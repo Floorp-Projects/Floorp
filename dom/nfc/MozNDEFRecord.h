@@ -19,9 +19,11 @@
 #include "mozilla/dom/TypedArray.h"
 #include "jsfriendapi.h"
 #include "js/GCAPI.h"
-#include "nsPIDOMWindow.h"
+#include "nsISupports.h"
 
+class nsIGlobalObject;
 struct JSContext;
+struct JSStructuredCloneWriter;
 
 namespace mozilla {
 namespace dom {
@@ -36,13 +38,13 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MozNDEFRecord)
 
 public:
-  MozNDEFRecord(nsPIDOMWindow* aWindow, TNF aTnf);
+  MozNDEFRecord(nsISupports* aParent, TNF aTnf = TNF::Empty);
 
   ~MozNDEFRecord();
 
-  nsIDOMWindow* GetParentObject() const
+  nsISupports* GetParentObject() const
   {
-    return mWindow;
+    return mParent;
   }
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
@@ -92,18 +94,26 @@ public:
   }
 
   void GetAsURI(nsAString& aRetVal);
+
+  // Structured clone methods use these to clone MozNDEFRecord.
+  bool WriteStructuredClone(JSContext* aCx, JSStructuredCloneWriter* aWriter) const;
+  bool ReadStructuredClone(JSContext* aCx, JSStructuredCloneReader* aReader);
 private:
   MozNDEFRecord() = delete;
-  nsRefPtr<nsPIDOMWindow> mWindow;
+  nsRefPtr<nsISupports> mParent;
   void HoldData();
   void DropData();
   void InitType(JSContext* aCx, const Optional<Uint8Array>& aType);
   void InitType(JSContext* aCx, const RTD rtd);
+  void InitType(JSContext* aCx, JSObject& aType, uint32_t aLen);
   void InitId(JSContext* aCx, const Optional<Uint8Array>& aId);
+  void InitId(JSContext* aCx, JSObject& aId, uint32_t aLen);
   void InitPayload(JSContext* aCx, const Optional<Uint8Array>& aPayload);
   void InitPayload(JSContext* aCx, const nsAString& aUri);
+  void InitPayload(JSContext* aCx, JSObject& aPayload, uint32_t aLen);
   void IncSize(uint32_t aCount);
   void IncSizeForPayload(uint32_t aLen);
+  bool WriteUint8Array(JSContext* aCx, JSStructuredCloneWriter* aWriter, JSObject* aObj, uint32_t aLen) const;
 
   static bool
   ValidateTNF(const MozNDEFRecordOptions& aOptions, ErrorResult& aRv);
