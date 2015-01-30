@@ -905,8 +905,7 @@ TabParent::RecvSetDimensions(const uint32_t& aFlags,
 }
 
 void
-TabParent::UpdateDimensions(const nsIntRect& rect, const nsIntSize& size,
-                            const nsIntPoint& aChromeDisp)
+TabParent::UpdateDimensions(const nsIntRect& rect, const nsIntSize& size)
 {
   if (mIsDestroyed) {
     return;
@@ -921,9 +920,9 @@ TabParent::UpdateDimensions(const nsIntRect& rect, const nsIntSize& size,
     mRect = rect;
     mDimensions = size;
     mOrientation = orientation;
-    mChromeDisp = aChromeDisp;
 
-    unused << SendUpdateDimensions(mRect, mDimensions, mOrientation, mChromeDisp);
+    nsIntPoint chromeOffset = -GetChildProcessOffset();
+    unused << SendUpdateDimensions(mRect, mDimensions, mOrientation, chromeOffset);
   }
 }
 
@@ -2693,7 +2692,7 @@ TabParent::HandleEvent(nsIDOMEvent* aEvent)
     }
     nsIntRect windowDims;
     NS_ENSURE_SUCCESS(frameLoader->GetWindowDimensions(windowDims), NS_ERROR_FAILURE);
-    UpdateDimensions(windowDims, mDimensions, mChromeDisp);
+    UpdateDimensions(windowDims, mDimensions);
     return NS_OK;
   }
   return NS_OK;
