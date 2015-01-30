@@ -98,7 +98,7 @@ void PluginWindowEvent::Init(const PluginWindowWeakRef &ref, HWND aWnd,
  */
 
 class nsPluginNativeWindowWin : public nsPluginNativeWindow {
-public: 
+public:
   nsPluginNativeWindowWin();
   virtual ~nsPluginNativeWindowWin();
 
@@ -154,7 +154,7 @@ static bool ProcessFlashMessageDelayed(nsPluginNativeWindowWin * aWin, nsNPAPIPl
   nsCOMPtr<nsIRunnable> pwe = aWin->GetPluginWindowEvent(hWnd, msg, wParam, lParam);
   if (pwe) {
     NS_DispatchToCurrentThread(pwe);
-    return true;  
+    return true;
   }
   return false;
 }
@@ -175,7 +175,7 @@ private:
 NS_IMETHODIMP nsDelayedPopupsEnabledEvent::Run()
 {
   mInst->PushPopupsEnabledState(false);
-  return NS_OK;	
+  return NS_OK;
 }
 
 static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -255,7 +255,7 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
 
     case WM_MOUSEACTIVATE: {
       // If a child window of this plug-in is already focused,
-      // don't focus the parent to avoid focus dance. We'll 
+      // don't focus the parent to avoid focus dance. We'll
       // receive a follow up WM_SETFOCUS which will notify
       // the appropriate window anyway.
       HWND focusedWnd = ::GetFocus();
@@ -417,7 +417,7 @@ SetWindowLongAHook(HWND hWnd,
   if (SetWindowLongHookCheck(hWnd, nIndex, newLong))
       return sUser32SetWindowLongAHookStub(hWnd, nIndex, newLong);
 
-  // Set flash's new subclass to get the result. 
+  // Set flash's new subclass to get the result.
   LONG_PTR proc = sUser32SetWindowLongAHookStub(hWnd, nIndex, newLong);
 
   // We already checked this in SetWindowLongHookCheck
@@ -446,14 +446,14 @@ SetWindowLongWHook(HWND hWnd,
   if (SetWindowLongHookCheck(hWnd, nIndex, newLong))
       return sUser32SetWindowLongWHookStub(hWnd, nIndex, newLong);
 
-  // Set flash's new subclass to get the result. 
+  // Set flash's new subclass to get the result.
   LONG_PTR proc = sUser32SetWindowLongWHookStub(hWnd, nIndex, newLong);
 
   // We already checked this in SetWindowLongHookCheck
   nsPluginNativeWindowWin * win =
     (nsPluginNativeWindowWin *)GetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
 
-  // Hook our subclass back up, just like we do on setwindow.   
+  // Hook our subclass back up, just like we do on setwindow.
   win->SetPrevWindowProc(
     reinterpret_cast<WNDPROC>(sUser32SetWindowLongWHookStub(hWnd, nIndex,
       reinterpret_cast<LONG_PTR>(PluginWndProc))));
@@ -491,11 +491,11 @@ HookSetWindowLongPtr()
 nsPluginNativeWindowWin::nsPluginNativeWindowWin() : nsPluginNativeWindow()
 {
   // initialize the struct fields
-  window = nullptr; 
-  x = 0; 
-  y = 0; 
-  width = 0; 
-  height = 0; 
+  window = nullptr;
+  x = 0;
+  y = 0;
+  width = 0;
+  height = 0;
 
   mPrevWinProc = nullptr;
   mPluginWinProc = nullptr;
@@ -547,10 +547,10 @@ NS_IMETHODIMP PluginWindowEvent::Run()
   else {
     // Currently not used, but added so that processing events here
     // is more generic.
-    ::CallWindowProc(win->GetWindowProc(), 
-                     hWnd, 
-                     GetMsg(), 
-                     GetWParam(), 
+    ::CallWindowProc(win->GetWindowProc(),
+                     hWnd,
+                     GetMsg(),
+                     GetWParam(),
                      GetLParam());
   }
 
@@ -558,7 +558,7 @@ NS_IMETHODIMP PluginWindowEvent::Run()
   return NS_OK;
 }
 
-PluginWindowEvent * 
+PluginWindowEvent *
 nsPluginNativeWindowWin::GetPluginWindowEvent(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam)
 {
   if (!mWeakRef) {
@@ -572,7 +572,7 @@ nsPluginNativeWindowWin::GetPluginWindowEvent(HWND aWnd, UINT aMsg, WPARAM aWPar
   // We have the ability to alloc if needed in case in the future some plugin
   // should post multiple PostMessages. However, this could lead to many
   // alloc's per second which could become a performance issue. See bug 169247.
-  if (!mCachedPluginWindowEvent) 
+  if (!mCachedPluginWindowEvent)
   {
     event = new PluginWindowEvent();
     if (!event) return nullptr;
@@ -698,7 +698,7 @@ nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
 
   DebugOnly<nsPluginNativeWindowWin *> win = (nsPluginNativeWindowWin *)::GetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
   NS_ASSERTION(!win || (win == this), "plugin window already has property and this is not us");
-  
+
   if (!::SetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION, (HANDLE)this))
     return NS_ERROR_FAILURE;
 
