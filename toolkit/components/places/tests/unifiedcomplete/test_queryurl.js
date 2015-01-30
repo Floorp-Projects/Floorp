@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(function* test_no_slash() {
-  do_log_info("Searching for host match without slash should match host");
+  do_print("Searching for host match without slash should match host");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://file.org/test/"),
                            transition: TRANSITION_TYPED },
                          { uri: NetUtil.newURI("file:///c:/test.html"),
@@ -17,7 +17,7 @@ add_task(function* test_no_slash() {
 });
 
 add_task(function* test_w_slash() {
-  do_log_info("Searching match with slash at the end should do nothing");
+  do_print("Searching match with slash at the end should do nothing");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://file.org/test/"),
                           transition: TRANSITION_TYPED },
                          { uri: NetUtil.newURI("file:///c:/test.html"),
@@ -31,7 +31,7 @@ add_task(function* test_w_slash() {
 });
 
 add_task(function* test_middle() {
-  do_log_info("Searching match with slash in the middle should match url");
+  do_print("Searching match with slash in the middle should match url");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://file.org/test/"),
                            transition: TRANSITION_TYPED },
                          { uri: NetUtil.newURI("file:///c:/test.html"),
@@ -45,7 +45,7 @@ add_task(function* test_middle() {
 });
 
 add_task(function* test_nonhost() {
-  do_log_info("Searching for non-host match without slash should not match url");
+  do_print("Searching for non-host match without slash should not match url");
   yield promiseAddVisits({ uri: NetUtil.newURI("file:///c:/test.html"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({

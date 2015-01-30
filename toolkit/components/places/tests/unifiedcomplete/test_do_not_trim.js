@@ -6,7 +6,7 @@
 // that largely confuses completeDefaultIndex
 
 add_task(function* test_not_autofill_ws_1() {
-  do_log_info("Do not autofill whitespaced entry 1");
+  do_print("Do not autofill whitespaced entry 1");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -18,7 +18,7 @@ add_task(function* test_not_autofill_ws_1() {
 });
 
 add_task(function* test_not_autofill_ws_2() {
-  do_log_info("Do not autofill whitespaced entry 2");
+  do_print("Do not autofill whitespaced entry 2");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -30,7 +30,7 @@ add_task(function* test_not_autofill_ws_2() {
 });
 
 add_task(function* test_not_autofill_ws_3() {
-  do_log_info("Do not autofill whitespaced entry 3");
+  do_print("Do not autofill whitespaced entry 3");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -42,7 +42,7 @@ add_task(function* test_not_autofill_ws_3() {
 });
 
 add_task(function* test_not_autofill_ws_4() {
-  do_log_info("Do not autofill whitespaced entry 4");
+  do_print("Do not autofill whitespaced entry 4");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -55,7 +55,7 @@ add_task(function* test_not_autofill_ws_4() {
 
 
 add_task(function* test_not_autofill_ws_5() {
-  do_log_info("Do not autofill whitespaced entry 5");
+  do_print("Do not autofill whitespaced entry 5");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -67,7 +67,7 @@ add_task(function* test_not_autofill_ws_5() {
 });
 
 add_task(function* test_not_autofill_ws_6() {
-  do_log_info("Do not autofill whitespaced entry 6");
+  do_print("Do not autofill whitespaced entry 6");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
