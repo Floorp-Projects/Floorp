@@ -1,0 +1,194 @@
+# Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("../../build/webrtc.gni")
+
+source_set("video_coding") {
+  sources = [
+    "main/interface/video_coding.h",
+    "main/interface/video_coding_defines.h",
+    "main/source/codec_database.cc",
+    "main/source/codec_database.h",
+    "main/source/codec_timer.cc",
+    "main/source/codec_timer.h",
+    "main/source/content_metrics_processing.cc",
+    "main/source/content_metrics_processing.h",
+    "main/source/decoding_state.cc",
+    "main/source/decoding_state.h",
+    "main/source/encoded_frame.cc",
+    "main/source/encoded_frame.h",
+    "main/source/er_tables_xor.h",
+    "main/source/fec_tables_xor.h",
+    "main/source/frame_buffer.cc",
+    "main/source/frame_buffer.h",
+    "main/source/generic_decoder.cc",
+    "main/source/generic_decoder.h",
+    "main/source/generic_encoder.cc",
+    "main/source/generic_encoder.h",
+    "main/source/inter_frame_delay.cc",
+    "main/source/inter_frame_delay.h",
+    "main/source/internal_defines.h",
+    "main/source/jitter_buffer.cc",
+    "main/source/jitter_buffer.h",
+    "main/source/jitter_buffer_common.h",
+    "main/source/jitter_estimator.cc",
+    "main/source/jitter_estimator.h",
+    "main/source/media_opt_util.cc",
+    "main/source/media_opt_util.h",
+    "main/source/media_optimization.cc",
+    "main/source/media_optimization.h",
+    "main/source/nack_fec_tables.h",
+    "main/source/packet.cc",
+    "main/source/packet.h",
+    "main/source/qm_select_data.h",
+    "main/source/qm_select.cc",
+    "main/source/qm_select.h",
+    "main/source/receiver.cc",
+    "main/source/receiver.h",
+    "main/source/rtt_filter.cc",
+    "main/source/rtt_filter.h",
+    "main/source/session_info.cc",
+    "main/source/session_info.h",
+    "main/source/timestamp_map.cc",
+    "main/source/timestamp_map.h",
+    "main/source/timing.cc",
+    "main/source/timing.h",
+    "main/source/video_coding_impl.cc",
+    "main/source/video_coding_impl.h",
+    "main/source/video_receiver.cc",
+    "main/source/video_sender.cc",
+  ]
+
+  configs += [ "../..:common_config" ]
+  public_configs = [ "../..:common_inherited_config" ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  deps = [
+    ":video_coding_utility",
+    ":webrtc_i420",
+    ":webrtc_vp8",
+    ":webrtc_vp9",
+    "../../common_video",
+    "../../system_wrappers",
+  ]
+}
+
+source_set("video_coding_utility") {
+  sources = [
+    "utility/include/frame_dropper.h",
+    "utility/frame_dropper.cc",
+    "utility/quality_scaler.cc",
+    "utility/quality_scaler.h",
+  ]
+
+  configs += [ "../..:common_config" ]
+  public_configs = [ "../..:common_inherited_config" ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  deps = [ "../../system_wrappers" ]
+}
+
+source_set("webrtc_i420") {
+  sources = [
+    "codecs/i420/main/source/i420.cc",
+    "codecs/i420/main/interface/i420.h",
+  ]
+
+  configs += [ "../..:common_config" ]
+  public_configs = [ "../..:common_inherited_config" ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  deps = [ "../../system_wrappers" ]
+}
+
+source_set("webrtc_vp8") {
+  sources = [
+    "codecs/vp8/default_temporal_layers.cc",
+    "codecs/vp8/default_temporal_layers.h",
+    "codecs/vp8/realtime_temporal_layers.cc",
+    "codecs/vp8/reference_picture_selection.cc",
+    "codecs/vp8/reference_picture_selection.h",
+    "codecs/vp8/include/vp8.h",
+    "codecs/vp8/include/vp8_common_types.h",
+    "codecs/vp8/temporal_layers.h",
+    "codecs/vp8/vp8_factory.cc",
+    "codecs/vp8/vp8_impl.cc",
+    "codecs/vp8/vp8_impl.h",
+  ]
+
+  configs += [ "../..:common_config" ]
+  public_configs = [ "../..:common_inherited_config" ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  # TODO(kjellander): Remove once libvpx has changed it's libvpx_config to be
+  # in direct_dependent_configs.
+  configs += [ "//third_party/libvpx:libvpx_config" ]
+
+  deps = [
+    ":video_coding_utility",
+    "../../common_video",
+    "../../system_wrappers",
+  ]
+  if (rtc_build_libvpx) {
+    deps += [
+      "//third_party/libvpx",
+    ]
+  }
+}
+
+source_set("webrtc_vp9") {
+  sources = [
+    "codecs/vp9/include/vp9.h",
+    "codecs/vp9/vp9_impl.cc",
+    "codecs/vp9/vp9_impl.h",
+  ]
+
+  configs += [ "../..:common_config" ]
+  public_configs = [ "../..:common_inherited_config" ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  # TODO(kjellander): Remove once libvpx has changed it's libvpx_config to be
+  # in direct_dependent_configs.
+  configs += [ "//third_party/libvpx:libvpx_config" ]
+
+  deps = [
+    ":video_coding_utility",
+    "../../common_video",
+    "../../system_wrappers",
+  ]
+  if (rtc_build_libvpx) {
+    deps += [
+      "//third_party/libvpx",
+    ]
+  }
+}

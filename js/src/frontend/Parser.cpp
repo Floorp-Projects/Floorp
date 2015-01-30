@@ -2253,11 +2253,7 @@ Parser<FullParseHandler>::finishFunctionDefinition(ParseNode *pn, FunctionBox *f
         if (!item)
             return false;
 
-        item->pn_next = body->pn_head;
-        body->pn_head = item;
-        if (body->pn_tail == &body->pn_head)
-            body->pn_tail = &item->pn_next;
-        ++body->pn_count;
+        body->prepend(item);
         body->pn_xflags |= PNX_DESTRUCT;
     }
 

@@ -17,7 +17,7 @@
 #include <list>
 #include <string>
 
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/video_engine/include/vie_render.h"
 
@@ -60,6 +60,7 @@ class ViEToFileRenderer: public webrtc::ExternalRenderer {
   int DeliverFrame(unsigned char* buffer,
                    int buffer_size,
                    uint32_t time_stamp,
+                   int64_t ntp_time_ms,
                    int64_t render_time,
                    void* handle) OVERRIDE;
 

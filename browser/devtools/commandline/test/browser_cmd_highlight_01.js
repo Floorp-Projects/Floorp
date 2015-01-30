@@ -54,7 +54,7 @@ function* spawnTest() {
         status: 'VALID'
       },
       exec: {
-        output: '1 nodes highlighted'
+        output: '1 node highlighted'
       }
     },
     {
@@ -78,7 +78,7 @@ function* spawnTest() {
         status: 'VALID'
       },
       exec: {
-        output: '1 nodes highlighted'
+        output: '1 node highlighted'
       }
     },
     {
@@ -102,7 +102,7 @@ function* spawnTest() {
         status: 'VALID'
       },
       exec: {
-        output: '1 nodes highlighted'
+        output: '1 node highlighted'
       }
     },
     {
@@ -126,7 +126,7 @@ function* spawnTest() {
         status: 'VALID'
       },
       exec: {
-        output: '1 nodes highlighted'
+        output: '1 node highlighted'
       }
     },
     {
@@ -198,7 +198,7 @@ function* spawnTest() {
         status: 'VALID'
       },
       exec: {
-        output: '1 nodes highlighted'
+        output: '1 node highlighted'
       }
     },
     {
@@ -213,7 +213,7 @@ function* spawnTest() {
         status: 'VALID'
       },
       exec: {
-        output: '1 nodes highlighted'
+        output: '1 node highlighted'
       }
     },
     {

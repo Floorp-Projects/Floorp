@@ -13,8 +13,8 @@
 
 #include <map>
 #include <stdio.h>
-#include "typedefs.h"
-#include "webrtc_neteq_internal.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/modules/interface/module_common_types.h"
 
 enum stereoModes {
     stereoModeMono,
@@ -36,11 +36,10 @@ public:
     int readFixedFromFile(FILE *fp, size_t len);
     virtual int writeToFile(FILE *fp);
     void blockPT(uint8_t pt);
-    void selectSSRC(uint32_t ssrc);
     //int16_t payloadType();
-    void parseHeader();
-    void parseHeader(WebRtcNetEQ_RTPInfo & rtpInfo);
-    WebRtcNetEQ_RTPInfo const * RTPinfo() const;
+    virtual void parseHeader();
+    void parseHeader(webrtc::WebRtcRTPHeader* rtp_header);
+    const webrtc::WebRtcRTPHeader* RTPinfo() const;
     uint8_t * datagram() const;
     uint8_t * payload() const;
     int16_t payloadLen();
@@ -62,11 +61,11 @@ public:
     int setMarkerBit(uint8_t mb);
     void setTime(uint32_t receiveTime) { _receiveTime = receiveTime; };
 
-    int setRTPheader(const WebRtcNetEQ_RTPInfo *RTPinfo);
+    int setRTPheader(const webrtc::WebRtcRTPHeader* RTPinfo);
 
     int splitStereo(NETEQTEST_RTPpacket* slaveRtp, enum stereoModes mode);
 
-    int extractRED(int index, WebRtcNetEQ_RTPInfo& red);
+    int extractRED(int index, webrtc::WebRtcRTPHeader& red);
 
     void scramblePayload(void);
 
@@ -75,19 +74,17 @@ public:
     int                 _memSize;
     int16_t         _datagramLen;
     int16_t         _payloadLen;
-    WebRtcNetEQ_RTPInfo  _rtpInfo;
+    webrtc::WebRtcRTPHeader _rtpInfo;
     bool                _rtpParsed;
     uint32_t        _receiveTime;
     bool                _lost;
     std::map<uint8_t, bool> _blockList;
-    uint32_t            _selectSSRC;
-    bool                _filterSSRC;
 
 protected:
     static const int _kRDHeaderLen;
     static const int _kBasicHeaderLen;
 
-    void parseBasicHeader(WebRtcNetEQ_RTPInfo *RTPinfo, int *i_P, int *i_X,
+    void parseBasicHeader(webrtc::WebRtcRTPHeader* RTPinfo, int *i_P, int *i_X,
                           int *i_CC) const;
     int calcHeaderLength(int i_X, int i_CC) const;
 
@@ -95,7 +92,7 @@ private:
     void makeRTPheader(unsigned char* rtp_data, uint8_t payloadType,
                        uint16_t seqNo, uint32_t timestamp,
                        uint32_t ssrc, uint8_t markerBit) const;
-    uint16_t parseRTPheader(WebRtcNetEQ_RTPInfo *RTPinfo,
+    uint16_t parseRTPheader(webrtc::WebRtcRTPHeader* RTPinfo,
                             uint8_t **payloadPtr = NULL) const;
     uint16_t parseRTPheader(uint8_t **payloadPtr = NULL)
         { return parseRTPheader(&_rtpInfo, payloadPtr);};

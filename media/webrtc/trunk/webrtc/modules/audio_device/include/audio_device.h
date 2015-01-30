@@ -107,10 +107,8 @@ class AudioDeviceModule : public RefCountedModule {
                                 uint16_t* volumeRight) const = 0;
 
   // Audio mixer initialization
-  virtual int32_t SpeakerIsAvailable(bool* available) = 0;
   virtual int32_t InitSpeaker() = 0;
   virtual bool SpeakerIsInitialized() const = 0;
-  virtual int32_t MicrophoneIsAvailable(bool* available) = 0;
   virtual int32_t InitMicrophone() = 0;
   virtual bool MicrophoneIsInitialized() const = 0;
 

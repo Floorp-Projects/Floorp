@@ -41,10 +41,6 @@ int16_t ACMRED::InternalCreateEncoder() {
   return 0;
 }
 
-void ACMRED::InternalDestructEncoderInst(void* /* ptr_inst */) {
-  // RED has no instance
-}
-
 void ACMRED::DestructEncoderSafe() {
   // RED has no instance
 }

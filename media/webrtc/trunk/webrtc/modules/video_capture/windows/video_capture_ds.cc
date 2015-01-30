@@ -45,13 +45,14 @@ VideoCaptureDS::~VideoCaptureDS()
         if (_dvFilter)
             _graphBuilder->RemoveFilter(_dvFilter);
     }
+    RELEASE_AND_CLEAR(_inputSendPin);
+    RELEASE_AND_CLEAR(_outputCapturePin);
+
     RELEASE_AND_CLEAR(_captureFilter); // release the capture device
     RELEASE_AND_CLEAR(_sinkFilter);
     RELEASE_AND_CLEAR(_dvFilter);
 
     RELEASE_AND_CLEAR(_mediaControl);
-    RELEASE_AND_CLEAR(_inputSendPin);
-    RELEASE_AND_CLEAR(_outputCapturePin);
 
     RELEASE_AND_CLEAR(_inputDvPin);
     RELEASE_AND_CLEAR(_outputDvPin);

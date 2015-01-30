@@ -12,10 +12,10 @@
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_RECEIVER_HELP_H_
 
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"  // RTCPReportBlock
 #include "webrtc/modules/rtp_rtcp/source/rtcp_utility.h"
 #include "webrtc/modules/rtp_rtcp/source/tmmbr_help.h"
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 

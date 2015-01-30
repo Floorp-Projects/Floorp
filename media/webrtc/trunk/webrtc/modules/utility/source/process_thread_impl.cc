@@ -10,7 +10,7 @@
 
 #include "webrtc/modules/interface/module.h"
 #include "webrtc/modules/utility/source/process_thread_impl.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+
 
 namespace webrtc {
 ProcessThread::~ProcessThread()
@@ -32,14 +32,12 @@ ProcessThreadImpl::ProcessThreadImpl()
       _critSectModules(CriticalSectionWrapper::CreateCriticalSection()),
       _thread(NULL)
 {
-    WEBRTC_TRACE(kTraceMemory, kTraceUtility, -1, "%s created", __FUNCTION__);
 }
 
 ProcessThreadImpl::~ProcessThreadImpl()
 {
     delete _critSectModules;
     delete &_timeEvent;
-    WEBRTC_TRACE(kTraceMemory, kTraceUtility, -1, "%s deleted", __FUNCTION__);
 }
 
 int32_t ProcessThreadImpl::Start()
@@ -101,9 +99,7 @@ int32_t ProcessThreadImpl::RegisterModule(Module* module)
     }
 
     _modules.push_front(module);
-    WEBRTC_TRACE(kTraceInfo, kTraceUtility, -1,
-                 "number of registered modules has increased to %d",
-                 _modules.size());
+
     // Wake the thread calling ProcessThreadImpl::Process() to update the
     // waiting time. The waiting time for the just registered module may be
     // shorter than all other registered modules.
@@ -119,9 +115,6 @@ int32_t ProcessThreadImpl::DeRegisterModule(const Module* module)
         if(module == *iter)
         {
             _modules.erase(iter);
-            WEBRTC_TRACE(kTraceInfo, kTraceUtility, -1,
-                         "number of registered modules has decreased to %d",
-                         _modules.size());
             return 0;
         }
     }

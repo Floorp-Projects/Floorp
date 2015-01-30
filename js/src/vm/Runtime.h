@@ -85,7 +85,6 @@ class JitRuntime;
 class JitActivation;
 struct PcScriptCache;
 class Simulator;
-class SimulatorRuntime;
 struct AutoFlushICache;
 class CompileRuntime;
 }
@@ -562,8 +561,6 @@ class PerThreadData : public PerThreadDataFriendFields
 
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     js::jit::Simulator *simulator() const;
-    void setSimulator(js::jit::Simulator *sim);
-    js::jit::SimulatorRuntime *simulatorRuntime() const;
 #endif
 };
 
@@ -959,8 +956,6 @@ struct JSRuntime : public JS::shadow::Runtime,
 
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     js::jit::Simulator *simulator_;
-    uintptr_t simulatorStackLimit_;
-    js::jit::SimulatorRuntime *simulatorRuntime_;
 #endif
 
   public:
@@ -970,10 +965,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     js::jit::Simulator *simulator() const;
-    void setSimulator(js::jit::Simulator *sim);
     uintptr_t *addressOfSimulatorStackLimit();
-    js::jit::SimulatorRuntime *simulatorRuntime() const;
-    void setSimulatorRuntime(js::jit::SimulatorRuntime *srt);
 #endif
 
     /* Strong references on scripts held for PCCount profiling API. */

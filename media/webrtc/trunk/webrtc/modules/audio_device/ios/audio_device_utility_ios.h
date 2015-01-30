@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_UTILITY_IPHONE_H
-#define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_UTILITY_IPHONE_H
+#ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_UTILITY_IOS_H
+#define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_UTILITY_IOS_H
 
 #include "webrtc/modules/audio_device/audio_device_utility.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
@@ -17,15 +17,15 @@
 namespace webrtc {
 class CriticalSectionWrapper;
 
-class AudioDeviceUtilityIPhone: public AudioDeviceUtility {
-public:
-    AudioDeviceUtilityIPhone(const int32_t id);
-    AudioDeviceUtilityIPhone();
-    virtual ~AudioDeviceUtilityIPhone();
+class AudioDeviceUtilityIOS: public AudioDeviceUtility {
+ public:
+    AudioDeviceUtilityIOS(const int32_t id);
+    AudioDeviceUtilityIOS();
+    virtual ~AudioDeviceUtilityIOS();
 
     virtual int32_t Init();
 
-private:
+ private:
     CriticalSectionWrapper& _critSect;
     int32_t _id;
     AudioDeviceModule::ErrorCode _lastError;
@@ -33,4 +33,4 @@ private:
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_UTILITY_IPHONE_H
+#endif  // WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_UTILITY_IOS_H

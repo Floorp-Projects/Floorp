@@ -7,7 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/codec.h"
 #include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
 #include "webrtc/typedefs.h"

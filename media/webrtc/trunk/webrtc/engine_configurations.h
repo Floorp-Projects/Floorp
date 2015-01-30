@@ -21,13 +21,14 @@
 //  [Voice] Codec settings
 // ----------------------------------------------------------------------------
 
-// iSAC is not included in the Mozilla build, but in all other builds.
+// iSAC and G722 are not included in the Mozilla build, but in all other builds.
 #ifndef WEBRTC_MOZILLA_BUILD
 #ifdef WEBRTC_ARCH_ARM
 #define WEBRTC_CODEC_ISACFX  // Fix-point iSAC implementation.
 #else
 #define WEBRTC_CODEC_ISAC  // Floating-point iSAC implementation (default).
 #endif  // WEBRTC_ARCH_ARM
+#define WEBRTC_CODEC_G722
 #endif  // !WEBRTC_MOZILLA_BUILD
 
 // AVT is included in all builds, along with G.711, NetEQ and CNG
@@ -39,11 +40,10 @@
 #define WEBRTC_CODEC_PCM16
 #endif
 
-// iLBC, G.722, and Redundancy coding are excluded from Chromium and Mozilla
+// iLBC and Redundancy coding are excluded from Chromium and Mozilla
 // builds to reduce binary size.
 #if !defined(WEBRTC_CHROMIUM_BUILD) && !defined(WEBRTC_MOZILLA_BUILD)
 #define WEBRTC_CODEC_ILBC
-#define WEBRTC_CODEC_G722
 #define WEBRTC_CODEC_RED
 #endif  // !WEBRTC_CHROMIUM_BUILD && !WEBRTC_MOZILLA_BUILD
 
@@ -53,6 +53,8 @@
 
 #define VIDEOCODEC_I420
 #define VIDEOCODEC_VP8
+#define VIDEOCODEC_VP9
+#define VIDEOCODEC_H264
 
 // ============================================================================
 //                                 VoiceEngine
@@ -85,11 +87,6 @@
 #define WEBRTC_VOICE_ENGINE_RTP_RTCP_API
 #define WEBRTC_VOICE_ENGINE_VIDEO_SYNC_API
 #define WEBRTC_VOICE_ENGINE_VOLUME_CONTROL_API
-
-#ifndef WEBRTC_CHROMIUM_BUILD
-#define WEBRTC_VOICE_ENGINE_CALL_REPORT_API
-#define WEBRTC_VOICE_ENGINE_ENCRYPTION_API
-#endif
 
 // ============================================================================
 //                                 VideoEngine

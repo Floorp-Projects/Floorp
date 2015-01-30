@@ -54,20 +54,6 @@ TEST_F(HardwareTest, AbleToQueryForDevices) {
 }
 #endif
 
-#ifdef _WIN32
-TEST_F(HardwareTest, GetCpuLoadWorksOnWindows) {
-  int load = -1;
-  EXPECT_EQ(0, voe_hardware_->GetCPULoad(load));
-  EXPECT_GE(0, load);
-  TEST_LOG("Voice engine CPU load = %d%%\n", load);
-}
-#else
-TEST_F(HardwareTest, GetCpuLoadReturnsErrorOnNonWindowsPlatform) {
-  int load = -1;
-  EXPECT_EQ(-1, voe_hardware_->GetCPULoad(load));
-}
-#endif
-
 // Flakily hangs on Windows: code.google.com/p/webrtc/issues/detail?id=2179.
 TEST_F(HardwareTest,
        DISABLED_ON_WIN(BuiltInWasapiAECWorksForAudioWindowsCoreAudioLayer)) {

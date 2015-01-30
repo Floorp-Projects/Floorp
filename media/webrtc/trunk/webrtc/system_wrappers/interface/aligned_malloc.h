@@ -19,8 +19,6 @@
 
 #include <stddef.h>
 
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
-
 namespace webrtc {
 
 // Returns a pointer to the first boundry of |alignment| bytes following the
@@ -48,10 +46,12 @@ T* AlignedMalloc(size_t size, size_t alignment) {
   return reinterpret_cast<T*>(AlignedMalloc(size, alignment));
 }
 
-// Scoped pointer to AlignedMalloc-memory.
-template<typename T>
-struct Allocator {
-  typedef scoped_ptr_malloc<T, AlignedFree> scoped_ptr_aligned;
+// Deleter for use with scoped_ptr. E.g., use as
+//   scoped_ptr<Foo, AlignedFreeDeleter> foo;
+struct AlignedFreeDeleter {
+  inline void operator()(void* ptr) const {
+    AlignedFree(ptr);
+  }
 };
 
 }  // namespace webrtc

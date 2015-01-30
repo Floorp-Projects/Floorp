@@ -167,18 +167,20 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
     // Supported video formats in preferred order.
     // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
     // I420 otherwise.
-    const int nFormats = 4;
+    const int nFormats = 5;
     unsigned int fmts[nFormats];
     if (capability.width > 640 || capability.height > 480) {
         fmts[0] = V4L2_PIX_FMT_MJPEG;
         fmts[1] = V4L2_PIX_FMT_YUV420;
         fmts[2] = V4L2_PIX_FMT_YUYV;
-        fmts[3] = V4L2_PIX_FMT_JPEG;
+        fmts[3] = V4L2_PIX_FMT_UYVY;
+        fmts[4] = V4L2_PIX_FMT_JPEG;
     } else {
         fmts[0] = V4L2_PIX_FMT_YUV420;
         fmts[1] = V4L2_PIX_FMT_YUYV;
-        fmts[2] = V4L2_PIX_FMT_MJPEG;
-        fmts[3] = V4L2_PIX_FMT_JPEG;
+        fmts[2] = V4L2_PIX_FMT_UYVY;
+        fmts[3] = V4L2_PIX_FMT_MJPEG;
+        fmts[4] = V4L2_PIX_FMT_JPEG;
     }
 
     // Enumerate image formats.
@@ -228,6 +230,8 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
         _captureVideoType = kVideoYUY2;
     else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUV420)
         _captureVideoType = kVideoI420;
+    else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY)
+        _captureVideoType = kVideoUYVY;
     else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||
              video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
         _captureVideoType = kVideoMJPEG;

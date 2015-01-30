@@ -15,7 +15,7 @@
 #undef max // Xlibint.h defines this and it breaks std::max
 #undef min // Xlibint.h defines this and it breaks std::min
 
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
+#include "webrtc/base/constructormagic.h"
 
 namespace webrtc {
 

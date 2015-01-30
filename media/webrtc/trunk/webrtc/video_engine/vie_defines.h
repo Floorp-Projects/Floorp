@@ -34,9 +34,7 @@ namespace webrtc {
 enum { kViEMinKeyRequestIntervalMs = 300 };
 
 // ViEBase
-enum { kViEMaxNumberOfChannels = 32 };
-enum { kViEVersionMaxMessageSize = 1024 };
-enum { kViEMaxModuleVersionSize = 960 };
+enum { kViEMaxNumberOfChannels = 64 };
 
 // ViECapture
 enum { kViEMaxCaptureDevices = 256 };
@@ -101,32 +99,9 @@ inline int ChannelId(const int moduleId) {
   return static_cast<int>(moduleId & 0xffff);
 }
 
-//  Build information macros
-#if defined(_DEBUG) || defined(DEBUG)
-#define BUILDMODE "d"
-#elif defined(NDEBUG)
-#define BUILDMODE "r"
-#else
-#define BUILDMODE "?"
-#endif
-
-#define BUILDTIME __TIME__
-#define BUILDDATE __DATE__
-
-// Example: "Oct 10 2002 12:05:30 r".
-#define BUILDINFO BUILDDATE " " BUILDTIME " " BUILDMODE
-
 // Windows specific.
 #if defined(_WIN32)
   #define RENDER_MODULE_TYPE kRenderWindows
-
-  // Warning pragmas.
-  // new behavior: elements of array 'XXX' will be default initialized.
-  #pragma warning(disable: 4351)
-  // 'this' : used in base member initializer list.
-  #pragma warning(disable: 4355)
-  // Frame pointer register 'ebp' modified by inline assembly code.
-  #pragma warning(disable: 4731)
 
   // Include libraries.
   #pragma comment(lib, "winmm.lib")

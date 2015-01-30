@@ -22,27 +22,24 @@ namespace webrtc {
 
 class RTPReceiverVideo : public RTPReceiverStrategy {
  public:
-  RTPReceiverVideo(const int32_t id, RtpData* data_callback);
+  explicit RTPReceiverVideo(RtpData* data_callback);
 
   virtual ~RTPReceiverVideo();
 
-  virtual int32_t ParseRtpPacket(
-      WebRtcRTPHeader* rtp_header,
-      const PayloadUnion& specific_payload,
-      bool is_red,
-      const uint8_t* packet,
-      uint16_t packet_length,
-      int64_t timestamp,
-      bool is_first_packet) OVERRIDE;
+  virtual int32_t ParseRtpPacket(WebRtcRTPHeader* rtp_header,
+                                 const PayloadUnion& specific_payload,
+                                 bool is_red,
+                                 const uint8_t* packet,
+                                 uint16_t packet_length,
+                                 int64_t timestamp,
+                                 bool is_first_packet) OVERRIDE;
 
-  TelephoneEventHandler* GetTelephoneEventHandler() {
-    return NULL;
-  }
+  TelephoneEventHandler* GetTelephoneEventHandler() { return NULL; }
 
   int GetPayloadTypeFrequency() const OVERRIDE;
 
-  virtual RTPAliveType ProcessDeadOrAlive(uint16_t last_payload_length) const
-      OVERRIDE;
+  virtual RTPAliveType ProcessDeadOrAlive(
+      uint16_t last_payload_length) const OVERRIDE;
 
   virtual bool ShouldReportCsrcChanges(uint8_t payload_type) const OVERRIDE;
 
@@ -60,32 +57,9 @@ class RTPReceiverVideo : public RTPReceiverStrategy {
 
   void SetPacketOverHead(uint16_t packet_over_head);
 
- protected:
-  int32_t ReceiveGenericCodec(WebRtcRTPHeader* rtp_header,
-                              const uint8_t* payload_data,
-                              uint16_t payload_data_length);
-
-  int32_t ReceiveVp8Codec(WebRtcRTPHeader* rtp_header,
-                          const uint8_t* payload_data,
-                          uint16_t payload_data_length);
-
-  int32_t ReceiveH264Codec(WebRtcRTPHeader* rtp_header,
-                          const uint8_t* payload_data,
-                          uint16_t payload_data_length);
-
+ private:
   int32_t BuildRTPheader(const WebRtcRTPHeader* rtp_header,
                          uint8_t* data_buffer) const;
-
- private:
-  int32_t ParseVideoCodecSpecific(
-      WebRtcRTPHeader* rtp_header,
-      const uint8_t* payload_data,
-      uint16_t payload_data_length,
-      RtpVideoCodecTypes video_type,
-      int64_t now_ms,
-      bool is_first_packet);
-
-  int32_t id_;
 };
 }  // namespace webrtc
 

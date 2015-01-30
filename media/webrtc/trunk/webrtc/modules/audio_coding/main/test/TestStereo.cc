@@ -14,8 +14,7 @@
 
 #include <string>
 
-#include "gtest/gtest.h"
-#include "webrtc/common.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/common_types.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
@@ -76,7 +75,7 @@ int32_t TestPackStereo::SendData(const FrameType frame_type,
                                            rtp_info);
 
     if (frame_type != kAudioFrameCN) {
-      payload_size_ = payload_size;
+      payload_size_ = static_cast<int>(payload_size);
     } else {
       payload_size_ = -1;
     }
@@ -89,7 +88,7 @@ int32_t TestPackStereo::SendData(const FrameType frame_type,
 }
 
 uint16_t TestPackStereo::payload_size() {
-  return payload_size_;
+  return static_cast<uint16_t>(payload_size_);
 }
 
 uint32_t TestPackStereo::timestamp_diff() {
@@ -108,9 +107,9 @@ void TestPackStereo::set_lost_packet(bool lost) {
   lost_packet_ = lost;
 }
 
-TestStereo::TestStereo(int test_mode, const Config& config)
-    : acm_a_(config.Get<AudioCodingModuleFactory>().Create(0)),
-      acm_b_(config.Get<AudioCodingModuleFactory>().Create(1)),
+TestStereo::TestStereo(int test_mode)
+    : acm_a_(AudioCodingModule::Create(0)),
+      acm_b_(AudioCodingModule::Create(1)),
       channel_a2b_(NULL),
       test_cntr_(0),
       pack_size_samp_(0),
@@ -808,6 +807,8 @@ void TestStereo::Run(TestPackStereo* channel, int in_channels, int out_channels,
   uint32_t time_stamp_diff;
   channel->reset_payload_size();
   int error_count = 0;
+  int variable_bytes = 0;
+  int variable_packets = 0;
 
   while (1) {
     // Simulate packet loss by setting |packet_loss_| to "true" in
@@ -839,11 +840,16 @@ void TestStereo::Run(TestPackStereo* channel, int in_channels, int out_channels,
     // Run sender side of ACM
     EXPECT_GT(acm_a_->Process(), -1);
 
-    // Verify that the received packet size matches the settings
+    // Verify that the received packet size matches the settings.
     rec_size = channel->payload_size();
     if ((0 < rec_size) & (rec_size < 65535)) {
-      // Opus is variable rate, skip this test.
-      if (strcmp(send_codec_name_, "opus")) {
+      if (strcmp(send_codec_name_, "opus") == 0) {
+        // Opus is a variable rate codec, hence calculate the average packet
+        // size, and later make sure the average is in the right range.
+        variable_bytes += rec_size;
+        variable_packets++;
+      } else {
+        // For fixed rate codecs, check that packet size is correct.
         if ((rec_size != pack_size_bytes_ * out_channels)
             && (pack_size_bytes_ < 65535)) {
           error_count++;
@@ -866,6 +872,13 @@ void TestStereo::Run(TestPackStereo* channel, int in_channels, int out_channels,
   }
 
   EXPECT_EQ(0, error_count);
+
+  // Check that packet size is in the right range for variable rate codecs,
+  // such as Opus.
+  if (variable_packets > 0) {
+    variable_bytes /= variable_packets;
+    EXPECT_NEAR(variable_bytes, pack_size_bytes_, 3);
+  }
 
   if (in_file_mono_->EndOfFile()) {
     in_file_mono_->Rewind();

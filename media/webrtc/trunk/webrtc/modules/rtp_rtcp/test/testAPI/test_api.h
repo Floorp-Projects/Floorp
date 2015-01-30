@@ -43,7 +43,7 @@ class LoopBackTransport : public webrtc::Transport {
   void DropEveryNthPacket(int n) {
     _packetLoss = n;
   }
-  virtual int SendPacket(int channel, const void *data, int len) {
+  virtual int SendPacket(int channel, const void *data, int len) OVERRIDE {
     _count++;
     if (_packetLoss > 0) {
       if ((_count % _packetLoss) == 0) {
@@ -52,7 +52,9 @@ class LoopBackTransport : public webrtc::Transport {
     }
     RTPHeader header;
     scoped_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
-    if (!parser->Parse(static_cast<const uint8_t*>(data), len, &header)) {
+    if (!parser->Parse(static_cast<const uint8_t*>(data),
+                       static_cast<size_t>(len),
+                       &header)) {
       return -1;
     }
     PayloadUnion payload_specific;
@@ -68,7 +70,7 @@ class LoopBackTransport : public webrtc::Transport {
     }
     return len;
   }
-  virtual int SendRTCPPacket(int channel, const void *data, int len) {
+  virtual int SendRTCPPacket(int channel, const void *data, int len) OVERRIDE {
     if (_rtpRtcpModule->IncomingRtcpPacket((const uint8_t*)data, len) < 0) {
       return -1;
     }
@@ -89,7 +91,7 @@ class TestRtpReceiver : public NullRtpData {
   virtual int32_t OnReceivedPayloadData(
       const uint8_t* payloadData,
       const uint16_t payloadSize,
-      const webrtc::WebRtcRTPHeader* rtpHeader) {
+      const webrtc::WebRtcRTPHeader* rtpHeader) OVERRIDE {
     EXPECT_LE(payloadSize, sizeof(_payloadData));
     memcpy(_payloadData, payloadData, payloadSize);
     memcpy(&_rtpHeader, rtpHeader, sizeof(_rtpHeader));

@@ -147,6 +147,9 @@ class AsmJSNumLit
     static AsmJSNumLit Create(Which w, Value v) {
         AsmJSNumLit lit;
         lit.which_ = w;
+        // Force float32 coercion, as the caller may have not done it.
+        if (w == Float)
+            v = Float32Value(v.toNumber());
         lit.value.scalar_ = v;
         MOZ_ASSERT(!lit.isSimd());
         return lit;

@@ -99,11 +99,11 @@
   display: none;
 
   position: absolute;
-  left: calc(50% - 14px);
+  left: calc(50% - 8px);
 
   height: 0;
   width: 0;
-  border: 14px solid hsl(214,13%,24%);
+  border: 8px solid hsl(214,13%,24%);
   border-left-color: transparent;
   border-right-color: transparent;
 }

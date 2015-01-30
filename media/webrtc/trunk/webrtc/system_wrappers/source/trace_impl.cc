@@ -288,10 +288,6 @@ int32_t TraceImpl::AddModuleAndId(char* trace_message,
         sprintf(trace_message, "VIDEO CAPTUR:%5ld %5ld;", id_engine,
                 id_channel);
         break;
-      case kTraceVideoPreocessing:
-        sprintf(trace_message, "  VIDEO PROC:%5ld %5ld;", id_engine,
-                id_channel);
-        break;
       case kTraceRemoteBitrateEstimator:
         sprintf(trace_message, "     BWE RBE:%5ld %5ld;", id_engine,
                 id_channel);
@@ -351,9 +347,6 @@ int32_t TraceImpl::AddModuleAndId(char* trace_message,
         break;
       case kTraceVideoCapture:
         sprintf(trace_message, "VIDEO CAPTUR:%11ld;", idl);
-        break;
-      case kTraceVideoPreocessing:
-        sprintf(trace_message, "  VIDEO PROC:%11ld;", idl);
         break;
       case kTraceRemoteBitrateEstimator:
         sprintf(trace_message, "     BWE RBE:%11ld;", idl);
@@ -615,15 +608,6 @@ void TraceImpl::WriteToFile() {
           message[length] = 0;
           message[length - 1] = '\n';
           trace_file_.Write(message, length);
-          row_count_text_++;
-        }
-        length = AddBuildInfo(message);
-        if (length != -1) {
-          message[length + 1] = 0;
-          message[length] = '\n';
-          message[length - 1] = '\n';
-          trace_file_.Write(message, length + 1);
-          row_count_text_++;
           row_count_text_++;
         }
       }

@@ -150,7 +150,7 @@ void ViEAutoTest::ViENetworkExtendedTest()
             ViETest::Log("On Win7 and late Vista, you need to right click the "
                          "exe and choose");
             ViETest::Log("\"Run as administrator\"\n");
-            getchar();
+            getc(stdin);
         }
         EXPECT_EQ(0, ViE.network->GetSendToS(
             tbChannel.videoChannel, DSCP, useSetSockOpt));  // No ToS set
@@ -390,7 +390,7 @@ void ViEAutoTest::ViENetworkAPITest()
             ViETest::Log("On Win7 and late Vista, you need to right click the "
                          "exe and choose");
             ViETest::Log("\"Run as administrator\"\n");
-            getchar();
+            getc(stdin);
         }
         EXPECT_EQ(0, ViE.network->GetSendToS(
             tbChannel.videoChannel, DSCP, useSetSockOpt));

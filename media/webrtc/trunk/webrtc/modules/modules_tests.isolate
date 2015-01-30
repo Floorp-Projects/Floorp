@@ -8,32 +8,27 @@
 {
   'conditions': [
     ['OS=="android"', {
-      # When doing Android builds, the WebRTC code is put in third_party/webrtc
-      # of a Chromium checkout, this is one level above the standalone build.
       'variables': {
-        'isolate_dependency_untracked': [
-          '../../../data/',
-          '../../../resources/',
+        'files': [
+          '<(DEPTH)/data/',
+          '<(DEPTH)/resources/',
         ],
       },
     }],
     ['OS=="linux" or OS=="mac" or OS=="win"', {
       'variables': {
         'command': [
-          '../../testing/test_env.py',
+          '<(DEPTH)/testing/test_env.py',
           '<(PRODUCT_DIR)/modules_tests<(EXECUTABLE_SUFFIX)',
         ],
-        'isolate_dependency_tracked': [
-          '../../DEPS',
-          '../../resources/audio_coding/testfile32kHz.pcm',
-          '../../resources/audio_coding/teststereo32kHz.pcm',
-          '../../resources/foreman_cif.yuv',
-          '../../resources/paris_qcif.yuv',
-          '../../testing/test_env.py',
+        'files': [
+          '<(DEPTH)/DEPS',
+          '<(DEPTH)/resources/audio_coding/testfile32kHz.pcm',
+          '<(DEPTH)/resources/audio_coding/teststereo32kHz.pcm',
+          '<(DEPTH)/resources/foreman_cif.yuv',
+          '<(DEPTH)/resources/paris_qcif.yuv',
+          '<(DEPTH)/testing/test_env.py',
           '<(PRODUCT_DIR)/modules_tests<(EXECUTABLE_SUFFIX)',
-        ],
-        'isolate_dependency_untracked': [
-          '../../tools/swarming_client/',
         ],
       },
     }],

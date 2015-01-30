@@ -182,8 +182,8 @@ public:
    */
   virtual int FrameSizeChange(unsigned int, unsigned int, unsigned int) MOZ_OVERRIDE;
 
-  virtual int DeliverFrame(unsigned char*,int, uint32_t , int64_t,
-                           void *handle) MOZ_OVERRIDE;
+  virtual int DeliverFrame(unsigned char*, int, uint32_t , int64_t,
+                           int64_t, void *handle) MOZ_OVERRIDE;
 
   /**
    * Does DeliverFrame() support a null buffer and non-null handle
@@ -226,7 +226,8 @@ public:
   WebrtcVideoConduit();
   virtual ~WebrtcVideoConduit();
 
-  MediaConduitErrorCode Init(WebrtcVideoConduit *other);
+  MediaConduitErrorCode Init(WebrtcVideoConduit *other,
+                             bool receiving);
 
   int GetChannel() { return mChannel; }
   webrtc::VideoEngine* GetVideoEngine() { return mVideoEngine; }
