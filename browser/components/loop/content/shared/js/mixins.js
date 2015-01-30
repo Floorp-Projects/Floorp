@@ -157,29 +157,217 @@ loop.shared.mixins = (function() {
    * elements and handling updates of the media containers.
    */
   var MediaSetupMixin = {
+    _videoDimensionsCache: {
+      local: {},
+      remote: {}
+    },
+
     componentDidMount: function() {
-      rootObject.addEventListener('orientationchange', this.updateVideoContainer);
-      rootObject.addEventListener('resize', this.updateVideoContainer);
+      rootObject.addEventListener("orientationchange", this.updateVideoContainer);
+      rootObject.addEventListener("resize", this.updateVideoContainer);
     },
 
     componentWillUnmount: function() {
-      rootObject.removeEventListener('orientationchange', this.updateVideoContainer);
-      rootObject.removeEventListener('resize', this.updateVideoContainer);
+      rootObject.removeEventListener("orientationchange", this.updateVideoContainer);
+      rootObject.removeEventListener("resize", this.updateVideoContainer);
+    },
+
+    /**
+     * Whenever the dimensions change of a video stream, this function is called
+     * by `updateVideoDimensions` to store the new values and notifies the callee
+     * if the dimensions changed compared to the currently stored values.
+     *
+     * @param  {String} which         Type of video stream. May be 'local' or 'remote'
+     * @param  {Object} newDimensions Object containing 'width' and 'height' properties
+     * @return {Boolean}              `true` when the dimensions have changed,
+     *                                `false` if not
+     */
+    _updateDimensionsCache: function(which, newDimensions) {
+      var cache = this._videoDimensionsCache[which];
+      var cacheKeys = Object.keys(cache);
+      var changed = false;
+      Object.keys(newDimensions).forEach(function(videoType) {
+        if (cacheKeys.indexOf(videoType) === -1) {
+          cache[videoType] = newDimensions[videoType];
+          cache[videoType].aspectRatio = this.getAspectRatio(cache[videoType]);
+          changed = true;
+          return;
+        }
+        if (cache[videoType].width !== newDimensions[videoType].width) {
+          cache[videoType].width = newDimensions[videoType].width;
+          changed = true;
+        }
+        if (cache[videoType].height !== newDimensions[videoType].height) {
+          cache[videoType].height = newDimensions[videoType].height;
+          changed = true;
+        }
+        if (changed) {
+          cache[videoType].aspectRatio = this.getAspectRatio(cache[videoType]);
+        }
+      }, this);
+      return changed;
+    },
+
+    /**
+     * Whenever the dimensions change of a video stream, this function is called
+     * to process these changes and possibly trigger an update to the video
+     * container elements.
+     *
+     * @param  {Object} localVideoDimensions  Object containing 'width' and 'height'
+     *                                        properties grouped by stream name
+     * @param  {Object} remoteVideoDimensions Object containing 'width' and 'height'
+     *                                        properties grouped by stream name
+     */
+    updateVideoDimensions: function(localVideoDimensions, remoteVideoDimensions) {
+      var localChanged = this._updateDimensionsCache("local", localVideoDimensions);
+      var remoteChanged = this._updateDimensionsCache("remote", remoteVideoDimensions);
+      if (localChanged || remoteChanged) {
+        this.updateVideoContainer();
+      }
+    },
+
+    /**
+     * Get the aspect ratio of a width/ height pair, which should be the dimensions
+     * of a stream. The returned object is an aspect ratio indexed by 1; the leading
+     * size has a value smaller than 1 and the slave size has a value of 1.
+     * this is exactly the same as notations like 4:3 and 16:9, which are merely
+     * human-readable forms of their fractional counterparts. 4:3 === 1:0.75 and
+     * 16:9 === 1:0.5625.
+     * So we're using the aspect ratios in their original form, because that's
+     * easier to do calculus with.
+     *
+     * Example:
+     * A stream with dimensions `{ width: 640, height: 480 }` yields an indexed
+     * aspect ratio of `{ width: 1, height: 0.75 }`. This means that the 'height'
+     * will determine the value of 'width' when the stream is stretched or shrunk
+     * to fit inside its container element at the maximum size.
+     *
+     * @param  {Object} dimensions Object containing 'width' and 'height' properties
+     * @return {Object}            Contains the indexed aspect ratio for 'width'
+     *                             and 'height' assigned to the corresponding
+     *                             properties.
+     */
+    getAspectRatio: function(dimensions) {
+      if (dimensions.width === dimensions.height) {
+        return {width: 1, height: 1};
+      }
+      var denominator = Math.max(dimensions.width, dimensions.height);
+      return {
+        width: dimensions.width / denominator,
+        height: dimensions.height / denominator
+      };
+    },
+
+    /**
+     * Retrieve the dimensions of the remote video stream.
+     * Example output:
+     *   {
+     *     width: 680,
+     *     height: 480,
+     *     streamWidth: 640,
+     *     streamHeight: 480,
+     *     offsetX: 20,
+     *     offsetY: 0
+     *   }
+     *
+     * Note: Once we support multiple remote video streams, this function will
+     *       need to be updated.
+     * @return {Object} contains the remote stream dimension properties of its
+     *                  container node, the stream itself and offset of the stream
+     *                  relative to its container node in pixels.
+     */
+    getRemoteVideoDimensions: function() {
+      var remoteVideoDimensions;
+
+      Object.keys(this._videoDimensionsCache.remote).forEach(function(videoType) {
+        var node = this._getElement("." + (videoType === "camera" ? "remote" : videoType));
+        var width = node.offsetWidth;
+        // If the width > 0 then we record its real size by taking its aspect
+        // ratio in account. Due to the 'contain' fit-mode, the stream will be
+        // centered inside the video element.
+        // We'll need to deal with more than one remote video stream whenever
+        // that becomes something we need to support.
+        if (width) {
+          remoteVideoDimensions = {
+            width: width,
+            height: node.offsetHeight
+          };
+          var ratio = this._videoDimensionsCache.remote[videoType].aspectRatio;
+          var leadingAxis = Math.min(ratio.width, ratio.height) === ratio.width ?
+            "width" : "height";
+          var slaveSize = remoteVideoDimensions[leadingAxis] +
+            (remoteVideoDimensions[leadingAxis] * (1 - ratio[leadingAxis]));
+          remoteVideoDimensions.streamWidth = leadingAxis === "width" ?
+            remoteVideoDimensions.width : slaveSize;
+          remoteVideoDimensions.streamHeight = leadingAxis === "height" ?
+            remoteVideoDimensions.height: slaveSize;
+        }
+      }, this);
+
+      // Supply some sensible defaults for the remoteVideoDimensions if no remote
+      // stream is connected (yet).
+      if (!remoteVideoDimensions) {
+        var node = this._getElement(".remote");
+        var width = node.offsetWidth;
+        var height = node.offsetHeight;
+        remoteVideoDimensions = {
+          width: width,
+          height: height,
+          streamWidth: width,
+          streamHeight: height
+        };
+      }
+
+      // Calculate the size of each individual letter- or pillarbox for convenience.
+      remoteVideoDimensions.offsetX = remoteVideoDimensions.width -
+        remoteVideoDimensions.streamWidth
+      if (remoteVideoDimensions.offsetX > 0) {
+        remoteVideoDimensions.offsetX /= 2;
+      }
+      remoteVideoDimensions.offsetY = remoteVideoDimensions.height -
+        remoteVideoDimensions.streamHeight;
+      if (remoteVideoDimensions.offsetY > 0) {
+        remoteVideoDimensions.offsetY /= 2;
+      }
+
+      return remoteVideoDimensions;
     },
 
     /**
      * Used to update the video container whenever the orientation or size of the
      * display area changes.
+     *
+     * Buffer the calls to this function to make sure we don't overflow the stack
+     * with update calls when many 'resize' event are fired, to prevent blocking
+     * the event loop.
      */
     updateVideoContainer: function() {
-      var localStreamParent = this._getElement('.local .OT_publisher');
-      var remoteStreamParent = this._getElement('.remote .OT_subscriber');
-      if (localStreamParent) {
-        localStreamParent.style.width = "100%";
+      if (this._bufferedUpdateVideo) {
+        rootObject.clearTimeout(this._bufferedUpdateVideo);
+        this._bufferedUpdateVideo = null;
       }
-      if (remoteStreamParent) {
-        remoteStreamParent.style.height = "100%";
-      }
+
+      this._bufferedUpdateVideo = rootObject.setTimeout(function() {
+        this._bufferedUpdateVideo = null;
+        var localStreamParent = this._getElement(".local .OT_publisher");
+        var remoteStreamParent = this._getElement(".remote .OT_subscriber");
+        if (localStreamParent) {
+          localStreamParent.style.width = "100%";
+        }
+        if (remoteStreamParent) {
+          remoteStreamParent.style.height = "100%";
+        }
+
+        // Update the position and dimensions of the containers of local video
+        // streams, if necessary. The consumer of this mixin should implement the
+        // actual updating mechanism.
+        Object.keys(this._videoDimensionsCache.local).forEach(function(videoType) {
+          var ratio = this._videoDimensionsCache.local[videoType].aspectRatio
+          if (videoType == "camera" && this.updateLocalCameraPosition) {
+            this.updateLocalCameraPosition(ratio);
+          }
+        }, this);
+      }.bind(this), 0);
     },
 
     /**
