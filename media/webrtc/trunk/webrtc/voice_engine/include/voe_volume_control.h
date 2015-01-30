@@ -62,12 +62,6 @@ public:
     // Gets the speaker |volume| level.
     virtual int GetSpeakerVolume(unsigned int& volume) = 0;
 
-    // Mutes the speaker device completely in the operating system.
-    virtual int SetSystemOutputMute(bool enable) = 0;
-
-    // Gets the output device mute state in the operating system.
-    virtual int GetSystemOutputMute(bool &enabled) = 0;
-
     // Sets the microphone volume level. Valid range is [0,255].
     virtual int SetMicVolume(unsigned int volume) = 0;
 
@@ -80,12 +74,6 @@ public:
 
     // Gets the current microphone input mute state.
     virtual int GetInputMute(int channel, bool& enabled) = 0;
-
-    // Mutes the microphone device completely in the operating system.
-    virtual int SetSystemInputMute(bool enable) = 0;
-
-    // Gets the mute state of the input device in the operating system.
-    virtual int GetSystemInputMute(bool& enabled) = 0;
 
     // Gets the microphone speech |level|, mapped non-linearly to the range
     // [0,9].
@@ -116,6 +104,12 @@ public:
 
     // Gets the current left and right scaling factors.
     virtual int GetOutputVolumePan(int channel, float& left, float& right) = 0;
+
+    // Don't use. Will be removed.
+    virtual int SetSystemOutputMute(bool enable) { return -1; }
+    virtual int GetSystemOutputMute(bool &enabled) { return -1; }
+    virtual int SetSystemInputMute(bool enable) { return -1; }
+    virtual int GetSystemInputMute(bool& enabled) { return -1; }
 
 protected:
     VoEVolumeControl() {}

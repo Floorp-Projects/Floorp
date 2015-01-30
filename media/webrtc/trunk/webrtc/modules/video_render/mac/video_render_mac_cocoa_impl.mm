@@ -11,12 +11,11 @@
 #include "webrtc/engine_configurations.h"
 #if defined(COCOA_RENDERING)
 
-#import "cocoa_render_view.h"
-
-#include "video_render_mac_cocoa_impl.h"
-#include "critical_section_wrapper.h"
-#include "video_render_nsopengl.h"
-#include "trace.h"
+#include "webrtc/modules/video_render/mac/cocoa_render_view.h"
+#include "webrtc/modules/video_render/mac/video_render_mac_cocoa_impl.h"
+#include "webrtc/modules/video_render/mac/video_render_nsopengl.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 

@@ -837,7 +837,7 @@ uint8_t VCMLossProtectionLogic::FilteredLoss(
     case kNoFilter:
       break;
     case kAvgFilter:
-      filtered_loss = static_cast<uint8_t> (_lossPr255.Value() + 0.5);
+      filtered_loss = static_cast<uint8_t>(_lossPr255.filtered() + 0.5);
       break;
     case kMaxFilter:
       filtered_loss = MaxFilteredLossPr(nowMs);
@@ -907,8 +907,8 @@ VCMLossProtectionLogic::UpdateMethod()
     _currentParameters.keyFrameSize = _keyFrameSize;
     _currentParameters.fecRateDelta = _fecRateDelta;
     _currentParameters.fecRateKey = _fecRateKey;
-    _currentParameters.packetsPerFrame = _packetsPerFrame.Value();
-    _currentParameters.packetsPerFrameKey = _packetsPerFrameKey.Value();
+    _currentParameters.packetsPerFrame = _packetsPerFrame.filtered();
+    _currentParameters.packetsPerFrameKey = _packetsPerFrameKey.filtered();
     _currentParameters.residualPacketLossFec = _residualPacketLossFec;
     _currentParameters.codecWidth = _codecWidth;
     _currentParameters.codecHeight = _codecHeight;

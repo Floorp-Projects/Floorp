@@ -85,9 +85,9 @@ int WebRtcVad_set_mode_core(VadInstT* self, int mode);
 
 /****************************************************************************
  * WebRtcVad_CalcVad48khz(...)
- * WebRtcVad_CalcVad32khz(...) 
- * WebRtcVad_CalcVad16khz(...) 
- * WebRtcVad_CalcVad8khz(...) 
+ * WebRtcVad_CalcVad32khz(...)
+ * WebRtcVad_CalcVad16khz(...)
+ * WebRtcVad_CalcVad8khz(...)
  *
  * Calculate probability for active speech and make VAD decision.
  *
@@ -103,13 +103,13 @@ int WebRtcVad_set_mode_core(VadInstT* self, int mode);
  *                        0 - No active speech
  *                        1-6 - Active speech
  */
-int WebRtcVad_CalcVad48khz(VadInstT* inst, int16_t* speech_frame,
+int WebRtcVad_CalcVad48khz(VadInstT* inst, const int16_t* speech_frame,
                            int frame_length);
-int WebRtcVad_CalcVad32khz(VadInstT* inst, int16_t* speech_frame,
+int WebRtcVad_CalcVad32khz(VadInstT* inst, const int16_t* speech_frame,
                            int frame_length);
-int WebRtcVad_CalcVad16khz(VadInstT* inst, int16_t* speech_frame,
+int WebRtcVad_CalcVad16khz(VadInstT* inst, const int16_t* speech_frame,
                            int frame_length);
-int WebRtcVad_CalcVad8khz(VadInstT* inst, int16_t* speech_frame,
+int WebRtcVad_CalcVad8khz(VadInstT* inst, const int16_t* speech_frame,
                           int frame_length);
 
 #endif  // WEBRTC_COMMON_AUDIO_VAD_VAD_CORE_H_

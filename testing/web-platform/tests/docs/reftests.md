@@ -55,20 +55,11 @@ test.
 
 In a reftest the test is required to either match or mismatch the
 rendering of the reference file. In order to specify this
-relationship there are two possible options:
+relationship, use a `link` element with `rel="match"` or `rel="mismatch"` and
+`href` attribute pointing to the reference file e.g. `<link
+rel=match href=references/green-box.html>`.
 
-* Give the test file and the reference file the same name but with the
-  reference file having the suffix `-ref` before the file extension
-  e.g. `test.html` and `test-ref.html`. This only works where the test
-  and the ref must match.
-
-* Use a `link` element with `rel="match"` or `rel="mismatch"` and
-  `href` attribute pointing to the reference file e.g. `<link
-  rel=match href=references/green-box.html>`.
-
-In general the second form is more expressive and so preferred. In
-particular it is more conducive to sharing the same reference amongst
-multiple files.
+If possible, share the same reference file amongst multiple tests.
 
 ## Controlling When Comparison Occurs
 

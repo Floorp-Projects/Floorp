@@ -16,8 +16,8 @@
 #include <string>
 
 #include "testing/gmock/include/gmock/gmock.h"
-#include "webrtc/common_video/interface/video_image.h"
 #include "webrtc/typedefs.h"
+#include "webrtc/video_frame.h"
 
 namespace webrtc {
 namespace test {

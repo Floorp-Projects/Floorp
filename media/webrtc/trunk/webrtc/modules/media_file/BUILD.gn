@@ -1,0 +1,51 @@
+# Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("../../build/webrtc.gni")
+
+config("media_file_config") {
+  visibility = [ ":*" ]  # Only targets in this file can depend on this.
+  include_dirs = [
+    "interface",
+    "../interface",
+  ]
+}
+
+source_set("media_file") {
+  sources = [
+    "interface/media_file.h",
+    "interface/media_file_defines.h",
+    "source/avi_file.cc",
+    "source/avi_file.h",
+    "source/media_file_impl.cc",
+    "source/media_file_impl.h",
+    "source/media_file_utility.cc",
+    "source/media_file_utility.h",
+  ]
+
+  if (is_win) {
+    cflags = [
+      # TODO(jschuh): Bug 1348: fix this warning.
+      "/wd4267",  # size_t to int truncations
+    ]
+  }
+
+  configs += [ "../..:common_config" ]
+  public_configs = [
+    "../..:common_inherited_config",
+    ":media_file_config",
+  ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  deps = [ "../../system_wrappers" ]
+}

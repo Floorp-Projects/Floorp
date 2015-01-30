@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    div.test {
+      /* Author expects this to prevent wrapping, and may add
+         "overflow:hidden;text-overflow:ellipsis" for nice effect: */
+      white-space: nowrap;
+
+      width: 200px;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <div class="test">
+    Does This Text Wrap? Does This Text Wrap? Does This Text Wrap?
+    Does This Text Wrap?
+  </div>
+</body>
+</html>

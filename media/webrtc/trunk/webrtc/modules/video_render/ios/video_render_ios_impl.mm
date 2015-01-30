@@ -8,6 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#if !defined(__has_feature) || !__has_feature(objc_arc)
+#error "This file requires ARC support."
+#endif
+
 #include "webrtc/modules/video_render/ios/video_render_ios_impl.h"
 #include "webrtc/modules/video_render/ios/video_render_ios_gles20.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
@@ -33,18 +37,13 @@ VideoRenderIosImpl::VideoRenderIosImpl(const int32_t id,
 
 VideoRenderIosImpl::~VideoRenderIosImpl() {
   delete crit_sec_;
-
-  if (ptr_ios_render_) {
-    delete ptr_ios_render_;
-    ptr_ios_render_ = NULL;
-  }
 }
 
 int32_t VideoRenderIosImpl::Init() {
   CriticalSectionScoped cs(crit_sec_);
 
-  ptr_ios_render_ = new VideoRenderIosGles20(
-      (VideoRenderIosView*)ptr_window_, full_screen_, id_);
+  ptr_ios_render_.reset(new VideoRenderIosGles20(
+      (__bridge VideoRenderIosView*)ptr_window_, full_screen_, id_));
 
   return ptr_ios_render_->Init();
   ;

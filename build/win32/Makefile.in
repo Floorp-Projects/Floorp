@@ -9,6 +9,8 @@ ifdef WIN32_REDIST_DIR
 REDIST_FILES = \
   $(MSVC_C_RUNTIME_DLL) \
   $(MSVC_CXX_RUNTIME_DLL) \
+  $(MSVC_APPCRT_DLL) \
+  $(MSVC_DESKTOPCRT_DLL) \
   $(NULL)
 
 libs-preqs = \

@@ -20,8 +20,9 @@
 
 #include "audio_coding_module.h"
 #include "engine_configurations.h"
-#include "gtest/gtest.h" // TODO (tlegrand): Consider removing usage of gtest.
 #include "rw_lock_wrapper.h"
+// TODO(tlegrand): Consider removing usage of gtest.
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace webrtc {
 
@@ -233,11 +234,11 @@ uint16_t RTPFile::Read(WebRtcRTPHeader* rtpInfo, uint8_t* payloadData,
   if (plen == 0) {
     return 0;
   }
-  if (payloadSize < (lengthBytes - 20)) {
-    return -1;
-  }
   if (lengthBytes < 20) {
-    return -1;
+    return 0;
+  }
+  if (payloadSize < (lengthBytes - 20)) {
+    return 0;
   }
   lengthBytes -= 20;
   EXPECT_EQ(lengthBytes, fread(payloadData, 1, lengthBytes, _rtpFile));

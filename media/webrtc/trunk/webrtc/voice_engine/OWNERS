@@ -2,3 +2,12 @@ henrikg@webrtc.org
 henrika@webrtc.org
 niklas.enbom@webrtc.org
 xians@webrtc.org
+
+per-file *.isolate=kjellander@webrtc.org
+
+# These are for the common case of adding or renaming files. If you're doing
+# structural changes, please get a review from a reviewer in this file.
+per-file *.gyp=*
+per-file *.gypi=*
+
+per-file BUILD.gn=kjellander@webrtc.org

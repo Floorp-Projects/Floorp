@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_render//incoming_video_stream.h"
+#include "webrtc/modules/video_render/incoming_video_stream.h"
 
 #include <assert.h>
 
@@ -22,7 +22,7 @@
 #endif
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/modules/video_render//video_render_frames.h"
+#include "webrtc/modules/video_render/video_render_frames.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"

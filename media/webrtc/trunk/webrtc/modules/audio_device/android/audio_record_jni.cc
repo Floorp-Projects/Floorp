@@ -592,12 +592,6 @@ int32_t AudioRecordJni::SetAGC(bool enable) {
   return 0;
 }
 
-int32_t AudioRecordJni::MicrophoneIsAvailable(bool& available) {  // NOLINT
-  // We always assume it's available
-  available = true;
-  return 0;
-}
-
 int32_t AudioRecordJni::InitMicrophone() {
   CriticalSectionScoped lock(&_critSect);
 

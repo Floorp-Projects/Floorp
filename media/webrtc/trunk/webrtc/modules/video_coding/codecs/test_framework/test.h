@@ -41,7 +41,7 @@ protected:
     virtual void Teardown();
     double ActualBitRate(int nFrames);
     virtual bool PacketLoss(double lossRate, int /*thrown*/);
-    static double RandUniform() { return (std::rand() + 1.0)/(RAND_MAX + 1.0); }
+    static double RandUniform() { return (rand() + 1.0)/(RAND_MAX + 1.0); }
     static void VideoEncodedBufferToEncodedImage(
         webrtc::VideoFrame& videoBuffer,
         webrtc::EncodedImage &image);

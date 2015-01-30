@@ -103,8 +103,8 @@ enum ViEErrors {
   kViEImageProcessInvalidCaptureId,          // No capture device exist with the provided capture id.
   kViEImageProcessFilterExists,              // RegisterCaptureEffectFilter,RegisterSendEffectFilter,RegisterRenderEffectFilter - Effect filter already registered.
   kViEImageProcessFilterDoesNotExist,        // DeRegisterCaptureEffectFilter,DeRegisterSendEffectFilter,DeRegisterRenderEffectFilter - Effect filter not registered.
-  kViEImageProcessAlreadyEnabled,            // EnableDeflickering,EnableDenoising,EnableColorEnhancement- Function already enabled.
-  kViEImageProcessAlreadyDisabled,           // EnableDeflickering,EnableDenoising,EnableColorEnhancement- Function already disabled.
+  kViEImageProcessAlreadyEnabled,            // EnableDeflickering,EnableColorEnhancement- Function already enabled.
+  kViEImageProcessAlreadyDisabled,           // EnableDeflickering,EnableColorEnhancement- Function already disabled.
   kViEImageProcessUnknownError               // An unknown error has occurred. Check the log file.
 };
 

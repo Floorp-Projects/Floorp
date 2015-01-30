@@ -29,7 +29,7 @@ using namespace webrtc;
 
 int CodecDataBaseTest::RunTest(CmdArgs& args)
 {
-    VideoCodingModule* vcm = VideoCodingModule::Create(1);
+    VideoCodingModule* vcm = VideoCodingModule::Create();
     CodecDataBaseTest* cdbt = new CodecDataBaseTest(vcm);
     cdbt->Perform(args);
     VideoCodingModule::Destroy(vcm);
@@ -129,8 +129,7 @@ CodecDataBaseTest::Perform(CmdArgs& args)
     sourceFrame.set_timestamp(_timeStamp);
     // Encoder registration
     TEST (VideoCodingModule::NumberOfCodecs() > 0);
-    TEST(VideoCodingModule::Codec(-1, &sendCodec) < 0);
-    TEST(VideoCodingModule::Codec(VideoCodingModule::NumberOfCodecs() + 1,
+    TEST(VideoCodingModule::Codec(VideoCodingModule::NumberOfCodecs() + 1u,
                                   &sendCodec) < 0);
     VideoCodingModule::Codec(1, &sendCodec);
     sendCodec.plType = 0; // random value

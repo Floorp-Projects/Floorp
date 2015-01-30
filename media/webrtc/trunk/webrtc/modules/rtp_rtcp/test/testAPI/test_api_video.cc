@@ -28,7 +28,7 @@ class RtpRtcpVideoTest : public ::testing::Test {
  protected:
   RtpRtcpVideoTest()
       : test_id_(123),
-        rtp_payload_registry_(0, RTPPayloadStrategy::CreateStrategy(false)),
+        rtp_payload_registry_(RTPPayloadStrategy::CreateStrategy(false)),
         test_ssrc_(3456),
         test_timestamp_(4567),
         test_sequence_number_(2345),
@@ -51,7 +51,7 @@ class RtpRtcpVideoTest : public ::testing::Test {
         test_id_, &fake_clock, receiver_, NULL, &rtp_payload_registry_));
 
     EXPECT_EQ(0, video_module_->SetRTCPStatus(kRtcpCompound));
-    EXPECT_EQ(0, video_module_->SetSSRC(test_ssrc_));
+    video_module_->SetSSRC(test_ssrc_);
     rtp_receiver_->SetNACKStatus(kNackRtcp);
     EXPECT_EQ(0, video_module_->SetStorePacketsStatus(true, 600));
     EXPECT_EQ(0, video_module_->SetSendingStatus(true));
@@ -83,11 +83,9 @@ class RtpRtcpVideoTest : public ::testing::Test {
                                uint32_t sequence_number) {
     dataBuffer[0] = static_cast<uint8_t>(0x80);  // version 2
     dataBuffer[1] = static_cast<uint8_t>(kPayloadType);
-    ModuleRTPUtility::AssignUWord16ToBuffer(dataBuffer + 2,
-                                                    sequence_number);
-    ModuleRTPUtility::AssignUWord32ToBuffer(dataBuffer + 4, timestamp);
-    ModuleRTPUtility::AssignUWord32ToBuffer(dataBuffer + 8,
-                                                    0x1234);  // SSRC.
+    RtpUtility::AssignUWord16ToBuffer(dataBuffer + 2, sequence_number);
+    RtpUtility::AssignUWord32ToBuffer(dataBuffer + 4, timestamp);
+    RtpUtility::AssignUWord32ToBuffer(dataBuffer + 8, 0x1234);  // SSRC.
     int32_t rtpHeaderLength = 12;
     return rtpHeaderLength;
   }

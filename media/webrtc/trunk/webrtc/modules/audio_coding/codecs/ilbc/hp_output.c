@@ -65,7 +65,7 @@ void WebRtcIlbcfix_HpOutput(
     tmpW32b = WEBRTC_SPL_SAT((int32_t)67108863, tmpW32b, (int32_t)-67108864);
 
     /* Convert back to Q0 and multiply with 2 */
-    signal[i] = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmpW32b, 11);
+    signal[i] = (int16_t)(tmpW32b >> 11);
 
     /* Update state (filtered part) */
     y[2] = y[0];

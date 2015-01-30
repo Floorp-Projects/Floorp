@@ -54,13 +54,13 @@ int16_t WebRtcIsacfix_DecodeImpl(int16_t       *signal_out16,
   int16_t AvgPitchGain_Q12;
 
   int16_t tmp_1, tmp_2;
-  int32_t tmp32a, tmp32b;
+  int32_t tmp32a;
   int16_t gainQ13;
 
 
   int16_t frame_nb; /* counter */
-  int16_t frame_mode; /* 0 for 20ms and 30ms, 1 for 60ms */
-  int16_t processed_samples;
+  int16_t frame_mode; /* 0 for 30ms, 1 for 60ms */
+  static const int16_t kProcessedSamples = 480; /* 480 (for both 30, 60 ms) */
 
   /* PLC */
   int16_t overlapWin[ 240 ];
@@ -76,14 +76,14 @@ int16_t WebRtcIsacfix_DecodeImpl(int16_t       *signal_out16,
   if (err<0)  // error check
     return err;
 
-  frame_mode = (int16_t)WEBRTC_SPL_DIV(*current_framesamples, MAX_FRAMESAMPLES); /* 0, or 1 */
-  processed_samples = (int16_t)WEBRTC_SPL_DIV(*current_framesamples, frame_mode+1); /* either 320 (20ms) or 480 (30, 60 ms) */
+  frame_mode = *current_framesamples / MAX_FRAMESAMPLES;  /* 0, or 1 */
 
   err = WebRtcIsacfix_DecodeSendBandwidth(&ISACdec_obj->bitstr_obj, &BWno);
   if (err<0)  // error check
     return err;
 
-  /* one loop if it's one frame (20 or 30ms), 2 loops if 2 frames bundled together (60ms) */
+  /* one loop if it's one frame (30ms), two loops if two frames bundled together
+   * (60ms) */
   for (frame_nb = 0; frame_nb <= frame_mode; frame_nb++) {
 
     /* decode & dequantize pitch parameters */
@@ -113,7 +113,8 @@ int16_t WebRtcIsacfix_DecodeImpl(int16_t       *signal_out16,
     WebRtcIsacfix_Spec2Time(Vector_Word16_1, Vector_Word16_2, Vector_Word32_1, Vector_Word32_2);
 
     for (k=0; k<FRAMESAMPLES/2; k++) {
-      Vector_Word16_1[k] = (int16_t)WEBRTC_SPL_RSHIFT_W32(Vector_Word32_1[k]+64, 7); //Q16 -> Q9
+      // Q16 -> Q9.
+      Vector_Word16_1[k] = (int16_t)((Vector_Word32_1[k] + 64) >> 7);
     }
 
     /* ----  If this is recovery frame ---- */
@@ -134,7 +135,7 @@ int16_t WebRtcIsacfix_DecodeImpl(int16_t       *signal_out16,
       /* ---- Add-overlap ---- */
       WebRtcSpl_GetHanningWindow( overlapWin, RECOVERY_OVERLAP );
       for( k = 0; k < RECOVERY_OVERLAP; k++ )
-        Vector_Word16_1[k] = WEBRTC_SPL_ADD_SAT_W16(
+        Vector_Word16_1[k] = WebRtcSpl_AddSatW16(
             (int16_t)WEBRTC_SPL_MUL_16_16_RSFT( (ISACdec_obj->plcstr_obj).overlapLP[k], overlapWin[RECOVERY_OVERLAP - k - 1], 14),
             (int16_t)WEBRTC_SPL_MUL_16_16_RSFT( Vector_Word16_1[k], overlapWin[k], 14) );
 
@@ -176,8 +177,7 @@ int16_t WebRtcIsacfix_DecodeImpl(int16_t       *signal_out16,
     /* reduce gain to compensate for pitch enhancer */
     /* gain = 1.0f - 0.45f * AvgPitchGain; */
     tmp32a = WEBRTC_SPL_MUL_16_16_RSFT(AvgPitchGain_Q12, 29, 0); // Q18
-    tmp32b = 262144 - tmp32a;  // Q18
-    gainQ13 = (int16_t) WEBRTC_SPL_RSHIFT_W32(tmp32b, 5); // Q13
+    gainQ13 = (int16_t)((262144 - tmp32a) >> 5);  // Q18 -> Q13.
 
     for (k = 0; k < FRAMESAMPLES/2; k++)
     {
@@ -210,7 +210,10 @@ int16_t WebRtcIsacfix_DecodeImpl(int16_t       *signal_out16,
       Vector_Word16_2[k] = tmp_2;
     }
 
-    WebRtcIsacfix_FilterAndCombine1(Vector_Word16_1, Vector_Word16_2, signal_out16 + frame_nb * processed_samples, &ISACdec_obj->postfiltbankstr_obj);
+    WebRtcIsacfix_FilterAndCombine1(Vector_Word16_1,
+                                    Vector_Word16_2,
+                                    signal_out16 + frame_nb * kProcessedSamples,
+                                    &ISACdec_obj->postfiltbankstr_obj);
 
   }
   return len;

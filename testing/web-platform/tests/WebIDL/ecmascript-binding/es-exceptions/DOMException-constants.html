@@ -45,10 +45,13 @@ test(function() {
       var object = o[0], description = o[1];
       test(function() {
         assert_equals(object[name], i + 1, name)
+        assert_own_property(object, name)
         var pd = Object.getOwnPropertyDescriptor(object, name)
-        assert_equals(pd.writable, false, "not writable")
-        assert_equals(pd.enumerable, true, "enumerable")
-        assert_equals(pd.configurable, false, "not configurable")
+        assert_false("get" in pd, "property has getter")
+        assert_false("set" in pd, "property has setter")
+        assert_false(pd.writable, "not writable")
+        assert_true(pd.enumerable, "enumerable")
+        assert_false(pd.configurable, "not configurable")
       }, "Constant " + name + " on " + description)
     })
   })
