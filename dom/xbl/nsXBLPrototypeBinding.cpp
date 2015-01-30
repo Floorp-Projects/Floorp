@@ -1264,7 +1264,6 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
     nsIURI* documentURI = aDocument->GetDocumentURI();
 
     nsRefPtr<nsXULPrototypeElement> prototype = new nsXULPrototypeElement();
-    NS_ENSURE_TRUE(prototype, NS_ERROR_OUT_OF_MEMORY);
 
     prototype->mNodeInfo = nodeInfo;
 
