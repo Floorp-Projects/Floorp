@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1127206
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1127206</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1127206 **/
+  SimpleTest.waitForExplicitFinish();
+  var blob = new Blob([
+    `try { new File({}); }
+     catch (e) {
+       postMessage("throwing on random object");
+     }
+     try { new File(new Blob(["abc"])); }
+     catch (e)  {
+       postMessage("throwing on Blob");
+     }
+     try { new File("abc"); }
+     catch (e) {
+       postMessage("throwing on string");
+     }
+     postMessage('finishTest')`]);
+  var url = URL.createObjectURL(blob);
+  var w = new Worker(url);
+  var expectedResults = [
+    "throwing on random object",
+    "throwing on Blob",
+    "throwing on string",
+  ];
+  var curIndex = 0;
+  w.onmessage = function(e) {
+    if (curIndex == expectedResults.length) {
+      is(e.data, "finishTest", "What message is this?");
+      SimpleTest.finish();
+    } else {
+      is(e.data, expectedResults[curIndex],
+         "Message " + (curIndex+1) + " should be correct");
+      ++curIndex;
+    }
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1127206">Mozilla Bug 1127206</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
