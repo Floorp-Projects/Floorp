@@ -401,7 +401,7 @@ public:
    * False on Windows 7
    * UNTESTED ON OTHER PLATFORMS
    */
-#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_COCOA)
+#if defined(MOZ_WIDGET_GONK) || defined(XP_DARWIN)
   static TimeStamp FromSystemTime(int64_t aSystemTime)
   {
     static_assert(sizeof(aSystemTime) == sizeof(TimeStampValue),
