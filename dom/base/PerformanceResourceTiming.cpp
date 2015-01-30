@@ -23,9 +23,8 @@ NS_IMPL_ADDREF_INHERITED(PerformanceResourceTiming, PerformanceEntry)
 NS_IMPL_RELEASE_INHERITED(PerformanceResourceTiming, PerformanceEntry)
 
 PerformanceResourceTiming::PerformanceResourceTiming(nsPerformanceTiming* aPerformanceTiming,
-                                                     nsPerformance* aPerformance,
-                                                     const nsAString& aName)
-: PerformanceEntry(aPerformance, aName, NS_LITERAL_STRING("resource")),
+                                                     nsPerformance* aPerformance)
+: PerformanceEntry(aPerformance),
   mTiming(aPerformanceTiming)
 {
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
