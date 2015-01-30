@@ -224,7 +224,9 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @private
      */
     _onActiveRoomStateChanged: function() {
-      this.setState(this.props.activeRoomStore.getStoreState());
+      var state = this.props.activeRoomStore.getStoreState();
+      this.updateVideoDimensions(state.localVideoDimensions, state.remoteVideoDimensions);
+      this.setState(state);
     },
 
     componentDidMount: function() {
@@ -281,6 +283,41 @@ loop.standaloneRoomViews = (function(mozL10n) {
         type: type,
         enabled: enabled
       }));
+    },
+
+    /**
+     * Specifically updates the local camera stream size and position, depending
+     * on the size and position of the remote video stream.
+     * This method gets called from `updateVideoContainer`, which is defined in
+     * the `MediaSetupMixin`.
+     *
+     * @param  {Object} ratio Aspect ratio of the local camera stream
+     */
+    updateLocalCameraPosition: function(ratio) {
+      var node = this._getElement(".local");
+      var parent = node.offsetParent || this._getElement(".media");
+      // The local camera view should be a sixth of the size of its offset parent
+      // and positioned to overlap with the remote stream at a quarter of its width.
+      var parentWidth = parent.offsetWidth;
+      var targetWidth = parentWidth / 6;
+
+      node.style.right = "auto";
+      if (window.matchMedia && window.matchMedia("screen and (max-width:640px)").matches) {
+        targetWidth = 180;
+        node.style.left = "auto";
+      } else {
+        // Now position the local camera view correctly with respect to the remote
+        // video stream.
+        var remoteVideoDimensions = this.getRemoteVideoDimensions();
+        var offsetX = (remoteVideoDimensions.streamWidth + remoteVideoDimensions.offsetX);
+        // The horizontal offset of the stream, and the width of the resulting
+        // pillarbox, is determined by the height exponent of the aspect ratio.
+        // Therefore we multiply the width of the local camera view by the height
+        // ratio.
+        node.style.left = (offsetX - ((targetWidth * ratio.height) / 4)) + "px";
+      }
+      node.style.width = (targetWidth * ratio.width) + "px";
+      node.style.height = (targetWidth * ratio.height) + "px";
     },
 
     /**

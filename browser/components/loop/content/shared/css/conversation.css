@@ -3,11 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Shared conversation window styles */
-.standalone .video-layout-wrapper,
-.conversation .media video {
-  background-color: #444;
-}
-
 .conversation {
   position: relative;
 }
@@ -673,7 +668,6 @@ html, .fx-embedded, #main,
   }
 
   .standalone {
-    max-width: 1000px;
     margin: 0 auto;
   }
 }
@@ -905,11 +899,6 @@ html, .fx-embedded, #main,
   width: 75%;
 }
 
-.standalone .room-conversation .local-stream {
-  width: 33%;
-  height: 26.5%;
-}
-
 .standalone .room-conversation .conversation-toolbar {
   background: #000;
   border: none;
@@ -944,11 +933,6 @@ html, .fx-embedded, #main,
   }
   .standalone .room-conversation .video_wrapper.remote_wrapper {
     width: 100%;
-  }
-  .standalone .room-conversation .local-stream {
-    /* Assumes 4:3 aspect ratio */
-    width: 180px;
-    height: 135px;
   }
   .standalone .conversation-toolbar {
     height: 38px;
