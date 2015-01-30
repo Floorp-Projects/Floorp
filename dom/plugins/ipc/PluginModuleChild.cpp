@@ -2091,7 +2091,7 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
 #ifdef OS_WIN
     if (specialType == nsPluginHost::eSpecialType_Flash) {
         mQuirks |= QUIRK_WINLESS_TRACKPOPUP_HOOK;
-        mQuirks |= QUIRK_FLASH_THROTTLE_WMUSER_EVENTS; 
+        mQuirks |= QUIRK_FLASH_THROTTLE_WMUSER_EVENTS;
         mQuirks |= QUIRK_FLASH_HOOK_SETLONGPTR;
         mQuirks |= QUIRK_FLASH_HOOK_GETWINDOWINFO;
         mQuirks |= QUIRK_FLASH_FIXUP_MOUSE_CAPTURE;
@@ -2100,7 +2100,7 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
     // QuickTime plugin usually loaded with audio/mpeg mimetype
     NS_NAMED_LITERAL_CSTRING(quicktime, "npqtplugin");
     if (FindInReadable(quicktime, mPluginFilename)) {
-      mQuirks |= QUIRK_QUICKTIME_AVOID_SETWINDOW;
+        mQuirks |= QUIRK_QUICKTIME_AVOID_SETWINDOW;
     }
 #endif
 
