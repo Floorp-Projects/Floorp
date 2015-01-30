@@ -626,7 +626,7 @@ File::Constructor(const GlobalObject& aGlobal,
                   const ChromeFilePropertyBag& aBag,
                   ErrorResult& aRv)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
+  if (!nsContentUtils::ThreadsafeIsCallerChrome()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
@@ -648,6 +648,7 @@ File::Constructor(const GlobalObject& aGlobal,
                   const ChromeFilePropertyBag& aBag,
                   ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!nsContentUtils::IsCallerChrome()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -672,7 +673,7 @@ File::Constructor(const GlobalObject& aGlobal,
                   const ChromeFilePropertyBag& aBag,
                   ErrorResult& aRv)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
+  if (!nsContentUtils::ThreadsafeIsCallerChrome()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
