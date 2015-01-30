@@ -56,7 +56,7 @@ class FakeVoEExternalMedia : public VoEExternalMedia {
                    int samples_per_channel, int sample_rate_hz,
                    int num_channels) {
     const int length = samples_per_channel * num_channels;
-    scoped_array<int16_t> data;
+    scoped_ptr<int16_t[]> data;
     if (!audio) {
       data.reset(new int16_t[length]);
       memset(data.get(), 0, length * sizeof(data[0]));

@@ -130,66 +130,31 @@ TEST_F(CodecTest, VoiceActivityDetectionCanBeTurnedOff) {
   EXPECT_EQ(webrtc::kVadConventional, vad_mode);
 }
 
-// Tests requiring manual verification (although they do have some value
-// without the manual verification):
-TEST_F(CodecTest, ManualExtendedISACApisBehaveAsExpected) {
-   strcpy(codec_instance_.plname, "isac");
-   codec_instance_.pltype = 103;
-   codec_instance_.plfreq = 16000;
-   codec_instance_.channels = 1;
-   // -1 here means "adaptive rate".
-   codec_instance_.rate = -1;
-   codec_instance_.pacsize = 480;
+TEST_F(CodecTest, OpusMaxPlaybackRateCanBeSet) {
+  for (int i = 0; i < voe_codec_->NumOfCodecs(); ++i) {
+    voe_codec_->GetCodec(i, codec_instance_);
+    if (_stricmp("opus", codec_instance_.plname)) {
+      continue;
+    }
+    voe_codec_->SetSendCodec(channel_, codec_instance_);
+    // SetOpusMaxPlaybackRate can handle any integer as the bandwidth. Following
+    // tests some most commonly used numbers.
+    EXPECT_EQ(0, voe_codec_->SetOpusMaxPlaybackRate(channel_, 48000));
+    EXPECT_EQ(0, voe_codec_->SetOpusMaxPlaybackRate(channel_, 32000));
+    EXPECT_EQ(0, voe_codec_->SetOpusMaxPlaybackRate(channel_, 16000));
+    EXPECT_EQ(0, voe_codec_->SetOpusMaxPlaybackRate(channel_, 8000));
+  }
+}
 
-   EXPECT_EQ(0, voe_codec_->SetSendCodec(channel_, codec_instance_));
-
-   EXPECT_NE(0, voe_codec_->SetISACInitTargetRate(channel_, 5000)) <<
-       "iSAC should reject rate 5000.";
-   EXPECT_NE(0, voe_codec_->SetISACInitTargetRate(channel_, 33000)) <<
-       "iSAC should reject rate 33000.";
-   EXPECT_EQ(0, voe_codec_->SetISACInitTargetRate(channel_, 32000));
-
-   TEST_LOG("Ensure that the sound is good (iSAC, target = 32kbps)...\n");
-   Sleep(3000);
-
-   EXPECT_EQ(0, voe_codec_->SetISACInitTargetRate(channel_, 10000));
-   TEST_LOG("Ensure that the sound is good (iSAC, target = 10kbps)...\n");
-   Sleep(3000);
-
-   EXPECT_EQ(0, voe_codec_->SetISACInitTargetRate(channel_, 10000, true));
-   EXPECT_EQ(0, voe_codec_->SetISACInitTargetRate(channel_, 10000, false));
-   EXPECT_EQ(0, voe_codec_->SetISACInitTargetRate(channel_, 0));
-   TEST_LOG("Ensure that the sound is good (iSAC, target = default)...\n");
-   Sleep(3000);
-
-   TEST_LOG("  Testing SetISACMaxPayloadSize:\n");
-   EXPECT_EQ(0, voe_base_->StopSend(channel_));
-   EXPECT_NE(0, voe_codec_->SetISACMaxPayloadSize(channel_, 50));
-   EXPECT_NE(0, voe_codec_->SetISACMaxPayloadSize(channel_, 650));
-   EXPECT_EQ(0, voe_codec_->SetISACMaxPayloadSize(channel_, 120));
-   EXPECT_EQ(0, voe_base_->StartSend(channel_));
-   TEST_LOG("Ensure that the sound is good (iSAC, "
-            "max payload size = 100 bytes)...\n");
-   Sleep(3000);
-
-   TEST_LOG("  Testing SetISACMaxRate:\n");
-   EXPECT_EQ(0, voe_base_->StopSend(channel_));
-   EXPECT_EQ(0, voe_codec_->SetISACMaxPayloadSize(channel_, 400));
-   EXPECT_EQ(0, voe_base_->StartSend(channel_));
-
-   EXPECT_EQ(0, voe_base_->StopSend(channel_));
-   EXPECT_NE(0, voe_codec_->SetISACMaxRate(channel_, 31900));
-   EXPECT_NE(0, voe_codec_->SetISACMaxRate(channel_, 53500));
-   EXPECT_EQ(0, voe_codec_->SetISACMaxRate(channel_, 32000));
-   EXPECT_EQ(0, voe_base_->StartSend(channel_));
-   TEST_LOG("Ensure that the sound is good (iSAC, max rate = 32 kbps)...\n");
-   Sleep(3000);
-
-   EXPECT_EQ(0, voe_base_->StopSend(channel_));
-
-   // Restore "no limitation". No, no limit, we reach for the sky.
-   EXPECT_EQ(0, voe_codec_->SetISACMaxRate(channel_, 53400));
-   EXPECT_EQ(0, voe_base_->StartSend(channel_));
+TEST_F(CodecTest, OpusMaxPlaybackRateCannotBeSetForNonOpus) {
+  for (int i = 0; i < voe_codec_->NumOfCodecs(); ++i) {
+    voe_codec_->GetCodec(i, codec_instance_);
+    if (!_stricmp("opus", codec_instance_.plname)) {
+      continue;
+    }
+    voe_codec_->SetSendCodec(channel_, codec_instance_);
+    EXPECT_EQ(-1, voe_codec_->SetOpusMaxPlaybackRate(channel_, 16000));
+  }
 }
 
 // TODO(xians, phoglund): Re-enable when issue 372 is resolved.

@@ -11,7 +11,7 @@
 #ifndef MODULES_AUDIO_CODING_CODECS_G711_MAIN_INTERFACE_G711_INTERFACE_H_
 #define MODULES_AUDIO_CODING_CODECS_G711_MAIN_INTERFACE_G711_INTERFACE_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 // Comfort noise constants
 #define G711_WEBRTC_SPEECH 1
@@ -28,8 +28,6 @@ extern "C" {
  * Input speech length has be of any length.
  *
  * Input:
- *      - state              : Dummy state to make this codec look more like
- *                             other codecs
  *      - speechIn           : Input speech vector
  *      - len                : Samples in speechIn
  *
@@ -40,8 +38,7 @@ extern "C" {
  *                             -1 - Error
  */
 
-int16_t WebRtcG711_EncodeA(void* state,
-                           int16_t* speechIn,
+int16_t WebRtcG711_EncodeA(int16_t* speechIn,
                            int16_t len,
                            int16_t* encoded);
 
@@ -52,8 +49,6 @@ int16_t WebRtcG711_EncodeA(void* state,
  * Input speech length has be of any length.
  *
  * Input:
- *      - state              : Dummy state to make this codec look more like
- *                             other codecs
  *      - speechIn           : Input speech vector
  *      - len                : Samples in speechIn
  *
@@ -64,8 +59,7 @@ int16_t WebRtcG711_EncodeA(void* state,
  *                             -1 - Error
  */
 
-int16_t WebRtcG711_EncodeU(void* state,
-                           int16_t* speechIn,
+int16_t WebRtcG711_EncodeU(int16_t* speechIn,
                            int16_t len,
                            int16_t* encoded);
 
@@ -75,8 +69,6 @@ int16_t WebRtcG711_EncodeU(void* state,
  * This function decodes a packet G711 A-law frame.
  *
  * Input:
- *      - state              : Dummy state to make this codec look more like
- *                             other codecs
  *      - encoded            : Encoded data
  *      - len                : Bytes in encoded vector
  *
@@ -90,8 +82,7 @@ int16_t WebRtcG711_EncodeU(void* state,
  *                             -1 - Error
  */
 
-int16_t WebRtcG711_DecodeA(void* state,
-                           int16_t* encoded,
+int16_t WebRtcG711_DecodeA(int16_t* encoded,
                            int16_t len,
                            int16_t* decoded,
                            int16_t* speechType);
@@ -102,8 +93,6 @@ int16_t WebRtcG711_DecodeA(void* state,
  * This function decodes a packet G711 U-law frame.
  *
  * Input:
- *      - state              : Dummy state to make this codec look more like
- *                             other codecs
  *      - encoded            : Encoded data
  *      - len                : Bytes in encoded vector
  *
@@ -117,8 +106,7 @@ int16_t WebRtcG711_DecodeA(void* state,
  *                             -1 - Error
  */
 
-int16_t WebRtcG711_DecodeU(void* state,
-                           int16_t* encoded,
+int16_t WebRtcG711_DecodeU(int16_t* encoded,
                            int16_t len,
                            int16_t* decoded,
                            int16_t* speechType);
@@ -129,8 +117,6 @@ int16_t WebRtcG711_DecodeU(void* state,
  * This function estimates the duration of a G711 packet in samples.
  *
  * Input:
- *      - state              : Dummy state to make this codec look more like
- *                             other codecs
  *      - payload            : Encoded data
  *      - payloadLengthBytes : Bytes in encoded vector
  *
@@ -139,8 +125,7 @@ int16_t WebRtcG711_DecodeU(void* state,
  *                             byte per sample.
  */
 
-int WebRtcG711_DurationEst(void* state,
-                           const uint8_t* payload,
+int WebRtcG711_DurationEst(const uint8_t* payload,
                            int payload_length_bytes);
 
 /**********************************************************************

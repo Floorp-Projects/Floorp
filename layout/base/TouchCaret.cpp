@@ -458,7 +458,8 @@ TouchCaret::IsDisplayable()
     return false;
   }
 
-  if (!nsLayoutUtils::IsRectVisibleInScrollFrames(focusFrame, focusRect)) {
+  if (mState != TOUCHCARET_TOUCHDRAG_ACTIVE &&
+        !nsLayoutUtils::IsRectVisibleInScrollFrames(focusFrame, focusRect)) {
     TOUCHCARET_LOG("Caret does not show in the scrollable frame!");
     return false;
   }

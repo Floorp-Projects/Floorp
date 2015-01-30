@@ -61,7 +61,7 @@ void RedPacket::CreateHeader(const uint8_t* rtp_header, int header_length,
 
 void RedPacket::SetSeqNum(int seq_num) {
   assert(seq_num >= 0 && seq_num < (1<<16));
-  ModuleRTPUtility::AssignUWord16ToBuffer(&data_[2], seq_num);
+  RtpUtility::AssignUWord16ToBuffer(&data_[2], seq_num);
 }
 
 void RedPacket::AssignPayload(const uint8_t* payload, int length) {

@@ -46,8 +46,8 @@ MediaEngineWebRTCVideoSource::FrameSizeChange(
 // ViEExternalRenderer Callback. Process every incoming frame here.
 int
 MediaEngineWebRTCVideoSource::DeliverFrame(
-   unsigned char* buffer, int size, uint32_t time_stamp, int64_t render_time,
-   void *handle)
+   unsigned char* buffer, int size, uint32_t time_stamp,
+   int64_t ntp_time_ms, int64_t render_time, void *handle)
 {
   // Check for proper state.
   if (mState != kStarted) {
@@ -87,8 +87,8 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
 
 #ifdef DEBUG
   static uint32_t frame_num = 0;
-  LOGFRAME(("frame %d (%dx%d); timestamp %u, render_time %lu", frame_num++,
-            mWidth, mHeight, time_stamp, render_time));
+  LOGFRAME(("frame %d (%dx%d); timestamp %u, ntp_time %lu, render_time %lu", frame_num++,
+            mWidth, mHeight, time_stamp, ntp_time_ms, render_time));
 #endif
 
   // we don't touch anything in 'this' until here (except for snapshot,

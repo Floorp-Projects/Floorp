@@ -17,6 +17,7 @@
             'video_codecs_test_framework',
             'webrtc_video_coding',
             '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
+            '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers_default',
             '<(webrtc_root)/test/metrics.gyp:metrics',
             '<(webrtc_vp8_dir)/vp8.gyp:webrtc_vp8',
           ],

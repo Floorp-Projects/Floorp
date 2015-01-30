@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -18,10 +19,16 @@
 #include "webrtc/tools/frame_analyzer/video_quality_analysis.h"
 #include "webrtc/tools/simple_command_line_parser.h"
 
+#define MAX_NUM_FRAMES_PER_FILE INT_MAX
+
 void CompareFiles(const char* reference_file_name, const char* test_file_name,
                   const char* results_file_name, int width, int height) {
-  FILE* ref_file = fopen(reference_file_name, "rb");
-  FILE* test_file = fopen(test_file_name, "rb");
+  // Check if the reference_file_name ends with "y4m".
+  bool y4m_mode = false;
+  if (std::string(reference_file_name).find("y4m") != std::string::npos){
+    y4m_mode = true;
+  }
+
   FILE* results_file = fopen(results_file_name, "w");
 
   int size = webrtc::test::GetI420FrameSize(width, height);
@@ -30,10 +37,19 @@ void CompareFiles(const char* reference_file_name, const char* test_file_name,
   uint8* test_frame = new uint8[size];
   uint8* ref_frame = new uint8[size];
 
-  int frame_counter = 0;
+  bool read_result = true;
+  for(int frame_counter = 0; frame_counter < MAX_NUM_FRAMES_PER_FILE;
+      ++frame_counter){
+    read_result &= (y4m_mode) ? webrtc::test::ExtractFrameFromY4mFile(
+        reference_file_name, width, height, frame_counter, ref_frame):
+        webrtc::test::ExtractFrameFromYuvFile(reference_file_name, width,
+                                              height, frame_counter, ref_frame);
+    read_result &=  webrtc::test::ExtractFrameFromYuvFile(test_file_name, width,
+        height, frame_counter, test_frame);
 
-  while (webrtc::test::GetNextI420Frame(ref_file, width, height, ref_frame) &&
-         webrtc::test::GetNextI420Frame(test_file, width, height, test_frame)) {
+    if (!read_result)
+      break;
+
     // Calculate the PSNR and SSIM.
     double result_psnr = webrtc::test::CalculateMetrics(
         webrtc::test::kPSNR, ref_frame, test_frame, width, height);
@@ -41,13 +57,10 @@ void CompareFiles(const char* reference_file_name, const char* test_file_name,
         webrtc::test::kSSIM, ref_frame, test_frame, width, height);
     fprintf(results_file, "Frame: %d, PSNR: %f, SSIM: %f\n", frame_counter,
             result_psnr, result_ssim);
-    ++frame_counter;
   }
   delete[] test_frame;
   delete[] ref_frame;
 
-  fclose(ref_file);
-  fclose(test_file);
   fclose(results_file);
 }
 

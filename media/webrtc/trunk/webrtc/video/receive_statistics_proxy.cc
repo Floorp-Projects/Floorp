@@ -22,14 +22,14 @@ ReceiveStatisticsProxy::ReceiveStatisticsProxy(uint32_t ssrc,
                                                ViECodec* codec,
                                                int channel)
     : channel_(channel),
-      lock_(CriticalSectionWrapper::CreateCriticalSection()),
       clock_(clock),
+      codec_(codec),
+      rtp_rtcp_(rtp_rtcp),
+      crit_(CriticalSectionWrapper::CreateCriticalSection()),
       // 1000ms window, scale 1000 for ms to s.
       decode_fps_estimator_(1000, 1000),
       renders_fps_estimator_(1000, 1000),
-      receive_state_(kReceiveStateInitial),
-      codec_(codec),
-      rtp_rtcp_(rtp_rtcp) {
+      receive_state_(kReceiveStateInitial) {
   stats_.ssrc = ssrc;
 }
 
@@ -38,12 +38,12 @@ ReceiveStatisticsProxy::~ReceiveStatisticsProxy() {}
 VideoReceiveStream::Stats ReceiveStatisticsProxy::GetStats() const {
   VideoReceiveStream::Stats stats;
   {
-    CriticalSectionScoped cs(lock_.get());
+    CriticalSectionScoped lock(crit_.get());
     stats = stats_;
   }
   stats.c_name = GetCName();
   codec_->GetReceiveSideDelay(channel_, &stats.avg_delay_ms);
-  stats.discarded_packets = codec_->GetDiscardedPackets(channel_);
+  stats.discarded_packets = codec_->GetNumDiscardedPackets(channel_);
   codec_->GetReceiveCodecStatistics(
       channel_, stats.key_frames, stats.delta_frames);
 
@@ -59,10 +59,10 @@ std::string ReceiveStatisticsProxy::GetCName() const {
 
 void ReceiveStatisticsProxy::IncomingRate(const int video_channel,
                                           const unsigned int framerate,
-                                          const unsigned int bitrate) {
-  CriticalSectionScoped cs(lock_.get());
+                                          const unsigned int bitrate_bps) {
+  CriticalSectionScoped lock(crit_.get());
   stats_.network_frame_rate = framerate;
-  stats_.bitrate_bps = bitrate;
+  stats_.total_bitrate_bps = bitrate_bps;
 }
 
 void ReceiveStatisticsProxy::ReceiveStateChange(const int video_channel,
@@ -74,7 +74,7 @@ void ReceiveStatisticsProxy::ReceiveStateChange(const int video_channel,
 void ReceiveStatisticsProxy::StatisticsUpdated(
     const webrtc::RtcpStatistics& statistics,
     uint32_t ssrc) {
-  CriticalSectionScoped cs(lock_.get());
+  CriticalSectionScoped lock(crit_.get());
 
   stats_.rtcp_stats = statistics;
 }
@@ -82,7 +82,7 @@ void ReceiveStatisticsProxy::StatisticsUpdated(
 void ReceiveStatisticsProxy::DataCountersUpdated(
     const webrtc::StreamDataCounters& counters,
     uint32_t ssrc) {
-  CriticalSectionScoped cs(lock_.get());
+  CriticalSectionScoped lock(crit_.get());
 
   stats_.rtp_stats = counters;
 }
@@ -90,7 +90,7 @@ void ReceiveStatisticsProxy::DataCountersUpdated(
 void ReceiveStatisticsProxy::OnDecodedFrame() {
   uint64_t now = clock_->TimeInMilliseconds();
 
-  CriticalSectionScoped cs(lock_.get());
+  CriticalSectionScoped lock(crit_.get());
   decode_fps_estimator_.Update(1, now);
   stats_.decode_frame_rate = decode_fps_estimator_.Rate(now);
 }
@@ -98,7 +98,7 @@ void ReceiveStatisticsProxy::OnDecodedFrame() {
 void ReceiveStatisticsProxy::OnRenderedFrame() {
   uint64_t now = clock_->TimeInMilliseconds();
 
-  CriticalSectionScoped cs(lock_.get());
+  CriticalSectionScoped lock(crit_.get());
   renders_fps_estimator_.Update(1, now);
   stats_.render_frame_rate = renders_fps_estimator_.Rate(now);
 }

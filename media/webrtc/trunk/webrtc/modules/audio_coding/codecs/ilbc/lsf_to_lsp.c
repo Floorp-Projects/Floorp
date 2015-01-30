@@ -43,7 +43,7 @@ void WebRtcIlbcfix_Lsf2Lsp(
        Lower 8 bits give the difference, which needs
        to be approximated linearly
     */
-    k = WEBRTC_SPL_RSHIFT_W16(freq, 8);
+    k = freq >> 8;
     diff = (freq&0x00ff);
 
     /* Guard against getting outside table */
@@ -54,7 +54,7 @@ void WebRtcIlbcfix_Lsf2Lsp(
 
     /* Calculate linear approximation */
     tmpW32 = WEBRTC_SPL_MUL_16_16(WebRtcIlbcfix_kCosDerivative[k], diff);
-    lsp[i] = WebRtcIlbcfix_kCos[k]+(int16_t)(WEBRTC_SPL_RSHIFT_W32(tmpW32, 12));
+    lsp[i] = WebRtcIlbcfix_kCos[k] + (int16_t)(tmpW32 >> 12);
   }
 
   return;

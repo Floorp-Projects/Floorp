@@ -11,8 +11,8 @@
 #ifndef WEBRTC_VIDEO_ENGINE_TEST_COMMON_MAC_VIDEO_RENDERER_MAC_H_
 #define WEBRTC_VIDEO_ENGINE_TEST_COMMON_MAC_VIDEO_RENDERER_MAC_H_
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/test/gl/gl_renderer.h"
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
 
 @class CocoaWindow;
 

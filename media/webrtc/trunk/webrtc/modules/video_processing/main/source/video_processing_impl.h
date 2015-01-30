@@ -16,7 +16,6 @@
 #include "webrtc/modules/video_processing/main/source/brightness_detection.h"
 #include "webrtc/modules/video_processing/main/source/color_enhancement.h"
 #include "webrtc/modules/video_processing/main/source/deflickering.h"
-#include "webrtc/modules/video_processing/main/source/denoising.h"
 #include "webrtc/modules/video_processing/main/source/frame_preprocessor.h"
 
 namespace webrtc {
@@ -30,54 +29,50 @@ class VideoProcessingModuleImpl : public VideoProcessingModule {
 
   int32_t Id() const;
 
-  virtual int32_t ChangeUniqueId(const int32_t id);
+  virtual int32_t ChangeUniqueId(const int32_t id) OVERRIDE;
 
-  virtual void Reset();
+  virtual void Reset() OVERRIDE;
 
-  virtual int32_t Deflickering(I420VideoFrame* frame, FrameStats* stats);
-
-  virtual int32_t Denoising(I420VideoFrame* frame);
+  virtual int32_t Deflickering(I420VideoFrame* frame,
+                               FrameStats* stats) OVERRIDE;
 
   virtual int32_t BrightnessDetection(const I420VideoFrame& frame,
-                                      const FrameStats& stats);
+                                      const FrameStats& stats) OVERRIDE;
 
   // Frame pre-processor functions
 
   // Enable temporal decimation
-  virtual void EnableTemporalDecimation(bool enable);
+  virtual void EnableTemporalDecimation(bool enable) OVERRIDE;
 
-  virtual void SetInputFrameResampleMode(VideoFrameResampling resampling_mode);
+  virtual void SetInputFrameResampleMode(
+      VideoFrameResampling resampling_mode) OVERRIDE;
 
   // Enable content analysis
-  virtual void EnableContentAnalysis(bool enable);
-
-  // Set max frame rate
-  virtual int32_t SetMaxFramerate(uint32_t max_frame_rate);
+  virtual void EnableContentAnalysis(bool enable) OVERRIDE;
 
   // Set Target Resolution: frame rate and dimension
   virtual int32_t SetTargetResolution(uint32_t width,
                                       uint32_t height,
-                                      uint32_t frame_rate);
+                                      uint32_t frame_rate) OVERRIDE;
 
 
   // Get decimated values: frame rate/dimension
-  virtual uint32_t Decimatedframe_rate();
-  virtual uint32_t DecimatedWidth() const;
-  virtual uint32_t DecimatedHeight() const;
+  virtual uint32_t Decimatedframe_rate() OVERRIDE;
+  virtual uint32_t DecimatedWidth() const OVERRIDE;
+  virtual uint32_t DecimatedHeight() const OVERRIDE;
 
   // Preprocess:
   // Pre-process incoming frame: Sample when needed and compute content
   // metrics when enabled.
   // If no resampling takes place - processed_frame is set to NULL.
   virtual int32_t PreprocessFrame(const I420VideoFrame& frame,
-                                  I420VideoFrame** processed_frame);
-  virtual VideoContentMetrics* ContentMetrics() const;
+                                  I420VideoFrame** processed_frame) OVERRIDE;
+  virtual VideoContentMetrics* ContentMetrics() const OVERRIDE;
 
  private:
   int32_t  id_;
   CriticalSectionWrapper& mutex_;
   VPMDeflickering deflickering_;
-  VPMDenoising  denoising_;
   VPMBrightnessDetection brightness_detection_;
   VPMFramePreprocessor  frame_pre_processor_;
 };

@@ -439,7 +439,9 @@ int main(int argc, char* argv[])
 			/* iSAC encoding */
 
 			if (mode==0 || mode ==1) {
-				stream_len = WebRtcIsac_Encode(ISAC_main_inst, shortdata,	streamdata);
+                          stream_len = WebRtcIsac_Encode(ISAC_main_inst,
+                                                         shortdata,
+                                                         (uint8_t*)streamdata);
 				if (stream_len < 0) {
 					/* exit if returned with error */
 					errtype=WebRtcIsac_GetErrorCode(ISAC_main_inst);
@@ -449,7 +451,10 @@ int main(int argc, char* argv[])
 			} else if (mode==2 || mode==3) {
 				/* iSAC encoding */
 				if (nbTest != 1)
-					stream_len = WebRtcIsacfix_Encode(ISACFIX_main_inst, shortdata,	streamdata);
+                                  stream_len = WebRtcIsacfix_Encode(
+                                      ISACFIX_main_inst,
+                                      shortdata,
+                                      (uint8_t*)streamdata);
 				else
 					stream_len = WebRtcIsacfix_EncodeNb(ISACFIX_main_inst, shortdata, streamdata);
 		

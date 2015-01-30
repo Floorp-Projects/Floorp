@@ -34,7 +34,7 @@ class RateStatistics {
   // Counters are kept in buckets (circular buffer), with one bucket
   // per millisecond.
   const int num_buckets_;
-  scoped_array<uint32_t> buckets_;
+  scoped_ptr<uint32_t[]> buckets_;
 
   // Total count recorded in buckets.
   uint32_t accumulated_count_;

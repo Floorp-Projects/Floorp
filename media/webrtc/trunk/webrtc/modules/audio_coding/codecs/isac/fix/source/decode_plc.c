@@ -59,19 +59,19 @@ static int16_t plc_filterma_Fast(
 
     for (j = 0;j < Blen; j++)
     {
-      o = WEBRTC_SPL_ADD_SAT_W32( o, WEBRTC_SPL_MUL_16_16( *b_ptr, *x_ptr) );
+      o = WebRtcSpl_AddSatW32(o, WEBRTC_SPL_MUL_16_16(*b_ptr, *x_ptr));
       b_ptr++;
       x_ptr--;
     }
 
     /* to round off correctly */
-    o = WEBRTC_SPL_ADD_SAT_W32( o, WEBRTC_SPL_LSHIFT_W32( 1, (rshift-1) ) );
+    o = WebRtcSpl_AddSatW32(o, 1 << (rshift - 1));
 
     /* saturate according to the domain of the filter coefficients */
     o = WEBRTC_SPL_SAT((int32_t)lim, o, (int32_t)-lim);
 
     /* o should be in the range of int16_t */
-    o = WEBRTC_SPL_RSHIFT_W32( o, rshift );
+    o >>= rshift;
 
     /* decay the output signal; this is specific to plc */
     *Out++ = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT( (int16_t)o, decay, 15); // ((o + (int32_t)2048) >> 12);
@@ -93,16 +93,14 @@ static int16_t plc_filterma_Fast(
 
 static __inline int32_t log2_Q8_T( uint32_t x ) {
 
-  int32_t zeros, lg2;
+  int32_t zeros;
   int16_t frac;
 
   zeros=WebRtcSpl_NormU32(x);
-  frac=(int16_t)WEBRTC_SPL_RSHIFT_W32(((uint32_t)WEBRTC_SPL_LSHIFT_W32(x, zeros)&0x7FFFFFFF), 23);
+  frac = (int16_t)(((x << zeros) & 0x7FFFFFFF) >> 23);
+
   /* log2(magn(i)) */
-
-  lg2= (WEBRTC_SPL_LSHIFT_W16((31-zeros), 8)+frac);
-  return lg2;
-
+  return ((31 - zeros) << 8) + frac;
 }
 
 static __inline int16_t  exp2_Q10_T(int16_t x) { // Both in and out in Q10
@@ -110,11 +108,11 @@ static __inline int16_t  exp2_Q10_T(int16_t x) { // Both in and out in Q10
   int16_t tmp16_1, tmp16_2;
 
   tmp16_2=(int16_t)(0x0400|(x&0x03FF));
-  tmp16_1=-(int16_t)WEBRTC_SPL_RSHIFT_W16(x,10);
+  tmp16_1 = -(x >> 10);
   if(tmp16_1>0)
-    return (int16_t) WEBRTC_SPL_RSHIFT_W16(tmp16_2, tmp16_1);
+    return tmp16_2 >> tmp16_1;
   else
-    return (int16_t) WEBRTC_SPL_LSHIFT_W16(tmp16_2, -tmp16_1);
+    return tmp16_2 << -tmp16_1;
 
 }
 
@@ -147,7 +145,7 @@ static void MemshipValQ15( int16_t in, int16_t *A, int16_t *B )
                            WEBRTC_SPL_MUL_16_16_RSFT( in, 983, 12) );
       /* b = x^2 / 2 {in Q15} so a shift of 16 is required to
          be in correct domain and one more for the division by 2 */
-      *B = (int16_t)WEBRTC_SPL_RSHIFT_W32( WEBRTC_SPL_MUL_16_16( x, x ) + 0x00010000, 17 );
+      *B = (int16_t)((x * x + 0x00010000) >> 17);
       *A = WEBRTC_SPL_WORD16_MAX - *B;
     }
     else
@@ -166,7 +164,7 @@ static void MemshipValQ15( int16_t in, int16_t *A, int16_t *B )
                            WEBRTC_SPL_MUL_16_16_RSFT( in, 983, 12) );
       /* b = x^2 / 2 {in Q15} so a shift of 16 is required to
          be in correct domain and one more for the division by 2 */
-      *A = (int16_t)WEBRTC_SPL_RSHIFT_W32( WEBRTC_SPL_MUL_16_16( x, x ) + 0x00010000, 17 );
+      *A = (int16_t)((x * x + 0x00010000) >> 17);
       *B = WEBRTC_SPL_WORD16_MAX - *A;
 
     }
@@ -305,8 +303,7 @@ int16_t WebRtcIsacfix_DecodePlcImpl(int16_t *signal_out16,
 
 
 
-  lag0 = WEBRTC_SPL_RSHIFT_W16(
-      (ISACdec_obj->plcstr_obj).lastPitchLag_Q7 + 64, 7 ) + 1;
+  lag0 = ((ISACdec_obj->plcstr_obj.lastPitchLag_Q7 + 64) >> 7) + 1;
 
 
   if( (ISACdec_obj->plcstr_obj).used != PLC_WAS_USED )
@@ -325,8 +322,8 @@ int16_t WebRtcIsacfix_DecodePlcImpl(int16_t *signal_out16,
         corr = 0;
         for( k = 0; k < lag0; k++ )
         {
-          corr = WEBRTC_SPL_ADD_SAT_W32( corr, WEBRTC_SPL_ABS_W32(
-              WEBRTC_SPL_SUB_SAT_W16(
+          corr = WebRtcSpl_AddSatW32(corr, WEBRTC_SPL_ABS_W32(
+              WebRtcSpl_SubSatW16(
                   (ISACdec_obj->plcstr_obj).lastPitchLP[k],
                   (ISACdec_obj->plcstr_obj).prevPitchInvIn[
                       FRAMESAMPLES_HALF - 2*lag0 - 10 + i + k ] ) ) );
@@ -473,27 +470,23 @@ int16_t WebRtcIsacfix_DecodePlcImpl(int16_t *signal_out16,
       /* --- Low Pass                                             */
       (ISACdec_obj->plcstr_obj).seed = WEBRTC_SPL_RAND(
           (ISACdec_obj->plcstr_obj).seed );
-      Vector_Word16_1[i] = WEBRTC_SPL_RSHIFT_W16(
-          (ISACdec_obj->plcstr_obj).seed, 10 ) - 16;
+      Vector_Word16_1[i] = (ISACdec_obj->plcstr_obj.seed >> 10) - 16;
 
       /* --- Highpass                                              */
       (ISACdec_obj->plcstr_obj).seed = WEBRTC_SPL_RAND(
           (ISACdec_obj->plcstr_obj).seed );
-      Vector_Word16_2[i] = WEBRTC_SPL_RSHIFT_W16(
-          (ISACdec_obj->plcstr_obj).seed, 10 ) - 16;
+      Vector_Word16_2[i] = (ISACdec_obj->plcstr_obj.seed >> 10) - 16;
 
     }
     for( i = 1; i < NOISE_FILTER_LEN; i++ )
     {
       (ISACdec_obj->plcstr_obj).seed = WEBRTC_SPL_RAND(
           (ISACdec_obj->plcstr_obj).seed );
-      Vector_Word16_Extended_1[ i ] = WEBRTC_SPL_RSHIFT_W16(
-          (ISACdec_obj->plcstr_obj).seed, 10 ) - 16;
+      Vector_Word16_Extended_1[i] = (ISACdec_obj->plcstr_obj.seed >> 10) - 16;
 
       (ISACdec_obj->plcstr_obj).seed = WEBRTC_SPL_RAND(
           (ISACdec_obj->plcstr_obj).seed );
-      Vector_Word16_Extended_2[ i ] = WEBRTC_SPL_RSHIFT_W16(
-          (ISACdec_obj->plcstr_obj).seed, 10 ) - 16;
+      Vector_Word16_Extended_2[i] = (ISACdec_obj->plcstr_obj.seed >> 10) - 16;
     }
     plc_filterma_Fast(Vector_Word16_1, Vector_Word16_Extended_1,
                       &(ISACdec_obj->plcstr_obj).prevPitchInvIn[FRAMESAMPLES_HALF -
@@ -508,14 +501,13 @@ int16_t WebRtcIsacfix_DecodePlcImpl(int16_t *signal_out16,
     rshift = 0;
     while( maxCoeff > WEBRTC_SPL_WORD16_MAX )
     {
-      maxCoeff = WEBRTC_SPL_RSHIFT_W32(maxCoeff, 1);
+      maxCoeff >>= 1;
       rshift++;
     }
     for( i = 0; i < NOISE_FILTER_LEN; i++ ) {
-      Vector_Word16_1[ FRAMESAMPLES_HALF - NOISE_FILTER_LEN + i] =
-          (int16_t)WEBRTC_SPL_RSHIFT_W32(
-              (ISACdec_obj->plcstr_obj).prevHP[
-                  PITCH_MAX_LAG + 10 - NOISE_FILTER_LEN + i], rshift);
+      Vector_Word16_1[FRAMESAMPLES_HALF - NOISE_FILTER_LEN + i] =(int16_t)(
+          ISACdec_obj->plcstr_obj.prevHP[PITCH_MAX_LAG + 10 - NOISE_FILTER_LEN +
+                                         i] >> rshift);
     }
     (ISACdec_obj->plcstr_obj).decayCoeffNoise = plc_filterma_Fast(
         Vector_Word16_2,
@@ -638,8 +630,7 @@ int16_t WebRtcIsacfix_DecodePlcImpl(int16_t *signal_out16,
         (ISACdec_obj->plcstr_obj).seed = WEBRTC_SPL_RAND(
             (ISACdec_obj->plcstr_obj).seed );
 
-        noise1 = WEBRTC_SPL_RSHIFT_W16(
-            (ISACdec_obj->plcstr_obj).seed, 10 ) - 16;
+        noise1 = (ISACdec_obj->plcstr_obj.seed >> 10) - 16;
 
         nLP = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(
             (int16_t)((noise1)*(ISACdec_obj->plcstr_obj).std),
@@ -648,8 +639,7 @@ int16_t WebRtcIsacfix_DecodePlcImpl(int16_t *signal_out16,
         /* --- Highpass                                              */
         (ISACdec_obj->plcstr_obj).seed = WEBRTC_SPL_RAND(
             (ISACdec_obj->plcstr_obj).seed );
-        noise1 = WEBRTC_SPL_RSHIFT_W16(
-            (ISACdec_obj->plcstr_obj).seed, 11 ) - 8;
+        noise1 = (ISACdec_obj->plcstr_obj.seed >> 11) - 8;
 
         nHP = (int32_t)WEBRTC_SPL_MUL_16_32_RSFT15(
             (ISACdec_obj->plcstr_obj).decayCoeffNoise,
@@ -756,10 +746,8 @@ int16_t WebRtcIsacfix_DecodePlcImpl(int16_t *signal_out16,
         }
 
         /* ------ Sum the noisy and periodic signals  ------ */
-        Vector_Word16_1[i] = (int16_t)WEBRTC_SPL_ADD_SAT_W16(
-            wNoisyLP, wPriodicLP );
-        Vector_Word32_2[i] = (int32_t)WEBRTC_SPL_ADD_SAT_W32(
-            wNoisyHP, wPriodicHP );
+        Vector_Word16_1[i] = WebRtcSpl_AddSatW16(wNoisyLP, wPriodicLP);
+        Vector_Word32_2[i] = WebRtcSpl_AddSatW32(wNoisyHP, wPriodicHP);
       }
     }
   }

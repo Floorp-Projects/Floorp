@@ -1,0 +1,52 @@
+# Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+config("audio_conference_mixer_config") {
+  visibility = [ ":*" ]  # Only targets in this file can depend on this.
+  include_dirs = [
+    "interface",
+    "../interface",
+  ]
+}
+
+source_set("audio_conference_mixer") {
+  sources = [
+    "interface/audio_conference_mixer.h",
+    "interface/audio_conference_mixer_defines.h",
+    "source/audio_conference_mixer_impl.cc",
+    "source/audio_conference_mixer_impl.h",
+    "source/audio_frame_manipulator.cc",
+    "source/audio_frame_manipulator.h",
+    "source/level_indicator.cc",
+    "source/level_indicator.h",
+    "source/memory_pool.h",
+    "source/memory_pool_posix.h",
+    "source/memory_pool_win.h",
+    "source/time_scheduler.cc",
+    "source/time_scheduler.h",
+  ]
+
+  configs += [ "../..:common_config" ]
+
+  public_configs = [
+    "../..:common_inherited_config",
+    ":audio_conference_mixer_config",
+  ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  deps = [
+    "../../system_wrappers",
+    "../audio_processing",
+    "../utility",
+  ]
+}

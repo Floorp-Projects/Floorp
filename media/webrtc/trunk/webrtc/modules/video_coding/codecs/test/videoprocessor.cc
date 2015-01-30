@@ -331,7 +331,7 @@ void VideoProcessorImpl::FrameDecoded(const I420VideoFrame& image) {
     }
     // TODO(mikhal): Extracting the buffer for now - need to update test.
     int length = CalcBufferSize(kI420, up_image.width(), up_image.height());
-    scoped_array<uint8_t> image_buffer(new uint8_t[length]);
+    scoped_ptr<uint8_t[]> image_buffer(new uint8_t[length]);
     length = ExtractBuffer(up_image, length, image_buffer.get());
     // Update our copy of the last successful frame:
     memcpy(last_successful_frame_buffer_, image_buffer.get(), length);
@@ -344,7 +344,7 @@ void VideoProcessorImpl::FrameDecoded(const I420VideoFrame& image) {
     // Update our copy of the last successful frame:
     // TODO(mikhal): Add as a member function, so won't be allocated per frame.
     int length = CalcBufferSize(kI420, image.width(), image.height());
-    scoped_array<uint8_t> image_buffer(new uint8_t[length]);
+    scoped_ptr<uint8_t[]> image_buffer(new uint8_t[length]);
     length = ExtractBuffer(image, length, image_buffer.get());
     assert(length > 0);
     memcpy(last_successful_frame_buffer_, image_buffer.get(), length);

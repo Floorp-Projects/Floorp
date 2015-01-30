@@ -15,8 +15,7 @@
 #include "webrtc/modules/audio_device/linux/audio_mixer_manager_alsa_linux.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
-
-#ifdef USE_X11
+#if defined(USE_X11)
 #include <X11/Xlib.h>
 #endif
 #include <alsa/asoundlib.h>
@@ -91,10 +90,8 @@ public:
                                   uint16_t& volumeRight) const OVERRIDE;
 
     // Audio mixer initialization
-    virtual int32_t SpeakerIsAvailable(bool& available) OVERRIDE;
     virtual int32_t InitSpeaker() OVERRIDE;
     virtual bool SpeakerIsInitialized() const OVERRIDE;
-    virtual int32_t MicrophoneIsAvailable(bool& available) OVERRIDE;
     virtual int32_t InitMicrophone() OVERRIDE;
     virtual bool MicrophoneIsInitialized() const OVERRIDE;
 
@@ -137,7 +134,7 @@ public:
     virtual int32_t StereoRecordingIsAvailable(bool& available) OVERRIDE;
     virtual int32_t SetStereoRecording(bool enable) OVERRIDE;
     virtual int32_t StereoRecording(bool& enabled) const OVERRIDE;
-   
+
     // Delay information and control
     virtual int32_t SetPlayoutBuffer(
         const AudioDeviceModule::BufferType type,
@@ -192,7 +189,7 @@ private:
 
 private:
     AudioDeviceBuffer* _ptrAudioBuffer;
-    
+
     CriticalSectionWrapper& _critSect;
 
     ThreadWrapper* _ptrThreadRec;
@@ -255,7 +252,7 @@ private:
     uint16_t _playBufDelayFixed;            // fixed playback delay
 
     char _oldKeyState[32];
-#ifdef USE_X11
+#if defined(USE_X11)
     Display* _XDisplay;
 #endif
 };

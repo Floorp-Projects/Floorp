@@ -314,6 +314,8 @@ private:
   public:
     explicit RefreshDriverVsyncObserver(VsyncRefreshDriverTimer* aVsyncRefreshDriverTimer)
       : mVsyncRefreshDriverTimer(aVsyncRefreshDriverTimer)
+      , mRefreshTickLock("RefreshTickLock")
+      , mProcessedVsync(true)
     {
       MOZ_ASSERT(NS_IsMainThread());
     }
@@ -321,6 +323,19 @@ private:
     virtual bool NotifyVsync(TimeStamp aVsyncTimestamp) MOZ_OVERRIDE
     {
       if (!NS_IsMainThread()) {
+        MOZ_ASSERT(XRE_IsParentProcess());
+        // Compress vsync notifications such that only 1 may run at a time
+        // This is so that we don't flood the refresh driver with vsync messages
+        // if the main thread is blocked for long periods of time
+        { // scope lock
+          MonitorAutoLock lock(mRefreshTickLock);
+          mRecentVsync = aVsyncTimestamp;
+          if (!mProcessedVsync) {
+            return true;
+          }
+          mProcessedVsync = false;
+        }
+
         nsCOMPtr<nsIRunnable> vsyncEvent =
              NS_NewRunnableMethodWithArg<TimeStamp>(this,
                                                     &RefreshDriverVsyncObserver::TickRefreshDriver,
@@ -346,6 +361,12 @@ private:
     {
       MOZ_ASSERT(NS_IsMainThread());
 
+      if (XRE_IsParentProcess()) {
+        MonitorAutoLock lock(mRefreshTickLock);
+        aVsyncTimestamp = mRecentVsync;
+        mProcessedVsync = true;
+      }
+
       // We might have a problem that we call ~VsyncRefreshDriverTimer() before
       // the scheduled TickRefreshDriver() runs. Check mVsyncRefreshDriverTimer
       // before use.
@@ -358,6 +379,9 @@ private:
     // be always available before Shutdown(). We can just use the raw pointer
     // here.
     VsyncRefreshDriverTimer* mVsyncRefreshDriverTimer;
+    Monitor mRefreshTickLock;
+    TimeStamp mRecentVsync;
+    bool mProcessedVsync;
   }; // RefreshDriverVsyncObserver
 
   virtual ~VsyncRefreshDriverTimer()
@@ -416,9 +440,13 @@ private:
     Tick(vsyncJsNow, aTimeStamp);
   }
 
-  nsRefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
   nsRefPtr<RefreshDriverVsyncObserver> mVsyncObserver;
-  VsyncChild* mVsyncChild;
+  // Used for parent process.
+  nsRefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
+  // Used for child process.
+  // The mVsyncChild will be always available before VsncChild::ActorDestroy().
+  // After ActorDestroy(), StartTimer() and StopTimer() calls will be non-op.
+  nsRefPtr<VsyncChild> mVsyncChild;
 }; // VsyncRefreshDriverTimer
 
 /*
