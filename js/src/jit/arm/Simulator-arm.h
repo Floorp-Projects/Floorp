@@ -94,7 +94,9 @@ class Simulator
         num_q_registers = 16
     };
 
+    // Returns nullptr on OOM.
     static Simulator *Create();
+
     static void Destroy(Simulator *simulator);
 
     // Constructor/destructor are for internal use only; use the static methods above.
@@ -192,6 +194,8 @@ class Simulator
         // C code.
         end_sim_pc = -2
     };
+
+    bool init();
 
     // Checks if the current instruction should be executed based on its
     // condition bits.
