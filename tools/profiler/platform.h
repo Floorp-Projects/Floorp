@@ -309,6 +309,8 @@ class Sampler {
   virtual void RequestSave() = 0;
   // Process any outstanding request outside a signal handler.
   virtual void HandleSaveRequest() = 0;
+  // Delete markers which are no longer part of the profile due to buffer wraparound.
+  virtual void DeleteExpiredMarkers() = 0;
 
   // Start and stop sampler.
   void Start();
