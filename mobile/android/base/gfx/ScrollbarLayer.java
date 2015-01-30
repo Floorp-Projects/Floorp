@@ -69,7 +69,7 @@ public class ScrollbarLayer extends TileLayer {
     private final Rect mEndCapTexCoords;    // bottom/right endcap coordinates
 
     ScrollbarLayer(LayerRenderer renderer, Bitmap scrollbarImage, IntSize imageSize, boolean vertical) {
-        super(new IntSize(scrollbarImage.getHeight(), scrollbarImage.getWidth()), TileLayer.PaintMode.NORMAL);
+        super(new IntSize(scrollbarImage.getHeight(), scrollbarImage.getWidth()));
         mImage = new BufferedImage(scrollbarImage);
         mRenderer = renderer;
         mVertical = vertical;
@@ -400,7 +400,7 @@ public class ScrollbarLayer extends TileLayer {
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER,
                                GLES20.GL_LINEAR);
 
-        int repeatMode = repeats() ? GLES20.GL_REPEAT : GLES20.GL_CLAMP_TO_EDGE;
+        int repeatMode = GLES20.GL_CLAMP_TO_EDGE;
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, repeatMode);
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, repeatMode);
     }
