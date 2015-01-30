@@ -66,7 +66,7 @@ public class TabsPanel extends LinearLayout
     }
 
     public static View createTabsLayout(final Context context, final AttributeSet attrs) {
-        if (NewTabletUI.isEnabled(context)) {
+        if (HardwareUtils.isTablet()) {
             return new TabsGridLayout(context, attrs);
         } else {
             return new TabsListLayout(context, attrs);
@@ -168,7 +168,7 @@ public class TabsPanel extends LinearLayout
             }
         });
 
-        if(NewTabletUI.isEnabled(getContext())) {
+        if (HardwareUtils.isTablet()) {
             ViewStub backButtonStub = (ViewStub) findViewById(R.id.nav_back_stub);
             mNavBackButton = (ImageButton) backButtonStub.inflate( );
             mNavBackButton.setOnClickListener(new Button.OnClickListener() {
@@ -258,7 +258,7 @@ public class TabsPanel extends LinearLayout
         int screenHeight = resources.getDisplayMetrics().heightPixels;
         int actionBarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height);
 
-        if(NewTabletUI.isEnabled(tabsContainer.getContext())){
+        if (HardwareUtils.isTablet()) {
             return screenHeight - actionBarHeight;
         }
 

@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ThumbnailHelper;
 
@@ -20,6 +19,7 @@ import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.ImageView;
+import org.mozilla.gecko.util.HardwareUtils;
 
 /**
  * A height constrained ImageView to show thumbnails of top and pinned sites.
@@ -85,7 +85,7 @@ public class TopSitesThumbnailView extends ImageView {
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-        if(NewTabletUI.isEnabled(getContext()) && mResize) {
+        if (HardwareUtils.isTablet() && mResize) {
             setScaleType(ScaleType.MATRIX);
             RectF rect = new RectF(0, 0, mWidth, mHeight);
             Matrix matrix = new Matrix();
