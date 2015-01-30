@@ -19,12 +19,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PerformanceEntry)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-PerformanceEntry::PerformanceEntry(nsPerformance* aPerformance,
-                                   const nsAString& aName,
-                                   const nsAString& aEntryType)
-: mPerformance(aPerformance),
-  mName(aName),
-  mEntryType(aEntryType)
+PerformanceEntry::PerformanceEntry(nsPerformance* aPerformance)
+: mPerformance(aPerformance)
 {
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
 }
