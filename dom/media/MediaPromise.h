@@ -252,8 +252,8 @@ public:
 
   template<typename TargetType, typename ThisType,
            typename ResolveMethodType, typename RejectMethodType>
-  void Then(TargetType* aResponseTarget, const char* aCallSite, ThisType* aThisVal,
-            ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
+  already_AddRefed<Consumer> RefableThen(TargetType* aResponseTarget, const char* aCallSite, ThisType* aThisVal,
+                                         ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
     MutexAutoLock lock(mMutex);
     MOZ_RELEASE_ASSERT(!IsExclusive || !mHaveConsumer);
@@ -269,6 +269,18 @@ public:
     } else {
       mThenValues.AppendElement(thenValue);
     }
+
+    return thenValue.forget();
+  }
+
+  template<typename TargetType, typename ThisType,
+           typename ResolveMethodType, typename RejectMethodType>
+  void Then(TargetType* aResponseTarget, const char* aCallSite, ThisType* aThisVal,
+            ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
+  {
+    nsRefPtr<Consumer> c =
+      RefableThen(aResponseTarget, aCallSite, aThisVal, aResolveMethod, aRejectMethod);
+    return;
   }
 
   void ChainTo(already_AddRefed<MediaPromise> aChainedPromise, const char* aCallSite)
@@ -434,6 +446,35 @@ public:
 private:
   Monitor* mMonitor;
   nsRefPtr<PromiseType> mPromise;
+};
+
+/*
+ * Class to encapsulate a MediaPromise::Consumer reference. Use this as the member
+ * variable for a class waiting on a media promise.
+ */
+template<typename PromiseType>
+class MediaPromiseConsumerHolder
+{
+public:
+  MediaPromiseConsumerHolder() {}
+  ~MediaPromiseConsumerHolder() { MOZ_ASSERT(!mConsumer); }
+
+  void Begin(already_AddRefed<typename PromiseType::Consumer> aConsumer)
+  {
+    MOZ_RELEASE_ASSERT(!Exists());
+    mConsumer = aConsumer;
+  }
+
+  void Complete()
+  {
+    MOZ_RELEASE_ASSERT(Exists());
+    mConsumer = nullptr;
+  }
+
+  bool Exists() { return !!mConsumer; }
+
+private:
+  nsRefPtr<typename PromiseType::Consumer> mConsumer;
 };
 
 #undef PROMISE_LOG
