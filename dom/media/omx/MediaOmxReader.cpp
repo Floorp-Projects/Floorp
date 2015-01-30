@@ -207,14 +207,6 @@ void MediaOmxReader::UpdateIsWaitingMediaResources()
   }
 }
 
-bool MediaOmxReader::IsDormantNeeded()
-{
-  if (!mOmxDecoder.get()) {
-    return false;
-  }
-  return mOmxDecoder->IsDormantNeeded();
-}
-
 void MediaOmxReader::ReleaseMediaResources()
 {
   ResetDecode();
