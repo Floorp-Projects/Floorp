@@ -181,17 +181,3 @@ NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
 
   return handler.forget();
 }
-
-nsresult
-NS_NewXBLKeyEventHandler(nsIAtom* aEventType, uint8_t aPhase, uint8_t aType,
-                         nsXBLKeyEventHandler** aResult)
-{
-  *aResult = new nsXBLKeyEventHandler(aEventType, aPhase, aType);
-
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
-}

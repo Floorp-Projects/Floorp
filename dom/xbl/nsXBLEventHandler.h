@@ -117,8 +117,4 @@ already_AddRefed<nsXBLEventHandler>
 NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
                       nsIAtom* aEventType);
 
-nsresult
-NS_NewXBLKeyEventHandler(nsIAtom* aEventType, uint8_t aPhase,
-                         uint8_t aType, nsXBLKeyEventHandler** aResult);
-
 #endif
