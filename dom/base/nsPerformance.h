@@ -21,7 +21,6 @@ class nsPerformance;
 class nsIHttpChannel;
 
 namespace mozilla {
-class ErrorResult;
 namespace dom {
   class PerformanceEntry;
 }
@@ -336,26 +335,12 @@ public:
                 nsITimedChannel* timedChannel);
   void ClearResourceTimings();
   void SetResourceTimingBufferSize(uint64_t maxSize);
-  void Mark(const nsAString& aName, mozilla::ErrorResult& aRv);
-  void ClearMarks(const mozilla::dom::Optional<nsAString>& aName);
-  void Measure(const nsAString& aName,
-               const mozilla::dom::Optional<nsAString>& aStartMark,
-               const mozilla::dom::Optional<nsAString>& aEndMark,
-               mozilla::ErrorResult& aRv);
-  void ClearMeasures(const mozilla::dom::Optional<nsAString>& aName);
-
   IMPL_EVENT_HANDLER(resourcetimingbufferfull)
 
 private:
   ~nsPerformance();
-  bool IsPerformanceTimingAttribute(const nsAString& aName);
-  DOMHighResTimeStamp ResolveTimestampFromName(const nsAString& aName, mozilla::ErrorResult& aRv);
-  DOMTimeMilliSec GetPerformanceTimingFromString(const nsAString& aTimingName);
-  DOMHighResTimeStamp ConvertDOMMilliSecToHighRes(const DOMTimeMilliSec aTime);
   void DispatchBufferFullEvent();
-  void InsertPerformanceEntry(PerformanceEntry* aEntry);
-  void ClearEntries(const mozilla::dom::Optional<nsAString>& aEntryName,
-                    const nsAString& aEntryType);
+
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsRefPtr<nsDOMNavigationTiming> mDOMTiming;
   nsCOMPtr<nsITimedChannel> mChannel;
