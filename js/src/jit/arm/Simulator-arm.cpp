@@ -363,7 +363,7 @@ Simulator::Create()
     if (!sim)
         return nullptr;
 
-    if (!sim->icache_.init()) {
+    if (!sim->init()) {
         js_delete(sim);
         return false;
     }
@@ -1031,16 +1031,11 @@ Simulator::Simulator()
     // Set up simulator support first. Some of this information is needed to
     // setup the architecture state.
 
-    // Allocate 2MB for the stack. Note that we will only use 1MB, see below.
-    static const size_t stackSize = 2 * 1024*1024;
-    stack_ = reinterpret_cast<char*>(js_malloc(stackSize));
-    if (!stack_) {
-        MOZ_ReportAssertionFailure("[unhandlable oom] Simulator stack", __FILE__, __LINE__);
-        MOZ_CRASH();
-    }
-    // Leave a safety margin of 1MB to prevent overrunning the stack when
-    // pushing values (total stack size is 2MB).
-    stackLimit_ = reinterpret_cast<uintptr_t>(stack_) + 1024 * 1024;
+    // Note, allocation and anything that depends on allocated memory is
+    // deferred until init(), in order to handle OOM properly.
+
+    stack_ = nullptr;
+    stackLimit_ = 0;
     pc_modified_ = false;
     icount_ = 0L;
     resume_pc_ = 0;
@@ -1077,11 +1072,6 @@ Simulator::Simulator()
     underflow_vfp_flag_ = false;
     inexact_vfp_flag_ = false;
 
-    // The sp is initialized to point to the bottom (high address) of the
-    // allocated stack area. To be safe in potential stack underflows we leave
-    // some buffer below.
-    registers_[sp] = reinterpret_cast<int32_t>(stack_) + stackSize - 64;
-
     // The lr and pc are initialized to a known bad value that will cause an
     // access violation if the simulator ever tries to execute it.
     registers_[pc] = bad_lr;
@@ -1090,6 +1080,30 @@ Simulator::Simulator()
     lastDebuggerInput_ = nullptr;
 
     redirection_ = nullptr;
+}
+
+bool
+Simulator::init()
+{
+    if (!icache_.init())
+        return false;
+
+    // Allocate 2MB for the stack. Note that we will only use 1MB, see below.
+    static const size_t stackSize = 2 * 1024*1024;
+    stack_ = reinterpret_cast<char*>(js_malloc(stackSize));
+    if (!stack_)
+        return false;
+
+    // Leave a safety margin of 1MB to prevent overrunning the stack when
+    // pushing values (total stack size is 2MB).
+    stackLimit_ = reinterpret_cast<uintptr_t>(stack_) + 1024 * 1024;
+
+    // The sp is initialized to point to the bottom (high address) of the
+    // allocated stack area. To be safe in potential stack underflows we leave
+    // some buffer below.
+    registers_[sp] = reinterpret_cast<int32_t>(stack_) + stackSize - 64;
+
+    return true;
 }
 
 // When the generated code calls a VM function (masm.callWithABI) we need to
