@@ -4,12 +4,12 @@
 
 package org.mozilla.gecko.fxa.activities;
 
+import org.mozilla.gecko.Locales.LocaleAwareActivity;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
-import org.mozilla.gecko.Locales.LocaleAwareActivity;
 
 import android.accounts.Account;
 import android.app.Activity;
@@ -69,6 +69,12 @@ public abstract class FxAccountAbstractActivity extends LocaleAwareActivity {
   public void onResume() {
     super.onResume();
     redirectIfAppropriate();
+  }
+
+  @Override
+  public void onBackPressed() {
+      super.onBackPressed();
+      overridePendingTransition(0, 0);
   }
 
   protected void launchActivity(Class<? extends Activity> activityClass) {

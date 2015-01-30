@@ -26,8 +26,8 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HIGHLIGHTER_STYLESHEET_URI = "resource://gre/modules/devtools/server/actors/highlighter.css";
 const HIGHLIGHTER_PICKED_TIMER = 1000;
 // How high is the nodeinfobar
-const NODE_INFOBAR_HEIGHT = 40; //px
-const NODE_INFOBAR_ARROW_SIZE = 15; // px
+const NODE_INFOBAR_HEIGHT = 34; //px
+const NODE_INFOBAR_ARROW_SIZE = 9; // px
 // Width of boxmodelhighlighter guides
 const GUIDE_STROKE_WIDTH = 1;
 // The minimum distance a line should be before it has an arrow marker-end
@@ -448,17 +448,33 @@ CanvasFrameAnonymousContentHelper.prototype = {
   _insert: function() {
     // Re-insert the content node after page navigation only if the new page
     // isn't XUL.
-    if (!isXUL(this.tabActor)) {
-      // For now highlighter.css is injected in content as a ua sheet because
-      // <style scoped> doesn't work inside anonymous content (see bug 1086532).
-      // If it did, highlighter.css would be injected as an anonymous content
-      // node using CanvasFrameAnonymousContentHelper instead.
-      installHelperSheet(this.tabActor.window,
-        "@import url('" + HIGHLIGHTER_STYLESHEET_URI + "');");
-      let node = this.nodeBuilder();
-      let doc = this.tabActor.window.document;
-      this._content = doc.insertAnonymousContent(node);
+    if (isXUL(this.tabActor)) {
+      return;
     }
+    let doc = this.tabActor.window.document;
+
+    // On B2G, for example, when connecting to keyboard just after startup,
+    // we connect to a hidden document, which doesn't accept
+    // insertAnonymousContent call yet.
+    if (doc.hidden) {
+      // In such scenario, just wait for the document to be visible
+      // before injecting anonymous content.
+      let onVisibilityChange = () => {
+        doc.removeEventListener("visibilitychange", onVisibilityChange);
+        this._insert();
+      };
+      doc.addEventListener("visibilitychange", onVisibilityChange);
+      return;
+    }
+
+    // For now highlighter.css is injected in content as a ua sheet because
+    // <style scoped> doesn't work inside anonymous content (see bug 1086532).
+    // If it did, highlighter.css would be injected as an anonymous content
+    // node using CanvasFrameAnonymousContentHelper instead.
+    installHelperSheet(this.tabActor.window,
+      "@import url('" + HIGHLIGHTER_STYLESHEET_URI + "');");
+    let node = this.nodeBuilder();
+    this._content = doc.insertAnonymousContent(node);
   },
 
   _onNavigate: function({isTopLevel}) {
@@ -500,7 +516,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
   },
 
   get content() {
-    if (Cu.isDeadWrapper(this._content)) {
+    if (!this._content || Cu.isDeadWrapper(this._content)) {
       return null;
     }
     return this._content;
