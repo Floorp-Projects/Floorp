@@ -98,7 +98,7 @@ public:
 
   virtual bool IsWaitingMediaResources() MOZ_OVERRIDE;
 
-  virtual bool IsDormantNeeded() MOZ_OVERRIDE;
+  virtual bool IsDormantNeeded() { return true;}
 
   virtual void AllocateMediaResources() MOZ_OVERRIDE;
 
