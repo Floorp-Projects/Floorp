@@ -138,17 +138,21 @@ ErrorTakesIdArgument(unsigned msg)
 }
 
 JS_PUBLIC_API(bool)
-JS::ObjectOpResult::reportError(JSContext *cx, HandleObject obj, HandleId id)
+JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext *cx, HandleObject obj, HandleId id,
+                                               bool strict)
 {
     static_assert(unsigned(OkCode) == unsigned(JSMSG_NOT_AN_ERROR),
                   "unsigned value of OkCode must not be an error code");
+    MOZ_ASSERT(code_ != Uninitialized);
     MOZ_ASSERT(!ok());
 
+    unsigned flags = strict ? JSREPORT_ERROR : (JSREPORT_WARNING | JSREPORT_STRICT);
     if (code_ == JSMSG_OBJECT_NOT_EXTENSIBLE) {
         RootedValue val(cx, ObjectValue(*obj));
-        ReportValueErrorFlags(cx, JSREPORT_ERROR, code_, JSDVG_IGNORE_STACK, val,
-                              NullPtr(), nullptr, nullptr);
-    } else if (ErrorTakesIdArgument(code_)) {
+        return ReportValueErrorFlags(cx, flags, code_, JSDVG_IGNORE_STACK, val,
+                                     NullPtr(), nullptr, nullptr);
+    }
+    if (ErrorTakesIdArgument(code_)) {
         RootedValue idv(cx, IdToValue(id));
         RootedString str(cx, ValueToSource(cx, idv));
         if (!str)
@@ -158,11 +162,10 @@ JS::ObjectOpResult::reportError(JSContext *cx, HandleObject obj, HandleId id)
         if (!propName)
             return false;
 
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, code_, propName.ptr());
-    } else {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, code_);
+        return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr, code_,
+                                            propName.ptr());
     }
-    return false;
+    return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr, code_);
 }
 
 JS_PUBLIC_API(int64_t)

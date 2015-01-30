@@ -792,11 +792,7 @@ DefinePropertyOnArray(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, cons
                 attrs = attrs | JSPROP_READONLY;
         }
 
-        // XXX Temporarily break compatibility here. The right thing is to pass
-        // result on to ArraySetLength.
-        if (!ArraySetLength(cx, arr, id, attrs, v, false))
-            return false;
-        return result.succeed();
+        return ArraySetLength(cx, arr, id, attrs, v, result);
     }
 
     /* Step 3. */
