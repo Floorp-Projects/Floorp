@@ -627,8 +627,8 @@ public:
     };
 
     size_t size() const { return m_formatter.size(); }
-    size_t allocSize() const { return m_formatter.allocSize(); }
-    unsigned char *buffer() const { return m_formatter.buffer(); }
+    const unsigned char *buffer() const { return m_formatter.buffer(); }
+    unsigned char *data() { return m_formatter.data(); }
     bool oom() const { return m_formatter.oom(); }
 
     void nop()
@@ -5292,11 +5292,10 @@ private:
         // Administrative methods:
 
         size_t size() const { return m_buffer.size(); }
-        size_t allocSize() const { return m_buffer.allocSize(); }
-        unsigned char *buffer() const { return m_buffer.buffer(); }
+        const unsigned char *buffer() const { return m_buffer.buffer(); }
         bool oom() const { return m_buffer.oom(); }
         bool isAligned(int alignment) const { return m_buffer.isAligned(alignment); }
-        void* data() const { return m_buffer.data(); }
+        unsigned char *data() { return m_buffer.data(); }
 
     private:
 
