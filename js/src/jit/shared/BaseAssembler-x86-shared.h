@@ -2422,7 +2422,7 @@ public:
     {
         m_formatter.oneByteRipOp(OP_MOV_GvEv, 0, (RegisterID)dst);
         JmpSrc label(m_formatter.size());
-        spew("movl       .Lfrom%d(%%rip), %s", label.offset(), GPReg32Name(dst));
+        spew("movl       " MEM_o32r ", %s", ADDR_o32r(label.offset()), GPReg32Name(dst));
         return label;
     }
 
@@ -2431,7 +2431,7 @@ public:
     {
         m_formatter.oneByteRipOp(OP_MOV_EvGv, 0, (RegisterID)src);
         JmpSrc label(m_formatter.size());
-        spew("movl       %s, .Lfrom%d(%%rip)", GPReg32Name(src), label.offset());
+        spew("movl       %s, " MEM_o32r "", GPReg32Name(src), ADDR_o32r(label.offset()));
         return label;
     }
 
@@ -2440,7 +2440,7 @@ public:
     {
         m_formatter.oneByteRipOp64(OP_MOV_GvEv, 0, dst);
         JmpSrc label(m_formatter.size());
-        spew("movq       .Lfrom%d(%%rip), %s", label.offset(), GPRegName(dst));
+        spew("movq       " MEM_o32r ", %s", ADDR_o32r(label.offset()), GPRegName(dst));
         return label;
     }
 #endif
@@ -2645,7 +2645,7 @@ public:
     {
         m_formatter.oneByteRipOp64(OP_LEA, 0, dst);
         JmpSrc label(m_formatter.size());
-        spew("leaq       .Lfrom%d(%%rip), %s", label.offset(), GPRegName(dst));
+        spew("leaq       " MEM_o32r ", %s", ADDR_o32r(label.offset()), GPRegName(dst));
         return label;
     }
 #endif
@@ -4047,9 +4047,9 @@ private:
             m_formatter.twoByteRipOp(opcode, 0, dst);
             JmpSrc label(m_formatter.size());
             if (IsXMMReversedOperands(opcode))
-                spew("%-11s%s, .Lfrom%d(%%rip)", legacySSEOpName(name), XMMRegName(dst), label.offset());
+                spew("%-11s%s, " MEM_o32r "", legacySSEOpName(name), XMMRegName(dst), ADDR_o32r(label.offset()));
             else
-                spew("%-11s.Lfrom%d(%%rip), %s", legacySSEOpName(name), label.offset(), XMMRegName(dst));
+                spew("%-11s" MEM_o32r ", %s", legacySSEOpName(name), ADDR_o32r(label.offset()), XMMRegName(dst));
             return label;
         }
 
@@ -4057,11 +4057,11 @@ private:
         JmpSrc label(m_formatter.size());
         if (src0 == X86Registers::invalid_xmm) {
             if (IsXMMReversedOperands(opcode))
-                spew("%-11s%s, .Lfrom%d(%%rip)", name, XMMRegName(dst), label.offset());
+                spew("%-11s%s, " MEM_o32r "", name, XMMRegName(dst), ADDR_o32r(label.offset()));
             else
-                spew("%-11s.Lfrom%d(%%rip), %s", name, label.offset(), XMMRegName(dst));
+                spew("%-11s" MEM_o32r ", %s", name, ADDR_o32r(label.offset()), XMMRegName(dst));
         } else {
-            spew("%-11s.Lfrom%d(%%rip), %s, %s", name, label.offset(), XMMRegName(src0), XMMRegName(dst));
+            spew("%-11s" MEM_o32r ", %s, %s", name, ADDR_o32r(label.offset()), XMMRegName(src0), XMMRegName(dst));
         }
         return label;
     }
