@@ -196,15 +196,11 @@ UnboxedPlainObject::convertToNative(JSContext *cx)
     if (!SetClassAndProto(cx, obj, &PlainObject::class_, proto))
         return false;
 
-    // Any failures after this point will leave the object as a mutant, and we
-    // can't recover.
-
-    RootedPlainObject nobj(cx, &obj->as<PlainObject>());
-    if (!nobj->setLastProperty(cx, nobj, shape))
-        CrashAtUnhandlableOOM("UnboxedPlainObject::convertToNative");
+    RootedNativeObject nobj(cx, &obj->as<PlainObject>());
+    NativeObject::setLastPropertyMakeNative(cx, nobj, shape);
 
     for (size_t i = 0; i < values.length(); i++)
-        nobj->initSlot(i, values[i]);
+        nobj->initSlotUnchecked(i, values[i]);
 
     return true;
 }
@@ -250,7 +246,7 @@ UnboxedPlainObject::obj_lookupGeneric(JSContext *cx, HandleObject obj,
                                       MutableHandleShape propp)
 {
     if (obj->as<UnboxedPlainObject>().layout().lookup(id)) {
-        MarkNonNativePropertyFound(propp);
+        MarkNonNativePropertyFound<CanGC>(propp);
         objp.set(obj);
         return true;
     }
