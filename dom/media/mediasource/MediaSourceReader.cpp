@@ -445,7 +445,7 @@ MediaSourceReader::BreakCycles()
 
 already_AddRefed<MediaDecoderReader>
 MediaSourceReader::SelectReader(int64_t aTarget,
-                                int64_t aError,
+                                int64_t aTolerance,
                                 const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders)
 {
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
@@ -458,7 +458,7 @@ MediaSourceReader::SelectReader(int64_t aTarget,
     nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
     aTrackDecoders[i]->GetBuffered(ranges);
     if (ranges->Find(double(aTarget) / USECS_PER_S,
-                     double(aError) / USECS_PER_S) == dom::TimeRanges::NoIndex) {
+                     double(aTolerance) / USECS_PER_S) == dom::TimeRanges::NoIndex) {
       MSE_DEBUGV("MediaSourceReader(%p)::SelectReader(%lld) newReader=%p target not in ranges=%s",
                  this, aTarget, newReader.get(), DumpTimeRanges(ranges).get());
       continue;
@@ -480,14 +480,14 @@ MediaSourceReader::HaveData(int64_t aTarget, MediaData::Type aType)
 }
 
 MediaSourceReader::SwitchReaderResult
-MediaSourceReader::SwitchAudioReader(int64_t aTarget, int64_t aError)
+MediaSourceReader::SwitchAudioReader(int64_t aTarget, int64_t aTolerance)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   // XXX: Can't handle adding an audio track after ReadMetadata.
   if (!mAudioTrack) {
     return READER_ERROR;
   }
-  nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget, aError, mAudioTrack->Decoders());
+  nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget, aTolerance, mAudioTrack->Decoders());
   if (newReader && newReader != mAudioReader) {
     mAudioReader->SetIdle();
     mAudioReader = newReader;
@@ -498,14 +498,14 @@ MediaSourceReader::SwitchAudioReader(int64_t aTarget, int64_t aError)
 }
 
 MediaSourceReader::SwitchReaderResult
-MediaSourceReader::SwitchVideoReader(int64_t aTarget, int64_t aError)
+MediaSourceReader::SwitchVideoReader(int64_t aTarget, int64_t aTolerance)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   // XXX: Can't handle adding a video track after ReadMetadata.
   if (!mVideoTrack) {
     return READER_ERROR;
   }
-  nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget, aError, mVideoTrack->Decoders());
+  nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget, aTolerance, mVideoTrack->Decoders());
   if (newReader && newReader != mVideoReader) {
     mVideoReader->SetIdle();
     mVideoReader = newReader;

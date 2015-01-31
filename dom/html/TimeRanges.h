@@ -42,10 +42,10 @@ public:
   double GetEndTime();
 
   // See http://www.whatwg.org/html/#normalized-timeranges-object
-  void Normalize(double aError = 0.0);
+  void Normalize(double aTolerance = 0.0);
 
   // Mutate this TimeRange to be the union of this and aOtherRanges.
-  void Union(const TimeRanges* aOtherRanges, double aError);
+  void Union(const TimeRanges* aOtherRanges, double aTolerance);
 
   // Mutate this TimeRange to be the intersection of this and aOtherRanges.
   void Intersection(const TimeRanges* aOtherRanges);
@@ -91,7 +91,7 @@ public:
   typedef nsTArray<TimeRange>::index_type index_type;
   static const index_type NoIndex = index_type(-1);
 
-  index_type Find(double aTime, double aError = 0);
+  index_type Find(double aTime, double aTolerance = 0);
 
   bool Contains(double aStart, double aEnd) {
     index_type target = Find(aStart);
