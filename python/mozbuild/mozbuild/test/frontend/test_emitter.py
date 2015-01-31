@@ -19,6 +19,7 @@ from mozbuild.frontend.data import (
     HostSources,
     IPDLFile,
     JARManifest,
+    JsPreferenceFile,
     LocalInclude,
     Program,
     ReaderSummary,
@@ -281,6 +282,21 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIn('overwrite', resources._children)
         overwrite = resources._children['overwrite']
         self.assertEqual(overwrite._strings, ['new.res'])
+
+    def test_preferences_js(self):
+        reader = self.reader('js_preference_files')
+        objs = self.read_topsrcdir(reader)
+
+        prefs = [o.path for o in objs if isinstance(o, JsPreferenceFile)]
+
+        prefsByDir = [
+            'valid_val/prefs.js',
+            'ww/ww.js',
+            'xx/xx.js',
+            'yy/yy.js',
+            ]
+
+        self.assertEqual(sorted(prefs), prefsByDir)
 
     def test_program(self):
         reader = self.reader('program')

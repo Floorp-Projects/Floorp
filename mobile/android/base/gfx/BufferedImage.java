@@ -22,12 +22,17 @@ public class BufferedImage {
 
     /** Creates an empty buffered image */
     public BufferedImage() {
-        setBuffer(null, 0, 0, 0);
+        mSize = new IntSize(0, 0);
     }
 
     /** Creates a buffered image from an Android bitmap. */
     public BufferedImage(Bitmap bitmap) {
-        setBitmap(bitmap);
+        mFormat = bitmapConfigToFormat(bitmap.getConfig());
+        mSize = new IntSize(bitmap.getWidth(), bitmap.getHeight());
+
+        int bpp = bitsPerPixelForFormat(mFormat);
+        mBuffer = DirectBufferAllocator.allocate(mSize.getArea() * bpp);
+        bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
     }
 
     private synchronized void freeBuffer() {
@@ -52,22 +57,6 @@ public class BufferedImage {
     public static final int FORMAT_A8 = 2;
     public static final int FORMAT_A1 = 3;
     public static final int FORMAT_RGB16_565 = 4;
-
-    public void setBuffer(ByteBuffer buffer, int width, int height, int format) {
-        freeBuffer();
-        mBuffer = buffer;
-        mSize = new IntSize(width, height);
-        mFormat = format;
-    }
-
-    public void setBitmap(Bitmap bitmap) {
-        mFormat = bitmapConfigToFormat(bitmap.getConfig());
-        mSize = new IntSize(bitmap.getWidth(), bitmap.getHeight());
-
-        int bpp = bitsPerPixelForFormat(mFormat);
-        mBuffer = DirectBufferAllocator.allocate(mSize.getArea() * bpp);
-        bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
-    }
 
     private static int bitsPerPixelForFormat(int format) {
         switch (format) {

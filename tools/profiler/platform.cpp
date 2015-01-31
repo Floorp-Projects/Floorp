@@ -56,13 +56,6 @@ const char* PROFILER_ENTRIES = "MOZ_PROFILER_ENTRIES";
 const char* PROFILER_STACK = "MOZ_PROFILER_STACK_SCAN";
 const char* PROFILER_FEATURES = "MOZ_PROFILING_FEATURES";
 
-/* used to keep track of the last event that we sampled during */
-unsigned int sLastSampledEventGeneration = 0;
-
-/* a counter that's incremented everytime we get responsiveness event
- * note: it might also be worth trackplaing everytime we go around
- * the event loop */
-unsigned int sCurrentEventGeneration = 0;
 /* we don't need to worry about overflow because we only treat the
  * case of them being the same as special. i.e. we only run into
  * a problem if 2^32 events happen between samples that we need
@@ -201,45 +194,6 @@ void ProfilerMarker::StreamJSObject(JSStreamWriter& b) const {
     }
     b.NameValue("time", mTime);
   b.EndObject();
-}
-
-PendingMarkers::~PendingMarkers() {
-  clearMarkers();
-  if (mSignalLock != false) {
-    // We're releasing the pseudostack while it's still in use.
-    // The label macros keep a non ref counted reference to the
-    // stack to avoid a TLS. If these are not all cleared we will
-    // get a use-after-free so better to crash now.
-    abort();
-  }
-}
-
-void
-PendingMarkers::addMarker(ProfilerMarker *aMarker) {
-  mSignalLock = true;
-  STORE_SEQUENCER();
-
-  MOZ_ASSERT(aMarker);
-  mPendingMarkers.insert(aMarker);
-
-  // Clear markers that have been overwritten
-  while (mStoredMarkers.peek() &&
-         mStoredMarkers.peek()->HasExpired(mGenID)) {
-    delete mStoredMarkers.popHead();
-  } 
-  STORE_SEQUENCER();
-  mSignalLock = false;
-}
-
-void
-PendingMarkers::updateGeneration(int aGenID) {
-  mGenID = aGenID;
-}
-
-void
-PendingMarkers::addStoredMarker(ProfilerMarker *aStoredMarker) {
-  aStoredMarker->SetGeneration(mGenID);
-  mStoredMarkers.insert(aStoredMarker);
 }
 
 bool sps_version2()
@@ -939,8 +893,6 @@ bool mozilla_sampler_is_active()
 
 void mozilla_sampler_responsiveness(const mozilla::TimeStamp& aTime)
 {
-  sCurrentEventGeneration++;
-
   sLastTracerEvent = aTime;
 }
 

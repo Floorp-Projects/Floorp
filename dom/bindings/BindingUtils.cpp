@@ -2726,6 +2726,10 @@ UnwrapArgImpl(JS::Handle<JSObject*> src,
               const nsIID &iid,
               void **ppArg)
 {
+    if (!NS_IsMainThread()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
     nsISupports *iface = xpc::UnwrapReflectorToISupports(src);
     if (iface) {
         if (NS_FAILED(iface->QueryInterface(iid, ppArg))) {

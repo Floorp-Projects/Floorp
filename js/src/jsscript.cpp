@@ -1090,10 +1090,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         scriptp.set(script);
 
         /* see BytecodeEmitter::tellDebuggerAboutCompiledScript */
-        if (!fun) {
-            RootedGlobalObject global(cx, script->compileAndGo() ? &script->global() : nullptr);
-            Debugger::onNewScript(cx, script, global);
-        }
+        if (!fun)
+            Debugger::onNewScript(cx, script);
     }
 
     return true;
@@ -3191,8 +3189,7 @@ js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction c
     cscript->setFunction(clone);
 
     script = clone->nonLazyScript();
-    RootedGlobalObject global(cx, script->compileAndGo() ? &script->global() : nullptr);
-    Debugger::onNewScript(cx, script, global);
+    Debugger::onNewScript(cx, script);
 
     return true;
 }
