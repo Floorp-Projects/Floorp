@@ -30,17 +30,11 @@
 #ifndef jit_shared_AssemblerBuffer_x86_shared_h
 #define jit_shared_AssemblerBuffer_x86_shared_h
 
-#include <limits.h>
 #include <stdarg.h>
 #include <string.h>
 
-#include "jsfriendapi.h"
-#include "jsopcode.h"
-#include "jsutil.h"
-
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitSpewer.h"
-#include "js/RootingAPI.h"
 
 // Spew formatting helpers.
 #define PRETTYHEX(x)                       (((x)<0)?"-":""),(((x)<0)?-(x):(x))
@@ -66,6 +60,9 @@
 #define ADDR_o32bs(offset, base, index, scale) ADDR_obs(offset, base, index, scale)
 
 namespace js {
+
+    class Sprinter;
+
 namespace jit {
 
     class AssemblerBuffer {
@@ -179,18 +176,15 @@ namespace jit {
 
     class GenericAssembler
     {
-        js::Sprinter *printer;
+        Sprinter *printer;
 
       public:
 
-        bool isOOLPath;
-
         GenericAssembler()
           : printer(NULL)
-          , isOOLPath(false)
         {}
 
-        void setPrinter(js::Sprinter *sp) {
+        void setPrinter(Sprinter *sp) {
             printer = sp;
         }
 
@@ -199,23 +193,15 @@ namespace jit {
             __attribute__ ((format (printf, 2, 3)))
 #endif
         {
-            if (printer || js::jit::JitSpewEnabled(js::jit::JitSpew_Codegen)) {
-                // Buffer to hold the formatted string. Note that this may contain
-                // '%' characters, so do not pass it directly to printf functions.
-                char buf[200];
-
+            if (MOZ_UNLIKELY(printer || JitSpewEnabled(JitSpew_Codegen))) {
                 va_list va;
                 va_start(va, fmt);
-                int i = vsnprintf(buf, sizeof(buf), fmt, va);
+                spew(fmt, va);
                 va_end(va);
-
-                if (i > -1) {
-                    if (printer)
-                        printer->printf("%s\n", buf);
-                    js::jit::JitSpew(js::jit::JitSpew_Codegen, "%s", buf);
-                }
             }
         }
+
+        MOZ_COLD void spew(const char *fmt, va_list va);
     };
 
 } // namespace jit
