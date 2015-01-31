@@ -382,42 +382,42 @@ SetRegisterToCoercedUndefined(CONTEXT *context, Scalar::Type viewType, AnyRegist
 {
     if (reg.isFloat()) {
         switch (reg.fpu().code()) {
-          case X86Registers::xmm0:  SetXMMRegToNaN(viewType, &XMM_sig(context, 0)); break;
-          case X86Registers::xmm1:  SetXMMRegToNaN(viewType, &XMM_sig(context, 1)); break;
-          case X86Registers::xmm2:  SetXMMRegToNaN(viewType, &XMM_sig(context, 2)); break;
-          case X86Registers::xmm3:  SetXMMRegToNaN(viewType, &XMM_sig(context, 3)); break;
-          case X86Registers::xmm4:  SetXMMRegToNaN(viewType, &XMM_sig(context, 4)); break;
-          case X86Registers::xmm5:  SetXMMRegToNaN(viewType, &XMM_sig(context, 5)); break;
-          case X86Registers::xmm6:  SetXMMRegToNaN(viewType, &XMM_sig(context, 6)); break;
-          case X86Registers::xmm7:  SetXMMRegToNaN(viewType, &XMM_sig(context, 7)); break;
-          case X86Registers::xmm8:  SetXMMRegToNaN(viewType, &XMM_sig(context, 8)); break;
-          case X86Registers::xmm9:  SetXMMRegToNaN(viewType, &XMM_sig(context, 9)); break;
-          case X86Registers::xmm10: SetXMMRegToNaN(viewType, &XMM_sig(context, 10)); break;
-          case X86Registers::xmm11: SetXMMRegToNaN(viewType, &XMM_sig(context, 11)); break;
-          case X86Registers::xmm12: SetXMMRegToNaN(viewType, &XMM_sig(context, 12)); break;
-          case X86Registers::xmm13: SetXMMRegToNaN(viewType, &XMM_sig(context, 13)); break;
-          case X86Registers::xmm14: SetXMMRegToNaN(viewType, &XMM_sig(context, 14)); break;
-          case X86Registers::xmm15: SetXMMRegToNaN(viewType, &XMM_sig(context, 15)); break;
+          case X86Encoding::xmm0:  SetXMMRegToNaN(viewType, &XMM_sig(context, 0)); break;
+          case X86Encoding::xmm1:  SetXMMRegToNaN(viewType, &XMM_sig(context, 1)); break;
+          case X86Encoding::xmm2:  SetXMMRegToNaN(viewType, &XMM_sig(context, 2)); break;
+          case X86Encoding::xmm3:  SetXMMRegToNaN(viewType, &XMM_sig(context, 3)); break;
+          case X86Encoding::xmm4:  SetXMMRegToNaN(viewType, &XMM_sig(context, 4)); break;
+          case X86Encoding::xmm5:  SetXMMRegToNaN(viewType, &XMM_sig(context, 5)); break;
+          case X86Encoding::xmm6:  SetXMMRegToNaN(viewType, &XMM_sig(context, 6)); break;
+          case X86Encoding::xmm7:  SetXMMRegToNaN(viewType, &XMM_sig(context, 7)); break;
+          case X86Encoding::xmm8:  SetXMMRegToNaN(viewType, &XMM_sig(context, 8)); break;
+          case X86Encoding::xmm9:  SetXMMRegToNaN(viewType, &XMM_sig(context, 9)); break;
+          case X86Encoding::xmm10: SetXMMRegToNaN(viewType, &XMM_sig(context, 10)); break;
+          case X86Encoding::xmm11: SetXMMRegToNaN(viewType, &XMM_sig(context, 11)); break;
+          case X86Encoding::xmm12: SetXMMRegToNaN(viewType, &XMM_sig(context, 12)); break;
+          case X86Encoding::xmm13: SetXMMRegToNaN(viewType, &XMM_sig(context, 13)); break;
+          case X86Encoding::xmm14: SetXMMRegToNaN(viewType, &XMM_sig(context, 14)); break;
+          case X86Encoding::xmm15: SetXMMRegToNaN(viewType, &XMM_sig(context, 15)); break;
           default: MOZ_CRASH();
         }
     } else {
         switch (reg.gpr().code()) {
-          case X86Registers::eax: RAX_sig(context) = 0; break;
-          case X86Registers::ecx: RCX_sig(context) = 0; break;
-          case X86Registers::edx: RDX_sig(context) = 0; break;
-          case X86Registers::ebx: RBX_sig(context) = 0; break;
-          case X86Registers::esp: RSP_sig(context) = 0; break;
-          case X86Registers::ebp: RBP_sig(context) = 0; break;
-          case X86Registers::esi: RSI_sig(context) = 0; break;
-          case X86Registers::edi: RDI_sig(context) = 0; break;
-          case X86Registers::r8:  R8_sig(context)  = 0; break;
-          case X86Registers::r9:  R9_sig(context)  = 0; break;
-          case X86Registers::r10: R10_sig(context) = 0; break;
-          case X86Registers::r11: R11_sig(context) = 0; break;
-          case X86Registers::r12: R12_sig(context) = 0; break;
-          case X86Registers::r13: R13_sig(context) = 0; break;
-          case X86Registers::r14: R14_sig(context) = 0; break;
-          case X86Registers::r15: R15_sig(context) = 0; break;
+          case X86Encoding::rax: RAX_sig(context) = 0; break;
+          case X86Encoding::rcx: RCX_sig(context) = 0; break;
+          case X86Encoding::rdx: RDX_sig(context) = 0; break;
+          case X86Encoding::rbx: RBX_sig(context) = 0; break;
+          case X86Encoding::rsp: RSP_sig(context) = 0; break;
+          case X86Encoding::rbp: RBP_sig(context) = 0; break;
+          case X86Encoding::rsi: RSI_sig(context) = 0; break;
+          case X86Encoding::rdi: RDI_sig(context) = 0; break;
+          case X86Encoding::r8:  R8_sig(context)  = 0; break;
+          case X86Encoding::r9:  R9_sig(context)  = 0; break;
+          case X86Encoding::r10: R10_sig(context) = 0; break;
+          case X86Encoding::r11: R11_sig(context) = 0; break;
+          case X86Encoding::r12: R12_sig(context) = 0; break;
+          case X86Encoding::r13: R13_sig(context) = 0; break;
+          case X86Encoding::r14: R14_sig(context) = 0; break;
+          case X86Encoding::r15: R15_sig(context) = 0; break;
           default: MOZ_CRASH();
         }
     }
@@ -551,22 +551,22 @@ SetRegisterToCoercedUndefined(mach_port_t rtThread, x86_thread_state64_t &state,
 
         Scalar::Type viewType = heapAccess.type();
         switch (heapAccess.loadedReg().fpu().code()) {
-          case X86Registers::xmm0:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm0); break;
-          case X86Registers::xmm1:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm1); break;
-          case X86Registers::xmm2:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm2); break;
-          case X86Registers::xmm3:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm3); break;
-          case X86Registers::xmm4:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm4); break;
-          case X86Registers::xmm5:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm5); break;
-          case X86Registers::xmm6:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm6); break;
-          case X86Registers::xmm7:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm7); break;
-          case X86Registers::xmm8:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm8); break;
-          case X86Registers::xmm9:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm9); break;
-          case X86Registers::xmm10: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm10); break;
-          case X86Registers::xmm11: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm11); break;
-          case X86Registers::xmm12: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm12); break;
-          case X86Registers::xmm13: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm13); break;
-          case X86Registers::xmm14: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm14); break;
-          case X86Registers::xmm15: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm15); break;
+          case X86Encoding::xmm0:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm0); break;
+          case X86Encoding::xmm1:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm1); break;
+          case X86Encoding::xmm2:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm2); break;
+          case X86Encoding::xmm3:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm3); break;
+          case X86Encoding::xmm4:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm4); break;
+          case X86Encoding::xmm5:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm5); break;
+          case X86Encoding::xmm6:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm6); break;
+          case X86Encoding::xmm7:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm7); break;
+          case X86Encoding::xmm8:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm8); break;
+          case X86Encoding::xmm9:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm9); break;
+          case X86Encoding::xmm10: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm10); break;
+          case X86Encoding::xmm11: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm11); break;
+          case X86Encoding::xmm12: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm12); break;
+          case X86Encoding::xmm13: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm13); break;
+          case X86Encoding::xmm14: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm14); break;
+          case X86Encoding::xmm15: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm15); break;
           default: MOZ_CRASH();
         }
 
@@ -575,22 +575,22 @@ SetRegisterToCoercedUndefined(mach_port_t rtThread, x86_thread_state64_t &state,
             return false;
     } else {
         switch (heapAccess.loadedReg().gpr().code()) {
-          case X86Registers::eax: state.__rax = 0; break;
-          case X86Registers::ecx: state.__rcx = 0; break;
-          case X86Registers::edx: state.__rdx = 0; break;
-          case X86Registers::ebx: state.__rbx = 0; break;
-          case X86Registers::esp: state.__rsp = 0; break;
-          case X86Registers::ebp: state.__rbp = 0; break;
-          case X86Registers::esi: state.__rsi = 0; break;
-          case X86Registers::edi: state.__rdi = 0; break;
-          case X86Registers::r8:  state.__r8  = 0; break;
-          case X86Registers::r9:  state.__r9  = 0; break;
-          case X86Registers::r10: state.__r10 = 0; break;
-          case X86Registers::r11: state.__r11 = 0; break;
-          case X86Registers::r12: state.__r12 = 0; break;
-          case X86Registers::r13: state.__r13 = 0; break;
-          case X86Registers::r14: state.__r14 = 0; break;
-          case X86Registers::r15: state.__r15 = 0; break;
+          case X86Encoding::rax: state.__rax = 0; break;
+          case X86Encoding::rcx: state.__rcx = 0; break;
+          case X86Encoding::rdx: state.__rdx = 0; break;
+          case X86Encoding::rbx: state.__rbx = 0; break;
+          case X86Encoding::rsp: state.__rsp = 0; break;
+          case X86Encoding::rbp: state.__rbp = 0; break;
+          case X86Encoding::rsi: state.__rsi = 0; break;
+          case X86Encoding::rdi: state.__rdi = 0; break;
+          case X86Encoding::r8:  state.__r8  = 0; break;
+          case X86Encoding::r9:  state.__r9  = 0; break;
+          case X86Encoding::r10: state.__r10 = 0; break;
+          case X86Encoding::r11: state.__r11 = 0; break;
+          case X86Encoding::r12: state.__r12 = 0; break;
+          case X86Encoding::r13: state.__r13 = 0; break;
+          case X86Encoding::r14: state.__r14 = 0; break;
+          case X86Encoding::r15: state.__r15 = 0; break;
           default: MOZ_CRASH();
         }
     }
