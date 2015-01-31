@@ -31,14 +31,17 @@ function UsableKeyIdsMatch(usableKeyIds, expectedKeyIds) {
 function AwaitAllKeysUsable(session, keys, token) {
   return new Promise(function(resolve, reject) {
     function listener(event) {
-      session.getUsableKeyIds().then(function(usableKeyIds) {
-        var u = UsableKeyIdsMatch(usableKeyIds, keys);
-        if (UsableKeyIdsMatch(usableKeyIds, keys)) {
-          Log(token, "resolving AwaitAllKeysUsable promise");
-          session.removeEventListener("keyschange", listener);
-          resolve();
-        }
-      }, bail(token + " failed to get usableKeyIds"));
+      var map = session.keyStatuses;
+      var usableKeyIds = [];
+      for (var [key, val] of map.entries()) {
+        is(val, "usable", token + ": key status should be usable");
+        usableKeyIds.push(key);
+      }
+      if (UsableKeyIdsMatch(usableKeyIds, keys)) {
+        Log(token, "resolving AwaitAllKeysUsable promise");
+        session.removeEventListener("keyschange", listener);
+        resolve();
+      }
     }
     session.addEventListener("keyschange", listener);
   });
@@ -47,12 +50,11 @@ function AwaitAllKeysUsable(session, keys, token) {
 function AwaitAllKeysNotUsable(session, token) {
   return new Promise(function(resolve, reject) {
     function listener(event) {
-      session.getUsableKeyIds().then(function(usableKeyIds) {
-        if (usableKeyIds.length == 0) {
-          session.removeEventListener("keyschange", listener);
-          resolve();
-        }
-      }, bail(token + " failed to get usableKeyIds"));
+      var map = session.keyStatuses;
+      if (map.size == 0) {
+        session.removeEventListener("keyschange", listener);
+        resolve();
+      }
     }
     session.addEventListener("keyschange", listener);
   });

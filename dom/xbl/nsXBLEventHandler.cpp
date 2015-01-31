@@ -160,42 +160,24 @@ nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-nsresult
+already_AddRefed<nsXBLEventHandler>
 NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
-                      nsIAtom* aEventType,
-                      nsXBLEventHandler** aResult)
+                      nsIAtom* aEventType)
 {
+  nsRefPtr<nsXBLEventHandler> handler;
+
   switch (nsContentUtils::GetEventClassID(nsDependentAtomString(aEventType))) {
     case eDragEventClass:
     case eMouseEventClass:
     case eMouseScrollEventClass:
     case eWheelEventClass:
     case eSimpleGestureEventClass:
-      *aResult = new nsXBLMouseEventHandler(aHandler);
+      handler = new nsXBLMouseEventHandler(aHandler);
       break;
     default:
-      *aResult = new nsXBLEventHandler(aHandler);
+      handler = new nsXBLEventHandler(aHandler);
       break;
   }
 
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
-nsresult
-NS_NewXBLKeyEventHandler(nsIAtom* aEventType, uint8_t aPhase, uint8_t aType,
-                         nsXBLKeyEventHandler** aResult)
-{
-  *aResult = new nsXBLKeyEventHandler(aEventType, aPhase, aType);
-
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
+  return handler.forget();
 }

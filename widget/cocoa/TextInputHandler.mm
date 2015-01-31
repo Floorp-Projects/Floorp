@@ -2975,6 +2975,7 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
   nsAutoString str;
   WidgetQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, mWidget);
   textContent.InitForQueryTextContent(aRange.location, aRange.length);
+  textContent.RequestFontRanges();
   DispatchEvent(textContent);
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -2989,9 +2990,26 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
   }
 
   NSString* nsstr = nsCocoaUtils::ToNSString(textContent.mReply.mString);
-  NSAttributedString* result =
-    [[[NSAttributedString alloc] initWithString:nsstr
-                                     attributes:nil] autorelease];
+  NSMutableAttributedString* result =
+    [[[NSMutableAttributedString alloc] initWithString:nsstr
+                                            attributes:nil] autorelease];
+  const nsTArray<FontRange>& fontRanges = textContent.mReply.mFontRanges;
+  int32_t lastOffset = textContent.mReply.mString.Length();
+  for (auto i = fontRanges.Length(); i > 0; --i) {
+    const FontRange& fontRange = fontRanges[i - 1];
+    NSString* fontName = nsCocoaUtils::ToNSString(fontRange.mFontName);
+    CGFloat fontSize = fontRange.mFontSize / mWidget->BackingScaleFactor();
+    NSFont* font = [NSFont fontWithName:fontName size:fontSize];
+    if (!font) {
+      font = [NSFont systemFontOfSize:fontSize];
+    }
+
+    NSDictionary* attrs = @{ NSFontAttributeName: font };
+    NSRange range = NSMakeRange(fontRange.mStartOffset,
+                                lastOffset - fontRange.mStartOffset);
+    [result setAttributes:attrs range:range];
+    lastOffset = fontRange.mStartOffset;
+  }
   if (aActualRange) {
     aActualRange->location = textContent.mReply.mOffset;
     aActualRange->length = textContent.mReply.mString.Length();
