@@ -225,10 +225,8 @@ MediaSourceReader::OnAudioNotDecoded(NotDecodedReason aReason)
     AdjustEndTime(&mLastAudioTime, mAudioReader);
   }
 
-  // See if we can find a different reader that can pick up where we left off. We use the
-  // EOS_FUZZ_US to allow for the fact that our end time can be inaccurate due to bug
-  // 1065207.
-  if (SwitchAudioReader(mLastAudioTime, EOS_FUZZ_US) == READER_NEW) {
+  // See if we can find a different reader that can pick up where we left off.
+  if (SwitchAudioReader(mLastAudioTime) == READER_NEW) {
     mAudioSeekRequest.Begin(mAudioReader->Seek(mLastAudioTime, 0)
                             ->RefableThen(GetTaskQueue(), __func__, this,
                                           &MediaSourceReader::CompleteAudioSeekAndDoRequest,
@@ -337,10 +335,8 @@ MediaSourceReader::OnVideoNotDecoded(NotDecodedReason aReason)
     AdjustEndTime(&mLastVideoTime, mVideoReader);
   }
 
-  // See if we can find a different reader that can pick up where we left off. We use the
-  // EOS_FUZZ_US to allow for the fact that our end time can be inaccurate due to bug
-  // 1065207.
-  if (SwitchVideoReader(mLastVideoTime, EOS_FUZZ_US) == READER_NEW) {
+  // See if we can find a different reader that can pick up where we left off.
+  if (SwitchVideoReader(mLastVideoTime) == READER_NEW) {
     mVideoSeekRequest.Begin(mVideoReader->Seek(mLastVideoTime, 0)
                            ->RefableThen(GetTaskQueue(), __func__, this,
                                          &MediaSourceReader::CompleteVideoSeekAndDoRequest,
@@ -472,14 +468,21 @@ MediaSourceReader::HaveData(int64_t aTarget, MediaData::Type aType)
 }
 
 MediaSourceReader::SwitchReaderResult
-MediaSourceReader::SwitchAudioReader(int64_t aTarget, int64_t aTolerance)
+MediaSourceReader::SwitchAudioReader(int64_t aTarget)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   // XXX: Can't handle adding an audio track after ReadMetadata.
   if (!mAudioTrack) {
     return READER_ERROR;
   }
-  nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget, aTolerance, mAudioTrack->Decoders());
+
+  // We first search without the tolerance and then search with it, so that, in
+  // the case of perfectly-aligned data, we don't prematurely jump to a new
+  // reader and skip the last few samples of the current one.
+  nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget, /* aTolerance = */ 0, mAudioTrack->Decoders());
+  if (!newReader) {
+    newReader = SelectReader(aTarget, EOS_FUZZ_US, mAudioTrack->Decoders());
+  }
   if (newReader && newReader != mAudioReader) {
     mAudioReader->SetIdle();
     mAudioReader = newReader;
@@ -490,14 +493,21 @@ MediaSourceReader::SwitchAudioReader(int64_t aTarget, int64_t aTolerance)
 }
 
 MediaSourceReader::SwitchReaderResult
-MediaSourceReader::SwitchVideoReader(int64_t aTarget, int64_t aTolerance)
+MediaSourceReader::SwitchVideoReader(int64_t aTarget)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   // XXX: Can't handle adding a video track after ReadMetadata.
   if (!mVideoTrack) {
     return READER_ERROR;
   }
-  nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget, aTolerance, mVideoTrack->Decoders());
+
+  // We first search without the tolerance and then search with it, so that, in
+  // the case of perfectly-aligned data, we don't prematurely jump to a new
+  // reader and skip the last few samples of the current one.
+  nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget, /* aTolerance = */ 0, mVideoTrack->Decoders());
+  if (!newReader) {
+    newReader = SelectReader(aTarget, EOS_FUZZ_US, mVideoTrack->Decoders());
+  }
   if (newReader && newReader != mVideoReader) {
     mVideoReader->SetIdle();
     mVideoReader = newReader;
