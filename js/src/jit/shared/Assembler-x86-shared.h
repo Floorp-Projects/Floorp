@@ -952,12 +952,12 @@ class AssemblerX86Shared : public AssemblerShared
         }
     }
     void call(Register reg) {
-        masm.call(reg.code());
+        masm.call_r(reg.code());
     }
     void call(const Operand &op) {
         switch (op.kind()) {
           case Operand::REG:
-            masm.call(op.reg());
+            masm.call_r(op.reg());
             break;
           case Operand::MEM_REG_DISP:
             masm.call_m(op.disp(), op.base());
