@@ -564,7 +564,6 @@ private:
         GROUP11_MOV = 0
     };
 
-    class X86InstructionFormatter;
 public:
     X86Assembler()
       : useVEX_(true)
@@ -573,8 +572,6 @@ public:
     void disableVEX() { useVEX_ = false; }
 
     class JmpSrc {
-        friend class X86Assembler;
-        friend class X86InstructionFormatter;
     public:
         JmpSrc()
             : m_offset(-1)
@@ -599,8 +596,6 @@ public:
     };
 
     class JmpDst {
-        friend class X86Assembler;
-        friend class X86InstructionFormatter;
     public:
         JmpDst()
             : m_offset(-1)
@@ -2663,7 +2658,7 @@ public:
     {
         m_formatter.oneByteOp(OP_CALL_rel32);
         JmpSrc r = m_formatter.immediateRel32();
-        spew("call       .Lfrom%d", r.m_offset);
+        spew("call       .Lfrom%d", r.offset());
         return r;
     }
 
@@ -2687,7 +2682,7 @@ public:
     {
         m_formatter.oneByteOp(OP_CMP_EAXIv);
         JmpSrc r = m_formatter.immediateRel32();
-        spew("cmpl       %%eax, .Lfrom%d", r.m_offset);
+        spew("cmpl       %%eax, .Lfrom%d", r.offset());
         return r;
     }
 
@@ -2712,7 +2707,7 @@ public:
     {
         m_formatter.oneByteOp(OP_JMP_rel32);
         JmpSrc r = m_formatter.immediateRel32();
-        spew("jmp        .Lfrom%d", r.m_offset);
+        spew("jmp        .Lfrom%d", r.offset());
         return r;
     }
 
@@ -2769,7 +2764,7 @@ public:
     {
         m_formatter.twoByteOp(jccRel32(cond));
         JmpSrc r = m_formatter.immediateRel32();
-        spew("j%s        .Lfrom%d", nameCC(cond), r.m_offset);
+        spew("j%s        .Lfrom%d", nameCC(cond), r.offset());
         return r;
     }
 
@@ -3820,7 +3815,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
     JmpDst label()
     {
         JmpDst r = JmpDst(m_formatter.size());
-        spew(".set .Llabel%d, .", r.m_offset);
+        spew(".set .Llabel%d, .", r.offset());
         return r;
     }
 
@@ -3830,7 +3825,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
 
     static JmpDst labelFor(JmpSrc jump, intptr_t offset = 0)
     {
-        return JmpDst(jump.m_offset + offset);
+        return JmpDst(jump.offset() + offset);
     }
 
     JmpDst align(int alignment)
@@ -3898,7 +3893,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
             return false;
 
         const unsigned char* code = m_formatter.data();
-        int32_t offset = getInt32(code + from.m_offset);
+        int32_t offset = getInt32(code + from.offset());
         if (offset == -1)
             return false;
         *next = JmpSrc(offset);
@@ -3912,22 +3907,22 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
             return;
 
         unsigned char* code = m_formatter.data();
-        setInt32(code + from.m_offset, to.m_offset);
+        setInt32(code + from.offset(), to.offset());
     }
 
     void linkJump(JmpSrc from, JmpDst to)
     {
-        MOZ_ASSERT(from.m_offset != -1);
-        MOZ_ASSERT(to.m_offset != -1);
+        MOZ_ASSERT(from.offset() != -1);
+        MOZ_ASSERT(to.offset() != -1);
 
         // Sanity check - if the assembler has OOM'd, it will start overwriting
         // its internal buffer and thus our links could be garbage.
         if (oom())
             return;
 
-        spew("##link     ((%d)) jumps to ((%d))", from.m_offset, to.m_offset);
+        spew("##link     ((%d)) jumps to ((%d))", from.offset(), to.offset());
         unsigned char* code = m_formatter.data();
-        setRel32(code + from.m_offset, code + to.m_offset);
+        setRel32(code + from.offset(), code + to.offset());
     }
 
     static bool canRelinkJump(void* from, void* to)
