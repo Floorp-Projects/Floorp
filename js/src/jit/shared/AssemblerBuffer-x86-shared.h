@@ -56,9 +56,9 @@
 #define MEM_o32bs MEM_o32 "(%s,%s,%d)"
 
 #define ADDR_o(offset)                       PRETTYHEX(offset)
-#define ADDR_os(offset, index, scale)        ADDR_o(offset), nameIReg((index)), (1<<(scale))
-#define ADDR_ob(offset, base)                ADDR_o(offset), nameIReg((base))
-#define ADDR_obs(offset, base, index, scale) ADDR_ob(offset, base), nameIReg((index)), (1<<(scale))
+#define ADDR_os(offset, index, scale)        ADDR_o(offset), GPRegName((index)), (1<<(scale))
+#define ADDR_ob(offset, base)                ADDR_o(offset), GPRegName((base))
+#define ADDR_obs(offset, base, index, scale) ADDR_ob(offset, base), GPRegName((index)), (1<<(scale))
 
 #define ADDR_o32(offset)                       ADDR_o(offset)
 #define ADDR_o32s(offset, index, scale)        ADDR_os(offset, index, scale)
