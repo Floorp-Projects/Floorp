@@ -122,12 +122,12 @@ function* check_autocomplete(test) {
 
   let numSearchesStarted = 0;
   input.onSearchBegin = () => {
-    do_log_info("onSearchBegin received");
+    do_print("onSearchBegin received");
     numSearchesStarted++;
   };
   let deferred = Promise.defer();
   input.onSearchComplete = () => {
-    do_log_info("onSearchComplete received");
+    do_print("onSearchComplete received");
     deferred.resolve();
   }
 
@@ -136,7 +136,7 @@ function* check_autocomplete(test) {
     controller.startSearch(test.incompleteSearch);
     expectedSearches++;
   }
-  do_log_info("Searching for: '" + test.search + "'");
+  do_print("Searching for: '" + test.search + "'");
   controller.startSearch(test.search);
   yield deferred.promise;
 
@@ -150,7 +150,7 @@ function* check_autocomplete(test) {
     for (let i = 0; i < controller.matchCount; i++) {
       let value = controller.getValueAt(i);
       let comment = controller.getCommentAt(i);
-      do_log_info("Looking for '" + value + "', '" + comment + "' in expected results...");
+      do_print("Looking for '" + value + "', '" + comment + "' in expected results...");
       let j;
       for (j = 0; j < matches.length; j++) {
         // Skip processed expected results
@@ -167,10 +167,10 @@ function* check_autocomplete(test) {
         else
           style = ["favicon"];
 
-        do_log_info("Checking against expected '" + uri.spec + "', '" + title + "'...");
+        do_print("Checking against expected '" + uri.spec + "', '" + title + "'...");
         // Got a match on both uri and title?
         if (stripPrefix(uri.spec) == stripPrefix(value) && title == comment) {
-          do_log_info("Got a match at index " + j + "!");
+          do_print("Got a match at index " + j + "!");
           let actualStyle = controller.getStyleAt(i).split(/\s+/).sort();
           if (style)
             Assert.equal(actualStyle.toString(), style.toString(), "Match should have expected style");
@@ -254,7 +254,7 @@ function changeRestrict(aType, aChar) {
   else
     branch += "restrict.";
 
-  do_log_info("changing restrict for " + aType + " to '" + aChar + "'");
+  do_print("changing restrict for " + aType + " to '" + aChar + "'");
   Services.prefs.setCharPref(branch + aType, aChar);
 }
 

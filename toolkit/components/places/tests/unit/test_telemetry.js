@@ -117,7 +117,7 @@ add_task(function test_execute()
   yield promiseTopicObserved("places-maintenance-finished");
 
   for (let histogramId in histograms) {
-    do_log_info("checking histogram " + histogramId);
+    do_print("checking histogram " + histogramId);
     let validate = histograms[histogramId];
     let snapshot = Services.telemetry.getHistogramById(histogramId).snapshot();
     validate(snapshot.sum);

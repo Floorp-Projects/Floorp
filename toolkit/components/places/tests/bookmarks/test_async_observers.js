@@ -33,7 +33,7 @@ let observer = {
   onItemChanged: function(aItemId, aProperty, aIsAnnotation, aNewValue,
                           aLastModified, aItemType)
   {
-    do_log_info("Check that we got the correct change information.");
+    do_print("Check that we got the correct change information.");
     do_check_neq(this.bookmarks.indexOf(aItemId), -1);
     if (aProperty == "favicon") {
       do_check_false(aIsAnnotation);
@@ -57,7 +57,7 @@ let observer = {
   },
   onItemVisited: function(aItemId, aVisitId, aTime)
   {
-    do_log_info("Check that we got the correct visit information.");
+    do_print("Check that we got the correct visit information.");
     do_check_neq(this.bookmarks.indexOf(aItemId), -1);
     this.observedVisitId = aVisitId;
     do_check_eq(aTime, NOW);

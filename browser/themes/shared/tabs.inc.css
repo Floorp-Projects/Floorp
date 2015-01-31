@@ -65,6 +65,10 @@
   -moz-padding-start: 9px;
 }
 
+.tab-content[pinned] {
+  -moz-padding-end: 3px;
+}
+
 .tab-throbber,
 .tab-icon-image,
 .tab-close-button {
@@ -75,10 +79,24 @@
 .tab-icon-image {
   height: 16px;
   width: 16px;
+  -moz-margin-end: 6px;
 }
 
 .tab-icon-image {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+}
+
+.tab-icon-overlay {
+  width: 16px;
+  height: 16px;
+  margin-top: 10px;
+  -moz-margin-start: -16px;
+  display: none;
+}
+
+.tab-icon-overlay[crashed] {
+  display: -moz-box;
+  list-style-image: url("chrome://browser/skin/tabbrowser/crashed.svg");
 }
 
 .tab-throbber[busy] {
@@ -87,11 +105,6 @@
 
 .tab-throbber[progress] {
   list-style-image: url("chrome://browser/skin/tabbrowser/loading.png");
-}
-
-.tab-throbber:not([pinned]),
-.tab-icon-image:not([pinned]) {
-  -moz-margin-end: 6px;
 }
 
 .tab-label {
