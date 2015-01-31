@@ -91,7 +91,7 @@ AssemblerX86Shared::trace(JSTracer *trc)
     }
     if (dataRelocations_.length()) {
         CompactBufferReader reader(dataRelocations_);
-        ::TraceDataRelocations(trc, masm.buffer(), reader);
+        ::TraceDataRelocations(trc, masm.data(), reader);
     }
 }
 
