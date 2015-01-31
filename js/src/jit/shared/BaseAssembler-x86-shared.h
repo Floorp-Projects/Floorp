@@ -2634,7 +2634,7 @@ public:
         return r;
     }
 
-    void call(RegisterID dst)
+    void call_r(RegisterID dst)
     {
         m_formatter.oneByteOp(OP_GROUP5_Ev, dst, GROUP5_OP_CALLN);
         spew("call       *%s", nameIReg(dst));
