@@ -25,9 +25,9 @@ BEGIN_TEST(testResolveRecursion)
         my_resolve
     };
 
-    obj1.init(cx, JS_NewObject(cx, &my_resolve_class, JS::NullPtr(), JS::NullPtr()));
+    obj1.init(cx, JS_NewObject(cx, &my_resolve_class));
     CHECK(obj1);
-    obj2.init(cx, JS_NewObject(cx, &my_resolve_class, JS::NullPtr(), JS::NullPtr()));
+    obj2.init(cx, JS_NewObject(cx, &my_resolve_class));
     CHECK(obj2);
     JS_SetPrivate(obj1, this);
     JS_SetPrivate(obj2, this);

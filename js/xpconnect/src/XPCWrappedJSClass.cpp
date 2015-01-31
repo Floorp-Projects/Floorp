@@ -1467,7 +1467,7 @@ JSObject*
 xpc::NewOutObject(JSContext* cx, JSObject* scope)
 {
     RootedObject global(cx, JS_GetGlobalForObject(cx, scope));
-    return JS_NewObject(cx, nullptr, NullPtr(), global);
+    return JS_NewObject(cx, nullptr, global);
 }
 
 

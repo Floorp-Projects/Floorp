@@ -190,8 +190,7 @@ FinalizationWitnessService::Make(const char* aTopic,
                                  JSContext* aCx,
                                  JS::MutableHandle<JS::Value> aRetval)
 {
-  JS::Rooted<JSObject*> objResult(aCx, JS_NewObject(aCx, &sWitnessClass, JS::NullPtr(),
-                                                    JS::NullPtr()));
+  JS::Rooted<JSObject*> objResult(aCx, JS_NewObject(aCx, &sWitnessClass));
   if (!objResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

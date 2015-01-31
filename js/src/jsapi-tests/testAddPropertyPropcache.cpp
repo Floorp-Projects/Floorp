@@ -46,7 +46,7 @@ BEGIN_TEST(testAddPropertyHook)
 
     JS::RootedObject arrObj(cx, &arr.toObject());
     for (int i = 0; i < ExpectedCount; ++i) {
-        obj = JS_NewObject(cx, &AddPropertyClass, JS::NullPtr(), JS::NullPtr());
+        obj = JS_NewObject(cx, &AddPropertyClass);
         CHECK(obj);
         CHECK(JS_DefineElement(cx, arrObj, i, obj,
                                JSPROP_ENUMERATE,
