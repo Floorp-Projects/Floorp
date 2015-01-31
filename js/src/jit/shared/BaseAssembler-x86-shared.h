@@ -5081,9 +5081,6 @@ private:
 
         void oneByteOp8(OneByteOpcodeID opcode, RegisterID rm, GroupOpcodeID groupOp)
         {
-#ifdef JS_CODEGEN_X86
-            MOZ_ASSERT(!X86Registers::ByteRegRequiresRex(rm));
-#endif
             m_buffer.ensureSpace(maxInstructionSize);
             emitRexIf(X86Registers::ByteRegRequiresRex(rm), 0, 0, rm);
             m_buffer.putByteUnchecked(opcode);
@@ -5101,9 +5098,6 @@ private:
 
         void oneByteOp8(OneByteOpcodeID opcode, int32_t offset, RegisterID base, RegisterID reg)
         {
-#ifdef JS_CODEGEN_X86
-            MOZ_ASSERT(!X86Registers::ByteRegRequiresRex(reg));
-#endif
             m_buffer.ensureSpace(maxInstructionSize);
             emitRexIf(X86Registers::ByteRegRequiresRex(reg), reg, 0, base);
             m_buffer.putByteUnchecked(opcode);
@@ -5113,9 +5107,6 @@ private:
         void oneByteOp8_disp32(OneByteOpcodeID opcode, int32_t offset, RegisterID base,
                                RegisterID reg)
         {
-#ifdef JS_CODEGEN_X86
-            MOZ_ASSERT(!X86Registers::ByteRegRequiresRex(reg));
-#endif
             m_buffer.ensureSpace(maxInstructionSize);
             emitRexIf(X86Registers::ByteRegRequiresRex(reg), reg, 0, base);
             m_buffer.putByteUnchecked(opcode);
@@ -5125,9 +5116,6 @@ private:
         void oneByteOp8(OneByteOpcodeID opcode, int32_t offset, RegisterID base,
                         RegisterID index, int scale, RegisterID reg)
         {
-#ifdef JS_CODEGEN_X86
-            MOZ_ASSERT(!X86Registers::ByteRegRequiresRex(reg));
-#endif
             m_buffer.ensureSpace(maxInstructionSize);
             emitRexIf(X86Registers::ByteRegRequiresRex(reg), reg, index, base);
             m_buffer.putByteUnchecked(opcode);
@@ -5136,9 +5124,6 @@ private:
 
         void oneByteOp8(OneByteOpcodeID opcode, const void* address, RegisterID reg)
         {
-#ifdef JS_CODEGEN_X86
-            MOZ_ASSERT(!X86Registers::ByteRegRequiresRex(reg));
-#endif
             m_buffer.ensureSpace(maxInstructionSize);
             emitRexIf(X86Registers::ByteRegRequiresRex(reg), reg, 0, 0);
             m_buffer.putByteUnchecked(opcode);
@@ -5348,7 +5333,10 @@ private:
 #else
         // No REX prefix bytes on 32-bit x86.
         inline bool regRequiresRex(int) { return false; }
-        inline void emitRexIf(bool, int, int, int) {}
+        inline void emitRexIf(bool condition, int, int, int)
+        {
+            MOZ_ASSERT(!condition, "32-bit x86 should never use a REX prefix");
+        }
         inline void emitRexIfNeeded(int, int, int) {}
 #endif
 
