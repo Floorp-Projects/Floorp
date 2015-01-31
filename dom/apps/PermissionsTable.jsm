@@ -524,6 +524,12 @@ this.PermissionsTable =  { geolocation: {
                              trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
+                           },
+                           "requestsync-manager": {
+                             app: DENY_ACTION,
+                             trusted: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
                            }
                          };
 

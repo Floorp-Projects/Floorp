@@ -217,6 +217,7 @@ function testSelectItem(aCommand, aExpect) {
   is(aCommand.typeOfCommand, MozIccManager.STK_CMD_SELECT_ITEM, "typeOfCommand");
   is(aCommand.commandQualifier, aExpect.commandQualifier, "commandQualifier");
   is(aCommand.options.title, aExpect.title, "options.title");
+  is(aCommand.options.presentationType, aCommand.commandQualifier & 0x03, "presentationType");
 
   for (let index in aExpect.items) {
     let item = aCommand.options.items[index];

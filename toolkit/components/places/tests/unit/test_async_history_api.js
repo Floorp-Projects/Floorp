@@ -69,7 +69,7 @@ function TitleChangedObserver(aURI,
 TitleChangedObserver.prototype = {
   __proto__: NavHistoryObserver.prototype,
   onTitleChanged(aURI, aTitle, aGUID) {
-    do_log_info("onTitleChanged(" + aURI.spec + ", " + aTitle + ", " + aGUID + ")");
+    do_print("onTitleChanged(" + aURI.spec + ", " + aTitle + ", " + aGUID + ")");
     if (!this.uri.equals(aURI)) {
       return;
     }
@@ -106,9 +106,9 @@ VisitObserver.prototype = {
                     aTransitionType,
                     aGUID)
   {
-    do_log_info("onVisit(" + aURI.spec + ", " + aVisitId + ", " + aTime +
-                ", " + aSessionId + ", " + aReferringId + ", " +
-                aTransitionType + ", " + aGUID + ")"); 
+    do_print("onVisit(" + aURI.spec + ", " + aVisitId + ", " + aTime +
+             ", " + aSessionId + ", " + aReferringId + ", " +
+             aTransitionType + ", " + aGUID + ")"); 
     if (!this.uri.equals(aURI) || this.guid != aGUID) {
       return;
     }
@@ -252,7 +252,7 @@ add_task(function* test_no_visits_throws() {
       (aPlace.uri ? "uri" : "no uri") + ", " +
       (aPlace.guid ? "guid" : "no guid") + ", " +
       (aPlace.visits ? "visits array" : "no visits array");
-    do_log_info(str);
+    do_print(str);
   };
 
   // Loop through every possible case.  Note that we don't actually care about
@@ -375,7 +375,7 @@ add_task(function* test_non_addable_uri_errors() {
       // NetUtil.newURI() can throw if e.g. our app knows about imap://
       // but the account is not set up and so the URL is invalid for us.
       // Note this in the log but ignore as it's not the subject of this test.
-      do_log_info("Could not construct URI for '" + url + "'; ignoring");
+      do_print("Could not construct URI for '" + url + "'; ignoring");
     }
   });
 
@@ -384,7 +384,7 @@ add_task(function* test_non_addable_uri_errors() {
     do_throw("Unexpected success.");
   }
   for (let place of placesResult.errors) {
-    do_log_info("Checking '" + place.info.uri.spec + "'");
+    do_print("Checking '" + place.info.uri.spec + "'");
     do_check_eq(place.resultCode, Cr.NS_ERROR_INVALID_ARG);
     do_check_false(yield promiseIsURIVisited(place.info.uri));
   }
@@ -1046,7 +1046,7 @@ add_task(function* test_visit_notifies() {
       });
       PlacesUtils.history.addObserver(visitObserver, false);
       let observer = function(aSubject, aTopic, aData) {
-        do_log_info("observe(" + aSubject + ", " + aTopic + ", " + aData + ")");
+        do_print("observe(" + aSubject + ", " + aTopic + ", " + aData + ")");
         do_check_true(aSubject instanceof Ci.nsIURI);
         do_check_true(aSubject.equals(place.uri));
 
@@ -1084,7 +1084,7 @@ add_task(function* test_callbacks_not_supplied() {
       // NetUtil.newURI() can throw if e.g. our app knows about imap://
       // but the account is not set up and so the URL is invalid for us.
       // Note this in the log but ignore as it's not the subject of this test.
-      do_log_info("Could not construct URI for '" + url + "'; ignoring");
+      do_print("Could not construct URI for '" + url + "'; ignoring");
     }
   });
 

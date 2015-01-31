@@ -761,17 +761,6 @@ function do_check_guid_for_bookmark(aId,
 }
 
 /**
- * Logs info to the console in the standard way (includes the filename).
- *
- * @param aMessage
- *        The message to log to the console.
- */
-function do_log_info(aMessage)
-{
-  print("TEST-INFO | " + _TEST_FILE + " | " + aMessage);
-}
-
-/**
  * Compares 2 arrays returning whether they contains the same elements.
  *
  * @param a1

@@ -14,7 +14,7 @@ add_task(function* test_searchEngine() {
   yield promiseAddVisits({ uri: uri1, title: "Terms - SearchEngine Search" });
   addBookmark({ uri: uri2, title: "Terms - SearchEngine Search" });
 
-  do_log_info("Past search terms should be styled, unless bookmarked");
+  do_print("Past search terms should be styled, unless bookmarked");
   Services.prefs.setBoolPref("browser.urlbar.restyleSearches", true);
   yield check_autocomplete({
     search: "term",
@@ -22,7 +22,7 @@ add_task(function* test_searchEngine() {
                { uri: uri2, title: "Terms - SearchEngine Search", style: ["bookmark"] } ]
   });
 
-  do_log_info("Past search terms should not be styled if restyling is disabled");
+  do_print("Past search terms should not be styled if restyling is disabled");
   Services.prefs.setBoolPref("browser.urlbar.restyleSearches", false);
   yield check_autocomplete({
     search: "term",

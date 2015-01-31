@@ -14,8 +14,8 @@
 
 add_test(function removed_bookmark()
 {
-  do_log_info("After removing bookmark, frecency of bookmark's URI should be " +
-              "zero if URI is unvisited and no longer bookmarked.");
+  do_print("After removing bookmark, frecency of bookmark's URI should be " +
+           "zero if URI is unvisited and no longer bookmarked.");
   const TEST_URI = NetUtil.newURI("http://example.com/1");
   let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                                 TEST_URI,
@@ -23,14 +23,14 @@ add_test(function removed_bookmark()
                                                 "bookmark title");
   promiseAsyncUpdates().then(function ()
   {
-    do_log_info("Bookmarked => frecency of URI should be != 0");
+    do_print("Bookmarked => frecency of URI should be != 0");
     do_check_neq(frecencyForUrl(TEST_URI), 0);
 
     PlacesUtils.bookmarks.removeItem(id);
 
     promiseAsyncUpdates().then(function ()
     {
-      do_log_info("Unvisited URI no longer bookmarked => frecency should = 0");
+      do_print("Unvisited URI no longer bookmarked => frecency should = 0");
       do_check_eq(frecencyForUrl(TEST_URI), 0);
 
       remove_all_bookmarks();
@@ -41,8 +41,8 @@ add_test(function removed_bookmark()
 
 add_test(function removed_but_visited_bookmark()
 {
-  do_log_info("After removing bookmark, frecency of bookmark's URI should " +
-              "not be zero if URI is visited.");
+  do_print("After removing bookmark, frecency of bookmark's URI should " +
+           "not be zero if URI is visited.");
   const TEST_URI = NetUtil.newURI("http://example.com/1");
   let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                                 TEST_URI,
@@ -50,7 +50,7 @@ add_test(function removed_but_visited_bookmark()
                                                 "bookmark title");
   promiseAsyncUpdates().then(function ()
   {
-    do_log_info("Bookmarked => frecency of URI should be != 0");
+    do_print("Bookmarked => frecency of URI should be != 0");
     do_check_neq(frecencyForUrl(TEST_URI), 0);
 
     promiseAddVisits(TEST_URI).then(function () {
@@ -58,7 +58,7 @@ add_test(function removed_but_visited_bookmark()
 
       promiseAsyncUpdates().then(function ()
       {
-        do_log_info("*Visited* URI no longer bookmarked => frecency should != 0");
+        do_print("*Visited* URI no longer bookmarked => frecency should != 0");
         do_check_neq(frecencyForUrl(TEST_URI), 0);
 
         remove_all_bookmarks();
@@ -70,8 +70,8 @@ add_test(function removed_but_visited_bookmark()
 
 add_test(function remove_bookmark_still_bookmarked()
 {
-  do_log_info("After removing bookmark, frecency of bookmark's URI should ",
-              "not be zero if URI is still bookmarked.");
+  do_print("After removing bookmark, frecency of bookmark's URI should " +
+           "not be zero if URI is still bookmarked.");
   const TEST_URI = NetUtil.newURI("http://example.com/1");
   let id1 = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                                  TEST_URI,
@@ -83,14 +83,14 @@ add_test(function remove_bookmark_still_bookmarked()
                                                  "bookmark 2 title");
   promiseAsyncUpdates().then(function ()
   {
-    do_log_info("Bookmarked => frecency of URI should be != 0");
+    do_print("Bookmarked => frecency of URI should be != 0");
     do_check_neq(frecencyForUrl(TEST_URI), 0);
 
     PlacesUtils.bookmarks.removeItem(id1);
 
     promiseAsyncUpdates().then(function ()
     {
-      do_log_info("URI still bookmarked => frecency should != 0");
+      do_print("URI still bookmarked => frecency should != 0");
       do_check_neq(frecencyForUrl(TEST_URI), 0);
 
       remove_all_bookmarks();
@@ -101,8 +101,8 @@ add_test(function remove_bookmark_still_bookmarked()
 
 add_test(function cleared_parent_of_visited_bookmark()
 {
-  do_log_info("After removing all children from bookmark's parent, frecency " +
-              "of bookmark's URI should not be zero if URI is visited.");
+  do_print("After removing all children from bookmark's parent, frecency " +
+           "of bookmark's URI should not be zero if URI is visited.");
   const TEST_URI = NetUtil.newURI("http://example.com/1");
   let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                                 TEST_URI,
@@ -110,7 +110,7 @@ add_test(function cleared_parent_of_visited_bookmark()
                                                 "bookmark title");
   promiseAsyncUpdates().then(function ()
   {
-    do_log_info("Bookmarked => frecency of URI should be != 0");
+    do_print("Bookmarked => frecency of URI should be != 0");
     do_check_neq(frecencyForUrl(TEST_URI), 0);
 
     promiseAddVisits(TEST_URI).then(function () {
@@ -118,7 +118,7 @@ add_test(function cleared_parent_of_visited_bookmark()
 
       promiseAsyncUpdates().then(function ()
       {
-        do_log_info("*Visited* URI no longer bookmarked => frecency should != 0");
+        do_print("*Visited* URI no longer bookmarked => frecency should != 0");
         do_check_neq(frecencyForUrl(TEST_URI), 0);
 
         remove_all_bookmarks();
@@ -130,9 +130,9 @@ add_test(function cleared_parent_of_visited_bookmark()
 
 add_test(function cleared_parent_of_bookmark_still_bookmarked()
 {
-  do_log_info("After removing all children from bookmark's parent, frecency " +
-              "of bookmark's URI should not be zero if URI is still " +
-              "bookmarked.");
+  do_print("After removing all children from bookmark's parent, frecency " +
+           "of bookmark's URI should not be zero if URI is still " +
+           "bookmarked.");
   const TEST_URI = NetUtil.newURI("http://example.com/1");
   let id1 = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.toolbarFolderId,
                                                  TEST_URI,
@@ -145,7 +145,7 @@ add_test(function cleared_parent_of_bookmark_still_bookmarked()
                                                 "bookmark 2 title");
   promiseAsyncUpdates().then(function ()
   {
-    do_log_info("Bookmarked => frecency of URI should be != 0");
+    do_print("Bookmarked => frecency of URI should be != 0");
     do_check_neq(frecencyForUrl(TEST_URI), 0);
 
     PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);

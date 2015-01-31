@@ -240,10 +240,10 @@ interface nsIStkSetupEventListCmd : nsIStkProactiveCmd
 };
 
 /**
- * The base interface of nsIStkSetUpMenuCmd and nsIStkSelectItemCmd.
+ * This interface is to be applied by STK_CMD_SET_UP_MENU.
  */
-[scriptable, uuid(298bf414-6a1f-11e4-9045-3b3fd28e7f6a)]
-interface nsIStkMenuCmd : nsIStkProactiveCmd
+[scriptable, uuid(d7a66664-a602-11e4-9cc7-c7ce5fdade7d)]
+interface nsIStkSetUpMenuCmd : nsIStkProactiveCmd
 {
   /**
    * (Optional for STK_CMD_SELECT_ITEM)
@@ -304,29 +304,22 @@ interface nsIStkMenuCmd : nsIStkProactiveCmd
 };
 
 /**
- * This interface is to be applied by STK_CMD_SET_UP_MENU.
+ * This interface is to be applied by STK_CMD_SELECT_ITEM.
  */
-[scriptable, uuid(d3ddb1f0-631c-11e4-aac3-4beb03196b7b)]
-interface nsIStkSetUpMenuCmd : nsIStkMenuCmd
+[scriptable, uuid(eb71f0fa-a602-11e4-926f-a3814461d218)]
+interface nsIStkSelectItemCmd : nsIStkSetUpMenuCmd
 {
   /**
    * Presentation type, one of PRESENTATION_TYPE_*.
    *
    * @See TS 11.14, clause 12.6, Command Qualifier: Select Item
    */
-  const short PRESENTATION_TYPE_NOT_SPECIFIED = 0x00;
-  const short PRESENTATION_TYPE_DATA_VALUES = 0x01;
-  const short PRESENTATION_TYPE_NAVIGATION_OPTIONS = 0x03;
+  const unsigned short PRESENTATION_TYPE_NOT_SPECIFIED = 0x00;
+  const unsigned short PRESENTATION_TYPE_DATA_VALUES = 0x01;
+  const unsigned short PRESENTATION_TYPE_NAVIGATION_OPTIONS = 0x03;
 
   readonly attribute unsigned short presentationType;
-};
 
-/**
- * This interface is to be applied by STK_CMD_SELECT_ITEM.
- */
-[scriptable, uuid(816dc186-631b-11e4-864f-b37f7b54a1b8)]
-interface nsIStkSelectItemCmd : nsIStkMenuCmd
-{
   const unsigned short DEFAULT_ITEM_INVALID = 0xFFFF;
 
   /**
