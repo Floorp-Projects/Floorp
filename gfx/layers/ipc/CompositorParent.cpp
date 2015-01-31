@@ -88,6 +88,13 @@ CompositorParent::LayerTreeState::LayerTreeState()
 {
 }
 
+CompositorParent::LayerTreeState::~LayerTreeState()
+{
+  if (mController) {
+    mController->Destroy();
+  }
+}
+
 typedef map<uint64_t, CompositorParent::LayerTreeState> LayerTreeMap;
 static LayerTreeMap sIndirectLayerTrees;
 static StaticAutoPtr<mozilla::Monitor> sIndirectLayerTreesLock;

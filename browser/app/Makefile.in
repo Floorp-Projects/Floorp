@@ -4,9 +4,6 @@
 
 dist_dest   = $(DIST)/$(MOZ_MACBUNDLE_NAME)
 
-PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js \
-		  $(NULL)
-
 # hardcode en-US for the moment
 AB_CD = en-US
 
@@ -17,10 +14,6 @@ DEFINES += \
   -DNEWTAB_ICO='"$(DIST)/branding/newtab.ico"' \
   -DPBMODE_ICO='"$(DIST)/branding/pbmode.ico"' \
   $(NULL)
-
-ifdef LIBXUL_SDK #{
-PREF_JS_EXPORTS += $(srcdir)/profile/channel-prefs.js
-endif #} LIBXUL_SDK
 
 # Build a binary bootstrapping with XRE_main
 

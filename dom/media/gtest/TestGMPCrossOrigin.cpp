@@ -1116,10 +1116,9 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
                             nsresult aException,
                             uint32_t aSystemCode,
                             const nsCString& aMessage) MOZ_OVERRIDE {}
-  virtual void KeyIdUsable(const nsCString& aSessionId,
-                           const nsTArray<uint8_t>& aKeyId) MOZ_OVERRIDE { }
-  virtual void KeyIdNotUsable(const nsCString& aSessionId,
-                              const nsTArray<uint8_t>& aKeyId) MOZ_OVERRIDE {}
+  virtual void KeyStatusChanged(const nsCString& aSessionId,
+                                const nsTArray<uint8_t>& aKeyId,
+                                GMPMediaKeyStatus aStatus) MOZ_OVERRIDE { }
   virtual void SetCaps(uint64_t aCaps) MOZ_OVERRIDE {}
   virtual void Decrypted(uint32_t aId,
                          GMPErr aResult,

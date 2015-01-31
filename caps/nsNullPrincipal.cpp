@@ -116,7 +116,6 @@ nsNullPrincipal::Init(uint32_t aAppId, bool aInMozBrowser)
   }
 
   mURI = new nsNullPrincipalURI(str);
-  NS_ENSURE_TRUE(mURI, NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
 }

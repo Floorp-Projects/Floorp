@@ -405,7 +405,7 @@ class TypedRegisterSet
 #error "Bad architecture"
 #endif
     }
-    // Determemine if some register are still allocated.  This function should
+    // Determine if some register are still allocated.  This function should
     // be used with the set of allocatable registers used for the initialization
     // of the current set.
     bool someAllocated(const TypedRegisterSet &allocatable) const {
