@@ -312,29 +312,33 @@ def print_opcode(opcode):
     print("""<dt>{names}</dt>
 <dd>
 <table class="standard-table">
+<tbody>
 <tr><th>Value</th><td><code>{values}</code></td></tr>
 <tr><th>Operands</th><td><code>{operands}</code></td></tr>
 <tr><th>Length</th><td><code>{length}</code></td></tr>
 <tr><th>Stack Uses</th><td><code>{stack_uses}</code></td></tr>
 <tr><th>Stack Defs</th><td><code>{stack_defs}</code></td></tr>
+</tbody>
 </table>
 
 {desc}
 </dd>
 """.format(names='<br>'.join(names),
            values='<br>'.join(values),
-           operands=escape(opcode.operands),
+           operands=escape(opcode.operands) or "&nbsp;",
            length=escape(override(opcode.length,
                                   opcode.length_override)),
-           stack_uses=escape(opcode.stack_uses),
-           stack_defs=escape(opcode.stack_defs),
+           stack_uses=escape(opcode.stack_uses) or "&nbsp;",
+           stack_defs=escape(opcode.stack_defs) or "&nbsp;",
            desc=opcode.desc)) # desc is already escaped
 
 def make_element_id(name):
     return name.replace(' ', '-')
 
 def print_doc(version, index):
-    print("""<h2 id="Bytecode_Listing">Bytecode Listing</h2>
+    print("""<div>{{{{SpiderMonkeySidebar("Internals")}}}}</div>
+
+<h2 id="Bytecode_Listing">Bytecode Listing</h2>
 
 <p>This document is automatically generated from
 <a href="{source_base}/js/src/vm/Opcodes.h">Opcodes.h</a> and
