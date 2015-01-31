@@ -2390,7 +2390,8 @@ public:
         m_formatter.oneByteOp64(OP_MOVSXD_GvEv, src, dst);
     }
 
-    JmpSrc movl_ripr(RegisterID dst)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    movl_ripr(RegisterID dst)
     {
         m_formatter.oneByteRipOp(OP_MOV_GvEv, 0, (RegisterID)dst);
         JmpSrc label(m_formatter.size());
@@ -2398,7 +2399,8 @@ public:
         return label;
     }
 
-    JmpSrc movl_rrip(RegisterID src)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    movl_rrip(RegisterID src)
     {
         m_formatter.oneByteRipOp(OP_MOV_EvGv, 0, (RegisterID)src);
         JmpSrc label(m_formatter.size());
@@ -2406,7 +2408,8 @@ public:
         return label;
     }
 
-    JmpSrc movq_ripr(RegisterID dst)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    movq_ripr(RegisterID dst)
     {
         m_formatter.oneByteRipOp64(OP_MOV_GvEv, 0, dst);
         JmpSrc label(m_formatter.size());
@@ -2610,7 +2613,8 @@ public:
         m_formatter.oneByteOp64(OP_LEA, offset, base, dst);
     }
 
-    JmpSrc leaq_rip(RegisterID dst)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    leaq_rip(RegisterID dst)
     {
         m_formatter.oneByteRipOp64(OP_LEA, 0, dst);
         JmpSrc label(m_formatter.size());
@@ -2621,7 +2625,8 @@ public:
 
     // Flow control:
 
-    JmpSrc call()
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    call()
     {
         m_formatter.oneByteOp(OP_CALL_rel32);
         JmpSrc r = m_formatter.immediateRel32();
@@ -2629,12 +2634,10 @@ public:
         return r;
     }
 
-    JmpSrc call(RegisterID dst)
+    void call(RegisterID dst)
     {
         m_formatter.oneByteOp(OP_GROUP5_Ev, dst, GROUP5_OP_CALLN);
-        JmpSrc r = JmpSrc(m_formatter.size());
         spew("call       *%s", nameIReg(dst));
-        return r;
     }
 
     void call_m(int32_t offset, RegisterID base)
@@ -2646,7 +2649,8 @@ public:
     // Comparison of EAX against a 32-bit immediate. The immediate is patched
     // in as if it were a jump target. The intention is to toggle the first
     // byte of the instruction between a CMP and a JMP to produce a pseudo-NOP.
-    JmpSrc cmp_eax()
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    cmp_eax()
     {
         m_formatter.oneByteOp(OP_CMP_EAXIv);
         JmpSrc r = m_formatter.immediateRel32();
@@ -2679,14 +2683,10 @@ public:
         return r;
     }
 
-    // Return a JmpSrc so we have a label to the jump, so we can use this
-    // To make a tail recursive call on x86-64.  The MacroAssembler
-    // really shouldn't wrap this as a Jump, since it can't be linked. :-/
-    JmpSrc jmp_r(RegisterID dst)
+    void jmp_r(RegisterID dst)
     {
         spew("jmp        *%s", nameIReg(dst));
         m_formatter.oneByteOp(OP_GROUP5_Ev, dst, GROUP5_OP_JMPN);
-        return JmpSrc(m_formatter.size());
     }
 
     void jmp_m(int32_t offset, RegisterID base)
@@ -3258,27 +3258,33 @@ public:
         twoByteOpSimd("vmovups", VEX_PS, OP2_MOVPS_WpsVps, address, X86Registers::invalid_xmm, src);
     }
 #ifdef JS_CODEGEN_X64
-    JmpSrc vmovsd_ripr(XMMRegisterID dst)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    vmovsd_ripr(XMMRegisterID dst)
     {
         return twoByteRipOpSimd("vmovsd", VEX_SD, OP2_MOVSD_VsdWsd, 0, X86Registers::invalid_xmm, dst);
     }
-    JmpSrc vmovss_ripr(XMMRegisterID dst)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    vmovss_ripr(XMMRegisterID dst)
     {
         return twoByteRipOpSimd("vmovss", VEX_SS, OP2_MOVSD_VsdWsd, 0, X86Registers::invalid_xmm, dst);
     }
-    JmpSrc vmovsd_rrip(XMMRegisterID src)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    vmovsd_rrip(XMMRegisterID src)
     {
         return twoByteRipOpSimd("vmovsd", VEX_SD, OP2_MOVSD_WsdVsd, 0, X86Registers::invalid_xmm, src);
     }
-    JmpSrc vmovss_rrip(XMMRegisterID src)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    vmovss_rrip(XMMRegisterID src)
     {
         return twoByteRipOpSimd("vmovss", VEX_SS, OP2_MOVSD_WsdVsd, 0, X86Registers::invalid_xmm, src);
     }
-    JmpSrc vmovdqa_rrip(XMMRegisterID src)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    vmovdqa_rrip(XMMRegisterID src)
     {
         return twoByteRipOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_WdqVdq, 0, X86Registers::invalid_xmm, src);
     }
-    JmpSrc vmovaps_rrip(XMMRegisterID src)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    vmovaps_rrip(XMMRegisterID src)
     {
         return twoByteRipOpSimd("vmovdqa", VEX_PS, OP2_MOVAPS_WsdVsd, 0, X86Registers::invalid_xmm, src);
     }
@@ -3356,12 +3362,14 @@ public:
     }
 
 #ifdef JS_CODEGEN_X64
-    JmpSrc vmovaps_ripr(XMMRegisterID dst)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    vmovaps_ripr(XMMRegisterID dst)
     {
         return twoByteRipOpSimd("vmovaps", VEX_PS, OP2_MOVAPS_VsdWsd, 0, X86Registers::invalid_xmm, dst);
     }
 
-    JmpSrc vmovdqa_ripr(XMMRegisterID dst)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    vmovdqa_ripr(XMMRegisterID dst)
     {
         return twoByteRipOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_VdqWdq, 0, X86Registers::invalid_xmm, dst);
     }
@@ -4009,8 +4017,9 @@ private:
     }
 
  #ifdef JS_CODEGEN_X64
-    JmpSrc twoByteRipOpSimd(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
-                            int ripOffset, XMMRegisterID src0, XMMRegisterID dst)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    twoByteRipOpSimd(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
+                     int ripOffset, XMMRegisterID src0, XMMRegisterID dst)
     {
         if (useLegacySSEEncoding(src0, dst)) {
             m_formatter.legacySSEPrefix(ty);
@@ -5190,7 +5199,8 @@ private:
             m_buffer.putInt64Unchecked(imm);
         }
 
-        JmpSrc immediateRel32()
+        MOZ_WARN_UNUSED_RESULT JmpSrc
+        immediateRel32()
         {
             m_buffer.putIntUnchecked(0);
             return JmpSrc(m_buffer.size());
