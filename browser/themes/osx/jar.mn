@@ -301,6 +301,7 @@ browser.jar:
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon-inverted.png    (tabbrowser/alltabs-box-bkgnd-icon-inverted.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon-inverted@2x.png (tabbrowser/alltabs-box-bkgnd-icon-inverted@2x.png)
+  skin/classic/browser/tabbrowser/crashed.svg                            (../shared/tabbrowser/crashed.svg)
   skin/classic/browser/tabbrowser/newtab.png                             (tabbrowser/newtab.png)
   skin/classic/browser/tabbrowser/newtab@2x.png                          (tabbrowser/newtab@2x.png)
   skin/classic/browser/tabbrowser/newtab-inverted.png                    (tabbrowser/newtab-inverted.png)

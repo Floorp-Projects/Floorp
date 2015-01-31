@@ -63,7 +63,7 @@ function waitForImportAndSmartBookmarks(aCallback) {
 
   function test_import()
   {
-    do_log_info("Import from bookmarks.html if importBookmarksHTML is true.");
+    do_print("Import from bookmarks.html if importBookmarksHTML is true.");
 
     remove_all_bookmarks();
     // Sanity check: we should not have any bookmark on the toolbar.
@@ -86,7 +86,7 @@ function waitForImportAndSmartBookmarks(aCallback) {
       run_next_test();
     });
     // Force nsBrowserGlue::_initPlaces().
-    do_log_info("Simulate Places init");
+    do_print("Simulate Places init");
     bg.QueryInterface(Ci.nsIObserver).observe(null,
                                               TOPIC_BROWSERGLUE_TEST,
                                               TOPICDATA_FORCE_PLACES_INIT);
@@ -94,8 +94,8 @@ function waitForImportAndSmartBookmarks(aCallback) {
 
   function test_import_noSmartBookmarks()
   {
-    do_log_info("import from bookmarks.html, but don't create smart bookmarks \
-                 if they are disabled");
+    do_print("import from bookmarks.html, but don't create smart bookmarks \
+              if they are disabled");
 
     remove_all_bookmarks();
     // Sanity check: we should not have any bookmark on the toolbar.
@@ -119,7 +119,7 @@ function waitForImportAndSmartBookmarks(aCallback) {
       run_next_test();
     });
     // Force nsBrowserGlue::_initPlaces().
-    do_log_info("Simulate Places init");
+    do_print("Simulate Places init");
     bg.QueryInterface(Ci.nsIObserver).observe(null,
                                               TOPIC_BROWSERGLUE_TEST,
                                               TOPICDATA_FORCE_PLACES_INIT);
@@ -127,8 +127,8 @@ function waitForImportAndSmartBookmarks(aCallback) {
 
   function test_import_autoExport_updatedSmartBookmarks()
   {
-    do_log_info("Import from bookmarks.html, but don't create smart bookmarks \
-                 if autoExportHTML is true and they are at latest version");
+    do_print("Import from bookmarks.html, but don't create smart bookmarks \
+              if autoExportHTML is true and they are at latest version");
 
     remove_all_bookmarks();
     // Sanity check: we should not have any bookmark on the toolbar.
@@ -154,7 +154,7 @@ function waitForImportAndSmartBookmarks(aCallback) {
       run_next_test();
     });
     // Force nsBrowserGlue::_initPlaces()
-    do_log_info("Simulate Places init");
+    do_print("Simulate Places init");
     bg.QueryInterface(Ci.nsIObserver).observe(null,
                                               TOPIC_BROWSERGLUE_TEST,
                                               TOPICDATA_FORCE_PLACES_INIT);
@@ -162,8 +162,8 @@ function waitForImportAndSmartBookmarks(aCallback) {
 
   function test_import_autoExport_oldSmartBookmarks()
   {
-    do_log_info("Import from bookmarks.html, and create smart bookmarks if \
-                 autoExportHTML is true and they are not at latest version.");
+    do_print("Import from bookmarks.html, and create smart bookmarks if \
+              autoExportHTML is true and they are not at latest version.");
 
     remove_all_bookmarks();
     // Sanity check: we should not have any bookmark on the toolbar.
@@ -190,7 +190,7 @@ function waitForImportAndSmartBookmarks(aCallback) {
       run_next_test();
     });
     // Force nsBrowserGlue::_initPlaces()
-    do_log_info("Simulate Places init");
+    do_print("Simulate Places init");
     bg.QueryInterface(Ci.nsIObserver).observe(null,
                                               TOPIC_BROWSERGLUE_TEST,
                                               TOPICDATA_FORCE_PLACES_INIT);
@@ -198,8 +198,8 @@ function waitForImportAndSmartBookmarks(aCallback) {
 
   function test_restore()
   {
-    do_log_info("restore from default bookmarks.html if \
-                 restore_default_bookmarks is true.");
+    do_print("restore from default bookmarks.html if \
+              restore_default_bookmarks is true.");
 
     remove_all_bookmarks();
     // Sanity check: we should not have any bookmark on the toolbar.
@@ -222,7 +222,7 @@ function waitForImportAndSmartBookmarks(aCallback) {
       run_next_test();
     });
     // Force nsBrowserGlue::_initPlaces()
-    do_log_info("Simulate Places init");
+    do_print("Simulate Places init");
     bg.QueryInterface(Ci.nsIObserver).observe(null,
                                               TOPIC_BROWSERGLUE_TEST,
                                               TOPICDATA_FORCE_PLACES_INIT);
@@ -231,8 +231,8 @@ function waitForImportAndSmartBookmarks(aCallback) {
 
   function test_restore_import()
   {
-    do_log_info("setting both importBookmarksHTML and \
-                 restore_default_bookmarks should restore defaults.");
+    do_print("setting both importBookmarksHTML and \
+              restore_default_bookmarks should restore defaults.");
 
     remove_all_bookmarks();
     // Sanity check: we should not have any bookmark on the toolbar.
@@ -257,7 +257,7 @@ function waitForImportAndSmartBookmarks(aCallback) {
       run_next_test();
     });
     // Force nsBrowserGlue::_initPlaces()
-    do_log_info("Simulate Places init");
+    do_print("Simulate Places init");
     bg.QueryInterface(Ci.nsIObserver).observe(null,
                                               TOPIC_BROWSERGLUE_TEST,
                                               TOPICDATA_FORCE_PLACES_INIT);
