@@ -55,7 +55,7 @@ struct Kennel {
 MOZ_NEVER_INLINE static Kennel *
 Allocate(JSContext *cx)
 {
-    RootedObject barker(cx, JS_NewObject(cx, &BarkWhenTracedClass::class_, JS::NullPtr(), JS::NullPtr()));
+    RootedObject barker(cx, JS_NewObject(cx, &BarkWhenTracedClass::class_));
     if (!barker)
         return nullptr;
 
@@ -196,7 +196,7 @@ BEGIN_TEST(test_GlobalPersistentRooted)
     CHECK(!gGlobalRoot.initialized());
 
     {
-        RootedObject barker(cx, JS_NewObject(cx, &BarkWhenTracedClass::class_, JS::NullPtr(), JS::NullPtr()));
+        RootedObject barker(cx, JS_NewObject(cx, &BarkWhenTracedClass::class_));
         CHECK(barker);
 
         gGlobalRoot.init(cx, barker);

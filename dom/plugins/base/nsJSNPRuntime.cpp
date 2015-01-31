@@ -1906,8 +1906,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
 
   // No existing JSObject, create one.
 
-  JS::Rooted<JSObject*> obj(cx, ::JS_NewObject(cx, js::Jsvalify(&sNPObjectJSWrapperClass),
-                                               JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> obj(cx, ::JS_NewObject(cx, js::Jsvalify(&sNPObjectJSWrapperClass)));
 
   if (generation != sNPObjWrappers.Generation()) {
       // Reload entry if the JS_NewObject call caused a GC and reallocated
@@ -2076,7 +2075,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
   // during initialization.
   memset(memberPrivate, 0, sizeof(NPObjectMemberPrivate));
 
-  JSObject *memobj = ::JS_NewObject(cx, &sNPObjectMemberClass, JS::NullPtr(), JS::NullPtr());
+  JSObject *memobj = ::JS_NewObject(cx, &sNPObjectMemberClass);
   if (!memobj) {
     PR_Free(memberPrivate);
     return false;

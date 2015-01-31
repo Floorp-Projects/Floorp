@@ -1280,7 +1280,7 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, JS::MutableHandle<JS::Value>
     JSCLASS_HAS_PRIVATE  /* flags */
   };
 
-  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, &JSHistogram_class, JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, &JSHistogram_class));
   if (!obj)
     return NS_ERROR_FAILURE;
   if (!(JS_DefineFunction(cx, obj, "add", JSHistogram_Add, 1, 0)
@@ -1456,7 +1456,7 @@ WrapAndReturnKeyedHistogram(KeyedHistogram *h, JSContext *cx, JS::MutableHandle<
     JSCLASS_HAS_PRIVATE  /* flags */
   };
 
-  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, &JSHistogram_class, JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, &JSHistogram_class));
   if (!obj)
     return NS_ERROR_FAILURE;
   if (!(JS_DefineFunction(cx, obj, "add", JSKeyedHistogram_Add, 2, 0)

@@ -1035,7 +1035,7 @@ CacheEntry(JSContext* cx, unsigned argc, JS::Value *vp)
         return false;
     }
 
-    RootedObject obj(cx, JS_NewObject(cx, &CacheEntry_class, JS::NullPtr(), JS::NullPtr()));
+    RootedObject obj(cx, JS_NewObject(cx, &CacheEntry_class));
     if (!obj)
         return false;
 
@@ -4039,7 +4039,7 @@ ObjectEmulatingUndefined(JSContext *cx, unsigned argc, jsval *vp)
         JSCLASS_EMULATES_UNDEFINED
     };
 
-    RootedObject obj(cx, JS_NewObject(cx, &cls, JS::NullPtr(), JS::NullPtr()));
+    RootedObject obj(cx, JS_NewObject(cx, &cls));
     if (!obj)
         return false;
     args.rval().setObject(*obj);

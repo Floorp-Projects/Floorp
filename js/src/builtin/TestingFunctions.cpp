@@ -1548,7 +1548,7 @@ class CloneBufferObject : public NativeObject {
     static const Class class_;
 
     static CloneBufferObject *Create(JSContext *cx) {
-        RootedObject obj(cx, JS_NewObject(cx, Jsvalify(&class_), JS::NullPtr(), JS::NullPtr()));
+        RootedObject obj(cx, JS_NewObject(cx, Jsvalify(&class_)));
         if (!obj)
             return nullptr;
         obj->as<CloneBufferObject>().setReservedSlot(DATA_SLOT, PrivateValue(nullptr));
