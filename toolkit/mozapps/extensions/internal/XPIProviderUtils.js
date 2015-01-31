@@ -352,6 +352,11 @@ function DBAddonInternalPrototype()
           }
         });
       });
+      if (aUpdate.multiprocessCompatible !== undefined &&
+          aUpdate.multiprocessCompatible != this.multiprocessCompatible) {
+        this.multiprocessCompatible = aUpdate.multiprocessCompatible;
+        XPIDatabase.saveChanges();
+      }
       XPIProvider.updateAddonDisabledState(this);
     };
 
