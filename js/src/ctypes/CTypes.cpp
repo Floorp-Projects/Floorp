@@ -965,7 +965,7 @@ InitCDataClass(JSContext* cx, HandleObject parent, HandleObject CTypeProto)
     return nullptr;
 
   // Set up ctypes.CData.prototype.
-  RootedObject prototype(cx, JS_NewObject(cx, &sCDataProtoClass, NullPtr(), parent));
+  RootedObject prototype(cx, JS_NewObject(cx, &sCDataProtoClass, parent));
   if (!prototype)
     return nullptr;
 
@@ -1363,7 +1363,7 @@ JS_PUBLIC_API(bool)
 JS_InitCTypesClass(JSContext* cx, HandleObject global)
 {
   // attach ctypes property to global object
-  RootedObject ctypes(cx, JS_NewObject(cx, &sCTypesGlobalClass, NullPtr(), NullPtr()));
+  RootedObject ctypes(cx, JS_NewObject(cx, &sCTypesGlobalClass));
   if (!ctypes)
     return false;
 
@@ -1386,7 +1386,7 @@ JS_InitCTypesClass(JSContext* cx, HandleObject global)
   if (!GetObjectProperty(cx, ctypes, "CDataFinalizer", &ctor))
     return false;
 
-  RootedObject prototype(cx, JS_NewObject(cx, &sCDataFinalizerProtoClass, NullPtr(), ctypes));
+  RootedObject prototype(cx, JS_NewObject(cx, &sCDataFinalizerProtoClass, ctypes));
   if (!prototype)
     return false;
 
@@ -6075,7 +6075,7 @@ CClosure::Create(JSContext* cx,
   RootedValue errVal(cx, errVal_);
   MOZ_ASSERT(fnObj);
 
-  RootedObject result(cx, JS_NewObject(cx, &sCClosureClass, NullPtr(), NullPtr()));
+  RootedObject result(cx, JS_NewObject(cx, &sCClosureClass));
   if (!result)
     return nullptr;
 
