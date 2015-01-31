@@ -322,6 +322,7 @@ if not CONFIG['ENABLE_ION']:
 elif CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
     UNIFIED_SOURCES += [
         'jit/shared/Assembler-x86-shared.cpp',
+        'jit/shared/AssemblerBuffer-x86-shared.cpp',
         'jit/shared/BaselineCompiler-x86-shared.cpp',
         'jit/shared/BaselineIC-x86-shared.cpp',
         'jit/shared/CodeGenerator-x86-shared.cpp',
