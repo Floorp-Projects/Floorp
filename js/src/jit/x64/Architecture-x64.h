@@ -106,10 +106,10 @@ class Registers {
         (1 << X86Registers::esp) |
         (1 << X86Registers::r11);      // This is ScratchReg.
 
+    static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
+
     // Registers that can be allocated without being saved, generally.
     static const uint32_t TempMask = VolatileMask & ~NonAllocatableMask;
-
-    static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
 
     // Registers returned from a JS -> JS call.
     static const uint32_t JSCallMask =
@@ -169,10 +169,9 @@ class FloatRegisters {
     static const uint32_t WrapperMask = VolatileMask;
 
     static const uint32_t NonAllocatableMask =
-        (1 << X86Registers::xmm15);    // This is ScratchFloatReg.
+        (1 << X86Registers::xmm15);    // This is ScratchDoubleReg.
 
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
-
 };
 
 template <typename T>
@@ -221,7 +220,6 @@ struct FloatRegister {
     uint32_t numAliased() const {
         return 1;
     }
-
     // N.B. FloatRegister is an explicit outparam here because msvc-2010
     // miscompiled it on win64 when the value was simply returned
     void aliased(uint32_t aliasIdx, FloatRegister *ret) {
@@ -239,7 +237,7 @@ struct FloatRegister {
     uint32_t size() const {
         return sizeof(double);
     }
-    uint32_t numAlignedAliased() {
+    uint32_t numAlignedAliased() const {
         return 1;
     }
     void alignedAliased(uint32_t aliasIdx, FloatRegister *ret) {
@@ -250,7 +248,6 @@ struct FloatRegister {
     static uint32_t GetSizeInBytes(const TypedRegisterSet<FloatRegister> &s);
     static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister> &s);
     uint32_t getRegisterDumpOffsetInBytes();
-
 };
 
 // Arm/D32 has double registers that can NOT be treated as float32
