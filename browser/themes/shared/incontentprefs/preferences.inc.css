@@ -131,6 +131,13 @@ treecol {
   -moz-margin-start: 0;
 }
 
+/* Content pane */
+#playDRMContentLink {
+  /* Line up with the buttons in the other grid bits: */
+  margin-left: 4px !important;
+  margin-right: 4px !important;
+}
+
 /* Applications Pane Styles */
 
 #applicationsContent {
