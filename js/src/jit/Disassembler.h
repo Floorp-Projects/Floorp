@@ -244,6 +244,16 @@ MOZ_COLD uint8_t *DisassembleHeapAccess(uint8_t *ptr, HeapAccess *access);
 
 #ifdef DEBUG
 void DumpHeapAccess(const HeapAccess &access);
+
+inline void
+VerifyHeapAccess(uint8_t *begin, uint8_t *end, const HeapAccess &expected)
+{
+    HeapAccess disassembled;
+    uint8_t *e = DisassembleHeapAccess(begin, &disassembled);
+    MOZ_ASSERT(e == end);
+    MOZ_ASSERT(disassembled == expected);
+}
+
 #endif
 
 } // namespace Disassembler

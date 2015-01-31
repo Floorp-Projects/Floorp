@@ -30,6 +30,10 @@
 namespace js {
 namespace jit {
 
+namespace Disassembler {
+class HeapAccess;
+};
+
 static const uint32_t Simd128DataSize = 4 * sizeof(int32_t);
 static_assert(Simd128DataSize == 4 * sizeof(int32_t), "SIMD data should be able to contain int32x4");
 static_assert(Simd128DataSize == 4 * sizeof(float), "SIMD data should be able to contain float32x4");
