@@ -12,6 +12,7 @@ namespace jit {
 
 #define MIR_OPCODE_LIST(_)                                                  \
     _(Constant)                                                             \
+    _(NurseryObject)                                                        \
     _(SimdBox)                                                              \
     _(SimdUnbox)                                                            \
     _(SimdValueX4)                                                          \

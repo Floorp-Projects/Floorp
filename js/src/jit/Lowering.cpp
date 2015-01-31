@@ -4003,6 +4003,12 @@ LIRGenerator::visitDebugger(MDebugger *ins)
     add(lir, ins);
 }
 
+void
+LIRGenerator::visitNurseryObject(MNurseryObject *ins)
+{
+    define(new(alloc()) LNurseryObject(), ins);
+}
+
 static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {
