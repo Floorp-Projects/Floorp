@@ -167,8 +167,9 @@ ClearKeySessionManager::PersistentSessionDataLoaded(GMPErr aStatus,
     mDecryptionManager->ExpectKeyId(keyId);
     mDecryptionManager->InitKey(keyId, key);
     mKeyIds.insert(key);
-    mCallback->KeyIdUsable(&aSessionId[0], aSessionId.size(),
-                           &keyId[0], keyId.size());
+    mCallback->KeyStatusChanged(&aSessionId[0], aSessionId.size(),
+                                &keyId[0], keyId.size(),
+                                kGMPUsable);
   }
 
   mCallback->ResolveLoadSessionPromise(aPromiseId, true);
@@ -203,8 +204,9 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
   for (auto it = keyPairs.begin(); it != keyPairs.end(); it++) {
     mDecryptionManager->InitKey(it->mKeyId, it->mKey);
     mKeyIds.insert(it->mKeyId);
-    mCallback->KeyIdUsable(aSessionId, aSessionIdLength,
-                           &it->mKeyId[0], it->mKeyId.size());
+    mCallback->KeyStatusChanged(aSessionId, aSessionIdLength,
+                                &it->mKeyId[0], it->mKeyId.size(),
+                                kGMPUsable);
   }
 
   if (session->Type() != kGMPPersistentSession) {
@@ -279,8 +281,9 @@ ClearKeySessionManager::ClearInMemorySessionData(ClearKeySession* aSession)
     mDecryptionManager->ReleaseKeyId(*it);
 
     const string& sessionId = aSession->Id();
-    mCallback->KeyIdNotUsable(&sessionId[0], sessionId.size(),
-                              &(*it)[0], it->size());
+    mCallback->KeyStatusChanged(&sessionId[0], sessionId.size(),
+                                &(*it)[0], it->size(),
+                                kGMPUnknown);
   }
 
   mSessions.erase(aSession->Id());

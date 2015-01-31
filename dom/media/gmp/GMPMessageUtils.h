@@ -61,6 +61,13 @@ struct ParamTraits<GMPSessionMessageType>
 {};
 
 template <>
+struct ParamTraits<GMPMediaKeyStatus>
+: public ContiguousEnumSerializer<GMPMediaKeyStatus,
+                                  kGMPUsable,
+                                  kGMPMediaKeyStatusInvalid>
+{};
+
+template <>
 struct ParamTraits<GMPSessionType>
 : public ContiguousEnumSerializer<GMPSessionType,
                                   kGMPTemporySession,
