@@ -216,6 +216,37 @@ IonBuilder::spew(const char *message)
 #endif
 }
 
+MInstruction *
+IonBuilder::constantMaybeNursery(JSObject *obj)
+{
+    MOZ_ASSERT(obj);
+    if (!IsInsideNursery(obj))
+        return constant(ObjectValue(*obj));
+
+    // If |obj| is in the nursery, we have to add it to the list of nursery
+    // objects that get traced during off-thread compilation. We use
+    // MNurseryObject to ensure we will patch the code with the right
+    // pointer after codegen is done.
+
+    size_t index = UINT32_MAX;
+    for (size_t i = 0, len = nurseryObjects_.length(); i < len; i++) {
+        if (nurseryObjects_[i] == obj) {
+            index = i;
+            break;
+        }
+    }
+
+    if (index == UINT32_MAX) {
+        if (!nurseryObjects_.append(obj))
+            return nullptr;
+        index = nurseryObjects_.length() - 1;
+    }
+
+    MNurseryObject *ins = MNurseryObject::New(alloc(), obj, index, constraints());
+    current->add(ins);
+    return ins;
+}
+
 static inline int32_t
 GetJumpOffset(jsbytecode *pc)
 {
@@ -5838,6 +5869,9 @@ bool
 IonBuilder::testShouldDOMCall(types::TypeSet *inTypes,
                               JSFunction *func, JSJitInfo::OpType opType)
 {
+    if (IsInsideNursery(func))
+        return false;
+
     if (!func->isNative() || !func->jitInfo())
         return false;
 
@@ -9297,9 +9331,7 @@ IonBuilder::objectsHaveCommonPrototype(types::TemporaryTypeSet *types, PropertyN
                 }
             }
 
-            if (!type->hasTenuredProto())
-                return false;
-            JSObject *proto = type->proto().toObjectOrNull();
+            JSObject *proto = type->protoMaybeInNursery().toObjectOrNull();
             if (proto == foundProto)
                 break;
             if (!proto) {
@@ -9307,7 +9339,7 @@ IonBuilder::objectsHaveCommonPrototype(types::TemporaryTypeSet *types, PropertyN
                 // object's prototype chain.
                 return false;
             }
-            type = types::TypeObjectKey::get(type->proto().toObjectOrNull());
+            type = types::TypeObjectKey::get(proto);
         }
     }
 
@@ -9336,14 +9368,14 @@ IonBuilder::freezePropertiesForCommonPrototype(types::TemporaryTypeSet *types, P
             // Don't mark the proto. It will be held down by the shape
             // guard. This allows us to use properties found on prototypes
             // with properties unknown to TI.
-            if (type->proto() == TaggedProto(foundProto))
+            if (type->protoMaybeInNursery() == TaggedProto(foundProto))
                 break;
-            type = types::TypeObjectKey::get(type->proto().toObjectOrNull());
+            type = types::TypeObjectKey::get(type->protoMaybeInNursery().toObjectOrNull());
         }
     }
 }
 
-inline bool
+bool
 IonBuilder::testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName *name,
                                    bool isGetter, JSObject *foundProto, Shape *lastProperty,
                                    MDefinition **guard,
@@ -9385,7 +9417,7 @@ IonBuilder::testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName 
             return true;
     }
 
-    MInstruction *wrapper = constant(ObjectValue(*foundProto));
+    MInstruction *wrapper = constantMaybeNursery(foundProto);
     *guard = addShapeGuard(wrapper, lastProperty, Bailout_ShapeGuard);
     return true;
 }
@@ -10049,7 +10081,7 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
     // Make sure there's enough room
     if (!current->ensureHasSlots(2))
         return false;
-    pushConstant(ObjectValue(*commonGetter));
+    current->push(constantMaybeNursery(commonGetter));
 
     current->push(obj);
 
@@ -10089,7 +10121,8 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
         }
     }
 
-    if (!makeCall(commonGetter, callInfo, false))
+    JSFunction *tenuredCommonGetter = IsInsideNursery(commonGetter) ? nullptr : commonGetter;
+    if (!makeCall(tenuredCommonGetter, callInfo, false))
         return false;
 
     // If the getter could have been inlined, don't track success. The call to
@@ -10497,8 +10530,7 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
     if (!current->ensureHasSlots(3))
         return false;
 
-    pushConstant(ObjectValue(*commonSetter));
-
+    current->push(constantMaybeNursery(commonSetter));
     current->push(obj);
     current->push(value);
 
@@ -10528,7 +10560,8 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
         }
     }
 
-    MCall *call = makeCallHelper(commonSetter, callInfo, false);
+    JSFunction *tenuredCommonSetter = IsInsideNursery(commonSetter) ? nullptr : commonSetter;
+    MCall *call = makeCallHelper(tenuredCommonSetter, callInfo, false);
     if (!call)
         return false;
 

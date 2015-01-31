@@ -1329,6 +1329,33 @@ class MConstant : public MNullaryInstruction
     ALLOW_CLONE(MConstant)
 };
 
+class MNurseryObject : public MNullaryInstruction
+{
+    // Index in MIRGenerator::nurseryObjects_.
+    uint32_t index_;
+
+  protected:
+    MNurseryObject(JSObject *obj, uint32_t index, types::CompilerConstraintList *constraints);
+
+  public:
+    INSTRUCTION_HEADER(NurseryObject)
+    static MNurseryObject *New(TempAllocator &alloc, JSObject *obj, uint32_t index,
+                               types::CompilerConstraintList *constraints = nullptr);
+
+    HashNumber valueHash() const MOZ_OVERRIDE;
+    bool congruentTo(const MDefinition *ins) const MOZ_OVERRIDE;
+
+    uint32_t index() const {
+        return index_;
+    }
+
+    AliasSet getAliasSet() const MOZ_OVERRIDE {
+        return AliasSet::None();
+    }
+
+    ALLOW_CLONE(MNurseryObject)
+};
+
 // Generic constructor of SIMD valuesX4.
 class MSimdValueX4
   : public MQuaternaryInstruction,
@@ -9825,7 +9852,7 @@ class MGuardObjectIdentity
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
 {
-    AlwaysTenured<JSObject *> singleObject_;
+    AlwaysTenuredObject singleObject_;
     bool bailOnEquality_;
 
     MGuardObjectIdentity(MDefinition *obj, JSObject *singleObject, bool bailOnEquality)
