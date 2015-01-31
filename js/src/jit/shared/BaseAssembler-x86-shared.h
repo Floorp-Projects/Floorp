@@ -3889,122 +3889,10 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
         setRel32(code + from.m_offset, code + to.m_offset);
     }
 
-    static void linkJump(void* code, JmpSrc from, void* to)
-    {
-        MOZ_ASSERT(from.m_offset != -1);
-
-        staticSpew("##link     ((%d)) jumps to ((%p))", from.m_offset, to);
-        setRel32(reinterpret_cast<char*>(code) + from.m_offset, to);
-    }
-
-    static void linkCall(void* code, JmpSrc from, void* to)
-    {
-        MOZ_ASSERT(from.m_offset != -1);
-
-        staticSpew("##linkCall");
-        setRel32(reinterpret_cast<char*>(code) + from.m_offset, to);
-    }
-
-    static void linkPointer(void* code, JmpDst where, void* value)
-    {
-        MOZ_ASSERT(where.m_offset != -1);
-
-        staticSpew("##linkPointer");
-        setPointer(reinterpret_cast<char*>(code) + where.m_offset, value);
-    }
-
-    static void relinkJump(void* from, void* to)
-    {
-        staticSpew("##relinkJump ((from=%p)) ((to=%p))", from, to);
-        setRel32(from, to);
-    }
-
     static bool canRelinkJump(void* from, void* to)
     {
         intptr_t offset = reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from);
         return (offset == static_cast<int32_t>(offset));
-    }
-
-    static void relinkCall(void* from, void* to)
-    {
-        staticSpew("##relinkCall ((from=%p)) ((to=%p))", from, to);
-        setRel32(from, to);
-    }
-
-    static void repatchInt32(void* where, int32_t value)
-    {
-        staticSpew("##relinkInt32 ((where=%p)) ((value=%d))", where, value);
-        setInt32(where, value);
-    }
-
-    static void repatchPointer(void* where, const void* value)
-    {
-        staticSpew("##repatchPtr ((where=%p)) ((value=%p))", where, value);
-        setPointer(where, value);
-    }
-
-    static void repatchLoadPtrToLEA(void* where)
-    {
-        staticSpew("##repatchLoadPtrToLEA ((where=%p))", where);
-
-#ifdef JS_CODEGEN_X64
-        // On x86-64 pointer memory accesses require a 64-bit operand, and as
-        // such a REX prefix.  Skip over the prefix byte.
-        where = reinterpret_cast<char*>(where) + 1;
-#endif
-        *reinterpret_cast<unsigned char*>(where) = static_cast<unsigned char>(OP_LEA);
-    }
-
-    static void repatchLEAToLoadPtr(void* where)
-    {
-        staticSpew("##repatchLEAToLoadPtr ((where=%p))", where);
-#ifdef JS_CODEGEN_X64
-        // On x86-64 pointer memory accesses require a 64-bit operand, and as
-        // such a REX prefix.  Skip over the prefix byte.
-        where = reinterpret_cast<char*>(where) + 1;
-#endif
-        *reinterpret_cast<unsigned char*>(where) = static_cast<unsigned char>(OP_MOV_GvEv);
-    }
-
-    static unsigned getCallReturnOffset(JmpSrc call)
-    {
-        MOZ_ASSERT(call.m_offset >= 0);
-        return call.m_offset;
-    }
-
-    static void* getRelocatedAddress(void* code, JmpSrc jump)
-    {
-        MOZ_ASSERT(jump.m_offset != -1);
-
-        return reinterpret_cast<void*>(reinterpret_cast<ptrdiff_t>(code) + jump.m_offset);
-    }
-
-    static void* getRelocatedAddress(void* code, JmpDst destination)
-    {
-        MOZ_ASSERT(destination.m_offset != -1);
-
-        return reinterpret_cast<void*>(reinterpret_cast<ptrdiff_t>(code) + destination.m_offset);
-    }
-
-    static int getDifferenceBetweenLabels(JmpDst src, JmpDst dst)
-    {
-        return dst.m_offset - src.m_offset;
-    }
-
-    static int getDifferenceBetweenLabels(JmpDst src, JmpSrc dst)
-    {
-        return dst.m_offset - src.m_offset;
-    }
-
-    static int getDifferenceBetweenLabels(JmpSrc src, JmpDst dst)
-    {
-        return dst.m_offset - src.m_offset;
-    }
-
-    void* executableAllocAndCopy(js::jit::ExecutableAllocator* allocator,
-                                 js::jit::ExecutablePool **poolp, js::jit::CodeKind kind)
-    {
-        return m_formatter.executableAllocAndCopy(allocator, poolp, kind);
     }
 
     void executableCopy(void* buffer)
@@ -5374,10 +5262,6 @@ private:
         bool oom() const { return m_buffer.oom(); }
         bool isAligned(int alignment) const { return m_buffer.isAligned(alignment); }
         void* data() const { return m_buffer.data(); }
-        void* executableAllocAndCopy(js::jit::ExecutableAllocator* allocator,
-                                     js::jit::ExecutablePool** poolp, js::jit::CodeKind kind) {
-            return m_buffer.executableAllocAndCopy(allocator, poolp, kind);
-        }
 
     private:
 
