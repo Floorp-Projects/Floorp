@@ -417,6 +417,12 @@ class NativeObject : public JSObject
     // that are (temporarily) inconsistent.
     void setLastPropertyMakeNonNative(Shape *shape);
 
+    // As for setLastProperty(), but changes the class associated with the
+    // object to a native one. The object's type has already been changed, and
+    // this brings the shape into sync with it.
+    static void setLastPropertyMakeNative(ExclusiveContext *cx, HandleNativeObject obj,
+                                          HandleShape shape);
+
   protected:
 #ifdef DEBUG
     void checkShapeConsistency();

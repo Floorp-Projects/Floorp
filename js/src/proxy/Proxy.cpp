@@ -559,7 +559,7 @@ js::proxy_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
         return false;
 
     if (found) {
-        MarkNonNativePropertyFound(propp);
+        MarkNonNativePropertyFound<CanGC>(propp);
         objp.set(obj);
     } else {
         objp.set(nullptr);
