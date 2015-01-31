@@ -95,20 +95,28 @@ class MapObject : public NativeObject {
     static bool getKeysAndValuesInterleaved(JSContext *cx, HandleObject obj,
                                             JS::AutoValueVector *entries);
     static bool entries(JSContext *cx, unsigned argc, Value *vp);
-    static bool set(JSContext *cx, HandleObject obj, HandleValue key, HandleValue value);
     static bool has(JSContext *cx, unsigned argc, Value *vp);
     static MapObject* create(JSContext *cx);
+
+    static uint32_t size(JSContext *cx, HandleObject obj);
+    static bool get(JSContext *cx, HandleObject obj, HandleValue key, MutableHandleValue rval);
+    static bool has(JSContext *cx, HandleObject obj, HandleValue key, bool* rval);
+    static bool set(JSContext *cx, HandleObject obj, HandleValue key, HandleValue val);
+    static bool clear(JSContext *cx, HandleObject obj);
+    static bool iterator(JSContext *cx, IteratorKind kind, HandleObject obj, MutableHandleValue iter);
 
   private:
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
     ValueMap *getData() { return static_cast<ValueMap *>(getPrivate()); }
+    static ValueMap & extract(HandleObject o);
     static ValueMap & extract(CallReceiver call);
     static void mark(JSTracer *trc, JSObject *obj);
     static void finalize(FreeOp *fop, JSObject *obj);
     static bool construct(JSContext *cx, unsigned argc, Value *vp);
 
     static bool is(HandleValue v);
+    static bool is(HandleObject o);
 
     static bool iterator_impl(JSContext *cx, CallArgs args, IteratorKind kind);
 
