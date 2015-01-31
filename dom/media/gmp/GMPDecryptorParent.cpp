@@ -266,7 +266,7 @@ GMPDecryptorParent::RecvSessionError(const nsCString& aSessionId,
 
 bool
 GMPDecryptorParent::RecvKeyStatusChanged(const nsCString& aSessionId,
-                                         InfallibleTArray<uint8_t>&& aKeyId,
+                                         const nsTArray<uint8_t>& aKeyId,
                                          const GMPMediaKeyStatus& aStatus)
 {
   if (!mIsOpen) {
