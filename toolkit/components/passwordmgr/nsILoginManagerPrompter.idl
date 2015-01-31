@@ -11,69 +11,69 @@ interface nsIDOMWindow;
 
 [scriptable, uuid(425f73b9-b2db-4e8a-88c5-9ac2512934ce)]
 interface nsILoginManagerPrompter : nsISupports {
-    /**
-     * Initialize the prompter. Must be called before using other interfaces.
-     *
-     * @param aWindow
-     *        The in which the user is doing some login-related action that's
-     *        resulting in a need to prompt them for something. The prompt
-     *        will be associated with this window (or, if a notification bar
-     *        is being used, topmost opener in some cases).
-     */
-    void init(in nsIDOMWindow aWindow);
+  /**
+   * Initialize the prompter. Must be called before using other interfaces.
+   *
+   * @param aWindow
+   *        The in which the user is doing some login-related action that's
+   *        resulting in a need to prompt them for something. The prompt
+   *        will be associated with this window (or, if a notification bar
+   *        is being used, topmost opener in some cases).
+   */
+  void init(in nsIDOMWindow aWindow);
 
-    /**
-     * If the caller knows which browser this prompter is being created for,
-     * they can call this function to avoid having to calculate it from the
-     * window passed to init.
-     *
-     * @param aBrowser the <browser> to use for this prompter.
-     * @param aOpener the opener to use for this prompter.
-     */
-    void setE10sData(in nsIDOMElement aBrowser, in nsIDOMWindow aOpener);
+  /**
+   * If the caller knows which browser this prompter is being created for,
+   * they can call this function to avoid having to calculate it from the
+   * window passed to init.
+   *
+   * @param aBrowser the <browser> to use for this prompter.
+   * @param aOpener the opener to use for this prompter.
+   */
+  void setE10sData(in nsIDOMElement aBrowser, in nsIDOMWindow aOpener);
 
-    /**
-     * Ask the user if they want to save a login (Yes, Never, Not Now)
-     *
-     * @param aLogin
-     *        The login to be saved.
-     */
-    void promptToSavePassword(in nsILoginInfo aLogin);
+  /**
+   * Ask the user if they want to save a login (Yes, Never, Not Now)
+   *
+   * @param aLogin
+   *        The login to be saved.
+   */
+  void promptToSavePassword(in nsILoginInfo aLogin);
 
-    /**
-     * Ask the user if they want to change a login's password. If the
-     * user consents, modifyLogin() will be called.
-     *
-     * @param aOldLogin
-     *        The existing login (with the old password).
-     * @param aNewLogin
-     *        The new login.
-     */
-    void promptToChangePassword(in nsILoginInfo aOldLogin,
-                                in nsILoginInfo aNewLogin);
+  /**
+   * Ask the user if they want to change a login's password. If the
+   * user consents, modifyLogin() will be called.
+   *
+   * @param aOldLogin
+   *        The existing login (with the old password).
+   * @param aNewLogin
+   *        The new login.
+   */
+  void promptToChangePassword(in nsILoginInfo aOldLogin,
+                              in nsILoginInfo aNewLogin);
 
-    /**
-     * Ask the user if they want to change the password for one of
-     * multiple logins, when the caller can't determine exactly which
-     * login should be changed. If the user consents, modifyLogin() will
-     * be called.
-     *
-     * @param logins
-     *        An array of existing logins.
-     * @param count
-     *        (length of the array)
-     * @param aNewLogin
-     *        The new login.
-     *
-     * Note: Because the caller does not know the username of the login
-     *       to be changed, aNewLogin.username and aNewLogin.usernameField
-     *       will be set (using the user's selection) before modifyLogin()
-     *       is called.
-     */
-    void promptToChangePasswordWithUsernames(
-            [array, size_is(count)] in nsILoginInfo logins,
-            in uint32_t count,
-            in nsILoginInfo aNewLogin);
+  /**
+   * Ask the user if they want to change the password for one of
+   * multiple logins, when the caller can't determine exactly which
+   * login should be changed. If the user consents, modifyLogin() will
+   * be called.
+   *
+   * @param logins
+   *        An array of existing logins.
+   * @param count
+   *        (length of the array)
+   * @param aNewLogin
+   *        The new login.
+   *
+   * Note: Because the caller does not know the username of the login
+   *       to be changed, aNewLogin.username and aNewLogin.usernameField
+   *       will be set (using the user's selection) before modifyLogin()
+   *       is called.
+   */
+  void promptToChangePasswordWithUsernames(
+          [array, size_is(count)] in nsILoginInfo logins,
+          in uint32_t count,
+          in nsILoginInfo aNewLogin);
 };
 %{C++
 
