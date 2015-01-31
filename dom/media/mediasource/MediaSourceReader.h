@@ -145,15 +145,16 @@ public:
 
 private:
   // Switch the current audio/video reader to the reader that
-  // contains aTarget (or up to aError after target). Both
-  // aTarget and aError are in microseconds.
+  // contains aTarget (or up to aTolerance after target). Both
+  // aTarget and aTolerance are in microseconds.
   enum SwitchReaderResult {
     READER_ERROR = -1,
     READER_EXISTING = 0,
     READER_NEW = 1,
   };
-  SwitchReaderResult SwitchAudioReader(int64_t aTarget, int64_t aError = 0);
-  SwitchReaderResult SwitchVideoReader(int64_t aTarget, int64_t aError = 0);
+
+  SwitchReaderResult SwitchAudioReader(int64_t aTarget, int64_t aTolerance = 0);
+  SwitchReaderResult SwitchVideoReader(int64_t aTarget, int64_t aTolerance = 0);
   void RequestAudioDataComplete(int64_t aTime);
   void RequestAudioDataFailed(nsresult aResult);
   void RequestVideoDataComplete(int64_t aTime);
@@ -165,7 +166,7 @@ private:
   // Return a reader from the set available in aTrackDecoders that has data
   // available in the range requested by aTarget.
   already_AddRefed<MediaDecoderReader> SelectReader(int64_t aTarget,
-                                                    int64_t aError,
+                                                    int64_t aTolerance,
                                                     const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders);
   bool HaveData(int64_t aTarget, MediaData::Type aType);
 
