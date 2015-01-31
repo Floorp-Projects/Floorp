@@ -76,7 +76,7 @@ public:
 
   // Returns true if any of the decoders managed by this track buffer
   // contain aTime in their buffered ranges.
-  bool ContainsTime(int64_t aTime);
+  bool ContainsTime(int64_t aTime, int64_t aTolerance);
 
   void BreakCycles();
 
