@@ -628,6 +628,10 @@ var shell = {
       content.removeEventListener('load', shell_homeLoaded);
       shell.isHomeLoaded = true;
 
+      if (Services.prefs.getBoolPref('b2g.orientation.animate')) {
+        Cu.import('resource://gre/modules/OrientationChangeHandler.jsm');
+      }
+
 #ifdef MOZ_WIDGET_GONK
       libcutils.property_set('sys.boot_completed', '1');
 #endif
