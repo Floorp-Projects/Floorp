@@ -3288,32 +3288,32 @@ public:
     MOZ_WARN_UNUSED_RESULT JmpSrc
     vmovsd_ripr(XMMRegisterID dst)
     {
-        return twoByteRipOpSimd("vmovsd", VEX_SD, OP2_MOVSD_VsdWsd, 0, X86Registers::invalid_xmm, dst);
+        return twoByteRipOpSimd("vmovsd", VEX_SD, OP2_MOVSD_VsdWsd, X86Registers::invalid_xmm, dst);
     }
     MOZ_WARN_UNUSED_RESULT JmpSrc
     vmovss_ripr(XMMRegisterID dst)
     {
-        return twoByteRipOpSimd("vmovss", VEX_SS, OP2_MOVSD_VsdWsd, 0, X86Registers::invalid_xmm, dst);
+        return twoByteRipOpSimd("vmovss", VEX_SS, OP2_MOVSD_VsdWsd, X86Registers::invalid_xmm, dst);
     }
     MOZ_WARN_UNUSED_RESULT JmpSrc
     vmovsd_rrip(XMMRegisterID src)
     {
-        return twoByteRipOpSimd("vmovsd", VEX_SD, OP2_MOVSD_WsdVsd, 0, X86Registers::invalid_xmm, src);
+        return twoByteRipOpSimd("vmovsd", VEX_SD, OP2_MOVSD_WsdVsd, X86Registers::invalid_xmm, src);
     }
     MOZ_WARN_UNUSED_RESULT JmpSrc
     vmovss_rrip(XMMRegisterID src)
     {
-        return twoByteRipOpSimd("vmovss", VEX_SS, OP2_MOVSD_WsdVsd, 0, X86Registers::invalid_xmm, src);
+        return twoByteRipOpSimd("vmovss", VEX_SS, OP2_MOVSD_WsdVsd, X86Registers::invalid_xmm, src);
     }
     MOZ_WARN_UNUSED_RESULT JmpSrc
     vmovdqa_rrip(XMMRegisterID src)
     {
-        return twoByteRipOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_WdqVdq, 0, X86Registers::invalid_xmm, src);
+        return twoByteRipOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_WdqVdq, X86Registers::invalid_xmm, src);
     }
     MOZ_WARN_UNUSED_RESULT JmpSrc
     vmovaps_rrip(XMMRegisterID src)
     {
-        return twoByteRipOpSimd("vmovdqa", VEX_PS, OP2_MOVAPS_WsdVsd, 0, X86Registers::invalid_xmm, src);
+        return twoByteRipOpSimd("vmovdqa", VEX_PS, OP2_MOVAPS_WsdVsd, X86Registers::invalid_xmm, src);
     }
 #endif
 
@@ -3392,13 +3392,13 @@ public:
     MOZ_WARN_UNUSED_RESULT JmpSrc
     vmovaps_ripr(XMMRegisterID dst)
     {
-        return twoByteRipOpSimd("vmovaps", VEX_PS, OP2_MOVAPS_VsdWsd, 0, X86Registers::invalid_xmm, dst);
+        return twoByteRipOpSimd("vmovaps", VEX_PS, OP2_MOVAPS_VsdWsd, X86Registers::invalid_xmm, dst);
     }
 
     MOZ_WARN_UNUSED_RESULT JmpSrc
     vmovdqa_ripr(XMMRegisterID dst)
     {
-        return twoByteRipOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_VdqWdq, 0, X86Registers::invalid_xmm, dst);
+        return twoByteRipOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_VdqWdq, X86Registers::invalid_xmm, dst);
     }
 #else
     void vmovaps_mr(const void* address, XMMRegisterID dst)
@@ -4040,28 +4040,28 @@ private:
  #ifdef JS_CODEGEN_X64
     MOZ_WARN_UNUSED_RESULT JmpSrc
     twoByteRipOpSimd(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
-                     int ripOffset, XMMRegisterID src0, XMMRegisterID dst)
+                     XMMRegisterID src0, XMMRegisterID dst)
     {
         if (useLegacySSEEncoding(src0, dst)) {
             m_formatter.legacySSEPrefix(ty);
-            m_formatter.twoByteRipOp(opcode, ripOffset, dst);
+            m_formatter.twoByteRipOp(opcode, 0, dst);
             JmpSrc label(m_formatter.size());
             if (IsXMMReversedOperands(opcode))
-                spew("%-11s%s, .Lfrom%d%+d(%%rip)", legacySSEOpName(name), XMMRegName(dst), label.offset(), ripOffset);
+                spew("%-11s%s, .Lfrom%d(%%rip)", legacySSEOpName(name), XMMRegName(dst), label.offset());
             else
-                spew("%-11s.Lfrom%d%+d(%%rip), %s", legacySSEOpName(name), label.offset(), ripOffset, XMMRegName(dst));
+                spew("%-11s.Lfrom%d(%%rip), %s", legacySSEOpName(name), label.offset(), XMMRegName(dst));
             return label;
         }
 
-        m_formatter.twoByteRipOpVex(ty, opcode, ripOffset, src0, dst);
+        m_formatter.twoByteRipOpVex(ty, opcode, 0, src0, dst);
         JmpSrc label(m_formatter.size());
         if (src0 == X86Registers::invalid_xmm) {
             if (IsXMMReversedOperands(opcode))
-                spew("%-11s%s, .Lfrom%d%+d(%%rip)", name, XMMRegName(dst), label.offset(), ripOffset);
+                spew("%-11s%s, .Lfrom%d(%%rip)", name, XMMRegName(dst), label.offset());
             else
-                spew("%-11s.Lfrom%d%+d(%%rip), %s", name, label.offset(), ripOffset, XMMRegName(dst));
+                spew("%-11s.Lfrom%d(%%rip), %s", name, label.offset(), XMMRegName(dst));
         } else {
-            spew("%-11s.Lfrom%d%+d(%%rip), %s, %s", name, label.offset(), ripOffset, XMMRegName(src0), XMMRegName(dst));
+            spew("%-11s.Lfrom%d(%%rip), %s, %s", name, label.offset(), XMMRegName(src0), XMMRegName(dst));
         }
         return label;
     }
