@@ -487,7 +487,10 @@ gfxWindowsPlatform::UpdateRenderMode()
       canvasMask |= BackendTypeBit(BackendType::DIRECT2D);
       contentMask |= BackendTypeBit(BackendType::DIRECT2D);
 #ifdef USE_D2D1_1
-      if (gfxPrefs::Direct2DUse1_1() && Factory::SupportsD2D1()) {
+      if (gfxPrefs::Direct2DUse1_1() && Factory::SupportsD2D1() &&
+          // Bug 1099074 suggests that we don't handle D2D1.1 and non-OMTC D3D10
+          // very well so only enable D2D1.1 if we have OMTC
+          OffMainThreadCompositingEnabled()) {
         contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
         canvasMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
         defaultBackend = BackendType::DIRECT2D1_1;
