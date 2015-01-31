@@ -172,12 +172,12 @@ let tests = [
           info("'Heartbeat:Voted' notification received (timestamp " + aData.timestamp.toString() + ").");
           ok(Number.isFinite(aData.timestamp), "Timestamp must be a number.");
           is(aData.score, expectedScore, "Should report a score of " + expectedScore);
-          done();
           break;
         }
         case "Heartbeat:NotificationClosed": {
           info("'Heartbeat:NotificationClosed' notification received (timestamp " + aData.timestamp.toString() + ").");
           ok(Number.isFinite(aData.timestamp), "Timestamp must be a number.");
+          done();
           break;
         }
         default:
@@ -197,6 +197,7 @@ let tests = [
     let flowId = "ui-ratefirefox-" + Math.random();
     let originalTabCount = gBrowser.tabs.length;
     const expectedTabCount = originalTabCount + 1;
+    let heartbeatVoteSeen = false;
 
     gContentAPI.observe(function (aEventName, aData) {
       switch (aEventName) {
@@ -210,9 +211,11 @@ let tests = [
         case "Heartbeat:Voted": {
           info("'Heartbeat:Voted' notification received (timestamp " + aData.timestamp.toString() + ").");
           ok(Number.isFinite(aData.timestamp), "Timestamp must be a number.");
+          heartbeatVoteSeen = true;
           break;
         }
         case "Heartbeat:NotificationClosed": {
+          ok(heartbeatVoteSeen, "Heartbeat vote should have been received");
           info("'Heartbeat:NotificationClosed' notification received (timestamp " + aData.timestamp.toString() + ").");
           ok(Number.isFinite(aData.timestamp), "Timestamp must be a number.");
           is(gBrowser.tabs.length, expectedTabCount, "Engagement URL should open in a new tab.");
