@@ -153,8 +153,9 @@ private:
     READER_NEW = 1,
   };
 
-  SwitchReaderResult SwitchAudioReader(int64_t aTarget, int64_t aTolerance = 0);
-  SwitchReaderResult SwitchVideoReader(int64_t aTarget, int64_t aTolerance = 0);
+  SwitchReaderResult SwitchAudioReader(int64_t aTarget);
+  SwitchReaderResult SwitchVideoReader(int64_t aTarget);
+
   void RequestAudioDataComplete(int64_t aTime);
   void RequestAudioDataFailed(nsresult aResult);
   void RequestVideoDataComplete(int64_t aTime);
