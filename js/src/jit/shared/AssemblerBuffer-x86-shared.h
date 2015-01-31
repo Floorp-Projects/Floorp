@@ -172,32 +172,6 @@ namespace jit {
             return m_oom;
         }
 
-        /*
-         * The user must check for a NULL return value, which means
-         * no code was generated, or there was an OOM.
-         */
-        void* executableAllocAndCopy(js::jit::ExecutableAllocator* allocator,
-                                     js::jit::ExecutablePool** poolp, js::jit::CodeKind kind)
-        {
-            if (m_oom || m_size == 0) {
-                *poolp = NULL;
-                return 0;
-            }
-
-            m_allocSize = js::AlignBytes(m_size, sizeof(void *));
-
-            void* result = allocator->alloc(m_allocSize, poolp, kind);
-            if (!result) {
-                *poolp = NULL;
-                return 0;
-            }
-            MOZ_ASSERT(*poolp);
-
-            js::jit::ExecutableAllocator::makeWritable(result, m_size);
-
-            return memcpy(result, m_buffer, m_size);
-        }
-
         unsigned char *buffer() const {
             MOZ_ASSERT(!m_oom);
             return reinterpret_cast<unsigned char *>(m_buffer);
@@ -228,7 +202,7 @@ namespace jit {
          * can continue assembling into the buffer, deferring OOM checking
          * until the user wants to read code out of the buffer.
          *
-         * See also the |executableAllocAndCopy| and |buffer| methods.
+         * See also the |buffer| method.
          */
 
         void grow(size_t extraCapacity = 0)
