@@ -642,10 +642,10 @@ bool
 MediaSourceReader::TrackBuffersContainTime(int64_t aTime)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  if (mAudioTrack && !mAudioTrack->ContainsTime(aTime)) {
+  if (mAudioTrack && !mAudioTrack->ContainsTime(aTime, EOS_FUZZ_US)) {
     return false;
   }
-  if (mVideoTrack && !mVideoTrack->ContainsTime(aTime)) {
+  if (mVideoTrack && !mVideoTrack->ContainsTime(aTime, EOS_FUZZ_US)) {
     return false;
   }
   return true;
