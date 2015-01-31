@@ -979,15 +979,17 @@ static nsIDocShell* GetOpenerDocShellHelper(Element* aFrameElement)
 }
 
 bool
-ContentParent::RecvLoadPlugin(const uint32_t& aPluginId)
+ContentParent::RecvLoadPlugin(const uint32_t& aPluginId, nsresult* aRv)
 {
-    return mozilla::plugins::SetupBridge(aPluginId, this);
+    *aRv = NS_OK;
+    return mozilla::plugins::SetupBridge(aPluginId, this, false, aRv);
 }
 
 bool
-ContentParent::RecvConnectPluginBridge(const uint32_t& aPluginId)
+ContentParent::RecvConnectPluginBridge(const uint32_t& aPluginId, nsresult* aRv)
 {
-    return mozilla::plugins::SetupBridge(aPluginId, this, true);
+    *aRv = NS_OK;
+    return mozilla::plugins::SetupBridge(aPluginId, this, true, aRv);
 }
 
 bool

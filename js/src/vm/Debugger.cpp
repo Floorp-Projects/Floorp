@@ -1302,47 +1302,27 @@ Debugger::dispatchHook(JSContext *cx, MutableHandleValue vp, Hook which, HandleO
     return JSTRAP_CONTINUE;
 }
 
-static bool
-AddNewScriptRecipients(GlobalObject::DebuggerVector *src, HandleScript script,
-                       AutoValueVector *dest)
-{
-    bool wasEmpty = dest->length() == 0;
-    for (Debugger **p = src->begin(); p != src->end(); p++) {
-        Debugger *dbg = *p;
-        Value v = ObjectValue(*dbg->toJSObject());
-        if (dbg->observesScript(script) && dbg->observesNewScript() &&
-            (wasEmpty || Find(dest->begin(), dest->end(), v) == dest->end()) &&
-            !dest->append(v))
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 void
-Debugger::slowPathOnNewScript(JSContext *cx, HandleScript script, GlobalObject *compileAndGoGlobal_)
+Debugger::slowPathOnNewScript(JSContext *cx, HandleScript script)
 {
-    Rooted<GlobalObject*> compileAndGoGlobal(cx, compileAndGoGlobal_);
-
-    MOZ_ASSERT(script->compileAndGo() == !!compileAndGoGlobal);
+    Rooted<GlobalObject*> global(cx, &script->global());
 
     /*
      * Build the list of recipients based on the debuggers observing the
      * script's compartment.
-     *
-     * TODO bug 1064079 will simplify this logic. The meaning of
-     * compile-and-go has changed over the years and is no longer relevant to
-     * Debugger.
      */
     AutoValueVector triggered(cx);
-    GlobalObject::DebuggerVector *debuggers =
-        (script->compileAndGo()
-         ? compileAndGoGlobal->getDebuggers()
-         : script->compartment()->maybeGlobal()->getDebuggers());
+    GlobalObject::DebuggerVector *debuggers = global->getDebuggers();
     if (debuggers) {
-        if (!AddNewScriptRecipients(debuggers, script, &triggered))
-            return;
+        for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
+            Debugger *dbg = *p;
+            if (dbg->observesNewScript() && dbg->observesScript(script)) {
+                if (!triggered.append(ObjectValue(*dbg->toJSObject()))) {
+                    js_ReportOutOfMemory(cx);
+                    return;
+                }
+            }
+        }
     }
 
     /*
@@ -1351,8 +1331,10 @@ Debugger::slowPathOnNewScript(JSContext *cx, HandleScript script, GlobalObject *
      */
     for (Value *p = triggered.begin(); p != triggered.end(); p++) {
         Debugger *dbg = Debugger::fromJSObject(&p->toObject());
-        if ((!compileAndGoGlobal || dbg->debuggees.has(compileAndGoGlobal)) &&
-            dbg->enabled && dbg->getHook(OnNewScript)) {
+        if (dbg->debuggees.has(global) &&
+            dbg->enabled &&
+            dbg->getHook(OnNewScript))
+        {
             dbg->fireNewScript(cx, script);
         }
     }

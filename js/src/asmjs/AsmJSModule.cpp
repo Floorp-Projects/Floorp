@@ -784,13 +784,13 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
             // i.e. ptr >= heapLength + 1 - data-type-byte-size
             // (Note that we need >= as this is what codegen uses.)
             size_t scalarByteSize = TypedArrayElemSize(access.type());
-            X86Assembler::setPointer(access.patchLengthAt(code_),
-                                     (void*)(heap->byteLength() + 1 - scalarByteSize));
+            X86Encoding::SetPointer(access.patchLengthAt(code_),
+                                    (void*)(heap->byteLength() + 1 - scalarByteSize));
         }
         void *addr = access.patchOffsetAt(code_);
-        uint32_t disp = reinterpret_cast<uint32_t>(X86Assembler::getPointer(addr));
+        uint32_t disp = reinterpret_cast<uint32_t>(X86Encoding::GetPointer(addr));
         MOZ_ASSERT(disp <= INT32_MAX);
-        X86Assembler::setPointer(addr, (void *)(heapOffset + disp));
+        X86Encoding::SetPointer(addr, (void *)(heapOffset + disp));
     }
 #elif defined(JS_CODEGEN_X64)
     // Even with signal handling being used for most bounds checks, there may be
@@ -806,7 +806,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
         if (access.hasLengthCheck()) {
             // See comment above for x86 codegen.
             size_t scalarByteSize = TypedArrayElemSize(access.type());
-            X86Assembler::setInt32(access.patchLengthAt(code_), heapLength + 1 - scalarByteSize);
+            X86Encoding::SetInt32(access.patchLengthAt(code_), heapLength + 1 - scalarByteSize);
         }
     }
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
@@ -828,9 +828,9 @@ AsmJSModule::restoreHeapToInitialState(ArrayBufferObjectMaybeShared *maybePrevBu
         for (unsigned i = 0; i < heapAccesses_.length(); i++) {
             const jit::AsmJSHeapAccess &access = heapAccesses_[i];
             void *addr = access.patchOffsetAt(code_);
-            uint8_t *ptr = reinterpret_cast<uint8_t*>(X86Assembler::getPointer(addr));
+            uint8_t *ptr = reinterpret_cast<uint8_t*>(X86Encoding::GetPointer(addr));
             MOZ_ASSERT(ptr >= ptrBase);
-            X86Assembler::setPointer(addr, (void *)(ptr - ptrBase));
+            X86Encoding::SetPointer(addr, (void *)(ptr - ptrBase));
         }
     }
 #endif
@@ -1678,7 +1678,7 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext *cx)
 
         uint8_t *callerRetAddr = code_ + cs.returnAddressOffset();
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        void *callee = X86Assembler::getRel32Target(callerRetAddr);
+        void *callee = X86Encoding::GetRel32Target(callerRetAddr);
 #elif defined(JS_CODEGEN_ARM)
         uint8_t *caller = callerRetAddr - 4;
         Instruction *callerInsn = reinterpret_cast<Instruction*>(caller);
@@ -1706,7 +1706,7 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext *cx)
         uint8_t *newCallee = enabled ? profilingEntry : entry;
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        X86Assembler::setRel32(callerRetAddr, newCallee);
+        X86Encoding::SetRel32(callerRetAddr, newCallee);
 #elif defined(JS_CODEGEN_ARM)
         new (caller) InstBLImm(BOffImm(newCallee - caller), Assembler::Always);
 #elif defined(JS_CODEGEN_MIPS)

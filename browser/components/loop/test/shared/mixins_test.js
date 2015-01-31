@@ -204,8 +204,16 @@ describe("loop.shared.mixins", function() {
         }
       });
 
+      sandbox.useFakeTimers();
+
       rootObject = {
         events: {},
+        setTimeout: function(func, timeout) {
+          return setTimeout(func, timeout);
+        },
+        clearTimeout: function(timer) {
+          return clearTimeout(timer);
+        },
         addEventListener: function(eventName, listener) {
           this.events[eventName] = listener;
         },
@@ -244,20 +252,26 @@ describe("loop.shared.mixins", function() {
       describe("resize", function() {
         it("should update the width on the local stream element", function() {
           localElement = {
+            offsetWidth: 100,
+            offsetHeight: 100,
             style: { width: "0%" }
           };
 
           rootObject.events.resize();
+          sandbox.clock.tick(10);
 
           expect(localElement.style.width).eql("100%");
         });
 
         it("should update the height on the remote stream element", function() {
           remoteElement = {
+            offsetWidth: 100,
+            offsetHeight: 100,
             style: { height: "0%" }
           };
 
           rootObject.events.resize();
+          sandbox.clock.tick(10);
 
           expect(remoteElement.style.height).eql("100%");
         });
@@ -266,22 +280,79 @@ describe("loop.shared.mixins", function() {
       describe("orientationchange", function() {
         it("should update the width on the local stream element", function() {
           localElement = {
+            offsetWidth: 100,
+            offsetHeight: 100,
             style: { width: "0%" }
           };
 
           rootObject.events.orientationchange();
+          sandbox.clock.tick(10);
 
           expect(localElement.style.width).eql("100%");
         });
 
         it("should update the height on the remote stream element", function() {
           remoteElement = {
+            offsetWidth: 100,
+            offsetHeight: 100,
             style: { height: "0%" }
           };
 
           rootObject.events.orientationchange();
+          sandbox.clock.tick(10);
 
           expect(remoteElement.style.height).eql("100%");
+        });
+      });
+
+
+      describe("Video stream dimensions", function() {
+        var localVideoDimensions = {
+          camera: {
+            width: 640,
+            height: 480
+          }
+        };
+        var remoteVideoDimensions = {
+          camera: {
+            width: 420,
+            height: 138
+          }
+        };
+
+        beforeEach(function() {
+          view.updateVideoDimensions(localVideoDimensions, remoteVideoDimensions);
+        });
+
+        it("should register video dimension updates correctly", function() {
+          expect(view._videoDimensionsCache.local.camera.width)
+            .eql(localVideoDimensions.camera.width);
+          expect(view._videoDimensionsCache.local.camera.height)
+            .eql(localVideoDimensions.camera.height);
+          expect(view._videoDimensionsCache.local.camera.aspectRatio.width).eql(1);
+          expect(view._videoDimensionsCache.local.camera.aspectRatio.height).eql(0.75);
+          expect(view._videoDimensionsCache.remote.camera.width)
+            .eql(remoteVideoDimensions.camera.width);
+          expect(view._videoDimensionsCache.remote.camera.height)
+            .eql(remoteVideoDimensions.camera.height);
+          expect(view._videoDimensionsCache.remote.camera.aspectRatio.width).eql(1);
+          expect(view._videoDimensionsCache.remote.camera.aspectRatio.height)
+            .eql(0.32857142857142857);
+        });
+
+        it("should fetch remote video stream dimensions correctly", function() {
+          remoteElement = {
+            offsetWidth: 600,
+            offsetHeight: 320
+          };
+
+          var remoteVideoDimensions = view.getRemoteVideoDimensions();
+          expect(remoteVideoDimensions.width).eql(remoteElement.offsetWidth);
+          expect(remoteVideoDimensions.height).eql(remoteElement.offsetHeight);
+          expect(remoteVideoDimensions.streamWidth).eql(534.8571428571429);
+          expect(remoteVideoDimensions.streamHeight).eql(remoteElement.offsetHeight);
+          expect(remoteVideoDimensions.offsetX).eql(32.571428571428555);
+          expect(remoteVideoDimensions.offsetY).eql(0);
         });
       });
     });

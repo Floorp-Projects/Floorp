@@ -36,7 +36,7 @@ add_task(function* test_same_date_same_hash() {
   converter.charset = "UTF-8";
   let result = yield OS.File.read(mostRecentBackupFile);
   let jsonString = converter.convertFromByteArray(result, result.length);
-  do_log_info("Check is valid JSON");
+  do_print("Check is valid JSON");
   JSON.parse(jsonString);
 
   // Cleanup
@@ -66,7 +66,7 @@ add_task(function* test_same_date_diff_hash() {
   converter.charset = "UTF-8";
   let result = yield OS.File.read(mostRecentBackupFile, { compression: "lz4" });
   let jsonString = converter.convertFromByteArray(result, result.length);
-  do_log_info("Check is valid JSON");
+  do_print("Check is valid JSON");
   JSON.parse(jsonString);
 
   // Cleanup

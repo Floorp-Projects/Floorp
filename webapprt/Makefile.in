@@ -5,9 +5,6 @@
 # Include config.mk explicitly so we can override FINAL_TARGET.
 include $(topsrcdir)/config/config.mk
 
-PREF_JS_EXPORTS = $(srcdir)/prefs.js \
-                  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(call mkdir_deps,$(FINAL_TARGET))
