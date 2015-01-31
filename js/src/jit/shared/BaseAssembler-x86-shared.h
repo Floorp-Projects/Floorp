@@ -3821,18 +3821,20 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
         return JmpDst(jump.offset() + offset);
     }
 
-    JmpDst align(int alignment)
+    void align(int alignment)
     {
         spew(".balign %d, 0x%x   # hlt", alignment, OP_HLT);
         while (!m_formatter.isAligned(alignment))
             m_formatter.oneByteOp(OP_HLT);
-
-        return label();
     }
 
     void jumpTablePointer(uintptr_t ptr)
     {
-        spew("#jumpTablePointer %llu", (unsigned long long)ptr);
+#ifdef JS_CODEGEN_X64
+        spew(".quad 0x%" PRIxPTR, ptr);
+#else
+        spew(".int 0x%" PRIxPTR, ptr);
+#endif
         m_formatter.jumpTablePointer(ptr);
     }
 
@@ -3913,7 +3915,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
         if (oom())
             return;
 
-        spew("##link     ((%d)) jumps to ((%d))", from.offset(), to.offset());
+        spew(".set .Lfrom%d, .Llabel%d", from.offset(), to.offset());
         unsigned char* code = m_formatter.data();
         setRel32(code + from.offset(), code + to.offset());
     }
@@ -3937,7 +3939,6 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
         if (offset != static_cast<int32_t>(offset))
             MOZ_CRASH("offset is too great for a 32-bit relocation");
 
-        staticSpew("##setRel32 ((from=%p)) ((to=%p))", from, to);
         setInt32(from, offset);
     }
 
@@ -3959,7 +3960,6 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
 
     static void setPointer(void* where, const void* value)
     {
-        staticSpew("##setPtr     ((where=%p)) ((value=%p))", where, value);
         static_cast<const void**>(where)[-1] = value;
     }
 

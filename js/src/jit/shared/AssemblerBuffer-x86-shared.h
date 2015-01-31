@@ -216,24 +216,6 @@ namespace jit {
                 }
             }
         }
-
-        static void staticSpew(const char *fmt, ...)
-#ifdef __GNUC__
-            __attribute__ ((format (printf, 1, 2)))
-#endif
-        {
-            if (js::jit::JitSpewEnabled(js::jit::JitSpew_Codegen)) {
-                char buf[200];
-
-                va_list va;
-                va_start(va, fmt);
-                int i = vsnprintf(buf, sizeof(buf), fmt, va);
-                va_end(va);
-
-                if (i > -1)
-                    js::jit::JitSpew(js::jit::JitSpew_Codegen, "%s", buf);
-            }
-        }
     };
 
 } // namespace jit
