@@ -44,11 +44,9 @@ public:
                             uint32_t aSystemCode,
                             const nsCString& aMessage) = 0;
 
-  virtual void KeyIdUsable(const nsCString& aSessionId,
-                           const nsTArray<uint8_t>& aKeyId) = 0;
-
-  virtual void KeyIdNotUsable(const nsCString& aSessionId,
-                              const nsTArray<uint8_t>& aKeyId) = 0;
+  virtual void KeyStatusChanged(const nsCString& aSessionId,
+                                const nsTArray<uint8_t>& aKeyId,
+                                GMPMediaKeyStatus aStatus) = 0;
 
   virtual void SetCaps(uint64_t aCaps) = 0;
 
