@@ -7,6 +7,7 @@ include protocol PGMP;
 include GMPTypes;
 
 using GMPSessionMessageType from  "gmp-decryption.h";
+using GMPMediaKeyStatus from  "gmp-decryption.h";
 using GMPSessionType from  "gmp-decryption.h";
 using GMPDOMException from "gmp-decryption.h";
 using GMPErr from "gmp-errors.h";
@@ -77,11 +78,10 @@ parent:
                uint32_t aSystemCode,
                nsCString aMessage);
 
-  KeyIdUsable(nsCString aSessionId, uint8_t[] aKey);
+  KeyStatusChanged(nsCString aSessionId, uint8_t[] aKey,
+                   GMPMediaKeyStatus aStatus);
 
   SetCaps(uint64_t aCaps);
-
-  KeyIdNotUsable(nsCString aSessionId,uint8_t[] aKey);
 
   Decrypted(uint32_t aId, GMPErr aResult, uint8_t[] aBuffer);
 };
