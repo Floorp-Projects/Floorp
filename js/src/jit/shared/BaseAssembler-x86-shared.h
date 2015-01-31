@@ -470,7 +470,7 @@ private:
     };
 
     // Test whether the given opcode should be printed with its operands reversed.
-    static inline bool IsXMMReversedOperands(TwoByteOpcodeID opcode) {
+    static bool IsXMMReversedOperands(TwoByteOpcodeID opcode) {
         switch (opcode) {
           case OP2_MOVSD_WsdVsd: // also OP2_MOVPS_WpsVps
           case OP2_MOVAPS_WsdVsd:
@@ -5294,19 +5294,19 @@ private:
         static const RegisterID hasSib2 = X86Registers::r12;
 
         // Registers r8 & above require a REX prefixe.
-        inline bool regRequiresRex(int reg)
+        bool regRequiresRex(int reg)
         {
             return (reg >= X86Registers::r8);
         }
 
         // Format a REX prefix byte.
-        inline void emitRex(bool w, int r, int x, int b)
+        void emitRex(bool w, int r, int x, int b)
         {
             m_buffer.putByteUnchecked(PRE_REX | ((int)w << 3) | ((r>>3)<<2) | ((x>>3)<<1) | (b>>3));
         }
 
         // Used to plant a REX byte with REX.w set (for 64-bit operations).
-        inline void emitRexW(int r, int x, int b)
+        void emitRexW(int r, int x, int b)
         {
             emitRex(true, r, x, b);
         }
@@ -5318,7 +5318,7 @@ private:
         // NB: WebKit's use of emitRexIf() is limited such that the
         // reqRequiresRex() checks are not needed. SpiderMonkey extends
         // oneByteOp8 functionality such that r, x, and b can all be used.
-        inline void emitRexIf(bool condition, int r, int x, int b)
+        void emitRexIf(bool condition, int r, int x, int b)
         {
             if (condition || regRequiresRex(r) || regRequiresRex(x) || regRequiresRex(b))
                 emitRex(false, r, x, b);
@@ -5326,18 +5326,18 @@ private:
 
         // Used for word sized operations, will plant a REX prefix if necessary
         // (if any register is r8 or above).
-        inline void emitRexIfNeeded(int r, int x, int b)
+        void emitRexIfNeeded(int r, int x, int b)
         {
             emitRexIf(regRequiresRex(r) || regRequiresRex(x) || regRequiresRex(b), r, x, b);
         }
 #else
         // No REX prefix bytes on 32-bit x86.
-        inline bool regRequiresRex(int) { return false; }
-        inline void emitRexIf(bool condition, int, int, int)
+        bool regRequiresRex(int) { return false; }
+        void emitRexIf(bool condition, int, int, int)
         {
             MOZ_ASSERT(!condition, "32-bit x86 should never use a REX prefix");
         }
-        inline void emitRexIfNeeded(int, int, int) {}
+        void emitRexIfNeeded(int, int, int) {}
 #endif
 
         enum ModRmMode {
