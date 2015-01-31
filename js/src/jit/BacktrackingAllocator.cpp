@@ -128,6 +128,9 @@ BacktrackingAllocator::go()
     if (!populateSafepoints())
         return false;
 
+    if (!annotateMoveGroups())
+        return false;
+
     return true;
 }
 
@@ -1184,7 +1187,7 @@ BacktrackingAllocator::resolveControlFlow()
 
             CodePosition start = interval->start();
             LNode *ins = insData[start];
-            if (interval->start() > entryOf(ins->block())) {
+            if (start > entryOf(ins->block())) {
                 MOZ_ASSERT(start == inputOf(ins) || start == outputOf(ins));
 
                 LiveInterval *prevInterval = reg->intervalFor(start.previous());
@@ -1450,6 +1453,63 @@ BacktrackingAllocator::populateSafepoints()
             }
         }
     }
+
+    return true;
+}
+
+bool
+BacktrackingAllocator::annotateMoveGroups()
+{
+    // Annotate move groups in the LIR graph with any register that is not
+    // allocated at that point and can be used as a scratch register. This is
+    // only required for x86, as other platforms always have scratch registers
+    // available for use.
+#ifdef JS_CODEGEN_X86
+    for (size_t i = 0; i < graph.numBlocks(); i++) {
+        if (mir->shouldCancel("Backtracking Annotate Move Groups"))
+            return false;
+
+        LBlock *block = graph.getBlock(i);
+        LInstruction *last = nullptr;
+        for (LInstructionIterator iter = block->begin(); iter != block->end(); ++iter) {
+            if (iter->isMoveGroup()) {
+                CodePosition from = last ? outputOf(last) : entryOf(block);
+                LiveInterval::Range range(from, from.next());
+                AllocatedRange search(nullptr, &range), existing;
+
+                for (size_t i = 0; i < AnyRegister::Total; i++) {
+                    PhysicalRegister &reg = registers[i];
+                    if (reg.reg.isFloat() || !reg.allocatable)
+                        continue;
+
+                    // This register is unavailable for use if (a) it is in use
+                    // by some live interval immediately before the move group,
+                    // or (b) it is an operand in one of the group's moves. The
+                    // latter case handles live intervals which end immediately
+                    // before the move group or start immediately after.
+
+                    bool found = false;
+                    LGeneralReg alloc(reg.reg.gpr());
+                    for (size_t j = 0; j < iter->toMoveGroup()->numMoves(); j++) {
+                        LMove move = iter->toMoveGroup()->getMove(j);
+                        if (*move.from() == alloc || *move.to() == alloc) {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (found || reg.allocations.contains(search, &existing))
+                        continue;
+
+                    iter->toMoveGroup()->setScratchRegister(reg.reg.gpr());
+                    break;
+                }
+            } else {
+                last = *iter;
+            }
+        }
+    }
+#endif
 
     return true;
 }

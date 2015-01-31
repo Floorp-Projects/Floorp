@@ -97,16 +97,8 @@ void PluginWindowEvent::Init(const PluginWindowWeakRef &ref, HWND aWnd,
  *  nsPluginNativeWindow Windows specific class declaration
  */
 
-typedef enum {
-  nsPluginType_Unknown = 0,
-  nsPluginType_Flash,
-  nsPluginType_Real,
-  nsPluginType_PDF,
-  nsPluginType_Other
-} nsPluginType;
-
 class nsPluginNativeWindowWin : public nsPluginNativeWindow {
-public: 
+public:
   nsPluginNativeWindowWin();
   virtual ~nsPluginNativeWindowWin();
 
@@ -135,7 +127,7 @@ private:
   HWND mParentWnd;
   LONG_PTR mParentProc;
 public:
-  nsPluginType mPluginType;
+  nsPluginHost::SpecialType mPluginType;
 };
 
 static bool sInMessageDispatch = false;
@@ -162,7 +154,7 @@ static bool ProcessFlashMessageDelayed(nsPluginNativeWindowWin * aWin, nsNPAPIPl
   nsCOMPtr<nsIRunnable> pwe = aWin->GetPluginWindowEvent(hWnd, msg, wParam, lParam);
   if (pwe) {
     NS_DispatchToCurrentThread(pwe);
-    return true;  
+    return true;
   }
   return false;
 }
@@ -183,7 +175,7 @@ private:
 NS_IMETHODIMP nsDelayedPopupsEnabledEvent::Run()
 {
   mInst->PushPopupsEnabledState(false);
-  return NS_OK;	
+  return NS_OK;
 }
 
 static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -213,7 +205,7 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   // Real may go into a state where it recursivly dispatches the same event
   // when subclassed. If this is Real, lets examine the event and drop it
   // on the floor if we get into this recursive situation. See bug 192914.
-  if (win->mPluginType == nsPluginType_Real) {
+  if (win->mPluginType == nsPluginHost::eSpecialType_RealPlayer) {
     if (sInMessageDispatch && msg == sLastMsg)
       return true;
     // Cache the last message sent
@@ -263,7 +255,7 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
 
     case WM_MOUSEACTIVATE: {
       // If a child window of this plug-in is already focused,
-      // don't focus the parent to avoid focus dance. We'll 
+      // don't focus the parent to avoid focus dance. We'll
       // receive a follow up WM_SETFOCUS which will notify
       // the appropriate window anyway.
       HWND focusedWnd = ::GetFocus();
@@ -291,7 +283,7 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
     case WM_KILLFOCUS: {
       // RealPlayer can crash, don't process the message for those,
       // see bug 328675.
-      if (win->mPluginType == nsPluginType_Real && msg == sLastMsg)
+      if (win->mPluginType == nsPluginHost::eSpecialType_RealPlayer && msg == sLastMsg)
         return TRUE;
       // Make sure setfocus and killfocus get through to the widget procedure
       // even if they are eaten by the plugin. Also make sure we aren't calling
@@ -309,7 +301,7 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   // Macromedia Flash plugin may flood the message queue with some special messages
   // (WM_USER+1) causing 100% CPU consumption and GUI freeze, see mozilla bug 132759;
   // we can prevent this from happening by delaying the processing such messages;
-  if (win->mPluginType == nsPluginType_Flash) {
+  if (win->mPluginType == nsPluginHost::eSpecialType_Flash) {
     if (ProcessFlashMessageDelayed(win, inst, hWnd, msg, wParam, lParam))
       return TRUE;
   }
@@ -403,7 +395,7 @@ SetWindowLongHookCheck(HWND hWnd,
 {
   nsPluginNativeWindowWin * win =
     (nsPluginNativeWindowWin *)GetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
-  if (!win || (win && win->mPluginType != nsPluginType_Flash) ||
+  if (!win || (win && win->mPluginType != nsPluginHost::eSpecialType_Flash) ||
       (nIndex == GWLP_WNDPROC &&
        newLong == reinterpret_cast<LONG_PTR>(PluginWndProc)))
     return true;
@@ -425,7 +417,7 @@ SetWindowLongAHook(HWND hWnd,
   if (SetWindowLongHookCheck(hWnd, nIndex, newLong))
       return sUser32SetWindowLongAHookStub(hWnd, nIndex, newLong);
 
-  // Set flash's new subclass to get the result. 
+  // Set flash's new subclass to get the result.
   LONG_PTR proc = sUser32SetWindowLongAHookStub(hWnd, nIndex, newLong);
 
   // We already checked this in SetWindowLongHookCheck
@@ -454,14 +446,14 @@ SetWindowLongWHook(HWND hWnd,
   if (SetWindowLongHookCheck(hWnd, nIndex, newLong))
       return sUser32SetWindowLongWHookStub(hWnd, nIndex, newLong);
 
-  // Set flash's new subclass to get the result. 
+  // Set flash's new subclass to get the result.
   LONG_PTR proc = sUser32SetWindowLongWHookStub(hWnd, nIndex, newLong);
 
   // We already checked this in SetWindowLongHookCheck
   nsPluginNativeWindowWin * win =
     (nsPluginNativeWindowWin *)GetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
 
-  // Hook our subclass back up, just like we do on setwindow.   
+  // Hook our subclass back up, just like we do on setwindow.
   win->SetPrevWindowProc(
     reinterpret_cast<WNDPROC>(sUser32SetWindowLongWHookStub(hWnd, nIndex,
       reinterpret_cast<LONG_PTR>(PluginWndProc))));
@@ -499,15 +491,15 @@ HookSetWindowLongPtr()
 nsPluginNativeWindowWin::nsPluginNativeWindowWin() : nsPluginNativeWindow()
 {
   // initialize the struct fields
-  window = nullptr; 
-  x = 0; 
-  y = 0; 
-  width = 0; 
-  height = 0; 
+  window = nullptr;
+  x = 0;
+  y = 0;
+  width = 0;
+  height = 0;
 
   mPrevWinProc = nullptr;
   mPluginWinProc = nullptr;
-  mPluginType = nsPluginType_Unknown;
+  mPluginType = nsPluginHost::eSpecialType_None;
 
   mParentWnd = nullptr;
   mParentProc = 0;
@@ -555,10 +547,10 @@ NS_IMETHODIMP PluginWindowEvent::Run()
   else {
     // Currently not used, but added so that processing events here
     // is more generic.
-    ::CallWindowProc(win->GetWindowProc(), 
-                     hWnd, 
-                     GetMsg(), 
-                     GetWParam(), 
+    ::CallWindowProc(win->GetWindowProc(),
+                     hWnd,
+                     GetMsg(),
+                     GetWParam(),
                      GetLParam());
   }
 
@@ -566,7 +558,7 @@ NS_IMETHODIMP PluginWindowEvent::Run()
   return NS_OK;
 }
 
-PluginWindowEvent * 
+PluginWindowEvent *
 nsPluginNativeWindowWin::GetPluginWindowEvent(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam)
 {
   if (!mWeakRef) {
@@ -580,7 +572,7 @@ nsPluginNativeWindowWin::GetPluginWindowEvent(HWND aWnd, UINT aMsg, WPARAM aWPar
   // We have the ability to alloc if needed in case in the future some plugin
   // should post multiple PostMessages. However, this could lead to many
   // alloc's per second which could become a performance issue. See bug 169247.
-  if (!mCachedPluginWindowEvent) 
+  if (!mCachedPluginWindowEvent)
   {
     event = new PluginWindowEvent();
     if (!event) return nullptr;
@@ -615,18 +607,10 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> 
   }
 
   // check plugin mime type and cache it if it will need special treatment later
-  if (mPluginType == nsPluginType_Unknown) {
+  if (mPluginType == nsPluginHost::eSpecialType_None) {
     const char* mimetype = nullptr;
-    aPluginInstance->GetMIMEType(&mimetype);
-    if (mimetype) { 
-      if (!strcmp(mimetype, "application/x-shockwave-flash"))
-        mPluginType = nsPluginType_Flash;
-      else if (!strcmp(mimetype, "audio/x-pn-realaudio-plugin"))
-        mPluginType = nsPluginType_Real;
-      else if (!strcmp(mimetype, "application/pdf"))
-        mPluginType = nsPluginType_PDF;
-      else
-        mPluginType = nsPluginType_Other;
+    if (NS_SUCCEEDED(aPluginInstance->GetMIMEType(&mimetype)) && mimetype) {
+      mPluginType = nsPluginHost::GetSpecialType(nsDependentCString(mimetype));
     }
   }
 
@@ -649,7 +633,7 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> 
 
     // PDF plugin v7.0.9, v8.1.3, and v9.0 subclass parent window, bug 531551
     // V8.2.2 and V9.1 don't have such problem.
-    if (mPluginType == nsPluginType_PDF) {
+    if (mPluginType == nsPluginHost::eSpecialType_PDF) {
       HWND parent = ::GetParent((HWND)window);
       if (mParentWnd != parent) {
         NS_ASSERTION(!mParentWnd, "Plugin's parent window changed");
@@ -663,7 +647,7 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> 
 
   SubclassAndAssociateWindow();
 
-  if (window && mPluginType == nsPluginType_Flash &&
+  if (window && mPluginType == nsPluginHost::eSpecialType_Flash &&
       !GetPropW((HWND)window, L"PluginInstanceParentProperty")) {
     HookSetWindowLongPtr();
   }
@@ -714,7 +698,7 @@ nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
 
   DebugOnly<nsPluginNativeWindowWin *> win = (nsPluginNativeWindowWin *)::GetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
   NS_ASSERTION(!win || (win == this), "plugin window already has property and this is not us");
-  
+
   if (!::SetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION, (HANDLE)this))
     return NS_ERROR_FAILURE;
 
@@ -741,7 +725,7 @@ nsresult nsPluginNativeWindowWin::UndoSubclassAndAssociateWindow()
     SetWindowLongPtr(hWnd, GWL_STYLE, style);
   }
 
-  if (mPluginType == nsPluginType_PDF && mParentWnd) {
+  if (mPluginType == nsPluginHost::eSpecialType_Flash && mParentWnd) {
     ::SetWindowLongPtr(mParentWnd, GWLP_WNDPROC, mParentProc);
     mParentWnd = nullptr;
     mParentProc = 0;

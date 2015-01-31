@@ -4558,6 +4558,37 @@ extern JS_PUBLIC_API(bool)
 SetWeakMapEntry(JSContext *cx, JS::HandleObject mapObj, JS::HandleObject key,
                 JS::HandleValue val);
 
+/*
+ * Map
+ */
+extern JS_PUBLIC_API(JSObject *)
+NewMapObject(JSContext *cx);
+
+extern JS_PUBLIC_API(uint32_t)
+MapSize(JSContext *cx, HandleObject obj);
+
+extern JS_PUBLIC_API(bool)
+MapGet(JSContext *cx, HandleObject obj,
+       HandleValue key, MutableHandleValue rval);
+
+extern JS_PUBLIC_API(bool)
+MapHas(JSContext *cx, HandleObject obj, HandleValue key, bool *rval);
+
+extern JS_PUBLIC_API(bool)
+MapSet(JSContext *cx, HandleObject obj, HandleValue key, HandleValue val);
+
+extern JS_PUBLIC_API(bool)
+MapClear(JSContext *cx, HandleObject obj);
+
+extern JS_PUBLIC_API(bool)
+MapKeys(JSContext *cx, HandleObject obj, MutableHandleValue rval);
+
+extern JS_PUBLIC_API(bool)
+MapValues(JSContext *cx, HandleObject obj, MutableHandleValue rval);
+
+extern JS_PUBLIC_API(bool)
+MapEntries(JSContext *cx, HandleObject obj, MutableHandleValue rval);
+
 } /* namespace JS */
 
 /*

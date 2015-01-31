@@ -13,29 +13,29 @@
 
   function tags_getter_setter()
   {
-    do_log_info("Tags getter/setter should work correctly");
-    do_log_info("Without setting tags, tags getter should return empty array");
+    do_print("Tags getter/setter should work correctly");
+    do_print("Without setting tags, tags getter should return empty array");
     var [query, dummy] = makeQuery();
     do_check_eq(query.tags.length, 0);
 
-    do_log_info("Setting tags to an empty array, tags getter should return "+
-          "empty array");
+    do_print("Setting tags to an empty array, tags getter should return "+
+             "empty array");
     [query, dummy] = makeQuery([]);
     do_check_eq(query.tags.length, 0);
 
-    do_log_info("Setting a few tags, tags getter should return correct array");
+    do_print("Setting a few tags, tags getter should return correct array");
     var tags = ["bar", "baz", "foo"];
     [query, dummy] = makeQuery(tags);
     setsAreEqual(query.tags, tags, true);
 
-    do_log_info("Setting some dupe tags, tags getter return unique tags");
+    do_print("Setting some dupe tags, tags getter return unique tags");
     [query, dummy] = makeQuery(["foo", "foo", "bar", "foo", "baz", "bar"]);
     setsAreEqual(query.tags, ["bar", "baz", "foo"], true);
   },
 
   function invalid_setter_calls()
   {
-    do_log_info("Invalid calls to tags setter should fail");
+    do_print("Invalid calls to tags setter should fail");
     try {
       var query = PlacesUtils.history.getNewQuery();
       query.tags = null;
@@ -105,19 +105,19 @@
 
   function not_setting_tags()
   {
-    do_log_info("Not setting tags at all should not affect query URI");
+    do_print("Not setting tags at all should not affect query URI");
     checkQueryURI();
   },
 
   function empty_array_tags()
   {
-    do_log_info("Setting tags with an empty array should not affect query URI");
+    do_print("Setting tags with an empty array should not affect query URI");
     checkQueryURI([]);
   },
 
   function set_tags()
   {
-    do_log_info("Setting some tags should result in correct query URI");
+    do_print("Setting some tags should result in correct query URI");
     checkQueryURI([
       "foo",
       "七難",
@@ -133,22 +133,22 @@
 
   function no_tags_tagsAreNot()
   {
-    do_log_info("Not setting tags at all but setting tagsAreNot should " +
-                "affect query URI");
+    do_print("Not setting tags at all but setting tagsAreNot should " +
+             "affect query URI");
     checkQueryURI(null, true);
   },
 
   function empty_array_tags_tagsAreNot()
   {
-    do_log_info("Setting tags with an empty array and setting tagsAreNot " +
-                "should affect query URI");
+    do_print("Setting tags with an empty array and setting tagsAreNot " +
+             "should affect query URI");
     checkQueryURI([], true);
   },
 
   function ()
   {
-    do_log_info("Setting some tags and setting tagsAreNot should result in " +
-                "correct query URI");
+    do_print("Setting some tags and setting tagsAreNot should result in " +
+             "correct query URI");
     checkQueryURI([
       "foo",
       "七難",
@@ -164,8 +164,8 @@
 
   function tag_to_uri()
   {
-    do_log_info("Querying history on tag associated with a URI should return " +
-                "that URI");
+    do_print("Querying history on tag associated with a URI should return " +
+             "that URI");
     yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo"]);
       executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -178,8 +178,8 @@
 
   function tags_to_uri()
   {
-    do_log_info("Querying history on many tags associated with a URI should " +
-                "return that URI");
+    do_print("Querying history on many tags associated with a URI should " +
+             "return that URI");
     yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo", "bar"]);
       executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -194,8 +194,8 @@
 
   function repeated_tag()
   {
-    do_log_info("Specifying the same tag multiple times in a history query " +
-                "should not matter");
+    do_print("Specifying the same tag multiple times in a history query " +
+             "should not matter");
     yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo", "foo"]);
       executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -206,8 +206,8 @@
 
   function many_tags_no_uri()
   {
-    do_log_info("Querying history on many tags associated with a URI and " +
-                "tags not associated with that URI should not return that URI");
+    do_print("Querying history on many tags associated with a URI and " +
+             "tags not associated with that URI should not return that URI");
     yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo", "bogus"]);
       executeAndCheckQueryResults(query, opts, []);
@@ -220,7 +220,7 @@
 
   function nonexistent_tags()
   {
-    do_log_info("Querying history on nonexistent tags should return no results");
+    do_print("Querying history on nonexistent tags should return no results");
     yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["bogus"]);
       executeAndCheckQueryResults(query, opts, []);
@@ -231,8 +231,8 @@
 
   function tag_to_bookmark()
   {
-    do_log_info("Querying bookmarks on tag associated with a URI should " +
-                "return that URI");
+    do_print("Querying bookmarks on tag associated with a URI should " +
+             "return that URI");
     yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo"]);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
@@ -248,8 +248,8 @@
 
   function many_tags_to_bookmark()
   {
-    do_log_info("Querying bookmarks on many tags associated with a URI " +
-                "should return that URI");
+    do_print("Querying bookmarks on many tags associated with a URI " +
+             "should return that URI");
     yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo", "bar"]);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
@@ -268,8 +268,8 @@
 
   function repeated_tag_to_bookmarks()
   {
-    do_log_info("Specifying the same tag multiple times in a bookmark query " +
-                "should not matter");
+    do_print("Specifying the same tag multiple times in a bookmark query " +
+             "should not matter");
     yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo", "foo"]);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
@@ -282,8 +282,8 @@
 
   function many_tags_no_bookmark()
   {
-    do_log_info("Querying bookmarks on many tags associated with a URI and " +
-          "tags not associated with that URI should not return that URI");
+    do_print("Querying bookmarks on many tags associated with a URI and " +
+             "tags not associated with that URI should not return that URI");
     yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["foo", "bogus"]);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
@@ -299,7 +299,7 @@
 
   function nonexistent_tags_bookmark()
   {
-    do_log_info("Querying bookmarks on nonexistent tag should return no results");
+    do_print("Querying bookmarks on nonexistent tag should return no results");
     yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
       var [query, opts] = makeQuery(["bogus"]);
       opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
@@ -312,14 +312,14 @@
 
   function tagsAreNot_history()
   {
-    do_log_info("Querying history using tagsAreNot should work correctly");
+    do_print("Querying history using tagsAreNot should work correctly");
     var urisAndTags = {
       "http://example.com/1": ["foo", "bar"],
       "http://example.com/2": ["baz", "qux"],
       "http://example.com/3": null
     };
 
-    do_log_info("Add visits and tag the URIs");
+    do_print("Add visits and tag the URIs");
     for (let [pURI, tags] in Iterator(urisAndTags)) {
       let nsiuri = uri(pURI);
       yield promiseAddVisits(nsiuri);
@@ -327,27 +327,27 @@
         PlacesUtils.tagging.tagURI(nsiuri, tags);
     }
 
-    do_log_info('  Querying for "foo" should match only /2 and /3');
+    do_print('  Querying for "foo" should match only /2 and /3');
     var [query, opts] = makeQuery(["foo"], true);
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                     ["http://example.com/2", "http://example.com/3"]);
 
-    do_log_info('  Querying for "foo" and "bar" should match only /2 and /3');
+    do_print('  Querying for "foo" and "bar" should match only /2 and /3');
     [query, opts] = makeQuery(["foo", "bar"], true);
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                     ["http://example.com/2", "http://example.com/3"]);
 
-    do_log_info('  Querying for "foo" and "bogus" should match only /2 and /3');
+    do_print('  Querying for "foo" and "bogus" should match only /2 and /3');
     [query, opts] = makeQuery(["foo", "bogus"], true);
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                     ["http://example.com/2", "http://example.com/3"]);
 
-    do_log_info('  Querying for "foo" and "baz" should match only /3');
+    do_print('  Querying for "foo" and "baz" should match only /3');
     [query, opts] = makeQuery(["foo", "baz"], true);
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                     ["http://example.com/3"]);
 
-    do_log_info('  Querying for "bogus" should match all');
+    do_print('  Querying for "bogus" should match all');
     [query, opts] = makeQuery(["bogus"], true);
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                     ["http://example.com/1",
@@ -365,14 +365,14 @@
 
   function tagsAreNot_bookmarks()
   {
-    do_log_info("Querying bookmarks using tagsAreNot should work correctly");
+    do_print("Querying bookmarks using tagsAreNot should work correctly");
     var urisAndTags = {
       "http://example.com/1": ["foo", "bar"],
       "http://example.com/2": ["baz", "qux"],
       "http://example.com/3": null
     };
 
-    do_log_info("Add bookmarks and tag the URIs");
+    do_print("Add bookmarks and tag the URIs");
     for (let [pURI, tags] in Iterator(urisAndTags)) {
       let nsiuri = uri(pURI);
       addBookmark(nsiuri);
@@ -380,31 +380,31 @@
         PlacesUtils.tagging.tagURI(nsiuri, tags);
     }
 
-    do_log_info('  Querying for "foo" should match only /2 and /3');
+    do_print('  Querying for "foo" should match only /2 and /3');
     var [query, opts] = makeQuery(["foo"], true);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                     ["http://example.com/2", "http://example.com/3"]);
 
-    do_log_info('  Querying for "foo" and "bar" should match only /2 and /3');
+    do_print('  Querying for "foo" and "bar" should match only /2 and /3');
     [query, opts] = makeQuery(["foo", "bar"], true);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                     ["http://example.com/2", "http://example.com/3"]);
 
-    do_log_info('  Querying for "foo" and "bogus" should match only /2 and /3');
+    do_print('  Querying for "foo" and "bogus" should match only /2 and /3');
     [query, opts] = makeQuery(["foo", "bogus"], true);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                     ["http://example.com/2", "http://example.com/3"]);
 
-    do_log_info('  Querying for "foo" and "baz" should match only /3');
+    do_print('  Querying for "foo" and "baz" should match only /3');
     [query, opts] = makeQuery(["foo", "baz"], true);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
                     ["http://example.com/3"]);
 
-    do_log_info('  Querying for "bogus" should match all');
+    do_print('  Querying for "bogus" should match all');
     [query, opts] = makeQuery(["bogus"], true);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root,
@@ -422,16 +422,16 @@
   },
 
   function duplicate_tags() {
-    do_log_info("Duplicate existing tags (i.e., multiple tag folders with " +
-                "same name) should not throw off query results");
+    do_print("Duplicate existing tags (i.e., multiple tag folders with " +
+             "same name) should not throw off query results");
     var tagName = "foo";
 
-    do_log_info("Add bookmark and tag it normally");
+    do_print("Add bookmark and tag it normally");
     addBookmark(TEST_URI);
     PlacesUtils.tagging.tagURI(TEST_URI, [tagName]);
 
-    do_log_info("Manually create tag folder with same name as tag and insert " +
-          "bookmark");
+    do_print("Manually create tag folder with same name as tag and insert " +
+             "bookmark");
     var dupTagId = PlacesUtils.bookmarks.createFolder(PlacesUtils.tagsFolderId,
                                                       tagName,
                                                       Ci.nsINavBookmarksService.DEFAULT_INDEX);
@@ -442,7 +442,7 @@
                                                     "title");
     do_check_true(bmId > 0);
 
-    do_log_info("Querying for tag should match URI");
+    do_print("Querying for tag should match URI");
     var [query, opts] = makeQuery([tagName]);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [TEST_URI.spec]);
@@ -453,21 +453,21 @@
 
   function folder_named_as_tag()
   {
-    do_log_info("Regular folders with the same name as tag should not throw " +
-                "off query results");
+    do_print("Regular folders with the same name as tag should not throw " +
+             "off query results");
     var tagName = "foo";
 
-    do_log_info("Add bookmark and tag it");
+    do_print("Add bookmark and tag it");
     addBookmark(TEST_URI);
     PlacesUtils.tagging.tagURI(TEST_URI, [tagName]);
 
-    do_log_info("Create folder with same name as tag");
+    do_print("Create folder with same name as tag");
     var folderId = PlacesUtils.bookmarks.createFolder(PlacesUtils.unfiledBookmarksFolderId,
                                                       tagName,
                                                       Ci.nsINavBookmarksService.DEFAULT_INDEX);
     do_check_true(folderId > 0);
 
-    do_log_info("Querying for tag should match URI");
+    do_print("Querying for tag should match URI");
     var [query, opts] = makeQuery([tagName]);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     queryResultsAre(PlacesUtils.history.executeQuery(query, opts).root, [TEST_URI.spec]);
@@ -477,7 +477,7 @@
   },
 
   function ORed_queries() {
-    do_log_info("Multiple queries ORed together should work");
+    do_print("Multiple queries ORed together should work");
     var urisAndTags = {
       "http://example.com/1": [],
       "http://example.com/2": []
@@ -490,7 +490,7 @@
       urisAndTags["http://example.com/2"].push("/2 tag " + i);
     }
 
-    do_log_info("Add visits and tag the URIs");
+    do_print("Add visits and tag the URIs");
     for (let [pURI, tags] in Iterator(urisAndTags)) {
       let nsiuri = uri(pURI);
       yield promiseAddVisits(nsiuri);
@@ -498,40 +498,40 @@
         PlacesUtils.tagging.tagURI(nsiuri, tags);
     }
 
-    do_log_info("Query for /1 OR query for /2 should match both /1 and /2");
+    do_print("Query for /1 OR query for /2 should match both /1 and /2");
     var [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
     var [query2, dummy] = makeQuery(urisAndTags["http://example.com/2"]);
     var root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
     queryResultsAre(root, ["http://example.com/1", "http://example.com/2"]);
 
-    do_log_info("Query for /1 OR query on bogus tag should match only /1");
+    do_print("Query for /1 OR query on bogus tag should match only /1");
     [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
     [query2, dummy] = makeQuery(["bogus"]);
     root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
     queryResultsAre(root, ["http://example.com/1"]);
 
-    do_log_info("Query for /1 OR query for /1 should match only /1");
+    do_print("Query for /1 OR query for /1 should match only /1");
     [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
     [query2, dummy] = makeQuery(urisAndTags["http://example.com/1"]);
     root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
     queryResultsAre(root, ["http://example.com/1"]);
 
-    do_log_info("Query for /1 with tagsAreNot OR query for /2 with tagsAreNot " +
-          "should match both /1 and /2");
+    do_print("Query for /1 with tagsAreNot OR query for /2 with tagsAreNot " +
+             "should match both /1 and /2");
     [query1, opts] = makeQuery(urisAndTags["http://example.com/1"], true);
     [query2, dummy] = makeQuery(urisAndTags["http://example.com/2"], true);
     root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
     queryResultsAre(root, ["http://example.com/1", "http://example.com/2"]);
 
-    do_log_info("Query for /1 OR query for /2 with tagsAreNot should match " +
-          "only /1");
+    do_print("Query for /1 OR query for /2 with tagsAreNot should match " +
+             "only /1");
     [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
     [query2, dummy] = makeQuery(urisAndTags["http://example.com/2"], true);
     root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
     queryResultsAre(root, ["http://example.com/1"]);
 
-    do_log_info("Query for /1 OR query for /1 with tagsAreNot should match " +
-          "both URIs");
+    do_print("Query for /1 OR query for /1 with tagsAreNot should match " +
+             "both URIs");
     [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
     [query2, dummy] = makeQuery(urisAndTags["http://example.com/1"], true);
     root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
@@ -568,7 +568,7 @@ function addBookmark(aURI) {
                                                   aURI,
                                                   Ci.nsINavBookmarksService.DEFAULT_INDEX,
                                                   aURI.spec);
-  do_log_info("Sanity check: insertBookmark should not fail");
+  do_print("Sanity check: insertBookmark should not fail");
   do_check_true(bmId > 0);
 }
 
@@ -596,7 +596,7 @@ function checkQueryURI(aTags, aTagsAreNot) {
   var expURI = "place:" + pairs.join("&");
   var [query, opts] = makeQuery(aTags, aTagsAreNot);
   var actualURI = queryURI(query, opts);
-  do_log_info("Query URI should be what we expect for the given tags");
+  do_print("Query URI should be what we expect for the given tags");
   do_check_eq(actualURI, expURI);
 }
 
@@ -683,7 +683,7 @@ function executeAndCheckQueryResults(aQuery, aQueryOpts, aExpectedURIs) {
  */
 function makeQuery(aTags, aTagsAreNot) {
   aTagsAreNot = !!aTagsAreNot;
-  do_log_info("Making a query " +
+  do_print("Making a query " +
         (aTags ?
          "with tags " + aTags.toSource() :
          "without calling setTags() at all") +
@@ -701,7 +701,7 @@ function makeQuery(aTags, aTagsAreNot) {
     uniqueTags.sort();
   }
 
-  do_log_info("Made query should be correct for tags and tagsAreNot");
+  do_print("Made query should be correct for tags and tagsAreNot");
   if (uniqueTags)
     setsAreEqual(query.tags, uniqueTags, true);
   var expCount = uniqueTags ? uniqueTags.length : 0;

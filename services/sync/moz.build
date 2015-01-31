@@ -60,3 +60,8 @@ TESTING_JS_MODULES.services.sync += [
     'modules-testing/rotaryengine.js',
     'modules-testing/utils.js',
 ]
+
+JS_PREFERENCE_FILES += [
+    'services-sync.js',
+]
+

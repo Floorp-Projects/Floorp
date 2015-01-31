@@ -30,15 +30,15 @@ add_task(function() {
   PlacesUtils.bookmarks.removeItem(f1);
   yield BookmarkJSONUtils.importFromFile((yield PlacesBackups.getMostRecentBackup()), true);
 
-  do_log_info("Checking first level");
+  do_print("Checking first level");
   let root = PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
   let level1 = root.getChild(0);
   do_check_eq(level1.title, "f1");
-  do_log_info("Checking second level");
+  do_print("Checking second level");
   PlacesUtils.asContainer(level1).containerOpen = true
   let level2 = level1.getChild(0);
   do_check_eq(level2.title, "f2");
-  do_log_info("Checking bookmark");
+  do_print("Checking bookmark");
   PlacesUtils.asContainer(level2).containerOpen = true
   let bookmark = level2.getChild(0);
   do_check_eq(bookmark.title, "bookmark");
