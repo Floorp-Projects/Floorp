@@ -230,7 +230,7 @@ Assembler::executableCopy(uint8_t *buffer)
 
             // Now patch the pointer, note that we need to align it to
             // *after* the extended jump, i.e. after the 64-bit immedate.
-            X86Assembler::repatchPointer(entry + SizeOfExtendedJump, rp.target);
+            X86Assembler::setPointer(entry + SizeOfExtendedJump, rp.target);
         }
     }
 }
