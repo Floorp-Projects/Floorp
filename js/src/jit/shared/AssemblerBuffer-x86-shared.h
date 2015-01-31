@@ -48,6 +48,7 @@
 #define MEM_o32s  MEM_o32 "(,%s,%d)"
 #define MEM_o32b  MEM_o32 "(%s)"
 #define MEM_o32bs MEM_o32 "(%s,%s,%d)"
+#define MEM_o32r  ".Lfrom%d(%%rip)"
 
 #define ADDR_o(offset)                       PRETTYHEX(offset)
 #define ADDR_os(offset, index, scale)        ADDR_o(offset), GPRegName((index)), (1<<(scale))
@@ -58,6 +59,7 @@
 #define ADDR_o32s(offset, index, scale)        ADDR_os(offset, index, scale)
 #define ADDR_o32b(offset, base)                ADDR_ob(offset, base)
 #define ADDR_o32bs(offset, base, index, scale) ADDR_obs(offset, base, index, scale)
+#define ADDR_o32r(offset)                      (offset)
 
 namespace js {
 
