@@ -67,7 +67,7 @@ TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader
 #endif
 
         // No barrier needed since these are constants.
-        gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(ptr), "ion-masm-ptr");
+        gc::MarkGCThingUnbarriered(trc, ptr, "ion-masm-ptr");
     }
 }
 

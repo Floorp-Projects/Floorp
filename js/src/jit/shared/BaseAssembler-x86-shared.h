@@ -2146,7 +2146,7 @@ public:
 #ifdef JS_CODEGEN_X64
         m_formatter.immediate64(reinterpret_cast<int64_t>(addr));
 #else
-        m_formatter.immediate32(reinterpret_cast<int>(addr));
+        m_formatter.immediate32(reinterpret_cast<int32_t>(addr));
 #endif
     }
 
@@ -2279,7 +2279,7 @@ public:
 #ifdef JS_CODEGEN_X64
         m_formatter.immediate64(reinterpret_cast<int64_t>(addr));
 #else
-        m_formatter.immediate32(reinterpret_cast<int>(addr));
+        m_formatter.immediate32(reinterpret_cast<int32_t>(addr));
 #endif
     }
 
@@ -3897,7 +3897,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
         if (oom())
             return false;
 
-        char* code = reinterpret_cast<char*>(m_formatter.data());
+        const unsigned char* code = m_formatter.data();
         int32_t offset = getInt32(code + from.m_offset);
         if (offset == -1)
             return false;
@@ -3911,7 +3911,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
         if (oom())
             return;
 
-        char* code = reinterpret_cast<char*>(m_formatter.data());
+        unsigned char* code = m_formatter.data();
         setInt32(code + from.m_offset, to.m_offset);
     }
 
@@ -3926,13 +3926,13 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
             return;
 
         spew("##link     ((%d)) jumps to ((%d))", from.m_offset, to.m_offset);
-        char* code = reinterpret_cast<char*>(m_formatter.data());
+        unsigned char* code = m_formatter.data();
         setRel32(code + from.m_offset, code + to.m_offset);
     }
 
     static bool canRelinkJump(void* from, void* to)
     {
-        intptr_t offset = reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from);
+        intptr_t offset = static_cast<char *>(to) - static_cast<char *>(from);
         return (offset == static_cast<int32_t>(offset));
     }
 
@@ -3943,7 +3943,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
 
     static void setRel32(void* from, void* to)
     {
-        intptr_t offset = reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from);
+        intptr_t offset = static_cast<char *>(to) - static_cast<char *>(from);
         MOZ_ASSERT(offset == static_cast<int32_t>(offset),
                    "offset is too great for a 32-bit relocation");
         if (offset != static_cast<int32_t>(offset))
@@ -3959,20 +3959,20 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
         return (char *)where + rel;
     }
 
-    static void *getPointer(void* where)
+    static void *getPointer(const void* where)
     {
-        return reinterpret_cast<void **>(where)[-1];
+        return static_cast<void *const *>(where)[-1];
     }
 
     static void **getPointerRef(void* where)
     {
-        return &reinterpret_cast<void **>(where)[-1];
+        return &static_cast<void *const *>(where)[-1];
     }
 
     static void setPointer(void* where, const void* value)
     {
         staticSpew("##setPtr     ((where=%p)) ((value=%p))", where, value);
-        reinterpret_cast<const void**>(where)[-1] = value;
+        static_cast<const void**>(where)[-1] = value;
     }
 
     // Test whether the given address will fit in an address immediate field.
@@ -3997,7 +3997,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
 
     static void setInt32(void* where, int32_t value)
     {
-        reinterpret_cast<int32_t*>(where)[-1] = value;
+        static_cast<int32_t*>(where)[-1] = value;
     }
 
 private:
@@ -4617,9 +4617,9 @@ private:
         m_formatter.immediate8u(imm);
     }
 
-    static int32_t getInt32(void* where)
+    static int32_t getInt32(const void* where)
     {
-        return reinterpret_cast<int32_t*>(where)[-1];
+        return static_cast<const int32_t*>(where)[-1];
     }
 
     class X86InstructionFormatter {
