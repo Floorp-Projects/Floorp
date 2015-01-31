@@ -12,18 +12,19 @@
   <!ENTITY % globalDTD
     SYSTEM "chrome://global/locale/global.dtd">
   %globalDTD;
-  <!ENTITY % browserDTD
-    SYSTEM "chrome://browser/locale/browser.dtd">
-  %browserDTD;
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
   %brandDTD;
-
+  <!ENTITY % tabCrashedDTD
+    SYSTEM "chrome://browser/locale/aboutTabCrashed.dtd">
+  %tabCrashedDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <link rel="stylesheet" type="text/css" media="all"
           href="chrome://global/skin/in-content/info-pages.css"/>
+    <link rel="stylesheet" type="text/css" media="all"
+          href="chrome://browser/content/aboutTabCrashed.css"/>
     <link rel="stylesheet" type="text/css" media="all"
           href="chrome://browser/skin/aboutTabCrashed.css"/>
   </head>
@@ -36,12 +37,19 @@
       <p>&tabCrashed.message;</p>
 
       <div id="report-box">
-        <input type="checkbox" id="checkSendReport" checked="checked"/>
-        <label for="checkSendReport">&tabCrashed.checkSendReport;</label>
+        <input type="checkbox" id="sendReport" checked="checked"/>
+        <label for="sendReport">&tabCrashed.sendReport;</label>
       </div>
 
+      <p id="reportSent">&tabCrashed.reportSent;</p>
+
       <div class="button-container">
-        <button id="tryAgain">&tabCrashed.tryAgain;</button>
+        <button id="closeTab" onclick="closeTab()">
+          &tabCrashed.closeTab;</button>
+        <button id="restoreTab" onclick="restoreTab()">
+          &tabCrashed.restoreTab;</button>
+        <button id="restoreAll" onclick="restoreAll()" autofocus="true" class="primary">
+          &tabCrashed.restoreAll;</button>
       </div>
     </div>
   </body>

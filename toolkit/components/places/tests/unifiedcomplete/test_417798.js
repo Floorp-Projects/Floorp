@@ -16,32 +16,32 @@ add_task(function* test_javascript_match() {
   addBookmark({ uri: uri2,
                 title: "Title with javascript:" });
 
-  do_log_info("Match non-javascript: with plain search");
+  do_print("Match non-javascript: with plain search");
   yield check_autocomplete({
     search: "a",
     matches: [ { uri: uri1, title: "Title with javascript:" } ]
   });
 
-  do_log_info("Match non-javascript: with almost javascript:");
+  do_print("Match non-javascript: with almost javascript:");
   yield check_autocomplete({
     search: "javascript",
     matches: [ { uri: uri1, title: "Title with javascript:" } ]
   });
 
-  do_log_info("Match javascript:");
+  do_print("Match javascript:");
   yield check_autocomplete({
     search: "javascript:",
     matches: [ { uri: uri1, title: "Title with javascript:" },
                { uri: uri2, title: "Title with javascript:", style: [ "bookmark" ]} ]
   });
 
-  do_log_info("Match nothing with non-first javascript:");
+  do_print("Match nothing with non-first javascript:");
   yield check_autocomplete({
     search: "5 javascript:",
     matches: [ ]
   });
 
-  do_log_info("Match javascript: with multi-word search");
+  do_print("Match javascript: with multi-word search");
   yield check_autocomplete({
     search: "javascript: 5",
     matches: [ { uri: uri2, title: "Title with javascript:", style: [ "bookmark" ]} ]

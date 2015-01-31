@@ -2800,7 +2800,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
 
       mFrameMetrics.CopyScrollInfoFrom(aLayerMetrics);
 
-      // Cancel the animation (which will also trigger a repaint request)
+      // Cancel the animation (which might also trigger a repaint request)
       // after we update the scroll offset above. Otherwise we can be left
       // in a state where things are out of sync.
       CancelAnimation();
@@ -2811,6 +2811,15 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       // correct this we need to update mLastDispatchedPaintMetrics to be the
       // last thing we know was painted by Gecko.
       mLastDispatchedPaintMetrics = aLayerMetrics;
+
+      // Since the scroll offset has changed, we need to recompute the
+      // displayport margins and send them to layout. Otherwise there might be
+      // scenarios where for example we scroll from the top of a page (where the
+      // top displayport margin is zero) to the bottom of a page, which will
+      // result in a displayport that doesn't extend upwards at all.
+      // Note that even if the CancelAnimation call above requested a repaint
+      // this is fine because we already have repaint request deduplication.
+      needContentRepaint = true;
     }
   }
 

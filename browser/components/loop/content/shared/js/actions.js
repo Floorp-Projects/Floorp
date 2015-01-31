@@ -177,6 +177,15 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Used for notifying that the dimensions of a stream just changed. Also
+     * dispatched when a stream connects for the first time.
+     */
+    VideoDimensionsChanged: Action.define("videoDimensionsChanged", {
+      videoType: String,
+      dimensions: Object
+    }),
+
+    /**
      * Used to mute or unmute a stream
      */
     SetMute: Action.define("setMute", {

@@ -16,6 +16,16 @@ function test() {
   UITourTest();
 }
 
+function runOffline(fun) {
+  return (done) => {
+    Services.io.offline = true;
+    fun(function onComplete() {
+      Services.io.offline = false;
+      done();
+    });
+  }
+}
+
 let tests = [
   taskify(function* test_menu_show_hide() {
     ise(loopButton.open, false, "Menu should initially be closed");
@@ -94,7 +104,7 @@ let tests = [
       });
     });
   },
-  function test_notifyLoopChatWindowOpenedClosed(done) {
+  runOffline(function test_notifyLoopChatWindowOpenedClosed(done) {
     gContentAPI.observe((event, params) => {
       is(event, "Loop:ChatWindowOpened", "Check Loop:ChatWindowOpened notification");
       gContentAPI.observe((event, params) => {
@@ -110,8 +120,8 @@ let tests = [
       document.querySelector("#pinnedchats > chatbox").close();
     });
     LoopRooms.open("fakeTourRoom");
-  },
-  function test_notifyLoopRoomURLCopied(done) {
+  }),
+  runOffline(function test_notifyLoopRoomURLCopied(done) {
     gContentAPI.observe((event, params) => {
       is(event, "Loop:ChatWindowOpened", "Loop chat window should've opened");
       gContentAPI.observe((event, params) => {
@@ -131,8 +141,8 @@ let tests = [
     });
     setupFakeRoom();
     LoopRooms.open("fakeTourRoom");
-  },
-  function test_notifyLoopRoomURLEmailed(done) {
+  }),
+  runOffline(function test_notifyLoopRoomURLEmailed(done) {
     gContentAPI.observe((event, params) => {
       is(event, "Loop:ChatWindowOpened", "Loop chat window should've opened");
       gContentAPI.observe((event, params) => {
@@ -162,7 +172,7 @@ let tests = [
       });
     });
     LoopRooms.open("fakeTourRoom");
-  },
+  }),
   taskify(function* test_arrow_panel_position() {
     ise(loopButton.open, false, "Menu should initially be closed");
     let popup = document.getElementById("UITourTooltip");
@@ -274,6 +284,7 @@ if (Services.prefs.getBoolPref("loop.enabled")) {
     Services.prefs.clearUserPref("loop.gettingStarted.resumeOnFirstJoin");
     Services.prefs.clearUserPref("loop.gettingStarted.seen");
     Services.prefs.clearUserPref("loop.gettingStarted.url");
+    Services.io.offline = false;
 
     // Copied from browser/components/loop/test/mochitest/head.js
     // Remove the iframe after each test. This also avoids mochitest complaining

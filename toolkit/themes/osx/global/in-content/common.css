@@ -15,12 +15,14 @@ xul|tab[selected] {
 }
 
 xul|button,
+html|button,
 xul|colorpicker[type="button"],
 xul|menulist {
   margin-top: 3px;
 }
 
-xul|button {
+xul|button,
+html|button {
   /* use the same margin of other elements for the alignment */
   margin-left: 4px;
   margin-right: 4px;

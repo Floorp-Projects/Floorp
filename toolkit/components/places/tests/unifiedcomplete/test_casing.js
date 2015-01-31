@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(function* test_casing_1() {
-  do_log_info("Searching for cased entry 1");
+  do_print("Searching for cased entry 1");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/test/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -15,7 +15,7 @@ add_task(function* test_casing_1() {
 });
 
 add_task(function* test_casing_2() {
-  do_log_info("Searching for cased entry 2");
+  do_print("Searching for cased entry 2");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/test/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -27,7 +27,7 @@ add_task(function* test_casing_2() {
 });
 
 add_task(function* test_casing_3() {
-  do_log_info("Searching for cased entry 3");
+  do_print("Searching for cased entry 3");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -39,7 +39,7 @@ add_task(function* test_casing_3() {
 });
 
 add_task(function* test_casing_4() {
-  do_log_info("Searching for cased entry 4");
+  do_print("Searching for cased entry 4");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -51,7 +51,7 @@ add_task(function* test_casing_4() {
 });
 
 add_task(function* test_casing_5() {
-  do_log_info("Searching for cased entry 5");
+  do_print("Searching for cased entry 5");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -63,7 +63,7 @@ add_task(function* test_casing_5() {
 });
 
 add_task(function* test_untrimmed_casing() {
-  do_log_info("Searching for untrimmed cased entry");
+  do_print("Searching for untrimmed cased entry");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -75,7 +75,7 @@ add_task(function* test_untrimmed_casing() {
 });
 
 add_task(function* test_untrimmed_www_casing() {
-  do_log_info("Searching for untrimmed cased entry with www");
+  do_print("Searching for untrimmed cased entry with www");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://www.mozilla.org/Test/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -87,7 +87,7 @@ add_task(function* test_untrimmed_www_casing() {
 });
 
 add_task(function* test_untrimmed_path_casing() {
-  do_log_info("Searching for untrimmed cased entry with path");
+  do_print("Searching for untrimmed cased entry with path");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -99,7 +99,7 @@ add_task(function* test_untrimmed_path_casing() {
 });
 
 add_task(function* test_untrimmed_path_casing_2() {
-  do_log_info("Searching for untrimmed cased entry with path 2");
+  do_print("Searching for untrimmed cased entry with path 2");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -111,7 +111,7 @@ add_task(function* test_untrimmed_path_casing_2() {
 });
 
 add_task(function* test_untrimmed_path_www_casing() {
-  do_log_info("Searching for untrimmed cased entry with www and path");
+  do_print("Searching for untrimmed cased entry with www and path");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://www.mozilla.org/Test/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -123,7 +123,7 @@ add_task(function* test_untrimmed_path_www_casing() {
 });
 
 add_task(function* test_untrimmed_path_www_casing_2() {
-  do_log_info("Searching for untrimmed cased entry with www and path 2");
+  do_print("Searching for untrimmed cased entry with www and path 2");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://www.mozilla.org/Test/"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({

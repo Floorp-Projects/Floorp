@@ -28,7 +28,7 @@ add_task(function* test_protocol_trimming() {
       "www.mo te"
     ];
     for (let input of inputs) {
-      do_log_info("Searching for: " + input);
+      do_print("Searching for: " + input);
       yield check_autocomplete({
         search: input,
         matches: matches

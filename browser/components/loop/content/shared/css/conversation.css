@@ -3,11 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Shared conversation window styles */
-.standalone .video-layout-wrapper,
-.conversation .media video {
-  background-color: #444;
-}
-
 .conversation {
   position: relative;
 }
@@ -508,15 +503,32 @@
  * XXX this approach is fragile because it makes assumptions
  * about the generated OT markup, any change will break it
  */
-.local-stream.local-stream-audio,
-.standalone .OT_subscriber .OT_video-poster,
-.fx-embedded .OT_video-container .OT_video-poster,
-.local-stream-audio .OT_publisher .OT_video-poster {
+
+/*
+ * For any audio-only streams, we want to display our own background
+ */
+.OT_audio-only .OT_widget-container .OT_video-poster {
   background-image: url("../img/audio-call-avatar.svg");
   background-repeat: no-repeat;
   background-color: #4BA6E7;
   background-size: contain;
   background-position: center;
+}
+
+/*
+ * Audio-only. For local streams, cancel out the SDK's opacity of 0.25.
+ * For remote streams we leave them shaded, as otherwise its too bright.
+ */
+.local-stream-audio .OT_publisher .OT_video-poster {
+  opacity: 1
+}
+
+/*
+ * In audio-only mode, don't display the video element, doing so interferes
+ * with the background opacity of the video-poster element.
+ */
+.OT_audio-only .OT_widget-container .OT_video-element {
+  display: none;
 }
 
 /*
@@ -537,7 +549,7 @@
  * Another less ugly possibility would be to work with Ted Mielczarek to use
  * the fake camera drivers he has for Linux.
  */
-.room-conversation .OT_publisher .OT_video-container {
+.room-conversation .OT_publisher .OT_widget-container {
   height: 100% !important;
   width: 100% !important;
   top: 0 !important;
@@ -545,12 +557,12 @@
   background-color: transparent; /* avoid visually obvious letterboxing */
 }
 
-.room-conversation .OT_publisher .OT_video-container video {
+.room-conversation .OT_publisher .OT_widget-container video {
   background-color: transparent; /* avoid visually obvious letterboxing */
 }
 
-.fx-embedded .room-conversation .room-preview .OT_publisher .OT_video-container,
-.fx-embedded .room-conversation .room-preview .OT_publisher .OT_video-container video {
+.fx-embedded .room-conversation .room-preview .OT_publisher .OT_widget-container,
+.fx-embedded .room-conversation .room-preview .OT_publisher .OT_widget-container video {
   /* Desktop conversation window room preview local stream actually wants
      a black background */
   background-color: #000;
@@ -673,7 +685,6 @@ html, .fx-embedded, #main,
   }
 
   .standalone {
-    max-width: 1000px;
     margin: 0 auto;
   }
 }
@@ -905,11 +916,6 @@ html, .fx-embedded, #main,
   width: 75%;
 }
 
-.standalone .room-conversation .local-stream {
-  width: 33%;
-  height: 26.5%;
-}
-
 .standalone .room-conversation .conversation-toolbar {
   background: #000;
   border: none;
@@ -944,11 +950,6 @@ html, .fx-embedded, #main,
   }
   .standalone .room-conversation .video_wrapper.remote_wrapper {
     width: 100%;
-  }
-  .standalone .room-conversation .local-stream {
-    /* Assumes 4:3 aspect ratio */
-    width: 180px;
-    height: 135px;
   }
   .standalone .conversation-toolbar {
     height: 38px;
