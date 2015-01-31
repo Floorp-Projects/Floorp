@@ -27,18 +27,6 @@ function currentRequest() {
   return img.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
 }
 
-function attachDiscardObserver(result) {
-  // Create the discard observer.
-  let observer = new ImageDiscardObserver(result);
-  let scriptedObserver = Cc["@mozilla.org/image/tools;1"]
-                           .getService(Ci.imgITools)
-                           .createScriptedObserver(observer);
-
-  // Clone the current imgIRequest with our new observer.
-  let request = currentRequest();
-  return request.clone(scriptedObserver);
-}
-
 function isImgDecoded() {
   let request = currentRequest();
   return request.imageStatus & Ci.imgIRequest.STATUS_FRAME_COMPLETE ? true : false;
@@ -69,9 +57,18 @@ function test() {
 }
 
 function step2() {
-  // Attach a discard listener and create a place to hold the result.
+  // Create a place to hold the result.
   var result = { wasDiscarded: false };
-  var clonedRequest = attachDiscardObserver(result);
+
+  // Create the discard observer.
+  var observer = new ImageDiscardObserver(result);
+  var scriptedObserver = Cc["@mozilla.org/image/tools;1"]
+                           .getService(Ci.imgITools)
+                           .createScriptedObserver(observer);
+
+  // Clone the current imgIRequest with our new observer.
+  var request = currentRequest();
+  var clonedRequest = request.clone(scriptedObserver);
 
   // Check that the image is decoded.
   forceDecodeImg();
@@ -83,6 +80,19 @@ function step2() {
   var os = Cc["@mozilla.org/observer-service;1"]
              .getService(Ci.nsIObserverService);
   os.notifyObservers(null, 'memory-pressure', 'heap-minimize');
+
+  // The discard notification is delivered asynchronously, so pump the event
+  // loop before checking.
+  window.addEventListener('message', function (event) {
+    if (event.data == 'step3') {
+      step3(result, scriptedObserver, clonedRequest);
+    }
+  }, false);
+
+  window.postMessage('step3', '*');
+}
+
+function step3(result, scriptedObserver, clonedRequest) {
   ok(result.wasDiscarded, 'Image should be discarded.');
 
   // And we're done.
