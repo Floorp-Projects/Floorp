@@ -10,6 +10,7 @@ EXPORTS.mozilla.dom += [
     'MediaKeyMessageEvent.h',
     'MediaKeys.h',
     'MediaKeySession.h',
+    'MediaKeyStatusMap.h',
     'MediaKeySystemAccess.h',
 ]
 
@@ -30,6 +31,7 @@ UNIFIED_SOURCES += [
     'MediaKeyMessageEvent.cpp',
     'MediaKeys.cpp',
     'MediaKeySession.cpp',
+    'MediaKeyStatusMap.cpp',
     'MediaKeySystemAccess.cpp',
 ]
 

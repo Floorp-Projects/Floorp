@@ -257,7 +257,7 @@ unmapPages(void *p, size_t size)
 void *
 mapMemoryAt(void *desired, size_t length)
 {
-#if defined(__ia64__)
+#if defined(__ia64__) || (defined(__sparc64__) && defined(__NetBSD__))
     MOZ_RELEASE_ASSERT(0xffff800000000000ULL & (uintptr_t(desired) + length - 1) == 0);
 #endif
     void *region = mmap(desired, length, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
@@ -275,13 +275,13 @@ void *
 mapMemory(size_t length)
 {
     void *hint = nullptr;
-#if defined(__ia64__)
+#if defined(__ia64__) || (defined(__sparc64__) && defined(__NetBSD__))
     hint = (void*)0x0000070000000000ULL;
 #endif
     void *region = mmap(hint, length, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
     if (region == MAP_FAILED)
         return nullptr;
-#if defined(__ia64__)
+#if defined(__ia64__) || (defined(__sparc64__) && defined(__NetBSD__))
     if ((uintptr_t(region) + (length - 1)) & 0xffff800000000000ULL) {
         if (munmap(region, length))
             MOZ_RELEASE_ASSERT(errno == ENOMEM);

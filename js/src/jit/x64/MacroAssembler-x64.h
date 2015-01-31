@@ -635,7 +635,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label *label) {
-        if (X86Assembler::isAddressImmediate(lhs.addr)) {
+        if (X86Encoding::IsAddressImmediate(lhs.addr)) {
             branch32(cond, Operand(lhs), rhs, label);
         } else {
             mov(ImmPtr(lhs.addr), ScratchReg);
@@ -647,7 +647,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         branch32(cond, Address(ScratchReg, 0), rhs, label);
     }
     void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label *label) {
-        if (X86Assembler::isAddressImmediate(lhs.addr)) {
+        if (X86Encoding::IsAddressImmediate(lhs.addr)) {
             branch32(cond, Operand(lhs), rhs, label);
         } else {
             mov(ImmPtr(lhs.addr), ScratchReg);
@@ -655,7 +655,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         }
     }
     void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label *label) {
-        if (X86Assembler::isAddressImmediate(address.addr)) {
+        if (X86Encoding::IsAddressImmediate(address.addr)) {
             test32(Operand(address), imm);
         } else {
             mov(ImmPtr(address.addr), ScratchReg);
@@ -667,7 +667,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Specialization for AbsoluteAddress.
     void branchPtr(Condition cond, AbsoluteAddress addr, Register ptr, Label *label) {
         MOZ_ASSERT(ptr != ScratchReg);
-        if (X86Assembler::isAddressImmediate(addr.addr)) {
+        if (X86Encoding::IsAddressImmediate(addr.addr)) {
             branchPtr(cond, Operand(addr), ptr, label);
         } else {
             mov(ImmPtr(addr.addr), ScratchReg);
@@ -675,7 +675,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         }
     }
     void branchPtr(Condition cond, AbsoluteAddress addr, ImmWord ptr, Label *label) {
-        if (X86Assembler::isAddressImmediate(addr.addr)) {
+        if (X86Encoding::IsAddressImmediate(addr.addr)) {
             branchPtr(cond, Operand(addr), ptr, label);
         } else {
             mov(ImmPtr(addr.addr), ScratchReg);
@@ -767,7 +767,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         movePtr(noteMaybeNurseryPtr(imm), dest);
     }
     void loadPtr(AbsoluteAddress address, Register dest) {
-        if (X86Assembler::isAddressImmediate(address.addr)) {
+        if (X86Encoding::IsAddressImmediate(address.addr)) {
             movq(Operand(address), dest);
         } else {
             mov(ImmPtr(address.addr), ScratchReg);
@@ -788,7 +788,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         shlq(Imm32(1), dest);
     }
     void load32(AbsoluteAddress address, Register dest) {
-        if (X86Assembler::isAddressImmediate(address.addr)) {
+        if (X86Encoding::IsAddressImmediate(address.addr)) {
             movl(Operand(address), dest);
         } else {
             mov(ImmPtr(address.addr), ScratchReg);
@@ -823,7 +823,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         movq(src, dest);
     }
     void storePtr(Register src, AbsoluteAddress address) {
-        if (X86Assembler::isAddressImmediate(address.addr)) {
+        if (X86Encoding::IsAddressImmediate(address.addr)) {
             movq(src, Operand(address));
         } else {
             mov(ImmPtr(address.addr), ScratchReg);
@@ -831,7 +831,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         }
     }
     void store32(Register src, AbsoluteAddress address) {
-        if (X86Assembler::isAddressImmediate(address.addr)) {
+        if (X86Encoding::IsAddressImmediate(address.addr)) {
             movl(src, Operand(address));
         } else {
             mov(ImmPtr(address.addr), ScratchReg);
@@ -1355,7 +1355,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void inc64(AbsoluteAddress dest) {
-        if (X86Assembler::isAddressImmediate(dest.addr)) {
+        if (X86Encoding::IsAddressImmediate(dest.addr)) {
             addPtr(Imm32(1), Operand(dest));
         } else {
             mov(ImmPtr(dest.addr), ScratchReg);

@@ -781,7 +781,7 @@ class Dumper_Linux(Dumper):
                                                       rel_path))
             shutil.move(file_dbg, full_path)
             # gzip the shipped debug files
-            os.system("gzip %s" % full_path)
+            os.system("gzip -f %s" % full_path)
             self.output(sys.stdout, rel_path + ".gz")
         else:
             if os.path.isfile(file_dbg):

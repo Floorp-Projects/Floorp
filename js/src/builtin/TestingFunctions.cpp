@@ -1219,6 +1219,89 @@ DisableSPSProfiling(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
+ReadSPSProfilingStack(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setUndefined();
+
+    if (!cx->runtime()->spsProfiler.enabled())
+        args.rval().setBoolean(false);
+
+    // Array holding physical jit stack frames.
+    RootedObject stack(cx, NewDenseEmptyArray(cx));
+    if (!stack)
+        return false;
+
+    RootedObject inlineStack(cx);
+    RootedObject inlineFrameInfo(cx);
+    RootedString frameKind(cx);
+    RootedString frameLabel(cx);
+    RootedId idx(cx);
+
+    JS::ProfilingFrameIterator::RegisterState state;
+    uint32_t physicalFrameNo = 0;
+    const unsigned propAttrs = JSPROP_ENUMERATE;
+    for (JS::ProfilingFrameIterator i(cx->runtime(), state); !i.done(); ++i, ++physicalFrameNo) {
+        MOZ_ASSERT(i.stackAddress() != nullptr);
+
+        // Array holding all inline frames in a single physical jit stack frame.
+        inlineStack = NewDenseEmptyArray(cx);
+        if (!inlineStack)
+            return false;
+
+        JS::ProfilingFrameIterator::Frame frames[16];
+        uint32_t nframes = i.extractStack(frames, 0, 16);
+        for (uint32_t inlineFrameNo = 0; inlineFrameNo < nframes; inlineFrameNo++) {
+
+            // Object holding frame info.
+            inlineFrameInfo = NewBuiltinClassInstance<PlainObject>(cx);
+            if (!inlineFrameInfo)
+                return false;
+
+            const char *frameKindStr = nullptr;
+            switch (frames[inlineFrameNo].kind) {
+              case JS::ProfilingFrameIterator::Frame_Baseline:
+                frameKindStr = "baseline";
+                break;
+              case JS::ProfilingFrameIterator::Frame_Ion:
+                frameKindStr = "ion";
+                break;
+              case JS::ProfilingFrameIterator::Frame_AsmJS:
+                frameKindStr = "asmjs";
+                break;
+              default:
+                frameKindStr = "unknown";
+            }
+            frameKind = NewStringCopyZ<CanGC>(cx, frameKindStr);
+            if (!frameKind)
+                return false;
+
+            if (!JS_DefineProperty(cx, inlineFrameInfo, "kind", frameKind, propAttrs))
+                return false;
+
+            frameLabel = NewStringCopyZ<CanGC>(cx, frames[inlineFrameNo].label);
+            if (!frameLabel)
+                return false;
+
+            if (!JS_DefineProperty(cx, inlineFrameInfo, "label", frameLabel, propAttrs))
+                return false;
+
+            idx = INT_TO_JSID(inlineFrameNo);
+            if (!JS_DefinePropertyById(cx, inlineStack, idx, inlineFrameInfo, 0))
+                return false;
+        }
+
+        // Push inline array into main array.
+        idx = INT_TO_JSID(physicalFrameNo);
+        if (!JS_DefinePropertyById(cx, stack, idx, inlineStack, 0))
+            return false;
+    }
+
+    args.rval().setObject(*stack);
+    return true;
+}
+
+static bool
 EnableOsiPointRegisterChecks(JSContext *, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2434,6 +2517,10 @@ gc::ZealModeHelpText),
     JS_FN_HELP("disableSPSProfiling", DisableSPSProfiling, 0, 0,
 "disableSPSProfiling()",
 "  Disables SPS instrumentation"),
+
+    JS_FN_HELP("readSPSProfilingStack", ReadSPSProfilingStack, 0, 0,
+"readSPSProfilingStack()",
+"  Reads the jit stack using ProfilingFrameIterator."),
 
     JS_FN_HELP("enableOsiPointRegisterChecks", EnableOsiPointRegisterChecks, 0, 0,
 "enableOsiPointRegisterChecks()",

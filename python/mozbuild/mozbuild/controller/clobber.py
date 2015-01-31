@@ -52,6 +52,10 @@ class Clobberer(object):
         self.src_clobber = os.path.join(topsrcdir, 'CLOBBER')
         self.obj_clobber = os.path.join(topobjdir, 'CLOBBER')
 
+        # Try looking for mozilla/CLOBBER, for comm-central
+        if not os.path.isfile(self.src_clobber):
+            self.src_clobber = os.path.join(topsrcdir, 'mozilla', 'CLOBBER')
+
         assert os.path.isfile(self.src_clobber)
 
     def clobber_needed(self):
