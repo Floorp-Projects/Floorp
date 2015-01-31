@@ -44,8 +44,11 @@ var gContentPane = {
     let drmInfoURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "drm-content";
     document.getElementById("playDRMContentLink").setAttribute("href", drmInfoURL);
-    document.getElementById("playDRMContentRow").hidden =
-      !Services.prefs.getBoolPref("browser.eme.ui.enabled");
+    if (!Services.prefs.getBoolPref("browser.eme.ui.enabled")) {
+      // Don't want to rely on .hidden for the toplevel groupbox because
+      // of the pane hiding/showing code potentially interfering:
+      document.getElementById("drmGroup").setAttribute("style", "display: none !important");
+    }
   },
 
   // UTILITY FUNCTIONS
