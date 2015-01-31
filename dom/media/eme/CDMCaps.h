@@ -25,6 +25,29 @@ public:
   CDMCaps();
   ~CDMCaps();
 
+  struct KeyStatus {
+    KeyStatus(const CencKeyId& aId,
+              const nsString& aSessionId,
+              GMPMediaKeyStatus aStatus)
+      : mId(aId)
+      , mSessionId(aSessionId)
+      , mStatus(aStatus)
+    {}
+    KeyStatus(const KeyStatus& aOther)
+      : mId(aOther.mId)
+      , mSessionId(aOther.mSessionId)
+      , mStatus(aOther.mStatus)
+    {}
+    bool operator==(const KeyStatus& aOther) const {
+      return mId == aOther.mId &&
+             mSessionId == aOther.mSessionId;
+    };
+
+    CencKeyId mId;
+    nsString mSessionId;
+    GMPMediaKeyStatus mStatus;
+  };
+
   // Locks the CDMCaps. It must be locked to access its shared state.
   // Threadsafe when locked.
   class MOZ_STACK_CLASS AutoLock {
@@ -42,8 +65,8 @@ public:
     // i.e. the key status changed from usable to expired.
     bool SetKeyStatus(const CencKeyId& aKeyId, const nsString& aSessionId, GMPMediaKeyStatus aStatus);
 
-    void GetUsableKeysForSession(const nsAString& aSessionId,
-                                 nsTArray<CencKeyId>& aOutKeyIds);
+    void GetKeyStatusesForSession(const nsAString& aSessionId,
+                                  nsTArray<KeyStatus>& aOutKeyStatuses);
 
     // Sets the capabilities of the CDM. aCaps is the logical OR of the
     // GMP_EME_CAP_* flags from gmp-decryption.h.
@@ -82,28 +105,6 @@ private:
 
   Monitor mMonitor;
 
-  struct KeyStatus {
-    KeyStatus(const CencKeyId& aId,
-              const nsString& aSessionId,
-              GMPMediaKeyStatus aStatus)
-      : mId(aId)
-      , mSessionId(aSessionId)
-      , mStatus(aStatus)
-    {}
-    KeyStatus(const KeyStatus& aOther)
-      : mId(aOther.mId)
-      , mSessionId(aOther.mSessionId)
-      , mStatus(aOther.mStatus)
-    {}
-    bool operator==(const KeyStatus& aOther) const {
-      return mId == aOther.mId &&
-             mSessionId == aOther.mSessionId;
-    };
-
-    CencKeyId mId;
-    nsString mSessionId;
-    GMPMediaKeyStatus mStatus;
-  };
   nsTArray<KeyStatus> mKeyStatuses;
 
   nsTArray<WaitForKeys> mWaitForKeys;

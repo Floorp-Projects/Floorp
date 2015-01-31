@@ -171,13 +171,13 @@ CDMCaps::AutoLock::CanDecryptVideo()
 }
 
 void
-CDMCaps::AutoLock::GetUsableKeysForSession(const nsAString& aSessionId,
-                                           nsTArray<CencKeyId>& aOutKeyIds)
+CDMCaps::AutoLock::GetKeyStatusesForSession(const nsAString& aSessionId,
+                                            nsTArray<KeyStatus>& aOutKeyStatuses)
 {
   for (size_t i = 0; i < mData.mKeyStatuses.Length(); i++) {
     const auto& key = mData.mKeyStatuses[i];
-    if (key.mSessionId.Equals(aSessionId) && key.mStatus == kGMPUsable) {
-      aOutKeyIds.AppendElement(key.mId);
+    if (key.mSessionId.Equals(aSessionId)) {
+      aOutKeyStatuses.AppendElement(key);
     }
   }
 }
