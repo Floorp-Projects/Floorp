@@ -683,6 +683,16 @@ class LValue : public LInstructionHelper<BOX_PIECES, 0, 0>
     }
 };
 
+class LNurseryObject : public LInstructionHelper<1, 0, 0>
+{
+  public:
+    LIR_HEADER(NurseryObject);
+
+    MNurseryObject *mir() const {
+        return mir_->toNurseryObject();
+    }
+};
+
 // Clone an object literal such as we are not modifying the object contained in
 // the sources.
 class LCloneLiteral : public LCallInstructionHelper<1, 1, 0>

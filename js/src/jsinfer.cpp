@@ -1074,6 +1074,12 @@ TypeObjectKey::proto()
     return isTypeObject() ? asTypeObject()->proto() : asSingleObject()->getTaggedProto();
 }
 
+TaggedProto
+TypeObjectKey::protoMaybeInNursery()
+{
+    return isTypeObject() ? asTypeObject()->proto() : asSingleObject()->getTaggedProto();
+}
+
 bool
 JSObject::hasTenuredProto() const
 {
