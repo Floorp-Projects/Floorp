@@ -11,8 +11,11 @@ include $(topsrcdir)/config/config.mk
 # l10s prefs file
 
 # copying firefox-l10n.js over from LOCALE_SRCDIR or browser
-PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/firefox-l10n.js) \
-                    $(topsrcdir)/$(relativesrcdir)/en-US/firefox-l10n.js )
+L10N_PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/firefox-l10n.js) \
+                         $(srcdir)/en-US/firefox-l10n.js )
+L10N_PREF_JS_EXPORTS_PATH = $(FINAL_TARGET)/$(PREF_DIR)
+L10N_PREF_JS_EXPORTS_FLAGS = $(PREF_PPFLAGS) --silence-missing-directive-warnings
+PP_TARGETS += L10N_PREF_JS_EXPORTS
 
 include $(topsrcdir)/config/rules.mk
 

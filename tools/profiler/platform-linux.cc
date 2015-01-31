@@ -294,6 +294,7 @@ static void* SignalSender(void* arg) {
 
   while (SamplerRegistry::sampler->IsActive()) {
     SamplerRegistry::sampler->HandleSaveRequest();
+    SamplerRegistry::sampler->DeleteExpiredMarkers();
 
     if (!SamplerRegistry::sampler->IsPaused()) {
       mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
@@ -311,8 +312,6 @@ static void* SignalSender(void* arg) {
         PseudoStack::SleepState sleeping = info->Stack()->observeSleeping();
         if (sleeping == PseudoStack::SLEEPING_AGAIN) {
           info->Profile()->DuplicateLastSample();
-          //XXX: This causes flushes regardless of jank-only mode
-          info->Profile()->flush();
           continue;
         }
 

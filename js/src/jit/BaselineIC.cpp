@@ -6539,6 +6539,10 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
                                                isTemporarilyUnoptimizable, isDOMProxy);
     }
 
+    // Try handling JSNative getters.
+    if (!cacheableCall || isScripted)
+        return true;
+
     if (!shape || !shape->hasGetterValue() || !shape->getterValue().isObject() ||
         !shape->getterObject()->is<JSFunction>())
     {
@@ -6546,72 +6550,66 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     }
 
     RootedFunction callee(cx, &shape->getterObject()->as<JSFunction>());
+    MOZ_ASSERT(callee->isNative());
 
     if (outerClass && (!callee->jitInfo() || callee->jitInfo()->needsOuterizedThisObject()))
         return true;
 
-    // Try handling JSNative getters.
-    if (cacheableCall && !isScripted) {
 #if JS_HAS_NO_SUCH_METHOD
-        // It's unlikely that a getter function will be used to generate functions for calling
-        // in CALLPROP locations.  Just don't attach stubs in that case to avoid issues with
-        // __noSuchMethod__ handling.
-        if (isCallProp)
-            return true;
+    // It's unlikely that a getter function will be used to generate functions for calling
+    // in CALLPROP locations.  Just don't attach stubs in that case to avoid issues with
+    // __noSuchMethod__ handling.
+    if (isCallProp)
+        return true;
 #endif
 
-        MOZ_ASSERT(callee->isNative());
+    JitSpew(JitSpew_BaselineIC, "  Generating GetProp(%s%s/NativeGetter %p) stub",
+            isDOMProxy ? "DOMProxyObj" : "NativeObj",
+            isDOMProxy && domProxyHasGeneration ? "WithGeneration" : "",
+            callee->native());
 
-        JitSpew(JitSpew_BaselineIC, "  Generating GetProp(%s%s/NativeGetter %p) stub",
-                isDOMProxy ? "DOMProxyObj" : "NativeObj",
-                isDOMProxy && domProxyHasGeneration ? "WithGeneration" : "",
-                callee->native());
-
-        ICStub *newStub = nullptr;
-        if (isDOMProxy) {
-            MOZ_ASSERT(obj != holder);
-            ICStub::Kind kind;
-            if (domProxyHasGeneration) {
-                if (UpdateExistingGenerationalDOMProxyStub(stub, obj)) {
-                    *attached = true;
-                    return true;
-                }
-                kind = ICStub::GetProp_CallDOMProxyWithGenerationNative;
-            } else {
-                kind = ICStub::GetProp_CallDOMProxyNative;
-            }
-            Rooted<ProxyObject*> proxy(cx, &obj->as<ProxyObject>());
-            ICGetPropCallDOMProxyNativeCompiler
-                compiler(cx, kind, monitorStub, proxy, holder, callee, script->pcToOffset(pc));
-            newStub = compiler.getStub(compiler.getStubSpace(script));
-        } else if (obj == holder) {
-            if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNative,
-                                               obj, JS::NullPtr(), callee)) {
+    ICStub *newStub = nullptr;
+    if (isDOMProxy) {
+        MOZ_ASSERT(obj != holder);
+        ICStub::Kind kind;
+        if (domProxyHasGeneration) {
+            if (UpdateExistingGenerationalDOMProxyStub(stub, obj)) {
                 *attached = true;
                 return true;
             }
-
-            ICGetProp_CallNative::Compiler compiler(cx, monitorStub, obj, callee,
-                                                    script->pcToOffset(pc), outerClass);
-            newStub = compiler.getStub(compiler.getStubSpace(script));
+            kind = ICStub::GetProp_CallDOMProxyWithGenerationNative;
         } else {
-            if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNativePrototype,
-                                               holder, obj, callee)) {
-                *attached = true;
-                return true;
-            }
-
-            ICGetProp_CallNativePrototype::Compiler compiler(cx, monitorStub, obj, holder, callee,
-                                                             script->pcToOffset(pc), outerClass);
-            newStub = compiler.getStub(compiler.getStubSpace(script));
+            kind = ICStub::GetProp_CallDOMProxyNative;
         }
-        if (!newStub)
-            return false;
-        stub->addNewStub(newStub);
-        *attached = true;
-        return true;
-    }
+        Rooted<ProxyObject*> proxy(cx, &obj->as<ProxyObject>());
+        ICGetPropCallDOMProxyNativeCompiler compiler(cx, kind, monitorStub, proxy, holder, callee,
+                                                     script->pcToOffset(pc));
+        newStub = compiler.getStub(compiler.getStubSpace(script));
+    } else if (obj == holder) {
+        if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNative,
+                                           obj, JS::NullPtr(), callee)) {
+            *attached = true;
+            return true;
+        }
 
+        ICGetProp_CallNative::Compiler compiler(cx, monitorStub, obj, callee,
+                                                script->pcToOffset(pc), outerClass);
+        newStub = compiler.getStub(compiler.getStubSpace(script));
+    } else {
+        if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNativePrototype,
+                                           holder, obj, callee)) {
+            *attached = true;
+            return true;
+        }
+
+        ICGetProp_CallNativePrototype::Compiler compiler(cx, monitorStub, obj, holder, callee,
+                                                         script->pcToOffset(pc), outerClass);
+        newStub = compiler.getStub(compiler.getStubSpace(script));
+    }
+    if (!newStub)
+        return false;
+    stub->addNewStub(newStub);
+    *attached = true;
     return true;
 }
 

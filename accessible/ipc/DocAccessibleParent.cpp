@@ -15,6 +15,9 @@ namespace a11y {
 bool
 DocAccessibleParent::RecvShowEvent(const ShowEventData& aData)
 {
+  if (mShutdown)
+    return true;
+
   if (aData.NewTree().IsEmpty()) {
     NS_ERROR("no children being added");
     return false;
@@ -95,6 +98,9 @@ DocAccessibleParent::AddSubtree(ProxyAccessible* aParent,
 bool
 DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID)
 {
+  if (mShutdown)
+    return true;
+
   ProxyEntry* rootEntry = mAccessibles.GetEntry(aRootID);
   if (!rootEntry) {
     NS_ERROR("invalid root being removed!");
@@ -151,16 +157,20 @@ PLDHashOperator
 DocAccessibleParent::ShutdownAccessibles(ProxyEntry* entry, void*)
 {
   ProxyDestroyed(entry->mProxy);
-  return PL_DHASH_NEXT;
+  return PL_DHASH_REMOVE;
 }
 
 void
 DocAccessibleParent::Destroy()
 {
-  MOZ_ASSERT(mChildDocs.IsEmpty(),
-      "why weren't the child docs destroyed already?");
+  NS_ASSERTION(mChildDocs.IsEmpty(),
+               "why weren't the child docs destroyed already?");
   MOZ_ASSERT(!mShutdown);
   mShutdown = true;
+
+  uint32_t childDocCount = mChildDocs.Length();
+  for (uint32_t i = childDocCount - 1; i < childDocCount; i--)
+    mChildDocs[i]->Destroy();
 
   mAccessibles.EnumerateEntries(ShutdownAccessibles, nullptr);
   ProxyDestroyed(this);
