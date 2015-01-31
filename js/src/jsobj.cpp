@@ -3047,77 +3047,71 @@ js::HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *result)
     return true;
 }
 
-static MOZ_ALWAYS_INLINE bool
-LookupPropertyPureInline(ExclusiveContext *cx, JSObject *obj, jsid id, NativeObject **objp,
-                         Shape **propp)
+bool
+js::LookupPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                       Shape **propp)
 {
-    if (!obj->isNative())
-        return false;
+    do {
+        if (obj->isNative()) {
+            /* Search for a native dense element, typed array element, or property. */
 
-    NativeObject *current = &obj->as<NativeObject>();
-    while (true) {
-        /* Search for a native dense element, typed array element, or property. */
+            if (JSID_IS_INT(id) && obj->as<NativeObject>().containsDenseElement(JSID_TO_INT(id))) {
+                *objp = obj;
+                MarkDenseOrTypedArrayElementFound<NoGC>(propp);
+                return true;
+            }
 
-        if (JSID_IS_INT(id) && current->containsDenseElement(JSID_TO_INT(id))) {
-            *objp = current;
-            MarkDenseOrTypedArrayElementFound<NoGC>(propp);
-            return true;
-        }
-
-        if (IsAnyTypedArray(current)) {
-            uint64_t index;
-            if (IsTypedArrayIndex(id, &index)) {
-                if (index < AnyTypedArrayLength(obj)) {
-                    *objp = current;
-                    MarkDenseOrTypedArrayElementFound<NoGC>(propp);
-                } else {
-                    *objp = nullptr;
-                    *propp = nullptr;
+            if (IsAnyTypedArray(obj)) {
+                uint64_t index;
+                if (IsTypedArrayIndex(id, &index)) {
+                    if (index < AnyTypedArrayLength(obj)) {
+                        *objp = obj;
+                        MarkDenseOrTypedArrayElementFound<NoGC>(propp);
+                    } else {
+                        *objp = nullptr;
+                        *propp = nullptr;
+                    }
+                    return true;
                 }
+            }
+
+            if (Shape *shape = obj->as<NativeObject>().lookupPure(id)) {
+                *objp = obj;
+                *propp = shape;
+                return true;
+            }
+
+            // Fail if there's a resolve hook. We allow the JSFunction resolve hook
+            // if we know it will never add a property with this name or str_resolve
+            // with a non-integer property.
+            do {
+                const Class *clasp = obj->getClass();
+                if (!clasp->resolve)
+                break;
+                if (clasp->resolve == fun_resolve && !FunctionHasResolveHook(cx->names(), id))
+                    break;
+                if (clasp->resolve == str_resolve && !JSID_IS_INT(id))
+                    break;
+                return false;
+            } while (0);
+        } else {
+            // Search for a property on an unboxed object. Other non-native objects
+            // are not handled here.
+            if (!obj->is<UnboxedPlainObject>())
+                return false;
+            if (obj->as<UnboxedPlainObject>().layout().lookup(id)) {
+                *objp = obj;
+                MarkNonNativePropertyFound<NoGC>(propp);
                 return true;
             }
         }
 
-        if (Shape *shape = current->lookupPure(id)) {
-            *objp = current;
-            *propp = shape;
-            return true;
-        }
-
-        // Fail if there's a resolve hook. We allow the JSFunction resolve hook
-        // if we know it will never add a property with this name or str_resolve
-        // with a non-integer property.
-        do {
-            const Class *clasp = current->getClass();
-            if (!clasp->resolve)
-                break;
-            if (clasp->resolve == fun_resolve && !FunctionHasResolveHook(cx->names(), id))
-                break;
-            if (clasp->resolve == str_resolve && !JSID_IS_INT(id))
-                break;
-            return false;
-        } while (0);
-
-        JSObject *proto = current->getProto();
-
-        if (!proto)
-            break;
-        if (!proto->isNative())
-            return false;
-
-        current = &proto->as<NativeObject>();
-    }
+        obj = obj->getProto();
+    } while (obj);
 
     *objp = nullptr;
     *propp = nullptr;
     return true;
-}
-
-bool
-js::LookupPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, NativeObject **objp,
-                       Shape **propp)
-{
-    return LookupPropertyPureInline(cx, obj, id, objp, propp);
 }
 
 bool
