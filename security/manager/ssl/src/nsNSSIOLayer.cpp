@@ -1190,6 +1190,7 @@ uint32_t tlsIntoleranceTelemetryBucket(PRErrorCode err)
     case SSL_ERROR_NO_CYPHER_OVERLAP: return 7;
     case SSL_ERROR_BAD_SERVER: return 8;
     case SSL_ERROR_BAD_BLOCK_PADDING: return 9;
+    case SSL_ERROR_UNSUPPORTED_VERSION: return 10;
     case SSL_ERROR_PROTOCOL_VERSION_ALERT: return 11;
     case SSL_ERROR_RX_MALFORMED_FINISHED: return 12;
     case SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE: return 13;
