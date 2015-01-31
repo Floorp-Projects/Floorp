@@ -4,7 +4,7 @@
 // Ensure inline autocomplete doesn't return zero frecency pages.
 
 add_task(function* test_dupe_urls() {
-  do_log_info("Searching for urls with dupes should only show one");
+  do_print("Searching for urls with dupes should only show one");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/"),
                            transition: TRANSITION_TYPED },
                          { uri: NetUtil.newURI("http://mozilla.org/?") });

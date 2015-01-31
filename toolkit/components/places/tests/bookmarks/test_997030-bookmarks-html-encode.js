@@ -27,7 +27,7 @@ add_task(function() {
   PlacesUtils.bookmarks.removeItem(bm);
   yield BookmarkHTMLUtils.importFromFile(file, true);
 
-  do_log_info("Checking first level");
+  do_print("Checking first level");
   let root = PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
   let node = root.getChild(0);
   do_check_eq(node.uri, uri.spec);

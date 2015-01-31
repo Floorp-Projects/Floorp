@@ -38,7 +38,7 @@ function setupBehaviorAndMigrate(aDefaultBehavior, aAutocompleteEnabled = true) 
 };
 
 add_task(function*() {
-  do_log_info("Migrate default.behavior = 0");
+  do_print("Migrate default.behavior = 0");
   setupBehaviorAndMigrate(0);
 
   Assert.ok(gGetBoolPref("browser.urlbar.suggest.history"),
@@ -52,7 +52,7 @@ add_task(function*() {
 });
 
 add_task(function*() {
-  do_log_info("Migrate default.behavior = 1");
+  do_print("Migrate default.behavior = 1");
   setupBehaviorAndMigrate(1);
 
   Assert.ok(gGetBoolPref("browser.urlbar.suggest.history"),
@@ -66,7 +66,7 @@ add_task(function*() {
 });
 
 add_task(function*() {
-  do_log_info("Migrate default.behavior = 2");
+  do_print("Migrate default.behavior = 2");
   setupBehaviorAndMigrate(2);
 
   Assert.equal(gGetBoolPref("browser.urlbar.suggest.history"), false,
@@ -80,7 +80,7 @@ add_task(function*() {
 });
 
 add_task(function*() {
-  do_log_info("Migrate default.behavior = 3");
+  do_print("Migrate default.behavior = 3");
   setupBehaviorAndMigrate(3);
 
   Assert.ok(gGetBoolPref("browser.urlbar.suggest.history"),
@@ -94,7 +94,7 @@ add_task(function*() {
 });
 
 add_task(function*() {
-  do_log_info("Migrate default.behavior = 19");
+  do_print("Migrate default.behavior = 19");
   setupBehaviorAndMigrate(19);
 
   Assert.ok(gGetBoolPref("browser.urlbar.suggest.history"),
@@ -108,7 +108,7 @@ add_task(function*() {
 });
 
 add_task(function*() {
-  do_log_info("Migrate default.behavior = 33");
+  do_print("Migrate default.behavior = 33");
   setupBehaviorAndMigrate(33);
 
   Assert.ok(gGetBoolPref("browser.urlbar.suggest.history"),
@@ -122,7 +122,7 @@ add_task(function*() {
 });
 
 add_task(function*() {
-  do_log_info("Migrate default.behavior = 129");
+  do_print("Migrate default.behavior = 129");
   setupBehaviorAndMigrate(129);
 
   Assert.ok(gGetBoolPref("browser.urlbar.suggest.history"),
@@ -136,7 +136,7 @@ add_task(function*() {
 });
 
 add_task(function*() {
-  do_log_info("Migrate default.behavior = 0, autocomplete.enabled = false");
+  do_print("Migrate default.behavior = 0, autocomplete.enabled = false");
   setupBehaviorAndMigrate(0, false);
 
   Assert.equal(gGetBoolPref("browser.urlbar.suggest.history"), false,

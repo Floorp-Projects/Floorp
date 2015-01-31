@@ -24,7 +24,7 @@ add_task(function smart_bookmarks_disabled() {
   let smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   do_check_eq(smartBookmarkItemIds.length, 0);
-  do_log_info("check that pref has not been bumped up");
+  do_print("check that pref has not been bumped up");
   do_check_eq(Services.prefs.getIntPref("browser.places.smartBookmarksVersion"), -1);
 });
 
@@ -34,7 +34,7 @@ add_task(function create_smart_bookmarks() {
   let smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   do_check_neq(smartBookmarkItemIds.length, 0);
-  do_log_info("check that pref has been bumped up");
+  do_print("check that pref has been bumped up");
   do_check_true(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
 });
 
@@ -42,14 +42,14 @@ add_task(function remove_smart_bookmark_and_restore() {
   let smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   let smartBookmarksCount = smartBookmarkItemIds.length;
-  do_log_info("remove one smart bookmark and restore");
+  do_print("remove one smart bookmark and restore");
   PlacesUtils.bookmarks.removeItem(smartBookmarkItemIds[0]);
   Services.prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
   gluesvc.ensurePlacesDefaultQueriesInitialized();
   smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   do_check_eq(smartBookmarkItemIds.length, smartBookmarksCount);
-  do_log_info("check that pref has been bumped up");
+  do_print("check that pref has been bumped up");
   do_check_true(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
 });
 
@@ -57,7 +57,7 @@ add_task(function move_smart_bookmark_rename_and_restore() {
   let smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   let smartBookmarksCount = smartBookmarkItemIds.length;
-  do_log_info("smart bookmark should be restored in place");
+  do_print("smart bookmark should be restored in place");
   let parent = PlacesUtils.bookmarks.getFolderIdForItem(smartBookmarkItemIds[0]);
   let oldTitle = PlacesUtils.bookmarks.getItemTitle(smartBookmarkItemIds[0]);
   // create a subfolder and move inside it
@@ -76,6 +76,6 @@ add_task(function move_smart_bookmark_rename_and_restore() {
   do_check_eq(smartBookmarkItemIds.length, smartBookmarksCount);
   do_check_eq(PlacesUtils.bookmarks.getFolderIdForItem(smartBookmarkItemIds[0]), newParent);
   do_check_eq(PlacesUtils.bookmarks.getItemTitle(smartBookmarkItemIds[0]), oldTitle);
-  do_log_info("check that pref has been bumped up");
+  do_print("check that pref has been bumped up");
   do_check_true(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
 });

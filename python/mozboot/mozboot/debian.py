@@ -121,7 +121,9 @@ class DebianBootstrapper(BaseBootstrapper):
     def suggest_mobile_android_mozconfig(self):
         import android
 
-        android.suggest_mozconfig(sdk_path=self.sdk_path,
+        # The SDK path that mozconfig wants includes platforms/android-21.
+        sdk_path = os.path.join(self.sdk_path, 'platforms', android.ANDROID_PLATFORM)
+        android.suggest_mozconfig(sdk_path=sdk_path,
             ndk_path=self.ndk_path)
 
     def _update_package_manager(self):

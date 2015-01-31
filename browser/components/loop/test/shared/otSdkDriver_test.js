@@ -8,6 +8,7 @@ describe("loop.OTSdkDriver", function () {
 
   var sharedActions = loop.shared.actions;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
+  var STREAM_PROPERTIES = loop.shared.utils.STREAM_PROPERTIES;
   var sandbox;
   var dispatcher, driver, publisher, sdk, session, sessionData;
   var fakeLocalElement, fakeRemoteElement, publisherConfig, fakeEvent;
@@ -308,6 +309,44 @@ describe("loop.OTSdkDriver", function () {
         sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "mediaConnected"));
       });
+    });
+
+    describe("streamPropertyChanged", function() {
+      var fakeStream = {
+        connection: { id: "fake" },
+        videoType: "screen",
+        videoDimensions: {
+          width: 320,
+          height: 160
+        }
+      };
+
+      it("should not dispatch a VideoDimensionsChanged action for other properties", function() {
+        session.trigger("streamPropertyChanged", {
+          stream: fakeStream,
+          changedProperty: STREAM_PROPERTIES.HAS_AUDIO
+        });
+        session.trigger("streamPropertyChanged", {
+          stream: fakeStream,
+          changedProperty: STREAM_PROPERTIES.HAS_VIDEO
+        });
+
+        sinon.assert.notCalled(dispatcher.dispatch);
+      });
+
+      it("should dispatch a VideoDimensionsChanged action", function() {
+        session.connection = {
+          id: "localUser"
+        };
+        session.trigger("streamPropertyChanged", {
+          stream: fakeStream,
+          changedProperty: STREAM_PROPERTIES.VIDEO_DIMENSIONS
+        });
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithMatch(dispatcher.dispatch,
+          sinon.match.hasOwn("name", "videoDimensionsChanged"))
+      })
     });
 
     describe("connectionCreated", function() {
