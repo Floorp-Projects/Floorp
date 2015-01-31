@@ -200,6 +200,16 @@ MediaEngineGonkVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
     return NS_ERROR_FAILURE;
   }
 
+  nsTArray<nsString> focusModes;
+  mCameraControl->Get(CAMERA_PARAM_SUPPORTED_FOCUSMODES, focusModes);
+  for (nsTArray<nsString>::index_type i = 0; i < focusModes.Length(); ++i) {
+    if (focusModes[i].EqualsASCII("continuous-video")) {
+      mCameraControl->Set(CAMERA_PARAM_FOCUSMODE, focusModes[i]);
+      mCameraControl->ResumeContinuousFocus();
+      break;
+    }
+  }
+
   if (NS_FAILED(InitDirectMediaBuffer())) {
     return NS_ERROR_FAILURE;
   }
@@ -423,15 +433,6 @@ MediaEngineGonkVideoSource::StartImpl(webrtc::CaptureCapability aCapability) {
   config.mPreviewSize.height = aCapability.height;
   mCameraControl->Start(&config);
   mCameraControl->Set(CAMERA_PARAM_PICTURE_SIZE, config.mPreviewSize);
-
-  nsTArray<nsString> focusModes;
-  mCameraControl->Get(CAMERA_PARAM_SUPPORTED_FOCUSMODES, focusModes);
-  for (nsTArray<nsString>::index_type i = 0; i < focusModes.Length(); ++i) {
-    if (focusModes[i].EqualsASCII("continuous-video")) {
-      mCameraControl->Set(CAMERA_PARAM_FOCUSMODE, focusModes[i]);
-      break;
-    }
-  }
 
   hal::RegisterScreenConfigurationObserver(this);
 }
