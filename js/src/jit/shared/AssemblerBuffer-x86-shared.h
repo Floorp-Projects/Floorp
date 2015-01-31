@@ -65,12 +65,6 @@
 #define ADDR_o32b(offset, base)                ADDR_ob(offset, base)
 #define ADDR_o32bs(offset, base, index, scale) ADDR_obs(offset, base, index, scale)
 
-#define FIXME_INSN_PRINTING                                 \
-    do {                                                    \
-        spew("FIXME insn printing %s:%d",                   \
-             __FILE__, __LINE__);                           \
-    } while (0)
-
 namespace js {
 namespace jit {
 

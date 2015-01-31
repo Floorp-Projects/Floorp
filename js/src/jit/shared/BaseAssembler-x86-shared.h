@@ -297,7 +297,6 @@ private:
         OP_SUB_EvGv                     = 0x29,
         OP_SUB_GvEv                     = 0x2B,
         OP_SUB_EAXIv                    = 0x2D,
-        PRE_PREDICT_BRANCH_NOT_TAKEN    = 0x2E,
         OP_XOR_EbGb                     = 0x30,
         OP_XOR_EvGv                     = 0x31,
         OP_XOR_GvEv                     = 0x33,
@@ -701,7 +700,7 @@ public:
 #ifdef JS_CODEGEN_X86
     void adcl_im(int32_t imm, const void* addr)
     {
-        FIXME_INSN_PRINTING;
+        spew("adcl       %d, %p", imm, addr);
         if (CAN_SIGN_EXTEND_8_32(imm)) {
             m_formatter.oneByteOp(OP_GROUP1_EvIb, addr, GROUP1_OP_ADC);
             m_formatter.immediate8s(imm);
@@ -1135,7 +1134,7 @@ public:
 
     void negl_m(int32_t offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        spew("negl       " MEM_ob, ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_GROUP3_Ev, offset, base, GROUP3_OP_NEG);
     }
 
@@ -1147,7 +1146,7 @@ public:
 
     void notl_m(int32_t offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        spew("notl       " MEM_ob, ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_GROUP3_Ev, offset, base, GROUP3_OP_NOT);
     }
 
@@ -1232,7 +1231,7 @@ public:
 #else
     void orl_im(int32_t imm, const void* addr)
     {
-        FIXME_INSN_PRINTING;
+        spew("orl        $0x%x, %p", imm, addr);
         if (CAN_SIGN_EXTEND_8_32(imm)) {
             m_formatter.oneByteOp(OP_GROUP1_EvIb, addr, GROUP1_OP_OR);
             m_formatter.immediate8s(imm);
@@ -1330,7 +1329,7 @@ public:
 #else
     void subl_im(int32_t imm, const void* addr)
     {
-        FIXME_INSN_PRINTING;
+        spew("subl       $%d, %p", imm, addr);
         if (CAN_SIGN_EXTEND_8_32(imm)) {
             m_formatter.oneByteOp(OP_GROUP1_EvIb, addr, GROUP1_OP_SUB);
             m_formatter.immediate8s(imm);
@@ -1466,7 +1465,7 @@ public:
 #ifdef JS_CODEGEN_X64
     void sarq_CLr(RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        spew("sarq       %%cl, %s", GPReg64Name(dst));
         m_formatter.oneByteOp64(OP_GROUP2_EvCL, dst, GROUP2_OP_SAR);
     }
 
@@ -1643,7 +1642,7 @@ public:
         m_formatter.oneByteOp(OP_CMP_GvEv, address, lhs);
     }
 
-    void cmpl_ir(int rhs, RegisterID lhs)
+    void cmpl_ir(int32_t rhs, RegisterID lhs)
     {
         if (rhs == 0) {
             testl_rr(lhs, lhs);
@@ -1663,7 +1662,7 @@ public:
         }
     }
 
-    void cmpl_i32r(int rhs, RegisterID lhs)
+    void cmpl_i32r(int32_t rhs, RegisterID lhs)
     {
         spew("cmpl       $0x%04x, %s", rhs, GPReg32Name(lhs));
         if (lhs == X86Registers::eax)
@@ -1673,7 +1672,7 @@ public:
         m_formatter.immediate32(rhs);
     }
 
-    void cmpl_im(int rhs, int32_t offset, RegisterID base)
+    void cmpl_im(int32_t rhs, int32_t offset, RegisterID base)
     {
         spew("cmpl       $0x%x, " MEM_ob, rhs, ADDR_ob(offset, base));
         if (CAN_SIGN_EXTEND_8_32(rhs)) {
@@ -1685,21 +1684,21 @@ public:
         }
     }
 
-    void cmpb_im(int rhs, int32_t offset, RegisterID base)
+    void cmpb_im(int32_t rhs, int32_t offset, RegisterID base)
     {
         spew("cmpb       $0x%x, " MEM_ob, rhs, ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, GROUP1_OP_CMP);
         m_formatter.immediate8(rhs);
     }
 
-    void cmpb_im(int rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
+    void cmpb_im(int32_t rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
         spew("cmpb       $0x%x, " MEM_obs, rhs, ADDR_obs(offset, base, index, scale));
         m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, index, scale, GROUP1_OP_CMP);
         m_formatter.immediate8(rhs);
     }
 
-    void cmpl_im(int rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
+    void cmpl_im(int32_t rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
         spew("cmpl       $0x%x, " MEM_o32b, rhs, ADDR_o32b(offset, base));
         if (CAN_SIGN_EXTEND_8_32(rhs)) {
@@ -1712,7 +1711,7 @@ public:
     }
 
     MOZ_WARN_UNUSED_RESULT JmpSrc
-    cmpl_im_disp32(int rhs, int32_t offset, RegisterID base)
+    cmpl_im_disp32(int32_t rhs, int32_t offset, RegisterID base)
     {
         spew("cmpl       $0x%x, " MEM_o32b, rhs, ADDR_o32b(offset, base));
         JmpSrc r;
@@ -1729,7 +1728,7 @@ public:
     }
 
     MOZ_WARN_UNUSED_RESULT JmpSrc
-    cmpl_im_disp32(int rhs, const void *addr)
+    cmpl_im_disp32(int32_t rhs, const void *addr)
     {
         spew("cmpl       $0x%x, %p", rhs, addr);
         JmpSrc r;
@@ -1745,14 +1744,14 @@ public:
         return r;
     }
 
-    void cmpl_i32m(int rhs, int32_t offset, RegisterID base)
+    void cmpl_i32m(int32_t rhs, int32_t offset, RegisterID base)
     {
         spew("cmpl       $0x%04x, " MEM_ob, rhs, ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_CMP);
         m_formatter.immediate32(rhs);
     }
 
-    void cmpl_i32m(int rhs, const void *addr)
+    void cmpl_i32m(int32_t rhs, const void *addr)
     {
         spew("cmpl       $0x%04x, %p", rhs, addr);
         m_formatter.oneByteOp(OP_GROUP1_EvIz, addr, GROUP1_OP_CMP);
@@ -1778,7 +1777,7 @@ public:
         m_formatter.oneByteOp64(OP_CMP_GvEv, offset, base, lhs);
     }
 
-    void cmpq_ir(int rhs, RegisterID lhs)
+    void cmpq_ir(int32_t rhs, RegisterID lhs)
     {
         if (rhs == 0) {
             testq_rr(lhs, lhs);
@@ -1798,7 +1797,7 @@ public:
         }
     }
 
-    void cmpq_im(int rhs, int32_t offset, RegisterID base)
+    void cmpq_im(int32_t rhs, int32_t offset, RegisterID base)
     {
         spew("cmpq       $0x%" PRIx64 ", " MEM_ob, int64_t(rhs), ADDR_ob(offset, base));
         if (CAN_SIGN_EXTEND_8_32(rhs)) {
@@ -1810,9 +1809,9 @@ public:
         }
     }
 
-    void cmpq_im(int rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
+    void cmpq_im(int32_t rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
-        FIXME_INSN_PRINTING;
+        spew("cmpq       $0x%x, " MEM_obs, rhs, ADDR_obs(offset, base, index, scale));
         if (CAN_SIGN_EXTEND_8_32(rhs)) {
             m_formatter.oneByteOp64(OP_GROUP1_EvIb, offset, base, index, scale, GROUP1_OP_CMP);
             m_formatter.immediate8s(rhs);
@@ -1821,7 +1820,7 @@ public:
             m_formatter.immediate32(rhs);
         }
     }
-    void cmpq_im(int rhs, const void* addr)
+    void cmpq_im(int32_t rhs, const void* addr)
     {
         spew("cmpq       $0x%" PRIx64 ", %p", int64_t(rhs), addr);
         if (CAN_SIGN_EXTEND_8_32(rhs)) {
@@ -1850,7 +1849,7 @@ public:
         m_formatter.oneByteOp_disp32(OP_CMP_EvGv, addr, rhs);
     }
 
-    void cmpl_im(int rhs, const void* addr)
+    void cmpl_im(int32_t rhs, const void* addr)
     {
         spew("cmpl       $0x%x, %p", rhs, addr);
         if (CAN_SIGN_EXTEND_8_32(rhs)) {
@@ -1871,14 +1870,14 @@ public:
 
     void cmpw_rm(RegisterID rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
-        FIXME_INSN_PRINTING;
+        spew("cmpw       %s, " MEM_obs, GPReg16Name(rhs), ADDR_obs(offset, base, index, scale));
         m_formatter.prefix(PRE_OPERAND_SIZE);
         m_formatter.oneByteOp(OP_CMP_EvGv, offset, base, index, scale, rhs);
     }
 
     void cmpw_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
-        FIXME_INSN_PRINTING;
+        spew("cmpw       $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
         if (CAN_SIGN_EXTEND_8_32(imm)) {
             m_formatter.prefix(PRE_OPERAND_SIZE);
             m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, index, scale, GROUP1_OP_CMP);
@@ -1902,7 +1901,7 @@ public:
         m_formatter.oneByteOp(OP_TEST_EbGb, lhs, rhs);
     }
 
-    void testl_ir(int rhs, RegisterID lhs)
+    void testl_ir(int32_t rhs, RegisterID lhs)
     {
         // If the mask fits in an 8-bit immediate, we can use testb with an
         // 8-bit subreg.
@@ -1924,37 +1923,37 @@ public:
         m_formatter.immediate32(rhs);
     }
 
-    void testl_i32m(int rhs, int32_t offset, RegisterID base)
+    void testl_i32m(int32_t rhs, int32_t offset, RegisterID base)
     {
         spew("testl      $0x%x, " MEM_ob, rhs, ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_GROUP3_EvIz, offset, base, GROUP3_OP_TEST);
         m_formatter.immediate32(rhs);
     }
 
-    void testl_i32m(int rhs, const void *addr)
+    void testl_i32m(int32_t rhs, const void *addr)
     {
         spew("testl      $0x%x, %p", rhs, addr);
         m_formatter.oneByteOp(OP_GROUP3_EvIz, addr, GROUP3_OP_TEST);
         m_formatter.immediate32(rhs);
     }
 
-    void testb_im(int rhs, int32_t offset, RegisterID base)
+    void testb_im(int32_t rhs, int32_t offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        spew("testb      $0x%x, " MEM_ob, rhs, ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_GROUP3_EbIb, offset, base, GROUP3_OP_TEST);
         m_formatter.immediate8(rhs);
     }
 
-    void testb_im(int rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
+    void testb_im(int32_t rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
-        FIXME_INSN_PRINTING;
+        spew("testb      $0x%x, " MEM_obs, rhs, ADDR_obs(offset, base, index, scale));
         m_formatter.oneByteOp(OP_GROUP3_EbIb, offset, base, index, scale, GROUP3_OP_TEST);
         m_formatter.immediate8(rhs);
     }
 
-    void testl_i32m(int rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
+    void testl_i32m(int32_t rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
-        FIXME_INSN_PRINTING;
+        spew("testl      $0x%4x, " MEM_obs, rhs, ADDR_obs(offset, base, index, scale));
         m_formatter.oneByteOp(OP_GROUP3_EvIz, offset, base, index, scale, GROUP3_OP_TEST);
         m_formatter.immediate32(rhs);
     }
@@ -1966,7 +1965,7 @@ public:
         m_formatter.oneByteOp64(OP_TEST_EvGv, lhs, rhs);
     }
 
-    void testq_ir(int rhs, RegisterID lhs)
+    void testq_ir(int32_t rhs, RegisterID lhs)
     {
         // If the mask fits in a 32-bit immediate, we can use testl with a
         // 32-bit subreg.
@@ -1982,16 +1981,16 @@ public:
         m_formatter.immediate32(rhs);
     }
 
-    void testq_i32m(int rhs, int32_t offset, RegisterID base)
+    void testq_i32m(int32_t rhs, int32_t offset, RegisterID base)
     {
         spew("testq      $0x%" PRIx64 ", " MEM_ob, int64_t(rhs), ADDR_ob(offset, base));
         m_formatter.oneByteOp64(OP_GROUP3_EvIz, offset, base, GROUP3_OP_TEST);
         m_formatter.immediate32(rhs);
     }
 
-    void testq_i32m(int rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
+    void testq_i32m(int32_t rhs, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
-        FIXME_INSN_PRINTING;
+        spew("testq      $0x%4x, " MEM_obs, rhs, ADDR_obs(offset, base, index, scale));
         m_formatter.oneByteOp64(OP_GROUP3_EvIz, offset, base, index, scale, GROUP3_OP_TEST);
         m_formatter.immediate32(rhs);
     }
@@ -1999,12 +1998,12 @@ public:
 
     void testw_rr(RegisterID rhs, RegisterID lhs)
     {
-        FIXME_INSN_PRINTING;
+        spew("testw      %s, %s", GPReg16Name(rhs), GPReg16Name(lhs));
         m_formatter.prefix(PRE_OPERAND_SIZE);
         m_formatter.oneByteOp(OP_TEST_EvGv, lhs, rhs);
     }
 
-    void testb_ir(int rhs, RegisterID lhs)
+    void testb_ir(int32_t rhs, RegisterID lhs)
     {
         spew("testb      $0x%x, %s", rhs, GPReg8Name(lhs));
         if (lhs == X86Registers::eax)
@@ -2016,7 +2015,7 @@ public:
 
     // Like testb_ir, but never emits a REX prefix. This may be used to
     // reference ah..bh.
-    void testb_ir_norex(int rhs, RegisterID lhs)
+    void testb_ir_norex(int32_t rhs, RegisterID lhs)
     {
         spew("testb      $0x%x, %s", rhs, GPReg8Name_norex(lhs));
         m_formatter.oneByteOp8_norex(OP_GROUP3_EbIb, lhs, GROUP3_OP_TEST);
@@ -2293,7 +2292,7 @@ public:
 
     void movq_rm_disp32(RegisterID src, int32_t offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        spew("movq       %s, " MEM_o32b, GPReg64Name(src), ADDR_o32b(offset, base));
         m_formatter.oneByteOp64_disp32(OP_MOV_EvGv, offset, base, src);
     }
 
@@ -2346,7 +2345,7 @@ public:
 
     void movq_mr_disp32(int32_t offset, RegisterID base, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        spew("movq       " MEM_o32b ", %s", ADDR_o32b(offset, base), GPReg64Name(dst));
         m_formatter.oneByteOp64_disp32(OP_MOV_GvEv, offset, base, dst);
     }
 
@@ -3783,12 +3782,6 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
         spew("ret        $%d", imm);
         m_formatter.oneByteOp(OP_RET_Iz);
         m_formatter.immediate16u(imm);
-    }
-
-    void predictNotTaken()
-    {
-        FIXME_INSN_PRINTING;
-        m_formatter.prefix(PRE_PREDICT_BRANCH_NOT_TAKEN);
     }
 
 #ifdef JS_CODEGEN_X86
