@@ -146,7 +146,7 @@ class FloatRegisters {
     static const uint32_t WrapperMask = VolatileMask;
 
     static const uint32_t NonAllocatableMask =
-        (1 << X86Registers::xmm7);
+        (1 << X86Registers::xmm7);     // This is ScratchDoubleReg.
 
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
 };
@@ -185,10 +185,10 @@ struct FloatRegister {
     bool volatile_() const {
         return !!((1 << code()) & FloatRegisters::VolatileMask);
     }
-    bool operator != (FloatRegister other) const {
+    bool operator !=(FloatRegister other) const {
         return other.code_ != code_;
     }
-    bool operator == (FloatRegister other) const {
+    bool operator ==(FloatRegister other) const {
         return other.code_ == code_;
     }
     bool aliases(FloatRegister other) const {
@@ -225,8 +225,6 @@ struct FloatRegister {
     static uint32_t GetSizeInBytes(const TypedRegisterSet<FloatRegister> &s);
     static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister> &s);
     uint32_t getRegisterDumpOffsetInBytes();
-
-
 };
 
 // Arm/D32 has double registers that can NOT be treated as float32
