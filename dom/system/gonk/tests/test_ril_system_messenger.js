@@ -725,7 +725,6 @@ add_test(function test_icc_notify_stk_proactive_command() {
           { identifier: 0x02, text: "Menu Item 2" },
           { identifier: 0x03, text: "Menu Item 3" }
         ],
-        presentationType: RIL.STK_PRESENTATION_TYPE_NOT_SPECIFIED,
         isHelpAvailable: true
       }
     },
@@ -762,7 +761,6 @@ add_test(function test_icc_notify_stk_proactive_command() {
         ],
         iconSelfExplanatory: false,
         icons: [basicIcon, colorIcon, colorTransparencyIcon],
-        presentationType: RIL.STK_PRESENTATION_TYPE_NOT_SPECIFIED,
         isHelpAvailable: false
       }
     },
@@ -777,6 +775,7 @@ add_test(function test_icc_notify_stk_proactive_command() {
           { identifier: 0x02, text: "Menu Item 2" },
           { identifier: 0x03, text: "Menu Item 3" }
         ],
+        presentationType: RIL.STK_PRESENTATION_TYPE_NOT_SPECIFIED,
         isHelpAvailable: false
       }
     },
@@ -814,6 +813,7 @@ add_test(function test_icc_notify_stk_proactive_command() {
         defaultItem: 0x02,
         iconSelfExplanatory: false,
         icons: [basicIcon, colorIcon, colorTransparencyIcon],
+        presentationType: RIL.STK_PRESENTATION_TYPE_NAVIGATION_OPTIONS,
         isHelpAvailable: false
       }
     },

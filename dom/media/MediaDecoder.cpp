@@ -263,15 +263,6 @@ void MediaDecoder::SetVolume(double aVolume)
   }
 }
 
-void MediaDecoder::SetAudioCaptured(bool aCaptured)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mInitialAudioCaptured = aCaptured;
-  if (mDecoderStateMachine) {
-    mDecoderStateMachine->SetAudioCaptured(aCaptured);
-  }
-}
-
 void MediaDecoder::ConnectDecodedStreamToOutputStream(OutputStreamData* aStream)
 {
   NS_ASSERTION(!aStream->mPort, "Already connected?");
@@ -357,13 +348,6 @@ MediaDecoder::DecodedStreamGraphListener::NotifyEvent(MediaStreamGraph* aGraph,
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(this, &DecodedStreamGraphListener::DoNotifyFinished);
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
-  }
-}
-
-void MediaDecoder::RecreateDecodedStreamIfNecessary(int64_t aStartTimeUSecs)
-{
-  if (mInitialAudioCaptured) {
-    RecreateDecodedStream(aStartTimeUSecs);
   }
 }
 
@@ -470,9 +454,13 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
 
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    if (!mDecodedStream) {
-      RecreateDecodedStream(mDecoderStateMachine ?
-          int64_t(mDecoderStateMachine->GetCurrentTime()*USECS_PER_S) : 0);
+    if (mDecoderStateMachine) {
+      mDecoderStateMachine->SetAudioCaptured();
+    }
+    if (!GetDecodedStream()) {
+      int64_t t = mDecoderStateMachine ?
+                  mDecoderStateMachine->GetCurrentTimeUs() : 0;
+      RecreateDecodedStream(t);
     }
     OutputStreamData* os = mOutputStreams.AppendElement();
     os->Init(aStream, aFinishWhenEnded);
@@ -672,7 +660,9 @@ void MediaDecoder::SetStateMachineParameters()
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mDecoderStateMachine->SetDuration(mDuration);
   mDecoderStateMachine->SetVolume(mInitialVolume);
-  mDecoderStateMachine->SetAudioCaptured(mInitialAudioCaptured);
+  if (GetDecodedStream()) {
+    mDecoderStateMachine->SetAudioCaptured();
+  }
   SetPlaybackRate(mInitialPlaybackRate);
   mDecoderStateMachine->SetPreservesPitch(mInitialPreservesPitch);
   if (mMinimizePreroll) {

@@ -6,8 +6,8 @@
 # It takes two arguments:
 #
 #   -b:     a bugnumber
-#   -type:  template type. One of {html|xhtml|xul|th|chrome|chromexul}.
-#           Defaults to html.
+#   -type:  template type. One of {plain|xhtml|xul|th|chrome|chromexul}.
+#           Defaults to th (testharness.js).
 #
 # For example, this command:
 #
@@ -28,10 +28,10 @@ if ($template_type eq "xul") {
   $template_type = "$FindBin::RealBin/static/chrome.template.txt";
 } elsif ($template_type eq "chromexul") {
   $template_type = "$FindBin::RealBin/static/chromexul.template.txt";
-} elsif ($template_type eq "th") {
-  $template_type = "$FindBin::RealBin/static/th.template.txt";
-} else {
+} elsif ($template_type eq "plain") {
   $template_type = "$FindBin::RealBin/static/test.template.txt";
+} else {
+  $template_type = "$FindBin::RealBin/static/th.template.txt";
 }
 
 open(IN,$template_type) or die("Failed to open myfile for reading.");
