@@ -3,21 +3,21 @@
 
 
 add_task(function*() {
-  do_log_info("visit url, no protocol");
+  do_print("visit url, no protocol");
   yield check_autocomplete({
     search: "mozilla.org",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("visiturl", {url: "http://mozilla.org/", input: "mozilla.org"}), title: "http://mozilla.org/", style: [ "action", "visiturl" ] } ]
   });
 
-  do_log_info("visit url, with protocol");
+  do_print("visit url, with protocol");
   yield check_autocomplete({
     search: "https://mozilla.org",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("visiturl", {url: "https://mozilla.org/", input: "https://mozilla.org"}), title: "https://mozilla.org/", style: [ "action", "visiturl" ] } ]
   });
 
-  do_log_info("visit url, about: protocol (no host)");
+  do_print("visit url, about: protocol (no host)");
   yield check_autocomplete({
     search: "about:config",
     searchParam: "enable-actions",
@@ -26,7 +26,7 @@ add_task(function*() {
 
   // This is distinct because of how we predict being able to url autofill via
   // host lookups.
-  do_log_info("visit url, host matching visited host but not visited url");
+  do_print("visit url, host matching visited host but not visited url");
   yield promiseAddVisits([
     { uri: NetUtil.newURI("http://mozilla.org/wine/"), title: "Mozilla Wine", transition: TRANSITION_TYPED },
   ]);
@@ -37,7 +37,7 @@ add_task(function*() {
   });
 
   // And hosts with no dot in them are special, due to requiring whitelisting.
-  do_log_info("visit url, host matching visited host but not visited url, non-whitelisted host");
+  do_print("visit url, host matching visited host but not visited url, non-whitelisted host");
   Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
                                        "http://s.example.com/search");
   let engine = Services.search.getEngineByName("MozSearch");

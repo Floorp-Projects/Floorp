@@ -6,7 +6,7 @@ add_task(function* test_prefix_space_noautofill() {
   yield promiseAddVisits({ uri: NetUtil.newURI("http://moz.org/test/"),
                            transition: TRANSITION_TYPED });
 
-  do_log_info("Should not try to autoFill if search string contains a space");
+  do_print("Should not try to autoFill if search string contains a space");
   yield check_autocomplete({
     search: " mo",
     autofilled: " mo",
@@ -20,7 +20,7 @@ add_task(function* test_trailing_space_noautofill() {
   yield promiseAddVisits({ uri: NetUtil.newURI("http://moz.org/test/"),
                            transition: TRANSITION_TYPED });
 
-  do_log_info("Should not try to autoFill if search string contains a space");
+  do_print("Should not try to autoFill if search string contains a space");
   yield check_autocomplete({
     search: "mo ",
     autofilled: "mo ",
@@ -38,7 +38,7 @@ add_task(function* test_searchEngine_autofill() {
   engine.addParam("q", "{searchTerms}", null);
   do_register_cleanup(() => Services.search.removeEngine(engine));
 
-  do_log_info("Should autoFill search engine if search string does not contains a space");
+  do_print("Should autoFill search engine if search string does not contains a space");
   yield check_autocomplete({
     search: "ca",
     autofilled: "cake.search",
@@ -56,7 +56,7 @@ add_task(function* test_searchEngine_prefix_space_noautofill() {
   engine.addParam("q", "{searchTerms}", null);
   do_register_cleanup(() => Services.search.removeEngine(engine));
 
-  do_log_info("Should not try to autoFill search engine if search string contains a space");
+  do_print("Should not try to autoFill search engine if search string contains a space");
   yield check_autocomplete({
     search: " cu",
     autofilled: " cu",
@@ -74,7 +74,7 @@ add_task(function* test_searchEngine_trailing_space_noautofill() {
   engine.addParam("q", "{searchTerms}", null);
   do_register_cleanup(() => Services.search.removeEngine(engine));
 
-  do_log_info("Should not try to autoFill search engine if search string contains a space");
+  do_print("Should not try to autoFill search engine if search string contains a space");
   yield check_autocomplete({
     search: "ba ",
     autofilled: "ba ",
@@ -92,7 +92,7 @@ add_task(function* test_searchEngine_www_noautofill() {
   engine.addParam("q", "{searchTerms}", null);
   do_register_cleanup(() => Services.search.removeEngine(engine));
 
-  do_log_info("Should not autoFill search engine if search string contains www. but engine doesn't");
+  do_print("Should not autoFill search engine if search string contains www. but engine doesn't");
   yield check_autocomplete({
     search: "www.ham",
     autofilled: "www.ham",
@@ -110,7 +110,7 @@ add_task(function* test_searchEngine_different_scheme_noautofill() {
   engine.addParam("q", "{searchTerms}", null);
   do_register_cleanup(() => Services.search.removeEngine(engine));
 
-  do_log_info("Should not autoFill search engine if search string has a different scheme.");
+  do_print("Should not autoFill search engine if search string has a different scheme.");
   yield check_autocomplete({
     search: "http://pie",
     autofilled: "http://pie",
@@ -129,21 +129,21 @@ add_task(function* test_searchEngine_matching_prefix_autofill() {
   do_register_cleanup(() => Services.search.removeEngine(engine));
 
 
-  do_log_info("Should autoFill search engine if search string has matching prefix.");
+  do_print("Should autoFill search engine if search string has matching prefix.");
   yield check_autocomplete({
     search: "http://www.be",
     autofilled: "http://www.bean.search",
     completed: "http://www.bean.search"
   })
 
-  do_log_info("Should autoFill search engine if search string has www prefix.");
+  do_print("Should autoFill search engine if search string has www prefix.");
   yield check_autocomplete({
     search: "www.be",
     autofilled: "www.bean.search",
     completed: "http://www.bean.search"
   });
 
-  do_log_info("Should autoFill search engine if search string has matching scheme.");
+  do_print("Should autoFill search engine if search string has matching scheme.");
   yield check_autocomplete({
     search: "http://be",
     autofilled: "http://bean.search",
@@ -159,7 +159,7 @@ add_task(function* test_prefix_autofill() {
   yield promiseAddVisits({ uri: NetUtil.newURI("http://moz.org/test/"),
                            transition: TRANSITION_TYPED });
 
-  do_log_info("Should not try to autoFill in-the-middle if a search is canceled immediately");
+  do_print("Should not try to autoFill in-the-middle if a search is canceled immediately");
   yield check_autocomplete({
     incompleteSearch: "moz",
     search: "mozi",
