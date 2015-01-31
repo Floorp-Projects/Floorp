@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gc/Marking.h"
+#include "jit/Disassembler.h"
 #include "jit/JitCompartment.h"
 #if defined(JS_CODEGEN_X86)
 # include "jit/x86/MacroAssembler-x86.h"
@@ -137,6 +138,15 @@ AssemblerX86Shared::InvertCondition(Condition cond)
       default:
         MOZ_CRASH("unexpected condition");
     }
+}
+
+void
+AssemblerX86Shared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end,
+                                                const Disassembler::HeapAccess &heapAccess)
+{
+#ifdef DEBUG
+    Disassembler::VerifyHeapAccess(masm.data() + begin, masm.data() + end, heapAccess);
+#endif
 }
 
 CPUInfo::SSEVersion CPUInfo::maxSSEVersion = UnknownSSE;

@@ -2594,6 +2594,9 @@ class AssemblerX86Shared : public AssemblerShared
                    *ptr == 0xE8);  // CALL
         *ptr = enabled ? 0xE8 : 0x3D;
     }
+
+    MOZ_COLD void verifyHeapAccessDisassembly(uint32_t begin, uint32_t end,
+                                              const Disassembler::HeapAccess &heapAccess);
 };
 
 } // namespace jit
