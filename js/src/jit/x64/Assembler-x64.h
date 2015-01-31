@@ -16,39 +16,39 @@
 namespace js {
 namespace jit {
 
-static MOZ_CONSTEXPR_VAR Register rax = { X86Registers::eax };
-static MOZ_CONSTEXPR_VAR Register rbx = { X86Registers::ebx };
-static MOZ_CONSTEXPR_VAR Register rcx = { X86Registers::ecx };
-static MOZ_CONSTEXPR_VAR Register rdx = { X86Registers::edx };
-static MOZ_CONSTEXPR_VAR Register rsi = { X86Registers::esi };
-static MOZ_CONSTEXPR_VAR Register rdi = { X86Registers::edi };
-static MOZ_CONSTEXPR_VAR Register rbp = { X86Registers::ebp };
-static MOZ_CONSTEXPR_VAR Register r8  = { X86Registers::r8  };
-static MOZ_CONSTEXPR_VAR Register r9  = { X86Registers::r9  };
-static MOZ_CONSTEXPR_VAR Register r10 = { X86Registers::r10 };
-static MOZ_CONSTEXPR_VAR Register r11 = { X86Registers::r11 };
-static MOZ_CONSTEXPR_VAR Register r12 = { X86Registers::r12 };
-static MOZ_CONSTEXPR_VAR Register r13 = { X86Registers::r13 };
-static MOZ_CONSTEXPR_VAR Register r14 = { X86Registers::r14 };
-static MOZ_CONSTEXPR_VAR Register r15 = { X86Registers::r15 };
-static MOZ_CONSTEXPR_VAR Register rsp = { X86Registers::esp };
+static MOZ_CONSTEXPR_VAR Register rax = { X86Encoding::rax };
+static MOZ_CONSTEXPR_VAR Register rbx = { X86Encoding::rbx };
+static MOZ_CONSTEXPR_VAR Register rcx = { X86Encoding::rcx };
+static MOZ_CONSTEXPR_VAR Register rdx = { X86Encoding::rdx };
+static MOZ_CONSTEXPR_VAR Register rsi = { X86Encoding::rsi };
+static MOZ_CONSTEXPR_VAR Register rdi = { X86Encoding::rdi };
+static MOZ_CONSTEXPR_VAR Register rbp = { X86Encoding::rbp };
+static MOZ_CONSTEXPR_VAR Register r8  = { X86Encoding::r8  };
+static MOZ_CONSTEXPR_VAR Register r9  = { X86Encoding::r9  };
+static MOZ_CONSTEXPR_VAR Register r10 = { X86Encoding::r10 };
+static MOZ_CONSTEXPR_VAR Register r11 = { X86Encoding::r11 };
+static MOZ_CONSTEXPR_VAR Register r12 = { X86Encoding::r12 };
+static MOZ_CONSTEXPR_VAR Register r13 = { X86Encoding::r13 };
+static MOZ_CONSTEXPR_VAR Register r14 = { X86Encoding::r14 };
+static MOZ_CONSTEXPR_VAR Register r15 = { X86Encoding::r15 };
+static MOZ_CONSTEXPR_VAR Register rsp = { X86Encoding::rsp };
 
-static MOZ_CONSTEXPR_VAR FloatRegister xmm0 = { X86Registers::xmm0 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm1 = { X86Registers::xmm1 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm2 = { X86Registers::xmm2 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm3 = { X86Registers::xmm3 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm4 = { X86Registers::xmm4 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm5 = { X86Registers::xmm5 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm6 = { X86Registers::xmm6 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm7 = { X86Registers::xmm7 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm8 = { X86Registers::xmm8 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm9 = { X86Registers::xmm9 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm10 = { X86Registers::xmm10 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm11 = { X86Registers::xmm11 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm12 = { X86Registers::xmm12 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm13 = { X86Registers::xmm13 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm14 = { X86Registers::xmm14 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm15 = { X86Registers::xmm15 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm0 = { X86Encoding::xmm0 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm1 = { X86Encoding::xmm1 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm2 = { X86Encoding::xmm2 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm3 = { X86Encoding::xmm3 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm4 = { X86Encoding::xmm4 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm5 = { X86Encoding::xmm5 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm6 = { X86Encoding::xmm6 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm7 = { X86Encoding::xmm7 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm8 = { X86Encoding::xmm8 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm9 = { X86Encoding::xmm9 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm10 = { X86Encoding::xmm10 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm11 = { X86Encoding::xmm11 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm12 = { X86Encoding::xmm12 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm13 = { X86Encoding::xmm13 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm14 = { X86Encoding::xmm14 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm15 = { X86Encoding::xmm15 };
 
 // X86-common synonyms.
 static MOZ_CONSTEXPR_VAR Register eax = rax;
@@ -60,8 +60,8 @@ static MOZ_CONSTEXPR_VAR Register edi = rdi;
 static MOZ_CONSTEXPR_VAR Register ebp = rbp;
 static MOZ_CONSTEXPR_VAR Register esp = rsp;
 
-static MOZ_CONSTEXPR_VAR Register InvalidReg = { X86Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { X86Registers::invalid_xmm };
+static MOZ_CONSTEXPR_VAR Register InvalidReg = { X86Encoding::invalid_reg };
+static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { X86Encoding::invalid_xmm };
 
 static MOZ_CONSTEXPR_VAR Register StackPointer = rsp;
 static MOZ_CONSTEXPR_VAR Register FramePointer = rbp;
@@ -717,7 +717,7 @@ class Assembler : public AssemblerX86Shared
     }
     void j(Condition cond, ImmPtr target,
            Relocation::Kind reloc = Relocation::HARDCODED) {
-        JmpSrc src = masm.jCC(static_cast<X86Assembler::Condition>(cond));
+        JmpSrc src = masm.jCC(static_cast<X86Encoding::Condition>(cond));
         addPendingJump(src, target, reloc);
     }
 
@@ -767,10 +767,10 @@ class Assembler : public AssemblerX86Shared
 static inline void
 PatchJump(CodeLocationJump jump, CodeLocationLabel label)
 {
-    if (X86Assembler::canRelinkJump(jump.raw(), label.raw())) {
-        X86Assembler::setRel32(jump.raw(), label.raw());
+    if (X86Encoding::CanRelinkJump(jump.raw(), label.raw())) {
+        X86Encoding::SetRel32(jump.raw(), label.raw());
     } else {
-        X86Assembler::setRel32(jump.raw(), jump.jumpTableEntry());
+        X86Encoding::SetRel32(jump.raw(), jump.jumpTableEntry());
         Assembler::PatchJumpEntry(jump.jumpTableEntry(), label.raw());
     }
 }

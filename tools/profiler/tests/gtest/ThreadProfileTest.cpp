@@ -12,7 +12,8 @@ TEST(ThreadProfile, Initialization) {
   PseudoStack* stack = PseudoStack::create();
   Thread::tid_t tid = 1000;
   ThreadInfo info("testThread", tid, true, stack, nullptr);
-  ThreadProfile tp(&info, 10);
+  nsRefPtr<ProfileBuffer> pb = new ProfileBuffer(10);
+  ThreadProfile tp(&info, pb);
 }
 
 // Make sure we can record one tag and read it
@@ -20,11 +21,11 @@ TEST(ThreadProfile, InsertOneTag) {
   PseudoStack* stack = PseudoStack::create();
   Thread::tid_t tid = 1000;
   ThreadInfo info("testThread", tid, true, stack, nullptr);
-  ThreadProfile tp(&info, 10);
-  tp.addTag(ProfileEntry('t', 123.1f));
-  ASSERT_TRUE(tp.mEntries != nullptr);
-  ASSERT_TRUE(tp.mEntries[tp.mReadPos].mTagName == 't');
-  ASSERT_TRUE(tp.mEntries[tp.mReadPos].mTagFloat == 123.1f);
+  nsRefPtr<ProfileBuffer> pb = new ProfileBuffer(10);
+  pb->addTag(ProfileEntry('t', 123.1f));
+  ASSERT_TRUE(pb->mEntries != nullptr);
+  ASSERT_TRUE(pb->mEntries[pb->mReadPos].mTagName == 't');
+  ASSERT_TRUE(pb->mEntries[pb->mReadPos].mTagFloat == 123.1f);
 }
 
 // See if we can insert some tags
@@ -32,17 +33,17 @@ TEST(ThreadProfile, InsertTagsNoWrap) {
   PseudoStack* stack = PseudoStack::create();
   Thread::tid_t tid = 1000;
   ThreadInfo info("testThread", tid, true, stack, nullptr);
-  ThreadProfile tp(&info, 100);
+  nsRefPtr<ProfileBuffer> pb = new ProfileBuffer(100);
   int test_size = 50;
   for (int i = 0; i < test_size; i++) {
-    tp.addTag(ProfileEntry('t', i));
+    pb->addTag(ProfileEntry('t', i));
   }
-  ASSERT_TRUE(tp.mEntries != nullptr);
-  int readPos = tp.mReadPos;
-  while (readPos != tp.mWritePos) {
-    ASSERT_TRUE(tp.mEntries[readPos].mTagName == 't');
-    ASSERT_TRUE(tp.mEntries[readPos].mTagInt == readPos);
-    readPos = (readPos + 1) % tp.mEntrySize;
+  ASSERT_TRUE(pb->mEntries != nullptr);
+  int readPos = pb->mReadPos;
+  while (readPos != pb->mWritePos) {
+    ASSERT_TRUE(pb->mEntries[readPos].mTagName == 't');
+    ASSERT_TRUE(pb->mEntries[readPos].mTagInt == readPos);
+    readPos = (readPos + 1) % pb->mEntrySize;
   }
 }
 
@@ -54,20 +55,20 @@ TEST(ThreadProfile, InsertTagsWrap) {
   int tags = 24;
   int buffer_size = tags + 1;
   ThreadInfo info("testThread", tid, true, stack, nullptr);
-  ThreadProfile tp(&info, buffer_size);
+  nsRefPtr<ProfileBuffer> pb = new ProfileBuffer(buffer_size);
   int test_size = 43;
   for (int i = 0; i < test_size; i++) {
-    tp.addTag(ProfileEntry('t', i));
+    pb->addTag(ProfileEntry('t', i));
   }
-  ASSERT_TRUE(tp.mEntries != nullptr);
-  int readPos = tp.mReadPos;
+  ASSERT_TRUE(pb->mEntries != nullptr);
+  int readPos = pb->mReadPos;
   int ctr = 0;
-  while (readPos != tp.mWritePos) {
-    ASSERT_TRUE(tp.mEntries[readPos].mTagName == 't');
+  while (readPos != pb->mWritePos) {
+    ASSERT_TRUE(pb->mEntries[readPos].mTagName == 't');
     // the first few tags were discarded when we wrapped
-    ASSERT_TRUE(tp.mEntries[readPos].mTagInt == ctr + (test_size - tags));
+    ASSERT_TRUE(pb->mEntries[readPos].mTagInt == ctr + (test_size - tags));
     ctr++;
-    readPos = (readPos + 1) % tp.mEntrySize;
+    readPos = (readPos + 1) % pb->mEntrySize;
   }
 }
 

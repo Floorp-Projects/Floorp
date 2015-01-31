@@ -129,7 +129,7 @@ class Test1BrowserCall(MarionetteTestCase):
     def check_remote_video(self):
         video_wrapper = self.wait_for_element_displayed(
             By.CSS_SELECTOR,
-            ".media .OT_subscriber .OT_video-container", 20)
+            ".media .OT_subscriber .OT_widget-container", 20)
         video = self.wait_for_subelement_displayed(
             video_wrapper, By.TAG_NAME, "video")
 

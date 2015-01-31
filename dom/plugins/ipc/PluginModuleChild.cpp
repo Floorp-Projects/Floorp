@@ -2077,10 +2077,10 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
     if (mQuirks != QUIRKS_NOT_INITIALIZED)
       return;
     mQuirks = 0;
-    // application/x-silverlight
-    // application/x-silverlight-2
-    NS_NAMED_LITERAL_CSTRING(silverlight, "application/x-silverlight");
-    if (FindInReadable(silverlight, aMimeType)) {
+
+    nsPluginHost::SpecialType specialType = nsPluginHost::GetSpecialType(aMimeType);
+
+    if (specialType == nsPluginHost::eSpecialType_Silverlight) {
         mQuirks |= QUIRK_SILVERLIGHT_DEFAULT_TRANSPARENT;
 #ifdef OS_WIN
         mQuirks |= QUIRK_WINLESS_TRACKPOPUP_HOOK;
@@ -2089,11 +2089,9 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
     }
 
 #ifdef OS_WIN
-    // application/x-shockwave-flash
-    NS_NAMED_LITERAL_CSTRING(flash, "application/x-shockwave-flash");
-    if (FindInReadable(flash, aMimeType)) {
+    if (specialType == nsPluginHost::eSpecialType_Flash) {
         mQuirks |= QUIRK_WINLESS_TRACKPOPUP_HOOK;
-        mQuirks |= QUIRK_FLASH_THROTTLE_WMUSER_EVENTS; 
+        mQuirks |= QUIRK_FLASH_THROTTLE_WMUSER_EVENTS;
         mQuirks |= QUIRK_FLASH_HOOK_SETLONGPTR;
         mQuirks |= QUIRK_FLASH_HOOK_GETWINDOWINFO;
         mQuirks |= QUIRK_FLASH_FIXUP_MOUSE_CAPTURE;
@@ -2102,20 +2100,18 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
     // QuickTime plugin usually loaded with audio/mpeg mimetype
     NS_NAMED_LITERAL_CSTRING(quicktime, "npqtplugin");
     if (FindInReadable(quicktime, mPluginFilename)) {
-      mQuirks |= QUIRK_QUICKTIME_AVOID_SETWINDOW;
+        mQuirks |= QUIRK_QUICKTIME_AVOID_SETWINDOW;
     }
 #endif
 
 #ifdef XP_MACOSX
     // Whitelist Flash and Quicktime to support offline renderer
-    NS_NAMED_LITERAL_CSTRING(flash, "application/x-shockwave-flash");
     NS_NAMED_LITERAL_CSTRING(quicktime, "QuickTime Plugin.plugin");
-    if (FindInReadable(flash, aMimeType)) {
-      mQuirks |= QUIRK_FLASH_AVOID_CGMODE_CRASHES;
-      mQuirks |= QUIRK_FLASH_HIDE_HIDPI_SUPPORT;
-    }
-    if (FindInReadable(flash, aMimeType) ||
-        FindInReadable(quicktime, mPluginFilename)) {
+    if (specialType == nsPluginHost::eSpecialType_Flash) {
+        mQuirks |= QUIRK_FLASH_AVOID_CGMODE_CRASHES;
+        mQuirks |= QUIRK_ALLOW_OFFLINE_RENDERER;
+        mQuirks |= QUIRK_FLASH_HIDE_HIDPI_SUPPORT;
+    } else if (FindInReadable(quicktime, mPluginFilename)) {
         mQuirks |= QUIRK_ALLOW_OFFLINE_RENDERER;
     }
 #endif

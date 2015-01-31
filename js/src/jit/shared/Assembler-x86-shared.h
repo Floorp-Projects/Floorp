@@ -68,7 +68,7 @@ class Operand
     { }
     explicit Operand(AbsoluteAddress address)
       : kind_(MEM_ADDRESS32),
-        disp_(X86Assembler::addressImmediate(address.addr))
+        disp_(X86Encoding::AddressImmediate(address.addr))
     { }
 
     Address toAddress() const {
@@ -216,10 +216,10 @@ class AssemblerX86Shared : public AssemblerShared
     }
 
   protected:
-    X86Assembler masm;
+    X86Encoding::BaseAssembler masm;
 
-    typedef X86Assembler::JmpSrc JmpSrc;
-    typedef X86Assembler::JmpDst JmpDst;
+    typedef X86Encoding::JmpSrc JmpSrc;
+    typedef X86Encoding::JmpDst JmpDst;
 
   public:
     AssemblerX86Shared()
@@ -229,23 +229,23 @@ class AssemblerX86Shared : public AssemblerShared
     }
 
     enum Condition {
-        Equal = X86Assembler::ConditionE,
-        NotEqual = X86Assembler::ConditionNE,
-        Above = X86Assembler::ConditionA,
-        AboveOrEqual = X86Assembler::ConditionAE,
-        Below = X86Assembler::ConditionB,
-        BelowOrEqual = X86Assembler::ConditionBE,
-        GreaterThan = X86Assembler::ConditionG,
-        GreaterThanOrEqual = X86Assembler::ConditionGE,
-        LessThan = X86Assembler::ConditionL,
-        LessThanOrEqual = X86Assembler::ConditionLE,
-        Overflow = X86Assembler::ConditionO,
-        Signed = X86Assembler::ConditionS,
-        NotSigned = X86Assembler::ConditionNS,
-        Zero = X86Assembler::ConditionE,
-        NonZero = X86Assembler::ConditionNE,
-        Parity = X86Assembler::ConditionP,
-        NoParity = X86Assembler::ConditionNP
+        Equal = X86Encoding::ConditionE,
+        NotEqual = X86Encoding::ConditionNE,
+        Above = X86Encoding::ConditionA,
+        AboveOrEqual = X86Encoding::ConditionAE,
+        Below = X86Encoding::ConditionB,
+        BelowOrEqual = X86Encoding::ConditionBE,
+        GreaterThan = X86Encoding::ConditionG,
+        GreaterThanOrEqual = X86Encoding::ConditionGE,
+        LessThan = X86Encoding::ConditionL,
+        LessThanOrEqual = X86Encoding::ConditionLE,
+        Overflow = X86Encoding::ConditionO,
+        Signed = X86Encoding::ConditionS,
+        NotSigned = X86Encoding::ConditionNS,
+        Zero = X86Encoding::ConditionE,
+        NonZero = X86Encoding::ConditionNE,
+        Parity = X86Encoding::ConditionP,
+        NoParity = X86Encoding::ConditionNP
     };
 
     // If this bit is set, the vucomisd operands have to be inverted.
@@ -788,10 +788,10 @@ class AssemblerX86Shared : public AssemblerShared
     void jSrc(Condition cond, Label *label) {
         if (label->bound()) {
             // The jump can be immediately encoded to the correct destination.
-            masm.jCC_i(static_cast<X86Assembler::Condition>(cond), JmpDst(label->offset()));
+            masm.jCC_i(static_cast<X86Encoding::Condition>(cond), JmpDst(label->offset()));
         } else {
             // Thread the jump list through the unpatched jump targets.
-            JmpSrc j = masm.jCC(static_cast<X86Assembler::Condition>(cond));
+            JmpSrc j = masm.jCC(static_cast<X86Encoding::Condition>(cond));
             JmpSrc prev = JmpSrc(label->use(j.offset()));
             masm.setNextJump(j, prev);
         }
@@ -823,7 +823,7 @@ class AssemblerX86Shared : public AssemblerShared
     }
 
     JmpSrc jSrc(Condition cond, RepatchLabel *label) {
-        JmpSrc j = masm.jCC(static_cast<X86Assembler::Condition>(cond));
+        JmpSrc j = masm.jCC(static_cast<X86Encoding::Condition>(cond));
         if (label->bound()) {
             // The jump can be immediately patched to the correct destination.
             masm.linkJump(j, JmpDst(label->offset()));
@@ -869,12 +869,12 @@ class AssemblerX86Shared : public AssemblerShared
     }
     void cmpEAX(Label *label) { cmpSrc(label); }
     void bind(Label *label) {
-        X86Assembler::JmpDst dst(masm.label());
+        JmpDst dst(masm.label());
         if (label->used()) {
             bool more;
-            X86Assembler::JmpSrc jmp(label->offset());
+            JmpSrc jmp(label->offset());
             do {
-                X86Assembler::JmpSrc next;
+                JmpSrc next;
                 more = masm.nextJump(jmp, &next);
                 masm.linkJump(jmp, dst);
                 jmp = next;
@@ -883,9 +883,9 @@ class AssemblerX86Shared : public AssemblerShared
         label->bind(dst.offset());
     }
     void bind(RepatchLabel *label) {
-        X86Assembler::JmpDst dst(masm.label());
+        JmpDst dst(masm.label());
         if (label->used()) {
-            X86Assembler::JmpSrc jmp(label->offset());
+            JmpSrc jmp(label->offset());
             masm.linkJump(jmp, dst);
         }
         label->bind(dst.offset());
@@ -898,9 +898,9 @@ class AssemblerX86Shared : public AssemblerShared
     void retarget(Label *label, Label *target) {
         if (label->used()) {
             bool more;
-            X86Assembler::JmpSrc jmp(label->offset());
+            JmpSrc jmp(label->offset());
             do {
-                X86Assembler::JmpSrc next;
+                JmpSrc next;
                 more = masm.nextJump(jmp, &next);
 
                 if (target->bound()) {
@@ -922,15 +922,15 @@ class AssemblerX86Shared : public AssemblerShared
         if (label->used()) {
             intptr_t src = label->offset();
             do {
-                intptr_t next = reinterpret_cast<intptr_t>(X86Assembler::getPointer(raw + src));
-                X86Assembler::setPointer(raw + src, address);
+                intptr_t next = reinterpret_cast<intptr_t>(X86Encoding::GetPointer(raw + src));
+                X86Encoding::SetPointer(raw + src, address);
                 src = next;
             } while (src != AbsoluteLabel::INVALID_OFFSET);
         }
         label->bind();
     }
 
-    // See Bind and X86Assembler::setPointer.
+    // See Bind and X86Encoding::setPointer.
     size_t labelOffsetToPatchOffset(size_t offset) {
         return offset - sizeof(void*);
     }
@@ -952,12 +952,12 @@ class AssemblerX86Shared : public AssemblerShared
         }
     }
     void call(Register reg) {
-        masm.call(reg.code());
+        masm.call_r(reg.code());
     }
     void call(const Operand &op) {
         switch (op.kind()) {
           case Operand::REG:
-            masm.call(op.reg());
+            masm.call_r(op.reg());
             break;
           case Operand::MEM_REG_DISP:
             masm.call_m(op.disp(), op.base());
@@ -1040,7 +1040,7 @@ class AssemblerX86Shared : public AssemblerShared
         masm.cmpw_rr(rhs.code(), lhs.code());
     }
     void setCC(Condition cond, Register r) {
-        masm.setCC_r(static_cast<X86Assembler::Condition>(cond), r.code());
+        masm.setCC_r(static_cast<X86Encoding::Condition>(cond), r.code());
     }
     void testb(Register rhs, Register lhs) {
         MOZ_ASSERT(GeneralRegisterSet(Registers::SingleByteRegs).has(rhs));
@@ -1694,19 +1694,19 @@ class AssemblerX86Shared : public AssemblerShared
         }
     }
     void vcmpeqps(const Operand &src1, FloatRegister src0, FloatRegister dest) {
-        vcmpps(X86Assembler::ConditionCmp_EQ, src1, src0, dest);
+        vcmpps(X86Encoding::ConditionCmp_EQ, src1, src0, dest);
     }
     void vcmpltps(const Operand &src1, FloatRegister src0, FloatRegister dest) {
-        vcmpps(X86Assembler::ConditionCmp_LT, src1, src0, dest);
+        vcmpps(X86Encoding::ConditionCmp_LT, src1, src0, dest);
     }
     void vcmpleps(const Operand &src1, FloatRegister src0, FloatRegister dest) {
-        vcmpps(X86Assembler::ConditionCmp_LE, src1, src0, dest);
+        vcmpps(X86Encoding::ConditionCmp_LE, src1, src0, dest);
     }
     void vcmpunordps(const Operand &src1, FloatRegister src0, FloatRegister dest) {
-        vcmpps(X86Assembler::ConditionCmp_UNORD, src1, src0, dest);
+        vcmpps(X86Encoding::ConditionCmp_UNORD, src1, src0, dest);
     }
     void vcmpneqps(const Operand &src1, FloatRegister src0, FloatRegister dest) {
-        vcmpps(X86Assembler::ConditionCmp_NEQ, src1, src0, dest);
+        vcmpps(X86Encoding::ConditionCmp_NEQ, src1, src0, dest);
     }
     void vrcpps(const Operand &src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
@@ -2333,11 +2333,11 @@ class AssemblerX86Shared : public AssemblerShared
         MOZ_ASSERT(HasSSE2());
         masm.vsqrtss_rr(src1.code(), src0.code(), dest.code());
     }
-    void vroundsd(X86Assembler::RoundingMode mode, FloatRegister src1, FloatRegister src0, FloatRegister dest) {
+    void vroundsd(X86Encoding::RoundingMode mode, FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE41());
         masm.vroundsd_irr(mode, src1.code(), src0.code(), dest.code());
     }
-    void vroundss(X86Assembler::RoundingMode mode, FloatRegister src1, FloatRegister src0, FloatRegister dest) {
+    void vroundss(X86Encoding::RoundingMode mode, FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE41());
         masm.vroundss_irr(mode, src1.code(), src0.code(), dest.code());
     }
@@ -2594,6 +2594,9 @@ class AssemblerX86Shared : public AssemblerShared
                    *ptr == 0xE8);  // CALL
         *ptr = enabled ? 0xE8 : 0x3D;
     }
+
+    MOZ_COLD void verifyHeapAccessDisassembly(uint32_t begin, uint32_t end,
+                                              const Disassembler::HeapAccess &heapAccess);
 };
 
 } // namespace jit

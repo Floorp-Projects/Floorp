@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gc/Marking.h"
+#include "jit/Disassembler.h"
 #include "jit/JitCompartment.h"
 #if defined(JS_CODEGEN_X86)
 # include "jit/x86/MacroAssembler-x86.h"
@@ -50,7 +51,7 @@ TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader
 {
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
-        void **ptr = X86Assembler::getPointerRef(buffer + offset);
+        void **ptr = X86Encoding::GetPointerRef(buffer + offset);
 
 #ifdef JS_PUNBOX64
         // All pointers on x64 will have the top bits cleared. If those bits
@@ -67,7 +68,7 @@ TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader
 #endif
 
         // No barrier needed since these are constants.
-        gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(ptr), "ion-masm-ptr");
+        gc::MarkGCThingUnbarriered(trc, ptr, "ion-masm-ptr");
     }
 }
 
@@ -91,7 +92,7 @@ AssemblerX86Shared::trace(JSTracer *trc)
     }
     if (dataRelocations_.length()) {
         CompactBufferReader reader(dataRelocations_);
-        ::TraceDataRelocations(trc, masm.buffer(), reader);
+        ::TraceDataRelocations(trc, masm.data(), reader);
     }
 }
 
@@ -137,6 +138,15 @@ AssemblerX86Shared::InvertCondition(Condition cond)
       default:
         MOZ_CRASH("unexpected condition");
     }
+}
+
+void
+AssemblerX86Shared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end,
+                                                const Disassembler::HeapAccess &heapAccess)
+{
+#ifdef DEBUG
+    Disassembler::VerifyHeapAccess(masm.data() + begin, masm.data() + end, heapAccess);
+#endif
 }
 
 CPUInfo::SSEVersion CPUInfo::maxSSEVersion = UnknownSSE;

@@ -23,3 +23,8 @@ EXTRA_JS_MODULES.devtools.webide += [
     'modules/tab-store.js',
     'modules/utils.js'
 ]
+
+JS_PREFERENCE_FILES += [
+    'webide-prefs.js',
+]
+
