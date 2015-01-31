@@ -248,6 +248,13 @@ function parseRDFManifest(aId, aUpdateKey, aRequest) {
     return getValue(aDs.GetTarget(aSource, EM_R(aProperty), true));
   }
 
+  function getBooleanProperty(aDs, aSource, aProperty) {
+    let propValue = aDs.GetTarget(aSource, EM_R(aProperty), true);
+    if (!propValue)
+      return undefined;
+    return getValue(propValue) == "true";
+  }
+
   function getRequiredProperty(aDs, aSource, aProperty) {
     let value = getProperty(aDs, aSource, aProperty);
     if (!value)
@@ -351,10 +358,11 @@ function parseRDFManifest(aId, aUpdateKey, aRequest) {
       let result = {
         id: aId,
         version: version,
+        multiprocessCompatible: getBooleanProperty(ds, item, "multiprocessCompatible"),
         updateURL: getProperty(ds, targetApp, "updateLink"),
         updateHash: getProperty(ds, targetApp, "updateHash"),
         updateInfoURL: getProperty(ds, targetApp, "updateInfoURL"),
-        strictCompatibility: getProperty(ds, targetApp, "strictCompatibility") == "true",
+        strictCompatibility: !!getBooleanProperty(ds, targetApp, "strictCompatibility"),
         targetApplications: [appEntry]
       };
 
