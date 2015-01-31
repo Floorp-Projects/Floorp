@@ -5221,23 +5221,13 @@ private:
         void doubleConstant(double d)
         {
             m_buffer.ensureSpace(sizeof(double));
-            union {
-                uint64_t u64;
-                double d;
-            } u;
-            u.d = d;
-            m_buffer.putInt64Unchecked(u.u64);
+            m_buffer.putInt64Unchecked(mozilla::BitwiseCast<uint64_t>(d));
         }
 
         void floatConstant(float f)
         {
             m_buffer.ensureSpace(sizeof(float));
-            union {
-                uint32_t u32;
-                float f;
-            } u;
-            u.f = f;
-            m_buffer.putIntUnchecked(u.u32);
+            m_buffer.putIntUnchecked(mozilla::BitwiseCast<uint32_t>(f));
         }
 
         void int32x4Constant(const int32_t s[4])
