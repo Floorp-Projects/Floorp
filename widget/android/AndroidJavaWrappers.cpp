@@ -738,7 +738,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
         // and the Points() array has points in CSS pixels, which we need
         // to convert.
         CSSToLayoutDeviceScale scale = widget->GetDefaultScale();
-        nsIntPoint pt(
+        LayoutDeviceIntPoint pt(
             (Points()[i].x * scale.scale) - offset.x,
             (Points()[i].y * scale.scale) - offset.y);
         nsIntPoint radii(

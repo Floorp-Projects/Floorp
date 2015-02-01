@@ -40,7 +40,7 @@ public:
         float aRotationAngle,
         float aForce);
   Touch(int32_t aIdentifier,
-        nsIntPoint aPoint,
+        LayoutDeviceIntPoint aPoint,
         nsIntPoint aRadius,
         float aRotationAngle,
         float aForce);
@@ -73,7 +73,7 @@ public:
   float Force() const { return mForce; }
 
   nsCOMPtr<EventTarget> mTarget;
-  nsIntPoint mRefPoint;
+  LayoutDeviceIntPoint mRefPoint;
   bool mChanged;
   uint32_t mMessage;
   int32_t mIdentifier;

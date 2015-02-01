@@ -75,7 +75,9 @@ ContentHelper::GetAllowedTouchBehavior(nsIWidget* aWidget, const nsIntPoint& aPo
   nsView *view = nsView::GetViewFor(aWidget);
   nsIFrame *viewFrame = view->GetFrame();
 
-  nsPoint relativePoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aWidget, aPoint, viewFrame);
+  nsPoint relativePoint =
+    nsLayoutUtils::GetEventCoordinatesRelativeTo(
+      aWidget, LayoutDeviceIntPoint::FromUntyped(aPoint), viewFrame);
 
   nsIFrame *target = nsLayoutUtils::GetFrameForPoint(viewFrame, relativePoint, nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
   nsIScrollableFrame *nearestScrollableParent = nsLayoutUtils::GetNearestScrollableFrame(target, 0);
