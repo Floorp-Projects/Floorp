@@ -99,11 +99,11 @@ add_task(function* setup() {
   // 2. run the test-suite
   // Note: we do not empty the db before this import to catch bugs like 380999
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileOld, true);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   yield testImportedBookmarks();
 
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   remove_all_bookmarks();
 });
 
@@ -113,10 +113,10 @@ add_task(function* test_import_new()
   // 1. import bookmarks.exported.html
   // 2. run the test-suite
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   yield testImportedBookmarks();
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   remove_all_bookmarks();
 });
@@ -135,7 +135,7 @@ add_task(function* test_emptytitle_export()
   // 9. empty bookmarks db and continue
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   const NOTITLE_URL = "http://notitle.mozilla.org/";
   let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
@@ -145,11 +145,11 @@ add_task(function* test_emptytitle_export()
   test_bookmarks.unfiled.push({ title: "", url: NOTITLE_URL });
 
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   remove_all_bookmarks();
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   yield testImportedBookmarks();
 
   // Cleanup.
@@ -157,7 +157,7 @@ add_task(function* test_emptytitle_export()
   PlacesUtils.bookmarks.removeItem(id);
 
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   remove_all_bookmarks();
 });
 
@@ -179,7 +179,7 @@ add_task(function* test_import_chromefavicon()
   const CHROME_FAVICON_URI_2 = NetUtil.newURI("chrome://global/skin/icons/error-16.png");
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                                 PAGE_URI,
                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -204,7 +204,7 @@ add_task(function* test_import_chromefavicon()
     { title: "Test", url: PAGE_URI.spec, icon: base64Icon });
 
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   // Change the favicon to check it's really imported again later.
   deferred = Promise.defer();
@@ -217,7 +217,7 @@ add_task(function* test_import_chromefavicon()
   remove_all_bookmarks();
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   yield testImportedBookmarks();
 
   // Cleanup.
@@ -225,7 +225,7 @@ add_task(function* test_import_chromefavicon()
   PlacesUtils.bookmarks.removeItem(id);
 
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   remove_all_bookmarks();
 });
 
@@ -240,14 +240,14 @@ add_task(function* test_import_ontop()
   // 4. run the test-suite
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   yield testImportedBookmarks();
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   remove_all_bookmarks();
 });
 
