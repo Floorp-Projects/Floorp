@@ -69,7 +69,7 @@ add_test(function test_query_result_favicon_changed_on_child()
     // operation, and then for the main thread to process any pending
     // notifications that came from the asynchronous thread, before we can be
     // sure that nodeIconChanged was not invoked in the meantime.
-    promiseAsyncUpdates().then(function QRFCOC_asyncUpdates() {
+    PlacesTestUtils.promiseAsyncUpdates().then(function QRFCOC_asyncUpdates() {
       do_execute_soon(function QRFCOC_soon() {
         result.removeObserver(resultObserver);
 
