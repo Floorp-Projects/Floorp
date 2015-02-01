@@ -366,7 +366,9 @@ public:
   // Later, when bug 357725 is implemented, we can make this adjust aChange by
   // the amount that the side can be resized, so that minimums and maximums
   // can be taken into account.
-  void CanAdjustEdges(int8_t aHorizontalSide, int8_t aVerticalSide, nsIntPoint& aChange);
+  void CanAdjustEdges(int8_t aHorizontalSide,
+                      int8_t aVerticalSide,
+                      mozilla::LayoutDeviceIntPoint& aChange);
 
   // Return true if the popup is positioned relative to an anchor.
   bool IsAnchored() const { return mScreenXPos == -1 && mScreenYPos == -1; }
