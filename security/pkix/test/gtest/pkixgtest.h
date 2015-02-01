@@ -21,8 +21,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef mozilla_pkix__pkixgtest_h
-#define mozilla_pkix__pkixgtest_h
+#ifndef mozilla_pkix_pkixgtest_h
+#define mozilla_pkix_pkixgtest_h
 
 #include <ostream>
 
@@ -53,4 +53,4 @@ extern const std::time_t oneDayAfterNow;
 
 } } } // namespace mozilla::pkix::test
 
-#endif // mozilla_pkix__pkixgtest_h
+#endif // mozilla_pkix_pkixgtest_h
