@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__pkixutil_h
-#define mozilla_pkix__pkixutil_h
+#ifndef mozilla_pkix_pkixutil_h
+#define mozilla_pkix_pkixutil_h
 
 #include "pkixder.h"
 
@@ -254,4 +254,4 @@ WrappedVerifySignedData(TrustDomain& trustDomain,
 
 } } // namespace mozilla::pkix
 
-#endif // mozilla_pkix__pkixutil_h
+#endif // mozilla_pkix_pkixutil_h

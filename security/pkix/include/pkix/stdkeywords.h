@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__stdkeywords_h
-#define mozilla_pkix__stdkeywords_h
+#ifndef mozilla_pkix_stdkeywords_h
+#define mozilla_pkix_stdkeywords_h
 
 #if defined(__GNUC__) && !defined(__clang__)
 
@@ -35,4 +35,4 @@
 
 #endif // defined(__GNUC__) && !defined(__clang__)
 
-#endif // mozilla_pkix__stdkeywords_h
+#endif // mozilla_pkix_stdkeywords_h

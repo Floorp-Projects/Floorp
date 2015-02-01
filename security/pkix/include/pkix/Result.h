@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__Result_h
-#define mozilla_pkix__Result_h
+#ifndef mozilla_pkix_Result_h
+#define mozilla_pkix_Result_h
 
 #include <cassert>
 
@@ -218,4 +218,4 @@ NotReached(const char* /*explanation*/, Result result)
 
 } } // namespace mozilla::pkix
 
-#endif // mozilla_pkix__Result_h
+#endif // mozilla_pkix_Result_h

@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__pkixder_h
-#define mozilla_pkix__pkixder_h
+#ifndef mozilla_pkix_pkixder_h
+#define mozilla_pkix_pkixder_h
 
 // Expect* functions advance the input mark and return Success if the input
 // matches the given criteria; they fail with the input mark in an undefined
@@ -631,4 +631,4 @@ Result SignedData(Reader& input, /*out*/ Reader& tbs,
 
 } } } // namespace mozilla::pkix::der
 
-#endif // mozilla_pkix__pkixder_h
+#endif // mozilla_pkix_pkixder_h

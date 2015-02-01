@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__pkixnss_h
-#define mozilla_pkix__pkixnss_h
+#ifndef mozilla_pkix_pkixnss_h
+#define mozilla_pkix_pkixnss_h
 
 #include "pkixtypes.h"
 #include "prerror.h"
@@ -95,4 +95,4 @@ inline SECItem UnsafeMapInputToSECItem(Input input)
 
 } } // namespace mozilla::pkix
 
-#endif // mozilla_pkix__pkixnss_h
+#endif // mozilla_pkix_pkixnss_h
