@@ -3647,8 +3647,9 @@ MNewObject::shouldUseVM() const
 bool
 MCreateThisWithTemplate::canRecoverOnBailout() const
 {
-    MOZ_ASSERT(!templateObject()->denseElementsAreCopyOnWrite());
-    MOZ_ASSERT(!templateObject()->is<ArrayObject>());
+    MOZ_ASSERT(templateObject()->is<PlainObject>() || templateObject()->is<UnboxedPlainObject>());
+    MOZ_ASSERT_IF(templateObject()->is<PlainObject>(),
+                  !templateObject()->as<PlainObject>().denseElementsAreCopyOnWrite());
     return true;
 }
 
@@ -3661,7 +3662,7 @@ MObjectState::MObjectState(MDefinition *obj)
     if (obj->isNewObject())
         templateObject = obj->toNewObject()->templateObject();
     else if (obj->isCreateThisWithTemplate())
-        templateObject = obj->toCreateThisWithTemplate()->templateObject();
+        templateObject = &obj->toCreateThisWithTemplate()->templateObject()->as<PlainObject>();
     else
         templateObject = obj->toNewCallObject()->templateObject();
     numSlots_ = templateObject->slotSpan();
@@ -4727,10 +4728,12 @@ AddTypeGuard(TempAllocator &alloc, MBasicBlock *current, MDefinition *obj,
 {
     MInstruction *guard;
 
-    if (type->isTypeObject())
-        guard = MGuardObjectType::New(alloc, obj, type->asTypeObject(), bailOnEquality);
-    else
+    if (type->isTypeObject()) {
+        guard = MGuardObjectType::New(alloc, obj, type->asTypeObject(), bailOnEquality,
+                                      Bailout_ObjectIdentityOrTypeGuard);
+    } else {
         guard = MGuardObjectIdentity::New(alloc, obj, type->asSingleObject(), bailOnEquality);
+    }
 
     current->add(guard);
 

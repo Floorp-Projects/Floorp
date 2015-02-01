@@ -1342,6 +1342,23 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     template <typename T>
     void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T &dest, MIRType slotType);
 
+    template <typename T>
+    void storeUnboxedPayload(ValueOperand value, T address, size_t nbytes) {
+        switch (nbytes) {
+          case 8:
+            unboxNonDouble(value, ScratchReg);
+            storePtr(ScratchReg, address);
+            return;
+          case 4:
+            store32(value.valueReg(), address);
+            return;
+          case 1:
+            store8(value.valueReg(), address);
+            return;
+          default: MOZ_CRASH("Bad payload width");
+        }
+    }
+
     void loadInstructionPointerAfterCall(Register dest) {
         loadPtr(Address(StackPointer, 0x0), dest);
     }

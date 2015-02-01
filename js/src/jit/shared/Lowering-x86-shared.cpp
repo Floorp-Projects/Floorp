@@ -49,7 +49,7 @@ LIRGeneratorX86Shared::visitGuardObjectType(MGuardObjectType *ins)
     MOZ_ASSERT(ins->obj()->type() == MIRType_Object);
 
     LGuardObjectType *guard = new(alloc()) LGuardObjectType(useRegisterAtStart(ins->obj()));
-    assignSnapshot(guard, Bailout_ObjectIdentityOrTypeGuard);
+    assignSnapshot(guard, ins->bailoutKind());
     add(guard, ins);
     redefine(ins, ins->obj());
 }
