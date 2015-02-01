@@ -147,6 +147,9 @@ typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
  * on most architectures, and may be allocated on the stack or within another
  * structure or class (see below for the Init and Finish functions to use).
  *
+ * No entry storage is allocated until the first element is added. This means
+ * that empty hash tables are cheap, which is good because they are common.
+ *
  * There used to be a long, math-heavy comment here about the merits of
  * double hashing vs. chaining; it was removed in bug 1058335. In short, double
  * hashing is more space-efficient unless the element size gets large (in which
@@ -175,8 +178,7 @@ private:
   uint32_t            mEntryCount;    /* number of entries in table */
   uint32_t            mRemovedCount;  /* removed entry sentinels in table */
   uint32_t            mGeneration;    /* entry storage generation number */
-  char*               mEntryStore;    /* entry storage */
-
+  char*               mEntryStore;    /* entry storage; allocated lazily */
 #ifdef PL_DHASHMETER
   struct PLDHashStats
   {
@@ -226,12 +228,12 @@ public:
 
   /*
    * Size in entries (gross, not net of free and removed sentinels) for table.
-   * We store mHashShift rather than sizeLog2 to optimize the collision-free
-   * case in SearchTable.
+   * This can be zero if no elements have been added yet, in which case the
+   * entry storage will not have yet been allocated.
    */
   uint32_t Capacity() const
   {
-    return ((uint32_t)1 << (PL_DHASH_BITS - mHashShift));
+    return mEntryStore ? CapacityFromHashShift() : 0;
   }
 
   uint32_t EntrySize()  const { return mEntrySize; }
@@ -245,6 +247,7 @@ public:
 
   PLDHashEntryHdr* Search(const void* aKey);
   PLDHashEntryHdr* Add(const void* aKey, const mozilla::fallible_t&);
+  PLDHashEntryHdr* Add(const void* aKey);
   void Remove(const void* aKey);
 
   void RawRemove(PLDHashEntryHdr* aEntry);
@@ -296,6 +299,13 @@ public:
 
 private:
   static bool EntryIsFree(PLDHashEntryHdr* aEntry);
+
+  // We store mHashShift rather than sizeLog2 to optimize the collision-free
+  // case in SearchTable.
+  uint32_t CapacityFromHashShift() const
+  {
+    return ((uint32_t)1 << (PL_DHASH_BITS - mHashShift));
+  }
 
   PLDHashNumber ComputeKeyHash(const void* aKey);
 
@@ -439,12 +449,14 @@ PLDHashTable* PL_NewDHashTable(
 void PL_DHashTableDestroy(PLDHashTable* aTable);
 
 /*
- * Initialize aTable with aOps, aEntrySize, and aCapacity. The table's initial
- * capacity will be chosen such that |aLength| elements can be inserted without
- * rehashing. If |aLength| is a power-of-two, this capacity will be |2*length|.
+ * Initialize aTable with aOps and aEntrySize. The table's initial capacity
+ * will be chosen such that |aLength| elements can be inserted without
+ * rehashing; if |aLength| is a power-of-two, this capacity will be |2*length|.
+ * However, because entry storage is allocated lazily, this initial capacity
+ * won't be relevant until the first element is added; prior to that the
+ * capacity will be zero.
  *
- * This function will crash if it can't allocate enough memory, or if
- * |aEntrySize| and/or |aLength| are too large.
+ * This function will crash if |aEntrySize| and/or |aLength| are too large.
  */
 void PL_DHashTableInit(
   PLDHashTable* aTable, const PLDHashTableOps* aOps,
