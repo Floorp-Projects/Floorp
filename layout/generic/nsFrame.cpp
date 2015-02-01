@@ -4812,7 +4812,7 @@ nsRect nsIFrame::GetScreenRectInAppUnits() const
     nsCOMPtr<nsIWidget> rootWidget;
     presContext->PresShell()->GetViewManager()->GetRootWidget(getter_AddRefs(rootWidget));
     if (rootWidget) {
-      nsIntPoint rootDevPx = rootWidget->WidgetToScreenOffset();
+      LayoutDeviceIntPoint rootDevPx = rootWidget->WidgetToScreenOffset();
       rootScreenPos.x = presContext->DevPixelsToAppUnits(rootDevPx.x);
       rootScreenPos.y = presContext->DevPixelsToAppUnits(rootDevPx.y);
     }
