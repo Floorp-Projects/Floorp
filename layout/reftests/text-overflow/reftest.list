@@ -1,6 +1,6 @@
 skip-if(B2G) == ellipsis-font-fallback.html ellipsis-font-fallback-ref.html
 == line-clipping.html line-clipping-ref.html
-skip-if(B2G) HTTP(..) == marker-basic.html marker-basic-ref.html
+fuzzy-if(Android,16,244) skip-if(B2G) HTTP(..) == marker-basic.html marker-basic-ref.html  # Bug 1128229
 skip-if(B2G) HTTP(..) == marker-string.html marker-string-ref.html
 skip-if(Android||B2G) HTTP(..) == bidi-simple.html bidi-simple-ref.html # Fails on Android due to anti-aliasing
 skip-if(!gtk2Widget) fuzzy-if(gtk2Widget,1,104) HTTP(..) == bidi-simple-scrolled.html bidi-simple-scrolled-ref.html # Fails on Windows and OSX due to anti-aliasing
