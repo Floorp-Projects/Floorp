@@ -226,6 +226,15 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     aMetrics.SetSize(wm, convertedSize);
     aMetrics.SetBlockStartAscent(kidMetrics.BlockStartAscent() +
                                  bp.BStart(wm));
+
+    // Ensure that the overflow rect contains the child textframe's
+    // overflow rect.
+    // Note that if this is floating, the overline/underline drawable
+    // area is in the overflow rect of the child textframe.
+    aMetrics.UnionOverflowAreasWithDesiredBounds();
+    ConsiderChildOverflow(aMetrics.mOverflowAreas, kid);
+
+    FinishAndStoreOverflow(&aMetrics);
   }
   else {
     // Pretend we are a span and reflow the child frame
@@ -246,12 +255,6 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
 
     nsLayoutUtils::SetBSizeFromFontMetrics(this, aMetrics, bp, lineWM, wm);
   }
-
-  // Ensure that the overflow rect contains the child textframe's overflow rect.
-  // Note that if this is floating, the overline/underline drawable area is in
-  // the overflow rect of the child textframe.
-  aMetrics.UnionOverflowAreasWithDesiredBounds();
-  ConsiderChildOverflow(aMetrics.mOverflowAreas, kid);
 
   if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
     // Create a continuation or remove existing continuations based on
@@ -286,8 +289,6 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
       }
     }
   }
-
-  FinishAndStoreOverflow(&aMetrics);
 
   NS_FRAME_SET_TRUNCATION(aReflowStatus, aReflowState, aMetrics);
 }
