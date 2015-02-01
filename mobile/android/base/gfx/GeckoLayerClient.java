@@ -915,10 +915,10 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     @Override
     public void panZoomStopped() {
         if (mDynamicToolbarViewportChangeListener != null) {
-        	mDynamicToolbarViewportChangeListener.onPanZoomStopped();
+            mDynamicToolbarViewportChangeListener.onPanZoomStopped();
         }
         if (mZoomedViewViewportChangeListener != null) {
-        	mZoomedViewViewportChangeListener.onPanZoomStopped();
+            mZoomedViewViewportChangeListener.onPanZoomStopped();
         }
     }
 
