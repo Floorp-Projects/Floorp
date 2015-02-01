@@ -1473,10 +1473,10 @@ nsWindow::GetScreenBounds(nsIntRect &aRect)
         // use the point including window decorations
         gint x, y;
         gdk_window_get_root_origin(gtk_widget_get_window(GTK_WIDGET(mContainer)), &x, &y);
-        aRect.MoveTo(GdkPointToDevicePixels({ x, y }));
+        aRect.MoveTo(LayoutDevicePixel::ToUntyped(GdkPointToDevicePixels({ x, y })));
     }
     else {
-        aRect.MoveTo(WidgetToScreenOffset());
+        aRect.MoveTo(WidgetToScreenOffsetUntyped());
     }
     // mBounds.Size() is the window bounds, not the window-manager frame
     // bounds (bug 581863).  gdk_window_get_frame_extents would give the
@@ -1797,7 +1797,7 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
 }
 
 
-nsIntPoint
+LayoutDeviceIntPoint
 nsWindow::WidgetToScreenOffset()
 {
     gint x = 0, y = 0;
@@ -2617,8 +2617,7 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
         } else {
             LayoutDeviceIntPoint point(NSToIntFloor(aEvent->x_root),
                                        NSToIntFloor(aEvent->y_root));
-            event.refPoint = point -
-                LayoutDeviceIntPoint::FromUntyped(WidgetToScreenOffset());
+            event.refPoint = point - WidgetToScreenOffset();
         }
 
         modifierState = aEvent->state;
@@ -2696,8 +2695,7 @@ nsWindow::InitButtonEvent(WidgetMouseEvent& aEvent,
     } else {
         LayoutDeviceIntPoint point(NSToIntFloor(aGdkEvent->x_root),
                                    NSToIntFloor(aGdkEvent->y_root));
-        aEvent.refPoint = point -
-            LayoutDeviceIntPoint::FromUntyped(WidgetToScreenOffset());
+        aEvent.refPoint = point - WidgetToScreenOffset();
     }
 
     guint modifierState = aGdkEvent->state;
@@ -3209,8 +3207,7 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
         // coordinates relative to this widget.
         LayoutDeviceIntPoint point(NSToIntFloor(aEvent->x_root),
                                    NSToIntFloor(aEvent->y_root));
-        wheelEvent.refPoint = point -
-            LayoutDeviceIntPoint::FromUntyped(WidgetToScreenOffset());
+        wheelEvent.refPoint = point - WidgetToScreenOffset();
     }
 
     KeymapWrapper::InitInputEvent(wheelEvent, aEvent->state);
@@ -6338,7 +6335,7 @@ nsWindow::GetDragInfo(WidgetMouseEvent* aMouseEvent,
     // moved since the mousedown.  (On the other hand, it's quite likely
     // that the mouse has moved, which is why we use the mouse position
     // from the event.)
-    nsIntPoint offset = aMouseEvent->widget->WidgetToScreenOffset();
+    LayoutDeviceIntPoint offset = aMouseEvent->widget->WidgetToScreenOffset();
     *aRootX = aMouseEvent->refPoint.x + offset.x;
     *aRootY = aMouseEvent->refPoint.y + offset.y;
 
@@ -6499,11 +6496,11 @@ nsWindow::GdkCoordToDevicePixels(gint coord) {
     return coord * GdkScaleFactor();
 }
 
-nsIntPoint
+LayoutDeviceIntPoint
 nsWindow::GdkPointToDevicePixels(GdkPoint point) {
     gint scale = GdkScaleFactor();
-    return nsIntPoint(point.x * scale,
-                      point.y * scale);
+    return LayoutDeviceIntPoint(point.x * scale,
+                                point.y * scale);
 }
 
 nsIntRect

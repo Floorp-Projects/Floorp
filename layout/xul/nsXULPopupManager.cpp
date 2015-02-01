@@ -729,7 +729,7 @@ nsXULPopupManager::ShowTooltipAtScreen(nsIContent* aPopup,
   if (rootPresContext) {
     nsIWidget *rootWidget = rootPresContext->GetRootWidget();
     if (rootWidget) {
-      mCachedMousePoint -= rootWidget->WidgetToScreenOffset();
+      mCachedMousePoint -= rootWidget->WidgetToScreenOffsetUntyped();
     }
   }
 

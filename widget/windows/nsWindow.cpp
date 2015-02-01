@@ -1991,7 +1991,7 @@ nsIntPoint nsWindow::GetClientOffset()
 
   RECT r1;
   GetWindowRect(mWnd, &r1);
-  nsIntPoint pt = WidgetToScreenOffset();
+  LayoutDeviceIntPoint pt = WidgetToScreenOffset();
   return nsIntPoint(pt.x - r1.left, pt.y - r1.top);
 }
 
@@ -3061,13 +3061,13 @@ NS_METHOD nsWindow::SetIcon(const nsAString& aIconSpec)
  *
  **************************************************************/
 
-nsIntPoint nsWindow::WidgetToScreenOffset()
+LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset()
 {
   POINT point;
   point.x = 0;
   point.y = 0;
   ::ClientToScreen(mWnd, &point);
-  return nsIntPoint(point.x, point.y);
+  return LayoutDeviceIntPoint(point.x, point.y);
 }
 
 nsIntSize nsWindow::ClientToWindowSize(const nsIntSize& aClientSize)
@@ -3819,7 +3819,7 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
     aInputSource == nsIDOMMouseEvent::MOZ_SOURCE_PEN ||
     !(WinUtils::GetIsMouseFromTouch(aEventType) && mTouchWindow);
 
-  nsIntPoint mpScreen = eventPoint + WidgetToScreenOffset();
+  nsIntPoint mpScreen = eventPoint + WidgetToScreenOffsetUntyped();
 
   // Suppress mouse moves caused by widget creation
   if (aEventType == NS_MOUSE_MOVE) 

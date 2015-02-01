@@ -1344,7 +1344,7 @@ HyperTextAccessible::GetCaretRect(nsIWidget** aWidget)
   nsIntRect caretRect;
   caretRect = rect.ToOutsidePixels(frame->PresContext()->AppUnitsPerDevPixel());
   // ((content screen origin) - (content offset in the widget)) = widget origin on the screen
-  caretRect.MoveBy((*aWidget)->WidgetToScreenOffset() - (*aWidget)->GetClientOffset());
+  caretRect.MoveBy((*aWidget)->WidgetToScreenOffsetUntyped() - (*aWidget)->GetClientOffset());
 
   // Correct for character size, so that caret always matches the size of
   // the character. This is important for font size transitions, and is

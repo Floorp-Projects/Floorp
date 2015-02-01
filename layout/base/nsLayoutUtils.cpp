@@ -2627,8 +2627,8 @@ nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
                 NSFloatPixelsToAppUnits(float(result.height), destAppUnitsPerDevPixel));
 }
 
-static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
-  nsIntPoint offset(0, 0);
+static LayoutDeviceIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
+  LayoutDeviceIntPoint offset(0, 0);
   while ((aWidget->WindowType() == eWindowType_child ||
           aWidget->IsPlugin())) {
     nsIWidget* parent = aWidget->GetParent();
@@ -2637,18 +2637,19 @@ static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
     }
     nsIntRect bounds;
     aWidget->GetBounds(bounds);
-    offset += bounds.TopLeft();
+    offset += LayoutDeviceIntPoint::FromUntyped(bounds.TopLeft());
     aWidget = parent;
   }
   aRootWidget = aWidget;
   return offset;
 }
 
-static nsIntPoint WidgetToWidgetOffset(nsIWidget* aFrom, nsIWidget* aTo) {
+static LayoutDeviceIntPoint
+WidgetToWidgetOffset(nsIWidget* aFrom, nsIWidget* aTo) {
   nsIWidget* fromRoot;
-  nsIntPoint fromOffset = GetWidgetOffset(aFrom, fromRoot);
+  LayoutDeviceIntPoint fromOffset = GetWidgetOffset(aFrom, fromRoot);
   nsIWidget* toRoot;
-  nsIntPoint toOffset = GetWidgetOffset(aTo, toRoot);
+  LayoutDeviceIntPoint toOffset = GetWidgetOffset(aTo, toRoot);
 
   if (fromRoot == toRoot) {
     return fromOffset - toOffset;
@@ -2667,14 +2668,13 @@ nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
 
-  LayoutDeviceIntPoint widgetPoint = aPt +
-    LayoutDeviceIntPoint::FromUntyped(WidgetToWidgetOffset(aWidget, viewWidget));
+  LayoutDeviceIntPoint widgetPoint = aPt + WidgetToWidgetOffset(aWidget, viewWidget);
   nsPoint widgetAppUnits(aPresContext->DevPixelsToAppUnits(widgetPoint.x),
                          aPresContext->DevPixelsToAppUnits(widgetPoint.y));
   return widgetAppUnits - viewOffset;
 }
 
-nsIntPoint
+LayoutDeviceIntPoint
 nsLayoutUtils::TranslateViewToWidget(nsPresContext* aPresContext,
                                      nsView* aView, nsPoint aPt,
                                      nsIWidget* aWidget)
@@ -2682,11 +2682,11 @@ nsLayoutUtils::TranslateViewToWidget(nsPresContext* aPresContext,
   nsPoint viewOffset;
   nsIWidget* viewWidget = aView->GetNearestWidget(&viewOffset);
   if (!viewWidget) {
-    return nsIntPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+    return LayoutDeviceIntPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
 
-  nsIntPoint relativeToViewWidget(aPresContext->AppUnitsToDevPixels(aPt.x + viewOffset.x),
-                                  aPresContext->AppUnitsToDevPixels(aPt.y + viewOffset.y));
+  LayoutDeviceIntPoint relativeToViewWidget(aPresContext->AppUnitsToDevPixels(aPt.x + viewOffset.x),
+                                            aPresContext->AppUnitsToDevPixels(aPt.y + viewOffset.y));
   return relativeToViewWidget + WidgetToWidgetOffset(viewWidget, aWidget);
 }
 

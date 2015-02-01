@@ -172,7 +172,7 @@ public:
   virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
   virtual void* GetNativeData(uint32_t aDataType);
   virtual void  FreeNativeData(void * data, uint32_t aDataType);
-  virtual nsIntPoint WidgetToScreenOffset();
+  virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset();
 
   already_AddRefed<nsIPresShell> GetPresShell();
 

@@ -117,8 +117,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         LayoutDeviceIntPoint refPoint;
         if (!GetEventPoint(aEvent, refPoint))
           return NS_OK;
-        mMouseDownPoint = refPoint +
-          LayoutDeviceIntPoint::FromUntyped(aEvent->widget->WidgetToScreenOffset());
+        mMouseDownPoint = refPoint + aEvent->widget->WidgetToScreenOffset();
 
         // we're tracking
         mTrackingMouseMove = true;
@@ -166,8 +165,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
       LayoutDeviceIntPoint refPoint;
       if (!GetEventPoint(aEvent, refPoint))
         return NS_OK;
-      LayoutDeviceIntPoint screenPoint = refPoint +
-        LayoutDeviceIntPoint::FromUntyped(aEvent->widget->WidgetToScreenOffset());
+      LayoutDeviceIntPoint screenPoint = refPoint + aEvent->widget->WidgetToScreenOffset();
       LayoutDeviceIntPoint mouseMove(screenPoint - mMouseDownPoint);
 
       // Determine which direction to resize by checking the dir attribute.
