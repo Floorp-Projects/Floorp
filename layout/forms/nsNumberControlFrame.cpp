@@ -585,8 +585,7 @@ nsNumberControlFrame::GetSpinButtonForPointerEvent(WidgetGUIEvent* aEvent) const
     LayoutDeviceIntPoint absPoint = aEvent->refPoint;
     nsPoint point =
       nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
-                       LayoutDeviceIntPoint::ToUntyped(absPoint),
-                       mSpinBox->GetPrimaryFrame());
+                       absPoint, mSpinBox->GetPrimaryFrame());
     if (point != nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)) {
       if (point.y < mSpinBox->GetPrimaryFrame()->GetSize().height / 2) {
         return eSpinButtonUp;

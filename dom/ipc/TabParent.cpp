@@ -1085,7 +1085,7 @@ TabParent::MapEventCoordinatesForChildProcess(
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       Touch* touch = touches[i];
       if (touch) {
-        touch->mRefPoint += LayoutDeviceIntPoint::ToUntyped(aOffset);
+        touch->mRefPoint += aOffset;
       }
     }
   }
@@ -1731,7 +1731,7 @@ TabParent::GetChildProcessOffset()
     return offset;
   }
   nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(widget,
-                                                            nsIntPoint(0, 0),
+                                                            LayoutDeviceIntPoint(0, 0),
                                                             targetFrame);
 
   return LayoutDeviceIntPoint::ToUntyped(LayoutDeviceIntPoint::FromAppUnitsToNearest(
@@ -2485,7 +2485,7 @@ TabParent::InjectTouchEvent(const nsAString& aType,
         presContext->AppUnitsPerDevPixel());
 
     nsRefPtr<Touch> t = new Touch(aIdentifiers[i],
-                                  LayoutDeviceIntPoint::ToUntyped(pt),
+                                  pt,
                                   nsIntPoint(aRxs[i], aRys[i]),
                                   aRotationAngles[i],
                                   aForces[i]);

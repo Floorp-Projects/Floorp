@@ -2097,7 +2097,8 @@ bool
 nsBoxFrame::GetEventPoint(WidgetGUIEvent* aEvent, nsPoint &aPoint) {
   nsIntPoint refPoint;
   bool res = GetEventPoint(aEvent, refPoint);
-  aPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, refPoint, this);
+  aPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+    aEvent, LayoutDeviceIntPoint::FromUntyped(refPoint), this);
   return res;
 }
 
@@ -2117,7 +2118,7 @@ nsBoxFrame::GetEventPoint(WidgetGUIEvent* aEvent, nsIntPoint &aPoint) {
     if (!touch) {
       return false;
     }
-    aPoint = touch->mRefPoint;
+    aPoint = LayoutDeviceIntPoint::ToUntyped(touch->mRefPoint);
   } else {
     aPoint = LayoutDeviceIntPoint::ToUntyped(aEvent->refPoint);
   }
