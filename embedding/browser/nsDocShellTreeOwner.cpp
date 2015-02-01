@@ -1452,7 +1452,7 @@ ChromeTooltipListener::sTooltipCallback(nsITimer *aTimer,
 
       if (textFound) {
         nsString tipText(tooltipText);
-        LayoutDeviceIntPoint screenDot = widget->WidgetToScreenOffset();
+        nsIntPoint screenDot = widget->WidgetToScreenOffset();
         self->ShowTooltip(self->mMouseScreenX - screenDot.x,
                           self->mMouseScreenY - screenDot.y,
                           tipText);

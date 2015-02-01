@@ -449,14 +449,15 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   nsIWidget* topLevelWidget = mWidget->GetTopLevelWidget();
   if (topLevelWidget && topLevelWidget != mWidget) {
     charAtPt.mReply.mRect.MoveBy(
-      topLevelWidget->WidgetToScreenOffsetUntyped() -
-        mWidget->WidgetToScreenOffsetUntyped());
+      topLevelWidget->WidgetToScreenOffset() -
+        mWidget->WidgetToScreenOffset());
   }
   // The refPt is relative to its widget.
   // We should notify it with offset in the widget.
   if (aMouseEvent->widget != mWidget) {
-    charAtPt.refPoint += aMouseEvent->widget->WidgetToScreenOffset() -
-      mWidget->WidgetToScreenOffset();
+    charAtPt.refPoint += LayoutDeviceIntPoint::FromUntyped(
+      aMouseEvent->widget->WidgetToScreenOffset() -
+        mWidget->WidgetToScreenOffset());
   }
 
   IMENotification notification(NOTIFY_IME_OF_MOUSE_BUTTON_EVENT);

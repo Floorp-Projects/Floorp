@@ -401,7 +401,7 @@ public:
 
   virtual void*           GetNativeData(uint32_t aDataType) MOZ_OVERRIDE;
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations) MOZ_OVERRIDE;
-  virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() MOZ_OVERRIDE;
+  virtual nsIntPoint      WidgetToScreenOffset() MOZ_OVERRIDE;
   virtual bool            ShowsResizeIndicator(nsIntRect* aResizerRect) MOZ_OVERRIDE;
 
   static  bool            ConvertStatus(nsEventStatus aStatus)

@@ -220,7 +220,7 @@ nsIntRect nsView::CalcWidgetBounds(nsWindowType aType)
     if (parentWidget && aType == eWindowType_popup &&
         IsEffectivelyVisible()) {
       // put offset into screen coordinates. (based on client area origin)
-      LayoutDeviceIntPoint screenPoint = parentWidget->WidgetToScreenOffset();
+      nsIntPoint screenPoint = parentWidget->WidgetToScreenOffset();
       viewBounds += nsPoint(NSIntPixelsToAppUnits(screenPoint.x, p2a),
                             NSIntPixelsToAppUnits(screenPoint.y, p2a));
     }

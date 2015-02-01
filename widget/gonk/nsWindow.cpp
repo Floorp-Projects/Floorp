@@ -522,10 +522,10 @@ nsWindow::Invalidate(const nsIntRect &aRect)
     return NS_OK;
 }
 
-LayoutDeviceIntPoint
+nsIntPoint
 nsWindow::WidgetToScreenOffset()
 {
-    LayoutDeviceIntPoint p(0, 0);
+    nsIntPoint p(0, 0);
     nsWindow *w = this;
 
     while (w && w->mParent) {

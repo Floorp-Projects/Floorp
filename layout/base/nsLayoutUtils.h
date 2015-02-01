@@ -728,10 +728,9 @@ public:
    * @param aWidget the widget to which returned coordinates are relative
    * @return the point in the view's coordinates
    */
-  static mozilla::LayoutDeviceIntPoint
-    TranslateViewToWidget(nsPresContext* aPresContext,
-                          nsView* aView, nsPoint aPt,
-                          nsIWidget* aWidget);
+  static nsIntPoint TranslateViewToWidget(nsPresContext* aPresContext,
+                                          nsView* aView, nsPoint aPt,
+                                          nsIWidget* aWidget);
 
   enum FrameForPointFlags {
     /**
