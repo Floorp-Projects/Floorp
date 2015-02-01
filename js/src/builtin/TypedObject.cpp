@@ -1700,7 +1700,7 @@ TypedObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
             return obj_lookupElement(cx, obj, index, objp, propp);
 
         if (JSID_IS_ATOM(id, cx->names().length)) {
-            MarkNonNativePropertyFound(propp);
+            MarkNonNativePropertyFound<CanGC>(propp);
             objp.set(obj);
             return true;
         }
@@ -1712,7 +1712,7 @@ TypedObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
         StructTypeDescr &structDescr = descr->as<StructTypeDescr>();
         size_t index;
         if (structDescr.fieldIndex(id, &index)) {
-            MarkNonNativePropertyFound(propp);
+            MarkNonNativePropertyFound<CanGC>(propp);
             objp.set(obj);
             return true;
         }
@@ -1746,7 +1746,7 @@ TypedObject::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
                                 MutableHandleObject objp, MutableHandleShape propp)
 {
     MOZ_ASSERT(obj->is<TypedObject>());
-    MarkNonNativePropertyFound(propp);
+    MarkNonNativePropertyFound<CanGC>(propp);
     objp.set(obj);
     return true;
 }

@@ -805,6 +805,12 @@ TraceOneDataRelocation(JSTracer *trc, Iter *iter, MacroAssemblerARM *masm)
     const void *prior = Assembler::GetPtr32Target(iter, &dest, &rs);
     void *ptr = const_cast<void *>(prior);
 
+    // The low bit shouldn't be set. If it is, we probably got a dummy
+    // pointer inserted by CodeGenerator::visitNurseryObject, but we
+    // shouldn't be able to trigger GC before those are patched to their
+    // real values.
+    MOZ_ASSERT(!(uintptr_t(ptr) & 0x1));
+
     // No barrier needed since these are constants.
     gc::MarkGCThingUnbarriered(trc, &ptr, "ion-masm-ptr");
 
@@ -844,6 +850,51 @@ void
 Assembler::TraceDataRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader)
 {
     ::TraceDataRelocations(trc, code->raw(), reader, static_cast<MacroAssemblerARM *>(Dummy));
+}
+
+void
+Assembler::FixupNurseryObjects(JSContext *cx, JitCode *code, CompactBufferReader &reader,
+                               const ObjectVector &nurseryObjects)
+{
+    MOZ_ASSERT(!nurseryObjects.empty());
+
+    uint8_t *buffer = code->raw();
+    bool hasNurseryPointers = false;
+    MacroAssemblerARM *masm = static_cast<MacroAssemblerARM *>(Dummy);
+
+    while (reader.more()) {
+        size_t offset = reader.readUnsigned();
+        InstructionIterator iter((Instruction*)(buffer + offset));
+        Instruction *ins = iter.cur();
+        Register dest;
+        Assembler::RelocStyle rs;
+        const void *prior = Assembler::GetPtr32Target(&iter, &dest, &rs);
+        void *ptr = const_cast<void *>(prior);
+        uintptr_t word = reinterpret_cast<uintptr_t>(ptr);
+
+        if (!(word & 0x1))
+            continue;
+
+        uint32_t index = word >> 1;
+        JSObject *obj = nurseryObjects[index];
+        masm->ma_movPatchable(Imm32(int32_t(obj)), dest, Assembler::Always, rs, ins);
+
+        if (rs != Assembler::L_LDR) {
+            // L_LDR won't cause any instructions to be updated.
+            AutoFlushICache::flush(uintptr_t(ins), 4);
+            AutoFlushICache::flush(uintptr_t(ins->next()), 4);
+        }
+
+        // Either all objects are still in the nursery, or all objects are
+        // tenured.
+        MOZ_ASSERT_IF(hasNurseryPointers, IsInsideNursery(obj));
+
+        if (!hasNurseryPointers && IsInsideNursery(obj))
+            hasNurseryPointers = true;
+    }
+
+    if (hasNurseryPointers)
+        cx->runtime()->gc.storeBuffer.putWholeCellFromMainThread(code);
 }
 
 void
