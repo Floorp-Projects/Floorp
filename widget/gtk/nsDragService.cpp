@@ -1755,7 +1755,7 @@ nsDragService::ScheduleDropEvent(nsWindow *aWindow,
         return FALSE;        
     }
 
-    SetDragEndPoint(aWindowPoint + aWindow->WidgetToScreenOffset());
+    SetDragEndPoint(aWindowPoint + aWindow->WidgetToScreenOffsetUntyped());
 
     // We'll reply with gtk_drag_finish().
     return TRUE;

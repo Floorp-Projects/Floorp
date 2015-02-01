@@ -138,7 +138,7 @@ public:
     NS_IMETHOD         SetTitle(const nsAString& aTitle) MOZ_OVERRIDE;
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec) MOZ_OVERRIDE;
     NS_IMETHOD         SetWindowClass(const nsAString& xulWinType) MOZ_OVERRIDE;
-    virtual nsIntPoint WidgetToScreenOffset() MOZ_OVERRIDE;
+    virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() MOZ_OVERRIDE;
     NS_IMETHOD         EnableDragDrop(bool aEnable) MOZ_OVERRIDE;
     NS_IMETHOD         CaptureMouse(bool aCapture) MOZ_OVERRIDE;
     NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
