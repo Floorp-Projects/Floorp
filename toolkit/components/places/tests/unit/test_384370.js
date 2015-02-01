@@ -53,7 +53,7 @@ function run_test() {
     // 2. run the test-suite
     Task.spawn(function() {
       yield validate();
-      yield promiseAsyncUpdates();
+      yield PlacesTestUtils.promiseAsyncUpdates();
       
       // Test exporting a Places canonical json file.
       // 1. export to bookmarks.exported.json
@@ -73,7 +73,7 @@ function run_test() {
       yield validate();
       LOG("validated import");
   
-      yield promiseAsyncUpdates();
+      yield PlacesTestUtils.promiseAsyncUpdates();
       do_test_finished();
     });
   }

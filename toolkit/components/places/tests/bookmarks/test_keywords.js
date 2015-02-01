@@ -77,7 +77,7 @@ add_test(function test_addBookmarkWithKeyword()
   check_bookmark_keyword(itemId, "keyword");
   check_uri_keyword(URIS[0], "keyword");
 
-  promiseAsyncUpdates().then(function() {
+  PlacesTestUtils.promiseAsyncUpdates().then(() => {
     check_orphans();
     run_next_test();
   });
@@ -94,7 +94,7 @@ add_test(function test_addBookmarkToURIHavingKeyword()
   check_bookmark_keyword(itemId, null);
   check_uri_keyword(URIS[0], "keyword");
 
-  promiseAsyncUpdates().then(function() {
+  PlacesTestUtils.promiseAsyncUpdates().then(() => {
     check_orphans();
     run_next_test();
   });
@@ -120,7 +120,7 @@ add_test(function test_addSameKeywordToOtherURI()
   check_uri_keyword(URIS[1], "keyword");
   check_uri_keyword(URIS[0], "keyword");
 
-  promiseAsyncUpdates().then(function() {
+  PlacesTestUtils.promiseAsyncUpdates().then(() => {
     check_orphans();
     run_next_test();
   });
@@ -143,7 +143,7 @@ add_test(function test_removeBookmarkWithKeyword()
   check_uri_keyword(URIS[1], "keyword");
   check_uri_keyword(URIS[0], "keyword");
 
-  promiseAsyncUpdates().then(function() {
+  PlacesTestUtils.promiseAsyncUpdates().then(() => {
     check_orphans();
     run_next_test();
   });
@@ -157,7 +157,7 @@ add_test(function test_removeFolderWithKeywordedBookmarks()
   check_uri_keyword(URIS[1], null);
   check_uri_keyword(URIS[0], null);
 
-  promiseAsyncUpdates().then(function() {
+  PlacesTestUtils.promiseAsyncUpdates().then(() => {
     check_orphans();
     run_next_test();
   });

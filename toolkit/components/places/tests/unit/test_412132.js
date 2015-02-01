@@ -21,14 +21,14 @@ add_task(function changeuri_unvisited_bookmark()
                                                 TEST_URI,
                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                 "bookmark title");
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("Bookmarked => frecency of URI should be != 0");
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
   PlacesUtils.bookmarks.changeBookmarkURI(id, uri("http://example.com/2"));
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("Unvisited URI no longer bookmarked => frecency should = 0");
   do_check_eq(frecencyForUrl(TEST_URI), 0);
@@ -47,18 +47,18 @@ add_task(function changeuri_visited_bookmark()
                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                 "bookmark title");
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("Bookmarked => frecency of URI should be != 0");
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
   yield promiseAddVisits(TEST_URI);
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   PlacesUtils.bookmarks.changeBookmarkURI(id, uri("http://example.com/2"));
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("*Visited* URI no longer bookmarked => frecency should != 0");
   do_check_neq(frecencyForUrl(TEST_URI), 0);
@@ -82,14 +82,14 @@ add_task(function changeuri_bookmark_still_bookmarked()
                                                  PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                  "bookmark 2 title");
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("Bookmarked => frecency of URI should be != 0");
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
   PlacesUtils.bookmarks.changeBookmarkURI(id1, uri("http://example.com/2"));
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("URI still bookmarked => frecency should != 0");
   do_check_neq(frecencyForUrl(TEST_URI), 0);
