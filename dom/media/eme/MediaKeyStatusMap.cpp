@@ -182,7 +182,9 @@ ToMediaKeyStatus(GMPMediaKeyStatus aStatus) {
   switch (aStatus) {
     case kGMPUsable: return MediaKeyStatus::Usable;
     case kGMPExpired: return MediaKeyStatus::Expired;
+    case kGMPOutputDownscaled: return MediaKeyStatus::Output_downscaled;
     case kGMPOutputNotAllowed: return MediaKeyStatus::Output_not_allowed;
+    case kGMPInternalError: return MediaKeyStatus::Internal_error;
     default: return MediaKeyStatus::Internal_error;
   }
 }
