@@ -902,7 +902,8 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
     return LayoutDeviceIntPoint::ToUntyped(aPoint);
   }
 
-  LayoutDeviceIntPoint offset = aPoint + guiEvent->widget->WidgetToScreenOffset();
+  LayoutDeviceIntPoint offset = aPoint +
+    LayoutDeviceIntPoint::FromUntyped(guiEvent->widget->WidgetToScreenOffset());
   nscoord factor =
     aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
   return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),

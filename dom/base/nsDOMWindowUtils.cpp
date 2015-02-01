@@ -2195,7 +2195,8 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
     }
   }
 
-  pt += widget->WidgetToScreenOffset() - targetWidget->WidgetToScreenOffset();
+  pt += LayoutDeviceIntPoint::FromUntyped(
+    widget->WidgetToScreenOffset() - targetWidget->WidgetToScreenOffset());
 
   WidgetQueryContentEvent queryEvent(true, aType, targetWidget);
   InitEvent(queryEvent, &pt);

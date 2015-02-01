@@ -1492,10 +1492,10 @@ MetroWidget::SetTitle(const nsAString& aTitle)
   return NS_OK;
 }
 
-LayoutDeviceIntPoint
+nsIntPoint
 MetroWidget::WidgetToScreenOffset()
 {
-  return LayoutDeviceIntPoint(0,0);
+  return nsIntPoint(0,0);
 }
 
 NS_IMETHODIMP

@@ -3198,7 +3198,7 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
       return E_FAIL;
     }
 
-    event.mReply.mRect.MoveBy(refWindow->WidgetToScreenOffsetUntyped());
+    event.mReply.mRect.MoveBy(refWindow->WidgetToScreenOffset());
   }
 
   // get bounding screen rect to test for clipping
@@ -3336,7 +3336,7 @@ nsTextStore::GetScreenExtInternal(RECT &aScreenExt)
     // Clip frame rect to window rect
     boundRect.IntersectRect(event.mReply.mRect, boundRect);
     if (!boundRect.IsEmpty()) {
-      boundRect.MoveBy(refWindow->WidgetToScreenOffsetUntyped());
+      boundRect.MoveBy(refWindow->WidgetToScreenOffset());
       ::SetRect(&aScreenExt, boundRect.x, boundRect.y,
                 boundRect.XMost(), boundRect.YMost());
     } else {
@@ -4325,8 +4325,8 @@ nsTextStore::CreateNativeCaret()
   }
 
   if (toplevelWindow != window) {
-    caretRect.MoveBy(toplevelWindow->WidgetToScreenOffsetUntyped());
-    caretRect.MoveBy(-window->WidgetToScreenOffsetUntyped());
+    caretRect.MoveBy(toplevelWindow->WidgetToScreenOffset());
+    caretRect.MoveBy(-window->WidgetToScreenOffset());
   }
 
   ::SetCaretPos(caretRect.x, caretRect.y);

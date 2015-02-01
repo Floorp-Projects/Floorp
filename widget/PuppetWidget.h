@@ -126,8 +126,8 @@ public:
   { return NS_ERROR_UNEXPECTED; }
   
   // PuppetWidgets are always at <0, 0>.
-  virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() MOZ_OVERRIDE
-  { return mozilla::LayoutDeviceIntPoint(0, 0); }
+  virtual nsIntPoint WidgetToScreenOffset() MOZ_OVERRIDE
+  { return nsIntPoint(0, 0); }
 
   void InitEvent(WidgetGUIEvent& aEvent, nsIntPoint* aPoint = nullptr);
 
