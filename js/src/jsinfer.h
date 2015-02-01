@@ -1521,10 +1521,8 @@ struct TypeObjectKey
     static intptr_t keyBits(TypeObjectKey *obj) { return (intptr_t) obj; }
     static TypeObjectKey *getKey(TypeObjectKey *obj) { return obj; }
 
-    static TypeObjectKey *get(JSObject *obj) {
-        MOZ_ASSERT(obj);
-        return (TypeObjectKey *) (uintptr_t(obj) | 1);
-    }
+    static inline TypeObjectKey *get(JSObject *obj);
+
     static TypeObjectKey *get(TypeObject *obj) {
         MOZ_ASSERT(obj);
         return (TypeObjectKey *) obj;
@@ -1545,6 +1543,7 @@ struct TypeObjectKey
 
     const Class *clasp();
     TaggedProto proto();
+    TaggedProto protoMaybeInNursery();
     bool hasTenuredProto();
     JSObject *singleton();
     TypeNewScript *newScript();

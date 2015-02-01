@@ -676,6 +676,7 @@ MConstant::MConstant(const js::Value &vp, types::CompilerConstraintList *constra
     if (vp.isObject()) {
         // Create a singleton type set for the object. This isn't necessary for
         // other types as the result type encodes all needed information.
+        MOZ_ASSERT(!IsInsideNursery(&vp.toObject()));
         setResultTypeSet(MakeSingletonTypeSet(constraints, &vp.toObject()));
     }
     if (vp.isMagic() && vp.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
@@ -695,6 +696,7 @@ MConstant::MConstant(const js::Value &vp, types::CompilerConstraintList *constra
 MConstant::MConstant(JSObject *obj)
   : value_(ObjectValue(*obj))
 {
+    MOZ_ASSERT(!IsInsideNursery(obj));
     setResultType(MIRType_Object);
     setMovable();
 }
@@ -802,6 +804,39 @@ MConstant::canProduceFloat32() const
     if (type() == MIRType_Double)
         return IsFloat32Representable(value_.toDouble());
     return true;
+}
+
+MNurseryObject::MNurseryObject(JSObject *obj, uint32_t index, types::CompilerConstraintList *constraints)
+  : index_(index)
+{
+    setResultType(MIRType_Object);
+
+    MOZ_ASSERT(IsInsideNursery(obj));
+    MOZ_ASSERT(!obj->hasSingletonType());
+    setResultTypeSet(MakeSingletonTypeSet(constraints, obj));
+
+    setMovable();
+}
+
+MNurseryObject *
+MNurseryObject::New(TempAllocator &alloc, JSObject *obj, uint32_t index,
+                    types::CompilerConstraintList *constraints)
+{
+    return new(alloc) MNurseryObject(obj, index, constraints);
+}
+
+HashNumber
+MNurseryObject::valueHash() const
+{
+    return HashNumber(index_);
+}
+
+bool
+MNurseryObject::congruentTo(const MDefinition *ins) const
+{
+    if (!ins->isNurseryObject())
+        return false;
+    return ins->toNurseryObject()->index_ == index_;
 }
 
 MDefinition*

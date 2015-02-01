@@ -122,6 +122,14 @@ TypeObjectKey::asSingleObject()
     return res;
 }
 
+/* static */ inline TypeObjectKey *
+TypeObjectKey::get(JSObject *obj)
+{
+    if (obj->hasSingletonType())
+        return (TypeObjectKey *) (uintptr_t(obj) | 1);
+    return TypeObjectKey::get(obj->type());
+}
+
 /* static */ inline Type
 Type::ObjectType(JSObject *obj)
 {
