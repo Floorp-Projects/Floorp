@@ -1,4 +1,5 @@
-This is SQLite 3.8.8.1
+This is the SQLite amalgamation.
+Check sqlite3.h for the version number and source id.
 
 See http://www.sqlite.org/ for more info.
 
