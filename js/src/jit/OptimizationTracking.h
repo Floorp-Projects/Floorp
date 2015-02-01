@@ -32,6 +32,8 @@ namespace jit {
       "getprop TypedObject")                            \
     _(GetProp_DefiniteSlot,                             \
       "getprop definite slot")                          \
+    _(GetProp_Unboxed,                                  \
+      "getprop unboxed object")                         \
     _(GetProp_CommonGetter,                             \
       "getprop common getter")                          \
     _(GetProp_InlineAccess,                             \
@@ -47,6 +49,8 @@ namespace jit {
       "setprop TypedObject")                            \
     _(SetProp_DefiniteSlot,                             \
       "setprop definite slot")                          \
+    _(SetProp_Unboxed,                                  \
+      "setprop unboxed object")                         \
     _(SetProp_InlineAccess,                             \
       "setprop inline access")                          \
                                                         \
@@ -108,12 +112,20 @@ namespace jit {
       "is not singleton")                                               \
     _(NotFixedSlot,                                                     \
       "property not in fixed slot")                                     \
+    _(InconsistentFixedSlot,                                            \
+      "property not in a consistent fixed slot")                        \
     _(NotObject,                                                        \
       "not definitely an object")                                       \
     _(NotStruct,                                                        \
       "not definitely a TypedObject struct")                            \
+    _(NotUnboxed,                                                       \
+      "not definitely an unboxed object")                               \
     _(StructNoField,                                                    \
       "struct doesn't definitely have field")                           \
+    _(InconsistentFieldType,                                            \
+      "unboxed property does not consistent type")                      \
+    _(InconsistentFieldOffset,                                          \
+      "unboxed property does not consistent offset")                    \
     _(NeedsTypeBarrier,                                                 \
       "needs type barrier")                                             \
     _(InDictionaryMode,                                                 \
