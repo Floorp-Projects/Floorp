@@ -161,7 +161,7 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
   }
 
   WidgetTouchEvent *touchEvent = aEvent->AsTouchEvent();
-  nsIntPoint movePoint;
+  LayoutDeviceIntPoint movePoint;
   int32_t nowTouchId = -1;
   if (touchEvent && !touchEvent->touches.IsEmpty()) {
     // If touch happened, just grab event with same identifier
@@ -183,7 +183,7 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
       nowTouchId = touchEvent->touches[0]->Identifier();
     }
   } else if (mouseEvent) {
-    movePoint = LayoutDeviceIntPoint::ToUntyped(mouseEvent->AsGUIEvent()->refPoint);
+    movePoint = mouseEvent->AsGUIEvent()->refPoint;
   }
 
   // Get event coordinate relative to root frame

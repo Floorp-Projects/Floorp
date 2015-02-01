@@ -679,7 +679,7 @@ public:
    */
   static nsPoint GetEventCoordinatesRelativeTo(
                    const mozilla::WidgetEvent* aEvent,
-                   const nsIntPoint aPoint,
+                   const mozilla::LayoutDeviceIntPoint& aPoint,
                    nsIFrame* aFrame);
 
   /**
@@ -693,7 +693,7 @@ public:
    * the event is not a GUI event).
    */
   static nsPoint GetEventCoordinatesRelativeTo(nsIWidget* aWidget,
-                                               const nsIntPoint aPoint,
+                                               const mozilla::LayoutDeviceIntPoint& aPoint,
                                                nsIFrame* aFrame);
 
   /**
@@ -716,7 +716,8 @@ public:
    * @return the point in the view's coordinates
    */
   static nsPoint TranslateWidgetToView(nsPresContext* aPresContext,
-                                       nsIWidget* aWidget, nsIntPoint aPt,
+                                       nsIWidget* aWidget,
+                                       const mozilla::LayoutDeviceIntPoint& aPt,
                                        nsView* aView);
 
   /**

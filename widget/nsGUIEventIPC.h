@@ -286,8 +286,7 @@ struct ParamTraits<mozilla::WidgetTouchEvent>
         }
         aResult->touches.AppendElement(
           new mozilla::dom::Touch(
-            identifier, mozilla::LayoutDeviceIntPoint::ToUntyped(refPoint),
-            radius, rotationAngle, force));
+            identifier, refPoint, radius, rotationAngle, force));
     }
     return true;
   }
