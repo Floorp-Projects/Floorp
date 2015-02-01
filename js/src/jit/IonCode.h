@@ -32,6 +32,8 @@ class CodeOffsetLabel;
 class PatchableBackedge;
 class IonBuilder;
 
+typedef Vector<JSObject *, 4, JitAllocPolicy> ObjectVector;
+
 class JitCode : public gc::TenuredCell
 {
   protected:
@@ -111,6 +113,8 @@ class JitCode : public gc::TenuredCell
     void setInvalidated() {
         invalidated_ = true;
     }
+
+    void fixupNurseryObjects(JSContext *cx, const ObjectVector &nurseryObjects);
 
     void setHasBytecodeMap() {
         hasBytecodeMap_ = true;

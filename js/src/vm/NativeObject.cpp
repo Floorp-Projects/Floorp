@@ -332,6 +332,7 @@ NativeObject::setLastProperty(ExclusiveContext *cx, HandleNativeObject obj, Hand
     MOZ_ASSERT(!shape->inDictionary());
     MOZ_ASSERT(shape->compartment() == obj->compartment());
     MOZ_ASSERT(shape->numFixedSlots() == obj->numFixedSlots());
+    MOZ_ASSERT(shape->getObjectClass() == obj->getClass());
 
     size_t oldSpan = obj->lastProperty()->slotSpan();
     size_t newSpan = shape->slotSpan();
@@ -355,6 +356,7 @@ NativeObject::setLastPropertyShrinkFixedSlots(Shape *shape)
     MOZ_ASSERT(!shape->inDictionary());
     MOZ_ASSERT(shape->compartment() == compartment());
     MOZ_ASSERT(lastProperty()->slotSpan() == shape->slotSpan());
+    MOZ_ASSERT(shape->getObjectClass() == getClass());
 
     DebugOnly<size_t> oldFixed = numFixedSlots();
     DebugOnly<size_t> newFixed = shape->numFixedSlots();
@@ -379,6 +381,30 @@ NativeObject::setLastPropertyMakeNonNative(Shape *shape)
     MOZ_ASSERT(!hasDynamicSlots());
 
     shape_ = shape;
+}
+
+/* static */ void
+NativeObject::setLastPropertyMakeNative(ExclusiveContext *cx, HandleNativeObject obj,
+                                        HandleShape shape)
+{
+    MOZ_ASSERT(obj->getClass()->isNative());
+    MOZ_ASSERT(!obj->lastProperty()->isNative());
+    MOZ_ASSERT(shape->isNative());
+    MOZ_ASSERT(!obj->inDictionaryMode());
+    MOZ_ASSERT(!shape->inDictionary());
+    MOZ_ASSERT(shape->compartment() == obj->compartment());
+
+    obj->shape_ = shape;
+    obj->slots_ = nullptr;
+    obj->elements_ = emptyObjectElements;
+
+    size_t oldSpan = shape->numFixedSlots();
+    size_t newSpan = shape->slotSpan();
+
+    // A failures at this point will leave the object as a mutant, and we
+    // can't recover.
+    if (oldSpan != newSpan && !updateSlotsForSpan(cx, obj, oldSpan, newSpan))
+        CrashAtUnhandlableOOM("NativeObject::setLastPropertyMakeNative");
 }
 
 /* static */ bool
