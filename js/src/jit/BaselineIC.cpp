@@ -3334,14 +3334,6 @@ IsCacheableGetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *sh
         return false;
 
     JSFunction *func = &shape->getterObject()->as<JSFunction>();
-
-    // Information from get prop call ICs may be used directly from Ion code,
-    // and should not be nursery allocated.
-    if (IsInsideNursery(holder) || IsInsideNursery(func)) {
-        *isTemporarilyUnoptimizable = true;
-        return false;
-    }
-
     if (func->isNative()) {
         *isScripted = false;
         return true;
@@ -3456,13 +3448,6 @@ IsCacheableSetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *sh
         return false;
 
     JSFunction *func = &shape->setterObject()->as<JSFunction>();
-
-    // Information from set prop call ICs may be used directly from Ion code,
-    // and should not be nursery allocated.
-    if (IsInsideNursery(holder) || IsInsideNursery(func)) {
-        *isTemporarilyUnoptimizable = true;
-        return false;
-    }
 
     if (func->isNative()) {
         *isScripted = false;

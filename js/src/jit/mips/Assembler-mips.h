@@ -1012,6 +1012,9 @@ class Assembler : public AssemblerShared
     static void TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
     static void TraceDataRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
 
+    static void FixupNurseryObjects(JSContext *cx, JitCode *code, CompactBufferReader &reader,
+                                    const ObjectVector &nurseryObjects);
+
     static bool SupportsFloatingPoint() {
 #if (defined(__mips_hard_float) && !defined(__mips_single_float)) || defined(JS_MIPS_SIMULATOR)
         return true;
