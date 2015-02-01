@@ -11,7 +11,7 @@
  * We expose Gecko-internal helpers related to "web apps" through this
  * sub-interface.
  */
-[scriptable, uuid(1d856b11-ac29-47d3-bd52-a86e3d45fcf4)]
+[scriptable, uuid(1d856b11-ac29-47d3-bd52-a86e3d45fcf5)]
 interface mozIApplication: nsISupports
 {
   /* Return true if this app has |permission|. */
@@ -55,4 +55,7 @@ interface mozIApplication: nsISupports
 
   /* role copied from the manifest */
   readonly attribute DOMString role;
+
+  /* Returns the kind of the app. */
+  readonly attribute DOMString kind;
 };

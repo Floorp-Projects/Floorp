@@ -83,10 +83,14 @@ exports.RecordingUtils.getSamplesFromAllocations = function(allocations) {
     samples.push(sample);
 
     while (frame) {
+      let source = frame.source + ":" + frame.line + ":" + frame.column;
+      let funcName = frame.functionDisplayName || "";
+
       sample.frames.push({
-        location: frame.source + ":" + frame.line + ":" + frame.column,
+        location: funcName ? funcName + " (" + source + ")" : source,
         allocations: count
       });
+
       site = frame.parent;
       frame = frames[site];
       count = counts[site];
