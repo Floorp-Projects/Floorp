@@ -650,6 +650,44 @@ class MacroAssemblerX86Shared : public Assembler
         Condition cond = testDoubleTruthy(truthy, reg);
         j(cond, label);
     }
+
+    // Class which ensures that registers used in byte ops are compatible with
+    // such instructions, even if the original register passed in wasn't. This
+    // only applies to x86, as on x64 all registers are valid single byte regs.
+    // This doesn't lead to great code but helps to simplify code generation.
+    class AutoEnsureByteRegister {
+        MacroAssemblerX86Shared *masm;
+        Register reg_;
+        bool read_;
+
+      public:
+        template <typename T>
+        AutoEnsureByteRegister(MacroAssemblerX86Shared *masm, T address, Register reg, bool read)
+          : masm(masm), reg_(reg), read_(read)
+        {
+            if (!GeneralRegisterSet(Registers::SingleByteRegs).has(reg_)) {
+                MOZ_ASSERT(address.base != StackPointer);
+                masm->push(eax);
+                if (read)
+                    masm->mov(reg_, eax);
+            }
+        }
+
+        ~AutoEnsureByteRegister() {
+            if (!GeneralRegisterSet(Registers::SingleByteRegs).has(reg_)) {
+                if (!read_)
+                    masm->mov(eax, reg_);
+                masm->pop(eax);
+            }
+        }
+
+        Register reg() {
+            if (!GeneralRegisterSet(Registers::SingleByteRegs).has(reg_))
+                return eax;
+            return reg_;
+        }
+    };
+
     void load8ZeroExtend(const Address &src, Register dest) {
         movzbl(Operand(src), dest);
     }
@@ -662,9 +700,14 @@ class MacroAssemblerX86Shared : public Assembler
     void load8SignExtend(const BaseIndex &src, Register dest) {
         movsbl(Operand(src), dest);
     }
-    template <typename S, typename T>
-    void store8(const S &src, const T &dest) {
+    template <typename T>
+    void store8(Imm32 src, const T &dest) {
         movb(src, Operand(dest));
+    }
+    template <typename T>
+    void store8(Register src, const T &dest) {
+        AutoEnsureByteRegister ensure(this, dest, src, /* read = */ true);
+        movb(ensure.reg(), Operand(dest));
     }
     template <typename T>
     void compareExchange8ZeroExtend(const T &mem, Register oldval, Register newval, Register output) {
