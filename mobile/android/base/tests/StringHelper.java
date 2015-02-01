@@ -148,7 +148,6 @@ public class StringHelper {
     public static final String ROBOCOP_SEARCH_TITLE = "Robocop Search Engine";
     public static final String ROBOCOP_TEXT_PAGE_TITLE = "Robocop Text Page";
     public static final String ROBOCOP_INPUT_TITLE = "Robocop Input";
-    public static final String ROBOCOP_SELECTION_HANDLER_TITLE = "Automated Text Selection tests for Mobile";
 
     // Distribution tile labels
     public static final String DISTRIBUTION1_LABEL = "Distribution 1";
