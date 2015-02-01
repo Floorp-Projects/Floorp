@@ -7,10 +7,12 @@
 #define mozilla_layers_APZCCallbackHelper_h
 
 #include "FrameMetrics.h"
+#include "mozilla/EventForwards.h"
 #include "nsIDOMWindowUtils.h"
 
 class nsIContent;
 class nsIDocument;
+class nsIWidget;
 template<class T> struct already_AddRefed;
 
 namespace mozilla {
@@ -104,6 +106,23 @@ public:
                                              const ScrollableLayerGuid& aGuid,
                                              const CSSToLayoutDeviceScale& aScale,
                                              float aPresShellResolution);
+
+    /* Dispatch a widget event via the widget stored in the event, if any.
+     * In a child process, allows the TabParent event-capture mechanism to
+     * intercept the event. */
+    static nsEventStatus DispatchWidgetEvent(WidgetGUIEvent& aEvent);
+
+    /* Synthesize a mouse event with the given parameters, and dispatch it
+     * via the given widget. */
+    static nsEventStatus DispatchSynthesizedMouseEvent(uint32_t aMsg,
+                                                       uint64_t aTime,
+                                                       const LayoutDevicePoint& aRefPoint,
+                                                       nsIWidget* aWidget);
+
+    /* Fire a single-tap event at the given point. The event is dispatched
+     * via the given widget. */
+    static void FireSingleTapEvent(const LayoutDevicePoint& aPoint,
+                                   nsIWidget* aWidget);
 };
 
 }

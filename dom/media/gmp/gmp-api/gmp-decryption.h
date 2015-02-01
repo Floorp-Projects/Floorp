@@ -79,9 +79,11 @@ enum GMPSessionMessageType {
 enum GMPMediaKeyStatus {
   kGMPUsable = 0,
   kGMPExpired = 1,
-  kGMPOutputNotAllowed = 2,
-  kGMPUnknown = 3,
-  kGMPMediaKeyStatusInvalid = 4 // Must always be last.
+  kGMPOutputDownscaled = 2,
+  kGMPOutputNotAllowed = 3,
+  kGMPInternalError = 4,
+  kGMPUnknown = 5,
+  kGMPMediaKeyStatusInvalid = 6 // Must always be last.
 };
 
 // Time in milliseconds, as offset from epoch, 1 Jan 1970.
@@ -222,7 +224,7 @@ enum GMPSessionType {
   kGMPSessionInvalid = 2 // Must always be last.
 };
 
-#define GMP_API_DECRYPTOR "eme-decrypt-v5"
+#define GMP_API_DECRYPTOR "eme-decrypt-v6"
 
 // API exposed by plugin library to manage decryption sessions.
 // When the Host requests this by calling GMPGetAPIFunc().

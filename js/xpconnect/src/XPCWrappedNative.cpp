@@ -808,7 +808,7 @@ XPCWrappedNative::Init(HandleObject parent,
         return false;
     }
 
-    mFlatJSObject = JS_NewObject(cx, jsclazz, protoJSObject, parent);
+    mFlatJSObject = JS_NewObjectWithGivenProto(cx, jsclazz, protoJSObject, parent);
     if (!mFlatJSObject) {
         mFlatJSObject.unsetFlags(FLAT_JS_OBJECT_VALID);
         return false;
@@ -1573,9 +1573,7 @@ XPCWrappedNative::InitTearOffJSObject(XPCWrappedNativeTearOff* to)
     AutoJSContext cx;
 
     RootedObject parent(cx, mFlatJSObject);
-    RootedObject proto(cx, JS_GetObjectPrototype(cx, parent));
-    JSObject* obj = JS_NewObject(cx, Jsvalify(&XPC_WN_Tearoff_JSClass),
-                                 proto, parent);
+    JSObject* obj = JS_NewObject(cx, Jsvalify(&XPC_WN_Tearoff_JSClass), parent);
     if (!obj)
         return false;
 

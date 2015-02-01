@@ -67,3 +67,8 @@ fails-if(winWidget||cocoaWidget) == 617869-1.html 617869-1-ref.html
 fails-if(gtk2Widget) random-if(winWidget&&!d2d) == font-text-styles-floater.html font-text-styles-floater-ref.html # bug 992846
 == inline-height-empty.html inline-height-empty-ref.html
 HTTP(..) == indic-clusters-1.html indic-clusters-1-ref.html
+== overflow-float-nooverflow.html overflow-float-nooverflow-ref.html
+== overflow-float-overflow.html overflow-float-overflow-notref.html
+== overflow-inline-nooverflow.html overflow-inline-nooverflow-ref.html
+!= overflow-inline-overflow.html overflow-inline-overflow-notref.html
+== overflow-inline-overflow.html overflow-inline-overflow-ref.html

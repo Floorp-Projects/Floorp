@@ -464,7 +464,7 @@ CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &options,
     RootedObject obj(cx);
     {
         JSAutoCompartment ac(cx, scope);
-        obj = JS_NewObject(cx, nullptr, JS::NullPtr(), scope);
+        obj = JS_NewObject(cx, nullptr, scope);
         if (!obj)
             return false;
 
