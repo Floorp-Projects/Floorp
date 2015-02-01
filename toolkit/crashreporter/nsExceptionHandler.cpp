@@ -408,7 +408,7 @@ JitExceptionHandler(void *exceptionRecord, void *context)
  * This size is bigger than xul.dll plus some extra for MinidumpWriteDump
  * allocations.
  */
-static const SIZE_T kReserveSize = 0x3200000; // 50 MB
+static const SIZE_T kReserveSize = 0x4000000; // 64 MB
 static void* gBreakpadReservedVM;
 #endif
 
