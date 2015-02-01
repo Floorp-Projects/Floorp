@@ -1848,7 +1848,7 @@ test-pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1-ref.html
 == 1069716-1.html 1069716-1-ref.html
 == 1078262-1.html about:blank
 test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1-ref.html
-fuzzy-if(winWidget&&!layersGPUAccelerated,1,31) fuzzy-if(B2G,128,75) == 1081185-1.html 1081185-1-ref.html   # fuzzy with event-regions, see bug 1107843
+fuzzy-if(B2G,128,75) == 1081185-1.html 1081185-1-ref.html   # fuzzy with event-regions, see bug 1107843
 == 1097437-1.html 1097437-1-ref.html
 == 1103258-1.html 1103258-1-ref.html # assertion crash test with layers culling test
 == 1105137-1.html 1105137-1-ref.html
