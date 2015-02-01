@@ -13,6 +13,10 @@ filefield + button {
   -moz-margin-start: -4px;
 }
 
+#advancedPrefs {
+  padding-bottom: 0; /* override padding from normal preferences.css */
+}
+
 /**
  * Dialog
  */
