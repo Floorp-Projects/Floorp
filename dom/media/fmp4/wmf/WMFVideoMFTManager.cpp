@@ -495,4 +495,10 @@ WMFVideoMFTManager::Shutdown()
   DeleteOnMainThread(mDXVA2Manager);
 }
 
+bool
+WMFVideoMFTManager::IsHardwareAccelerated() const
+{
+  return mUseHwAccel;
+}
+
 } // namespace mozilla
