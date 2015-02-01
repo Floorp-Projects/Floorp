@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__pkixtypes_h
-#define mozilla_pkix__pkixtypes_h
+#ifndef mozilla_pkix_pkixtypes_h
+#define mozilla_pkix_pkixtypes_h
 
 #include "pkix/Input.h"
 #include "pkix/Time.h"
@@ -342,4 +342,4 @@ protected:
 
 } } // namespace mozilla::pkix
 
-#endif // mozilla_pkix__pkixtypes_h
+#endif // mozilla_pkix_pkixtypes_h

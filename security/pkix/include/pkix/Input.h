@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__Input_h
-#define mozilla_pkix__Input_h
+#ifndef mozilla_pkix_Input_h
+#define mozilla_pkix_Input_h
 
 #include <cstring>
 
@@ -341,4 +341,4 @@ InputContains(const Input& input, uint8_t toFind)
 
 } } // namespace mozilla::pkix
 
-#endif // mozilla_pkix__Input_h
+#endif // mozilla_pkix_Input_h
