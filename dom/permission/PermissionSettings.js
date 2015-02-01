@@ -61,10 +61,13 @@ PermissionSettings.prototype = {
                                   aBrowserFlag) {
     debug("isExplicit: " + aPermName + ", " + aManifestURL + ", " + aOrigin);
     let uri = Services.io.newURI(aOrigin, null, null);
-    let appID = appsService.getAppLocalIdByManifestURL(aManifestURL);
-    let principal = Services.scriptSecurityManager.getAppCodebasePrincipal(uri, appID, aBrowserFlag);
+    let app = appsService.getAppByManifestURL(aManifestURL);
+    let principal = Services.scriptSecurityManager
+      .getAppCodebasePrincipal(uri, app.localId, aBrowserFlag);
 
-    return isExplicitInPermissionsTable(aPermName, principal.appStatus);
+    return isExplicitInPermissionsTable(aPermName,
+                                        principal.appStatus,
+                                        app.kind);
   },
 
   set: function set(aPermName, aPermValue, aManifestURL, aOrigin,
