@@ -41,6 +41,7 @@ public:
     : mDisplay(0,0)
     , mStereoMode(StereoMode::MONO)
     , mHasVideo(false)
+    , mIsHardwareAccelerated(false)
   {
     // TODO: TrackInfo should be initialized by its specific codec decoder.
     // This following call should be removed once we have that implemented.
@@ -59,6 +60,8 @@ public:
   bool mHasVideo;
 
   TrackInfo mTrackInfo;
+
+  bool mIsHardwareAccelerated;
 };
 
 class AudioInfo {
