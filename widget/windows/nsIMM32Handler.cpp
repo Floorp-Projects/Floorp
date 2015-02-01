@@ -1957,7 +1957,7 @@ nsIMM32Handler::SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
   // window needs to be specified the position in the client area.
   nsWindow* toplevelWindow = aWindow->GetTopLevelWindow(false);
   nsIntRect pluginRectInScreen =
-    editorRectEvent.mReply.mRect + toplevelWindow->WidgetToScreenOffsetUntyped();
+    editorRectEvent.mReply.mRect + toplevelWindow->WidgetToScreenOffset();
   nsIntRect winRectInScreen;
   aWindow->GetClientBounds(winRectInScreen);
   // composition window cannot be positioned on the edge of client area.
@@ -1974,7 +1974,7 @@ nsIMM32Handler::SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
   int32_t yMost = std::min(pluginRectInScreen.YMost(), winRectInScreen.YMost());
   clippedPluginRect.width = std::max(0, xMost - clippedPluginRect.x);
   clippedPluginRect.height = std::max(0, yMost - clippedPluginRect.y);
-  clippedPluginRect -= aWindow->WidgetToScreenOffsetUntyped();
+  clippedPluginRect -= aWindow->WidgetToScreenOffset();
 
   // Cover the plugin with native caret.  This prevents IME's window and plugin
   // overlap.
@@ -2013,10 +2013,10 @@ nsIMM32Handler::ResolveIMECaretPos(nsIWidget* aReferenceWidget,
     return;
 
   if (aReferenceWidget)
-    aOutRect.MoveBy(aReferenceWidget->WidgetToScreenOffsetUntyped());
+    aOutRect.MoveBy(aReferenceWidget->WidgetToScreenOffset());
 
   if (aNewOriginWidget)
-    aOutRect.MoveBy(-aNewOriginWidget->WidgetToScreenOffsetUntyped());
+    aOutRect.MoveBy(-aNewOriginWidget->WidgetToScreenOffset());
 }
 
 /* static */ nsresult

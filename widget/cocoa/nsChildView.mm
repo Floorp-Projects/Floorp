@@ -923,7 +923,7 @@ NS_IMETHODIMP nsChildView::GetClientBounds(nsIntRect &aRect)
   if (!mParentWidget) {
     // For top level widgets we want the position on screen, not the position
     // of this view inside the window.
-    aRect.MoveTo(WidgetToScreenOffsetUntyped());
+    aRect.MoveTo(WidgetToScreenOffset());
   }
   return NS_OK;
 }
@@ -931,7 +931,7 @@ NS_IMETHODIMP nsChildView::GetClientBounds(nsIntRect &aRect)
 NS_IMETHODIMP nsChildView::GetScreenBounds(nsIntRect &aRect)
 {
   GetBounds(aRect);
-  aRect.MoveTo(WidgetToScreenOffsetUntyped());
+  aRect.MoveTo(WidgetToScreenOffset());
   return NS_OK;
 }
 
@@ -1482,7 +1482,7 @@ void nsChildView::ReportSizeEvent()
 
 //    Return the offset between this child view and the screen.
 //    @return       -- widget origin in device-pixel coords
-LayoutDeviceIntPoint nsChildView::WidgetToScreenOffset()
+nsIntPoint nsChildView::WidgetToScreenOffset()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -1500,9 +1500,9 @@ LayoutDeviceIntPoint nsChildView::WidgetToScreenOffset()
   FlipCocoaScreenCoordinate(origin);
 
   // convert to device pixels
-  return LayoutDeviceIntPoint::FromUntyped(CocoaPointsToDevPixels(origin));
+  return CocoaPointsToDevPixels(origin);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0,0));
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0,0));
 }
 
 NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener,

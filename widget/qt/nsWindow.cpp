@@ -626,7 +626,7 @@ nsWindow::Invalidate(const nsIntRect &aRect)
     return NS_OK;
 }
 
-LayoutDeviceIntPoint
+nsIntPoint
 nsWindow::WidgetToScreenOffset()
 {
     NS_ENSURE_TRUE(mWidget, nsIntPoint(0,0));
@@ -634,7 +634,7 @@ nsWindow::WidgetToScreenOffset()
     QPoint origin(0, 0);
     origin = mWidget->mapToGlobal(origin);
 
-    return LayoutDeviceIntPoint(origin.x(), origin.y());
+    return nsIntPoint(origin.x(), origin.y());
 }
 
 void*
