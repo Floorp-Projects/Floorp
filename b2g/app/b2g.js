@@ -861,6 +861,9 @@ pref("dom.identity.enabled", true);
 // Wait up to this much milliseconds when orientation changed
 pref("layers.orientation.sync.timeout", 1000);
 
+// Animate the orientation change
+pref("b2g.orientation.animate", true);
+
 // Don't discard WebGL contexts for foreground apps on memory
 // pressure.
 pref("webgl.can-lose-context-in-foreground", false);
