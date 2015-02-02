@@ -42,7 +42,7 @@ struct PrefHashEntry : PLDHashEntryHdr
 // the preference hashtable.
 // </font>
 */
-nsresult    PREF_Init();
+void        PREF_Init();
 
 /*
 // Cleanup should be called at program exit to free the 

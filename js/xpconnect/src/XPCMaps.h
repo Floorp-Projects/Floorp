@@ -32,7 +32,7 @@ class JSObject2WrappedJSMap
 public:
     static JSObject2WrappedJSMap* newMap(int length) {
         JSObject2WrappedJSMap* map = new JSObject2WrappedJSMap();
-        if (map && map->mTable.init(length))
+        if (map->mTable.init(length))
             return map;
         delete map;
         return nullptr;

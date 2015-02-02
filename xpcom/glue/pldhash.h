@@ -10,7 +10,6 @@
  * Double hashing, a la Knuth 6.
  */
 #include "mozilla/Attributes.h" // for MOZ_ALWAYS_INLINE
-#include "mozilla/fallible.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Types.h"
 #include "nscore.h"
@@ -240,8 +239,7 @@ public:
   uint32_t EntryCount() const { return mEntryCount; }
   uint32_t Generation() const { return mGeneration; }
 
-  bool Init(const PLDHashTableOps* aOps, uint32_t aEntrySize,
-            const mozilla::fallible_t&, uint32_t aLength);
+  void Init(const PLDHashTableOps* aOps, uint32_t aEntrySize, uint32_t aLength);
 
   void Finish();
 
@@ -436,7 +434,7 @@ const PLDHashTableOps* PL_DHashGetStubOps(void);
 
 /*
  * Dynamically allocate a new PLDHashTable, initialize it using
- * PL_DHashTableInit, and return its address. Return null on allocation failure.
+ * PL_DHashTableInit, and return its address. Never returns null.
  */
 PLDHashTable* PL_NewDHashTable(
   const PLDHashTableOps* aOps, uint32_t aEntrySize,
@@ -462,15 +460,6 @@ void PL_DHashTableDestroy(PLDHashTable* aTable);
 void PL_DHashTableInit(
   PLDHashTable* aTable, const PLDHashTableOps* aOps,
   uint32_t aEntrySize, uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
-
-/*
- * Initialize aTable. This is the same as PL_DHashTableInit, except that it
- * returns a boolean indicating success, rather than crashing on failure.
- */
-MOZ_WARN_UNUSED_RESULT bool PL_DHashTableInit(
-  PLDHashTable* aTable, const PLDHashTableOps* aOps,
-  uint32_t aEntrySize, const mozilla::fallible_t&,
-  uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
 /*
  * Free |aTable|'s entry storage (via aTable->mOps->freeTable). Use this

@@ -171,15 +171,8 @@ PLDHashTable*
 PL_NewDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
                  uint32_t aLength)
 {
-  PLDHashTable* table = (PLDHashTable*)malloc(sizeof(*table));
-
-  if (!table) {
-    return nullptr;
-  }
-  if (!PL_DHashTableInit(table, aOps, aEntrySize, fallible, aLength)) {
-    free(table);
-    return nullptr;
-  }
+  PLDHashTable* table = new PLDHashTable();
+  PL_DHashTableInit(table, aOps, aEntrySize, aLength);
   return table;
 }
 
@@ -187,7 +180,7 @@ void
 PL_DHashTableDestroy(PLDHashTable* aTable)
 {
   PL_DHashTableFinish(aTable);
-  free(aTable);
+  delete aTable;
 }
 
 /*
@@ -219,12 +212,12 @@ MinCapacity(uint32_t aLength)
   return (aLength * 4 + (3 - 1)) / 3;   // == ceil(aLength * 4 / 3)
 }
 
-MOZ_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE void
 PLDHashTable::Init(const PLDHashTableOps* aOps,
-                   uint32_t aEntrySize, const fallible_t&, uint32_t aLength)
+                   uint32_t aEntrySize, uint32_t aLength)
 {
   if (aLength > PL_DHASH_MAX_INITIAL_LENGTH) {
-    return false;
+    MOZ_CRASH("Initial length is too large");
   }
 
   // Compute the smallest capacity allowing |aLength| elements to be inserted
@@ -238,51 +231,30 @@ PLDHashTable::Init(const PLDHashTableOps* aOps,
 
   capacity = 1u << log2;
   MOZ_ASSERT(capacity <= PL_DHASH_MAX_CAPACITY);
+  mOps = aOps;
   mHashShift = PL_DHASH_BITS - log2;
   mEntrySize = aEntrySize;
   mEntryCount = mRemovedCount = 0;
   mGeneration = 0;
   uint32_t nbytes;
   if (!SizeOfEntryStore(capacity, aEntrySize, &nbytes)) {
-    return false;  // overflowed
+    MOZ_CRASH("Initial entry store size is too large");
   }
 
   mEntryStore = nullptr;
 
   METER(memset(&mStats, 0, sizeof(mStats)));
 
-  // Set this only once we reach a point where we know we can't fail.
-  mOps = aOps;
-
 #ifdef DEBUG
   mRecursionLevel = 0;
 #endif
-
-  return true;
-}
-
-bool
-PL_DHashTableInit(PLDHashTable* aTable, const PLDHashTableOps* aOps,
-                  uint32_t aEntrySize,
-                  const fallible_t& aFallible, uint32_t aLength)
-{
-  return aTable->Init(aOps, aEntrySize, aFallible, aLength);
 }
 
 void
 PL_DHashTableInit(PLDHashTable* aTable, const PLDHashTableOps* aOps,
                   uint32_t aEntrySize, uint32_t aLength)
 {
-  if (!PL_DHashTableInit(aTable, aOps, aEntrySize, fallible, aLength)) {
-    if (aLength > PL_DHASH_MAX_INITIAL_LENGTH) {
-      MOZ_CRASH();          // the asked-for length was too big
-    }
-    uint32_t capacity = MinCapacity(aLength), nbytes;
-    if (!SizeOfEntryStore(capacity, aEntrySize, &nbytes)) {
-      MOZ_CRASH();          // the required mEntryStore size was too big
-    }
-    NS_ABORT_OOM(nbytes);   // allocation failed
-  }
+  aTable->Init(aOps, aEntrySize, aLength);
 }
 
 /*
