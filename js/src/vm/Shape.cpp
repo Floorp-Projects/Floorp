@@ -706,8 +706,8 @@ js::NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
     RootedId id(cx);
     RootedShape newShape(cx, EmptyShape::getInitialShape(cx, res->getClass(),
                                                          res->getTaggedProto(),
-                                                         res->getMetadata(),
                                                          res->getParent(),
+                                                         res->getMetadata(),
                                                          res->numFixedSlots(),
                                                          shape->getObjectFlags()));
     for (unsigned i = 0; i < ids.length(); i++) {
