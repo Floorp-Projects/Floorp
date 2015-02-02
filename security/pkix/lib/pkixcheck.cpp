@@ -442,10 +442,6 @@ MatchEKU(Reader& value, KeyPurposeId requiredEKU,
       case KeyPurposeId::anyExtendedKeyUsage:
         return NotReached("anyExtendedKeyUsage should start with found==true",
                           Result::FATAL_ERROR_LIBRARY_FAILURE);
-
-      default:
-        return NotReached("unrecognized EKU",
-                          Result::FATAL_ERROR_LIBRARY_FAILURE);
     }
   }
 
