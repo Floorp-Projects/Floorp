@@ -121,6 +121,12 @@ startTestCommon(function() {
       // Wait onstkcommand event.
       promises.push(waitForTargetEvent(icc, "stkcommand")
         .then((aEvent) => testBipCommand(aEvent.command, data.expect)));
+      // Wait icc-stkcommand system message.
+      promises.push(waitForSystemMessage("icc-stkcommand")
+        .then((aMessage) => {
+          is(aMessage.iccId, icc.iccInfo.iccid, "iccId");
+          testBipCommand(aMessage.command, data.expect);
+        }));
       // Send emulator command to generate stk unsolicited event.
       promises.push(sendEmulatorStkPdu(data.command));
 
