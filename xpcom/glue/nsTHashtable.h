@@ -149,7 +149,7 @@ public:
    */
   EntryType* PutEntry(KeyType aKey)
   {
-    EntryType* e = PutEntry(aKey, fallible_t());
+    EntryType* e = PutEntry(aKey, mozilla::fallible);
     if (!e) {
       NS_ABORT_OOM(mTable.EntrySize() * mTable.EntryCount());
     }

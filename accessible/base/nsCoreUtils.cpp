@@ -149,7 +149,7 @@ nsCoreUtils::DispatchTouchEvent(uint32_t aEventType, int32_t aX, int32_t aY,
   event.time = PR_IntervalNow();
 
   // XXX: Touch has an identifier of -1 to hint that it is synthesized.
-  nsRefPtr<dom::Touch> t = new dom::Touch(-1, nsIntPoint(aX, aY),
+  nsRefPtr<dom::Touch> t = new dom::Touch(-1, LayoutDeviceIntPoint(aX, aY),
                                           nsIntPoint(1, 1), 0.0f, 1.0f);
   t->SetTarget(aContent);
   event.touches.AppendElement(t);

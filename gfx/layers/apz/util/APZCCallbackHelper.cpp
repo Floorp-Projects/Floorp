@@ -355,16 +355,15 @@ APZCCallbackHelper::ApplyCallbackTransform(const CSSPoint& aInput,
     return input;
 }
 
-nsIntPoint
-APZCCallbackHelper::ApplyCallbackTransform(const nsIntPoint& aPoint,
+LayoutDeviceIntPoint
+APZCCallbackHelper::ApplyCallbackTransform(const LayoutDeviceIntPoint& aPoint,
                                            const ScrollableLayerGuid& aGuid,
                                            const CSSToLayoutDeviceScale& aScale,
                                            float aPresShellResolution)
 {
     LayoutDevicePoint point = LayoutDevicePoint(aPoint.x, aPoint.y);
     point = ApplyCallbackTransform(point / aScale, aGuid, aPresShellResolution) * aScale;
-    LayoutDeviceIntPoint ret = gfx::RoundedToInt(point);
-    return nsIntPoint(ret.x, ret.y);
+    return gfx::RoundedToInt(point);
 }
 
 nsEventStatus

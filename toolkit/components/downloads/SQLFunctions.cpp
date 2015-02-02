@@ -61,7 +61,7 @@ Base64urlEncode(const uint8_t* aBytes,
   // result, we set the capacity to be one greater than what we need, and the
   // length to our desired length.
   uint32_t length = (aNumBytes + 2) / 3 * 4; // +2 due to integer math.
-  NS_ENSURE_TRUE(_result.SetCapacity(length + 1, mozilla::fallible_t()),
+  NS_ENSURE_TRUE(_result.SetCapacity(length + 1, mozilla::fallible),
                  NS_ERROR_OUT_OF_MEMORY);
   _result.SetLength(length);
   (void)PL_Base64Encode(reinterpret_cast<const char*>(aBytes), aNumBytes,

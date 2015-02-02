@@ -333,13 +333,12 @@ MediaDecodeTask::FinishDecode()
   // Allocate the channel buffers.  Note that if we end up resampling, we may
   // write fewer bytes than mResampledFrames to the output buffer, in which
   // case mWriteIndex will tell us how many valid samples we have.
-  static const fallible_t fallible = fallible_t();
   bool memoryAllocationSuccess = true;
   if (!mDecodeJob.mChannelBuffers.SetLength(channelCount)) {
     memoryAllocationSuccess = false;
   } else {
     for (uint32_t i = 0; i < channelCount; ++i) {
-      mDecodeJob.mChannelBuffers[i] = new(fallible) float[resampledFrames];
+      mDecodeJob.mChannelBuffers[i] = new (fallible) float[resampledFrames];
       if (!mDecodeJob.mChannelBuffers[i]) {
         memoryAllocationSuccess = false;
         break;

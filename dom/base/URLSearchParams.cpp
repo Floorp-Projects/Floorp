@@ -190,7 +190,7 @@ URLSearchParams::ConvertString(const nsACString& aInput, nsAString& aOutput)
     return;
   }
 
-  if (!aOutput.SetLength(outputLength, fallible_t())) {
+  if (!aOutput.SetLength(outputLength, fallible)) {
     return;
   }
 

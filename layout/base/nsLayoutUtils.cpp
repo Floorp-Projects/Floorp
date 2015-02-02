@@ -1912,13 +1912,13 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
   return GetEventCoordinatesRelativeTo(aEvent,
-           LayoutDeviceIntPoint::ToUntyped(aEvent->AsGUIEvent()->refPoint),
+           aEvent->AsGUIEvent()->refPoint,
            aFrame);
 }
 
 nsPoint
 nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
-                                             const nsIntPoint aPoint,
+                                             const LayoutDeviceIntPoint& aPoint,
                                              nsIFrame* aFrame)
 {
   if (!aFrame) {
@@ -1935,7 +1935,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
 
 nsPoint
 nsLayoutUtils::GetEventCoordinatesRelativeTo(nsIWidget* aWidget,
-                                             const nsIntPoint aPoint,
+                                             const LayoutDeviceIntPoint& aPoint,
                                              nsIFrame* aFrame)
 {
   if (!aFrame || !aWidget) {
@@ -2658,7 +2658,7 @@ static nsIntPoint WidgetToWidgetOffset(nsIWidget* aFrom, nsIWidget* aTo) {
 
 nsPoint
 nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
-                                     nsIWidget* aWidget, nsIntPoint aPt,
+                                     nsIWidget* aWidget, const LayoutDeviceIntPoint& aPt,
                                      nsView* aView)
 {
   nsPoint viewOffset;
@@ -2667,7 +2667,8 @@ nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
 
-  nsIntPoint widgetPoint = aPt + WidgetToWidgetOffset(aWidget, viewWidget);
+  LayoutDeviceIntPoint widgetPoint = aPt +
+    LayoutDeviceIntPoint::FromUntyped(WidgetToWidgetOffset(aWidget, viewWidget));
   nsPoint widgetAppUnits(aPresContext->DevPixelsToAppUnits(widgetPoint.x),
                          aPresContext->DevPixelsToAppUnits(widgetPoint.y));
   return widgetAppUnits - viewOffset;
@@ -7646,15 +7647,8 @@ nsLayoutUtils::CalculateExpandedScrollableRect(nsIFrame* aFrame)
 /* static */ bool
 nsLayoutUtils::WantSubAPZC()
 {
-  // TODO Turn this on for inprocess OMTC on all platforms
-  bool wantSubAPZC = gfxPrefs::AsyncPanZoomEnabled() &&
-                     gfxPrefs::APZSubframeEnabled();
-#ifdef MOZ_WIDGET_GONK
-  if (XRE_GetProcessType() != GeckoProcessType_Content) {
-    wantSubAPZC = false;
-  }
-#endif
-  return wantSubAPZC;
+  return gfxPrefs::AsyncPanZoomEnabled() &&
+         gfxPrefs::APZSubframeEnabled();
 }
 
 /* static */ bool
