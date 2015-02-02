@@ -38,8 +38,8 @@ DirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId i
 {
     assertEnteredPolicy(cx, proxy, id, SET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    bool ignored;
-    return StandardDefineProperty(cx, target, id, desc, &ignored);
+    ObjectOpResult ignored;
+    return StandardDefineProperty(cx, target, id, desc, ignored);
 }
 
 bool

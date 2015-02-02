@@ -833,8 +833,7 @@ js::obj_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     if (!desc.initialize(cx, args.get(2)))
         return false;
 
-    bool ignored;
-    if (!StandardDefineProperty(cx, obj, id, desc, true, &ignored))
+    if (!StandardDefineProperty(cx, obj, id, desc))
         return false;
 
     args.rval().setObject(*obj);

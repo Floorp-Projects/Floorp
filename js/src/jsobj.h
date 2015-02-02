@@ -754,12 +754,23 @@ GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
  * the DefineProperty functions do not enforce some invariants mandated by ES6.
  */
 extern bool
-StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
-                       const PropDesc &desc, bool throwError, bool *rval);
+StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &desc,
+                       ObjectOpResult &result);
 
 extern bool
 StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
-                       Handle<PropertyDescriptor> descriptor, bool *bp);
+                       Handle<PropertyDescriptor> descriptor, ObjectOpResult &result);
+
+/*
+ * For convenience, signatures identical to the above except without the
+ * ObjectOpResult out-parameter. They throw a TypeError on failure.
+ */
+extern bool
+StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &desc);
+
+extern bool
+StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
+                       Handle<PropertyDescriptor> desc);
 
 extern bool
 DefineProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleValue value,

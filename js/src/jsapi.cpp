@@ -128,6 +128,40 @@ JS::CallArgs::requireAtLeast(JSContext *cx, const char *fnname, unsigned require
     return true;
 }
 
+static bool
+ErrorTakesIdArgument(unsigned msg)
+{
+    MOZ_ASSERT(msg < JSErr_Limit);
+    unsigned argCount = js_ErrorFormatString[msg].argCount;
+    MOZ_ASSERT(argCount <= 1);
+    return argCount == 1;
+}
+
+JS_PUBLIC_API(bool)
+JS::ObjectOpResult::reportError(JSContext *cx, HandleId id)
+{
+    static_assert(unsigned(OkCode) == unsigned(JSMSG_NOT_AN_ERROR),
+                  "unsigned value of OkCode must not be an error code");
+    MOZ_ASSERT(!ok());
+    MOZ_ASSERT(code_ != Uninitialized);
+
+    if (ErrorTakesIdArgument(code_)) {
+        RootedValue idv(cx, IdToValue(id));
+        RootedString str(cx, ValueToSource(cx, idv));
+        if (!str)
+            return false;
+
+        JSAutoByteString propName(cx, str);
+        if (!propName)
+            return false;
+
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, code_, propName.ptr());
+    } else {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, code_);
+    }
+    return false;
+}
+
 JS_PUBLIC_API(int64_t)
 JS_Now()
 {
