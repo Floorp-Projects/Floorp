@@ -76,7 +76,7 @@ let gTests = [{
     dialog.document.documentElement.cancelDialog();
 
     let closingEvent = yield closingPromise;
-    ise(closingEvent.detail.button, "cancel", "closing event should indicate button was 'accept'");
+    ise(closingEvent.detail.button, "cancel", "closing event should indicate button was 'cancel'");
 
     yield deferredClose.promise;
     ise(rv.acceptCount, 0, "return value should NOT have been updated");
@@ -113,6 +113,22 @@ let gTests = [{
 
     yield EventUtils.synthesizeMouseAtCenter(content.document.getElementById("dialogClose"), {},
                                              content.window);
+
+    yield deferredClose.promise;
+    ise(rv.acceptCount, 0, "return value should NOT have been updated");
+  },
+},
+{
+  desc: "Check that 'back' navigation will close the dialog",
+  run: function* () {
+    let rv = { acceptCount: 0 };
+    let deferredClose = Promise.defer();
+    let dialogPromise = openAndLoadSubDialog(gDialogURL, null, rv,
+                                             (aEvent) => dialogClosingCallback(deferredClose, aEvent));
+    let dialog = yield dialogPromise;
+
+    info("cancelling the dialog");
+    content.gSubDialog._frame.goBack();
 
     yield deferredClose.promise;
     ise(rv.acceptCount, 0, "return value should NOT have been updated");
