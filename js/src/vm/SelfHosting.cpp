@@ -324,10 +324,10 @@ js::intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp)
     if (!buffer)
         return false;
 
-    types::TypeObject *newtype = types::GetTypeCallerInitObject(cx, JSProto_Array);
-    if (!newtype)
+    types::ObjectGroup *newgroup = types::GetCallerInitGroup(cx, JSProto_Array);
+    if (!newgroup)
         return false;
-    buffer->setType(newtype);
+    buffer->setGroup(newgroup);
 
     NativeObject::EnsureDenseResult edr = buffer->ensureDenseElements(cx, length, 0);
     switch (edr) {
@@ -506,8 +506,8 @@ js::intrinsic_IsPackedArray(JSContext *cx, unsigned argc, Value *vp)
     MOZ_ASSERT(args[0].isObject());
 
     JSObject *obj = &args[0].toObject();
-    bool isPacked = obj->is<ArrayObject>() && !obj->hasLazyType() &&
-                    !obj->type()->hasAllFlags(types::OBJECT_FLAG_NON_PACKED) &&
+    bool isPacked = obj->is<ArrayObject>() && !obj->hasLazyGroup() &&
+                    !obj->group()->hasAllFlags(types::OBJECT_FLAG_NON_PACKED) &&
                     obj->as<ArrayObject>().getDenseInitializedLength() ==
                         obj->as<ArrayObject>().length();
 

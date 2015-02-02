@@ -35,7 +35,7 @@ ProxyObject::New(JSContext *cx, const BaseProxyHandler *handler, HandleValue pri
      */
     if (proto.isObject() && !options.singleton() && !clasp->isDOMClass()) {
         RootedObject protoObj(cx, proto.toObject());
-        if (!JSObject::setNewTypeUnknown(cx, clasp, protoObj))
+        if (!JSObject::setNewGroupUnknown(cx, clasp, protoObj))
             return nullptr;
     }
 
@@ -66,7 +66,7 @@ ProxyObject::New(JSContext *cx, const BaseProxyHandler *handler, HandleValue pri
 
     /* Don't track types of properties of non-DOM and non-singleton proxies. */
     if (newKind != SingletonObject && !clasp->isDOMClass())
-        MarkTypeObjectUnknownProperties(cx, proxy->type());
+        MarkObjectGroupUnknownProperties(cx, proxy->group());
 
     return proxy;
 }

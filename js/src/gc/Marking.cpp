@@ -87,7 +87,7 @@ static inline void
 PushMarkStack(GCMarker *gcmarker, JS::Symbol *sym);
 
 static inline void
-PushMarkStack(GCMarker *gcmarker, types::TypeObject *thing);
+PushMarkStack(GCMarker *gcmarker, types::ObjectGroup *thing);
 
 namespace js {
 namespace gc {
@@ -98,7 +98,7 @@ static void MarkChildren(JSTracer *trc, JSScript *script);
 static void MarkChildren(JSTracer *trc, LazyScript *lazy);
 static void MarkChildren(JSTracer *trc, Shape *shape);
 static void MarkChildren(JSTracer *trc, BaseShape *base);
-static void MarkChildren(JSTracer *trc, types::TypeObject *type);
+static void MarkChildren(JSTracer *trc, types::ObjectGroup *group);
 static void MarkChildren(JSTracer *trc, jit::JitCode *code);
 
 } /* namespace gc */
@@ -614,7 +614,7 @@ DeclMarkerImpl(String, JSFlatString)
 DeclMarkerImpl(String, JSLinearString)
 DeclMarkerImpl(String, PropertyName)
 DeclMarkerImpl(Symbol, JS::Symbol)
-DeclMarkerImpl(TypeObject, js::types::TypeObject)
+DeclMarkerImpl(ObjectGroup, js::types::ObjectGroup)
 
 } /* namespace gc */
 } /* namespace js */
@@ -654,8 +654,8 @@ gc::MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
       case JSTRACE_SHAPE:
         MarkInternal(trc, reinterpret_cast<Shape **>(thingp));
         break;
-      case JSTRACE_TYPE_OBJECT:
-        MarkInternal(trc, reinterpret_cast<types::TypeObject **>(thingp));
+      case JSTRACE_OBJECT_GROUP:
+        MarkInternal(trc, reinterpret_cast<types::ObjectGroup **>(thingp));
         break;
       default:
         MOZ_CRASH("Invalid trace kind in MarkKind.");
@@ -791,14 +791,14 @@ gc::MarkTypeRoot(JSTracer *trc, types::Type *v, const char *name)
 {
     JS_ROOT_MARKING_ASSERT(trc);
     trc->setTracingName(name);
-    if (v->isSingleObject()) {
-        JSObject *obj = v->singleObject();
+    if (v->isSingleton()) {
+        JSObject *obj = v->singleton();
         MarkInternal(trc, &obj);
         *v = types::Type::ObjectType(obj);
-    } else if (v->isTypeObject()) {
-        types::TypeObject *typeObj = v->typeObject();
-        MarkInternal(trc, &typeObj);
-        *v = types::Type::ObjectType(typeObj);
+    } else if (v->isGroup()) {
+        types::ObjectGroup *group = v->group();
+        MarkInternal(trc, &group);
+        *v = types::Type::ObjectType(group);
     }
 }
 
@@ -1066,7 +1066,7 @@ PushMarkStack(GCMarker *gcmarker, JSFunction *thing)
 }
 
 static void
-PushMarkStack(GCMarker *gcmarker, types::TypeObject *thing)
+PushMarkStack(GCMarker *gcmarker, types::ObjectGroup *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
     MOZ_ASSERT(!IsInsideNursery(thing));
@@ -1422,63 +1422,63 @@ gc::MarkCycleCollectorChildren(JSTracer *trc, Shape *shape)
 }
 
 static void
-ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
+ScanObjectGroup(GCMarker *gcmarker, types::ObjectGroup *group)
 {
-    unsigned count = type->getPropertyCount();
+    unsigned count = group->getPropertyCount();
     for (unsigned i = 0; i < count; i++) {
-        if (types::Property *prop = type->getProperty(i))
-            MarkId(gcmarker, &prop->id, "TypeObject property id");
+        if (types::Property *prop = group->getProperty(i))
+            MarkId(gcmarker, &prop->id, "ObjectGroup property id");
     }
 
-    if (type->proto().isObject())
-        PushMarkStack(gcmarker, type->proto().toObject());
+    if (group->proto().isObject())
+        PushMarkStack(gcmarker, group->proto().toObject());
 
-    if (type->singleton() && !type->lazy())
-        PushMarkStack(gcmarker, type->singleton());
+    if (group->singleton() && !group->lazy())
+        PushMarkStack(gcmarker, group->singleton());
 
-    if (type->newScript())
-        type->newScript()->trace(gcmarker);
+    if (group->newScript())
+        group->newScript()->trace(gcmarker);
 
-    if (type->maybeUnboxedLayout())
-        type->unboxedLayout().trace(gcmarker);
+    if (group->maybeUnboxedLayout())
+        group->unboxedLayout().trace(gcmarker);
 
-    if (TypeDescr *descr = type->maybeTypeDescr())
+    if (TypeDescr *descr = group->maybeTypeDescr())
         PushMarkStack(gcmarker, descr);
 
-    if (JSFunction *fun = type->maybeInterpretedFunction())
+    if (JSFunction *fun = group->maybeInterpretedFunction())
         PushMarkStack(gcmarker, fun);
 }
 
 static void
-gc::MarkChildren(JSTracer *trc, types::TypeObject *type)
+gc::MarkChildren(JSTracer *trc, types::ObjectGroup *group)
 {
-    unsigned count = type->getPropertyCount();
+    unsigned count = group->getPropertyCount();
     for (unsigned i = 0; i < count; i++) {
-        types::Property *prop = type->getProperty(i);
+        types::Property *prop = group->getProperty(i);
         if (prop)
-            MarkId(trc, &prop->id, "type_prop");
+            MarkId(trc, &prop->id, "group_property");
     }
 
-    if (type->proto().isObject())
-        MarkObject(trc, &type->protoRaw(), "type_proto");
+    if (group->proto().isObject())
+        MarkObject(trc, &group->protoRaw(), "group_proto");
 
-    if (type->singleton() && !type->lazy())
-        MarkObject(trc, &type->singletonRaw(), "type_singleton");
+    if (group->singleton() && !group->lazy())
+        MarkObject(trc, &group->singletonRaw(), "group_singleton");
 
-    if (type->newScript())
-        type->newScript()->trace(trc);
+    if (group->newScript())
+        group->newScript()->trace(trc);
 
-    if (type->maybeUnboxedLayout())
-        type->unboxedLayout().trace(trc);
+    if (group->maybeUnboxedLayout())
+        group->unboxedLayout().trace(trc);
 
-    if (JSObject *descr = type->maybeTypeDescr()) {
-        MarkObjectUnbarriered(trc, &descr, "type_descr");
-        type->setTypeDescr(&descr->as<TypeDescr>());
+    if (JSObject *descr = group->maybeTypeDescr()) {
+        MarkObjectUnbarriered(trc, &descr, "group_type_descr");
+        group->setTypeDescr(&descr->as<TypeDescr>());
     }
 
-    if (JSObject *fun = type->maybeInterpretedFunction()) {
-        MarkObjectUnbarriered(trc, &fun, "type_function");
-        type->setInterpretedFunction(&fun->as<JSFunction>());
+    if (JSObject *fun = group->maybeInterpretedFunction()) {
+        MarkObjectUnbarriered(trc, &fun, "group_function");
+        group->setInterpretedFunction(&fun->as<JSFunction>());
     }
 }
 
@@ -1532,8 +1532,8 @@ gc::PushArena(GCMarker *gcmarker, ArenaHeader *aheader)
         PushArenaTyped<js::Shape>(gcmarker, aheader);
         break;
 
-      case JSTRACE_TYPE_OBJECT:
-        PushArenaTyped<js::types::TypeObject>(gcmarker, aheader);
+      case JSTRACE_OBJECT_GROUP:
+        PushArenaTyped<js::types::ObjectGroup>(gcmarker, aheader);
         break;
 
       default:
@@ -1651,8 +1651,8 @@ GCMarker::restoreValueArray(NativeObject *obj, void **vpp, void **endp)
 void
 GCMarker::processMarkStackOther(uintptr_t tag, uintptr_t addr)
 {
-    if (tag == TypeTag) {
-        ScanTypeObject(this, reinterpret_cast<types::TypeObject *>(addr));
+    if (tag == GroupTag) {
+        ScanObjectGroup(this, reinterpret_cast<types::ObjectGroup *>(addr));
     } else if (tag == SavedValueArrayTag) {
         MOZ_ASSERT(!(addr & CellMask));
         NativeObject *obj = reinterpret_cast<NativeObject *>(addr);
@@ -1796,14 +1796,14 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
             return;
         }
 
-        types::TypeObject *type = obj->typeFromGC();
-        PushMarkStack(this, type);
+        types::ObjectGroup *group = obj->groupFromGC();
+        PushMarkStack(this, group);
 
         Shape *shape = obj->lastProperty();
         PushMarkStack(this, shape);
 
         /* Call the trace hook if necessary. */
-        const Class *clasp = type->clasp();
+        const Class *clasp = group->clasp();
         if (clasp->trace) {
             // Global objects all have the same trace hook. That hook is safe without barriers
             // if the global has no custom trace hook of its own, or has been moved to a different
@@ -1950,8 +1950,8 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
         MarkChildren(trc, static_cast<Shape *>(thing));
         break;
 
-      case JSTRACE_TYPE_OBJECT:
-        MarkChildren(trc, (types::TypeObject *)thing);
+      case JSTRACE_OBJECT_GROUP:
+        MarkChildren(trc, (types::ObjectGroup *)thing);
         break;
 
       default:

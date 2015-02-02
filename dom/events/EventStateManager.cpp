@@ -5490,6 +5490,12 @@ EventStateManager::WheelPrefs::NeedToComputeLineOrPageDelta(
 }
 
 bool
+EventStateManager::WheelEventIsScrollAction(WidgetWheelEvent* aEvent)
+{
+  return WheelPrefs::GetInstance()->ComputeActionFor(aEvent) == WheelPrefs::ACTION_SCROLL;
+}
+
+bool
 EventStateManager::WheelPrefs::IsOverOnePageScrollAllowedX(
                                  WidgetWheelEvent* aEvent)
 {

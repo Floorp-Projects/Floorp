@@ -344,8 +344,8 @@ template <> struct TypeToArgProperties<MutableHandleValue> {
 template <> struct TypeToArgProperties<HandleShape> {
     static const uint32_t result = TypeToArgProperties<Shape *>::result | VMFunction::ByRef;
 };
-template <> struct TypeToArgProperties<HandleTypeObject> {
-    static const uint32_t result = TypeToArgProperties<types::TypeObject *>::result | VMFunction::ByRef;
+template <> struct TypeToArgProperties<HandleObjectGroup> {
+    static const uint32_t result = TypeToArgProperties<types::ObjectGroup *>::result | VMFunction::ByRef;
 };
 
 // Convert argument type to whether or not it should be passed in a float
@@ -382,7 +382,7 @@ template <> struct TypeToRootType<MutableHandleValue> {
 template <> struct TypeToRootType<HandleShape> {
     static const uint32_t result = VMFunction::RootCell;
 };
-template <> struct TypeToRootType<HandleTypeObject> {
+template <> struct TypeToRootType<HandleObjectGroup> {
     static const uint32_t result = VMFunction::RootCell;
 };
 template <> struct TypeToRootType<HandleScript> {
@@ -674,7 +674,7 @@ bool SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Handl
 bool InterruptCheck(JSContext *cx);
 
 void *MallocWrapper(JSRuntime *rt, size_t nbytes);
-JSObject *NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type,
+JSObject *NewCallObject(JSContext *cx, HandleShape shape, HandleObjectGroup group,
                         uint32_t lexicalBegin);
 JSObject *NewSingletonCallObject(JSContext *cx, HandleShape shape, uint32_t lexicalBegin);
 JSObject *NewStringObject(JSContext *cx, HandleString str);
@@ -759,7 +759,7 @@ void MarkValueFromIon(JSRuntime *rt, Value *vp);
 void MarkStringFromIon(JSRuntime *rt, JSString **stringp);
 void MarkObjectFromIon(JSRuntime *rt, JSObject **objp);
 void MarkShapeFromIon(JSRuntime *rt, Shape **shapep);
-void MarkTypeObjectFromIon(JSRuntime *rt, types::TypeObject **typep);
+void MarkObjectGroupFromIon(JSRuntime *rt, types::ObjectGroup **groupp);
 
 // Helper for generatePreBarrier.
 inline void *
@@ -774,8 +774,8 @@ IonMarkFunction(MIRType type)
         return JS_FUNC_TO_DATA_PTR(void *, MarkObjectFromIon);
       case MIRType_Shape:
         return JS_FUNC_TO_DATA_PTR(void *, MarkShapeFromIon);
-      case MIRType_TypeObject:
-        return JS_FUNC_TO_DATA_PTR(void *, MarkTypeObjectFromIon);
+      case MIRType_ObjectGroup:
+        return JS_FUNC_TO_DATA_PTR(void *, MarkObjectGroupFromIon);
       default: MOZ_CRASH();
     }
 }

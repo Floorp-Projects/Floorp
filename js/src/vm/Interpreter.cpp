@@ -380,7 +380,7 @@ RunState::maybeCreateThisForConstructor(JSContext *cx)
         InvokeState &invoke = *asInvoke();
         if (invoke.constructing() && invoke.args().thisv().isPrimitive()) {
             RootedObject callee(cx, &invoke.args().callee());
-            NewObjectKind newKind = invoke.useNewType() ? SingletonObject : GenericObject;
+            NewObjectKind newKind = invoke.createSingleton() ? SingletonObject : GenericObject;
             JSObject *obj = CreateThisForFunction(cx, callee, newKind);
             if (!obj)
                 return false;
@@ -503,14 +503,14 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
     /* Run function until JSOP_RETRVAL, JSOP_RETURN or error. */
     InvokeState state(cx, args, initial);
 
-    // Check to see if useNewType flag should be set for this frame.
+    // Check to see if createSingleton flag should be set for this frame.
     if (construct) {
         FrameIter iter(cx);
         if (!iter.done() && iter.hasScript()) {
             JSScript *script = iter.script();
             jsbytecode *pc = iter.pc();
-            if (UseNewType(cx, script, pc))
-                state.setUseNewType();
+            if (UseSingletonForNewObject(cx, script, pc))
+                state.setCreateSingleton();
         }
     }
 
@@ -1495,7 +1495,6 @@ Interpret(JSContext *cx, RunState &state)
     RootedObject rootObject0(cx), rootObject1(cx), rootObject2(cx);
     RootedNativeObject rootNativeObject0(cx);
     RootedFunction rootFunction0(cx);
-    RootedTypeObject rootType0(cx);
     RootedPropertyName rootName0(cx);
     RootedId rootId0(cx);
     RootedShape rootShape0(cx);
@@ -2565,16 +2564,16 @@ CASE(JSOP_FUNCALL)
     }
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
-    bool newType = UseNewType(cx, script, REGS.pc);
+    bool createSingleton = UseSingletonForNewObject(cx, script, REGS.pc);
 
     TypeMonitorCall(cx, args, construct);
 
     {
         InvokeState state(cx, args, initial);
-        if (newType)
-            state.setUseNewType();
+        if (createSingleton)
+            state.setCreateSingleton();
 
-        if (!newType && jit::IsIonEnabled(cx)) {
+        if (!createSingleton && jit::IsIonEnabled(cx)) {
             jit::MethodStatus status = jit::CanEnter(cx, state);
             if (status == jit::Method_Error)
                 goto error;
@@ -2605,8 +2604,8 @@ CASE(JSOP_FUNCALL)
     if (!activation.pushInlineFrame(args, funScript, initial))
         goto error;
 
-    if (newType)
-        REGS.fp()->setUseNewType();
+    if (createSingleton)
+        REGS.fp()->setCreateSingleton();
 
     SET_SCRIPT(REGS.fp()->script());
 
@@ -3089,14 +3088,14 @@ CASE(JSOP_NEWINIT)
     RootedObject &obj = rootObject0;
     NewObjectKind newKind;
     if (i == JSProto_Array) {
-        newKind = UseNewTypeForInitializer(script, REGS.pc, &ArrayObject::class_);
+        newKind = UseSingletonForInitializer(script, REGS.pc, &ArrayObject::class_);
         obj = NewDenseEmptyArray(cx, nullptr, newKind);
     } else {
         gc::AllocKind allocKind = GuessObjectGCKind(0);
-        newKind = UseNewTypeForInitializer(script, REGS.pc, &PlainObject::class_);
+        newKind = UseSingletonForInitializer(script, REGS.pc, &PlainObject::class_);
         obj = NewBuiltinClassInstance<PlainObject>(cx, allocKind, newKind);
     }
-    if (!obj || !SetInitializerObjectType(cx, script, REGS.pc, obj, newKind))
+    if (!obj || !SetInitializerObjectGroup(cx, script, REGS.pc, obj, newKind))
         goto error;
 
     PUSH_OBJECT(*obj);
@@ -3107,9 +3106,9 @@ CASE(JSOP_NEWARRAY)
 {
     unsigned count = GET_UINT24(REGS.pc);
     RootedObject &obj = rootObject0;
-    NewObjectKind newKind = UseNewTypeForInitializer(script, REGS.pc, &ArrayObject::class_);
+    NewObjectKind newKind = UseSingletonForInitializer(script, REGS.pc, &ArrayObject::class_);
     obj = NewDenseFullyAllocatedArray(cx, count, nullptr, newKind);
-    if (!obj || !SetInitializerObjectType(cx, script, REGS.pc, obj, newKind))
+    if (!obj || !SetInitializerObjectGroup(cx, script, REGS.pc, obj, newKind))
         goto error;
 
     PUSH_OBJECT(*obj);
@@ -3138,9 +3137,9 @@ CASE(JSOP_NEWOBJECT)
     baseobj = script->getObject(REGS.pc);
 
     RootedObject &obj = rootObject1;
-    NewObjectKind newKind = UseNewTypeForInitializer(script, REGS.pc, baseobj->getClass());
+    NewObjectKind newKind = UseSingletonForInitializer(script, REGS.pc, baseobj->getClass());
     obj = CopyInitializerObject(cx, baseobj.as<PlainObject>(), newKind);
-    if (!obj || !SetInitializerObjectType(cx, script, REGS.pc, obj, newKind))
+    if (!obj || !SetInitializerObjectGroup(cx, script, REGS.pc, obj, newKind))
         goto error;
 
     PUSH_OBJECT(*obj);
@@ -3960,13 +3959,13 @@ js::RunOnceScriptPrologue(JSContext *cx, HandleScript script)
         return true;
     }
 
-    // Force instantiation of the script's function's type to ensure the flag
+    // Force instantiation of the script's function's group to ensure the flag
     // is preserved in type information.
-    if (!script->functionNonDelazifying()->getType(cx))
+    if (!script->functionNonDelazifying()->getGroup(cx))
         return false;
 
-    types::MarkTypeObjectFlags(cx, script->functionNonDelazifying(),
-                               types::OBJECT_FLAG_RUNONCE_INVALIDATED);
+    types::MarkObjectGroupFlags(cx, script->functionNonDelazifying(),
+                                types::OBJECT_FLAG_RUNONCE_INVALIDATED);
     return true;
 }
 

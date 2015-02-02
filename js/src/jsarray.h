@@ -80,7 +80,7 @@ enum AllocatingBehaviour {
  * contents if the length is not excessive.
  */
 extern ArrayObject *
-NewDenseArray(ExclusiveContext *cx, uint32_t length, HandleTypeObject type,
+NewDenseArray(ExclusiveContext *cx, uint32_t length, HandleObjectGroup group,
               AllocatingBehaviour allocating);
 
 /* Create a dense array with a copy of the dense array elements in src. */
@@ -193,7 +193,7 @@ extern bool
 NewbornArrayPush(JSContext *cx, HandleObject obj, const Value &v);
 
 extern ArrayObject *
-ArrayConstructorOneArg(JSContext *cx, HandleTypeObject type, int32_t lengthInt);
+ArrayConstructorOneArg(JSContext *cx, HandleObjectGroup group, int32_t lengthInt);
 
 } /* namespace js */
 

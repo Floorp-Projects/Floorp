@@ -74,7 +74,6 @@ class nsIBaseWindow;
 class nsIContent;
 class nsICSSDeclaration;
 class nsIDocShellTreeOwner;
-class nsIDOMCrypto;
 class nsIDOMOfflineResourceList;
 class nsIScrollableFrame;
 class nsIControllers;
@@ -101,6 +100,7 @@ class DOMEventTargetHelper;
 namespace dom {
 class BarProp;
 class Console;
+class Crypto;
 class External;
 class Function;
 class Gamepad;
@@ -995,7 +995,7 @@ public:
   }
   int64_t GetMozAnimationStartTime(mozilla::ErrorResult& aError);
   void SizeToContent(mozilla::ErrorResult& aError);
-  nsIDOMCrypto* GetCrypto(mozilla::ErrorResult& aError);
+  mozilla::dom::Crypto* GetCrypto(mozilla::ErrorResult& aError);
   nsIControllers* GetControllers(mozilla::ErrorResult& aError);
   mozilla::dom::Element* GetRealFrameElement(mozilla::ErrorResult& aError);
   float GetMozInnerScreenX(mozilla::ErrorResult& aError);
@@ -1556,7 +1556,7 @@ protected:
   nsString                      mStatus;
   nsString                      mDefaultStatus;
   nsGlobalWindowObserver*       mObserver; // Inner windows only.
-  nsCOMPtr<nsIDOMCrypto>        mCrypto;
+  nsRefPtr<mozilla::dom::Crypto>  mCrypto;
   nsRefPtr<mozilla::dom::Console> mConsole;
   // We need to store an nsISupports pointer to this object because the
   // mozilla::dom::External class doesn't exist on b2g and using the type

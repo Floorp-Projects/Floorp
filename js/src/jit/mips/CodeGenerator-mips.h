@@ -244,7 +244,7 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
     void visitFloat32(LFloat32 *ins);
 
     void visitGuardShape(LGuardShape *guard);
-    void visitGuardObjectType(LGuardObjectType *guard);
+    void visitGuardObjectGroup(LGuardObjectGroup *guard);
     void visitGuardClass(LGuardClass *guard);
 
     void visitNegI(LNegI *lir);

@@ -56,10 +56,10 @@ var stacks;
 var ffi = function(enable) {
     if (enable == +1)
         enableSPSProfiling();
-    if (enable == -1)
-        disableSPSProfiling();
     enableSingleStepProfiling();
     stacks = disableSingleStepProfiling();
+    if (enable == -1)
+        disableSPSProfiling();
 }
 var f = asmLink(asmCompile('global','ffis',USE_ASM + "var ffi=ffis.ffi; function g(i) { i=i|0; ffi(i|0) } function f(i) { i=i|0; g(i|0) } return f"), null, {ffi});
 f(0);

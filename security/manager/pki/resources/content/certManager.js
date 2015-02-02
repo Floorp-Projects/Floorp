@@ -197,130 +197,100 @@ function getSelectedTreeItems()
   }
 }
 
+/**
+ * Returns true if nothing in the given cert tree is selected or if the
+ * selection includes a container. Returns false otherwise.
+ *
+ * @param {nsICertTree} certTree
+ * @returns {Boolean}
+ */
+function nothingOrContainerSelected(certTree)
+{
+  var certTreeSelection = certTree.selection;
+  var numSelectionRanges = certTreeSelection.getRangeCount();
+
+  if (numSelectionRanges == 0) {
+    return true;
+  }
+
+  for (var i = 0; i < numSelectionRanges; i++) {
+    var o1 = {};
+    var o2 = {};
+    certTreeSelection.getRangeAt(i, o1, o2);
+    var minIndex = o1.value;
+    var maxIndex = o2.value;
+    for (var j = minIndex; j <= maxIndex; j++) {
+      if (certTree.isContainer(j)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 function ca_enableButtons()
 {
-  var items = caTreeView.selection;
-  var nr = items.getRangeCount();
-  var toggle="false";
-  if (nr == 0) {
-    toggle="true";
-  }
-  var edit_toggle=toggle;
-/*
-  var edit_toggle="true";
-  if (nr > 0) {
-    for (var i=0; i<nr; i++) {
-      var o1 = {};
-      var o2 = {};
-      items.getRangeAt(i, o1, o2);
-      var min = o1.value;
-      var max = o2.value;
-      var stop = false;
-      for (var j=min; j<=max; j++) {
-        var tokenName = items.tree.view.getCellText(j, "tokencol");
-	if (tokenName == "Builtin Object Token") { stop = true; } break;
-      }
-      if (stop) break;
-    }
-    if (i == nr) {
-      edit_toggle="false";
-    }
-  }
-*/
+  var disableButtons = nothingOrContainerSelected(caTreeView);
+
   var enableViewButton=document.getElementById('ca_viewButton');
-  enableViewButton.setAttribute("disabled",toggle);
+  enableViewButton.setAttribute("disabled", disableButtons);
   var enableEditButton=document.getElementById('ca_editButton');
-  enableEditButton.setAttribute("disabled",edit_toggle);
+  enableEditButton.setAttribute("disabled", disableButtons);
   var enableExportButton=document.getElementById('ca_exportButton');
-  enableExportButton.setAttribute("disabled",toggle);
+  enableExportButton.setAttribute("disabled", disableButtons);
   var enableDeleteButton=document.getElementById('ca_deleteButton');
-  enableDeleteButton.setAttribute("disabled",toggle);
+  enableDeleteButton.setAttribute("disabled", disableButtons);
 }
 
 function mine_enableButtons()
 {
-  var items = userTreeView.selection;
-  var toggle="false";
-  if (items.getRangeCount() == 0) {
-    toggle="true";
-  }
+  var disableButtons = nothingOrContainerSelected(userTreeView);
+
   var enableViewButton=document.getElementById('mine_viewButton');
-  enableViewButton.setAttribute("disabled",toggle);
+  enableViewButton.setAttribute("disabled", disableButtons);
   var enableBackupButton=document.getElementById('mine_backupButton');
-  enableBackupButton.setAttribute("disabled",toggle);
+  enableBackupButton.setAttribute("disabled", disableButtons);
   var enableDeleteButton=document.getElementById('mine_deleteButton');
-  enableDeleteButton.setAttribute("disabled",toggle);
+  enableDeleteButton.setAttribute("disabled", disableButtons);
 }
 
 function websites_enableButtons()
 {
-  var items = serverTreeView.selection;
-  var count_ranges = items.getRangeCount();
-
-  var enable_delete = false;
-  var enable_view = false;
-
-  if (count_ranges > 0) {
-    enable_delete = true;
-  }
-
-  if (count_ranges == 1) {
-    var o1 = {};
-    var o2 = {};
-    items.getRangeAt(0, o1, o2); // the first range
-    if (o1.value == o2.value) {
-      // only a single item is selected
-      try {
-        var ti = serverTreeView.getTreeItem(o1.value);
-        if (ti) {
-          if (ti.cert) {
-            enable_view = true;
-          }
-        }
-      }
-      catch (e) {
-      }
-    }
-  }
+  var disableButtons = nothingOrContainerSelected(serverTreeView);
 
   var enableViewButton=document.getElementById('websites_viewButton');
-  enableViewButton.setAttribute("disabled", !enable_view);
+  enableViewButton.setAttribute("disabled", disableButtons);
   var enableExportButton=document.getElementById('websites_exportButton');
-  enableExportButton.setAttribute("disabled", !enable_view);
+  enableExportButton.setAttribute("disabled", disableButtons);
   var enableDeleteButton=document.getElementById('websites_deleteButton');
-  enableDeleteButton.setAttribute("disabled", !enable_delete);
+  enableDeleteButton.setAttribute("disabled", disableButtons);
 }
 
 function email_enableButtons()
 {
-  var items = emailTreeView.selection;
-  var toggle="false";
-  if (items.getRangeCount() == 0) {
-    toggle="true";
-  }
+  var disableButtons = nothingOrContainerSelected(emailTreeView);
+
   var enableViewButton=document.getElementById('email_viewButton');
-  enableViewButton.setAttribute("disabled",toggle);
+  enableViewButton.setAttribute("disabled", disableButtons);
   var enableEditButton=document.getElementById('email_editButton');
-  enableEditButton.setAttribute("disabled",toggle);
+  enableEditButton.setAttribute("disabled", disableButtons);
   var enableExportButton=document.getElementById('email_exportButton');
-  enableExportButton.setAttribute("disabled",toggle);
+  enableExportButton.setAttribute("disabled", disableButtons);
   var enableDeleteButton=document.getElementById('email_deleteButton');
-  enableDeleteButton.setAttribute("disabled",toggle);
+  enableDeleteButton.setAttribute("disabled", disableButtons);
 }
 
 function orphan_enableButtons()
 {
-  var items = orphanTreeView.selection;
-  var toggle="false";
-  if (items.getRangeCount() == 0) {
-    toggle="true";
-  }
+  var disableButtons = nothingOrContainerSelected(orphanTreeView);
+
   var enableViewButton=document.getElementById('orphan_viewButton');
-  enableViewButton.setAttribute("disabled",toggle);
+  enableViewButton.setAttribute("disabled", disableButtons);
   var enableExportButton=document.getElementById('orphan_exportButton');
-  enableExportButton.setAttribute("disabled",toggle);
+  enableExportButton.setAttribute("disabled", disableButtons);
   var enableDeleteButton=document.getElementById('orphan_deleteButton');
-  enableDeleteButton.setAttribute("disabled",toggle);
+  enableDeleteButton.setAttribute("disabled", disableButtons);
 }
 
 function backupCerts()

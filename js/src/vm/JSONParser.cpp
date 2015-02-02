@@ -612,10 +612,10 @@ JSONParserBase::createFinishedObject(PropertyVector &properties)
 
     /*
      * Try to assign a new type to the object with type information for its
-     * properties, and update the initializer type object cache with this
+     * properties, and update the initializer object group cache with this
      * object's final shape.
      */
-    cx->compartment()->types.fixObjectType(cx, obj);
+    cx->compartment()->types.fixObjectGroup(cx, obj);
 
     return obj;
 }
@@ -646,7 +646,7 @@ JSONParserBase::finishArray(MutableHandleValue vp, ElementVector &elements)
         return false;
 
     /* Try to assign a new type to the array according to its elements. */
-    cx->compartment()->types.fixArrayType(cx, obj);
+    cx->compartment()->types.fixArrayGroup(cx, obj);
 
     vp.setObject(*obj);
     if (!freeElements.append(&elements))

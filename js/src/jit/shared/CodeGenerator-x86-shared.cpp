@@ -1978,10 +1978,10 @@ CodeGeneratorX86Shared::visitGuardShape(LGuardShape *guard)
 }
 
 void
-CodeGeneratorX86Shared::visitGuardObjectType(LGuardObjectType *guard)
+CodeGeneratorX86Shared::visitGuardObjectGroup(LGuardObjectGroup *guard)
 {
     Register obj = ToRegister(guard->input());
-    masm.cmpPtr(Operand(obj, JSObject::offsetOfType()), ImmGCPtr(guard->mir()->typeObject()));
+    masm.cmpPtr(Operand(obj, JSObject::offsetOfGroup()), ImmGCPtr(guard->mir()->group()));
 
     Assembler::Condition cond =
         guard->mir()->bailOnEquality() ? Assembler::Equal : Assembler::NotEqual;
@@ -1994,8 +1994,8 @@ CodeGeneratorX86Shared::visitGuardClass(LGuardClass *guard)
     Register obj = ToRegister(guard->input());
     Register tmp = ToRegister(guard->tempInt());
 
-    masm.loadPtr(Address(obj, JSObject::offsetOfType()), tmp);
-    masm.cmpPtr(Operand(tmp, types::TypeObject::offsetOfClasp()), ImmPtr(guard->mir()->getClass()));
+    masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), tmp);
+    masm.cmpPtr(Operand(tmp, types::ObjectGroup::offsetOfClasp()), ImmPtr(guard->mir()->getClass()));
     bailoutIf(Assembler::NotEqual, guard->snapshot());
 }
 

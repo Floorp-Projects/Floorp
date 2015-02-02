@@ -135,10 +135,10 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
         if (!obj)
             return nullptr;
 
-        types::TypeObject *type = cx->getNewType(obj->getClass(), TaggedProto(proto.get()));
-        if (!type)
+        types::ObjectGroup *group = cx->getNewGroup(obj->getClass(), TaggedProto(proto.get()));
+        if (!group)
             return nullptr;
-        obj->setType(type);
+        obj->setGroup(group);
 
         return &obj->as<SharedTypedArrayObject>();
     }
@@ -157,14 +157,14 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
         jsbytecode *pc;
         RootedScript script(cx, cx->currentScript(&pc));
         NewObjectKind newKind = script
-                                ? UseNewTypeForInitializer(script, pc, instanceClass())
+                                ? UseSingletonForInitializer(script, pc, instanceClass())
                                 : GenericObject;
         RootedObject obj(cx, NewBuiltinClassInstance(cx, instanceClass(), allocKind, newKind));
         if (!obj)
             return nullptr;
 
         if (script) {
-            if (!types::SetInitializerObjectType(cx, script, pc, obj, newKind))
+            if (!types::SetInitializerObjectGroup(cx, script, pc, obj, newKind))
                 return nullptr;
         }
 
