@@ -765,7 +765,7 @@ nsHostResolver::ResolveHost(const char            *host,
 
             nsHostKey key = { host, flags, af };
             nsHostDBEnt *he = static_cast<nsHostDBEnt *>
-                                         (PL_DHashTableAdd(&mDB, &key));
+                (PL_DHashTableAdd(&mDB, &key, fallible));
 
             // if the record is null, the hash table OOM'd.
             if (!he) {

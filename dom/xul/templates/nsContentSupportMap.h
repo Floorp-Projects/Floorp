@@ -28,7 +28,8 @@ public:
         if (!mMap.IsInitialized())
             return NS_ERROR_NOT_INITIALIZED;
 
-        PLDHashEntryHdr* hdr = PL_DHashTableAdd(&mMap, aElement);
+        PLDHashEntryHdr* hdr =
+            PL_DHashTableAdd(&mMap, aElement, mozilla::fallible);
         if (!hdr)
             return NS_ERROR_OUT_OF_MEMORY;
 
