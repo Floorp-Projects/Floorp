@@ -72,37 +72,6 @@ SetJsObject(JSContext* aContext,
   return true;
 }
 
-nsString
-GetObjectPathFromAddress(const nsAString& aAdapterPath,
-                         const nsAString& aDeviceAddress)
-{
-  // The object path would be like /org/bluez/2906/hci0/dev_00_23_7F_CB_B4_F1,
-  // and the adapter path would be the first part of the object path, according
-  // to the example above, it's /org/bluez/2906/hci0.
-  nsString devicePath(aAdapterPath);
-  devicePath.AppendLiteral("/dev_");
-  devicePath.Append(aDeviceAddress);
-  devicePath.ReplaceChar(':', '_');
-  return devicePath;
-}
-
-nsString
-GetAddressFromObjectPath(const nsAString& aObjectPath)
-{
-  // The object path would be like /org/bluez/2906/hci0/dev_00_23_7F_CB_B4_F1,
-  // and the adapter path would be the first part of the object path, according
-  // to the example above, it's /org/bluez/2906/hci0.
-  nsString address(aObjectPath);
-  int addressHead = address.RFind("/") + 5;
-
-  MOZ_ASSERT(addressHead + BLUETOOTH_ADDRESS_LENGTH == (int)address.Length());
-
-  address.Cut(0, addressHead);
-  address.ReplaceChar('_', ':');
-
-  return address;
-}
-
 bool
 BroadcastSystemMessage(const nsAString& aType,
                        const InfallibleTArray<BluetoothNamedValue>& aData)
@@ -152,27 +121,6 @@ DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
   if (NS_FAILED(NS_DispatchToMainThread(aRunnable))) {
     BT_WARNING("Failed to dispatch to main thread!");
   }
-}
-
-void
-ParseAtCommand(const nsACString& aAtCommand, const int aStart,
-               nsTArray<nsCString>& aRetValues)
-{
-  int length = aAtCommand.Length();
-  int begin = aStart;
-
-  for (int i = aStart; i < length; ++i) {
-    // Use ',' as separator
-    if (aAtCommand[i] == ',') {
-      nsCString tmp(nsDependentCSubstring(aAtCommand, begin, i - begin));
-      aRetValues.AppendElement(tmp);
-
-      begin = i + 1;
-    }
-  }
-
-  nsCString tmp(nsDependentCSubstring(aAtCommand, begin));
-  aRetValues.AppendElement(tmp);
 }
 
 void
