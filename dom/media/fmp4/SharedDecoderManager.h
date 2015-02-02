@@ -25,7 +25,6 @@ public:
   SharedDecoderManager();
 
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
-    PlatformDecoderModule* aPDM,
     const mp4_demuxer::VideoDecoderConfig& aConfig,
     layers::LayersBackend aLayersBackend,
     layers::ImageContainer* aImageContainer, MediaTaskQueue* aVideoTaskQueue,
@@ -34,8 +33,6 @@ public:
   void SetReader(MediaDecoderReader* aReader);
   void Select(SharedDecoderProxy* aProxy);
   void SetIdle(MediaDataDecoder* aProxy);
-  void ReleaseMediaResources();
-  void Shutdown();
 
   friend class SharedDecoderProxy;
   friend class SharedDecoderCallback;
@@ -45,13 +42,11 @@ private:
   void DrainComplete();
 
   nsRefPtr<MediaDataDecoder> mDecoder;
-  nsRefPtr<MediaTaskQueue> mTaskQueue;
   SharedDecoderProxy* mActiveProxy;
   MediaDataDecoderCallback* mActiveCallback;
   nsAutoPtr<MediaDataDecoderCallback> mCallback;
   bool mWaitForInternalDrain;
   Monitor mMonitor;
-  bool mDecoderReleasedResources;
 };
 
 class SharedDecoderProxy : public MediaDataDecoder
