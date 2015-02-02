@@ -4,13 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "EMEAudioDecoder.h"
+#include "EMEVideoDecoder.h"
+#include "GMPVideoEncodedFrameImpl.h"
 #include "mozilla/CDMProxy.h"
 
 namespace mozilla {
 
 void
-EMEAudioCallbackAdapter::Error(GMPErr aErr)
+EMEVideoCallbackAdapter::Error(GMPErr aErr)
 {
   if (aErr == GMPNoKeyErr) {
     // The GMP failed to decrypt a frame due to not having a key. This can
@@ -18,20 +19,30 @@ EMEAudioCallbackAdapter::Error(GMPErr aErr)
     NS_WARNING("GMP failed to decrypt due to lack of key");
     return;
   }
-  AudioCallbackAdapter::Error(aErr);
+  VideoCallbackAdapter::Error(aErr);
 }
 
 void
-EMEAudioDecoder::InitTags(nsTArray<nsCString>& aTags)
+EMEVideoDecoder::InitTags(nsTArray<nsCString>& aTags)
 {
-  GMPAudioDecoder::InitTags(aTags);
+  GMPVideoDecoder::InitTags(aTags);
   aTags.AppendElement(NS_ConvertUTF16toUTF8(mProxy->KeySystem()));
 }
 
 nsCString
-EMEAudioDecoder::GetNodeId()
+EMEVideoDecoder::GetNodeId()
 {
   return mProxy->GetNodeId();
+}
+
+GMPUniquePtr<GMPVideoEncodedFrame>
+EMEVideoDecoder::CreateFrame(mp4_demuxer::MP4Sample* aSample)
+{
+  GMPUniquePtr<GMPVideoEncodedFrame> frame = GMPVideoDecoder::CreateFrame(aSample);
+  if (frame && aSample->crypto.valid) {
+    static_cast<gmp::GMPVideoEncodedFrameImpl*>(frame.get())->InitCrypto(aSample->crypto);
+  }
+  return frame;
 }
 
 } // namespace mozilla
