@@ -1197,11 +1197,11 @@ struct EmptyShape : public js::Shape
      * shape if none was found.
      */
     static Shape *getInitialShape(ExclusiveContext *cx, const Class *clasp,
-                                  TaggedProto proto, JSObject *metadata,
-                                  JSObject *parent, size_t nfixed, uint32_t objectFlags = 0);
+                                  TaggedProto proto, JSObject *parent,
+                                  JSObject *metadata, size_t nfixed, uint32_t objectFlags = 0);
     static Shape *getInitialShape(ExclusiveContext *cx, const Class *clasp,
-                                  TaggedProto proto, JSObject *metadata,
-                                  JSObject *parent, gc::AllocKind kind, uint32_t objectFlags = 0);
+                                  TaggedProto proto, JSObject *parent,
+                                  JSObject *metadata, gc::AllocKind kind, uint32_t objectFlags = 0);
 
     /*
      * Reinsert an alternate initial shape, to be returned by future
