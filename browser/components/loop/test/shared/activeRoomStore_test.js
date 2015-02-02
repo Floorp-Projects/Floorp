@@ -657,6 +657,16 @@ describe("loop.store.ActiveRoomStore", function () {
     });
   });
 
+  describe("#receivingScreenShare", function() {
+    it("should save the state", function() {
+      store.receivingScreenShare(new sharedActions.ReceivingScreenShare({
+        receiving: true
+      }));
+
+      expect(store.getStoreState().receivingScreenShare).eql(true);
+    });
+  });
+
   describe("#remotePeerConnected", function() {
     it("should set the state to `HAS_PARTICIPANTS`", function() {
       store.remotePeerConnected();

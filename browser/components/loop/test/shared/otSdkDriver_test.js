@@ -12,13 +12,15 @@ describe("loop.OTSdkDriver", function () {
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
   var sandbox;
   var dispatcher, driver, publisher, sdk, session, sessionData;
-  var fakeLocalElement, fakeRemoteElement, publisherConfig, fakeEvent;
+  var fakeLocalElement, fakeRemoteElement, fakeScreenElement;
+  var publisherConfig, fakeEvent;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
 
     fakeLocalElement = {fake: 1};
     fakeRemoteElement = {fake: 2};
+    fakeScreenElement = {fake: 3};
     fakeEvent = {
       preventDefault: sinon.stub()
     };
@@ -290,6 +292,7 @@ describe("loop.OTSdkDriver", function () {
 
       dispatcher.dispatch(new sharedActions.SetupStreamElements({
         getLocalElementFunc: function() {return fakeLocalElement;},
+        getScreenShareElementFunc: function() {return fakeScreenElement;},
         getRemoteElementFunc: function() {return fakeRemoteElement;},
         publisherConfig: publisherConfig
       }));
@@ -353,16 +356,50 @@ describe("loop.OTSdkDriver", function () {
         });
     });
 
-    describe("streamCreated", function() {
+    describe("streamCreated (publisher/local)", function() {
+      it("should dispatch a VideoDimensionsChanged action", function() {
+        var fakeStream = {
+          hasVideo: true,
+          videoType: "camera",
+          videoDimensions: {width: 1, height: 2}
+        };
+
+        publisher.trigger("streamCreated", {stream: fakeStream});
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.VideoDimensionsChanged({
+            isLocal: true,
+            videoType: "camera",
+            dimensions: {width: 1, height: 2}
+          }));
+      });
+    });
+
+    describe("streamCreated (session/remote)", function() {
       var fakeStream;
 
       beforeEach(function() {
         fakeStream = {
-          fakeStream: 3
+          hasVideo: true,
+          videoType: "camera",
+          videoDimensions: {width: 1, height: 2}
         };
       });
 
-      it("should subscribe to the stream", function() {
+      it("should dispatch a VideoDimensionsChanged action", function() {
+        session.trigger("streamCreated", {stream: fakeStream});
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.VideoDimensionsChanged({
+            isLocal: false,
+            videoType: "camera",
+            dimensions: {width: 1, height: 2}
+          }));
+      });
+
+      it("should subscribe to a camera stream", function() {
         session.trigger("streamCreated", {stream: fakeStream});
 
         sinon.assert.calledOnce(session.subscribe);
@@ -370,14 +407,84 @@ describe("loop.OTSdkDriver", function () {
           fakeStream, fakeRemoteElement, publisherConfig);
       });
 
+      it("should subscribe to a screen sharing stream", function() {
+        fakeStream.videoType = "screen";
+
+        session.trigger("streamCreated", {stream: fakeStream});
+
+        sinon.assert.calledOnce(session.subscribe);
+        sinon.assert.calledWithExactly(session.subscribe,
+          fakeStream, fakeScreenElement, publisherConfig);
+      });
+
       it("should dispach a mediaConnected action if both streams are up", function() {
         driver._publishedLocalStream = true;
 
         session.trigger("streamCreated", {stream: fakeStream});
 
-        sinon.assert.calledOnce(dispatcher.dispatch);
+        // Called twice due to the VideoDimensionsChanged above.
+        sinon.assert.calledTwice(dispatcher.dispatch);
         sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "mediaConnected"));
+      });
+
+      it("should not dispatch a mediaConnected action for screen sharing streams",
+        function() {
+          driver._publishedLocalStream = true;
+          fakeStream.videoType = "screen";
+
+          session.trigger("streamCreated", {stream: fakeStream});
+
+          sinon.assert.neverCalledWithMatch(dispatcher.dispatch,
+            sinon.match.hasOwn("name", "mediaConnected"));
+        });
+
+      it("should not dispatch a ReceivingScreenShare action for camera streams",
+        function() {
+          session.trigger("streamCreated", {stream: fakeStream});
+
+          sinon.assert.neverCalledWithMatch(dispatcher.dispatch,
+            new sharedActions.ReceivingScreenShare({receiving: true}));
+        });
+
+      it("should dispatch a ReceivingScreenShare action for screen sharing streams",
+        function() {
+          fakeStream.videoType = "screen";
+
+          session.trigger("streamCreated", {stream: fakeStream});
+
+          // Called twice due to the VideoDimensionsChanged above.
+          sinon.assert.calledTwice(dispatcher.dispatch);
+          sinon.assert.calledWithMatch(dispatcher.dispatch,
+            new sharedActions.ReceivingScreenShare({receiving: true}));
+        });
+    });
+
+    describe("streamDestroyed", function() {
+      var fakeStream;
+
+      beforeEach(function() {
+        fakeStream = {
+          videoType: "screen"
+        };
+      });
+
+      it("should dispatch a ReceivingScreenShare action", function() {
+        session.trigger("streamDestroyed", {stream: fakeStream});
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ReceivingScreenShare({
+            receiving: false
+          }));
+      });
+
+      it("should not dispatch an action if the videoType is camera", function() {
+        fakeStream.videoType = "camera";
+
+        session.trigger("streamDestroyed", {stream: fakeStream});
+
+        sinon.assert.notCalled(dispatcher.dispatch);
       });
     });
 
@@ -415,8 +522,8 @@ describe("loop.OTSdkDriver", function () {
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithMatch(dispatcher.dispatch,
-          sinon.match.hasOwn("name", "videoDimensionsChanged"))
-      })
+          sinon.match.hasOwn("name", "videoDimensionsChanged"));
+      });
     });
 
     describe("connectionCreated", function() {

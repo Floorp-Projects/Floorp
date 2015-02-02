@@ -219,6 +219,13 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Used to notify that a shared screen is being received (or not).
+     */
+    ReceivingScreenShare: Action.define("receivingScreenShare", {
+      receiving: Boolean
+    }),
+
+    /**
      * Creates a new room.
      * XXX: should move to some roomActions module - refs bug 1079284
      */
