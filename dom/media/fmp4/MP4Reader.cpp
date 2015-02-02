@@ -117,9 +117,6 @@ MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
   , mIsEncrypted(false)
   , mIndexReady(false)
   , mDemuxerMonitor("MP4 Demuxer")
-#if defined(XP_WIN)
-  , mDormantEnabled(Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
-#endif
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   MOZ_COUNT_CTOR(MP4Reader);
@@ -255,15 +252,15 @@ private:
 #endif
 
 void MP4Reader::RequestCodecResource() {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
-  if (mVideo.mDecoder) {
+#ifdef MOZ_GONK_MEDIACODEC
+  if(mVideo.mDecoder) {
     mVideo.mDecoder->AllocateMediaResources();
   }
 #endif
 }
 
 bool MP4Reader::IsWaitingOnCodecResource() {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
+#ifdef MOZ_GONK_MEDIACODEC
   return mVideo.mDecoder && mVideo.mDecoder->IsWaitingMediaResources();
 #endif
   return false;
@@ -449,8 +446,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     mVideo.mCallback = new DecoderCallback(this, kVideo);
     if (mSharedDecoderManager) {
       mVideo.mDecoder =
-        mSharedDecoderManager->CreateVideoDecoder(mPlatform,
-                                                  video,
+        mSharedDecoderManager->CreateVideoDecoder(video,
                                                   mLayersBackendType,
                                                   mDecoder->GetImageContainer(),
                                                   mVideo.mTaskQueue,
@@ -1005,20 +1001,15 @@ MP4Reader::GetBuffered(dom::TimeRanges* aBuffered)
 
 bool MP4Reader::IsDormantNeeded()
 {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
-  return
-#if defined(XP_WIN)
-        mDormantEnabled &&
-#endif
-        mVideo.mDecoder &&
-        mVideo.mDecoder->IsDormantNeeded();
+#ifdef MOZ_GONK_MEDIACODEC
+  return mVideo.mDecoder && mVideo.mDecoder->IsDormantNeeded();
 #endif
   return false;
 }
 
 void MP4Reader::ReleaseMediaResources()
 {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
+#ifdef MOZ_GONK_MEDIACODEC
   // Before freeing a video codec, all video buffers needed to be released
   // even from graphics pipeline.
   VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
@@ -1033,7 +1024,7 @@ void MP4Reader::ReleaseMediaResources()
 
 void MP4Reader::NotifyResourcesStatusChanged()
 {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
+#ifdef MOZ_GONK_MEDIACODEC
   if (mDecoder) {
     mDecoder->NotifyWaitingForResourcesStatusChanged();
   }
@@ -1052,7 +1043,7 @@ MP4Reader::SetIdle()
 void
 MP4Reader::SetSharedDecoderManager(SharedDecoderManager* aManager)
 {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
+#ifdef MOZ_GONK_MEDIACODEC
   mSharedDecoderManager = aManager;
 #endif
 }
