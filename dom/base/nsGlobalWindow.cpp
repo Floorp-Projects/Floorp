@@ -4413,7 +4413,7 @@ nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCach
   return rv.ErrorCode();
 }
 
-nsIDOMCrypto*
+Crypto*
 nsGlobalWindow::GetCrypto(ErrorResult& aError)
 {
   FORWARD_TO_INNER_OR_THROW(GetCrypto, (aError), aError, nullptr);

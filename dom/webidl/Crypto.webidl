@@ -9,8 +9,7 @@
 
 [NoInterfaceObject]
 interface GlobalCrypto {
-  //[Throws] readonly attribute Crypto crypto;
-  [Throws] readonly attribute nsIDOMCrypto crypto;
+  [Throws] readonly attribute Crypto crypto;
 };
 
 //[Exposed=(Window,Worker)]
