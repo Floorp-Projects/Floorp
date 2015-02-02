@@ -19,43 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
 /**
- * Waits for all pending async statements on the default connection.
- *
- * @return {Promise}
- * @resolves When all pending async statements finished.
- * @rejects Never.
- *
- * @note The result is achieved by asynchronously executing a query requiring
- *       a write lock.  Since all statements on the same connection are
- *       serialized, the end of this write operation means that all writes are
- *       complete.  Note that WAL makes so that writers don't block readers, but
- *       this is a problem only across different connections.
- */
-function promiseAsyncUpdates()
-{
-  let deferred = Promise.defer();
-
-  let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                              .DBConnection;
-  let begin = db.createAsyncStatement("BEGIN EXCLUSIVE");
-  begin.executeAsync();
-  begin.finalize();
-
-  let commit = db.createAsyncStatement("COMMIT");
-  commit.executeAsync({
-    handleResult: function() {},
-    handleError: function() {},
-    handleCompletion: function(aReason)
-    {
-      deferred.resolve();
-    }
-  });
-  commit.finalize();
-
-  return deferred.promise;
-}
-
-/**
  * Returns a moz_places field value for a url.
  *
  * @param aURI
