@@ -174,7 +174,7 @@ UnboxedPlainObject::convertToNative(JSContext *cx)
 
     AutoValueVector values(cx);
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &PlainObject::class_, proto,
-                                                      getMetadata(), getParent(), nfixed,
+                                                      getParent(), getMetadata(), nfixed,
                                                       lastProperty()->getObjectFlags()));
     if (!shape)
         return false;
@@ -635,8 +635,8 @@ js::TryConvertToUnboxedLayout(JSContext *cx, Shape *templateShape,
     // Get an empty shape which we can use for the preliminary objects.
     Shape *newShape = EmptyShape::getInitialShape(cx, &UnboxedPlainObject::class_,
                                                   type->proto(),
-                                                  templateShape->getObjectMetadata(),
                                                   templateShape->getObjectParent(),
+                                                  templateShape->getObjectMetadata(),
                                                   templateShape->getObjectFlags());
     if (!newShape) {
         cx->clearPendingException();
