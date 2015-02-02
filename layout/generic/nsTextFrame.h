@@ -582,7 +582,8 @@ protected:
                       const nscolor& aForegroundColor,
                       const nsCharClipDisplayItem::ClipEdges& aClipEdges,
                       nscoord aLeftSideOffset,
-                      gfxRect& aBoundingBox);
+                      gfxRect& aBoundingBox,
+                      uint32_t aBlurFlags);
 
   void PaintShadows(nsCSSShadowArray* aShadow,
                     uint32_t aOffset, uint32_t aLength,

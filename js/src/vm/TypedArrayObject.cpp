@@ -305,10 +305,10 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (!obj)
             return nullptr;
 
-        types::TypeObject *type = cx->getNewType(obj->getClass(), TaggedProto(proto.get()));
-        if (!type)
+        types::ObjectGroup *group = cx->getNewGroup(obj->getClass(), TaggedProto(proto.get()));
+        if (!group)
             return nullptr;
-        obj->setType(type);
+        obj->setGroup(group);
 
         return &obj->as<TypedArrayObject>();
     }
@@ -317,7 +317,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     makeTypedInstance(JSContext *cx, uint32_t len, gc::AllocKind allocKind)
     {
         const Class *clasp = instanceClass();
-        if (len * sizeof(NativeType) >= TypedArrayObject::SINGLETON_TYPE_BYTE_LENGTH) {
+        if (len * sizeof(NativeType) >= TypedArrayObject::SINGLETON_BYTE_LENGTH) {
             JSObject *obj = NewBuiltinClassInstance(cx, clasp, allocKind, SingletonObject);
             if (!obj)
                 return nullptr;
@@ -327,14 +327,14 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         jsbytecode *pc;
         RootedScript script(cx, cx->currentScript(&pc));
         NewObjectKind newKind = script
-                                ? UseNewTypeForInitializer(script, pc, clasp)
+                                ? UseSingletonForInitializer(script, pc, clasp)
                                 : GenericObject;
         RootedObject obj(cx, NewBuiltinClassInstance(cx, clasp, allocKind, newKind));
         if (!obj)
             return nullptr;
 
         if (script) {
-            if (!types::SetInitializerObjectType(cx, script, pc, obj, newKind))
+            if (!types::SetInitializerObjectGroup(cx, script, pc, obj, newKind))
                 return nullptr;
         }
 
@@ -968,13 +968,13 @@ TypedArrayObjectTemplate<double>::getIndexValue(JSObject *tarray, uint32_t index
 static NewObjectKind
 DataViewNewObjectKind(JSContext *cx, uint32_t byteLength, JSObject *proto)
 {
-    if (!proto && byteLength >= TypedArrayObject::SINGLETON_TYPE_BYTE_LENGTH)
+    if (!proto && byteLength >= TypedArrayObject::SINGLETON_BYTE_LENGTH)
         return SingletonObject;
     jsbytecode *pc;
     JSScript *script = cx->currentScript(&pc);
     if (!script)
         return GenericObject;
-    return types::UseNewTypeForInitializer(script, pc, &DataViewObject::class_);
+    return types::UseSingletonForInitializer(script, pc, &DataViewObject::class_);
 }
 
 inline DataViewObject *
@@ -1000,17 +1000,17 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
         return nullptr;
 
     if (proto) {
-        types::TypeObject *type = cx->getNewType(&class_, TaggedProto(proto));
-        if (!type)
+        types::ObjectGroup *group = cx->getNewGroup(&class_, TaggedProto(proto));
+        if (!group)
             return nullptr;
-        obj->setType(type);
-    } else if (byteLength >= TypedArrayObject::SINGLETON_TYPE_BYTE_LENGTH) {
-        MOZ_ASSERT(obj->hasSingletonType());
+        obj->setGroup(group);
+    } else if (byteLength >= TypedArrayObject::SINGLETON_BYTE_LENGTH) {
+        MOZ_ASSERT(obj->isSingleton());
     } else {
         jsbytecode *pc;
         RootedScript script(cx, cx->currentScript(&pc));
         if (script) {
-            if (!types::SetInitializerObjectType(cx, script, pc, obj, newKind))
+            if (!types::SetInitializerObjectGroup(cx, script, pc, obj, newKind))
                 return nullptr;
         }
     }

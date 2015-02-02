@@ -551,7 +551,7 @@ GetAnyCompartmentInZone(JS::Zone *zone);
  */
 namespace shadow {
 
-struct TypeObject {
+struct ObjectGroup {
     const Class *clasp;
     JSObject    *proto;
 };
@@ -573,12 +573,12 @@ public:
 };
 
 // This layout is shared by all objects except for Typed Objects (which still
-// have a shape and type).
+// have a shape and group).
 struct Object {
-    shadow::Shape      *shape;
-    shadow::TypeObject *type;
-    JS::Value          *slots;
-    void               *_1;
+    shadow::Shape       *shape;
+    shadow::ObjectGroup *group;
+    JS::Value           *slots;
+    void                *_1;
 
     size_t numFixedSlots() const { return shape->slotInfo >> Shape::FIXED_SLOTS_SHIFT; }
     JS::Value *fixedSlots() const {
@@ -628,7 +628,7 @@ extern JS_FRIEND_DATA(const js::Class* const) ObjectClassPtr;
 inline const js::Class *
 GetObjectClass(JSObject *obj)
 {
-    return reinterpret_cast<const shadow::Object*>(obj)->type->clasp;
+    return reinterpret_cast<const shadow::Object*>(obj)->group->clasp;
 }
 
 inline const JSClass *

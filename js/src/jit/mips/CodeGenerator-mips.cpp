@@ -1744,16 +1744,16 @@ CodeGeneratorMIPS::visitGuardShape(LGuardShape *guard)
 }
 
 void
-CodeGeneratorMIPS::visitGuardObjectType(LGuardObjectType *guard)
+CodeGeneratorMIPS::visitGuardObjectGroup(LGuardObjectGroup *guard)
 {
     Register obj = ToRegister(guard->input());
     Register tmp = ToRegister(guard->tempInt());
 
-    masm.loadPtr(Address(obj, JSObject::offsetOfType()), tmp);
+    masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), tmp);
     Assembler::Condition cond = guard->mir()->bailOnEquality()
                                 ? Assembler::Equal
                                 : Assembler::NotEqual;
-    bailoutCmpPtr(cond, tmp, ImmGCPtr(guard->mir()->typeObject()), guard->snapshot());
+    bailoutCmpPtr(cond, tmp, ImmGCPtr(guard->mir()->group()), guard->snapshot());
 }
 
 void

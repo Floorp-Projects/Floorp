@@ -39,6 +39,19 @@ function playElement(e) {
 function loadedAll(elementList) {
   elements = elementList;
 
+  // Log events for debugging.
+  var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                "waiting", "pause"];
+  function logEvent(e) {
+    info(e.target._name + ": got " + e.type);
+  }
+  elementList.forEach(function(element) {
+    events.forEach(function(evt) {
+      element.addEventListener(evt, logEvent, false);
+    });
+  });
+
   // Blow away the subframe
   document.body.removeChild(document.getElementById("frame"));
 
