@@ -379,8 +379,8 @@ enum MIRType
     MIRType_Elements,                  // An elements vector
     MIRType_Pointer,                   // An opaque pointer that receives no special treatment
     MIRType_Shape,                     // A Shape pointer.
-    MIRType_TypeObject,                // A TypeObject pointer.
-    MIRType_Last = MIRType_TypeObject,
+    MIRType_ObjectGroup,               // An ObjectGroup pointer.
+    MIRType_Last = MIRType_ObjectGroup,
     MIRType_Float32x4 = MIRType_Float32 | (2 << VECTOR_SCALE_SHIFT),
     MIRType_Int32x4   = MIRType_Int32   | (2 << VECTOR_SCALE_SHIFT),
     MIRType_Doublex2  = MIRType_Double  | (1 << VECTOR_SCALE_SHIFT)

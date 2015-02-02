@@ -167,8 +167,8 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
     bool strict = callee->strict();
     const Class *clasp = strict ? &StrictArgumentsObject::class_ : &NormalArgumentsObject::class_;
 
-    RootedTypeObject type(cx, cx->getNewType(clasp, TaggedProto(proto.get())));
-    if (!type)
+    RootedObjectGroup group(cx, cx->getNewGroup(clasp, TaggedProto(proto.get())));
+    if (!group)
         return nullptr;
 
     JSObject *metadata = nullptr;
@@ -196,7 +196,7 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
     Rooted<ArgumentsObject *> obj(cx);
     JSObject *base = JSObject::create(cx, FINALIZE_KIND,
                                       GetInitialHeap(GenericObject, clasp),
-                                      shape, type);
+                                      shape, group);
     if (!base) {
         js_free(data);
         return nullptr;

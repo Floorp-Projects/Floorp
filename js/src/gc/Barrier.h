@@ -183,7 +183,7 @@ class Shape;
 class UnownedBaseShape;
 
 namespace types {
-struct TypeObject;
+struct ObjectGroup;
 }
 
 namespace jit {
@@ -232,7 +232,7 @@ template <> struct MapTypeToTraceKind<SharedArrayBufferObject>{ static const JSG
 template <> struct MapTypeToTraceKind<SharedTypedArrayObject>{ static const JSGCTraceKind kind = JSTRACE_OBJECT; };
 template <> struct MapTypeToTraceKind<UnownedBaseShape> { static const JSGCTraceKind kind = JSTRACE_BASE_SHAPE; };
 template <> struct MapTypeToTraceKind<jit::JitCode>     { static const JSGCTraceKind kind = JSTRACE_JITCODE; };
-template <> struct MapTypeToTraceKind<types::TypeObject>{ static const JSGCTraceKind kind = JSTRACE_TYPE_OBJECT; };
+template <> struct MapTypeToTraceKind<types::ObjectGroup> { static const JSGCTraceKind kind = JSTRACE_OBJECT_GROUP; };
 
 // Direct value access used by the write barriers and the jits.
 void
@@ -806,7 +806,7 @@ typedef HeapPtr<PropertyName*> HeapPtrPropertyName;
 typedef HeapPtr<Shape*> HeapPtrShape;
 typedef HeapPtr<UnownedBaseShape*> HeapPtrUnownedBaseShape;
 typedef HeapPtr<jit::JitCode*> HeapPtrJitCode;
-typedef HeapPtr<types::TypeObject*> HeapPtrTypeObject;
+typedef HeapPtr<types::ObjectGroup*> HeapPtrObjectGroup;
 
 typedef PreBarriered<Value> PreBarrieredValue;
 typedef RelocatablePtr<Value> RelocatableValue;
@@ -827,7 +827,7 @@ typedef ReadBarriered<ScriptSourceObject*> ReadBarrieredScriptSourceObject;
 typedef ReadBarriered<Shape*> ReadBarrieredShape;
 typedef ReadBarriered<UnownedBaseShape*> ReadBarrieredUnownedBaseShape;
 typedef ReadBarriered<jit::JitCode*> ReadBarrieredJitCode;
-typedef ReadBarriered<types::TypeObject*> ReadBarrieredTypeObject;
+typedef ReadBarriered<types::ObjectGroup*> ReadBarrieredObjectGroup;
 typedef ReadBarriered<JSAtom*> ReadBarrieredAtom;
 typedef ReadBarriered<JS::Symbol*> ReadBarrieredSymbol;
 

@@ -91,7 +91,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     void visitReturn(MReturn *ret);
     void lowerPhi(MPhi *phi);
     void visitGuardShape(MGuardShape *ins);
-    void visitGuardObjectType(MGuardObjectType *ins);
+    void visitGuardObjectGroup(MGuardObjectGroup *ins);
     void visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins);
     void visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32 *ins);
     void visitAsmJSLoadHeap(MAsmJSLoadHeap *ins);

@@ -416,7 +416,7 @@ bool
 str_split(JSContext *cx, unsigned argc, Value *vp);
 
 JSObject *
-str_split_string(JSContext *cx, HandleTypeObject type, HandleString str, HandleString sep);
+str_split_string(JSContext *cx, HandleObjectGroup group, HandleString str, HandleString sep);
 
 bool
 str_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp);
