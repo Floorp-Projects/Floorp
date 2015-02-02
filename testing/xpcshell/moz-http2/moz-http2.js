@@ -227,8 +227,8 @@ function handleRequest(req, res) {
     res.setHeader("X-Expected-MD5", md5);
   }
 
-  else if (u.pathname === "/post") {
-    if (req.method != "POST") {
+  else if (u.pathname === "/post" || u.pathname === "/patch") {
+    if (req.method != "POST" && req.method != "PATCH") {
       res.writeHead(405);
       res.end('Unexpected method: ' + req.method);
       return;
