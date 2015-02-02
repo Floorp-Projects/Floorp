@@ -83,7 +83,7 @@ MSG_DEF(JSMSG_MISSING_FUN_ARG,         2, JSEXN_TYPEERR, "missing argument {0} w
 MSG_DEF(JSMSG_NOT_NONNULL_OBJECT,      1, JSEXN_TYPEERR, "{0} is not a non-null object")
 MSG_DEF(JSMSG_INVALID_DESCRIPTOR,      0, JSEXN_TYPEERR, "property descriptors must not specify a value or be writable when a getter or setter has been specified")
 MSG_DEF(JSMSG_OBJECT_NOT_EXTENSIBLE,   1, JSEXN_TYPEERR, "{0} is not extensible")
-MSG_DEF(JSMSG_CANT_REDEFINE_PROP,      1, JSEXN_TYPEERR, "can't redefine non-configurable property '{0}'")
+MSG_DEF(JSMSG_CANT_REDEFINE_PROP,      1, JSEXN_TYPEERR, "can't redefine non-configurable property {0}")
 MSG_DEF(JSMSG_CANT_APPEND_TO_ARRAY,    0, JSEXN_TYPEERR, "can't add elements past the end of an array if its length property is unwritable")
 MSG_DEF(JSMSG_CANT_REDEFINE_ARRAY_LENGTH, 0, JSEXN_TYPEERR, "can't redefine array length")
 MSG_DEF(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH, 0, JSEXN_TYPEERR, "can't define array index property past the end of an array with non-writable length")

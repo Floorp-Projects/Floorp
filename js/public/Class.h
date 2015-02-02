@@ -44,6 +44,92 @@ namespace JS {
 
 class AutoIdVector;
 
+/*
+ * Per ES6, the [[DefineOwnProperty]] internal method has three different
+ * possible outcomes:
+ *
+ * -   It can throw an exception (which we indicate by returning false).
+ *
+ * -   It can return true, indicating unvarnished success.
+ *
+ * -   It can return false, indicating "strict failure". The property could
+ *     not be defined. It's an error, but no exception was thrown.
+ *
+ * It's not just [[DefineOwnProperty]]: all the mutating internal methods have
+ * the same three outcomes. (The other affected internal methods are [[Set]],
+ * [[Delete]], [[SetPrototypeOf]], and [[PreventExtensions]].)
+ *
+ * If you think this design is awful, you're not alone.  But as it's the
+ * standard, we must represent these boolean "success" values somehow.
+ * ObjectOpSuccess is the class for this. It's like a bool, but when it's false
+ * it also stores an error code.
+ *
+ * Typical usage:
+ *
+ *     ObjectOpResult result;
+ *     if (!DefineProperty(cx, obj, id, ..., result))
+ *         return false;
+ *     if (!result)
+ *         return result.reportError(cx, id);
+ *
+ * Users don't have to call `result.report()`; another possible ending is:
+ *
+ *     argv.rval().setBoolean(bool(result));
+ *     return true;
+ */
+class ObjectOpResult
+{
+  private:
+    uint32_t code_;
+
+  public:
+    enum { OkCode = 0, Uninitialized = 0xffffffff };
+
+    ObjectOpResult() : code_(Uninitialized) {}
+
+    /* Return true if fail() was not called. */
+    bool ok() const {
+        MOZ_ASSERT(code_ != Uninitialized);
+        return code_ == OkCode;
+    }
+
+    explicit operator bool() const { return ok(); }
+
+    /* Set this ObjectOpResult to true and return true. */
+    bool succeed() {
+        code_ = OkCode;
+        return true;
+    }
+
+    /*
+     * Set this ObjectOpResult to false with an error code.
+     *
+     * Always returns true, as a convenience. Typical usage will be:
+     *
+     *     if (funny condition)
+     *         return result.fail(JSMSG_CANT_DO_THE_THINGS);
+     *
+     * The true return value indicates that no exception is pending, and it
+     * would be OK to ignore the failure and continue.
+     */
+    bool fail(uint32_t msg) {
+        MOZ_ASSERT(msg != OkCode);
+        code_ = msg;
+        return true;
+    }
+
+    /*
+     * Convenience method. Return true if ok() or if strict is false; otherwise
+     * throw a TypeError and return false.
+     */
+    bool checkStrict(JSContext *cx, HandleId id) {
+        return ok() || reportError(cx, id);
+    }
+
+    /* Throw an exception. Call this only if !ok(). */
+    JS_PUBLIC_API(bool) reportError(JSContext *cx, HandleId id);
+};
+
 }
 
 // JSClass operation signatures.

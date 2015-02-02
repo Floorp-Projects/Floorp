@@ -386,8 +386,7 @@ js::intrinsic_DefineDataProperty(JSContext *cx, unsigned argc, Value *vp)
 
     desc = PropDesc(value, writable, enumerable, configurable);
 
-    bool result;
-    return StandardDefineProperty(cx, obj, id, desc, true, &result);
+    return StandardDefineProperty(cx, obj, id, desc);
 }
 
 bool
