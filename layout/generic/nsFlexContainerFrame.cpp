@@ -3885,7 +3885,11 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
              "We gave flex item unconstrained available height, so it "
              "should be complete");
 
-  childReflowState.ApplyRelativePositioning(&aFramePos, aContainerWidth);
+  LogicalMargin offsets =
+    childReflowState.ComputedLogicalOffsets().ConvertTo(outerWM, wm);
+  nsHTMLReflowState::ApplyRelativePositioning(aItem.Frame(), outerWM,
+                                              offsets, &aFramePos,
+                                              aContainerWidth);
 
   FinishReflowChild(aItem.Frame(), aPresContext,
                     childDesiredSize, &childReflowState,
