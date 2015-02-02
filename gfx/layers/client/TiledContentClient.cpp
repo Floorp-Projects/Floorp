@@ -517,6 +517,7 @@ TileClient::TileClient(const TileClient& o)
   mManager = o.mManager;
   mInvalidFront = o.mInvalidFront;
   mInvalidBack = o.mInvalidBack;
+  mExpirationState = o.mExpirationState;
 }
 
 TileClient&
@@ -536,6 +537,7 @@ TileClient::operator=(const TileClient& o)
   mManager = o.mManager;
   mInvalidFront = o.mInvalidFront;
   mInvalidBack = o.mInvalidBack;
+  mExpirationState = o.mExpirationState;
   return *this;
 }
 
