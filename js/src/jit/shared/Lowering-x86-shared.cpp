@@ -44,11 +44,11 @@ LIRGeneratorX86Shared::visitGuardShape(MGuardShape *ins)
 }
 
 void
-LIRGeneratorX86Shared::visitGuardObjectType(MGuardObjectType *ins)
+LIRGeneratorX86Shared::visitGuardObjectGroup(MGuardObjectGroup *ins)
 {
     MOZ_ASSERT(ins->obj()->type() == MIRType_Object);
 
-    LGuardObjectType *guard = new(alloc()) LGuardObjectType(useRegisterAtStart(ins->obj()));
+    LGuardObjectGroup *guard = new(alloc()) LGuardObjectGroup(useRegisterAtStart(ins->obj()));
     assignSnapshot(guard, ins->bailoutKind());
     add(guard, ins);
     redefine(ins, ins->obj());

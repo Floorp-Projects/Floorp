@@ -584,7 +584,7 @@ class TypedObject : public JSObject
     }
 
     TypeDescr &typeDescr() const {
-        return type()->typeDescr();
+        return group()->typeDescr();
     }
 
     TypeDescr &maybeForwardedTypeDescr() const {

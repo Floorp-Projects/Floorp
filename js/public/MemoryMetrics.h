@@ -444,8 +444,8 @@ struct ZoneStats
     macro(Other,   IsLiveGCThing,  lazyScriptsGCHeap) \
     macro(Other,   NotLiveGCThing, lazyScriptsMallocHeap) \
     macro(Other,   IsLiveGCThing,  jitCodesGCHeap) \
-    macro(Other,   IsLiveGCThing,  typeObjectsGCHeap) \
-    macro(Other,   NotLiveGCThing, typeObjectsMallocHeap) \
+    macro(Other,   IsLiveGCThing,  objectGroupsGCHeap) \
+    macro(Other,   NotLiveGCThing, objectGroupsMallocHeap) \
     macro(Other,   NotLiveGCThing, typePool) \
     macro(Other,   NotLiveGCThing, baselineStubsOptimized) \
 

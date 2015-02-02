@@ -22,7 +22,7 @@ ArrayObject::setLength(ExclusiveContext *cx, uint32_t length)
 
     if (length > INT32_MAX) {
         /* Track objects with overflowing lengths in type information. */
-        types::MarkTypeObjectFlags(cx, this, types::OBJECT_FLAG_LENGTH_OVERFLOW);
+        types::MarkObjectGroupFlags(cx, this, types::OBJECT_FLAG_LENGTH_OVERFLOW);
     }
 
     getElementsHeader()->length = length;
@@ -30,25 +30,25 @@ ArrayObject::setLength(ExclusiveContext *cx, uint32_t length)
 
 /* static */ inline ArrayObject *
 ArrayObject::createArrayInternal(ExclusiveContext *cx, gc::AllocKind kind, gc::InitialHeap heap,
-                                 HandleShape shape, HandleTypeObject type)
+                                 HandleShape shape, HandleObjectGroup group)
 {
     // Create a new array and initialize everything except for its elements.
-    MOZ_ASSERT(shape && type);
-    MOZ_ASSERT(type->clasp() == shape->getObjectClass());
-    MOZ_ASSERT(type->clasp() == &ArrayObject::class_);
-    MOZ_ASSERT_IF(type->clasp()->finalize, heap == gc::TenuredHeap);
+    MOZ_ASSERT(shape && group);
+    MOZ_ASSERT(group->clasp() == shape->getObjectClass());
+    MOZ_ASSERT(group->clasp() == &ArrayObject::class_);
+    MOZ_ASSERT_IF(group->clasp()->finalize, heap == gc::TenuredHeap);
 
     // Arrays can use their fixed slots to store elements, so can't have shapes
     // which allow named properties to be stored in the fixed slots.
     MOZ_ASSERT(shape->numFixedSlots() == 0);
 
-    size_t nDynamicSlots = dynamicSlotsCount(0, shape->slotSpan(), type->clasp());
-    JSObject *obj = NewGCObject<CanGC>(cx, kind, nDynamicSlots, heap, type->clasp());
+    size_t nDynamicSlots = dynamicSlotsCount(0, shape->slotSpan(), group->clasp());
+    JSObject *obj = NewGCObject<CanGC>(cx, kind, nDynamicSlots, heap, group->clasp());
     if (!obj)
         return nullptr;
 
     static_cast<ArrayObject *>(obj)->shape_.init(shape);
-    static_cast<ArrayObject *>(obj)->type_.init(type);
+    static_cast<ArrayObject *>(obj)->group_.init(group);
 
     return &obj->as<ArrayObject>();
 }
@@ -67,10 +67,10 @@ ArrayObject::finishCreateArray(ArrayObject *obj, HandleShape shape)
 
 /* static */ inline ArrayObject *
 ArrayObject::createArray(ExclusiveContext *cx, gc::AllocKind kind, gc::InitialHeap heap,
-                         HandleShape shape, HandleTypeObject type,
+                         HandleShape shape, HandleObjectGroup group,
                          uint32_t length)
 {
-    ArrayObject *obj = createArrayInternal(cx, kind, heap, shape, type);
+    ArrayObject *obj = createArrayInternal(cx, kind, heap, shape, group);
     if (!obj)
         return nullptr;
 
@@ -84,7 +84,7 @@ ArrayObject::createArray(ExclusiveContext *cx, gc::AllocKind kind, gc::InitialHe
 
 /* static */ inline ArrayObject *
 ArrayObject::createArray(ExclusiveContext *cx, gc::InitialHeap heap,
-                         HandleShape shape, HandleTypeObject type,
+                         HandleShape shape, HandleObjectGroup group,
                          HeapSlot *elements)
 {
     // Use the smallest allocation kind for the array, as it can't have any
@@ -92,7 +92,7 @@ ArrayObject::createArray(ExclusiveContext *cx, gc::InitialHeap heap,
     // its fixed elements.
     gc::AllocKind kind = gc::FINALIZE_OBJECT0_BACKGROUND;
 
-    ArrayObject *obj = createArrayInternal(cx, kind, heap, shape, type);
+    ArrayObject *obj = createArrayInternal(cx, kind, heap, shape, group);
     if (!obj)
         return nullptr;
 
@@ -114,8 +114,8 @@ ArrayObject::createCopyOnWriteArray(ExclusiveContext *cx, gc::InitialHeap heap,
     // its fixed elements.
     gc::AllocKind kind = gc::FINALIZE_OBJECT0_BACKGROUND;
 
-    RootedTypeObject type(cx, sharedElementsOwner->type());
-    ArrayObject *obj = createArrayInternal(cx, kind, heap, shape, type);
+    RootedObjectGroup group(cx, sharedElementsOwner->group());
+    ArrayObject *obj = createArrayInternal(cx, kind, heap, shape, group);
     if (!obj)
         return nullptr;
 

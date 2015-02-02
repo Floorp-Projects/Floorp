@@ -198,7 +198,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitRound(LRound *lir);
     virtual void visitRoundF(LRoundF *lir);
     virtual void visitGuardShape(LGuardShape *guard);
-    virtual void visitGuardObjectType(LGuardObjectType *guard);
+    virtual void visitGuardObjectGroup(LGuardObjectGroup *guard);
     virtual void visitGuardClass(LGuardClass *guard);
     virtual void visitEffectiveAddress(LEffectiveAddress *ins);
     virtual void visitUDivOrMod(LUDivOrMod *ins);

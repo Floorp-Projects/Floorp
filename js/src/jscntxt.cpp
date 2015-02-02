@@ -116,7 +116,7 @@ js::ExistingCloneFunctionAtCallsite(const CallsiteCloneTable &table, JSFunction 
 {
     MOZ_ASSERT(fun->nonLazyScript()->shouldCloneAtCallsite());
     MOZ_ASSERT(!fun->nonLazyScript()->enclosingStaticScope());
-    MOZ_ASSERT(types::UseNewTypeForClone(fun));
+    MOZ_ASSERT(types::UseSingletonForClone(fun));
 
     /*
      * If we start allocating function objects in the nursery, then the callsite
