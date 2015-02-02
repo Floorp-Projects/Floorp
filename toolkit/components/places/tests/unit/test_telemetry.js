@@ -59,7 +59,7 @@ add_task(function test_execute()
     .getService(Ci.nsIObserver)
     .observe(null, "gather-telemetry", null);
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   // Test expiration probes.
   for (let i = 0; i < 2; i++) {

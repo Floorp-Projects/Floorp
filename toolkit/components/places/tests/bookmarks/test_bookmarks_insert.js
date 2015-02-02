@@ -277,7 +277,7 @@ add_task(function* create_bookmark_frecency() {
                                                 title: "a bookmark" });
   checkBookmarkObject(bm);
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   Assert.ok(frecencyForUrl(bm.url) > 0, "Check frecency has been updated")
 });
 
