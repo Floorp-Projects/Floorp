@@ -43,6 +43,11 @@
     margin-right: 16px;
   }
 
+.btn-screen-share-entry {
+  float: right !important;
+  border-left: 1px solid #5a5a5a;
+}
+
 .conversation-toolbar-btn-box {
   border-right: 1px solid #5a5a5a;
 }
@@ -147,11 +152,11 @@
 }
 
 /* Common media control buttons behavior */
-.conversation-toolbar .media-control {
+.conversation-toolbar .transparent-button {
   background-color: transparent;
   opacity: 1;
 }
-.conversation-toolbar .media-control:hover {
+.conversation-toolbar .transparent-button:hover {
   background-color: rgba(255,255,255,.35);
   opacity: 1;
 }
@@ -190,6 +195,21 @@
   .btn-mute-video.muted {
     background-image: url(../img/facemute-14x14@2x.png);
   }
+}
+
+/* Screen share button */
+.btn-screen-share {
+  /* XXX Replace this with the real button: bug 1126286 */
+  background-image: url(../img/video-inverse-14x14.png);
+}
+
+.btn-screen-share.active {
+  background-color: #6CB23E;
+  opacity: 1;
+}
+
+.btn-screen-share.disabled {
+  /* XXX Add css here for disabled state: bug 1126286 */
 }
 
 .fx-embedded .remote_wrapper {

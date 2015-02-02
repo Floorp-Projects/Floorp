@@ -14,6 +14,7 @@ loop.roomViews = (function(mozL10n) {
   var sharedActions = loop.shared.actions;
   var sharedMixins = loop.shared.mixins;
   var ROOM_STATES = loop.store.ROOM_STATES;
+  var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
   var sharedViews = loop.shared.views;
 
   /**
@@ -169,7 +170,8 @@ loop.roomViews = (function(mozL10n) {
     ],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      mozLoop: React.PropTypes.object.isRequired,
     },
 
     _renderInvitationOverlay: function() {
@@ -193,6 +195,7 @@ loop.roomViews = (function(mozL10n) {
             publishVideo: !this.state.videoMuted
           }),
           getLocalElementFunc: this._getElement.bind(this, ".local"),
+          getScreenShareElementFunc: this._getElement.bind(this, ".screen"),
           getRemoteElementFunc: this._getElement.bind(this, ".remote")
         }));
       }
@@ -238,6 +241,11 @@ loop.roomViews = (function(mozL10n) {
         "room-preview": this.state.roomState !== ROOM_STATES.HAS_PARTICIPANTS
       });
 
+      var screenShareData = {
+        state: this.state.screenSharingState,
+        visible: this.props.mozLoop.getLoopPref("screenshare.enabled")
+      };
+
       switch(this.state.roomState) {
         case ROOM_STATES.FAILED:
         case ROOM_STATES.FULL: {
@@ -269,12 +277,15 @@ loop.roomViews = (function(mozL10n) {
                       <div className="video_inner remote"></div>
                     </div>
                     <div className={localStreamClasses}></div>
+                    <div className="screen hide"></div>
                   </div>
                   <sharedViews.ConversationToolbar
+                    dispatcher={this.props.dispatcher}
                     video={{enabled: !this.state.videoMuted, visible: true}}
                     audio={{enabled: !this.state.audioMuted, visible: true}}
                     publishStream={this.publishStream}
-                    hangup={this.leaveRoom} />
+                    hangup={this.leaveRoom}
+                    screenShare={screenShareData} />
                 </div>
               </div>
             </div>

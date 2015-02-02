@@ -160,6 +160,9 @@ loop.shared.actions = (function() {
       publisherConfig: Object,
       // The local stream element
       getLocalElementFunc: Function,
+      // The screen share element; optional until all conversation
+      // types support it.
+      // getScreenShareElementFunc: Function,
       // The remote stream element
       getRemoteElementFunc: Function
     }),
@@ -193,6 +196,26 @@ loop.shared.actions = (function() {
       type: String,
       // Whether or not to enable the stream.
       enabled: Boolean
+    }),
+
+    /**
+     * Used to start a screen share.
+     */
+    StartScreenShare: Action.define("startScreenShare", {
+    }),
+
+    /**
+     * Used to end a screen share.
+     */
+    EndScreenShare: Action.define("endScreenShare", {
+    }),
+
+    /**
+     * Used to notifiy that screen sharing is active or not.
+     */
+    ScreenSharingState: Action.define("screenSharingState", {
+      // One of loop.shared.utils.SCREEN_SHARE_STATES.
+      state: String
     }),
 
     /**
