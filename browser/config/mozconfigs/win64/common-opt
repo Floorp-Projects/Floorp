@@ -25,5 +25,7 @@ export MOZILLA_OFFICIAL=1
 
 export MOZ_TELEMETRY_REPORTING=1
 
+. $topsrcdir/build/win64/mozconfig.vs2013
+
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1

@@ -4,5 +4,17 @@
 "digest": "bb345b0e700ffab4d09436981f14b5de84da55a3f18a7f09ebc4364a4488acdeab8d46f447b12ac70f2da1444a68b8ce8b8675f0dae2ccf845e966d1df0f0869",
 "algorithm": "sha512",
 "filename": "mozmake.exe"
+},
+{
+"size": 176,
+"digest": "2809058907ac5eefdc394113d2e4fe76ba559ac61c2eca2f88e7a12a74bdf44a15d9039fa8aa229f7362a14b67d67395063f68147ae098beac5dfcc78aff98da",
+"algorithm": "sha512",
+"filename": "setup.sh"
+},
+{
+"size": 166506,
+"digest": "f3c214fd571f21d64937584645212f8d7c2d12c9016be613bd2bc9cecd80b3d52a741423cc1ca69bd85fb924c3d0572c85a1734d12db1616df37abcc397e9252",
+"algorithm": "sha512",
+"filename": "sccache.tar.bz2"
 }
 ]
