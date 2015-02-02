@@ -5973,8 +5973,6 @@ EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFrameP
     Rooted<StaticEvalObject *> staticScope(cx, StaticEvalObject::create(cx, js::NullPtr()));
     if (!staticScope)
         return false;
-    if (frame && frame.script()->strict())
-        staticScope->setStrict();
     CompileOptions options(cx);
     options.setCompileAndGo(true)
            .setForEval(true)
@@ -5991,6 +5989,9 @@ EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFrameP
                                                     /* staticLevel = */ frame ? 1 : 0));
     if (!script)
         return false;
+
+    if (script->strict())
+        staticScope->setStrict();
 
     script->setActiveEval();
     ExecuteType type = !frame ? EXECUTE_DEBUG_GLOBAL : EXECUTE_DEBUG;
