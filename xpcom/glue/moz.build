@@ -114,3 +114,8 @@ if CONFIG['ENABLE_TESTS']:
     DIRS += ['tests/gtest']
 
 FAIL_ON_WARNINGS = True
+
+# Include fallible for third party code using the xpcom glue
+USE_LIBS += [
+    'fallible',
+]

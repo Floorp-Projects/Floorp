@@ -581,7 +581,7 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
         GetAndFlushUnderlyingGLErrors();
 
         if (mFakeVertexAttrib0BufferStatus == WebGLVertexAttrib0Status::EmulatedInitializedArray) {
-            UniquePtr<GLfloat[]> array(new ((fallible_t())) GLfloat[4 * vertexCount]);
+            UniquePtr<GLfloat[]> array(new (fallible) GLfloat[4 * vertexCount]);
             if (!array) {
                 ErrorOutOfMemory("Fake attrib0 array.");
                 return false;
