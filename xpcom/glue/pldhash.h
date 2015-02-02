@@ -244,7 +244,7 @@ public:
   void Finish();
 
   PLDHashEntryHdr* Search(const void* aKey);
-  PLDHashEntryHdr* Add(const void* aKey);
+  PLDHashEntryHdr* Add(const void* aKey, const mozilla::fallible_t&);
   void Remove(const void* aKey);
 
   void RawRemove(PLDHashEntryHdr* aEntry);
@@ -481,7 +481,7 @@ PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey);
 /*
  * To add an entry identified by key to table, call:
  *
- *  entry = PL_DHashTableAdd(table, key);
+ *  entry = PL_DHashTableAdd(table, key, mozilla::fallible);
  *
  * If entry is null upon return, then either (a) the table is severely
  * overloaded and memory can't be allocated for entry storage, or (b)
@@ -493,6 +493,14 @@ PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey);
  * initialize the key and value parts of the entry sub-type, if they have not
  * been set already (i.e. if entry was not already in the table, and if the
  * optional initEntry hook was not used).
+ */
+PLDHashEntryHdr* PL_DHASH_FASTCALL
+PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey,
+                 const mozilla::fallible_t&);
+
+/*
+ * This is like the other PL_DHashTableAdd() function, but infallible, and so
+ * never returns null.
  */
 PLDHashEntryHdr* PL_DHASH_FASTCALL
 PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey);
