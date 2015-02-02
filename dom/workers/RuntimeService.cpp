@@ -400,8 +400,8 @@ UpdateCommonJSGCMemoryOption(RuntimeService* aRuntimeService,
 }
 
 void
-UpdatOtherJSGCMemoryOption(RuntimeService* aRuntimeService,
-                           JSGCParamKey aKey, uint32_t aValue)
+UpdateOtherJSGCMemoryOption(RuntimeService* aRuntimeService,
+                            JSGCParamKey aKey, uint32_t aValue)
 {
   AssertIsOnMainThread();
 
@@ -466,14 +466,14 @@ LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */)
       uint32_t value = (prefValue <= 0 || prefValue >= 0x1000) ?
                        uint32_t(-1) :
                        uint32_t(prefValue) * 1024 * 1024;
-      UpdatOtherJSGCMemoryOption(rts, JSGC_MAX_BYTES, value);
+      UpdateOtherJSGCMemoryOption(rts, JSGC_MAX_BYTES, value);
       continue;
     }
 
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "high_water_mark");
     if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 1)) {
       int32_t prefValue = GetWorkerPref(matchName, 128);
-      UpdatOtherJSGCMemoryOption(rts, JSGC_MAX_MALLOC_BYTES,
+      UpdateOtherJSGCMemoryOption(rts, JSGC_MAX_MALLOC_BYTES,
                                  uint32_t(prefValue) * 1024 * 1024);
       continue;
     }
@@ -538,7 +538,7 @@ LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */)
       int32_t prefValue = GetWorkerPref(matchName, -1);
       uint32_t value =
         (prefValue <= 0 || prefValue >= 100000) ? 0 : uint32_t(prefValue);
-      UpdatOtherJSGCMemoryOption(rts, JSGC_SLICE_TIME_BUDGET, value);
+      UpdateOtherJSGCMemoryOption(rts, JSGC_SLICE_TIME_BUDGET, value);
       continue;
     }
 
@@ -546,7 +546,7 @@ LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */)
     if (memPrefName == matchName ||
         (gRuntimeServiceDuringInit && index == 10)) {
       bool prefValue = GetWorkerPref(matchName, false);
-      UpdatOtherJSGCMemoryOption(rts, JSGC_DYNAMIC_HEAP_GROWTH,
+      UpdateOtherJSGCMemoryOption(rts, JSGC_DYNAMIC_HEAP_GROWTH,
                                  prefValue ? 0 : 1);
       continue;
     }
@@ -555,7 +555,7 @@ LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */)
     if (memPrefName == matchName ||
         (gRuntimeServiceDuringInit && index == 11)) {
       bool prefValue = GetWorkerPref(matchName, false);
-      UpdatOtherJSGCMemoryOption(rts, JSGC_DYNAMIC_MARK_SLICE,
+      UpdateOtherJSGCMemoryOption(rts, JSGC_DYNAMIC_MARK_SLICE,
                                  prefValue ? 0 : 1);
       continue;
     }
@@ -571,6 +571,15 @@ LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */)
     if (memPrefName == matchName ||
         (gRuntimeServiceDuringInit && index == 13)) {
       UpdateCommonJSGCMemoryOption(rts, matchName, JSGC_MAX_EMPTY_CHUNK_COUNT);
+      continue;
+    }
+
+    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_compacting");
+    if (memPrefName == matchName ||
+        (gRuntimeServiceDuringInit && index == 14)) {
+      bool prefValue = GetWorkerPref(matchName, false);
+      UpdateOtherJSGCMemoryOption(rts, JSGC_COMPACTING_ENABLED,
+                                 prefValue ? 0 : 1);
       continue;
     }
 

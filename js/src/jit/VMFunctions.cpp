@@ -287,16 +287,16 @@ template bool StringsEqual<false>(JSContext *cx, HandleString lhs, HandleString 
 JSObject*
 NewInitObject(JSContext *cx, HandlePlainObject templateObject)
 {
-    NewObjectKind newKind = templateObject->hasSingletonType() ? SingletonObject : GenericObject;
-    if (!templateObject->hasLazyType() && templateObject->type()->shouldPreTenure())
+    NewObjectKind newKind = templateObject->isSingleton() ? SingletonObject : GenericObject;
+    if (!templateObject->hasLazyGroup() && templateObject->group()->shouldPreTenure())
         newKind = TenuredObject;
     RootedObject obj(cx, CopyInitializerObject(cx, templateObject, newKind));
 
     if (!obj)
         return nullptr;
 
-    if (!templateObject->hasSingletonType())
-        obj->setType(templateObject->type());
+    if (!templateObject->isSingleton())
+        obj->setGroup(templateObject->group());
 
     return obj;
 }
@@ -519,9 +519,9 @@ MallocWrapper(JSRuntime *rt, size_t nbytes)
 }
 
 JSObject *
-NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, uint32_t lexicalBegin)
+NewCallObject(JSContext *cx, HandleShape shape, HandleObjectGroup group, uint32_t lexicalBegin)
 {
-    JSObject *obj = CallObject::create(cx, shape, type, lexicalBegin);
+    JSObject *obj = CallObject::create(cx, shape, group, lexicalBegin);
     if (!obj)
         return nullptr;
 
@@ -913,7 +913,7 @@ InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleObject temp
         Rooted<ArrayObject*> arrRes(cx, &objRes->as<ArrayObject>());
 
         MOZ_ASSERT(!arrRes->getDenseInitializedLength());
-        MOZ_ASSERT(arrRes->type() == templateObj->type());
+        MOZ_ASSERT(arrRes->group() == templateObj->group());
 
         // Fast path: we managed to allocate the array inline; initialize the
         // slots.
@@ -927,12 +927,12 @@ InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleObject temp
         return arrRes;
     }
 
-    NewObjectKind newKind = templateObj->type()->shouldPreTenure()
+    NewObjectKind newKind = templateObj->group()->shouldPreTenure()
                             ? TenuredObject
                             : GenericObject;
     ArrayObject *arrRes = NewDenseCopiedArray(cx, length, rest, nullptr, newKind);
     if (arrRes)
-        arrRes->setType(templateObj->type());
+        arrRes->setGroup(templateObj->group());
     return arrRes;
 }
 
@@ -1177,8 +1177,8 @@ AssertValidObjectPtr(JSContext *cx, JSObject *obj)
     MOZ_ASSERT(obj->compartment() == cx->compartment());
     MOZ_ASSERT(obj->runtimeFromMainThread() == cx->runtime());
 
-    MOZ_ASSERT_IF(!obj->hasLazyType(),
-                  obj->type()->clasp() == obj->lastProperty()->getObjectClass());
+    MOZ_ASSERT_IF(!obj->hasLazyGroup(),
+                  obj->group()->clasp() == obj->lastProperty()->getObjectClass());
 
     if (obj->isTenured()) {
         MOZ_ASSERT(obj->isAligned());
@@ -1288,9 +1288,9 @@ MarkShapeFromIon(JSRuntime *rt, Shape **shapep)
 }
 
 void
-MarkTypeObjectFromIon(JSRuntime *rt, types::TypeObject **typep)
+MarkObjectGroupFromIon(JSRuntime *rt, types::ObjectGroup **groupp)
 {
-    gc::MarkTypeObjectUnbarriered(&rt->gc.marker, typep, "write barrier");
+    gc::MarkObjectGroupUnbarriered(&rt->gc.marker, groupp, "write barrier");
 }
 
 bool

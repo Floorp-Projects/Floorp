@@ -230,10 +230,7 @@ partial interface Window {
 };
 
 // https://dvcs.w3.org/hg/webcrypto-api/raw-file/tip/spec/Overview.html
-partial interface Window {
-  //[Throws] readonly attribute Crypto crypto;
-  [Throws] readonly attribute nsIDOMCrypto crypto;
-};
+Window implements GlobalCrypto;
 
 #ifdef MOZ_WEBSPEECH
 // http://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html

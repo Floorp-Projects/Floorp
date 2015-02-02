@@ -1861,3 +1861,4 @@ fuzzy-if(d2d,36,304) HTTP(..) == 1116480-1-fakeitalic-overflow.html 1116480-1-fa
 == 1127107-1a-nowrap.html 1127107-1-ref.html
 == 1127107-1b-pre.html 1127107-1-ref.html
 == 1127107-2-capitalize.html 1127107-2-capitalize-ref.html
+== 1127679-1a-inline-flex-relpos.html 1127679-1b-inline-flex-relpos.html

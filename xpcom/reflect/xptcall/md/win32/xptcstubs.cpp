@@ -158,12 +158,12 @@ asm(".text\n\t"
 #define STUB_ENTRY(n) \
 asm(".text\n\t" \
     ".align     4\n\t" \
-    ".globl     \"?Stub" #n "@nsXPTCStubBase@@UAG?AW4tag_nsresult@@XZ\"\n\t" \
-    ".def       \"?Stub" #n "@nsXPTCStubBase@@UAG?AW4tag_nsresult@@XZ\"; \n\t" \
+    ".globl     \"?Stub" #n "@nsXPTCStubBase@@UAG?AW4nsresult@@XZ\"\n\t" \
+    ".def       \"?Stub" #n "@nsXPTCStubBase@@UAG?AW4nsresult@@XZ\"; \n\t" \
     ".scl       2\n\t" \
     ".type      46\n\t" \
     ".endef\n\t" \
-    "\"?Stub" #n "@nsXPTCStubBase@@UAG?AW4tag_nsresult@@XZ\":\n\t" \
+    "\"?Stub" #n "@nsXPTCStubBase@@UAG?AW4nsresult@@XZ\":\n\t" \
     "mov $" #n ", %ecx\n\t" \
     "jmp SharedStub");
 

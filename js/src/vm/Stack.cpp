@@ -218,7 +218,7 @@ InterpreterFrame::prologue(JSContext *cx)
     if (isConstructing() && functionThis().isPrimitive()) {
         RootedObject callee(cx, &this->callee());
         JSObject *obj = CreateThisForFunction(cx, callee,
-                                              useNewType() ? SingletonObject : GenericObject);
+                                              createSingleton() ? SingletonObject : GenericObject);
         if (!obj)
             return false;
         functionThis() = ObjectValue(*obj);

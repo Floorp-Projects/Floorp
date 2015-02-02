@@ -233,8 +233,8 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
         name = "shape";
         break;
 
-      case JSTRACE_TYPE_OBJECT:
-        name = "type_object";
+      case JSTRACE_OBJECT_GROUP:
+        name = "object_group";
         break;
 
       default:

@@ -841,9 +841,9 @@ class IonBuilder
     // Inlining helpers.
     bool inlineGenericFallback(JSFunction *target, CallInfo &callInfo, MBasicBlock *dispatchBlock,
                                bool clonedAtCallsite);
-    bool inlineTypeObjectFallback(CallInfo &callInfo, MBasicBlock *dispatchBlock,
-                                  MTypeObjectDispatch *dispatch, MGetPropertyCache *cache,
-                                  MBasicBlock **fallbackTarget);
+    bool inlineObjectGroupFallback(CallInfo &callInfo, MBasicBlock *dispatchBlock,
+                                   MObjectGroupDispatch *dispatch, MGetPropertyCache *cache,
+                                   MBasicBlock **fallbackTarget);
 
     bool atomicsMeetsPreconditions(CallInfo &callInfo, Scalar::Type *arrayElementType);
     void atomicsCheckBounds(CallInfo &callInfo, MInstruction **elements, MDefinition **index);
@@ -892,7 +892,7 @@ class IonBuilder
     bool freezePropTypeSets(types::TemporaryTypeSet *types,
                             JSObject *foundProto, PropertyName *name);
     bool canInlinePropertyOpShapes(const BaselineInspector::ShapeVector &nativeShapes,
-                                   const BaselineInspector::TypeObjectVector &unboxedTypes);
+                                   const BaselineInspector::ObjectGroupVector &unboxedGroups);
 
     types::TemporaryTypeSet *bytecodeTypes(jsbytecode *pc);
 
@@ -1076,7 +1076,7 @@ class IonBuilder
     // In such cases we do not have read the property, except when the type
     // object is unknown.
     //
-    // As an optimization, we can dispatch a call based on the type object,
+    // As an optimization, we can dispatch a call based on the object group,
     // without doing the MGetPropertyCache.  This is what is achieved by
     // |IonBuilder::inlineCalls|.  As we might not know all the functions, we
     // are adding a fallback path, where this MGetPropertyCache would be moved
