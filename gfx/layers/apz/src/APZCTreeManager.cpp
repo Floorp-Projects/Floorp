@@ -19,6 +19,7 @@
 #include "mozilla/mozalloc.h"           // for operator new
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Preferences.h"        // for Preferences
+#include "mozilla/EventStateManager.h"  // for WheelPrefs
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsThreadUtils.h"              // for NS_IsMainThread
@@ -891,11 +892,11 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
     }
     case eWheelEventClass: {
       WidgetWheelEvent& wheelEvent = *aEvent.AsWheelEvent();
-      if (wheelEvent.IsControl() ||
-          wheelEvent.deltaMode != nsIDOMWheelEvent::DOM_DELTA_LINE)
+      if (wheelEvent.deltaMode != nsIDOMWheelEvent::DOM_DELTA_LINE ||
+          !EventStateManager::WheelEventIsScrollAction(&wheelEvent))
       {
-        // Don't send through APZ if we could be ctrl+zooming or if the delta
-        // mode is not line-based.
+        // Don't send through APZ if we're not scrolling or if the delta mode
+        // is not line-based.
         return ProcessEvent(aEvent, aOutTargetGuid, aOutInputBlockId);
       }
       return ProcessWheelEvent(wheelEvent, aOutTargetGuid, aOutInputBlockId);
