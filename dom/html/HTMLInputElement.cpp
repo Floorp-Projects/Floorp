@@ -6894,6 +6894,9 @@ HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
         case NS_FORM_INPUT_RADIO:
           key.AssignLiteral("FormValidationRadioMissing");
           break;
+        case NS_FORM_INPUT_NUMBER:
+          key.AssignLiteral("FormValidationBadInputNumber");
+          break;
         default:
           key.AssignLiteral("FormValidationValueMissing");
       }

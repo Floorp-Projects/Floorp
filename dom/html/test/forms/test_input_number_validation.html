@@ -16,6 +16,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=827161
 <p id="display"></p>
 <div id="content">
   <input id="input" type="number" step="0.01" oninvalid="invalidEventHandler(event);">
+  <input id="requiredinput" type="number" step="0.01" required
+         oninvalid="invalidEventHandler(event);">
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -37,21 +39,22 @@ function runTest(test) {
   elem.lang = test.langTag;
 
   gInvalid = false; // reset
+  var desc = `${test.desc}  (lang='${test.langTag}', id='${elem.id}')`;
   elem.value = 0;
   elem.focus();
   elem.select();
   sendString(test.inputWithGrouping);
-  checkIsValid(elem, test.desc + " ('" + test.langTag + "') with grouping separator");
+  checkIsValid(elem, `${desc} with grouping separator`);
   sendChar("a");
-  checkIsInvalid(elem, test.desc + " ('" + test.langTag + "') with grouping separator");
+  checkIsInvalid(elem, `${desc} with grouping separator`);
 
   gInvalid = false; // reset
   elem.value = 0;
   elem.select();
   sendString(test.inputWithoutGrouping);
-  checkIsValid(elem, test.desc + " ('" + test.langTag + "') without grouping separator");
+  checkIsValid(elem, `${desc} without grouping separator`);
   sendChar("a");
-  checkIsInvalid(elem, test.desc + " ('" + test.langTag + "') without grouping separator");
+  checkIsInvalid(elem, `${desc} without grouping separator`);
 }
 
 function startTests() {
@@ -59,6 +62,14 @@ function startTests() {
   for (var test of tests) {
     runTest(test);
   }
+  elem = document.getElementById("requiredinput");
+  for (var test of tests) {
+    runTest(test);
+  }
+
+  gInvalid = false; // reset
+  elem.value = "";
+  checkIsInvalidEmptyValue(elem, "empty value");
 }
 
 var gInvalid = false;
@@ -85,6 +96,24 @@ function checkIsInvalid(element, infoStr)
 {
   ok(element.validity.badInput,
      "Element should suffer from bad input for " + infoStr);
+  if (element.id == "requiredinput") {
+    ok(element.validity.valueMissing,
+       "Element should suffer from value missing for " + infoStr);
+  }
+  ok(!element.validity.valid, "Element should not be valid for " + infoStr);
+  ok(!element.checkValidity(), "checkValidity() should return false for " + infoStr);
+  ok(gInvalid, "The invalid event should have been thrown for " + infoStr);
+  is(element.validationMessage, "Please enter a number.",
+     "Validation message is not the expected message for " + infoStr);
+  ok(element.matches(":invalid"), ":invalid pseudo-class should apply for " + infoStr);
+}
+
+function checkIsInvalidEmptyValue(element, infoStr)
+{
+  ok(!element.validity.badInput,
+     "Element should not suffer from bad input for " + infoStr);
+  ok(element.validity.valueMissing,
+     "Element should suffer from value missing for " + infoStr);
   ok(!element.validity.valid, "Element should not be valid for " + infoStr);
   ok(!element.checkValidity(), "checkValidity() should return false for " + infoStr);
   ok(gInvalid, "The invalid event should have been thrown for " + infoStr);
