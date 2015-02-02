@@ -479,7 +479,7 @@ function test_http2_huge_suspended() {
 }
 
 // Support for doing a POST
-function do_post(content, chan, listener) {
+function do_post(content, chan, listener, method) {
   var stream = Cc["@mozilla.org/io/string-input-stream;1"]
                .createInstance(Ci.nsIStringInputStream);
   stream.data = content;
@@ -487,7 +487,7 @@ function do_post(content, chan, listener) {
   var uchan = chan.QueryInterface(Ci.nsIUploadChannel);
   uchan.setUploadStream(stream, "text/plain", stream.available());
 
-  chan.requestMethod = "POST";
+  chan.requestMethod = method;
 
   chan.asyncOpen(listener, null);
 }
@@ -496,14 +496,21 @@ function do_post(content, chan, listener) {
 function test_http2_post() {
   var chan = makeChan("https://localhost:" + serverPort + "/post");
   var listener = new Http2PostListener(md5s[0]);
-  do_post(posts[0], chan, listener);
+  do_post(posts[0], chan, listener, "POST");
+}
+
+// Make sure we can do a simple PATCH
+function test_http2_patch() {
+  var chan = makeChan("https://localhost:" + serverPort + "/patch");
+  var listener = new Http2PostListener(md5s[0]);
+  do_post(posts[0], chan, listener, "PATCH");
 }
 
 // Make sure we can do a POST that covers more than 2 frames
 function test_http2_post_big() {
   var chan = makeChan("https://localhost:" + serverPort + "/post");
   var listener = new Http2PostListener(md5s[1]);
-  do_post(posts[1], chan, listener);
+  do_post(posts[1], chan, listener, "POST");
 }
 
 Cu.import("resource://testing-common/httpd.js");
@@ -739,6 +746,7 @@ var tests = [ test_http2_post_big
             , test_http2_big
             , test_http2_huge_suspended
             , test_http2_post
+            , test_http2_patch
             , test_http2_pushapi_1
             // These next two must always come in this order
             , test_http2_h11required_stream
