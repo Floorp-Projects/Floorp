@@ -723,6 +723,8 @@ GLBlitHelper::BlitGrallocImage(layers::GrallocImage* grallocImage, bool yflip)
 
 #ifdef MOZ_WIDGET_ANDROID
 
+#define ATTACH_WAIT_MS 50
+
 bool
 GLBlitHelper::BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage, bool yflip)
 {
@@ -730,7 +732,7 @@ GLBlitHelper::BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage, bool
 
     ScopedBindTextureUnit boundTU(mGL, LOCAL_GL_TEXTURE0);
 
-    if (NS_FAILED(surfaceTexture->Attach(mGL)))
+    if (NS_FAILED(surfaceTexture->Attach(mGL, PR_MillisecondsToInterval(ATTACH_WAIT_MS))))
         return false;
 
     // UpdateTexImage() changes the EXTERNAL binding, so save it here
