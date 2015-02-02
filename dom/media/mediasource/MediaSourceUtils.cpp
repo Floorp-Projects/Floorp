@@ -11,7 +11,6 @@
 
 namespace mozilla {
 
-#if defined(PR_LOGGING)
 nsCString
 DumpTimeRanges(dom::TimeRanges* aRanges)
 {
@@ -31,6 +30,5 @@ DumpTimeRanges(dom::TimeRanges* aRanges)
 
   return dump;
 }
-#endif
 
 } // namespace mozilla
