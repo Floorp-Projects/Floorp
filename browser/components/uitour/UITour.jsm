@@ -74,9 +74,6 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 this.UITour = {
   url: null,
   seenPageIDs: null,
-  // This map is not persisted and is used for
-  // building the content source of a potential tour.
-  pageIDsForSession: new Map(),
   pageIDSourceBrowsers: new WeakMap(),
   /* Map from browser chrome windows to a Set of <browser>s in which a tour is open (both visible and hidden) */
   tourBrowsersByWindow: new WeakMap(),
@@ -378,22 +375,16 @@ this.UITour = {
 
     switch (action) {
       case "registerPageID": {
-        if (typeof data.pageID != "string") {
-          log.warn("registerPageID: pageID must be a string");
-          break;
-        }
-
-        this.pageIDsForSession.set(data.pageID, {lastSeen: Date.now()});
-
-        // The rest is only relevant if Telemetry is enabled.
+        // This is only relevant if Telemtry is enabled.
         if (!UITelemetry.enabled) {
-          log.debug("registerPageID: Telemetry disabled, not doing anything");
+          log.debug("registerPageID: Telemery disabled, not doing anything");
           break;
         }
 
         // We don't want to allow BrowserUITelemetry.BUCKET_SEPARATOR in the
         // pageID, as it could make parsing the telemetry bucket name difficult.
-        if (data.pageID.contains(BrowserUITelemetry.BUCKET_SEPARATOR)) {
+        if (typeof data.pageID != "string" ||
+            data.pageID.contains(BrowserUITelemetry.BUCKET_SEPARATOR)) {
           log.warn("registerPageID: Invalid page ID specified");
           break;
         }
