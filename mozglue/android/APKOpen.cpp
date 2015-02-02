@@ -210,8 +210,6 @@ report_mapping(char *name, void *base, uint32_t len, uint32_t offset)
 static mozglueresult
 loadGeckoLibs(const char *apkName)
 {
-  chdir(getenv("GRE_HOME"));
-
   uint64_t t0 = TimeStamp_Now();
   struct rusage usage1_thread, usage1;
   getrusage(RUSAGE_THREAD, &usage1_thread);
@@ -271,8 +269,6 @@ loadSQLiteLibs(const char *apkName)
   if (loadNSSLibs(apkName) != SUCCESS)
     return FAILURE;
 #else
-  chdir(getenv("GRE_HOME"));
-
   RefPtr<Zip> zip = ZipCollection::GetZip(apkName);
   if (!lib_mapping) {
     lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
@@ -298,8 +294,6 @@ loadNSSLibs(const char *apkName)
 {
   if (nss_handle && nspr_handle && plc_handle)
     return SUCCESS;
-
-  chdir(getenv("GRE_HOME"));
 
   RefPtr<Zip> zip = ZipCollection::GetZip(apkName);
   if (!lib_mapping) {
