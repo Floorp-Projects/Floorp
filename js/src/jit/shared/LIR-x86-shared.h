@@ -282,16 +282,16 @@ class LGuardShape : public LInstructionHelper<0, 1, 0>
     }
 };
 
-class LGuardObjectType : public LInstructionHelper<0, 1, 0>
+class LGuardObjectGroup : public LInstructionHelper<0, 1, 0>
 {
   public:
-    LIR_HEADER(GuardObjectType)
+    LIR_HEADER(GuardObjectGroup)
 
-    explicit LGuardObjectType(const LAllocation &in) {
+    explicit LGuardObjectGroup(const LAllocation &in) {
         setOperand(0, in);
     }
-    const MGuardObjectType *mir() const {
-        return mir_->toGuardObjectType();
+    const MGuardObjectGroup *mir() const {
+        return mir_->toGuardObjectGroup();
     }
 };
 

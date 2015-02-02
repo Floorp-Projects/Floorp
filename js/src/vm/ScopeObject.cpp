@@ -129,16 +129,16 @@ ScopeObject::setEnclosingScope(HandleObject obj)
 }
 
 CallObject *
-CallObject::create(JSContext *cx, HandleShape shape, HandleTypeObject type, uint32_t lexicalBegin)
+CallObject::create(JSContext *cx, HandleShape shape, HandleObjectGroup group, uint32_t lexicalBegin)
 {
-    MOZ_ASSERT(!type->singleton(),
-               "passed a singleton type to create() (use createSingleton() "
+    MOZ_ASSERT(!group->singleton(),
+               "passed a singleton group to create() (use createSingleton() "
                "instead)");
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
     MOZ_ASSERT(CanBeFinalizedInBackground(kind, &CallObject::class_));
     kind = gc::GetBackgroundAllocKind(kind);
 
-    JSObject *obj = JSObject::create(cx, kind, gc::DefaultHeap, shape, type);
+    JSObject *obj = JSObject::create(cx, kind, gc::DefaultHeap, shape, group);
     if (!obj)
         return nullptr;
 
@@ -153,15 +153,15 @@ CallObject::createSingleton(JSContext *cx, HandleShape shape, uint32_t lexicalBe
     MOZ_ASSERT(CanBeFinalizedInBackground(kind, &CallObject::class_));
     kind = gc::GetBackgroundAllocKind(kind);
 
-    RootedTypeObject type(cx, cx->getSingletonType(&class_, TaggedProto(nullptr)));
-    if (!type)
+    RootedObjectGroup group(cx, cx->getLazySingletonGroup(&class_, TaggedProto(nullptr)));
+    if (!group)
         return nullptr;
-    RootedObject obj(cx, JSObject::create(cx, kind, gc::TenuredHeap, shape, type));
+    RootedObject obj(cx, JSObject::create(cx, kind, gc::TenuredHeap, shape, group));
     if (!obj)
         return nullptr;
 
-    MOZ_ASSERT(obj->hasSingletonType(),
-               "type created inline above must be a singleton");
+    MOZ_ASSERT(obj->isSingleton(),
+               "group created inline above must be a singleton");
 
     obj->as<CallObject>().initRemainingSlotsToUninitializedLexicals(lexicalBegin);
     return &obj->as<CallObject>();
@@ -178,15 +178,15 @@ CallObject::createTemplateObject(JSContext *cx, HandleScript script, gc::Initial
     RootedShape shape(cx, script->bindings.callObjShape());
     MOZ_ASSERT(shape->getObjectClass() == &class_);
 
-    RootedTypeObject type(cx, cx->getNewType(&class_, TaggedProto(nullptr)));
-    if (!type)
+    RootedObjectGroup group(cx, cx->getNewGroup(&class_, TaggedProto(nullptr)));
+    if (!group)
         return nullptr;
 
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
     MOZ_ASSERT(CanBeFinalizedInBackground(kind, &class_));
     kind = gc::GetBackgroundAllocKind(kind);
 
-    JSObject *obj = JSObject::create(cx, kind, heap, shape, type);
+    JSObject *obj = JSObject::create(cx, kind, heap, shape, group);
     if (!obj)
         return nullptr;
 
@@ -216,7 +216,7 @@ CallObject::create(JSContext *cx, HandleScript script, HandleObject enclosing, H
 
     if (script->treatAsRunOnce()) {
         Rooted<CallObject*> ncallobj(cx, callobj);
-        if (!JSObject::setSingletonType(cx, ncallobj))
+        if (!JSObject::setSingleton(cx, ncallobj))
             return nullptr;
         return ncallobj;
     }
@@ -326,8 +326,8 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::Initi
 {
     MOZ_ASSERT(IsNurseryAllocable(FINALIZE_KIND));
 
-    RootedTypeObject type(cx, cx->getNewType(&class_, TaggedProto(nullptr)));
-    if (!type)
+    RootedObjectGroup group(cx, cx->getNewGroup(&class_, TaggedProto(nullptr)));
+    if (!group)
         return nullptr;
 
     RootedShape emptyDeclEnvShape(cx);
@@ -338,7 +338,7 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::Initi
         return nullptr;
 
     RootedNativeObject obj(cx, MaybeNativeObject(JSObject::create(cx, FINALIZE_KIND, heap,
-                                                                  emptyDeclEnvShape, type)));
+                                                                  emptyDeclEnvShape, group)));
     if (!obj)
         return nullptr;
 
@@ -400,8 +400,8 @@ js::XDRStaticWithObject(XDRState<XDR_DECODE> *, HandleObject, MutableHandle<Stat
 StaticWithObject *
 StaticWithObject::create(ExclusiveContext *cx)
 {
-    RootedTypeObject type(cx, cx->getNewType(&class_, TaggedProto(nullptr)));
-    if (!type)
+    RootedObjectGroup group(cx, cx->getNewGroup(&class_, TaggedProto(nullptr)));
+    if (!group)
         return nullptr;
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &class_, TaggedProto(nullptr),
@@ -409,7 +409,7 @@ StaticWithObject::create(ExclusiveContext *cx)
     if (!shape)
         return nullptr;
 
-    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape, type));
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape, group));
     if (!obj)
         return nullptr;
 
@@ -433,8 +433,8 @@ DynamicWithObject::create(JSContext *cx, HandleObject object, HandleObject enclo
                           HandleObject staticWith, WithKind kind)
 {
     MOZ_ASSERT(staticWith->is<StaticWithObject>());
-    RootedTypeObject type(cx, cx->getNewType(&class_, TaggedProto(staticWith.get())));
-    if (!type)
+    RootedObjectGroup group(cx, cx->getNewGroup(&class_, TaggedProto(staticWith.get())));
+    if (!group)
         return nullptr;
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &class_, TaggedProto(staticWith),
@@ -444,7 +444,7 @@ DynamicWithObject::create(JSContext *cx, HandleObject object, HandleObject enclo
         return nullptr;
 
     RootedNativeObject obj(cx, MaybeNativeObject(JSObject::create(cx, FINALIZE_KIND,
-                                                                  gc::DefaultHeap, shape, type)));
+                                                                  gc::DefaultHeap, shape, group)));
     if (!obj)
         return nullptr;
 
@@ -641,8 +641,8 @@ const Class DynamicWithObject::class_ = {
 /* static */ StaticEvalObject *
 StaticEvalObject::create(JSContext *cx, HandleObject enclosing)
 {
-    RootedTypeObject type(cx, cx->getNewType(&class_, TaggedProto(nullptr)));
-    if (!type)
+    RootedObjectGroup group(cx, cx->getNewGroup(&class_, TaggedProto(nullptr)));
+    if (!group)
         return nullptr;
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &class_, TaggedProto(nullptr),
@@ -652,7 +652,7 @@ StaticEvalObject::create(JSContext *cx, HandleObject enclosing)
         return nullptr;
 
     RootedNativeObject obj(cx, MaybeNativeObject(JSObject::create(cx, FINALIZE_KIND,
-                                                                  gc::TenuredHeap, shape, type)));
+                                                                  gc::TenuredHeap, shape, group)));
     if (!obj)
         return nullptr;
 
@@ -674,14 +674,14 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Hand
 {
     MOZ_ASSERT(block->getClass() == &BlockObject::class_);
 
-    RootedTypeObject type(cx, cx->getNewType(&BlockObject::class_, TaggedProto(block.get())));
-    if (!type)
+    RootedObjectGroup group(cx, cx->getNewGroup(&BlockObject::class_, TaggedProto(block.get())));
+    if (!group)
         return nullptr;
 
     RootedShape shape(cx, block->lastProperty());
 
     RootedNativeObject obj(cx, MaybeNativeObject(JSObject::create(cx, FINALIZE_KIND,
-                                                                  gc::TenuredHeap, shape, type)));
+                                                                  gc::TenuredHeap, shape, group)));
     if (!obj)
         return nullptr;
 
@@ -746,8 +746,8 @@ ClonedBlockObject::copyUnaliasedValues(AbstractFramePtr frame)
 StaticBlockObject *
 StaticBlockObject::create(ExclusiveContext *cx)
 {
-    RootedTypeObject type(cx, cx->getNewType(&BlockObject::class_, TaggedProto(nullptr)));
-    if (!type)
+    RootedObjectGroup group(cx, cx->getNewGroup(&BlockObject::class_, TaggedProto(nullptr)));
+    if (!group)
         return nullptr;
 
     RootedShape emptyBlockShape(cx);
@@ -756,7 +756,7 @@ StaticBlockObject::create(ExclusiveContext *cx)
     if (!emptyBlockShape)
         return nullptr;
 
-    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, emptyBlockShape, type);
+    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, emptyBlockShape, group);
     if (!obj)
         return nullptr;
 
@@ -958,8 +958,8 @@ js::CloneNestedScopeObject(JSContext *cx, HandleObject enclosingScope, Handle<Ne
 /* static */ UninitializedLexicalObject *
 UninitializedLexicalObject::create(JSContext *cx, HandleObject enclosing)
 {
-    RootedTypeObject type(cx, cx->getNewType(&class_, TaggedProto(nullptr)));
-    if (!type)
+    RootedObjectGroup group(cx, cx->getNewGroup(&class_, TaggedProto(nullptr)));
+    if (!group)
         return nullptr;
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &class_, TaggedProto(nullptr),
@@ -967,7 +967,7 @@ UninitializedLexicalObject::create(JSContext *cx, HandleObject enclosing)
     if (!shape)
         return nullptr;
 
-    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape, type));
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape, group));
     if (!obj)
         return nullptr;
 

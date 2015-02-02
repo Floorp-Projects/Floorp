@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+div {
+  border: 1px solid blue;
+  padding: 5px;
+}
+span {
+  margin: 0 15px;
+  border: 1px solid green;
+  position: relative;
+  top: 5px;
+  left: 10px;
+}
+</style>
+<body>
+<!-- the dir attributes on the spans here should not affect their positioning -->
+<div style="display: inline-flex;"><span dir=ltr>foo</span><span dir=rtl>bar</span>
+</body>
+</html>

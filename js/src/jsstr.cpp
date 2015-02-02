@@ -3553,7 +3553,7 @@ class SplitMatchResult {
 template<class Matcher>
 static ArrayObject *
 SplitHelper(JSContext *cx, HandleLinearString str, uint32_t limit, const Matcher &splitMatch,
-            Handle<TypeObject*> type)
+            HandleObjectGroup group)
 {
     size_t strLength = str->length();
     SplitMatchResult result;
@@ -3657,7 +3657,7 @@ SplitHelper(JSContext *cx, HandleLinearString str, uint32_t limit, const Matcher
                         return nullptr;
                 } else {
                     /* Only string entries have been accounted for so far. */
-                    AddTypePropertyId(cx, type, JSID_VOID, UndefinedValue());
+                    AddTypePropertyId(cx, group, JSID_VOID, UndefinedValue());
                     if (!splits.append(UndefinedValue()))
                         return nullptr;
                 }
@@ -3785,10 +3785,10 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    RootedTypeObject type(cx, GetTypeCallerInitObject(cx, JSProto_Array));
-    if (!type)
+    RootedObjectGroup group(cx, GetCallerInitGroup(cx, JSProto_Array));
+    if (!group)
         return false;
-    AddTypePropertyId(cx, type, JSID_VOID, Type::StringType());
+    AddTypePropertyId(cx, group, JSID_VOID, Type::StringType());
 
     /* Step 5: Use the second argument as the split limit, if given. */
     uint32_t limit;
@@ -3822,7 +3822,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
         JSObject *aobj = NewDenseEmptyArray(cx);
         if (!aobj)
             return false;
-        aobj->setType(type);
+        aobj->setGroup(group);
         args.rval().setObject(*aobj);
         return true;
     }
@@ -3833,7 +3833,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
         JSObject *aobj = NewDenseCopiedArray(cx, 1, v.address());
         if (!aobj)
             return false;
-        aobj->setType(type);
+        aobj->setGroup(group);
         args.rval().setObject(*aobj);
         return true;
     }
@@ -3848,26 +3848,26 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
             aobj = CharSplitHelper(cx, linearStr, limit);
         } else {
             SplitStringMatcher matcher(cx, sepstr);
-            aobj = SplitHelper(cx, linearStr, limit, matcher, type);
+            aobj = SplitHelper(cx, linearStr, limit, matcher, group);
         }
     } else {
         RegExpStatics *res = cx->global()->getRegExpStatics(cx);
         if (!res)
             return false;
         SplitRegExpMatcher matcher(*re, res);
-        aobj = SplitHelper(cx, linearStr, limit, matcher, type);
+        aobj = SplitHelper(cx, linearStr, limit, matcher, group);
     }
     if (!aobj)
         return false;
 
     /* Step 16. */
-    aobj->setType(type);
+    aobj->setGroup(group);
     args.rval().setObject(*aobj);
     return true;
 }
 
 JSObject *
-js::str_split_string(JSContext *cx, HandleTypeObject type, HandleString str, HandleString sep)
+js::str_split_string(JSContext *cx, HandleObjectGroup group, HandleString str, HandleString sep)
 {
     RootedLinearString linearStr(cx, str->ensureLinear(cx));
     if (!linearStr)
@@ -3884,13 +3884,13 @@ js::str_split_string(JSContext *cx, HandleTypeObject type, HandleString str, Han
         aobj = CharSplitHelper(cx, linearStr, limit);
     } else {
         SplitStringMatcher matcher(cx, linearSep);
-        aobj = SplitHelper(cx, linearStr, limit, matcher, type);
+        aobj = SplitHelper(cx, linearStr, limit, matcher, group);
     }
 
     if (!aobj)
         return nullptr;
 
-    aobj->setType(type);
+    aobj->setGroup(group);
     return aobj;
 }
 

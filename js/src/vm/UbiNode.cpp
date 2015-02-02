@@ -68,7 +68,7 @@ Node::Node(JSGCTraceKind kind, void *ptr)
       case JSTRACE_JITCODE:     construct(static_cast<js::jit::JitCode *>(ptr));      break;
       case JSTRACE_LAZY_SCRIPT: construct(static_cast<js::LazyScript *>(ptr));        break;
       case JSTRACE_SHAPE:       construct(static_cast<js::Shape *>(ptr));             break;
-      case JSTRACE_TYPE_OBJECT: construct(static_cast<js::types::TypeObject *>(ptr)); break;
+      case JSTRACE_OBJECT_GROUP: construct(static_cast<js::types::ObjectGroup *>(ptr)); break;
 
       default:
         MOZ_CRASH("bad JSGCTraceKind passed to JS::ubi::Node::Node");
@@ -239,8 +239,8 @@ template<> const char16_t TracerConcrete<js::Shape>::concreteTypeName[] =
     MOZ_UTF16("js::Shape");
 template<> const char16_t TracerConcrete<js::BaseShape>::concreteTypeName[] =
     MOZ_UTF16("js::BaseShape");
-template<> const char16_t TracerConcrete<js::types::TypeObject>::concreteTypeName[] =
-    MOZ_UTF16("js::types::TypeObject");
+template<> const char16_t TracerConcrete<js::types::ObjectGroup>::concreteTypeName[] =
+    MOZ_UTF16("js::types::ObjectGroup");
 
 
 // Instantiate all the TracerConcrete and templates here, where
@@ -255,7 +255,7 @@ template class TracerConcrete<js::LazyScript>;
 template class TracerConcrete<js::jit::JitCode>;
 template class TracerConcreteWithCompartment<js::Shape>;
 template class TracerConcreteWithCompartment<js::BaseShape>;
-template class TracerConcrete<js::types::TypeObject>;
+template class TracerConcrete<js::types::ObjectGroup>;
 }
 }
 

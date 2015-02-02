@@ -186,7 +186,7 @@ class JitRuntime
     JitCode *stringPreBarrier_;
     JitCode *objectPreBarrier_;
     JitCode *shapePreBarrier_;
-    JitCode *typeObjectPreBarrier_;
+    JitCode *objectGroupPreBarrier_;
 
     // Thunk to call malloc/free.
     JitCode *mallocStub_;
@@ -361,7 +361,7 @@ class JitRuntime
           case MIRType_String: return stringPreBarrier_;
           case MIRType_Object: return objectPreBarrier_;
           case MIRType_Shape: return shapePreBarrier_;
-          case MIRType_TypeObject: return typeObjectPreBarrier_;
+          case MIRType_ObjectGroup: return objectGroupPreBarrier_;
           default: MOZ_CRASH();
         }
     }

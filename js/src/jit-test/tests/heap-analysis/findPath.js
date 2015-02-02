@@ -21,8 +21,8 @@ print(uneval(findPath(a, o)));
 function C() {}
 C.prototype.obj = {};
 var c = new C;
-Match.Pattern([{node: {}, edge: "type"},
-               {node: Match.Pattern.ANY, edge: "type_proto"},
+Match.Pattern([{node: {}, edge: "group"},
+               {node: Match.Pattern.ANY, edge: "group_proto"},
                {node: { constructor: Match.Pattern.ANY }, edge: "obj"}])
   .assert(findPath(c, c.obj));
 print(uneval(findPath(c, c.obj)));

@@ -170,7 +170,7 @@ class TypedArrayObject : public NativeObject
      * Byte length above which created typed arrays and data views will have
      * singleton types regardless of the context in which they are created.
      */
-    static const uint32_t SINGLETON_TYPE_BYTE_LENGTH = 1024 * 1024 * 10;
+    static const uint32_t SINGLETON_BYTE_LENGTH = 1024 * 1024 * 10;
 
     static bool isOriginalLengthGetter(Native native);
 

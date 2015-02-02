@@ -519,11 +519,11 @@ ArrayBufferObject::neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer,
     // performed. This is done by setting a compartment wide flag indicating
     // that buffers with typed object views have been neutered.
     if (buffer->hasTypedObjectViews()) {
-        // Make sure the global object's type has been instantiated, so the
+        // Make sure the global object's group has been instantiated, so the
         // flag change will be observed.
-        if (!cx->global()->getType(cx))
+        if (!cx->global()->getGroup(cx))
             CrashAtUnhandlableOOM("ArrayBufferObject::neuter");
-        types::MarkTypeObjectFlags(cx, cx->global(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED);
+        types::MarkObjectGroupFlags(cx, cx->global(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED);
         cx->compartment()->neuteredTypedObjects = 1;
     }
 

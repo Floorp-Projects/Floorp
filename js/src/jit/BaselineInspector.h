@@ -93,8 +93,10 @@ class BaselineInspector
 
   public:
     typedef Vector<Shape *, 4, JitAllocPolicy> ShapeVector;
-    typedef Vector<types::TypeObject *, 4, JitAllocPolicy> TypeObjectVector;
-    bool maybeInfoForPropertyOp(jsbytecode *pc, ShapeVector &nativeShapes, TypeObjectVector &unboxedTypes);
+    typedef Vector<types::ObjectGroup *, 4, JitAllocPolicy> ObjectGroupVector;
+    bool maybeInfoForPropertyOp(jsbytecode *pc,
+                                ShapeVector &nativeShapes,
+                                ObjectGroupVector &unboxedGroups);
 
     SetElemICInspector setElemICInspector(jsbytecode *pc) {
         return makeICInspector<SetElemICInspector>(pc, ICStub::SetElem_Fallback);

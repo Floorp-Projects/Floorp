@@ -194,18 +194,18 @@ class InvokeState : public RunState
 {
     CallArgs &args_;
     InitialFrameFlags initial_;
-    bool useNewType_;
+    bool createSingleton_;
 
   public:
     InvokeState(JSContext *cx, CallArgs &args, InitialFrameFlags initial)
       : RunState(cx, Invoke, args.callee().as<JSFunction>().nonLazyScript()),
         args_(args),
         initial_(initial),
-        useNewType_(false)
+        createSingleton_(false)
     { }
 
-    bool useNewType() const { return useNewType_; }
-    void setUseNewType() { useNewType_ = true; }
+    bool createSingleton() const { return createSingleton_; }
+    void setCreateSingleton() { createSingleton_ = true; }
 
     bool constructing() const { return InitialFrameFlagsAreConstructing(initial_); }
     CallArgs &args() const { return args_; }

@@ -35,7 +35,7 @@ SkipScopeParent(JSObject *parent)
 inline bool
 CanReuseFunctionForClone(JSContext *cx, HandleFunction fun)
 {
-    if (!fun->hasSingletonType())
+    if (!fun->isSingleton())
         return false;
     if (fun->isInterpretedLazy()) {
         LazyScript *lazy = fun->lazyScript();

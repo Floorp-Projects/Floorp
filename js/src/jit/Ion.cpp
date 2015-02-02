@@ -283,9 +283,9 @@ JitRuntime::initialize(JSContext *cx)
     if (!shapePreBarrier_)
         return false;
 
-    JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for TypeObject");
-    typeObjectPreBarrier_ = generatePreBarrier(cx, MIRType_TypeObject);
-    if (!typeObjectPreBarrier_)
+    JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for ObjectGroup");
+    objectGroupPreBarrier_ = generatePreBarrier(cx, MIRType_ObjectGroup);
+    if (!objectGroupPreBarrier_)
         return false;
 
     JitSpew(JitSpew_Codegen, "# Emitting malloc stub");
@@ -1755,7 +1755,7 @@ OffThreadCompilationAvailable(JSContext *cx)
 static void
 TrackAllProperties(JSContext *cx, JSObject *obj)
 {
-    MOZ_ASSERT(obj->hasSingletonType());
+    MOZ_ASSERT(obj->isSingleton());
 
     for (Shape::Range<NoGC> range(obj->lastProperty()); !range.empty(); range.popFront())
         types::EnsureTrackPropertyTypes(cx, obj, range.front().propid());
@@ -1773,14 +1773,14 @@ TrackPropertiesForSingletonScopes(JSContext *cx, JSScript *script, BaselineFrame
                             : nullptr;
 
     while (environment && !environment->is<GlobalObject>()) {
-        if (environment->is<CallObject>() && environment->hasSingletonType())
+        if (environment->is<CallObject>() && environment->isSingleton())
             TrackAllProperties(cx, environment);
         environment = environment->enclosingScope();
     }
 
     if (baselineFrame) {
         JSObject *scope = baselineFrame->scopeChain();
-        if (scope->is<CallObject>() && scope->hasSingletonType())
+        if (scope->is<CallObject>() && scope->isSingleton())
             TrackAllProperties(cx, scope);
     }
 }
@@ -1908,9 +1908,9 @@ IonCompile(JSContext *cx, JSScript *script,
             // Some type was accessed which needs the new script properties
             // analysis to be performed. Do this now and we will try to build
             // again shortly.
-            const MIRGenerator::TypeObjectVector &types = builder->abortedNewScriptPropertiesTypes();
-            for (size_t i = 0; i < types.length(); i++) {
-                if (!types[i]->newScript()->maybeAnalyze(cx, types[i], nullptr, /* force = */ true))
+            const MIRGenerator::ObjectGroupVector &groups = builder->abortedNewScriptPropertiesGroups();
+            for (size_t i = 0; i < groups.length(); i++) {
+                if (!groups[i]->newScript()->maybeAnalyze(cx, groups[i], nullptr, /* force = */ true))
                     return AbortReason_Alloc;
             }
         }
