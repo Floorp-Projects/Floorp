@@ -120,7 +120,8 @@ public:
         NS_PRECONDITION(wrapper,"bad param");
         nsISupports* obj = wrapper->GetIdentityObject();
         MOZ_ASSERT(!Find(obj), "wrapper already in new scope!");
-        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, obj);
+        Entry* entry = static_cast<Entry*>
+            (PL_DHashTableAdd(mTable, obj, mozilla::fallible));
         if (!entry)
             return nullptr;
         if (entry->key)
@@ -185,7 +186,8 @@ public:
     {
         NS_PRECONDITION(clazz,"bad param");
         const nsIID* iid = &clazz->GetIID();
-        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, iid);
+        Entry* entry = static_cast<Entry*>
+            (PL_DHashTableAdd(mTable, iid, mozilla::fallible));
         if (!entry)
             return nullptr;
         if (entry->key)
@@ -238,7 +240,8 @@ public:
     {
         NS_PRECONDITION(iface,"bad param");
         const nsIID* iid = iface->GetIID();
-        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, iid);
+        Entry* entry = static_cast<Entry*>
+            (PL_DHashTableAdd(mTable, iid, mozilla::fallible));
         if (!entry)
             return nullptr;
         if (entry->key)
@@ -293,7 +296,8 @@ public:
     inline XPCNativeSet* Add(nsIClassInfo* info, XPCNativeSet* set)
     {
         NS_PRECONDITION(info,"bad param");
-        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, info);
+        Entry* entry = static_cast<Entry*>
+            (PL_DHashTableAdd(mTable, info, mozilla::fallible));
         if (!entry)
             return nullptr;
         if (entry->key)
@@ -349,7 +353,8 @@ public:
     inline XPCWrappedNativeProto* Add(nsIClassInfo* info, XPCWrappedNativeProto* proto)
     {
         NS_PRECONDITION(info,"bad param");
-        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, info);
+        Entry* entry = static_cast<Entry*>
+            (PL_DHashTableAdd(mTable, info, mozilla::fallible));
         if (!entry)
             return nullptr;
         if (entry->key)
@@ -411,7 +416,8 @@ public:
     {
         NS_PRECONDITION(key,"bad param");
         NS_PRECONDITION(set,"bad param");
-        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, key);
+        Entry* entry = static_cast<Entry*>
+            (PL_DHashTableAdd(mTable, key, mozilla::fallible));
         if (!entry)
             return nullptr;
         if (entry->key_value)
@@ -483,8 +489,8 @@ public:
     inline nsIXPCFunctionThisTranslator* Add(REFNSIID iid,
                                              nsIXPCFunctionThisTranslator* obj)
     {
-
-        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, &iid);
+        Entry* entry = static_cast<Entry*>
+            (PL_DHashTableAdd(mTable, &iid, mozilla::fallible));
         if (!entry)
             return nullptr;
         entry->value = obj;
@@ -555,8 +561,8 @@ public:
     inline XPCWrappedNativeProto* Add(XPCWrappedNativeProto* proto)
     {
         NS_PRECONDITION(proto,"bad param");
-        PLDHashEntryStub* entry = (PLDHashEntryStub*)
-            PL_DHashTableAdd(mTable, proto);
+        PLDHashEntryStub* entry = static_cast<PLDHashEntryStub*>
+            (PL_DHashTableAdd(mTable, proto, mozilla::fallible));
         if (!entry)
             return nullptr;
         if (entry->key)

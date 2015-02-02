@@ -900,8 +900,8 @@ PtrToNodeEntry*
 CCGraph::AddNodeToMap(void* aPtr)
 {
   JS::AutoSuppressGCAnalysis suppress;
-  PtrToNodeEntry* e =
-    static_cast<PtrToNodeEntry*>(PL_DHashTableAdd(&mPtrToNodeMap, aPtr));
+  PtrToNodeEntry* e = static_cast<PtrToNodeEntry*>
+    (PL_DHashTableAdd(&mPtrToNodeMap, aPtr, fallible));
   if (!e) {
     // Caller should track OOMs
     return nullptr;
