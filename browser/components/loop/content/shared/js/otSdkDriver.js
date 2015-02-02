@@ -136,6 +136,7 @@ loop.OTSdkDriver = (function() {
 
       this.session.on("connectionCreated", this._onConnectionCreated.bind(this));
       this.session.on("streamCreated", this._onRemoteStreamCreated.bind(this));
+      this.session.on("streamDestroyed", this._onRemoteStreamDestroyed.bind(this));
       this.session.on("connectionDestroyed",
         this._onConnectionDestroyed.bind(this));
       this.session.on("sessionDisconnected",
@@ -281,6 +282,30 @@ loop.OTSdkDriver = (function() {
     },
 
     /**
+     * Handles when a remote screen share is created, subscribing to
+     * the stream, and notifying the stores that a share is being
+     * received.
+     *
+     * @param {Stream} stream The SDK Stream:
+     * https://tokbox.com/opentok/libraries/client/js/reference/Stream.html
+     */
+    _handleRemoteScreenShareCreated: function(stream) {
+      if (!this.getScreenShareElementFunc) {
+        return;
+      }
+
+      // Let the stores know first so they can update the display.
+      this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({
+        receiving: true
+      }));
+
+      var remoteElement = this.getScreenShareElementFunc();
+
+      this.session.subscribe(stream,
+        remoteElement, this._getCopyPublisherConfig());
+    },
+
+    /**
      * Handles the event when the remote stream is created.
      *
      * @param {StreamEvent} event The event details:
@@ -295,13 +320,12 @@ loop.OTSdkDriver = (function() {
         }));
       }
 
-      var remoteElement;
       if (event.stream.videoType === "screen") {
-        // XXX Implement in part 2.
-        remoteElement = "null";
-      } else {
-        remoteElement = this.getRemoteElement();
+        this._handleRemoteScreenShareCreated(event.stream);
+        return;
       }
+
+      var remoteElement = this.getRemoteElement();
 
       this.session.subscribe(event.stream,
         remoteElement, this._getCopyPublisherConfig());
@@ -315,7 +339,7 @@ loop.OTSdkDriver = (function() {
     /**
      * Handles the event when the local stream is created.
      *
-     * @param  {StreamEvent} event The event details:
+     * @param {StreamEvent} event The event details:
      * https://tokbox.com/opentok/libraries/client/js/reference/StreamEvent.html
      */
     _onLocalStreamCreated: function(event) {
@@ -326,6 +350,25 @@ loop.OTSdkDriver = (function() {
           dimensions: event.stream[STREAM_PROPERTIES.VIDEO_DIMENSIONS]
         }));
       }
+    },
+
+
+    /**
+     * Handles the event when the remote stream is destroyed.
+     *
+     * @param {StreamEvent} event The event details:
+     * https://tokbox.com/opentok/libraries/client/js/reference/StreamEvent.html
+     */
+    _onRemoteStreamDestroyed: function(event) {
+      if (event.stream.videoType !== "screen") {
+        return;
+      }
+
+      // All we need to do is notify the store we're no longer receiving,
+      // the sdk should do the rest.
+      this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({
+        receiving: false
+      }));
     },
 
     /**

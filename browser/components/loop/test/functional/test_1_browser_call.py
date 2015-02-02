@@ -4,7 +4,6 @@ import urlparse
 from errors import NoSuchElementException, StaleElementException
 # noinspection PyUnresolvedReferences
 from wait import Wait
-from time import sleep
 
 import os
 import sys
@@ -126,23 +125,32 @@ class Test1BrowserCall(MarionetteTestCase):
         join_button.click()
 
     # Assumes the standlone or the conversation window is selected first.
-    def check_remote_video(self):
-        video_wrapper = self.wait_for_element_displayed(
-            By.CSS_SELECTOR,
-            ".media .OT_subscriber .OT_widget-container", 20)
-        video = self.wait_for_subelement_displayed(
-            video_wrapper, By.TAG_NAME, "video")
+    def check_video(self, selector):
+        video_wrapper = self.wait_for_element_displayed(By.CSS_SELECTOR,
+                                                        selector, 20)
+        video = self.wait_for_subelement_displayed(video_wrapper,
+                                                   By.TAG_NAME, "video")
 
         self.wait_for_element_attribute_to_be_false(video, "paused")
         self.assertEqual(video.get_attribute("ended"), "false")
 
     def standalone_check_remote_video(self):
         self.switch_to_standalone()
-        self.check_remote_video()
+        self.check_video(".remote .OT_subscriber .OT_widget-container")
 
     def local_check_remote_video(self):
         self.switch_to_chatbox()
-        self.check_remote_video()
+        self.check_video(".remote .OT_subscriber .OT_widget-container")
+
+    def local_enable_screenshare(self):
+        self.switch_to_chatbox()
+        button = self.marionette.find_element(By.CLASS_NAME, "btn-screen-share")
+
+        button.click()
+
+    def standalone_check_remote_screenshare(self):
+        self.switch_to_standalone()
+        self.check_video(".media .screen .OT_subscriber .OT_widget-container")
 
     def local_leave_room_and_verify_feedback(self):
         button = self.marionette.find_element(By.CLASS_NAME, "btn-hangup")
@@ -169,6 +177,11 @@ class Test1BrowserCall(MarionetteTestCase):
         # Check we get the video streams
         self.standalone_check_remote_video()
         self.local_check_remote_video()
+
+        # XXX To enable this, we either need to navigate the permissions prompt
+        # or have a route where we don't need the permissions prompt.
+        # self.local_enable_screenshare()
+        # self.standalone_check_remote_screenshare()
 
         # hangup the call
         self.local_leave_room_and_verify_feedback()

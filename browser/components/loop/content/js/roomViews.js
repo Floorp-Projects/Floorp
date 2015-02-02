@@ -274,7 +274,7 @@ loop.roomViews = (function(mozL10n) {
                 React.createElement("div", {className: "conversation room-conversation"}, 
                   React.createElement("div", {className: "media nested"}, 
                     React.createElement("div", {className: "video_wrapper remote_wrapper"}, 
-                      React.createElement("div", {className: "video_inner remote"})
+                      React.createElement("div", {className: "video_inner remote remote-stream"})
                     ), 
                     React.createElement("div", {className: localStreamClasses}), 
                     React.createElement("div", {className: "screen hide"})
