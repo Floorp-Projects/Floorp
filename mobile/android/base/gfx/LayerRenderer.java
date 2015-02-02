@@ -96,9 +96,9 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
     private int mSampleHandle;
     private int mTMatrixHandle;
 
-    private List<LayerView.OnZoomedViewListener> mZoomedViewListeners;
-    private float mViewLeft = 0.0f;
-    private float mViewTop = 0.0f;
+    private List<LayerView.ZoomedViewListener> mZoomedViewListeners;
+    private float mLastViewLeft;
+    private float mLastViewTop;
 
     // column-major matrix applied to each vertex to shift the viewport from
     // one ranging from (-1, -1),(1,1) to (0,0),(1,1) and to scale all sizes by
@@ -168,7 +168,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         mCoordBuffer = mCoordByteBuffer.asFloatBuffer();
 
         Tabs.registerOnTabsChangedListener(this);
-        mZoomedViewListeners = new ArrayList<LayerView.OnZoomedViewListener>();
+        mZoomedViewListeners = new ArrayList<LayerView.ZoomedViewListener>();
     }
 
     private Bitmap expandCanvasToPowerOfTwo(Bitmap image, IntSize size) {
@@ -598,7 +598,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
         }
 
-        public void maybeRequestZoomedViewRender(RenderContext context){
+        private void maybeRequestZoomedViewRender(RenderContext context) {
             // Concurrently update of mZoomedViewListeners should not be an issue here
             // because the following line is just a short-circuit
             if (mZoomedViewListeners.size() == 0) {
@@ -612,13 +612,13 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             final float viewTop = context.viewport.top - context.offset.y;
             boolean shouldWaitToRender = false;
 
-            if (Math.abs(mViewLeft - viewLeft) > MAX_SCROLL_SPEED_TO_REQUEST_ZOOM_RENDER ||
-                Math.abs(mViewTop - viewTop) > MAX_SCROLL_SPEED_TO_REQUEST_ZOOM_RENDER) {
+            if (Math.abs(mLastViewLeft - viewLeft) > MAX_SCROLL_SPEED_TO_REQUEST_ZOOM_RENDER ||
+                Math.abs(mLastViewTop - viewTop) > MAX_SCROLL_SPEED_TO_REQUEST_ZOOM_RENDER) {
                 shouldWaitToRender = true;
             }
 
-            mViewLeft = viewLeft;
-            mViewTop = viewTop;
+            mLastViewLeft = viewLeft;
+            mLastViewTop = viewTop;
 
             if (shouldWaitToRender) {
                 return;
@@ -627,7 +627,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    for (LayerView.OnZoomedViewListener listener : mZoomedViewListeners) {
+                    for (LayerView.ZoomedViewListener listener : mZoomedViewListeners) {
                         listener.requestZoomedViewRender();
                     }
                 }
@@ -697,19 +697,20 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                for (LayerView.OnZoomedViewListener listener : mZoomedViewListeners) {
+                for (LayerView.ZoomedViewListener listener : mZoomedViewListeners) {
+                    data.position(0);
                     listener.updateView(data);
                 }
             }
         });
     }
 
-    public void addOnZoomedViewListener(LayerView.OnZoomedViewListener listener) {
+    public void addZoomedViewListener(LayerView.ZoomedViewListener listener) {
         ThreadUtils.assertOnUiThread();
         mZoomedViewListeners.add(listener);
     }
 
-    public void removeOnZoomedViewListener(LayerView.OnZoomedViewListener listener) {
+    public void removeZoomedViewListener(LayerView.ZoomedViewListener listener) {
         ThreadUtils.assertOnUiThread();
         mZoomedViewListeners.remove(listener);
     }

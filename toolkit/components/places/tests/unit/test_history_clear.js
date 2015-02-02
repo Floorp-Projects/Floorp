@@ -91,7 +91,7 @@ add_task(function* test_history_clear()
     { uri: uri("http://frecency.mozilla.org/"),
       transition: TRANSITION_LINK },
   ]);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   // Clear history and wait for the onClearHistory notification.
   let promiseWaitClearHistory = promiseOnClearHistoryObserved();
@@ -102,7 +102,7 @@ add_task(function* test_history_clear()
   do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
 
   yield promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   // Check that frecency for not cleared items (bookmarks) has been converted
   // to -MAX(visit_count, 1), so we will be able to recalculate frecency

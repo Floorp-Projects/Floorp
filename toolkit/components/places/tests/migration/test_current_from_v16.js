@@ -20,7 +20,7 @@ add_task(function* test_moz_hosts() {
   yield db.execute("SELECT host, frecency, typed, prefix FROM moz_hosts");
 
   // moz_hosts is populated asynchronously, so we need to wait.
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   // check the number of entries in moz_hosts equals the number of
   // unique rev_host in moz_places

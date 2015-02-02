@@ -24,7 +24,6 @@ var viewerPlayerglobalInfo = {
 
 var avm2Root = SHUMWAY_ROOT + "avm2/";
 var builtinPath = avm2Root + "generated/builtin/builtin.abc";
-var avm1Path = avm2Root + "generated/avm1lib/avm1lib.abc";
 
 window.print = function(msg) {
   console.log(msg);
@@ -38,29 +37,32 @@ function runSwfPlayer(flashParams) {
   var appMode = compilerSettings.appCompiler ? EXECUTION_MODE.COMPILE : EXECUTION_MODE.INTERPRET;
   var asyncLoading = true;
   var baseUrl = flashParams.baseUrl;
-  var movieParams = flashParams.movieParams;
   var objectParams = flashParams.objectParams;
   var movieUrl = flashParams.url;
 
   Shumway.frameRateOption.value = flashParams.turboMode ? 60 : -1;
   Shumway.AVM2.Verifier.enabled.value = compilerSettings.verifier;
 
-  Shumway.createAVM2(builtinPath, viewerPlayerglobalInfo, avm1Path, sysMode, appMode, function (avm2) {
+  Shumway.createAVM2(builtinPath, viewerPlayerglobalInfo, sysMode, appMode, function (avm2) {
     function runSWF(file) {
       var player = new Shumway.Player.Window.WindowPlayer(window, window.parent);
       player.defaultStageColor = flashParams.bgcolor;
+      player.movieParams = flashParams.movieParams;
+      player.stageAlign = (objectParams && (objectParams.salign || objectParams.align)) || '';
+      player.stageScale = (objectParams && objectParams.scale) || 'showall';
+      player.displayParameters = flashParams.displayParameters;
 
       Shumway.ExternalInterfaceService.instance = player.createExternalInterfaceService();
 
       player.load(file);
     }
-    file = Shumway.FileLoadingService.instance.setBaseUrl(baseUrl);
+    Shumway.FileLoadingService.instance.setBaseUrl(baseUrl);
     if (asyncLoading) {
       runSWF(movieUrl);
     } else {
       new Shumway.BinaryFileReader(movieUrl).readAll(null, function(buffer, error) {
         if (!buffer) {
-          throw "Unable to open the file " + file + ": " + error;
+          throw "Unable to open the file " + movieUrl + ": " + error;
         }
         runSWF(movieUrl, buffer);
       });
@@ -129,32 +131,34 @@ function setupServices() {
       };
     },
     setBaseUrl: function (url) {
-      var baseUrl;
-      if (typeof URL !== 'undefined') {
-        baseUrl = new URL(url, document.location.href).href;
-      } else {
-        var a = document.createElement('a');
-        a.href = url || '#';
-        a.setAttribute('style', 'display: none;');
-        document.body.appendChild(a);
-        baseUrl = a.href;
-        document.body.removeChild(a);
-      }
-      Shumway.FileLoadingService.instance.baseUrl = baseUrl;
-      return baseUrl;
+      Shumway.FileLoadingService.instance.baseUrl = url;
     },
     resolveUrl: function (url) {
-      if (url.indexOf('://') >= 0) return url;
-
-      var base = Shumway.FileLoadingService.instance.baseUrl;
-      base = base.lastIndexOf('/') >= 0 ? base.substring(0, base.lastIndexOf('/') + 1) : '';
-      if (url.indexOf('/') === 0) {
-        var m = /^[^:]+:\/\/[^\/]+/.exec(base);
-        if (m) base = m[0];
-      }
-      return base + url;
+      return new URL(url, Shumway.FileLoadingService.instance.baseUrl).href;
+    },
+    navigateTo: function (url, target) {
+      window.parent.postMessage({
+        callback: 'navigateTo',
+        data: {
+          url: this.resolveUrl(url),
+          target: target
+        }
+      }, '*');
     }
   };
+
+  // Using SpecialInflate when chrome code provides it.
+  if (parent.createSpecialInflate) {
+    window.SpecialInflate = function () {
+      return parent.createSpecialInflate();
+    };
+  }
+
+  // Using createRtmpXHR/createRtmpSocket when chrome code provides it.
+  if (parent.createRtmpXHR) {
+    window.createRtmpSocket = parent.createRtmpSocket;
+    window.createRtmpXHR = parent.createRtmpXHR;
+  }
 }
 
 window.addEventListener('message', function onWindowMessage(e) {

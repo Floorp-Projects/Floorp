@@ -40,7 +40,7 @@ add_test(function test_keywordRemovedOnUniqueItemRemoval() {
   // remove bookmark
   bmsvc.removeItem(bookmarkId);
 
-  promiseAsyncUpdates().then(function() {
+  PlacesTestUtils.promiseAsyncUpdates().then(() => {
     // Check that keyword has been removed from the database.
     // The removal is asynchronous.
     var sql = "SELECT id FROM moz_keywords WHERE keyword = ?1";
@@ -77,7 +77,7 @@ add_test(function test_keywordNotRemovedOnNonUniqueItemRemoval() {
   // remove first bookmark
   bmsvc.removeItem(bookmarkId1);
 
-  promiseAsyncUpdates().then(function() {
+  PlacesTestUtils.promiseAsyncUpdates().then(() => {
     // check that keyword is still there
     var sql = "SELECT id FROM moz_keywords WHERE keyword = ?1";
     var stmt = mDBConn.createStatement(sql);

@@ -166,8 +166,8 @@ function run_test() {
       // updates.
       // This is not a problem in real life, but autocomplete tests should
       // return reliable resultsets, thus we have to wait.
-      promiseAsyncUpdates().then(function () ensure_results(searchString,
-                                                            expectedValue));
+      PlacesTestUtils.promiseAsyncUpdates()
+                     .then(() => ensure_results(searchString, expectedValue));
     })
   }, this);
 

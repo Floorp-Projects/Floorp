@@ -56,7 +56,7 @@ add_task(function* test_eraseEverything() {
   PlacesUtils.annotations.setItemAnnotation((yield PlacesUtils.promiseItemId(toolbarBookmarkInFolder.guid)),
                                             "testanno1", "testvalue1", 0, 0);
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   Assert.ok(frecencyForUrl("http://example.com/") > frecencyForExample);
   Assert.ok(frecencyForUrl("http://example.com/") > frecencyForMozilla);
 
