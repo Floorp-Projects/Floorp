@@ -116,13 +116,13 @@
 
 /*@{*/
 
-typedef enum class tag_nsresult : uint32_t
+enum class nsresult : uint32_t
 {
   #undef ERROR
   #define ERROR(key, val) key = val
   #include "ErrorList.h"
   #undef ERROR
-} nsresult;
+};
 
 /*
  * enum classes don't place their initializers in the global scope, so we need
