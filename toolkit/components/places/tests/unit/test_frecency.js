@@ -73,8 +73,8 @@ AutoCompleteInput.prototype = {
 
 function ensure_results(uris, searchTerm)
 {
-  promiseAsyncUpdates().then(function () ensure_results_internal(uris,
-                                                                 searchTerm));
+  PlacesTestUtils.promiseAsyncUpdates()
+                 .then(() => ensure_results_internal(uris, searchTerm));
 }
 
 function ensure_results_internal(uris, searchTerm)

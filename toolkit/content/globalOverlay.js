@@ -28,9 +28,11 @@ function closeWindow(aClose, aPromptFunction)
     if (typeof(aPromptFunction) == "function" && !aPromptFunction())
       return false;
 
-  if (aClose)    
+  if (aClose) {
     window.close();
-  
+    return window.closed;
+  }
+
   return true;
 }
 

@@ -283,7 +283,7 @@ add_task(function test_add_visits_to_database()
 add_task(function test_redirects()
 {
   // Frecency and hidden are updated asynchronously, wait for them.
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   // This array will be used by cartProd to generate a matrix of all possible
   // combinations.

@@ -388,7 +388,7 @@ add_task(function* test_non_addable_uri_errors() {
     do_check_eq(place.resultCode, Cr.NS_ERROR_INVALID_ARG);
     do_check_false(yield promiseIsURIVisited(place.info.uri));
   }
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(function* test_duplicate_guid_errors() {
@@ -426,7 +426,7 @@ add_task(function* test_duplicate_guid_errors() {
   do_check_eq(badPlaceInfo.resultCode, Cr.NS_ERROR_STORAGE_CONSTRAINT);
   do_check_false(yield promiseIsURIVisited(badPlaceInfo.info.uri));
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(function* test_invalid_referrerURI_ignored() {
@@ -462,7 +462,7 @@ add_task(function* test_invalid_referrerURI_ignored() {
   do_check_eq(stmt.row.from_visit, 0);
   stmt.finalize();
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(function* test_nonnsIURI_referrerURI_ignored() {
@@ -494,7 +494,7 @@ add_task(function* test_nonnsIURI_referrerURI_ignored() {
   do_check_eq(stmt.row.from_visit, 0);
   stmt.finalize();
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(function* test_old_referrer_ignored() {
@@ -553,7 +553,7 @@ add_task(function* test_old_referrer_ignored() {
   do_check_eq(stmt.row.count, 1);
   stmt.finalize();
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(function* test_place_id_ignored() {
@@ -593,7 +593,7 @@ add_task(function* test_place_id_ignored() {
   do_check_neq(placeInfo.placeId, placeId);
   do_check_true(yield promiseIsURIVisited(badPlace.uri));
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(function* test_handleCompletion_called_when_complete() {
@@ -634,7 +634,7 @@ add_task(function* test_handleCompletion_called_when_complete() {
 
   do_check_eq(callbackCountSuccess, EXPECTED_COUNT_SUCCESS);
   do_check_eq(callbackCountFailure, EXPECTED_COUNT_FAILURE);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(function* test_add_visit() {
@@ -695,7 +695,7 @@ add_task(function* test_add_visit() {
 
     // If we have had all of our callbacks, continue running tests.
     if (++callbackCount == place.visits.length) {
-      yield promiseAsyncUpdates();
+      yield PlacesTestUtils.promiseAsyncUpdates();
     }
   }
 });
@@ -778,7 +778,7 @@ add_task(function* test_properties_saved() {
 
     // If we have had all of our callbacks, continue running tests.
     if (++callbackCount == places.length) {
-      yield promiseAsyncUpdates();
+      yield PlacesTestUtils.promiseAsyncUpdates();
     }
   }
 });
@@ -803,7 +803,7 @@ add_task(function* test_guid_saved() {
   do_check_true(yield promiseIsURIVisited(uri));
   do_check_eq(placeInfo.guid, place.guid);
   do_check_guid_for_uri(uri, place.guid);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(function* test_referrer_saved() {
@@ -853,7 +853,7 @@ add_task(function* test_referrer_saved() {
       do_check_eq(stmt.row.count, 1);
       stmt.finalize();
 
-      yield promiseAsyncUpdates();
+      yield PlacesTestUtils.promiseAsyncUpdates();
     }
   }
 });
@@ -881,7 +881,7 @@ add_task(function* test_guid_change_saved() {
   }
   do_check_guid_for_uri(place.uri, place.guid);
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(function* test_title_change_saved() {
@@ -927,7 +927,7 @@ add_task(function* test_title_change_saved() {
   }
   do_check_title_for_uri(place.uri, place.title);
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(function* test_no_title_does_not_clear_title() {
@@ -955,7 +955,7 @@ add_task(function* test_no_title_does_not_clear_title() {
   }
   do_check_title_for_uri(place.uri, TITLE);
 
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(function* test_title_change_notifies() {
@@ -1011,7 +1011,7 @@ add_task(function* test_title_change_notifies() {
   }
 
   yield promiseTitleChangedObserver(place);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(function* test_visit_notifies() {
@@ -1059,7 +1059,7 @@ add_task(function* test_visit_notifies() {
   }
 
   yield promiseVisitObserver(place);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 // test with empty mozIVisitInfoCallback object
@@ -1089,7 +1089,7 @@ add_task(function* test_callbacks_not_supplied() {
   });
 
   PlacesUtils.asyncHistory.updatePlaces(places, {});
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
 // Test that we don't wrongly overwrite typed and hidden when adding new visits.

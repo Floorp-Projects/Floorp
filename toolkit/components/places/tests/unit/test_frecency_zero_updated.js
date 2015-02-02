@@ -15,13 +15,13 @@ add_task(function ()
                                                 TEST_URI,
                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                 "A title");
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   do_check_true(frecencyForUrl(TEST_URI) > 0);
 
   // Removing the bookmark should leave an orphan page with zero frecency.
   // Note this would usually be expired later by expiration.
   PlacesUtils.bookmarks.removeItem(id);
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
   do_check_eq(frecencyForUrl(TEST_URI), 0);
 
   // Now add a valid visit to the page, frecency should increase.

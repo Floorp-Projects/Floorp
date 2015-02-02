@@ -101,7 +101,7 @@ function* check_autocomplete(test) {
   // updates.
   // This is not a problem in real life, but autocomplete tests should
   // return reliable resultsets, thus we have to wait.
-  yield promiseAsyncUpdates();
+  yield PlacesTestUtils.promiseAsyncUpdates();
 
   // Make an AutoCompleteInput that uses our searches and confirms results.
   let input = new AutoCompleteInput(["unifiedcomplete"]);
