@@ -7288,6 +7288,13 @@
     "extended_statistics_ok": true,
     "description": "The number of sites for which the user has explicitly rejected saving logins"
   },
+  "PWMGR_NUM_PASSWORDS_PER_HOSTNAME": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 21,
+    "n_buckets" : 20,
+    "description": "The number of passwords per hostname"
+  },
   "PWMGR_NUM_SAVED_PASSWORDS": {
     "expires_in_version": "never",
     "kind": "exponential",
