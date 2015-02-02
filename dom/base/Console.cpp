@@ -6,7 +6,9 @@
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/ConsoleBinding.h"
 
+#include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/Exceptions.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Maybe.h"
 #include "nsCycleCollectionParticipant.h"
@@ -41,15 +43,24 @@
 // console.trace().
 #define DEFAULT_MAX_STACKTRACE_DEPTH 200
 
-// This tag is used in the Structured Clone Algorithm to move js values from
+// This tags are used in the Structured Clone Algorithm to move js values from
 // worker thread to main thread
-#define CONSOLE_TAG JS_SCTAG_USER_MIN
+#define CONSOLE_TAG_STRING JS_SCTAG_USER_MIN
+#define CONSOLE_TAG_BLOB   JS_SCTAG_USER_MIN + 1
 
 using namespace mozilla::dom::exceptions;
 using namespace mozilla::dom::workers;
 
 namespace mozilla {
 namespace dom {
+
+struct
+ConsoleStructuredCloneData
+{
+  nsCOMPtr<nsISupports> mParent;
+  nsTArray<nsString> mStrings;
+  nsTArray<nsRefPtr<FileImpl>> mFiles;
+};
 
 /**
  * Console API in workers uses the Structured Clone Algorithm to move any value
@@ -63,29 +74,41 @@ namespace dom {
 static JSObject*
 ConsoleStructuredCloneCallbacksRead(JSContext* aCx,
                                     JSStructuredCloneReader* /* unused */,
-                                    uint32_t aTag, uint32_t aData,
+                                    uint32_t aTag, uint32_t aIndex,
                                     void* aClosure)
 {
   AssertIsOnMainThread();
+  ConsoleStructuredCloneData* data =
+    static_cast<ConsoleStructuredCloneData*>(aClosure);
+  MOZ_ASSERT(data);
 
-  if (aTag != CONSOLE_TAG) {
-    return nullptr;
+  if (aTag == CONSOLE_TAG_STRING) {
+    MOZ_ASSERT(data->mStrings.Length() > aIndex);
+
+    JS::Rooted<JS::Value> value(aCx);
+    if (!xpc::StringToJsval(aCx, data->mStrings.ElementAt(aIndex), &value)) {
+      return nullptr;
+    }
+
+    JS::Rooted<JSObject*> obj(aCx);
+    if (!JS_ValueToObject(aCx, value, &obj)) {
+      return nullptr;
+    }
+
+    return obj;
   }
 
-  nsTArray<nsString>* strings = static_cast<nsTArray<nsString>*>(aClosure);
-  MOZ_ASSERT(strings->Length() > aData);
+  if (aTag == CONSOLE_TAG_BLOB) {
+    MOZ_ASSERT(data->mFiles.Length() > aIndex);
 
-  JS::Rooted<JS::Value> value(aCx);
-  if (!xpc::StringToJsval(aCx, strings->ElementAt(aData), &value)) {
-    return nullptr;
+    nsRefPtr<File> file =
+      new File(data->mParent, data->mFiles.ElementAt(aIndex));
+    JS::Rooted<JSObject*> obj(aCx, file->WrapObject(aCx));
+    return obj;
   }
 
-  JS::Rooted<JSObject*> obj(aCx);
-  if (!JS_ValueToObject(aCx, value, &obj)) {
-    return nullptr;
-  }
-
-  return obj;
+  MOZ_CRASH("No other tags are supported.");
+  return nullptr;
 }
 
 // This method is called by the Structured Clone Algorithm when some data has
@@ -96,6 +119,21 @@ ConsoleStructuredCloneCallbacksWrite(JSContext* aCx,
                                      JS::Handle<JSObject*> aObj,
                                      void* aClosure)
 {
+  ConsoleStructuredCloneData* data =
+    static_cast<ConsoleStructuredCloneData*>(aClosure);
+  MOZ_ASSERT(data);
+
+  nsRefPtr<File> file;
+  if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, file)) &&
+      file->Impl()->MayBeClonedToOtherThreads()) {
+    if (!JS_WriteUint32Pair(aWriter, CONSOLE_TAG_BLOB, data->mFiles.Length())) {
+      return false;
+    }
+
+    data->mFiles.AppendElement(file->Impl());
+    return true;
+  }
+
   JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aObj));
   JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
   if (!jsString) {
@@ -107,14 +145,12 @@ ConsoleStructuredCloneCallbacksWrite(JSContext* aCx,
     return false;
   }
 
-  nsTArray<nsString>* strings = static_cast<nsTArray<nsString>*>(aClosure);
-
-  if (!JS_WriteUint32Pair(aWriter, CONSOLE_TAG, strings->Length())) {
+  if (!JS_WriteUint32Pair(aWriter, CONSOLE_TAG_STRING,
+                          data->mStrings.Length())) {
     return false;
   }
 
-  strings->AppendElement(string);
-
+  data->mStrings.AppendElement(string);
   return true;
 }
 
@@ -414,7 +450,7 @@ private:
 
     JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*arguments));
 
-    if (!mArguments.write(aCx, value, &gConsoleCallbacks, &mStrings)) {
+    if (!mArguments.write(aCx, value, &gConsoleCallbacks, &mData)) {
       return false;
     }
 
@@ -451,8 +487,13 @@ private:
       mCallData->SetIDs(id, frame.mFilename);
     }
 
+    // Now we could have the correct window (if we are not window-less).
+    mData.mParent = aInnerWindow;
+
     ProcessCallData(aCx);
     mCallData->CleanupJSObjects();
+
+    mData.mParent = nullptr;
   }
 
 private:
@@ -462,7 +503,7 @@ private:
     ClearException ce(aCx);
 
     JS::Rooted<JS::Value> argumentsValue(aCx);
-    if (!mArguments.read(aCx, &argumentsValue, &gConsoleCallbacks, &mStrings)) {
+    if (!mArguments.read(aCx, &argumentsValue, &gConsoleCallbacks, &mData)) {
       return;
     }
 
@@ -494,7 +535,7 @@ private:
   ConsoleCallData* mCallData;
 
   JSAutoStructuredCloneBuffer mArguments;
-  nsTArray<nsString> mStrings;
+  ConsoleStructuredCloneData mData;
 };
 
 // This runnable calls ProfileMethod() on the console on the main-thread.
@@ -539,7 +580,7 @@ private:
 
     JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*arguments));
 
-    if (!mBuffer.write(aCx, value, &gConsoleCallbacks, &mStrings)) {
+    if (!mBuffer.write(aCx, value, &gConsoleCallbacks, &mData)) {
       return false;
     }
 
@@ -552,8 +593,14 @@ private:
   {
     ClearException ce(aCx);
 
+    // Now we could have the correct window (if we are not window-less).
+    mData.mParent = aInnerWindow;
+
     JS::Rooted<JS::Value> argumentsValue(aCx);
-    if (!mBuffer.read(aCx, &argumentsValue, &gConsoleCallbacks, &mStrings)) {
+    bool ok = mBuffer.read(aCx, &argumentsValue, &gConsoleCallbacks, &mData);
+    mData.mParent = nullptr;
+
+    if (!ok) {
       return;
     }
 
@@ -585,7 +632,7 @@ private:
   Sequence<JS::Value> mArguments;
 
   JSAutoStructuredCloneBuffer mBuffer;
-  nsTArray<nsString> mStrings;
+  ConsoleStructuredCloneData mData;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Console)
