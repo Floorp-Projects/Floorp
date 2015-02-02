@@ -7077,6 +7077,7 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime *rt)
         c->checkTypeObjectTablesAfterMovingGC();
         c->checkInitialShapesTableAfterMovingGC();
         c->checkWrapperMapAfterMovingGC();
+        c->checkBaseShapeTableAfterMovingGC();
         if (c->debugScopes)
             c->debugScopes->checkHashTablesAfterMovingGC(rt);
     }

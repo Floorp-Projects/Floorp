@@ -293,6 +293,7 @@ struct JSCompartment
     void checkTypeObjectTableAfterMovingGC(js::types::NewTypeObjectTable &table);
     void checkInitialShapesTableAfterMovingGC();
     void checkWrapperMapAfterMovingGC();
+    void checkBaseShapeTableAfterMovingGC();
 #endif
 
     /*
