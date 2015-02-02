@@ -7,6 +7,7 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ThumbnailHelper;
+import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -19,7 +20,6 @@ import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.ImageView;
-import org.mozilla.gecko.util.HardwareUtils;
 
 /**
  * A height constrained ImageView to show thumbnails of top and pinned sites.

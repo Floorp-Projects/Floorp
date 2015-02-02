@@ -13,6 +13,7 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
+import org.mozilla.gecko.widget.ThemedImageView;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -24,7 +25,6 @@ import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.ImageView;
-import org.mozilla.gecko.widget.ThemedImageView;
 
 /**
  * A base implementations of the browser toolbar for phones.

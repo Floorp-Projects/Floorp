@@ -173,7 +173,7 @@ class BrowserToolbarTablet extends BrowserToolbarTabletBase {
 
     @Override
     public void setToolBarButtonsAlpha(float alpha) {
-        // Do nothing;
+        // Do nothing.
     }
 
 
