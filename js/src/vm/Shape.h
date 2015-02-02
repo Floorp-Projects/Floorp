@@ -582,8 +582,6 @@ BaseShape::baseUnowned()
 /* Entries for the per-compartment baseShapes set of unowned base shapes. */
 struct StackBaseShape : public DefaultHasher<ReadBarrieredUnownedBaseShape>
 {
-    typedef const StackBaseShape *Lookup;
-
     uint32_t flags;
     const Class *clasp;
     JSObject *parent;
@@ -602,8 +600,50 @@ struct StackBaseShape : public DefaultHasher<ReadBarrieredUnownedBaseShape>
                           JSObject *parent, JSObject *metadata, uint32_t objectFlags);
     explicit inline StackBaseShape(Shape *shape);
 
-    static inline HashNumber hash(const StackBaseShape *lookup);
-    static inline bool match(UnownedBaseShape *key, const StackBaseShape *lookup);
+    struct Lookup
+    {
+        uint32_t flags;
+        const Class *clasp;
+        JSObject *hashParent;
+        JSObject *matchParent;
+        JSObject *hashMetadata;
+        JSObject *matchMetadata;
+
+        MOZ_IMPLICIT Lookup(const StackBaseShape &base)
+          : flags(base.flags),
+            clasp(base.clasp),
+            hashParent(base.parent),
+            matchParent(base.parent),
+            hashMetadata(base.metadata),
+            matchMetadata(base.metadata)
+        {}
+
+        MOZ_IMPLICIT Lookup(UnownedBaseShape *base)
+          : flags(base->getObjectFlags()),
+            clasp(base->clasp()),
+            hashParent(base->getObjectParent()),
+            matchParent(base->getObjectParent()),
+            hashMetadata(base->getObjectMetadata()),
+            matchMetadata(base->getObjectMetadata())
+        {
+            MOZ_ASSERT(!base->isOwned());
+        }
+
+        // For use by generational GC post barriers.
+        Lookup(uint32_t flags, const Class *clasp,
+               JSObject *hashParent, JSObject *matchParent,
+               JSObject *hashMetadata, JSObject *matchMetadata)
+          : flags(flags),
+            clasp(clasp),
+            hashParent(hashParent),
+            matchParent(matchParent),
+            hashMetadata(hashMetadata),
+            matchMetadata(matchMetadata)
+        {}
+    };
+
+    static inline HashNumber hash(const Lookup& lookup);
+    static inline bool match(UnownedBaseShape *key, const Lookup& lookup);
 
     // For RootedGeneric<StackBaseShape*>
     void trace(JSTracer *trc);

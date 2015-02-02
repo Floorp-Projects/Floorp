@@ -253,10 +253,13 @@ class HashMap
             rekeyAs(old_key, new_key, new_key);
     }
 
-    // Infallibly rekey one entry, if present.
-    void rekeyAs(const Lookup &old_lookup, const Lookup &new_lookup, const Key &new_key) {
-        if (Ptr p = lookup(old_lookup))
+    // Infallibly rekey one entry if present, and return whether that happened.
+    bool rekeyAs(const Lookup &old_lookup, const Lookup &new_lookup, const Key &new_key) {
+        if (Ptr p = lookup(old_lookup)) {
             impl.rekeyAndMaybeRehash(p, new_lookup, new_key);
+            return true;
+        }
+        return false;
     }
 
     // HashMap is movable
@@ -471,10 +474,13 @@ class HashSet
             rekeyAs(old_value, new_value, new_value);
     }
 
-    // Infallibly rekey one entry, if present.
-    void rekeyAs(const Lookup &old_lookup, const Lookup &new_lookup, const T &new_value) {
-        if (Ptr p = lookup(old_lookup))
+    // Infallibly rekey one entry if present, and return whether that happened.
+    bool rekeyAs(const Lookup &old_lookup, const Lookup &new_lookup, const T &new_value) {
+        if (Ptr p = lookup(old_lookup)) {
             impl.rekeyAndMaybeRehash(p, new_lookup, new_value);
+            return true;
+        }
+        return false;
     }
 
     // Infallibly rekey one entry with a new key that is equivalent.
