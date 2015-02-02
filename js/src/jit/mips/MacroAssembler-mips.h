@@ -236,6 +236,7 @@ class MacroAssemblerMIPS : public Assembler
     }
     void ma_b(Register lhs, Address addr, Label *l, Condition c, JumpKind jumpKind = LongJump);
     void ma_b(Address addr, Imm32 imm, Label *l, Condition c, JumpKind jumpKind = LongJump);
+    void ma_b(Address addr, ImmGCPtr imm, Label *l, Condition c, JumpKind jumpKind = LongJump);
     void ma_b(Address addr, Register rhs, Label *l, Condition c, JumpKind jumpKind = LongJump) {
         MOZ_ASSERT(rhs != ScratchRegister);
         ma_lw(ScratchRegister, addr);

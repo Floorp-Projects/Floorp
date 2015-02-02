@@ -930,6 +930,13 @@ MacroAssemblerMIPS::ma_b(Address addr, Imm32 imm, Label *label, Condition c, Jum
 }
 
 void
+MacroAssemblerMIPS::ma_b(Address addr, ImmGCPtr imm, Label *label, Condition c, JumpKind jumpKind)
+{
+    ma_lw(SecondScratchReg, addr);
+    ma_b(SecondScratchReg, imm, label, c, jumpKind);
+}
+
+void
 MacroAssemblerMIPS::ma_b(Label *label, JumpKind jumpKind)
 {
     branchWithCode(getBranchCode(BranchIsJump), label, jumpKind);
