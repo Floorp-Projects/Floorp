@@ -161,7 +161,7 @@ AssignJSString(JSContext *cx, T &dest, JSString *s)
   size_t len = js::GetStringLength(s);
   static_assert(js::MaxStringLength < (1 << 28),
                 "Shouldn't overflow here or in SetCapacity");
-  if (MOZ_UNLIKELY(!dest.SetLength(len, mozilla::fallible_t()))) {
+  if (MOZ_UNLIKELY(!dest.SetLength(len, mozilla::fallible))) {
     JS_ReportOutOfMemory(cx);
     return false;
   }

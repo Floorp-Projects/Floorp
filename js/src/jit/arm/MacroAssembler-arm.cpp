@@ -2686,6 +2686,20 @@ MacroAssemblerARMCompat::cmpPtr(const Address &lhs, ImmPtr rhs)
 }
 
 void
+MacroAssemblerARMCompat::cmpPtr(const Address &lhs, ImmGCPtr rhs)
+{
+    loadPtr(lhs, secondScratchReg_);
+    ma_cmp(secondScratchReg_, rhs);
+}
+
+void
+MacroAssemblerARMCompat::cmpPtr(const Address &lhs, Imm32 rhs)
+{
+    loadPtr(lhs, secondScratchReg_);
+    ma_cmp(secondScratchReg_, rhs);
+}
+
+void
 MacroAssemblerARMCompat::setStackArg(Register reg, uint32_t arg)
 {
     ma_dataTransferN(IsStore, 32, true, sp, Imm32(arg * sizeof(intptr_t)), reg);

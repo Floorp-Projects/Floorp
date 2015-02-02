@@ -107,7 +107,7 @@ SnappyCompressOutputStream::WriteSegments(nsReadSegmentFun aReader,
   }
 
   if (!mBuffer) {
-    mBuffer.reset(new ((fallible_t())) char[mBlockSize]);
+    mBuffer.reset(new (fallible) char[mBlockSize]);
     if (NS_WARN_IF(!mBuffer)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -174,7 +174,7 @@ SnappyCompressOutputStream::FlushToBaseStream()
   // will then get re-used until the stream is closed.
   if (!mCompressedBuffer) {
     mCompressedBufferLength = MaxCompressedBufferLength(mBlockSize);
-    mCompressedBuffer.reset(new ((fallible_t())) char[mCompressedBufferLength]);
+    mCompressedBuffer.reset(new (fallible) char[mCompressedBufferLength]);
     if (NS_WARN_IF(!mCompressedBuffer)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

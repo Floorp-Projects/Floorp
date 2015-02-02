@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
 var debug = false;
 function log(...pieces) {
   function generateLogMessage(args) {
@@ -201,34 +203,65 @@ LoginManager.prototype = {
                        "passwordmgr-storage-replace-complete", null);
         }.bind(this));
       } else if (topic == "gather-telemetry") {
-        this._pwmgr._gatherTelemetry();
+        // When testing, the "data" parameter is a string containing the
+        // reference time in milliseconds for time-based statistics.
+        this._pwmgr._gatherTelemetry(data ? parseInt(data)
+                                          : new Date().getTime());
       } else {
         log("Oops! Unexpected notification:", topic);
       }
     }
   },
 
-  _gatherTelemetry : function() {
-    let numPasswordsBlocklist = Services.telemetry.getHistogramById("PWMGR_BLOCKLIST_NUM_SITES");
-    numPasswordsBlocklist.clear();
-    numPasswordsBlocklist.add(this.getAllDisabledHosts({}).length);
+  /**
+   * Collects statistics about the current logins and settings. The telemetry
+   * histograms used here are not accumulated, but are reset each time this
+   * function is called, since it can be called multiple times in a session.
+   *
+   * This function might also not be called at all in the current session.
+   *
+   * @param referenceTimeMs
+   *        Current time used to calculate time-based statistics, expressed as
+   *        the number of milliseconds since January 1, 1970, 00:00:00 UTC.
+   *        This is set to a fake value during unit testing.
+   */
+  _gatherTelemetry : function (referenceTimeMs) {
+    function clearAndGetHistogram(histogramId) {
+      let histogram = Services.telemetry.getHistogramById(histogramId);
+      histogram.clear();
+      return histogram;
+    }
 
-    let numPasswordsHist = Services.telemetry.getHistogramById("PWMGR_NUM_SAVED_PASSWORDS");
-    numPasswordsHist.clear();
-    numPasswordsHist.add(this.countLogins("", "", ""));
+    clearAndGetHistogram("PWMGR_BLOCKLIST_NUM_SITES").add(
+      this.getAllDisabledHosts({}).length
+    );
+    clearAndGetHistogram("PWMGR_NUM_SAVED_PASSWORDS").add(
+      this.countLogins("", "", "")
+    );
 
-    let isPwdSavedEnabledHist = Services.telemetry.getHistogramById("PWMGR_SAVING_ENABLED");
-    isPwdSavedEnabledHist.clear();
-    isPwdSavedEnabledHist.add(this._remember);
+    // This is a boolean histogram, and not a flag, because we don't want to
+    // record any value if _gatherTelemetry is not called.
+    clearAndGetHistogram("PWMGR_SAVING_ENABLED").add(this._remember);
 
     // Don't try to get logins if MP is enabled, since we don't want to show a MP prompt.
-    if (this.isLoggedIn) {
-      let logins = this.getAllLogins({});
+    if (!this.isLoggedIn) {
+      return;
+    }
 
-      let usernameHist = Services.telemetry.getHistogramById("PWMGR_USERNAME_PRESENT");
-      usernameHist.clear();
-      for (let login of logins) {
-        usernameHist.add(!!login.username);
+    let logins = this.getAllLogins({});
+
+    let usernamePresentHistogram = clearAndGetHistogram("PWMGR_USERNAME_PRESENT");
+    let loginLastUsedDaysHistogram = clearAndGetHistogram("PWMGR_LOGIN_LAST_USED_DAYS");
+
+    for (let login of logins) {
+      usernamePresentHistogram.add(!!login.username);
+
+      login.QueryInterface(Ci.nsILoginMetaInfo);
+      let timeLastUsedAgeMs = referenceTimeMs - login.timeLastUsed;
+      if (timeLastUsedAgeMs > 0) {
+        loginLastUsedDaysHistogram.add(
+          Math.floor(timeLastUsedAgeMs / MS_PER_DAY)
+        );
       }
     }
   },
