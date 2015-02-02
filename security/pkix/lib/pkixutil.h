@@ -211,6 +211,47 @@ WrappedVerifySignedData(TrustDomain& trustDomain,
   return trustDomain.VerifySignedData(signedData, subjectPublicKeyInfo);
 }
 
+// In a switch over an enum, sometimes some compilers are not satisfied that
+// all control flow paths have been considered unless there is a default case.
+// However, in our code, such a default case is almost always unreachable dead
+// code. That can be particularly problematic when the compiler wants the code
+// to choose a value, such as a return value, for the default case, but there's
+// no appropriate "impossible case" value to choose.
+//
+// MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM accounts for this. Example:
+//
+//     // In xy.cpp
+//     #include "xt.h"
+//
+//     enum class XY { X, Y };
+//
+//     int func(XY xy) {
+//       switch (xy) {
+//         case XY::X: return 1;
+//         case XY::Y; return 2;
+//         MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
+//       }
+//     }
+#if defined(__clang__) && (__clang_major__ == 3 && __clang_minor__ < 5)
+  // Earlier versions of Clang will warn if not all cases are covered
+  // (-Wswitch-enum) AND they always, inappropriately, assume the default case
+  // is unreachable. This was fixed in
+  // http://llvm.org/klaus/clang/commit/28cd22d7c2d2458575ce9cc19dfe63c6321010ce/
+# define MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM // empty
+#elif defined(__GNUC__) || defined(__clang__)
+  // GCC and recent versions of clang will warn if not all cases are covered
+  // (-Wswitch-enum). They do not assume that the default case is unreachable.
+# define MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM \
+         default: assert(false); __builtin_unreachable();
+#elif defined(_MSC_VER)
+  // MSVC will warn if not all cases are covered (C4061, level 4). It does not
+  // assume that the default case is unreachable.
+# define MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM \
+         default: assert(false); __assume(0);
+#else
+# error Unsupported compiler for MOZILLA_PKIX_UNREACHABLE_DEFAULT.
+#endif
+
 } } // namespace mozilla::pkix
 
 #endif // mozilla_pkix__pkixutil_h
