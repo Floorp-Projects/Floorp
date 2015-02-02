@@ -1201,8 +1201,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
     }
 
     // The new buffer is now validated, remove the dirty region from it.
-    aTile.mInvalidBack.Sub(nsIntRect(0, 0, GetTileSize().width, GetTileSize().height),
-                           offsetScaledDirtyRegion);
+    aTile.mInvalidBack.SubOut(offsetScaledDirtyRegion);
 
     aTile.Flip();
 
@@ -1267,8 +1266,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
   }
 
   // The new buffer is now validated, remove the dirty region from it.
-  aTile.mInvalidBack.Sub(nsIntRect(0, 0, GetTileSize().width, GetTileSize().height),
-                         offsetScaledDirtyRegion);
+  aTile.mInvalidBack.SubOut(offsetScaledDirtyRegion);
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   DrawDebugOverlay(drawTarget, aTileOrigin.x * mResolution,
