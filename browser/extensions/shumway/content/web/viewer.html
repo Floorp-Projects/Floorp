@@ -35,7 +35,7 @@ limitations under the License.
         display: none;
       }
 
-      #stageContainer {
+      #easelContainer {
         position:fixed !important;
         left:0;top:0;bottom:0;right:0;
         overflow: hidden;
@@ -49,7 +49,7 @@ limitations under the License.
       #overlay.enabled {
         display: block;
         position:fixed;
-        bottom: 0;
+        top: 0;
         right: 0;
       }
 
@@ -58,7 +58,7 @@ limitations under the License.
         width: 70px; height: 16px;
         padding: 8px 4px 4px;
         color: white;
-        background-color: rgba(0, 0, 0, 0.62);
+        background-color: rgba(218, 56, 7, 0.63);
         font: bold 10px sans-serif;
         text-align: center;
         text-decoration: none;
@@ -100,7 +100,7 @@ limitations under the License.
 
   <body contextmenu="shumwayMenu">
     <iframe id="playerWindow" width="9" height="9" src=""></iframe>
-    <div id="stageContainer"></div>
+    <div id="easelContainer"></div>
     <section>
       <div id="overlay">
         <a id="fallback" href="#">Shumway <span class="icon">&times;</span></a>
@@ -114,5 +114,8 @@ limitations under the License.
         <menuitem label="About Shumway" id="aboutMenu"></menuitem>
       </menu>
     </section>
+
+    <script src='resource://shumway/shumway.gfx.js'></script>
+    <script src='resource://shumway/web/viewer.js'></script>
   </body>
 </html>

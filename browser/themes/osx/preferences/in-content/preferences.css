@@ -58,6 +58,11 @@ filefield + button {
   border-bottom: none;
 }
 
+#advancedPrefs {
+  margin-right: 0; /*override margin from normal preferences.css */
+  margin-left: 0;
+}
+
 /**
  * Dialog
  */
