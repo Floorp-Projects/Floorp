@@ -73,7 +73,8 @@ loop.store.ActiveRoomStore = (function() {
         used: false,
         localVideoDimensions: {},
         remoteVideoDimensions: {},
-        screenSharingState: SCREEN_SHARE_STATES.INACTIVE
+        screenSharingState: SCREEN_SHARE_STATES.INACTIVE,
+        receivingScreenShare: false
       };
     },
 
@@ -121,6 +122,7 @@ loop.store.ActiveRoomStore = (function() {
         "connectionFailure",
         "setMute",
         "screenSharingState",
+        "receivingScreenShare",
         "remotePeerDisconnected",
         "remotePeerConnected",
         "windowUnload",
@@ -378,6 +380,13 @@ loop.store.ActiveRoomStore = (function() {
      */
     screenSharingState: function(actionData) {
       this.setStoreState({screenSharingState: actionData.state});
+    },
+
+    /**
+     * Used to note the current state of receiving screenshare data.
+     */
+    receivingScreenShare: function(actionData) {
+      this.setStoreState({receivingScreenShare: actionData.receiving});
     },
 
     /**

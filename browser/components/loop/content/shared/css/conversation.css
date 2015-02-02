@@ -231,7 +231,7 @@
 
 /* Side by side video elements */
 
-.conversation .media.side-by-side .remote {
+.conversation .media.side-by-side .remote-stream {
   width: 50%;
   float: left;
 }
@@ -509,7 +509,7 @@
   max-height: none;
 }
 
-.conversation .media.nested .remote {
+.conversation .media.nested .remote-stream {
   display: inline-block;
   position: absolute; /* workaround for lack of object-fit; see bug 1020445 */
   width: 100%;
