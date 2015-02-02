@@ -826,7 +826,7 @@ class GCRuntime
         Finished
     };
 
-    void minorGCImpl(JS::gcreason::Reason reason, Nursery::TypeObjectList *pretenureTypes);
+    void minorGCImpl(JS::gcreason::Reason reason, Nursery::ObjectGroupList *pretenureGroups);
 
     // For ArenaLists::allocateFromArena()
     friend class ArenaLists;

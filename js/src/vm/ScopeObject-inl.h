@@ -20,9 +20,9 @@ ScopeObject::setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name
     JS_STATIC_ASSERT(CallObject::RESERVED_SLOTS == BlockObject::RESERVED_SLOTS);
 
     // name may be null if we don't need to track side effects on the object.
-    MOZ_ASSERT_IF(hasSingletonType(), name);
+    MOZ_ASSERT_IF(isSingleton(), name);
 
-    if (hasSingletonType()) {
+    if (isSingleton()) {
         MOZ_ASSERT(name);
         types::AddTypePropertyId(cx, this, NameToId(name), v);
 
@@ -41,7 +41,7 @@ CallObject::setAliasedVar(JSContext *cx, AliasedFormalIter fi, PropertyName *nam
 {
     MOZ_ASSERT(name == fi->name());
     setSlot(fi.scopeSlot(), v);
-    if (hasSingletonType())
+    if (isSingleton())
         types::AddTypePropertyId(cx, this, NameToId(name), v);
 }
 
@@ -49,7 +49,7 @@ inline void
 CallObject::setAliasedVarFromArguments(JSContext *cx, const Value &argsValue, jsid id, const Value &v)
 {
     setSlot(ArgumentsObject::SlotFromMagicScopeSlotValue(argsValue), v);
-    if (hasSingletonType())
+    if (isSingleton())
         types::AddTypePropertyId(cx, this, id, v);
 }
 

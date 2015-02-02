@@ -364,7 +364,7 @@ class NativeObject : public JSObject
 
         static_assert(offsetof(NativeObject, shape_) == offsetof(shadow::Object, shape),
                       "shadow shape must match actual shape");
-        static_assert(offsetof(NativeObject, type_) == offsetof(shadow::Object, type),
+        static_assert(offsetof(NativeObject, group_) == offsetof(shadow::Object, group),
                       "shadow type must match actual type");
         static_assert(offsetof(NativeObject, slots_) == offsetof(shadow::Object, slots),
                       "shadow slots must match actual slots");
@@ -814,8 +814,6 @@ class NativeObject : public JSObject
     static bool rollbackProperties(ExclusiveContext *cx, HandleNativeObject obj,
                                    uint32_t slotSpan);
 
-    inline bool setSlotIfHasType(Shape *shape, const Value &value,
-                                 bool overwriting = true);
     inline void setSlotWithType(ExclusiveContext *cx, Shape *shape,
                                 const Value &value, bool overwriting = true);
 

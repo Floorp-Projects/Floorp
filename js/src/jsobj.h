@@ -95,7 +95,7 @@ bool SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj, bool 
  * - The |shape_| member stores the shape of the object, which includes the
  *   object's class and the layout of all its properties.
  *
- * - The |type_| member stores the type of the object, which contains its
+ * - The |group_| member stores the group of the object, which contains its
  *   prototype object and the possible types of its properties.
  *
  * Subclasses of JSObject --- mainly NativeObject and JSFunction --- add more
@@ -104,18 +104,8 @@ bool SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj, bool 
 class JSObject : public js::gc::Cell
 {
   protected:
-    /*
-     * Shape of the object, encodes the layout of the object's properties and
-     * all other information about its structure. See vm/Shape.h.
-     */
     js::HeapPtrShape shape_;
-
-    /*
-     * The object's type and prototype. For objects with the LAZY_TYPE flag
-     * set, this is the prototype's default 'new' type and can only be used
-     * to get that prototype.
-     */
-    js::HeapPtrTypeObject type_;
+    js::HeapPtrObjectGroup group_;
 
   private:
     friend class js::Shape;
@@ -127,8 +117,8 @@ class JSObject : public js::gc::Cell
     friend bool js::SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj,
                                           bool *succeeded);
 
-    /* Make the type object to use for LAZY_TYPE objects. */
-    static js::types::TypeObject *makeLazyType(JSContext *cx, js::HandleObject obj);
+    // Make a new group to use for a singleton object.
+    static js::types::ObjectGroup *makeLazyGroup(JSContext *cx, js::HandleObject obj);
 
   public:
     js::Shape * lastProperty() const {
@@ -141,7 +131,7 @@ class JSObject : public js::gc::Cell
     }
 
     const js::Class *getClass() const {
-        return type_->clasp();
+        return group_->clasp();
     }
     const JSClass *getJSClass() const {
         return Jsvalify(getClass());
@@ -153,29 +143,29 @@ class JSObject : public js::gc::Cell
         return &getClass()->ops;
     }
 
-    js::types::TypeObject *type() const {
-        MOZ_ASSERT(!hasLazyType());
-        return typeRaw();
+    js::types::ObjectGroup *group() const {
+        MOZ_ASSERT(!hasLazyGroup());
+        return groupRaw();
     }
 
-    js::types::TypeObject *typeRaw() const {
-        return type_;
-    }
-
-    /*
-     * Whether this is the only object which has its specified type. This
-     * object will have its type constructed lazily as needed by analysis.
-     */
-    bool hasSingletonType() const {
-        return !!type_->singleton();
+    js::types::ObjectGroup *groupRaw() const {
+        return group_;
     }
 
     /*
-     * Whether the object's type has not been constructed yet. If an object
-     * might have a lazy type, use getType() below, otherwise type().
+     * Whether this is the only object which has its specified gbroup. This
+     * object will have its group constructed lazily as needed by analysis.
      */
-    bool hasLazyType() const {
-        return type_->lazy();
+    bool isSingleton() const {
+        return !!group_->singleton();
+    }
+
+    /*
+     * Whether the object's group has not been constructed yet. If an object
+     * might have a lazy group, use getGroup() below, otherwise group().
+     */
+    bool hasLazyGroup() const {
+        return group_->lazy();
     }
 
     JSCompartment *compartment() const {
@@ -190,7 +180,7 @@ class JSObject : public js::gc::Cell
                                    js::gc::AllocKind kind,
                                    js::gc::InitialHeap heap,
                                    js::HandleShape shape,
-                                   js::HandleTypeObject type);
+                                   js::HandleObjectGroup group);
 
     // Set the initial slots and elements of an object. These pointers are only
     // valid for native objects, but during initialization are set for all
@@ -328,24 +318,24 @@ class JSObject : public js::gc::Cell
     bool hasIdempotentProtoChain() const;
 
     /*
-     * Marks this object as having a singleton type, and leave the type lazy.
+     * Marks this object as having a singleton type, and leave the group lazy.
      * Constructs a new, unique shape for the object.
      */
-    static inline bool setSingletonType(js::ExclusiveContext *cx, js::HandleObject obj);
+    static inline bool setSingleton(js::ExclusiveContext *cx, js::HandleObject obj);
 
-    // uninlinedGetType() is the same as getType(), but not inlined.
-    inline js::types::TypeObject* getType(JSContext *cx);
-    js::types::TypeObject* uninlinedGetType(JSContext *cx);
+    // uninlinedGetGroup() is the same as getGroup(), but not inlined.
+    inline js::types::ObjectGroup* getGroup(JSContext *cx);
+    js::types::ObjectGroup* uninlinedGetGroup(JSContext *cx);
 
-    const js::HeapPtrTypeObject &typeFromGC() const {
+    const js::HeapPtrObjectGroup &groupFromGC() const {
         /* Direct field access for use by GC. */
-        return type_;
+        return group_;
     }
 
     /*
      * We allow the prototype of an object to be lazily computed if the object
      * is a proxy. In the lazy case, we store (JSObject *)0x1 in the proto field
-     * of the object's TypeObject. We offer three ways of getting the prototype:
+     * of the object's group. We offer three ways of getting the prototype:
      *
      * 1. obj->getProto() returns the prototype, but asserts if obj is a proxy.
      * 2. obj->getTaggedProto() returns a TaggedProto, which can be tested to
@@ -356,7 +346,7 @@ class JSObject : public js::gc::Cell
      */
 
     js::TaggedProto getTaggedProto() const {
-        return type_->proto();
+        return group_->proto();
     }
 
     bool hasTenuredProto() const;
@@ -400,12 +390,12 @@ class JSObject : public js::gc::Cell
         return lastProperty()->hasObjectFlag(js::BaseShape::IMMUTABLE_PROTOTYPE);
     }
 
-    // uninlinedSetType() is the same as setType(), but not inlined.
-    inline void setType(js::types::TypeObject *newType);
-    void uninlinedSetType(js::types::TypeObject *newType);
+    // uninlinedSetGroup() is the same as setGroup(), but not inlined.
+    inline void setGroup(js::types::ObjectGroup *group);
+    void uninlinedSetGroup(js::types::ObjectGroup *group);
 
 #ifdef DEBUG
-    bool hasNewType(const js::Class *clasp, js::types::TypeObject *newType);
+    bool hasNewGroup(const js::Class *clasp, js::types::ObjectGroup *group);
 #endif
 
     /*
@@ -424,10 +414,10 @@ class JSObject : public js::gc::Cell
      * Mark an object as requiring its default 'new' type to have unknown
      * properties.
      */
-    bool isNewTypeUnknown() const {
-        return lastProperty()->hasObjectFlag(js::BaseShape::NEW_TYPE_UNKNOWN);
+    bool isNewGroupUnknown() const {
+        return lastProperty()->hasObjectFlag(js::BaseShape::NEW_GROUP_UNKNOWN);
     }
-    static bool setNewTypeUnknown(JSContext *cx, const js::Class *clasp, JS::HandleObject obj);
+    static bool setNewGroupUnknown(JSContext *cx, const js::Class *clasp, JS::HandleObject obj);
 
     // Mark an object as having its 'new' script information cleared.
     bool wasNewScriptCleared() const {
@@ -493,10 +483,6 @@ class JSObject : public js::gc::Cell
 
     inline js::GlobalObject &global() const;
     inline bool isOwnGlobal() const;
-
-    /* Remove the type (and prototype) or parent from a new object. */
-    static inline bool clearType(JSContext *cx, js::HandleObject obj);
-    static bool clearParent(JSContext *cx, js::HandleObject obj);
 
     /*
      * ES5 meta-object properties and operations.
@@ -605,10 +591,7 @@ class JSObject : public js::gc::Cell
     /* JIT Accessors */
 
     static size_t offsetOfShape() { return offsetof(JSObject, shape_); }
-    js::HeapPtrShape *addressOfShape() { return &shape_; }
-
-    static size_t offsetOfType() { return offsetof(JSObject, type_); }
-    js::HeapPtrTypeObject *addressOfType() { return &type_; }
+    static size_t offsetOfGroup() { return offsetof(JSObject, group_); }
 
     // Maximum size in bytes of a JSObject.
     static const size_t MAX_BYTE_SIZE = 4 * sizeof(void *) + 16 * sizeof(JS::Value);

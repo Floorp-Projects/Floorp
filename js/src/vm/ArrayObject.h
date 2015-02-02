@@ -44,7 +44,7 @@ class ArrayObject : public NativeObject
                 gc::AllocKind kind,
                 gc::InitialHeap heap,
                 HandleShape shape,
-                HandleTypeObject type,
+                HandleObjectGroup group,
                 uint32_t length);
 
     // Make an array object with the specified initial state and elements.
@@ -52,7 +52,7 @@ class ArrayObject : public NativeObject
     createArray(ExclusiveContext *cx,
                 gc::InitialHeap heap,
                 HandleShape shape,
-                HandleTypeObject type,
+                HandleObjectGroup group,
                 HeapSlot *elements);
 
     // Make a copy-on-write array object which shares the elements of an
@@ -70,7 +70,7 @@ class ArrayObject : public NativeObject
                         gc::AllocKind kind,
                         gc::InitialHeap heap,
                         HandleShape shape,
-                        HandleTypeObject type);
+                        HandleObjectGroup group);
 
     static inline ArrayObject *
     finishCreateArray(ArrayObject *obj, HandleShape shape);
