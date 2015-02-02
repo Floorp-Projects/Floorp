@@ -60,8 +60,7 @@ MockMediaResource::ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
 int64_t
 MockMediaResource::GetLength()
 {
-  fseek(mFileHandle, 0, SEEK_END);
-  return ftell(mFileHandle);
+  return fseek(mFileHandle, 0, SEEK_END);
 }
 
 void
