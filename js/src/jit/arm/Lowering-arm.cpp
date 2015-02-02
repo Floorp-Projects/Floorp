@@ -393,7 +393,7 @@ LIRGeneratorARM::visitGuardObjectType(MGuardObjectType *ins)
 
     LDefinition tempObj = temp(LDefinition::OBJECT);
     LGuardObjectType *guard = new(alloc()) LGuardObjectType(useRegister(ins->obj()), tempObj);
-    assignSnapshot(guard, Bailout_ObjectIdentityOrTypeGuard);
+    assignSnapshot(guard, ins->bailoutKind());
     add(guard, ins);
     redefine(ins, ins->obj());
 }

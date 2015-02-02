@@ -60,10 +60,10 @@ def print_array_entry(histogram, name_index, exp_index):
     cpp_guard = histogram.cpp_guard()
     if cpp_guard:
         print "#if defined(%s)" % cpp_guard
-    print "  { %s, %s, %s, %s, %d, %d, %s, %s }," \
+    print "  { %s, %s, %s, %s, %d, %d, %s, %s, %s }," \
         % (histogram.low(), histogram.high(),
            histogram.n_buckets(), histogram.nsITelemetry_kind(),
-           name_index, exp_index,
+           name_index, exp_index, histogram.dataset(),
            "true" if histogram.extended_statistics_ok() else "false",
            "true" if histogram.keyed() else "false")
     if cpp_guard:

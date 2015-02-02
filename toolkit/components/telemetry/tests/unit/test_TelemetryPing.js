@@ -259,7 +259,7 @@ function checkPayload(request, reason, successfulPings) {
   do_check_true(TELEMETRY_TEST_FLAG in payload.histograms);
   do_check_true(TELEMETRY_TEST_COUNT in payload.histograms);
 
-  let rh = Telemetry.registeredHistograms([]);
+  let rh = Telemetry.registeredHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, []);
   for (let name of rh) {
     if (/SQLITE/.test(name) && name in payload.histograms) {
       do_check_true(("STARTUP_" + name) in payload.histograms); 

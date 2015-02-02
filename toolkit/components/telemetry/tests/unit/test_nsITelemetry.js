@@ -15,7 +15,8 @@ function test_expired_histogram() {
   var clone_id = "ExpiredClone";
   var dummy = Telemetry.newHistogram(histogram_id, "28.0a1", Telemetry.HISTOGRAM_EXPONENTIAL, 1, 2, 3);
   var dummy_clone = Telemetry.histogramFrom(clone_id, test_expired_id);
-  var rh = Telemetry.registeredHistograms([]);
+  var rh = Telemetry.registeredHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, []);
+  Assert.ok(!!rh);
 
   dummy.add(1);
   dummy_clone.add(1);
@@ -558,6 +559,52 @@ function test_keyed_histogram() {
   test_keyed_flag_histogram();
 }
 
+function test_datasets()
+{
+  // Check that datasets work as expected.
+
+  const RELEASE_CHANNEL_OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
+  const RELEASE_CHANNEL_OPTIN  = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
+
+  // Histograms should default to the extended dataset
+  let h = Telemetry.getHistogramById("TELEMETRY_TEST_FLAG");
+  Assert.equal(h.dataset(), RELEASE_CHANNEL_OPTIN);
+  h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_FLAG");
+  Assert.equal(h.dataset(), RELEASE_CHANNEL_OPTIN);
+
+  // Check test histograms with explicit dataset definitions
+  h = Telemetry.getHistogramById("TELEMETRY_TEST_RELEASE_OPTIN");
+  Assert.equal(h.dataset(), RELEASE_CHANNEL_OPTIN);
+  h = Telemetry.getHistogramById("TELEMETRY_TEST_RELEASE_OPTOUT");
+  Assert.equal(h.dataset(), RELEASE_CHANNEL_OPTOUT);
+  h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTIN");
+  Assert.equal(h.dataset(), RELEASE_CHANNEL_OPTIN);
+  h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT");
+  Assert.equal(h.dataset(), RELEASE_CHANNEL_OPTOUT);
+
+  // Check that registeredHistogram works properly
+  let registered = Telemetry.registeredHistograms(RELEASE_CHANNEL_OPTIN, []);
+  registered = new Set(registered);
+  Assert.ok(registered.has("TELEMETRY_TEST_FLAG"));
+  Assert.ok(registered.has("TELEMETRY_TEST_RELEASE_OPTIN"));
+  Assert.ok(registered.has("TELEMETRY_TEST_RELEASE_OPTOUT"));
+  registered = Telemetry.registeredHistograms(RELEASE_CHANNEL_OPTOUT, []);
+  registered = new Set(registered);
+  Assert.ok(!registered.has("TELEMETRY_TEST_FLAG"));
+  Assert.ok(!registered.has("TELEMETRY_TEST_RELEASE_OPTIN"));
+  Assert.ok(registered.has("TELEMETRY_TEST_RELEASE_OPTOUT"));
+
+  // Check that registeredKeyedHistograms works properly
+  registered = Telemetry.registeredKeyedHistograms(RELEASE_CHANNEL_OPTIN, []);
+  registered = new Set(registered);
+  Assert.ok(registered.has("TELEMETRY_TEST_KEYED_FLAG"));
+  Assert.ok(registered.has("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT"));
+  registered = Telemetry.registeredKeyedHistograms(RELEASE_CHANNEL_OPTOUT, []);
+  registered = new Set(registered);
+  Assert.ok(!registered.has("TELEMETRY_TEST_KEYED_FLAG"));
+  Assert.ok(registered.has("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT"));
+}
+
 function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
   // strip {}
@@ -592,4 +639,5 @@ function run_test()
   test_extended_stats();
   test_expired_histogram();
   test_keyed_histogram();
+  test_datasets();
 }

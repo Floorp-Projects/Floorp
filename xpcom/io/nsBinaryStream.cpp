@@ -765,7 +765,7 @@ nsBinaryInputStream::ReadString(nsAString& aString)
   }
 
   // pre-allocate output buffer, and get direct access to buffer...
-  if (!aString.SetLength(length, mozilla::fallible_t())) {
+  if (!aString.SetLength(length, mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
