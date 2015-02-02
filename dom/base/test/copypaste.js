@@ -317,6 +317,27 @@ if (false) {
     copySelectionToClipboard(true);
     testPasteHTML('contentEditable5', '<div id="div2s"><div id="div2se1">before</div></div><div id="div2s">after</div>');
 
+    // crash test for bug 1127835
+    var e1 = document.getElementById('1127835crash1');
+    var e2 = document.getElementById('1127835crash2');
+    var e3 = document.getElementById('1127835crash3');
+    var t1 = e1.childNodes[0];
+    var t3 = e3.childNodes[0];
+    
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+  
+    var r = document.createRange();
+    r.setStart(t1, 1);
+    r.setEnd(e2, 0);
+    sel.addRange(r);
+  
+    r = document.createRange();
+    r.setStart(e2, 1);
+    r.setEnd(t3, 0);
+    sel.addRange(r);
+    copySelectionToClipboard(true);
+    testPasteHTML('contentEditable6', '<span id="1127835crash1"></span><div id="1127835crash2"><div>\n</div></div><br>');
   }
 
   // ============ copy/paste test from/to a textarea
@@ -344,20 +365,22 @@ if (false) {
   copyToClipboard($("tr1"));
   testClipboardValue("text/unicode", "foo\tbar");
 
-  // ============ spanning multiple rows
+  if (!isXHTML) {
+    // ============ spanning multiple rows
 
-  copyRangeToClipboard($("tr2"),0,$("tr3"),0);
-  testClipboardValue("text/unicode", "1\t2\n3\t4\n");
-  testClipboardValue("text/html", '<table><tbody><tr id="tr2"><tr id="tr2"><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr><tr id="tr3"></tr></tr></tbody></table>');
+    copyRangeToClipboard($("tr2"),0,$("tr3"),0);
+    testClipboardValue("text/unicode", "1\t2\n3\t4\n");
+    testClipboardValue("text/html", '<table><tbody><tr id="tr2"><tr id="tr2"><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr><tr id="tr3"></tr></tr></tbody></table>');
 
-  // ============ spanning multiple rows in multi-range selection
+    // ============ spanning multiple rows in multi-range selection
 
-  clear();
-  addRange($("tr2"),0,$("tr2"),2);
-  addRange($("tr3"),0,$("tr3"),2);
-  copySelectionToClipboard();
-  testClipboardValue("text/unicode", "1\t2\n5\t6");
-  testClipboardValue("text/html", '<table><tbody><tr id="tr2"><td>1</td><td>2</td></tr><tr id="tr3"><td>5</td><td>6</td></tr></tbody></table>');
+    clear();
+    addRange($("tr2"),0,$("tr2"),2);
+    addRange($("tr3"),0,$("tr3"),2);
+    copySelectionToClipboard();
+    testClipboardValue("text/unicode", "1\t2\n5\t6");
+    testClipboardValue("text/html", '<table><tbody><tr id="tr2"><td>1</td><td>2</td></tr><tr id="tr3"><td>5</td><td>6</td></tr></tbody></table>');
+  }
 
   // ============ manipulating Selection in oncopy
 
