@@ -6,6 +6,7 @@ package org.mozilla.gecko.db;
 
 import java.util.HashMap;
 
+import org.mozilla.gecko.CrashHandler;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
@@ -50,6 +51,8 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
 
     private static final String LOG_TAG = "GeckPasswordsProvider";
 
+    private CrashHandler mCrashHandler;
+
     static {
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
@@ -82,10 +85,26 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
 
     public PasswordsProvider() {
         super(LOG_TAG);
+    }
+
+    @Override
+    public boolean onCreate() {
+        mCrashHandler = CrashHandler.createDefaultCrashHandler(getContext());
 
         // We don't use .loadMozGlue because we're in a different process,
         // and we just want to reuse code rather than use the loader lock etc.
         GeckoLoader.doLoadLibrary(getContext(), "mozglue");
+        return super.onCreate();
+    }
+
+    @Override
+    public void shutdown() {
+        super.shutdown();
+
+        if (mCrashHandler != null) {
+            mCrashHandler.unregister();
+            mCrashHandler = null;
+        }
     }
 
     @Override
