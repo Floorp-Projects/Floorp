@@ -174,12 +174,14 @@ Native2WrappedNativeMap::newMap(int length)
 
 Native2WrappedNativeMap::Native2WrappedNativeMap(int length)
 {
-    mTable = PL_NewDHashTable(PL_DHashGetStubOps(), sizeof(Entry), length);
+    mTable = new PLDHashTable();
+    PL_DHashTableInit(mTable, PL_DHashGetStubOps(), sizeof(Entry), length);
 }
 
 Native2WrappedNativeMap::~Native2WrappedNativeMap()
 {
-    PL_DHashTableDestroy(mTable);
+    PL_DHashTableFinish(mTable);
+    delete mTable;
 }
 
 size_t
@@ -218,12 +220,14 @@ IID2WrappedJSClassMap::newMap(int length)
 
 IID2WrappedJSClassMap::IID2WrappedJSClassMap(int length)
 {
-    mTable = PL_NewDHashTable(&Entry::sOps, sizeof(Entry), length);
+    mTable = new PLDHashTable();
+    PL_DHashTableInit(mTable, &Entry::sOps, sizeof(Entry), length);
 }
 
 IID2WrappedJSClassMap::~IID2WrappedJSClassMap()
 {
-    PL_DHashTableDestroy(mTable);
+    PL_DHashTableFinish(mTable);
+    delete mTable;
 }
 
 
@@ -247,12 +251,14 @@ IID2NativeInterfaceMap::newMap(int length)
 
 IID2NativeInterfaceMap::IID2NativeInterfaceMap(int length)
 {
-    mTable = PL_NewDHashTable(&Entry::sOps, sizeof(Entry), length);
+    mTable = new PLDHashTable();
+    PL_DHashTableInit(mTable, &Entry::sOps, sizeof(Entry), length);
 }
 
 IID2NativeInterfaceMap::~IID2NativeInterfaceMap()
 {
-    PL_DHashTableDestroy(mTable);
+    PL_DHashTableFinish(mTable);
+    delete mTable;
 }
 
 size_t
@@ -284,12 +290,14 @@ ClassInfo2NativeSetMap::newMap(int length)
 
 ClassInfo2NativeSetMap::ClassInfo2NativeSetMap(int length)
 {
-    mTable = PL_NewDHashTable(PL_DHashGetStubOps(), sizeof(Entry), length);
+    mTable = new PLDHashTable();
+    PL_DHashTableInit(mTable, PL_DHashGetStubOps(), sizeof(Entry), length);
 }
 
 ClassInfo2NativeSetMap::~ClassInfo2NativeSetMap()
 {
-    PL_DHashTableDestroy(mTable);
+    PL_DHashTableFinish(mTable);
+    delete mTable;
 }
 
 size_t
@@ -314,12 +322,14 @@ ClassInfo2WrappedNativeProtoMap::newMap(int length)
 
 ClassInfo2WrappedNativeProtoMap::ClassInfo2WrappedNativeProtoMap(int length)
 {
-    mTable = PL_NewDHashTable(PL_DHashGetStubOps(), sizeof(Entry), length);
+    mTable = new PLDHashTable();
+    PL_DHashTableInit(mTable, PL_DHashGetStubOps(), sizeof(Entry), length);
 }
 
 ClassInfo2WrappedNativeProtoMap::~ClassInfo2WrappedNativeProtoMap()
 {
-    PL_DHashTableDestroy(mTable);
+    PL_DHashTableFinish(mTable);
+    delete mTable;
 }
 
 size_t
@@ -430,12 +440,14 @@ NativeSetMap::newMap(int length)
 
 NativeSetMap::NativeSetMap(int length)
 {
-    mTable = PL_NewDHashTable(&Entry::sOps, sizeof(Entry), length);
+    mTable = new PLDHashTable();
+    PL_DHashTableInit(mTable, &Entry::sOps, sizeof(Entry), length);
 }
 
 NativeSetMap::~NativeSetMap()
 {
-    PL_DHashTableDestroy(mTable);
+    PL_DHashTableFinish(mTable);
+    delete mTable;
 }
 
 size_t
@@ -489,12 +501,14 @@ IID2ThisTranslatorMap::newMap(int length)
 
 IID2ThisTranslatorMap::IID2ThisTranslatorMap(int length)
 {
-    mTable = PL_NewDHashTable(&Entry::sOps, sizeof(Entry), length);
+    mTable = new PLDHashTable();
+    PL_DHashTableInit(mTable, &Entry::sOps, sizeof(Entry), length);
 }
 
 IID2ThisTranslatorMap::~IID2ThisTranslatorMap()
 {
-    PL_DHashTableDestroy(mTable);
+    PL_DHashTableFinish(mTable);
+    delete mTable;
 }
 
 /***************************************************************************/
@@ -560,12 +574,14 @@ XPCNativeScriptableSharedMap::newMap(int length)
 
 XPCNativeScriptableSharedMap::XPCNativeScriptableSharedMap(int length)
 {
-    mTable = PL_NewDHashTable(&Entry::sOps, sizeof(Entry), length);
+    mTable = new PLDHashTable();
+    PL_DHashTableInit(mTable, &Entry::sOps, sizeof(Entry), length);
 }
 
 XPCNativeScriptableSharedMap::~XPCNativeScriptableSharedMap()
 {
-    PL_DHashTableDestroy(mTable);
+    PL_DHashTableFinish(mTable);
+    delete mTable;
 }
 
 bool
@@ -606,13 +622,15 @@ XPCWrappedNativeProtoMap::newMap(int length)
 
 XPCWrappedNativeProtoMap::XPCWrappedNativeProtoMap(int length)
 {
-    mTable = PL_NewDHashTable(PL_DHashGetStubOps(),
-                              sizeof(PLDHashEntryStub), length);
+    mTable = new PLDHashTable();
+    PL_DHashTableInit(mTable, PL_DHashGetStubOps(), sizeof(PLDHashEntryStub),
+                      length);
 }
 
 XPCWrappedNativeProtoMap::~XPCWrappedNativeProtoMap()
 {
-    PL_DHashTableDestroy(mTable);
+    PL_DHashTableFinish(mTable);
+    delete mTable;
 }
 
 /***************************************************************************/
