@@ -9,6 +9,7 @@ describe("loop.OTSdkDriver", function () {
   var sharedActions = loop.shared.actions;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var STREAM_PROPERTIES = loop.shared.utils.STREAM_PROPERTIES;
+  var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
   var sandbox;
   var dispatcher, driver, publisher, sdk, session, sessionData;
   var fakeLocalElement, fakeRemoteElement, publisherConfig, fakeEvent;
@@ -35,6 +36,7 @@ describe("loop.OTSdkDriver", function () {
       connect: sinon.stub(),
       disconnect: sinon.stub(),
       publish: sinon.stub(),
+      unpublish: sinon.stub(),
       subscribe: sinon.stub(),
       forceDisconnect: sinon.stub()
     }, Backbone.Events);
@@ -116,6 +118,74 @@ describe("loop.OTSdkDriver", function () {
 
       sinon.assert.calledOnce(publisher.publishVideo);
       sinon.assert.calledWithExactly(publisher.publishVideo, true);
+    });
+  });
+
+  describe("#startScreenShare", function() {
+    var fakeElement;
+
+    beforeEach(function() {
+      sandbox.stub(dispatcher, "dispatch");
+
+      fakeElement = {
+        className: "fakeVideo"
+      };
+
+      driver.getScreenShareElementFunc = function() {
+        return fakeElement;
+      };
+    });
+
+    it("should dispatch a `ScreenSharingState` action", function() {
+      driver.startScreenShare(new sharedActions.StartScreenShare());
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.ScreenSharingState({
+          state: SCREEN_SHARE_STATES.PENDING
+        }));
+    });
+
+    it("should initialize a publisher", function() {
+      driver.startScreenShare(new sharedActions.StartScreenShare());
+
+      sinon.assert.calledOnce(sdk.initPublisher);
+      sinon.assert.calledWithMatch(sdk.initPublisher,
+        fakeElement, {videoSource: "window"});
+    });
+  });
+
+  describe("#endScreenShare", function() {
+    beforeEach(function() {
+      driver.getScreenShareElementFunc = function() {};
+
+      driver.startScreenShare(new sharedActions.StartScreenShare());
+
+      sandbox.stub(dispatcher, "dispatch");
+
+      driver.session = session;
+    });
+
+    it("should unpublish the share", function() {
+      driver.endScreenShare(new sharedActions.EndScreenShare());
+
+      sinon.assert.calledOnce(session.unpublish);
+    });
+
+    it("should destroy the share", function() {
+      driver.endScreenShare(new sharedActions.EndScreenShare());
+
+      sinon.assert.calledOnce(publisher.destroy);
+    });
+
+    it("should dispatch a `ScreenSharingState` action", function() {
+      driver.endScreenShare(new sharedActions.EndScreenShare());
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.ScreenSharingState({
+          state: SCREEN_SHARE_STATES.INACTIVE
+        }));
     });
   });
 
@@ -214,7 +284,7 @@ describe("loop.OTSdkDriver", function () {
     });
   });
 
-  describe("Events", function() {
+  describe("Events (general media)", function() {
     beforeEach(function() {
       driver.connectSession(sessionData);
 
@@ -424,6 +494,48 @@ describe("loop.OTSdkDriver", function () {
         publisher.trigger("accessDialogOpened", fakeEvent);
 
         sinon.assert.calledOnce(fakeEvent.preventDefault);
+      });
+    });
+  });
+
+  describe("Events (screenshare)", function() {
+    beforeEach(function() {
+      driver.connectSession(sessionData);
+
+      driver.getScreenShareElementFunc = function() {};
+
+      driver.startScreenShare(new sharedActions.StartScreenShare());
+
+      sandbox.stub(dispatcher, "dispatch");
+    });
+
+    describe("accessAllowed", function() {
+      it("should publish the stream", function() {
+        publisher.trigger("accessAllowed", fakeEvent);
+
+        sinon.assert.calledOnce(session.publish);
+      });
+
+      it("should dispatch a `ScreenSharingState` action", function() {
+        publisher.trigger("accessAllowed", fakeEvent);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ScreenSharingState({
+            state: SCREEN_SHARE_STATES.ACTIVE
+          }));
+      });
+    });
+
+    describe("accessDenied", function() {
+      it("should dispatch a `ScreenShareState` action", function() {
+        publisher.trigger("accessDenied", fakeEvent);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ScreenSharingState({
+            state: SCREEN_SHARE_STATES.INACTIVE
+          }));
       });
     });
   });
