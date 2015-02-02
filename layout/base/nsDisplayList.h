@@ -907,6 +907,7 @@ private:
   // display list has a display port. An async-scrollable scroll frame is one
   // which WantsAsyncScroll().
   bool                           mHaveScrollableDisplayPort;
+  bool                           mWindowDraggingAllowed;
 };
 
 class nsDisplayItem;
