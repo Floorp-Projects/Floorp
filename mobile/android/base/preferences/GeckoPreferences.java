@@ -38,6 +38,7 @@ import org.mozilla.gecko.TelemetryContract.Method;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
+import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -1057,7 +1058,7 @@ OnSharedPreferenceChangeListener
         if (PREFS_MENU_CHAR_ENCODING.equals(prefName)) {
             setCharEncodingState(((String) newValue).equals("true"));
         } else if (PREFS_UPDATER_AUTODOWNLOAD.equals(prefName)) {
-            UpdateServiceHelper.registerForUpdates(this, (String) newValue);
+            UpdateServiceHelper.setAutoDownloadPolicy(this, UpdateService.AutoDownloadPolicy.get((String) newValue));
         } else if (PREFS_HEALTHREPORT_UPLOAD_ENABLED.equals(prefName)) {
             // The healthreport pref only lives in Android, so we do not persist
             // to Gecko, but we do broadcast intent to the health report
