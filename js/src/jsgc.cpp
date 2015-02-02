@@ -1112,7 +1112,8 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     sliceBudget(SliceBudget::Unlimited),
     incrementalAllowed(true),
     generationalDisabled(0),
-    compactingDisabled(0),
+    compactingEnabled(true),
+    compactingDisabledCount(0),
     manipulatingDeadZones(false),
     objectsMarkedInDeadZones(0),
     poked(false),
@@ -1373,6 +1374,9 @@ GCRuntime::setParameter(JSGCParamKey key, uint32_t value)
                    mode == JSGC_MODE_COMPARTMENT ||
                    mode == JSGC_MODE_INCREMENTAL);
         break;
+      case JSGC_COMPACTING_ENABLED:
+        compactingEnabled = value != 0;
+        break;
       default:
         tunables.setParameter(key, value);
     }
@@ -1414,10 +1418,10 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value)
         MOZ_ASSERT(lowFrequencyHeapGrowth_ / 0.9 > 1.0);
         break;
       case JSGC_DYNAMIC_HEAP_GROWTH:
-        dynamicHeapGrowthEnabled_ = value;
+        dynamicHeapGrowthEnabled_ = value != 0;
         break;
       case JSGC_DYNAMIC_MARK_SLICE:
-        dynamicMarkSliceEnabled_ = value;
+        dynamicMarkSliceEnabled_ = value != 0;
         break;
       case JSGC_ALLOCATION_THRESHOLD:
         gcZoneAllocThresholdBase_ = value * 1024 * 1024;
@@ -1483,6 +1487,8 @@ GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC &lock)
         return tunables.minEmptyChunkCount();
       case JSGC_MAX_EMPTY_CHUNK_COUNT:
         return tunables.maxEmptyChunkCount();
+      case JSGC_COMPACTING_ENABLED:
+        return compactingEnabled;
       default:
         MOZ_ASSERT(key == JSGC_NUMBER);
         return uint32_t(number);
@@ -1888,22 +1894,22 @@ void
 GCRuntime::disableCompactingGC()
 {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    ++rt->gc.compactingDisabled;
+    ++compactingDisabledCount;
 }
 
 void
 GCRuntime::enableCompactingGC()
 {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    MOZ_ASSERT(compactingDisabled > 0);
-    --compactingDisabled;
+    MOZ_ASSERT(compactingDisabledCount > 0);
+    --compactingDisabledCount;
 }
 
 bool
 GCRuntime::isCompactingGCEnabled()
 {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    return rt->gc.compactingDisabled == 0;
+    return compactingEnabled && compactingDisabledCount == 0;
 }
 
 AutoDisableCompactingGC::AutoDisableCompactingGC(JSRuntime *rt)
@@ -7065,18 +7071,6 @@ JS_PUBLIC_API(bool)
 JS::IsIncrementalGCEnabled(JSRuntime *rt)
 {
     return rt->gc.isIncrementalGCEnabled();
-}
-
-JS_PUBLIC_API(void)
-JS::DisableCompactingGC(JSRuntime *rt)
-{
-    rt->gc.disableCompactingGC();
-}
-
-JS_PUBLIC_API(bool)
-JS::IsCompactingGCEnabled(JSRuntime *rt)
-{
-    return rt->gc.isCompactingGCEnabled();
 }
 
 JS_PUBLIC_API(bool)
