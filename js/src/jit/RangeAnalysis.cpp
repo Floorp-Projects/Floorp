@@ -3218,6 +3218,8 @@ RangeAnalysis::prepareForUCE(bool *shouldRemoveDeadCode)
 {
     *shouldRemoveDeadCode = false;
 
+    MDefinitionVector deadConditions(alloc());
+
     for (ReversePostorderIterator iter(graph_.rpoBegin()); iter != graph_.rpoEnd(); iter++) {
         MBasicBlock *block = *iter;
 
@@ -3232,6 +3234,7 @@ RangeAnalysis::prepareForUCE(bool *shouldRemoveDeadCode)
         // chosen based which of the successors has the unreachable flag which is
         // added by MBeta::computeRange on its own block.
         MTest *test = cond->toTest();
+        MDefinition *condition = test->input();
         MConstant *constant = nullptr;
         if (block == test->ifTrue()) {
             constant = MConstant::New(alloc(), BooleanValue(false));
@@ -3239,12 +3242,70 @@ RangeAnalysis::prepareForUCE(bool *shouldRemoveDeadCode)
             MOZ_ASSERT(block == test->ifFalse());
             constant = MConstant::New(alloc(), BooleanValue(true));
         }
+
+        if (DeadIfUnused(condition) && !condition->isInWorklist()) {
+            condition->setInWorklist();
+            if (!deadConditions.append(condition))
+                return false;
+        }
+
         test->block()->insertBefore(test, constant);
+
         test->replaceOperand(0, constant);
         JitSpew(JitSpew_Range, "Update condition of %d to reflect unreachable branches.",
                 test->id());
 
         *shouldRemoveDeadCode = true;
+    }
+
+    // Flag all fallible instructions which were indirectly used in the
+    // computation of the condition, such that we do not ignore
+    // bailout-paths which are used to shrink the input range of the
+    // operands of the condition.
+    for (size_t i = 0; i < deadConditions.length(); i++) {
+        MDefinition *cond = deadConditions[i];
+
+        // If this instruction is a guard, then there is not need to continue on
+        // this instruction.
+        if (cond->isGuard())
+            continue;
+
+        if (cond->range()) {
+            // Filter the range of the instruction based on its MIRType.
+            Range typeFilteredRange(cond);
+
+            // If the filtered range is updated by adding the original range,
+            // then the MIRType act as an effectful filter. As we do not know if
+            // this filtered Range might change or not the result of the
+            // previous comparison, we have to keep this instruction as a guard
+            // because it has to bailout in order to restrict the Range to its
+            // MIRType.
+            if (typeFilteredRange.update(cond->range())) {
+                cond->setGuard();
+                continue;
+            }
+        }
+
+        for (size_t op = 0, e = cond->numOperands(); op < e; op++) {
+            MDefinition *operand = cond->getOperand(op);
+            if (!DeadIfUnused(operand) || operand->isInWorklist())
+                continue;
+
+            // If the operand has no range, then its range is always infered
+            // from its MIRType, so it cannot be used change the result deduced
+            // by Range Analysis.
+            if (!operand->range())
+                continue;
+
+            operand->setInWorklist();
+            if (!deadConditions.append(operand))
+                return false;
+        }
+    }
+
+    while (!deadConditions.empty()) {
+        MDefinition *cond = deadConditions.popCopy();
+        cond->setNotInWorklist();
     }
 
     return true;
