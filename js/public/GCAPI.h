@@ -303,21 +303,6 @@ extern JS_PUBLIC_API(bool)
 IsIncrementalGCEnabled(JSRuntime *rt);
 
 /*
- * Compacting GC defaults to enabled, but may be disabled for testing or in
- * embeddings that have not implemented the necessary object moved hooks or weak
- * pointer callbacks.  There is not currently a way to re-enable compacting GC
- * once it has been disabled on the runtime.
- */
-extern JS_PUBLIC_API(void)
-DisableCompactingGC(JSRuntime *rt);
-
-/*
- * Returns true if compacting GC is enabled.
- */
-extern JS_PUBLIC_API(bool)
-IsCompactingGCEnabled(JSRuntime *rt);
-
-/*
  * Returns true while an incremental GC is ongoing, both when actively
  * collecting and between slices.
  */

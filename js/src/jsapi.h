@@ -1957,7 +1957,10 @@ typedef enum JSGCParamKey {
     JSGC_MIN_EMPTY_CHUNK_COUNT = 21,
 
     /* We never keep more than this many unused chunks in the free chunk pool. */
-    JSGC_MAX_EMPTY_CHUNK_COUNT = 22
+    JSGC_MAX_EMPTY_CHUNK_COUNT = 22,
+
+    /* Whether compacting GC is enabled. */
+    JSGC_COMPACTING_ENABLED = 23
 } JSGCParamKey;
 
 extern JS_PUBLIC_API(void)
