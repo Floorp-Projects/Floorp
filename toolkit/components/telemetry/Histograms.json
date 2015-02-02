@@ -7294,7 +7294,14 @@
     "high": 750,
     "n_buckets" : 50,
     "extended_statistics_ok": true,
-    "description": "The number of saved signons in storage"
+    "description": "Total number of saved logins, including those that cannot be decrypted"
+  },
+  "PWMGR_LOGIN_LAST_USED_DAYS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 750,
+    "n_buckets" : 40,
+    "description": "Time in days each saved login was last used"
   },
   "PWMGR_SAVING_ENABLED": {
     "expires_in_version": "never",
