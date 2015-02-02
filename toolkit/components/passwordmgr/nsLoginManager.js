@@ -253,8 +253,12 @@ LoginManager.prototype = {
     let usernamePresentHistogram = clearAndGetHistogram("PWMGR_USERNAME_PRESENT");
     let loginLastUsedDaysHistogram = clearAndGetHistogram("PWMGR_LOGIN_LAST_USED_DAYS");
 
+    let hostnameCount = new Map();
     for (let login of logins) {
       usernamePresentHistogram.add(!!login.username);
+
+      let hostname = login.hostname;
+      hostnameCount.set(hostname, (hostnameCount.get(hostname) || 0 ) + 1);
 
       login.QueryInterface(Ci.nsILoginMetaInfo);
       let timeLastUsedAgeMs = referenceTimeMs - login.timeLastUsed;
@@ -263,6 +267,11 @@ LoginManager.prototype = {
           Math.floor(timeLastUsedAgeMs / MS_PER_DAY)
         );
       }
+    }
+
+    let passwordsCountHistogram = clearAndGetHistogram("PWMGR_NUM_PASSWORDS_PER_HOSTNAME");
+    for (let count of hostnameCount.values()) {
+      passwordsCountHistogram.add(count);
     }
   },
 
