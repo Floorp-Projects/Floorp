@@ -114,6 +114,11 @@ public:
   // Used by SourceBuffer.
   void AppendData(LargeDataBuffer* aData);
   void Ended();
+  bool IsEnded()
+  {
+    ReentrantMonitorAutoEnter mon(mMonitor);
+    return mEnded;
+  }
   // Remove data from resource if it holds more than the threshold
   // number of bytes. Returns amount evicted.
   uint32_t EvictData(uint64_t aPlaybackOffset, uint32_t aThreshold);

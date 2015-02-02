@@ -48,6 +48,8 @@ public:
     return mHasInitData;
   }
 
+  bool HasCompleteInitData();
+
   static ContainerParser* CreateForMIMEType(const nsACString& aType);
 
 protected:
