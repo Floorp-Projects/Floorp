@@ -13,15 +13,6 @@
 dictionary MediaTrackConstraints : MediaTrackConstraintSet {
     sequence<DOMString> require;
     sequence<MediaTrackConstraintSet> advanced;
-
-    // mobile-only backwards-compatibility for facingMode
-    MobileLegacyMediaTrackConstraintSet mandatory;
-    sequence<MobileLegacyMediaTrackConstraintSet> _optional;
-};
-
-// TODO(jib): Remove in 6+ weeks (Bug 997365)
-dictionary MobileLegacyMediaTrackConstraintSet {
-    DOMString facingMode;
 };
 
 interface MediaStreamTrack {
