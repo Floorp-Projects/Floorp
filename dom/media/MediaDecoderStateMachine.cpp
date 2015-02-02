@@ -191,6 +191,12 @@ static int64_t DurationToUsecs(TimeDuration aDuration) {
   return static_cast<int64_t>(aDuration.ToSeconds() * USECS_PER_S);
 }
 
+static const uint32_t MIN_VIDEO_QUEUE_SIZE = 3;
+static const uint32_t MAX_VIDEO_QUEUE_SIZE = 10;
+
+static uint32_t sVideoQueueDefaultSize = MAX_VIDEO_QUEUE_SIZE;
+static uint32_t sVideoQueueHWAccelSize = MIN_VIDEO_QUEUE_SIZE;
+
 MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                                    MediaDecoderReader* aReader,
                                                    bool aRealTime) :
@@ -216,7 +222,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mVolume(1.0),
   mPlaybackRate(1.0),
   mPreservesPitch(true),
-  mAmpleVideoFrames(2),
+  mAmpleVideoFrames(MIN_VIDEO_QUEUE_SIZE),
   mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS),
   mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_USECS),
   mQuickBufferingLowDataThresholdUsecs(detail::QUICK_BUFFERING_LOW_DATA_USECS),
@@ -247,8 +253,16 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
-  mAmpleVideoFrames =
-    std::max<uint32_t>(Preferences::GetUint("media.video-queue.default-size", 10), 3);
+  static bool sPrefCacheInit = false;
+  if (!sPrefCacheInit) {
+    sPrefCacheInit = true;
+    Preferences::AddUintVarCache(&sVideoQueueDefaultSize,
+                                 "media.video-queue.default-size",
+                                 MAX_VIDEO_QUEUE_SIZE);
+    Preferences::AddUintVarCache(&sVideoQueueHWAccelSize,
+                                 "media.video-queue.hw-accel-size",
+                                 MIN_VIDEO_QUEUE_SIZE);
+  }
 
   mBufferingWait = IsRealTime() ? 0 : 30;
   mLowDataThresholdUsecs = IsRealTime() ? 0 : detail::LOW_DATA_THRESHOLD_USECS;
@@ -2215,16 +2229,27 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
     return NS_OK;
   }
 
+  if (NS_FAILED(res) || (!info.HasValidMedia())) {
+    DECODER_WARN("ReadMetadata failed, res=%x HasValidMedia=%d", res, info.HasValidMedia());
+    return NS_ERROR_FAILURE;
+  }
+
   if (NS_SUCCEEDED(res)) {
     mDecoder->SetMediaSeekable(mReader->IsMediaSeekable());
   }
 
   mInfo = info;
 
-  if (NS_FAILED(res) || (!info.HasValidMedia())) {
-    DECODER_WARN("ReadMetadata failed, res=%x HasValidMedia=%d", res, info.HasValidMedia());
-    return NS_ERROR_FAILURE;
+  if (HasVideo()) {
+    mAmpleVideoFrames = (mReader->IsAsync() && mInfo.mVideo.mIsHardwareAccelerated)
+      ? std::max<uint32_t>(sVideoQueueHWAccelSize, MIN_VIDEO_QUEUE_SIZE)
+      : std::max<uint32_t>(sVideoQueueDefaultSize, MIN_VIDEO_QUEUE_SIZE);
+    DECODER_LOG("Video decode isAsync=%d HWAccel=%d videoQueueSize=%d",
+                mReader->IsAsync(),
+                mInfo.mVideo.mIsHardwareAccelerated,
+                mAmpleVideoFrames);
   }
+
   mDecoder->StartProgressUpdates();
   mGotDurationFromMetaData = (GetDuration() != -1) || mDurationSet;
 

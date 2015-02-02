@@ -492,14 +492,12 @@ nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent)
   if (aEvent->mClass == eTouchEventClass) {
     MOZ_ASSERT(aEvent->AsTouchEvent()->touches.Length() == 1,
                "Unexpected number of touches");
-    absPoint = LayoutDeviceIntPoint::FromUntyped(
-      aEvent->AsTouchEvent()->touches[0]->mRefPoint);
+    absPoint = aEvent->AsTouchEvent()->touches[0]->mRefPoint;
   } else {
     absPoint = aEvent->refPoint;
   }
   nsPoint point =
-    nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, 
-      LayoutDeviceIntPoint::ToUntyped(absPoint), this);
+    nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, absPoint, this);
 
   if (point == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)) {
     // We don't want to change the current value for this error state.

@@ -55,7 +55,8 @@ def exponential_buckets(dmin, dmax, n_buckets):
         ret_array[bucket_index] = current
     return ret_array
 
-always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version', "alert_emails", 'keyed']
+always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version',
+                       'alert_emails', 'keyed', 'releaseChannelCollection']
 
 class Histogram:
     """A class for representing a histogram definition."""
@@ -88,6 +89,12 @@ symbol that should guard C/C++ definitions associated with the histogram."""
                   'exponential': 'EXPONENTIAL' }
         table_dispatch(self.kind(), table,
                        lambda k: self._set_nsITelemetry_kind(k))
+        datasets = { 'opt-in': 'DATASET_RELEASE_CHANNEL_OPTIN',
+                     'opt-out': 'DATASET_RELEASE_CHANNEL_OPTOUT' }
+        value = definition.get('releaseChannelCollection', 'opt-in')
+        if not value in datasets:
+            raise DefinitionException, "unknown release channel collection policy for " + name
+        self._dataset = "nsITelemetry::" + datasets[value]
 
     def name(self):
         """Return the name of the histogram."""
@@ -134,6 +141,10 @@ associated with the histogram.  Returns None if no guarding is necessary."""
     def keyed(self):
         """Returns True if this a keyed histogram, false otherwise."""
         return self._keyed
+
+    def dataset(self):
+        """Returns the dataset this histogram belongs into."""
+        return self._dataset
 
     def extended_statistics_ok(self):
         """Return True if gathering extended statistics for this histogram

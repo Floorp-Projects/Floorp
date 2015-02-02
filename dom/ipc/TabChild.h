@@ -592,7 +592,7 @@ private:
     bool PrepareForSetTargetAPZCNotification(const ScrollableLayerGuid& aGuid,
                                              const uint64_t& aInputBlockId,
                                              nsIFrame* aRootFrame,
-                                             const nsIntPoint& aRefPoint,
+                                             const LayoutDeviceIntPoint& aRefPoint,
                                              nsTArray<ScrollableLayerGuid>* aTargets);
 
     // Sends a SetTarget notification for APZC, given one or more previous

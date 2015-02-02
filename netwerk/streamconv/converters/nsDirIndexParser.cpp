@@ -333,7 +333,7 @@ nsDirIndexParser::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
   
   // Ensure that our mBuf has capacity to hold the data we're about to
   // read.
-  if (!mBuf.SetLength(len + aCount, fallible_t()))
+  if (!mBuf.SetLength(len + aCount, fallible))
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Now read the data into our buffer.

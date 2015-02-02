@@ -39,13 +39,12 @@ nsHtml5OwningUTF16Buffer::~nsHtml5OwningUTF16Buffer()
 already_AddRefed<nsHtml5OwningUTF16Buffer>
 nsHtml5OwningUTF16Buffer::FalliblyCreate(int32_t aLength)
 {
-  const mozilla::fallible_t fallible = mozilla::fallible_t();
-  char16_t* newBuf = new (fallible) char16_t[aLength];
+  char16_t* newBuf = new (mozilla::fallible) char16_t[aLength];
   if (!newBuf) {
     return nullptr;
   }
   nsRefPtr<nsHtml5OwningUTF16Buffer> newObj =
-    new (fallible) nsHtml5OwningUTF16Buffer(newBuf);
+    new (mozilla::fallible) nsHtml5OwningUTF16Buffer(newBuf);
   if (!newObj) {
     delete[] newBuf;
     return nullptr;

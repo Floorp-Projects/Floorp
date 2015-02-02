@@ -363,6 +363,11 @@ ICStub::trace(JSTracer *trc)
         }
         break;
       }
+      case ICStub::GetProp_Unboxed: {
+        ICGetProp_Unboxed *propStub = toGetProp_Unboxed();
+        MarkTypeObject(trc, &propStub->type(), "baseline-getprop-unboxed-stub-type");
+        break;
+      }
       case ICStub::GetProp_TypedObject: {
         ICGetProp_TypedObject *propStub = toGetProp_TypedObject();
         MarkShape(trc, &propStub->shape(), "baseline-getprop-typedobject-stub-shape");
@@ -435,6 +440,11 @@ ICStub::trace(JSTracer *trc)
           case 4: propStub->toImpl<4>()->traceShapes(trc); break;
           default: MOZ_CRASH("Invalid proto stub.");
         }
+        break;
+      }
+      case ICStub::SetProp_Unboxed: {
+        ICSetProp_Unboxed *propStub = toSetProp_Unboxed();
+        MarkTypeObject(trc, &propStub->type(), "baseline-setprop-unboxed-stub-type");
         break;
       }
       case ICStub::SetProp_TypedObject: {
@@ -1410,8 +1420,9 @@ DoTypeUpdateFallback(JSContext *cx, BaselineFrame *frame, ICUpdatedStub *stub, H
         break;
       }
       case ICStub::SetProp_Native:
-      case ICStub::SetProp_NativeAdd: {
-        MOZ_ASSERT(obj->isNative());
+      case ICStub::SetProp_NativeAdd:
+      case ICStub::SetProp_Unboxed: {
+        MOZ_ASSERT(obj->isNative() || obj->is<UnboxedPlainObject>());
         jsbytecode *pc = stub->getChainFallback()->icEntry()->pc(script);
         if (*pc == JSOP_SETALIASEDVAR || *pc == JSOP_INITALIASEDLEXICAL)
             id = NameToId(ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc));
@@ -6599,6 +6610,40 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
 }
 
 static bool
+TryAttachUnboxedGetPropStub(JSContext *cx, HandleScript script,
+                            ICGetProp_Fallback *stub, HandlePropertyName name, HandleValue val,
+                            bool *attached)
+{
+    MOZ_ASSERT(!*attached);
+
+    if (!cx->runtime()->jitSupportsFloatingPoint)
+        return true;
+
+    if (!val.isObject() || !val.toObject().is<UnboxedPlainObject>())
+        return true;
+    Rooted<UnboxedPlainObject *> obj(cx, &val.toObject().as<UnboxedPlainObject>());
+
+    const UnboxedLayout::Property *property = obj->layout().lookup(name);
+    if (!property)
+        return true;
+
+    ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
+
+    ICGetProp_Unboxed::Compiler compiler(cx, monitorStub, obj->type(),
+                                         property->offset + UnboxedPlainObject::offsetOfData(),
+                                         property->type);
+    ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+    if (!newStub)
+        return false;
+    stub->addNewStub(newStub);
+
+    StripPreliminaryObjectStubs(cx, stub);
+
+    *attached = true;
+    return true;
+}
+
+static bool
 TryAttachTypedObjectGetPropStub(JSContext *cx, HandleScript script,
                                 ICGetProp_Fallback *stub, HandlePropertyName name, HandleValue val,
                                 bool *attached)
@@ -6841,6 +6886,11 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub_
 
     if (!TryAttachNativeGetPropStub(cx, script, pc, stub, name, val, oldShape,
                                     res, &attached, &isTemporarilyUnoptimizable))
+        return false;
+    if (attached)
+        return true;
+
+    if (!TryAttachUnboxedGetPropStub(cx, script, stub, name, val, &attached))
         return false;
     if (attached)
         return true;
@@ -7756,6 +7806,39 @@ ICGetProp_Generic::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 bool
+ICGetProp_Unboxed::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+
+    GeneralRegisterSet regs(availableGeneralRegs(1));
+
+    Register scratch = regs.takeAnyExcluding(BaselineTailCallReg);
+
+    // Object and type guard.
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+    Register object = masm.extractObject(R0, ExtractTemp0);
+    masm.loadPtr(Address(BaselineStubReg, ICGetProp_Unboxed::offsetOfType()), scratch);
+    masm.branchPtr(Assembler::NotEqual, Address(object, JSObject::offsetOfType()), scratch,
+                   &failure);
+
+    // Get the address being read from.
+    masm.load32(Address(BaselineStubReg, ICGetProp_Unboxed::offsetOfFieldOffset()), scratch);
+
+    masm.loadUnboxedProperty(BaseIndex(object, scratch, TimesOne), fieldType_, TypedOrValueRegister(R0));
+
+    // Only monitor the result if its type might change.
+    if (fieldType_ == JSVAL_TYPE_OBJECT)
+        EmitEnterTypeMonitorIC(masm);
+    else
+        EmitReturnFromIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+
+    return true;
+}
+
+bool
 ICGetProp_TypedObject::Compiler::generateStubCode(MacroAssembler &masm)
 {
     Label failure;
@@ -8010,6 +8093,40 @@ TryAttachSetAccessorPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
 }
 
 static bool
+TryAttachUnboxedSetPropStub(JSContext *cx, HandleScript script,
+                            ICSetProp_Fallback *stub, HandleId id,
+                            HandleObject obj, HandleValue rhs, bool *attached)
+{
+    MOZ_ASSERT(!*attached);
+
+    if (!cx->runtime()->jitSupportsFloatingPoint)
+        return true;
+
+    if (!obj->is<UnboxedPlainObject>())
+        return true;
+
+    const UnboxedLayout::Property *property = obj->as<UnboxedPlainObject>().layout().lookup(id);
+    if (!property)
+        return true;
+
+    ICSetProp_Unboxed::Compiler compiler(cx, obj->type(),
+                                         property->offset + UnboxedPlainObject::offsetOfData(),
+                                         property->type);
+    ICUpdatedStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+    if (!newStub)
+        return false;
+    if (compiler.needsUpdateStubs() && !newStub->addUpdateStubForValue(cx, script, obj, id, rhs))
+        return false;
+
+    stub->addNewStub(newStub);
+
+    StripPreliminaryObjectStubs(cx, stub);
+
+    *attached = true;
+    return true;
+}
+
+static bool
 TryAttachTypedObjectSetPropStub(JSContext *cx, HandleScript script,
                                 ICSetProp_Fallback *stub, HandleId id,
                                 HandleObject obj, HandleValue rhs, bool *attached)
@@ -8146,6 +8263,15 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
         lhs.isObject() &&
         !TryAttachSetValuePropStub(cx, script, pc, stub, obj, oldShape,
                                    oldType, oldSlots, name, id, rhs, &attached))
+    {
+        return false;
+    }
+    if (attached)
+        return true;
+
+    if (!attached &&
+        lhs.isObject() &&
+        !TryAttachUnboxedSetPropStub(cx, script, stub, id, obj, rhs, &attached))
     {
         return false;
     }
@@ -8430,6 +8556,75 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
     // Failure case - jump to next stub
     masm.bind(&failureUnstow);
     EmitUnstowICValues(masm, 2);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICSetProp_Unboxed::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+
+    // Guard input is an object.
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+
+    GeneralRegisterSet regs(availableGeneralRegs(2));
+    Register scratch = regs.takeAny();
+
+    // Unbox and type guard.
+    Register object = masm.extractObject(R0, ExtractTemp0);
+    masm.loadPtr(Address(BaselineStubReg, ICSetProp_Unboxed::offsetOfType()), scratch);
+    masm.branchPtr(Assembler::NotEqual, Address(object, JSObject::offsetOfType()), scratch,
+                   &failure);
+
+    if (needsUpdateStubs()) {
+        // Stow both R0 and R1 (object and value).
+        masm.push(object);
+        masm.push(BaselineStubReg);
+        EmitStowICValues(masm, 2);
+
+        // Move RHS into R0 for TypeUpdate check.
+        masm.moveValue(R1, R0);
+
+        // Call the type update stub.
+        if (!callTypeUpdateIC(masm, sizeof(Value)))
+            return false;
+
+        // Unstow R0 and R1 (object and key)
+        EmitUnstowICValues(masm, 2);
+        masm.pop(BaselineStubReg);
+        masm.pop(object);
+
+        // Trigger post barriers here on the values being written. Fields which
+        // objects can be written to also need update stubs.
+        GeneralRegisterSet saveRegs;
+        saveRegs.add(R0);
+        saveRegs.add(R1);
+        saveRegs.addUnchecked(object);
+        saveRegs.add(BaselineStubReg);
+        emitPostWriteBarrierSlot(masm, object, R1, scratch, saveRegs);
+    }
+
+    // Compute the address being written to.
+    masm.load32(Address(BaselineStubReg, ICSetProp_Unboxed::offsetOfFieldOffset()), scratch);
+    BaseIndex address(object, scratch, TimesOne);
+
+    if (fieldType_ == JSVAL_TYPE_OBJECT)
+        EmitPreBarrier(masm, address, MIRType_Object);
+    else if (fieldType_ == JSVAL_TYPE_STRING)
+        EmitPreBarrier(masm, address, MIRType_String);
+    else
+        MOZ_ASSERT(!UnboxedTypeNeedsPreBarrier(fieldType_));
+
+    masm.storeUnboxedProperty(address, fieldType_,
+                              ConstantOrRegister(TypedOrValueRegister(R1)), &failure);
+
+    // The RHS has to be in R0.
+    masm.moveValue(R1, R0);
+
+    EmitReturnFromIC(masm);
 
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
@@ -9066,27 +9261,26 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
 
         // Remember the template object associated with any script being called
         // as a constructor, for later use during Ion compilation.
-        RootedPlainObject templateObject(cx);
+        RootedObject templateObject(cx);
         if (constructing) {
             JSObject *thisObject = CreateThisForFunction(cx, fun, MaybeSingletonObject);
             if (!thisObject)
                 return false;
 
-            if (thisObject->is<PlainObject>()) {
-                templateObject = &thisObject->as<PlainObject>();
+            if (thisObject->is<PlainObject>() || thisObject->is<UnboxedPlainObject>()) {
+                templateObject = thisObject;
 
                 // If we are calling a constructor for which the new script
                 // properties analysis has not been performed yet, don't attach a
                 // stub. After the analysis is performed, CreateThisForFunction may
                 // start returning objects with a different type, and the Ion
                 // compiler might get confused.
-                if (templateObject->type()->newScript() &&
-                    !templateObject->type()->newScript()->analyzed())
-                {
+                types::TypeNewScript *newScript = templateObject->type()->newScript();
+                if (newScript && !newScript->analyzed()) {
                     // Clear the object just created from the preliminary objects
                     // on the TypeNewScript, as it will not be used or filled in by
                     // running code.
-                    templateObject->type()->newScript()->unregisterNewObject(templateObject);
+                    newScript->unregisterNewObject(&templateObject->as<PlainObject>());
                     return true;
                 }
             }
@@ -11713,7 +11907,7 @@ ICSetProp_CallNative::Clone(JSContext *cx, ICStubSpace *space, ICStub *,
 }
 
 ICCall_Scripted::ICCall_Scripted(JitCode *stubCode, ICStub *firstMonitorStub,
-                                 HandleScript calleeScript, HandleNativeObject templateObject,
+                                 HandleScript calleeScript, HandleObject templateObject,
                                  uint32_t pcOffset)
   : ICMonitoredStub(ICStub::Call_Scripted, stubCode, firstMonitorStub),
     calleeScript_(calleeScript),
@@ -11726,7 +11920,7 @@ ICCall_Scripted::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorSt
                        ICCall_Scripted &other)
 {
     RootedScript calleeScript(cx, other.calleeScript_);
-    RootedNativeObject templateObject(cx, other.templateObject_);
+    RootedObject templateObject(cx, other.templateObject_);
     return New(space, other.jitCode(), firstMonitorStub, calleeScript, templateObject,
                other.pcOffset_);
 }
