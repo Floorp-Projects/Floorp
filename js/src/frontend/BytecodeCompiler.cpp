@@ -468,7 +468,7 @@ frontend::CompileLazyFunction(JSContext *cx, Handle<LazyScript*> lazy, const cha
 
     CompileOptions options(cx, lazy->version());
     options.setMutedErrors(lazy->mutedErrors())
-           .setFileAndLine(lazy->source()->filename(), lazy->lineno())
+           .setFileAndLine(lazy->filename(), lazy->lineno())
            .setColumn(lazy->column())
            .setCompileAndGo(true)
            .setNoScriptRval(false)
