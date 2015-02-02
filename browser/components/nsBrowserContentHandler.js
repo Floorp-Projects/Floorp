@@ -513,6 +513,10 @@ nsBrowserContentHandler.prototype = {
             if (prefb.prefHasUserValue("app.update.postupdate"))
               overridePage = getPostUpdateOverridePage(overridePage);
 
+            // Temporary exclusion of the Loop tour page for users who have already used Loop.
+            if (Services.prefs.getBoolPref("loop.gettingStarted.seen"))
+              overridePage = "";
+
             overridePage = overridePage.replace("%OLD_VERSION%", old_mstone);
             break;
         }
