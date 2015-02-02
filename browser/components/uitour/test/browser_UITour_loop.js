@@ -26,21 +26,9 @@ function runOffline(fun) {
   }
 }
 
-function resetGettingStartedSeenPref() {
-  Services.prefs.setBoolPref("loop.gettingStarted.seen", false);
-  if (!document.getElementById("loop-notification-panel").childElementCount)
-    return;
-
-  // Force a refresh of the loop panel since going from seen -> unseen doesn't trigger
-  // automatic re-rendering.
-  let loopWin = document.getElementById("loop-notification-panel").children[0].contentWindow;
-  var event = new loopWin.CustomEvent("GettingStartedSeen");
-  loopWin.dispatchEvent(event);
-}
-
 let tests = [
   taskify(function* test_gettingStartedClicked_linkOpenedWithExpectedParams() {
-    resetGettingStartedSeenPref();
+    Services.prefs.setBoolPref("loop.gettingStarted.seen", false);
     Services.prefs.setCharPref("loop.gettingStarted.url", "http://example.com");
     ise(loopButton.open, false, "Menu should initially be closed");
     loopButton.click();
@@ -71,7 +59,13 @@ let tests = [
     checkLoopPanelIsHidden();
   }),
   taskify(function* test_gettingStartedClicked_linkOpenedWithExpectedParams2() {
-    resetGettingStartedSeenPref();
+    Services.prefs.setBoolPref("loop.gettingStarted.seen", false);
+    // Force a refresh of the loop panel since going from seen -> unseen doesn't trigger
+    // automatic re-rendering.
+    let loopWin = document.getElementById("loop-notification-panel").children[0].contentWindow;
+    var event = new loopWin.CustomEvent("GettingStartedSeen");
+    loopWin.dispatchEvent(event);
+
     UITour.pageIDsForSession.clear();
     Services.prefs.setCharPref("loop.gettingStarted.url", "http://example.com");
     ise(loopButton.open, false, "Menu should initially be closed");
@@ -90,7 +84,7 @@ let tests = [
     UITour.pageIDsForSession.set("hello-tour_OpenPanel_testPageOldId",
                                    {lastSeen: Date.now() - (10 * 60 * 60 * 1000)});
 
-    let loopDoc = document.getElementById("loop-notification-panel").children[0].contentDocument;
+    let loopDoc = loopWin.document;
     let gettingStartedButton = loopDoc.getElementById("fte-button");
     ok(gettingStartedButton, "Getting Started button should be found");
 
