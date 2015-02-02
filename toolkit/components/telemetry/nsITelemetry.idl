@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(3869a5cd-f886-40e6-b298-e4b3efc79d3b)]
+[scriptable, uuid(c782cf96-7f44-45ac-8d76-e0d1b174e562)]
 interface nsITelemetry : nsISupports
 {
   /**
