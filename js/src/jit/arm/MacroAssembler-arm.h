@@ -1129,6 +1129,19 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T &dest,
                            MIRType slotType);
 
+    template <typename T>
+    void storeUnboxedPayload(ValueOperand value, T address, size_t nbytes) {
+        switch (nbytes) {
+          case 4:
+            storePtr(value.payloadReg(), address);
+            return;
+          case 1:
+            store8(value.payloadReg(), address);
+            return;
+          default: MOZ_CRASH("Bad payload width");
+        }
+    }
+
     void moveValue(const Value &val, const ValueOperand &dest);
 
     void moveValue(const ValueOperand &src, const ValueOperand &dest) {
@@ -1622,14 +1635,16 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void cmp32(const Operand &lhs, Imm32 rhs);
     void cmp32(const Operand &lhs, Register rhs);
 
+    void cmpPtr(Register lhs, Register rhs);
     void cmpPtr(Register lhs, ImmWord rhs);
     void cmpPtr(Register lhs, ImmPtr rhs);
-    void cmpPtr(Register lhs, Register rhs);
     void cmpPtr(Register lhs, ImmGCPtr rhs);
     void cmpPtr(Register lhs, Imm32 rhs);
     void cmpPtr(const Address &lhs, Register rhs);
     void cmpPtr(const Address &lhs, ImmWord rhs);
     void cmpPtr(const Address &lhs, ImmPtr rhs);
+    void cmpPtr(const Address &lhs, ImmGCPtr rhs);
+    void cmpPtr(const Address &lhs, Imm32 rhs);
 
     void subPtr(Imm32 imm, const Register dest);
     void subPtr(const Address &addr, const Register dest);

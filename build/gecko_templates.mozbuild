@@ -78,6 +78,11 @@ def GeckoBinary(linkage='dependent', msvcrt='dynamic', mozglue=None):
             else:
                 error('`mozglue` must be "program" or "library"')
 
+    if not CONFIG['JS_STANDALONE']:
+        USE_LIBS += [
+            'fallible',
+        ]
+
 
 @template
 def GeckoProgram(name, linkage='standalone', **kwargs):

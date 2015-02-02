@@ -814,7 +814,7 @@ NS_CopyNativeToUnicode(const nsACString& aInput, nsAString& aOutput)
   // this will generally result in a larger allocation, but that seems
   // better than an extra buffer copy.
   //
-  if (!aOutput.SetLength(inputLen, fallible_t())) {
+  if (!aOutput.SetLength(inputLen, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsAString::iterator out_iter;
@@ -925,7 +925,7 @@ NS_CopyNativeToUnicode(const nsACString& aInput, nsAString& aOutput)
   }
 
   // allocate sufficient space
-  if (!aOutput.SetLength(resultLen, fallible_t())) {
+  if (!aOutput.SetLength(resultLen, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   if (resultLen > 0) {
@@ -959,7 +959,7 @@ NS_CopyUnicodeToNative(const nsAString&  aInput, nsACString& aOutput)
   }
 
   // allocate sufficient space
-  if (!aOutput.SetLength(resultLen, fallible_t())) {
+  if (!aOutput.SetLength(resultLen, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   if (resultLen > 0) {
