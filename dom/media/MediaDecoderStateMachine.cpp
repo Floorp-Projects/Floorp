@@ -401,29 +401,12 @@ static void WriteVideoToMediaStream(MediaStream* aStream,
 
 void MediaDecoderStateMachine::SendStreamData()
 {
-  NS_ASSERTION(OnDecodeThread() || OnStateMachineThread(),
-               "Should be on decode thread or state machine thread");
+  MOZ_ASSERT(OnStateMachineThread(), "Should be on state machine thread");
   AssertCurrentThreadInMonitor();
-  MOZ_ASSERT(mState != DECODER_STATE_DECODING_NONE);
+  MOZ_ASSERT(!mAudioSink, "Should've been stopped in CallRunStateMachine()");
 
   DecodedStreamData* stream = mDecoder->GetDecodedStream();
-  if (!stream) {
-    return;
-  }
 
-  if (mState == DECODER_STATE_DECODING_METADATA ||
-      mState == DECODER_STATE_DECODING_FIRSTFRAME) {
-    return;
-  }
-
-  // If there's still an audio sink alive, then we can't send any stream
-  // data yet since both SendStreamData and the audio sink want to be in
-  // charge of popping the audio queue. We're waiting for the audio sink
-  if (mAudioSink) {
-    return;
-  }
-
-  int64_t minLastAudioPacketTime = INT64_MAX;
   bool finished =
       (!mInfo.HasAudio() || AudioQueue().IsFinished()) &&
       (!mInfo.HasVideo() || VideoQueue().IsFinished());
@@ -571,12 +554,6 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedAudio(int64_t aAmpleAudioUSecs)
 
   DecodedStreamData* stream = mDecoder->GetDecodedStream();
 
-  // Since stream is initialized in SendStreamData() which is called when
-  // audio/video samples are received, we need to keep decoding to ensure
-  // the stream is initialized.
-  if (stream && !stream->mStreamInitialized) {
-    return false;
-  }
   if (stream && stream->mStreamInitialized && !stream->mHaveSentFinishAudio) {
     if (!stream->mStream->HaveEnoughBuffered(kAudioTrack)) {
       return false;
@@ -597,10 +574,6 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
   }
 
   DecodedStreamData* stream = mDecoder->GetDecodedStream();
-
-  if (stream && !stream->mStreamInitialized) {
-    return false;
-  }
 
   if (stream && stream->mStreamInitialized && !stream->mHaveSentFinishVideo) {
     if (!stream->mStream->HaveEnoughBuffered(kVideoTrack)) {
@@ -813,6 +786,10 @@ MediaDecoderStateMachine::OnAudioDecoded(AudioData* aAudioSample)
       if (mIsAudioPrerolling && DonePrerollingAudio()) {
         StopPrerollingAudio();
       }
+      // Schedule the state machine to send stream data as soon as possible.
+      if (mAudioCaptured) {
+        ScheduleStateMachine();
+      }
       return;
     }
 
@@ -869,7 +846,6 @@ MediaDecoderStateMachine::Push(AudioData* aSample)
   // to reach playing.
   AudioQueue().Push(aSample);
   if (mState > DECODER_STATE_DECODING_FIRSTFRAME) {
-    SendStreamData();
     // The ready state can change when we've decoded data, so update the
     // ready state, so that DOM events can fire.
     UpdateReadyState();
@@ -887,7 +863,6 @@ MediaDecoderStateMachine::Push(VideoData* aSample)
   // to reach playing.
   VideoQueue().Push(aSample);
   if (mState > DECODER_STATE_DECODING_FIRSTFRAME) {
-    SendStreamData();
     // The ready state can change when we've decoded data, so update the
     // ready state, so that DOM events can fire.
     UpdateReadyState();
@@ -959,11 +934,14 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     case DECODER_STATE_BUFFERING:
     case DECODER_STATE_DECODING: {
       CheckIfDecodeComplete();
-      SendStreamData();
       // The ready state can change when we've decoded data, so update the
       // ready state, so that DOM events can fire.
       UpdateReadyState();
       mDecoder->GetReentrantMonitor().NotifyAll();
+      // Schedule the state machine to notify track ended as soon as possible.
+      if (mAudioCaptured) {
+        ScheduleStateMachine();
+      }
       return;
     }
     case DECODER_STATE_SEEKING: {
@@ -1060,6 +1038,11 @@ MediaDecoderStateMachine::OnVideoDecoded(VideoData* aVideoSample)
                                               mAmpleAudioThresholdUsecs);
         DECODER_LOG("Slow video decode, set mLowAudioThresholdUsecs=%lld mAmpleAudioThresholdUsecs=%lld",
                     mLowAudioThresholdUsecs, mAmpleAudioThresholdUsecs);
+      }
+
+      // Schedule the state machine to send stream data as soon as possible.
+      if (mAudioCaptured) {
+        ScheduleStateMachine();
       }
       return;
     }
@@ -1837,9 +1820,6 @@ void MediaDecoderStateMachine::StopAudioThread()
       mAudioSink->Shutdown();
     }
     mAudioSink = nullptr;
-    // Now that the audio sink is dead, try sending data to our MediaStream(s).
-    // That may have been waiting for the audio thread to stop.
-    SendStreamData();
   }
   // Wake up those waiting for audio sink to finish.
   mDecoder->GetReentrantMonitor().NotifyAll();
@@ -3090,11 +3070,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
     return;
   }
 
-  DecodedStreamData* stream = mDecoder->GetDecodedStream();
-  if (stream && !stream->mStreamInitialized) {
-    // Output streams exist but are not initialized yet.
-    // Send the data we already have to allow stream clock to progress and
-    // avoid stalling playback.
+  if (mAudioCaptured) {
     SendStreamData();
   }
 
