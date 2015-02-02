@@ -176,7 +176,7 @@ PL_NewDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
   if (!table) {
     return nullptr;
   }
-  if (!PL_DHashTableInit(table, aOps, aEntrySize, fallible_t(), aLength)) {
+  if (!PL_DHashTableInit(table, aOps, aEntrySize, fallible, aLength)) {
     free(table);
     return nullptr;
   }
@@ -276,7 +276,7 @@ void
 PL_DHashTableInit(PLDHashTable* aTable, const PLDHashTableOps* aOps,
                   uint32_t aEntrySize, uint32_t aLength)
 {
-  if (!PL_DHashTableInit(aTable, aOps, aEntrySize, fallible_t(), aLength)) {
+  if (!PL_DHashTableInit(aTable, aOps, aEntrySize, fallible, aLength)) {
     if (aLength > PL_DHASH_MAX_INITIAL_LENGTH) {
       MOZ_CRASH();          // the asked-for length was too big
     }

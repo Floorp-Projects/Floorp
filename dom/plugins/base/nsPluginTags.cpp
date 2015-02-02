@@ -259,7 +259,7 @@ static nsresult ConvertToUTF8(nsIUnicodeDecoder *aUnicodeDecoder,
   nsresult rv = aUnicodeDecoder->GetMaxLength(aString.get(), numberOfBytes,
                                               &outUnicodeLen);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!buffer.SetLength(outUnicodeLen, fallible_t()))
+  if (!buffer.SetLength(outUnicodeLen, fallible))
     return NS_ERROR_OUT_OF_MEMORY;
   rv = aUnicodeDecoder->Convert(aString.get(), &numberOfBytes,
                                 buffer.BeginWriting(), &outUnicodeLen);

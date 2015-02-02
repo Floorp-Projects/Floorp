@@ -1357,7 +1357,7 @@ private:
     if (!aPi) {
       MOZ_CRASH();
     }
-    if (!aQueue.Push(aPi, fallible_t())) {
+    if (!aQueue.Push(aPi, fallible)) {
       mVisitor.Failed();
     }
   }

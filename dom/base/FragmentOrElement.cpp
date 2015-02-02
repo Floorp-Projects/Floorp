@@ -2202,7 +2202,7 @@ public:
 
   bool ToString(nsAString& aOut)
   {
-    if (!aOut.SetCapacity(mLength, fallible_t())) {
+    if (!aOut.SetCapacity(mLength, fallible)) {
       return false;
     }
 

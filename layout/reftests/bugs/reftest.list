@@ -971,7 +971,7 @@ fails == 413027-3.html 413027-3-ref.html
 == 413286-5.html 413286-5-ref.html
 == 413286-6.html 413286-6-ref.html
 skip-if(cocoaWidget) == 413292-1.html 413292-1-ref.html # disabling due to failure loading on some mac tinderboxes. See bug 432954
-fuzzy-if(Android&&AndroidVersion>=15,11,15) == 413361-1.html 413361-1-ref.html
+fuzzy-if(B2G||Android,11,15) == 413361-1.html 413361-1-ref.html # bug 1128229
 == 413840-background-unchanged.html 413840-background-unchanged-ref.html
 == 413840-ltr-offsets.html 413840-ltr-offsets-ref.html
 == 413840-rtl-offsets.html 413840-rtl-offsets-ref.html
@@ -1848,7 +1848,7 @@ test-pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1-ref.html
 == 1069716-1.html 1069716-1-ref.html
 == 1078262-1.html about:blank
 test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1-ref.html
-fuzzy-if(winWidget&&!layersGPUAccelerated,1,31) fuzzy-if(B2G,128,75) == 1081185-1.html 1081185-1-ref.html   # fuzzy with event-regions, see bug 1107843
+fuzzy-if(B2G,128,75) == 1081185-1.html 1081185-1-ref.html   # fuzzy with event-regions, see bug 1107843
 == 1097437-1.html 1097437-1-ref.html
 == 1103258-1.html 1103258-1-ref.html # assertion crash test with layers culling test
 == 1105137-1.html 1105137-1-ref.html

@@ -99,13 +99,14 @@ public:
                                            const ScrollableLayerGuid& aGuid,
                                            float aPresShellResolution);
 
-    /* Same as above, but operates on nsIntPoint that are assumed to be in LayoutDevice
-       pixel space. Requires an additonal |aScale| parameter to convert between CSS and
+    /* Same as above, but operates on LayoutDeviceIntPoint.
+       Requires an additonal |aScale| parameter to convert between CSS and
        LayoutDevice space. */
-    static nsIntPoint ApplyCallbackTransform(const nsIntPoint& aPoint,
-                                             const ScrollableLayerGuid& aGuid,
-                                             const CSSToLayoutDeviceScale& aScale,
-                                             float aPresShellResolution);
+    static mozilla::LayoutDeviceIntPoint
+    ApplyCallbackTransform(const LayoutDeviceIntPoint& aPoint,
+                           const ScrollableLayerGuid& aGuid,
+                           const CSSToLayoutDeviceScale& aScale,
+                           float aPresShellResolution);
 
     /* Dispatch a widget event via the widget stored in the event, if any.
      * In a child process, allows the TabParent event-capture mechanism to

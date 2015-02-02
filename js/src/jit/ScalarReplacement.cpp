@@ -112,6 +112,10 @@ IsObjectEscaped(MInstruction *ins, JSObject *objDefault = nullptr)
     else
         obj = objDefault;
 
+    // Don't optimize unboxed objects, which aren't handled by MObjectState.
+    if (obj->is<UnboxedPlainObject>())
+        return true;
+
     // Check if the object is escaped. If the object is not the first argument
     // of either a known Store / Load, then we consider it as escaped. This is a
     // cheap and conservative escape analysis.

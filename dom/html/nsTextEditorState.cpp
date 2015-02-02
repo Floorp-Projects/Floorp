@@ -1873,8 +1873,6 @@ bool
 nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput,
                             bool aSetValueChanged)
 {
-  mozilla::fallible_t fallible;
-
   if (mEditor && mBoundFrame) {
     // The InsertText call below might flush pending notifications, which
     // could lead into a scheduled PrepareEditor to be called.  That will

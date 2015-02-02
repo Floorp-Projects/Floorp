@@ -27,7 +27,7 @@ static bool test_pldhash_Init_capacity_ok()
   // will allocate 0.5GB of entry store on 32-bit platforms and 1GB on 64-bit
   // platforms.
   if (!PL_DHashTableInit(&t, PL_DHashGetStubOps(), sizeof(PLDHashEntryStub),
-                         mozilla::fallible_t(), PL_DHASH_MAX_INITIAL_LENGTH)) {
+                         mozilla::fallible, PL_DHASH_MAX_INITIAL_LENGTH)) {
     return false;
   }
 
@@ -57,7 +57,7 @@ static bool test_pldhash_Init_capacity_too_large()
   // Try the smallest too-large capacity.
   if (PL_DHashTableInit(&t, PL_DHashGetStubOps(),
                         sizeof(PLDHashEntryStub),
-                        mozilla::fallible_t(),
+                        mozilla::fallible,
                         PL_DHASH_MAX_INITIAL_LENGTH + 1)) {
     return false;   // it succeeded!?
   }
@@ -93,7 +93,7 @@ static bool test_pldhash_Init_overflow()
   };
 
   if (PL_DHashTableInit(&t, PL_DHashGetStubOps(), sizeof(OneKBEntry),
-                        mozilla::fallible_t(), PL_DHASH_MAX_INITIAL_LENGTH)) {
+                        mozilla::fallible, PL_DHASH_MAX_INITIAL_LENGTH)) {
     return false;   // it succeeded!?
   }
   // Don't call PL_DHashTableFinish() here; it's not safe after Init() failure.

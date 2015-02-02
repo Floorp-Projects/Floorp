@@ -966,8 +966,7 @@ Event::GetClientCoords(nsPresContext* aPresContext,
     return CSSIntPoint(0, 0);
   }
   nsPoint pt =
-    nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
-      LayoutDeviceIntPoint::ToUntyped(aPoint), rootFrame);
+    nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, aPoint, rootFrame);
 
   return CSSIntPoint::FromAppUnitsRounded(pt);
 }
