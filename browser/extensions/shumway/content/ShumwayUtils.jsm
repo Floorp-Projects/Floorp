@@ -15,12 +15,8 @@
 
 var EXPORTED_SYMBOLS = ["ShumwayUtils"];
 
-const RESOURCE_NAME = 'shumway';
-const EXT_PREFIX = 'shumway@research.mozilla.org';
-const SWF_CONTENT_TYPE = 'application/x-shockwave-flash';
 const PREF_PREFIX = 'shumway.';
 const PREF_DISABLED = PREF_PREFIX + 'disabled';
-const PREF_IGNORE_CTP = PREF_PREFIX + 'ignoreCTP';
 
 let Cc = Components.classes;
 let Ci = Components.interfaces;
@@ -29,14 +25,6 @@ let Cu = Components.utils;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
-
-let Svc = {};
-XPCOMUtils.defineLazyServiceGetter(Svc, 'mime',
-                                   '@mozilla.org/mime;1',
-                                   'nsIMIMEService');
-XPCOMUtils.defineLazyServiceGetter(Svc, 'pluginHost',
-                                   '@mozilla.org/plugin/host;1',
-                                   'nsIPluginHost');
 
 function getBoolPref(pref, def) {
   try {
@@ -50,31 +38,6 @@ function log(str) {
   dump(str + '\n');
 }
 
-// Register/unregister a constructor as a factory.
-function Factory() {}
-Factory.prototype = {
-  register: function register(targetConstructor) {
-    var proto = targetConstructor.prototype;
-    this._classID = proto.classID;
-
-    var factory = XPCOMUtils._getFactory(targetConstructor);
-    this._factory = factory;
-
-    var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-    registrar.registerFactory(proto.classID, proto.classDescription,
-                              proto.contractID, factory);
-  },
-
-  unregister: function unregister() {
-    var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-    registrar.unregisterFactory(this._classID, this._factory);
-    this._factory = null;
-  }
-};
-
-let converterFactory = new Factory();
-let overlayConverterFactory = new Factory();
-
 let ShumwayUtils = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
   _registered: false,
@@ -84,6 +47,10 @@ let ShumwayUtils = {
       this._ensureRegistered();
     else
       this._ensureUnregistered();
+
+    Cc["@mozilla.org/parentprocessmessagemanager;1"]
+      .getService(Ci.nsIMessageBroadcaster)
+      .addMessageListener('Shumway:Chrome:isEnabled', this);
 
     // Listen for when shumway is completely disabled.
     Services.prefs.addObserver(PREF_DISABLED, this, false);
@@ -95,6 +62,13 @@ let ShumwayUtils = {
       this._ensureRegistered();
     else
       this._ensureUnregistered();
+  },
+
+  receiveMessage: function(message) {
+    switch (message.name) {
+      case 'Shumway:Chrome:isEnabled':
+        return this.enabled;
+    }
   },
   
   /**
@@ -110,17 +84,16 @@ let ShumwayUtils = {
       return;
 
     // Load the component and register it.
-    Cu.import('resource://shumway/ShumwayStreamConverter.jsm');
-    converterFactory.register(ShumwayStreamConverter);
-    overlayConverterFactory.register(ShumwayStreamOverlayConverter);
-
-    var ignoreCTP = getBoolPref(PREF_IGNORE_CTP, true);
-
-    Svc.pluginHost.registerPlayPreviewMimeType(SWF_CONTENT_TYPE, ignoreCTP);
+    Cu.import('resource://shumway/ShumwayBootstrapUtils.jsm');
+    ShumwayBootstrapUtils.register();
 
     this._registered = true;
 
     log('Shumway is registered');
+
+    let globalMM = Cc['@mozilla.org/globalmessagemanager;1']
+      .getService(Ci.nsIFrameScriptLoader);
+    globalMM.broadcastAsyncMessage('Shumway:Child:refreshSettings');
   },
 
   _ensureUnregistered: function _ensureUnregistered() {
@@ -128,14 +101,15 @@ let ShumwayUtils = {
       return;
 
     // Remove the contract/component.
-    converterFactory.unregister();
-    overlayConverterFactory.unregister();
-    Cu.unload('resource://shumway/ShumwayStreamConverter.jsm');
-
-    Svc.pluginHost.unregisterPlayPreviewMimeType(SWF_CONTENT_TYPE);
+    ShumwayBootstrapUtils.unregister();
+    Cu.unload('resource://shumway/ShumwayBootstrapUtils.jsm');
 
     this._registered = false;
 
     log('Shumway is unregistered');
+
+    let globalMM = Cc['@mozilla.org/globalmessagemanager;1']
+      .getService(Ci.nsIFrameScriptLoader);
+    globalMM.broadcastAsyncMessage('Shumway:Child:refreshSettings');
   }
 };

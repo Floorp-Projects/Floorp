@@ -32,7 +32,9 @@ loop.store.FxOSActiveRoomStore = (function() {
         roomState: ROOM_STATES.INIT,
         audioMuted: false,
         videoMuted: false,
-        failureReason: undefined
+        failureReason: undefined,
+        localVideoDimensions: {},
+        remoteVideoDimensions: {}
       };
     },
 

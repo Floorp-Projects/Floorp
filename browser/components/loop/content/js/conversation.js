@@ -108,7 +108,9 @@ loop.conversation = (function(mozL10n) {
         callback(null, navigator.mozLoop.getLoopPref("ot.guid"));
       },
       set: function(guid, callback) {
-        navigator.mozLoop.setLoopPref("ot.guid", guid);
+        // See nsIPrefBranch
+        const PREF_STRING = 32;
+        navigator.mozLoop.setLoopPref("ot.guid", guid, PREF_STRING);
         callback(null);
       }
     });
