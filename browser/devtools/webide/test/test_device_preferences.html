@@ -30,9 +30,13 @@
 
           let prefIframe = win.document.querySelector("#deck-panel-devicepreferences");
 
+          yield documentIsLoaded(prefIframe.contentWindow.document);
+
           win.AppManager.update("runtimelist");
 
           yield connectToLocalRuntime(win);
+
+          yield nextTick();
 
           let prefs = win.document.querySelector("#cmd_showDevicePrefs");
 
@@ -43,13 +47,8 @@
           win.Cmds.showDevicePrefs();
           is(deck.selectedPanel, prefIframe, "device preferences iframe selected");
 
-          yield nextTick();
-
-          yield documentIsLoaded(prefIframe.contentWindow.document);
-
-          yield nextTick();
-
           yield prefIframe.contentWindow.getAllPrefs;
+          yield nextTick();
 
           setDocument(prefIframe);
 
