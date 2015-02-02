@@ -581,6 +581,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mAllowMergingAndFlattening(true),
       mWillComputePluginGeometry(false),
       mInTransform(false),
+      mIsInRootChromeDocument(false),
       mSyncDecodeImages(false),
       mIsPaintingToWindow(false),
       mIsCompositingCheap(false),
@@ -1006,6 +1007,8 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame)
 
   nsPresContext* pc = aReferenceFrame->PresContext();
   pc->GetDocShell()->GetWindowDraggingAllowed(&mWindowDraggingAllowed);
+
+  mIsInRootChromeDocument = !IsInSubdocument() && pc->IsChrome();
 }
 
 void
@@ -1021,6 +1024,7 @@ nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame)
   if (!mPresShellStates.IsEmpty()) {
     nsPresContext* pc = CurrentPresContext();
     pc->GetDocShell()->GetWindowDraggingAllowed(&mWindowDraggingAllowed);
+    mIsInRootChromeDocument = !IsInSubdocument() && pc->IsChrome();
   }
 }
 
@@ -2104,7 +2108,7 @@ nsDisplaySolidColor::WriteDebugInfo(std::stringstream& aStream)
 static void
 RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
 {
-  if (!aBuilder->IsInSubdocument() && !aBuilder->IsInTransform()) {
+  if (aBuilder->IsInRootChromeDocument() && !aBuilder->IsInTransform()) {
     nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(aFrame);
     nsRect borderBox(aFrame->GetOffsetTo(displayRoot), aFrame->GetSize());
     aBuilder->RegisterThemeGeometry(aFrame->StyleDisplay()->mAppearance,
@@ -2244,7 +2248,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   if (isThemed) {
     nsITheme* theme = presContext->GetTheme();
     if (theme->NeedToClearBackgroundBehindWidget(aFrame->StyleDisplay()->mAppearance) &&
-        !aBuilder->IsInSubdocument() && !aBuilder->IsInTransform()) {
+        aBuilder->IsInRootChromeDocument() && !aBuilder->IsInTransform()) {
       bgItemList.AppendNewToTop(
         new (aBuilder) nsDisplayClearBackground(aBuilder, aFrame));
     }
