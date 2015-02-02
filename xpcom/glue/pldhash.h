@@ -433,21 +433,6 @@ void PL_DHashFreeStringKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 const PLDHashTableOps* PL_DHashGetStubOps(void);
 
 /*
- * Dynamically allocate a new PLDHashTable, initialize it using
- * PL_DHashTableInit, and return its address. Never returns null.
- */
-PLDHashTable* PL_NewDHashTable(
-  const PLDHashTableOps* aOps, uint32_t aEntrySize,
-  uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
-
-/*
- * Free |aTable|'s entry storage and |aTable| itself (both via
- * aTable->mOps->freeTable). Use this function to destroy a PLDHashTable that
- * was allocated on the heap via PL_NewDHashTable().
- */
-void PL_DHashTableDestroy(PLDHashTable* aTable);
-
-/*
  * Initialize aTable with aOps and aEntrySize. The table's initial capacity
  * will be chosen such that |aLength| elements can be inserted without
  * rehashing; if |aLength| is a power-of-two, this capacity will be |2*length|.
@@ -462,9 +447,8 @@ void PL_DHashTableInit(
   uint32_t aEntrySize, uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
 /*
- * Free |aTable|'s entry storage (via aTable->mOps->freeTable). Use this
- * function to destroy a PLDHashTable that is allocated on the stack or in
- * static memory and was created via PL_DHashTableInit().
+ * Clear |aTable|'s elements (via aTable->mOps->clearEntry) and free its entry
+ * storage, if has any.
  */
 void PL_DHashTableFinish(PLDHashTable* aTable);
 
