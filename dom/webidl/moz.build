@@ -9,7 +9,6 @@ GENERATED_WEBIDL_FILES = [
 ]
 
 PREPROCESSED_WEBIDL_FILES = [
-    'Crypto.webidl',
     'HTMLMediaElement.webidl',
     'Navigator.webidl',
     'Window.webidl',
@@ -81,6 +80,7 @@ WEBIDL_FILES = [
     'ContainerBoxObject.webidl',
     'ConvolverNode.webidl',
     'Coordinates.webidl',
+    'Crypto.webidl',
     'CSPReport.webidl',
     'CSS.webidl',
     'CSSPrimitiveValue.webidl',
