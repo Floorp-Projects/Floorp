@@ -33,6 +33,16 @@ treecol {
   overflow-x: hidden !important;
 }
 
+/**
+ * We want the last category to always have non-0 getBoundingClientRect().bottom
+ * so we can use the value to figure out the max-height of the list in
+ * preferences.js, so use collapse instead of display: none; if it's hidden
+ */
+#categories > .category[hidden="true"] {
+  display: -moz-box;
+  visibility: collapse;
+}
+
 .category-icon {
   list-style-image: url("chrome://browser/skin/preferences/in-content/icons.png");
 }
