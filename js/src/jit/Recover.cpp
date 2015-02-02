@@ -971,10 +971,10 @@ RStringSplit::recover(JSContext *cx, SnapshotIterator &iter) const
 {
     RootedString str(cx, iter.read().toString());
     RootedString sep(cx, iter.read().toString());
-    RootedTypeObject typeObj(cx, iter.read().toObject().type());
+    RootedObjectGroup group(cx, iter.read().toObject().group());
     RootedValue result(cx);
 
-    JSObject *res = str_split_string(cx, typeObj, str, sep);
+    JSObject *res = str_split_string(cx, group, str, sep);
     if (!res)
         return false;
 
@@ -1211,13 +1211,13 @@ RNewArray::recover(JSContext *cx, SnapshotIterator &iter) const
 {
     RootedObject templateObject(cx, &iter.read().toObject());
     RootedValue result(cx);
-    RootedTypeObject type(cx);
+    RootedObjectGroup group(cx);
 
     // See CodeGenerator::visitNewArrayCallVM
-    if (!templateObject->hasSingletonType())
-        type = templateObject->type();
+    if (!templateObject->isSingleton())
+        group = templateObject->group();
 
-    JSObject *resultObject = NewDenseArray(cx, count_, type, allocatingBehaviour_);
+    JSObject *resultObject = NewDenseArray(cx, count_, group, allocatingBehaviour_);
     if (!resultObject)
         return false;
 

@@ -92,7 +92,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitTestOAndBranch(LTestOAndBranch *lir);
     void visitTestVAndBranch(LTestVAndBranch *lir);
     void visitFunctionDispatch(LFunctionDispatch *lir);
-    void visitTypeObjectDispatch(LTypeObjectDispatch *lir);
+    void visitObjectGroupDispatch(LObjectGroupDispatch *lir);
     void visitBooleanToString(LBooleanToString *lir);
     void emitIntToString(Register input, Register output, Label *ool);
     void visitIntToString(LIntToString *lir);

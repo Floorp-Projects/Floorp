@@ -25,7 +25,7 @@ JS_STATIC_ASSERT(LastObjectAllocKind == FINALIZE_OBJECT_LAST);
 static FILE *gcTraceFile = nullptr;
 
 static HashSet<const Class *, DefaultHasher<const Class *>, SystemAllocPolicy> tracedClasses;
-static HashSet<const TypeObject *, DefaultHasher<const TypeObject *>, SystemAllocPolicy> tracedTypes;
+static HashSet<const ObjectGroup *, DefaultHasher<const ObjectGroup *>, SystemAllocPolicy> tracedGroups;
 
 static inline void
 WriteWord(uint64_t data)
@@ -156,26 +156,26 @@ MaybeTraceClass(const Class *clasp)
 }
 
 static void
-MaybeTraceType(TypeObject *type)
+MaybeTraceGroup(ObjectGroup *group)
 {
-    if (tracedTypes.has(type))
+    if (tracedGroups.has(group))
         return;
 
-    MaybeTraceClass(type->clasp());
-    TraceEvent(TraceEventTypeInfo, uint64_t(type));
-    TraceAddress(type->clasp());
-    TraceInt(type->flags());
+    MaybeTraceClass(group->clasp());
+    TraceEvent(TraceEventGroupInfo, uint64_t(group));
+    TraceAddress(group->clasp());
+    TraceInt(group->flags());
 
-    MOZ_ALWAYS_TRUE(tracedTypes.put(type));
+    MOZ_ALWAYS_TRUE(tracedGroups.put(group));
 }
 
 void
-js::gc::TraceTypeNewScript(TypeObject *type)
+js::gc::TraceTypeNewScript(ObjectGroup *group)
 {
     const size_t bufLength = 128;
     static char buffer[bufLength];
-    MOZ_ASSERT(type->hasNewScript());
-    JSAtom *funName = type->newScript()->fun->displayAtom();
+    MOZ_ASSERT(group->hasNewScript());
+    JSAtom *funName = group->newScript()->fun->displayAtom();
     if (!funName)
         return;
 
@@ -184,7 +184,7 @@ js::gc::TraceTypeNewScript(TypeObject *type)
     CopyChars(reinterpret_cast<Latin1Char *>(buffer), *funName);
     buffer[length] = 0;
 
-    TraceEvent(TraceEventTypeNewScript, uint64_t(type));
+    TraceEvent(TraceEventTypeNewScript, uint64_t(group));
     TraceString(buffer);
 }
 
@@ -194,10 +194,10 @@ js::gc::TraceCreateObject(JSObject* object)
     if (!gcTraceFile)
         return;
 
-    TypeObject *type = object->type();
-    MaybeTraceType(type);
+    ObjectGroup *group = object->group();
+    MaybeTraceGroup(group);
     TraceEvent(TraceEventCreateObject, uint64_t(object));
-    TraceAddress(type);
+    TraceAddress(group);
 }
 
 void
@@ -230,8 +230,8 @@ js::gc::TraceTenuredFinalize(Cell *thing)
 {
     if (!gcTraceFile)
         return;
-    if (thing->tenuredGetAllocKind() == FINALIZE_TYPE_OBJECT)
-        tracedTypes.remove(static_cast<const TypeObject *>(thing));
+    if (thing->tenuredGetAllocKind() == FINALIZE_OBJECT_GROUP)
+        tracedGroups.remove(static_cast<const ObjectGroup *>(thing));
     TraceEvent(TraceEventTenuredFinalize, uint64_t(thing));
 }
 

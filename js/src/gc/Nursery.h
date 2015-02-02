@@ -40,7 +40,7 @@ class MinorCollectionTracer;
 } /* namespace gc */
 
 namespace types {
-struct TypeObject;
+struct ObjectGroup;
 }
 
 namespace jit {
@@ -117,13 +117,13 @@ class Nursery
     /* Free a slots array. */
     void freeSlots(HeapSlot *slots);
 
-    typedef Vector<types::TypeObject *, 0, SystemAllocPolicy> TypeObjectList;
+    typedef Vector<types::ObjectGroup *, 0, SystemAllocPolicy> ObjectGroupList;
 
     /*
-     * Do a minor collection, optionally specifying a list to store types which
+     * Do a minor collection, optionally specifying a list to store groups which
      * should be pretenured afterwards.
      */
-    void collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList *pretenureTypes);
+    void collect(JSRuntime *rt, JS::gcreason::Reason reason, ObjectGroupList *pretenureGroups);
 
     /*
      * Check if the thing at |*ref| in the Nursery has been forwarded. If so,

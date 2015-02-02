@@ -549,10 +549,10 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         break;
       }
 
-      case JSTRACE_TYPE_OBJECT: {
-        types::TypeObject *obj = static_cast<types::TypeObject *>(thing);
-        zStats->typeObjectsGCHeap += thingSize;
-        zStats->typeObjectsMallocHeap += obj->sizeOfExcludingThis(rtStats->mallocSizeOf_);
+      case JSTRACE_OBJECT_GROUP: {
+        types::ObjectGroup *group = static_cast<types::ObjectGroup *>(thing);
+        zStats->objectGroupsGCHeap += thingSize;
+        zStats->objectGroupsMallocHeap += group->sizeOfExcludingThis(rtStats->mallocSizeOf_);
         break;
       }
 

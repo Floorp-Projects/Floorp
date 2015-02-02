@@ -23,7 +23,7 @@ namespace jit {
 class JitCode;
 }
 namespace types {
-struct TypeObject;
+struct ObjectGroup;
 }
 
 static const size_t NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY = 4096;
@@ -143,8 +143,8 @@ class GCMarker : public JSTracer
         pushTaggedPtr(ObjectTag, obj);
     }
 
-    void pushType(types::TypeObject *type) {
-        pushTaggedPtr(TypeTag, type);
+    void pushType(types::ObjectGroup *group) {
+        pushTaggedPtr(GroupTag, group);
     }
 
     void pushJitCode(jit::JitCode *code) {
@@ -231,7 +231,7 @@ class GCMarker : public JSTracer
     enum StackTag {
         ValueArrayTag,
         ObjectTag,
-        TypeTag,
+        GroupTag,
         XmlTag,
         SavedValueArrayTag,
         JitCodeTag,

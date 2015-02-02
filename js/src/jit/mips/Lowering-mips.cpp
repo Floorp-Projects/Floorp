@@ -378,12 +378,12 @@ LIRGeneratorMIPS::visitGuardShape(MGuardShape *ins)
 }
 
 void
-LIRGeneratorMIPS::visitGuardObjectType(MGuardObjectType *ins)
+LIRGeneratorMIPS::visitGuardObjectGroup(MGuardObjectGroup *ins)
 {
     MOZ_ASSERT(ins->obj()->type() == MIRType_Object);
 
     LDefinition tempObj = temp(LDefinition::OBJECT);
-    LGuardObjectType *guard = new(alloc()) LGuardObjectType(useRegister(ins->obj()), tempObj);
+    LGuardObjectGroup *guard = new(alloc()) LGuardObjectGroup(useRegister(ins->obj()), tempObj);
     assignSnapshot(guard, ins->bailoutKind());
     add(guard, ins);
     redefine(ins, ins->obj());

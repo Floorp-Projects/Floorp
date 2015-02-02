@@ -24,7 +24,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     LTableSwitchV *newLTableSwitchV(MTableSwitch *ins);
 
     void visitGuardShape(MGuardShape *ins);
-    void visitGuardObjectType(MGuardObjectType *ins);
+    void visitGuardObjectGroup(MGuardObjectGroup *ins);
     void visitPowHalf(MPowHalf *ins);
     void lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
                        MDefinition *rhs);
