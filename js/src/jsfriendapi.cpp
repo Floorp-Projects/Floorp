@@ -1197,7 +1197,11 @@ js::DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
     if (descriptor.hasSetterObject())
         assertSameCompartment(cx, descriptor.setterObject());
 
-    return StandardDefineProperty(cx, obj, id, descriptor, bp);
+    ObjectOpResult success;
+    if (!StandardDefineProperty(cx, obj, id, descriptor, success))
+        return false;
+    *bp = bool(success);
+    return true;
 }
 
 JS_FRIEND_API(bool)
