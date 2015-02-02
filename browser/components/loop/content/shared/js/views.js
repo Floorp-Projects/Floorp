@@ -8,11 +8,13 @@
 /* global loop:true, React */
 var loop = loop || {};
 loop.shared = loop.shared || {};
-loop.shared.views = (function(_, OT, l10n) {
+loop.shared.views = (function(_, l10n) {
   "use strict";
 
+  var sharedActions = loop.shared.actions;
   var sharedModels = loop.shared.models;
   var sharedMixins = loop.shared.mixins;
+  var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
 
   /**
    * Media control button.
@@ -46,6 +48,7 @@ loop.shared.views = (function(_, OT, l10n) {
       var classesObj = {
         "btn": true,
         "media-control": true,
+        "transparent-button": true,
         "local-media": this.props.scope === "local",
         "muted": !this.props.enabled,
         "hide": !this.props.visible
@@ -73,6 +76,60 @@ loop.shared.views = (function(_, OT, l10n) {
   });
 
   /**
+   * Screen sharing control button.
+   *
+   * Required props:
+   * - {loop.Dispatcher} dispatcher  The dispatcher instance
+   * - {Boolean}         visible     Set to true to display the button
+   * - {String}          state       One of the screen sharing states, see
+   *                                 loop.shared.utils.SCREEN_SHARE_STATES
+   */
+  var ScreenShareControlButton = React.createClass({displayName: "ScreenShareControlButton",
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      visible: React.PropTypes.bool.isRequired,
+      state: React.PropTypes.string.isRequired,
+    },
+
+    handleClick: function() {
+      if (this.props.state === SCREEN_SHARE_STATES.ACTIVE) {
+        this.props.dispatcher.dispatch(
+          new sharedActions.EndScreenShare({}));
+      } else {
+        this.props.dispatcher.dispatch(
+          new sharedActions.StartScreenShare({}));
+      }
+    },
+
+    _getTitle: function() {
+      var prefix = this.props.state === SCREEN_SHARE_STATES.ACTIVE ?
+        "active" : "inactive";
+
+      return l10n.get(prefix + "_screenshare_button_title");
+    },
+
+    render: function() {
+      if (!this.props.visible) {
+        return null;
+      }
+
+      var screenShareClasses = React.addons.classSet({
+        "btn": true,
+        "btn-screen-share": true,
+        "transparent-button": true,
+        "active": this.props.state === SCREEN_SHARE_STATES.ACTIVE,
+        "disabled": this.props.state === SCREEN_SHARE_STATES.PENDING
+      });
+
+      return (
+        React.createElement("button", {className: screenShareClasses, 
+                onClick: this.handleClick, 
+                title: this._getTitle()})
+      );
+    }
+  });
+
+  /**
    * Conversation controls.
    */
   var ConversationToolbar = React.createClass({displayName: "ConversationToolbar",
@@ -80,13 +137,16 @@ loop.shared.views = (function(_, OT, l10n) {
       return {
         video: {enabled: true, visible: true},
         audio: {enabled: true, visible: true},
+        screenShare: {state: SCREEN_SHARE_STATES.INACTIVE, visible: false},
         enableHangup: true
       };
     },
 
     propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       video: React.PropTypes.object.isRequired,
       audio: React.PropTypes.object.isRequired,
+      screenShare: React.PropTypes.object,
       hangup: React.PropTypes.func.isRequired,
       publishStream: React.PropTypes.func.isRequired,
       hangupButtonLabel: React.PropTypes.string,
@@ -110,7 +170,6 @@ loop.shared.views = (function(_, OT, l10n) {
     },
 
     render: function() {
-      var cx = React.addons.classSet;
       return (
         React.createElement("ul", {className: "conversation-toolbar"}, 
           React.createElement("li", {className: "conversation-toolbar-btn-box btn-hangup-entry"}, 
@@ -131,6 +190,11 @@ loop.shared.views = (function(_, OT, l10n) {
                                 enabled: this.props.audio.enabled, 
                                 visible: this.props.audio.visible, 
                                 scope: "local", type: "audio"})
+          ), 
+          React.createElement("li", {className: "conversation-toolbar-btn-box btn-screen-share-entry"}, 
+            React.createElement(ScreenShareControlButton, {dispatcher: this.props.dispatcher, 
+                                      visible: this.props.screenShare.visible, 
+                                      state: this.props.screenShare.state})
           )
         )
       );
@@ -461,6 +525,7 @@ loop.shared.views = (function(_, OT, l10n) {
     ConversationView: ConversationView,
     ConversationToolbar: ConversationToolbar,
     MediaControlButton: MediaControlButton,
+    ScreenShareControlButton: ScreenShareControlButton,
     NotificationListView: NotificationListView
   };
-})(_, window.OT, navigator.mozL10n || document.mozL10n);
+})(_, navigator.mozL10n || document.mozL10n);

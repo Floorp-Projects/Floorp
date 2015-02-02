@@ -6,20 +6,25 @@ describe("loop.roomViews", function () {
   "use strict";
 
   var ROOM_STATES = loop.store.ROOM_STATES;
+  var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
 
   var sandbox, dispatcher, roomStore, activeRoomStore, fakeWindow;
+  var fakeMozLoop;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
 
     dispatcher = new loop.Dispatcher();
 
+    fakeMozLoop = {
+      getAudioBlob: sinon.stub(),
+      getLoopPref: sinon.stub()
+    };
+
     fakeWindow = {
       document: {},
       navigator: {
-        mozLoop: {
-          getAudioBlob: sinon.stub()
-        }
+        mozLoop: fakeMozLoop
       },
       addEventListener: function() {},
       removeEventListener: function() {}
@@ -62,16 +67,10 @@ describe("loop.roomViews", function () {
           roomStore: roomStore
         }));
 
-      expect(testView.state).eql({
-        roomState: ROOM_STATES.INIT,
-        audioMuted: false,
-        videoMuted: false,
-        failureReason: undefined,
-        used: false,
-        foo: "bar",
-        localVideoDimensions: {},
-        remoteVideoDimensions: {}
-      });
+      var expectedState = _.extend({foo: "bar"},
+        activeRoomStore.getInitialStoreState());
+
+      expect(testView.state).eql(expectedState);
     });
 
     it("should listen to store changes", function() {
@@ -216,7 +215,8 @@ describe("loop.roomViews", function () {
       return TestUtils.renderIntoDocument(
         React.createElement(loop.roomViews.DesktopRoomConversationView, {
           dispatcher: dispatcher,
-          roomStore: roomStore
+          roomStore: roomStore,
+          mozLoop: fakeMozLoop
         }));
     }
 
@@ -274,6 +274,20 @@ describe("loop.roomViews", function () {
       var muteBtn = view.getDOMNode().querySelector('.btn-mute-audio');
 
       expect(muteBtn.classList.contains("muted")).eql(true);
+    });
+
+    it("should dispatch a `StartScreenShare` action when sharing is not active " +
+       "and the screen share button is pressed", function() {
+      view = mountTestComponent();
+
+      view.setState({screenSharingState: SCREEN_SHARE_STATES.INACTIVE});
+
+      var muteBtn = view.getDOMNode().querySelector('.btn-mute-video');
+
+      React.addons.TestUtils.Simulate.click(muteBtn);
+
+      sinon.assert.calledWithMatch(dispatcher.dispatch,
+        sinon.match.hasOwn("name", "setMute"));
     });
 
     describe("#componentWillUpdate", function() {

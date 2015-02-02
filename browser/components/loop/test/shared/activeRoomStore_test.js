@@ -9,6 +9,7 @@ describe("loop.store.ActiveRoomStore", function () {
   var REST_ERRNOS = loop.shared.utils.REST_ERRNOS;
   var ROOM_STATES = loop.store.ROOM_STATES;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
+  var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
   var sandbox, dispatcher, store, fakeMozLoop, fakeSdkDriver;
   var fakeMultiplexGum;
 
@@ -643,6 +644,16 @@ describe("loop.store.ActiveRoomStore", function () {
       }));
 
       expect(store.getStoreState().videoMuted).eql(true);
+    });
+  });
+
+  describe("#screenSharingState", function() {
+    it("should save the state", function() {
+      store.screenSharingState(new sharedActions.ScreenSharingState({
+        state: SCREEN_SHARE_STATES.ACTIVE
+      }));
+
+      expect(store.getStoreState().screenSharingState).eql(SCREEN_SHARE_STATES.ACTIVE);
     });
   });
 
