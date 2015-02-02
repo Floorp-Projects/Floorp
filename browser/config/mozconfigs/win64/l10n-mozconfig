@@ -1,0 +1,13 @@
+. "$topsrcdir/browser/config/mozconfigs/common"
+. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
+
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+ac_add_options --enable-update-packaging
+ac_add_options --with-l10n-base=../../l10n
+ac_add_options --with-windows-version=603
+
+export MOZILLA_OFFICIAL=1
+
+. $topsrcdir/build/win64/mozconfig.vs2013
+
+. "$topsrcdir/build/mozconfig.common.override"
