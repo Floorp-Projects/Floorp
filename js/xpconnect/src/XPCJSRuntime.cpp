@@ -1928,13 +1928,13 @@ ReportZoneStats(const JS::ZoneStats &zStats,
         zStats.jitCodesGCHeap,
         "References to executable code pools used by the JITs.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects/gc-heap"),
-        zStats.typeObjectsGCHeap,
-        "Type inference information about objects.");
+    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("object-groups/gc-heap"),
+        zStats.objectGroupsGCHeap,
+        "Classification and type inference information about objects.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects/malloc-heap"),
-        zStats.typeObjectsMallocHeap,
-        "Type object addenda.");
+    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("object-groups/malloc-heap"),
+        zStats.objectGroupsMallocHeap,
+        "Object group addenda.");
 
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-pool"),
         zStats.typePool,

@@ -99,7 +99,7 @@ NativeObject::initDenseElementWithType(ExclusiveContext *cx, uint32_t index,
 inline void
 NativeObject::setDenseElementHole(ExclusiveContext *cx, uint32_t index)
 {
-    types::MarkTypeObjectFlags(cx, this, types::OBJECT_FLAG_NON_PACKED);
+    types::MarkObjectGroupFlags(cx, this, types::OBJECT_FLAG_NON_PACKED);
     setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
 }
 
@@ -107,9 +107,9 @@ NativeObject::setDenseElementHole(ExclusiveContext *cx, uint32_t index)
 NativeObject::removeDenseElementForSparseIndex(ExclusiveContext *cx,
                                                HandleNativeObject obj, uint32_t index)
 {
-    types::MarkTypeObjectFlags(cx, obj,
-                               types::OBJECT_FLAG_NON_PACKED |
-                               types::OBJECT_FLAG_SPARSE_INDEXES);
+    types::MarkObjectGroupFlags(cx, obj,
+                                types::OBJECT_FLAG_NON_PACKED |
+                                types::OBJECT_FLAG_SPARSE_INDEXES);
     if (obj->containsDenseElement(index))
         obj->setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
 }
@@ -124,7 +124,7 @@ inline void
 NativeObject::markDenseElementsNotPacked(ExclusiveContext *cx)
 {
     MOZ_ASSERT(isNative());
-    MarkTypeObjectFlags(cx, this, types::OBJECT_FLAG_NON_PACKED);
+    MarkObjectGroupFlags(cx, this, types::OBJECT_FLAG_NON_PACKED);
 }
 
 inline void
@@ -283,10 +283,10 @@ NativeObject::copy(ExclusiveContext *cx, gc::AllocKind kind, gc::InitialHeap hea
                    HandleNativeObject templateObject)
 {
     RootedShape shape(cx, templateObject->lastProperty());
-    RootedTypeObject type(cx, templateObject->type());
+    RootedObjectGroup group(cx, templateObject->group());
     MOZ_ASSERT(!templateObject->denseElementsAreCopyOnWrite());
 
-    JSObject *baseObj = create(cx, kind, heap, shape, type);
+    JSObject *baseObj = create(cx, kind, heap, shape, group);
     if (!baseObj)
         return nullptr;
     NativeObject *obj = &baseObj->as<NativeObject>();
@@ -309,19 +309,6 @@ NativeObject::copy(ExclusiveContext *cx, gc::AllocKind kind, gc::InitialHeap hea
     }
 
     return obj;
-}
-
-inline bool
-NativeObject::setSlotIfHasType(Shape *shape, const Value &value, bool overwriting)
-{
-    if (!types::HasTypePropertyId(this, shape->propid(), value))
-        return false;
-    setSlot(shape->slot(), value);
-
-    if (overwriting)
-        shape->setOverwritten();
-
-    return true;
 }
 
 inline void

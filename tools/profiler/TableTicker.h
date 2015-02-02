@@ -158,13 +158,13 @@ class TableTicker: public Sampler {
   }
 
   // Called within a signal. This function must be reentrant
-  virtual void Tick(TickSample* sample);
+  virtual void Tick(TickSample* sample) MOZ_OVERRIDE;
 
   // Immediately captures the calling thread's call stack and returns it.
-  virtual SyncProfile* GetBacktrace();
+  virtual SyncProfile* GetBacktrace() MOZ_OVERRIDE;
 
   // Called within a signal. This function must be reentrant
-  virtual void RequestSave()
+  virtual void RequestSave() MOZ_OVERRIDE
   {
     mSaveRequested = true;
 #ifdef MOZ_TASK_TRACER
@@ -174,7 +174,7 @@ class TableTicker: public Sampler {
 #endif
   }
 
-  virtual void HandleSaveRequest();
+  virtual void HandleSaveRequest() MOZ_OVERRIDE;
   virtual void DeleteExpiredMarkers() MOZ_OVERRIDE;
 
   ThreadProfile* GetPrimaryThreadProfile()
@@ -203,7 +203,7 @@ class TableTicker: public Sampler {
   bool ProfileJava() const { return mProfileJava; }
   bool ProfileGPU() const { return mProfileGPU; }
   bool ProfilePower() const { return mProfilePower; }
-  bool ProfileThreads() const { return mProfileThreads; }
+  bool ProfileThreads() const MOZ_OVERRIDE { return mProfileThreads; }
   bool InPrivacyMode() const { return mPrivacyMode; }
   bool AddMainThreadIO() const { return mAddMainThreadIO; }
   bool ProfileMemory() const { return mProfileMemory; }

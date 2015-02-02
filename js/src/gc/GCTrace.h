@@ -11,7 +11,7 @@
 
 namespace js {
 
-namespace types { struct TypeObject; }
+namespace types { struct ObjectGroup; }
 
 namespace gc {
 
@@ -29,7 +29,7 @@ extern void TraceMinorGCEnd();
 extern void TraceMajorGCStart();
 extern void TraceTenuredFinalize(Cell *thing);
 extern void TraceMajorGCEnd();
-extern void TraceTypeNewScript(js::types::TypeObject *type);
+extern void TraceTypeNewScript(js::types::ObjectGroup *group);
 
 #else
 
@@ -45,7 +45,7 @@ inline void TraceMinorGCEnd() {}
 inline void TraceMajorGCStart() {}
 inline void TraceTenuredFinalize(Cell *thing) {}
 inline void TraceMajorGCEnd() {}
-inline void TraceTypeNewScript(js::types::TypeObject *type) {}
+inline void TraceTypeNewScript(js::types::ObjectGroup *group) {}
 
 #endif
 

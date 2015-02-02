@@ -71,51 +71,38 @@ JSObject::finalize(js::FreeOp *fop)
 }
 
 /* static */ inline bool
-JSObject::setSingletonType(js::ExclusiveContext *cx, js::HandleObject obj)
+JSObject::setSingleton(js::ExclusiveContext *cx, js::HandleObject obj)
 {
     MOZ_ASSERT_IF(cx->isJSContext(), !IsInsideNursery(obj));
 
-    js::types::TypeObject *type = cx->getSingletonType(obj->getClass(), obj->getTaggedProto());
-    if (!type)
+    js::types::ObjectGroup *group = cx->getLazySingletonGroup(obj->getClass(),
+                                                              obj->getTaggedProto());
+    if (!group)
         return false;
 
-    obj->type_ = type;
+    obj->group_ = group;
     return true;
 }
 
-inline js::types::TypeObject*
-JSObject::getType(JSContext *cx)
+inline js::types::ObjectGroup*
+JSObject::getGroup(JSContext *cx)
 {
     MOZ_ASSERT(cx->compartment() == compartment());
-    if (hasLazyType()) {
+    if (hasLazyGroup()) {
         JS::RootedObject self(cx, this);
         if (cx->compartment() != compartment())
             MOZ_CRASH();
-        return makeLazyType(cx, self);
+        return makeLazyGroup(cx, self);
     }
-    return static_cast<js::types::TypeObject*>(type_);
-}
-
-/* static */ inline bool
-JSObject::clearType(JSContext *cx, js::HandleObject obj)
-{
-    MOZ_ASSERT(!obj->hasSingletonType());
-    MOZ_ASSERT(cx->compartment() == obj->compartment());
-
-    js::types::TypeObject *type = cx->getNewType(obj->getClass(), js::TaggedProto(nullptr));
-    if (!type)
-        return false;
-
-    obj->type_ = type;
-    return true;
+    return group_;
 }
 
 inline void
-JSObject::setType(js::types::TypeObject *newType)
+JSObject::setGroup(js::types::ObjectGroup *group)
 {
-    MOZ_ASSERT(newType);
-    MOZ_ASSERT(!hasSingletonType());
-    type_ = newType;
+    MOZ_ASSERT(group);
+    MOZ_ASSERT(!isSingleton());
+    group_ = group;
 }
 
 
@@ -256,26 +243,28 @@ ClassCanHaveFixedData(const Class *clasp)
 
 /* static */ inline JSObject *
 JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-                 js::HandleShape shape, js::HandleTypeObject type)
+                 js::HandleShape shape, js::HandleObjectGroup group)
 {
-    MOZ_ASSERT(shape && type);
-    MOZ_ASSERT(type->clasp() == shape->getObjectClass());
-    MOZ_ASSERT(type->clasp() != &js::ArrayObject::class_);
-    MOZ_ASSERT_IF(!js::ClassCanHaveFixedData(type->clasp()),
-                  js::gc::GetGCKindSlots(kind, type->clasp()) == shape->numFixedSlots());
-    MOZ_ASSERT_IF(type->clasp()->flags & JSCLASS_BACKGROUND_FINALIZE, IsBackgroundFinalized(kind));
-    MOZ_ASSERT_IF(type->clasp()->finalize, heap == js::gc::TenuredHeap ||
-                                           (type->clasp()->flags & JSCLASS_FINALIZE_FROM_NURSERY));
+    MOZ_ASSERT(shape && group);
+    MOZ_ASSERT(group->clasp() == shape->getObjectClass());
+    MOZ_ASSERT(group->clasp() != &js::ArrayObject::class_);
+    MOZ_ASSERT_IF(!js::ClassCanHaveFixedData(group->clasp()),
+                  js::gc::GetGCKindSlots(kind, group->clasp()) == shape->numFixedSlots());
+    MOZ_ASSERT_IF(group->clasp()->flags & JSCLASS_BACKGROUND_FINALIZE,
+                  IsBackgroundFinalized(kind));
+    MOZ_ASSERT_IF(group->clasp()->finalize,
+                  heap == js::gc::TenuredHeap ||
+                  (group->clasp()->flags & JSCLASS_FINALIZE_FROM_NURSERY));
 
     // Non-native classes cannot have reserved slots or private data, and the
     // objects can't have any fixed slots, for compatibility with
     // GetReservedOrProxyPrivateSlot.
-    MOZ_ASSERT_IF(!type->clasp()->isNative(), JSCLASS_RESERVED_SLOTS(type->clasp()) == 0);
-    MOZ_ASSERT_IF(!type->clasp()->isNative(), !type->clasp()->hasPrivate());
-    MOZ_ASSERT_IF(!type->clasp()->isNative(), shape->numFixedSlots() == 0);
-    MOZ_ASSERT_IF(!type->clasp()->isNative(), shape->slotSpan() == 0);
+    MOZ_ASSERT_IF(!group->clasp()->isNative(), JSCLASS_RESERVED_SLOTS(group->clasp()) == 0);
+    MOZ_ASSERT_IF(!group->clasp()->isNative(), !group->clasp()->hasPrivate());
+    MOZ_ASSERT_IF(!group->clasp()->isNative(), shape->numFixedSlots() == 0);
+    MOZ_ASSERT_IF(!group->clasp()->isNative(), shape->slotSpan() == 0);
 
-    const js::Class *clasp = type->clasp();
+    const js::Class *clasp = group->clasp();
     size_t nDynamicSlots =
         js::NativeObject::dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(), clasp);
 
@@ -284,7 +273,7 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
         return nullptr;
 
     obj->shape_.init(shape);
-    obj->type_.init(type);
+    obj->group_.init(group);
 
     // Note: slots are created and assigned internally by NewGCObject.
     obj->setInitialElementsMaybeNonNative(js::emptyObjectElements);
@@ -296,7 +285,7 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
         obj->as<js::NativeObject>().initializeSlotRange(0, span);
 
     // JSFunction's fixed slots expect POD-style initialization.
-    if (type->clasp()->isJSFunction())
+    if (group->clasp()->isJSFunction())
         memset(obj->as<JSFunction>().fixedSlots(), 0, sizeof(js::HeapSlot) * GetGCKindSlots(kind));
 
     js::gc::TraceCreateObject(obj);
@@ -648,29 +637,29 @@ bool
 NewObjectScriptedCall(JSContext *cx, MutableHandleObject obj);
 
 JSObject *
-NewObjectWithTypeCommon(JSContext *cx, HandleTypeObject type, JSObject *parent,
-                        gc::AllocKind allocKind, NewObjectKind newKind);
+NewObjectWithGroupCommon(JSContext *cx, HandleObjectGroup group, JSObject *parent,
+                         gc::AllocKind allocKind, NewObjectKind newKind);
 
 template <typename T>
 inline T *
-NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent,
-                  gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
+NewObjectWithGroup(JSContext *cx, HandleObjectGroup group, JSObject *parent,
+                   gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
-    JSObject *obj = NewObjectWithTypeCommon(cx, type, parent, allocKind, newKind);
+    JSObject *obj = NewObjectWithGroupCommon(cx, group, parent, allocKind, newKind);
     return obj ? &obj->as<T>() : nullptr;
 }
 
 template <typename T>
 inline T *
-NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent,
-                  NewObjectKind newKind = GenericObject)
+NewObjectWithGroup(JSContext *cx, HandleObjectGroup group, JSObject *parent,
+                   NewObjectKind newKind = GenericObject)
 {
-    gc::AllocKind allocKind = gc::GetGCObjectKind(type->clasp());
-    return NewObjectWithType<T>(cx, type, parent, allocKind, newKind);
+    gc::AllocKind allocKind = gc::GetGCObjectKind(group->clasp());
+    return NewObjectWithGroup<T>(cx, group, parent, allocKind, newKind);
 }
 
 JSObject *
-NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
+NewReshapedObject(JSContext *cx, HandleObjectGroup group, JSObject *parent,
                   gc::AllocKind allocKind, HandleShape shape,
                   NewObjectKind newKind = GenericObject);
 

@@ -262,14 +262,14 @@ class CallObject : public ScopeObject
 
     /*
      * Construct a bare-bones call object given a shape and a non-singleton
-     * type.  The call object must be further initialized to be usable.
+     * group.  The call object must be further initialized to be usable.
      */
     static CallObject *
-    create(JSContext *cx, HandleShape shape, HandleTypeObject type, uint32_t lexicalBegin);
+    create(JSContext *cx, HandleShape shape, HandleObjectGroup group, uint32_t lexicalBegin);
 
     /*
-     * Construct a bare-bones call object given a shape and make it have
-     * singleton type.  The call object must be initialized to be usable.
+     * Construct a bare-bones call object given a shape and make it into
+     * a singleton.  The call object must be initialized to be usable.
      */
     static CallObject *
     createSingleton(JSContext *cx, HandleShape shape, uint32_t lexicalBegin);

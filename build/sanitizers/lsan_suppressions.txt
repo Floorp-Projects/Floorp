@@ -46,7 +46,7 @@ leak:mozilla::TransportLayerDtls::Setup
 ###
 
 # Bug 981195 - Small leak in the parser. m4
-leak:TypeCompartment::fixObjectType
+leak:TypeCompartment::fixObjectGroup
 
 # Bug 982111 - WebM is leaking. m1
 leak:nestegg_read_packet
