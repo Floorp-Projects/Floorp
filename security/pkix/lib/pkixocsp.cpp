@@ -195,8 +195,7 @@ MatchResponderID(TrustDomain& trustDomain,
                           potentialSignerSubjectPublicKeyInfo, match);
     }
 
-    default:
-      return Result::ERROR_OCSP_MALFORMED_RESPONSE;
+    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
 }
 
@@ -320,9 +319,8 @@ VerifyEncodedOCSPResponse(TrustDomain& trustDomain, const struct CertID& certID,
       return Result::ERROR_REVOKED_CERTIFICATE;
     case CertStatus::Unknown:
       return Result::ERROR_OCSP_UNKNOWN_CERT;
+     MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
-
-  return NotReached("unknown CertStatus", Result::ERROR_OCSP_UNKNOWN_CERT);
 }
 
 // OCSPResponse ::= SEQUENCE {

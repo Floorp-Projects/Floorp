@@ -23,8 +23,7 @@
  */
 
 #include "pkix/Result.h"
-
-#include "pkix/stdkeywords.h"
+#include "pkixutil.h"
 
 namespace mozilla { namespace pkix {
 
@@ -40,9 +39,7 @@ MapResultToName(Result result)
 
 #undef MOZILLA_PKIX_MAP
 
-    default:
-      assert(false);
-      return nullptr;
+    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
 }
 

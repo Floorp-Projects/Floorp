@@ -33,6 +33,7 @@
 #include "pkix/pkix.h"
 #include "pkix/ScopedPtr.h"
 #include "pkixder.h"
+#include "pkixutil.h"
 #include "secerr.h"
 #include "sslerr.h"
 
@@ -55,6 +56,17 @@ CheckPublicKeySize(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
   if (!publicKey) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
+
+  // Some compilers complain if if we don't explicitly list every case. That is
+  // usually what we want, but in this case we really want to support an
+  // open-ended set of key types that might be expanded by future NSS versions.
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#elif defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4061)
+#endif
 
   switch (publicKey.get()->keyType) {
     case ecKey:
@@ -87,27 +99,26 @@ CheckPublicKeySize(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
         case NamedCurve::secp384r1: // fall through
         case NamedCurve::secp521r1:
           break;
-        default:
-          return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
       }
 
       return Success;
     }
+
     case rsaKey:
       if (SECKEY_PublicKeyStrengthInBits(publicKey.get()) < minimumNonECCBits) {
         return Result::ERROR_INADEQUATE_KEY_SIZE;
       }
       break;
-    case dsaKey: // fall through
-    case nullKey: // fall through
-    case fortezzaKey: // fall through
-    case dhKey: // fall through
-    case keaKey: // fall through
-    case rsaPssKey: // fall through
-    case rsaOaepKey: // fall through
+
     default:
       return Result::ERROR_UNSUPPORTED_KEYALG;
   }
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
   return Success;
 }
@@ -160,9 +171,9 @@ VerifySignedDataNSS(const SignedDataWithSignature& sd,
       digestAlg = SEC_OID_SHA1;
       break;
     case SignatureAlgorithm::unsupported_algorithm: // fall through
-    default:
       return NotReached("unknown signature algorithm",
                         Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
+    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
 
   Result rv;
@@ -244,9 +255,7 @@ MapResultToPRErrorCode(Result result)
 
 #undef MOZILLA_PKIX_MAP
 
-    default:
-      PR_NOT_REACHED("Unknown error code in MapResultToPRErrorCode");
-      return SEC_ERROR_LIBRARY_FAILURE;
+    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
 }
 

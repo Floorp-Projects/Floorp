@@ -257,9 +257,7 @@ CheckCertHostname(Input endEntityCertDER, Input hostname)
       return Result::ERROR_BAD_CERT_DOMAIN;
     case MatchResult::Match:
       return Success;
-    default:
-      return NotReached("Invalid match result",
-                        Result::FATAL_ERROR_LIBRARY_FAILURE);
+    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
 }
 
@@ -721,10 +719,8 @@ MatchPresentedIDWithReferenceID(GeneralNameType presentedIDType,
       return NotReached("unexpected nameType for SearchType::Match",
                         Result::FATAL_ERROR_INVALID_ARGS);
 
-    default:
-      return NotReached("Invalid nameType for MatchPresentedIDWithReferenceID",
-                        Result::FATAL_ERROR_INVALID_ARGS);
-  }
+    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
+ }
 
   if (rv != Success) {
     return rv;
@@ -900,10 +896,11 @@ CheckPresentedIDConformsToNameConstraintsSubtrees(
         case GeneralNameType::registeredID: // fall through
           return Result::ERROR_CERT_NOT_IN_NAME_SPACE;
 
-        case GeneralNameType::nameConstraints: // fall through
-        default:
+        case GeneralNameType::nameConstraints:
           return NotReached("invalid presentedIDType",
                             Result::FATAL_ERROR_LIBRARY_FAILURE);
+
+        MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
       }
 
       switch (subtreesType) {
@@ -919,9 +916,6 @@ CheckPresentedIDConformsToNameConstraintsSubtrees(
             return Result::ERROR_CERT_NOT_IN_NAME_SPACE;
           }
           break;
-        default:
-          return NotReached("unexpected subtreesType",
-                            Result::FATAL_ERROR_INVALID_ARGS);
       }
     }
   } while (!subtrees.AtEnd());
@@ -1142,8 +1136,7 @@ MatchPresentedDNSIDWithReferenceDNSID(
     }
 
     case IDRole::PresentedID: // fall through
-    default:
-      return NotReached("invalid or unknown referenceDNSIDRole",
+      return NotReached("IDRole::PresentedID is not a valid referenceDNSIDRole",
                         Result::FATAL_ERROR_INVALID_ARGS);
   }
 
@@ -1348,8 +1341,6 @@ MatchPresentedDirectoryNameWithConstraint(NameConstraintsSubtrees subtreesType,
       }
       matches = true;
       return Success;
-    default:
-      return NotReached("invalid subtrees", Result::FATAL_ERROR_INVALID_ARGS);
   }
 
   for (;;) {
@@ -1509,10 +1500,6 @@ MatchPresentedRFC822NameWithReferenceRFC822Name(Input presentedRFC822Name,
                AllowDotlessSubdomainMatches::No, IDRole::NameConstraint,
                referenceRFC822Name, matches);
     }
-
-    default:
-      return NotReached("invalid referenceRFC822NameRole",
-                        Result::FATAL_ERROR_INVALID_ARGS);
   }
 
   if (!IsValidRFC822Name(referenceRFC822Name)) {
