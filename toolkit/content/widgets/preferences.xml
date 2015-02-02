@@ -1063,8 +1063,8 @@
             secMan.isSystemPrincipal(window.opener.document.nodePrincipal)) {
           var psvc = Components.classes["@mozilla.org/preferences-service;1"]
                                .getService(Components.interfaces.nsIPrefBranch);
-          var instantApply = psvc.getBoolPref("browser.preferences.instantApply");
-          if (instantApply) {
+          var pdocEl = window.opener.document.documentElement;
+          if (pdocEl.instantApply) {
             var panes = this.preferencePanes;
             for (var i = 0; i < panes.length; ++i)
               panes[i].writePreferences(true);
