@@ -2129,7 +2129,8 @@ RelocateArena(ArenaHeader *aheader)
  * relocate each cell within it, then add it to a list of relocated arenas.
  */
 ArenaHeader *
-ArenaList::relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated)
+ArenaList::relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated,
+                          gcstats::Statistics& stats)
 {
     check();
 
@@ -2139,6 +2140,7 @@ ArenaList::relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated)
         // Prepend to list of relocated arenas
         arena->next = relocated;
         relocated = arena;
+        stats.count(gcstats::STAT_ARENA_RELOCATED);
     }
 
     check();
@@ -2147,7 +2149,7 @@ ArenaList::relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated)
 }
 
 ArenaHeader *
-ArenaLists::relocateArenas(ArenaHeader *relocatedList)
+ArenaLists::relocateArenas(ArenaHeader *relocatedList, gcstats::Statistics& stats)
 {
     // Flush all the freeLists back into the arena headers
     purge();
@@ -2158,7 +2160,7 @@ ArenaLists::relocateArenas(ArenaHeader *relocatedList)
             ArenaList &al = arenaLists[i];
             ArenaHeader *toRelocate = al.pickArenasToRelocate(runtime_);
             if (toRelocate)
-                relocatedList = al.relocateArenas(toRelocate, relocatedList);
+                relocatedList = al.relocateArenas(toRelocate, relocatedList, stats);
         }
     }
 
@@ -2187,7 +2189,7 @@ GCRuntime::relocateArenas()
         if (CanRelocateZone(rt, zone)) {
             zone->setGCState(Zone::Compact);
             jit::StopAllOffThreadCompilations(zone);
-            relocatedList = zone->arenas.relocateArenas(relocatedList);
+            relocatedList = zone->arenas.relocateArenas(relocatedList, stats);
         }
     }
 

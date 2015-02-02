@@ -45,6 +45,10 @@ namespace jit {
     class JitCode;
 }
 
+namespace gcstats {
+struct Statistics;
+}
+
 namespace gc {
 
 struct FinalizePhase;
@@ -472,7 +476,8 @@ class ArenaList {
 
     ArenaHeader *removeRemainingArenas(ArenaHeader **arenap, const AutoLockGC &lock);
     ArenaHeader *pickArenasToRelocate(JSRuntime *runtime);
-    ArenaHeader *relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated);
+    ArenaHeader *relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated,
+                                gcstats::Statistics& stats);
 };
 
 /*
@@ -799,7 +804,7 @@ class ArenaLists
         MOZ_ASSERT(freeLists[kind].isEmpty());
     }
 
-    ArenaHeader *relocateArenas(ArenaHeader *relocatedList);
+    ArenaHeader *relocateArenas(ArenaHeader *relocatedList, gcstats::Statistics& stats);
 
     void queueForegroundObjectsForSweep(FreeOp *fop);
     void queueForegroundThingsForSweep(FreeOp *fop);
