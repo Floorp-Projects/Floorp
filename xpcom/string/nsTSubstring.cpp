@@ -253,7 +253,7 @@ nsTSubstring_CharT::EnsureMutable(size_type aNewLen)
 
     aNewLen = mLength;
   }
-  return SetLength(aNewLen, fallible_t());
+  return SetLength(aNewLen, mozilla::fallible);
 }
 
 // ---------------------------------------------------------------------------
@@ -283,7 +283,7 @@ nsTSubstring_CharT::Assign(char_type aChar, const fallible_t&)
 void
 nsTSubstring_CharT::Assign(const char_type* aData)
 {
-  if (!Assign(aData, size_type(-1), fallible_t())) {
+  if (!Assign(aData, size_type(-1), mozilla::fallible)) {
     AllocFailed(char_traits::length(aData));
   }
 }
@@ -291,7 +291,7 @@ nsTSubstring_CharT::Assign(const char_type* aData)
 void
 nsTSubstring_CharT::Assign(const char_type* aData, size_type aLength)
 {
-  if (!Assign(aData, aLength, fallible_t())) {
+  if (!Assign(aData, aLength, mozilla::fallible)) {
     AllocFailed(aLength == size_type(-1) ? char_traits::length(aData)
                                          : aLength);
   }
@@ -299,7 +299,7 @@ nsTSubstring_CharT::Assign(const char_type* aData, size_type aLength)
 
 bool
 nsTSubstring_CharT::Assign(const char_type* aData, size_type aLength,
-                           const fallible_t&)
+                           const fallible_t& aFallible)
 {
   if (!aData || aLength == 0) {
     Truncate();
@@ -311,7 +311,7 @@ nsTSubstring_CharT::Assign(const char_type* aData, size_type aLength,
   }
 
   if (IsDependentOn(aData, aData + aLength)) {
-    return Assign(string_type(aData, aLength), fallible_t());
+    return Assign(string_type(aData, aLength), aFallible);
   }
 
   if (!ReplacePrep(0, mLength, aLength)) {
@@ -325,20 +325,20 @@ nsTSubstring_CharT::Assign(const char_type* aData, size_type aLength,
 void
 nsTSubstring_CharT::AssignASCII(const char* aData, size_type aLength)
 {
-  if (!AssignASCII(aData, aLength, fallible_t())) {
+  if (!AssignASCII(aData, aLength, mozilla::fallible)) {
     AllocFailed(aLength);
   }
 }
 
 bool
 nsTSubstring_CharT::AssignASCII(const char* aData, size_type aLength,
-                                const fallible_t&)
+                                const fallible_t& aFallible)
 {
   // A Unicode string can't depend on an ASCII string buffer,
   // so this dependence check only applies to CStrings.
 #ifdef CharT_is_char
   if (IsDependentOn(aData, aData + aLength)) {
-    return Assign(string_type(aData, aLength), fallible_t());
+    return Assign(string_type(aData, aLength), aFallible);
   }
 #endif
 
@@ -362,13 +362,13 @@ nsTSubstring_CharT::AssignLiteral(const char_type* aData, size_type aLength)
 void
 nsTSubstring_CharT::Assign(const self_type& aStr)
 {
-  if (!Assign(aStr, fallible_t())) {
+  if (!Assign(aStr, mozilla::fallible)) {
     AllocFailed(aStr.Length());
   }
 }
 
 bool
-nsTSubstring_CharT::Assign(const self_type& aStr, const fallible_t&)
+nsTSubstring_CharT::Assign(const self_type& aStr, const fallible_t& aFallible)
 {
   // |aStr| could be sharable. We need to check its flags to know how to
   // deal with it.
@@ -406,24 +406,24 @@ nsTSubstring_CharT::Assign(const self_type& aStr, const fallible_t&)
   }
 
   // else, treat this like an ordinary assignment.
-  return Assign(aStr.Data(), aStr.Length(), fallible_t());
+  return Assign(aStr.Data(), aStr.Length(), aFallible);
 }
 
 void
 nsTSubstring_CharT::Assign(const substring_tuple_type& aTuple)
 {
-  if (!Assign(aTuple, fallible_t())) {
+  if (!Assign(aTuple, mozilla::fallible)) {
     AllocFailed(aTuple.Length());
   }
 }
 
 bool
 nsTSubstring_CharT::Assign(const substring_tuple_type& aTuple,
-                           const fallible_t&)
+                           const fallible_t& aFallible)
 {
   if (aTuple.IsDependentOn(mData, mData + mLength)) {
     // take advantage of sharing here...
-    return Assign(string_type(aTuple), fallible_t());
+    return Assign(string_type(aTuple), aFallible);
   }
 
   size_type length = aTuple.Length();
@@ -486,7 +486,7 @@ nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
 bool
 nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
                             char_type aChar,
-                            const mozilla::fallible_t&)
+                            const fallible_t&)
 {
   aCutStart = XPCOM_MIN(aCutStart, Length());
 
@@ -504,7 +504,7 @@ nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
                             const char_type* aData, size_type aLength)
 {
   if (!Replace(aCutStart, aCutLength, aData, aLength,
-               mozilla::fallible_t())) {
+               mozilla::fallible)) {
     AllocFailed(Length() - aCutLength + 1);
   }
 }
@@ -512,7 +512,7 @@ nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
 bool
 nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
                             const char_type* aData, size_type aLength,
-                            const mozilla::fallible_t&)
+                            const fallible_t& aFallible)
 {
   // unfortunately, some callers pass null :-(
   if (!aData) {
@@ -524,7 +524,7 @@ nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
 
     if (IsDependentOn(aData, aData + aLength)) {
       nsTAutoString_CharT temp(aData, aLength);
-      return Replace(aCutStart, aCutLength, temp, mozilla::fallible_t());
+      return Replace(aCutStart, aCutLength, temp, aFallible);
     }
   }
 
@@ -602,7 +602,7 @@ nsTSubstring_CharT::ReplaceLiteral(index_type aCutStart, size_type aCutLength,
 void
 nsTSubstring_CharT::SetCapacity(size_type aCapacity)
 {
-  if (!SetCapacity(aCapacity, fallible_t())) {
+  if (!SetCapacity(aCapacity, mozilla::fallible)) {
     AllocFailed(aCapacity);
   }
 }
@@ -659,9 +659,9 @@ nsTSubstring_CharT::SetLength(size_type aLength)
 }
 
 bool
-nsTSubstring_CharT::SetLength(size_type aLength, const fallible_t&)
+nsTSubstring_CharT::SetLength(size_type aLength, const fallible_t& aFallible)
 {
-  if (!SetCapacity(aLength, fallible_t())) {
+  if (!SetCapacity(aLength, aFallible)) {
     return false;
   }
 

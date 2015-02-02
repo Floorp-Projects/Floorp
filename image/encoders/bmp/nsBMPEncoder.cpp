@@ -185,7 +185,6 @@ nsBMPEncoder::AddImageFrame(const uint8_t* aData,
     return NS_ERROR_INVALID_ARG;
   }
 
-  static fallible_t fallible = fallible_t();
   nsAutoArrayPtr<uint8_t> row(new (fallible)
                               uint8_t[mBMPInfoHeader.width *
                               BytesPerPixel(mBMPInfoHeader.bpp)]);

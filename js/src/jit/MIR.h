@@ -4273,8 +4273,8 @@ class MCreateThisWithTemplate
     }
 
     // Template for |this|, provided by TI.
-    PlainObject *templateObject() const {
-        return &getOperand(0)->toConstant()->value().toObject().as<PlainObject>();
+    JSObject *templateObject() const {
+        return &getOperand(0)->toConstant()->value().toObject();
     }
 
     gc::InitialHeap initialHeap() const {
@@ -8059,21 +8059,29 @@ class MLoadUnboxedObjectOrNull
   : public MBinaryInstruction,
     public SingleObjectPolicy::Data
 {
-    bool bailOnNull_;
+  public:
+    enum NullBehavior {
+        HandleNull,
+        BailOnNull,
+        NullNotPossible
+    };
+
+  private:
+    NullBehavior nullBehavior_;
     int32_t offsetAdjustment_;
 
     MLoadUnboxedObjectOrNull(MDefinition *elements, MDefinition *index,
-                             bool bailOnNull, int32_t offsetAdjustment)
+                             NullBehavior nullBehavior, int32_t offsetAdjustment)
       : MBinaryInstruction(elements, index),
-        bailOnNull_(bailOnNull),
+        nullBehavior_(nullBehavior),
         offsetAdjustment_(offsetAdjustment)
     {
-        if (bailOnNull) {
+        if (nullBehavior == BailOnNull) {
             // Don't eliminate loads which bail out on a null pointer, for the
             // same reason as MLoadElement.
             setGuard();
         }
-        setResultType(bailOnNull ? MIRType_Object : MIRType_Value);
+        setResultType(nullBehavior == HandleNull ? MIRType_Value : MIRType_Object);
         setMovable();
         MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
         MOZ_ASSERT(index->type() == MIRType_Int32);
@@ -8084,8 +8092,9 @@ class MLoadUnboxedObjectOrNull
 
     static MLoadUnboxedObjectOrNull *New(TempAllocator &alloc,
                                          MDefinition *elements, MDefinition *index,
-                                         bool bailOnNull, int32_t offsetAdjustment) {
-        return new(alloc) MLoadUnboxedObjectOrNull(elements, index, bailOnNull, offsetAdjustment);
+                                         NullBehavior nullBehavior, int32_t offsetAdjustment) {
+        return new(alloc) MLoadUnboxedObjectOrNull(elements, index, nullBehavior,
+                                                   offsetAdjustment);
     }
 
     MDefinition *elements() const {
@@ -8094,20 +8103,20 @@ class MLoadUnboxedObjectOrNull
     MDefinition *index() const {
         return getOperand(1);
     }
-    bool bailOnNull() const {
-        return bailOnNull_;
+    NullBehavior nullBehavior() const {
+        return nullBehavior_;
     }
     int32_t offsetAdjustment() const {
         return offsetAdjustment_;
     }
     bool fallible() const {
-        return bailOnNull();
+        return nullBehavior() == BailOnNull;
     }
     bool congruentTo(const MDefinition *ins) const MOZ_OVERRIDE {
         if (!ins->isLoadUnboxedObjectOrNull())
             return false;
         const MLoadUnboxedObjectOrNull *other = ins->toLoadUnboxedObjectOrNull();
-        if (bailOnNull() != other->bailOnNull())
+        if (nullBehavior() != other->nullBehavior())
             return false;
         if (offsetAdjustment() != other->offsetAdjustment())
             return false;
@@ -8140,7 +8149,8 @@ class MLoadUnboxedString
     INSTRUCTION_HEADER(LoadUnboxedString)
 
     static MLoadUnboxedString *New(TempAllocator &alloc,
-                                   MDefinition *elements, MDefinition *index, int32_t offsetAdjustment) {
+                                   MDefinition *elements, MDefinition *index,
+                                   int32_t offsetAdjustment = 0) {
         return new(alloc) MLoadUnboxedString(elements, index, offsetAdjustment);
     }
 
@@ -8331,7 +8341,7 @@ class MStoreUnboxedObjectOrNull
     static MStoreUnboxedObjectOrNull *New(TempAllocator &alloc,
                                           MDefinition *elements, MDefinition *index,
                                           MDefinition *value, MDefinition *typedObj,
-                                          int32_t offsetAdjustment) {
+                                          int32_t offsetAdjustment = 0) {
         return new(alloc) MStoreUnboxedObjectOrNull(elements, index, value, typedObj,
                                                     offsetAdjustment);
     }
@@ -8386,7 +8396,7 @@ class MStoreUnboxedString
 
     static MStoreUnboxedString *New(TempAllocator &alloc,
                                     MDefinition *elements, MDefinition *index,
-                                    MDefinition *value, int32_t offsetAdjustment) {
+                                    MDefinition *value, int32_t offsetAdjustment = 0) {
         return new(alloc) MStoreUnboxedString(elements, index, value, offsetAdjustment);
     }
     MDefinition *elements() const {
@@ -8581,14 +8591,16 @@ class MLoadTypedArrayElement
     Scalar::Type arrayType_;
     bool requiresBarrier_;
     int32_t offsetAdjustment_;
+    bool canonicalizeDoubles_;
 
     MLoadTypedArrayElement(MDefinition *elements, MDefinition *index,
                            Scalar::Type arrayType, MemoryBarrierRequirement requiresBarrier,
-                           int32_t offsetAdjustment)
+                           int32_t offsetAdjustment, bool canonicalizeDoubles)
       : MBinaryInstruction(elements, index),
         arrayType_(arrayType),
         requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier),
-        offsetAdjustment_(offsetAdjustment)
+        offsetAdjustment_(offsetAdjustment),
+        canonicalizeDoubles_(canonicalizeDoubles)
     {
         setResultType(MIRType_Value);
         if (requiresBarrier_)
@@ -8606,10 +8618,12 @@ class MLoadTypedArrayElement
     static MLoadTypedArrayElement *New(TempAllocator &alloc, MDefinition *elements, MDefinition *index,
                                        Scalar::Type arrayType,
                                        MemoryBarrierRequirement requiresBarrier=DoesNotRequireMemoryBarrier,
-                                       int32_t offsetAdjustment = 0)
+                                       int32_t offsetAdjustment = 0,
+                                       bool canonicalizeDoubles = true)
     {
         return new(alloc) MLoadTypedArrayElement(elements, index, arrayType,
-                                                 requiresBarrier, offsetAdjustment);
+                                                 requiresBarrier, offsetAdjustment,
+                                                 canonicalizeDoubles);
     }
 
     Scalar::Type arrayType() const {
@@ -8621,6 +8635,9 @@ class MLoadTypedArrayElement
     }
     bool requiresMemoryBarrier() const {
         return requiresBarrier_;
+    }
+    bool canonicalizeDoubles() const {
+        return canonicalizeDoubles_;
     }
     MDefinition *elements() const {
         return getOperand(0);
@@ -8648,6 +8665,8 @@ class MLoadTypedArrayElement
         if (arrayType_ != other->arrayType_)
             return false;
         if (offsetAdjustment() != other->offsetAdjustment())
+            return false;
+        if (canonicalizeDoubles() != other->canonicalizeDoubles())
             return false;
         return congruentIfOperandsEqual(other);
     }
@@ -9340,8 +9359,8 @@ class MGetPropertyCache
     bool updateForReplacement(MDefinition *ins) MOZ_OVERRIDE;
 };
 
-// Emit code to load a value from an object's slots if its shape matches
-// one of the shapes observed by the baseline IC, else bails out.
+// Emit code to load a value from an object if its shape/type matches one of
+// the shapes/types observed by the baseline IC, else bails out.
 class MGetPropertyPolymorphic
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
@@ -9354,21 +9373,19 @@ class MGetPropertyPolymorphic
         Shape *shape;
     };
 
-    Vector<Entry, 4, JitAllocPolicy> shapes_;
+    Vector<Entry, 4, JitAllocPolicy> nativeShapes_;
+    Vector<types::TypeObject *, 4, JitAllocPolicy> unboxedTypes_;
     AlwaysTenuredPropertyName name_;
 
     MGetPropertyPolymorphic(TempAllocator &alloc, MDefinition *obj, PropertyName *name)
       : MUnaryInstruction(obj),
-        shapes_(alloc),
+        nativeShapes_(alloc),
+        unboxedTypes_(alloc),
         name_(name)
     {
         setGuard();
         setMovable();
         setResultType(MIRType_Value);
-    }
-
-    PropertyName *name() const {
-        return name_;
     }
 
   public:
@@ -9390,22 +9407,35 @@ class MGetPropertyPolymorphic
         Entry entry;
         entry.objShape = objShape;
         entry.shape = shape;
-        return shapes_.append(entry);
+        return nativeShapes_.append(entry);
+    }
+    bool addUnboxedType(types::TypeObject *type) {
+        return unboxedTypes_.append(type);
     }
     size_t numShapes() const {
-        return shapes_.length();
+        return nativeShapes_.length();
     }
     Shape *objShape(size_t i) const {
-        return shapes_[i].objShape;
+        return nativeShapes_[i].objShape;
     }
     Shape *shape(size_t i) const {
-        return shapes_[i].shape;
+        return nativeShapes_[i].shape;
+    }
+    size_t numUnboxedTypes() const {
+        return unboxedTypes_.length();
+    }
+    types::TypeObject *unboxedType(size_t i) const {
+        return unboxedTypes_[i];
+    }
+    PropertyName *name() const {
+        return name_;
     }
     MDefinition *obj() const {
         return getOperand(0);
     }
     AliasSet getAliasSet() const MOZ_OVERRIDE {
-        return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot | AliasSet::DynamicSlot);
+        return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot | AliasSet::DynamicSlot |
+                              (unboxedTypes_.empty() ? 0 : (AliasSet::TypedArrayElement | AliasSet::Element)));
     }
 
     bool mightAlias(const MDefinition *store) const MOZ_OVERRIDE;
@@ -9425,12 +9455,17 @@ class MSetPropertyPolymorphic
         Shape *shape;
     };
 
-    Vector<Entry, 4, JitAllocPolicy> shapes_;
+    Vector<Entry, 4, JitAllocPolicy> nativeShapes_;
+    Vector<types::TypeObject *, 4, JitAllocPolicy> unboxedTypes_;
+    AlwaysTenuredPropertyName name_;
     bool needsBarrier_;
 
-    MSetPropertyPolymorphic(TempAllocator &alloc, MDefinition *obj, MDefinition *value)
+    MSetPropertyPolymorphic(TempAllocator &alloc, MDefinition *obj, MDefinition *value,
+                            PropertyName *name)
       : MBinaryInstruction(obj, value),
-        shapes_(alloc),
+        nativeShapes_(alloc),
+        unboxedTypes_(alloc),
+        name_(name),
         needsBarrier_(false)
     {
     }
@@ -9438,24 +9473,37 @@ class MSetPropertyPolymorphic
   public:
     INSTRUCTION_HEADER(SetPropertyPolymorphic)
 
-    static MSetPropertyPolymorphic *New(TempAllocator &alloc, MDefinition *obj, MDefinition *value) {
-        return new(alloc) MSetPropertyPolymorphic(alloc, obj, value);
+    static MSetPropertyPolymorphic *New(TempAllocator &alloc, MDefinition *obj, MDefinition *value,
+                                        PropertyName *name) {
+        return new(alloc) MSetPropertyPolymorphic(alloc, obj, value, name);
     }
 
     bool addShape(Shape *objShape, Shape *shape) {
         Entry entry;
         entry.objShape = objShape;
         entry.shape = shape;
-        return shapes_.append(entry);
+        return nativeShapes_.append(entry);
+    }
+    bool addUnboxedType(types::TypeObject *type) {
+        return unboxedTypes_.append(type);
     }
     size_t numShapes() const {
-        return shapes_.length();
+        return nativeShapes_.length();
     }
     Shape *objShape(size_t i) const {
-        return shapes_[i].objShape;
+        return nativeShapes_[i].objShape;
     }
     Shape *shape(size_t i) const {
-        return shapes_[i].shape;
+        return nativeShapes_[i].shape;
+    }
+    size_t numUnboxedTypes() const {
+        return unboxedTypes_.length();
+    }
+    types::TypeObject *unboxedType(size_t i) const {
+        return unboxedTypes_[i];
+    }
+    PropertyName *name() const {
+        return name_;
     }
     MDefinition *obj() const {
         return getOperand(0);
@@ -9470,7 +9518,8 @@ class MSetPropertyPolymorphic
         needsBarrier_ = true;
     }
     AliasSet getAliasSet() const MOZ_OVERRIDE {
-        return AliasSet::Store(AliasSet::ObjectFields | AliasSet::FixedSlot | AliasSet::DynamicSlot);
+        return AliasSet::Store(AliasSet::ObjectFields | AliasSet::FixedSlot | AliasSet::DynamicSlot |
+                               (unboxedTypes_.empty() ? 0 : (AliasSet::TypedArrayElement | AliasSet::Element)));
     }
 };
 
@@ -9805,11 +9854,14 @@ class MGuardObjectType
 {
     AlwaysTenured<types::TypeObject *> typeObject_;
     bool bailOnEquality_;
+    BailoutKind bailoutKind_;
 
-    MGuardObjectType(MDefinition *obj, types::TypeObject *typeObject, bool bailOnEquality)
+    MGuardObjectType(MDefinition *obj, types::TypeObject *typeObject, bool bailOnEquality,
+                     BailoutKind bailoutKind)
       : MUnaryInstruction(obj),
         typeObject_(typeObject),
-        bailOnEquality_(bailOnEquality)
+        bailOnEquality_(bailOnEquality),
+        bailoutKind_(bailoutKind)
     {
         setGuard();
         setMovable();
@@ -9820,8 +9872,8 @@ class MGuardObjectType
     INSTRUCTION_HEADER(GuardObjectType)
 
     static MGuardObjectType *New(TempAllocator &alloc, MDefinition *obj, types::TypeObject *typeObject,
-                                 bool bailOnEquality) {
-        return new(alloc) MGuardObjectType(obj, typeObject, bailOnEquality);
+                                 bool bailOnEquality, BailoutKind bailoutKind) {
+        return new(alloc) MGuardObjectType(obj, typeObject, bailOnEquality, bailoutKind);
     }
 
     MDefinition *obj() const {
@@ -9833,12 +9885,17 @@ class MGuardObjectType
     bool bailOnEquality() const {
         return bailOnEquality_;
     }
+    BailoutKind bailoutKind() const {
+        return bailoutKind_;
+    }
     bool congruentTo(const MDefinition *ins) const MOZ_OVERRIDE {
         if (!ins->isGuardObjectType())
             return false;
         if (typeObject() != ins->toGuardObjectType()->typeObject())
             return false;
         if (bailOnEquality() != ins->toGuardObjectType()->bailOnEquality())
+            return false;
+        if (bailoutKind() != ins->toGuardObjectType()->bailoutKind())
             return false;
         return congruentIfOperandsEqual(ins);
     }

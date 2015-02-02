@@ -2302,9 +2302,8 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
     if (nsIPresShell* shell = document->GetShell()) {
       if (nsIFrame* rootFrame = shell->GetRootFrame()) {
         nsTArray<ScrollableLayerGuid> targets;
-        nsIntPoint refPoint(aEvent.refPoint.x, aEvent.refPoint.y);
         bool waitForRefresh =
-          PrepareForSetTargetAPZCNotification(aGuid, aInputBlockId, rootFrame, refPoint, &targets);
+          PrepareForSetTargetAPZCNotification(aGuid, aInputBlockId, rootFrame, aEvent.refPoint, &targets);
 
         SendSetTargetAPZCNotification(shell, aInputBlockId, targets, waitForRefresh);
       }
@@ -2541,7 +2540,7 @@ bool
 TabChild::PrepareForSetTargetAPZCNotification(const ScrollableLayerGuid& aGuid,
                                               const uint64_t& aInputBlockId,
                                               nsIFrame* aRootFrame,
-                                              const nsIntPoint& aRefPoint,
+                                              const LayoutDeviceIntPoint& aRefPoint,
                                               nsTArray<ScrollableLayerGuid>* aTargets)
 {
   ScrollableLayerGuid guid(aGuid.mLayersId, 0, FrameMetrics::NULL_SCROLL_ID);
