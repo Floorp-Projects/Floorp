@@ -405,8 +405,6 @@ public:
 
     // The following group of fields are protected by the decoder's monitor
     // and can be read or written on any thread.
-    int64_t mLastAudioPacketTime; // microseconds
-    int64_t mLastAudioPacketEndTime; // microseconds
     // Count of audio frames written to the stream
     int64_t mAudioFramesWritten;
     // Saved value of aInitialTime. Timestamp of the first audio and/or
@@ -416,6 +414,7 @@ public:
     // Therefore video packets starting at or after this time need to be copied
     // to the output stream.
     int64_t mNextVideoTime; // microseconds
+    int64_t mNextAudioTime; // microseconds
     MediaDecoder* mDecoder;
     // The last video image sent to the stream. Useful if we need to replicate
     // the image.
