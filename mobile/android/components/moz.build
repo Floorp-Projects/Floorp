@@ -26,7 +26,6 @@ EXTRA_COMPONENTS += [
     'NSSDialogService.js',
     'PromptService.js',
     'SessionStore.js',
-    'Sidebar.js',
     'SiteSpecificUserAgent.js',
     'Snippets.js',
     'TabSource.js',
