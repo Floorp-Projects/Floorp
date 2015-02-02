@@ -6,6 +6,7 @@
 package org.mozilla.gecko.updater;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.GeckoJarReader;
 
@@ -17,6 +18,8 @@ import android.os.Build;
 import android.util.Log;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class UpdateServiceHelper {
     public static final String ACTION_REGISTER_FOR_UPDATES = AppConstants.ANDROID_PACKAGE_NAME + ".REGISTER_FOR_UPDATES";
@@ -28,24 +31,19 @@ public class UpdateServiceHelper {
     public static final String ACTION_CANCEL_DOWNLOAD = AppConstants.ANDROID_PACKAGE_NAME + ".CANCEL_DOWNLOAD";
 
     // Flags for ACTION_CHECK_FOR_UPDATE
-    public static final int FLAG_FORCE_DOWNLOAD = 1;
-    public static final int FLAG_OVERWRITE_EXISTING = 1 << 1;
-    public static final int FLAG_REINSTALL = 1 << 2;
-    public static final int FLAG_RETRY = 1 << 3;
+    protected static final int FLAG_FORCE_DOWNLOAD = 1;
+    protected static final int FLAG_OVERWRITE_EXISTING = 1 << 1;
+    protected static final int FLAG_REINSTALL = 1 << 2;
+    protected static final int FLAG_RETRY = 1 << 3;
 
     // Name of the Intent extra for the autodownload policy, used with ACTION_REGISTER_FOR_UPDATES
-    public static final String EXTRA_AUTODOWNLOAD_NAME = "autodownload";
-
-    // Values for EXTRA_AUTODOWNLOAD_NAME
-    public static final int AUTODOWNLOAD_WIFI = 0;
-    public static final int AUTODOWNLOAD_DISABLED = 1;
-    public static final int AUTODOWNLOAD_ENABLED = 2;
+    protected static final String EXTRA_AUTODOWNLOAD_NAME = "autodownload";
 
     // Name of the Intent extra that holds the flags for ACTION_CHECK_FOR_UPDATE
-    public static final String EXTRA_UPDATE_FLAGS_NAME = "updateFlags";
+    protected static final String EXTRA_UPDATE_FLAGS_NAME = "updateFlags";
 
     // Name of the Intent extra that holds the APK path, used with ACTION_APPLY_UPDATE
-    public static final String EXTRA_PACKAGE_PATH_NAME = "packagePath";
+    protected static final String EXTRA_PACKAGE_PATH_NAME = "packagePath";
 
     private static final String LOGTAG = "UpdateServiceHelper";
     private static final String DEFAULT_UPDATE_LOCALE = "en-US";
@@ -54,6 +52,33 @@ public class UpdateServiceHelper {
 
     // So that updates can be disabled by tests.
     private static volatile boolean isEnabled = true;
+
+    private enum Pref {
+        AUTO_DOWNLOAD_POLICY("app.update.autodownload");
+
+        public final String name;
+
+        private Pref(String name) {
+            this.name = name;
+        }
+
+        public final static String[] names;
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
+
+        static {
+            ArrayList<String> nameList = new ArrayList<String>();
+
+            for (Pref id: Pref.values()) {
+                nameList.add(id.toString());
+            }
+
+            names = nameList.toArray(new String[0]);
+        }
+    }
 
     static {
         final String pkgSpecial;
@@ -68,14 +93,6 @@ public class UpdateServiceHelper {
                      "/%LOCALE%/"                         + AppConstants.MOZ_UPDATE_CHANNEL +
                      "/%OS_VERSION%/default/default/"     + AppConstants.MOZILLA_VERSION +
                      "/update.xml";
-    }
-
-    public enum CheckUpdateResult {
-        // Keep these in sync with mobile/android/chrome/content/about.xhtml
-        NOT_AVAILABLE,
-        AVAILABLE,
-        DOWNLOADING,
-        DOWNLOADED
     }
 
     @RobocopTarget
@@ -119,33 +136,63 @@ public class UpdateServiceHelper {
         return AppConstants.MOZ_UPDATER && isEnabled;
     }
 
-    public static void registerForUpdates(Context context, String policy) {
-        if (policy == null)
-            return;
+    public static void setAutoDownloadPolicy(Context context, UpdateService.AutoDownloadPolicy policy) {
+        registerForUpdates(context, policy);
+    }
 
-        int intPolicy;
-        if (policy.equals("wifi")) {
-            intPolicy = AUTODOWNLOAD_WIFI;
-        } else if (policy.equals("disabled")) {
-            intPolicy = AUTODOWNLOAD_DISABLED;
-        } else if (policy.equals("enabled")) {
-            intPolicy = AUTODOWNLOAD_ENABLED;
-        } else {
-            Log.w(LOGTAG, "Unhandled autoupdate policy: " + policy);
+    public static void checkForUpdate(Context context) {
+        if (context == null) {
             return;
         }
 
-        registerForUpdates(context, intPolicy);
+        context.startService(createIntent(context, ACTION_CHECK_FOR_UPDATE));
     }
 
-    // 'policy' should one of AUTODOWNLOAD_WIFI, AUTODOWNLOAD_DISABLED, AUTODOWNLOAD_ENABLED
-    public static void registerForUpdates(Context context, int policy) {
+    public static void downloadUpdate(Context context) {
+        if (context == null) {
+            return;
+        }
+
+        context.startService(createIntent(context, ACTION_DOWNLOAD_UPDATE));
+    }
+
+    public static void applyUpdate(Context context) {
+        if (context == null) {
+            return;
+        }
+
+        context.startService(createIntent(context, ACTION_APPLY_UPDATE));
+    }
+
+    public static void registerForUpdates(final Context context) {
+        final HashMap<String, Object> prefs = new HashMap<String, Object>();
+
+        PrefsHelper.getPrefs(Pref.names, new PrefsHelper.PrefHandlerBase() {
+            @Override public void prefValue(String pref, String value) {
+                prefs.put(pref, value);
+            }
+
+            @Override public void finish() {
+                UpdateServiceHelper.registerForUpdates(context,
+                    UpdateService.AutoDownloadPolicy.get(
+                      (String) prefs.get(Pref.AUTO_DOWNLOAD_POLICY.toString())));
+            }
+        });
+    }
+
+    public static void registerForUpdates(Context context, UpdateService.AutoDownloadPolicy policy) {
         if (!isUpdaterEnabled())
             return;
 
-        Intent intent = new Intent(UpdateServiceHelper.ACTION_REGISTER_FOR_UPDATES, null, context, UpdateService.class);
-        intent.putExtra(EXTRA_AUTODOWNLOAD_NAME, policy);
+        Log.i(LOGTAG, "register for updates policy: " + policy.toString());
+
+        Intent intent = createIntent(context, ACTION_REGISTER_FOR_UPDATES);
+        intent.putExtra(EXTRA_AUTODOWNLOAD_NAME, policy.value);
 
         context.startService(intent);
+    }
+
+    private static Intent createIntent(Context context, String action) {
+        return new Intent(action, null, context, UpdateService.class);
     }
 }
