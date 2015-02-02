@@ -107,9 +107,14 @@ public:
     return mDecoders.Length();
   }
 
+  void AppendElement(SourceBufferDecoder* aDecoder)
+  {
+    mDecoders.AppendElement(aDecoder);
+  }
+
 private:
   TrackBuffer* mOwner;
-  nsAutoTArray<nsRefPtr<SourceBufferDecoder>,2> mDecoders;
+  nsAutoTArray<nsRefPtr<SourceBufferDecoder>,1> mDecoders;
 };
 
 nsRefPtr<ShutdownPromise>
@@ -155,41 +160,71 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
   MOZ_ASSERT(NS_IsMainThread());
   DecodersToInitialize decoders(this);
   nsRefPtr<InitializationPromise> p = mInitializationPromise.Ensure(__func__);
+  bool hadInitData = mParser->HasInitData();
+  bool hadCompleteInitData = mParser->HasCompleteInitData();
+  nsRefPtr<LargeDataBuffer> oldInit = mParser->InitData();
+  bool newInitData = mParser->IsInitSegmentPresent(aData);
 
   // TODO: Run more of the buffer append algorithm asynchronously.
-  if (mParser->IsInitSegmentPresent(aData)) {
+  if (newInitData) {
     MSE_DEBUG("TrackBuffer(%p)::AppendData: New initialization segment.", this);
-    if (!decoders.NewDecoder(aTimestampOffset)) {
-      mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
-      return p;
-    }
-  } else if (!mParser->HasInitData()) {
+  } else if (!hadInitData) {
     MSE_DEBUG("TrackBuffer(%p)::AppendData: Non-init segment appended during initialization.", this);
     mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
     return p;
   }
 
   int64_t start = 0, end = 0;
-  if (mParser->ParseStartAndEndTimestamps(aData, start, end)) {
-    start += aTimestampOffset;
-    end += aTimestampOffset;
-    if (mParser->IsMediaSegmentPresent(aData) &&
-        mLastEndTimestamp &&
-        (!mParser->TimestampsFuzzyEqual(start, mLastEndTimestamp.value()) ||
-         mLastTimestampOffset != aTimestampOffset ||
-         mDecoderPerSegment || (mCurrentDecoder && mCurrentDecoder->WasTrimmed()))) {
-      MSE_DEBUG("TrackBuffer(%p)::AppendData: Data last=[%lld, %lld] overlaps [%lld, %lld]",
-                this, mLastStartTimestamp, mLastEndTimestamp.value(), start, end);
+  bool gotMedia = mParser->ParseStartAndEndTimestamps(aData, start, end);
+  bool gotInit = mParser->HasCompleteInitData();
 
-      // This data is earlier in the timeline than data we have already
-      // processed, so we must create a new decoder to handle the decoding.
+  if (newInitData) {
+    if (!gotInit) {
+      // We need a new decoder, but we can't initialize it yet.
+      nsRefPtr<SourceBufferDecoder> decoder = NewDecoder(aTimestampOffset);
+      // The new decoder is stored in mDecoders/mCurrentDecoder, so we
+      // don't need to do anything with 'decoder'. It's only a placeholder.
+      if (!decoder) {
+        mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
+        return p;
+      }
+    } else {
       if (!decoders.NewDecoder(aTimestampOffset)) {
         mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
         return p;
       }
-      MSE_DEBUG("TrackBuffer(%p)::AppendData: Decoder marked as initialized.", this);
-      nsRefPtr<LargeDataBuffer> initData = mParser->InitData();
-      AppendDataToCurrentResource(initData, end - start);
+    }
+  } else if (!hadCompleteInitData && gotInit) {
+    MOZ_ASSERT(mCurrentDecoder);
+    // Queue pending decoder for initialization now that we have a full
+    // init segment.
+    decoders.AppendElement(mCurrentDecoder);
+  }
+
+  if (gotMedia) {
+    start += aTimestampOffset;
+    end += aTimestampOffset;
+    if (mLastEndTimestamp &&
+        (!mParser->TimestampsFuzzyEqual(start, mLastEndTimestamp.value()) ||
+         mLastTimestampOffset != aTimestampOffset ||
+         mDecoderPerSegment ||
+         (mCurrentDecoder && mCurrentDecoder->WasTrimmed()))) {
+      MSE_DEBUG("TrackBuffer(%p)::AppendData: Data last=[%lld, %lld] overlaps [%lld, %lld]",
+                this, mLastStartTimestamp, mLastEndTimestamp.value(), start, end);
+
+      if (!newInitData) {
+        // This data is earlier in the timeline than data we have already
+        // processed or not continuous, so we must create a new decoder
+        // to handle the decoding.
+        if (!decoders.NewDecoder(aTimestampOffset)) {
+          mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
+          return p;
+        }
+        if (hadCompleteInitData) {
+          MSE_DEBUG("TrackBuffer(%p)::AppendData: Decoder marked as initialized.", this);
+          AppendDataToCurrentResource(oldInit, 0);
+        }
+      }
       mLastStartTimestamp = start;
     } else {
       MSE_DEBUG("TrackBuffer(%p)::AppendData: Segment last=[%lld, %lld] [%lld, %lld]",
@@ -205,16 +240,15 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
   }
 
   if (decoders.Length()) {
-    // TODO: the theory is that we should only ever have one decoder to
-    // initialize in common use. We can't properly handle the condition where
-    // the source buffer needs to wait on two decoders to initialize.
+    // We're going to have to wait for the decoder to initialize, the promise
+    // will be resolved once initialization completes.
     return p;
   }
   // Tell our reader that we have more data to ensure that playback starts if
   // required when data is appended.
   mParentDecoder->GetReader()->MaybeNotifyHaveData();
 
-  mInitializationPromise.Resolve(end - start > 0, __func__);
+  mInitializationPromise.Resolve(gotMedia, __func__);
   return p;
 }
 
@@ -389,9 +423,9 @@ TrackBuffer::Buffered(dom::TimeRanges* aRanges)
 
   double highestEndTime = 0;
 
-  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+  for (uint32_t i = 0; i < mInitializedDecoders.Length(); ++i) {
     nsRefPtr<dom::TimeRanges> r = new dom::TimeRanges();
-    mDecoders[i]->GetBuffered(r);
+    mInitializedDecoders[i]->GetBuffered(r);
     if (r->Length() > 0) {
       highestEndTime = std::max(highestEndTime, r->GetEndTime());
       aRanges->Union(r, double(mParser->GetRoundingError()) / USECS_PER_S);
@@ -474,10 +508,28 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
   MediaInfo mi;
   nsAutoPtr<MetadataTags> tags; // TODO: Handle metadata.
   nsresult rv;
+
+  // HACK WARNING:
+  // We only reach this point once we know that we have a complete init segment.
+  // We don't want the demuxer to do a blocking read as no more data can be
+  // appended while this routine is running. Marking the SourceBufferResource
+  // as ended will cause any incomplete reads to abort.
+  // As this decoder hasn't been initialized yet, the resource isn't yet in use
+  // and so it is safe to do so.
+  bool wasEnded = aDecoder->GetResource()->IsEnded();
+  if (!wasEnded) {
+    aDecoder->GetResource()->Ended();
+  }
   {
     ReentrantMonitorAutoExit mon(mParentDecoder->GetReentrantMonitor());
     rv = reader->ReadMetadata(&mi, getter_Transfers(tags));
   }
+  if (!wasEnded) {
+    // Adding an empty buffer will reopen the SourceBufferResource
+    nsRefPtr<LargeDataBuffer> emptyBuffer = new LargeDataBuffer;
+    aDecoder->GetResource()->AppendData(emptyBuffer);
+  }
+  // HACK END.
 
   reader->SetIdle();
   if (mShutdown) {
@@ -623,13 +675,15 @@ TrackBuffer::Detach()
   if (mCurrentDecoder) {
     DiscardDecoder();
   }
+  // Cancel the promise should the current decoder hadn't be initialized yet.
+  mInitializationPromise.RejectIfExists(NS_ERROR_ABORT, __func__);
 }
 
 bool
 TrackBuffer::HasInitSegment()
 {
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
-  return mParser->HasInitData();
+  return mParser->HasCompleteInitData();
 }
 
 bool
