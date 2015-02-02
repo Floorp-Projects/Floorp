@@ -1060,7 +1060,6 @@ WebGLContext::GetImageBuffer(uint8_t** out_imageBuffer, int32_t* out_format)
     if (!dataSurface->Map(DataSourceSurface::MapType::READ, &map))
         return;
 
-    static const fallible_t fallible = fallible_t();
     uint8_t* imageBuffer = new (fallible) uint8_t[mWidth * mHeight * 4];
     if (!imageBuffer) {
         dataSurface->Unmap();

@@ -348,7 +348,7 @@ nsDOMFileReader::DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount)
     if (uint64_t(oldLen) + aCount > UINT32_MAX)
       return NS_ERROR_OUT_OF_MEMORY;
     char16_t *buf = nullptr;
-    mResult.GetMutableData(&buf, oldLen + aCount, fallible_t());
+    mResult.GetMutableData(&buf, oldLen + aCount, fallible);
     NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
 
     uint32_t bytesRead = 0;
@@ -522,7 +522,7 @@ nsDOMFileReader::GetAsDataURL(nsIDOMBlob *aFile,
   rv = Base64Encode(Substring(aFileData, aDataLen), encodedData);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!AppendASCIItoUTF16(encodedData, aResult, fallible_t())) {
+  if (!AppendASCIItoUTF16(encodedData, aResult, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

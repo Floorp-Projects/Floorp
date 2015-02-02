@@ -2619,12 +2619,12 @@ LIRGenerator::visitLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull *ins)
     if (ins->type() == MIRType_Object) {
         LLoadUnboxedPointerT *lir = new(alloc()) LLoadUnboxedPointerT(useRegister(ins->elements()),
                                                                       useRegisterOrConstant(ins->index()));
-        if (ins->bailOnNull())
+        if (ins->nullBehavior() == MLoadUnboxedObjectOrNull::BailOnNull)
             assignSnapshot(lir, Bailout_TypeBarrierO);
         define(lir, ins);
     } else {
         MOZ_ASSERT(ins->type() == MIRType_Value);
-        MOZ_ASSERT(!ins->bailOnNull());
+        MOZ_ASSERT(ins->nullBehavior() != MLoadUnboxedObjectOrNull::BailOnNull);
 
         LLoadUnboxedPointerV *lir = new(alloc()) LLoadUnboxedPointerV(useRegister(ins->elements()),
                                                                       useRegisterOrConstant(ins->index()));
@@ -2848,7 +2848,7 @@ LIRGenerator::visitLoadTypedArrayElement(MLoadTypedArrayElement *ins)
     const LUse elements = useRegister(ins->elements());
     const LAllocation index = useRegisterOrConstant(ins->index());
 
-    MOZ_ASSERT(IsNumberType(ins->type()));
+    MOZ_ASSERT(IsNumberType(ins->type()) || ins->type() == MIRType_Boolean);
 
     // We need a temp register for Uint32Array with known double result.
     LDefinition tempDef = LDefinition::BogusTemp();

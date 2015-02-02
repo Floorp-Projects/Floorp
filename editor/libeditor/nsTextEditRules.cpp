@@ -1198,7 +1198,7 @@ nsTextEditRules::TruncateInsertionIfNeeded(Selection* aSelection,
   if (!aSelection || !aInString || !aOutString) {return NS_ERROR_NULL_POINTER;}
   
   nsresult res = NS_OK;
-  if (!aOutString->Assign(*aInString, mozilla::fallible_t())) {
+  if (!aOutString->Assign(*aInString, mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   if (aTruncated) {

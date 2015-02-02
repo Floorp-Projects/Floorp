@@ -84,7 +84,7 @@ public:
    */
   void Push(void* aItem)
   {
-    if (!Push(aItem, fallible_t())) {
+    if (!Push(aItem, mozilla::fallible)) {
       NS_ABORT_OOM(mSize * sizeof(void*));
     }
   }
@@ -98,7 +98,7 @@ public:
    */
   void PushFront(void* aItem)
   {
-    if (!PushFront(aItem, fallible_t())) {
+    if (!PushFront(aItem, mozilla::fallible)) {
       NS_ABORT_OOM(mSize * sizeof(void*));
     }
   }

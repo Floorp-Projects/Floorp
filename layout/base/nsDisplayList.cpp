@@ -5207,11 +5207,13 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
                                           aAppUnitsPerPixel, nullptr,
                                           aOutAncestor, !frame->IsTransformed());
 
-    result.ChangeBasis(offsetBetweenOrigins);
-    result = result * parent;
     if (aOffsetByOrigin) {
-      result.Translate(roundedOrigin);
+      result.Translate(-aProperties.mToTransformOrigin);
+      result.TranslatePost(offsetBetweenOrigins);
+    } else {
+      result.ChangeBasis(offsetBetweenOrigins);
     }
+    result = result * parent;
     return result;
   }
 

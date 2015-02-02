@@ -629,7 +629,7 @@ TouchCaret::GetEventPosition(WidgetTouchEvent* aEvent, int32_t aIdentifier)
     if (aEvent->touches[i]->mIdentifier == aIdentifier) {
       // Get event coordinate relative to canvas frame.
       nsIFrame* canvasFrame = GetCanvasFrame();
-      nsIntPoint touchIntPoint = aEvent->touches[i]->mRefPoint;
+      LayoutDeviceIntPoint touchIntPoint = aEvent->touches[i]->mRefPoint;
       return nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
                                                           touchIntPoint,
                                                           canvasFrame);
@@ -643,8 +643,7 @@ TouchCaret::GetEventPosition(WidgetMouseEvent* aEvent)
 {
   // Get event coordinate relative to canvas frame.
   nsIFrame* canvasFrame = GetCanvasFrame();
-  nsIntPoint mouseIntPoint =
-    LayoutDeviceIntPoint::ToUntyped(aEvent->AsGUIEvent()->refPoint);
+  LayoutDeviceIntPoint mouseIntPoint = aEvent->AsGUIEvent()->refPoint;
   return nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
                                                       mouseIntPoint,
                                                       canvasFrame);
