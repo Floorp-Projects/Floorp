@@ -49,9 +49,6 @@ class RangedPtr
   T* const mRangeEnd;
 #endif
 
-  typedef void (RangedPtr::* ConvertibleToBool)();
-  void nonNull() {}
-
   void checkSanity()
   {
     MOZ_ASSERT(mRangeStart <= mPtr);
@@ -118,7 +115,7 @@ public:
 
   T* get() const { return mPtr; }
 
-  operator ConvertibleToBool() const { return mPtr ? &RangedPtr::nonNull : 0; }
+  explicit operator bool() const { return mPtr != nullptr; }
 
   /*
    * You can only assign one RangedPtr into another if the two pointers have

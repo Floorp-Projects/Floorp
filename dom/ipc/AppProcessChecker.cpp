@@ -157,7 +157,7 @@ AssertAppProcess(PContentParent* aActor,
       "Security problem: Content process does not have `%s'.  It will be killed.\n",
       aCapability).get());
 
-  static_cast<ContentParent*>(aActor)->KillHard();
+  static_cast<ContentParent*>(aActor)->KillHard("AssertAppProcess");
 
   return false;
 }
@@ -179,7 +179,7 @@ AssertAppStatus(PContentParent* aActor,
       "Security problem: Content process does not have `%d' status.  It will be killed.",
       aStatus).get());
 
-  static_cast<ContentParent*>(aActor)->KillHard();
+  static_cast<ContentParent*>(aActor)->KillHard("AssertAppStatus");
 
   return false;
 }
@@ -198,7 +198,7 @@ AssertAppPrincipal(PContentParent* aActor,
 {
   if (!aPrincipal) {
     NS_WARNING("Principal is invalid, killing app process");
-    static_cast<ContentParent*>(aActor)->KillHard();
+    static_cast<ContentParent*>(aActor)->KillHard("AssertAppPrincipal");
     return false;
   }
 
@@ -220,7 +220,7 @@ AssertAppPrincipal(PContentParent* aActor,
   }
 
   NS_WARNING("Principal is invalid, killing app process");
-  static_cast<ContentParent*>(aActor)->KillHard();
+  static_cast<ContentParent*>(aActor)->KillHard("AssertAppPrincipal");
   return false;
 }
 

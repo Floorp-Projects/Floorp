@@ -33,7 +33,7 @@ addLoadEvent(function() {
   panner.connect(destination);
 
   // Verify default values
-  is(panner.panningModel, "HRTF", "Correct default value for panning model");
+  is(panner.panningModel, "equalpower", "Correct default value for panning model");
   is(panner.distanceModel, "inverse", "Correct default value for distance model");
   near(panner.refDistance, 1, "Correct default value for ref distance");
   near(panner.maxDistance, 10000, "Correct default value for max distance");

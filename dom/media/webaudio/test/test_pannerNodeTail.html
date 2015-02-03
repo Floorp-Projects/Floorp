@@ -176,6 +176,7 @@ function startTest() {
     delay.connect(referencePanner)
 
     var panner = ctx.createPanner();
+    panner.type = "HRTF";
     delay.connect(panner);
     testPanners[i] = panner;
 
@@ -207,6 +208,7 @@ function prepareTest() {
   // database.  Wait for this to load before starting the test.
   var processor = ctx.createScriptProcessor(bufferSize, 2, 0);
   referencePanner = ctx.createPanner();
+  referencePanner.type = "HRTF";
   referencePanner.connect(processor);
   var oscillator = ctx.createOscillator();
   oscillator.connect(referencePanner);
