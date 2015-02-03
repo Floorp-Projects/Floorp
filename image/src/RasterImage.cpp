@@ -61,16 +61,6 @@ namespace image {
 using std::ceil;
 using std::min;
 
-// a mask for flags that will affect the decoding
-#define DECODE_FLAGS_MASK (imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA | imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION)
-#define DECODE_FLAGS_DEFAULT 0
-
-static uint32_t
-DecodeFlags(uint32_t aFlags)
-{
-  return aFlags & DECODE_FLAGS_MASK;
-}
-
 // The maximum number of times any one RasterImage was decoded.  This is only
 // used for statistics.
 static int32_t sMaxDecodeCount = 0;
@@ -1359,7 +1349,7 @@ RasterImage::CreateDecoder(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
   decoder->SetSizeDecode(!aSize);
   decoder->SetSendPartialInvalidations(!mHasBeenDecoded);
   decoder->SetImageIsTransient(mTransient);
-  decoder->SetDecodeFlags(DecodeFlags(aFlags));
+  decoder->SetFlags(aFlags);
 
   if (!mHasBeenDecoded && aSize) {
     // Lock the image while we're decoding, so that it doesn't get evicted from
@@ -1783,7 +1773,7 @@ RasterImage::Draw(gfxContext* aContext,
   // Illegal -- you can't draw with non-default decode flags.
   // (Disabling colorspace conversion might make sense to allow, but
   // we don't currently.)
-  if ((aFlags & DECODE_FLAGS_MASK) != DECODE_FLAGS_DEFAULT)
+  if (DecodeFlags(aFlags) != DECODE_FLAGS_DEFAULT)
     return NS_ERROR_FAILURE;
 
   NS_ENSURE_ARG_POINTER(aContext);
