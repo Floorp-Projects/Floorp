@@ -239,10 +239,7 @@ var gSearchPane = {
 
 function onDragEngineStart(event) {
   var selectedIndex = gEngineView.selectedIndex;
-  var tree = document.getElementById("engineList");
-  var row = { }, col = { }, child = { };
-  tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, child);
-  if (selectedIndex >= 0 && !gEngineView.isCheckBox(row.value, col.value)) {
+  if (selectedIndex >= 0) {
     event.dataTransfer.setData(ENGINE_FLAVOR, selectedIndex.toString());
     event.dataTransfer.effectAllowed = "move";
   }
@@ -409,10 +406,6 @@ EngineView.prototype = {
 
   getSourceIndexFromDrag: function (dataTransfer) {
     return parseInt(dataTransfer.getData(ENGINE_FLAVOR));
-  },
-
-  isCheckBox: function(index, column) {
-    return column.id == "engineShown";
   },
 
   // nsITreeView
