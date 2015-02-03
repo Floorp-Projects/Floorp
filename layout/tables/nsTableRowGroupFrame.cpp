@@ -1832,13 +1832,8 @@ nsTableRowGroupFrame::GetNextSiblingOnLine(nsIFrame*& aFrame,
 
 //end nsLineIterator methods
 
-static void
-DestroyFrameCursorData(void* aPropertyValue)
-{
-  delete static_cast<nsTableRowGroupFrame::FrameCursorData*>(aPropertyValue);
-}
-
-NS_DECLARE_FRAME_PROPERTY(RowCursorProperty, DestroyFrameCursorData)
+NS_DECLARE_FRAME_PROPERTY(RowCursorProperty,
+                          DeleteValue<nsTableRowGroupFrame::FrameCursorData>)
 
 void
 nsTableRowGroupFrame::ClearRowCursor()

@@ -17,13 +17,8 @@
 
 namespace mozilla {
 
-void DestroyStickyScrollContainer(void* aPropertyValue)
-{
-  delete static_cast<StickyScrollContainer*>(aPropertyValue);
-}
-
 NS_DECLARE_FRAME_PROPERTY(StickyScrollContainerProperty,
-                          DestroyStickyScrollContainer)
+                          DeleteValue<StickyScrollContainer>)
 
 StickyScrollContainer::StickyScrollContainer(nsIScrollableFrame* aScrollFrame)
   : mScrollFrame(aScrollFrame)
