@@ -92,40 +92,40 @@ RecompileInfo::shouldSweep(TypeZone &types)
 // Types
 /////////////////////////////////////////////////////////////////////
 
-/* static */ inline ObjectGroupKey *
-ObjectGroupKey::get(JSObject *obj)
+/* static */ inline TypeSetObjectKey *
+TypeSetObjectKey::get(JSObject *obj)
 {
     MOZ_ASSERT(obj);
     if (obj->isSingleton())
-        return (ObjectGroupKey *) (uintptr_t(obj) | 1);
-    return (ObjectGroupKey *) obj->group();
+        return (TypeSetObjectKey *) (uintptr_t(obj) | 1);
+    return (TypeSetObjectKey *) obj->group();
 }
 
-/* static */ inline ObjectGroupKey *
-ObjectGroupKey::get(ObjectGroup *group)
+/* static */ inline TypeSetObjectKey *
+TypeSetObjectKey::get(ObjectGroup *group)
 {
     MOZ_ASSERT(group);
     if (group->singleton())
-        return (ObjectGroupKey *) (uintptr_t(group->singleton()) | 1);
-    return (ObjectGroupKey *) group;
+        return (TypeSetObjectKey *) (uintptr_t(group->singleton()) | 1);
+    return (TypeSetObjectKey *) group;
 }
 
 inline ObjectGroup *
-ObjectGroupKey::groupNoBarrier()
+TypeSetObjectKey::groupNoBarrier()
 {
     MOZ_ASSERT(isGroup());
     return (ObjectGroup *) this;
 }
 
 inline JSObject *
-ObjectGroupKey::singletonNoBarrier()
+TypeSetObjectKey::singletonNoBarrier()
 {
     MOZ_ASSERT(isSingleton());
     return (JSObject *) (uintptr_t(this) & ~1);
 }
 
 inline ObjectGroup *
-ObjectGroupKey::group()
+TypeSetObjectKey::group()
 {
     ObjectGroup *res = groupNoBarrier();
     ObjectGroup::readBarrier(res);
@@ -133,7 +133,7 @@ ObjectGroupKey::group()
 }
 
 inline JSObject *
-ObjectGroupKey::singleton()
+TypeSetObjectKey::singleton()
 {
     JSObject *res = singletonNoBarrier();
     JSObject::readBarrier(res);
@@ -157,7 +157,7 @@ Type::ObjectType(ObjectGroup *group)
 }
 
 /* static */ inline Type
-Type::ObjectType(ObjectGroupKey *obj)
+Type::ObjectType(TypeSetObjectKey *obj)
 {
     return Type(uintptr_t(obj));
 }
@@ -1026,11 +1026,11 @@ HashSetLookup(U **values, unsigned count, T key)
     return nullptr;
 }
 
-inline ObjectGroupKey *
+inline TypeSetObjectKey *
 Type::objectKey() const
 {
     MOZ_ASSERT(isObject());
-    return (ObjectGroupKey *) data;
+    return (TypeSetObjectKey *) data;
 }
 
 inline JSObject *
@@ -1071,7 +1071,7 @@ TypeSet::hasType(Type type) const
         return !!(flags & TYPE_FLAG_ANYOBJECT);
     } else {
         return !!(flags & TYPE_FLAG_ANYOBJECT) ||
-            HashSetLookup<ObjectGroupKey*,ObjectGroupKey,ObjectGroupKey>
+            HashSetLookup<TypeSetObjectKey*,TypeSetObjectKey,TypeSetObjectKey>
             (objectSet, baseObjectCount(), type.objectKey()) != nullptr;
     }
 }
@@ -1139,13 +1139,13 @@ TypeSet::getObjectCount() const
     return count;
 }
 
-inline ObjectGroupKey *
+inline TypeSetObjectKey *
 TypeSet::getObject(unsigned i) const
 {
     MOZ_ASSERT(i < getObjectCount());
     if (baseObjectCount() == 1) {
         MOZ_ASSERT(i == 0);
-        return (ObjectGroupKey *) objectSet;
+        return (TypeSetObjectKey *) objectSet;
     }
     return objectSet[i];
 }
@@ -1153,28 +1153,28 @@ TypeSet::getObject(unsigned i) const
 inline JSObject *
 TypeSet::getSingleton(unsigned i) const
 {
-    ObjectGroupKey *key = getObject(i);
+    TypeSetObjectKey *key = getObject(i);
     return (key && key->isSingleton()) ? key->singleton() : nullptr;
 }
 
 inline ObjectGroup *
 TypeSet::getGroup(unsigned i) const
 {
-    ObjectGroupKey *key = getObject(i);
+    TypeSetObjectKey *key = getObject(i);
     return (key && key->isGroup()) ? key->group() : nullptr;
 }
 
 inline JSObject *
 TypeSet::getSingletonNoBarrier(unsigned i) const
 {
-    ObjectGroupKey *key = getObject(i);
+    TypeSetObjectKey *key = getObject(i);
     return (key && key->isSingleton()) ? key->singletonNoBarrier() : nullptr;
 }
 
 inline ObjectGroup *
 TypeSet::getGroupNoBarrier(unsigned i) const
 {
-    ObjectGroupKey *key = getObject(i);
+    TypeSetObjectKey *key = getObject(i);
     return (key && key->isGroup()) ? key->groupNoBarrier() : nullptr;
 }
 

@@ -1624,7 +1624,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, FunctionType ty
         bool hasDefaults = false;
         Node duplicatedArg = null();
         Node list = null();
-        bool disallowDuplicateArgs = kind == Arrow;
+        bool disallowDuplicateArgs = kind == Arrow || kind == Method;
 
         if (type == Getter) {
             report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "getter", "no", "s");

@@ -15,7 +15,6 @@
 #include "nsCacheService.h"
 #include "zlib.h"
 #include "mozilla/Mutex.h"
-#include "nsVoidArray.h"
 
 /******************************************************************************
 * nsCacheEntryDescriptor
@@ -45,7 +44,7 @@ public:
     nsCacheEntry * CacheEntry(void)      { return mCacheEntry; }
     bool           ClearCacheEntry(void)
     {
-      NS_ASSERTION(mInputWrappers.Count() == 0, "Bad state");
+      NS_ASSERTION(mInputWrappers.IsEmpty(), "Bad state");
       NS_ASSERTION(!mOutputWrapper, "Bad state");
 
       bool doomEntry = false;
@@ -226,7 +225,7 @@ private:
       */
      nsCacheEntry          * mCacheEntry; // we are a child of the entry
      nsCacheAccessMode       mAccessGranted;
-     nsVoidArray             mInputWrappers;
+     nsTArray<nsInputStreamWrapper*> mInputWrappers;
      nsOutputStreamWrapper * mOutputWrapper;
      mozilla::Mutex          mLock;
      bool                    mAsyncDoomPending;

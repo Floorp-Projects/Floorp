@@ -111,8 +111,8 @@ SVGRectElement::GetLengthInfo()
 // nsSVGPathGeometryElement methods
 
 bool
-SVGRectElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
-                                  CapStyle aCapStyle, const Matrix& aTransform)
+SVGRectElement::GetGeometryBounds(
+  Rect* aBounds, const StrokeOptions& aStrokeOptions, const Matrix& aTransform)
 {
   Rect rect;
   Float rx, ry;
@@ -137,8 +137,8 @@ SVGRectElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
     }
   }
 
-  if (aStrokeWidth > 0.f) {
-    rect.Inflate(aStrokeWidth / 2.f);
+  if (aStrokeOptions.mLineWidth > 0.f) {
+    rect.Inflate(aStrokeOptions.mLineWidth / 2.f);
   }
 
   *aBounds = aTransform.TransformBounds(rect);

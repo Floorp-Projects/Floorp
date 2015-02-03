@@ -9,6 +9,7 @@
 #include "nsIWidget.h"
 #include "nsServiceManagerUtils.h"
 #include "ScreenManagerParent.h"
+#include "ContentProcessManager.h"
 
 namespace mozilla {
 namespace dom {
@@ -116,7 +117,7 @@ ScreenManagerParent::RecvScreenForRect(const int32_t& aLeft,
 }
 
 bool
-ScreenManagerParent::RecvScreenForBrowser(PBrowserParent* aBrowser,
+ScreenManagerParent::RecvScreenForBrowser(const TabId& aTabId,
                                           ScreenDetails* aRetVal,
                                           bool* aSuccess)
 {
@@ -129,7 +130,14 @@ ScreenManagerParent::RecvScreenForBrowser(PBrowserParent* aBrowser,
 
   // Find the mWidget associated with the tabparent, and then return
   // the nsIScreen it's on.
-  TabParent* tabParent = static_cast<TabParent*>(aBrowser);
+  ContentParent* cp = static_cast<ContentParent*>(this->Manager());
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  nsRefPtr<TabParent> tabParent =
+    cpm->GetTopLevelTabParentByProcessAndTabId(cp->ChildID(), aTabId);
+  if(!tabParent){
+    return false;
+  }
+
   nsCOMPtr<nsIWidget> widget = tabParent->GetWidget();
 
   nsCOMPtr<nsIScreen> screen;

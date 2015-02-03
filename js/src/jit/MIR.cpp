@@ -655,7 +655,7 @@ jit::MakeSingletonTypeSet(types::CompilerConstraintList *constraints, JSObject *
     // we want to invalidate and mark this TypeSet as containing AnyObject
     // (because mutating __proto__ will change an object's ObjectGroup).
     MOZ_ASSERT(constraints);
-    types::ObjectGroupKey *key = types::ObjectGroupKey::get(obj);
+    types::TypeSetObjectKey *key = types::TypeSetObjectKey::get(obj);
     key->hasStableClassAndProto(constraints);
 
     LifoAlloc *alloc = GetJitContext()->temp->lifoAlloc();
@@ -4351,7 +4351,7 @@ jit::DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinit
     unsigned count = types->getObjectCount();
 
     for (unsigned i = 0; i < count; i++) {
-        types::ObjectGroupKey *key = types->getObject(i);
+        types::TypeSetObjectKey *key = types->getObject(i);
         if (!key)
             continue;
 
@@ -4375,7 +4375,7 @@ jit::DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinit
 
 static BarrierKind
 PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
-                             types::ObjectGroupKey *key, PropertyName *name,
+                             types::TypeSetObjectKey *key, PropertyName *name,
                              types::TypeSet *observed)
 {
     // If the object being read from has types for the property which haven't
@@ -4426,7 +4426,7 @@ PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
 BarrierKind
 jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
-                                  types::ObjectGroupKey *key, PropertyName *name,
+                                  types::TypeSetObjectKey *key, PropertyName *name,
                                   types::TemporaryTypeSet *observed, bool updateObserved)
 {
     // If this access has never executed, try to add types to the observed set
@@ -4444,7 +4444,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
             if (!obj->getClass()->isNative())
                 break;
 
-            types::ObjectGroupKey *key = types::ObjectGroupKey::get(obj);
+            types::TypeSetObjectKey *key = types::TypeSetObjectKey::get(obj);
             if (propertycx)
                 key->ensureTrackedProperty(propertycx, NameToId(name));
 
@@ -4488,7 +4488,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
 
     bool updateObserved = types->getObjectCount() == 1;
     for (size_t i = 0; i < types->getObjectCount(); i++) {
-        types::ObjectGroupKey *key = types->getObject(i);
+        types::TypeSetObjectKey *key = types->getObject(i);
         if (key) {
             BarrierKind kind = PropertyReadNeedsTypeBarrier(propertycx, constraints, key, name,
                                                             observed, updateObserved);
@@ -4522,7 +4522,7 @@ jit::PropertyReadOnPrototypeNeedsTypeBarrier(types::CompilerConstraintList *cons
     BarrierKind res = BarrierKind::NoBarrier;
 
     for (size_t i = 0; i < types->getObjectCount(); i++) {
-        types::ObjectGroupKey *key = types->getObject(i);
+        types::TypeSetObjectKey *key = types->getObject(i);
         if (!key)
             continue;
         while (true) {
@@ -4530,7 +4530,7 @@ jit::PropertyReadOnPrototypeNeedsTypeBarrier(types::CompilerConstraintList *cons
                 return BarrierKind::TypeSet;
             if (!key->proto().isObject())
                 break;
-            key = types::ObjectGroupKey::get(key->proto().toObject());
+            key = types::TypeSetObjectKey::get(key->proto().toObject());
             BarrierKind kind = PropertyReadNeedsTypeBarrier(constraints, key, name, observed);
             if (kind == BarrierKind::TypeSet)
                 return BarrierKind::TypeSet;
@@ -4558,7 +4558,7 @@ jit::PropertyReadIsIdempotent(types::CompilerConstraintList *constraints,
         return false;
 
     for (size_t i = 0; i < types->getObjectCount(); i++) {
-        types::ObjectGroupKey *key = types->getObject(i);
+        types::TypeSetObjectKey *key = types->getObject(i);
         if (key) {
             if (key->unknownProperties())
                 return false;
@@ -4589,7 +4589,7 @@ jit::AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,
     }
 
     for (size_t i = 0; i < types->getObjectCount(); i++) {
-        types::ObjectGroupKey *key = types->getObject(i);
+        types::TypeSetObjectKey *key = types->getObject(i);
         if (!key)
             continue;
 
@@ -4610,7 +4610,7 @@ jit::AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,
         }
 
         for (size_t i = 0; i < types->getObjectCount(); i++) {
-            types::ObjectGroupKey *key = types->getObject(i);
+            types::TypeSetObjectKey *key = types->getObject(i);
             if (key)
                 observed->addType(types::Type::ObjectType(key), alloc);
         }
@@ -4652,7 +4652,7 @@ TryAddTypeBarrierForWrite(TempAllocator &alloc, types::CompilerConstraintList *c
     Maybe<types::HeapTypeSetKey> aggregateProperty;
 
     for (size_t i = 0; i < objTypes->getObjectCount(); i++) {
-        types::ObjectGroupKey *key = objTypes->getObject(i);
+        types::TypeSetObjectKey *key = objTypes->getObject(i);
         if (!key)
             continue;
 
@@ -4725,7 +4725,7 @@ TryAddTypeBarrierForWrite(TempAllocator &alloc, types::CompilerConstraintList *c
 
 static MInstruction *
 AddGroupGuard(TempAllocator &alloc, MBasicBlock *current, MDefinition *obj,
-              types::ObjectGroupKey *key, bool bailOnEquality)
+              types::TypeSetObjectKey *key, bool bailOnEquality)
 {
     MInstruction *guard;
 
@@ -4778,7 +4778,7 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator &alloc, types::CompilerConstrai
 
     bool success = true;
     for (size_t i = 0; i < types->getObjectCount(); i++) {
-        types::ObjectGroupKey *key = types->getObject(i);
+        types::TypeSetObjectKey *key = types->getObject(i);
         if (!key || key->unknownProperties())
             continue;
 
@@ -4812,9 +4812,9 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator &alloc, types::CompilerConstrai
     if (types->getObjectCount() <= 1)
         return true;
 
-    types::ObjectGroupKey *excluded = nullptr;
+    types::TypeSetObjectKey *excluded = nullptr;
     for (size_t i = 0; i < types->getObjectCount(); i++) {
-        types::ObjectGroupKey *key = types->getObject(i);
+        types::TypeSetObjectKey *key = types->getObject(i);
         if (!key || key->unknownProperties())
             continue;
         if (!name && IsAnyTypedArrayClass(key->clasp()))

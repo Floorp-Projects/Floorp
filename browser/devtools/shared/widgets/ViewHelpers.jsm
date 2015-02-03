@@ -800,7 +800,7 @@ this.WidgetMethods = {
    */
   removeForPredicate: function(aPredicate) {
     let item;
-    while (item = this.getItemForPredicate(aPredicate)) {
+    while ((item = this.getItemForPredicate(aPredicate))) {
       this.remove(item);
     }
   },

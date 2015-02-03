@@ -339,6 +339,12 @@ function test_spdy_post_big() {
   do_post(posts[1], chan, listener);
 }
 
+function test_complete() {
+  resetPrefs();
+  do_test_finished();
+  do_timeout(0,run_next_test);
+}
+
 // hack - the header test resets the multiplex object on the server,
 // so make sure header is always run before the multiplex test.
 //
@@ -356,6 +362,8 @@ var tests = [ test_spdy_post_big
             , test_spdy_multiplex
             , test_spdy_big
             , test_spdy_post
+            // cleanup
+            , test_complete
             ];
 var current_test = 0;
 
@@ -432,6 +440,7 @@ function resetPrefs() {
   prefs.setBoolPref("network.http.spdy.enabled", spdypref);
   prefs.setBoolPref("network.http.spdy.enabled.v3-1", spdy3pref);
   prefs.setBoolPref("network.http.spdy.allow-push", spdypush);
+  prefs.setBoolPref("network.http.spdy.debug-1102923", false);
 }
 
 function run_test() {
@@ -459,6 +468,7 @@ function run_test() {
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.v3-1", true);
   prefs.setBoolPref("network.http.spdy.allow-push", true);
+  prefs.setBoolPref("network.http.spdy.debug-1102923", true);
 
   loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
 
