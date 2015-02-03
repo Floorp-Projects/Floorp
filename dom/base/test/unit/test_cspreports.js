@@ -8,6 +8,7 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 Cu.import('resource://gre/modules/NetUtil.jsm');
+Cu.import("resource://gre/modules/Services.jsm");
 
 var httpServer = new HttpServer();
 httpServer.start(-1);
@@ -70,7 +71,14 @@ function makeTest(id, expectedJSON, useReportOnlyPolicy, callback) {
   var selfuri = NetUtil.newURI(REPORT_SERVER_URI +
                                ":" + REPORT_SERVER_PORT +
                                "/foo/self");
-  var selfchan = NetUtil.newChannel(selfuri);
+  var selfchan = NetUtil.newChannel2(selfuri,
+                                     null,
+                                     null,
+                                     null,      // aLoadingNode
+                                     Services.scriptSecurityManager.getSystemPrincipal(),
+                                     null,      // aTriggeringPrincipal
+                                     Ci.nsILoadInfo.SEC_NORMAL,
+                                     Ci.nsIContentPolicy.TYPE_OTHER);
 
   dump("Created test " + id + " : " + policy + "\n\n");
 

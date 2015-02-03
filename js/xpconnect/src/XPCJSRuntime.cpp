@@ -2989,14 +2989,6 @@ JSSizeOfTab(JSObject *objArg, size_t *jsObjectsSize, size_t *jsStringsSize,
 
 } // namespace xpc
 
-#ifdef MOZ_CRASHREPORTER
-static bool
-DiagnosticMemoryCallback(void *ptr, size_t size)
-{
-    return CrashReporter::RegisterAppMemory(ptr, size) == NS_OK;
-}
-#endif
-
 static void
 AccumulateTelemetryCallback(int id, uint32_t sample, const char *key)
 {
@@ -3324,9 +3316,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_AddWeakPointerCallback(runtime, WeakPointerCallback, this);
     JS_SetWrapObjectCallbacks(runtime, &WrapObjectCallbacks);
     js::SetPreserveWrapperCallback(runtime, PreserveWrapper);
-#ifdef MOZ_CRASHREPORTER
-    JS_EnumerateDiagnosticMemoryRegions(DiagnosticMemoryCallback);
-#endif
 #ifdef MOZ_ENABLE_PROFILER_SPS
     if (PseudoStack *stack = mozilla_get_pseudo_stack())
         stack->sampleRuntime(runtime);

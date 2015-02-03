@@ -973,21 +973,13 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
 // Macros to initialize Object or Function like XPC_WN classes
 #define XPC_WN_WithCall_ObjectOps                                             \
     {                                                                         \
-        nullptr, /* lookupGeneric */                                          \
         nullptr, /* lookupProperty */                                         \
-        nullptr, /* lookupElement */                                          \
-        nullptr, /* defineGeneric */                                          \
         nullptr, /* defineProperty */                                         \
-        nullptr, /* defineElement */                                          \
-        nullptr, /* getGeneric    */                                          \
         nullptr, /* getProperty    */                                         \
-        nullptr, /* getElement    */                                          \
-        nullptr, /* setGeneric    */                                          \
         nullptr, /* setProperty    */                                         \
-        nullptr, /* setElement    */                                          \
         nullptr, /* getOwnPropertyDescriptor */                               \
-        nullptr, /* setGenericAttributes  */                                  \
-        nullptr, /* deleteGeneric */                                          \
+        nullptr, /* setPropertyAttributes  */                                 \
+        nullptr, /* deleteProperty */                                         \
         nullptr, nullptr, /* watch/unwatch */                                 \
         nullptr, /* getElements */                                            \
         nullptr, /* enumerate */                                              \
@@ -996,21 +988,13 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
 
 #define XPC_WN_NoCall_ObjectOps                                               \
     {                                                                         \
-        nullptr, /* lookupGeneric */                                          \
         nullptr, /* lookupProperty */                                         \
-        nullptr, /* lookupElement */                                          \
-        nullptr, /* defineGeneric */                                          \
         nullptr, /* defineProperty */                                         \
-        nullptr, /* defineElement */                                          \
-        nullptr, /* getGeneric    */                                          \
         nullptr, /* getProperty    */                                         \
-        nullptr, /* getElement    */                                          \
-        nullptr, /* setGeneric    */                                          \
         nullptr, /* setProperty    */                                         \
-        nullptr, /* setElement    */                                          \
         nullptr, /* getOwnPropertyDescriptor */                               \
-        nullptr, /* setGenericAttributes  */                                  \
-        nullptr, /* deleteGeneric */                                          \
+        nullptr, /* setPropertyAttributes  */                                 \
+        nullptr, /* deleteProperty */                                         \
         nullptr, nullptr, /* watch/unwatch */                                 \
         nullptr, /* getElements */                                            \
         nullptr, /* enumerate */                                              \

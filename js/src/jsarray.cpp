@@ -2715,7 +2715,7 @@ struct SortComparatorIndexes
 
 // Returns all indexed properties in the range [begin, end) found on |obj| or
 // its proto chain. This function does not handle proxies, objects with
-// resolve/lookupGeneric hooks or indexed getters, as those can introduce
+// resolve/lookupProperty hooks or indexed getters, as those can introduce
 // new properties. In those cases, *success is set to |false|.
 static bool
 GetIndexedPropertiesInRange(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end,
@@ -2727,7 +2727,7 @@ GetIndexedPropertiesInRange(JSContext *cx, HandleObject obj, uint32_t begin, uin
     // properties.
     JSObject *pobj = obj;
     do {
-        if (!pobj->isNative() || pobj->getClass()->resolve || pobj->getOps()->lookupGeneric)
+        if (!pobj->isNative() || pobj->getClass()->resolve || pobj->getOps()->lookupProperty)
             return true;
     } while ((pobj = pobj->getProto()));
 

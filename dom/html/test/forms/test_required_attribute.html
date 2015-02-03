@@ -66,6 +66,12 @@ function checkSufferingFromBeingMissing(element, hasMozUIInvalid)
       "Please select a file.",
       "Validation message is wrong");
   }
+  else if (element.type == 'number')
+  {
+    is(element.validationMessage,
+      "Please enter a number.",
+      "Validation message is wrong");
+  }
   else // text fields
   {
     is(element.validationMessage,

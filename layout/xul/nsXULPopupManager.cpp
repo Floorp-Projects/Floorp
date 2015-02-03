@@ -205,10 +205,19 @@ nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
     ConsumeOutsideClicksResult consumeResult = item->Frame()->ConsumeOutsideClicks();
     consume = (consumeResult == ConsumeOutsideClicks_True);
 
-    // If ConsumeOutsideClicks_ParentOnly was returned, then only consume the
-    // click is it was over the anchor. This way, clicking on a menu doesn't
+    bool rollup = true;
+
+    // If norolluponanchor is true, then don't rollup when clicking the anchor.
+    // This would be used to allow adjusting the caret position in an
+    // autocomplete field without hiding the popup for example.
+    bool noRollupOnAnchor = (!consume && pos &&
+      item->Frame()->GetContent()->AttrValueIs(kNameSpaceID_None,
+        nsGkAtoms::norolluponanchor, nsGkAtoms::_true, eCaseMatters));
+
+    // When ConsumeOutsideClicks_ParentOnly is used, always consume the click
+    // when the click was over the anchor. This way, clicking on a menu doesn't
     // reopen the menu.
-    if (consumeResult == ConsumeOutsideClicks_ParentOnly && pos) {
+    if ((consumeResult == ConsumeOutsideClicks_ParentOnly || noRollupOnAnchor) && pos) {
       nsCOMPtr<nsIContent> anchor = item->Frame()->GetAnchor();
 
       // Check if the anchor has indicated another node to use for checking
@@ -234,33 +243,41 @@ nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
         // event will get consumed, so here only a quick coordinates check is
         // done rather than a slower complete check of what is at that location.
         if (anchor->GetPrimaryFrame()->GetScreenRect().Contains(*pos)) {
-          consume = true;
+          if (consumeResult == ConsumeOutsideClicks_ParentOnly) {
+            consume = true;
+          }
+
+          if (noRollupOnAnchor) {
+            rollup = false;
+          }
         }
       }
     }
 
-    // if a number of popups to close has been specified, determine the last
-    // popup to close
-    nsIContent* lastPopup = nullptr;
-    if (aCount != UINT32_MAX) {
-      nsMenuChainItem* last = item;
-      while (--aCount && last->GetParent()) {
-        last = last->GetParent();
+    if (rollup) {
+      // if a number of popups to close has been specified, determine the last
+      // popup to close
+      nsIContent* lastPopup = nullptr;
+      if (aCount != UINT32_MAX) {
+        nsMenuChainItem* last = item;
+        while (--aCount && last->GetParent()) {
+          last = last->GetParent();
+        }
+        if (last) {
+          lastPopup = last->Content();
+        }
       }
-      if (last) {
-        lastPopup = last->Content();
+
+      nsPresContext* presContext = item->Frame()->PresContext();
+      nsRefPtr<nsViewManager> viewManager = presContext->PresShell()->GetViewManager();
+
+      HidePopup(item->Content(), true, true, false, true, lastPopup);
+
+      if (aFlush) {
+        // The popup's visibility doesn't update until the minimize animation has
+        // finished, so call UpdateWidgetGeometry to update it right away.
+        viewManager->UpdateWidgetGeometry();
       }
-    }
-
-    nsPresContext* presContext = item->Frame()->PresContext();
-    nsRefPtr<nsViewManager> viewManager = presContext->PresShell()->GetViewManager();
-
-    HidePopup(item->Content(), true, true, false, true, lastPopup);
-
-    if (aFlush) {
-      // The popup's visibility doesn't update until the minimize animation has
-      // finished, so call UpdateWidgetGeometry to update it right away.
-      viewManager->UpdateWidgetGeometry();
     }
   }
 

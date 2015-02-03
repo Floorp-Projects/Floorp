@@ -10,6 +10,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
+#include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -22,6 +23,13 @@
 
 #define DSSTORE_FILE_NAME ".DS_Store"
 
+#define QM_WARNING(...)                                                        \
+  do {                                                                         \
+    nsPrintfCString str(__VA_ARGS__);                                          \
+    mozilla::dom::quota::ReportInternalError(__FILE__, __LINE__, str.get());   \
+    NS_WARNING(str.get());                                                     \
+  } while (0)
+
 BEGIN_QUOTA_NAMESPACE
 
 void
@@ -32,6 +40,9 @@ AssertCurrentThreadOwnsQuotaMutex();
 
 bool
 IsOnIOThread();
+
+void
+ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr);
 
 END_QUOTA_NAMESPACE
 

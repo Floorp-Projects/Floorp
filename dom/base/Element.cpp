@@ -1198,6 +1198,12 @@ already_AddRefed<Attr>
 Element::RemoveAttributeNode(Attr& aAttribute,
                              ErrorResult& aError)
 {
+  Element *elem = aAttribute.GetElement();
+  if (elem != this) {
+    aError.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
+    return nullptr;
+  }
+
   OwnerDoc()->WarnOnceAbout(nsIDocument::eRemoveAttributeNode);
   nsAutoString nameSpaceURI;
   aAttribute.NodeInfo()->GetNamespaceURI(nameSpaceURI);

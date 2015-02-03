@@ -538,7 +538,7 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
 {
     /* 8.12.9 step 1. */
     RootedShape shape(cx);
-    MOZ_ASSERT(!obj->getOps()->lookupGeneric);
+    MOZ_ASSERT(!obj->getOps()->lookupProperty);
     if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &shape))
         return false;
 
@@ -962,7 +962,7 @@ js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id, const P
     if (obj->is<UnboxedPlainObject>() && !obj->as<UnboxedPlainObject>().convertToNative(cx))
         return false;
 
-    if (obj->getOps()->lookupGeneric) {
+    if (obj->getOps()->lookupProperty) {
         if (obj->is<ProxyObject>()) {
             Rooted<PropertyDescriptor> pd(cx);
             desc.populatePropertyDescriptor(obj, &pd);
@@ -1036,7 +1036,7 @@ js::DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
     if (obj->is<UnboxedPlainObject>() && !obj->as<UnboxedPlainObject>().convertToNative(cx))
         return false;
 
-    if (obj->getOps()->lookupGeneric) {
+    if (obj->getOps()->lookupProperty) {
         if (obj->is<ProxyObject>()) {
             Rooted<PropertyDescriptor> pd(cx);
             for (size_t i = 0, len = ids.length(); i < len; i++) {
@@ -1175,7 +1175,7 @@ js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
 
     // Ordinarily ArraySetLength handles this, but we're going behind its back
     // right now, so we must do this manually.  Neither the custom property
-    // tree mutations nor the setGenericAttributes call in the above code will
+    // tree mutations nor the setPropertyAttributes call in the above code will
     // do this for us.
     //
     // ArraySetLength also implements the capacity <= length invariant for
@@ -1780,34 +1780,22 @@ JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj, HandleObject rec
     }
     if (obj->is<ProxyObject>())
         return Proxy::set(cx, obj, receiver, id, strict, vp);
-    return obj->getOps()->setGeneric(cx, obj, id, vp, strict);
+    return obj->getOps()->setProperty(cx, obj, id, vp, strict);
 }
 
 /* static */ bool
 JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
                               uint32_t index, MutableHandleValue vp, bool strict)
 {
-    if (MOZ_UNLIKELY(obj->watched())) {
-        RootedId id(cx);
-        if (!IndexToId(cx, index, &id))
-            return false;
-
-        WatchpointMap *wpmap = cx->compartment()->watchpointMap;
-        if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, vp))
-            return false;
-    }
-    if (obj->is<ProxyObject>()) {
-        RootedId id(cx);
-        return IndexToId(cx, index, &id) &&
-               Proxy::set(cx, obj, receiver, id, strict, vp);
-    }
-    return obj->getOps()->setElement(cx, obj, index, vp, strict);
+    RootedId id(cx);
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return nonNativeSetProperty(cx, obj, receiver, id, vp, strict);
 }
 
 JS_FRIEND_API(bool)
 JS_CopyPropertyFrom(JSContext *cx, HandleId id, HandleObject target,
-                    HandleObject obj,
-                    PropertyCopyBehavior copyBehavior)
+                    HandleObject obj, PropertyCopyBehavior copyBehavior)
 {
     // |obj| and |cx| are generally not same-compartment with |target| here.
     assertSameCompartment(cx, obj, id);
@@ -2925,11 +2913,11 @@ bool
 js::LookupProperty(JSContext *cx, HandleObject obj, js::HandleId id,
                    MutableHandleObject objp, MutableHandleShape propp)
 {
-    /* NB: The logic of lookupGeneric is implicitly reflected in
+    /* NB: The logic of lookupProperty is implicitly reflected in
      *     BaselineIC.cpp's |EffectlesslyLookupProperty| logic.
      *     If this changes, please remember to update the logic there as well.
      */
-    if (LookupGenericOp op = obj->getOps()->lookupGeneric)
+    if (LookupPropertyOp op = obj->getOps()->lookupProperty)
         return op(cx, obj, id, objp, propp);
     return NativeLookupProperty<CanGC>(cx, obj.as<NativeObject>(), id, objp, propp);
 }
@@ -2964,7 +2952,7 @@ js::LookupNameNoGC(JSContext *cx, PropertyName *name, JSObject *scopeChain,
     MOZ_ASSERT(!*objp && !*pobjp && !*propp);
 
     for (JSObject *scope = scopeChain; scope; scope = scope->enclosingScope()) {
-        if (scope->getOps()->lookupGeneric)
+        if (scope->getOps()->lookupProperty)
             return false;
         if (!LookupPropertyInline<NoGC>(cx, &scope->as<NativeObject>(), NameToId(name), pobjp, propp))
             return false;
@@ -3301,7 +3289,7 @@ js::DefineProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleVa
     MOZ_ASSERT(setter != JS_StrictPropertyStub);
     MOZ_ASSERT(!(attrs & JSPROP_PROPOP_ACCESSORS));
 
-    DefineGenericOp op = obj->getOps()->defineGeneric;
+    DefinePropertyOp op = obj->getOps()->defineProperty;
     if (op) {
         if (!cx->shouldBeJSContext())
             return false;
@@ -3326,13 +3314,10 @@ js::DefineElement(ExclusiveContext *cx, HandleObject obj, uint32_t index, Handle
     MOZ_ASSERT(getter != JS_PropertyStub);
     MOZ_ASSERT(setter != JS_StrictPropertyStub);
 
-    DefineElementOp op = obj->getOps()->defineElement;
-    if (op) {
-        if (!cx->shouldBeJSContext())
-            return false;
-        return op(cx->asJSContext(), obj, index, value, getter, setter, attrs);
-    }
-    return NativeDefineElement(cx, obj.as<NativeObject>(), index, value, getter, setter, attrs);
+    RootedId id(cx);
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return DefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
 
 
@@ -4131,7 +4116,7 @@ JSObject::hasIdempotentProtoChain() const
         if (resolve && resolve != js::fun_resolve && resolve != js::str_resolve)
             return false;
 
-        if (obj->getOps()->lookupProperty || obj->getOps()->lookupGeneric || obj->getOps()->lookupElement)
+        if (obj->getOps()->lookupProperty)
             return false;
 
         obj = obj->getProto();

@@ -14,6 +14,7 @@
 #include "nsIScrollPositionListener.h"
 #include "nsDisplayList.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsIDOMEventListener.h"
 
 class nsPresContext;
 class nsRenderingContext;
@@ -168,6 +169,24 @@ protected:
   nsCOMPtr<mozilla::dom::Element> mSelectionCaretsStartElement;
   nsCOMPtr<mozilla::dom::Element> mSelectionCaretsEndElement;
   nsCOMPtr<mozilla::dom::Element> mCustomContentContainer;
+
+  class DummyTouchListener MOZ_FINAL : public nsIDOMEventListener
+  {
+  public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE
+    {
+      return NS_OK;
+    }
+  private:
+    ~DummyTouchListener() {}
+  };
+
+  /**
+   * A no-op touch-listener used for APZ purposes.
+   */
+  nsRefPtr<DummyTouchListener> mDummyTouchListener;
 };
 
 /**

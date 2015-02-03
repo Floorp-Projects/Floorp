@@ -31,12 +31,6 @@ static std::map<int, AndroidSurfaceTexture*> sInstances;
 static int sNextID = 0;
 
 static bool
-IsDetachSupported()
-{
-  return AndroidBridge::Bridge()->GetAPIVersion() >= 16; /* Jelly Bean */
-}
-
-static bool
 IsSTSupported()
 {
   return AndroidBridge::Bridge()->GetAPIVersion() >= 14; /* ICS */
@@ -87,7 +81,7 @@ AndroidSurfaceTexture::Attach(GLContext* aContext, PRIntervalTime aTimeout)
     return NS_OK;
   }
 
-  if (!IsDetachSupported()) {
+  if (!CanDetach()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -104,6 +98,8 @@ AndroidSurfaceTexture::Attach(GLContext* aContext, PRIntervalTime aTimeout)
   mAttachedContext->MakeCurrent();
   aContext->fGenTextures(1, &mTexture);
 
+  UpdateCanDetach();
+
   return mSurfaceTexture->AttachToGLContext(mTexture);
 }
 
@@ -112,8 +108,10 @@ AndroidSurfaceTexture::Detach()
 {
   MonitorAutoLock lock(mMonitor);
 
-  if (!IsDetachSupported() ||
-      !mAttachedContext || !mAttachedContext->IsOwningThreadCurrent()) {
+  if (!CanDetach() ||
+      !mAttachedContext ||
+      !mAttachedContext->IsOwningThreadCurrent())
+  {
     return NS_ERROR_FAILURE;
   }
 
@@ -127,10 +125,21 @@ AndroidSurfaceTexture::Detach()
   return NS_OK;
 }
 
+void
+AndroidSurfaceTexture::UpdateCanDetach()
+{
+  // The API for attach/detach only exists on 16+, and PowerVR has some sort of
+  // fencing issue.
+  mCanDetach = AndroidBridge::Bridge()->GetAPIVersion() >= 16 &&
+    (!mAttachedContext || mAttachedContext->Vendor() != GLVendor::Imagination);
+}
+
 bool
 AndroidSurfaceTexture::Init(GLContext* aContext, GLuint aTexture)
 {
-  if (!aTexture && !IsDetachSupported()) {
+  UpdateCanDetach();
+
+  if (!aTexture && !CanDetach()) {
     // We have no texture and cannot initialize detached, bail out
     return false;
   }
@@ -167,6 +176,7 @@ AndroidSurfaceTexture::AndroidSurfaceTexture()
   , mSurface()
   , mMonitor("AndroidSurfaceTexture::mContextMonitor")
   , mAttachedContext(nullptr)
+  , mCanDetach(false)
 {
 }
 

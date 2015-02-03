@@ -27,6 +27,7 @@ from mozpack.unify import UnifiedBuildFinder
 import mozpack.path
 import buildconfig
 from argparse import ArgumentParser
+from createprecomplete import generate_precomplete
 import os
 from StringIO import StringIO
 import subprocess
@@ -393,6 +394,8 @@ def main():
                                  args.source, gre_path, base)
 
     copier.copy(args.destination)
+    generate_precomplete(os.path.normpath(os.path.join(args.destination,
+                                                       respath)))
 
 
 if __name__ == '__main__':
