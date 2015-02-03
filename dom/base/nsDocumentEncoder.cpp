@@ -971,6 +971,7 @@ nsDocumentEncoder::SerializeRangeToString(nsRange *aRange,
   NS_ENSURE_TRUE(endParent, NS_ERROR_FAILURE);
   int32_t endOffset = aRange->EndOffset();
 
+  mStartDepth = mEndDepth = 0;
   mCommonAncestors.Clear();
   mStartNodes.Clear();
   mStartOffsets.Clear();
@@ -1071,6 +1072,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDOMNode> node, prevNode;
+    uint32_t firstRangeStartDepth = 0;
     for (i = 0; i < count; i++) {
       mSelection->GetRangeAt(i, getter_AddRefs(range));
 
@@ -1120,7 +1122,11 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
       nsRange* r = static_cast<nsRange*>(range.get());
       rv = SerializeRangeToString(r, output);
       NS_ENSURE_SUCCESS(rv, rv);
+      if (i == 0) {
+        firstRangeStartDepth = mStartDepth;
+      }
     }
+    mStartDepth = firstRangeStartDepth;
 
     if (prevNode) {
       nsCOMPtr<nsINode> p = do_QueryInterface(prevNode);
