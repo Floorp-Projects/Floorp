@@ -330,7 +330,7 @@ RasterImage::Init(const char* aMimeType,
   }
 
   // Create the initial size decoder.
-  nsresult rv = Decode(DecodeStrategy::ASYNC, Nothing(), DECODE_FLAGS_DEFAULT);
+  nsresult rv = Decode(Nothing(), DECODE_FLAGS_DEFAULT);
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
@@ -525,7 +525,7 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
     // The OS threw this frame away. We need to redecode if we can.
     MOZ_ASSERT(!mAnim, "Animated frames should be locked");
 
-    WantDecodedFrames(ThebesIntSize(requestedSize), aFlags);
+    Decode(Some(ThebesIntSize(requestedSize)), aFlags);
 
     // If we can sync decode, we should already have the frame.
     if (aFlags & FLAG_SYNC_DECODE) {
@@ -1132,7 +1132,7 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus,
     // We need to guarantee that we've gotten the image's size, or at least
     // determined that we won't be able to get it, before we deliver the load
     // event. That means we have to do a synchronous size decode here.
-    Decode(DecodeStrategy::SYNC_IF_POSSIBLE, Nothing(), DECODE_FLAGS_DEFAULT);
+    Decode(Nothing(), FLAG_SYNC_DECODE);
   }
 
   // Determine our final status, giving precedence to Necko failure codes. We
@@ -1399,30 +1399,6 @@ RasterImage::CreateDecoder(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
   return decoder.forget();
 }
 
-void
-RasterImage::WantDecodedFrames(const nsIntSize& aSize, uint32_t aFlags)
-{
-  if (mDownscaleDuringDecode) {
-    // We're about to decode again, which may mean that some of the previous
-    // sizes we've decoded at aren't useful anymore. We can allow them to
-    // expire from the cache by unlocking them here. When the decode finishes,
-    // it will send an invalidation that will cause all instances of this image
-    // to redraw. If this image is locked, any surfaces that are still useful
-    // will become locked again when LookupFrame touches them, and the remainder
-    // will eventually expire.
-    SurfaceCache::UnlockSurfaces(ImageKey(this));
-  }
-
-  DecodeStrategy strategy = DecodeStrategy::ASYNC;
-  if (aFlags & FLAG_SYNC_DECODE) {
-    strategy = DecodeStrategy::SYNC_IF_POSSIBLE;
-  } else if (aFlags & FLAG_SYNC_DECODE_IF_FAST) {
-    strategy = DecodeStrategy::SYNC_FOR_SMALL_IMAGES;
-  }
-
-  Decode(strategy, Some(aSize), aFlags);
-}
-
 //******************************************************************************
 /* void requestDecode() */
 NS_IMETHODIMP
@@ -1496,9 +1472,7 @@ RasterImage::IsDecoded()
 }
 
 NS_IMETHODIMP
-RasterImage::Decode(DecodeStrategy aStrategy,
-                    const Maybe<nsIntSize>& aSize,
-                    uint32_t aFlags)
+RasterImage::Decode(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
 {
   MOZ_ASSERT(!aSize || NS_IsMainThread());
 
@@ -1518,6 +1492,17 @@ RasterImage::Decode(DecodeStrategy aStrategy,
     return NS_ERROR_FAILURE;
   }
 
+  if (mDownscaleDuringDecode && aSize) {
+    // We're about to decode again, which may mean that some of the previous
+    // sizes we've decoded at aren't useful anymore. We can allow them to
+    // expire from the cache by unlocking them here. When the decode finishes,
+    // it will send an invalidation that will cause all instances of this image
+    // to redraw. If this image is locked, any surfaces that are still useful
+    // will become locked again when LookupFrame touches them, and the remainder
+    // will eventually expire.
+    SurfaceCache::UnlockSurfaces(ImageKey(this));
+  }
+
   if (aSize) {
     // This isn't a size decode (which doesn't send any early notifications), so
     // send out notifications right away.
@@ -1528,17 +1513,17 @@ RasterImage::Decode(DecodeStrategy aStrategy,
 
   if (mHasSourceData) {
     // If we have all the data, we can sync decode if requested.
-    if (aStrategy == DecodeStrategy::SYNC_FOR_SMALL_IMAGES) {
-      PROFILER_LABEL_PRINTF("DecodePool", "SyncDecodeIfSmall",
-        js::ProfileEntry::Category::GRAPHICS, "%s", GetURIString().get());
-      DecodePool::Singleton()->SyncDecodeIfSmall(decoder);
-      return NS_OK;
-    }
-
-    if (aStrategy == DecodeStrategy::SYNC_IF_POSSIBLE) {
+    if (aFlags & FLAG_SYNC_DECODE) {
       PROFILER_LABEL_PRINTF("DecodePool", "SyncDecodeIfPossible",
         js::ProfileEntry::Category::GRAPHICS, "%s", GetURIString().get());
       DecodePool::Singleton()->SyncDecodeIfPossible(decoder);
+      return NS_OK;
+    }
+
+    if (aFlags & FLAG_SYNC_DECODE_IF_FAST) {
+      PROFILER_LABEL_PRINTF("DecodePool", "SyncDecodeIfSmall",
+        js::ProfileEntry::Category::GRAPHICS, "%s", GetURIString().get());
+      DecodePool::Singleton()->SyncDecodeIfSmall(decoder);
       return NS_OK;
     }
   }
