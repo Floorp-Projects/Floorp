@@ -159,7 +159,7 @@ interface nsIDhcpRequestCallback : nsISupports
 /**
  * Provide network services.
  */
-[scriptable, uuid(f7e23599-176a-435b-9ecf-7e5274bdfa76)]
+[scriptable, uuid(138ab267-0007-4c3e-8bfc-a7e1be0b5a6f)]
 interface nsINetworkService : nsISupports
 {
   const long MODIFY_ROUTE_ADD    = 0;
@@ -259,6 +259,11 @@ interface nsINetworkService : nsISupports
    *        we want to set.
    */
   void setNetworkProxy(in nsINetworkInterface networkInterface);
+
+  /**
+   * Clear all http proxy.
+   */
+  void clearNetworkProxy();
 
   /**
    * Set USB tethering.

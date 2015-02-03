@@ -4,21 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/basictypes.h"
-
+#include "BluetoothUtils.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
-#include "BluetoothServiceBluedroid.h"
-#include "BluetoothUtils.h"
 #include "jsapi.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "nsContentUtils.h"
-#include "nsIScriptContext.h"
 #include "nsISystemMessagesInternal.h"
-#include "nsString.h"
-#include "nsTArray.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
 
@@ -132,6 +125,36 @@ BroadcastSystemMessage(const nsAString& aType,
     return false;
   }
 
+  systemMessenger->BroadcastMessage(aType, value,
+                                    JS::UndefinedHandleValue);
+
+  return true;
+}
+
+bool
+BroadcastSystemMessage(const nsAString& aType,
+                       const InfallibleTArray<BluetoothNamedValue>& aData)
+{
+  mozilla::AutoSafeJSContext cx;
+  NS_ASSERTION(!::JS_IsExceptionPending(cx),
+      "Shouldn't get here when an exception is pending!");
+
+  JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
+  if (!obj) {
+    BT_WARNING("Failed to new JSObject for system message!");
+    return false;
+  }
+
+  if (!SetJsObject(cx, aData, obj)) {
+    BT_WARNING("Failed to set properties of system message!");
+    return false;
+  }
+
+  nsCOMPtr<nsISystemMessagesInternal> systemMessenger =
+    do_GetService("@mozilla.org/system-message-internal;1");
+  NS_ENSURE_TRUE(systemMessenger, false);
+
+  JS::Rooted<JS::Value> value(cx, JS::ObjectValue(*obj));
   systemMessenger->BroadcastMessage(aType, value,
                                     JS::UndefinedHandleValue);
 
