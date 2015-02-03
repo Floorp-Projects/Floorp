@@ -1958,30 +1958,6 @@ RilObject.prototype = {
     });
   },
 
-  holdConference: function(options) {
-    if (this._isCdma) {
-      // We cannot hold a conference call on CDMA.
-      options.success = false;
-      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    this.switchActiveCall(options);
-  },
-
-  resumeConference: function(options) {
-    if (this._isCdma) {
-      // We cannot resume a conference call on CDMA
-      options.success = false;
-      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    this.switchActiveCall(options);
-  },
-
   /**
    * Get current calls.
    */
