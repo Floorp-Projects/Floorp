@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-INSTALL_TARGETS += CLEARKEY_CDM
-
-CLEARKEY_CDM_DEST = $(DEPTH)/dist/bin/gmp-clearkey/0.1
-CLEARKEY_CDM_FILES = \
-  clearkey.info \
+CLEARKEY_CDM_PATH := $(DEPTH)/dist/bin/gmp-clearkey/0.1
+CLEARKEY_CDM := \
+  clearkey.info.in \
   $(NULL)
+
+PP_TARGETS := CLEARKEY_CDM
