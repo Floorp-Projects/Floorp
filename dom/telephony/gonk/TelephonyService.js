@@ -868,15 +868,12 @@ TelephonyService.prototype = {
   },
 
   hangUpCall: function(aClientId, aCallIndex, aCallback) {
-    let parentId = this._currentCalls[aClientId][aCallIndex].parentId;
-    if (parentId) {
-      // Should release both, child and parent, together. Since RIL holds only
-      // the parent call, we send 'parentId' to RIL.
-      this.hangUpCall(aClientId, parentId, aCallback);
-    } else {
-      this._sendToRilWorker(aClientId, "hangUpCall", { callIndex: aCallIndex },
-                            this._defaultCallbackHandler.bind(this, aCallback));
-    }
+    // Should release both, child and parent, together. Since RIL holds only
+    // the parent call, we send 'parentId' to RIL.
+    aCallIndex = this._currentCalls[aClientId][aCallIndex].parentId || aCallIndex;
+
+    this._sendToRilWorker(aClientId, "hangUpCall", { callIndex: aCallIndex },
+                          this._defaultCallbackHandler.bind(this, aCallback));
   },
 
   holdCall: function(aClientId, aCallIndex, aCallback) {
