@@ -26,114 +26,20 @@
 
 #include <limits>
 
-#include "cert.h"
 #include "cryptohi.h"
 #include "keyhi.h"
 #include "pk11pub.h"
 #include "pkix/pkix.h"
 #include "pkix/ScopedPtr.h"
-#include "pkixder.h"
 #include "pkixutil.h"
 #include "secerr.h"
 #include "sslerr.h"
 
 namespace mozilla { namespace pkix {
 
-typedef ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey> ScopedSECKeyPublicKey;
-
-static Result
-CheckPublicKeySize(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
-                   /*out*/ ScopedSECKeyPublicKey& publicKey)
-{
-  SECItem subjectPublicKeyInfoSECItem =
-    UnsafeMapInputToSECItem(subjectPublicKeyInfo);
-  ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
-    spki(SECKEY_DecodeDERSubjectPublicKeyInfo(&subjectPublicKeyInfoSECItem));
-  if (!spki) {
-    return MapPRErrorCodeToResult(PR_GetError());
-  }
-  publicKey = SECKEY_ExtractPublicKey(spki.get());
-  if (!publicKey) {
-    return MapPRErrorCodeToResult(PR_GetError());
-  }
-
-  // Some compilers complain if if we don't explicitly list every case. That is
-  // usually what we want, but in this case we really want to support an
-  // open-ended set of key types that might be expanded by future NSS versions.
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-#elif defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable: 4061)
-#endif
-
-  switch (publicKey.get()->keyType) {
-    case ecKey:
-    {
-      SECKEYECParams* encodedParams = &publicKey.get()->u.ec.DEREncodedParams;
-      if (!encodedParams) {
-        return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
-      }
-
-      Input input;
-      Result rv = input.Init(encodedParams->data, encodedParams->len);
-      if (rv != Success) {
-        return rv;
-      }
-
-      Reader reader(input);
-      NamedCurve namedCurve;
-      rv = der::NamedCurveOID(reader, namedCurve);
-      if (rv != Success) {
-        return rv;
-      }
-
-      rv = der::End(reader);
-      if (rv != Success) {
-        return rv;
-      }
-
-      switch (namedCurve) {
-        case NamedCurve::secp256r1: // fall through
-        case NamedCurve::secp384r1: // fall through
-        case NamedCurve::secp521r1:
-          break;
-      }
-
-      return Success;
-    }
-
-    case rsaKey:
-      if (SECKEY_PublicKeyStrengthInBits(publicKey.get()) < minimumNonECCBits) {
-        return Result::ERROR_INADEQUATE_KEY_SIZE;
-      }
-      break;
-
-    default:
-      return Result::ERROR_UNSUPPORTED_KEYALG;
-  }
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(_MSC_VER)
-#pragma warning(pop)
-#endif
-
-  return Success;
-}
-
-Result
-CheckPublicKeyNSS(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits)
-{
-  ScopedSECKeyPublicKey unused;
-  return CheckPublicKeySize(subjectPublicKeyInfo, minimumNonECCBits, unused);
-}
-
 Result
 VerifySignedDataNSS(const SignedDataWithSignature& sd,
-                    Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
-                    void* pkcs11PinArg)
+                    Input subjectPublicKeyInfo, void* pkcs11PinArg)
 {
   SECOidTag pubKeyAlg;
   SECOidTag digestAlg;
@@ -176,11 +82,17 @@ VerifySignedDataNSS(const SignedDataWithSignature& sd,
     MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
 
-  Result rv;
-  ScopedSECKeyPublicKey pubKey;
-  rv = CheckPublicKeySize(subjectPublicKeyInfo, minimumNonECCBits, pubKey);
-  if (rv != Success) {
-    return rv;
+  SECItem subjectPublicKeyInfoSECItem =
+    UnsafeMapInputToSECItem(subjectPublicKeyInfo);
+  ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
+    spki(SECKEY_DecodeDERSubjectPublicKeyInfo(&subjectPublicKeyInfoSECItem));
+  if (!spki) {
+    return MapPRErrorCodeToResult(PR_GetError());
+  }
+  ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey>
+    pubKey(SECKEY_ExtractPublicKey(spki.get()));
+  if (!pubKey) {
+    return MapPRErrorCodeToResult(PR_GetError());
   }
 
   // The static_cast is safe as long as the length of the data in sd.data can

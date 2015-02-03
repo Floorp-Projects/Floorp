@@ -116,9 +116,15 @@ private:
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result CheckPublicKey(Input subjectPublicKeyInfo) override
+  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
+                                            override
   {
-    return TestCheckPublicKey(subjectPublicKeyInfo);
+    return Success;
+  }
+
+  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
+  {
+    return Success;
   }
 
   ByteString rootDER;

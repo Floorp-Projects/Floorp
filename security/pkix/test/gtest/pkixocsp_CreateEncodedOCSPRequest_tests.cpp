@@ -71,10 +71,15 @@ private:
     return TestDigestBuf(item, digestBuf, digestBufLen);
   }
 
-  Result CheckPublicKey(Input) override
+  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
+                                            override
   {
-    ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return Success;
+  }
+
+  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
+  {
+    return Success;
   }
 };
 

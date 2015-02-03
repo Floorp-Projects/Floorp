@@ -385,19 +385,11 @@ SHA1(const ByteString& toHash)
 }
 
 Result
-TestCheckPublicKey(Input subjectPublicKeyInfo)
-{
-  InitNSSIfNeeded();
-  return CheckPublicKeyNSS(subjectPublicKeyInfo, MINIMUM_TEST_KEY_BITS);
-}
-
-Result
 TestVerifySignedData(const SignedDataWithSignature& signedData,
                      Input subjectPublicKeyInfo)
 {
   InitNSSIfNeeded();
-  return VerifySignedDataNSS(signedData, subjectPublicKeyInfo,
-                             MINIMUM_TEST_KEY_BITS, nullptr);
+  return VerifySignedDataNSS(signedData, subjectPublicKeyInfo, nullptr);
 }
 
 Result
