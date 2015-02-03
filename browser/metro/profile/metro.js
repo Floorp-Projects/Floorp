@@ -59,7 +59,6 @@ pref("apz.min_skate_speed", "10.0");
 // 0 = free, 1 = standard, 2 = sticky
 pref("apz.axis_lock.mode", 2);
 pref("apz.cross_slide.enabled", true);
-pref("apz.subframe.enabled", true);
 
 // Enable Microsoft TSF support by default for imes.
 pref("intl.tsf.enable", true);

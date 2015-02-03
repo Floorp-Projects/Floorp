@@ -1003,7 +1003,6 @@ pref("apz.y_stationary_size_multiplier", "1.8");
 pref("apz.enlarge_displayport_when_clipped", true);
 // Use "sticky" axis locking
 pref("apz.axis_lock.mode", 2);
-pref("apz.subframe.enabled", true);
 
 // Overscroll-related settings
 pref("apz.overscroll.enabled", true);
