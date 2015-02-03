@@ -109,8 +109,8 @@ class nsTableFrame : public nsContainerFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  NS_DECLARE_FRAME_PROPERTY(PositionedTablePartArray,
-                            DeleteValue<nsTArray<nsIFrame*>>)
+  static void DestroyPositionedTablePartArray(void* aPropertyValue);
+  NS_DECLARE_FRAME_PROPERTY(PositionedTablePartArray, DestroyPositionedTablePartArray)
 
   /** nsTableOuterFrame has intimate knowledge of the inner table frame */
   friend class nsTableOuterFrame;
