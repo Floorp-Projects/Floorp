@@ -9,6 +9,7 @@ include protocol PContent;
 include "mozilla/GfxMessageUtils.h";
 
 using struct nsIntRect from "nsRect.h";
+using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 
 namespace mozilla {
 namespace dom {
@@ -49,7 +50,7 @@ parent:
       returns (ScreenDetails screen,
                bool success);
 
-    prio(high) sync ScreenForBrowser(PBrowser aBrowser)
+    prio(high) sync ScreenForBrowser(TabId aTabId)
       returns (ScreenDetails screen,
                bool success);
 

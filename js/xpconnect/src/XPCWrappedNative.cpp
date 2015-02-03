@@ -2654,6 +2654,7 @@ XPCJSObjectHolder::GetJSObject()
 XPCJSObjectHolder::XPCJSObjectHolder(JSObject* obj)
     : mJSObj(obj)
 {
+    MOZ_ASSERT(obj);
     XPCJSRuntime::Get()->AddObjectHolderRoot(this);
 }
 
@@ -2675,15 +2676,4 @@ XPCJSObjectHolder::GetTraceName(JSTracer* trc, char *buf, size_t bufsize)
 {
     JS_snprintf(buf, bufsize, "XPCJSObjectHolder[0x%p].mJSObj",
                 trc->debugPrintArg());
-}
-
-// static
-XPCJSObjectHolder*
-XPCJSObjectHolder::newHolder(JSObject* obj)
-{
-    if (!obj) {
-        NS_ERROR("bad param");
-        return nullptr;
-    }
-    return new XPCJSObjectHolder(obj);
 }

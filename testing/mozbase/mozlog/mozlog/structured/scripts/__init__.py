@@ -3,13 +3,15 @@
 import argparse
 import unstable
 import format as formatlog
+import logmerge
 
 def get_parser():
     parser = argparse.ArgumentParser("structlog",
                                      description="Tools for dealing with structured logs")
 
     commands = {"unstable": (unstable.get_parser, unstable.main),
-                "format": (formatlog.get_parser, formatlog.main)}
+                "format": (formatlog.get_parser, formatlog.main),
+                "logmerge": (logmerge.get_parser, logmerge.main)}
 
     sub_parser = parser.add_subparsers(title='Subcommands')
 

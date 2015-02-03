@@ -244,6 +244,7 @@ static const uint32_t SAMask = ((1 << SABits) - 1) << SAShift;
 static const uint32_t FunctionMask = ((1 << FunctionBits) - 1) << FunctionShift;
 static const uint32_t RegMask = Registers::Total - 1;
 
+static const uint32_t BREAK_STACK_UNALIGNED = 1;
 static const uint32_t MAX_BREAK_CODE = 1024 - 1;
 
 class Instruction;

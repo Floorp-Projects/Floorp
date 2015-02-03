@@ -238,7 +238,17 @@ public:
      * in emergency situations since it bypasses the normal shutdown
      * process.
      */
-    void KillHard();
+    void KillHard(const char* aWhy);
+
+    /**
+     * API for adding a crash reporter annotation that provides a reason
+     * for a listener request to abort the child.
+     */
+    bool IsKillHardAnnotationSet() { return mKillHardAnnotation.IsEmpty(); }
+    const nsCString& GetKillHardAnnotation() { return mKillHardAnnotation; }
+    void SetKillHardAnnotation(const nsACString& aReason) {
+      mKillHardAnnotation = aReason;
+    }
 
     ContentParentId ChildID() MOZ_OVERRIDE { return mChildID; }
     const nsString& AppManifestURL() const { return mAppManifestURL; }
@@ -732,7 +742,7 @@ private:
     virtual bool RecvNotifyKeywordSearchLoading(const nsString &aProvider,
                                                 const nsString &aKeyword) MOZ_OVERRIDE; 
 
-    virtual void ProcessingError(Result what) MOZ_OVERRIDE;
+    virtual void ProcessingError(Result aCode, const char* aMsgName) MOZ_OVERRIDE;
 
     virtual bool RecvAllocateLayerTreeId(uint64_t* aId) MOZ_OVERRIDE;
     virtual bool RecvDeallocateLayerTreeId(const uint64_t& aId) MOZ_OVERRIDE;
@@ -793,6 +803,8 @@ private:
     int32_t mGeolocationWatchID;
 
     nsString mAppManifestURL;
+
+    nsCString mKillHardAnnotation;
 
     /**
      * We cache mAppName instead of looking it up using mAppManifestURL when we

@@ -30,7 +30,7 @@ protected:
             fail("unexpected destruction!");  
     }
 
-    virtual void ProcessingError(Result what) MOZ_OVERRIDE;
+    virtual void ProcessingError(Result aCode, const char* aReason) MOZ_OVERRIDE;
 
     bool mGotProcessingError;
 };

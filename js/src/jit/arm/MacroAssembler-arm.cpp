@@ -404,52 +404,61 @@ MacroAssemblerARM::ma_nop()
     as_nop();
 }
 
-Instruction *
-NextInst(Instruction *i)
-{
-    if (i == nullptr)
-        return nullptr;
-    return i->next();
-}
-
 void
 MacroAssemblerARM::ma_movPatchable(Imm32 imm_, Register dest, Assembler::Condition c,
-                                   RelocStyle rs, Instruction *i)
+                                   RelocStyle rs)
 {
     int32_t imm = imm_.value;
-    if (i) {
-        // Make sure the current instruction is not an artificial guard inserted
-        // by the assembler buffer.
-        i = i->skipPool();
-    }
     switch(rs) {
       case L_MOVWT:
-        as_movw(dest, Imm16(imm & 0xffff), c, i);
-        // 'i' can be nullptr here. That just means "insert in the next in
-        // sequence." NextInst is special cased to not do anything when it is
-        // passed nullptr, so two consecutive instructions will be inserted.
-        i = NextInst(i);
-        as_movt(dest, Imm16(imm >> 16 & 0xffff), c, i);
+        as_movw(dest, Imm16(imm & 0xffff), c);
+        as_movt(dest, Imm16(imm >> 16 & 0xffff), c);
         break;
       case L_LDR:
-        if(i == nullptr)
-            as_Imm32Pool(dest, imm, c);
-        else
-            as_WritePoolEntry(i, c, imm);
+        as_Imm32Pool(dest, imm, c);
         break;
     }
 }
 
 void
 MacroAssemblerARM::ma_movPatchable(ImmPtr imm, Register dest, Assembler::Condition c,
-                                   RelocStyle rs, Instruction *i)
+                                   RelocStyle rs)
 {
-    return ma_movPatchable(Imm32(int32_t(imm.value)), dest, c, rs, i);
+    ma_movPatchable(Imm32(int32_t(imm.value)), dest, c, rs);
+}
+
+/* static */ void
+MacroAssemblerARM::ma_mov_patch(Imm32 imm_, Register dest, Assembler::Condition c,
+                                RelocStyle rs, Instruction *i)
+{
+    MOZ_ASSERT(i);
+    int32_t imm = imm_.value;
+
+    // Make sure the current instruction is not an artificial guard inserted
+    // by the assembler buffer.
+    i = i->skipPool();
+
+    switch(rs) {
+      case L_MOVWT:
+        Assembler::as_movw_patch(dest, Imm16(imm & 0xffff), c, i);
+        i = i->next();
+        Assembler::as_movt_patch(dest, Imm16(imm >> 16 & 0xffff), c, i);
+        break;
+      case L_LDR:
+        Assembler::WritePoolEntry(i, c, imm);
+        break;
+    }
+}
+
+/* static */ void
+MacroAssemblerARM::ma_mov_patch(ImmPtr imm, Register dest, Assembler::Condition c,
+                                RelocStyle rs, Instruction *i)
+{
+    ma_mov_patch(Imm32(int32_t(imm.value)), dest, c, rs, i);
 }
 
 void
-MacroAssemblerARM::ma_mov(Register src, Register dest,
-            SetCond_ sc, Assembler::Condition c)
+MacroAssemblerARM::ma_mov(Register src, Register dest, SetCond_ sc, Assembler::Condition c)
 {
     if (sc == SetCond || dest != src)
         as_mov(dest, O2Reg(src), sc, c);

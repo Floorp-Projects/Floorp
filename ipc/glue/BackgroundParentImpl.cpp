@@ -285,20 +285,20 @@ public:
     bool isNullPrincipal;
     nsresult rv = principal->GetIsNullPrincipal(&isNullPrincipal);
     if (NS_WARN_IF(NS_FAILED(rv)) || isNullPrincipal) {
-      mContentParent->KillHard();
+      mContentParent->KillHard("PBackground CheckPrincipal 1");
       return NS_OK;
     }
 
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), mOrigin);
     if (NS_FAILED(rv) || !uri) {
-      mContentParent->KillHard();
+      mContentParent->KillHard("PBackground CheckPrincipal 2");
       return NS_OK;
     }
 
     rv = principal->CheckMayLoad(uri, false, false);
     if (NS_FAILED(rv)) {
-      mContentParent->KillHard();
+      mContentParent->KillHard("PBackground CheckPrincipal 3");
       return NS_OK;
     }
 
