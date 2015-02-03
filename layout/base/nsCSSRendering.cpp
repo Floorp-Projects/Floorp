@@ -4348,59 +4348,56 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
   }
 }
 
-void
-nsCSSRendering::DecorationLineToPath(nsIFrame* aFrame,
-                                     gfxContext* aGfxContext,
-                                     const gfxRect& aDirtyRect,
-                                     const nscolor aColor,
-                                     const gfxPoint& aPt,
-                                     const gfxFloat aICoordInFrame,
-                                     const gfxSize& aLineSize,
-                                     const gfxFloat aAscent,
-                                     const gfxFloat aOffset,
+Rect
+nsCSSRendering::DecorationLineToPath(const Rect& aDirtyRect,
+                                     const Point& aPt,
+                                     const Size& aLineSize,
+                                     const Float aAscent,
+                                     const Float aOffset,
                                      const uint8_t aDecoration,
                                      const uint8_t aStyle,
                                      bool aVertical,
-                                     const gfxFloat aDescentLimit)
+                                     const Float aDescentLimit)
 {
   NS_ASSERTION(aStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE, "aStyle is none");
 
-  aGfxContext->NewPath();
+  Rect path; // To benefit from RVO, we return this from all return points
 
-  gfxRect rect =
-    GetTextDecorationRectInternal(aPt, aLineSize, aAscent, aOffset,
+  Rect rect = ToRect(
+    GetTextDecorationRectInternal(ThebesPoint(aPt), ThebesSize(aLineSize),
+                                  aAscent, aOffset,
                                   aDecoration, aStyle, aVertical,
-                                  aDescentLimit);
+                                  aDescentLimit));
   if (rect.IsEmpty() || !rect.Intersects(aDirtyRect)) {
-    return;
+    return path;
   }
 
   if (aDecoration != NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE &&
       aDecoration != NS_STYLE_TEXT_DECORATION_LINE_OVERLINE &&
       aDecoration != NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
     NS_ERROR("Invalid decoration value!");
-    return;
+    return path;
   }
 
   if (aStyle != NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
     // For the moment, we support only solid text decorations.
-    return;
+    return path;
   }
 
-  gfxFloat lineThickness = std::max(NS_round(aLineSize.height), 1.0);
+  Float lineThickness = std::max(NS_round(aLineSize.height), 1.0);
 
   // The block-direction position should be set to the middle of the line.
   if (aVertical) {
     rect.x += lineThickness / 2;
-    aGfxContext->Rectangle
-      (gfxRect(gfxPoint(rect.TopLeft() - gfxPoint(lineThickness / 2, 0.0)),
-               gfxSize(lineThickness, rect.Height())));
+    path = Rect(rect.TopLeft() - Point(lineThickness / 2, 0.0),
+                Size(lineThickness, rect.Height()));
   } else {
     rect.y += lineThickness / 2;
-    aGfxContext->Rectangle
-      (gfxRect(gfxPoint(rect.TopLeft() - gfxPoint(0.0, lineThickness / 2)),
-               gfxSize(rect.Width(), lineThickness)));
+    path = Rect(rect.TopLeft() - Point(0.0, lineThickness / 2),
+                Size(rect.Width(), lineThickness));
   }
+
+  return path;
 }
 
 nsRect
