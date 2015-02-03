@@ -3049,20 +3049,31 @@ SourceActor.prototype = {
   },
 
   /**
-   * Set a breakpoint using the Debugger API. If the line on which the
-   * breakpoint is being set contains no code, then the breakpoint will slide
-   * down to the next line that has runnable code. In this case the server
-   * breakpoint cache will be updated, so callers that iterate over the
-   * breakpoint cache should take that into account.
+   * Get or create a BreakpointActor for the given location, and set it as a
+   * breakpoint handler on all scripts that match the given location for which
+   * the BreakpointActor is not already a breakpoint handler.
+   *
+   * It is possible that no scripts match the given location, because they have
+   * all been garbage collected. In that case, the BreakpointActor is not set as
+   * a breakpoint handler for any script, but is still inserted in the
+   * breakpoint cache as a pending breakpoint. Whenever a new script is
+   * introduced, we call this method again to see if there are now any scripts
+   * that matches the given location.
+   *
+   * The first time we find one or more scripts that matches the given location,
+   * we check if any of these scripts has any entry points for the given
+   * location. If not, the given location does not have any code.
+   *
+   * If the given location does not contain any code, we slide the breakpoint
+   * down to the next closest line that does, and update the breakpoint cache
+   * accordingly. Note that we only do so if the breakpoint actor is still
+   * pending (i.e. is not set as a breakpoint handler for any script).
    *
    * @param object aLocation
    *        The location of the breakpoint (in the generated source, if source
    *        mapping).
-   * @param Debugger.Script aOnlyThisScript [optional]
-   *        If provided, only set breakpoints in this Debugger.Script, and
-   *        nowhere else.
    */
-  _setBreakpoint: function (aLocation, aOnlyThisScript=null) {
+  _setBreakpoint: function (aLocation) {
     const location = {
       source: this.form(),
       line: aLocation.line,
@@ -3076,7 +3087,7 @@ SourceActor.prototype = {
     // are all represented by 1 SourceActor even though they have
     // separate source objects, so we need to query based on the url
     // of the page for them.
-    const scripts = this.dbg.findScripts({
+    let scripts = this.dbg.findScripts({
       source: this.source || undefined,
       url: this._originalUrl || undefined,
       line: location.line,
@@ -3102,7 +3113,21 @@ SourceActor.prototype = {
     // the requested line. Set breakpoints on each of the offsets that is an
     // entry point to our selected line.
 
-    const result = this._findNextLineWithOffsets(scripts, location.line);
+    let result;
+    // Only try to find the next line with offsets if the breakpoint is still
+    // pending.
+    if (actor.scripts.size === 0) {
+      result = this._findNextLineWithOffsets(scripts, location.line);
+    } else {
+      let entryPoints = this._findEntryPointsForLine(scripts, location.line)
+      if (entryPoints) {
+        result = {
+          line: location.line,
+          entryPoints: entryPoints
+        };
+      }
+    }
+
     if (!result) {
       return {
         error: "noCodeAtLineColumn",
@@ -3139,11 +3164,11 @@ SourceActor.prototype = {
       }
     }
 
+    // Ignore scripts for which the BreakpointActor is already a breakpoint
+    // handler.
     this._setBreakpointOnEntryPoints(
       actor,
-      aOnlyThisScript
-        ? entryPoints.filter(o => o.script === aOnlyThisScript)
-        : entryPoints
+      entryPoints.filter((entryPoint) => !actor.hasScript(entryPoint.script))
     );
 
     return {
@@ -4841,6 +4866,10 @@ function BreakpointActor(aThreadActor, { sourceActor, line, column, condition })
 BreakpointActor.prototype = {
   actorPrefix: "breakpoint",
   condition: null,
+
+  hasScript: function (aScript) {
+    return this.scripts.has(aScript);
+  },
 
   /**
    * Called when this same breakpoint is added to another Debugger.Script
