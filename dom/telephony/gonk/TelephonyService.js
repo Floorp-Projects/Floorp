@@ -973,8 +973,7 @@ TelephonyService.prototype = {
   },
 
   sendUSSD: function(aClientId, aUssd, aCallback) {
-    this._sendToRilWorker(aClientId, "sendUSSD",
-                          { ussd: aUssd, checkSession: true },
+    this._sendToRilWorker(aClientId, "sendUSSD", { ussd: aUssd },
                           response => {
       if (!response.success) {
         aCallback.notifyError(response.errorMsg);
