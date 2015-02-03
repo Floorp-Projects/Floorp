@@ -3165,6 +3165,17 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
   nsCOMPtr<nsIPluginPlayPreviewInfo> playPreviewInfo;
   bool isPlayPreviewSpecified = NS_SUCCEEDED(pluginHost->GetPlayPreviewInfo(
     mContentType, getter_AddRefs(playPreviewInfo)));
+  if (isPlayPreviewSpecified) {
+    // Checking PlayPreview whitelist as well.
+    nsCString uriSpec, baseSpec;
+    if (mURI) {
+      mURI->GetSpec(uriSpec);
+    }
+    if (mBaseURI) {
+      mBaseURI->GetSpec(baseSpec);
+    }
+    playPreviewInfo->CheckWhitelist(baseSpec, uriSpec, &isPlayPreviewSpecified);
+  }
   bool ignoreCTP = false;
   if (isPlayPreviewSpecified) {
     playPreviewInfo->GetIgnoreCTP(&ignoreCTP);
