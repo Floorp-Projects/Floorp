@@ -28,7 +28,14 @@ function loadFileContent(aFile, aCharset) {
 
     var ios = SpecialPowers.Cc['@mozilla.org/network/io-service;1']
             .getService(SpecialPowers.Ci.nsIIOService);
-    var chann = ios.newChannel(aFile, aCharset, baseUri);
+    var chann = ios.newChannel2(aFile,
+                                aCharset,
+                                baseUri,
+                                null,      // aLoadingNode
+                                SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                SpecialPowers.Ci.nsILoadInfo.SEC_NORMAL,
+                                SpecialPowers.Ci.nsIContentPolicy.TYPE_OTHER);
 
     var cis = SpecialPowers.Ci.nsIConverterInputStream;
 
