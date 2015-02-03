@@ -14,13 +14,16 @@ var manager = new MediaTestManager;
 
 function ended(evt) {
   var v = evt.target;
+  v.removeEventListener("ended", ended);
   is(v.gotPause, true, "We should have received a \"pause\" event.")
   is(v.paused, true, v._name + " must be paused after end");
   manager.finished(v.token);
+  removeNodeAndSource(v);
 }
 
 function pause(evt) {
   var v = evt.target;
+  v.removeEventListener("pause", pause);
   v.gotPause = true;
 }
 
