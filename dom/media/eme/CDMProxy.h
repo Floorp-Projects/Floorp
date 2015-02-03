@@ -164,7 +164,7 @@ public:
   CDMCaps& Capabilites();
 
   // Main thread only.
-  void OnKeysChange(const nsAString& aSessionId);
+  void OnKeyStatusesChange(const nsAString& aSessionId);
 
 #ifdef DEBUG
   bool IsOnGMPThread();
