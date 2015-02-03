@@ -277,7 +277,6 @@ function onLoad()
   const LdDesc = "Load memory reports from file and show.";
   const DfDesc = "Load memory report data from two files and show the " +
                  "difference.";
-  const RdDesc = "Read memory reports from the clipboard and show.";
 
   const SvDesc = "Save memory reports to file.";
 
@@ -321,8 +320,6 @@ function onLoad()
   appendButton(row1, LdDesc, () => fileInput1.click(), "Load" + kEllipsis);
   appendButton(row1, DfDesc, () => fileInput2.click(),
                "Load and diff" + kEllipsis);
-  appendButton(row1, RdDesc, updateAboutMemoryFromClipboard,
-               "Read from clipboard");
 
   let row2 = appendElement(ops, "div", "opsRow");
 
@@ -703,36 +700,6 @@ function updateAboutMemoryFromTwoFiles(aFilename1, aFilename2)
       }
     });
   });
-}
-
-/**
- * Like updateAboutMemoryFromFile(), but gets its data from the clipboard
- * instead of a file.
- */
-function updateAboutMemoryFromClipboard()
-{
-  // Get the clipboard's contents.
-  let transferable = Cc["@mozilla.org/widget/transferable;1"]
-                       .createInstance(Ci.nsITransferable);
-  let loadContext = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsILoadContext);
-  transferable.init(loadContext);
-  transferable.addDataFlavor('text/unicode');
-  Services.clipboard.getData(transferable, Ci.nsIClipboard.kGlobalClipboard);
-
-  var cbData = {};
-  try {
-    transferable.getTransferData('text/unicode', cbData,
-                                 /* out dataLen (ignored) */ {});
-    let cbString = cbData.value.QueryInterface(Ci.nsISupportsString).data;
-
-    // Success!  Now use the string to generate about:memory.
-    updateAboutMemoryFromJSONString(cbString);
-
-  } catch (ex) {
-    handleException(ex);
-  }
 }
 
 //---------------------------------------------------------------------------
