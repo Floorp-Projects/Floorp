@@ -14,14 +14,25 @@ const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIDOMWindowUtils);
 const scale = utils.screenPixelsPerCSSPixel;
 
-function synthesizeNativeMouseClick(aElement) {
+function* synthesizeNativeMouseClick(aElement) {
   let rect = aElement.getBoundingClientRect();
   let win = aElement.ownerDocument.defaultView;
   let x = win.mozInnerScreenX + (rect.left + rect.right) / 2;
   let y = win.mozInnerScreenY + (rect.top + rect.bottom) / 2;
+ 
+  // Wait for the mouseup event to occur before continuing.
+  return new Promise((resolve, reject) => {
+    function eventOccurred(e)
+    {
+      aElement.removeEventListener("mouseup", eventOccurred, true);
+      resolve();
+    }
 
-  utils.sendNativeMouseEvent(x * scale, y * scale, mouseDown, 0, null);
-  utils.sendNativeMouseEvent(x * scale, y * scale, mouseUp, 0, null);
+    aElement.addEventListener("mouseup", eventOccurred, true);
+
+    utils.sendNativeMouseEvent(x * scale, y * scale, mouseDown, 0, null);
+    utils.sendNativeMouseEvent(x * scale, y * scale, mouseUp, 0, null);
+  });
 }
 
 function promiseNewEngine(basename) {
@@ -113,7 +124,7 @@ add_task(function* open_empty() {
   let clickPromise = promiseEvent(searchIcon, "click");
 
   info("Hiding popup");
-  synthesizeNativeMouseClick(searchIcon);
+  yield synthesizeNativeMouseClick(searchIcon);
   yield promise;
 
   is(textbox.mController.searchString, "", "Should not have started to search for the new text");
@@ -362,10 +373,49 @@ add_task(function* dont_consume_clicks() {
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
   promise = promiseEvent(searchPopup, "popuphidden");
-  synthesizeNativeMouseClick(gURLBar);
+  yield synthesizeNativeMouseClick(gURLBar);
   yield promise;
 
   is(Services.focus.focusedElement, gURLBar.inputField, "Should have focused the URL bar");
 
   textbox.value = "";
 });
+
+// Moving the caret using the cursor keys should not close the popup.
+add_task(function* dont_rollup_oncaretmove() {
+  gURLBar.focus();
+  textbox.value = "long text";
+
+  let promise = promiseEvent(searchPopup, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(textbox, {});
+  yield promise;
+
+  // Deselect the text
+  EventUtils.synthesizeKey("VK_RIGHT", {});
+  is(textbox.selectionStart, 9, "Should have moved the caret (selectionStart after deselect right)");
+  is(textbox.selectionEnd, 9, "Should have moved the caret (selectionEnd after deselect right)");
+  is(searchPopup.state, "open", "Popup should still be open");
+
+  EventUtils.synthesizeKey("VK_LEFT", {});
+  is(textbox.selectionStart, 8, "Should have moved the caret (selectionStart after left)");
+  is(textbox.selectionEnd, 8, "Should have moved the caret (selectionEnd after left)");
+  is(searchPopup.state, "open", "Popup should still be open");
+
+  EventUtils.synthesizeKey("VK_RIGHT", {});
+  is(textbox.selectionStart, 9, "Should have moved the caret (selectionStart after right)");
+  is(textbox.selectionEnd, 9, "Should have moved the caret (selectionEnd after right)");
+  is(searchPopup.state, "open", "Popup should still be open");
+
+  if (navigator.platform.indexOf("Mac") == -1) {
+    EventUtils.synthesizeKey("VK_HOME", {});
+    is(textbox.selectionStart, 0, "Should have moved the caret (selectionStart after home)");
+    is(textbox.selectionEnd, 0, "Should have moved the caret (selectionEnd after home)");
+    is(searchPopup.state, "open", "Popup should still be open");
+  }
+
+  // Close the popup again
+  promise = promiseEvent(searchPopup, "popuphidden");
+  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  yield promise;
+});
+

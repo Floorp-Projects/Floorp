@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1070015
+-->
+<head>
+  <title>Test for Bug 1070015</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1070015">Mozilla Bug 1070015</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<div id="attrTest1" testAttr="testValue1"></div>
+<div id="attrTest2" testAttr="testValue2"></div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1070015 **/
+
+function testRemoveAttribute() {
+  var attrTest1 = document.getElementById("attrTest1");
+  var attr1 = attrTest1.getAttributeNode("testAttr");
+
+  var attrTest2 = document.getElementById("attrTest2");
+  var attr2 = attrTest2.getAttributeNode("testAttr");
+
+  ok(attrTest1.hasAttribute("testAttr"), "First object should have attribute");
+  ok(attrTest2.hasAttribute("testAttr"), "Second object should have attribute");
+
+  try {
+    attrTest1.removeAttributeNode(attr2);
+    ok(false, "Should throw when removing from the different element");
+  } catch (e) {
+    ok(true, "Should throw when removing from the different element");
+  }
+
+  ok(attrTest1.hasAttribute("testAttr"), "Object should not remove attribute which not belongs to it");
+  ok(attrTest2.hasAttribute("testAttr"), "Object should not be changed");
+
+  attrTest1.removeAttributeNode(attr1);
+  ok(!attrTest1.hasAttribute("testAttr"), "Object should remove its attribute");
+}
+testRemoveAttribute();
+
+</script>
+</pre>
+</body>
+</html>

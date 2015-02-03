@@ -254,6 +254,7 @@ public:
     bool IsWARP() { return mIsWARP; }
 
     static mozilla::Atomic<size_t> sD3D11MemoryUsed;
+    static mozilla::Atomic<size_t> sD3D9MemoryUsed;
 
 protected:
     RenderMode mRenderMode;
