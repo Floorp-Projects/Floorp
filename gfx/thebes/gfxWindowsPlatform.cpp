@@ -344,6 +344,24 @@ public:
 
 NS_IMPL_ISUPPORTS(D3D11TextureReporter, nsIMemoryReporter)
 
+Atomic<size_t> gfxWindowsPlatform::sD3D9MemoryUsed;
+
+class D3D9TextureReporter MOZ_FINAL : public nsIMemoryReporter
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD CollectReports(nsIHandleReportCallback *aHandleReport,
+                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+  {
+    return MOZ_COLLECT_REPORT("d3d9-shared-textures", KIND_OTHER, UNITS_BYTES,
+                              gfxWindowsPlatform::sD3D9MemoryUsed,
+                              "Memory used for D3D9 shared textures");
+  }
+};
+
+NS_IMPL_ISUPPORTS(D3D9TextureReporter, nsIMemoryReporter)
+
 gfxWindowsPlatform::gfxWindowsPlatform()
   : mD3D11DeviceInitialized(false)
   , mIsWARP(false)
@@ -372,6 +390,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     RegisterStrongMemoryReporter(new GPUAdapterReporter());
     RegisterStrongMemoryReporter(new D3D11TextureReporter());
+    RegisterStrongMemoryReporter(new D3D9TextureReporter());
 }
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
