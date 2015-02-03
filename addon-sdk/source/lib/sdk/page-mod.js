@@ -262,6 +262,20 @@ function onContent (mod, window) {
       return;
     domOff(window, eventName, onReady, true);
     createWorker(mod, window);
+
+    // Attaching is asynchronous so if the document is already loaded we will
+    // miss the pageshow event so send a synthetic one.
+    if (window.document.readyState == "complete") {
+      mod.on('attach', worker => {
+        try {
+          worker.send('pageshow');
+          emit(worker, 'pageshow');
+        }
+        catch (e) {
+          // This can fail if an earlier attach listener destroyed the worker
+        }
+      });
+    }
   }, true);
 }
 

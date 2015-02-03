@@ -37,7 +37,17 @@ const WorkerChild = Class({
     this.receive = this.receive.bind(this);
     this.manager.addMessageListener('sdk/worker/message', this.receive);
 
-    this.sandbox = WorkerSandbox(this, getByInnerId(this.window));
+    let window = getByInnerId(this.window);
+    this.sandbox = WorkerSandbox(this, window);
+
+    if (options.currentReadyState != "complete" &&
+        window.document.readyState == "complete") {
+      // If we attempted to attach the worker before the document was loaded but
+      // it has now completed loading then the parent should reasonably expect
+      // to see a pageshow event.
+      this.sandbox.emitSync("pageshow");
+      this.send("pageshow");
+    }
   },
   // messages
   receive({ data: { id, args }}) {
