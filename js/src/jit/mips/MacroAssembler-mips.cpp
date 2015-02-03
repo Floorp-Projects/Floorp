@@ -3355,7 +3355,7 @@ MacroAssemblerMIPSCompat::checkStackAlignment()
     Label aligned;
     as_andi(ScratchRegister, sp, ABIStackAlignment - 1);
     ma_b(ScratchRegister, zero, &aligned, Equal, ShortJump);
-    as_break(MAX_BREAK_CODE);
+    as_break(BREAK_STACK_UNALIGNED);
     bind(&aligned);
 #endif
 }
