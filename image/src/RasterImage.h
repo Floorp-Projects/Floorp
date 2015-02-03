@@ -302,19 +302,16 @@ private:
                                     uint32_t aFlags);
 
   TemporaryRef<gfx::SourceSurface> CopyFrame(uint32_t aWhichFrame,
-                                             uint32_t aFlags,
-                                             bool aShouldSyncNotify = true);
+                                             uint32_t aFlags);
   TemporaryRef<gfx::SourceSurface> GetFrameInternal(uint32_t aWhichFrame,
-                                                    uint32_t aFlags,
-                                                    bool aShouldSyncNotify = true);
+                                                    uint32_t aFlags);
 
   DrawableFrameRef LookupFrameInternal(uint32_t aFrameNum,
                                        const gfx::IntSize& aSize,
                                        uint32_t aFlags);
   DrawableFrameRef LookupFrame(uint32_t aFrameNum,
                                const nsIntSize& aSize,
-                               uint32_t aFlags,
-                               bool aShouldSyncNotify = true);
+                               uint32_t aFlags);
   uint32_t GetCurrentFrameIndex() const;
   uint32_t GetRequestedFrameIndex(uint32_t aWhichFrame) const;
 
@@ -356,8 +353,7 @@ private:
   already_AddRefed<Decoder> CreateDecoder(const Maybe<nsIntSize>& aSize,
                                           uint32_t aFlags);
 
-  void WantDecodedFrames(const nsIntSize& aSize, uint32_t aFlags,
-                         bool aShouldSyncNotify);
+  void WantDecodedFrames(const nsIntSize& aSize, uint32_t aFlags);
 
 private: // data
   nsIntSize                  mSize;
