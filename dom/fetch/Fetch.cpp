@@ -1525,7 +1525,17 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
       data.Adopt(reinterpret_cast<char*>(aResult), aResultLength);
       autoFree.Reset();
 
-      if (StringBeginsWith(mMimeType, NS_LITERAL_CSTRING("multipart/form-data"))) {
+      NS_NAMED_LITERAL_CSTRING(formDataMimeType, NS_LITERAL_CSTRING("multipart/form-data"));
+
+      // Allow semicolon separated boundary/encoding suffix like multipart/form-data; boundary=
+      // but disallow multipart/form-datafoobar.
+      bool isValidFormDataMimeType = StringBeginsWith(mMimeType, formDataMimeType);
+
+      if (isValidFormDataMimeType && mMimeType.Length() > formDataMimeType.Length()) {
+        isValidFormDataMimeType = mMimeType[formDataMimeType.Length()] == ';';
+      }
+
+      if (isValidFormDataMimeType) {
         FormDataParser parser(mMimeType, data, DerivedClass()->GetParentObject());
         if (!parser.Parse()) {
           ErrorResult result;
@@ -1537,18 +1547,26 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
         nsRefPtr<nsFormData> fd = parser.FormData();
         MOZ_ASSERT(fd);
         localPromise->MaybeResolve(fd);
-      } else if (StringBeginsWith(mMimeType,
-                                  NS_LITERAL_CSTRING("application/x-www-form-urlencoded"))) {
-        nsRefPtr<URLSearchParams> params = new URLSearchParams();
-        params->ParseInput(data, /* aObserver */ nullptr);
-
-        nsRefPtr<nsFormData> fd = new nsFormData(DerivedClass()->GetParentObject());
-        params->ForEach(FillFormData, static_cast<void*>(fd));
-        localPromise->MaybeResolve(fd);
       } else {
-        ErrorResult result;
-        result.ThrowTypeError(MSG_BAD_FORMDATA);
-        localPromise->MaybeReject(result);
+        NS_NAMED_LITERAL_CSTRING(urlDataMimeType, NS_LITERAL_CSTRING("application/x-www-form-urlencoded"));
+        bool isValidUrlEncodedMimeType = StringBeginsWith(mMimeType, urlDataMimeType);
+
+        if (isValidUrlEncodedMimeType && mMimeType.Length() > urlDataMimeType.Length()) {
+          isValidUrlEncodedMimeType = mMimeType[urlDataMimeType.Length()] == ';';
+        }
+
+        if (isValidUrlEncodedMimeType) {
+          nsRefPtr<URLSearchParams> params = new URLSearchParams();
+          params->ParseInput(data, /* aObserver */ nullptr);
+
+          nsRefPtr<nsFormData> fd = new nsFormData(DerivedClass()->GetParentObject());
+          params->ForEach(FillFormData, static_cast<void*>(fd));
+          localPromise->MaybeResolve(fd);
+        } else {
+          ErrorResult result;
+          result.ThrowTypeError(MSG_BAD_FORMDATA);
+          localPromise->MaybeReject(result);
+        }
       }
       return;
     }
@@ -1626,15 +1644,15 @@ FetchBody<Response>::ConsumeBody(ConsumeType aType, ErrorResult& aRv);
 
 template <class Derived>
 void
-FetchBody<Derived>::SetMimeType(ErrorResult& aRv)
+FetchBody<Derived>::SetMimeType()
 {
   // Extract mime type.
+  ErrorResult result;
   nsTArray<nsCString> contentTypeValues;
   MOZ_ASSERT(DerivedClass()->GetInternalHeaders());
-  DerivedClass()->GetInternalHeaders()->GetAll(NS_LITERAL_CSTRING("Content-Type"), contentTypeValues, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  DerivedClass()->GetInternalHeaders()->GetAll(NS_LITERAL_CSTRING("Content-Type"),
+                                               contentTypeValues, result);
+  MOZ_ALWAYS_TRUE(!result.Failed());
 
   // HTTP ABNF states Content-Type may have only one value.
   // This is from the "parse a header value" of the fetch spec.
@@ -1646,10 +1664,10 @@ FetchBody<Derived>::SetMimeType(ErrorResult& aRv)
 
 template
 void
-FetchBody<Request>::SetMimeType(ErrorResult& aRv);
+FetchBody<Request>::SetMimeType();
 
 template
 void
-FetchBody<Response>::SetMimeType(ErrorResult& aRv);
+FetchBody<Response>::SetMimeType();
 } // namespace dom
 } // namespace mozilla
