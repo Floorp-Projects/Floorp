@@ -724,10 +724,9 @@ CreateHolderIfNeeded(HandleObject obj, MutableHandleValue d,
                      nsIXPConnectJSObjectHolder** dest)
 {
     if (dest) {
-        nsRefPtr<XPCJSObjectHolder> objHolder = XPCJSObjectHolder::newHolder(obj);
-        if (!objHolder)
+        if (!obj)
             return false;
-
+        nsRefPtr<XPCJSObjectHolder> objHolder = new XPCJSObjectHolder(obj);
         objHolder.forget(dest);
     }
 
@@ -856,11 +855,9 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
         if (flat == original) {
             wrapper.forget(dest);
         } else {
-            nsRefPtr<XPCJSObjectHolder> objHolder =
-                XPCJSObjectHolder::newHolder(flat);
-            if (!objHolder)
+            if (!flat)
                 return false;
-
+            nsRefPtr<XPCJSObjectHolder> objHolder = new XPCJSObjectHolder(flat);
             objHolder.forget(dest);
         }
     }
