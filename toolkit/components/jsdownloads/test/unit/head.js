@@ -400,7 +400,14 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
       },
     }).then(null, do_report_unexpected_exception);
 
-    let channel = NetUtil.newChannel(sourceURI);
+    let channel = NetUtil.newChannel2(sourceURI,
+                                      null,
+                                      null,
+                                      null,      // aLoadingNode
+                                      Services.scriptSecurityManager.getSystemPrincipal(),
+                                      null,      // aTriggeringPrincipal
+                                      Ci.nsILoadInfo.SEC_NORMAL,
+                                      Ci.nsIContentPolicy.TYPE_OTHER);
 
     // Start the actual download process.
     channel.asyncOpen({
@@ -534,21 +541,29 @@ function promiseVerifyContents(aPath, aExpectedContents)
     }
 
     let deferred = Promise.defer();
-    NetUtil.asyncFetch(file, function(aInputStream, aStatus) {
-      do_check_true(Components.isSuccessCode(aStatus));
-      let contents = NetUtil.readInputStreamToString(aInputStream,
-                                                     aInputStream.available());
-      if (contents.length > TEST_DATA_SHORT.length * 2 ||
-          /[^\x20-\x7E]/.test(contents)) {
-        // Do not print the entire content string to the test log.
-        do_check_eq(contents.length, aExpectedContents.length);
-        do_check_true(contents == aExpectedContents);
-      } else {
-        // Print the string if it is short and made of printable characters.
-        do_check_eq(contents, aExpectedContents);
-      }
-      deferred.resolve();
-    });
+    NetUtil.asyncFetch2(
+      file,
+      function(aInputStream, aStatus) {
+        do_check_true(Components.isSuccessCode(aStatus));
+        let contents = NetUtil.readInputStreamToString(aInputStream,
+                                                       aInputStream.available());
+        if (contents.length > TEST_DATA_SHORT.length * 2 ||
+            /[^\x20-\x7E]/.test(contents)) {
+          // Do not print the entire content string to the test log.
+          do_check_eq(contents.length, aExpectedContents.length);
+          do_check_true(contents == aExpectedContents);
+        } else {
+          // Print the string if it is short and made of printable characters.
+          do_check_eq(contents, aExpectedContents);
+        }
+        deferred.resolve();
+      },
+      null,      // aLoadingNode
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      null,      // aTriggeringPrincipal
+      Ci.nsILoadInfo.SEC_NORMAL,
+      Ci.nsIContentPolicy.TYPE_OTHER);
+
     yield deferred.promise;
   });
 }

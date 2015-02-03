@@ -191,7 +191,7 @@ NS_IMPL_ISUPPORTS(GfxD2DVramReporter, nsIMemoryReporter)
 #define GFX_CLEARTYPE_PARAMS_STRUCTURE "gfx.font_rendering.cleartype_params.pixel_structure"
 #define GFX_CLEARTYPE_PARAMS_MODE      "gfx.font_rendering.cleartype_params.rendering_mode"
 
-class GPUAdapterReporter : public nsIMemoryReporter
+class GPUAdapterReporter MOZ_FINAL : public nsIMemoryReporter
 {
     // Callers must Release the DXGIAdapter after use or risk mem-leak
     static bool GetDXGIAdapter(IDXGIAdapter **DXGIAdapter)
@@ -330,6 +330,8 @@ Atomic<size_t> gfxWindowsPlatform::sD3D11MemoryUsed;
 
 class D3D11TextureReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  ~D3D11TextureReporter() {}
+
 public:
   NS_DECL_ISUPPORTS
 
@@ -343,6 +345,24 @@ public:
 };
 
 NS_IMPL_ISUPPORTS(D3D11TextureReporter, nsIMemoryReporter)
+
+Atomic<size_t> gfxWindowsPlatform::sD3D9MemoryUsed;
+
+class D3D9TextureReporter MOZ_FINAL : public nsIMemoryReporter
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD CollectReports(nsIHandleReportCallback *aHandleReport,
+                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+  {
+    return MOZ_COLLECT_REPORT("d3d9-shared-textures", KIND_OTHER, UNITS_BYTES,
+                              gfxWindowsPlatform::sD3D9MemoryUsed,
+                              "Memory used for D3D9 shared textures");
+  }
+};
+
+NS_IMPL_ISUPPORTS(D3D9TextureReporter, nsIMemoryReporter)
 
 gfxWindowsPlatform::gfxWindowsPlatform()
   : mD3D11DeviceInitialized(false)
@@ -372,6 +392,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     RegisterStrongMemoryReporter(new GPUAdapterReporter());
     RegisterStrongMemoryReporter(new D3D11TextureReporter());
+    RegisterStrongMemoryReporter(new D3D9TextureReporter());
 }
 
 gfxWindowsPlatform::~gfxWindowsPlatform()

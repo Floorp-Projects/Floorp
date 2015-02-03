@@ -21,6 +21,58 @@ D3D9SurfaceImage::D3D9SurfaceImage()
 
 D3D9SurfaceImage::~D3D9SurfaceImage() {}
 
+static const GUID sD3D9TextureUsage =
+{ 0x631e1338, 0xdc22, 0x497f, { 0xa1, 0xa8, 0xb4, 0xfe, 0x3a, 0xf4, 0x13, 0x4d } };
+
+/* This class get's it's lifetime tied to a D3D texture
+ * and increments memory usage on construction and decrements
+ * on destruction */
+class TextureMemoryMeasurer9 : public IUnknown
+{
+public:
+  TextureMemoryMeasurer9(size_t aMemoryUsed)
+  {
+    mMemoryUsed = aMemoryUsed;
+    gfxWindowsPlatform::sD3D9MemoryUsed += mMemoryUsed;
+    mRefCnt = 0;
+  }
+  ~TextureMemoryMeasurer9()
+  {
+    gfxWindowsPlatform::sD3D9MemoryUsed -= mMemoryUsed;
+  }
+  STDMETHODIMP_(ULONG) AddRef() {
+    mRefCnt++;
+    return mRefCnt;
+  }
+  STDMETHODIMP QueryInterface(REFIID riid,
+                              void **ppvObject)
+  {
+    IUnknown *punk = nullptr;
+    if (riid == IID_IUnknown) {
+      punk = this;
+    }
+    *ppvObject = punk;
+    if (punk) {
+      punk->AddRef();
+      return S_OK;
+    } else {
+      return E_NOINTERFACE;
+    }
+  }
+
+  STDMETHODIMP_(ULONG) Release() {
+    int refCnt = --mRefCnt;
+    if (refCnt == 0) {
+      delete this;
+    }
+    return refCnt;
+  }
+private:
+  int mRefCnt;
+  int mMemoryUsed;
+};
+
+
 HRESULT
 D3D9SurfaceImage::SetData(const Data& aData)
 {
@@ -61,6 +113,9 @@ D3D9SurfaceImage::SetData(const Data& aData)
                              byRef(texture),
                              &shareHandle);
   NS_ENSURE_TRUE(SUCCEEDED(hr) && shareHandle, hr);
+
+  // Track the lifetime of this memory
+  texture->SetPrivateData(sD3D9TextureUsage, new TextureMemoryMeasurer9(region.width * region.height * 4), sizeof(IUnknown *), D3DSPD_IUNKNOWN);
 
   // Copy the image onto the texture, preforming YUV -> RGB conversion if necessary.
   RefPtr<IDirect3DSurface9> textureSurface;

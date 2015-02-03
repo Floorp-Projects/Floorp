@@ -25,8 +25,8 @@ function onTimeout() {
 }
 
 // We expect this test to finish very soon.
-// A timeout of 15s should be enough for the slow B2G emulator.
-var timer = setTimeout(onTimeout, 15000);
+// A timeout of 90s should be enough for the slow B2G emulator.
+var timer = setTimeout(onTimeout, 90000);
 
 function finish(v) {
   clearTimeout(timer);

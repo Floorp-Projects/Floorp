@@ -54,7 +54,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(e0e833fe-3a5b-48b0-8684-a097e09c0723)]
+[scriptable, builtinclass, uuid(888fcf04-a69b-11e4-8d33-6fbb72d2eb03)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -1053,4 +1053,11 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Holds the id of the payment request associated with this docshell if any.
    */
   attribute DOMString paymentRequestId;
+
+  /**
+   * Allow usage of -moz-window-dragging:drag for content docshells.
+   * True for top level chrome docshells. Throws if set to false with
+   * top level chrome docshell.
+   */
+  attribute boolean windowDraggingAllowed;
 };

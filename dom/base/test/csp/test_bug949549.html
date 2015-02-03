@@ -41,7 +41,14 @@
     // as app channels can't be instanciated in xpcshell.
     // Because app protocol depends on webapps.jsm,
     // which doesn't instanciate properly on xpcshell without many hacks
-    let appchan = SpecialPowers.Services.io.newChannel(gManifestURL, null, null);
+    let appchan = SpecialPowers.Services.io.newChannel2(gManifestURL,
+                                                        null,
+                                                        null,
+                                                        null,      // aLoadingNode
+                                                        SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal(),
+                                                        null,      // aTriggeringPrincipal
+                                                        SpecialPowers.Ci.nsILoadInfo.SEC_NORMAL,
+                                                        SpecialPowers.Ci.nsIContentPolicy.TYPE_OTHER);
 
     try {
       csp.setRequestContext(null, null, appchan);

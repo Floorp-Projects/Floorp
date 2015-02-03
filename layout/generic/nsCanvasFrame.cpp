@@ -53,6 +53,8 @@ NS_QUERYFRAME_HEAD(nsCanvasFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
+NS_IMPL_ISUPPORTS(nsCanvasFrame::DummyTouchListener, nsIDOMEventListener)
+
 void
 nsCanvasFrame::ShowCustomContentContainer()
 {
@@ -101,6 +103,12 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     classValue.AppendLiteral("moz-touchcaret hidden");
     rv = mTouchCaretElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                                      classValue, true);
+
+    if (!mDummyTouchListener) {
+      mDummyTouchListener = new DummyTouchListener();
+    }
+    mTouchCaretElement->AddEventListener(NS_LITERAL_STRING("touchstart"),
+                                         mDummyTouchListener, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -124,6 +132,14 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     rv = mSelectionCaretsEndElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                                              NS_LITERAL_STRING("moz-selectioncaret-right hidden"),
                                              true);
+
+    if (!mDummyTouchListener) {
+      mDummyTouchListener = new DummyTouchListener();
+    }
+    mSelectionCaretsStartElement->AddEventListener(NS_LITERAL_STRING("touchstart"),
+                                                   mDummyTouchListener, false);
+    mSelectionCaretsEndElement->AddEventListener(NS_LITERAL_STRING("touchstart"),
+                                                 mDummyTouchListener, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -177,6 +193,21 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
     PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
   if (sf) {
     sf->RemoveScrollPositionListener(this);
+  }
+
+  if (mTouchCaretElement) {
+    mTouchCaretElement->RemoveEventListener(NS_LITERAL_STRING("touchstart"),
+                                            mDummyTouchListener, false);
+  }
+
+  if (mSelectionCaretsStartElement) {
+    mSelectionCaretsStartElement->RemoveEventListener(NS_LITERAL_STRING("touchstart"),
+                                                      mDummyTouchListener, false);
+  }
+
+  if (mSelectionCaretsEndElement) {
+    mSelectionCaretsEndElement->RemoveEventListener(NS_LITERAL_STRING("touchstart"),
+                                                    mDummyTouchListener, false);
   }
 
   nsContentUtils::DestroyAnonymousContent(&mTouchCaretElement);
