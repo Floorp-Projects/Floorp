@@ -129,8 +129,13 @@ IsForeignChild(const nsIFrame* aFrame)
     aFrame->GetType() == nsGkAtoms::blockFrame;
 }
 
-NS_DECLARE_FRAME_PROPERTY(HTMLReflowMetricsProperty,
-                          DeleteValue<nsHTMLReflowMetrics>)
+static void
+DestroyHTMLReflowMetrics(void *aPropertyValue)
+{
+  delete static_cast<nsHTMLReflowMetrics*>(aPropertyValue);
+}
+
+NS_DECLARE_FRAME_PROPERTY(HTMLReflowMetricsProperty, DestroyHTMLReflowMetrics)
 
 /* static */ void
 nsMathMLContainerFrame::SaveReflowAndBoundingMetricsFor(nsIFrame*                  aFrame,

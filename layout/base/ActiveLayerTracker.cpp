@@ -107,8 +107,13 @@ LayerActivity::~LayerActivity()
   }
 }
 
+static void DestroyLayerActivity(void* aPropertyValue)
+{
+  delete static_cast<LayerActivity*>(aPropertyValue);
+}
+
 // Frames with this property have NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY set
-NS_DECLARE_FRAME_PROPERTY(LayerActivityProperty, DeleteValue<LayerActivity>)
+NS_DECLARE_FRAME_PROPERTY(LayerActivityProperty, DestroyLayerActivity)
 
 void
 LayerActivityTracker::NotifyExpired(LayerActivity* aObject)

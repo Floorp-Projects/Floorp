@@ -99,7 +99,7 @@ private:
   void ComputeStickyLimits(nsIFrame* aFrame, nsRect* aStick,
                            nsRect* aContain) const;
 
-  friend void DeleteValue<StickyScrollContainer>(void* aPropertyValue);
+  friend void DestroyStickyScrollContainer(void* aPropertyValue);
 
   nsIScrollableFrame* const mScrollFrame;
   nsTArray<nsIFrame*> mFrames;

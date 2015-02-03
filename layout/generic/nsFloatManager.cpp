@@ -307,7 +307,7 @@ nsFloatManager::CalculateRegionFor(WritingMode          aWM,
   return region;
 }
 
-NS_DECLARE_FRAME_PROPERTY(FloatRegionProperty, DeleteValue<nsMargin>)
+NS_DECLARE_FRAME_PROPERTY(FloatRegionProperty, nsIFrame::DestroyMargin)
 
 LogicalRect
 nsFloatManager::GetRegionFor(WritingMode aWM, nsIFrame* aFloat,

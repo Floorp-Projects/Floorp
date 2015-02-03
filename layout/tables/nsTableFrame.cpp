@@ -261,6 +261,13 @@ nsTableFrame::PageBreakAfter(nsIFrame* aSourceFrame,
 typedef nsTArray<nsIFrame*> FrameTArray;
 
 /* static */ void
+nsTableFrame::DestroyPositionedTablePartArray(void* aPropertyValue)
+{
+  auto positionedObjs = static_cast<FrameTArray*>(aPropertyValue);
+  delete positionedObjs;
+}
+
+/* static */ void
 nsTableFrame::RegisterPositionedTablePart(nsIFrame* aFrame)
 {
   // Supporting relative positioning for table parts other than table cells has
@@ -2542,7 +2549,14 @@ nsTableFrame::GetUsedMargin() const
   return nsMargin(0, 0, 0, 0);
 }
 
-NS_DECLARE_FRAME_PROPERTY(TableBCProperty, DeleteValue<BCPropertyData>)
+// Destructor function for BCPropertyData properties
+static void
+DestroyBCProperty(void* aPropertyValue)
+{
+  delete static_cast<BCPropertyData*>(aPropertyValue);
+}
+
+NS_DECLARE_FRAME_PROPERTY(TableBCProperty, DestroyBCProperty)
 
 BCPropertyData*
 nsTableFrame::GetBCProperty(bool aCreateIfNecessary) const
