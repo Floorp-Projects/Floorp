@@ -11,7 +11,7 @@ EXPORTS.mozilla += [
     'mozalloc_oom.h',
 ]
 
-if CONFIG['MOZ_MSVC_STL_WRAP__RAISE'] or CONFIG['MOZ_MSVC_STL_WRAP__Throw']:
+if CONFIG['MOZ_MSVC_STL_WRAP_RAISE'] or CONFIG['MOZ_MSVC_STL_WRAP_Throw']:
     build_msvc_wrappers = 1
 else:
     build_msvc_wrappers = 0
