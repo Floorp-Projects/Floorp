@@ -1608,8 +1608,6 @@ RilObject.prototype = {
   /**
    * Dial a non-emergency number.
    *
-   * @param isDialEmergency
-   *        Whether it is called by dialEmergency.
    * @param isEmergency
    *        Whether the number is an emergency number.
    * @param number
@@ -1648,18 +1646,6 @@ RilObject.prototype = {
 
       this.dialInternal(options);
     } else {
-      // Notify error in establishing the call without radio.
-      if (isRadioOff) {
-        onerror(GECKO_ERROR_RADIO_NOT_AVAILABLE);
-        return;
-      }
-
-      // Shouldn't dial a non-emergency number by dialEmergency.
-      if (options.isDialEmergency || this.voiceRegistrationState.emergencyCallsOnly) {
-        onerror(GECKO_CALL_ERROR_BAD_NUMBER);
-        return;
-      }
-
       // Exit emergency callback mode when user dial a non-emergency call.
       if (this._isInEmergencyCbMode) {
         this.exitEmergencyCbMode();
@@ -1672,13 +1658,6 @@ RilObject.prototype = {
   },
 
   dialInternal: function(options) {
-    // Make a Cdma 3way call.
-    if (this._isCdma && Object.keys(this.currentCalls).length == 1) {
-      options.featureStr = options.number;
-      this.cdmaFlash(options);
-      return;
-    }
-
     this.telephonyRequestQueue.push(options.request, () => {
       let Buf = this.context.Buf;
       Buf.newParcel(options.request, options);
