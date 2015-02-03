@@ -22,7 +22,7 @@ using mozilla::Vector;
 
 #define CHECK(c) \
   do { \
-    bool cond = (c); \
+    bool cond = !!(c); \
     MOZ_ASSERT(cond, "Failed assertion: " #c); \
     if (!cond) { \
       return false; \
