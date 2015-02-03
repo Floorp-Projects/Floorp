@@ -59,7 +59,7 @@ function test() {
 
   let functionCell = D.target.childNodes[5];
 
-  is(functionCell.childNodes.length, 8,
+  is(functionCell.childNodes.length, 9,
     "The number of columns displayed for function cells is correct.");
   is(functionCell.childNodes[0].className, "arrow theme-twisty",
     "The first node displayed for function cells is correct.");
@@ -69,13 +69,15 @@ function test() {
     "The third node displayed for function cells is correct.");
   is(functionCell.childNodes[3].className, "plain call-tree-line",
     "The fourth node displayed for function cells is correct.");
-  is(functionCell.childNodes[4].className, "plain call-tree-host",
+  is(functionCell.childNodes[4].className, "plain call-tree-column",
     "The fifth node displayed for function cells is correct.");
-  is(functionCell.childNodes[5].className, "plain call-tree-zoom",
+  is(functionCell.childNodes[5].className, "plain call-tree-host",
+    "The fifth node displayed for function cells is correct.");
+  is(functionCell.childNodes[6].className, "plain call-tree-zoom",
     "The sixth node displayed for function cells is correct.");
-  is(functionCell.childNodes[6].tagName, "spacer",
+  is(functionCell.childNodes[7].tagName, "spacer",
     "The seventh node displayed for function cells is correct.");
-  is(functionCell.childNodes[7].className, "plain call-tree-category",
+  is(functionCell.childNodes[8].className, "plain call-tree-category",
     "The eight node displayed for function cells is correct.");
 
   finish();
