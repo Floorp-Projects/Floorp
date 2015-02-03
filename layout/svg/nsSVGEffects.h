@@ -390,11 +390,6 @@ public:
   typedef nsInterfaceHashtable<nsURIHashKey, nsIMutationObserver>
     URIObserverHashtable;
 
-  static void DestroySupports(void* aPropertyValue)
-  {
-    (static_cast<nsISupports*>(aPropertyValue))->Release();
-  }
-
   static void DestroyFilterProperty(void* aPropertyValue)
   {
     auto* prop = static_cast<nsSVGFilterProperty*>(aPropertyValue);
@@ -407,21 +402,17 @@ public:
     prop->Release();
   }
 
-  static void DestroyHashtable(void* aPropertyValue)
-  {
-    delete static_cast<URIObserverHashtable*> (aPropertyValue);
-  }
-
   NS_DECLARE_FRAME_PROPERTY(FilterProperty, DestroyFilterProperty)
-  NS_DECLARE_FRAME_PROPERTY(MaskProperty, DestroySupports)
-  NS_DECLARE_FRAME_PROPERTY(ClipPathProperty, DestroySupports)
-  NS_DECLARE_FRAME_PROPERTY(MarkerBeginProperty, DestroySupports)
-  NS_DECLARE_FRAME_PROPERTY(MarkerMiddleProperty, DestroySupports)
-  NS_DECLARE_FRAME_PROPERTY(MarkerEndProperty, DestroySupports)
-  NS_DECLARE_FRAME_PROPERTY(FillProperty, DestroySupports)
-  NS_DECLARE_FRAME_PROPERTY(StrokeProperty, DestroySupports)
-  NS_DECLARE_FRAME_PROPERTY(HrefProperty, DestroySupports)
-  NS_DECLARE_FRAME_PROPERTY(BackgroundImageProperty, DestroyHashtable)
+  NS_DECLARE_FRAME_PROPERTY(MaskProperty, ReleaseValue<nsISupports>)
+  NS_DECLARE_FRAME_PROPERTY(ClipPathProperty, ReleaseValue<nsISupports>)
+  NS_DECLARE_FRAME_PROPERTY(MarkerBeginProperty, ReleaseValue<nsISupports>)
+  NS_DECLARE_FRAME_PROPERTY(MarkerMiddleProperty, ReleaseValue<nsISupports>)
+  NS_DECLARE_FRAME_PROPERTY(MarkerEndProperty, ReleaseValue<nsISupports>)
+  NS_DECLARE_FRAME_PROPERTY(FillProperty, ReleaseValue<nsISupports>)
+  NS_DECLARE_FRAME_PROPERTY(StrokeProperty, ReleaseValue<nsISupports>)
+  NS_DECLARE_FRAME_PROPERTY(HrefProperty, ReleaseValue<nsISupports>)
+  NS_DECLARE_FRAME_PROPERTY(BackgroundImageProperty,
+                            DeleteValue<URIObserverHashtable>)
 
   /**
    * Get the paint server for a aTargetFrame.
