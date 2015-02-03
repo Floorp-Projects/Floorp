@@ -3541,7 +3541,7 @@ public:
     }
 
     bool IsOffscreen() const {
-        return mScreen;
+        return !!mScreen;
     }
 
     GLScreenBuffer* Screen() const {
