@@ -60,10 +60,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gRadioInterfaceLayer",
                                    "@mozilla.org/ril;1",
                                    "nsIRadioInterfaceLayer");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gGonkTelephonyService",
-                                  "@mozilla.org/telephony/telephonyservice;1",
-                                  "nsIGonkTelephonyService");
-
 let DEBUG = RIL.DEBUG_RIL;
 function debug(s) {
   dump("MobileConnectionService: " + s + "\n");

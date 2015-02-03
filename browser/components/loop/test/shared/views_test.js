@@ -12,10 +12,11 @@ var TestUtils = React.addons.TestUtils;
 describe("loop.shared.views", function() {
   "use strict";
 
-  var sharedModels = loop.shared.models,
-      sharedViews = loop.shared.views,
-      getReactElementByClass = TestUtils.findRenderedDOMComponentWithClass,
-      sandbox, fakeAudioXHR;
+  var sharedModels = loop.shared.models;
+  var sharedViews = loop.shared.views;
+  var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
+  var getReactElementByClass = TestUtils.findRenderedDOMComponentWithClass;
+  var sandbox, fakeAudioXHR, dispatcher;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -23,6 +24,10 @@ describe("loop.shared.views", function() {
     sandbox.stub(l10n, "get", function(x) {
       return "translated:" + x;
     });
+
+    dispatcher = new loop.Dispatcher();
+    sandbox.stub(dispatcher, "dispatch");
+
     fakeAudioXHR = {
       open: sinon.spy(),
       send: function() {},
@@ -90,6 +95,76 @@ describe("loop.shared.views", function() {
 
       expect(comp.getDOMNode().classList.contains("muted")).eql(true);
     });
+  });
+
+  describe("ScreenShareControlButton", function() {
+    it("should render a visible share button", function() {
+      var comp = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.ScreenShareControlButton, {
+          dispatcher: dispatcher,
+          visible: true,
+          state: SCREEN_SHARE_STATES.INACTIVE
+        }));
+
+      expect(comp.getDOMNode().classList.contains("active")).eql(false);
+      expect(comp.getDOMNode().classList.contains("disabled")).eql(false);
+    });
+
+    it("should render a disabled share button when share is pending", function() {
+      var comp = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.ScreenShareControlButton, {
+          dispatcher: dispatcher,
+          visible: true,
+          state: SCREEN_SHARE_STATES.PENDING
+        }));
+
+      expect(comp.getDOMNode().classList.contains("active")).eql(false);
+      expect(comp.getDOMNode().classList.contains("disabled")).eql(true);
+    });
+
+    it("should render an active share button", function() {
+      var comp = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.ScreenShareControlButton, {
+          dispatcher: dispatcher,
+          visible: true,
+          state: SCREEN_SHARE_STATES.ACTIVE
+        }));
+
+      expect(comp.getDOMNode().classList.contains("active")).eql(true);
+      expect(comp.getDOMNode().classList.contains("disabled")).eql(false);
+    });
+
+    it("should dispatch a StartScreenShare action on click when the state is not active",
+       function() {
+        var comp = TestUtils.renderIntoDocument(
+          React.createElement(sharedViews.ScreenShareControlButton, {
+            dispatcher: dispatcher,
+            visible: true,
+            state: SCREEN_SHARE_STATES.INACTIVE
+          }));
+
+        TestUtils.Simulate.click(comp.getDOMNode());
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.StartScreenShare({}));
+      });
+
+    it("should dispatch a EndScreenShare action on click when the state is active",
+      function() {
+        var comp = TestUtils.renderIntoDocument(
+          React.createElement(sharedViews.ScreenShareControlButton, {
+            dispatcher: dispatcher,
+            visible: true,
+            state: SCREEN_SHARE_STATES.ACTIVE
+          }));
+
+        TestUtils.Simulate.click(comp.getDOMNode());
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.EndScreenShare({}));
+      });
   });
 
   describe("ConversationToolbar", function() {

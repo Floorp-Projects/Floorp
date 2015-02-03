@@ -53,9 +53,9 @@ function spawnTest () {
   OverviewView.off(EVENTS.OVERVIEW_RANGE_SELECTED, fail);
 
   let secondInterval = OverviewView.getTimeInterval();
-  is(secondInterval.startTime, 30,
+  is(Math.round(secondInterval.startTime), 30,
     "The interval's start time was properly set again.");
-  is(secondInterval.endTime, 40,
+  is(Math.round(secondInterval.endTime), 40,
     "The interval's end time was properly set again.");
 
   yield teardown(panel);

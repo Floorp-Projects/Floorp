@@ -165,11 +165,15 @@ let MemoryActor = protocol.ActorClass({
       ? options.probability
       : 1.0;
     this.dbg.memory.trackingAllocationSites = true;
+
+    return Date.now();
   }), {
     request: {
       options: Arg(0, "nullable:AllocationsRecordingOptions")
     },
-    response: {}
+    response: {
+      value: RetVal(0, "number")
+    }
   }),
 
   /**
@@ -178,9 +182,13 @@ let MemoryActor = protocol.ActorClass({
   stopRecordingAllocations: method(expectState("attached", function() {
     this.dbg.memory.trackingAllocationSites = false;
     this._clearFrames();
+
+    return Date.now();
   }), {
     request: {},
-    response: {}
+    response: {
+      value: RetVal(0, "number")
+    }
   }),
 
   /**

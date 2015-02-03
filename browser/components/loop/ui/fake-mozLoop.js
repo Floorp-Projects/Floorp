@@ -54,6 +54,7 @@ navigator.mozLoop = {
     switch(pref) {
       // Ensure we skip FTE completely.
       case "gettingStarted.seen":
+      case "screenshare.enabled":
         return true;
     }
   },

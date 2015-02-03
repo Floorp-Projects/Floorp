@@ -42,24 +42,28 @@ function test() {
   ok(!A.target.querySelector(".call-tree-category").hidden,
     "The .A.B.D node's category label cell should not be hidden.");
 
-  is(D.target.childNodes.length, 6,
+  is(D.target.childNodes.length, 8,
     "The number of columns displayed for tree items is correct.");
   is(D.target.childNodes[0].getAttribute("type"), "duration",
     "The first column displayed for tree items is correct.");
   is(D.target.childNodes[1].getAttribute("type"), "percentage",
     "The third column displayed for tree items is correct.");
-  is(D.target.childNodes[2].getAttribute("type"), "self-duration",
+  is(D.target.childNodes[2].getAttribute("type"), "allocations",
     "The second column displayed for tree items is correct.");
-  is(D.target.childNodes[3].getAttribute("type"), "self-percentage",
+  is(D.target.childNodes[3].getAttribute("type"), "self-duration",
+    "The second column displayed for tree items is correct.");
+  is(D.target.childNodes[4].getAttribute("type"), "self-percentage",
     "The fourth column displayed for tree items is correct.");
-  is(D.target.childNodes[4].getAttribute("type"), "samples",
+  is(D.target.childNodes[5].getAttribute("type"), "self-allocations",
+    "The fourth column displayed for tree items is correct.");
+  is(D.target.childNodes[6].getAttribute("type"), "samples",
     "The fifth column displayed for tree items is correct.");
-  is(D.target.childNodes[5].getAttribute("type"), "function",
+  is(D.target.childNodes[7].getAttribute("type"), "function",
     "The sixth column displayed for tree items is correct.");
 
-  let functionCell = D.target.childNodes[5];
+  let functionCell = D.target.childNodes[7];
 
-  is(functionCell.childNodes.length, 8,
+  is(functionCell.childNodes.length, 9,
     "The number of columns displayed for function cells is correct.");
   is(functionCell.childNodes[0].className, "arrow theme-twisty",
     "The first node displayed for function cells is correct.");
@@ -69,13 +73,15 @@ function test() {
     "The third node displayed for function cells is correct.");
   is(functionCell.childNodes[3].className, "plain call-tree-line",
     "The fourth node displayed for function cells is correct.");
-  is(functionCell.childNodes[4].className, "plain call-tree-host",
+  is(functionCell.childNodes[4].className, "plain call-tree-column",
     "The fifth node displayed for function cells is correct.");
-  is(functionCell.childNodes[5].className, "plain call-tree-zoom",
+  is(functionCell.childNodes[5].className, "plain call-tree-host",
+    "The fifth node displayed for function cells is correct.");
+  is(functionCell.childNodes[6].className, "plain call-tree-zoom",
     "The sixth node displayed for function cells is correct.");
-  is(functionCell.childNodes[6].tagName, "spacer",
+  is(functionCell.childNodes[7].tagName, "spacer",
     "The seventh node displayed for function cells is correct.");
-  is(functionCell.childNodes[7].className, "plain call-tree-category",
+  is(functionCell.childNodes[8].className, "plain call-tree-category",
     "The eight node displayed for function cells is correct.");
 
   finish();

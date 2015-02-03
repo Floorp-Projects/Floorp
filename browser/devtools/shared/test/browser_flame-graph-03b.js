@@ -49,9 +49,9 @@ function testGraph(graph) {
 
   scroll(graph, 10000, HORIZONTAL_AXIS, 1);
 
-  is(graph.getViewRange().startTime, 140,
+  is(Math.round(graph.getViewRange().startTime), 150,
     "The selection start boundary is correct on HiDPI (2).");
-  is(graph.getViewRange().endTime, 150,
+  is(Math.round(graph.getViewRange().endTime), 150,
     "The selection end boundary is correct on HiDPI (2).");
 
   is(graph.getOuterBounds().startTime, 0,

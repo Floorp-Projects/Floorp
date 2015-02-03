@@ -48,6 +48,13 @@ loop.shared.utils = (function(mozL10n) {
     HAS_VIDEO: "hasVideo"
   };
 
+  var SCREEN_SHARE_STATES = {
+    INACTIVE: "ss-inactive",
+    // Pending is when the user is being prompted, aka gUM in progress.
+    PENDING: "ss-pending",
+    ACTIVE: "ss-active"
+  };
+
   /**
    * Format a given date into an l10n-friendly string.
    *
@@ -145,6 +152,7 @@ loop.shared.utils = (function(mozL10n) {
     REST_ERRNOS: REST_ERRNOS,
     WEBSOCKET_REASONS: WEBSOCKET_REASONS,
     STREAM_PROPERTIES: STREAM_PROPERTIES,
+    SCREEN_SHARE_STATES: SCREEN_SHARE_STATES,
     Helper: Helper,
     composeCallUrlEmail: composeCallUrlEmail,
     formatDate: formatDate,
