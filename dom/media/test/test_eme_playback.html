@@ -43,7 +43,7 @@ function startTest(test, token)
     {
       onsessioncreated: function(session) {
         sessions.push(session);
-        session.addEventListener("keyschange", KeysChangeFunc(session, test.keys, token), false);
+        session.addEventListener("keystatuseschange", KeysChangeFunc(session, test.keys, token), false);
       }
     }
   );
@@ -75,7 +75,7 @@ function startTest(test, token)
        TimeStamp(token) + " Current time should be same as duration");
 
     // Verify all sessions had all keys went sent the to the CDM usable, and thus
-    // that we received keyschange event(s).
+    // that we received keystatuseschange event(s).
     is(sessions.length, 1, TimeStamp(token) + " should have 1 session");
     for (var i = 0; i < sessions.length; i++) {
       var session = sessions[i];
