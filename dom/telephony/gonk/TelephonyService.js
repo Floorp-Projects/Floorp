@@ -877,26 +877,50 @@ TelephonyService.prototype = {
                           this._defaultCallbackHandler.bind(this, aCallback));
   },
 
-  holdCall: function(aClientId, aCallIndex, aCallback) {
+  _switchCall: function(aClientId, aCallIndex, aCallback, aRequiredState) {
     let call = this._currentCalls[aClientId][aCallIndex];
-    if (!call || !call.isSwitchable) {
+    if (!call) {
       aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
       return;
     }
 
-    this._sendToRilWorker(aClientId, "holdCall", { callIndex: aCallIndex },
+    if (this._isCdmaClient(aClientId)) {
+      this._switchCallCdma(aClientId, aCallIndex, aCallback);
+    } else {
+      this._switchCallGsm(aClientId, aCallIndex, aCallback, aRequiredState);
+    }
+  },
+
+  _switchCallGsm: function(aClientId, aCallIndex, aCallback, aRequiredState) {
+    let call = this._currentCalls[aClientId][aCallIndex];
+    if (call.state != aRequiredState) {
+      aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
+      return;
+    }
+
+    this._sendToRilWorker(aClientId, "switchActiveCall", null,
                           this._defaultCallbackHandler.bind(this, aCallback));
   },
 
-  resumeCall: function(aClientId, aCallIndex, aCallback) {
+  _switchCallCdma: function(aClientId, aCallIndex, aCallback) {
     let call = this._currentCalls[aClientId][aCallIndex];
-    if (!call || !call.isSwitchable) {
+    if (!call.isSwitchable) {
       aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
       return;
     }
 
-    this._sendToRilWorker(aClientId, "resumeCall", { callIndex: aCallIndex },
+    this._sendToRilWorker(aClientId, "cdmaFlash", null,
                           this._defaultCallbackHandler.bind(this, aCallback));
+  },
+
+  holdCall: function(aClientId, aCallIndex, aCallback) {
+    this._switchCall(aClientId, aCallIndex, aCallback,
+                     nsITelephonyService.CALL_STATE_CONNECTED);
+  },
+
+  resumeCall: function(aClientId, aCallIndex, aCallback) {
+    this._switchCall(aClientId, aCallIndex, aCallback,
+                     nsITelephonyService.CALL_STATE_HELD);
   },
 
   _conferenceCallGsm: function(aClientId, aCallback) {
