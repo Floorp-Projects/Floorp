@@ -7,7 +7,8 @@
 module.metadata = {
   "stability": "unstable",
   "engines": {
-    "Firefox": "*"
+    "Firefox": "*",
+    "SeaMonkey": "*"
   }
 };
 

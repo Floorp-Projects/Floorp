@@ -7,19 +7,29 @@ module.metadata = {
   "stability": "unstable"
 };
 
-const { EventEmitterTrait: EventEmitter } = require("../deprecated/events");
+const { EventTarget } = require("../event/target");
+const { emit } = require("../event/core");
 const { WindowTracker, windowIterator } = require("../deprecated/window-utils");
 const { DOMEventAssembler } = require("../deprecated/events/assembler");
-const { Trait } = require("../deprecated/light-traits");
+const { Class } = require("../core/heritage");
 
 // Event emitter objects used to register listeners and emit events on them
 // when they occur.
-const observer = Trait.compose(DOMEventAssembler, EventEmitter).create({
-  /**
-   * Method is implemented by `EventEmitter` and is used just for emitting
-   * events on registered listeners.
-   */
-  _emit: Trait.required,
+const Observer = Class({
+  initialize() {
+    // Using `WindowTracker` to track window events.
+    WindowTracker({
+      onTrack: chromeWindow => {
+        emit(this, "open", chromeWindow);
+        this.observe(chromeWindow);
+      },
+      onUntrack: chromeWindow => {
+        emit(this, "close", chromeWindow);
+        this.ignore(chromeWindow);
+      }
+    });
+  },
+  implements: [EventTarget, DOMEventAssembler],
   /**
    * Events that are supported and emitted by the module.
    */
@@ -31,21 +41,9 @@ const observer = Trait.compose(DOMEventAssembler, EventEmitter).create({
    * @param {Event} event
    *    Keyboard event being emitted.
    */
-  handleEvent: function handleEvent(event) {
-    this._emit(event.type, event.target, event);
+  handleEvent(event) {
+    emit(this, event.type, event.target, event);
   }
 });
 
-// Using `WindowTracker` to track window events.
-WindowTracker({
-  onTrack: function onTrack(chromeWindow) {
-    observer._emit("open", chromeWindow);
-    observer.observe(chromeWindow);
-  },
-  onUntrack: function onUntrack(chromeWindow) {
-    observer._emit("close", chromeWindow);
-    observer.ignore(chromeWindow);
-  }
-});
-
-exports.observer = observer;
+exports.observer = new Observer();

@@ -7,12 +7,13 @@ module.metadata = {
   "stability": "unstable"
 };
 
-const { EventEmitterTrait: EventEmitter } = require("../deprecated/events");
+const { EventTarget } = require("../event/target");
+const { emit } = require("../event/core");
 const { DOMEventAssembler } = require("../deprecated/events/assembler");
-const { Trait } = require("../deprecated/light-traits");
-const { getActiveTab, getTabs, getTabContainer } = require("./utils");
+const { Class } = require("../core/heritage");
+const { getActiveTab, getTabs } = require("./utils");
 const { browserWindowIterator } = require("../deprecated/window-utils");
-const { isBrowser } = require('../window/utils');
+const { isBrowser, windows, getMostRecentBrowserWindow } = require("../window/utils");
 const { observer: windowObserver } = require("../windows/observer");
 
 const EVENTS = {
@@ -24,15 +25,69 @@ const EVENTS = {
   "TabUnpinned": "unpinned"
 };
 
+const selectedTab = Symbol("observer/state/selectedTab");
 
 // Event emitter objects used to register listeners and emit events on them
 // when they occur.
-const observer = Trait.compose(DOMEventAssembler, EventEmitter).create({
-  /**
-   * Method is implemented by `EventEmitter` and is used just for emitting
-   * events on registered listeners.
-   */
-  _emit: Trait.required,
+const Observer = Class({
+  implements: [EventTarget, DOMEventAssembler],
+  initialize() {
+    this[selectedTab] = null;
+    // Currently Gecko does not dispatch any event on the previously selected
+    // tab before / after "TabSelect" is dispatched. In order to work around this
+    // limitation we keep track of selected tab and emit "deactivate" event with
+    // that before emitting "activate" on selected tab.
+    this.on("select", tab => {
+      const selected = this[selectedTab];
+      if (selected !== tab) {
+        if (selected) {
+          emit(this, 'deactivate', selected);
+        }
+
+        if (tab) {
+          this[selectedTab] = tab;
+          emit(this, 'activate', this[selectedTab]);
+        }
+      }
+    });
+
+
+    // We also observe opening / closing windows in order to add / remove it's
+    // containers to the observed list.
+    windowObserver.on("open", chromeWindow => {
+      if (isBrowser(chromeWindow)) {
+        this.observe(chromeWindow);
+      }
+    });
+
+    windowObserver.on("close", chromeWindow => {
+      if (isBrowser(chromeWindow)) {
+        // Bug 751546: Emit `deactivate` event on window close immediatly
+        // Otherwise we are going to face "dead object" exception on `select` event
+        if (getActiveTab(chromeWindow) === this[selectedTab]) {
+          emit(this, "deactivate", this[selectedTab]);
+          this[selectedTab] = null;
+        }
+        this.ignore(chromeWindow);
+      }
+    });
+
+
+    // Currently gecko does not dispatches "TabSelect" events when different
+    // window gets activated. To work around this limitation we emulate "select"
+    // event for this case.
+    windowObserver.on("activate", chromeWindow => {
+      if (isBrowser(chromeWindow)) {
+        emit(this, "select", getActiveTab(chromeWindow));
+      }
+    });
+
+    // We should synchronize state, since probably we already have at least one
+    // window open.
+    for (let chromeWindow of browserWindowIterator()) {
+      this.observe(chromeWindow);
+    }
+  },
   /**
    * Events that are supported and emitted by the module.
    */
@@ -45,54 +100,8 @@ const observer = Trait.compose(DOMEventAssembler, EventEmitter).create({
    *    Keyboard event being emitted.
    */
   handleEvent: function handleEvent(event) {
-    this._emit(EVENTS[event.type], event.target, event);
+    emit(this, EVENTS[event.type], event.target, event);
   }
 });
 
-// Currently Gecko does not dispatch any event on the previously selected
-// tab before / after "TabSelect" is dispatched. In order to work around this
-// limitation we keep track of selected tab and emit "deactivate" event with
-// that before emitting "activate" on selected tab.
-var selectedTab = null;
-function onTabSelect(tab) {
-  if (selectedTab !== tab) {
-    if (selectedTab) observer._emit('deactivate', selectedTab);
-    if (tab) observer._emit('activate', selectedTab = tab);
-  }
-};
-observer.on('select', onTabSelect);
-
-// We also observe opening / closing windows in order to add / remove it's
-// containers to the observed list.
-function onWindowOpen(chromeWindow) {
-  if (!isBrowser(chromeWindow)) return; // Ignore if it's not a browser window.
-  observer.observe(getTabContainer(chromeWindow));
-}
-windowObserver.on("open", onWindowOpen);
-
-function onWindowClose(chromeWindow) {
-  if (!isBrowser(chromeWindow)) return; // Ignore if it's not a browser window.
-  // Bug 751546: Emit `deactivate` event on window close immediatly
-  // Otherwise we are going to face "dead object" exception on `select` event
-  if (getActiveTab(chromeWindow) == selectedTab) {
-    observer._emit("deactivate", selectedTab);
-    selectedTab = null;
-  }
-  observer.ignore(getTabContainer(chromeWindow));
-}
-windowObserver.on("close", onWindowClose);
-
-
-// Currently gecko does not dispatches "TabSelect" events when different
-// window gets activated. To work around this limitation we emulate "select"
-// event for this case.
-windowObserver.on("activate", function onWindowActivate(chromeWindow) {
-  if (!isBrowser(chromeWindow)) return; // Ignore if it's not a browser window.
-  observer._emit("select", getActiveTab(chromeWindow));
-});
-
-// We should synchronize state, since probably we already have at least one
-// window open.
-for (let window of browserWindowIterator()) onWindowOpen(window);
-
-exports.observer = observer;
+exports.observer = new Observer();

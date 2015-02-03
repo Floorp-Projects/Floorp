@@ -277,4 +277,4 @@ exports["test site authentication credentials"] = function(assert, done) {
   });
 };
 
-require("test").run(exports);
+require("sdk/test").run(exports);

@@ -109,4 +109,4 @@ exports.testIsBrowser = function(assert) {
   assert.ok(!isBrowser(), 'no argument is not a browser window');
 };
 
-require('test').run(exports);
+require('sdk/test').run(exports);

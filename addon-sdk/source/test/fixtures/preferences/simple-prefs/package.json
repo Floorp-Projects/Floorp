@@ -6,7 +6,8 @@
         "name": "test",
         "type": "bool",
         "title": "tëst",
-        "value": false
+        "value": false,
+        "description": "descrïptiön"
     },
     {
         "name": "test2",

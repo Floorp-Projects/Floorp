@@ -1,15 +1,31 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 var timer = require("sdk/timers");
 const { Loader } = require("sdk/test/loader");
+const { gc } = require("sdk/test/memory");
+const { all, defer } = require("sdk/core/promise");
 
 exports.testSetTimeout = function(assert, end) {
   timer.setTimeout(function() {
     assert.pass("testSetTimeout passed");
     end();
   }, 1);
+};
+
+exports.testSetTimeoutGC = function*(assert) {
+  let called = defer();
+  let gcDone = defer();
+
+  timer.setTimeout(called.resolve, 300);
+  gc().then(gcDone.resolve);
+
+  yield called.promise;
+  yield gcDone.promise;
+
+  assert.pass("setTimeout passed!");
 };
 
 exports.testParamedSetTimeout = function(assert, end) {
@@ -59,6 +75,42 @@ exports.testSetInterval = function (assert, end) {
       end();
     }
   }, 1);
+};
+
+exports.testSetIntervalGC = function*(assert) {
+  let called = defer();
+  let gcDone = defer();
+  let done = false;
+  let count = 0;
+
+  let id = timer.setInterval(() => {
+    assert.pass("call count is " + count);
+
+    if (done) {
+      timer.clearInterval(id);
+      called.resolve();
+      return null;
+    }
+
+    if (count++ == 0) {
+      assert.pass("first call to setInterval worked!");
+
+      gc().then(() => {
+        assert.pass("gc is complete!");
+        done = true;
+        gcDone.resolve();
+      });
+
+      assert.pass("called gc()!");
+    }
+
+    return null;
+  }, 1);
+
+  yield gcDone.promise;
+  yield called.promise;
+
+  assert.pass("setInterval was called after the gc!");
 };
 
 exports.testParamedSetInerval = function(assert, end) {
@@ -174,4 +226,4 @@ exports.testUnload = function(assert, end) {
   }, 2);
 };
 
-require("test").run(exports);
+require("sdk/test").run(exports);

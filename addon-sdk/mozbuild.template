@@ -14,5 +14,4 @@ EXTRA_JS_MODULES.sdk += [
 
 EXTRA_JS_MODULES.sdk.system += [
     'source/modules/system/Startup.js',
-    'source/modules/system/XulApp.js',
 ]

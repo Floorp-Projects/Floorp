@@ -21,61 +21,53 @@ const prefService = Cc["@mozilla.org/preferences-service;1"].
 const prefSvc = prefService.getBranch(null);
 const defaultBranch = prefService.getDefaultBranch(null);
 
-function Branch(branchName) {
-  function getPrefKeys() {
-    return keys(branchName).map(function(key) {
-      return key.replace(branchName, "");
-    });
-  }
+const { Preferences } = require("resource://gre/modules/Preferences.jsm");
+const prefs = new Preferences({});
 
-  return Proxy.create({
-    get: function(receiver, pref) {
-      return get(branchName + pref);
-    },
-    set: function(receiver, pref, val) {
-      set(branchName + pref, val);
-    },
-    delete: function(pref) {
-      reset(branchName + pref);
-      return true;
-    },
-    has: function hasPrefKey(pref) {
-      return has(branchName + pref)
-    },
-    getPropertyDescriptor: function(name) {
+const branchKeys = branchName =>
+  keys(branchName).map($ => $.replace(branchName, ""));
+
+const Branch = function(branchName) {
+  return new Proxy(Branch.prototype, {
+    getOwnPropertyDescriptor(target, name, receiver) {
       return {
-        value: get(branchName + name)
+        configurable: true,
+        enumerable: true,
+        writable: false,
+        value: this.get(target, name, receiver)
       };
     },
-    enumerate: getPrefKeys,
-    keys: getPrefKeys
-  }, Branch.prototype);
+    enumerate(target) {
+      return branchKeys(branchName)[Symbol.iterator]();
+    },
+    ownKeys(target) {
+      return branchKeys(branchName);
+    },
+    get(target, name, receiver) {
+      return get(`${branchName}${name}`);
+    },
+    set(target, name, value, receiver) {
+      set(`${branchName}${name}`, value);
+    },
+    has(target, name) {
+      return this.hasOwn(target, name);
+    },
+    hasOwn(target, name) {
+      return has(`${branchName}${name}`);
+    },
+    deleteProperty(target, name) {
+      reset(`${branchName}${name}`);
+      return true;
+    }
+  });
 }
+
 
 function get(name, defaultValue) {
-  switch (prefSvc.getPrefType(name)) {
-  case Ci.nsIPrefBranch.PREF_STRING:
-    return prefSvc.getComplexValue(name, Ci.nsISupportsString).data;
-
-  case Ci.nsIPrefBranch.PREF_INT:
-    return prefSvc.getIntPref(name);
-
-  case Ci.nsIPrefBranch.PREF_BOOL:
-    return prefSvc.getBoolPref(name);
-
-  case Ci.nsIPrefBranch.PREF_INVALID:
-    return defaultValue;
-
-  default:
-    // This should never happen.
-    throw new Error("Error getting pref " + name +
-                    "; its value's type is " +
-                    prefSvc.getPrefType(name) +
-                    ", which I don't know " +
-                    "how to handle.");
-  }
+  return prefs.get(name, defaultValue);
 }
 exports.get = get;
+
 
 function set(name, value) {
   var prefType;
@@ -83,44 +75,16 @@ function set(name, value) {
     prefType = value.constructor.name;
 
   switch (prefType) {
-  case "String":
-    {
-      var string = Cc["@mozilla.org/supports-string;1"].
-                   createInstance(Ci.nsISupportsString);
-      string.data = value;
-      prefSvc.setComplexValue(name, Ci.nsISupportsString, string);
-    }
-    break;
-
   case "Number":
-    // We throw if the number is outside the range or not an integer, since
-    // the result will not be what the consumer wanted to store.
-    if (value > MAX_INT || value < MIN_INT)
-      throw new Error("you cannot set the " + name +
-                      " pref to the number " + value +
-                      ", as number pref values must be in the signed " +
-                      "32-bit integer range -(2^31) to 2^31-1.  " +
-                      "To store numbers outside that range, store " +
-                      "them as strings.");
     if (value % 1 != 0)
       throw new Error("cannot store non-integer number: " + value);
-    prefSvc.setIntPref(name, value);
-    break;
-
-  case "Boolean":
-    prefSvc.setBoolPref(name, value);
-    break;
-
-  default:
-    throw new Error("can't set pref " + name + " to value '" + value +
-                    "'; it isn't a string, integer, or boolean");
   }
+
+  prefs.set(name, value);
 }
 exports.set = set;
 
-function has(name) {
-  return (prefSvc.getPrefType(name) != Ci.nsIPrefBranch.PREF_INVALID);
-}
+const has = prefs.has.bind(prefs)
 exports.has = has;
 
 function keys(root) {
@@ -128,9 +92,7 @@ function keys(root) {
 }
 exports.keys = keys;
 
-function isSet(name) {
-  return (has(name) && prefSvc.prefHasUserValue(name));
-}
+const isSet = prefs.isSet.bind(prefs);
 exports.isSet = isSet;
 
 function reset(name) {

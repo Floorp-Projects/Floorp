@@ -36,9 +36,15 @@ exports.testWrappedDOM = function(assert, done) {
   let page = Page({
     allow: { script: true },
     contentURL: "data:text/html;charset=utf-8,<script>document.getElementById=3;window.scrollTo=3;</script>",
-    contentScript: "window.addEventListener('load', function () " +
-                   "self.postMessage([typeof(document.getElementById), " +
-                   "typeof(window.scrollTo)]), true)",
+    contentScript: 'new ' + function() {
+      function send() {
+        self.postMessage([typeof(document.getElementById), typeof(window.scrollTo)]);
+      }
+      if (document.readyState !== 'complete')
+        window.addEventListener('load', send, true)
+      else
+        send();
+    },
     onMessage: function (message) {
       assert.equal(message[0],
                        "function",
@@ -264,8 +270,8 @@ exports.testLoadContentPage = function(assert, done) {
         return done();
       assert[msg].apply(assert, message);
     },
-    contentURL: fixtures.url("test-page-worker.html"),
-    contentScriptFile: fixtures.url("test-page-worker.js"),
+    contentURL: fixtures.url("addon-sdk/data/test-page-worker.html"),
+    contentScriptFile: fixtures.url("addon-sdk/data/test-page-worker.js"),
     contentScriptWhen: "ready"
   });
 }
@@ -274,13 +280,10 @@ exports.testLoadContentPageRelativePath = function(assert, done) {
   const self = require("sdk/self");
   const { merge } = require("sdk/util/object");
 
-  let loader = Loader(module, null, null, {
-    modules: {
-      "sdk/self": merge({}, self, {
-        data: merge({}, self.data, fixtures)
-      })
-    }
-  });
+  const options = merge({}, require('@loader/options'),
+      { prefixURI: require('./fixtures').url() });
+
+  let loader = Loader(module, null, options);
 
   let page = loader.require("sdk/page-worker").Page({
     onMessage: function(message) {
@@ -526,4 +529,4 @@ function isDestroyed(page) {
   return false;
 }
 
-require("test").run(exports);
+require("sdk/test").run(exports);

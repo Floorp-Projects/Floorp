@@ -1,11 +1,36 @@
 {
-    "name": "addon-sdk",
-    "description": "Add-on development made easy.",
-    "keywords": [
-      "javascript", "engine", "addon", "extension",
-      "xulrunner", "firefox", "browser"
-    ],
-    "loader": "lib/sdk/loader/cuddlefish.js",
-    "license": "MPL 2.0",
-    "unpack": true
+  "name": "addon-sdk",
+  "description": "Add-on development made easy.",
+  "keywords": [
+    "javascript", "engine", "addon", "extension",
+    "xulrunner", "firefox", "browser"
+  ],
+  "license": "MPL 2.0",
+  "unpack": true,
+  "scripts": {
+    "test": "node ./bin/jpm-test.js",
+    "modules": "node ./bin/jpm-test.js --type modules",
+    "addons": "node ./bin/jpm-test.js --type addons",
+    "examples": "node ./bin/jpm-test.js --type examples"
+  },
+  "homepage": "https://github.com/mozilla/addon-sdk",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mozilla/addon-sdk.git"
+  },
+  "version": "0.1.18",
+  "main": "./lib/index.js",
+  "loader": "lib/sdk/loader/cuddlefish.js",
+  "devDependencies": {
+    "async": "0.2.10",
+    "chai": "1.9.2",
+    "glob": "4.0.6",
+    "jpm": "0.0.23",
+    "lodash": "2.4.1",
+    "mocha": "1.21.5",
+    "promise": "6.0.1",
+    "rimraf": "2.2.8",
+    "unzip": "0.1.9",
+    "xmldom": "0.1.19"
+  }
 }

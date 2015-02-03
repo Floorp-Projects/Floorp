@@ -22,13 +22,16 @@ const { URL } = require('sdk/url');
 const { once, off, emit } = require('sdk/event/core');
 const { defer, all } = require('sdk/core/promise');
 const { modelFor } = require('sdk/model/core');
+const { cleanUI } = require("sdk/test/utils");
+const { before, after } = require('sdk/test/utils');
+
 require('sdk/windows');
 
 const { BUILTIN_SIDEBAR_MENUITEMS, isSidebarShowing,
         getSidebarMenuitems, getExtraSidebarMenuitems, makeID, simulateCommand,
         simulateClick, isChecked } = require('./sidebar/utils');
 
-exports.testSidebarBasicLifeCycle = function(assert, done) {
+exports.testSidebarBasicLifeCycle = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testSidebarBasicLifeCycle';
   let window = getMostRecentBrowserWindow();
@@ -62,45 +65,48 @@ exports.testSidebarBasicLifeCycle = function(assert, done) {
   assert.equal(ele.getAttribute('label'), sidebar.title, 'the sidebar title is the menuitem label')
 
   assert.equal(isSidebarShowing(window), false, 'sidebar is not showing 2');
-  sidebar.on('show', function() {
-    assert.pass('the show event was fired');
-    assert.equal(isSidebarShowing(window), true, 'sidebar is not showing 3');
-    assert.equal(isShowing(sidebar), true, 'the sidebar is showing');
-    assert.ok(isChecked(ele), 'the sidebar is displayed');
 
-    sidebar.once('hide', function() {
+  // explicit test of the on hide event
+  yield new Promise(resolve => {
+    sidebar.on('show', resolve);
+    sidebar.show();
+    assert.pass('showing sidebar..');
+  });
+
+  assert.pass('the show event was fired');
+  assert.equal(isSidebarShowing(window), true, 'sidebar is not showing 3');
+  assert.equal(isShowing(sidebar), true, 'the sidebar is showing');
+  assert.ok(isChecked(ele), 'the sidebar is displayed');
+
+  // explicit test of the on show event
+  yield new Promise(resolve => {
+    sidebar.on('hide', () => {
+      sidebar.once('detach', resolve);
+
       assert.pass('the hide event was fired');
       assert.ok(!isChecked(ele), 'the sidebar menuitem is not checked');
       assert.equal(isShowing(sidebar), false, 'the sidebar is not showing');
       assert.equal(isSidebarShowing(window), false, 'the sidebar elemnt is hidden');
-
-      sidebar.once('detach', function() {
-        // calling destroy twice should not matter
-        sidebar.destroy();
-        sidebar.destroy();
-
-        let sidebarMI = getSidebarMenuitems();
-        for (let mi of sidebarMI) {
-          assert.ok(BUILTIN_SIDEBAR_MENUITEMS.indexOf(mi.getAttribute('id')) >= 0, 'the menuitem is for a built-in sidebar')
-          assert.ok(!isChecked(mi), 'no sidebar menuitem is checked');
-        }
-
-        assert.ok(!window.document.getElementById(makeID(testName)), 'sidebar id DNE');
-        assert.pass('calling destroy worked without error');
-
-        done();
-      });
     });
-
     sidebar.hide();
     assert.pass('hiding sidebar..');
   });
 
-  sidebar.show();
-  assert.pass('showing sidebar..');
+  // calling destroy twice should not matter
+  sidebar.destroy();
+  sidebar.destroy();
+
+  let sidebarMI = getSidebarMenuitems();
+  for (let mi of sidebarMI) {
+    assert.ok(BUILTIN_SIDEBAR_MENUITEMS.indexOf(mi.getAttribute('id')) >= 0, 'the menuitem is for a built-in sidebar')
+    assert.ok(!isChecked(mi), 'no sidebar menuitem is checked');
+  }
+
+  assert.ok(!window.document.getElementById(makeID(testName)), 'sidebar id DNE');
+  assert.pass('calling destroy worked without error');
 }
 
-exports.testSideBarIsInNewWindows = function(assert, done) {
+exports.testSideBarIsInNewWindows = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testSideBarIsInNewWindows';
   let sidebar = Sidebar({
@@ -113,22 +119,20 @@ exports.testSideBarIsInNewWindows = function(assert, done) {
   let ele = startWindow.document.getElementById(makeID(testName));
   assert.ok(ele, 'sidebar element was added');
 
-  open().then(function(window) {
-      let ele = window.document.getElementById(makeID(testName));
-      assert.ok(ele, 'sidebar element was added');
+  let window = yield open();
 
-      // calling destroy twice should not matter
-      sidebar.destroy();
-      sidebar.destroy();
+  ele = window.document.getElementById(makeID(testName));
+  assert.ok(ele, 'sidebar element was added');
 
-      assert.ok(!window.document.getElementById(makeID(testName)), 'sidebar id DNE');
-      assert.ok(!startWindow.document.getElementById(makeID(testName)), 'sidebar id DNE');
+  // calling destroy twice should not matter
+  sidebar.destroy();
+  sidebar.destroy();
 
-      close(window).then(done, assert.fail);
-  })
+  assert.ok(!window.document.getElementById(makeID(testName)), 'sidebar id DNE');
+  assert.ok(!startWindow.document.getElementById(makeID(testName)), 'sidebar id DNE');
 }
 
-exports.testSideBarIsShowingInNewWindows = function(assert, done) {
+exports.testSideBarIsShowingInNewWindows = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testSideBarIsShowingInNewWindows';
   let sidebar = Sidebar({
@@ -142,57 +146,55 @@ exports.testSideBarIsShowingInNewWindows = function(assert, done) {
   assert.ok(ele, 'sidebar element was added');
 
   let oldEle = ele;
-  sidebar.once('attach', function() {
-    assert.pass('attach event fired');
 
-    sidebar.once('show', function() {
-      assert.pass('show event fired');
+  yield new Promise(resolve => {
+    sidebar.once('attach', function() {
+      assert.pass('attach event fired');
 
       sidebar.once('show', function() {
-        let window = getMostRecentBrowserWindow();
-        assert.notEqual(startWindow, window, 'window is new');
-
-        let sb = window.document.getElementById('sidebar');
-        if (sb && sb.docShell && sb.contentDocument && sb.contentDocument.getElementById('web-panels-browser')) {
-          end();
-        }
-        else {
-          sb.addEventListener('DOMWindowCreated', end, false);
-        }
-
-        function end() {
-          sb.removeEventListener('DOMWindowCreated', end, false);
-          let webPanelBrowser = sb.contentDocument.getElementById('web-panels-browser');
-
-          let ele = window.document.getElementById(makeID(testName));
-
-          assert.ok(ele, 'sidebar element was added 2');
-          assert.ok(isChecked(ele), 'the sidebar is checked');
-          assert.notEqual(ele, oldEle, 'there are two different sidebars');
-
-          assert.equal(isShowing(sidebar), true, 'the sidebar is showing in new window');
-
-
-            sidebar.destroy();
-
-            assert.equal(isShowing(sidebar), false, 'the sidebar is not showing');
-            assert.ok(!isSidebarShowing(window), 'sidebar in most recent window is not showing');
-            assert.ok(!isSidebarShowing(startWindow), 'sidebar in most start window is not showing');
-            assert.ok(!window.document.getElementById(makeID(testName)), 'sidebar id DNE');
-            assert.ok(!startWindow.document.getElementById(makeID(testName)), 'sidebar id DNE');
-
-            setTimeout(function() {
-              close(window).then(done, assert.fail);
-            });
-        }
-      });
-
-      startWindow.OpenBrowserWindow();
+        assert.pass('show event fired');
+        resolve();
+      })
     });
+    sidebar.show();
   });
 
-  show(sidebar);
-  assert.pass('showing the sidebar');
+  yield new Promise(resolve => {
+    sidebar.once('show', resolve);
+    startWindow.OpenBrowserWindow();
+  });
+
+  let window = getMostRecentBrowserWindow();
+  assert.notEqual(startWindow, window, 'window is new');
+
+  let sb = window.document.getElementById('sidebar');
+  yield new Promise(resolve => {
+    if (sb && sb.docShell && sb.contentDocument && sb.contentDocument.getElementById('web-panels-browser')) {
+      end();
+    }
+    else {
+      sb.addEventListener('DOMWindowCreated', end, false);
+    }
+    function end () {
+      sb.removeEventListener('DOMWindowCreated', end, false);
+      resolve();
+    }
+  })
+
+  ele = window.document.getElementById(makeID(testName));
+  assert.ok(ele, 'sidebar element was added 2');
+  assert.ok(isChecked(ele), 'the sidebar is checked');
+  assert.notEqual(ele, oldEle, 'there are two different sidebars');
+
+  assert.equal(isShowing(sidebar), true, 'the sidebar is showing in new window');
+
+  sidebar.destroy();
+
+  assert.equal(isShowing(sidebar), false, 'the sidebar is not showing');
+  assert.ok(!isSidebarShowing(window), 'sidebar in most recent window is not showing');
+  assert.ok(!isSidebarShowing(startWindow), 'sidebar in most start window is not showing');
+  assert.ok(!window.document.getElementById(makeID(testName)), 'sidebar id DNE');
+  assert.ok(!startWindow.document.getElementById(makeID(testName)), 'sidebar id DNE');
 }
 
 // TODO: determine if this is acceptable..
@@ -223,7 +225,7 @@ exports.testAddonGlobalSimple = function(assert, done) {
 }
 */
 
-exports.testAddonGlobalComplex = function(assert, done) {
+exports.testAddonGlobalComplex = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testAddonGlobalComplex';
   let sidebar = Sidebar({
@@ -232,54 +234,57 @@ exports.testAddonGlobalComplex = function(assert, done) {
     url: data.url('test-sidebar-addon-global.html')
   });
 
-  sidebar.on('attach', function(worker) {
-    assert.pass('sidebar was attached');
-    assert.ok(!!worker, 'attach event has worker');
-
-    worker.port.once('Y', function(msg) {
-      assert.equal(msg, '1', 'got event from worker');
-
-      worker.port.on('X', function(msg) {
-        assert.equal(msg, '123', 'the final message is correct');
-
-        sidebar.destroy();
-
-        done();
-      });
-      worker.port.emit('X', msg + '2');
-    })
+  let worker = yield new Promise(resolve => {
+    sidebar.on('attach', resolve);
+    show(sidebar);
   });
 
-  show(sidebar);
+  assert.pass('sidebar was attached');
+  assert.ok(!!worker, 'attach event has worker');
+
+
+  let msg = yield new Promise(resolve => {
+    worker.port.once('Y', resolve);
+  });
+
+  assert.equal(msg, '1', 'got event from worker');
+
+  msg = yield new Promise(resolve => {
+    worker.port.on('X', resolve);
+    worker.port.emit('X', msg + '2');
+  });
+
+  assert.equal(msg, '123', 'the final message is correct');
+
+  sidebar.destroy();
 }
 
-exports.testAddonReady = function(assert, done) {
+exports.testAddonReady = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testAddonReady';
+  let ready = defer();
   let sidebar = Sidebar({
     id: testName,
     title: testName,
     url: data.url('test-sidebar-addon-global.html'),
-    onReady: function(worker) {
-      assert.pass('sidebar was attached');
-      assert.ok(!!worker, 'attach event has worker');
-
-      worker.port.on('X', function(msg) {
-        assert.equal(msg, '123', 'the final message is correct');
-
-        sidebar.destroy();
-
-        done();
-      });
-
-      worker.port.emit('X', '12');
-    }
+    onReady: ready.resolve
   });
-
   show(sidebar);
+
+  let worker = yield ready.promise;
+  assert.pass('sidebar was attached');
+  assert.ok(!!worker, 'attach event has worker');
+
+  let msg = yield new Promise(resolve => {
+    worker.port.on('X', resolve);
+    worker.port.emit('X', '12');
+  });
+  assert.equal(msg, '123', 'the final message is correct');
+
+  sidebar.destroy();
 }
 
-exports.testShowingOneSidebarAfterAnother = function(assert, done) {
+exports.testShowingOneSidebarAfterAnother = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testShowingOneSidebarAfterAnother';
 
@@ -307,38 +312,35 @@ exports.testShowingOneSidebarAfterAnother = function(assert, done) {
   }
   testShowing(false, false, false);
 
-  sidebar1.once('show', function() {
-    testShowing(true, false, true);
-    for (let mi of getExtraSidebarMenuitems(window)) {
-      let menuitemID = mi.getAttribute('id').replace(/^jetpack-sidebar-/, '');
-      assert.ok(IDs.indexOf(menuitemID) >= 0, 'the extra menuitem is for one of our test sidebars');
-      assert.equal(isChecked(mi), menuitemID == sidebar1.id, 'the test sidebar menuitem has the correct checked value');
-    }
+  yield show(sidebar1);
+  assert.pass('showed sidebar1');
 
-    sidebar2.once('show', function() {
-      testShowing(false, true, true);
-      for (let mi of getExtraSidebarMenuitems(window)) {
-        let menuitemID = mi.getAttribute('id').replace(/^jetpack-sidebar-/, '');
-        assert.ok(IDs.indexOf(menuitemID) >= 0, 'the extra menuitem is for one of our test sidebars');
-        assert.equal(isChecked(mi), menuitemID == sidebar2.id, 'the test sidebar menuitem has the correct checked value');
-      }
+  testShowing(true, false, true);
 
-      sidebar1.destroy();
-      sidebar2.destroy();
+  for (let mi of getExtraSidebarMenuitems(window)) {
+    let menuitemID = mi.getAttribute('id').replace(/^jetpack-sidebar-/, '');
+    assert.ok(IDs.indexOf(menuitemID) >= 0, 'the extra menuitem is for one of our test sidebars');
+    assert.equal(isChecked(mi), menuitemID == sidebar1.id, 'the test sidebar menuitem has the correct checked value');
+  }
 
-      testShowing(false, false, false);
+  yield show(sidebar2);
+  assert.pass('showed sidebar2');
 
-      done();
-    });
+  testShowing(false, true, true);
 
-    show(sidebar2);
-    assert.pass('showing sidebar 2');
-  })
-  show(sidebar1);
-  assert.pass('showing sidebar 1');
+  for (let mi of getExtraSidebarMenuitems(window)) {
+    let menuitemID = mi.getAttribute('id').replace(/^jetpack-sidebar-/, '');
+    assert.ok(IDs.indexOf(menuitemID) >= 0, 'the extra menuitem is for one of our test sidebars');
+    assert.equal(isChecked(mi), menuitemID == sidebar2.id, 'the test sidebar menuitem has the correct checked value');
+  }
+
+  sidebar1.destroy();
+  sidebar2.destroy();
+
+  testShowing(false, false, false);
 }
 
-exports.testSidebarUnload = function(assert, done) {
+exports.testSidebarUnload = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testSidebarUnload';
   let loader = Loader(module);
@@ -350,28 +352,25 @@ exports.testSidebarUnload = function(assert, done) {
   let sidebar = loader.require('sdk/ui/sidebar').Sidebar({
     id: testName,
     title: testName,
-    url:  'data:text/html;charset=utf-8,'+ testName,
-    onShow: function() {
-      assert.pass('onShow works for Sidebar');
-      loader.unload();
+    url:  'data:text/html;charset=utf-8,'+ testName
+  });
 
-      let sidebarMI = getSidebarMenuitems();
-      for (let mi of sidebarMI) {
-        assert.ok(BUILTIN_SIDEBAR_MENUITEMS.indexOf(mi.getAttribute('id')) >= 0, 'the menuitem is for a built-in sidebar')
-        assert.ok(!isChecked(mi), 'no sidebar menuitem is checked');
-      }
-      assert.ok(!window.document.getElementById(makeID(testName)), 'sidebar id DNE');
-      assert.equal(isSidebarShowing(window), false, 'the sidebar is not showing');
-
-      done();
-    }
-  })
-
-  sidebar.show();
+  yield sidebar.show();
   assert.pass('showing the sidebar');
+
+  loader.unload();
+
+  let sidebarMI = getSidebarMenuitems();
+  for (let mi of sidebarMI) {
+    assert.ok(BUILTIN_SIDEBAR_MENUITEMS.indexOf(mi.getAttribute('id')) >= 0, 'the menuitem is for a built-in sidebar')
+    assert.ok(!isChecked(mi), 'no sidebar menuitem is checked');
+  }
+
+  assert.ok(!window.document.getElementById(makeID(testName)), 'sidebar id DNE');
+  assert.equal(isSidebarShowing(window), false, 'the sidebar is not showing');
 }
 
-exports.testRelativeURL = function(assert, done) {
+exports.testRelativeURL = function*(assert) {
   const { merge } = require('sdk/util/object');
   const self = require('sdk/self');
 
@@ -392,25 +391,25 @@ exports.testRelativeURL = function(assert, done) {
     url: './test-sidebar-addon-global.html'
   });
 
-  sidebar.on('attach', function(worker) {
-    assert.pass('sidebar was attached');
-    assert.ok(!!worker, 'attach event has worker');
+  yield new Promise(resolve => {
+    sidebar.on('attach', function(worker) {
+      assert.pass('sidebar was attached');
+      assert.ok(!!worker, 'attach event has worker');
 
-    worker.port.once('Y', function(msg) {
-      assert.equal(msg, '1', 'got event from worker');
+      worker.port.once('Y', function(msg) {
+        assert.equal(msg, '1', 'got event from worker');
 
-      worker.port.on('X', function(msg) {
-        assert.equal(msg, '123', 'the final message is correct');
-
-        sidebar.destroy();
-
-        done();
-      });
-      worker.port.emit('X', msg + '2');
-    })
+        worker.port.on('X', function(msg) {
+          assert.equal(msg, '123', 'the final message is correct');
+          resolve();
+        });
+        worker.port.emit('X', msg + '2');
+      })
+    });
+    sidebar.show();
   });
 
-  sidebar.show();
+  sidebar.destroy();
 }
 
 exports.testRemoteContent = function(assert) {
@@ -553,7 +552,7 @@ exports.testUndefinedID = function(assert) {
 }
 
 // TEST: edge case where web panel is destroyed while loading
-exports.testDestroyEdgeCaseBug = function(assert, done) {
+exports.testDestroyEdgeCaseBug = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testDestroyEdgeCaseBug';
   let window = getMostRecentBrowserWindow();
@@ -572,46 +571,43 @@ exports.testDestroyEdgeCaseBug = function(assert, done) {
 
   //assert.equal(isShowing(sidebar), true, 'the sidebar is showing');
 
-  open().then(focus).then(function(window2) {
-    assert.equal(isPrivate(window2), false, 'the new window is not private');
-    assert.equal(isSidebarShowing(window2), false, 'the sidebar is not showing');
-    assert.equal(isShowing(sidebar), false, 'the sidebar is not showing');
+  let window2 = yield open().then(focus);
 
-    sidebar.destroy();
-    assert.pass('destroying the sidebar');
+  assert.equal(isPrivate(window2), false, 'the new window is not private');
+  assert.equal(isSidebarShowing(window2), false, 'the sidebar is not showing');
+  assert.equal(isShowing(sidebar), false, 'the sidebar is not showing');
 
-    close(window2).then(function() {
-      let loader = Loader(module);
+  sidebar.destroy();
+  assert.pass('destroying the sidebar');
 
-      assert.equal(isPrivate(window), false, 'the current window is not private');
+  yield close(window2);
 
-      let sidebar = loader.require('sdk/ui/sidebar').Sidebar({
-        id: testName,
-        title: testName,
-        url:  'data:text/html;charset=utf-8,'+ testName,
-        onShow: function() {
-          assert.pass('onShow works for Sidebar');
-          loader.unload();
+  let loader = Loader(module);
 
-          let sidebarMI = getSidebarMenuitems();
-          for (let mi of sidebarMI) {
-            assert.ok(BUILTIN_SIDEBAR_MENUITEMS.indexOf(mi.getAttribute('id')) >= 0, 'the menuitem is for a built-in sidebar')
-            assert.ok(!isChecked(mi), 'no sidebar menuitem is checked');
-          }
-          assert.ok(!window.document.getElementById(makeID(testName)), 'sidebar id DNE');
-          assert.equal(isSidebarShowing(window), false, 'the sidebar is not showing');
+  assert.equal(isPrivate(window), false, 'the current window is not private');
 
-          done();
-        }
-      })
+  sidebar = loader.require('sdk/ui/sidebar').Sidebar({
+    id: testName,
+    title: testName,
+    url:  'data:text/html;charset=utf-8,'+ testName,
+    onShow: function() {
+    }
+  })
 
-      sidebar.show();
-      assert.pass('showing the sidebar');
-    });
-  });
+  assert.pass('showing the sidebar');
+  yield sidebar.show();
+  loader.unload();
+
+  let sidebarMI = getSidebarMenuitems();
+  for (let mi of sidebarMI) {
+    assert.ok(BUILTIN_SIDEBAR_MENUITEMS.indexOf(mi.getAttribute('id')) >= 0, 'the menuitem is for a built-in sidebar')
+    assert.ok(!isChecked(mi), 'no sidebar menuitem is checked');
+  }
+  assert.ok(!window.document.getElementById(makeID(testName)), 'sidebar id DNE');
+  assert.equal(isSidebarShowing(window), false, 'the sidebar is not showing');
 }
 
-exports.testClickingACheckedMenuitem = function(assert, done) {
+exports.testClickingACheckedMenuitem = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   const testName = 'testClickingACheckedMenuitem';
   let sidebar = Sidebar({
@@ -621,23 +617,22 @@ exports.testClickingACheckedMenuitem = function(assert, done) {
   });
   assert.pass('sidebar was created');
 
-  open().then(focus).then(window => {
-    return sidebar.show().then(_ => {
-      assert.pass('the show callback works');
+  let window = yield open().then(focus);
+  yield sidebar.show();
+  assert.pass('the show callback works');
 
-      sidebar.once('hide', _ => {
-        assert.pass('clicking the menuitem after the sidebar has shown hides it.');
-        sidebar.destroy();
-        close(window).then(done, assert.fail);
-      });
+  let waitForHide = defer();
+  sidebar.once('hide', waitForHide.resolve);
+  let menuitem = window.document.getElementById(makeID(sidebar.id));
+  simulateCommand(menuitem);
 
-      let menuitem = window.document.getElementById(makeID(sidebar.id));
-      simulateCommand(menuitem);
-    });
-  }).catch(assert.fail);
+  yield waitForHide.promise;
+
+  assert.pass('clicking the menuitem after the sidebar has shown hides it.');
+  sidebar.destroy();
 };
 
-exports.testTitleSetter = function(assert, done) {
+exports.testTitleSetter = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testTitleSetter';
   let { document } = getMostRecentBrowserWindow();
@@ -650,29 +645,27 @@ exports.testTitleSetter = function(assert, done) {
 
   assert.equal(sidebar1.title, testName, 'title getter works');
 
-  sidebar1.show().then(function() {
-    assert.equal(document.getElementById(makeID(sidebar1.id)).getAttribute('label'),
-                 testName,
-                 'the menuitem label is correct');
+  yield sidebar1.show();
+  assert.equal(document.getElementById(makeID(sidebar1.id)).getAttribute('label'),
+               testName,
+               'the menuitem label is correct');
 
-    assert.equal(document.getElementById('sidebar-title').value, testName, 'the menuitem label is correct');
+  assert.equal(document.getElementById('sidebar-title').value, testName, 'the menuitem label is correct');
 
-    sidebar1.title = 'foo';
+  sidebar1.title = 'foo';
 
-    assert.equal(sidebar1.title, 'foo', 'title getter works');
+  assert.equal(sidebar1.title, 'foo', 'title getter works');
 
-    assert.equal(document.getElementById(makeID(sidebar1.id)).getAttribute('label'),
-                 'foo',
-                 'the menuitem label was updated');
+  assert.equal(document.getElementById(makeID(sidebar1.id)).getAttribute('label'),
+               'foo',
+               'the menuitem label was updated');
 
-    assert.equal(document.getElementById('sidebar-title').value, 'foo', 'the sidebar title was updated');
+  assert.equal(document.getElementById('sidebar-title').value, 'foo', 'the sidebar title was updated');
 
-    sidebar1.destroy();
-    done();
-  }, assert.fail);
+  sidebar1.destroy();
 }
 
-exports.testURLSetter = function(assert, done) {
+exports.testURLSetter = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testURLSetter';
   let window = getMostRecentBrowserWindow();
@@ -691,37 +684,35 @@ exports.testURLSetter = function(assert, done) {
                'the menuitem is not checked');
   assert.equal(isSidebarShowing(window), false, 'the new window sidebar is not showing');
 
-  windowPromise(window.OpenBrowserWindow(), 'load').then(function(window) {
-    let { document } = window;
-    assert.pass('new window was opened');
+  window = yield windowPromise(window.OpenBrowserWindow(), 'load');
+  document = window.document;
+  assert.pass('new window was opened');
 
-    sidebar1.show().then(function() {
-      assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
-      assert.ok(isChecked(document.getElementById(makeID(sidebar1.id))),
-                   'the menuitem is checked');
-      assert.ok(isSidebarShowing(window), 'the new window sidebar is showing');
+  yield sidebar1.show();
 
-      sidebar1.once('show', function() {
-        assert.pass('setting the sidebar.url causes a show event');
+  assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
+  assert.ok(isChecked(document.getElementById(makeID(sidebar1.id))),
+               'the menuitem is checked');
+  assert.ok(isSidebarShowing(window), 'the new window sidebar is showing');
 
-        assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
-        assert.ok(isSidebarShowing(window), 'the new window sidebar is still showing');
+  yield new Promise(resolve => {
+    sidebar1.once('show', resolve);
+    sidebar1.url = (url + '1');
+    assert.equal(sidebar1.url, (url + '1'), 'url getter works');
+    assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
+    assert.ok(isSidebarShowing(window), 'the new window sidebar is showing');
+  });
 
-        assert.ok(isChecked(document.getElementById(makeID(sidebar1.id))),
-                     'the menuitem is still checked');
+  assert.pass('setting the sidebar.url causes a show event');
 
-        sidebar1.destroy();
+  assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
+  assert.equal(isSidebarShowing(window), true, 'the new window sidebar is still showing');
 
-        close(window).then(done);
-      });
+  assert.ok(isChecked(document.getElementById(makeID(sidebar1.id))),
+               'the menuitem is still checked');
 
-      sidebar1.url = (url + '1');
-
-      assert.equal(sidebar1.url, (url + '1'), 'url getter works');
-      assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
-      assert.ok(isSidebarShowing(window), 'the new window sidebar is showing');
-    }, assert.fail);
-  }, assert.fail);
+  sidebar1.destroy();
+  assert.equal(isSidebarShowing(window), false, 'the new window sidebar is not showing');
 }
 
 exports.testDuplicateID = function(assert) {
@@ -748,7 +739,7 @@ exports.testDuplicateID = function(assert) {
   sidebar1.destroy();
 }
 
-exports.testURLSetterToSameValueReloadsSidebar = function(assert, done) {
+exports.testURLSetterToSameValueReloadsSidebar = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testURLSetterToSameValueReloadsSidebar';
   let window = getMostRecentBrowserWindow();
@@ -767,40 +758,39 @@ exports.testURLSetterToSameValueReloadsSidebar = function(assert, done) {
                'the menuitem is not checked');
   assert.equal(isSidebarShowing(window), false, 'the new window sidebar is not showing');
 
-  windowPromise(window.OpenBrowserWindow(), 'load').then(function(window) {
-    let { document } = window;
-    assert.pass('new window was opened');
+  window = yield windowPromise(window.OpenBrowserWindow(), 'load');
+  document = window.document;
+  assert.pass('new window was opened');
 
-    sidebar1.show().then(function() {
-      assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
-      assert.ok(isChecked(document.getElementById(makeID(sidebar1.id))),
-                   'the menuitem is checked');
-      assert.ok(isSidebarShowing(window), 'the new window sidebar is showing');
+  yield sidebar1.show();
 
-      sidebar1.once('show', function() {
-        assert.pass('setting the sidebar.url causes a show event');
+  assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
+  assert.ok(isChecked(document.getElementById(makeID(sidebar1.id))),
+               'the menuitem is checked');
+  assert.ok(isSidebarShowing(window), 'the new window sidebar is showing');
 
-        assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
-        assert.ok(isSidebarShowing(window), 'the new window sidebar is still showing');
+  let shown = defer();
+  sidebar1.once('show', shown.resolve);
+  sidebar1.url = url;
 
-        assert.ok(isChecked(document.getElementById(makeID(sidebar1.id))),
-                     'the menuitem is still checked');
+  assert.equal(sidebar1.url, url, 'url getter works');
+  assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
+  assert.ok(isSidebarShowing(window), 'the new window sidebar is showing');
 
-        sidebar1.destroy();
+  yield shown.promise;
 
-        close(window).then(done);
-      });
+  assert.pass('setting the sidebar.url causes a show event');
 
-      sidebar1.url = url;
+  assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
+  assert.ok(isSidebarShowing(window), 'the new window sidebar is still showing');
 
-      assert.equal(sidebar1.url, url, 'url getter works');
-      assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
-      assert.ok(isSidebarShowing(window), 'the new window sidebar is showing');
-    }, assert.fail);
-  }, assert.fail);
+  assert.ok(isChecked(document.getElementById(makeID(sidebar1.id))),
+               'the menuitem is still checked');
+
+  sidebar1.destroy();
 }
 
-exports.testShowingInOneWindowDoesNotAffectOtherWindows = function(assert, done) {
+exports.testShowingInOneWindowDoesNotAffectOtherWindows = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testShowingInOneWindowDoesNotAffectOtherWindows';
   let window1 = getMostRecentBrowserWindow();
@@ -827,54 +817,42 @@ exports.testShowingInOneWindowDoesNotAffectOtherWindows = function(assert, done)
   }
   checkSidebarShowing(window1, false);
 
-  windowPromise(window1.OpenBrowserWindow(), 'load').then(function(window) {
-    let { document } = window;
-    assert.pass('new window was opened!');
+  let window = yield windowPromise(window1.OpenBrowserWindow(), 'load');
+  let { document } = window;
+  assert.pass('new window was opened!');
 
-    // waiting for show
-    sidebar1.once('show', function() {
-      // check state of the new window
-      assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
-      checkSidebarShowing(window, true);
+  // waiting for show
+  yield sidebar1.show();
 
-      // check state of old window
-      checkSidebarShowing(window1, false);
+  // check state of the new window
+  assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
+  checkSidebarShowing(window, true);
 
-      // waiting for show using url setter
-      sidebar1.once('show', function() {
-        assert.pass('setting the sidebar.url causes a new show event');
+  // check state of old window
+  checkSidebarShowing(window1, false);
 
-        // check state of the new window
-        assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
-        checkSidebarShowing(window, true);
+  yield sidebar1.show();
 
-        // check state of old window
-        checkSidebarShowing(window1, false);
+  // check state of the new window
+  assert.equal(isShowing(sidebar1), true, 'the sidebar is showing');
+  checkSidebarShowing(window, true);
 
-        // calling destroy() twice should not matter
-        sidebar1.destroy();
-        sidebar1.destroy();
+  // check state of old window
+  checkSidebarShowing(window1, false);
 
-        // check state of the new window
-        assert.equal(isShowing(sidebar1), false, 'the sidebar is not showing');
-        checkSidebarShowing(window, undefined);
+  // calling destroy() twice should not matter
+  sidebar1.destroy();
+  sidebar1.destroy();
 
-        // check state of old window
-        checkSidebarShowing(window1, undefined);
+  // check state of the new window
+  assert.equal(isShowing(sidebar1), false, 'the sidebar is not showing');
+  checkSidebarShowing(window, undefined);
 
-        close(window).then(done);
-      });
-
-      assert.pass('setting sidebar1.url');
-      sidebar1.url += '1';
-      assert.pass('set sidebar1.url');
-    });
-
-    sidebar1.show();
-  }, assert.fail);
+  // check state of old window
+  checkSidebarShowing(window1, undefined);
 }
 
-exports.testHidingAHiddenSidebarRejects = function(assert, done) {
+exports.testHidingAHiddenSidebarRejects = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testHidingAHiddenSidebarRejects';
   let url = 'data:text/html;charset=utf-8,'+testName;
@@ -884,13 +862,12 @@ exports.testHidingAHiddenSidebarRejects = function(assert, done) {
     url: url
   });
 
-  sidebar.hide().then(assert.fail, assert.pass).then(function() {
-    sidebar.destroy();
-    done();
-  }, assert.fail);
+  yield sidebar.hide().then(assert.fail, assert.pass);
+
+  sidebar.destroy();
 }
 
-exports.testGCdSidebarsOnUnload = function(assert, done) {
+exports.testGCdSidebarsOnUnload = function*(assert) {
   const loader = Loader(module);
   const { Sidebar } = loader.require('sdk/ui/sidebar');
   const window = getMostRecentBrowserWindow();
@@ -907,27 +884,24 @@ exports.testGCdSidebarsOnUnload = function(assert, done) {
     url: url
   });
 
-  sidebar.show().then(function() {
-    sidebar = null;
+  yield sidebar.show();
+  sidebar = null;
 
-    assert.equal(isSidebarShowing(window), true, 'the sidebar is showing');
+  assert.equal(isSidebarShowing(window), true, 'the sidebar is showing');
 
-    let menuitemID = makeID(testName);
+  let menuitemID = makeID(testName);
 
-    assert.ok(!!window.document.getElementById(menuitemID), 'the menuitem was found');
+  assert.ok(window.document.getElementById(menuitemID), 'the menuitem was found');
 
-    Cu.schedulePreciseGC(function() {
-      loader.unload();
+  yield new Promise(resolve => Cu.schedulePreciseGC(resolve));
 
-      assert.equal(isSidebarShowing(window), false, 'the sidebar is not showing after unload');
-      assert.ok(!window.document.getElementById(menuitemID), 'the menuitem was removed');
+  loader.unload();
 
-      done();
-    })
-  }, assert.fail).then(null, assert.fail);
+  assert.equal(isSidebarShowing(window), false, 'the sidebar is not showing after unload');
+  assert.ok(!window.document.getElementById(menuitemID), 'the menuitem was removed');
 }
 
-exports.testGCdShowingSidebarsOnUnload = function(assert, done) {
+exports.testGCdShowingSidebarsOnUnload = function*(assert) {
   const loader = Loader(module);
   const { Sidebar } = loader.require('sdk/ui/sidebar');
   const window = getMostRecentBrowserWindow();
@@ -943,41 +917,67 @@ exports.testGCdShowingSidebarsOnUnload = function(assert, done) {
     url: url
   });
 
-  sidebar.on('show', function() {
-    sidebar = null;
+  yield sidebar.show();
 
-    assert.equal(isSidebarShowing(window), true, 'the sidebar is showing');
+  sidebar = null;
 
-    let menuitemID = makeID(testName);
+  assert.equal(isSidebarShowing(window), true, 'the sidebar is showing');
 
-    assert.ok(!!window.document.getElementById(menuitemID), 'the menuitem was found');
+  let menuitemID = makeID(testName);
 
-    Cu.schedulePreciseGC(function() {
-      assert.equal(isSidebarShowing(window), true, 'the sidebar is still showing after gc');
-      assert.ok(!!window.document.getElementById(menuitemID), 'the menuitem was found after gc');
+  assert.ok(!!window.document.getElementById(menuitemID), 'the menuitem was found');
 
-      loader.unload();
+  yield new Promise(resolve => Cu.schedulePreciseGC(resolve));
 
-      assert.equal(isSidebarShowing(window), false, 'the sidebar is not showing after unload');
-      assert.ok(!window.document.getElementById(menuitemID), 'the menuitem was removed');
+  assert.equal(isSidebarShowing(window), true, 'the sidebar is still showing after gc');
+  assert.ok(!!window.document.getElementById(menuitemID), 'the menuitem was found after gc');
 
-      done();
-    })
+  loader.unload();
+
+  assert.equal(isSidebarShowing(window), false, 'the sidebar is not showing after unload');
+  assert.ok(!window.document.getElementById(menuitemID), 'the menuitem was removed');
+}
+
+exports.testDetachEventOnWindowClose = function*(assert) {
+  const loader = Loader(module);
+  const { Sidebar } = loader.require('sdk/ui/sidebar');
+  let window = getMostRecentBrowserWindow();
+
+  let testName = 'testDetachEventOnWindowClose';
+  let url = 'data:text/html;charset=utf-8,' + testName;
+
+  window = yield windowPromise(window.OpenBrowserWindow(), 'load').then(focus);
+
+  yield new Promise(resolve => {
+    let sidebar = Sidebar({
+      id: testName,
+      title: testName,
+      url: url,
+      onAttach: function() {
+        assert.pass('the attach event is fired');
+        window.close();
+      },
+      onDetach: resolve
+    });
+
+    sidebar.show();
   });
 
-  sidebar.show();
+  assert.pass('the detach event is fired when the window showing it closes');
+  loader.unload();
 }
 
-exports.testDetachEventOnWindowClose = function(assert, done) {
+exports.testHideEventOnWindowClose = function*(assert) {
   const loader = Loader(module);
   const { Sidebar } = loader.require('sdk/ui/sidebar');
-  const window = getMostRecentBrowserWindow();
+  let window = getMostRecentBrowserWindow();
 
   let testName = 'testDetachEventOnWindowClose';
   let url = 'data:text/html;charset=utf-8,' + testName;
 
 
-  windowPromise(window.OpenBrowserWindow(), 'load').then(focus).then(function(window) {
+  window = yield windowPromise(window.OpenBrowserWindow(), 'load').then(focus);
+  yield new Promise(resolve => {
     let sidebar = Sidebar({
       id: testName,
       title: testName,
@@ -986,47 +986,17 @@ exports.testDetachEventOnWindowClose = function(assert, done) {
         assert.pass('the attach event is fired');
         window.close();
       },
-      onDetach: function() {
-        assert.pass('the detach event is fired when the window showing it closes');
-        loader.unload();
-        done();
-      }
+      onHide: resolve
     });
 
     sidebar.show();
-  }).then(null, assert.fail);
+  });
+
+  assert.pass('the hide event is fired when the window showing it closes');
+  loader.unload();
 }
 
-exports.testHideEventOnWindowClose = function(assert, done) {
-  const loader = Loader(module);
-  const { Sidebar } = loader.require('sdk/ui/sidebar');
-  const window = getMostRecentBrowserWindow();
-
-  let testName = 'testDetachEventOnWindowClose';
-  let url = 'data:text/html;charset=utf-8,' + testName;
-
-
-  windowPromise(window.OpenBrowserWindow(), 'load').then(focus).then(function(window) {
-    let sidebar = Sidebar({
-      id: testName,
-      title: testName,
-      url: url,
-      onAttach: function() {
-        assert.pass('the attach event is fired');
-        window.close();
-      },
-      onHide: function() {
-        assert.pass('the hide event is fired when the window showing it closes');
-        loader.unload();
-        done();
-      }
-    });
-
-    sidebar.show();
-  }).then(null, assert.fail);
-}
-
-exports.testGCdHiddenSidebarsOnUnload = function(assert, done) {
+exports.testGCdHiddenSidebarsOnUnload = function*(assert) {
   const loader = Loader(module);
   const { Sidebar } = loader.require('sdk/ui/sidebar');
   const window = getMostRecentBrowserWindow();
@@ -1047,15 +1017,13 @@ exports.testGCdHiddenSidebarsOnUnload = function(assert, done) {
 
   assert.ok(!!window.document.getElementById(menuitemID), 'the menuitem was found');
 
-  Cu.schedulePreciseGC(function() {
-    assert.ok(!!window.document.getElementById(menuitemID), 'the menuitem was found after gc');
+  yield new Promise(resolve => Cu.schedulePreciseGC(resolve));
 
-    loader.unload();
+  assert.ok(!!window.document.getElementById(menuitemID), 'the menuitem was found after gc');
 
-    assert.ok(!window.document.getElementById(menuitemID), 'the menuitem was removed');
+  loader.unload();
 
-    done();
-  });
+  assert.ok(!window.document.getElementById(menuitemID), 'the menuitem was removed');
 }
 
 exports.testSidebarGettersAndSettersAfterDestroy = function(assert) {
@@ -1089,7 +1057,7 @@ exports.testSidebarGettersAndSettersAfterDestroy = function(assert) {
 }
 
 
-exports.testSidebarLeakCheckDestroyAfterAttach = function(assert, done) {
+exports.testSidebarLeakCheckDestroyAfterAttach = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testSidebarLeakCheckDestroyAfterAttach';
   let window = getMostRecentBrowserWindow();
@@ -1099,37 +1067,37 @@ exports.testSidebarLeakCheckDestroyAfterAttach = function(assert, done) {
     url: 'data:text/html;charset=utf-8,'+testName
   });
 
-  sidebar.on('attach', function() {
-    assert.pass('the sidebar was shown');
+  yield new Promise(resolve => {
+    sidebar.on('attach', resolve);
+    assert.pass('showing the sidebar');
+    sidebar.show();
+  })
 
-    sidebar.on('show', function() {
-      assert.fail('the sidebar show listener should have been removed');
-    });
-    assert.pass('added a sidebar show listener');
+  assert.pass('the sidebar was shown');
 
-    sidebar.on('hide', function() {
-      assert.fail('the sidebar hide listener should have been removed');
-    });
-    assert.pass('added a sidebar hide listener');
+  sidebar.on('show', () => {
+    assert.fail('the sidebar show listener should have been removed');
+  });
+  assert.pass('added a sidebar show listener');
 
+  sidebar.on('hide', () => {
+    assert.fail('the sidebar hide listener should have been removed');
+  });
+  assert.pass('added a sidebar hide listener');
+
+  yield new Promise(resolve => {
     let panelBrowser = window.document.getElementById('sidebar').contentDocument.getElementById('web-panels-browser');
     panelBrowser.contentWindow.addEventListener('unload', function onUnload() {
       panelBrowser.contentWindow.removeEventListener('unload', onUnload, false);
-      // wait a tick..
-      setTimeout(function() {
-        assert.pass('the sidebar web panel was unloaded properly');
-        done();
-      })
+      resolve();
     }, false);
-
     sidebar.destroy();
   });
 
-  assert.pass('showing the sidebar');
-  sidebar.show();
+  assert.pass('the sidebar web panel was unloaded properly');
 }
 
-exports.testSidebarLeakCheckUnloadAfterAttach = function(assert, done) {
+exports.testSidebarLeakCheckUnloadAfterAttach = function*(assert) {
   const loader = Loader(module);
   const { Sidebar } = loader.require('sdk/ui/sidebar');
   let testName = 'testSidebarLeakCheckUnloadAfterAttach';
@@ -1139,33 +1107,36 @@ exports.testSidebarLeakCheckUnloadAfterAttach = function(assert, done) {
     url: 'data:text/html;charset=utf-8,'+testName
   });
 
-  open().then(focus).then(window => {
-    sidebar.on('attach', function() {
-      assert.pass('the sidebar was shown');
+  let window = yield open().then(focus);
 
-      sidebar.on('show', function() {
-        assert.fail('the sidebar show listener should have been removed');
-      });
-      assert.pass('added a sidebar show listener');
-
-      sidebar.on('hide', function() {
-        assert.fail('the sidebar hide listener should have been removed');
-      });
-      assert.pass('added a sidebar hide listener');
-
-      let panelBrowser = window.document.getElementById('sidebar').contentDocument.getElementById('web-panels-browser');
-      panelBrowser.contentWindow.addEventListener('unload', function onUnload() {
-        panelBrowser.contentWindow.removeEventListener('unload', onUnload, false);
-        assert.pass('the sidebar web panel was unloaded properly');
-        close(window).then(done).catch(assert.fail);
-      }, false);
-
-      loader.unload();
-    });
-
+  yield new Promise(resolve => {
+    sidebar.on('attach', resolve);
     assert.pass('showing the sidebar');
     sidebar.show();
-  }).catch(assert.fail);
+  });
+
+  assert.pass('the sidebar was shown');
+
+  sidebar.on('show', function() {
+    assert.fail('the sidebar show listener should have been removed');
+  });
+  assert.pass('added a sidebar show listener');
+
+  sidebar.on('hide', function() {
+    assert.fail('the sidebar hide listener should have been removed');
+  });
+  assert.pass('added a sidebar hide listener');
+
+  let panelBrowser = window.document.getElementById('sidebar').contentDocument.getElementById('web-panels-browser');
+  yield new Promise(resolve => {
+    panelBrowser.contentWindow.addEventListener('unload', function onUnload() {
+      panelBrowser.contentWindow.removeEventListener('unload', onUnload, false);
+      resolve();
+    }, false);
+    loader.unload();
+  });
+
+  assert.pass('the sidebar web panel was unloaded properly');
 }
 
 exports.testTwoSidebarsWithSameTitleAndURL = function(assert) {
@@ -1239,30 +1210,22 @@ exports.testChangingURLBackToOriginalValue = function(assert) {
   assert.pass('Changing values back to originals works');
 }
 
-exports.testShowToOpenXToClose = function(assert, done) {
+exports.testShowToOpenXToClose = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testShowToOpenXToClose';
 
   let title = testName;
   let url = 'data:text/html;charset=utf-8,' + testName;
   let window = getMostRecentBrowserWindow();
+  let shown = defer();
+  let hidden = defer();
 
   let sidebar = Sidebar({
     id: testName,
     title: testName,
     url: url,
-    onShow: function() {
-      assert.ok(isChecked(menuitem), 'menuitem is checked');
-
-      let closeButton = window.document.querySelector('#sidebar-header > toolbarbutton.close-icon');
-      simulateCommand(closeButton);
-    },
-    onHide: function() {
-      assert.ok(!isChecked(menuitem), 'menuitem is not checked');
-
-      sidebar.destroy();
-      done();
-    }
+    onShow: shown.resolve,
+    onHide: hidden.resolve
   });
 
   let menuitem = window.document.getElementById(makeID(sidebar.id));
@@ -1270,9 +1233,22 @@ exports.testShowToOpenXToClose = function(assert, done) {
   assert.ok(!isChecked(menuitem), 'menuitem is not checked');
 
   sidebar.show();
+
+  yield shown.promise;
+
+  assert.ok(isChecked(menuitem), 'menuitem is checked');
+
+  let closeButton = window.document.querySelector('#sidebar-header > toolbarbutton.close-icon');
+  simulateCommand(closeButton);
+
+  yield hidden.promise;
+
+  assert.ok(!isChecked(menuitem), 'menuitem is not checked');
+
+  sidebar.destroy();
 }
 
-exports.testShowToOpenMenuitemToClose = function(assert, done) {
+exports.testShowToOpenMenuitemToClose = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testShowToOpenMenuitemToClose';
 
@@ -1280,31 +1256,32 @@ exports.testShowToOpenMenuitemToClose = function(assert, done) {
   let url = 'data:text/html;charset=utf-8,' + testName;
   let window = getMostRecentBrowserWindow();
 
+  let hidden = defer();
   let sidebar = Sidebar({
     id: testName,
     title: testName,
     url: url,
-    onShow: function() {
-      assert.ok(isChecked(menuitem), 'menuitem is checked');
-
-      simulateCommand(menuitem);
-    },
-    onHide: function() {
-      assert.ok(!isChecked(menuitem), 'menuitem is not checked');
-
-      sidebar.destroy();
-      done();
-    }
+    onHide: hidden.resolve
   });
 
   let menuitem = window.document.getElementById(makeID(sidebar.id));
 
   assert.ok(!isChecked(menuitem), 'menuitem is not checked');
 
-  sidebar.show();
+  yield sidebar.show();
+
+  assert.ok(isChecked(menuitem), 'menuitem is checked');
+
+  simulateCommand(menuitem);
+
+  yield hidden.promise;
+
+  assert.ok(!isChecked(menuitem), 'menuitem is not checked');
+
+  sidebar.destroy();
 }
 
-exports.testDestroyWhileNonBrowserWindowIsOpen = function(assert, done) {
+exports.testDestroyWhileNonBrowserWindowIsOpen = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testDestroyWhileNonBrowserWindowIsOpen';
   let url = 'data:text/html;charset=utf-8,' + testName;
@@ -1315,26 +1292,19 @@ exports.testDestroyWhileNonBrowserWindowIsOpen = function(assert, done) {
     url: url
   });
 
-  open('chrome://browser/content/preferences/preferences.xul').then(function(window) {
-    try {
-      sidebar.show();
-      assert.equal(isSidebarShowing(getMostRecentBrowserWindow()), true, 'the sidebar is showing');
+  let window = yield open('chrome://browser/content/preferences/preferences.xul');
 
-      sidebar.destroy();
+  yield sidebar.show();
+  assert.equal(isSidebarShowing(getMostRecentBrowserWindow()), true, 'the sidebar is showing');
 
-      assert.pass('sidebar was destroyed while a non browser window was open');
-    }
-    catch(e) {
-      assert.fail(e);
-    }
+  sidebar.destroy();
+  assert.pass('sidebar was destroyed while a non browser window was open');
 
-    return window;
-  }).then(close).then(function() {
-    assert.equal(isSidebarShowing(getMostRecentBrowserWindow()), false, 'the sidebar is not showing');
-  }).then(done, assert.fail);
+  yield cleanUI();
+  assert.equal(isSidebarShowing(getMostRecentBrowserWindow()), false, 'the sidebar is not showing');
 }
 
-exports.testEventListeners = function(assert, done) {
+exports.testEventListeners = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testWhatThisIsInSidebarEventListeners';
   let eventListenerOrder = [];
@@ -1428,7 +1398,9 @@ exports.testEventListeners = function(assert, done) {
     onHide.resolve();
   });
 
-  all([constructorOnShow.promise,
+  sidebar.show();
+
+  yield all([constructorOnShow.promise,
       constructorOnAttach.promise,
       constructorOnReady.promise,
       constructorOnHide.promise,
@@ -1439,33 +1411,33 @@ exports.testEventListeners = function(assert, done) {
       onShow.promise,
       onAttach.promise,
       onReady.promise,
-      onHide.promise]).then(function() {
-        assert.equal(eventListenerOrder.join(), [
-            'onAttach',
-            'once attach',
-            'on attach',
-            'onReady',
-            'once ready',
-            'on ready',
-            'onShow',
-            'once show',
-            'on show',
-            'onHide',
-            'once hide',
-            'on hide'
-          ].join(), 'the event order was correct');
-        sidebar.destroy();
-      }).then(done, assert.fail);
+      onHide.promise]);
 
-  sidebar.show();
+  assert.equal(eventListenerOrder.join(), [
+    'onAttach',
+    'once attach',
+    'on attach',
+    'onReady',
+    'once ready',
+    'on ready',
+    'onShow',
+    'once show',
+    'on show',
+    'onHide',
+    'once hide',
+    'on hide'
+  ].join(), 'the event order was correct');
+
+  sidebar.destroy();
 }
 
 // For more information see Bug 920780
-exports.testAttachDoesNotEmitWhenShown = function(assert, done) {
+exports.testAttachDoesNotEmitWhenShown = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testAttachDoesNotEmitWhenShown';
   let count = 0;
 
+  let attached = defer();
   let sidebar = Sidebar({
     id: testName,
     title: testName,
@@ -1478,29 +1450,33 @@ exports.testAttachDoesNotEmitWhenShown = function(assert, done) {
         assert.pass('sidebar was attached ' + count + ' time(s)');
       }
 
-      if (++count == 1) {
-        setImmediate(function() {
-          let shownFired = 0;
-          let onShow = () => shownFired++;
-          sidebar.on('show', onShow);
-
-          sidebar.show()
-          .then(() => assert.equal(shownFired, 0, 'shown should not be fired again when already showing from after attach'))
-          .then(sidebar.hide.bind(sidebar))
-          .then(sidebar.show.bind(sidebar))
-          .then(() => assert.equal(shownFired, 1, 'shown was emitted when `show` called after being hidden'))
-          .then(sidebar.show.bind(sidebar))
-          .then(() => {
-            assert.equal(shownFired, 1, 'shown was not emitted again if already being shown');
-            sidebar.off('show', onShow);
-            sidebar.destroy();
-          }).catch(assert.fail).then(done);
-        });
-      }
+      count++;
+      attached.resolve();
     }
   });
 
   sidebar.show();
+
+  yield attached.promise;
+
+  let shownFired = 0;
+  let onShow = () => shownFired++;
+  sidebar.on('show', onShow);
+
+  yield sidebar.show();
+  assert.equal(shownFired, 0, 'shown should not be fired again when already showing from after attach');
+
+  yield sidebar.hide();
+  assert.pass("the sidebar was hidden");
+
+  yield sidebar.show();
+  assert.equal(shownFired, 1, 'shown was emitted when `show` called after being hidden');
+
+  yield sidebar.show();
+  assert.equal(shownFired, 1, 'shown was not emitted again if already being shown');
+
+  sidebar.off('show', onShow);
+  sidebar.destroy();
 }
 
 exports.testShowHideRawWindowArg = function*(assert) {
@@ -1532,8 +1508,6 @@ exports.testShowHideRawWindowArg = function*(assert) {
   assert.ok(!isSidebarShowing(mainWindow), 'sidebar is not showing in main window');
   assert.ok(!isSidebarShowing(newWindow), 'sidebar is not showing in new window');
   sidebar.destroy();
-
-  yield close(newWindow);
 }
 
 exports.testShowHideSDKWindowArg = function*(assert) {
@@ -1566,23 +1540,15 @@ exports.testShowHideSDKWindowArg = function*(assert) {
   assert.ok(!isSidebarShowing(mainWindow), 'sidebar is not showing in main window');
   assert.ok(!isSidebarShowing(newWindow), 'sidebar is not showing in new window');
   sidebar.destroy();
-
-  yield close(newWindow);
 }
 
-// If the module doesn't support the app we're being run in, require() will
-// throw.  In that case, remove all tests above from exports, and add one dummy
-// test that passes.
-try {
-  require('sdk/ui/sidebar');
-}
-catch (err) {
-  if (!/^Unsupported Application/.test(err.message))
-    throw err;
+before(exports, (name, assert) => {
+  assert.equal(isSidebarShowing(), false, 'no sidebar is showing');
+});
 
-  module.exports = {
-    'test Unsupported Application': assert => assert.pass(err.message)
-  }
-}
+after(exports, function*(name, assert) {
+  yield cleanUI();
+  assert.equal(isSidebarShowing(), false, 'no sidebar is showing');
+});
 
 require('sdk/test').run(exports);

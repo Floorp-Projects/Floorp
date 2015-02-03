@@ -8,8 +8,9 @@ module.metadata = {
   "stability": "unstable"
 };
 
-const { Trait } = require("../deprecated/light-traits");
-const { EventEmitterTrait: EventEmitter } = require("../deprecated/events");
+const { Class } = require("../core/heritage");
+const { EventTarget } = require("../event/target");
+const { emit } = require("../event/core");
 const { DOMEventAssembler } = require("../deprecated/events/assembler");
 const { browserWindowIterator } = require('../deprecated/window-utils');
 const { isBrowser } = require('../window/utils');
@@ -17,12 +18,26 @@ const { observer: windowObserver } = require("../windows/observer");
 
 // Event emitter objects used to register listeners and emit events on them
 // when they occur.
-const observer = Trait.compose(DOMEventAssembler, EventEmitter).create({
-  /**
-   * Method is implemented by `EventEmitter` and is used just for emitting
-   * events on registered listeners.
-   */
-  _emit: Trait.required,
+const Observer = Class({
+  implements: [DOMEventAssembler, EventTarget],
+  initialize() {
+    // Adding each opened window to a list of observed windows.
+    windowObserver.on("open", window => {
+      if (isBrowser(window))
+        this.observe(window);
+    });
+
+    // Removing each closed window form the list of observed windows.
+    windowObserver.on("close", window => {
+      if (isBrowser(window))
+        this.ignore(window);
+    });
+
+    // Making observer aware of already opened windows.
+    for (let window of browserWindowIterator()) {
+      this.observe(window);
+    }
+  },
   /**
    * Events that are supported and emitted by the module.
    */
@@ -34,24 +49,9 @@ const observer = Trait.compose(DOMEventAssembler, EventEmitter).create({
    * @param {Event} event
    *    Keyboard event being emitted.
    */
-  handleEvent: function handleEvent(event) {
-    this._emit(event.type, event, event.target.ownerDocument.defaultView);
+  handleEvent(event) {
+    emit(this, event.type, event, event.target.ownerDocument.defaultView);
   }
 });
 
-// Adding each opened window to a list of observed windows.
-windowObserver.on("open", function onOpen(window) {
-  if (isBrowser(window))
-    observer.observe(window);
-});
-// Removing each closed window form the list of observed windows.
-windowObserver.on("close", function onClose(window) {
-  if (isBrowser(window))
-    observer.ignore(window);
-});
-
-// Making observer aware of already opened windows.
-for (let window of browserWindowIterator())
-  observer.observe(window);
-
-exports.observer = observer;
+exports.observer = new Observer();

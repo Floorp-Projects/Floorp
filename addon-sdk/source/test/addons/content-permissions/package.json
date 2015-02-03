@@ -1,6 +1,8 @@
 {
-  "id": "content-permissions",
+  "id": "content-permissions@jetpack",
   "permissions": {
     "cross-domain-content": ["http://localhost:8099"]
-  }
+  },
+  "main": "./main.js",
+  "version": "0.0.1"
 }
