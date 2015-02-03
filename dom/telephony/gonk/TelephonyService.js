@@ -159,6 +159,7 @@ function TelephonyService() {
   this._isDialing = false;
   this._cachedDialRequest = null;
   this._currentCalls = {};
+  this._currentConferenceState = nsITelephonyService.CALL_STATE_UNKNOWN;
   this._audioStates = {};
 
   this._cdmaCallWaitingNumber = null;
@@ -980,7 +981,18 @@ TelephonyService.prototype = {
   },
 
   hangUpConference: function(aClientId, aCallback) {
-    this._sendToRilWorker(aClientId, "hangUpConference", null,
+    // In cdma, ril only maintains one call index.
+    if (this._isCdmaClient(aClientId)) {
+      this._sendToRilWorker(aClientId, "hangUpCall",
+                            { callIndex: CDMA_FIRST_CALL_INDEX },
+                            this._defaultCallbackHandler.bind(this, aCallback));
+      return;
+    }
+
+    let foreground = this._currentConferenceState == nsITelephonyService.CALL_STATE_CONNECTED;
+    this._sendToRilWorker(aClientId,
+                          foreground ? "hangUpForeground" : "hangUpBackground",
+                          null,
                           this._defaultCallbackHandler.bind(this, aCallback));
   },
 
@@ -1195,8 +1207,9 @@ TelephonyService.prototype = {
 
   notifyConferenceCallStateChanged: function(aState) {
     if (DEBUG) debug("handleConferenceCallStateChanged: " + aState);
-    aState = this._convertRILCallState(aState);
-    this._notifyAllListeners("conferenceCallStateChanged", [aState]);
+    this._currentConferenceState = this._convertRILCallState(aState);
+    this._notifyAllListeners("conferenceCallStateChanged",
+                             [this._currentConferenceState]);
   },
 
   notifyUssdReceived: function(aClientId, aMessage, aSessionEnded) {

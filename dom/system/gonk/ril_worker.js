@@ -1958,29 +1958,6 @@ RilObject.prototype = {
     });
   },
 
-  hangUpConference: function(options) {
-    if (this._isCdma) {
-      // In cdma, ril only maintains one call index.
-      let call = this.currentCalls[1];
-      if (!call) {
-        options.success = false;
-        options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-        this.sendChromeMessage(options);
-        return;
-      }
-
-      options.callIndex = 1;
-      this.hangUpCall(options);
-      return;
-    }
-
-    if (this.currentConferenceState === CALL_STATE_ACTIVE) {
-      this.hangUpForeground(options);
-    } else {
-      this.hangUpBackground(options);
-    }
-  },
-
   holdConference: function(options) {
     if (this._isCdma) {
       // We cannot hold a conference call on CDMA.
