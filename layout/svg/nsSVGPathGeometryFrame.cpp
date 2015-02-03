@@ -480,8 +480,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
     }
     Rect simpleBounds;
     gotSimpleBounds = element->GetGeometryBounds(&simpleBounds,
-                                                 strokeOptions.mLineWidth,
-                                                 strokeOptions.mLineCap,
+                                                 strokeOptions,
                                                  aToBBoxUserspace);
     if (gotSimpleBounds) {
       bbox = simpleBounds;
