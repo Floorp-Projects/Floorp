@@ -846,6 +846,14 @@ public:
    */
   static bool IsValidSandboxFlag(const nsAString& aFlag);
 
+  /**
+   * A helper function that returns a string attribute corresponding to the
+   * sandbox flags.
+   *
+   * @param aFlags  the sandbox flags
+   * @param aString the attribute corresponding to the flags (null if flags is 0)
+   */
+  static void SandboxFlagsToString(uint32_t aFlags, nsAString& aString);
 
   /**
    * Fill (with the parameters given) the localized string named |aKey| in
