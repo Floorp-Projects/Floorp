@@ -1163,7 +1163,11 @@ Compressor.prototype._transform = function _transform(frame, encoding, done) {
   if (frame.type === 'HEADERS' || frame.type === 'PUSH_PROMISE') {
     var buffer = this.compress(frame.headers);
 
-    var chunks = cut(buffer, MAX_HTTP_PAYLOAD_SIZE);
+    // This will result in CONTINUATIONs from a PUSH_PROMISE being 4 bytes shorter than they could
+    // be, but that's not the end of the world, and it prevents us from going over MAX_HTTP_PAYLOAD_SIZE
+    // on the initial PUSH_PROMISE frame.
+    var adjustment = frame.type === 'PUSH_PROMISE' ? 4 : 0;
+    var chunks = cut(buffer, MAX_HTTP_PAYLOAD_SIZE - adjustment);
 
     for (var i = 0; i < chunks.length; i++) {
       var chunkFrame;

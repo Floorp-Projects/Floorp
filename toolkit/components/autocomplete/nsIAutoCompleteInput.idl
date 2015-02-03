@@ -7,7 +7,7 @@
 
 interface nsIAutoCompletePopup;
 
-[scriptable, uuid(fadb2bb9-3e2e-4ca0-b0e0-0982b8dda9dc)]
+[scriptable, uuid(B068E70F-F82C-4C12-AD87-82E271C5C180)]
 interface nsIAutoCompleteInput : nsISupports
 {  
   /*
@@ -147,4 +147,9 @@ interface nsIAutoCompleteInput : nsISupports
    * (such as a history database).
    */
   readonly attribute boolean inPrivateContext;
+
+  /*
+   * Don't rollup the popup when the caret is moved.
+   */
+  readonly attribute boolean noRollupOnCaretMove;
 };

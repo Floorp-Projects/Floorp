@@ -20,9 +20,11 @@
   <script type="application/javascript" src="performance/views/overview.js"/>
   <script type="application/javascript" src="performance/views/toolbar.js"/>
   <script type="application/javascript" src="performance/views/details-subview.js"/>
-  <script type="application/javascript" src="performance/views/details-call-tree.js"/>
   <script type="application/javascript" src="performance/views/details-waterfall.js"/>
-  <script type="application/javascript" src="performance/views/details-flamegraph.js"/>
+  <script type="application/javascript" src="performance/views/details-js-call-tree.js"/>
+  <script type="application/javascript" src="performance/views/details-js-flamegraph.js"/>
+  <script type="application/javascript" src="performance/views/details-memory-call-tree.js"/>
+  <script type="application/javascript" src="performance/views/details-memory-flamegraph.js"/>
   <script type="application/javascript" src="performance/views/details.js"/>
   <script type="application/javascript" src="performance/views/recordings.js"/>
 
@@ -60,14 +62,25 @@
       <toolbar id="performance-toolbar" class="devtools-toolbar">
         <hbox id="performance-toolbar-controls-detail-views" class="devtools-toolbarbutton-group">
           <toolbarbutton id="select-waterfall-view"
-                         class="devtools-toolbarbutton"
+                         class="devtools-toolbarbutton devtools-button"
+                         label="&profilerUI.toolbar.waterfall;"
                          data-view="waterfall" />
-          <toolbarbutton id="select-calltree-view"
-                         class="devtools-toolbarbutton"
-                         data-view="calltree" />
-          <toolbarbutton id="select-flamegraph-view"
-                         class="devtools-toolbarbutton"
-                         data-view="flamegraph" />
+          <toolbarbutton id="select-js-calltree-view"
+                         class="devtools-toolbarbutton devtools-button"
+                         label="&profilerUI.toolbar.js-calltree;"
+                         data-view="js-calltree" />
+          <toolbarbutton id="select-js-flamegraph-view"
+                         class="devtools-toolbarbutton devtools-button"
+                         label="&profilerUI.toolbar.js-flamegraph;"
+                         data-view="js-flamegraph" />
+          <toolbarbutton id="select-memory-calltree-view"
+                         class="devtools-toolbarbutton devtools-button"
+                         label="&profilerUI.toolbar.memory-calltree;"
+                         data-view="memory-calltree" />
+          <toolbarbutton id="select-memory-flamegraph-view"
+                         class="devtools-toolbarbutton devtools-button"
+                         label="&profilerUI.toolbar.memory-flamegraph;"
+                         data-view="memory-flamegraph" />
         </hbox>
         <spacer flex="1"></spacer>
         <hbox id="performance-toolbar-control-options" class="devtools-toolbarbutton-group">
@@ -94,12 +107,12 @@
                 height="150"/>
         </hbox>
 
-        <vbox id="calltree-view" flex="1">
+        <vbox id="js-calltree-view" flex="1">
           <hbox class="call-tree-headers-container">
             <label class="plain call-tree-header"
                    type="duration"
                    crop="end"
-                   value="&profilerUI.table.totalDuration;"/>
+                   value="&profilerUI.table.totalDuration2;"/>
             <label class="plain call-tree-header"
                    type="percentage"
                    crop="end"
@@ -107,7 +120,7 @@
             <label class="plain call-tree-header"
                    type="self-duration"
                    crop="end"
-                   value="&profilerUI.table.selfDuration;"/>
+                   value="&profilerUI.table.selfDuration2;"/>
             <label class="plain call-tree-header"
                    type="self-percentage"
                    crop="end"
@@ -123,9 +136,53 @@
           </hbox>
           <vbox class="call-tree-cells-container" flex="1"/>
         </vbox>
-        <hbox id="flamegraph-view" flex="1">
+
+        <hbox id="js-flamegraph-view" flex="1">
+        </hbox>
+
+        <vbox id="memory-calltree-view" flex="1">
+          <hbox class="call-tree-headers-container">
+            <label class="plain call-tree-header"
+                   type="duration"
+                   crop="end"
+                   value="&profilerUI.table.totalDuration2;"/>
+            <label class="plain call-tree-header"
+                   type="percentage"
+                   crop="end"
+                   value="&profilerUI.table.totalPercentage;"/>
+            <label class="plain call-tree-header"
+                   type="allocations"
+                   crop="end"
+                   value="&profilerUI.table.totalAlloc;"/>
+            <label class="plain call-tree-header"
+                   type="self-duration"
+                   crop="end"
+                   value="&profilerUI.table.selfDuration2;"/>
+            <label class="plain call-tree-header"
+                   type="self-percentage"
+                   crop="end"
+                   value="&profilerUI.table.selfPercentage;"/>
+            <label class="plain call-tree-header"
+                   type="self-allocations"
+                   crop="end"
+                   value="&profilerUI.table.selfAlloc;"/>
+            <label class="plain call-tree-header"
+                   type="samples"
+                   crop="end"
+                   value="&profilerUI.table.samples;"/>
+            <label class="plain call-tree-header"
+                   type="function"
+                   crop="end"
+                   value="&profilerUI.table.function;"/>
+          </hbox>
+          <vbox class="call-tree-cells-container" flex="1"/>
+        </vbox>
+
+        <hbox id="memory-flamegraph-view" flex="1">
+          <!-- TODO: bug 1077461 -->
         </hbox>
       </deck>
+
     </vbox>
   </hbox>
 </window>

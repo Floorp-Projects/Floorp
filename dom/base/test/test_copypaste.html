@@ -5,6 +5,7 @@
 <head>
   <title>Test for copy/paste</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="copypaste.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -63,6 +64,31 @@ addLoadEvent(function () testCopyPaste(false));
   T<textarea>     </textarea>
 </div>
 
+<div>Copy1then Paste<ul id="ul1"><li>LI</li>
+</ul></div>
+
+<div><ul id="ul2">
+<li>LI</li></ul>Copy2then Paste</div>
+
+<div><ul id="ul3"><li>
+<li>LI</li></ul>Copy3then Paste</div>
+
+<div><div id="div1s"><div id="div1se1">before<div>inner</div></div>after</div></div>
+<div><div id="div2s"><div id="div2se1">before<div>inner</div></div>after</div>
+</div>
+
+<div id="contentEditable1" contenteditable spellcheck="false"></div>
+<div id="contentEditable2" contenteditable spellcheck="false"></div>
+<div id="contentEditable3" contenteditable spellcheck="false"></div>
+<div id="contentEditable4" contenteditable spellcheck="false"></div>
+<div id="contentEditable5" contenteditable spellcheck="false"></div>
+
+<div>
+<span id="1127835crash1">1</span><div id="1127835crash2"><div>
+</div></div><a href="http://www.mozilla.org/" id="1127835crash3">3</a>
+</div>
+<div id="contentEditable6" contenteditable spellcheck="false"></div>
+
 <div id="div6" style="display:none"></div>
 <script>
 var x = $("div6")
@@ -86,6 +112,7 @@ x.appendChild(document.createTextNode('10'))
 <div id="div13">_<noscript>FAIL</noscript>_</div>
 
 <table><tr id=tr1><td>foo</td><td>bar</td></tr></table>
+<table><tr id=tr2><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr><tr id=tr3><td>5</td><td>6</td></tr></table>
 
 </div>
 </body>
