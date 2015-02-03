@@ -2722,13 +2722,12 @@ public:
   void NotifySelectionBackgroundNeedsFill(const Rect& aBackgroundRect,
                                           nscolor aColor,
                                           DrawTarget& aDrawTarget) MOZ_OVERRIDE;
+  void PaintDecorationLine(Rect aPath, nscolor aColor) MOZ_OVERRIDE;
   void NotifyBeforeText(nscolor aColor) MOZ_OVERRIDE;
   void NotifyGlyphPathEmitted() MOZ_OVERRIDE;
   void NotifyBeforeSVGGlyphPainted() MOZ_OVERRIDE;
   void NotifyAfterSVGGlyphPainted() MOZ_OVERRIDE;
   void NotifyAfterText() MOZ_OVERRIDE;
-  void NotifyBeforeDecorationLine(nscolor aColor) MOZ_OVERRIDE;
-  void NotifyDecorationLinePathEmitted() MOZ_OVERRIDE;
   void NotifyBeforeSelectionDecorationLine(nscolor aColor) MOZ_OVERRIDE;
   void NotifySelectionDecorationLinePathEmitted() MOZ_OVERRIDE;
 
@@ -2838,15 +2837,16 @@ SVGTextDrawPathCallbacks::NotifyAfterText()
 }
 
 void
-SVGTextDrawPathCallbacks::NotifyBeforeDecorationLine(nscolor aColor)
+SVGTextDrawPathCallbacks::PaintDecorationLine(Rect aPath, nscolor aColor)
 {
   mColor = aColor;
-  SetupContext();
-}
+  AntialiasMode aaMode =
+    nsSVGUtils::ToAntialiasMode(mFrame->StyleSVG()->mTextRendering);
 
-void
-SVGTextDrawPathCallbacks::NotifyDecorationLinePathEmitted()
-{
+  gfx->Save();
+  gfx->NewPath();
+  gfx->SetAntialiasMode(aaMode);
+  gfx->Rectangle(ThebesRect(aPath));
   HandleTextGeometry();
   gfx->NewPath();
   gfx->Restore();
