@@ -3518,16 +3518,6 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex)
   if (mApplyUserSelectStyle) {
     nsAutoTArray<nsRefPtr<nsRange>, 4> rangesToAdd;
     aItem->ExcludeNonSelectableNodes(&rangesToAdd);
-    if (rangesToAdd.IsEmpty()) {
-      ErrorResult err;
-      nsINode* node = aItem->GetStartContainer(err);
-      if (node && node->IsContent() && node->AsContent()->GetEditingHost()) {
-        // A contenteditable node with user-select:none, for example.
-        // Allow it to have a collapsed selection (for the caret).
-        aItem->Collapse(GetDirection() == eDirPrevious);
-        rangesToAdd.AppendElement(aItem);
-      }
-    }
     for (size_t i = 0; i < rangesToAdd.Length(); ++i) {
       nsresult rv = AddItemInternal(rangesToAdd[i], aOutIndex);
       NS_ENSURE_SUCCESS(rv, rv);
