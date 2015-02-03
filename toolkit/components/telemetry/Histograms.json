@@ -5447,6 +5447,18 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'reconfigure thread' request to go round trip."
   },
+  "VIDEO_CANPLAYTYPE_H264_LEVEL": {
+    "expires_in_version": "40",
+    "kind": "enumerated",
+    "n_values": 51,
+    "description": "The H.264 level (level_idc) as extracted from the codecs parameter passed to HTMLMediaElement.canPlayType, from levels 1 (10) to 5.2 (51), with the addition of 0 for unknown values."
+  },
+  "VIDEO_CANPLAYTYPE_H264_PROFILE": {
+    "expires_in_version": "40",
+    "kind": "enumerated",
+    "n_values": 244,
+    "description": "The H.264 profile number (profile_idc) as extracted from the codecs parameter passed to HTMLMediaElement.canPlayType."
+  },
   "WEBRTC_ICE_FINAL_CONNECTION_STATE": {
     "expires_in_version": "never",
     "kind": "enumerated",
