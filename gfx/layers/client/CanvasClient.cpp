@@ -409,13 +409,7 @@ CanvasClientSharedSurface::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 void
 CanvasClientSharedSurface::ClearSurfaces()
 {
-  if (mFrontTex && (mFront || mPrevFront)) {
-    // Force a synchronous destruction so that the TextureHost does not
-    // outlive the SharedSurface. This won't be needed once TextureClient/Host
-    // and SharedSurface are merged.
-    mFrontTex->ForceRemove(true /* sync */);
-    mFrontTex = nullptr;
-  }
+  mFrontTex = nullptr;
   // It is important to destroy the SharedSurface *after* the TextureClient.
   mFront = nullptr;
   mPrevFront = nullptr;
