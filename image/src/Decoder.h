@@ -240,21 +240,14 @@ public:
    */
   bool WasAborted() const { return mDecodeAborted; }
 
-  // flags.  Keep these in sync with imgIContainer.idl.
-  // SetDecodeFlags must be called before Init(), otherwise
-  // default flags are assumed.
-  enum {
-    DECODER_NO_PREMULTIPLY_ALPHA = 0x2,     // imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA
-    DECODER_NO_COLORSPACE_CONVERSION = 0x4  // imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION
-  };
-
   enum DecodeStyle {
       PROGRESSIVE, // produce intermediate frames representing the partial state of the image
       SEQUENTIAL // decode to final image immediately
   };
 
-  void SetDecodeFlags(uint32_t aFlags) { mDecodeFlags = aFlags; }
-  uint32_t GetDecodeFlags() { return mDecodeFlags; }
+  void SetFlags(uint32_t aFlags) { mFlags = aFlags; }
+  uint32_t GetFlags() const { return mFlags; }
+  uint32_t GetDecodeFlags() const { return DecodeFlags(mFlags); }
 
   bool HasSize() const { return mImageMetadata.HasSize(); }
   void SetSizeOnImage();
@@ -457,7 +450,7 @@ protected:
   TimeDuration mDecodeTime;
   uint32_t mChunkCount;
 
-  uint32_t mDecodeFlags;
+  uint32_t mFlags;
   size_t mBytesDecoded;
   bool mSendPartialInvalidations;
   bool mDataDone;

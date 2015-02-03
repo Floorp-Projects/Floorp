@@ -1554,7 +1554,8 @@ class Marionette(object):
     def application_cache(self):
         return ApplicationCache(self)
 
-    def screenshot(self, element=None, highlights=None, format="base64"):
+    def screenshot(self, element=None, highlights=None, format="base64",
+                   full=True):
         """Takes a screenshot of a web element or the current frame.
 
         The screen capture is returned as a lossless PNG image encoded
@@ -1573,6 +1574,9 @@ class Marionette(object):
             as a base64-string. If "binary", the data is decoded and
             returned as raw binary.
 
+        :param full: If True (the default), the capture area will be the
+            complete frame. Else only the viewport is captured. Only applies
+            when `element` is None.
         """
 
         if element:
@@ -1581,7 +1585,8 @@ class Marionette(object):
         if highlights:
             lights = [highlight.id for highlight in highlights]
         screenshot_data = self._send_message("takeScreenshot", "value",
-                                  id=element, highlights=lights)
+                                             id=element, highlights=lights,
+                                             full=full)
         if format == 'base64':
             return screenshot_data
         elif format == 'binary':

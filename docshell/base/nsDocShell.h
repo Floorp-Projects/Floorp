@@ -885,6 +885,7 @@ protected:
     bool                       mInPrivateBrowsing;
     bool                       mUseRemoteTabs;
     bool                       mDeviceSizeIsPageSize;
+    bool                       mWindowDraggingAllowed;
 
     // Because scriptability depends on the mAllowJavascript values of our
     // ancestors, we cache the effective scriptability and recompute it when

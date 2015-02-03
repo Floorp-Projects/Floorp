@@ -529,9 +529,14 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
           }
         }
       }
-      // Close the pop-up even if nothing was selected
-      ClearSearchTimer();
-      ClosePopup();
+
+      bool noRollup;
+      input->GetNoRollupOnCaretMove(&noRollup);
+      if (!noRollup) {
+        // Close the pop-up even if nothing was selected
+        ClearSearchTimer();
+        ClosePopup();
+      }
     }
     // Update last-searched string to the current input, since the input may
     // have changed.  Without this, subsequent backspaces look like text
