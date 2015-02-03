@@ -237,6 +237,11 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     lineNode.setAttribute("value", frameInfo.line ? ":" + frameInfo.line : "");
     cell.appendChild(lineNode);
 
+    let columnNode = this.document.createElement("label");
+    columnNode.className = "plain call-tree-column";
+    columnNode.setAttribute("value", frameInfo.column ? ":" + frameInfo.column : "");
+    cell.appendChild(columnNode);
+
     let hostNode = this.document.createElement("label");
     hostNode.className = "plain call-tree-host";
     hostNode.setAttribute("value", frameInfo.hostName || "");
