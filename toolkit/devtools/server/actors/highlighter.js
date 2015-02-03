@@ -45,13 +45,41 @@ const SIMPLE_OUTLINE_SHEET = ".__fx-devtools-hide-shortcut__ {" +
                              "  outline-offset: -2px!important;" +
                              "}";
 
-// All possible highlighter classes
-let HIGHLIGHTER_CLASSES = exports.HIGHLIGHTER_CLASSES = {
-  "BoxModelHighlighter": BoxModelHighlighter,
-  "CssTransformHighlighter": CssTransformHighlighter,
-  "SelectorHighlighter": SelectorHighlighter,
-  "RectHighlighter": RectHighlighter
+/**
+ * The registration mechanism for highlighters provide a quick way to
+ * have modular highlighters, instead of a hard coded list.
+ * It allow us to split highlighers in sub modules, and add them dynamically
+ * using add-on (useful for 3rd party developers, or prototyping)
+ *
+ * Note that currently, highlighters added using add-ons, can only work on
+ * Firefox desktop, or Fennec if the same add-on is installed in both.
+ */
+const highlighterTypes = new Map();
+
+/**
+ * Returns `true` if a highlighter for the given `typeName` is registered,
+ * `false` otherwise.
+ */
+const isTypeRegistered = (typeName) => highlighterTypes.has(typeName);
+exports.isTypeRegistered = isTypeRegistered;
+
+/**
+ * Registers a given constructor as highlighter, for the `typeName` given.
+ * If no `typeName` is provided, is looking for a `typeName` property in
+ * the prototype's constructor.
+ */
+const register = (constructor, typeName=constructor.prototype.typeName) => {
+  if (!typeName) {
+    throw Error("No type's name found, or provided.")
+  }
+
+  if (highlighterTypes.has(typeName)) {
+    throw Error(`${typeName} is already registered.`)
+  }
+
+  highlighterTypes.set(typeName, constructor);
 };
+exports.register = register;
 
 /**
  * The Highlighter is the server-side entry points for any tool that wishes to
@@ -319,10 +347,11 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
 
     this._inspector = inspector;
 
-    let constructor = HIGHLIGHTER_CLASSES[typeName];
+    let constructor = highlighterTypes.get(typeName);
     if (!constructor) {
-      throw new Error(typeName + " isn't a valid highlighter class (" +
-        Object.keys(HIGHLIGHTER_CLASSES) + ")");
+      let list = [...highlighterTypes.keys()];
+
+      throw new Error(`${typeName} isn't a valid highlighter class (${list})`);
       return;
     }
 
@@ -798,6 +827,8 @@ function BoxModelHighlighter(tabActor) {
 }
 
 BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype, {
+  typeName: "BoxModelHighlighter",
+
   ID_CLASS_PREFIX: "box-model-",
 
   get zoom() {
@@ -1342,6 +1373,8 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
     this.markup.setAttributeForElement(containerId, "style", style);
   }
 });
+register(BoxModelHighlighter);
+exports.BoxModelHighlighter = BoxModelHighlighter;
 
 /**
  * The CssTransformHighlighter is the class that draws an outline around a
@@ -1358,6 +1391,8 @@ function CssTransformHighlighter(tabActor) {
 let MARKER_COUNTER = 1;
 
 CssTransformHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype, {
+  typeName: "CssTransformHighlighter",
+
   ID_CLASS_PREFIX: "css-transform-",
 
   _buildMarkup: function() {
@@ -1565,6 +1600,9 @@ CssTransformHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.proto
       "hidden");
   }
 });
+register(CssTransformHighlighter);
+exports.CssTransformHighlighter = CssTransformHighlighter;
+
 
 /**
  * The SelectorHighlighter runs a given selector through querySelectorAll on the
@@ -1577,6 +1615,7 @@ function SelectorHighlighter(tabActor) {
 }
 
 SelectorHighlighter.prototype = {
+  typeName: "SelectorHighlighter",
   /**
    * Show BoxModelHighlighter on each node that matches that provided selector.
    * @param {DOMNode} node A context node that is used to get the document on
@@ -1628,6 +1667,8 @@ SelectorHighlighter.prototype = {
     this.tabActor = null;
   }
 };
+register(SelectorHighlighter);
+exports.SelectorHighlighter = SelectorHighlighter;
 
 /**
  * The RectHighlighter is a class that draws a rectangle highlighter at specific
@@ -1644,6 +1685,8 @@ function RectHighlighter(tabActor) {
 }
 
 RectHighlighter.prototype = {
+  typeName: "RectHighlighter",
+
   _buildMarkup: function() {
     let doc = this.win.document;
 
@@ -1708,6 +1751,8 @@ RectHighlighter.prototype = {
     this.markup.setAttributeForElement("highlighted-rect", "hidden", "true");
   }
 };
+register(RectHighlighter);
+exports.RectHighlighter = RectHighlighter;
 
 /**
  * The SimpleOutlineHighlighter is a class that has the same API than the
