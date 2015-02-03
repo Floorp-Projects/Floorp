@@ -27,6 +27,7 @@
 #include "DecodePool.h"
 #include "Orientation.h"
 #include "nsIObserver.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
@@ -139,6 +140,17 @@ MOZ_BEGIN_ENUM_CLASS(DecodeStrategy, uint8_t)
   SYNC_IF_POSSIBLE
 MOZ_END_ENUM_CLASS(DecodeStrategy)
 
+/**
+ * Given a set of imgIContainer FLAG_* flags, returns those flags that can
+ * affect the output of decoders.
+ */
+inline MOZ_CONSTEXPR uint32_t
+DecodeFlags(uint32_t aFlags)
+{
+  return aFlags & (imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA |
+                   imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION);
+}
+
 class RasterImage MOZ_FINAL : public ImageResource
                             , public nsIProperties
                             , public SupportsWeakPtr<RasterImage>
@@ -218,7 +230,7 @@ public:
    */
   void NotifyProgress(Progress aProgress,
                       const nsIntRect& aInvalidRect = nsIntRect(),
-                      uint32_t aFlags = 0);
+                      uint32_t aFlags = DECODE_FLAGS_DEFAULT);
 
   /**
    * Records telemetry and does final teardown of the provided decoder.
