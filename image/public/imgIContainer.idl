@@ -69,7 +69,7 @@ native nsIntSizeByVal(nsIntSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(25236a61-9568-4b2b-a2ce-209a2db9771d)]
+[scriptable, builtinclass, uuid(60e07aae-8500-46c7-b305-9a35ad7e6665)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -151,6 +151,9 @@ interface imgIContainer : nsISupports
    * FLAG_SYNC_DECODE: Forces synchronous/non-progressive decode of all
    * available data before the call returns.
    *
+   * FLAG_SYNC_DECODE_IF_FAST: Like FLAG_SYNC_DECODE, but requests a sync decode
+   * be performed only if ImageLib estimates it can be completed very quickly.
+   *
    * FLAG_DECODE_NO_PREMULTIPLY_ALPHA: Do not premultiply alpha if
    * it's not already premultiplied in the image data.
    *
@@ -177,12 +180,13 @@ interface imgIContainer : nsISupports
    */
   const unsigned long FLAG_NONE                            = 0x0;
   const unsigned long FLAG_SYNC_DECODE                     = 0x1;
-  const unsigned long FLAG_DECODE_NO_PREMULTIPLY_ALPHA     = 0x2;
-  const unsigned long FLAG_DECODE_NO_COLORSPACE_CONVERSION = 0x4;
-  const unsigned long FLAG_CLAMP                           = 0x8;
-  const unsigned long FLAG_HIGH_QUALITY_SCALING            = 0x10;
-  const unsigned long FLAG_WANT_DATA_SURFACE               = 0x20;
-  const unsigned long FLAG_BYPASS_SURFACE_CACHE            = 0x40;
+  const unsigned long FLAG_SYNC_DECODE_IF_FAST             = 0x2;
+  const unsigned long FLAG_DECODE_NO_PREMULTIPLY_ALPHA     = 0x4;
+  const unsigned long FLAG_DECODE_NO_COLORSPACE_CONVERSION = 0x8;
+  const unsigned long FLAG_CLAMP                           = 0x10;
+  const unsigned long FLAG_HIGH_QUALITY_SCALING            = 0x20;
+  const unsigned long FLAG_WANT_DATA_SURFACE               = 0x40;
+  const unsigned long FLAG_BYPASS_SURFACE_CACHE            = 0x80;
 
   /**
    * A constant specifying the default set of decode flags (i.e., the default
