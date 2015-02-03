@@ -5229,19 +5229,18 @@ PaintDecorationLine(nsIFrame* aFrame,
 {
   nscolor lineColor = aOverrideColor ? *aOverrideColor : aColor;
   if (aCallbacks) {
-    if (aDecorationType == eNormalDecoration) {
-      aCallbacks->NotifyBeforeDecorationLine(lineColor);
-    } else {
-      aCallbacks->NotifyBeforeSelectionDecorationLine(lineColor);
-    }
     Rect path = nsCSSRendering::DecorationLineToPath(ToRect(aDirtyRect),
       ToPoint(aPt), ToSize(aLineSize), aAscent, aOffset, aDecoration, aStyle,
       aVertical, aDescentLimit);
-    aCtx->NewPath();
-    aCtx->Rectangle(ThebesRect(path));
     if (aDecorationType == eNormalDecoration) {
+      aCallbacks->NotifyBeforeDecorationLine(lineColor);
+      aCtx->NewPath();
+      aCtx->Rectangle(ThebesRect(path));
       aCallbacks->NotifyDecorationLinePathEmitted();
     } else {
+      aCallbacks->NotifyBeforeSelectionDecorationLine(lineColor);
+      aCtx->NewPath();
+      aCtx->Rectangle(ThebesRect(path));
       aCallbacks->NotifySelectionDecorationLinePathEmitted();
     }
   } else {
