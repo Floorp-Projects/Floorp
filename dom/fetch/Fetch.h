@@ -160,7 +160,7 @@ protected:
   virtual ~FetchBody();
 
   void
-  SetMimeType(ErrorResult& aRv);
+  SetMimeType();
 private:
   enum ConsumeType
   {

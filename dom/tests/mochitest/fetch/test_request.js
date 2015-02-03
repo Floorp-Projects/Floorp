@@ -337,8 +337,8 @@ function testFormDataBodyExtraction() {
 
   var req = new Request("", { method: 'POST', body: params });
   var p1 = req.formData().then(function(fd) {
-    ok(fd.has("item"));
-    ok(fd.has("feature"));
+    ok(fd.has("item"), "Has entry 'item'.");
+    ok(fd.has("feature"), "Has entry 'feature'.");
     var entries = fd.getAll("quantity");
     is(entries.length, 2, "Entries with same name are correctly handled.");
     is(entries[0], "700", "Entries with same name are correctly handled.");
@@ -351,9 +351,9 @@ function testFormDataBodyExtraction() {
   f1.append("blob", new Blob([text]));
   var r2 = new Request("", { method: 'post', body: f1 });
   var p2 = r2.formData().then(function(fd) {
-    ok(fd.has("key"));
-    ok(fd.has("foo"));
-    ok(fd.has("blob"));
+    ok(fd.has("key"), "Has entry 'key'.");
+    ok(fd.has("foo"), "Has entry 'foo'.");
+    ok(fd.has("blob"), "Has entry 'blob'.");
     var entries = fd.getAll("blob");
     is(entries.length, 1, "getAll returns all items.");
     is(entries[0].name, "blob", "Filename should be blob.");
@@ -363,13 +363,13 @@ function testFormDataBodyExtraction() {
   f1.set("key", new File([ws], 'file name has spaces.txt', { type: 'new/lines' }));
   var r3 = new Request("", { method: 'post', body: f1 });
   var p3 = r3.formData().then(function(fd) {
-    ok(fd.has("foo"));
-    ok(fd.has("blob"));
+    ok(fd.has("foo"), "Has entry 'foo'.");
+    ok(fd.has("blob"), "Has entry 'blob'.");
     var entries = fd.getAll("blob");
     is(entries.length, 1, "getAll returns all items.");
     is(entries[0].name, "blob", "Filename should be blob.");
 
-    ok(fd.has("key"));
+    ok(fd.has("key"), "Has entry 'key'.");
     var f = fd.get("key");
     ok(f instanceof File, "entry should be a File.");
     is(f.name, "file name has spaces.txt", "File name should match.");
@@ -380,7 +380,30 @@ function testFormDataBodyExtraction() {
     });
   });
 
-  return Promise.all([p1, p2, p3]);
+  // Override header and ensure parse fails.
+  var boundary = "1234567891011121314151617";
+  var body = boundary +
+             '\r\nContent-Disposition: form-data; name="greeting"\r\n\r\n"hello"\r\n' +
+             boundary + '-';
+
+  var r4 = new Request("", { method: 'post', body: body, headers: {
+                               "Content-Type": "multipart/form-datafoobar; boundary="+boundary,
+                           }});
+  var p4 = r4.formData().then(function() {
+    ok(false, "Invalid mimetype should fail.");
+  }, function() {
+    ok(true, "Invalid mimetype should fail.");
+  });
+
+  var r5 = new Request("", { method: 'POST', body: params, headers: {
+                               "Content-Type": "application/x-www-form-urlencodedfoobar",
+                           }});
+  var p5 = r5.formData().then(function() {
+    ok(false, "Invalid mimetype should fail.");
+  }, function() {
+    ok(true, "Invalid mimetype should fail.");
+  });
+  return Promise.all([p1, p2, p3, p4]);
 }
 
 // mode cannot be set to "CORS-with-forced-preflight" from javascript.
