@@ -171,9 +171,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
         friend class ArrayBufferObject;
 
-        typedef void (BufferContents::* ConvertibleToBool)();
-        void nonNull() {}
-
         BufferContents(uint8_t *data, BufferKind kind) : data_(data), kind_(kind) {
             MOZ_ASSERT((kind_ & ~KIND_MASK) == 0);
         }
@@ -194,7 +191,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         uint8_t *data() const { return data_; }
         BufferKind kind() const { return kind_; }
 
-        operator ConvertibleToBool() const { return data_ ? &BufferContents::nonNull : nullptr; }
+        explicit operator bool() const { return data_ != nullptr; }
     };
 
     static const Class class_;

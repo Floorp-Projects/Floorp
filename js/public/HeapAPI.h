@@ -153,9 +153,6 @@ struct Zone
 // to several kinds of GC thing.
 class JS_FRIEND_API(GCCellPtr)
 {
-    typedef void (GCCellPtr::* ConvertibleToBool)();
-    void nonNull() {}
-
   public:
     // Construction from a void* and trace kind.
     GCCellPtr(void *gcthing, JSGCTraceKind traceKind) : ptr(checkedCast(gcthing, traceKind)) {}
@@ -179,9 +176,9 @@ class JS_FRIEND_API(GCCellPtr)
     }
 
     // Allow GCCellPtr to be used in a boolean context.
-    operator ConvertibleToBool() const {
+    explicit operator bool() const {
         MOZ_ASSERT(bool(asCell()) == (kind() != JSTRACE_NULL));
-        return asCell() ? &GCCellPtr::nonNull : 0;
+        return asCell();
     }
 
     // Simplify checks to the kind.
