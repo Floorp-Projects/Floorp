@@ -276,6 +276,8 @@ private:
   DECL_GFX_PREF(Live, "layers.dump-texture",                   LayersDumpTexture, bool, false);
 #ifdef MOZ_DUMP_PAINTING
   DECL_GFX_PREF(Live, "layers.dump-decision",                  LayersDumpDecision, bool, false);
+  DECL_GFX_PREF(Live, "layers.dump-client-layers",             DumpClientLayers, bool, false);
+  DECL_GFX_PREF(Live, "layers.dump-host-layers",               DumpHostLayers, bool, false);
 #endif
 
   // 0 is "no change" for contrast, positive values increase it, negative values

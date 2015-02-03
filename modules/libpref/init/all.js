@@ -3923,6 +3923,8 @@ pref("layers.dump", false);
 // If we're dumping layers, also dump the texture data
 pref("layers.dump-texture", false);
 pref("layers.dump-decision", false);
+pref("layers.dump-client-layers", false);
+pref("layers.dump-host-layers", false);
 #endif
 pref("layers.draw-borders", false);
 pref("layers.draw-tile-borders", false);
