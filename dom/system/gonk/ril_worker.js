@@ -1922,33 +1922,12 @@ RilObject.prototype = {
   },
 
   conferenceCall: function(options) {
-    if (this._isCdma) {
-      options.featureStr = "";
-      this.cdmaFlash(options);
-      return;
-    }
-
     this.telephonyRequestQueue.push(REQUEST_CONFERENCE, () => {
       this.context.Buf.simpleRequest(REQUEST_CONFERENCE, options);
     });
   },
 
   separateCall: function(options) {
-    let call = this.currentCalls[options.callIndex];
-    if (!call) {
-      options.errorName = "removeError";
-      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-      options.success = false;
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    if (this._isCdma) {
-      options.featureStr = "";
-      this.cdmaFlash(options);
-      return;
-    }
-
     this.telephonyRequestQueue.push(REQUEST_SEPARATE_CONNECTION, () => {
       let Buf = this.context.Buf;
       Buf.newParcel(REQUEST_SEPARATE_CONNECTION, options);
@@ -6543,11 +6522,6 @@ RilObject.prototype[REQUEST_CDMA_QUERY_PREFERRED_VOICE_PRIVACY_MODE] = function 
 RilObject.prototype[REQUEST_CDMA_FLASH] = function REQUEST_CDMA_FLASH(length, options) {
   options.success = (options.rilRequestError === 0);
   if (!options.success) {
-    if (options.rilMessageType === "conferenceCall") {
-      options.errorName = "addError";
-    } else if (options.rilMessageType === "separateCall") {
-      options.errorName = "removeError";
-    }
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   }
 
