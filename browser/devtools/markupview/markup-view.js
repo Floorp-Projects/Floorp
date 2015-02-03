@@ -23,6 +23,7 @@ const promise = require("resource://gre/modules/Promise.jsm").Promise;
 const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const Heritage = require("sdk/core/heritage");
+const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
 
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/Templater.jsm");
@@ -2072,9 +2073,8 @@ TextEditor.prototype = {
   update: function() {
     if (!this.selected || !this.node.incompleteValue) {
       let text = this.node.shortValue;
-      // XXX: internationalize the elliding
       if (this.node.incompleteValue) {
-        text += "…";
+        text += ELLIPSIS;
       }
       this.value.textContent = text;
     } else {
