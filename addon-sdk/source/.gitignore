@@ -8,6 +8,7 @@ doc/index.html
 doc/modules/
 doc/status.md5
 packages/*
+node_modules
 
 # Python
 *.pyc
@@ -17,4 +18,3 @@ packages/*
 
 # Windows
 *Thumbs.db
-

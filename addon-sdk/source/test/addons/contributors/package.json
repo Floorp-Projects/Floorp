@@ -1,4 +1,6 @@
 {
-  "id": "test-contributors",
-  "contributors": [ "A", "B" ]
+  "id": "test-contributors@jetpack",
+  "contributors": [ "A", "B" ],
+  "main": "./main.js",
+  "version": "0.0.1"
 }

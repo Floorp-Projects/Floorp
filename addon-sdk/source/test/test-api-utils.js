@@ -313,4 +313,4 @@ exports.testAddIterator = function testAddIterator (assert) {
 
 };
 
-require('test').run(exports);
+require("sdk/test").run(exports);

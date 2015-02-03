@@ -1,8 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-'use strict';
+"use strict";
 
 const deprecate = require("sdk/util/deprecate");
 const { LoaderWithHookedConsole } = require("sdk/test/loader");
@@ -86,6 +85,7 @@ exports.testDeprecateEvent = function(assert, done) {
     assert.equal(messages.length, 1, "only one error is dispatched");
     emit(testObj, 'water');
   });
+
   assert.equal(messages.length, 1, "only one error is dispatched");
   assert.equal(messages[0].type, "error", "the console message is an error");
   let msg = messages[0].msg;
@@ -98,16 +98,16 @@ exports.testDeprecateEvent = function(assert, done) {
   emit(testObj, 'fire');
 }
 
-exports.testDeprecateSettingToggle = function (assert, done) {
+exports.testDeprecateSettingToggle = function (assert) {
   let { loader, messages } = LoaderWithHookedConsole(module);
   let deprecate = loader.require("sdk/util/deprecate");
-  
+
   function fn () { deprecate.deprecateUsage("foo"); }
 
   set(PREFERENCE, false);
   fn();
   assert.equal(messages.length, 0, 'no deprecation warnings');
-  
+
   set(PREFERENCE, true);
   fn();
   assert.equal(messages.length, 1, 'deprecation warnings when toggled');
@@ -115,7 +115,6 @@ exports.testDeprecateSettingToggle = function (assert, done) {
   set(PREFERENCE, false);
   fn();
   assert.equal(messages.length, 1, 'no new deprecation warnings');
-  done();
 };
 
 exports.testDeprecateSetting = function (assert, done) {
@@ -157,4 +156,5 @@ exports.testDeprecateSetting = function (assert, done) {
 
   emit(testObj, 'fire');
 }
-require("test").run(exports);
+
+require("sdk/test").run(exports);

@@ -7,7 +7,7 @@ let { seq, iterate, filter, map, reductions, reduce, count,
       isEmpty, every, isEvery, some, take, takeWhile, drop,
       dropWhile, concat, first, rest, nth, last, dropLast,
       distinct, remove, mapcat, fromEnumerator, string,
-      object, pairs, keys, values, each
+      object, pairs, keys, values, each, names, symbols
     } = require("sdk/util/sequence");
 
 const boom = () => { throw new Error("Boom!"); };
@@ -150,6 +150,13 @@ exports["test keys"] = assert => {
   assert.deepEqual([...keys({a: 1, b: 2, c: 3})].sort(),
                    ["a", "b", "c"],
                    "all keys");
+  assert.deepEqual([...keys(Object.create({}, {
+                              a: {value: 1, enumerable: true},
+                              b: {value: 2, enumerable: false},
+                              c: {value: 3, enumerable: false}
+                            }))].sort(),
+                 ["a"],
+                 "only enumerable keys");
 
   let items = [];
   for (let key of keys({a: 1, b: 2, c: 3}))
@@ -190,6 +197,81 @@ exports["test keys"] = assert => {
 
   assert.throws(() => keys(true),
                 "can't keys boolean");
+};
+
+exports["test names"] = assert => {
+  assert.deepEqual([...names(null)], [], "names on null is empty");
+  assert.deepEqual([...names(void(0))], [], "names on void is empty");
+  assert.deepEqual([...names({})], [], "empty sequence");
+  assert.deepEqual([...names({a: 1})], ["a"], "single key");
+  assert.deepEqual([...names({a: 1, b: 2, c: 3})].sort(),
+                   ["a", "b", "c"],
+                   "all keys");
+  assert.deepEqual([...names(Object.create({}, {
+                              a: {value: 1, enumerable: true},
+                              b: {value: 2, enumerable: false},
+                              c: {value: 3, enumerable: false}
+                            }))].sort(),
+                   ["a", "b", "c"],
+                   "all enumerable & non-enumerable keys");
+
+
+  assert.throws(() => names([1, 2, 3]),
+                "can't names array");
+
+  assert.throws(() => names(""),
+                "can't names string");
+
+  assert.throws(() => names(new Map()),
+                "can't names map");
+
+  assert.throws(() => names(new Set()),
+                "can't names set");
+
+  assert.throws(() => names(4),
+                "can't names number");
+
+  assert.throws(() => names(true),
+                "can't names boolean");
+};
+
+exports["test symbols"] = assert => {
+  assert.deepEqual([...symbols(null)], [], "symbols on null is empty");
+  assert.deepEqual([...symbols(void(0))], [], "symbols on void is empty");
+  assert.deepEqual([...symbols({})], [], "symbols on empty is empty");
+  assert.deepEqual([...symbols({a: 1})], [], "symbols is empty if not owned");
+
+  const b = Symbol("b");
+  assert.deepEqual([...symbols({a: 1, [b]: 2, c: 3})].sort(),
+                   [b],
+                   "only symbols");
+
+  assert.deepEqual([...symbols(Object.create({}, {
+                                a: {value: 1, enumerable: true},
+                                [b]: {value: 2, enumerable: false},
+                                c: {value: 3, enumerable: false}
+                              }))].sort(),
+                   [b],
+                   "includes non-enumerable symbols");
+
+
+  assert.throws(() => symbols([1, 2, 3]),
+                "can't symbols array");
+
+  assert.throws(() => symbols(""),
+                "can't symbols string");
+
+  assert.throws(() => symbols(new Map()),
+                "can't symbols map");
+
+  assert.throws(() => symbols(new Set()),
+                "can't symbols set");
+
+  assert.throws(() => symbols(4),
+                "can't symbols number");
+
+  assert.throws(() => symbols(true),
+                "can't symbols boolean");
 };
 
 exports["test values"] = assert => {

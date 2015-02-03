@@ -28,9 +28,9 @@ const { Rules } = require('./util/rules');
 const { merge } = require('./util/object');
 const { data } = require('./self');
 
-const views = WeakMap();
-const workers = WeakMap();
-const pages = WeakMap();
+const views = new WeakMap();
+const workers = new WeakMap();
+const pages = new WeakMap();
 
 const readyEventNames = [
   'DOMContentLoaded',
@@ -136,7 +136,7 @@ const Page = Class({
 
     // page-worker doesn't have a model like other APIs, so to be consitent
     // with the behavior "what you set is what you get", we need to store
-    // the original `contentURL` given. 
+    // the original `contentURL` given.
     // Even if XUL elements doesn't support `dataset`, properties, to
     // indicate that is a custom attribute the syntax "data-*" is used.
     view.setAttribute('data-src', contentURL);

@@ -5,6 +5,7 @@ testdocs.tgz
 jetpack-sdk-docs.tgz
 .test_tmp
 jetpack-sdk-docs
+node_modules
 
 # These should really be in a global .hgignore, but such a thing
 # seems ridiculously confusing to set up, so we'll include some
