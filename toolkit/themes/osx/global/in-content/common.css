@@ -79,6 +79,6 @@ xul|description {
 html|a:-moz-focusring,
 xul|*.text-link:-moz-focusring,
 xul|*.inline-link:-moz-focusring {
-  outline-width: 0;
-  box-shadow: @focusRingShadow@;
+  color: #ff9500;
+  text-decoration: underline;
 }
