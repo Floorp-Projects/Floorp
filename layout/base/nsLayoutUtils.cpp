@@ -2892,7 +2892,8 @@ nsLayoutUtils::GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
   // displayport.
   // Note: we only do this in processes where we do subframe scrolling to
   //       begin with (i.e., not in the parent process on B2G).
-  if (aBuilder.IsPaintingToWindow() && WantSubAPZC() &&
+  if (aBuilder.IsPaintingToWindow() &&
+      gfxPrefs::AsyncPanZoomEnabled() &&
       !aBuilder.HaveScrollableDisplayPort() &&
       scrollableFrame->WantAsyncScroll()) {
 
@@ -7650,13 +7651,6 @@ nsLayoutUtils::CalculateExpandedScrollableRect(nsIFrame* aFrame)
     scrollableRect.height = compSize.height;
   }
   return scrollableRect;
-}
-
-/* static */ bool
-nsLayoutUtils::WantSubAPZC()
-{
-  return gfxPrefs::AsyncPanZoomEnabled() &&
-         gfxPrefs::APZSubframeEnabled();
 }
 
 /* static */ bool
