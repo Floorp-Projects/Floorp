@@ -900,13 +900,8 @@ PtrToNodeEntry*
 CCGraph::AddNodeToMap(void* aPtr)
 {
   JS::AutoSuppressGCAnalysis suppress;
-  PtrToNodeEntry* e = static_cast<PtrToNodeEntry*>
-    (PL_DHashTableAdd(&mPtrToNodeMap, aPtr, fallible));
-  if (!e) {
-    // Caller should track OOMs
-    return nullptr;
-  }
-  return e;
+  return static_cast<PtrToNodeEntry*>
+    (PL_DHashTableAdd(&mPtrToNodeMap, aPtr)); // infallible add
 }
 
 void
@@ -2037,7 +2032,6 @@ private:
   nsCString mNextEdgeName;
   nsCOMPtr<nsICycleCollectorListener> mListener;
   bool mMergeZones;
-  bool mRanOutOfMemory;
   nsAutoPtr<NodePool::Enumerator> mCurrNode;
 
 public:
@@ -2152,7 +2146,6 @@ CCGraphBuilder::CCGraphBuilder(CCGraph& aGraph,
   , mJSZoneParticipant(nullptr)
   , mListener(aListener)
   , mMergeZones(aMergeZones)
-  , mRanOutOfMemory(false)
 {
   if (aJSRuntime) {
     mJSParticipant = aJSRuntime->GCThingParticipant();
@@ -2186,11 +2179,6 @@ PtrInfo*
 CCGraphBuilder::AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant)
 {
   PtrToNodeEntry* e = mGraph.AddNodeToMap(aPtr);
-  if (!e) {
-    mRanOutOfMemory = true;
-    return nullptr;
-  }
-
   PtrInfo* result;
   if (!e->mNode) {
     // New entry.
@@ -2269,11 +2257,6 @@ CCGraphBuilder::BuildGraph(SliceBudget& aBudget)
 
   if (mGraph.mRootCount > 0) {
     SetLastChild();
-  }
-
-  if (mRanOutOfMemory) {
-    MOZ_ASSERT(false, "Ran out of memory while building cycle collector graph");
-    CC_TELEMETRY(_OOM, true);
   }
 
   mCurrNode = nullptr;
