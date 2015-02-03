@@ -12692,7 +12692,7 @@ bool ElementAccessHasExtraIndexedProperty(types::CompilerConstraintList *constra
 MIRType DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinition *obj);
 BarrierKind PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                                          types::CompilerConstraintList *constraints,
-                                         types::ObjectGroupKey *object, PropertyName *name,
+                                         types::TypeSetObjectKey *key, PropertyName *name,
                                          types::TemporaryTypeSet *observed, bool updateObserved);
 BarrierKind PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                                          types::CompilerConstraintList *constraints,

@@ -86,6 +86,8 @@ template <typename T>
 void
 StoreBuffer::MonoTypeBuffer<T>::mark(StoreBuffer *owner, JSTracer *trc)
 {
+    ReentrancyGuard g(*owner);
+    MOZ_ASSERT(owner->isEnabled());
     MOZ_ASSERT(stores_.initialized());
     sinkStores(owner);
     for (typename StoreSet::Range r = stores_.all(); !r.empty(); r.popFront())
@@ -97,8 +99,8 @@ StoreBuffer::MonoTypeBuffer<T>::mark(StoreBuffer *owner, JSTracer *trc)
 void
 StoreBuffer::GenericBuffer::mark(StoreBuffer *owner, JSTracer *trc)
 {
-    MOZ_ASSERT(owner->isEnabled());
     ReentrancyGuard g(*owner);
+    MOZ_ASSERT(owner->isEnabled());
     if (!storage_)
         return;
 

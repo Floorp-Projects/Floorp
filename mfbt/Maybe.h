@@ -82,9 +82,6 @@ struct Nothing { };
 template<class T>
 class Maybe
 {
-  typedef void (Maybe::* ConvertibleToBool)(float*****, double*****);
-  void nonNull(float*****, double*****) {}
-
   bool mIsSome;
   AlignedStorage2<T> mStorage;
 
@@ -154,7 +151,7 @@ public:
   }
 
   /* Methods that check whether this Maybe contains a value */
-  operator ConvertibleToBool() const { return mIsSome ? &Maybe::nonNull : 0; }
+  explicit operator bool() const { return isSome(); }
   bool isSome() const { return mIsSome; }
   bool isNothing() const { return !mIsSome; }
 

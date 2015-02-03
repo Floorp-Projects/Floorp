@@ -85,6 +85,12 @@ typedef HANDLE (WINAPI *CreateFileWPtr)(LPCWSTR fname, DWORD access,
                                         DWORD creation, DWORD flags,
                                         HANDLE ftemplate);
 static CreateFileWPtr sCreateFileWStub = nullptr;
+typedef HANDLE (WINAPI *CreateFileAPtr)(LPCSTR fname, DWORD access,
+                                        DWORD share,
+                                        LPSECURITY_ATTRIBUTES security,
+                                        DWORD creation, DWORD flags,
+                                        HANDLE ftemplate);
+static CreateFileAPtr sCreateFileAStub = nullptr;
 
 // Used with fix for flash fullscreen window loosing focus.
 static bool gDelayFlashFocusReplyUntilEval = false;
@@ -1937,10 +1943,44 @@ PluginModuleChild::DoNP_Initialize(const PluginSettings& aSettings)
 
 #if defined(XP_WIN)
 
+// Windows 8 RTM (kernelbase's version is 6.2.9200.16384) doesn't call
+// CreateFileW from CreateFileA.
+// So we hook CreateFileA too to use CreateFileW hook.
+
+static HANDLE WINAPI
+CreateFileAHookFn(LPCSTR fname, DWORD access, DWORD share,
+                  LPSECURITY_ATTRIBUTES security, DWORD creation, DWORD flags,
+                  HANDLE ftemplate)
+{
+    while (true) { // goto out
+        // Our hook is for mms.cfg into \Windows\System32\Macromed\Flash
+        // We don't requrie supporting too long path.
+        WCHAR unicodeName[MAX_PATH];
+        size_t len = strlen(fname);
+
+        if (len >= MAX_PATH) {
+            break;
+        }
+
+        // We call to CreateFileW for workaround of Windows 8 RTM
+        int newLen = MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS, fname,
+                                         len, unicodeName, MAX_PATH);
+        if (newLen == 0 || newLen >= MAX_PATH) {
+            break;
+        }
+        unicodeName[newLen] = '\0';
+
+        return CreateFileW(unicodeName, access, share, security, creation, flags, ftemplate);
+    }
+
+    return sCreateFileAStub(fname, access, share, security, creation, flags,
+                            ftemplate);
+}
+
 HANDLE WINAPI
-CreateFileHookFn(LPCWSTR fname, DWORD access, DWORD share,
-                 LPSECURITY_ATTRIBUTES security, DWORD creation, DWORD flags,
-                 HANDLE ftemplate)
+CreateFileWHookFn(LPCWSTR fname, DWORD access, DWORD share,
+                  LPSECURITY_ATTRIBUTES security, DWORD creation, DWORD flags,
+                  HANDLE ftemplate)
 {
     static const WCHAR kConfigFile[] = L"mms.cfg";
     static const size_t kConfigLength = ArrayLength(kConfigFile) - 1;
@@ -2008,8 +2048,11 @@ PluginModuleChild::HookProtectedMode()
 {
     sKernel32Intercept.Init("kernel32.dll");
     sKernel32Intercept.AddHook("CreateFileW",
-                               reinterpret_cast<intptr_t>(CreateFileHookFn),
+                               reinterpret_cast<intptr_t>(CreateFileWHookFn),
                                (void**) &sCreateFileWStub);
+    sKernel32Intercept.AddHook("CreateFileA",
+                               reinterpret_cast<intptr_t>(CreateFileAHookFn),
+                               (void**) &sCreateFileAStub);
 }
 
 BOOL WINAPI

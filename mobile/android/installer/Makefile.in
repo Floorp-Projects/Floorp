@@ -6,7 +6,10 @@ STANDALONE_MAKEFILE := 1
 
 # overwrite mobile-l10n.js with a matchOS=true one for multi-locale builds
 ifeq ($(AB_CD),multi)
-PREF_JS_EXPORTS = $(srcdir)/mobile-l10n.js
+L10N_PREF_JS_EXPORTS = $(srcdir)/mobile-l10n.js
+L10N_PREF_JS_EXPORTS_PATH = $(FINAL_TARGET)/$(PREF_DIR)
+L10N_PREF_JS_EXPORTS_FLAGS = $(PREF_PPFLAGS) --silence-missing-directive-warnings
+PP_TARGETS += L10N_PREF_JS_EXPORTS
 endif
 
 include $(topsrcdir)/config/rules.mk

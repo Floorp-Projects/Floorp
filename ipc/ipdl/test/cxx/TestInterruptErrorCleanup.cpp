@@ -122,9 +122,9 @@ TestInterruptErrorCleanupParent::Main()
 }
 
 void
-TestInterruptErrorCleanupParent::ProcessingError(Result what)
+TestInterruptErrorCleanupParent::ProcessingError(Result aCode, const char* aReason)
 {
-    if (what != MsgDropped)
+    if (aCode != MsgDropped)
         fail("unexpected processing error");
     mGotProcessingError = true;
 }

@@ -36,11 +36,9 @@ struct DependentAddPtr
         return table.relookupOrAdd(addPtr, key, value);
     }
 
-    typedef void (DependentAddPtr::* ConvertibleToBool)();
-    void nonNull() {}
 
     bool found() const                 { return addPtr.found(); }
-    operator ConvertibleToBool() const { return found() ? &DependentAddPtr::nonNull : 0; }
+    explicit operator bool() const     { return found(); }
     const Entry &operator*() const     { return *addPtr; }
     const Entry *operator->() const    { return &*addPtr; }
 

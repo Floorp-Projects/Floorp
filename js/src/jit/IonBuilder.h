@@ -394,6 +394,8 @@ class IonBuilder
     MDefinition *addMaybeCopyElementsForWrite(MDefinition *object);
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
     MInstruction *addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bailoutKind);
+    MInstruction *addShapeGuardPolymorphic(MDefinition *obj,
+                                           const BaselineInspector::ShapeVector &shapes);
 
     MDefinition *convertShiftToMaskForStaticTypedArray(MDefinition *id,
                                                        Scalar::Type viewType);
@@ -451,7 +453,7 @@ class IonBuilder
                                 PropertyName *name, MDefinition *value);
     bool setPropTryCommonDOMSetter(bool *emitted, MDefinition *obj,
                                    MDefinition *value, JSFunction *setter,
-                                   bool isDOM);
+                                   types::TemporaryTypeSet *objTypes);
     bool setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
                                 PropertyName *name, MDefinition *value,
                                 bool barrier, types::TemporaryTypeSet *objTypes);
@@ -873,6 +875,10 @@ class IonBuilder
     bool testShouldDOMCall(types::TypeSet *inTypes,
                            JSFunction *func, JSJitInfo::OpType opType);
 
+    MDefinition *addShapeGuardsForGetterSetter(MDefinition *obj, JSObject *holder, Shape *holderShape,
+                                               const BaselineInspector::ShapeVector &receiverShapes,
+                                               bool isOwnProperty);
+
     bool annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPropCache,
                                   types::TemporaryTypeSet *objTypes,
                                   types::TemporaryTypeSet *pushedTypes);
@@ -1021,6 +1027,8 @@ class IonBuilder
         return callerResumePoint_ ? callerResumePoint_->pc() : nullptr;
     }
     IonBuilder *callerBuilder_;
+
+    IonBuilder *outermostBuilder();
 
     bool oom() {
         abortReason_ = AbortReason_Alloc;

@@ -2511,15 +2511,14 @@ public:
     // non-interface implementation
 
 public:
-    static XPCJSObjectHolder* newHolder(JSObject* obj);
-
     void TraceJS(JSTracer *trc);
     static void GetTraceName(JSTracer* trc, char *buf, size_t bufsize);
+
+    explicit XPCJSObjectHolder(JSObject* obj);
 
 private:
     virtual ~XPCJSObjectHolder();
 
-    explicit XPCJSObjectHolder(JSObject* obj);
     XPCJSObjectHolder(); // not implemented
 
     JS::Heap<JSObject*> mJSObj;
