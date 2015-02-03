@@ -8,7 +8,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-this.EXPORTED_SYMBOLS = [];
+this.EXPORTED_SYMBOLS = ["SettingsRequestManager"];
 
 Cu.import("resource://gre/modules/SettingsDB.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -64,6 +64,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
 XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
+                                   "@mozilla.org/settingsService;1",
+                                   "nsISettingsService");
 
 let SettingsPermissions = {
   checkPermission: function(aPrincipal, aPerm) {
@@ -1036,10 +1039,18 @@ let SettingsRequestManager = {
     let mm = aMessage.target;
 
     function returnMessage(name, data) {
-      try {
-        mm.sendAsyncMessage(name, data);
-      } catch (e) {
-        if (DEBUG) debug("Return message failed, " + name);
+      if (mm) {
+        try {
+          mm.sendAsyncMessage(name, data);
+        } catch (e) {
+          if (DEBUG) debug("Return message failed, " + name + ": " + e);
+        }
+      } else {
+        try {
+          gSettingsService.receiveMessage({ name: name, data: data });
+	} catch (e) {
+          if (DEBUG) debug("Direct return message failed, " + name + ": " + e);
+	}
       }
     }
 
@@ -1193,4 +1204,5 @@ let SettingsRequestManager = {
   }
 };
 
+this.SettingsRequestManager = SettingsRequestManager;
 SettingsRequestManager.init();

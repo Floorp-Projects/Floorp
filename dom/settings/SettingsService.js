@@ -79,10 +79,8 @@ function SettingsServiceLock(aSettingsService, aTransactionCallback) {
     windowID: undefined,
     lockStack: (new Error).stack
   };
-  cpmm.sendAsyncMessage("Settings:CreateLock",
-                        createLockPayload,
-                        undefined,
-                        Services.scriptSecurityManager.getSystemPrincipal());
+
+  this.returnMessage("Settings:CreateLock", createLockPayload);
   Services.tm.currentThread.dispatch(closeHelper, Ci.nsIThread.DISPATCH_NORMAL);
 }
 
@@ -91,12 +89,20 @@ SettingsServiceLock.prototype = {
     return !this._open;
   },
 
+  returnMessage: function(aMessage, aData) {
+    SettingsRequestManager.receiveMessage({
+      name: aMessage,
+      data: aData,
+      target: undefined,
+      principal: Services.scriptSecurityManager.getSystemPrincipal()
+    });
+  },
+
   runOrFinalizeQueries: function() {
     if (!this._requests || Object.keys(this._requests).length == 0) {
-      this._settingsService.unregisterLock(this._id);
-      cpmm.sendAsyncMessage("Settings:Finalize", {lockID: this._id}, undefined, Services.scriptSecurityManager.getSystemPrincipal());
+      this.returnMessage("Settings:Finalize", {lockID: this._id});
     } else {
-      cpmm.sendAsyncMessage("Settings:Run", {lockID: this._id}, undefined, Services.scriptSecurityManager.getSystemPrincipal());
+      this.returnMessage("Settings:Run", {lockID: this._id});
     }
   },
 
@@ -124,6 +130,8 @@ SettingsServiceLock.prototype = {
         default:
           if (DEBUG) debug("Message type " + aMessage.name + " is missing a requestID");
       }
+
+      this._settingsService.unregisterLock(this._id);
       return;
     }
 
@@ -138,7 +146,7 @@ SettingsServiceLock.prototype = {
         this._open = true;
         let settings_names = Object.keys(msg.settings);
         if (settings_names.length > 0) {
-          let name = settings_names[0];        
+          let name = settings_names[0];
           if (DEBUG && settings_names.length > 1) {
             debug("Warning: overloaded setting:" + name);
           }
@@ -174,11 +182,9 @@ SettingsServiceLock.prototype = {
     }
     let reqID = uuidgen.generateUUID().toString();
     this._requests[reqID] = makeSettingsServiceRequest(aCallback, aName);
-    cpmm.sendAsyncMessage("Settings:Get", {requestID: reqID,
-                                           lockID: this._id,
-                                           name: aName},
-                                           undefined,
-                                           Services.scriptSecurityManager.getSystemPrincipal());
+    this.returnMessage("Settings:Get", {requestID: reqID,
+                                        lockID: this._id,
+                                        name: aName});
   },
 
   set: function set(aName, aValue, aCallback) {
@@ -190,11 +196,9 @@ SettingsServiceLock.prototype = {
     this._requests[reqID] = makeSettingsServiceRequest(aCallback, aName, aValue);
     let settings = {};
     settings[aName] = aValue;
-    cpmm.sendAsyncMessage("Settings:Set", {requestID: reqID,
-                                           lockID: this._id,
-                                           settings: settings},
-                                           undefined,
-                                           Services.scriptSecurityManager.getSystemPrincipal());
+    this.returnMessage("Settings:Set", {requestID: reqID,
+                                        lockID: this._id,
+                                        settings: settings});
   },
 
   callHandle: function callHandle(aCallback, aName, aValue) {
@@ -239,6 +243,7 @@ function SettingsService()
 {
   if (VERBOSE) debug("settingsService Constructor");
   this._locks = [];
+  this._serviceLocks = {};
   this._createdLocks = 0;
   this._unregisteredLocks = 0;
   this.init();
@@ -263,14 +268,36 @@ SettingsService.prototype = {
     }
   },
 
+  receiveMessage: function(aMessage) {
+    if (VERBOSE) debug("Entering receiveMessage");
+
+    let lockID = aMessage.data.lockID;
+    if (!lockID) {
+      if (DEBUG) debug("No lock ID");
+      return;
+    }
+
+    if (!(lockID in this._serviceLocks)) {
+      if (DEBUG) debug("Received message for lock " + lockID + " but no lock");
+      return;
+    }
+
+    if (VERBOSE) debug("Delivering message");
+    this._serviceLocks[lockID].receiveMessage(aMessage);
+  },
+
   createLock: function createLock(aCallback) {
+    if (VERBOSE) debug("Calling createLock");
     var lock = new SettingsServiceLock(this, aCallback);
-    this.registerLock(lock._id);
+    if (VERBOSE) debug("Created lock " + lock._id);
+    this.registerLock(lock);
     return lock;
   },
 
-  registerLock: function(aLockID) {
-    this._locks.push(aLockID);
+  registerLock: function(aLock) {
+    if (VERBOSE) debug("Registering lock " + aLock._id);
+    this._locks.push(aLock._id);
+    this._serviceLocks[aLock._id] = aLock;
     this._createdLocks++;
   },
 
@@ -279,6 +306,8 @@ SettingsService.prototype = {
     if (lock_index != -1) {
       if (VERBOSE) debug("Unregistering lock " + aLockID);
       this._locks.splice(lock_index, 1);
+      this._serviceLocks[aLockID] = null;
+      delete this._serviceLocks[aLockID];
       this._unregisteredLocks++;
     }
   },
