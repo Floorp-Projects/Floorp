@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=648573
+-->
+<head>
+  <title>Test for Bug 648573</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=648573">Mozilla Bug 648573</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 648573 **/
+SimpleTest.waitForExplicitFinish();
+var utils = SpecialPowers.getDOMWindowUtils(window);
+
+ok(!utils.mayHaveTouchEventListeners,
+  "There shouldn't be any touch event listeners yet.");
+
+ok("createTouch" in document, "Should have createTouch function");
+ok("createTouchList" in document, "Should have createTouchList function");
+ok(document.createEvent("touchevent"), "Should be able to create TouchEvent objects");
+
+var t1 = document.createTouch(window, document, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
+is(t1.target, document, "Wrong target");
+is(t1.identifier, 1, "Wrong identifier");
+is(t1.pageX, 2, "Wrong pageX");
+is(t1.pageY, 3, "Wrong pageY");
+is(t1.screenX, 4, "Wrong screenX");
+is(t1.screenY, 5, "Wrong screenY");
+is(t1.clientX, 6, "Wrong clientX");
+is(t1.clientY, 7, "Wrong clientY");
+is(t1.radiusX, 8, "Wrong radiusX");
+is(t1.radiusY, 9, "Wrong radiusY");
+is(t1.rotationAngle, 10, "Wrong rotationAngle");
+is(t1.force, 11, "Wrong force");
+
+var t2 = document.createTouch();
+
+var l1 = document.createTouchList(t1);
+is(l1.length, 1, "Wrong length");
+is(l1.item(0), t1, "Wront item (1)");
+is(l1[0], t1, "Wront item (2)");
+
+var l2 = document.createTouchList([t1, t2]);
+is(l2.length, 2, "Wrong length");
+is(l2.item(0), t1, "Wront item (3)");
+is(l2.item(1), t2, "Wront item (4)");
+is(l2[0], t1, "Wront item (5)");
+is(l2[1], t2, "Wront item (6)");
+
+var l3 = document.createTouchList();
+
+var e = document.createEvent("touchevent");
+e.initTouchEvent("touchmove", true, true, window, 0, true, true, true, true,
+                 l1, l2, l3);
+is(e.touches, l1, "Wrong list (1)");
+is(e.targetTouches, l2, "Wrong list (2)");
+is(e.changedTouches, l3, "Wrong list (3)");
+ok(e.altKey, "Alt should be true");
+ok(e.metaKey, "Meta should be true");
+ok(e.ctrlKey, "Ctrl should be true");
+ok(e.shiftKey, "Shift should be true");
+
+
+var events =
+  ["touchstart",
+   "touchend",
+   "touchmove",
+   "touchcancel"];
+
+function runEventTest(type) {
+  var e = document.createEvent("touchevent");
+  e.initTouchEvent(type, true, true, window, 0, true, true, true, true,
+                   l1, l2, l3);
+  var t = document.createElement("div");
+  // Testing target.onFoo;
+  var didCall = false;
+  t["on" + type] = function (evt) {
+    is(evt, e, "Wrong event");
+    evt.target.didCall = true;
+  }
+  t.dispatchEvent(e);
+  ok(t.didCall, "Should have called the listener(1)");
+
+  // Testing <element onFoo="">
+  t = document.createElement("div");
+  t.setAttribute("on" + type, "this.didCall = true;");
+  t.dispatchEvent(e);
+  ok(t.didCall, "Should have called the listener(2)");
+}
+
+for (var i = 0; i < events.length; ++i) {
+  runEventTest(events[i]);
+}
+
+ok(utils.mayHaveTouchEventListeners,
+  "There should be touch event listeners.");
+SimpleTest.finish();
+</script>
+</pre>
+</body>
+</html>
+

@@ -9,6 +9,7 @@
 #include "mozilla/RefPtr.h"
 
 #include <stdint.h>
+#include <string.h>
 #include <set>
 #include <vector>
 #include <sstream>

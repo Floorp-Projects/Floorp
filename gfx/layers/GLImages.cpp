@@ -61,9 +61,9 @@ GLImage::GetAsSourceSurface()
 
   GLBlitHelper helper(sSnapshotContext);
 
-  helper.BlitImageToFramebuffer(this, size, fb.FB(), true);
-
-  ScopedBindFramebuffer bind(sSnapshotContext, fb.FB());
+  if (!helper.BlitImageToFramebuffer(this, size, fb.FB(), true)) {
+    return nullptr;
+  }
 
   RefPtr<gfx::DataSourceSurface> source =
         gfx::Factory::CreateDataSourceSurface(size, gfx::SurfaceFormat::B8G8R8A8);
@@ -71,6 +71,7 @@ GLImage::GetAsSourceSurface()
     return nullptr;
   }
 
+  ScopedBindFramebuffer bind(sSnapshotContext, fb.FB());
   ReadPixelsIntoDataSurface(sSnapshotContext, source);
   return source.forget();
 }

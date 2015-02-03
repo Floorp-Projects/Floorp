@@ -469,7 +469,7 @@ public class testDistribution extends ContentProviderTest {
         JSONObject response = clickTrackingTile(StringHelper.DISTRIBUTION1_LABEL);
         mAsserter.is(response.getInt("click"), 0, "JSON click index matched");
         mAsserter.is(response.getString("locale"), localeCode, "JSON locale code matched");
-        mAsserter.is(response.getString("tiles"), "[{\"id\":123},{\"id\":456},{},{},{},{}]", "JSON tiles data matched");
+        mAsserter.is(response.getString("tiles"), "[{\"id\":123},{\"id\":456},{\"id\":632},{\"id\":629},{\"id\":630},{\"id\":631}]", "JSON tiles data matched");
 
         inputAndLoadUrl(StringHelper.ABOUT_HOME_URL);
 
@@ -479,7 +479,7 @@ public class testDistribution extends ContentProviderTest {
         // Click the second tracking tile and verify the posted data.
         response = clickTrackingTile(StringHelper.DISTRIBUTION2_LABEL);
         mAsserter.is(response.getInt("click"), 1, "JSON click index matched");
-        mAsserter.is(response.getString("tiles"), "[{\"id\":123},{\"id\":456,\"pin\":true},{},{},{},{}]", "JSON tiles data matched");
+        mAsserter.is(response.getString("tiles"), "[{\"id\":123},{\"id\":456,\"pin\":true},{\"id\":632},{\"id\":629},{\"id\":630},{\"id\":631}]", "JSON tiles data matched");
 
         inputAndLoadUrl(StringHelper.ABOUT_HOME_URL);
 

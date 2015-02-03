@@ -168,7 +168,7 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
         mLastEndTimestamp &&
         (!mParser->TimestampsFuzzyEqual(start, mLastEndTimestamp.value()) ||
          mLastTimestampOffset != aTimestampOffset ||
-         mDecoderPerSegment || mCurrentDecoder->WasTrimmed())) {
+         mDecoderPerSegment || (mCurrentDecoder && mCurrentDecoder->WasTrimmed()))) {
       MSE_DEBUG("TrackBuffer(%p)::AppendData: Data last=[%lld, %lld] overlaps [%lld, %lld]",
                 this, mLastStartTimestamp, mLastEndTimestamp.value(), start, end);
 
