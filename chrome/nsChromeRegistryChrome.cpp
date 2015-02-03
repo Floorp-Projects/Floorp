@@ -772,7 +772,8 @@ SendManifestEntry(const ChromeRegistryItem &aItem)
 
 void
 nsChromeRegistryChrome::ManifestContent(ManifestProcessingContext& cx, int lineno,
-                                        char *const * argv, int flags)
+                                        char *const * argv, bool platform,
+                                        bool contentaccessible)
 {
   char* package = argv[0];
   char* uri = argv[1];
@@ -796,7 +797,11 @@ nsChromeRegistryChrome::ManifestContent(ManifestProcessingContext& cx, int linen
   nsDependentCString packageName(package);
   PackageEntry* entry = mPackagesHash.LookupOrAdd(packageName);
   entry->baseURI = resolved;
-  entry->flags = flags;
+
+  if (platform)
+    entry->flags |= PLATFORM_PACKAGE;
+  if (contentaccessible)
+    entry->flags |= CONTENT_ACCESSIBLE;
 
   if (mDynamicRegistration) {
     ChromePackage chromePackage;
@@ -808,7 +813,8 @@ nsChromeRegistryChrome::ManifestContent(ManifestProcessingContext& cx, int linen
 
 void
 nsChromeRegistryChrome::ManifestLocale(ManifestProcessingContext& cx, int lineno,
-                                       char *const * argv, int flags)
+                                       char *const * argv, bool platform,
+                                       bool contentaccessible)
 {
   char* package = argv[0];
   char* provider = argv[1];
@@ -844,7 +850,8 @@ nsChromeRegistryChrome::ManifestLocale(ManifestProcessingContext& cx, int lineno
 
 void
 nsChromeRegistryChrome::ManifestSkin(ManifestProcessingContext& cx, int lineno,
-                                     char *const * argv, int flags)
+                                     char *const * argv, bool platform,
+                                     bool contentaccessible)
 {
   char* package = argv[0];
   char* provider = argv[1];
@@ -880,7 +887,8 @@ nsChromeRegistryChrome::ManifestSkin(ManifestProcessingContext& cx, int lineno,
 
 void
 nsChromeRegistryChrome::ManifestOverlay(ManifestProcessingContext& cx, int lineno,
-                                        char *const * argv, int flags)
+                                        char *const * argv, bool platform,
+                                        bool contentaccessible)
 {
   char* base = argv[0];
   char* overlay = argv[1];
@@ -907,7 +915,8 @@ nsChromeRegistryChrome::ManifestOverlay(ManifestProcessingContext& cx, int linen
 
 void
 nsChromeRegistryChrome::ManifestStyle(ManifestProcessingContext& cx, int lineno,
-                                      char *const * argv, int flags)
+                                      char *const * argv, bool platform,
+                                      bool contentaccessible)
 {
   char* base = argv[0];
   char* overlay = argv[1];
@@ -934,7 +943,8 @@ nsChromeRegistryChrome::ManifestStyle(ManifestProcessingContext& cx, int lineno,
 
 void
 nsChromeRegistryChrome::ManifestOverride(ManifestProcessingContext& cx, int lineno,
-                                         char *const * argv, int flags)
+                                         char *const * argv, bool platform,
+                                         bool contentaccessible)
 {
   char* chrome = argv[0];
   char* resolved = argv[1];
@@ -968,7 +978,8 @@ nsChromeRegistryChrome::ManifestOverride(ManifestProcessingContext& cx, int line
 
 void
 nsChromeRegistryChrome::ManifestResource(ManifestProcessingContext& cx, int lineno,
-                                         char *const * argv, int flags)
+                                         char *const * argv, bool platform,
+                                         bool contentaccessible)
 {
   char* package = argv[0];
   char* uri = argv[1];

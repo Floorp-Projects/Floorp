@@ -65,19 +65,26 @@ class nsChromeRegistryContent : public nsChromeRegistry
   nsCString mLocale;
 
   virtual void ManifestContent(ManifestProcessingContext& cx, int lineno,
-                               char *const * argv, int flags) MOZ_OVERRIDE;
+                               char *const * argv, bool platform,
+                               bool contentaccessible) MOZ_OVERRIDE;
   virtual void ManifestLocale(ManifestProcessingContext& cx, int lineno,
-                              char *const * argv, int flags) MOZ_OVERRIDE;
+                              char *const * argv, bool platform,
+                              bool contentaccessible) MOZ_OVERRIDE;
   virtual void ManifestSkin(ManifestProcessingContext& cx, int lineno,
-                            char *const * argv, int flags) MOZ_OVERRIDE;
+                            char *const * argv, bool platform,
+                            bool contentaccessible) MOZ_OVERRIDE;
   virtual void ManifestOverlay(ManifestProcessingContext& cx, int lineno,
-                               char *const * argv, int flags) MOZ_OVERRIDE;
+                               char *const * argv, bool platform,
+                               bool contentaccessible) MOZ_OVERRIDE;
   virtual void ManifestStyle(ManifestProcessingContext& cx, int lineno,
-                             char *const * argv, int flags) MOZ_OVERRIDE;
+                             char *const * argv, bool platform,
+                             bool contentaccessible) MOZ_OVERRIDE;
   virtual void ManifestOverride(ManifestProcessingContext& cx, int lineno,
-                                char *const * argv, int flags) MOZ_OVERRIDE;
+                                char *const * argv, bool platform,
+                                bool contentaccessible) MOZ_OVERRIDE;
   virtual void ManifestResource(ManifestProcessingContext& cx, int lineno,
-                                char *const * argv, int flags) MOZ_OVERRIDE;
+                                char *const * argv, bool platform,
+                                bool contentaccessible) MOZ_OVERRIDE;
 };
 
 #endif // nsChromeRegistryContent_h
