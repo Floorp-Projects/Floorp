@@ -436,7 +436,7 @@ CDMProxy::OnSessionMessage(const nsAString& aSessionId,
 }
 
 void
-CDMProxy::OnKeysChange(const nsAString& aSessionId)
+CDMProxy::OnKeyStatusesChange(const nsAString& aSessionId)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mKeys.IsNull()) {
@@ -444,7 +444,7 @@ CDMProxy::OnKeysChange(const nsAString& aSessionId)
   }
   nsRefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
   if (session) {
-    session->DispatchKeysChange();
+    session->DispatchKeyStatusesChange();
   }
 }
 

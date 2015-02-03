@@ -127,26 +127,26 @@ SVGLineElement::BuildPath(PathBuilder* aBuilder)
 }
 
 bool
-SVGLineElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
-                                  CapStyle aCapStyle, const Matrix& aTransform)
+SVGLineElement::GetGeometryBounds(
+  Rect* aBounds, const StrokeOptions& aStrokeOptions, const Matrix& aTransform)
 {
   float x1, y1, x2, y2;
   GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nullptr);
 
-  if (aStrokeWidth <= 0) {
+  if (aStrokeOptions.mLineWidth <= 0) {
     *aBounds = Rect(aTransform * Point(x1, y1), Size());
     aBounds->ExpandToEnclose(aTransform * Point(x2, y2));
     return true;
   }
 
-  if (aCapStyle == CapStyle::ROUND) {
+  if (aStrokeOptions.mLineCap == CapStyle::ROUND) {
     if (!aTransform.IsRectilinear()) {
       // TODO: handle this case.
       return false;
     }
     Rect bounds(Point(x1, y1), Size());
     bounds.ExpandToEnclose(Point(x2, y2));
-    bounds.Inflate(aStrokeWidth / 2.f);
+    bounds.Inflate(aStrokeOptions.mLineWidth / 2.f);
     *aBounds = aTransform.TransformBounds(bounds);
     return true;
   }
@@ -155,20 +155,20 @@ SVGLineElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
   Float xDelta;
   Float yDelta;
 
-  if (aCapStyle == CapStyle::BUTT) {
+  if (aStrokeOptions.mLineCap == CapStyle::BUTT) {
     if (length == 0.f) {
       xDelta = yDelta = 0.f;
     } else {
-      Float ratio = aStrokeWidth / 2.f / length;
+      Float ratio = aStrokeOptions.mLineWidth / 2.f / length;
       xDelta = ratio * (y2 - y1);
       yDelta = ratio * (x2 - x1);
     }
   } else {
-    MOZ_ASSERT(aCapStyle == CapStyle::SQUARE);
+    MOZ_ASSERT(aStrokeOptions.mLineCap == CapStyle::SQUARE);
     if (length == 0.f) {
-      xDelta = yDelta = aStrokeWidth / 2.f;
+      xDelta = yDelta = aStrokeOptions.mLineWidth / 2.f;
     } else {
-      Float ratio = aStrokeWidth / 2.f / length;
+      Float ratio = aStrokeOptions.mLineWidth / 2.f / length;
       xDelta = yDelta = ratio * (fabs(y2 - y1) + fabs(x2 - x1));
     }
   }

@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// Opens a popup. Link should load in main browser window. Popup should be closed when link clicked.
+function openWindow1() {
+  return window.open('file_window_open_close_outer.html','','width=300,height=200');
+}
+
+// Opens a new tab T1. Link opens in another new tab T2. T1 should close when link clicked.
+function openWindow2() {
+  return window.open('file_window_open_close_outer.html');
+}
+
+// Opens a new window. Link should open in a new tab of that window, but then both windows should close.
+function openWindow3() {
+  return window.open('file_window_open_close_outer.html', '', 'toolbar=1');
+}
+
+var TESTS = [openWindow1, openWindow2, openWindow3];
+
+function popupLoad(win)
+{
+  info("Sending click");
+  sendMouseEvent({type: "click"}, "link", win);
+  ok(true, "Didn't crash");
+
+  next();
+}
+
+function next()
+{
+  if (TESTS.length == 0) {
+    SimpleTest.finish();
+  } else {
+    var test = TESTS.shift();
+    var w = test();
+    w.addEventListener("load", (e) => popupLoad(w));
+  }
+}
+</script>
+
+<body onload="next()">
+</body>
+</html>

@@ -970,7 +970,8 @@ nsDisplayListBuilder::GetCaret() {
 }
 
 void
-nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame)
+nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
+                                     bool aPointerEventsNoneDoc)
 {
   PresShellState* state = mPresShellStates.AppendElement();
   state->mPresShell = aReferenceFrame->PresContext()->PresShell();
@@ -995,6 +996,12 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame)
     state->mIsBackgroundOnly = true;
     buildCaret = false;
   }
+
+  bool pointerEventsNone = aPointerEventsNoneDoc;
+  if (IsInSubdocument()) {
+    pointerEventsNone |= mPresShellStates[mPresShellStates.Length() - 2].mInsidePointerEventsNoneDoc;
+  }
+  state->mInsidePointerEventsNoneDoc = pointerEventsNone;
 
   if (!buildCaret)
     return;
@@ -3100,6 +3107,11 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
 {
   NS_ASSERTION(aBuilder->FindReferenceFrameFor(aFrame) == aBuilder->FindReferenceFrameFor(mFrame),
                "Reference frame mismatch");
+  if (aBuilder->IsInsidePointerEventsNoneDoc()) {
+    // Somewhere up the parent document chain is a subdocument with pointer-
+    // events:none set on it (and without a mozpasspointerevents).
+    return;
+  }
   if (!aFrame->GetParent()) {
     MOZ_ASSERT(aFrame->GetType() == nsGkAtoms::viewportFrame);
     nsSubDocumentFrame* subdoc = static_cast<nsSubDocumentFrame*>(

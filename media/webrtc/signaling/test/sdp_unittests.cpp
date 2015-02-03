@@ -869,8 +869,8 @@ class NewSdpTest : public ::testing::Test,
         std::stringstream os;
 
         if (expectSuccess) {
-          ASSERT_TRUE(mSdp) << "Parse failed on first pass: "
-                            << GetParseErrors();
+          ASSERT_TRUE(!!mSdp) << "Parse failed on first pass: "
+                              << GetParseErrors();
         }
 
         if (mSdp) {
@@ -880,7 +880,7 @@ class NewSdpTest : public ::testing::Test,
 
           // Whether we expected the parse to work or not, it should
           // succeed the second time if it succeeded the first.
-          ASSERT_TRUE(mSdp) << "Parse failed on second pass, SDP was: "
+          ASSERT_TRUE(!!mSdp) << "Parse failed on second pass, SDP was: "
             << std::endl << os.str() <<  std::endl
             << "Errors were: " << GetParseErrors();
 
@@ -892,7 +892,7 @@ class NewSdpTest : public ::testing::Test,
       }
 
       if (expectSuccess) {
-        ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+        ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
         ASSERT_EQ(0U, mParser.GetParseErrors().size())
                   << "Got unexpected parse errors/warnings: "
                   << GetParseErrors();
@@ -1199,7 +1199,7 @@ TEST_P(NewSdpTest, BasicAudioVideoSdpParse) {
 
 TEST_P(NewSdpTest, CheckIceUfrag) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_TRUE(mSdp->GetAttributeList().HasAttribute(
         SdpAttribute::kIceUfragAttribute));
   auto ice_ufrag = mSdp->GetAttributeList().GetIceUfrag();
@@ -1216,7 +1216,7 @@ TEST_P(NewSdpTest, CheckIceUfrag) {
 
 TEST_P(NewSdpTest, CheckIcePwd) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_TRUE(mSdp->GetAttributeList().HasAttribute(
         SdpAttribute::kIcePwdAttribute));
   auto ice_pwd = mSdp->GetAttributeList().GetIcePwd();
@@ -1235,7 +1235,7 @@ TEST_P(NewSdpTest, CheckIcePwd) {
 
 TEST_P(NewSdpTest, CheckIceOptions) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_TRUE(mSdp->GetAttributeList().HasAttribute(
         SdpAttribute::kIceOptionsAttribute));
   auto ice_options = mSdp->GetAttributeList().GetIceOptions();
@@ -1254,7 +1254,7 @@ TEST_P(NewSdpTest, CheckIceOptions) {
 
 TEST_P(NewSdpTest, CheckFingerprint) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_TRUE(mSdp->GetAttributeList().HasAttribute(
         SdpAttribute::kFingerprintAttribute));
   auto fingerprints = mSdp->GetAttributeList().GetFingerprint();
@@ -1273,7 +1273,7 @@ TEST_P(NewSdpTest, CheckFingerprint) {
 
 TEST_P(NewSdpTest, CheckIdentity) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_TRUE(mSdp->GetAttributeList().HasAttribute(
         SdpAttribute::kIdentityAttribute));
   auto identity = mSdp->GetAttributeList().GetIdentity();
@@ -1282,13 +1282,13 @@ TEST_P(NewSdpTest, CheckIdentity) {
 
 TEST_P(NewSdpTest, CheckNumberOfMediaSections) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
 }
 
 TEST_P(NewSdpTest, CheckMlines) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
   ASSERT_EQ(SdpMediaSection::kAudio, mSdp->GetMediaSection(0).GetMediaType())
     << "Wrong type for first media section";
@@ -1318,7 +1318,7 @@ TEST_P(NewSdpTest, CheckMlines) {
 
 TEST_P(NewSdpTest, CheckSetup) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
 
   ASSERT_TRUE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
@@ -1336,7 +1336,7 @@ TEST_P(NewSdpTest, CheckSetup) {
 TEST_P(NewSdpTest, CheckSsrc)
 {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
 
   ASSERT_TRUE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
@@ -1358,7 +1358,7 @@ TEST_P(NewSdpTest, CheckSsrc)
 
 TEST_P(NewSdpTest, CheckRtpmap) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
     << "Wrong number of media sections";
 
@@ -1488,7 +1488,7 @@ const std::string kH264AudioVideoOffer =
 
 TEST_P(NewSdpTest, CheckFormatParameters) {
   ParseSdp(kH264AudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
     << "Wrong number of media sections";
 
@@ -1506,7 +1506,7 @@ TEST_P(NewSdpTest, CheckFormatParameters) {
       mSdp->GetMediaSection(1).GetAttributeList().GetFmtp().mFmtps;
   ASSERT_EQ(3U, video_format_params.size());
   ASSERT_EQ("97", video_format_params[0].format);
-  ASSERT_TRUE(video_format_params[0].parameters);
+  ASSERT_TRUE(!!video_format_params[0].parameters);
   ASSERT_EQ(SdpRtpmapAttributeList::kH264,
             video_format_params[0].parameters->codec_type);
   const SdpFmtpAttributeList::H264Parameters *h264_parameters(
@@ -1522,7 +1522,7 @@ TEST_P(NewSdpTest, CheckFormatParameters) {
   ASSERT_EQ(0U, h264_parameters->max_br);
 
   ASSERT_EQ("98", video_format_params[1].format);
-  ASSERT_TRUE(video_format_params[1].parameters);
+  ASSERT_TRUE(!!video_format_params[1].parameters);
   ASSERT_EQ(SdpRtpmapAttributeList::kH264,
             video_format_params[1].parameters->codec_type);
   h264_parameters =
@@ -1538,7 +1538,7 @@ TEST_P(NewSdpTest, CheckFormatParameters) {
   ASSERT_EQ(180000U, h264_parameters->max_br);
 
   ASSERT_EQ("120", video_format_params[2].format);
-  ASSERT_TRUE(video_format_params[2].parameters);
+  ASSERT_TRUE(!!video_format_params[2].parameters);
   ASSERT_EQ(SdpRtpmapAttributeList::kVP8,
             video_format_params[2].parameters->codec_type);
   const SdpFmtpAttributeList::VP8Parameters *vp8_parameters =
@@ -1589,7 +1589,7 @@ TEST_P(NewSdpTest, CheckFlags) {
 
 TEST_P(NewSdpTest, CheckConnectionLines) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
     << "Wrong number of media sections";
 
@@ -1616,7 +1616,7 @@ TEST_P(NewSdpTest, CheckConnectionLines) {
 TEST_P(NewSdpTest, CheckDirections) {
   ParseSdp(kBasicAudioVideoOffer);
 
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(SdpDirectionAttribute::kSendonly,
             mSdp->GetMediaSection(0).GetAttributeList().GetDirection());
   ASSERT_EQ(SdpDirectionAttribute::kRecvonly,
@@ -1627,7 +1627,7 @@ TEST_P(NewSdpTest, CheckDirections) {
 
 TEST_P(NewSdpTest, CheckCandidates) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
 
   ASSERT_TRUE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
@@ -1705,7 +1705,7 @@ TEST_P(NewSdpTest, CheckMsid) {
 
 TEST_P(NewSdpTest, CheckMediaLevelIceUfrag) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
 
   ASSERT_TRUE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
@@ -1724,7 +1724,7 @@ TEST_P(NewSdpTest, CheckMediaLevelIceUfrag) {
 
 TEST_P(NewSdpTest, CheckMediaLevelIcePwd) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
 
   ASSERT_TRUE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
@@ -1832,7 +1832,7 @@ TEST_P(NewSdpTest, BasicAudioVideoDataSdpParse) {
 
 TEST_P(NewSdpTest, CheckApplicationParameters) {
   ParseSdp(kBasicAudioVideoDataOffer);
-  ASSERT_TRUE(mSdp);
+  ASSERT_TRUE(!!mSdp);
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
   ASSERT_EQ(SdpMediaSection::kAudio, mSdp->GetMediaSection(0).GetMediaType())
     << "Wrong type for first media section";
@@ -1862,7 +1862,7 @@ TEST_P(NewSdpTest, CheckApplicationParameters) {
 
 TEST_P(NewSdpTest, CheckExtmap) {
   ParseSdp(kBasicAudioVideoDataOffer);
-  ASSERT_TRUE(mSdp);
+  ASSERT_TRUE(!!mSdp);
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
 
   ASSERT_TRUE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
@@ -1897,7 +1897,7 @@ TEST_P(NewSdpTest, CheckExtmap) {
 
 TEST_P(NewSdpTest, CheckRtcpFb) {
   ParseSdp(kBasicAudioVideoDataOffer);
-  ASSERT_TRUE(mSdp);
+  ASSERT_TRUE(!!mSdp);
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
 
   auto& video_attrs = mSdp->GetMediaSection(1).GetAttributeList();
@@ -1927,7 +1927,7 @@ TEST_P(NewSdpTest, CheckRtcpFb) {
 
 TEST_P(NewSdpTest, CheckSctpmap) {
   ParseSdp(kBasicAudioVideoDataOffer);
-  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
     << "Wrong number of media sections";
 

@@ -74,11 +74,8 @@ class IncrementalSafety
     static IncrementalSafety Safe() { return IncrementalSafety(nullptr); }
     static IncrementalSafety Unsafe(const char *reason) { return IncrementalSafety(reason); }
 
-    typedef void (IncrementalSafety::* ConvertibleToBool)();
-    void nonNull() {}
-
-    operator ConvertibleToBool() const {
-        return reason_ == nullptr ? &IncrementalSafety::nonNull : 0;
+    explicit operator bool() const {
+        return reason_ == nullptr;
     }
 
     const char *reason() {

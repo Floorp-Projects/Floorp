@@ -25,7 +25,7 @@ public:
 protected:    
     virtual bool RecvError() MOZ_OVERRIDE;
 
-    virtual void ProcessingError(Result what) MOZ_OVERRIDE
+    virtual void ProcessingError(Result aCode, const char* aReason) MOZ_OVERRIDE
     {
         // Ignore errors
     }
@@ -50,7 +50,7 @@ public:
 protected:
     virtual bool RecvStart() MOZ_OVERRIDE;
 
-    virtual void ProcessingError(Result what) MOZ_OVERRIDE
+    virtual void ProcessingError(Result aCode, const char* aReason) MOZ_OVERRIDE
     {
         // Ignore errors
     }

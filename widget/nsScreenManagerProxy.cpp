@@ -126,7 +126,7 @@ nsScreenManagerProxy::ScreenForNativeWidget(void* aWidget,
   // for it.
   bool success = false;
   ScreenDetails details;
-  unused << SendScreenForBrowser(tabChild, &details, &success);
+  unused << SendScreenForBrowser(tabChild->GetTabId(), &details, &success);
   if (!success) {
     return NS_ERROR_FAILURE;
   }
