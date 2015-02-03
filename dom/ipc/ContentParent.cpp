@@ -3013,11 +3013,6 @@ ContentParent::Observe(nsISupports* aSubject,
             if (!result.IsEmpty()) {
                 pse->AddSubProfile(result.get());
             }
-            if (IsKillHardAnnotationSet()) {
-              crashReporter->AnnotateCrashReport(
-                  NS_LITERAL_CSTRING("kill_hard"),
-                  GetKillHardAnnotation());
-            }
         }
     }
 #endif
@@ -3273,6 +3268,11 @@ ContentParent::KillHard()
             crashReporter->AnnotateCrashReport(
                 NS_LITERAL_CSTRING("additional_minidumps"),
                 additionalDumps);
+            if (IsKillHardAnnotationSet()) {
+              crashReporter->AnnotateCrashReport(
+                  NS_LITERAL_CSTRING("kill_hard"),
+                  GetKillHardAnnotation());
+            }
         }
     }
 #endif
