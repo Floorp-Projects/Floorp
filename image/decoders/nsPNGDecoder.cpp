@@ -226,11 +226,11 @@ nsPNGDecoder::InitInternal()
   }
 
   mCMSMode = gfxPlatform::GetCMSMode();
-  if ((mDecodeFlags & DECODER_NO_COLORSPACE_CONVERSION) != 0) {
+  if (GetDecodeFlags() & imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION) {
     mCMSMode = eCMSMode_Off;
   }
-  mDisablePremultipliedAlpha = (mDecodeFlags & DECODER_NO_PREMULTIPLY_ALPHA)
-                                != 0;
+  mDisablePremultipliedAlpha =
+    GetDecodeFlags() & imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
 
 #ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
   static png_byte color_chunks[]=

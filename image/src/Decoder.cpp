@@ -28,7 +28,7 @@ Decoder::Decoder(RasterImage* aImage)
   , mImageData(nullptr)
   , mColormap(nullptr)
   , mChunkCount(0)
-  , mDecodeFlags(0)
+  , mFlags(0)
   , mBytesDecoded(0)
   , mSendPartialInvalidations(false)
   , mDataDone(false)
@@ -353,7 +353,7 @@ Decoder::AllocateFrame(const nsIntSize& aTargetSize /* = nsIntSize() */)
   mCurrentFrame = EnsureFrame(mNewFrameData.mFrameNum,
                               targetSize,
                               mNewFrameData.mFrameRect,
-                              mDecodeFlags,
+                              GetDecodeFlags(),
                               mNewFrameData.mFormat,
                               mNewFrameData.mPaletteDepth,
                               mCurrentFrame.get());

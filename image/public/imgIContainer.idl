@@ -69,7 +69,7 @@ native nsIntSizeByVal(nsIntSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(4adb4c92-284d-4f5a-85e7-e924ec57510f)]
+[scriptable, builtinclass, uuid(25236a61-9568-4b2b-a2ce-209a2db9771d)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -146,12 +146,10 @@ interface imgIContainer : nsISupports
    *
    * Meanings:
    *
-   * FLAG_NONE: Lack of flags
+   * FLAG_NONE: Lack of flags.
    *
    * FLAG_SYNC_DECODE: Forces synchronous/non-progressive decode of all
-   * available data before the call returns. It is an error to pass this flag
-   * from a call stack that originates in a decoder (ie, from a decoder
-   * observer event).
+   * available data before the call returns.
    *
    * FLAG_DECODE_NO_PREMULTIPLY_ALPHA: Do not premultiply alpha if
    * it's not already premultiplied in the image data.
@@ -166,28 +164,31 @@ interface imgIContainer : nsISupports
    * FLAG_HIGH_QUALITY_SCALING: A hint as to whether this image should be
    * scaled using the high quality scaler. Do not set this if not drawing to
    * a window or not listening to invalidations.
+   *
+   * FLAG_WANT_DATA_SURFACE: Can be passed to GetFrame when the caller wants a
+   * DataSourceSurface instead of a hardware accelerated surface. This can be
+   * important for performance (by avoiding an upload to/readback from the GPU)
+   * when the caller knows they want a SourceSurface of type DATA.
+   *
+   * FLAG_BYPASS_SURFACE_CACHE: Forces drawing to happen rather than taking
+   * cached rendering from the surface cache. This is used when we are printing,
+   * for example, where we want the vector commands from VectorImages to end up
+   * in the PDF output rather than a cached rendering at screen resolution.
    */
+  const unsigned long FLAG_NONE                            = 0x0;
+  const unsigned long FLAG_SYNC_DECODE                     = 0x1;
+  const unsigned long FLAG_DECODE_NO_PREMULTIPLY_ALPHA     = 0x2;
+  const unsigned long FLAG_DECODE_NO_COLORSPACE_CONVERSION = 0x4;
+  const unsigned long FLAG_CLAMP                           = 0x8;
+  const unsigned long FLAG_HIGH_QUALITY_SCALING            = 0x10;
+  const unsigned long FLAG_WANT_DATA_SURFACE               = 0x20;
+  const unsigned long FLAG_BYPASS_SURFACE_CACHE            = 0x40;
 
-  const long FLAG_NONE            = 0x0;
-  const long FLAG_SYNC_DECODE     = 0x1;
-  const long FLAG_DECODE_NO_PREMULTIPLY_ALPHA = 0x2;
-  const long FLAG_DECODE_NO_COLORSPACE_CONVERSION = 0x4;
-  const long FLAG_CLAMP           = 0x8;
-  const long FLAG_HIGH_QUALITY_SCALING = 0x10;
   /**
-   * Can be passed to GetFrame when the caller wants a DataSourceSurface
-   * instead of a hardware accelerated surface. This can be important for
-   * performance (by avoiding an upload to/readback from the GPU) when the
-   * caller knows they want a SourceSurface of type DATA.
+   * A constant specifying the default set of decode flags (i.e., the default
+   * values for FLAG_DECODE_*).
    */
-  const long FLAG_WANT_DATA_SURFACE = 0x20;
-  /**
-   * Forces drawing to happen rather than taking cached rendering from the
-   * surface cache. This is used when we are printing, for example, where we
-   * want the vector commands from VectorImages to end up in the PDF output
-   * rather than a cached rendering at screen resolution.
-   */
-  const long FLAG_BYPASS_SURFACE_CACHE = 0x40;
+  const unsigned long DECODE_FLAGS_DEFAULT = 0;
 
   /**
     * Constants for specifying various "special" frames.
