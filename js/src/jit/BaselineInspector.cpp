@@ -533,81 +533,127 @@ static Shape *GlobalShapeForGetPropFunction(ICStub *stub)
     return nullptr;
 }
 
-JSObject *
-BaselineInspector::commonGetPropFunction(jsbytecode *pc, Shape **lastProperty, JSFunction **commonGetter,
-                                         Shape **globalShape)
+static bool
+AddReceiverShape(BaselineInspector::ShapeVector &shapes, Shape *shape)
+{
+    MOZ_ASSERT(shape);
+
+    for (size_t i = 0; i < shapes.length(); i++) {
+        if (shapes[i] == shape)
+            return true;
+    }
+
+    return shapes.append(shape);
+}
+
+static bool
+AddReceiverShapeForGetPropFunction(BaselineInspector::ShapeVector &shapes, ICStub *stub)
+{
+    if (stub->isGetProp_CallNative())
+        return true;
+
+    Shape *shape = nullptr;
+    if (stub->isGetProp_CallScripted())
+        shape = stub->toGetProp_CallScripted()->receiverShape();
+    else
+        shape = stub->toGetProp_CallNativePrototype()->receiverShape();
+
+    return AddReceiverShape(shapes, shape);
+}
+
+bool
+BaselineInspector::commonGetPropFunction(jsbytecode *pc, JSObject **holder, Shape **holderShape,
+                                         JSFunction **commonGetter, Shape **globalShape,
+                                         bool *isOwnProperty, ShapeVector &receiverShapes)
 {
     if (!hasBaselineScript())
-        return nullptr;
+        return false;
 
+    MOZ_ASSERT(receiverShapes.empty());
+
+    *holder = nullptr;
     const ICEntry &entry = icEntryFromPC(pc);
-    JSObject* holder = nullptr;
-    Shape *holderShape = nullptr;
-    JSFunction *getter = nullptr;
-    Shape *global = nullptr;
+
     for (ICStub *stub = entry.firstStub(); stub; stub = stub->next()) {
         if (stub->isGetProp_CallScripted()  ||
             stub->isGetProp_CallNative()    ||
             stub->isGetProp_CallNativePrototype())
         {
             ICGetPropCallGetter *nstub = static_cast<ICGetPropCallGetter *>(stub);
-            if (!holder) {
-                holder = nstub->holder();
-                holderShape = nstub->holderShape();
-                getter = nstub->getter();
-                global = GlobalShapeForGetPropFunction(nstub);
-            } else if (nstub->holderShape() != holderShape ||
-                       GlobalShapeForGetPropFunction(nstub) != global)
+            bool isOwn = stub->isGetProp_CallNative();
+            if (!AddReceiverShapeForGetPropFunction(receiverShapes, nstub))
+                return false;
+
+            if (!*holder) {
+                *holder = nstub->holder();
+                *holderShape = nstub->holderShape();
+                *commonGetter = nstub->getter();
+                *globalShape = GlobalShapeForGetPropFunction(nstub);
+                *isOwnProperty = isOwn;
+            } else if (nstub->holderShape() != *holderShape ||
+                       GlobalShapeForGetPropFunction(nstub) != *globalShape ||
+                       isOwn != *isOwnProperty)
             {
-                return nullptr;
+                return false;
             } else {
-                MOZ_ASSERT(getter == nstub->getter());
+                MOZ_ASSERT(*commonGetter == nstub->getter());
             }
-        } else if (stub->isGetProp_Fallback() &&
+        } else if (!stub->isGetProp_Fallback() ||
                    stub->toGetProp_Fallback()->hadUnoptimizableAccess())
         {
             // We have an unoptimizable access, so don't try to optimize.
-            return nullptr;
+            return false;
         }
     }
-    *lastProperty = holderShape;
-    *commonGetter = getter;
-    *globalShape = global;
-    return holder;
+
+    if (!*holder)
+        return false;
+
+    MOZ_ASSERT(*isOwnProperty == receiverShapes.empty());
+    return true;
 }
 
-JSObject *
-BaselineInspector::commonSetPropFunction(jsbytecode *pc, Shape **lastProperty, JSFunction **commonSetter)
+bool
+BaselineInspector::commonSetPropFunction(jsbytecode *pc, JSObject **holder, Shape **holderShape,
+                                         JSFunction **commonSetter, bool *isOwnProperty,
+                                         ShapeVector &receiverShapes)
 {
     if (!hasBaselineScript())
-        return nullptr;
+        return false;
 
+    MOZ_ASSERT(receiverShapes.empty());
+
+    *holder = nullptr;
     const ICEntry &entry = icEntryFromPC(pc);
-    JSObject *holder = nullptr;
-    Shape *holderShape = nullptr;
-    JSFunction *setter = nullptr;
+
     for (ICStub *stub = entry.firstStub(); stub; stub = stub->next()) {
         if (stub->isSetProp_CallScripted() || stub->isSetProp_CallNative()) {
             ICSetPropCallSetter *nstub = static_cast<ICSetPropCallSetter *>(stub);
-            if (!holder) {
-                holder = nstub->holder();
-                holderShape = nstub->holderShape();
-                setter = nstub->setter();
-            } else if (nstub->holderShape() != holderShape) {
-                return nullptr;
+            if (!AddReceiverShape(receiverShapes, nstub->shape()))
+                return false;
+
+            if (!*holder) {
+                *holder = nstub->holder();
+                *holderShape = nstub->holderShape();
+                *commonSetter = nstub->setter();
+                *isOwnProperty = false;
+            } else if (nstub->holderShape() != *holderShape) {
+                return false;
             } else {
-                MOZ_ASSERT(setter == nstub->setter());
+                MOZ_ASSERT(*commonSetter == nstub->setter());
             }
-        } else if (stub->isSetProp_Fallback() &&
+        } else if (!stub->isSetProp_Fallback() ||
                    stub->toSetProp_Fallback()->hadUnoptimizableAccess())
         {
             // We have an unoptimizable access, so don't try to optimize.
-            return nullptr;
+            return false;
         }
     }
-    *lastProperty = holderShape;
-    *commonSetter = setter;
-    return holder;
+
+    if (!*holder)
+        return false;
+
+    return true;
 }
 
 bool
