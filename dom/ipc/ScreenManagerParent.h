@@ -41,7 +41,7 @@ class ScreenManagerParent : public PScreenManagerParent
                                  ScreenDetails* aRetVal,
                                  bool* aSuccess) MOZ_OVERRIDE;
 
-  virtual bool RecvScreenForBrowser(PBrowserParent* aBrowser,
+  virtual bool RecvScreenForBrowser(const TabId& aTabId,
                                     ScreenDetails* aRetVal,
                                     bool* aSuccess) MOZ_OVERRIDE;
 
