@@ -259,7 +259,8 @@ loop.shared.mixins = (function() {
     },
 
     /**
-     * Retrieve the dimensions of the remote video stream.
+     * Retrieve the dimensions of the active remote video stream. This assumes
+     * that if screens are being shared, the remote camera stream is hidden.
      * Example output:
      *   {
      *     width: 680,
@@ -270,6 +271,8 @@ loop.shared.mixins = (function() {
      *     offsetY: 0
      *   }
      *
+     * Note: This expects a class on the element that has the name "remote" or the
+     *       same name as the possible video types (currently only "screen").
      * Note: Once we support multiple remote video streams, this function will
      *       need to be updated.
      * @return {Object} contains the remote stream dimension properties of its
@@ -320,7 +323,7 @@ loop.shared.mixins = (function() {
 
       // Calculate the size of each individual letter- or pillarbox for convenience.
       remoteVideoDimensions.offsetX = remoteVideoDimensions.width -
-        remoteVideoDimensions.streamWidth
+        remoteVideoDimensions.streamWidth;
       if (remoteVideoDimensions.offsetX > 0) {
         remoteVideoDimensions.offsetX /= 2;
       }
@@ -351,18 +354,22 @@ loop.shared.mixins = (function() {
         this._bufferedUpdateVideo = null;
         var localStreamParent = this._getElement(".local .OT_publisher");
         var remoteStreamParent = this._getElement(".remote .OT_subscriber");
+        var screenShareStreamParent = this._getElement('.screen .OT_subscriber');
         if (localStreamParent) {
           localStreamParent.style.width = "100%";
         }
         if (remoteStreamParent) {
           remoteStreamParent.style.height = "100%";
         }
+        if (screenShareStreamParent) {
+          screenShareStreamParent.style.height = "100%";
+        }
 
         // Update the position and dimensions of the containers of local video
         // streams, if necessary. The consumer of this mixin should implement the
         // actual updating mechanism.
         Object.keys(this._videoDimensionsCache.local).forEach(function(videoType) {
-          var ratio = this._videoDimensionsCache.local[videoType].aspectRatio
+          var ratio = this._videoDimensionsCache.local[videoType].aspectRatio;
           if (videoType == "camera" && this.updateLocalCameraPosition) {
             this.updateLocalCameraPosition(ratio);
           }

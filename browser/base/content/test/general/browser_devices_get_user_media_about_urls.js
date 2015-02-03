@@ -22,6 +22,37 @@ XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
 
 var gTab;
 
+// Taken from dom/media/tests/mochitest/head.js
+function isMacOSX10_6orOlder() {
+  var is106orOlder = false;
+
+  if (navigator.platform.indexOf("Mac") == 0) {
+    var version = Cc["@mozilla.org/system-info;1"]
+                    .getService(Ci.nsIPropertyBag2)
+                    .getProperty("version");
+    // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10.x !
+    // Mac OS 10.7 is Darwin version 11.x. the |version| string we've got here
+    // is the Darwin version.
+    is106orOlder = (parseFloat(version) < 11.0);
+  }
+  return is106orOlder;
+}
+
+// Screensharing is disabled on older platforms (WinXP and Mac 10.6).
+function isOldPlatform() {
+  const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
+  if (isMacOSX10_6orOlder() || isWinXP) {
+    info(true, "Screensharing disabled for OSX10.6 and WinXP");
+    return true;
+  }
+  return false;
+}
+
+// Linux prompts aren't working for screensharing.
+function isLinux() {
+  return navigator.platform.indexOf("Linux") != -1;
+}
+
 var gObservedTopics = {};
 function observer(aSubject, aTopic, aData) {
   if (!(aTopic in gObservedTopics))
@@ -97,16 +128,41 @@ function expectNoObserverCalled() {
   gObservedTopics = {};
 }
 
+function promiseMessage(aMessage, aAction) {
+  let deferred = Promise.defer();
+
+  content.addEventListener("message", function messageListener(event) {
+    content.removeEventListener("message", messageListener);
+    is(event.data, aMessage, "received " + aMessage);
+    if (event.data == aMessage)
+      deferred.resolve();
+    else
+      deferred.reject();
+  });
+
+  if (aAction)
+    aAction();
+
+  return deferred.promise;
+}
+
 function getMediaCaptureState() {
   let hasVideo = {};
   let hasAudio = {};
-  MediaManagerService.mediaCaptureWindowState(content, hasVideo, hasAudio);
+  let hasScreenShare = {};
+  let hasWindowShare = {};
+  MediaManagerService.mediaCaptureWindowState(content, hasVideo, hasAudio,
+                                              hasScreenShare, hasWindowShare);
   if (hasVideo.value && hasAudio.value)
     return "CameraAndMicrophone";
   if (hasVideo.value)
     return "Camera";
   if (hasAudio.value)
     return "Microphone";
+  if (hasScreenShare)
+    return "Screen";
+  if (hasWindowShare)
+    return "Window";
   return "none";
 }
 
@@ -173,6 +229,7 @@ registerCleanupFunction(function() {
   Services.prefs.setCharPref(PREF_LOOP_CSP, originalLoopCsp);
 });
 
+const permissionError = "error: PermissionDeniedError: The user did not grant permission for the operation.";
 
 let gTests = [
 
@@ -208,6 +265,46 @@ let gTests = [
 },
 
 {
+  desc: "getUserMedia about:loopconversation should prompt for window sharing",
+  run: function checkShareScreenLoop() {
+    if (isOldPlatform() || isLinux()) {
+      return;
+    }
+
+    Services.prefs.setCharPref(PREF_LOOP_CSP, "default-src 'unsafe-inline'");
+
+    let classID = Cc["@mozilla.org/uuid-generator;1"]
+                    .getService(Ci.nsIUUIDGenerator).generateUUID();
+    registrar.registerFactory(classID, "",
+                              "@mozilla.org/network/protocol/about;1?what=loopconversation",
+                              factory);
+
+    yield loadPage("about:loopconversation");
+
+    yield promiseObserverCalled("getUserMedia:request", () => {
+      info("requesting screen");
+      content.wrappedJSObject.requestDevice(false, true, "window");
+    });
+    // Wait for the devices to actually be captured and running before
+    // proceeding.
+    yield promisePopupNotification("webRTC-shareDevices");
+
+    isnot(getMediaCaptureState(), "Window",
+       "expected camera and microphone not to be shared");
+
+    yield promiseMessage(permissionError, () => {
+      PopupNotifications.panel.firstChild.button.click();
+    });
+
+    expectObserverCalled("getUserMedia:response:deny");
+    expectObserverCalled("recording-window-ended");
+
+    registrar.unregisterFactory(classID, factory);
+    Services.prefs.setCharPref(PREF_LOOP_CSP, originalLoopCsp);
+  }
+},
+
+{
   desc: "getUserMedia about:evil should prompt",
   run: function checkAudioVideoNonLoop() {
     let classID = Cc["@mozilla.org/uuid-generator;1"]
@@ -236,6 +333,8 @@ function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref(PREF_PERMISSION_FAKE, true);
+  // Ensure this is always true
+  Services.prefs.setBoolPref("media.getusermedia.screensharing.enabled", true);
 
   gTab = gBrowser.addTab();
   gBrowser.selectedTab = gTab;

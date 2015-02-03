@@ -530,11 +530,6 @@ RilObject.prototype = {
      */
     this._ussdSession = null;
 
-   /**
-    * Regular expresion to parse MMI codes.
-    */
-    this._mmiRegExp = null;
-
     /**
      * Cell Broadcast Search Lists.
      */
@@ -1613,8 +1608,6 @@ RilObject.prototype = {
   /**
    * Dial a non-emergency number.
    *
-   * @param isDialEmergency
-   *        Whether it is called by dialEmergency.
    * @param isEmergency
    *        Whether the number is an emergency number.
    * @param number
@@ -1653,18 +1646,6 @@ RilObject.prototype = {
 
       this.dialInternal(options);
     } else {
-      // Notify error in establishing the call without radio.
-      if (isRadioOff) {
-        onerror(GECKO_ERROR_RADIO_NOT_AVAILABLE);
-        return;
-      }
-
-      // Shouldn't dial a non-emergency number by dialEmergency.
-      if (options.isDialEmergency || this.voiceRegistrationState.emergencyCallsOnly) {
-        onerror(GECKO_CALL_ERROR_BAD_NUMBER);
-        return;
-      }
-
       // Exit emergency callback mode when user dial a non-emergency call.
       if (this._isInEmergencyCbMode) {
         this.exitEmergencyCbMode();
@@ -1677,13 +1658,6 @@ RilObject.prototype = {
   },
 
   dialInternal: function(options) {
-    // Make a Cdma 3way call.
-    if (this._isCdma && Object.keys(this.currentCalls).length == 1) {
-      options.featureStr = options.number;
-      this.cdmaFlash(options);
-      return;
-    }
-
     this.telephonyRequestQueue.push(options.request, () => {
       let Buf = this.context.Buf;
       Buf.newParcel(options.request, options);
@@ -1697,12 +1671,17 @@ RilObject.prototype = {
     });
   },
 
+  /**
+   * CDMA flash.
+   *
+   * @param featureStr (optional)
+   *        Dialing number when the command is used for three-way-calling
+   */
   cdmaFlash: function(options) {
     let Buf = this.context.Buf;
-    options.isCdma = true;
     options.request = REQUEST_CDMA_FLASH;
     Buf.newParcel(options.request, options);
-    Buf.writeString(options.featureStr);
+    Buf.writeString(options.featureStr || "");
     Buf.sendParcel();
   },
 
@@ -1885,70 +1864,13 @@ RilObject.prototype = {
     }
   },
 
-  holdCall: function(options) {
-    let call = this.currentCalls[options.callIndex];
-    if (!call) {
-      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-      options.success = false;
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    let Buf = this.context.Buf;
-    if (this._isCdma) {
-      options.featureStr = "";
-      this.cdmaFlash(options);
-    } else if (call.state == CALL_STATE_ACTIVE) {
-      this.switchActiveCall(options);
-    }
-  },
-
-  resumeCall: function(options) {
-    let call = this.currentCalls[options.callIndex];
-    if (!call) {
-      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-      options.success = false;
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    let Buf = this.context.Buf;
-    if (this._isCdma) {
-      options.featureStr = "";
-      this.cdmaFlash(options);
-    } else if (call.state == CALL_STATE_HOLDING) {
-      this.switchActiveCall(options);
-    }
-  },
-
   conferenceCall: function(options) {
-    if (this._isCdma) {
-      options.featureStr = "";
-      this.cdmaFlash(options);
-      return;
-    }
-
     this.telephonyRequestQueue.push(REQUEST_CONFERENCE, () => {
       this.context.Buf.simpleRequest(REQUEST_CONFERENCE, options);
     });
   },
 
   separateCall: function(options) {
-    let call = this.currentCalls[options.callIndex];
-    if (!call) {
-      options.errorName = "removeError";
-      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-      options.success = false;
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    if (this._isCdma) {
-      options.featureStr = "";
-      this.cdmaFlash(options);
-      return;
-    }
-
     this.telephonyRequestQueue.push(REQUEST_SEPARATE_CONNECTION, () => {
       let Buf = this.context.Buf;
       Buf.newParcel(REQUEST_SEPARATE_CONNECTION, options);
@@ -1956,53 +1878,6 @@ RilObject.prototype = {
       Buf.writeInt32(options.callIndex);
       Buf.sendParcel();
     });
-  },
-
-  hangUpConference: function(options) {
-    if (this._isCdma) {
-      // In cdma, ril only maintains one call index.
-      let call = this.currentCalls[1];
-      if (!call) {
-        options.success = false;
-        options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-        this.sendChromeMessage(options);
-        return;
-      }
-
-      options.callIndex = 1;
-      this.hangUpCall(options);
-      return;
-    }
-
-    if (this.currentConferenceState === CALL_STATE_ACTIVE) {
-      this.hangUpForeground(options);
-    } else {
-      this.hangUpBackground(options);
-    }
-  },
-
-  holdConference: function(options) {
-    if (this._isCdma) {
-      // We cannot hold a conference call on CDMA.
-      options.success = false;
-      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    this.switchActiveCall(options);
-  },
-
-  resumeConference: function(options) {
-    if (this._isCdma) {
-      // We cannot resume a conference call on CDMA
-      options.success = false;
-      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    this.switchActiveCall(options);
   },
 
   /**
@@ -2743,7 +2618,7 @@ RilObject.prototype = {
       return;
     }
 
-    this.sendUSSD(options);
+    this.sendUSSD(options, false);
   },
 
   /**
@@ -2757,11 +2632,9 @@ RilObject.prototype = {
    *
    * @param ussd
    *        String containing the USSD code.
-   * @param checkSession
-   *        True if an existing session should be there.
    */
-  sendUSSD: function(options) {
-    if (options.checkSession && !this._ussdSession) {
+  sendUSSD: function(options, checkSession = true) {
+    if (checkSession && !this._ussdSession) {
       options.success = false;
       options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
       this.sendChromeMessage(options);
@@ -5376,6 +5249,16 @@ RilObject.prototype = {
     });
   },
 
+  sendDefaultResponse: function(options) {
+    if (!options.rilMessageType) {
+      return;
+    }
+
+    options.success = (options.rilRequestError === 0);
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendChromeMessage(options);
+  },
+
   /**
    * Send messages to the main thread.
    */
@@ -5556,42 +5439,22 @@ RilObject.prototype[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length, option
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_HANGUP] = function REQUEST_HANGUP(length, options) {
-  if (options.rilMessageType == null) {
-    return;
-  }
-
-  options.success = (options.rilRequestError === 0);
-  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_HANGUP_WAITING_OR_BACKGROUND] = function REQUEST_HANGUP_WAITING_OR_BACKGROUND(length, options) {
-  RilObject.prototype[REQUEST_HANGUP].call(this, length, options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND] = function REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND(length, options) {
-  RilObject.prototype[REQUEST_HANGUP].call(this, length, options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE] = function REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE(length, options) {
-  options.success = (options.rilRequestError === 0);
-  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_CONFERENCE] = function REQUEST_CONFERENCE(length, options) {
-  options.success = (options.rilRequestError === 0);
-  if (!options.success) {
-    options.errorName = "addError";
-    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-    this.sendChromeMessage(options);
-    return;
-  }
-
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_UDUB] = function REQUEST_UDUB(length, options) {
-  options.success = (options.rilRequestError === 0);
-  if (!options.success) {
-    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-  }
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_LAST_CALL_FAIL_CAUSE] = function REQUEST_LAST_CALL_FAIL_CAUSE(length, options) {
   let Buf = this.context.Buf;
@@ -6046,11 +5909,7 @@ RilObject.prototype[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV(length, op
   this.IMEISV = this.context.Buf.readString();
 };
 RilObject.prototype[REQUEST_ANSWER] = function REQUEST_ANSWER(length, options) {
-  options.success = (options.rilRequestError === 0);
-  if (!options.success) {
-    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-  }
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length, options) {
   if (options.rilRequestError) {
@@ -6248,15 +6107,7 @@ RilObject.prototype[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSIO
   if (DEBUG) this.context.debug("Baseband version: " + this.basebandVersion);
 };
 RilObject.prototype[REQUEST_SEPARATE_CONNECTION] = function REQUEST_SEPARATE_CONNECTION(length, options) {
-  options.success = (options.rilRequestError === 0);
-  if (!options.success) {
-    options.errorName = "removeError";
-    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-    this.sendChromeMessage(options);
-    return;
-  }
-
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_SET_MUTE] = null;
 RilObject.prototype[REQUEST_GET_MUTE] = null;
@@ -6590,17 +6441,7 @@ RilObject.prototype[REQUEST_CDMA_QUERY_PREFERRED_VOICE_PRIVACY_MODE] = function 
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_CDMA_FLASH] = function REQUEST_CDMA_FLASH(length, options) {
-  options.success = (options.rilRequestError === 0);
-  if (!options.success) {
-    if (options.rilMessageType === "conferenceCall") {
-      options.errorName = "addError";
-    } else if (options.rilMessageType === "separateCall") {
-      options.errorName = "removeError";
-    }
-    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-  }
-
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_CDMA_BURST_DTMF] = null;
 RilObject.prototype[REQUEST_CDMA_VALIDATE_AND_WRITE_AKEY] = null;

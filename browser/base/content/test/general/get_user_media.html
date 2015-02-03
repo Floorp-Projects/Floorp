@@ -24,11 +24,17 @@ function message(m) {
 
 var gStream;
 
-function requestDevice(aAudio, aVideo) {
+function requestDevice(aAudio, aVideo, aShare) {
   var opts = {video: aVideo, audio: aAudio};
-  if (useFakeStreams) {
+  if (aShare) {
+    opts.video = {
+      mozMediaSource: aShare,
+      mediaSource: aShare
+    }
+  } else if (useFakeStreams) {
     opts.fake = true;
   }
+
   window.navigator.mozGetUserMedia(opts, function(stream) {
     gStream = stream;
     message("ok");

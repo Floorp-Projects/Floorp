@@ -56,8 +56,10 @@ let test = Task.async(function*() {
     "The impored data is identical to the original data (4).");
   is(importedData.ticks.toSource(), originalData.ticks.toSource(),
     "The impored data is identical to the original data (5).");
-  is(importedData.profile.toSource(), originalData.profile.toSource(),
+  is(importedData.allocations.toSource(), originalData.allocations.toSource(),
     "The impored data is identical to the original data (6).");
+  is(importedData.profile.toSource(), originalData.profile.toSource(),
+    "The impored data is identical to the original data (7).");
 
   yield teardown(panel);
   finish();

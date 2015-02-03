@@ -141,7 +141,8 @@ describe("loop.conversation", function() {
           sdk: {},
           conversationStore: conversationStore,
           conversationAppStore: conversationAppStore,
-          dispatcher: dispatcher
+          dispatcher: dispatcher,
+          mozLoop: navigator.mozLoop
         }));
     }
 
