@@ -324,7 +324,7 @@ TemporaryTypeSet::TemporaryTypeSet(LifoAlloc *alloc, Type type)
         flags |= TYPE_FLAG_ANYOBJECT;
     } else {
         setBaseObjectCount(1);
-        objectSet = reinterpret_cast<ObjectGroupKey**>(type.objectKey());
+        objectSet = reinterpret_cast<TypeSetObjectKey**>(type.objectKey());
 
         if (type.isGroup()) {
             ObjectGroup *ngroup = type.group();
@@ -388,7 +388,7 @@ TypeSet::objectsAreSubset(TypeSet *other)
         return false;
 
     for (unsigned i = 0; i < getObjectCount(); i++) {
-        ObjectGroupKey *key = getObject(i);
+        TypeSetObjectKey *key = getObject(i);
         if (!key)
             continue;
         if (!other->hasType(Type::ObjectType(key)))
@@ -408,7 +408,7 @@ TypeSet::isSubset(const TypeSet *other) const
         MOZ_ASSERT(other->unknownObject());
     } else {
         for (unsigned i = 0; i < getObjectCount(); i++) {
-            ObjectGroupKey *key = getObject(i);
+            TypeSetObjectKey *key = getObject(i);
             if (!key)
                 continue;
             if (!other->hasType(Type::ObjectType(key)))
@@ -442,7 +442,7 @@ TypeSet::enumerateTypes(TypeList *list) const
     /* Enqueue specific object types. */
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
-        ObjectGroupKey *key = getObject(i);
+        TypeSetObjectKey *key = getObject(i);
         if (key) {
             if (!list->append(Type::ObjectType(key)))
                 return false;
@@ -533,8 +533,8 @@ TypeSet::addType(Type type, LifoAlloc *alloc)
 
     {
         uint32_t objectCount = baseObjectCount();
-        ObjectGroupKey *key = type.objectKey();
-        ObjectGroupKey **pentry = HashSetInsert<ObjectGroupKey *,ObjectGroupKey,ObjectGroupKey>
+        TypeSetObjectKey *key = type.objectKey();
+        TypeSetObjectKey **pentry = HashSetInsert<TypeSetObjectKey *,TypeSetObjectKey,TypeSetObjectKey>
                                      (*alloc, objectSet, objectCount, key);
         if (!pentry)
             goto unknownObject;
@@ -664,7 +664,7 @@ TypeSet::print()
 
         unsigned count = getObjectCount();
         for (unsigned i = 0; i < count; i++) {
-            ObjectGroupKey *key = getObject(i);
+            TypeSetObjectKey *key = getObject(i);
             if (key)
                 fprintf(stderr, " %s", TypeString(Type::ObjectType(key)));
         }
@@ -678,7 +678,7 @@ TypeSet::readBarrier(const TypeSet *types)
         return;
 
     for (unsigned i = 0; i < types->getObjectCount(); i++) {
-        if (ObjectGroupKey *key = types->getObject(i)) {
+        if (TypeSetObjectKey *key = types->getObject(i)) {
             if (key->isSingleton())
                 (void) key->singleton();
             else
@@ -695,9 +695,9 @@ TypeSet::clone(LifoAlloc *alloc, TemporaryTypeSet *result) const
     unsigned objectCount = baseObjectCount();
     unsigned capacity = (objectCount >= 2) ? HashSetCapacity(objectCount) : 0;
 
-    ObjectGroupKey **newSet;
+    TypeSetObjectKey **newSet;
     if (capacity) {
-        newSet = alloc->newArray<ObjectGroupKey*>(capacity);
+        newSet = alloc->newArray<TypeSetObjectKey*>(capacity);
         if (!newSet)
             return false;
         PodCopy(newSet, objectSet, capacity);
@@ -760,17 +760,17 @@ TypeSet::cloneWithoutObjects(LifoAlloc *alloc)
 TypeSet::unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc)
 {
     TemporaryTypeSet *res = alloc->new_<TemporaryTypeSet>(a->baseFlags() | b->baseFlags(),
-                                                          static_cast<ObjectGroupKey**>(nullptr));
+                                                          static_cast<TypeSetObjectKey**>(nullptr));
     if (!res)
         return nullptr;
 
     if (!res->unknownObject()) {
         for (size_t i = 0; i < a->getObjectCount() && !res->unknownObject(); i++) {
-            if (ObjectGroupKey *key = a->getObject(i))
+            if (TypeSetObjectKey *key = a->getObject(i))
                 res->addType(Type::ObjectType(key), alloc);
         }
         for (size_t i = 0; i < b->getObjectCount() && !res->unknownObject(); i++) {
-            if (ObjectGroupKey *key = b->getObject(i))
+            if (TypeSetObjectKey *key = b->getObject(i))
                 res->addType(Type::ObjectType(key), alloc);
         }
     }
@@ -783,7 +783,7 @@ TypeSet::intersectSets(TemporaryTypeSet *a, TemporaryTypeSet *b, LifoAlloc *allo
 {
     TemporaryTypeSet *res;
     res = alloc->new_<TemporaryTypeSet>(a->baseFlags() & b->baseFlags(),
-                static_cast<ObjectGroupKey**>(nullptr));
+                static_cast<TypeSetObjectKey**>(nullptr));
     if (!res)
         return nullptr;
 
@@ -1062,20 +1062,20 @@ CompilerConstraintInstance<T>::generateTypeConstraint(JSContext *cx, RecompileIn
 } /* anonymous namespace */
 
 const Class *
-ObjectGroupKey::clasp()
+TypeSetObjectKey::clasp()
 {
     return isGroup() ? group()->clasp() : singleton()->getClass();
 }
 
 TaggedProto
-ObjectGroupKey::proto()
+TypeSetObjectKey::proto()
 {
     MOZ_ASSERT(hasTenuredProto());
     return isGroup() ? group()->proto() : singleton()->getTaggedProto();
 }
 
 TaggedProto
-ObjectGroupKey::protoMaybeInNursery()
+TypeSetObjectKey::protoMaybeInNursery()
 {
     return isGroup() ? group()->proto() : singleton()->getTaggedProto();
 }
@@ -1087,13 +1087,13 @@ JSObject::hasTenuredProto() const
 }
 
 bool
-ObjectGroupKey::hasTenuredProto()
+TypeSetObjectKey::hasTenuredProto()
 {
     return isGroup() ? group()->hasTenuredProto() : singleton()->hasTenuredProto();
 }
 
 TypeNewScript *
-ObjectGroupKey::newScript()
+TypeSetObjectKey::newScript()
 {
     if (isGroup() && group()->newScript())
         return group()->newScript();
@@ -1101,7 +1101,7 @@ ObjectGroupKey::newScript()
 }
 
 ObjectGroup *
-ObjectGroupKey::maybeGroup()
+TypeSetObjectKey::maybeGroup()
 {
     if (isGroup())
         return group();
@@ -1111,7 +1111,7 @@ ObjectGroupKey::maybeGroup()
 }
 
 bool
-ObjectGroupKey::unknownProperties()
+TypeSetObjectKey::unknownProperties()
 {
     if (ObjectGroup *group = maybeGroup())
         return group->unknownProperties();
@@ -1119,7 +1119,7 @@ ObjectGroupKey::unknownProperties()
 }
 
 HeapTypeSetKey
-ObjectGroupKey::property(jsid id)
+TypeSetObjectKey::property(jsid id)
 {
     MOZ_ASSERT(!unknownProperties());
 
@@ -1133,7 +1133,7 @@ ObjectGroupKey::property(jsid id)
 }
 
 void
-ObjectGroupKey::ensureTrackedProperty(JSContext *cx, jsid id)
+TypeSetObjectKey::ensureTrackedProperty(JSContext *cx, jsid id)
 {
     // If we are accessing a lazily defined property which actually exists in
     // the VM and has not been instantiated yet, instantiate it now if we are
@@ -1597,7 +1597,7 @@ class ConstraintDataFreezeObjectFlags
 } /* anonymous namespace */
 
 bool
-ObjectGroupKey::hasFlags(CompilerConstraintList *constraints, ObjectGroupFlags flags)
+TypeSetObjectKey::hasFlags(CompilerConstraintList *constraints, ObjectGroupFlags flags)
 {
     MOZ_ASSERT(flags);
 
@@ -1615,7 +1615,7 @@ ObjectGroupKey::hasFlags(CompilerConstraintList *constraints, ObjectGroupFlags f
 }
 
 bool
-ObjectGroupKey::hasStableClassAndProto(CompilerConstraintList *constraints)
+TypeSetObjectKey::hasStableClassAndProto(CompilerConstraintList *constraints)
 {
     return !hasFlags(constraints, OBJECT_FLAG_UNKNOWN_PROPERTIES);
 }
@@ -1635,7 +1635,7 @@ TemporaryTypeSet::hasObjectFlags(CompilerConstraintList *constraints, ObjectGrou
 
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
-        ObjectGroupKey *key = getObject(i);
+        TypeSetObjectKey *key = getObject(i);
         if (key && key->hasFlags(constraints, flags))
             return true;
     }
@@ -1656,7 +1656,7 @@ ObjectGroup::initialHeap(CompilerConstraintList *constraints)
     if (!canPreTenure())
         return gc::DefaultHeap;
 
-    HeapTypeSetKey objectProperty = ObjectGroupKey::get(this)->property(JSID_EMPTY);
+    HeapTypeSetKey objectProperty = TypeSetObjectKey::get(this)->property(JSID_EMPTY);
     LifoAlloc *alloc = constraints->alloc();
 
     typedef CompilerConstraintInstance<ConstraintDataFreezeObjectFlags> T;
@@ -1733,7 +1733,7 @@ class ConstraintDataFreezeObjectForTypedArrayData
 } /* anonymous namespace */
 
 void
-ObjectGroupKey::watchStateChangeForInlinedCall(CompilerConstraintList *constraints)
+TypeSetObjectKey::watchStateChangeForInlinedCall(CompilerConstraintList *constraints)
 {
     HeapTypeSetKey objectProperty = property(JSID_EMPTY);
     LifoAlloc *alloc = constraints->alloc();
@@ -1743,7 +1743,7 @@ ObjectGroupKey::watchStateChangeForInlinedCall(CompilerConstraintList *constrain
 }
 
 void
-ObjectGroupKey::watchStateChangeForTypedArrayData(CompilerConstraintList *constraints)
+TypeSetObjectKey::watchStateChangeForTypedArrayData(CompilerConstraintList *constraints)
 {
     TypedArrayObject &tarray = singleton()->as<TypedArrayObject>();
     HeapTypeSetKey objectProperty = property(JSID_EMPTY);
@@ -1966,7 +1966,7 @@ TemporaryTypeSet::filtersType(const TemporaryTypeSet *other, Type filteredType) 
         return unknownObject();
 
     for (size_t i = 0; i < other->getObjectCount(); i++) {
-        ObjectGroupKey *key = other->getObject(i);
+        TypeSetObjectKey *key = other->getObject(i);
         if (key) {
             Type type = Type::ObjectType(key);
             if (type != filteredType && !hasType(type))
@@ -1988,7 +1988,7 @@ TemporaryTypeSet::convertDoubleElements(CompilerConstraintList *constraints)
     bool dontConvert = false;
 
     for (unsigned i = 0; i < getObjectCount(); i++) {
-        ObjectGroupKey *key = getObject(i);
+        TypeSetObjectKey *key = getObject(i);
         if (!key)
             continue;
 
@@ -2060,7 +2060,7 @@ TemporaryTypeSet::getKnownClass(CompilerConstraintList *constraints)
 
     if (clasp) {
         for (unsigned i = 0; i < count; i++) {
-            ObjectGroupKey *key = getObject(i);
+            TypeSetObjectKey *key = getObject(i);
             if (key && !key->hasStableClassAndProto(constraints))
                 return nullptr;
         }
@@ -2202,7 +2202,7 @@ TemporaryTypeSet::getCommonPrototype(CompilerConstraintList *constraints)
     unsigned count = getObjectCount();
 
     for (unsigned i = 0; i < count; i++) {
-        ObjectGroupKey *key = getObject(i);
+        TypeSetObjectKey *key = getObject(i);
         if (!key)
             continue;
 
@@ -2222,7 +2222,7 @@ TemporaryTypeSet::getCommonPrototype(CompilerConstraintList *constraints)
 
     // Guard against mutating __proto__.
     for (unsigned i = 0; i < count; i++) {
-        ObjectGroupKey *key = getObject(i);
+        TypeSetObjectKey *key = getObject(i);
         if (key)
             JS_ALWAYS_TRUE(key->hasStableClassAndProto(constraints));
     }
@@ -2237,7 +2237,7 @@ TemporaryTypeSet::propertyNeedsBarrier(CompilerConstraintList *constraints, jsid
         return true;
 
     for (unsigned i = 0; i < getObjectCount(); i++) {
-        ObjectGroupKey *key = getObject(i);
+        TypeSetObjectKey *key = getObject(i);
         if (!key)
             continue;
 
@@ -2441,7 +2441,7 @@ static inline bool
 PrototypeHasIndexedProperty(CompilerConstraintList *constraints, JSObject *obj)
 {
     do {
-        ObjectGroupKey *key = ObjectGroupKey::get(obj);
+        TypeSetObjectKey *key = TypeSetObjectKey::get(obj);
         if (ClassCanHaveExtraProperties(key->clasp()))
             return true;
         if (key->unknownProperties())
@@ -3543,7 +3543,7 @@ types::AddClearDefiniteFunctionUsesInScript(JSContext *cx, ObjectGroup *group,
     // contain a single object, as IonBuilder does not inline polymorphic sites
     // during the definite properties analysis.
 
-    ObjectGroupKey *calleeKey = Type::ObjectType(calleeScript->functionNonDelazifying()).objectKey();
+    TypeSetObjectKey *calleeKey = Type::ObjectType(calleeScript->functionNonDelazifying()).objectKey();
 
     unsigned count = TypeScript::NumTypeSets(script);
     StackTypeSet *typeArray = script->types()->typeArray();
@@ -3603,13 +3603,13 @@ types::TypeMonitorCallSlow(JSContext *cx, JSObject *callee, const CallArgs &args
 }
 
 static inline bool
-IsAboutToBeFinalized(ObjectGroupKey **keyp)
+IsAboutToBeFinalized(TypeSetObjectKey **keyp)
 {
     // Mask out the low bit indicating whether this is a group or JS object.
     uintptr_t flagBit = uintptr_t(*keyp) & 1;
     gc::Cell *tmp = reinterpret_cast<gc::Cell *>(uintptr_t(*keyp) & ~1);
     bool isAboutToBeFinalized = IsCellAboutToBeFinalized(&tmp);
-    *keyp = reinterpret_cast<ObjectGroupKey *>(uintptr_t(tmp) | flagBit);
+    *keyp = reinterpret_cast<TypeSetObjectKey *>(uintptr_t(tmp) | flagBit);
     return isAboutToBeFinalized;
 }
 
@@ -4732,17 +4732,17 @@ ConstraintTypeSet::sweep(Zone *zone, AutoClearTypeInferenceStateOnOOM &oom)
     unsigned objectCount = baseObjectCount();
     if (objectCount >= 2) {
         unsigned oldCapacity = HashSetCapacity(objectCount);
-        ObjectGroupKey **oldArray = objectSet;
+        TypeSetObjectKey **oldArray = objectSet;
 
         clearObjects();
         objectCount = 0;
         for (unsigned i = 0; i < oldCapacity; i++) {
-            ObjectGroupKey *key = oldArray[i];
+            TypeSetObjectKey *key = oldArray[i];
             if (!key)
                 continue;
             if (!IsAboutToBeFinalized(&key)) {
-                ObjectGroupKey **pentry =
-                    HashSetInsert<ObjectGroupKey *,ObjectGroupKey,ObjectGroupKey>
+                TypeSetObjectKey **pentry =
+                    HashSetInsert<TypeSetObjectKey *,TypeSetObjectKey,TypeSetObjectKey>
                         (zone->types.typeLifoAlloc, objectSet, objectCount, key);
                 if (pentry) {
                     *pentry = key;
@@ -4765,9 +4765,9 @@ ConstraintTypeSet::sweep(Zone *zone, AutoClearTypeInferenceStateOnOOM &oom)
         }
         setBaseObjectCount(objectCount);
     } else if (objectCount == 1) {
-        ObjectGroupKey *key = (ObjectGroupKey *) objectSet;
+        TypeSetObjectKey *key = (TypeSetObjectKey *) objectSet;
         if (!IsAboutToBeFinalized(&key)) {
-            objectSet = reinterpret_cast<ObjectGroupKey **>(key);
+            objectSet = reinterpret_cast<TypeSetObjectKey **>(key);
         } else {
             // As above, mark type sets containing objects with unknown
             // properties as unknown.

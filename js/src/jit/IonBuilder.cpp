@@ -497,7 +497,7 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
         return DontInline(inlineScript, "Script is debuggee");
     }
 
-    types::ObjectGroupKey *targetKey = types::ObjectGroupKey::get(target);
+    types::TypeSetObjectKey *targetKey = types::TypeSetObjectKey::get(target);
     if (targetKey->unknownProperties()) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineUnknownProps);
         return DontInline(inlineScript, "Target type has unknown properties");
@@ -3462,7 +3462,7 @@ IonBuilder::improveTypesAtCompare(MCompare *ins, bool trueBranch, MTest *test)
         if (altersNull)
             flags |= types::TYPE_FLAG_NULL;
 
-        types::TemporaryTypeSet base(flags, static_cast<types::ObjectGroupKey**>(nullptr));
+        types::TemporaryTypeSet base(flags, static_cast<types::TypeSetObjectKey**>(nullptr));
         type = types::TypeSet::intersectSets(&base, subject->resultTypeSet(), alloc_->lifoAlloc());
     }
 
@@ -3591,7 +3591,7 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
             return true;
         }
 
-        types::TemporaryTypeSet base(flags, static_cast<types::ObjectGroupKey**>(nullptr));
+        types::TemporaryTypeSet base(flags, static_cast<types::TypeSetObjectKey**>(nullptr));
         type = types::TypeSet::intersectSets(&base, oldType, alloc_->lifoAlloc());
     }
 
@@ -4748,7 +4748,7 @@ IonBuilder::makeInliningDecision(JSObject *targetArg, CallInfo &callInfo)
     }
 
     // TI calls ObjectStateChange to trigger invalidation of the caller.
-    types::ObjectGroupKey *targetKey = types::ObjectGroupKey::get(target);
+    types::TypeSetObjectKey *targetKey = types::TypeSetObjectKey::get(target);
     targetKey->watchStateChangeForInlinedCall(constraints());
 
     return InliningDecision_Inline;
@@ -5506,7 +5506,7 @@ IonBuilder::createThisScripted(MDefinition *callee)
 JSObject *
 IonBuilder::getSingletonPrototype(JSFunction *target)
 {
-    types::ObjectGroupKey *targetKey = types::ObjectGroupKey::get(target);
+    types::TypeSetObjectKey *targetKey = types::TypeSetObjectKey::get(target);
     if (targetKey->unknownProperties())
         return nullptr;
 
@@ -5532,7 +5532,7 @@ IonBuilder::createThisScriptedSingleton(JSFunction *target, MDefinition *callee)
     if (!templateObject->hasTenuredProto() || templateObject->getProto() != proto)
         return nullptr;
 
-    types::ObjectGroupKey *templateObjectKey = types::ObjectGroupKey::get(templateObject->group());
+    types::TypeSetObjectKey *templateObjectKey = types::TypeSetObjectKey::get(templateObject->group());
     if (templateObjectKey->hasFlags(constraints(), types::OBJECT_FLAG_NEW_SCRIPT_CLEARED))
         return nullptr;
 
@@ -5899,7 +5899,7 @@ IonBuilder::testShouldDOMCall(types::TypeSet *inTypes,
         return false;
 
     for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
-        types::ObjectGroupKey *key = inTypes->getObject(i);
+        types::TypeSetObjectKey *key = inTypes->getObject(i);
         if (!key)
             continue;
 
@@ -6314,7 +6314,7 @@ IonBuilder::jsop_initelem_array()
     if (obj->isUnknownValue()) {
         needStub = true;
     } else {
-        types::ObjectGroupKey *initializer = obj->resultTypeSet()->getObject(0);
+        types::TypeSetObjectKey *initializer = obj->resultTypeSet()->getObject(0);
         if (value->type() == MIRType_MagicHole) {
             if (!initializer->hasFlags(constraints(), types::OBJECT_FLAG_NON_PACKED))
                 needStub = true;
@@ -6896,7 +6896,7 @@ IonBuilder::testSingletonProperty(JSObject *obj, PropertyName *name)
         if (!ClassHasEffectlessLookup(obj->getClass(), name))
             return nullptr;
 
-        types::ObjectGroupKey *objKey = types::ObjectGroupKey::get(obj);
+        types::TypeSetObjectKey *objKey = types::TypeSetObjectKey::get(obj);
         if (analysisContext)
             objKey->ensureTrackedProperty(analysisContext, NameToId(name));
 
@@ -6977,7 +6977,7 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, Pr
         // find a prototype common to all the objects; if that prototype
         // has the singleton property, the access will not be on a missing property.
         for (unsigned i = 0; i < types->getObjectCount(); i++) {
-            types::ObjectGroupKey *key = types->getObject(i);
+            types::TypeSetObjectKey *key = types->getObject(i);
             if (!key)
                 continue;
             if (analysisContext)
@@ -7206,7 +7206,7 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
         return true;
     }
 
-    types::ObjectGroupKey *staticKey = types::ObjectGroupKey::get(staticObject);
+    types::TypeSetObjectKey *staticKey = types::TypeSetObjectKey::get(staticObject);
     if (analysisContext)
         staticKey->ensureTrackedProperty(analysisContext, NameToId(name));
 
@@ -7310,7 +7310,7 @@ IonBuilder::setStaticName(JSObject *staticObject, PropertyName *name)
 
     MDefinition *value = current->peek(-1);
 
-    types::ObjectGroupKey *staticKey = types::ObjectGroupKey::get(staticObject);
+    types::TypeSetObjectKey *staticKey = types::TypeSetObjectKey::get(staticObject);
     if (staticKey->unknownProperties())
         return jsop_setprop(name);
 
@@ -7618,7 +7618,7 @@ IonBuilder::checkTypedObjectIndexInBounds(int32_t elemSize,
 
         // If we are not loading the length from the object itself, only
         // optimize if the array buffer can't have been neutered.
-        types::ObjectGroupKey *globalKey = types::ObjectGroupKey::get(&script()->global());
+        types::TypeSetObjectKey *globalKey = types::TypeSetObjectKey::get(&script()->global());
         if (globalKey->hasFlags(constraints(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED)) {
             trackOptimizationOutcome(TrackedOutcome::TypedObjectNeutered);
             return false;
@@ -7937,7 +7937,7 @@ IonBuilder::getStaticTypedArrayObject(MDefinition *obj, MDefinition *index)
         return nullptr;
     }
 
-    types::ObjectGroupKey *tarrKey = types::ObjectGroupKey::get(tarrObj);
+    types::TypeSetObjectKey *tarrKey = types::TypeSetObjectKey::get(tarrObj);
     if (tarrKey->unknownProperties()) {
         trackOptimizationOutcome(TrackedOutcome::UnknownProperties);
         return nullptr;
@@ -7969,7 +7969,7 @@ IonBuilder::getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *
     // Emit LoadTypedArrayElementStatic.
 
     if (tarrObj->is<TypedArrayObject>()) {
-        types::ObjectGroupKey *tarrKey = types::ObjectGroupKey::get(tarrObj);
+        types::TypeSetObjectKey *tarrKey = types::TypeSetObjectKey::get(tarrObj);
         tarrKey->watchStateChangeForTypedArrayData(constraints());
     }
 
@@ -8320,7 +8320,7 @@ IonBuilder::addTypedArrayLengthAndData(MDefinition *obj,
         if (isTenured && tarr->isSingleton()) {
             // The 'data' pointer of TypedArrayObject can change in rare circumstances
             // (ArrayBufferObject::changeContents).
-            types::ObjectGroupKey *tarrKey = types::ObjectGroupKey::get(tarr);
+            types::TypeSetObjectKey *tarrKey = types::TypeSetObjectKey::get(tarr);
             if (!tarrKey->unknownProperties()) {
                 if (tarr->is<TypedArrayObject>())
                     tarrKey->watchStateChangeForTypedArrayData(constraints());
@@ -8680,7 +8680,7 @@ IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
     // Emit StoreTypedArrayElementStatic.
 
     if (tarrObj->is<TypedArrayObject>()) {
-        types::ObjectGroupKey *tarrKey = types::ObjectGroupKey::get(tarrObj);
+        types::TypeSetObjectKey *tarrKey = types::TypeSetObjectKey::get(tarrObj);
         tarrKey->watchStateChangeForTypedArrayData(constraints());
     }
 
@@ -9088,7 +9088,7 @@ IonBuilder::jsop_length_fastPath()
         // Compute the length for array typed objects.
         TypedObjectPrediction prediction = typedObjectPrediction(obj);
         if (!prediction.isUseless()) {
-            types::ObjectGroupKey *globalKey = types::ObjectGroupKey::get(&script()->global());
+            types::TypeSetObjectKey *globalKey = types::TypeSetObjectKey::get(&script()->global());
             if (globalKey->hasFlags(constraints(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED))
                 return false;
 
@@ -9216,7 +9216,7 @@ IonBuilder::getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name)
     // objects, which often have a different number of fixed slots from
     // subsequent objects.
     for (size_t i = 0; i < types->getObjectCount(); i++) {
-        types::ObjectGroupKey *key = types->getObject(i);
+        types::TypeSetObjectKey *key = types->getObject(i);
         if (!key)
             continue;
 
@@ -9232,7 +9232,7 @@ IonBuilder::getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name)
     uint32_t slot = UINT32_MAX;
 
     for (size_t i = 0; i < types->getObjectCount(); i++) {
-        types::ObjectGroupKey *key = types->getObject(i);
+        types::TypeSetObjectKey *key = types->getObject(i);
         if (!key)
             continue;
 
@@ -9278,7 +9278,7 @@ IonBuilder::getUnboxedOffset(types::TemporaryTypeSet *types, PropertyName *name,
     uint32_t offset = UINT32_MAX;
 
     for (size_t i = 0; i < types->getObjectCount(); i++) {
-        types::ObjectGroupKey *key = types->getObject(i);
+        types::TypeSetObjectKey *key = types->getObject(i);
         if (!key)
             continue;
 
@@ -9357,7 +9357,7 @@ IonBuilder::objectsHaveCommonPrototype(types::TemporaryTypeSet *types, PropertyN
         if (types->getSingleton(i) == foundProto)
             continue;
 
-        types::ObjectGroupKey *key = types->getObject(i);
+        types::TypeSetObjectKey *key = types->getObject(i);
         if (!key)
             continue;
 
@@ -9406,7 +9406,7 @@ IonBuilder::objectsHaveCommonPrototype(types::TemporaryTypeSet *types, PropertyN
                 // object's prototype chain.
                 return false;
             }
-            key = types::ObjectGroupKey::get(proto);
+            key = types::TypeSetObjectKey::get(proto);
         }
     }
 
@@ -9424,7 +9424,7 @@ IonBuilder::freezePropertiesForCommonPrototype(types::TemporaryTypeSet *types, P
         if (types->getSingleton(i) == foundProto)
             continue;
 
-        types::ObjectGroupKey *key = types->getObject(i);
+        types::TypeSetObjectKey *key = types->getObject(i);
         if (!key)
             continue;
 
@@ -9437,7 +9437,7 @@ IonBuilder::freezePropertiesForCommonPrototype(types::TemporaryTypeSet *types, P
             // with properties unknown to TI.
             if (key->protoMaybeInNursery() == TaggedProto(foundProto))
                 break;
-            key = types::ObjectGroupKey::get(key->protoMaybeInNursery().toObjectOrNull());
+            key = types::TypeSetObjectKey::get(key->protoMaybeInNursery().toObjectOrNull());
         }
     }
 }
@@ -9531,7 +9531,7 @@ IonBuilder::annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPro
         types::ObjectGroup *group = objTypes->getGroup(i);
         if (!group)
             continue;
-        types::ObjectGroupKey *key = types::ObjectGroupKey::get(group);
+        types::TypeSetObjectKey *key = types::TypeSetObjectKey::get(group);
         if (key->unknownProperties() || !key->hasTenuredProto() || !key->proto().isObject())
             continue;
 
@@ -9818,7 +9818,7 @@ IonBuilder::getPropTryInferredConstant(bool *emitted, MDefinition *obj, Property
         return true;
     }
 
-    types::ObjectGroupKey *key = types::ObjectGroupKey::get(singleton);
+    types::TypeSetObjectKey *key = types::TypeSetObjectKey::get(singleton);
     if (key->unknownProperties()) {
         trackOptimizationOutcome(TrackedOutcome::UnknownProperties);
         return true;
@@ -9977,7 +9977,7 @@ IonBuilder::getPropTryScalarPropOfTypedObject(bool *emitted, MDefinition *typedO
     Scalar::Type fieldType = fieldPrediction.scalarType();
 
     // Don't optimize if the typed object might be neutered.
-    types::ObjectGroupKey *globalKey = types::ObjectGroupKey::get(&script()->global());
+    types::TypeSetObjectKey *globalKey = types::TypeSetObjectKey::get(&script()->global());
     if (globalKey->hasFlags(constraints(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED))
         return true;
 
@@ -9999,7 +9999,7 @@ IonBuilder::getPropTryReferencePropOfTypedObject(bool *emitted, MDefinition *typ
 {
     ReferenceTypeDescr::Type fieldType = fieldPrediction.referenceType();
 
-    types::ObjectGroupKey *globalKey = types::ObjectGroupKey::get(&script()->global());
+    types::TypeSetObjectKey *globalKey = types::TypeSetObjectKey::get(&script()->global());
     if (globalKey->hasFlags(constraints(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED))
         return true;
 
@@ -10021,7 +10021,7 @@ IonBuilder::getPropTryComplexPropOfTypedObject(bool *emitted,
                                                size_t fieldIndex)
 {
     // Don't optimize if the typed object might be neutered.
-    types::ObjectGroupKey *globalKey = types::ObjectGroupKey::get(&script()->global());
+    types::TypeSetObjectKey *globalKey = types::TypeSetObjectKey::get(&script()->global());
     if (globalKey->hasFlags(constraints(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED))
         return true;
 
@@ -10593,7 +10593,7 @@ IonBuilder::tryInnerizeWindow(MDefinition *obj)
     // When we navigate, the outer object is brain transplanted and we'll mark
     // its ObjectGroup as having unknown properties. The type constraint we add
     // here will invalidate JIT code when this happens.
-    types::ObjectGroupKey *key = types::ObjectGroupKey::get(singleton);
+    types::TypeSetObjectKey *key = types::TypeSetObjectKey::get(singleton);
     if (key->hasFlags(constraints(), types::OBJECT_FLAG_UNKNOWN_PROPERTIES))
         return obj;
 
@@ -10872,7 +10872,7 @@ IonBuilder::setPropTryReferencePropOfTypedObject(bool *emitted,
 {
     ReferenceTypeDescr::Type fieldType = fieldPrediction.referenceType();
 
-    types::ObjectGroupKey *globalKey = types::ObjectGroupKey::get(&script()->global());
+    types::TypeSetObjectKey *globalKey = types::TypeSetObjectKey::get(&script()->global());
     if (globalKey->hasFlags(constraints(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED))
         return true;
 
@@ -10901,7 +10901,7 @@ IonBuilder::setPropTryScalarPropOfTypedObject(bool *emitted,
     Scalar::Type fieldType = fieldPrediction.scalarType();
 
     // Don't optimize if the typed object might be neutered.
-    types::ObjectGroupKey *globalKey = types::ObjectGroupKey::get(&script()->global());
+    types::TypeSetObjectKey *globalKey = types::TypeSetObjectKey::get(&script()->global());
     if (globalKey->hasFlags(constraints(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED))
         return true;
 
@@ -10937,7 +10937,7 @@ IonBuilder::setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
 
     bool writeBarrier = false;
     for (size_t i = 0; i < obj->resultTypeSet()->getObjectCount(); i++) {
-        types::ObjectGroupKey *key = obj->resultTypeSet()->getObject(i);
+        types::TypeSetObjectKey *key = obj->resultTypeSet()->getObject(i);
         if (!key)
             continue;
 
@@ -11233,7 +11233,7 @@ IonBuilder::jsop_regexp(RegExpObject *reobj)
     // avoid cloning in this case.
 
     bool mustClone = true;
-    types::ObjectGroupKey *globalKey = types::ObjectGroupKey::get(&script()->global());
+    types::TypeSetObjectKey *globalKey = types::TypeSetObjectKey::get(&script()->global());
     if (!globalKey->hasFlags(constraints(), types::OBJECT_FLAG_REGEXP_FLAGS_SET)) {
 #ifdef DEBUG
         // Only compare the statics if the one on script()->global() has been
@@ -11621,8 +11621,8 @@ IonBuilder::hasStaticScopeObject(ScopeCoordinate sc, JSObject **pcall)
     if (!outerScript || !outerScript->treatAsRunOnce())
         return false;
 
-    types::ObjectGroupKey *funKey =
-        types::ObjectGroupKey::get(outerScript->functionNonDelazifying());
+    types::TypeSetObjectKey *funKey =
+        types::TypeSetObjectKey::get(outerScript->functionNonDelazifying());
     if (funKey->hasFlags(constraints(), types::OBJECT_FLAG_RUNONCE_INVALIDATED))
         return false;
 
@@ -11824,7 +11824,7 @@ IonBuilder::jsop_in_dense()
 }
 
 static bool
-HasOnProtoChain(types::CompilerConstraintList *constraints, types::ObjectGroupKey *key,
+HasOnProtoChain(types::CompilerConstraintList *constraints, types::TypeSetObjectKey *key,
                 JSObject *protoObject, bool *hasOnProto)
 {
     MOZ_ASSERT(protoObject);
@@ -11848,7 +11848,7 @@ HasOnProtoChain(types::CompilerConstraintList *constraints, types::ObjectGroupKe
             return true;
         }
 
-        key = types::ObjectGroupKey::get(proto);
+        key = types::TypeSetObjectKey::get(proto);
     }
 
     MOZ_CRASH("Unreachable");
@@ -11876,7 +11876,7 @@ IonBuilder::tryFoldInstanceOf(MDefinition *lhs, JSObject *protoObject)
     bool knownIsInstance = false;
 
     for (unsigned i = 0; i < lhsTypes->getObjectCount(); i++) {
-        types::ObjectGroupKey *key = lhsTypes->getObject(i);
+        types::TypeSetObjectKey *key = lhsTypes->getObject(i);
         if (!key)
             continue;
 
@@ -11923,7 +11923,7 @@ IonBuilder::jsop_instanceof()
         if (!rhsObject || !rhsObject->is<JSFunction>() || rhsObject->isBoundFunction())
             break;
 
-        types::ObjectGroupKey *rhsKey = types::ObjectGroupKey::get(rhsObject);
+        types::TypeSetObjectKey *rhsKey = types::TypeSetObjectKey::get(rhsObject);
         if (rhsKey->unknownProperties())
             break;
 
@@ -12094,7 +12094,7 @@ IonBuilder::typedObjectPrediction(types::TemporaryTypeSet *types)
     TypedObjectPrediction out;
     for (uint32_t i = 0; i < types->getObjectCount(); i++) {
         types::ObjectGroup *group = types->getGroup(i);
-        if (!group || !types::ObjectGroupKey::get(group)->hasStableClassAndProto(constraints()))
+        if (!group || !types::TypeSetObjectKey::get(group)->hasStableClassAndProto(constraints()))
             return TypedObjectPrediction();
 
         if (!IsTypedObjectClass(group->clasp()))
