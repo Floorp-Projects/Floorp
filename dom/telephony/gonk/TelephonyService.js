@@ -227,6 +227,29 @@ TelephonyService.prototype = {
     this._getClient(aClientId).sendWorkerMessage(aType, aMessage, aCallback);
   },
 
+  _isGsmTechGroup: function(aType) {
+    switch (aType) {
+      case null:  // Handle unknown as gsm.
+      case "gsm":
+      case "gprs":
+      case "edge":
+      case "umts":
+      case "hsdpa":
+      case "hsupa":
+      case "hspa":
+      case "hspa+":
+      case "lte":
+        return true;
+      default:
+        return false;
+    }
+  },
+
+  _isCdmaClient: function(aClientId) {
+    let type = gGonkMobileConnectionService.getItemByServiceId(aClientId).voice.type;
+    return !this._isGsmTechGroup(type);
+  },
+
   // An array of nsITelephonyListener instances.
   _listeners: null,
   _notifyAllListeners: function(aMethodName, aArgs) {
