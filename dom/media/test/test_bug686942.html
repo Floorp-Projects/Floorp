@@ -23,6 +23,7 @@ var manager = new MediaTestManager;
 
 function onloaded(event) {
   var v = event.target;
+  v.removeEventListener("loadedmetadata", onloaded);
   v.currentTime = v.duration;
   return;
 }
@@ -31,15 +32,18 @@ function checkNotPlaying(v) {
   ok(v.currentTime == 0, "Should not be playing after seek to end and back to beginning");
   v._finished = true;
   manager.finished(v.token);
+  removeNodeAndSource(v);
 }
 
 function onseeked(event) {
   var v = event.target;
+  v.removeEventListener("seeked", onseeked);
   setTimeout(function() { checkNotPlaying(v); }, 500);
 }
 
 function onended(event) {
   var v = event.target;
+  v.removeEventListener("ended", onended);
   if (v._finished)
     return;
   v.addEventListener("seeked", onseeked, false);
