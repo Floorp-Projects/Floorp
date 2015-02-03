@@ -40,7 +40,9 @@ const nsITelephonyService = Ci.nsITelephonyService;
 
 const CALL_WAKELOCK_TIMEOUT = 5000;
 
-// Index of the CDMA second call which isn't held in RIL but only in TelephoyService.
+// In CDMA, RIL only hold one call index. We need to fake a second call index
+// in TelephonyService for 3-way calling.
+const CDMA_FIRST_CALL_INDEX = 1;
 const CDMA_SECOND_CALL_INDEX = 2;
 
 const DIAL_ERROR_INVALID_STATE_ERROR = "InvalidStateError";
@@ -470,7 +472,7 @@ TelephonyService.prototype = {
     return null;
   },
 
-  _addCdmaChildCall: function(aClientId, aNumber, aParentId) {
+  _addCdmaChildCall: function(aClientId, aNumber) {
     let childCall = {
       callIndex: CDMA_SECOND_CALL_INDEX,
       state: RIL.CALL_STATE_DIALING,
@@ -480,7 +482,7 @@ TelephonyService.prototype = {
       isConference: false,
       isSwitchable: false,
       isMergeable: true,
-      parentId: aParentId
+      parentId: CDMA_FIRST_CALL_INDEX
     };
 
     // Manual update call state according to the request response.
@@ -669,7 +671,7 @@ TelephonyService.prototype = {
         // RIL doesn't hold the 2nd call. We create one by ourselves.
         aCallback.notifyDialCallSuccess(aClientId, CDMA_SECOND_CALL_INDEX,
                                         response.number);
-        this._addCdmaChildCall(aClientId, response.number, currentCdmaCallIndex);
+        this._addCdmaChildCall(aClientId, response.number);
       }
     });
   },
