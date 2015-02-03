@@ -1420,23 +1420,18 @@ RasterImage::WantDecodedFrames(const nsIntSize& aSize, uint32_t aFlags,
     SurfaceCache::UnlockSurfaces(ImageKey(this));
   }
 
+  DecodeStrategy strategy = DecodeStrategy::ASYNC;
+
   if (aShouldSyncNotify) {
     // We can sync notify, which means we can also sync decode.
     if (aFlags & FLAG_SYNC_DECODE) {
-      Decode(DecodeStrategy::SYNC_IF_POSSIBLE, Some(aSize), aFlags);
-      return;
+      strategy = DecodeStrategy::SYNC_IF_POSSIBLE;
+    } else if (aFlags & FLAG_SYNC_DECODE_IF_FAST) {
+      strategy = DecodeStrategy::SYNC_FOR_SMALL_IMAGES;
     }
-
-    // Here we are explicitly trading off flashing for responsiveness in the
-    // case that we're redecoding an image (see bug 845147).
-    Decode(mHasBeenDecoded ? DecodeStrategy::ASYNC
-                           : DecodeStrategy::SYNC_FOR_SMALL_IMAGES,
-           Some(aSize), aFlags);
-    return;
   }
 
-  // We can't sync notify, so do an async decode.
-  Decode(DecodeStrategy::ASYNC, Some(aSize), aFlags);
+  Decode(strategy, Some(aSize), aFlags);
 }
 
 //******************************************************************************
@@ -1466,7 +1461,7 @@ RasterImage::StartDecoding()
     return NS_OK;
   }
 
-  return RequestDecodeForSize(mSize, FLAG_SYNC_DECODE);
+  return RequestDecodeForSize(mSize, FLAG_SYNC_DECODE_IF_FAST);
 }
 
 NS_IMETHODIMP
@@ -1487,8 +1482,15 @@ RasterImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
   // downscale-during-decode.
   nsIntSize targetSize = mDownscaleDuringDecode ? aSize : mSize;
 
-  // Sync decode small images if requested.
-  bool shouldSyncDecodeSmallImages = aFlags & FLAG_SYNC_DECODE;
+  // Decide whether to sync decode images we can decode quickly. Here we are
+  // explicitly trading off flashing for responsiveness in the case that we're
+  // redecoding an image (see bug 845147).
+  bool shouldSyncDecodeIfFast =
+    !mHasBeenDecoded && (aFlags & FLAG_SYNC_DECODE_IF_FAST);
+
+  uint32_t flags = shouldSyncDecodeIfFast
+                 ? aFlags
+                 : aFlags & ~FLAG_SYNC_DECODE_IF_FAST;
 
   // Look up the first frame of the image, which will implicitly start decoding
   // if it's not available right now.
@@ -1496,8 +1498,8 @@ RasterImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
   // synchronously decoding small images, while passing false has the effect of
   // decoding asynchronously, but that's not obvious from the argument name.
   // This API needs to be reworked.
-  LookupFrame(0, targetSize, DecodeFlags(aFlags),
-              /* aShouldSyncNotify = */ shouldSyncDecodeSmallImages);
+  LookupFrame(0, targetSize, flags,
+              /* aShouldSyncNotify = */ shouldSyncDecodeIfFast);
 
   return NS_OK;
 }
