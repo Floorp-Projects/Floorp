@@ -1739,6 +1739,12 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
   scan_value_array:
     MOZ_ASSERT(vp <= end);
     while (vp != end) {
+        budget.step();
+        if (budget.isOverBudget()) {
+            pushValueArray(obj, vp, end);
+            return;
+        }
+
         const Value &v = *vp++;
         if (v.isString()) {
             markAndScanString(obj, v.toString());

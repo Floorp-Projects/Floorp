@@ -99,7 +99,7 @@ nsCacheEntryDescriptor::~nsCacheEntryDescriptor()
     if (mCacheEntry)
         Close();
 
-    NS_ASSERTION(mInputWrappers.Count() == 0,
+    NS_ASSERTION(mInputWrappers.IsEmpty(),
                  "We have still some input wrapper!");
     NS_ASSERTION(!mOutputWrapper, "We have still an output wrapper!");
 
@@ -565,9 +565,8 @@ nsCacheEntryDescriptor::Close()
         // Make sure no other stream can be opened
         mClosingDescriptor = true;
         outputWrapper = mOutputWrapper;
-        for (int32_t i = 0 ; i < mInputWrappers.Count() ; i++)
-            inputWrappers.AppendElement(static_cast<nsInputStreamWrapper *>(
-                        mInputWrappers[i]));
+        for (size_t i = 0; i < mInputWrappers.Length(); i++)
+            inputWrappers.AppendElement(mInputWrappers[i]);
     }
 
     // Call Close() on the streams outside the lock since it might need to call
@@ -678,7 +677,7 @@ nsCacheEntryDescriptor::nsInputStreamWrapper::Release()
     if (0 == count) {
         // don't use desc here since mDescriptor might be already nulled out
         if (mDescriptor) {
-            NS_ASSERTION(mDescriptor->mInputWrappers.IndexOf(this) != -1,
+            NS_ASSERTION(mDescriptor->mInputWrappers.Contains(this),
                          "Wrapper not found in array!");
             mDescriptor->mInputWrappers.RemoveElement(this);
         }
@@ -872,7 +871,7 @@ nsCacheEntryDescriptor::nsDecompressInputStreamWrapper::Release()
     if (0 == count) {
         // don't use desc here since mDescriptor might be already nulled out
         if (mDescriptor) {
-            NS_ASSERTION(mDescriptor->mInputWrappers.IndexOf(this) != -1,
+            NS_ASSERTION(mDescriptor->mInputWrappers.Contains(this),
                          "Wrapper not found in array!");
             mDescriptor->mInputWrappers.RemoveElement(this);
         }

@@ -93,8 +93,8 @@ SVGEllipseElement::GetLengthInfo()
 // nsSVGPathGeometryElement methods
 
 bool
-SVGEllipseElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
-                                     CapStyle aCapStyle, const Matrix& aTransform)
+SVGEllipseElement::GetGeometryBounds(
+  Rect* aBounds, const StrokeOptions& aStrokeOptions, const Matrix& aTransform)
 {
   float x, y, rx, ry;
   GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
@@ -108,9 +108,9 @@ SVGEllipseElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
   if (aTransform.IsRectilinear()) {
     // Optimize the case where we can treat the ellipse as a rectangle and
     // still get tight bounds.
-    if (aStrokeWidth > 0.f) {
-      rx += aStrokeWidth / 2.f;
-      ry += aStrokeWidth / 2.f;
+    if (aStrokeOptions.mLineWidth > 0.f) {
+      rx += aStrokeOptions.mLineWidth / 2.f;
+      ry += aStrokeOptions.mLineWidth / 2.f;
     }
     Rect rect(x - rx, y - ry, 2 * rx, 2 * ry);
     *aBounds = aTransform.TransformBounds(rect);

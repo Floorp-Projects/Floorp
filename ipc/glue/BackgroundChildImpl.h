@@ -40,7 +40,7 @@ protected:
   virtual ~BackgroundChildImpl();
 
   virtual void
-  ProcessingError(Result aWhat) MOZ_OVERRIDE;
+  ProcessingError(Result aCode, const char* aReason) MOZ_OVERRIDE;
 
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;

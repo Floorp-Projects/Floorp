@@ -39,11 +39,11 @@ function AwaitAllKeysUsable(session, keys, token) {
       }
       if (UsableKeyIdsMatch(usableKeyIds, keys)) {
         Log(token, "resolving AwaitAllKeysUsable promise");
-        session.removeEventListener("keyschange", listener);
+        session.removeEventListener("keystatuseschange", listener);
         resolve();
       }
     }
-    session.addEventListener("keyschange", listener);
+    session.addEventListener("keystatuseschange", listener);
   });
 }
 
@@ -52,11 +52,11 @@ function AwaitAllKeysNotUsable(session, token) {
     function listener(event) {
       var map = session.keyStatuses;
       if (map.size == 0) {
-        session.removeEventListener("keyschange", listener);
+        session.removeEventListener("keystatuseschange", listener);
         resolve();
       }
     }
-    session.addEventListener("keyschange", listener);
+    session.addEventListener("keystatuseschange", listener);
   });
 }
 

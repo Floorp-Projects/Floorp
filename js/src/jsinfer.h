@@ -127,7 +127,7 @@ namespace types {
 
 struct TypeZone;
 class TypeSet;
-struct ObjectGroupKey;
+struct TypeSetObjectKey;
 
 /*
  * Information about a single concrete type. We pack this into a single word,
@@ -184,7 +184,7 @@ class Type
         return data > JSVAL_TYPE_UNKNOWN;
     }
 
-    inline ObjectGroupKey *objectKey() const;
+    inline TypeSetObjectKey *objectKey() const;
 
     /* Accessors for JSObject types */
 
@@ -224,8 +224,8 @@ class Type
     }
 
     static inline Type ObjectType(JSObject *obj);
-    static inline Type ObjectType(ObjectGroup *obj);
-    static inline Type ObjectType(ObjectGroupKey *obj);
+    static inline Type ObjectType(ObjectGroup *group);
+    static inline Type ObjectType(TypeSetObjectKey *key);
 
     static js::ThingRootKind rootKind() { return js::THING_ROOT_TYPE; }
 };
@@ -463,7 +463,7 @@ class TypeSet
     TypeFlags flags;
 
     /* Possible objects this type set can represent. */
-    ObjectGroupKey **objectSet;
+    TypeSetObjectKey **objectSet;
 
   public:
 
@@ -519,7 +519,7 @@ class TypeSet
      * may return nullptr.
      */
     inline unsigned getObjectCount() const;
-    inline ObjectGroupKey *getObject(unsigned i) const;
+    inline TypeSetObjectKey *getObject(unsigned i) const;
     inline JSObject *getSingleton(unsigned i) const;
     inline ObjectGroup *getGroup(unsigned i) const;
     inline JSObject *getSingletonNoBarrier(unsigned i) const;
@@ -658,7 +658,7 @@ class TemporaryTypeSet : public TypeSet
     TemporaryTypeSet() {}
     TemporaryTypeSet(LifoAlloc *alloc, Type type);
 
-    TemporaryTypeSet(uint32_t flags, ObjectGroupKey **objectSet) {
+    TemporaryTypeSet(uint32_t flags, TypeSetObjectKey **objectSet) {
         this->flags = flags;
         this->objectSet = objectSet;
     }
@@ -1516,13 +1516,13 @@ typedef HashMap<AllocationSiteKey,
 class HeapTypeSetKey;
 
 // Type set entry for either a JSObject with singleton type or a non-singleton ObjectGroup.
-struct ObjectGroupKey
+struct TypeSetObjectKey
 {
-    static intptr_t keyBits(ObjectGroupKey *obj) { return (intptr_t) obj; }
-    static ObjectGroupKey *getKey(ObjectGroupKey *obj) { return obj; }
+    static intptr_t keyBits(TypeSetObjectKey *obj) { return (intptr_t) obj; }
+    static TypeSetObjectKey *getKey(TypeSetObjectKey *obj) { return obj; }
 
-    static inline ObjectGroupKey *get(JSObject *obj);
-    static inline ObjectGroupKey *get(ObjectGroup *group);
+    static inline TypeSetObjectKey *get(JSObject *obj);
+    static inline TypeSetObjectKey *get(ObjectGroup *group);
 
     bool isGroup() {
         return (uintptr_t(this) & 1) == 0;
@@ -1564,10 +1564,10 @@ struct ObjectGroupKey
 // during generation of baseline caches.
 class HeapTypeSetKey
 {
-    friend struct ObjectGroupKey;
+    friend struct TypeSetObjectKey;
 
     // Object and property being accessed.
-    ObjectGroupKey *object_;
+    TypeSetObjectKey *object_;
     jsid id_;
 
     // If instantiated, the underlying heap type set.
@@ -1578,7 +1578,7 @@ class HeapTypeSetKey
       : object_(nullptr), id_(JSID_EMPTY), maybeTypes_(nullptr)
     {}
 
-    ObjectGroupKey *object() const { return object_; }
+    TypeSetObjectKey *object() const { return object_; }
     jsid id() const { return id_; }
     HeapTypeSet *maybeTypes() const { return maybeTypes_; }
 

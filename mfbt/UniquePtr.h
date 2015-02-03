@@ -286,20 +286,12 @@ public:
     return get();
   }
 
+  explicit operator bool() const { return get() != nullptr; }
+
   Pointer get() const { return ptr(); }
 
   DeleterType& getDeleter() { return del(); }
   const DeleterType& getDeleter() const { return del(); }
-
-private:
-  typedef void (UniquePtr::* ConvertibleToBool)(double, char);
-  void nonNull(double, char) {}
-
-public:
-  operator ConvertibleToBool() const
-  {
-    return get() != nullptr ? &UniquePtr::nonNull : nullptr;
-  }
 
   Pointer release()
   {
@@ -433,21 +425,13 @@ public:
     return *this;
   }
 
+  explicit operator bool() const { return get() != nullptr; }
+
   T& operator[](decltype(sizeof(int)) aIndex) const { return get()[aIndex]; }
   Pointer get() const { return mTuple.first(); }
 
   DeleterType& getDeleter() { return mTuple.second(); }
   const DeleterType& getDeleter() const { return mTuple.second(); }
-
-private:
-  typedef void (UniquePtr::* ConvertibleToBool)(double, char);
-  void nonNull(double, char) {}
-
-public:
-  operator ConvertibleToBool() const
-  {
-    return get() != nullptr ? &UniquePtr::nonNull : nullptr;
-  }
 
   Pointer release()
   {

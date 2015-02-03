@@ -300,7 +300,7 @@ MediaKeySession::DispatchKeyError(uint32_t aSystemCode)
 }
 
 void
-MediaKeySession::DispatchKeysChange()
+MediaKeySession::DispatchKeyStatusesChange()
 {
   if (IsClosed()) {
     return;
@@ -309,7 +309,7 @@ MediaKeySession::DispatchKeysChange()
   UpdateKeyStatusMap();
 
   nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, NS_LITERAL_STRING("keyschange"), false);
+    new AsyncEventDispatcher(this, NS_LITERAL_STRING("keystatuseschange"), false);
   asyncDispatcher->PostDOMEvent();
 }
 
