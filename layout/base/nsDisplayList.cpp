@@ -362,10 +362,11 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
     aLayer->AddAnimation();
 
   const AnimationTiming& timing = aPlayer->GetSource()->Timing();
-  animation->startTime() = aPlayer->GetStartTime().IsNull()
-                         ? TimeStamp()
-                         : aPlayer->Timeline()->ToTimeStamp(
-                             aPlayer->GetStartTime().Value() + timing.mDelay);
+  Nullable<TimeDuration> startTime = aPlayer->GetCurrentOrPendingStartTime();
+  animation->startTime() = startTime.IsNull()
+                           ? TimeStamp()
+                           : aPlayer->Timeline()->ToTimeStamp(
+                              startTime.Value() + timing.mDelay);
   animation->initialCurrentTime() = aPlayer->GetCurrentTime().Value()
                                     - timing.mDelay;
   animation->duration() = timing.mIterationDuration;
