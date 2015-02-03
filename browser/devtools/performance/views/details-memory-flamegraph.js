@@ -6,8 +6,6 @@
 /**
  * FlameGraph view containing a pyramid-like visualization of memory allocation
  * sites, controlled by DetailsView.
- *
- * TODO: bug 1077469
  */
 let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
   /**
@@ -15,6 +13,14 @@ let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
    */
   initialize: Task.async(function* () {
     DetailsSubview.initialize.call(this);
+
+    this.graph = new FlameGraph($("#memory-flamegraph-view"));
+    this.graph.timelineTickUnits = L10N.getStr("graphs.ms");
+    yield this.graph.ready();
+
+    this._onRangeChangeInGraph = this._onRangeChangeInGraph.bind(this);
+
+    this.graph.on("selecting", this._onRangeChangeInGraph);
   }),
 
   /**
@@ -22,6 +28,8 @@ let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
    */
   destroy: function () {
     DetailsSubview.destroy.call(this);
+
+    this.graph.off("selecting", this._onRangeChangeInGraph);
   },
 
   /**
@@ -31,6 +39,35 @@ let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
    *        The { startTime, endTime }, in milliseconds.
    */
   render: function (interval={}) {
+    let recording = PerformanceController.getCurrentRecording();
+    let duration = recording.getDuration();
+    let allocations = recording.getAllocations();
+
+    let samples = RecordingUtils.getSamplesFromAllocations(allocations);
+    let data = FlameGraphUtils.createFlameGraphDataFromSamples(samples, {
+      flattenRecursion: Prefs.flattenTreeRecursion,
+      showIdleBlocks: Prefs.showIdleBlocks && L10N.getStr("table.idle")
+    });
+
+    this.graph.setData({ data,
+      bounds: {
+        startTime: 0,
+        endTime: duration
+      },
+      visible: {
+        startTime: interval.startTime || 0,
+        endTime: interval.endTime || duration
+      }
+    });
+
     this.emit(EVENTS.MEMORY_FLAMEGRAPH_RENDERED);
+  },
+
+  /**
+   * Fired when a range is selected or cleared in the FlameGraph.
+   */
+  _onRangeChangeInGraph: function () {
+    let interval = this.graph.getViewRange();
+    OverviewView.setTimeInterval(interval, { stopPropagation: true });
   }
 });
