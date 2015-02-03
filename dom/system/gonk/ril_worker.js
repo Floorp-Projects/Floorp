@@ -5249,6 +5249,16 @@ RilObject.prototype = {
     });
   },
 
+  sendDefaultResponse: function(options) {
+    if (!options.rilMessageType) {
+      return;
+    }
+
+    options.success = (options.rilRequestError === 0);
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendChromeMessage(options);
+  },
+
   /**
    * Send messages to the main thread.
    */
@@ -5429,42 +5439,22 @@ RilObject.prototype[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length, option
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_HANGUP] = function REQUEST_HANGUP(length, options) {
-  if (options.rilMessageType == null) {
-    return;
-  }
-
-  options.success = (options.rilRequestError === 0);
-  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_HANGUP_WAITING_OR_BACKGROUND] = function REQUEST_HANGUP_WAITING_OR_BACKGROUND(length, options) {
-  RilObject.prototype[REQUEST_HANGUP].call(this, length, options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND] = function REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND(length, options) {
-  RilObject.prototype[REQUEST_HANGUP].call(this, length, options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE] = function REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE(length, options) {
-  options.success = (options.rilRequestError === 0);
-  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_CONFERENCE] = function REQUEST_CONFERENCE(length, options) {
-  options.success = (options.rilRequestError === 0);
-  if (!options.success) {
-    options.errorName = "addError";
-    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-    this.sendChromeMessage(options);
-    return;
-  }
-
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_UDUB] = function REQUEST_UDUB(length, options) {
-  options.success = (options.rilRequestError === 0);
-  if (!options.success) {
-    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-  }
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_LAST_CALL_FAIL_CAUSE] = function REQUEST_LAST_CALL_FAIL_CAUSE(length, options) {
   let Buf = this.context.Buf;
@@ -5919,11 +5909,7 @@ RilObject.prototype[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV(length, op
   this.IMEISV = this.context.Buf.readString();
 };
 RilObject.prototype[REQUEST_ANSWER] = function REQUEST_ANSWER(length, options) {
-  options.success = (options.rilRequestError === 0);
-  if (!options.success) {
-    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-  }
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length, options) {
   if (options.rilRequestError) {
@@ -6121,15 +6107,7 @@ RilObject.prototype[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSIO
   if (DEBUG) this.context.debug("Baseband version: " + this.basebandVersion);
 };
 RilObject.prototype[REQUEST_SEPARATE_CONNECTION] = function REQUEST_SEPARATE_CONNECTION(length, options) {
-  options.success = (options.rilRequestError === 0);
-  if (!options.success) {
-    options.errorName = "removeError";
-    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-    this.sendChromeMessage(options);
-    return;
-  }
-
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_SET_MUTE] = null;
 RilObject.prototype[REQUEST_GET_MUTE] = null;
@@ -6463,12 +6441,7 @@ RilObject.prototype[REQUEST_CDMA_QUERY_PREFERRED_VOICE_PRIVACY_MODE] = function 
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_CDMA_FLASH] = function REQUEST_CDMA_FLASH(length, options) {
-  options.success = (options.rilRequestError === 0);
-  if (!options.success) {
-    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-  }
-
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_CDMA_BURST_DTMF] = null;
 RilObject.prototype[REQUEST_CDMA_VALIDATE_AND_WRITE_AKEY] = null;
