@@ -240,6 +240,16 @@ public:
      */
     void KillHard();
 
+    /**
+     * API for adding a crash reporter annotation that provides a reason
+     * for a listener request to abort the child.
+     */
+    bool IsKillHardAnnotationSet() { return mKillHardAnnotation.IsEmpty(); }
+    const nsCString& GetKillHardAnnotation() { return mKillHardAnnotation; }
+    void SetKillHardAnnotation(const nsACString& aReason) {
+      mKillHardAnnotation = aReason;
+    }
+
     ContentParentId ChildID() MOZ_OVERRIDE { return mChildID; }
     const nsString& AppManifestURL() const { return mAppManifestURL; }
 
@@ -793,6 +803,8 @@ private:
     int32_t mGeolocationWatchID;
 
     nsString mAppManifestURL;
+
+    nsCString mKillHardAnnotation;
 
     /**
      * We cache mAppName instead of looking it up using mAppManifestURL when we
