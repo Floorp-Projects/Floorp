@@ -89,4 +89,4 @@ exports.testNewGlobalPBService = function(assert) {
   assert.equal(isPrivate(), false, 'isPrivate() is false again');
 };
 
-require('sdk/test').run(exports);
+require('sdk/test').run(module.exports);

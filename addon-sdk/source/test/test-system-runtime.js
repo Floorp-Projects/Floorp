@@ -20,4 +20,4 @@ exports["test system runtime"] = function(assert) {
 };
 
 
-require("test").run(exports);
+require("sdk/test").run(exports);

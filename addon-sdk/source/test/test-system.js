@@ -34,4 +34,4 @@ exports["test system architecture and compiler"] = function(assert) {
   );
 };
 
-require("test").run(exports);
+require("sdk/test").run(exports);

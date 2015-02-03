@@ -7,7 +7,6 @@ module.metadata = {
   "stability": "experimental"
 };
 
-var { Cu } = require("chrome");
-var { XulApp } = Cu.import("resource://gre/modules/sdk/system/XulApp.js", {});
+const { XulApp } = require("./xul-app.jsm");
 
 Object.keys(XulApp).forEach(k => exports[k] = XulApp[k]);

@@ -1,3 +1,5 @@
 {
-  "id": "test-main"
+  "id": "test-main@jetpack",
+  "main": "./main.js",
+  "version": "0.0.1"
 }

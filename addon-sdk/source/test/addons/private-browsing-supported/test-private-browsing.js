@@ -10,8 +10,9 @@ const { browserWindows: windows } = require('sdk/windows');
 const { isPrivate } = require('sdk/private-browsing');
 const { is } = require('sdk/system/xul-app');
 const { isWindowPBSupported, isTabPBSupported } = require('sdk/private-browsing/utils');
+const { cleanUI } = require('sdk/test/utils');
 
-const TAB_URL = 'data:text/html;charset=utf-8,TEST-TAB';
+const TAB_URL = 'about:addons';
 
 exports.testIsPrivateBrowsingTrue = function(assert) {
   assert.ok(isPrivateBrowsingSupported,
@@ -25,8 +26,8 @@ exports.testTabOpenPrivate = function(assert, done) {
     isPrivate: true,
     onReady: function(tab) {
       assert.equal(tab.url, TAB_URL, 'opened correct tab');
-      assert.equal(isPrivate(tab), (isWindowPBSupported || isTabPBSupported));
-      tab.close(done);
+      assert.equal(isPrivate(tab), (isWindowPBSupported || isTabPBSupported), "tab is private");
+      cleanUI().then(done).catch(console.exception);
     }
   });
 }
@@ -38,8 +39,8 @@ exports.testTabOpenPrivateDefault = function(assert, done) {
     url: TAB_URL,
     onReady: function(tab) {
       assert.equal(tab.url, TAB_URL, 'opened correct tab');
-      assert.equal(isPrivate(tab), false);
-      tab.close(done);
+      assert.equal(isPrivate(tab), false, "tab is not private");
+      cleanUI().then(done).catch(console.exception);
     }
   });
 }
@@ -51,8 +52,8 @@ exports.testTabOpenPrivateOffExplicit = function(assert, done) {
     isPrivate: false,
     onReady: function(tab) {
       assert.equal(tab.url, TAB_URL, 'opened correct tab');
-      assert.equal(isPrivate(tab), false);
-      tab.close(done);
+      assert.equal(isPrivate(tab), false, "tab is not private");
+      cleanUI().then(done).catch(console.exception);
     }
   });
 }
@@ -70,7 +71,7 @@ if (!is('Fennec')) {
         tab.once('ready', function() {
           assert.equal(tab.url, TAB_URL, 'opened correct tab');
           assert.equal(isPrivate(tab), isWindowPBSupported, 'tab is private');
-          window.close(done);
+          cleanUI().then(done).catch(console.exception);
         });
       }
     });
@@ -82,7 +83,7 @@ if (!is('Fennec')) {
       onOpen: function(window) {
         assert.equal(isPrivate(window), isWindowPBSupported, 'isPrivate for a window is true when it should be');
         assert.equal(isPrivate(window.tabs[0]), isWindowPBSupported, 'isPrivate for a tab is false when it should be');
-        window.close(done);
+        cleanUI().then(done).catch(console.exception);
       }
     });
   };
@@ -92,7 +93,7 @@ if (!is('Fennec')) {
       onOpen: function(window) {
         assert.equal(isPrivate(window), false, 'isPrivate for a window is false when it should be');
         assert.equal(isPrivate(window.tabs[0]), false, 'isPrivate for a tab is false when it should be');
-        window.close(done);
+        cleanUI().then(done).catch(console.exception);
       }
     })
   }
@@ -103,7 +104,7 @@ if (!is('Fennec')) {
       onOpen: function(window) {
         assert.equal(isPrivate(window), false, 'isPrivate for a window is false when it should be');
         assert.equal(isPrivate(window.tabs[0]), false, 'isPrivate for a tab is false when it should be');
-        window.close(done);
+        cleanUI().then(done).catch(console.exception);
       }
     })
   }
