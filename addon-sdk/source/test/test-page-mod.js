@@ -522,6 +522,10 @@ exports.testWorksWithExistingTabs = function(assert, done) {
           assert.ok(!!worker.tab, "Worker.tab exists");
           assert.equal(tab, worker.tab, "A worker has been created on this existing tab");
 
+          worker.on('pageshow', () => {
+            assert.fail("Should not have seen pageshow for an already loaded page");
+          });
+
           setTimeout(function() {
             pageModOnExisting.destroy();
             pageModOffExisting.destroy();
@@ -1661,5 +1665,122 @@ exports.testSyntaxErrorInContentScript = function *(assert) {
   loader.unload();
   yield cleanUI();
 };
+
+exports.testPageShowWhenStart = function(assert, done) {
+  const TEST_URL = 'data:text/html;charset=utf-8,detach';
+  let sawWorkerPageShow = false;
+  let sawInjected = false;
+
+  let mod = PageMod({
+    include: TEST_URL,
+    contentScriptWhen: 'start',
+    contentScript: Isolate(function() {
+      self.port.emit('injected');
+      self.on('pageshow', () => {
+        self.port.emit('pageshow');
+      });
+    }),
+    onAttach: worker => {
+      worker.on('pageshow', () => {
+        sawWorkerPageShow = true;
+      });
+
+      worker.port.on('injected', () => {
+        sawInjected = true;
+      });
+
+      worker.port.on('pageshow', () => {
+        assert.ok(sawWorkerPageShow, 'Should have seen the pageshow event');
+        assert.ok(sawInjected, 'Should have seen the injected event');
+        closeTab(tab);
+      });
+
+      worker.on('detach', () => {
+        mod.destroy();
+        done();
+      });
+    }
+  });
+
+  let tab = openTab(getMostRecentBrowserWindow(), TEST_URL);
+}
+
+exports.testPageShowWhenReady = function(assert, done) {
+  const TEST_URL = 'data:text/html;charset=utf-8,detach';
+  let sawWorkerPageShow = false;
+  let sawInjected = false;
+
+  let mod = PageMod({
+    include: TEST_URL,
+    contentScriptWhen: 'ready',
+    contentScript: Isolate(function() {
+      self.port.emit('injected');
+      self.on('pageshow', () => {
+        self.port.emit('pageshow');
+      });
+    }),
+    onAttach: worker => {
+      worker.on('pageshow', () => {
+        sawWorkerPageShow = true;
+      });
+
+      worker.port.on('injected', () => {
+        sawInjected = true;
+      });
+
+      worker.port.on('pageshow', () => {
+        assert.ok(sawWorkerPageShow, 'Should have seen the pageshow event');
+        assert.ok(sawInjected, 'Should have seen the injected event');
+        closeTab(tab);
+      });
+
+      worker.on('detach', () => {
+        mod.destroy();
+        done();
+      });
+    }
+  });
+
+  let tab = openTab(getMostRecentBrowserWindow(), TEST_URL);
+}
+
+exports.testPageShowWhenEnd = function(assert, done) {
+  const TEST_URL = 'data:text/html;charset=utf-8,detach';
+  let sawWorkerPageShow = false;
+  let sawInjected = false;
+
+  let mod = PageMod({
+    include: TEST_URL,
+    contentScriptWhen: 'end',
+    contentScript: Isolate(function() {
+      self.port.emit('injected');
+      self.on('pageshow', () => {
+        self.port.emit('pageshow');
+      });
+    }),
+    onAttach: worker => {
+      worker.on('pageshow', () => {
+        sawWorkerPageShow = true;
+      });
+
+      worker.port.on('injected', () => {
+        sawInjected = true;
+      });
+
+      worker.port.on('pageshow', () => {
+        assert.ok(sawWorkerPageShow, 'Should have seen the pageshow event');
+        assert.ok(sawInjected, 'Should have seen the injected event');
+        closeTab(tab);
+      });
+
+      worker.on('detach', () => {
+        mod.destroy();
+        done();
+      });
+    }
+  });
+
+  let tab = openTab(getMostRecentBrowserWindow(), TEST_URL);
+}
 
 require('sdk/test').run(exports);

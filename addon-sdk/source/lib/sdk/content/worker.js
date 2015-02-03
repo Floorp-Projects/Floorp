@@ -124,6 +124,7 @@ attach.define(Worker, function(worker, window) {
 
   model.window = window;
   model.options.window = getInnerId(window);
+  model.options.currentReadyState = window.document.readyState;
   model.id = model.options.id = String(uuid());
 
   let tab = getTabForContentWindow(window);
