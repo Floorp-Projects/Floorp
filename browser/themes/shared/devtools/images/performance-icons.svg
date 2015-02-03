@@ -28,9 +28,9 @@
 </g>
 <g id="details-call-tree">
   <rect x="0px" y="3px" width="16px" height="2px" rx="1" ry="1"/>
-  <rect x="3px" y="6px" width="7px" height="2px" rx="1" ry="1"/>
-  <rect x="6px" y="9px" width="6px" height="2px" rx="1" ry="1"/>
-  <rect x="9px" y="12px" width="5px" height="2px" rx="1" ry="1"/>
+  <rect x="0px" y="6px" width="8px" height="2px" rx="1" ry="1"/>
+  <rect x="0px" y="9px" width="11px" height="2px" rx="1" ry="1"/>
+  <rect x="0px" y="12px" width="6px" height="2px" rx="1" ry="1"/>
 </g>
 <g id="details-flamegraph">
   <rect x="0px" y="3px" width="16px" height="2px" rx="1" ry="1"/>

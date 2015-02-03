@@ -58,7 +58,7 @@ PerformancePanel.prototype = {
     }
 
     // Destroy the connection to ensure packet handlers are removed from client.
-    this._connection.destroy();
+    yield this._connection.destroy();
 
     yield this.panelWin.shutdownPerformance();
     this.emit("destroyed");

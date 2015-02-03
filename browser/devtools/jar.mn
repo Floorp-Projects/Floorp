@@ -99,9 +99,11 @@ browser.jar:
     content/browser/devtools/performance/views/toolbar.js              (performance/views/toolbar.js)
     content/browser/devtools/performance/views/details.js              (performance/views/details.js)
     content/browser/devtools/performance/views/details-subview.js      (performance/views/details-abstract-subview.js)
-    content/browser/devtools/performance/views/details-call-tree.js    (performance/views/details-call-tree.js)
     content/browser/devtools/performance/views/details-waterfall.js    (performance/views/details-waterfall.js)
-    content/browser/devtools/performance/views/details-flamegraph.js   (performance/views/details-flamegraph.js)
+    content/browser/devtools/performance/views/details-js-call-tree.js      (performance/views/details-js-call-tree.js)
+    content/browser/devtools/performance/views/details-js-flamegraph.js     (performance/views/details-js-flamegraph.js)
+    content/browser/devtools/performance/views/details-memory-call-tree.js  (performance/views/details-memory-call-tree.js)
+    content/browser/devtools/performance/views/details-memory-flamegraph.js (performance/views/details-memory-flamegraph.js)
     content/browser/devtools/performance/views/recordings.js           (performance/views/recordings.js)
 #endif
     content/browser/devtools/responsivedesign/resize-commands.js       (responsivedesign/resize-commands.js)

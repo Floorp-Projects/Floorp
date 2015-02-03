@@ -7,14 +7,14 @@
  * FlameGraph view containing a pyramid-like visualization of a profile,
  * controlled by DetailsView.
  */
-let FlameGraphView = Heritage.extend(DetailsSubview, {
+let JsFlameGraphView = Heritage.extend(DetailsSubview, {
   /**
    * Sets up the view with event binding.
    */
   initialize: Task.async(function* () {
     DetailsSubview.initialize.call(this);
 
-    this.graph = new FlameGraph($("#flamegraph-view"));
+    this.graph = new FlameGraph($("#js-flamegraph-view"));
     this.graph.timelineTickUnits = L10N.getStr("graphs.ms");
     yield this.graph.ready();
 
@@ -61,7 +61,7 @@ let FlameGraphView = Heritage.extend(DetailsSubview, {
       }
     });
 
-    this.emit(EVENTS.FLAMEGRAPH_RENDERED);
+    this.emit(EVENTS.JS_FLAMEGRAPH_RENDERED);
   },
 
   /**
