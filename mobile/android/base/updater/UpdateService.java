@@ -70,6 +70,7 @@ public class UpdateService extends IntentService {
     private static final String KEY_LAST_FILE_NAME = "UpdateService.lastFileName";
     private static final String KEY_LAST_ATTEMPT_DATE = "UpdateService.lastAttemptDate";
     private static final String KEY_AUTODOWNLOAD_POLICY = "UpdateService.autoDownloadPolicy";
+    private static final String KEY_UPDATE_URL = "UpdateService.updateUrl";
 
     private SharedPreferences mPrefs;
 
@@ -180,6 +181,11 @@ public class UpdateService extends IntentService {
 
             if (policy != AutoDownloadPolicy.NONE) {
                 setAutoDownloadPolicy(policy);
+            }
+
+            String url = intent.getStringExtra(UpdateServiceHelper.EXTRA_UPDATE_URL_NAME);
+            if (url != null) {
+                setUpdateUrl(url);
             }
 
             registerForUpdates(false);
@@ -354,7 +360,12 @@ public class UpdateService extends IntentService {
 
     private UpdateInfo findUpdate(boolean force) {
         try {
-            URL url = UpdateServiceHelper.getUpdateUrl(this, force);
+            URL url = getUpdateUrl(force);
+
+            if (url == null) {
+              Log.e(LOGTAG, "failed to get update URL");
+              return null;
+            }
 
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             Document dom = builder.parse(openConnectionWithProxy(url).getInputStream());
@@ -675,6 +686,16 @@ public class UpdateService extends IntentService {
     private void setAutoDownloadPolicy(AutoDownloadPolicy policy) {
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putInt(KEY_AUTODOWNLOAD_POLICY, policy.value);
+        editor.commit();
+    }
+
+    private URL getUpdateUrl(boolean force) {
+        return UpdateServiceHelper.expandUpdateUrl(this, mPrefs.getString(KEY_UPDATE_URL, null), force);
+    }
+
+    private void setUpdateUrl(String url) {
+        SharedPreferences.Editor editor = mPrefs.edit();
+        editor.putString(KEY_UPDATE_URL, url);
         editor.commit();
     }
 
