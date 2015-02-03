@@ -1022,6 +1022,8 @@ class IonBuilder
     }
     IonBuilder *callerBuilder_;
 
+    IonBuilder *outermostBuilder();
+
     bool oom() {
         abortReason_ = AbortReason_Alloc;
         return false;

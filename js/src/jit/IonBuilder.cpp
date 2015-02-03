@@ -189,16 +189,22 @@ IonBuilder::abort(const char *message, ...)
     return false;
 }
 
+IonBuilder *
+IonBuilder::outermostBuilder()
+{
+    IonBuilder *builder = this;
+    while (builder->callerBuilder_)
+        builder = builder->callerBuilder_;
+    return builder;
+}
+
 void
 IonBuilder::trackActionableAbort(const char *message)
 {
     if (!isOptimizationTrackingEnabled())
         return;
 
-    IonBuilder *topBuilder = this;
-    while (topBuilder->callerBuilder_)
-        topBuilder = topBuilder->callerBuilder_;
-
+    IonBuilder *topBuilder = outermostBuilder();
     if (topBuilder->hadActionableAbort())
         return;
 
@@ -228,18 +234,20 @@ IonBuilder::constantMaybeNursery(JSObject *obj)
     // MNurseryObject to ensure we will patch the code with the right
     // pointer after codegen is done.
 
+    ObjectVector &nurseryObjects = outermostBuilder()->nurseryObjects_;
+
     size_t index = UINT32_MAX;
-    for (size_t i = 0, len = nurseryObjects_.length(); i < len; i++) {
-        if (nurseryObjects_[i] == obj) {
+    for (size_t i = 0, len = nurseryObjects.length(); i < len; i++) {
+        if (nurseryObjects[i] == obj) {
             index = i;
             break;
         }
     }
 
     if (index == UINT32_MAX) {
-        if (!nurseryObjects_.append(obj))
+        if (!nurseryObjects.append(obj))
             return nullptr;
-        index = nurseryObjects_.length() - 1;
+        index = nurseryObjects.length() - 1;
     }
 
     MNurseryObject *ins = MNurseryObject::New(alloc(), obj, index, constraints());
@@ -4501,6 +4509,9 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
         return false;
     }
 
+    MOZ_ASSERT(inlineBuilder.nurseryObjects_.empty(),
+               "Nursery objects should be added to outer builder");
+
     // Create return block.
     jsbytecode *postCall = GetNextPc(pc);
     MBasicBlock *returnBlock = newBlock(nullptr, postCall);
@@ -6852,9 +6863,7 @@ IonBuilder::insertRecompileCheck()
 
     // Get the topmost builder. The topmost script will get recompiled when
     // warm-up counter is high enough to justify a higher optimization level.
-    IonBuilder *topBuilder = this;
-    while (topBuilder->callerBuilder_)
-        topBuilder = topBuilder->callerBuilder_;
+    IonBuilder *topBuilder = outermostBuilder();
 
     // Add recompile check to recompile when the warm-up count reaches the
     // threshold of the next optimization level.
