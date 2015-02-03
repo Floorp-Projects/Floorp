@@ -20,9 +20,6 @@ class Range
   const RangedPtr<T> mStart;
   const RangedPtr<T> mEnd;
 
-  typedef void (Range::* ConvertibleToBool)();
-  void nonNull() {}
-
 public:
   Range() : mStart(nullptr, 0), mEnd(nullptr, 0) {}
   Range(T* aPtr, size_t aLength)
@@ -36,7 +33,7 @@ public:
 
   T& operator[](size_t aOffset) const { return mStart[aOffset]; }
 
-  operator ConvertibleToBool() const { return mStart ? &Range::nonNull : 0; }
+  explicit operator bool() const { return mStart != nullptr; }
 };
 
 } // namespace mozilla
