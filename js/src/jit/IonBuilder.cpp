@@ -10166,6 +10166,25 @@ IonBuilder::getPropTryUnboxed(bool *emitted, MDefinition *obj, PropertyName *nam
     return true;
 }
 
+MDefinition *
+IonBuilder::addShapeGuardsForGetterSetter(MDefinition *obj, JSObject *holder, Shape *holderShape,
+                                          const BaselineInspector::ShapeVector &receiverShapes,
+                                          bool isOwnProperty)
+{
+    MOZ_ASSERT(holder);
+    MOZ_ASSERT(holderShape);
+
+    if (isOwnProperty) {
+        MOZ_ASSERT(receiverShapes.empty());
+        return addShapeGuard(obj, holderShape, Bailout_ShapeGuard);
+    }
+
+    MDefinition *holderDef = constantMaybeNursery(holder);
+    addShapeGuard(holderDef, holderShape, Bailout_ShapeGuard);
+
+    return addShapeGuardPolymorphic(obj, receiverShapes);
+}
+
 bool
 IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName *name,
                                    types::TemporaryTypeSet *types)
@@ -10175,21 +10194,32 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
     Shape *lastProperty = nullptr;
     JSFunction *commonGetter = nullptr;
     Shape *globalShape = nullptr;
-    JSObject *foundProto = inspector->commonGetPropFunction(pc, &lastProperty, &commonGetter, &globalShape);
-    if (!foundProto)
+    JSObject *foundProto = nullptr;
+    bool isOwnProperty = false;
+    BaselineInspector::ShapeVector receiverShapes(alloc());
+    if (!inspector->commonGetPropFunction(pc, &foundProto, &lastProperty, &commonGetter,
+                                          &globalShape, &isOwnProperty, receiverShapes))
+    {
         return true;
+    }
 
     types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
     MDefinition *guard = nullptr;
     MDefinition *globalGuard = nullptr;
-    bool canUseCommonGetter =
+    bool canUseTIForGetter =
         testCommonGetterSetter(objTypes, name, /* isGetter = */ true,
                                foundProto, lastProperty, &guard, globalShape,
                                &globalGuard);
-    if (!canUseCommonGetter)
-        return true;
+    if (!canUseTIForGetter) {
+        // If type information is bad, we can still optimize the getter if we
+        // shape guard.
+        obj = addShapeGuardsForGetterSetter(obj, foundProto, lastProperty, receiverShapes,
+                                            isOwnProperty);
+        if (!obj)
+            return false;
+    }
 
-    bool isDOM = objTypes->isDOMClass(constraints());
+    bool isDOM = objTypes && objTypes->isDOMClass(constraints());
 
     if (isDOM && testShouldDOMCall(objTypes, commonGetter, JSJitInfo::Getter)) {
         const JSJitInfo *jitinfo = commonGetter->jitInfo();
@@ -10229,7 +10259,7 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
     }
 
     // Don't call the getter with a primitive value.
-    if (objTypes->getKnownMIRType() != MIRType_Object) {
+    if (obj->type() != MIRType_Object) {
         MGuardObject *guardObj = MGuardObject::New(alloc(), obj);
         current->add(guardObj);
         obj = guardObj;
@@ -10420,17 +10450,9 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, MDefinition *obj, PropertyName
         return false;
 
     if (sameSlot && unboxedGroups.empty()) {
-        MGuardShapePolymorphic *guard = MGuardShapePolymorphic::New(alloc(), obj);
-        current->add(guard);
-        obj = guard;
-
-        if (failedShapeGuard_)
-            guard->setNotMovable();
-
-        for (size_t i = 0; i < nativeShapes.length(); i++) {
-            if (!guard->addShape(nativeShapes[i]))
-                return false;
-        }
+        obj = addShapeGuardPolymorphic(obj, nativeShapes);
+        if (!obj)
+            return false;
 
         if (!loadSlot(obj, propShapes[0], rvalType, barrier, types))
             return false;
@@ -10682,21 +10704,29 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
 
     Shape *lastProperty = nullptr;
     JSFunction *commonSetter = nullptr;
-    JSObject *foundProto = inspector->commonSetPropFunction(pc, &lastProperty, &commonSetter);
-    if (!foundProto) {
+    JSObject *foundProto = nullptr;
+    bool isOwnProperty;
+    BaselineInspector::ShapeVector receiverShapes(alloc());
+    if (!inspector->commonSetPropFunction(pc, &foundProto, &lastProperty, &commonSetter, &isOwnProperty,
+                                          receiverShapes))
+    {
         trackOptimizationOutcome(TrackedOutcome::NoProtoFound);
         return true;
     }
 
     types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
     MDefinition *guard = nullptr;
-    bool canUseCommonSetter =
+    bool canUseTIForSetter =
         testCommonGetterSetter(objTypes, name, /* isGetter = */ false,
                                foundProto, lastProperty, &guard);
-    if (!canUseCommonSetter)
-        return true;
-
-    bool isDOM = objTypes->isDOMClass(constraints());
+    if (!canUseTIForSetter) {
+        // If type information is bad, we can still optimize the setter if we
+        // shape guard.
+        obj = addShapeGuardsForGetterSetter(obj, foundProto, lastProperty, receiverShapes,
+                                            isOwnProperty);
+        if (!obj)
+            return false;
+    }
 
     // Emit common setter.
 
@@ -10705,7 +10735,7 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
     // properties.
 
     // Try emitting dom call.
-    if (!setPropTryCommonDOMSetter(emitted, obj, value, commonSetter, isDOM))
+    if (!setPropTryCommonDOMSetter(emitted, obj, value, commonSetter, objTypes))
         return false;
 
     if (*emitted) {
@@ -10714,7 +10744,7 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
     }
 
     // Don't call the setter with a primitive value.
-    if (objTypes->getKnownMIRType() != MIRType_Object) {
+    if (obj->type() != MIRType_Object) {
         MGuardObject *guardObj = MGuardObject::New(alloc(), obj);
         current->add(guardObj);
         obj = guardObj;
@@ -10777,14 +10807,13 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
 bool
 IonBuilder::setPropTryCommonDOMSetter(bool *emitted, MDefinition *obj,
                                       MDefinition *value, JSFunction *setter,
-                                      bool isDOM)
+                                      types::TemporaryTypeSet *objTypes)
 {
     MOZ_ASSERT(*emitted == false);
 
-    if (!isDOM)
+    if (!objTypes || !objTypes->isDOMClass(constraints()))
         return true;
 
-    types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
     if (!testShouldDOMCall(objTypes, setter, JSJitInfo::Setter))
         return true;
 
@@ -11098,17 +11127,9 @@ IonBuilder::setPropTryInlineAccess(bool *emitted, MDefinition *obj,
         return false;
 
     if (sameSlot && unboxedGroups.empty()) {
-        MGuardShapePolymorphic *guard = MGuardShapePolymorphic::New(alloc(), obj);
-        current->add(guard);
-        obj = guard;
-
-        if (failedShapeGuard_)
-            guard->setNotMovable();
-
-        for (size_t i = 0; i < nativeShapes.length(); i++) {
-            if (!guard->addShape(nativeShapes[i]))
-                return false;
-        }
+        obj = addShapeGuardPolymorphic(obj, nativeShapes);
+        if (!obj)
+            return false;
 
         bool needsBarrier = objTypes->propertyNeedsBarrier(constraints(), NameToId(name));
         if (!storeSlot(obj, propShapes[0], value, needsBarrier))
@@ -12015,6 +12036,28 @@ IonBuilder::addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bail
     // If a shape guard failed in the past, don't optimize shape guard.
     if (failedShapeGuard_)
         guard->setNotMovable();
+
+    return guard;
+}
+
+MInstruction *
+IonBuilder::addShapeGuardPolymorphic(MDefinition *obj, const BaselineInspector::ShapeVector &shapes)
+{
+    if (shapes.length() == 1)
+        return addShapeGuard(obj, shapes[0], Bailout_ShapeGuard);
+
+    MOZ_ASSERT(shapes.length() > 1);
+
+    MGuardShapePolymorphic *guard = MGuardShapePolymorphic::New(alloc(), obj);
+    current->add(guard);
+
+    if (failedShapeGuard_)
+        guard->setNotMovable();
+
+    for (size_t i = 0, len = shapes.length(); i < len; i++) {
+        if (!guard->addShape(shapes[i]))
+            return nullptr;
+    }
 
     return guard;
 }
