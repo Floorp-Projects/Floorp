@@ -88,8 +88,6 @@
 #define MB * 1024ULL KB
 #define GB * 1024ULL MB
 
-#define QM_WARNING(...) NS_WARNING(nsPrintfCString(__VA_ARGS__).get())
-
 USING_QUOTA_NAMESPACE
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -487,6 +485,22 @@ AssertCurrentThreadOwnsQuotaMutex()
 
   quotaManager->AssertCurrentThreadOwnsQuotaMutex();
 #endif
+}
+
+void
+ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr)
+{
+  // Get leaf of file path
+  for (const char* p = aFile; *p; ++p) {
+    if (*p == '/' && *(p + 1)) {
+      aFile = p + 1;
+    }
+  }
+
+  nsContentUtils::LogSimpleConsoleError(
+    NS_ConvertUTF8toUTF16(nsPrintfCString(
+                          "Quota %s: %s:%lu", aStr, aFile, aLine)),
+    "quota");
 }
 
 END_QUOTA_NAMESPACE
@@ -1910,9 +1924,8 @@ QuotaManager::InitializeRepository(PersistenceType aPersistenceType)
         continue;
       }
 
-      nsPrintfCString message("Something (%s) in the repository that doesn't "
-                              "belong!", NS_ConvertUTF16toUTF8(leafName).get());
-      NS_WARNING(message.get());
+      QM_WARNING("Something (%s) in the repository that doesn't belong!",
+                 NS_ConvertUTF16toUTF8(leafName).get());
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -4802,9 +4815,8 @@ OriginParser::Parse(uint32_t* aAppId,
   }
 
   if (mError) {
-    nsPrintfCString message("Origin '%s' failed to parse, handled tokens: %s",
-                            mOrigin.get(), mHandledTokens.get());
-    NS_WARNING(message.get());
+    QM_WARNING("Origin '%s' failed to parse, handled tokens: %s", mOrigin.get(),
+               mHandledTokens.get());
 
     return false;
   }
@@ -5059,7 +5071,7 @@ OriginParser::HandleToken(const nsDependentCSubstring& aToken)
       MOZ_ASSERT(mSchemaType == eFile);
 
       if (aToken.IsEmpty()) {
-        QM_WARNING("Expected a driver letter or pathname component "
+        QM_WARNING("Expected a drive letter or pathname component "
                    "(not an empty string)!");
 
         mError = true;
