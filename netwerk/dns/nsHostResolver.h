@@ -101,6 +101,7 @@ public:
     // mValidEnd, and mGraceStart). valid and grace are durations in seconds.
     void SetExpiration(const mozilla::TimeStamp& now, unsigned int valid,
                        unsigned int grace);
+    void CopyExpirationTimesFrom(const nsHostRecord *aFromHostRecord);
 
     // Checks if the record is usable (not expired and has a value)
     bool HasUsableResult(const mozilla::TimeStamp& now, uint16_t queryFlags = 0) const;
