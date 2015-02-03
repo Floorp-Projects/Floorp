@@ -530,11 +530,6 @@ RilObject.prototype = {
      */
     this._ussdSession = null;
 
-   /**
-    * Regular expresion to parse MMI codes.
-    */
-    this._mmiRegExp = null;
-
     /**
      * Cell Broadcast Search Lists.
      */
@@ -2743,7 +2738,7 @@ RilObject.prototype = {
       return;
     }
 
-    this.sendUSSD(options);
+    this.sendUSSD(options, false);
   },
 
   /**
@@ -2757,11 +2752,9 @@ RilObject.prototype = {
    *
    * @param ussd
    *        String containing the USSD code.
-   * @param checkSession
-   *        True if an existing session should be there.
    */
-  sendUSSD: function(options) {
-    if (options.checkSession && !this._ussdSession) {
+  sendUSSD: function(options, checkSession = true) {
+    if (checkSession && !this._ussdSession) {
       options.success = false;
       options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
       this.sendChromeMessage(options);
