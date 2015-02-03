@@ -305,7 +305,8 @@
 
 .call-tree-item:not([origin="content"]) .call-tree-name,
 .call-tree-item:not([origin="content"]) .call-tree-url,
-.call-tree-item:not([origin="content"]) .call-tree-line {
+.call-tree-item:not([origin="content"]) .call-tree-line,
+.call-tree-item:not([origin="content"]) .call-tree-column {
   /* Style chrome and non-JS nodes differently. */
   opacity: 0.6;
 }
@@ -323,9 +324,13 @@
   color: var(--theme-highlight-blue);
 }
 
-
 .call-tree-line {
   color: var(--theme-highlight-orange);
+}
+
+.call-tree-column {
+  color: var(--theme-highlight-orange);
+  opacity: 0.6;
 }
 
 .call-tree-host {
@@ -334,8 +339,10 @@
   color: var(--theme-content-color2);
 }
 
+.call-tree-name[value=""],
 .call-tree-url[value=""],
 .call-tree-line[value=""],
+.call-tree-column[value=""],
 .call-tree-host[value=""] {
   display: none;
 }
