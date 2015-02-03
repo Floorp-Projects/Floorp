@@ -74,7 +74,8 @@ struct ManifestDirective
     int aLineNo, char* const* aArgv);
   void (nsChromeRegistry::*regfunc)(
     nsChromeRegistry::ManifestProcessingContext& aCx,
-    int aLineNo, char* const* aArgv, int aFlags);
+    int aLineNo, char* const* aArgv,
+    bool aPlatform, bool aContentAccessible);
 #ifdef MOZ_B2G_LOADER
   // The function to handle the directive for XPT Only parsing.
   void (*xptonlyfunc)(
@@ -486,8 +487,6 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
 
   NS_NAMED_LITERAL_STRING(kPlatform, "platform");
   NS_NAMED_LITERAL_STRING(kContentAccessible, "contentaccessible");
-  NS_NAMED_LITERAL_STRING(kRemoteEnabled, "remoteenabled");
-  NS_NAMED_LITERAL_STRING(kRemoteRequired, "remoterequired");
   NS_NAMED_LITERAL_STRING(kApplication, "application");
   NS_NAMED_LITERAL_STRING(kAppVersion, "appversion");
   NS_NAMED_LITERAL_STRING(kGeckoVersion, "platformversion");
@@ -685,7 +684,8 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
 #if defined(MOZ_WIDGET_ANDROID)
     TriState stTablet = eUnspecified;
 #endif
-    int flags = 0;
+    bool platform = false;
+    bool contentAccessible = false;
 
     while ((token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
            ok) {
@@ -710,28 +710,10 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
       }
 #endif
 
-      if (directive->contentflags) {
-        bool flag;
-        if (CheckFlag(kPlatform, wtoken, flag)) {
-          if (flag)
-            flags |= nsChromeRegistry::PLATFORM_PACKAGE;
-          continue;
-        }
-        if (CheckFlag(kContentAccessible, wtoken, flag)) {
-          if (flag)
-            flags |= nsChromeRegistry::CONTENT_ACCESSIBLE;
-          continue;
-        }
-        if (CheckFlag(kRemoteEnabled, wtoken, flag)) {
-          if (flag)
-            flags |= nsChromeRegistry::REMOTE_ALLOWED;
-          continue;
-        }
-        if (CheckFlag(kRemoteRequired, wtoken, flag)) {
-          if (flag)
-            flags |= nsChromeRegistry::REMOTE_REQUIRED;
-          continue;
-        }
+      if (directive->contentflags &&
+          (CheckFlag(kPlatform, wtoken, platform) ||
+           CheckFlag(kContentAccessible, wtoken, contentAccessible))) {
+        continue;
       }
 
       bool xpcNativeWrappers = true; // Dummy for CheckFlag.
@@ -783,7 +765,7 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
       }
 
       (nsChromeRegistry::gChromeRegistry->*(directive->regfunc))(
-        chromecx, line, argv, flags);
+        chromecx, line, argv, platform, contentAccessible);
     } else if (directive->ischrome || !aChromeOnly) {
       if (directive->isContract) {
         CachedDirective* cd = contracts.AppendElement();

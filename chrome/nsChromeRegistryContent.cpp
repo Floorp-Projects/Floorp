@@ -257,7 +257,7 @@ nsresult nsChromeRegistryContent::UpdateSelectedLocale()
 void
 nsChromeRegistryContent::ManifestContent(ManifestProcessingContext& cx,
                                          int lineno, char *const * argv,
-                                         int flags)
+                                         bool platform, bool contentaccessible)
 {
   CONTENT_NOTREACHED();
 }
@@ -265,7 +265,8 @@ nsChromeRegistryContent::ManifestContent(ManifestProcessingContext& cx,
 void
 nsChromeRegistryContent::ManifestLocale(ManifestProcessingContext& cx,
                                         int lineno,
-                                        char *const * argv, int flags)
+                                        char *const * argv, bool platform,
+                                        bool contentaccessible)
 {
   CONTENT_NOTREACHED();
 }
@@ -273,14 +274,16 @@ nsChromeRegistryContent::ManifestLocale(ManifestProcessingContext& cx,
 void
 nsChromeRegistryContent::ManifestSkin(ManifestProcessingContext& cx,
                                       int lineno,
-                                      char *const * argv, int flags)
+                                      char *const * argv, bool platform,
+                                      bool contentaccessible)
 {
   CONTENT_NOTREACHED();
 }
 
 void
 nsChromeRegistryContent::ManifestOverlay(ManifestProcessingContext& cx, int lineno,
-                                         char *const * argv, int flags)
+                                         char *const * argv, bool platform,
+                                         bool contentaccessible)
 {
   CONTENT_NOTREACHED();
 }
@@ -288,7 +291,8 @@ nsChromeRegistryContent::ManifestOverlay(ManifestProcessingContext& cx, int line
 void
 nsChromeRegistryContent::ManifestStyle(ManifestProcessingContext& cx,
                                        int lineno,
-                                       char *const * argv, int flags)
+                                       char *const * argv, bool platform,
+                                       bool contentaccessible)
 {
   CONTENT_NOTREACHED();
 }
@@ -296,7 +300,8 @@ nsChromeRegistryContent::ManifestStyle(ManifestProcessingContext& cx,
 void
 nsChromeRegistryContent::ManifestOverride(ManifestProcessingContext& cx,
                                           int lineno,
-                                          char *const * argv, int flags)
+                                          char *const * argv, bool platform,
+                                          bool contentaccessible)
 {
   CONTENT_NOTREACHED();
 }
@@ -304,7 +309,8 @@ nsChromeRegistryContent::ManifestOverride(ManifestProcessingContext& cx,
 void
 nsChromeRegistryContent::ManifestResource(ManifestProcessingContext& cx,
                                           int lineno,
-                                          char *const * argv, int flags)
+                                          char *const * argv, bool platform,
+                                          bool contentaccessible)
 {
   CONTENT_NOTREACHED();
 }
