@@ -236,13 +236,15 @@ describe("loop.shared.mixins", function() {
     });
 
     describe("Events", function() {
-      var localElement, remoteElement;
+      var localElement, remoteElement, screenShareElement;
 
       beforeEach(function() {
         sandbox.stub(view, "getDOMNode").returns({
           querySelector: function(classSelector) {
             if (classSelector.contains("local")) {
-              return localElement;
+                return localElement;
+            } else if (classSelector.contains("screen")) {
+                return screenShareElement;
             }
             return remoteElement;
           }
@@ -275,6 +277,19 @@ describe("loop.shared.mixins", function() {
 
           expect(remoteElement.style.height).eql("100%");
         });
+
+        it("should update the height on the screen share stream element", function() {
+          screenShareElement = {
+            offsetWidth: 100,
+            offsetHeight: 100,
+            style: { height: "0%" }
+          };
+
+          rootObject.events.resize();
+          sandbox.clock.tick(10);
+
+          expect(screenShareElement.style.height).eql("100%");
+        });
       });
 
       describe("orientationchange", function() {
@@ -302,6 +317,19 @@ describe("loop.shared.mixins", function() {
           sandbox.clock.tick(10);
 
           expect(remoteElement.style.height).eql("100%");
+        });
+
+        it("should update the height on the screen share stream element", function() {
+          screenShareElement = {
+            offsetWidth: 100,
+            offsetHeight: 100,
+            style: { height: "0%" }
+          };
+
+          rootObject.events.orientationchange();
+          sandbox.clock.tick(10);
+
+          expect(screenShareElement.style.height).eql("100%");
         });
       });
 

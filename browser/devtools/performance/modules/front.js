@@ -13,11 +13,22 @@ loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
 loader.lazyRequireGetter(this, "TimelineFront",
   "devtools/server/actors/timeline", true);
+loader.lazyRequireGetter(this, "MemoryFront",
+  "devtools/server/actors/memory", true);
+
 loader.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/toolkit/DevToolsUtils");
 
 loader.lazyImporter(this, "gDevTools",
   "resource:///modules/devtools/gDevTools.jsm");
+
+loader.lazyImporter(this, "setTimeout",
+  "resource://gre/modules/Timer.jsm");
+loader.lazyImporter(this, "clearTimeout",
+  "resource://gre/modules/Timer.jsm");
+
+// How often do we pull allocation sites from the memory actor.
+const DEFAULT_ALLOCATION_SITES_PULL_TIMEOUT = 200; // ms
 
 /**
  * A cache of all PerformanceActorsConnection instances.
@@ -45,6 +56,25 @@ SharedPerformanceActors.forTarget = function(target) {
 };
 
 /**
+ * A dummy front decorated with the provided methods.
+ *
+ * @param array blueprint
+ *        A list of [funcName, retVal] describing the class.
+ */
+function MockedFront(blueprint) {
+  EventEmitter.decorate(this);
+
+  for (let [funcName, retVal] of blueprint) {
+    this[funcName] = (x => x).bind(this, retVal);
+  }
+}
+
+MockedFront.prototype = {
+  initialize: function() {},
+  destroy: function() {}
+};
+
+/**
  * A connection to underlying actors (profiler, memory, framerate, etc.)
  * shared by all tools in a target.
  *
@@ -67,7 +97,7 @@ function PerformanceActorsConnection(target) {
 PerformanceActorsConnection.prototype = {
   /**
    * Initializes a connection to the profiler and other miscellaneous actors.
-   * If already open, nothing happens.
+   * If in the process of opening, or already open, nothing happens.
    *
    * @return object
    *         A promise that is resolved once the connection is established.
@@ -80,11 +110,13 @@ PerformanceActorsConnection.prototype = {
     // Local debugging needs to make the target remote.
     yield this._target.makeRemote();
 
-    // Sets `this._profiler`
+    // Sets `this._profiler`, `this._timeline` and `this._memory`.
+    // Only initialize the timeline and memory fronts if the respective actors
+    // are available. Older Gecko versions don't have existing implementations,
+    // in which case all the methods we need can be easily mocked.
     yield this._connectProfilerActor();
-
-    // Sets or shims `this._timeline`
     yield this._connectTimelineActor();
+    yield this._connectMemoryActor();
 
     this._connected = true;
 
@@ -94,10 +126,10 @@ PerformanceActorsConnection.prototype = {
   /**
    * Destroys this connection.
    */
-  destroy: function () {
-    this._disconnectActors();
+  destroy: Task.async(function*() {
+    yield this._disconnectActors();
     this._connected = false;
-  },
+  }),
 
   /**
    * Initializes a connection to the profiler actor.
@@ -126,46 +158,51 @@ PerformanceActorsConnection.prototype = {
 
   /**
    * Initializes a connection to a timeline actor.
+   * TODO: use framework level feature detection from bug 1069673
    */
   _connectTimelineActor: function() {
-    // Only initialize the timeline front if the respective actor is available.
-    // Older Gecko versions don't have an existing implementation, in which case
-    // all the methods we need can be easily mocked.
-    //
-    // If the timeline actor exists, all underlying actors (memory, framerate) exist,
-    // with the expected methods and behaviour. If using the Performance tool,
-    // and timeline actor does not exist (FxOS devices < Gecko 35),
-    // then just use the mocked actor and do not display timeline data.
-    //
-    // TODO use framework level feature detection from bug 1069673
     if (this._target.form && this._target.form.timelineActor) {
       this._timeline = new TimelineFront(this._target.client, this._target.form);
     } else {
-      this._timeline = {
-        start: () => 0,
-        stop: () => 0,
-        isRecording: () => false,
-        on: () => null,
-        off: () => null,
-        once: () => promise.reject(),
-        destroy: () => null
-      };
+      this._timeline = new MockedFront([
+        ["start", 0],
+        ["stop", 0]
+      ]);
+    }
+  },
+
+  /**
+   * Initializes a connection to a memory actor.
+   * TODO: use framework level feature detection from bug 1069673
+   */
+  _connectMemoryActor: function() {
+    if (this._target.form && this._target.form.memoryActor) {
+      this._memory = new MemoryFront(this._target.client, this._target.form);
+    } else {
+      this._memory = new MockedFront([
+        ["attach"],
+        ["detach"],
+        ["startRecordingAllocations", 0],
+        ["stopRecordingAllocations", 0],
+        ["getAllocations"]
+      ]);
     }
   },
 
   /**
    * Closes the connections to non-profiler actors.
    */
-  _disconnectActors: function () {
-    this._timeline.destroy();
-  },
+  _disconnectActors: Task.async(function* () {
+    yield this._timeline.destroy();
+    yield this._memory.destroy();
+  }),
 
   /**
    * Sends the request over the remote debugging protocol to the
    * specified actor.
    *
    * @param string actor
-   *        The designated actor. Currently supported: "profiler", "timeline".
+   *        Currently supported: "profiler", "timeline", "memory".
    * @param string method
    *        Method to call on the backend.
    * @param any args [optional]
@@ -188,6 +225,11 @@ PerformanceActorsConnection.prototype = {
     if (actor == "timeline") {
       return this._timeline[method].apply(this._timeline, args);
     }
+
+    // Handle requests to the memory actor.
+    if (actor == "memory") {
+      return this._memory[method].apply(this._memory, args);
+    }
   }
 };
 
@@ -208,67 +250,140 @@ function PerformanceFront(connection) {
   connection._timeline.on("frames", (delta, frames) => this.emit("frames", delta, frames));
   connection._timeline.on("memory", (delta, measurement) => this.emit("memory", delta, measurement));
   connection._timeline.on("ticks", (delta, timestamps) => this.emit("ticks", delta, timestamps));
+
+  this._pullAllocationSites = this._pullAllocationSites.bind(this);
+  this._sitesPullTimeout = 0;
 }
 
 PerformanceFront.prototype = {
   /**
    * Manually begins a recording session.
    *
-   * @param object timelineOptions
-   *        An options object to pass to the timeline front. Supported
-   *        properties are `withTicks` and `withMemory`.
+   * @param object options
+   *        An options object to pass to the actors. Supported properties are
+   *        `withTicks`, `withMemory` and `withAllocations`.
    * @return object
    *         A promise that is resolved once recording has started.
    */
-  startRecording: Task.async(function*(timelineOptions = {}) {
-    let profilerStatus = yield this._request("profiler", "isActive");
-    let profilerStartTime;
+  startRecording: Task.async(function*(options = {}) {
+    // All actors are started asynchronously over the remote debugging protocol.
+    // Get the corresponding start times from each one of them.
+    let profilerStartTime = yield this._startProfiler();
+    let timelineStartTime = yield this._startTimeline(options);
+    let memoryStartTime = yield this._startMemory(options);
 
-    // Start the profiler only if it wasn't already active. The built-in
-    // nsIPerformance module will be kept recording, because it's the same instance
-    // for all targets and interacts with the whole platform, so we don't want
-    // to affect other clients by stopping (or restarting) it.
-    if (!profilerStatus.isActive) {
-      // Extend the profiler options so that protocol.js doesn't modify the original.
-      let profilerOptions = extend({}, this._customProfilerOptions);
-      yield this._request("profiler", "startProfiler", profilerOptions);
-      profilerStartTime = 0;
-      this.emit("profiler-activated");
-    } else {
-      profilerStartTime = profilerStatus.currentTime;
-      this.emit("profiler-already-active");
-    }
-
-    // The timeline actor is target-dependent, so just make sure it's recording.
-    // It won't, however, be available in older Geckos (FF < 35).
-    let timelineStartTime = yield this._request("timeline", "start", timelineOptions);
-
-    // Return the start times from the two actors. They will be used to
-    // synchronize the profiler and timeline data.
     return {
       profilerStartTime,
-      timelineStartTime
+      timelineStartTime,
+      memoryStartTime
     };
   }),
 
   /**
    * Manually ends the current recording session.
    *
+   * @param object options
+   *        @see PerformanceFront.prototype.startRecording
    * @return object
    *         A promise that is resolved once recording has stopped,
-   *         with the profiler and timeline data.
+   *         with the profiler and memory data, along with all the end times.
    */
-  stopRecording: Task.async(function*() {
-    let timelineEndTime = yield this._request("timeline", "stop");
+  stopRecording: Task.async(function*(options = {}) {
+    let memoryEndTime = yield this._stopMemory(options);
+    let timelineEndTime = yield this._stopTimeline(options);
     let profilerData = yield this._request("profiler", "getProfile");
 
-    // Return the end times from the two actors. They will be used to
-    // synchronize the profiler and timeline data.
     return {
+      // Data available only at the end of a recording.
       profile: profilerData.profile,
+
+      // End times for all the actors.
       profilerEndTime: profilerData.currentTime,
-      timelineEndTime: timelineEndTime
+      timelineEndTime: timelineEndTime,
+      memoryEndTime: memoryEndTime
     };
+  }),
+
+  /**
+   * Starts the profiler actor, if necessary.
+   */
+  _startProfiler: Task.async(function *() {
+    // Start the profiler only if it wasn't already active. The built-in
+    // nsIPerformance module will be kept recording, because it's the same instance
+    // for all targets and interacts with the whole platform, so we don't want
+    // to affect other clients by stopping (or restarting) it.
+    let profilerStatus = yield this._request("profiler", "isActive");
+    if (profilerStatus.isActive) {
+      this.emit("profiler-already-active");
+      return profilerStatus.currentTime;
+    }
+
+    // Extend the profiler options so that protocol.js doesn't modify the original.
+    let profilerOptions = extend({}, this._customProfilerOptions);
+    yield this._request("profiler", "startProfiler", profilerOptions);
+
+    this.emit("profiler-activated");
+    return 0;
+  }),
+
+  /**
+   * Starts the timeline actor.
+   */
+  _startTimeline: Task.async(function *(options) {
+    // The timeline actor is target-dependent, so just make sure it's recording.
+    // It won't, however, be available in older Geckos (FF < 35).
+    return (yield this._request("timeline", "start", options));
+  }),
+
+  /**
+   * Stops the timeline actor.
+   */
+  _stopTimeline: Task.async(function *(options) {
+    return (yield this._request("timeline", "stop"));
+  }),
+
+  /**
+   * Starts the timeline actor, if necessary.
+   */
+  _startMemory: Task.async(function *(options) {
+    if (!options.withAllocations) {
+      return 0;
+    }
+    yield this._request("memory", "attach");
+    let memoryStartTime = yield this._request("memory", "startRecordingAllocations");
+    yield this._pullAllocationSites();
+    return memoryStartTime;
+  }),
+
+  /**
+   * Stops the timeline actor, if necessary.
+   */
+  _stopMemory: Task.async(function *(options) {
+    if (!options.withAllocations) {
+      return 0;
+    }
+    clearTimeout(this._sitesPullTimeout);
+    let memoryEndTime = yield this._request("memory", "stopRecordingAllocations");
+    yield this._request("memory", "detach");
+    return memoryEndTime;
+  }),
+
+  /**
+   * At regular intervals, pull allocations from the memory actor, and forward
+   * them to consumers.
+   */
+  _pullAllocationSites: Task.async(function *() {
+    let memoryData = yield this._request("memory", "getAllocations");
+
+    this.emit("allocations", {
+      sites: memoryData.allocations,
+      timestamps: memoryData.allocationsTimestamps,
+      frames: memoryData.frames,
+      counts: memoryData.counts
+    });
+
+    let delay = DEFAULT_ALLOCATION_SITES_PULL_TIMEOUT;
+    this._sitesPullTimeout = setTimeout(this._pullAllocationSites, delay);
   }),
 
   /**
@@ -285,7 +400,8 @@ PerformanceFront.prototype = {
 };
 
 /**
- * A collection of small wrappers promisifying functions invoking callbacks.
+ * Returns a promise resolved with a listing of all the tabs in the
+ * provided thread client.
  */
 function listTabs(client) {
   let deferred = promise.defer();

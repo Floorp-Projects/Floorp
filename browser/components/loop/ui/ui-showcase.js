@@ -567,6 +567,7 @@
                 React.createElement(DesktopRoomConversationView, {
                   roomStore: roomStore, 
                   dispatcher: dispatcher, 
+                  mozLoop: navigator.mozLoop, 
                   roomState: ROOM_STATES.INIT})
               )
             ), 
@@ -577,6 +578,7 @@
                 React.createElement(DesktopRoomConversationView, {
                   roomStore: roomStore, 
                   dispatcher: dispatcher, 
+                  mozLoop: navigator.mozLoop, 
                   roomState: ROOM_STATES.HAS_PARTICIPANTS})
               )
             )
