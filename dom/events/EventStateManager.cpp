@@ -3011,7 +3011,13 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       }
 
       WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
-      switch (WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent)) {
+      WheelPrefs::Action action = WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);
+      if (action == WheelPrefs::ACTION_SCROLL && gfxPrefs::AsyncPanZoomEnabled()) {
+        // When APZ is enabled, the actual scroll animation is handled by the
+        // compositor. Ignore it here.
+        action = WheelPrefs::ACTION_NONE;
+      }
+      switch (action) {
         case WheelPrefs::ACTION_SCROLL: {
           // For scrolling of default action, we should honor the mouse wheel
           // transaction.
