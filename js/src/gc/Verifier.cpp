@@ -404,7 +404,7 @@ struct VerifyPostTracer : JSTracer
 void
 gc::GCRuntime::startVerifyPostBarriers()
 {
-    if (verifyPostData || isIncrementalGCInProgress())
+    if (!JS::IsGenerationalGCEnabled(rt) || verifyPostData || isIncrementalGCInProgress())
         return;
 
     evictNursery();
