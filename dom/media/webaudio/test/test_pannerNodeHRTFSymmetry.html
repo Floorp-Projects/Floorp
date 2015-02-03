@@ -29,6 +29,8 @@ function isChannelSilent(channel) {
 function startTest() {
   var leftPanner = ctx.createPanner();
   var rightPanner = ctx.createPanner();
+  leftPanner.type = "HRTF";
+  rightPanner.type = "HRTF";
   leftPanner.setPosition(-1,0,0);
   rightPanner.setPosition(1,0,0);
 
