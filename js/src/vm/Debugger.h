@@ -128,8 +128,8 @@ class DebuggerWeakMap : private WeakMap<PreBarriered<UnbarrieredKey>, Relocatabl
 
     bool hasKeyInZone(JS::Zone *zone) {
         CountMap::Ptr p = zoneCounts.lookup(zone);
-        MOZ_ASSERT_IF(p, p->value() > 0);
-        return p;
+        MOZ_ASSERT_IF(p.found(), p->value() > 0);
+        return p.found();
     }
 
   private:

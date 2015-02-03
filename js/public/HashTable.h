@@ -210,7 +210,7 @@ class HashMap
     /************************************************** Shorthand operations */
 
     bool has(const Lookup &l) const {
-        return impl.lookup(l) != nullptr;
+        return impl.lookup(l).found();
     }
 
     // Overwrite existing value with v. Return false on oom.
@@ -441,7 +441,7 @@ class HashSet
     /************************************************** Shorthand operations */
 
     bool has(const Lookup &l) const {
-        return impl.lookup(l) != nullptr;
+        return impl.lookup(l).found();
     }
 
     // Add |u| if it is not present already. Return false on oom.
@@ -767,8 +767,6 @@ class HashTable : private AllocPolicy
     class Ptr
     {
         friend class HashTable;
-        typedef void (Ptr::* ConvertibleToBool)();
-        void nonNull() {}
 
         Entry *entry_;
 #ifdef JS_DEBUG
@@ -800,8 +798,8 @@ class HashTable : private AllocPolicy
             return entry_->isLive();
         }
 
-        operator ConvertibleToBool() const {
-            return found() ? &Ptr::nonNull : 0;
+        explicit operator bool() const {
+            return found();
         }
 
         bool operator==(const Ptr &rhs) const {
