@@ -77,6 +77,11 @@ exports.RecordingUtils.offsetAndScaleTimestamps = function(timestamps, timeOffse
 }
 
 /**
+ * Cache used in `RecordingUtils.getSamplesFromAllocations`.
+ */
+let gSamplesFromAllocationCache = new WeakMap();
+
+/**
  * Converts allocation data from the memory actor to something that follows
  * the same structure as the samples data received from the profiler.
  *
@@ -88,6 +93,11 @@ exports.RecordingUtils.offsetAndScaleTimestamps = function(timestamps, timeOffse
  *         The samples data.
  */
 exports.RecordingUtils.getSamplesFromAllocations = function(allocations) {
+  let cached = gSamplesFromAllocationCache.get(allocations);
+  if (cached) {
+    return cached;
+  }
+
   let { sites, timestamps, frames, counts } = allocations;
   let samples = [];
 
@@ -117,5 +127,6 @@ exports.RecordingUtils.getSamplesFromAllocations = function(allocations) {
     sample.frames.reverse();
   }
 
+  gSamplesFromAllocationCache.set(allocations, samples);
   return samples;
 }

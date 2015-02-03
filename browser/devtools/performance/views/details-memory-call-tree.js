@@ -15,8 +15,6 @@ let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
   initialize: function () {
     DetailsSubview.initialize.call(this);
 
-    this._cache = new WeakMap();
-
     this._onPrefChanged = this._onPrefChanged.bind(this);
     this._onLink = this._onLink.bind(this);
 
@@ -63,14 +61,7 @@ let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
    * populate the call tree.
    */
   _prepareCallTree: function (allocations, { startTime, endTime }, options) {
-    let cached = this._cache.get(allocations);
-    if (cached) {
-      var samples = cached;
-    } else {
-      var samples = RecordingUtils.getSamplesFromAllocations(allocations);
-      this._cache.set(allocations, samples);
-    }
-
+    let samples = RecordingUtils.getSamplesFromAllocations(allocations);
     let contentOnly = !Prefs.showPlatformData;
     let invertTree = PerformanceController.getPref("invert-call-tree");
 
