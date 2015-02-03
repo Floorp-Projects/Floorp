@@ -638,6 +638,8 @@ BrowserElementChild.prototype = {
     // We clear selectionStateChangedTarget if selection carets are invisible.
     if (e.visible && !isCollapsed) {
       this._selectionStateChangedTarget = e.target;
+    } else if (canPaste && isCollapsed) {
+      this._selectionStateChangedTarget = e.target;
     } else {
       this._selectionStateChangedTarget = null;
     }
@@ -1144,6 +1146,7 @@ BrowserElementChild.prototype = {
 
   _recvDoCommand: function(data) {
     if (this._isCommandEnabled(data.json.command)) {
+      this._selectionStateChangedTarget = null;
       docShell.doCommand(COMMAND_MAP[data.json.command]);
     }
   },
