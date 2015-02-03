@@ -797,7 +797,7 @@ Assembler::TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReade
 
 template <class Iter>
 static void
-TraceOneDataRelocation(JSTracer *trc, Iter *iter, MacroAssemblerARM *masm)
+TraceOneDataRelocation(JSTracer *trc, Iter *iter)
 {
     Instruction *ins = iter->cur();
     Register dest;
@@ -815,7 +815,8 @@ TraceOneDataRelocation(JSTracer *trc, Iter *iter, MacroAssemblerARM *masm)
     gc::MarkGCThingUnbarriered(trc, &ptr, "ion-masm-ptr");
 
     if (ptr != prior) {
-        masm->ma_movPatchable(Imm32(int32_t(ptr)), dest, Assembler::Always, rs, ins);
+        MacroAssemblerARM::ma_mov_patch(Imm32(int32_t(ptr)), dest, Assembler::Always, rs, ins);
+
         // L_LDR won't cause any instructions to be updated.
         if (rs != Assembler::L_LDR) {
             AutoFlushICache::flush(uintptr_t(ins), 4);
@@ -825,31 +826,30 @@ TraceOneDataRelocation(JSTracer *trc, Iter *iter, MacroAssemblerARM *masm)
 }
 
 static void
-TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader,
-                     MacroAssemblerARM *masm)
+TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader)
 {
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
         InstructionIterator iter((Instruction*)(buffer + offset));
-        TraceOneDataRelocation(trc, &iter, masm);
+        TraceOneDataRelocation(trc, &iter);
     }
 }
 
 static void
 TraceDataRelocations(JSTracer *trc, ARMBuffer *buffer,
-                     Vector<BufferOffset, 0, SystemAllocPolicy> *locs, MacroAssemblerARM *masm)
+                     Vector<BufferOffset, 0, SystemAllocPolicy> *locs)
 {
     for (unsigned int idx = 0; idx < locs->length(); idx++) {
         BufferOffset bo = (*locs)[idx];
         ARMBuffer::AssemblerBufferInstIterator iter(bo, buffer);
-        TraceOneDataRelocation(trc, &iter, masm);
+        TraceOneDataRelocation(trc, &iter);
     }
 }
 
 void
 Assembler::TraceDataRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader)
 {
-    ::TraceDataRelocations(trc, code->raw(), reader, static_cast<MacroAssemblerARM *>(Dummy));
+    ::TraceDataRelocations(trc, code->raw(), reader);
 }
 
 void
@@ -860,7 +860,6 @@ Assembler::FixupNurseryObjects(JSContext *cx, JitCode *code, CompactBufferReader
 
     uint8_t *buffer = code->raw();
     bool hasNurseryPointers = false;
-    MacroAssemblerARM *masm = static_cast<MacroAssemblerARM *>(Dummy);
 
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
@@ -877,7 +876,7 @@ Assembler::FixupNurseryObjects(JSContext *cx, JitCode *code, CompactBufferReader
 
         uint32_t index = word >> 1;
         JSObject *obj = nurseryObjects[index];
-        masm->ma_movPatchable(Imm32(int32_t(obj)), dest, Assembler::Always, rs, ins);
+        MacroAssembler::ma_mov_patch(Imm32(int32_t(obj)), dest, Assembler::Always, rs, ins);
 
         if (rs != Assembler::L_LDR) {
             // L_LDR won't cause any instructions to be updated.
@@ -930,10 +929,8 @@ Assembler::trace(JSTracer *trc)
         }
     }
 
-    if (tmpDataRelocations_.length()) {
-        ::TraceDataRelocations(trc, &m_buffer, &tmpDataRelocations_,
-                               static_cast<MacroAssemblerARM *>(this));
-    }
+    if (tmpDataRelocations_.length())
+        ::TraceDataRelocations(trc, &m_buffer, &tmpDataRelocations_);
 }
 
 void
@@ -1390,14 +1387,11 @@ Assembler::bytesNeeded() const
 
 // Write a blob of binary into the instruction stream.
 BufferOffset
-Assembler::writeInst(uint32_t x, uint32_t *dest)
+Assembler::writeInst(uint32_t x)
 {
-    if (dest == nullptr)
-        return m_buffer.putInt(x);
-
-    WriteInstStatic(x, dest);
-    return BufferOffset();
+    return m_buffer.putInt(x);
 }
+
 BufferOffset
 Assembler::writeBranchInst(uint32_t x)
 {
@@ -1421,19 +1415,40 @@ Assembler::as_nop()
 {
     return writeInst(0xe320f000);
 }
-BufferOffset
-Assembler::as_alu(Register dest, Register src1, Operand2 op2,
-                  ALUOp op, SetCond_ sc, Condition c, Instruction *instdest)
+
+static uint32_t
+EncodeAlu(Register dest, Register src1, Operand2 op2, ALUOp op, SetCond_ sc,
+          Assembler::Condition c)
 {
-    return writeInst((int)op | (int)sc | (int) c | op2.encode() |
-                     ((dest == InvalidReg) ? 0 : RD(dest)) |
-                     ((src1 == InvalidReg) ? 0 : RN(src1)), (uint32_t*)instdest);
+    return (int)op | (int)sc | (int) c | op2.encode() |
+           ((dest == InvalidReg) ? 0 : RD(dest)) |
+           ((src1 == InvalidReg) ? 0 : RN(src1));
 }
 
 BufferOffset
-Assembler::as_mov(Register dest, Operand2 op2, SetCond_ sc, Condition c, Instruction *instdest)
+Assembler::as_alu(Register dest, Register src1, Operand2 op2,
+                  ALUOp op, SetCond_ sc, Condition c)
 {
-    return as_alu(dest, InvalidReg, op2, OpMov, sc, c, instdest);
+    return writeInst(EncodeAlu(dest, src1, op2, op, sc, c));
+}
+
+BufferOffset
+Assembler::as_mov(Register dest, Operand2 op2, SetCond_ sc, Condition c)
+{
+    return as_alu(dest, InvalidReg, op2, OpMov, sc, c);
+}
+
+/* static */ void
+Assembler::as_alu_patch(Register dest, Register src1, Operand2 op2, ALUOp op, SetCond_ sc,
+                        Condition c, uint32_t *pos)
+{
+    WriteInstStatic(EncodeAlu(dest, src1, op2, op, sc, c), pos);
+}
+
+/* static */ void
+Assembler::as_mov_patch(Register dest, Operand2 op2, SetCond_ sc, Condition c, uint32_t *pos)
+{
+    as_alu_patch(dest, InvalidReg, op2, OpMov, sc, c, pos);
 }
 
 BufferOffset
@@ -1551,20 +1566,45 @@ Assembler::as_uxth(Register dest, Register src, int rotate, Condition c)
     return writeInst((int)c | SignExtend | SxUxth | RN(NoAddend) | RD(dest) | ((rotate & 3) << 10) | src.code());
 }
 
+static uint32_t
+EncodeMovW(Register dest, Imm16 imm, Assembler::Condition c)
+{
+    MOZ_ASSERT(HasMOVWT());
+    return 0x03000000 | c | imm.encode() | RD(dest);
+}
+
+static uint32_t
+EncodeMovT(Register dest, Imm16 imm, Assembler::Condition c)
+{
+    MOZ_ASSERT(HasMOVWT());
+    return 0x03400000 | c | imm.encode() | RD(dest);
+}
+
 // Not quite ALU worthy, but these are useful none the less. These also have
 // the isue of these being formatted completly differently from the standard ALU
 // operations.
 BufferOffset
-Assembler::as_movw(Register dest, Imm16 imm, Condition c, Instruction *pos)
+Assembler::as_movw(Register dest, Imm16 imm, Condition c)
 {
-    MOZ_ASSERT(HasMOVWT());
-    return writeInst(0x03000000 | c | imm.encode() | RD(dest), (uint32_t*)pos);
+    return writeInst(EncodeMovW(dest, imm, c));
 }
-BufferOffset
-Assembler::as_movt(Register dest, Imm16 imm, Condition c, Instruction *pos)
+
+/* static */ void
+Assembler::as_movw_patch(Register dest, Imm16 imm, Condition c, Instruction *pos)
 {
-    MOZ_ASSERT(HasMOVWT());
-    return writeInst(0x03400000 | c | imm.encode() | RD(dest), (uint32_t*)pos);
+    WriteInstStatic(EncodeMovW(dest, imm, c), (uint32_t*)pos);
+}
+
+BufferOffset
+Assembler::as_movt(Register dest, Imm16 imm, Condition c)
+{
+    return writeInst(EncodeMovT(dest, imm, c));
+}
+
+/* static */ void
+Assembler::as_movt_patch(Register dest, Imm16 imm, Condition c, Instruction *pos)
+{
+    WriteInstStatic(EncodeMovT(dest, imm, c), (uint32_t*)pos);
 }
 
 static const int mull_tag = 0x90;
@@ -1639,24 +1679,35 @@ Assembler::as_udiv(Register rd, Register rn, Register rm, Condition c)
 }
 
 BufferOffset
-Assembler::as_clz(Register dest, Register src, Condition c, Instruction *instdest)
+Assembler::as_clz(Register dest, Register src, Condition c)
 {
-    return writeInst(RD(dest) | src.code() | c | 0x016f0f10, (uint32_t*)instdest);
+    return writeInst(RD(dest) | src.code() | c | 0x016f0f10);
 }
-
 
 // Data transfer instructions: ldr, str, ldrb, strb. Using an int to
 // differentiate between 8 bits and 32 bits is overkill, but meh.
-BufferOffset
-Assembler::as_dtr(LoadStore ls, int size, Index mode,
-                  Register rt, DTRAddr addr, Condition c, uint32_t *dest)
+
+static uint32_t
+EncodeDtr(LoadStore ls, int size, Index mode, Register rt, DTRAddr addr, Assembler::Condition c)
 {
     MOZ_ASSERT(mode == Offset ||  (rt != addr.getBase() && pc != addr.getBase()));
     MOZ_ASSERT(size == 32 || size == 8);
-    return writeInst( 0x04000000 | ls | (size == 8 ? 0x00400000 : 0) | mode | c |
-                      RT(rt) | addr.encode(), dest);
-
+    return 0x04000000 | ls | (size == 8 ? 0x00400000 : 0) | mode | c | RT(rt) | addr.encode();
 }
+
+BufferOffset
+Assembler::as_dtr(LoadStore ls, int size, Index mode, Register rt, DTRAddr addr, Condition c)
+{
+    return writeInst(EncodeDtr(ls, size, mode, rt, addr, c));
+}
+
+/* static */ void
+Assembler::as_dtr_patch(LoadStore ls, int size, Index mode, Register rt, DTRAddr addr, Condition c,
+                        uint32_t *dest)
+{
+    WriteInstStatic(EncodeDtr(ls, size, mode, rt, addr, c), dest);
+}
+
 class PoolHintData {
   public:
     enum LoadType {
@@ -1749,7 +1800,7 @@ union PoolHintPun {
 // ldrd, etc. The size is given in bits.
 BufferOffset
 Assembler::as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
-                     Register rt, EDtrAddr addr, Condition c, uint32_t *dest)
+                     Register rt, EDtrAddr addr, Condition c)
 {
     int extra_bits2 = 0;
     int extra_bits1 = 0;
@@ -1778,7 +1829,7 @@ Assembler::as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
         MOZ_CRASH("SAY WHAT?");
     }
     return writeInst(extra_bits2 << 5 | extra_bits1 << 20 | 0x90 |
-                     addr.encode() | RT(rt) | mode | c, dest);
+                     addr.encode() | RT(rt) | mode | c);
 }
 
 BufferOffset
@@ -1797,8 +1848,8 @@ Assembler::as_Imm32Pool(Register dest, uint32_t value, Condition c)
     return m_buffer.allocEntry(1, 1, (uint8_t*)&php.raw, (uint8_t*)&value);
 }
 
-void
-Assembler::as_WritePoolEntry(Instruction *addr, Condition c, uint32_t data)
+/* static */ void
+Assembler::WritePoolEntry(Instruction *addr, Condition c, uint32_t data)
 {
     MOZ_ASSERT(addr->is<InstLDR>());
     int32_t offset = addr->encode() & 0xfff;
@@ -1865,8 +1916,8 @@ Assembler::InsertIndexIntoTag(uint8_t *load_, uint32_t index)
 // patchConstantPoolLoad takes the address of the instruction that wants to be
 // patched, and the address of the start of the constant pool, and figures
 // things out from there.
-bool
-Assembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
+void
+Assembler::PatchConstantPoolLoad(void *loadAddr, void *constPoolAddr)
 {
     PoolHintData data = *(PoolHintData*)loadAddr;
     uint32_t *instAddr = (uint32_t*) loadAddr;
@@ -1875,8 +1926,9 @@ Assembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
       case PoolHintData::PoolBOGUS:
         MOZ_CRASH("bogus load type!");
       case PoolHintData::PoolDTR:
-        Dummy->as_dtr(IsLoad, 32, Offset, data.getReg(),
-                      DTRAddr(pc, DtrOffImm(offset+4*data.getIndex() - 8)), data.getCond(), instAddr);
+        Assembler::as_dtr_patch(IsLoad, 32, Offset, data.getReg(),
+                                DTRAddr(pc, DtrOffImm(offset+4*data.getIndex() - 8)),
+                                data.getCond(), instAddr);
         break;
       case PoolHintData::PoolBranch:
         // Either this used to be a poolBranch, and the label was already bound,
@@ -1887,20 +1939,20 @@ Assembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
         // get bound later, then we want to make sure this is a load from the
         // pool entry (and the pool entry should be nullptr so it will crash).
         if (data.isValidPoolHint()) {
-            Dummy->as_dtr(IsLoad, 32, Offset, pc,
-                          DTRAddr(pc, DtrOffImm(offset+4*data.getIndex() - 8)),
-                          data.getCond(), instAddr);
+            Assembler::as_dtr_patch(IsLoad, 32, Offset, pc,
+                                    DTRAddr(pc, DtrOffImm(offset+4*data.getIndex() - 8)),
+                                    data.getCond(), instAddr);
         }
         break;
       case PoolHintData::PoolVDTR: {
         VFPRegister dest = data.getVFPReg();
         int32_t imm = offset + (data.getIndex() * 4) - 8;
         MOZ_ASSERT(-1024 < imm && imm < 1024);
-        Dummy->as_vdtr(IsLoad, dest, VFPAddr(pc, VFPOffImm(imm)), data.getCond(), instAddr);
+        Assembler::as_vdtr_patch(IsLoad, dest, VFPAddr(pc, VFPOffImm(imm)), data.getCond(),
+                                 instAddr);
         break;
       }
     }
-    return true;
 }
 
 // Atomic instruction stuff:
@@ -2136,11 +2188,19 @@ enum vfp_tags {
     VfpArith = 0x02000000
 };
 BufferOffset
-Assembler::writeVFPInst(vfp_size sz, uint32_t blob, uint32_t *dest)
+Assembler::writeVFPInst(vfp_size sz, uint32_t blob)
 {
     MOZ_ASSERT((sz & blob) == 0);
     MOZ_ASSERT((VfpTag & blob) == 0);
-    return writeInst(VfpTag | sz | blob, dest);
+    return writeInst(VfpTag | sz | blob);
+}
+
+/* static */ void
+Assembler::WriteVFPInstStatic(vfp_size sz, uint32_t blob, uint32_t *dest)
+{
+    MOZ_ASSERT((sz & blob) == 0);
+    MOZ_ASSERT((VfpTag & blob) == 0);
+    WriteInstStatic(VfpTag | sz | blob, dest);
 }
 
 // Unityped variants: all registers hold the same (ieee754 single/double)
@@ -2345,13 +2405,25 @@ Assembler::as_vcvtFixed(VFPRegister vd, bool isSigned, uint32_t fixedPoint, bool
 }
 
 // Transfer between VFP and memory.
+static uint32_t
+EncodeVdtr(LoadStore ls, VFPRegister vd, VFPAddr addr, Assembler::Condition c)
+{
+    return ls | 0x01000000 | addr.encode() | VD(vd) | c;
+}
+
 BufferOffset
 Assembler::as_vdtr(LoadStore ls, VFPRegister vd, VFPAddr addr,
-                   Condition c /* vfp doesn't have a wb option */,
-                   uint32_t *dest)
+                   Condition c /* vfp doesn't have a wb option */)
 {
     vfp_size sz = vd.isDouble() ? IsDouble : IsSingle;
-    return writeVFPInst(sz, ls | 0x01000000 | addr.encode() | VD(vd) | c, dest);
+    return writeVFPInst(sz, EncodeVdtr(ls, vd, addr, c));
+}
+
+/* static */ void
+Assembler::as_vdtr_patch(LoadStore ls, VFPRegister vd, VFPAddr addr, Condition c, uint32_t *dest)
+{
+    vfp_size sz = vd.isDouble() ? IsDouble : IsSingle;
+    WriteVFPInstStatic(sz, EncodeVdtr(ls, vd, addr, c), dest);
 }
 
 // VFP's ldm/stm work differently from the standard arm ones. You can only
@@ -2685,8 +2757,9 @@ Assembler::PatchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newVal
     Assembler::RelocStyle rs;
     DebugOnly<const uint32_t *> val = GetPtr32Target(&iter, &dest, &rs);
     MOZ_ASSERT((uint32_t)(const uint32_t *)val == uint32_t(expectedValue.value));
-    reinterpret_cast<MacroAssemblerARM*>(Dummy)->ma_movPatchable(Imm32(int32_t(newValue.value)),
-                                                                 dest, Always, rs, ptr);
+
+    MacroAssembler::ma_mov_patch(Imm32(int32_t(newValue.value)), dest, Always, rs, ptr);
+
     // L_LDR won't cause any instructions to be updated.
     if (rs != L_LDR) {
         AutoFlushICache::flush(uintptr_t(ptr), 4);
@@ -2954,7 +3027,6 @@ InstructionIterator::InstructionIterator(Instruction *i_) : i(i_)
     i = i->skipPool();
 }
 
-Assembler *Assembler::Dummy = nullptr;
 uint32_t Assembler::NopFill = 0;
 
 uint32_t

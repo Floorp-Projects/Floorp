@@ -108,10 +108,16 @@ class MacroAssemblerARM : public Assembler
     void ma_alu(Register src1, Operand op2, Register dest, ALUOp op,
                 SetCond_ sc = NoSetCond, Condition c = Always);
     void ma_nop();
+
     void ma_movPatchable(Imm32 imm, Register dest, Assembler::Condition c,
-                         RelocStyle rs, Instruction *i = nullptr);
+                         RelocStyle rs);
     void ma_movPatchable(ImmPtr imm, Register dest, Assembler::Condition c,
-                         RelocStyle rs, Instruction *i = nullptr);
+                         RelocStyle rs);
+
+    static void ma_mov_patch(Imm32 imm, Register dest, Assembler::Condition c,
+                             RelocStyle rs, Instruction *i);
+    static void ma_mov_patch(ImmPtr imm, Register dest, Assembler::Condition c,
+                             RelocStyle rs, Instruction *i);
 
     // These should likely be wrapped up as a set of macros or something like
     // that. I cannot think of a good reason to explicitly have all of this
