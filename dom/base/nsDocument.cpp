@@ -2864,7 +2864,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
 
   // Figure out if we need to apply an app default CSP or a CSP from an app manifest
-  nsIPrincipal* principal = NodePrincipal();
+  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
 
   uint16_t appStatus = principal->GetAppStatus();
   bool applyAppDefaultCSP = false;
@@ -3036,11 +3036,30 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     // speculative loads.
   }
 
+  // ----- Set sandbox flags according to CSP header
+  // The document may already have some sandbox flags set (e.g., if the
+  // document is an iframe with the sandbox attribute set).  If we have a CSP
+  // sandbox directive, intersect the CSP sandbox flags with the existing
+  // flags.  This corresponds to the _least_ permissive policy.
+  uint32_t cspSandboxFlags = SANDBOXED_NONE;
+  rv = csp->GetCSPSandboxFlags(&cspSandboxFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mSandboxFlags |= cspSandboxFlags;
+
+  if (cspSandboxFlags & SANDBOXED_ORIGIN) {
+    // If the new CSP sandbox flags do not have the allow-same-origin flag
+    // reset the document principal to a null principal
+    principal = do_CreateInstance("@mozilla.org/nullprincipal;1");
+    SetPrincipal(principal);
+  }
+
+
   rv = principal->SetCsp(csp);
   NS_ENSURE_SUCCESS(rv, rv);
 #ifdef PR_LOGGING
   PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-         ("Inserted CSP into principal %p", principal));
+         ("Inserted CSP into principal %p", principal.get()));
 #endif
 
   return NS_OK;
