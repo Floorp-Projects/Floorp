@@ -41,13 +41,23 @@
   -  on a button that remvoes all the recordings. -->
 <!ENTITY profilerUI.clearButton "Clear">
 
+<!-- LOCALIZATION NOTE (profilerUI.toolbar.*): These strings are displayed
+  -  in the toolbar on buttons that select which view is currently shown. -->
+<!ENTITY profilerUI.toolbar.waterfall "Timeline">
+<!ENTITY profilerUI.toolbar.js-calltree "JavaScript">
+<!ENTITY profilerUI.toolbar.memory-calltree "Memory">
+<!ENTITY profilerUI.toolbar.js-flamegraph "JS Flame Chart">
+<!ENTITY profilerUI.toolbar.memory-flamegraph "Memory Flame Chart">
+
 <!-- LOCALIZATION NOTE (profilerUI.table.*): These strings are displayed
   -  in the call tree headers for a recording. -->
-<!ENTITY profilerUI.table.totalDuration   "Total Time (ms)">
-<!ENTITY profilerUI.table.selfDuration    "Self Time (ms)">
+<!ENTITY profilerUI.table.totalDuration2  "Total Time">
+<!ENTITY profilerUI.table.selfDuration2   "Self Time">
 <!ENTITY profilerUI.table.totalPercentage "Total Cost">
 <!ENTITY profilerUI.table.selfPercentage  "Self Cost">
 <!ENTITY profilerUI.table.samples         "Samples">
+<!ENTITY profilerUI.table.totalAlloc      "Total Allocations">
+<!ENTITY profilerUI.table.selfAlloc       "Self Allocations">
 <!ENTITY profilerUI.table.function        "Function">
 
 <!-- LOCALIZATION NOTE (profilerUI.newtab.tooltiptext): The tooltiptext shown
