@@ -45,16 +45,18 @@ public class UpdateServiceHelper {
     // Name of the Intent extra that holds the APK path, used with ACTION_APPLY_UPDATE
     protected static final String EXTRA_PACKAGE_PATH_NAME = "packagePath";
 
+    // Name of the Intent extra for the update URL, used with ACTION_REGISTER_FOR_UPDATES
+    protected static final String EXTRA_UPDATE_URL_NAME = "updateUrl";
+
     private static final String LOGTAG = "UpdateServiceHelper";
     private static final String DEFAULT_UPDATE_LOCALE = "en-US";
-
-    private static final String UPDATE_URL;
 
     // So that updates can be disabled by tests.
     private static volatile boolean isEnabled = true;
 
     private enum Pref {
-        AUTO_DOWNLOAD_POLICY("app.update.autodownload");
+        AUTO_DOWNLOAD_POLICY("app.update.autodownload"),
+        UPDATE_URL("app.update.url.android");
 
         public final String name;
 
@@ -80,49 +82,46 @@ public class UpdateServiceHelper {
         }
     }
 
-    static {
-        final String pkgSpecial;
-        if (AppConstants.MOZ_PKG_SPECIAL != null) {
-            pkgSpecial = "-" + AppConstants.MOZ_PKG_SPECIAL;
-        } else {
-            pkgSpecial = "";
-        }
-        UPDATE_URL = "https://aus4.mozilla.org/update/4/" + AppConstants.MOZ_APP_BASENAME + "/" +
-                     AppConstants.MOZ_APP_VERSION         +
-                     "/%BUILDID%/Android_"                + AppConstants.MOZ_APP_ABI + pkgSpecial +
-                     "/%LOCALE%/"                         + AppConstants.MOZ_UPDATE_CHANNEL +
-                     "/%OS_VERSION%/default/default/"     + AppConstants.MOZILLA_VERSION +
-                     "/update.xml";
-    }
-
     @RobocopTarget
     public static void setEnabled(final boolean enabled) {
         isEnabled = enabled;
     }
 
-    public static URL getUpdateUrl(Context context, boolean force) {
+    public static URL expandUpdateUrl(Context context, String updateUrl, boolean force) {
+        if (updateUrl == null) {
+            return null;
+        }
+
         PackageManager pm = context.getPackageManager();
 
-        String locale = null;
+        String pkgSpecial = AppConstants.MOZ_PKG_SPECIAL != null ?
+                            "-" + AppConstants.MOZ_PKG_SPECIAL :
+                            "";
+        String locale = DEFAULT_UPDATE_LOCALE;
+
         try {
             ApplicationInfo info = pm.getApplicationInfo(AppConstants.ANDROID_PACKAGE_NAME, 0);
             String updateLocaleUrl = "jar:jar:file://" + info.sourceDir + "!/" + AppConstants.OMNIJAR_NAME + "!/update.locale";
 
-            locale = GeckoJarReader.getText(updateLocaleUrl);
-
-            if (locale != null)
-                locale = locale.trim();
-            else
-                locale = DEFAULT_UPDATE_LOCALE;
+            final String jarLocale = GeckoJarReader.getText(updateLocaleUrl);
+            if (jarLocale != null) {
+                locale = jarLocale.trim();
+            }
         } catch (android.content.pm.PackageManager.NameNotFoundException e) {
             // Shouldn't really be possible, but fallback to default locale
-            Log.i(LOGTAG, "Failed to read update locale file, falling back to " + DEFAULT_UPDATE_LOCALE);
-            locale = DEFAULT_UPDATE_LOCALE;
+            Log.i(LOGTAG, "Failed to read update locale file, falling back to " + locale);
         }
 
-        String url = UPDATE_URL.replace("%LOCALE%", locale).
-            replace("%OS_VERSION%", Build.VERSION.RELEASE).
-            replace("%BUILDID%", force ? "0" : AppConstants.MOZ_APP_BUILDID);
+        String url = updateUrl.replace("%PRODUCT%", AppConstants.MOZ_APP_BASENAME)
+            .replace("%VERSION%", AppConstants.MOZ_APP_VERSION)
+            .replace("%BUILD_ID%", force ? "0" : AppConstants.MOZ_APP_BUILDID)
+            .replace("%BUILD_TARGET%", "Android_" + AppConstants.MOZ_APP_ABI + pkgSpecial)
+            .replace("%LOCALE%", locale)
+            .replace("%CHANNEL%", AppConstants.MOZ_UPDATE_CHANNEL)
+            .replace("%OS_VERSION%", Build.VERSION.RELEASE)
+            .replace("%DISTRIBUTION%", "default")
+            .replace("%DISTRIBUTION_VERSION%", "default")
+            .replace("%MOZ_VERSION%", AppConstants.MOZILLA_VERSION);
 
         try {
             return new URL(url);
@@ -136,8 +135,12 @@ public class UpdateServiceHelper {
         return AppConstants.MOZ_UPDATER && isEnabled;
     }
 
+    public static void setUpdateUrl(Context context, String url) {
+        registerForUpdates(context, null, url);
+    }
+
     public static void setAutoDownloadPolicy(Context context, UpdateService.AutoDownloadPolicy policy) {
-        registerForUpdates(context, policy);
+        registerForUpdates(context, policy, null);
     }
 
     public static void checkForUpdate(Context context) {
@@ -175,19 +178,26 @@ public class UpdateServiceHelper {
             @Override public void finish() {
                 UpdateServiceHelper.registerForUpdates(context,
                     UpdateService.AutoDownloadPolicy.get(
-                      (String) prefs.get(Pref.AUTO_DOWNLOAD_POLICY.toString())));
+                        (String) prefs.get(Pref.AUTO_DOWNLOAD_POLICY.toString())),
+                      (String) prefs.get(Pref.UPDATE_URL.toString()));
             }
         });
     }
 
-    public static void registerForUpdates(Context context, UpdateService.AutoDownloadPolicy policy) {
-        if (!isUpdaterEnabled())
-            return;
-
-        Log.i(LOGTAG, "register for updates policy: " + policy.toString());
+    public static void registerForUpdates(Context context, UpdateService.AutoDownloadPolicy policy, String url) {
+        if (!isUpdaterEnabled()) {
+             return;
+        }
 
         Intent intent = createIntent(context, ACTION_REGISTER_FOR_UPDATES);
-        intent.putExtra(EXTRA_AUTODOWNLOAD_NAME, policy.value);
+
+        if (policy != null) {
+            intent.putExtra(EXTRA_AUTODOWNLOAD_NAME, policy.value);
+        }
+
+        if (url != null) {
+            intent.putExtra(EXTRA_UPDATE_URL_NAME, url);
+        }
 
         context.startService(intent);
     }
