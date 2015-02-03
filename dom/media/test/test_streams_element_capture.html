@@ -47,6 +47,7 @@ function startTest(test, token) {
     }
     vout.parentNode.removeChild(vout);
     manager.finished(vout.token);
+    removeNodeAndSource(v);
   }}(test, vout, stream);
   vout.addEventListener("ended", checkEnded, false);
 
