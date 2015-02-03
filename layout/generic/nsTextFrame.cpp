@@ -5233,10 +5233,7 @@ PaintDecorationLine(nsIFrame* aFrame,
       ToPoint(aPt), ToSize(aLineSize), aAscent, aOffset, aDecoration, aStyle,
       aVertical, aDescentLimit);
     if (aDecorationType == eNormalDecoration) {
-      aCallbacks->NotifyBeforeDecorationLine(lineColor);
-      aCtx->NewPath();
-      aCtx->Rectangle(ThebesRect(path));
-      aCallbacks->NotifyDecorationLinePathEmitted();
+      aCallbacks->PaintDecorationLine(path, lineColor);
     } else {
       aCallbacks->NotifyBeforeSelectionDecorationLine(lineColor);
       aCtx->NewPath();
