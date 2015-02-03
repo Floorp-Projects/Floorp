@@ -64,19 +64,9 @@ exports.getHighlighterUtils = function(toolbox) {
   /**
    * Does the target support custom highlighters.
    */
-  let supportsCustomHighlighters = function() {
+  let supportsCustomHighlighters = exported.supportsCustomHighlighters = () => {
     return !!target.client.traits.customHighlighters;
-  }
-
-  /**
-   * Is typeName a known custom highlighter
-   * @param {String} typeName
-   * @return {Boolean}
-   */
-  let hasCustomHighlighter = exported.hasCustomHighlighter = function(typeName) {
-    return supportsCustomHighlighters() &&
-           target.client.traits.customHighlighters.indexOf(typeName) !== -1;
-  }
+  };
 
   /**
    * Make a function that initializes the inspector before it runs.
@@ -273,12 +263,15 @@ exports.getHighlighterUtils = function(toolbox) {
    */
   let getHighlighterByType = exported.getHighlighterByType = requireInspector(
   function*(typeName) {
-    if (hasCustomHighlighter(typeName)) {
-      return yield toolbox.inspector.getHighlighterByType(typeName);
-    } else {
-      throw "The target doesn't support creating highlighters by types or " +
-        typeName + " is unknown";
+    let highlighter = null;
+
+    if (supportsCustomHighlighters()) {
+      highlighter = yield toolbox.inspector.getHighlighterByType(typeName);
     }
+
+    return highlighter || promise.reject("The target doesn't support " +
+        `creating highlighters by types or ${typeName} is unknown`);
+
   });
 
   // Return the public API

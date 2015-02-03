@@ -64,9 +64,7 @@ function HighlightersOverlay(view) {
 
   // Only initialize the overlay if at least one of the highlighter types is
   // supported
-  this.supportsHighlighters = HIGHLIGHTER_TYPES.some(type => {
-    return this.highlighterUtils.hasCustomHighlighter(type);
-  });
+  this.supportsHighlighters = this.highlighterUtils.supportsCustomHighlighters();
 }
 
 exports.HighlightersOverlay = HighlightersOverlay;
@@ -203,9 +201,6 @@ HighlightersOverlay.prototype = {
    */
   _getHighlighter: function(type) {
     let utils = this.highlighterUtils;
-    if (!utils.hasCustomHighlighter(type)) {
-      return promise.reject();
-    }
 
     if (this.promises[type]) {
       return this.promises[type];
