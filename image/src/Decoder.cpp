@@ -194,6 +194,9 @@ Decoder::Finish(ShutdownReason aReason)
     // If we're usable, do exactly what we should have when the decoder
     // completed.
     if (usable) {
+      // Not writing to the entire frame may have left us transparent.
+      PostHasTransparency();
+
       if (mInFrame) {
         PostFrameStop();
       }
