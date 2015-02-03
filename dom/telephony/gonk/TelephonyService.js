@@ -899,44 +899,93 @@ TelephonyService.prototype = {
                           this._defaultCallbackHandler.bind(this, aCallback));
   },
 
-  conferenceCall: function(aClientId, aCallback) {
-    let indexes = Object.keys(this._currentCalls[aClientId]);
-    if (indexes.length < 2) {
-      aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
-      return;
-    }
+  _conferenceCallGsm: function(aClientId, aCallback) {
+    this._sendToRilWorker(aClientId, "conferenceCall", null, response => {
+      if (!response.success) {
+        aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
+        // TODO: Bug 1124993. Deprecate it. Use callback response is enough.
+        this._notifyAllListeners("notifyConferenceError",
+                                 ["addError", response.errorMsg]);
+        return;
+      }
 
-    for (let i = 0; i < indexes.length; ++i) {
-      let call = this._currentCalls[aClientId][indexes[i]];
+      aCallback.notifySuccess();
+    });
+  },
+
+  _conferenceCallCdma: function(aClientId, aCallback) {
+    for (let index in this._currentCalls[aClientId]) {
+      let call = this._currentCalls[aClientId][index];
       if (!call.isMergeable) {
         aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
         return;
       }
     }
 
-    this._sendToRilWorker(aClientId, "conferenceCall", null, response => {
+    this._sendToRilWorker(aClientId, "cdmaFlash", null, response => {
       if (!response.success) {
         aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
-        this._notifyAllListeners("notifyConferenceError", [response.errorName,
-                                                           response.errorMsg]);
+        // TODO: Bug 1124993. Deprecate it. Use callback response is enough.
+        this._notifyAllListeners("notifyConferenceError",
+                                 ["addError", response.errorMsg]);
         return;
       }
 
-      if (response.isCdma) {
-        let indexes = Object.keys(this._currentCalls[aClientId]);
-        if (indexes.length < 2) {
-          aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
-          return;
-        }
-
-        for (let i = 0; i < indexes.length; ++i) {
-          let call = this._currentCalls[aClientId][indexes[i]];
-          call.state = RIL.CALL_STATE_ACTIVE;
-          call.isConference = true;
-          this.notifyCallStateChanged(aClientId, call);
-        }
-        this.notifyConferenceCallStateChanged(RIL.CALL_STATE_ACTIVE);
+      for (let index in this._currentCalls[aClientId]) {
+        let call = this._currentCalls[aClientId][index];
+        call.state = RIL.CALL_STATE_ACTIVE;
+        call.isConference = true;
+        this.notifyCallStateChanged(aClientId, call);
       }
+      this.notifyConferenceCallStateChanged(RIL.CALL_STATE_ACTIVE);
+
+      aCallback.notifySuccess();
+    });
+  },
+
+  conferenceCall: function(aClientId, aCallback) {
+    if (Object.keys(this._currentCalls[aClientId]).length < 2) {
+      aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
+      return;
+    }
+
+    if (this._isCdmaClient(aClientId)) {
+      this._conferenceCallCdma(aClientId, aCallback);
+    } else {
+      this._conferenceCallGsm(aClientId, aCallback);
+    }
+  },
+
+  _separateCallGsm: function(aClientId, aCallIndex, aCallback) {
+    this._sendToRilWorker(aClientId, "separateCall", { callIndex: aCallIndex },
+                          response => {
+      if (!response.success) {
+        aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
+        // TODO: Bug 1124993. Deprecate it. Use callback response is enough.
+        this._notifyAllListeners("notifyConferenceError",
+                                 ["removeError", response.errorMsg]);
+        return;
+      }
+
+      aCallback.notifySuccess();
+    });
+  },
+
+  // See 3gpp2, S.R0006-522-A v1.0. Table 4, XID 6S.
+  // Release the third party. Optionally apply a warning tone. Connect the
+  // controlling subscriber and the second party. Go to the 2-way state.
+  _separateCallCdma: function(aClientId, aCallIndex, aCallback) {
+    this._sendToRilWorker(aClientId, "cdmaFlash", null, response => {
+      if (!response.success) {
+        aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
+        // TODO: Bug 1124993. Deprecate it. Use callback response is enough.
+        this._notifyAllListeners("notifyConferenceError",
+                                 ["removeError", response.errorMsg]);
+        return;
+      }
+
+      let childCall = this._currentCalls[aClientId][CDMA_SECOND_CALL_INDEX];
+      this.notifyCallDisconnected(aClientId, childCall);
 
       aCallback.notifySuccess();
     });
@@ -949,35 +998,11 @@ TelephonyService.prototype = {
       return;
     }
 
-    let parentId = call.parentId;
-    if (parentId) {
-      this.separateCall(aClientId, parentId);
-      return;
+    if (this._isCdmaClient(aClientId)) {
+      this._separateCallCdma(aClientId, aCallIndex, aCallback);
+    } else {
+      this._separateCallGsm(aClientId, aCallIndex, aCallback);
     }
-
-    this._sendToRilWorker(aClientId, "separateCall", { callIndex: aCallIndex },
-                          response => {
-      if (!response.success) {
-        aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
-        this._notifyAllListeners("notifyConferenceError", [response.errorName,
-                                                           response.errorMsg]);
-        return;
-      }
-
-      if (response.isCdma) {
-        // See 3gpp2, S.R0006-522-A v1.0. Table 4, XID 6S.
-        let call = this._currentCalls[aClientId][aCallIndex];
-        if (!call || !call.isConference || !call.childId) {
-          aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
-          return;
-        }
-
-        let childCall = this._currentCalls[aClientId][call.childId];
-        this.notifyCallDisconnected(aClientId, childCall);
-      }
-
-      aCallback.notifySuccess();
-    });
   },
 
   hangUpConference: function(aClientId, aCallback) {
