@@ -103,13 +103,6 @@ BackCert::Init()
   if (rv != Success) {
     return rv;
   }
-  // TODO(bug XXXXXXX): We defer parsing/validating subjectPublicKeyInfo to
-  // the point where the public key is needed. For end-entity certificates, we
-  // assume that the caller will extract the public key and use it somehow; if
-  // they don't do that then we'll never know whether the key is invalid. On
-  // the other hand, if the caller never uses the key then in some ways it
-  // doesn't matter. Regardless, we should parse and validate
-  // subjectPublicKeyKeyInfo internally.
   rv = der::ExpectTagAndGetTLV(tbsCertificate, der::SEQUENCE,
                                subjectPublicKeyInfo);
   if (rv != Success) {

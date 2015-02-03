@@ -302,21 +302,33 @@ public:
                     /*optional*/ const Input* stapledOCSPresponse,
                     /*optional*/ const Input* aiaExtension) = 0;
 
-  // Check that the key size, algorithm, elliptic curve used (if applicable),
-  // and parameters of the given public key are acceptable.
+  // Check that the RSA public key size is acceptable.
   //
-  // VerifySignedData() should do the same checks that this function does, but
-  // mainly for efficiency, some keys are not passed to VerifySignedData().
-  // This function is called instead for those keys.
-  virtual Result CheckPublicKey(Input subjectPublicKeyInfo) = 0;
+  // Return Success if the key size is acceptable,
+  // Result::ERROR_INADEQUATE_KEY_SIZE if the key size is not acceptable,
+  // or another error code if another error occurred.
+  virtual Result CheckRSAPublicKeyModulusSizeInBits(
+                   EndEntityOrCA endEntityOrCA,
+                   unsigned int modulusSizeInBits) = 0;
+
+  // Check that the given named ECC curve is acceptable for ECDSA signatures.
+  //
+  // Return Success if the curve is acceptable,
+  // Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE if the curve is not acceptable,
+  // or another error code if another error occurred.
+  virtual Result CheckECDSACurveIsAcceptable(EndEntityOrCA endEntityOrCA,
+                                             NamedCurve curve) = 0;
 
   // Verify the given signature using the given public key.
   //
   // Most implementations of this function should probably forward the call
   // directly to mozilla::pkix::VerifySignedData.
   //
-  // In any case, the implementation must perform checks on the public key
-  // similar to how mozilla::pkix::CheckPublicKey() does.
+  // CheckRSAPublicKeyModulusSizeInBits or CheckECDSACurveIsAcceptable will
+  // be called before calling this function, so it is not necessary to repeat
+  // those checks in VerifySignedData. However, VerifySignedData *is*
+  // responsible for doing the mathematical verification of the public key
+  // validity as specified in NIST SP 800-56A.
   virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
                                   Input subjectPublicKeyInfo) = 0;
 

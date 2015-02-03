@@ -327,14 +327,6 @@ BuildCertChain(TrustDomain& trustDomain, Input certDER,
     return rv;
   }
 
-  // See documentation for CheckPublicKey() in pkixtypes.h for why the public
-  // key also needs to be checked here when trustDomain.VerifySignedData()
-  // should already be doing it.
-  rv = trustDomain.CheckPublicKey(cert.GetSubjectPublicKeyInfo());
-  if (rv != Success) {
-    return rv;
-  }
-
   return BuildForward(trustDomain, cert, time, requiredKeyUsageIfPresent,
                       requiredEKUIfPresent, requiredPolicy, stapledOCSPResponse,
                       0/*subCACount*/);

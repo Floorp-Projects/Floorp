@@ -82,9 +82,15 @@ public:
     return TestDigestBuf(item, digestBuf, digestBufLen);
   }
 
-  Result CheckPublicKey(Input subjectPublicKeyInfo) final override
+  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
+                                            final override
   {
-    return TestCheckPublicKey(subjectPublicKeyInfo);
+    return Success;
+  }
+
+  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) final override
+  {
+    return Success;
   }
 
   OCSPTestTrustDomain(const OCSPTestTrustDomain&) = delete;

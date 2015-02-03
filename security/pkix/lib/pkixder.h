@@ -603,8 +603,6 @@ Result DigestAlgorithmIdentifier(Reader& input,
 Result SignatureAlgorithmIdentifier(Reader& input,
                                     /*out*/ SignatureAlgorithm& algorithm);
 
-Result NamedCurveOID(Reader& input, /*out*/ NamedCurve& namedCurve);
-
 // Parses a SEQUENCE into tbs and then parses an AlgorithmIdentifier followed
 // by a BIT STRING into signedData. This handles the commonality between
 // parsing the signed/signature fields of certificates and OCSP responses. In
