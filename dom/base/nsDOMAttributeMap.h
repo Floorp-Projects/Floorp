@@ -11,7 +11,6 @@
 #define nsDOMAttributeMap_h
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
@@ -186,11 +185,9 @@ private:
   nsCOMPtr<Element> mContent;
 
   /**
-   * Cache of Attrs. It's usually empty, and thus initialized lazily.
+   * Cache of Attrs.
    */
-  mozilla::UniquePtr<AttrCache> mAttributeCache;
-
-  void EnsureAttributeCache();
+  AttrCache mAttributeCache;
 
   /**
    * SetNamedItem() (aWithNS = false) and SetNamedItemNS() (aWithNS =
