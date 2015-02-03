@@ -996,14 +996,23 @@ TelephonyService.prototype = {
                           this._defaultCallbackHandler.bind(this, aCallback));
   },
 
-  holdConference: function(aClientId, aCallback) {
-    this._sendToRilWorker(aClientId, "holdConference", null,
+  _switchConference: function(aClientId, aCallback) {
+    // Cannot hold/resume a conference in cdma.
+    if (this._isCdmaClient(aClientId)) {
+      aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
+      return;
+    }
+
+    this._sendToRilWorker(aClientId, "switchActiveCall", null,
                           this._defaultCallbackHandler.bind(this, aCallback));
   },
 
+  holdConference: function(aClientId, aCallback) {
+    this._switchConference(aClientId, aCallback);
+  },
+
   resumeConference: function(aClientId, aCallback) {
-    this._sendToRilWorker(aClientId, "resumeConference", null,
-                          this._defaultCallbackHandler.bind(this, aCallback));
+    this._switchConference(aClientId, aCallback);
   },
 
   sendUSSD: function(aClientId, aUssd, aCallback) {
