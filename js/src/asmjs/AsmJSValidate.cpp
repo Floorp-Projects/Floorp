@@ -5567,12 +5567,7 @@ class CheckSimdVectorScalarArgs
         }
 
         // Second argument is the scalar
-        Type coercedFormalType = SimdToCoercedScalarType(formalSimdType_);
-        if (!(actualType <= coercedFormalType)) {
-            return f.failf(arg, "%s is not a subtype of %s", actualType.toChars(),
-                           coercedFormalType.toChars());
-        }
-        return true;
+        return CheckSimdScalarArgs(formalSimdType_)(f, arg, argIndex, actualType, def);
     }
 };
 

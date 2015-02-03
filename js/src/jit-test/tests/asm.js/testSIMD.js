@@ -614,7 +614,6 @@ const WZF = 'var w = f4.withZ;';
 const WWF = 'var w = f4.withW;';
 
 assertAsmTypeFail('glob', USE_ASM + F32 + WXF + "function f() {var x = f4(1,2,3,4); x = w(x, 1);} return f");
-assertAsmTypeFail('glob', USE_ASM + F32 + WXF + "function f() {var x = f4(1,2,3,4); x = w(x, 1.0);} return f");
 assertAsmTypeFail('glob', USE_ASM + F32 + WXF + "function f() {var x = f4(1,2,3,4); x = w(x, x);} return f");
 assertAsmTypeFail('glob', USE_ASM + F32 + WXF + FROUND + "function f() {var x = f4(1,2,3,4); x = w(1, f32(1));} return f");
 assertAsmTypeFail('glob', USE_ASM + F32 + WXF + FROUND + "function f() {var x = f4(1,2,3,4); x = w(1., f32(1));} return f");
@@ -626,6 +625,11 @@ CheckF4(WYF + FROUND, 'var x = f4(1,2,3,4); x = w(x, f32(13.37));', [1, Math.fro
 CheckF4(WZF + FROUND, 'var x = f4(1,2,3,4); x = w(x, f32(13.37));', [1, 2, Math.fround(13.37), 4]);
 CheckF4(WWF + FROUND, 'var x = f4(1,2,3,4); x = w(x, f32(13.37));', [1, 2, 3, Math.fround(13.37)]);
 CheckF4(WWF + FROUND, 'var x = f4(1,2,3,4); x = w(x, f32(13.37) + f32(6.63));', [1, 2, 3, Math.fround(Math.fround(13.37) + Math.fround(6.63))]);
+
+CheckF4(WXF + FROUND, 'var x = f4(1,2,3,4); x = w(x, 13.37);', [Math.fround(13.37), 2, 3, 4]);
+CheckF4(WYF + FROUND, 'var x = f4(1,2,3,4); x = w(x, 13.37);', [1, Math.fround(13.37), 3, 4]);
+CheckF4(WZF + FROUND, 'var x = f4(1,2,3,4); x = w(x, 13.37);', [1, 2, Math.fround(13.37), 4]);
+CheckF4(WWF + FROUND, 'var x = f4(1,2,3,4); x = w(x, 13.37);', [1, 2, 3, Math.fround(13.37)]);
 
 const WXI = 'var w = i4.withX;';
 const WYI = 'var w = i4.withY;';
