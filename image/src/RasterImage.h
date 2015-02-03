@@ -133,12 +133,6 @@ class Decoder;
 class FrameAnimator;
 class SourceBuffer;
 
-enum class DecodeStrategy : uint8_t {
-  ASYNC,
-  SYNC_FOR_SMALL_IMAGES,
-  SYNC_IF_POSSIBLE
-};
-
 /**
  * Given a set of imgIContainer FLAG_* flags, returns those flags that can
  * affect the output of decoders.
@@ -337,13 +331,11 @@ private:
 
   /**
    * Creates and runs a decoder, either synchronously or asynchronously
-   * according to @aStrategy. Passes the provided target size @aSize and decode
+   * according to @aFlags. Passes the provided target size @aSize and decode
    * flags @aFlags to CreateDecoder. If a size decode is desired, pass Nothing
    * for @aSize.
    */
-  NS_IMETHOD Decode(DecodeStrategy aStrategy,
-                    const Maybe<nsIntSize>& aSize,
-                    uint32_t aFlags);
+  NS_IMETHOD Decode(const Maybe<nsIntSize>& aSize, uint32_t aFlags);
 
   /**
    * Creates a new decoder with a target size of @aSize and decode flags
@@ -352,8 +344,6 @@ private:
    */
   already_AddRefed<Decoder> CreateDecoder(const Maybe<nsIntSize>& aSize,
                                           uint32_t aFlags);
-
-  void WantDecodedFrames(const nsIntSize& aSize, uint32_t aFlags);
 
 private: // data
   nsIntSize                  mSize;
