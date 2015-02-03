@@ -260,15 +260,14 @@ Result
 NSSCertDBTrustDomain::VerifySignedData(const SignedDataWithSignature& signedData,
                                        Input subjectPublicKeyInfo)
 {
-  return ::mozilla::pkix::VerifySignedDataNSS(signedData, subjectPublicKeyInfo,
-                                              mMinimumNonECCBits, mPinArg);
+  return VerifySignedDataNSS(signedData, subjectPublicKeyInfo, mPinArg);
 }
 
 Result
 NSSCertDBTrustDomain::DigestBuf(Input item,
                                 /*out*/ uint8_t* digestBuf, size_t digestBufLen)
 {
-  return ::mozilla::pkix::DigestBufNSS(item, digestBuf, digestBufLen);
+  return DigestBufNSS(item, digestBuf, digestBufLen);
 }
 
 
@@ -721,10 +720,27 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
 }
 
 Result
-NSSCertDBTrustDomain::CheckPublicKey(Input subjectPublicKeyInfo)
+NSSCertDBTrustDomain::CheckRSAPublicKeyModulusSizeInBits(
+  EndEntityOrCA /*endEntityOrCA*/, unsigned int modulusSizeInBits)
 {
-  return ::mozilla::pkix::CheckPublicKeyNSS(subjectPublicKeyInfo,
-                                            mMinimumNonECCBits);
+  if (modulusSizeInBits < mMinimumNonECCBits) {
+    return Result::ERROR_INADEQUATE_KEY_SIZE;
+  }
+  return Success;
+}
+
+Result
+NSSCertDBTrustDomain::CheckECDSACurveIsAcceptable(
+  EndEntityOrCA /*endEntityOrCA*/, NamedCurve curve)
+{
+  switch (curve) {
+    case NamedCurve::secp256r1: // fall through
+    case NamedCurve::secp384r1: // fall through
+    case NamedCurve::secp521r1:
+      return Success;
+  }
+
+  return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
 }
 
 namespace {

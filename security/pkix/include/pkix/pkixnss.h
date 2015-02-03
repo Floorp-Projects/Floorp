@@ -34,7 +34,6 @@ namespace mozilla { namespace pkix {
 // Verify the given signed data using the given public key.
 Result VerifySignedDataNSS(const SignedDataWithSignature& sd,
                            Input subjectPublicKeyInfo,
-                           unsigned int minimumNonECCBits,
                            void* pkcs11PinArg);
 
 // Computes the SHA-1 hash of the data in the current item.
@@ -50,12 +49,6 @@ Result VerifySignedDataNSS(const SignedDataWithSignature& sd,
 // a way to provide a more-obviously-safe interface.
 Result DigestBufNSS(Input item, /*out*/ uint8_t* digestBuf,
                     size_t digestBufLen);
-
-// Checks, for RSA keys, that the modulus is at least the given number of bits.
-// Checks, for ECC keys, that the curve used is one of the NIST P-256, P-384,
-// or P-521 curves.
-Result CheckPublicKeyNSS(Input subjectPublicKeyInfo,
-                         unsigned int minimumNonECCBits);
 
 Result MapPRErrorCodeToResult(PRErrorCode errorCode);
 PRErrorCode MapResultToPRErrorCode(Result result);

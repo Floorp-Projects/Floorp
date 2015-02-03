@@ -70,8 +70,13 @@ public:
                               /*out*/ mozilla::pkix::TrustLevel& trustLevel)
                               MOZ_OVERRIDE;
 
-  virtual Result CheckPublicKey(mozilla::pkix::Input subjectPublicKeyInfo)
-                                MOZ_OVERRIDE;
+  virtual Result CheckRSAPublicKeyModulusSizeInBits(
+                   mozilla::pkix::EndEntityOrCA endEntityOrCA,
+                   unsigned int modulusSizeInBits) MOZ_OVERRIDE;
+
+  virtual Result CheckECDSACurveIsAcceptable(
+                   mozilla::pkix::EndEntityOrCA endEntityOrCA,
+                   mozilla::pkix::NamedCurve curve) MOZ_OVERRIDE;
 
   virtual Result VerifySignedData(
                    const mozilla::pkix::SignedDataWithSignature& signedData,
