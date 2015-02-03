@@ -133,4 +133,5 @@ function test() {
         reportCompare(true, true);
 }
 
-test();
+// TODO temporarily disabled because of bug 1123404
+//test();
