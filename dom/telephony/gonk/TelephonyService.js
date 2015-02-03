@@ -999,23 +999,12 @@ TelephonyService.prototype = {
 
   sendUSSD: function(aClientId, aUssd, aCallback) {
     this._sendToRilWorker(aClientId, "sendUSSD", { ussd: aUssd },
-                          response => {
-      if (!response.success) {
-        aCallback.notifyError(response.errorMsg);
-      } else {
-        aCallback.notifySuccess();
-      }
-    });
+                          this._defaultCallbackHandler.bind(this, aCallback));
   },
 
   cancelUSSD: function(aClientId, aCallback) {
-    this._sendToRilWorker(aClientId, "cancelUSSD", {}, response => {
-      if (!response.success) {
-        aCallback.notifyError(response.errorMsg);
-      } else {
-        aCallback.notifySuccess();
-      }
-    });
+    this._sendToRilWorker(aClientId, "cancelUSSD", {},
+                          this._defaultCallbackHandler.bind(this, aCallback));
   },
 
   get microphoneMuted() {
