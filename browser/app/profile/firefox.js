@@ -405,6 +405,9 @@ pref("browser.search.context.loadInBackground", false);
 
 pref("browser.search.showOneOffButtons", true);
 
+// comma seperated list of of engines to hide in the search panel.
+pref("browser.search.hiddenOneOffs", "");
+
 // How many times to show the new search highlight
 pref("browser.search.highlightCount", 5);
 
