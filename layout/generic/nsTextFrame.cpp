@@ -5234,9 +5234,11 @@ PaintDecorationLine(nsIFrame* aFrame,
     } else {
       aCallbacks->NotifyBeforeSelectionDecorationLine(lineColor);
     }
-    nsCSSRendering::DecorationLineToPath(aFrame, aCtx, aDirtyRect, lineColor,
-      aPt, aICoordInFrame, aLineSize, aAscent, aOffset, aDecoration, aStyle,
+    Rect path = nsCSSRendering::DecorationLineToPath(ToRect(aDirtyRect),
+      ToPoint(aPt), ToSize(aLineSize), aAscent, aOffset, aDecoration, aStyle,
       aVertical, aDescentLimit);
+    aCtx->NewPath();
+    aCtx->Rectangle(ThebesRect(path));
     if (aDecorationType == eNormalDecoration) {
       aCallbacks->NotifyDecorationLinePathEmitted();
     } else {
