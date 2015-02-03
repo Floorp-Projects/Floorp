@@ -241,6 +241,18 @@ class JS_FRIEND_API(GCCellPtr)
     uintptr_t ptr;
 };
 
+inline bool
+operator==(const GCCellPtr &ptr1, const GCCellPtr &ptr2)
+{
+    return ptr1.asCell() == ptr2.asCell();
+}
+
+inline bool
+operator!=(const GCCellPtr &ptr1, const GCCellPtr &ptr2)
+{
+    return !(ptr1 == ptr2);
+}
+
 } /* namespace JS */
 
 namespace js {
