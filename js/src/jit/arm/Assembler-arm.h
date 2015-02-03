@@ -1845,14 +1845,12 @@ class Instruction
         data = src.data;
         return *this;
     }
-
     // Since almost all instructions have condition codes, the condition code
     // extractor resides in the base class.
     void extractCond(Assembler::Condition *c) {
-        MOZ_ASSERT(data >> 28 != 0xf, "Instruction must have a condition code");
-        *c = (Assembler::Condition)(data & 0xf0000000);
+        if (data >> 28 != 0xf )
+            *c = (Assembler::Condition)(data & 0xf0000000);
     }
-
     // Get the next instruction in the instruction stream.
     // This does neat things like ignoreconstant pools and their guards.
     Instruction *next();
