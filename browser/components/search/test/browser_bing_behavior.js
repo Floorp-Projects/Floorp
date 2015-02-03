@@ -18,7 +18,7 @@ function test() {
   Services.search.currentEngine = engine;
   engine.alias = "b";
   
-  let base = "http://www.bing.com/search?q=foo&pc=MOZI";
+  let base = "https://www.bing.com/search?q=foo&pc=MOZI";
   let url;
 
   // Test search URLs (including purposes).
