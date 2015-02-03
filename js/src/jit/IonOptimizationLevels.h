@@ -107,6 +107,9 @@ class OptimizationInfo
     // are compiled.
     uint32_t compilerWarmUpThreshold_;
 
+    // Default compiler warmup threshold, unless it is overridden.
+    static const uint32_t CompilerWarmupThreshold = 1000;
+
     // How many invocations or loop iterations are needed before calls
     // are inlined, as a fraction of compilerWarmUpThreshold.
     double inliningWarmUpThresholdFactor_;
@@ -173,9 +176,9 @@ class OptimizationInfo
     }
 
     IonRegisterAllocator registerAllocator() const {
-        if (!js_JitOptions.forceRegisterAllocator)
-            return registerAllocator_;
-        return js_JitOptions.forcedRegisterAllocator;
+        if (js_JitOptions.forcedRegisterAllocator.isSome())
+            return js_JitOptions.forcedRegisterAllocator.ref();
+        return registerAllocator_;
     }
 
     bool scalarReplacementEnabled() const {
@@ -202,8 +205,8 @@ class OptimizationInfo
 
     uint32_t inliningWarmUpThreshold() const {
         uint32_t compilerWarmUpThreshold = compilerWarmUpThreshold_;
-        if (js_JitOptions.forceDefaultIonWarmUpThreshold)
-            compilerWarmUpThreshold = js_JitOptions.forcedDefaultIonWarmUpThreshold;
+        if (js_JitOptions.forcedDefaultIonWarmUpThreshold.isSome())
+            compilerWarmUpThreshold = js_JitOptions.forcedDefaultIonWarmUpThreshold.ref();
         return compilerWarmUpThreshold * inliningWarmUpThresholdFactor_;
     }
 
