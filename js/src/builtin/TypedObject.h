@@ -525,52 +525,35 @@ class TypedObject : public JSObject
                                     MutableHandleValue vp);
 
   protected:
-    static bool obj_lookupGeneric(JSContext *cx, HandleObject obj,
-                                  HandleId id, MutableHandleObject objp,
-                                  MutableHandleShape propp);
-
     static bool obj_lookupProperty(JSContext *cx, HandleObject obj,
-                                   HandlePropertyName name,
-                                   MutableHandleObject objp,
+                                   HandleId id, MutableHandleObject objp,
                                    MutableHandleShape propp);
 
-    static bool obj_lookupElement(JSContext *cx, HandleObject obj,
-                                  uint32_t index, MutableHandleObject objp,
-                                  MutableHandleShape propp);
+    static bool obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
+                                  MutableHandleObject objp, MutableHandleShape propp);
 
-    static bool obj_defineGeneric(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                                  PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
-
-    static bool obj_defineProperty(JSContext *cx, HandleObject obj,
-                                   HandlePropertyName name, HandleValue v,
+    static bool obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
                                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 
-    static bool obj_defineElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue v,
-                                  PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
-
-    static bool obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver,
-                               HandleId id, MutableHandleValue vp);
-
     static bool obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                HandlePropertyName name, MutableHandleValue vp);
+                                HandleId id, MutableHandleValue vp);
 
     static bool obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiver,
                                uint32_t index, MutableHandleValue vp);
 
-    static bool obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
-                               MutableHandleValue vp, bool strict);
-    static bool obj_setProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
+    static bool obj_setProperty(JSContext *cx, HandleObject obj, HandleId id,
                                 MutableHandleValue vp, bool strict);
+
     static bool obj_setElement(JSContext *cx, HandleObject obj, uint32_t index,
                                MutableHandleValue vp, bool strict);
 
     static bool obj_getOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
                                              MutableHandle<JSPropertyDescriptor> desc);
 
-    static bool obj_setGenericAttributes(JSContext *cx, HandleObject obj,
-                                         HandleId id, unsigned *attrsp);
+    static bool obj_setPropertyAttributes(JSContext *cx, HandleObject obj,
+                                          HandleId id, unsigned *attrsp);
 
-    static bool obj_deleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded);
+    static bool obj_deleteProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded);
 
     static bool obj_enumerate(JSContext *cx, HandleObject obj, AutoIdVector &properties);
 

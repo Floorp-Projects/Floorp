@@ -19,7 +19,7 @@ public:
   bool HasKey() const { return !!mKey.size(); }
 
   GMPErr Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                 GMPEncryptedBufferMetadata* aMetadata);
+                 const GMPEncryptedBufferMetadata* aMetadata);
 
   const Key& DecryptionKey() const { return mKey; }
 
@@ -61,14 +61,14 @@ ClearKeyDecryptionManager::~ClearKeyDecryptionManager()
 bool
 ClearKeyDecryptionManager::HasSeenKeyId(const KeyId& aKeyId) const
 {
-  CK_LOGD("ClearKeyDecryptionManager::HasSeenKeyId");
+  CK_LOGD("ClearKeyDecryptionManager::SeenKeyId %s", mDecryptors.find(aKeyId) != mDecryptors.end() ? "t" : "f");
   return mDecryptors.find(aKeyId) != mDecryptors.end();
 }
 
 bool
 ClearKeyDecryptionManager::IsExpectingKeyForKeyId(const KeyId& aKeyId) const
 {
-  CK_LOGD("ClearKeyDecryptionManager::IsExpectingKeyForKeyId");
+  CK_LOGD("ClearKeyDecryptionManager::IsExpectingKeyForId %08x...", *(uint32_t*)&aKeyId[0]);
   const auto& decryptor = mDecryptors.find(aKeyId);
   return decryptor != mDecryptors.end() && !decryptor->second->HasKey();
 }
@@ -91,7 +91,7 @@ ClearKeyDecryptionManager::GetDecryptionKey(const KeyId& aKeyId)
 void
 ClearKeyDecryptionManager::InitKey(KeyId aKeyId, Key aKey)
 {
-  CK_LOGD("ClearKeyDecryptionManager::InitKey");
+  CK_LOGD("ClearKeyDecryptionManager::InitKey %08x...", *(uint32_t*)&aKeyId[0]);
   if (IsExpectingKeyForKeyId(aKeyId)) {
     mDecryptors[aKeyId]->InitKey(aKey);
   }
@@ -100,7 +100,7 @@ ClearKeyDecryptionManager::InitKey(KeyId aKeyId, Key aKey)
 void
 ClearKeyDecryptionManager::ExpectKeyId(KeyId aKeyId)
 {
-  CK_LOGD("ClearKeyDecryptionManager::ExpectKeyId");
+  CK_LOGD("ClearKeyDecryptionManager::ExpectKeyId %08x...", *(uint32_t*)&aKeyId[0]);
   if (!HasSeenKeyId(aKeyId)) {
     mDecryptors[aKeyId] = new ClearKeyDecryptor();
   }
@@ -111,6 +111,8 @@ void
 ClearKeyDecryptionManager::ReleaseKeyId(KeyId aKeyId)
 {
   CK_LOGD("ClearKeyDecryptionManager::ReleaseKeyId");
+  MOZ_ASSERT(HasKeyForKeyId(aKeyId));
+
   ClearKeyDecryptor* decryptor = mDecryptors[aKeyId];
   if (!decryptor->Release()) {
     mDecryptors.erase(aKeyId);
@@ -119,7 +121,7 @@ ClearKeyDecryptionManager::ReleaseKeyId(KeyId aKeyId)
 
 GMPErr
 ClearKeyDecryptionManager::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                                   GMPEncryptedBufferMetadata* aMetadata)
+                                   const GMPEncryptedBufferMetadata* aMetadata)
 {
   CK_LOGD("ClearKeyDecryptionManager::Decrypt");
   KeyId keyId(aMetadata->KeyId(), aMetadata->KeyId() + aMetadata->KeyIdSize());
@@ -138,7 +140,7 @@ ClearKeyDecryptor::ClearKeyDecryptor()
 
 ClearKeyDecryptor::~ClearKeyDecryptor()
 {
-  CK_LOGD("ClearKeyDecryptor dtor; key ID = %08x...", *(uint32_t*)&mKey[0]);
+  CK_LOGD("ClearKeyDecryptor dtor; key = %08x...", *(uint32_t*)&mKey[0]);
 }
 
 void
@@ -149,7 +151,7 @@ ClearKeyDecryptor::InitKey(const Key& aKey)
 
 GMPErr
 ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                           GMPEncryptedBufferMetadata* aMetadata)
+                           const GMPEncryptedBufferMetadata* aMetadata)
 {
   CK_LOGD("ClearKeyDecryptor::Decrypt");
   // If the sample is split up into multiple encrypted subsamples, we need to

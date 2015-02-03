@@ -928,7 +928,7 @@ void nsNPAPIPluginInstance::SetWakeLock(bool aLocked)
     return;
 
   mWakeLocked = aLocked;
-  hal::ModifyWakeLock(NS_LITERAL_STRING("nsNPAPIPluginInstance"),
+  hal::ModifyWakeLock(NS_LITERAL_STRING("screen"),
                       mWakeLocked ? hal::WAKE_LOCK_ADD_ONE : hal::WAKE_LOCK_REMOVE_ONE,
                       hal::WAKE_LOCK_NO_CHANGE);
 }

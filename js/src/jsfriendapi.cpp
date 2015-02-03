@@ -707,7 +707,7 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
     RootedFunction fun(cx, iter.maybeCallee(cx));
     RootedString funname(cx);
     if (fun)
-        funname = fun->atom();
+        funname = fun->displayAtom();
 
     RootedValue thisVal(cx);
     if (iter.hasUsableAbstractFramePtr() && iter.computeThis(cx)) {
