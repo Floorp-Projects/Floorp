@@ -13,7 +13,7 @@ function test() {
   let engine = Services.search.getEngineByName("Bing");
   ok(engine, "Bing");
 
-  let base = "http://www.bing.com/search?q=foo&pc=MOZI";
+  let base = "https://www.bing.com/search?q=foo&pc=MOZI";
   let url;
 
   // Test search URLs (including purposes).
@@ -32,14 +32,14 @@ function test() {
 
   // Check search suggestion URL.
   url = engine.getSubmission("foo", "application/x-suggestions+json").uri.spec;
-  is(url, "http://api.bing.com/osjson.aspx?query=foo&form=OSDJAS&language=" + getLocale(), "Check search suggestion URL for 'foo'");
+  is(url, "https://www.bing.com/osjson.aspx?query=foo&form=OSDJAS&language=" + getLocale(), "Check search suggestion URL for 'foo'");
 
   // Check all other engine properties.
   const EXPECTED_ENGINE = {
     name: "Bing",
     alias: null,
     description: "Bing. Search by Microsoft.",
-    searchForm: "http://www.bing.com/search?q=&pc=MOZI",
+    searchForm: "https://www.bing.com/search?q=&pc=MOZI",
     type: Ci.nsISearchEngine.TYPE_MOZSEARCH,
     hidden: false,
     wrappedJSObject: {
@@ -49,7 +49,7 @@ function test() {
         {
           type: "application/x-suggestions+json",
           method: "GET",
-          template: "http://api.bing.com/osjson.aspx",
+          template: "https://www.bing.com/osjson.aspx",
           params: [
             {
               name: "query",
@@ -71,7 +71,7 @@ function test() {
         {
           type: "text/html",
           method: "GET",
-          template: "http://www.bing.com/search",
+          template: "https://www.bing.com/search",
           params: [
             {
               name: "q",
