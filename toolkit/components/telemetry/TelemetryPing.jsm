@@ -1034,7 +1034,7 @@ let Impl = {
     AsyncShutdown.sendTelemetry.addBlocker(
       "Telemetry: shutting down",
       function condition(){
-        this.shutdown();
+        return this.shutdown();
       }.bind(this));
 
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
