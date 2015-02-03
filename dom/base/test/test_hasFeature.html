@@ -24,7 +24,8 @@ function testAPIs() {
 
   var b2gOnly = (function() {
     var isAndroid = !!navigator.userAgent.contains("Android");
-    var isB2g = !isAndroid && /Mobile|Tablet/.test(navigator.userAgent);
+    var isMulet = pref("b2g.is_mulet");
+    var isB2g = isMulet || (!isAndroid && /Mobile|Tablet/.test(navigator.userAgent));
     return isB2g ? true : undefined;
   })();
 
