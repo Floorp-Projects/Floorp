@@ -45,7 +45,7 @@ public:
   explicit PannerNodeEngine(AudioNode* aNode)
     : AudioNodeEngine(aNode)
     // Please keep these default values consistent with PannerNode::PannerNode below.
-    , mPanningModelFunction(&PannerNodeEngine::HRTFPanningFunction)
+    , mPanningModelFunction(&PannerNodeEngine::EqualPowerPanningFunction)
     , mDistanceModelFunction(&PannerNodeEngine::InverseGainFunction)
     , mPosition()
     , mOrientation(1., 0., 0.)
@@ -228,7 +228,7 @@ PannerNode::PannerNode(AudioContext* aContext)
               ChannelCountMode::Clamped_max,
               ChannelInterpretation::Speakers)
   // Please keep these default values consistent with PannerNodeEngine::PannerNodeEngine above.
-  , mPanningModel(PanningModelType::HRTF)
+  , mPanningModel(PanningModelType::Equalpower)
   , mDistanceModel(DistanceModelType::Inverse)
   , mPosition()
   , mOrientation(1., 0., 0.)
