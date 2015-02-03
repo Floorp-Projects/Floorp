@@ -1671,10 +1671,15 @@ void MediaDecoderStateMachine::PlayInternal()
 
 void MediaDecoderStateMachine::ResetPlayback()
 {
+  // We should be reseting because we're seeking, shutting down, or
+  // entering dormant state. We could also be in the process of going dormant,
+  // and have just switched to exiting dormant before we finished entering
+  // dormant, hence the DECODING_NONE case below.
   AssertCurrentThreadInMonitor();
   MOZ_ASSERT(mState == DECODER_STATE_SEEKING ||
              mState == DECODER_STATE_SHUTDOWN ||
-             mState == DECODER_STATE_DORMANT);
+             mState == DECODER_STATE_DORMANT ||
+             mState == DECODER_STATE_DECODING_NONE);
 
   // Audio thread should've been stopped at the moment. Otherwise, AudioSink
   // might be accessing AudioQueue outside of the decoder monitor while we
