@@ -25,7 +25,14 @@
   -moz-border-end-color: var(--theme-splitter-color);
 }
 
-/* Overview Panel */
+#performance-toolbar-controls-detail-views > toolbarbutton {
+  min-width: 0;
+}
+
+#performance-toolbar-controls-detail-views .toolbarbutton-text {
+  -moz-padding-start: 4px;
+  -moz-padding-end: 8px;
+}
 
 #record-button {
   list-style-image: url(profiler-stopwatch.svg);
@@ -45,11 +52,13 @@
   list-style-image: url(performance-icons.svg#details-waterfall);
 }
 
-#select-calltree-view {
+#select-js-calltree-view,
+#select-memory-calltree-view {
   list-style-image: url(performance-icons.svg#details-call-tree);
 }
 
-#select-flamegraph-view {
+#select-js-flamegraph-view,
+#select-memory-flamegraph-view {
   list-style-image: url(performance-icons.svg#details-flamegraph);
 }
 
@@ -61,27 +70,42 @@
   overflow: auto;
 }
 
+.call-tree-cells-container[allocations-hidden] .call-tree-cell[type="allocations"],
+.call-tree-cells-container[allocations-hidden] .call-tree-cell[type="self-allocations"],
 .call-tree-cells-container[categories-hidden] .call-tree-category {
   display: none;
+}
+
+.call-tree-header {
+  font-size: 90%;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
 }
 
 .call-tree-header[type="duration"],
 .call-tree-cell[type="duration"],
 .call-tree-header[type="self-duration"],
 .call-tree-cell[type="self-duration"] {
-  width: 9em;
+  width: 6vw;
 }
 
 .call-tree-header[type="percentage"],
 .call-tree-cell[type="percentage"],
 .call-tree-header[type="self-percentage"],
 .call-tree-cell[type="self-percentage"] {
-  width: 6em;
+  width: 5vw;
 }
 
 .call-tree-header[type="samples"],
 .call-tree-cell[type="samples"] {
-  width: 5em;
+  width: 4vw;
+}
+
+.call-tree-header[type="allocations"],
+.call-tree-cell[type="allocations"],
+.call-tree-header[type="self-allocations"],
+.call-tree-cell[type="self-allocations"] {
+  width: 7vw;
 }
 
 .call-tree-header[type="function"],
@@ -142,7 +166,8 @@
 
 .call-tree-item:not([origin="content"]) .call-tree-name,
 .call-tree-item:not([origin="content"]) .call-tree-url,
-.call-tree-item:not([origin="content"]) .call-tree-line {
+.call-tree-item:not([origin="content"]) .call-tree-line,
+.call-tree-item:not([origin="content"]) .call-tree-column {
   /* Style chrome and non-JS nodes differently. */
   opacity: 0.6;
 }
@@ -164,14 +189,21 @@
   color: var(--theme-highlight-orange);
 }
 
+.call-tree-column {
+  color: var(--theme-highlight-orange);
+  opacity: 0.6;
+}
+
 .call-tree-host {
   -moz-margin-start: 8px !important;
   font-size: 90%;
   color: var(--theme-content-color2);
 }
 
+.call-tree-name[value=""],
 .call-tree-url[value=""],
 .call-tree-line[value=""],
+.call-tree-column[value=""],
 .call-tree-host[value=""] {
   display: none;
 }

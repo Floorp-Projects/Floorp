@@ -1387,8 +1387,7 @@ inline bool
 js::GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
                 MutableHandleValue vp)
 {
-    MOZ_ASSERT(!!obj->getOps()->getGeneric == !!obj->getOps()->getProperty);
-    if (GenericIdOp op = obj->getOps()->getGeneric)
+    if (GetPropertyOp op = obj->getOps()->getProperty)
         return op(cx, obj, receiver, id, vp);
     return NativeGetProperty(cx, obj.as<NativeObject>(), receiver, id, vp);
 }
@@ -1396,7 +1395,7 @@ js::GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId
 inline bool
 js::GetPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
-    if (obj->getOps()->getGeneric)
+    if (obj->getOps()->getProperty)
         return false;
     return NativeGetPropertyNoGC(cx, &obj->as<NativeObject>(), receiver, id, vp);
 }
@@ -1405,7 +1404,7 @@ inline bool
 js::SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
                 HandleId id, MutableHandleValue vp, bool strict)
 {
-    if (obj->getOps()->setGeneric)
+    if (obj->getOps()->setProperty)
         return JSObject::nonNativeSetProperty(cx, obj, receiver, id, vp, strict);
     return NativeSetProperty(cx, obj.as<NativeObject>(), receiver, id, Qualified, vp, strict);
 }
@@ -1414,7 +1413,7 @@ inline bool
 js::SetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
                MutableHandleValue vp, bool strict)
 {
-    if (obj->getOps()->setElement)
+    if (obj->getOps()->setProperty)
         return JSObject::nonNativeSetElement(cx, obj, receiver, index, vp, strict);
     return NativeSetElement(cx, obj.as<NativeObject>(), receiver, index, vp, strict);
 }

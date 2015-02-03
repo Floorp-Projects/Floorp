@@ -842,6 +842,7 @@ nsDocShell::nsDocShell():
     mInPrivateBrowsing(false),
     mUseRemoteTabs(false),
     mDeviceSizeIsPageSize(false),
+    mWindowDraggingAllowed(false),
     mCanExecuteScripts(false),
     mFiredUnloadEvent(false),
     mEODForCurrentDocument(false),
@@ -3011,6 +3012,35 @@ nsDocShell::AddProfileTimelineMarker(UniquePtr<TimelineMarker>& aMarker)
   if (mProfileTimelineRecording) {
     mProfileTimelineMarkers.AppendElement(aMarker.release());
   }
+}
+
+NS_IMETHODIMP
+nsDocShell::SetWindowDraggingAllowed(bool aValue)
+{
+  nsRefPtr<nsDocShell> parent = GetParentDocshell();
+  if (!aValue && mItemType == typeChrome && !parent) {
+    // Window dragging is always allowed for top level
+    // chrome docshells.
+    return NS_ERROR_FAILURE;
+  }
+  mWindowDraggingAllowed = aValue;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetWindowDraggingAllowed(bool* aValue)
+{
+  // window dragging regions in CSS (-moz-window-drag:drag)
+  // can be slow. Default behavior is to only allow it for
+  // chrome top level windows.
+  nsRefPtr<nsDocShell> parent = GetParentDocshell();
+  if (mItemType == typeChrome && !parent) {
+    // Top level chrome window
+    *aValue = true;
+  } else {
+    *aValue = mWindowDraggingAllowed;
+  }
+  return NS_OK;
 }
 
 void

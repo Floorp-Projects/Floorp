@@ -298,9 +298,9 @@ function waitForWidgetsRendered(panel) {
   let {
     EVENTS,
     OverviewView,
-    CallTreeView,
     WaterfallView,
-    FlameGraphView
+    JsCallTreeView,
+    JsFlameGraphView
   } = panel.panelWin;
 
   return Promise.all([
@@ -309,8 +309,8 @@ function waitForWidgetsRendered(panel) {
     once(OverviewView, EVENTS.FRAMERATE_GRAPH_RENDERED),
     once(OverviewView, EVENTS.OVERVIEW_RENDERED),
     once(WaterfallView, EVENTS.WATERFALL_RENDERED),
-    once(CallTreeView, EVENTS.CALL_TREE_RENDERED),
-    once(FlameGraphView, EVENTS.FLAMEGRAPH_RENDERED)
+    once(JsCallTreeView, EVENTS.JS_CALL_TREE_RENDERED),
+    once(JsFlameGraphView, EVENTS.JS_FLAMEGRAPH_RENDERED)
   ]);
 }
 

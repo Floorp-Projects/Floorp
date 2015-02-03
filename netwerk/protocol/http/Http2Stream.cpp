@@ -477,6 +477,11 @@ Http2Stream::GenerateOpen()
                                             head->IsConnect(),
                                             compressedData);
 
+  int64_t clVal = mSession->Compressor()->GetParsedContentLength();
+  if (clVal != -1) {
+    mRequestBodyLenRemaining = clVal;
+  }
+
   // Determine whether to put the fin bit on the header frame or whether
   // to wait for a data packet to put it on.
   uint8_t firstFrameFlags =  Http2Session::kFlag_PRIORITY;
@@ -581,42 +586,6 @@ Http2Stream::GenerateOpen()
     compressedData.Length() * 100 /
     (11 + head->RequestURI().Length() +
      mFlatHttpRequestHeaders.Length());
-
-  const char *beginBuffer = mFlatHttpRequestHeaders.BeginReading();
-  int32_t crlfIndex = mFlatHttpRequestHeaders.Find("\r\n");
-  while (true) {
-    int32_t startIndex = crlfIndex + 2;
-
-    crlfIndex = mFlatHttpRequestHeaders.Find("\r\n", false, startIndex);
-    if (crlfIndex == -1)
-      break;
-
-    int32_t colonIndex = mFlatHttpRequestHeaders.Find(":", false, startIndex,
-                                                      crlfIndex - startIndex);
-    if (colonIndex == -1)
-      break;
-
-    nsDependentCSubstring name = Substring(beginBuffer + startIndex,
-                                           beginBuffer + colonIndex);
-    // all header names are lower case in spdy
-    ToLowerCase(name);
-
-    if (name.EqualsLiteral("content-length")) {
-      nsCString *val = new nsCString();
-      int32_t valueIndex = colonIndex + 1;
-      while (valueIndex < crlfIndex && beginBuffer[valueIndex] == ' ')
-        ++valueIndex;
-
-      nsDependentCSubstring v = Substring(beginBuffer + valueIndex,
-                                          beginBuffer + crlfIndex);
-      val->Append(v);
-
-      int64_t len;
-      if (nsHttp::ParseInt64(val->get(), nullptr, &len))
-        mRequestBodyLenRemaining = len;
-      break;
-    }
-  }
 
   mFlatHttpRequestHeaders.Truncate();
   Telemetry::Accumulate(Telemetry::SPDY_SYN_RATIO, ratio);
