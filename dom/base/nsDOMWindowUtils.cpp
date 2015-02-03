@@ -3889,6 +3889,28 @@ nsDOMWindowUtils::SetAudioVolume(float aVolume)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SetChromeMargin(int32_t aTop,
+                                  int32_t aRight,
+                                  int32_t aBottom,
+                                  int32_t aLeft)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  if (window) {
+    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(window->GetDocShell());
+    if (baseWindow) {
+      nsCOMPtr<nsIWidget> widget;
+      baseWindow->GetMainWidget(getter_AddRefs(widget));
+      if (widget) {
+        nsIntMargin margins(aTop, aRight, aBottom, aLeft);
+        return widget->SetNonClientMargins(margins);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::XpconnectArgument(nsIDOMWindowUtils* aThis)
 {
   // Do nothing.

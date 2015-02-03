@@ -2016,6 +2016,8 @@ NS_IMETHODIMP nsCocoaWindow::SetNonClientMargins(nsIntMargin &margins)
 
   SetDrawsInTitlebar(margins.top == 0);
 
+  return NS_OK;
+
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
