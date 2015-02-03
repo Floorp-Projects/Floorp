@@ -89,7 +89,7 @@ private:
   virtual bool RecvBeginAsyncShutdown() MOZ_OVERRIDE;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
-  virtual void ProcessingError(Result aWhat) MOZ_OVERRIDE;
+  virtual void ProcessingError(Result aCode, const char* aReason) MOZ_OVERRIDE;
 
   GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI);
 

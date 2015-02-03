@@ -238,7 +238,7 @@ public:
      * in emergency situations since it bypasses the normal shutdown
      * process.
      */
-    void KillHard();
+    void KillHard(const char* aWhy);
 
     /**
      * API for adding a crash reporter annotation that provides a reason
@@ -742,7 +742,7 @@ private:
     virtual bool RecvNotifyKeywordSearchLoading(const nsString &aProvider,
                                                 const nsString &aKeyword) MOZ_OVERRIDE; 
 
-    virtual void ProcessingError(Result what) MOZ_OVERRIDE;
+    virtual void ProcessingError(Result aCode, const char* aMsgName) MOZ_OVERRIDE;
 
     virtual bool RecvAllocateLayerTreeId(uint64_t* aId) MOZ_OVERRIDE;
     virtual bool RecvDeallocateLayerTreeId(const uint64_t& aId) MOZ_OVERRIDE;
