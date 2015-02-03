@@ -367,20 +367,6 @@ struct IntrinsicSize {
 };
 }
 
-/// Generic destructor for frame properties. Calls delete.
-template<typename T>
-static void DeleteValue(void* aPropertyValue)
-{
-  delete static_cast<T*>(aPropertyValue);
-}
-
-/// Generic destructor for frame properties. Calls Release().
-template<typename T>
-static void ReleaseValue(void* aPropertyValue)
-{
-  static_cast<T*>(aPropertyValue)->Release();
-}
-
 //----------------------------------------------------------------------
 
 /**
@@ -797,6 +783,30 @@ public:
   
   nsPoint GetPositionIgnoringScrolling();
 
+  static void DestroyRegion(void* aPropertyValue);
+
+  static void DestroyMargin(void* aPropertyValue)
+  {
+    delete static_cast<nsMargin*>(aPropertyValue);
+  }
+
+  static void DestroyRect(void* aPropertyValue)
+  {
+    delete static_cast<nsRect*>(aPropertyValue);
+  }
+
+  static void DestroyPoint(void* aPropertyValue)
+  {
+    delete static_cast<nsPoint*>(aPropertyValue);
+  }
+
+  static void DestroyOverflowAreas(void* aPropertyValue)
+  {
+    delete static_cast<nsOverflowAreas*>(aPropertyValue);
+  }
+
+  static void DestroySurface(void* aPropertyValue);
+  static void DestroyDT(void* aPropertyValue);
   static void DestroyContentArray(void* aPropertyValue);
 
 #ifdef _MSC_VER
@@ -822,19 +832,18 @@ public:
   NS_DECLARE_FRAME_PROPERTY(IBSplitSibling, nullptr)
   NS_DECLARE_FRAME_PROPERTY(IBSplitPrevSibling, nullptr)
 
-  NS_DECLARE_FRAME_PROPERTY(NormalPositionProperty, DeleteValue<nsPoint>)
-  NS_DECLARE_FRAME_PROPERTY(ComputedOffsetProperty, DeleteValue<nsMargin>)
+  NS_DECLARE_FRAME_PROPERTY(NormalPositionProperty, DestroyPoint)
+  NS_DECLARE_FRAME_PROPERTY(ComputedOffsetProperty, DestroyMargin)
 
-  NS_DECLARE_FRAME_PROPERTY(OutlineInnerRectProperty, DeleteValue<nsRect>)
-  NS_DECLARE_FRAME_PROPERTY(PreEffectsBBoxProperty, DeleteValue<nsRect>)
+  NS_DECLARE_FRAME_PROPERTY(OutlineInnerRectProperty, DestroyRect)
+  NS_DECLARE_FRAME_PROPERTY(PreEffectsBBoxProperty, DestroyRect)
   NS_DECLARE_FRAME_PROPERTY(PreTransformOverflowAreasProperty,
-                            DeleteValue<nsOverflowAreas>)
+                            DestroyOverflowAreas)
 
   // The initial overflow area passed to FinishAndStoreOverflow. This is only set
   // on frames that Preserve3D() or HasPerspective() or IsTransformed(), and
   // when at least one of the overflow areas differs from the frame bound rect.
-  NS_DECLARE_FRAME_PROPERTY(InitialOverflowProperty,
-                            DeleteValue<nsOverflowAreas>)
+  NS_DECLARE_FRAME_PROPERTY(InitialOverflowProperty, DestroyOverflowAreas)
 
 #ifdef DEBUG
   // InitialOverflowPropertyDebug is added to the frame to indicate that either
@@ -843,19 +852,18 @@ public:
   NS_DECLARE_FRAME_PROPERTY(DebugInitialOverflowPropertyApplied, nullptr)
 #endif
 
-  NS_DECLARE_FRAME_PROPERTY(UsedMarginProperty, DeleteValue<nsMargin>)
-  NS_DECLARE_FRAME_PROPERTY(UsedPaddingProperty, DeleteValue<nsMargin>)
-  NS_DECLARE_FRAME_PROPERTY(UsedBorderProperty, DeleteValue<nsMargin>)
+  NS_DECLARE_FRAME_PROPERTY(UsedMarginProperty, DestroyMargin)
+  NS_DECLARE_FRAME_PROPERTY(UsedPaddingProperty, DestroyMargin)
+  NS_DECLARE_FRAME_PROPERTY(UsedBorderProperty, DestroyMargin)
 
   NS_DECLARE_FRAME_PROPERTY(ScrollLayerCount, nullptr)
 
   NS_DECLARE_FRAME_PROPERTY(LineBaselineOffset, nullptr)
 
-  NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImage, ReleaseValue<gfxASurface>)
-  NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImageDT,
-                            ReleaseValue<mozilla::gfx::DrawTarget>)
+  NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImage, DestroySurface)
+  NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImageDT, DestroyDT)
 
-  NS_DECLARE_FRAME_PROPERTY(InvalidationRect, DeleteValue<nsRect>)
+  NS_DECLARE_FRAME_PROPERTY(InvalidationRect, DestroyRect)
 
   NS_DECLARE_FRAME_PROPERTY(RefusedAsyncAnimation, nullptr)
 
