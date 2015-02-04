@@ -299,8 +299,11 @@ private:
 
   PLDHashNumber ComputeKeyHash(const void* aKey);
 
+  enum SearchReason { ForSearchOrRemove, ForAdd };
+
+  template <SearchReason Reason>
   PLDHashEntryHdr* PL_DHASH_FASTCALL
-    SearchTable(const void* aKey, PLDHashNumber aKeyHash, bool aIsAdd);
+    SearchTable(const void* aKey, PLDHashNumber aKeyHash);
 
   PLDHashEntryHdr* PL_DHASH_FASTCALL FindFreeEntry(PLDHashNumber aKeyHash);
 

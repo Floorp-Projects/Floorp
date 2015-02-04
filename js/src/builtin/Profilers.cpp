@@ -40,9 +40,10 @@ using mozilla::ArrayLength;
 
 static char gLastError[2000];
 
+#if defined(__APPLE__) || defined(__linux__) || defined(MOZ_CALLGRIND)
 static void
 #ifdef __GNUC__
-__attribute__((unused,format(printf,1,2)))
+__attribute__((format(printf,1,2)))
 #endif
 UnsafeError(const char *format, ...)
 {
@@ -53,6 +54,7 @@ UnsafeError(const char *format, ...)
 
     gLastError[sizeof(gLastError) - 1] = '\0';
 }
+#endif
 
 JS_PUBLIC_API(const char *)
 JS_UnsafeGetLastProfilingError()
@@ -344,7 +346,6 @@ ClearMaxGCPauseAccumulator(JSContext *cx, unsigned argc, jsval *vp)
     args.rval().setNumber(uint32_t(cx->runtime()->gc.stats.clearMaxGCPauseAccumulator()));
     return true;
 }
-
 
 #if defined(MOZ_SHARK) || defined(MOZ_INSTRUMENTS)
 

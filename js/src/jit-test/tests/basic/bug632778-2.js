@@ -1,2 +1,2 @@
-obj = wrap(Number.bind());
+obj = new Proxy(Number.bind(), {});
 Object.defineProperty(obj, "caller", {set: function () {}});
