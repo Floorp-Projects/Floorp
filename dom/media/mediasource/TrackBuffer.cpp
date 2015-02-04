@@ -243,11 +243,11 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
     // We're going to have to wait for the decoder to initialize, the promise
     // will be resolved once initialization completes.
     return p;
+  } else if (gotMedia) {
+    // Tell our reader that we have more data to ensure that playback starts if
+    // required when data is appended.
+    mParentDecoder->GetReader()->MaybeNotifyHaveData();
   }
-  // Tell our reader that we have more data to ensure that playback starts if
-  // required when data is appended.
-  mParentDecoder->GetReader()->MaybeNotifyHaveData();
-
   mInitializationPromise.Resolve(gotMedia, __func__);
   return p;
 }
