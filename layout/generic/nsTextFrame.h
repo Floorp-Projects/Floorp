@@ -311,7 +311,7 @@ public:
    *    (NotifyBeforeSVGGlyphPainted NotifyAfterSVGGlyphPainted))*
    *   NotifyAfterText
    *   PaintDecorationLine*
-   *   (NotifyBeforeSelectionDecorationLine NotifySelectionDecorationLinePathEmitted)*
+   *   PaintSelectionDecorationLine*
    *
    * The color of each part of the frame's text rendering is passed as an argument
    * to the NotifyBefore* callback for that part.  The nscolor can take on one of
@@ -342,6 +342,13 @@ public:
      * is drawn to have a text decoration line drawn.
      */
     virtual void PaintDecorationLine(Rect aPath, nscolor aColor) { }
+
+    /**
+     * Called after selected text is drawn to have a decoration line drawn over
+     * the text. (All types of text decoration are drawn after the text when
+     * text is selected.)
+     */
+    virtual void PaintSelectionDecorationLine(Rect aPath, nscolor aColor) { }
 
     /**
      * Called just before any paths have been emitted to the gfxContext
