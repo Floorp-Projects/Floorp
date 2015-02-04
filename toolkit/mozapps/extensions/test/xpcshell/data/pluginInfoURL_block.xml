@@ -6,7 +6,13 @@
   <pluginItems>
     <pluginItem blockID="test_plugin_wInfoURL">
       <match name="name" exp="^test_with_infoURL"/>
+      <match name="version" exp="^5"/>
       <infoURL>http://test.url.com/</infoURL>
+    </pluginItem>
+    <pluginItem blockID="test_plugin_wAltInfoURL">
+      <match name="name" exp="^test_with_altInfoURL"/>
+      <match name="version" exp="^5"/>
+      <infoURL>http://alt.test.url.com/</infoURL>
     </pluginItem>
     <pluginItem blockID="test_plugin_noInfoURL">
       <match name="name" exp="^test_no_infoURL"/>
