@@ -10,17 +10,12 @@ let toolbar = document.getElementById("PersonalToolbar");
 let wasCollapsed = toolbar.collapsed;
 
 function test() {
+  // Uncollapse the personal toolbar if needed.
+  if (wasCollapsed)
+    setToolbarVisibility(toolbar, true);
+
   waitForExplicitFinish();
 
-  // Uncollapse the personal toolbar if needed.
-  if (wasCollapsed) {
-    promiseSetToolbarVisibility(toolbar, true).then(openBookmarksSidebar);
-  } else {
-    openBookmarksSidebar();
-  }
-}
-
-function openBookmarksSidebar() {
   // Sanity checks.
   ok(PlacesUtils, "PlacesUtils in context");
   ok(PlacesUIUtils, "PlacesUIUtils in context");
@@ -174,11 +169,10 @@ function finishTest() {
   toggleSidebar("viewBookmarksSidebar", false);
 
   // Collapse the personal toolbar if needed.
-  if (wasCollapsed) {
-    promiseSetToolbarVisibility(toolbar, false).then(finish);
-  } else {
-    finish();
-  }
+  if (wasCollapsed)
+    setToolbarVisibility(toolbar, false);
+
+  finish();
 }
 
 /**
