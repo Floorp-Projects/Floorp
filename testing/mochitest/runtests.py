@@ -1934,7 +1934,7 @@ class Mochitest(MochitestUtilsMixin):
     processLeakLog(self.leak_report_file, options)
 
     if self.nsprLogs:
-      with zipfile.ZipFile("%s/nsprlog.zip" % browserEnv["MOZ_UPLOAD_DIR"], "w", zipfile.ZIP_DEFLATED) as logzip:
+      with zipfile.ZipFile("%s/nsprlog.zip" % self.browserEnv["MOZ_UPLOAD_DIR"], "w", zipfile.ZIP_DEFLATED) as logzip:
         for logfile in glob.glob("%s/nspr*.log*" % tempfile.gettempdir()):
           logzip.write(logfile)
           os.remove(logfile)
