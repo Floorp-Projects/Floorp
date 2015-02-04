@@ -1584,6 +1584,7 @@ nsPlaintextEditor::SelectEntireDocument(Selection* aSelection)
     return aSelection->Collapse(rootElement, 0);
   }
 
+  SelectionBatcher selectionBatcher(aSelection);
   nsresult rv = nsEditor::SelectEntireDocument(aSelection);
   NS_ENSURE_SUCCESS(rv, rv);
 
