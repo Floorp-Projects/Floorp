@@ -343,10 +343,6 @@ UrshValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Mutabl
 
 template <bool strict>
 bool
-SetProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &value);
-
-template <bool strict>
-bool
 DeleteProperty(JSContext *ctx, HandleValue val, HandlePropertyName name, bool *bv);
 
 template <bool strict>
