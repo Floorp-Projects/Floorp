@@ -82,6 +82,7 @@
             android:id="@+id/menu"
             style="@style/UrlBar.ImageButton.NewTablet"
             android:layout_alignParentRight="true"
+            android:layout_marginRight="6dp"
             android:contentDescription="@string/menu"
             android:background="@drawable/new_tablet_action_bar_button"
             android:visibility="gone"/>
