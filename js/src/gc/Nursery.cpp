@@ -39,7 +39,7 @@ using mozilla::PodZero;
 
 struct js::Nursery::FreeHugeSlotsTask : public GCParallelTask
 {
-    FreeHugeSlotsTask(FreeOp *fop) : fop_(fop) {}
+    explicit FreeHugeSlotsTask(FreeOp *fop) : fop_(fop) {}
     bool init() { return slots_.init(); }
     void transferSlotsToFree(HugeSlotsSet &slotsToFree);
 
