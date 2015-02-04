@@ -103,6 +103,9 @@ public:
   // Times are in microseconds.
   bool RangeRemoval(int64_t aStart, int64_t aEnd);
 
+  // Abort any pending appendBuffer by rejecting any pending promises.
+  void Abort();
+
 #ifdef MOZ_EME
   nsresult SetCDMProxy(CDMProxy* aProxy);
 #endif
