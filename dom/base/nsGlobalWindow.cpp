@@ -632,9 +632,9 @@ public:
                        JS::ObjectOpResult &result) const MOZ_OVERRIDE;
   virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
                          JS::MutableHandle<JSObject*> vp) const MOZ_OVERRIDE;
-  virtual bool preventExtensions(JSContext *cx,
+  virtual bool preventExtensions(JSContext* cx,
                                  JS::Handle<JSObject*> proxy,
-                                 bool *succeeded) const MOZ_OVERRIDE;
+                                 JS::ObjectOpResult& result) const MOZ_OVERRIDE;
   virtual bool isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible)
                             const MOZ_OVERRIDE;
   virtual bool has(JSContext *cx, JS::Handle<JSObject*> proxy,
@@ -842,15 +842,14 @@ nsOuterWindowProxy::delete_(JSContext *cx, JS::Handle<JSObject*> proxy,
 }
 
 bool
-nsOuterWindowProxy::preventExtensions(JSContext *cx,
+nsOuterWindowProxy::preventExtensions(JSContext* cx,
                                       JS::Handle<JSObject*> proxy,
-                                      bool *succeeded) const
+                                      JS::ObjectOpResult& result) const
 {
   // If [[Extensible]] could be false, then navigating a window could navigate
   // to a window that's [[Extensible]] after being at one that wasn't: an
   // invariant violation.  So never change a window's extensibility.
-  *succeeded = false;
-  return true;
+  return result.failCantPreventExtensions();
 }
 
 bool

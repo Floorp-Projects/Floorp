@@ -125,6 +125,7 @@ class ObjectOpResult
     JS_PUBLIC_API(bool) failCantDelete();
     JS_PUBLIC_API(bool) failCantDeleteWindowElement();
     JS_PUBLIC_API(bool) failCantDeleteWindowNamedProperty();
+    JS_PUBLIC_API(bool) failCantPreventExtensions();
 
     uint32_t failureCode() const {
         MOZ_ASSERT(!ok());
@@ -152,11 +153,13 @@ class ObjectOpResult
     }
 
     /*
-     * Convenience method. Return true if ok() or if strict is false; otherwise
-     * throw a TypeError and return false.
+     * The same as checkStrictErrorOrWarning(cx, id, strict), except the
+     * operation is not associated with a particular property id. This is
+     * used for [[PreventExtensions]] and [[SetPrototypeOf]]. failureCode()
+     * must not be an error that has "{0}" in the error message.
      */
-    bool checkStrict(JSContext *cx, HandleObject obj, HandleId id) {
-        return checkStrictErrorOrWarning(cx, obj, id, true);
+    bool checkStrictErrorOrWarning(JSContext *cx, HandleObject obj, bool strict) {
+        return ok() || reportStrictErrorOrWarning(cx, obj, strict);
     }
 
     /* Throw a TypeError. Call this only if !ok(). */
@@ -164,8 +167,33 @@ class ObjectOpResult
         return reportStrictErrorOrWarning(cx, obj, id, true);
     }
 
+    /*
+     * The same as reportError(cx, obj, id), except the operation is not
+     * associated with a particular property id.
+     */
+    bool reportError(JSContext *cx, HandleObject obj) {
+        return reportStrictErrorOrWarning(cx, obj, true);
+    }
+
     /* Helper function for checkStrictErrorOrWarning's slow path. */
     JS_PUBLIC_API(bool) reportStrictErrorOrWarning(JSContext *cx, HandleObject obj, HandleId id, bool strict);
+    JS_PUBLIC_API(bool) reportStrictErrorOrWarning(JSContext *cx, HandleObject obj, bool strict);
+
+    /*
+     * Convenience method. Return true if ok() or if strict is false; otherwise
+     * throw a TypeError and return false.
+     */
+    bool checkStrict(JSContext *cx, HandleObject obj, HandleId id) {
+        return checkStrictErrorOrWarning(cx, obj, id, true);
+    }
+
+    /*
+     * Convenience method. The same as checkStrict(cx, id), except the
+     * operation is not associated with a particular property id.
+     */
+    bool checkStrict(JSContext *cx, HandleObject obj) {
+        return checkStrictErrorOrWarning(cx, obj, true);
+    }
 };
 
 }

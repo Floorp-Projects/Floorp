@@ -117,11 +117,11 @@ CrossCompartmentWrapper::setImmutablePrototype(JSContext *cx, HandleObject wrapp
 
 bool
 CrossCompartmentWrapper::preventExtensions(JSContext *cx, HandleObject wrapper,
-                                           bool *succeeded) const
+                                           ObjectOpResult &result) const
 {
     PIERCE(cx, wrapper,
            NOTHING,
-           Wrapper::preventExtensions(cx, wrapper, succeeded),
+           Wrapper::preventExtensions(cx, wrapper, result),
            NOTHING);
 }
 

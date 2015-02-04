@@ -1440,12 +1440,12 @@ class DebugScopeProxy : public BaseProxyHandler
 
     MOZ_CONSTEXPR DebugScopeProxy() : BaseProxyHandler(&family) {}
 
-    bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const MOZ_OVERRIDE
+    bool preventExtensions(JSContext *cx, HandleObject proxy,
+                           ObjectOpResult &result) const MOZ_OVERRIDE
     {
         // always [[Extensible]], can't be made non-[[Extensible]], like most
         // proxies
-        *succeeded = false;
-        return true;
+        return result.fail(JSMSG_CANT_CHANGE_EXTENSIBILITY);
     }
 
     bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE

@@ -6820,24 +6820,17 @@ DebuggerObject_sealHelper(JSContext *cx, unsigned argc, Value *vp, SealHelperOp 
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, obj);
     ErrorCopier ec(ac);
-    bool ok;
     if (op == OpSeal) {
-        ok = SetIntegrityLevel(cx, obj, IntegrityLevel::Sealed);
+        if (!SetIntegrityLevel(cx, obj, IntegrityLevel::Sealed))
+            return false;
     } else if (op == OpFreeze) {
-        ok = SetIntegrityLevel(cx, obj, IntegrityLevel::Frozen);
+        if (!SetIntegrityLevel(cx, obj, IntegrityLevel::Frozen))
+            return false;
     } else {
         MOZ_ASSERT(op == OpPreventExtensions);
-        bool succeeded;
-        ok = PreventExtensions(cx, obj, &succeeded);
-        if (!ok)
+        if (!PreventExtensions(cx, obj))
             return false;
-        if (!succeeded) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
-            return false;
-        }
     }
-    if (!ok)
-        return false;
     args.rval().setUndefined();
     return true;
 }
