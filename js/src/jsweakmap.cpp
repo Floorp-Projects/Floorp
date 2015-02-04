@@ -20,6 +20,7 @@
 #include "jsobjinlines.h"
 
 #include "vm/Interpreter-inl.h"
+#include "vm/NativeObject-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -526,7 +527,12 @@ WeakMap_construct(JSContext *cx, unsigned argc, Value *vp)
     if (!obj)
         return false;
 
-    // ES6 23.3.1.1 steps 5-6, 11.
+    // ES6 draft rev 31 (15 Jan 2015) 23.3.1.1 step 1.
+    // FIXME: bug 1083752
+    if (!WarnIfNotConstructing(cx, args, "WeakMap"))
+        return false;
+
+    // Steps 5-6, 11.
     if (!args.get(0).isNullOrUndefined()) {
         // Steps 7a-b.
         RootedValue adderVal(cx);
