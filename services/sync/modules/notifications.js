@@ -84,7 +84,7 @@ this.Notifications = {
  * A basic notification.  Subclass this to create more complex notifications.
  */
 this.Notification =
- function Notification(title, description, iconURL, priority, buttons) {
+function Notification(title, description, iconURL, priority, buttons, link) {
   this.title = title;
   this.description = description;
 
@@ -96,6 +96,9 @@ this.Notification =
 
   if (buttons)
     this.buttons = buttons;
+
+  if (link)
+    this.link = link;
 }
 
 // We set each prototype property individually instead of redefining

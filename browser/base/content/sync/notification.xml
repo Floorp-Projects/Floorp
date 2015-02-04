@@ -73,6 +73,18 @@
                                              notification.priority,
                                              notification.buttons);
           node.notification = notification;
+
+          if (notification.link) {
+            let XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+            let link = node.ownerDocument.createElementNS(XULNS, "label");
+            link.className = "text-link";
+            link.setAttribute("value", notification.link.text);
+            link.href = notification.link.href;
+            let desc = node.ownerDocument.getAnonymousElementByAttribute(
+              node, "anonid", "messageText"
+            );
+            desc.appendChild(link);
+          }
         ]]></body>
       </method>
 
