@@ -78,7 +78,7 @@ public:
                                int32_t* aY) MOZ_OVERRIDE
   { *aX = kMaxDimension;  *aY = kMaxDimension;  return NS_OK; }
 
-  // We're always at <0, 0>, and so ignore move requests.
+  // Widget position is controlled by the parent process via TabChild.
   NS_IMETHOD Move(double aX, double aY) MOZ_OVERRIDE
   { return NS_OK; }
 
@@ -90,7 +90,7 @@ public:
                     double aWidth,
                     double aHeight,
                     bool   aRepaint) MOZ_OVERRIDE
-  // (we're always at <0, 0>)
+  // Widget position is controlled by the parent process via TabChild.
   { return Resize(aWidth, aHeight, aRepaint); }
 
   // XXX/cjones: copying gtk behavior here; unclear what disabling a
@@ -121,9 +121,8 @@ public:
   NS_IMETHOD SetTitle(const nsAString& aTitle) MOZ_OVERRIDE
   { return NS_ERROR_UNEXPECTED; }
   
-  // PuppetWidgets are always at <0, 0>.
   virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() MOZ_OVERRIDE
-  { return mozilla::LayoutDeviceIntPoint(0, 0); }
+  { return LayoutDeviceIntPoint::FromUntyped(GetWindowPosition() + GetChromeDimensions()); }
 
   void InitEvent(WidgetGUIEvent& aEvent, nsIntPoint* aPoint = nullptr);
 
