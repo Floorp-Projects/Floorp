@@ -109,7 +109,9 @@ public:
     // ...
     // DocType == "webm"
     // ...
-    // 0x18538067 // Segment (must be "unknown" size)
+    // 0x18538067 // Segment (must be "unknown" size or contain a value large
+                  // enough to include the Segment Information and Tracks
+                  // elements that follow)
     // 0x1549a966 // -> Segment Info
     // 0x1654ae6b // -> One or more Tracks
     if (aData->Length() >= 4 &&
@@ -150,6 +152,7 @@ public:
       mParser = WebMBufferedParser(0);
       mOverlappedMapping.Clear();
       mInitData = new LargeDataBuffer();
+      mResource = new SourceBufferResource(NS_LITERAL_CSTRING("video/webm"));
     }
 
     // XXX if it only adds new mappings, overlapped but not available
@@ -159,22 +162,27 @@ public:
     mOverlappedMapping.Clear();
     ReentrantMonitor dummy("dummy");
     mParser.Append(aData->Elements(), aData->Length(), mapping, dummy);
+    if (mResource) {
+      mResource->AppendData(aData);
+    }
 
     // XXX This is a bit of a hack.  Assume if there are no timecodes
     // present and it's an init segment that it's _just_ an init segment.
     // We should be more precise.
-    if (initSegment) {
-      uint32_t length = aData->Length();
-      if (!mapping.IsEmpty()) {
-        length = mapping[0].mSyncOffset;
-        MOZ_ASSERT(length <= aData->Length());
-      }
-      MSE_DEBUG("WebMContainerParser(%p)::ParseStartAndEndTimestamps: Stashed init of %u bytes.",
-                this, length);
-      if (!mInitData->ReplaceElementsAt(0, mInitData->Length(),
-                                        aData->Elements(), length)) {
-        // Unlikely OOM
-        return false;
+    if (initSegment || !HasCompleteInitData()) {
+      if (mParser.mInitEndOffset > 0) {
+        MOZ_ASSERT(mParser.mInitEndOffset <= mResource->GetLength());
+        if (!mInitData->SetLength(mParser.mInitEndOffset)) {
+          // Super unlikely OOM
+          return false;
+        }
+        char* buffer = reinterpret_cast<char*>(mInitData->Elements());
+        mResource->ReadFromCache(buffer, 0, mParser.mInitEndOffset);
+        MSE_DEBUG("WebMContainerParser(%p)::ParseStartAndEndTimestamps: Stashed init of %u bytes.",
+                  this, mParser.mInitEndOffset);
+        mResource = nullptr;
+      } else {
+        MSE_DEBUG("WebMContainerParser(%p)::ParseStartAndEndTimestamps: Incomplete init found.");
       }
       mHasInitData = true;
     }
@@ -329,7 +337,6 @@ public:
 private:
   nsRefPtr<MP4Stream> mStream;
   nsAutoPtr<mp4_demuxer::MoofParser> mParser;
-  nsRefPtr<SourceBufferResource> mResource;
   Monitor mMonitor;
 };
 

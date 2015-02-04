@@ -12,6 +12,7 @@
 namespace mozilla {
 
 class LargeDataBuffer;
+class SourceBufferResource;
 
 class ContainerParser {
 public:
@@ -54,6 +55,7 @@ public:
 
 protected:
   nsRefPtr<LargeDataBuffer> mInitData;
+  nsRefPtr<SourceBufferResource> mResource;
   bool mHasInitData;
 };
 

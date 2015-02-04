@@ -50,9 +50,9 @@ struct WebMTimeDataOffset
 struct WebMBufferedParser
 {
   explicit WebMBufferedParser(int64_t aOffset)
-    : mStartOffset(aOffset), mCurrentOffset(aOffset), mState(READ_ELEMENT_ID),
-      mVIntRaw(false), mClusterSyncPos(0), mTimecodeScale(1000000),
-      mGotTimecodeScale(false)
+    : mStartOffset(aOffset), mCurrentOffset(aOffset), mInitEndOffset(-1),
+      mState(READ_ELEMENT_ID), mVIntRaw(false), mClusterSyncPos(0),
+      mTimecodeScale(1000000), mGotTimecodeScale(false)
   {
     if (mStartOffset != 0) {
       mState = FIND_CLUSTER_SYNC;
@@ -94,6 +94,10 @@ struct WebMBufferedParser
   // Current offset with the stream.  Updated in chunks as Append() consumes
   // data.
   int64_t mCurrentOffset;
+
+  // Tracks element's end offset. This indicates the end of the init segment.
+  // Will only be set if a Segment Information has been found.
+  int64_t mInitEndOffset;
 
 private:
   enum State {
@@ -139,6 +143,11 @@ private:
     // WebMTimeDataOffset entry into aMapping if one is not already present
     // for this offset.
     READ_BLOCK_TIMECODE,
+
+    // Will skip the current tracks element and set mInitEndOffset if an init
+    // segment has been found.
+    // Currently, only assumes it's the end of the tracks element.
+    CHECK_INIT_FOUND,
 
     // Skip mSkipBytes of data before resuming parse at mNextState.
     SKIP_DATA,
