@@ -304,20 +304,23 @@ Proxy::callProp(JSContext *cx, HandleObject proxy, HandleObject receiver, Handle
 }
 
 bool
-Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id, bool strict,
-           MutableHandleValue vp)
+Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+           MutableHandleValue vp, ObjectOpResult &result)
 {
     JS_CHECK_RECURSION(cx, return false);
     const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::SET, true);
-    if (!policy.allowed())
-        return policy.returnValue();
+    if (!policy.allowed()) {
+        if (!policy.returnValue())
+            return false;
+        return result.succeed();
+    }
 
     // Special case. See the comment on BaseProxyHandler::mHasPrototype.
     if (handler->hasPrototype())
-        return handler->BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
+        return handler->BaseProxyHandler::set(cx, proxy, receiver, id, vp, result);
 
-    return handler->set(cx, proxy, receiver, id, strict, vp);
+    return handler->set(cx, proxy, receiver, id, vp, result);
 }
 
 bool
@@ -581,9 +584,9 @@ js::proxy_GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, Ha
 
 bool
 js::proxy_SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
-                      MutableHandleValue vp, bool strict)
+                      MutableHandleValue vp, ObjectOpResult &result)
 {
-    return Proxy::set(cx, obj, receiver, id, strict, vp);
+    return Proxy::set(cx, obj, receiver, id, vp, result);
 }
 
 bool

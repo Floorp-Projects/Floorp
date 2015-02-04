@@ -164,8 +164,8 @@ static bool
 NPObjWrapper_DelProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, bool *succeeded);
 
 static bool
-NPObjWrapper_SetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, bool strict,
-                         JS::MutableHandle<JS::Value> vp);
+NPObjWrapper_SetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                         JS::MutableHandle<JS::Value> vp, JS::ObjectOpResult &result);
 
 static bool
 NPObjWrapper_GetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp);
@@ -1306,8 +1306,8 @@ NPObjWrapper_DelProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
 }
 
 static bool
-NPObjWrapper_SetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, bool strict,
-                         JS::MutableHandle<JS::Value> vp)
+NPObjWrapper_SetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                         JS::MutableHandle<JS::Value> vp, JS::ObjectOpResult &result)
 {
   NPObject *npobj = GetNPObject(cx, obj);
 
@@ -1362,7 +1362,7 @@ NPObjWrapper_SetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
     return false;
   }
 
-  return true;
+  return result.succeed();
 }
 
 static bool

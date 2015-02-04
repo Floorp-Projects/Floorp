@@ -40,8 +40,8 @@ class WrapperAnswer : public virtual JavaScriptShared
                  const JSIDVariant &id,
                  ReturnStatus *rs, JSVariant *result);
     bool RecvSet(const ObjectId &objId, const ObjectVariant &receiverVar,
-                 const JSIDVariant &id, const bool &strict,
-                 const JSVariant &value, ReturnStatus *rs, JSVariant *result);
+                 const JSIDVariant &id, const JSVariant &value, ReturnStatus *rs,
+                 JSVariant *result);
 
     bool RecvIsExtensible(const ObjectId &objId, ReturnStatus *rs,
                           bool *result);

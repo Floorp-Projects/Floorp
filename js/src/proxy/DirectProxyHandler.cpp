@@ -223,11 +223,11 @@ DirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver
 
 bool
 DirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                        HandleId id, bool strict, MutableHandleValue vp) const
+                        HandleId id, MutableHandleValue vp, ObjectOpResult &result) const
 {
     assertEnteredPolicy(cx, proxy, id, SET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return SetProperty(cx, target, receiver, id, vp, strict);
+    return SetProperty(cx, target, receiver, id, vp, result);
 }
 
 bool

@@ -221,7 +221,7 @@ DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::
 
 bool
 DOMProxyHandler::set(JSContext *cx, Handle<JSObject*> proxy, Handle<JSObject*> receiver,
-                     Handle<jsid> id, bool strict, MutableHandle<JS::Value> vp) const
+                     Handle<jsid> id, MutableHandle<JS::Value> vp, ObjectOpResult &result) const
 {
   MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy),
              "Should not have a XrayWrapper here");
@@ -230,7 +230,7 @@ DOMProxyHandler::set(JSContext *cx, Handle<JSObject*> proxy, Handle<JSObject*> r
     return false;
   }
   if (done) {
-    return true;
+    return result.succeed();
   }
 
   // Make sure to ignore our named properties when checking for own
@@ -255,7 +255,7 @@ DOMProxyHandler::set(JSContext *cx, Handle<JSObject*> proxy, Handle<JSObject*> r
   }
 
   return js::SetPropertyIgnoringNamedGetter(cx, this, proxy, receiver, id,
-                                            &desc, descIsOwn, strict, vp);
+                                            &desc, descIsOwn, vp, result);
 }
 
 bool

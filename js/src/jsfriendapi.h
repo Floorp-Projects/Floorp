@@ -370,7 +370,7 @@ proxy_GetProperty(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver
                   JS::MutableHandleValue vp);
 extern JS_FRIEND_API(bool)
 proxy_SetProperty(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, JS::HandleId id,
-                  JS::MutableHandleValue bp, bool strict);
+                  JS::MutableHandleValue bp, JS::ObjectOpResult &result);
 extern JS_FRIEND_API(bool)
 proxy_GetOwnPropertyDescriptor(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                                JS::MutableHandle<JSPropertyDescriptor> desc);
@@ -2640,7 +2640,8 @@ JS_FRIEND_API(bool)
 SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handler,
                                JS::HandleObject proxy, JS::HandleObject receiver,
                                JS::HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc,
-                               bool descIsOwn, bool strict, JS::MutableHandleValue vp);
+                               bool descIsOwn, JS::MutableHandleValue vp,
+                               JS::ObjectOpResult &result);
 
 JS_FRIEND_API(void)
 ReportErrorWithId(JSContext *cx, const char *msg, JS::HandleId id);

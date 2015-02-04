@@ -186,6 +186,12 @@ JS::ObjectOpResult::failGetterOnly()
     return fail(JSMSG_GETTER_ONLY);
 }
 
+JS_PUBLIC_API(bool)
+JS::ObjectOpResult::failCantSetInterposed()
+{
+    return fail(JSMSG_CANT_SET_INTERPOSED);
+}
+
 JS_PUBLIC_API(int64_t)
 JS_Now()
 {
@@ -1658,9 +1664,10 @@ JS_PropertyStub(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
 }
 
 JS_PUBLIC_API(bool)
-JS_StrictPropertyStub(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
+JS_StrictPropertyStub(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp,
+                      ObjectOpResult &result)
 {
-    return true;
+    return result.succeed();
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2806,25 +2813,25 @@ JS_SetPropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue v)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
 
-    return SetProperty(cx, obj, obj, id, &value, false);
+    ObjectOpResult ignored;
+    return SetProperty(cx, obj, obj, id, &value, ignored);
 }
 
 JS_PUBLIC_API(bool)
-JS_ForwardSetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue onBehalfOf,
-                        bool strict, JS::HandleValue v)
+JS_ForwardSetPropertyTo(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
+                        HandleValue receiver, ObjectOpResult &result)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id);
-    assertSameCompartment(cx, onBehalfOf);
+    assertSameCompartment(cx, obj, id, receiver);
 
     // XXX Bug 603201 will eliminate this ToObject.
-    RootedObject receiver(cx, ToObject(cx, onBehalfOf));
-    if (!receiver)
+    RootedObject receiverObj(cx, ToObject(cx, receiver));
+    if (!receiverObj)
         return false;
 
     RootedValue value(cx, v);
-    return SetProperty(cx, obj, receiver, id, &value, strict);
+    return SetProperty(cx, obj, receiverObj, id, &value, result);
 }
 
 static bool
@@ -2834,7 +2841,8 @@ SetElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue v
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, vp);
 
-    return SetElement(cx, obj, obj, index, vp, false);
+    ObjectOpResult ignored;
+    return SetElement(cx, obj, obj, index, vp, ignored);
 }
 
 JS_PUBLIC_API(bool)

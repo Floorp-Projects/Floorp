@@ -486,10 +486,10 @@ class JSObject : public js::gc::Cell
 
     static bool nonNativeSetProperty(JSContext *cx, js::HandleObject obj,
                                      js::HandleObject receiver, js::HandleId id,
-                                     js::MutableHandleValue vp, bool strict);
+                                     js::MutableHandleValue vp, JS::ObjectOpResult &result);
     static bool nonNativeSetElement(JSContext *cx, js::HandleObject obj,
                                     js::HandleObject receiver, uint32_t index,
-                                    js::MutableHandleValue vp, bool strict);
+                                    js::MutableHandleValue vp, JS::ObjectOpResult &result);
 
     static bool swap(JSContext *cx, JS::HandleObject a, JS::HandleObject b);
 
@@ -870,19 +870,49 @@ GetElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index,
  */
 inline bool
 SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
-            MutableHandleValue vp, bool strict);
+            MutableHandleValue vp, ObjectOpResult &result);
 
 inline bool
 SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, PropertyName *name,
-            MutableHandleValue vp, bool strict)
+            MutableHandleValue vp, ObjectOpResult &result)
 {
     RootedId id(cx, NameToId(name));
-    return SetProperty(cx, obj, receiver, id, vp, strict);
+    return SetProperty(cx, obj, receiver, id, vp, result);
 }
 
 inline bool
 SetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
-           MutableHandleValue vp, bool strict);
+           MutableHandleValue vp, ObjectOpResult &result);
+
+inline bool
+SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+            MutableHandleValue vp)
+{
+    ObjectOpResult result;
+    return SetProperty(cx, obj, receiver, id, vp, result) &&
+           result.checkStrict(cx, receiver, id);
+}
+
+extern bool
+SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name,
+            MutableHandleValue vp);
+
+/*
+ * ES6 draft rev 31 (15 Jan 2015) 7.3.3 Put (O, P, V, Throw), except that on
+ * success, the spec says this is supposed to return a boolean value, which we
+ * don't bother doing.
+ */
+inline bool
+PutProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue value, bool strict)
+{
+    ObjectOpResult result;
+    return SetProperty(cx, obj, obj, id, value, result) &&
+           result.checkStrictErrorOrWarning(cx, obj, id, strict);
+}
+
+extern bool
+PutProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue value,
+            bool strict);
 
 /*
  * ES6 [[Delete]]. Equivalent to the JS code `delete obj[id]`.
