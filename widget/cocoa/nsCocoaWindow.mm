@@ -1812,7 +1812,7 @@ NS_IMETHODIMP nsCocoaWindow::SetFocus(bool aState)
   return NS_OK;
 }
 
-nsIntPoint nsCocoaWindow::WidgetToScreenOffset()
+LayoutDeviceIntPoint nsCocoaWindow::WidgetToScreenOffset()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -1823,9 +1823,9 @@ nsIntPoint nsCocoaWindow::WidgetToScreenOffset()
   }
   r = nsCocoaUtils::CocoaRectToGeckoRectDevPix(rect, BackingScaleFactor());
 
-  return r.TopLeft();
+  return LayoutDeviceIntPoint::FromUntyped(r.TopLeft());
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0,0));
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0,0));
 }
 
 nsIntPoint nsCocoaWindow::GetClientOffset()
