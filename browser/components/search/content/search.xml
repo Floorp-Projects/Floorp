@@ -990,8 +990,14 @@
 
           let engine;
           let oneOff = this.selectedButton;
-          if (oneOff)
+          if (oneOff) {
+            if (!oneOff.engine) {
+              oneOff.doCommand();
+              this.mEnterEvent = null;
+              return;
+            }
             engine = oneOff.engine;
+          }
           if (this.mEnterEvent && this._selectionDetails &&
               this._selectionDetails.currentIndex != -1) {
             BrowserSearch.searchBar.telemetrySearchDetails = this._selectionDetails;
@@ -1020,6 +1026,32 @@
         ]]></setter>
       </property>
 
+      <method name="getSelectableButtons">
+        <parameter name="aCycleEngines"/>
+        <body><![CDATA[
+          let buttons = [];
+          let oneOff = document.getAnonymousElementByAttribute(this.popup, "anonid",
+                                                               "search-panel-one-offs");
+          for (oneOff = oneOff.firstChild; oneOff; oneOff = oneOff.nextSibling) {
+            if (oneOff.classList.contains("dummy"))
+              break;
+            buttons.push(oneOff);
+          }
+
+          if (aCycleEngines)
+            return buttons;
+
+          let addEngine =
+            document.getAnonymousElementByAttribute(this.popup, "anonid", "add-engines");
+          for (addEngine = addEngine.firstChild; addEngine; addEngine = addEngine.nextSibling)
+            buttons.push(addEngine);
+
+          buttons.push(document.getAnonymousElementByAttribute(this.popup, "anonid",
+                                                               "search-settings"));
+          return buttons;
+        ]]></body>
+      </method>
+
       <method name="advanceSelection">
         <parameter name="aForward"/>
         <parameter name="aSkipSuggestions"/>
@@ -1029,21 +1061,27 @@
           let list = document.getAnonymousElementByAttribute(popup, "anonid",
                                                              "search-panel-one-offs");
           let selectedButton = this.selectedButton;
+          let buttons = this.getSelectableButtons(aCycleEngines);
 
           // If the last suggestion is selected, DOWN selects the first button.
           if (!aSkipSuggestions && aForward &&
               popup.selectedIndex + 1 == popup.view.rowCount) {
-            this.selectedButton = list.firstChild;
+            this.selectedButton = buttons[0];
             return false;
           }
 
           // If a one-off is selected and no suggestion is selected (or we skip them)
           if (selectedButton && (popup.selectedIndex == -1 || aSkipSuggestions)) {
             // cycle through one-off buttons.
+            let index = buttons.indexOf(selectedButton);
             if (aForward)
-              this.selectedButton = selectedButton.nextSibling;
+              ++index;
             else
-              this.selectedButton = selectedButton.previousSibling;
+              --index;
+            if (index >= 0 && index < buttons.length)
+              this.selectedButton = buttons[index];
+            else
+              this.selectedButton = null;
 
             if (this.selectedButton || aCycleEngines)
               return true;
@@ -1062,17 +1100,14 @@
           if (!selectedButton) {
             // If no selection, select the first button or ...
             if (aForward && aSkipSuggestions) {
-              this.selectedButton = list.firstChild;
+              this.selectedButton = buttons[0];
               return true;
             }
 
             if (!aForward && (aCycleEngines ||
                               (!aSkipSuggestions && popup.selectedIndex == -1))) {
               // the last button.
-              selectedButton = list.lastChild;
-              while (selectedButton.classList.contains("dummy"))
-                selectedButton = selectedButton.previousSibling;
-              this.selectedButton = selectedButton;
+              this.selectedButton = buttons[buttons.length - 1];
               return true;
             }
           }
