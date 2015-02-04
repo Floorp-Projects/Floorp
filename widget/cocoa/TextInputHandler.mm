@@ -3118,7 +3118,7 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange,
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  nsIntRect r;
+  LayoutDeviceIntRect r;
   bool useCaretRect = (aRange.length == 0);
   if (!useCaretRect) {
     WidgetQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT, mWidget);
@@ -3154,7 +3154,8 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange,
   if (!rootWindow || !rootView) {
     return rect;
   }
-  rect = nsCocoaUtils::DevPixelsToCocoaPoints(r, mWidget->BackingScaleFactor());
+  rect = nsCocoaUtils::DevPixelsToCocoaPoints(LayoutDevicePixel::ToUntyped(r),
+                                              mWidget->BackingScaleFactor());
   rect = [rootView convertRect:rect toView:nil];
   rect.origin = [rootWindow convertBaseToScreen:rect.origin];
 
