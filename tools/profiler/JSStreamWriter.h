@@ -22,6 +22,7 @@ public:
   void EndArray();
   void Name(const char *name);
   void Value(int value);
+  void Value(unsigned value);
   void Value(double value);
   void Value(const char *value, size_t valueLength);
   void Value(const char *value);
