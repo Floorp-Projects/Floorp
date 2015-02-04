@@ -38,6 +38,7 @@ EXPORTS.mozilla = [
     'HashFunctions.h',
     'IntegerPrintfMacros.h',
     'IntegerTypeTraits.h',
+    'IteratorTraits.h',
     'JSONWriter.h',
     'Likely.h',
     'LinkedList.h',
