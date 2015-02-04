@@ -38,10 +38,6 @@ using mozilla::AssertedCast;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 
-using JS::TrackedStrategy;
-using JS::TrackedOutcome;
-using JS::TrackedTypeSite;
-
 class jit::BaselineFrameInspector
 {
   public:
