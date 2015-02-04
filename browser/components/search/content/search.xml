@@ -1020,13 +1020,70 @@
         ]]></setter>
       </property>
 
+      <method name="advanceSelection">
+        <parameter name="aForward"/>
+        <parameter name="aSkipSuggestions"/>
+        <parameter name="aCycleEngines"/>
+        <body><![CDATA[
+          let popup = this.popup;
+          let list = document.getAnonymousElementByAttribute(popup, "anonid",
+                                                             "search-panel-one-offs");
+          let selectedButton = this.selectedButton;
+
+          // If the last suggestion is selected, DOWN selects the first button.
+          if (!aSkipSuggestions && aForward &&
+              popup.selectedIndex + 1 == popup.view.rowCount) {
+            this.selectedButton = list.firstChild;
+            return false;
+          }
+
+          // If a one-off is selected and no suggestion is selected (or we skip them)
+          if (selectedButton && (popup.selectedIndex == -1 || aSkipSuggestions)) {
+            // cycle through one-off buttons.
+            if (aForward)
+              this.selectedButton = selectedButton.nextSibling;
+            else
+              this.selectedButton = selectedButton.previousSibling;
+
+            if (this.selectedButton || aCycleEngines)
+              return true;
+
+            // Set the selectedIndex to something that will make
+            // handleKeyNavigation (called by autocomplete.xml's onKeyPress
+            // method) reset the text field value to what the user typed.
+            // Doesn't work when aSkipSuggestions=true, see bug 1124747.
+            if (aForward)
+              popup.selectedIndex = popup.view.rowCount - 1;
+            else
+              popup.selectedIndex = popup.view.rowCount;
+            return false;
+          }
+
+          if (!selectedButton) {
+            // If no selection, select the first button or ...
+            if (aForward && aSkipSuggestions) {
+              this.selectedButton = list.firstChild;
+              return true;
+            }
+
+            if (!aForward && (aCycleEngines ||
+                              (!aSkipSuggestions && popup.selectedIndex == -1))) {
+              // the last button.
+              selectedButton = list.lastChild;
+              while (selectedButton.classList.contains("dummy"))
+                selectedButton = selectedButton.previousSibling;
+              this.selectedButton = selectedButton;
+              return true;
+            }
+          }
+
+          return false;
+        ]]></body>
+      </method>
+
       <method name="handleKeyboardNavigation">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          // XXXFlorian This method could likely be shortened with a helper
-          // handling moving the selection within the one-off list and
-          // returning a boolean indicating if the event should be stopped.
-
           let popup = this.popup;
           if (!popup.popupOpen)
             return;
@@ -1042,7 +1099,7 @@
 
           let list = document.getAnonymousElementByAttribute(popup, "anonid",
                                                              "search-panel-one-offs");
-          if (!list)
+          if (!list) // remove this check when removing the old search UI.
             return;
 
           // accel + up/down changes the default engine and shouldn't affect
@@ -1054,108 +1111,26 @@
 #endif
             return;
 
-          let selectedButton = this.selectedButton;
+          let stopEvent = false;
 
           // Alt + up/down is very similar to (shift +) tab but differs in that
           // it loops through the list, whereas tab will move the focus out.
           if (aEvent.altKey &&
               (aEvent.keyCode == KeyEvent.DOM_VK_DOWN ||
                aEvent.keyCode == KeyEvent.DOM_VK_UP)) {
-            let forward = aEvent.keyCode == KeyEvent.DOM_VK_DOWN;
-            if (selectedButton) {
-              // cycle though the list of one-off buttons.
-              if (forward)
-                this.selectedButton = selectedButton.nextSibling;
-              else
-                this.selectedButton = selectedButton.previousSibling;
-            }
-            else {
-              // If no selection, select the first or last one-off button.
-              if (forward) {
-                this.selectedButton = list.firstChild;
-              }
-              else {
-                selectedButton = list.lastChild;
-                while (selectedButton.classList.contains("dummy"))
-                  selectedButton = selectedButton.previousSibling;
-                this.selectedButton = selectedButton;
-              }
-            }
-
-            aEvent.preventDefault();
-            aEvent.stopPropagation();
-            return;
+            stopEvent =
+              this.advanceSelection(aEvent.keyCode == KeyEvent.DOM_VK_DOWN,
+                                    true, true);
+          }
+          else if (aEvent.keyCode == KeyEvent.DOM_VK_DOWN ||
+                   aEvent.keyCode == KeyEvent.DOM_VK_UP) {
+            stopEvent = this.advanceSelection(aEvent.keyCode == KeyEvent.DOM_VK_DOWN);
+          }
+          else if (aEvent.keyCode == KeyEvent.DOM_VK_TAB) {
+            stopEvent = this.advanceSelection(!aEvent.shiftKey, true);
           }
 
-          // If the last suggestion is selected, DOWN selects the first one-off.
-          if (aEvent.keyCode == KeyEvent.DOM_VK_DOWN &&
-              popup.selectedIndex + 1 == popup.view.rowCount) {
-            this.selectedButton = list.firstChild;
-          }
-
-          // If no suggestion is selected and a one-off is selected,
-          // UP and DOWN cycle through one-off buttons.
-          if (popup.selectedIndex == -1 && selectedButton &&
-              (aEvent.keyCode == KeyEvent.DOM_VK_DOWN ||
-               aEvent.keyCode == KeyEvent.DOM_VK_UP)) {
-            if (aEvent.keyCode == KeyEvent.DOM_VK_DOWN)
-              this.selectedButton = selectedButton.nextSibling;
-            else
-              this.selectedButton = selectedButton.previousSibling;
-
-            if (this.selectedButton) {
-              aEvent.preventDefault();
-              aEvent.stopPropagation();
-            }
-            else {
-              // Set the selectedIndex to something that will make
-              // handleKeyNavigation (called by autocomplete.xml's onKeyPress
-              // method) reset the text field value to what the user typed.
-              if (aEvent.keyCode == KeyEvent.DOM_VK_UP)
-                popup.selectedIndex = popup.view.rowCount;
-              else
-                popup.selectedIndex = popup.view.rowCount - 1;
-            }
-          }
-
-          // If nothing is selected, UP selects the last one-off button.
-          if (aEvent.keyCode == KeyEvent.DOM_VK_UP &&
-              popup.selectedIndex == -1 && !selectedButton) {
-            selectedButton = list.lastChild;
-            while (selectedButton.classList.contains("dummy"))
-              selectedButton = selectedButton.previousSibling;
-            this.selectedButton = selectedButton;
-
-            aEvent.preventDefault();
-            aEvent.stopPropagation();
-          }
-
-          if (aEvent.keyCode == KeyEvent.DOM_VK_TAB) {
-            if (selectedButton) {
-              // TAB cycles though the list of one-off buttons.
-              if (aEvent.shiftKey)
-                this.selectedButton = selectedButton.previousSibling;
-              else
-                this.selectedButton = selectedButton.nextSibling;
-
-              // If we are out of the list, revert the text field to what the user typed.
-              if (!this.selectedButton) {
-                // Set the selectedIndex to something that will make
-                // handleKeyNavigation (called by autocomplete.xml's onKeyPress
-                // method) reset the text field value to what the user typed.
-                popup.selectedIndex = aEvent.shiftKey ? 0 : popup.view.rowCount - 1;
-                return;
-              }
-            }
-            else {
-              // If no selection, let the focus escape the panel for shift+<tab>
-              if (aEvent.shiftKey)
-                return;
-
-              // and select the first one-off button for <tab>.
-              this.selectedButton = list.firstChild;
-            }
-
+          if (stopEvent) {
             aEvent.preventDefault();
             aEvent.stopPropagation();
           }
