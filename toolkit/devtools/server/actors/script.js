@@ -2041,11 +2041,7 @@ ThreadActor.prototype = {
       // Limit the search to the line numbers contained in the new script.
       if (bpActor.location.line >= aScript.startLine
           && bpActor.location.line <= endLine) {
-        source.setBreakpointForActor(bpActor, {
-          sourceActor: source,
-          line: bpActor.location.line,
-          column: bpActor.location.column
-        });
+        source.setBreakpointForActor(bpActor);
       }
     }
 
@@ -2729,10 +2725,9 @@ SourceActor.prototype = {
   },
 
   _createBreakpoint: function(loc, originalLoc, condition) {
-    return this.setBreakpoint({
-      line: originalLoc.line,
-      column: originalLoc.column,
-    }, condition).then(response => {
+    return this.setBreakpoint(originalLoc.line, originalLoc.column, condition)
+               .then(response =>
+    {
       var actual = response.actualLocation;
       if (actual) {
         if (loc.sourceActor.source) {
@@ -2898,31 +2893,49 @@ SourceActor.prototype = {
    * accordingly. Note that we only do so if the breakpoint actor is still
    * pending (i.e. is not set as a breakpoint handler for any script).
    *
-   * @param object originalLocation
-   *        The location of the breakpoint in the original source.
+   * @param Number originalLine
+   *        The line number of the breakpoint in the original source.
+   * @param Number originalColumn
+   *        The column number of the breakpoint in the original source.
+   * @param String condition
+   *        A condition for the breakpoint.
    */
-  setBreakpoint: function (originalLocation, condition) {
+  setBreakpoint: function (originalLine, originalColumn, condition) {
     return this.threadActor.sources.getGeneratedLocation({
       sourceActor: this,
-      line: originalLocation.line,
-      column: originalLocation.column
+      line: originalLine,
+      column: originalColumn
     }).then(generatedLocation => {
       let actor = this._getOrCreateBreakpointActor(generatedLocation, condition);
 
-      return this.setBreakpointForActor(actor, generatedLocation);
+      return generatedLocation.sourceActor.setBreakpointForActor(actor);
     });
   },
 
-  setBreakpointForActor: function (actor, generatedLocation) {
-    let { sourceActor, line } = generatedLocation;
+  /*
+   * Set the given BreakpointActor as breakpoint handler on all scripts that
+   * match the given location for which the BreakpointActor is not already a
+   * breakpoint handler.
+   *
+   * @param BreakpointActor actor
+   *        The BreakpointActor to set as breakpoint handler.
+   */
+  setBreakpointForActor: function (actor) {
+    let generatedLocation = {
+      sourceActor: this,
+      line: actor.location.line,
+      column: actor.location.column
+    };
+
+    let { line: generatedLine, column: generatedColumn } = generatedLocation;
 
     // Find all scripts matching the given location. We will almost always have
     // a `source` object to query, but multiple inline HTML scripts are all
     // represented by a single SourceActor even though they have separate source
     // objects, so we need to query based on the url of the page for them.
-    let scripts = sourceActor.source
-      ? this.scripts.getScriptsBySourceAndLine(sourceActor.source, line)
-      : this.scripts.getScriptsByURLAndLine(sourceActor._originalUrl, line);
+    let scripts = this.source
+      ? this.scripts.getScriptsBySourceAndLine(this.source, generatedLine)
+      : this.scripts.getScriptsByURLAndLine(this._originalUrl, generatedLine);
 
     if (scripts.length === 0) {
       // Since we did not find any scripts to set the breakpoint on now, return
@@ -2940,7 +2953,7 @@ SourceActor.prototype = {
     // handler.
     scripts = scripts.filter((script) => !actor.hasScript(script));
 
-    if (generatedLocation.column) {
+    if (generatedColumn) {
       return this._setBreakpointAtColumn(scripts, generatedLocation, actor);
     }
 
@@ -2950,15 +2963,15 @@ SourceActor.prototype = {
       // location is not yet fixed. Use breakpoint sliding to select the first
       // line greater than or equal to the requested line that has one or more
       // offsets.
-      result = this._findNextLineWithOffsets(scripts, line);
+      result = this._findNextLineWithOffsets(scripts, generatedLine);
     } else {
       // If the BreakpointActor is a breakpoint handler for at least one script,
       // breakpoint sliding has already been carried out, so select the
       // requested line, even if it does not have any offsets.
-      let entryPoints = findEntryPointsForLine(scripts, line)
+      let entryPoints = findEntryPointsForLine(scripts, generatedLine)
       if (entryPoints) {
         result = {
-          line: line,
+          line: generatedLine,
           entryPoints: entryPoints
         };
       }
@@ -2973,8 +2986,8 @@ SourceActor.prototype = {
 
     const { line: actualLine, entryPoints } = result;
 
-    const actualLocation = actualLine !== line
-                         ? { sourceActor: sourceActor, line: actualLine }
+    const actualLocation = actualLine !== generatedLine
+                         ? { sourceActor: this, line: actualLine }
       : undefined;
 
     if (actualLocation) {
