@@ -4688,6 +4688,31 @@ FrameLayerBuilder::DumpRetainedLayerTree(LayerManager* aManager, std::stringstre
   aManager->Dump(aStream, "", aDumpHtml);
 }
 
+nsDisplayItemGeometry*
+FrameLayerBuilder::GetMostRecentGeometry(nsDisplayItem* aItem)
+{
+  typedef nsTArray<DisplayItemData*> DataArray;
+
+  // Retrieve the array of DisplayItemData associated with our frame.
+  FrameProperties properties = aItem->Frame()->Properties();
+  auto dataArray =
+    static_cast<DataArray*>(properties.Get(LayerManagerDataProperty()));
+  if (!dataArray) {
+    return nullptr;
+  }
+
+  // Find our display item data, if it exists, and return its geometry.
+  uint32_t itemPerFrameKey = aItem->GetPerFrameKey();
+  for (uint32_t i = 0; i < dataArray->Length(); i++) {
+    DisplayItemData* data = dataArray->ElementAt(i);
+    if (data->GetDisplayItemKey() == itemPerFrameKey) {
+      return data->GetGeometry();
+    }
+  }
+
+  return nullptr;
+}
+
 gfx::Rect
 CalculateBounds(const nsTArray<DisplayItemClip::RoundedRect>& aRects, int32_t A2D)
 {
