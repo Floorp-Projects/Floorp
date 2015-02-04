@@ -130,16 +130,10 @@ static nsresult ReportParseError(nsIFrame* aFrame, const char16_t* aAttribute,
 // stored in the property table. Row/Cell frames query the property table
 // to see what values apply to them.
 
-static void
-DestroyStylePropertyList(void* aPropertyValue)
-{
-  delete static_cast<nsTArray<int8_t>*>(aPropertyValue);
-}
-
-NS_DECLARE_FRAME_PROPERTY(RowAlignProperty, DestroyStylePropertyList)
-NS_DECLARE_FRAME_PROPERTY(RowLinesProperty, DestroyStylePropertyList)
-NS_DECLARE_FRAME_PROPERTY(ColumnAlignProperty, DestroyStylePropertyList)
-NS_DECLARE_FRAME_PROPERTY(ColumnLinesProperty, DestroyStylePropertyList)
+NS_DECLARE_FRAME_PROPERTY(RowAlignProperty, DeleteValue<nsTArray<int8_t>>)
+NS_DECLARE_FRAME_PROPERTY(RowLinesProperty, DeleteValue<nsTArray<int8_t>>)
+NS_DECLARE_FRAME_PROPERTY(ColumnAlignProperty, DeleteValue<nsTArray<int8_t>>)
+NS_DECLARE_FRAME_PROPERTY(ColumnLinesProperty, DeleteValue<nsTArray<int8_t>>)
 
 static const FramePropertyDescriptor*
 AttributeToProperty(nsIAtom* aAttribute)
