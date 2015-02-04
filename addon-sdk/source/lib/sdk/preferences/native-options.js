@@ -123,7 +123,8 @@ function injectOptions({ preferences, preferencesBranch, document, parent, id })
     setting.setAttribute('pref', 'extensions.' + preferencesBranch + '.' + name);
     setting.setAttribute('type', type);
     setting.setAttribute('title', title);
-    setting.setAttribute('desc', description);
+    if (description)
+      setting.setAttribute('desc', description);
 
     if (type === 'file' || type === 'directory') {
       setting.setAttribute('fullpath', 'true');

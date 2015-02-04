@@ -1,4 +1,5 @@
 {
-  "id": "test-child-process",
-  "main": "index.js"
+  "id": "test-child-process@jetpack",
+  "main": "./index.js",
+  "version": "0.0.1"
 }

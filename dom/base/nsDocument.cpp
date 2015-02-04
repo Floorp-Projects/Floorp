@@ -146,6 +146,7 @@
 #include "nsHtml5TreeOpExecutor.h"
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/dom/MediaSource.h"
 
 #include "mozAutoDocUpdate.h"
 #include "nsGlobalWindow.h"
@@ -4567,6 +4568,31 @@ nsDocument::ContainsEMEContent()
 #endif // MOZ_EME
 
 static void
+CheckIfContainsMSEContent(nsISupports* aSupports, void* aContainsMSE)
+{
+  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aSupports));
+  if (domMediaElem) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(domMediaElem));
+    MOZ_ASSERT(content, "aSupports is not a content");
+    HTMLMediaElement* mediaElem = static_cast<HTMLMediaElement*>(content.get());
+    bool* contains = static_cast<bool*>(aContainsMSE);
+    nsRefPtr<MediaSource> ms = mediaElem->GetMozMediaSourceObject();
+    if (ms) {
+      *contains = true;
+    }
+  }
+}
+
+bool
+nsDocument::ContainsMSEContent()
+{
+  bool containsMSE = false;
+  EnumerateActivityObservers(CheckIfContainsMSEContent,
+                             static_cast<void*>(&containsMSE));
+  return containsMSE;
+}
+
+static void
 NotifyActivityChanged(nsISupports *aSupports, void *aUnused)
 {
   nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aSupports));
@@ -8836,6 +8862,12 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
     return false;
   }
 #endif
+
+  // Don't save presentations for documents containing MSE content, to
+  // reduce memory usage.
+  if (ContainsMSEContent()) {
+    return false;
+  }
 
   bool canCache = true;
   if (mSubDocuments)

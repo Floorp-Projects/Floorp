@@ -25,6 +25,18 @@ enum IonRegisterAllocator {
     RegisterAllocator_Stupid
 };
 
+static inline mozilla::Maybe<IonRegisterAllocator>
+LookupRegisterAllocator(const char *name)
+{
+    if (!strcmp(name, "lsra"))
+        return mozilla::Some(RegisterAllocator_LSRA);
+    if (!strcmp(name, "backtracking"))
+        return mozilla::Some(RegisterAllocator_Backtracking);
+    if (!strcmp(name, "stupid"))
+        return mozilla::Some(RegisterAllocator_Stupid);
+    return mozilla::Nothing();
+}
+
 struct JitOptions
 {
     bool checkGraphConsistency;
@@ -42,10 +54,8 @@ struct JitOptions
     bool disableLoopUnrolling;
     bool disableEaa;
     bool eagerCompilation;
-    bool forceDefaultIonWarmUpThreshold;
-    uint32_t forcedDefaultIonWarmUpThreshold;
-    bool forceRegisterAllocator;
-    IonRegisterAllocator forcedRegisterAllocator;
+    mozilla::Maybe<uint32_t> forcedDefaultIonWarmUpThreshold;
+    mozilla::Maybe<IonRegisterAllocator> forcedRegisterAllocator;
     bool limitScriptSize;
     bool osr;
     uint32_t baselineWarmUpThreshold;

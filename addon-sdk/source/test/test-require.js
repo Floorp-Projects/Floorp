@@ -1,11 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 'use strict';
 
 const traceback = require('sdk/console/traceback');
-const REQUIRE_LINE_NO = 30;
+const REQUIRE_LINE_NO = 29;
 
 exports.test_no_args = function(assert) {
   let passed = tryRequireModule(assert);
@@ -28,7 +27,8 @@ function tryRequireModule(assert, module) {
   try {
     // This line number is important, referenced in REQUIRE_LINE_NO
     let doesNotExist = require(module);
-  } catch(e) {
+  }
+  catch(e) {
     checkError(assert, module, e);
     passed = true;
   }
@@ -64,4 +64,4 @@ function checkError (assert, name, e) {
                           'stacktrace has correct line number');
 }
 
-require('test').run(exports);
+require('sdk/test').run(exports);

@@ -58,11 +58,7 @@ var stopOnError;
 var findAndRunTests;
 
 // Combined information from all test runs.
-var results = {
-  passed: 0,
-  failed: 0,
-  testRuns: []
-};
+var results;
 
 // A list of the compartments and windows loaded after startup
 var startLeaks;
@@ -438,7 +434,8 @@ var POINTLESS_ERRORS = [
   'file: "chrome://browser/content/',
   'file: "chrome://global/content/',
   '[JavaScript Warning: "The character encoding of a framed document was ' +
-    'not declared.'
+    'not declared.',
+  'file: "chrome://browser/skin/'
 ];
 
 var consoleListener = {
@@ -589,6 +586,12 @@ var runTests = exports.runTests = function runTests(options) {
   onDone = options.onDone;
   print = options.print;
   findAndRunTests = options.findAndRunTests;
+
+  results = {
+    passed: 0,
+    failed: 0,
+    testRuns: []
+  };
 
   try {
     consoleListener.register();

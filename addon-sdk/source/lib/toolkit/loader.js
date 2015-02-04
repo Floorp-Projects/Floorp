@@ -2,28 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-;(function(id, factory) { // Module boilerplate :(
-  if (typeof(define) === 'function') { // RequireJS
-    define(factory);
-  } else if (typeof(require) === 'function') { // CommonJS
-    factory.call(this, require, exports, module);
-  } else if (~String(this).indexOf('BackstagePass')) { // JSM
-    this[factory.name] = {};
-    factory(function require(uri) {
-      var imports = {};
-      this['Components'].utils.import(uri, imports);
-      return imports;
-    }, this[factory.name], { uri: __URI__, id: id });
-    this.EXPORTED_SYMBOLS = [factory.name];
-  } else if (~String(this).indexOf('Sandbox')) { // Sandbox
-    factory(function require(uri) {}, this, { uri: __URI__, id: id });
-  } else {  // Browser or alike
-    var globals = this
-    factory(function require(id) {
-      return globals[id];
-    }, (globals[id] = {}), { uri: document.location.href + '#' + id, id: id });
+;((factory) => { // Module boilerplate :(
+  if (typeof(require) === 'function') { // CommonJS
+    require("chrome").Cu.import(module.uri, exports);
   }
-}).call(this, 'loader', function Loader(require, exports, module) {
+  else if (~String(this).indexOf('BackstagePass')) { // JSM
+    let module = { uri: __URI__, id: "toolkit/loader", exports: Object.create(null) }
+    factory(module);
+    Object.assign(this, module.exports);
+    this.EXPORTED_SYMBOLS = Object.getOwnPropertyNames(module.exports);
+  }
+  else {
+    throw Error("Loading environment is not supported");
+  }
+})(module => {
 
 'use strict';
 
@@ -38,10 +30,15 @@ const { loadSubScript } = Cc['@mozilla.org/moz/jssubscript-loader;1'].
                      getService(Ci.mozIJSSubScriptLoader);
 const { notifyObservers } = Cc['@mozilla.org/observer-service;1'].
                         getService(Ci.nsIObserverService);
+const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-const { Reflect } = Cu.import("resource://gre/modules/reflect.jsm", {});
-const { ConsoleAPI } = Cu.import("resource://gre/modules/devtools/Console.jsm");
 const { join: pathJoin, normalize, dirname } = Cu.import("resource://gre/modules/osfile/ospath_unix.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "XulApp", () => {
+  let xulappURI = module.uri.replace("toolkit/loader.js",
+                                       "sdk/system/xul-app.jsm");
+  return Cu.import(xulappURI, {});
+});
 
 // Define some shortcuts.
 const bind = Function.call.bind(Function.bind);
@@ -90,7 +87,7 @@ const descriptor = iced(function descriptor(object) {
   });
   return value;
 });
-exports.descriptor = descriptor;
+Loader.descriptor = descriptor;
 
 // Freeze important built-ins so they can't be used by untrusted code as a
 // message passing channel.
@@ -127,15 +124,15 @@ const override = iced(function override(target, source) {
   });
   return define({}, properties);
 });
-exports.override = override;
+Loader.override = override;
 
 function sourceURI(uri) { return String(uri).split(" -> ").pop(); }
-exports.sourceURI = iced(sourceURI);
+Loader.sourceURI = iced(sourceURI);
 
 function isntLoaderFrame(frame) { return frame.fileName !== module.uri }
 
 function parseURI(uri) { return String(uri).split(" -> ").pop(); }
-exports.parseURI = parseURI;
+Loader.parseURI = parseURI;
 
 function parseStack(stack) {
   let lines = String(stack).split("\n");
@@ -158,7 +155,7 @@ function parseStack(stack) {
     return frames;
   }, []);
 }
-exports.parseStack = parseStack;
+Loader.parseStack = parseStack;
 
 function serializeStack(frames) {
   return frames.reduce(function(stack, frame) {
@@ -169,7 +166,7 @@ function serializeStack(frames) {
            stack;
   }, "");
 }
-exports.serializeStack = serializeStack;
+Loader.serializeStack = serializeStack;
 
 function readURI(uri) {
   let stream = NetUtil.newChannel2(uri,
@@ -201,7 +198,7 @@ function join (...paths) {
   resolved = resolved.replace(/^chrome\:\/([^\/])/, 'chrome://$1');
   return resolved;
 }
-exports.join = join;
+Loader.join = join;
 
 // Function takes set of options and returns a JS sandbox. Function may be
 // passed set of options:
@@ -253,7 +250,7 @@ const Sandbox = iced(function Sandbox(options) {
 
   return sandbox;
 });
-exports.Sandbox = Sandbox;
+Loader.Sandbox = Sandbox;
 
 // Evaluates code from the given `uri` into given `sandbox`. If
 // `options.source` is passed, then that code is evaluated instead.
@@ -273,7 +270,7 @@ const evaluate = iced(function evaluate(sandbox, uri, options) {
   return source ? Cu.evalInSandbox(source, sandbox, version, uri, line)
                 : loadSubScript(uri, sandbox, encoding);
 });
-exports.evaluate = evaluate;
+Loader.evaluate = evaluate;
 
 // Populates `exports` of the given CommonJS `module` object, in the context
 // of the given `loader` by evaluating code associated with it.
@@ -306,7 +303,8 @@ const load = iced(function load(loader, module) {
       descriptors[name] = getOwnPropertyDescriptor(globals, name)
     });
     define(sandbox, descriptors);
-  } else {
+  }
+  else {
     sandbox = Sandbox({
       name: module.uri,
       prototype: create(globals, descriptors),
@@ -323,7 +321,8 @@ const load = iced(function load(loader, module) {
 
   try {
     evaluate(sandbox, module.uri);
-  } catch (error) {
+  }
+  catch (error) {
     let { message, fileName, lineNumber } = error;
     let stack = error.stack || Error().stack;
     let frames = parseStack(stack).filter(isntLoaderFrame);
@@ -361,12 +360,19 @@ const load = iced(function load(loader, module) {
     });
   }
 
+  if (loader.checkCompatibility) {
+    let err = XulApp.incompatibility(module);
+    if (err) {
+      throw err;
+    }
+  }
+
   if (module.exports && typeof(module.exports) === 'object')
     freeze(module.exports);
 
   return module;
 });
-exports.load = load;
+Loader.load = load;
 
 // Utility function to normalize module `uri`s so they have `.js` extension.
 function normalizeExt (uri) {
@@ -403,7 +409,7 @@ const resolve = iced(function resolve(id, base) {
 
   return resolved;
 });
-exports.resolve = resolve;
+Loader.resolve = resolve;
 
 // Node-style module lookup
 // Takes an id and path and attempts to load a file using node's resolving
@@ -412,7 +418,7 @@ exports.resolve = resolve;
 // http://nodejs.org/api/modules.html#modules_all_together
 const nodeResolve = iced(function nodeResolve(id, requirer, { rootURI }) {
   // Resolve again
-  id = exports.resolve(id, requirer);
+  id = Loader.resolve(id, requirer);
 
   // we assume that extensions are correct, i.e., a directory doesnt't have '.js'
   // and a js file isn't named 'file.json.js'
@@ -441,7 +447,7 @@ const nodeResolve = iced(function nodeResolve(id, requirer, { rootURI }) {
   // with `resolveURI` -- if during runtime, then `resolve` will throw.
   return void 0;
 });
-exports.nodeResolve = nodeResolve;
+Loader.nodeResolve = nodeResolve;
 
 // Attempts to load `path` and then `path.js`
 // Returns `path` with valid file, or `undefined` otherwise
@@ -538,7 +544,7 @@ const resolveURI = iced(function resolveURI(id, mapping) {
   }
   return void 0; // otherwise we raise a warning, see bug 910304
 });
-exports.resolveURI = resolveURI;
+Loader.resolveURI = resolveURI;
 
 // Creates version of `require` that will be exposed to the given `module`
 // in the context of the given `loader`. Each module gets own limited copy
@@ -652,7 +658,7 @@ const Require = iced(function Require(loader, requirer) {
       // found in the paths most likely, like `sdk/tabs`, which should
       // be resolved relatively if needed using traditional resolve
       if (!requirement) {
-        requirement = isRelative(id) ? exports.resolve(id, requirer.id) : id;
+        requirement = isRelative(id) ? Loader.resolve(id, requirer.id) : id;
       }
     } else {
       // Resolve `id` to its requirer if it's relative.
@@ -679,7 +685,7 @@ const Require = iced(function Require(loader, requirer) {
   require.main = loader.main === requirer ? requirer : undefined;
   return iced(require);
 });
-exports.Require = Require;
+Loader.Require = Require;
 
 const main = iced(function main(loader, id) {
   // If no main entry provided, and native loader is used,
@@ -690,7 +696,7 @@ const main = iced(function main(loader, id) {
   let module = loader.main = loader.modules[uri] = Module(id, uri);
   return loader.load(loader, module).exports;
 });
-exports.main = main;
+Loader.main = main;
 
 // Makes module object that is made available to CommonJS modules when they
 // are evaluated, along with `exports` and `require`.
@@ -701,7 +707,7 @@ const Module = iced(function Module(id, uri) {
     uri: { value: uri }
   });
 });
-exports.Module = Module;
+Loader.Module = Module;
 
 // Takes `loader`, and unload `reason` string and notifies all observers that
 // they should cleanup after them-self.
@@ -716,7 +722,7 @@ const unload = iced(function unload(loader, reason) {
   let subject = { wrappedJSObject: loader.destructor };
   notifyObservers(subject, 'sdk:loader:destroy', reason);
 });
-exports.unload = unload;
+Loader.unload = unload;
 
 // Function makes new loader that can be used to load CommonJS modules
 // described by a given `options.manifest`. Loader takes following options:
@@ -731,24 +737,29 @@ exports.unload = unload;
 //   module object (that has `uri` property) and `baseURI` of the loader.
 //   If `resolve` does not returns `uri` string exception will be thrown by
 //   an associated `require` call.
-const Loader = iced(function Loader(options) {
-  let console = new ConsoleAPI({
-    consoleID: options.id ? "addon/" + options.id : ""
-  });
-
+function Loader(options) {
   let {
     modules, globals, resolve, paths, rootURI, manifest, requireMap, isNative,
-    metadata, sharedGlobal, sharedGlobalBlacklist
+    metadata, sharedGlobal, sharedGlobalBlacklist, checkCompatibility
   } = override({
     paths: {},
     modules: {},
     globals: {
-      console: console
+      get console() {
+        // Import Console.jsm from here to prevent loading it until someone uses it
+        let { ConsoleAPI } = Cu.import("resource://gre/modules/devtools/Console.jsm");
+        let console = new ConsoleAPI({
+          consoleID: options.id ? "addon/" + options.id : ""
+        });
+        Object.defineProperty(this, "console", { value: console });
+        return this.console;
+      }
     },
+    checkCompatibility: false,
     resolve: options.isNative ?
       // Make the returned resolve function have the same signature
-      (id, requirer) => exports.nodeResolve(id, requirer, { rootURI: rootURI }) :
-      exports.resolve,
+      (id, requirer) => Loader.nodeResolve(id, requirer, { rootURI: rootURI }) :
+      Loader.resolve,
     sharedGlobalBlacklist: ["sdk/indexed-db"]
   }, options);
 
@@ -825,6 +836,7 @@ const Loader = iced(function Loader(options) {
     invisibleToDebugger: { enumerable: false,
                            value: options.invisibleToDebugger || false },
     load: { enumerable: false, value: options.load || load },
+    checkCompatibility: { enumerable: false, value: checkCompatibility },
     // Main (entry point) module, it can be set only once, since loader
     // instance can have only one main module.
     main: new function() {
@@ -846,8 +858,8 @@ const Loader = iced(function Loader(options) {
   }
 
   return freeze(create(null, returnObj));
-});
-exports.Loader = Loader;
+};
+Loader.Loader = Loader;
 
 let isJSONURI = uri => uri.substr(-5) === '.json';
 let isJSMURI = uri => uri.substr(-4) === '.jsm';
@@ -860,7 +872,7 @@ let isRelative = id => id[0] === '.'
 const generateMap = iced(function generateMap(options, callback) {
   let { rootURI, resolve, paths } = override({
     paths: {},
-    resolve: exports.nodeResolve
+    resolve: Loader.nodeResolve
   }, options);
 
   rootURI = addTrailingSlash(rootURI);
@@ -882,7 +894,7 @@ const generateMap = iced(function generateMap(options, callback) {
   }, {}, callback);
 
 });
-exports.generateMap = generateMap;
+Loader.generateMap = generateMap;
 
 // Default `main` entry to './index.js' and ensure is relative,
 // since node allows 'lib/index.js' without relative `./`
@@ -950,6 +962,8 @@ function findModuleIncludes (uri, callback) {
 }
 
 function walk (src, callback) {
+  // Import Reflect.jsm from here to prevent loading it until someone uses it
+  let { Reflect } = Cu.import("resource://gre/modules/reflect.jsm", {});
   let nodes = Reflect.parse(src);
   traverse(nodes, callback);
 }
@@ -988,4 +1002,5 @@ function isRequire (node) {
    && node.arguments[0].type === 'Literal';
 }
 
+module.exports = iced(Loader);
 });

@@ -1,0 +1,17 @@
+local.json
+mapping.json
+CONTRIBUTING.md
+@addon-sdk.xpi
+.*
+app-extension/
+bin/
+modules/
+node_modules/
+examples/
+
+# Python
+python-lib/
+*.pyc
+
+# Windows
+*Thumbs.db

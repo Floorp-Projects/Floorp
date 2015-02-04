@@ -18,6 +18,7 @@ const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { partial } = require('sdk/lang/functional');
 const { wait } = require('./event/helpers');
 const { gc } = require('sdk/test/memory');
+const packaging = require("@loader/options");
 
 const openBrowserWindow = partial(open, null, {features: {toolbar: true}});
 const openPrivateBrowserWindow = partial(open, null,
@@ -157,6 +158,35 @@ exports['test button added'] = function(assert) {
     'badge attribute is empty');
 
   loader.unload();
+}
+exports['test button is not garbaged'] = function (assert, done) {
+  let loader = Loader(module);
+  let { ToggleButton } = loader.require('sdk/ui');
+
+  ToggleButton({
+    id: 'my-button-1',
+    label: 'my button',
+    icon: './icon.png',
+    onClick: () => {
+      loader.unload();
+      done();
+    }
+  });
+
+  gc().then(() => {
+    let { node } = getWidget('my-button-1');
+
+    assert.ok(!!node, 'The button is in the navbar');
+
+    assert.equal('my button', node.getAttribute('label'),
+      'label is set');
+
+    assert.equal(data.url('icon.png'), node.getAttribute('image'),
+      'icon is set');
+
+    // ensure the listener is not gc'ed too
+    node.click();
+  }).catch(assert.fail);
 }
 
 exports['test button added with resource URI'] = function(assert) {
@@ -1346,4 +1376,11 @@ exports['test buttons can have anchored panels'] = function(assert, done) {
   b1.click();
 }
 
-require('sdk/test').run(exports);
+
+if (packaging.isNative) {
+  module.exports = {
+    "test skip on jpm": (assert) => assert.pass("skipping this file with jpm")
+  };
+}
+
+require("sdk/test").run(module.exports);

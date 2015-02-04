@@ -315,4 +315,4 @@ exports.testIgnoreClosingWindow = function(assert, done) {
   }, false);
 };
 
-require("test").run(exports);
+require("sdk/test").run(exports);
