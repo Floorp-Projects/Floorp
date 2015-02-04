@@ -2,7 +2,7 @@
 
 load(libdir + "iteration.js");
 
-var s = Set(["a"]);
+var s = new Set(["a"]);
 var it = s[Symbol.iterator]();
 assertIteratorNext(it, "a");
 s.clear();

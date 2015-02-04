@@ -31,6 +31,8 @@
 
 #ifdef JS_ARM_SIMULATOR
 
+#include "jslock.h"
+
 #include "jit/arm/Architecture-arm.h"
 #include "jit/IonTypes.h"
 
@@ -40,6 +42,7 @@ namespace jit {
 class Simulator;
 class Redirection;
 class CachePage;
+class AutoLockSimulator;
 
 // When the SingleStepCallback is called, the simulator is about to execute
 // sim->get_pc() and the current machine state represents the completed
@@ -68,6 +71,7 @@ class SimInstruction;
 class Simulator
 {
     friend class Redirection;
+    friend class AutoLockSimulatorCache;
 
   public:
     friend class ArmDebugger;
@@ -383,8 +387,6 @@ class Simulator
     }
 
   private:
-    Redirection *redirection_;
-
     // ICache checking.
     struct ICacheHasher {
         typedef void *Key;
@@ -396,19 +398,34 @@ class Simulator
   public:
     typedef HashMap<void *, CachePage *, ICacheHasher, SystemAllocPolicy> ICacheMap;
 
-  protected:
+  private:
+    // This lock creates a critical section around 'redirection_' and
+    // 'icache_', which are referenced both by the execution engine
+    // and by the off-thread compiler (see Redirection::Get in the cpp file).
+    PRLock *cacheLock_;
+#ifdef DEBUG
+    PRThread *cacheLockHolder_;
+#endif
+
+    Redirection *redirection_;
     ICacheMap icache_;
 
   public:
     ICacheMap &icache() {
+        // Technically we need the lock to access the innards of the
+        // icache, not to take its address, but the latter condition
+        // serves as a useful complement to the former.
+        MOZ_ASSERT(cacheLockHolder_);
         return icache_;
     }
 
     Redirection *redirection() const {
+        MOZ_ASSERT(cacheLockHolder_);
         return redirection_;
     }
 
     void setRedirection(js::jit::Redirection *redirection) {
+        MOZ_ASSERT(cacheLockHolder_);
         redirection_ = redirection;
     }
 };

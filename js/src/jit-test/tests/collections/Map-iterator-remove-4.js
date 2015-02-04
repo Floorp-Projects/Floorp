@@ -3,7 +3,7 @@
 load(libdir + "iteration.js");
 
 // Make a map.
-var map = Map();
+var map = new Map();
 var SIZE = 7;
 for (var j = 0; j < SIZE; j++)
     map.set(j, j);

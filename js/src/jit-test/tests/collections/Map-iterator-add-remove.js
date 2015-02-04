@@ -1,6 +1,6 @@
 // Removing and re-adding entries while an iterator is live causes the iterator to visit them again.
 
-var map = Map([['a', 1]]);
+var map = new Map([['a', 1]]);
 var n = 5;
 for (let [k, v] of map) {
     assertEq(k, 'a');

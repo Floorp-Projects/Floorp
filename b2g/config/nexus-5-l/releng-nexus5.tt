@@ -1,0 +1,7 @@
+[{
+"size": 80458572,
+"digest": "e5101f9dee1e462f6cbd3897ea57eede41d23981825c7b20d91d23ab461875d54d3dfc24999aa58a31e8b01f49fb3140e05ffe5af2957ef1d1afb89fd0dfe1ad",
+"algorithm": "sha512",
+"filename": "gcc.tar.xz",
+"unpack": "True"
+}]

@@ -2,7 +2,7 @@
 
 var g = newGlobal();
 var dbg = Debugger(g);
-var seen = WeakMap();
+var seen = new WeakMap();
 var hits = 0;
 dbg.onNewScript = function (s) {
     // Exceptions thrown from onNewScript are swept under the rug, but they

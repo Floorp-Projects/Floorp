@@ -14,8 +14,7 @@ assertEq(Map.name, "Map");
 
 assertEq(Object.getPrototypeOf(Map.prototype), Object.prototype);
 assertEq(Object.prototype.toString.call(Map.prototype), "[object Map]");
-assertEq(Object.prototype.toString.call(new Map), "[object Map]");
-assertEq(Object.prototype.toString.call(Map()), "[object Map]");
+assertEq(Object.prototype.toString.call(new Map()), "[object Map]");
 assertEq(Object.keys(Map.prototype).join(), "");
 assertEq(Map.prototype.constructor, Map);
 

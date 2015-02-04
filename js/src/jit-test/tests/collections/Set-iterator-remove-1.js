@@ -1,8 +1,8 @@
 // A set iterator can cope with removing the current entry.
 
 function test(letters, toRemove) {
-    var set = Set(letters);
-    toRemove = Set(toRemove);
+    var set = new Set(letters);
+    toRemove = new Set(toRemove);
 
     var leftovers = [x for (x of set) if (!toRemove.has(x))].join("");
 

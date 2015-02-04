@@ -14,8 +14,7 @@ assertEq(Set.name, "Set");
 
 assertEq(Object.getPrototypeOf(Set.prototype), Object.prototype);
 assertEq(Object.prototype.toString.call(Set.prototype), "[object Set]");
-assertEq(Object.prototype.toString.call(new Set), "[object Set]");
-assertEq(Object.prototype.toString.call(Set()), "[object Set]");
+assertEq(Object.prototype.toString.call(new Set()), "[object Set]");
 assertEq(Object.keys(Set.prototype).join(), "");
 assertEq(Set.prototype.constructor, Set);
 

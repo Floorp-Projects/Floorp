@@ -9,7 +9,7 @@ function seq_scan(array, f) {}\
 function assertStructuralEq(e1, e2) {}\
 for (var i = 0, l = a.length; i < l; i++) {}\
 ');");
-lfcode.push("for (var x of Set(Object.getOwnPropertyNames(this))) {}");
+lfcode.push("for (var x of new Set(Object.getOwnPropertyNames(this))) {}");
 var lfRunTypeId = -1;
 while (true) {
   var file = lfcode.shift(); if (file == undefined) { break; }

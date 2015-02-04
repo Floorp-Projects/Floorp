@@ -3,7 +3,7 @@
 load(libdir + "iteration.js");
 
 // Make a set.
-var set = Set();
+var set = new Set();
 var SIZE = 7;
 for (var j = 0; j < SIZE; j++)
     set.add(j);
