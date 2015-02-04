@@ -94,7 +94,7 @@ public:
     void Disconnect()
     {
       AssertOnDispatchThread();
-      MOZ_RELEASE_ASSERT(!mComplete);
+      MOZ_DIAGNOSTIC_ASSERT(!mComplete);
       mDisconnected = true;
     }
 
@@ -302,7 +302,7 @@ public:
                                          ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
     MutexAutoLock lock(mMutex);
-    MOZ_RELEASE_ASSERT(!IsExclusive || !mHaveConsumer);
+    MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveConsumer);
     mHaveConsumer = true;
     nsRefPtr<ThenValueBase> thenValue = new ThenValue<TargetType, ThisType, ResolveMethodType,
                                                       RejectMethodType>(aResponseTarget, aThisVal,
@@ -332,7 +332,7 @@ public:
   void ChainTo(already_AddRefed<MediaPromise> aChainedPromise, const char* aCallSite)
   {
     MutexAutoLock lock(mMutex);
-    MOZ_RELEASE_ASSERT(!IsExclusive || !mHaveConsumer);
+    MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveConsumer);
     mHaveConsumer = true;
     nsRefPtr<MediaPromise> chainedPromise = aChainedPromise;
     PROMISE_LOG("%s invoking Chain() [this=%p, chainedPromise=%p, isPending=%d]",
@@ -507,13 +507,13 @@ public:
 
   void Begin(already_AddRefed<typename PromiseType::Consumer> aConsumer)
   {
-    MOZ_RELEASE_ASSERT(!Exists());
+    MOZ_DIAGNOSTIC_ASSERT(!Exists());
     mConsumer = aConsumer;
   }
 
   void Complete()
   {
-    MOZ_RELEASE_ASSERT(Exists());
+    MOZ_DIAGNOSTIC_ASSERT(Exists());
     mConsumer = nullptr;
   }
 
