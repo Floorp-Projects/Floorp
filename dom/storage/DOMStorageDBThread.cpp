@@ -41,7 +41,7 @@ DOMStorageDBBridge::DOMStorageDBBridge()
 
 DOMStorageDBThread::DOMStorageDBThread()
 : mThread(nullptr)
-, mMonitor("DOMStorageThreadMonitor")
+, mThreadObserver(new ThreadObserver())
 , mStopIOThread(false)
 , mWALModeEnabled(false)
 , mDBReady(false)
@@ -76,7 +76,7 @@ DOMStorageDBThread::Init()
 
   // Need to keep the lock to avoid setting mThread later then
   // the thread body executes.
-  MonitorAutoLock monitor(mMonitor);
+  MonitorAutoLock monitor(mThreadObserver->GetMonitor());
 
   mThread = PR_CreateThread(PR_USER_THREAD, &DOMStorageDBThread::ThreadFunc, this,
                             PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD,
@@ -98,7 +98,7 @@ DOMStorageDBThread::Shutdown()
   Telemetry::AutoTimer<Telemetry::LOCALDOMSTORAGE_SHUTDOWN_DATABASE_MS> timer;
 
   {
-    MonitorAutoLock monitor(mMonitor);
+    MonitorAutoLock monitor(mThreadObserver->GetMonitor());
 
     // After we stop, no other operations can be accepted
     mFlushImmediately = true;
@@ -130,7 +130,7 @@ DOMStorageDBThread::SyncPreload(DOMStorageCacheBridge* aCache, bool aForceSync)
   if (mDBReady && mWALModeEnabled) {
     bool pendingTasks;
     {
-      MonitorAutoLock monitor(mMonitor);
+      MonitorAutoLock monitor(mThreadObserver->GetMonitor());
       pendingTasks = mPendingTasks.IsScopeUpdatePending(aCache->Scope()) ||
                      mPendingTasks.IsScopeClearPending(aCache->Scope());
     }
@@ -157,7 +157,7 @@ DOMStorageDBThread::SyncPreload(DOMStorageCacheBridge* aCache, bool aForceSync)
 void
 DOMStorageDBThread::AsyncFlush()
 {
-  MonitorAutoLock monitor(mMonitor);
+  MonitorAutoLock monitor(mThreadObserver->GetMonitor());
   mFlushImmediately = true;
   monitor.Notify();
 }
@@ -165,7 +165,7 @@ DOMStorageDBThread::AsyncFlush()
 bool
 DOMStorageDBThread::ShouldPreloadScope(const nsACString& aScope)
 {
-  MonitorAutoLock monitor(mMonitor);
+  MonitorAutoLock monitor(mThreadObserver->GetMonitor());
   return mScopesHavingData.Contains(aScope);
 }
 
@@ -185,14 +185,14 @@ GetScopesHavingDataEnum(nsCStringHashKey* aKey, void* aArg)
 void
 DOMStorageDBThread::GetScopesHavingData(InfallibleTArray<nsCString>* aScopes)
 {
-  MonitorAutoLock monitor(mMonitor);
+  MonitorAutoLock monitor(mThreadObserver->GetMonitor());
   mScopesHavingData.EnumerateEntries(GetScopesHavingDataEnum, aScopes);
 }
 
 nsresult
 DOMStorageDBThread::InsertDBOp(DOMStorageDBThread::DBOperation* aOperation)
 {
-  MonitorAutoLock monitor(mMonitor);
+  MonitorAutoLock monitor(mThreadObserver->GetMonitor());
 
   // Sentinel to don't forget to delete the operation when we exit early.
   nsAutoPtr<DOMStorageDBThread::DBOperation> opScope(aOperation);
@@ -204,7 +204,7 @@ DOMStorageDBThread::InsertDBOp(DOMStorageDBThread::DBOperation* aOperation)
   }
 
   if (NS_FAILED(mStatus)) {
-    MonitorAutoUnlock unlock(mMonitor);
+    MonitorAutoUnlock unlock(mThreadObserver->GetMonitor());
     aOperation->Finalize(mStatus);
     return mStatus;
   }
@@ -225,7 +225,7 @@ DOMStorageDBThread::InsertDBOp(DOMStorageDBThread::DBOperation* aOperation)
       // actually been cleared from the database.  Preloads are processed
       // immediately before update and clear operations on the database that
       // are flushed periodically in batches.
-      MonitorAutoUnlock unlock(mMonitor);
+      MonitorAutoUnlock unlock(mThreadObserver->GetMonitor());
       aOperation->Finalize(NS_OK);
       return NS_OK;
     }
@@ -292,7 +292,7 @@ DOMStorageDBThread::ThreadFunc()
 {
   nsresult rv = InitDatabase();
 
-  MonitorAutoLock lockMonitor(mMonitor);
+  MonitorAutoLock lockMonitor(mThreadObserver->GetMonitor());
 
   if (NS_FAILED(rv)) {
     mStatus = rv;
@@ -300,13 +300,32 @@ DOMStorageDBThread::ThreadFunc()
     return;
   }
 
-  while (MOZ_LIKELY(!mStopIOThread || mPreloads.Length() || mPendingTasks.HasTasks())) {
+  // Create an nsIThread for the current PRThread, so we can observe runnables
+  // dispatched to it.
+  nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
+  nsCOMPtr<nsIThreadInternal> threadInternal = do_QueryInterface(thread);
+  MOZ_ASSERT(threadInternal); // Should always succeed.
+  threadInternal->SetObserver(mThreadObserver);
+
+  while (MOZ_LIKELY(!mStopIOThread || mPreloads.Length() ||
+                    mPendingTasks.HasTasks() ||
+                    mThreadObserver->HasPendingEvents())) {
+    // Process xpcom events first.
+    while (MOZ_UNLIKELY(mThreadObserver->HasPendingEvents())) {
+      mThreadObserver->ClearPendingEvents();
+      MonitorAutoUnlock unlock(mThreadObserver->GetMonitor());
+      bool processedEvent;
+      do {
+        rv = thread->ProcessNextEvent(false, &processedEvent);
+      } while (NS_SUCCEEDED(rv) && processedEvent);
+    }
+
     if (MOZ_UNLIKELY(TimeUntilFlush() == 0)) {
       // Flush time is up or flush has been forced, do it now.
       UnscheduleFlush();
       if (mPendingTasks.Prepare()) {
         {
-          MonitorAutoUnlock unlockMonitor(mMonitor);
+          MonitorAutoUnlock unlockMonitor(mThreadObserver->GetMonitor());
           rv = mPendingTasks.Execute(this);
         }
 
@@ -320,7 +339,7 @@ DOMStorageDBThread::ThreadFunc()
       nsAutoPtr<DBOperation> op(mPreloads[0]);
       mPreloads.RemoveElementAt(0);
       {
-        MonitorAutoUnlock unlockMonitor(mMonitor);
+        MonitorAutoUnlock unlockMonitor(mThreadObserver->GetMonitor());
         op->PerformAndFinalize(this);
       }
 
@@ -333,7 +352,40 @@ DOMStorageDBThread::ThreadFunc()
   } // thread loop
 
   mStatus = ShutdownDatabase();
+
+  if (threadInternal) {
+    threadInternal->SetObserver(nullptr);
+  }
 }
+
+
+NS_IMPL_ISUPPORTS(DOMStorageDBThread::ThreadObserver, nsIThreadObserver)
+
+NS_IMETHODIMP
+DOMStorageDBThread::ThreadObserver::OnDispatchedEvent(nsIThreadInternal *thread)
+{
+  MonitorAutoLock lock(mMonitor);
+  mHasPendingEvents = true;
+  lock.Notify();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DOMStorageDBThread::ThreadObserver::OnProcessNextEvent(nsIThreadInternal *thread,
+                                       bool mayWait,
+                                       uint32_t recursionDepth)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DOMStorageDBThread::ThreadObserver::AfterProcessNextEvent(nsIThreadInternal *thread,
+                                          uint32_t recursionDepth,
+                                          bool eventWasProcessed)
+{
+  return NS_OK;
+}
+
 
 extern void
 ReverseString(const nsCSubstring& aSource, nsCSubstring& aResult);
@@ -508,7 +560,7 @@ DOMStorageDBThread::InitDatabase()
     rv = stmt->GetUTF8String(0, foundScope);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    MonitorAutoLock monitor(mMonitor);
+    MonitorAutoLock monitor(mThreadObserver->GetMonitor());
     mScopesHavingData.PutEntry(foundScope);
   }
 
@@ -648,7 +700,7 @@ DOMStorageDBThread::ScheduleFlush()
   mDirtyEpoch = PR_IntervalNow() | 1; // Must be non-zero to indicate we are scheduled
 
   // Wake the monitor from indefinite sleep...
-  mMonitor.Notify();
+  (mThreadObserver->GetMonitor()).Notify();
 }
 
 void
