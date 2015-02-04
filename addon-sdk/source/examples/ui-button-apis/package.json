@@ -5,5 +5,6 @@
   "description": "A Button API example",
   "author": "jeff@canuckistani.ca (Jeff Griffiths | @canuckistani)",
   "license": "MPL 2.0",
-  "version": "0.1"
+  "version": "0.1.1",
+  "main": "./lib/main.js"
 }

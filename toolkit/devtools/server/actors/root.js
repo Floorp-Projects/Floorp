@@ -125,12 +125,7 @@ RootActor.prototype = {
     highlightable: true,
     // Which custom highlighter does the server-side highlighter actor supports?
     // (see server/actors/highlighter.js)
-    customHighlighters: [
-      "BoxModelHighlighter",
-      "CssTransformHighlighter",
-      "SelectorHighlighter",
-      "RectHighlighter"
-    ],
+    customHighlighters: true,
     // Whether the inspector actor implements the getImageDataFromURL
     // method that returns data-uris for image URLs. This is used for image
     // tooltips for instance

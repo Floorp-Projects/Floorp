@@ -9,8 +9,11 @@ import java.util.Arrays;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
+import org.mozilla.gecko.widget.ThemedImageView;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -30,6 +33,7 @@ import android.widget.ImageView;
 abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
 
     protected final ImageView urlBarTranslatingEdge;
+    protected final ThemedImageView editCancel;
 
     private final Path roundCornerShape;
     private final Paint roundCornerPaint;
@@ -45,6 +49,8 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
         // This will clip the translating edge's image at 60% of its width
         urlBarTranslatingEdge.getDrawable().setLevel(6000);
 
+        editCancel = (ThemedImageView) findViewById(R.id.edit_cancel);
+
         focusOrder.add(this);
         focusOrder.addAll(urlDisplayLayout.getFocusOrder());
         focusOrder.addAll(Arrays.asList(tabsButton, menuButton));
@@ -59,6 +65,31 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
         roundCornerPaint.setAntiAlias(true);
         roundCornerPaint.setColor(res.getColor(R.color.background_tabs));
         roundCornerPaint.setStrokeWidth(0.0f);
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        editCancel.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // If we exit editing mode during the animation,
+                // we're put into an inconsistent state (bug 1017276).
+                if (!isAnimating()) {
+                    Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL,
+                            TelemetryContract.Method.ACTIONBAR,
+                            getResources().getResourceEntryName(editCancel.getId()));
+                    cancelEdit();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void setPrivateMode(final boolean isPrivate) {
+        super.setPrivateMode(isPrivate);
+        editCancel.setPrivateMode(isPrivate);
     }
 
     @Override
@@ -152,4 +183,42 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
         }
     }
 
+    @Override
+    protected void setUrlEditLayoutVisibility(final boolean showEditLayout,
+            final PropertyAnimator animator) {
+        super.setUrlEditLayoutVisibility(showEditLayout, animator);
+
+        if (animator == null) {
+            editCancel.setVisibility(showEditLayout ? View.VISIBLE : View.INVISIBLE);
+            return;
+        }
+
+        animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+            @Override
+            public void onPropertyAnimationStart() {
+                if (!showEditLayout) {
+                    editCancel.setVisibility(View.INVISIBLE);
+                }
+            }
+
+            @Override
+            public void onPropertyAnimationEnd() {
+                if (showEditLayout) {
+                    editCancel.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onLightweightThemeChanged() {
+        super.onLightweightThemeChanged();
+        editCancel.onLightweightThemeChanged();
+    }
+
+    @Override
+    public void onLightweightThemeReset() {
+        super.onLightweightThemeReset();
+        editCancel.onLightweightThemeReset();
+    }
 }

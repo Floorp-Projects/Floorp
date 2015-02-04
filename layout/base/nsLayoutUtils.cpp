@@ -2892,7 +2892,8 @@ nsLayoutUtils::GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
   // displayport.
   // Note: we only do this in processes where we do subframe scrolling to
   //       begin with (i.e., not in the parent process on B2G).
-  if (aBuilder.IsPaintingToWindow() && WantSubAPZC() &&
+  if (aBuilder.IsPaintingToWindow() &&
+      gfxPrefs::AsyncPanZoomEnabled() &&
       !aBuilder.HaveScrollableDisplayPort() &&
       scrollableFrame->WantAsyncScroll()) {
 
@@ -3226,6 +3227,14 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     gPaintCount++;
 #endif
   }
+
+#ifdef MOZ_DUMP_PAINTING
+  if (gfxPrefs::DumpClientLayers()) {
+    std::stringstream ss;
+    FrameLayerBuilder::DumpRetainedLayerTree(layerManager, ss, false);
+    printf_stderr("%s", ss.str().c_str());
+  }
+#endif
 
   // Update the widget's opaque region information. This sets
   // glass boundaries on Windows. Also set up the window dragging region
@@ -7642,13 +7651,6 @@ nsLayoutUtils::CalculateExpandedScrollableRect(nsIFrame* aFrame)
     scrollableRect.height = compSize.height;
   }
   return scrollableRect;
-}
-
-/* static */ bool
-nsLayoutUtils::WantSubAPZC()
-{
-  return gfxPrefs::AsyncPanZoomEnabled() &&
-         gfxPrefs::APZSubframeEnabled();
 }
 
 /* static */ bool

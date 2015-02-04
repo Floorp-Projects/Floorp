@@ -4,9 +4,9 @@
 
 package org.mozilla.gecko.tabs;
 
-import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.TabThumbnailWrapper;
 
 import android.content.Context;
@@ -95,7 +95,7 @@ public class TabsLayoutItemView extends LinearLayout
         mCloseButton = (ImageView) findViewById(R.id.close);
         mThumbnailWrapper = (TabThumbnailWrapper) findViewById(R.id.wrapper);
 
-        if (NewTabletUI.isEnabled(getContext())) {
+        if (HardwareUtils.isTablet()) {
             growCloseButtonHitArea();
         }
     }

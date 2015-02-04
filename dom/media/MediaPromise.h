@@ -253,6 +253,9 @@ protected:
       Consumer::mComplete = true;
       if (Consumer::mDisconnected) {
         PROMISE_LOG("ThenValue::DoResolve disconnected - bailing out [this=%p]", this);
+        // Null these out for the same reasons described below.
+        mResponseTarget = nullptr;
+        mThisVal = nullptr;
         return;
       }
       InvokeCallbackMethod(mThisVal.get(), mResolveMethod, aResolveValue);
@@ -270,6 +273,9 @@ protected:
       Consumer::mComplete = true;
       if (Consumer::mDisconnected) {
         PROMISE_LOG("ThenValue::DoReject disconnected - bailing out [this=%p]", this);
+        // Null these out for the same reasons described below.
+        mResponseTarget = nullptr;
+        mThisVal = nullptr;
         return;
       }
       InvokeCallbackMethod(mThisVal.get(), mRejectMethod, aRejectValue);
