@@ -2,7 +2,7 @@
 
 load(libdir + "iteration.js");
 
-var m = Map();
+var m = new Map();
 var it = m[Symbol.iterator]();
 assertIteratorDone(it, undefined);  // close the iterator
 m.clear();

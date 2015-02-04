@@ -3,7 +3,7 @@
 load(libdir + "iteration.js");
 
 var aproto = Object.getPrototypeOf(Array()[Symbol.iterator]());
-var mproto = Object.getPrototypeOf(Map()[Symbol.iterator]());
+var mproto = Object.getPrototypeOf((new Map())[Symbol.iterator]());
 var sproto = Object.getPrototypeOf(Set()[Symbol.iterator]());
 assertEq(aproto !== mproto, true);
 assertEq(aproto !== sproto, true);

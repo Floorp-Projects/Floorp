@@ -1,7 +1,8 @@
 // The Map constructor creates an empty Map by default.
 
-assertEq(Map().size, 0);
-assertEq((new Map).size, 0);
-assertEq(Map(undefined).size, 0);
-assertEq(new Map(undefined).size, 0);
-assertEq(new Map(null).size, 0);
+var m = new Map();
+assertEq(m.size, 0);
+m = new Map(undefined);
+assertEq(m.size, 0);
+m = new Map(null);
+assertEq(m.size, 0);

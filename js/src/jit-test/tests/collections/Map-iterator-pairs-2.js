@@ -2,7 +2,7 @@
 
 load(libdir + "iteration.js");
 
-var map = Map([['a', 1], ['b', 2]]);
+var map = new Map([['a', 1], ['b', 2]]);
 var iter = map[Symbol.iterator]();
 var a = iter.next(), b = iter.next();
 assertIteratorResult(a, ['a', 1], false);
