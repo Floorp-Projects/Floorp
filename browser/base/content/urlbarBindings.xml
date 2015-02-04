@@ -1137,6 +1137,7 @@
                                                            "search-panel-one-offs")
         while (list.firstChild)
           list.firstChild.remove();
+        textbox._selectedButton = null;
 
         let hiddenList;
         try {
