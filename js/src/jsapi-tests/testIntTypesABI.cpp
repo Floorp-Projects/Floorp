@@ -31,6 +31,7 @@
 #include "js/SliceBudget.h"
 #include "js/StructuredClone.h"
 #include "js/TracingAPI.h"
+#include "js/TrackedOptimizationInfo.h"
 #include "js/TypeDecls.h"
 #include "js/UbiNode.h"
 #include "js/Utility.h"

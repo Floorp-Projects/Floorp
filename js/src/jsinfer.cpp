@@ -97,6 +97,38 @@ types::TypeIdStringImpl(jsid id)
 // Logging
 /////////////////////////////////////////////////////////////////////
 
+const char *
+types::NonObjectTypeString(Type type)
+{
+    if (type.isPrimitive()) {
+        switch (type.primitive()) {
+          case JSVAL_TYPE_UNDEFINED:
+            return "void";
+          case JSVAL_TYPE_NULL:
+            return "null";
+          case JSVAL_TYPE_BOOLEAN:
+            return "bool";
+          case JSVAL_TYPE_INT32:
+            return "int";
+          case JSVAL_TYPE_DOUBLE:
+            return "float";
+          case JSVAL_TYPE_STRING:
+            return "string";
+          case JSVAL_TYPE_SYMBOL:
+            return "symbol";
+          case JSVAL_TYPE_MAGIC:
+            return "lazyargs";
+          default:
+            MOZ_CRASH("Bad type");
+        }
+    }
+    if (type.isUnknown())
+        return "unknown";
+
+    MOZ_ASSERT(type.isAnyObject());
+    return "object";
+}
+
 #ifdef DEBUG
 
 static bool InferSpewActive(SpewChannel channel)
@@ -172,32 +204,8 @@ types::InferSpewColor(TypeSet *types)
 const char *
 types::TypeString(Type type)
 {
-    if (type.isPrimitive()) {
-        switch (type.primitive()) {
-          case JSVAL_TYPE_UNDEFINED:
-            return "void";
-          case JSVAL_TYPE_NULL:
-            return "null";
-          case JSVAL_TYPE_BOOLEAN:
-            return "bool";
-          case JSVAL_TYPE_INT32:
-            return "int";
-          case JSVAL_TYPE_DOUBLE:
-            return "float";
-          case JSVAL_TYPE_STRING:
-            return "string";
-          case JSVAL_TYPE_SYMBOL:
-            return "symbol";
-          case JSVAL_TYPE_MAGIC:
-            return "lazyargs";
-          default:
-            MOZ_CRASH("Bad type");
-        }
-    }
-    if (type.isUnknown())
-        return "unknown";
-    if (type.isAnyObject())
-        return " object";
+    if (type.isPrimitive() || type.isUnknown() || type.isAnyObject())
+        return NonObjectTypeString(type);
 
     static char bufs[4][40];
     static unsigned which = 0;
@@ -4708,6 +4716,30 @@ ExclusiveContext::getLazySingletonGroup(const Class *clasp, TaggedProto proto)
     MOZ_ASSERT(group->singleton(), "created group must be a proper singleton");
 
     return group;
+}
+
+bool
+ExclusiveContext::findAllocationSiteForType(Type type, JSScript **script, uint32_t *offset) const
+{
+    *script = nullptr;
+    *offset = 0;
+
+    if (type.isUnknown() || type.isAnyObject() || !type.isGroup())
+        return false;
+    ObjectGroup *obj = type.group();
+
+    const AllocationSiteTable *table = compartment()->types.allocationSiteTable;
+    if (!table)
+        return false;
+
+    for (AllocationSiteTable::Range r = table->all(); !r.empty(); r.popFront()) {
+        if (obj == r.front().value()) {
+            *script = r.front().key().script;
+            *offset = r.front().key().offset;
+            return true;
+        }
+    }
+    return false;
 }
 
 /////////////////////////////////////////////////////////////////////
