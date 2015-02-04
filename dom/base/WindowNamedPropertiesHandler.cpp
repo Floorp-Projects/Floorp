@@ -210,10 +210,10 @@ WindowNamedPropertiesHandler::ownPropNames(JSContext* aCx,
 bool
 WindowNamedPropertiesHandler::delete_(JSContext* aCx,
                                       JS::Handle<JSObject*> aProxy,
-                                      JS::Handle<jsid> aId, bool* aBp) const
+                                      JS::Handle<jsid> aId,
+                                      JS::ObjectOpResult &aResult) const
 {
-  *aBp = false;
-  return true;
+  return aResult.failCantDeleteWindowNamedProperty();
 }
 
 static bool

@@ -2322,7 +2322,8 @@ js::NativeSetElement(JSContext *cx, HandleNativeObject obj, HandleObject receive
 
 // ES6 draft rev31 9.1.10 [[Delete]]
 bool
-js::NativeDeleteProperty(JSContext *cx, HandleNativeObject obj, HandleId id, bool *succeeded)
+js::NativeDeleteProperty(JSContext *cx, HandleNativeObject obj, HandleId id,
+                         ObjectOpResult &result)
 {
     // Steps 2-3.
     RootedShape shape(cx);
@@ -2333,20 +2334,18 @@ js::NativeDeleteProperty(JSContext *cx, HandleNativeObject obj, HandleId id, boo
     if (!shape) {
         // If no property call the class's delProperty hook, passing succeeded
         // as the result parameter. This always succeeds when there is no hook.
-        return CallJSDeletePropertyOp(cx, obj->getClass()->delProperty, obj, id, succeeded);
+        return CallJSDeletePropertyOp(cx, obj->getClass()->delProperty, obj, id, result);
     }
 
     cx->runtime()->gc.poke();
 
     // Step 6. Non-configurable property.
-    if (GetShapeAttributes(obj, shape) & JSPROP_PERMANENT) {
-        *succeeded = false;
-        return true;
-    }
+    if (GetShapeAttributes(obj, shape) & JSPROP_PERMANENT)
+        return result.failCantDelete();
 
-    if (!CallJSDeletePropertyOp(cx, obj->getClass()->delProperty, obj, id, succeeded))
+    if (!CallJSDeletePropertyOp(cx, obj->getClass()->delProperty, obj, id, result))
         return false;
-    if (!*succeeded)
+    if (!result)
         return true;
 
     // Step 5.

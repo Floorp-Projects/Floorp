@@ -114,8 +114,8 @@ public:
   virtual bool defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                               JS::MutableHandle<JSPropertyDescriptor> desc,
                               JS::ObjectOpResult &result, bool *defined) const;
-  bool delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
-               JS::Handle<jsid> id, bool* bp) const MOZ_OVERRIDE;
+  bool delete_(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
+               JS::ObjectOpResult &result) const MOZ_OVERRIDE;
   bool preventExtensions(JSContext *cx, JS::Handle<JSObject*> proxy,
                          bool *succeeded) const MOZ_OVERRIDE;
   bool isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible)

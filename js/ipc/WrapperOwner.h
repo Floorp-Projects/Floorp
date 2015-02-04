@@ -35,7 +35,8 @@ class WrapperOwner : public virtual JavaScriptShared
                         JS::MutableHandle<JSPropertyDescriptor> desc,
                         JS::ObjectOpResult &result);
     bool ownPropertyKeys(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
-    bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
+    bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
+                 JS::ObjectOpResult &result);
     bool preventExtensions(JSContext *cx, JS::HandleObject proxy, bool *succeeded);
     bool isExtensible(JSContext *cx, JS::HandleObject proxy, bool *extensible);
     bool has(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
@@ -118,7 +119,7 @@ class WrapperOwner : public virtual JavaScriptShared
                                     const PPropertyDescriptor &flags,
                                     ReturnStatus *rs) = 0;
     virtual bool SendDelete(const ObjectId &objId, const JSIDVariant &id,
-                            ReturnStatus *rs, bool *success) = 0;
+                            ReturnStatus *rs) = 0;
 
     virtual bool SendHas(const ObjectId &objId, const JSIDVariant &id,
                          ReturnStatus *rs, bool *bp) = 0;

@@ -689,9 +689,10 @@ ScriptedDirectProxyHandler::ownPropertyKeys(JSContext *cx, HandleObject proxy,
                            cx->names().ownKeys);
 }
 
-// ES6 (5 April 2014) 9.5.10 Proxy.[[Delete]](P)
+// ES6 draft rev 32 (2 Feb 2014) 9.5.10 Proxy.[[Delete]](P)
 bool
-ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const
+ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id,
+                                    ObjectOpResult &result) const
 {
     // step 2
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
@@ -702,19 +703,19 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId 
         return false;
     }
 
-    // step 4
+    // steps 4-5
     RootedObject target(cx, proxy->as<ProxyObject>().target());
 
-    // step 5
+    // steps 6-7
     RootedValue trap(cx);
     if (!GetProperty(cx, handler, handler, cx->names().deleteProperty, &trap))
         return false;
 
-    // step 7
-    if (trap.isUndefined())
-        return DirectProxyHandler::delete_(cx, proxy, id, bp);
-
     // step 8
+    if (trap.isUndefined())
+        return DirectProxyHandler::delete_(cx, proxy, id, result);
+
+    // steps 9-10
     RootedValue value(cx);
     if (!IdToStringOrSymbol(cx, id, &value))
         return false;
@@ -726,28 +727,24 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId 
     if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
-    // step 9
-    if (ToBoolean(trapResult)) {
-        // step 12
-        Rooted<PropertyDescriptor> desc(cx);
-        if (!GetOwnPropertyDescriptor(cx, target, id, &desc))
-            return false;
+    // step 11
+    if (!ToBoolean(trapResult))
+        return result.fail(JSMSG_PROXY_DELETE_RETURNED_FALSE);
 
-        // step 14-15
-        if (desc.object() && desc.isPermanent()) {
-            RootedValue v(cx, IdToValue(id));
-            ReportValueError(cx, JSMSG_CANT_DELETE, JSDVG_IGNORE_STACK, v, js::NullPtr());
-            return false;
-        }
+    // steps 12-13
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!GetOwnPropertyDescriptor(cx, target, id, &desc))
+        return false;
 
-        // step 16
-        *bp = true;
-        return true;
+    // step 14-15
+    if (desc.object() && desc.isPermanent()) {
+        RootedValue v(cx, IdToValue(id));
+        ReportValueError(cx, JSMSG_CANT_DELETE, JSDVG_IGNORE_STACK, v, js::NullPtr());
+        return false;
     }
 
-    // step 11
-    *bp = false;
-    return true;
+    // step 16
+    return result.succeed();
 }
 
 // ES6 (14 October, 2014) 9.5.11 Proxy.[[Enumerate]]

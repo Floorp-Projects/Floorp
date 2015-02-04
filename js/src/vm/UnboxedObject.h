@@ -179,7 +179,8 @@ class UnboxedPlainObject : public JSObject
     static bool obj_getOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
                                              MutableHandle<JSPropertyDescriptor> desc);
 
-    static bool obj_deleteProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded);
+    static bool obj_deleteProperty(JSContext *cx, HandleObject obj, HandleId id,
+                                   ObjectOpResult &result);
 
     static bool obj_enumerate(JSContext *cx, HandleObject obj, AutoIdVector &properties);
     static bool obj_watch(JSContext *cx, HandleObject obj, HandleId id, HandleObject callable);

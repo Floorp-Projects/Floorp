@@ -6803,10 +6803,10 @@ DebuggerObject_deleteProperty(JSContext *cx, unsigned argc, Value *vp)
     ac.emplace(cx, obj);
     ErrorCopier ec(ac);
 
-    bool succeeded;
-    if (!DeleteProperty(cx, obj, id, &succeeded))
+    ObjectOpResult result;
+    if (!DeleteProperty(cx, obj, id, result))
         return false;
-    args.rval().setBoolean(succeeded);
+    args.rval().setBoolean(result.ok());
     return true;
 }
 

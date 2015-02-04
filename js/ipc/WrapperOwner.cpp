@@ -94,7 +94,8 @@ class CPOWProxyHandler : public BaseProxyHandler
                                 ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const MOZ_OVERRIDE;
-    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE;
+    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id,
+                         ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp) const MOZ_OVERRIDE;
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const MOZ_OVERRIDE;
     virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;
@@ -248,13 +249,14 @@ WrapperOwner::ownPropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector &p
 }
 
 bool
-CPOWProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const
+CPOWProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id,
+                          ObjectOpResult &result) const
 {
-    FORWARD(delete_, (cx, proxy, id, bp));
+    FORWARD(delete_, (cx, proxy, id, result));
 }
 
 bool
-WrapperOwner::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
+WrapperOwner::delete_(JSContext *cx, HandleObject proxy, HandleId id, ObjectOpResult &result)
 {
     ObjectId objId = idOf(proxy);
 
@@ -263,12 +265,12 @@ WrapperOwner::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
         return false;
 
     ReturnStatus status;
-    if (!SendDelete(objId, idVar, &status, bp))
+    if (!SendDelete(objId, idVar, &status))
         return ipcfail(cx);
 
     LOG_STACK();
 
-    return ok(cx, status);
+    return ok(cx, status, result);
 }
 
 bool

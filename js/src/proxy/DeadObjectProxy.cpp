@@ -48,7 +48,8 @@ DeadObjectProxy::ownPropertyKeys(JSContext *cx, HandleObject wrapper,
 }
 
 bool
-DeadObjectProxy::delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp) const
+DeadObjectProxy::delete_(JSContext *cx, HandleObject wrapper, HandleId id,
+                         ObjectOpResult &result) const
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;

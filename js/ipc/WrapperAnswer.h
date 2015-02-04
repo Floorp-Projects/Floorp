@@ -29,8 +29,7 @@ class WrapperAnswer : public virtual JavaScriptShared
                                       PPropertyDescriptor *out);
     bool RecvDefineProperty(const ObjectId &objId, const JSIDVariant &id,
                             const PPropertyDescriptor &flags, ReturnStatus *rs);
-    bool RecvDelete(const ObjectId &objId, const JSIDVariant &id,
-                    ReturnStatus *rs, bool *success);
+    bool RecvDelete(const ObjectId &objId, const JSIDVariant &id, ReturnStatus *rs);
 
     bool RecvHas(const ObjectId &objId, const JSIDVariant &id,
                  ReturnStatus *rs, bool *bp);

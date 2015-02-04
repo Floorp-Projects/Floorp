@@ -70,11 +70,12 @@ CrossCompartmentWrapper::ownPropertyKeys(JSContext *cx, HandleObject wrapper,
 }
 
 bool
-CrossCompartmentWrapper::delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp) const
+CrossCompartmentWrapper::delete_(JSContext *cx, HandleObject wrapper, HandleId id,
+                                 ObjectOpResult &result) const
 {
     PIERCE(cx, wrapper,
            NOTHING,
-           Wrapper::delete_(cx, wrapper, id, bp),
+           Wrapper::delete_(cx, wrapper, id, result),
            NOTHING);
 }
 
