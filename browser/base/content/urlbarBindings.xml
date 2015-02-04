@@ -1048,6 +1048,12 @@
       </method>
     </implementation>
     <handlers>
+      <handler event="popuphidden"><![CDATA[
+        Services.tm.mainThread.dispatch(function() {
+          document.getElementById("searchbar").textbox.selectedButton = null;
+        }, Ci.nsIThread.DISPATCH_NORMAL);
+      ]]></handler>
+
       <handler event="popupshowing"><![CDATA[
         // First handle deciding if we are showing the reduced version of the
         // popup containing only the preferences button. We do this if the
@@ -1137,7 +1143,6 @@
                                                            "search-panel-one-offs")
         while (list.firstChild)
           list.firstChild.remove();
-        textbox._selectedButton = null;
 
         let hiddenList;
         try {
