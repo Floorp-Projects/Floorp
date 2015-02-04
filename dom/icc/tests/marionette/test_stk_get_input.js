@@ -5,67 +5,135 @@ MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
 const TEST_DATA = [
-  {command: "d01b8103012300820281828d0c04456e74657220313233343591020505",
+  {command: "D01B" + // Length
+            "8103012300" + // Command details
+            "82028182" + // Device identities
+            "8D0C04456E746572203132333435" + // Text string
+            "91020505", // Response length
    expect: {commandQualifier: 0x00,
             text: "Enter 12345",
             minLength: 5,
             maxLength: 5}},
-  {command: "d01a8103012308820281828d0b004537bd2c07d96eaad10a91020505",
+  {command: "D01A" + // Length
+            "8103012308" + // Command details
+            "82028182" + // Device identities
+            "8D0B004537BD2C07D96EAAD10A" + // Text string
+            "91020505", // Response length
    expect: {commandQualifier: 0x08,
             text: "Enter 67*#+",
             minLength: 5,
-            maxLength: 5,
-            isPacked: true}},
-  {command: "d01b8103012301820281828d0c04456e74657220416243644591020505",
+            maxLength: 5}},
+  {command: "D01B" + // Length
+            "8103012301" + // Command details
+            "82028182" + // Device identities
+            "8D0C04456E746572204162436445" + // Text string
+            "91020505", // Response length
    expect: {commandQualifier: 0x01,
             text: "Enter AbCdE",
             minLength: 5,
-            maxLength: 5,
-            isAlphabet: true}},
-  {command: "d0278103012304820281828d180450617373776f726420313c53454e443e3233343536373891020408",
+            maxLength: 5}},
+  {command: "D027" + // Length
+            "8103012304" + // Command details
+            "82028182" + // Device identities
+            "8D180450617373776F726420313C53454E443E323334" + // Text string
+            "35363738" +
+            "91020408", // Response length
    expect: {commandQualifier: 0x04,
             text: "Password 1<SEND>2345678",
             minLength: 4,
-            maxLength: 8,
-            hideInput: true}},
-  {command: "d01e8103012300820281828d0f043c474f2d4241434b57415244533e91020008",
+            maxLength: 8}},
+  {command: "D01E" + // Length
+            "8103012300" + // Command details
+            "82028182" + // Device identities
+            "8D0F043C474F2D4241434B57415244533E" + // Text string
+            "91020008", // Response length
    expect: {commandQualifier: 0x00,
             text: "<GO-BACKWARDS>",
             minLength: 0,
             maxLength: 8}},
-  {command: "d081b18103012300820281828d81a1042a2a2a313131313131313131312323232a2a2a323232323232323232322323232a2a2a333333333333333333332323232a2a2a343434343434343434342323232a2a2a353535353535353535352323232a2a2a363636363636363636362323232a2a2a373737373737373737372323232a2a2a383838383838383838382323232a2a2a393939393939393939392323232a2a2a303030303030303030302323239102a0a0",
+  {command: "D081B1" + // Length
+            "8103012300" + // Command details
+            "82028182" + // Device identities
+            "8D81A1042A2A2A313131313131313131312323232A2A2A" + // Text string
+            "323232323232323232322323232A2A2A33333333333333" +
+            "3333332323232A2A2A343434343434343434342323232A" +
+            "2A2A353535353535353535352323232A2A2A3636363636" +
+            "36363636362323232A2A2A373737373737373737372323" +
+            "232A2A2A383838383838383838382323232A2A2A393939" +
+            "393939393939392323232A2A2A30303030303030303030" +
+            "232323" +
+            "9102A0A0", // Response length
    expect: {commandQualifier: 0x00,
-            text: "***1111111111###***2222222222###***3333333333###***4444444444###***5555555555###***6666666666###***7777777777###***8888888888###***9999999999###***0000000000###",
+            text: "***1111111111###***2222222222###***3333333333###***444444" +
+                  "4444###***5555555555###***6666666666###***7777777777###**" +
+                  "*8888888888###***9999999999###***0000000000###",
             minLength: 160,
             maxLength: 160}},
-  {command: "d0819d8103012301820281828d818d08041704140420041004120421042204120423041904220415041704140420041004120421042204120423041904220415041704140420041004120421042204120423041904220415041704140420041004120421042204120423041904220415041704140420041004120421042204120423041904220415041704140420041004120421042204120423041991020505",
+  {command: "D0819D" + // Length
+            "8103012301" + // Command details
+            "82028182" + // Device identities
+            "8D818D0804170414042004100412042104220412042304" + // Text string
+            "1904220415041704140420041004120421042204120423" +
+            "0419042204150417041404200410041204210422041204" +
+            "2304190422041504170414042004100412042104220412" +
+            "0423041904220415041704140420041004120421042204" +
+            "1204230419042204150417041404200410041204210422" +
+            "041204230419" +
+            "91020505", // Response length
    expect: {commandQualifier: 0x01,
-            text: "ЗДРАВСТВУЙТЕЗДРАВСТВУЙТЕЗДРАВСТВУЙТЕЗДРАВСТВУЙТЕЗДРАВСТВУЙТЕЗДРАВСТВУЙ",
+            text: "ЗДРАВСТВУЙТЕЗДРАВСТВУЙТЕЗДРАВСТВУЙТЕЗДРАВСТВУЙТЕЗДРАВСТВУ" +
+                  "ЙТЕЗДРАВСТВУЙ",
             minLength: 5,
-            maxLength: 5,
-            isAlphabet: true}},
-  {command: "d01b8103012303820281828d0c04456e7465722048656c6c6f910205ff",
+            maxLength: 5}},
+  {command: "D01B" + // Length
+            "8103012303" + // Command details
+            "82028182" + // Device identities
+            "8D0C04456E7465722048656C6C6F" + // Text string
+            "910205FF", // Response length
    expect: {commandQualifier: 0x03,
             text: "Enter Hello",
             minLength: 5,
-            maxLength: 0xFF,
-            isAlphabet: true,
-            isUCS2: true}},
-  {command: "d081ba8103012300820281828d0704456e7465723a9102a0a01781a1042a2a2a313131313131313131312323232a2a2a323232323232323232322323232a2a2a333333333333333333332323232a2a2a343434343434343434342323232a2a2a353535353535353535352323232a2a2a363636363636363636362323232a2a2a373737373737373737372323232a2a2a383838383838383838382323232a2a2a393939393939393939392323232a2a2a30303030303030303030232323",
+            maxLength: 0xFF}},
+  {command: "D081BA" + // Length
+            "8103012300" + // Command details
+            "82028182" + // Device identities
+            "8D0704456E7465723A" + // Text string
+            "9102A0A0" + // Response length
+            "1781A1042A2A2A313131313131313131312323232A2A2A" + // Default text
+            "323232323232323232322323232A2A2A33333333333333" +
+            "3333332323232A2A2A343434343434343434342323232A" +
+            "2A2A353535353535353535352323232A2A2A3636363636" +
+            "36363636362323232A2A2A373737373737373737372323" +
+            "232A2A2A383838383838383838382323232A2A2A393939" +
+            "393939393939392323232A2A2A30303030303030303030" +
+            "232323",
    expect: {commandQualifier: 0x00,
             text: "Enter:",
             minLength: 160,
             maxLength: 160,
-            defaultText: "***1111111111###***2222222222###***3333333333###***4444444444###***5555555555###***6666666666###***7777777777###***8888888888###***9999999999###***0000000000###"}},
-  {command: "d01d8103012300820281828d0a043c4e4f2d49434f4e3e9102000a1e020002",
+            defaultText: "***1111111111###***2222222222###***3333333333###**" +
+                         "*4444444444###***5555555555###***6666666666###***7" +
+                         "777777777###***8888888888###***9999999999###***000" +
+                         "0000000###"}},
+  {command: "D01D" + // Length
+            "8103012300" + // Command details
+            "82028182" + // Device identities
+            "8D0A043C4E4F2D49434F4E3E" + // Text string
+            "9102000A" + // Response length
+            "1E020002", // Icon identifier
    expect: {commandQualifier: 0x00,
             // The record number 02 in EFimg is not defined, so no icon will be
             // shown, but the text string should still be displayed.
             text: "<NO-ICON>",
             minLength: 0,
             maxLength: 10}},
-  {command: "d0208103012300820281828d0d043c42415349432d49434f4e3e9102000a1e020101",
-   expect: {commandQualifier: 0x00,
+  {command: "D020" + // Length
+            "8103012380" + // Command details
+            "82028182" + // Device identities
+            "8D0D043C42415349432D49434F4E3E" + // Text string
+            "9102000A" + // Response length
+            "1E020101", // Icon identifier
+   expect: {commandQualifier: 0x80,
             text: "<BASIC-ICON>",
             minLength: 0,
             maxLength: 10,
@@ -74,33 +142,31 @@ const TEST_DATA = [
 ];
 
 function testGetInput(aCommand, aExpect) {
+  is(aCommand.commandNumber, 0x01, "commandNumber");
   is(aCommand.typeOfCommand, MozIccManager.STK_CMD_GET_INPUT, "typeOfCommand");
   is(aCommand.commandQualifier, aExpect.commandQualifier, "commandQualifier");
+
+  is(aCommand.options.isAlphabet, !!(aExpect.commandQualifier & 0x01),
+     "options.isAlphabet");
+  is(aCommand.options.isUCS2, !!(aExpect.commandQualifier & 0x02),
+     "options.isUCS2");
+  is(aCommand.options.hideInput, !!(aExpect.commandQualifier & 0x04),
+     "options.hideInput");
+  is(aCommand.options.isPacked, !!(aExpect.commandQualifier & 0x08),
+     "options.isPacked");
+  is(aCommand.options.isHelpAvailable, !!(aExpect.commandQualifier & 0x80),
+     "options.isHelpAvailable");
   is(aCommand.options.text, aExpect.text, "options.text");
   is(aCommand.options.minLength, aExpect.minLength, "options.minLength");
   is(aCommand.options.maxLength, aExpect.maxLength, "options.maxLength");
 
-  if (aExpect.defaultText) {
+  // defaultText is optional.
+  if ("defaultText" in aExpect) {
     is(aCommand.options.defaultText, aExpect.defaultText, "options.defaultText");
   }
 
-  if (aExpect.isAlphabet) {
-    is(aCommand.options.isAlphabet, aExpect.isAlphabet, "options.isAlphabet");
-  }
-
-  if (aExpect.isUCS2) {
-    is(aCommand.options.isUCS2, aExpect.isUCS2, "options.isUCS2");
-  }
-
-  if (aExpect.isPacked) {
-    is(aCommand.options.isPacked, aExpect.isPacked, "options.isPacked");
-  }
-
-  if (aExpect.hideInput) {
-    is(aCommand.options.hideInput, aExpect.hideInput, "options.hideInput");
-  }
-
-  if (aExpect.icons) {
+  // icons is optional.
+  if ("icons" in aExpect) {
     isIcons(aCommand.options.icons, aExpect.icons);
     is(aCommand.options.iconSelfExplanatory, aExpect.iconSelfExplanatory,
        "options.iconSelfExplanatory");

@@ -5,11 +5,14 @@ MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
 const TEST_DATA = [
-  {command: "d009810301040082028182",
+  {command: "D009" + // Length
+            "8103010400" + // Command details
+            "82028182", // Device identities
    expect: {commandQualifier: 0x00}}
 ];
 
 function testPollOff(aCommand, aExpect) {
+  is(aCommand.commandNumber, 0x01, "commandNumber");
   is(aCommand.typeOfCommand, MozIccManager.STK_CMD_POLL_OFF, "typeOfCommand");
   is(aCommand.commandQualifier, aExpect.commandQualifier, "commandQualifier");
 }
@@ -21,7 +24,7 @@ startTestCommon(function() {
   for (let i = 0; i < TEST_DATA.length; i++) {
     let data = TEST_DATA[i];
     promise = promise.then(() => {
-      log("pull_off_cmd: " + data.command);
+      log("poll_off_cmd: " + data.command);
 
       let promises = [];
       // Wait onstkcommand event.
