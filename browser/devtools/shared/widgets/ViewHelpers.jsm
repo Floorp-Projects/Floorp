@@ -617,7 +617,7 @@ Item.prototype = {
 
 // Creating maps thousands of times for widgets with a large number of children
 // fills up a lot of memory. Make sure these are instantiated only if needed.
-DevToolsUtils.defineLazyPrototypeGetter(Item.prototype, "_itemsByElement", Map);
+DevToolsUtils.defineLazyPrototypeGetter(Item.prototype, "_itemsByElement", () => new Map());
 
 /**
  * Some generic Widget methods handling Item instances.

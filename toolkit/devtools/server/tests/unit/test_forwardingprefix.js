@@ -104,7 +104,7 @@ function tryActors(aReachables, aCompleted) {
  */
 function TestNoForwardingYet()
 {
-  tryActors(Set(['root']), run_next_test);
+  tryActors(new Set(['root']), run_next_test);
 }
 
 /*
@@ -138,7 +138,7 @@ function createSubconnection1()
 // Establish forwarding, but don't put any actors in that server.
 function TestForwardPrefix1OnlyRoot()
 {
-  tryActors(Set(['root', 'prefix1/root']), run_next_test);
+  tryActors(new Set(['root', 'prefix1/root']), run_next_test);
 }
 
 /* Create a third root actor, to which we can forward things. */
@@ -152,7 +152,7 @@ function createSubconnection2()
 
 function TestForwardPrefix12OnlyRoot()
 {
-  tryActors(Set(['root', 'prefix1/root', 'prefix2/root']), run_next_test);
+  tryActors(new Set(['root', 'prefix1/root', 'prefix2/root']), run_next_test);
 }
 
 // A dumb actor that implements 'echo'.
@@ -183,7 +183,7 @@ function TestForwardPrefix12WithActor1()
   actor.actorID = 'prefix1/actor';
   gSubconnection1.addActor(actor);
 
-  tryActors(Set(['root', 'prefix1/root', 'prefix1/actor', 'prefix2/root']), run_next_test);
+  tryActors(new Set(['root', 'prefix1/root', 'prefix1/actor', 'prefix2/root']), run_next_test);
 }
 
 function TestForwardPrefix12WithActor12()
@@ -192,5 +192,5 @@ function TestForwardPrefix12WithActor12()
   actor.actorID = 'prefix2/actor';
   gSubconnection2.addActor(actor);
 
-  tryActors(Set(['root', 'prefix1/root', 'prefix1/actor', 'prefix2/root', 'prefix2/actor']), run_next_test);
+  tryActors(new Set(['root', 'prefix1/root', 'prefix1/actor', 'prefix2/root', 'prefix2/actor']), run_next_test);
 }
