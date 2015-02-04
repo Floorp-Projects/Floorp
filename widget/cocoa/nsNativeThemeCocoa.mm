@@ -2421,11 +2421,12 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 
     case NS_THEME_MENUITEM:
     case NS_THEME_CHECKMENUITEM: {
-      bool isDisabled = IsDisabled(aFrame, eventState);
-      bool isSelected = !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
-      if (!isSelected && VibrancyManager::SystemSupportsVibrancy()) {
-        DrawVibrancyBackground(cgContext, macRect, aFrame, eThemeGeometryTypeMenu);
+      if (VibrancyManager::SystemSupportsVibrancy()) {
+        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
+        DrawVibrancyBackground(cgContext, macRect, aFrame, type);
       } else {
+        bool isDisabled = IsDisabled(aFrame, eventState);
+        bool isSelected = !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
         // maybe use kThemeMenuItemHierBackground or PopUpBackground instead of just Plain?
         HIThemeMenuItemDrawInfo drawInfo;
         memset(&drawInfo, 0, sizeof(drawInfo));
@@ -3827,9 +3828,14 @@ nsNativeThemeCocoa::ThemeGeometryTypeForWidget(nsIFrame* aFrame, uint8_t aWidget
     case NS_THEME_TOOLTIP:
       return eThemeGeometryTypeTooltip;
     case NS_THEME_MENUPOPUP:
-    case NS_THEME_MENUITEM:
-    case NS_THEME_CHECKMENUITEM:
       return eThemeGeometryTypeMenu;
+    case NS_THEME_MENUITEM:
+    case NS_THEME_CHECKMENUITEM: {
+      EventStates eventState = GetContentState(aFrame, aWidgetType);
+      bool isDisabled = IsDisabled(aFrame, eventState);
+      bool isSelected = !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
+      return isSelected ? eThemeGeometryTypeHighlightedMenuItem : eThemeGeometryTypeMenu;
+    }
     default:
       return eThemeGeometryTypeUnknown;
   }

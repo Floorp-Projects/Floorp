@@ -25,7 +25,8 @@ enum class VibrancyType {
   LIGHT,
   DARK,
   TOOLTIP,
-  MENU
+  MENU,
+  HIGHLIGHTED_MENUITEM
 };
 
 /**

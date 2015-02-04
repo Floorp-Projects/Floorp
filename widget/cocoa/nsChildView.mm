@@ -2377,18 +2377,25 @@ nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries)
     GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeMenu);
   nsIntRegion tooltipRegion =
     GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeTooltip);
+  nsIntRegion highlightedMenuItemRegion =
+    GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeHighlightedMenuItem);
 
   vibrantDarkRegion.SubOut(vibrantLightRegion);
   vibrantDarkRegion.SubOut(menuRegion);
   vibrantDarkRegion.SubOut(tooltipRegion);
+  vibrantDarkRegion.SubOut(highlightedMenuItemRegion);
   vibrantLightRegion.SubOut(menuRegion);
   vibrantLightRegion.SubOut(tooltipRegion);
+  vibrantLightRegion.SubOut(highlightedMenuItemRegion);
   menuRegion.SubOut(tooltipRegion);
+  menuRegion.SubOut(highlightedMenuItemRegion);
+  tooltipRegion.SubOut(highlightedMenuItemRegion);
 
   auto& vm = EnsureVibrancyManager();
   vm.UpdateVibrantRegion(VibrancyType::LIGHT, vibrantLightRegion);
   vm.UpdateVibrantRegion(VibrancyType::TOOLTIP, tooltipRegion);
   vm.UpdateVibrantRegion(VibrancyType::MENU, menuRegion);
+  vm.UpdateVibrantRegion(VibrancyType::HIGHLIGHTED_MENUITEM, highlightedMenuItemRegion);
   vm.UpdateVibrantRegion(VibrancyType::DARK, vibrantDarkRegion);
 }
 
@@ -2412,6 +2419,8 @@ ThemeGeometryTypeToVibrancyType(nsITheme::ThemeGeometryType aThemeGeometryType)
       return VibrancyType::TOOLTIP;
     case nsNativeThemeCocoa::eThemeGeometryTypeMenu:
       return VibrancyType::MENU;
+    case nsNativeThemeCocoa::eThemeGeometryTypeHighlightedMenuItem:
+      return VibrancyType::HIGHLIGHTED_MENUITEM;
     default:
       MOZ_CRASH();
   }
