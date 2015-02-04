@@ -2256,7 +2256,7 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
 
 static void
 DrawVibrancyBackground(CGContextRef cgContext, CGRect inBoxRect,
-                       nsIFrame* aFrame, uint8_t aWidgetType,
+                       nsIFrame* aFrame, nsITheme::ThemeGeometryType aThemeGeometryType,
                        int aCornerRadius = 0)
 {
   ChildView* childView = ChildViewForFrame(aFrame);
@@ -2270,7 +2270,7 @@ DrawVibrancyBackground(CGContextRef cgContext, CGRect inBoxRect,
       [[NSBezierPath bezierPathWithRoundedRect:rect xRadius:aCornerRadius yRadius:aCornerRadius] addClip];
     }
 
-    [[childView vibrancyFillColorForWidgetType:aWidgetType] set];
+    [[childView vibrancyFillColorForThemeGeometryType:aThemeGeometryType] set];
     NSRectFill(rect);
 
     [NSGraphicsContext restoreGraphicsState];
@@ -2391,7 +2391,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 
     case NS_THEME_MENUPOPUP:
       if (VibrancyManager::SystemSupportsVibrancy()) {
-        DrawVibrancyBackground(cgContext, macRect, aFrame, aWidgetType, 4);
+        DrawVibrancyBackground(cgContext, macRect, aFrame, eThemeGeometryTypeMenu, 4);
       } else {
         HIThemeMenuDrawInfo mdi;
         memset(&mdi, 0, sizeof(mdi));
@@ -2424,7 +2424,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       bool isDisabled = IsDisabled(aFrame, eventState);
       bool isSelected = !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
       if (!isSelected && VibrancyManager::SystemSupportsVibrancy()) {
-        DrawVibrancyBackground(cgContext, macRect, aFrame, aWidgetType);
+        DrawVibrancyBackground(cgContext, macRect, aFrame, eThemeGeometryTypeMenu);
       } else {
         // maybe use kThemeMenuItemHierBackground or PopUpBackground instead of just Plain?
         HIThemeMenuItemDrawInfo drawInfo;
@@ -2472,7 +2472,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 
     case NS_THEME_TOOLTIP:
       if (VibrancyManager::SystemSupportsVibrancy()) {
-        DrawVibrancyBackground(cgContext, macRect, aFrame, aWidgetType);
+        DrawVibrancyBackground(cgContext, macRect, aFrame, ThemeGeometryTypeForWidget(aFrame, aWidgetType));
       } else {
         CGContextSetRGBFillColor(cgContext, 0.996, 1.000, 0.792, 0.950);
         CGContextFillRect(cgContext, macRect);
@@ -2909,9 +2909,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       break;
 
     case NS_THEME_MAC_VIBRANCY_LIGHT:
-    case NS_THEME_MAC_VIBRANCY_DARK:
-      DrawVibrancyBackground(cgContext, macRect, aFrame, aWidgetType);
+    case NS_THEME_MAC_VIBRANCY_DARK: {
+      ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
+      DrawVibrancyBackground(cgContext, macRect, aFrame, type);
       break;
+    }
   }
 
   if (hidpi) {
@@ -3793,7 +3795,8 @@ nsNativeThemeCocoa::WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame,
     {
       ChildView* childView = ChildViewForFrame(aFrame);
       if (childView) {
-        NSColor* color = [childView vibrancyFontSmoothingBackgroundColorForWidgetType:aWidgetType];
+        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
+        NSColor* color = [childView vibrancyFontSmoothingBackgroundColorForThemeGeometryType:type];
         *aColor = ConvertNSColor(color);
         return true;
       }
@@ -3801,6 +3804,34 @@ nsNativeThemeCocoa::WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame,
     }
     default:
       return false;
+  }
+}
+
+nsITheme::ThemeGeometryType
+nsNativeThemeCocoa::ThemeGeometryTypeForWidget(nsIFrame* aFrame, uint8_t aWidgetType)
+{
+  switch (aWidgetType) {
+    case NS_THEME_WINDOW_TITLEBAR:
+      return eThemeGeometryTypeTitlebar;
+    case NS_THEME_TOOLBAR:
+    case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
+      return eThemeGeometryTypeToolbar;
+    case NS_THEME_WINDOW_BUTTON_BOX:
+      return eThemeGeometryTypeWindowButtons;
+    case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON:
+      return eThemeGeometryTypeFullscreenButton;
+    case NS_THEME_MAC_VIBRANCY_LIGHT:
+      return eThemeGeometryTypeVibrancyLight;
+    case NS_THEME_MAC_VIBRANCY_DARK:
+      return eThemeGeometryTypeVibrancyDark;
+    case NS_THEME_TOOLTIP:
+      return eThemeGeometryTypeTooltip;
+    case NS_THEME_MENUPOPUP:
+    case NS_THEME_MENUITEM:
+    case NS_THEME_CHECKMENUITEM:
+      return eThemeGeometryTypeMenu;
+    default:
+      return eThemeGeometryTypeUnknown;
   }
 }
 
