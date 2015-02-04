@@ -738,6 +738,11 @@ GlobalHelperThreadState::canStartGCParallelTask()
     return !gcParallelWorklist().empty();
 }
 
+js::GCParallelTask::~GCParallelTask()
+{
+    join();
+}
+
 bool
 js::GCParallelTask::startWithLockHeld()
 {
