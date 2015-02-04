@@ -21,6 +21,18 @@ function getOneOffs() {
   return oneOffs;
 }
 
+function getOpenSearchItems() {
+  let os = [];
+
+  let addEngineList =
+    document.getAnonymousElementByAttribute(searchPopup, "anonid",
+                                            "add-engines");
+  for (let item = addEngineList.firstChild; item; item = item.nextSibling)
+    os.push(item);
+
+  return os;
+}
+
 add_task(function* init() {
   yield promiseNewEngine("testEngine.xml");
 
@@ -102,11 +114,19 @@ add_task(function* test_arrows() {
     EventUtils.synthesizeKey("VK_DOWN", {});
   }
 
+  is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
+     "the settings item should be selected");
+  EventUtils.synthesizeKey("VK_DOWN", {});
+
   // We should now be back to the initial situation.
   is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
   ok(!textbox.selectedButton, "no one-off button should be selected");
 
   info("now test the up arrow key");
+  EventUtils.synthesizeKey("VK_UP", {});
+  is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
+     "the settings item should be selected");
+
   // cycle through the one-off items, the first one is already selected.
   for (let i = oneOffs.length; i; --i) {
     EventUtils.synthesizeKey("VK_UP", {});
@@ -149,6 +169,10 @@ add_task(function* test_tab() {
   is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
   is(textbox.value, kUserValue, "the textfield value should be unmodified");
 
+  // One more <tab> selects the settings button.
+  EventUtils.synthesizeKey("VK_TAB", {});
+  is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
+     "the settings item should be selected");
 
   // Pressing tab again should close the panel...
   let promise = promiseEvent(searchPopup, "popuphidden");
@@ -170,7 +194,12 @@ add_task(function* test_shift_tab() {
   let oneOffs = getOneOffs();
   ok(!textbox.selectedButton, "no one-off button should be selected");
 
-  // Press up once to select the last one-off button.
+  // Press up once to select the last button.
+  EventUtils.synthesizeKey("VK_UP", {});
+  is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
+     "the settings item should be selected");
+
+  // Press up again to select the last one-off button.
   EventUtils.synthesizeKey("VK_UP", {});
 
   // Pressing shift+tab should cycle through the one-off items.
@@ -272,6 +301,9 @@ add_task(function* test_alt_up() {
 
   // Cleanup for the next test.
   EventUtils.synthesizeKey("VK_DOWN", {});
+  is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
+     "the settings item should be selected");
+  EventUtils.synthesizeKey("VK_DOWN", {});
   ok(!textbox.selectedButton, "no one-off should be selected anymore");
 });
 
@@ -329,4 +361,71 @@ add_task(function* test_tab_and_arrows() {
   let promise = promiseEvent(searchPopup, "popuphidden");
   searchPopup.hidePopup();
   yield promise;
+});
+
+add_task(function* test_open_search() {
+  let tab = gBrowser.addTab();
+  gBrowser.selectedTab = tab;
+
+  let deferred = Promise.defer();
+  let browser = gBrowser.selectedBrowser;
+  browser.addEventListener("load", function onload() {
+    browser.removeEventListener("load", onload, true);
+    deferred.resolve();
+  }, true);
+
+  let rootDir = getRootDirectory(gTestPath);
+  content.location = rootDir + "opensearch.html";
+
+  yield deferred.promise;
+
+  let promise = promiseEvent(searchPopup, "popupshown");
+  info("Opening search panel");
+  searchbar.focus();
+  yield promise;
+
+  let engines = getOpenSearchItems();
+  is(engines.length, 2, "the opensearch.html page exposes 2 engines")
+
+  // Check that there's initially no selection.
+  is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
+  ok(!textbox.selectedButton, "no button should be selected");
+
+  // Pressing up once selects the setting button...
+  EventUtils.synthesizeKey("VK_UP", {});
+  is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
+     "the settings item should be selected");
+
+  // ...and then pressing up selects open search engines.
+  for (let i = engines.length; i; --i) {
+    EventUtils.synthesizeKey("VK_UP", {});
+    let selectedButton = textbox.selectedButton;
+    is(selectedButton, engines[i - 1],
+       "the engine #" + i + " should be selected");
+    ok(selectedButton.classList.contains("addengine-item"),
+       "the button is themed as an engine item");
+  }
+
+  // Pressing up again should select the last one-off button.
+  EventUtils.synthesizeKey("VK_UP", {});
+  is(textbox.selectedButton, getOneOffs().pop(),
+     "the last one-off button should be selected");
+
+  info("now check that the down key navigates open search items as expected");
+  for (let i = 0; i < engines.length; ++i) {
+    EventUtils.synthesizeKey("VK_DOWN", {});
+    is(textbox.selectedButton, engines[i],
+       "the engine #" + (i + 1) + " should be selected");
+  }
+
+  // Pressing down on the last engine item selects the settings button.
+  EventUtils.synthesizeKey("VK_DOWN", {});
+  is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
+     "the settings item should be selected");
+
+  promise = promiseEvent(searchPopup, "popuphidden");
+  searchPopup.hidePopup();
+  yield promise;
+
+  gBrowser.removeCurrentTab();
 });
