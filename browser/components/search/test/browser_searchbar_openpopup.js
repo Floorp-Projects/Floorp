@@ -31,34 +31,6 @@ function synthesizeNativeMouseClick(aElement) {
   utils.sendNativeMouseEvent(x * scale, y * scale, mouseUp, 0, null);
 }
 
-function promiseNewEngine(basename) {
-  return new Promise((resolve, reject) => {
-    info("Waiting for engine to be added: " + basename);
-    Services.search.init({
-      onInitComplete: function() {
-        let url = getRootDirectory(gTestPath) + basename;
-        let current = Services.search.currentEngine;
-        Services.search.addEngine(url, Ci.nsISearchEngine.TYPE_MOZSEARCH, "", false, {
-          onSuccess: function (engine) {
-            info("Search engine added: " + basename);
-            Services.search.currentEngine = engine;
-            registerCleanupFunction(() => {
-              Services.search.currentEngine = current;
-              Services.search.removeEngine(engine);
-              info("Search engine removed: " + basename);
-            });
-            resolve(engine);
-          },
-          onError: function (errCode) {
-            ok(false, "addEngine failed with error code " + errCode);
-            reject();
-          }
-        });
-      }
-    });
-  });
-}
-
 add_task(function* init() {
   yield promiseNewEngine("testEngine.xml");
 });
