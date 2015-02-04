@@ -691,7 +691,7 @@ TrackBuffer::IsReady()
 {
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
   MOZ_ASSERT((mInfo.HasAudio() || mInfo.HasVideo()) || mInitializedDecoders.IsEmpty());
-  return mParser->HasInitData() && (mInfo.HasAudio() || mInfo.HasVideo());
+  return mInfo.HasAudio() || mInfo.HasVideo();
 }
 
 bool
