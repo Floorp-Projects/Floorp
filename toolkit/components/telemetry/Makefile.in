@@ -22,7 +22,7 @@ histoenums_TARGET := export
 
 include $(topsrcdir)/config/rules.mk
 
-histograms_file := $(srcdir)/Histograms.json
+histogram_files := $(srcdir)/Histograms.json $(topsrcdir)/dom/base/UseCounters.conf
 histogram_enum_file := TelemetryHistogramEnums.h
 histogram_data_file := TelemetryHistogramData.inc
 
@@ -36,10 +36,10 @@ data_python_deps := \
   $(srcdir)/histogram_tools.py \
   $(NULL)
 
-$(histogram_enum_file): $(histograms_file) $(enum_python_deps)
-	$(PYTHON) $(srcdir)/gen-histogram-enum.py $< > $@
-$(histogram_data_file): $(histograms_file) $(data_python_deps)
-	$(PYTHON) $(srcdir)/gen-histogram-data.py $< > $@
+$(histogram_enum_file): $(histogram_files) $(enum_python_deps)
+	$(PYTHON) $(srcdir)/gen-histogram-enum.py $(histogram_files) > $@
+$(histogram_data_file): $(histogram_files) $(data_python_deps)
+	$(PYTHON) $(srcdir)/gen-histogram-data.py $(histogram_files) > $@
 
 GARBAGE += $(histogram_enum_file)
 
