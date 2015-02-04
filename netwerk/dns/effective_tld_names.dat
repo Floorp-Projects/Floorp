@@ -9074,6 +9074,10 @@ co.ca
 co.nl
 co.no
 
+// Commerce Guys, SAS
+// Submitted by Damien Tournoud <damien@commerceguys.com> 2015-01-22
+*.platform.sh
+
 // Cupcake : https://cupcake.io/
 // Submitted by Jonathan Rudenberg <jonathan@cupcake.io> 2013-10-08
 cupcake.is
