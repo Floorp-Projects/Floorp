@@ -296,7 +296,7 @@ ScriptedIndirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObjec
 
 bool
 ScriptedIndirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                                  HandleId id, bool strict, MutableHandleValue vp) const
+                                  HandleId id, MutableHandleValue vp, ObjectOpResult &result) const
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
     RootedValue idv(cx);
@@ -310,13 +310,16 @@ ScriptedIndirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObjec
     if (!GetDerivedTrap(cx, handler, cx->names().set, &fval))
         return false;
     if (!IsCallable(fval))
-        return derivedSet(cx, proxy, receiver, id, strict, vp);
-    return Trap(cx, handler, fval, 3, argv.begin(), &idv);
+        return derivedSet(cx, proxy, receiver, id, vp, result);
+    if (!Trap(cx, handler, fval, 3, argv.begin(), &idv))
+        return false;
+    return result.succeed();
 }
 
 bool
 ScriptedIndirectProxyHandler::derivedSet(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                                         HandleId id, bool strict, MutableHandleValue vp) const
+                                         HandleId id, MutableHandleValue vp,
+                                         ObjectOpResult &result) const
 {
     // Find an own or inherited property. The code here is strange for maximum
     // backward compatibility with earlier code written before ES6 and before
@@ -330,8 +333,8 @@ ScriptedIndirectProxyHandler::derivedSet(JSContext *cx, HandleObject proxy, Hand
             return false;
     }
 
-    return SetPropertyIgnoringNamedGetter(cx, this, proxy, receiver, id, &desc, descIsOwn, strict,
-                                          vp);
+    return SetPropertyIgnoringNamedGetter(cx, this, proxy, receiver, id, &desc, descIsOwn, vp,
+                                          result);
 }
 
 bool

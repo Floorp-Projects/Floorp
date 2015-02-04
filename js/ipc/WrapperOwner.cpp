@@ -102,7 +102,8 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
                      HandleId id, MutableHandleValue vp) const MOZ_OVERRIDE;
     virtual bool set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
-                     JS::HandleId id, bool strict, JS::MutableHandleValue vp) const MOZ_OVERRIDE;
+                     JS::HandleId id, JS::MutableHandleValue vp,
+                     JS::ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) const MOZ_OVERRIDE;
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const MOZ_OVERRIDE;
 
@@ -434,14 +435,14 @@ WrapperOwner::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
 
 bool
 CPOWProxyHandler::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
-                      JS::HandleId id, bool strict, JS::MutableHandleValue vp) const
+                      JS::HandleId id, JS::MutableHandleValue vp, JS::ObjectOpResult &result) const
 {
-    FORWARD(set, (cx, proxy, receiver, id, strict, vp));
+    FORWARD(set, (cx, proxy, receiver, id, vp, result));
 }
 
 bool
 WrapperOwner::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
-                  JS::HandleId id, bool strict, JS::MutableHandleValue vp)
+                  JS::HandleId id, JS::MutableHandleValue vp, JS::ObjectOpResult &result)
 {
     ObjectId objId = idOf(proxy);
 
@@ -458,16 +459,16 @@ WrapperOwner::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiv
         return false;
 
     ReturnStatus status;
-    JSVariant result;
-    if (!SendSet(objId, receiverVar, idVar, strict, val, &status, &result))
+    JSVariant resultValue;
+    if (!SendSet(objId, receiverVar, idVar, val, &status, &resultValue))
         return ipcfail(cx);
 
     LOG_STACK();
 
-    if (!ok(cx, status))
+    if (!ok(cx, status, result))
         return false;
 
-    return fromVariant(cx, result, vp);
+    return fromVariant(cx, resultValue, vp);
 }
 
 bool

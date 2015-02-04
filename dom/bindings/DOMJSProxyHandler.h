@@ -123,7 +123,7 @@ public:
   bool has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
            bool* bp) const MOZ_OVERRIDE;
   bool set(JSContext *cx, JS::Handle<JSObject*> proxy, JS::Handle<JSObject*> receiver,
-           JS::Handle<jsid> id, bool strict, JS::MutableHandle<JS::Value> vp)
+           JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp, JS::ObjectOpResult &result)
            const MOZ_OVERRIDE;
 
   /*

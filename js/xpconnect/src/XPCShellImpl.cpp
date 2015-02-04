@@ -645,7 +645,8 @@ static const JSFunctionSpec glob_functions[] = {
 };
 
 static bool
-env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
+env_setProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp,
+                ObjectOpResult &result)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined SOLARIS
@@ -695,7 +696,7 @@ env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, Mutab
     }
     vp.set(STRING_TO_JSVAL(valstr));
 #endif /* !defined SOLARIS */
-    return true;
+    return result.succeed();
 }
 
 static bool

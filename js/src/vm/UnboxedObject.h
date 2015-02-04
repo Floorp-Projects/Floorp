@@ -174,7 +174,7 @@ class UnboxedPlainObject : public JSObject
                                 HandleId id, MutableHandleValue vp);
 
     static bool obj_setProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                HandleId id, MutableHandleValue vp, bool strict);
+                                HandleId id, MutableHandleValue vp, ObjectOpResult &result);
 
     static bool obj_getOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
                                              MutableHandle<JSPropertyDescriptor> desc);

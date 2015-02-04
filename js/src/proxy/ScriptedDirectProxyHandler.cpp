@@ -935,7 +935,7 @@ ScriptedDirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject 
 // ES6 (22 May, 2014) 9.5.9 Proxy.[[SetP]](P, V, Receiver)
 bool
 ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                                HandleId id, bool strict, MutableHandleValue vp) const
+                                HandleId id, MutableHandleValue vp, ObjectOpResult &result) const
 {
     // step 2
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
@@ -956,7 +956,7 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
 
     // step 7
     if (trap.isUndefined())
-        return DirectProxyHandler::set(cx, proxy, receiver, id, strict, vp);
+        return DirectProxyHandler::set(cx, proxy, receiver, id, vp, result);
 
     // step 8,10
     RootedValue value(cx);
@@ -972,7 +972,9 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
     if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
-    // step 9
+    // FIXME - bug 1132522: Step 9 is not implemented yet.
+    // if (!ToBoolean(trapResult))
+    //     return result.fail(JSMSG_PROXY_SET_RETURNED_FALSE);
     bool success = ToBoolean(trapResult);
 
     if (success) {
@@ -1001,8 +1003,9 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
     }
 
     // step 11, 15
+    // XXX FIXME - This use of vp is wrong. Bug 1132522 can clean it up.
     vp.setBoolean(success);
-    return true;
+    return result.succeed();
 }
 
 

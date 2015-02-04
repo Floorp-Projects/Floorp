@@ -364,7 +364,7 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, HandleValue v)
         return false;
 
     RootedValue tmp(cx, v);
-    return SetProperty(cx, obj, obj, id, &tmp, true);
+    return SetProperty(cx, obj, obj, id, &tmp);
 }
 
 /*
@@ -434,7 +434,7 @@ bool
 js::SetLengthProperty(JSContext *cx, HandleObject obj, double length)
 {
     RootedValue v(cx, NumberValue(length));
-    return SetProperty(cx, obj, obj, cx->names().length, &v, true);
+    return SetProperty(cx, obj, obj, cx->names().length, &v);
 }
 
 /*
@@ -460,7 +460,8 @@ array_length_getter(JSContext *cx, HandleObject obj_, HandleId id, MutableHandle
 }
 
 static bool
-array_length_setter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
+array_length_setter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp,
+                    ObjectOpResult &result)
 {
     if (!obj->is<ArrayObject>()) {
         // This array .length property was found on the prototype
@@ -468,21 +469,14 @@ array_length_setter(JSContext *cx, HandleObject obj, HandleId id, bool strict, M
         // we're here, do an impression of SetPropertyByDefining.
         const Class *clasp = obj->getClass();
         return DefineProperty(cx, obj, cx->names().length, vp,
-                              clasp->getProperty, clasp->setProperty, JSPROP_ENUMERATE);
+                              clasp->getProperty, clasp->setProperty, JSPROP_ENUMERATE, result);
     }
 
     Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
     MOZ_ASSERT(arr->lengthIsWritable(),
                "setter shouldn't be called if property is non-writable");
 
-    ObjectOpResult success;
-    if (!ArraySetLength(cx, arr, id, JSPROP_PERMANENT, vp, success))
-        return false;
-    if (strict && !success) {
-        success.reportError(cx, arr, id);
-        return false;
-    }
-    return true;
+    return ArraySetLength(cx, arr, id, JSPROP_PERMANENT, vp, result);
 }
 
 struct ReverseIndexComparator
@@ -1277,7 +1271,7 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
         value = *vector++;
         indexv = DoubleValue(index);
         if (!ValueToId<CanGC>(cx, indexv, &id) ||
-            !SetProperty(cx, obj, obj, id, &value, true))
+            !SetProperty(cx, obj, obj, id, &value))
         {
             return false;
         }
@@ -3074,8 +3068,7 @@ array_of(JSContext *cx, unsigned argc, Value *vp)
     }
 
     // Steps 9-10.
-    RootedValue v(cx, NumberValue(args.length()));
-    if (!SetProperty(cx, obj, obj, cx->names().length, &v, true))
+    if (!SetLengthProperty(cx, obj, args.length()))
         return false;
 
     // Step 11.

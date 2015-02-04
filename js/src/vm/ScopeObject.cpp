@@ -298,7 +298,7 @@ CallObject::createHollowForDebug(JSContext *cx, HandleFunction callee)
     RootedScript script(cx, callee->nonLazyScript());
     for (BindingIter bi(script); !bi.done(); bi++) {
         id = NameToId(bi->name());
-        if (!SetProperty(cx, callobj, callobj, id, &optimizedOut, true))
+        if (!SetProperty(cx, callobj, callobj, id, &optimizedOut))
             return nullptr;
     }
 
@@ -495,13 +495,13 @@ with_GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleI
 
 static bool
 with_SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
-                 MutableHandleValue vp, bool strict)
+                 MutableHandleValue vp, ObjectOpResult &result)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
     RootedObject actualReceiver(cx, receiver);
     if (receiver == obj)
         actualReceiver = actual;
-    return SetProperty(cx, actual, actualReceiver, id, vp, strict);
+    return SetProperty(cx, actual, actualReceiver, id, vp, result);
 }
 
 static bool
@@ -941,7 +941,7 @@ uninitialized_GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver
 
 static bool
 uninitialized_SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
-                          MutableHandleValue vp, bool strict)
+                          MutableHandleValue vp, ObjectOpResult &result)
 {
     ReportUninitializedLexicalId(cx, id);
     return false;
@@ -1603,8 +1603,8 @@ class DebugScopeProxy : public BaseProxyHandler
         }
     }
 
-    bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id, bool strict,
-             MutableHandleValue vp) const MOZ_OVERRIDE
+    bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+             MutableHandleValue vp, ObjectOpResult &result) const MOZ_OVERRIDE
     {
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->as<DebugScopeObject>());
         Rooted<ScopeObject*> scope(cx, &proxy->as<DebugScopeObject>().scope());
@@ -1618,9 +1618,9 @@ class DebugScopeProxy : public BaseProxyHandler
 
         switch (access) {
           case ACCESS_UNALIASED:
-            return true;
+            return result.succeed();
           case ACCESS_GENERIC:
-            return SetProperty(cx, scope, scope, id, vp, strict);
+            return SetProperty(cx, scope, scope, id, vp, result);
           default:
             MOZ_CRASH("bad AccessResult");
         }

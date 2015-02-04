@@ -646,8 +646,8 @@ public:
   virtual bool set(JSContext *cx, JS::Handle<JSObject*> proxy,
                    JS::Handle<JSObject*> receiver,
                    JS::Handle<jsid> id,
-                   bool strict,
-                   JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
+                   JS::MutableHandle<JS::Value> vp,
+                   JS::ObjectOpResult &result) const MOZ_OVERRIDE;
 
   // SpiderMonkey extensions
   virtual bool getPropertyDescriptor(JSContext* cx,
@@ -917,19 +917,17 @@ bool
 nsOuterWindowProxy::set(JSContext *cx, JS::Handle<JSObject*> proxy,
                         JS::Handle<JSObject*> receiver,
                         JS::Handle<jsid> id,
-                        bool strict,
-                        JS::MutableHandle<JS::Value> vp) const
+                        JS::MutableHandle<JS::Value> vp,
+                        JS::ObjectOpResult &result) const
 {
   int32_t index = GetArrayIndexFromId(cx, id);
   if (IsArrayIndex(index)) {
     // Reject (which means throw if and only if strict) the set.
-    if (strict) {
-      // XXXbz This needs to throw, but see bug 828137.
-    }
-    return true;
+    // XXX See bug 828137.
+    return result.succeed();
   }
 
-  return js::Wrapper::set(cx, proxy, receiver, id, strict, vp);
+  return js::Wrapper::set(cx, proxy, receiver, id, vp, result);
 }
 
 bool
