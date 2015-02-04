@@ -76,9 +76,6 @@ MOZ_WEBGL_CONFORMANT=1
 # Enable the Search Activity.
 MOZ_ANDROID_SEARCH_ACTIVITY=1
 
-# Use the new tablet UI. This will go away in Bug 1106935.
-MOZ_ANDROID_NEW_TABLET_UI=1
-
 # Enable the share handler.
 MOZ_ANDROID_SHARE_OVERLAY=1
 
