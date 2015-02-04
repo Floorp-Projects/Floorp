@@ -187,9 +187,9 @@ def write_debug_histogram_ranges(histograms):
     print "#endif"
 
 def main(argv):
-    filename = argv[0]
+    filenames = argv
 
-    histograms = list(histogram_tools.from_file(filename))
+    histograms = list(histogram_tools.from_files(filenames))
 
     print banner
     write_histogram_table(histograms)

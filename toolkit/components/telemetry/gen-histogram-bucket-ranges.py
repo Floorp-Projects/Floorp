@@ -17,10 +17,11 @@ from collections import OrderedDict
 startup_histogram_re = re.compile("SQLITE|HTTP|SPDY|CACHE|DNS")
 
 def main(argv):
-    filename = argv[0]
+    filenames = argv
+
     all_histograms = OrderedDict()
 
-    for histogram in histogram_tools.from_file(filename):
+    for histogram in histogram_tools.from_files(filenames):
         name = histogram.name()
         parameters = OrderedDict()
         table = {
