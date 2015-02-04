@@ -6404,6 +6404,9 @@ GCRuntime::onOutOfMallocMemory()
     // Stop allocating new chunks.
     allocTask.cancel(GCParallelTask::CancelAndWait);
 
+    // Wait for background free of nursery huge slots to finish.
+    nursery.waitBackgroundFreeEnd();
+
     AutoLockGC lock(rt);
     onOutOfMallocMemory(lock);
 }
@@ -6506,6 +6509,7 @@ AutoFinishGC::AutoFinishGC(JSRuntime *rt)
     }
 
     rt->gc.waitBackgroundSweepEnd();
+    rt->gc.nursery.waitBackgroundFreeEnd();
 }
 
 AutoPrepareForTracing::AutoPrepareForTracing(JSRuntime *rt, ZoneSelector selector)
