@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const INVERT_PREF = "devtools.performance.ui.invert-call-tree";
-
 /**
  * Tests that the js call tree view is re-rendered after the
  * "invert-call-tree" pref is changed.

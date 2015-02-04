@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const FLATTEN_PREF = "devtools.performance.ui.flatten-tree-recursion";
-
 /**
  * Tests that the js Flamegraphs gets rerendered when toggling `flatten-tree-recursion`
  */

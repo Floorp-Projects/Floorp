@@ -22,6 +22,13 @@ const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-u
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/performance/test/";
 const SIMPLE_URL = EXAMPLE_URL + "doc_simple-test.html";
 
+const FRAMERATE_PREF = "devtools.performance.ui.enable-framerate";
+const MEMORY_PREF = "devtools.performance.ui.enable-memory";
+const PLATFORM_DATA_PREF = "devtools.performance.ui.show-platform-data";
+const IDLE_PREF = "devtools.performance.ui.show-idle-blocks";
+const INVERT_PREF = "devtools.performance.ui.invert-call-tree";
+const FLATTEN_PREF = "devtools.performance.ui.flatten-tree-recursion";
+
 // All tests are asynchronous.
 waitForExplicitFinish();
 

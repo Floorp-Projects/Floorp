@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const PLATFORM_DATA_PREF = "devtools.performance.ui.show-platform-data";
-
 /**
  * Tests that the JsFlamegraphs get rerendered when toggling `show-platform-data`
  */

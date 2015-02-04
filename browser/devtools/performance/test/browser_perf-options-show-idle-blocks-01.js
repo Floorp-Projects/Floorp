@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const IDLE_PREF = "devtools.performance.ui.show-idle-blocks";
-
 /**
  * Tests that the js Flamegraphs gets rerendered when toggling `show-idle-blocks`
  */
