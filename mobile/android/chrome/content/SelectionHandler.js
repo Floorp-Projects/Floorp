@@ -671,10 +671,10 @@ var SelectionHandler = {
       id: "paste_action",
       icon: "drawable://ab_paste",
       action: function(aElement) {
-        if (aElement) {
-          let editor = SelectionHandler._getEditor();
-          aElement.focus();
-          editor.paste(Ci.nsIClipboard.kGlobalClipboard);
+        if (aElement && (aElement instanceof Ci.nsIDOMNSEditableElement)) {
+          let target = aElement.QueryInterface(Ci.nsIDOMNSEditableElement);
+          target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
+          target.focus();
           SelectionHandler._closeSelection();
           UITelemetry.addEvent("action.1", "actionbar", null, "paste");
         }
@@ -850,8 +850,7 @@ var SelectionHandler = {
 
   isElementEditableText: function (aElement) {
     return (((aElement instanceof HTMLInputElement && aElement.mozIsTextField(false)) ||
-            (aElement instanceof HTMLTextAreaElement)) && !aElement.readOnly) ||
-            aElement.contentEditable == "true";
+            (aElement instanceof HTMLTextAreaElement)) && !aElement.readOnly);
   },
 
   _isNonTextInputElement: function(aElement) {
@@ -919,7 +918,7 @@ var SelectionHandler = {
   _moveCaret: function sh_moveCaret(aX, aY) {
     // Get rect of text inside element
     let range = document.createRange();
-    range.selectNodeContents(this._getEditor().rootElement);
+    range.selectNodeContents(this._targetElement.QueryInterface(Ci.nsIDOMNSEditableElement).editor.rootElement);
     let textBounds = range.getBoundingClientRect();
 
     // Get rect of editor
