@@ -15,6 +15,7 @@
 #include "nsAutoPtr.h"
 #include "nsWidgetInitData.h"
 #include "nsTArray.h"
+#include "nsITheme.h"
 #include "nsITimer.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/EventForwards.h"
@@ -740,14 +741,15 @@ class nsIWidget : public nsISupports {
 
     // Used in UpdateThemeGeometries.
     struct ThemeGeometry {
-      // The -moz-appearance value for the themed widget
-      uint8_t mWidgetType;
+      // The ThemeGeometryType value for the themed widget, see
+      // nsITheme::ThemeGeometryTypeForWidget.
+      nsITheme::ThemeGeometryType mType;
       // The device-pixel rect within the window for the themed widget
       nsIntRect mRect;
 
-      ThemeGeometry(uint8_t aWidgetType, const nsIntRect& aRect)
-       : mWidgetType(aWidgetType)
-       , mRect(aRect)
+      ThemeGeometry(nsITheme::ThemeGeometryType aType, const nsIntRect& aRect)
+        : mType(aType)
+        , mRect(aRect)
       { }
     };
 
