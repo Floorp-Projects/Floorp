@@ -1612,9 +1612,9 @@ TabParent::RecvNotifyIMETextChange(const uint32_t& aStart,
 bool
 TabParent::RecvNotifyIMESelectedCompositionRect(
   const uint32_t& aOffset,
-  InfallibleTArray<nsIntRect>&& aRects,
+  InfallibleTArray<LayoutDeviceIntRect>&& aRects,
   const uint32_t& aCaretOffset,
-  const nsIntRect& aCaretRect)
+  const LayoutDeviceIntRect& aCaretRect)
 {
   // add rect to cache for another query
   mIMECompositionRectOffset = aOffset;
@@ -1684,7 +1684,7 @@ TabParent::RecvNotifyIMEMouseButtonEvent(
 }
 
 bool
-TabParent::RecvNotifyIMEEditorRect(const nsIntRect& aRect)
+TabParent::RecvNotifyIMEEditorRect(const LayoutDeviceIntRect& aRect)
 {
   mIMEEditorRect = aRect;
   return true;
@@ -1692,9 +1692,9 @@ TabParent::RecvNotifyIMEEditorRect(const nsIntRect& aRect)
 
 bool
 TabParent::RecvNotifyIMEPositionChange(
-             const nsIntRect& aEditorRect,
-             InfallibleTArray<nsIntRect>&& aCompositionRects,
-             const nsIntRect& aCaretRect)
+             const LayoutDeviceIntRect& aEditorRect,
+             InfallibleTArray<LayoutDeviceIntRect>&& aCompositionRects,
+             const LayoutDeviceIntRect& aCaretRect)
 {
   mIMEEditorRect = aEditorRect;
   mIMECompositionRects = aCompositionRects;
@@ -1929,7 +1929,8 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
           aEvent.mReply.mRect.Union(mIMECompositionRects[i]);
       }
       aEvent.mReply.mOffset = aEvent.mInput.mOffset;
-      aEvent.mReply.mRect = aEvent.mReply.mRect - GetChildProcessOffset();
+      aEvent.mReply.mRect =
+        aEvent.mReply.mRect - LayoutDevicePixel::FromUntyped(GetChildProcessOffset());
       aEvent.mSucceeded = true;
     }
     break;
@@ -1940,13 +1941,15 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
       }
 
       aEvent.mReply.mOffset = mIMECaretOffset;
-      aEvent.mReply.mRect = mIMECaretRect - GetChildProcessOffset();
+      aEvent.mReply.mRect =
+        mIMECaretRect - LayoutDevicePixel::FromUntyped(GetChildProcessOffset());
       aEvent.mSucceeded = true;
     }
     break;
   case NS_QUERY_EDITOR_RECT:
     {
-      aEvent.mReply.mRect = mIMEEditorRect - GetChildProcessOffset();
+      aEvent.mReply.mRect =
+        mIMEEditorRect - LayoutDevicePixel::FromUntyped(GetChildProcessOffset());
       aEvent.mSucceeded = true;
     }
     break;
