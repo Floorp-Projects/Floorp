@@ -160,7 +160,7 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
     return false;
   }
 
-  int64_t start, end;
+  int64_t start = 0, end = 0;
   if (mParser->ParseStartAndEndTimestamps(aData, start, end)) {
     start += aTimestampOffset;
     end += aTimestampOffset;
