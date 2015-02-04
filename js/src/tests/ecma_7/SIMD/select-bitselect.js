@@ -128,9 +128,9 @@ function test() {
     testSelect(float64x2, inputs);
     testBitSelectSimple(float64x2, inputs);
     testBitSelectComplex(float64x2, inputs);
+
+    if (typeof reportCompare === "function")
+        reportCompare(true, true);
 }
 
-// TODO temporarily disabled because of bug 1123404
-//test();
-if (typeof reportCompare === "function")
-    reportCompare(true, true);
+test();
