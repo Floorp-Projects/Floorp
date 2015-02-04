@@ -133,10 +133,10 @@ DirectProxyHandler::setImmutablePrototype(JSContext *cx, HandleObject proxy, boo
 }
 
 bool
-DirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const
+DirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy, ObjectOpResult &result) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return PreventExtensions(cx, target, succeeded);
+    return PreventExtensions(cx, target, result);
 }
 
 bool

@@ -879,15 +879,10 @@ CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
     if (!tte)
         return nullptr;
 
-    bool succeeded;
     RootedFunction throwTypeError(cx, NewFunction(cx, tte, ThrowTypeError, 0,
                                                   JSFunction::NATIVE_FUN, self, js::NullPtr()));
-    if (!throwTypeError || !PreventExtensions(cx, throwTypeError, &succeeded))
+    if (!throwTypeError || !PreventExtensions(cx, throwTypeError))
         return nullptr;
-    if (!succeeded) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
-        return nullptr;
-    }
 
     self->setThrowTypeError(throwTypeError);
 

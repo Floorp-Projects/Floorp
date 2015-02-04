@@ -279,7 +279,8 @@ class JS_FRIEND_API(BaseProxyHandler)
     /* Non-standard but conceptual kin to {g,s}etPrototypeOf, so lives here. */
     virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded) const;
 
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const = 0;
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy,
+                                   ObjectOpResult &result) const = 0;
     virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const = 0;
 
     /*
@@ -385,7 +386,8 @@ class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
                                 bool *bp) const MOZ_OVERRIDE;
     virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy,
                                        bool *succeeded) const MOZ_OVERRIDE;
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const MOZ_OVERRIDE;
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy,
+                                   ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id,
                      bool *bp) const MOZ_OVERRIDE;

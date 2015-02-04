@@ -169,6 +169,17 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext *cx, HandleObject obj, 
 }
 
 JS_PUBLIC_API(bool)
+JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext *cx, HandleObject obj, bool strict)
+{
+    MOZ_ASSERT(code_ != Uninitialized);
+    MOZ_ASSERT(!ok());
+    MOZ_ASSERT(!ErrorTakesIdArgument(code_));
+
+    unsigned flags = strict ? JSREPORT_ERROR : (JSREPORT_WARNING | JSREPORT_STRICT);
+    return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr, code_);
+}
+
+JS_PUBLIC_API(bool)
 JS::ObjectOpResult::failCantRedefineProp()
 {
     return fail(JSMSG_CANT_REDEFINE_PROP);
@@ -208,6 +219,12 @@ JS_PUBLIC_API(bool)
 JS::ObjectOpResult::failCantDeleteWindowNamedProperty()
 {
     return fail(JSMSG_CANT_DELETE_WINDOW_NAMED_PROPERTY);
+}
+
+JS_PUBLIC_API(bool)
+JS::ObjectOpResult::failCantPreventExtensions()
+{
+    return fail(JSMSG_CANT_PREVENT_EXTENSIONS);
 }
 
 JS_PUBLIC_API(int64_t)
@@ -1795,9 +1812,9 @@ JS_IsExtensible(JSContext *cx, HandleObject obj, bool *extensible)
 }
 
 JS_PUBLIC_API(bool)
-JS_PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded)
+JS_PreventExtensions(JSContext *cx, JS::HandleObject obj, ObjectOpResult &result)
 {
-    return PreventExtensions(cx, obj, succeeded);
+    return PreventExtensions(cx, obj, result);
 }
 
 JS_PUBLIC_API(JSObject *)

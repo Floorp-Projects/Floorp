@@ -131,7 +131,8 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
 
     virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy,
                                        bool *succeeded) const MOZ_OVERRIDE;
-    virtual bool preventExtensions(JSContext *cx, HandleObject wrapper, bool *succeeded) const MOZ_OVERRIDE;
+    virtual bool preventExtensions(JSContext *cx, HandleObject wrapper,
+                                   ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool isExtensible(JSContext *cx, HandleObject wrapper, bool *extensible) const MOZ_OVERRIDE;
     virtual bool has(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp) const MOZ_OVERRIDE;
     virtual bool get(JSContext *cx, HandleObject wrapper, HandleObject receiver,
@@ -187,7 +188,8 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
                                 MutableHandle<JSPropertyDescriptor> desc,
                                 ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool isExtensible(JSContext *cx, HandleObject wrapper, bool *extensible) const MOZ_OVERRIDE;
-    virtual bool preventExtensions(JSContext *cx, HandleObject wrapper, bool *succeeded) const MOZ_OVERRIDE;
+    virtual bool preventExtensions(JSContext *cx, HandleObject wrapper,
+                                   ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto,
                                 bool *bp) const MOZ_OVERRIDE;
     virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded) const MOZ_OVERRIDE;

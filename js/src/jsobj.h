@@ -84,7 +84,7 @@ class SetObject;
 class StrictArgumentsObject;
 
 // Forward declarations, required for later friend declarations.
-bool PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded);
+bool PreventExtensions(JSContext *cx, JS::HandleObject obj, JS::ObjectOpResult &result);
 bool SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj, bool *succeeded);
 
 }  /* namespace js */
@@ -114,7 +114,7 @@ class JSObject : public js::gc::Cell
     friend class js::NewObjectCache;
     friend class js::Nursery;
     friend class js::gc::RelocationOverlay;
-    friend bool js::PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded);
+    friend bool js::PreventExtensions(JSContext *cx, JS::HandleObject obj, JS::ObjectOpResult &result);
     friend bool js::SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj,
                                           bool *succeeded);
 
@@ -725,11 +725,15 @@ IsExtensible(ExclusiveContext *cx, HandleObject obj, bool *extensible);
 
 /*
  * ES6 [[PreventExtensions]]. Attempt to change the [[Extensible]] bit on |obj|
- * to false.  Indicate success or failure through the |*succeeded| outparam, or
+ * to false.  Indicate success or failure through the |result| outparam, or
  * actual error through the return value.
  */
 extern bool
-PreventExtensions(JSContext *cx, HandleObject obj, bool *succeeded);
+PreventExtensions(JSContext *cx, HandleObject obj, ObjectOpResult &result);
+
+/* Convenience function. As above, but throw on failure. */
+extern bool
+PreventExtensions(JSContext *cx, HandleObject obj);
 
 /*
  * ES6 [[GetOwnPropertyDescriptor]]. Get a description of one of obj's own

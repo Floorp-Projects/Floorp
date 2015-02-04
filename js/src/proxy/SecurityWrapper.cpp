@@ -51,13 +51,12 @@ SecurityWrapper<Base>::setImmutablePrototype(JSContext *cx, HandleObject wrapper
 template <class Base>
 bool
 SecurityWrapper<Base>::preventExtensions(JSContext *cx, HandleObject wrapper,
-                                         bool *succeeded) const
+                                         ObjectOpResult &result) const
 {
     // Just like BaseProxyHandler, SecurityWrappers claim by default to always
     // be extensible, so as not to leak information about the state of the
     // underlying wrapped thing.
-    *succeeded = false;
-    return true;
+    return result.fail(JSMSG_CANT_CHANGE_EXTENSIBILITY);
 }
 
 template <class Base>
