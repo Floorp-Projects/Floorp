@@ -485,6 +485,11 @@ TrackBuffer::QueueInitializeDecoder(SourceBufferDecoder* aDecoder)
 void
 TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
 {
+  if (!mParentDecoder) {
+    MSE_DEBUG("TrackBuffer(%p) was shutdown. Aborting initialization.",
+              this);
+    return;
+  }
   // ReadMetadata may block the thread waiting on data, so we must be able
   // to leave the monitor while we call it. For the rest of this function
   // we want to hold the monitor though, since we run on a different task queue
@@ -587,6 +592,11 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
 void
 TrackBuffer::CompleteInitializeDecoder(SourceBufferDecoder* aDecoder)
 {
+  if (!mParentDecoder) {
+    MSE_DEBUG("TrackBuffer(%p) was shutdown. Aborting initialization.",
+              this);
+    return;
+  }
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
   if (mCurrentDecoder != aDecoder) {
     MSE_DEBUG("TrackBuffer(%p) append was cancelled. Aborting initialization.",
