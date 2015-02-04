@@ -735,7 +735,20 @@ TrackBuffer::ResetDecode()
 void
 TrackBuffer::ResetParserState()
 {
-  // TODO
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mParser->HasInitData() && !mParser->HasCompleteInitData()) {
+    // We have an incomplete init segment pending. reset current parser and
+    // discard the current decoder.
+    mParser = ContainerParser::CreateForMIMEType(mType);
+    DiscardDecoder();
+  }
+}
+
+void
+TrackBuffer::Abort()
+{
+  mInitializationPromise.RejectIfExists(NS_ERROR_ABORT, __func__);
 }
 
 const nsTArray<nsRefPtr<SourceBufferDecoder>>&

@@ -227,7 +227,9 @@ void
 SourceBuffer::Abort()
 {
   if (mUpdating) {
-    // TODO: Abort segment parser loop, buffer append, and stream append loop algorithms.
+    // abort any pending buffer append.
+    mTrackBuffer->Abort();
+    // TODO: Abort segment parser loop, and stream append loop algorithms.
     AbortUpdating();
   }
 }
@@ -474,7 +476,15 @@ SourceBuffer::AppendDataCompletedWithSuccess(bool aGotMedia)
 void
 SourceBuffer::AppendDataErrored(nsresult aError)
 {
-  AppendError(true);
+  switch (aError) {
+    case NS_ERROR_ABORT:
+      // Nothing further to do as the handling of the events is being done
+      // by Abort().
+      break;
+    default:
+      AppendError(true);
+      break;
+  }
 }
 
 void
