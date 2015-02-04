@@ -10,7 +10,7 @@ function data(n) {
     done = true;
 }
 
-var m = Map(data(50));
+var m = new Map(data(50));
 assertEq(done, true);  // the constructor consumes the argument
 assertEq(m.size, 50);
 assertEq(m.get(""), 0);

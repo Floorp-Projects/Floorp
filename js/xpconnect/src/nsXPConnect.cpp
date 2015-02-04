@@ -1194,18 +1194,6 @@ nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const
     return nullptr;
 }
 
-NS_IMETHODIMP
-nsXPConnect::HoldObject(JSContext *aJSContext, JSObject *aObjectArg,
-                        nsIXPConnectJSObjectHolder **aHolder)
-{
-    RootedObject aObject(aJSContext, aObjectArg);
-    if (!aObject)
-        return NS_ERROR_FAILURE;
-    nsRefPtr<XPCJSObjectHolder> objHolder = new XPCJSObjectHolder(aObject);
-    objHolder.forget(aHolder);
-    return NS_OK;
-}
-
 namespace xpc {
 
 bool

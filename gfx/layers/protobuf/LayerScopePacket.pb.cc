@@ -27,6 +27,7 @@ void protobuf_ShutdownFile_LayerScopePacket_2eproto() {
   delete LayersPacket_Layer_Shadow::default_instance_;
   delete MetaPacket::default_instance_;
   delete Packet::default_instance_;
+  delete CommandPacket::default_instance_;
 }
 
 void protobuf_AddDesc_LayerScopePacket_2eproto() {
@@ -47,6 +48,7 @@ void protobuf_AddDesc_LayerScopePacket_2eproto() {
   LayersPacket_Layer_Shadow::default_instance_ = new LayersPacket_Layer_Shadow();
   MetaPacket::default_instance_ = new MetaPacket();
   Packet::default_instance_ = new Packet();
+  CommandPacket::default_instance_ = new CommandPacket();
   FramePacket::default_instance_->InitAsDefaultInstance();
   ColorPacket::default_instance_->InitAsDefaultInstance();
   TexturePacket::default_instance_->InitAsDefaultInstance();
@@ -59,6 +61,7 @@ void protobuf_AddDesc_LayerScopePacket_2eproto() {
   LayersPacket_Layer_Shadow::default_instance_->InitAsDefaultInstance();
   MetaPacket::default_instance_->InitAsDefaultInstance();
   Packet::default_instance_->InitAsDefaultInstance();
+  CommandPacket::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_LayerScopePacket_2eproto);
 }
 
@@ -3570,6 +3573,220 @@ void Packet::Swap(Packet* other) {
 
 ::std::string Packet::GetTypeName() const {
   return "mozilla.layers.layerscope.Packet";
+}
+
+
+// ===================================================================
+
+bool CommandPacket_CmdType_IsValid(int value) {
+  switch(value) {
+    case 0:
+    case 1:
+    case 2:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#ifndef _MSC_VER
+const CommandPacket_CmdType CommandPacket::NO_OP;
+const CommandPacket_CmdType CommandPacket::LAYERS_TREE;
+const CommandPacket_CmdType CommandPacket::LAYERS_BUFFER;
+const CommandPacket_CmdType CommandPacket::CmdType_MIN;
+const CommandPacket_CmdType CommandPacket::CmdType_MAX;
+const int CommandPacket::CmdType_ARRAYSIZE;
+#endif  // _MSC_VER
+#ifndef _MSC_VER
+const int CommandPacket::kTypeFieldNumber;
+const int CommandPacket::kValueFieldNumber;
+#endif  // !_MSC_VER
+
+CommandPacket::CommandPacket()
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+}
+
+void CommandPacket::InitAsDefaultInstance() {
+}
+
+CommandPacket::CommandPacket(const CommandPacket& from)
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void CommandPacket::SharedCtor() {
+  _cached_size_ = 0;
+  type_ = 0;
+  value_ = false;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+CommandPacket::~CommandPacket() {
+  SharedDtor();
+}
+
+void CommandPacket::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void CommandPacket::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const CommandPacket& CommandPacket::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_LayerScopePacket_2eproto();  return *default_instance_;
+}
+
+CommandPacket* CommandPacket::default_instance_ = NULL;
+
+CommandPacket* CommandPacket::New() const {
+  return new CommandPacket;
+}
+
+void CommandPacket::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    type_ = 0;
+    value_ = false;
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+bool CommandPacket::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // required .mozilla.layers.layerscope.CommandPacket.CmdType type = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::mozilla::layers::layerscope::CommandPacket_CmdType_IsValid(value)) {
+            set_type(static_cast< ::mozilla::layers::layerscope::CommandPacket_CmdType >(value));
+          }
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(16)) goto parse_value;
+        break;
+      }
+      
+      // optional bool value = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_value:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &value_)));
+          set_has_value();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+      
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void CommandPacket::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // required .mozilla.layers.layerscope.CommandPacket.CmdType type = 1;
+  if (has_type()) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      1, this->type(), output);
+  }
+  
+  // optional bool value = 2;
+  if (has_value()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->value(), output);
+  }
+  
+}
+
+int CommandPacket::ByteSize() const {
+  int total_size = 0;
+  
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // required .mozilla.layers.layerscope.CommandPacket.CmdType type = 1;
+    if (has_type()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
+    }
+    
+    // optional bool value = 2;
+    if (has_value()) {
+      total_size += 1 + 1;
+    }
+    
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void CommandPacket::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const CommandPacket*>(&from));
+}
+
+void CommandPacket::MergeFrom(const CommandPacket& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_type()) {
+      set_type(from.type());
+    }
+    if (from.has_value()) {
+      set_value(from.value());
+    }
+  }
+}
+
+void CommandPacket::CopyFrom(const CommandPacket& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool CommandPacket::IsInitialized() const {
+  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
+  
+  return true;
+}
+
+void CommandPacket::Swap(CommandPacket* other) {
+  if (other != this) {
+    std::swap(type_, other->type_);
+    std::swap(value_, other->value_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::std::string CommandPacket::GetTypeName() const {
+  return "mozilla.layers.layerscope.CommandPacket";
 }
 
 

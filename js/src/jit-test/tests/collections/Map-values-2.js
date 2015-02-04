@@ -4,7 +4,7 @@
 load(libdir + "iteration.js");
 
 var data = [["one", 1], ["two", 2], ["three", 3], ["four", 4]];
-var m = Map(data);
+var m = new Map(data);
 
 var ki = m.keys();
 assertIteratorNext(ki, "one");

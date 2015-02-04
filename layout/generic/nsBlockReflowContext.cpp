@@ -428,6 +428,10 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState&  aReflowState,
   LogicalPoint logPos =
     LogicalPoint(mWritingMode, mICoord, mBCoord).
       ConvertTo(frameWM, mWritingMode, mContainerWidth - mMetrics.Width());
+
+  // ApplyRelativePositioning in right-to-left writing modes needs to
+  // know the updated frame width
+  mFrame->SetSize(mWritingMode, mMetrics.Size(mWritingMode));
   aReflowState.ApplyRelativePositioning(&logPos, mContainerWidth);
 
   // Now place the frame and complete the reflow process
