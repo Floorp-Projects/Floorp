@@ -1,6 +1,6 @@
 // Removing and re-adding entries while an iterator is live causes the iterator to visit them again.
 
-var set = Set(['a']);
+var set = new Set(['a']);
 var n = 5;
 for (let v of set) {
     assertEq(v, 'a');

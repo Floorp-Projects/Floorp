@@ -37,6 +37,7 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
 {
   static const uint32_t SEGMENT_ID = 0x18538067;
   static const uint32_t SEGINFO_ID = 0x1549a966;
+  static const uint32_t TRACKS_ID = 0x1654AE6B;
   static const uint32_t CLUSTER_ID = 0x1f43b675;
   static const uint32_t TIMECODESCALE_ID = 0x2ad7b1;
   static const unsigned char TIMECODE_ID = 0xe7;
@@ -115,6 +116,10 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
         mState = READ_VINT;
         mNextState = READ_BLOCK_TIMECODE;
         break;
+      case TRACKS_ID:
+        mSkipBytes = mElement.mSize.mValue;
+        mState = CHECK_INIT_FOUND;
+        break;
       default:
         mSkipBytes = mElement.mSize.mValue;
         mState = SKIP_DATA;
@@ -190,6 +195,20 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
         mSkipBytes -= left;
       } else {
         mState = mNextState;
+      }
+      break;
+    case CHECK_INIT_FOUND:
+      if (mSkipBytes) {
+        uint32_t left = aLength - (p - aBuffer);
+        left = std::min(left, mSkipBytes);
+        p += left;
+        mSkipBytes -= left;
+      }
+      if (!mSkipBytes) {
+        if (mInitEndOffset < 0) {
+          mInitEndOffset = mCurrentOffset + (p - aBuffer);
+        }
+        mState = READ_ELEMENT_ID;
       }
       break;
     }
@@ -321,6 +340,7 @@ void WebMBufferedState::NotifyDataArrived(const char* aBuffer, uint32_t aLength,
   while (i + 1 < mRangeParsers.Length()) {
     if (mRangeParsers[i].mCurrentOffset >= mRangeParsers[i + 1].mStartOffset) {
       mRangeParsers[i + 1].mStartOffset = mRangeParsers[i].mStartOffset;
+      mRangeParsers[i + 1].mInitEndOffset = mRangeParsers[i].mInitEndOffset;
       mRangeParsers.RemoveElementAt(i);
     } else {
       i += 1;
@@ -328,5 +348,12 @@ void WebMBufferedState::NotifyDataArrived(const char* aBuffer, uint32_t aLength,
   }
 }
 
-} // namespace mozilla
+int64_t WebMBufferedState::GetInitEndOffset()
+{
+  if (mRangeParsers.IsEmpty()) {
+    return -1;
+  }
+  return mRangeParsers[0].mInitEndOffset;
+}
 
+} // namespace mozilla

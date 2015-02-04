@@ -82,7 +82,7 @@ const Census = {};
   function makeBasisChecker({compare, missing, extra}) {
     return function makeWalker(basis) {
       if (typeof basis === 'object') {
-        var unvisited = Set(Object.getOwnPropertyNames(basis));
+        var unvisited = new Set(Object.getOwnPropertyNames(basis));
         return {
           enter: prop => {
             unvisited.delete(prop);

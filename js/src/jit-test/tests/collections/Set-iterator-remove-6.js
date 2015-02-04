@@ -4,7 +4,7 @@
 
 load(libdir + "iteration.js");
 
-var set = Set();
+var set = new Set();
 for (var i = 0; i < 32; i++)
     set.add(i);
 var iter = set[Symbol.iterator]();

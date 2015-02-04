@@ -45,6 +45,7 @@ class LayersPacket_Layer_Matrix;
 class LayersPacket_Layer_Shadow;
 class MetaPacket;
 class Packet;
+class CommandPacket;
 
 enum LayersPacket_Layer_LayerType {
   LayersPacket_Layer_LayerType_UnknownLayer = 0,
@@ -97,6 +98,16 @@ bool Packet_DataType_IsValid(int value);
 const Packet_DataType Packet_DataType_DataType_MIN = Packet_DataType_FRAMESTART;
 const Packet_DataType Packet_DataType_DataType_MAX = Packet_DataType_META;
 const int Packet_DataType_DataType_ARRAYSIZE = Packet_DataType_DataType_MAX + 1;
+
+enum CommandPacket_CmdType {
+  CommandPacket_CmdType_NO_OP = 0,
+  CommandPacket_CmdType_LAYERS_TREE = 1,
+  CommandPacket_CmdType_LAYERS_BUFFER = 2
+};
+bool CommandPacket_CmdType_IsValid(int value);
+const CommandPacket_CmdType CommandPacket_CmdType_CmdType_MIN = CommandPacket_CmdType_NO_OP;
+const CommandPacket_CmdType CommandPacket_CmdType_CmdType_MAX = CommandPacket_CmdType_LAYERS_BUFFER;
+const int CommandPacket_CmdType_CmdType_ARRAYSIZE = CommandPacket_CmdType_CmdType_MAX + 1;
 
 // ===================================================================
 
@@ -1438,6 +1449,99 @@ class Packet : public ::google::protobuf::MessageLite {
   
   void InitAsDefaultInstance();
   static Packet* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class CommandPacket : public ::google::protobuf::MessageLite {
+ public:
+  CommandPacket();
+  virtual ~CommandPacket();
+  
+  CommandPacket(const CommandPacket& from);
+  
+  inline CommandPacket& operator=(const CommandPacket& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  static const CommandPacket& default_instance();
+  
+  void Swap(CommandPacket* other);
+  
+  // implements Message ----------------------------------------------
+  
+  CommandPacket* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const CommandPacket& from);
+  void MergeFrom(const CommandPacket& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::std::string GetTypeName() const;
+  
+  // nested types ----------------------------------------------------
+  
+  typedef CommandPacket_CmdType CmdType;
+  static const CmdType NO_OP = CommandPacket_CmdType_NO_OP;
+  static const CmdType LAYERS_TREE = CommandPacket_CmdType_LAYERS_TREE;
+  static const CmdType LAYERS_BUFFER = CommandPacket_CmdType_LAYERS_BUFFER;
+  static inline bool CmdType_IsValid(int value) {
+    return CommandPacket_CmdType_IsValid(value);
+  }
+  static const CmdType CmdType_MIN =
+    CommandPacket_CmdType_CmdType_MIN;
+  static const CmdType CmdType_MAX =
+    CommandPacket_CmdType_CmdType_MAX;
+  static const int CmdType_ARRAYSIZE =
+    CommandPacket_CmdType_CmdType_ARRAYSIZE;
+  
+  // accessors -------------------------------------------------------
+  
+  // required .mozilla.layers.layerscope.CommandPacket.CmdType type = 1;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 1;
+  inline ::mozilla::layers::layerscope::CommandPacket_CmdType type() const;
+  inline void set_type(::mozilla::layers::layerscope::CommandPacket_CmdType value);
+  
+  // optional bool value = 2;
+  inline bool has_value() const;
+  inline void clear_value();
+  static const int kValueFieldNumber = 2;
+  inline bool value() const;
+  inline void set_value(bool value);
+  
+  // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.CommandPacket)
+ private:
+  inline void set_has_type();
+  inline void clear_has_type();
+  inline void set_has_value();
+  inline void clear_has_value();
+  
+  int type_;
+  bool value_;
+  
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+  
+  friend void  protobuf_AddDesc_LayerScopePacket_2eproto();
+  friend void protobuf_AssignDesc_LayerScopePacket_2eproto();
+  friend void protobuf_ShutdownFile_LayerScopePacket_2eproto();
+  
+  void InitAsDefaultInstance();
+  static CommandPacket* default_instance_;
 };
 // ===================================================================
 
@@ -2801,6 +2905,55 @@ inline ::mozilla::layers::layerscope::MetaPacket* Packet::release_meta() {
   ::mozilla::layers::layerscope::MetaPacket* temp = meta_;
   meta_ = NULL;
   return temp;
+}
+
+// -------------------------------------------------------------------
+
+// CommandPacket
+
+// required .mozilla.layers.layerscope.CommandPacket.CmdType type = 1;
+inline bool CommandPacket::has_type() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void CommandPacket::set_has_type() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void CommandPacket::clear_has_type() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void CommandPacket::clear_type() {
+  type_ = 0;
+  clear_has_type();
+}
+inline ::mozilla::layers::layerscope::CommandPacket_CmdType CommandPacket::type() const {
+  return static_cast< ::mozilla::layers::layerscope::CommandPacket_CmdType >(type_);
+}
+inline void CommandPacket::set_type(::mozilla::layers::layerscope::CommandPacket_CmdType value) {
+  GOOGLE_DCHECK(::mozilla::layers::layerscope::CommandPacket_CmdType_IsValid(value));
+  set_has_type();
+  type_ = value;
+}
+
+// optional bool value = 2;
+inline bool CommandPacket::has_value() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void CommandPacket::set_has_value() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void CommandPacket::clear_has_value() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void CommandPacket::clear_value() {
+  value_ = false;
+  clear_has_value();
+}
+inline bool CommandPacket::value() const {
+  return value_;
+}
+inline void CommandPacket::set_value(bool value) {
+  set_has_value();
+  value_ = value;
 }
 
 

@@ -4,7 +4,7 @@ load(libdir + "asserts.js");
 load(libdir + "iteration.js");
 
 function test(constructor) {
-    var proto = Object.getPrototypeOf(constructor()[Symbol.iterator]());
+    var proto = Object.getPrototypeOf(new constructor()[Symbol.iterator]());
     var names = Object.getOwnPropertyNames(proto);
     names.sort();
     assertDeepEq(names, ['next']);

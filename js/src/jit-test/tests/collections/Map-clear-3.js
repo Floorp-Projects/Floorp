@@ -1,6 +1,6 @@
 // Clearing a Map with a nontrivial number of elements works.
 
-var m = Map();
+var m = new Map();
 for (var i = 0; i < 100; i++)
     m.set(i, i);
 assertEq(m.size, i);

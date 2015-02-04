@@ -1,6 +1,6 @@
 // map.set(k, v) increments the map size iff map didn't already have an entry for k.
 
-var m = Map();
+var m = new Map();
 m.set('a', 0);
 assertEq(m.size, 1);
 m.set('a', 0);

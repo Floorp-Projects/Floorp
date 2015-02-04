@@ -4595,10 +4595,16 @@ IonBuilder::specializeInlinedReturn(MDefinition *rdef, MBasicBlock *exit)
         if (rdef->resultTypeSet()->isSubset(types))
             return rdef;
     } else {
+        MIRType observedType = types->getKnownMIRType();
+
+        // Don't specialize if type is MIRType_Float32 and TI reports
+        // MIRType_Double. Float is more specific than double.
+        if (observedType == MIRType_Double && rdef->type() == MIRType_Float32)
+            return rdef;
+
         // Don't specialize if types are inaccordance, except for MIRType_Value
         // and MIRType_Object (when not unknown object), since the typeset
         // contains more specific information.
-        MIRType observedType = types->getKnownMIRType();
         if (observedType == rdef->type() &&
             observedType != MIRType_Value &&
             (observedType != MIRType_Object || types->unknownObject()))
