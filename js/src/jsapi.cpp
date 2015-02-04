@@ -5738,7 +5738,9 @@ JS_GetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt)
       case JSJITCOMPILER_BASELINE_WARMUP_TRIGGER:
         return jit::js_JitOptions.baselineWarmUpThreshold;
       case JSJITCOMPILER_ION_WARMUP_TRIGGER:
-        return jit::js_JitOptions.forcedDefaultIonWarmUpThreshold;
+        return jit::js_JitOptions.forcedDefaultIonWarmUpThreshold.isSome()
+             ? jit::js_JitOptions.forcedDefaultIonWarmUpThreshold.ref()
+             : jit::OptimizationInfo::CompilerWarmupThreshold;
       case JSJITCOMPILER_ION_ENABLE:
         return JS::RuntimeOptionsRef(rt).ion();
       case JSJITCOMPILER_BASELINE_ENABLE:

@@ -472,9 +472,9 @@ BluetoothGattClientHALInterface::RegisterClient(
   const BluetoothUuid& aUuid, BluetoothGattClientResultHandler* aRes)
 {
   int status;
-  bt_uuid_t uuid;
 
 #if ANDROID_VERSION >= 19
+  bt_uuid_t uuid;
   if (NS_SUCCEEDED(Convert(aUuid, uuid))) {
     status = mInterface->register_client(&uuid);
   } else {
