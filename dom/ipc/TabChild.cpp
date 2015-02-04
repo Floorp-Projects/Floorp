@@ -2011,7 +2011,7 @@ TabChild::RecvUpdateDimensions(const nsIntRect& rect, const nsIntSize& size,
     ScreenIntSize oldScreenSize = mInnerSize;
     mInnerSize = ScreenIntSize::FromUnknownSize(
       gfx::IntSize(size.width, size.height));
-    mWidget->Resize(0, 0, size.width, size.height,
+    mWidget->Resize(rect.x + chromeDisp.x, rect.y + chromeDisp.y, size.width, size.height,
                     true);
 
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(WebNavigation());

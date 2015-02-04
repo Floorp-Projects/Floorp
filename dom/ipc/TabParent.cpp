@@ -916,8 +916,15 @@ TabParent::UpdateDimensions(const nsIntRect& rect, const nsIntSize& size)
 
   if (!mUpdatedDimensions || mOrientation != orientation ||
       mDimensions != size || !mRect.IsEqualEdges(rect)) {
+    nsCOMPtr<nsIWidget> widget = GetWidget();
+    nsIntRect contentRect = rect;
+    if (widget) {
+      contentRect.x += widget->GetClientOffset().x;
+      contentRect.y += widget->GetClientOffset().y;
+    }
+
     mUpdatedDimensions = true;
-    mRect = rect;
+    mRect = contentRect;
     mDimensions = size;
     mOrientation = orientation;
 
