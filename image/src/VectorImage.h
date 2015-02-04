@@ -85,6 +85,13 @@ protected:
   void Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams);
 
 private:
+  /**
+   * In catastrophic circumstances like a GPU driver crash, we may lose our
+   * surfaces even if they're locked. RecoverFromLossOfSurfaces discards all
+   * existing surfaces, allowing us to recover.
+   */
+  void RecoverFromLossOfSurfaces();
+
   void CancelAllListeners();
   void SendInvalidationNotifications();
 
