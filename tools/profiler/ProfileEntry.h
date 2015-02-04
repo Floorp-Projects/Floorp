@@ -81,7 +81,7 @@ public:
 
   void addTag(const ProfileEntry& aTag);
   void IterateTagsForThread(IterateTagsCallback aCallback, int aThreadId);
-  void StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JSRuntime* rt);
+  void StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId);
   void StreamMarkersToJSObject(JSStreamWriter& b, int aThreadId);
   void DuplicateLastSample(int aThreadId);
 
@@ -184,8 +184,6 @@ public:
   int64_t        mRssMemory;
   int64_t        mUssMemory;
 #endif
-
-  void StreamTrackedOptimizations(JSStreamWriter& b, void* addr, uint8_t index);
 };
 
 std::ostream& operator<<(std::ostream& stream, const ThreadProfile& profile);

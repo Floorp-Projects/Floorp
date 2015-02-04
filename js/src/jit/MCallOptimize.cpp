@@ -24,10 +24,6 @@
 
 using mozilla::ArrayLength;
 
-using JS::TrackedStrategy;
-using JS::TrackedOutcome;
-using JS::TrackedTypeSite;
-
 namespace js {
 namespace jit {
 
