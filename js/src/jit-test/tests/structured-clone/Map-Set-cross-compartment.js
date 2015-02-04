@@ -5,4 +5,4 @@
 
 // Don't crash
 serialize(evalcx("Set(['x', 'y'])"));
-serialize(evalcx("Map([['x', 1]])"));
+serialize(evalcx("new Map([['x', 1]])"));

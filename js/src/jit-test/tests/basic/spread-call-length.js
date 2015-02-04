@@ -23,7 +23,7 @@ function checkLength(f, makeFn) {
   assertEq(makeFn("...arg")(f, "abc"), 3);
   assertEq(makeFn("...arg")(f, [1, 2, 3][Symbol.iterator]()), 3);
   assertEq(makeFn("...arg")(f, Set([1, 2, 3])), 3);
-  assertEq(makeFn("...arg")(f, Map([["a", "A"], ["b", "B"], ["c", "C"]])), 3);
+  assertEq(makeFn("...arg")(f, new Map([["a", "A"], ["b", "B"], ["c", "C"]])), 3);
   let itr = {};
   itr[Symbol.iterator] = function() {
       return {
