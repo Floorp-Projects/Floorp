@@ -7,6 +7,8 @@
 #define NSDISPLAYLISTINVALIDATION_H_
 
 #include "mozilla/Attributes.h"
+#include "FrameLayerBuilder.h"
+#include "imgIContainer.h"
 #include "nsRect.h"
 #include "nsColor.h"
 #include "gfxRect.h"
@@ -69,6 +71,63 @@ public:
   virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
 
   nsRect mBorderRect;
+};
+
+/**
+ * nsImageGeometryMixin is a mixin for geometry items that draw images. Geometry
+ * items that include this mixin can track drawing results and use that
+ * information to inform invalidation decisions.
+ *
+ * This mixin uses CRTP; its template parameter should be the type of the class
+ * that is inheriting from it. See nsDisplayItemGenericImageGeometry for an
+ * example.
+ */
+template <typename T>
+class nsImageGeometryMixin
+{
+public:
+  explicit nsImageGeometryMixin(nsDisplayItem* aItem)
+    : mLastDrawResult(mozilla::image::DrawResult::NOT_READY)
+  {
+    auto lastGeometry =
+      static_cast<T*>(mozilla::FrameLayerBuilder::GetMostRecentGeometry(aItem));
+    if (lastGeometry) {
+      mLastDrawResult = lastGeometry->LastDrawResult();
+    }
+  }
+
+  static void UpdateDrawResult(nsDisplayItem* aItem,
+                               mozilla::image::DrawResult aResult)
+  {
+    auto lastGeometry =
+      static_cast<T*>(mozilla::FrameLayerBuilder::GetMostRecentGeometry(aItem));
+    if (lastGeometry) {
+      lastGeometry->mLastDrawResult = aResult;
+    }
+  }
+
+  mozilla::image::DrawResult LastDrawResult() const { return mLastDrawResult; }
+
+private:
+  mozilla::image::DrawResult mLastDrawResult;
+};
+
+/**
+ * nsDisplayItemGenericImageGeometry is a generic geometry item class that
+ * includes nsImageGeometryMixin.
+ *
+ * This should be sufficient for most display items that draw images.
+ */
+class nsDisplayItemGenericImageGeometry
+  : public nsDisplayItemGenericGeometry
+  , public nsImageGeometryMixin<nsDisplayItemGenericImageGeometry>
+{
+public:
+  nsDisplayItemGenericImageGeometry(nsDisplayItem* aItem,
+                                    nsDisplayListBuilder* aBuilder)
+    : nsDisplayItemGenericGeometry(aItem, aBuilder)
+    , nsImageGeometryMixin(aItem)
+  { }
 };
 
 class nsDisplayItemBoundsGeometry : public nsDisplayItemGeometry
