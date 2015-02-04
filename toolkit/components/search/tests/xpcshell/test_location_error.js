@@ -2,23 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-  removeMetadata();
-  removeCacheFile();
-
-  do_check_false(Services.search.isInitialized);
-
-  let engineDummyFile = gProfD.clone();
-  engineDummyFile.append("searchplugins");
-  engineDummyFile.append("test-search-engine.xml");
-  let engineDir = engineDummyFile.parent;
-  engineDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-
-  do_get_file("data/engine.xml").copyTo(engineDir, "engine.xml");
-
-  do_register_cleanup(function() {
-    removeMetadata();
-    removeCacheFile();
-  });
+  installTestEngine();
 
   // using a port > 2^32 causes an error to be reported.
   let url = "http://localhost:111111111";
