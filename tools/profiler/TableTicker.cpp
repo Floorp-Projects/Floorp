@@ -582,6 +582,16 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
     if (jsStackAddr > nativeStackAddr) {
       MOZ_ASSERT(jsIndex >= 0);
       addDynamicTag(aProfile, 'c', jsFrames[jsIndex].label);
+
+      // Stringifying optimization information is delayed until streaming
+      // time. To re-lookup the entry in the JitcodeGlobalTable, we need to
+      // store both the the JIT code address ('J') and the tracked
+      // optimization index ('o') in the circular buffer.
+      if (jsFrames[jsIndex].hasTrackedOptimizations) {
+        aProfile.addTag(ProfileEntry('J', jsFrames[jsIndex].returnAddress));
+        aProfile.addTag(ProfileEntry('o', jsFrames[jsIndex].trackedOptimizationIndex));
+      }
+
       jsIndex--;
       continue;
     }
