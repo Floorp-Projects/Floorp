@@ -1931,6 +1931,7 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(int32_t aStyle)
 
   mShadowStyle = aStyle;
   [mWindow setHasShadow:(aStyle != NS_STYLE_WINDOW_SHADOW_NONE)];
+  [mWindow setUseMenuStyle:(aStyle == NS_STYLE_WINDOW_SHADOW_MENU)];
   AdjustWindowShadow();
   SetWindowBackgroundBlur();
 
@@ -2592,6 +2593,32 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
  - (void)_addKnownSubview:(NSView*)aView positioned:(NSWindowOrderingMode)place relativeTo:(NSView*)otherView;
 @end
 
+// Available on 10.10
+@interface NSWindow(PrivateCornerMaskMethod)
+ - (id)_cornerMask;
+ - (void)_cornerMaskChanged;
+@end
+
+#if !defined(MAC_OS_X_VERSION_10_10) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_10
+
+@interface NSImage(CapInsets)
+- (void)setCapInsets:(NSEdgeInsets)capInsets;
+@end
+
+#endif
+
+#if !defined(MAC_OS_X_VERSION_10_8) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
+
+@interface NSImage(ImageCreationWithDrawingHandler)
++ (NSImage *)imageWithSize:(NSSize)size
+                   flipped:(BOOL)drawingHandlerShouldBeCalledWithFlippedContext
+            drawingHandler:(BOOL (^)(NSRect dstRect))drawingHandler;
+@end
+
+#endif
+
 @interface BaseWindow(Private)
 - (void)removeTrackingArea;
 - (void)cursorUpdated:(NSEvent*)aEvent;
@@ -2600,6 +2627,25 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
 @end
 
 @implementation BaseWindow
+
+- (id)_cornerMask
+{
+  if (!mUseMenuStyle) {
+    return [super _cornerMask];
+  }
+
+  CGFloat radius = 4.0f;
+  NSEdgeInsets insets = { 5, 5, 5, 5 };
+  NSSize maskSize = { 12, 12 };
+  NSImage* maskImage = [NSImage imageWithSize:maskSize flipped:YES drawingHandler:^BOOL(NSRect dstRect) {
+    NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:dstRect xRadius:radius yRadius:radius];
+    [[NSColor colorWithDeviceWhite:1.0 alpha:1.0] set];
+    [path fill];
+    return YES;
+  }];
+  [maskImage setCapInsets:insets];
+  return maskImage;
+}
 
 // The frame of a window is implemented using undocumented NSView subclasses.
 // We offset the window buttons by overriding the methods _closeButtonOrigin
@@ -2667,9 +2713,20 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
   mBeingShown = NO;
   mDrawTitle = NO;
   mBrightTitlebarForeground = NO;
+  mUseMenuStyle = NO;
   [self updateTrackingArea];
 
   return self;
+}
+
+- (void)setUseMenuStyle:(BOOL)aValue
+{
+  if (aValue != mUseMenuStyle) {
+    mUseMenuStyle = aValue;
+    if ([self respondsToSelector:@selector(_cornerMaskChanged)]) {
+      [self _cornerMaskChanged];
+    }
+  }
 }
 
 - (void)setBeingShown:(BOOL)aValue
