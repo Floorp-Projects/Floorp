@@ -5,13 +5,19 @@ MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
 const TEST_DATA = [
-  {command: "d0108103010101820281829205013f002fe2",
+  {command: "D010" + // Length
+            "8103010101" + // Command details
+            "82028182" + // Device identities
+            "9205013F002FE2", // File list
    expect: {commandQualifier: 0x01}},
-  {command: "d009810301010482028182",
+  {command: "D009" + // Length
+            "8103010104" + // Command details
+            "82028182", // Device identities
    expect: {commandQualifier: 0x04}}
 ];
 
 function testRefresh(aCommand, aExpect) {
+  is(aCommand.commandNumber, 0x01, "commandNumber");
   is(aCommand.typeOfCommand, MozIccManager.STK_CMD_REFRESH, "typeOfCommand");
   is(aCommand.commandQualifier, aExpect.commandQualifier, "commandQualifier");
 }

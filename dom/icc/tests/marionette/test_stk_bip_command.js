@@ -6,36 +6,102 @@ MARIONETTE_HEAD_JS = "head.js";
 
 const TEST_DATA = [
   // Open channel.
-  {command: "d04f81030140018202818205074f70656e204944350702030403041f0239020578470a065465737447700272730d08f4557365724c6f670d08f4557365725077643c0301ad9c3e0521010101019e020007",
+  {command: "D02E" + // Length
+            "8103014001" + // Command details
+            "82028182" + // Device identities
+            "05074F70656E204944" + // Alpha identifier
+            "9E020007" + // Icon identifier
+            "86099111223344556677F8" + // Address
+            "350702030403041F02" + // Bear description
+            "39020578", // Buffer size
    expect: {typeOfCommand: MozIccManager.STK_CMD_OPEN_CHANNEL,
+            commandQualifier: 0x01,
             text: "Open ID",
             iconSelfExplanatory: true,
             icons: [COLOR_ICON, COLOR_TRANSPARENCY_ICON]}},
-  {command: "d0448103014001820281820500350702030403041f0239020578470a065465737447700272730d08f4557365724c6f670d08f4557365725077643c0301ad9c3e052101010101",
+  {command: "D023" + // Length
+            "8103014001" + // Command details
+            "82028182" + // Device identities
+            "0500" + // Alpha identifier
+            "86099111223344556677F8" + // Address
+            "350702030403041F02" + // Bear description
+            "39020578", // Buffer size
    expect: {typeOfCommand: MozIccManager.STK_CMD_OPEN_CHANNEL,
+            commandQualifier: 0x01,
             text: ""}},
-  {command: "d05381030140018202818205094f70656e2049442031350702030403041f0239020578470a065465737447700272730d08f4557365724c6f670d08f4557365725077643c0301ad9c3e052101010101d004000900b4",
+  {command: "D02C" + // Length
+            "8103014001" + // Command details
+            "82028182" + // Device identities
+            "05094F70656E2049442031" + // Alpha identifier
+            "86099111223344556677F8" + // Address
+            "350702030403041F02" + // Bear description
+            "39020578", // Buffer size
    expect: {typeOfCommand: MozIccManager.STK_CMD_OPEN_CHANNEL,
+            commandQualifier: 0x01,
             text: "Open ID 1"}},
   // Close channel.
-  {command: "d01b810301410082028121850a436c6f73652049442031d004000a00b4",
+  {command: "D00D" + // Length
+            "8103014100" + // Command details
+            "82028182" + // Device identities
+            "9E020007", // Icon identifier
    expect: {typeOfCommand: MozIccManager.STK_CMD_CLOSE_CHANNEL,
+            commandQualifier: 0x00,
+            iconSelfExplanatory: true,
+            icons: [COLOR_ICON, COLOR_TRANSPARENCY_ICON]}},
+  {command: "D015" + // Length
+            "8103014100" + // Command details
+            "82028121" + // Device identities
+            "850A436C6F73652049442031", // Alpha identifier
+   expect: {typeOfCommand: MozIccManager.STK_CMD_CLOSE_CHANNEL,
+            commandQualifier: 0x00,
             text: "Close ID 1"}},
-  // Recive data.
-  {command: "d022810301420082028121850e5265636569766520446174612031b701c8d004000e00b4",
+  // Receive data.
+  {command: "D00C" + // Length
+            "8103014200" + // Command details
+            "82028121" + // Device identities
+            "B701C8", // Channel data length
    expect: {typeOfCommand: MozIccManager.STK_CMD_RECEIVE_DATA,
+            commandQualifier: 0x00}},
+  {command: "D01C" + // Length
+            "8103014200" + // Command details
+            "82028121" + // Device identities
+            "850E5265636569766520446174612031" + // Alpha identifier
+            "B701C8", // Channel data length
+   expect: {typeOfCommand: MozIccManager.STK_CMD_RECEIVE_DATA,
+            commandQualifier: 0x00,
             text: "Receive Data 1"}},
   // Send data.
-  {command: "d026810301430182028121850b53656e6420446174612031b6080001020304050607d004000b00b4",
+  {command: "D017" + // Length
+            "8103014301" + // Command details
+            "82028121" + // Device identities
+            "9E020007" + // Icon identifier
+            "B6080001020304050607", // Channel data
    expect: {typeOfCommand: MozIccManager.STK_CMD_SEND_DATA,
+            commandQualifier: 0x01,
+            iconSelfExplanatory: true,
+            icons: [COLOR_ICON, COLOR_TRANSPARENCY_ICON]}},
+  {command: "D020" + // Length
+            "8103014301" + // Command details
+            "82028121" + // Device identities
+            "850B53656E6420446174612031" + // Alpha identifier
+            "B6080001020304050607", // Channel data
+   expect: {typeOfCommand: MozIccManager.STK_CMD_SEND_DATA,
+            commandQualifier: 0x01,
             text: "Send Data 1"}},
 ];
 
 function testBipCommand(aCommand, aExpect) {
+  is(aCommand.commandNumber, 0x01, "commandNumber");
   is(aCommand.typeOfCommand, aExpect.typeOfCommand, "typeOfCommand");
-  is(aCommand.options.text, aExpect.text, "options.text");
+  is(aCommand.commandQualifier, aExpect.commandQualifier, "commandQualifier");
 
-  if (aExpect.icons) {
+  // text is optional.
+  if ("text" in aExpect) {
+    is(aCommand.options.text, aExpect.text, "options.text");
+  }
+
+  // icons is optional.
+  if ("icons" in aExpect) {
     isIcons(aCommand.options.icons, aExpect.icons);
     is(aCommand.options.iconSelfExplanatory, aExpect.iconSelfExplanatory,
        "options.iconSelfExplanatory");

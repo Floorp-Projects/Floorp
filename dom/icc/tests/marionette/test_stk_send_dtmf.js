@@ -5,43 +5,79 @@ MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
 const TEST_DATA = [
-  {command: "d01b810301140082028183850953656e642044544d46ac052143658709",
+  {command: "D01B" + // Length
+            "8103011400" + // Command details
+            "82028183" + // Device identities
+            "850953656E642044544D46" + // Alpha identifier
+            "AC052143658709", // DTMF string
    expect: {commandQualifier: 0x00,
             text: "Send DTMF"}},
-  {command: "d010810301140082028183ac052143658709",
+  {command: "D010" + // Length
+            "8103011400" + // Command details
+            "82028183" + // Device identities
+            "AC052143658709", // DTMF string
    expect: {commandQualifier: 0x00}},
-  {command: "d0138103011400820281838500ac06c1cccccccc2c",
+  {command: "D013" + // Length
+            "8103011400" + // Command details
+            "82028183" + // Device identities
+            "8500" + // Alpha identifier
+            "AC06C1CCCCCCCC2C", // DTMF string
    expect: {commandQualifier: 0x00,
             text: ""}},
-  {command: "d01d810301140082028183850a42617369632049636f6eac02c1f29e020001",
+  {command: "D01D" + // Length
+            "8103011400" + // Command details
+            "82028183" + // Device identities
+            "850A42617369632049636F6E" + // Alpha identifier
+            "AC02C1F2" + // DTMF string
+            "9E020001", // Icon identifier
    expect: {commandQualifier: 0x00,
             text: "Basic Icon",
             iconSelfExplanatory: true,
             icons: [BASIC_ICON]}},
-  {command: "d011810301140082028183ac02c1f29e020005",
+  {command: "D011" + // Length
+            "8103011400" + // Command details
+            "82028183" + // Device identities
+            "AC02C1F2" + // DTMF string
+            "9E020005", // Icon identifier
    expect: {commandQualifier: 0x00,
             iconSelfExplanatory: true,
             icons: [COLOR_TRANSPARENCY_ICON]}},
-  {command: "d028810301140082028183851980041704140420041004120421042204120423041904220415ac02c1f2",
+  {command: "D028" + // Length
+            "8103011400" + // Command details
+            "82028183" + // Device identities
+            "851980041704140420041004120421042204120423041904220415" + // Alpha identifier
+            "AC02C1F2", // DTMF string
    expect: {commandQualifier: 0x00,
             text: "ЗДРАВСТВУЙТЕ"}},
-  {command: "d023810301140082028183850b53656e642044544d462031ac052143658709d004000b00b4",
+  {command: "D023" + // Length
+            "8103011400" + // Command details
+            "82028183" + // Device identities
+            "850B53656E642044544D462031" + // Alpha identifier
+            "AC052143658709" + // DTMF string
+            "D004000B00B4", // Text attribute
    expect: {commandQualifier: 0x00,
             text: "Send DTMF 1"}},
-  {command: "d0148103011400820281838505804f60597dac02c1f2",
+  {command: "D014" + // Length
+            "8103011400" + // Command details
+            "82028183" + // Device identities
+            "8505804F60597D" + // Alpha identifier
+            "AC02C1F2", // DTMF string
    expect: {commandQualifier: 0x00,
             text: "你好"}},
 ];
 
 function testSendDTMF(aCommand, aExpect) {
+  is(aCommand.commandNumber, 0x01, "commandNumber");
   is(aCommand.typeOfCommand, MozIccManager.STK_CMD_SEND_DTMF, "typeOfCommand");
   is(aCommand.commandQualifier, aExpect.commandQualifier, "commandQualifier");
 
-  if (aExpect.text) {
+  // text is optional.
+  if ("text" in aExpect) {
     is(aCommand.options.text, aExpect.text, "options.text");
   }
 
-  if (aExpect.icons) {
+  // icons is optional.
+  if ("icons" in aExpect) {
     isIcons(aCommand.options.icons, aExpect.icons);
     is(aCommand.options.iconSelfExplanatory, aExpect.iconSelfExplanatory,
        "options.iconSelfExplanatory");
