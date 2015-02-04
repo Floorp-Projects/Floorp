@@ -4,6 +4,9 @@ option optimize_for = LITE_RUNTIME;
 
 package mozilla.layers.layerscope;
 
+// ===============================
+// Server to Client messages
+// ===============================
 message FramePacket {
   optional uint64 value = 1;
 }
@@ -132,4 +135,18 @@ message Packet {
   optional TexturePacket texture = 4;
   optional LayersPacket layers = 5;
   optional MetaPacket meta = 6;
+}
+
+
+// ===============================
+// Client to Server messages
+// ===============================
+message CommandPacket {
+  enum CmdType {
+    NO_OP = 0;
+    LAYERS_TREE = 1;
+    LAYERS_BUFFER = 2;
+  }
+  required CmdType type = 1;
+  optional bool value = 2;
 }

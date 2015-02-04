@@ -17,6 +17,6 @@ var misc = [
 ];
 
 for (var v of misc) {
-    assertThrowsInstanceOf(function () { Set(v); }, TypeError);
-    assertThrowsInstanceOf(function () { Map(v); }, TypeError);
+    assertThrowsInstanceOf(function () { new Set(v); }, TypeError);
+    assertThrowsInstanceOf(function () { new Map(v); }, TypeError);
 }

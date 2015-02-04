@@ -37,7 +37,13 @@
 #include "libdisplay/FramebufferSurface.h"
 #include "gfxPrefs.h"
 #include "nsThreadUtils.h"
+#endif
 
+#if ANDROID_VERSION >= 21
+#ifndef HWC_BLIT
+#define HWC_BLIT 0xFF
+#endif
+#elif ANDROID_VERSION >= 17
 #ifndef HWC_BLIT
 #define HWC_BLIT (HWC_FRAMEBUFFER_TARGET + 1)
 #endif

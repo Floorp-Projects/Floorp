@@ -1,6 +1,6 @@
 // Nested for-of loops can iterate over a Map.
 
-var map = Map([['a', 0], ['b', 1]]);
+var map = new Map([['a', 0], ['b', 1]]);
 var log = '';
 for (let [k0, v0] of map) {
     log += k0 + v0 + ':'

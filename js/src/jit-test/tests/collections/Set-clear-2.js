@@ -1,6 +1,6 @@
 // Clearing a Set removes its elements; the Set remains usable afterwards.
 
-var s = Set(["x", "y", "z", "z", "y"]);
+var s = new Set(["x", "y", "z", "z", "y"]);
 assertEq(s.size, 3);
 s.clear();
 assertEq(s.size, 0);

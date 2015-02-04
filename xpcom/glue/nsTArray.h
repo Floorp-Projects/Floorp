@@ -14,6 +14,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/ReverseIterator.h"
 #include "mozilla/TypeTraits.h"
 
 #include <string.h>
@@ -768,6 +769,10 @@ public:
   typedef nsTArray_Impl<E, Alloc>                    self_type;
   typedef nsTArrayElementTraits<E>                   elem_traits;
   typedef nsTArray_SafeElementAtHelper<E, self_type> safeelementat_helper_type;
+  typedef elem_type*                                 iterator;
+  typedef const elem_type*                           const_iterator;
+  typedef mozilla::ReverseIterator<elem_type*>       reverse_iterator;
+  typedef mozilla::ReverseIterator<const elem_type*> const_reverse_iterator;
 
   using safeelementat_helper_type::SafeElementAt;
   using base_type::EmptyHdr;
@@ -991,6 +996,22 @@ public:
     return SafeElementAt(Length() - 1, aDef);
   }
 
+  // Methods for range-based for loops.
+  iterator begin() { return Elements(); }
+  const_iterator begin() const { return Elements(); }
+  const_iterator cbegin() const { return begin(); }
+  iterator end() { return Elements() + Length(); }
+  const_iterator end() const { return Elements() + Length(); }
+  const_iterator cend() const { return end(); }
+
+  // Methods for reverse iterating.
+  reverse_iterator rbegin() { return reverse_iterator(end()); }
+  const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+  const_reverse_iterator crbegin() const { return rbegin(); }
+  reverse_iterator rend() { return reverse_iterator(begin()); }
+  const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+  const_reverse_iterator crend() const { return rend(); }
+
   //
   // Search methods
   //
@@ -1027,8 +1048,9 @@ public:
   index_type IndexOf(const Item& aItem, index_type aStart,
                      const Comparator& aComp) const
   {
-    const elem_type* iter = Elements() + aStart, *end = Elements() + Length();
-    for (; iter != end; ++iter) {
+    const elem_type* iter = Elements() + aStart;
+    const elem_type* iend = Elements() + Length();
+    for (; iter != iend; ++iter) {
       if (aComp.Equals(*iter, aItem)) {
         return index_type(iter - Elements());
       }
@@ -1060,8 +1082,9 @@ public:
                          const Comparator& aComp) const
   {
     size_type endOffset = aStart >= Length() ? Length() : aStart + 1;
-    const elem_type* end = Elements() - 1, *iter = end + endOffset;
-    for (; iter != end; --iter) {
+    const elem_type* iend = Elements() - 1;
+    const elem_type* iter = iend + endOffset;
+    for (; iter != iend; --iter) {
       if (aComp.Equals(*iter, aItem)) {
         return index_type(iter - Elements());
       }
@@ -1541,8 +1564,9 @@ public:
     }
 
     // Initialize the extra array elements
-    elem_type* iter = Elements() + aIndex, *end = iter + aCount;
-    for (; iter != end; ++iter) {
+    elem_type* iter = Elements() + aIndex;
+    elem_type* iend = iter + aCount;
+    for (; iter != iend; ++iter) {
       elem_traits::Construct(iter);
     }
 
@@ -1566,8 +1590,9 @@ public:
     }
 
     // Initialize the extra array elements
-    elem_type* iter = Elements() + aIndex, *end = iter + aCount;
-    for (; iter != end; ++iter) {
+    elem_type* iter = Elements() + aIndex;
+    elem_type* iend = iter + aCount;
+    for (; iter != iend; ++iter) {
       elem_traits::Construct(iter, aItem);
     }
 
@@ -1696,8 +1721,9 @@ protected:
   // @param aCount The number of elements to destroy.
   void DestructRange(index_type aStart, size_type aCount)
   {
-    elem_type* iter = Elements() + aStart, *end = iter + aCount;
-    for (; iter != end; ++iter) {
+    elem_type* iter = Elements() + aStart;
+    elem_type *iend = iter + aCount;
+    for (; iter != iend; ++iter) {
       elem_traits::Destruct(iter);
     }
   }
@@ -1722,19 +1748,19 @@ protected:
   {
     elem_type* elem = Elements();
     elem_type item = elem[aIndex];
-    index_type end = Length() - 1;
-    while ((aIndex * 2) < end) {
+    index_type iend = Length() - 1;
+    while ((aIndex * 2) < iend) {
       const index_type left = (aIndex * 2) + 1;
       const index_type right = (aIndex * 2) + 2;
       const index_type parent_index = aIndex;
       if (aComp.LessThan(item, elem[left])) {
-        if (left < end &&
+        if (left < iend &&
             aComp.LessThan(elem[left], elem[right])) {
           aIndex = right;
         } else {
           aIndex = left;
         }
-      } else if (left < end &&
+      } else if (left < iend &&
                  aComp.LessThan(item, elem[right])) {
         aIndex = right;
       } else {

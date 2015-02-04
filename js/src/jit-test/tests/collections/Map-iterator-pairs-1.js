@@ -3,7 +3,7 @@
 load(libdir + "iteration.js");
 
 var key = {};
-var map = Map([[key, 'value']]);
+var map = new Map([[key, 'value']]);
 var entry = map[Symbol.iterator]().next().value;
 assertEq(Array.isArray(entry), true);
 assertEq(Object.getPrototypeOf(entry), Array.prototype);

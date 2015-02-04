@@ -7,8 +7,8 @@
 #ifndef MOZILLA_TRACKBUFFER_H_
 #define MOZILLA_TRACKBUFFER_H_
 
+#include "SourceBuffer.h"
 #include "SourceBufferDecoder.h"
-#include "MediaPromise.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/mozalloc.h"
@@ -40,7 +40,8 @@ public:
   // Append data to the current decoder.  Also responsible for calling
   // NotifyDataArrived on the decoder to keep buffered range computation up
   // to date.  Returns false if the append failed.
-  bool AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset /* microseconds */);
+  nsRefPtr<TrackBufferAppendPromise> AppendData(LargeDataBuffer* aData,
+                                                int64_t aTimestampOffset /* microseconds */);
 
   // Evicts data held in the current decoders SourceBufferResource from the
   // start of the buffer through to aPlaybackTime. aThreshold is used to
@@ -61,7 +62,7 @@ public:
 
   // Mark the current decoder's resource as ended, clear mCurrentDecoder and
   // reset mLast{Start,End}Timestamp.
-  void DiscardDecoder();
+  void DiscardCurrentDecoder();
   // Mark the current decoder's resource as ended.
   void EndCurrentDecoder();
 
@@ -100,6 +101,9 @@ public:
   // Times are in microseconds.
   bool RangeRemoval(int64_t aStart, int64_t aEnd);
 
+  // Abort any pending appendBuffer by rejecting any pending promises.
+  void AbortAppendData();
+
 #ifdef MOZ_EME
   nsresult SetCDMProxy(CDMProxy* aProxy);
 #endif
@@ -130,6 +134,11 @@ private:
   // Runs decoder initialization including calling ReadMetadata.  Runs as an
   // event on the decode thread pool.
   void InitializeDecoder(SourceBufferDecoder* aDecoder);
+  // Once decoder has been initialized, set mediasource duration if required
+  // and resolve any pending InitializationPromise.
+  // Setting the mediasource duration must be done on the main thread.
+  // TODO: Why is that so?
+  void CompleteInitializeDecoder(SourceBufferDecoder* aDecoder);
 
   // Adds a successfully initialized decoder to mDecoders and (if it's the
   // first decoder initialized), initializes mHasAudio/mHasVideo.  Called
@@ -193,6 +202,9 @@ private:
   MediaPromiseHolder<ShutdownPromise> mShutdownPromise;
   bool mDecoderPerSegment;
   bool mShutdown;
+
+  MediaPromiseHolder<TrackBufferAppendPromise> mInitializationPromise;
+
 };
 
 } // namespace mozilla
