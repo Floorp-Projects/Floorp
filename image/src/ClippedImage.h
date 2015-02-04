@@ -39,13 +39,13 @@ public:
     GetFrame(uint32_t aWhichFrame, uint32_t aFlags) MOZ_OVERRIDE;
   NS_IMETHOD GetImageContainer(layers::LayerManager* aManager,
                                layers::ImageContainer** _retval) MOZ_OVERRIDE;
-  NS_IMETHOD Draw(gfxContext* aContext,
-                  const nsIntSize& aSize,
-                  const ImageRegion& aRegion,
-                  uint32_t aWhichFrame,
-                  GraphicsFilter aFilter,
-                  const Maybe<SVGImageContext>& aSVGContext,
-                  uint32_t aFlags) MOZ_OVERRIDE;
+  NS_IMETHOD_(DrawResult) Draw(gfxContext* aContext,
+                               const nsIntSize& aSize,
+                               const ImageRegion& aRegion,
+                               uint32_t aWhichFrame,
+                               GraphicsFilter aFilter,
+                               const Maybe<SVGImageContext>& aSVGContext,
+                               uint32_t aFlags) MOZ_OVERRIDE;
   NS_IMETHOD RequestDiscard() MOZ_OVERRIDE;
   NS_IMETHOD_(Orientation) GetOrientation() MOZ_OVERRIDE;
   NS_IMETHOD_(nsIntRect) GetImageSpaceInvalidationRect(const nsIntRect& aRect) MOZ_OVERRIDE;
@@ -66,13 +66,13 @@ private:
                      uint32_t aWhichFrame,
                      uint32_t aFlags);
   bool ShouldClip();
-  nsresult DrawSingleTile(gfxContext* aContext,
-                          const nsIntSize& aSize,
-                          const ImageRegion& aRegion,
-                          uint32_t aWhichFrame,
-                          GraphicsFilter aFilter,
-                          const Maybe<SVGImageContext>& aSVGContext,
-                          uint32_t aFlags);
+  DrawResult DrawSingleTile(gfxContext* aContext,
+                            const nsIntSize& aSize,
+                            const ImageRegion& aRegion,
+                            uint32_t aWhichFrame,
+                            GraphicsFilter aFilter,
+                            const Maybe<SVGImageContext>& aSVGContext,
+                            uint32_t aFlags);
 
   // If we are forced to draw a temporary surface, we cache it here.
   nsAutoPtr<ClippedImageCachedSurface> mCachedSurface;

@@ -690,13 +690,12 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
 
   nsRefPtr<gfxContext> context = new gfxContext(dt);
 
-  nsresult rv = Draw(context, imageIntSize,
+  auto result = Draw(context, imageIntSize,
                      ImageRegion::Create(imageIntSize),
                      aWhichFrame, GraphicsFilter::FILTER_NEAREST,
                      Nothing(), aFlags);
 
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  return dt->Snapshot();
+  return result == DrawResult::SUCCESS ? dt->Snapshot() : nullptr;
 }
 
 //******************************************************************************
@@ -750,7 +749,7 @@ struct SVGDrawingParameters
  *                      in gfxGraphicsFilter aFilter,
  *                      [const] in MaybeSVGImageContext aSVGContext,
  *                      in uint32_t aFlags); */
-NS_IMETHODIMP
+NS_IMETHODIMP_(DrawResult)
 VectorImage::Draw(gfxContext* aContext,
                   const nsIntSize& aSize,
                   const ImageRegion& aRegion,
@@ -759,16 +758,25 @@ VectorImage::Draw(gfxContext* aContext,
                   const Maybe<SVGImageContext>& aSVGContext,
                   uint32_t aFlags)
 {
-  if (aWhichFrame > FRAME_MAX_VALUE)
-    return NS_ERROR_INVALID_ARG;
+  if (aWhichFrame > FRAME_MAX_VALUE) {
+    return DrawResult::BAD_ARGS;
+  }
 
-  NS_ENSURE_ARG_POINTER(aContext);
-  if (mError || !mIsFullyLoaded)
-    return NS_ERROR_FAILURE;
+  if (!aContext) {
+    return DrawResult::BAD_ARGS;
+  }
+
+  if (mError) {
+    return DrawResult::BAD_IMAGE;
+  }
+
+  if (!mIsFullyLoaded) {
+    return DrawResult::NOT_READY;
+  }
 
   if (mIsDrawing) {
     NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
-    return NS_ERROR_FAILURE;
+    return DrawResult::TEMPORARY_ERROR;
   }
 
   if (mAnimationConsumers == 0 && mProgressTracker) {
@@ -789,7 +797,7 @@ VectorImage::Draw(gfxContext* aContext,
 
   if (aFlags & FLAG_BYPASS_SURFACE_CACHE) {
     CreateSurfaceAndShow(params);
-    return NS_OK;
+    return DrawResult::SUCCESS;
   }
 
   DrawableFrameRef frameRef =
@@ -805,7 +813,7 @@ VectorImage::Draw(gfxContext* aContext,
       nsRefPtr<gfxDrawable> svgDrawable =
         new gfxSurfaceDrawable(surface, ThebesIntSize(frameRef->GetSize()));
       Show(svgDrawable, params);
-      return NS_OK;
+      return DrawResult::SUCCESS;
     }
 
     // We lost our surface due to some catastrophic event.
@@ -814,7 +822,7 @@ VectorImage::Draw(gfxContext* aContext,
 
   CreateSurfaceAndShow(params);
 
-  return NS_OK;
+  return DrawResult::SUCCESS;
 }
 
 void
