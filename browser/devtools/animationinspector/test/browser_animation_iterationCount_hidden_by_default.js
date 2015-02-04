@@ -13,12 +13,22 @@ add_task(function*() {
   info("Selecting a node with an animation that doesn't repeat");
   yield selectNode(".long", inspector);
   let widget = panel.playerWidgets[0];
-  let metaDataLabels = widget.el.querySelectorAll(".animation-title .meta-data strong");
-  is(metaDataLabels.length, 1, "Only the duration is shown");
+
+  ok(isNodeVisible(widget.metaDataComponent.durationValue),
+    "The duration value is shown");
+  ok(!isNodeVisible(widget.metaDataComponent.delayValue),
+    "The delay value is hidden");
+  ok(!isNodeVisible(widget.metaDataComponent.iterationValue),
+    "The iteration count is hidden");
 
   info("Selecting a node with an animation that repeats several times");
   yield selectNode(".delayed", inspector);
   widget = panel.playerWidgets[0];
-  let iterationLabel = widget.el.querySelectorAll(".animation-title .meta-data strong")[2];
-  is(iterationLabel.textContent, "10", "The iteration is shown");
+
+  ok(isNodeVisible(widget.metaDataComponent.durationValue),
+    "The duration value is shown");
+  ok(isNodeVisible(widget.metaDataComponent.delayValue),
+    "The delay value is shown");
+  ok(isNodeVisible(widget.metaDataComponent.iterationValue),
+    "The iteration count is shown");
 });
