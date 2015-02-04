@@ -422,7 +422,6 @@ public:
 
   void OnWaitForDataRejected(WaitForDataRejectValue aRejection)
   {
-    MOZ_ASSERT(aRejection.mReason == WaitForDataRejectValue::SHUTDOWN);
     if (RequestStatusRef(aRejection.mType) == RequestStatus::Waiting) {
       RequestStatusRef(aRejection.mType) = RequestStatus::Idle;
     }
