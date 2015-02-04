@@ -12,4 +12,4 @@ function test(obj0, obj1) {
 
 test([], [1]);
 test(new Map(), new Map([[1, 1]]));
-test(Set(), Set([1]));
+test(new Set(), new Set([1]));
