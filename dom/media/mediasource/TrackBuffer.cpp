@@ -216,14 +216,12 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
         // This data is earlier in the timeline than data we have already
         // processed or not continuous, so we must create a new decoder
         // to handle the decoding.
-        if (!decoders.NewDecoder(aTimestampOffset)) {
+        if (!hadCompleteInitData || !decoders.NewDecoder(aTimestampOffset)) {
           mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
           return p;
         }
-        if (hadCompleteInitData) {
-          MSE_DEBUG("TrackBuffer(%p)::AppendData: Decoder marked as initialized.", this);
-          AppendDataToCurrentResource(oldInit, 0);
-        }
+        MSE_DEBUG("TrackBuffer(%p)::AppendData: Decoder marked as initialized.", this);
+        AppendDataToCurrentResource(oldInit, 0);
       }
       mLastStartTimestamp = start;
     } else {
