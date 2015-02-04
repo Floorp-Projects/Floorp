@@ -121,6 +121,7 @@ class ObjectOpResult
     JS_PUBLIC_API(bool) failCantRedefineProp();
     JS_PUBLIC_API(bool) failReadOnly();
     JS_PUBLIC_API(bool) failGetterOnly();
+    JS_PUBLIC_API(bool) failCantSetInterposed();
 
     uint32_t failureCode() const {
         MOZ_ASSERT(!ok());
@@ -162,7 +163,6 @@ class ObjectOpResult
 
     /* Helper function for checkStrictErrorOrWarning's slow path. */
     JS_PUBLIC_API(bool) reportStrictErrorOrWarning(JSContext *cx, HandleObject obj, HandleId id, bool strict);
-
 };
 
 }
@@ -185,7 +185,7 @@ typedef JSGetterOp JSAddPropertyOp;
 // set.
 typedef bool
 (* JSSetterOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-               bool strict, JS::MutableHandleValue vp);
+               JS::MutableHandleValue vp, JS::ObjectOpResult &result);
 
 // Delete a property named by id in obj.
 //
@@ -298,7 +298,7 @@ typedef bool
                   JS::MutableHandleValue vp);
 typedef bool
 (* SetPropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, JS::HandleId id,
-                  JS::MutableHandleValue vp, bool strict);
+                  JS::MutableHandleValue vp, JS::ObjectOpResult &result);
 typedef bool
 (* GetOwnPropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                      JS::MutableHandle<JSPropertyDescriptor> desc);

@@ -338,7 +338,8 @@ js::intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp)
             MOZ_ASSERT_IF(arrobj->is<TypedObject>(), idx < uint32_t(arrobj->as<TypedObject>().length()));
             RootedValue tmp(cx, args[elemi]);
             // XXX: Always non-strict.
-            if (!SetElement(cx, arrobj, arrobj, idx, &tmp, false))
+            ObjectOpResult ignored;
+            if (!SetElement(cx, arrobj, arrobj, idx, &tmp, ignored))
                 return false;
         } else {
             MOZ_ASSERT(idx < arrobj->as<ArrayObject>().getDenseInitializedLength());

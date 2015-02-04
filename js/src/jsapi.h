@@ -1997,8 +1997,8 @@ JS_PropertyStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                 JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
-JS_StrictPropertyStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool strict,
-                      JS::MutableHandleValue vp);
+JS_StrictPropertyStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                      JS::MutableHandleValue vp, JS::ObjectOpResult &result);
 
 template<typename T>
 struct JSConstScalarSpec {
@@ -2841,8 +2841,8 @@ extern JS_PUBLIC_API(bool)
 JS_SetPropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue v);
 
 extern JS_PUBLIC_API(bool)
-JS_ForwardSetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue onBehalfOf,
-                        bool strict, JS::HandleValue vp);
+JS_ForwardSetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue v,
+                        JS::HandleValue receiver, JS::ObjectOpResult &result);
 
 extern JS_PUBLIC_API(bool)
 JS_DeleteProperty(JSContext *cx, JS::HandleObject obj, const char *name);

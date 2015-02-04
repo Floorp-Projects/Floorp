@@ -41,25 +41,27 @@ Shape::search(ExclusiveContext *cx, jsid id)
 }
 
 inline bool
-Shape::set(JSContext* cx, HandleNativeObject obj, HandleObject receiver, bool strict,
-           MutableHandleValue vp)
+Shape::set(JSContext* cx, HandleNativeObject obj, HandleObject receiver, MutableHandleValue vp,
+           ObjectOpResult &result)
 {
     MOZ_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
     MOZ_ASSERT(!obj->is<DynamicWithObject>());  // See bug 1128681.
 
     if (attrs & JSPROP_SETTER) {
         Value fval = setterValue();
-        return InvokeGetterOrSetter(cx, receiver, fval, 1, vp.address(), vp);
+        if (!InvokeGetterOrSetter(cx, receiver, fval, 1, vp.address(), vp))
+            return false;
+        return result.succeed();
     }
 
     if (attrs & JSPROP_GETTER)
-        return ReportGetterOnlyAssignment(cx, strict);
+        return result.fail(JSMSG_GETTER_ONLY);
 
     if (!setterOp())
-        return true;
+        return result.succeed();
 
     RootedId id(cx, propid());
-    return CallJSSetterOp(cx, setterOp(), obj, id, strict, vp);
+    return CallJSSetterOp(cx, setterOp(), obj, id, vp, result);
 }
 
 /* static */ inline Shape *

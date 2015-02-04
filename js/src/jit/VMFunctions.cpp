@@ -448,18 +448,24 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
         return true;
     }
 
+    ObjectOpResult result;
     if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
-        return NativeSetProperty(
-            cx, obj.as<NativeObject>(), obj.as<NativeObject>(), id,
-            (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME ||
-             op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME)
-            ? Unqualified
-            : Qualified,
-            &v,
-            strict);
+        if (!NativeSetProperty(
+                cx, obj.as<NativeObject>(), obj.as<NativeObject>(), id,
+                (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME ||
+                 op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME)
+                ? Unqualified
+                : Qualified,
+                &v,
+                result))
+        {
+            return false;
+        }
+    } else {
+        if (!SetProperty(cx, obj, obj, id, &v, result))
+            return false;
     }
-
-    return SetProperty(cx, obj, obj, id, &v, strict);
+    return result.checkStrictErrorOrWarning(cx, obj, id, strict);
 }
 
 bool

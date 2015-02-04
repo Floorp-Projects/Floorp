@@ -2168,7 +2168,7 @@ class MOZ_STACK_CLASS StringRegExpGuard
 
         // Handle everything else generically (including throwing if .lastIndex is non-writable).
         RootedValue zero(cx, Int32Value(0));
-        return SetProperty(cx, obj_, obj_, cx->names().lastIndex, &zero, true);
+        return SetProperty(cx, obj_, obj_, cx->names().lastIndex, &zero);
     }
 
     RegExpShared &regExp() { return *re_; }

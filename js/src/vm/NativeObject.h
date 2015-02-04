@@ -83,8 +83,7 @@ class ArrayObject;
  *
  * |id| must be "length", |attrs| are the attributes to be used for the newly-
  * changed length property, |value| is the value for the new length, and
- * |setterIsStrict| indicates whether invalid changes will cause a TypeError
- * to be thrown.
+ * |result| receives an error code if the change is invalid.
  */
 extern bool
 ArraySetLength(JSContext *cx, Handle<ArrayObject*> obj, HandleId id,
@@ -1299,16 +1298,12 @@ NativeGetElement(JSContext *cx, HandleNativeObject obj, uint32_t index, MutableH
 }
 
 bool
-SetPropertyByDefining(JSContext *cx, HandleObject obj, HandleObject receiver,
-                      HandleId id, HandleValue v, bool strict, bool objHasOwn);
+SetPropertyByDefining(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+                      HandleValue v, bool objHasOwn, ObjectOpResult &result);
 
 bool
-SetPropertyOnProto(JSContext *cx, HandleObject obj, HandleObject receiver,
-                   HandleId id, MutableHandleValue vp, bool strict);
-
-// Report any error or warning when writing to a non-writable property.
-bool
-SetNonWritableProperty(JSContext *cx, HandleId id, bool strict);
+SetPropertyOnProto(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+                   MutableHandleValue vp, ObjectOpResult &result);
 
 /*
  * Indicates whether an assignment operation is qualified (`x.y = 0`) or
@@ -1324,11 +1319,11 @@ enum QualifiedBool {
 
 extern bool
 NativeSetProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver, HandleId id,
-                  QualifiedBool qualified, MutableHandleValue vp, bool strict);
+                  QualifiedBool qualified, MutableHandleValue vp, ObjectOpResult &result);
 
 extern bool
 NativeSetElement(JSContext *cx, HandleNativeObject obj, HandleObject receiver, uint32_t index,
-                 MutableHandleValue vp, bool strict);
+                 MutableHandleValue vp, ObjectOpResult &result);
 
 extern bool
 NativeDeleteProperty(JSContext *cx, HandleNativeObject obj, HandleId id, bool *succeeded);
@@ -1440,20 +1435,20 @@ js::GetPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, V
 
 inline bool
 js::SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
-                HandleId id, MutableHandleValue vp, bool strict)
+                HandleId id, MutableHandleValue vp, ObjectOpResult &result)
 {
     if (obj->getOps()->setProperty)
-        return JSObject::nonNativeSetProperty(cx, obj, receiver, id, vp, strict);
-    return NativeSetProperty(cx, obj.as<NativeObject>(), receiver, id, Qualified, vp, strict);
+        return JSObject::nonNativeSetProperty(cx, obj, receiver, id, vp, result);
+    return NativeSetProperty(cx, obj.as<NativeObject>(), receiver, id, Qualified, vp, result);
 }
 
 inline bool
 js::SetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
-               MutableHandleValue vp, bool strict)
+               MutableHandleValue vp, ObjectOpResult &result)
 {
     if (obj->getOps()->setProperty)
-        return JSObject::nonNativeSetElement(cx, obj, receiver, index, vp, strict);
-    return NativeSetElement(cx, obj.as<NativeObject>(), receiver, index, vp, strict);
+        return JSObject::nonNativeSetElement(cx, obj, receiver, index, vp, result);
+    return NativeSetElement(cx, obj.as<NativeObject>(), receiver, index, vp, result);
 }
 
 #endif /* vm_NativeObject_h */

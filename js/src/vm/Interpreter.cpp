@@ -315,19 +315,19 @@ SetObjectProperty(JSContext *cx, JSOp op, HandleValue lval, HandleId id, Mutable
 
     RootedObject obj(cx, &lval.toObject());
 
-    bool strict = op == JSOP_STRICTSETPROP;
+    ObjectOpResult result;
     if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
         if (!NativeSetProperty(cx, obj.as<NativeObject>(), obj.as<NativeObject>(), id,
-                               Qualified, rref, strict))
+                               Qualified, rref, result))
         {
             return false;
         }
     } else {
-        if (!SetProperty(cx, obj, obj, id, rref, strict))
+        if (!SetProperty(cx, obj, obj, id, rref, result))
             return false;
     }
 
-    return true;
+    return result.checkStrictErrorOrWarning(cx, obj, id, op == JSOP_STRICTSETPROP);
 }
 
 static bool
@@ -1390,7 +1390,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
         return false;
 
     RootedValue tmp(cx, value);
-    return SetProperty(cx, obj, obj, id, &tmp, strict);
+    return PutProperty(cx, obj, id, &tmp, strict);
 }
 
 static MOZ_NEVER_INLINE bool
@@ -3809,7 +3809,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
      */
 
     /* Step 5f. */
-    return SetProperty(cx, parent, parent, name, &rval, script->strict());
+    return PutProperty(cx, parent, name, &rval, script->strict());
 }
 
 bool

@@ -406,24 +406,24 @@ UnboxedPlainObject::obj_getProperty(JSContext *cx, HandleObject obj, HandleObjec
 
 /* static */ bool
 UnboxedPlainObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                    HandleId id, MutableHandleValue vp, bool strict)
+                                    HandleId id, MutableHandleValue vp, ObjectOpResult &result)
 {
     const UnboxedLayout &layout = obj->as<UnboxedPlainObject>().layout();
 
     if (const UnboxedLayout::Property *property = layout.lookup(id)) {
         if (obj == receiver) {
             if (obj->as<UnboxedPlainObject>().setValue(cx, *property, vp))
-                return true;
+                return result.succeed();
 
             if (!convertToNative(cx, obj))
                 return false;
-            return SetProperty(cx, obj, receiver, id, vp, strict);
+            return SetProperty(cx, obj, receiver, id, vp, result);
         }
 
-        return SetPropertyByDefining(cx, obj, receiver, id, vp, strict, false);
+        return SetPropertyByDefining(cx, obj, receiver, id, vp, false, result);
     }
 
-    return SetPropertyOnProto(cx, obj, receiver, id, vp, strict);
+    return SetPropertyOnProto(cx, obj, receiver, id, vp, result);
 }
 
 /* static */ bool

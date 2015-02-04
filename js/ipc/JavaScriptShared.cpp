@@ -605,7 +605,8 @@ UnknownPropertyStub(JSContext *cx, HandleObject obj, HandleId id, MutableHandleV
 }
 
 bool
-UnknownStrictPropertyStub(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
+UnknownStrictPropertyStub(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp,
+                          ObjectOpResult &result)
 {
     JS_ReportError(cx, "setter could not be wrapped via CPOWs");
     return false;
