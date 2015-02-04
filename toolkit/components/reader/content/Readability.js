@@ -407,8 +407,11 @@ Readability.prototype = {
     page = page ? page : this._doc.body;
     let pageCacheHtml = page.innerHTML;
 
-    // Check if any "dir" is set on the toplevel document element
-    this._articleDir = doc.documentElement.getAttribute("dir");
+    // Check if any "dir" is set on the toplevel BODY or HTML.
+    this._articleDir = page.getAttribute("dir");
+    if (!this._articleDir) {
+      this._articleDir = doc.documentElement.getAttribute("dir");
+    }
 
     while (true) {
       let stripUnlikelyCandidates = this._flagIsActive(this.FLAG_STRIP_UNLIKELYS);
@@ -904,20 +907,35 @@ Readability.prototype = {
       return;
 
     // Remove any root styles, if we're able.
-    if (typeof e.removeAttribute === 'function' && e.className !== 'readability-styled')
-      e.removeAttribute('style');
+    if (typeof e.removeAttribute === 'function' && e.className !== 'readability-styled') {
+      this._stripNonDirectionStyles(e);
+    }
 
     // Go until there are no more child nodes
     while (cur !== null) {
       if (cur.nodeType === 1) {
         // Remove style attribute(s) :
-        if (cur.className !== "readability-styled")
-          cur.removeAttribute("style");
-
+        if (cur.className !== "readability-styled") {
+          this._stripNonDirectionStyles(e);
+        }
         this._cleanStyles(cur);
       }
 
       cur = cur.nextSibling;
+    }
+  },
+
+  /**
+   * Remove all style atrributes, preserving RTL/LTR text direction styles.
+   *
+   * @param Element
+   * @return void.
+   */
+  _stripNonDirectionStyles: function(e) {
+    let dir = e.style.direction;
+    e.removeAttribute("style");
+    if (dir) {
+      e.style.direction = dir;
     }
   },
 
