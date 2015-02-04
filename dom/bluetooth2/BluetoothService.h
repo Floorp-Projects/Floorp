@@ -395,7 +395,8 @@ protected:
   static BluetoothService*
   Create();
 
-  void CompleteToggleBt(bool aEnabled);
+  void
+  CompleteToggleBt(bool aEnabled);
 
   typedef nsClassHashtable<nsStringHashKey, BluetoothSignalObserverList >
   BluetoothSignalObserverTable;

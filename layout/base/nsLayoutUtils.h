@@ -2472,12 +2472,6 @@ public:
   CalculateExpandedScrollableRect(nsIFrame* aFrame);
 
   /**
-   * Return whether we want to use APZ for subframes in this process.
-   * Currently we don't support APZ for the parent process on B2G.
-   */
-  static bool WantSubAPZC();
-
-  /**
    * Returns true if we're using asynchronous scrolling (either through
    * APZ or the android frontend).
    */

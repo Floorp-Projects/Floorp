@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_bluetooth_bluetoothdbusservice_h__
 #define mozilla_dom_bluetooth_bluetoothdbusservice_h__
 
-#include "mozilla/Attributes.h"
 #include "BluetoothCommon.h"
-#include "mozilla/ipc/RawDBusConnection.h"
 #include "BluetoothService.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/ipc/RawDBusConnection.h"
 #include "nsIThread.h"
 
 class DBusMessage;
@@ -93,15 +93,15 @@ public:
   RemoveDeviceInternal(const nsAString& aDeviceObjectPath,
                        BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual nsresult
+  virtual void
   SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode,
                      BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual nsresult
+  virtual void
   SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey,
                      BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual nsresult
+  virtual void
   SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm,
                                  BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 

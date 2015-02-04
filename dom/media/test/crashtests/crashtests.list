@@ -78,4 +78,4 @@ load 1080986.html
 include ../../mediasource/test/crashtests/crashtests.list
 
 # This needs to run at the end to avoid leaking busted state into other tests.
-skip-if(winWidget) load 691096-1.html
+skip-if(winWidget||OSX==1010&&isDebugBuild) load 691096-1.html
