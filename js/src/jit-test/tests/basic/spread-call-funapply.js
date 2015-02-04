@@ -81,7 +81,7 @@ function checkRest(f) {
   assertEqArray(f.apply(null, ...[[undefined]]), [undefined]);
 
   // other iterable objects
-  assertEqArray(f.apply(null, ...Map([[["a", "A"], ["b", "B"]]])).map(([k, v]) => k + v), ["aA", "bB"]);
+  assertEqArray(f.apply(null, ...new Map([[["a", "A"], ["b", "B"]]])).map(([k, v]) => k + v), ["aA", "bB"]);
 }
 
 checkRest(function(...x) x);

@@ -11,6 +11,6 @@ function test(obj, edgeName) {
     referencesVia(obj, edgeName, key);
 }
 
-test([key],                 "element[0]");
-test(Map([[key, 'value']]), "key");
-test(Set([key]),            "key");
+test([key],                     "element[0]");
+test(new Map([[key, 'value']]), "key");
+test(Set([key]),                "key");
