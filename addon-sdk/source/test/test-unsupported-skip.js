@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 'use strict';
 
 const app = require('sdk/system/xul-app');
@@ -13,7 +12,8 @@ const app = require('sdk/system/xul-app');
  */
 if (!app.is('Firefox')) {
   require('./fixtures/loader/unsupported/firefox');
-} else {
+}
+else {
   require('./fixtures/loader/unsupported/fennec');
 }
 
@@ -21,4 +21,4 @@ exports.testRunning = function (assert) {
   assert.fail('Tests should not run in unsupported applications');
 };
 
-require('test').run(exports);
+require('sdk/test').run(exports);

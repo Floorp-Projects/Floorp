@@ -19,12 +19,14 @@ public:
 
   nsPluginPlayPreviewInfo(const char* aMimeType,
                           bool aIgnoreCTP,
-                          const char* aRedirectURL);
+                          const char* aRedirectURL,
+                          const char* aWhitelist);
   explicit nsPluginPlayPreviewInfo(const nsPluginPlayPreviewInfo* aSource);
 
   nsCString mMimeType;
   bool      mIgnoreCTP;
   nsCString mRedirectURL;
+  nsCString mWhitelist;
 };
 
 
