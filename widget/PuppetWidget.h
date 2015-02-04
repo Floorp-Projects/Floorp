@@ -92,8 +92,14 @@ public:
                     double aWidth,
                     double aHeight,
                     bool   aRepaint) MOZ_OVERRIDE
-  // Widget position is controlled by the parent process via TabChild.
-  { return Resize(aWidth, aHeight, aRepaint); }
+  {
+    if (mBounds.x != aX || mBounds.y != aY) {
+      NotifyWindowMoved(aX, aY);
+    }
+    mBounds.x = aX;
+    mBounds.y = aY;
+    return Resize(aWidth, aHeight, aRepaint);
+  }
 
   // XXX/cjones: copying gtk behavior here; unclear what disabling a
   // widget is supposed to entail
@@ -196,6 +202,8 @@ public:
 
   // Get the screen position of the application window.
   nsIntPoint GetWindowPosition();
+
+  NS_IMETHOD GetScreenBounds(nsIntRect &aRect) MOZ_OVERRIDE;
 
 protected:
   bool mEnabled;
