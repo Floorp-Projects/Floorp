@@ -71,7 +71,7 @@ public class TabStripItemView extends ThemedLinearLayout
         backgroundDrawable = new ResizablePathDrawable(new TabCurveShape(), tabColors);
         setBackgroundDrawable(backgroundDrawable);
 
-        faviconSize = res.getDimensionPixelSize(R.dimen.new_tablet_tab_strip_favicon_size);
+        faviconSize = res.getDimensionPixelSize(R.dimen.browser_toolbar_favicon_size);
 
         LayoutInflater.from(context).inflate(R.layout.tab_strip_item_view, this);
         setOnClickListener(new View.OnClickListener() {
