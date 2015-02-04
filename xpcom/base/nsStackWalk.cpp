@@ -34,12 +34,12 @@ static CriticalAddress gCriticalAddress;
 #define _GNU_SOURCE
 #endif
 
-#if defined(HAVE_DLOPEN) || defined(XP_MACOSX)
+#if defined(HAVE_DLOPEN) || defined(XP_DARWIN)
 #include <dlfcn.h>
 #endif
 
 #define NSSTACKWALK_SUPPORTS_MACOSX \
-  (defined(XP_MACOSX) && \
+  (defined(XP_DARWIN) && \
    (defined(__i386) || defined(__ppc__) || defined(HAVE__UNWIND_BACKTRACE)))
 
 #define NSSTACKWALK_SUPPORTS_LINUX \
@@ -49,7 +49,10 @@ static CriticalAddress gCriticalAddress;
 
 #if NSSTACKWALK_SUPPORTS_MACOSX
 #include <pthread.h>
+#include <sys/errno.h>
+#ifdef MOZ_WIDGET_COCOA
 #include <CoreServices/CoreServices.h>
+#endif
 
 typedef void
 malloc_logger_t(uint32_t aType,
@@ -74,7 +77,7 @@ stack_callback(uint32_t aFrameNumber, void* aPc, void* aSp, void* aClosure)
   gCriticalAddress.mAddr = aPc;
 }
 
-#ifdef DEBUG
+#if defined(MOZ_WIDGET_COCOA) && defined(DEBUG)
 #define MAC_OS_X_VERSION_10_7_HEX 0x00001070
 
 static int32_t OSXVersion()
@@ -152,7 +155,9 @@ StackWalkInitCriticalAddress()
   // On Lion, malloc is no longer called from pthread_cond_*wait*. This prevents
   // us from finding the address, but that is fine, since with no call to malloc
   // there is no critical address.
+#ifdef MOZ_WIDGET_COCOA
   MOZ_ASSERT(OnLionOrLater() || gCriticalAddress.mAddr != nullptr);
+#endif
   MOZ_ASSERT(r == ETIMEDOUT);
   r = pthread_mutex_unlock(&mutex);
   MOZ_ASSERT(r == 0);
