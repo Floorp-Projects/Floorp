@@ -251,9 +251,7 @@ MediaSource::RemoveSourceBuffer(SourceBuffer& aSourceBuffer, ErrorResult& aRv)
   if (sourceBuffer->Updating()) {
     // TODO:
     // abort stream append loop (if running)
-    // set updating to false
-    // fire "abort" at sourceBuffer
-    // fire "updateend" at sourceBuffer
+    sourceBuffer->Abort();
   }
   // TODO:
   // For all sourceBuffer audioTracks, videoTracks, textTracks:
