@@ -525,7 +525,9 @@ AudioChannelService::SetDefaultVolumeControlChannelInternal(int32_t aChannel,
   // If this child is in the background and mDefChannelChildID is set to
   // others then it means other child in the foreground already set it's
   // own default channel already.
-  if (!aHidden && mDefChannelChildID != aChildID) {
+  if ((!aHidden && mDefChannelChildID != aChildID) ||
+      (mDefChannelChildID != aChildID &&
+       mDefChannelChildID != CONTENT_PROCESS_ID_UNKNOWN)) {
     return;
   }
 
@@ -839,7 +841,7 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const ch
     if (!setting.mValue.isNumber()) {
       return NS_OK;
     }
-    
+
     nsCOMPtr<nsIAudioManager> audioManager = do_GetService(NS_AUDIOMANAGER_CONTRACTID);
     NS_ENSURE_TRUE(audioManager, NS_OK);
 
