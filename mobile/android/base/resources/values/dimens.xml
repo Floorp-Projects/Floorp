@@ -38,7 +38,6 @@
     <dimen name="new_tablet_site_security_padding_horizontal">8dp</dimen>
     <dimen name="new_tablet_site_security_right_margin">1dp</dimen>
     <dimen name="new_tablet_browser_toolbar_height">60dp</dimen>
-    <dimen name="new_tablet_browser_toolbar_menu_right_margin">6dp</dimen>
     <dimen name="new_tablet_browser_toolbar_menu_item_width">56dp</dimen>
     <!-- Padding combines with an 18dp image to form the menu item width and height. -->
     <dimen name="new_tablet_browser_toolbar_menu_item_padding_horizontal">19dp</dimen>
