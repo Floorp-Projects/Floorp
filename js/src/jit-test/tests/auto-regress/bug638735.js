@@ -5,7 +5,7 @@ var o9 = Function.prototype;
 var o13 = Array;
 function f5(o) {
 o.watch('p3', function() {});
-ox1 = wrap(o);
+ox1 = new Proxy(o, {});
 }
 f5(o9);
 f5(o13);

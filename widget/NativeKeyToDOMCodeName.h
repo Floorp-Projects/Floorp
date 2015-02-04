@@ -414,8 +414,8 @@ CODE_MAP_X11(End,                       0x0073)
 CODE_MAP_ANDROID(End,                   0x006B)
 
 CODE_MAP_MAC(Help,                      kVK_Help) // Insert key on PC keyboard
-CODE_MAP_X11(Help,                      0x0092) // on Sun keyboard
-CODE_MAP_ANDROID(Help,                  0x008A) // on Sun keyboard
+CODE_MAP_X11(Help,                      0x0092) // Help key on Sun keyboard
+CODE_MAP_ANDROID(Help,                  0x008A) // Help key on Sun keyboard
 
 CODE_MAP_WIN(Home,                      0xE047)
 CODE_MAP_MAC(Home,                      kVK_Home)
@@ -786,6 +786,34 @@ CODE_MAP_ANDROID(VolumeUp,              0x0073) // side of body, not on keyboard
 // CODE_MAP_WIN(WakeUp) // not available?
 CODE_MAP_X11(WakeUp,                    0x0097)
 CODE_MAP_ANDROID(WakeUp,                0x008F)
+
+// Legacy editing keys
+CODE_MAP_X11(Again,                     0x0089) // Again key on Sun keyboard
+CODE_MAP_ANDROID(Again,                 0x0081) // Again key on Sun keyboard
+
+CODE_MAP_X11(Copy,                      0x008D) // Copy key on Sun keyboard
+CODE_MAP_ANDROID(Copy,                  0x0085) // Copy key on Sun keyboard
+
+CODE_MAP_X11(Cut,                       0x0091) // Cut key on Sun keyboard
+CODE_MAP_ANDROID(Cut,                   0x0089) // Cut key on Sun keyboard
+
+CODE_MAP_X11(Find,                      0x0090) // Find key on Sun keyboard
+CODE_MAP_ANDROID(Find,                  0x0088) // Find key on Sun keyboard
+
+CODE_MAP_X11(Open,                      0x008E) // Open key on Sun keyboard
+CODE_MAP_ANDROID(Open,                  0x0086) // Open key on Sun keyboard
+
+CODE_MAP_X11(Paste,                     0x008F) // Paste key on Sun keyboard
+CODE_MAP_ANDROID(Paste,                 0x0087) // Paste key on Sun keyboard
+
+CODE_MAP_X11(Props,                     0x008A) // Props key on Sun keyboard
+CODE_MAP_ANDROID(Props,                 0x0082) // Props key on Sun keyboard
+
+CODE_MAP_X11(Select,                    0x008C) // Front key on Sun keyboard
+CODE_MAP_ANDROID(Select,                0x0084) // Front key on Sun keyboard
+
+CODE_MAP_X11(Undo,                      0x008B) // Undo key on Sun keyboard
+CODE_MAP_ANDROID(Undo,                  0x0083) // Undo key on Sun keyboard
 
 #undef CODE_MAP_WIN
 #undef CODE_MAP_MAC
