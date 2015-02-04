@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=655297
 
 /** Test for Bug 655297 **/
 
-var map = WeakMap();
+var map = new WeakMap();
 function f() {
     var paras = document.getElementsByTagName("form");
     for (var i = 0; i < paras.length; i++)

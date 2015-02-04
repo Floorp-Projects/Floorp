@@ -12,6 +12,7 @@
 namespace mozilla {
 
 class LargeDataBuffer;
+class SourceBufferResource;
 
 class ContainerParser {
 public:
@@ -48,10 +49,13 @@ public:
     return mHasInitData;
   }
 
+  bool HasCompleteInitData();
+
   static ContainerParser* CreateForMIMEType(const nsACString& aType);
 
 protected:
   nsRefPtr<LargeDataBuffer> mInitData;
+  nsRefPtr<SourceBufferResource> mResource;
   bool mHasInitData;
 };
 

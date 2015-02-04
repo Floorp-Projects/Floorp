@@ -1,7 +1,7 @@
 // Map.clear is unaffected by deleting/monkeypatching Map.prototype.{delete,iterator}.
 
 var data = [["a", 1], ["b", 2]];
-var m1 = Map(data), m2 = Map(data);
+var m1 = new Map(data), m2 = new Map(data);
 
 delete Map.prototype.delete;
 delete Map.prototype.iterator;

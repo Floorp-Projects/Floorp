@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=673468
 
   let system = Cc["@mozilla.org/systemprincipal;1"].createInstance();
   let sandbox = Cu.Sandbox(system);
-  let map = sandbox.WeakMap();
+  let map = new sandbox.WeakMap();
   let obj = {};
   map.set(obj, {});
 

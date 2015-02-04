@@ -97,16 +97,16 @@ function markGCType(typeName, child, why, depth, ptrdness)
 
     if (depth == 0) {
         if (!(typeName in gcTypes))
-            gcTypes[typeName] = Set();
+            gcTypes[typeName] = new Set();
         gcTypes[typeName].add(why);
     } else if (depth == 1) {
         if (!(typeName in gcPointers))
-            gcPointers[typeName] = Set();
+            gcPointers[typeName] = new Set();
         gcPointers[typeName].add(why);
     }
 
     if (!(typeName in gcFields))
-        gcFields[typeName] = Map();
+        gcFields[typeName] = new Map();
     gcFields[typeName].set(why, [ child, ptrdness ]);
 
     if (typeName in structureParents) {
@@ -148,7 +148,7 @@ addGCPointer('JS::AutoCheckCannotGC');
 
 function explain(csu, indent, seen) {
     if (!seen)
-        seen = Set();
+        seen = new Set();
     seen.add(csu);
     if (!(csu in gcFields))
         return;
