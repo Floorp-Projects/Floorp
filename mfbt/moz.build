@@ -60,6 +60,7 @@ EXPORTS.mozilla = [
     'RefCountType.h',
     'ReentrancyGuard.h',
     'RefPtr.h',
+    'ReverseIterator.h',
     'RollingMean.h',
     'Scoped.h',
     'SegmentedVector.h',
