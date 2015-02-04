@@ -1242,14 +1242,24 @@
 
       <handler event="mouseover"><![CDATA[
         let target = event.originalTarget;
-        if (target.localName == "button" &&
-            target.classList.contains("searchbar-engine-one-off-item") &&
-            !target.classList.contains("dummy")) {
-          let list = document.getAnonymousElementByAttribute(this, "anonid",
-                                                             "search-panel-one-offs")
-          for (let button = list.firstChild; button; button = button.nextSibling)
-            button.removeAttribute("selected");
-        }
+        if (target.localName != "button")
+          return;
+
+        if ((target.classList.contains("searchbar-engine-one-off-item") &&
+             !target.classList.contains("dummy")) ||
+            target.classList.contains("addengine-item") ||
+            target.classList.contains("search-setting-button"))
+          document.getElementById("searchbar").textbox.selectedButton = target;
+      ]]></handler>
+
+      <handler event="mouseout"><![CDATA[
+        let target = event.originalTarget;
+        if (target.localName != "button")
+          return;
+
+        let textbox = document.getElementById("searchbar").textbox;
+        if (textbox.selectedButton == target)
+          textbox.selectedButton = null;
       ]]></handler>
 
       <handler event="click"><![CDATA[
