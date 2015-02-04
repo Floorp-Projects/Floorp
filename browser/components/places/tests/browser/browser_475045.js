@@ -7,15 +7,15 @@ this._scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
 this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
 
-add_task(function* test() {
+function test() {
   // Make sure the bookmarks bar is visible and restore its state on cleanup.
   let toolbar = document.getElementById("PersonalToolbar");
   ok(toolbar, "PersonalToolbar should not be null");
 
   if (toolbar.collapsed) {
-    yield promiseSetToolbarVisibility(toolbar, true);
+    setToolbarVisibility(toolbar, true);
     registerCleanupFunction(function() {
-      return promiseSetToolbarVisibility(toolbar, false);
+      setToolbarVisibility(toolbar, false);
     });
   }
 
@@ -62,4 +62,4 @@ add_task(function* test() {
       simulateDragDrop(effect, mimeType);
     });
   });
-});
+}
