@@ -968,6 +968,8 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
     mDC->CreateBitmap(D2DIntSize(mSize), D2D1::BitmapProperties(D2DPixelFormat(mFormat)), byRef(tmpBitmap));
 
     // This flush is important since the copy method will not know about the context drawing to the surface.
+    // We also need to pop all the clips to make sure any drawn content will have made it to the final bitmap.
+    PopAllClips();
     mDC->Flush();
 
     // We need to use a copy here because affects don't accept a surface on
@@ -977,6 +979,9 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
     mBlendEffect->SetInput(0, tmpBitmap);
     mBlendEffect->SetInput(1, mTempBitmap);
     mBlendEffect->SetValue(D2D1_BLEND_PROP_MODE, D2DBlendMode(aOp));
+
+    PushClipsToDC(mDC);
+    mClipsArePushed = true;
 
     mDC->DrawImage(mBlendEffect, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_BOUNDED_SOURCE_COPY);
     return;
