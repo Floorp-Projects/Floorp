@@ -12,6 +12,10 @@ const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "HiddenFrame",
+  "resource:///modules/HiddenFrame.jsm");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -60,8 +64,6 @@ this.CustomizationTabPreloaderInternal = {
   _browser: null,
 
   uninit: function () {
-    HostFrame.destroy();
-
     if (this._browser) {
       this._browser.destroy();
       this._browser = null;
@@ -90,6 +92,7 @@ function HiddenBrowser() {
 
 HiddenBrowser.prototype = {
   _timer: null,
+  _hiddenFrame: null,
 
   get isPreloaded() {
     return this._browser &&
@@ -137,11 +140,19 @@ HiddenBrowser.prototype = {
 
   destroy: function () {
     this._removeBrowser();
+    if (this._hiddenFrame) {
+      this._hiddenFrame.destroy();
+      this._hiddenFrame = null;
+    }
     this._timer = clearTimer(this._timer);
   },
 
   _createBrowser: function () {
-    HostFrame.get().then(aFrame => {
+    if (!this._hiddenFrame) {
+      this._hiddenFrame = new HiddenFrame();
+    }
+
+    this._hiddenFrame.get().then(aFrame => {
       let doc = aFrame.document;
       this._browser = doc.createElementNS(XUL_NS, "browser");
       this._browser.setAttribute("type", "content");
@@ -156,62 +167,6 @@ HiddenBrowser.prototype = {
     if (this._browser) {
       this._browser.remove();
       this._browser = null;
-    }
-  }
-};
-
-let HostFrame = {
-  _frame: null,
-  _deferred: null,
-
-  get hiddenDOMDocument() {
-    return Services.appShell.hiddenDOMWindow.document;
-  },
-
-  get isReady() {
-    return this.hiddenDOMDocument.readyState === "complete";
-  },
-
-  get: function () {
-    if (!this._deferred) {
-      this._deferred = Promise.defer();
-      this._create();
-    }
-
-    return this._deferred.promise;
-  },
-
-  destroy: function () {
-    if (this._frame) {
-      if (!Cu.isDeadWrapper(this._frame)) {
-        this._frame.removeEventListener("load", this, true);
-        this._frame.remove();
-      }
-
-      this._frame = null;
-      this._deferred = null;
-    }
-  },
-
-  handleEvent: function () {
-    let contentWindow = this._frame.contentWindow;
-    if (contentWindow.location.href === XUL_PAGE) {
-      this._frame.removeEventListener("load", this, true);
-      this._deferred.resolve(contentWindow);
-    } else {
-      contentWindow.location = XUL_PAGE;
-    }
-  },
-
-  _create: function () {
-    if (this.isReady) {
-      let doc = this.hiddenDOMDocument;
-      this._frame = doc.createElementNS(HTML_NS, "iframe");
-      this._frame.addEventListener("load", this, true);
-      doc.documentElement.appendChild(this._frame);
-    } else {
-      let flags = Ci.nsIThread.DISPATCH_NORMAL;
-      Services.tm.currentThread.dispatch(() => this._create(), flags);
     }
   }
 };
