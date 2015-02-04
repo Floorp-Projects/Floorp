@@ -5852,7 +5852,7 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
 }
 
 
-static nsresult
+static DrawResult
 DrawImageInternal(gfxContext&            aContext,
                   nsPresContext*         aPresContext,
                   imgIContainer*         aImage,
@@ -5880,8 +5880,9 @@ DrawImageInternal(gfxContext&            aContext,
                                          aFill, aAnchor, aDirty, aImage,
                                          aGraphicsFilter, aImageFlags);
 
-  if (!params.shouldDraw)
-    return NS_OK;
+  if (!params.shouldDraw) {
+    return DrawResult::SUCCESS;
+  }
 
   gfxContextMatrixAutoSaveRestore contextMatrixRestorer(&aContext);
   aContext.SetMatrix(params.imageSpaceToDeviceSpace);
@@ -5892,13 +5893,12 @@ DrawImageInternal(gfxContext&            aContext,
     svgContext = Some(SVGImageContext(params.svgViewportSize, Nothing()));
   }
 
-  aImage->Draw(&aContext, params.size, params.region, imgIContainer::FRAME_CURRENT,
-               aGraphicsFilter, svgContext, aImageFlags);
-
-  return NS_OK;
+  return aImage->Draw(&aContext, params.size, params.region,
+                      imgIContainer::FRAME_CURRENT, aGraphicsFilter,
+                      svgContext, aImageFlags);
 }
 
-/* static */ nsresult
+/* static */ DrawResult
 nsLayoutUtils::DrawSingleUnscaledImage(gfxContext&          aContext,
                                        nsPresContext*       aPresContext,
                                        imgIContainer*       aImage,
@@ -5911,7 +5911,10 @@ nsLayoutUtils::DrawSingleUnscaledImage(gfxContext&          aContext,
   nsIntSize imageSize;
   aImage->GetWidth(&imageSize.width);
   aImage->GetHeight(&imageSize.height);
-  NS_ENSURE_TRUE(imageSize.width > 0 && imageSize.height > 0, NS_ERROR_FAILURE);
+  if (imageSize.width < 1 || imageSize.height < 1) {
+    NS_WARNING("Image width or height is non-positive");
+    return DrawResult::TEMPORARY_ERROR;
+  }
 
   nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
   nsSize size(imageSize.width*appUnitsPerCSSPixel,
@@ -5936,7 +5939,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(gfxContext&          aContext,
                            nullptr, aImageFlags);
 }
 
-/* static */ nsresult
+/* static */ DrawResult
 nsLayoutUtils::DrawSingleImage(gfxContext&            aContext,
                                nsPresContext*         aPresContext,
                                imgIContainer*         aImage,
@@ -5950,7 +5953,11 @@ nsLayoutUtils::DrawSingleImage(gfxContext&            aContext,
 {
   nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
   nsIntSize pixelImageSize(ComputeSizeForDrawingWithFallback(aImage, aDest.Size()));
-  NS_ENSURE_TRUE(pixelImageSize.width > 0 && pixelImageSize.height > 0, NS_ERROR_FAILURE);
+  if (pixelImageSize.width < 1 || pixelImageSize.height < 1) {
+    NS_WARNING("Image width or height is non-positive");
+    return DrawResult::TEMPORARY_ERROR;
+  }
+
   nsSize imageSize(pixelImageSize.width * appUnitsPerCSSPixel,
                    pixelImageSize.height * appUnitsPerCSSPixel);
 
@@ -6049,7 +6056,7 @@ nsLayoutUtils::ComputeSizeForDrawingWithFallback(imgIContainer* aImage,
   return imageSize;
 }
 
-/* static */ nsresult
+/* static */ DrawResult
 nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
                                    nsPresContext*      aPresContext,
                                    imgIContainer*      aImage,
@@ -6075,7 +6082,7 @@ nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
                            aDirty, &svgContext, aImageFlags);
 }
 
-/* static */ nsresult
+/* static */ DrawResult
 nsLayoutUtils::DrawImage(gfxContext&         aContext,
                          nsPresContext*      aPresContext,
                          imgIContainer*      aImage,
