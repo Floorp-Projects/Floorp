@@ -897,8 +897,6 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     return NS_ERROR_FAILURE;
   }
 
-  int64_t maxDuration = -1;
-
   if (mAudioTrack) {
     MOZ_ASSERT(mAudioTrack->IsReady());
     mAudioReader = mAudioTrack->Decoders()[0]->GetReader();
@@ -907,9 +905,9 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     MOZ_ASSERT(info.HasAudio());
     mInfo.mAudio = info.mAudio;
     mInfo.mIsEncrypted = mInfo.mIsEncrypted || info.mIsEncrypted;
-    maxDuration = std::max(maxDuration, mAudioReader->GetDecoder()->GetMediaDuration());
-    MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata audio reader=%p maxDuration=%lld",
-              this, mAudioReader.get(), maxDuration);
+    MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata audio reader=%p duration=%lld",
+              this, mAudioReader.get(),
+              mAudioReader->GetDecoder()->GetMediaDuration());
   }
 
   if (mVideoTrack) {
@@ -920,16 +918,10 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     MOZ_ASSERT(info.HasVideo());
     mInfo.mVideo = info.mVideo;
     mInfo.mIsEncrypted = mInfo.mIsEncrypted || info.mIsEncrypted;
-    maxDuration = std::max(maxDuration, mVideoReader->GetDecoder()->GetMediaDuration());
-    MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata video reader=%p maxDuration=%lld",
-              this, mVideoReader.get(), maxDuration);
+    MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata video reader=%p duration=%lld",
+              this, mVideoReader.get(),
+              mVideoReader->GetDecoder()->GetMediaDuration());
   }
-
-  if (!maxDuration) {
-    // Treat a duration of 0 as infinity
-    maxDuration = -1;
-  }
-  static_cast<MediaSourceDecoder*>(mDecoder)->SetDecodedDuration(maxDuration);
 
   *aInfo = mInfo;
   *aTags = nullptr; // TODO: Handle metadata.

@@ -19,8 +19,8 @@ assertEqArray([...[undefined]], [undefined]);
 assertEqArray([...new Int32Array([1, 2, 3])], [1, 2, 3]);
 assertEqArray([..."abc"], ["a", "b", "c"]);
 assertEqArray([...[1, 2, 3][Symbol.iterator]()], [1, 2, 3]);
-assertEqArray([...Set([1, 2, 3])], [1, 2, 3]);
-assertEqArray([...Map([["a", "A"], ["b", "B"], ["c", "C"]])].map(([k, v]) => k + v), ["aA", "bB", "cC"]);
+assertEqArray([...new Set([1, 2, 3])], [1, 2, 3]);
+assertEqArray([...new Map([["a", "A"], ["b", "B"], ["c", "C"]])].map(([k, v]) => k + v), ["aA", "bB", "cC"]);
 let itr = {};
 itr[Symbol.iterator] = function () {
     return {

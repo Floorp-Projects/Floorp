@@ -2,7 +2,7 @@
 
 function test(pairs) {
     print(uneval(pairs));
-    var map = Map(pairs);
+    var map = new Map(pairs);
     
     var all_keys = '';
     var false_keys = '';

@@ -1,6 +1,6 @@
 // map.delete(k) decrements the map size iff an entry was actually removed.
 
-var m = Map();
+var m = new Map();
 m.delete(3);
 assertEq(m.size, 0);
 m.set({}, 'ok');
