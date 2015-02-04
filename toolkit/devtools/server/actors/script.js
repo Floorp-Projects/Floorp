@@ -2728,58 +2728,29 @@ SourceActor.prototype = {
     return this.setBreakpoint(originalLoc.line, originalLoc.column, condition)
                .then(response =>
     {
-      var actual = response.actualLocation;
-      if (actual) {
-        if (loc.sourceActor.source) {
+      return Promise.resolve().then(() => {
+        var actual = response.actualLocation ? response.actualLocation : loc;
+        if (actual.sourceActor.source) {
           return this.threadActor.sources.getOriginalLocation({
-            source: loc.sourceActor.source,
+            source: actual.sourceActor.source,
             line: actual.line,
             column: actual.column
-          }).then(({ sourceActor, line, column }) => {
-            if (sourceActor.url !== originalLoc.url ||
-                line !== originalLoc.line ||
-                column !== originalLoc.column) {
-              response.actualLocation = {
-                source: sourceActor.form(),
-                line: line,
-                column: column
-              };
-            }
-            return response;
           });
+        } else {
+          return actual;
         }
-        else {
+      }).then((location) => {
+        if (location.sourceActor.url !== originalLoc.url ||
+            location.line !== originalLoc.line)
+        {
           response.actualLocation = {
-            source: loc.sourceActor.form(),
-            line: actual.line,
-            column: actual.column
-          }
-          return response;
+            source: location.sourceActor.form(),
+            line: location.line,
+            column: location.column
+          };
         }
-      }
-      else {
-        if (loc.sourceActor.source) {
-          // Get the original location known by the sourcemap and see if
-          // it's different from our initial arguments
-          return this.threadActor.sources.getOriginalLocation({
-            source: loc.sourceActor.source,
-            line: loc.line,
-            column: loc.column
-          }).then(({ sourceActor, line }) => {
-            if (originalLoc.url !== sourceActor.url ||
-                originalLoc.line !== line) {
-              response.actualLocation = {
-                source: sourceActor.form(),
-                line: line
-              };
-            }
-            return response;
-          });
-        }
-        else {
-          return response;
-        }
-      }
+        return response;
+      });
     }).then(null, error => {
       DevToolsUtils.reportException("onSetBreakpoint", error);
     });
