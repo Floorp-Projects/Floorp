@@ -36,12 +36,6 @@
   <!-- highlight-focused on shaped button: 10% white over background_tabs -->
   <color name="highlight_shaped_focused">#FF565B60</color>
 
-  <!-- highlight on nav button: 20% black over background_normal -->
-  <color name="highlight_nav">#FFA5ACB2</color>
-
-  <!-- highlight-focused on nav button: 10% black over background_normal -->
-  <color name="highlight_nav_focused">#FFB9C1C7</color>
-
   <!-- highlight on private nav button: 20% white over background_private -->
   <color name="highlight_nav_pb">#FF545654</color>
 

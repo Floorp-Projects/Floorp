@@ -5,9 +5,9 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ThumbnailHelper;
+import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -85,7 +85,7 @@ public class TopSitesThumbnailView extends ImageView {
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-        if(NewTabletUI.isEnabled(getContext()) && mResize) {
+        if (HardwareUtils.isTablet() && mResize) {
             setScaleType(ScaleType.MATRIX);
             RectF rect = new RectF(0, 0, mWidth, mHeight);
             Matrix matrix = new Matrix();

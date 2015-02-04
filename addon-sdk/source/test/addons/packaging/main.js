@@ -4,43 +4,54 @@
 "use strict";
 
 var options = require("@loader/options");
+var metadata = {};
+if (options.isNative) {
+  metadata = require("./package.json");
+  metadata.permissions = {};
+  Object.freeze(metadata);
+}
+else {
+  metadata = options.metadata;
+}
 
 exports.testPackaging = function(assert) {
-  assert.equal(options.metadata.description,
-                   "Add-on development made easy.",
-                   "packaging metadata should be available");
+  assert.equal(metadata.description,
+               "Add-on development made easy.",
+               "packaging metadata should be available");
   try {
-    options.metadata.description = 'new description';
+    metadata.description = 'new description';
     assert.fail('should not have been able to set options.metadata property');
   }
   catch (e) {}
 
-  assert.equal(options.metadata.description,
-                   "Add-on development made easy.",
-                   "packaging metadata should be frozen");
+  assert.equal(metadata.description,
+               "Add-on development made easy.",
+               "packaging metadata should be frozen");
 
-  assert.equal(options.metadata.permissions['private-browsing'], undefined,
-                   "private browsing metadata should be undefined");
-  assert.equal(options.metadata['private-browsing'], undefined,
-                   "private browsing metadata should be be frozen");
+  assert.equal(metadata.permissions['private-browsing'], undefined,
+               "private browsing metadata should be undefined");
+
+  assert.equal(metadata['private-browsing'], undefined,
+               "private browsing metadata should be be frozen");
+
   assert.equal(options['private-browsing'], undefined,
-                   "private browsing metadata should be be frozen");
+               "private browsing metadata should be be frozen");
 
   try {
-    options.metadata['private-browsing'] = true;
+    metadata['private-browsing'] = true;
     assert.fail('should not have been able to set options.metadata property');
   }
   catch(e) {}
-  assert.equal(options.metadata['private-browsing'], undefined,
-                   "private browsing metadata should be be frozen");
+  assert.equal(metadata['private-browsing'], undefined,
+               "private browsing metadata should be be frozen");
 
   try {
-    options.metadata.permissions['private-browsing'] = true;
+    options.permissions['private-browsing'] = true;
     assert.fail('should not have been able to set options.metadata.permissions property');
   }
   catch (e) {}
-  assert.equal(options.metadata.permissions['private-browsing'], undefined,
-                   "private browsing metadata should be be frozen");
+  assert.equal(metadata.permissions['private-browsing'], undefined,
+               "private browsing metadata should be be frozen");
 };
 
 require("sdk/test/runner").runTestsFromModule(module);
