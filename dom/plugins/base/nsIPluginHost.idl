@@ -12,7 +12,7 @@
   "@mozilla.org/plugin/host;1"
 %}
 
-[scriptable, uuid(f89e7679-0adf-4a30-bda9-1afe1ee270d6)]
+[scriptable, uuid(57069ada-2845-46ef-b57f-233596d1c02c)]
 interface nsIPluginPlayPreviewInfo : nsISupports
 {
   readonly attribute AUTF8String mimeType;
@@ -27,7 +27,7 @@ interface nsIPluginPlayPreviewInfo : nsISupports
   boolean checkWhitelist(in AUTF8String pageURI, in AUTF8String objectURI);
 };
 
-[scriptable, uuid(e8fe94f0-b877-46d0-931a-090967fb1e83)]
+[scriptable, uuid(6034e3a0-365b-48a5-a257-586946ff361e)]
 interface nsIPluginHost : nsISupports
 {
   /**
