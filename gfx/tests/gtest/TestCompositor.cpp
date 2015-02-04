@@ -71,7 +71,7 @@ public:
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations) MOZ_OVERRIDE { return NS_OK; }
   NS_IMETHOD              Invalidate(const nsIntRect &aRect) MOZ_OVERRIDE { return NS_OK; }
   NS_IMETHOD              SetTitle(const nsAString& title) MOZ_OVERRIDE { return NS_OK; }
-  virtual nsIntPoint      WidgetToScreenOffset() MOZ_OVERRIDE { return nsIntPoint(0, 0); }
+  virtual LayoutDeviceIntPoint WidgetToScreenOffset() MOZ_OVERRIDE { return LayoutDeviceIntPoint(0, 0); }
   NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                         nsEventStatus& aStatus) MOZ_OVERRIDE { return NS_OK; }
   NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture) MOZ_OVERRIDE { return NS_OK; }

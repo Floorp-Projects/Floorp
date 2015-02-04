@@ -8474,9 +8474,9 @@ PresShell::AdjustContextMenuKeyEvent(WidgetMouseEvent* aEvent)
 
       nsCOMPtr<nsIWidget> widget = popupFrame->GetNearestWidget();
       aEvent->widget = widget;
-      nsIntPoint widgetPoint = widget->WidgetToScreenOffset();
+      LayoutDeviceIntPoint widgetPoint = widget->WidgetToScreenOffset();
       aEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(
-        itemFrame->GetScreenRect().BottomLeft() - widgetPoint);
+        itemFrame->GetScreenRect().BottomLeft()) - widgetPoint;
 
       mCurrentEventContent = itemFrame->GetContent();
       mCurrentEventFrame = itemFrame;

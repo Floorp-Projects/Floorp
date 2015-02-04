@@ -1668,12 +1668,16 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD SetIcon(const nsAString& anIconSpec) = 0;
 
     /**
-     * Return this widget's origin in screen coordinates.
+     * Return this widget's origin in screen coordinates. The untyped version
+     * exists temporarily to ease conversion to typed coordinates.
      *
      * @return screen coordinates stored in the x,y members
      */
 
-    virtual nsIntPoint WidgetToScreenOffset() = 0;
+    virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() = 0;
+    virtual nsIntPoint WidgetToScreenOffsetUntyped() {
+      return mozilla::LayoutDeviceIntPoint::ToUntyped(WidgetToScreenOffset());
+    }
 
     /**
      * Given the specified client size, return the corresponding window size,
