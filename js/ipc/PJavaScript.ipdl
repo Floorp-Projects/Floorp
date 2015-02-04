@@ -28,7 +28,7 @@ both:
     prio(high) sync GetPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
     prio(high) sync GetOwnPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
     prio(high) sync DefineProperty(uint64_t objId, JSIDVariant id, PPropertyDescriptor descriptor) returns (ReturnStatus rs);
-    prio(high) sync Delete(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool successful);
+    prio(high) sync Delete(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs);
 
     prio(high) sync Has(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);
     prio(high) sync HasOwn(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);

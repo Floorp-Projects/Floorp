@@ -543,7 +543,7 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
 }
 
 bool
-JSXrayTraits::delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp)
+JSXrayTraits::delete_(JSContext *cx, HandleObject wrapper, HandleId id, ObjectOpResult &result)
 {
     RootedObject holder(cx, ensureHolder(cx, wrapper));
 
@@ -560,10 +560,9 @@ JSXrayTraits::delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp
         if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, &desc))
             return false;
         if (desc.object())
-            return JS_DeletePropertyById2(cx, target, id, bp);
+            return JS_DeletePropertyById(cx, target, id, result);
     }
-    *bp = true;
-    return true;
+    return result.succeed();
 }
 
 bool
@@ -2025,7 +2024,7 @@ XrayWrapper<Base, Traits>::ownPropertyKeys(JSContext *cx, HandleObject wrapper,
 template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::delete_(JSContext *cx, HandleObject wrapper,
-                                   HandleId id, bool *bp) const
+                                   HandleId id, ObjectOpResult &result) const
 {
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::SET);
 
@@ -2037,10 +2036,10 @@ XrayWrapper<Base, Traits>::delete_(JSContext *cx, HandleObject wrapper,
 
     if (expando) {
         JSAutoCompartment ac(cx, expando);
-        return JS_DeletePropertyById2(cx, expando, id, bp);
+        return JS_DeletePropertyById(cx, expando, id, result);
     }
 
-    return Traits::singleton.delete_(cx, wrapper, id, bp);
+    return Traits::singleton.delete_(cx, wrapper, id, result);
 }
 
 template <typename Base, typename Traits>

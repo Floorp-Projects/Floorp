@@ -195,14 +195,12 @@ WrapperAnswer::RecvDefineProperty(const ObjectId &objId, const JSIDVariant &idVa
 }
 
 bool
-WrapperAnswer::RecvDelete(const ObjectId &objId, const JSIDVariant &idVar, ReturnStatus *rs,
-                          bool *success)
+WrapperAnswer::RecvDelete(const ObjectId &objId, const JSIDVariant &idVar, ReturnStatus *rs)
 {
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
     JSContext *cx = jsapi.cx();
-    *success = false;
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
@@ -214,10 +212,10 @@ WrapperAnswer::RecvDelete(const ObjectId &objId, const JSIDVariant &idVar, Retur
     if (!fromJSIDVariant(cx, idVar, &id))
         return fail(cx, rs);
 
-    if (!JS_DeletePropertyById2(cx, obj, id, success))
+    ObjectOpResult success;
+    if (!JS_DeletePropertyById(cx, obj, id, success))
         return fail(cx, rs);
-
-    return ok(rs);
+    return ok(rs, success);
 }
 
 bool

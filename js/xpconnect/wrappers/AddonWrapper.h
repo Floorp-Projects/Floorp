@@ -30,7 +30,8 @@ class AddonWrapper : public Base {
     virtual bool defineProperty(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                                 JS::MutableHandle<JSPropertyDescriptor> desc,
                                 JS::ObjectOpResult &result) const MOZ_OVERRIDE;
-    virtual bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp) const MOZ_OVERRIDE;
+    virtual bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
+                         JS::ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool get(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,
                      JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
     virtual bool set(JSContext *cx, JS::HandleObject wrapper, JS::HandleObject receiver,

@@ -163,14 +163,15 @@ AddonWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper, HandleId
 
 template<typename Base>
 bool
-AddonWrapper<Base>::delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp) const
+AddonWrapper<Base>::delete_(JSContext *cx, HandleObject wrapper, HandleId id,
+                            ObjectOpResult &result) const
 {
     Rooted<JSPropertyDescriptor> desc(cx);
     if (!Interpose(cx, wrapper, nullptr, id, &desc))
         return false;
 
     if (!desc.object())
-        return Base::delete_(cx, wrapper, id, bp);
+        return Base::delete_(cx, wrapper, id, result);
 
     js::ReportErrorWithId(cx, "unable to delete interposed property %s", id);
     return false;

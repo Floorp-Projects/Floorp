@@ -122,6 +122,9 @@ class ObjectOpResult
     JS_PUBLIC_API(bool) failReadOnly();
     JS_PUBLIC_API(bool) failGetterOnly();
     JS_PUBLIC_API(bool) failCantSetInterposed();
+    JS_PUBLIC_API(bool) failCantDelete();
+    JS_PUBLIC_API(bool) failCantDeleteWindowElement();
+    JS_PUBLIC_API(bool) failCantDeleteWindowNamedProperty();
 
     uint32_t failureCode() const {
         MOZ_ASSERT(!ok());
@@ -192,17 +195,17 @@ typedef bool
 // If an error occurred, return false as per normal JSAPI error practice.
 //
 // If no error occurred, but the deletion attempt wasn't allowed (perhaps
-// because the property was non-configurable), set *succeeded to false and
+// because the property was non-configurable), call result.fail() and
 // return true.  This will cause |delete obj[id]| to evaluate to false in
 // non-strict mode code, and to throw a TypeError in strict mode code.
 //
 // If no error occurred and the deletion wasn't disallowed (this is *not* the
 // same as saying that a deletion actually occurred -- deleting a non-existent
 // property, or an inherited property, is allowed -- it's just pointless),
-// set *succeeded to true and return true.
+// call result.succeed() and return true.
 typedef bool
 (* JSDeletePropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                       bool *succeeded);
+                       JS::ObjectOpResult &result);
 
 // The type of ObjectOps::enumerate. This callback overrides a portion of SpiderMonkey's default
 // [[Enumerate]] internal method. When an ordinary object is enumerated, that object and each object
@@ -303,7 +306,8 @@ typedef bool
 (* GetOwnPropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                      JS::MutableHandle<JSPropertyDescriptor> desc);
 typedef bool
-(* DeletePropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *succeeded);
+(* DeletePropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                     JS::ObjectOpResult &result);
 
 typedef bool
 (* WatchOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable);

@@ -56,8 +56,8 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
         return Answer::RecvDefineProperty(ObjectId::deserialize(objId), id, flags, rs);
     }
     bool RecvDelete(const uint64_t &objId, const JSIDVariant &id,
-                      ReturnStatus *rs, bool *success) {
-        return Answer::RecvDelete(ObjectId::deserialize(objId), id, rs, success);
+                      ReturnStatus *rs) {
+        return Answer::RecvDelete(ObjectId::deserialize(objId), id, rs);
     }
 
     bool RecvHas(const uint64_t &objId, const JSIDVariant &id,
@@ -147,9 +147,8 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
                             ReturnStatus *rs) {
         return Base::SendDefineProperty(objId.serialize(), id, flags, rs);
     }
-    bool SendDelete(const ObjectId &objId, const JSIDVariant &id,
-                    ReturnStatus *rs, bool *success) {
-        return Base::SendDelete(objId.serialize(), id, rs, success);
+    bool SendDelete(const ObjectId &objId, const JSIDVariant &id, ReturnStatus *rs) {
+        return Base::SendDelete(objId.serialize(), id, rs);
     }
 
     bool SendHas(const ObjectId &objId, const JSIDVariant &id,

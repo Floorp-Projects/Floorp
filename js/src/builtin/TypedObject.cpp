@@ -2059,18 +2059,16 @@ IsOwnId(JSContext *cx, HandleObject obj, HandleId id)
 }
 
 bool
-TypedObject::obj_deleteProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
+TypedObject::obj_deleteProperty(JSContext *cx, HandleObject obj, HandleId id, ObjectOpResult &result)
 {
     if (IsOwnId(cx, obj, id))
         return ReportPropertyError(cx, JSMSG_CANT_DELETE, id);
 
     RootedObject proto(cx, obj->getProto());
-    if (!proto) {
-        *succeeded = false;
-        return true;
-    }
+    if (!proto)
+        return result.succeed();
 
-    return DeleteProperty(cx, proto, id, succeeded);
+    return DeleteProperty(cx, proto, id, result);
 }
 
 bool

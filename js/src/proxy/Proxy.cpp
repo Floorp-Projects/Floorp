@@ -159,15 +159,18 @@ Proxy::ownPropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 }
 
 bool
-Proxy::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
+Proxy::delete_(JSContext *cx, HandleObject proxy, HandleId id, ObjectOpResult &result)
 {
     JS_CHECK_RECURSION(cx, return false);
     const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    *bp = true; // default result if we refuse to perform this action
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::SET, true);
-    if (!policy.allowed())
-        return policy.returnValue();
-    return proxy->as<ProxyObject>().handler()->delete_(cx, proxy, id, bp);
+    if (!policy.allowed()) {
+        bool ok = policy.returnValue();
+        if (ok)
+            result.succeed();
+        return ok;
+    }
+    return proxy->as<ProxyObject>().handler()->delete_(cx, proxy, id, result);
 }
 
 JS_FRIEND_API(bool)
@@ -597,13 +600,11 @@ js::proxy_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 bool
-js::proxy_DeleteProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
+js::proxy_DeleteProperty(JSContext *cx, HandleObject obj, HandleId id, ObjectOpResult &result)
 {
-    bool deleted;
-    if (!Proxy::delete_(cx, obj, id, &deleted))
+    if (!Proxy::delete_(cx, obj, id, result))
         return false;
-    *succeeded = deleted;
-    return SuppressDeletedProperty(cx, obj, id);
+    return SuppressDeletedProperty(cx, obj, id); // XXX is this necessary?
 }
 
 void

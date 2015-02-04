@@ -320,17 +320,16 @@ CallJSSetterOp(JSContext *cx, SetterOp op, HandleObject obj, HandleId id, Mutabl
     return op(cx, obj, id, vp, result);
 }
 
-static inline bool
+inline bool
 CallJSDeletePropertyOp(JSContext *cx, JSDeletePropertyOp op, HandleObject receiver, HandleId id,
-                       bool *succeeded)
+                       ObjectOpResult &result)
 {
     JS_CHECK_RECURSION(cx, return false);
 
     assertSameCompartment(cx, receiver, id);
     if (op)
-        return op(cx, receiver, id, succeeded);
-    *succeeded = true;
-    return true;
+        return op(cx, receiver, id, result);
+    return result.succeed();
 }
 
 inline bool
