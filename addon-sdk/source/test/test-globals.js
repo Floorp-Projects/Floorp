@@ -27,4 +27,4 @@ exports.testComponent = function (assert) {
   }, /`Components` is not available/, 'using `Components` throws');
 };
 
-require('test').run(exports);
+require('sdk/test').run(exports);

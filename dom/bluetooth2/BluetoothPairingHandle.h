@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_bluetooth_bluetoothpairinghandle_h
 #define mozilla_dom_bluetooth_bluetoothpairinghandle_h
 
+#include "BluetoothCommon.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {

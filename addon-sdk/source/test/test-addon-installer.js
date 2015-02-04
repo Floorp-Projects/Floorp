@@ -4,18 +4,21 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
+const { pathFor } = require("sdk/system");
 const AddonInstaller = require("sdk/addon/installer");
 const { on, off } = require("sdk/system/events");
 const { setTimeout } = require("sdk/timers");
 const tmp = require("sdk/test/tmp-file");
-const system = require("sdk/system");
+const fs = require("sdk/io/fs");
+const path = require("sdk/fs/path");
 
+const profilePath = pathFor("ProfD");
+const corruptXPIPath = path.join(profilePath, "sdk-corrupt.xpi");
 const testFolderURL = module.uri.split('test-addon-installer.js')[0];
 const ADDON_URL = testFolderURL + "fixtures/addon-install-unit-test@mozilla.com.xpi";
 const ADDON_PATH = tmp.createFromURL(ADDON_URL);
 
 exports["test Install"] = function (assert, done) {
-
   // Save all events distpatched by bootstrap.js of the installed addon
   let events = [];
   function eventsObserver({ data }) {
@@ -64,18 +67,28 @@ exports["test Failing Install With Invalid Path"] = function (assert, done) {
 };
 
 exports["test Failing Install With Invalid File"] = function (assert, done) {
-  let directory = system.pathFor("ProfD");
-  AddonInstaller.install(directory).then(
-    function onInstalled(id) {
-      assert.fail("Unexpected success");
-      done();
-    },
-    function onFailure(code) {
-      assert.equal(code, AddonInstaller.ERROR_CORRUPT_FILE,
-                       "Got expected error code");
-      done();
-    }
-  );
+  const content = "bad xpi";
+  const path = corruptXPIPath;
+
+  fs.writeFile(path, content, (error) => {
+    assert.equal(fs.readFileSync(path).toString(),
+                 content,
+                 "contet was written");
+
+    AddonInstaller.install(path).then(
+      () => {
+        assert.fail("Unexpected success");
+        fs.unlinkSync(path);
+        done();
+      },
+      (code) => {
+        assert.equal(code, AddonInstaller.ERROR_CORRUPT_FILE,
+                         "Got expected error code");
+        fs.unlinkSync(path);
+        done();
+      }
+    );
+  });
 }
 
 exports["test Update"] = function (assert, done) {

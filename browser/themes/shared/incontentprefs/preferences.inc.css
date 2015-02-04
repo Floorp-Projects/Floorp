@@ -33,6 +33,16 @@ treecol {
   overflow-x: hidden !important;
 }
 
+/**
+ * We want the last category to always have non-0 getBoundingClientRect().bottom
+ * so we can use the value to figure out the max-height of the list in
+ * preferences.js, so use collapse instead of display: none; if it's hidden
+ */
+#categories > .category[hidden="true"] {
+  display: -moz-box;
+  visibility: collapse;
+}
+
 .category-icon {
   list-style-image: url("chrome://browser/skin/preferences/in-content/icons.png");
 }
@@ -121,6 +131,39 @@ treecol {
 }
 
 /* General Pane */
+
+#startupTable {
+  border-collapse: collapse;
+}
+
+#startupTable > tr > td {
+  padding: 0; /* remove the padding from html.css */
+}
+
+#startupTable > tr:not(:first-child) > td {
+  padding-top: 0.5em; /* add a spacing between the rows */
+}
+
+#startupTable > tr > .label-cell {
+  text-align: end;
+  width: 0; /* make the column as small as possible */
+}
+
+#startupTable > tr > .label-cell > label {
+  white-space: nowrap;
+}
+
+#startupTable > tr > .content-cell {
+  display: flex;
+}
+
+#startupTable > tr > .homepage-buttons {
+  flex-wrap: wrap;
+}
+
+#startupTable > tr > td > .content-cell-item {
+  flex-grow: 1;
+}
 
 #useFirefoxSync  {
   font-size: 90%;

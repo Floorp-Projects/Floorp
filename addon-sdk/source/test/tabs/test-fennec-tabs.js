@@ -603,4 +603,4 @@ exports.testOnLoadEventWithDOM = function(assert, done) {
   });
 };
 
-require('sdk/test').run(exports);
+require("sdk/test").run(exports);

@@ -93,6 +93,13 @@ OptionsView.prototype = {
     let $el = this.$(`menuitem[data-pref="${prefName}"]`, this.menupopup);
     let value = this.prefObserver.get(prefName);
 
+    // If options panel does not contain a menuitem for the
+    // pref, emit an event and do nothing.
+    if (!$el) {
+      this.emit(PREF_CHANGE_EVENT, prefName);
+      return;
+    }
+
     if (value) {
       $el.setAttribute("checked", value);
     } else {
