@@ -960,6 +960,13 @@ PuppetWidget::GetWindowPosition()
   return nsIntPoint(winX, winY);
 }
 
+NS_METHOD
+PuppetWidget::GetScreenBounds(nsIntRect &aRect) {
+  aRect.MoveTo(WidgetToScreenOffset());
+  aRect.SizeTo(mBounds.Size());
+  return NS_OK;
+}
+
 PuppetScreen::PuppetScreen(void *nativeScreen)
 {
 }
