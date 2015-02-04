@@ -183,14 +183,6 @@ function runNormalTests(global)
   assertEq(setImmutablePrototype(indirectFunctionProxy), true);
   assertEq(Object.getPrototypeOf(indirectFunctionProxy), global.Function.prototype);
   checkPrototypeMutationFailure(indirectFunctionProxy, "indirectFunctionProxy");
-
-  // more-hated wrap()
-
-  var wrappedTarget = {};
-  var wrappedProxy = global.wrap(wrappedTarget);
-
-  assertEq(setImmutablePrototype(wrappedProxy), true);
-  checkPrototypeMutationFailure(wrappedProxy, "wrapped proxy");
 }
 
 var global = this;

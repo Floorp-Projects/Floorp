@@ -3928,26 +3928,6 @@ ThisFilename(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
-Wrap(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    Value v = args.get(0);
-    if (v.isPrimitive()) {
-        args.rval().set(v);
-        return true;
-    }
-
-    RootedObject obj(cx, v.toObjectOrNull());
-    JSObject *wrapped = Wrapper::New(cx, obj, &obj->global(),
-                                     &Wrapper::singleton);
-    if (!wrapped)
-        return false;
-
-    args.rval().setObject(*wrapped);
-    return true;
-}
-
-static bool
 WrapWithProto(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -4564,14 +4544,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "thisFilename()",
 "  Return the filename of the current script"),
 
-    JS_FN_HELP("wrap", Wrap, 1, 0,
-"wrap(obj)",
-"  Wrap an object into a noop wrapper."),
-
-    JS_FN_HELP("wrapWithProto", WrapWithProto, 2, 0,
-"wrapWithProto(obj)",
-"  Wrap an object into a noop wrapper with prototype semantics."),
-
     JS_FN_HELP("newGlobal", NewGlobal, 1, 0,
 "newGlobal([options])",
 "  Return a new global object in a new compartment. If options\n"
@@ -4697,6 +4669,12 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 "  original hook, that we reinstate after the call to |fun| completes,\n"
 "  might be asked for the source code of compilations that |fun|\n"
 "  performed, and which, presumably, only |hook| knows how to find.\n"),
+
+    JS_FN_HELP("wrapWithProto", WrapWithProto, 2, 0,
+"wrapWithProto(obj)",
+"  Wrap an object into a noop wrapper with prototype semantics.\n"
+"  Note: This is not fuzzing safe because it can be used to construct\n"
+"        deeply nested wrapper chains that cannot exist in the wild."),
 
     JS_FS_HELP_END
 };
