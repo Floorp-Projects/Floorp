@@ -352,6 +352,31 @@ class CachePage
     char validity_map_[kValidityMapSize];  // One byte per line.
 };
 
+// Protects the icache() and redirection() properties of the
+// Simulator.
+class AutoLockSimulatorCache
+{
+  public:
+    explicit AutoLockSimulatorCache(Simulator *sim) : sim_(sim) {
+        PR_Lock(sim_->cacheLock_);
+        MOZ_ASSERT(!sim_->cacheLockHolder_);
+#ifdef DEBUG
+        sim_->cacheLockHolder_ = PR_GetCurrentThread();
+#endif
+    }
+
+    ~AutoLockSimulatorCache() {
+        MOZ_ASSERT(sim_->cacheLockHolder_);
+#ifdef DEBUG
+        sim_->cacheLockHolder_ = nullptr;
+#endif
+        PR_Unlock(sim_->cacheLock_);
+    }
+
+  private:
+    Simulator *const sim_;
+};
+
 bool Simulator::ICacheCheckingEnabled = false;
 
 int64_t Simulator::StopSimAt = -1L;
@@ -922,7 +947,7 @@ AllOnOnePage(uintptr_t start, int size)
 }
 
 static CachePage *
-GetCachePage(Simulator::ICacheMap &i_cache, void *page)
+GetCachePageLocked(Simulator::ICacheMap &i_cache, void *page)
 {
     MOZ_ASSERT(Simulator::ICacheCheckingEnabled);
 
@@ -938,7 +963,7 @@ GetCachePage(Simulator::ICacheMap &i_cache, void *page)
 
 // Flush from start up to and not including start + size.
 static void
-FlushOnePage(Simulator::ICacheMap &i_cache, intptr_t start, int size)
+FlushOnePageLocked(Simulator::ICacheMap &i_cache, intptr_t start, int size)
 {
     MOZ_ASSERT(size <= CachePage::kPageSize);
     MOZ_ASSERT(AllOnOnePage(start, size - 1));
@@ -947,13 +972,13 @@ FlushOnePage(Simulator::ICacheMap &i_cache, intptr_t start, int size)
 
     void *page = reinterpret_cast<void*>(start & (~CachePage::kPageMask));
     int offset = (start & CachePage::kPageMask);
-    CachePage *cache_page = GetCachePage(i_cache, page);
+    CachePage *cache_page = GetCachePageLocked(i_cache, page);
     char *valid_bytemap = cache_page->validityByte(offset);
     memset(valid_bytemap, CachePage::LINE_INVALID, size >> CachePage::kLineShift);
 }
 
 static void
-FlushICache(Simulator::ICacheMap &i_cache, void *start_addr, size_t size)
+FlushICacheLocked(Simulator::ICacheMap &i_cache, void *start_addr, size_t size)
 {
     intptr_t start = reinterpret_cast<intptr_t>(start_addr);
     int intra_line = (start & CachePage::kLineMask);
@@ -963,24 +988,24 @@ FlushICache(Simulator::ICacheMap &i_cache, void *start_addr, size_t size)
     int offset = (start & CachePage::kPageMask);
     while (!AllOnOnePage(start, size - 1)) {
         int bytes_to_flush = CachePage::kPageSize - offset;
-        FlushOnePage(i_cache, start, bytes_to_flush);
+        FlushOnePageLocked(i_cache, start, bytes_to_flush);
         start += bytes_to_flush;
         size -= bytes_to_flush;
         MOZ_ASSERT((start & CachePage::kPageMask) == 0);
         offset = 0;
     }
     if (size != 0)
-        FlushOnePage(i_cache, start, size);
+        FlushOnePageLocked(i_cache, start, size);
 }
 
 static void
-CheckICache(Simulator::ICacheMap &i_cache, SimInstruction *instr)
+CheckICacheLocked(Simulator::ICacheMap &i_cache, SimInstruction *instr)
 {
     intptr_t address = reinterpret_cast<intptr_t>(instr);
     void *page = reinterpret_cast<void*>(address & (~CachePage::kPageMask));
     void *line = reinterpret_cast<void*>(address & (~CachePage::kLineMask));
     int offset = (address & CachePage::kPageMask);
-    CachePage* cache_page = GetCachePage(i_cache, page);
+    CachePage* cache_page = GetCachePageLocked(i_cache, page);
     char *cache_valid_byte = cache_page->validityByte(offset);
     bool cache_hit = (*cache_valid_byte == CachePage::LINE_VALID);
     char *cached_line = cache_page->cachedData(offset & ~CachePage::kLineMask);
@@ -1021,9 +1046,13 @@ void
 Simulator::FlushICache(void *start_addr, size_t size)
 {
     JitSpewCont(JitSpew_CacheFlush, "[%p %zx]", start_addr, size);
-    if (!Simulator::ICacheCheckingEnabled)
-        return;
-    js::jit::FlushICache(Simulator::Current()->icache(), start_addr, size);
+    if (Simulator::ICacheCheckingEnabled) {
+        Simulator *sim = Simulator::Current();
+
+        AutoLockSimulatorCache als(sim);
+
+        js::jit::FlushICacheLocked(sim->icache(), start_addr, size);
+    }
 }
 
 Simulator::Simulator()
@@ -1079,12 +1108,20 @@ Simulator::Simulator()
 
     lastDebuggerInput_ = nullptr;
 
+    cacheLock_ = nullptr;
+#ifdef DEBUG
+    cacheLockHolder_ = nullptr;
+#endif
     redirection_ = nullptr;
 }
 
 bool
 Simulator::init()
 {
+    cacheLock_ = PR_NewLock();
+    if (!cacheLock_)
+        return false;
+
     if (!icache_.init())
         return false;
 
@@ -1116,6 +1153,7 @@ class Redirection
 {
     friend class Simulator;
 
+    // sim's lock must already be held.
     Redirection(void *nativeFunction, ABIFunctionType type, Simulator *sim)
       : nativeFunction_(nativeFunction),
         swiInstruction_(Assembler::AL | (0xf * (1 << 24)) | kCallRtRedirected),
@@ -1124,7 +1162,7 @@ class Redirection
     {
         next_ = sim->redirection();
         if (Simulator::ICacheCheckingEnabled)
-            FlushICache(sim->icache(), addressOfSwiInstruction(), SimInstruction::kInstrSize);
+            FlushICacheLocked(sim->icache(), addressOfSwiInstruction(), SimInstruction::kInstrSize);
         sim->setRedirection(this);
     }
 
@@ -1135,6 +1173,9 @@ class Redirection
 
     static Redirection *Get(void *nativeFunction, ABIFunctionType type) {
         Simulator *sim = Simulator::Current();
+
+        AutoLockSimulatorCache als(sim);
+
         Redirection *current = sim->redirection();
         for (; current != nullptr; current = current->next_) {
             if (current->nativeFunction_ == nativeFunction) {
@@ -1169,6 +1210,7 @@ class Redirection
 Simulator::~Simulator()
 {
     js_free(stack_);
+    PR_DestroyLock(cacheLock_);
     Redirection *r = redirection_;
     while (r) {
         Redirection *next = r->next_;
@@ -4100,8 +4142,10 @@ Simulator::decodeSpecialCondition(SimInstruction *instr)
 void
 Simulator::instructionDecode(SimInstruction *instr)
 {
-    if (Simulator::ICacheCheckingEnabled)
-        CheckICache(icache(), instr);
+    if (Simulator::ICacheCheckingEnabled) {
+        AutoLockSimulatorCache als(this);
+        CheckICacheLocked(icache(), instr);
+    }
 
     pc_modified_ = false;
 

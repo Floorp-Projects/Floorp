@@ -486,6 +486,31 @@ class CachePage {
     char validity_map_[kValidityMapSize];  // One byte per line.
 };
 
+// Protects the icache() and redirection() properties of the
+// Simulator.
+class AutoLockSimulatorCache
+{
+  public:
+    explicit AutoLockSimulatorCache(Simulator *sim) : sim_(sim) {
+        PR_Lock(sim_->cacheLock_);
+        MOZ_ASSERT(!sim_->cacheLockHolder_);
+#ifdef DEBUG
+        sim_->cacheLockHolder_ = PR_GetCurrentThread();
+#endif
+    }
+
+    ~AutoLockSimulatorCache() {
+        MOZ_ASSERT(sim_->cacheLockHolder_);
+#ifdef DEBUG
+        sim_->cacheLockHolder_ = nullptr;
+#endif
+        PR_Unlock(sim_->cacheLock_);
+    }
+
+  private:
+    Simulator *const sim_;
+};
+
 bool Simulator::ICacheCheckingEnabled = false;
 
 int Simulator::StopSimAt = -1;
@@ -497,9 +522,9 @@ Simulator::Create()
     if (!sim)
         return nullptr;
 
-    if (!sim->icache_.init()) {
+    if (!sim->init()) {
         js_delete(sim);
-        return false;
+        return nullptr;
     }
 
     if (getenv("MIPS_SIM_ICACHE_CHECKS"))
@@ -1117,7 +1142,7 @@ Simulator::setLastDebuggerInput(char *input)
 }
 
 static CachePage *
-GetCachePage(Simulator::ICacheMap &i_cache, void *page)
+GetCachePageLocked(Simulator::ICacheMap &i_cache, void *page)
 {
     Simulator::ICacheMap::AddPtr p = i_cache.lookupForAdd(page);
     if (p)
@@ -1131,7 +1156,7 @@ GetCachePage(Simulator::ICacheMap &i_cache, void *page)
 
 // Flush from start up to and not including start + size.
 static void
-FlushOnePage(Simulator::ICacheMap &i_cache, intptr_t start, int size)
+FlushOnePageLocked(Simulator::ICacheMap &i_cache, intptr_t start, int size)
 {
     MOZ_ASSERT(size <= CachePage::kPageSize);
     MOZ_ASSERT(AllOnOnePage(start, size - 1));
@@ -1139,13 +1164,13 @@ FlushOnePage(Simulator::ICacheMap &i_cache, intptr_t start, int size)
     MOZ_ASSERT((size & CachePage::kLineMask) == 0);
     void *page = reinterpret_cast<void*>(start & (~CachePage::kPageMask));
     int offset = (start & CachePage::kPageMask);
-    CachePage *cache_page = GetCachePage(i_cache, page);
+    CachePage *cache_page = GetCachePageLocked(i_cache, page);
     char *valid_bytemap = cache_page->validityByte(offset);
     memset(valid_bytemap, CachePage::LINE_INVALID, size >> CachePage::kLineShift);
 }
 
 static void
-FlushICache(Simulator::ICacheMap &i_cache, void *start_addr, size_t size)
+FlushICacheLocked(Simulator::ICacheMap &i_cache, void *start_addr, size_t size)
 {
     intptr_t start = reinterpret_cast<intptr_t>(start_addr);
     int intra_line = (start & CachePage::kLineMask);
@@ -1155,25 +1180,25 @@ FlushICache(Simulator::ICacheMap &i_cache, void *start_addr, size_t size)
     int offset = (start & CachePage::kPageMask);
     while (!AllOnOnePage(start, size - 1)) {
         int bytes_to_flush = CachePage::kPageSize - offset;
-        FlushOnePage(i_cache, start, bytes_to_flush);
+        FlushOnePageLocked(i_cache, start, bytes_to_flush);
         start += bytes_to_flush;
         size -= bytes_to_flush;
         MOZ_ASSERT((start & CachePage::kPageMask) == 0);
         offset = 0;
     }
     if (size != 0) {
-        FlushOnePage(i_cache, start, size);
+        FlushOnePageLocked(i_cache, start, size);
     }
 }
 
 static void
-CheckICache(Simulator::ICacheMap &i_cache, SimInstruction *instr)
+CheckICacheLocked(Simulator::ICacheMap &i_cache, SimInstruction *instr)
 {
     intptr_t address = reinterpret_cast<intptr_t>(instr);
     void *page = reinterpret_cast<void*>(address & (~CachePage::kPageMask));
     void *line = reinterpret_cast<void*>(address & (~CachePage::kLineMask));
     int offset = (address & CachePage::kPageMask);
-    CachePage *cache_page = GetCachePage(i_cache, page);
+    CachePage *cache_page = GetCachePageLocked(i_cache, page);
     char *cache_valid_byte = cache_page->validityByte(offset);
     bool cache_hit = (*cache_valid_byte == CachePage::LINE_VALID);
     char *cached_line = cache_page->cachedData(offset & ~CachePage::kLineMask);
@@ -1206,7 +1231,11 @@ Simulator::ICacheHasher::match(const Key &k, const Lookup &l)
 void
 Simulator::FlushICache(void *start_addr, size_t size)
 {
-    js::jit::FlushICache(Simulator::Current()->icache(), start_addr, size);
+    if (Simulator::ICacheCheckingEnabled) {
+        Simulator *sim = Simulator::Current();
+        AutoLockSimulatorCache als(sim);
+        js::jit::FlushICacheLocked(sim->icache(), start_addr, size);
+    }
 }
 
 Simulator::Simulator()
@@ -1214,16 +1243,11 @@ Simulator::Simulator()
     // Set up simulator support first. Some of this information is needed to
     // setup the architecture state.
 
-    // Allocate 2MB for the stack. Note that we will only use 1MB, see below.
-    static const size_t stackSize = 2 * 1024 * 1024;
-    stack_ = static_cast<char*>(js_malloc(stackSize));
-    if (!stack_) {
-        MOZ_ReportAssertionFailure("[unhandlable oom] Simulator stack", __FILE__, __LINE__);
-        MOZ_CRASH();
-    }
-    // Leave a safety margin of 1MB to prevent overrunning the stack when
-    // pushing values (total stack size is 2MB).
-    stackLimit_ = reinterpret_cast<uintptr_t>(stack_) + 1024 * 1024;
+    // Note, allocation and anything that depends on allocated memory is
+    // deferred until init(), in order to handle OOM properly.
+
+    stack_ = nullptr;
+    stackLimit_ = 0;
     pc_modified_ = false;
     icount_ = 0;
     break_count_ = 0;
@@ -1241,10 +1265,6 @@ Simulator::Simulator()
     }
     FCSR_ = 0;
 
-    // The sp is initialized to point to the bottom (high address) of the
-    // allocated stack area. To be safe in potential stack underflows we leave
-    // some buffer below.
-    registers_[sp] = reinterpret_cast<int32_t>(stack_) + stackSize - 64;
     // The ra and pc are initialized to a known bad value that will cause an
     // access violation if the simulator ever tries to execute it.
     registers_[pc] = bad_ra;
@@ -1255,7 +1275,39 @@ Simulator::Simulator()
 
     lastDebuggerInput_ = nullptr;
 
+    cacheLock_ = nullptr;
+#ifdef DEBUG
+    cacheLockHolder_ = nullptr;
+#endif
     redirection_ = nullptr;
+}
+
+bool
+Simulator::init()
+{
+    cacheLock_ = PR_NewLock();
+    if (!cacheLock_)
+        return false;
+
+    if (!icache_.init())
+        return false;
+
+    // Allocate 2MB for the stack. Note that we will only use 1MB, see below.
+    static const size_t stackSize = 2 * 1024 * 1024;
+    stack_ = static_cast<char*>(js_malloc(stackSize));
+    if (!stack_)
+        return false;
+
+    // Leave a safety margin of 1MB to prevent overrunning the stack when
+    // pushing values (total stack size is 2MB).
+    stackLimit_ = reinterpret_cast<uintptr_t>(stack_) + 1024 * 1024;
+
+    // The sp is initialized to point to the bottom (high address) of the
+    // allocated stack area. To be safe in potential stack underflows we leave
+    // some buffer below.
+    registers_[sp] = reinterpret_cast<int32_t>(stack_) + stackSize - 64;
+
+    return true;
 }
 
 // When the generated code calls an external reference we need to catch that in
@@ -1269,6 +1321,7 @@ class Redirection
 {
     friend class Simulator;
 
+    // sim's lock must already be held.
     Redirection(void* nativeFunction, ABIFunctionType type, Simulator *sim)
       : nativeFunction_(nativeFunction),
         swiInstruction_(kCallRedirInstr),
@@ -1277,7 +1330,7 @@ class Redirection
     {
         next_ = sim->redirection();
 	if (Simulator::ICacheCheckingEnabled)
-	    FlushICache(sim->icache(), addressOfSwiInstruction(), SimInstruction::kInstrSize);
+	    FlushICacheLocked(sim->icache(), addressOfSwiInstruction(), SimInstruction::kInstrSize);
         sim->setRedirection(this);
     }
 
@@ -1288,6 +1341,9 @@ class Redirection
 
     static Redirection *Get(void *nativeFunction, ABIFunctionType type) {
         Simulator *sim = Simulator::Current();
+
+        AutoLockSimulatorCache als(sim);
+
         Redirection *current = sim->redirection();
         for (; current != nullptr; current = current->next_) {
             if (current->nativeFunction_ == nativeFunction) {
@@ -1322,6 +1378,7 @@ class Redirection
 Simulator::~Simulator()
 {
     js_free(stack_);
+    PR_DestroyLock(cacheLock_);
     Redirection *r = redirection_;
     while (r) {
         Redirection *next = r->next_;
@@ -3213,8 +3270,10 @@ Simulator::decodeTypeJump(SimInstruction *instr)
 void
 Simulator::instructionDecode(SimInstruction *instr)
 {
-    if (Simulator::ICacheCheckingEnabled)
-        CheckICache(icache(), instr);
+    if (Simulator::ICacheCheckingEnabled) {
+        AutoLockSimulatorCache als(this);
+        CheckICacheLocked(icache(), instr);
+    }
     pc_modified_ = false;
 
     switch (instr->instructionType()) {

@@ -30,12 +30,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=688277
     "nondeterministicGetWeakMapKeys should return undefined for null");
 
   /* return an empty array for an empty WeakMap */
-  let mempty = WeakMap();
+  let mempty = new WeakMap();
   is(Cu.nondeterministicGetWeakMapKeys(mempty).length, 0,
     "nondeterministicGetWeakMapKeys should return empty array for empty weakmap");
 
   /* Test freeing/nonfreeing. */
-  let m = WeakMap();
+  let m = new WeakMap();
   let liveKeys = new Array();
 
   let add_elements = function () {

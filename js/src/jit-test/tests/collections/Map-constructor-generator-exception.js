@@ -9,4 +9,4 @@ function data2() {
 }
 
 var it = data2();
-assertThrowsValue(function () { Map(it); }, "oops");
+assertThrowsValue(function () { new Map(it); }, "oops");

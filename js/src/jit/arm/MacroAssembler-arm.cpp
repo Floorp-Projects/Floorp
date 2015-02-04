@@ -140,16 +140,26 @@ void
 MacroAssemblerARM::convertFloat32ToInt32(FloatRegister src, Register dest,
                                          Label *fail, bool negativeZeroCheck)
 {
-    // Convert the floating point value to an integer, if it did not fit, then
-    // when we convert it *back* to a float, it will have a different value,
-    // which we can test.
-    ma_vcvt_F32_I32(src, ScratchFloat32Reg.sintOverlay());
-    // Move the value into the dest register.
-    ma_vxfer(ScratchFloat32Reg, dest);
-    ma_vcvt_I32_F32(ScratchFloat32Reg.sintOverlay(), ScratchFloat32Reg);
-    ma_vcmp_f32(src, ScratchFloat32Reg);
+    // Converting the floating point value to an integer and then converting it
+    // back to a float32 would not work, as float to int32 conversions are
+    // clamping (e.g. float(INT32_MAX + 1) would get converted into INT32_MAX
+    // and then back to float(INT32_MAX + 1)).  If this ever happens, we just
+    // bail out.
+    FloatRegister ScratchSIntReg = ScratchFloat32Reg.sintOverlay();
+    ma_vcvt_F32_I32(src, ScratchSIntReg);
+
+    // Store the result
+    ma_vxfer(ScratchSIntReg, dest);
+
+    ma_vcvt_I32_F32(ScratchSIntReg, ScratchFloat32Reg);
+    ma_vcmp(src, ScratchFloat32Reg);
     as_vmrs(pc);
     ma_b(fail, Assembler::VFP_NotEqualOrUnordered);
+
+    // Bail out in the clamped cases.
+    ma_cmp(dest, Imm32(0x7fffffff));
+    ma_cmp(dest, Imm32(0x80000000), Assembler::NotEqual);
+    ma_b(fail, Assembler::Equal);
 
     if (negativeZeroCheck) {
         ma_cmp(dest, Imm32(0));

@@ -9,7 +9,7 @@ function checkCommon(f) {
   assertEqArray(f.apply(...[null, [1, 2, 3]]), [1, 2, 3]);
 
   // other iterable objects
-  assertEqArray(f.apply(...Set([null, [1, 2, 3]])), [1, 2, 3]);
+  assertEqArray(f.apply(...new Set([null, [1, 2, 3]])), [1, 2, 3]);
   assertEqArray(f.apply(...[null, [1, 2, 3]][Symbol.iterator]()), [1, 2, 3]);
   let itr = {};
   itr[Symbol.iterator] = function() {
@@ -81,7 +81,7 @@ function checkRest(f) {
   assertEqArray(f.apply(null, ...[[undefined]]), [undefined]);
 
   // other iterable objects
-  assertEqArray(f.apply(null, ...Map([[["a", "A"], ["b", "B"]]])).map(([k, v]) => k + v), ["aA", "bB"]);
+  assertEqArray(f.apply(null, ...new Map([[["a", "A"], ["b", "B"]]])).map(([k, v]) => k + v), ["aA", "bB"]);
 }
 
 checkRest(function(...x) x);

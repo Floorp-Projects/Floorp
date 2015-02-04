@@ -1,4 +1,4 @@
-// WeakMap(arr) throws if arr contains holes (or undefined values).
+// new WeakMap(arr) throws if arr contains holes (or undefined values).
 
 load(libdir + "asserts.js");
 
@@ -14,7 +14,7 @@ assertThrowsInstanceOf(function () { new WeakMap([null]); }, TypeError);
 assertThrowsInstanceOf(function () { new WeakMap([[k1, v1], [k2, v2], , [k3, k3]]); }, TypeError);
 assertThrowsInstanceOf(function () { new WeakMap([[k1, v1], [k2, v2], ,]); }, TypeError);
 
-// WeakMap(iterable) throws if iterable doesn't have array-like objects
+// new WeakMap(iterable) throws if iterable doesn't have array-like objects
 
 assertThrowsInstanceOf(function () { new WeakMap([1, 2, 3]); }, TypeError);
 assertThrowsInstanceOf(function () {
