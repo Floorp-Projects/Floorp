@@ -14,7 +14,7 @@ var _var_ = o;
 }
 for(var i1=0; i1<6; i1++) {
 f4(f3);
-f4 = wrap(f7);
+f4 = new Proxy(f7, {});
 }
 f4(f0);
 
