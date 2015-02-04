@@ -343,6 +343,18 @@ Convert(uint8_t aIn, BluetoothHandsfreeVolumeType& aOut)
 }
 
 nsresult
+Convert(int aIn, int32_t& aOut)
+{
+  if (NS_WARN_IF(aIn < std::numeric_limits<int32_t>::min()) ||
+      NS_WARN_IF(aIn > std::numeric_limits<int32_t>::max())) {
+    aOut = 0; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = static_cast<int32_t>(aIn);
+  return NS_OK;
+}
+
+nsresult
 Convert(int32_t aIn, BluetoothTypeOfDevice& aOut)
 {
   static const BluetoothTypeOfDevice sTypeOfDevice[] = {
