@@ -86,7 +86,7 @@ function getDir(name) {
 function writeFile(dirName, fileName, data) {
   let path = getDir(dirName);
   if (!path.exists())
-    path.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt('0700', 8));
+    path.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
   path.append(fileName);
   var fs = Cc["@mozilla.org/network/file-output-stream;1"].
            createInstance(Ci.nsIFileOutputStream);
