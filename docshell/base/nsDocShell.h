@@ -963,6 +963,7 @@ private:
     nsTObserverArray<nsWeakPtr> mScrollObservers;
     nsCString         mOriginalUriString;
     nsWeakPtr mOpener;
+    nsWeakPtr mOpenedRemote;
 
     // A depth count of how many times NotifyRunToCompletionStart
     // has been called without a matching NotifyRunToCompletionStop.
