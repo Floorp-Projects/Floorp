@@ -2664,6 +2664,19 @@ nsNativeThemeWin::WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType)
   }
 }
 
+nsITheme::ThemeGeometryType
+nsNativeThemeWin::ThemeGeometryTypeForWidget(nsIFrame* aFrame,
+                                             uint8_t aWidgetType)
+{
+  switch (aWidgetType) {
+    case NS_THEME_WINDOW_BUTTON_BOX:
+    case NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED:
+      return eThemeGeometryTypeWindowButtons;
+    default:
+      return eThemeGeometryTypeUnknown;
+  }
+}
+
 bool
 nsNativeThemeWin::ShouldHideScrollbars()
 {
