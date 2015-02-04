@@ -5,7 +5,7 @@ function hexData(n) {
         yield i.toString(16);
 }
 
-var s = Set(hexData(256));
+var s = new Set(hexData(256));
 assertEq(s.size, 256);
 assertEq(s.has("0"), true);
 assertEq(s.has(0), false);
