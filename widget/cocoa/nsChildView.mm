@@ -2362,6 +2362,28 @@ GatherThemeGeometryRegion(const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeomet
   return region;
 }
 
+template<typename T>
+static void MakeRegionsNonOverlappingImpl(T& aOutUnion) { }
+
+template<typename T, typename ... TT>
+static void MakeRegionsNonOverlappingImpl(T& aOutUnion, T& aFirst, TT& ... aRest)
+{
+  MakeRegionsNonOverlappingImpl(aOutUnion, aRest...);
+  aFirst.SubOut(aOutUnion);
+  aOutUnion.OrWith(aFirst);
+}
+
+// Subtracts parts from regions in such a way that they don't have any overlap.
+// Each region in the argument list will have the union of all the regions
+// *following* it subtracted from itself. In other words, the arguments are
+// sorted low priority to high priority.
+template<typename T, typename ... TT>
+static void MakeRegionsNonOverlapping(T& aFirst, TT& ... aRest)
+{
+  T unionOfAll;
+  MakeRegionsNonOverlappingImpl(unionOfAll, aFirst, aRest...);
+}
+
 void
 nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries)
 {
@@ -2380,16 +2402,8 @@ nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries)
   nsIntRegion highlightedMenuItemRegion =
     GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeHighlightedMenuItem);
 
-  vibrantDarkRegion.SubOut(vibrantLightRegion);
-  vibrantDarkRegion.SubOut(menuRegion);
-  vibrantDarkRegion.SubOut(tooltipRegion);
-  vibrantDarkRegion.SubOut(highlightedMenuItemRegion);
-  vibrantLightRegion.SubOut(menuRegion);
-  vibrantLightRegion.SubOut(tooltipRegion);
-  vibrantLightRegion.SubOut(highlightedMenuItemRegion);
-  menuRegion.SubOut(tooltipRegion);
-  menuRegion.SubOut(highlightedMenuItemRegion);
-  tooltipRegion.SubOut(highlightedMenuItemRegion);
+  MakeRegionsNonOverlapping(vibrantLightRegion, vibrantDarkRegion, menuRegion,
+                            tooltipRegion, highlightedMenuItemRegion);
 
   auto& vm = EnsureVibrancyManager();
   vm.UpdateVibrantRegion(VibrancyType::LIGHT, vibrantLightRegion);
