@@ -35,6 +35,8 @@ public class TopSitesGridItemView extends RelativeLayout {
     private static final ScaleType SCALE_TYPE_THUMBNAIL = ScaleType.CENTER_CROP;
     private static final ScaleType SCALE_TYPE_URL       = ScaleType.CENTER_INSIDE;
 
+    private static final int THUMBNAIL_DEFAULT_FAVICON_ID = R.drawable.favicon_globe;
+
     // Child views.
     private final TextView mTitleView;
     private final TopSitesThumbnailView mThumbnailView;
@@ -216,7 +218,7 @@ public class TopSitesGridItemView extends RelativeLayout {
     public void displayThumbnail(Bitmap thumbnail) {
         if (thumbnail == null) {
             // Show a favicon based view instead.
-            displayThumbnail(R.drawable.favicon);
+            displayThumbnail(THUMBNAIL_DEFAULT_FAVICON_ID);
             return;
         }
         mThumbnailSet = true;
@@ -242,7 +244,7 @@ public class TopSitesGridItemView extends RelativeLayout {
         ImageLoader.with(getContext())
                    .load(imageUrl)
                    .noFade()
-                   .error(R.drawable.favicon)
+                   .error(THUMBNAIL_DEFAULT_FAVICON_ID)
                    .into(mThumbnailView);
     }
 
@@ -270,7 +272,7 @@ public class TopSitesGridItemView extends RelativeLayout {
 
         if (favicon == null) {
             // Should show default favicon.
-            displayThumbnail(R.drawable.favicon);
+            displayThumbnail(THUMBNAIL_DEFAULT_FAVICON_ID);
             return;
         }
 
