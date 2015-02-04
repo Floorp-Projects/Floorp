@@ -6,7 +6,7 @@
 #define mozilla_system_volumemanagerlog_h__
 
 #undef USE_DEBUG
-#define USE_DEBUG 0
+#define USE_DEBUG 1
 
 #if !defined(VOLUME_MANAGER_LOG_TAG)
 #define VOLUME_MANAGER_LOG_TAG  "VolumeManager"
