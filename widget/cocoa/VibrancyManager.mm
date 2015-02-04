@@ -163,6 +163,7 @@ AppearanceForVibrancyType(VibrancyType aType)
     case VibrancyType::LIGHT:
     case VibrancyType::TOOLTIP:
     case VibrancyType::MENU:
+    case VibrancyType::HIGHLIGHTED_MENUITEM:
       return [NSAppearanceClass performSelector:@selector(appearanceNamed:)
                                      withObject:@"NSAppearanceNameVibrantLight"];
     case VibrancyType::DARK:
@@ -179,8 +180,29 @@ enum {
 };
 #endif
 
-@interface NSView(NSVisualEffectViewSetState)
+static NSUInteger
+VisualEffectStateForVibrancyType(VibrancyType aType)
+{
+  switch (aType) {
+    case VibrancyType::TOOLTIP:
+    case VibrancyType::MENU:
+    case VibrancyType::HIGHLIGHTED_MENUITEM:
+      // Tooltip and menu windows are never "key", so we need to tell the
+      // vibrancy effect to look active regardless of window state.
+      return NSVisualEffectStateActive;
+    default:
+      return NSVisualEffectStateFollowsWindowActiveState;
+  }
+}
+
+enum {
+  NSVisualEffectMaterialMenuItem = 4
+};
+
+@interface NSView(NSVisualEffectViewMethods)
 - (void)setState:(NSUInteger)state;
+- (void)setMaterial:(NSUInteger)material;
+- (void)setEmphasized:(BOOL)emphasized;
 @end
 
 NSView*
@@ -190,10 +212,13 @@ VibrancyManager::CreateEffectView(VibrancyType aType, NSRect aRect)
   NSView* effectView = [[EffectViewClass alloc] initWithFrame:aRect];
   [effectView performSelector:@selector(setAppearance:)
                    withObject:AppearanceForVibrancyType(aType)];
-  if (aType == VibrancyType::TOOLTIP || aType == VibrancyType::MENU) {
-    // Tooltip and menu windows never become active, so we need to tell the
-    // vibrancy effect to look active regardless of window state.
-    [effectView setState:NSVisualEffectStateActive];
+  [effectView setState:VisualEffectStateForVibrancyType(aType)];
+
+  if (aType == VibrancyType::HIGHLIGHTED_MENUITEM) {
+    [effectView setMaterial:NSVisualEffectMaterialMenuItem];
+    if ([effectView respondsToSelector:@selector(setEmphasized:)]) {
+      [effectView setEmphasized:YES];
+    }
   }
   return effectView;
 }
