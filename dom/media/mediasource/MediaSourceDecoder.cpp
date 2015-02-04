@@ -205,7 +205,7 @@ MediaSourceDecoder::DurationChanged(double aOldDuration, double aNewDuration)
 }
 
 void
-MediaSourceDecoder::SetDecodedDuration(int64_t aDuration)
+MediaSourceDecoder::SetInitialDuration(int64_t aDuration)
 {
   // Only use the decoded duration if one wasn't already
   // set.
@@ -218,7 +218,7 @@ MediaSourceDecoder::SetDecodedDuration(int64_t aDuration)
   if (aDuration >= 0) {
     duration /= USECS_PER_S;
   }
-  DoSetMediaSourceDuration(duration);
+  SetMediaSourceDuration(duration, MSRangeRemovalAction::SKIP);
 }
 
 void
@@ -226,13 +226,6 @@ MediaSourceDecoder::SetMediaSourceDuration(double aDuration, MSRangeRemovalActio
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   double oldDuration = mMediaSourceDuration;
-  DoSetMediaSourceDuration(aDuration);
-  ScheduleDurationChange(oldDuration, aDuration, aAction);
-}
-
-void
-MediaSourceDecoder::DoSetMediaSourceDuration(double aDuration)
-{
   if (aDuration >= 0) {
     mDecoderStateMachine->SetDuration(aDuration * USECS_PER_S);
     mMediaSourceDuration = aDuration;
@@ -243,6 +236,7 @@ MediaSourceDecoder::DoSetMediaSourceDuration(double aDuration)
   if (mReader) {
     mReader->SetMediaSourceDuration(mMediaSourceDuration);
   }
+  ScheduleDurationChange(oldDuration, aDuration, aAction);
 }
 
 void
