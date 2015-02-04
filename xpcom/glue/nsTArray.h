@@ -1027,8 +1027,9 @@ public:
   index_type IndexOf(const Item& aItem, index_type aStart,
                      const Comparator& aComp) const
   {
-    const elem_type* iter = Elements() + aStart, *end = Elements() + Length();
-    for (; iter != end; ++iter) {
+    const elem_type* iter = Elements() + aStart;
+    const elem_type* iend = Elements() + Length();
+    for (; iter != iend; ++iter) {
       if (aComp.Equals(*iter, aItem)) {
         return index_type(iter - Elements());
       }
@@ -1060,8 +1061,9 @@ public:
                          const Comparator& aComp) const
   {
     size_type endOffset = aStart >= Length() ? Length() : aStart + 1;
-    const elem_type* end = Elements() - 1, *iter = end + endOffset;
-    for (; iter != end; --iter) {
+    const elem_type* iend = Elements() - 1;
+    const elem_type* iter = iend + endOffset;
+    for (; iter != iend; --iter) {
       if (aComp.Equals(*iter, aItem)) {
         return index_type(iter - Elements());
       }
@@ -1541,8 +1543,9 @@ public:
     }
 
     // Initialize the extra array elements
-    elem_type* iter = Elements() + aIndex, *end = iter + aCount;
-    for (; iter != end; ++iter) {
+    elem_type* iter = Elements() + aIndex;
+    elem_type* iend = iter + aCount;
+    for (; iter != iend; ++iter) {
       elem_traits::Construct(iter);
     }
 
@@ -1566,8 +1569,9 @@ public:
     }
 
     // Initialize the extra array elements
-    elem_type* iter = Elements() + aIndex, *end = iter + aCount;
-    for (; iter != end; ++iter) {
+    elem_type* iter = Elements() + aIndex;
+    elem_type* iend = iter + aCount;
+    for (; iter != iend; ++iter) {
       elem_traits::Construct(iter, aItem);
     }
 
@@ -1696,8 +1700,9 @@ protected:
   // @param aCount The number of elements to destroy.
   void DestructRange(index_type aStart, size_type aCount)
   {
-    elem_type* iter = Elements() + aStart, *end = iter + aCount;
-    for (; iter != end; ++iter) {
+    elem_type* iter = Elements() + aStart;
+    elem_type *iend = iter + aCount;
+    for (; iter != iend; ++iter) {
       elem_traits::Destruct(iter);
     }
   }
@@ -1722,19 +1727,19 @@ protected:
   {
     elem_type* elem = Elements();
     elem_type item = elem[aIndex];
-    index_type end = Length() - 1;
-    while ((aIndex * 2) < end) {
+    index_type iend = Length() - 1;
+    while ((aIndex * 2) < iend) {
       const index_type left = (aIndex * 2) + 1;
       const index_type right = (aIndex * 2) + 2;
       const index_type parent_index = aIndex;
       if (aComp.LessThan(item, elem[left])) {
-        if (left < end &&
+        if (left < iend &&
             aComp.LessThan(elem[left], elem[right])) {
           aIndex = right;
         } else {
           aIndex = left;
         }
-      } else if (left < end &&
+      } else if (left < iend &&
                  aComp.LessThan(item, elem[right])) {
         aIndex = right;
       } else {
