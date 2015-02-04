@@ -2256,24 +2256,17 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
 
 static void
 DrawVibrancyBackground(CGContextRef cgContext, CGRect inBoxRect,
-                       nsIFrame* aFrame, nsITheme::ThemeGeometryType aThemeGeometryType,
-                       int aCornerRadius = 0)
+                       nsIFrame* aFrame, nsITheme::ThemeGeometryType aThemeGeometryType)
 {
   ChildView* childView = ChildViewForFrame(aFrame);
   if (childView) {
     NSRect rect = NSRectFromCGRect(inBoxRect);
     NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
-    [NSGraphicsContext saveGraphicsState];
-
-    if (aCornerRadius > 0) {
-      [[NSBezierPath bezierPathWithRoundedRect:rect xRadius:aCornerRadius yRadius:aCornerRadius] addClip];
-    }
 
     [[childView vibrancyFillColorForThemeGeometryType:aThemeGeometryType] set];
     NSRectFill(rect);
 
-    [NSGraphicsContext restoreGraphicsState];
     [NSGraphicsContext setCurrentContext:savedContext];
   }
 }
@@ -2391,7 +2384,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 
     case NS_THEME_MENUPOPUP:
       if (VibrancyManager::SystemSupportsVibrancy()) {
-        DrawVibrancyBackground(cgContext, macRect, aFrame, eThemeGeometryTypeMenu, 4);
+        DrawVibrancyBackground(cgContext, macRect, aFrame, eThemeGeometryTypeMenu);
       } else {
         HIThemeMenuDrawInfo mdi;
         memset(&mdi, 0, sizeof(mdi));
