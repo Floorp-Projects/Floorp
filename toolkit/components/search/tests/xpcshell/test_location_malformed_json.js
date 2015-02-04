@@ -1,41 +1,40 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function run_test() {
-  removeMetadata();
-  removeCacheFile();
-
-  do_check_false(Services.search.isInitialized);
-
-  let engineDummyFile = gProfD.clone();
-  engineDummyFile.append("searchplugins");
-  engineDummyFile.append("test-search-engine.xml");
-  let engineDir = engineDummyFile.parent;
-  engineDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-
-  do_get_file("data/engine.xml").copyTo(engineDir, "engine.xml");
-
-  do_register_cleanup(function() {
-    removeMetadata();
-    removeCacheFile();
+// A console listener so we can listen for a log message from nsSearchService.
+function promiseTimezoneMessage() {
+  return new Promise(resolve => {
+    let listener = {
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener]),
+      observe : function (msg) {
+        if (msg.message.startsWith("getIsUS() fell back to a timezone check with the result=")) {
+          Services.console.unregisterListener(listener);
+          resolve(msg);
+        }
+      }
+    };
+    Services.console.registerListener(listener);
   });
+}
+
+function run_test() {
+  installTestEngine();
+
+  // setup a console listener for the timezone fallback message.
+  let promiseTzMessage = promiseTimezoneMessage();
 
   // Here we have malformed JSON
   Services.prefs.setCharPref("browser.search.geoip.url", 'data:application/json,{"country_code"');
   Services.search.init(() => {
-    try {
-      Services.prefs.getCharPref("browser.search.countryCode");
-      ok(false, "should be no countryCode pref");
-    } catch (_) {}
-    try {
-      Services.prefs.getCharPref("browser.search.isUS");
-      ok(false, "should be no isUS pref yet either");
-    } catch (_) {}
-    // fetch the engines - this should force the timezone check
+    ok(!Services.prefs.prefHasUserValue("browser.search.countryCode"), "should be no countryCode pref");
+    ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
+    ok(!Services.prefs.prefHasUserValue("browser.search.isUS"), "should never be an isUS pref");
+    // fetch the engines - this should force the timezone check, but still
+    // doesn't persist any prefs.
     Services.search.getEngines();
-    equal(Services.prefs.getBoolPref("browser.search.isUS"),
-          isUSTimezone(),
-          "should have set isUS based on current timezone.");
+    ok(!Services.prefs.prefHasUserValue("browser.search.countryCode"), "should be no countryCode pref");
+    ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
+    ok(!Services.prefs.prefHasUserValue("browser.search.isUS"), "should never be an isUS pref");
     // should have recorded SUCCESS_WITHOUT_DATA
     checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.SUCCESS_WITHOUT_DATA);
     // and false values for timeout and forced-sync-init.
@@ -46,8 +45,13 @@ function run_test() {
       deepEqual(snapshot.counts, [1,0,0]); // boolean probe so 3 buckets, expect 1 result for |0|.
     }
 
-    do_test_finished();
-    run_next_test();
+    // Check we saw the timezone fallback message.
+    promiseTzMessage.then(msg => {
+      print("Timezone message:", msg.message);
+      ok(msg.message.endsWith(isUSTimezone().toString()), "fell back to timezone and it matches our timezone");
+      do_test_finished();
+      run_next_test();
+    });
   });
   do_test_pending();
 }

@@ -291,6 +291,30 @@ let addTestEngines = Task.async(function* (aItems) {
 });
 
 /**
+ * Installs a test engine into the test profile.
+ */
+function installTestEngine() {
+  removeMetadata();
+  removeCacheFile();
+
+  do_check_false(Services.search.isInitialized);
+
+  let engineDummyFile = gProfD.clone();
+  engineDummyFile.append("searchplugins");
+  engineDummyFile.append("test-search-engine.xml");
+  let engineDir = engineDummyFile.parent;
+  engineDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+
+  do_get_file("data/engine.xml").copyTo(engineDir, "engine.xml");
+
+  do_register_cleanup(function() {
+    removeMetadata();
+    removeCacheFile();
+  });
+}
+
+
+/**
  * Returns a promise that is resolved when an observer notification from the
  * search service fires with the specified data.
  *
