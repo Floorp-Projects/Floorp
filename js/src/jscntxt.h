@@ -304,10 +304,6 @@ class ExclusiveContext : public ContextFriendFields,
     types::ObjectGroup *getNewGroup(const Class *clasp, TaggedProto proto,
                                     JSObject *associated = nullptr);
     types::ObjectGroup *getLazySingletonGroup(const Class *clasp, TaggedProto proto);
-
-    // Returns false if not found.
-    bool findAllocationSiteForType(types::Type ty, JSScript **script, uint32_t *offset) const;
-
     inline js::LifoAlloc &typeLifoAlloc();
 
     // Current global. This is only safe to use within the scope of the

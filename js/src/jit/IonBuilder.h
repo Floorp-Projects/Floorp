@@ -1116,13 +1116,13 @@ class IonBuilder
     // The track* methods below are called often. Do not combine them with the
     // unchecked variants, despite the unchecked variants having no other
     // callers.
-    void trackTypeInfo(JS::TrackedTypeSite site, MIRType mirType,
+    void trackTypeInfo(TrackedTypeSite site, MIRType mirType,
                        types::TemporaryTypeSet *typeSet)
     {
         if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
             trackTypeInfoUnchecked(site, mirType, typeSet);
     }
-    void trackTypeInfo(JS::TrackedTypeSite site, JSObject *obj) {
+    void trackTypeInfo(TrackedTypeSite site, JSObject *obj) {
         if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
             trackTypeInfoUnchecked(site, obj);
     }
@@ -1130,7 +1130,7 @@ class IonBuilder
         if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
             trackTypeInfoUnchecked(callInfo);
     }
-    void trackOptimizationAttempt(JS::TrackedStrategy strategy) {
+    void trackOptimizationAttempt(TrackedStrategy strategy) {
         if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
             trackOptimizationAttemptUnchecked(strategy);
     }
@@ -1138,7 +1138,7 @@ class IonBuilder
         if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
             amendOptimizationAttemptUnchecked(index);
     }
-    void trackOptimizationOutcome(JS::TrackedOutcome outcome) {
+    void trackOptimizationOutcome(TrackedOutcome outcome) {
         if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
             trackOptimizationOutcomeUnchecked(outcome);
     }
@@ -1153,13 +1153,13 @@ class IonBuilder
 
     // Out-of-line variants that don't check if optimization tracking is
     // enabled.
-    void trackTypeInfoUnchecked(JS::TrackedTypeSite site, MIRType mirType,
+    void trackTypeInfoUnchecked(TrackedTypeSite site, MIRType mirType,
                                 types::TemporaryTypeSet *typeSet);
-    void trackTypeInfoUnchecked(JS::TrackedTypeSite site, JSObject *obj);
+    void trackTypeInfoUnchecked(TrackedTypeSite site, JSObject *obj);
     void trackTypeInfoUnchecked(CallInfo &callInfo);
-    void trackOptimizationAttemptUnchecked(JS::TrackedStrategy strategy);
+    void trackOptimizationAttemptUnchecked(TrackedStrategy strategy);
     void amendOptimizationAttemptUnchecked(uint32_t index);
-    void trackOptimizationOutcomeUnchecked(JS::TrackedOutcome outcome);
+    void trackOptimizationOutcomeUnchecked(TrackedOutcome outcome);
     void trackOptimizationSuccessUnchecked();
     void trackInlineSuccessUnchecked(InliningStatus status);
 };
