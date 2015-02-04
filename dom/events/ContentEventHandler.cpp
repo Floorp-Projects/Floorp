@@ -182,8 +182,8 @@ ContentEventHandler::QueryContentRect(nsIContent* aContent,
     resultRect.UnionRect(resultRect, frameRect);
   }
 
-  aEvent->mReply.mRect =
-      resultRect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel());
+  aEvent->mReply.mRect = LayoutDevicePixel::FromUntyped(
+      resultRect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
   aEvent->mSucceeded = true;
 
   return NS_OK;
@@ -992,8 +992,8 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
   } else {
     rect.UnionRect(rect, frameRect);
   }
-  aEvent->mReply.mRect =
-      rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel());
+  aEvent->mReply.mRect = LayoutDevicePixel::FromUntyped(
+      rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
   aEvent->mSucceeded = true;
   return NS_OK;
 }
@@ -1043,8 +1043,8 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
       }
       rv = ConvertToRootViewRelativeOffset(caretFrame, caretRect);
       NS_ENSURE_SUCCESS(rv, rv);
-      aEvent->mReply.mRect =
-        caretRect.ToOutsidePixels(caretFrame->PresContext()->AppUnitsPerDevPixel());
+      aEvent->mReply.mRect = LayoutDevicePixel::FromUntyped(
+        caretRect.ToOutsidePixels(caretFrame->PresContext()->AppUnitsPerDevPixel()));
       aEvent->mReply.mOffset = aEvent->mInput.mOffset;
       aEvent->mSucceeded = true;
       return NS_OK;
@@ -1076,8 +1076,8 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
   rv = ConvertToRootViewRelativeOffset(frame, rect);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aEvent->mReply.mRect =
-      rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel());
+  aEvent->mReply.mRect = LayoutDevicePixel::FromUntyped(
+      rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
   aEvent->mSucceeded = true;
   return NS_OK;
 }

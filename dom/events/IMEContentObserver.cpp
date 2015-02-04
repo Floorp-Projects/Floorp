@@ -449,8 +449,8 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   nsIWidget* topLevelWidget = mWidget->GetTopLevelWidget();
   if (topLevelWidget && topLevelWidget != mWidget) {
     charAtPt.mReply.mRect.MoveBy(
-      topLevelWidget->WidgetToScreenOffsetUntyped() -
-        mWidget->WidgetToScreenOffsetUntyped());
+      topLevelWidget->WidgetToScreenOffset() -
+        mWidget->WidgetToScreenOffset());
   }
   // The refPt is relative to its widget.
   // We should notify it with offset in the widget.
@@ -464,7 +464,8 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   notification.mMouseButtonEventData.mOffset = charAtPt.mReply.mOffset;
   notification.mMouseButtonEventData.mCursorPos.Set(
     LayoutDeviceIntPoint::ToUntyped(charAtPt.refPoint));
-  notification.mMouseButtonEventData.mCharRect.Set(charAtPt.mReply.mRect);
+  notification.mMouseButtonEventData.mCharRect.Set(
+    LayoutDevicePixel::ToUntyped(charAtPt.mReply.mRect));
   notification.mMouseButtonEventData.mButton = aMouseEvent->button;
   notification.mMouseButtonEventData.mButtons = aMouseEvent->buttons;
   notification.mMouseButtonEventData.mModifiers = aMouseEvent->modifiers;
