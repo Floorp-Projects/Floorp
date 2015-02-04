@@ -5235,10 +5235,7 @@ PaintDecorationLine(nsIFrame* aFrame,
     if (aDecorationType == eNormalDecoration) {
       aCallbacks->PaintDecorationLine(path, lineColor);
     } else {
-      aCallbacks->NotifyBeforeSelectionDecorationLine(lineColor);
-      aCtx->NewPath();
-      aCtx->Rectangle(ThebesRect(path));
-      aCallbacks->NotifySelectionDecorationLinePathEmitted();
+      aCallbacks->PaintSelectionDecorationLine(path, lineColor);
     }
   } else {
     nsCSSRendering::PaintDecorationLine(aFrame, *aCtx->GetDrawTarget(),

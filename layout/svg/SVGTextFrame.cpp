@@ -2723,13 +2723,12 @@ public:
                                           nscolor aColor,
                                           DrawTarget& aDrawTarget) MOZ_OVERRIDE;
   void PaintDecorationLine(Rect aPath, nscolor aColor) MOZ_OVERRIDE;
+  void PaintSelectionDecorationLine(Rect aPath, nscolor aColor) MOZ_OVERRIDE;
   void NotifyBeforeText(nscolor aColor) MOZ_OVERRIDE;
   void NotifyGlyphPathEmitted() MOZ_OVERRIDE;
   void NotifyBeforeSVGGlyphPainted() MOZ_OVERRIDE;
   void NotifyAfterSVGGlyphPainted() MOZ_OVERRIDE;
   void NotifyAfterText() MOZ_OVERRIDE;
-  void NotifyBeforeSelectionDecorationLine(nscolor aColor) MOZ_OVERRIDE;
-  void NotifySelectionDecorationLinePathEmitted() MOZ_OVERRIDE;
 
 private:
   void SetupContext();
@@ -2853,7 +2852,8 @@ SVGTextDrawPathCallbacks::PaintDecorationLine(Rect aPath, nscolor aColor)
 }
 
 void
-SVGTextDrawPathCallbacks::NotifyBeforeSelectionDecorationLine(nscolor aColor)
+SVGTextDrawPathCallbacks::PaintSelectionDecorationLine(Rect aPath,
+                                                       nscolor aColor)
 {
   if (IsClipPathChild()) {
     // Don't paint selection decorations when in a clip path.
@@ -2861,17 +2861,10 @@ SVGTextDrawPathCallbacks::NotifyBeforeSelectionDecorationLine(nscolor aColor)
   }
 
   mColor = aColor;
+
   gfx->Save();
-}
-
-void
-SVGTextDrawPathCallbacks::NotifySelectionDecorationLinePathEmitted()
-{
-  if (IsClipPathChild()) {
-    // Don't paint selection decorations when in a clip path.
-    return;
-  }
-
+  gfx->NewPath();
+  gfx->Rectangle(ThebesRect(aPath));
   FillAndStrokeGeometry();
   gfx->Restore();
 }
