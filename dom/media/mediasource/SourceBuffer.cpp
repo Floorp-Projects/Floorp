@@ -269,6 +269,8 @@ SourceBuffer::RangeRemoval(double aStart, double aEnd)
 void
 SourceBuffer::DoRangeRemoval(double aStart, double aEnd)
 {
+  MSE_DEBUG("SourceBuffer(%p)::DoRangeRemoval (updating:%d)",
+            this, mUpdating);
   if (!mUpdating) {
     // abort was called in between.
     return;
@@ -397,9 +399,11 @@ SourceBuffer::AbortUpdating()
 void
 SourceBuffer::CheckEndTime()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   // Check if we need to update mMediaSource duration
   double endTime = GetBufferedEnd();
-  if (endTime > mMediaSource->Duration()) {
+  double duration = mMediaSource->Duration();
+  if (endTime > duration) {
     mMediaSource->SetDuration(endTime, MSRangeRemovalAction::SKIP);
   }
 }
@@ -437,21 +441,41 @@ SourceBuffer::AppendData(LargeDataBuffer* aData, double aTimestampOffset)
 
   MOZ_ASSERT(mMediaSource);
 
-  if (aData->Length()) {
-    if (!mTrackBuffer->AppendData(aData, aTimestampOffset * USECS_PER_S)) {
-      AppendError(true);
-      return;
-    }
+  if (!aData->Length()) {
+    StopUpdating();
+    return;
+  }
 
-    if (mTrackBuffer->HasInitSegment()) {
-      mMediaSource->QueueInitializationEvent();
-    }
+  mTrackBuffer->AppendData(aData, aTimestampOffset * USECS_PER_S)
+                    ->Then(NS_GetCurrentThread(), __func__, this,
+                           &SourceBuffer::AppendDataCompletedWithSuccess,
+                           &SourceBuffer::AppendDataErrored);
+}
 
+void
+SourceBuffer::AppendDataCompletedWithSuccess(bool aGotMedia)
+{
+  if (!mUpdating) {
+    // The buffer append algorithm has been interrupted by abort().
+    return;
+  }
+
+  if (mTrackBuffer->HasInitSegment()) {
+    mMediaSource->QueueInitializationEvent();
+  }
+
+  if (aGotMedia) {
     CheckEndTime();
   }
 
   StopUpdating();
- }
+}
+
+void
+SourceBuffer::AppendDataErrored(nsresult aError)
+{
+  AppendError(true);
+}
 
 void
 SourceBuffer::AppendError(bool aDecoderError)
