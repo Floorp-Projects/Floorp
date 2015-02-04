@@ -509,7 +509,7 @@
             let type = "unknown";
             if (aEvent instanceof KeyboardEvent) {
               type = "key";
-              if (this._textbox.getSelectedOneOff()) {
+              if (this._textbox.selectedButton) {
                 source = "oneoff";
               }
             } else if (aEvent instanceof MouseEvent) {
@@ -989,7 +989,7 @@
           var evt = aEvent || this.mEnterEvent;
 
           let engine;
-          let oneOff = this.getSelectedOneOff();
+          let oneOff = this.selectedButton;
           if (oneOff)
             engine = oneOff.engine;
           if (this.mEnterEvent && this._selectionDetails &&
@@ -1003,22 +1003,22 @@
         ]]></body>
       </method>
 
-      <method name="getSelectedOneOff">
-        <body><![CDATA[
-          let list = document.getAnonymousElementByAttribute(this.popup, "anonid",
-                                                             "search-panel-one-offs");
-          if (!list)
-            return null;
+      <field name="_selectedButton"/>
+      <property name="selectedButton" onget="return this._selectedButton;">
+        <setter><![CDATA[
+          if (this._selectedButton)
+            this._selectedButton.removeAttribute("selected");
 
-          for (let button = list.firstChild; button; button = button.nextSibling) {
-            if (button.hasAttribute("selected"))
-              return button;
+          // Avoid selecting dummy buttons.
+          if (val && !val.classList.contains("dummy")) {
+            val.setAttribute("selected", "true");
+            this._selectedButton = val;
+            return;
           }
 
-          return null;
-        ]]></body>
-      </method>
-
+          this._selectedButton = null;
+        ]]></setter>
+      </property>
 
       <method name="handleKeyboardNavigation">
         <parameter name="aEvent"/>
@@ -1054,7 +1054,7 @@
 #endif
             return;
 
-          let selectedButton = this.getSelectedOneOff();
+          let selectedButton = this.selectedButton;
 
           // Alt + up/down is very similar to (shift +) tab but differs in that
           // it loops through the list, whereas tab will move the focus out.
@@ -1064,29 +1064,23 @@
             let forward = aEvent.keyCode == KeyEvent.DOM_VK_DOWN;
             if (selectedButton) {
               // cycle though the list of one-off buttons.
-              selectedButton.removeAttribute("selected");
               if (forward)
-                selectedButton = selectedButton.nextSibling;
+                this.selectedButton = selectedButton.nextSibling;
               else
-                selectedButton = selectedButton.previousSibling;
-
-              // Avoid selecting dummy buttons.
-              if (selectedButton && selectedButton.classList.contains("dummy"))
-                selectedButton = null;
+                this.selectedButton = selectedButton.previousSibling;
             }
             else {
               // If no selection, select the first or last one-off button.
               if (forward) {
-                selectedButton = list.firstChild;
+                this.selectedButton = list.firstChild;
               }
               else {
                 selectedButton = list.lastChild;
                 while (selectedButton.classList.contains("dummy"))
                   selectedButton = selectedButton.previousSibling;
+                this.selectedButton = selectedButton;
               }
             }
-            if (selectedButton)
-              selectedButton.setAttribute("selected", "true");
 
             aEvent.preventDefault();
             aEvent.stopPropagation();
@@ -1096,11 +1090,7 @@
           // If the last suggestion is selected, DOWN selects the first one-off.
           if (aEvent.keyCode == KeyEvent.DOM_VK_DOWN &&
               popup.selectedIndex + 1 == popup.view.rowCount) {
-            if (selectedButton)
-              selectedButton.removeAttribute("selected");
-            selectedButton = list.firstChild;
-            if (selectedButton)
-              selectedButton.setAttribute("selected", "true");
+            this.selectedButton = list.firstChild;
           }
 
           // If no suggestion is selected and a one-off is selected,
@@ -1108,17 +1098,12 @@
           if (popup.selectedIndex == -1 && selectedButton &&
               (aEvent.keyCode == KeyEvent.DOM_VK_DOWN ||
                aEvent.keyCode == KeyEvent.DOM_VK_UP)) {
-            selectedButton.removeAttribute("selected");
             if (aEvent.keyCode == KeyEvent.DOM_VK_DOWN)
-              selectedButton = selectedButton.nextSibling;
+              this.selectedButton = selectedButton.nextSibling;
             else
-              selectedButton = selectedButton.previousSibling;
-            if (selectedButton && selectedButton.classList.contains("dummy"))
-              selectedButton = null;
+              this.selectedButton = selectedButton.previousSibling;
 
-            if (selectedButton) {
-              selectedButton.setAttribute("selected", "true");
-
+            if (this.selectedButton) {
               aEvent.preventDefault();
               aEvent.stopPropagation();
             }
@@ -1139,7 +1124,7 @@
             selectedButton = list.lastChild;
             while (selectedButton.classList.contains("dummy"))
               selectedButton = selectedButton.previousSibling;
-            selectedButton.setAttribute("selected", "true");
+            this.selectedButton = selectedButton;
 
             aEvent.preventDefault();
             aEvent.stopPropagation();
@@ -1148,18 +1133,13 @@
           if (aEvent.keyCode == KeyEvent.DOM_VK_TAB) {
             if (selectedButton) {
               // TAB cycles though the list of one-off buttons.
-              selectedButton.removeAttribute("selected");
               if (aEvent.shiftKey)
-                selectedButton = selectedButton.previousSibling;
+                this.selectedButton = selectedButton.previousSibling;
               else
-                selectedButton = selectedButton.nextSibling;
-
-              // Avoid selecting dummy buttons.
-              if (selectedButton && selectedButton.classList.contains("dummy"))
-                selectedButton = null;
+                this.selectedButton = selectedButton.nextSibling;
 
               // If we are out of the list, revert the text field to what the user typed.
-              if (!selectedButton) {
+              if (!this.selectedButton) {
                 // Set the selectedIndex to something that will make
                 // handleKeyNavigation (called by autocomplete.xml's onKeyPress
                 // method) reset the text field value to what the user typed.
@@ -1173,9 +1153,8 @@
                 return;
 
               // and select the first one-off button for <tab>.
-              selectedButton = list.firstChild;
+              this.selectedButton = list.firstChild;
             }
-            selectedButton.setAttribute("selected", "true");
 
             aEvent.preventDefault();
             aEvent.stopPropagation();
