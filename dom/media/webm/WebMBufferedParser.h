@@ -241,6 +241,9 @@ public:
   // dependencies to arrive at aTime.
   bool GetOffsetForTime(uint64_t aTime, int64_t* aOffset);
 
+  // Returns end offset of init segment or -1 if none found.
+  int64_t GetInitEndOffset();
+
 private:
   // Private destructor, to discourage deletion outside of Release():
   ~WebMBufferedState() {
