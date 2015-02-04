@@ -340,11 +340,20 @@ void WebMBufferedState::NotifyDataArrived(const char* aBuffer, uint32_t aLength,
   while (i + 1 < mRangeParsers.Length()) {
     if (mRangeParsers[i].mCurrentOffset >= mRangeParsers[i + 1].mStartOffset) {
       mRangeParsers[i + 1].mStartOffset = mRangeParsers[i].mStartOffset;
+      mRangeParsers[i + 1].mInitEndOffset = mRangeParsers[i].mInitEndOffset;
       mRangeParsers.RemoveElementAt(i);
     } else {
       i += 1;
     }
   }
+}
+
+int64_t WebMBufferedState::GetInitEndOffset()
+{
+  if (mRangeParsers.IsEmpty()) {
+    return -1;
+  }
+  return mRangeParsers[0].mInitEndOffset;
 }
 
 } // namespace mozilla

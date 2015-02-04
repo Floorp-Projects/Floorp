@@ -337,7 +337,7 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
   io.tell = webm_tell;
   io.userdata = mDecoder;
   int64_t maxOffset = mDecoder->HasInitializationData() ?
-    mDecoder->GetResource()->GetLength() : -1;
+    mBufferedState->GetInitEndOffset() : -1;
   int r = nestegg_init(&mContext, io, &webm_log, maxOffset);
   if (r == -1) {
     return NS_ERROR_FAILURE;
