@@ -49,14 +49,14 @@ protected:
    * grid-template-columns / grid-template-rows are stored in this frame
    * property when needed, as a ImplicitNamedAreas* value.
    */
-  NS_DECLARE_FRAME_PROPERTY(ImplicitNamedAreasProperty, DestroyImplicitNamedAreas)
+  NS_DECLARE_FRAME_PROPERTY(ImplicitNamedAreasProperty,
+                            DeleteValue<ImplicitNamedAreas>)
   void InitImplicitNamedAreas(const nsStylePosition* aStyle);
   void AddImplicitNamedAreas(const nsTArray<nsTArray<nsString>>& aLineNameLists);
   typedef nsTHashtable<nsStringHashKey> ImplicitNamedAreas;
   ImplicitNamedAreas* GetImplicitNamedAreas() const {
     return static_cast<ImplicitNamedAreas*>(Properties().Get(ImplicitNamedAreasProperty()));
   }
-  static void DestroyImplicitNamedAreas(void* aPropertyValue);
 
 #ifdef DEBUG
   void SanityCheckAnonymousGridItems() const;

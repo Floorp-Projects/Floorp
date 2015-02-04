@@ -152,13 +152,7 @@ static void RefreshContentFrames(nsPresContext* aPresContext, nsIContent * aStar
 
 #include "prenv.h"
 
-static void
-DestroyBoxMetrics(void* aPropertyValue)
-{
-  delete static_cast<nsBoxLayoutMetrics*>(aPropertyValue);
-}
-
-NS_DECLARE_FRAME_PROPERTY(BoxMetricsProperty, DestroyBoxMetrics)
+NS_DECLARE_FRAME_PROPERTY(BoxMetricsProperty, DeleteValue<nsBoxLayoutMetrics>)
 
 static void
 InitBoxMetrics(nsIFrame* aFrame, bool aClear)
@@ -250,13 +244,8 @@ nsFrame::GetLogModuleInfo()
 
 #endif
 
-static void
-DestroyAbsoluteContainingBlock(void* aPropertyValue)
-{
-  delete static_cast<nsAbsoluteContainingBlock*>(aPropertyValue);
-}
-
-NS_DECLARE_FRAME_PROPERTY(AbsoluteContainingBlockProperty, DestroyAbsoluteContainingBlock)
+NS_DECLARE_FRAME_PROPERTY(AbsoluteContainingBlockProperty,
+                          DeleteValue<nsAbsoluteContainingBlock>)
 
 bool
 nsIFrame::HasAbsolutelyPositionedChildren() const {
@@ -7122,8 +7111,7 @@ nsFrame::AccessibleType()
 }
 #endif
 
-NS_DECLARE_FRAME_PROPERTY(OverflowAreasProperty,
-                          nsIFrame::DestroyOverflowAreas)
+NS_DECLARE_FRAME_PROPERTY(OverflowAreasProperty, DeleteValue<nsOverflowAreas>)
 
 bool
 nsIFrame::ClearOverflowRects()
@@ -8770,24 +8758,6 @@ nsIFrame::IsSelected() const
 {
   return (GetContent() && GetContent()->IsSelectionDescendant()) ?
     IsFrameSelected() : false;
-}
-
-void
-nsIFrame::DestroySurface(void* aPropertyValue)
-{
-  static_cast<gfxASurface*>(aPropertyValue)->Release();
-}
-
-void
-nsIFrame::DestroyDT(void* aPropertyValue)
-{
-  static_cast<mozilla::gfx::DrawTarget*>(aPropertyValue)->Release();
-}
-
-void
-nsIFrame::DestroyRegion(void* aPropertyValue)
-{
-  delete static_cast<nsRegion*>(aPropertyValue);
 }
 
 /*static*/ void
