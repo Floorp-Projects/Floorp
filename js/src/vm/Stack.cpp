@@ -1866,6 +1866,8 @@ JS::ProfilingFrameIterator::extractStack(Frame *frames, uint32_t offset, uint32_
         frames[offset].returnAddress = nullptr;
         frames[offset].activation = activation_;
         frames[offset].label = asmJSIter().label();
+        frames[offset].hasTrackedOptimizations = false;
+        frames[offset].trackedOptimizationIndex = 0;
         return 1;
     }
 
