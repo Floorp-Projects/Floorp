@@ -318,43 +318,6 @@ FindObjectClass(JSContext* cx, JSObject* aGlobalObject)
   sObjectClass = js::GetObjectJSClass(obj);
 }
 
-static inline nsresult
-WrapNative(JSContext *cx, nsISupports *native,
-           nsWrapperCache *cache, const nsIID* aIID, JS::MutableHandle<JS::Value> vp,
-           bool aAllowWrapping)
-{
-  if (!native) {
-    vp.setNull();
-
-    return NS_OK;
-  }
-
-  JSObject *wrapper = xpc_FastGetCachedWrapper(cx, cache, vp);
-  if (wrapper) {
-    return NS_OK;
-  }
-
-  JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
-  return nsDOMClassInfo::XPConnect()->WrapNativeToJSVal(cx, scope, native,
-                                                        cache, aIID,
-                                                        aAllowWrapping, vp);
-}
-
-static inline nsresult
-WrapNative(JSContext *cx, nsISupports *native, const nsIID* aIID,
-           bool aAllowWrapping, JS::MutableHandle<JS::Value> vp)
-{
-  return WrapNative(cx, native, nullptr, aIID, vp, aAllowWrapping);
-}
-
-// Same as the WrapNative above, but use these if aIID is nsISupports' IID.
-static inline nsresult
-WrapNative(JSContext *cx, nsISupports *native,
-           bool aAllowWrapping, JS::MutableHandle<JS::Value> vp)
-{
-  return WrapNative(cx, native, nullptr, nullptr, vp, aAllowWrapping);
-}
-
 // Helper to handle torn-down inner windows.
 static inline nsresult
 SetParentToWindow(nsGlobalWindow *win, JSObject **parent)
@@ -1349,7 +1312,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
   }
 
   js::AssertSameCompartment(cx, obj);
-  return WrapNative(cx, native, true, args.rval());
+  return nsContentUtils::WrapNative(cx, native, args.rval(), true);
 }
 
 static nsresult
@@ -1852,8 +1815,9 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
   JS::Rooted<JS::Value> v(cx);
 
   js::AssertSameCompartment(cx, obj);
-  rv = WrapNative(cx, constructor, &NS_GET_IID(nsIDOMDOMConstructor),
-                  false, &v);
+  rv = nsContentUtils::WrapNative(cx, constructor,
+                                  &NS_GET_IID(nsIDOMDOMConstructor), &v,
+                                  false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   FillPropertyDescriptor(ctorDesc, obj, 0, v);
@@ -2223,8 +2187,9 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     JS::Rooted<JS::Value> v(cx);
     js::AssertSameCompartment(cx, obj);
-    rv = WrapNative(cx, constructor, &NS_GET_IID(nsIDOMDOMConstructor),
-                    false, &v);
+    rv = nsContentUtils::WrapNative(cx, constructor,
+                                    &NS_GET_IID(nsIDOMDOMConstructor), &v,
+                                    false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     JS::Rooted<JSObject*> class_obj(cx, &v.toObject());
@@ -2332,8 +2297,9 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     JS::Rooted<JS::Value> val(cx);
     js::AssertSameCompartment(cx, obj);
-    rv = WrapNative(cx, constructor, &NS_GET_IID(nsIDOMDOMConstructor),
-                    true, &val);
+    rv = nsContentUtils::WrapNative(cx, constructor,
+                                    &NS_GET_IID(nsIDOMDOMConstructor), &val,
+                                    true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ASSERTION(val.isObject(), "Why didn't we get a JSObject?");
@@ -2370,7 +2336,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
         NS_ENSURE_TRUE(inner, NS_ERROR_UNEXPECTED);
       }
 
-      rv = WrapNative(cx, native, true, &prop_val);
+      rv = nsContentUtils::WrapNative(cx, native, &prop_val, true);
     }
 
     NS_ENSURE_SUCCESS(rv, rv);
