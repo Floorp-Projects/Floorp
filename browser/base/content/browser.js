@@ -214,6 +214,7 @@ let gInitialPages = [
 #include browser-ctrlTab.js
 #include browser-customization.js
 #include browser-devedition.js
+#include browser-eme.js
 #include browser-feeds.js
 #include browser-fullScreen.js
 #include browser-fullZoom.js
