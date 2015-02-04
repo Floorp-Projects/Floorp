@@ -702,6 +702,11 @@ RasterImage::CopyFrame(uint32_t aWhichFrame, uint32_t aFlags)
                      DrawOptions(1.0f, CompositionOp::OP_SOURCE));
   } else {
     RefPtr<SourceSurface> srcSurf = frameRef->GetSurface();
+    if (!srcSurf) {
+      RecoverFromLossOfFrames(mSize, aFlags);
+      return nullptr;
+    }
+
     Rect srcRect(0, 0, intFrameRect.width, intFrameRect.height);
     target->DrawSurface(srcSurf, srcRect, rect);
   }
@@ -1534,6 +1539,30 @@ RasterImage::Decode(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
   return NS_OK;
 }
 
+void
+RasterImage::RecoverFromLossOfFrames(const nsIntSize& aSize, uint32_t aFlags)
+{
+  if (!mHasSize) {
+    return;
+  }
+
+  NS_WARNING("An imgFrame became invalid. Attempting to recover...");
+
+  // Discard all existing frames, since they're probably all now invalid.
+  SurfaceCache::RemoveImage(ImageKey(this));
+
+  // Animated images require some special handling, because we normally require
+  // that they never be discarded.
+  if (mAnim) {
+    Decode(Some(mSize), aFlags | FLAG_SYNC_DECODE);
+    ResetAnimation();
+    return;
+  }
+
+  // For non-animated images, it's fine to recover using an async decode.
+  Decode(Some(aSize), aFlags);
+}
+
 bool
 RasterImage::CanScale(GraphicsFilter aFilter,
                       const nsIntSize& aSize,
@@ -1713,7 +1742,9 @@ RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
     region.Scale(1.0 / scale.width, 1.0 / scale.height);
   }
 
-  frameRef->Draw(aContext, region, aFilter, aFlags);
+  if (!frameRef->Draw(aContext, region, aFilter, aFlags)) {
+    RecoverFromLossOfFrames(aSize, aFlags);
+  }
 }
 
 //******************************************************************************
