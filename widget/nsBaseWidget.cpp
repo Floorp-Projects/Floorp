@@ -49,6 +49,7 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/ChromeProcessController.h"
 #include "mozilla/layers/InputAPZContext.h"
+#include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/dom/TabParent.h"
 #include "nsRefPtrHashtable.h"
 #ifdef ACCESSIBILITY
@@ -936,6 +937,17 @@ nsBaseWidget::DispatchEventForAPZ(WidgetGUIEvent* aEvent,
 {
   MOZ_ASSERT(NS_IsMainThread());
   InputAPZContext context(aGuid, aInputBlockId);
+
+  // If this is a touch event and APZ has targeted it to an APZC in the root
+  // process, apply that APZC's callback-transform before dispatching the
+  // event. If the event is instead targeted to an APZC in the child process,
+  // the transform will be applied in the child process before dispatching
+  // the event there (see e.g. TabChild::RecvRealTouchEvent()).
+  // TODO: Do other types of events (than touch) need this?
+  if (aEvent->AsTouchEvent() && aGuid.mLayersId == mCompositorParent->RootLayerTreeId()) {
+    APZCCallbackHelper::ApplyCallbackTransform(*aEvent->AsTouchEvent(), aGuid,
+        GetDefaultScale(), 1.0f);
+  }
 
   nsEventStatus status;
   DispatchEvent(aEvent, status);
