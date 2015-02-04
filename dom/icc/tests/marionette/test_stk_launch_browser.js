@@ -5,60 +5,118 @@ MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
 const TEST_DATA = [
-  {command: "d0188103011500820281823100050b44656661756c742055524c",
+  {command: "D018" + // Length
+            "8103011500" + // Command details
+            "82028182" + // Device identities
+            "3100" + // URL
+            "050B44656661756C742055524C", // Alpha identifier
    expect: {commandQualifier: 0x00,
             url: "",
+            mode: MozIccManager.STK_BROWSER_MODE_LAUNCH_IF_NOT_ALREADY_LAUNCHED,
             confirmMessage: { text: "Default URL" }}},
-  {command: "d01f8103011500820281823112687474703a2f2f7878782e7979792e7a7a7a0500",
+  {command: "D01F" + // Length
+            "8103011500" + // Command details
+            "82028182" + // Device identities
+            "3112687474703A2F2F7878782E7979792E7A7A7A" + // URL
+            "0500", // Alpha identifier
    expect: {commandQualifier: 0x00,
             url: "http://xxx.yyy.zzz",
+            mode: MozIccManager.STK_BROWSER_MODE_LAUNCH_IF_NOT_ALREADY_LAUNCHED,
             confirmMessage: { text: "" }}},
-  {command: "d0208103011500820281823100320103" +
-            "0d10046162632e6465662e6768692e6a6b6c", // "0D" String TLV is useless for Launch Browser.
+  {command: "D023" + // Length
+            "8103011500" + // Command details
+            "82028182" + // Device identities
+            "300100" + // Browser identity
+            "3100" + // URL
+            "320103" + // Bear
+            "0D10046162632E6465662E6768692E6A6B6C", // Text string
    expect: {commandQualifier: 0x00,
-            url: ""}},
-  {command: "d0188103011502820281823100050b44656661756c742055524c",
+            // Browser identity, Bear and Text string are useless.
+            url: "",
+            mode: MozIccManager.STK_BROWSER_MODE_LAUNCH_IF_NOT_ALREADY_LAUNCHED}},
+  {command: "D018" + // Length
+            "8103011502" + // Command details
+            "82028182" + // Device identities
+            "3100" + // URL
+            "050B44656661756C742055524C", // Alpha identifier
    expect: {commandQualifier: 0x02,
             url: "",
+            mode: MozIccManager.STK_BROWSER_MODE_USING_EXISTING_BROWSER,
             confirmMessage: { text: "Default URL" }}},
-  {command: "d0188103011503820281823100050b44656661756c742055524c",
+  {command: "D018" + // Length
+            "8103011503" + // Command details
+            "82028182" + // Device identities
+            "3100" + // URL
+            "050B44656661756C742055524C", // Alpha identifier
    expect: {commandQualifier: 0x03,
             url: "",
+            mode: MozIccManager.STK_BROWSER_MODE_USING_NEW_BROWSER,
             confirmMessage: { text: "Default URL"}}},
-  {command: "d0268103011502820281823100051980041704140420041004120421042204120423041904220415",
+  {command: "D026" + // Length
+            "8103011502" + // Command details
+            "82028182" + // Device identities
+            "3100" + // URL
+            "051980041704140420041004120421042204120423" + // Alpha identifier
+            "041904220415",
    expect: {commandQualifier: 0x02,
             url: "",
+            mode: MozIccManager.STK_BROWSER_MODE_USING_EXISTING_BROWSER,
             confirmMessage: { text: "ЗДРАВСТВУЙТЕ" }}},
-  {command: "d021810301150282028182310005104e6f742073656c66206578706c616e2e1e020101",
+  {command: "D021" + // Length
+            "8103011502" + // Command details
+            "82028182" + // Device identities
+            "3100" + // URL
+            "05104E6F742073656C66206578706C616E2E" + // Alpha identifier
+            "1E020101", // Icon identifier
    expect: {commandQualifier: 0x02,
             url: "",
+            mode: MozIccManager.STK_BROWSER_MODE_USING_EXISTING_BROWSER,
             confirmMessage: { text: "Not self explan.",
                               iconSelfExplanatory: false,
                               icons : [BASIC_ICON] }
             }},
-  {command: "d01281030115028202818231000505804f60597d",
+  {command: "D012" + // Length
+            "8103011502" + // Command details
+            "82028182" + // Device identities
+            "3100" + // URL
+            "0505804F60597D", // Alpha identifier
    expect: {commandQualifier: 0x02,
             url: "",
+            mode: MozIccManager.STK_BROWSER_MODE_USING_EXISTING_BROWSER,
             confirmMessage: { text: "你好" }}},
-  {command: "d01281030115008202818230010031001e020001",
+  {command: "D00F" + // Length
+            "8103011500" + // Command details
+            "82028182" + // Device identities
+            "3100" + // URL
+            "1E020001", // Icon identifier
    expect: {commandQualifier: 0x00,
             url: "",
+            mode: MozIccManager.STK_BROWSER_MODE_LAUNCH_IF_NOT_ALREADY_LAUNCHED,
             confirmMessage: { iconSelfExplanatory: true,
                               icons: [BASIC_ICON] }}},
-  {command: "d01281030115008202818230010031001e020003",
+  {command: "D00F" + // Length
+            "8103011500" + // Command details
+            "82028182" + // Device identities
+            "3100" + // URL
+            "1E020003", // Icon identifier
    expect: {commandQualifier: 0x00,
             url: "",
+            mode: MozIccManager.STK_BROWSER_MODE_LAUNCH_IF_NOT_ALREADY_LAUNCHED,
             confirmMessage: { iconSelfExplanatory: true,
                               icons: [COLOR_ICON] }}},
 ];
 
 function testLaunchBrowser(aCommand, aExpect) {
+  is(aCommand.commandNumber, 0x01, "commandNumber");
   is(aCommand.typeOfCommand, MozIccManager.STK_CMD_LAUNCH_BROWSER,
      "typeOfCommand");
   is(aCommand.commandQualifier, aExpect.commandQualifier, "commandQualifier");
-  is(aCommand.options.url, aExpect.url, "options.url");
 
-  if (aExpect.confirmMessage) {
+  is(aCommand.options.url, aExpect.url, "options.url");
+  is(aCommand.options.mode, aExpect.mode, "options.mode");
+
+  // confirmMessage is optional
+  if ("confirmMessage" in aExpect) {
     isStkText(aCommand.options.confirmMessage, aExpect.confirmMessage,
               "options.confirmMessage");
   }

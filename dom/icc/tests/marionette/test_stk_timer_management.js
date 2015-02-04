@@ -6,34 +6,43 @@ MARIONETTE_HEAD_JS = "head.js";
 
 const TEST_DATA = [
   // Start
-  {command: "d011810301270082028182a40101a503102030",
-   expect: {commandNumber: 0x01,
-            commandQualifier: MozIccManager.STK_TIMER_START,
+  {command: "D011" + // Length
+            "8103012700" + // Command details
+            "82028182" + // Device identities
+            "A40101" + // Timer identifier
+            "A503102030", // Timer value
+   expect: {commandQualifier: MozIccManager.STK_TIMER_START,
             timerAction: MozIccManager.STK_TIMER_START,
             timerId: 0x01,
             timerValue: (0x01 * 60 * 60) + (0x02 * 60) + 0x03}},
   // Deactivate
-  {command: "d00c810301270182028182a40104",
-   expect: {commandNumber: 0x01,
-            commandQualifier: MozIccManager.STK_TIMER_DEACTIVATE,
+  {command: "D00C" + // Length
+            "8103012701" + // Command details
+            "82028182" + // Device identities
+            "A40104", // Timer identifier
+   expect: {commandQualifier: MozIccManager.STK_TIMER_DEACTIVATE,
             timerAction: MozIccManager.STK_TIMER_DEACTIVATE,
             timerId: 0x04}},
   // Get current value
-  {command: "d00c810301270282028182a40108",
-   expect: {commandNumber: 0x01,
-            commandQualifier: MozIccManager.STK_TIMER_GET_CURRENT_VALUE,
+  {command: "D00C" + // Length
+            "8103012702" + // Command details
+            "82028182" + // Device identities
+            "A40108", // Timer identifier
+   expect: {commandQualifier: MozIccManager.STK_TIMER_GET_CURRENT_VALUE,
             timerAction: MozIccManager.STK_TIMER_GET_CURRENT_VALUE,
             timerId: 0x08}},
 ];
 
 function testTimerManagement(aCommand, aExpect) {
+  is(aCommand.commandNumber, 0x01, "commandNumber");
   is(aCommand.typeOfCommand, MozIccManager.STK_CMD_TIMER_MANAGEMENT,
      "typeOfCommand");
   is(aCommand.commandQualifier, aExpect.commandQualifier, "commandQualifier");
+
   is(aCommand.options.timerAction, aExpect.timerAction, "options.timerAction");
   is(aCommand.options.timerId, aExpect.timerId, "options.timerId");
 
-  if (aExpect.timerValue) {
+  if ("timerValue" in aExpect) {
     is(aCommand.options.timerValue, aExpect.timerValue, "options.timerValue");
   }
 }

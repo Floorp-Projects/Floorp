@@ -5,27 +5,46 @@ MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
 const TEST_DATA = [
-  {command: "d00c810301050082028182990104",
+  {command: "D00C" + // Length
+            "8103010500" + // Command details
+            "82028182" + // Device identities
+            "990104", // Event list
    expect: {commandQualifier: 0x00,
             eventList: [4]}},
-  {command: "d00d81030105008202818299020507",
+  {command: "D00D" + // Length
+            "8103010500" + // Command details
+            "82028182" + // Device identities
+            "99020507", // Event list
    expect: {commandQualifier: 0x00,
             eventList: [5, 7]}},
-  {command: "d00c810301050082028182990107",
+  {command: "D00C" + // Length
+            "8103010500" + // Command details
+            "82028182" + // Device identities
+            "990107", // Event list
    expect: {commandQualifier: 0x00,
             eventList: [7]}},
-  {command: "d00c810301050082028182990107",
+  {command: "D00C" + // Length
+            "8103010500" + // Command details
+            "82028182" + // Device identities
+            "990107", // Event list
    expect: {commandQualifier: 0x00,
             eventList: [7]}},
-  {command: "d00b8103010500820281829900",
+  {command: "D00B" + // Length
+            "8103010500" + // Command details
+            "82028182" + // Device identities
+            "9900", // Event list
    expect: {commandQualifier: 0x00,
             eventList: null}},
-  {command: "d00c810301050082028182990107",
+  {command: "D00C" + // Length
+            "8103010500" + // Command details
+            "82028182" + // Device identities
+            "990107", // Event list
    expect: {commandQualifier: 0x00,
             eventList: [7]}}
 ];
 
 function testSetupEventList(aCommand, aExpect) {
+  is(aCommand.commandNumber, 0x01, "commandNumber");
   is(aCommand.typeOfCommand, MozIccManager.STK_CMD_SET_UP_EVENT_LIST,
      "typeOfCommand");
   is(aCommand.commandQualifier, aExpect.commandQualifier, "commandQualifier");
