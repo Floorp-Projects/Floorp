@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const IDLE_PREF = "devtools.performance.ui.show-idle-blocks";
-
 /**
  * Tests that the memory Flamegraphs gets rerendered when toggling `show-idle-blocks`
  */
@@ -10,6 +8,8 @@ function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView, MemoryFlameGraphView } = panel.panelWin;
 
+  // Enable memory to test
+  Services.prefs.setBoolPref(MEMORY_PREF, true);
   DetailsView.selectView("memory-flamegraph");
 
   Services.prefs.setBoolPref(IDLE_PREF, true);
