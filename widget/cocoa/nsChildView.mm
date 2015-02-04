@@ -2373,16 +2373,24 @@ nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries)
     GatherThemeGeometryRegion(aThemeGeometries, NS_THEME_MAC_VIBRANCY_LIGHT);
   nsIntRegion vibrantDarkRegion =
     GatherThemeGeometryRegion(aThemeGeometries, NS_THEME_MAC_VIBRANCY_DARK);
+  nsIntRegion menuRegion =
+    GatherThemeGeometryRegion(aThemeGeometries, NS_THEME_MENUPOPUP).OrWith(
+      GatherThemeGeometryRegion(aThemeGeometries, NS_THEME_MENUITEM).OrWith(
+        GatherThemeGeometryRegion(aThemeGeometries, NS_THEME_CHECKMENUITEM)));
   nsIntRegion tooltipRegion =
     GatherThemeGeometryRegion(aThemeGeometries, NS_THEME_TOOLTIP);
 
   vibrantDarkRegion.SubOut(vibrantLightRegion);
+  vibrantDarkRegion.SubOut(menuRegion);
   vibrantDarkRegion.SubOut(tooltipRegion);
+  vibrantLightRegion.SubOut(menuRegion);
   vibrantLightRegion.SubOut(tooltipRegion);
+  menuRegion.SubOut(tooltipRegion);
 
   auto& vm = EnsureVibrancyManager();
   vm.UpdateVibrantRegion(VibrancyType::LIGHT, vibrantLightRegion);
   vm.UpdateVibrantRegion(VibrancyType::TOOLTIP, tooltipRegion);
+  vm.UpdateVibrantRegion(VibrancyType::MENU, menuRegion);
   vm.UpdateVibrantRegion(VibrancyType::DARK, vibrantDarkRegion);
 }
 
@@ -2404,6 +2412,10 @@ WidgetTypeToVibrancyType(uint8_t aWidgetType)
       return VibrancyType::DARK;
     case NS_THEME_TOOLTIP:
       return VibrancyType::TOOLTIP;
+    case NS_THEME_MENUPOPUP:
+    case NS_THEME_MENUITEM:
+    case NS_THEME_CHECKMENUITEM:
+      return VibrancyType::MENU;
     default:
       MOZ_CRASH();
   }

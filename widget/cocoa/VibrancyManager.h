@@ -24,7 +24,8 @@ namespace mozilla {
 enum class VibrancyType {
   LIGHT,
   DARK,
-  TOOLTIP
+  TOOLTIP,
+  MENU
 };
 
 /**

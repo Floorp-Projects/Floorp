@@ -162,6 +162,7 @@ AppearanceForVibrancyType(VibrancyType aType)
   switch (aType) {
     case VibrancyType::LIGHT:
     case VibrancyType::TOOLTIP:
+    case VibrancyType::MENU:
       return [NSAppearanceClass performSelector:@selector(appearanceNamed:)
                                      withObject:@"NSAppearanceNameVibrantLight"];
     case VibrancyType::DARK:
@@ -189,9 +190,9 @@ VibrancyManager::CreateEffectView(VibrancyType aType, NSRect aRect)
   NSView* effectView = [[EffectViewClass alloc] initWithFrame:aRect];
   [effectView performSelector:@selector(setAppearance:)
                    withObject:AppearanceForVibrancyType(aType)];
-  if (aType == VibrancyType::TOOLTIP) {
-    // Tooltip windows never become active, so we need to tell the vibrancy
-    // effect to look active regardless of window state.
+  if (aType == VibrancyType::TOOLTIP || aType == VibrancyType::MENU) {
+    // Tooltip and menu windows never become active, so we need to tell the
+    // vibrancy effect to look active regardless of window state.
     [effectView setState:NSVisualEffectStateActive];
   }
   return effectView;
