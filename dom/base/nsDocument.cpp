@@ -3123,15 +3123,32 @@ nsDocument::GetLastModified(nsAString& aLastModified)
   return NS_OK;
 }
 
+static void
+GetFormattedTimeString(PRTime aTime, nsAString& aFormattedTimeString)
+{
+  PRExplodedTime prtime;
+  PR_ExplodeTime(aTime, PR_LocalTimeParameters, &prtime);
+  // "MM/DD/YYYY hh:mm:ss"
+  char formatedTime[24];
+  if (PR_snprintf(formatedTime, sizeof(formatedTime),
+                  "%02ld/%02ld/%04hd %02ld:%02ld:%02ld",
+                  prtime.tm_month + 1, prtime.tm_mday, prtime.tm_year,
+                  prtime.tm_hour     ,  prtime.tm_min,  prtime.tm_sec)) {
+    CopyASCIItoUTF16(nsDependentCString(formatedTime), aFormattedTimeString);
+  } else {
+    // If we for whatever reason failed to find the last modified time
+    // (or even the current time), fall back to what NS4.x returned.
+    aFormattedTimeString.AssignLiteral(MOZ_UTF16("01/01/1970 00:00:00"));
+  }
+}
+
 void
 nsIDocument::GetLastModified(nsAString& aLastModified) const
 {
   if (!mLastModified.IsEmpty()) {
     aLastModified.Assign(mLastModified);
   } else {
-    // If we for whatever reason failed to find the last modified time
-    // (or even the current time), fall back to what NS4.x returned.
-    aLastModified.AssignLiteral(MOZ_UTF16("01/01/1970 00:00:00"));
+    GetFormattedTimeString(PR_Now(), aLastModified);
   }
 }
 
@@ -8620,25 +8637,9 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
     }
   }
 
-  if (modDate == 0) {
-    // We got nothing from our attempt to ask nsIFileChannel and
-    // nsIHttpChannel for the last modified time. Return the current
-    // time.
-    modDate = PR_Now();
-  }
-
   mLastModified.Truncate();
   if (modDate != 0) {
-    PRExplodedTime prtime;
-    PR_ExplodeTime(modDate, PR_LocalTimeParameters, &prtime);
-    // "MM/DD/YYYY hh:mm:ss"
-    char formatedTime[24];
-    if (PR_snprintf(formatedTime, sizeof(formatedTime),
-                    "%02ld/%02ld/%04hd %02ld:%02ld:%02ld",
-                    prtime.tm_month + 1, prtime.tm_mday, prtime.tm_year,
-                    prtime.tm_hour     ,  prtime.tm_min,  prtime.tm_sec)) {
-      CopyASCIItoUTF16(nsDependentCString(formatedTime), mLastModified);
-    }
+    GetFormattedTimeString(modDate, mLastModified);
   }
 }
 
