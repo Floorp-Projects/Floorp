@@ -70,7 +70,7 @@ DeadObjectProxy::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandle
 }
 
 bool
-DeadObjectProxy::preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const
+DeadObjectProxy::preventExtensions(JSContext *cx, HandleObject proxy, ObjectOpResult &result) const
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;

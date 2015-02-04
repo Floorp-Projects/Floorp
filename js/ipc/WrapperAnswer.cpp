@@ -74,25 +74,23 @@ WrapperAnswer::ok(ReturnStatus *rs, const JS::ObjectOpResult &result)
 }
 
 bool
-WrapperAnswer::RecvPreventExtensions(const ObjectId &objId, ReturnStatus *rs,
-                                     bool *succeeded)
+WrapperAnswer::RecvPreventExtensions(const ObjectId &objId, ReturnStatus *rs)
 {
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
     JSContext *cx = jsapi.cx();
 
-    *succeeded = false;
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
 
-    if (!JS_PreventExtensions(cx, obj, succeeded))
+    ObjectOpResult success;
+    if (!JS_PreventExtensions(cx, obj, success))
         return fail(cx, rs);
 
     LOG("%s.preventExtensions()", ReceiverObj(objId));
-
-    return ok(rs);
+    return ok(rs, success);
 }
 
 static void

@@ -969,13 +969,8 @@ js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
     assertSameCompartment(cx, obj);
 
     // Steps 3-5. (Steps 1-2 are redundant assertions.)
-    bool status;
-    if (!PreventExtensions(cx, obj, &status))
+    if (!PreventExtensions(cx, obj))
         return false;
-    if (!status) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
-        return false;
-    }
 
     // Steps 6-7.
     AutoIdVector keys(cx);
@@ -3173,35 +3168,38 @@ js::SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succ
 }
 
 bool
-js::PreventExtensions(JSContext *cx, HandleObject obj, bool *succeeded)
+js::PreventExtensions(JSContext *cx, HandleObject obj, ObjectOpResult &result)
 {
     if (obj->is<ProxyObject>())
-        return js::Proxy::preventExtensions(cx, obj, succeeded);
+        return js::Proxy::preventExtensions(cx, obj, result);
 
-    if (!obj->nonProxyIsExtensible()) {
-        *succeeded = true;
-        return true;
-    }
+    if (!obj->nonProxyIsExtensible())
+        return result.succeed();
 
-    /*
-     * Force lazy properties to be resolved by iterating over the objects' own
-     * properties.
-     */
+    // Force lazy properties to be resolved.
     AutoIdVector props(cx);
     if (!js::GetPropertyKeys(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, &props))
         return false;
 
-    /*
-     * Convert all dense elements to sparse properties. This will shrink the
-     * initialized length and capacity of the object to zero and ensure that no
-     * new dense elements can be added without calling growElements(), which
-     * checks isExtensible().
-     */
-    if (obj->isNative() && !NativeObject::sparsifyDenseElements(cx, obj.as<NativeObject>()))
-        return false;
+    // Convert all dense elements to sparse properties. This will shrink the
+    // initialized length and capacity of the object to zero and ensure that no
+    // new dense elements can be added without calling growElements(), which
+    // checks isExtensible().
+    if (obj->isNative()) {
+        if (!NativeObject::sparsifyDenseElements(cx, obj.as<NativeObject>()))
+            return false;
+    }
 
-    *succeeded = true;
-    return obj->setFlags(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE);
+    if (!obj->setFlags(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE))
+        return false;
+    return result.succeed();
+}
+
+bool
+js::PreventExtensions(JSContext *cx, HandleObject obj)
+{
+    ObjectOpResult result;
+    return PreventExtensions(cx, obj, result) && result.checkStrict(cx, obj);
 }
 
 bool

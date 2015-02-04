@@ -38,10 +38,9 @@ public:
           JS::ObjectOpResult &aResult) const MOZ_OVERRIDE;
   virtual bool
   preventExtensions(JSContext* aCx, JS::Handle<JSObject*> aProxy,
-                    bool *succeeded) const MOZ_OVERRIDE
+                    JS::ObjectOpResult& aResult) const MOZ_OVERRIDE
   {
-    *succeeded = false;
-    return true;
+    return aResult.failCantPreventExtensions();
   }
   virtual bool
   isExtensible(JSContext* aCx, JS::Handle<JSObject*> aProxy,

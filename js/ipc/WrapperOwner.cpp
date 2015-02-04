@@ -97,7 +97,8 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id,
                          ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp) const MOZ_OVERRIDE;
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const MOZ_OVERRIDE;
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy,
+                                   ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
@@ -487,23 +488,23 @@ WrapperOwner::getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy, Au
 }
 
 bool
-CPOWProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const
+CPOWProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy, ObjectOpResult &result) const
 {
-    FORWARD(preventExtensions, (cx, proxy, succeeded));
+    FORWARD(preventExtensions, (cx, proxy, result));
 }
 
 bool
-WrapperOwner::preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded)
+WrapperOwner::preventExtensions(JSContext *cx, HandleObject proxy, ObjectOpResult &result)
 {
     ObjectId objId = idOf(proxy);
 
     ReturnStatus status;
-    if (!SendPreventExtensions(objId, &status, succeeded))
+    if (!SendPreventExtensions(objId, &status))
         return ipcfail(cx);
 
     LOG_STACK();
 
-    return ok(cx, status);
+    return ok(cx, status, result);
 }
 
 bool

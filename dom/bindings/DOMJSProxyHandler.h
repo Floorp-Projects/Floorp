@@ -116,8 +116,8 @@ public:
                               JS::ObjectOpResult &result, bool *defined) const;
   bool delete_(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                JS::ObjectOpResult &result) const MOZ_OVERRIDE;
-  bool preventExtensions(JSContext *cx, JS::Handle<JSObject*> proxy,
-                         bool *succeeded) const MOZ_OVERRIDE;
+  bool preventExtensions(JSContext* cx, JS::Handle<JSObject*> proxy,
+                         JS::ObjectOpResult& result) const MOZ_OVERRIDE;
   bool isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible)
                     const MOZ_OVERRIDE;
   bool has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,

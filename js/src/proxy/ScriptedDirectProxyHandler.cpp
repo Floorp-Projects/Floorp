@@ -307,10 +307,10 @@ ScriptedDirectProxyHandler::setImmutablePrototype(JSContext *cx, HandleObject pr
     return DirectProxyHandler::setImmutablePrototype(cx, proxy, succeeded);
 }
 
-// ES6 20141014 9.5.4 Proxy.[[PreventExtensions]]()
+// ES6 draft rev 32 (2 Feb 2015) 9.5.4 Proxy.[[PreventExtensions]]()
 bool
 ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy,
-                                              bool *succeeded) const
+                                              ObjectOpResult &result) const
 {
     // Steps 1-3.
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
@@ -329,9 +329,9 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy,
 
     // Step 7.
     if (trap.isUndefined())
-        return DirectProxyHandler::preventExtensions(cx, proxy, succeeded);
+        return DirectProxyHandler::preventExtensions(cx, proxy, result);
 
-    // Steps 8, 10.
+    // Steps 8-9.
     Value argv[] = {
         ObjectValue(*target)
     };
@@ -339,23 +339,19 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy,
     if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
-    // Step 9.
-    bool booleanTrapResult = ToBoolean(trapResult);
-
-    // Step 11.
-    if (booleanTrapResult) {
+    // Steps 10-11.
+    if (ToBoolean(trapResult)) {
         bool extensible;
         if (!IsExtensible(cx, target, &extensible))
             return false;
         if (extensible) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_AS_NON_EXTENSIBLE);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                                 JSMSG_CANT_REPORT_AS_NON_EXTENSIBLE);
             return false;
         }
+        return result.succeed();
     }
-
-    // Step 12.
-    *succeeded = booleanTrapResult;
-    return true;
+    return result.fail(JSMSG_PROXY_PREVENTEXTENSIONS_RETURNED_FALSE);
 }
 
 // ES6 (5 April, 2014) 9.5.3 Proxy.[[IsExtensible]]()

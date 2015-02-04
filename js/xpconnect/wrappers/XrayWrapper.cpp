@@ -1764,16 +1764,15 @@ XrayToString(JSContext *cx, unsigned argc, Value *vp)
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::preventExtensions(JSContext *cx, HandleObject wrapper, bool *succeeded)
-                                             const
+XrayWrapper<Base, Traits>::preventExtensions(JSContext *cx, HandleObject wrapper,
+                                             ObjectOpResult &result) const
 {
     // Xray wrappers are supposed to provide a clean view of the target
     // reflector, hiding any modifications by script in the target scope.  So
     // even if that script freezes the reflector, we don't want to make that
     // visible to the caller. DOM reflectors are always extensible by default,
-    // so we can just return true here.
-    *succeeded = false;
-    return true;
+    // so we can just return failure here.
+    return result.failCantPreventExtensions();
 }
 
 template <typename Base, typename Traits>
