@@ -2,7 +2,7 @@
 // entries to be skipped.
 
 var str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-var set = Set(str);
+var set = new Set(str);
 
 var log = '';
 var i = 0;

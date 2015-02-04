@@ -1,7 +1,8 @@
 // The Set constructor creates an empty Set by default.
 
-assertEq(Set().size, 0);
-assertEq((new Set).size, 0);
-assertEq(Set(undefined).size, 0);
-assertEq(new Set(undefined).size, 0);
-assertEq(new Set(null).size, 0);
+var s = new Set();
+assertEq(s.size, 0);
+s = new Set(undefined);
+assertEq(s.size, 0);
+s = new Set(null);
+assertEq(s.size, 0);

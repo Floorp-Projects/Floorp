@@ -13,4 +13,4 @@ function test(obj, edgeName) {
 
 test([key],                     "element[0]");
 test(new Map([[key, 'value']]), "key");
-test(Set([key]),                "key");
+test(new Set([key]),            "key");

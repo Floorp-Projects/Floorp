@@ -1,6 +1,6 @@
 // set.delete(v) decrements set.size iff the set contained v.
 
-var s = Set();
+var s = new Set();
 for (var i = 0; i < 10; i++)
     s.add(i);
 
