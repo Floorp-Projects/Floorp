@@ -28,23 +28,7 @@ function getProbeSum(probe, sum) {
 }
 
 function run_test() {
-  removeMetadata();
-  removeCacheFile();
-
-  do_check_false(Services.search.isInitialized);
-
-  let engineDummyFile = gProfD.clone();
-  engineDummyFile.append("searchplugins");
-  engineDummyFile.append("test-search-engine.xml");
-  let engineDir = engineDummyFile.parent;
-  engineDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-
-  do_get_file("data/engine.xml").copyTo(engineDir, "engine.xml");
-
-  do_register_cleanup(function() {
-    removeMetadata();
-    removeCacheFile();
-  });
+  installTestEngine();
 
   let resolveContinuePromise;
   let continuePromise = new Promise(resolve => {
@@ -56,10 +40,8 @@ function run_test() {
   Services.prefs.setCharPref("browser.search.geoip.url", url);
   Services.prefs.setIntPref("browser.search.geoip.timeout", 50);
   Services.search.init(() => {
-    try {
-      Services.prefs.getCharPref("browser.search.countryCode");
-      ok(false, "not expecting countryCode to be set");
-    } catch (ex) {}
+    ok(!Services.prefs.prefHasUserValue("browser.search.countryCode"), "should be no countryCode pref");
+    ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
     // should be no result recorded at all.
     checkCountryResultTelemetry(null);
 
@@ -82,7 +64,8 @@ function run_test() {
       // and should have the result of the response that finally came in, and
       // everything dependent should also be updated.
       equal(Services.prefs.getCharPref("browser.search.countryCode"), "AU");
-      equal(Services.prefs.getBoolPref("browser.search.isUS"), false);
+      equal(Services.prefs.getCharPref("browser.search.region"), "AU");
+      ok(!Services.prefs.prefHasUserValue("browser.search.isUS"), "should never have an isUS pref");
 
       do_test_finished();
       server.stop(run_next_test);
