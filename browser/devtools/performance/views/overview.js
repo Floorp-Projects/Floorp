@@ -33,6 +33,7 @@ let OverviewView = {
     this._onRecordingSelected = this._onRecordingSelected.bind(this);
     this._onRecordingTick = this._onRecordingTick.bind(this);
     this._onGraphSelecting = this._onGraphSelecting.bind(this);
+    this._onPrefChanged = this._onPrefChanged.bind(this);
 
     yield this._showMarkersGraph();
     yield this._showMemoryGraph();
@@ -41,6 +42,13 @@ let OverviewView = {
     this.markersOverview.on("selecting", this._onGraphSelecting);
 
     PerformanceController.on(EVENTS.RECORDING_WILL_START, this._onRecordingWillStart);
+
+    // Toggle the initial state of memory and framerate graph based off of
+    // the prefs.
+    $("#memory-overview").hidden = !PerformanceController.getPref("enable-memory");
+    $("#time-framerate").hidden = !PerformanceController.getPref("enable-framerate");
+
+    PerformanceController.on(EVENTS.PREF_CHANGED, this._onPrefChanged);
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.on(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
@@ -59,6 +67,7 @@ let OverviewView = {
     this.markersOverview.off("selecting", this._onGraphSelecting);
 
     PerformanceController.off(EVENTS.RECORDING_WILL_START, this._onRecordingWillStart);
+    PerformanceController.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.off(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
@@ -74,7 +83,7 @@ let OverviewView = {
   setTimeInterval: function(interval, options = {}) {
     let recording = PerformanceController.getCurrentRecording();
     if (recording == null) {
-      throw "A recording should be available in order to set the selection."
+      throw new Error("A recording should be available in order to set the selection.");
     }
     let mapStart = () => 0;
     let mapEnd = () => recording.getDuration();
@@ -93,7 +102,7 @@ let OverviewView = {
   getTimeInterval: function() {
     let recording = PerformanceController.getCurrentRecording();
     if (recording == null) {
-      throw "A recording should be available in order to get the selection."
+      throw new Error("A recording should be available in order to get the selection.");
     }
     let mapStart = () => 0;
     let mapEnd = () => recording.getDuration();
@@ -271,6 +280,19 @@ let OverviewView = {
     this.markersOverview.selectionEnabled = selectionEnabled;
     this.memoryOverview.selectionEnabled = selectionEnabled;
     this.framerateGraph.selectionEnabled = selectionEnabled;
+  },
+
+  /**
+   * Called whenever a preference in `devtools.performance.ui.` changes. Used
+   * to toggle the visibility of memory and framerate graphs.
+   */
+  _onPrefChanged: function (_, prefName, value) {
+    if (prefName === "enable-memory") {
+      $("#memory-overview").hidden = !PerformanceController.getPref("enable-memory");
+    }
+    if (prefName === "enable-framerate") {
+      $("#time-framerate").hidden = !PerformanceController.getPref("enable-framerate");
+    }
   }
 };
 

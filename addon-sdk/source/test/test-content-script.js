@@ -853,4 +853,4 @@ exports["test nsEp for content-script"] = createProxyTest(html, function (helper
 
 });
 
-require("test").run(exports);
+require("sdk/test").run(exports);

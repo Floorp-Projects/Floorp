@@ -163,4 +163,4 @@ exports['test nuke sandbox'] = function(assert) {
   );
 }
 
-require('test').run(exports);
+require('sdk/test').run(exports);

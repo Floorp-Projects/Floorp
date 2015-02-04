@@ -1,9 +1,11 @@
 {
-    "license": "MPL 2.0",
-    "name": "annotator",
-    "contributors": [],
-    "author": "Will Bamberg",
-    "keywords": [],
-    "id": "anonid0-annotator",
-    "description": "Add notes to Web pages"
+  "license": "MPL 2.0",
+  "name": "annotator",
+  "contributors": [],
+  "author": "Will Bamberg",
+  "keywords": [],
+  "version": "0.1.1",
+  "id": "anonid0-annotator@jetpack",
+  "description": "Add notes to Web pages",
+  "main": "./lib/main.js"
 }
