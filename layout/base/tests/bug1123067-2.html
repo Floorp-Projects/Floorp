@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <meta charset="utf-8">
+    <title>Testcase #2 for bug 1123067</title>
+    <script>
+        function test() {
+          for (var i = 0; i < 5; ++i) {
+            synthesizeKey("VK_RIGHT", {});
+          }
+          synthesizeKey("VK_LEFT", {});
+          document.documentElement.removeAttribute("class");
+        }
+        function runTests() {
+          var e = document.querySelector('#test1');
+          e.focus();
+        }
+    </script>
+    <style>
+        div { -moz-user-select:none; }
+        div:focus { outline:1px solid black; }
+    </style>
+</head>
+<body>
+
+<div id="test1" contenteditable="true" spellcheck="false" onfocus="setTimeout(test,0)">This text is NOT selectable.</div>
+
+<script>
+SimpleTest.waitForFocus(runTests);
+</script>
+</body>
+</html>

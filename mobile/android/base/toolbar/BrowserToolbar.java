@@ -12,7 +12,6 @@ import java.util.List;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -108,8 +107,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         DISPLAY
     }
 
-    private final boolean isNewTablet;
-
     protected final ToolbarDisplayLayout urlDisplayLayout;
     protected final ToolbarEditLayout urlEditLayout;
     protected final View urlBarEntry;
@@ -122,8 +119,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     protected final ThemedImageView menuIcon;
     private MenuPopup menuPopup;
     protected final List<View> focusOrder;
-
-    protected final ThemedImageView editCancel;
 
     private OnActivateListener activateListener;
     private OnFocusChangeListener focusChangeListener;
@@ -161,9 +156,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
     public static BrowserToolbar create(final Context context, final AttributeSet attrs) {
         final BrowserToolbar toolbar;
-        if (NewTabletUI.isEnabled(context)) {
-            toolbar = new BrowserToolbarNewTablet(context, attrs);
-        } else if (HardwareUtils.isTablet()) {
+        if (HardwareUtils.isTablet()) {
             toolbar = new BrowserToolbarTablet(context, attrs);
         } else if (Versions.preHC) {
             toolbar = new BrowserToolbarPreHC(context, attrs);
@@ -177,18 +170,10 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         super(context, attrs);
         setWillNotDraw(false);
 
-        isNewTablet = NewTabletUI.isEnabled(context);
-
         // BrowserToolbar is attached to BrowserApp only.
         activity = (BrowserApp) context;
 
-        // Inflate the content.
-        // TODO: Remove the branch when new tablet becomes old tablet.
-        if (!isNewTablet) {
-            LayoutInflater.from(context).inflate(R.layout.browser_toolbar, this);
-        } else {
-            LayoutInflater.from(context).inflate(R.layout.new_tablet_browser_toolbar, this);
-        }
+        LayoutInflater.from(context).inflate(R.layout.browser_toolbar, this);
 
         Tabs.registerOnTabsChangedListener(this);
         isSwitchingTabs = true;
@@ -206,8 +191,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         menuButton = (ThemedImageButton) findViewById(R.id.menu);
         menuIcon = (ThemedImageView) findViewById(R.id.menu_icon);
         hasSoftMenuButton = !HardwareUtils.hasMenuButton();
-
-        editCancel = (ThemedImageView) findViewById(R.id.edit_cancel);
 
         // The focusOrder List should be filled by sub-classes.
         focusOrder = new ArrayList<View>();
@@ -332,20 +315,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
             }
         });
         tabsButton.setImageLevel(0);
-
-        editCancel.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // If we exit editing mode during the animation,
-                // we're put into an inconsistent state (bug 1017276).
-                if (!isAnimating()) {
-                    Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL,
-                                          TelemetryContract.Method.ACTIONBAR,
-                                          getResources().getResourceEntryName(editCancel.getId()));
-                    cancelEdit();
-                }
-            }
-        });
 
         if (hasSoftMenuButton) {
             menuButton.setVisibility(View.VISIBLE);
@@ -745,7 +714,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         setUrlEditLayoutVisibility(false, animator);
     }
 
-    private void setUrlEditLayoutVisibility(final boolean showEditLayout, PropertyAnimator animator) {
+    protected void setUrlEditLayoutVisibility(final boolean showEditLayout, PropertyAnimator animator) {
         if (showEditLayout) {
             urlEditLayout.prepareShowAnimation(animator);
         }
@@ -756,9 +725,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
             viewToHide.setVisibility(View.GONE);
             viewToShow.setVisibility(View.VISIBLE);
-
-            final int cancelVisibility = (showEditLayout ? View.VISIBLE : View.INVISIBLE);
-            setCancelVisibility(cancelVisibility);
             return;
         }
 
@@ -768,8 +734,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
                 if (!showEditLayout) {
                     urlEditLayout.setVisibility(View.GONE);
                     urlDisplayLayout.setVisibility(View.VISIBLE);
-
-                    setCancelVisibility(View.INVISIBLE);
                 }
             }
 
@@ -778,18 +742,9 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
                 if (showEditLayout) {
                     urlDisplayLayout.setVisibility(View.GONE);
                     urlEditLayout.setVisibility(View.VISIBLE);
-
-                    setCancelVisibility(View.VISIBLE);
                 }
             }
         });
-    }
-
-    private void setCancelVisibility(final int visibility) {
-        // TODO: Remove this check (and maybe method) when NewTablet's editing mode is implemented.
-        if (!isNewTablet) {
-            editCancel.setVisibility(visibility);
-        }
     }
 
     private void setUIMode(final UIMode uiMode) {
@@ -870,7 +825,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         tabsButton.setPrivateMode(isPrivate);
         menuButton.setPrivateMode(isPrivate);
         menuIcon.setPrivateMode(isPrivate);
-        editCancel.setPrivateMode(isPrivate);
         urlEditLayout.setPrivateMode(isPrivate);
     }
 
@@ -941,14 +895,11 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         stateList.addState(EMPTY_STATE_SET, drawable);
 
         setBackgroundDrawable(stateList);
-
-        editCancel.onLightweightThemeChanged();
     }
 
     @Override
     public void onLightweightThemeReset() {
         setBackgroundResource(R.drawable.url_bar_bg);
-        editCancel.onLightweightThemeReset();
     }
 
     public static LightweightThemeDrawable getLightweightThemeDrawable(final View view,

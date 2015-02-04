@@ -39,8 +39,8 @@ exports.testIterations = function(assert) {
   assert.ok("test" in sp);
   assert.ok(!sp.getPropertyDescriptor);
   assert.ok(Object.prototype.hasOwnProperty.call(sp, "test"));
-  assert.equal(["test", "test.test"].toString(), prefAry.sort().toString(), "for (x in y) part 1/2 works");
-  assert.equal(["test", "test.test"].toString(), Object.keys(sp).sort().toString(), "Object.keys works");
+  assert.equal(["test", "test.test"].toString(), prefAry.filter((i) => !/^sdk\./.test(i)).sort().toString(), "for (x in y) part 1/2 works");
+  assert.equal(["test", "test.test"].toString(), Object.keys(sp).filter((i) => !/^sdk\./.test(i)).sort().toString(), "Object.keys works");
 
   delete sp["test"];
   delete sp["test.test"];
@@ -48,7 +48,7 @@ exports.testIterations = function(assert) {
   for (var name in sp ) {
     prefAry.push(name);
   }
-  assert.equal([].toString(), prefAry.toString(), "for (x in y) part 2/2 works");
+  assert.equal([].toString(), prefAry.filter((i) => !/^sdk\./.test(i)).toString(), "for (x in y) part 2/2 works");
 }
 
 exports.testSetGetBool = function(assert) {
@@ -258,22 +258,21 @@ exports.testUnloadOfDynamicPrefGeneration = function*(assert) {
 
   // zip the add-on
   let zip = new ZipWriter(xpi_path);
-  assert.pass("start creating the xpi");
+  assert.pass("start creating the blank xpi");
   zip.addFile("", toFilename(fixtures.url("bootstrap-addon/")));
   yield zip.close();
 
   // insatll the add-on
   let id = yield install(xpi_path);
+  assert.pass('installed');
 
   // get the addon
   let addon = yield getAddonByID(id);
+  assert.equal(id, addon.id, 'addon id: ' + id);
 
-  assert.pass('installed');
-
-  assert.pass('addon id: ' + addon.id);
   addon.userDisabled = false;
   assert.ok(!addon.userDisabled, 'the add-on is enabled');
-  assert.ok(addon.isActive, 'the add-on is enabled');
+  assert.ok(addon.isActive, 'the add-on is active');
 
   // setup dynamic prefs
   yield enable({
@@ -293,12 +292,12 @@ exports.testUnloadOfDynamicPrefGeneration = function*(assert) {
     }]
   });
 
-  assert.pass('enabled');
+  assert.pass('enabled prefs');
 
   // show inline prefs
   let { tabId, document } = yield open(addon);
-
   assert.pass('opened');
+
   // confirm dynamic pref generation did occur
   let results = document.querySelectorAll("*[data-jetpack-id=\"" + id + "\"]");
   assert.ok(results.length > 0, "the prefs were setup");

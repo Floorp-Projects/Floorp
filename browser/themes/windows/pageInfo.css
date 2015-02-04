@@ -116,7 +116,7 @@ textbox[disabled] {
 }
 
 /* General Tab */
-groupbox.collapsable caption .caption-icon { 
+groupbox.collapsable caption .caption-icon {
   width: 9px;
   height: 9px;
   background-repeat: no-repeat;
@@ -132,16 +132,16 @@ groupbox.collapsable[closed="true"] {
   -moz-appearance: none;
 }
 
-groupbox.collapsable[closed="true"] caption .caption-icon { 
+groupbox.collapsable[closed="true"] caption .caption-icon {
   background-image: url("chrome://global/skin/tree/twisty-clsd.png");
 }
 
-groupbox tree { 
+groupbox tree {
   margin: 0 3px;
   border: none;
 }
 
-#securityBox description { 
+#securityBox description {
   -moz-margin-start: 10px;
 }
 
@@ -206,7 +206,7 @@ treechildren::-moz-tree-cell-text(broken) {
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
 }
 
-.feedTitle { 
+.feedTitle {
   font-weight: bold;
 }
 
@@ -247,12 +247,16 @@ treechildren::-moz-tree-cell-text(broken) {
 #securityPanel .header {
   font-size: 120%;
 }
- 
+
 #securityPanel .fieldLabel {
-  margin: 2px 10px 3px 10px;
+  margin: 2px 10px 3px;
 }
 
 #securityPanel .fieldValue {
   font-weight: bold;
-  margin: 2px 10px 0px 10px;
+  margin: 2px 10px 3px;
+}
+
+#securityPanel row {
+  -moz-box-align: center;
 }

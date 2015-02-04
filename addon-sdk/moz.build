@@ -9,8 +9,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-HAS_MISC_RULE = True
-
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 JETPACK_PACKAGE_MANIFESTS += ['source/test/jetpack-package.ini']
 JETPACK_ADDON_MANIFESTS += ['source/test/addons/jetpack-addon.ini']
@@ -21,7 +19,6 @@ EXTRA_JS_MODULES.sdk += [
 
 EXTRA_JS_MODULES.sdk.system += [
     'source/modules/system/Startup.js',
-    'source/modules/system/XulApp.js',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk":
@@ -39,6 +36,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk":
         'source/lib/sdk/deprecated/list.js',
         'source/lib/sdk/deprecated/memory.js',
         'source/lib/sdk/deprecated/symbiont.js',
+        'source/lib/sdk/deprecated/sync-worker.js',
         'source/lib/sdk/deprecated/traits-worker.js',
         'source/lib/sdk/deprecated/traits.js',
         'source/lib/sdk/deprecated/unit-test-finder.js',
@@ -54,7 +52,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk":
     EXTRA_JS_MODULES.commonjs.sdk.panel += [
         'source/lib/sdk/panel/events.js',
         'source/lib/sdk/panel/utils.js',
-        'source/lib/sdk/panel/window.js',
     ]
 
     EXTRA_JS_MODULES.commonjs.sdk.places += [
@@ -99,6 +96,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk":
     ]
 
     EXTRA_JS_MODULES.commonjs.sdk.ui += [
+        'source/lib/sdk/ui/component.js',
         'source/lib/sdk/ui/frame.js',
         'source/lib/sdk/ui/id.js',
         'source/lib/sdk/ui/sidebar.js',
@@ -133,13 +131,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk":
         'source/lib/sdk/windows/dom.js',
         'source/lib/sdk/windows/fennec.js',
         'source/lib/sdk/windows/firefox.js',
-        'source/lib/sdk/windows/loader.js',
         'source/lib/sdk/windows/observer.js',
         'source/lib/sdk/windows/tabs-fennec.js',
         'source/lib/sdk/windows/tabs-firefox.js',
     ]
 
 EXTRA_JS_MODULES.commonjs += [
+    'source/lib/index.js',
     'source/lib/test.js',
 ]
 
@@ -173,10 +171,13 @@ EXTRA_JS_MODULES.commonjs.diffpatcher.test += [
 ]
 
 EXTRA_JS_MODULES.commonjs.framescript += [
+    'source/lib/framescript/context-menu.js',
     'source/lib/framescript/contextmenu-events.js',
     'source/lib/framescript/FrameScriptManager.jsm',
     'source/lib/framescript/LoaderHelper.jsm',
+    'source/lib/framescript/manager.js',
     'source/lib/framescript/tab-events.js',
+    'source/lib/framescript/util.js',
 ]
 
 EXTRA_JS_MODULES.commonjs.method += [
@@ -191,6 +192,7 @@ EXTRA_JS_MODULES.commonjs.sdk += [
     'source/lib/sdk/base64.js',
     'source/lib/sdk/clipboard.js',
     'source/lib/sdk/context-menu.js',
+    'source/lib/sdk/context-menu@2.js',
     'source/lib/sdk/hotkeys.js',
     'source/lib/sdk/indexed-db.js',
     'source/lib/sdk/l10n.js',
@@ -218,6 +220,7 @@ EXTRA_JS_MODULES.commonjs.sdk += [
 ]
 
 EXTRA_JS_MODULES.commonjs.sdk.addon += [
+    'source/lib/sdk/addon/bootstrap.js',
     'source/lib/sdk/addon/events.js',
     'source/lib/sdk/addon/host.js',
     'source/lib/sdk/addon/installer.js',
@@ -246,8 +249,13 @@ EXTRA_JS_MODULES.commonjs.sdk.content += [
     'source/lib/sdk/content/thumbnail.js',
     'source/lib/sdk/content/utils.js',
     'source/lib/sdk/content/worker-child.js',
-    'source/lib/sdk/content/worker-parent.js',
     'source/lib/sdk/content/worker.js',
+]
+
+EXTRA_JS_MODULES.commonjs.sdk['context-menu'] += [
+    'source/lib/sdk/context-menu/context.js',
+    'source/lib/sdk/context-menu/core.js',
+    'source/lib/sdk/context-menu/readers.js',
 ]
 
 EXTRA_JS_MODULES.commonjs.sdk.core += [
@@ -395,6 +403,7 @@ EXTRA_JS_MODULES.commonjs.sdk.system += [
     'source/lib/sdk/system/runtime.js',
     'source/lib/sdk/system/unload.js',
     'source/lib/sdk/system/xul-app.js',
+    'source/lib/sdk/system/xul-app.jsm',
 ]
 
 EXTRA_JS_MODULES.commonjs.sdk.system.child_process += [
@@ -426,12 +435,17 @@ EXTRA_JS_MODULES.commonjs.sdk.ui.toolbar += [
     'source/lib/sdk/ui/toolbar/view.js',
 ]
 
+EXTRA_JS_MODULES.commonjs.sdk.uri += [
+    'source/lib/sdk/uri/resource.js',
+]
+
 EXTRA_JS_MODULES.commonjs.sdk.url += [
     'source/lib/sdk/url/utils.js',
 ]
 
 EXTRA_JS_MODULES.commonjs.sdk.util += [
     'source/lib/sdk/util/array.js',
+    'source/lib/sdk/util/bond.js',
     'source/lib/sdk/util/collection.js',
     'source/lib/sdk/util/contract.js',
     'source/lib/sdk/util/deprecate.js',
@@ -439,7 +453,6 @@ EXTRA_JS_MODULES.commonjs.sdk.util += [
     'source/lib/sdk/util/list.js',
     'source/lib/sdk/util/match-pattern.js',
     'source/lib/sdk/util/object.js',
-    'source/lib/sdk/util/registry.js',
     'source/lib/sdk/util/rules.js',
     'source/lib/sdk/util/sequence.js',
     'source/lib/sdk/util/uuid.js',

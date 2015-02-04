@@ -810,6 +810,7 @@
                                           "anonid", "input-box-contextmenu");
         var pasteAndSearch;
         cxmenu.addEventListener("popupshowing", function() {
+          BrowserSearch.searchBar._textbox.closePopup();
           if (!pasteAndSearch)
             return;
           var controller = document.commandDispatcher.getControllerForCommand("cmd_paste");
@@ -1260,7 +1261,7 @@
         if (data) {
           event.preventDefault();
           this.value = data;
-          this.onTextEntered(event);
+          document.getBindingParent(this).openSuggestionsPanel();
         }
       ]]>
       </handler>

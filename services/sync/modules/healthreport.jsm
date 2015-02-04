@@ -63,6 +63,24 @@ SyncDevicesMeasurement1.prototype = Object.freeze({
   },
 });
 
+function SyncMigrationMeasurement1() {
+  Metrics.Measurement.call(this);
+}
+
+SyncMigrationMeasurement1.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "migration",
+  version: 1,
+
+  fields: {
+    state: DAILY_LAST_TEXT_FIELD, // last "user" or "internal" state we saw for the day
+    accepted: DAILY_COUNTER_FIELD, // number of times user tried to start migration
+    declined: DAILY_COUNTER_FIELD, // number of times user closed nagging infobar
+    unlinked: DAILY_LAST_NUMERIC_FIELD, // did the user decline and unlink
+  },
+});
+
 this.SyncProvider = function () {
   Metrics.Provider.call(this);
 };
@@ -74,12 +92,16 @@ SyncProvider.prototype = Object.freeze({
   measurementTypes: [
     SyncDevicesMeasurement1,
     SyncMeasurement1,
+    SyncMigrationMeasurement1,
   ],
 
   _OBSERVERS: [
     "weave:service:sync:start",
     "weave:service:sync:finish",
     "weave:service:sync:error",
+    "fxa-migration:state-changed",
+    "fxa-migration:internal-state-changed",
+    "fxa-migration:internal-telemetry",
   ],
 
   postInit: function () {
@@ -99,6 +121,21 @@ SyncProvider.prototype = Object.freeze({
   },
 
   observe: function (subject, topic, data) {
+    switch (topic) {
+      case "weave:service:sync:start":
+      case "weave:service:sync:finish":
+      case "weave:service:sync:error":
+        return this._observeSync(subject, topic, data);
+
+      case "fxa-migration:state-changed":
+      case "fxa-migration:internal-state-changed":
+      case "fxa-migration:internal-telemetry":
+        return this._observeMigration(subject, topic, data);
+    }
+    Cu.reportError("unexpected topic in sync healthreport provider: " + topic);
+  },
+
+  _observeSync: function (subject, topic, data) {
     let field;
     switch (topic) {
       case "weave:service:sync:start":
@@ -112,6 +149,10 @@ SyncProvider.prototype = Object.freeze({
       case "weave:service:sync:error":
         field = "syncError";
         break;
+
+      default:
+        Cu.reportError("unexpected sync topic in sync healthreport provider: " + topic);
+        return;
     }
 
     let m = this.getMeasurement(SyncMeasurement1.prototype.name,
@@ -119,6 +160,47 @@ SyncProvider.prototype = Object.freeze({
     return this.enqueueStorageOperation(function recordSyncEvent() {
       return m.incrementDailyCounter(field);
     });
+  },
+
+  _observeMigration: function(subject, topic, data) {
+    switch (topic) {
+      case "fxa-migration:state-changed":
+      case "fxa-migration:internal-state-changed": {
+        // We record both "user" and "internal" states in the same field.  This
+        // works for us as user state is always null when there is an internal
+        // state.
+        if (!data) {
+          return; // we don't count the |null| state
+        }
+        let m = this.getMeasurement(SyncMigrationMeasurement1.prototype.name,
+                                    SyncMigrationMeasurement1.prototype.version);
+        return this.enqueueStorageOperation(function() {
+          return m.setDailyLastText("state", data);
+        });
+      }
+
+      case "fxa-migration:internal-telemetry": {
+        // |data| is our field name.
+        let m = this.getMeasurement(SyncMigrationMeasurement1.prototype.name,
+                                    SyncMigrationMeasurement1.prototype.version);
+        return this.enqueueStorageOperation(function() {
+          switch (data) {
+            case "accepted":
+            case "declined":
+              return m.incrementDailyCounter(data);
+            case "unlinked":
+              return m.setDailyLastNumeric(data, 1);
+            default:
+              Cu.reportError("Unexpected migration field in sync healthreport provider: " + data);
+              return Promise.resolve();
+          }
+        });
+      }
+
+      default:
+        Cu.reportError("unexpected migration topic in sync healthreport provider: " + topic);
+        return;
+    }
   },
 
   collectDailyData: function () {

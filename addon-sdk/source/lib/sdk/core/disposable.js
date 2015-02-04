@@ -52,11 +52,13 @@ setup.define(Object, (object, ...args) => object.setup(...args));
 const setupDisposable = disposable => {
   subscribe(disposable, addonUnloadTopic, isWeak(disposable));
 };
+exports.setupDisposable = setupDisposable;
 
 // Tears down disposable instance.
 const disposeDisposable = disposable => {
   unsubscribe(disposable, addonUnloadTopic);
 };
+exports.disposeDisposable = disposeDisposable;
 
 // Base type that takes care of disposing it's instances on add-on unload.
 // Also makes sure to remove unload listener if it's already being disposed.
@@ -129,4 +131,3 @@ uninstall.define(Disposable, dispose);
 // increase shutdown time. Although specefic components may choose
 // to implement shutdown handler that does something better.
 shutdown.define(Disposable, disposable => {});
-
