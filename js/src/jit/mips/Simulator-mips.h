@@ -137,7 +137,9 @@ class Simulator {
         kNumFPURegisters
     };
 
+    // Returns nullptr on OOM.
     static Simulator *Create();
+
     static void Destroy(Simulator *simulator);
 
     // Constructor/destructor are for internal use only; use the static methods above.
@@ -223,6 +225,8 @@ class Simulator {
         // Unpredictable value.
         Unpredictable = 0xbadbeaf
     };
+
+    bool init();
 
     // Unsupported instructions use Format to print an error and stop execution.
     void format(SimInstruction* instr, const char* format);
