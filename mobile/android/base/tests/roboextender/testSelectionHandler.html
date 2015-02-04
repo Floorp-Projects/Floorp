@@ -9,7 +9,6 @@
 const DIV_POINT_TEXT = "Under";
 const INPUT_TEXT = "Text for select all in an <input>";
 const TEXTAREA_TEXT = "Text for select all in a <textarea>";
-const PASTE_TEXT = "Text for testing paste";
 const READONLY_INPUT_TEXT = "readOnly text";
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
@@ -29,7 +28,6 @@ function startTests() {
     then(testReadonlyInput).
     then(testCloseSelection).
     then(testStartSelectionFail).
-    then(testPaste).
 
     then(testAttachCaret).
     then(testAttachCaretFail).
@@ -350,44 +348,6 @@ function testAttachCaretFail() {
 }
 
 
-/*
- * Tests related to pasting text inside editable elements:
- *   * input
- *   * textarea
- *   * contentEditable elements
- */
-function testPaste() {
-  var sh = getSelectionHandler();
-  var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-  clipboard.copyString(PASTE_TEXT, document);
-
-  // Add a contentEditable element to the document.
-  var div = document.createElement("div");
-  div.contentEditable = true;
-  div.dataset.editable = true;
-  document.body.appendChild(div);
-
-  var elements = document.querySelectorAll("div, input, textarea");
-  var promises = [];
-
-  for (var i = 0; i < elements.length; i++) {
-    sh.startSelection(elements[i]);
-    sh.actions.PASTE.action(elements[i]);
-    if (elements[i].dataset.editable) {
-      promises.push(is(getTextValue(elements[i]), PASTE_TEXT, "Pasted correctly"));
-      promises.push(ok(sh.isElementEditableText(elements[i]), "Element is editable"));
-    } else {
-      promises.push(isnot(getTextValue(elements[i]), PASTE_TEXT, "Paste failed correctly"));
-      promises.push(ok(!sh.isElementEditableText(elements[i]), "Element is not editable"));
-    }
-  }
-
-  document.body.removeChild(div);
-  div = null;
-
-  return Promise.all(promises);
-}
-
 /* =================================================================================
  *
  * After finish of all selection tests, wrap up and go home.
@@ -413,10 +373,6 @@ function getSelectionHandler() {
     this._selectionHandler;
 }
 
-function getTextValue(aElement) {
-  return aElement.value || aElement.textContent;
-}
-
 function ok(one, msg) {
   return Messaging.sendRequestForResult({
     type: "Robocop:testSelectionHandler",
@@ -430,14 +386,6 @@ function is(one, two, msg) {
     type: "Robocop:testSelectionHandler",
     result: one === two,
     msg: msg + " : " + one + " === " + two
-  });
-}
-
-function isnot(one, two, msg) {
-  return Messaging.sendRequestForResult({
-    type: "Robocop:testSelectionHandler",
-    result: one !== two,
-    msg: msg + " : " + one + " !== " + two
   });
 }
 
@@ -476,9 +424,9 @@ function isnot(one, two, msg) {
       nunc vel, fringilla turpis. Nulla lacinia, leo ut egestas hendrerit, risus
       ligula interdum enim, vel varius libero sem ut ligula.</div><br>
 
-    <input data-editable="true" id="inputNode" type="text"><br>
+    <input id="inputNode" type="text"><br>
 
-    <textarea data-editable="true" id="textareaNode"></textarea><br>
+    <textarea id="textareaNode"></textarea><br>
 
     <input id="readOnlyTextInput" type="text" readonly><br>
 
