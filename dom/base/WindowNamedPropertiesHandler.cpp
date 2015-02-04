@@ -159,7 +159,7 @@ WindowNamedPropertiesHandler::defineProperty(JSContext* aCx,
 {
   ErrorResult rv;
   rv.ThrowTypeError(MSG_DEFINEPROPERTY_ON_GSP);
-  rv.ReportTypeError(aCx);
+  rv.ReportErrorWithMessage(aCx);
   return false;
 }
 
