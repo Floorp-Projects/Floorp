@@ -57,6 +57,7 @@ int __real_pthread_cond_timedwait(pthread_cond_t *cond,
                                   pthread_mutex_t *mtx,
                                   const struct timespec *abstime);
 int __real_pthread_mutex_lock(pthread_mutex_t *mtx);
+int __real_pthread_mutex_trylock(pthread_mutex_t *mtx);
 int __real_poll(struct pollfd *fds, nfds_t nfds, int timeout);
 int __real_epoll_create(int size);
 int __real_socketpair(int domain, int type, int protocol, int sv[2]);
@@ -1131,6 +1132,20 @@ __wrap_pthread_cond_timedwait(pthread_cond_t *cond,
   return rv;
 }
 
+
+extern "C" MFBT_API int
+__wrap_pthread_mutex_trylock(pthread_mutex_t *mtx) {
+  int rv = 0;
+
+  THREAD_FREEZE_POINT1();
+  if (freezePoint2) {
+    return rv;
+  }
+  rv = REAL(pthread_mutex_trylock)(mtx);
+  THREAD_FREEZE_POINT2();
+
+  return rv;
+}
 
 extern "C" MFBT_API int
 __wrap_pthread_mutex_lock(pthread_mutex_t *mtx) {
