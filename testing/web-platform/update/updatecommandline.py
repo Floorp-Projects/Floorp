@@ -6,8 +6,10 @@ def create_parser():
     from wptrunner import wptcommandline
 
     parser = wptcommandline.create_parser_update()
-    parser.add_argument("--upstream", action="store_true",
-                        help="Push local changes to upstream repository")
+    parser.add_argument("--upstream", dest="upstream", action="store_true", default=None,
+                        help="Push local changes to upstream repository even when not syncing")
+    parser.add_argument("--no-upstream", dest="upstream", action="store_false", default=None,
+                        help="Dont't push local changes to upstream repository when syncing")
     parser.add_argument("--token-file", action="store", type=wptcommandline.abs_path,
                         help="Path to file containing github token")
     parser.add_argument("--token", action="store", help="GitHub token to use")
@@ -18,6 +20,8 @@ def check_args(kwargs):
     from wptrunner import wptcommandline
 
     wptcommandline.set_from_config(kwargs)
+    kwargs["upstream"] = kwargs["upstream"] if kwargs["upstream"] is not None else kwargs["sync"]
+
     if kwargs["upstream"]:
         if kwargs["rev"]:
             raise ValueError("Setting --rev with --upstream isn't supported")
