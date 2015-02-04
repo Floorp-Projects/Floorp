@@ -12,6 +12,8 @@
   <script type="application/javascript"
           src="../common.js"></script>
   <script type="application/javascript"
+          src="../attributes.js"></script>
+  <script type="application/javascript"
           src="../events.js"></script>
 
   <script type="application/javascript">
@@ -40,6 +42,23 @@
       };
     }
 
+    function updateARIAHidden(aID, aIsDefined, aChildId)
+    {
+      this.__proto__ = new updateAttribute(aID, "aria-hidden",
+                                           aIsDefined ? "true" : "false");
+
+      this.finalCheck = function updateARIAHidden()
+      {
+        if (aIsDefined) {
+          testAttrs(aID, {"hidden" : "true"}, true);
+          testAttrs(aChildId, {"hidden" : "true"}, true);
+        } else {
+          testAbsentAttrs(aID, { "hidden": "true"});
+          testAbsentAttrs(aChildId, { "hidden": "true"});
+        }
+      }
+    }
+
     // Debug stuff.
     // gA11yEventDumpID = "eventdump";
     //gA11yEventDumpToConsole = true;
@@ -48,7 +67,8 @@
     {
       gQueue = new eventQueue();
 
-      gQueue.push(new updateAttribute("hideable", "aria-hidden", "true"));
+      gQueue.push(new updateARIAHidden("hideable", true, "hideable_child"));
+      gQueue.push(new updateARIAHidden("hideable", false, "hideable_child"));
 
       gQueue.push(new updateAttribute("sortable", "aria-sort", "ascending"));
 
@@ -89,7 +109,7 @@
   </pre>
   <div id="eventdump"></div>
 
-  <div id="hideable"><div>Hi</div><div>there</div></div>
+  <div id="hideable"><div id="hideable_child">Hi</div><div>there</div></div>
 
   <div id="sortable" role="columnheader" aria-sort="none">aria-sort</div>
 
