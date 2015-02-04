@@ -1,5 +1,12 @@
 // Tests that the suggestion popup appears at the right times in response to
-// focus and clicks.
+// focus and user events (mouse, keyboard, drop).
+
+// Instead of loading ChromeUtils.js into the test scope in browser-test.js for all tests,
+// we only need ChromeUtils.js for a few files which is why we are using loadSubScript.
+var ChromeUtils = {};
+this._scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+                     getService(Ci.mozIJSSubScriptLoader);
+this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
 
 const searchbar = document.getElementById("searchbar");
 const searchIcon = document.getAnonymousElementByAttribute(searchbar, "anonid", "searchbar-search-button");
@@ -233,6 +240,37 @@ add_task(function* escape_closes_popup() {
   textbox.value = "";
 });
 
+// Pressing contextmenu should close the popup.
+add_task(function* contextmenu_closes_popup() {
+  gURLBar.focus();
+  textbox.value = "foo";
+
+  let promise = promiseEvent(searchPopup, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(textbox, {});
+  yield promise;
+  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
+
+  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(textbox.selectionStart, 0, "Should have selected all of the text");
+  is(textbox.selectionEnd, 3, "Should have selected all of the text");
+
+  promise = promiseEvent(searchPopup, "popuphidden");
+
+  //synthesizeKey does not work with VK_CONTEXT_MENU (bug 1127368)
+  EventUtils.synthesizeMouseAtCenter(textbox, { type: "contextmenu", button: null });
+
+  yield promise;
+
+  let contextPopup =
+    document.getAnonymousElementByAttribute(textbox.inputField.parentNode,
+                                            "anonid", "input-box-contextmenu");
+  promise = promiseEvent(contextPopup, "popuphidden");
+  contextPopup.hidePopup();
+  yield promise;
+
+  textbox.value = "";
+});
+
 // Tabbing to the search box should open the popup if it contains text.
 add_task(function* tab_opens_popup() {
   gURLBar.focus();
@@ -377,6 +415,21 @@ add_task(function* dont_consume_clicks() {
   yield promise;
 
   is(Services.focus.focusedElement, gURLBar.inputField, "Should have focused the URL bar");
+
+  textbox.value = "";
+});
+
+// Dropping text to the searchbar should open the popup
+add_task(function* drop_opens_popup() {
+  let promise = promiseEvent(searchPopup, "popupshown");
+  ChromeUtils.synthesizeDrop(searchIcon, textbox.inputField, [[ {type: "text/plain", data: "foo" } ]], "move", window);
+  yield promise;
+
+  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
+  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  promise = promiseEvent(searchPopup, "popuphidden");
+  searchPopup.hidePopup();
+  yield promise;
 
   textbox.value = "";
 });

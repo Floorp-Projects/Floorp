@@ -86,4 +86,4 @@ exports.testResponseHeaders = function(assert, done) {
   req.send(null);
 }
 
-require('test').run(exports);
+require('sdk/test').run(exports);
