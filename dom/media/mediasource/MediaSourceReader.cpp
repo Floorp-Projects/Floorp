@@ -688,6 +688,10 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aIgnored /* Used only for ogg whi
   mAudioPromise.RejectIfExists(CANCELED, __func__);
   mVideoPromise.RejectIfExists(CANCELED, __func__);
 
+  // Do the same for any data wait promises.
+  mAudioWaitPromise.RejectIfExists(WaitForDataRejectValue(MediaData::AUDIO_DATA, WaitForDataRejectValue::CANCELED), __func__);
+  mVideoWaitPromise.RejectIfExists(WaitForDataRejectValue(MediaData::VIDEO_DATA, WaitForDataRejectValue::CANCELED), __func__);
+
   // Finally, if we were midway seeking a new reader to find a sample, abandon
   // that too.
   mAudioSeekRequest.DisconnectIfExists();
