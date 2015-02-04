@@ -318,43 +318,6 @@ FindObjectClass(JSContext* cx, JSObject* aGlobalObject)
   sObjectClass = js::GetObjectJSClass(obj);
 }
 
-static inline nsresult
-WrapNative(JSContext *cx, nsISupports *native,
-           nsWrapperCache *cache, const nsIID* aIID, JS::MutableHandle<JS::Value> vp,
-           bool aAllowWrapping)
-{
-  if (!native) {
-    vp.setNull();
-
-    return NS_OK;
-  }
-
-  JSObject *wrapper = xpc_FastGetCachedWrapper(cx, cache, vp);
-  if (wrapper) {
-    return NS_OK;
-  }
-
-  JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
-  return nsDOMClassInfo::XPConnect()->WrapNativeToJSVal(cx, scope, native,
-                                                        cache, aIID,
-                                                        aAllowWrapping, vp);
-}
-
-static inline nsresult
-WrapNative(JSContext *cx, nsISupports *native, const nsIID* aIID,
-           bool aAllowWrapping, JS::MutableHandle<JS::Value> vp)
-{
-  return WrapNative(cx, native, nullptr, aIID, vp, aAllowWrapping);
-}
-
-// Same as the WrapNative above, but use these if aIID is nsISupports' IID.
-static inline nsresult
-WrapNative(JSContext *cx, nsISupports *native,
-           bool aAllowWrapping, JS::MutableHandle<JS::Value> vp)
-{
-  return WrapNative(cx, native, nullptr, nullptr, vp, aAllowWrapping);
-}
-
 // Helper to handle torn-down inner windows.
 static inline nsresult
 SetParentToWindow(nsGlobalWindow *win, JSObject **parent)
@@ -1349,7 +1312,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
   }
 
   js::AssertSameCompartment(cx, obj);
-  return WrapNative(cx, native, true, args.rval());
+  return nsContentUtils::WrapNative(cx, native, args.rval(), true);
 }
 
 static nsresult
@@ -1792,7 +1755,7 @@ nsDOMConstructor::ToString(nsAString &aResult)
 static nsresult
 GetXPCProto(nsIXPConnect *aXPConnect, JSContext *cx, nsGlobalWindow *aWin,
             const nsGlobalNameStruct *aNameStruct,
-            nsIXPConnectJSObjectHolder **aProto)
+            JS::MutableHandle<JSObject*> aProto)
 {
   NS_ASSERTION(aNameStruct->mType ==
                  nsGlobalNameStruct::eTypeClassConstructor ||
@@ -1813,18 +1776,14 @@ GetXPCProto(nsIXPConnect *aXPConnect, JSContext *cx, nsGlobalWindow *aWin,
   }
   NS_ENSURE_TRUE(ci, NS_ERROR_UNEXPECTED);
 
+  nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
   nsresult rv =
     aXPConnect->GetWrappedNativePrototype(cx, aWin->GetGlobalJSObject(), ci,
-                                          aProto);
+                                          getter_AddRefs(proto_holder));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JS::Rooted<JSObject*> proto_obj(cx, (*aProto)->GetJSObject());
-  if (!JS_WrapObject(cx, &proto_obj)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NS_IF_RELEASE(*aProto);
-  return aXPConnect->HoldObject(cx, proto_obj, aProto);
+  aProto.set(proto_holder->GetJSObject());
+  return JS_WrapObject(cx, aProto) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 // Either ci_data must be non-null or name_struct must be non-null and of type
@@ -1852,8 +1811,9 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
   JS::Rooted<JS::Value> v(cx);
 
   js::AssertSameCompartment(cx, obj);
-  rv = WrapNative(cx, constructor, &NS_GET_IID(nsIDOMDOMConstructor),
-                  false, &v);
+  rv = nsContentUtils::WrapNative(cx, constructor,
+                                  &NS_GET_IID(nsIDOMDOMConstructor), &v,
+                                  false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   FillPropertyDescriptor(ctorDesc, obj, 0, v);
@@ -2223,8 +2183,9 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     JS::Rooted<JS::Value> v(cx);
     js::AssertSameCompartment(cx, obj);
-    rv = WrapNative(cx, constructor, &NS_GET_IID(nsIDOMDOMConstructor),
-                    false, &v);
+    rv = nsContentUtils::WrapNative(cx, constructor,
+                                    &NS_GET_IID(nsIDOMDOMConstructor), &v,
+                                    false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     JS::Rooted<JSObject*> class_obj(cx, &v.toObject());
@@ -2255,10 +2216,12 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     // Create the XPConnect prototype for our classinfo, PostCreateProto will
     // set up the prototype chain.  This will go ahead and define things on the
     // actual window's global.
-    nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
+    JS::Rooted<JSObject*> dot_prototype(cx);
     rv = GetXPCProto(nsDOMClassInfo::sXPConnect, cx, aWin, name_struct,
-                     getter_AddRefs(proto_holder));
+                     &dot_prototype);
     NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(dot_prototype);
+
     bool isXray = xpc::WrapperFactory::IsXrayWrapper(obj);
     MOZ_ASSERT_IF(obj != aWin->GetGlobalJSObject(), isXray);
     if (!isXray) {
@@ -2269,9 +2232,6 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     // This is the Xray case.  Look up the constructor object for this
     // prototype.
-    JS::Rooted<JSObject*> dot_prototype(cx, proto_holder->GetJSObject());
-    NS_ENSURE_STATE(dot_prototype);
-
     const nsDOMClassInfoData *ci_data;
     if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
       ci_data = &sClassInfoData[name_struct->mDOMClassInfoID];
@@ -2301,13 +2261,11 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     // We need to use the XPConnect prototype for the DOM class that this
     // constructor is an alias for (for example for Image we need the prototype
     // for HTMLImageElement).
-    nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
+    JS::Rooted<JSObject*> dot_prototype(cx);
     rv = GetXPCProto(nsDOMClassInfo::sXPConnect, cx, aWin, alias_struct,
-                     getter_AddRefs(proto_holder));
+                     &dot_prototype);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    JSObject* dot_prototype = proto_holder->GetJSObject();
-    NS_ENSURE_STATE(dot_prototype);
+    MOZ_ASSERT(dot_prototype);
 
     const nsDOMClassInfoData *ci_data;
     if (alias_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
@@ -2332,8 +2290,9 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     JS::Rooted<JS::Value> val(cx);
     js::AssertSameCompartment(cx, obj);
-    rv = WrapNative(cx, constructor, &NS_GET_IID(nsIDOMDOMConstructor),
-                    true, &val);
+    rv = nsContentUtils::WrapNative(cx, constructor,
+                                    &NS_GET_IID(nsIDOMDOMConstructor), &val,
+                                    true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ASSERTION(val.isObject(), "Why didn't we get a JSObject?");
@@ -2370,7 +2329,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
         NS_ENSURE_TRUE(inner, NS_ERROR_UNEXPECTED);
       }
 
-      rv = WrapNative(cx, native, true, &prop_val);
+      rv = nsContentUtils::WrapNative(cx, native, &prop_val, true);
     }
 
     NS_ENSURE_SUCCESS(rv, rv);

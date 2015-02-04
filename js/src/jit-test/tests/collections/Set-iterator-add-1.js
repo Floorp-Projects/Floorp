@@ -1,6 +1,6 @@
 // set.iterator() is live: entries added during iteration are visited.
 
-var set = Set([5]);
+var set = new Set([5]);
 var log = '';
 for (let x of set) {
     log += x + ';';

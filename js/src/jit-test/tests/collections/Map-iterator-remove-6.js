@@ -4,7 +4,7 @@
 
 load(libdir + "iteration.js");
 
-var map = Map();
+var map = new Map();
 for (var i = 0; i < 32; i++)
     map.set(i, i);
 var iter = map[Symbol.iterator]();

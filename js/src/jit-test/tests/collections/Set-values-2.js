@@ -4,7 +4,7 @@
 load(libdir + "iteration.js");
 
 var data = [1, 2, 3, 4];
-var s = Set(data);
+var s = new Set(data);
 
 var ki = s.keys();
 assertIteratorNext(ki, 1);

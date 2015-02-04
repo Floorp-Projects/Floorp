@@ -2,19 +2,19 @@
 
 load(libdir + "iteration.js");
 
-var s = Set();
+var s = new Set();
 var it = s[Symbol.iterator]();
 s.clear();
 assertIteratorDone(it, undefined);
 
-s = Set(["a", "b", "c", "d"]);
+s = new Set(["a", "b", "c", "d"]);
 it = s[Symbol.iterator]();
 assertIteratorNext(it, "a");
 s.clear();
 assertIteratorDone(it, undefined);
 
 var log = "";
-s = Set(["a", "b", "c", "d"]);
+s = new Set(["a", "b", "c", "d"]);
 for (var v of s) {
     log += v;
     if (v == "b")
