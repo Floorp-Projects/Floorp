@@ -297,7 +297,7 @@ MustCreateSurface(gfxContext* aContext,
   return willTile || willResample;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(DrawResult)
 ClippedImage::Draw(gfxContext* aContext,
                    const nsIntSize& aSize,
                    const ImageRegion& aRegion,
@@ -318,7 +318,9 @@ ClippedImage::Draw(gfxContext* aContext,
     // GetFrame will call DrawSingleTile internally.
     RefPtr<SourceSurface> surface =
       GetFrameInternal(aSize, aSVGContext, aWhichFrame, aFlags);
-    NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
+    if (!surface) {
+      return DrawResult::TEMPORARY_ERROR;
+    }
 
     // Create a drawable from that surface.
     nsRefPtr<gfxSurfaceDrawable> drawable =
@@ -328,7 +330,7 @@ ClippedImage::Draw(gfxContext* aContext,
     gfxUtils::DrawPixelSnapped(aContext, drawable, aSize, aRegion,
                                SurfaceFormat::B8G8R8A8, aFilter);
 
-    return NS_OK;
+    return DrawResult::SUCCESS;
   }
 
   return DrawSingleTile(aContext, aSize, aRegion, aWhichFrame,
@@ -352,7 +354,7 @@ UnclipViewport(const SVGImageContext& aOldContext,
                          aOldContext.GetPreserveAspectRatio());
 }
 
-nsresult
+DrawResult
 ClippedImage::DrawSingleTile(gfxContext* aContext,
                              const nsIntSize& aSize,
                              const ImageRegion& aRegion,
