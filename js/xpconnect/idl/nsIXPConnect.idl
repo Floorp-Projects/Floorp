@@ -267,7 +267,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[noscript, uuid(a632b020-331f-11e4-8c21-0800200c9a66)]
+[noscript, uuid(f0966cb3-9171-4dc6-a446-37ea16611fb0)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -544,13 +544,6 @@ interface nsIXPConnect : nsISupports
                                     bool showLocals,
                                     bool showThisProps) = 0;
 %}
-
-    /**
-     * Creates a JS object holder around aObject that will hold the object
-     * alive for as long as the holder stays alive.
-     */
-    nsIXPConnectJSObjectHolder holdObject(in JSContextPtr aJSContext,
-                                          in JSObjectPtr aObject);
 
     [noscript] void writeScript(in nsIObjectOutputStream aStream,
                                 in JSContextPtr aJSContext,
