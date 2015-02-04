@@ -153,6 +153,9 @@ private:
                                                 uint32_t aLength,
                                                 ErrorResult& aRv);
 
+  void AppendDataCompletedWithSuccess(bool aValue);
+  void AppendDataErrored(nsresult aError);
+
   nsRefPtr<MediaSource> mMediaSource;
 
   uint32_t mEvictionThreshold;

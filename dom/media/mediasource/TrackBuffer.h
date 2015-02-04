@@ -33,6 +33,8 @@ class TrackBuffer MOZ_FINAL {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TrackBuffer);
 
+  typedef MediaPromise<bool, nsresult, /* IsExclusive = */ false> InitializationPromise;
+
   TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& aType);
 
   nsRefPtr<ShutdownPromise> Shutdown();
@@ -40,7 +42,8 @@ public:
   // Append data to the current decoder.  Also responsible for calling
   // NotifyDataArrived on the decoder to keep buffered range computation up
   // to date.  Returns false if the append failed.
-  bool AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset /* microseconds */);
+  nsRefPtr<InitializationPromise> AppendData(LargeDataBuffer* aData,
+                                             int64_t aTimestampOffset /* microseconds */);
 
   // Evicts data held in the current decoders SourceBufferResource from the
   // start of the buffer through to aPlaybackTime. aThreshold is used to
@@ -130,6 +133,11 @@ private:
   // Runs decoder initialization including calling ReadMetadata.  Runs as an
   // event on the decode thread pool.
   void InitializeDecoder(SourceBufferDecoder* aDecoder);
+  // Once decoder has been initialized, set mediasource duration if required
+  // and resolve any pending InitializationPromise.
+  // Setting the mediasource duration must be done on the main thread.
+  // TODO: Why is that so?
+  void CompleteInitializeDecoder(SourceBufferDecoder* aDecoder);
 
   // Adds a successfully initialized decoder to mDecoders and (if it's the
   // first decoder initialized), initializes mHasAudio/mHasVideo.  Called
@@ -193,6 +201,9 @@ private:
   MediaPromiseHolder<ShutdownPromise> mShutdownPromise;
   bool mDecoderPerSegment;
   bool mShutdown;
+
+  MediaPromiseHolder<InitializationPromise> mInitializationPromise;
+
 };
 
 } // namespace mozilla
