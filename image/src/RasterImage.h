@@ -333,6 +333,13 @@ private:
   // that case we use our animation consumers count as a proxy for lock count.
   bool IsUnlocked() { return (mLockCount == 0 || (mAnim && mAnimationConsumers == 0)); }
 
+  /**
+   * In catastrophic circumstances like a GPU driver crash, we may lose our
+   * frames even if they're locked. RecoverFromLossOfFrames discards all
+   * existing frames and redecodes.
+   */
+  void RecoverFromLossOfFrames();
+
 private: // data
   nsIntSize                  mSize;
   Orientation                mOrientation;
