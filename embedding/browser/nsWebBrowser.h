@@ -60,8 +60,7 @@ class nsWebBrowserListenerState
 {
 public:
     bool Equals(nsIWeakReference *aListener, const nsIID& aID) {
-        if (mWeakPtr.get() == aListener && mID.Equals(aID)) return true;
-        return false;
+      return mWeakPtr.get() == aListener && mID.Equals(aID);
     }
 
     nsWeakPtr mWeakPtr;
@@ -85,8 +84,8 @@ class nsWebBrowser MOZ_FINAL : public nsIWebBrowser,
                                public nsIWebBrowserFocus,
                                public nsIWebProgressListener,
                                public nsIWebBrowserStream,
-                     public nsIWidgetListener,
-                     public nsSupportsWeakReference
+                               public nsIWidgetListener,
+                               public nsSupportsWeakReference
 {
 friend class nsDocShellTreeOwner;
 public:
