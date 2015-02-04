@@ -8,6 +8,9 @@ function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
+  Services.prefs.setBoolPref("devtools.performance.ui.enable-memory", true);
+  Services.prefs.setBoolPref("devtools.performance.ui.enable-framerate", true);
+
   yield startRecording(panel);
 
   let updated = 0;

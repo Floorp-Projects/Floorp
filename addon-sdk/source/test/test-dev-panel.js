@@ -100,7 +100,7 @@ exports["test Panel communication"] = test(function*(assert) {
         if (event.source === window) {
           var port = event.ports[0];
           port.start();
-          port.postMessage("ping");;
+          port.postMessage("ping");
           port.onmessage = (event) => {
             if (event.data === "pong") {
               port.postMessage("bye");
@@ -301,7 +301,6 @@ exports["test createView panel"] = test(function*(assert) {
     }
   });
 
-
   const toolbox = yield openToolbox(MyPanel);
   const myPanel = yield getCurrentPanel(toolbox);
 
@@ -317,6 +316,4 @@ exports["test createView panel"] = test(function*(assert) {
   yield closeToolbox();
 });
 
-
-require("test").run(exports);
-
+require("sdk/test").run(exports);

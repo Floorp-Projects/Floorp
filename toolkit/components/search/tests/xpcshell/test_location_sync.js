@@ -17,24 +17,24 @@ function getIsUSPref() {
   }
 }
 
-function run_test() {
-  removeMetadata();
-  removeCacheFile();
-
-  ok(!Services.search.isInitialized);
-
-  let engineDummyFile = gProfD.clone();
-  engineDummyFile.append("searchplugins");
-  engineDummyFile.append("test-search-engine.xml");
-  let engineDir = engineDummyFile.parent;
-  engineDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-
-  do_get_file("data/engine.xml").copyTo(engineDir, "engine.xml");
-
-  do_register_cleanup(function() {
-    removeMetadata();
-    removeCacheFile();
+// A console listener so we can listen for a log message from nsSearchService.
+function promiseTimezoneMessage() {
+  return new Promise(resolve => {
+    let listener = {
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener]),
+      observe : function (msg) {
+        if (msg.message.startsWith("getIsUS() fell back to a timezone check with the result=")) {
+          Services.console.unregisterListener(listener);
+          resolve(msg);
+        }
+      }
+    };
+    Services.console.registerListener(listener);
   });
+}
+
+function run_test() {
+  installTestEngine();
 
   run_next_test();
 }
@@ -50,16 +50,22 @@ add_task(function* test_simple() {
 
   ok(!Services.search.isInitialized);
 
+  // setup a console listener for the timezone fallback message.
+  let promiseTzMessage = promiseTimezoneMessage();
+
   // fetching the engines forces a sync init, and should have caused us to
   // check the timezone.
   let engines = Services.search.getEngines();
   ok(Services.search.isInitialized);
-  deepEqual(getIsUSPref(), isUSTimezone(), "isUS pref was set by sync init.");
 
   // a little wait to check we didn't do the xhr thang.
   yield new Promise(resolve => {
     do_timeout(500, resolve);
   });
+
+  let msg = yield promiseTzMessage;
+  print("Timezone message:", msg.message);
+  ok(msg.message.endsWith(isUSTimezone().toString()), "fell back to timezone and it matches our timezone");
 
   deepEqual(getCountryCodePref(), undefined, "didn't do the geoip xhr");
   // and no telemetry evidence of geoip.
