@@ -1282,26 +1282,34 @@ NS_IMETHODIMP nsWebBrowser::GetPositionAndSize(int32_t* aX, int32_t* aY,
                                                int32_t* aCX, int32_t* aCY)
 {
   if (!mDocShell) {
-    if (aX)
+    if (aX) {
       *aX = mInitInfo->x;
-    if (aY)
+    }
+    if (aY) {
       *aY = mInitInfo->y;
-    if (aCX)
+    }
+    if (aCX) {
       *aCX = mInitInfo->cx;
-    if (aCY)
+    }
+    if (aCY) {
       *aCY = mInitInfo->cy;
+    }
   } else if (mInternalWidget) {
     nsIntRect bounds;
     NS_ENSURE_SUCCESS(mInternalWidget->GetBounds(bounds), NS_ERROR_FAILURE);
 
-    if (aX)
+    if (aX) {
       *aX = bounds.x;
-    if (aY)
+    }
+    if (aY) {
       *aY = bounds.y;
-    if (aCX)
+    }
+    if (aCX) {
       *aCX = bounds.width;
-    if (aCY)
+    }
+    if (aCY) {
       *aCY = bounds.height;
+    }
     return NS_OK;
   } else {
     // Can directly return this as it is the
