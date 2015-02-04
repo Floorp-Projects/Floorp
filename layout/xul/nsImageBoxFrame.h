@@ -40,6 +40,7 @@ private:
 class nsImageBoxFrame MOZ_FINAL : public nsLeafBoxFrame
 {
 public:
+  typedef mozilla::image::DrawResult DrawResult;
   typedef mozilla::layers::LayerManager LayerManager;
 
   friend class nsDisplayXULImage;
@@ -90,9 +91,9 @@ public:
 
   virtual ~nsImageBoxFrame();
 
-  void  PaintImage(nsRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsPoint aPt, uint32_t aFlags);
+  DrawResult PaintImage(nsRenderingContext& aRenderingContext,
+                        const nsRect& aDirtyRect,
+                        nsPoint aPt, uint32_t aFlags);
 
   already_AddRefed<mozilla::layers::ImageContainer> GetContainer(LayerManager* aManager);
 protected:
@@ -146,6 +147,7 @@ public:
     *aSnap = true;
     return nsRect(ToReferenceFrame(), Frame()->GetSize());
   }
+  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) MOZ_OVERRIDE;
