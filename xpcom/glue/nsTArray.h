@@ -14,6 +14,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/ReverseIterator.h"
 #include "mozilla/TypeTraits.h"
 
 #include <string.h>
@@ -770,6 +771,8 @@ public:
   typedef nsTArray_SafeElementAtHelper<E, self_type> safeelementat_helper_type;
   typedef elem_type*                                 iterator;
   typedef const elem_type*                           const_iterator;
+  typedef mozilla::ReverseIterator<elem_type*>       reverse_iterator;
+  typedef mozilla::ReverseIterator<const elem_type*> const_reverse_iterator;
 
   using safeelementat_helper_type::SafeElementAt;
   using base_type::EmptyHdr;
@@ -1000,6 +1003,14 @@ public:
   iterator end() { return Elements() + Length(); }
   const_iterator end() const { return Elements() + Length(); }
   const_iterator cend() const { return end(); }
+
+  // Methods for reverse iterating.
+  reverse_iterator rbegin() { return reverse_iterator(end()); }
+  const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+  const_reverse_iterator crbegin() const { return rbegin(); }
+  reverse_iterator rend() { return reverse_iterator(begin()); }
+  const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+  const_reverse_iterator crend() const { return rend(); }
 
   //
   // Search methods
