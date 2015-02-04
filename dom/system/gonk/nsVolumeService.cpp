@@ -268,6 +268,7 @@ nsVolumeService::GetVolumesForIPC(nsTArray<VolumeInfo>* aResult)
     volInfo->isUnmounting()     = vol->mIsUnmounting;
     volInfo->isRemovable()      = vol->mIsRemovable;
     volInfo->isHotSwappable()   = vol->mIsHotSwappable;
+    DBG("GetVolumesForIPC: adding '%s'", vol->NameStr().get());
   }
 }
 
@@ -295,6 +296,7 @@ nsVolumeService::RecvVolumesFromParent(const nsTArray<VolumeInfo>& aVolumes)
                                           volInfo.isUnmounting(),
                                           volInfo.isRemovable(),
                                           volInfo.isHotSwappable());
+    DBG("RecvVolumesFromParent: got '%s'", vol->NameStr().get());
     UpdateVolume(vol, false);
   }
 }
