@@ -35,7 +35,7 @@ public:
                JS::AutoIdVector& aProps) const MOZ_OVERRIDE;
   virtual bool
   delete_(JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
-          bool* aBp) const MOZ_OVERRIDE;
+          JS::ObjectOpResult &aResult) const MOZ_OVERRIDE;
   virtual bool
   preventExtensions(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                     bool *succeeded) const MOZ_OVERRIDE

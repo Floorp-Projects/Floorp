@@ -219,13 +219,21 @@ ScriptedIndirectProxyHandler::ownPropertyKeys(JSContext *cx, HandleObject proxy,
 }
 
 bool
-ScriptedIndirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const
+ScriptedIndirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id,
+                                      ObjectOpResult &result) const
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
     RootedValue fval(cx), value(cx);
-    return GetFundamentalTrap(cx, handler, cx->names().delete_, &fval) &&
-           Trap1(cx, handler, fval, id, &value) &&
-           ValueToBool(value, bp);
+    if (!GetFundamentalTrap(cx, handler, cx->names().delete_, &fval))
+        return false;
+    if (!Trap1(cx, handler, fval, id, &value))
+        return false;
+
+    if (ToBoolean(value))
+        result.succeed();
+    else
+        result.fail(JSMSG_PROXY_DELETE_RETURNED_FALSE);
+    return true;
 }
 
 bool

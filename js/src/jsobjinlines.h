@@ -182,21 +182,21 @@ js::GetElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t in
 }
 
 inline bool
-js::DeleteProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
+js::DeleteProperty(JSContext *cx, HandleObject obj, HandleId id, ObjectOpResult &result)
 {
     MarkTypePropertyNonData(cx, obj, id);
     if (DeletePropertyOp op = obj->getOps()->deleteProperty)
-        return op(cx, obj, id, succeeded);
-    return NativeDeleteProperty(cx, obj.as<NativeObject>(), id, succeeded);
+        return op(cx, obj, id, result);
+    return NativeDeleteProperty(cx, obj.as<NativeObject>(), id, result);
 }
 
 inline bool
-js::DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, bool *succeeded)
+js::DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, ObjectOpResult &result)
 {
     RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;
-    return DeleteProperty(cx, obj, id, succeeded);
+    return DeleteProperty(cx, obj, id, result);
 }
 
 

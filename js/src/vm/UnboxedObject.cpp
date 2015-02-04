@@ -445,11 +445,11 @@ UnboxedPlainObject::obj_getOwnPropertyDescriptor(JSContext *cx, HandleObject obj
 
 /* static */ bool
 UnboxedPlainObject::obj_deleteProperty(JSContext *cx, HandleObject obj, HandleId id,
-                                       bool *succeeded)
+                                       ObjectOpResult &result)
 {
     if (!convertToNative(cx, obj))
         return false;
-    return DeleteProperty(cx, obj, id, succeeded);
+    return DeleteProperty(cx, obj, id, result);
 }
 
 /* static */ bool

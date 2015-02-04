@@ -256,7 +256,9 @@ class JS_FRIEND_API(BaseProxyHandler)
                                 ObjectOpResult &result) const = 0;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const = 0;
-    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const = 0;
+    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id,
+                         ObjectOpResult &result) const = 0;
+
     /*
      * Because [[Enumerate]] is one of the standard traps it should be overridden.
      * However for convenience BaseProxyHandler includes a pure virtual implementation,
@@ -374,7 +376,7 @@ class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id,
-                         bool *bp) const MOZ_OVERRIDE;
+                         ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, HandleObject proxy,
                            MutableHandleObject objp) const MOZ_OVERRIDE;
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,

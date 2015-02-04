@@ -52,11 +52,12 @@ DirectProxyHandler::ownPropertyKeys(JSContext *cx, HandleObject proxy,
 }
 
 bool
-DirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const
+DirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id,
+                            ObjectOpResult &result) const
 {
     assertEnteredPolicy(cx, proxy, id, SET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return DeleteProperty(cx, target, id, bp);
+    return DeleteProperty(cx, target, id, result);
 }
 
 bool

@@ -513,10 +513,10 @@ with_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 static bool
-with_DeleteProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
+with_DeleteProperty(JSContext *cx, HandleObject obj, HandleId id, ObjectOpResult &result)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return DeleteProperty(cx, actual, id, succeeded);
+    return DeleteProperty(cx, actual, id, result);
 }
 
 static JSObject *
@@ -956,7 +956,7 @@ uninitialized_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId
 }
 
 static bool
-uninitialized_DeleteProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
+uninitialized_DeleteProperty(JSContext *cx, HandleObject obj, HandleId id, ObjectOpResult &result)
 {
     ReportUninitializedLexicalId(cx, id);
     return false;
@@ -1714,11 +1714,10 @@ class DebugScopeProxy : public BaseProxyHandler
         return true;
     }
 
-    bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE
+    bool delete_(JSContext *cx, HandleObject proxy, HandleId id,
+                 ObjectOpResult &result) const MOZ_OVERRIDE
     {
-        RootedValue idval(cx, IdToValue(id));
-        return ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_CANT_DELETE,
-                                     JSDVG_IGNORE_STACK, idval, NullPtr(), nullptr, nullptr);
+        return result.fail(JSMSG_CANT_DELETE);
     }
 };
 

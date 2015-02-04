@@ -192,6 +192,24 @@ JS::ObjectOpResult::failCantSetInterposed()
     return fail(JSMSG_CANT_SET_INTERPOSED);
 }
 
+JS_PUBLIC_API(bool)
+JS::ObjectOpResult::failCantDelete()
+{
+    return fail(JSMSG_CANT_DELETE);
+}
+
+JS_PUBLIC_API(bool)
+JS::ObjectOpResult::failCantDeleteWindowElement()
+{
+    return fail(JSMSG_CANT_DELETE_WINDOW_ELEMENT);
+}
+
+JS_PUBLIC_API(bool)
+JS::ObjectOpResult::failCantDeleteWindowNamedProperty()
+{
+    return fail(JSMSG_CANT_DELETE_WINDOW_NAMED_PROPERTY);
+}
+
 JS_PUBLIC_API(int64_t)
 JS_Now()
 {
@@ -2909,7 +2927,7 @@ JS_SetUCProperty(JSContext *cx, HandleObject obj, const char16_t *name, size_t n
 }
 
 JS_PUBLIC_API(bool)
-JS_DeletePropertyById2(JSContext *cx, HandleObject obj, HandleId id, bool *result)
+JS_DeletePropertyById(JSContext *cx, HandleObject obj, HandleId id, ObjectOpResult &result)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -2919,7 +2937,7 @@ JS_DeletePropertyById2(JSContext *cx, HandleObject obj, HandleId id, bool *resul
 }
 
 JS_PUBLIC_API(bool)
-JS_DeleteElement2(JSContext *cx, HandleObject obj, uint32_t index, bool *result)
+JS_DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, ObjectOpResult &result)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -2929,7 +2947,7 @@ JS_DeleteElement2(JSContext *cx, HandleObject obj, uint32_t index, bool *result)
 }
 
 JS_PUBLIC_API(bool)
-JS_DeleteProperty2(JSContext *cx, HandleObject obj, const char *name, bool *result)
+JS_DeleteProperty(JSContext *cx, HandleObject obj, const char *name, ObjectOpResult &result)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
@@ -2942,8 +2960,8 @@ JS_DeleteProperty2(JSContext *cx, HandleObject obj, const char *name, bool *resu
 }
 
 JS_PUBLIC_API(bool)
-JS_DeleteUCProperty2(JSContext *cx, HandleObject obj, const char16_t *name, size_t namelen,
-                     bool *result)
+JS_DeleteUCProperty(JSContext *cx, HandleObject obj, const char16_t *name, size_t namelen,
+                    ObjectOpResult &result)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
@@ -2958,22 +2976,22 @@ JS_DeleteUCProperty2(JSContext *cx, HandleObject obj, const char16_t *name, size
 JS_PUBLIC_API(bool)
 JS_DeletePropertyById(JSContext *cx, HandleObject obj, HandleId id)
 {
-    bool junk;
-    return JS_DeletePropertyById2(cx, obj, id, &junk);
+    ObjectOpResult ignored;
+    return JS_DeletePropertyById(cx, obj, id, ignored);
 }
 
 JS_PUBLIC_API(bool)
 JS_DeleteElement(JSContext *cx, HandleObject obj, uint32_t index)
 {
-    bool junk;
-    return JS_DeleteElement2(cx, obj, index, &junk);
+    ObjectOpResult ignored;
+    return JS_DeleteElement(cx, obj, index, ignored);
 }
 
 JS_PUBLIC_API(bool)
 JS_DeleteProperty(JSContext *cx, HandleObject obj, const char *name)
 {
-    bool junk;
-    return JS_DeleteProperty2(cx, obj, name, &junk);
+    ObjectOpResult ignored;
+    return JS_DeleteProperty(cx, obj, name, ignored);
 }
 
 JS_PUBLIC_API(void)

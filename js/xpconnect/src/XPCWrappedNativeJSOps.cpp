@@ -443,7 +443,7 @@ XPC_WN_CannotModifyPropertyStub(JSContext *cx, HandleObject obj, HandleId id,
 
 static bool
 XPC_WN_CantDeletePropertyStub(JSContext *cx, HandleObject obj, HandleId id,
-                              bool *succeeded)
+                              ObjectOpResult &result)
 {
     return Throw(NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN, cx);
 }
@@ -716,15 +716,15 @@ XPC_WN_MaybeResolvingSetPropertyStub(JSContext *cx, HandleObject obj, HandleId i
 }
 
 static bool
-XPC_WN_MaybeResolvingDeletePropertyStub(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
+XPC_WN_MaybeResolvingDeletePropertyStub(JSContext *cx, HandleObject obj, HandleId id,
+                                        ObjectOpResult &result)
 {
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
     if (ccx.GetResolvingWrapper() == wrapper) {
-        *succeeded = true;
-        return true;
+        return result.succeed();
     }
     return Throw(NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN, cx);
 }
