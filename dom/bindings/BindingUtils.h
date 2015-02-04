@@ -103,8 +103,8 @@ ThrowMethodFailedWithDetails(JSContext* cx, ErrorResult& rv,
                              const char* memberName,
                              bool reportJSContentExceptions = false)
 {
-  if (rv.IsTypeError()) {
-    rv.ReportTypeError(cx);
+  if (rv.IsErrorWithMessage()) {
+    rv.ReportErrorWithMessage(cx);
     return false;
   }
   if (rv.IsJSException()) {
