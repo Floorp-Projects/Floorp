@@ -475,6 +475,12 @@ IonTrackedOptimizationsRegion::findAttemptsIndex(uint32_t offset) const
 Maybe<IonTrackedOptimizationsRegion>
 IonTrackedOptimizationsRegionTable::findRegion(uint32_t offset) const
 {
+    // For two contiguous regions, e.g., [i, j] and [j, k], an offset exactly
+    // at j will be associated with [i, j] instead of [j, k]. An offset
+    // exactly at j is often a return address from a younger frame, which case
+    // the next region, despite starting at j, has not yet logically started
+    // execution.
+
     static const uint32_t LINEAR_SEARCH_THRESHOLD = 8;
     uint32_t regions = numEntries();
     MOZ_ASSERT(regions > 0);
@@ -483,7 +489,7 @@ IonTrackedOptimizationsRegionTable::findRegion(uint32_t offset) const
     if (regions <= LINEAR_SEARCH_THRESHOLD) {
         for (uint32_t i = 0; i < regions; i++) {
             IonTrackedOptimizationsRegion region = entry(i);
-            if (region.startOffset() <= offset && offset < region.endOffset()) {
+            if (region.startOffset() <= offset && offset <= region.endOffset()) {
                 return Some(entry(i));
             }
         }
@@ -500,7 +506,7 @@ IonTrackedOptimizationsRegionTable::findRegion(uint32_t offset) const
         if (offset < region.startOffset()) {
             // Entry is below mid.
             regions = step;
-        } else if (offset >= region.endOffset()) {
+        } else if (offset > region.endOffset()) {
             // Entry is above mid.
             i = mid;
             regions -= step;
@@ -703,14 +709,14 @@ IonTrackedOptimizationsRegion::WriteRun(CompactBufferWriter &writer,
                                         const UniqueTrackedOptimizations &unique)
 {
     // Write the header, which is the range that this whole run encompasses.
-    JitSpew(JitSpew_OptimizationTracking, "     Header: [%u, %u)",
+    JitSpew(JitSpew_OptimizationTracking, "     Header: [%u, %u]",
             start->startOffset.offset(), (end - 1)->endOffset.offset());
     writer.writeUnsigned(start->startOffset.offset());
     writer.writeUnsigned((end - 1)->endOffset.offset());
 
     // Write the first entry of the run, which is not delta-encoded.
     JitSpew(JitSpew_OptimizationTracking,
-            "     [%6u, %6u)                        vector %3u, offset %4u",
+            "     [%6u, %6u]                        vector %3u, offset %4u",
             start->startOffset.offset(), start->endOffset.offset(),
             unique.indexOf(start->optimizations), writer.length());
     uint32_t prevEndOffset = start->endOffset.offset();
@@ -727,7 +733,7 @@ IonTrackedOptimizationsRegion::WriteRun(CompactBufferWriter &writer,
         uint8_t index = unique.indexOf(entry->optimizations);
 
         JitSpew(JitSpew_OptimizationTracking,
-                "     [%6u, %6u) delta [+%5u, +%5u) vector %3u, offset %4u",
+                "     [%6u, %6u] delta [+%5u, +%5u] vector %3u, offset %4u",
                 startOffset, endOffset, startDelta, length, index, writer.length());
 
         WriteDelta(writer, startDelta, length, index);
