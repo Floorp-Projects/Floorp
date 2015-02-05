@@ -133,7 +133,7 @@ PluginWidgetParent::RecvCreate(nsresult* aResult)
   initData.clipChildren = true;
   initData.clipSiblings = true;
   *aResult = mWidget->Create(parentWidget.get(), nullptr, nsIntRect(0,0,0,0),
-                             nullptr, &initData);
+                             &initData);
   if (NS_FAILED(*aResult)) {
     mWidget->Destroy();
     mWidget = nullptr;

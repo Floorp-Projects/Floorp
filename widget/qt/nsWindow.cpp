@@ -134,7 +134,6 @@ nsresult
 nsWindow::Create(nsIWidget        *aParent,
                  nsNativeWidget    aNativeParent,
                  const nsIntRect  &aRect,
-                 nsDeviceContext *aContext,
                  nsWidgetInitData *aInitData)
 {
     // only set the base parent if we're not going to be a dialog or a

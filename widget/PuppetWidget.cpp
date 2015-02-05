@@ -96,7 +96,6 @@ NS_IMETHODIMP
 PuppetWidget::Create(nsIWidget        *aParent,
                      nsNativeWidget   aNativeParent,
                      const nsIntRect  &aRect,
-                     nsDeviceContext *aContext,
                      nsWidgetInitData *aInitData)
 {
   MOZ_ASSERT(!aNativeParent, "got a non-Puppet native parent");
@@ -147,7 +146,7 @@ PuppetWidget::CreateChild(const nsIntRect  &aRect,
   nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget(mTabChild);
   return ((widget &&
            NS_SUCCEEDED(widget->Create(isPopup ? nullptr: this, nullptr, aRect,
-                                       aContext, aInitData))) ?
+                                       aInitData))) ?
           widget.forget() : nullptr);
 }
 

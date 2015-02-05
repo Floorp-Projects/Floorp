@@ -205,7 +205,6 @@ NS_IMETHODIMP
 MetroWidget::Create(nsIWidget *aParent,
                     nsNativeWidget aNativeParent,
                     const nsIntRect &aRect,
-                    nsDeviceContext *aContext,
                     nsWidgetInitData *aInitData)
 {
   LogFunction();
