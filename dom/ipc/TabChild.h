@@ -254,7 +254,11 @@ class TabChild MOZ_FINAL : public TabChildBase,
     typedef mozilla::layers::ActiveElementManager ActiveElementManager;
 
 public:
-    static std::map<TabId, nsRefPtr<TabChild>>& NestedTabChildMap();
+    /**
+     * Find TabChild of aTabId in the same content process of the
+     * caller.
+     */
+    static already_AddRefed<TabChild> FindTabChild(const TabId& aTabId);
 
 public:
     /** 
@@ -609,13 +613,7 @@ private:
     // Get the pres shell resolution of the document in this tab.
     float GetPresShellResolution() const;
 
-    void SetTabId(const TabId& aTabId)
-    {
-      MOZ_ASSERT(mUniqueId == 0);
-
-      mUniqueId = aTabId;
-      NestedTabChildMap()[mUniqueId] = this;
-    }
+    void SetTabId(const TabId& aTabId);
 
     class CachedFileDescriptorInfo;
     class CachedFileDescriptorCallbackRunnable;

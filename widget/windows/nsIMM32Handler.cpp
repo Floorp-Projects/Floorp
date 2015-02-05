@@ -1805,7 +1805,7 @@ nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
     aWindow->InitEvent(charRect, &point);
     aWindow->DispatchWindowEvent(&charRect);
     if (charRect.mSucceeded) {
-      aCharRect = charRect.mReply.mRect;
+      aCharRect = LayoutDevicePixel::ToUntyped(charRect.mReply.mRect);
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: GetCharacterRectOfSelectedTextAt, aOffset=%lu, SUCCEEDED\n",
          aOffset));
@@ -1844,7 +1844,7 @@ nsIMM32Handler::GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect)
       ("IMM32: GetCaretRect,  FAILED (NS_QUERY_CARET_RECT)\n"));
     return false;
   }
-  aCaretRect = caretRect.mReply.mRect;
+  aCaretRect = LayoutDevicePixel::ToUntyped(caretRect.mReply.mRect);
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: GetCaretRect, SUCCEEDED, aCaretRect={ x: %ld, y: %ld, width: %ld, height: %ld }\n",
      aCaretRect.x, aCaretRect.y, aCaretRect.width, aCaretRect.height));
@@ -1956,7 +1956,7 @@ nsIMM32Handler::SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
   // Clip the plugin rect by the client rect of the window because composition
   // window needs to be specified the position in the client area.
   nsWindow* toplevelWindow = aWindow->GetTopLevelWindow(false);
-  nsIntRect pluginRectInScreen =
+  LayoutDeviceIntRect pluginRectInScreen =
     editorRectEvent.mReply.mRect + toplevelWindow->WidgetToScreenOffset();
   nsIntRect winRectInScreen;
   aWindow->GetClientBounds(winRectInScreen);
@@ -1974,7 +1974,7 @@ nsIMM32Handler::SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
   int32_t yMost = std::min(pluginRectInScreen.YMost(), winRectInScreen.YMost());
   clippedPluginRect.width = std::max(0, xMost - clippedPluginRect.x);
   clippedPluginRect.height = std::max(0, yMost - clippedPluginRect.y);
-  clippedPluginRect -= aWindow->WidgetToScreenOffset();
+  clippedPluginRect -= aWindow->WidgetToScreenOffsetUntyped();
 
   // Cover the plugin with native caret.  This prevents IME's window and plugin
   // overlap.
@@ -2013,10 +2013,10 @@ nsIMM32Handler::ResolveIMECaretPos(nsIWidget* aReferenceWidget,
     return;
 
   if (aReferenceWidget)
-    aOutRect.MoveBy(aReferenceWidget->WidgetToScreenOffset());
+    aOutRect.MoveBy(aReferenceWidget->WidgetToScreenOffsetUntyped());
 
   if (aNewOriginWidget)
-    aOutRect.MoveBy(-aNewOriginWidget->WidgetToScreenOffset());
+    aOutRect.MoveBy(-aNewOriginWidget->WidgetToScreenOffsetUntyped());
 }
 
 /* static */ nsresult

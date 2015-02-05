@@ -28,6 +28,18 @@ class nsNativeThemeCocoa : private nsNativeTheme,
                            public nsITheme
 {
 public:
+  enum {
+    eThemeGeometryTypeTitlebar = eThemeGeometryTypeUnknown + 1,
+    eThemeGeometryTypeToolbar,
+    eThemeGeometryTypeWindowButtons,
+    eThemeGeometryTypeFullscreenButton,
+    eThemeGeometryTypeMenu,
+    eThemeGeometryTypeHighlightedMenuItem,
+    eThemeGeometryTypeVibrancyLight,
+    eThemeGeometryTypeVibrancyDark,
+    eThemeGeometryTypeTooltip,
+  };
+
   nsNativeThemeCocoa();
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -65,6 +77,8 @@ public:
   virtual bool NeedToClearBackgroundBehindWidget(uint8_t aWidgetType) MOZ_OVERRIDE;
   virtual bool WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame, uint8_t aWidgetType,
                                                           nscolor* aColor) MOZ_OVERRIDE;
+  virtual ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame* aFrame,
+                                                       uint8_t aWidgetType) MOZ_OVERRIDE;
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType) MOZ_OVERRIDE;
 
   void DrawProgress(CGContextRef context, const HIRect& inBoxRect,

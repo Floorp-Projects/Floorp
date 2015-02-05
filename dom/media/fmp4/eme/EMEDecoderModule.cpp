@@ -5,24 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EMEDecoderModule.h"
-#include "mozIGeckoMediaPluginService.h"
-#include "nsServiceManagerUtils.h"
-#include "nsThreadUtils.h"
-#include "ImageContainer.h"
-#include "prsystem.h"
-#include "mp4_demuxer/DecoderData.h"
-#include "gfx2DGlue.h"
-#include "nsContentUtils.h"
-#include "mozilla/CDMProxy.h"
-#include "mozilla/EMELog.h"
-#include "MediaTaskQueue.h"
-#include "SharedThreadPool.h"
-#include "mozilla/EMELog.h"
-#include "EMEH264Decoder.h"
 #include "EMEAudioDecoder.h"
+#include "EMEVideoDecoder.h"
+#include "MediaDataDecoderProxy.h"
+#include "mozIGeckoMediaPluginService.h"
+#include "mozilla/CDMProxy.h"
 #include "mozilla/unused.h"
-#include "SamplesWaitingForKey.h"
-#include <string>
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 
@@ -168,6 +157,42 @@ private:
 #endif
 };
 
+class EMEMediaDataDecoderProxy : public MediaDataDecoderProxy {
+public:
+  EMEMediaDataDecoderProxy(nsIThread* aProxyThread, MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, MediaTaskQueue* aTaskQueue)
+   : MediaDataDecoderProxy(aProxyThread, aCallback)
+   , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aTaskQueue, aProxy))
+  {
+  }
+
+  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
+  virtual nsresult Shutdown() MOZ_OVERRIDE;
+
+private:
+  nsRefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
+};
+
+nsresult
+EMEMediaDataDecoderProxy::Input(mp4_demuxer::MP4Sample* aSample)
+{
+  if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
+    return NS_OK;
+  }
+
+  return MediaDataDecoderProxy::Input(aSample);
+}
+
+nsresult
+EMEMediaDataDecoderProxy::Shutdown()
+{
+  nsresult rv = MediaDataDecoderProxy::Shutdown();
+
+  mSamplesWaitingForKey->BreakCycles();
+  mSamplesWaitingForKey = nullptr;
+
+  return rv;
+}
+
 EMEDecoderModule::EMEDecoderModule(CDMProxy* aProxy,
                                    PlatformDecoderModule* aPDM,
                                    bool aCDMDecodesAudio,
@@ -192,6 +217,24 @@ EMEDecoderModule::Shutdown()
   return NS_OK;
 }
 
+static already_AddRefed<MediaDataDecoderProxy>
+CreateDecoderWrapper(MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, MediaTaskQueue* aTaskQueue)
+{
+  nsCOMPtr<mozIGeckoMediaPluginService> gmpService = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  if (!gmpService) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = gmpService->GetThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  nsRefPtr<MediaDataDecoderProxy> decoder(new EMEMediaDataDecoderProxy(thread, aCallback, aProxy, aTaskQueue));
+  return decoder.forget();
+}
+
 already_AddRefed<MediaDataDecoder>
 EMEDecoderModule::CreateVideoDecoder(const VideoDecoderConfig& aConfig,
                                      layers::LayersBackend aLayersBackend,
@@ -200,13 +243,14 @@ EMEDecoderModule::CreateVideoDecoder(const VideoDecoderConfig& aConfig,
                                      MediaDataDecoderCallback* aCallback)
 {
   if (mCDMDecodesVideo && aConfig.crypto.valid) {
-    nsRefPtr<MediaDataDecoder> decoder(new EMEH264Decoder(mProxy,
-                                                          aConfig,
-                                                          aLayersBackend,
-                                                          aImageContainer,
-                                                          aVideoTaskQueue,
-                                                          aCallback));
-    return decoder.forget();
+    nsRefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aVideoTaskQueue);
+    wrapper->SetProxyTarget(new EMEVideoDecoder(mProxy,
+                                                aConfig,
+                                                aLayersBackend,
+                                                aImageContainer,
+                                                aVideoTaskQueue,
+                                                wrapper->Callback()));
+    return wrapper.forget();
   }
 
   nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateVideoDecoder(aConfig,
@@ -234,11 +278,12 @@ EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
                                      MediaDataDecoderCallback* aCallback)
 {
   if (mCDMDecodesAudio && aConfig.crypto.valid) {
-    nsRefPtr<MediaDataDecoder> decoder(new EMEAudioDecoder(mProxy,
-                                                           aConfig,
-                                                           aAudioTaskQueue,
-                                                           aCallback));
-    return decoder.forget();
+    nsRefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aAudioTaskQueue);
+    wrapper->SetProxyTarget(new EMEAudioDecoder(mProxy,
+                                                aConfig,
+                                                aAudioTaskQueue,
+                                                wrapper->Callback()));
+    return wrapper.forget();
   }
 
   nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateAudioDecoder(aConfig,

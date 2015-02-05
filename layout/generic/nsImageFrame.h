@@ -63,6 +63,7 @@ typedef nsSplittableFrame ImageFrameSuper;
 class nsImageFrame : public ImageFrameSuper,
                      public nsIReflowCallback {
 public:
+  typedef mozilla::image::DrawResult DrawResult;
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::layers::ImageLayer ImageLayer;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -214,9 +215,9 @@ protected:
                       const nsString&      aAltText,
                       const nsRect&        aRect);
 
-  void PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
-                  const nsRect& aDirtyRect, imgIContainer* aImage,
-                  uint32_t aFlags);
+  DrawResult PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
+                        const nsRect& aDirtyRect, imgIContainer* aImage,
+                        uint32_t aFlags);
 
 protected:
   friend class nsImageListener;
@@ -373,6 +374,8 @@ public:
   virtual ~nsDisplayImage() {
     MOZ_COUNT_DTOR(nsDisplayImage);
   }
+
+  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) MOZ_OVERRIDE;

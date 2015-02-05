@@ -51,6 +51,29 @@ public:
   MaybeOneOf() : state(None) {}
   ~MaybeOneOf() { destroyIfConstructed(); }
 
+  MaybeOneOf(MaybeOneOf&& rhs)
+    : state(None)
+  {
+    if (!rhs.empty()) {
+      if (rhs.constructed<T1>()) {
+        construct<T1>(Move(rhs.as<T1>()));
+        rhs.as<T1>().~T1();
+      } else {
+        construct<T2>(Move(rhs.as<T2>()));
+        rhs.as<T2>().~T2();
+      }
+      rhs.state = None;
+    }
+  }
+
+  MaybeOneOf &operator=(MaybeOneOf&& rhs)
+  {
+    MOZ_ASSERT(this != &rhs, "Self-move is prohibited");
+    this->~MaybeOneOf();
+    new(this) MaybeOneOf(Move(rhs));
+    return *this;
+  }
+
   bool empty() const { return state == None; }
 
   template <class T>
