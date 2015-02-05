@@ -24,6 +24,7 @@ const MODE_TRUNCATE = FileUtils.MODE_TRUNCATE;
 // nsSearchService.js uses Services.appinfo.name to build a salt for a hash.
 var XULRuntime = Components.classesByID["{95d89e3e-a169-41a3-8e56-719978e15b12}"]
                            .getService(Ci.nsIXULRuntime);
+
 var XULAppInfo = {
   vendor: "Mozilla",
   name: "XPCShell",
@@ -34,7 +35,8 @@ var XULAppInfo = {
   platformBuildID: "2007010101",
   inSafeMode: false,
   logConsoleErrors: true,
-  OS: "XPCShell",
+  // mirror OS from the base impl as some of the "location" tests rely on it
+  OS: XULRuntime.OS,
   XPCOMABI: "noarch-spidermonkey",
   // mirror processType from the base implementation
   processType: XULRuntime.processType,

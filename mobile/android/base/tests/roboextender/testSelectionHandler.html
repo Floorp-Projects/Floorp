@@ -4,7 +4,7 @@
     <meta name="viewport" content="initial-scale=1.0"/>
     <script type="application/javascript"
       src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-    <script type="application/javascript">
+    <script type="application/javascript;version=1.8">
 
 const DIV_POINT_TEXT = "Under";
 const INPUT_TEXT = "Text for select all in an <input>";
@@ -44,9 +44,9 @@ function startTests() {
  *
  */
 function testSelectAllDivs() {
-  var sh = getSelectionHandler();
-  var selDiv = document.getElementById("selDiv");
-  var nonSelDiv = document.getElementById("nonSelDiv");
+  let sh = getSelectionHandler();
+  let selDiv = document.getElementById("selDiv");
+  let nonSelDiv = document.getElementById("nonSelDiv");
 
   // Check the initial state of the selection handler, and selectable/non-selectable <div>s.
   return Promise.all([
@@ -56,8 +56,8 @@ function testSelectAllDivs() {
 
   ]).then(function() {
     // Select all on a non-editable text node selects all the text in the page.
-    var startSelectionResult = sh.startSelection(selDiv);
-    var selection = sh._getSelection();
+    let startSelectionResult = sh.startSelection(selDiv);
+    let selection = sh._getSelection();
 
     return Promise.all([
       is(startSelectionResult, sh.ERROR_NONE,
@@ -78,17 +78,17 @@ function testSelectAllDivs() {
  *
  */
 function testSelectDivAtPoint() {
-  var sh = getSelectionHandler();
-  var selDiv = document.getElementById("selDiv");
+  let sh = getSelectionHandler();
+  let selDiv = document.getElementById("selDiv");
 
   // Select word at point in <div>
-  var rect = selDiv.getBoundingClientRect();
-  var startSelectionResult = sh.startSelection(selDiv, {
+  let rect = selDiv.getBoundingClientRect();
+  let startSelectionResult = sh.startSelection(selDiv, {
     mode: sh.SELECT_AT_POINT,
     x: rect.left + 1,
     y: rect.top + 1
   });
-  var selection = sh._getSelection();
+  let selection = sh._getSelection();
 
   // Check the state of the selection handler after selecting at a point.
   return Promise.all([
@@ -114,8 +114,8 @@ function testSelectDivAtPoint() {
  *
  */
 function testSelectInput() {
-  var sh = getSelectionHandler();
-  var inputNode = document.getElementById("inputNode");
+  let sh = getSelectionHandler();
+  let inputNode = document.getElementById("inputNode");
   inputNode.value = INPUT_TEXT;
 
   // Test that calling startSelection with an input selects all the text in the input.
@@ -125,8 +125,8 @@ function testSelectInput() {
 
   ]).then(function() {
     // Check the state of the selection handler after calling startSelection on it.
-    var startSelectionResult = sh.startSelection(inputNode);
-    var selection = sh._getSelection();
+    let startSelectionResult = sh.startSelection(inputNode);
+    let selection = sh._getSelection();
 
     return Promise.all([
       is(startSelectionResult, sh.ERROR_NONE,
@@ -145,13 +145,13 @@ function testSelectInput() {
  */
 
 function testSelectTextarea() {
-  var sh = getSelectionHandler();
-  var textareaNode = document.getElementById("textareaNode");
+  let sh = getSelectionHandler();
+  let textareaNode = document.getElementById("textareaNode");
   textareaNode.value = TEXTAREA_TEXT;
 
   // Change (still-active) selection from previous <input> field to <textarea>
-  var startSelectionResult = sh.startSelection(textareaNode);
-  var selection = sh._getSelection();
+  let startSelectionResult = sh.startSelection(textareaNode);
+  let selection = sh._getSelection();
 
   return Promise.all([
     ok(sh.isSelectionActive(), "Selection should be active at start of testSelectTextarea"),
@@ -177,8 +177,8 @@ function testSelectTextarea() {
  *
  */
 function testReadonlyInput() {
-  var sh = getSelectionHandler();
-  var readOnlyNode = document.getElementById("readOnlyTextInput");
+  let sh = getSelectionHandler();
+  let readOnlyNode = document.getElementById("readOnlyTextInput");
   readOnlyNode.value = READONLY_INPUT_TEXT;
 
   return Promise.all([
@@ -199,8 +199,8 @@ function testReadonlyInput() {
  *
  */
 function testCloseSelection() {
-  var sh = getSelectionHandler();
-  var inputNode = document.getElementById("inputNode");
+  let sh = getSelectionHandler();
+  let inputNode = document.getElementById("inputNode");
   inputNode.value = INPUT_TEXT;
 
   // Check the initial state of the selection handler.
@@ -239,7 +239,7 @@ function testCloseSelection() {
  *
  */
 function testStartSelectionFail() {
-  var sh = getSelectionHandler();
+  let sh = getSelectionHandler();
 
   return Promise.all([
     ok(!sh.isSelectionActive(),
@@ -247,9 +247,9 @@ function testStartSelectionFail() {
 
   ]).then(function() {
     // We cannot perform an invalid selection request.
-    var element = document.getElementById("inputNode");
-    var rect = element.getBoundingClientRect();
-    var startSelectionResult = sh.startSelection(element, {
+    let element = document.getElementById("inputNode");
+    let rect = element.getBoundingClientRect();
+    let startSelectionResult = sh.startSelection(element, {
       mode: "fooMode",
       x: rect.left + 1,
       y: rect.top + 1
@@ -263,8 +263,8 @@ function testStartSelectionFail() {
 
   }).then(function() {
     // Select all on a Button should fail.
-    var element = document.getElementById("inputButton");
-    var startSelectionResult = sh.startSelection(element);
+    let element = document.getElementById("inputButton");
+    let startSelectionResult = sh.startSelection(element);
 
     return Promise.all([
       is(startSelectionResult, sh.START_ERROR_NONTEXT_INPUT,
@@ -274,9 +274,9 @@ function testStartSelectionFail() {
 
   }).then(function() {
     // We cannot Select Word where no point exists.
-    var element = document.getElementById("inputNode");
-    var rect = element.getBoundingClientRect();
-    var startSelectionResult = sh.startSelection(element, {
+    let element = document.getElementById("inputNode");
+    let rect = element.getBoundingClientRect();
+    let startSelectionResult = sh.startSelection(element, {
       mode: sh.SELECT_AT_POINT,
       x: -1000,
       y: -1000
@@ -296,15 +296,15 @@ function testStartSelectionFail() {
  *
  */
 function testAttachCaret() {
-  var sh = getSelectionHandler();
+  let sh = getSelectionHandler();
 
   return Promise.all([
     ok(!sh.isSelectionActive(), "Selection should not be active at start of testAttachCaret"),
 
   ]).then(function() {
-    var element = document.getElementById("inputNode");
+    let element = document.getElementById("inputNode");
     element.value = INPUT_TEXT;
-    var attachCaretResult = sh.attachCaret(element);
+    let attachCaretResult = sh.attachCaret(element);
 
     return Promise.all([
       is(attachCaretResult, sh.ERROR_NONE,
@@ -326,7 +326,7 @@ function testAttachCaret() {
  *
  */
 function testAttachCaretFail() {
-  var sh = getSelectionHandler();
+  let sh = getSelectionHandler();
 
   return Promise.all([
     is(sh._activeType, sh.TYPE_NONE,
@@ -334,9 +334,9 @@ function testAttachCaretFail() {
 
   ]).then(function() {
     // We cannot attach Caret into disabled input.
-    var element = document.getElementById("inputDisabled");
+    let element = document.getElementById("inputDisabled");
     element.value = INPUT_TEXT;
-    var attachCaretResult = sh.attachCaret(element);
+    let attachCaretResult = sh.attachCaret(element);
 
     return Promise.all([
       is(attachCaretResult, sh.ATTACH_ERROR_INCOMPATIBLE,
