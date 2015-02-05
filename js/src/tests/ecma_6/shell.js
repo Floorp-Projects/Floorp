@@ -45,6 +45,7 @@ if (typeof assertDeepEq === 'undefined') {
             Array_isArray = Array.isArray,
             Map_ = Map,
             Error_ = Error,
+            Symbol_ = Symbol,
             Map_has = call.bind(Map.prototype.has),
             Map_get = call.bind(Map.prototype.get),
             Map_set = call.bind(Map.prototype.set),
