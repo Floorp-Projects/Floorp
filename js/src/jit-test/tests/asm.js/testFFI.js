@@ -151,10 +151,8 @@ assertEq(f(40), INT32_MAX + 1 | 0);
 function testBadConversions(f) {
     valueToConvert = {valueOf: function () { throw "FAIL"; }};
     assertThrowsValue(() => f(40), "FAIL");
-    if (typeof Symbol === "function") {
-        valueToConvert = Symbol();
-        assertThrowsInstanceOf(() => f(40), TypeError);
-    }
+    valueToConvert = Symbol();
+    assertThrowsInstanceOf(() => f(40), TypeError);
 }
 testBadConversions(f);
 

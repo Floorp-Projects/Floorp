@@ -95,12 +95,10 @@ a = {["x"]: 1, x: 2};
 assertEq(a.x, 2);
 
 // Symbols
-if (typeof Symbol === "function") {
-    var unique_sym = Symbol("1"), registered_sym = Symbol.for("2");
-    a = { [unique_sym] : 2, [registered_sym] : 3 };
-    assertEq(a[unique_sym], 2);
-    assertEq(a[registered_sym], 3);
-}
+var unique_sym = Symbol("1"), registered_sym = Symbol.for("2");
+a = { [unique_sym] : 2, [registered_sym] : 3 };
+assertEq(a[unique_sym], 2);
+assertEq(a[registered_sym], 3);
 
 // Same expression can be run several times to build objects with different property names.
 a = [];
@@ -215,13 +213,11 @@ assertEq(a.hey, 3);
 assertThrowsValue(() => { a.hey = 5; }, 2);
 
 // Symbols with duplicate get and set.
-if (typeof Symbol === "function") {
-    expr = Symbol("hey");
-    a = {get [expr]() { return 3; }, set[expr](v) { throw 2; },
-         set [expr] (w) { throw 4; }, get[expr](){return 5; }};
-    assertEq(a[expr], 5);
-    assertThrowsValue(() => { a[expr] = 7; }, 4);
-}
+expr = Symbol("hey");
+a = {get [expr]() { return 3; }, set[expr](v) { throw 2; },
+     set [expr] (w) { throw 4; }, get[expr](){return 5; }};
+assertEq(a[expr], 5);
+assertThrowsValue(() => { a[expr] = 7; }, 4);
 
 // expressions with side effects are called in the right order
 log = "";

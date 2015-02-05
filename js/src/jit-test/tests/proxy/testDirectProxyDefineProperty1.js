@@ -15,10 +15,7 @@ function testProxy(p, key) {
     assertEq(desc.configurable, true);
 }
 
-var keys = ['foo'];
-if (typeof Symbol === "function")
-    keys.push(Symbol("quux"));
-for (var key of keys) {
+for (var key of ['foo', Symbol("quux")]) {
     target = {};
     testProxy(new Proxy(target, {}), key);
     target = {};

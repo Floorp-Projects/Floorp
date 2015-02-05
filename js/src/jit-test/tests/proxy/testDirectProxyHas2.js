@@ -3,10 +3,7 @@
  * argument, and the name of the property as the second argument
  */
 var target = {};
-var keys = ['foo'];
-if (typeof Symbol === "function")
-    keys.push(Symbol('bar'));
-for (var key of keys) {
+for (var key of ['foo', Symbol('bar')]) {
     var called;
     var handler = {
         has: function (target1, name) {
