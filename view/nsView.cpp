@@ -566,8 +566,6 @@ nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
 
   nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
-  nsRefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
-
   nsIWidget* parentWidget =
     GetParent() ? GetParent()->GetNearestWidget(nullptr) : nullptr;
   if (!parentWidget) {
@@ -577,8 +575,7 @@ nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
 
   // XXX: using aForceUseIWidgetParent=true to preserve previous
   // semantics.  It's not clear that it's actually needed.
-  mWindow = parentWidget->CreateChild(trect, dx, aWidgetInitData,
-                                      true).take();
+  mWindow = parentWidget->CreateChild(trect, aWidgetInitData, true).take();
   if (!mWindow) {
     return NS_ERROR_FAILURE;
   }
@@ -604,10 +601,8 @@ nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
 
   nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
-  nsRefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
-
   mWindow =
-    aParentWidget->CreateChild(trect, dx, aWidgetInitData).take();
+    aParentWidget->CreateChild(trect, aWidgetInitData).take();
   if (!mWindow) {
     return NS_ERROR_FAILURE;
   }
@@ -629,8 +624,6 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
 
   nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
-  nsRefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
-
   // XXX/cjones: having these two separate creation cases seems ... um
   // ... unnecessary, but it's the way the old code did it.  Please
   // unify them by first finding a suitable parent nsIWidget, then
@@ -638,8 +631,7 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
   if (aParentWidget) {
     // XXX: using aForceUseIWidgetParent=true to preserve previous
     // semantics.  It's not clear that it's actually needed.
-    mWindow = aParentWidget->CreateChild(trect, dx, aWidgetInitData,
-                                         true).take();
+    mWindow = aParentWidget->CreateChild(trect, aWidgetInitData, true).take();
   }
   else {
     nsIWidget* nearestParent = GetParent() ? GetParent()->GetNearestWidget(nullptr)
@@ -650,8 +642,7 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
       return NS_ERROR_FAILURE;
     }
 
-    mWindow =
-      nearestParent->CreateChild(trect, dx, aWidgetInitData).take();
+    mWindow = nearestParent->CreateChild(trect, aWidgetInitData).take();
   }
   if (!mWindow) {
     return NS_ERROR_FAILURE;
