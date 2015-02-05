@@ -182,7 +182,7 @@ NeckoParent::CreateChannelLoadContext(const PBrowserOrId& aBrowser,
       case PBrowserOrId::TPBrowserParent:
       {
         nsRefPtr<TabParent> tabParent =
-          static_cast<TabParent*>(aBrowser.get_PBrowserParent());
+          TabParent::GetFrom(aBrowser.get_PBrowserParent());
         dom::Element* topFrameElement = nullptr;
         if (tabParent) {
           topFrameElement = tabParent->GetOwnerElement();
@@ -332,7 +332,7 @@ NeckoParent::AllocPWebSocketParent(const PBrowserOrId& browser,
     return nullptr;
   }
 
-  nsRefPtr<TabParent> tabParent = static_cast<TabParent*>(browser.get_PBrowserParent());
+  nsRefPtr<TabParent> tabParent = TabParent::GetFrom(browser.get_PBrowserParent());
   PBOverrideStatus overrideStatus = PBOverrideStatusFromLoadContext(serialized);
   WebSocketChannelParent* p = new WebSocketChannelParent(tabParent, loadContext,
                                                          overrideStatus);
