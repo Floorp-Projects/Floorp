@@ -16,6 +16,8 @@ TranslatorESSL::TranslatorESSL(sh::GLenum type, ShShaderSpec spec)
 void TranslatorESSL::translate(TIntermNode* root) {
     TInfoSinkBase& sink = getInfoSink().obj;
 
+    writePragma();
+
     // Write built-in extension behaviors.
     writeExtensionBehavior();
 

@@ -47,11 +47,14 @@ bool IsPointSampled(const gl::SamplerState &samplerState)
     return (samplerState.magFilter == GL_NEAREST && (samplerState.minFilter == GL_NEAREST || samplerState.minFilter == GL_NEAREST_MIPMAP_NEAREST));
 }
 
+unsigned int Texture::mCurrentTextureSerial = 1;
+
 Texture::Texture(rx::TextureImpl *impl, GLuint id, GLenum target)
     : RefCountObject(id),
       mTexture(impl),
+      mTextureSerial(issueTextureSerial()),
       mUsage(GL_NONE),
-      mImmutable(false),
+      mImmutableLevelCount(0),
       mTarget(target)
 {
 }
@@ -70,16 +73,6 @@ void Texture::setUsage(GLenum usage)
 {
     mUsage = usage;
     getImplementation()->setUsage(usage);
-}
-
-void Texture::getSamplerStateWithNativeOffset(SamplerState *sampler)
-{
-    *sampler = mSamplerState;
-
-    // Offset the effective base level by the texture storage's top level
-    rx::TextureStorage *texture = getNativeTexture();
-    int topLevel = texture ? texture->getTopLevel() : 0;
-    sampler->baseLevel = topLevel + mSamplerState.baseLevel;
 }
 
 GLenum Texture::getUsage() const
@@ -138,35 +131,35 @@ GLenum Texture::getActualFormat(const ImageIndex &index) const
     return image->getActualFormat();
 }
 
-rx::TextureStorage *Texture::getNativeTexture()
+Error Texture::generateMipmaps()
 {
-    return getImplementation()->getNativeTexture();
+    return getImplementation()->generateMipmaps();
 }
 
-void Texture::generateMipmaps()
+Error Texture::copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+                           GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
 {
-    getImplementation()->generateMipmaps();
+    return mTexture->copySubImage(target, level, xoffset, yoffset, zoffset, x, y, width, height, source);
 }
 
-void Texture::copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
+unsigned int Texture::getTextureSerial() const
 {
-    getImplementation()->copySubImage(target, level, xoffset, yoffset, zoffset, x, y, width, height, source);
+    return mTextureSerial;
 }
 
-unsigned int Texture::getTextureSerial()
+unsigned int Texture::issueTextureSerial()
 {
-    rx::TextureStorage *texture = getNativeTexture();
-    return texture ? texture->getTextureSerial() : 0;
+    return mCurrentTextureSerial++;
 }
 
 bool Texture::isImmutable() const
 {
-    return mImmutable;
+    return (mImmutableLevelCount > 0);
 }
 
 int Texture::immutableLevelCount()
 {
-    return (mImmutable ? getNativeTexture()->getLevelCount() : 0);
+    return mImmutableLevelCount;
 }
 
 int Texture::mipLevels() const
@@ -255,11 +248,11 @@ void Texture2D::releaseTexImage()
 }
 
 Error Texture2D::setCompressedImage(GLint level, GLenum format, GLsizei width, GLsizei height, GLsizei imageSize,
-                                    const void *pixels)
+                                    const PixelUnpackState &unpack, const void *pixels)
 {
     releaseTexImage();
 
-    return mTexture->setCompressedImage(GL_TEXTURE_2D, level, format, width, height, 1, imageSize, pixels);
+    return mTexture->setCompressedImage(GL_TEXTURE_2D, level, format, width, height, 1, imageSize, unpack, pixels);
 }
 
 Error Texture2D::subImage(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels)
@@ -268,23 +261,30 @@ Error Texture2D::subImage(GLint level, GLint xoffset, GLint yoffset, GLsizei wid
 }
 
 Error Texture2D::subImageCompressed(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                    GLenum format, GLsizei imageSize, const void *pixels)
+                                    GLenum format, GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels)
 {
-    return mTexture->subImageCompressed(GL_TEXTURE_2D, level, xoffset, yoffset, 0, width, height, 1, format, imageSize, pixels);
+    return mTexture->subImageCompressed(GL_TEXTURE_2D, level, xoffset, yoffset, 0, width, height, 1, format, imageSize, unpack, pixels);
 }
 
-void Texture2D::copyImage(GLint level, GLenum format, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
+Error Texture2D::copyImage(GLint level, GLenum format, GLint x, GLint y, GLsizei width, GLsizei height,
+                           Framebuffer *source)
 {
     releaseTexImage();
 
-    mTexture->copyImage(GL_TEXTURE_2D, level, format, x, y, width, height, source);
+    return mTexture->copyImage(GL_TEXTURE_2D, level, format, x, y, width, height, source);
 }
 
-void Texture2D::storage(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
+Error Texture2D::storage(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
 {
-    mImmutable = true;
+    Error error = mTexture->storage(GL_TEXTURE_2D, levels, internalformat, width, height, 1);
+    if (error.isError())
+    {
+        return error;
+    }
 
-    mTexture->storage(GL_TEXTURE_2D, levels, internalformat, width, height, 1);
+    mImmutableLevelCount = levels;
+
+    return Error(GL_NO_ERROR);
 }
 
 // Tests for 2D texture sampling completeness. [OpenGL ES 2.0.24] section 3.8.2 page 85.
@@ -361,11 +361,11 @@ bool Texture2D::isDepth(GLint level) const
     return GetInternalFormatInfo(getInternalFormat(level)).depthBits > 0;
 }
 
-void Texture2D::generateMipmaps()
+Error Texture2D::generateMipmaps()
 {
     releaseTexImage();
 
-    mTexture->generateMipmaps();
+    return mTexture->generateMipmaps();
 }
 
 // Tests for 2D texture (mipmap) completeness. [OpenGL ES 2.0.24] section 3.7.10 page 81.
@@ -475,9 +475,9 @@ Error TextureCubeMap::setImage(GLenum target, GLint level, GLsizei width, GLsize
 }
 
 Error TextureCubeMap::setCompressedImage(GLenum target, GLint level, GLenum format, GLsizei width, GLsizei height,
-                                         GLsizei imageSize, const void *pixels)
+                                         GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels)
 {
-    return mTexture->setCompressedImage(target, level, format, width, height, 1, imageSize, pixels);
+    return mTexture->setCompressedImage(target, level, format, width, height, 1, imageSize, unpack, pixels);
 }
 
 Error TextureCubeMap::subImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels)
@@ -487,9 +487,9 @@ Error TextureCubeMap::subImage(GLenum target, GLint level, GLint xoffset, GLint 
 
 Error TextureCubeMap::subImageCompressed(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                          GLsizei width, GLsizei height, GLenum format,
-                                         GLsizei imageSize, const void *pixels)
+                                         GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels)
 {
-    return mTexture->subImageCompressed(target, level, xoffset, yoffset, 0, width, height, 1, format, imageSize, pixels);
+    return mTexture->subImageCompressed(target, level, xoffset, yoffset, 0, width, height, 1, format, imageSize, unpack, pixels);
 }
 
 // Tests for cube texture completeness. [OpenGL ES 2.0.24] section 3.7.10 page 81.
@@ -529,16 +529,23 @@ bool TextureCubeMap::isDepth(GLenum target, GLint level) const
     return GetInternalFormatInfo(getInternalFormat(target, level)).depthBits > 0;
 }
 
-void TextureCubeMap::copyImage(GLenum target, GLint level, GLenum format, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
+Error TextureCubeMap::copyImage(GLenum target, GLint level, GLenum format, GLint x, GLint y,
+                                GLsizei width, GLsizei height, Framebuffer *source)
 {
-    mTexture->copyImage(target, level, format, x, y, width, height, source);
+    return mTexture->copyImage(target, level, format, x, y, width, height, source);
 }
 
-void TextureCubeMap::storage(GLsizei levels, GLenum internalformat, GLsizei size)
+Error TextureCubeMap::storage(GLsizei levels, GLenum internalformat, GLsizei size)
 {
-    mImmutable = true;
+    Error error = mTexture->storage(GL_TEXTURE_CUBE_MAP, levels, internalformat, size, size, 1);
+    if (error.isError())
+    {
+        return error;
+    }
 
-    mTexture->storage(GL_TEXTURE_CUBE_MAP, levels, internalformat, size, size, 1);
+    mImmutableLevelCount = levels;
+
+    return Error(GL_NO_ERROR);
 }
 
 // Tests for texture sampling completeness
@@ -720,9 +727,9 @@ Error Texture3D::setImage(GLint level, GLsizei width, GLsizei height, GLsizei de
 }
 
 Error Texture3D::setCompressedImage(GLint level, GLenum format, GLsizei width, GLsizei height, GLsizei depth,
-                                    GLsizei imageSize, const void *pixels)
+                                    GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels)
 {
-    return mTexture->setCompressedImage(GL_TEXTURE_3D, level, format, width, height, depth, imageSize, pixels);
+    return mTexture->setCompressedImage(GL_TEXTURE_3D, level, format, width, height, depth, imageSize, unpack, pixels);
 }
 
 Error Texture3D::subImage(GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels)
@@ -732,16 +739,22 @@ Error Texture3D::subImage(GLint level, GLint xoffset, GLint yoffset, GLint zoffs
 
 Error Texture3D::subImageCompressed(GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                                     GLsizei width, GLsizei height, GLsizei depth, GLenum format,
-                                    GLsizei imageSize, const void *pixels)
+                                    GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels)
 {
-    return mTexture->subImageCompressed(GL_TEXTURE_3D, level, xoffset, yoffset, zoffset, width, height, depth, format, imageSize, pixels);
+    return mTexture->subImageCompressed(GL_TEXTURE_3D, level, xoffset, yoffset, zoffset, width, height, depth, format, imageSize, unpack, pixels);
 }
 
-void Texture3D::storage(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth)
+Error Texture3D::storage(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth)
 {
-    mImmutable = true;
+    Error error = mTexture->storage(GL_TEXTURE_3D, levels, internalformat, width, height, depth);
+    if (error.isError())
+    {
+        return error;
+    }
 
-    mTexture->storage(GL_TEXTURE_3D, levels, internalformat, width, height, depth);
+    mImmutableLevelCount = levels;
+
+    return Error(GL_NO_ERROR);
 }
 
 bool Texture3D::isSamplerComplete(const SamplerState &samplerState, const TextureCapsMap &textureCaps, const Extensions &extensions, int clientVersion) const
@@ -881,9 +894,9 @@ Error Texture2DArray::setImage(GLint level, GLsizei width, GLsizei height, GLsiz
 }
 
 Error Texture2DArray::setCompressedImage(GLint level, GLenum format, GLsizei width, GLsizei height, GLsizei depth,
-                                         GLsizei imageSize, const void *pixels)
+                                         GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels)
 {
-    return mTexture->setCompressedImage(GL_TEXTURE_2D_ARRAY, level, format, width, height, depth, imageSize, pixels);
+    return mTexture->setCompressedImage(GL_TEXTURE_2D_ARRAY, level, format, width, height, depth, imageSize, unpack, pixels);
 }
 
 Error Texture2DArray::subImage(GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels)
@@ -893,16 +906,22 @@ Error Texture2DArray::subImage(GLint level, GLint xoffset, GLint yoffset, GLint 
 
 Error Texture2DArray::subImageCompressed(GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                                          GLsizei width, GLsizei height, GLsizei depth, GLenum format,
-                                         GLsizei imageSize, const void *pixels)
+                                         GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels)
 {
-    return mTexture->subImageCompressed(GL_TEXTURE_2D_ARRAY, level, xoffset, yoffset, zoffset, width, height, depth, format, imageSize, pixels);
+    return mTexture->subImageCompressed(GL_TEXTURE_2D_ARRAY, level, xoffset, yoffset, zoffset, width, height, depth, format, imageSize, unpack, pixels);
 }
 
-void Texture2DArray::storage(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth)
+Error Texture2DArray::storage(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth)
 {
-    mImmutable = true;
+    Error error = mTexture->storage(GL_TEXTURE_2D_ARRAY, levels, internalformat, width, height, depth);
+    if (error.isError())
+    {
+        return error;
+    }
 
-    mTexture->storage(GL_TEXTURE_2D_ARRAY, levels, internalformat, width, height, depth);
+    mImmutableLevelCount = levels;
+
+    return Error(GL_NO_ERROR);
 }
 
 bool Texture2DArray::isSamplerComplete(const SamplerState &samplerState, const TextureCapsMap &textureCaps, const Extensions &extensions, int clientVersion) const

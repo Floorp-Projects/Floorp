@@ -38,19 +38,19 @@ enum DirectiveType
 
 DirectiveType getDirective(const pp::Token *token)
 {
-    static const std::string kDirectiveDefine("define");
-    static const std::string kDirectiveUndef("undef");
-    static const std::string kDirectiveIf("if");
-    static const std::string kDirectiveIfdef("ifdef");
-    static const std::string kDirectiveIfndef("ifndef");
-    static const std::string kDirectiveElse("else");
-    static const std::string kDirectiveElif("elif");
-    static const std::string kDirectiveEndif("endif");
-    static const std::string kDirectiveError("error");
-    static const std::string kDirectivePragma("pragma");
-    static const std::string kDirectiveExtension("extension");
-    static const std::string kDirectiveVersion("version");
-    static const std::string kDirectiveLine("line");
+    const char kDirectiveDefine[] = "define";
+    const char kDirectiveUndef[] = "undef";
+    const char kDirectiveIf[] = "if";
+    const char kDirectiveIfdef[] = "ifdef";
+    const char kDirectiveIfndef[] = "ifndef";
+    const char kDirectiveElse[] = "else";
+    const char kDirectiveElif[] = "elif";
+    const char kDirectiveEndif[] = "endif";
+    const char kDirectiveError[] = "error";
+    const char kDirectivePragma[] = "pragma";
+    const char kDirectiveExtension[] = "extension";
+    const char kDirectiveVersion[] = "version";
+    const char kDirectiveLine[] = "line";
 
     if (token->type != pp::Token::IDENTIFIER)
         return DIRECTIVE_NONE;
@@ -155,7 +155,7 @@ class DefinedParser : public Lexer
   protected:
     virtual void lex(Token *token)
     {
-        static const std::string kDefined("defined");
+        const char kDefined[] = "defined";
 
         mLexer->lex(token);
         if (token->type != Token::IDENTIFIER)
@@ -592,6 +592,11 @@ void DirectiveParser::parsePragma(Token *token)
     int state = PRAGMA_NAME;
 
     mTokenizer->lex(token);
+    bool stdgl = token->text == "STDGL";
+    if (stdgl)
+    {
+        mTokenizer->lex(token);
+    }
     while ((token->type != '\n') && (token->type != Token::LAST))
     {
         switch(state++)
@@ -627,7 +632,7 @@ void DirectiveParser::parsePragma(Token *token)
     }
     else if (state > PRAGMA_NAME)  // Do not notify for empty pragma.
     {
-        mDirectiveHandler->handlePragma(token->location, name, value);
+        mDirectiveHandler->handlePragma(token->location, name, value, stdgl);
     }
 }
 

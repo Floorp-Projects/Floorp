@@ -37,6 +37,13 @@ BufferD3D *BufferD3D::makeBufferD3D(BufferImpl *buffer)
     return static_cast<BufferD3D*>(buffer);
 }
 
+BufferD3D *BufferD3D::makeFromBuffer(gl::Buffer *buffer)
+{
+    BufferImpl *impl = buffer->getImplementation();
+    ASSERT(impl);
+    return makeBufferD3D(impl);
+}
+
 void BufferD3D::updateSerial()
 {
     mSerial = mNextSerial++;

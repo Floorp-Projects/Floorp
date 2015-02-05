@@ -198,6 +198,7 @@ TIntermTyped *TIntermediate::addUnaryMath(
       case EOpPostDecrement:
       case EOpPreDecrement:
       case EOpNegative:
+      case EOpPositive:
         if (child->getType().getBasicType() == EbtStruct ||
             child->getType().isArray())
         {

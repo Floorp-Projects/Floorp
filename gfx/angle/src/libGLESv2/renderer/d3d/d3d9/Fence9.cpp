@@ -4,7 +4,7 @@
 // found in the LICENSE file.
 //
 
-// Fence9.cpp: Defines the rx::Fence9 class.
+// Fence9.cpp: Defines the rx::FenceNV9 class.
 
 #include "libGLESv2/renderer/d3d/d3d9/Fence9.h"
 #include "libGLESv2/renderer/d3d/d3d9/renderer9_utils.h"
@@ -14,39 +14,41 @@
 namespace rx
 {
 
-Fence9::Fence9(rx::Renderer9 *renderer)
+FenceNV9::FenceNV9(Renderer9 *renderer)
+    : FenceNVImpl(),
+      mRenderer(renderer),
+      mQuery(NULL)
 {
-    mRenderer = renderer;
-    mQuery = NULL;
 }
 
-Fence9::~Fence9()
+FenceNV9::~FenceNV9()
 {
     SafeRelease(mQuery);
 }
 
-bool Fence9::isSet() const
-{
-    return mQuery != NULL;
-}
-
-void Fence9::set()
+gl::Error FenceNV9::set()
 {
     if (!mQuery)
     {
-        mQuery = mRenderer->allocateEventQuery();
-        if (!mQuery)
+        gl::Error error = mRenderer->allocateEventQuery(&mQuery);
+        if (error.isError())
         {
-            return gl::error(GL_OUT_OF_MEMORY);
+            return error;
         }
     }
 
     HRESULT result = mQuery->Issue(D3DISSUE_END);
-    UNUSED_ASSERTION_VARIABLE(result);
-    ASSERT(SUCCEEDED(result));
+    if (FAILED(result))
+    {
+        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
+        SafeRelease(mQuery);
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to end event query, result: 0x%X.", result);
+    }
+
+    return gl::Error(GL_NO_ERROR);
 }
 
-bool Fence9::test(bool flushCommandBuffer)
+gl::Error FenceNV9::test(bool flushCommandBuffer, GLboolean *outFinished)
 {
     ASSERT(mQuery);
 
@@ -56,17 +58,34 @@ bool Fence9::test(bool flushCommandBuffer)
     if (d3d9::isDeviceLostError(result))
     {
         mRenderer->notifyDeviceLost();
-        return gl::error(GL_OUT_OF_MEMORY, true);
+        return gl::Error(GL_OUT_OF_MEMORY, "Device was lost while querying result of an event query.");
+    }
+    else if (FAILED(result))
+    {
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to get query data, result: 0x%X.", result);
     }
 
     ASSERT(result == S_OK || result == S_FALSE);
-
-    return (result == S_OK);
+    *outFinished = ((result == S_OK) ? GL_TRUE : GL_FALSE);
+    return gl::Error(GL_NO_ERROR);
 }
 
-bool Fence9::hasError() const
+gl::Error FenceNV9::finishFence(GLboolean *outFinished)
 {
-    return mRenderer->isDeviceLost();
+    ASSERT(outFinished);
+
+    while (*outFinished != GL_TRUE)
+    {
+        gl::Error error = test(true, outFinished);
+        if (error.isError())
+        {
+            return error;
+        }
+
+        Sleep(0);
+    }
+
+    return gl::Error(GL_NO_ERROR);
 }
 
 }

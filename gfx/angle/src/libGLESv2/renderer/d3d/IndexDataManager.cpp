@@ -97,7 +97,14 @@ gl::Error IndexDataManager::prepareIndexData(GLenum type, GLsizei count, gl::Buf
 
         ASSERT(typeInfo.bytes * static_cast<unsigned int>(count) + offset <= storage->getSize());
 
-        indices = static_cast<const GLubyte*>(storage->getData()) + offset;
+        const uint8_t *bufferData = NULL;
+        gl::Error error = storage->getData(&bufferData);
+        if (error.isError())
+        {
+            return error;
+        }
+
+        indices = bufferData + offset;
     }
 
     StaticIndexBufferInterface *staticBuffer = storage ? storage->getStaticIndexBuffer() : NULL;
@@ -183,7 +190,16 @@ gl::Error IndexDataManager::prepareIndexData(GLenum type, GLsizei count, gl::Buf
             return error;
         }
 
-        ConvertIndices(type, destinationIndexType, staticBuffer ? storage->getData() : indices, convertCount, output);
+        const uint8_t *dataPointer = reinterpret_cast<const uint8_t*>(indices);
+        if (staticBuffer)
+        {
+            error = storage->getData(&dataPointer);
+            if (error.isError())
+            {
+                return error;
+            }
+        }
+        ConvertIndices(type, destinationIndexType, dataPointer, convertCount, output);
 
         error = indexBuffer->unmapBuffer();
         if (error.isError())
