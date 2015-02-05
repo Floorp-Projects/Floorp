@@ -56,8 +56,11 @@ PluginWidgetProxy::Create(nsIWidget*        aParent,
   ENSURE_CHANNEL;
   PWLOG("PluginWidgetProxy::Create()\n");
 
-  if (!mActor->SendCreate()) {
+  nsresult rv = NS_ERROR_UNEXPECTED;
+  mActor->SendCreate(&rv);
+  if (NS_FAILED(rv)) {
     NS_WARNING("failed to create chrome widget, plugins won't paint.");
+    return rv;
   }
 
   BaseCreate(aParent, aRect, aContext, aInitData);

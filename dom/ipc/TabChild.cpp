@@ -3481,19 +3481,20 @@ TabChild::DeallocPPluginWidgetChild(mozilla::plugins::PPluginWidgetChild* aActor
     return true;
 }
 
-already_AddRefed<nsIWidget>
-TabChild::CreatePluginWidget(nsIWidget* aParent)
+nsresult
+TabChild::CreatePluginWidget(nsIWidget* aParent, nsIWidget** aOut)
 {
+  *aOut = nullptr;
   mozilla::plugins::PluginWidgetChild* child =
     static_cast<mozilla::plugins::PluginWidgetChild*>(SendPPluginWidgetConstructor());
   if (!child) {
     NS_ERROR("couldn't create PluginWidgetChild");
-    return nullptr;
+    return NS_ERROR_UNEXPECTED;
   }
   nsCOMPtr<nsIWidget> pluginWidget = nsIWidget::CreatePluginProxyWidget(this, child);
   if (!pluginWidget) {
     NS_ERROR("couldn't create PluginWidgetProxy");
-    return nullptr;
+    return NS_ERROR_UNEXPECTED;
   }
 
   nsWidgetInitData initData;
@@ -3506,7 +3507,8 @@ TabChild::CreatePluginWidget(nsIWidget* aParent)
   if (NS_FAILED(rv)) {
     NS_WARNING("Creating native plugin widget on the chrome side failed.");
   }
-  return pluginWidget.forget();
+  pluginWidget.forget(aOut);
+  return rv;
 }
 
 TabChildGlobal::TabChildGlobal(TabChildBase* aTabChild)
