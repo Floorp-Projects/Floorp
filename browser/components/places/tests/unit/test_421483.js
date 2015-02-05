@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
 const SMART_BOOKMARKS_PREF = "browser.places.smartBookmarksVersion";
 
 let gluesvc = Cc["@mozilla.org/browser/browserglue;1"].
@@ -18,64 +17,88 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function smart_bookmarks_disabled() {
+add_task(function* smart_bookmarks_disabled() {
   Services.prefs.setIntPref("browser.places.smartBookmarksVersion", -1);
   gluesvc.ensurePlacesDefaultQueriesInitialized();
+
   let smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
-  do_check_eq(smartBookmarkItemIds.length, 0);
+  Assert.equal(smartBookmarkItemIds.length, 0);
+
   do_print("check that pref has not been bumped up");
-  do_check_eq(Services.prefs.getIntPref("browser.places.smartBookmarksVersion"), -1);
+  Assert.equal(Services.prefs.getIntPref("browser.places.smartBookmarksVersion"), -1);
 });
 
-add_task(function create_smart_bookmarks() {
+add_task(function* create_smart_bookmarks() {
   Services.prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
   gluesvc.ensurePlacesDefaultQueriesInitialized();
+
   let smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
-  do_check_neq(smartBookmarkItemIds.length, 0);
+  Assert.notEqual(smartBookmarkItemIds.length, 0);
+
   do_print("check that pref has been bumped up");
-  do_check_true(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
+  Assert.ok(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
 });
 
-add_task(function remove_smart_bookmark_and_restore() {
+add_task(function* remove_smart_bookmark_and_restore() {
   let smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   let smartBookmarksCount = smartBookmarkItemIds.length;
   do_print("remove one smart bookmark and restore");
-  PlacesUtils.bookmarks.removeItem(smartBookmarkItemIds[0]);
+
+  let guid = yield PlacesUtils.promiseItemGuid(smartBookmarkItemIds[0]);
+  yield PlacesUtils.bookmarks.remove(guid);
   Services.prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
+
   gluesvc.ensurePlacesDefaultQueriesInitialized();
   smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
-  do_check_eq(smartBookmarkItemIds.length, smartBookmarksCount);
+  Assert.equal(smartBookmarkItemIds.length, smartBookmarksCount);
+
   do_print("check that pref has been bumped up");
-  do_check_true(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
+  Assert.ok(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
 });
 
-add_task(function move_smart_bookmark_rename_and_restore() {
+add_task(function* move_smart_bookmark_rename_and_restore() {
   let smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   let smartBookmarksCount = smartBookmarkItemIds.length;
   do_print("smart bookmark should be restored in place");
-  let parent = PlacesUtils.bookmarks.getFolderIdForItem(smartBookmarkItemIds[0]);
-  let oldTitle = PlacesUtils.bookmarks.getItemTitle(smartBookmarkItemIds[0]);
+
+  let guid = yield PlacesUtils.promiseItemGuid(smartBookmarkItemIds[0]);
+  let bm = yield PlacesUtils.bookmarks.fetch(guid);
+  let oldTitle = bm.title;
+
   // create a subfolder and move inside it
-  let newParent =
-    PlacesUtils.bookmarks.createFolder(parent, "test",
-                                       PlacesUtils.bookmarks.DEFAULT_INDEX);
-  PlacesUtils.bookmarks.moveItem(smartBookmarkItemIds[0], newParent,
-                                 PlacesUtils.bookmarks.DEFAULT_INDEX);
-  // change title
-  PlacesUtils.bookmarks.setItemTitle(smartBookmarkItemIds[0], "new title");
+  let subfolder = yield PlacesUtils.bookmarks.insert({
+    parentGuid: bm.parentGuid,
+    title: "test",
+    index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER
+  });
+
+  // change title and move into new subfolder
+  yield PlacesUtils.bookmarks.update({
+    guid: guid,
+    parentGuid: subfolder.guid,
+    index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+    title: "new title"
+  });
+
   // restore
   Services.prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
   gluesvc.ensurePlacesDefaultQueriesInitialized();
+
   smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
-  do_check_eq(smartBookmarkItemIds.length, smartBookmarksCount);
-  do_check_eq(PlacesUtils.bookmarks.getFolderIdForItem(smartBookmarkItemIds[0]), newParent);
-  do_check_eq(PlacesUtils.bookmarks.getItemTitle(smartBookmarkItemIds[0]), oldTitle);
+  Assert.equal(smartBookmarkItemIds.length, smartBookmarksCount);
+
+  guid = yield PlacesUtils.promiseItemGuid(smartBookmarkItemIds[0]);
+  bm = yield PlacesUtils.bookmarks.fetch(guid);
+  Assert.equal(bm.parentGuid, subfolder.guid);
+  Assert.equal(bm.title, oldTitle);
+
   do_print("check that pref has been bumped up");
-  do_check_true(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
+  Assert.ok(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
 });
