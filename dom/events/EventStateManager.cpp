@@ -1088,8 +1088,7 @@ bool
 EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
                                              nsFrameLoader* aFrameLoader,
                                              nsEventStatus *aStatus) {
-  PBrowserParent* remoteBrowser = aFrameLoader->GetRemoteBrowser();
-  TabParent* remote = static_cast<TabParent*>(remoteBrowser);
+  TabParent* remote = TabParent::GetFrom(aFrameLoader);
   if (!remote) {
     return false;
   }

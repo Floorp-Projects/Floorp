@@ -87,7 +87,7 @@ nsIContentParent::CanOpenBrowser(const IPCTabContext& aContext)
     return false;
   }
 
-  auto opener = static_cast<TabParent*>(popupContext.opener().get_PBrowserParent());
+  auto opener = TabParent::GetFrom(popupContext.opener().get_PBrowserParent());
   if (!opener) {
     ASSERT_UNLESS_FUZZING();
     return false;
@@ -140,7 +140,7 @@ nsIContentParent::AllocPBrowserParent(const TabId& aTabId,
 bool
 nsIContentParent::DeallocPBrowserParent(PBrowserParent* aFrame)
 {
-  TabParent* parent = static_cast<TabParent*>(aFrame);
+  TabParent* parent = TabParent::GetFrom(aFrame);
   NS_RELEASE(parent);
   return true;
 }
