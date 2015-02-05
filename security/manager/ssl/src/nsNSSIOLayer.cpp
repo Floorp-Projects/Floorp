@@ -1224,7 +1224,8 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
 
     return false;
   }
-  if ((err == SSL_ERROR_NO_CYPHER_OVERLAP || err == PR_END_OF_FILE_ERROR) &&
+  if ((err == SSL_ERROR_NO_CYPHER_OVERLAP || err == PR_END_OF_FILE_ERROR ||
+       err == PR_CONNECT_RESET_ERROR) &&
       nsNSSComponent::AreAnyWeakCiphersEnabled()) {
     if (socketInfo->SharedState().IOLayerHelpers()
                   .rememberStrongCiphersFailed(socketInfo->GetHostName(),
