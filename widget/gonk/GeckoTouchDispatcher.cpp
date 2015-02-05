@@ -122,7 +122,7 @@ GeckoTouchDispatcher::SetCompositorVsyncObserver(mozilla::layers::CompositorVsyn
   MOZ_ASSERT(NS_IsMainThread());
   // We assume on b2g that there is only 1 CompositorParent
   MOZ_ASSERT(sTouchDispatcher->mCompositorVsyncObserver == nullptr);
-  if (gfxPrefs::TouchResampling()) {
+  if (sTouchDispatcher->mResamplingEnabled) {
     sTouchDispatcher->mCompositorVsyncObserver = aObserver;
   }
 }
@@ -131,7 +131,7 @@ GeckoTouchDispatcher::SetCompositorVsyncObserver(mozilla::layers::CompositorVsyn
 /* static */ bool
 GeckoTouchDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp)
 {
-  if ((sTouchDispatcher == nullptr) || !gfxPrefs::TouchResampling()) {
+  if (sTouchDispatcher == nullptr) {
     return false;
   }
 
@@ -153,7 +153,7 @@ GeckoTouchDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp)
 void
 GeckoTouchDispatcher::NotifyTouch(MultiTouchInput& aTouch, TimeStamp aEventTime)
 {
-  if (aTouch.mType == MultiTouchInput::MULTITOUCH_START && mCompositorVsyncObserver) {
+  if (mCompositorVsyncObserver) {
     mCompositorVsyncObserver->SetNeedsComposite(true);
   }
 
@@ -247,8 +247,8 @@ ResampleTouch(MultiTouchInput& aOutTouch,
 
   // Make sure we only resample the correct finger.
   for (size_t i = 0; i < aOutTouch.mTouches.Length(); i++) {
-    const SingleTouchData& base = aBase.mTouches[i];
-    const SingleTouchData& current = GetTouchByID(base, aCurrent);
+    const SingleTouchData& current = aCurrent.mTouches[i];
+    const SingleTouchData& base = GetTouchByID(current, aBase);
 
     const ScreenIntPoint& baseTouchPoint = base.mScreenPoint;
     const ScreenIntPoint& currentTouchPoint = current.mScreenPoint;

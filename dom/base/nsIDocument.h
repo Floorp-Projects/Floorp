@@ -598,6 +598,12 @@ public:
     return mSandboxFlags;
   }
 
+   /**
+   * Get string representation of sandbox flags (null if no flags as
+   * set).
+   */
+  void GetSandboxFlagsAsString(nsAString& aFlags);
+
   /**
    * Set the sandbox flags for this document.
    * @see nsSandboxFlags.h for the possible flags

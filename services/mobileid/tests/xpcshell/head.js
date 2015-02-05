@@ -1,9 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
 "use strict";
+
+const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 const Cm = Components.manager;
 
@@ -428,7 +428,7 @@ let MobileIdentityUIGlue = {
 const XUL_APP_INFO_UUID = Components.ID("{84fdc459-d96d-421c-9bff-a8193233ae75}");
 const XUL_APP_INFO_CONTRACT_ID = "@mozilla.org/xre/app-info;1";
 
-let (XULAppInfo = {
+let XULAppInfo = {
   vendor: "Mozilla",
   name: "MobileIdTest",
   ID: "{230de50e-4cd1-11dc-8314-0800200b9a66}",
@@ -445,18 +445,18 @@ let (XULAppInfo = {
     Ci.nsIXULAppInfo,
     Ci.nsIXULRuntime,
   ])
-}) {
-  let XULAppInfoFactory = {
-    createInstance: function (outer, iid) {
-      if (outer != null) {
-        throw Cr.NS_ERROR_NO_AGGREGATION;
-      }
-      return XULAppInfo.QueryInterface(iid);
+};
+
+let XULAppInfoFactory = {
+  createInstance: function (outer, iid) {
+    if (outer != null) {
+      throw Cr.NS_ERROR_NO_AGGREGATION;
     }
-  };
-  Cm.QueryInterface(Ci.nsIComponentRegistrar)
-    .registerFactory(XUL_APP_INFO_UUID,
-                     "XULAppInfo",
-                     XUL_APP_INFO_CONTRACT_ID,
-                     XULAppInfoFactory);
-}
+    return XULAppInfo.QueryInterface(iid);
+  }
+};
+Cm.QueryInterface(Ci.nsIComponentRegistrar)
+  .registerFactory(XUL_APP_INFO_UUID,
+                   "XULAppInfo",
+                   XUL_APP_INFO_CONTRACT_ID,
+                   XULAppInfoFactory);

@@ -227,7 +227,7 @@ DirectoryProvider.prototype = {
       // subdir doesn't exist, and the parent is writable, so try to
       // create it. This can fail if a file named updates exists.
       try {
-        dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0770);
+        dir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt('0770', 8));
       } catch (e) {
         // The create failed for some reason. We can't use it.
         log("Error: " + dir.path + " unable to create directory");

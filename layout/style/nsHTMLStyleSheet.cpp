@@ -483,8 +483,9 @@ nsHTMLStyleSheet::UniqueMappedAttributes(nsMappedAttributes* aMapped)
     PL_DHashTableInit(&mMappedAttrTable, &MappedAttrTable_Ops,
                       sizeof(MappedAttrTableEntry));
   }
-  MappedAttrTableEntry *entry = static_cast<MappedAttrTableEntry*>
-                                           (PL_DHashTableAdd(&mMappedAttrTable, aMapped));
+  MappedAttrTableEntry *entry =
+    static_cast<MappedAttrTableEntry*>
+               (PL_DHashTableAdd(&mMappedAttrTable, aMapped, fallible));
   if (!entry)
     return nullptr;
   if (!entry->mAttributes) {
@@ -518,7 +519,7 @@ nsHTMLStyleSheet::LangRuleFor(const nsString& aLanguage)
                       sizeof(LangRuleTableEntry));
   }
   LangRuleTableEntry *entry = static_cast<LangRuleTableEntry*>
-    (PL_DHashTableAdd(&mLangRuleTable, &aLanguage));
+    (PL_DHashTableAdd(&mLangRuleTable, &aLanguage, fallible));
   if (!entry) {
     NS_ASSERTION(false, "out of memory");
     return nullptr;

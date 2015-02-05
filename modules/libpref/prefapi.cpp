@@ -143,19 +143,14 @@ static nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, u
 
 #define PREF_HASHTABLE_INITIAL_LENGTH   1024
 
-nsresult PREF_Init()
+void PREF_Init()
 {
     if (!gHashTable.IsInitialized()) {
-        if (!PL_DHashTableInit(&gHashTable, &pref_HashTableOps,
-                               sizeof(PrefHashEntry), fallible,
-                               PREF_HASHTABLE_INITIAL_LENGTH)) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-
+        PL_DHashTableInit(&gHashTable, &pref_HashTableOps,
+                          sizeof(PrefHashEntry), PREF_HASHTABLE_INITIAL_LENGTH);
         PL_INIT_ARENA_POOL(&gPrefNameArena, "PrefNameArena",
                            PREFNAME_ARENA_SIZE);
     }
-    return NS_OK;
 }
 
 /* Frees the callback list. */
@@ -740,7 +735,8 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
     if (!gHashTable.IsInitialized())
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PrefHashEntry* pref = static_cast<PrefHashEntry*>(PL_DHashTableAdd(&gHashTable, key));
+    PrefHashEntry* pref = static_cast<PrefHashEntry*>
+        (PL_DHashTableAdd(&gHashTable, key, fallible));
 
     if (!pref)
         return NS_ERROR_OUT_OF_MEMORY;

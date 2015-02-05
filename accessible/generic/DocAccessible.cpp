@@ -955,6 +955,22 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsIAtom* aAttribute
 
   nsIContent* elm = aAccessible->GetContent();
 
+  // Update aria-hidden flag for the whole subtree iff aria-hidden is changed
+  // on the root, i.e. ignore any affiliated aria-hidden changes in the subtree
+  // of top aria-hidden.
+  if (aAttribute == nsGkAtoms::aria_hidden) {
+    bool isDefined = aria::HasDefinedARIAHidden(elm);
+    if (isDefined != aAccessible->IsARIAHidden() &&
+        !aAccessible->Parent()->IsARIAHidden()) {
+      aAccessible->SetARIAHidden(isDefined);
+
+      nsRefPtr<AccEvent> event =
+        new AccObjectAttrChangedEvent(aAccessible, aAttribute);
+      FireDelayedEvent(event);
+    }
+    return;
+  }
+
   if (aAttribute == nsGkAtoms::aria_checked ||
       (aAccessible->IsButton() &&
        aAttribute == nsGkAtoms::aria_pressed)) {
