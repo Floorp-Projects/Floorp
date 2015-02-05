@@ -14,6 +14,7 @@
 #include "jit/MacroAssembler.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
+#include "jit/OptimizationTracking.h"
 #include "jit/Safepoints.h"
 #include "jit/Snapshots.h"
 #include "jit/VMFunctions.h"
@@ -25,7 +26,6 @@ class OutOfLineCode;
 class CodeGenerator;
 class MacroAssembler;
 class IonCache;
-class UniqueTrackedOptimizations;
 
 template <class ArgSeq, class StoreOutputTo>
 class OutOfLineCallVM;
@@ -46,6 +46,17 @@ struct PatchableBackedgeInfo
 struct ReciprocalMulConstants {
     int32_t multiplier;
     int32_t shiftAmount;
+};
+
+// This should be nested in CodeGeneratorShared, but it is used in
+// optimization tracking implementation and nested classes cannot be
+// forward-declared.
+struct NativeToTrackedOptimizations
+{
+    // [startOffset, endOffset]
+    CodeOffsetLabel startOffset;
+    CodeOffsetLabel endOffset;
+    const TrackedOptimizations *optimizations;
 };
 
 class CodeGeneratorShared : public LElementVisitor
@@ -115,15 +126,6 @@ class CodeGeneratorShared : public LElementVisitor
         return gen->isProfilerInstrumentationEnabled();
     }
 
-  public:
-    struct NativeToTrackedOptimizations {
-        // [startOffset, endOffset)
-        CodeOffsetLabel startOffset;
-        CodeOffsetLabel endOffset;
-        const TrackedOptimizations *optimizations;
-    };
-
-  protected:
     js::Vector<NativeToTrackedOptimizations, 0, SystemAllocPolicy> trackedOptimizations_;
     uint8_t *trackedOptimizationsMap_;
     uint32_t trackedOptimizationsMapSize_;
@@ -338,10 +340,10 @@ class CodeGeneratorShared : public LElementVisitor
     void verifyCompactNativeToBytecodeMap(JitCode *code);
 
     bool generateCompactTrackedOptimizationsMap(JSContext *cx, JitCode *code,
-                                                types::TypeSet::TypeList *allTypes);
+                                                IonTrackedTypeVector *allTypes);
     void verifyCompactTrackedOptimizationsMap(JitCode *code, uint32_t numRegions,
                                               const UniqueTrackedOptimizations &unique,
-                                              const types::TypeSet::TypeList *allTypes);
+                                              const IonTrackedTypeVector *allTypes);
 
     // Mark the safepoint on |ins| as corresponding to the current assembler location.
     // The location should be just after a call.

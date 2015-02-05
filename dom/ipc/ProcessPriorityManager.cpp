@@ -813,12 +813,11 @@ ParticularProcessPriorityManager::OnRemoteBrowserFrameShown(nsISupports* aSubjec
     return;
   }
 
-  nsCOMPtr<nsITabParent> tp;
-  fl->GetTabParent(getter_AddRefs(tp));
+  TabParent* tp = TabParent::GetFrom(fl);
   NS_ENSURE_TRUE_VOID(tp);
 
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
-  if (static_cast<TabParent*>(tp.get())->Manager() != mContentParent) {
+  if (tp->Manager() != mContentParent) {
     return;
   }
 
@@ -832,7 +831,7 @@ ParticularProcessPriorityManager::OnTabParentDestroyed(nsISupports* aSubject)
   NS_ENSURE_TRUE_VOID(tp);
 
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
-  if (static_cast<TabParent*>(tp.get())->Manager() != mContentParent) {
+  if (TabParent::GetFrom(tp)->Manager() != mContentParent) {
     return;
   }
 
@@ -845,14 +844,13 @@ ParticularProcessPriorityManager::OnFrameloaderVisibleChanged(nsISupports* aSubj
   nsCOMPtr<nsIFrameLoader> fl = do_QueryInterface(aSubject);
   NS_ENSURE_TRUE_VOID(fl);
 
-  nsCOMPtr<nsITabParent> tp;
-  fl->GetTabParent(getter_AddRefs(tp));
+  TabParent* tp = TabParent::GetFrom(fl);
   if (!tp) {
     return;
   }
 
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
-  if (static_cast<TabParent*>(tp.get())->Manager() != mContentParent) {
+  if (tp->Manager() != mContentParent) {
     return;
   }
 
@@ -932,7 +930,7 @@ ParticularProcessPriorityManager::HasAppType(const char* aAppType)
     mContentParent->ManagedPBrowserParent();
   for (uint32_t i = 0; i < browsers.Length(); i++) {
     nsAutoString appType;
-    static_cast<TabParent*>(browsers[i])->GetAppType(appType);
+    TabParent::GetFrom(browsers[i])->GetAppType(appType);
     if (appType.EqualsASCII(aAppType)) {
       return true;
     }
@@ -947,7 +945,7 @@ ParticularProcessPriorityManager::IsExpectingSystemMessage()
   const InfallibleTArray<PBrowserParent*>& browsers =
     mContentParent->ManagedPBrowserParent();
   for (uint32_t i = 0; i < browsers.Length(); i++) {
-    TabParent* tp = static_cast<TabParent*>(browsers[i]);
+    TabParent* tp = TabParent::GetFrom(browsers[i]);
     nsCOMPtr<nsIMozBrowserFrame> bf = do_QueryInterface(tp->GetOwnerElement());
     if (!bf) {
       continue;
@@ -979,7 +977,7 @@ ParticularProcessPriorityManager::ComputePriority()
   const InfallibleTArray<PBrowserParent*>& browsers =
     mContentParent->ManagedPBrowserParent();
   for (uint32_t i = 0; i < browsers.Length(); i++) {
-    if (static_cast<TabParent*>(browsers[i])->IsVisible()) {
+    if (TabParent::GetFrom(browsers[i])->IsVisible()) {
       isVisible = true;
       break;
     }

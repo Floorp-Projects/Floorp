@@ -236,7 +236,8 @@ nsDiskCacheBindery::AddBinding(nsDiskCacheBinding * binding)
     HashTableEntry * hashEntry;
     hashEntry = (HashTableEntry *)
       PL_DHashTableAdd(&table,
-                       (void *)(uintptr_t) binding->mRecord.HashNumber());
+                       (void *)(uintptr_t) binding->mRecord.HashNumber(),
+                       fallible);
     if (!hashEntry) return NS_ERROR_OUT_OF_MEMORY;
     
     if (hashEntry->mBinding == nullptr) {

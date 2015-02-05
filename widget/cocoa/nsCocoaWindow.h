@@ -41,6 +41,13 @@ typedef NSInteger NSWindowAnimationBehavior;
 - (void)toggleFullScreen:(id)sender;
 @end
 
+typedef struct NSEdgeInsets {
+    CGFloat top;
+    CGFloat left;
+    CGFloat bottom;
+    CGFloat right;
+} NSEdgeInsets;
+
 #endif
 
 typedef struct _nsCocoaWindowList {
@@ -82,6 +89,7 @@ typedef struct _nsCocoaWindowList {
   BOOL mBeingShown;
   BOOL mDrawTitle;
   BOOL mBrightTitlebarForeground;
+  BOOL mUseMenuStyle;
 }
 
 - (void)importState:(NSDictionary*)aState;
@@ -119,6 +127,8 @@ typedef struct _nsCocoaWindowList {
 - (void)enableSetNeedsDisplay;
 
 - (NSRect)getAndResetNativeDirtyRect;
+
+- (void)setUseMenuStyle:(BOOL)aValue;
 
 @end
 
@@ -260,7 +270,7 @@ public:
     NS_IMETHOD              SetModal(bool aState) MOZ_OVERRIDE;
     virtual bool            IsVisible() const MOZ_OVERRIDE;
     NS_IMETHOD              SetFocus(bool aState=false) MOZ_OVERRIDE;
-    virtual nsIntPoint WidgetToScreenOffset() MOZ_OVERRIDE;
+    virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() MOZ_OVERRIDE;
     virtual nsIntPoint GetClientOffset() MOZ_OVERRIDE;
     virtual nsIntSize ClientToWindowSize(const nsIntSize& aClientSize) MOZ_OVERRIDE;
 
