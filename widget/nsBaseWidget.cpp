@@ -307,7 +307,6 @@ void nsBaseWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener)
 
 already_AddRefed<nsIWidget>
 nsBaseWidget::CreateChild(const nsIntRect  &aRect,
-                          nsDeviceContext *aContext,
                           nsWidgetInitData *aInitData,
                           bool             aForceUseIWidgetParent)
 {

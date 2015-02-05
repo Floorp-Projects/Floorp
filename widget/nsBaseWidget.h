@@ -212,7 +212,6 @@ public:
                                                          double& aOverriddenDeltaY) MOZ_OVERRIDE;
   virtual already_AddRefed<nsIWidget>
   CreateChild(const nsIntRect  &aRect,
-              nsDeviceContext *aContext,
               nsWidgetInitData *aInitData = nullptr,
               bool             aForceUseIWidgetParent = false) MOZ_OVERRIDE;
   NS_IMETHOD              AttachViewToTopLevel(bool aUseAttachedEvents) MOZ_OVERRIDE;
