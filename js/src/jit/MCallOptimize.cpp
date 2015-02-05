@@ -259,6 +259,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     // Simd functions
     if (native == js::simd_int32x4_add)
         return inlineSimdInt32x4BinaryArith(callInfo, native, MSimdBinaryArith::Add);
+    if (native == js::simd_int32x4_and)
+        return inlineSimdInt32x4BinaryBitwise(callInfo, native, MSimdBinaryBitwise::and_);
 
     return InliningStatus_NotInlined;
 }
@@ -2745,6 +2747,38 @@ IonBuilder::inlineSimdInt32x4BinaryArith(CallInfo &callInfo, JSNative native,
     // instruction is supposed to produce a TypeError once it is called.
     MSimdBinaryArith *ins = MSimdBinaryArith::New(alloc(), callInfo.getArg(0), callInfo.getArg(1),
                                                   op, MIRType_Int32x4);
+
+    MSimdBox *obj = MSimdBox::New(alloc(), constraints(), ins, inlineTypedObject,
+                                  inlineTypedObject->group()->initialHeap(constraints()));
+
+    current->add(ins);
+    current->add(obj);
+    current->push(obj);
+
+    callInfo.setImplicitlyUsedUnchecked();
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineSimdInt32x4BinaryBitwise(CallInfo &callInfo, JSNative native,
+                                           MSimdBinaryBitwise::Operation op)
+{
+    if (callInfo.argc() != 2)
+        return InliningStatus_NotInlined;
+
+    JSObject *templateObject = inspector->getTemplateObjectForNative(pc, native);
+    if (!templateObject)
+        return InliningStatus_NotInlined;
+
+    InlineTypedObject *inlineTypedObject = &templateObject->as<InlineTypedObject>();
+    MOZ_ASSERT(inlineTypedObject->typeDescr().as<SimdTypeDescr>().type() == js::Int32x4::type);
+
+    // If the type of any of the arguments is neither a SIMD type, an Object
+    // type, or a Value, then the applyTypes phase will add a fallible box &
+    // unbox sequence.  This does not matter much as the binary bitwise
+    // instruction is supposed to produce a TypeError once it is called.
+    MSimdBinaryBitwise *ins = MSimdBinaryBitwise::New(alloc(), callInfo.getArg(0), callInfo.getArg(1),
+                                                      op, MIRType_Int32x4);
 
     MSimdBox *obj = MSimdBox::New(alloc(), constraints(), ins, inlineTypedObject,
                                   inlineTypedObject->group()->initialHeap(constraints()));
