@@ -1898,14 +1898,6 @@ public:
   }
   
   /*
-   * Returns true if user timing API should print to console.
-   */
-  static bool IsUserTimingLoggingEnabled()
-  {
-    return sIsUserTimingLoggingEnabled;
-  }
-
-  /*
    * Returns true if the performance timing APIs are enabled.
    */
   static bool IsResourceTimingEnabled()
@@ -2385,7 +2377,6 @@ private:
   static uint32_t sHandlingInputTimeout;
   static bool sIsPerformanceTimingEnabled;
   static bool sIsResourceTimingEnabled;
-  static bool sIsUserTimingLoggingEnabled;
   static bool sIsExperimentalAutocompleteEnabled;
   static bool sEncodeDecodeURLHash;
 
