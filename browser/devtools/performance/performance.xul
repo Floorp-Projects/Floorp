@@ -65,7 +65,7 @@
         <hbox id="recordings-controls"
               class="devtools-toolbarbutton-group">
           <toolbarbutton id="record-button"
-                         class="devtools-toolbarbutton"
+                         class="devtools-toolbarbutton record-button"
                          tooltiptext="&profilerUI.recordButton.tooltip;"/>
           <toolbarbutton id="import-button"
                          class="devtools-toolbarbutton"
@@ -111,98 +111,122 @@
         </hbox>
       </toolbar>
 
-      <vbox id="overview-pane">
-        <hbox id="markers-overview"/>
-        <hbox id="memory-overview"/>
-        <hbox id="time-framerate"/>
-      </vbox>
-
-      <deck id="details-pane" flex="1">
-        <hbox id="waterfall-view" flex="1">
-          <vbox id="waterfall-breakdown" flex="1" />
-          <splitter class="devtools-side-splitter"/>
-          <vbox id="waterfall-details"
-                class="theme-sidebar"
-                width="150"
-                height="150"/>
+      <deck id="performance-view" flex="1">
+        <hbox id="empty-notice"
+              class="notice-container"
+              align="center"
+              pack="center"
+              flex="1">
+          <label value="&profilerUI.emptyNotice1;"/>
+          <button class="devtools-toolbarbutton record-button"
+                  standalone="true" />
+          <label value="&profilerUI.emptyNotice2;"/>
         </hbox>
+        <vbox id="performance-view-content" flex="1">
+          <vbox id="overview-pane">
+            <hbox id="markers-overview"/>
+            <hbox id="memory-overview"/>
+            <hbox id="time-framerate"/>
+          </vbox>
+          <deck id="details-pane-container" flex="1">
+            <hbox id="recording-notice"
+                  class="notice-container"
+                  align="center"
+                  pack="center"
+                  flex="1">
+              <label value="&profilerUI.stopNotice1;"/>
+              <button class="devtools-toolbarbutton record-button"
+                      standalone="true"
+                      checked="true" />
+              <label value="&profilerUI.stopNotice2;"/>
+            </hbox>
+            <deck id="details-pane" flex="1">
+              <hbox id="waterfall-view" flex="1">
+                <vbox id="waterfall-breakdown" flex="1" />
+                <splitter class="devtools-side-splitter"/>
+                <vbox id="waterfall-details"
+                      class="theme-sidebar"
+                      width="150"
+                      height="150"/>
+              </hbox>
 
-        <vbox id="js-calltree-view" flex="1">
-          <hbox class="call-tree-headers-container">
-            <label class="plain call-tree-header"
-                   type="duration"
-                   crop="end"
-                   value="&profilerUI.table.totalDuration2;"/>
-            <label class="plain call-tree-header"
-                   type="percentage"
-                   crop="end"
-                   value="&profilerUI.table.totalPercentage;"/>
-            <label class="plain call-tree-header"
-                   type="self-duration"
-                   crop="end"
-                   value="&profilerUI.table.selfDuration2;"/>
-            <label class="plain call-tree-header"
-                   type="self-percentage"
-                   crop="end"
-                   value="&profilerUI.table.selfPercentage;"/>
-            <label class="plain call-tree-header"
-                   type="samples"
-                   crop="end"
-                   value="&profilerUI.table.samples;"/>
-            <label class="plain call-tree-header"
-                   type="function"
-                   crop="end"
-                   value="&profilerUI.table.function;"/>
-          </hbox>
-          <vbox class="call-tree-cells-container" flex="1"/>
+              <vbox id="js-calltree-view" flex="1">
+                <hbox class="call-tree-headers-container">
+                  <label class="plain call-tree-header"
+                         type="duration"
+                         crop="end"
+                         value="&profilerUI.table.totalDuration2;"/>
+                  <label class="plain call-tree-header"
+                         type="percentage"
+                         crop="end"
+                         value="&profilerUI.table.totalPercentage;"/>
+                  <label class="plain call-tree-header"
+                         type="self-duration"
+                         crop="end"
+                         value="&profilerUI.table.selfDuration2;"/>
+                  <label class="plain call-tree-header"
+                         type="self-percentage"
+                         crop="end"
+                         value="&profilerUI.table.selfPercentage;"/>
+                  <label class="plain call-tree-header"
+                         type="samples"
+                         crop="end"
+                         value="&profilerUI.table.samples;"/>
+                  <label class="plain call-tree-header"
+                         type="function"
+                         crop="end"
+                         value="&profilerUI.table.function;"/>
+                </hbox>
+                <vbox class="call-tree-cells-container" flex="1"/>
+              </vbox>
+
+              <hbox id="js-flamegraph-view" flex="1">
+              </hbox>
+
+              <vbox id="memory-calltree-view" flex="1">
+                <hbox class="call-tree-headers-container">
+                  <label class="plain call-tree-header"
+                         type="duration"
+                         crop="end"
+                         value="&profilerUI.table.totalDuration2;"/>
+                  <label class="plain call-tree-header"
+                         type="percentage"
+                         crop="end"
+                         value="&profilerUI.table.totalPercentage;"/>
+                  <label class="plain call-tree-header"
+                         type="allocations"
+                         crop="end"
+                         value="&profilerUI.table.totalAlloc;"/>
+                  <label class="plain call-tree-header"
+                         type="self-duration"
+                         crop="end"
+                         value="&profilerUI.table.selfDuration2;"/>
+                  <label class="plain call-tree-header"
+                         type="self-percentage"
+                         crop="end"
+                         value="&profilerUI.table.selfPercentage;"/>
+                  <label class="plain call-tree-header"
+                         type="self-allocations"
+                         crop="end"
+                         value="&profilerUI.table.selfAlloc;"/>
+                  <label class="plain call-tree-header"
+                         type="samples"
+                         crop="end"
+                         value="&profilerUI.table.samples;"/>
+                  <label class="plain call-tree-header"
+                         type="function"
+                         crop="end"
+                         value="&profilerUI.table.function;"/>
+                </hbox>
+                <vbox class="call-tree-cells-container" flex="1"/>
+              </vbox>
+
+              <hbox id="memory-flamegraph-view" flex="1">
+              </hbox>
+            </deck>
+          </deck>
         </vbox>
-
-        <hbox id="js-flamegraph-view" flex="1">
-        </hbox>
-
-        <vbox id="memory-calltree-view" flex="1">
-          <hbox class="call-tree-headers-container">
-            <label class="plain call-tree-header"
-                   type="duration"
-                   crop="end"
-                   value="&profilerUI.table.totalDuration2;"/>
-            <label class="plain call-tree-header"
-                   type="percentage"
-                   crop="end"
-                   value="&profilerUI.table.totalPercentage;"/>
-            <label class="plain call-tree-header"
-                   type="allocations"
-                   crop="end"
-                   value="&profilerUI.table.totalAlloc;"/>
-            <label class="plain call-tree-header"
-                   type="self-duration"
-                   crop="end"
-                   value="&profilerUI.table.selfDuration2;"/>
-            <label class="plain call-tree-header"
-                   type="self-percentage"
-                   crop="end"
-                   value="&profilerUI.table.selfPercentage;"/>
-            <label class="plain call-tree-header"
-                   type="self-allocations"
-                   crop="end"
-                   value="&profilerUI.table.selfAlloc;"/>
-            <label class="plain call-tree-header"
-                   type="samples"
-                   crop="end"
-                   value="&profilerUI.table.samples;"/>
-            <label class="plain call-tree-header"
-                   type="function"
-                   crop="end"
-                   value="&profilerUI.table.function;"/>
-          </hbox>
-          <vbox class="call-tree-cells-container" flex="1"/>
-        </vbox>
-
-        <hbox id="memory-flamegraph-view" flex="1">
-          <!-- TODO: bug 1077461 -->
-        </hbox>
       </deck>
-
     </vbox>
   </hbox>
 </window>
