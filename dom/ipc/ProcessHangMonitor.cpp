@@ -619,7 +619,7 @@ HangMonitoredProcess::GetScriptBrowser(nsIDOMElement** aBrowser)
   nsTArray<PBrowserParent*> tabs;
   mContentParent->ManagedPBrowserParent(tabs);
   for (size_t i = 0; i < tabs.Length(); i++) {
-    TabParent* tp = TabParent::GetFrom(tabs[i]);
+    TabParent* tp = static_cast<TabParent*>(tabs[i]);
     if (tp->GetTabId() == tabId) {
       nsCOMPtr<nsIDOMElement> node = do_QueryInterface(tp->GetOwnerElement());
       node.forget(aBrowser);
@@ -765,13 +765,14 @@ HangMonitoredProcess::IsReportForBrowser(nsIFrameLoader* aFrameLoader, bool* aRe
     return NS_OK;
   }
 
-  TabParent* tp = TabParent::GetFrom(aFrameLoader);
-  if (!tp) {
+  nsCOMPtr<nsITabParent> itp;
+  aFrameLoader->GetTabParent(getter_AddRefs(itp));
+  if (!itp) {
     *aResult = false;
     return NS_OK;
   }
 
-  *aResult = mContentParent == tp->Manager();
+  *aResult = mContentParent == static_cast<TabParent*>(itp.get())->Manager();
   return NS_OK;
 }
 

@@ -83,7 +83,7 @@ AssertAppProcess(PBrowserParent* aActor,
     return false;
   }
 
-  TabParent* tab = TabParent::GetFrom(aActor);
+  TabParent* tab = static_cast<TabParent*>(aActor);
   nsCOMPtr<mozIApplication> app = tab->GetOwnOrContainingApp();
 
   return CheckAppTypeHelper(app, aType, aCapability, tab->IsBrowserElement());
@@ -114,7 +114,7 @@ AssertAppStatus(PBrowserParent* aActor,
     return false;
   }
 
-  TabParent* tab = TabParent::GetFrom(aActor);
+  TabParent* tab = static_cast<TabParent*>(aActor);
   nsCOMPtr<mozIApplication> app = tab->GetOwnOrContainingApp();
 
   return CheckAppStatusHelper(app, aStatus);

@@ -92,7 +92,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
     if (mRenderFrame) {
-      TabParent* browser = TabParent::GetFrom(mRenderFrame->Manager());
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
       browser->UpdateFrame(aFrameMetrics);
     }
   }
@@ -110,7 +110,7 @@ public:
       return;
     }
     if (mRenderFrame) {
-      TabParent* browser = TabParent::GetFrom(mRenderFrame->Manager());
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
       browser->AcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
     }
   }
@@ -129,7 +129,7 @@ public:
       return;
     }
     if (mRenderFrame) {
-      TabParent* browser = TabParent::GetFrom(mRenderFrame->Manager());
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
       browser->HandleDoubleTap(aPoint, aModifiers, aGuid);
     }
   }
@@ -148,7 +148,7 @@ public:
       return;
     }
     if (mRenderFrame) {
-      TabParent* browser = TabParent::GetFrom(mRenderFrame->Manager());
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
       browser->HandleSingleTap(aPoint, aModifiers, aGuid);
     }
   }
@@ -168,7 +168,7 @@ public:
       return;
     }
     if (mRenderFrame) {
-      TabParent* browser = TabParent::GetFrom(mRenderFrame->Manager());
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
       browser->HandleLongTap(aPoint, aModifiers, aGuid, aInputBlockId);
     }
   }
@@ -187,7 +187,7 @@ public:
       return;
     }
     if (mRenderFrame) {
-      TabParent* browser = TabParent::GetFrom(mRenderFrame->Manager());
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
       browser->HandleLongTapUp(aPoint, aModifiers, aGuid);
     }
   }
@@ -207,7 +207,7 @@ public:
       return;
     }
     if (mRenderFrame && aIsRoot) {
-      TabParent* browser = TabParent::GetFrom(mRenderFrame->Manager());
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
       BrowserElementParent::DispatchAsyncScrollEvent(browser, aContentRect,
                                                      aContentSize);
     }
@@ -247,7 +247,7 @@ public:
       return;
     }
     if (mRenderFrame) {
-      TabParent* browser = TabParent::GetFrom(mRenderFrame->Manager());
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
       browser->NotifyAPZStateChange(aGuid.mScrollId, aChange, aArg);
     }
   }

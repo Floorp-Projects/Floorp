@@ -81,7 +81,7 @@ ExternalHelperAppParent::Init(ContentParent *parent,
 
   nsCOMPtr<nsIInterfaceRequestor> window;
   if (aBrowser) {
-    TabParent* tabParent = TabParent::GetFrom(aBrowser);
+    TabParent* tabParent = static_cast<TabParent*>(aBrowser);
     if (tabParent->GetOwnerElement())
       window = do_QueryInterface(tabParent->GetOwnerElement()->OwnerDoc()->GetWindow());
   }
