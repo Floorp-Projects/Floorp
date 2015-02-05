@@ -3196,6 +3196,11 @@ BrowserObj.prototype = {
    * Called when we start a session with this browser.
    */
   startSession: function BO_startSession(newSession, win, callback) {
+    if (appName == "Firefox" &&
+        win.gMultiProcessBrowser &&
+        !win.gBrowser.selectedBrowser.isRemoteBrowser) {
+      win.XULBrowserWindow.forceInitialBrowserRemote();
+    }
     callback(win, newSession);
   },
 
