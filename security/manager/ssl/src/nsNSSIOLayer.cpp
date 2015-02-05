@@ -1185,17 +1185,12 @@ uint32_t tlsIntoleranceTelemetryBucket(PRErrorCode err)
     case SSL_ERROR_BAD_MAC_READ: return 2;
     case SSL_ERROR_HANDSHAKE_FAILURE_ALERT: return 3;
     case SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT: return 4;
-    case SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE: return 5;
     case SSL_ERROR_ILLEGAL_PARAMETER_ALERT: return 6;
     case SSL_ERROR_NO_CYPHER_OVERLAP: return 7;
-    case SSL_ERROR_BAD_SERVER: return 8;
-    case SSL_ERROR_BAD_BLOCK_PADDING: return 9;
     case SSL_ERROR_UNSUPPORTED_VERSION: return 10;
     case SSL_ERROR_PROTOCOL_VERSION_ALERT: return 11;
-    case SSL_ERROR_RX_MALFORMED_FINISHED: return 12;
     case SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE: return 13;
     case SSL_ERROR_DECODE_ERROR_ALERT: return 14;
-    case SSL_ERROR_RX_UNKNOWN_ALERT: return 15;
     case PR_CONNECT_RESET_ERROR: return 16;
     case PR_END_OF_FILE_ERROR: return 17;
     default: return 0;
