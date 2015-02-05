@@ -22,7 +22,7 @@ body {
   background-image: url("chrome://browser/skin/aboutNetError_info.svg");
   background-position: left 0;
   background-repeat: no-repeat;
-  background-size: auto;
+  background-size: 1.6em;
   -moz-margin-start: -2.3em;
   -moz-padding-start: 2.3em;
   font-size: 2.5em;
