@@ -50,33 +50,6 @@ inline bool NS_warn_if_impl(bool aCondition, const char* aExpr,
 #endif
 
 /**
- * Abort the execution of the program if the expression evaluates to
- * false.
- *
- * There is no status value returned from the macro.
- *
- * Note that the non-debug version of this macro does <b>not</b>
- * evaluate the expression argument. Hence side effect statements
- * as arguments to the macro will yield improper execution in a
- * non-debug build. For example:
- *
- *      NS_ABORT_IF_FALSE(0 == foo++, "yikes foo should be zero");
- *
- * Note also that the non-debug version of this macro does <b>not</b>
- * evaluate the message argument.
- */
-#ifdef DEBUG
-#define NS_ABORT_IF_FALSE(_expr, _msg)                        \
-  do {                                                        \
-    if (!(_expr)) {                                           \
-      NS_DebugBreak(NS_DEBUG_ABORT, _msg, #_expr, __FILE__, __LINE__); \
-    }                                                         \
-  } while(0)
-#else
-#define NS_ABORT_IF_FALSE(_expr, _msg) do { /* nothing */ } while(0)
-#endif
-
-/**
  * Warn if a given condition is false.
  *
  * Program execution continues past the usage of this macro.
