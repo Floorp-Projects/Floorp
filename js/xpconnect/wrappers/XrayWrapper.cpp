@@ -1633,9 +1633,9 @@ DOMXrayTraits::construct(JSContext *cx, HandleObject wrapper,
 }
 
 bool
-DOMXrayTraits::getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
-                              JS::HandleObject target,
-                              JS::MutableHandleObject protop)
+DOMXrayTraits::getPrototype(JSContext *cx, JS::HandleObject wrapper,
+                            JS::HandleObject target,
+                            JS::MutableHandleObject protop)
 {
     return mozilla::dom::XrayGetNativeProto(cx, target, protop);
 }
@@ -2143,15 +2143,15 @@ XrayWrapper<Base, Traits>::defaultValue(JSContext *cx, HandleObject wrapper,
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
-                                          JS::MutableHandleObject protop) const
+XrayWrapper<Base, Traits>::getPrototype(JSContext *cx, JS::HandleObject wrapper,
+                                        JS::MutableHandleObject protop) const
 {
     // We really only want this override for non-SecurityWrapper-inheriting
     // |Base|. But doing that statically with templates requires partial method
     // specializations (and therefore a helper class), which is all more trouble
     // than it's worth. Do a dynamic check.
     if (Base::hasSecurityPolicy())
-        return Base::getPrototypeOf(cx, wrapper, protop);
+        return Base::getPrototype(cx, wrapper, protop);
 
     RootedObject target(cx, Traits::getTargetObject(wrapper));
     RootedObject expando(cx);
@@ -2168,7 +2168,7 @@ XrayWrapper<Base, Traits>::getPrototypeOf(JSContext *cx, JS::HandleObject wrappe
         v = JS_GetReservedSlot(expando, JSSLOT_EXPANDO_PROTOTYPE);
     }
     if (v.isUndefined())
-        return getPrototypeOfHelper(cx, wrapper, target, protop);
+        return getPrototypeHelper(cx, wrapper, target, protop);
 
     protop.set(v.toObjectOrNull());
     return JS_WrapObject(cx, protop);
@@ -2176,13 +2176,13 @@ XrayWrapper<Base, Traits>::getPrototypeOf(JSContext *cx, JS::HandleObject wrappe
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::setPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
-                                          JS::HandleObject proto, bool *bp) const
+XrayWrapper<Base, Traits>::setPrototype(JSContext *cx, JS::HandleObject wrapper,
+                                        JS::HandleObject proto, JS::ObjectOpResult &result) const
 {
     // Do this only for non-SecurityWrapper-inheriting |Base|. See the comment
-    // in getPrototypeOf().
+    // in getPrototype().
     if (Base::hasSecurityPolicy())
-        return Base::setPrototypeOf(cx, wrapper, proto, bp);
+        return Base::setPrototype(cx, wrapper, proto, result);
 
     RootedObject target(cx, Traits::getTargetObject(wrapper));
     RootedObject expando(cx, Traits::singleton.ensureExpandoObject(cx, wrapper, target));
@@ -2196,8 +2196,7 @@ XrayWrapper<Base, Traits>::setPrototypeOf(JSContext *cx, JS::HandleObject wrappe
     if (!JS_WrapValue(cx, &v))
         return false;
     JS_SetReservedSlot(expando, JSSLOT_EXPANDO_PROTOTYPE, v);
-    *bp = true;
-    return true;
+    return result.succeed();
 }
 
 template <typename Base, typename Traits>

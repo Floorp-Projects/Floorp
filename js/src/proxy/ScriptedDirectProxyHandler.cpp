@@ -263,11 +263,11 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
     return true;
 }
 
-// ES6 implements both getPrototypeOf and setPrototypeOf traps. We don't have them yet (see bug
+// ES6 implements both getPrototype and setPrototype traps. We don't have them yet (see bug
 // 888969). For now, use these, to account for proxy revocation.
 bool
-ScriptedDirectProxyHandler::getPrototypeOf(JSContext *cx, HandleObject proxy,
-                                           MutableHandleObject protop) const
+ScriptedDirectProxyHandler::getPrototype(JSContext *cx, HandleObject proxy,
+                                         MutableHandleObject protop) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     // Though handler is used elsewhere, spec mandates that both get set to null.
@@ -276,12 +276,12 @@ ScriptedDirectProxyHandler::getPrototypeOf(JSContext *cx, HandleObject proxy,
         return false;
     }
 
-    return DirectProxyHandler::getPrototypeOf(cx, proxy, protop);
+    return DirectProxyHandler::getPrototype(cx, proxy, protop);
 }
 
 bool
-ScriptedDirectProxyHandler::setPrototypeOf(JSContext *cx, HandleObject proxy,
-                                           HandleObject proto, bool *bp) const
+ScriptedDirectProxyHandler::setPrototype(JSContext *cx, HandleObject proxy, HandleObject proto,
+                                         ObjectOpResult &result) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     if (!target) {
@@ -289,7 +289,7 @@ ScriptedDirectProxyHandler::setPrototypeOf(JSContext *cx, HandleObject proxy,
         return false;
     }
 
-    return DirectProxyHandler::setPrototypeOf(cx, proxy, proto, bp);
+    return DirectProxyHandler::setPrototype(cx, proxy, proto, result);
 }
 
 // Not yet part of ES6, but hopefully to be standards-tracked -- and needed to
@@ -406,7 +406,7 @@ ScriptedDirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool
     return true;
 }
 
-// Corresponds to the "standard" property descriptor getOwn getPrototypeOf dance. It's so explicit
+// Corresponds to the "standard" property descriptor getOwn/getPrototype dance. It's so explicit
 // here because ScriptedDirectProxyHandler allows script visibility for this operation.
 bool
 ScriptedDirectProxyHandler::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,

@@ -63,7 +63,7 @@ DeadObjectProxy::enumerate(JSContext *cx, HandleObject wrapper, MutableHandleObj
 }
 
 bool
-DeadObjectProxy::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const
+DeadObjectProxy::getPrototype(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const
 {
     protop.set(nullptr);
     return true;

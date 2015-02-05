@@ -164,8 +164,8 @@ FilteringWrapper<Base, Policy>::defaultValue(JSContext *cx, HandleObject obj,
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
-                                               JS::MutableHandleObject protop) const
+FilteringWrapper<Base, Policy>::getPrototype(JSContext *cx, JS::HandleObject wrapper,
+                                             JS::MutableHandleObject protop) const
 {
     // Filtering wrappers do not allow access to the prototype.
     protop.set(nullptr);
