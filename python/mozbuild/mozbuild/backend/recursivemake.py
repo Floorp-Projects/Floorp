@@ -58,7 +58,6 @@ from ..frontend.data import (
     StaticLibrary,
     TestHarnessFiles,
     TestManifest,
-    UnifiedSources,
     VariablePassthru,
     XPIDLFile,
 )
@@ -387,29 +386,6 @@ class RecursiveMakeBackend(CommonBackend):
             var = suffix_map[obj.canonical_suffix]
             for f in sorted(obj.files):
                 backend_file.write('%s += %s\n' % (var, f))
-        elif isinstance(obj, UnifiedSources):
-            suffix_map = {
-                '.c': 'UNIFIED_CSRCS',
-                '.mm': 'UNIFIED_CMMSRCS',
-                '.cpp': 'UNIFIED_CPPSRCS',
-            }
-
-            var = suffix_map[obj.canonical_suffix]
-            non_unified_var = var[len('UNIFIED_'):]
-
-            if obj.have_unified_mapping:
-                self._write_unified_files(obj.unified_source_mapping, backend_file.objdir)
-                self._add_unified_build_rules(backend_file,
-                    obj.unified_source_mapping,
-                    unified_files_makefile_variable=var,
-                    include_curdir_build_rules=False)
-                backend_file.write('%s += $(%s)\n' % (non_unified_var, var))
-            else:
-                # Sorted so output is consistent and we don't bump mtimes.
-                source_files = list(sorted(obj.files))
-
-                backend_file.write('%s += %s\n' % (
-                    non_unified_var, ' '.join(source_files)))
         elif isinstance(obj, VariablePassthru):
             # Sorted so output is consistent and we don't bump mtimes.
             for k, v in sorted(obj.variables.items()):
@@ -718,6 +694,31 @@ class RecursiveMakeBackend(CommonBackend):
         self._write_manifests('install', self._install_manifests)
 
         ensureParentDir(mozpath.join(self.environment.topobjdir, 'dist', 'foo'))
+
+    def _process_unified_sources(self, obj):
+        backend_file = self._get_backend_file_for(obj)
+
+        suffix_map = {
+            '.c': 'UNIFIED_CSRCS',
+            '.mm': 'UNIFIED_CMMSRCS',
+            '.cpp': 'UNIFIED_CPPSRCS',
+        }
+
+        var = suffix_map[obj.canonical_suffix]
+        non_unified_var = var[len('UNIFIED_'):]
+
+        if obj.have_unified_mapping:
+            self._add_unified_build_rules(backend_file,
+                                          obj.unified_source_mapping,
+                                          unified_files_makefile_variable=var,
+                                          include_curdir_build_rules=False)
+            backend_file.write('%s += $(%s)\n' % (non_unified_var, var))
+        else:
+            # Sorted so output is consistent and we don't bump mtimes.
+            source_files = list(sorted(obj.files))
+
+            backend_file.write('%s += %s\n' % (
+                    non_unified_var, ' '.join(source_files)))
 
     def _process_directory_traversal(self, obj, backend_file):
         """Process a data.DirectoryTraversal instance."""
