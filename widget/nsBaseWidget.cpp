@@ -342,8 +342,7 @@ nsBaseWidget::CreateChild(const nsIntRect  &aRect,
 
 // Attach a view to our widget which we'll send events to.
 NS_IMETHODIMP
-nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents,
-                                   nsDeviceContext *aContext)
+nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents)
 {
   NS_ASSERTION((mWindowType == eWindowType_toplevel ||
                 mWindowType == eWindowType_dialog ||
