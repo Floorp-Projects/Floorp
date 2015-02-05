@@ -19,7 +19,12 @@ D3D9SurfaceImage::D3D9SurfaceImage()
   , mSize(0, 0)
 {}
 
-D3D9SurfaceImage::~D3D9SurfaceImage() {}
+D3D9SurfaceImage::~D3D9SurfaceImage()
+{
+  if (mTexture) {
+    gfxWindowsPlatform::sD3D9SurfaceImageUsed -= mSize.width * mSize.height * 4;
+  }
+}
 
 static const GUID sD3D9TextureUsage =
 { 0x631e1338, 0xdc22, 0x497f, { 0xa1, 0xa8, 0xb4, 0xfe, 0x3a, 0xf4, 0x13, 0x4d } };
@@ -116,6 +121,8 @@ D3D9SurfaceImage::SetData(const Data& aData)
 
   // Track the lifetime of this memory
   texture->SetPrivateData(sD3D9TextureUsage, new TextureMemoryMeasurer9(region.width * region.height * 4), sizeof(IUnknown *), D3DSPD_IUNKNOWN);
+
+  gfxWindowsPlatform::sD3D9SurfaceImageUsed += region.width * region.height * 4;
 
   // Copy the image onto the texture, preforming YUV -> RGB conversion if necessary.
   RefPtr<IDirect3DSurface9> textureSurface;
