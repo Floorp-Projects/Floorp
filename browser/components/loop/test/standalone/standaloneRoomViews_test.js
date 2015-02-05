@@ -45,7 +45,7 @@ describe("loop.standaloneRoomViews", function() {
           loop.standaloneRoomViews.StandaloneRoomView, {
             dispatcher: dispatcher,
             activeRoomStore: activeRoomStore,
-            helper: new loop.shared.utils.Helper()
+            isFirefox: true
           }));
     }
 
