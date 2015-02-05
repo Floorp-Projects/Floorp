@@ -10,11 +10,9 @@ for (let p of [new Proxy(target, {}), Proxy.revocable(target, {}).proxy]) {
     p['foo'] = 'buz';
     assertEq(target.foo, 'buz');
 
-    if (typeof Symbol === "function") {
-        var sym = Symbol.for('quux');
-        p[sym] = sym;
-        assertEq(target[sym], sym);
-        // Reset for second iteration
-        target[sym] = undefined;
-    }
+    var sym = Symbol.for('quux');
+    p[sym] = sym;
+    assertEq(target[sym], sym);
+    // Reset for second iteration
+    target[sym] = undefined;
 }

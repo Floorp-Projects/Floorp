@@ -36,8 +36,7 @@ function basicSymbols() {
     assertEq(a.bProp, 7);
     assertEq(a[aSymbol], 22);
 }
-if (typeof Symbol === "function")
-    basicSymbols();
+basicSymbols();
 
 // Calls ToObject() for target, skips null/undefined sources, uses
 // ToObject(source) otherwise.
