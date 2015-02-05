@@ -86,9 +86,10 @@ public:
   virtual void ScrollPositionWillChange(nscoord aX, nscoord aY) MOZ_OVERRIDE;
   virtual void ScrollPositionDidChange(nscoord aX, nscoord aY) MOZ_OVERRIDE;
 
+  ~StickyScrollContainer();
+
 private:
   explicit StickyScrollContainer(nsIScrollableFrame* aScrollFrame);
-  ~StickyScrollContainer();
 
   /**
    * Compute two rectangles that determine sticky positioning: |aStick|, based
@@ -98,8 +99,6 @@ private:
    */
   void ComputeStickyLimits(nsIFrame* aFrame, nsRect* aStick,
                            nsRect* aContain) const;
-
-  friend void DestroyStickyScrollContainer(void* aPropertyValue);
 
   nsIScrollableFrame* const mScrollFrame;
   nsTArray<nsIFrame*> mFrames;

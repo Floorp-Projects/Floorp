@@ -24,6 +24,7 @@
 #include "js/TypeDecls.h"
 
 class nsFrameLoader;
+class nsIFrameLoader;
 class nsIContent;
 class nsIPrincipal;
 class nsIURI;
@@ -172,9 +173,9 @@ public:
                                          const bool& aCausedByComposition) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMESelectedCompositionRect(
                    const uint32_t& aOffset,
-                   InfallibleTArray<nsIntRect>&& aRects,
+                   InfallibleTArray<LayoutDeviceIntRect>&& aRects,
                    const uint32_t& aCaretOffset,
-                   const nsIntRect& aCaretRect) MOZ_OVERRIDE;
+                   const LayoutDeviceIntRect& aCaretRect) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMESelection(const uint32_t& aSeqno,
                                         const uint32_t& aAnchor,
                                         const uint32_t& aFocus,
@@ -183,11 +184,11 @@ public:
     virtual bool RecvNotifyIMETextHint(const nsString& aText) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMEMouseButtonEvent(const widget::IMENotification& aEventMessage,
                                                bool* aConsumedByIME) MOZ_OVERRIDE;
-    virtual bool RecvNotifyIMEEditorRect(const nsIntRect& aRect) MOZ_OVERRIDE;
+    virtual bool RecvNotifyIMEEditorRect(const LayoutDeviceIntRect& aRect) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMEPositionChange(
-                   const nsIntRect& aEditoRect,
-                   InfallibleTArray<nsIntRect>&& aCompositionRects,
-                   const nsIntRect& aCaretRect) MOZ_OVERRIDE;
+                   const LayoutDeviceIntRect& aEditorRect,
+                   InfallibleTArray<LayoutDeviceIntRect>&& aCompositionRects,
+                   const LayoutDeviceIntRect& aCaretRect) MOZ_OVERRIDE;
     virtual bool RecvEndIMEComposition(const bool& aCancel,
                                        nsString* aComposition) MOZ_OVERRIDE;
     virtual bool RecvGetInputContext(int32_t* aIMEEnabled,
@@ -328,6 +329,9 @@ public:
     bool SendSelectionEvent(mozilla::WidgetSelectionEvent& event);
 
     static TabParent* GetFrom(nsFrameLoader* aFrameLoader);
+    static TabParent* GetFrom(nsIFrameLoader* aFrameLoader);
+    static TabParent* GetFrom(nsITabParent* aTabParent);
+    static TabParent* GetFrom(PBrowserParent* aTabParent);
     static TabParent* GetFrom(nsIContent* aContent);
     static TabId GetTabIdFrom(nsIDocShell* docshell);
 
@@ -414,10 +418,10 @@ protected:
     uint32_t mIMESeqno;
 
     uint32_t mIMECompositionRectOffset;
-    InfallibleTArray<nsIntRect> mIMECompositionRects;
+    InfallibleTArray<LayoutDeviceIntRect> mIMECompositionRects;
     uint32_t mIMECaretOffset;
-    nsIntRect mIMECaretRect;
-    nsIntRect mIMEEditorRect;
+    LayoutDeviceIntRect mIMECaretRect;
+    LayoutDeviceIntRect mIMEEditorRect;
 
     // The number of event series we're currently capturing.
     int32_t mEventCaptureDepth;

@@ -746,15 +746,27 @@ private:
     }
 };
 
+namespace {
 StaticRefPtr<TabChild> sPreallocatedTab;
 
-/*static*/
 std::map<TabId, nsRefPtr<TabChild>>&
-TabChild::NestedTabChildMap()
+NestedTabChildMap()
 {
   MOZ_ASSERT(NS_IsMainThread());
   static std::map<TabId, nsRefPtr<TabChild>> sNestedTabChildMap;
   return sNestedTabChildMap;
+}
+} // anonymous namespace
+
+already_AddRefed<TabChild>
+TabChild::FindTabChild(const TabId& aTabId)
+{
+  auto iter = NestedTabChildMap().find(aTabId);
+  if (iter == NestedTabChildMap().end()) {
+    return nullptr;
+  }
+  nsRefPtr<TabChild> tabChild = iter->second;
+  return tabChild.forget();
 }
 
 /*static*/ void
@@ -3328,6 +3340,15 @@ TabChild::GetTabId(uint64_t* aId)
 {
   *aId = GetTabId();
   return NS_OK;
+}
+
+void
+TabChild::SetTabId(const TabId& aTabId)
+{
+  MOZ_ASSERT(mUniqueId == 0);
+
+  mUniqueId = aTabId;
+  NestedTabChildMap()[mUniqueId] = this;
 }
 
 bool

@@ -181,12 +181,7 @@ TabWidthStore::ApplySpacing(gfxTextRun::PropertyProvider::Spacing *aSpacing,
   }
 }
 
-static void DestroyTabWidth(void* aPropertyValue)
-{
-  delete static_cast<TabWidthStore*>(aPropertyValue);
-}
-
-NS_DECLARE_FRAME_PROPERTY(TabWidthProperty, DestroyTabWidth)
+NS_DECLARE_FRAME_PROPERTY(TabWidthProperty, DeleteValue<TabWidthStore>)
 
 NS_DECLARE_FRAME_PROPERTY(OffsetToFrameProperty, nullptr)
 
@@ -204,18 +199,14 @@ private:
   nsTextFrame* mFrame;
 };
 
-static void DestroyGlyphObserverList(void* aPropertyValue)
-{
-  delete static_cast<nsTArray<nsAutoPtr<GlyphObserver> >*>(aPropertyValue);
-}
-
 /**
  * This property is set on text frames with TEXT_IN_TEXTRUN_USER_DATA set that
  * have potentially-animated glyphs.
  * The only reason this list is in a property is to automatically destroy the
  * list when the frame is deleted, unregistering the observers.
  */
-NS_DECLARE_FRAME_PROPERTY(TextFrameGlyphObservers, DestroyGlyphObserverList);
+NS_DECLARE_FRAME_PROPERTY(TextFrameGlyphObservers,
+                          DeleteValue<nsTArray<nsAutoPtr<GlyphObserver>>>);
 
 static const nsFrameState TEXT_REFLOW_FLAGS =
    TEXT_FIRST_LETTER |
