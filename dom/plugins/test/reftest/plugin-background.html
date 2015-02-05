@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html class="reftest-wait">
 <head>
   <link rel="stylesheet" type="text/css" href="plugin-background.css"></link>
 </head>
-<body>
+<script src="utils.js">
+</script>
+<body onLoad="forceLoadPlugin('plugin')">
   <div id="bad">Test some plugin stuff.</div>
   <div id="good"></div>
 

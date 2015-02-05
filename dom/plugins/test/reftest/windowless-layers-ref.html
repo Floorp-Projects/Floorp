@@ -1,6 +1,10 @@
 <!DOCTYPE html>
-<html>
-<body>
-  <embed type="application/x-test" style="width:200px; height:200px;">
+<html class="reftest-wait">
+<head>
+<script src="utils.js">
+</script>
+</head>
+<body onLoad="forceLoadPlugin('p1')">
+  <embed type="application/x-test" style="width:200px; height:200px;" id="p1">
 </body>
 </html>

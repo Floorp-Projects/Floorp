@@ -1,12 +1,17 @@
 <!DOCTYPE html>
-<html>
-<body style="margin:0">
+<html class="reftest-wait">
+<head>
+<script src="utils.js">
+</script>
+</head>
+<body style="margin:0" onLoad="forceLoadPlugin('plugin')">
 <object type="application/x-test"
         style="width:200px; height:200px; display:block; margin:90px 80px;
                outline:5px dashed blue;
                background:cyan;
                border:dotted black; border-width:4px 8px 4px 8px;
-               padding:3px 1px;">
+               padding:3px 1px;"
+        id="plugin">
 </object>
 </body>
 </html>

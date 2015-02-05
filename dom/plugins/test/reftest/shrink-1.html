@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
 <head>
+  <script src="utils.js">
+  </script>
   <script>
 function doShrink()
 {
@@ -15,7 +17,7 @@ function doShrink()
 document.addEventListener("MozReftestInvalidate", doShrink, false);
   </script>
 </head>
-<body>
+<body onLoad="forceLoadPlugin('plugin', true)">
   <embed id="plugin" type="application/x-test"
          width="300" height="500">
   </embed>

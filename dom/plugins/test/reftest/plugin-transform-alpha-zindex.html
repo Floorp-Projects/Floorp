@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html class="reftest-wait">
 <head>
 <style type="text/css">
 #one {
@@ -17,8 +17,10 @@
   -moz-transform: translate(100px,100px);
 }
 </style>
+<script src="utils.js">
+</script>
 </head>
-<body>
+<body onLoad="forceLoadPlugin('one')">
   <div id="two"></div>
   <embed id="one" type="application/x-test" width="400" height="400" drawmode="solid" color="9900FF00"></embed>
 </body>
