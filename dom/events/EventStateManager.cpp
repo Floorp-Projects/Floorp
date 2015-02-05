@@ -4409,6 +4409,14 @@ EventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
     nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
     if (presShell) {
       nsCOMPtr<nsIContent> mouseContent = GetEventTargetContent(aEvent);
+      // Click events apply to *elements* not nodes. At this point the target
+      // content may have been reset to some non-element content, and so we need
+      // to walk up the closest ancestor element, just like we do in
+      // nsPresShell::HandlePositionedEvent.
+      while (mouseContent && !mouseContent->IsElement()) {
+        mouseContent = mouseContent->GetParent();
+      }
+
       if (!mouseContent && !mCurrentTarget) {
         return NS_OK;
       }
