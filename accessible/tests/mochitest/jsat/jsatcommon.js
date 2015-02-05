@@ -617,6 +617,15 @@ function ExpectedCheckAction(aChecked, aOptions) {
 
 ExpectedCheckAction.prototype = Object.create(ExpectedPresent.prototype);
 
+function ExpectedNameChange(aName, aOptions) {
+  ExpectedPresent.call(this, {
+    eventType: 'name-change',
+    data: aName
+  }, null, aOptions);
+}
+
+ExpectedNameChange.prototype = Object.create(ExpectedPresent.prototype);
+
 function ExpectedValueChange(aValue, aOptions) {
   ExpectedPresent.call(this, {
     eventType: 'value-change',
