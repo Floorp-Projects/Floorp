@@ -215,7 +215,7 @@ public:
               nsDeviceContext *aContext,
               nsWidgetInitData *aInitData = nullptr,
               bool             aForceUseIWidgetParent = false) MOZ_OVERRIDE;
-  NS_IMETHOD              AttachViewToTopLevel(bool aUseAttachedEvents, nsDeviceContext *aContext) MOZ_OVERRIDE;
+  NS_IMETHOD              AttachViewToTopLevel(bool aUseAttachedEvents) MOZ_OVERRIDE;
   virtual nsIWidgetListener* GetAttachedWidgetListener() MOZ_OVERRIDE;
   virtual void               SetAttachedWidgetListener(nsIWidgetListener* aListener) MOZ_OVERRIDE;
   NS_IMETHOD              RegisterTouchWindow() MOZ_OVERRIDE;
