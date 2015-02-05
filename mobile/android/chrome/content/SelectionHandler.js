@@ -753,6 +753,9 @@ var SelectionHandler = {
    * @param aX, aY tap location in client coordinates.
    */
   attachCaret: function sh_attachCaret(aElement) {
+    // Clear out any existing active selection
+    this._closeSelection();
+
     // Ensure it isn't disabled, isn't handled by Android native dialog, and is editable text element
     if (aElement.disabled || InputWidgetHelper.hasInputWidget(aElement) || !this.isElementEditableText(aElement)) {
       return this.ATTACH_ERROR_INCOMPATIBLE;
