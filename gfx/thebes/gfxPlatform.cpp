@@ -287,6 +287,8 @@ SRGBOverrideObserver::Observe(nsISupports *aSubject,
                            MOZ_UTF16(GFX_PREF_CMS_FORCE_SRGB)) == 0,
                  "Restarting CMS on wrong pref!");
     ShutdownCMS();
+    // Update current cms profile.
+    gfxPlatform::CreateCMSOutputProfile();
     return NS_OK;
 }
 
