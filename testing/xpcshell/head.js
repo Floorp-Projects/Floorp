@@ -653,8 +653,8 @@ function do_execute_soon(callback, aName) {
           let stack = e.stack ? _format_stack(e.stack) : null;
           _testLogger.testStatus(_TEST_NAME,
                                  funcName,
-                                 'ERROR',
-                                 'OK',
+                                 'FAIL',
+                                 'PASS',
                                  _exception_message(e),
                                  stack);
           _do_quit();

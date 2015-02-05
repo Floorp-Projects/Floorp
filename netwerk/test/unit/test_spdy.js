@@ -1,9 +1,5 @@
 // test spdy/3.1
 
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var Cu = Components.utils;
-
 Cu.import("resource://gre/modules/Services.jsm");
 
 // Generate a small and a large post with known pre-calculated md5 sums
@@ -352,7 +348,7 @@ function test_complete() {
 // a stalled stream when a SETTINGS frame arrives
 var tests = [ test_spdy_post_big
             , test_spdy_basic
-	    , test_spdy_concurrent
+            , test_spdy_concurrent
             , test_spdy_push1
             , test_spdy_push2
             , test_spdy_push3

@@ -138,11 +138,8 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[],
     return false;
   }
 
-  if (!PL_DHashTableInit(&mNameTable, &nametable_CaseInsensitiveHashTableOps,
-                         sizeof(NameTableEntry), fallible,
-                         aLength)) {
-    return false;
-  }
+  PL_DHashTableInit(&mNameTable, &nametable_CaseInsensitiveHashTableOps,
+                    sizeof(NameTableEntry), aLength);
 
   for (int32_t index = 0; index < aLength; ++index) {
     const char* raw = aNames[index];
@@ -164,8 +161,8 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[],
 
     NameTableKey key(strPtr);
 
-    NameTableEntry* entry =
-      static_cast<NameTableEntry*>(PL_DHashTableAdd(&mNameTable, &key));
+    NameTableEntry* entry = static_cast<NameTableEntry*>
+      (PL_DHashTableAdd(&mNameTable, &key, fallible));
     if (!entry) {
       continue;
     }

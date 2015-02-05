@@ -829,7 +829,7 @@ function runUnloadTests1(aNextTest)
     iframe.addEventListener("load", function () {
       ok(true, description + "old iframe is restored");
       // And also restore the iframe information with restored contents.
-      iframe.removeEventListener("DOMContentLoaded", arguments.callee, true);
+      iframe.removeEventListener("load", arguments.callee, true);
       childWindow = iframe.contentWindow;
       textareaInFrame = iframe.contentDocument.getElementById("textarea");
       setTimeout(aNextTest, 0);

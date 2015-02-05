@@ -892,11 +892,7 @@ RuleCache::ApplyFilter(Accessible* aAccessible, uint16_t* aResult)
       return NS_OK;
 
     if (nsIAccessibleTraversalRule::PREFILTER_ARIA_HIDDEN & mPreFilter) {
-      nsIContent* content = aAccessible->GetContent();
-      if (content &&
-          nsAccUtils::HasDefinedARIAToken(content, nsGkAtoms::aria_hidden) &&
-          !content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_hidden,
-                                nsGkAtoms::_false, eCaseMatters)) {
+      if (aAccessible->IsARIAHidden()) {
         *aResult |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
         return NS_OK;
       }

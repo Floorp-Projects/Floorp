@@ -2627,8 +2627,8 @@ nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
                 NSFloatPixelsToAppUnits(float(result.height), destAppUnitsPerDevPixel));
 }
 
-static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
-  nsIntPoint offset(0, 0);
+static LayoutDeviceIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
+  LayoutDeviceIntPoint offset(0, 0);
   while ((aWidget->WindowType() == eWindowType_child ||
           aWidget->IsPlugin())) {
     nsIWidget* parent = aWidget->GetParent();
@@ -2637,18 +2637,19 @@ static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
     }
     nsIntRect bounds;
     aWidget->GetBounds(bounds);
-    offset += bounds.TopLeft();
+    offset += LayoutDeviceIntPoint::FromUntyped(bounds.TopLeft());
     aWidget = parent;
   }
   aRootWidget = aWidget;
   return offset;
 }
 
-static nsIntPoint WidgetToWidgetOffset(nsIWidget* aFrom, nsIWidget* aTo) {
+static LayoutDeviceIntPoint
+WidgetToWidgetOffset(nsIWidget* aFrom, nsIWidget* aTo) {
   nsIWidget* fromRoot;
-  nsIntPoint fromOffset = GetWidgetOffset(aFrom, fromRoot);
+  LayoutDeviceIntPoint fromOffset = GetWidgetOffset(aFrom, fromRoot);
   nsIWidget* toRoot;
-  nsIntPoint toOffset = GetWidgetOffset(aTo, toRoot);
+  LayoutDeviceIntPoint toOffset = GetWidgetOffset(aTo, toRoot);
 
   if (fromRoot == toRoot) {
     return fromOffset - toOffset;
@@ -2667,14 +2668,13 @@ nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
 
-  LayoutDeviceIntPoint widgetPoint = aPt +
-    LayoutDeviceIntPoint::FromUntyped(WidgetToWidgetOffset(aWidget, viewWidget));
+  LayoutDeviceIntPoint widgetPoint = aPt + WidgetToWidgetOffset(aWidget, viewWidget);
   nsPoint widgetAppUnits(aPresContext->DevPixelsToAppUnits(widgetPoint.x),
                          aPresContext->DevPixelsToAppUnits(widgetPoint.y));
   return widgetAppUnits - viewOffset;
 }
 
-nsIntPoint
+LayoutDeviceIntPoint
 nsLayoutUtils::TranslateViewToWidget(nsPresContext* aPresContext,
                                      nsView* aView, nsPoint aPt,
                                      nsIWidget* aWidget)
@@ -2682,11 +2682,11 @@ nsLayoutUtils::TranslateViewToWidget(nsPresContext* aPresContext,
   nsPoint viewOffset;
   nsIWidget* viewWidget = aView->GetNearestWidget(&viewOffset);
   if (!viewWidget) {
-    return nsIntPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+    return LayoutDeviceIntPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
 
-  nsIntPoint relativeToViewWidget(aPresContext->AppUnitsToDevPixels(aPt.x + viewOffset.x),
-                                  aPresContext->AppUnitsToDevPixels(aPt.y + viewOffset.y));
+  LayoutDeviceIntPoint relativeToViewWidget(aPresContext->AppUnitsToDevPixels(aPt.x + viewOffset.x),
+                                            aPresContext->AppUnitsToDevPixels(aPt.y + viewOffset.y));
   return relativeToViewWidget + WidgetToWidgetOffset(viewWidget, aWidget);
 }
 
@@ -5872,7 +5872,7 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
 }
 
 
-static nsresult
+static DrawResult
 DrawImageInternal(gfxContext&            aContext,
                   nsPresContext*         aPresContext,
                   imgIContainer*         aImage,
@@ -5900,8 +5900,9 @@ DrawImageInternal(gfxContext&            aContext,
                                          aFill, aAnchor, aDirty, aImage,
                                          aGraphicsFilter, aImageFlags);
 
-  if (!params.shouldDraw)
-    return NS_OK;
+  if (!params.shouldDraw) {
+    return DrawResult::SUCCESS;
+  }
 
   gfxContextMatrixAutoSaveRestore contextMatrixRestorer(&aContext);
   aContext.SetMatrix(params.imageSpaceToDeviceSpace);
@@ -5912,13 +5913,12 @@ DrawImageInternal(gfxContext&            aContext,
     svgContext = Some(SVGImageContext(params.svgViewportSize, Nothing()));
   }
 
-  aImage->Draw(&aContext, params.size, params.region, imgIContainer::FRAME_CURRENT,
-               aGraphicsFilter, svgContext, aImageFlags);
-
-  return NS_OK;
+  return aImage->Draw(&aContext, params.size, params.region,
+                      imgIContainer::FRAME_CURRENT, aGraphicsFilter,
+                      svgContext, aImageFlags);
 }
 
-/* static */ nsresult
+/* static */ DrawResult
 nsLayoutUtils::DrawSingleUnscaledImage(gfxContext&          aContext,
                                        nsPresContext*       aPresContext,
                                        imgIContainer*       aImage,
@@ -5931,7 +5931,10 @@ nsLayoutUtils::DrawSingleUnscaledImage(gfxContext&          aContext,
   nsIntSize imageSize;
   aImage->GetWidth(&imageSize.width);
   aImage->GetHeight(&imageSize.height);
-  NS_ENSURE_TRUE(imageSize.width > 0 && imageSize.height > 0, NS_ERROR_FAILURE);
+  if (imageSize.width < 1 || imageSize.height < 1) {
+    NS_WARNING("Image width or height is non-positive");
+    return DrawResult::TEMPORARY_ERROR;
+  }
 
   nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
   nsSize size(imageSize.width*appUnitsPerCSSPixel,
@@ -5956,7 +5959,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(gfxContext&          aContext,
                            nullptr, aImageFlags);
 }
 
-/* static */ nsresult
+/* static */ DrawResult
 nsLayoutUtils::DrawSingleImage(gfxContext&            aContext,
                                nsPresContext*         aPresContext,
                                imgIContainer*         aImage,
@@ -5970,7 +5973,11 @@ nsLayoutUtils::DrawSingleImage(gfxContext&            aContext,
 {
   nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
   nsIntSize pixelImageSize(ComputeSizeForDrawingWithFallback(aImage, aDest.Size()));
-  NS_ENSURE_TRUE(pixelImageSize.width > 0 && pixelImageSize.height > 0, NS_ERROR_FAILURE);
+  if (pixelImageSize.width < 1 || pixelImageSize.height < 1) {
+    NS_WARNING("Image width or height is non-positive");
+    return DrawResult::TEMPORARY_ERROR;
+  }
+
   nsSize imageSize(pixelImageSize.width * appUnitsPerCSSPixel,
                    pixelImageSize.height * appUnitsPerCSSPixel);
 
@@ -6069,7 +6076,7 @@ nsLayoutUtils::ComputeSizeForDrawingWithFallback(imgIContainer* aImage,
   return imageSize;
 }
 
-/* static */ nsresult
+/* static */ DrawResult
 nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
                                    nsPresContext*      aPresContext,
                                    imgIContainer*      aImage,
@@ -6095,7 +6102,7 @@ nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
                            aDirty, &svgContext, aImageFlags);
 }
 
-/* static */ nsresult
+/* static */ DrawResult
 nsLayoutUtils::DrawImage(gfxContext&         aContext,
                          nsPresContext*      aPresContext,
                          imgIContainer*      aImage,
