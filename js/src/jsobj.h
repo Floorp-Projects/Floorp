@@ -344,7 +344,7 @@ class JSObject : public js::gc::Cell
     //
     // Proxies that don't have such a simple [[Prototype]] instead have a
     // "lazy" [[Prototype]].  Accessing the [[Prototype]] of such an object
-    // requires going through the proxy handler {get,set}PrototypeOf and
+    // requires going through the proxy handler {get,set}Prototype and
     // setImmutablePrototype methods.  This is most commonly useful for proxies
     // that are wrappers around other objects.  If the [[Prototype]] of the
     // underlying object changes, the [[Prototype]] of the wrapper must also
@@ -708,12 +708,17 @@ GetPrototype(JSContext *cx, HandleObject obj, MutableHandleObject protop);
 /*
  * ES6 [[SetPrototypeOf]]. Change obj's prototype to proto.
  *
- * Returns false on error, success of operation in outparam. For example, if
+ * Returns false on error, success of operation in *result. For example, if
  * obj is not extensible, its prototype is fixed. js::SetPrototype will return
- * true, because no exception is thrown for this; but *succeeded will be false.
+ * true, because no exception is thrown for this; but *result will be false.
  */
 extern bool
-SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succeeded);
+SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto,
+             ObjectOpResult &result);
+
+/* Convenience function: like the above, but throw on failure. */
+extern bool
+SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto);
 
 /*
  * ES6 [[IsExtensible]]. Extensible objects can have new properties defined on

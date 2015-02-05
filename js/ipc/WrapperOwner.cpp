@@ -124,7 +124,7 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual void objectMoved(JSObject *proxy, const JSObject *old) const MOZ_OVERRIDE;
     virtual bool isCallable(JSObject *obj) const MOZ_OVERRIDE;
     virtual bool isConstructor(JSObject *obj) const MOZ_OVERRIDE;
-    virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const MOZ_OVERRIDE;
+    virtual bool getPrototype(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const MOZ_OVERRIDE;
 
     static const char family;
     static const CPOWProxyHandler singleton;
@@ -687,19 +687,19 @@ WrapperOwner::className(JSContext *cx, HandleObject proxy)
 }
 
 bool
-CPOWProxyHandler::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject objp) const
+CPOWProxyHandler::getPrototype(JSContext *cx, HandleObject proxy, MutableHandleObject objp) const
 {
-    FORWARD(getPrototypeOf, (cx, proxy, objp));
+    FORWARD(getPrototype, (cx, proxy, objp));
 }
 
 bool
-WrapperOwner::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject objp)
+WrapperOwner::getPrototype(JSContext *cx, HandleObject proxy, MutableHandleObject objp)
 {
     ObjectId objId = idOf(proxy);
 
     ObjectOrNullVariant val;
     ReturnStatus status;
-    if (!SendGetPrototypeOf(objId, &status, &val))
+    if (!SendGetPrototype(objId, &status, &val))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -1030,7 +1030,7 @@ WrapperOwner::fromRemoteObjectVariant(JSContext *cx, RemoteObject objVar)
         RootedObject junkScope(cx, xpc::PrivilegedJunkScope());
         JSAutoCompartment ac(cx, junkScope);
         RootedValue v(cx, UndefinedValue());
-        // We need to setLazyProto for the getPrototypeOf hook.
+        // We need to setLazyProto for the getPrototype hook.
         ProxyOptions options;
         options.setLazyProto(true);
         obj = NewProxyObject(cx,

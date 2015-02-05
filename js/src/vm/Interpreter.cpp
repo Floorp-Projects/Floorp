@@ -3207,10 +3207,8 @@ CASE(JSOP_MUTATEPROTO)
         obj = &REGS.sp[-2].toObject();
         MOZ_ASSERT(obj->is<PlainObject>());
 
-        bool succeeded;
-        if (!SetPrototype(cx, obj, newProto, &succeeded))
+        if (!SetPrototype(cx, obj, newProto))
             goto error;
-        MOZ_ASSERT(succeeded);
     }
 
     REGS.sp--;

@@ -80,8 +80,8 @@ CrossCompartmentWrapper::delete_(JSContext *cx, HandleObject wrapper, HandleId i
 }
 
 bool
-CrossCompartmentWrapper::getPrototypeOf(JSContext *cx, HandleObject wrapper,
-                                        MutableHandleObject protop) const
+CrossCompartmentWrapper::getPrototype(JSContext *cx, HandleObject wrapper,
+                                      MutableHandleObject protop) const
 {
     {
         RootedObject wrapped(cx, wrappedObject(wrapper));
@@ -96,13 +96,13 @@ CrossCompartmentWrapper::getPrototypeOf(JSContext *cx, HandleObject wrapper,
 }
 
 bool
-CrossCompartmentWrapper::setPrototypeOf(JSContext *cx, HandleObject wrapper,
-                                        HandleObject proto, bool *bp) const
+CrossCompartmentWrapper::setPrototype(JSContext *cx, HandleObject wrapper,
+                                      HandleObject proto, ObjectOpResult &result) const
 {
     RootedObject protoCopy(cx, proto);
     PIERCE(cx, wrapper,
            cx->compartment()->wrap(cx, &protoCopy),
-           Wrapper::setPrototypeOf(cx, wrapper, protoCopy, bp),
+           Wrapper::setPrototype(cx, wrapper, protoCopy, result),
            NOTHING);
 }
 

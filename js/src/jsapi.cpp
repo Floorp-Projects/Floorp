@@ -1792,17 +1792,7 @@ JS_SetPrototype(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, proto);
 
-    bool succeeded;
-    if (!SetPrototype(cx, obj, proto, &succeeded))
-        return false;
-
-    if (!succeeded) {
-        RootedValue val(cx, ObjectValue(*obj));
-        ReportValueError(cx, JSMSG_SETPROTOTYPEOF_FAIL, JSDVG_IGNORE_STACK, val, js::NullPtr());
-        return false;
-    }
-
-    return true;
+    return SetPrototype(cx, obj, proto);
 }
 
 JS_PUBLIC_API(bool)

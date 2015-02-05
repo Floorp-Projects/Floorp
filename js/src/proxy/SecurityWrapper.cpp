@@ -32,8 +32,8 @@ SecurityWrapper<Base>::nativeCall(JSContext *cx, IsAcceptableThis test, NativeIm
 
 template <class Base>
 bool
-SecurityWrapper<Base>::setPrototypeOf(JSContext *cx, HandleObject wrapper,
-                                      HandleObject proto, bool *bp) const
+SecurityWrapper<Base>::setPrototype(JSContext *cx, HandleObject wrapper, HandleObject proto,
+                                    ObjectOpResult &result) const
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     return false;

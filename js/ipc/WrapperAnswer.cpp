@@ -542,7 +542,7 @@ WrapperAnswer::RecvClassName(const ObjectId &objId, nsString *name)
 }
 
 bool
-WrapperAnswer::RecvGetPrototypeOf(const ObjectId &objId, ReturnStatus *rs, ObjectOrNullVariant *result)
+WrapperAnswer::RecvGetPrototype(const ObjectId &objId, ReturnStatus *rs, ObjectOrNullVariant *result)
 {
     *result = NullVariant();
 
@@ -562,7 +562,7 @@ WrapperAnswer::RecvGetPrototypeOf(const ObjectId &objId, ReturnStatus *rs, Objec
     if (!toObjectOrNullVariant(cx, proto, result))
         return fail(cx, rs);
 
-    LOG("getPrototypeOf(%s)", ReceiverObj(objId));
+    LOG("getPrototype(%s)", ReceiverObj(objId));
 
     return ok(rs);
 }

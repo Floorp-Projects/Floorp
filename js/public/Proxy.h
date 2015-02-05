@@ -128,13 +128,13 @@ class JS_FRIEND_API(Wrapper);
  * 2.  A proxy can implement more complicated prototype semantics (if, for
  *     example, it wants to delegate the prototype lookup to a wrapped object)
  *     by passing Proxy::LazyProto as the prototype at create time. This
- *     guarantees that the getPrototypeOf() handler method will be called every
+ *     guarantees that the getPrototype() handler method will be called every
  *     time the object's prototype chain is accessed.
  *
- *     This system is implemented with two methods: {get,set}PrototypeOf. The
- *     default implementation of setPrototypeOf throws a TypeError. Since it is
+ *     This system is implemented with two methods: {get,set}Prototype. The
+ *     default implementation of setPrototype throws a TypeError. Since it is
  *     not possible to create an object without a sense of prototype chain,
- *     handlers must implement getPrototypeOf if opting in to the dynamic
+ *     handlers must implement getPrototype if opting in to the dynamic
  *     prototype system.
  */
 
@@ -271,12 +271,13 @@ class JS_FRIEND_API(BaseProxyHandler)
      * These methods are standard, but the engine does not normally call them.
      * They're opt-in. See "Proxy prototype chains" above.
      *
-     * getPrototypeOf() crashes if called. setPrototypeOf() throws a TypeError.
+     * getPrototype() crashes if called. setPrototype() throws a TypeError.
      */
-    virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const;
-    virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp) const;
+    virtual bool getPrototype(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const;
+    virtual bool setPrototype(JSContext *cx, HandleObject proxy, HandleObject proto,
+                              ObjectOpResult &result) const;
 
-    /* Non-standard but conceptual kin to {g,s}etPrototypeOf, so lives here. */
+    /* Non-standard but conceptual kin to {g,s}etPrototype, so lives here. */
     virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded) const;
 
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy,
@@ -380,10 +381,10 @@ class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
                          ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, HandleObject proxy,
                            MutableHandleObject objp) const MOZ_OVERRIDE;
-    virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
-                                MutableHandleObject protop) const MOZ_OVERRIDE;
-    virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto,
-                                bool *bp) const MOZ_OVERRIDE;
+    virtual bool getPrototype(JSContext *cx, HandleObject proxy,
+                              MutableHandleObject protop) const MOZ_OVERRIDE;
+    virtual bool setPrototype(JSContext *cx, HandleObject proxy, HandleObject proto,
+                              ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy,
                                        bool *succeeded) const MOZ_OVERRIDE;
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy,
