@@ -205,7 +205,7 @@ Prompt.Server.prototype = {
   },
 
   /**
-   * Prompt the user to accept or decline the incoming connection. The default
+   * Prompt the user to accept or decline the incoming connection.  The default
    * implementation is used unless this is overridden on a particular
    * authenticator instance.
    *
@@ -215,6 +215,7 @@ Prompt.Server.prototype = {
    * @param session object
    *        In PROMPT mode, the |session| includes:
    *        {
+   *          authentication: "PROMPT",
    *          client: {
    *            host,
    *            port
@@ -560,6 +561,7 @@ OOBCert.Server.prototype = {
    * @param session object
    *        In OOB_CERT mode, the |session| includes:
    *        {
+   *          authentication: "OOB_CERT",
    *          client: {
    *            host,
    *            port,

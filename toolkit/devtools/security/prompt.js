@@ -101,11 +101,26 @@ Client.defaultSendOOB = ({ authResult, oob }) => {
 };
 
 /**
- * Prompt the user to accept or decline the incoming connection. This is the
+ * Prompt the user to accept or decline the incoming connection.  This is the
  * default implementation that products embedding the debugger server may
  * choose to override.  This can be overridden via |allowConnection| on the
  * socket's authenticator instance.
  *
+ * @param session object
+ *        The session object will contain at least the following fields:
+ *        {
+ *          authentication,
+ *          client: {
+ *            host,
+ *            port
+ *          },
+ *          server: {
+ *            host,
+ *            port
+ *          }
+ *        }
+ *        Specific authentication modes may include additional fields.  Check
+ *        the different |allowConnection| methods in ./auth.js.
  * @return An AuthenticationResult value.
  *         A promise that will be resolved to the above is also allowed.
  */
