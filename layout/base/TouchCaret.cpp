@@ -140,6 +140,16 @@ TouchCaret::GetCanvasFrame()
   return presShell->GetCanvasFrame();
 }
 
+nsIFrame*
+TouchCaret::GetRootFrame()
+{
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (!presShell) {
+    return nullptr;
+  }
+  return presShell->GetRootFrame();
+}
+
 void
 TouchCaret::SetVisibility(bool aVisible)
 {
@@ -282,7 +292,6 @@ TouchCaret::MoveCaret(const nsPoint& movePoint)
   if (!focusFrame && !canvasFrame) {
     return;
   }
-
   nsIFrame* scrollable =
     nsLayoutUtils::GetClosestFrameOfType(focusFrame, nsGkAtoms::scrollFrame);
 
@@ -419,6 +428,12 @@ TouchCaret::IsDisplayable()
     return false;
   }
 
+  nsIFrame* rootFrame = GetRootFrame();
+  if (!rootFrame) {
+    TOUCHCARET_LOG("No root frame!");
+    return false;
+  }
+
   dom::Element* touchCaretElement = presShell->GetTouchCaretElement();
   if (!touchCaretElement) {
     TOUCHCARET_LOG("No touch caret frame element!");
@@ -483,14 +498,14 @@ TouchCaret::GetTouchCaretPosition()
 {
   nsRect focusRect;
   nsIFrame* focusFrame = GetCaretFocusFrame(&focusRect);
-  nsIFrame* canvasFrame = GetCanvasFrame();
+  nsIFrame* rootFrame = GetRootFrame();
 
   // Position of the touch caret relative to focusFrame.
   nsPoint pos = nsPoint(focusRect.x + (focusRect.width / 2),
                         focusRect.y + focusRect.height);
 
-  // Transform the position to make it relative to canvas frame.
-  nsLayoutUtils::TransformPoint(focusFrame, canvasFrame, pos);
+  // Transform the position to make it relative to root frame.
+  nsLayoutUtils::TransformPoint(focusFrame, rootFrame, pos);
 
   return pos;
 }
@@ -500,7 +515,7 @@ TouchCaret::ClampPositionToScrollFrame(const nsPoint& aPosition)
 {
   nsPoint pos = aPosition;
   nsIFrame* focusFrame = GetCaretFocusFrame();
-  nsIFrame* canvasFrame = GetCanvasFrame();
+  nsIFrame* rootFrame = GetRootFrame();
 
   // Clamp the touch caret position to the scrollframe boundary.
   nsIFrame* closestScrollFrame =
@@ -511,7 +526,7 @@ TouchCaret::ClampPositionToScrollFrame(const nsPoint& aPosition)
     nsRect visualRect = sf->GetScrollPortRect();
 
     // Clamp the touch caret in the scroll port.
-    nsLayoutUtils::TransformRect(closestScrollFrame, canvasFrame, visualRect);
+    nsLayoutUtils::TransformRect(closestScrollFrame, rootFrame, visualRect);
     pos = visualRect.ClampPoint(pos);
 
     // Get next ancestor scroll frame.
