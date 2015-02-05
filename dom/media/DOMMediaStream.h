@@ -95,6 +95,8 @@ public:
   // WebIDL
   double CurrentTime();
 
+  void GetId(nsAString& aID) const;
+
   void GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks);
   void GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks);
   void GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks);
@@ -292,6 +294,8 @@ protected:
   nsRefPtr<StreamListener> mListener;
 
   nsTArray<nsAutoPtr<OnTracksAvailableCallback> > mRunOnTracksAvailable;
+
+  nsString mID;
 
   // Keep these alive until the stream finishes
   nsTArray<nsCOMPtr<nsISupports> > mConsumersToKeepAlive;
