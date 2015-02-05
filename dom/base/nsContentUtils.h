@@ -832,28 +832,11 @@ public:
    * A helper function that parses a sandbox attribute (of an <iframe> or
    * a CSP directive) and converts it to the set of flags used internally.
    *
-   * @param aSandboxAttr  the sandbox attribute
-   * @return              the set of flags (SANDBOXED_NONE if aSandboxAttr is null)
+   * @param sandboxAttr   the sandbox attribute
+   * @return              the set of flags (0 if sandboxAttr is null)
    */
-  static uint32_t ParseSandboxAttributeToFlags(const nsAttrValue* aSandboxAttr);
+  static uint32_t ParseSandboxAttributeToFlags(const nsAttrValue* sandboxAttr);
 
-  /**
-   * A helper function that checks if a string matches a valid sandbox
-   * flag.
-   *
-   * @param aFlag  the potential sandbox flag
-   * @return       true if the flag is a sandbox flag
-   */
-  static bool IsValidSandboxFlag(const nsAString& aFlag);
-
-  /**
-   * A helper function that returns a string attribute corresponding to the
-   * sandbox flags.
-   *
-   * @param aFlags  the sandbox flags
-   * @param aString the attribute corresponding to the flags (null if flags is 0)
-   */
-  static void SandboxFlagsToString(uint32_t aFlags, nsAString& aString);
 
   /**
    * Fill (with the parameters given) the localized string named |aKey| in

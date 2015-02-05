@@ -1241,36 +1241,18 @@ nsContentUtils::GetParserService()
   return sParserService;
 }
 
-static nsIAtom** sSandboxFlagAttrs[] = {
-  &nsGkAtoms::allowsameorigin,     // SANDBOXED_ORIGIN
-  &nsGkAtoms::allowforms,          // SANDBOXED_FORMS
-  &nsGkAtoms::allowscripts,        // SANDBOXED_SCRIPTS | SANDBOXED_AUTOMATIC_FEATURES
-  &nsGkAtoms::allowtopnavigation,  // SANDBOXED_TOPLEVEL_NAVIGATION
-  &nsGkAtoms::allowpointerlock,    // SANDBOXED_POINTER_LOCK
-  &nsGkAtoms::allowpopups          // SANDBOXED_AUXILIARY_NAVIGATION
-};
-
-static const uint32_t sSandboxFlagValues[] = {
-  SANDBOXED_ORIGIN,                                 // allow-same-origin
-  SANDBOXED_FORMS,                                  // allow-forms
-  SANDBOXED_SCRIPTS | SANDBOXED_AUTOMATIC_FEATURES, // allow-scripts
-  SANDBOXED_TOPLEVEL_NAVIGATION,                    // allow-top-navigation
-  SANDBOXED_POINTER_LOCK,                           // allow-pointer-lock
-  SANDBOXED_AUXILIARY_NAVIGATION                    // allow-popups
-};
-
 /**
  * A helper function that parses a sandbox attribute (of an <iframe> or
  * a CSP directive) and converts it to the set of flags used internally.
  *
- * @param aSandboxAttr  the sandbox attribute
- * @return              the set of flags (SANDBOXED_NONE if aSandboxAttr is null)
+ * @param sandboxAttr   the sandbox attribute
+ * @return              the set of flags (0 if sandboxAttr is null)
  */
 uint32_t
-nsContentUtils::ParseSandboxAttributeToFlags(const nsAttrValue* aSandboxAttr)
+nsContentUtils::ParseSandboxAttributeToFlags(const nsAttrValue* sandboxAttr)
 {
   // No sandbox attribute, no sandbox flags.
-  if (!aSandboxAttr) { return SANDBOXED_NONE; }
+  if (!sandboxAttr) { return 0; }
 
   //  Start off by setting all the restriction flags.
   uint32_t out = SANDBOXED_NAVIGATION
@@ -1284,70 +1266,19 @@ nsContentUtils::ParseSandboxAttributeToFlags(const nsAttrValue* aSandboxAttr)
                | SANDBOXED_POINTER_LOCK
                | SANDBOXED_DOMAIN;
 
-  MOZ_ASSERT(ArrayLength(sSandboxFlagAttrs) == ArrayLength(sSandboxFlagValues),
-             "Lengths of SandboxFlagAttrs and SandboxFlagvalues do not match");
+// Macro for updating the flag according to the keywords
+#define IF_KEYWORD(atom, flags) \
+  if (sandboxAttr->Contains(nsGkAtoms::atom, eIgnoreCase)) { out &= ~(flags); }
 
-  // For each flag: if it's in the attribute, update the (out) flag
-  for (uint32_t i = 0; i <  ArrayLength(sSandboxFlagAttrs); i++) {
-    if (aSandboxAttr->Contains(*sSandboxFlagAttrs[i], eIgnoreCase)) {
-        out &= ~(sSandboxFlagValues[i]);
-    }
-  }
+  IF_KEYWORD(allowsameorigin, SANDBOXED_ORIGIN)
+  IF_KEYWORD(allowforms,  SANDBOXED_FORMS)
+  IF_KEYWORD(allowscripts, SANDBOXED_SCRIPTS | SANDBOXED_AUTOMATIC_FEATURES)
+  IF_KEYWORD(allowtopnavigation, SANDBOXED_TOPLEVEL_NAVIGATION)
+  IF_KEYWORD(allowpointerlock, SANDBOXED_POINTER_LOCK)
+  IF_KEYWORD(allowpopups, SANDBOXED_AUXILIARY_NAVIGATION)
 
   return out;
-}
-
-/**
- * A helper function that checks if a string matches (case-insensitive) a valid
- * sandbox flag.
- *
- * @param aFlag  the potential sandbox flag
- * @return       true if the flag is a sandbox flag
- */
-bool
-nsContentUtils::IsValidSandboxFlag(const nsAString& aFlag)
-{
-  for (uint32_t i = 0; i < ArrayLength(sSandboxFlagAttrs); i++) {
-    if (EqualsIgnoreASCIICase(nsDependentAtomString(*sSandboxFlagAttrs[i]), aFlag)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * A helper function that returns a string attribute corresponding to the
- * sandbox flags.
- *
- * @param aFlags  the sandbox flags
- * @param aString the attribute corresponding to the flags (null if flags is 0)
- */
-void
-nsContentUtils::SandboxFlagsToString(uint32_t aFlags, nsAString& aString)
-{
-  if (!aFlags) {
-    SetDOMStringToNull(aString);
-    return;
-  }
-
-  aString.Truncate();
-
-// Macro for updating the string according to set flags
-#define IF_FLAG(flag, atom)                                 \
-  if (!(aFlags & flag)) {                                   \
-    if (!aString.IsEmpty()) {                               \
-      aString.Append(NS_LITERAL_STRING(" "));               \
-    }                                                       \
-    aString.Append(nsDependentAtomString(nsGkAtoms::atom)); \
-  }
-
-  IF_FLAG(SANDBOXED_ORIGIN, allowsameorigin)
-  IF_FLAG(SANDBOXED_FORMS, allowforms)
-  IF_FLAG(SANDBOXED_SCRIPTS, allowscripts)
-  IF_FLAG(SANDBOXED_TOPLEVEL_NAVIGATION, allowtopnavigation)
-  IF_FLAG(SANDBOXED_POINTER_LOCK, allowpointerlock)
-  IF_FLAG(SANDBOXED_AUXILIARY_NAVIGATION, allowpopups)
-#undef IF_FLAG
+#undef IF_KEYWORD
 }
 
 nsIBidiKeyboard*
