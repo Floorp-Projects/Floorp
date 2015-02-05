@@ -8,7 +8,8 @@ var FindHelper = {
   _targetTab: null,
   _initialViewport: null,
   _viewportChanged: false,
-  _matchesCountResult: null,
+  _result: null,
+  _limit: 0,
 
   observe: function(aMessage, aTopic, aData) {
     switch(aTopic) {
@@ -31,6 +32,13 @@ var FindHelper = {
   },
 
   _findOpened: function() {
+    try {
+      this._limit = Services.prefs.getIntPref("accessibility.typeaheadfind.matchesCountLimit");
+    } catch (e) {
+      // Pref not available, assume 0, no match counting.
+      this._limit = 0;
+    }
+
     Messaging.addListener((data) => {
       this.doFind(data.searchString, data.matchCase);
       return this._getMatchesCountResult(data.searchString);
@@ -90,18 +98,22 @@ var FindHelper = {
    * Request, wait for, and return the current matchesCount results for a string.
    */
   _getMatchesCountResult: function(findString) {
-      // Sync call to Finder, results available immediately.
-      this._matchesCountResult = null;
-      this._finder.requestMatchesCount(findString);
+    // Count matches up to any provided limit.
+    if (this._limit <= 0) {
+      return { total: 0, current: 0, limit: 0 };
+    }
 
-      return this._matchesCountResult;
+    // Sync call to Finder, results available immediately.
+    this._finder.requestMatchesCount(findString, this._limit);
+    return this._result;
   },
 
   /**
    * Pass along the count results to FindInPageBar for display.
    */
   onMatchesCountResult: function(result) {
-    this._matchesCountResult = result;
+    this._result = result;
+    this._result.limit = this._limit;
   },
 
   doFind: function(searchString, matchCase) {
