@@ -418,11 +418,10 @@ gTests.push({
 
   setup: function(aCallback) {
     // Add a visit.
-    addVisits(
+    PlacesTestUtils.addVisits(
       {uri: PlacesUtils._uri(TEST_URL),
-        transition: PlacesUtils.history.TRANSITION_TYPED},
-      window,
-      aCallback);
+        transition: PlacesUtils.history.TRANSITION_TYPED}
+      ).then(aCallback);
   },
 
   selectNode: function(tree) {
