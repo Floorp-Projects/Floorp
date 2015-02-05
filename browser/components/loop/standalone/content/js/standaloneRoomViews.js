@@ -19,7 +19,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
   var StandaloneRoomInfoArea = React.createClass({displayName: "StandaloneRoomInfoArea",
     propTypes: {
-      helper: React.PropTypes.instanceOf(loop.shared.utils.Helper).isRequired,
+      isFirefox: React.PropTypes.bool.isRequired,
       activeRoomStore: React.PropTypes.oneOfType([
         React.PropTypes.instanceOf(loop.store.ActiveRoomStore),
         React.PropTypes.instanceOf(loop.store.FxOSActiveRoomStore)
@@ -34,7 +34,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
     },
 
     _renderCallToActionLink: function() {
-      if (this.props.helper.isFirefox(navigator.userAgent)) {
+      if (this.props.isFirefox) {
         return (
           React.createElement("a", {href: loop.config.learnMoreUrl, className: "btn btn-info"}, 
             mozL10n.get("rooms_room_full_call_to_action_label", {
@@ -201,7 +201,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
         React.PropTypes.instanceOf(loop.store.FxOSActiveRoomStore)
       ]).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      helper: React.PropTypes.instanceOf(loop.shared.utils.Helper).isRequired
+      isFirefox: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function() {
@@ -360,7 +360,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
           React.createElement(StandaloneRoomInfoArea, {roomState: this.state.roomState, 
                                   failureReason: this.state.failureReason, 
                                   joinRoom: this.joinRoom, 
-                                  helper: this.props.helper, 
+                                  isFirefox: this.props.isFirefox, 
                                   activeRoomStore: this.props.activeRoomStore, 
                                   roomUsed: this.state.used}), 
           React.createElement("div", {className: "video-layout-wrapper"}, 
