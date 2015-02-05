@@ -34,10 +34,29 @@
   -moz-padding-end: 8px;
 }
 
+/* Recording Notice */
+
+#performance-view .notice-container {
+  font-size: 120%;
+  background-color: var(--theme-toolbar-background);
+  color: var(--theme-body-color);
+  padding-bottom: 20vh;
+}
+
+#performance-view .notice-container button {
+  min-width: 30px;
+  min-height: 28px;
+  margin: 0;
+}
+
+/* Overview Panel */
+
+.notice-container button,
 #record-button {
   list-style-image: url(profiler-stopwatch.svg);
 }
 
+.notice-container button[checked],
 #record-button[checked] {
   list-style-image: url(profiler-stopwatch-checked.svg);
 }

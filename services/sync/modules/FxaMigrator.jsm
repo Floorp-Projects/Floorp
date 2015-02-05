@@ -524,8 +524,22 @@ Migrator.prototype = {
       default:
         throw new Error("Unexpected telemetry flag: " + flag);
     }
-  }
-}
+  },
+
+  get learnMoreLink() {
+    try {
+      var url = Services.prefs.getCharPref("app.support.baseURL");
+    } catch (err) {
+      return null;
+    }
+    url += "sync-upgrade";
+    let sb = Services.strings.createBundle("chrome://weave/locale/services/sync.properties");
+    return {
+      text: sb.GetStringFromName("sync.eol.learnMore.label"),
+      href: Services.urlFormatter.formatURL(url),
+    };
+  },
+};
 
 // We expose a singleton
 this.EXPORTED_SYMBOLS = ["fxaMigrator"];
