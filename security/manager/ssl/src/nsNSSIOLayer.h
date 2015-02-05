@@ -232,6 +232,7 @@ public:
   void clearStoredData();
   void loadVersionFallbackLimit();
   void setInsecureFallbackSites(const nsCString& str);
+  bool isInsecureFallbackSite(const nsACString& hostname);
 
   bool mFalseStartRequireNPN;
   bool mFalseStartRequireForwardSecrecy;

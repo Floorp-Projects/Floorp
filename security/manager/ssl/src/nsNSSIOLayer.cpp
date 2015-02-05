@@ -1224,6 +1224,14 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
 
     return false;
   }
+
+  // Allow PR_CONNECT_RESET_ERROR only for whitelisted sites.
+  if (err == PR_CONNECT_RESET_ERROR &&
+      !socketInfo->SharedState().IOLayerHelpers()
+        .isInsecureFallbackSite(socketInfo->GetHostName())) {
+    return false;
+  }
+
   if ((err == SSL_ERROR_NO_CYPHER_OVERLAP || err == PR_END_OF_FILE_ERROR ||
        err == PR_CONNECT_RESET_ERROR) &&
       nsNSSComponent::AreAnyWeakCiphersEnabled()) {
@@ -1833,6 +1841,13 @@ nsSSLIOLayerHelpers::setInsecureFallbackSites(const nsCString& str)
       mInsecureFallbackSites.PutEntry(host);
     }
   }
+}
+
+bool
+nsSSLIOLayerHelpers::isInsecureFallbackSite(const nsACString& hostname)
+{
+  MutexAutoLock lock(mutex);
+  return mInsecureFallbackSites.Contains(hostname);
 }
 
 void
