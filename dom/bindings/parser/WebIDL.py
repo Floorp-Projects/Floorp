@@ -4026,6 +4026,11 @@ class IDLAttribute(IDLInterfaceMember):
                                   "readonly attributes" % attr.value(),
                                   [attr.location, self.location])
             self._setDependsOn(attr.value())
+        elif identifier == "UseCounter":
+            if self.stringifier:
+                raise WebIDLError("[UseCounter] must not be used on a "
+                                  "stringifier attribute",
+                                  [attr.location, self.location])
         elif (identifier == "Pref" or
               identifier == "Deprecated" or
               identifier == "SetterThrows" or
@@ -4431,6 +4436,15 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         """
         return self.maplikeOrSetlike is not None
 
+    def isSpecial(self):
+        return (self.isGetter() or
+                self.isSetter() or
+                self.isCreator() or
+                self.isDeleter() or
+                self.isLegacycaller() or
+                self.isStringifier() or
+                self.isJsonifier())
+
     def hasOverloads(self):
         return self._hasOverloads
 
@@ -4712,6 +4726,11 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                 raise WebIDLError("[Alias] takes an identifier or string",
                                   [attr.location])
             self._addAlias(attr.value())
+        elif identifier == "UseCounter":
+            if self.isSpecial():
+                raise WebIDLError("[UseCounter] must not be used on a special "
+                                  "operation",
+                                  [attr.location, self.location])
         elif (identifier == "Throws" or
               identifier == "NewObject" or
               identifier == "ChromeOnly" or
