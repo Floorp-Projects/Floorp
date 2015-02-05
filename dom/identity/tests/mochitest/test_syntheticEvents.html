@@ -176,8 +176,9 @@ function runTest() {
         );
 
         // Because the <iframe mozapp> can't parent its way back to us, we
-        // provide this handle to our window so it can postMessage to us.
-        iframe.contentWindow.wrappedJSObject.realParent = window;
+        // provide this handle it can use to postMessage to us.
+        Components.utils.exportFunction(window.postMessage.bind(window), iframe.contentWindow, {defineAs: 'doPostMessage'});
+
         iframe.contentWindow.postMessage({
           wantIssuer: app.wantIssuer,
           appIndex: _index
