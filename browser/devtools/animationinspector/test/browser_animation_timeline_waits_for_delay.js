@@ -20,5 +20,5 @@ add_task(function*() {
   is(timeline.value, 0, "The timeline is at 0 since the animation hasn't started");
 
   let timeLabel = widget.timeDisplayEl;
-  is(timeLabel.textContent, "0.00s", "The current time is 0");
+  is(timeLabel.textContent, "0s", "The current time is 0");
 });
