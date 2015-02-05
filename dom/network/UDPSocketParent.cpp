@@ -69,7 +69,7 @@ UDPSocketParent::GetAppId()
   const PContentParent *content = Manager()->Manager();
   const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
   if (browsers.Length() > 0) {
-    TabParent *tab = static_cast<TabParent*>(browsers[0]);
+    TabParent *tab = TabParent::GetFrom(browsers[0]);
     appId = tab->OwnAppId();
   }
   return appId;

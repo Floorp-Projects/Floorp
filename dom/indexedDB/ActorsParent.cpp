@@ -10987,7 +10987,7 @@ FactoryOp::CheckAtLeastOneAppHasPermission(ContentParent* aContentParent,
          index < count;
          index++) {
       uint32_t appId =
-        static_cast<TabParent*>(browsers[index])->OwnOrContainingAppId();
+        TabParent::GetFrom(browsers[index])->OwnOrContainingAppId();
       MOZ_ASSERT(kUnknownAppId != appId && kNoAppId != appId);
 
       nsCOMPtr<mozIApplication> app;

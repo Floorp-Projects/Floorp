@@ -143,7 +143,7 @@ PrintingParent::DOMWindowFromBrowserParent(PBrowserParent* parent)
     return nullptr;
   }
 
-  TabParent* tabParent = static_cast<TabParent*>(parent);
+  TabParent* tabParent = TabParent::GetFrom(parent);
   if (!tabParent) {
     return nullptr;
   }

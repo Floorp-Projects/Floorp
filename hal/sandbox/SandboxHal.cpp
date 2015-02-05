@@ -507,7 +507,7 @@ public:
               PBrowserParent *browserParent) MOZ_OVERRIDE
   {
     // We give all content vibration permission.
-    TabParent *tabParent = static_cast<TabParent*>(browserParent);
+    TabParent *tabParent = TabParent::GetFrom(browserParent);
     nsCOMPtr<nsIDOMWindow> window =
       do_QueryInterface(tabParent->GetBrowserDOMWindow());
     WindowIdentifier newID(id, window);
@@ -519,7 +519,7 @@ public:
   RecvCancelVibrate(InfallibleTArray<uint64_t> &&id,
                     PBrowserParent *browserParent) MOZ_OVERRIDE
   {
-    TabParent *tabParent = static_cast<TabParent*>(browserParent);
+    TabParent *tabParent = TabParent::GetFrom(browserParent);
     nsCOMPtr<nsIDOMWindow> window =
       do_QueryInterface(tabParent->GetBrowserDOMWindow());
     WindowIdentifier newID(id, window);
