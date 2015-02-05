@@ -2550,7 +2550,18 @@ MediaDecoderStateMachine::SeekCompleted()
     newCurrentTime = mAudioStartTime = seekTime;
   } else if (HasAudio()) {
     AudioData* audio = AudioQueue().PeekFront();
-    newCurrentTime = mAudioStartTime = audio ? audio->mTime : seekTime;
+    mAudioStartTime = audio ? audio->mTime : seekTime;
+
+    // Though we adjust the newCurrentTime in audio-based, and supplemented
+    // by video. For better UX, should not bind the slide position to
+    // mAudioStartTime directly.
+    // While seeking to a position where there's only either audio or video,
+    // Need to check the seekTime is bounded in audio duration. See Bug 1112438.
+    if (audio && audio->mTime <= seekTime && seekTime < audio->GetEndTime()) {
+      newCurrentTime = audio->mTime;
+    } else {
+      newCurrentTime = video ? video->mTime : seekTime;
+    }
   } else {
     newCurrentTime = video ? video->mTime : seekTime;
   }
