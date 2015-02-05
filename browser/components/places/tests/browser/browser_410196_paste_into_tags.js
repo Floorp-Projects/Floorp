@@ -66,10 +66,9 @@ let tests = {
     // need to add a history object
     let testURI1 = NetUtil.newURI(MOZURISPEC);
     isnot(testURI1, null, "testURI is not null");
-    addVisits(
-      {uri: testURI1, transition: PlacesUtils.history.TRANSITION_TYPED},
-      window,
-      aCallback);
+    PlacesTestUtils.addVisits(
+      {uri: testURI1, transition: PlacesUtils.history.TRANSITION_TYPED}
+      ).then(aCallback);
   },
 
   makeTag: function() {

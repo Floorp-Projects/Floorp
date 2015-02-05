@@ -58,7 +58,7 @@
            { uri: Services.io.newURI("http://example3.tld/", null, null),
              visitDate: ++vtime, transition: ttype }];
 
-        yield new Promise(resolve => addVisits(places, resolve));
+        yield PlacesTestUtils.addVisits(places);
 
         // Make a history query.
         let query = PlacesUtils.history.getNewQuery();
@@ -86,7 +86,7 @@
 
         // First check live-update of the view when adding visits.
         places.forEach(place => place.visitDate = ++vtime);
-        yield new Promise(resolve => addVisits(places, resolve));
+        yield PlacesTestUtils.addVisits(places);
 
         for (let i = 0; i < rc; i++) {
           selection.select(i);
