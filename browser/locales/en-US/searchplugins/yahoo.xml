@@ -20,6 +20,10 @@
   <Param name="p" value="{searchTerms}"/>
   <Param name="ei" value="UTF-8"/>
   <Param name="hspart" value="mozilla"/>
-  <Param name="hsimp" value="yhs-001"/>
+  <MozParam name="hsimp" condition="purpose" purpose="searchbar"   value="yhs-001"/>
+  <MozParam name="hsimp" condition="purpose" purpose="keyword"     value="yhs-002"/>
+  <MozParam name="hsimp" condition="purpose" purpose="homepage"    value="yhs-003"/>
+  <MozParam name="hsimp" condition="purpose" purpose="newtab"      value="yhs-004"/>
+  <MozParam name="hsimp" condition="purpose" purpose="contextmenu" value="yhs-005"/>
 </Url>
 </SearchPlugin>
