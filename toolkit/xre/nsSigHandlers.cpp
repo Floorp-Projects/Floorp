@@ -165,7 +165,7 @@ static void fpehandler(int signum, siginfo_t *si, void *context)
   status->__invalid = status->__denorm = status->__zdiv = status->__ovrfl = status->__undfl =
     status->__precis = status->__stkflt = status->__errsumm = 0;
 
-  __uint32_t *mxcsr = &uc->uc_mcontext->__fs.__fpu_mxcsr;
+  uint32_t *mxcsr = &uc->uc_mcontext->__fs.__fpu_mxcsr;
   *mxcsr |= SSE_EXCEPTION_MASK; /* disable all SSE exceptions */
   *mxcsr &= ~SSE_STATUS_FLAGS; /* clear all pending SSE exceptions */
 #endif
@@ -185,13 +185,13 @@ static void fpehandler(int signum, siginfo_t *si, void *context)
   *sw &= ~FPU_STATUS_FLAGS;
 #endif
 #if defined(__amd64__)
-  __uint16_t *cw = &uc->uc_mcontext.fpregs->cwd;
+  uint16_t *cw = &uc->uc_mcontext.fpregs->cwd;
   *cw |= FPU_EXCEPTION_MASK;
 
-  __uint16_t *sw = &uc->uc_mcontext.fpregs->swd;
+  uint16_t *sw = &uc->uc_mcontext.fpregs->swd;
   *sw &= ~FPU_STATUS_FLAGS;
 
-  __uint32_t *mxcsr = &uc->uc_mcontext.fpregs->mxcsr;
+  uint32_t *mxcsr = &uc->uc_mcontext.fpregs->mxcsr;
   *mxcsr |= SSE_EXCEPTION_MASK; /* disable all SSE exceptions */
   *mxcsr &= ~SSE_STATUS_FLAGS; /* clear all pending SSE exceptions */
 #endif
