@@ -19,9 +19,9 @@ body {
   background-color: #333333;
 }
 
-.print {
+.sepia {
   color: #333333;
-  background-color: #fff1df;
+  background-color: #f0ece7;
 }
 
 .sans-serif {
@@ -60,7 +60,7 @@ body {
 }
 
 .light > .header > .domain,
-.print > .header > .domain {
+.sepia > .header > .domain {
   border-bottom-color: #333333;
 }
 
@@ -165,7 +165,7 @@ body {
 }
 
 .light > .content blockquote,
-.print > .content blockquote {
+.sepia > .content blockquote {
   -moz-border-start: 2px solid #333333;
 }
 
