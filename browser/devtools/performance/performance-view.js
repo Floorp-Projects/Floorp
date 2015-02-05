@@ -30,7 +30,7 @@ let PerformanceView = {
    * Sets up the view with event binding and main subviews.
    */
   initialize: function () {
-    this._recordButton = $("#record-button");
+    this._recordButton = $("#main-record-button");
     this._importButton = $("#import-button");
     this._clearButton = $("#clear-button");
 

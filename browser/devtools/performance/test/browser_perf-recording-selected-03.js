@@ -21,10 +21,10 @@ let test = Task.async(function*() {
   RecordingsView.selectedIndex = 0;
   yield select;
 
-  ok($("#record-button").hasAttribute("checked"),
+  ok($("#main-record-button").hasAttribute("checked"),
     "Button is still checked after selecting another item.");
 
-  ok(!$("#record-button").hasAttribute("locked"),
+  ok(!$("#main-record-button").hasAttribute("locked"),
     "Button is not locked after selecting another item.");
 
   yield stopRecording(panel);
