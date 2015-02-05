@@ -24,7 +24,6 @@
 #include "js/TypeDecls.h"
 
 class nsFrameLoader;
-class nsIFrameLoader;
 class nsIContent;
 class nsIPrincipal;
 class nsIURI;
@@ -329,9 +328,6 @@ public:
     bool SendSelectionEvent(mozilla::WidgetSelectionEvent& event);
 
     static TabParent* GetFrom(nsFrameLoader* aFrameLoader);
-    static TabParent* GetFrom(nsIFrameLoader* aFrameLoader);
-    static TabParent* GetFrom(nsITabParent* aTabParent);
-    static TabParent* GetFrom(PBrowserParent* aTabParent);
     static TabParent* GetFrom(nsIContent* aContent);
     static TabId GetTabIdFrom(nsIDocShell* docshell);
 
