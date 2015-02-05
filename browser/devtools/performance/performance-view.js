@@ -7,6 +7,25 @@
  * Master view handler for the performance tool.
  */
 let PerformanceView = {
+
+  _state: null,
+
+  // Mapping of state to selectors for different panes
+  // of the main profiler view. Used in `PerformanceView.setState()`
+  states: {
+    empty: [
+      { deck: "#performance-view", pane: "#empty-notice" }
+    ],
+    recording: [
+      { deck: "#performance-view", pane: "#performance-view-content" },
+      { deck: "#details-pane-container", pane: "#recording-notice" }
+    ],
+    recorded: [
+      { deck: "#performance-view", pane: "#performance-view-content" },
+      { deck: "#details-pane-container", pane: "#details-pane" }
+    ]
+  },
+
   /**
    * Sets up the view with event binding and main subviews.
    */
@@ -18,13 +37,20 @@ let PerformanceView = {
     this._onImportButtonClick = this._onImportButtonClick.bind(this);
     this._lockRecordButton = this._lockRecordButton.bind(this);
     this._unlockRecordButton = this._unlockRecordButton.bind(this);
+    this._onRecordingSelected = this._onRecordingSelected.bind(this);
+    this._onRecordingStopped = this._onRecordingStopped.bind(this);
 
-    this._recordButton.addEventListener("click", this._onRecordButtonClick);
+    for (let button of $$(".record-button")) {
+      button.addEventListener("click", this._onRecordButtonClick);
+    }
     this._importButton.addEventListener("click", this._onImportButtonClick);
 
     // Bind to controller events to unlock the record button
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._unlockRecordButton);
-    PerformanceController.on(EVENTS.RECORDING_STOPPED, this._unlockRecordButton);
+    PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
+    PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
+
+    this.setState("empty");
 
     return promise.all([
       RecordingsView.initialize(),
@@ -38,11 +64,14 @@ let PerformanceView = {
    * Unbinds events and destroys subviews.
    */
   destroy: function () {
-    this._recordButton.removeEventListener("click", this._onRecordButtonClick);
+    for (let button of $$(".record-button")) {
+      button.removeEventListener("click", this._onRecordButtonClick);
+    }
     this._importButton.removeEventListener("click", this._onImportButtonClick);
 
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._unlockRecordButton);
-    PerformanceController.off(EVENTS.RECORDING_STOPPED, this._unlockRecordButton);
+    PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
+    PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
 
     return promise.all([
       RecordingsView.destroy(),
@@ -50,6 +79,29 @@ let PerformanceView = {
       ToolbarView.destroy(),
       DetailsView.destroy()
     ]);
+  },
+
+  /**
+   * Sets the state of the profiler view. Possible options are "empty",
+   * "recording", "recorded".
+   */
+  setState: function (state) {
+    let viewConfig = this.states[state];
+    if (!viewConfig) {
+      throw new Error(`Invalid state for PerformanceView: ${state}`);
+    }
+    for (let { deck, pane } of viewConfig) {
+      $(deck).selectedPanel = $(pane);
+    }
+
+    this._state = state;
+  },
+
+  /**
+   * Returns the state of the PerformanceView.
+   */
+  getState: function () {
+    return this._state;
   },
 
   /**
@@ -65,6 +117,20 @@ let PerformanceView = {
    */
   _unlockRecordButton: function () {
     this._recordButton.removeAttribute("locked");
+  },
+
+  /**
+   * When a recording is complete.
+   */
+  _onRecordingStopped: function (_, recording) {
+    this._unlockRecordButton();
+
+    // If this recording stopped is the current recording, set the
+    // state to "recorded". A stopped recording doesn't necessarily
+    // have to be the current recording (console.profileEnd, for example)
+    if (recording === PerformanceController.getCurrentRecording()) {
+      this.setState("recorded");
+    }
   },
 
   /**
@@ -93,6 +159,17 @@ let PerformanceView = {
 
     if (fp.show() == Ci.nsIFilePicker.returnOK) {
       this.emit(EVENTS.UI_IMPORT_RECORDING, fp.file);
+    }
+  },
+
+  /**
+   * Fired when a recording is selected. Used to toggle the profiler view state.
+   */
+  _onRecordingSelected: function (_, recording) {
+    if (recording.isRecording()) {
+      this.setState("recording");
+    } else {
+      this.setState("recorded");
     }
   }
 };
