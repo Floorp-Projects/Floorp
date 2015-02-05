@@ -50,7 +50,6 @@ NS_IMETHODIMP
 PluginWidgetProxy::Create(nsIWidget*        aParent,
                           nsNativeWidget    aNativeParent,
                           const nsIntRect&  aRect,
-                          nsDeviceContext*  aContext,
                           nsWidgetInitData* aInitData)
 {
   ENSURE_CHANNEL;
