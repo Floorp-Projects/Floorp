@@ -120,7 +120,7 @@ Omnijar::CleanUp()
 already_AddRefed<nsZipArchive>
 Omnijar::GetReader(nsIFile* aPath)
 {
-  NS_ABORT_IF_FALSE(IsInitialized(), "Omnijar not initialized");
+  MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
 
   bool equals;
   nsresult rv;
@@ -143,7 +143,7 @@ Omnijar::GetReader(nsIFile* aPath)
 nsresult
 Omnijar::GetURIString(Type aType, nsACString& aResult)
 {
-  NS_ABORT_IF_FALSE(IsInitialized(), "Omnijar not initialized");
+  MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
 
   aResult.Truncate();
 

@@ -40,8 +40,8 @@ template <class T>
 inline const T&
 clamped(const T& aA, const T& aMin, const T& aMax)
 {
-  NS_ABORT_IF_FALSE(aMax >= aMin,
-                    "clamped(): aMax must be greater than or equal to aMin");
+  MOZ_ASSERT(aMax >= aMin,
+             "clamped(): aMax must be greater than or equal to aMin");
   return XPCOM_MIN(XPCOM_MAX(aA, aMin), aMax);
 }
 

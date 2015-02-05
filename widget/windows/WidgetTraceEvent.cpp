@@ -111,7 +111,7 @@ void SignalTracerThread()
 // This function is called from the background tracer thread.
 bool FireAndWaitForTracerEvent()
 {
-  NS_ABORT_IF_FALSE(sEventHandle, "Tracing not initialized!");
+  MOZ_ASSERT(sEventHandle, "Tracing not initialized!");
 
   // First, try to find the hidden window.
   static HWND hidden_window = nullptr;

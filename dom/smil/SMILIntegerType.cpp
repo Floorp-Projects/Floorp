@@ -13,7 +13,7 @@ namespace mozilla {
 void
 SMILIntegerType::Init(nsSMILValue& aValue) const
 {
-  NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected value type");
+  MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
   aValue.mU.mInt = 0;
   aValue.mType = this;
 }

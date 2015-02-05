@@ -45,8 +45,8 @@ GetZeroValueForUnit(StyleAnimationValue::Unit aUnit)
   static const StyleAnimationValue
     sZeroColor(NS_RGB(0,0,0), StyleAnimationValue::ColorConstructor);
 
-  NS_ABORT_IF_FALSE(aUnit != StyleAnimationValue::eUnit_Null,
-                    "Need non-null unit for a zero value");
+  MOZ_ASSERT(aUnit != StyleAnimationValue::eUnit_Null,
+             "Need non-null unit for a zero value");
   switch (aUnit) {
     case StyleAnimationValue::eUnit_Coord:
       return &sZeroCoord;
@@ -75,8 +75,8 @@ static const bool
 FinalizeStyleAnimationValues(const StyleAnimationValue*& aValue1,
                              const StyleAnimationValue*& aValue2)
 {
-  NS_ABORT_IF_FALSE(aValue1 || aValue2,
-                    "expecting at least one non-null value");
+  MOZ_ASSERT(aValue1 || aValue2,
+             "expecting at least one non-null value");
 
   // Are we missing either val? (If so, it's an implied 0 in other val's units)
   if (!aValue1) {
@@ -142,7 +142,7 @@ ExtractValueWrapper(const nsSMILValue& aValue)
 void
 nsSMILCSSValueType::Init(nsSMILValue& aValue) const
 {
-  NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected SMIL value type");
+  MOZ_ASSERT(aValue.IsNull(), "Unexpected SMIL value type");
 
   aValue.mU.mPtr = nullptr;
   aValue.mType = this;
@@ -151,7 +151,7 @@ nsSMILCSSValueType::Init(nsSMILValue& aValue) const
 void
 nsSMILCSSValueType::Destroy(nsSMILValue& aValue) const
 {
-  NS_ABORT_IF_FALSE(aValue.mType == this, "Unexpected SMIL value type");
+  MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value type");
   delete static_cast<ValueWrapper*>(aValue.mU.mPtr);
   aValue.mType = nsSMILNullType::Singleton();
 }
@@ -159,8 +159,8 @@ nsSMILCSSValueType::Destroy(nsSMILValue& aValue) const
 nsresult
 nsSMILCSSValueType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
 {
-  NS_ABORT_IF_FALSE(aDest.mType == aSrc.mType, "Incompatible SMIL types");
-  NS_ABORT_IF_FALSE(aDest.mType == this, "Unexpected SMIL value type");
+  MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
+  MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value type");
   const ValueWrapper* srcWrapper = ExtractValueWrapper(aSrc);
   ValueWrapper* destWrapper = ExtractValueWrapper(aDest);
 
@@ -185,8 +185,8 @@ bool
 nsSMILCSSValueType::IsEqual(const nsSMILValue& aLeft,
                             const nsSMILValue& aRight) const
 {
-  NS_ABORT_IF_FALSE(aLeft.mType == aRight.mType, "Incompatible SMIL types");
-  NS_ABORT_IF_FALSE(aLeft.mType == this, "Unexpected SMIL value");
+  MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
+  MOZ_ASSERT(aLeft.mType == this, "Unexpected SMIL value");
   const ValueWrapper* leftWrapper = ExtractValueWrapper(aLeft);
   const ValueWrapper* rightWrapper = ExtractValueWrapper(aRight);
 
@@ -213,14 +213,14 @@ nsresult
 nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                         uint32_t aCount) const
 {
-  NS_ABORT_IF_FALSE(aValueToAdd.mType == aDest.mType,
-                    "Trying to add invalid types");
-  NS_ABORT_IF_FALSE(aValueToAdd.mType == this, "Unexpected source type");
+  MOZ_ASSERT(aValueToAdd.mType == aDest.mType,
+             "Trying to add invalid types");
+  MOZ_ASSERT(aValueToAdd.mType == this, "Unexpected source type");
 
   ValueWrapper* destWrapper = ExtractValueWrapper(aDest);
   const ValueWrapper* valueToAddWrapper = ExtractValueWrapper(aValueToAdd);
-  NS_ABORT_IF_FALSE(destWrapper || valueToAddWrapper,
-                    "need at least one fully-initialized value");
+  MOZ_ASSERT(destWrapper || valueToAddWrapper,
+             "need at least one fully-initialized value");
 
   nsCSSProperty property = (valueToAddWrapper ? valueToAddWrapper->mPropID :
                             destWrapper->mPropID);
@@ -260,13 +260,13 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
                                     const nsSMILValue& aTo,
                                     double& aDistance) const
 {
-  NS_ABORT_IF_FALSE(aFrom.mType == aTo.mType,
-                    "Trying to compare different types");
-  NS_ABORT_IF_FALSE(aFrom.mType == this, "Unexpected source type");
+  MOZ_ASSERT(aFrom.mType == aTo.mType,
+             "Trying to compare different types");
+  MOZ_ASSERT(aFrom.mType == this, "Unexpected source type");
 
   const ValueWrapper* fromWrapper = ExtractValueWrapper(aFrom);
   const ValueWrapper* toWrapper = ExtractValueWrapper(aTo);
-  NS_ABORT_IF_FALSE(toWrapper, "expecting non-null endpoint");
+  MOZ_ASSERT(toWrapper, "expecting non-null endpoint");
 
   const StyleAnimationValue* fromCSSValue = fromWrapper ?
     &fromWrapper->mCSSValue : nullptr;
@@ -287,18 +287,18 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
                                 double aUnitDistance,
                                 nsSMILValue& aResult) const
 {
-  NS_ABORT_IF_FALSE(aStartVal.mType == aEndVal.mType,
-                    "Trying to interpolate different types");
-  NS_ABORT_IF_FALSE(aStartVal.mType == this,
-                    "Unexpected types for interpolation");
-  NS_ABORT_IF_FALSE(aResult.mType == this, "Unexpected result type");
-  NS_ABORT_IF_FALSE(aUnitDistance >= 0.0 && aUnitDistance <= 1.0,
-                    "unit distance value out of bounds");
-  NS_ABORT_IF_FALSE(!aResult.mU.mPtr, "expecting barely-initialized outparam");
+  MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
+             "Trying to interpolate different types");
+  MOZ_ASSERT(aStartVal.mType == this,
+             "Unexpected types for interpolation");
+  MOZ_ASSERT(aResult.mType == this, "Unexpected result type");
+  MOZ_ASSERT(aUnitDistance >= 0.0 && aUnitDistance <= 1.0,
+             "unit distance value out of bounds");
+  MOZ_ASSERT(!aResult.mU.mPtr, "expecting barely-initialized outparam");
 
   const ValueWrapper* startWrapper = ExtractValueWrapper(aStartVal);
   const ValueWrapper* endWrapper = ExtractValueWrapper(aEndVal);
-  NS_ABORT_IF_FALSE(endWrapper, "expecting non-null endpoint");
+  MOZ_ASSERT(endWrapper, "expecting non-null endpoint");
 
   const StyleAnimationValue* startCSSValue = startWrapper ?
     &startWrapper->mCSSValue : nullptr;
@@ -370,9 +370,8 @@ ValueFromStringHelper(nsCSSProperty aPropID,
 
   if (aPropID == eCSSProperty_font_size) {
     // Divide out text-zoom, since SVG is supposed to ignore it
-    NS_ABORT_IF_FALSE(aStyleAnimValue.GetUnit() ==
-                        StyleAnimationValue::eUnit_Coord,
-                      "'font-size' value with unexpected style unit");
+    MOZ_ASSERT(aStyleAnimValue.GetUnit() == StyleAnimationValue::eUnit_Coord,
+               "'font-size' value with unexpected style unit");
     aStyleAnimValue.SetCoordValue(aStyleAnimValue.GetCoordValue() /
                                   aPresContext->TextZoom());
   }
@@ -387,7 +386,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
                                     nsSMILValue& aValue,
                                     bool* aIsContextSensitive)
 {
-  NS_ABORT_IF_FALSE(aValue.IsNull(), "Outparam should be null-typed");
+  MOZ_ASSERT(aValue.IsNull(), "Outparam should be null-typed");
   nsPresContext* presContext = GetPresContextForElement(aTargetElement);
   if (!presContext) {
     NS_WARNING("Not parsing animation value; unable to get PresContext");
@@ -415,8 +414,8 @@ bool
 nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
                                   nsAString& aString)
 {
-  NS_ABORT_IF_FALSE(aValue.mType == &nsSMILCSSValueType::sSingleton,
-                    "Unexpected SMIL value type");
+  MOZ_ASSERT(aValue.mType == &nsSMILCSSValueType::sSingleton,
+             "Unexpected SMIL value type");
   const ValueWrapper* wrapper = ExtractValueWrapper(aValue);
   return !wrapper ||
     StyleAnimationValue::UncomputeValue(wrapper->mPropID,

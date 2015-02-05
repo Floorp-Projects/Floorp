@@ -94,8 +94,7 @@ nsHostObjectURI::CloneInternal(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
 #ifdef DEBUG
   nsRefPtr<nsHostObjectURI> uriCheck;
   rv = simpleClone->QueryInterface(kHOSTOBJECTURICID, getter_AddRefs(uriCheck));
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) && uriCheck,
-		    "Unexpected!");
+  MOZ_ASSERT(NS_SUCCEEDED(rv) && uriCheck);
 #endif
 
   nsHostObjectURI* u = static_cast<nsHostObjectURI*>(simpleClone.get());
