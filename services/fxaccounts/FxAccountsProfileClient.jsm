@@ -134,6 +134,18 @@ this.FxAccountsProfileClient.prototype = {
   fetchProfile: function () {
     log.debug("FxAccountsProfileClient: Requested profile");
     return this._createRequest("/profile", "GET");
+  },
+
+  /**
+   * Retrieve user's profile from the server
+   *
+   * @return Promise
+   *         Resolves: {Object} Successful response from the '/avatar' endpoint.
+   *         Rejects: {FxAccountsProfileClientError} profile client error.
+   */
+  fetchProfileImage: function () {
+    log.debug("FxAccountsProfileClient: Requested avatar");
+    return this._createRequest("/avatar", "GET");
   }
 };
 
