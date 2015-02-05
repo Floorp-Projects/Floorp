@@ -27,7 +27,7 @@ ComputedTimingFunction::Init(const nsTimingFunction &aFunction)
 static inline double
 StepEnd(uint32_t aSteps, double aPortion)
 {
-  NS_ABORT_IF_FALSE(0.0 <= aPortion && aPortion <= 1.0, "out of range");
+  MOZ_ASSERT(0.0 <= aPortion && aPortion <= 1.0, "out of range");
   uint32_t step = uint32_t(aPortion * aSteps); // floor
   return double(step) / double(aSteps);
 }
@@ -47,7 +47,7 @@ ComputedTimingFunction::GetValue(double aPortion) const
       // really meant it.
       return 1.0 - StepEnd(mSteps, 1.0 - aPortion);
     default:
-      NS_ABORT_IF_FALSE(false, "bad type");
+      MOZ_ASSERT(false, "bad type");
       // fall through
     case nsTimingFunction::StepEnd:
       return StepEnd(mSteps, aPortion);

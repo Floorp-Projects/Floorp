@@ -20,7 +20,7 @@ namespace mozilla {
 void
 SVGPointListSMILType::Init(nsSMILValue &aValue) const
 {
-  NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected value type");
+  MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
 
   SVGPointListAndInfo* pointList = new SVGPointListAndInfo();
 
@@ -76,8 +76,8 @@ SVGPointListSMILType::Add(nsSMILValue& aDest,
   const SVGPointListAndInfo& valueToAdd =
     *static_cast<const SVGPointListAndInfo*>(aValueToAdd.mU.mPtr);
 
-  NS_ABORT_IF_FALSE(dest.Element() || valueToAdd.Element(),
-                    "Target element propagation failure");
+  MOZ_ASSERT(dest.Element() || valueToAdd.Element(),
+             "Target element propagation failure");
 
   if (valueToAdd.IsIdentity()) {
     return NS_OK;
@@ -92,8 +92,8 @@ SVGPointListSMILType::Add(nsSMILValue& aDest,
     dest.SetInfo(valueToAdd.Element()); // propagate target element info!
     return NS_OK;
   }
-  NS_ABORT_IF_FALSE(dest.Element() == valueToAdd.Element(),
-                    "adding values from different elements...?");
+  MOZ_ASSERT(dest.Element() == valueToAdd.Element(),
+             "adding values from different elements...?");
   if (dest.Length() != valueToAdd.Length()) {
     // For now we only support animation between lists with the same number of
     // items. SVGContentUtils::ReportToConsole
@@ -163,9 +163,9 @@ SVGPointListSMILType::Interpolate(const nsSMILValue& aStartVal,
   SVGPointListAndInfo& result =
     *static_cast<SVGPointListAndInfo*>(aResult.mU.mPtr);
 
-  NS_ABORT_IF_FALSE(end.Element(), "Can't propagate target element");
-  NS_ABORT_IF_FALSE(start.Element() == end.Element() || !start.Element(),
-                    "Different target elements");
+  MOZ_ASSERT(end.Element(), "Can't propagate target element");
+  MOZ_ASSERT(start.Element() == end.Element() || !start.Element(),
+             "Different target elements");
 
   if (start.Element() && // 'start' is not an "identity" value
       start.Length() != end.Length()) {
@@ -180,7 +180,7 @@ SVGPointListSMILType::Interpolate(const nsSMILValue& aStartVal,
   result.SetInfo(end.Element()); // propagate target element info!
 
   if (start.Length() != end.Length()) {
-    NS_ABORT_IF_FALSE(start.Length() == 0, "Not an identity value");
+    MOZ_ASSERT(start.Length() == 0, "Not an identity value");
     for (uint32_t i = 0; i < end.Length(); ++i) {
       result[i] = aUnitDistance * end[i];
     }

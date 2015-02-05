@@ -27,11 +27,10 @@ class DocumentFragment : public FragmentOrElement,
 private:
   void Init()
   {
-    NS_ABORT_IF_FALSE(mNodeInfo->NodeType() ==
-                      nsIDOMNode::DOCUMENT_FRAGMENT_NODE &&
-                      mNodeInfo->Equals(nsGkAtoms::documentFragmentNodeName,
-                                        kNameSpaceID_None),
-                      "Bad NodeType in aNodeInfo");
+    MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE &&
+               mNodeInfo->Equals(nsGkAtoms::documentFragmentNodeName,
+                                 kNameSpaceID_None),
+               "Bad NodeType in aNodeInfo");
   }
 
 public:

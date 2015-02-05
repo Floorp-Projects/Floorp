@@ -78,7 +78,7 @@ SVGDocumentWrapper::GetRootLayoutFrame()
 void
 SVGDocumentWrapper::UpdateViewportBounds(const nsIntSize& aViewportSize)
 {
-  NS_ABORT_IF_FALSE(!mIgnoreInvalidation, "shouldn't be reentrant");
+  MOZ_ASSERT(!mIgnoreInvalidation, "shouldn't be reentrant");
   mIgnoreInvalidation = true;
 
   nsIntRect currentBounds;
@@ -96,7 +96,7 @@ SVGDocumentWrapper::UpdateViewportBounds(const nsIntSize& aViewportSize)
 void
 SVGDocumentWrapper::FlushImageTransformInvalidation()
 {
-  NS_ABORT_IF_FALSE(!mIgnoreInvalidation, "shouldn't be reentrant");
+  MOZ_ASSERT(!mIgnoreInvalidation, "shouldn't be reentrant");
 
   SVGSVGElement* svgElem = GetRootSVGElem();
   if (!svgElem)
@@ -346,8 +346,8 @@ SVGDocumentWrapper::SetupViewer(nsIRequest* aRequest,
 void
 SVGDocumentWrapper::RegisterForXPCOMShutdown()
 {
-  NS_ABORT_IF_FALSE(!mRegisteredForXPCOMShutdown,
-                    "re-registering for XPCOM shutdown");
+  MOZ_ASSERT(!mRegisteredForXPCOMShutdown,
+             "re-registering for XPCOM shutdown");
   // Listen for xpcom-shutdown so that we can drop references to our
   // helper-document at that point. (Otherwise, we won't get cleaned up
   // until imgLoader::Shutdown, which can happen after the JAR service
@@ -366,8 +366,8 @@ SVGDocumentWrapper::RegisterForXPCOMShutdown()
 void
 SVGDocumentWrapper::UnregisterForXPCOMShutdown()
 {
-  NS_ABORT_IF_FALSE(mRegisteredForXPCOMShutdown,
-                    "unregistering for XPCOM shutdown w/out being registered");
+  MOZ_ASSERT(mRegisteredForXPCOMShutdown,
+             "unregistering for XPCOM shutdown w/out being registered");
 
   nsresult rv;
   nsCOMPtr<nsIObserverService> obsSvc = do_GetService(OBSERVER_SVC_CID, &rv);

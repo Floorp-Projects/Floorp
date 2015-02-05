@@ -1722,8 +1722,8 @@ SetupDirtyRects(const nsRect& aBGClipArea, const nsRect& aCallerDirtyRect,
   *aDirtyRectGfx = nsLayoutUtils::RectToGfxRect(*aDirtyRect, aAppUnitsPerPixel);
   NS_WARN_IF_FALSE(aDirtyRect->IsEmpty() || !aDirtyRectGfx->IsEmpty(),
                    "converted dirty rect should not be empty");
-  NS_ABORT_IF_FALSE(!aDirtyRect->IsEmpty() || aDirtyRectGfx->IsEmpty(),
-                    "second should be empty if first is");
+  MOZ_ASSERT(!aDirtyRect->IsEmpty() || aDirtyRectGfx->IsEmpty(),
+             "second should be empty if first is");
 }
 
 /* static */ void
@@ -2165,7 +2165,7 @@ ComputeRadialGradientLine(nsPresContext* aPresContext,
   }
   default:
     radiusX = radiusY = 0;
-    NS_ABORT_IF_FALSE(false, "unknown radial gradient sizing method");
+    MOZ_ASSERT(false, "unknown radial gradient sizing method");
   }
   *aRadiusX = radiusX;
   *aRadiusY = radiusY;
@@ -2460,8 +2460,8 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   gfxFloat lineLength = NS_hypot(lineEnd.x - lineStart.x,
                                   lineEnd.y - lineStart.y);
 
-  NS_ABORT_IF_FALSE(aGradient->mStops.Length() >= 2,
-                    "The parser should reject gradients with less than two stops");
+  MOZ_ASSERT(aGradient->mStops.Length() >= 2,
+             "The parser should reject gradients with less than two stops");
 
   // Build color stop array and compute stop positions
   nsTArray<ColorStop> stops;
@@ -2507,7 +2507,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
           (NSAppUnitsToFloatPixels(calc->mLength, appUnitsPerDevPixel) / lineLength));
       break;
     default:
-      NS_ABORT_IF_FALSE(false, "Unknown stop position type");
+      MOZ_ASSERT(false, "Unknown stop position type");
     }
 
     if (i > 0) {
@@ -2581,7 +2581,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       }
     }
     firstStop = stops[0].mPosition;
-    NS_ABORT_IF_FALSE(firstStop >= 0.0, "Failed to fix stop offsets");
+    MOZ_ASSERT(firstStop >= 0.0, "Failed to fix stop offsets");
   }
 
   if (aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR && !aGradient->mRepeating) {
@@ -4629,9 +4629,9 @@ nsImageRenderer::PrepareImage()
       nsCOMPtr<imgIContainer> srcImage;
       DebugOnly<nsresult> rv =
         mImage->GetImageData()->GetImage(getter_AddRefs(srcImage));
-      NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) && srcImage,
-                        "If GetImage() is failing, mImage->IsComplete() "
-                        "should have returned false");
+      MOZ_ASSERT(NS_SUCCEEDED(rv) && srcImage,
+                 "If GetImage() is failing, mImage->IsComplete() "
+                 "should have returned false");
 
       if (!mImage->GetCropRect()) {
         mImageContainer.swap(srcImage);

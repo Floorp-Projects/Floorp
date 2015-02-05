@@ -979,7 +979,7 @@ MediaRecorder::Constructor(const GlobalObject& aGlobal,
 nsresult
 MediaRecorder::CreateAndDispatchBlobEvent(already_AddRefed<nsIDOMBlob>&& aBlob)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
   if (!CheckPrincipal()) {
     // Media is not same-origin, don't allow the data out.
     nsRefPtr<nsIDOMBlob> blob = aBlob;
@@ -1003,7 +1003,7 @@ MediaRecorder::CreateAndDispatchBlobEvent(already_AddRefed<nsIDOMBlob>&& aBlob)
 void
 MediaRecorder::DispatchSimpleEvent(const nsAString & aStr)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
   nsresult rv = CheckInnerWindowCorrectness();
   if (NS_FAILED(rv)) {
     return;
@@ -1034,7 +1034,7 @@ MediaRecorder::DispatchSimpleEvent(const nsAString & aStr)
 void
 MediaRecorder::NotifyError(nsresult aRv)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
   nsresult rv = CheckInnerWindowCorrectness();
   if (NS_FAILED(rv)) {
     return;
@@ -1070,7 +1070,7 @@ MediaRecorder::NotifyError(nsresult aRv)
 
 bool MediaRecorder::CheckPrincipal()
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
   if (!mDOMStream && !mAudioNode) {
     return false;
   }

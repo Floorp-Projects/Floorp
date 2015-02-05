@@ -216,7 +216,7 @@ nsStyleUtil::AppendBitmaskCSSValue(nsCSSProperty aProperty,
       }
     }
   }
-  NS_ABORT_IF_FALSE(aMaskedValue == 0, "unexpected bit remaining in bitfield");
+  MOZ_ASSERT(aMaskedValue == 0, "unexpected bit remaining in bitfield");
 }
 
 /* static */ void
@@ -487,8 +487,8 @@ nsStyleUtil::AppendUnicodeRange(const nsCSSValue& aValue, nsAString& aResult)
   nsCSSValue::Array const & sources = *aValue.GetArrayValue();
   nsAutoCString buf;
 
-  NS_ABORT_IF_FALSE(sources.Count() % 2 == 0,
-                    "odd number of entries in a unicode-range: array");
+  MOZ_ASSERT(sources.Count() % 2 == 0,
+             "odd number of entries in a unicode-range: array");
 
   for (uint32_t i = 0; i < sources.Count(); i += 2) {
     uint32_t min = sources[i].GetIntValue();
