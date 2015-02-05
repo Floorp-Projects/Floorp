@@ -31,6 +31,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 1                       RT_MANIFEST             "updater.exe.manifest"
+IDR_COMCTL32_MANIFEST   RT_MANIFEST             "updater.exe.comctl32.manifest"
 
 /////////////////////////////////////////////////////////////////////////////
 //
