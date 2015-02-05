@@ -222,7 +222,7 @@ LocalDebugInfoSymbolizer::FillSourceLineInfo(const CodeModules* modules,
     debug_info_module = it->second;
   }
 
-  u_int64_t address = frame->instruction - frame->module->base_address();
+  uint64_t address = frame->instruction - frame->module->base_address();
   Module::Function* function =
       debug_info_module->FindFunctionByAddress(address);
   if (function) {
@@ -282,7 +282,7 @@ CFIFrameInfo* LocalDebugInfoSymbolizer::FindCFIFrameInfo(
   if (it == symbols_.end()) return NULL;
 
   Module* module = it->second;
-  u_int64_t address = frame->instruction - frame->module->base_address();
+  uint64_t address = frame->instruction - frame->module->base_address();
   Module::StackFrameEntry* entry =
       module->FindStackFrameEntryByAddress(address);
   if (!entry)
