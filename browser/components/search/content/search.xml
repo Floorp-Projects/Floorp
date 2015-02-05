@@ -1256,7 +1256,7 @@
         if (data) {
           event.preventDefault();
           this.value = data;
-          document.getBindingParent(this).openSuggestionsPanel();
+          this.onTextEntered(event);
         }
       ]]>
       </handler>
