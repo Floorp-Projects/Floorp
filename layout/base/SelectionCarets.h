@@ -208,7 +208,6 @@ private:
   void DispatchSelectionStateChangedEvent(dom::Selection* aSelection,
                                           const dom::Sequence<dom::SelectionState>& aStates);
   void DispatchCustomEvent(const nsAString& aEvent);
-  nsRect GetSelectionBoundingRect(dom::Selection* aSel);
 
   /**
    * Detecting long tap using timer
