@@ -194,8 +194,8 @@ bool MacroExpander::expandMacro(const Macro &macro,
 
         if (macro.predefined)
         {
-            static const std::string kLine = "__LINE__";
-            static const std::string kFile = "__FILE__";
+            const char kLine[] = "__LINE__";
+            const char kFile[] = "__FILE__";
 
             assert(replacements->size() == 1);
             Token& repl = replacements->front();

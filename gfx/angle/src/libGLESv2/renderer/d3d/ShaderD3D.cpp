@@ -11,7 +11,30 @@
 #include "libGLESv2/Shader.h"
 #include "libGLESv2/main.h"
 
+#include "common/features.h"
 #include "common/utilities.h"
+
+// Definitions local to the translation unit
+namespace
+{
+
+const char *GetShaderTypeString(GLenum type)
+{
+    switch (type)
+    {
+      case GL_VERTEX_SHADER:
+        return "VERTEX";
+
+      case GL_FRAGMENT_SHADER:
+        return "FRAGMENT";
+
+      default:
+        UNREACHABLE();
+        return "";
+    }
+}
+
+}
 
 namespace rx
 {
@@ -69,12 +92,17 @@ const ShaderD3D *ShaderD3D::makeShaderD3D(const ShaderImpl *impl)
     return static_cast<const ShaderD3D*>(impl);
 }
 
+std::string ShaderD3D::getDebugInfo() const
+{
+    return mDebugInfo + std::string("\n// ") + GetShaderTypeString(mType) + " SHADER END\n";
+}
+
 // Perform a one-time initialization of the shader compiler (or after being destructed by releaseCompiler)
 void ShaderD3D::initializeCompiler()
 {
     if (!mFragmentCompiler)
     {
-        int result = ShInitialize();
+        bool result = ShInitialize();
 
         if (result)
         {
@@ -126,7 +154,7 @@ void ShaderD3D::releaseCompiler()
 
 void ShaderD3D::parseVaryings(void *compiler)
 {
-     if (!mHlsl.empty())
+    if (!mHlsl.empty())
     {
         const std::vector<sh::Varying> *varyings = ShGetVaryings(compiler);
         ASSERT(varyings);
@@ -183,6 +211,7 @@ void ShaderD3D::uncompile()
     mInterfaceBlocks.clear();
     mActiveAttributes.clear();
     mActiveOutputVariables.clear();
+    mDebugInfo.clear();
 }
 
 void ShaderD3D::compileToHLSL(void *compiler, const std::string &source)
@@ -192,12 +221,15 @@ void ShaderD3D::compileToHLSL(void *compiler, const std::string &source)
 
     int compileOptions = (SH_OBJECT_CODE | SH_VARIABLES);
     std::string sourcePath;
+
+#if !defined (ANGLE_ENABLE_WINDOWS_STORE)
     if (gl::perfActive())
     {
         sourcePath = getTempPath();
         writeFile(sourcePath.c_str(), source.c_str(), source.length());
         compileOptions |= SH_LINE_DIRECTIVES;
     }
+#endif
 
     int result;
     if (sourcePath.empty())
@@ -220,25 +252,20 @@ void ShaderD3D::compileToHLSL(void *compiler, const std::string &source)
         result = ShCompile(compiler, sourceStrings, ArraySize(sourceStrings), compileOptions | SH_SOURCE_PATH);
     }
 
-    size_t shaderVersion = 100;
-    ShGetInfo(compiler, SH_SHADER_VERSION, &shaderVersion);
+    mShaderVersion = ShGetShaderVersion(compiler);
 
-    mShaderVersion = static_cast<int>(shaderVersion);
-
-    if (shaderVersion == 300 && mRenderer->getCurrentClientVersion() < 3)
+    if (mShaderVersion == 300 && mRenderer->getCurrentClientVersion() < 3)
     {
         mInfoLog = "GLSL ES 3.00 is not supported by OpenGL ES 2.0 contexts";
         TRACE("\n%s", mInfoLog.c_str());
     }
     else if (result)
     {
-        size_t objCodeLen = 0;
-        ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &objCodeLen);
-
-        std::vector<char> outputHLSL(objCodeLen);
-        ShGetObjectCode(compiler, outputHLSL.data());
+        mHlsl = ShGetObjectCode(compiler);
 
 #ifdef _DEBUG
+        // Prefix hlsl shader with commented out glsl shader
+        // Useful in diagnostics tools like pix which capture the hlsl shaders
         std::ostringstream hlslStream;
         hlslStream << "// GLSL\n";
         hlslStream << "//\n";
@@ -254,10 +281,8 @@ void ShaderD3D::compileToHLSL(void *compiler, const std::string &source)
             curPos = (nextLine == std::string::npos) ? std::string::npos : (nextLine + 1);
         }
         hlslStream << "\n\n";
-        hlslStream << outputHLSL.data();
+        hlslStream << mHlsl;
         mHlsl = hlslStream.str();
-#else
-        mHlsl = outputHLSL.data();
 #endif
 
         mUniforms = *GetShaderVariables(ShGetUniforms(compiler));
@@ -269,7 +294,7 @@ void ShaderD3D::compileToHLSL(void *compiler, const std::string &source)
             if (uniform.staticUse)
             {
                 unsigned int index = -1;
-                bool result = ShGetUniformRegister(compiler, uniform.name.c_str(), &index);
+                bool result = ShGetUniformRegister(compiler, uniform.name, &index);
                 UNUSED_ASSERTION_VARIABLE(result);
                 ASSERT(result);
 
@@ -286,7 +311,7 @@ void ShaderD3D::compileToHLSL(void *compiler, const std::string &source)
             if (interfaceBlock.staticUse)
             {
                 unsigned int index = -1;
-                bool result = ShGetInterfaceBlockRegister(compiler, interfaceBlock.name.c_str(), &index);
+                bool result = ShGetInterfaceBlockRegister(compiler, interfaceBlock.name, &index);
                 UNUSED_ASSERTION_VARIABLE(result);
                 ASSERT(result);
 
@@ -296,14 +321,9 @@ void ShaderD3D::compileToHLSL(void *compiler, const std::string &source)
     }
     else
     {
-        size_t infoLogLen = 0;
-        ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &infoLogLen);
+        mInfoLog = ShGetInfoLog(compiler);
 
-        std::vector<char> infoLog(infoLogLen);
-        ShGetInfoLog(compiler, infoLog.data());
-        mInfoLog = infoLog.data();
-
-        TRACE("\n%s", infoLog.data());
+        TRACE("\n%s", mInfoLog.c_str());
     }
 }
 
@@ -385,10 +405,7 @@ ShShaderOutput ShaderD3D::getCompilerOutputType(GLenum shader)
       default: UNREACHABLE();  return SH_HLSL9_OUTPUT;
     }
 
-    size_t outputType = 0;
-    ShGetInfo(compiler, SH_OUTPUT_TYPE, &outputType);
-
-    return static_cast<ShShaderOutput>(outputType);
+    return ShGetShaderOutputType(compiler);
 }
 
 bool ShaderD3D::compile(const std::string &source)
@@ -417,6 +434,15 @@ bool ShaderD3D::compile(const std::string &source)
             FilterInactiveVariables(&mActiveOutputVariables);
         }
     }
+
+#if ANGLE_SHADER_DEBUG_INFO == ANGLE_ENABLED
+    mDebugInfo += std::string("// ") + GetShaderTypeString(mType) + " SHADER BEGIN\n";
+    mDebugInfo += "\n// GLSL BEGIN\n\n" + source + "\n\n// GLSL END\n\n\n";
+    mDebugInfo += "// INITIAL HLSL BEGIN\n\n" + getTranslatedSource() + "\n// INITIAL HLSL END\n\n\n";
+    // Successive steps will append more info
+#else
+    mDebugInfo += getTranslatedSource();
+#endif
 
     return !getTranslatedSource().empty();
 }
