@@ -555,7 +555,7 @@
           <Section name="UnsupportedDeviceView">
             <Example summary="Standalone Unsupported Device">
               <div className="standalone">
-                <UnsupportedDeviceView />
+                <UnsupportedDeviceView platform="ios"/>
               </div>
             </Example>
           </Section>

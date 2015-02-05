@@ -45,7 +45,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
     render: function() {
       return (
-        React.createElement("div", {className: "expired-url-info"}, 
+        React.createElement("div", {className: "highlight-issue-box"}, 
           React.createElement("div", {className: "info-panel"}, 
             React.createElement("div", {className: "firefox-logo"}), 
             React.createElement("h1", null, mozL10n.get("incompatible_browser_heading")), 
@@ -61,12 +61,28 @@ loop.webapp = (function($, _, OT, mozL10n) {
    * Unsupported Device view.
    */
   var UnsupportedDeviceView = React.createClass({displayName: "UnsupportedDeviceView",
+    propTypes: {
+      platform: React.PropTypes.string.isRequired
+    },
+
     render: function() {
+      var unsupportedDeviceParams = {
+        clientShortname: mozL10n.get("clientShortname2"),
+        platform: mozL10n.get("unsupported_platform_" + this.props.platform)
+      };
+      var unsupportedLearnMoreText = mozL10n.get("unsupported_platform_learn_more_link",
+        {clientShortname: mozL10n.get("clientShortname2")});
+
       return (
-        React.createElement("div", null, 
-          React.createElement("h2", null, mozL10n.get("incompatible_device")), 
-          React.createElement("p", null, mozL10n.get("sorry_device_unsupported", {clientShortname: mozL10n.get("clientShortname2")})), 
-          React.createElement("p", null, mozL10n.get("use_firefox_windows_mac_linux", {brandShortname: mozL10n.get("brandShortname")}))
+        React.createElement("div", {className: "highlight-issue-box"}, 
+          React.createElement("div", {className: "info-panel"}, 
+            React.createElement("div", {className: "firefox-logo"}), 
+            React.createElement("h1", null, mozL10n.get("unsupported_platform_heading")), 
+            React.createElement("h4", null, mozL10n.get("unsupported_platform_message", unsupportedDeviceParams))
+          ), 
+          React.createElement("p", null, 
+            React.createElement("a", {className: "btn btn-large btn-accept btn-unsupported-device", 
+               href: loop.config.unsupportedPlatformUrl}, unsupportedLearnMoreText))
         )
       );
     }
@@ -110,7 +126,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
     render: function() {
       return (
-        React.createElement("div", {className: "expired-url-info"}, 
+        React.createElement("div", {className: "highlight-issue-box"}, 
           React.createElement("div", {className: "info-panel"}, 
             React.createElement("div", {className: "firefox-logo"}), 
             React.createElement("h1", null, mozL10n.get("call_url_unavailable_notification_heading")), 
@@ -965,7 +981,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     render: function() {
       switch (this.state.windowType) {
         case "unsupportedDevice": {
-          return React.createElement(UnsupportedDeviceView, null);
+          return React.createElement(UnsupportedDeviceView, {platform: this.state.unsupportedPlatform});
         }
         case "unsupportedBrowser": {
           return React.createElement(UnsupportedBrowserView, {isFirefox: this.state.isFirefox});

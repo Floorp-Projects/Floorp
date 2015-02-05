@@ -84,8 +84,6 @@ loop.shared.utils = (function(mozL10n) {
     return !!localStorage.getItem(prefName);
   }
 
-  var IOS_REGEX = /^(iPad|iPhone|iPod)/;
-
   function isFirefox(platform) {
     return platform.indexOf("Firefox") !== -1;
   }
@@ -99,8 +97,26 @@ loop.shared.utils = (function(mozL10n) {
     return !!window.MozActivity && /mobi/i.test(platform);
   }
 
-  function isIOS(platform) {
-    return IOS_REGEX.test(platform);
+  /**
+   * Helper to get the platform if it is unsupported.
+   *
+   * @param {String} platform The platform this is running on.
+   * @return null for supported platforms, a string for unsupported platforms.
+   */
+  function getUnsupportedPlatform(platform) {
+    if (/^(iPad|iPhone|iPod)/.test(platform)) {
+      return "ios";
+    }
+
+    if (/Windows Phone/i.test(platform)) {
+      return "windows_phone";
+    }
+
+    if (/BlackBerry/i.test(platform)) {
+      return "blackberry";
+    }
+
+    return null;
   }
 
   /**
@@ -151,7 +167,7 @@ loop.shared.utils = (function(mozL10n) {
     getBoolPreference: getBoolPreference,
     isFirefox: isFirefox,
     isFirefoxOS: isFirefoxOS,
-    isIOS: isIOS,
+    getUnsupportedPlatform: getUnsupportedPlatform,
     locationData: locationData
   };
 })(document.mozL10n || navigator.mozL10n);

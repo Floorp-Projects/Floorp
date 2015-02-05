@@ -57,7 +57,7 @@ describe("loop.store.StandaloneAppStore", function () {
         windowPath: ""
       };
 
-      sandbox.stub(loop.shared.utils, "isIOS").returns(false);
+      sandbox.stub(loop.shared.utils, "getUnsupportedPlatform").returns();
       sandbox.stub(loop.shared.utils, "isFirefox").returns(true);
 
       fakeSdk = {
@@ -94,9 +94,18 @@ describe("loop.store.StandaloneAppStore", function () {
       expect(store.getStoreState().isFirefox).eql(false);
     });
 
-    it("should set windowType to `unsupportedDevice` for IOS", function() {
-      // The stub should return true for this test.
-      loop.shared.utils.isIOS.returns(true);
+    it("should store the platform for unsupported platforms", function() {
+      loop.shared.utils.getUnsupportedPlatform.returns("fake");
+
+      store.extractTokenInfo(
+        new sharedActions.ExtractTokenInfo(fakeGetWindowData));
+
+      expect(store.getStoreState().unsupportedPlatform).eql("fake");
+    });
+
+    it("should set windowType to `unsupportedDevice` for ios", function() {
+      // The stub should return a platform for this test.
+      loop.shared.utils.getUnsupportedPlatform.returns("ios");
 
       store.extractTokenInfo(
         new sharedActions.ExtractTokenInfo(fakeGetWindowData));

@@ -555,7 +555,7 @@
           React.createElement(Section, {name: "UnsupportedDeviceView"}, 
             React.createElement(Example, {summary: "Standalone Unsupported Device"}, 
               React.createElement("div", {className: "standalone"}, 
-                React.createElement(UnsupportedDeviceView, null)
+                React.createElement(UnsupportedDeviceView, {platform: "ios"})
               )
             )
           ), 
