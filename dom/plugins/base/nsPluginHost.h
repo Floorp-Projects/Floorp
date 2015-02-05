@@ -28,7 +28,6 @@
 #include "nsIEffectiveTLDService.h"
 #include "nsIIDNService.h"
 #include "nsCRT.h"
-#include "mozilla/plugins/PluginTypes.h"
 
 #ifdef XP_WIN
 #include "nsIWindowsRegKey.h"
@@ -37,6 +36,7 @@
 namespace mozilla {
 namespace plugins {
 class PluginAsyncSurrogate;
+class PluginTag;
 } // namespace mozilla
 } // namespace plugins
 
