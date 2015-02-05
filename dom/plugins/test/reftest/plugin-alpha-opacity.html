@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html class="reftest-wait">
 <head>
 <style type="text/css">
 #one {
@@ -18,8 +18,10 @@
   background-color: rgb(255,0,0);
 }
 </style>
+<script src="utils.js">
+</script>
 </head>
-<body>
+<body onLoad="forceLoadPlugin('one')">
 <div id="two"></div>
 <embed id="one" type="application/x-test" width="400" height="400" drawmode="solid" color="FFa0a0a0"></embed>
 </body>
