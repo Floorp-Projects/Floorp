@@ -127,7 +127,6 @@ nsBaseWidget::nsBaseWidget()
 , mForceLayersAcceleration(false)
 , mTemporarilyUseBasicLayerManager(false)
 , mUseAttachedEvents(false)
-, mContextInitialized(false)
 , mBounds(0,0,0,0)
 , mOriginalBounds(nullptr)
 , mClipRectCount(0)
@@ -1126,20 +1125,6 @@ CompositorChild* nsBaseWidget::GetRemoteRenderer()
 TemporaryRef<mozilla::gfx::DrawTarget> nsBaseWidget::StartRemoteDrawing()
 {
   return nullptr;
-}
-
-//-------------------------------------------------------------------------
-//
-// Return the used device context
-//
-//-------------------------------------------------------------------------
-nsDeviceContext* nsBaseWidget::GetDeviceContext()
-{
-  if (!mContextInitialized) {
-    mContext->Init(this);
-    mContextInitialized = true;
-  }
-  return mContext;
 }
 
 //-------------------------------------------------------------------------
