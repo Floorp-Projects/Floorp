@@ -234,7 +234,13 @@ nsresult
 Convert(BluetoothAvrcpNotification aIn, uint8_t& aOut);
 
 nsresult
+Convert(BluetoothAvrcpPlayerAttribute aIn, uint8_t& aOut);
+
+nsresult
 Convert(BluetoothAvrcpRemoteFeature aIn, unsigned long& aOut);
+
+nsresult
+Convert(BluetoothAvrcpStatus aIn, uint8_t& aOut);
 
 nsresult
 Convert(BluetoothHandsfreeAtResponse aIn, uint8_t& aOut);
@@ -285,6 +291,11 @@ Convert(ControlPlayStatus aIn, uint8_t& aOut);
 // Packing
 //
 
+// introduce link errors on non-handled data types
+template <typename T>
+nsresult
+PackPDU(T aIn, BluetoothDaemonPDU& aPDU);
+
 nsresult
 PackPDU(bool aIn, BluetoothDaemonPDU& aPDU);
 
@@ -334,6 +345,12 @@ PackPDU(const BluetoothAvrcpEventParamPair& aIn, BluetoothDaemonPDU& aPDU);
 
 nsresult
 PackPDU(BluetoothAvrcpNotification aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(BluetoothAvrcpPlayerAttribute aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(BluetoothAvrcpStatus aIn, BluetoothDaemonPDU& aPDU);
 
 nsresult
 PackPDU(const BluetoothConfigurationParameter& aIn, BluetoothDaemonPDU& aPDU);
@@ -593,6 +610,11 @@ PackPDU(const T1& aIn1, const T2& aIn2, const T3& aIn3,
 // Unpacking
 //
 
+// introduce link errors on non-handled data types
+template <typename T>
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, T& aOut);
+
 inline nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, int8_t& aOut)
 {
@@ -794,6 +816,19 @@ struct UnpackArray
 template<typename T>
 inline nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, const UnpackArray<T>& aOut)
+{
+  for (size_t i = 0; i < aOut.mLength; ++i) {
+    nsresult rv = UnpackPDU(aPDU, aOut.mData[i]);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
+template<typename T>
+inline nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, UnpackArray<T>& aOut)
 {
   for (size_t i = 0; i < aOut.mLength; ++i) {
     nsresult rv = UnpackPDU(aPDU, aOut.mData[i]);
