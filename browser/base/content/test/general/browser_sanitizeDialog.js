@@ -68,7 +68,7 @@ var gAllTests = [
       uris.push(pURI);
     }
 
-    addVisits(places, function() {
+    PlacesTestUtils.addVisits(places).then(() => {
       let wh = new WindowHelper();
       wh.onload = function () {
         this.selectDuration(Sanitizer.TIMESPAN_HOUR);
@@ -132,7 +132,7 @@ var gAllTests = [
       olderURIs.push(pURI);
     }
 
-    addVisits(places, function() {
+    PlacesTestUtils.addVisits(places).then(() => {
       let totalHistoryVisits = uris.length + olderURIs.length;
 
       let wh = new WindowHelper();
@@ -213,7 +213,7 @@ var gAllTests = [
       uris.push(pURI);
     }
 
-    addVisits(places, function() {
+    PlacesTestUtils.addVisits(places).then(() => {
       let wh = new WindowHelper();
       wh.onload = function () {
         is(this.isWarningPanelVisible(), false,
@@ -270,7 +270,7 @@ var gAllTests = [
       places.push({uri: pURI, visitDate: visitTimeForMinutesAgo(aValue)});
       uris.push(pURI);
     });
-    addVisits(places, function() {
+    PlacesTestUtils.addVisits(places).then(() => {
       let wh = new WindowHelper();
       wh.onload = function () {
         is(this.isWarningPanelVisible(), false,
@@ -317,7 +317,7 @@ var gAllTests = [
       places.push({uri: pURI, visitDate: visitTimeForMinutesAgo(aValue)});
       uris.push(pURI);
     });
-    addVisits(places, function() {
+    PlacesTestUtils.addVisits(places).then(() => {
       let wh = new WindowHelper();
       wh.onload = function () {
         is(this.isWarningPanelVisible(), true,
@@ -359,7 +359,7 @@ var gAllTests = [
   function () {
     // Add history.
     let pURI = makeURI("http://" + 10 + "-minutes-ago.com/");
-    addVisits({uri: pURI, visitDate: visitTimeForMinutesAgo(10)}, function() {
+    PlacesTestUtils.addVisits({uri: pURI, visitDate: visitTimeForMinutesAgo(10)}).then(() => {
       let uris = [ pURI ];
 
       let wh = new WindowHelper();
