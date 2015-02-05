@@ -2680,11 +2680,19 @@ static bool
 EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-
-    RootedString str(cx);
-    RootedObject sobj(cx);
-    if (!JS_ConvertArguments(cx, args, "S / o", str.address(), sobj.address()))
+    if (!args.requireAtLeast(cx, "evalcx", 1))
         return false;
+
+    RootedString str(cx, ToString(cx, args[0]));
+    if (!str)
+        return false;
+
+    RootedObject sobj(cx);
+    if (args.hasDefined(1)) {
+        sobj = ToObject(cx, args[1]);
+        if (!sobj)
+            return false;
+    }
 
     AutoStableStringChars strChars(cx);
     if (!strChars.initTwoByte(cx, str))
