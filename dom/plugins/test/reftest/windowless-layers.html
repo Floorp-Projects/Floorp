@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html>
-<body>
+<html class="reftest-wait">
+<head>
+<script src="utils.js">
+</script>
+</head>
+<body onLoad="forceLoadPlugin(['p1', 'p2'])">
   <div style="width:200px; height:200px; overflow:hidden; position:absolute; z-index:1">
-    <embed type="application/x-test" style="width:200px; height:200px;">
+    <embed type="application/x-test" style="width:200px; height:200px;" id="p1">
   </div>
   <div style="width:200px; height:100px; overflow:hidden; position:absolute; z-index:2">
-    <embed type="application/x-test" style="width:200px; height:200px;">
+    <embed type="application/x-test" style="width:200px; height:200px;" id="p2">
   </div>
 </body>
 </html>

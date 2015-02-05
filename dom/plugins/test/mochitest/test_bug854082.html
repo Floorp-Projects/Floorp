@@ -28,14 +28,11 @@
     o.style.display = "none";
     // Access clientTop to force layout flush
     o.clientTop;
+    ok(true, "Setter called and did not crash");
+    SimpleTest.finish();
     setterCalled = true;
   });
   document.body.appendChild(o);
-
-  SimpleTest.executeSoon(function() {
-    ok(setterCalled, "Setter called and did not crash");
-    SimpleTest.finish();
-  });
 </script>
 </body>
 </html>
