@@ -70,7 +70,9 @@ def generate_histograms(filename):
             append_counters(method.replace('.', '_').upper(), 'called %s' % method)
         elif counter['type'] == 'attribute':
             attr = '%s.%s' % (counter['interface_name'], counter['attribute_name'])
-            append_counters(attr.replace('.', '_').upper(), 'got or set %s' % attr)
+            counter_name = attr.replace('.', '_').upper()
+            append_counters('%s_getter' % counter_name, 'got %s' % attr)
+            append_counters('%s_setter' % counter_name, 'set %s' % attr)
         elif counter['type'] == 'property':
             prop = counter['property_name']
             append_counters('PROPERTY_%s' % prop.replace('-', '_').upper(), "used the '%s' property" % prop)
