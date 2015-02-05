@@ -492,7 +492,7 @@ public:
     uint32_t mOffset;
     nsString mString;
     // Finally, the coordinates is system coordinates.
-    nsIntRect mRect;
+    mozilla::LayoutDeviceIntRect mRect;
     // The return widget has the caret. This is set at all query events.
     nsIWidget* mFocusedWidget;
     // true if selection is reversed (end < start)

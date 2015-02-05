@@ -52,7 +52,7 @@
 
 #include "mozilla/CheckedInt.h"
 
-#if defined(DEBUG) || defined(PR_LOGGING)
+#if defined(PR_LOGGING)
 GFX2D_API PRLogModuleInfo *
 GetGFX2DLog()
 {

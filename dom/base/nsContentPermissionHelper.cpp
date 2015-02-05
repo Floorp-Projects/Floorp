@@ -92,7 +92,7 @@ ContentPermissionRequestParent::IsBeingDestroyed()
 {
   // When TabParent::Destroy() is called, we are being destroyed. It's unsafe
   // to send out any message now.
-  TabParent* tabParent = static_cast<TabParent*>(Manager());
+  TabParent* tabParent = TabParent::GetFrom(Manager());
   return tabParent->IsDestroyed();
 }
 
@@ -397,14 +397,12 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices)
     if (mPermissionRequests[i].type().EqualsLiteral("audio-capture")) {
       GonkPermissionService::GetInstance()->addGrantInfo(
         "android.permission.RECORD_AUDIO",
-        static_cast<TabParent*>(
-          mParent->Manager())->Manager()->AsContentParent()->Pid());
+        TabParent::GetFrom(mParent->Manager())->Manager()->AsContentParent()->Pid());
     }
     if (mPermissionRequests[i].type().EqualsLiteral("video-capture")) {
       GonkPermissionService::GetInstance()->addGrantInfo(
         "android.permission.CAMERA",
-        static_cast<TabParent*>(
-          mParent->Manager())->Manager()->AsContentParent()->Pid());
+        TabParent::GetFrom(mParent->Manager())->Manager()->AsContentParent()->Pid());
     }
   }
 #endif

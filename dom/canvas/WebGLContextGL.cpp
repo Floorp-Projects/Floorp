@@ -2106,7 +2106,6 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
 
     // if we're reading alpha, we may need to do fixup.  Note that we don't allow
     // GL_ALPHA to readpixels currently, but we had the code written for it already.
-
     const bool formatHasAlpha = format == LOCAL_GL_ALPHA ||
                                 format == LOCAL_GL_RGBA;
     if (!formatHasAlpha)
