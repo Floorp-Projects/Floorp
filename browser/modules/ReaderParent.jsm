@@ -112,23 +112,37 @@ let ReaderParent = {
 
     let win = event.target.ownerDocument.defaultView;
     let url = win.gBrowser.selectedBrowser.currentURI.spec;
+
     if (url.startsWith("about:reader")) {
-      win.openUILinkIn(this._getOriginalUrl(url), "current");
+      let originalURL = this._getOriginalUrl(url);
+      if (!originalURL) {
+        Cu.reportError("Error finding original URL for about:reader URL: " + url);
+      } else {
+        win.openUILinkIn(originalURL, "current");
+      }
     } else {
       win.openUILinkIn("about:reader?url=" + encodeURIComponent(url), "current");
     }
+  },
+
+  parseReaderUrl: function(url) {
+    if (!url.startsWith("about:reader?")) {
+      return null;
+    }
+    return this._getOriginalUrl(url);
   },
 
   /**
    * Returns original URL from an about:reader URL.
    *
    * @param url An about:reader URL.
+   * @return The original URL for the article, or null if we did not find
+   *         a properly formatted about:reader URL.
    */
   _getOriginalUrl: function(url) {
-    let searchParams = new URLSearchParams(url.split("?")[1]);
+    let searchParams = new URLSearchParams(url.substring("about:reader?".length));
     if (!searchParams.has("url")) {
-      Cu.reportError("Error finding original URL for about:reader URL: " + url);
-      return url;
+      return null;
     }
     return decodeURIComponent(searchParams.get("url"));
   },
