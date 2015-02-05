@@ -51,6 +51,16 @@ interface nsIAboutModule : nsISupports
     const unsigned long ENABLE_INDEXED_DB = (1 << 3);
 
     /**
+     * A flag that indicates that this URI can be loaded in a child process
+     */
+    const unsigned long URI_CAN_LOAD_IN_CHILD = (1 << 4);
+
+    /**
+     * A flag that indicates that this URI must be loaded in a child process
+     */
+    const unsigned long URI_MUST_LOAD_IN_CHILD = (1 << 5);
+
+    /**
      * A method to get the flags that apply to a given about: URI.  The URI
      * passed in is guaranteed to be one of the URIs that this module
      * registered to deal with.
