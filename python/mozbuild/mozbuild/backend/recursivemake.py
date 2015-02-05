@@ -328,17 +328,20 @@ class RecursiveMakeBackend(CommonBackend):
             'tools': set(),
         }
 
+    def _get_backend_file_for(self, obj):
+        if obj.objdir not in self._backend_files:
+            self._backend_files[obj.objdir] = \
+                BackendMakeFile(obj.srcdir, obj.objdir, obj.config,
+                    obj.topsrcdir, self.environment.topobjdir)
+        return self._backend_files[obj.objdir]
+
     def consume_object(self, obj):
         """Write out build files necessary to build with recursive make."""
 
         if not isinstance(obj, ContextDerived):
             return
 
-        if obj.objdir not in self._backend_files:
-            self._backend_files[obj.objdir] = \
-                BackendMakeFile(obj.srcdir, obj.objdir, obj.config,
-                    obj.topsrcdir, self.environment.topobjdir)
-        backend_file = self._backend_files[obj.objdir]
+        backend_file = self._get_backend_file_for(obj)
 
         CommonBackend.consume_object(self, obj)
 
