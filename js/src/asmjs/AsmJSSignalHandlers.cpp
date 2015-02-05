@@ -484,10 +484,6 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!heapAccess)
         return false;
 
-    // Also not necessary, but, since we can, do.
-    if (heapAccess->isLoad() != !record->ExceptionInformation[0])
-        return false;
-
     // We now know that this is an out-of-bounds access made by an asm.js
     // load/store that we should handle.
 
@@ -496,6 +492,10 @@ HandleFault(PEXCEPTION_POINTERS exception)
         RedirectToOutOfBoundsLabel(ppc, module);
         return true;
     }
+
+    // Also not necessary, but, since we can, do.
+    if (heapAccess->isLoad() != !record->ExceptionInformation[0])
+        return false;
 
     // If this is a load, assign the JS-defined result value to the destination
     // register (ToInt32(undefined) or ToNumber(undefined), determined by the
