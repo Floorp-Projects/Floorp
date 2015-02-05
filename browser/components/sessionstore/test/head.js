@@ -6,6 +6,7 @@ const TAB_STATE_NEEDS_RESTORE = 1;
 const TAB_STATE_RESTORING = 2;
 
 const ROOT = getRootDirectory(gTestPath);
+const HTTPROOT = ROOT.replace("chrome://mochitests/content/", "http://example.com/");
 const FRAME_SCRIPTS = [
   ROOT + "content.js",
   ROOT + "content-forms.js"
