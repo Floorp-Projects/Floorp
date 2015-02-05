@@ -138,6 +138,8 @@ function PlayerWidget(player, containerEl) {
 
   this.onStateChanged = this.onStateChanged.bind(this);
   this.onPlayPauseBtnClick = this.onPlayPauseBtnClick.bind(this);
+
+  this.metaDataComponent = new PlayerMetaDataHeader();
 }
 
 PlayerWidget.prototype = {
@@ -159,6 +161,7 @@ PlayerWidget.prototype = {
 
     this.stopTimelineAnimation();
     this.stopListeners();
+    this.metaDataComponent.destroy();
 
     this.el.remove();
     this.playPauseBtnEl = this.currentTimeEl = this.timeDisplayEl = null;
@@ -184,45 +187,8 @@ PlayerWidget.prototype = {
       }
     });
 
-    // Animation header
-    let titleEl = createNode({
-      parent: this.el,
-      attributes: {
-        "class": "animation-title"
-      }
-    });
-    let titleHTML = "";
-
-    // Name.
-    if (state.name) {
-      // Css animations have names.
-      titleHTML += L10N.getStr("player.animationNameLabel");
-      titleHTML += "<strong>" + state.name + "</strong>";
-    } else {
-      // Css transitions don't.
-      titleHTML += L10N.getStr("player.transitionNameLabel");
-    }
-
-    // Duration, delay and iteration count.
-    titleHTML += "<span class='meta-data'>";
-    titleHTML += L10N.getStr("player.animationDurationLabel");
-    titleHTML += "<strong>" + L10N.getFormatStr("player.timeLabel",
-      this.getFormattedTime(state.duration)) + "</strong>";
-
-    if (state.delay) {
-      titleHTML += L10N.getStr("player.animationDelayLabel");
-      titleHTML += "<strong>" + L10N.getFormatStr("player.timeLabel",
-        this.getFormattedTime(state.delay)) + "</strong>";
-    }
-
-    if (state.iterationCount !== 1) {
-      titleHTML += L10N.getStr("player.animationIterationCountLabel");
-      let count = state.iterationCount || L10N.getStr("player.infiniteIterationCount");
-      titleHTML += "<strong>" + count + "</strong>";
-    }
-
-    titleHTML += "</span>";
-    titleEl.innerHTML = titleHTML;
+    this.metaDataComponent.createMarkup(this.el);
+    this.metaDataComponent.render(state);
 
     // Timeline widget.
     let timelineEl = createNode({
@@ -297,18 +263,6 @@ PlayerWidget.prototype = {
   },
 
   /**
-   * Format time as a string.
-   * @param {Number} time Defaults to the player's currentTime.
-   * @return {String} The formatted time, e.g. "10.55"
-   */
-  getFormattedTime: function(time) {
-    return (time/1000).toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  },
-
-  /**
    * Executed when the playPause button is clicked.
    * Note that tests may want to call this callback directly rather than
    * simulating a click on the button since it returns the promise returned by
@@ -328,7 +282,8 @@ PlayerWidget.prototype = {
    */
   onStateChanged: function() {
     let state = this.player.state;
-    this.updateWidgetState(state.playState);
+    this.updateWidgetState(state);
+    this.metaDataComponent.render(state);
 
     switch (state.playState) {
       case "finished":
@@ -354,7 +309,7 @@ PlayerWidget.prototype = {
   pause: function() {
     // Switch to the right className on the element right away to avoid waiting
     // for the next state update to change the playPause icon.
-    this.updateWidgetState("paused");
+    this.updateWidgetState({playState: "paused"});
     return this.player.pause().then(() => {
       this.stopTimelineAnimation();
     });
@@ -368,12 +323,12 @@ PlayerWidget.prototype = {
   play: function() {
     // Switch to the right className on the element right away to avoid waiting
     // for the next state update to change the playPause icon.
-    this.updateWidgetState("running");
+    this.updateWidgetState({playState: "running"});
     this.startTimelineAnimation();
     return this.player.play();
   },
 
-  updateWidgetState: function(playState) {
+  updateWidgetState: function({playState}) {
     this.el.className = "player-widget " + playState;
   },
 
@@ -417,7 +372,7 @@ PlayerWidget.prototype = {
 
     // Set the time label value.
     this.timeDisplayEl.textContent = L10N.getFormatStr("player.timeLabel",
-      this.getFormattedTime(time));
+      L10N.numberWithDecimals(time / 1000, 2));
 
     // Set the timeline slider value.
     if (!state.iterationCount && time !== state.duration) {
@@ -434,6 +389,162 @@ PlayerWidget.prototype = {
       cancelAnimationFrame(this.rafID);
       this.rafID = null;
     }
+  }
+};
+
+/**
+ * UI component responsible for displaying and updating the player meta-data:
+ * name, duration, iterations, delay.
+ * The parent UI component for this should drive its updates by calling
+ * render(state) whenever it wants the component to update.
+ */
+function PlayerMetaDataHeader() {
+  // Store the various state pieces we need to only refresh the UI when things
+  // change.
+  this.state = {};
+}
+
+PlayerMetaDataHeader.prototype = {
+  createMarkup: function(containerEl) {
+    // The main title element.
+    this.el = createNode({
+      parent: containerEl,
+      attributes: {
+        "class": "animation-title"
+      }
+    });
+
+    // Animation name (value hidden by default since transitions don't have names).
+    this.nameLabel = createNode({
+      parent: this.el,
+      nodeType: "span"
+    });
+
+    this.nameValue = createNode({
+      parent: this.el,
+      nodeType: "strong",
+      attributes: {
+        "style": "display:none;"
+      }
+    });
+
+    // Animation duration, delay and iteration container.
+    let metaData = createNode({
+      parent: this.el,
+      nodeType: "span",
+      attributes: {
+        "class": "meta-data"
+      }
+    });
+
+    // Animation duration.
+    this.durationLabel = createNode({
+      parent: metaData,
+      nodeType: "span"
+    });
+    this.durationLabel.textContent = L10N.getStr("player.animationDurationLabel");
+
+    this.durationValue = createNode({
+      parent: metaData,
+      nodeType: "strong"
+    });
+
+    // Animation delay (hidden by default since there may not be a delay).
+    this.delayLabel = createNode({
+      parent: metaData,
+      nodeType: "span",
+      attributes: {
+        "style": "display:none;"
+      }
+    });
+    this.delayLabel.textContent = L10N.getStr("player.animationDelayLabel");
+
+    this.delayValue = createNode({
+      parent: metaData,
+      nodeType: "strong"
+    });
+
+    // Animation iteration count (also hidden by default since we don't display
+    // single iterations).
+    this.iterationLabel = createNode({
+      parent: metaData,
+      nodeType: "span",
+      attributes: {
+        "style": "display:none;"
+      }
+    });
+    this.iterationLabel.textContent = L10N.getStr("player.animationIterationCountLabel");
+
+    this.iterationValue = createNode({
+      parent: metaData,
+      nodeType: "strong",
+      attributes: {
+        "style": "display:none;"
+      }
+    });
+  },
+
+  destroy: function() {
+    this.state = null;
+    this.el.remove();
+    this.el = null;
+    this.nameLabel = this.nameValue = null;
+    this.durationLabel = this.durationValue = null;
+    this.delayLabel = this.delayValue = null;
+    this.iterationLabel = this.iterationValue = null;
+  },
+
+  render: function(state) {
+    // Update the name if needed.
+    if (state.name !== this.state.name) {
+      if (state.name) {
+        // Css animations have names.
+        this.nameLabel.textContent = L10N.getStr("player.animationNameLabel");
+        this.nameValue.style.display = "inline";
+        this.nameValue.textContent = state.name;
+      } else {
+        // Css transitions don't.
+        this.nameLabel.textContent = L10N.getStr("player.transitionNameLabel");
+        this.nameValue.style.display = "none";
+      }
+    }
+
+    // update the duration value if needed.
+    if (state.duration !== this.state.duration) {
+      this.durationValue.textContent = L10N.getFormatStr("player.timeLabel",
+        L10N.numberWithDecimals(state.duration / 1000, 2));
+    }
+
+    // Update the delay if needed.
+    if (state.delay !== this.state.delay) {
+      if (state.delay) {
+        this.delayLabel.style.display = "inline";
+        this.delayValue.style.display = "inline";
+        this.delayValue.textContent = L10N.getFormatStr("player.timeLabel",
+          L10N.numberWithDecimals(state.delay / 1000, 2));
+      } else {
+        // Hide the delay elements if there is no delay defined.
+        this.delayLabel.style.display = "none";
+        this.delayValue.style.display = "none";
+      }
+    }
+
+    // Update the iterationCount if needed.
+    if (state.iterationCount !== this.state.iterationCount) {
+      if (state.iterationCount !== 1) {
+        this.iterationLabel.style.display = "inline";
+        this.iterationValue.style.display = "inline";
+        let count = state.iterationCount ||
+                    L10N.getStr("player.infiniteIterationCount");
+        this.iterationValue.innerHTML = count;
+      } else {
+        // Hide the iteration elements if iteration is 1.
+        this.iterationLabel.style.display = "none";
+        this.iterationValue.style.display = "none";
+      }
+    }
+
+    this.state = state;
   }
 };
 

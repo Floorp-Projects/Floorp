@@ -14,273 +14,13 @@ const PREF_AUTO_EXPORT_HTML = "browser.bookmarks.autoExportHTML";
 const PREF_IMPORT_BOOKMARKS_HTML = "browser.places.importBookmarksHTML";
 const PREF_RESTORE_DEFAULT_BOOKMARKS = "browser.bookmarks.restore_default_bookmarks";
 
-const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
-
-/**
- * Rebuilds smart bookmarks listening to console output to report any message or
- * exception generated when calling ensurePlacesDefaultQueriesInitialized().
- */
-function rebuildSmartBookmarks() {
-  let consoleListener = {
-    observe: function(aMsg) {
-      print("Got console message: " + aMsg.message);
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([
-      Ci.nsIConsoleListener
-    ]),
-  };
-  Services.console.reset();
-  Services.console.registerListener(consoleListener);
-  Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIBrowserGlue)
-                                          .ensurePlacesDefaultQueriesInitialized();
-  Services.console.unregisterListener(consoleListener);
+function run_test() {
+  remove_bookmarks_html();
+  remove_all_JSON_backups();
+  run_next_test();
 }
 
-
-let tests = [];
-//------------------------------------------------------------------------------
-
-tests.push({
-  description: "All smart bookmarks are created if smart bookmarks version is 0.",
-  exec: function() {
-    // Sanity check: we should have default bookmark.
-    do_check_neq(PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.toolbarFolderId, 0), -1);
-    do_check_neq(PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId, 0), -1);
-
-    // Set preferences.
-    Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 0);
-
-    rebuildSmartBookmarks();
-
-    // Count items.
-    do_check_eq(countFolderChildren(PlacesUtils.toolbarFolderId),
-                SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    do_check_eq(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
-                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
-
-    // Check version has been updated.
-    do_check_eq(Services.prefs.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
-                SMART_BOOKMARKS_VERSION);
-
-    next_test();
-  }
-});
-
-//------------------------------------------------------------------------------
-
-tests.push({
-  description: "An existing smart bookmark is replaced when version changes.",
-  exec: function() {
-    // Sanity check: we have a smart bookmark on the toolbar.
-    let itemId = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.toolbarFolderId, 0);
-    do_check_neq(itemId, -1);
-    do_check_true(PlacesUtils.annotations.itemHasAnnotation(itemId, SMART_BOOKMARKS_ANNO));
-    // Change its title.
-    PlacesUtils.bookmarks.setItemTitle(itemId, "new title");
-    do_check_eq(PlacesUtils.bookmarks.getItemTitle(itemId), "new title");
-
-    // Sanity check items.
-    do_check_eq(countFolderChildren(PlacesUtils.toolbarFolderId),
-                SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    do_check_eq(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
-                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
-
-    // Set preferences.
-    Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
-
-    rebuildSmartBookmarks();
-
-    // Count items.
-    do_check_eq(countFolderChildren(PlacesUtils.toolbarFolderId),
-                SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    do_check_eq(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
-                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
-
-    // Check smart bookmark has been replaced, itemId has changed.
-    itemId = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.toolbarFolderId, 0);
-    do_check_neq(itemId, -1);
-    do_check_neq(PlacesUtils.bookmarks.getItemTitle(itemId), "new title");
-    do_check_true(PlacesUtils.annotations.itemHasAnnotation(itemId, SMART_BOOKMARKS_ANNO));
-
-    // Check version has been updated.
-    do_check_eq(Services.prefs.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
-                SMART_BOOKMARKS_VERSION);
-
-    next_test();
-  }
-});
-
-//------------------------------------------------------------------------------
-
-tests.push({
-  description: "bookmarks position is retained when version changes.",
-  exec: function() {
-    // Sanity check items.
-    do_check_eq(countFolderChildren(PlacesUtils.toolbarFolderId),
-                SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    do_check_eq(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
-                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
-
-    let itemId = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId, 0);
-    do_check_true(PlacesUtils.annotations.itemHasAnnotation(itemId, SMART_BOOKMARKS_ANNO));
-    let firstItemTitle = PlacesUtils.bookmarks.getItemTitle(itemId);
-
-    itemId = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId, 1);
-    do_check_true(PlacesUtils.annotations.itemHasAnnotation(itemId, SMART_BOOKMARKS_ANNO));
-    let secondItemTitle = PlacesUtils.bookmarks.getItemTitle(itemId);
-
-    // Set preferences.
-    Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
-
-    rebuildSmartBookmarks();
-
-    // Count items.
-    do_check_eq(countFolderChildren(PlacesUtils.toolbarFolderId),
-                SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    do_check_eq(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
-                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
-
-    // Check smart bookmarks are still in correct position.
-    itemId = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId, 0);
-    do_check_true(PlacesUtils.annotations.itemHasAnnotation(itemId, SMART_BOOKMARKS_ANNO));
-    do_check_eq(PlacesUtils.bookmarks.getItemTitle(itemId), firstItemTitle);
-
-    itemId = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId, 1);
-    do_check_true(PlacesUtils.annotations.itemHasAnnotation(itemId, SMART_BOOKMARKS_ANNO));
-    do_check_eq(PlacesUtils.bookmarks.getItemTitle(itemId), secondItemTitle);
-
-    // Check version has been updated.
-    do_check_eq(Services.prefs.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
-                SMART_BOOKMARKS_VERSION);
-
-    next_test();
-  }
-});
-
-//------------------------------------------------------------------------------
-
-tests.push({
-  description: "moved bookmarks position is retained when version changes.",
-  exec: function() {
-    // Sanity check items.
-    do_check_eq(countFolderChildren(PlacesUtils.toolbarFolderId),
-                SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    do_check_eq(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
-                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
-
-    let itemId1 = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId, 0);
-    do_check_true(PlacesUtils.annotations.itemHasAnnotation(itemId1, SMART_BOOKMARKS_ANNO));
-    let firstItemTitle = PlacesUtils.bookmarks.getItemTitle(itemId1);
-
-    let itemId2 = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId, 1);
-    do_check_true(PlacesUtils.annotations.itemHasAnnotation(itemId2, SMART_BOOKMARKS_ANNO));
-    let secondItemTitle = PlacesUtils.bookmarks.getItemTitle(itemId2);
-
-    // Move the first smart bookmark to the end of the menu.
-    PlacesUtils.bookmarks.moveItem(itemId1, PlacesUtils.bookmarksMenuFolderId,
-                                   PlacesUtils.bookmarks.DEFAULT_INDEX);
-
-    do_check_eq(itemId1, PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId,
-                                                   PlacesUtils.bookmarks.DEFAULT_INDEX));
-
-    // Set preferences.
-    Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
-
-    rebuildSmartBookmarks();
-
-    // Count items.
-    do_check_eq(countFolderChildren(PlacesUtils.toolbarFolderId),
-                SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    do_check_eq(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
-                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
-
-    // Check smart bookmarks are still in correct position.
-    itemId2 = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId, 0);
-    do_check_true(PlacesUtils.annotations.itemHasAnnotation(itemId2, SMART_BOOKMARKS_ANNO));
-    do_check_eq(PlacesUtils.bookmarks.getItemTitle(itemId2), secondItemTitle);
-
-    itemId1 = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId,
-                                                   PlacesUtils.bookmarks.DEFAULT_INDEX);
-    do_check_true(PlacesUtils.annotations.itemHasAnnotation(itemId1, SMART_BOOKMARKS_ANNO));
-    do_check_eq(PlacesUtils.bookmarks.getItemTitle(itemId1), firstItemTitle);
-
-    // Move back the smart bookmark to the original position.
-    PlacesUtils.bookmarks.moveItem(itemId1, PlacesUtils.bookmarksMenuFolderId, 1);
-
-    // Check version has been updated.
-    do_check_eq(Services.prefs.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
-                SMART_BOOKMARKS_VERSION);
-
-    next_test();
-  }
-});
-
-//------------------------------------------------------------------------------
-
-tests.push({
-  description: "An explicitly removed smart bookmark should not be recreated.",
-  exec: function() {   
-    // Remove toolbar's smart bookmarks
-    PlacesUtils.bookmarks.removeItem(PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.toolbarFolderId, 0));
-
-    // Sanity check items.
-    do_check_eq(countFolderChildren(PlacesUtils.toolbarFolderId),
-                DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    do_check_eq(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
-                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
-
-    // Set preferences.
-    Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
-
-    rebuildSmartBookmarks();
-
-    // Count items.
-    // We should not have recreated the smart bookmark on toolbar.
-    do_check_eq(countFolderChildren(PlacesUtils.toolbarFolderId),
-                DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    do_check_eq(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
-                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
-
-    // Check version has been updated.
-    do_check_eq(Services.prefs.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
-                SMART_BOOKMARKS_VERSION);
-
-    next_test();
-  }
-});
-
-//------------------------------------------------------------------------------
-
-tests.push({
-  description: "Even if a smart bookmark has been removed recreate it if version is 0.",
-  exec: function() {
-    // Sanity check items.
-    do_check_eq(countFolderChildren(PlacesUtils.toolbarFolderId),
-                DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    do_check_eq(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
-                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
-
-    // Set preferences.
-    Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 0);
-
-    rebuildSmartBookmarks();
-
-    // Count items.
-    // We should not have recreated the smart bookmark on toolbar.
-    do_check_eq(countFolderChildren(PlacesUtils.toolbarFolderId),
-                SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    do_check_eq(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
-                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
-
-    // Check version has been updated.
-    do_check_eq(Services.prefs.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
-                SMART_BOOKMARKS_VERSION);
-
-    next_test();
-  }
-});
-//------------------------------------------------------------------------------
+do_register_cleanup(() => PlacesUtils.bookmarks.eraseEverything());
 
 function countFolderChildren(aFolderItemId) {
   let rootNode = PlacesUtils.getFolderContents(aFolderItemId).root;
@@ -295,57 +35,303 @@ function countFolderChildren(aFolderItemId) {
   return cc;
 }
 
-function next_test() {
-  if (tests.length) {
-    // Execute next test.
-    let test = tests.shift();
-    print("\nTEST: " + test.description);
-    test.exec();
-  }
-  else {
-    // Clean up database from all bookmarks.
-    remove_all_bookmarks();
-    do_test_finished();
-  }
+/**
+ * Rebuilds smart bookmarks listening to console output to report any message or
+ * exception generated when calling ensurePlacesDefaultQueriesInitialized().
+ */
+function rebuildSmartBookmarks() {
+  let consoleListener = {
+    observe: function(aMsg) {
+      do_throw("Got console message: " + aMsg.message);
+    },
+
+    QueryInterface: XPCOMUtils.generateQI([
+      Ci.nsIConsoleListener
+    ]),
+  };
+  Services.console.reset();
+  Services.console.registerListener(consoleListener);
+  Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIBrowserGlue)
+                                          .ensurePlacesDefaultQueriesInitialized();
+  Services.console.unregisterListener(consoleListener);
 }
 
-function run_test() {
-  do_test_pending();
-
-  remove_bookmarks_html();
-  remove_all_JSON_backups();
-
+add_task(function* setup() {
   // Initialize browserGlue, but remove it's listener to places-init-complete.
   let bg = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver);
+
   // Initialize Places.
   PlacesUtils.history;
-  // Observes Places initialisation complete.
-  Services.obs.addObserver(function waitPlaceInitComplete() {
-    Services.obs.removeObserver(waitPlaceInitComplete, "places-browser-init-complete");
 
-    // Ensure preferences status.
-    do_check_false(Services.prefs.getBoolPref(PREF_AUTO_EXPORT_HTML));
-    do_check_false(Services.prefs.getBoolPref(PREF_RESTORE_DEFAULT_BOOKMARKS));
-    try {
-      do_check_false(Services.prefs.getBoolPref(PREF_IMPORT_BOOKMARKS_HTML));
-      do_throw("importBookmarksHTML pref should not exist");
-    }
-    catch(ex) {}
+  // Wait for Places init notification.
+  yield promiseTopicObserved("places-browser-init-complete");
 
-    waitForImportAndSmartBookmarks(next_test);
-  }, "places-browser-init-complete", false);
+  // Ensure preferences status.
+  Assert.ok(!Services.prefs.getBoolPref(PREF_AUTO_EXPORT_HTML));
+  Assert.ok(!Services.prefs.getBoolPref(PREF_RESTORE_DEFAULT_BOOKMARKS));
+  Assert.throws(() => Services.prefs.getBoolPref(PREF_IMPORT_BOOKMARKS_HTML));
 
-  // Usually places init would async notify to glue, but we want to avoid
-  // randomness here, thus we fire the notification synchronously.
-  bg.observe(null, "places-init-complete", null);
-}
+  yield waitForImportAndSmartBookmarks();
+});
 
-function waitForImportAndSmartBookmarks(aCallback) {
-  Services.obs.addObserver(function waitImport() {
-    Services.obs.removeObserver(waitImport, "bookmarks-restore-success");
-    // Delay to test eventual smart bookmarks creation.
-    do_execute_soon(function () {
-      PlacesTestUtils.promiseAsyncUpdates().then(aCallback);
-    });
-  }, "bookmarks-restore-success", false);
-}
+add_task(function* test_version_0() {
+  do_print("All smart bookmarks are created if smart bookmarks version is 0.");
+
+  // Sanity check: we should have default bookmark.
+  Assert.ok(yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    index: 0
+  }));
+
+  Assert.ok(yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    index: 0
+  }));
+
+  // Set preferences.
+  Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 0);
+
+  rebuildSmartBookmarks();
+
+  // Count items.
+  Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
+               SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
+  Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
+               SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+
+  // Check version has been updated.
+  Assert.equal(Services.prefs.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
+               SMART_BOOKMARKS_VERSION);
+});
+
+add_task(function* test_version_change() {
+  do_print("An existing smart bookmark is replaced when version changes.");
+
+  // Sanity check: we have a smart bookmark on the toolbar.
+  let bm = yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    index: 0
+  });
+  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
+
+  // Change its title.
+  yield PlacesUtils.bookmarks.update({guid: bm.guid, title: "new title"});
+  bm = yield PlacesUtils.bookmarks.fetch({guid: bm.guid});
+  Assert.equal(bm.title, "new title");
+
+  // Sanity check items.
+  Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
+               SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
+  Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
+               SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+
+  // Set preferences.
+  Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
+
+  rebuildSmartBookmarks();
+
+  // Count items.
+  Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
+               SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
+  Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
+               SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+
+  // Check smart bookmark has been replaced, itemId has changed.
+  bm = yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    index: 0
+  });
+  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
+  Assert.notEqual(bm.title, "new title");
+
+  // Check version has been updated.
+  Assert.equal(Services.prefs.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
+               SMART_BOOKMARKS_VERSION);
+});
+
+add_task(function* test_version_change_pos() {
+  do_print("bookmarks position is retained when version changes.");
+
+  // Sanity check items.
+  Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
+               SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
+  Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
+               SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+
+  let bm = yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    index: 0
+  });
+  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
+  let firstItemTitle = bm.title;
+
+  bm = yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    index: 1
+  });
+  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
+  let secondItemTitle = bm.title;
+
+  // Set preferences.
+  Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
+
+  rebuildSmartBookmarks();
+
+  // Count items.
+  Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
+               SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
+  Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
+               SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+
+  // Check smart bookmarks are still in correct position.
+  bm = yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    index: 0
+  });
+  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
+  Assert.equal(bm.title, firstItemTitle);
+
+  bm = yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    index: 1
+  });
+  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
+  Assert.equal(bm.title, secondItemTitle);
+
+  // Check version has been updated.
+  Assert.equal(Services.prefs.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
+               SMART_BOOKMARKS_VERSION);
+});
+
+add_task(function* test_version_change_pos_moved() {
+  do_print("moved bookmarks position is retained when version changes.");
+
+  // Sanity check items.
+  Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
+               SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
+  Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
+               SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+
+  let bm1 = yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    index: 0
+  });
+  yield checkItemHasAnnotation(bm1.guid, SMART_BOOKMARKS_ANNO);
+  let firstItemTitle = bm1.title;
+
+  let bm2 = yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    index: 1
+  });
+  yield checkItemHasAnnotation(bm2.guid, SMART_BOOKMARKS_ANNO);
+  let secondItemTitle = bm2.title;
+
+  // Move the first smart bookmark to the end of the menu.
+  yield PlacesUtils.bookmarks.update({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    guid: bm1.guid,
+    index: PlacesUtils.bookmarks.DEFAULT_INDEX
+  });
+
+  let bm = yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    index: PlacesUtils.bookmarks.DEFAULT_INDEX
+  });
+  Assert.equal(bm.guid, bm1.guid);
+
+  // Set preferences.
+  Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
+
+  rebuildSmartBookmarks();
+
+  // Count items.
+  Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
+               SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
+  Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
+               SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+
+  // Check smart bookmarks are still in correct position.
+  bm2 = yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    index: 0
+  });
+  yield checkItemHasAnnotation(bm2.guid, SMART_BOOKMARKS_ANNO);
+  Assert.equal(bm2.title, secondItemTitle);
+
+  bm1 = yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    index: PlacesUtils.bookmarks.DEFAULT_INDEX
+  });
+  yield checkItemHasAnnotation(bm1.guid, SMART_BOOKMARKS_ANNO);
+  Assert.equal(bm1.title, firstItemTitle);
+
+  // Move back the smart bookmark to the original position.
+  yield PlacesUtils.bookmarks.update({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    guid: bm1.guid,
+    index: 1
+  });
+
+  // Check version has been updated.
+  Assert.equal(Services.prefs.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
+              SMART_BOOKMARKS_VERSION);
+});
+
+add_task(function* test_recreation() {
+  do_print("An explicitly removed smart bookmark should not be recreated.");
+
+  // Remove toolbar's smart bookmarks
+  let bm = yield PlacesUtils.bookmarks.fetch({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    index: 0
+  });
+  yield PlacesUtils.bookmarks.remove(bm.guid);
+
+  // Sanity check items.
+  Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
+               DEFAULT_BOOKMARKS_ON_TOOLBAR);
+  Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
+               SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+
+  // Set preferences.
+  Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
+
+  rebuildSmartBookmarks();
+
+  // Count items.
+  // We should not have recreated the smart bookmark on toolbar.
+  Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
+               DEFAULT_BOOKMARKS_ON_TOOLBAR);
+  Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
+               SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+
+  // Check version has been updated.
+  Assert.equal(Services.prefs.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
+               SMART_BOOKMARKS_VERSION);
+});
+
+add_task(function* test_recreation_version_0() {
+  do_print("Even if a smart bookmark has been removed recreate it if version is 0.");
+
+  // Sanity check items.
+  Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
+               DEFAULT_BOOKMARKS_ON_TOOLBAR);
+  Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
+               SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+
+  // Set preferences.
+  Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 0);
+
+  rebuildSmartBookmarks();
+
+  // Count items.
+  // We should not have recreated the smart bookmark on toolbar.
+  Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
+               SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
+  Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
+               SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+
+  // Check version has been updated.
+  Assert.equal(Services.prefs.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
+               SMART_BOOKMARKS_VERSION);
+});
