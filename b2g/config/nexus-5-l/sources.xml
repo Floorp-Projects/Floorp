@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="7f2ee9f4cb926684883fc2a2e407045fd9db2199">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="6afe4606da768aed62d8a200fd24e6a7fa52dc4b"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="94af4b42d2ace6c9f38f31de77240604fac68af1"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2262d4a77d4f46ab230fd747bb91e9b77bad36cb"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="9614a9d92d7a2b216500b4dcc38294ba5ee5884b"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="fe5ef8bd2eaf5179d0da29cf8904157575d03d3e"/>
   <!-- Stock Android things -->
   <project groups="pdk,linux" name="platform/prebuilts/clang/linux-x86/host/3.5" path="prebuilts/clang/linux-x86/host/3.5" revision="50d1ca4ab8add54523b7bc692860d57e8ee4c0d1"/>
   <project groups="pdk,linux,arm" name="platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" path="prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" revision="fb3845864573857677f9b500040a8f011eaf5078"/>
@@ -126,7 +126,7 @@
   <project name="platform/prebuilts/qemu-kernel" path="prebuilts/qemu-kernel" revision="530cad9b205442d2db29361e796299dc323ef9ce"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="a982f43b7f2d5916dc3a859667a8ba78e50b6202"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="6e18b61ee446bdd9880c07ae84197a087490c2e5"/>
-  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="23d746289c21673448b00a31dd469cbf0b23b26e"/>
+  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="798a1844533b05b652674e738a00304dfe786603"/>
   <project name="platform/system/extras" path="system/extras" revision="18f7c51415917eb0e21b30f220db7bd0be4130a7"/>
   <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="8fcd25d64f0f67d1a6f7037a4c83ce6d95466770"/>
   <project name="platform/system/media" path="system/media" revision="adf8fbacf7395858884690df5e3ce46bc75fa683"/>
@@ -136,7 +136,7 @@
   <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="ea531874885eed7f68802048218ed86dde927f58"/>
   <project name="platform_frameworks_base" path="frameworks/base" remote="b2g" revision="df7e0cfbbc7e954ed26c73ac17832a5ff035f046"/>
   <project name="platform_frameworks_wilhelm" path="frameworks/wilhelm" remote="b2g" revision="73f7e7f12c8c5459f7a39e2fa343f083c942864d"/>
-  <project name="platform_system_core" path="system/core" remote="b2g" revision="016398870d88db771bf64b8fb3167878665fc1de"/>
+  <project name="platform_system_core" path="system/core" remote="b2g" revision="4df51d9abf6cc9a6ec49b965e621699e0e6dc4fb"/>
   <default remote="caf" revision="refs/tags/android-5.0.0_r6" sync-j="4"/>
   <!-- Nexus 5 specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="ba62cc8b78c30d36181b8060a2016cc8da166236"/>
