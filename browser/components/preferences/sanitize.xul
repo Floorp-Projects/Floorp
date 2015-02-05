@@ -19,9 +19,10 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel,help"
             ondialoghelp="openPrefsHelp()"
-            style="width: &dialog.width2;;"
+            dialogWidth="&dialog.width2;"
+            subdialogWidth="&inContentDialog.width;"
             title="&sanitizePrefs2.title;"
-            onload="gSanitizeDialog.onClearHistoryChanged();">
+            onload="gSanitizeDialog.init();">
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript" src="chrome://browser/content/preferences/sanitize.js"/>
@@ -48,7 +49,8 @@
       <caption label="&historySection.label;"/>
       <grid flex="1">
         <columns>
-          <column style="width: &column.width2;"/>
+          <column dialogWidth="&column.width2;"
+                  subdialogWidth="&inContentColumn.width;"/>
           <column flex="1"/>
         </columns>
         <rows>
@@ -80,7 +82,8 @@
       <caption label="&dataSection.label;"/>
       <grid flex="1">
         <columns>
-          <column style="width: &column.width2;"/>
+          <column dialogWidth="&column.width2;"
+                  subdialogWidth="&inContentColumn.width;"/>
           <column flex="1"/>
         </columns>
         <rows>
