@@ -554,6 +554,24 @@ function storeCountryCode(cc) {
   if (cc != "US" && isTimezoneUS) {
     Services.telemetry.getHistogramById("SEARCH_SERVICE_US_TIMEZONE_MISMATCHED_COUNTRY").add(1);
   }
+  // telemetry to compare our geoip response with platform-specific country data.
+  // On Mac, we can get a country code via nsIGfxInfo2
+  let gfxInfo2;
+  try {
+    gfxInfo2 = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo2);
+  } catch (ex) {
+    // not on Mac.
+  }
+  if (gfxInfo2) {
+    let macCC = gfxInfo2.countryCode;
+    if (cc == "US" || macCC == "US") {
+      // one of the 2 said US, so record if they are the same.
+      Services.telemetry.getHistogramById("SEARCH_SERVICE_US_COUNTRY_MISMATCHED_PLATFORM_OSX").add(cc != macCC);
+    } else {
+      // different country - record if they are the same
+      Services.telemetry.getHistogramById("SEARCH_SERVICE_NONUS_COUNTRY_MISMATCHED_PLATFORM_OSX").add(cc != macCC);
+    }
+  }
 }
 
 // Get the country we are in via a XHR geoip request.
