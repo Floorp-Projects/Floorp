@@ -18,12 +18,14 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
     this._onRecordingStopped = this._onRecordingStopped.bind(this);
     this._onRecordingImported = this._onRecordingImported.bind(this);
     this._onSaveButtonClick = this._onSaveButtonClick.bind(this);
+    this._onRecordingsCleared = this._onRecordingsCleared.bind(this);
 
     this.emptyText = L10N.getStr("noRecordingsText");
 
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.on(EVENTS.RECORDING_IMPORTED, this._onRecordingImported);
+    PerformanceController.on(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
     this.widget.addEventListener("select", this._onSelect, false);
   },
 
@@ -34,6 +36,7 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.off(EVENTS.RECORDING_IMPORTED, this._onRecordingImported);
+    PerformanceController.off(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
     this.widget.removeEventListener("select", this._onSelect, false);
   },
 
@@ -160,6 +163,13 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
 
     // Render the recording item with finalized information (timing, etc)
     this.finalizeRecording(recordingItem);
+  },
+
+  /**
+   * Clears out all recordings.
+   */
+  _onRecordingsCleared: function () {
+    this.empty();
   },
 
   /**

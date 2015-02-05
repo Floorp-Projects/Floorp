@@ -473,11 +473,11 @@ FindFrameTargetedByInputEvent(WidgetGUIEvent* aEvent,
   if (!view) {
     return target;
   }
-  nsIntPoint widgetPoint = nsLayoutUtils::TranslateViewToWidget(
+  LayoutDeviceIntPoint widgetPoint = nsLayoutUtils::TranslateViewToWidget(
         aRootFrame->PresContext(), view, point, aEvent->widget);
   if (widgetPoint.x != NS_UNCONSTRAINEDSIZE) {
     // If that succeeded, we update the point in the event
-    aEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(widgetPoint);
+    aEvent->refPoint = widgetPoint;
   }
   return target;
 }

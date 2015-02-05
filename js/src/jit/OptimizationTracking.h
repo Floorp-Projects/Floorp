@@ -13,280 +13,30 @@
 #include "jit/CompactBuffer.h"
 #include "jit/CompileInfo.h"
 #include "jit/JitAllocPolicy.h"
-#include "jit/shared/CodeGenerator-shared.h"
+#include "js/TrackedOptimizationInfo.h"
 
 namespace js {
 
 namespace jit {
 
-#define TRACKED_STRATEGY_LIST(_)                        \
-    _(GetProp_ArgumentsLength,                          \
-      "getprop arguments.length")                       \
-    _(GetProp_ArgumentsCallee,                          \
-      "getprop arguments.callee")                       \
-    _(GetProp_InferredConstant,                         \
-      "getprop inferred constant")                      \
-    _(GetProp_Constant,                                 \
-      "getprop constant")                               \
-    _(GetProp_TypedObject,                              \
-      "getprop TypedObject")                            \
-    _(GetProp_DefiniteSlot,                             \
-      "getprop definite slot")                          \
-    _(GetProp_Unboxed,                                  \
-      "getprop unboxed object")                         \
-    _(GetProp_CommonGetter,                             \
-      "getprop common getter")                          \
-    _(GetProp_InlineAccess,                             \
-      "getprop inline access")                          \
-    _(GetProp_Innerize,                                 \
-      "getprop innerize (access on global window)")     \
-    _(GetProp_InlineCache,                              \
-      "getprop IC")                                     \
-                                                        \
-    _(SetProp_CommonSetter,                             \
-      "setprop common setter")                          \
-    _(SetProp_TypedObject,                              \
-      "setprop TypedObject")                            \
-    _(SetProp_DefiniteSlot,                             \
-      "setprop definite slot")                          \
-    _(SetProp_Unboxed,                                  \
-      "setprop unboxed object")                         \
-    _(SetProp_InlineAccess,                             \
-      "setprop inline access")                          \
-                                                        \
-    _(GetElem_TypedObject,                              \
-      "getprop TypedObject")                            \
-    _(GetElem_Dense,                                    \
-      "getelem dense")                                  \
-    _(GetElem_TypedStatic,                              \
-      "getelem TypedArray static")                      \
-    _(GetElem_TypedArray,                               \
-      "getelem TypedArray")                             \
-    _(GetElem_String,                                   \
-      "getelem string")                                 \
-    _(GetElem_Arguments,                                \
-      "getelem arguments")                              \
-    _(GetElem_ArgumentsInlined,                         \
-      "getelem arguments inlined")                      \
-    _(GetElem_InlineCache,                              \
-      "getelem IC")                                     \
-                                                        \
-    _(SetElem_TypedObject,                              \
-      "setelem TypedObject")                            \
-    _(SetElem_TypedStatic,                              \
-      "setelem TypedArray static")                      \
-    _(SetElem_TypedArray,                               \
-      "setelem TypedArray")                             \
-    _(SetElem_Dense,                                    \
-      "setelem dense")                                  \
-    _(SetElem_Arguments,                                \
-      "setelem arguments")                              \
-    _(SetElem_InlineCache,                              \
-      "setelem IC")                                     \
-                                                        \
-    _(Call_Inline,                                      \
-      "call inline")
-
-
-// Ordering is important below. All outcomes before GenericSuccess will be
-// considered failures, and all outcomes after GenericSuccess will be
-// considered successes.
-#define TRACKED_OUTCOME_LIST(_)                                         \
-    _(GenericFailure,                                                   \
-      "failure")                                                        \
-    _(Disabled,                                                         \
-      "disabled")                                                       \
-    _(NoTypeInfo,                                                       \
-      "no type info")                                                   \
-    _(NoAnalysisInfo,                                                   \
-      "no newscript analysis")                                          \
-    _(NoShapeInfo,                                                      \
-      "cannot determine shape")                                         \
-    _(UnknownObject,                                                    \
-      "unknown object")                                                 \
-    _(UnknownProperties,                                                \
-      "unknown properties")                                             \
-    _(Singleton,                                                        \
-      "is singleton")                                                   \
-    _(NotSingleton,                                                     \
-      "is not singleton")                                               \
-    _(NotFixedSlot,                                                     \
-      "property not in fixed slot")                                     \
-    _(InconsistentFixedSlot,                                            \
-      "property not in a consistent fixed slot")                        \
-    _(NotObject,                                                        \
-      "not definitely an object")                                       \
-    _(NotStruct,                                                        \
-      "not definitely a TypedObject struct")                            \
-    _(NotUnboxed,                                                       \
-      "not definitely an unboxed object")                               \
-    _(StructNoField,                                                    \
-      "struct doesn't definitely have field")                           \
-    _(InconsistentFieldType,                                            \
-      "unboxed property does not consistent type")                      \
-    _(InconsistentFieldOffset,                                          \
-      "unboxed property does not consistent offset")                    \
-    _(NeedsTypeBarrier,                                                 \
-      "needs type barrier")                                             \
-    _(InDictionaryMode,                                                 \
-      "object in dictionary mode")                                      \
-    _(NoProtoFound,                                                     \
-      "no proto found")                                                 \
-    _(MultiProtoPaths,                                                  \
-      "not all paths to property go through same proto")                \
-    _(NonWritableProperty,                                              \
-      "non-writable property")                                          \
-    _(ProtoIndexedProps,                                                \
-      "prototype has indexed properties")                               \
-    _(ArrayBadFlags,                                                    \
-      "array observed to be sparse, overflowed .length, or has been iterated") \
-    _(ArrayDoubleConversion,                                            \
-      "array has ambiguous double conversion")                          \
-    _(ArrayRange,                                                       \
-      "array range issue (.length problems)")                           \
-    _(ArraySeenNegativeIndex,                                           \
-      "has seen array access with negative index")                      \
-    _(TypedObjectNeutered,                                              \
-      "TypedObject might have been neutered")                           \
-    _(TypedObjectArrayRange,                                            \
-      "TypedObject array of unknown length")                            \
-    _(AccessNotDense,                                                   \
-      "access not on dense native (check receiver, index, and result types)") \
-    _(AccessNotTypedObject,                                             \
-      "access not on typed array (check receiver and index types)")     \
-    _(AccessNotTypedArray,                                              \
-      "access not on typed array (check receiver, index, and result types)") \
-    _(AccessNotString,                                                  \
-      "getelem not on string (check receiver and index types)")         \
-    _(StaticTypedArrayUint32,                                           \
-      "static uint32 arrays currently cannot be optimized")             \
-    _(StaticTypedArrayCantComputeMask,                                  \
-      "can't compute mask for static typed array access (index isn't constant or not int32)") \
-    _(OutOfBounds,                                                      \
-      "observed out of bounds access")                                  \
-    _(GetElemStringNotCached,                                           \
-      "getelem on strings is not inline cached")                        \
-    _(NonNativeReceiver,                                                \
-      "observed non-native receiver")                                   \
-    _(IndexType,                                                        \
-      "index type must be int32, string, or symbol")                    \
-    _(SetElemNonDenseNonTANotCached,                                    \
-      "setelem on non-dense non-TAs are not inline cached")             \
-                                                                        \
-    _(CantInlineGeneric,                                                \
-      "can't inline")                                                   \
-    _(CantInlineNoTarget,                                               \
-      "can't inline: no target")                                        \
-    _(CantInlineNotInterpreted,                                         \
-      "can't inline: not interpreted")                                  \
-    _(CantInlineNoBaseline,                                             \
-      "can't inline: no baseline code")                                 \
-    _(CantInlineLazy,                                                   \
-      "can't inline: lazy script")                                      \
-    _(CantInlineNotConstructor,                                         \
-      "can't inline: calling non-constructor with 'new'")               \
-    _(CantInlineDisabledIon,                                            \
-      "can't inline: ion disabled for callee")                          \
-    _(CantInlineTooManyArgs,                                            \
-      "can't inline: too many arguments")                               \
-    _(CantInlineRecursive,                                              \
-      "can't inline: recursive")                                        \
-    _(CantInlineHeavyweight,                                            \
-      "can't inline: heavyweight")                                      \
-    _(CantInlineNeedsArgsObj,                                           \
-      "can't inline: needs arguments object")                           \
-    _(CantInlineDebuggee,                                               \
-      "can't inline: debuggee")                                         \
-    _(CantInlineUnknownProps,                                           \
-      "can't inline: type has unknown properties")                      \
-    _(CantInlineExceededDepth,                                          \
-      "can't inline: exceeded inlining depth")                          \
-    _(CantInlineBigLoop,                                                \
-      "can't inline: big function with a loop")                         \
-    _(CantInlineBigCaller,                                              \
-      "can't inline: big caller")                                       \
-    _(CantInlineBigCallee,                                              \
-      "can't inline: big callee")                                       \
-    _(CantInlineNotHot,                                                 \
-      "can't inline: not hot enough")                                   \
-    _(CantInlineNotInDispatch,                                          \
-      "can't inline: not in dispatch table")                            \
-    _(CantInlineNativeBadForm,                                          \
-      "can't inline native: bad form (arity mismatch/constructing)")    \
-    _(CantInlineNativeBadType,                                          \
-      "can't inline native: bad argument or return type observed")      \
-    _(CantInlineNativeNoTemplateObj,                                    \
-      "can't inline native: no template object")                        \
-    _(CantInlineBound,                                                  \
-      "can't inline bound function invocation")                         \
-                                                                        \
-    _(GenericSuccess,                                                   \
-      "success")                                                        \
-    _(Inlined,                                                          \
-      "inlined")                                                        \
-    _(DOM,                                                              \
-      "DOM")                                                            \
-    _(Monomorphic,                                                      \
-      "monomorphic")                                                    \
-    _(Polymorphic,                                                      \
-      "polymorphic")
-
-#define TRACKED_TYPESITE_LIST(_)                \
-    _(Receiver,                                 \
-      "receiver object")                        \
-    _(Index,                                    \
-      "index")                                  \
-    _(Value,                                    \
-      "value")                                  \
-    _(Call_Target,                              \
-      "call target")                            \
-    _(Call_This,                                \
-      "call 'this'")                            \
-    _(Call_Arg,                                 \
-      "call argument")                          \
-    _(Call_Return,                              \
-      "call return")
-
-enum class TrackedStrategy : uint32_t {
-#define STRATEGY_OP(name, msg) name,
-    TRACKED_STRATEGY_LIST(STRATEGY_OP)
-#undef STRATEGY_OPT
-
-    Count
-};
-
-enum class TrackedOutcome : uint32_t {
-#define OUTCOME_OP(name, msg) name,
-    TRACKED_OUTCOME_LIST(OUTCOME_OP)
-#undef OUTCOME_OP
-
-    Count
-};
-
-enum class TrackedTypeSite : uint32_t {
-#define TYPESITE_OP(name, msg) name,
-    TRACKED_TYPESITE_LIST(TYPESITE_OP)
-#undef TYPESITE_OP
-
-    Count
-};
+struct NativeToTrackedOptimizations;
 
 class OptimizationAttempt
 {
-    TrackedStrategy strategy_;
-    TrackedOutcome outcome_;
+    JS::TrackedStrategy strategy_;
+    JS::TrackedOutcome outcome_;
 
   public:
-    OptimizationAttempt(TrackedStrategy strategy, TrackedOutcome outcome)
+    OptimizationAttempt(JS::TrackedStrategy strategy, JS::TrackedOutcome outcome)
       : strategy_(strategy),
         outcome_(outcome)
     { }
 
-    void setOutcome(TrackedOutcome outcome) { outcome_ = outcome; }
-    bool succeeded() const { return outcome_ >= TrackedOutcome::GenericSuccess; }
-    bool failed() const { return outcome_ < TrackedOutcome::GenericSuccess; }
-    TrackedStrategy strategy() const { return strategy_; }
-    TrackedOutcome outcome() const { return outcome_; }
+    void setOutcome(JS::TrackedOutcome outcome) { outcome_ = outcome; }
+    bool succeeded() const { return outcome_ >= JS::TrackedOutcome::GenericSuccess; }
+    bool failed() const { return outcome_ < JS::TrackedOutcome::GenericSuccess; }
+    JS::TrackedStrategy strategy() const { return strategy_; }
+    JS::TrackedOutcome outcome() const { return outcome_; }
 
     bool operator ==(const OptimizationAttempt &other) const {
         return strategy_ == other.strategy_ && outcome_ == other.outcome_;
@@ -298,29 +48,27 @@ class OptimizationAttempt
         return (HashNumber(strategy_) << 8) + HashNumber(outcome_);
     }
 
-    explicit OptimizationAttempt(CompactBufferReader &reader);
     void writeCompact(CompactBufferWriter &writer) const;
 };
 
-typedef Vector<OptimizationAttempt, 4, JitAllocPolicy> TempAttemptsVector;
-typedef Vector<OptimizationAttempt, 4, SystemAllocPolicy> AttemptsVector;
+typedef Vector<OptimizationAttempt, 4, JitAllocPolicy> TempOptimizationAttemptsVector;
 
 class UniqueTrackedTypes;
 
-class TrackedTypeInfo
+class OptimizationTypeInfo
 {
-    TrackedTypeSite site_;
+    JS::TrackedTypeSite site_;
     MIRType mirType_;
     types::TypeSet::TypeList types_;
 
   public:
-    TrackedTypeInfo(TrackedTypeInfo &&other)
+    OptimizationTypeInfo(OptimizationTypeInfo &&other)
       : site_(other.site_),
         mirType_(other.mirType_),
         types_(mozilla::Move(other.types_))
     { }
 
-    TrackedTypeInfo(TrackedTypeSite site, MIRType mirType)
+    OptimizationTypeInfo(JS::TrackedTypeSite site, MIRType mirType)
       : site_(site),
         mirType_(mirType)
     { }
@@ -328,32 +76,26 @@ class TrackedTypeInfo
     bool trackTypeSet(types::TemporaryTypeSet *typeSet);
     bool trackType(types::Type type);
 
-    TrackedTypeSite site() const { return site_; }
+    JS::TrackedTypeSite site() const { return site_; }
     MIRType mirType() const { return mirType_; }
     const types::TypeSet::TypeList &types() const { return types_; }
 
-    bool operator ==(const TrackedTypeInfo &other) const;
-    bool operator !=(const TrackedTypeInfo &other) const;
+    bool operator ==(const OptimizationTypeInfo &other) const;
+    bool operator !=(const OptimizationTypeInfo &other) const;
 
     HashNumber hash() const;
 
-    // This constructor is designed to be used in conjunction with readTypes
-    // below it. The same reader must be passed to readTypes after
-    // instantiating the TrackedTypeInfo.
-    explicit TrackedTypeInfo(CompactBufferReader &reader);
-    bool readTypes(CompactBufferReader &reader, const types::TypeSet::TypeList *allTypes);
     bool writeCompact(CompactBufferWriter &writer, UniqueTrackedTypes &uniqueTypes) const;
 };
 
-typedef Vector<TrackedTypeInfo, 1, JitAllocPolicy> TempTrackedTypeInfoVector;
-typedef Vector<TrackedTypeInfo, 1, SystemAllocPolicy> TrackedTypeInfoVector;
+typedef Vector<OptimizationTypeInfo, 1, JitAllocPolicy> TempOptimizationTypeInfoVector;
 
 // Tracks the optimization attempts made at a bytecode location.
 class TrackedOptimizations : public TempObject
 {
     friend class UniqueTrackedOptimizations;
-    TempTrackedTypeInfoVector types_;
-    TempAttemptsVector attempts_;
+    TempOptimizationTypeInfoVector types_;
+    TempOptimizationAttemptsVector attempts_;
     uint32_t currentAttempt_;
 
   public:
@@ -363,15 +105,15 @@ class TrackedOptimizations : public TempObject
         currentAttempt_(UINT32_MAX)
     { }
 
-    bool trackTypeInfo(TrackedTypeInfo &&ty);
+    bool trackTypeInfo(OptimizationTypeInfo &&ty);
 
-    bool trackAttempt(TrackedStrategy strategy);
+    bool trackAttempt(JS::TrackedStrategy strategy);
     void amendAttempt(uint32_t index);
-    void trackOutcome(TrackedOutcome outcome);
+    void trackOutcome(JS::TrackedOutcome outcome);
     void trackSuccess();
 
-    bool matchTypes(const TempTrackedTypeInfoVector &other) const;
-    bool matchAttempts(const TempAttemptsVector &other) const;
+    bool matchTypes(const TempOptimizationTypeInfoVector &other) const;
+    bool matchAttempts(const TempOptimizationAttemptsVector &other) const;
 
     void spew() const;
 };
@@ -383,8 +125,8 @@ class UniqueTrackedOptimizations
   public:
     struct SortEntry
     {
-        const TempTrackedTypeInfoVector *types;
-        const TempAttemptsVector *attempts;
+        const TempOptimizationTypeInfoVector *types;
+        const TempOptimizationAttemptsVector *attempts;
         uint32_t frequency;
     };
     typedef Vector<SortEntry, 4> SortedVector;
@@ -392,8 +134,8 @@ class UniqueTrackedOptimizations
   private:
     struct Key
     {
-        const TempTrackedTypeInfoVector *types;
-        const TempAttemptsVector *attempts;
+        const TempOptimizationTypeInfoVector *types;
+        const TempOptimizationAttemptsVector *attempts;
 
         typedef Key Lookup;
         static HashNumber hash(const Lookup &lookup);
@@ -409,12 +151,12 @@ class UniqueTrackedOptimizations
         uint32_t frequency;
     };
 
-    // Map of unique (TempTrackedTypeInfoVector, TempAttemptsVector) pairs to
-    // indices.
+    // Map of unique (TempOptimizationTypeInfoVector,
+    // TempOptimizationAttemptsVector) pairs to indices.
     typedef HashMap<Key, Entry, Key> AttemptsMap;
     AttemptsMap map_;
 
-    // TempAttemptsVectors sorted by frequency.
+    // TempOptimizationAttemptsVectors sorted by frequency.
     SortedVector sorted_;
 
   public:
@@ -457,7 +199,7 @@ class UniqueTrackedOptimizations
 //    |  Optimization type info 1                      |  |
 //    |------------------------------------------------|  |
 //    |  Optimization type info 2                      |  |-- PayloadT of list of
-//    |------------------------------------------------|  |   IonTrackedOptimizationTypeInfo in
+//    |------------------------------------------------|  |   OptimizationTypeInfo in
 //    |               ...                              |  |   order of decreasing frequency
 //    |------------------------------------------------|  |
 //    |  Optimization type info N                      |  |
@@ -475,7 +217,7 @@ class UniqueTrackedOptimizations
 //    |  Optimization attempts 1                       |  |
 //    |------------------------------------------------|  |
 //    |  Optimization attempts 2                       |  |-- PayloadA of list of
-//    |------------------------------------------------|  |   IonTrackedOptimizationAttempts in
+//    |------------------------------------------------|  |   OptimizationAttempts in
 //    |               ...                              |  |   order of decreasing frequency
 //    |------------------------------------------------|  |
 //    |  Optimization attempts N                       |  |
@@ -569,7 +311,9 @@ class IonTrackedOptimizationsRegion
 
     RangeIterator ranges() const { return RangeIterator(rangesStart_, end_, startOffset_); }
 
-    mozilla::Maybe<uint8_t> findAttemptsIndex(uint32_t offset) const;
+    // Find the index of tracked optimization info (e.g., type info and
+    // attempts) at a native code offset.
+    mozilla::Maybe<uint8_t> findIndex(uint32_t offset) const;
 
     // For the variants below, S stands for startDelta, L for length, and I
     // for index. These were automatically generated from training on the
@@ -646,7 +390,6 @@ class IonTrackedOptimizationsRegion
 
     static const uint32_t MAX_RUN_LENGTH = 100;
 
-    typedef CodeGeneratorShared::NativeToTrackedOptimizations NativeToTrackedOptimizations;
     static uint32_t ExpectedRunLength(const NativeToTrackedOptimizations *start,
                                       const NativeToTrackedOptimizations *end);
 
@@ -673,19 +416,54 @@ class IonTrackedOptimizationsAttempts
         MOZ_ASSERT(start < end);
     }
 
-    template <class T>
-    bool readVector(T *attempts) {
-        CompactBufferReader reader(start_, end_);
-        const uint8_t *cur = start_;
-        while (cur != end_) {
-            if (!attempts->append(OptimizationAttempt(reader)))
-                return false;
-            cur = reader.currentPosition();
-            MOZ_ASSERT(cur <= end_);
-        }
-        return true;
-    }
+    void forEach(JS::ForEachTrackedOptimizationAttemptOp &op);
 };
+
+struct IonTrackedTypeWithAddendum
+{
+    types::Type type;
+
+    enum HasAddendum {
+        HasNothing,
+        HasAllocationSite,
+        HasConstructor
+    };
+    HasAddendum hasAddendum;
+
+    // If type is a type object and is tied to a site, the script and pc are
+    // resolved early and stored below. This is done to avoid accessing the
+    // compartment during profiling time.
+    union {
+        struct {
+            JSScript *script;
+            uint32_t offset;
+        };
+        JSFunction *constructor;
+    };
+
+    explicit IonTrackedTypeWithAddendum(types::Type type)
+      : type(type),
+        hasAddendum(HasNothing)
+    { }
+
+    IonTrackedTypeWithAddendum(types::Type type, JSScript *script, uint32_t offset)
+      : type(type),
+        hasAddendum(HasAllocationSite),
+        script(script),
+        offset(offset)
+    { }
+
+    IonTrackedTypeWithAddendum(types::Type type, JSFunction *constructor)
+      : type(type),
+        hasAddendum(HasConstructor),
+        constructor(constructor)
+    { }
+
+    bool hasAllocationSite() const { return hasAddendum == HasAllocationSite; }
+    bool hasConstructor() const { return hasAddendum == HasConstructor; }
+};
+
+typedef Vector<IonTrackedTypeWithAddendum, 1, SystemAllocPolicy> IonTrackedTypeVector;
 
 class IonTrackedOptimizationsTypeInfo
 {
@@ -701,21 +479,17 @@ class IonTrackedOptimizationsTypeInfo
 
     bool empty() const { return start_ == end_; }
 
-    template <class T>
-    bool readVector(T *types, const types::TypeSet::TypeList *allTypes) {
-        CompactBufferReader reader(start_, end_);
-        const uint8_t *cur = start_;
-        while (cur != end_) {
-            TrackedTypeInfo ty(reader);
-            if (!ty.readTypes(reader, allTypes))
-                return false;
-            if (!types->append(mozilla::Move(ty)))
-                return false;
-            cur = reader.currentPosition();
-            MOZ_ASSERT(cur <= end_);
-        }
-        return true;
-    }
+    // Unlike IonTrackedOptimizationAttempts,
+    // JS::ForEachTrackedOptimizaitonTypeInfoOp cannot be used directly. The
+    // internal API needs to deal with engine-internal data structures (e.g.,
+    // types::Type) directly.
+    struct ForEachOp
+    {
+        virtual void readType(const IonTrackedTypeWithAddendum &tracked) = 0;
+        virtual void operator()(JS::TrackedTypeSite site, MIRType mirType) = 0;
+    };
+
+    void forEach(ForEachOp &op, const IonTrackedTypeVector *allTypes);
 };
 
 template <class Entry>
@@ -763,12 +537,12 @@ typedef IonTrackedOptimizationsOffsetsTable<IonTrackedOptimizationsTypeInfo>
 
 bool
 WriteIonTrackedOptimizationsTable(JSContext *cx, CompactBufferWriter &writer,
-                                  const CodeGeneratorShared::NativeToTrackedOptimizations *start,
-                                  const CodeGeneratorShared::NativeToTrackedOptimizations *end,
+                                  const NativeToTrackedOptimizations *start,
+                                  const NativeToTrackedOptimizations *end,
                                   const UniqueTrackedOptimizations &unique,
                                   uint32_t *numRegions, uint32_t *regionTableOffsetp,
                                   uint32_t *typesTableOffsetp, uint32_t *attemptsTableOffsetp,
-                                  types::TypeSet::TypeList *allTypes);
+                                  IonTrackedTypeVector *allTypes);
 
 } // namespace jit
 } // namespace js

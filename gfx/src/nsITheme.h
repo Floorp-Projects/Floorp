@@ -28,10 +28,10 @@ class nsIAtom;
 class nsIWidget;
 
 // IID for the nsITheme interface
-// {cc3a6c72-50c2-414d-b9f2-b778a5e0f136}
+// {a21dd936-5960-46da-a724-7c114e421b41}
  #define NS_ITHEME_IID     \
-{ 0xcc3a6c72, 0x50c2, 0x414d, \
-  { 0xb9, 0xf2, 0xb7, 0x78, 0xa5, 0xe0, 0xf1, 0x36 } }
+{ 0xa21dd936, 0x5960, 0x46da, \
+  { 0xa7, 0x24, 0x7c, 0x11, 0x4e, 0x42, 0x1b, 0x41 } }
 // {0ae05515-cf7a-45a8-9e02-6556de7685b1}
 #define NS_THEMERENDERER_CID \
 { 0x0ae05515, 0xcf7a, 0x45a8, \
@@ -146,6 +146,33 @@ public:
   virtual bool WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame,
                                       uint8_t aWidgetType, nscolor* aColor)
   { return false; }
+
+  /**
+   * ThemeGeometryType values are used for describing themed nsIFrames in
+   * calls to nsIWidget::UpdateThemeGeometries. We don't simply pass the
+   * -moz-appearance value ("widget type") of the frame because the widget may
+   * want to treat different frames with the same -moz-appearance differently
+   * based on other properties of the frame. So we give the theme a first look
+   * at the frame in nsITheme::ThemeGeometryTypeForWidget and pass the
+   * returned ThemeGeometryType along to the widget.
+   * Each theme backend defines the ThemeGeometryType values it needs in its
+   * own nsITheme subclass. eThemeGeometryTypeUnknown is the only value that's
+   * shared between backends.
+   */
+  typedef uint8_t ThemeGeometryType;
+  enum {
+    eThemeGeometryTypeUnknown = 0
+  };
+
+  /**
+   * Returns the theme geometry type that should be used in the ThemeGeometry
+   * array that's passed to the widget using nsIWidget::UpdateThemeGeometries.
+   * A return value of eThemeGeometryTypeUnknown means that this frame will
+   * not be included in the ThemeGeometry array.
+   */
+  virtual ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame* aFrame,
+                                                       uint8_t aWidgetType)
+  { return eThemeGeometryTypeUnknown; }
 
   /**
    * Can the nsITheme implementation handle this widget?

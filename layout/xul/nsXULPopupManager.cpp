@@ -537,7 +537,7 @@ void
 nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
                                     nsIContent** aTriggerContent)
 {
-  mCachedMousePoint = nsIntPoint(0, 0);
+  mCachedMousePoint = LayoutDeviceIntPoint(0, 0);
 
   if (aTriggerContent) {
     *aTriggerContent = nullptr;
@@ -598,8 +598,8 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
           else if (rootDocumentRootFrame) {
             nsPoint pnt =
               nsLayoutUtils::GetEventCoordinatesRelativeTo(event, rootDocumentRootFrame);
-            mCachedMousePoint = nsIntPoint(rootDocPresContext->AppUnitsToDevPixels(pnt.x),
-                                           rootDocPresContext->AppUnitsToDevPixels(pnt.y));
+            mCachedMousePoint = LayoutDeviceIntPoint(rootDocPresContext->AppUnitsToDevPixels(pnt.x),
+                                                     rootDocPresContext->AppUnitsToDevPixels(pnt.y));
           }
         }
       }
@@ -738,8 +738,8 @@ nsXULPopupManager::ShowTooltipAtScreen(nsIContent* aPopup,
   InitTriggerEvent(nullptr, nullptr, nullptr);
 
   nsPresContext* pc = popupFrame->PresContext();
-  mCachedMousePoint = nsIntPoint(pc->CSSPixelsToDevPixels(aXPos),
-                                 pc->CSSPixelsToDevPixels(aYPos));
+  mCachedMousePoint = LayoutDeviceIntPoint(pc->CSSPixelsToDevPixels(aXPos),
+                                           pc->CSSPixelsToDevPixels(aYPos));
 
   // coordinates are relative to the root widget
   nsPresContext* rootPresContext = pc->GetRootPresContext();
@@ -1323,11 +1323,11 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
     event.widget = nullptr;
   }
 
-  event.refPoint = LayoutDeviceIntPoint::FromUntyped(mCachedMousePoint);
+  event.refPoint = mCachedMousePoint;
   event.modifiers = mCachedModifiers;
   EventDispatcher::Dispatch(popup, presContext, &event, nullptr, &status);
 
-  mCachedMousePoint = nsIntPoint(0, 0);
+  mCachedMousePoint = LayoutDeviceIntPoint(0, 0);
   mOpeningPopup = nullptr;
 
   mCachedModifiers = 0;

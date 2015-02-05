@@ -743,7 +743,7 @@ protected:
   int32_t mRangeOffset;
   // Device pixels relative to the showing popup's presshell's
   // root prescontext's root frame.
-  nsIntPoint mCachedMousePoint;
+  mozilla::LayoutDeviceIntPoint mCachedMousePoint;
 
   // cached modifiers
   mozilla::Modifiers mCachedModifiers;
