@@ -21,13 +21,7 @@ if [ ! -z $MOZTT_GIT_URL ] || [ ! -z $MOZTT_REVISION ]; then
   rm -rf moztt
 fi
 
-if [ ! -d "$gecko_dir/moztt" ]; then
-  moztt_url=${MOZTT_GIT_URL:=https://github.com/mozilla-b2g/moztt}
-  moztt_revision=${MOZTT_REVISION:=master}
-  tc-vcs clone $moztt_url $gecko_dir/moztt
-  tc-vcs checkout-revision \
-    $gecko_dir/moztt $moztt_url $moztt_revision $moztt_revision
-  echo "moztt repository: $moztt_url"
-  echo "moztt revision: $(tc-vcs revision $gecko_dir/moztt)"
-fi
+moztt_url=${MOZTT_GIT_URL:=https://github.com/mozilla-b2g/moztt}
+moztt_revision=${MOZTT_REVISION:=master}
 
+tc-vcs checkout $gecko_dir/moztt $moztt_url $moztt_url $moztt_revision
