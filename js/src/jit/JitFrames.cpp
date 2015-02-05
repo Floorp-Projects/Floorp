@@ -3062,6 +3062,9 @@ AssertJitStackInvariants(JSContext *cx)
                   "The rectifier frame should keep the alignment");
 
                 size_t expectedFrameSize = 0
+#if defined(JS_CODEGEN_X86)
+                    + sizeof(void *) /* frame pointer */
+#endif
                     + sizeof(Value) * (frames.callee()->nargs() + 1 /* |this| argument */ )
                     + sizeof(JitFrameLayout);
                 MOZ_RELEASE_ASSERT(frameSize >= expectedFrameSize,
