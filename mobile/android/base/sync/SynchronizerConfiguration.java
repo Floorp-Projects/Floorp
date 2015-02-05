@@ -7,8 +7,8 @@ package org.mozilla.gecko.sync;
 import java.io.IOException;
 
 import org.json.simple.parser.ParseException;
+import org.mozilla.gecko.background.common.PrefsBranch;
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.sync.SyncConfiguration.ConfigurationBranch;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 
 import android.content.SharedPreferences.Editor;
@@ -20,7 +20,7 @@ public class SynchronizerConfiguration {
   public RepositorySessionBundle remoteBundle;
   public RepositorySessionBundle localBundle;
 
-  public SynchronizerConfiguration(ConfigurationBranch config) throws NonObjectJSONException, IOException, ParseException {
+  public SynchronizerConfiguration(PrefsBranch config) throws NonObjectJSONException, IOException, ParseException {
     this.load(config);
   }
 
@@ -31,7 +31,7 @@ public class SynchronizerConfiguration {
   }
 
   // This should get partly shuffled back into SyncConfiguration, I think.
-  public void load(ConfigurationBranch config) throws NonObjectJSONException, IOException, ParseException {
+  public void load(PrefsBranch config) throws NonObjectJSONException, IOException, ParseException {
     if (config == null) {
       throw new IllegalArgumentException("config cannot be null.");
     }
@@ -51,7 +51,7 @@ public class SynchronizerConfiguration {
     Logger.debug(LOG_TAG, "Loaded SynchronizerConfiguration. syncID: " + syncID + ", remoteBundle: " + remoteBundle + ", localBundle: " + localBundle);
   }
 
-  public void persist(ConfigurationBranch config) {
+  public void persist(PrefsBranch config) {
     if (config == null) {
       throw new IllegalArgumentException("config cannot be null.");
     }
