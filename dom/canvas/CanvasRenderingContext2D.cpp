@@ -4452,13 +4452,15 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
 
   SVGImageContext svgContext(scaledImageSize, Nothing(), CurrentState().globalAlpha);
 
-  nsresult rv = image.mImgContainer->
+  auto result = image.mImgContainer->
     Draw(context, scaledImageSize,
          ImageRegion::Create(gfxRect(src.x, src.y, src.width, src.height)),
          image.mWhichFrame, GraphicsFilter::FILTER_GOOD,
          Some(svgContext), modifiedFlags);
 
-  NS_ENSURE_SUCCESS_VOID(rv);
+  if (result != DrawResult::SUCCESS) {
+    NS_WARNING("imgIContainer::Draw failed");
+  }
 }
 
 void

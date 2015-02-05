@@ -8,7 +8,10 @@
 #include "platform.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
+
+// JS
 #include "jsapi.h"
+#include "js/TrackedOptimizationInfo.h"
 
 // JSON
 #include "JSStreamWriter.h"
@@ -93,8 +96,9 @@ void ProfileEntry::log()
   // by looking through all the use points of TableTicker.cpp.
   //   mTagMarker (ProfilerMarker*) m
   //   mTagData   (const char*)  c,s
-  //   mTagPtr    (void*)        d,l,L,B (immediate backtrace), S(start-of-stack)
-  //   mTagInt    (int)          n,f,y,T (thread id)
+  //   mTagPtr    (void*)        d,l,L,B (immediate backtrace), S(start-of-stack),
+  //                             J (JIT code addr)
+  //   mTagInt    (int)          n,f,y,o (JIT optimization info index), T (thread id)
   //   mTagChar   (char)         h
   //   mTagFloat  (double)       r,t,p,R (resident memory), U (unshared memory)
   switch (mTagName) {
@@ -102,9 +106,9 @@ void ProfileEntry::log()
       LOGF("%c \"%s\"", mTagName, mTagMarker->GetMarkerName()); break;
     case 'c': case 's':
       LOGF("%c \"%s\"", mTagName, mTagData); break;
-    case 'd': case 'l': case 'L': case 'B': case 'S':
+    case 'd': case 'l': case 'L': case 'J': case 'B': case 'S':
       LOGF("%c %p", mTagName, mTagPtr); break;
-    case 'n': case 'f': case 'y': case 'T':
+    case 'n': case 'f': case 'y': case 'o': case 'T':
       LOGF("%c %d", mTagName, mTagInt); break;
     case 'h':
       LOGF("%c \'%c\'", mTagName, mTagChar); break;
@@ -245,7 +249,72 @@ void ProfileBuffer::IterateTagsForThread(IterateTagsCallback aCallback, int aThr
   }
 }
 
-void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId)
+class StreamOptimizationTypeInfoOp : public JS::ForEachTrackedOptimizationTypeInfoOp
+{
+  JSStreamWriter& mWriter;
+  bool mStartedTypeList;
+
+public:
+  explicit StreamOptimizationTypeInfoOp(JSStreamWriter& b)
+    : mWriter(b)
+    , mStartedTypeList(false)
+  { }
+
+  void readType(const char *keyedBy, const char *name,
+                const char *location, unsigned lineno) MOZ_OVERRIDE {
+    if (!mStartedTypeList) {
+      mStartedTypeList = true;
+      mWriter.BeginObject();
+        mWriter.Name("types");
+        mWriter.BeginArray();
+    }
+
+    mWriter.BeginObject();
+      mWriter.NameValue("keyedBy", keyedBy);
+      mWriter.NameValue("name", name);
+      if (location) {
+        mWriter.NameValue("location", location);
+        mWriter.NameValue("line", lineno);
+      }
+    mWriter.EndObject();
+  }
+
+  void operator()(JS::TrackedTypeSite site, const char *mirType) MOZ_OVERRIDE {
+    if (mStartedTypeList) {
+      mWriter.EndArray();
+      mStartedTypeList = false;
+    } else {
+      mWriter.BeginObject();
+    }
+
+      mWriter.NameValue("site", JS::TrackedTypeSiteString(site));
+      mWriter.NameValue("mirType", mirType);
+    mWriter.EndObject();
+  }
+};
+
+class StreamOptimizationAttemptsOp : public JS::ForEachTrackedOptimizationAttemptOp
+{
+  JSStreamWriter& mWriter;
+
+public:
+  explicit StreamOptimizationAttemptsOp(JSStreamWriter& b)
+    : mWriter(b)
+  { }
+
+  void operator()(JS::TrackedStrategy strategy, JS::TrackedOutcome outcome) MOZ_OVERRIDE {
+    mWriter.BeginObject();
+    {
+      // Stringify the reasons for now; could stream enum values in the future
+      // to save space.
+      mWriter.NameValue("strategy", JS::TrackedStrategyString(strategy));
+      mWriter.NameValue("outcome", JS::TrackedOutcomeString(outcome));
+    }
+    mWriter.EndObject();
+  }
+};
+
+void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JSRuntime* rt)
 {
   b.BeginArray();
 
@@ -367,6 +436,28 @@ void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId)
                           mEntries[readAheadPos].mTagName == 'y') {
                         b.NameValue("category", mEntries[readAheadPos].mTagInt);
                         incBy++;
+                      }
+                      readAheadPos = (framePos + incBy) % mEntrySize;
+                      if (readAheadPos != mWritePos &&
+                          mEntries[readAheadPos].mTagName == 'J') {
+                        void* pc = mEntries[readAheadPos].mTagPtr;
+                        incBy++;
+                        readAheadPos = (framePos + incBy) % mEntrySize;
+                        MOZ_ASSERT(readAheadPos != mWritePos &&
+                                   mEntries[readAheadPos].mTagName == 'o');
+                        uint32_t index = mEntries[readAheadPos].mTagInt;
+
+                        // TODOshu: cannot stream tracked optimization info if
+                        // the JS engine has already shut down when streaming.
+                        if (rt) {
+                          b.Name("opts");
+                          b.BeginArray();
+                            StreamOptimizationTypeInfoOp typeInfoOp(b);
+                            JS::ForEachTrackedOptimizationTypeInfo(rt, pc, index, typeInfoOp);
+                            StreamOptimizationAttemptsOp attemptOp(b);
+                            JS::ForEachTrackedOptimizationAttempt(rt, pc, index, attemptOp);
+                          b.EndArray();
+                        }
                       }
                     b.EndObject();
                   }
@@ -542,7 +633,7 @@ void ThreadProfile::StreamJSObject(JSStreamWriter& b)
     b.NameValue("tid", static_cast<int>(mThreadId));
 
     b.Name("samples");
-    mBuffer->StreamSamplesToJSObject(b, mThreadId);
+    mBuffer->StreamSamplesToJSObject(b, mThreadId, mPseudoStack->mRuntime);
 
     b.Name("markers");
     mBuffer->StreamMarkersToJSObject(b, mThreadId);

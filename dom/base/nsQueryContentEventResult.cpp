@@ -147,7 +147,7 @@ nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
   }
 
   // Convert the top widget related coordinates to the given widget's.
-  nsIntPoint offset =
+  LayoutDeviceIntPoint offset =
     aWidget->WidgetToScreenOffset() - topWidget->WidgetToScreenOffset();
   mRect.MoveBy(-offset);
 }
