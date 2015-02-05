@@ -153,7 +153,7 @@ GeckoTouchDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp)
 void
 GeckoTouchDispatcher::NotifyTouch(MultiTouchInput& aTouch, TimeStamp aEventTime)
 {
-  if (aTouch.mType == MultiTouchInput::MULTITOUCH_START && mCompositorVsyncObserver) {
+  if (mCompositorVsyncObserver) {
     mCompositorVsyncObserver->SetNeedsComposite(true);
   }
 
