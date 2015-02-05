@@ -19,6 +19,7 @@
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/LayerTransactionParent.h"
 #include "nsContentUtils.h"
+#include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsIObserver.h"
 #include "nsSubDocumentFrame.h"
@@ -148,6 +149,7 @@ public:
       return;
     }
     if (mRenderFrame) {
+      mRenderFrame->TakeFocusForClick();
       TabParent* browser = TabParent::GetFrom(mRenderFrame->Manager());
       browser->HandleSingleTap(aPoint, aModifiers, aGuid);
     }
@@ -593,6 +595,25 @@ RenderFrameParent::GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextur
   } else {
     *aTextureFactoryIdentifier = TextureFactoryIdentifier();
   }
+}
+
+void
+RenderFrameParent::TakeFocusForClick()
+{
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return;
+  }
+  nsCOMPtr<nsIContent> owner = mFrameLoader->GetOwnerContent();
+  if (!owner) {
+    return;
+  }
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(owner);
+  if (!element) {
+    return;
+  }
+  fm->SetFocus(element, nsIFocusManager::FLAG_BYMOUSE |
+                        nsIFocusManager::FLAG_NOSCROLL);
 }
 
 }  // namespace layout
