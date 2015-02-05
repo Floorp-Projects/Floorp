@@ -118,7 +118,6 @@ nsAutoRollup::~nsAutoRollup()
 nsBaseWidget::nsBaseWidget()
 : mWidgetListener(nullptr)
 , mAttachedWidgetListener(nullptr)
-, mContext(nullptr)
 , mCompositorVsyncDispatcher(nullptr)
 , mCursor(eCursor_standard)
 , mUpdateCursor(true)
@@ -246,7 +245,6 @@ nsBaseWidget::~nsBaseWidget()
   printf("WIDGETS- = %d\n", gNumWidgets);
 #endif
 
-  NS_IF_RELEASE(mContext);
   delete mOriginalBounds;
 
   // Can have base widgets that are things like tooltips which don't have CompositorVsyncDispatchers
@@ -274,16 +272,6 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
   }
 
   // keep a reference to the device context
-  if (aContext) {
-    mContext = aContext;
-    NS_ADDREF(mContext);
-  }
-  else {
-    mContext = new nsDeviceContext();
-    NS_ADDREF(mContext);
-    mContext->Init(nullptr);
-  }
-
   if (nullptr != aInitData) {
     mWindowType = aInitData->mWindowType;
     mBorderStyle = aInitData->mBorderStyle;
@@ -365,14 +353,6 @@ nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents,
                "Can't attach to window of that type");
 
   mUseAttachedEvents = aUseAttachedEvents;
-
-  if (aContext) {
-    if (mContext) {
-      NS_IF_RELEASE(mContext);
-    }
-    mContext = aContext;
-    NS_ADDREF(mContext);
-  }
 
   return NS_OK;
 }
@@ -1134,9 +1114,6 @@ TemporaryRef<mozilla::gfx::DrawTarget> nsBaseWidget::StartRemoteDrawing()
 //-------------------------------------------------------------------------
 void nsBaseWidget::OnDestroy()
 {
-  // release references to device context and app shell
-  NS_IF_RELEASE(mContext);
-
   if (mTextEventDispatcher) {
     mTextEventDispatcher->OnDestroyWidget();
     // Don't release it until this widget actually released because after this
