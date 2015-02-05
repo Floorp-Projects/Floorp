@@ -22,69 +22,59 @@ describe("loop.shared.utils", function() {
     sandbox.restore();
   });
 
-  describe("Helper", function() {
-    var helper;
+  it("should detect iOS", function() {
+    expect(sharedUtils.isIOS("iPad")).eql(true);
+    expect(sharedUtils.isIOS("iPod")).eql(true);
+    expect(sharedUtils.isIOS("iPhone")).eql(true);
+    expect(sharedUtils.isIOS("iPhone Simulator")).eql(true);
+  });
 
-    beforeEach(function() {
-      helper = new sharedUtils.Helper();
+  it("shouldn't detect iOS with other platforms", function() {
+    expect(sharedUtils.isIOS("MacIntel")).eql(false);
+  });
+
+  describe("#isFirefox", function() {
+    it("should detect Firefox", function() {
+      expect(sharedUtils.isFirefox("Firefox")).eql(true);
+      expect(sharedUtils.isFirefox("Gecko/Firefox")).eql(true);
+      expect(sharedUtils.isFirefox("Firefox/Gecko")).eql(true);
+      expect(sharedUtils.isFirefox("Gecko/Firefox/Chuck Norris")).eql(true);
     });
 
-    describe("#isIOS", function() {
-      it("should detect iOS", function() {
-        expect(helper.isIOS("iPad")).eql(true);
-        expect(helper.isIOS("iPod")).eql(true);
-        expect(helper.isIOS("iPhone")).eql(true);
-        expect(helper.isIOS("iPhone Simulator")).eql(true);
+    it("shouldn't detect Firefox with other platforms", function() {
+      expect(sharedUtils.isFirefox("Opera")).eql(false);
+    });
+  });
+
+  describe("#isFirefoxOS", function() {
+    describe("without mozActivities", function() {
+      it("shouldn't detect FirefoxOS on mobile platform", function() {
+        expect(sharedUtils.isFirefoxOS("mobi")).eql(false);
       });
 
-      it("shouldn't detect iOS with other platforms", function() {
-        expect(helper.isIOS("MacIntel")).eql(false);
+      it("shouldn't detect FirefoxOS on non mobile platform", function() {
+        expect(sharedUtils.isFirefoxOS("whatever")).eql(false);
       });
     });
 
-    describe("#isFirefox", function() {
-      it("should detect Firefox", function() {
-        expect(helper.isFirefox("Firefox")).eql(true);
-        expect(helper.isFirefox("Gecko/Firefox")).eql(true);
-        expect(helper.isFirefox("Firefox/Gecko")).eql(true);
-        expect(helper.isFirefox("Gecko/Firefox/Chuck Norris")).eql(true);
+    describe("with mozActivities", function() {
+      var realMozActivity;
+
+      before(function() {
+        realMozActivity = window.MozActivity;
+        window.MozActivity = {};
       });
 
-      it("shouldn't detect Firefox with other platforms", function() {
-        expect(helper.isFirefox("Opera")).eql(false);
-      });
-    });
-
-    describe("#isFirefoxOS", function() {
-      describe("without mozActivities", function() {
-        it("shouldn't detect FirefoxOS on mobile platform", function() {
-          expect(helper.isFirefoxOS("mobi")).eql(false);
-        });
-
-        it("shouldn't detect FirefoxOS on non mobile platform", function() {
-          expect(helper.isFirefoxOS("whatever")).eql(false);
-        });
+      after(function() {
+        window.MozActivity = realMozActivity;
       });
 
-      describe("with mozActivities", function() {
-        var realMozActivity;
+      it("should detect FirefoxOS on mobile platform", function() {
+        expect(sharedUtils.isFirefoxOS("mobi")).eql(true);
+      });
 
-        before(function() {
-          realMozActivity = window.MozActivity;
-          window.MozActivity = {};
-        });
-
-        after(function() {
-          window.MozActivity = realMozActivity;
-        });
-
-        it("should detect FirefoxOS on mobile platform", function() {
-          expect(helper.isFirefoxOS("mobi")).eql(true);
-        });
-
-        it("shouldn't detect FirefoxOS on non mobile platform", function() {
-          expect(helper.isFirefoxOS("whatever")).eql(false);
-        });
+      it("shouldn't detect FirefoxOS on non mobile platform", function() {
+        expect(sharedUtils.isFirefoxOS("whatever")).eql(false);
       });
     });
   });

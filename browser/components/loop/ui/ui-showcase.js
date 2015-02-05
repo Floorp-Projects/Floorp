@@ -497,10 +497,10 @@
 
           React.createElement(Section, {name: "CallUrlExpiredView"}, 
             React.createElement(Example, {summary: "Firefox User"}, 
-              React.createElement(CallUrlExpiredView, {helper: {isFirefox: returnTrue}})
+              React.createElement(CallUrlExpiredView, {isFirefox: true})
             ), 
             React.createElement(Example, {summary: "Non-Firefox User"}, 
-              React.createElement(CallUrlExpiredView, {helper: {isFirefox: returnFalse}})
+              React.createElement(CallUrlExpiredView, {isFirefox: false})
             )
           ), 
 
@@ -547,7 +547,7 @@
           React.createElement(Section, {name: "UnsupportedBrowserView"}, 
             React.createElement(Example, {summary: "Standalone Unsupported Browser"}, 
               React.createElement("div", {className: "standalone"}, 
-                React.createElement(UnsupportedBrowserView, {helper: {isFirefox: returnFalse}})
+                React.createElement(UnsupportedBrowserView, {isFirefox: false})
               )
             )
           ), 
@@ -591,7 +591,7 @@
                   dispatcher: dispatcher, 
                   activeRoomStore: activeRoomStore, 
                   roomState: ROOM_STATES.READY, 
-                  helper: {isFirefox: returnTrue}})
+                  isFirefox: true})
               )
             ), 
 
@@ -601,7 +601,7 @@
                   dispatcher: dispatcher, 
                   activeRoomStore: activeRoomStore, 
                   roomState: ROOM_STATES.JOINED, 
-                  helper: {isFirefox: returnTrue}})
+                  isFirefox: true})
               )
             ), 
 
@@ -611,7 +611,7 @@
                   dispatcher: dispatcher, 
                   activeRoomStore: activeRoomStore, 
                   roomState: ROOM_STATES.HAS_PARTICIPANTS, 
-                  helper: {isFirefox: returnTrue}})
+                  isFirefox: true})
               )
             ), 
 
@@ -621,7 +621,7 @@
                   dispatcher: dispatcher, 
                   activeRoomStore: activeRoomStore, 
                   roomState: ROOM_STATES.FULL, 
-                  helper: {isFirefox: returnTrue}})
+                  isFirefox: true})
               )
             ), 
 
@@ -631,7 +631,7 @@
                   dispatcher: dispatcher, 
                   activeRoomStore: activeRoomStore, 
                   roomState: ROOM_STATES.FULL, 
-                  helper: {isFirefox: returnFalse}})
+                  isFirefox: false})
               )
             ), 
 
@@ -642,7 +642,7 @@
                   activeRoomStore: activeRoomStore, 
                   feedbackStore: feedbackStore, 
                   roomState: ROOM_STATES.ENDED, 
-                  helper: {isFirefox: returnFalse}})
+                  isFirefox: false})
               )
             ), 
 
@@ -652,7 +652,7 @@
                   dispatcher: dispatcher, 
                   activeRoomStore: activeRoomStore, 
                   roomState: ROOM_STATES.FAILED, 
-                  helper: {isFirefox: returnFalse}})
+                  isFirefox: false})
               )
             )
           ), 
