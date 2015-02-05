@@ -351,6 +351,10 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
   @WebRTCJNITarget
   private synchronized boolean stopCapture() {
     Log.d(TAG, "stopCapture");
+    // See comment at the top of startCaptureOnCameraThread
+    if (cameraThreadHandler == null) {
+      return true;
+    }
     final Exchanger<Boolean> result = new Exchanger<Boolean>();
     cameraThreadHandler.post(new Runnable() {
         @Override public void run() {
