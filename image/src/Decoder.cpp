@@ -266,6 +266,10 @@ Decoder::CompleteDecode()
     if (!HasDecoderError() && GetCompleteFrameCount() > 0) {
       // We're usable, so do exactly what we should have when the decoder
       // completed.
+
+      // Not writing to the entire frame may have left us transparent.
+      PostHasTransparency();
+
       if (mInFrame) {
         PostFrameStop();
       }
