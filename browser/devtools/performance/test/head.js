@@ -244,7 +244,7 @@ function* startRecording(panel) {
   let clicked = panel.panelWin.PerformanceView.once(win.EVENTS.UI_START_RECORDING);
   let willStart = panel.panelWin.PerformanceController.once(win.EVENTS.RECORDING_WILL_START);
   let hasStarted = panel.panelWin.PerformanceController.once(win.EVENTS.RECORDING_STARTED);
-  let button = win.$("#record-button");
+  let button = win.$("#main-record-button");
 
   ok(!button.hasAttribute("checked"),
     "The record button should not be checked yet.");
@@ -275,7 +275,7 @@ function* stopRecording(panel) {
   let clicked = panel.panelWin.PerformanceView.once(win.EVENTS.UI_STOP_RECORDING);
   let willStop = panel.panelWin.PerformanceController.once(win.EVENTS.RECORDING_WILL_STOP);
   let hasStopped = panel.panelWin.PerformanceController.once(win.EVENTS.RECORDING_STOPPED);
-  let button = win.$("#record-button");
+  let button = win.$("#main-record-button");
 
   ok(button.hasAttribute("checked"),
     "The record button should already be checked.");
