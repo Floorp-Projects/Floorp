@@ -94,7 +94,6 @@ public:
 
 private:
   friend class DecodeWorker;
-  friend class NotifyDecodeCompleteWorker;
 
   DecodePool();
   virtual ~DecodePool();
