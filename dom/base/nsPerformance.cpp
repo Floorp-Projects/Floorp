@@ -24,12 +24,6 @@
 #include "mozilla/dom/PerformanceNavigationBinding.h"
 #include "mozilla/TimeStamp.h"
 
-#ifdef MOZ_WIDGET_GONK
-#define PERFLOG(msg, args...)  __android_log_print(ANDROID_LOG_INFO, "PerformanceTiming", msg, ## args)
-#else
-#define PERFLOG(msg, args...) printf_stderr(msg, ## args)
-#endif
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -595,7 +589,7 @@ nsPerformance::AddEntry(nsIHttpChannel* channel,
       initiatorType = NS_LITERAL_STRING("other");
     }
     performanceEntry->SetInitiatorType(initiatorType);
-    InsertPerformanceEntry(performanceEntry, false);
+    InsertPerformanceEntry(performanceEntry);
   }
 }
 
@@ -620,29 +614,13 @@ nsPerformance::PerformanceEntryComparator::LessThan(
 }
 
 void
-nsPerformance::InsertPerformanceEntry(PerformanceEntry* aEntry,
-                                      bool aShouldPrint)
+nsPerformance::InsertPerformanceEntry(PerformanceEntry* aEntry)
 {
   MOZ_ASSERT(aEntry);
   MOZ_ASSERT(mEntries.Length() < mPrimaryBufferSize);
   if (mEntries.Length() == mPrimaryBufferSize) {
     NS_WARNING("Performance Entry buffer size maximum reached!");
     return;
-  }
-  if (aShouldPrint && nsContentUtils::IsUserTimingLoggingEnabled()) {
-    nsAutoCString uri;
-    nsresult rv = mWindow->GetDocumentURI()->GetHost(uri);
-    if(NS_FAILED(rv)) {
-      // If we have no URI, just put in "none".
-      uri.AssignLiteral("none");
-    }
-    PERFLOG("Performance Entry: %s|%s|%s|%f|%f|%lld\n",
-            uri.get(),
-            NS_ConvertUTF16toUTF8(aEntry->GetEntryType()).get(),
-            NS_ConvertUTF16toUTF8(aEntry->GetName()).get(),
-            aEntry->StartTime(),
-            aEntry->Duration(),
-            static_cast<uint64_t>(PR_Now() / PR_USEC_PER_MSEC));
   }
   mEntries.InsertElementSorted(aEntry,
                                PerformanceEntryComparator());
@@ -667,7 +645,7 @@ nsPerformance::Mark(const nsAString& aName, ErrorResult& aRv)
   }
   nsRefPtr<PerformanceMark> performanceMark =
     new PerformanceMark(this, aName);
-  InsertPerformanceEntry(performanceMark, true);
+  InsertPerformanceEntry(performanceMark);
 }
 
 void
@@ -744,7 +722,7 @@ nsPerformance::Measure(const nsAString& aName,
   }
   nsRefPtr<PerformanceMeasure> performanceMeasure =
     new PerformanceMeasure(this, aName, startTime, endTime);
-  InsertPerformanceEntry(performanceMeasure, true);
+  InsertPerformanceEntry(performanceMeasure);
 }
 
 void
