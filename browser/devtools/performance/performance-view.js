@@ -32,20 +32,27 @@ let PerformanceView = {
   initialize: function () {
     this._recordButton = $("#record-button");
     this._importButton = $("#import-button");
+    this._clearButton = $("#clear-button");
 
     this._onRecordButtonClick = this._onRecordButtonClick.bind(this);
     this._onImportButtonClick = this._onImportButtonClick.bind(this);
+    this._onClearButtonClick = this._onClearButtonClick.bind(this);
     this._lockRecordButton = this._lockRecordButton.bind(this);
     this._unlockRecordButton = this._unlockRecordButton.bind(this);
     this._onRecordingSelected = this._onRecordingSelected.bind(this);
     this._onRecordingStopped = this._onRecordingStopped.bind(this);
+    this._onRecordingWillStop = this._onRecordingWillStop.bind(this);
+    this._onRecordingWillStart = this._onRecordingWillStart.bind(this);
 
     for (let button of $$(".record-button")) {
       button.addEventListener("click", this._onRecordButtonClick);
     }
     this._importButton.addEventListener("click", this._onImportButtonClick);
+    this._clearButton.addEventListener("click", this._onClearButtonClick);
 
     // Bind to controller events to unlock the record button
+    PerformanceController.on(EVENTS.RECORDING_WILL_START, this._onRecordingWillStart);
+    PerformanceController.on(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._unlockRecordButton);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
@@ -69,6 +76,8 @@ let PerformanceView = {
     }
     this._importButton.removeEventListener("click", this._onImportButtonClick);
 
+    PerformanceController.off(EVENTS.RECORDING_WILL_START, this._onRecordingWillStart);
+    PerformanceController.off(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._unlockRecordButton);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
@@ -120,6 +129,22 @@ let PerformanceView = {
   },
 
   /**
+   * Fired when a recording is starting, but not yet completed.
+   */
+  _onRecordingWillStart: function () {
+    this._lockRecordButton();
+    this._recordButton.setAttribute("checked", "true");
+  },
+
+  /**
+   * Fired when a recording is stopping, but not yet completed.
+   */
+  _onRecordingWillStop: function () {
+    this._lockRecordButton();
+    this._recordButton.removeAttribute("checked");
+  },
+
+  /**
    * When a recording is complete.
    */
   _onRecordingStopped: function (_, recording) {
@@ -134,16 +159,19 @@ let PerformanceView = {
   },
 
   /**
+   * Handler for clicking the clear button.
+   */
+  _onClearButtonClick: function (e) {
+    this.emit(EVENTS.UI_CLEAR_RECORDINGS);
+  },
+
+  /**
    * Handler for clicking the record button.
    */
   _onRecordButtonClick: function (e) {
     if (this._recordButton.hasAttribute("checked")) {
-      this._recordButton.removeAttribute("checked");
-      this._lockRecordButton();
       this.emit(EVENTS.UI_STOP_RECORDING);
     } else {
-      this._recordButton.setAttribute("checked", "true");
-      this._lockRecordButton();
       this.emit(EVENTS.UI_START_RECORDING);
     }
   },
@@ -166,7 +194,9 @@ let PerformanceView = {
    * Fired when a recording is selected. Used to toggle the profiler view state.
    */
   _onRecordingSelected: function (_, recording) {
-    if (recording.isRecording()) {
+    if (!recording) {
+      this.setState("empty");
+    } else if (recording.isRecording()) {
       this.setState("recording");
     } else {
       this.setState("recorded");

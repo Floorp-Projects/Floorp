@@ -64,6 +64,9 @@ const EVENTS = {
   // when a recording model is selected
   RECORDING_SELECTED: "Performance:RecordingSelected",
 
+  // Emitted by the PerformanceView on clear button click
+  UI_CLEAR_RECORDINGS: "Performance:UI:ClearRecordings",
+
   // Emitted by the PerformanceView on record button click
   UI_START_RECORDING: "Performance:UI:StartRecording",
   UI_STOP_RECORDING: "Performance:UI:StopRecording",
@@ -78,6 +81,9 @@ const EVENTS = {
   RECORDING_STOPPED: "Performance:RecordingStopped",
   RECORDING_WILL_START: "Performance:RecordingWillStart",
   RECORDING_WILL_STOP: "Performance:RecordingWillStop",
+
+  // When recordings have been cleared out
+  RECORDINGS_CLEARED: "Performance:RecordingsCleared",
 
   // When a recording is imported or exported via the PerformanceController
   RECORDING_IMPORTED: "Performance:RecordingImported",
@@ -162,6 +168,7 @@ let PerformanceController = {
     this.stopRecording = this.stopRecording.bind(this);
     this.importRecording = this.importRecording.bind(this);
     this.exportRecording = this.exportRecording.bind(this);
+    this.clearRecordings = this.clearRecordings.bind(this);
     this._onTimelineData = this._onTimelineData.bind(this);
     this._onRecordingSelectFromView = this._onRecordingSelectFromView.bind(this);
     this._onPrefChanged = this._onPrefChanged.bind(this);
@@ -170,6 +177,7 @@ let PerformanceController = {
     PerformanceView.on(EVENTS.UI_START_RECORDING, this.startRecording);
     PerformanceView.on(EVENTS.UI_STOP_RECORDING, this.stopRecording);
     PerformanceView.on(EVENTS.UI_IMPORT_RECORDING, this.importRecording);
+    PerformanceView.on(EVENTS.UI_CLEAR_RECORDINGS, this.clearRecordings);
     RecordingsView.on(EVENTS.UI_EXPORT_RECORDING, this.exportRecording);
     RecordingsView.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelectFromView);
 
@@ -188,6 +196,7 @@ let PerformanceController = {
     PerformanceView.off(EVENTS.UI_START_RECORDING, this.startRecording);
     PerformanceView.off(EVENTS.UI_STOP_RECORDING, this.stopRecording);
     PerformanceView.off(EVENTS.UI_IMPORT_RECORDING, this.importRecording);
+    PerformanceView.off(EVENTS.UI_CLEAR_RECORDINGS, this.clearRecordings);
     RecordingsView.off(EVENTS.UI_EXPORT_RECORDING, this.exportRecording);
     RecordingsView.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelectFromView);
 
@@ -250,6 +259,22 @@ let PerformanceController = {
   exportRecording: Task.async(function*(_, recording, file) {
     yield recording.exportRecording(file);
     this.emit(EVENTS.RECORDING_EXPORTED, recording);
+  }),
+
+  /**
+   * Clears all recordings from the list as well as the current recording.
+   * Emits `EVENTS.RECORDINGS_CLEARED` when complete so other components can clean up.
+   */
+  clearRecordings: Task.async(function* () {
+    let latest = this._getLatestRecording();
+
+    if (latest && latest.isRecording()) {
+      yield this.stopRecording();
+    }
+
+    this._recordings.length = 0;
+    this.setCurrentRecording(null);
+    this.emit(EVENTS.RECORDINGS_CLEARED);
   }),
 
   /**
