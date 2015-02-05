@@ -95,6 +95,13 @@ public:
                            const CSSToLayoutDeviceScale& aScale,
                            float aPresShellResolution);
 
+    /* Convenience function for applying a callback transform to all touch
+     * points of a touch event. */
+    static void ApplyCallbackTransform(WidgetTouchEvent& aEvent,
+                                       const ScrollableLayerGuid& aGuid,
+                                       const CSSToLayoutDeviceScale& aScale,
+                                       float aPresShellResolution);
+
     /* Dispatch a widget event via the widget stored in the event, if any.
      * In a child process, allows the TabParent event-capture mechanism to
      * intercept the event. */

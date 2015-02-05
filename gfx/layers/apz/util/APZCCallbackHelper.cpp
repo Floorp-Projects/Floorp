@@ -360,6 +360,18 @@ APZCCallbackHelper::ApplyCallbackTransform(const LayoutDeviceIntPoint& aPoint,
     return gfx::RoundedToInt(point);
 }
 
+void
+APZCCallbackHelper::ApplyCallbackTransform(WidgetTouchEvent& aEvent,
+                                           const ScrollableLayerGuid& aGuid,
+                                           const CSSToLayoutDeviceScale& aScale,
+                                           float aPresShellResolution)
+{
+  for (size_t i = 0; i < aEvent.touches.Length(); i++) {
+    aEvent.touches[i]->mRefPoint = ApplyCallbackTransform(
+        aEvent.touches[i]->mRefPoint, aGuid, aScale, aPresShellResolution);
+  }
+}
+
 nsEventStatus
 APZCCallbackHelper::DispatchWidgetEvent(WidgetGUIEvent& aEvent)
 {
