@@ -10,12 +10,12 @@
     ok(true, "documents sandboxed with allow-scripts should be able to run inline scripts");
   }
 </script>
-<script src='file_csp_sandbox_fail.js'></script>
+<script src='file_iframe_sandbox_pass.js'></script>
 <body onLoad='ok(true, "documents sandboxed with allow-scripts should be able to run script from event listeners");doStuff();'>
   I am sandboxed but with only inline "allow-scripts"
 
  <!-- sandbox="allow-scripts" -->
- <!-- Content-Security-Policy: default-src 'none'; script-src 'unsafe-inline' -->
+ <!-- Content-Security-Policy: default-src 'none' 'unsafe-inline'-->
 
  <!-- these should be stopped by CSP -->
  <img src="/tests/dom/base/test/csp/file_CSP.sjs?testid=img5_bad&type=img/png" />
