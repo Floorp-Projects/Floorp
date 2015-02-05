@@ -251,9 +251,8 @@ static uint32_t CountNewlinesInXPLength(nsIContent* aContent,
     return 0;
   }
   // For automated tests, we should abort on debug build.
-  NS_ABORT_IF_FALSE(
-    (aXPLength == UINT32_MAX || aXPLength <= text->GetLength()),
-    "aXPLength is out-of-bounds");
+  MOZ_ASSERT(aXPLength == UINT32_MAX || aXPLength <= text->GetLength(),
+             "aXPLength is out-of-bounds");
   const uint32_t length = std::min(aXPLength, text->GetLength());
   uint32_t newlines = 0;
   for (uint32_t i = 0; i < length; ++i) {
@@ -283,7 +282,7 @@ static uint32_t CountNewlinesInNativeLength(nsIContent* aContent,
        i < xpLength && nativeOffset < aNativeLength;
        ++i, ++nativeOffset) {
     // For automated tests, we should abort on debug build.
-    NS_ABORT_IF_FALSE(i < text->GetLength(), "i is out-of-bounds");
+    MOZ_ASSERT(i < text->GetLength(), "i is out-of-bounds");
     if (text->CharAt(i) == '\n') {
       ++newlines;
       ++nativeOffset;

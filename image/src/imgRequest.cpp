@@ -104,11 +104,11 @@ nsresult imgRequest::Init(nsIURI *aURI,
 
   LOG_FUNC(GetImgLog(), "imgRequest::Init");
 
-  NS_ABORT_IF_FALSE(!mImage, "Multiple calls to init");
-  NS_ABORT_IF_FALSE(aURI, "No uri");
-  NS_ABORT_IF_FALSE(aCurrentURI, "No current uri");
-  NS_ABORT_IF_FALSE(aRequest, "No request");
-  NS_ABORT_IF_FALSE(aChannel, "No channel");
+  MOZ_ASSERT(!mImage, "Multiple calls to init");
+  MOZ_ASSERT(aURI, "No uri");
+  MOZ_ASSERT(aCurrentURI, "No current uri");
+  MOZ_ASSERT(aRequest, "No request");
+  MOZ_ASSERT(aChannel, "No channel");
 
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
 
@@ -145,12 +145,12 @@ already_AddRefed<ProgressTracker>
 imgRequest::GetProgressTracker()
 {
   if (mImage) {
-    NS_ABORT_IF_FALSE(!mProgressTracker,
-                      "Should have given mProgressTracker to mImage");
+    MOZ_ASSERT(!mProgressTracker,
+               "Should have given mProgressTracker to mImage");
     return mImage->GetProgressTracker();
   } else {
-    NS_ABORT_IF_FALSE(mProgressTracker,
-                      "Should have mProgressTracker until we create mImage");
+    MOZ_ASSERT(mProgressTracker,
+               "Should have mProgressTracker until we create mImage");
     nsRefPtr<ProgressTracker> progressTracker = mProgressTracker;
     MOZ_ASSERT(progressTracker);
     return progressTracker.forget();
@@ -183,7 +183,7 @@ void imgRequest::AddProxy(imgRequestProxy *proxy)
   // proxies.
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
   if (progressTracker->ObserverCount() == 0) {
-    NS_ABORT_IF_FALSE(mURI, "Trying to SetHasProxies without key uri.");
+    MOZ_ASSERT(mURI, "Trying to SetHasProxies without key uri.");
     if (mLoader) {
       mLoader->SetHasProxies(this);
     }
@@ -214,7 +214,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
     // been cancelled and thus removed from the cache, tell the image loader so
     // we can be evicted from the cache.
     if (mCacheEntry) {
-      NS_ABORT_IF_FALSE(mURI, "Removing last observer without key uri.");
+      MOZ_ASSERT(mURI, "Removing last observer without key uri.");
 
       if (mLoader) {
         mLoader->SetHasNoProxies(this, mCacheEntry);
@@ -644,12 +644,12 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   if (mpchan) {
     mIsMultiPartChannel = true;
   } else {
-    NS_ABORT_IF_FALSE(!mIsMultiPartChannel, "Something went wrong");
+    MOZ_ASSERT(!mIsMultiPartChannel, "Something went wrong");
   }
 
   // If we're not multipart, we shouldn't have an image yet
-  NS_ABORT_IF_FALSE(mIsMultiPartChannel || !mImage,
-                    "Already have an image for non-multipart request");
+  MOZ_ASSERT(mIsMultiPartChannel || !mImage,
+             "Already have an image for non-multipart request");
 
   /*
    * If mRequest is null here, then we need to set it so that we'll be able to

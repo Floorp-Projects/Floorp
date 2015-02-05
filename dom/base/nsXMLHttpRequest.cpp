@@ -321,7 +321,7 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
     Abort();
   }
 
-  NS_ABORT_IF_FALSE(!(mState & XML_HTTP_REQUEST_SYNCLOOPING), "we rather crash than hang");
+  MOZ_ASSERT(!(mState & XML_HTTP_REQUEST_SYNCLOOPING), "we rather crash than hang");
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
 
   mResultJSON.setUndefined();
@@ -1915,7 +1915,7 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request,
 {
   NS_ENSURE_ARG_POINTER(inStr);
 
-  NS_ABORT_IF_FALSE(mContext.get() == ctxt,"start context different from OnDataAvailable context");
+  MOZ_ASSERT(mContext.get() == ctxt,"start context different from OnDataAvailable context");
 
   mProgressSinceLastProgressEvent = true;
 
@@ -3236,8 +3236,8 @@ nsXMLHttpRequest::SetTimeout(uint32_t aTimeout, ErrorResult& aRv)
 void
 nsXMLHttpRequest::StartTimeoutTimer()
 {
-  NS_ABORT_IF_FALSE(mRequestSentTime,
-                    "StartTimeoutTimer mustn't be called before the request was sent!");
+  MOZ_ASSERT(mRequestSentTime,
+             "StartTimeoutTimer mustn't be called before the request was sent!");
   if (mState & XML_HTTP_REQUEST_DONE) {
     // do nothing!
     return;

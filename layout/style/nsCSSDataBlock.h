@@ -93,8 +93,8 @@ public:
 
 private:
     void* operator new(size_t aBaseSize, uint32_t aNumProps) {
-        NS_ABORT_IF_FALSE(aBaseSize == sizeof(nsCSSCompressedDataBlock),
-                          "unexpected size for nsCSSCompressedDataBlock");
+        MOZ_ASSERT(aBaseSize == sizeof(nsCSSCompressedDataBlock),
+                   "unexpected size for nsCSSCompressedDataBlock");
         return ::operator new(aBaseSize + DataSize(aNumProps));
     }
 
@@ -131,14 +131,14 @@ private:
     }
 
     nsCSSValue* ValueAtIndex(uint32_t i) const {
-        NS_ABORT_IF_FALSE(i < mNumProps, "value index out of range");
+        MOZ_ASSERT(i < mNumProps, "value index out of range");
         return Values() + i;
     }
 
     nsCSSProperty PropertyAtIndex(uint32_t i) const {
-        NS_ABORT_IF_FALSE(i < mNumProps, "property index out of range");
+        MOZ_ASSERT(i < mNumProps, "property index out of range");
         nsCSSProperty prop = (nsCSSProperty)CompressedProperties()[i];
-        NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(prop), "out of range");
+        MOZ_ASSERT(!nsCSSProps::IsShorthand(prop), "out of range");
         return prop;
     }
 
@@ -151,7 +151,7 @@ private:
     }
 
     void SetPropertyAtIndex(uint32_t i, nsCSSProperty aProperty) {
-        NS_ABORT_IF_FALSE(i < mNumProps, "set property index out of range");
+        MOZ_ASSERT(i < mNumProps, "set property index out of range");
         CompressedProperties()[i] = (CompressedCSSProperty)aProperty;
     }
 
@@ -313,15 +313,15 @@ private:
      * property |aProperty|.
      */
     nsCSSValue* PropertyAt(nsCSSProperty aProperty) {
-        NS_ABORT_IF_FALSE(0 <= aProperty &&
-                          aProperty < eCSSProperty_COUNT_no_shorthands,
-                          "property out of range");
+        MOZ_ASSERT(0 <= aProperty &&
+                   aProperty < eCSSProperty_COUNT_no_shorthands,
+                   "property out of range");
         return &mValues[aProperty];
     }
     const nsCSSValue* PropertyAt(nsCSSProperty aProperty) const {
-        NS_ABORT_IF_FALSE(0 <= aProperty &&
-                          aProperty < eCSSProperty_COUNT_no_shorthands,
-                          "property out of range");
+        MOZ_ASSERT(0 <= aProperty &&
+                   aProperty < eCSSProperty_COUNT_no_shorthands,
+                   "property out of range");
         return &mValues[aProperty];
     }
 

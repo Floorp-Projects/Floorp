@@ -985,8 +985,8 @@ nsImageMap::HandleEvent(nsIDOMEvent* aEvent)
   nsAutoString eventType;
   aEvent->GetType(eventType);
   bool focus = eventType.EqualsLiteral("focus");
-  NS_ABORT_IF_FALSE(focus == !eventType.EqualsLiteral("blur"),
-                    "Unexpected event type");
+  MOZ_ASSERT(focus == !eventType.EqualsLiteral("blur"),
+             "Unexpected event type");
 
   //Set which one of our areas changed focus
   nsCOMPtr<nsIContent> targetContent = do_QueryInterface(
