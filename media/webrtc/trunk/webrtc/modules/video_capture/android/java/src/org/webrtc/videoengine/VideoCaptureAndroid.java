@@ -247,7 +247,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
       }
 
       Log.d(TAG, "Camera orientation: " + info.orientation +
-          " .Device orientation: " + getDeviceOrientation());
+          ". Device orientation: " + getDeviceOrientation());
       Camera.Parameters parameters = camera.getParameters();
       // This wasn't added until ICS MR1.
       if(android.os.Build.VERSION.SDK_INT>14) {
@@ -264,7 +264,6 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
             parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
         }
       }
-      parameters.setPictureSize(width, height);
       parameters.setPreviewSize(width, height);
 
       // Check if requested fps range is supported by camera,
@@ -305,6 +304,14 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
       int format = ImageFormat.NV21;
       parameters.setPreviewFormat(format);
       camera.setParameters(parameters);
+      try {
+          // See https://code.google.com/p/webrtc/issues/detail?id=4197
+          parameters.setPictureSize(width, height);
+          camera.setParameters(parameters);
+      } catch(RuntimeException e) {
+          Log.d(TAG, "Failed to apply Nexus 7 workaround");
+      }
+
       int bufSize = width * height * ImageFormat.getBitsPerPixel(format) / 8;
       for (int i = 0; i < numCaptureBuffers; i++) {
         camera.addCallbackBuffer(new byte[bufSize]);
