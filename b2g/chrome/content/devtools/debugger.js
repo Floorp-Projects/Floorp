@@ -56,10 +56,10 @@ let RemoteDebugger = {
     this._listen();
 
     this._promptingForAllow = new Promise(resolve => {
-      this._handleAllowResult = allowed => {
+      this._handleAllowResult = detail => {
         this._handleAllowResult = null;
         this._promptingForAllow = null;
-        if (allowed) {
+        if (detail.value) {
           resolve(DebuggerServer.AuthenticationResult.ALLOW);
         } else {
           resolve(DebuggerServer.AuthenticationResult.DENY);
@@ -75,6 +75,72 @@ let RemoteDebugger = {
     return this._promptingForAllow;
   },
 
+  /**
+   * During OOB_CERT authentication, the user must transfer some data through some
+   * out of band mechanism from the client to the server to authenticate the
+   * devices.
+   *
+   * This implementation instructs Gaia to continually capture images which are
+   * passed back here and run through a QR decoder.
+   *
+   * @return An object containing:
+   *         * sha256: hash(ClientCert)
+   *         * k     : K(random 128-bit number)
+   *         A promise that will be resolved to the above is also allowed.
+   */
+  receiveOOB() {
+    if (this._receivingOOB) {
+      return this._receivingOOB;
+    }
+    this._listen();
+
+    const QR = devtools.require("devtools/toolkit/qrcode/index");
+    this._receivingOOB = new Promise((resolve, reject) => {
+      this._handleAuthEvent = detail => {
+        debug(detail.action);
+        if (detail.action === "abort") {
+          this._handleAuthEvent = null;
+          this._receivingOOB = null;
+          reject();
+          return;
+        }
+
+        if (detail.action !== "capture") {
+          return;
+        }
+
+        let url = detail.url;
+        QR.decodeFromURI(url).then(data => {
+          debug("Got auth data: " + data);
+          let oob = JSON.parse(data);
+
+          shell.sendChromeEvent({
+            type: "devtools-auth",
+            action: "stop"
+          });
+
+          this._handleAuthEvent = null;
+          this._receivingOOB = null;
+          resolve(oob);
+        }).catch(() => {
+          debug("No auth data, requesting new capture");
+          shell.sendChromeEvent({
+            type: "devtools-auth",
+            action: "capture"
+          });
+        });
+      };
+
+      // Show QR scanning dialog, get an initial capture
+      shell.sendChromeEvent({
+        type: "devtools-auth",
+        action: "start"
+      });
+    });
+
+    return this._receivingOOB;
+  },
+
   _listen: function() {
     if (this._listening) {
       return;
@@ -88,11 +154,11 @@ let RemoteDebugger = {
 
   handleEvent: function(event) {
     let detail = event.detail;
-    if (detail.type !== "remote-debugger-prompt") {
-      return;
+    if (detail.type === "remote-debugger-prompt" && this._handleAllowResult) {
+      this._handleAllowResult(detail);
     }
-    if (this._handleAllowResult) {
-      this._handleAllowResult(detail.value);
+    if (detail.type === "devtools-auth" && this._handleAuthEvent) {
+      this._handleAuthEvent(detail);
     }
   },
 
@@ -148,6 +214,8 @@ let RemoteDebugger = {
 
 RemoteDebugger.allowConnection =
   RemoteDebugger.allowConnection.bind(RemoteDebugger);
+RemoteDebugger.receiveOOB =
+  RemoteDebugger.receiveOOB.bind(RemoteDebugger);
 
 let USBRemoteDebugger = {
 
@@ -217,6 +285,7 @@ let WiFiRemoteDebugger = {
       let AuthenticatorType = DebuggerServer.Authenticators.get("OOB_CERT");
       let authenticator = new AuthenticatorType.Server();
       authenticator.allowConnection = RemoteDebugger.allowConnection;
+      authenticator.receiveOOB = RemoteDebugger.receiveOOB;
       this._listener = DebuggerServer.createListener();
       this._listener.portOrPath = -1 /* any available port */;
       this._listener.authenticator = authenticator;
