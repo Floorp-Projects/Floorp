@@ -9108,12 +9108,14 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
         return true;
     }
 
-    if (native == js::simd_int32x4_add && JitSupportsSimd()) {
-        Rooted<TypeDescr *> descr(cx, &Int32x4::GetTypeDescr(*cx->global()));
-        res.set(TypedObject::createZeroed(cx, descr, 0, gc::TenuredHeap));
-        if (!res)
-            return false;
-        return true;
+    if (JitSupportsSimd()) {
+        if (native == js::simd_int32x4_add || native == js::simd_int32x4_and) {
+            Rooted<TypeDescr *> descr(cx, &Int32x4::GetTypeDescr(*cx->global()));
+            res.set(TypedObject::createZeroed(cx, descr, 0, gc::TenuredHeap));
+            if (!res)
+                return false;
+            return true;
+        }
     }
 
     return true;
