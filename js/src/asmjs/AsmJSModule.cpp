@@ -774,6 +774,16 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
     MOZ_ASSERT(isStaticallyLinked());
 }
 
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+static size_t
+ByteSizeOfHeapAccess(const jit::AsmJSHeapAccess access)
+{
+    Scalar::Type type = access.type();
+    if (Scalar::isSimdType(type))
+        return Scalar::scalarByteSize(type) * access.numSimdElems();
+    return TypedArrayElemSize(type);
+}
+#endif
 void
 AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx)
 {
@@ -794,7 +804,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
             //      ptr + data-type-byte-size > heapLength
             // i.e. ptr >= heapLength + 1 - data-type-byte-size
             // (Note that we need >= as this is what codegen uses.)
-            size_t scalarByteSize = TypedArrayElemSize(access.type());
+            size_t scalarByteSize = ByteSizeOfHeapAccess(access);
             X86Encoding::SetPointer(access.patchLengthAt(code_),
                                     (void*)(heap->byteLength() + 1 - scalarByteSize));
         }
@@ -816,7 +826,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
         const jit::AsmJSHeapAccess &access = heapAccesses_[i];
         if (access.hasLengthCheck()) {
             // See comment above for x86 codegen.
-            size_t scalarByteSize = TypedArrayElemSize(access.type());
+            size_t scalarByteSize = ByteSizeOfHeapAccess(access);
             X86Encoding::SetInt32(access.patchLengthAt(code_), heapLength + 1 - scalarByteSize);
         }
     }

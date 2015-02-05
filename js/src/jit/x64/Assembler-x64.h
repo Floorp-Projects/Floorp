@@ -361,11 +361,41 @@ class Assembler : public AssemblerX86Shared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void movq(const Operand &src, FloatRegister dest) {
+        switch (src.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.movq_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::MEM_SCALE:
+            masm.movq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.movq_mr(src.address(), dest.code());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void movq(Register src, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::REG:
             masm.movq_rr(src.code(), dest.reg());
             break;
+          case Operand::MEM_REG_DISP:
+            masm.movq_rm(src.code(), dest.disp(), dest.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.movq_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.movq_rm(src.code(), dest.address());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
+    void movq(FloatRegister src, const Operand &dest) {
+        switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
             masm.movq_rm(src.code(), dest.disp(), dest.base());
             break;
