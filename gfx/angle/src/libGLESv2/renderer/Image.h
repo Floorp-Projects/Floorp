@@ -54,10 +54,10 @@ class Image
     virtual gl::Error loadCompressedData(GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
                                          const void *input) = 0;
 
-    void copy(GLint xoffset, GLint yoffset, GLint zoffset, const gl::Rectangle &sourceArea, gl::Framebuffer *source);
-    virtual void copy(GLint xoffset, GLint yoffset, GLint zoffset, const gl::Rectangle &sourceArea, RenderTarget *source) = 0;
-    virtual void copy(GLint xoffset, GLint yoffset, GLint zoffset, const gl::Rectangle &sourceArea,
-                      const gl::ImageIndex &sourceIndex, TextureStorage *source) = 0;
+    gl::Error copy(GLint xoffset, GLint yoffset, GLint zoffset, const gl::Rectangle &sourceArea, gl::Framebuffer *source);
+    virtual gl::Error copy(GLint xoffset, GLint yoffset, GLint zoffset, const gl::Rectangle &sourceArea, RenderTarget *source) = 0;
+    virtual gl::Error copy(GLint xoffset, GLint yoffset, GLint zoffset, const gl::Rectangle &sourceArea,
+                           const gl::ImageIndex &sourceIndex, TextureStorage *source) = 0;
 
   protected:
     GLsizei mWidth;

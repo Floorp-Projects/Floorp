@@ -12,6 +12,13 @@
 
 #include <set>
 
+#if defined(ANGLE_ENABLE_WINDOWS_STORE)
+#  include <wrl.h>
+#  include <wrl/wrappers/corewrappers.h>
+#  include <windows.applicationmodel.core.h>
+#  include <windows.graphics.display.h>
+#endif
+
 namespace gl
 {
 
@@ -439,6 +446,7 @@ int VariableSortOrder(GLenum type)
 
 }
 
+#if !defined(ANGLE_ENABLE_WINDOWS_STORE)
 std::string getTempPath()
 {
 #ifdef ANGLE_PLATFORM_WINDOWS
@@ -476,3 +484,33 @@ void writeFile(const char* path, const void* content, size_t size)
     fwrite(content, sizeof(char), size, file);
     fclose(file);
 }
+#endif // !ANGLE_ENABLE_WINDOWS_STORE
+
+#if defined(ANGLE_ENABLE_WINDOWS_STORE)
+
+void Sleep(unsigned long dwMilliseconds)
+{
+    static HANDLE singletonEvent = nullptr;
+    HANDLE sleepEvent = singletonEvent;
+    if (!sleepEvent)
+    {
+        sleepEvent = CreateEventEx(nullptr, nullptr, CREATE_EVENT_MANUAL_RESET, EVENT_ALL_ACCESS);
+
+        if (!sleepEvent)
+            return;
+
+        HANDLE previousEvent = InterlockedCompareExchangePointerRelease(&singletonEvent, sleepEvent, nullptr);
+
+        if (previousEvent)
+        {
+            // Back out if multiple threads try to demand create at the same time.
+            CloseHandle(sleepEvent);
+            sleepEvent = previousEvent;
+        }
+    }
+
+    // Emulate sleep by waiting with timeout on an event that is never signalled.
+    WaitForSingleObjectEx(sleepEvent, dwMilliseconds, false);
+}
+
+#endif // ANGLE_ENABLE_WINDOWS_STORE
