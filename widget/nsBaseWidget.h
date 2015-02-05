@@ -136,7 +136,6 @@ public:
   virtual void            SetWindowAnimationType(WindowAnimationType aType) MOZ_OVERRIDE {}
   NS_IMETHOD              HideWindowChrome(bool aShouldHide) MOZ_OVERRIDE;
   NS_IMETHOD              MakeFullScreen(bool aFullScreen, nsIScreen* aScreen = nullptr) MOZ_OVERRIDE;
-  virtual nsDeviceContext* GetDeviceContext() MOZ_OVERRIDE;
   virtual LayerManager*   GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
                                           LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
@@ -452,7 +451,6 @@ protected:
   // such windows.
   bool              mRequireOffMainThreadCompositing;
   bool              mUseAttachedEvents;
-  bool              mContextInitialized;
   nsIntRect         mBounds;
   nsIntRect*        mOriginalBounds;
   // When this pointer is null, the widget is not clipped

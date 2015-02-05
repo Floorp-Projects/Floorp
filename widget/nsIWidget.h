@@ -1644,9 +1644,6 @@ class nsIWidget : public nsISupports {
     virtual void SetNativeData(uint32_t aDataType, uintptr_t aVal) = 0;
     virtual void FreeNativeData(void * data, uint32_t aDataType) = 0;//~~~
 
-    // GetDeviceContext returns a weak pointer to this widget's device context
-    virtual nsDeviceContext* GetDeviceContext() = 0;
-
     //@}
 
     /**
