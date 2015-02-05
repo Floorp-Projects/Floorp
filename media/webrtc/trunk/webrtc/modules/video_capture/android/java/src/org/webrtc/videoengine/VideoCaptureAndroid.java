@@ -206,6 +206,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
         camera = Camera.open();
       }
 
+      localPreview = ViERenderer.GetLocalRenderer();
       if (localPreview != null) {
         localPreview.addCallback(this);
         if (localPreview.getSurface() != null &&
