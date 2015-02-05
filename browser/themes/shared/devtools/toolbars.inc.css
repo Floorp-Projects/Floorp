@@ -891,8 +891,7 @@
 .theme-light .scrollbutton-up > .toolbarbutton-icon,
 .theme-light .scrollbutton-down > .toolbarbutton-icon,
 .theme-light #black-boxed-message-button .button-icon,
-.theme-light #profiling-notice-button .button-icon,
-.theme-light #canvas-debugging-empty-notice-button .button-icon,
+.theme-light .notice-container button .button-icon,
 .theme-light #requests-menu-perf-notice-button .button-icon,
 .theme-light #requests-menu-network-summary-button .button-icon,
 .theme-light .event-tooltip-debugger-icon,
@@ -906,7 +905,8 @@
 .theme-light .devtools-tab[icon-invertable][selected] > image,
 .theme-light .devtools-tab[icon-invertable][highlighted] > image,
 .theme-light #record-snapshot[checked] > image,
-.theme-light #profiler-start[checked] > image {
+.theme-light #profiler-start[checked] > image,
+.theme-light .notice-container button[checked] .button-icon {
   filter: none !important;
 }
 

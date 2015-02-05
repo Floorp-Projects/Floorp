@@ -8,6 +8,8 @@
 // slider don't show values bigger than the animation duration (which would
 // happen if the local requestAnimationFrame loop didn't stop correctly).
 
+let L10N = new ViewHelpers.L10N();
+
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel} = yield openAnimationInspector();
@@ -35,6 +37,6 @@ add_task(function*() {
   is(widget.currentTimeEl.value, front.state.duration,
     "The timeline slider has the right value");
   is(widget.timeDisplayEl.textContent,
-    widget.getFormattedTime(front.state.duration) + "s",
+    L10N.numberWithDecimals(front.state.duration / 1000, 2) + "s",
     "The timeline slider has the right value");
 });

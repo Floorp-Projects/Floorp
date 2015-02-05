@@ -26,9 +26,11 @@ add_task(function*() {
   ok(metaDataEl, "The meta-data element exists");
 
   let metaDataEls = metaDataEl.querySelectorAll("strong");
-  is(metaDataEls.length, 2, "2 meta-data elements were found");
-  is(metaDataEls[0].textContent, "2.00s",
+  is(metaDataEls.length, 3, "3 meta-data elements were found");
+  is(metaDataEls[0].textContent, "2s",
     "The first meta-data is the duration, and is correct");
+  ok(!isNodeVisible(metaDataEls[1]),
+    "The second meta-data is hidden, since there's no delay on the animation");
 
   info("Select the node with the delayed animation");
   yield selectNode(".delayed", inspector);
@@ -40,10 +42,13 @@ add_task(function*() {
   metaDataEls = titleEl.querySelectorAll(".meta-data strong");
   is(metaDataEls.length, 3,
     "3 meta-data elements were found for the delayed animation");
-  is(metaDataEls[0].textContent, "3.00s",
+  is(metaDataEls[0].textContent, "3s",
     "The first meta-data is the duration, and is correct");
-  is(metaDataEls[1].textContent, "60.00s",
+  ok(isNodeVisible(metaDataEls[0]), "The duration is shown");
+  is(metaDataEls[1].textContent, "60s",
     "The second meta-data is the delay, and is correct");
+  ok(isNodeVisible(metaDataEls[1]), "The delay is shown");
   is(metaDataEls[2].textContent, "10",
     "The third meta-data is the iteration count, and is correct");
+  ok(isNodeVisible(metaDataEls[2]), "The iteration count is shown");
 });
