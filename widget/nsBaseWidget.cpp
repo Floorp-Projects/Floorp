@@ -332,8 +332,7 @@ nsBaseWidget::CreateChild(const nsIntRect  &aRect,
   }
 
   if (widget &&
-      NS_SUCCEEDED(widget->Create(parent, nativeParent, aRect,
-                                  aContext, aInitData))) {
+      NS_SUCCEEDED(widget->Create(parent, nativeParent, aRect, aInitData))) {
     return widget.forget();
   }
 
