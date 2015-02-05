@@ -12165,7 +12165,7 @@ class MAsmJSHeapAccess
     bool needsBoundsCheck() const { return needsBoundsCheck_; }
     void removeBoundsCheck() { needsBoundsCheck_ = false; }
     Label *outOfBoundsLabel() const { return outOfBoundsLabel_; }
-    unsigned numSimdElems() const { return numSimdElems_; }
+    unsigned numSimdElems() const { MOZ_ASSERT(Scalar::isSimdType(accessType_)); return numSimdElems_; }
 };
 
 class MAsmJSLoadHeap

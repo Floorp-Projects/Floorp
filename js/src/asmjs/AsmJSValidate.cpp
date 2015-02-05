@@ -5823,8 +5823,20 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
 
       case AsmJSSimdOperation_load:
         return CheckSimdLoad(f, call, opType, 4, def, type);
+      case AsmJSSimdOperation_loadX:
+        return CheckSimdLoad(f, call, opType, 1, def, type);
+      case AsmJSSimdOperation_loadXY:
+        return CheckSimdLoad(f, call, opType, 2, def, type);
+      case AsmJSSimdOperation_loadXYZ:
+        return CheckSimdLoad(f, call, opType, 3, def, type);
       case AsmJSSimdOperation_store:
         return CheckSimdStore(f, call, opType, 4, def, type);
+      case AsmJSSimdOperation_storeX:
+        return CheckSimdStore(f, call, opType, 1, def, type);
+      case AsmJSSimdOperation_storeXY:
+        return CheckSimdStore(f, call, opType, 2, def, type);
+      case AsmJSSimdOperation_storeXYZ:
+        return CheckSimdStore(f, call, opType, 3, def, type);
 
       case AsmJSSimdOperation_bitselect:
         return CheckSimdSelect(f, call, opType, /*isElementWise */ false, def, type);
