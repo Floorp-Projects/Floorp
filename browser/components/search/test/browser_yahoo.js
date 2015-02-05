@@ -13,7 +13,7 @@ function test() {
   let engine = Services.search.getEngineByName("Yahoo");
   ok(engine, "Yahoo");
 
-  let base = "https://search.yahoo.com/yhs/search?p=foo&ei=UTF-8&hspart=mozilla&hsimp=yhs-001";
+  let base = "https://search.yahoo.com/yhs/search?p=foo&ei=UTF-8&hspart=mozilla";
   let url;
 
   // Test search URLs (including purposes).
@@ -29,7 +29,7 @@ function test() {
     name: "Yahoo",
     alias: null,
     description: "Yahoo Search",
-    searchForm: "https://search.yahoo.com/yhs/search?p=&ei=UTF-8&hspart=mozilla&hsimp=yhs-001",
+    searchForm: "https://search.yahoo.com/yhs/search?p=&ei=UTF-8&hspart=mozilla",
     type: Ci.nsISearchEngine.TYPE_MOZSEARCH,
     hidden: false,
     wrappedJSObject: {
@@ -81,7 +81,27 @@ function test() {
             {
               name: "hsimp",
               value: "yhs-001",
-              purpose: undefined,
+              purpose: "searchbar",
+            },
+            {
+              name: "hsimp",
+              value: "yhs-002",
+              purpose: "keyword",
+            },
+            {
+              name: "hsimp",
+              value: "yhs-003",
+              purpose: "homepage",
+            },
+            {
+              name: "hsimp",
+              value: "yhs-004",
+              purpose: "newtab",
+            },
+            {
+              name: "hsimp",
+              value: "yhs-005",
+              purpose: "contextmenu",
             },
           ],
           mozparams: {},
