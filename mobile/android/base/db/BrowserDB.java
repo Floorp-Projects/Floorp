@@ -122,8 +122,10 @@ public interface BrowserDB {
      * Can return <code>null</code>.
      */
     public abstract Cursor getReadingList(ContentResolver cr);
+    public abstract Cursor getReadingListUnfetched(ContentResolver cr);
     public abstract boolean isReadingListItem(ContentResolver cr, String uri);
     public abstract void addReadingListItem(ContentResolver cr, ContentValues values);
+    public abstract void updateReadingListItem(ContentResolver cr, ContentValues values);
     public abstract void removeReadingListItemWithURL(ContentResolver cr, String uri);
 
 

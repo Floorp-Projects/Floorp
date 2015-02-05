@@ -422,7 +422,6 @@ public:
 
   void OnWaitForDataRejected(WaitForDataRejectValue aRejection)
   {
-    MOZ_ASSERT(aRejection.mReason == WaitForDataRejectValue::SHUTDOWN);
     if (RequestStatusRef(aRejection.mType) == RequestStatus::Waiting) {
       RequestStatusRef(aRejection.mType) = RequestStatus::Idle;
     }
@@ -489,15 +488,9 @@ protected:
   // decode more.
   bool NeedToDecodeAudio();
 
-  // Decodes some audio. This should be run on the decode task queue.
-  void DecodeAudio();
-
   // True if our buffers of decoded video are not full, and we should
   // decode more.
   bool NeedToDecodeVideo();
-
-  // Decodes some video. This should be run on the decode task queue.
-  void DecodeVideo();
 
   // Returns true if we've got less than aAudioUsecs microseconds of decoded
   // and playable data. The decoder monitor must be held.

@@ -126,8 +126,8 @@ public:
   { return NS_ERROR_UNEXPECTED; }
   
   // PuppetWidgets are always at <0, 0>.
-  virtual nsIntPoint WidgetToScreenOffset() MOZ_OVERRIDE
-  { return nsIntPoint(0, 0); }
+  virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() MOZ_OVERRIDE
+  { return mozilla::LayoutDeviceIntPoint(0, 0); }
 
   void InitEvent(WidgetGUIEvent& aEvent, nsIntPoint* aPoint = nullptr);
 
@@ -221,11 +221,11 @@ private:
   nsresult NotifyIMEOfEditorRect();
   nsresult NotifyIMEOfPositionChange();
 
-  bool GetEditorRect(nsIntRect& aEditorRect);
+  bool GetEditorRect(mozilla::LayoutDeviceIntRect& aEditorRect);
   bool GetCompositionRects(uint32_t& aStartOffset,
-                           nsTArray<nsIntRect>& aRectArray,
+                           nsTArray<mozilla::LayoutDeviceIntRect>& aRectArray,
                            uint32_t& aTargetCauseOffset);
-  bool GetCaretRect(nsIntRect& aCaretRect, uint32_t aCaretOffset);
+  bool GetCaretRect(mozilla::LayoutDeviceIntRect& aCaretRect, uint32_t aCaretOffset);
   uint32_t GetCaretOffset();
 
   class PaintTask : public nsRunnable {

@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -46,26 +46,25 @@ class nsIContentViewerFile;
 class nsWebBrowserInitInfo
 {
 public:
-   //nsIBaseWindow Stuff
-   int32_t                 x;
-   int32_t                 y;
-   int32_t                 cx;
-   int32_t                 cy;
-   bool                    visible;
-   nsCOMPtr<nsISHistory>   sessionHistory;
-   nsString                name;
+  //nsIBaseWindow Stuff
+  int32_t                 x;
+  int32_t                 y;
+  int32_t                 cx;
+  int32_t                 cy;
+  bool                    visible;
+  nsCOMPtr<nsISHistory>   sessionHistory;
+  nsString                name;
 };
 
 class nsWebBrowserListenerState
 {
 public:
-    bool Equals(nsIWeakReference *aListener, const nsIID& aID) {
-        if (mWeakPtr.get() == aListener && mID.Equals(aID)) return true;
-        return false;
-    }
+  bool Equals(nsIWeakReference *aListener, const nsIID& aID) {
+    return mWeakPtr.get() == aListener && mID.Equals(aID);
+  }
 
-    nsWeakPtr mWeakPtr;
-    nsIID mID;
+  nsWeakPtr mWeakPtr;
+  nsIID mID;
 };
 
 //  {cda5863a-aa9c-411e-be49-ea0d525ab4b5} -
@@ -85,82 +84,82 @@ class nsWebBrowser MOZ_FINAL : public nsIWebBrowser,
                                public nsIWebBrowserFocus,
                                public nsIWebProgressListener,
                                public nsIWebBrowserStream,
-                     public nsIWidgetListener,
-                     public nsSupportsWeakReference
+                               public nsIWidgetListener,
+                               public nsSupportsWeakReference
 {
-friend class nsDocShellTreeOwner;
+  friend class nsDocShellTreeOwner;
 public:
-    nsWebBrowser();
+  nsWebBrowser();
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-    NS_DECL_NSIBASEWINDOW
-    NS_DECL_NSIDOCSHELLTREEITEM
-    NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSISCROLLABLE
-    NS_DECL_NSITEXTSCROLL
-    NS_DECL_NSIWEBBROWSER
-    NS_DECL_NSIWEBNAVIGATION
-    NS_DECL_NSIWEBBROWSERSETUP
-    NS_DECL_NSIWEBBROWSERPERSIST
-    NS_DECL_NSICANCELABLE
-    NS_DECL_NSIWEBBROWSERFOCUS
-    NS_DECL_NSIWEBBROWSERSTREAM
-    NS_DECL_NSIWEBPROGRESSLISTENER
-
-protected:
-    virtual ~nsWebBrowser();
-    NS_IMETHOD InternalDestroy();
-
-    // XXXbz why are these NS_IMETHOD?  They're not interface methods!
-    NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
-    NS_IMETHOD EnsureDocShellTreeOwner();
-    NS_IMETHOD GetPrimaryContentWindow(nsIDOMWindow **aDomWindow);
-    NS_IMETHOD BindListener(nsISupports *aListener, const nsIID& aIID);
-    NS_IMETHOD UnBindListener(nsISupports *aListener, const nsIID& aIID);
-    NS_IMETHOD EnableGlobalHistory(bool aEnable);
-
-    // nsIWidgetListener
-    virtual void WindowRaised(nsIWidget* aWidget);
-    virtual void WindowLowered(nsIWidget* aWidget);
-    virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion) MOZ_OVERRIDE;
+  NS_DECL_NSIBASEWINDOW
+  NS_DECL_NSIDOCSHELLTREEITEM
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSISCROLLABLE
+  NS_DECL_NSITEXTSCROLL
+  NS_DECL_NSIWEBBROWSER
+  NS_DECL_NSIWEBNAVIGATION
+  NS_DECL_NSIWEBBROWSERSETUP
+  NS_DECL_NSIWEBBROWSERPERSIST
+  NS_DECL_NSICANCELABLE
+  NS_DECL_NSIWEBBROWSERFOCUS
+  NS_DECL_NSIWEBBROWSERSTREAM
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
 protected:
-   nsRefPtr<nsDocShellTreeOwner> mDocShellTreeOwner;
-   nsCOMPtr<nsIDocShell>      mDocShell;
-   nsCOMPtr<nsIInterfaceRequestor> mDocShellAsReq;
-   nsCOMPtr<nsIBaseWindow>    mDocShellAsWin;
-   nsCOMPtr<nsIWebNavigation> mDocShellAsNav;
-   nsCOMPtr<nsIScrollable>    mDocShellAsScrollable;
-   nsCOMPtr<nsITextScroll>    mDocShellAsTextScroll;
-   nsCOMPtr<nsIWidget>        mInternalWidget;
-   nsCOMPtr<nsIWindowWatcher> mWWatch;
-   nsAutoPtr<nsWebBrowserInitInfo> mInitInfo;
-   uint32_t                   mContentType;
-   bool                       mActivating;
-   bool                       mShouldEnableHistory;
-   bool                       mIsActive;
-   nativeWindow               mParentNativeWindow;
-   nsIWebProgressListener    *mProgressListener;
-   nsCOMPtr<nsIWebProgress>      mWebProgress;
+  virtual ~nsWebBrowser();
+  NS_IMETHOD InternalDestroy();
 
-   nsCOMPtr<nsIPrintSettings> mPrintSettings;
+  // XXXbz why are these NS_IMETHOD?  They're not interface methods!
+  NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
+  NS_IMETHOD EnsureDocShellTreeOwner();
+  NS_IMETHOD GetPrimaryContentWindow(nsIDOMWindow **aDomWindow);
+  NS_IMETHOD BindListener(nsISupports *aListener, const nsIID& aIID);
+  NS_IMETHOD UnBindListener(nsISupports *aListener, const nsIID& aIID);
+  NS_IMETHOD EnableGlobalHistory(bool aEnable);
 
-   // cached background color
-   nscolor                       mBackgroundColor;
+  // nsIWidgetListener
+  virtual void WindowRaised(nsIWidget* aWidget);
+  virtual void WindowLowered(nsIWidget* aWidget);
+  virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion) MOZ_OVERRIDE;
 
-   // persistence object
-   nsCOMPtr<nsIWebBrowserPersist> mPersist;
-   uint32_t                       mPersistCurrentState;
-   nsresult                       mPersistResult;
-   uint32_t                       mPersistFlags;
+protected:
+  nsRefPtr<nsDocShellTreeOwner> mDocShellTreeOwner;
+  nsCOMPtr<nsIDocShell>      mDocShell;
+  nsCOMPtr<nsIInterfaceRequestor> mDocShellAsReq;
+  nsCOMPtr<nsIBaseWindow>    mDocShellAsWin;
+  nsCOMPtr<nsIWebNavigation> mDocShellAsNav;
+  nsCOMPtr<nsIScrollable>    mDocShellAsScrollable;
+  nsCOMPtr<nsITextScroll>    mDocShellAsTextScroll;
+  nsCOMPtr<nsIWidget>        mInternalWidget;
+  nsCOMPtr<nsIWindowWatcher> mWWatch;
+  nsAutoPtr<nsWebBrowserInitInfo> mInitInfo;
+  uint32_t                   mContentType;
+  bool                       mActivating;
+  bool                       mShouldEnableHistory;
+  bool                       mIsActive;
+  nativeWindow               mParentNativeWindow;
+  nsIWebProgressListener    *mProgressListener;
+  nsCOMPtr<nsIWebProgress>      mWebProgress;
 
-   // stream
-   nsRefPtr<nsEmbedStream>        mStream;
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
 
-   //Weak Reference interfaces...
-   nsIWidget*                            mParentWidget;
-   nsAutoPtr<nsTArray<nsWebBrowserListenerState>> mListenerArray;
+  // cached background color
+  nscolor                       mBackgroundColor;
+
+  // persistence object
+  nsCOMPtr<nsIWebBrowserPersist> mPersist;
+  uint32_t                       mPersistCurrentState;
+  nsresult                       mPersistResult;
+  uint32_t                       mPersistFlags;
+
+  // stream
+  nsRefPtr<nsEmbedStream>        mStream;
+
+  //Weak Reference interfaces...
+  nsIWidget*                            mParentWidget;
+  nsAutoPtr<nsTArray<nsWebBrowserListenerState>> mListenerArray;
 };
 
 #endif /* nsWebBrowser_h__ */

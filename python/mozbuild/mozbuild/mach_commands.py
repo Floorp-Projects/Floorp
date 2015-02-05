@@ -586,6 +586,12 @@ class Build(MachCommandBase):
         python = self.virtualenv_manager.python_path
         config_status = os.path.join(self.topobjdir, 'config.status')
 
+        if not os.path.exists(config_status):
+            print('config.status not found.  Please run |mach configure| '
+                  'or |mach build| prior to building the %s build backend.'
+                  % backend)
+            return 1
+
         args = [python, config_status, '--backend=%s' % backend]
         if diff:
             args.append('--diff')

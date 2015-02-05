@@ -1715,8 +1715,8 @@ nsDocument::~nsDocument()
   // Kill the subdocument map, doing this will release its strong
   // references, if any.
   if (mSubDocuments) {
-    PL_DHashTableDestroy(mSubDocuments);
-
+    PL_DHashTableFinish(mSubDocuments);
+    delete mSubDocuments;
     mSubDocuments = nullptr;
   }
 
@@ -2126,7 +2126,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   }
 
   if (tmp->mSubDocuments) {
-    PL_DHashTableDestroy(tmp->mSubDocuments);
+    PL_DHashTableFinish(tmp->mSubDocuments);
+    delete tmp->mSubDocuments;
     tmp->mSubDocuments = nullptr;
   }
 
@@ -2331,8 +2332,8 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   // Delete references to sub-documents and kill the subdocument map,
   // if any. It holds strong references
   if (mSubDocuments) {
-    PL_DHashTableDestroy(mSubDocuments);
-
+    PL_DHashTableFinish(mSubDocuments);
+    delete mSubDocuments;
     mSubDocuments = nullptr;
   }
 
@@ -2863,7 +2864,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
 
   // Figure out if we need to apply an app default CSP or a CSP from an app manifest
-  nsIPrincipal* principal = NodePrincipal();
+  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
 
   uint16_t appStatus = principal->GetAppStatus();
   bool applyAppDefaultCSP = false;
@@ -3035,11 +3036,30 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     // speculative loads.
   }
 
+  // ----- Set sandbox flags according to CSP header
+  // The document may already have some sandbox flags set (e.g., if the
+  // document is an iframe with the sandbox attribute set).  If we have a CSP
+  // sandbox directive, intersect the CSP sandbox flags with the existing
+  // flags.  This corresponds to the _least_ permissive policy.
+  uint32_t cspSandboxFlags = SANDBOXED_NONE;
+  rv = csp->GetCSPSandboxFlags(&cspSandboxFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mSandboxFlags |= cspSandboxFlags;
+
+  if (cspSandboxFlags & SANDBOXED_ORIGIN) {
+    // If the new CSP sandbox flags do not have the allow-same-origin flag
+    // reset the document principal to a null principal
+    principal = do_CreateInstance("@mozilla.org/nullprincipal;1");
+    SetPrincipal(principal);
+  }
+
+
   rv = principal->SetCsp(csp);
   NS_ENSURE_SUCCESS(rv, rv);
 #ifdef PR_LOGGING
   PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-         ("Inserted CSP into principal %p", principal));
+         ("Inserted CSP into principal %p", principal.get()));
 #endif
 
   return NS_OK;
@@ -3103,15 +3123,32 @@ nsDocument::GetLastModified(nsAString& aLastModified)
   return NS_OK;
 }
 
+static void
+GetFormattedTimeString(PRTime aTime, nsAString& aFormattedTimeString)
+{
+  PRExplodedTime prtime;
+  PR_ExplodeTime(aTime, PR_LocalTimeParameters, &prtime);
+  // "MM/DD/YYYY hh:mm:ss"
+  char formatedTime[24];
+  if (PR_snprintf(formatedTime, sizeof(formatedTime),
+                  "%02ld/%02ld/%04hd %02ld:%02ld:%02ld",
+                  prtime.tm_month + 1, prtime.tm_mday, prtime.tm_year,
+                  prtime.tm_hour     ,  prtime.tm_min,  prtime.tm_sec)) {
+    CopyASCIItoUTF16(nsDependentCString(formatedTime), aFormattedTimeString);
+  } else {
+    // If we for whatever reason failed to find the last modified time
+    // (or even the current time), fall back to what NS4.x returned.
+    aFormattedTimeString.AssignLiteral(MOZ_UTF16("01/01/1970 00:00:00"));
+  }
+}
+
 void
 nsIDocument::GetLastModified(nsAString& aLastModified) const
 {
   if (!mLastModified.IsEmpty()) {
     aLastModified.Assign(mLastModified);
   } else {
-    // If we for whatever reason failed to find the last modified time
-    // (or even the current time), fall back to what NS4.x returned.
-    aLastModified.AssignLiteral(MOZ_UTF16("01/01/1970 00:00:00"));
+    GetFormattedTimeString(PR_Now(), aLastModified);
   }
 }
 
@@ -3693,6 +3730,12 @@ nsDocument::RemoveCharSetObserver(nsIObserver* aObserver)
 }
 
 void
+nsIDocument::GetSandboxFlagsAsString(nsAString& aFlags)
+{
+  nsContentUtils::SandboxFlagsToString(mSandboxFlags, aFlags);
+}
+
+void
 nsDocument::GetHeaderData(nsIAtom* aHeaderField, nsAString& aData) const
 {
   aData.Truncate();
@@ -3984,16 +4027,13 @@ nsDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
         SubDocInitEntry
       };
 
-      mSubDocuments = PL_NewDHashTable(&hash_table_ops, sizeof(SubDocMapEntry));
-      if (!mSubDocuments) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      mSubDocuments = new PLDHashTable();
+      PL_DHashTableInit(mSubDocuments, &hash_table_ops, sizeof(SubDocMapEntry));
     }
 
     // Add a mapping to the hash table
-    SubDocMapEntry *entry =
-      static_cast<SubDocMapEntry*>
-                 (PL_DHashTableAdd(mSubDocuments, aElement));
+    SubDocMapEntry *entry = static_cast<SubDocMapEntry*>
+      (PL_DHashTableAdd(mSubDocuments, aElement, fallible));
 
     if (!entry) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -8597,25 +8637,9 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
     }
   }
 
-  if (modDate == 0) {
-    // We got nothing from our attempt to ask nsIFileChannel and
-    // nsIHttpChannel for the last modified time. Return the current
-    // time.
-    modDate = PR_Now();
-  }
-
   mLastModified.Truncate();
   if (modDate != 0) {
-    PRExplodedTime prtime;
-    PR_ExplodeTime(modDate, PR_LocalTimeParameters, &prtime);
-    // "MM/DD/YYYY hh:mm:ss"
-    char formatedTime[24];
-    if (PR_snprintf(formatedTime, sizeof(formatedTime),
-                    "%02ld/%02ld/%04hd %02ld:%02ld:%02ld",
-                    prtime.tm_month + 1, prtime.tm_mday, prtime.tm_year,
-                    prtime.tm_hour     ,  prtime.tm_min,  prtime.tm_sec)) {
-      CopyASCIItoUTF16(nsDependentCString(formatedTime), mLastModified);
-    }
+    GetFormattedTimeString(modDate, mLastModified);
   }
 }
 

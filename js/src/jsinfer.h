@@ -1790,6 +1790,8 @@ enum SpewChannel {
     SPEW_COUNT
 };
 
+const char *NonObjectTypeString(Type type);
+
 #ifdef DEBUG
 
 const char * InferSpewColorReset();

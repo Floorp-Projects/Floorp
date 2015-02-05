@@ -1752,6 +1752,33 @@ function JSTermHelpers(aOwner)
     // inert by coercing it to a String.
     return String(Cu.waiveXrays(aValue));
   };
+
+  /**
+   * Copy the String representation of a value to the clipboard.
+   *
+   * @param any aValue
+   *        A value you want to copy as a string.
+   * @return void
+   */
+  aOwner.sandbox.copy = function JSTH_copy(aValue)
+  {
+    let payload;
+    try {
+      if (aValue instanceof Ci.nsIDOMElement) {
+        payload = aValue.outerHTML;
+      } else if (typeof aValue == "string") {
+        payload = aValue;
+      } else {
+        payload = JSON.stringify(aValue, null, "  ");
+      }
+    } catch (ex) {
+      payload = "/* " + ex  + " */";
+    }
+    aOwner.helperResult = {
+      type: "copyValueToClipboard",
+      value: payload,
+    };
+  };
 }
 exports.JSTermHelpers = JSTermHelpers;
 

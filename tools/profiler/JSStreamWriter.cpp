@@ -151,6 +151,20 @@ JSStreamWriter::Value(int aValue)
 }
 
 void
+JSStreamWriter::Value(unsigned aValue)
+{
+  MOZ_ASSERT(!mNeedsName);
+  if (mNeedsComma && mStack.Peek() == ARRAY) {
+    mStream << ",";
+  }
+  mStream << aValue;
+  mNeedsComma = true;
+  if (mStack.Peek() == OBJECT) {
+    mNeedsName = true;
+  }
+}
+
+void
 JSStreamWriter::Value(double aValue)
 {
   MOZ_ASSERT(!mNeedsName);

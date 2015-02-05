@@ -107,11 +107,12 @@ MediaKeySystemAccess::IsKeySystemSupported(const nsAString& aKeySystem)
   }
 
 #ifdef XP_WIN
-  if (aKeySystem.EqualsLiteral("com.adobe.access") &&
+  if ((aKeySystem.EqualsLiteral("com.adobe.access") ||
+       aKeySystem.EqualsLiteral("com.adobe.primetime")) &&
       Preferences::GetBool("media.eme.adobe-access.enabled", false) &&
       IsVistaOrLater() && // Win Vista and later only.
       HaveGMPFor(mps,
-                 NS_LITERAL_CSTRING("com.adobe.access"),
+                 NS_ConvertUTF16toUTF8(aKeySystem),
                  NS_LITERAL_CSTRING(GMP_API_DECRYPTOR))) {
       return true;
   }

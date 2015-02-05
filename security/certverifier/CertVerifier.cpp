@@ -32,13 +32,13 @@ namespace mozilla { namespace psm {
 const CertVerifier::Flags CertVerifier::FLAG_LOCAL_ONLY = 1;
 const CertVerifier::Flags CertVerifier::FLAG_MUST_BE_EV = 2;
 
-CertVerifier::CertVerifier(ocsp_download_config odc,
-                           ocsp_strict_config osc,
-                           ocsp_get_config ogc,
+CertVerifier::CertVerifier(OcspDownloadConfig odc,
+                           OcspStrictConfig osc,
+                           OcspGetConfig ogc,
                            PinningMode pinningMode)
-  : mOCSPDownloadEnabled(odc == ocsp_on)
-  , mOCSPStrict(osc == ocsp_strict)
-  , mOCSPGETEnabled(ogc == ocsp_get_enabled)
+  : mOCSPDownloadEnabled(odc == ocspOn)
+  , mOCSPStrict(osc == ocspStrict)
+  , mOCSPGETEnabled(ogc == ocspGetEnabled)
   , mPinningMode(pinningMode)
 {
 }
@@ -205,8 +205,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
     : !mOCSPStrict              ? NSSCertDBTrustDomain::FetchOCSPForDVSoftFail
                                 : NSSCertDBTrustDomain::FetchOCSPForDVHardFail;
 
-  ocsp_get_config ocspGETConfig = mOCSPGETEnabled ? ocsp_get_enabled
-                                                  : ocsp_get_disabled;
+  OcspGetConfig ocspGETConfig = mOCSPGETEnabled ? ocspGetEnabled
+                                                : ocspGetDisabled;
 
   Input stapledOCSPResponseInput;
   const Input* stapledOCSPResponse = nullptr;

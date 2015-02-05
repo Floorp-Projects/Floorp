@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.DBUtils;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.NativeEventListener;
@@ -18,24 +19,45 @@ import org.mozilla.gecko.util.UIAsyncTask;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.ContentObserver;
+import android.database.Cursor;
+import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
 
 public final class ReadingListHelper implements NativeEventListener {
-    private static final String LOGTAG = "ReadingListHelper";
+    private static final String LOGTAG = "GeckoReadingListHelper";
 
     protected final Context context;
+    private final BrowserDB db;
 
-    public ReadingListHelper(Context context) {
+    private final Uri readingListUriWithProfile;
+    private final ContentObserver contentObserver;
+
+    public ReadingListHelper(Context context, GeckoProfile profile) {
         this.context = context;
+        this.db = profile.getDB();
 
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
-            "Reader:AddToList", "Reader:FaviconRequest", "Reader:ListStatusRequest", "Reader:RemoveFromList");
+            "Reader:AddToList", "Reader:UpdateList", "Reader:FaviconRequest", "Reader:ListStatusRequest", "Reader:RemoveFromList");
+
+        readingListUriWithProfile = DBUtils.appendProfile(profile.getName(), ReadingListItems.CONTENT_URI);
+
+        contentObserver = new ContentObserver(null) {
+            @Override
+            public void onChange(boolean selfChange) {
+                fetchContent();
+            }
+        };
+
+        context.getContentResolver().registerContentObserver(readingListUriWithProfile, false, contentObserver);
     }
 
     public void uninit() {
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
-            "Reader:AddToList", "Reader:FaviconRequest", "Reader:ListStatusRequest", "Reader:RemoveFromList");
+            "Reader:AddToList", "Reader:UpdateList", "Reader:FaviconRequest", "Reader:ListStatusRequest", "Reader:RemoveFromList");
+
+        context.getContentResolver().unregisterContentObserver(contentObserver);
     }
 
     @Override
@@ -44,6 +66,10 @@ public final class ReadingListHelper implements NativeEventListener {
         switch(event) {
             case "Reader:AddToList": {
                 handleAddToList(callback, message);
+                break;
+            }
+            case "Reader:UpdateList": {
+                handleUpdateList(message);
                 break;
             }
             case "Reader:FaviconRequest": {
@@ -73,14 +99,8 @@ public final class ReadingListHelper implements NativeEventListener {
 
         // We can't access a NativeJSObject from the background thread, so we need to get the
         // values here, even if we may not use them to insert an item into the DB.
-        final ContentValues values = new ContentValues();
-        values.put(ReadingListItems.URL, url);
-        values.put(ReadingListItems.TITLE, message.getString("title"));
-        values.put(ReadingListItems.LENGTH, message.getInt("length"));
-        values.put(ReadingListItems.EXCERPT, message.getString("excerpt"));
-        values.put(ReadingListItems.CONTENT_STATUS, message.getInt("status"));
+        final ContentValues values = getContentValues(message);
 
-        final BrowserDB db = GeckoProfile.get(context).getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
@@ -97,11 +117,51 @@ public final class ReadingListHelper implements NativeEventListener {
     }
 
     /**
+     * Updates a reading list item with new meta data.
+     */
+    private void handleUpdateList(final NativeJSObject message) {
+        final ContentResolver cr = context.getContentResolver();
+        final ContentValues values = getContentValues(message);
+
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                db.updateReadingListItem(cr, values);
+            }
+        });
+    }
+
+    /**
+     * Creates reading list item content values from JS message.
+     */
+    private ContentValues getContentValues(NativeJSObject message) {
+        final ContentValues values = new ContentValues();
+        if (message.has("id")) {
+            values.put(ReadingListItems._ID, message.getInt("id"));
+        }
+        if (message.has("url")) {
+            values.put(ReadingListItems.URL, message.getString("url"));
+        }
+        if (message.has("title")) {
+            values.put(ReadingListItems.TITLE, message.getString("title"));
+        }
+        if (message.has("length")) {
+            values.put(ReadingListItems.LENGTH, message.getInt("length"));
+        }
+        if (message.has("excerpt")) {
+            values.put(ReadingListItems.EXCERPT, message.getString("excerpt"));
+        }
+        if (message.has("status")) {
+            values.put(ReadingListItems.CONTENT_STATUS, message.getInt("status"));
+        }
+        return values;
+    }
+
+    /**
      * Gecko (ReaderMode) requests the page favicon to append to the
      * document head for display.
      */
     private void handleReaderModeFaviconRequest(final EventCallback callback, final String url) {
-        final BrowserDB db = GeckoProfile.get(context).getDB();
         (new UIAsyncTask.WithoutParams<String>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public String doInBackground() {
@@ -129,7 +189,6 @@ public final class ReadingListHelper implements NativeEventListener {
      * or by tapping the readinglist-remove icon in the ReaderMode banner.
      */
     private void handleRemoveFromList(final String url) {
-        final BrowserDB db = GeckoProfile.get(context).getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
@@ -145,7 +204,6 @@ public final class ReadingListHelper implements NativeEventListener {
      * the proper ReaderMode banner icon (readinglist-add / readinglist-remove).
      */
     private void handleReadingListStatusRequest(final EventCallback callback, final String url) {
-        final BrowserDB db = GeckoProfile.get(context).getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
@@ -173,6 +231,30 @@ public final class ReadingListHelper implements NativeEventListener {
             @Override
             public void run() {
                 Toast.makeText(context, resId, duration).show();
+            }
+        });
+    }
+
+    private void fetchContent() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                final Cursor c = db.getReadingListUnfetched(context.getContentResolver());
+                try {
+                    while (c.moveToNext()) {
+                        JSONObject json = new JSONObject();
+                        try {
+                            json.put("id", c.getInt(c.getColumnIndexOrThrow(ReadingListItems._ID)));
+                            json.put("url", c.getString(c.getColumnIndexOrThrow(ReadingListItems.URL)));
+                            GeckoAppShell.sendEventToGecko(
+                                GeckoEvent.createBroadcastEvent("Reader:FetchContent", json.toString()));
+                        } catch (JSONException e) {
+                            Log.e(LOGTAG, "Failed to fetch reading list content for item");
+                        }
+                    }
+                } finally {
+                    c.close();
+                }
             }
         });
     }
