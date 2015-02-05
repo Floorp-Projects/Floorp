@@ -138,7 +138,6 @@ PuppetWidget::InitIMEState()
 
 already_AddRefed<nsIWidget>
 PuppetWidget::CreateChild(const nsIntRect  &aRect,
-                          nsDeviceContext *aContext,
                           nsWidgetInitData *aInitData,
                           bool             aForceUseIWidgetParent)
 {
