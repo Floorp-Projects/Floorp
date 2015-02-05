@@ -276,7 +276,7 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
   // fortunately, BaseCreate doesn't actually use it so we don't
   // need to worry about trying to convert it to device pixels
   // when we don't have a window (or dev context, perhaps) yet
-  Inherited::BaseCreate(aParent, newBounds, aContext, aInitData);
+  Inherited::BaseCreate(aParent, newBounds, aInitData);
 
   mParent = aParent;
 

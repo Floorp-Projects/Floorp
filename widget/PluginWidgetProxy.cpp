@@ -63,7 +63,7 @@ PluginWidgetProxy::Create(nsIWidget*        aParent,
     return rv;
   }
 
-  BaseCreate(aParent, aRect, aContext, aInitData);
+  BaseCreate(aParent, aRect, aInitData);
 
   mBounds = aRect;
   mEnabled = true;
