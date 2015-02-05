@@ -18,7 +18,7 @@ function test() {
   Services.search.currentEngine = engine;
   engine.alias = "y";
 
-  let base = "https://search.yahoo.com/yhs/search?p=foo&ei=UTF-8&hspart=mozilla&hsimp=yhs-001";
+  let base = "https://search.yahoo.com/yhs/search?p=foo&ei=UTF-8&hspart=mozilla";
   let url;
 
   // Test search URLs (including purposes).
@@ -31,7 +31,7 @@ function test() {
   var gTests = [
     {
       name: "context menu search",
-      searchURL: base,
+      searchURL: base + "&hsimp=yhs-005",
       run: function () {
         // Simulate a contextmenu search
         // FIXME: This is a bit "low-level"...
@@ -40,7 +40,7 @@ function test() {
     },
     {
       name: "keyword search",
-      searchURL: base,
+      searchURL: base + "&hsimp=yhs-002",
       run: function () {
         gURLBar.value = "? foo";
         gURLBar.focus();
@@ -48,8 +48,8 @@ function test() {
       }
     },
     {
-      name: "keyword search",
-      searchURL: base,
+      name: "keyword search with alias",
+      searchURL: base + "&hsimp=yhs-002",
       run: function () {
         gURLBar.value = "y foo";
         gURLBar.focus();
@@ -58,7 +58,7 @@ function test() {
     },
     {
       name: "search bar search",
-      searchURL: base,
+      searchURL: base + "&hsimp=yhs-001",
       run: function () {
         let sb = BrowserSearch.searchBar;
         sb.focus();
@@ -71,7 +71,7 @@ function test() {
     },
     {
       name: "new tab search",
-      searchURL: base,
+      searchURL: base + "&hsimp=yhs-004",
       run: function () {
         function doSearch(doc) {
           // Re-add the listener, and perform a search
