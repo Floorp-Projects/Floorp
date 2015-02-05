@@ -1086,7 +1086,7 @@ ClientTiledLayerBuffer::PostValidate(const nsIntRegion& aPaintRegion)
 }
 
 void
-ClientTiledLayerBuffer::UnlockTile(TileClient& aTile)
+ClientTiledLayerBuffer::UnlockTile(TileClient aTile)
 {
   // We locked the back buffer, and flipped so we now need to unlock the front
   if (aTile.mFrontBuffer && aTile.mFrontBuffer->IsLocked()) {
@@ -1105,8 +1105,8 @@ ClientTiledLayerBuffer::UnlockTile(TileClient& aTile)
   }
 }
 
-void
-ClientTiledLayerBuffer::ValidateTile(TileClient& aTile,
+TileClient
+ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
                                     const nsIntPoint& aTileOrigin,
                                     const nsIntRegion& aDirtyRegion)
 {
@@ -1147,24 +1147,27 @@ ClientTiledLayerBuffer::ValidateTile(TileClient& aTile,
 
   if (!backBuffer) {
     NS_WARNING("Failed to allocate a tile TextureClient");
-    aTile.Release();
-    return;
+    aTile.DiscardBackBuffer();
+    aTile.DiscardFrontBuffer();
+    return TileClient();
   }
 
   // the back buffer may have been already locked in ValidateBackBufferFromFront
   if (!backBuffer->IsLocked()) {
     if (!backBuffer->Lock(OpenMode::OPEN_READ_WRITE)) {
       NS_WARNING("Failed to lock a tile TextureClient");
-      aTile.Release();
-      return;
+      aTile.DiscardBackBuffer();
+      aTile.DiscardFrontBuffer();
+      return TileClient();
     }
   }
 
   if (backBufferOnWhite && !backBufferOnWhite->IsLocked()) {
     if (!backBufferOnWhite->Lock(OpenMode::OPEN_READ_WRITE)) {
       NS_WARNING("Failed to lock tile TextureClient for updating.");
-      aTile.Release();
-      return;
+      aTile.DiscardBackBuffer();
+      aTile.DiscardFrontBuffer();
+      return TileClient();
     }
   }
 
@@ -1174,13 +1177,15 @@ ClientTiledLayerBuffer::ValidateTile(TileClient& aTile,
     if (createdTextureClient) {
       if (!mCompositableClient->AddTextureClient(backBuffer)) {
         NS_WARNING("Failed to add tile TextureClient.");
-        aTile.Release();
-        return;
+        aTile.DiscardFrontBuffer();
+        aTile.DiscardBackBuffer();
+        return aTile;
       }
       if (backBufferOnWhite && !mCompositableClient->AddTextureClient(backBufferOnWhite)) {
         NS_WARNING("Failed to add tile TextureClient.");
-        aTile.Release();
-        return;
+        aTile.DiscardFrontBuffer();
+        aTile.DiscardBackBuffer();
+        return aTile;
       }
     }
 
@@ -1196,9 +1201,9 @@ ClientTiledLayerBuffer::ValidateTile(TileClient& aTile,
     }
     moz2DTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x, aTileOrigin.y);
     if (!dt || (backBufferOnWhite && !dtOnWhite)) {
-      NS_WARNING("Failed to get a DrawTarget from a tile");
-      aTile.Release();
-      return;
+      aTile.DiscardFrontBuffer();
+      aTile.DiscardBackBuffer();
+      return aTile;
     }
 
     mMoz2DTiles.push_back(moz2DTile);
@@ -1231,7 +1236,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient& aTile,
 
     aTile.Flip();
 
-    return;
+    return aTile;
   }
 
   // Single paint buffer case:
@@ -1294,8 +1299,9 @@ ClientTiledLayerBuffer::ValidateTile(TileClient& aTile,
   if (createdTextureClient) {
     if (!mCompositableClient->AddTextureClient(backBuffer)) {
       NS_WARNING("Failed to add tile TextureClient.");
-      aTile.Release();
-      return;
+      aTile.DiscardFrontBuffer();
+      aTile.DiscardBackBuffer();
+      return aTile;
     }
   }
 
@@ -1309,6 +1315,8 @@ ClientTiledLayerBuffer::ValidateTile(TileClient& aTile,
     // TextureClient around unnecessarily, so discard the back-buffer.
     aTile.DiscardBackBuffer();
   }
+
+  return aTile;
 }
 
 /**
