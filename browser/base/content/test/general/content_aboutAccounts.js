@@ -29,6 +29,11 @@ addEventListener("DOMContentLoaded", function domContentLoaded(event) {
     }
     iframe.removeEventListener("load", iframeLoaded, true);
     sendAsyncMessage("test:iframe:load", {url: iframe.getAttribute("src")});
+    // And an event listener for the test responses, which we send to the test
+    // via a message.
+    iframe.contentWindow.addEventListener("FirefoxAccountsTestResponse", function (event) {
+      sendAsyncMessage("test:response", {data: event.detail.data});
+    }, true);
   }, true);
 }, true);
 
