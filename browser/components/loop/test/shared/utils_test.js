@@ -22,15 +22,27 @@ describe("loop.shared.utils", function() {
     sandbox.restore();
   });
 
-  it("should detect iOS", function() {
-    expect(sharedUtils.isIOS("iPad")).eql(true);
-    expect(sharedUtils.isIOS("iPod")).eql(true);
-    expect(sharedUtils.isIOS("iPhone")).eql(true);
-    expect(sharedUtils.isIOS("iPhone Simulator")).eql(true);
-  });
+  describe("#getUnsupportedPlatform", function() {
+    it("should detect iOS", function() {
+      expect(sharedUtils.getUnsupportedPlatform("iPad")).eql('ios');
+      expect(sharedUtils.getUnsupportedPlatform("iPod")).eql('ios');
+      expect(sharedUtils.getUnsupportedPlatform("iPhone")).eql('ios');
+      expect(sharedUtils.getUnsupportedPlatform("iPhone Simulator")).eql('ios');
+    });
 
-  it("shouldn't detect iOS with other platforms", function() {
-    expect(sharedUtils.isIOS("MacIntel")).eql(false);
+    it("should detect Windows Phone", function() {
+      expect(sharedUtils.getUnsupportedPlatform("Windows Phone"))
+        .eql('windows_phone');
+    });
+
+    it("should detect BlackBerry", function() {
+      expect(sharedUtils.getUnsupportedPlatform("BlackBerry"))
+        .eql('blackberry');
+    });
+
+    it("shouldn't detect other platforms", function() {
+      expect(sharedUtils.getUnsupportedPlatform("MacIntel")).eql(null);
+    });
   });
 
   describe("#isFirefox", function() {

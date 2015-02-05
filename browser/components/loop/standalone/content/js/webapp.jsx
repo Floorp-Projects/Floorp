@@ -45,7 +45,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
     render: function() {
       return (
-        <div className="expired-url-info">
+        <div className="highlight-issue-box">
           <div className="info-panel">
             <div className="firefox-logo" />
             <h1>{mozL10n.get("incompatible_browser_heading")}</h1>
@@ -61,12 +61,28 @@ loop.webapp = (function($, _, OT, mozL10n) {
    * Unsupported Device view.
    */
   var UnsupportedDeviceView = React.createClass({
+    propTypes: {
+      platform: React.PropTypes.string.isRequired
+    },
+
     render: function() {
+      var unsupportedDeviceParams = {
+        clientShortname: mozL10n.get("clientShortname2"),
+        platform: mozL10n.get("unsupported_platform_" + this.props.platform)
+      };
+      var unsupportedLearnMoreText = mozL10n.get("unsupported_platform_learn_more_link",
+        {clientShortname: mozL10n.get("clientShortname2")});
+
       return (
-        <div>
-          <h2>{mozL10n.get("incompatible_device")}</h2>
-          <p>{mozL10n.get("sorry_device_unsupported", {clientShortname: mozL10n.get("clientShortname2")})}</p>
-          <p>{mozL10n.get("use_firefox_windows_mac_linux", {brandShortname: mozL10n.get("brandShortname")})}</p>
+        <div className="highlight-issue-box">
+          <div className="info-panel">
+            <div className="firefox-logo" />
+            <h1>{mozL10n.get("unsupported_platform_heading")}</h1>
+            <h4>{mozL10n.get("unsupported_platform_message", unsupportedDeviceParams)}</h4>
+          </div>
+          <p>
+            <a className="btn btn-large btn-accept btn-unsupported-device"
+               href={loop.config.unsupportedPlatformUrl}>{unsupportedLearnMoreText}</a></p>
         </div>
       );
     }
@@ -110,7 +126,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
     render: function() {
       return (
-        <div className="expired-url-info">
+        <div className="highlight-issue-box">
           <div className="info-panel">
             <div className="firefox-logo" />
             <h1>{mozL10n.get("call_url_unavailable_notification_heading")}</h1>
@@ -965,7 +981,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     render: function() {
       switch (this.state.windowType) {
         case "unsupportedDevice": {
-          return <UnsupportedDeviceView />;
+          return <UnsupportedDeviceView platform={this.state.unsupportedPlatform}/>;
         }
         case "unsupportedBrowser": {
           return <UnsupportedBrowserView isFirefox={this.state.isFirefox}/>;

@@ -235,6 +235,31 @@ p.standalone-btn-label {
 }
 
 /**
+ * Unsupported/expired views
+ */
+
+.highlight-issue-box {
+  width: 400px;
+  margin: 0 auto;
+}
+
+.promote-firefox {
+  text-align: center;
+  font-size: 18px;
+  line-height: 24px;
+  margin: 2em 0;
+}
+
+.promote-firefox h3 {
+  font-weight: 300;
+}
+
+.btn-unsupported-device {
+  width: 80%;
+  line-height: 24px;
+}
+
+/**
  * Feedback form overlay (standalone only)
  */
 .standalone .ended-conversation {
