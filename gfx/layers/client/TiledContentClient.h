@@ -442,15 +442,15 @@ public:
   SurfaceDescriptorTiles GetSurfaceDescriptorTiles();
 
 protected:
-  void ValidateTile(TileClient& aTile,
-                    const nsIntPoint& aTileRect,
-                    const nsIntRegion& dirtyRect);
+  TileClient ValidateTile(TileClient aTile,
+                          const nsIntPoint& aTileRect,
+                          const nsIntRegion& dirtyRect);
 
   void PostValidate(const nsIntRegion& aPaintRegion);
 
-  void UnlockTile(TileClient& aTile);
+  void UnlockTile(TileClient aTile);
 
-  void ReleaseTile(TileClient& aTile) { aTile.Release(); }
+  void ReleaseTile(TileClient aTile) { aTile.Release(); }
 
   void SwapTiles(TileClient& aTileA, TileClient& aTileB) { std::swap(aTileA, aTileB); }
 
