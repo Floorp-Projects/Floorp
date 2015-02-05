@@ -65,7 +65,6 @@ from ..frontend.data import (
 from ..util import (
     ensureParentDir,
     FileAvoidWrite,
-    group_unified_files,
 )
 from ..makeutil import Makefile
 
@@ -395,33 +394,17 @@ class RecursiveMakeBackend(CommonBackend):
             var = suffix_map[obj.canonical_suffix]
             non_unified_var = var[len('UNIFIED_'):]
 
-            files_per_unification = obj.files_per_unified_file
-            do_unify = files_per_unification > 1
-            # Sorted so output is consistent and we don't bump mtimes.
-            source_files = list(sorted(obj.files))
-
-            if do_unify:
-                # On Windows, path names have a maximum length of 255 characters,
-                # so avoid creating extremely long path names.
-                unified_prefix = mozpath.relpath(backend_file.objdir,
-                    backend_file.environment.topobjdir)
-                if len(unified_prefix) > 20:
-                    unified_prefix = unified_prefix[-20:].split('/', 1)[-1]
-                unified_prefix = unified_prefix.replace('/', '_')
-
-                suffix = obj.canonical_suffix[1:]
-                unified_prefix='Unified_%s_%s' % (suffix, unified_prefix)
-                unified_source_mapping = list(group_unified_files(source_files,
-                                                                  unified_prefix=unified_prefix,
-                                                                  unified_suffix=suffix,
-                                                                  files_per_unified_file=files_per_unification))
-                self._write_unified_files(unified_source_mapping, backend_file.objdir)
+            if obj.have_unified_mapping:
+                self._write_unified_files(obj.unified_source_mapping, backend_file.objdir)
                 self._add_unified_build_rules(backend_file,
-                    unified_source_mapping,
+                    obj.unified_source_mapping,
                     unified_files_makefile_variable=var,
                     include_curdir_build_rules=False)
                 backend_file.write('%s += $(%s)\n' % (non_unified_var, var))
             else:
+                # Sorted so output is consistent and we don't bump mtimes.
+                source_files = list(sorted(obj.files))
+
                 backend_file.write('%s += %s\n' % (
                     non_unified_var, ' '.join(source_files)))
         elif isinstance(obj, VariablePassthru):

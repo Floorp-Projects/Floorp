@@ -1,0 +1,21 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+UNIFIED_SOURCES += [
+    'bar.cxx',
+    'foo.cpp',
+    'quux.cc',
+]
+
+UNIFIED_SOURCES += [
+    'objc1.mm',
+    'objc2.mm',
+]
+
+UNIFIED_SOURCES += [
+    'c1.c',
+    'c2.c',
+]
+
+FILES_PER_UNIFIED_FILE = 1
