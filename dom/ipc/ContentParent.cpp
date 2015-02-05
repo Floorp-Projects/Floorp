@@ -1075,7 +1075,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                 constructorSender->ChildID(),
                 constructorSender->IsForApp(),
                 constructorSender->IsForBrowser());
-            return TabParent::GetFrom(browser);
+            return static_cast<TabParent*>(browser);
         }
         return nullptr;
     }
@@ -1189,7 +1189,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
 
     if (isInContentProcess) {
         // Just return directly without the following check in content process.
-        return TabParent::GetFrom(browser);
+        return static_cast<TabParent*>(browser);
     }
 
     if (!browser) {
@@ -1218,7 +1218,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
 
     parent->AsContentParent()->MaybeTakeCPUWakeLock(aFrameElement);
 
-    return TabParent::GetFrom(browser);
+    return static_cast<TabParent*>(browser);
 }
 
 /*static*/ ContentBridgeParent*

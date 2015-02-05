@@ -51,7 +51,7 @@ ColorPickerParent::CreateColorPicker()
     return false;
   }
 
-  Element* ownerElement = TabParent::GetFrom(Manager())->GetOwnerElement();
+  Element* ownerElement = static_cast<TabParent*>(Manager())->GetOwnerElement();
   if (!ownerElement) {
     return false;
   }
