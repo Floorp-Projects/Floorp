@@ -2657,18 +2657,16 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
 {
   TABC_LOG("Receiving touch event of type %d\n", aEvent.message);
 
-  for (size_t i = 0; i < aEvent.touches.Length(); i++) {
-    aEvent.touches[i]->mRefPoint = APZCCallbackHelper::ApplyCallbackTransform(
-        aEvent.touches[i]->mRefPoint, aGuid, mWidget->GetDefaultScale(),
-        GetPresShellResolution());
-  }
-
-  if (aEvent.message == NS_TOUCH_START && IsAsyncPanZoomEnabled()) {
-    SendSetTargetAPZCNotification(aEvent, aGuid, aInputBlockId);
-  }
-
   WidgetTouchEvent localEvent(aEvent);
   localEvent.widget = mWidget;
+
+  APZCCallbackHelper::ApplyCallbackTransform(localEvent, aGuid,
+      mWidget->GetDefaultScale(), GetPresShellResolution());
+
+  if (localEvent.message == NS_TOUCH_START && IsAsyncPanZoomEnabled()) {
+    SendSetTargetAPZCNotification(localEvent, aGuid, aInputBlockId);
+  }
+
   // Dispatch event to content (potentially a long-running operation)
   nsEventStatus status = APZCCallbackHelper::DispatchWidgetEvent(localEvent);
 
