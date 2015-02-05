@@ -309,11 +309,10 @@ protected:
   void            ResolveIconName(const nsAString &aIconName,
                                   const nsAString &aIconSuffix,
                                   nsIFile **aResult);
-  virtual void            OnDestroy();
-  virtual void            BaseCreate(nsIWidget *aParent,
-                                     const nsIntRect &aRect,
-                                     nsDeviceContext *aContext,
-                                     nsWidgetInitData *aInitData);
+  virtual void    OnDestroy();
+  void            BaseCreate(nsIWidget *aParent,
+                             const nsIntRect &aRect,
+                             nsWidgetInitData *aInitData);
 
   virtual void ConfigureAPZCTreeManager();
   virtual already_AddRefed<GeckoContentController> CreateRootContentController();

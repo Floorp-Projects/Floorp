@@ -356,7 +356,7 @@ nsWindow::Create(nsIWidget *aParent,
                  nsWidgetInitData *aInitData)
 {
     BaseCreate(aParent, IS_TOPLEVEL() ? sVirtualBounds : aRect,
-               aContext, aInitData);
+               aInitData);
 
     mBounds = aRect;
 
