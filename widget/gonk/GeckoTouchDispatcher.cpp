@@ -247,8 +247,8 @@ ResampleTouch(MultiTouchInput& aOutTouch,
 
   // Make sure we only resample the correct finger.
   for (size_t i = 0; i < aOutTouch.mTouches.Length(); i++) {
-    const SingleTouchData& base = aBase.mTouches[i];
-    const SingleTouchData& current = GetTouchByID(base, aCurrent);
+    const SingleTouchData& current = aCurrent.mTouches[i];
+    const SingleTouchData& base = GetTouchByID(current, aBase);
 
     const ScreenIntPoint& baseTouchPoint = base.mScreenPoint;
     const ScreenIntPoint& currentTouchPoint = current.mScreenPoint;
