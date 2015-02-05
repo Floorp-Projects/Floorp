@@ -29,8 +29,8 @@ class DeadObjectProxy : public BaseProxyHandler
     virtual bool delete_(JSContext *cx, HandleObject wrapper, HandleId id,
                          ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, HandleObject wrapper, MutableHandleObject objp) const MOZ_OVERRIDE;
-    virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
-                                MutableHandleObject protop) const MOZ_OVERRIDE;
+    virtual bool getPrototype(JSContext *cx, HandleObject proxy,
+                              MutableHandleObject protop) const MOZ_OVERRIDE;
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy,
                                    ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;

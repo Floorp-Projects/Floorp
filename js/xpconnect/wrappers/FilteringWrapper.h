@@ -53,8 +53,8 @@ class FilteringWrapper : public Base {
     virtual bool defaultValue(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint,
                               JS::MutableHandleValue vp) const MOZ_OVERRIDE;
 
-    virtual bool getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
-                                JS::MutableHandleObject protop) const MOZ_OVERRIDE;
+    virtual bool getPrototype(JSContext *cx, JS::HandleObject wrapper,
+                              JS::MutableHandleObject protop) const MOZ_OVERRIDE;
 
     static const FilteringWrapper singleton;
 };

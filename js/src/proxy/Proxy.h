@@ -35,8 +35,9 @@ class Proxy
     static bool enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp);
     static bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible);
     static bool preventExtensions(JSContext *cx, HandleObject proxy, ObjectOpResult &result);
-    static bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop);
-    static bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp);
+    static bool getPrototype(JSContext *cx, HandleObject proxy, MutableHandleObject protop);
+    static bool setPrototype(JSContext *cx, HandleObject proxy, HandleObject proto,
+                             ObjectOpResult &result);
     static bool setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded);
     static bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp);
     static bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,

@@ -194,19 +194,19 @@ js::AppendUnique(JSContext *cx, AutoIdVector &base, AutoIdVector &others)
 }
 
 /* static */ bool
-Proxy::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject proto)
+Proxy::getPrototype(JSContext *cx, HandleObject proxy, MutableHandleObject proto)
 {
     MOZ_ASSERT(proxy->hasLazyPrototype());
     JS_CHECK_RECURSION(cx, return false);
-    return proxy->as<ProxyObject>().handler()->getPrototypeOf(cx, proxy, proto);
+    return proxy->as<ProxyObject>().handler()->getPrototype(cx, proxy, proto);
 }
 
 /* static */ bool
-Proxy::setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp)
+Proxy::setPrototype(JSContext *cx, HandleObject proxy, HandleObject proto, ObjectOpResult &result)
 {
     MOZ_ASSERT(proxy->hasLazyPrototype());
     JS_CHECK_RECURSION(cx, return false);
-    return proxy->as<ProxyObject>().handler()->setPrototypeOf(cx, proxy, proto, bp);
+    return proxy->as<ProxyObject>().handler()->setPrototype(cx, proxy, proto, result);
 }
 
 /* static */ bool

@@ -3087,23 +3087,22 @@ JSObject::reportNotExtensible(JSContext *cx, unsigned report)
 /*** ES6 standard internal methods ***************************************************************/
 
 bool
-js::SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succeeded)
+js::SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, JS::ObjectOpResult &result)
 {
     /*
      * If |obj| has a "lazy" [[Prototype]], it is 1) a proxy 2) whose handler's
-     * {get,set}PrototypeOf and setImmutablePrototype methods mediate access to
+     * {get,set}Prototype and setImmutablePrototype methods mediate access to
      * |obj.[[Prototype]]|.  The Proxy subsystem is responsible for responding
      * to such attempts.
      */
     if (obj->hasLazyPrototype()) {
         MOZ_ASSERT(obj->is<ProxyObject>());
-        return Proxy::setPrototypeOf(cx, obj, proto, succeeded);
+        return Proxy::setPrototype(cx, obj, proto, result);
     }
 
     /* Disallow mutation of immutable [[Prototype]]s. */
     if (obj->nonLazyPrototypeIsImmutable()) {
-        *succeeded = false;
-        return true;
+        return result.fail(JSMSG_CANT_SET_PROTO);
     }
 
     /*
@@ -3112,7 +3111,7 @@ js::SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succ
      * have a mutable [[Prototype]].
      */
     if (obj->is<ArrayBufferObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
                              "incompatible ArrayBuffer");
         return false;
     }
@@ -3121,7 +3120,7 @@ js::SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succ
      * Disallow mutating the [[Prototype]] on Typed Objects, per the spec.
      */
     if (obj->is<TypedObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
                              "incompatible TypedObject");
         return false;
     }
@@ -3131,7 +3130,7 @@ js::SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succ
      * for flash-related security reasons.
      */
     if (!strcmp(obj->getClass()->name, "Location")) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
                              "incompatible Location object");
         return false;
     }
@@ -3140,18 +3139,14 @@ js::SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succ
     bool extensible;
     if (!IsExtensible(cx, obj, &extensible))
         return false;
-    if (!extensible) {
-        *succeeded = false;
-        return true;
-    }
+    if (!extensible)
+        return result.fail(JSMSG_CANT_SET_PROTO);
 
     /* ES6 9.1.2 step 6 forbids generating cyclical prototype chains. */
     RootedObject obj2(cx);
     for (obj2 = proto; obj2; ) {
-        if (obj2 == obj) {
-            *succeeded = false;
-            return true;
-        }
+        if (obj2 == obj)
+            return result.fail(JSMSG_CANT_SET_PROTO_CYCLE);
 
         if (!GetPrototype(cx, obj2, &obj2))
             return false;
@@ -3163,8 +3158,17 @@ js::SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succ
         return false;
 
     Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
-    *succeeded = SetClassAndProto(cx, obj, obj->getClass(), taggedProto);
-    return *succeeded;
+    if (!SetClassAndProto(cx, obj, obj->getClass(), taggedProto))
+        return false;
+
+    return result.succeed();
+}
+
+bool
+js::SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto)
+{
+    ObjectOpResult result;
+    return SetPrototype(cx, obj, proto, result) && result.checkStrict(cx, obj);
 }
 
 bool
