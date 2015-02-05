@@ -4639,6 +4639,18 @@
     "kind": "flag",
     "description": "Set if the time-zone heuristic indicates US but the fetched country code doesn't"
   },
+  "SEARCH_SERVICE_US_COUNTRY_MISMATCHED_PLATFORM_OSX": {
+    "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "If we are on OSX and either the OSX countryCode or the geoip countryCode indicates we are in the US, set to false if they both do or true otherwise"
+  },
+  "SEARCH_SERVICE_NONUS_COUNTRY_MISMATCHED_PLATFORM_OSX": {
+    "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "If we are on OSX and neither the OSX countryCode nor the geoip countryCode indicates we are in the US, set to false if they both agree on the value or true otherwise"
+  },
   "SOCIAL_ENABLED_ON_SESSION": {
     "expires_in_version": "never",
     "kind": "flag",
