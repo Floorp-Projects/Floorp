@@ -36,8 +36,7 @@ add_task(function* test_doNotDisturb_with_login() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "active", "Check button is in active state");
   yield loadLoopPanel();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "disabled", "Check button is in disabled state after opening panel");
-  let loopPanel = document.getElementById("loop-notification-panel");
-  loopPanel.hidePopup();
+  LoopUI.panel.hidePopup();
   yield MozLoopService.doNotDisturb = false;
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
   MozLoopServiceInternal.fxAOAuthTokenData = null;
@@ -75,8 +74,7 @@ add_task(function* test_active() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "active", "Check button is in active state");
   yield loadLoopPanel();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state after opening panel");
-  let loopPanel = document.getElementById("loop-notification-panel");
-  loopPanel.hidePopup();
+  LoopUI.panel.hidePopup();
   MozLoopServiceInternal.fxAOAuthTokenData = null;
   MozLoopServiceInternal.notifyStatusChanged();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
@@ -93,3 +91,16 @@ add_task(function* test_room_participants() {
   LoopRoomsInternal.rooms.delete("test_room");
 });
 
+add_task(function* test_panelToggle_on_click() {
+  // Since we _know_ the first click on the button will open the panel, we'll
+  // open it using the test utility and check the correct state by clicking the
+  // button. This should hide the panel.
+  // If we'd open the panel with a simulated click on the button, we won't know
+  // for sure when the panel has opened, because the event loop spins a few times
+  // in the mean time.
+  yield loadLoopPanel();
+  Assert.strictEqual(LoopUI.panel.state, "open", "Panel should be open");
+  // The panel should now be visible. Clicking the button should hide it.
+  LoopUI.toolbarButton.node.click();
+  Assert.strictEqual(LoopUI.panel.state, "closed", "Panel should be closed");
+});
