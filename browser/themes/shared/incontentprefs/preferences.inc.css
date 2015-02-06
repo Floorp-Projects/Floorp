@@ -153,15 +153,19 @@ treecol {
   white-space: nowrap;
 }
 
-#startupTable > tr > .content-cell {
-  display: flex;
+#startupTable > tr > .content-cell > menulist,
+#startupTable > tr > .content-cell > textbox {
+  width: calc(100% - 8px);
+  margin-left: 4px;
+  margin-right: 4px;
 }
 
 #startupTable > tr > .homepage-buttons {
+  display: flex;
   flex-wrap: wrap;
 }
 
-#startupTable > tr > td > .content-cell-item {
+#startupTable > tr > .homepage-buttons > .content-cell-item {
   flex-grow: 1;
 }
 
