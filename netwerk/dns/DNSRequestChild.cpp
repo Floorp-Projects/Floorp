@@ -94,6 +94,13 @@ ChildDNSRecord::GetNextAddr(uint16_t port, NetAddr *addr)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ChildDNSRecord::GetAddresses(nsTArray<NetAddr> & aAddressArray)
+{
+  aAddressArray = mAddresses;
+  return NS_OK;
+}
+
 // shamelessly copied from nsDNSRecord
 NS_IMETHODIMP
 ChildDNSRecord::GetScriptableNextAddr(uint16_t port, nsINetAddr **result)

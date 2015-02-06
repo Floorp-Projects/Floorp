@@ -2062,7 +2062,7 @@ ICCompare_ObjectWithUndefined::Compiler::generateStubCode(MacroAssembler &masm)
         Label emulatesUndefined;
         Register obj = masm.extractObject(objectOperand, ExtractTemp0);
         masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), obj);
-        masm.loadPtr(Address(obj, types::ObjectGroup::offsetOfClasp()), obj);
+        masm.loadPtr(Address(obj, ObjectGroup::offsetOfClasp()), obj);
         masm.branchTest32(Assembler::NonZero,
                           Address(obj, Class::offsetOfFlags()),
                           Imm32(JSCLASS_EMULATES_UNDEFINED),
@@ -4521,7 +4521,7 @@ LoadTypedThingLength(MacroAssembler &masm, TypedThingLayout layout, Register obj
       case Layout_OutlineTypedObject:
       case Layout_InlineTypedObject:
         masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), result);
-        masm.loadPtr(Address(result, types::ObjectGroup::offsetOfAddendum()), result);
+        masm.loadPtr(Address(result, ObjectGroup::offsetOfAddendum()), result);
         masm.unboxInt32(Address(result, ArrayTypeDescr::offsetOfLength()), result);
         break;
       default:
@@ -8248,13 +8248,10 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
         obj->as<ScopeObject>().setAliasedVar(cx, ScopeCoordinate(pc), name, rhs);
     } else {
         MOZ_ASSERT(op == JSOP_SETPROP || op == JSOP_STRICTSETPROP);
-        if (op == JSOP_STRICTSETPROP) {
-            if (!js::SetProperty<true>(cx, obj, id, rhs))
-                return false;
-        } else {
-            if (!js::SetProperty<false>(cx, obj, id, rhs))
-                return false;
-        }
+
+        RootedValue v(cx, rhs);
+        if (!SetProperty(cx, obj, obj, id, &v, op == JSOP_STRICTSETPROP))
+            return false;
     }
 
     // Leave the RHS on the stack.
@@ -8520,7 +8517,7 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
     // Check if the old group still has a newScript.
     masm.loadPtr(Address(objReg, JSObject::offsetOfGroup()), scratch);
     masm.branchPtr(Assembler::Equal,
-                   Address(scratch, types::ObjectGroup::offsetOfAddendum()),
+                   Address(scratch, ObjectGroup::offsetOfAddendum()),
                    ImmWord(0),
                    &noGroupChange);
 
@@ -9049,7 +9046,7 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
         if (!res)
             return false;
 
-        types::ObjectGroup *group = types::TypeScript::InitGroup(cx, script, pc, JSProto_Array);
+        ObjectGroup *group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
         if (!group)
             return false;
         res->setGroup(group);
@@ -9061,7 +9058,7 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
         if (!res)
             return false;
 
-        types::ObjectGroup *group = types::TypeScript::InitGroup(cx, script, pc, JSProto_Array);
+        ObjectGroup *group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
         if (!group)
             return false;
         res->setGroup(group);
@@ -9085,7 +9082,7 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
         if (!res)
             return false;
 
-        types::ObjectGroup *group = types::TypeScript::InitGroup(cx, script, pc, JSProto_Array);
+        ObjectGroup *group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
         if (!group)
             return false;
         res->setGroup(group);
@@ -9487,7 +9484,7 @@ DoCallFallback(JSContext *cx, BaselineFrame *frame, ICCall_Fallback *stub_, uint
 
     // Compute construcing and useNewGroup flags.
     bool constructing = (op == JSOP_NEW);
-    bool createSingleton = types::UseSingletonForNewObject(cx, script, pc);
+    bool createSingleton = ObjectGroup::useSingletonForNewObject(cx, script, pc);
 
     // Try attaching a call stub.
     if (!TryAttachCallStub(cx, stub, script, pc, op, argc, vp, constructing, false, createSingleton))
@@ -11609,7 +11606,7 @@ ICSetElem_Dense::ICSetElem_Dense(JitCode *stubCode, HandleShape shape, HandleObj
     group_(group)
 { }
 
-ICSetElem_DenseAdd::ICSetElem_DenseAdd(JitCode *stubCode, types::ObjectGroup *group,
+ICSetElem_DenseAdd::ICSetElem_DenseAdd(JitCode *stubCode, ObjectGroup *group,
                                        size_t protoChainDepth)
   : ICUpdatedStub(SetElem_DenseAdd, stubCode),
     group_(group)
@@ -12123,7 +12120,7 @@ static bool DoRestFallback(JSContext *cx, ICRest_Fallback *stub,
     ArrayObject *obj = NewDenseCopiedArray(cx, numRest, rest, nullptr);
     if (!obj)
         return false;
-    types::FixRestArgumentsType(cx, obj);
+    ObjectGroup::fixRestArgumentsGroup(cx, obj);
     res.setObject(*obj);
     return true;
 }
