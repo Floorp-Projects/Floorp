@@ -32,8 +32,9 @@ class ShaderD3D : public ShaderImpl
     static const ShaderD3D *makeShaderD3D(const ShaderImpl *impl);
 
     // ShaderImpl implementation
-    const std::string &getInfoLog() const { return mInfoLog; }
-    const std::string &getTranslatedSource() const { return mHlsl; }
+    virtual const std::string &getInfoLog() const { return mInfoLog; }
+    virtual const std::string &getTranslatedSource() const { return mHlsl; }
+    virtual std::string getDebugInfo() const;
 
     // D3D-specific methods
     virtual void uncompile();
@@ -41,6 +42,7 @@ class ShaderD3D : public ShaderImpl
     unsigned int getUniformRegister(const std::string &uniformName) const;
     unsigned int getInterfaceBlockRegister(const std::string &blockName) const;
     int getSemanticIndex(const std::string &attributeName) const;
+    void appendDebugInfo(const std::string &info) { mDebugInfo += info; }
 
     rx::D3DWorkaroundType getD3DWorkarounds() const;
     int getShaderVersion() const { return mShaderVersion; }
@@ -86,6 +88,7 @@ class ShaderD3D : public ShaderImpl
 
     std::string mHlsl;
     std::string mInfoLog;
+    std::string mDebugInfo;
     std::map<std::string, unsigned int> mUniformRegisterMap;
     std::map<std::string, unsigned int> mInterfaceBlockRegisterMap;
 };

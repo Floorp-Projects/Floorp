@@ -45,8 +45,7 @@
 
 // This tags are used in the Structured Clone Algorithm to move js values from
 // worker thread to main thread
-#define CONSOLE_TAG_STRING JS_SCTAG_USER_MIN
-#define CONSOLE_TAG_BLOB   JS_SCTAG_USER_MIN + 1
+#define CONSOLE_TAG_BLOB   JS_SCTAG_USER_MIN
 
 using namespace mozilla::dom::exceptions;
 using namespace mozilla::dom::workers;
@@ -58,7 +57,6 @@ struct
 ConsoleStructuredCloneData
 {
   nsCOMPtr<nsISupports> mParent;
-  nsTArray<nsString> mStrings;
   nsTArray<nsRefPtr<FileImpl>> mFiles;
 };
 
@@ -81,22 +79,6 @@ ConsoleStructuredCloneCallbacksRead(JSContext* aCx,
   ConsoleStructuredCloneData* data =
     static_cast<ConsoleStructuredCloneData*>(aClosure);
   MOZ_ASSERT(data);
-
-  if (aTag == CONSOLE_TAG_STRING) {
-    MOZ_ASSERT(data->mStrings.Length() > aIndex);
-
-    JS::Rooted<JS::Value> value(aCx);
-    if (!xpc::StringToJsval(aCx, data->mStrings.ElementAt(aIndex), &value)) {
-      return nullptr;
-    }
-
-    JS::Rooted<JSObject*> obj(aCx);
-    if (!JS_ValueToObject(aCx, value, &obj)) {
-      return nullptr;
-    }
-
-    return obj;
-  }
 
   if (aTag == CONSOLE_TAG_BLOB) {
     MOZ_ASSERT(data->mFiles.Length() > aIndex);
@@ -146,17 +128,10 @@ ConsoleStructuredCloneCallbacksWrite(JSContext* aCx,
     return false;
   }
 
-  nsAutoJSString string;
-  if (!string.init(aCx, jsString)) {
+  if (!JS_WriteString(aWriter, jsString)) {
     return false;
   }
 
-  if (!JS_WriteUint32Pair(aWriter, CONSOLE_TAG_STRING,
-                          data->mStrings.Length())) {
-    return false;
-  }
-
-  data->mStrings.AppendElement(string);
   return true;
 }
 

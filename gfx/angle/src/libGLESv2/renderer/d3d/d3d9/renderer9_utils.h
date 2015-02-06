@@ -12,6 +12,7 @@
 
 #include "libGLESv2/angletypes.h"
 #include "libGLESv2/Caps.h"
+#include "libGLESv2/Error.h"
 
 namespace gl
 {
@@ -75,7 +76,7 @@ inline bool isDeviceLostError(HRESULT errorCode)
     }
 }
 
-RenderTarget9 *GetAttachmentRenderTarget(gl::FramebufferAttachment *attachment);
+gl::Error GetAttachmentRenderTarget(gl::FramebufferAttachment *attachment, RenderTarget9 **outRT);
 Workarounds GenerateWorkarounds();
 
 }

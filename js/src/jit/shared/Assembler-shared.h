@@ -769,6 +769,7 @@ class AsmJSHeapAccess
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     uint8_t cmpDelta_;  // the number of bytes from the cmp to the load/store instruction
     uint8_t opLength_;  // the length of the load/store instruction
+    uint8_t numSimdElems_; // the number of SIMD lanes to load/store at once
     Scalar::Type type_;
     AnyRegister::Code loadedReg_ : 8;
 #endif
@@ -787,16 +788,34 @@ class AsmJSHeapAccess
       : offset_(offset),
         cmpDelta_(cmp == NoLengthCheck ? 0 : offset - cmp),
         opLength_(after - offset),
+        numSimdElems_(UINT8_MAX),
         type_(type),
         loadedReg_(loadedReg.code())
-    {}
+    {
+        MOZ_ASSERT(!Scalar::isSimdType(type));
+    }
     AsmJSHeapAccess(uint32_t offset, uint8_t after, Scalar::Type type, uint32_t cmp = NoLengthCheck)
       : offset_(offset),
         cmpDelta_(cmp == NoLengthCheck ? 0 : offset - cmp),
         opLength_(after - offset),
+        numSimdElems_(UINT8_MAX),
         type_(type),
         loadedReg_(UINT8_MAX)
-    {}
+    {
+        MOZ_ASSERT(!Scalar::isSimdType(type));
+    }
+    // SIMD loads / stores
+    AsmJSHeapAccess(uint32_t offset, uint32_t after, unsigned numSimdElems, Scalar::Type type,
+                    uint32_t cmp = NoLengthCheck)
+      : offset_(offset),
+        cmpDelta_(cmp == NoLengthCheck ? 0 : offset - cmp),
+        opLength_(after - offset),
+        numSimdElems_(numSimdElems),
+        type_(type),
+        loadedReg_(UINT8_MAX)
+    {
+        MOZ_ASSERT(Scalar::isSimdType(type));
+    }
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     explicit AsmJSHeapAccess(uint32_t offset)
       : offset_(offset)
@@ -808,11 +827,14 @@ class AsmJSHeapAccess
 #if defined(JS_CODEGEN_X86)
     void *patchOffsetAt(uint8_t *code) const { return code + (offset_ + opLength_); }
 #endif
+#if defined(JS_CODEGEN_X64)
+    unsigned opLength() const { MOZ_ASSERT(!Scalar::isSimdType(type_)); return opLength_; }
+    bool isLoad() const { MOZ_ASSERT(!Scalar::isSimdType(type_)); return loadedReg_ != UINT8_MAX; }
+#endif
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     bool hasLengthCheck() const { return cmpDelta_ > 0; }
     void *patchLengthAt(uint8_t *code) const { return code + (offset_ - cmpDelta_); }
-    unsigned opLength() const { return opLength_; }
-    bool isLoad() const { return loadedReg_ != UINT8_MAX; }
+    unsigned numSimdElems() const { MOZ_ASSERT(Scalar::isSimdType(type_)); return numSimdElems_; }
     Scalar::Type type() const { return type_; }
     AnyRegister loadedReg() const { return AnyRegister::FromCode(loadedReg_); }
 #endif
@@ -860,6 +882,7 @@ enum AsmJSImmKind
     AsmJSImm_StackLimit,
     AsmJSImm_ReportOverRecursed,
     AsmJSImm_OnDetached,
+    AsmJSImm_OnOutOfBounds,
     AsmJSImm_HandleExecutionInterrupt,
     AsmJSImm_InvokeFromAsmJS_Ignore,
     AsmJSImm_InvokeFromAsmJS_ToInt32,

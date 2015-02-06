@@ -67,8 +67,6 @@ class TextRenderer;
 class CompositingRenderTarget;
 struct FPSState;
 
-static const int kVisualWarningTrigger = 200; // ms
-static const int kVisualWarningMax = 1000; // ms
 static const int kVisualWarningDuration = 150; // ms
 
 class LayerManagerComposite MOZ_FINAL : public LayerManager

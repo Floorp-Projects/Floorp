@@ -320,13 +320,21 @@ void OutputHLSL::header()
 
     if (mUsesDiscardRewriting)
     {
-        out << "#define ANGLE_USES_DISCARD_REWRITING" << "\n";
+        out << "#define ANGLE_USES_DISCARD_REWRITING\n";
     }
 
     if (mUsesNestedBreak)
     {
-        out << "#define ANGLE_USES_NESTED_BREAK" << "\n";
+        out << "#define ANGLE_USES_NESTED_BREAK\n";
     }
+
+    out << "#ifdef ANGLE_ENABLE_LOOP_FLATTEN\n"
+           "#define LOOP [loop]\n"
+           "#define FLATTEN [flatten]\n"
+           "#else\n"
+           "#define LOOP\n"
+           "#define FLATTEN\n"
+           "#endif\n";
 
     if (mContext.shaderType == GL_FRAGMENT_SHADER)
     {
@@ -1747,6 +1755,7 @@ bool OutputHLSL::visitUnary(Visit visit, TIntermUnary *node)
     switch (node->getOp())
     {
       case EOpNegative:         outputTriplet(visit, "(-", "", ")");         break;
+      case EOpPositive:         outputTriplet(visit, "(+", "", ")");         break;
       case EOpVectorLogicalNot: outputTriplet(visit, "(!", "", ")");         break;
       case EOpLogicalNot:       outputTriplet(visit, "(!", "", ")");         break;
       case EOpPostIncrement:    outputTriplet(visit, "(", "", "++)");        break;
@@ -1860,15 +1869,20 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
 
                 if (!variable->getAsSymbolNode() || variable->getAsSymbolNode()->getSymbol() != "")   // Variable declaration
                 {
-                    if (!mInsideFunction)
-                    {
-                        out << "static ";
-                    }
-
-                    out << TypeString(variable->getType()) + " ";
-
                     for (TIntermSequence::iterator sit = sequence->begin(); sit != sequence->end(); sit++)
                     {
+                        if (isSingleStatement(*sit))
+                        {
+                            mUnfoldShortCircuit->traverse(*sit);
+                        }
+
+                        if (!mInsideFunction)
+                        {
+                            out << "static ";
+                        }
+
+                        out << TypeString(variable->getType()) + " ";
+
                         TIntermSymbol *symbol = (*sit)->getAsSymbolNode();
 
                         if (symbol)
@@ -1884,7 +1898,7 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
 
                         if (*sit != sequence->back())
                         {
-                            out << ", ";
+                            out << ";\n";
                         }
                     }
                 }
@@ -2287,7 +2301,7 @@ bool OutputHLSL::visitSelection(Visit visit, TIntermSelection *node)
     {
         mUnfoldShortCircuit->traverse(node->getCondition());
 
-        out << "if (";
+        out << "FLATTEN if (";
 
         node->getCondition()->traverse(this);
 
@@ -2367,14 +2381,14 @@ bool OutputHLSL::visitLoop(Visit visit, TIntermLoop *node)
 
     if (node->getType() == ELoopDoWhile)
     {
-        out << "{do\n";
+        out << "{LOOP do\n";
 
         outputLineDirective(node->getLine().first_line);
         out << "{\n";
     }
     else
     {
-        out << "{for(";
+        out << "{LOOP for(";
 
         if (node->getInit())
         {
@@ -2501,6 +2515,12 @@ bool OutputHLSL::isSingleStatement(TIntermNode *node)
     {
         if (aggregate->getOp() == EOpSequence)
         {
+            return false;
+        }
+        else if (aggregate->getOp() == EOpDeclaration)
+        {
+            // Declaring multiple comma-separated variables must be considered multiple statements
+            // because each individual declaration has side effects which are visible in the next.
             return false;
         }
         else
@@ -2675,7 +2695,7 @@ bool OutputHLSL::handleExcessiveLoop(TIntermLoop *node)
 
                 // for(int index = initial; index < clampedLimit; index += increment)
 
-                out << "for(";
+                out << "LOOP for(";
                 index->traverse(this);
                 out << " = ";
                 out << initial;

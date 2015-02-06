@@ -205,6 +205,17 @@
             'type': 'static_library',
             'includes': [ '../build/common_defines.gypi', ],
             'sources': [ '<@(angle_preprocessor_sources)', ],
+            'conditions':
+            [
+                ['angle_build_winrt==1',
+                {
+                    'msvs_enable_winrt' : '1',
+                }],
+                ['angle_build_winphone==1',
+                {
+                    'msvs_enable_winphone' : '1',
+                }],
+            ],
         },
         {
             'target_name': 'translator_lib',
@@ -233,6 +244,17 @@
                 'AdditionalOptions': ['/ignore:4221']
               },
             },
+            'conditions':
+            [
+                ['angle_build_winrt==1',
+                {
+                    'msvs_enable_winrt' : '1',
+                }],
+                ['angle_build_winphone==1',
+                {
+                    'msvs_enable_winphone' : '1',
+                }],
+            ],
         },
 
         {
@@ -253,6 +275,17 @@
             [
                 'compiler/translator/ShaderLang.cpp',
                 'compiler/translator/ShaderVars.cpp'
+            ],
+            'conditions':
+            [
+                ['angle_build_winrt==1',
+                {
+                    'msvs_enable_winrt' : '1',
+                }],
+                ['angle_build_winphone==1',
+                {
+                    'msvs_enable_winphone' : '1',
+                }],
             ],
         },
 
@@ -281,6 +314,17 @@
             [
                 'compiler/translator/ShaderLang.cpp',
                 'compiler/translator/ShaderVars.cpp'
+            ],
+            'conditions':
+            [
+                ['angle_build_winrt==1',
+                {
+                    'msvs_enable_winrt' : '1',
+                }],
+                ['angle_build_winphone==1',
+                {
+                    'msvs_enable_winphone' : '1',
+                }],
             ],
         },
     ],

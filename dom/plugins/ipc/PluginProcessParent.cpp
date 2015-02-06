@@ -14,10 +14,6 @@
 #include "mozilla/Telemetry.h"
 #include "nsThreadUtils.h"
 
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-#include "mozilla/Preferences.h"
-#endif
-
 using std::vector;
 using std::string;
 
@@ -48,14 +44,12 @@ PluginProcessParent::~PluginProcessParent()
 
 bool
 PluginProcessParent::Launch(mozilla::UniquePtr<LaunchCompleteTask> aLaunchCompleteTask,
-                            bool aEnableSandbox)
+                            int32_t aSandboxLevel)
 {
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-    mEnableNPAPISandbox = aEnableSandbox;
-    mMoreStrictSandbox =
-      Preferences::GetBool("dom.ipc.plugins.moreStrictSandbox");
+    mSandboxLevel = aSandboxLevel;
 #else
-    if (aEnableSandbox) {
+    if (aSandboxLevel != 0) {
         MOZ_ASSERT(false,
                    "Can't enable an NPAPI process sandbox for platform/build.");
     }

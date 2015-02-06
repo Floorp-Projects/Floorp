@@ -92,7 +92,6 @@ public:
     NS_IMETHOD         Create(nsIWidget        *aParent,
                               nsNativeWidget   aNativeParent,
                               const nsIntRect  &aRect,
-                              nsDeviceContext *aContext,
                               nsWidgetInitData *aInitData) MOZ_OVERRIDE;
     NS_IMETHOD         Destroy(void) MOZ_OVERRIDE;
     virtual nsIWidget *GetParent() MOZ_OVERRIDE;

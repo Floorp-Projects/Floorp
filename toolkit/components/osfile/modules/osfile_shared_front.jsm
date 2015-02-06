@@ -337,7 +337,7 @@ AbstractFile.read = function read(path, bytes, options = {}) {
     let decoder;
     try {
       decoder = new TextDecoder(options.encoding);
-    } catch (ex if ex instanceof TypeError) {
+    } catch (ex if ex instanceof RangeError) {
       throw OS.File.Error.invalidArgument("Decode");
     }
     return decoder.decode(buffer);

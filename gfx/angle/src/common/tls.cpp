@@ -10,12 +10,50 @@
 
 #include <assert.h>
 
+#ifdef ANGLE_ENABLE_WINDOWS_STORE
+#include <vector>
+#include <set>
+#include <map>
+#include <mutex>
+
+#include <wrl/client.h>
+#include <wrl/async.h>
+#include <Windows.System.Threading.h>
+
+using namespace std;
+using namespace Windows::Foundation;
+using namespace ABI::Windows::System::Threading;
+
+// Thread local storage for Windows Store support
+typedef vector<void*> ThreadLocalData;
+
+static __declspec(thread) ThreadLocalData* currentThreadData = nullptr;
+static set<ThreadLocalData*> allThreadData;
+static DWORD nextTlsIndex = 0;
+static vector<DWORD> freeTlsIndices;
+
+#endif
+
 TLSIndex CreateTLSIndex()
 {
     TLSIndex index;
 
 #ifdef ANGLE_PLATFORM_WINDOWS
+#ifdef ANGLE_ENABLE_WINDOWS_STORE
+    if (!freeTlsIndices.empty())
+    {
+        DWORD result = freeTlsIndices.back();
+        freeTlsIndices.pop_back();
+        index = result;
+    }
+    else
+    {
+        index = nextTlsIndex++;
+    }
+#else
     index = TlsAlloc();
+#endif
+
 #elif defined(ANGLE_PLATFORM_POSIX)
     // Create global pool key
     if ((pthread_key_create(&index, NULL)) != 0)
@@ -37,7 +75,22 @@ bool DestroyTLSIndex(TLSIndex index)
     }
 
 #ifdef ANGLE_PLATFORM_WINDOWS
+#ifdef ANGLE_ENABLE_WINDOWS_STORE
+    assert(index < nextTlsIndex);
+    assert(find(freeTlsIndices.begin(), freeTlsIndices.end(), index) == freeTlsIndices.end());
+
+    freeTlsIndices.push_back(index);
+    for (auto threadData : allThreadData)
+    {
+        if (threadData->size() > index)
+        {
+            threadData->at(index) = nullptr;
+        }
+    }
+    return true;
+#else
     return (TlsFree(index) == TRUE);
+#endif
 #elif defined(ANGLE_PLATFORM_POSIX)
     return (pthread_key_delete(index) == 0);
 #endif
@@ -52,7 +105,24 @@ bool SetTLSValue(TLSIndex index, void *value)
     }
 
 #ifdef ANGLE_PLATFORM_WINDOWS
+#ifdef ANGLE_ENABLE_WINDOWS_STORE
+    ThreadLocalData* threadData = currentThreadData;
+    if (!threadData)
+    {
+        threadData = new ThreadLocalData(index + 1, nullptr);
+        allThreadData.insert(threadData);
+        currentThreadData = threadData;
+    }
+    else if (threadData->size() <= index)
+    {
+        threadData->resize(index + 1, nullptr);
+    }
+
+    threadData->at(index) = value;
+    return true;
+#else
     return (TlsSetValue(index, value) == TRUE);
+#endif
 #elif defined(ANGLE_PLATFORM_POSIX)
     return (pthread_setspecific(index, value) == 0);
 #endif
@@ -67,7 +137,19 @@ void *GetTLSValue(TLSIndex index)
     }
 
 #ifdef ANGLE_PLATFORM_WINDOWS
+#ifdef ANGLE_ENABLE_WINDOWS_STORE
+    ThreadLocalData* threadData = currentThreadData;
+    if (threadData && threadData->size() > index)
+    {
+        return threadData->at(index);
+    }
+    else
+    {
+        return nullptr;
+    }
+#else
     return TlsGetValue(index);
+#endif
 #elif defined(ANGLE_PLATFORM_POSIX)
     return pthread_getspecific(index);
 #endif

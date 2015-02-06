@@ -16,28 +16,41 @@
 #include "common/debug.h"
 #include "common/platform.h"
 
-#ifdef ANGLE_ENABLE_D3D11
 // DXGISwapChain and DXGIFactory are typedef'd to specific required
 // types. The HWND NativeWindow implementation requires IDXGISwapChain
 // and IDXGIFactory and the Windows Store NativeWindow
 // implementation requires IDXGISwapChain1 and IDXGIFactory2.
+#if defined(ANGLE_ENABLE_WINDOWS_STORE)
+typedef IDXGISwapChain1 DXGISwapChain;
+typedef IDXGIFactory2 DXGIFactory;
+
+#include <wrl.h>
+#include <wrl/wrappers/corewrappers.h>
+#include <windows.applicationmodel.core.h>
+#include <memory>
+
+class IInspectableNativeWindow;
+
+using namespace Microsoft::WRL;
+using namespace Microsoft::WRL::Wrappers;
+
+#else
+#ifdef ANGLE_ENABLE_D3D11
 typedef IDXGISwapChain DXGISwapChain;
 typedef IDXGIFactory DXGIFactory;
+#endif
 #endif
 
 namespace rx
 {
 class NativeWindow
 {
-  public:
+public:
     explicit NativeWindow(EGLNativeWindowType window);
 
-    // The HWND NativeWindow implementation can benefit
-    // by having inline versions of these methods to
-    // reduce the calling overhead.
-    inline bool initialize() { return true; }
-    inline bool getClientRect(LPRECT rect) { return GetClientRect(mWindow, rect) == TRUE; }
-    inline bool isIconic() { return IsIconic(mWindow) == TRUE; }
+    bool initialize();
+    bool getClientRect(LPRECT rect);
+    bool isIconic();
 
 #ifdef ANGLE_ENABLE_D3D11
     HRESULT createSwapChain(ID3D11Device* device, DXGIFactory* factory,
@@ -47,8 +60,13 @@ class NativeWindow
 
     inline EGLNativeWindowType getNativeWindow() const { return mWindow; }
 
-  private:
+private:
     EGLNativeWindowType mWindow;
+
+#if defined(ANGLE_ENABLE_WINDOWS_STORE)
+    std::shared_ptr<IInspectableNativeWindow> mImpl;
+#endif
+
 };
 }
 

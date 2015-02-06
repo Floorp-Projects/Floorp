@@ -51,7 +51,8 @@ class TextureStorage;
 class VertexBuffer;
 class IndexBuffer;
 class QueryImpl;
-class FenceImpl;
+class FenceNVImpl;
+class FenceSyncImpl;
 class BufferImpl;
 class VertexArrayImpl;
 class BufferStorage;
@@ -108,12 +109,12 @@ class Renderer
     virtual int generateConfigs(ConfigDesc **configDescList) = 0;
     virtual void deleteConfigs(ConfigDesc *configDescList) = 0;
 
-    virtual void sync(bool block) = 0;
+    virtual gl::Error sync(bool block) = 0;
 
     virtual SwapChain *createSwapChain(rx::NativeWindow nativeWindow, HANDLE shareHandle, GLenum backBufferFormat, GLenum depthBufferFormat) = 0;
 
     virtual gl::Error generateSwizzle(gl::Texture *texture) = 0;
-    virtual gl::Error setSamplerState(gl::SamplerType type, int index, const gl::SamplerState &sampler) = 0;
+    virtual gl::Error setSamplerState(gl::SamplerType type, int index, gl::Texture *texture, const gl::SamplerState &sampler) = 0;
     virtual gl::Error setTexture(gl::SamplerType type, int index, gl::Texture *texture) = 0;
 
     virtual gl::Error setUniformBuffers(const gl::Buffer *vertexUniformBuffers[], const gl::Buffer *fragmentUniformBuffers[]) = 0;
@@ -208,7 +209,7 @@ class Renderer
 
     // Image operations
     virtual Image *createImage() = 0;
-    virtual void generateMipmap(Image *dest, Image *source) = 0;
+    virtual gl::Error generateMipmap(Image *dest, Image *source) = 0;
     virtual TextureStorage *createTextureStorage2D(SwapChain *swapChain) = 0;
     virtual TextureStorage *createTextureStorage2D(GLenum internalformat, bool renderTarget, GLsizei width, GLsizei height, int levels) = 0;
     virtual TextureStorage *createTextureStorageCube(GLenum internalformat, bool renderTarget, int size, int levels) = 0;
@@ -228,7 +229,8 @@ class Renderer
 
     // Query and Fence creation
     virtual QueryImpl *createQuery(GLenum type) = 0;
-    virtual FenceImpl *createFence() = 0;
+    virtual FenceNVImpl *createFenceNV() = 0;
+    virtual FenceSyncImpl *createFenceSync() = 0;
 
     // Transform Feedback creation
     virtual TransformFeedbackImpl* createTransformFeedback() = 0;

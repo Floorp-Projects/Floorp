@@ -20,6 +20,21 @@ NativeWindow::NativeWindow(EGLNativeWindowType window) : mWindow(window)
 {
 }
 
+bool NativeWindow::initialize()
+{ 
+    return true; 
+}
+
+bool NativeWindow::getClientRect(LPRECT rect)
+{
+    return GetClientRect(mWindow, rect) == TRUE;
+}
+
+bool NativeWindow::isIconic()
+{
+    return IsIconic(mWindow) == TRUE;
+}
+
 #ifdef ANGLE_ENABLE_D3D11
 HRESULT NativeWindow::createSwapChain(ID3D11Device* device, DXGIFactory* factory,
                                       DXGI_FORMAT format, unsigned int width, unsigned int height,

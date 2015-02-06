@@ -2210,7 +2210,7 @@ RangeAnalysis::analyze()
                 if (iter->isAsmJSLoadHeap()) {
                     MAsmJSLoadHeap *ins = iter->toAsmJSLoadHeap();
                     Range *range = ins->ptr()->range();
-                    uint32_t elemSize = TypedArrayElemSize(ins->viewType());
+                    uint32_t elemSize = TypedArrayElemSize(ins->accessType());
                     if (range && range->hasInt32LowerBound() && range->lower() >= 0 &&
                         range->hasInt32UpperBound() && uint32_t(range->upper()) + elemSize <= minHeapLength) {
                         ins->removeBoundsCheck();
@@ -2218,7 +2218,7 @@ RangeAnalysis::analyze()
                 } else if (iter->isAsmJSStoreHeap()) {
                     MAsmJSStoreHeap *ins = iter->toAsmJSStoreHeap();
                     Range *range = ins->ptr()->range();
-                    uint32_t elemSize = TypedArrayElemSize(ins->viewType());
+                    uint32_t elemSize = TypedArrayElemSize(ins->accessType());
                     if (range && range->hasInt32LowerBound() && range->lower() >= 0 &&
                         range->hasInt32UpperBound() && uint32_t(range->upper()) + elemSize <= minHeapLength) {
                         ins->removeBoundsCheck();

@@ -4,7 +4,7 @@
 // found in the LICENSE file.
 //
 
-// Fence9.h: Defines the rx::Fence9 class which implements rx::FenceImpl.
+// Fence9.h: Defines the rx::FenceNV9 class which implements rx::FenceNVImpl.
 
 #ifndef LIBGLESV2_RENDERER_FENCE9_H_
 #define LIBGLESV2_RENDERER_FENCE9_H_
@@ -15,21 +15,20 @@ namespace rx
 {
 class Renderer9;
 
-class Fence9 : public FenceImpl
+class FenceNV9 : public FenceNVImpl
 {
   public:
-    explicit Fence9(rx::Renderer9 *renderer);
-    virtual ~Fence9();
+    explicit FenceNV9(Renderer9 *renderer);
+    virtual ~FenceNV9();
 
-    bool isSet() const;
-    void set();
-    bool test(bool flushCommandBuffer);
-    bool hasError() const;
+    gl::Error set();
+    gl::Error test(bool flushCommandBuffer, GLboolean *outFinished);
+    gl::Error finishFence(GLboolean *outFinished);
 
   private:
-    DISALLOW_COPY_AND_ASSIGN(Fence9);
+    DISALLOW_COPY_AND_ASSIGN(FenceNV9);
 
-    rx::Renderer9 *mRenderer;
+    Renderer9 *mRenderer;
     IDirect3DQuery9 *mQuery;
 };
 

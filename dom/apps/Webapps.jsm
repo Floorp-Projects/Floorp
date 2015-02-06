@@ -3429,11 +3429,29 @@ this.DOMApplicationRegistry = {
                                aNewApp) {
     let requestChannel;
 
+    let appURI = NetUtil.newURI(aNewApp.origin, null, null);
+    let principal = Services.scriptSecurityManager.getAppCodebasePrincipal(
+                      appURI, aNewApp.localId, false);
+
     if (aIsLocalFileInstall) {
-      requestChannel = NetUtil.newChannel(aFullPackagePath)
+      requestChannel = NetUtil.newChannel2(aFullPackagePath,
+                                           null,
+                                           null,
+                                           null,      // aLoadingNode
+                                           principal,
+                                           null,      // aTriggeringPrincipal
+                                           Ci.nsILoadInfo.SEC_NORMAL,
+                                           Ci.nsIContentPolicy.TYPE_OTHER)
                               .QueryInterface(Ci.nsIFileChannel);
     } else {
-      requestChannel = NetUtil.newChannel(aFullPackagePath)
+      requestChannel = NetUtil.newChannel2(aFullPackagePath,
+                                           null,
+                                           null,
+                                           null,      // aLoadingNode
+                                           principal,
+                                           null,      // aTriggeringPrincipal
+                                           Ci.nsILoadInfo.SEC_NORMAL,
+                                           Ci.nsIContentPolicy.TYPE_OTHER)
                               .QueryInterface(Ci.nsIHttpChannel);
       requestChannel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
     }
@@ -3529,7 +3547,7 @@ this.DOMApplicationRegistry = {
     let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     file.initWithPath(aFilePath);
 
-    NetUtil.asyncFetch(file, function(inputStream, status) {
+    NetUtil.asyncFetch2(file, function(inputStream, status) {
       if (!Components.isSuccessCode(status)) {
         debug("Error reading " + aFilePath + ": " + e);
         deferred.reject();
@@ -3556,7 +3574,12 @@ this.DOMApplicationRegistry = {
       debug("File hash computed: " + hash);
 
       deferred.resolve(hash);
-    });
+    },
+    null,      // aLoadingNode
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null,      // aTriggeringPrincipal
+    Ci.nsILoadInfo.SEC_NORMAL,
+    Ci.nsIContentPolicy.TYPE_OTHER);
 
     return deferred.promise;
   },

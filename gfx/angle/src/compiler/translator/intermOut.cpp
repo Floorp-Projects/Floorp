@@ -62,7 +62,9 @@ TString TType::getCompleteString() const
     TStringStream stream;
 
     if (qualifier != EvqTemporary && qualifier != EvqGlobal)
-        stream << getQualifierString() << " " << getPrecisionString() << " ";
+        stream << getQualifierString() << " ";
+    if (precision != EbpUndefined)
+        stream << getPrecisionString() << " ";
     if (array)
         stream << "array[" << getArraySize() << "] of ";
     if (isMatrix())
@@ -221,6 +223,7 @@ bool TOutputTraverser::visitUnary(Visit visit, TIntermUnary *node)
     switch (node->getOp())
     {
       case EOpNegative:       out << "Negate value";         break;
+      case EOpPositive:       out << "Positive sign";        break;
       case EOpVectorLogicalNot:
       case EOpLogicalNot:     out << "Negate conditional";   break;
 

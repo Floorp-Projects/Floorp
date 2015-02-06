@@ -95,7 +95,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
   }
 
   if (aStatus != 301 && aStatus != 302 && aStatus != 303 && aStatus != 307 && aStatus != 308) {
-    aRv.Throw(NS_ERROR_RANGE_ERR);
+    aRv.ThrowRangeError(MSG_INVALID_REDIRECT_STATUSCODE_ERROR);
     return nullptr;
   }
 
@@ -122,7 +122,7 @@ Response::Constructor(const GlobalObject& aGlobal,
                       const ResponseInit& aInit, ErrorResult& aRv)
 {
   if (aInit.mStatus < 200 || aInit.mStatus > 599) {
-    aRv.Throw(NS_ERROR_RANGE_ERR);
+    aRv.ThrowRangeError(MSG_INVALID_RESPONSE_STATUSCODE_ERROR);
     return nullptr;
   }
 

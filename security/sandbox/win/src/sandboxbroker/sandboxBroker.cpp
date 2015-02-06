@@ -117,7 +117,7 @@ SandboxBroker::SetSecurityLevelForContentProcess(bool aMoreStrict)
 #endif
 
 bool
-SandboxBroker::SetSecurityLevelForPluginProcess(bool aMoreStrict)
+SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel)
 {
   if (!mPolicy) {
     return false;
@@ -125,7 +125,7 @@ SandboxBroker::SetSecurityLevelForPluginProcess(bool aMoreStrict)
 
   sandbox::ResultCode result;
   bool ret;
-  if (aMoreStrict) {
+  if (aSandboxLevel >= 2) {
     result = mPolicy->SetJobLevel(sandbox::JOB_UNPROTECTED,
                                      0 /* ui_exceptions */);
     ret = (sandbox::SBOX_ALL_OK == result);

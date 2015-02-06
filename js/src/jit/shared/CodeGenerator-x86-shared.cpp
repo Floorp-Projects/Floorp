@@ -336,6 +336,8 @@ void
 CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool)
 {
     switch (ool->viewType()) {
+      case Scalar::Float32x4:
+      case Scalar::Int32x4:
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
       case Scalar::Float32:
@@ -343,12 +345,6 @@ CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTyp
         break;
       case Scalar::Float64:
         masm.loadConstantDouble(GenericNaN(), ool->dest().fpu());
-        break;
-      case Scalar::Float32x4:
-        masm.loadConstantFloat32x4(SimdConstant::SplatX4(float(GenericNaN())), ool->dest().fpu());
-        break;
-      case Scalar::Int32x4:
-        masm.loadConstantInt32x4(SimdConstant::SplatX4(0), ool->dest().fpu());
         break;
       case Scalar::Int8:
       case Scalar::Uint8:

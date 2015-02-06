@@ -9,6 +9,8 @@
 #ifndef LIBGLESV2_RENDERER_TEXTURESTORAGE_H_
 #define LIBGLESV2_RENDERER_TEXTURESTORAGE_H_
 
+#include "libGLESv2/Error.h"
+
 #include "common/debug.h"
 #include "libGLESv2/Error.h"
 
@@ -27,6 +29,7 @@ namespace rx
 class Renderer;
 class SwapChain;
 class RenderTarget;
+class Image;
 
 class TextureStorage
 {
@@ -39,11 +42,11 @@ class TextureStorage
     virtual bool isManaged() const = 0;
     virtual int getLevelCount() const = 0;
 
-    virtual RenderTarget *getRenderTarget(const gl::ImageIndex &index) = 0;
-    virtual void generateMipmap(const gl::ImageIndex &sourceIndex, const gl::ImageIndex &destIndex) = 0;
+    virtual gl::Error getRenderTarget(const gl::ImageIndex &index, RenderTarget **outRT) = 0;
+    virtual gl::Error generateMipmap(const gl::ImageIndex &sourceIndex, const gl::ImageIndex &destIndex) = 0;
 
     virtual gl::Error copyToStorage(TextureStorage *destStorage) = 0;
-    virtual gl::Error setData(const gl::ImageIndex &index, const gl::Box &sourceBox, GLenum internalFormat, GLenum type,
+    virtual gl::Error setData(const gl::ImageIndex &index, Image *image, const gl::Box *destBox, GLenum type,
                               const gl::PixelUnpackState &unpack, const uint8_t *pixelData) = 0;
 
     unsigned int getRenderTargetSerial(const gl::ImageIndex &index) const;
@@ -54,11 +57,6 @@ class TextureStorage
 
   private:
     DISALLOW_COPY_AND_ASSIGN(TextureStorage);
-
-    const unsigned int mTextureSerial;
-    static unsigned int issueTextureSerial();
-
-    static unsigned int mCurrentTextureSerial;
 
     unsigned int mFirstRenderTargetSerial;
     unsigned int mRenderTargetSerialsLayerStride;

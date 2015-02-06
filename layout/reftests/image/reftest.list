@@ -74,8 +74,7 @@ fuzzy(1,1) == image-orientation-background.html?from-image   image-orientation-r
 fuzzy(1,1) == image-orientation-background.html?90&flip      image-orientation-ref.html?0
 == image-orientation-border-image.html?from-image            image-orientation-border-image.html?0
 == image-orientation-border-image.html?90&flip               image-orientation-border-image.html?0
-# Bug 1120397 - frequent failures on Android
-random-if(Android) == image-orientation-list-style-image.html?from-image        image-orientation-list-style-image.html?0
+== image-orientation-list-style-image.html?from-image        image-orientation-list-style-image.html?0
 == image-orientation-list-style-image.html?90&flip           image-orientation-list-style-image.html?0
 
 # Sanity checks for the image-orientation tests. Ensures that the various

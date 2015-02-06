@@ -37,7 +37,6 @@ public:
     ~ShaderValidator();
 
     bool ValidateAndTranslate(const char* source);
-    void GetInfo(ShShaderInfo pname, size_t* params) const;
     void GetInfoLog(nsACString* out) const;
     void GetOutput(nsACString* out) const;
     bool CanLinkTo(const ShaderValidator* prev, nsCString* const out_log) const;

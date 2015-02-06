@@ -24,6 +24,9 @@
 #include "common/mathutil.h"
 #include "common/utilities.h"
 
+// FIXME(jmadill): remove this when we support buffer data caching
+#include "libGLESv2/renderer/d3d/BufferD3D.h"
+
 namespace gl
 {
 
@@ -1673,8 +1676,17 @@ bool ValidateDrawElements(Context *context, GLenum mode, GLsizei count, GLenum t
         uintptr_t offset = reinterpret_cast<uintptr_t>(indices);
         if (!elementArrayBuffer->getIndexRangeCache()->findRange(type, offset, count, indexRangeOut, NULL))
         {
-            const void *dataPointer = elementArrayBuffer->getImplementation()->getData();
-            const uint8_t *offsetPointer = static_cast<const uint8_t *>(dataPointer) + offset;
+            // FIXME(jmadill): Use buffer data caching instead of the D3D back-end
+            rx::BufferD3D *bufferD3D = rx::BufferD3D::makeBufferD3D(elementArrayBuffer->getImplementation());
+            const uint8_t *dataPointer = NULL;
+            Error error = bufferD3D->getData(&dataPointer);
+            if (error.isError())
+            {
+                context->recordError(error);
+                return false;
+            }
+
+            const uint8_t *offsetPointer = dataPointer + offset;
             *indexRangeOut = rx::IndexRangeCache::ComputeRange(type, offsetPointer, count);
         }
     }

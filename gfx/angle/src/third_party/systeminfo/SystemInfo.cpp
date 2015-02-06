@@ -24,6 +24,7 @@
  */
 
 #include <windows.h>
+#include "common/platform.h"
 
 #if _WIN32_WINNT_WINBLUE
 #include <versionhelpers.h>
@@ -52,7 +53,11 @@ bool isWindowsVistaOrGreater()
 
     if (!initialized) {
         initialized = true;
+#if defined(ANGLE_ENABLE_WINDOWS_STORE)
+        cachedIsWindowsVistaOrGreater = true;
+#else
         cachedIsWindowsVistaOrGreater = IsWindowsVistaOrGreater();
+#endif
     }
     return cachedIsWindowsVistaOrGreater;
 }

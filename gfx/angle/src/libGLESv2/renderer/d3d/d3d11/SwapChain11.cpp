@@ -15,6 +15,7 @@
 #include "libGLESv2/renderer/d3d/d3d11/shaders/compiled/passthrough2d11vs.h"
 #include "libGLESv2/renderer/d3d/d3d11/shaders/compiled/passthroughrgba2d11ps.h"
 
+#include "common/features.h"
 #include "common/NativeWindow.h"
 
 // This can be defined to other values like D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX as needed
@@ -351,8 +352,10 @@ EGLint SwapChain11::resize(EGLint backbufferWidth, EGLint backbufferHeight)
     SafeRelease(mBackBufferRTView);
 
     // Resize swap chain
+    DXGI_SWAP_CHAIN_DESC desc;
+    mSwapChain->GetDesc(&desc);
     const d3d11::TextureFormat &backbufferFormatInfo = d3d11::GetTextureFormatInfo(mBackBufferFormat);
-    HRESULT result = mSwapChain->ResizeBuffers(1, backbufferWidth, backbufferHeight, backbufferFormatInfo.texFormat, 0);
+    HRESULT result = mSwapChain->ResizeBuffers(desc.BufferCount, backbufferWidth, backbufferHeight, backbufferFormatInfo.texFormat, 0);
 
     if (FAILED(result))
     {
@@ -589,13 +592,13 @@ EGLint SwapChain11::swapRect(EGLint x, EGLint y, EGLint width, EGLint height)
     deviceContext->RSSetViewports(1, &viewport);
 
     // Apply textures
-    deviceContext->PSSetShaderResources(0, 1, &mOffscreenSRView);
+    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, mOffscreenSRView);
     deviceContext->PSSetSamplers(0, 1, &mPassThroughSampler);
 
     // Draw
     deviceContext->Draw(4, 0);
 
-#ifdef ANGLE_FORCE_VSYNC_OFF
+#if ANGLE_VSYNC == ANGLE_DISABLED
     result = mSwapChain->Present(0, 0);
 #else
     result = mSwapChain->Present(mSwapInterval, 0);
@@ -619,8 +622,7 @@ EGLint SwapChain11::swapRect(EGLint x, EGLint y, EGLint width, EGLint height)
     }
 
     // Unbind
-    static ID3D11ShaderResourceView *const nullSRV = NULL;
-    deviceContext->PSSetShaderResources(0, 1, &nullSRV);
+    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, NULL);
 
     mRenderer->unapplyRenderTargets();
     mRenderer->markAllStateDirty();

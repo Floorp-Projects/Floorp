@@ -218,7 +218,7 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
     if (ptr->isConstant() && !ins->needsBoundsCheck()) {
         MOZ_ASSERT(ptr->toConstant()->value().toInt32() >= 0);
         LAllocation ptrAlloc = LAllocation(ptr->toConstant()->vp());
-        switch (ins->viewType()) {
+        switch (ins->accessType()) {
           case Scalar::Int8: case Scalar::Uint8:
             // See comment below.
             lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useFixed(ins->value(), eax));
@@ -238,7 +238,7 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
         return;
     }
 
-    switch (ins->viewType()) {
+    switch (ins->accessType()) {
       case Scalar::Int8: case Scalar::Uint8:
         // See comment for LIRGeneratorX86::useByteOpRegister.
         lir = new(alloc()) LAsmJSStoreHeap(useRegister(ins->ptr()), useFixed(ins->value(), eax));
@@ -265,7 +265,7 @@ LIRGeneratorX86::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic
     // The code generated for StoreTypedArrayElementStatic is identical to that
     // for AsmJSStoreHeap, and the same concerns apply.
     LStoreTypedArrayElementStatic *lir;
-    switch (ins->viewType()) {
+    switch (ins->accessType()) {
       case Scalar::Int8: case Scalar::Uint8:
       case Scalar::Uint8Clamped:
         lir = new(alloc()) LStoreTypedArrayElementStatic(useRegister(ins->ptr()),

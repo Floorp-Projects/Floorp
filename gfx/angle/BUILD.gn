@@ -164,6 +164,9 @@ if (is_win) {
     ]
     libs = []
 
+    # Windows-specific sources.
+    sources += rebase_path(gles_gypi.angle_libangle_win_sources, ".", "src")
+
     # Shared D3dD sources.
     if (angle_enable_d3d9 || angle_enable_d3d11) {
       sources += rebase_path(gles_gypi.angle_d3d_shared_sources, ".", "src")
@@ -218,7 +221,10 @@ if (is_win) {
     ]
 
     if (is_debug) {
-      defines += [ "ANGLE_ENABLE_PERF" ]
+      defines += [
+        "ANGLE_ENABLE_PERF",
+        "ANGLE_GENERATE_SHADER_DEBUG_INFO"
+      ]
     }
 
     include_dirs = [ "src/libGLESv2" ]

@@ -139,7 +139,7 @@ public:
     mRetainedWidth = 0;
     mRetainedHeight = 0;
     for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
-      if (!IsPlaceholder(mRetainedTiles[i])) {
+      if (!mRetainedTiles[i].IsPlaceholderTile()) {
         AsDerived().ReleaseTile(mRetainedTiles[i]);
       }
     }
@@ -205,8 +205,6 @@ protected:
 private:
   const Derived& AsDerived() const { return *static_cast<const Derived*>(this); }
   Derived& AsDerived() { return *static_cast<Derived*>(this); }
-
-  bool IsPlaceholder(Tile aTile) const { return aTile == AsDerived().GetPlaceholderTile(); }
 };
 
 class ClientTiledLayerBuffer;
@@ -301,7 +299,7 @@ TiledLayerBuffer<Derived, Tile>::RemoveTile(int x, int y, Tile& aRemovedTile)
 {
   int index = x * mRetainedHeight + y;
   const Tile& tileToRemove = mRetainedTiles.SafeElementAt(index, AsDerived().GetPlaceholderTile());
-  if (!IsPlaceholder(tileToRemove)) {
+  if (!tileToRemove.IsPlaceholderTile()) {
     aRemovedTile = tileToRemove;
     mRetainedTiles[index] = AsDerived().GetPlaceholderTile();
     return true;
@@ -393,8 +391,8 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
         int index = tileX * oldRetainedHeight + tileY;
 
         // The tile may have been removed, skip over it in this case.
-        if (IsPlaceholder(oldRetainedTiles.
-                          SafeElementAt(index, AsDerived().GetPlaceholderTile()))) {
+        if (oldRetainedTiles.
+                          SafeElementAt(index, AsDerived().GetPlaceholderTile()).IsPlaceholderTile()) {
           newRetainedTiles.AppendElement(AsDerived().GetPlaceholderTile());
         } else {
           Tile tileWithPartialValidContent = oldRetainedTiles[index];
@@ -436,7 +434,7 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
   int oldTileCount = 0;
   for (size_t i = 0; i < oldRetainedTiles.Length(); i++) {
     Tile oldTile = oldRetainedTiles[i];
-    if (IsPlaceholder(oldTile)) {
+    if (oldTile.IsPlaceholderTile()) {
       continue;
     }
 
@@ -500,8 +498,8 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
         // If allocating a tile failed we can run into this assertion.
         // Rendering is going to be glitchy but we don't want to crash.
         NS_ASSERTION(!newValidRegion.Intersects(tileRect) ||
-                     !IsPlaceholder(newRetainedTiles.
-                                    SafeElementAt(index, AsDerived().GetPlaceholderTile())),
+                     !newRetainedTiles.
+                                    SafeElementAt(index, AsDerived().GetPlaceholderTile()).IsPlaceholderTile(),
                      "Unexpected placeholder tile");
 
 #endif
@@ -520,10 +518,10 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
 
       // Try to reuse a tile from the old retained tiles that had no partially
       // valid content.
-      while (IsPlaceholder(newTile) && oldRetainedTiles.Length() > 0) {
+      while (newTile.IsPlaceholderTile() && oldRetainedTiles.Length() > 0) {
         AsDerived().SwapTiles(newTile, oldRetainedTiles[oldRetainedTiles.Length()-1]);
         oldRetainedTiles.RemoveElementAt(oldRetainedTiles.Length()-1);
-        if (!IsPlaceholder(newTile)) {
+        if (!newTile.IsPlaceholderTile()) {
           oldTileCount--;
         }
       }
@@ -534,7 +532,7 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
       nsIntPoint tileOrigin(tileStartX, tileStartY);
       newTile = AsDerived().ValidateTile(newTile, nsIntPoint(tileStartX, tileStartY),
                                          tileDrawRegion);
-      NS_ASSERTION(!IsPlaceholder(newTile), "Unexpected placeholder tile - failed to allocate?");
+      NS_ASSERTION(!newTile.IsPlaceholderTile(), "Unexpected placeholder tile - failed to allocate?");
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
       printf_stderr("Store Validate tile %i, %i -> %i\n", tileStartX, tileStartY, index);
 #endif

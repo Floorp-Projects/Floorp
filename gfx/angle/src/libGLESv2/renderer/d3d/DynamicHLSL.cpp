@@ -262,6 +262,13 @@ int DynamicHLSL::packVaryings(InfoLog &infoLog, VaryingPacking packing, rx::Shad
     for (unsigned int feedbackVaryingIndex = 0; feedbackVaryingIndex < transformFeedbackVaryings.size(); feedbackVaryingIndex++)
     {
         const std::string &transformFeedbackVarying = transformFeedbackVaryings[feedbackVaryingIndex];
+
+        if (transformFeedbackVarying == "gl_Position" || transformFeedbackVarying == "gl_PointSize")
+        {
+            // do not pack builtin XFB varyings
+            continue;
+        }
+
         if (packedVaryings.find(transformFeedbackVarying) == packedVaryings.end())
         {
             bool found = false;
@@ -281,7 +288,7 @@ int DynamicHLSL::packVaryings(InfoLog &infoLog, VaryingPacking packing, rx::Shad
                 }
             }
 
-            if (!found && transformFeedbackVarying != "gl_Position" && transformFeedbackVarying != "gl_PointSize")
+            if (!found)
             {
                 infoLog.append("Transform feedback varying %s does not exist in the vertex shader.", transformFeedbackVarying.c_str());
                 return -1;

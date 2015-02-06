@@ -63,7 +63,7 @@
       new ArchiveReader(binaryFile, { encoding: "random stuff" });
       ok(false, "Should have thrown for bogus encoding label.");
     } catch (e) {
-      ok(e instanceof TypeError, "Expected a TypeError");
+      ok(e instanceof RangeError, "Expected a RangeError");
       finishTest();
     }
   }

@@ -4,6 +4,7 @@
 
 #include "PluginWidgetParent.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsWidgetsCID.h"
 #include "mozilla/DebugOnly.h"
@@ -99,14 +100,12 @@ PluginWidgetParent::SendAsyncUpdate(nsIWidget* aWidget)
 // makes use of some of the utility functions as well.
 
 bool
-PluginWidgetParent::RecvCreate()
+PluginWidgetParent::RecvCreate(nsresult* aResult)
 {
   PWLOG("PluginWidgetParent::RecvCreate()\n");
 
-  nsresult rv;
-
-  mWidget = do_CreateInstance(kWidgetCID, &rv);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "widget create failure");
+  mWidget = do_CreateInstance(kWidgetCID, aResult);
+  NS_ASSERTION(NS_SUCCEEDED(*aResult), "widget create failure");
 
 #if defined(MOZ_WIDGET_GTK)
   // We need this currently just for GTK in setting up a socket widget
@@ -122,17 +121,23 @@ PluginWidgetParent::RecvCreate()
 
   // This returns the top level window widget
   nsCOMPtr<nsIWidget> parentWidget = GetTabParent()->GetWidget();
+  // If this fails, bail.
+  if (!parentWidget) {
+    *aResult = NS_ERROR_NOT_AVAILABLE;
+    return true;
+  }
 
   nsWidgetInitData initData;
   initData.mWindowType = eWindowType_plugin_ipc_chrome;
   initData.mUnicode = false;
   initData.clipChildren = true;
   initData.clipSiblings = true;
-  rv = mWidget->Create(parentWidget.get(), nullptr, nsIntRect(0,0,0,0),
-                       nullptr, &initData);
-  if (NS_FAILED(rv)) {
+  *aResult = mWidget->Create(parentWidget.get(), nullptr, nsIntRect(0,0,0,0),
+                             &initData);
+  if (NS_FAILED(*aResult)) {
     mWidget->Destroy();
     mWidget = nullptr;
+    // This should never fail, abort.
     return false;
   }
 

@@ -17,6 +17,7 @@
 #include <set>
 #include <sstream>
 #include <cstdarg>
+#include <vector>
 
 // A macro to disallow the copy constructor and operator= functions
 // This must be used in the private: declarations for a class
@@ -95,6 +96,13 @@ inline void StructZero(T *obj)
     memset(obj, 0, sizeof(T));
 }
 
+template <typename T>
+inline bool IsMaskFlagSet(T mask, T flag)
+{
+    // Handles multibit flags as well
+    return (mask & flag) == flag;
+}
+
 inline const char* MakeStaticString(const std::string &str)
 {
     static std::set<std::string> strings;
@@ -131,6 +139,8 @@ inline std::string Str(int i)
     strstr << i;
     return strstr.str();
 }
+
+size_t FormatStringIntoVector(const char *fmt, va_list vararg, std::vector<char>& buffer);
 
 std::string FormatString(const char *fmt, va_list vararg);
 std::string FormatString(const char *fmt, ...);

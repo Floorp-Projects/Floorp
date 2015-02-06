@@ -141,8 +141,6 @@ class ProgramBinary : public RefCountObject
     void getUniformiv(GLint location, GLint *params);
     void getUniformuiv(GLint location, GLuint *params);
 
-    void dirtyAllUniforms();
-
     Error applyUniforms();
     Error applyUniformBuffers(const std::vector<Buffer*> boundBuffers, const Caps &caps);
 
@@ -153,7 +151,6 @@ class ProgramBinary : public RefCountObject
     LinkResult link(InfoLog &infoLog, const AttributeBindings &attributeBindings, Shader *fragmentShader, Shader *vertexShader,
                     const std::vector<std::string>& transformFeedbackVaryings, GLenum transformFeedbackBufferMode,
                     const Caps &caps);
-    void getAttachedShaders(GLsizei maxCount, GLsizei *count, GLuint *shaders);
 
     void getActiveAttribute(GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, GLchar *name) const;
     GLint getActiveAttributeCount() const;
@@ -189,25 +186,19 @@ class ProgramBinary : public RefCountObject
     void initAttributesByLayout();
     void sortAttributesByLayout(rx::TranslatedAttribute attributes[MAX_VERTEX_ATTRIBS], int sortedSemanticIndices[MAX_VERTEX_ATTRIBS]) const;
 
-    const std::vector<LinkedUniform*> &getUniforms() const { return mUniforms; }
-
     static bool linkVaryings(InfoLog &infoLog, Shader *fragmentShader, Shader *vertexShader);
+    static bool linkValidateUniforms(InfoLog &infoLog, const std::string &uniformName, const sh::Uniform &vertexUniform, const sh::Uniform &fragmentUniform);
+    static bool linkValidateInterfaceBlockFields(InfoLog &infoLog, const std::string &uniformName, const sh::InterfaceBlockField &vertexUniform, const sh::InterfaceBlockField &fragmentUniform);
 
   private:
     DISALLOW_COPY_AND_ASSIGN(ProgramBinary);
 
-    struct Sampler
-    {
-        Sampler();
-
-        bool active;
-        GLint logicalTextureUnit;
-        GLenum textureType;
-    };
-
     void reset();
 
     bool linkAttributes(InfoLog &infoLog, const AttributeBindings &attributeBindings, const Shader *vertexShader);
+    bool linkUniformBlocks(InfoLog &infoLog, const Shader &vertexShader, const Shader &fragmentShader, const Caps &caps);
+    bool areMatchingInterfaceBlocks(gl::InfoLog &infoLog, const sh::InterfaceBlock &vertexInterfaceBlock,
+                                    const sh::InterfaceBlock &fragmentInterfaceBlock);
 
     static bool linkValidateVariablesBase(InfoLog &infoLog,
                                           const std::string &variableName,
@@ -215,39 +206,14 @@ class ProgramBinary : public RefCountObject
                                           const sh::ShaderVariable &fragmentVariable,
                                           bool validatePrecision);
 
-    static bool linkValidateUniforms(InfoLog &infoLog, const std::string &uniformName, const sh::Uniform &vertexUniform, const sh::Uniform &fragmentUniform);
     static bool linkValidateVaryings(InfoLog &infoLog, const std::string &varyingName, const sh::Varying &vertexVarying, const sh::Varying &fragmentVarying);
-    static bool linkValidateInterfaceBlockFields(InfoLog &infoLog, const std::string &uniformName, const sh::InterfaceBlockField &vertexUniform, const sh::InterfaceBlockField &fragmentUniform);
-    bool linkUniforms(InfoLog &infoLog, const Shader &vertexShader, const Shader &fragmentShader, const Caps &caps);
-    void defineUniformBase(GLenum shader, const sh::Uniform &uniform, unsigned int uniformRegister);
-    void defineUniform(GLenum shader, const sh::ShaderVariable &uniform, const std::string &fullName, sh::HLSLBlockEncoder *encoder);
-    bool indexSamplerUniform(const LinkedUniform &uniform, InfoLog &infoLog, const Caps &caps);
-    bool indexUniforms(InfoLog &infoLog, const Caps &caps);
-    static bool assignSamplers(unsigned int startSamplerIndex, GLenum samplerType, unsigned int samplerCount,
-                               std::vector<Sampler> &outSamplers, GLuint *outUsedRange);
-    bool areMatchingInterfaceBlocks(InfoLog &infoLog, const sh::InterfaceBlock &vertexInterfaceBlock, const sh::InterfaceBlock &fragmentInterfaceBlock);
-    bool linkUniformBlocks(InfoLog &infoLog, const Shader &vertexShader, const Shader &fragmentShader, const Caps &caps);
     bool gatherTransformFeedbackLinkedVaryings(InfoLog &infoLog, const std::vector<LinkedVarying> &linkedVaryings,
                                                const std::vector<std::string> &transformFeedbackVaryingNames,
                                                GLenum transformFeedbackBufferMode,
                                                std::vector<LinkedVarying> *outTransformFeedbackLinkedVaryings,
                                                const Caps &caps) const;
-    template <typename VarT>
-    void defineUniformBlockMembers(const std::vector<VarT> &fields, const std::string &prefix, int blockIndex,
-                                   sh::BlockLayoutEncoder *encoder, std::vector<unsigned int> *blockUniformIndexes,
-                                   bool inRowMajorLayout);
-    bool defineUniformBlock(InfoLog &infoLog, const Shader &shader, const sh::InterfaceBlock &interfaceBlock, const Caps &caps);
     bool assignUniformBlockRegister(InfoLog &infoLog, UniformBlock *uniformBlock, GLenum shader, unsigned int registerIndex, const Caps &caps);
     void defineOutputVariables(Shader *fragmentShader);
-
-    template <typename T>
-    void setUniform(GLint location, GLsizei count, const T* v, GLenum targetUniformType);
-
-    template <int cols, int rows>
-    void setUniformMatrixfv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value, GLenum targetUniformType);
-
-    template <typename T>
-    void getUniformv(GLint location, T *params, GLenum uniformType);
 
     rx::ProgramImpl *mProgram;
 
@@ -255,15 +221,6 @@ class ProgramBinary : public RefCountObject
     int mSemanticIndex[MAX_VERTEX_ATTRIBS];
     int mAttributesByLayout[MAX_VERTEX_ATTRIBS];
 
-    std::vector<Sampler> mSamplersPS;
-    std::vector<Sampler> mSamplersVS;
-    GLuint mUsedVertexSamplerRange;
-    GLuint mUsedPixelSamplerRange;
-    bool mDirtySamplerMapping;
-
-    std::vector<LinkedUniform*> mUniforms;
-    std::vector<UniformBlock*> mUniformBlocks;
-    std::vector<VariableLocation> mUniformIndex;
     std::map<int, VariableLocation> mOutputVariables;
 
     bool mValidated;

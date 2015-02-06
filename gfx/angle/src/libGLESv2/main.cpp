@@ -11,15 +11,42 @@
 
 #include "common/tls.h"
 
-static TLSIndex currentTLS = TLS_OUT_OF_INDEXES;
+static TLSIndex currentTLS = TLS_INVALID_INDEX;
 
 namespace gl
 {
 
+// TODO(kbr): figure out how these are going to be managed on
+// non-Windows platforms. These routines would need to be exported
+// from ANGLE and called cooperatively when users create and destroy
+// threads -- or the initialization of the TLS index, and allocation
+// of thread-local data, will have to be done lazily. Will have to use
+// destructor function with pthread_create_key on POSIX platforms to
+// clean up thread-local data.
+
+// Call this exactly once at process startup.
+bool CreateThreadLocalIndex()
+{
+    currentTLS = CreateTLSIndex();
+    if (currentTLS == TLS_INVALID_INDEX)
+    {
+        return false;
+    }
+    return true;
+}
+
+// Call this exactly once at process shutdown.
+void DestroyThreadLocalIndex()
+{
+    DestroyTLSIndex(currentTLS);
+    currentTLS = TLS_INVALID_INDEX;
+}
+
+// Call this upon thread startup.
 Current *AllocateCurrent()
 {
-    ASSERT(currentTLS != TLS_OUT_OF_INDEXES);
-    if (currentTLS == TLS_OUT_OF_INDEXES)
+    ASSERT(currentTLS != TLS_INVALID_INDEX);
+    if (currentTLS == TLS_INVALID_INDEX)
     {
         return NULL;
     }
@@ -37,6 +64,7 @@ Current *AllocateCurrent()
     return current;
 }
 
+// Call this upon thread shutdown.
 void DeallocateCurrent()
 {
     Current *current = reinterpret_cast<Current*>(GetTLSValue(currentTLS));
@@ -46,17 +74,21 @@ void DeallocateCurrent()
 
 }
 
+#ifdef ANGLE_PLATFORM_WINDOWS
 extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 {
     switch (reason)
     {
       case DLL_PROCESS_ATTACH:
         {
-            currentTLS = CreateTLSIndex();
-            if (currentTLS == TLS_OUT_OF_INDEXES)
+            if (!gl::CreateThreadLocalIndex())
             {
                 return FALSE;
             }
+
+#ifdef ANGLE_ENABLE_DEBUG_ANNOTATIONS
+            gl::InitializeDebugAnnotations();
+#endif
         }
         // Fall through to initialize index
       case DLL_THREAD_ATTACH:
@@ -72,7 +104,11 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved
       case DLL_PROCESS_DETACH:
         {
             gl::DeallocateCurrent();
-            DestroyTLSIndex(currentTLS);
+            gl::DestroyThreadLocalIndex();
+
+#ifdef ANGLE_ENABLE_DEBUG_ANNOTATIONS
+            gl::UninitializeDebugAnnotations();
+#endif
         }
         break;
       default:
@@ -81,6 +117,7 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved
 
     return TRUE;
 }
+#endif
 
 namespace gl
 {
@@ -168,4 +205,3 @@ void error(GLenum errorCode)
 }
 
 }
-

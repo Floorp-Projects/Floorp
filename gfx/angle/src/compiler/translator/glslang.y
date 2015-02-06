@@ -354,6 +354,15 @@ function_call
                         // Treat it like a built-in unary operator.
                         //
                         $$ = context->intermediate.addUnaryMath(op, $1.intermNode, @1);
+                        const TType& returnType = fnCandidate->getReturnType();
+                        if (returnType.getBasicType() == EbtBool) {
+                            // Bool types should not have precision, so we'll override any precision
+                            // that might have been set by addUnaryMath.
+                            $$->setType(returnType);
+                        } else {
+                            // addUnaryMath has set the precision of the node based on the operand.
+                            $$->setTypePreservePrecision(returnType);
+                        }
                         if ($$ == 0)  {
                             std::stringstream extraInfoStream;
                             extraInfoStream << "built in unary operator function.  Type: " << static_cast<TIntermTyped*>($1.intermNode)->getCompleteString();
@@ -362,20 +371,29 @@ function_call
                             YYERROR;
                         }
                     } else {
-                        $$ = context->intermediate.setAggregateOperator($1.intermAggregate, op, @1);
+                        TIntermAggregate *aggregate = context->intermediate.setAggregateOperator($1.intermAggregate, op, @1);
+                        aggregate->setType(fnCandidate->getReturnType());
+                        aggregate->setPrecisionFromChildren();
+                        $$ = aggregate;
                     }
                 } else {
                     // This is a real function call
 
-                    $$ = context->intermediate.setAggregateOperator($1.intermAggregate, EOpFunctionCall, @1);
-                    $$->setType(fnCandidate->getReturnType());
+                    TIntermAggregate *aggregate = context->intermediate.setAggregateOperator($1.intermAggregate, EOpFunctionCall, @1);
+                    aggregate->setType(fnCandidate->getReturnType());
 
                     // this is how we know whether the given function is a builtIn function or a user defined function
                     // if builtIn == false, it's a userDefined -> could be an overloaded builtIn function also
                     // if builtIn == true, it's definitely a builtIn function with EOpNull
                     if (!builtIn)
-                        $$->getAsAggregate()->setUserDefined();
-                    $$->getAsAggregate()->setName(fnCandidate->getMangledName());
+                        aggregate->setUserDefined();
+                    aggregate->setName(fnCandidate->getMangledName());
+
+                    // This needs to happen after the name is set
+                    if (builtIn)
+                        aggregate->setBuiltInFunctionPrecision();
+
+                    $$ = aggregate;
 
                     TQualifier qual;
                     for (size_t i = 0; i < fnCandidate->getParamCount(); ++i) {
@@ -388,7 +406,6 @@ function_call
                         }
                     }
                 }
-                $$->setType(fnCandidate->getReturnType());
             } else {
                 // error message was put out by PaFindFunction()
                 // Put on a dummy node for error recovery
@@ -500,6 +517,7 @@ unary_expression
                 const char* errorOp = "";
                 switch($1.op) {
                 case EOpNegative:   errorOp = "-"; break;
+                case EOpPositive:   errorOp = "+"; break;
                 case EOpLogicalNot: errorOp = "!"; break;
                 default: break;
                 }
@@ -514,7 +532,7 @@ unary_expression
 // Grammar Note:  No traditional style type casts.
 
 unary_operator
-    : PLUS  { $$.op = EOpNull; }
+    : PLUS  { $$.op = EOpPositive; }
     | DASH  { $$.op = EOpNegative; }
     | BANG  { $$.op = EOpLogicalNot; }
     ;

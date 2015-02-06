@@ -58,14 +58,13 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
   }
 
   [mHandoffTimer invalidate];
+  [mHandoffTimer release];
   mHandoffTimer = nil;
 }
 
 - (void)handoffToGeoIPProvider
 {
-  // Single-shot timers are invalid once executed and are released by the run loop
-  mHandoffTimer = nil;
-
+  [self shutdownHandoffTimer];
   mProvider->CreateMLSFallbackProvider();
 }
 
@@ -96,11 +95,11 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
     // The 2 sec delay is arbitrarily large enough that CL has a reasonable head start and
     // if it is likely to succeed, it should complete before the MLS provider.
     // Take note that in locationManager:didUpdateLocations: the handoff to MLS is stopped.
-    mHandoffTimer = [NSTimer scheduledTimerWithTimeInterval:2.0
+    mHandoffTimer = [[NSTimer scheduledTimerWithTimeInterval:2.0
                                                      target:self
                                                    selector:@selector(handoffToGeoIPProvider)
                                                    userInfo:nil
-                                                    repeats:NO];
+                                                    repeats:NO] retain];
   }
 }
 

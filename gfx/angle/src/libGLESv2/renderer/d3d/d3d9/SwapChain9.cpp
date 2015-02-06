@@ -11,6 +11,8 @@
 #include "libGLESv2/renderer/d3d/d3d9/formatutils9.h"
 #include "libGLESv2/renderer/d3d/d3d9/Renderer9.h"
 
+#include "common/features.h"
+
 namespace rx
 {
 
@@ -50,7 +52,7 @@ void SwapChain9::release()
 
 static DWORD convertInterval(EGLint interval)
 {
-#ifdef ANGLE_FORCE_VSYNC_OFF
+#if ANGLE_VSYNC == ANGLE_DISABLED
     return D3DPRESENT_INTERVAL_IMMEDIATE;
 #else
     switch(interval)

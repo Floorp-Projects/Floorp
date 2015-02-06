@@ -18,6 +18,7 @@
 #include "compiler/translator/ExtensionBehavior.h"
 #include "compiler/translator/HashNames.h"
 #include "compiler/translator/InfoSink.h"
+#include "compiler/translator/Pragma.h"
 #include "compiler/translator/SymbolTable.h"
 #include "compiler/translator/VariableInfo.h"
 #include "third_party/compiler/ArrayBoundsClamper.h"
@@ -71,9 +72,7 @@ class TCompiler : public TShHandleBase
     const std::vector<sh::Attribute> &getAttributes() const { return attributes; }
     const std::vector<sh::Attribute> &getOutputVariables() const { return outputVariables; }
     const std::vector<sh::Uniform> &getUniforms() const { return uniforms; }
-    const std::vector<sh::ShaderVariable> &getExpandedUniforms() const { return expandedUniforms; }
     const std::vector<sh::Varying> &getVaryings() const { return varyings; }
-    const std::vector<sh::ShaderVariable> &getExpandedVaryings() const { return expandedVaryings; }
     const std::vector<sh::InterfaceBlock> &getInterfaceBlocks() const { return interfaceBlocks; }
 
     ShHashFunction64 getHashFunction() const { return hashFunction; }
@@ -81,7 +80,7 @@ class TCompiler : public TShHandleBase
     TSymbolTable& getSymbolTable() { return symbolTable; }
     ShShaderSpec getShaderSpec() const { return shaderSpec; }
     ShShaderOutput getOutputType() const { return outputType; }
-    std::string getBuiltInResourcesString() const { return builtInResourcesString; }
+    const std::string &getBuiltInResourcesString() const { return builtInResourcesString; }
 
     // Get the resources set by InitBuiltInSymbolTable
     const ShBuiltInResources& getResources() const;
@@ -131,6 +130,8 @@ class TCompiler : public TShHandleBase
     bool limitExpressionComplexity(TIntermNode* root);
     // Get built-in extensions with default behavior.
     const TExtensionBehavior& getExtensionBehavior() const;
+    const TPragma& getPragma() const { return mPragma; }
+    void writePragma();
 
     const ArrayBoundsClamper& getArrayBoundsClamper() const;
     ShArrayIndexClampingStrategy getArrayIndexClampingStrategy() const;
@@ -141,7 +142,6 @@ class TCompiler : public TShHandleBase
     std::vector<sh::Uniform> uniforms;
     std::vector<sh::ShaderVariable> expandedUniforms;
     std::vector<sh::Varying> varyings;
-    std::vector<sh::ShaderVariable> expandedVaryings;
     std::vector<sh::InterfaceBlock> interfaceBlocks;
 
   private:
@@ -174,6 +174,8 @@ class TCompiler : public TShHandleBase
     // name hashing.
     ShHashFunction64 hashFunction;
     NameMap nameMap;
+
+    TPragma mPragma;
 };
 
 //

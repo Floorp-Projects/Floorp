@@ -86,7 +86,7 @@ class Context
     GLuint createRenderbuffer();
     GLuint createSampler();
     GLuint createTransformFeedback();
-    GLsync createFenceSync(GLenum condition);
+    GLsync createFenceSync();
 
     void deleteBuffer(GLuint buffer);
     void deleteShader(GLuint shader);
@@ -193,7 +193,7 @@ class Context
     Error drawElements(GLenum mode, GLsizei count, GLenum type,
                        const GLvoid *indices, GLsizei instances,
                        const rx::RangeUI &indexRange);
-    void sync(bool block);   // flush/finish
+    Error sync(bool block);   // flush/finish
 
     void recordError(const Error &error);
 

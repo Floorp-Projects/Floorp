@@ -124,7 +124,14 @@ ContactDB.prototype = {
         }
       }
 
-      let chan = jsm.NetUtil.newChannel(contactsFile);
+      let chan = jsm.NetUtil.newChannel2(contactsFile,
+                                         null,
+                                         null,
+                                         null,      // aLoadingNode
+                                         Services.scriptSecurityManager.getSystemPrincipal(),
+                                         null,      // aTriggeringPrincipal
+                                         Ci.nsILoadInfo.SEC_NORMAL,
+                                         Ci.nsIContentPolicy.TYPE_OTHER);
       let stream = chan.open();
       // Obtain a converter to read from a UTF-8 encoded input stream.
       let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]

@@ -238,14 +238,9 @@ GLuint Context::createRenderbuffer()
     return mResourceManager->createRenderbuffer();
 }
 
-GLsync Context::createFenceSync(GLenum condition)
+GLsync Context::createFenceSync()
 {
     GLuint handle = mResourceManager->createFenceSync();
-
-    gl::FenceSync *fenceSync = mResourceManager->getFenceSync(handle);
-    ASSERT(fenceSync);
-
-    fenceSync->set(condition);
 
     return reinterpret_cast<GLsync>(handle);
 }
@@ -290,7 +285,7 @@ GLuint Context::createFenceNV()
 {
     GLuint handle = mFenceNVHandleAllocator.allocate();
 
-    mFenceNVMap[handle] = new FenceNV(mRenderer);
+    mFenceNVMap[handle] = new FenceNV(mRenderer->createFenceNV());
 
     return handle;
 }
@@ -1474,9 +1469,8 @@ Error Context::applyTextures(ProgramBinary *programBinary, SamplerType shaderTyp
         GLint textureUnit = programBinary->getSamplerMapping(shaderType, samplerIndex, getCaps());
         if (textureUnit != -1)
         {
-            SamplerState sampler;
-            Texture* texture = getSamplerTexture(textureUnit, textureType);
-            texture->getSamplerStateWithNativeOffset(&sampler);
+            Texture *texture = getSamplerTexture(textureUnit, textureType);
+            SamplerState sampler = texture->getSamplerState();
 
             Sampler *samplerObject = mState.getSampler(textureUnit);
             if (samplerObject)
@@ -1488,7 +1482,7 @@ Error Context::applyTextures(ProgramBinary *programBinary, SamplerType shaderTyp
             if (texture->isSamplerComplete(sampler, mTextureCaps, mExtensions, mClientVersion) &&
                 !std::binary_search(framebufferSerials.begin(), framebufferSerials.begin() + framebufferSerialCount, texture->getTextureSerial()))
             {
-                Error error = mRenderer->setSamplerState(shaderType, samplerIndex, sampler);
+                Error error = mRenderer->setSamplerState(shaderType, samplerIndex, texture, sampler);
                 if (error.isError())
                 {
                     return error;
@@ -1619,7 +1613,11 @@ Error Context::clear(GLbitfield mask)
 
     ClearParameters clearParams = mState.getClearParameters(mask);
 
-    applyRenderTarget(GL_TRIANGLES, true);   // Clips the clear to the scissor rectangle but not the viewport
+    Error error = applyRenderTarget(GL_TRIANGLES, true);   // Clips the clear to the scissor rectangle but not the viewport
+    if (error.isError())
+    {
+        return error;
+    }
 
     return mRenderer->clear(clearParams, mState.getDrawFramebuffer());
 }
@@ -1650,7 +1648,11 @@ Error Context::clearBufferfv(GLenum buffer, int drawbuffer, const float *values)
         clearParams.depthClearValue = values[0];
     }
 
-    applyRenderTarget(GL_TRIANGLES, true);   // Clips the clear to the scissor rectangle but not the viewport
+    Error error = applyRenderTarget(GL_TRIANGLES, true);   // Clips the clear to the scissor rectangle but not the viewport
+    if (error.isError())
+    {
+        return error;
+    }
 
     return mRenderer->clear(clearParams, mState.getDrawFramebuffer());
 }
@@ -1671,7 +1673,11 @@ Error Context::clearBufferuiv(GLenum buffer, int drawbuffer, const unsigned int 
     clearParams.colorUIClearValue = ColorUI(values[0], values[1], values[2], values[3]);
     clearParams.colorClearType = GL_UNSIGNED_INT;
 
-    applyRenderTarget(GL_TRIANGLES, true);   // Clips the clear to the scissor rectangle but not the viewport
+    Error error = applyRenderTarget(GL_TRIANGLES, true);   // Clips the clear to the scissor rectangle but not the viewport
+    if (error.isError())
+    {
+        return error;
+    }
 
     return mRenderer->clear(clearParams, mState.getDrawFramebuffer());
 }
@@ -1702,7 +1708,11 @@ Error Context::clearBufferiv(GLenum buffer, int drawbuffer, const int *values)
         clearParams.stencilClearValue = values[1];
     }
 
-    applyRenderTarget(GL_TRIANGLES, true);   // Clips the clear to the scissor rectangle but not the viewport
+    Error error = applyRenderTarget(GL_TRIANGLES, true);   // Clips the clear to the scissor rectangle but not the viewport
+    if (error.isError())
+    {
+        return error;
+    }
 
     return mRenderer->clear(clearParams, mState.getDrawFramebuffer());
 }
@@ -1721,7 +1731,11 @@ Error Context::clearBufferfi(GLenum buffer, int drawbuffer, float depth, int ste
     clearParams.clearStencil = true;
     clearParams.stencilClearValue = stencil;
 
-    applyRenderTarget(GL_TRIANGLES, true);   // Clips the clear to the scissor rectangle but not the viewport
+    Error error = applyRenderTarget(GL_TRIANGLES, true);   // Clips the clear to the scissor rectangle but not the viewport
+    if (error.isError())
+    {
+        return error;
+    }
 
     return mRenderer->clear(clearParams, mState.getDrawFramebuffer());
 }
@@ -1896,9 +1910,9 @@ Error Context::drawElements(GLenum mode, GLsizei count, GLenum type,
 }
 
 // Implements glFlush when block is false, glFinish when block is true
-void Context::sync(bool block)
+Error Context::sync(bool block)
 {
-    mRenderer->sync(block);
+    return mRenderer->sync(block);
 }
 
 void Context::recordError(const Error &error)
