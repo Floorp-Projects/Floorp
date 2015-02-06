@@ -624,6 +624,7 @@ CodeGeneratorARM::visitSoftDivI(LSoftDivI *ins)
         masm.callWithABI(AsmJSImm_aeabi_idivmod);
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
+
     // idivmod returns the quotient in r0, and the remainder in r1.
     if (!mir->canTruncateRemainder()) {
         MOZ_ASSERT(mir->fallible());
@@ -2104,6 +2105,14 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod *ins)
         masm.callWithABI(AsmJSImm_aeabi_uidivmod);
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_uidivmod));
+
+    // uidivmod returns the quotient in r0, and the remainder in r1.
+    MInstruction *mir = ins->mir();
+    if (mir->isDiv() && !mir->toDiv()->canTruncateRemainder()) {
+        MOZ_ASSERT(mir->toDiv()->fallible());
+        masm.ma_cmp(r1, Imm32(0));
+        bailoutIf(Assembler::NonZero, ins->snapshot());
+    }
 
     masm.bind(&afterDiv);
 }
