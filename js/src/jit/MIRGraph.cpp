@@ -93,7 +93,7 @@ MIRGenerator::abort(const char *message, ...)
 }
 
 void
-MIRGenerator::addAbortedNewScriptPropertiesGroup(types::ObjectGroup *group)
+MIRGenerator::addAbortedNewScriptPropertiesGroup(ObjectGroup *group)
 {
     for (size_t i = 0; i < abortedNewScriptPropertiesGroups_.length(); i++) {
         if (group == abortedNewScriptPropertiesGroups_[i])

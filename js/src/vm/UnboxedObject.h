@@ -35,7 +35,7 @@ UnboxedTypeNeedsPreBarrier(JSValueType type)
 }
 
 // Class describing the layout of an UnboxedPlainObject.
-class UnboxedLayout
+class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
 {
   public:
     struct Property {
@@ -44,7 +44,7 @@ class UnboxedLayout
         JSValueType type;
 
         Property()
-          : name(nullptr), offset(0), type(JSVAL_TYPE_MAGIC)
+          : name(nullptr), offset(UINT32_MAX), type(JSVAL_TYPE_MAGIC)
         {}
     };
 
@@ -182,7 +182,7 @@ class UnboxedPlainObject : public JSObject
 // preliminary objects and their group to the new unboxed representation.
 bool
 TryConvertToUnboxedLayout(JSContext *cx, Shape *templateShape,
-                          types::ObjectGroup *group, types::PreliminaryObjectArray *objects);
+                          ObjectGroup *group, types::PreliminaryObjectArray *objects);
 
 inline gc::AllocKind
 UnboxedLayout::getAllocKind() const
