@@ -248,9 +248,9 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
     NS_UpdateHint(result, nsChangeHint_ClearAncestorIntrinsics);
   }
 
-  MOZ_ASSERT(NS_IsHintSubset(result,
-                             nsChangeHint_Hints_NotHandledForDescendants),
-             "something is inconsistent");
+  NS_ABORT_IF_FALSE(NS_IsHintSubset(result,
+                                    nsChangeHint_Hints_NotHandledForDescendants),
+                    "something is inconsistent");
 
   return result;
 }

@@ -19,6 +19,7 @@
 #include "mozilla/layers/APZTestData.h" // for APZTestData
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsDebug.h"                    // for NS_ABORT_IF_FALSE
 #include "nsIObserver.h"                // for nsIObserver
 #include "nsISupportsImpl.h"            // for Layer::Release, etc
 #include "nsRect.h"                     // for nsIntRect
@@ -357,7 +358,7 @@ public:
 
   void SetShadow(PLayerChild* aShadow)
   {
-    MOZ_ASSERT(!mShadow, "can't have two shadows (yet)");
+    NS_ABORT_IF_FALSE(!mShadow, "can't have two shadows (yet)");
     mShadow = aShadow;
   }
 
@@ -395,7 +396,7 @@ CreateShadowFor(ClientLayer* aLayer,
 {
   PLayerChild* shadow = aMgr->AsShadowForwarder()->ConstructShadowFor(aLayer);
   // XXX error handling
-  MOZ_ASSERT(shadow, "failed to create shadow");
+  NS_ABORT_IF_FALSE(shadow, "failed to create shadow");
 
   aLayer->SetShadow(shadow);
   (aMgr->AsShadowForwarder()->*aMethod)(aLayer);

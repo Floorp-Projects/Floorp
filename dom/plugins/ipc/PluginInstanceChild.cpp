@@ -2669,8 +2669,8 @@ PluginInstanceChild::DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
 bool
 PluginInstanceChild::CreateOptSurface(void)
 {
-    MOZ_ASSERT(mSurfaceType != gfxSurfaceType::Max,
-               "Need a valid surface type here");
+    NS_ABORT_IF_FALSE(mSurfaceType != gfxSurfaceType::Max,
+                      "Need a valid surface type here");
     NS_ASSERTION(!mCurrentSurface, "mCurrentSurfaceActor can get out of sync.");
 
     nsRefPtr<gfxASurface> retsurf;
@@ -3099,8 +3099,8 @@ void
 PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
                                                   gfxASurface* aSurface)
 {
-    MOZ_ASSERT(aSurface->GetContentType() == gfxContentType::COLOR_ALPHA,
-               "Refusing to pointlessly recover alpha");
+    NS_ABORT_IF_FALSE(aSurface->GetContentType() == gfxContentType::COLOR_ALPHA,
+                      "Refusing to pointlessly recover alpha");
 
     nsIntRect rect(aRect);
     // If |aSurface| can be used to paint and can have alpha values
@@ -3179,7 +3179,7 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
     PaintRectToSurface(rect, blackImage, gfxRGBA(0.0, 0.0, 0.0));
 #endif
 
-    MOZ_ASSERT(whiteImage && blackImage, "Didn't paint enough!");
+    NS_ABORT_IF_FALSE(whiteImage && blackImage, "Didn't paint enough!");
 
     // Extract alpha from black and white image and store to black
     // image
@@ -3543,7 +3543,7 @@ bool
 PluginInstanceChild::RecvUpdateBackground(const SurfaceDescriptor& aBackground,
                                           const nsIntRect& aRect)
 {
-    MOZ_ASSERT(mIsTransparent, "Only transparent plugins use backgrounds");
+    NS_ABORT_IF_FALSE(mIsTransparent, "Only transparent plugins use backgrounds");
 
     if (!mBackground) {
         // XXX refactor me

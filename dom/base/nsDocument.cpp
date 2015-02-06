@@ -1056,8 +1056,8 @@ void
 TransferZoomLevels(nsIDocument* aFromDoc,
                    nsIDocument* aToDoc)
 {
-  MOZ_ASSERT(aFromDoc && aToDoc,
-             "transferring zoom levels from/to null doc");
+  NS_ABORT_IF_FALSE(aFromDoc && aToDoc,
+                    "transferring zoom levels from/to null doc");
 
   nsIPresShell* fromShell = aFromDoc->GetShell();
   if (!fromShell)
@@ -1083,8 +1083,8 @@ TransferZoomLevels(nsIDocument* aFromDoc,
 void
 TransferShowingState(nsIDocument* aFromDoc, nsIDocument* aToDoc)
 {
-  MOZ_ASSERT(aFromDoc && aToDoc,
-             "transferring showing state from/to null doc");
+  NS_ABORT_IF_FALSE(aFromDoc && aToDoc,
+                    "transferring showing state from/to null doc");
 
   if (aFromDoc->IsShowing()) {
     aToDoc->OnPageShow(true, nullptr);
@@ -1624,8 +1624,8 @@ ClearAllBoxObjects(nsIContent* aKey, nsPIBoxObject* aBoxObject, void* aUserArg)
 
 nsIDocument::~nsIDocument()
 {
-  MOZ_ASSERT(PR_CLIST_IS_EMPTY(&mDOMMediaQueryLists),
-             "must not have media query lists left");
+  NS_ABORT_IF_FALSE(PR_CLIST_IS_EMPTY(&mDOMMediaQueryLists),
+                    "must not have media query lists left");
 
   if (mNodeInfoManager) {
     mNodeInfoManager->DropDocumentReference();
@@ -2211,8 +2211,8 @@ nsDocument::Init()
   // mNodeInfo keeps NodeInfoManager alive!
   mNodeInfo = mNodeInfoManager->GetDocumentNodeInfo();
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_OUT_OF_MEMORY);
-  MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_NODE,
-             "Bad NodeType in aNodeInfo");
+  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_NODE,
+                    "Bad NodeType in aNodeInfo");
 
   NS_ASSERTION(OwnerDoc() == this, "Our nodeinfo is busted!");
 
@@ -4672,11 +4672,11 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
                  "Script global object must be an inner window!");
   }
 #endif
-  MOZ_ASSERT(aScriptGlobalObject || !mAnimationController ||
-             mAnimationController->IsPausedByType(
-               nsSMILTimeContainer::PAUSE_PAGEHIDE |
-               nsSMILTimeContainer::PAUSE_BEGIN),
-             "Clearing window pointer while animations are unpaused");
+  NS_ABORT_IF_FALSE(aScriptGlobalObject || !mAnimationController ||
+                    mAnimationController->IsPausedByType(
+                        nsSMILTimeContainer::PAUSE_PAGEHIDE |
+                        nsSMILTimeContainer::PAUSE_BEGIN),
+                    "Clearing window pointer while animations are unpaused");
 
   if (mScriptGlobalObject && !aScriptGlobalObject) {
     // We're detaching from the window.  We need to grab a pointer to
@@ -10406,8 +10406,8 @@ nsDocument::RemoveImage(imgIRequest* aImage, uint32_t aFlags)
   // Get the old count. It should exist and be > 0.
   uint32_t count = 0;
   DebugOnly<bool> found = mImageTracker.Get(aImage, &count);
-  MOZ_ASSERT(found, "Removing image that wasn't in the tracker!");
-  MOZ_ASSERT(count > 0, "Entry in the cache tracker with count 0!");
+  NS_ABORT_IF_FALSE(found, "Removing image that wasn't in the tracker!");
+  NS_ABORT_IF_FALSE(count > 0, "Entry in the cache tracker with count 0!");
 
   // We're removing, so decrement the count.
   count--;

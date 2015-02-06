@@ -317,8 +317,8 @@ public:
   static bool IsCustomPropertyName(const nsACString& aProperty);
 
   static inline bool IsShorthand(nsCSSProperty aProperty) {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
-               "out of range");
+    NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+                 "out of range");
     return (aProperty >= eCSSProperty_COUNT_no_shorthands);
   }
 
@@ -381,8 +381,8 @@ private:
 public:
   static inline bool PropHasFlags(nsCSSProperty aProperty, uint32_t aFlags)
   {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
-               "out of range");
+    NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+                      "out of range");
     MOZ_ASSERT(!(aFlags & CSS_PROPERTY_PARSE_PROPERTY_MASK),
                "The CSS_PROPERTY_PARSE_* values are not bitflags; don't pass "
                "them to PropHasFlags.  You probably want PropertyParseType "
@@ -392,16 +392,16 @@ public:
 
   static inline uint32_t PropertyParseType(nsCSSProperty aProperty)
   {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
-               "out of range");
+    NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+                      "out of range");
     return nsCSSProps::kFlagsTable[aProperty] &
            CSS_PROPERTY_PARSE_PROPERTY_MASK;
   }
 
   static inline uint32_t ValueRestrictions(nsCSSProperty aProperty)
   {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
-               "out of range");
+    NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+                      "out of range");
     return nsCSSProps::kFlagsTable[aProperty] &
            CSS_PROPERTY_VALUE_RESTRICTION_MASK;
   }
@@ -412,8 +412,9 @@ private:
 
 public:
   static inline uint32_t ParserVariant(nsCSSProperty aProperty) {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
-               "out of range");
+    NS_ABORT_IF_FALSE(0 <= aProperty &&
+                      aProperty < eCSSProperty_COUNT_no_shorthands,
+                      "out of range");
     return nsCSSProps::kParserVariantTable[aProperty];
   }
 
@@ -426,9 +427,9 @@ private:
 public:
   static inline
   const nsCSSProperty * SubpropertyEntryFor(nsCSSProperty aProperty) {
-    MOZ_ASSERT(eCSSProperty_COUNT_no_shorthands <= aProperty &&
-               aProperty < eCSSProperty_COUNT,
-               "out of range");
+    NS_ABORT_IF_FALSE(eCSSProperty_COUNT_no_shorthands <= aProperty &&
+                      aProperty < eCSSProperty_COUNT,
+                      "out of range");
     return nsCSSProps::kSubpropertyTable[aProperty -
                                          eCSSProperty_COUNT_no_shorthands];
   }
@@ -437,9 +438,10 @@ public:
   // properties containing |aProperty|, sorted from those that contain
   // the most properties to those that contain the least.
   static const nsCSSProperty * ShorthandsContaining(nsCSSProperty aProperty) {
-    MOZ_ASSERT(gShorthandsContainingPool, "uninitialized");
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
-               "out of range");
+    NS_ABORT_IF_FALSE(gShorthandsContainingPool, "uninitialized");
+    NS_ABORT_IF_FALSE(0 <= aProperty &&
+                      aProperty < eCSSProperty_COUNT_no_shorthands,
+                      "out of range");
     return gShorthandsContainingTable[aProperty];
   }
 private:
@@ -461,8 +463,8 @@ public:
    * nsRuleNode builds the nsStyle* for aSID.
    */
   static size_t PropertyCountInStruct(nsStyleStructID aSID) {
-    MOZ_ASSERT(0 <= aSID && aSID < nsStyleStructID_Length,
-               "out of range");
+    NS_ABORT_IF_FALSE(0 <= aSID && aSID < nsStyleStructID_Length,
+                      "out of range");
     return gPropertyCountInStruct[aSID];
   }
   /**
@@ -470,8 +472,9 @@ public:
    * the range 0 <= index < PropertyCountInStruct(aSID).
    */
   static size_t PropertyIndexInStruct(nsCSSProperty aProperty) {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
-               "out of range");
+    NS_ABORT_IF_FALSE(0 <= aProperty &&
+                         aProperty < eCSSProperty_COUNT_no_shorthands,
+                      "out of range");
     return gPropertyIndexInStruct[aProperty];
   }
 
@@ -508,8 +511,9 @@ private:
 public:
 
   static bool IsEnabled(nsCSSProperty aProperty) {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_with_aliases,
-               "out of range");
+    NS_ABORT_IF_FALSE(0 <= aProperty &&
+                      aProperty < eCSSProperty_COUNT_with_aliases,
+                      "out of range");
     return gPropertyEnabled[aProperty];
   }
 

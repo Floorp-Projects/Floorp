@@ -3128,8 +3128,8 @@ protected:
 private:
   nsOverflowAreas* GetOverflowAreasProperty();
   nsRect GetVisualOverflowFromDeltas() const {
-    MOZ_ASSERT(mOverflow.mType != NS_FRAME_OVERFLOW_LARGE,
-               "should not be called when overflow is in a property");
+    NS_ABORT_IF_FALSE(mOverflow.mType != NS_FRAME_OVERFLOW_LARGE,
+                      "should not be called when overflow is in a property");
     // Calculate the rect using deltas from the frame's border rect.
     // Note that the mOverflow.mDeltas fields are unsigned, but we will often
     // need to return negative values for the left and top, so take care

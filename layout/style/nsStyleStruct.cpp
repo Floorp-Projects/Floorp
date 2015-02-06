@@ -268,7 +268,7 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
                          int32_t aNumEnums)
 {
   if (aCoord.GetUnit() == eStyleUnit_Enumerated) {
-    MOZ_ASSERT(aEnumTable, "must have enum table");
+    NS_ABORT_IF_FALSE(aEnumTable, "must have enum table");
     int32_t value = aCoord.GetIntValue();
     if (0 <= value && value < aNumEnums) {
       return aEnumTable[aCoord.GetIntValue()];
@@ -276,7 +276,7 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
     NS_NOTREACHED("unexpected enum value");
     return 0;
   }
-  MOZ_ASSERT(aCoord.ConvertsToLength(), "unexpected unit");
+  NS_ABORT_IF_FALSE(aCoord.ConvertsToLength(), "unexpected unit");
   return nsRuleNode::ComputeCoordPercentCalc(aCoord, 0);
 }
 
@@ -512,10 +512,10 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 {
   nsChangeHint shadowDifference =
     CalcShadowDifference(mBoxShadow, aOther.mBoxShadow);
-  MOZ_ASSERT(shadowDifference == unsigned(NS_STYLE_HINT_REFLOW) ||
-             shadowDifference == unsigned(NS_STYLE_HINT_VISUAL) ||
-             shadowDifference == unsigned(NS_STYLE_HINT_NONE),
-             "should do more with shadowDifference");
+  NS_ABORT_IF_FALSE(shadowDifference == unsigned(NS_STYLE_HINT_REFLOW) ||
+                    shadowDifference == unsigned(NS_STYLE_HINT_VISUAL) ||
+                    shadowDifference == unsigned(NS_STYLE_HINT_NONE),
+                    "should do more with shadowDifference");
 
   // XXXbz we should be able to return a more specific change hint for
   // at least GetComputedBorder() differences...
@@ -1746,12 +1746,12 @@ nsChangeHint nsStyleColor::CalcDifference(const nsStyleColor& aOther) const
 bool
 nsStyleGradient::operator==(const nsStyleGradient& aOther) const
 {
-  MOZ_ASSERT(mSize == NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER ||
-             mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR,
-             "incorrect combination of shape and size");
-  MOZ_ASSERT(aOther.mSize == NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER ||
-             aOther.mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR,
-             "incorrect combination of shape and size");
+  NS_ABORT_IF_FALSE(mSize == NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER ||
+                    mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR,
+                    "incorrect combination of shape and size");
+  NS_ABORT_IF_FALSE(aOther.mSize == NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER ||
+                    aOther.mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR,
+                    "incorrect combination of shape and size");
 
   if (mShape != aOther.mShape ||
       mSize != aOther.mSize ||
@@ -1869,8 +1869,8 @@ nsStyleImage::DoCopy(const nsStyleImage& aOther)
 void
 nsStyleImage::SetNull()
 {
-  MOZ_ASSERT(!mImageTracked,
-             "Calling SetNull() with image tracked!");
+  NS_ABORT_IF_FALSE(!mImageTracked,
+                    "Calling SetNull() with image tracked!");
 
   if (mType == eStyleImageType_Gradient)
     mGradient->Release();
@@ -1886,8 +1886,8 @@ nsStyleImage::SetNull()
 void
 nsStyleImage::SetImageData(imgRequestProxy* aImage)
 {
-  MOZ_ASSERT(!mImageTracked,
-             "Setting a new image without untracking the old one!");
+  NS_ABORT_IF_FALSE(!mImageTracked,
+                    "Setting a new image without untracking the old one!");
 
   NS_IF_ADDREF(aImage);
 
@@ -1905,9 +1905,9 @@ void
 nsStyleImage::TrackImage(nsPresContext* aContext)
 {
   // Sanity
-  MOZ_ASSERT(!mImageTracked, "Already tracking image!");
-  MOZ_ASSERT(mType == eStyleImageType_Image,
-             "Can't track image when there isn't one!");
+  NS_ABORT_IF_FALSE(!mImageTracked, "Already tracking image!");
+  NS_ABORT_IF_FALSE(mType == eStyleImageType_Image,
+                    "Can't track image when there isn't one!");
 
   // Register the image with the document
   nsIDocument* doc = aContext->Document();
@@ -1924,9 +1924,9 @@ void
 nsStyleImage::UntrackImage(nsPresContext* aContext)
 {
   // Sanity
-  MOZ_ASSERT(mImageTracked, "Image not tracked!");
-  MOZ_ASSERT(mType == eStyleImageType_Image,
-             "Can't untrack image when there isn't one!");
+  NS_ABORT_IF_FALSE(mImageTracked, "Image not tracked!");
+  NS_ABORT_IF_FALSE(mType == eStyleImageType_Image,
+                    "Can't untrack image when there isn't one!");
 
   // Unregister the image with the document
   nsIDocument* doc = aContext->Document();
@@ -1992,7 +1992,7 @@ ConvertToPixelCoord(const nsStyleCoord& aCoord, int32_t aPercentScale)
       NS_NOTREACHED("unexpected unit for image crop rect");
       return 0;
   }
-  MOZ_ASSERT(pixelValue >= 0, "we ensured non-negative while parsing");
+  NS_ABORT_IF_FALSE(pixelValue >= 0, "we ensured non-negative while parsing");
   pixelValue = std::min(pixelValue, double(INT32_MAX)); // avoid overflow
   return NS_lround(pixelValue);
 }
@@ -2050,11 +2050,11 @@ nsStyleImage::IsOpaque() const
   if (mType == eStyleImageType_Element)
     return false;
 
-  MOZ_ASSERT(mType == eStyleImageType_Image, "unexpected image type");
+  NS_ABORT_IF_FALSE(mType == eStyleImageType_Image, "unexpected image type");
 
   nsCOMPtr<imgIContainer> imageContainer;
   mImage->GetImage(getter_AddRefs(imageContainer));
-  MOZ_ASSERT(imageContainer, "IsComplete() said image container is ready");
+  NS_ABORT_IF_FALSE(imageContainer, "IsComplete() said image container is ready");
 
   // Check if the crop region of the image is opaque.
   if (imageContainer->IsOpaque()) {
@@ -2282,8 +2282,8 @@ nsStyleBackground::Position::SetInitialPercentValues(float aPercentVal)
 bool
 nsStyleBackground::Size::DependsOnPositioningAreaSize(const nsStyleImage& aImage) const
 {
-  MOZ_ASSERT(aImage.GetType() != eStyleImageType_Null,
-             "caller should have handled this");
+  NS_ABORT_IF_FALSE(aImage.GetType() != eStyleImageType_Null,
+                    "caller should have handled this");
 
   // If either dimension contains a non-zero percentage, rendering for that
   // dimension straightforwardly depends on frame size.
@@ -2302,10 +2302,10 @@ nsStyleBackground::Size::DependsOnPositioningAreaSize(const nsStyleImage& aImage
     return false;
   }
 
-  MOZ_ASSERT((mWidthType == eLengthPercentage && mHeightType == eAuto) ||
-             (mWidthType == eAuto && mHeightType == eLengthPercentage) ||
-             (mWidthType == eAuto && mHeightType == eAuto),
-             "logic error");
+  NS_ABORT_IF_FALSE((mWidthType == eLengthPercentage && mHeightType == eAuto) ||
+                    (mWidthType == eAuto && mHeightType == eLengthPercentage) ||
+                    (mWidthType == eAuto && mHeightType == eAuto),
+                    "logic error");
 
   nsStyleImageType type = aImage.GetType();
 
@@ -2367,14 +2367,14 @@ nsStyleBackground::Size::SetInitialValues()
 bool
 nsStyleBackground::Size::operator==(const Size& aOther) const
 {
-  MOZ_ASSERT(mWidthType < eDimensionType_COUNT,
-             "bad mWidthType for this");
-  MOZ_ASSERT(mHeightType < eDimensionType_COUNT,
-             "bad mHeightType for this");
-  MOZ_ASSERT(aOther.mWidthType < eDimensionType_COUNT,
-             "bad mWidthType for aOther");
-  MOZ_ASSERT(aOther.mHeightType < eDimensionType_COUNT,
-             "bad mHeightType for aOther");
+  NS_ABORT_IF_FALSE(mWidthType < eDimensionType_COUNT,
+                    "bad mWidthType for this");
+  NS_ABORT_IF_FALSE(mHeightType < eDimensionType_COUNT,
+                    "bad mHeightType for this");
+  NS_ABORT_IF_FALSE(aOther.mWidthType < eDimensionType_COUNT,
+                    "bad mWidthType for aOther");
+  NS_ABORT_IF_FALSE(aOther.mHeightType < eDimensionType_COUNT,
+                    "bad mHeightType for aOther");
 
   return mWidthType == aOther.mWidthType &&
          mHeightType == aOther.mHeightType &&
@@ -2469,8 +2469,8 @@ void nsTimingFunction::AssignFromKeyword(int32_t aTimingFunctionType)
     { 0.42f, 0.00f, 0.58f, 1.00f }  // ease-in-out
   };
 
-  MOZ_ASSERT(0 <= aTimingFunctionType && aTimingFunctionType < 5,
-             "keyword out of range");
+  NS_ABORT_IF_FALSE(0 <= aTimingFunctionType && aTimingFunctionType < 5,
+                    "keyword out of range");
   mFunc.mX1 = timingFunctionValues[aTimingFunctionType][0];
   mFunc.mY1 = timingFunctionValues[aTimingFunctionType][1];
   mFunc.mX2 = timingFunctionValues[aTimingFunctionType][2];
@@ -2592,8 +2592,8 @@ nsStyleDisplay::nsStyleDisplay()
   mScrollBehavior = NS_STYLE_SCROLL_BEHAVIOR_AUTO;
 
   mTransitions.AppendElement();
-  MOZ_ASSERT(mTransitions.Length() == 1,
-             "appending within auto buffer should never fail");
+  NS_ABORT_IF_FALSE(mTransitions.Length() == 1,
+                    "appending within auto buffer should never fail");
   mTransitions[0].SetInitialValues();
   mTransitionTimingFunctionCount = 1;
   mTransitionDurationCount = 1;
@@ -2601,8 +2601,8 @@ nsStyleDisplay::nsStyleDisplay()
   mTransitionPropertyCount = 1;
 
   mAnimations.AppendElement();
-  MOZ_ASSERT(mAnimations.Length() == 1,
-             "appending within auto buffer should never fail");
+  NS_ABORT_IF_FALSE(mAnimations.Length() == 1,
+                    "appending within auto buffer should never fail");
   mAnimations[0].SetInitialValues();
   mAnimationTimingFunctionCount = 1;
   mAnimationDurationCount = 1;
@@ -2936,8 +2936,8 @@ nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) 
 
 nsStyleContentData::~nsStyleContentData()
 {
-  MOZ_ASSERT(!mImageTracked,
-             "nsStyleContentData being destroyed while still tracking image!");
+  NS_ABORT_IF_FALSE(!mImageTracked,
+                    "nsStyleContentData being destroyed while still tracking image!");
   if (mType == eStyleContentType_Image) {
     NS_IF_RELEASE(mContent.mImage);
   } else if (mType == eStyleContentType_Counter ||
@@ -2997,11 +2997,11 @@ void
 nsStyleContentData::TrackImage(nsPresContext* aContext)
 {
   // Sanity
-  MOZ_ASSERT(!mImageTracked, "Already tracking image!");
-  MOZ_ASSERT(mType == eStyleContentType_Image,
-             "Trying to do image tracking on non-image!");
-  MOZ_ASSERT(mContent.mImage,
-             "Can't track image when there isn't one!");
+  NS_ABORT_IF_FALSE(!mImageTracked, "Already tracking image!");
+  NS_ABORT_IF_FALSE(mType == eStyleContentType_Image,
+                    "Trying to do image tracking on non-image!");
+  NS_ABORT_IF_FALSE(mContent.mImage,
+                    "Can't track image when there isn't one!");
 
   // Register the image with the document
   nsIDocument* doc = aContext->Document();
@@ -3018,11 +3018,11 @@ void
 nsStyleContentData::UntrackImage(nsPresContext* aContext)
 {
   // Sanity
-  MOZ_ASSERT(mImageTracked, "Image not tracked!");
-  MOZ_ASSERT(mType == eStyleContentType_Image,
-             "Trying to do image tracking on non-image!");
-  MOZ_ASSERT(mContent.mImage,
-             "Can't untrack image when there isn't one!");
+  NS_ABORT_IF_FALSE(mImageTracked, "Image not tracked!");
+  NS_ABORT_IF_FALSE(mType == eStyleContentType_Image,
+                    "Trying to do image tracking on non-image!");
+  NS_ABORT_IF_FALSE(mContent.mImage,
+                    "Can't untrack image when there isn't one!");
 
   // Unregister the image with the document
   nsIDocument* doc = aContext->Document();

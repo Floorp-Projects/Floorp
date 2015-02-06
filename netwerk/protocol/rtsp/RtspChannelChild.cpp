@@ -47,8 +47,8 @@ RtspChannelChild::ReleaseController()
 void
 RtspChannelChild::AddIPDLReference()
 {
-  MOZ_ASSERT(!mIPCOpen,
-             "Attempt to retain more than one IPDL reference");
+  NS_ABORT_IF_FALSE(!mIPCOpen,
+                    "Attempt to retain more than one IPDL reference");
   mIPCOpen = true;
   AddRef();
 }
@@ -56,7 +56,7 @@ RtspChannelChild::AddIPDLReference()
 void
 RtspChannelChild::ReleaseIPDLReference()
 {
-  MOZ_ASSERT(mIPCOpen, "Attempt to release nonexistent IPDL reference");
+  NS_ABORT_IF_FALSE(mIPCOpen, "Attempt to release nonexistent IPDL reference");
   mIPCOpen = false;
   Release();
 }

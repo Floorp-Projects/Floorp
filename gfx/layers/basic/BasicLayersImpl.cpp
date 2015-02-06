@@ -183,8 +183,8 @@ bool
 ShouldShadow(Layer* aLayer)
 {
   if (!ToShadowable(aLayer)) {
-    MOZ_ASSERT(aLayer->GetType() == Layer::TYPE_READBACK,
-               "Only expect not to shadow ReadbackLayers");
+    NS_ABORT_IF_FALSE(aLayer->GetType() == Layer::TYPE_READBACK,
+                      "Only expect not to shadow ReadbackLayers");
     return false;
   }
   return true;

@@ -91,7 +91,7 @@ class TransportLayer : public sigslot::has_slots<> {
   virtual void SetState(State state, const char *file, unsigned line);
   // Check if we are on the right thread
   void CheckThread() const {
-    MOZ_ASSERT(CheckThreadInt(), "Wrong thread");
+    NS_ABORT_IF_FALSE(CheckThreadInt(), "Wrong thread");
   }
 
   State state_;

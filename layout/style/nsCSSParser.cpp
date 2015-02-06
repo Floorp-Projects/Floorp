@@ -1837,7 +1837,7 @@ CSSParserImpl::ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
                                            uint32_t aLineNumber, // for error reporting
                                            InfallibleTArray<float>& aSelectorList)
 {
-  MOZ_ASSERT(aSelectorList.IsEmpty(), "given list should start empty");
+  NS_ABORT_IF_FALSE(aSelectorList.IsEmpty(), "given list should start empty");
 
   nsCSSScanner scanner(aSelectorString, aLineNumber);
   css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aURI);
@@ -3866,8 +3866,8 @@ CSSParserImpl::ParsePageRule(RuleAppendFunc aAppendFunc, void* aData)
                         eParseDeclaration_AllowImportant;
 
   // Forbid viewport units in @page rules. See bug 811391.
-  MOZ_ASSERT(mViewportUnitsEnabled,
-             "Viewport units should be enabled outside of @page rules.");
+  NS_ABORT_IF_FALSE(mViewportUnitsEnabled,
+                    "Viewport units should be enabled outside of @page rules.");
   mViewportUnitsEnabled = false;
   nsAutoPtr<css::Declaration> declaration(
                                 ParseDeclarationBlock(parseFlags,
@@ -5523,8 +5523,8 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
           ParsePseudoClassWithNthPairArg(aSelector, pseudoClassType);
       }
       else {
-        MOZ_ASSERT(nsCSSPseudoClasses::HasSelectorListArg(pseudoClassType),
-                   "unexpected pseudo with function token");
+        NS_ABORT_IF_FALSE(nsCSSPseudoClasses::HasSelectorListArg(pseudoClassType),
+                          "unexpected pseudo with function token");
         parsingStatus = ParsePseudoClassWithSelectorListArg(aSelector,
                                                             pseudoClassType);
       }
@@ -6808,12 +6808,12 @@ CSSParserImpl::ParseNonNegativeVariant(nsCSSValue& aValue,
 {
   // The variant mask must only contain non-numeric variants or the ones
   // that we specifically handle.
-  MOZ_ASSERT((aVariantMask & ~(VARIANT_ALL_NONNUMERIC |
-                               VARIANT_NUMBER |
-                               VARIANT_LENGTH |
-                               VARIANT_PERCENT |
-                               VARIANT_INTEGER)) == 0,
-             "need to update code below to handle additional variants");
+  NS_ABORT_IF_FALSE((aVariantMask & ~(VARIANT_ALL_NONNUMERIC |
+                                      VARIANT_NUMBER |
+                                      VARIANT_LENGTH |
+                                      VARIANT_PERCENT |
+                                      VARIANT_INTEGER)) == 0,
+                    "need to update code below to handle additional variants");
 
   if (ParseVariant(aValue, aVariantMask, aKeywordTable)) {
     if (eCSSUnit_Number == aValue.GetUnit() ||
@@ -6850,10 +6850,10 @@ CSSParserImpl::ParseOneOrLargerVariant(nsCSSValue& aValue,
 {
   // The variant mask must only contain non-numeric variants or the ones
   // that we specifically handle.
-  MOZ_ASSERT((aVariantMask & ~(VARIANT_ALL_NONNUMERIC |
-                               VARIANT_NUMBER |
-                               VARIANT_INTEGER)) == 0,
-             "need to update code below to handle additional variants");
+  NS_ABORT_IF_FALSE((aVariantMask & ~(VARIANT_ALL_NONNUMERIC |
+                                      VARIANT_NUMBER |
+                                      VARIANT_INTEGER)) == 0,
+                    "need to update code below to handle additional variants");
 
   if (ParseVariant(aValue, aVariantMask, aKeywordTable)) {
     if (aValue.GetUnit() == eCSSUnit_Integer) {
@@ -6887,10 +6887,10 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
   NS_ASSERTION(!(mUnitlessLengthQuirk && (aVariantMask & VARIANT_LENGTH)) ||
                !(aVariantMask & VARIANT_NUMBER),
                "can't distinguish lengths from numbers");
-  MOZ_ASSERT(!(aVariantMask & VARIANT_IDENTIFIER) ||
-             !(aVariantMask & VARIANT_IDENTIFIER_NO_INHERIT),
-             "must not set both VARIANT_IDENTIFIER and "
-             "VARIANT_IDENTIFIER_NO_INHERIT");
+  NS_ABORT_IF_FALSE(!(aVariantMask & VARIANT_IDENTIFIER) ||
+                    !(aVariantMask & VARIANT_IDENTIFIER_NO_INHERIT),
+                    "must not set both VARIANT_IDENTIFIER and "
+                    "VARIANT_IDENTIFIER_NO_INHERIT");
 
   if (!GetToken(true)) {
     return false;
@@ -9485,10 +9485,10 @@ bool
 CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
 {
   // Can't use AutoRestore<bool> because it's a bitfield.
-  MOZ_ASSERT(!mHashlessColorQuirk,
-             "hashless color quirk should not be set");
-  MOZ_ASSERT(!mUnitlessLengthQuirk,
-             "unitless length quirk should not be set");
+  NS_ABORT_IF_FALSE(!mHashlessColorQuirk,
+                    "hashless color quirk should not be set");
+  NS_ABORT_IF_FALSE(!mUnitlessLengthQuirk,
+                    "unitless length quirk should not be set");
   MOZ_ASSERT(aPropID != eCSSPropertyExtra_variable);
 
   if (mNavQuirkMode) {
@@ -9537,9 +9537,9 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
     default: {
       result = false;
       allowVariables = false;
-      MOZ_ASSERT(false,
-                 "Property's flags field in nsCSSPropList.h is missing "
-                 "one of the CSS_PROPERTY_PARSE_* constants");
+      NS_ABORT_IF_FALSE(false,
+                        "Property's flags field in nsCSSPropList.h is missing "
+                        "one of the CSS_PROPERTY_PARSE_* constants");
       break;
     }
   }
@@ -9866,7 +9866,7 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
   case eCSSProperty_all:
     return ParseAll();
   default:
-    MOZ_ASSERT(false, "should not be called");
+    NS_ABORT_IF_FALSE(false, "should not be called");
     return false;
   }
 }
@@ -9895,7 +9895,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   }
 
   if (aPropID < 0 || aPropID >= eCSSProperty_COUNT_no_shorthands) {
-    MOZ_ASSERT(false, "not a single value property");
+    NS_ABORT_IF_FALSE(false, "not a single value property");
     return false;
   }
 
@@ -9936,14 +9936,14 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
       case eCSSProperty_touch_action:
         return ParseTouchAction(aValue);
       default:
-        MOZ_ASSERT(false, "should not reach here");
+        NS_ABORT_IF_FALSE(false, "should not reach here");
         return false;
     }
   }
 
   uint32_t variant = nsCSSProps::ParserVariant(aPropID);
   if (variant == 0) {
-    MOZ_ASSERT(false, "not a single value property");
+    NS_ABORT_IF_FALSE(false, "not a single value property");
     return false;
   }
 
@@ -9959,7 +9959,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   const KTableValue *kwtable = nsCSSProps::kKeywordTableTable[aPropID];
   switch (nsCSSProps::ValueRestrictions(aPropID)) {
     default:
-      MOZ_ASSERT(false, "should not be reached");
+      NS_ABORT_IF_FALSE(false, "should not be reached");
     case 0:
       return ParseVariant(aValue, variant, kwtable);
     case CSS_PROPERTY_VALUE_NONNEGATIVE:
@@ -11177,7 +11177,7 @@ CSSParserImpl::ParseCalc(nsCSSValue &aValue, int32_t aVariantMask)
   // This can be done without lookahead when we assume that the property
   // values cannot themselves be numbers.
   NS_ASSERTION(!(aVariantMask & VARIANT_NUMBER), "unexpected variant mask");
-  MOZ_ASSERT(aVariantMask != 0, "unexpected variant mask");
+  NS_ABORT_IF_FALSE(aVariantMask != 0, "unexpected variant mask");
 
   bool oldUnitlessLengthQuirk = mUnitlessLengthQuirk;
   mUnitlessLengthQuirk = false;
@@ -11220,7 +11220,7 @@ bool
 CSSParserImpl::ParseCalcAdditiveExpression(nsCSSValue& aValue,
                                            int32_t& aVariantMask)
 {
-  MOZ_ASSERT(aVariantMask != 0, "unexpected variant mask");
+  NS_ABORT_IF_FALSE(aVariantMask != 0, "unexpected variant mask");
   nsCSSValue *storage = &aValue;
   for (;;) {
     bool haveWS;
@@ -11253,7 +11253,7 @@ struct ReduceNumberCalcOps : public mozilla::css::BasicFloatCalcOps,
 {
   result_type ComputeLeafValue(const nsCSSValue& aValue)
   {
-    MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
+    NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
     return aValue.GetFloatValue();
   }
 
@@ -11281,7 +11281,7 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
                                                  int32_t& aVariantMask,
                                                  bool *aHadFinalWS)
 {
-  MOZ_ASSERT(aVariantMask != 0, "unexpected variant mask");
+  NS_ABORT_IF_FALSE(aVariantMask != 0, "unexpected variant mask");
   bool gotValue = false; // already got the part with the unit
   bool afterDivision = false;
 
@@ -11295,11 +11295,11 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
     }
     if (!ParseCalcTerm(*storage, variantMask))
       return false;
-    MOZ_ASSERT(variantMask != 0,
-               "ParseCalcTerm did not set variantMask appropriately");
-    MOZ_ASSERT(!(variantMask & VARIANT_NUMBER) ||
-               !(variantMask & ~int32_t(VARIANT_NUMBER)),
-               "ParseCalcTerm did not set variantMask appropriately");
+    NS_ABORT_IF_FALSE(variantMask != 0,
+                      "ParseCalcTerm did not set variantMask appropriately");
+    NS_ABORT_IF_FALSE(!(variantMask & VARIANT_NUMBER) ||
+                      !(variantMask & ~int32_t(VARIANT_NUMBER)),
+                      "ParseCalcTerm did not set variantMask appropriately");
 
     if (variantMask & VARIANT_NUMBER) {
       // Simplify the value immediately so we can check for division by
@@ -11315,8 +11315,8 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
       if (storage != &aValue) {
         // Simplify any numbers in the Times_L position (which are
         // not simplified by the check above).
-        MOZ_ASSERT(storage == &aValue.GetArrayValue()->Item(1),
-                   "unexpected relationship to current storage");
+        NS_ABORT_IF_FALSE(storage == &aValue.GetArrayValue()->Item(1),
+                          "unexpected relationship to current storage");
         nsCSSValue &leftValue = aValue.GetArrayValue()->Item(0);
         ReduceNumberCalcOps ops;
         float number = mozilla::css::ComputeCalc(leftValue, ops);
@@ -11377,7 +11377,7 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
 bool
 CSSParserImpl::ParseCalcTerm(nsCSSValue& aValue, int32_t& aVariantMask)
 {
-  MOZ_ASSERT(aVariantMask != 0, "unexpected variant mask");
+  NS_ABORT_IF_FALSE(aVariantMask != 0, "unexpected variant mask");
   if (!GetToken(true))
     return false;
   // Either an additive expression in parentheses...
@@ -11538,13 +11538,14 @@ CSSParserImpl::ParseContent()
 
   // Verify that these two lists add up to the size of
   // nsCSSProps::kContentKTable.
-  MOZ_ASSERT(nsCSSProps::kContentKTable[
-               ArrayLength(kContentListKWs) +
-               ArrayLength(kContentSolitaryKWs) - 4] == eCSSKeyword_UNKNOWN &&
-             nsCSSProps::kContentKTable[
-               ArrayLength(kContentListKWs) +
-               ArrayLength(kContentSolitaryKWs) - 3] == -1,
-             "content keyword tables out of sync");
+  NS_ABORT_IF_FALSE(nsCSSProps::kContentKTable[
+                      ArrayLength(kContentListKWs) +
+                      ArrayLength(kContentSolitaryKWs) - 4] ==
+                    eCSSKeyword_UNKNOWN &&
+                    nsCSSProps::kContentKTable[
+                      ArrayLength(kContentListKWs) +
+                      ArrayLength(kContentSolitaryKWs) - 3] == -1,
+                    "content keyword tables out of sync");
 
   nsCSSValue value;
   // 'inherit', 'initial', 'unset', 'normal', 'none', and 'alt-content' must
@@ -13836,8 +13837,8 @@ bool CSSParserImpl::ParseTransformOrigin(bool aPerspective)
   if (position.mXValue.GetUnit() == eCSSUnit_Inherit ||
       position.mXValue.GetUnit() == eCSSUnit_Initial ||
       position.mXValue.GetUnit() == eCSSUnit_Unset) {
-    MOZ_ASSERT(position.mXValue == position.mYValue,
-               "inherit/initial/unset only half?");
+    NS_ABORT_IF_FALSE(position.mXValue == position.mYValue,
+                      "inherit/initial/unset only half?");
     AppendValue(prop, position.mXValue);
   } else {
     nsCSSValue value;
@@ -13966,12 +13967,12 @@ CSSParserImpl::ParseSingleFilter(nsCSSValue* aValue)
   }
 
   // Get the first and only argument to the filter function.
-  MOZ_ASSERT(aValue->GetUnit() == eCSSUnit_Function,
-             "expected a filter function");
-  MOZ_ASSERT(aValue->UnitHasArrayValue(),
-             "filter function should be an array");
-  MOZ_ASSERT(aValue->GetArrayValue()->Count() == 2,
-             "filter function should have exactly one argument");
+  NS_ABORT_IF_FALSE(aValue->GetUnit() == eCSSUnit_Function,
+                    "expected a filter function");
+  NS_ABORT_IF_FALSE(aValue->UnitHasArrayValue(),
+                    "filter function should be an array");
+  NS_ABORT_IF_FALSE(aValue->GetArrayValue()->Count() == 2,
+                    "filter function should have exactly one argument");
   nsCSSValue& arg = aValue->GetArrayValue()->Item(1);
 
   if (rejectNegativeArgument &&
@@ -14171,11 +14172,11 @@ AppendValueToList(nsCSSValue& aContainer,
 {
   nsCSSValueList* entry;
   if (aContainer.GetUnit() == eCSSUnit_Null) {
-    MOZ_ASSERT(!aTail, "should not have an entry");
+    NS_ABORT_IF_FALSE(!aTail, "should not have an entry");
     entry = aContainer.SetListValue();
   } else {
-    MOZ_ASSERT(!aTail->mNext, "should not have a next entry");
-    MOZ_ASSERT(aContainer.GetUnit() == eCSSUnit_List, "not a list");
+    NS_ABORT_IF_FALSE(!aTail->mNext, "should not have a next entry");
+    NS_ABORT_IF_FALSE(aContainer.GetUnit() == eCSSUnit_List, "not a list");
     entry = new nsCSSValueList;
     aTail->mNext = entry;
   }
@@ -14202,8 +14203,8 @@ CSSParserImpl::ParseAnimationOrTransitionShorthand(
   }
 
   static const size_t maxNumProperties = 8;
-  MOZ_ASSERT(aNumProperties <= maxNumProperties,
-             "can't handle this many properties");
+  NS_ABORT_IF_FALSE(aNumProperties <= maxNumProperties,
+                    "can't handle this many properties");
   nsCSSValueList *cur[maxNumProperties];
   bool parsedProperty[maxNumProperties];
 
@@ -14315,8 +14316,9 @@ CSSParserImpl::ParseTransition()
   //     'none'.
   //   + None of the items can be 'inherit', 'initial' or 'unset'.
   {
-    MOZ_ASSERT(kTransitionProperties[3] == eCSSProperty_transition_property,
-               "array index mismatch");
+    NS_ABORT_IF_FALSE(kTransitionProperties[3] ==
+                        eCSSProperty_transition_property,
+                      "array index mismatch");
     nsCSSValueList *l = values[3].GetListValue();
     bool multipleItems = !!l->mNext;
     do {

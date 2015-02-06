@@ -62,7 +62,7 @@ public:
     : nsDisplayItem(aBuilder, aFrame)
   {
     MOZ_COUNT_CTOR(nsDisplaySVGPathGeometry);
-    MOZ_ASSERT(aFrame, "Must have a frame!");
+    NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplaySVGPathGeometry() {
@@ -360,8 +360,8 @@ nsSVGPathGeometryFrame::ReflowSVG()
   NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
                "This call is probably a wasteful mistake");
 
-  MOZ_ASSERT(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
-             "ReflowSVG mechanism not designed for this");
+  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
+                    "ReflowSVG mechanism not designed for this");
 
   if (!nsSVGUtils::NeedsReflowSVG(this)) {
     return;
@@ -411,8 +411,8 @@ nsSVGPathGeometryFrame::ReflowSVG()
 void
 nsSVGPathGeometryFrame::NotifySVGChanged(uint32_t aFlags)
 {
-  MOZ_ASSERT(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
-             "Invalidation logic may need adjusting");
+  NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
+                    "Invalidation logic may need adjusting");
 
   // Changes to our ancestors may affect how we render when we are rendered as
   // part of our ancestor (specifically, if our coordinate context changes size
