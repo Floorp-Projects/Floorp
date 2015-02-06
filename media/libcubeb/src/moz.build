@@ -34,8 +34,11 @@ if CONFIG['OS_ARCH'] == 'OpenBSD':
 if CONFIG['OS_TARGET'] == 'Darwin':
     SOURCES += [
         'cubeb_audiounit.c',
-        'cubeb_osx_run_loop.c'
     ]
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+        SOURCES += [
+            'cubeb_osx_run_loop.c',
+        ]
     DEFINES['USE_AUDIOUNIT'] = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':
