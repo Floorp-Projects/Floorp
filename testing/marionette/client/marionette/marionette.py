@@ -713,6 +713,8 @@ class Marionette(object):
             raise errors.FrameSendFailureError(message=message, status=status, stacktrace=stacktrace)
         elif status == errors.ErrorCodes.UNSUPPORTED_OPERATION:
             raise errors.UnsupportedOperationException(message=message, status=status, stacktrace=stacktrace)
+        elif status == errors.ErrorCodes.SESSION_NOT_CREATED:
+            raise errors.SessionNotCreatedException(message=message, status=status, stacktrace=stacktrace)
         else:
             raise errors.MarionetteException(message=message, status=status, stacktrace=stacktrace)
 
