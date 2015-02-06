@@ -645,7 +645,7 @@ nsJSONListener::ConsumeConverted(const char* aBuffer, uint32_t aByteLength)
   rv = mDecoder->Convert(aBuffer, &srcLen, endelems, &unicharLength);
   if (NS_FAILED(rv))
     return rv;
-  NS_ABORT_IF_FALSE(preLength >= unicharLength, "GetMaxLength lied");
+  MOZ_ASSERT(preLength >= unicharLength, "GetMaxLength lied");
   if (preLength > unicharLength)
     mBufferedChars.TruncateLength(mBufferedChars.Length() - (preLength - unicharLength));
   return NS_OK;

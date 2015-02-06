@@ -88,7 +88,7 @@ public:
   // Set the capacity of the buffer in bytes.  Must be called before any
   // call to append or pop elements.
   void SetCapacity(uint32_t aCapacity) {
-    NS_ABORT_IF_FALSE(!mBuffer, "Buffer allocated.");
+    MOZ_ASSERT(!mBuffer, "Buffer allocated.");
     mCapacity = aCapacity;
     mBuffer = new uint8_t[mCapacity];
   }
@@ -108,8 +108,8 @@ public:
   // Append aLength bytes from aSrc to the buffer.  Caller must check that
   // sufficient space is available.
   void AppendElements(const uint8_t* aSrc, uint32_t aLength) {
-    NS_ABORT_IF_FALSE(mBuffer && mCapacity, "Buffer not initialized.");
-    NS_ABORT_IF_FALSE(aLength <= Available(), "Buffer full.");
+    MOZ_ASSERT(mBuffer && mCapacity, "Buffer not initialized.");
+    MOZ_ASSERT(aLength <= Available(), "Buffer full.");
 
     uint32_t end = (mStart + mCount) % mCapacity;
 
@@ -124,8 +124,8 @@ public:
   // must not specify an aSize larger than Length().
   void PopElements(uint32_t aSize, void** aData1, uint32_t* aSize1,
                    void** aData2, uint32_t* aSize2) {
-    NS_ABORT_IF_FALSE(mBuffer && mCapacity, "Buffer not initialized.");
-    NS_ABORT_IF_FALSE(aSize <= Length(), "Request too large.");
+    MOZ_ASSERT(mBuffer && mCapacity, "Buffer not initialized.");
+    MOZ_ASSERT(aSize <= Length(), "Request too large.");
 
     *aData1 = &mBuffer[mStart];
     *aSize1 = std::min(mCapacity - mStart, aSize);
@@ -139,7 +139,7 @@ public:
   // Throw away all but aSize bytes from the buffer.  Returns new size, which
   // may be less than aSize
   uint32_t ContractTo(uint32_t aSize) {
-    NS_ABORT_IF_FALSE(mBuffer && mCapacity, "Buffer not initialized.");
+    MOZ_ASSERT(mBuffer && mCapacity, "Buffer not initialized.");
     if (aSize >= mCount) {
       return mCount;
     }

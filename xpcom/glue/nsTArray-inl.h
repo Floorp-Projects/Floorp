@@ -45,8 +45,8 @@ nsTArray_base<Alloc, Copy>::GetAutoArrayBufferUnsafe(size_t aElemAlign) const
                 "auto array padding wasn't what we expected");
 
   // We don't support alignments greater than 8 bytes.
-  NS_ABORT_IF_FALSE(aElemAlign <= 4 || aElemAlign == 8,
-                    "unsupported alignment.");
+  MOZ_ASSERT(aElemAlign <= 4 || aElemAlign == 8,
+             "unsupported alignment.");
   if (sizeof(void*) == 4 && aElemAlign == 8) {
     autoBuf = reinterpret_cast<const char*>(autoBuf) + 4;
   }
@@ -97,8 +97,8 @@ nsTArray_base<Alloc, Copy>::UsesAutoArrayBuffer() const
 #ifdef DEBUG
   ptrdiff_t diff = reinterpret_cast<const char*>(GetAutoArrayBuffer(8)) -
                    reinterpret_cast<const char*>(GetAutoArrayBuffer(4));
-  NS_ABORT_IF_FALSE(diff >= 0 && diff <= 4,
-                    "GetAutoArrayBuffer doesn't do what we expect.");
+  MOZ_ASSERT(diff >= 0 && diff <= 4,
+             "GetAutoArrayBuffer doesn't do what we expect.");
 #endif
 
   return mHdr == GetAutoArrayBuffer(4) || mHdr == GetAutoArrayBuffer(8);
@@ -378,9 +378,8 @@ nsTArray_base<Alloc, Copy>::SwapArrayElements(nsTArray_base<Allocator,
 
   // The EnsureCapacity calls above shouldn't have caused *both* arrays to
   // switch from their auto buffers to malloc'ed space.
-  NS_ABORT_IF_FALSE(UsesAutoArrayBuffer() ||
-                    aOther.UsesAutoArrayBuffer(),
-                    "One of the arrays should be using its auto buffer.");
+  MOZ_ASSERT(UsesAutoArrayBuffer() || aOther.UsesAutoArrayBuffer(),
+             "One of the arrays should be using its auto buffer.");
 
   size_type smallerLength = XPCOM_MIN(Length(), aOther.Length());
   size_type largerLength = XPCOM_MAX(Length(), aOther.Length());
@@ -409,9 +408,9 @@ nsTArray_base<Alloc, Copy>::SwapArrayElements(nsTArray_base<Allocator,
   Copy::CopyElements(largerElements, temp.Elements(), smallerLength, aElemSize);
 
   // Swap the arrays' lengths.
-  NS_ABORT_IF_FALSE((aOther.Length() == 0 || mHdr != EmptyHdr()) &&
-                    (Length() == 0 || aOther.mHdr != EmptyHdr()),
-                    "Don't set sEmptyHdr's length.");
+  MOZ_ASSERT((aOther.Length() == 0 || mHdr != EmptyHdr()) &&
+             (Length() == 0 || aOther.mHdr != EmptyHdr()),
+             "Don't set sEmptyHdr's length.");
   size_type tempLength = Length();
   mHdr->mLength = aOther.Length();
   aOther.mHdr->mLength = tempLength;

@@ -20,7 +20,9 @@ const STATUS_SUCCESS = 200;
  * @returns {Function}
  */
 let mockResponse = function (response) {
-  return function () {
+  let Request = function (requestUri) {
+    // Store the request uri so tests can inspect it
+    Request._requestUri = requestUri;
     return {
       setHeader: function () {},
       get: function () {
@@ -29,6 +31,8 @@ let mockResponse = function (response) {
       }
     };
   };
+
+  return Request;
 };
 
 /**
@@ -60,6 +64,7 @@ add_test(function successfulResponse () {
   client.fetchProfile()
     .then(
       function (result) {
+        do_check_eq(client._Request._requestUri, "http://127.0.0.1:1111/v1/profile");
         do_check_eq(result.email, "someone@restmail.net");
         do_check_eq(result.uid, "0d5c1a89b8c54580b8e3e8adadae864a");
         run_next_test();
@@ -162,6 +167,26 @@ add_test(function onCompleteRequestError () {
         run_next_test();
       }
   );
+});
+
+add_test(function fetchProfileImage_successfulResponse () {
+  let client = new FxAccountsProfileClient(PROFILE_OPTIONS);
+  let response = {
+    success: true,
+    status: STATUS_SUCCESS,
+    body: "{\"avatar\":\"http://example.com/image.jpg\",\"id\":\"0d5c1a89b8c54580b8e3e8adadae864a\"}",
+  };
+
+  client._Request = new mockResponse(response);
+  client.fetchProfileImage()
+    .then(
+      function (result) {
+        do_check_eq(client._Request._requestUri, "http://127.0.0.1:1111/v1/avatar");
+        do_check_eq(result.avatar, "http://example.com/image.jpg");
+        do_check_eq(result.id, "0d5c1a89b8c54580b8e3e8adadae864a");
+        run_next_test();
+      }
+    );
 });
 
 add_test(function constructorTests() {

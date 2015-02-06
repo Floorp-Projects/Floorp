@@ -186,6 +186,14 @@ this.EventManager.prototype = {
         }
         break;
       }
+      case Events.NAME_CHANGE:
+      {
+        let acc = aEvent.accessible;
+        if (acc === this.contentControl.vc.position) {
+          this.present(Presentation.nameChanged(acc));
+        }
+        break;
+      }
       case Events.SCROLLING_START:
       {
         this.contentControl.autoMove(aEvent.accessible);

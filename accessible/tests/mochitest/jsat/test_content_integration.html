@@ -56,8 +56,12 @@
           [ContentMessages.moveOrAdjustUp(), new ExpectedValueChange('6')],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(['Home', {'string': 'pushbutton'}])],
+          [ContentMessages.simpleMoveNext,
+           new ExpectedCursorChange(['apple', {'string': 'pushbutton'}])],
 
           // Simple traversal backward
+          [ContentMessages.simpleMovePrevious,
+           new ExpectedCursorChange(['Home', {'string': 'pushbutton'}])],
           [ContentMessages.simpleMovePrevious,
            new ExpectedCursorChange(['much range', '6', {'string': 'slider'}, 'such app'])],
           [ContentMessages.moveOrAdjustDown(), new ExpectedValueChange('5')],
@@ -88,7 +92,7 @@
           // Move from an inner frame to the last element in the parent doc
           [ContentMessages.simpleMoveLast,
             new ExpectedCursorChange(
-              ['Home', {'string': 'pushbutton'}], { b2g_todo: true })],
+              ['apple', {'string': 'pushbutton'}], { b2g_todo: true })],
 
           [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
@@ -134,6 +138,17 @@
             new ExpectedCursorChange(['Phone status bar'], { b2g_todo: true })],
 
           // Reset cursors
+          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+
+          // Current virtual cursor's position's name changes
+          [ContentMessages.simpleMoveNext,
+           new ExpectedCursorChange(['Phone status bar', 'Traversal Rule test document'])],
+          [ContentMessages.focusSelector('button#fruit', false),
+           new ExpectedCursorChange(['apple', {'string': 'pushbutton'}])],
+          [doc.defaultView.renameFruit, new ExpectedNameChange('banana')],
+
+          // Blur button and reset cursor
+          [ContentMessages.focusSelector('button#fruit', true), null],
           [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
           // Move cursor with focus in outside document
@@ -207,14 +222,14 @@
 
           // Open dialog in outer doc, while cursor is also in outer doc
           [ContentMessages.simpleMoveLast,
-           new ExpectedCursorChange(['Home', {'string': 'pushbutton'}])],
+           new ExpectedCursorChange(['banana', {'string': 'pushbutton'}])],
           [doc.defaultView.showAlert,
             new ExpectedCursorChange(['This is an alert!',
               {'string': 'headingLevel', 'args': [1]},
               {'string': 'dialog'}])],
 
           [doc.defaultView.hideAlert,
-           new ExpectedCursorChange(['Home', {'string': 'pushbutton'}])],
+           new ExpectedCursorChange(['banana', {'string': 'pushbutton'}])],
 
           [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
@@ -253,6 +268,8 @@
             doc.querySelector('button#home').focus();
           }, new ExpectedCursorChange(['Home', {'string': 'pushbutton'},
             'Traversal Rule test document'])],
+          [ContentMessages.simpleMoveNext,
+            new ExpectedCursorChange(['banana', {'string': 'pushbutton'}])]
           [ContentMessages.simpleMoveNext, new ExpectedNoMove()]
         ]);
 

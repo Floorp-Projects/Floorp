@@ -219,8 +219,8 @@ RtspControllerChild::RecvAsyncOpenFailed(const nsresult& reason)
 void
 RtspControllerChild::AddIPDLReference()
 {
-  NS_ABORT_IF_FALSE(!mIPCOpen,
-                    "Attempt to retain more than one IPDL reference");
+  MOZ_ASSERT(!mIPCOpen,
+             "Attempt to retain more than one IPDL reference");
   mIPCOpen = true;
   AllowIPC();
   AddRef();
@@ -229,7 +229,7 @@ RtspControllerChild::AddIPDLReference()
 void
 RtspControllerChild::ReleaseIPDLReference()
 {
-  NS_ABORT_IF_FALSE(mIPCOpen, "Attempt to release nonexistent IPDL reference");
+  MOZ_ASSERT(mIPCOpen, "Attempt to release nonexistent IPDL reference");
   mIPCOpen = false;
   DisallowIPC();
   Release();

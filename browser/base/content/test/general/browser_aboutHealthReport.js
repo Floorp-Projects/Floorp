@@ -29,7 +29,7 @@ let gTests = [
     Services.prefs.setCharPref("datareporting.healthreport.about.reportUrl",
                                "https://example.com/browser/browser/base/content/test/general/healthreport_testRemoteCommands.html");
   },
-  run: function ()
+  run: function (iframe)
   {
     let deferred = Promise.defer();
 
@@ -40,19 +40,18 @@ let gTests = [
 
     let results = 0;
     try {
-      let win = gBrowser.contentWindow;
-      win.addEventListener("message", function testLoad(e) {
-        if (e.data.type == "testResult") {
-          ok(e.data.pass, e.data.info);
+      iframe.contentWindow.addEventListener("FirefoxHealthReportTestResponse", function evtHandler(event) {
+        let data = event.detail.data;
+        if (data.type == "testResult") {
+          ok(data.pass, data.info);
           results++;
         }
-        else if (e.data.type == "testsComplete") {
-          is(results, e.data.count, "Checking number of results received matches the number of tests that should have run");
-          win.removeEventListener("message", testLoad, false, true);
+        else if (data.type == "testsComplete") {
+          is(results, data.count, "Checking number of results received matches the number of tests that should have run");
+          iframe.contentWindow.removeEventListener("FirefoxHealthReportTestResponse", evtHandler, true);
           deferred.resolve();
         }
-
-      }, false, true);
+      }, true);
 
     } catch(e) {
       ok(false, "Failed to get all commands");
@@ -77,9 +76,9 @@ function test()
       info(test.desc);
       test.setup();
 
-      yield promiseNewTabLoadEvent("about:healthreport");
+      let iframe = yield promiseNewTabLoadEvent("about:healthreport");
 
-      yield test.run();
+      yield test.run(iframe);
 
       gBrowser.removeCurrentTab();
     }
@@ -96,8 +95,12 @@ function promiseNewTabLoadEvent(aUrl, aEventType="load")
     tab.linkedBrowser.removeEventListener(aEventType, load, true);
     let iframe = tab.linkedBrowser.contentDocument.getElementById("remote-report");
       iframe.addEventListener("load", function frameLoad(e) {
+        if (iframe.contentWindow.location.href == "about:blank" ||
+            e.target != iframe) {
+          return;
+        }
         iframe.removeEventListener("load", frameLoad, false);
-        deferred.resolve();
+        deferred.resolve(iframe);
       }, false);
     }, true);
   return deferred.promise;

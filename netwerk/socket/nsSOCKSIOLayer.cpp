@@ -357,8 +357,8 @@ nsSOCKSSocketInfo::HandshakeFinished(PRErrorCode err)
 PRStatus
 nsSOCKSSocketInfo::StartDNS(PRFileDesc *fd)
 {
-    NS_ABORT_IF_FALSE(!mDnsRec && mState == SOCKS_INITIAL,
-                      "Must be in initial state to make DNS Lookup");
+    MOZ_ASSERT(!mDnsRec && mState == SOCKS_INITIAL,
+               "Must be in initial state to make DNS Lookup");
 
     nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
     if (!dns)
@@ -384,7 +384,7 @@ nsSOCKSSocketInfo::OnLookupComplete(nsICancelable *aRequest,
                                     nsIDNSRecord *aRecord,
                                     nsresult aStatus)
 {
-    NS_ABORT_IF_FALSE(aRequest == mLookup, "wrong DNS query");
+    MOZ_ASSERT(aRequest == mLookup, "wrong DNS query");
     mLookup = nullptr;
     mLookupStatus = aStatus;
     mDnsRec = aRecord;
@@ -402,8 +402,8 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
     PRStatus status;
     nsresult rv;
 
-    NS_ABORT_IF_FALSE(mState == SOCKS_DNS_COMPLETE,
-                      "Must have DNS to make connection!");
+    MOZ_ASSERT(mState == SOCKS_DNS_COMPLETE,
+               "Must have DNS to make connection!");
 
     if (NS_FAILED(mLookupStatus)) {
         PR_SetError(PR_BAD_ADDRESS_ERROR, 0);
@@ -514,8 +514,8 @@ nsSOCKSSocketInfo::ContinueConnectingToProxy(PRFileDesc *fd, int16_t oflags)
 {
     PRStatus status;
 
-    NS_ABORT_IF_FALSE(mState == SOCKS_CONNECTING_TO_PROXY,
-                      "Continuing connection in wrong state!");
+    MOZ_ASSERT(mState == SOCKS_CONNECTING_TO_PROXY,
+               "Continuing connection in wrong state!");
 
     LOGDEBUG(("socks: continuing connection to proxy"));
 
@@ -544,8 +544,8 @@ nsSOCKSSocketInfo::WriteV4ConnectRequest()
     NetAddr *addr = &mDestinationAddr;
     int32_t proxy_resolve;
 
-    NS_ABORT_IF_FALSE(mState == SOCKS_CONNECTING_TO_PROXY,
-                      "Invalid state!");
+    MOZ_ASSERT(mState == SOCKS_CONNECTING_TO_PROXY,
+               "Invalid state!");
     
     proxy_resolve = mFlags & nsISocketProvider::PROXY_RESOLVES_HOST;
 
@@ -595,10 +595,10 @@ nsSOCKSSocketInfo::WriteV4ConnectRequest()
 PRStatus
 nsSOCKSSocketInfo::ReadV4ConnectResponse()
 {
-    NS_ABORT_IF_FALSE(mState == SOCKS4_READ_CONNECT_RESPONSE,
-                      "Handling SOCKS 4 connection reply in wrong state!");
-    NS_ABORT_IF_FALSE(mDataLength == 8,
-                      "SOCKS 4 connection reply must be 8 bytes!");
+    MOZ_ASSERT(mState == SOCKS4_READ_CONNECT_RESPONSE,
+               "Handling SOCKS 4 connection reply in wrong state!");
+    MOZ_ASSERT(mDataLength == 8,
+               "SOCKS 4 connection reply must be 8 bytes!");
 
     LOGDEBUG(("socks4: checking connection reply"));
 
@@ -623,7 +623,7 @@ nsSOCKSSocketInfo::ReadV4ConnectResponse()
 PRStatus
 nsSOCKSSocketInfo::WriteV5AuthRequest()
 {
-    NS_ABORT_IF_FALSE(mVersion == 5, "SOCKS version must be 5!");
+    MOZ_ASSERT(mVersion == 5, "SOCKS version must be 5!");
 
     mState = SOCKS5_WRITE_AUTH_REQUEST;
 
@@ -641,10 +641,10 @@ nsSOCKSSocketInfo::WriteV5AuthRequest()
 PRStatus
 nsSOCKSSocketInfo::ReadV5AuthResponse()
 {
-    NS_ABORT_IF_FALSE(mState == SOCKS5_READ_AUTH_RESPONSE,
-                      "Handling SOCKS 5 auth method reply in wrong state!");
-    NS_ABORT_IF_FALSE(mDataLength == 2,
-                      "SOCKS 5 auth method reply must be 2 bytes!");
+    MOZ_ASSERT(mState == SOCKS5_READ_AUTH_RESPONSE,
+               "Handling SOCKS 5 auth method reply in wrong state!");
+    MOZ_ASSERT(mDataLength == 2,
+               "SOCKS 5 auth method reply must be 2 bytes!");
 
     LOGDEBUG(("socks5: checking auth method reply"));
 
@@ -721,11 +721,11 @@ nsSOCKSSocketInfo::WriteV5ConnectRequest()
 PRStatus
 nsSOCKSSocketInfo::ReadV5AddrTypeAndLength(uint8_t *type, uint32_t *len)
 {
-    NS_ABORT_IF_FALSE(mState == SOCKS5_READ_CONNECT_RESPONSE_TOP ||
-                      mState == SOCKS5_READ_CONNECT_RESPONSE_BOTTOM,
-                      "Invalid state!");
-    NS_ABORT_IF_FALSE(mDataLength >= 5,
-                      "SOCKS 5 connection reply must be at least 5 bytes!");
+    MOZ_ASSERT(mState == SOCKS5_READ_CONNECT_RESPONSE_TOP ||
+               mState == SOCKS5_READ_CONNECT_RESPONSE_BOTTOM,
+               "Invalid state!");
+    MOZ_ASSERT(mDataLength >= 5,
+               "SOCKS 5 connection reply must be at least 5 bytes!");
  
     // Seek to the address location 
     mReadOffset = 3;
@@ -756,10 +756,10 @@ nsSOCKSSocketInfo::ReadV5ConnectResponseTop()
     uint8_t res;
     uint32_t len;
 
-    NS_ABORT_IF_FALSE(mState == SOCKS5_READ_CONNECT_RESPONSE_TOP,
-                      "Invalid state!");
-    NS_ABORT_IF_FALSE(mDataLength == 5,
-                      "SOCKS 5 connection reply must be exactly 5 bytes!");
+    MOZ_ASSERT(mState == SOCKS5_READ_CONNECT_RESPONSE_TOP,
+               "Invalid state!");
+    MOZ_ASSERT(mDataLength == 5,
+               "SOCKS 5 connection reply must be exactly 5 bytes!");
 
     LOGDEBUG(("socks5: checking connection reply"));
 
@@ -833,16 +833,16 @@ nsSOCKSSocketInfo::ReadV5ConnectResponseBottom()
     uint8_t type;
     uint32_t len;
 
-    NS_ABORT_IF_FALSE(mState == SOCKS5_READ_CONNECT_RESPONSE_BOTTOM,
-                      "Invalid state!");
+    MOZ_ASSERT(mState == SOCKS5_READ_CONNECT_RESPONSE_BOTTOM,
+               "Invalid state!");
 
     if (ReadV5AddrTypeAndLength(&type, &len) != PR_SUCCESS) {
         HandshakeFinished(PR_BAD_ADDRESS_ERROR);
         return PR_FAILURE;
     }
 
-    NS_ABORT_IF_FALSE(mDataLength == 7+len,
-                      "SOCKS 5 unexpected length of connection reply!");
+    MOZ_ASSERT(mDataLength == 7+len,
+               "SOCKS 5 unexpected length of connection reply!");
 
     LOGDEBUG(("socks5: loading source addr and port"));
     // Read what the proxy says is our source address
@@ -971,8 +971,8 @@ inline uint8_t
 nsSOCKSSocketInfo::ReadUint8()
 {
     uint8_t rv;
-    NS_ABORT_IF_FALSE(mReadOffset + sizeof(rv) <= mDataLength,
-                      "Not enough space to pop a uint8_t!");
+    MOZ_ASSERT(mReadOffset + sizeof(rv) <= mDataLength,
+               "Not enough space to pop a uint8_t!");
     rv = mData[mReadOffset];
     mReadOffset += sizeof(rv);
     return rv;
@@ -982,8 +982,8 @@ inline uint16_t
 nsSOCKSSocketInfo::ReadUint16()
 {
     uint16_t rv;
-    NS_ABORT_IF_FALSE(mReadOffset + sizeof(rv) <= mDataLength,
-                      "Not enough space to pop a uint16_t!");
+    MOZ_ASSERT(mReadOffset + sizeof(rv) <= mDataLength,
+               "Not enough space to pop a uint16_t!");
     memcpy(&rv, mData + mReadOffset, sizeof(rv));
     mReadOffset += sizeof(rv);
     return rv;
@@ -993,8 +993,8 @@ inline uint32_t
 nsSOCKSSocketInfo::ReadUint32()
 {
     uint32_t rv;
-    NS_ABORT_IF_FALSE(mReadOffset + sizeof(rv) <= mDataLength,
-                      "Not enough space to pop a uint32_t!");
+    MOZ_ASSERT(mReadOffset + sizeof(rv) <= mDataLength,
+               "Not enough space to pop a uint32_t!");
     memcpy(&rv, mData + mReadOffset, sizeof(rv));
     mReadOffset += sizeof(rv);
     return rv;
@@ -1009,13 +1009,13 @@ nsSOCKSSocketInfo::ReadNetAddr(NetAddr *addr, uint16_t fam)
     addr->raw.family = fam;
     if (fam == AF_INET) {
         amt = sizeof(addr->inet.ip);
-        NS_ABORT_IF_FALSE(mReadOffset + amt <= mDataLength,
-                          "Not enough space to pop an ipv4 addr!");
+        MOZ_ASSERT(mReadOffset + amt <= mDataLength,
+                   "Not enough space to pop an ipv4 addr!");
         memcpy(&addr->inet.ip, ip, amt);
     } else if (fam == AF_INET6) {
         amt = sizeof(addr->inet6.ip.u8);
-        NS_ABORT_IF_FALSE(mReadOffset + amt <= mDataLength,
-                          "Not enough space to pop an ipv6 addr!");
+        MOZ_ASSERT(mReadOffset + amt <= mDataLength,
+                   "Not enough space to pop an ipv6 addr!");
         memcpy(addr->inet6.ip.u8, ip, amt);
     }
 
@@ -1031,10 +1031,10 @@ nsSOCKSSocketInfo::ReadNetPort(NetAddr *addr)
 void
 nsSOCKSSocketInfo::WantRead(uint32_t sz)
 {
-    NS_ABORT_IF_FALSE(mDataIoPtr == nullptr,
-                      "WantRead() called while I/O already in progress!");
-    NS_ABORT_IF_FALSE(mDataLength + sz <= BUFFER_SIZE,
-                      "Can't read that much data!");
+    MOZ_ASSERT(mDataIoPtr == nullptr,
+               "WantRead() called while I/O already in progress!");
+    MOZ_ASSERT(mDataLength + sz <= BUFFER_SIZE,
+               "Can't read that much data!");
     mAmountToRead = sz;
 }
 

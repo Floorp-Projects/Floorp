@@ -8,6 +8,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
+Cu.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 
@@ -25,6 +26,11 @@ log.level = Log.Level.Debug;
 
 // See verbose logging from FxAccounts.jsm
 Services.prefs.setCharPref("identity.fxaccounts.loglevel", "DEBUG");
+
+// The oauth server is mocked, but set these prefs to pass param checks
+Services.prefs.setCharPref("identity.fxaccounts.remote.oauth.uri", "https://example.com/v1");
+Services.prefs.setCharPref("identity.fxaccounts.oauth.client_id", "abc123");
+
 
 function run_test() {
   run_next_test();
@@ -681,6 +687,46 @@ add_test(function test_sign_out_with_remote_error() {
   fxa.signOut();
 });
 
+add_test(function test_getOAuthToken() {
+  let fxa = new MockFxAccounts();
+  let alice = getTestUser("alice");
+  let getTokenFromAssertionCalled = false;
+
+  fxa.internal._d_signCertificate.resolve("cert1");
+
+  // create a mock oauth client
+  let client = new FxAccountsOAuthGrantClient({
+    serverURL: "http://example.com/v1",
+    client_id: "abc123"
+  });
+  client.getTokenFromAssertion = function () {
+    getTokenFromAssertionCalled = true;
+    return Promise.resolve({ access_token: "token" });
+  };
+
+  fxa.setSignedInUser(alice).then(
+    () => {
+      fxa.getOAuthToken({ scope: "profile", client: client }).then(
+        (result) => {
+           do_check_true(getTokenFromAssertionCalled);
+           do_check_eq(result, "token");
+           run_next_test();
+        }
+      )
+    }
+  );
+
+});
+
+add_test(function test_getOAuthToken_missing_scope() {
+  let fxa = new MockFxAccounts();
+
+  do_check_throws_message(() => {
+    fxa.getOAuthToken();
+  }, "Missing 'scope' option");
+  run_next_test();
+});
+
 /*
  * End of tests.
  * Utility functions follow.
@@ -743,7 +789,7 @@ function do_check_throws(func, result, stack)
     if (ex.name == result) {
       return;
     }
-    do_throw("Expected result " + result + ", caught " + ex, stack);
+    do_throw("Expected result " + result + ", caught " + ex.name, stack);
   }
 
   if (result) {

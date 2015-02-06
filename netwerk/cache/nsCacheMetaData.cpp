@@ -16,14 +16,14 @@ nsCacheMetaData::GetElement(const char * key)
     while (data < limit) {
         // Point to the value part
         const char * value = data + strlen(data) + 1;
-        NS_ABORT_IF_FALSE(value < limit, "Cache Metadata corrupted");
+        MOZ_ASSERT(value < limit, "Cache Metadata corrupted");
         if (strcmp(data, key) == 0)
             return value;
 
         // Skip value part
         data = value + strlen(value) + 1;
     }
-    NS_ABORT_IF_FALSE(data == limit, "Metadata corrupted");
+    MOZ_ASSERT(data == limit, "Metadata corrupted");
     return nullptr;
 }
 
@@ -134,7 +134,7 @@ nsCacheMetaData::VisitElements(nsICacheMetaDataVisitor * visitor)
         const char * key = data;
         // Skip key part
         data += strlen(data) + 1;
-        NS_ABORT_IF_FALSE(data < limit, "Metadata corrupted");
+        MOZ_ASSERT(data < limit, "Metadata corrupted");
         bool keepGoing;
         nsresult rv = visitor->VisitMetaDataElement(key, data, &keepGoing);
         if (NS_FAILED(rv) || !keepGoing)
@@ -143,7 +143,7 @@ nsCacheMetaData::VisitElements(nsICacheMetaDataVisitor * visitor)
         // Skip value part
         data += strlen(data) + 1;
     }
-    NS_ABORT_IF_FALSE(data == limit, "Metadata corrupted");
+    MOZ_ASSERT(data == limit, "Metadata corrupted");
     return NS_OK;
 }
 

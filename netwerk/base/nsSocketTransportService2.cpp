@@ -180,8 +180,8 @@ nsresult
 nsSocketTransportService::DetachSocket(SocketContext *listHead, SocketContext *sock)
 {
     SOCKET_LOG(("nsSocketTransportService::DetachSocket [handler=%p]\n", sock->mHandler));
-    NS_ABORT_IF_FALSE((listHead == mActiveList) || (listHead == mIdleList),
-                      "DetachSocket invalid head");
+    MOZ_ASSERT((listHead == mActiveList) || (listHead == mIdleList),
+               "DetachSocket invalid head");
 
     // inform the handler that this socket is going away
     sock->mHandler->OnSocketDetached(sock->mFD);
@@ -213,8 +213,8 @@ nsSocketTransportService::DetachSocket(SocketContext *listHead, SocketContext *s
 nsresult
 nsSocketTransportService::AddToPollList(SocketContext *sock)
 {
-    NS_ABORT_IF_FALSE(!(((uint32_t)(sock - mActiveList)) < mActiveListSize),
-                      "AddToPollList Socket Already Active");
+    MOZ_ASSERT(!(static_cast<uint32_t>(sock - mActiveList) < mActiveListSize),
+               "AddToPollList Socket Already Active");
 
     SOCKET_LOG(("nsSocketTransportService::AddToPollList [handler=%p]\n", sock->mHandler));
     if (mActiveCount == mActiveListSize) {
@@ -250,7 +250,7 @@ nsSocketTransportService::RemoveFromPollList(SocketContext *sock)
     SOCKET_LOG(("nsSocketTransportService::RemoveFromPollList [handler=%p]\n", sock->mHandler));
 
     uint32_t index = sock - mActiveList;
-    NS_ABORT_IF_FALSE(index < mActiveListSize, "invalid index");
+    MOZ_ASSERT(index < mActiveListSize, "invalid index");
 
     SOCKET_LOG(("  index=%u mActiveCount=%u\n", index, mActiveCount));
 
@@ -266,8 +266,8 @@ nsSocketTransportService::RemoveFromPollList(SocketContext *sock)
 nsresult
 nsSocketTransportService::AddToIdleList(SocketContext *sock)
 {
-    NS_ABORT_IF_FALSE(!(((uint32_t)(sock - mIdleList)) < mIdleListSize),
-                      "AddToIdlelList Socket Already Idle");
+    MOZ_ASSERT(!(static_cast<uint32_t>(sock - mIdleList) < mIdleListSize),
+               "AddToIdlelList Socket Already Idle");
 
     SOCKET_LOG(("nsSocketTransportService::AddToIdleList [handler=%p]\n", sock->mHandler));
     if (mIdleCount == mIdleListSize) {

@@ -37,14 +37,6 @@ class InternalRequest MOZ_FINAL
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(InternalRequest)
 
-  enum ContextFrameType
-  {
-    FRAMETYPE_AUXILIARY = 0,
-    FRAMETYPE_TOP_LEVEL,
-    FRAMETYPE_NESTED,
-    FRAMETYPE_NONE,
-  };
-
   enum ResponseTainting
   {
     RESPONSETAINT_BASIC,
@@ -55,7 +47,6 @@ public:
   explicit InternalRequest()
     : mMethod("GET")
     , mHeaders(new InternalHeaders(HeadersGuardEnum::None))
-    , mContextFrameType(FRAMETYPE_NONE)
     , mReferrer(NS_LITERAL_STRING(kFETCH_CLIENT_REFERRER_STR))
     , mMode(RequestMode::No_cors)
     , mCredentialsMode(RequestCredentials::Omit)
@@ -81,8 +72,7 @@ public:
     , mURL(aOther.mURL)
     , mHeaders(aOther.mHeaders)
     , mBodyStream(aOther.mBodyStream)
-    , mContext(aOther.mContext)
-    , mContextFrameType(aOther.mContextFrameType)
+    , mContentPolicyType(aOther.mContentPolicyType)
     , mReferrer(aOther.mReferrer)
     , mMode(aOther.mMode)
     , mCredentialsMode(aOther.mCredentialsMode)
@@ -240,9 +230,9 @@ public:
   }
 
   nsContentPolicyType
-  GetContext() const
+  ContentPolicyType() const
   {
-    return mContext;
+    return mContentPolicyType;
   }
 
   bool
@@ -312,9 +302,7 @@ private:
 
   // nsContentPolicyType does not cover the complete set defined in the spec,
   // but it is a good start.
-  nsContentPolicyType mContext;
-
-  ContextFrameType mContextFrameType;
+  nsContentPolicyType mContentPolicyType;
 
   // Empty string: no-referrer
   // "about:client": client (default)

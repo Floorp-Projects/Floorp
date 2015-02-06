@@ -168,8 +168,8 @@ NS_GFX_(bool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
   while (newdpc > 2) {
     bool haveNonzero = false;
     for (int c = 0; c < 3; ++c) {
-      NS_ABORT_IF_FALSE(c * dpc < nameLen,
-                        "should not pass end of string while newdpc > 2");
+      MOZ_ASSERT(c * dpc < nameLen,
+                 "should not pass end of string while newdpc > 2");
       char16_t ch = colorSpec[c * dpc];
       if (('1' <= ch && ch <= '9') ||
           ('A' <= ch && ch <= 'F') ||

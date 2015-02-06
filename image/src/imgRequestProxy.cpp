@@ -157,7 +157,7 @@ nsresult imgRequestProxy::Init(imgRequest* aOwner,
 
   LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgRequestProxy::Init", "request", aOwner);
 
-  NS_ABORT_IF_FALSE(mAnimationConsumers == 0, "Cannot have animation before Init");
+  MOZ_ASSERT(mAnimationConsumers == 0, "Cannot have animation before Init");
 
   mBehaviour->SetOwner(aOwner);
   mListener = aObserver;
@@ -392,7 +392,7 @@ imgRequestProxy::LockImage()
 NS_IMETHODIMP
 imgRequestProxy::UnlockImage()
 {
-  NS_ABORT_IF_FALSE(mLockCount > 0, "calling unlock but no locks!");
+  MOZ_ASSERT(mLockCount > 0, "calling unlock but no locks!");
 
   mLockCount--;
   nsRefPtr<Image> image = GetImage();
@@ -921,8 +921,8 @@ void imgRequestProxy::NotifyListener()
   } else {
     // We don't have an imgRequest, so we can only notify the clone of our
     // current state, but we still have to do that asynchronously.
-    NS_ABORT_IF_FALSE(HasImage(),
-                      "if we have no imgRequest, we should have an Image");
+    MOZ_ASSERT(HasImage(),
+               "if we have no imgRequest, we should have an Image");
     progressTracker->NotifyCurrentState(this);
   }
 }

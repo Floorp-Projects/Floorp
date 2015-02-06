@@ -335,8 +335,8 @@ SVGPathElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 float
 SVGPathElement::GetPathLengthScale(PathLengthScaleForType aFor)
 {
-  NS_ABORT_IF_FALSE(aFor == eForTextPath || aFor == eForStroking,
-                    "Unknown enum");
+  MOZ_ASSERT(aFor == eForTextPath || aFor == eForStroking,
+             "Unknown enum");
   if (mPathLength.IsExplicitlySet()) {
     float authorsPathLengthEstimate = mPathLength.GetAnimValue();
     if (authorsPathLengthEstimate > 0) {

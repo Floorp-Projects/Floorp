@@ -104,7 +104,7 @@ public:
 
   NS_IMETHODIMP Run()
   {
-    NS_ABORT_IF_FALSE(NS_IsMainThread(), "wrong thread");
+    MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
     mThread->Shutdown();
     return NS_OK;
   }
@@ -125,7 +125,7 @@ public:
 
   NS_IMETHODIMP Run()
   {
-    NS_ABORT_IF_FALSE(NS_IsMainThread(), "wrong thread");
+    MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
     if (mPACMan->mPACThread) {
       mPACMan->mPACThread->Shutdown();
       mPACMan->mPACThread = nullptr;
@@ -153,7 +153,7 @@ public:
 
   NS_IMETHODIMP Run()
   {
-    NS_ABORT_IF_FALSE(NS_IsMainThread(), "wrong thread");
+    MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
     mPACMan->mLoader = nullptr;
     mPACMan->PostProcessPendingQ();
     return NS_OK;
@@ -194,7 +194,7 @@ public:
 
   NS_IMETHODIMP Run()
   {
-    NS_ABORT_IF_FALSE(!NS_IsMainThread(), "wrong thread");
+    MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
     if (mCancel) {
       mPACMan->CancelPendingQ(mCancelStatus);
       mCancel = false;
@@ -272,7 +272,7 @@ PendingPACQuery::UseAlternatePACFile(const nsCString &pacURL)
 NS_IMETHODIMP
 PendingPACQuery::Run()
 {
-  NS_ABORT_IF_FALSE(!NS_IsMainThread(), "wrong thread");
+  MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
   mPACMan->PostQuery(this);
   return NS_OK;
 }
@@ -288,7 +288,7 @@ nsPACMan::nsPACMan()
   , mLoadFailureCount(0)
   , mInProgress(false)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "pacman must be created on main thread");
+  MOZ_ASSERT(NS_IsMainThread(), "pacman must be created on main thread");
   if (!sThreadLocalSetup){
     sThreadLocalSetup = true;
     PR_NewThreadPrivateIndex(&sThreadLocalIndex, nullptr);
@@ -315,7 +315,7 @@ nsPACMan::~nsPACMan()
 void
 nsPACMan::Shutdown()
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "pacman must be shutdown on main thread");
+  MOZ_ASSERT(NS_IsMainThread(), "pacman must be shutdown on main thread");
   if (mShutdown) {
     return;
   }
@@ -331,7 +331,7 @@ nsresult
 nsPACMan::AsyncGetProxyForURI(nsIURI *uri, nsPACManCallback *callback,
                               bool mainThreadResponse)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "wrong thread");
+  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   if (mShutdown)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -355,7 +355,7 @@ nsPACMan::AsyncGetProxyForURI(nsIURI *uri, nsPACManCallback *callback,
 nsresult
 nsPACMan::PostQuery(PendingPACQuery *query)
 {
-  NS_ABORT_IF_FALSE(!NS_IsMainThread(), "wrong thread");
+  MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
 
   if (mShutdown) {
     query->Complete(NS_ERROR_NOT_AVAILABLE, EmptyCString());
@@ -412,7 +412,7 @@ nsPACMan::LoadPACFromURI(const nsCString &spec)
 void
 nsPACMan::StartLoading()
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "wrong thread");
+  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   mLoadPending = false;
 
   // CancelExistingLoad was called...
@@ -493,7 +493,7 @@ nsPACMan::CancelExistingLoad()
 void
 nsPACMan::PostProcessPendingQ()
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "wrong thread");
+  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   nsRefPtr<ExecutePACThreadAction> pending =
     new ExecutePACThreadAction(this);
   if (mPACThread)
@@ -503,7 +503,7 @@ nsPACMan::PostProcessPendingQ()
 void
 nsPACMan::PostCancelPendingQ(nsresult status)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "wrong thread");
+  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   nsRefPtr<ExecutePACThreadAction> pending =
     new ExecutePACThreadAction(this);
   pending->CancelQueue(status);
@@ -514,7 +514,7 @@ nsPACMan::PostCancelPendingQ(nsresult status)
 void
 nsPACMan::CancelPendingQ(nsresult status)
 {
-  NS_ABORT_IF_FALSE(!NS_IsMainThread(), "wrong thread");
+  MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
   nsRefPtr<PendingPACQuery> query;
 
   while (!mPendingQ.isEmpty()) {
@@ -529,7 +529,7 @@ nsPACMan::CancelPendingQ(nsresult status)
 void
 nsPACMan::ProcessPendingQ()
 {
-  NS_ABORT_IF_FALSE(!NS_IsMainThread(), "wrong thread");
+  MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
   while (ProcessPending());
 
   if (mShutdown) {
@@ -604,7 +604,7 @@ nsPACMan::OnStreamComplete(nsIStreamLoader *loader,
                            uint32_t dataLen,
                            const uint8_t *data)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "wrong thread");
+  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   if (mLoader != loader) {
     // If this happens, then it means that LoadPACFromURI was called more
     // than once before the initial call completed.  In this case, status
@@ -687,7 +687,7 @@ nsPACMan::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel,
                                  uint32_t flags,
                                  nsIAsyncVerifyRedirectCallback *callback)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "wrong thread");
+  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   
   nsresult rv = NS_OK;
   nsCOMPtr<nsIURI> pacURI;
@@ -714,7 +714,7 @@ nsPACMan::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel,
 void
 nsPACMan::NamePACThread()
 {
-  NS_ABORT_IF_FALSE(!NS_IsMainThread(), "wrong thread");
+  MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
   PR_SetCurrentThreadName("Proxy Resolution");
 #ifdef MOZ_NUWA_PROCESS
   if (IsNuwaProcess()) {

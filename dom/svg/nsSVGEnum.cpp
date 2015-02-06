@@ -185,8 +185,8 @@ nsSVGEnum::SMILEnum::SetAnimValue(const nsSMILValue& aValue)
   NS_ASSERTION(aValue.mType == SMILEnumType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILEnumType::Singleton()) {
-    NS_ABORT_IF_FALSE(aValue.mU.mUint <= USHRT_MAX,
-                      "Very large enumerated value - too big for uint16_t");
+    MOZ_ASSERT(aValue.mU.mUint <= USHRT_MAX,
+               "Very large enumerated value - too big for uint16_t");
     mVal->SetAnimValue(uint16_t(aValue.mU.mUint), mSVGElement);
   }
   return NS_OK;

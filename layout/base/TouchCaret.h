@@ -88,6 +88,11 @@ private:
   nsCanvasFrame* GetCanvasFrame();
 
   /**
+   * Find the root frame to update the touch caret's position.
+   */
+  nsIFrame* GetRootFrame();
+
+  /**
    * Retrieve the bounding rectangle of the touch caret.
    *
    * @returns A nsRect representing the bounding rectangle of this touch caret.

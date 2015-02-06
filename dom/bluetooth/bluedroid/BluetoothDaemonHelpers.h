@@ -149,6 +149,9 @@ nsresult
 Convert(int aIn, int16_t& aOut);
 
 nsresult
+Convert(int aIn, int32_t& aOut);
+
+nsresult
 Convert(int32_t aIn, BluetoothDeviceType& aOut);
 
 nsresult

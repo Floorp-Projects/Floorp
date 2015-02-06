@@ -12,7 +12,7 @@
 #include <stdint.h>                     // for uint16_t, uint32_t
 #include <sys/types.h>                  // for int32_t
 #include "gfxPlatform.h"                // for GetTileWidth/GetTileHeight
-#include "nsDebug.h"                    // for NS_ABORT_IF_FALSE
+#include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRect.h"                     // for nsIntRect
 #include "nsRegion.h"                   // for nsIntRegion
@@ -448,12 +448,12 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
     }
   }
 
-  NS_ABORT_IF_FALSE(aNewValidRegion.Contains(aPaintRegion), "Painting a region outside the visible region");
+  MOZ_ASSERT(aNewValidRegion.Contains(aPaintRegion), "Painting a region outside the visible region");
 #ifdef DEBUG
   nsIntRegion oldAndPainted(oldValidRegion);
   oldAndPainted.Or(oldAndPainted, aPaintRegion);
 #endif
-  NS_ABORT_IF_FALSE(oldAndPainted.Contains(newValidRegion), "newValidRegion has not been fully painted");
+  MOZ_ASSERT(oldAndPainted.Contains(newValidRegion), "newValidRegion has not been fully painted");
 
   nsIntRegion regionToPaint(aPaintRegion);
 
@@ -512,9 +512,9 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
       int tileX = floor_div(x - newBufferOrigin.x, scaledTileSize.width);
       int tileY = floor_div(y - newBufferOrigin.y, scaledTileSize.height);
       int index = tileX * mRetainedHeight + tileY;
-      NS_ABORT_IF_FALSE(index >= 0 &&
-                        static_cast<unsigned>(index) < newRetainedTiles.Length(),
-                        "index out of range");
+      MOZ_ASSERT(index >= 0 &&
+                 static_cast<unsigned>(index) < newRetainedTiles.Length(),
+                 "index out of range");
 
       Tile newTile = newRetainedTiles[index];
 
@@ -553,7 +553,7 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
   }
 
   // At this point, oldTileCount should be zero
-  NS_ABORT_IF_FALSE(oldTileCount == 0, "Failed to release old tiles");
+  MOZ_ASSERT(oldTileCount == 0, "Failed to release old tiles");
 
   mValidRegion = aNewValidRegion;
   mPaintedRegion.Or(mPaintedRegion, aPaintRegion);

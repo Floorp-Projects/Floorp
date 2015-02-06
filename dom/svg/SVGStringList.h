@@ -112,14 +112,14 @@ private:
   }
 
   void ReplaceItem(uint32_t aIndex, const nsAString &aString) {
-    NS_ABORT_IF_FALSE(aIndex < mStrings.Length(),
-                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    MOZ_ASSERT(aIndex < mStrings.Length(),
+               "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mStrings[aIndex] = aString;
   }
 
   void RemoveItem(uint32_t aIndex) {
-    NS_ABORT_IF_FALSE(aIndex < mStrings.Length(),
-                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    MOZ_ASSERT(aIndex < mStrings.Length(),
+               "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mStrings.RemoveElementAt(aIndex);
   }
 

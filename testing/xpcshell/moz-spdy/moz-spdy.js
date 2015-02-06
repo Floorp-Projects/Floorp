@@ -140,7 +140,7 @@ function handleRequest(req, res) {
      function(err, stream) {
        if (err) return;
          stream.end('// comments');
-       });
+       }).on('error', function(){});
       content = '<head> <script src="push.js"/></head>body text';
   } else if (u.pathname == "/push2") {
       res.push('/push2.js',
@@ -151,7 +151,7 @@ function handleRequest(req, res) {
        function(err, stream) {
         if (err) return;
          stream.end('// comments');
-       });
+       }).on('error', function(){});
       content = '<head> <script src="push2.js"/></head>body text';
   } else if (u.pathname == "/big") {
     content = getHugeContent(128 * 1024);

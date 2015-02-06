@@ -371,7 +371,7 @@ AudioStream::Init(int32_t aNumChannels, int32_t aRate,
   // selected based on the observed behaviour of the existing AudioStream
   // implementations.
   uint32_t bufferLimit = FramesToBytes(aRate);
-  NS_ABORT_IF_FALSE(bufferLimit % mBytesPerFrame == 0, "Must buffer complete frames");
+  MOZ_ASSERT(bufferLimit % mBytesPerFrame == 0, "Must buffer complete frames");
   mBuffer.SetCapacity(bufferLimit);
 
   if (aLatencyRequest == LowLatency) {
@@ -632,8 +632,8 @@ AudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames, TimeStamp *aTim
 
   while (bytesToCopy > 0) {
     uint32_t available = std::min(bytesToCopy, mBuffer.Available());
-    NS_ABORT_IF_FALSE(available % mBytesPerFrame == 0,
-        "Must copy complete frames.");
+    MOZ_ASSERT(available % mBytesPerFrame == 0,
+               "Must copy complete frames.");
 
     mBuffer.AppendElements(src, available);
     src += available;
@@ -678,14 +678,14 @@ uint32_t
 AudioStream::Available()
 {
   MonitorAutoLock mon(mMonitor);
-  NS_ABORT_IF_FALSE(mBuffer.Length() % mBytesPerFrame == 0, "Buffer invariant violated.");
+  MOZ_ASSERT(mBuffer.Length() % mBytesPerFrame == 0, "Buffer invariant violated.");
   return BytesToFrames(mBuffer.Available());
 }
 
 void
 AudioStream::SetVolume(double aVolume)
 {
-  NS_ABORT_IF_FALSE(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
+  MOZ_ASSERT(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
 
   if (cubeb_stream_set_volume(mCubebStream.get(), aVolume * CubebUtils::GetVolumeScale()) != CUBEB_OK) {
     NS_WARNING("Could not change volume on cubeb stream.");
@@ -1035,7 +1035,7 @@ AudioStream::Reset()
   // selected based on the observed behaviour of the existing AudioStream
   // implementations.
   uint32_t bufferLimit = FramesToBytes(mInRate);
-  NS_ABORT_IF_FALSE(bufferLimit % mBytesPerFrame == 0, "Must buffer complete frames");
+  MOZ_ASSERT(bufferLimit % mBytesPerFrame == 0, "Must buffer complete frames");
   mBuffer.Reset();
   mBuffer.SetCapacity(bufferLimit);
 
@@ -1054,7 +1054,7 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
   MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != SHUTDOWN, "No data callback after shutdown");
   uint32_t available = std::min(static_cast<uint32_t>(FramesToBytes(aFrames)), mBuffer.Length());
-  NS_ABORT_IF_FALSE(available % mBytesPerFrame == 0, "Must copy complete frames");
+  MOZ_ASSERT(available % mBytesPerFrame == 0, "Must copy complete frames");
   AudioDataValue* output = reinterpret_cast<AudioDataValue*>(aBuffer);
   uint32_t underrunFrames = 0;
   uint32_t servicedFrames = 0;
@@ -1113,7 +1113,7 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
       servicedFrames = GetTimeStretched(output, aFrames, insertTime);
     }
 
-    NS_ABORT_IF_FALSE(mBuffer.Length() % mBytesPerFrame == 0, "Must copy complete frames");
+    MOZ_ASSERT(mBuffer.Length() % mBytesPerFrame == 0, "Must copy complete frames");
 
     // Notify any blocked Write() call that more space is available in mBuffer.
     mon.NotifyAll();

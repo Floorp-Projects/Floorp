@@ -607,7 +607,7 @@ MouseScrollHandler::HandleMouseWheelMessage(nsWindowBase* aWidget,
                                             WPARAM aWParam,
                                             LPARAM aLParam)
 {
-  NS_ABORT_IF_FALSE(
+  MOZ_ASSERT(
     (aMessage == MOZ_WM_MOUSEVWHEEL || aMessage == MOZ_WM_MOUSEHWHEEL),
     "HandleMouseWheelMessage must be called with "
     "MOZ_WM_MOUSEVWHEEL or MOZ_WM_MOUSEHWHEEL");
@@ -672,7 +672,7 @@ MouseScrollHandler::HandleScrollMessageAsMouseWheelMessage(nsWindowBase* aWidget
                                                            WPARAM aWParam,
                                                            LPARAM aLParam)
 {
-  NS_ABORT_IF_FALSE(
+  MOZ_ASSERT(
     (aMessage == MOZ_WM_VSCROLL || aMessage == MOZ_WM_HSCROLL),
     "HandleScrollMessageAsMouseWheelMessage must be called with "
     "MOZ_WM_VSCROLL or MOZ_WM_HSCROLL");
@@ -743,7 +743,7 @@ MouseScrollHandler::EventInfo::EventInfo(nsWindowBase* aWidget,
                                          UINT aMessage,
                                          WPARAM aWParam, LPARAM aLParam)
 {
-  NS_ABORT_IF_FALSE(aMessage == WM_MOUSEWHEEL || aMessage == WM_MOUSEHWHEEL,
+  MOZ_ASSERT(aMessage == WM_MOUSEWHEEL || aMessage == WM_MOUSEHWHEEL,
     "EventInfo must be initialized with WM_MOUSEWHEEL or WM_MOUSEHWHEEL");
 
   MouseScrollHandler::GetInstance()->mSystemSettings.Init();

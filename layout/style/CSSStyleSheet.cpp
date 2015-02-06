@@ -1490,8 +1490,8 @@ CSSStyleSheet::EnsureUniqueInner()
 {
   mDirty = true;
 
-  NS_ABORT_IF_FALSE(mInner->mSheets.Length() != 0,
-                    "unexpected number of outers");
+  MOZ_ASSERT(mInner->mSheets.Length() != 0,
+             "unexpected number of outers");
   if (mInner->mSheets.Length() == 1) {
     return eUniqueInner_AlreadyUnique;
   }
@@ -1614,8 +1614,8 @@ CSSStyleSheet::WillDirty()
 void
 CSSStyleSheet::DidDirty()
 {
-  NS_ABORT_IF_FALSE(!mInner->mComplete || mDirty,
-                    "caller must have called WillDirty()");
+  MOZ_ASSERT(!mInner->mComplete || mDirty,
+             "caller must have called WillDirty()");
   ClearRuleCascades();
 }
 

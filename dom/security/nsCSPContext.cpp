@@ -37,7 +37,6 @@
 #include "prlog.h"
 #include "mozilla/dom/CSPReportBinding.h"
 #include "mozilla/net/ReferrerPolicy.h"
-#include "nsSandboxFlags.h"
 
 using namespace mozilla;
 
@@ -1184,49 +1183,6 @@ nsCSPContext::Permits(nsIURI* aURI,
   }
 #endif
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSPContext::GetCSPSandboxFlags(uint32_t* aOutSandboxFlags)
-{
-  if (aOutSandboxFlags == nullptr) {
-    return NS_ERROR_FAILURE;
-  }
-  *aOutSandboxFlags = SANDBOXED_NONE;
-
-  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
-    uint32_t flags = mPolicies[i]->getSandboxFlags();
-
-    // current policy doesn't have sandbox flag, check next policy
-    if (!flags) {
-      continue;
-    }
-
-    // current policy has sandbox flags, if the policy is in
-    // enforcement-mode (i.e., not report-only) set these flags
-    // and check for policies with more restrictions
-    if (!mPolicies[i]->getReportOnlyFlag()) {
-      *aOutSandboxFlags |= flags;
-    } else {
-      // sandbox directive is ignored in report-only mode, warn about
-      // it and continue the loop checking for an enforcement-mode policy
-      nsAutoString policy;
-      mPolicies[i]->toString(policy);
-
-      CSPCONTEXTLOG(("nsCSPContext::ShouldSandbox, report only policy, ignoring sandbox in: %s",
-                      policy.get()));
-
-      const char16_t* params[] = { policy.get() };
-      CSP_LogLocalizedStr(MOZ_UTF16("ignoringReportOnlyDirective"),
-                          params, ArrayLength(params),
-                          EmptyString(),
-                          EmptyString(),
-                          0, 0,
-                          nsIScriptError::warningFlag,
-                          "CSP", mInnerWindowID);
-    }
-  }
   return NS_OK;
 }
 

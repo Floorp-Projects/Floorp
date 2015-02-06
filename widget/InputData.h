@@ -48,12 +48,12 @@ class ScrollWheelInput;
 #define INPUTDATA_AS_CHILD_TYPE(type, enumID) \
   const type& As##type() const \
   { \
-    NS_ABORT_IF_FALSE(mInputType == enumID, "Invalid cast of InputData."); \
+    MOZ_ASSERT(mInputType == enumID, "Invalid cast of InputData."); \
     return (const type&) *this; \
   } \
   type& As##type() \
   { \
-    NS_ABORT_IF_FALSE(mInputType == enumID, "Invalid cast of InputData."); \
+    MOZ_ASSERT(mInputType == enumID, "Invalid cast of InputData."); \
     return (type&) *this; \
   }
 

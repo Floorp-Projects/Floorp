@@ -77,8 +77,8 @@ public:
 
   void DependentUpdate(const nsSMILTimeValue& aNewTime)
   {
-    NS_ABORT_IF_FALSE(!IsFixedTime(),
-        "Updating an instance time that is not expected to be updated");
+    MOZ_ASSERT(!IsFixedTime(),
+               "Updating an instance time that is not expected to be updated");
     mTime = aNewTime;
   }
 

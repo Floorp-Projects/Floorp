@@ -146,11 +146,11 @@ void
 SVGMotionSMILAnimationFunction::
   RebuildPathAndVerticesFromBasicAttrs(const nsIContent* aContextElem)
 {
-  NS_ABORT_IF_FALSE(!HasAttr(nsGkAtoms::path),
-                    "Should be using |path| attr if we have it");
-  NS_ABORT_IF_FALSE(!mPath, "regenerating when we aleady have path");
-  NS_ABORT_IF_FALSE(mPathVertices.IsEmpty(),
-                    "regenerating when we already have vertices");
+  MOZ_ASSERT(!HasAttr(nsGkAtoms::path),
+             "Should be using |path| attr if we have it");
+  MOZ_ASSERT(!mPath, "regenerating when we aleady have path");
+  MOZ_ASSERT(mPathVertices.IsEmpty(),
+             "regenerating when we already have vertices");
 
   if (!aContextElem->IsSVG()) {
     NS_ERROR("Uh oh, SVG animateMotion element targeting a non-SVG node");
@@ -264,7 +264,7 @@ void
 SVGMotionSMILAnimationFunction::
   RebuildPathAndVertices(const nsIContent* aTargetElement)
 {
-  NS_ABORT_IF_FALSE(mIsPathStale, "rebuilding path when it isn't stale");
+  MOZ_ASSERT(mIsPathStale, "rebuilding path when it isn't stale");
 
   // Clear stale data
   mPath = nullptr;
@@ -297,7 +297,7 @@ SVGMotionSMILAnimationFunction::
                                  FallibleTArray<double>& aPointDistances,
                                  nsSMILValueArray& aResult)
 {
-  NS_ABORT_IF_FALSE(aResult.IsEmpty(), "outparam is non-empty");
+  MOZ_ASSERT(aResult.IsEmpty(), "outparam is non-empty");
 
   // If we're using "keyPoints" as our list of input distances, then we need
   // to de-normalize from the [0, 1] scale to the [0, totalPathLen] scale.
@@ -321,14 +321,14 @@ SVGMotionSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
   if (mIsPathStale) {
     RebuildPathAndVertices(aSMILAttr.GetTargetNode());
   }
-  NS_ABORT_IF_FALSE(!mIsPathStale, "Forgot to clear 'is path stale' state");
+  MOZ_ASSERT(!mIsPathStale, "Forgot to clear 'is path stale' state");
 
   if (!mPath) {
     // This could be due to e.g. a parse error.
-    NS_ABORT_IF_FALSE(mPathVertices.IsEmpty(), "have vertices but no path");
+    MOZ_ASSERT(mPathVertices.IsEmpty(), "have vertices but no path");
     return NS_ERROR_FAILURE;
   }
-  NS_ABORT_IF_FALSE(!mPathVertices.IsEmpty(), "have a path but no vertices");
+  MOZ_ASSERT(!mPathVertices.IsEmpty(), "have a path but no vertices");
 
   // Now: Make the actual list of nsSMILValues (using keyPoints, if set)
   bool isUsingKeyPoints = !mKeyPoints.IsEmpty();
