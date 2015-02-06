@@ -49,6 +49,13 @@ ObjectGroup::finalize(FreeOp *fop)
 }
 
 void
+ObjectGroup::setProtoUnchecked(TaggedProto proto)
+{
+    proto_ = proto.raw();
+    MOZ_ASSERT_IF(proto_ && proto_->isNative(), proto_->isDelegate());
+}
+
+void
 ObjectGroup::setProto(JSContext *cx, TaggedProto proto)
 {
     MOZ_ASSERT(singleton());

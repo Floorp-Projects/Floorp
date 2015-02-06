@@ -353,9 +353,7 @@ class JSObject : public js::gc::Cell
 
     JSObject *getProto() const {
         MOZ_ASSERT(!uninlinedIsProxy());
-        JSObject *proto = getTaggedProto().toObjectOrNull();
-        MOZ_ASSERT_IF(proto && proto->isNative(), proto->isDelegate());
-        return proto;
+        return getTaggedProto().toObjectOrNull();
     }
 
     // Normal objects and a subset of proxies have uninteresting [[Prototype]].
