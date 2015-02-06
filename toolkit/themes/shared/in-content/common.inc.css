@@ -653,6 +653,11 @@ xul|tree {
   border: 1px solid #c1c1c1;
 }
 
+xul|tree:-moz-focusring,
+xul|richlistbox:-moz-focusring {
+  border: 1px dotted #0095dd;
+}
+
 xul|listheader,
 xul|treecols {
   -moz-appearance: none;
