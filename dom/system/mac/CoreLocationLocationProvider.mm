@@ -44,7 +44,7 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
 @implementation LocationDelegate
 - (id) init:(CoreLocationLocationProvider*) aProvider
 {
-  if (self = [super init]) {
+  if ((self = [super init])) {
     mProvider = aProvider;
   }
 
@@ -160,7 +160,6 @@ CoreLocationLocationProvider::MLSUpdate::NotifyError(uint16_t error)
   mParentLocationProvider.NotifyError(error);
   return NS_OK;
 }
-
 
 class CoreLocationObjects {
 public:

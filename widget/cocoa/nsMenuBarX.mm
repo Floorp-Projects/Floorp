@@ -735,7 +735,6 @@ void nsMenuBarX::SetParent(nsIWidget* aParent)
   mParentWindow = aParent;
 }
 
-
 //
 // Objective-C class used to allow us to have keyboard commands
 // look like they are doing something but actually do nothing.
@@ -749,7 +748,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
 
 - (id)initWithTitle:(NSString *)aTitle
 {
-  if (self = [super initWithTitle:aTitle]) {
+  if ((self = [super initWithTitle:aTitle])) {
     mMenuBarOwner = nullptr;
     mDelayResignMainMenu = false;
   }
@@ -758,7 +757,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
 
 - (id)initWithTitle:(NSString *)aTitle andMenuBarOwner:(nsMenuBarX *)aMenuBarOwner
 {
-  if (self = [super initWithTitle:aTitle]) {
+  if ((self = [super initWithTitle:aTitle])) {
     mMenuBarOwner = aMenuBarOwner;
     mDelayResignMainMenu = false;
   }
@@ -798,7 +797,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
 // Undocumented method, present unchanged since OS X 10.6, used to temporarily
 // highlight a top-level menu item when an appropriate Cmd+key combination is
 // pressed.
-- (void)_performActionWithHighlightingForItemAtIndex:(NSInteger)index;
+- (void)_performActionWithHighlightingForItemAtIndex:(NSInteger)index
 {
   NSMenu *mainMenu = [NSApp mainMenu];
   if ([mainMenu isKindOfClass:[GeckoNSMenu class]]) {
