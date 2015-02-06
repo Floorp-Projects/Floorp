@@ -16,12 +16,13 @@
 #include "jshashutil.h"
 #include "jsmath.h"
 #include "jsnum.h"
+#include "jsscript.h"
 #include "prmjtime.h"
 
 #include "gc/Marking.h"
+#include "gc/Rooting.h"
 #include "js/Vector.h"
 #include "vm/Debugger.h"
-#include "vm/GlobalObject.h"
 #include "vm/StringBuffer.h"
 
 #include "jscntxtinlines.h"
@@ -136,18 +137,67 @@ SavedFrame::HashPolicy::rekey(Key &key, const Key &newKey)
     key = newKey;
 }
 
+/* static */ bool
+SavedFrame::finishSavedFrameInit(JSContext *cx, HandleObject ctor, HandleObject proto)
+{
+    // The only object with the SavedFrame::class_ that doesn't have a source
+    // should be the prototype.
+    proto->as<NativeObject>().setReservedSlot(SavedFrame::JSSLOT_SOURCE, NullValue());
+
+    return FreezeObject(cx, proto);
+}
+
 /* static */ const Class SavedFrame::class_ = {
     "SavedFrame",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_RESERVED_SLOTS(SavedFrame::JSSLOT_COUNT),
-    nullptr, // addProperty
-    nullptr, // delProperty
-    nullptr, // getProperty
-    nullptr, // setProperty
-    nullptr, // enumerate
-    nullptr, // resolve
-    nullptr, // convert
-    SavedFrame::finalize
+    JSCLASS_HAS_RESERVED_SLOTS(SavedFrame::JSSLOT_COUNT) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_SavedFrame) |
+    JSCLASS_IS_ANONYMOUS,
+    nullptr,                    // addProperty
+    nullptr,                    // delProperty
+    nullptr,                    // getProperty
+    nullptr,                    // setProperty
+    nullptr,                    // enumerate
+    nullptr,                    // resolve
+    nullptr,                    // convert
+    SavedFrame::finalize,       // finalize
+    nullptr,                    // call
+    nullptr,                    // hasInstance
+    nullptr,                    // construct
+    nullptr,                    // trace
+
+    // ClassSpec
+    {
+        GenericCreateConstructor<SavedFrame::construct, 0, JSFunction::FinalizeKind>,
+        GenericCreatePrototype,
+        SavedFrame::staticFunctions,
+        SavedFrame::protoFunctions,
+        SavedFrame::protoAccessors,
+        SavedFrame::finishSavedFrameInit,
+        ClassSpec::DontDefineConstructor
+    }
+};
+
+/* static */ const JSFunctionSpec
+SavedFrame::staticFunctions[] = {
+    JS_FS_END
+};
+
+/* static */ const JSFunctionSpec
+SavedFrame::protoFunctions[] = {
+    JS_FN("constructor", SavedFrame::construct, 0, 0),
+    JS_FN("toString", SavedFrame::toStringMethod, 0, 0),
+    JS_FS_END
+};
+
+/* static */ const JSPropertySpec
+SavedFrame::protoAccessors[] = {
+    JS_PSG("source", SavedFrame::sourceProperty, 0),
+    JS_PSG("line", SavedFrame::lineProperty, 0),
+    JS_PSG("column", SavedFrame::columnProperty, 0),
+    JS_PSG("functionDisplayName", SavedFrame::functionDisplayNameProperty, 0),
+    JS_PSG("parent", SavedFrame::parentProperty, 0),
+    JS_PS_END
 };
 
 /* static */ void
@@ -359,15 +409,6 @@ SavedFrame::parentProperty(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-/* static */ const JSPropertySpec SavedFrame::properties[] = {
-    JS_PSG("source", SavedFrame::sourceProperty, 0),
-    JS_PSG("line", SavedFrame::lineProperty, 0),
-    JS_PSG("column", SavedFrame::columnProperty, 0),
-    JS_PSG("functionDisplayName", SavedFrame::functionDisplayNameProperty, 0),
-    JS_PSG("parent", SavedFrame::parentProperty, 0),
-    JS_PS_END
-};
-
 /* static */ bool
 SavedFrame::toStringMethod(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -402,12 +443,6 @@ SavedFrame::toStringMethod(JSContext *cx, unsigned argc, Value *vp)
     args.rval().setString(str);
     return true;
 }
-
-/* static */ const JSFunctionSpec SavedFrame::methods[] = {
-    JS_FN("constructor", SavedFrame::construct, 0, 0),
-    JS_FN("toString", SavedFrame::toStringMethod, 0, 0),
-    JS_FS_END
-};
 
 bool
 SavedStacks::init()
@@ -460,12 +495,6 @@ SavedStacks::sweep(JSRuntime *rt)
     }
 
     sweepPCLocationMap();
-
-    if (savedFrameProto.unbarrieredGet() &&
-        IsObjectAboutToBeFinalizedFromAnyThread(savedFrameProto.unsafeGet()))
-    {
-        savedFrameProto.set(nullptr);
-    }
 }
 
 void
@@ -587,48 +616,16 @@ SavedStacks::getOrCreateSavedFrame(JSContext *cx, SavedFrame::HandleLookup looku
     return frame;
 }
 
-JSObject *
-SavedStacks::getOrCreateSavedFramePrototype(JSContext *cx)
-{
-    if (savedFrameProto)
-        return savedFrameProto;
-
-    Rooted<GlobalObject *> global(cx, cx->compartment()->maybeGlobal());
-    if (!global)
-        return nullptr;
-
-    Rooted<SavedFrame *> proto(cx,
-        NewObjectWithGivenProto<SavedFrame>(cx, global->getOrCreateObjectPrototype(cx), global));
-    if (!proto
-        || !JS_DefineProperties(cx, proto, SavedFrame::properties)
-        || !JS_DefineFunctions(cx, proto, SavedFrame::methods)
-        || !FreezeObject(cx, proto))
-    {
-        return nullptr;
-    }
-
-    // The only object with the SavedFrame::class_ that doesn't have a source
-    // should be the prototype.
-    proto->setReservedSlot(SavedFrame::JSSLOT_SOURCE, NullValue());
-
-    savedFrameProto.set(proto);
-    return savedFrameProto;
-}
-
 SavedFrame *
 SavedStacks::createFrameFromLookup(JSContext *cx, SavedFrame::HandleLookup lookup)
 {
-    RootedObject proto(cx, getOrCreateSavedFramePrototype(cx));
+    RootedGlobalObject global(cx, cx->global());
+    assertSameCompartment(cx, global);
+
+    RootedNativeObject proto(cx, GlobalObject::getOrCreateSavedFramePrototype(cx, global));
     if (!proto)
         return nullptr;
-
     assertSameCompartment(cx, proto);
-
-    RootedObject global(cx, cx->compartment()->maybeGlobal());
-    if (!global)
-        return nullptr;
-
-    assertSameCompartment(cx, global);
 
     RootedObject frameObj(cx, NewObjectWithGivenProto(cx, &SavedFrame::class_, proto, global));
     if (!frameObj)
