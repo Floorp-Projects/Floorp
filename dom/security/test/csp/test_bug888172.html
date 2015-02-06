@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 888172 - CSP 1.0 does not process 'unsafe-inline' or 'unsafe-eval' for default-src</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<iframe style="width:100%;" id='testframe1'></iframe>
+<iframe style="width:100%;" id='testframe2'></iframe>
+<iframe style="width:100%;" id='testframe3'></iframe>
+<script class="testbody" type="text/javascript">
+
+//////////////////////////////////////////////////////////////////////
+// set up and go
+SimpleTest.waitForExplicitFinish();
+
+// utilities for check functions
+// black means the style wasn't applied, applied styles are green
+var green = 'rgb(0, 128, 0)';
+var black = 'rgb(0, 0, 0)';
+
+function getElementColorById(doc, id) {
+  return window.getComputedStyle(doc.contentDocument.getElementById(id)).color;
+}
+
+// We test both script and style execution by observing changes in computed styles
+function checkDefaultSrcOnly() {
+  var testframe = document.getElementById('testframe1');
+
+  ok(getElementColorById(testframe, 'unsafe-inline-script') === green, "Inline script should be allowed");
+  ok(getElementColorById(testframe, 'unsafe-eval-script')  === green, "Eval should be allowed");
+  ok(getElementColorById(testframe, 'unsafe-inline-style') === green, "Inline style should be allowed");
+
+  document.getElementById('testframe2').src = 'file_bug888172.sjs?csp=' +
+    escape("default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self'");
+  document.getElementById('testframe2').addEventListener('load', checkDefaultSrcWithScriptSrc, false);
+}
+
+function checkDefaultSrcWithScriptSrc() {
+  var testframe = document.getElementById('testframe2');
+
+  ok(getElementColorById(testframe, 'unsafe-inline-script') === black, "Inline script should be blocked");
+  ok(getElementColorById(testframe, 'unsafe-eval-script')  === black, "Eval should be blocked");
+  ok(getElementColorById(testframe, 'unsafe-inline-style') === green, "Inline style should be allowed");
+
+  document.getElementById('testframe3').src = 'file_bug888172.sjs?csp=' +
+    escape("default-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self'");
+  document.getElementById('testframe3').addEventListener('load', checkDefaultSrcWithStyleSrc, false);
+}
+
+function checkDefaultSrcWithStyleSrc() {
+  var testframe = document.getElementById('testframe3');
+
+  ok(getElementColorById(testframe, 'unsafe-inline-script') === green, "Inline script should be allowed");
+  ok(getElementColorById(testframe, 'unsafe-eval-script')  === green, "Eval should be allowed");
+  ok(getElementColorById(testframe, 'unsafe-inline-style') === black, "Inline style should be blocked");
+
+  // last test calls finish
+  SimpleTest.finish();
+}
+
+document.getElementById('testframe1').src = 'file_bug888172.sjs?csp=' +
+  escape("default-src 'self' 'unsafe-inline' 'unsafe-eval'");
+document.getElementById('testframe1').addEventListener('load', checkDefaultSrcOnly, false);
+</script>
+</pre>
+</body>
+</html>

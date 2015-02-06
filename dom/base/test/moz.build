@@ -10,7 +10,6 @@ XPCSHELL_TESTS_MANIFESTS += [
 ]
 
 GeckoCppUnitTests([
-    'TestCSPParser',
     'TestGetURL',
     'TestNativeXMLHttpRequest',
     'TestPlainTextSerializer',
@@ -18,7 +17,6 @@ GeckoCppUnitTests([
 
 MOCHITEST_MANIFESTS += [
     'chrome/mochitest.ini',
-    'csp/mochitest.ini',
     'mixedcontentblocker/mochitest.ini',
     'mochitest.ini',
     'websocket_hybi/mochitest.ini',
@@ -34,7 +32,6 @@ if CONFIG['MOZ_CHILD_PERMISSIONS']:
 MOCHITEST_CHROME_MANIFESTS += [
     'chrome.ini',
     'chrome/chrome.ini',
-    'csp/chrome.ini',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['browser.ini']
