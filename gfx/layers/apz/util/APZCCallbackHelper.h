@@ -18,6 +18,17 @@ template<class T> struct already_AddRefed;
 namespace mozilla {
 namespace layers {
 
+/* A base class for callbacks to be passed to APZCCallbackHelper::SendSetTargetAPZCNotification.
+ * If we had something like std::function, we could just use
+ * std::function<void(uint64_t, const nsTArray<ScrollableLayerGuid>&)>. */
+struct SetTargetAPZCCallback {
+public:
+  NS_INLINE_DECL_REFCOUNTING(SetTargetAPZCCallback)
+  virtual void Run(uint64_t aInputBlockId, const nsTArray<ScrollableLayerGuid>& aTargets) const = 0;
+protected:
+  virtual ~SetTargetAPZCCallback() {}
+};
+
 /* This class contains some helper methods that facilitate implementing the
    GeckoContentController callback interface required by the AsyncPanZoomController.
    Since different platforms need to implement this interface in similar-but-
@@ -118,6 +129,19 @@ public:
      * via the given widget. */
     static void FireSingleTapEvent(const LayoutDevicePoint& aPoint,
                                    nsIWidget* aWidget);
+
+    /* Perform hit-testing on the touch points of |aEvent| to determine
+     * which scrollable frames they target. If any of these frames don't have
+     * a displayport, set one. Finally, invoke the provided callback with
+     * the guids of the target frames. If any displayports needed to be set,
+     * the callback is invoked after the next refresh, otherwise it's invoked
+     * right away. */
+    static void SendSetTargetAPZCNotification(nsIWidget* aWidget,
+                                              nsIDocument* aDocument,
+                                              const WidgetGUIEvent& aEvent,
+                                              const ScrollableLayerGuid& aGuid,
+                                              uint64_t aInputBlockId,
+                                              const nsRefPtr<SetTargetAPZCCallback>& aCallback);
 };
 
 }
