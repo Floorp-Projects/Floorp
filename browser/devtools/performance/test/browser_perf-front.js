@@ -31,7 +31,9 @@ function spawnTest () {
     profilerEndTime,
     timelineEndTime,
     memoryEndTime
-  } = yield front.stopRecording();
+  } = yield front.stopRecording({
+    withAllocations: true
+  });
 
   ok(typeof profilerEndTime === "number",
     "The front.stopRecording() emits a profiler end time.");

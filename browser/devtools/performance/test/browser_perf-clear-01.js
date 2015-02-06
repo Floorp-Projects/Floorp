@@ -8,7 +8,7 @@
 
 let test = Task.async(function*() {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, PerformanceController, PerformanceView, RecordingsView } = panel.panelWin;
+  let { EVENTS, PerformanceController, PerformanceView, RecordingsView, OverviewView } = panel.panelWin;
 
   yield startRecording(panel);
   yield stopRecording(panel);

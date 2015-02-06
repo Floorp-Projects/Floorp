@@ -35,12 +35,9 @@ let DetailsView = {
       button.addEventListener("command", this._onViewToggle);
     }
 
-    for (let [_, { view }] of Iterator(this.components)) {
-      yield view.initialize();
-    }
-
-    this.selectView(DEFAULT_DETAILS_SUBVIEW);
+    yield this.selectView(DEFAULT_DETAILS_SUBVIEW);
     this.setAvailableViews();
+
     PerformanceController.on(EVENTS.PREF_CHANGED, this.setAvailableViews);
   }),
 
@@ -52,9 +49,10 @@ let DetailsView = {
       button.removeEventListener("command", this._onViewToggle);
     }
 
-    for (let [_, { view }] of Iterator(this.components)) {
-      yield view.destroy();
+    for (let [_, component] of Iterator(this.components)) {
+      component.initialized && (yield component.view.destroy());
     }
+
     PerformanceController.off(EVENTS.PREF_CHANGED, this.setAvailableViews);
   }),
 
@@ -71,7 +69,8 @@ let DetailsView = {
       let value = PerformanceController.getPref(pref);
       $(`toolbarbutton[data-view=${name}]`).hidden = !value;
 
-      // If the view is currently selected and not enabled, go back to the default view
+      // If the view is currently selected and not enabled, go back to the
+      // default view.
       if (!value && this.isViewSelected(view)) {
         this.selectView(DEFAULT_DETAILS_SUBVIEW);
       }
@@ -85,8 +84,11 @@ let DetailsView = {
    * @param String viewName
    *        Name of the view to be shown.
    */
-  selectView: function (viewName) {
-    this.el.selectedPanel = $("#" + this.components[viewName].id);
+  selectView: Task.async(function *(viewName) {
+    let component = this.components[viewName];
+    this.el.selectedPanel = $("#" + component.id);
+
+    yield this._whenViewInitialized(component);
 
     for (let button of $$("toolbarbutton[data-view]", this.toolbar)) {
       if (button.getAttribute("data-view") === viewName) {
@@ -97,7 +99,7 @@ let DetailsView = {
     }
 
     this.emit(EVENTS.DETAILS_VIEW_SELECTED, viewName);
-  },
+  }),
 
   /**
    * Checks if the provided view is currently selected.
@@ -131,6 +133,30 @@ let DetailsView = {
     }
     yield this.once(EVENTS.DETAILS_VIEW_SELECTED);
     return this.whenViewSelected(viewObject);
+  }),
+
+  /**
+   * Initializes a subview if it wasn't already set up, and makes sure
+   * it's populated with recording data if there is some available.
+   *
+   * @param object component
+   *        A component descriptor from DetailsView.components
+   */
+  _whenViewInitialized: Task.async(function *(component) {
+    if (component.initialized) {
+      return;
+    }
+    component.initialized = true;
+    yield component.view.initialize();
+
+    // If this view is initialized *after* a recording is shown, it won't display
+    // any data. Make sure it's populated by setting `shouldUpdateWhenShown`.
+    // All detail views require a recording to be complete, so do not
+    // attempt to render if recording is in progress or does not exist.
+    let recording = PerformanceController.getCurrentRecording();
+    if (recording && !recording.isRecording()) {
+      component.view.shouldUpdateWhenShown = true;
+    }
   }),
 
   /**
