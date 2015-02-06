@@ -46,6 +46,7 @@ class RenderFrameChild;
 
 namespace layers {
 class ActiveElementManager;
+struct SetTargetAPZCCallback;
 }
 
 namespace widget {
@@ -252,6 +253,7 @@ class TabChild MOZ_FINAL : public TabChildBase,
     typedef mozilla::layout::RenderFrameChild RenderFrameChild;
     typedef mozilla::layout::ScrollingBehavior ScrollingBehavior;
     typedef mozilla::layers::ActiveElementManager ActiveElementManager;
+    typedef mozilla::layers::SetTargetAPZCCallback SetTargetAPZCCallback;
 
 public:
     /**
@@ -597,26 +599,6 @@ private:
     void SendPendingTouchPreventedResponse(bool aPreventDefault,
                                            const ScrollableLayerGuid& aGuid);
 
-    // Adds the scrollable layer target to the target list, and returns whether
-    // or not the caller should wait for a refresh to send a target
-    // notification.
-    bool PrepareForSetTargetAPZCNotification(const ScrollableLayerGuid& aGuid,
-                                             const uint64_t& aInputBlockId,
-                                             nsIFrame* aRootFrame,
-                                             const LayoutDeviceIntPoint& aRefPoint,
-                                             nsTArray<ScrollableLayerGuid>* aTargets);
-
-    // Sends a SetTarget notification for APZC, given one or more previous
-    // calls to PrepareForAPZCSetTargetNotification().
-    void SendSetTargetAPZCNotification(nsIPresShell* aShell,
-                                       const uint64_t& aInputBlockId,
-                                       const nsTArray<ScrollableLayerGuid>& aTargets,
-                                       bool aWaitForRefresh);
-
-    void SendSetTargetAPZCNotification(const WidgetTouchEvent& aEvent,
-                                       const mozilla::layers::ScrollableLayerGuid& aGuid,
-                                       const uint64_t& aInputBlockId);
-
     // Get the pres shell resolution of the document in this tab.
     float GetPresShellResolution() const;
 
@@ -664,6 +646,7 @@ private:
 
     bool mIgnoreKeyPressEvent;
     nsRefPtr<ActiveElementManager> mActiveElementManager;
+    nsRefPtr<SetTargetAPZCCallback> mSetTargetAPZCCallback;
     bool mHasValidInnerSize;
     bool mDestroyed;
     // Position of tab, relative to parent widget (typically the window)

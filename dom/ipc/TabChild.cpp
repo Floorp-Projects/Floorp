@@ -849,6 +849,22 @@ TabChild::Create(nsIContentChild* aManager,
     return NS_SUCCEEDED(iframe->Init()) ? iframe.forget() : nullptr;
 }
 
+class TabChildSetTargetAPZCCallback : public SetTargetAPZCCallback {
+public:
+  explicit TabChildSetTargetAPZCCallback(TabChild* aTabChild)
+    : mTabChild(do_GetWeakReference(static_cast<nsITabChild*>(aTabChild)))
+  {}
+
+  void Run(uint64_t aInputBlockId, const nsTArray<ScrollableLayerGuid>& aTargets) const MOZ_OVERRIDE {
+    if (nsCOMPtr<nsITabChild> tabChild = do_QueryReferent(mTabChild)) {
+      static_cast<TabChild*>(tabChild.get())->SendSetTargetAPZC(aInputBlockId, aTargets);
+    }
+  }
+
+private:
+  nsWeakPtr mTabChild;
+};
+
 
 TabChild::TabChild(nsIContentChild* aManager,
                    const TabId& aTabId,
@@ -874,6 +890,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mEndTouchIsClick(false)
   , mIgnoreKeyPressEvent(false)
   , mActiveElementManager(new ActiveElementManager())
+  , mSetTargetAPZCCallback(new TabChildSetTargetAPZCCallback(this))
   , mHasValidInnerSize(false)
   , mDestroyed(false)
   , mUniqueId(aTabId)
@@ -2322,15 +2339,8 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
 {
   if (IsAsyncPanZoomEnabled()) {
     nsCOMPtr<nsIDocument> document(GetDocument());
-    if (nsIPresShell* shell = document->GetShell()) {
-      if (nsIFrame* rootFrame = shell->GetRootFrame()) {
-        nsTArray<ScrollableLayerGuid> targets;
-        bool waitForRefresh =
-          PrepareForSetTargetAPZCNotification(aGuid, aInputBlockId, rootFrame, aEvent.refPoint, &targets);
-
-        SendSetTargetAPZCNotification(shell, aInputBlockId, targets, waitForRefresh);
-      }
-    }
+    APZCCallbackHelper::SendSetTargetAPZCNotification(WebWidget(), document, aEvent, aGuid,
+        aInputBlockId, mSetTargetAPZCCallback);
   }
 
   WidgetWheelEvent event(aEvent);
@@ -2485,160 +2495,6 @@ TabChild::CancelTapTracking()
   mTapHoldTimer = nullptr;
 }
 
-static nsIScrollableFrame*
-GetScrollableAncestorFrame(nsIFrame* aTarget)
-{
-  if (!aTarget) {
-    return nullptr;
-  }
-  uint32_t flags = nsLayoutUtils::SCROLLABLE_ALWAYS_MATCH_ROOT
-                 | nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE;
-  return nsLayoutUtils::GetNearestScrollableFrame(aTarget, flags);
-}
-
-static dom::Element*
-GetDisplayportElementFor(nsIScrollableFrame* aScrollableFrame)
-{
-  if (!aScrollableFrame) {
-    return nullptr;
-  }
-  nsIFrame* scrolledFrame = aScrollableFrame->GetScrolledFrame();
-  if (!scrolledFrame) {
-    return nullptr;
-  }
-  // |scrolledFrame| should at this point be the root content frame of the
-  // nearest ancestor scrollable frame. The element corresponding to this
-  // frame should be the one with the displayport set on it, so find that
-  // element and return it.
-  nsIContent* content = scrolledFrame->GetContent();
-  MOZ_ASSERT(content->IsElement()); // roc says this must be true
-  return content->AsElement();
-}
-
-class DisplayportSetListener : public nsAPostRefreshObserver {
-public:
-  DisplayportSetListener(TabChild* aTabChild,
-                         nsIPresShell* aPresShell,
-                         const uint64_t& aInputBlockId,
-                         const nsTArray<ScrollableLayerGuid>& aTargets)
-    : mTabChild(aTabChild)
-    , mPresShell(aPresShell)
-    , mInputBlockId(aInputBlockId)
-    , mTargets(aTargets)
-  {
-  }
-
-  virtual ~DisplayportSetListener()
-  {
-  }
-
-  void DidRefresh() MOZ_OVERRIDE {
-    if (!mTabChild) {
-      MOZ_ASSERT_UNREACHABLE("Post-refresh observer fired again after failed attempt at unregistering it");
-      return;
-    }
-
-    TABC_LOG("Got refresh, sending target APZCs for input block %" PRIu64 "\n", mInputBlockId);
-    mTabChild->SendSetTargetAPZC(mInputBlockId, mTargets);
-
-    if (!mPresShell->RemovePostRefreshObserver(this)) {
-      MOZ_ASSERT_UNREACHABLE("Unable to unregister post-refresh observer! Leaking it instead of leaving garbage registered");
-      // Graceful handling, just in case...
-      mTabChild = nullptr;
-      mPresShell = nullptr;
-      return;
-    }
-
-    delete this;
-  }
-
-private:
-  nsRefPtr<TabChild> mTabChild;
-  nsRefPtr<nsIPresShell> mPresShell;
-  uint64_t mInputBlockId;
-  nsTArray<ScrollableLayerGuid> mTargets;
-};
-
-bool
-TabChild::PrepareForSetTargetAPZCNotification(const ScrollableLayerGuid& aGuid,
-                                              const uint64_t& aInputBlockId,
-                                              nsIFrame* aRootFrame,
-                                              const LayoutDeviceIntPoint& aRefPoint,
-                                              nsTArray<ScrollableLayerGuid>* aTargets)
-{
-  ScrollableLayerGuid guid(aGuid.mLayersId, 0, FrameMetrics::NULL_SCROLL_ID);
-  nsPoint point =
-    nsLayoutUtils::GetEventCoordinatesRelativeTo(WebWidget(), aRefPoint, aRootFrame);
-  nsIFrame* target =
-    nsLayoutUtils::GetFrameForPoint(aRootFrame, point, nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
-  nsIScrollableFrame* scrollAncestor = GetScrollableAncestorFrame(target);
-  nsCOMPtr<dom::Element> dpElement = GetDisplayportElementFor(scrollAncestor);
-
-  nsAutoString dpElementDesc;
-  if (dpElement) {
-    dpElement->Describe(dpElementDesc);
-  }
-  TABC_LOG("For input block %" PRIu64 " found scrollable element %p (%s)\n",
-      aInputBlockId, dpElement.get(),
-      NS_LossyConvertUTF16toASCII(dpElementDesc).get());
-
-  bool guidIsValid = APZCCallbackHelper::GetOrCreateScrollIdentifiers(
-    dpElement, &(guid.mPresShellId), &(guid.mScrollId));
-  aTargets->AppendElement(guid);
-
-  if (!guidIsValid || nsLayoutUtils::GetDisplayPort(dpElement, nullptr)) {
-    return false;
-  }
-
-  TABC_LOG("%p didn't have a displayport, so setting one...\n", dpElement.get());
-  return nsLayoutUtils::CalculateAndSetDisplayPortMargins(
-      scrollAncestor, nsLayoutUtils::RepaintMode::Repaint);
-}
-
-void
-TabChild::SendSetTargetAPZCNotification(nsIPresShell* aShell,
-                                        const uint64_t& aInputBlockId,
-                                        const nsTArray<ScrollableLayerGuid>& aTargets,
-                                        bool aWaitForRefresh)
-{
-  bool waitForRefresh = aWaitForRefresh;
-  if (waitForRefresh) {
-    TABC_LOG("At least one target got a new displayport, need to wait for refresh\n");
-    waitForRefresh = aShell->AddPostRefreshObserver(
-      new DisplayportSetListener(this, aShell, aInputBlockId, aTargets));
-  }
-  if (!waitForRefresh) {
-    TABC_LOG("Sending target APZCs for input block %" PRIu64 "\n", aInputBlockId);
-    SendSetTargetAPZC(aInputBlockId, aTargets);
-  } else {
-    TABC_LOG("Successfully registered post-refresh observer\n");
-  }
-}
-
-void
-TabChild::SendSetTargetAPZCNotification(const WidgetTouchEvent& aEvent,
-                                        const ScrollableLayerGuid& aGuid,
-                                        const uint64_t& aInputBlockId)
-{
-  nsCOMPtr<nsIDocument> document(GetDocument());
-  nsIPresShell* shell = document->GetShell();
-  if (!shell) {
-    return;
-  }
-  nsIFrame* rootFrame = shell->GetRootFrame();
-  if (!rootFrame) {
-    return;
-  }
-
-  bool waitForRefresh = false;
-  nsTArray<ScrollableLayerGuid> targets;
-  for (size_t i = 0; i < aEvent.touches.Length(); i++) {
-    waitForRefresh |= PrepareForSetTargetAPZCNotification(aGuid, aInputBlockId,
-        rootFrame, aEvent.touches[i]->mRefPoint, &targets);
-  }
-  SendSetTargetAPZCNotification(shell, aInputBlockId, targets, waitForRefresh);
-}
-
 float
 TabChild::GetPresShellResolution() const
 {
@@ -2664,7 +2520,9 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
       mWidget->GetDefaultScale(), GetPresShellResolution());
 
   if (localEvent.message == NS_TOUCH_START && IsAsyncPanZoomEnabled()) {
-    SendSetTargetAPZCNotification(localEvent, aGuid, aInputBlockId);
+    nsCOMPtr<nsIDocument> document = GetDocument();
+    APZCCallbackHelper::SendSetTargetAPZCNotification(WebWidget(), document,
+        localEvent, aGuid, aInputBlockId, mSetTargetAPZCCallback);
   }
 
   // Dispatch event to content (potentially a long-running operation)

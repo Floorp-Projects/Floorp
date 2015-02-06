@@ -434,5 +434,174 @@ APZCCallbackHelper::FireSingleTapEvent(const LayoutDevicePoint& aPoint,
   DispatchSynthesizedMouseEvent(NS_MOUSE_BUTTON_UP, time, aPoint, aWidget);
 }
 
+static nsIScrollableFrame*
+GetScrollableAncestorFrame(nsIFrame* aTarget)
+{
+  if (!aTarget) {
+    return nullptr;
+  }
+  uint32_t flags = nsLayoutUtils::SCROLLABLE_ALWAYS_MATCH_ROOT
+                 | nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE;
+  return nsLayoutUtils::GetNearestScrollableFrame(aTarget, flags);
+}
+
+static dom::Element*
+GetDisplayportElementFor(nsIScrollableFrame* aScrollableFrame)
+{
+  if (!aScrollableFrame) {
+    return nullptr;
+  }
+  nsIFrame* scrolledFrame = aScrollableFrame->GetScrolledFrame();
+  if (!scrolledFrame) {
+    return nullptr;
+  }
+  // |scrolledFrame| should at this point be the root content frame of the
+  // nearest ancestor scrollable frame. The element corresponding to this
+  // frame should be the one with the displayport set on it, so find that
+  // element and return it.
+  nsIContent* content = scrolledFrame->GetContent();
+  MOZ_ASSERT(content->IsElement()); // roc says this must be true
+  return content->AsElement();
+}
+
+// Determine the scrollable target frame for the given point and add it to
+// the target list. If the frame doesn't have a displayport, set one.
+// Return whether or not a displayport was set.
+static bool
+PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
+                                    const ScrollableLayerGuid& aGuid,
+                                    nsIFrame* aRootFrame,
+                                    const LayoutDeviceIntPoint& aRefPoint,
+                                    nsTArray<ScrollableLayerGuid>* aTargets)
+{
+  ScrollableLayerGuid guid(aGuid.mLayersId, 0, FrameMetrics::NULL_SCROLL_ID);
+  nsPoint point =
+    nsLayoutUtils::GetEventCoordinatesRelativeTo(aWidget, aRefPoint, aRootFrame);
+  nsIFrame* target =
+    nsLayoutUtils::GetFrameForPoint(aRootFrame, point, nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
+  nsIScrollableFrame* scrollAncestor = GetScrollableAncestorFrame(target);
+  nsCOMPtr<dom::Element> dpElement = GetDisplayportElementFor(scrollAncestor);
+
+  nsAutoString dpElementDesc;
+  if (dpElement) {
+    dpElement->Describe(dpElementDesc);
+  }
+  APZCCH_LOG("For input block %" PRIu64 " found scrollable element %p (%s)\n",
+      aInputBlockId, dpElement.get(),
+      NS_LossyConvertUTF16toASCII(dpElementDesc).get());
+
+  bool guidIsValid = APZCCallbackHelper::GetOrCreateScrollIdentifiers(
+    dpElement, &(guid.mPresShellId), &(guid.mScrollId));
+  aTargets->AppendElement(guid);
+
+  if (!guidIsValid || nsLayoutUtils::GetDisplayPort(dpElement, nullptr)) {
+    return false;
+  }
+
+  APZCCH_LOG("%p didn't have a displayport, so setting one...\n", dpElement.get());
+  return nsLayoutUtils::CalculateAndSetDisplayPortMargins(
+      scrollAncestor, nsLayoutUtils::RepaintMode::Repaint);
+}
+
+class DisplayportSetListener : public nsAPostRefreshObserver {
+public:
+  DisplayportSetListener(const nsRefPtr<SetTargetAPZCCallback>& aCallback,
+                         nsIPresShell* aPresShell,
+                         const uint64_t& aInputBlockId,
+                         const nsTArray<ScrollableLayerGuid>& aTargets)
+    : mCallback(aCallback)
+    , mPresShell(aPresShell)
+    , mInputBlockId(aInputBlockId)
+    , mTargets(aTargets)
+  {
+  }
+
+  virtual ~DisplayportSetListener()
+  {
+  }
+
+  void DidRefresh() MOZ_OVERRIDE {
+    if (!mCallback) {
+      MOZ_ASSERT_UNREACHABLE("Post-refresh observer fired again after failed attempt at unregistering it");
+      return;
+    }
+
+    APZCCH_LOG("Got refresh, sending target APZCs for input block %" PRIu64 "\n", mInputBlockId);
+    mCallback->Run(mInputBlockId, mTargets);
+
+    if (!mPresShell->RemovePostRefreshObserver(this)) {
+      MOZ_ASSERT_UNREACHABLE("Unable to unregister post-refresh observer! Leaking it instead of leaving garbage registered");
+      // Graceful handling, just in case...
+      mCallback = nullptr;
+      mPresShell = nullptr;
+      return;
+    }
+
+    delete this;
+  }
+
+private:
+  nsRefPtr<SetTargetAPZCCallback> mCallback;
+  nsRefPtr<nsIPresShell> mPresShell;
+  uint64_t mInputBlockId;
+  nsTArray<ScrollableLayerGuid> mTargets;
+};
+
+// Sends a SetTarget notification for APZC, given one or more previous
+// calls to PrepareForAPZCSetTargetNotification().
+static void
+SendSetTargetAPZCNotificationHelper(nsIPresShell* aShell,
+                                    const uint64_t& aInputBlockId,
+                                    const nsTArray<ScrollableLayerGuid>& aTargets,
+                                    bool aWaitForRefresh,
+                                    const nsRefPtr<SetTargetAPZCCallback>& aCallback)
+{
+  bool waitForRefresh = aWaitForRefresh;
+  if (waitForRefresh) {
+    APZCCH_LOG("At least one target got a new displayport, need to wait for refresh\n");
+    waitForRefresh = aShell->AddPostRefreshObserver(
+      new DisplayportSetListener(aCallback, aShell, aInputBlockId, aTargets));
+  }
+  if (!waitForRefresh) {
+    APZCCH_LOG("Sending target APZCs for input block %" PRIu64 "\n", aInputBlockId);
+    aCallback->Run(aInputBlockId, aTargets);
+  } else {
+    APZCCH_LOG("Successfully registered post-refresh observer\n");
+  }
+}
+
+void
+APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
+                                                  nsIDocument* aDocument,
+                                                  const WidgetGUIEvent& aEvent,
+                                                  const ScrollableLayerGuid& aGuid,
+                                                  uint64_t aInputBlockId,
+                                                  const nsRefPtr<SetTargetAPZCCallback>& aCallback)
+{
+  if (nsIPresShell* shell = aDocument->GetShell()) {
+    if (nsIFrame* rootFrame = shell->GetRootFrame()) {
+      bool waitForRefresh = false;
+      nsTArray<ScrollableLayerGuid> targets;
+
+      if (const WidgetTouchEvent* touchEvent = aEvent.AsTouchEvent()) {
+        for (size_t i = 0; i < touchEvent->touches.Length(); i++) {
+          waitForRefresh |= PrepareForSetTargetAPZCNotification(aWidget, aGuid,
+              rootFrame, touchEvent->touches[i]->mRefPoint, &targets);
+        }
+      } else if (const WidgetWheelEvent* wheelEvent = aEvent.AsWheelEvent()) {
+        waitForRefresh = PrepareForSetTargetAPZCNotification(aWidget, aGuid,
+            rootFrame, wheelEvent->refPoint, &targets);
+      }
+      // TODO: Do other types of events need to be handled?
+
+      if (!targets.IsEmpty()) {
+        SendSetTargetAPZCNotificationHelper(shell, aInputBlockId, targets,
+            waitForRefresh, aCallback);
+      }
+    }
+  }
+}
+
 }
 }
+
