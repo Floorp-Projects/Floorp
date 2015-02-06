@@ -173,3 +173,21 @@
 <!-- Monitor -->
 <!ENTITY monitor_title "Monitor">
 <!ENTITY monitor_help "Help">
+
+<!-- WiFi Authentication -->
+<!-- LOCALIZATION NOTE (wifi_auth_header): The header displayed on the dialog
+     that instructs the user to transfer an authentication token to the
+     server. -->
+<!ENTITY wifi_auth_header "Client Identification">
+<!-- LOCALIZATION NOTE (wifi_auth_scan_request): Instructions requesting the
+     user to transfer authentication info by scanning a QR code. -->
+<!ENTITY wifi_auth_scan_request "The endpoint you are connecting to needs more information to authenticate this connection.  Please scan the QR code below via the prompt on your other device.">
+<!-- LOCALIZATION NOTE (wifi_auth_no_scanner): Link text to assist users with
+     devices that can't scan a QR code. -->
+<!ENTITY wifi_auth_no_scanner "No QR scanner prompt?">
+<!-- LOCALIZATION NOTE (wifi_auth_yes_scanner): Link text to assist users with
+     devices that can scan a QR code. -->
+<!ENTITY wifi_auth_yes_scanner "Have a QR scanner prompt?">
+<!-- LOCALIZATION NOTE (wifi_auth_token_request): Instructions requesting the
+     user to transfer authentication info by transferring a token. -->
+<!ENTITY wifi_auth_token_request "If your other device asks for a token instead of scanning a QR code, please copy the value below to the other device:">
