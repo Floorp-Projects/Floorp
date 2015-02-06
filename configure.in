@@ -4201,7 +4201,7 @@ if test -z "$gonkdir" ; then
     # Minimum Android SDK API Level we require.
     case "$MOZ_BUILD_APP" in
     mobile/android)
-        android_min_api_level=17
+        android_min_api_level=20
         case "$target" in
         *-android*|*-linuxandroid*)
             :

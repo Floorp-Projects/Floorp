@@ -10,7 +10,7 @@ task:
     source: http://todo.com/soon
     owner: {{owner}}
 
-  workerType: build-c4-2xlarge
+  workerType: b2gbuild
   provisionerId: aws-provisioner
   schedulerId: task-graph-scheduler
 

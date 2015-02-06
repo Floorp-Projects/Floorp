@@ -129,7 +129,9 @@ dictionary IccSetCardLockOptions
                   // Necessary for lock types: "pin", "fdn"
 };
 
-[Pref="dom.icc.enabled"]
+[Pref="dom.icc.enabled",
+ CheckPermissions="mobileconnection",
+ AvailableIn="CertifiedApps"]
 interface MozIcc : EventTarget
 {
   // Integrated Circuit Card Information.

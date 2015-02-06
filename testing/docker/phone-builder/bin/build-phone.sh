@@ -20,7 +20,7 @@ fi
 #   $ docker -v your_mozharness:/home/worker/mozharness ...
 #
 if [ ! -d mozharness ]; then
-  tc-vcs clone $MOZHARNESS_REPOSITORY -u $MOZHARNESS_REV mozharness
+  tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV
 fi
 
 OBJDIR="$HOME/object-folder"
@@ -29,9 +29,7 @@ if [ ! -d $OBJDIR ]; then
   mkdir -p $OBJDIR
 fi
 
-if [ ! -d $OBJDIR/B2G ]; then
-  tc-vcs clone https://git.mozilla.org/b2g/B2G.git $OBJDIR/B2G
-fi
+tc-vcs repo-checkout $OBJDIR/B2G https://git.mozilla.org/b2g/B2G.git $MANIFEST
 
 debug_flag=""
 if [ 0$B2G_DEBUG -ne 0 ]; then

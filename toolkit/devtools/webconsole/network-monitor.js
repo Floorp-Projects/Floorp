@@ -687,6 +687,12 @@ NetworkMonitor.prototype = {
       }
     }
 
+    if (aChannel.loadInfo) {
+      if (aChannel.loadInfo.contentPolicyType == Ci.nsIContentPolicy.TYPE_BEACON) {
+        return true;
+      }
+    }
+    
     if (this.topFrame) {
       let topFrame = NetworkHelper.getTopFrameForRequest(aChannel);
       if (topFrame && topFrame === this.topFrame) {
