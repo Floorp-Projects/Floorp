@@ -83,7 +83,13 @@ function startTest(test, token)
 
   v.addEventListener("error", bail(token + " got error event"));
 
-  LoadTest(test, v, token).then(function(){v.play();}, bail(token + " failed to load"));
+  LoadTest(test, v, token)
+  .then(function() {
+    v.play();
+  }).catch(function() {
+    ok(false, token + " failed to load");
+    manager.finished(token);
+  });
 }
 
 function beginTest() {
