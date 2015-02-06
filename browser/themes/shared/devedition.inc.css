@@ -273,13 +273,23 @@ searchbar:not([oneoffui]) .search-go-button {
   visibility: hidden;
 }
 
+/* Make the tab splitter 1px wide with a solid background. */
 #tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
 .tabbrowser-tab:not([selected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
 #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([selected]):not([beforehovered]):not(:hover)::after {
-  background-image: linear-gradient(to top, var(--tab-separator-color), var(--tab-separator-color));
-  background-position: 1px 0;
-  background-repeat: no-repeat;
-  background-size: 1px 100%;
+  background: var(--tab-separator-color);
+  width: 1px;
+  -moz-margin-start: 0;
+  -moz-margin-end: -1px;
+}
+
+/* For the last tab separator, use margin-start of -1px to prevent jittering
+   due to the ::after element causing the width of the tab to extend, which
+   causes an overflow and makes it disappear, which removes the overflow and
+   causes it to reappear, etc, etc. */
+#tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([selected]):not([beforehovered]):not(:hover)::after {
+  -moz-margin-start: -1px;
+  -moz-margin-end: 0;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down,
