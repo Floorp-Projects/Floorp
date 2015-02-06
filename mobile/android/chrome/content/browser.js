@@ -328,6 +328,7 @@ var BrowserApp = {
         Services.tm.mainThread.dispatch(function() {
           // Init LoginManager
           Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+          Services.search.init();
         }, Ci.nsIThread.DISPATCH_NORMAL);
 
 #ifdef MOZ_SAFE_BROWSING
