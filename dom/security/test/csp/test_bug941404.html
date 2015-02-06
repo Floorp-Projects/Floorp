@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 941404 - Data documents should not set CSP</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+
+</div>
+
+<iframe style="width:200px;height:200px;" id='cspframe'></iframe>
+<script class="testbody" type="text/javascript">
+
+
+var path = "/tests/dom/security/test/csp/";
+
+// These are test results: -1 means it hasn't run,
+// true/false is the pass/fail result.
+window.tests = {
+  img_good: -1,
+  img2_good: -1,
+};
+
+
+//csp related
+
+// This is used to watch the blocked data bounce off CSP and allowed data
+// get sent out to the wire.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
+}
+
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    var testpat = new RegExp("testid=([a-z0-9_]+)");
+
+    //_good things better be allowed!
+    //_bad things better be stopped!
+
+    if (topic === "specialpowers-http-notify-request") {
+      //these things were allowed by CSP
+      var uri = data;
+      if (!testpat.test(uri)) return;
+      var testid = testpat.exec(uri)[1];
+
+      window.testResult(testid,
+                        /_good/.test(testid),
+                        uri + " allowed by csp");
+    }
+
+    if(topic === "csp-on-violate-policy") {
+      //these were blocked... record that they were blocked
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+      if (!testpat.test(asciiSpec)) return;
+      var testid = testpat.exec(asciiSpec)[1];
+      window.testResult(testid,
+                        /_bad/.test(testid),
+                        asciiSpec + " blocked by \"" + data + "\"");
+    }
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+  }
+}
+
+window.examiner = new examiner();
+
+window.testResult = function(testname, result, msg) {
+  //test already complete.... forget it... remember the first result.
+  if (window.tests[testname] != -1)
+    return;
+
+  window.tests[testname] = result;
+  is(result, true, testname + ' test: ' + msg);
+
+  // if any test is incomplete, keep waiting
+  for (var v in window.tests)
+    if(tests[v] == -1) {
+      console.log(v + " is not complete");
+      return;
+    }
+
+  // ... otherwise, finish
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_bug941404.html';
+
+</script>
+</pre>
+</body>
+</html>
