@@ -81,6 +81,11 @@
 <!ENTITY profilerUI.invertTree             "Invert Call Tree">
 <!ENTITY profilerUI.invertTree.tooltiptext "Inverting the call tree displays the profiled call paths starting from the youngest frames and expanding out to the older frames.">
 
+<!-- LOCALIZATION NOTE (profilerUI.invertFlameGraph): This is the label shown next to
+  -  a checkbox that inverts and un-inverts the profiler's flame graph. -->
+<!ENTITY profilerUI.invertFlameGraph             "Invert Flame Chart">
+<!ENTITY profilerUI.invertFlameGraph.tooltiptext "Inverting the flame chart displays the profiled call paths starting from the youngest frames and expanding out to the older frames.">
+
 <!-- LOCALIZATION NOTE (profilerUI.showPlatformData): This is the
   -  label for the checkbox that toggles whether or not Gecko platform data
   -  is displayed in the profiler. -->

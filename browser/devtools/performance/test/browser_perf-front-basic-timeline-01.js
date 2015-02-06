@@ -28,9 +28,7 @@ function spawnTest () {
   front.on("ticks", handler);
 
   yield front.startRecording({ withMemory: true, withTicks: true });
-
   yield Promise.all(Object.keys(deferreds).map(type => deferreds[type].promise));
-
   yield front.stopRecording();
 
   is(counters.markers.length, 1, "one marker event fired.");

@@ -1,17 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const PLATFORM_DATA_PREF = "devtools.performance.ui.show-platform-data";
-
 /**
- * Tests that the JsFlamegraphs get rerendered when toggling `show-platform-data`
+ * Tests that the js flamegraphs get rerendered when toggling `show-platform-data`
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView, JsFlameGraphView } = panel.panelWin;
 
   Services.prefs.setBoolPref(PLATFORM_DATA_PREF, false);
-  DetailsView.selectView("js-flamegraph");
+
+  yield DetailsView.selectView("js-flamegraph");
 
   yield startRecording(panel);
   yield busyWait(100);

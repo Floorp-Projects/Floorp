@@ -58,11 +58,10 @@ const BRANCH_NAME = "devtools.performance.ui.";
 // Events emitted by various objects in the panel.
 const EVENTS = {
   // Fired by the OptionsView when a preference changes.
-  PREF_CHANGED: "Preformance:PrefChanged",
+  PREF_CHANGED: "Performance:PrefChanged",
 
-  // Emitted by the PerformanceController or RecordingView
-  // when a recording model is selected
-  RECORDING_SELECTED: "Performance:RecordingSelected",
+  // Emitted by the PerformanceView when the state (display mode) changes.
+  UI_STATE_CHANGED: "Performance:UI:StateChanged",
 
   // Emitted by the PerformanceView on clear button click
   UI_CLEAR_RECORDINGS: "Performance:UI:ClearRecordings",
@@ -81,6 +80,10 @@ const EVENTS = {
   RECORDING_STOPPED: "Performance:RecordingStopped",
   RECORDING_WILL_START: "Performance:RecordingWillStart",
   RECORDING_WILL_STOP: "Performance:RecordingWillStop",
+
+  // Emitted by the PerformanceController or RecordingView
+  // when a recording model is selected
+  RECORDING_SELECTED: "Performance:RecordingSelected",
 
   // When recordings have been cleared out
   RECORDINGS_CLEARED: "Performance:RecordingsCleared",
@@ -220,15 +223,15 @@ let PerformanceController = {
    * when the front has started to record.
    */
   startRecording: Task.async(function *() {
-    let recording = this._createRecording();
-
     let withMemory = this.getPref("enable-memory");
     let withTicks = this.getPref("enable-framerate");
-    let withAllocations = true;
+    let withAllocations = this.getPref("enable-memory");
+
+    let recording = this._createRecording({ withMemory, withTicks, withAllocations });
 
     this.emit(EVENTS.RECORDING_WILL_START, recording);
     yield recording.startRecording({ withTicks, withMemory, withAllocations });
-    this.emit(EVENTS.RECORDING_STARTED, recording, { withTicks, withMemory, withAllocations });
+    this.emit(EVENTS.RECORDING_STARTED, recording);
 
     this.setCurrentRecording(recording);
   }),
@@ -241,9 +244,7 @@ let PerformanceController = {
     let recording = this._getLatestRecording();
 
     this.emit(EVENTS.RECORDING_WILL_STOP, recording);
-    yield recording.stopRecording({
-      withAllocations: true
-    });
+    yield recording.stopRecording();
     this.emit(EVENTS.RECORDING_STOPPED, recording);
   }),
 
@@ -295,11 +296,18 @@ let PerformanceController = {
    * Creates a new RecordingModel, fires events and stores it
    * internally in the controller.
    *
+   * @param object options
+   *        @see PerformanceFront.prototype.startRecording
    * @return RecordingModel
    *         The newly created recording model.
    */
-  _createRecording: function () {
-    let recording = new RecordingModel({ front: gFront, performance });
+  _createRecording: function (options={}) {
+    let { withMemory, withTicks, withAllocations } = options;
+    let front = gFront;
+
+    let recording = new RecordingModel(
+      { front, performance, withMemory, withTicks, withAllocations });
+
     this._recordings.push(recording);
     return recording;
   },

@@ -16,6 +16,7 @@ EXTRA_JS_MODULES += [
     'Chat.jsm',
     'ContentClick.jsm',
     'ContentLinkHandler.jsm',
+    'ContentObservers.jsm',
     'ContentSearch.jsm',
     'ContentWebRTC.jsm',
     'CustomizationTabPreloader.jsm',

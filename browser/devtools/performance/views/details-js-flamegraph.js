@@ -9,7 +9,12 @@
  */
 let JsFlameGraphView = Heritage.extend(DetailsSubview, {
 
-  rerenderPrefs: ["flatten-tree-recursion", "show-platform-data", "show-idle-blocks"],
+  rerenderPrefs: [
+    "invert-flame-graph",
+    "flatten-tree-recursion",
+    "show-platform-data",
+    "show-idle-blocks"
+  ],
 
   /**
    * Sets up the view with event binding.
@@ -48,6 +53,7 @@ let JsFlameGraphView = Heritage.extend(DetailsSubview, {
     let samples = profile.threads[0].samples;
 
     let data = FlameGraphUtils.createFlameGraphDataFromSamples(samples, {
+      invertStack: PerformanceController.getPref("invert-flame-graph"),
       flattenRecursion: PerformanceController.getPref("flatten-tree-recursion"),
       filterFrames: !PerformanceController.getPref("show-platform-data") && FrameNode.isContent,
       showIdleBlocks: PerformanceController.getPref("show-idle-blocks") && L10N.getStr("table.idle")
@@ -73,5 +79,15 @@ let JsFlameGraphView = Heritage.extend(DetailsSubview, {
   _onRangeChangeInGraph: function () {
     let interval = this.graph.getViewRange();
     OverviewView.setTimeInterval(interval, { stopPropagation: true });
+  },
+
+  /**
+   * Called whenever a pref is changed and this view needs to be rerendered.
+   */
+  _onRerenderPrefChanged: function() {
+    let recording = PerformanceController.getCurrentRecording();
+    let profile = recording.getProfile();
+    let samples = profile.threads[0].samples;
+    FlameGraphUtils.removeFromCache(samples);
   }
 });

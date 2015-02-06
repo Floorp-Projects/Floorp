@@ -50,6 +50,11 @@
                 data-pref="invert-call-tree"
                 label="&profilerUI.invertTree;"
                 tooltiptext="&profilerUI.invertTree.tooltiptext;"/>
+      <menuitem id="option-invert-flame-graph"
+                type="checkbox"
+                data-pref="invert-flame-graph"
+                label="&profilerUI.invertFlameGraph;"
+                tooltiptext="&profilerUI.invertFlameGraph.tooltiptext;"/>
       <menuitem id="option-flatten-tree-recursion"
                 type="checkbox"
                 data-pref="flatten-tree-recursion"
