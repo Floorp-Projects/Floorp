@@ -20,22 +20,19 @@ let TEST_DATA = {
   sites: [0, 0, 1, 2, 3],
   timestamps: [50, 100, 150, 200, 250],
   frames: [
-    null,
-    {
+    null, {
       source: "A",
       line: 1,
       column: 2,
       functionDisplayName: "x",
       parent: 0
-    },
-    {
+    }, {
       source: "B",
       line: 3,
       column: 4,
       functionDisplayName: "y",
       parent: 1
-    },
-    {
+    }, {
       source: "C",
       line: 5,
       column: 6,

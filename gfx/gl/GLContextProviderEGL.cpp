@@ -878,7 +878,7 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const gfxIntSize& size)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderEGL::CreateHeadless(bool)
+GLContextProviderEGL::CreateHeadless()
 {
     if (!sEGLLibrary.EnsureInitialized()) {
         return nullptr;
@@ -897,10 +897,9 @@ GLContextProviderEGL::CreateHeadless(bool)
 // often without the ability to texture from them directly.
 already_AddRefed<GLContext>
 GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,
-                                      const SurfaceCaps& caps,
-                                      bool requireCompatProfile)
+                                      const SurfaceCaps& caps)
 {
-    nsRefPtr<GLContext> glContext = CreateHeadless(requireCompatProfile);
+    nsRefPtr<GLContext> glContext = CreateHeadless();
     if (!glContext)
         return nullptr;
 

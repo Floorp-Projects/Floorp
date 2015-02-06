@@ -7,6 +7,7 @@
  * Waterfall view containing the timeline markers, controlled by DetailsView.
  */
 let WaterfallView = Heritage.extend(DetailsSubview, {
+
   rangeChangeDebounceTime: 10, // ms
 
   /**
@@ -18,11 +19,8 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     this.waterfall = new Waterfall($("#waterfall-breakdown"), $("#details-pane"), TIMELINE_BLUEPRINT);
     this.details = new MarkerDetails($("#waterfall-details"), $("#waterfall-view > splitter"));
 
-    this._onRecordingStarted = this._onRecordingStarted.bind(this);
     this._onMarkerSelected = this._onMarkerSelected.bind(this);
     this._onResize = this._onResize.bind(this);
-
-    PerformanceController.on(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
 
     this.waterfall.on("selected", this._onMarkerSelected);
     this.waterfall.on("unselected", this._onMarkerSelected);
@@ -36,8 +34,6 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    */
   destroy: function () {
     DetailsSubview.destroy.call(this);
-
-    PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
 
     this.waterfall.off("selected", this._onMarkerSelected);
     this.waterfall.off("unselected", this._onMarkerSelected);
@@ -57,13 +53,6 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     let markers = recording.getMarkers();
     this.waterfall.setData({ markers, interval: { startTime, endTime } });
     this.emit(EVENTS.WATERFALL_RENDERED);
-  },
-
-  /**
-   * Called when recording starts.
-   */
-  _onRecordingStarted: function () {
-    this.waterfall.clearView();
   },
 
   /**

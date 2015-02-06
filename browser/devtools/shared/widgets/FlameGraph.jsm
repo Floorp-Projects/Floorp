@@ -143,10 +143,10 @@ function FlameGraph(parent, sharpness) {
     this._onResize = this._onResize.bind(this);
     this.refresh = this.refresh.bind(this);
 
-    container.addEventListener("mousemove", this._onMouseMove);
-    container.addEventListener("mousedown", this._onMouseDown);
-    container.addEventListener("mouseup", this._onMouseUp);
-    container.addEventListener("MozMousePixelScroll", this._onMouseWheel);
+    this._window.addEventListener("mousemove", this._onMouseMove);
+    this._window.addEventListener("mousedown", this._onMouseDown);
+    this._window.addEventListener("mouseup", this._onMouseUp);
+    this._window.addEventListener("MozMousePixelScroll", this._onMouseWheel);
 
     let ownerWindow = this._parent.ownerDocument.defaultView;
     ownerWindow.addEventListener("resize", this._onResize);
@@ -181,11 +181,10 @@ FlameGraph.prototype = {
    * Destroys this graph.
    */
   destroy: function() {
-    let container = this._container;
-    container.removeEventListener("mousemove", this._onMouseMove);
-    container.removeEventListener("mousedown", this._onMouseDown);
-    container.removeEventListener("mouseup", this._onMouseUp);
-    container.removeEventListener("MozMousePixelScroll", this._onMouseWheel);
+    this._window.removeEventListener("mousemove", this._onMouseMove);
+    this._window.removeEventListener("mousedown", this._onMouseDown);
+    this._window.removeEventListener("mouseup", this._onMouseUp);
+    this._window.removeEventListener("MozMousePixelScroll", this._onMouseWheel);
 
     let ownerWindow = this._parent.ownerDocument.defaultView;
     ownerWindow.removeEventListener("resize", this._onResize);
@@ -870,6 +869,8 @@ let FlameGraphUtils = {
    *        A list of { time, frames: [{ location }] } objects.
    * @param object options [optional]
    *        Additional options supported by this operation:
+   *          - invertStack: specifies if the frames array in every sample
+   *                         should be reversed
    *          - flattenRecursion: specifies if identical consecutive frames
    *                              should be omitted from the output
    *          - filterFrames: predicate used for filtering all frames, passing
@@ -915,6 +916,11 @@ let FlameGraphUtils = {
       // should be taken into consideration.
       if (options.filterFrames) {
         frames = frames.filter(options.filterFrames);
+      }
+
+      // Invert the stack if preferred, reversing the frames array in place.
+      if (options.invertStack) {
+        frames.reverse();
       }
 
       // If no frames are available, add a pseudo "idle" block in between.

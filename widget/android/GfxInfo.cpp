@@ -72,8 +72,8 @@ public:
     }
 
     nsRefPtr<gl::GLContext> gl;
-    bool requireCompatProfile = true;
-    gl = gl::GLContextProvider::CreateHeadless(requireCompatProfile);
+    gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(16, 16),
+                                                gl::SurfaceCaps::ForRGB());
 
     if (!gl) {
       // Setting mReady to true here means that we won't retry. Everything will
