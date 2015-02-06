@@ -143,10 +143,10 @@ function FlameGraph(parent, sharpness) {
     this._onResize = this._onResize.bind(this);
     this.refresh = this.refresh.bind(this);
 
-    container.addEventListener("mousemove", this._onMouseMove);
-    container.addEventListener("mousedown", this._onMouseDown);
-    container.addEventListener("mouseup", this._onMouseUp);
-    container.addEventListener("MozMousePixelScroll", this._onMouseWheel);
+    this._window.addEventListener("mousemove", this._onMouseMove);
+    this._window.addEventListener("mousedown", this._onMouseDown);
+    this._window.addEventListener("mouseup", this._onMouseUp);
+    this._window.addEventListener("MozMousePixelScroll", this._onMouseWheel);
 
     let ownerWindow = this._parent.ownerDocument.defaultView;
     ownerWindow.addEventListener("resize", this._onResize);
@@ -181,11 +181,10 @@ FlameGraph.prototype = {
    * Destroys this graph.
    */
   destroy: function() {
-    let container = this._container;
-    container.removeEventListener("mousemove", this._onMouseMove);
-    container.removeEventListener("mousedown", this._onMouseDown);
-    container.removeEventListener("mouseup", this._onMouseUp);
-    container.removeEventListener("MozMousePixelScroll", this._onMouseWheel);
+    this._window.removeEventListener("mousemove", this._onMouseMove);
+    this._window.removeEventListener("mousedown", this._onMouseDown);
+    this._window.removeEventListener("mouseup", this._onMouseUp);
+    this._window.removeEventListener("MozMousePixelScroll", this._onMouseWheel);
 
     let ownerWindow = this._parent.ownerDocument.defaultView;
     ownerWindow.removeEventListener("resize", this._onResize);
