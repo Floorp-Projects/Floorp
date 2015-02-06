@@ -8,7 +8,9 @@
  */
 let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
 
-  rerenderPrefs: ["invert-call-tree"],
+  rerenderPrefs: [
+    "invert-call-tree"
+  ],
 
   rangeChangeDebounceTime: 100, // ms
 

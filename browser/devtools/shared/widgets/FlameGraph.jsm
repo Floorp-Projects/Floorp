@@ -870,6 +870,8 @@ let FlameGraphUtils = {
    *        A list of { time, frames: [{ location }] } objects.
    * @param object options [optional]
    *        Additional options supported by this operation:
+   *          - invertStack: specifies if the frames array in every sample
+   *                         should be reversed
    *          - flattenRecursion: specifies if identical consecutive frames
    *                              should be omitted from the output
    *          - filterFrames: predicate used for filtering all frames, passing
@@ -915,6 +917,11 @@ let FlameGraphUtils = {
       // should be taken into consideration.
       if (options.filterFrames) {
         frames = frames.filter(options.filterFrames);
+      }
+
+      // Invert the stack if preferred, reversing the frames array in place.
+      if (options.invertStack) {
+        frames.reverse();
       }
 
       // If no frames are available, add a pseudo "idle" block in between.
