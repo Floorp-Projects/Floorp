@@ -30,14 +30,13 @@ function handleRequest(req, resp) {
           createInstance(Components.interfaces.nsITimer);
   timer.init(function sendFile() {
     dump("cancelCompatCheck: starting to send file\n");
-    let (str = {}) {
-      let read = 0;
-      do {
-        // read as much as we can and put it in str.value
-        read = cstream.readString(0xffffffff, str);
-        resp.write(str.value);
-      } while (read != 0);
-    }
+    let str = {};
+    let read = 0;
+    do {
+      // read as much as we can and put it in str.value
+      read = cstream.readString(0xffffffff, str);
+      resp.write(str.value);
+    } while (read != 0);
     cstream.close();
     resp.finish();
   }, delay, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
