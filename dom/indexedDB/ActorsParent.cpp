@@ -97,9 +97,9 @@ using namespace mozilla::ipc;
 #define DISABLE_ASSERTS_FOR_FUZZING 0
 
 #if DISABLE_ASSERTS_FOR_FUZZING
-#define ASSERT_UNLESS_FUZZING() do { } while (0)
+#define ASSERT_UNLESS_FUZZING(...) do { } while (0)
 #else
-#define ASSERT_UNLESS_FUZZING() MOZ_ASSERT(false)
+#define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
 #endif
 
 namespace {
