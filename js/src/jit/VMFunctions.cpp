@@ -1288,7 +1288,7 @@ MarkShapeFromIon(JSRuntime *rt, Shape **shapep)
 }
 
 void
-MarkObjectGroupFromIon(JSRuntime *rt, types::ObjectGroup **groupp)
+MarkObjectGroupFromIon(JSRuntime *rt, ObjectGroup **groupp)
 {
     gc::MarkObjectGroupUnbarriered(&rt->gc.marker, groupp, "write barrier");
 }

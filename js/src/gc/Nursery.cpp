@@ -537,7 +537,7 @@ js::Nursery::forwardBufferPointer(HeapSlot **pSlotsElems)
 // been tenured during a minor collection.
 struct TenureCount
 {
-    types::ObjectGroup *group;
+    ObjectGroup *group;
     int count;
 };
 
@@ -550,8 +550,8 @@ struct Nursery::TenureCountCache
 
     TenureCountCache() { PodZero(this); }
 
-    TenureCount &findEntry(types::ObjectGroup *group) {
-        return entries[PointerHasher<types::ObjectGroup *, 3>::hash(group) % ArrayLength(entries)];
+    TenureCount &findEntry(ObjectGroup *group) {
+        return entries[PointerHasher<ObjectGroup *, 3>::hash(group) % ArrayLength(entries)];
     }
 };
 

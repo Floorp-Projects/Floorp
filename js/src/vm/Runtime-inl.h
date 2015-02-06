@@ -52,7 +52,7 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::Initi
 
     // Do an end run around JSObject::group() to avoid doing AutoUnprotectCell
     // on the templateObj, which is not a GC thing and can't use runtimeFromAnyThread.
-    types::ObjectGroup *group = templateObj->group_;
+    ObjectGroup *group = templateObj->group_;
 
     if (group->shouldPreTenure())
         heap = gc::TenuredHeap;

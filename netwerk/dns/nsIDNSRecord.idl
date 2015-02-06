@@ -10,8 +10,10 @@ namespace net {
 union NetAddr;
 }
 }
+template<class T> class nsTArray;
 %}
 native NetAddr(mozilla::net::NetAddr);
+[ref] native nsNetAddrTArrayRef(nsTArray<mozilla::net::NetAddr>);
 interface nsINetAddr;
 
 /**
@@ -22,7 +24,7 @@ interface nsINetAddr;
  * like an enumerator, allowing the caller to easily step through the
  * list of IP addresses.
  */
-[scriptable, uuid(95ced6f3-44b4-4427-a149-c9a1e033d852)]
+[scriptable, uuid(f92228ae-c417-4188-a604-0830a95e7eb9)]
 interface nsIDNSRecord : nsISupports
 {
     /**
@@ -44,6 +46,15 @@ interface nsIDNSRecord : nsISupports
      * the record.
      */
     [noscript] NetAddr getNextAddr(in uint16_t aPort);
+
+    /**
+     * this function copies the value of all working members of the RR
+     * set into the output array.
+     *
+     * @param aAddressArray
+     *        The result set
+     */
+    [noscript] void getAddresses(out nsNetAddrTArrayRef aAddressArray);
 
     /**
      * this function returns the value of the next IP address as a

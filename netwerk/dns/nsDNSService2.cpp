@@ -173,6 +173,46 @@ nsDNSRecord::GetNextAddr(uint16_t port, NetAddr *addr)
 }
 
 NS_IMETHODIMP
+nsDNSRecord::GetAddresses(nsTArray<NetAddr> & aAddressArray)
+{
+    if (mDone) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    mHostRecord->addr_info_lock.Lock();
+    if (mHostRecord->addr_info) {
+        for (NetAddrElement *iter = mHostRecord->addr_info->mAddresses.getFirst();
+             iter; iter = iter->getNext()) {
+            if (mHostRecord->Blacklisted(&iter->mAddress)) {
+                continue;
+            }
+            NetAddr *addr = aAddressArray.AppendElement(NetAddr());
+            memcpy(addr, &iter->mAddress, sizeof(NetAddr));
+            if (addr->raw.family == AF_INET) {
+                addr->inet.port = 0;
+            } else if (addr->raw.family == AF_INET6) {
+                addr->inet6.port = 0;
+            }
+        }
+        mHostRecord->addr_info_lock.Unlock();
+    } else {
+        mHostRecord->addr_info_lock.Unlock();
+
+        if (!mHostRecord->addr) {
+            return NS_ERROR_NOT_AVAILABLE;
+        }
+        NetAddr *addr = aAddressArray.AppendElement(NetAddr());
+        memcpy(addr, mHostRecord->addr, sizeof(NetAddr));
+        if (addr->raw.family == AF_INET) {
+            addr->inet.port = 0;
+        } else if (addr->raw.family == AF_INET6) {
+            addr->inet6.port = 0;
+        }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDNSRecord::GetScriptableNextAddr(uint16_t port, nsINetAddr * *result)
 {
     NetAddr addr;

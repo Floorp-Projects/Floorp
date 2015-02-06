@@ -323,87 +323,6 @@ struct AutoEnterAnalysis
 // Interface functions
 /////////////////////////////////////////////////////////////////////
 
-inline const Class *
-GetClassForProtoKey(JSProtoKey key)
-{
-    switch (key) {
-      case JSProto_Null:
-      case JSProto_Object:
-        return &PlainObject::class_;
-      case JSProto_Array:
-        return &ArrayObject::class_;
-
-      case JSProto_Number:
-        return &NumberObject::class_;
-      case JSProto_Boolean:
-        return &BooleanObject::class_;
-      case JSProto_String:
-        return &StringObject::class_;
-      case JSProto_Symbol:
-        return &SymbolObject::class_;
-      case JSProto_RegExp:
-        return &RegExpObject::class_;
-
-      case JSProto_Int8Array:
-      case JSProto_Uint8Array:
-      case JSProto_Int16Array:
-      case JSProto_Uint16Array:
-      case JSProto_Int32Array:
-      case JSProto_Uint32Array:
-      case JSProto_Float32Array:
-      case JSProto_Float64Array:
-      case JSProto_Uint8ClampedArray:
-        return &TypedArrayObject::classes[key - JSProto_Int8Array];
-
-      case JSProto_SharedInt8Array:
-      case JSProto_SharedUint8Array:
-      case JSProto_SharedInt16Array:
-      case JSProto_SharedUint16Array:
-      case JSProto_SharedInt32Array:
-      case JSProto_SharedUint32Array:
-      case JSProto_SharedFloat32Array:
-      case JSProto_SharedFloat64Array:
-      case JSProto_SharedUint8ClampedArray:
-        return &SharedTypedArrayObject::classes[key - JSProto_SharedInt8Array];
-
-      case JSProto_ArrayBuffer:
-        return &ArrayBufferObject::class_;
-
-      case JSProto_SharedArrayBuffer:
-        return &SharedArrayBufferObject::class_;
-
-      case JSProto_DataView:
-        return &DataViewObject::class_;
-
-      default:
-        MOZ_CRASH("Bad proto key");
-    }
-}
-
-/*
- * Get the default 'new' group for a given standard class, per the currently
- * active global.
- */
-inline ObjectGroup *
-GetNewObjectGroup(JSContext *cx, JSProtoKey key)
-{
-    RootedObject proto(cx);
-    if (key != JSProto_Null && !GetBuiltinPrototype(cx, key, &proto))
-        return nullptr;
-    return cx->getNewGroup(GetClassForProtoKey(key), TaggedProto(proto.get()));
-}
-
-/* Get a group for the immediate allocation site within a native. */
-inline ObjectGroup *
-GetCallerInitGroup(JSContext *cx, JSProtoKey key)
-{
-    jsbytecode *pc;
-    RootedScript script(cx, cx->currentScript(&pc));
-    if (script)
-        return TypeScript::InitGroup(cx, script, pc, key);
-    return GetNewObjectGroup(cx, key);
-}
-
 void MarkIteratorUnknownSlow(JSContext *cx);
 
 void TypeMonitorCallSlow(JSContext *cx, JSObject *callee, const CallArgs &args,
@@ -569,23 +488,6 @@ MarkObjectStateChange(ExclusiveContext *cx, JSObject *obj)
         obj->group()->markStateChange(cx);
 }
 
-/*
- * For an array or object which has not yet escaped and been referenced elsewhere,
- * pick a new type based on the object's current contents.
- */
-
-inline void
-FixArrayGroup(ExclusiveContext *cx, ArrayObject *obj)
-{
-    cx->compartment()->types.fixArrayGroup(cx, obj);
-}
-
-inline void
-FixObjectGroup(ExclusiveContext *cx, PlainObject *obj)
-{
-    cx->compartment()->types.fixObjectGroup(cx, obj);
-}
-
 /* Interface helpers for JSScript*. */
 extern void TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc,
                               const js::Value &rval);
@@ -679,85 +581,6 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc)
                          hint, types->typeArray());
 }
 
-struct AllocationSiteKey : public DefaultHasher<AllocationSiteKey> {
-    JSScript *script;
-
-    uint32_t offset : 24;
-    JSProtoKey kind : 8;
-
-    static const uint32_t OFFSET_LIMIT = (1 << 23);
-
-    AllocationSiteKey() { mozilla::PodZero(this); }
-
-    static inline uint32_t hash(AllocationSiteKey key) {
-        return uint32_t(size_t(key.script->offsetToPC(key.offset)) ^ key.kind);
-    }
-
-    static inline bool match(const AllocationSiteKey &a, const AllocationSiteKey &b) {
-        return a.script == b.script && a.offset == b.offset && a.kind == b.kind;
-    }
-};
-
-/* Whether to use a singleton kind for an initializer opcode at script/pc. */
-js::NewObjectKind
-UseSingletonForInitializer(JSScript *script, jsbytecode *pc, JSProtoKey key);
-
-js::NewObjectKind
-UseSingletonForInitializer(JSScript *script, jsbytecode *pc, const Class *clasp);
-
-/* static */ inline ObjectGroup *
-TypeScript::InitGroup(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoKey kind)
-{
-    MOZ_ASSERT(!UseSingletonForInitializer(script, pc, kind));
-
-    uint32_t offset = script->pcToOffset(pc);
-
-    if (offset >= AllocationSiteKey::OFFSET_LIMIT)
-        return GetNewObjectGroup(cx, kind);
-
-    AllocationSiteKey key;
-    key.script = script;
-    key.offset = offset;
-    key.kind = kind;
-
-    if (!cx->compartment()->types.allocationSiteTable)
-        return cx->compartment()->types.addAllocationSiteObjectGroup(cx, key);
-
-    AllocationSiteTable::Ptr p = cx->compartment()->types.allocationSiteTable->lookup(key);
-
-    if (p)
-        return p->value();
-    return cx->compartment()->types.addAllocationSiteObjectGroup(cx, key);
-}
-
-/* Set the group to use for obj according to the site it was allocated at. */
-static inline bool
-SetInitializerObjectGroup(JSContext *cx, HandleScript script, jsbytecode *pc, HandleObject obj,
-                          NewObjectKind kind)
-{
-    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(obj->getClass());
-    MOZ_ASSERT(key != JSProto_Null);
-    MOZ_ASSERT(kind == UseSingletonForInitializer(script, pc, key));
-
-    if (kind == SingletonObject) {
-        MOZ_ASSERT(obj->isSingleton());
-
-        /*
-         * Inference does not account for types of run-once initializer
-         * objects, as these may not be created until after the script
-         * has been analyzed.
-         */
-        TypeScript::Monitor(cx, script, pc, ObjectValue(*obj));
-    } else {
-        types::ObjectGroup *group = TypeScript::InitGroup(cx, script, pc, key);
-        if (!group)
-            return false;
-        obj->uninlinedSetGroup(group);
-    }
-
-    return true;
-}
-
 /* static */ inline void
 TypeScript::Monitor(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Value &rval)
 {
@@ -808,8 +631,8 @@ TypeScript::SetThis(JSContext *cx, JSScript *script, Type type)
     if (!types->hasType(type)) {
         AutoEnterAnalysis enter(cx);
 
-        InferSpew(ISpewOps, "externalType: setThis #%u: %s",
-                  script->id(), TypeString(type));
+        InferSpew(ISpewOps, "externalType: setThis %p: %s",
+                  script, TypeString(type));
         types->addType(cx, type);
     }
 }
@@ -830,8 +653,8 @@ TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, Type type
     if (!types->hasType(type)) {
         AutoEnterAnalysis enter(cx);
 
-        InferSpew(ISpewOps, "externalType: setArg #%u %u: %s",
-                  script->id(), arg, TypeString(type));
+        InferSpew(ISpewOps, "externalType: setArg %p %u: %s",
+                  script, arg, TypeString(type));
         types->addType(cx, type);
     }
 }
@@ -841,16 +664,6 @@ TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js:
 {
     Type type = GetValueType(value);
     SetArgument(cx, script, arg, type);
-}
-
-/////////////////////////////////////////////////////////////////////
-// TypeCompartment
-/////////////////////////////////////////////////////////////////////
-
-inline JSCompartment *
-TypeCompartment::compartment()
-{
-    return (JSCompartment *)((char *)this - offsetof(JSCompartment, types));
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1189,32 +1002,25 @@ TypeSet::getObjectClass(unsigned i) const
 }
 
 /////////////////////////////////////////////////////////////////////
-// ObjectGroup
+// TypeNewScript
 /////////////////////////////////////////////////////////////////////
 
-inline
-ObjectGroup::ObjectGroup(const Class *clasp, TaggedProto proto, ObjectGroupFlags initialFlags)
-{
-    mozilla::PodZero(this);
-
-    /* Inner objects may not appear on prototype chains. */
-    MOZ_ASSERT_IF(proto.isObject(), !proto.toObject()->getClass()->ext.outerObject);
-
-    this->clasp_ = clasp;
-    this->proto_ = proto.raw();
-    this->flags_ = initialFlags;
-
-    setGeneration(zone()->types.generation);
-
-    InferSpew(ISpewOps, "newGroup: %s", ObjectGroupString(this));
-}
-
 inline void
-ObjectGroup::finalize(FreeOp *fop)
+TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
 {
-    fop->delete_(newScriptDontCheckGeneration());
-    fop->delete_(maybeUnboxedLayoutDontCheckGeneration());
+    if (!newScript->function()->runtimeFromAnyThread()->needsIncrementalBarrier())
+        return;
+
+    JS::Zone *zone = newScript->function()->zoneFromAnyThread();
+    if (zone->needsIncrementalBarrier())
+        newScript->trace(zone->barrierTracer());
 }
+
+} // namespace types
+
+/////////////////////////////////////////////////////////////////////
+// ObjectGroup
+/////////////////////////////////////////////////////////////////////
 
 inline uint32_t
 ObjectGroup::basePropertyCount()
@@ -1231,24 +1037,24 @@ ObjectGroup::setBasePropertyCount(uint32_t count)
            | (count << OBJECT_FLAG_PROPERTY_COUNT_SHIFT);
 }
 
-inline HeapTypeSet *
+inline types::HeapTypeSet *
 ObjectGroup::getProperty(ExclusiveContext *cx, jsid id)
 {
     MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
-    MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
+    MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == types::IdToTypeId(id));
     MOZ_ASSERT(!unknownProperties());
 
-    if (HeapTypeSet *types = maybeGetProperty(id))
+    if (types::HeapTypeSet *types = maybeGetProperty(id))
         return types;
 
-    Property *base = cx->typeLifoAlloc().new_<Property>(id);
+    types::Property *base = cx->typeLifoAlloc().new_<types::Property>(id);
     if (!base) {
         markUnknown(cx);
         return nullptr;
     }
 
     uint32_t propertyCount = basePropertyCount();
-    Property **pprop = HashSetInsert<jsid,Property,Property>
+    types::Property **pprop = types::HashSetInsert<jsid,types::Property,types::Property>
         (cx->typeLifoAlloc(), propertySet, propertyCount, id);
     if (!pprop) {
         markUnknown(cx);
@@ -1272,14 +1078,14 @@ ObjectGroup::getProperty(ExclusiveContext *cx, jsid id)
     return &base->types;
 }
 
-inline HeapTypeSet *
+inline types::HeapTypeSet *
 ObjectGroup::maybeGetProperty(jsid id)
 {
     MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
-    MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
+    MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == types::IdToTypeId(id));
     MOZ_ASSERT(!unknownProperties());
 
-    Property *prop = HashSetLookup<jsid,Property,Property>
+    types::Property *prop = types::HashSetLookup<jsid,types::Property,types::Property>
         (propertySet, basePropertyCount(), id);
 
     return prop ? &prop->types : nullptr;
@@ -1289,49 +1095,21 @@ inline unsigned
 ObjectGroup::getPropertyCount()
 {
     uint32_t count = basePropertyCount();
-    if (count > SET_ARRAY_SIZE)
-        return HashSetCapacity(count);
+    if (count > types::SET_ARRAY_SIZE)
+        return types::HashSetCapacity(count);
     return count;
 }
 
-inline Property *
+inline types::Property *
 ObjectGroup::getProperty(unsigned i)
 {
     MOZ_ASSERT(i < getPropertyCount());
     if (basePropertyCount() == 1) {
         MOZ_ASSERT(i == 0);
-        return (Property *) propertySet;
+        return (types::Property *) propertySet;
     }
     return propertySet[i];
 }
-
-inline void
-TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
-{
-    if (!newScript->function()->runtimeFromAnyThread()->needsIncrementalBarrier())
-        return;
-
-    JS::Zone *zone = newScript->function()->zoneFromAnyThread();
-    if (zone->needsIncrementalBarrier())
-        newScript->trace(zone->barrierTracer());
-}
-
-} } /* namespace js::types */
-
-inline js::types::TypeScript *
-JSScript::types()
-{
-    maybeSweepTypes(nullptr);
-    return types_;
-}
-
-inline bool
-JSScript::ensureHasTypes(JSContext *cx)
-{
-    return types() || makeTypes(cx);
-}
-
-namespace js {
 
 template <>
 struct GCMethods<const types::Type>
@@ -1354,5 +1132,18 @@ struct GCMethods<types::Type>
 };
 
 } // namespace js
+
+inline js::types::TypeScript *
+JSScript::types()
+{
+    maybeSweepTypes(nullptr);
+    return types_;
+}
+
+inline bool
+JSScript::ensureHasTypes(JSContext *cx)
+{
+    return types() || makeTypes(cx);
+}
 
 #endif /* jsinferinlines_h */

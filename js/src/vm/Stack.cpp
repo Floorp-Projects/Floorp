@@ -135,7 +135,7 @@ InterpreterFrame::createRestParameter(JSContext *cx)
     ArrayObject *obj = NewDenseCopiedArray(cx, nrest, restvp, nullptr);
     if (!obj)
         return nullptr;
-    types::FixRestArgumentsType(cx, obj);
+    ObjectGroup::fixRestArgumentsGroup(cx, obj);
     return obj;
 }
 

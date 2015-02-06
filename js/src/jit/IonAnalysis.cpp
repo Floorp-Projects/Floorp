@@ -2880,7 +2880,7 @@ jit::ConvertLinearInequality(TempAllocator &alloc, MBasicBlock *block, const Lin
 }
 
 static bool
-AnalyzePoppedThis(JSContext *cx, types::ObjectGroup *group,
+AnalyzePoppedThis(JSContext *cx, ObjectGroup *group,
                   MDefinition *thisValue, MInstruction *ins, bool definitelyExecuted,
                   HandlePlainObject baseobj,
                   Vector<types::TypeNewScript::Initializer> *initializerList,
@@ -2896,9 +2896,6 @@ AnalyzePoppedThis(JSContext *cx, types::ObjectGroup *group,
         if (setprop->object() != thisValue)
             return true;
 
-        // Don't use GetAtomId here, we need to watch for SETPROP on
-        // integer properties and bail out. We can't mark the aggregate
-        // JSID_VOID type property as being in a definite slot.
         if (setprop->name() == cx->names().prototype ||
             setprop->name() == cx->names().proto ||
             setprop->name() == cx->names().constructor)
@@ -3016,7 +3013,7 @@ CmpInstructions(const void *a, const void *b)
 
 bool
 jit::AnalyzeNewScriptDefiniteProperties(JSContext *cx, JSFunction *fun,
-                                        types::ObjectGroup *group, HandlePlainObject baseobj,
+                                        ObjectGroup *group, HandlePlainObject baseobj,
                                         Vector<types::TypeNewScript::Initializer> *initializerList)
 {
     MOZ_ASSERT(cx->zone()->types.activeAnalysis);

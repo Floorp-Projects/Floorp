@@ -429,7 +429,7 @@ ScriptedDirectProxyHandler::getPropertyDescriptor(JSContext *cx, HandleObject pr
         MOZ_ASSERT(!desc.object());
         return true;
     }
-    return JS_GetPropertyDescriptorById(cx, proto, id, desc);
+    return GetPropertyDescriptor(cx, proto, id, desc);
 }
 
 // ES6 (5 April 2014) 9.5.5 Proxy.[[GetOwnProperty]](P)

@@ -4321,14 +4321,14 @@ bool
 jit::ElementAccessIsPacked(types::CompilerConstraintList *constraints, MDefinition *obj)
 {
     types::TemporaryTypeSet *types = obj->resultTypeSet();
-    return types && !types->hasObjectFlags(constraints, types::OBJECT_FLAG_NON_PACKED);
+    return types && !types->hasObjectFlags(constraints, OBJECT_FLAG_NON_PACKED);
 }
 
 bool
 jit::ElementAccessMightBeCopyOnWrite(types::CompilerConstraintList *constraints, MDefinition *obj)
 {
     types::TemporaryTypeSet *types = obj->resultTypeSet();
-    return !types || types->hasObjectFlags(constraints, types::OBJECT_FLAG_COPY_ON_WRITE);
+    return !types || types->hasObjectFlags(constraints, OBJECT_FLAG_COPY_ON_WRITE);
 }
 
 bool
@@ -4337,7 +4337,7 @@ jit::ElementAccessHasExtraIndexedProperty(types::CompilerConstraintList *constra
 {
     types::TemporaryTypeSet *types = obj->resultTypeSet();
 
-    if (!types || types->hasObjectFlags(constraints, types::OBJECT_FLAG_LENGTH_OVERFLOW))
+    if (!types || types->hasObjectFlags(constraints, OBJECT_FLAG_LENGTH_OVERFLOW))
         return true;
 
     return types::TypeCanHaveExtraIndexedProperties(constraints, types);

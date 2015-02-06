@@ -290,12 +290,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     void loadObjClass(Register objReg, Register dest) {
         loadPtr(Address(objReg, JSObject::offsetOfGroup()), dest);
-        loadPtr(Address(dest, types::ObjectGroup::offsetOfClasp()), dest);
+        loadPtr(Address(dest, ObjectGroup::offsetOfClasp()), dest);
     }
     void branchTestObjClass(Condition cond, Register obj, Register scratch, const js::Class *clasp,
                             Label *label) {
         loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
-        branchPtr(cond, Address(scratch, types::ObjectGroup::offsetOfClasp()), ImmPtr(clasp), label);
+        branchPtr(cond, Address(scratch, ObjectGroup::offsetOfClasp()), ImmPtr(clasp), label);
     }
     void branchTestObjShape(Condition cond, Register obj, const Shape *shape, Label *label) {
         branchPtr(cond, Address(obj, JSObject::offsetOfShape()), ImmGCPtr(shape), label);
@@ -348,7 +348,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void loadObjProto(Register obj, Register dest) {
         loadPtr(Address(obj, JSObject::offsetOfGroup()), dest);
-        loadPtr(Address(dest, types::ObjectGroup::offsetOfProto()), dest);
+        loadPtr(Address(dest, ObjectGroup::offsetOfProto()), dest);
     }
 
     void loadStringLength(Register str, Register dest) {

@@ -16,7 +16,7 @@ def main(argv):
     filename = argv[0]
 
     print banner
-    print "enum ID {"
+    print "enum ID : uint32_t {"
     for histogram in histogram_tools.from_file(filename):
         cpp_guard = histogram.cpp_guard()
         if cpp_guard:

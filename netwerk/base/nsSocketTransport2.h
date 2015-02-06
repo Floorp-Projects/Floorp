@@ -14,6 +14,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
+#include "nsIInterfaceRequestor.h"
 #include "nsISocketTransport.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
@@ -108,6 +109,7 @@ class nsSocketTransport MOZ_FINAL : public nsASocketHandler
                                   , public nsISocketTransport
                                   , public nsIDNSListener
                                   , public nsIClassInfo
+                                  , public nsIInterfaceRequestor
 {
     typedef mozilla::Mutex Mutex;
 
@@ -117,6 +119,7 @@ public:
     NS_DECL_NSISOCKETTRANSPORT
     NS_DECL_NSIDNSLISTENER
     NS_DECL_NSICLASSINFO
+    NS_DECL_NSIINTERFACEREQUESTOR
 
     nsSocketTransport();
 

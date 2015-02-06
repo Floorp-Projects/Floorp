@@ -19,6 +19,7 @@
 
 #include "gfxPlatform.h"
 #include "mozilla/Endian.h"
+#include "mozilla/Telemetry.h"
 
 extern "C" {
 #include "iccjpeg.h"

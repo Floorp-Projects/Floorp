@@ -15,6 +15,7 @@
 #include "nspr.h"
 #include "png.h"
 #include "RasterImage.h"
+#include "mozilla/Telemetry.h"
 
 #include <algorithm>
 

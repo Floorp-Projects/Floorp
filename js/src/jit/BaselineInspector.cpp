@@ -99,7 +99,7 @@ BaselineInspector::maybeInfoForPropertyOp(jsbytecode *pc,
     ICStub *stub = entry.firstStub();
     while (stub->next()) {
         Shape *shape = nullptr;
-        types::ObjectGroup *group = nullptr;
+        ObjectGroup *group = nullptr;
         if (stub->isGetProp_Native()) {
             shape = stub->toGetProp_Native()->shape();
         } else if (stub->isSetProp_Native()) {

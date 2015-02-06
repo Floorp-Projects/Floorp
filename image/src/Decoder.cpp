@@ -15,6 +15,7 @@
 #include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
+#include "mozilla/Telemetry.h"
 
 using mozilla::gfx::IntSize;
 using mozilla::gfx::SurfaceFormat;
@@ -699,6 +700,13 @@ Decoder::NeedNewFrame(uint32_t framenum, uint32_t x_offset, uint32_t y_offset,
                                nsIntRect(x_offset, y_offset, width, height),
                                format, palette_depth);
   mNeedsNewFrame = true;
+}
+
+Telemetry::ID
+Decoder::SpeedHistogram()
+{
+  // Use HistogramCount as an invalid Histogram ID.
+  return Telemetry::HistogramCount;
 }
 
 } // namespace image

@@ -6319,7 +6319,7 @@ class MStringSplit
     JSObject *templateObject() const {
         return &getOperand(2)->toConstant()->value().toObject();
     }
-    types::ObjectGroup *group() const {
+    ObjectGroup *group() const {
         return templateObject()->group();
     }
     bool possiblyCalls() const MOZ_OVERRIDE {
@@ -7166,7 +7166,7 @@ struct LambdaFunctionInfo
                            ? (gc::Cell *) fun->nonLazyScript()
                            : (gc::Cell *) fun->lazyScript()),
         singletonType(fun->isSingleton()),
-        useSingletonForClone(types::UseSingletonForClone(fun))
+        useSingletonForClone(ObjectGroup::useSingletonForClone(fun))
     {}
 
     LambdaFunctionInfo(const LambdaFunctionInfo &info)
@@ -7187,7 +7187,7 @@ class MLambda
       : MBinaryInstruction(scopeChain, cst), info_(&cst->value().toObject().as<JSFunction>())
     {
         setResultType(MIRType_Object);
-        if (!info().fun->isSingleton() && !types::UseSingletonForClone(info().fun))
+        if (!info().fun->isSingleton() && !ObjectGroup::useSingletonForClone(info().fun))
             setResultTypeSet(MakeSingletonTypeSet(constraints, info().fun));
     }
 
@@ -7225,7 +7225,7 @@ class MLambdaArrow
       : MBinaryInstruction(scopeChain, this_), info_(fun)
     {
         setResultType(MIRType_Object);
-        MOZ_ASSERT(!types::UseSingletonForClone(fun));
+        MOZ_ASSERT(!ObjectGroup::useSingletonForClone(fun));
         if (!fun->isSingleton())
             setResultTypeSet(MakeSingletonTypeSet(constraints, fun));
     }
@@ -9201,10 +9201,10 @@ typedef Vector<bool, 4, JitAllocPolicy> BoolVector;
 class InlinePropertyTable : public TempObject
 {
     struct Entry : public TempObject {
-        AlwaysTenured<types::ObjectGroup *> group;
+        AlwaysTenured<ObjectGroup *> group;
         AlwaysTenuredFunction func;
 
-        Entry(types::ObjectGroup *group, JSFunction *func)
+        Entry(ObjectGroup *group, JSFunction *func)
           : group(group), func(func)
         { }
     };
@@ -9232,7 +9232,7 @@ class InlinePropertyTable : public TempObject
         return pc_;
     }
 
-    bool addEntry(TempAllocator &alloc, types::ObjectGroup *group, JSFunction *func) {
+    bool addEntry(TempAllocator &alloc, ObjectGroup *group, JSFunction *func) {
         return entries_.append(new(alloc) Entry(group, func));
     }
 
@@ -9240,7 +9240,7 @@ class InlinePropertyTable : public TempObject
         return entries_.length();
     }
 
-    types::ObjectGroup *getObjectGroup(size_t i) const {
+    ObjectGroup *getObjectGroup(size_t i) const {
         MOZ_ASSERT(i < numEntries());
         return entries_[i]->group;
     }
@@ -9380,7 +9380,7 @@ class MGetPropertyPolymorphic
     };
 
     Vector<Entry, 4, JitAllocPolicy> nativeShapes_;
-    Vector<types::ObjectGroup *, 4, JitAllocPolicy> unboxedGroups_;
+    Vector<ObjectGroup *, 4, JitAllocPolicy> unboxedGroups_;
     AlwaysTenuredPropertyName name_;
 
     MGetPropertyPolymorphic(TempAllocator &alloc, MDefinition *obj, PropertyName *name)
@@ -9415,7 +9415,7 @@ class MGetPropertyPolymorphic
         entry.shape = shape;
         return nativeShapes_.append(entry);
     }
-    bool addUnboxedGroup(types::ObjectGroup *group) {
+    bool addUnboxedGroup(ObjectGroup *group) {
         return unboxedGroups_.append(group);
     }
     size_t numShapes() const {
@@ -9430,7 +9430,7 @@ class MGetPropertyPolymorphic
     size_t numUnboxedGroups() const {
         return unboxedGroups_.length();
     }
-    types::ObjectGroup *unboxedGroup(size_t i) const {
+    ObjectGroup *unboxedGroup(size_t i) const {
         return unboxedGroups_[i];
     }
     PropertyName *name() const {
@@ -9462,7 +9462,7 @@ class MSetPropertyPolymorphic
     };
 
     Vector<Entry, 4, JitAllocPolicy> nativeShapes_;
-    Vector<types::ObjectGroup *, 4, JitAllocPolicy> unboxedGroups_;
+    Vector<ObjectGroup *, 4, JitAllocPolicy> unboxedGroups_;
     AlwaysTenuredPropertyName name_;
     bool needsBarrier_;
 
@@ -9490,7 +9490,7 @@ class MSetPropertyPolymorphic
         entry.shape = shape;
         return nativeShapes_.append(entry);
     }
-    bool addUnboxedGroup(types::ObjectGroup *group) {
+    bool addUnboxedGroup(ObjectGroup *group) {
         return unboxedGroups_.append(group);
     }
     size_t numShapes() const {
@@ -9505,7 +9505,7 @@ class MSetPropertyPolymorphic
     size_t numUnboxedGroups() const {
         return unboxedGroups_.length();
     }
-    types::ObjectGroup *unboxedGroup(size_t i) const {
+    ObjectGroup *unboxedGroup(size_t i) const {
         return unboxedGroups_[i];
     }
     PropertyName *name() const {
@@ -9539,10 +9539,10 @@ class MDispatchInstruction
         // If |func| has a singleton group, |funcGroup| is null. Otherwise,
         // |funcGroup| holds the ObjectGroup for |func|, and dispatch guards
         // on the group instead of directly on the function.
-        types::ObjectGroup *funcGroup;
+        ObjectGroup *funcGroup;
         MBasicBlock *block;
 
-        Entry(JSFunction *func, types::ObjectGroup *funcGroup, MBasicBlock *block)
+        Entry(JSFunction *func, ObjectGroup *funcGroup, MBasicBlock *block)
           : func(func), funcGroup(funcGroup), block(block)
         { }
     };
@@ -9611,7 +9611,7 @@ class MDispatchInstruction
     }
 
   public:
-    void addCase(JSFunction *func, types::ObjectGroup *funcGroup, MBasicBlock *block) {
+    void addCase(JSFunction *func, ObjectGroup *funcGroup, MBasicBlock *block) {
         map_.append(Entry(func, funcGroup, block));
     }
     uint32_t numCases() const {
@@ -9620,7 +9620,7 @@ class MDispatchInstruction
     JSFunction *getCase(uint32_t i) const {
         return map_[i].func;
     }
-    types::ObjectGroup *getCaseObjectGroup(uint32_t i) const {
+    ObjectGroup *getCaseObjectGroup(uint32_t i) const {
         return map_[i].funcGroup;
     }
     MBasicBlock *getCaseBlock(uint32_t i) const {
@@ -9858,11 +9858,11 @@ class MGuardObjectGroup
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
 {
-    AlwaysTenured<types::ObjectGroup *> group_;
+    AlwaysTenured<ObjectGroup *> group_;
     bool bailOnEquality_;
     BailoutKind bailoutKind_;
 
-    MGuardObjectGroup(MDefinition *obj, types::ObjectGroup *group, bool bailOnEquality,
+    MGuardObjectGroup(MDefinition *obj, ObjectGroup *group, bool bailOnEquality,
                       BailoutKind bailoutKind)
       : MUnaryInstruction(obj),
         group_(group),
@@ -9877,7 +9877,7 @@ class MGuardObjectGroup
   public:
     INSTRUCTION_HEADER(GuardObjectGroup)
 
-    static MGuardObjectGroup *New(TempAllocator &alloc, MDefinition *obj, types::ObjectGroup *group,
+    static MGuardObjectGroup *New(TempAllocator &alloc, MDefinition *obj, ObjectGroup *group,
                                   bool bailOnEquality, BailoutKind bailoutKind) {
         return new(alloc) MGuardObjectGroup(obj, group, bailOnEquality, bailoutKind);
     }
@@ -9885,7 +9885,7 @@ class MGuardObjectGroup
     MDefinition *obj() const {
         return getOperand(0);
     }
-    const types::ObjectGroup *group() const {
+    const ObjectGroup *group() const {
         return group_;
     }
     bool bailOnEquality() const {

@@ -723,7 +723,7 @@ CodeGenerator::visitFunctionDispatch(LFunctionDispatch *lir)
     for (size_t i = 0; i < casesWithFallback - 1; i++) {
         MOZ_ASSERT(i < mir->numCases());
         LBlock *target = skipTrivialBlocks(mir->getCaseBlock(i))->lir();
-        if (types::ObjectGroup *funcGroup = mir->getCaseObjectGroup(i)) {
+        if (ObjectGroup *funcGroup = mir->getCaseObjectGroup(i)) {
             masm.branchPtr(Assembler::Equal, Address(input, JSObject::offsetOfGroup()),
                            ImmGCPtr(funcGroup), target->label());
         } else {
@@ -764,7 +764,7 @@ CodeGenerator::visitObjectGroupDispatch(LObjectGroupDispatch *lir)
             if (lastBranch.isInitialized())
                 lastBranch.emit(masm);
 
-            types::ObjectGroup *group = propTable->getObjectGroup(j);
+            ObjectGroup *group = propTable->getObjectGroup(j);
             lastBranch = MacroAssembler::BranchGCPtr(Assembler::Equal, temp, ImmGCPtr(group),
                                                      target->label());
             lastBlock = target;
@@ -3680,8 +3680,8 @@ CodeGenerator::emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mi
         // properties become unknown, so check for this case.
         masm.loadPtr(Address(output, JSObject::offsetOfGroup()), temp);
         masm.branchTestPtr(Assembler::NonZero,
-                           Address(temp, types::ObjectGroup::offsetOfFlags()),
-                           Imm32(types::OBJECT_FLAG_UNKNOWN_PROPERTIES), &ok);
+                           Address(temp, ObjectGroup::offsetOfFlags()),
+                           Imm32(OBJECT_FLAG_UNKNOWN_PROPERTIES), &ok);
 
         masm.assumeUnreachable("MIR instruction returned object with unexpected type");
 
@@ -3760,8 +3760,8 @@ CodeGenerator::emitValueResultChecks(LInstruction *lir, MDefinition *mir)
         Register payload = masm.extractObject(output, temp1);
         masm.loadPtr(Address(payload, JSObject::offsetOfGroup()), temp1);
         masm.branchTestPtr(Assembler::NonZero,
-                           Address(temp1, types::ObjectGroup::offsetOfFlags()),
-                           Imm32(types::OBJECT_FLAG_UNKNOWN_PROPERTIES), &ok);
+                           Address(temp1, ObjectGroup::offsetOfFlags()),
+                           Imm32(OBJECT_FLAG_UNKNOWN_PROPERTIES), &ok);
         masm.bind(&realMiss);
 
         masm.assumeUnreachable("MIR instruction returned value with unexpected type");
@@ -3947,7 +3947,7 @@ CodeGenerator::visitNewArrayCallVM(LNewArray *lir)
     saveLive(lir);
 
     JSObject *templateObject = lir->mir()->templateObject();
-    types::ObjectGroup *group =
+    ObjectGroup *group =
         templateObject->isSingleton() ? nullptr : templateObject->group();
 
     pushArg(Imm32(lir->mir()->allocatingBehaviour()));
@@ -4338,7 +4338,7 @@ CodeGenerator::visitSimdUnbox(LSimdUnbox *lir)
 
     // Guard that the object has the same representation as the one produced for
     // SIMD value-type.
-    Address clasp(temp, types::ObjectGroup::offsetOfClasp());
+    Address clasp(temp, ObjectGroup::offsetOfClasp());
     static_assert(!SimdTypeDescr::Opaque, "SIMD objects are transparent");
     masm.branchPtr(Assembler::NotEqual, clasp, ImmPtr(&InlineTransparentTypedObject::class_),
                    &bail);
@@ -4346,7 +4346,7 @@ CodeGenerator::visitSimdUnbox(LSimdUnbox *lir)
     // obj->type()->typeDescr()
     // The previous class pointer comparison implies that the addendumKind is
     // Addendum_TypeDescr.
-    masm.loadPtr(Address(temp, types::ObjectGroup::offsetOfAddendum()), temp);
+    masm.loadPtr(Address(temp, ObjectGroup::offsetOfAddendum()), temp);
 
     // Check for the /Kind/ reserved slot of the TypeDescr.  This is an Int32
     // Value which is equivalent to the object class check.
@@ -4810,7 +4810,7 @@ CodeGenerator::visitTypedObjectDescr(LTypedObjectDescr *lir)
     Register out = ToRegister(lir->output());
 
     masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), out);
-    masm.loadPtr(Address(out, types::ObjectGroup::offsetOfAddendum()), out);
+    masm.loadPtr(Address(out, ObjectGroup::offsetOfAddendum()), out);
 }
 
 void

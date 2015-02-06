@@ -27,7 +27,7 @@ def run_update(logger, **kwargs):
 
 if __name__ == "__main__":
     args = updatecommandline.parse_args()
-    logger = setup_logging(args, {})
+    logger = setup_logging(args, {"mach": sys.stdout})
     assert structuredlog.get_default_logger() is not None
 
 

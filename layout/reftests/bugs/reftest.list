@@ -55,9 +55,9 @@ fails == 25888-2r-block.html 25888-2r-ref.html # Bug 25888
 fails == 25888-3l-block.html 25888-3l-ref.html # Bug 25888
 fails == 25888-3r-block.html 25888-3r-ref.html # Bug 25888
 skip-if(B2G) == 28811-1a.html 28811-1-ref.html
-== 28811-1b.html 28811-1-ref.html
+fuzzy-if(gtk2Widget,6,26200) == 28811-1b.html 28811-1-ref.html  # Bug 1128229
 skip-if(B2G) == 28811-2a.html 28811-2-ref.html
-== 28811-2b.html 28811-2-ref.html
+fuzzy-if(gtk2Widget,6,26200) == 28811-2b.html 28811-2-ref.html  # Bug 1128229
 == 40596-1a.html 40596-1-ref.html
 != 40596-1b.html 40596-1-ref.html
 == 40596-1c.html 40596-1-ref.html
@@ -935,10 +935,10 @@ fuzzy-if(Android,13,9) == 407111-1.html 407111-1-ref.html  # Bug 1128229
 == 409089-1.html 409089-1-ref.html
 == 409089-2.html 409089-2-ref.html
 == 409089-3.html 409089-3-ref.html
-== 409659-1a.html 409659-1-ref.html
+fuzzy-if(winWidget,123,1600) == 409659-1a.html 409659-1-ref.html  # Bug 1128229
 != 409659-1b.html 409659-1-ref.html
 fails-if(Android&&AndroidVersion>=15&&smallScreen&&AndroidVersion!=17) != 409659-1c.html 409659-1-ref.html #there is no difference in the visible area of the screen
-== 409659-1d.html 409659-1-ref.html
+fuzzy-if(winWidget,123,1900) == 409659-1d.html 409659-1-ref.html  # Bug 1128229
 == 410621-1.html 410621-1-ref.html
 == 411059-1.html 411059-1-ref.html
 == 411334-1.xml 411334-1-ref.xml
@@ -1196,9 +1196,10 @@ test-pref(dom.use_xbl_scopes_for_remote_xul,true) != 449149-1b.html about:blank
 == 455280-1.xhtml 455280-1-ref.xhtml
 skip-if(B2G) == 455826-1.html 455826-1-ref.html
 skip-if(B2G) fails-if(cocoaWidget) fails-if(Android) == 456147.xul 456147-ref.html # bug 458047
-fuzzy-if(Android,11,40) fuzzy-if(B2G,11,40) fuzzy-if(d2d&&/^Windows\x20NT\x206\.2/.test(http.oscpu),1,69) == 456219-1a.html 456219-1-ref.html # bug 853273
-fuzzy-if(Android,11,40) fuzzy-if(B2G,11,40) fuzzy-if(d2d&&/^Windows\x20NT\x206\.2/.test(http.oscpu),1,69) == 456219-1b.html 456219-1-ref.html # bug 853273
-fuzzy-if(Android,11,40) fuzzy-if(B2G,11,40) fuzzy-if(d2d&&/^Windows\x20NT\x206\.2/.test(http.oscpu),1,69) == 456219-1c.html 456219-1-ref.html # bug 853273
+# The next three tests are fuzzy due to bug 1128229.
+fuzzy-if(Android||B2G,11,41) fuzzy-if(d2d&&/^Windows\x20NT\x206\.2/.test(http.oscpu),1,69) == 456219-1a.html 456219-1-ref.html # bug 853273
+fuzzy-if(Android||B2G,11,41) fuzzy-if(d2d&&/^Windows\x20NT\x206\.2/.test(http.oscpu),1,69) == 456219-1b.html 456219-1-ref.html # bug 853273
+fuzzy-if(Android||B2G,11,41) fuzzy-if(d2d&&/^Windows\x20NT\x206\.2/.test(http.oscpu),1,69) == 456219-1c.html 456219-1-ref.html # bug 853273
 == 456219-2.html 456219-2-ref.html
 == 456330-1.gif 456330-1-ref.png
 == 456484-1.html 456484-1-ref.html

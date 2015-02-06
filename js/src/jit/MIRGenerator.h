@@ -154,7 +154,7 @@ class MIRGenerator
         return modifiesFrameArguments_;
     }
 
-    typedef Vector<types::ObjectGroup *, 0, JitAllocPolicy> ObjectGroupVector;
+    typedef Vector<ObjectGroup *, 0, JitAllocPolicy> ObjectGroupVector;
 
     // When abortReason() == AbortReason_NewScriptProperties, all types which
     // the new script properties analysis hasn't been performed on yet.
@@ -199,7 +199,7 @@ class MIRGenerator
     // CodeGenerator::link).
     ObjectVector nurseryObjects_;
 
-    void addAbortedNewScriptPropertiesGroup(types::ObjectGroup *type);
+    void addAbortedNewScriptPropertiesGroup(ObjectGroup *type);
     void setForceAbort() {
         shouldForceAbort_ = true;
     }

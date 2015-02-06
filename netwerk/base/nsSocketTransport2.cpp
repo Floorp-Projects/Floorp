@@ -1988,11 +1988,13 @@ NS_IMPL_ISUPPORTS(nsSocketTransport,
                   nsISocketTransport,
                   nsITransport,
                   nsIDNSListener,
-                  nsIClassInfo)
+                  nsIClassInfo,
+                  nsIInterfaceRequestor)
 NS_IMPL_CI_INTERFACE_GETTER(nsSocketTransport,
                             nsISocketTransport,
                             nsITransport,
-                            nsIDNSListener)
+                            nsIDNSListener,
+                            nsIInterfaceRequestor)
 
 NS_IMETHODIMP
 nsSocketTransport::OpenInputStream(uint32_t flags,
@@ -2417,6 +2419,17 @@ nsSocketTransport::OnLookupComplete(nsICancelable *request,
         NS_WARNING("unable to post DNS lookup complete message");
 
     return NS_OK;
+}
+
+// nsIInterfaceRequestor
+NS_IMETHODIMP
+nsSocketTransport::GetInterface(const nsIID &iid, void **result)
+{
+    if (iid.Equals(NS_GET_IID(nsIDNSRecord))) {
+        return mDNSRecord ?
+            mDNSRecord->QueryInterface(iid, result) : NS_ERROR_NO_INTERFACE;
+    }
+    return this->QueryInterface(iid, result);
 }
 
 NS_IMETHODIMP

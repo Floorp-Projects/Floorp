@@ -89,7 +89,7 @@ class WebPlatformTestsUpdater(MozbuildObject):
         if kwargs["config"] is None:
             kwargs["config"] = os.path.join(self.topsrcdir, 'testing', 'web-platform', 'wptrunner.ini')
         updatecommandline.check_args(kwargs)
-        logger = update.setup_logging(kwargs, {})
+        logger = update.setup_logging(kwargs, {"mach": sys.stdout})
 
         try:
             update.run_update(logger, **kwargs)

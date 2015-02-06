@@ -132,7 +132,7 @@ DeclMarker(String, JSFlatString)
 DeclMarker(String, JSLinearString)
 DeclMarker(String, PropertyName)
 DeclMarker(Symbol, JS::Symbol)
-DeclMarker(ObjectGroup, types::ObjectGroup)
+DeclMarker(ObjectGroup, ObjectGroup)
 
 #undef DeclMarker
 

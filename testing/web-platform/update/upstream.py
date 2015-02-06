@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import sys
 import urlparse
@@ -7,7 +8,7 @@ from wptrunner.update.sync import LoadManifest
 from wptrunner.update.tree import get_unique_name
 from wptrunner.update.base import Step, StepRunner, exit_clean, exit_unclean
 
-from .tree import GitTree, Patch
+from .tree import Commit, GitTree, Patch
 import github
 from .github import GitHub
 
@@ -29,7 +30,7 @@ def rewrite_patch(patch, strip_dir):
     for line in patch.diff.split("\n"):
         for start in line_starts:
             if line.startswith(start):
-                new_diff.append(line.replace(strip_dir, ""))
+                new_diff.append(line.replace(strip_dir, "").encode("utf8"))
                 break
         else:
             new_diff.append(line)
@@ -101,14 +102,20 @@ class CheckoutBranch(Step):
 class GetLastSyncCommit(Step):
     """Find the gecko commit at which we last performed a sync with upstream."""
 
-    provides = ["last_sync_commit"]
+    provides = ["last_sync_path", "last_sync_commit"]
 
     def create(self, state):
         self.logger.info("Looking for last sync commit")
-        state.last_sync_commit = state.local_tree.commits_by_message(state.test_manifest.rev,
-                                                                     os.path.join(state.local_tree.root,
-                                                                                  "testing",
-                                                                                  "web-platform"))[-1]
+        state.last_sync_path = os.path.join(state.metadata_path, "mozilla-sync")
+        with open(state.last_sync_path) as f:
+            last_sync_sha1 = f.read().strip()
+
+        state.last_sync_commit = Commit(state.local_tree, last_sync_sha1)
+
+        if not state.local_tree.contains_commit(state.last_sync_commit):
+            self.logger.error("Could not find last sync commit %s" % last_sync_sha1)
+            return exit_clean
+
         self.logger.info("Last sync to web-platform-tests happened in %s" % state.last_sync_commit.sha1)
 
 
@@ -132,14 +139,23 @@ class LoadCommits(Step):
         state.source_commits = state.local_tree.log(state.last_sync_commit,
                                                     state.tests_path)
 
-        for i, commit in enumerate(state.source_commits):
+        update_regexp = re.compile("Bug \d+ - Update web-platform-tests to revision [0-9a-f]{40}")
+
+        for i, commit in enumerate(state.source_commits[:]):
+            if update_regexp.match(commit.message.text):
+                # This is a previous update commit so ignore it
+                state.source_commits.remove(commit)
+                continue
+
             if commit.message.backouts:
                 #TODO: Add support for collapsing backouts
                 raise NotImplementedError("Need to get the Git->Hg commits for backouts and remove the backed out patch")
+
             if not commit.message.bug:
                 self.logger.error("Commit %i (%s) doesn't have an associated bug number." %
                              (i + 1, commit.sha1))
                 return exit_unclean
+
         self.logger.debug("Source commits: %s" % state.source_commits)
 
 class MovePatches(Step):
@@ -227,6 +243,17 @@ class MergeUpstream(Step):
                     return rv
             state.merge_index += 1
 
+class UpdateLastSyncCommit(Step):
+    """Update the gecko commit at which we last performed a sync with upstream."""
+
+    provides = []
+
+    def create(self, state):
+        self.logger.info("Updating last sync commit")
+        with open(state.last_sync_path, "w") as f:
+            f.write(state.local_tree.rev)
+        # This gets added to the patch later on
+
 class MergeLocalBranch(Step):
     """Create a local branch pointing at the commit to upstream"""
 
@@ -305,7 +332,8 @@ class SyncToUpstreamRunner(StepRunner):
              MovePatches,
              RebaseCommits,
              CheckRebase,
-             MergeUpstream]
+             MergeUpstream,
+             UpdateLastSyncCommit]
 
 
 class PRMergeRunner(StepRunner):

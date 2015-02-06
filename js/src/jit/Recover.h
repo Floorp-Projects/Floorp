@@ -11,6 +11,7 @@
 
 #include "jsarray.h"
 
+#include "jit/MIR.h"
 #include "jit/Snapshots.h"
 
 struct JSContext;

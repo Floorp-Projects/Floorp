@@ -1247,7 +1247,7 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
     if (count == 0)
         return true;
 
-    types::ObjectGroup *group = obj->getGroup(cx);
+    ObjectGroup *group = obj->getGroup(cx);
     if (!group)
         return false;
     if (updateTypes && !InitArrayTypes(cx, group, vector, count))
@@ -2326,7 +2326,7 @@ TryReuseArrayGroup(JSObject *obj, ArrayObject *narr)
      * as obj. This can only be performed if the original object is an array
      * and has the same prototype.
      */
-    MOZ_ASSERT(narr->getProto()->hasNewGroup(&ArrayObject::class_, narr->group()));
+    MOZ_ASSERT(ObjectGroup::hasDefaultNewGroup(narr->getProto(), &ArrayObject::class_, narr->group()));
 
     if (obj->is<ArrayObject>() && !obj->isSingleton() && obj->getProto() == narr->getProto())
         narr->setGroup(obj->group());
@@ -2363,7 +2363,7 @@ CanOptimizeForDenseStorage(HandleObject arr, uint32_t startingIndex, uint32_t co
      * case can't happen, because any dense array used as the prototype of
      * another object is first slowified, for type inference's sake.
      */
-    types::ObjectGroup *arrGroup = arr->getGroup(cx);
+    ObjectGroup *arrGroup = arr->getGroup(cx);
     if (MOZ_UNLIKELY(!arrGroup || arrGroup->hasAllFlags(OBJECT_FLAG_ITERATED)))
         return false;
 
@@ -2982,7 +2982,7 @@ array_filter(JSContext *cx, unsigned argc, Value *vp)
     RootedObject arr(cx, NewDenseFullyAllocatedArray(cx, 0));
     if (!arr)
         return false;
-    ObjectGroup *newGroup = GetCallerInitGroup(cx, JSProto_Array);
+    ObjectGroup *newGroup = ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array);
     if (!newGroup)
         return false;
     arr->setGroup(newGroup);
@@ -3082,7 +3082,7 @@ array_of(JSContext *cx, unsigned argc, Value *vp)
     if (IsArrayConstructor(args.thisv()) || !IsConstructor(args.thisv())) {
         // IsArrayConstructor(this) will usually be true in practice. This is
         // the most common path.
-        RootedObjectGroup group(cx, GetCallerInitGroup(cx, JSProto_Array));
+        RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
         if (!group)
             return false;
         return ArrayFromCallArgs(cx, group, args);
@@ -3189,7 +3189,7 @@ bool
 js_Array(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObjectGroup group(cx, GetCallerInitGroup(cx, JSProto_Array));
+    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
     if (!group)
         return false;
 
@@ -3251,7 +3251,8 @@ CreateArrayPrototype(JSContext *cx, JSProtoKey key)
     if (!proto)
         return nullptr;
 
-    RootedObjectGroup group(cx, cx->getNewGroup(&ArrayObject::class_, TaggedProto(proto)));
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &ArrayObject::class_,
+                                                             TaggedProto(proto)));
     if (!group)
         return nullptr;
 
@@ -3379,7 +3380,8 @@ NewArray(ExclusiveContext *cxArg, uint32_t length,
     if (!proto && !GetBuiltinPrototype(cxArg, JSProto_Array, &proto))
         return nullptr;
 
-    RootedObjectGroup group(cxArg, cxArg->getNewGroup(&ArrayObject::class_, TaggedProto(proto)));
+    RootedObjectGroup group(cxArg, ObjectGroup::defaultNewGroup(cxArg, &ArrayObject::class_,
+                                                                TaggedProto(proto)));
     if (!group)
         return nullptr;
 

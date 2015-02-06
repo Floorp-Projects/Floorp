@@ -195,13 +195,13 @@ private:
   ErrorResult& mRv;
 };
 
-class PostMessageRunnable MOZ_FINAL : public nsICancelableRunnable
+class BCPostMessageRunnable MOZ_FINAL : public nsICancelableRunnable
 {
 public:
   NS_DECL_ISUPPORTS
 
-  PostMessageRunnable(BroadcastChannelChild* aActor,
-                      BroadcastChannelMessage* aData)
+  BCPostMessageRunnable(BroadcastChannelChild* aActor,
+                        BroadcastChannelMessage* aData)
     : mActor(aActor)
     , mData(aData)
   {
@@ -249,13 +249,13 @@ public:
   }
 
 private:
-  ~PostMessageRunnable() {}
+  ~BCPostMessageRunnable() {}
 
   nsRefPtr<BroadcastChannelChild> mActor;
   nsRefPtr<BroadcastChannelMessage> mData;
 };
 
-NS_IMPL_ISUPPORTS(PostMessageRunnable, nsICancelableRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS(BCPostMessageRunnable, nsICancelableRunnable, nsIRunnable)
 
 class CloseRunnable MOZ_FINAL : public nsICancelableRunnable
 {
@@ -559,8 +559,8 @@ void
 BroadcastChannel::PostMessageData(BroadcastChannelMessage* aData)
 {
   if (mActor) {
-    nsRefPtr<PostMessageRunnable> runnable =
-      new PostMessageRunnable(mActor, aData);
+    nsRefPtr<BCPostMessageRunnable> runnable =
+      new BCPostMessageRunnable(mActor, aData);
 
     if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
       NS_WARNING("Failed to dispatch to the current thread!");

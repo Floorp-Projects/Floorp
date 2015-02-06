@@ -3078,8 +3078,14 @@ nsGlobalWindow::PreHandleEvent(EventChainPreVisitor& aVisitor)
       gEntropyCollector->RandomUpdate((void*)&(aVisitor.mEvent->time),
                                       sizeof(uint32_t));
     }
-  } else if (msg == NS_RESIZE_EVENT) {
-    mIsHandlingResizeEvent = true;
+  } else if (msg == NS_RESIZE_EVENT && aVisitor.mEvent->mFlags.mIsTrusted) {
+    // QIing to window so that we can keep the old behavior also in case
+    // a child window is handling resize.
+    nsCOMPtr<nsPIDOMWindow> window =
+      do_QueryInterface(aVisitor.mEvent->originalTarget);
+    if (window) {
+      mIsHandlingResizeEvent = true;
+    }
   } else if (msg == NS_MOUSE_BUTTON_DOWN &&
              aVisitor.mEvent->mFlags.mIsTrusted) {
     gMouseDown = true;
@@ -7259,7 +7265,7 @@ nsGlobalWindow::ScrollTo(const CSSIntPoint& aScroll,
 NS_IMETHODIMP
 nsGlobalWindow::ScrollBy(int32_t aXScrollDif, int32_t aYScrollDif)
 {
-  ScrollBy(aXScrollDif, aYScrollDif);
+  ScrollBy(double(aXScrollDif), double(aYScrollDif));
 
   return NS_OK;
 }
@@ -11017,6 +11023,10 @@ nsGlobalWindow::ShowSlowScriptDialog()
 
     return ContinueSlowScriptAndKeepNotifying;
   }
+
+  // Reached only on non-e10s - once per slow script dialog.
+  // On e10s - we probe once at ProcessHangsMonitor.jsm
+  Telemetry::Accumulate(Telemetry::SLOW_SCRIPT_NOTICE_COUNT, 1);
 
   // Get the nsIPrompt interface from the docshell
   nsCOMPtr<nsIDocShell> ds = GetDocShell();

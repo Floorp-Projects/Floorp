@@ -37,7 +37,7 @@ interface nsIFrame;
  * interface to mirror this interface when changing it.
  */
 
-[scriptable, builtinclass, uuid(ce098f6c-baca-4178-a9aa-266e8bfe509b)]
+[scriptable, builtinclass, uuid(5794d12b-3195-4526-a814-a2181f6c71fe)]
 interface nsIImageLoadingContent : imgINotificationObserver
 {
   /**
@@ -170,9 +170,17 @@ interface nsIImageLoadingContent : imgINotificationObserver
 
   /**
    * A visible count is stored, if it is non-zero then this image is considered
-   * visible. These methods increment, decrement, or return the visible coount.
+   * visible. These methods increment, decrement, or return the visible count.
+   *
+   * @param aNonvisibleAction What to do if the image's visibility count is now
+   *                          zero. If ON_NONVISIBLE_NO_ACTION, nothing will be
+   *                          done. If ON_NONVISIBLE_REQUEST_DISCARD, the image
+   *                          will be asked to discard its surfaces if possible.
    */
   [noscript, notxpcom] void IncrementVisibleCount();
-  [noscript, notxpcom] void DecrementVisibleCount();
+  [noscript, notxpcom] void DecrementVisibleCount(in uint32_t aNonvisibleAction);
   [noscript, notxpcom] uint32_t GetVisibleCount();
+
+  const long ON_NONVISIBLE_NO_ACTION = 0;
+  const long ON_NONVISIBLE_REQUEST_DISCARD = 1;
 };

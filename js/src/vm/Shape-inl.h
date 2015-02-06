@@ -41,10 +41,11 @@ Shape::search(ExclusiveContext *cx, jsid id)
 }
 
 inline bool
-Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict,
+Shape::set(JSContext* cx, HandleNativeObject obj, HandleObject receiver, bool strict,
            MutableHandleValue vp)
 {
     MOZ_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
+    MOZ_ASSERT(!obj->is<DynamicWithObject>());  // See bug 1128681.
 
     if (attrs & JSPROP_SETTER) {
         Value fval = setterValue();
@@ -58,16 +59,6 @@ Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict,
         return true;
 
     RootedId id(cx, propid());
-
-    /*
-     * |with (it) color='red';| ends up here.
-     * Avoid exposing the With object to native setters.
-     */
-    if (obj->is<DynamicWithObject>()) {
-        RootedObject nobj(cx, &obj->as<DynamicWithObject>().object());
-        return CallJSPropertyOpSetter(cx, setterOp(), nobj, id, strict, vp);
-    }
-
     return CallJSPropertyOpSetter(cx, setterOp(), obj, id, strict, vp);
 }
 

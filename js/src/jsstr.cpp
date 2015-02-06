@@ -3785,7 +3785,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    RootedObjectGroup group(cx, GetCallerInitGroup(cx, JSProto_Array));
+    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
     if (!group)
         return false;
     AddTypePropertyId(cx, group, JSID_VOID, Type::StringType());

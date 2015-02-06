@@ -581,12 +581,12 @@ JSObject *
 JSONParserBase::createFinishedObject(PropertyVector &properties)
 {
     /*
-     * Look for an existing cached type and shape for objects with this set of
+     * Look for an existing cached group and shape for objects with this set of
      * properties.
      */
     {
-        JSObject *obj = cx->compartment()->types.newTypedObject(cx, properties.begin(),
-                                                                properties.length());
+        JSObject *obj = ObjectGroup::newPlainObject(cx, properties.begin(),
+                                                    properties.length());
         if (obj)
             return obj;
     }
@@ -611,11 +611,11 @@ JSONParserBase::createFinishedObject(PropertyVector &properties)
     }
 
     /*
-     * Try to assign a new type to the object with type information for its
+     * Try to assign a new group to the object with type information for its
      * properties, and update the initializer object group cache with this
      * object's final shape.
      */
-    cx->compartment()->types.fixObjectGroup(cx, obj);
+    ObjectGroup::fixPlainObjectGroup(cx, obj);
 
     return obj;
 }
@@ -645,8 +645,8 @@ JSONParserBase::finishArray(MutableHandleValue vp, ElementVector &elements)
     if (!obj)
         return false;
 
-    /* Try to assign a new type to the array according to its elements. */
-    cx->compartment()->types.fixArrayGroup(cx, obj);
+    /* Try to assign a new group to the array according to its elements. */
+    ObjectGroup::fixArrayGroup(cx, obj);
 
     vp.setObject(*obj);
     if (!freeElements.append(&elements))

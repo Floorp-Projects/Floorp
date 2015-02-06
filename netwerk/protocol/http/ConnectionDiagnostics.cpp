@@ -70,10 +70,10 @@ nsHttpConnectionMgr::PrintDiagnosticsCB(const nsACString &key,
                               ent->mIdleConns.Length());
   self->mLogData.AppendPrintf("   Half Opens Length = %u\n",
                               ent->mHalfOpens.Length());
-  self->mLogData.AppendPrintf("   Coalescing Key = %s\n",
-                              ent->mCoalescingKey.get());
+  self->mLogData.AppendPrintf("   Coalescing Keys Length = %u\n",
+                              ent->mCoalescingKeys.Length());
   self->mLogData.AppendPrintf("   Spdy using = %d, tested = %d, preferred = %d\n",
-                              ent->mUsingSpdy, ent->mTestedSpdy, ent->mSpdyPreferred);
+                              ent->mUsingSpdy, ent->mTestedSpdy, ent->mInPreferredHash);
   self->mLogData.AppendPrintf("   pipelinestate = %d penalty = %d\n",
                               ent->mPipelineState, ent->mPipeliningPenalty);
   for (i = 0; i < nsAHttpTransaction::CLASS_MAX; ++i) {
@@ -96,7 +96,10 @@ nsHttpConnectionMgr::PrintDiagnosticsCB(const nsACString &key,
     self->mLogData.AppendPrintf("   :: Pending Transaction #%u\n", i);
     ent->mPendingQ[i]->PrintDiagnostics(self->mLogData);
   }
-
+  for (i = 0; i < ent->mCoalescingKeys.Length(); ++i) {
+    self->mLogData.AppendPrintf("   :: Coalescing Key #%u %s\n",
+                                i, ent->mCoalescingKeys[i].get());
+  }
   return PL_DHASH_NEXT;
 }
 

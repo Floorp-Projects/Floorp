@@ -93,7 +93,7 @@ class BaselineInspector
 
   public:
     typedef Vector<Shape *, 4, JitAllocPolicy> ShapeVector;
-    typedef Vector<types::ObjectGroup *, 4, JitAllocPolicy> ObjectGroupVector;
+    typedef Vector<ObjectGroup *, 4, JitAllocPolicy> ObjectGroupVector;
     bool maybeInfoForPropertyOp(jsbytecode *pc,
                                 ShapeVector &nativeShapes,
                                 ObjectGroupVector &unboxedGroups);

@@ -4295,7 +4295,7 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
         }
         MOZ_ASSERT(idx == count);
 
-        types::FixArrayGroup(cx, obj);
+        ObjectGroup::fixArrayGroup(cx, obj);
         vp.setObject(*obj);
         return true;
       }
@@ -4358,7 +4358,7 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
             }
         }
 
-        types::FixObjectGroup(cx, obj);
+        ObjectGroup::fixPlainObjectGroup(cx, obj);
         vp.setObject(*obj);
         return true;
       }
@@ -7250,13 +7250,13 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 if (!pn->getConstantValue(cx, ParseNode::DontAllowNestedObjects, &value))
                     return false;
                 if (!value.isMagic(JS_GENERIC_MAGIC)) {
-                    // Note: the type of the template object might not yet reflect
+                    // Note: the group of the template object might not yet reflect
                     // that the object has copy on write elements. When the
                     // interpreter or JIT compiler fetches the template, it should
-                    // use types::GetOrFixupCopyOnWriteObject to make sure the type
-                    // for the template is accurate. We don't do this here as we
-                    // want to use types::InitObject, which requires a finished
-                    // script.
+                    // use ObjectGroup::getOrFixupCopyOnWriteObject to make sure the
+                    // group for the template is accurate. We don't do this here as we
+                    // want to use ObjectGroup::allocationSiteGroup, which requires a
+                    // finished script.
                     NativeObject *obj = &value.toObject().as<NativeObject>();
                     if (!ObjectElements::MakeElementsCopyOnWrite(cx, obj))
                         return false;

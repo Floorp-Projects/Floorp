@@ -324,7 +324,7 @@ js::intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp)
     if (!buffer)
         return false;
 
-    types::ObjectGroup *newgroup = types::GetCallerInitGroup(cx, JSProto_Array);
+    ObjectGroup *newgroup = ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array);
     if (!newgroup)
         return false;
     buffer->setGroup(newgroup);
@@ -507,7 +507,7 @@ js::intrinsic_IsPackedArray(JSContext *cx, unsigned argc, Value *vp)
 
     JSObject *obj = &args[0].toObject();
     bool isPacked = obj->is<ArrayObject>() && !obj->hasLazyGroup() &&
-                    !obj->group()->hasAllFlags(types::OBJECT_FLAG_NON_PACKED) &&
+                    !obj->group()->hasAllFlags(OBJECT_FLAG_NON_PACKED) &&
                     obj->as<ArrayObject>().getDenseInitializedLength() ==
                         obj->as<ArrayObject>().length();
 

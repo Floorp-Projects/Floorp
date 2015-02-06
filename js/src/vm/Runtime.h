@@ -287,7 +287,7 @@ class NewObjectCache
     inline bool lookupGlobal(const Class *clasp, js::GlobalObject *global, gc::AllocKind kind,
                              EntryIndex *pentry);
 
-    bool lookupGroup(js::types::ObjectGroup *group, gc::AllocKind kind, EntryIndex *pentry) {
+    bool lookupGroup(js::ObjectGroup *group, gc::AllocKind kind, EntryIndex *pentry) {
         return lookup(group->clasp(), group, kind, pentry);
     }
 
@@ -306,7 +306,7 @@ class NewObjectCache
     inline void fillGlobal(EntryIndex entry, const Class *clasp, js::GlobalObject *global,
                            gc::AllocKind kind, NativeObject *obj);
 
-    void fillGroup(EntryIndex entry, js::types::ObjectGroup *group, gc::AllocKind kind,
+    void fillGroup(EntryIndex entry, js::ObjectGroup *group, gc::AllocKind kind,
                    NativeObject *obj)
     {
         MOZ_ASSERT(obj->group() == group);
@@ -347,7 +347,7 @@ class NewObjectCache
     static void copyCachedToObject(JSObject *dst, JSObject *src, gc::AllocKind kind) {
         js_memcpy(dst, src, gc::Arena::thingSize(kind));
         Shape::writeBarrierPost(dst->shape_, &dst->shape_);
-        types::ObjectGroup::writeBarrierPost(dst->group_, &dst->group_);
+        ObjectGroup::writeBarrierPost(dst->group_, &dst->group_);
     }
 };
 
@@ -986,10 +986,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
     mozilla::UniquePtr<js::SourceHook> sourceHook;
-
-#ifdef NIGHTLY_BUILD
-    js::AssertOnScriptEntryHook assertOnScriptEntryHook_;
-#endif
 
     /* SPS profiling metadata */
     js::SPSProfiler     spsProfiler;
