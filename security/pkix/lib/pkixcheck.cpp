@@ -38,7 +38,7 @@ CheckValidity(Input encodedValidity, Time time)
     return Result::ERROR_EXPIRED_CERTIFICATE;
   }
   if (time < notBefore) {
-    return Result::ERROR_EXPIRED_CERTIFICATE;
+    return Result::ERROR_NOT_YET_VALID_CERTIFICATE;
   }
 
   Time notAfter(Time::uninitialized);
