@@ -75,6 +75,7 @@ let PerformanceView = {
       button.removeEventListener("click", this._onRecordButtonClick);
     }
     this._importButton.removeEventListener("click", this._onImportButtonClick);
+    this._clearButton.removeEventListener("click", this._onClearButtonClick);
 
     PerformanceController.off(EVENTS.RECORDING_WILL_START, this._onRecordingWillStart);
     PerformanceController.off(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
