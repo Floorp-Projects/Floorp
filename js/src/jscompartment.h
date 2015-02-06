@@ -302,6 +302,9 @@ struct JSCompartment
     // Map from typed objects to array buffers lazily created for them.
     js::LazyArrayBufferTable *lazyArrayBuffers;
 
+    // All unboxed layouts in the compartment.
+    mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
+
     /* During GC, stores the index of this compartment in rt->compartments. */
     unsigned                     gcIndex;
 
