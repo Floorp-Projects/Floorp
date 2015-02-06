@@ -256,9 +256,7 @@ class ObjectGroup : public gc::TenuredCell
     HeapPtrObject &singletonRaw() { return singleton_; }
 
     void setProto(JSContext *cx, TaggedProto proto);
-    void setProtoUnchecked(TaggedProto proto) {
-        proto_ = proto.raw();
-    }
+    void setProtoUnchecked(TaggedProto proto);
 
     void initSingleton(JSObject *singleton) {
         singleton_ = singleton;
