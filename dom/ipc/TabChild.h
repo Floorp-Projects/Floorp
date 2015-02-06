@@ -312,7 +312,8 @@ public:
                                          const ViewID& aViewId,
                                          const bool& aIsRoot,
                                          const ZoomConstraints& aConstraints) MOZ_OVERRIDE;
-    virtual bool RecvLoadURL(const nsCString& uri) MOZ_OVERRIDE;
+    virtual bool RecvLoadURL(const nsCString& aURI,
+                             const BrowserConfiguration& aConfiguration) MOZ_OVERRIDE;
     virtual bool RecvCacheFileDescriptor(const nsString& aPath,
                                          const FileDescriptor& aFileDescriptor)
                                          MOZ_OVERRIDE;
