@@ -223,31 +223,48 @@ function SetupEME(test, token, params)
         videoType: test.type,
       }
     ];
-    navigator.requestMediaKeySystemAccess(KEYSYSTEM_TYPE, options)
-      .then(function(keySystemAccess) {
-        return keySystemAccess.createMediaKeys();
-      }, bail(token + " Failed to request key system access."))
 
-      .then(function(mediaKeys) {
-        Log(token, "created MediaKeys object ok");
-        mediaKeys.sessions = [];
-        return v.setMediaKeys(mediaKeys);
-      }, bail("failed to create MediaKeys object"))
+    function chain(promise, onReject) {
+      return promise.then(function(value) {
+        return Promise.resolve(value);
+      }).catch(function(reason) {
+        onReject(reason);
+        return Promise.reject();
+      })
+    }
 
-      .then(function() {
-        Log(token, "set MediaKeys on <video> element ok");
-        var sessionType = (params && params.sessionType) ? params.sessionType : "temporary";
-        var session = v.mediaKeys.createSession(sessionType);
-        if (params && params.onsessioncreated) {
-          params.onsessioncreated(session);
-        }
-        session.addEventListener("message", UpdateSessionFunc(test, token, sessionType));
-        return session.generateRequest(ev.initDataType, ev.initData);
-      }, onSetKeysFail)
+    var p = navigator.requestMediaKeySystemAccess(KEYSYSTEM_TYPE, options);
+    var r = bail(token + " Failed to request key system access.");
+    chain(p, r)
+    .then(function(keySystemAccess) {
+      var p = keySystemAccess.createMediaKeys();
+      var r = bail(token +  " Failed to create MediaKeys object");
+      return chain(p, r);
+    })
 
-      .then(function() {
-        Log(token, "generated request");
-      }, bail(token + " Failed to request key system access2."));
+    .then(function(mediaKeys) {
+      Log(token, "created MediaKeys object ok");
+      mediaKeys.sessions = [];
+      var p = v.setMediaKeys(mediaKeys);
+      return chain(p, onSetKeysFail);
+    })
+
+    .then(function() {
+      Log(token, "set MediaKeys on <video> element ok");
+      var sessionType = (params && params.sessionType) ? params.sessionType : "temporary";
+      var session = v.mediaKeys.createSession(sessionType);
+      if (params && params.onsessioncreated) {
+        params.onsessioncreated(session);
+      }
+      session.addEventListener("message", UpdateSessionFunc(test, token, sessionType));
+      var p = session.generateRequest(ev.initDataType, ev.initData);
+      var r = bail(token + ": session.generateRequest failed");
+      return chain(p, r);
+    })
+
+    .then(function() {
+      Log(token, ": session.generateRequest succeeded");
+    });
   });
   return v;
 }
