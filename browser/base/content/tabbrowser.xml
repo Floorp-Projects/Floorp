@@ -1362,6 +1362,7 @@
             var aRelatedToCurrent;
             var aAllowMixedContent;
             var aSkipAnimation;
+            var aNoReferrer;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1375,6 +1376,7 @@
               aRelatedToCurrent     = params.relatedToCurrent;
               aAllowMixedContent    = params.allowMixedContent;
               aSkipAnimation        = params.skipAnimation;
+              aNoReferrer           = params.noReferrer;
             }
 
             var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
@@ -1389,7 +1391,8 @@
                                   fromExternal: aFromExternal,
                                   relatedToCurrent: aRelatedToCurrent,
                                   skipAnimation: aSkipAnimation,
-                                  allowMixedContent: aAllowMixedContent });
+                                  allowMixedContent: aAllowMixedContent,
+                                  noReferrer: aNoReferrer });
             if (!bgLoad)
               this.selectedTab = tab;
 
@@ -1651,6 +1654,7 @@
             var aRelatedToCurrent;
             var aSkipAnimation;
             var aAllowMixedContent;
+            var aNoReferrer;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1664,6 +1668,7 @@
               aRelatedToCurrent     = params.relatedToCurrent;
               aSkipAnimation        = params.skipAnimation;
               aAllowMixedContent    = params.allowMixedContent;
+              aNoReferrer           = params.noReferrer;
             }
 
             // if we're adding tabs, we're past interrupt mode, ditch the owner
@@ -1796,7 +1801,9 @@
               if (aAllowMixedContent)
                 flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT;
               try {
-                b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
+                b.loadURIWithFlags(aURI, flags,
+                                   aNoReferrer ? null : aReferrerURI,
+                                   aCharset, aPostData);
               } catch (ex) {
                 Cu.reportError(ex);
               }
