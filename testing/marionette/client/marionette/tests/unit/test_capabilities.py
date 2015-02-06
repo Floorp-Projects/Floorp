@@ -55,7 +55,7 @@ class TestCapabilities(MarionetteTestCase):
 
     def test_we_can_pass_in_capabilities_on_session_start(self):
         self.marionette.delete_session()
-        capabilities = {"somethingAwesome": "cake"}
+        capabilities = { "desiredCapabilities": {"somethingAwesome": "cake"}}
         self.marionette.start_session(capabilities)
         caps = self.marionette.session_capabilities
         self.assertIn("somethingAwesome", caps)
