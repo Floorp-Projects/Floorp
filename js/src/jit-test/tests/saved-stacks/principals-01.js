@@ -42,7 +42,7 @@ var count = 0;
 low .eval('function b() { check("b",        extract(saveStack())); c(); }');
 mid .eval('function c() { check("cba",      extract(saveStack())); d(); }');
 high.eval('function d() { check("dcba",     extract(saveStack())); e(); }');
-     eval('function e() { check("edcba",    extract(saveStack())); f(); }'); // no principal, so checks skipped
+     eval('function e() { check("ecba",     extract(saveStack())); f(); }');
 low .eval('function f() { check("fb",       extract(saveStack())); g(); }');
 mid .eval('function g() { check("gfecba",   extract(saveStack())); h(); }');
 high.eval('function h() { check("hgfedcba", extract(saveStack()));      }');
