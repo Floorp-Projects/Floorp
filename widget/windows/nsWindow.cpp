@@ -2870,6 +2870,8 @@ nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
       taskbarInfo->PrepareFullScreenHWND(mWnd, TRUE);
     }
   } else {
+    if (mSizeMode != nsSizeMode_Fullscreen)
+      return NS_OK;
     SetSizeMode(mOldSizeMode);
   }
 
@@ -2887,6 +2889,13 @@ nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
   if (visible) {
     Show(true);
     Invalidate();
+
+    if (!aFullScreen && mOldSizeMode == nsSizeMode_Normal) {
+      // Ensure the window exiting fullscreen get activated. Window
+      // activation was bypassed by SetSizeMode, and hiding window for
+      // transition could also blur the current window.
+      DispatchFocusToTopLevelWindow(true);
+    }
   }
 
   // Notify the taskbar that we have exited full screen mode.
