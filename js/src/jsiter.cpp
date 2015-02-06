@@ -483,8 +483,8 @@ static inline PropertyIteratorObject *
 NewPropertyIteratorObject(JSContext *cx, unsigned flags)
 {
     if (flags & JSITER_ENUMERATE) {
-        RootedObjectGroup group(cx, cx->getNewGroup(&PropertyIteratorObject::class_,
-                                                    TaggedProto(nullptr)));
+        RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &PropertyIteratorObject::class_,
+                                                                 TaggedProto(nullptr)));
         if (!group)
             return nullptr;
 
@@ -580,7 +580,7 @@ VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVecto
 
     if (obj->isSingleton() && !obj->setIteratedSingleton(cx))
         return false;
-    types::MarkObjectGroupFlags(cx, obj, types::OBJECT_FLAG_ITERATED);
+    types::MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
 
     Rooted<PropertyIteratorObject *> iterobj(cx, NewPropertyIteratorObject(cx, flags));
     if (!iterobj)
@@ -623,7 +623,7 @@ VectorToValueIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVec
 
     if (obj->isSingleton() && !obj->setIteratedSingleton(cx))
         return false;
-    types::MarkObjectGroupFlags(cx, obj, types::OBJECT_FLAG_ITERATED);
+    types::MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
 
     Rooted<PropertyIteratorObject*> iterobj(cx, NewPropertyIteratorObject(cx, flags));
     if (!iterobj)

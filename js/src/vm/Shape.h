@@ -16,7 +16,6 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsinfer.h"
 #include "jspropertytree.h"
 #include "jstypes.h"
 #include "NamespaceImports.h"
@@ -29,6 +28,7 @@
 #include "js/MemoryMetrics.h"
 #include "js/RootingAPI.h"
 #include "js/UbiNode.h"
+#include "vm/ObjectGroup.h"
 #include "vm/PropDesc.h"
 
 #ifdef _MSC_VER
