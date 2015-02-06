@@ -224,8 +224,7 @@ let OverviewView = {
    * mouseup and scroll events.
    */
   _onGraphSelecting: function () {
-    let recording = PerformanceController.getCurrentRecording();
-    if (recording == null || this._stopSelectionChangeEventPropagation) {
+    if (this._stopSelectionChangeEventPropagation) {
       return;
     }
     // If the range is smaller than a pixel (which can happen when performing
