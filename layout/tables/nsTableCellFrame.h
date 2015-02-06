@@ -7,6 +7,7 @@
 
 #include "mozilla/Attributes.h"
 #include "celldata.h"
+#include "imgIContainer.h"
 #include "nsITableCellLayout.h"
 #include "nscore.h"
 #include "nsContainerFrame.h"
@@ -33,6 +34,8 @@ class nsTableCellFrame : public nsContainerFrame,
                          public nsITableCellLayout,
                          public nsIPercentHeightObserver
 {
+  typedef mozilla::image::DrawResult DrawResult;
+
 public:
   NS_DECL_QUERYFRAME_TARGET(nsTableCellFrame)
   NS_DECL_QUERYFRAME
@@ -93,9 +96,9 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  void PaintCellBackground(nsRenderingContext& aRenderingContext,
-                           const nsRect& aDirtyRect, nsPoint aPt,
-                           uint32_t aFlags);
+  DrawResult PaintCellBackground(nsRenderingContext& aRenderingContext,
+                                 const nsRect& aDirtyRect, nsPoint aPt,
+                                 uint32_t aFlags);
 
  
   virtual nsresult ProcessBorders(nsTableFrame* aFrame,
@@ -202,10 +205,10 @@ public:
 
   virtual nsMargin* GetBorderWidth(nsMargin& aBorder) const;
 
-  virtual void PaintBackground(nsRenderingContext& aRenderingContext,
-                               const nsRect&        aDirtyRect,
-                               nsPoint              aPt,
-                               uint32_t             aFlags);
+  virtual DrawResult PaintBackground(nsRenderingContext& aRenderingContext,
+                                     const nsRect&        aDirtyRect,
+                                     nsPoint              aPt,
+                                     uint32_t             aFlags);
 
   void DecorateForSelection(nsRenderingContext& aRenderingContext,
                             nsPoint              aPt);
@@ -289,6 +292,7 @@ inline void nsTableCellFrame::SetHasPctOverHeight(bool aValue)
 // nsBCTableCellFrame
 class nsBCTableCellFrame MOZ_FINAL : public nsTableCellFrame
 {
+  typedef mozilla::image::DrawResult DrawResult;
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -319,10 +323,10 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
-  virtual void PaintBackground(nsRenderingContext& aRenderingContext,
-                               const nsRect&        aDirtyRect,
-                               nsPoint              aPt,
-                               uint32_t             aFlags) MOZ_OVERRIDE;
+  virtual DrawResult PaintBackground(nsRenderingContext& aRenderingContext,
+                                     const nsRect&        aDirtyRect,
+                                     nsPoint              aPt,
+                                     uint32_t             aFlags) MOZ_OVERRIDE;
 
 private:
 
