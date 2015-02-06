@@ -320,8 +320,6 @@ GetFirstSubsumedFrame(JSContext *cx, SavedFrame *frame)
         return frame;
 
     JSPrincipals *principals = cx->compartment()->principals;
-    if (!principals)
-        return frame;
 
     while (frame && !subsumes(principals, frame->getPrincipals()))
         frame = frame->getParent();
@@ -439,7 +437,7 @@ SavedFrame::toStringMethod(JSContext *cx, unsigned argc, Value *vp)
     DebugOnly<JSPrincipals *> principals = cx->compartment()->principals;
 
     do {
-        MOZ_ASSERT_IF(principals && subsumes, (*subsumes)(principals, frame->getPrincipals()));
+        MOZ_ASSERT_IF(subsumes, (*subsumes)(principals, frame->getPrincipals()));
         if (frame->isSelfHosted())
             continue;
 
