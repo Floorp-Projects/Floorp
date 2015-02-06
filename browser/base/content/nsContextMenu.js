@@ -858,7 +858,7 @@ nsContextMenu.prototype = {
   _openLinkInParameters : function (doc, extra) {
     let params = { charset: doc.characterSet };
     if (!BrowserUtils.linkHasNoReferrer(this.link))
-      params.referrerURI = document.documentURIObject;
+      params.referrerURI = doc.documentURIObject;
     for (let p in extra)
       params[p] = extra[p];
     return params;
