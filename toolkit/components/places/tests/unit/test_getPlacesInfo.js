@@ -28,7 +28,7 @@ function ensurePlacesInfoObjectsAreEqual(a, b) {
   do_check_eq(a.placeId, b.placeId);
 }
 
-function test_getPlacesInfoExistentPlace() {
+function* test_getPlacesInfoExistentPlace() {
   let testURI = NetUtil.newURI("http://www.example.tld");
   yield PlacesTestUtils.addVisits(testURI);
 
@@ -46,7 +46,7 @@ function test_getPlacesInfoExistentPlace() {
 }
 add_task(test_getPlacesInfoExistentPlace);
 
-function test_getPlacesInfoNonExistentPlace() {
+function* test_getPlacesInfoNonExistentPlace() {
   let testURI = NetUtil.newURI("http://www.example_non_existent.tld");
   let getPlacesInfoResult = yield promiseGetPlacesInfo(testURI);
   do_check_eq(getPlacesInfoResult.results.length, 0);
@@ -54,24 +54,22 @@ function test_getPlacesInfoNonExistentPlace() {
 }
 add_task(test_getPlacesInfoNonExistentPlace);
 
-function test_promisedHelper() {
-  let (uri = NetUtil.newURI("http://www.helper_existent_example.tld")) {
-    yield PlacesTestUtils.addVisits(uri);
-    let placeInfo = yield PlacesUtils.promisePlaceInfo(uri);
-    do_check_true(placeInfo instanceof Ci.mozIPlaceInfo);
-  };
+function* test_promisedHelper() {
+  let uri = NetUtil.newURI("http://www.helper_existent_example.tld");
+  yield PlacesTestUtils.addVisits(uri);
+  let placeInfo = yield PlacesUtils.promisePlaceInfo(uri);
+  do_check_true(placeInfo instanceof Ci.mozIPlaceInfo);
 
-  let (uri = NetUtil.newURI("http://www.helper_non_existent_example.tld")) {
-    try {
-      let placeInfo = yield PlacesUtils.promisePlaceInfo(uri);
-      do_throw("PlacesUtils.promisePlaceInfo should have rejected the promise");
-    }
-    catch(ex) { }
-  };
+  uri = NetUtil.newURI("http://www.helper_non_existent_example.tld");
+  try {
+    let placeInfo = yield PlacesUtils.promisePlaceInfo(uri);
+    do_throw("PlacesUtils.promisePlaceInfo should have rejected the promise");
+  }
+  catch(ex) { }
 }
 add_task(test_promisedHelper);
 
-function test_infoByGUID() {
+function* test_infoByGUID() {
   let testURI = NetUtil.newURI("http://www.guid_example.tld");
   yield PlacesTestUtils.addVisits(testURI);
 
@@ -81,7 +79,7 @@ function test_infoByGUID() {
 }
 add_task(test_infoByGUID);
 
-function test_invalid_guid() {
+function* test_invalid_guid() {
   try {
     let placeInfoByGUID = yield PlacesUtils.promisePlaceInfo("###");
     do_throw("getPlacesInfo should fail for invalid guids")
@@ -90,17 +88,15 @@ function test_invalid_guid() {
 }
 add_task(test_invalid_guid);
 
-function test_mixed_selection() {
+function* test_mixed_selection() {
   let placeInfo1, placeInfo2;
-  let (uri = NetUtil.newURI("http://www.mixed_selection_test_1.tld")) {
-    yield PlacesTestUtils.addVisits(uri);
-    placeInfo1 = yield PlacesUtils.promisePlaceInfo(uri);
-  };
+  let uri = NetUtil.newURI("http://www.mixed_selection_test_1.tld");
+  yield PlacesTestUtils.addVisits(uri);
+  placeInfo1 = yield PlacesUtils.promisePlaceInfo(uri);
 
-  let (uri = NetUtil.newURI("http://www.mixed_selection_test_2.tld")) {
-    yield PlacesTestUtils.addVisits(uri);
-    placeInfo2 = yield PlacesUtils.promisePlaceInfo(uri);
-  };
+  uri = NetUtil.newURI("http://www.mixed_selection_test_2.tld");
+  yield PlacesTestUtils.addVisits(uri);
+  placeInfo2 = yield PlacesUtils.promisePlaceInfo(uri);
 
   let getPlacesInfoResult = yield promiseGetPlacesInfo([placeInfo1.uri, placeInfo2.guid]);
   do_check_eq(getPlacesInfoResult.results.length, 2);
