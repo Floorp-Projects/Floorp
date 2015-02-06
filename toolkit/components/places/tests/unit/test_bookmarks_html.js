@@ -311,17 +311,16 @@ function* checkItem(aExpected, aNode)
             do_check_eq(aNode.uri, aExpected.url)
           break;
         case "icon":
-          let (deferred = Promise.defer(), data) {
-            PlacesUtils.favicons.getFaviconDataForPage(
-              NetUtil.newURI(aExpected.url),
-              function (aURI, aDataLen, aData, aMimeType) {
-                deferred.resolve(aData);
-              });
-            data = yield deferred.promise;
-            let base64Icon = "data:image/png;base64," +
-                             base64EncodeString(String.fromCharCode.apply(String, data));
-            do_check_true(base64Icon == aExpected.icon);
-          }
+          let deferred = Promise.defer();
+          PlacesUtils.favicons.getFaviconDataForPage(
+            NetUtil.newURI(aExpected.url),
+            function (aURI, aDataLen, aData, aMimeType) {
+              deferred.resolve(aData);
+            });
+          let data = yield deferred.promise;
+          let base64Icon = "data:image/png;base64," +
+                           base64EncodeString(String.fromCharCode.apply(String, data));
+          do_check_true(base64Icon == aExpected.icon);
           break;
         case "keyword":
           break;
