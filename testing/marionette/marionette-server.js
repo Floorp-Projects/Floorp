@@ -588,7 +588,14 @@ MarionetteServerConnection.prototype = {
     if (aRequest && aRequest.parameters) {
       this.sessionId = aRequest.parameters.session_id ? aRequest.parameters.session_id : null;
       logger.info("Session Id is set to: " + this.sessionId);
-      this.setSessionCapabilities(aRequest.parameters.capabilities);
+      try {
+        this.setSessionCapabilities(aRequest.parameters.capabilities);
+      } catch (e) {
+        // 71 error is "session not created"
+        this.sendError(e.message + " " + JSON.stringify(e.errors), 71, null,
+                       this.command_id);
+        return;
+      }
     }
 
     function waitForWindow() {
@@ -704,10 +711,22 @@ MarionetteServerConnection.prototype = {
           // Keeping desired capabilities separate for now so that we can keep
           // backwards compatibility
           to = copy(from[key], to);
+        } else if (key === "requiredCapabilities") {
+          for (let caps in from[key]) {
+            if (from[key][caps] !== this.sessionCapabilities[caps]) {
+              errors[caps] = from[key][caps] + " does not equal " + this.sessionCapabilities[caps]
+            }
+          }
         }
         to[key] = from[key];
       }
-      return to;
+      if (Object.keys(errors).length === 0){
+        return to;
+      }
+      else {
+        throw { "message": "Not all requiredCapabilities could be met",
+                "errors": errors}
+      }
     };
 
     // Clone, overwrite, and set.
