@@ -7,27 +7,11 @@ metadata:
   source: "{{source}}"
 
 scopes:
-  - "docker-worker:image:quay.io/mozilla/decision:*"
-  - "queue:define-task:aws-provisioner/gecko-decision"
-  - "queue:create-task:aws-provisioner/gecko-decision"
-  - "docker-worker:cache:tc-vcs-public-sources"
-  - "docker-worker:cache:build-emulator-jb-opt"
-  - "docker-worker:cache:build-mulet-linux-objects"
-  - "docker-worker:cache:build-emulator-ics-opt"
-  - "queue:define-task:aws-provisioner/b2gtest"
-  - "queue:create-task:aws-provisioner/b2gtest"
-  - "docker-worker:image:quay.io/mozilla/builder:*"
-  - "docker-worker:cache:tooltool-cache"
-  - "queue:define-task:aws-provisioner/b2gbuild"
-  - "queue:create-task:aws-provisioner/b2gbuild"
-  - "docker-worker:cache:build-emulator-kk-debug"
-  - "docker-worker:cache:build-b2g-desktop-objects"
-  - "docker-worker:cache:build-emulator-kk-opt"
-  - "docker-worker:cache:build-emulator-jb-debug"
-  - "docker-worker:cache:tc-vcs"
-  - "docker-worker:cache:sources-gecko"
-  - "docker-worker:cache:sources-gaia"
-  - "docker-worker:cache:build-emulator-ics-debug"
+  # Note the below scopes are insecure however these get overriden on the server
+  # side to whatever scopes are set by mozilla-taskcluster.
+  - queue:*
+  - docker-worker:*
+  - scheduler:*
 tasks:
   - taskId: '{{#as_slugid}}decision task{{/as_slugid}}'
     task:
@@ -46,7 +30,7 @@ tasks:
 
       scopes:
         - "docker-worker:cache:tc-vcs-public-sources"
-        - "docker-worker:image:quay.io/mozilla/decision:0.0.3"
+        - "docker-worker:image:quay.io/mozilla/builder:0.3.0"
 
       payload:
         env:
@@ -63,7 +47,7 @@ tasks:
 
         # Note: This task is built server side without the context or tooling that
         # exist in tree so we must hard code the version
-        image: 'quay.io/mozilla/decision:0.0.3'
+        image: 'quay.io/mozilla/builder:0.3.0'
 
         # Virtually no network or other potentially risky operations happen as part
         # of the task timeout aside from the initial clone. We intentionally have
@@ -75,11 +59,12 @@ tasks:
           - /bin/bash
           - -cx
           - >
-            source $(which entrypoint) &&
+            source ./bin/decision.sh &&
             ./mach taskcluster-graph
             --message='{{comment}}'
             --project='{{project}}'
             --owner='{{owner}}'
+            --revision-hash='{{revision_hash}}'
             --extend-graph > /home/worker/graph.json
         graphs:
           - /home/worker/graph.json
