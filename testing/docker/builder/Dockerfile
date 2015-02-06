@@ -1,9 +1,7 @@
-FROM          quay.io/mozilla/b2g-build:0.0.1
+FROM          quay.io/mozilla/b2g-build:0.2.5
 MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 
-ENV PATH /tools/python27-mercurial/bin:/tools/python27/bin:/tools/tools/buildfarm/utils:$PATH:/home/worker/bin/
 ENV PYTHONPATH /tools/tools/lib/python:$PYTHONPATH
-
 ENV TOOLTOOL_CACHE  /home/worker/tools/tooltool-cache
 
 # Add utilities and configuration
@@ -25,10 +23,10 @@ RUN git config --global user.email "docker@docker.com" && \
     git config --global user.name "docker"
 
 # VCS Tools
-RUN npm install -g taskcluster-vcs@0.0.2
+RUN npm install -g taskcluster-vcs@2.1.2
 
 # Add bin tools last as they are most likely to change
-ADD bin /home/worker/bin
+COPY bin /home/worker/bin
 
 # TODO enable worker
 # TODO volume mount permissions will be an issue

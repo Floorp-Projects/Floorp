@@ -1,6 +1,7 @@
 $inherits:
   from: 'tasks/builds/b2g_emulator_base.yml'
 task:
+  workerType: b2gbuild-emulator-kk
   scopes:
     - 'docker-worker:cache:build-emulator-kk-debug'
   metadata:

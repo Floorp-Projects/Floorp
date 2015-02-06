@@ -1,0 +1,6 @@
+[releng]
+name=releng
+descr=releng-specific packages from mockbuild-repos
+baseurl=http://mockbuild-repos.pub.build.mozilla.org/releng/public/CentOS/6/x86_64
+enabled=1
+gpgcheck=0
