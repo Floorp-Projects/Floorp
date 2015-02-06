@@ -488,7 +488,7 @@ GeneratePrototypeGuards(JSContext *cx, IonScript *ion, MacroAssembler &masm, JSO
         // Note: objectReg and scratchReg may be the same register, so we cannot
         // use objectReg in the rest of this function.
         masm.loadPtr(Address(objectReg, JSObject::offsetOfGroup()), scratchReg);
-        Address proto(scratchReg, types::ObjectGroup::offsetOfProto());
+        Address proto(scratchReg, ObjectGroup::offsetOfProto());
         masm.branchPtr(Assembler::NotEqual, proto,
                        ImmMaybeNurseryPtr(obj->getProto()), failures);
     }
@@ -1897,7 +1897,7 @@ CheckTypeSetForWrite(MacroAssembler &masm, JSObject *obj, jsid id,
                      Register object, ConstantOrRegister value, Label *failure)
 {
     TypedOrValueRegister valReg = value.reg();
-    types::ObjectGroup *group = obj->group();
+    ObjectGroup *group = obj->group();
     if (group->unknownProperties())
         return;
     types::HeapTypeSet *propTypes = group->maybeGetProperty(id);
@@ -1929,7 +1929,7 @@ GenerateSetSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &att
         // just guard that it's already there.
 
         // Obtain and guard on the ObjectGroup of the object.
-        types::ObjectGroup *group = obj->group();
+        ObjectGroup *group = obj->group();
         masm.branchPtr(Assembler::NotEqual,
                        Address(object, JSObject::offsetOfGroup()),
                        ImmGCPtr(group), &failures);
@@ -2463,7 +2463,7 @@ SetPropertyIC::attachCallSetter(JSContext *cx, HandleScript outerScript, IonScri
 
 static void
 GenerateAddSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
-                NativeObject *obj, Shape *oldShape, types::ObjectGroup *oldGroup,
+                NativeObject *obj, Shape *oldShape, ObjectGroup *oldGroup,
                 Register object, ConstantOrRegister value,
                 bool checkTypeset)
 {
@@ -2520,7 +2520,7 @@ GenerateAddSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &att
         masm.push(object);
         masm.loadPtr(Address(object, JSObject::offsetOfGroup()), object);
         masm.branchPtr(Assembler::Equal,
-                       Address(object, types::ObjectGroup::offsetOfAddendum()),
+                       Address(object, ObjectGroup::offsetOfAddendum()),
                        ImmWord(0),
                        &noTypeChange);
         masm.pop(object);
@@ -2579,7 +2579,7 @@ static bool
 CanInlineSetPropTypeCheck(JSObject *obj, jsid id, ConstantOrRegister val, bool *checkTypeset)
 {
     bool shouldCheck = false;
-    types::ObjectGroup *group = obj->group();
+    ObjectGroup *group = obj->group();
     if (!group->unknownProperties()) {
         types::HeapTypeSet *propTypes = group->maybeGetProperty(id);
         if (!propTypes)

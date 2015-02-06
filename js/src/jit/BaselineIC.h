@@ -3576,7 +3576,7 @@ class ICSetElem_DenseAdd : public ICUpdatedStub
   protected:
     HeapPtrObjectGroup group_;
 
-    ICSetElem_DenseAdd(JitCode *stubCode, types::ObjectGroup *group, size_t protoChainDepth);
+    ICSetElem_DenseAdd(JitCode *stubCode, ObjectGroup *group, size_t protoChainDepth);
 
   public:
     static size_t offsetOfGroup() {
@@ -3611,7 +3611,7 @@ class ICSetElem_DenseAddImpl : public ICSetElem_DenseAdd
     static const size_t NumShapes = ProtoChainDepth + 1;
     mozilla::Array<HeapPtrShape, NumShapes> shapes_;
 
-    ICSetElem_DenseAddImpl(JitCode *stubCode, types::ObjectGroup *group,
+    ICSetElem_DenseAddImpl(JitCode *stubCode, ObjectGroup *group,
                            const AutoShapeVector *shapes)
       : ICSetElem_DenseAdd(stubCode, group, ProtoChainDepth)
     {
@@ -3622,7 +3622,7 @@ class ICSetElem_DenseAddImpl : public ICSetElem_DenseAdd
 
   public:
     static inline ICSetElem_DenseAddImpl *New(ICStubSpace *space, JitCode *code,
-                                              types::ObjectGroup *group,
+                                              ObjectGroup *group,
                                               const AutoShapeVector *shapes)
     {
         if (!code)
@@ -4585,7 +4585,7 @@ class ICGetProp_Unboxed : public ICMonitoredStub
 
       public:
         Compiler(JSContext *cx, ICStub *firstMonitorStub,
-                 types::ObjectGroup *group, uint32_t fieldOffset, JSValueType fieldType)
+                 ObjectGroup *group, uint32_t fieldOffset, JSValueType fieldType)
           : ICStubCompiler(cx, ICStub::GetProp_Unboxed),
             firstMonitorStub_(firstMonitorStub),
             group_(cx, group),
@@ -5545,7 +5545,7 @@ class ICSetProp_Unboxed : public ICUpdatedStub
         }
 
       public:
-        Compiler(JSContext *cx, types::ObjectGroup *group, uint32_t fieldOffset,
+        Compiler(JSContext *cx, ObjectGroup *group, uint32_t fieldOffset,
                  JSValueType fieldType)
           : ICStubCompiler(cx, ICStub::SetProp_Unboxed),
             group_(cx, group),
@@ -5635,7 +5635,7 @@ class ICSetProp_TypedObject : public ICUpdatedStub
         }
 
       public:
-        Compiler(JSContext *cx, Shape *shape, types::ObjectGroup *group, uint32_t fieldOffset,
+        Compiler(JSContext *cx, Shape *shape, ObjectGroup *group, uint32_t fieldOffset,
                  SimpleTypeDescr *fieldDescr)
           : ICStubCompiler(cx, ICStub::SetProp_TypedObject),
             shape_(cx, shape),

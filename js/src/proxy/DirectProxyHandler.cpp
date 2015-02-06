@@ -20,7 +20,7 @@ DirectProxyHandler::getPropertyDescriptor(JSContext *cx, HandleObject proxy, Han
     assertEnteredPolicy(cx, proxy, id, GET | SET | GET_PROPERTY_DESCRIPTOR);
     MOZ_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JS_GetPropertyDescriptorById(cx, target, id, desc);
+    return GetPropertyDescriptor(cx, target, id, desc);
 }
 
 bool

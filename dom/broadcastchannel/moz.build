@@ -8,7 +8,7 @@ EXPORTS.mozilla.dom += [
     'BroadcastChannel.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'BroadcastChannel.cpp',
     'BroadcastChannelChild.cpp',
     'BroadcastChannelParent.cpp',
