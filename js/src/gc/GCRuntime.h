@@ -732,7 +732,7 @@ class GCRuntime
 
     void setMaxMallocBytes(size_t value);
     void resetMallocBytes();
-    bool isTooMuchMalloc() const { return mallocBytes <= 0; }
+    bool isTooMuchMalloc() const { return mallocBytesUntilGC <= 0; }
     void updateMallocCounter(JS::Zone *zone, size_t nbytes);
     void onTooMuchMalloc();
 
@@ -1178,11 +1178,11 @@ class GCRuntime
      * Malloc counter to measure memory pressure for GC scheduling. It runs
      * from maxMallocBytes down to zero.
      */
-    mozilla::Atomic<ptrdiff_t, mozilla::ReleaseAcquire> mallocBytes;
+    mozilla::Atomic<ptrdiff_t, mozilla::ReleaseAcquire> mallocBytesUntilGC;
 
     /*
-     * Whether a GC has been triggered as a result of mallocBytes falling
-     * below zero.
+     * Whether a GC has been triggered as a result of mallocBytesUntilGC
+     * falling below zero.
      */
     mozilla::Atomic<bool, mozilla::ReleaseAcquire> mallocGCTriggered;
 
