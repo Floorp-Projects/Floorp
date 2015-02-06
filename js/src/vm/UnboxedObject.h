@@ -35,7 +35,7 @@ UnboxedTypeNeedsPreBarrier(JSValueType type)
 }
 
 // Class describing the layout of an UnboxedPlainObject.
-class UnboxedLayout
+class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
 {
   public:
     struct Property {
@@ -44,7 +44,7 @@ class UnboxedLayout
         JSValueType type;
 
         Property()
-          : name(nullptr), offset(0), type(JSVAL_TYPE_MAGIC)
+          : name(nullptr), offset(UINT32_MAX), type(JSVAL_TYPE_MAGIC)
         {}
     };
 
