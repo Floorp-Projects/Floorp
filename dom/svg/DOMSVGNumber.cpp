@@ -93,11 +93,12 @@ DOMSVGNumber::DOMSVGNumber(DOMSVGNumberList *aList,
   , mValue(0.0f)
 {
   // These shifts are in sync with the members in the header.
-  NS_ABORT_IF_FALSE(aList &&
-                    aAttrEnum < (1 << 4) &&
-                    aListIndex <= MaxListIndex(), "bad arg");
+  MOZ_ASSERT(aList &&
+             aAttrEnum < (1 << 4) &&
+             aListIndex <= MaxListIndex(),
+             "bad arg");
 
-  NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGNumber!");
+  MOZ_ASSERT(IndexIsValid(), "Bad index for DOMSVGNumber!");
 }
 
 DOMSVGNumber::DOMSVGNumber(nsISupports* aParent)
@@ -180,7 +181,7 @@ DOMSVGNumber::InsertingIntoList(DOMSVGNumberList *aList,
   mListIndex = aListIndex;
   mIsAnimValItem = aIsAnimValItem;
 
-  NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGNumber!");
+  MOZ_ASSERT(IndexIsValid(), "Bad index for DOMSVGNumber!");
 }
 
 void

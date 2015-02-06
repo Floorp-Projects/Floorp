@@ -69,8 +69,8 @@ SVGTransformableElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
       // Reconstruct the frame tree to handle stacking context changes:
       NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
     } else {
-      NS_ABORT_IF_FALSE(aModType == nsIDOMMutationEvent::MODIFICATION,
-                        "Unknown modification type.");
+      MOZ_ASSERT(aModType == nsIDOMMutationEvent::MODIFICATION,
+                 "Unknown modification type.");
       // We just assume the old and new transforms are different.
       NS_UpdateHint(retval, NS_CombineHint(nsChangeHint_UpdatePostTransformOverflow,
                                            nsChangeHint_UpdateTransformLayer));
@@ -102,8 +102,8 @@ SVGTransformableElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
     return result;
   }
 
-  NS_ABORT_IF_FALSE(aWhich == eAllTransforms || aWhich == eUserSpaceToParent,
-                    "Unknown TransformTypes");
+  MOZ_ASSERT(aWhich == eAllTransforms || aWhich == eUserSpaceToParent,
+             "Unknown TransformTypes");
 
   // animateMotion's resulting transform is supposed to apply *on top of*
   // any transformations from the |transform| attribute. So since we're

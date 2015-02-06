@@ -336,10 +336,10 @@ bool
 gfxFontEntry::GetSVGGlyphExtents(gfxContext *aContext, uint32_t aGlyphId,
                                  gfxRect *aResult)
 {
-    NS_ABORT_IF_FALSE(mSVGInitialized,
-                      "SVG data has not yet been loaded. TryGetSVGData() first.");
-    NS_ABORT_IF_FALSE(mUnitsPerEm >= kMinUPEM && mUnitsPerEm <= kMaxUPEM,
-                      "font has invalid unitsPerEm");
+    MOZ_ASSERT(mSVGInitialized,
+               "SVG data has not yet been loaded. TryGetSVGData() first.");
+    MOZ_ASSERT(mUnitsPerEm >= kMinUPEM && mUnitsPerEm <= kMaxUPEM,
+               "font has invalid unitsPerEm");
 
     gfxContextAutoSaveRestore matrixRestore(aContext);
     cairo_matrix_t fontMatrix;

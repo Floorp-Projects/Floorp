@@ -3,20 +3,27 @@
 <head>
 <meta charset="utf-8">
 <style>
+@font-face {
+  font-family: mplus;
+  src: url(../fonts/mplus/mplus-1p-regular.ttf);
+}
+@font-face {
+  font-family: dejavu;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
 .test {
   margin:10px;
   border:1px solid blue;
-  font-family: monospace;
   font-size: 16px;
   word-break:break-all;
-  text-transform:full-width;
-  width:7.8em;
-  height:7.8em;
+  text-orientation:upright;
+  width:7.9em;
+  height:7.9em;
 }
 
-.h { writing-mode:horizontal-tb; }
-.v-lr { writing-mode:vertical-lr; }
-.v-rl { writing-mode:vertical-rl; }
+.h { writing-mode:horizontal-tb; font-family: mplus; text-transform:full-width; }
+.v-lr { writing-mode:vertical-lr; font-family: dejavu; }
+.v-rl { writing-mode:vertical-rl; font-family: dejavu; }
 
 .bgtest {
   background: url(blue-32x32.png) no-repeat;

@@ -1038,50 +1038,6 @@ typedef js::Vector<CompartmentTimeStats, 0, js::SystemAllocPolicy> CompartmentSt
 extern JS_PUBLIC_API(bool)
 JS_GetCompartmentStats(JSRuntime *rt, CompartmentStatsVector &stats);
 
-/*
- * Format is a string of the following characters (spaces are insignificant),
- * specifying the tabulated type conversions:
- *
- *   b      bool            Boolean
- *   c      char16_t        ECMA uint16_t, Unicode character
- *   i      int32_t         ECMA int32_t
- *   j      int32_t         ECMA int32_t (used to be different)
- *   u      uint32_t        ECMA uint32_t
- *   d      double          IEEE double
- *   I      double          Integral IEEE double
- *   S      JSString *      Unicode string, accessed by a JSString pointer
- *   W      char16_t *      Unicode character vector, 0-terminated (W for wide)
- *   o      JSObject *      Object reference
- *   f      JSFunction *    Function private
- *   v      jsval           Argument value (no conversion)
- *   *      N/A             Skip this argument (no vararg)
- *   /      N/A             End of required arguments
- *
- * The variable argument list after format must consist of &b, &c, &s, e.g.,
- * where those variables have the types given above.  For the pointer types
- * char *, JSString *, and JSObject *, the pointed-at memory returned belongs
- * to the JS runtime, not to the calling native code.  The runtime promises
- * to keep this memory valid so long as argv refers to allocated stack space
- * (so long as the native function is active).
- *
- * Fewer arguments than format specifies may be passed only if there is a /
- * in format after the last required argument specifier and argc is at least
- * the number of required arguments.  More arguments than format specifies
- * may be passed without error; it is up to the caller to deal with trailing
- * unconverted arguments.
- */
-extern JS_PUBLIC_API(bool)
-JS_ConvertArguments(JSContext *cx, const JS::CallArgs &args, const char *format, ...);
-
-#ifdef va_start
-extern JS_PUBLIC_API(bool)
-JS_ConvertArgumentsVA(JSContext *cx, const JS::CallArgs &args, const char *format,
-                      va_list ap);
-#endif
-
-extern JS_PUBLIC_API(bool)
-JS_ConvertValue(JSContext *cx, JS::HandleValue v, JSType type, JS::MutableHandleValue vp);
-
 extern JS_PUBLIC_API(bool)
 JS_ValueToObject(JSContext *cx, JS::HandleValue v, JS::MutableHandleObject objp);
 

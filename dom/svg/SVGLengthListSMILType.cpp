@@ -21,7 +21,7 @@ namespace mozilla {
 void
 SVGLengthListSMILType::Init(nsSMILValue &aValue) const
 {
-  NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected value type");
+  MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
 
   SVGLengthListAndInfo* lengthList = new SVGLengthListAndInfo();
 
@@ -110,8 +110,8 @@ SVGLengthListSMILType::Add(nsSMILValue& aDest,
                  valueToAdd.CanZeroPadList()); // propagate target element info!
     return NS_OK;
   }
-  NS_ABORT_IF_FALSE(dest.Element() == valueToAdd.Element(),
-                    "adding values from different elements...?");
+  MOZ_ASSERT(dest.Element() == valueToAdd.Element(),
+             "adding values from different elements...?");
 
   // Zero-pad our |dest| list, if necessary.
   if (dest.Length() < valueToAdd.Length()) {
@@ -120,8 +120,8 @@ SVGLengthListSMILType::Add(nsSMILValue& aDest,
       return NS_ERROR_FAILURE;
     }
 
-    NS_ABORT_IF_FALSE(valueToAdd.CanZeroPadList(),
-                      "values disagree about attribute's zero-paddibility");
+    MOZ_ASSERT(valueToAdd.CanZeroPadList(),
+               "values disagree about attribute's zero-paddibility");
 
     uint32_t i = dest.Length();
     if (!dest.SetLength(valueToAdd.Length())) {
