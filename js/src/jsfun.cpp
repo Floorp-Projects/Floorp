@@ -873,7 +873,7 @@ CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
         return nullptr;
 
     functionProto->initScript(script);
-    types::ObjectGroup* protoGroup = functionProto->getGroup(cx);
+    ObjectGroup* protoGroup = functionProto->getGroup(cx);
     if (!protoGroup)
         return nullptr;
 
@@ -2037,7 +2037,7 @@ js::CloneFunctionObjectUseSameScript(JSCompartment *compartment, HandleFunction 
 {
     return compartment == fun->compartment() &&
            !fun->isSingleton() &&
-           !types::UseSingletonForClone(fun);
+           !ObjectGroup::useSingletonForClone(fun);
 }
 
 JSFunction *

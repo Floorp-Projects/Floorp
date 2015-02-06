@@ -182,7 +182,7 @@ class UnboxedPlainObject : public JSObject
 // preliminary objects and their group to the new unboxed representation.
 bool
 TryConvertToUnboxedLayout(JSContext *cx, Shape *templateShape,
-                          types::ObjectGroup *group, types::PreliminaryObjectArray *objects);
+                          ObjectGroup *group, types::PreliminaryObjectArray *objects);
 
 inline gc::AllocKind
 UnboxedLayout::getAllocKind() const
