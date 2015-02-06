@@ -602,7 +602,7 @@ class GCRuntime
         gcstats::AutoPhase ap(stats, gcstats::PHASE_EVICT_NURSERY);
         minorGCImpl(reason, nullptr);
     }
-    bool gcIfNeeded(JSContext *cx = nullptr);
+    bool gcIfRequested(JSContext *cx = nullptr);
     void gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
     void startGC(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
     void gcSlice(JS::gcreason::Reason reason, int64_t millis = 0);
