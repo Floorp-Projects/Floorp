@@ -1243,6 +1243,7 @@ var SelectionHandler = {
       return [{ handle: this.HANDLE_TYPE_CARET,
                 left: x + scroll.X,
                 top: y + scroll.Y,
+                rtl: this._targetIsRTL,
                 hidden: checkHidden(x, y) }];
     } else {
       let anchorX = this._cache.anchorPt.x;
