@@ -168,7 +168,7 @@ ExtractMotionSegmentArray(const nsSMILValue& aValue)
 void
 SVGMotionSMILType::Init(nsSMILValue& aValue) const
 {
-  NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected SMIL type");
+  MOZ_ASSERT(aValue.IsNull(), "Unexpected SMIL type");
 
   aValue.mType = this;
   aValue.mU.mPtr = new MotionSegmentArray(1);
@@ -177,7 +177,7 @@ SVGMotionSMILType::Init(nsSMILValue& aValue) const
 void
 SVGMotionSMILType::Destroy(nsSMILValue& aValue) const
 {
-  NS_ABORT_IF_FALSE(aValue.mType == this, "Unexpected SMIL type");
+  MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL type");
 
   MotionSegmentArray* arr = static_cast<MotionSegmentArray*>(aValue.mU.mPtr);
   delete arr;
@@ -189,8 +189,8 @@ SVGMotionSMILType::Destroy(nsSMILValue& aValue) const
 nsresult
 SVGMotionSMILType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
 {
-  NS_ABORT_IF_FALSE(aDest.mType == aSrc.mType, "Incompatible SMIL types");
-  NS_ABORT_IF_FALSE(aDest.mType == this, "Unexpected SMIL type");
+  MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
+  MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL type");
 
   const MotionSegmentArray& srcArr = ExtractMotionSegmentArray(aSrc);
   MotionSegmentArray& dstArr = ExtractMotionSegmentArray(aDest);
@@ -208,8 +208,8 @@ bool
 SVGMotionSMILType::IsEqual(const nsSMILValue& aLeft,
                            const nsSMILValue& aRight) const
 {
-  NS_ABORT_IF_FALSE(aLeft.mType == aRight.mType, "Incompatible SMIL types");
-  NS_ABORT_IF_FALSE(aLeft.mType == this, "Unexpected SMIL type");
+  MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
+  MOZ_ASSERT(aLeft.mType == this, "Unexpected SMIL type");
 
   const MotionSegmentArray& leftArr = ExtractMotionSegmentArray(aLeft);
   const MotionSegmentArray& rightArr = ExtractMotionSegmentArray(aRight);
@@ -257,9 +257,9 @@ nsresult
 SVGMotionSMILType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                        uint32_t aCount) const
 {
-  NS_ABORT_IF_FALSE(aDest.mType == aValueToAdd.mType,
-                    "Incompatible SMIL types");
-  NS_ABORT_IF_FALSE(aDest.mType == this, "Unexpected SMIL type");
+  MOZ_ASSERT(aDest.mType == aValueToAdd.mType,
+             "Incompatible SMIL types");
+  MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL type");
 
   MotionSegmentArray& dstArr = ExtractMotionSegmentArray(aDest);
   const MotionSegmentArray& srcArr = ExtractMotionSegmentArray(aValueToAdd);
@@ -272,23 +272,23 @@ SVGMotionSMILType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   // we don't do this for <animateMotion>, because we instead use our "by"
   // value to construct an equivalent "path" attribute, and we use *that* for
   // our actual animation.
-  NS_ABORT_IF_FALSE(srcArr.Length() == 1, "Invalid source segment arr to add");
-  NS_ABORT_IF_FALSE(dstArr.Length() == 1, "Invalid dest segment arr to add to");
+  MOZ_ASSERT(srcArr.Length() == 1, "Invalid source segment arr to add");
+  MOZ_ASSERT(dstArr.Length() == 1, "Invalid dest segment arr to add to");
   const MotionSegment& srcSeg = srcArr[0];
   const MotionSegment& dstSeg = dstArr[0];
-  NS_ABORT_IF_FALSE(srcSeg.mSegmentType == eSegmentType_PathPoint,
-                    "expecting to be adding points from a motion path");
-  NS_ABORT_IF_FALSE(dstSeg.mSegmentType == eSegmentType_PathPoint,
-                    "expecting to be adding points from a motion path");
+  MOZ_ASSERT(srcSeg.mSegmentType == eSegmentType_PathPoint,
+             "expecting to be adding points from a motion path");
+  MOZ_ASSERT(dstSeg.mSegmentType == eSegmentType_PathPoint,
+             "expecting to be adding points from a motion path");
 
   const PathPointParams& srcParams = srcSeg.mU.mPathPointParams;
   const PathPointParams& dstParams = dstSeg.mU.mPathPointParams;
 
-  NS_ABORT_IF_FALSE(srcSeg.mRotateType  == dstSeg.mRotateType &&
-                    srcSeg.mRotateAngle == dstSeg.mRotateAngle,
-                    "unexpected angle mismatch");
-  NS_ABORT_IF_FALSE(srcParams.mPath == dstParams.mPath,
-                    "unexpected path mismatch");
+  MOZ_ASSERT(srcSeg.mRotateType  == dstSeg.mRotateType &&
+             srcSeg.mRotateAngle == dstSeg.mRotateAngle,
+             "unexpected angle mismatch");
+  MOZ_ASSERT(srcParams.mPath == dstParams.mPath,
+             "unexpected path mismatch");
   Path* path = srcParams.mPath;
 
   // Use destination to get our rotate angle.
@@ -313,15 +313,15 @@ nsresult
 SVGMotionSMILType::SandwichAdd(nsSMILValue& aDest,
                                const nsSMILValue& aValueToAdd) const
 {
-  NS_ABORT_IF_FALSE(aDest.mType == aValueToAdd.mType,
-                    "Incompatible SMIL types");
-  NS_ABORT_IF_FALSE(aDest.mType == this, "Unexpected SMIL type");
+  MOZ_ASSERT(aDest.mType == aValueToAdd.mType,
+             "Incompatible SMIL types");
+  MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL type");
   MotionSegmentArray& dstArr = ExtractMotionSegmentArray(aDest);
   const MotionSegmentArray& srcArr = ExtractMotionSegmentArray(aValueToAdd);
 
   // We're only expecting to be adding 1 segment on to the list
-  NS_ABORT_IF_FALSE(srcArr.Length() == 1,
-                    "Trying to do sandwich add of more than one value");
+  MOZ_ASSERT(srcArr.Length() == 1,
+             "Trying to do sandwich add of more than one value");
 
   if (!dstArr.AppendElement(srcArr[0])) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -335,30 +335,30 @@ SVGMotionSMILType::ComputeDistance(const nsSMILValue& aFrom,
                                    const nsSMILValue& aTo,
                                    double& aDistance) const
 {
-  NS_ABORT_IF_FALSE(aFrom.mType == aTo.mType, "Incompatible SMIL types");
-  NS_ABORT_IF_FALSE(aFrom.mType == this, "Unexpected SMIL type");
+  MOZ_ASSERT(aFrom.mType == aTo.mType, "Incompatible SMIL types");
+  MOZ_ASSERT(aFrom.mType == this, "Unexpected SMIL type");
   const MotionSegmentArray& fromArr = ExtractMotionSegmentArray(aFrom);
   const MotionSegmentArray& toArr = ExtractMotionSegmentArray(aTo);
 
   // ComputeDistance is only used for calculating distances between single
   // values in a values array. So we should only have one entry in each array.
-  NS_ABORT_IF_FALSE(fromArr.Length() == 1,
-                    "Wrong number of elements in from value");
-  NS_ABORT_IF_FALSE(toArr.Length() == 1,
-                    "Wrong number of elements in to value");
+  MOZ_ASSERT(fromArr.Length() == 1,
+             "Wrong number of elements in from value");
+  MOZ_ASSERT(toArr.Length() == 1,
+             "Wrong number of elements in to value");
 
   const MotionSegment& from = fromArr[0];
   const MotionSegment& to = toArr[0];
 
-  NS_ABORT_IF_FALSE(from.mSegmentType == to.mSegmentType,
-                    "Mismatched MotionSegment types");
+  MOZ_ASSERT(from.mSegmentType == to.mSegmentType,
+             "Mismatched MotionSegment types");
   if (from.mSegmentType == eSegmentType_PathPoint) {
     const PathPointParams& fromParams = from.mU.mPathPointParams;
     const PathPointParams& toParams   = to.mU.mPathPointParams;
-    NS_ABORT_IF_FALSE(fromParams.mPath == toParams.mPath,
-                      "Interpolation endpoints should be from same path");
-    NS_ABORT_IF_FALSE(fromParams.mDistToPoint <= toParams.mDistToPoint,
-                      "To value shouldn't be before from value on path");
+    MOZ_ASSERT(fromParams.mPath == toParams.mPath,
+               "Interpolation endpoints should be from same path");
+    MOZ_ASSERT(fromParams.mDistToPoint <= toParams.mDistToPoint,
+               "To value shouldn't be before from value on path");
     aDistance = fabs(toParams.mDistToPoint - fromParams.mDistToPoint);
   } else {
     const TranslationParams& fromParams = from.mU.mTranslationParams;
@@ -385,28 +385,28 @@ SVGMotionSMILType::Interpolate(const nsSMILValue& aStartVal,
                                double aUnitDistance,
                                nsSMILValue& aResult) const
 {
-  NS_ABORT_IF_FALSE(aStartVal.mType == aEndVal.mType,
-                    "Trying to interpolate different types");
-  NS_ABORT_IF_FALSE(aStartVal.mType == this,
-                    "Unexpected types for interpolation");
-  NS_ABORT_IF_FALSE(aResult.mType == this, "Unexpected result type");
-  NS_ABORT_IF_FALSE(aUnitDistance >= 0.0 && aUnitDistance <= 1.0,
-                    "unit distance value out of bounds");
+  MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
+             "Trying to interpolate different types");
+  MOZ_ASSERT(aStartVal.mType == this,
+             "Unexpected types for interpolation");
+  MOZ_ASSERT(aResult.mType == this, "Unexpected result type");
+  MOZ_ASSERT(aUnitDistance >= 0.0 && aUnitDistance <= 1.0,
+             "unit distance value out of bounds");
 
   const MotionSegmentArray& startArr = ExtractMotionSegmentArray(aStartVal);
   const MotionSegmentArray& endArr = ExtractMotionSegmentArray(aEndVal);
   MotionSegmentArray& resultArr = ExtractMotionSegmentArray(aResult);
 
-  NS_ABORT_IF_FALSE(startArr.Length() <= 1,
-                    "Invalid start-point for animateMotion interpolation");
-  NS_ABORT_IF_FALSE(endArr.Length() == 1,
-                    "Invalid end-point for animateMotion interpolation");
-  NS_ABORT_IF_FALSE(resultArr.IsEmpty(),
-                    "Expecting result to be just-initialized w/ empty array");
+  MOZ_ASSERT(startArr.Length() <= 1,
+             "Invalid start-point for animateMotion interpolation");
+  MOZ_ASSERT(endArr.Length() == 1,
+             "Invalid end-point for animateMotion interpolation");
+  MOZ_ASSERT(resultArr.IsEmpty(),
+             "Expecting result to be just-initialized w/ empty array");
 
   const MotionSegment& endSeg = endArr[0];
-  NS_ABORT_IF_FALSE(endSeg.mSegmentType == eSegmentType_PathPoint,
-                    "Expecting to be interpolating along a path");
+  MOZ_ASSERT(endSeg.mSegmentType == eSegmentType_PathPoint,
+             "Expecting to be interpolating along a path");
 
   const PathPointParams& endParams = endSeg.mU.mPathPointParams;
   // NOTE: path & angle should match between start & end (since presumably
@@ -421,14 +421,14 @@ SVGMotionSMILType::Interpolate(const nsSMILValue& aStartVal,
     startDist = 0.0f;
   } else {
     const MotionSegment& startSeg = startArr[0];
-    NS_ABORT_IF_FALSE(startSeg.mSegmentType == eSegmentType_PathPoint,
-                      "Expecting to be interpolating along a path");
+    MOZ_ASSERT(startSeg.mSegmentType == eSegmentType_PathPoint,
+               "Expecting to be interpolating along a path");
     const PathPointParams& startParams = startSeg.mU.mPathPointParams;
-    NS_ABORT_IF_FALSE(startSeg.mRotateType  == endSeg.mRotateType &&
-                      startSeg.mRotateAngle == endSeg.mRotateAngle,
-                      "unexpected angle mismatch");
-    NS_ABORT_IF_FALSE(startParams.mPath == endParams.mPath,
-                      "unexpected path mismatch");
+    MOZ_ASSERT(startSeg.mRotateType  == endSeg.mRotateType &&
+               startSeg.mRotateAngle == endSeg.mRotateAngle,
+               "unexpected angle mismatch");
+    MOZ_ASSERT(startParams.mPath == endParams.mPath,
+               "unexpected path mismatch");
     startDist = startParams.mDistToPoint;
   }
 
@@ -456,9 +456,9 @@ SVGMotionSMILType::CreateMatrix(const nsSMILValue& aSMILVal)
     if (arr[i].mSegmentType == eSegmentType_Translation) {
       point.x = arr[i].mU.mTranslationParams.mX;
       point.y = arr[i].mU.mTranslationParams.mY;
-      NS_ABORT_IF_FALSE(arr[i].mRotateType == eRotateType_Explicit,
-                        "'auto'/'auto-reverse' should have been converted to "
-                        "explicit angles when we generated this translation");
+      MOZ_ASSERT(arr[i].mRotateType == eRotateType_Explicit,
+                 "'auto'/'auto-reverse' should have been converted to "
+                 "explicit angles when we generated this translation");
     } else {
       GetAngleAndPointAtDistance(arr[i].mU.mPathPointParams.mPath,
                                  arr[i].mU.mPathPointParams.mDistToPoint,

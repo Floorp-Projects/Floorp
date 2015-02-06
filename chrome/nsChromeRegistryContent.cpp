@@ -22,8 +22,8 @@ nsChromeRegistryContent::RegisterRemoteChrome(
     const nsACString& aLocale,
     bool aReset)
 {
-  NS_ABORT_IF_FALSE(aReset || mLocale.IsEmpty(),
-                    "RegisterChrome twice?");
+  MOZ_ASSERT(aReset || mLocale.IsEmpty(),
+             "RegisterChrome twice?");
 
   if (aReset) {
     mPackagesHash.Clear();
@@ -257,7 +257,7 @@ nsresult nsChromeRegistryContent::UpdateSelectedLocale()
 void
 nsChromeRegistryContent::ManifestContent(ManifestProcessingContext& cx,
                                          int lineno, char *const * argv,
-                                         bool platform, bool contentaccessible)
+                                         int flags)
 {
   CONTENT_NOTREACHED();
 }
@@ -265,8 +265,7 @@ nsChromeRegistryContent::ManifestContent(ManifestProcessingContext& cx,
 void
 nsChromeRegistryContent::ManifestLocale(ManifestProcessingContext& cx,
                                         int lineno,
-                                        char *const * argv, bool platform,
-                                        bool contentaccessible)
+                                        char *const * argv, int flags)
 {
   CONTENT_NOTREACHED();
 }
@@ -274,16 +273,14 @@ nsChromeRegistryContent::ManifestLocale(ManifestProcessingContext& cx,
 void
 nsChromeRegistryContent::ManifestSkin(ManifestProcessingContext& cx,
                                       int lineno,
-                                      char *const * argv, bool platform,
-                                      bool contentaccessible)
+                                      char *const * argv, int flags)
 {
   CONTENT_NOTREACHED();
 }
 
 void
 nsChromeRegistryContent::ManifestOverlay(ManifestProcessingContext& cx, int lineno,
-                                         char *const * argv, bool platform,
-                                         bool contentaccessible)
+                                         char *const * argv, int flags)
 {
   CONTENT_NOTREACHED();
 }
@@ -291,8 +288,7 @@ nsChromeRegistryContent::ManifestOverlay(ManifestProcessingContext& cx, int line
 void
 nsChromeRegistryContent::ManifestStyle(ManifestProcessingContext& cx,
                                        int lineno,
-                                       char *const * argv, bool platform,
-                                       bool contentaccessible)
+                                       char *const * argv, int flags)
 {
   CONTENT_NOTREACHED();
 }
@@ -300,8 +296,7 @@ nsChromeRegistryContent::ManifestStyle(ManifestProcessingContext& cx,
 void
 nsChromeRegistryContent::ManifestOverride(ManifestProcessingContext& cx,
                                           int lineno,
-                                          char *const * argv, bool platform,
-                                          bool contentaccessible)
+                                          char *const * argv, int flags)
 {
   CONTENT_NOTREACHED();
 }
@@ -309,8 +304,7 @@ nsChromeRegistryContent::ManifestOverride(ManifestProcessingContext& cx,
 void
 nsChromeRegistryContent::ManifestResource(ManifestProcessingContext& cx,
                                           int lineno,
-                                          char *const * argv, bool platform,
-                                          bool contentaccessible)
+                                          char *const * argv, int flags)
 {
   CONTENT_NOTREACHED();
 }

@@ -1,8 +1,2 @@
 component {1b4c85df-cbdd-4bb6-b04e-613caece083c} DownloadLegacy.js
-
-# The following contract definition is commented out because the same contract
-# is also implemented in "toolkit/components/downloads".  To use the component
-# in this folder experimentally, the contract must be registered manually.  When
-# the other folder is not included in builds anymore (bug 851471), we'll be able
-# to define the contract implementation in this manifest.
-# contract @mozilla.org/transfer;1 {1b4c85df-cbdd-4bb6-b04e-613caece083c}
+contract @mozilla.org/transfer;1 {1b4c85df-cbdd-4bb6-b04e-613caece083c}

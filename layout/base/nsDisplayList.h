@@ -2642,9 +2642,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE
   {
     *aSnap = false;
-    // We don't want to report that we take up any space so we don't expand any
-    // layer bounds.
-    return nsRect();
+    return mHitRegion.GetBounds().Union(mMaybeHitRegion.GetBounds());
   }
 
   NS_DISPLAY_DECL_NAME("LayerEventRegions", TYPE_LAYER_EVENT_REGIONS)

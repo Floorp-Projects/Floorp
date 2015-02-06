@@ -534,7 +534,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         if (mPassword.mLen >= 0)
             approxLen += 1 + encoder.EncodeSegmentCount(spec, mPassword,  esc_Password,      encPassword,  useEncPassword);
         // mHost is handled differently below due to encoding differences
-        NS_ABORT_IF_FALSE(mPort >= -1, "Invalid negative mPort");
+        MOZ_ASSERT(mPort >= -1, "Invalid negative mPort");
         if (mPort != -1 && mPort != mDefaultPort)
         {
             // :port
@@ -615,7 +615,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     if (mHost.mLen > 0) {
         i = AppendSegmentToBuf(buf, i, spec, mHost, &encHost, useEncHost);
         net_ToLowerCase(buf + mHost.mPos, mHost.mLen);
-        NS_ABORT_IF_FALSE(mPort >= -1, "Invalid negative mPort");
+        MOZ_ASSERT(mPort >= -1, "Invalid negative mPort");
         if (mPort != -1 && mPort != mDefaultPort) {
             buf[i++] = ':';
             // Already formatted while building approxLen

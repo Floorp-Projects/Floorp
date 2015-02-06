@@ -42,43 +42,48 @@
       */
 
     function runTest() {
-      var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-               getService(Ci.nsINavBookmarksService);
-      var ios = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
-      function uri(spec) {
-        return ios.newURI(spec, null, null);
-      }
-
-      // Add a bookmark.
-      var itemId = bs.insertBookmark(PlacesUtils.toolbarFolderId,
-                                     uri("http://www.example.com/"),
-                                     bs.DEFAULT_INDEX,
-                                     "mozilla");
-
-      // Init panel.
-      ok(gEditItemOverlay, "gEditItemOverlay is in context");
-      gEditItemOverlay.initPanel(itemId);
-      ok(gEditItemOverlay._initialized, "gEditItemOverlay is initialized");
-      // We must be sure tree is initialized, so we wait for place to be set.
       SimpleTest.waitForExplicitFinish();
-      var tree = gEditItemOverlay._element("folderTree");
-      tree.addEventListener("DOMAttrModified", function(event) {
-          if (event.attrName != "place")
-            return;
-          tree.removeEventListener("DOMAttrModified", arguments.callee, false);
-          SimpleTest.executeSoon(function() {
-            tree.view.selection.clearSelection();
-            ok(document.getElementById("editBMPanel_newFolderButton").disabled,
-               "New folder button is disabled if there's no selection");
 
-            // Cleanup.
-            bs.removeItem(itemId);
-            SimpleTest.finish();
-            });
-        }, false);
-      // Open the folder tree.
-      document.getElementById("editBMPanel_foldersExpander").doCommand();
+      Task.spawn(function* () {
+        // Add a bookmark.
+        let bm = yield PlacesUtils.bookmarks.insert({
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+          url: "http://www.example.com/",
+          index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          title: "mozilla"
+        });
+
+        // Init panel.
+        ok(gEditItemOverlay, "gEditItemOverlay is in context");
+        let itemId = yield PlacesUtils.promiseItemId(bm.guid);
+        gEditItemOverlay.initPanel(itemId);
+        ok(gEditItemOverlay._initialized, "gEditItemOverlay is initialized");
+
+        let tree = gEditItemOverlay._element("folderTree");
+        yield openFolderTree(tree);
+
+        tree.view.selection.clearSelection();
+        ok(document.getElementById("editBMPanel_newFolderButton").disabled,
+           "New folder button is disabled if there's no selection");
+
+        // Cleanup.
+        yield PlacesUtils.bookmarks.remove(bm.guid);
+      }).then(() => SimpleTest.finish());
+    }
+
+    function openFolderTree(tree) {
+      return new Promise(resolve => {
+        tree.addEventListener("DOMAttrModified", function onAttrModified(event) {
+          if (event.attrName == "place") {
+            tree.removeEventListener("DOMAttrModified", onAttrModified);
+            resolve();
+          }
+        });
+
+        // Open the folder tree.
+        document.getElementById("editBMPanel_foldersExpander").doCommand();
+      });
     }
   ]]>
   </script>

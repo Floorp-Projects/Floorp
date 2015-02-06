@@ -37,47 +37,45 @@
   <![CDATA[
 
     function runTest() {
-      var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-               getService(Ci.nsINavBookmarksService);
-      var ts = Cc["@mozilla.org/browser/tagging-service;1"].
-               getService(Ci.nsITaggingService);
-      var ios = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
-      function uri(spec) {
-        return ios.newURI(spec, null, null);
-      }
+      SimpleTest.waitForExplicitFinish();
 
-      var testURI = uri("http://www.example.com/");
-      var testTag = "foo";
-      var testTagUpper = "Foo";
+      Task.spawn(function* () {
+        let testTag = "foo";
+        let testTagUpper = "Foo";
+        let testURI = Services.io.newURI("http://www.example.com/", null, null);
 
-      // Add a bookmark
-      var itemId = bs.insertBookmark(bs.toolbarFolder,
-                                     testURI,
-                                     bs.DEFAULT_INDEX,
-                                     "mozilla");
+        // Add a bookmark.
+        let bm = yield PlacesUtils.bookmarks.insert({
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+          index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          title: "mozilla",
+          url: testURI
+        });
 
-      // Init panel
-      ok(gEditItemOverlay, "gEditItemOverlay is in context");
-      gEditItemOverlay.initPanel(itemId);
+        // Init panel
+        ok(gEditItemOverlay, "gEditItemOverlay is in context");
+        let itemId = yield PlacesUtils.promiseItemId(bm.guid);
+        gEditItemOverlay.initPanel(itemId);
 
-      // add a tag
-      document.getElementById("editBMPanel_tagsField").value = testTag;
-      gEditItemOverlay.onTagsFieldBlur();
+        // add a tag
+        document.getElementById("editBMPanel_tagsField").value = testTag;
+        gEditItemOverlay.onTagsFieldBlur();
 
-      // test that the tag has been added in the backend
-      is(ts.getTagsForURI(testURI)[0], testTag, "tags match");
+        // test that the tag has been added in the backend
+        is(PlacesUtils.tagging.getTagsForURI(testURI)[0], testTag, "tags match");
 
-      // change the tag
-      document.getElementById("editBMPanel_tagsField").value = testTagUpper;
-      gEditItemOverlay.onTagsFieldBlur();
+        // change the tag
+        document.getElementById("editBMPanel_tagsField").value = testTagUpper;
+        gEditItemOverlay.onTagsFieldBlur();
 
-      // test that the tag has been added in the backend
-      is(ts.getTagsForURI(testURI)[0], testTagUpper, "tags match");
+        // test that the tag has been added in the backend
+        is(PlacesUtils.tagging.getTagsForURI(testURI)[0], testTagUpper, "tags match");
 
-      // Cleanup.
-      ts.untagURI(testURI, [testTag]);
-      bs.removeItem(itemId);
+        // Cleanup.
+        PlacesUtils.tagging.untagURI(testURI, [testTag]);
+        yield PlacesUtils.bookmarks.remove(bm.guid);
+      }).then(() => SimpleTest.finish());
     }
   ]]>
   </script>

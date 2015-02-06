@@ -1846,8 +1846,8 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
       // If mSheetAlreadyComplete, then the sheet could well be modified between
       // when we posted the async call to SheetComplete and now, since the sheet
       // was page-accessible during that whole time.
-      NS_ABORT_IF_FALSE(!data->mSheet->IsModified(),
-                        "should not get marked modified during parsing");
+      MOZ_ASSERT(!data->mSheet->IsModified(),
+                 "should not get marked modified during parsing");
       data->mSheet->SetComplete();
       data->ScheduleLoadEventIfNeeded(aStatus);
     }
@@ -2098,8 +2098,8 @@ HaveAncestorDataWithURI(SheetLoadData *aData, nsIURI *aURI)
 {
   if (!aData->mURI) {
     // Inline style; this won't have any ancestors
-    NS_ABORT_IF_FALSE(!aData->mParentData,
-                      "How does inline style have a parent?");
+    MOZ_ASSERT(!aData->mParentData,
+               "How does inline style have a parent?");
     return false;
   }
 
