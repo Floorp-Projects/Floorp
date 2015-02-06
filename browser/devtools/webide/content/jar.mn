@@ -24,3 +24,5 @@ webide.jar:
     content/devicepreferences.xhtml   (devicepreferences.xhtml)
     content/devicesettings.js         (devicesettings.js)
     content/devicesettings.xhtml      (devicesettings.xhtml)
+    content/wifi-auth.js              (wifi-auth.js)
+    content/wifi-auth.xhtml           (wifi-auth.xhtml)

@@ -42,6 +42,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/net/NeckoCommon.h"
+#include "mozilla/Telemetry.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
@@ -148,6 +149,8 @@ static const char kNetworkActiveChanged[] = "network-active-changed";
 uint32_t   nsIOService::gDefaultSegmentSize = 4096;
 uint32_t   nsIOService::gDefaultSegmentCount = 24;
 
+bool nsIOService::sTelemetryEnabled = false;
+
 NS_IMPL_ISUPPORTS(nsAppOfflineInfo, nsIAppOfflineInfo)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,6 +224,8 @@ nsIOService::Init()
     }
     else
         NS_WARNING("failed to get observer service");
+
+    Preferences::AddBoolVarCache(&sTelemetryEnabled, "toolkit.telemetry.enabled", false);
 
     gIOService = this;
 
@@ -633,6 +638,28 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
     rv = aURI->GetScheme(scheme);
     if (NS_FAILED(rv))
         return rv;
+
+    if (sTelemetryEnabled) {
+        nsAutoCString path;
+        aURI->GetPath(path);
+
+        bool endsInExcl = StringEndsWith(path, NS_LITERAL_CSTRING("!"));
+        int32_t bangSlashPos = path.Find("!/");
+
+        bool hasBangSlash = bangSlashPos != kNotFound;
+        bool hasBangDoubleSlash = false;
+
+        if (bangSlashPos != kNotFound) {
+            nsDependentCSubstring substr(path, bangSlashPos);
+            hasBangDoubleSlash = StringBeginsWith(substr, NS_LITERAL_CSTRING("!//"));
+        }
+
+        Telemetry::Accumulate(Telemetry::URL_PATH_ENDS_IN_EXCLAMATION, endsInExcl);
+        Telemetry::Accumulate(Telemetry::URL_PATH_CONTAINS_EXCLAMATION_SLASH,
+                              hasBangSlash);
+        Telemetry::Accumulate(Telemetry::URL_PATH_CONTAINS_EXCLAMATION_DOUBLE_SLASH,
+                              hasBangDoubleSlash);
+    }
 
     nsCOMPtr<nsIProtocolHandler> handler;
     rv = GetProtocolHandler(scheme.get(), getter_AddRefs(handler));

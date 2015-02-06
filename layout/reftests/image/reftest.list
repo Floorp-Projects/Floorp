@@ -2,7 +2,7 @@ fuzzy-if(Android,8,30) == background-image-zoom-1.html background-image-zoom-1-r
 == background-image-zoom-2.html about:blank
 == image-seam-1a.html image-seam-1-ref.html
 == image-seam-1b.html image-seam-1-ref.html
-== image-seam-2.html  image-seam-2-ref.html
+fuzzy-if(Android,255,154) == image-seam-2.html  image-seam-2-ref.html  # Bug 1128229
 skip-if(B2G&&browserIsRemote) == image-zoom-1.html image-zoom-1-ref.html
 skip-if(B2G&&browserIsRemote) == image-zoom-2.html image-zoom-1-ref.html
 == invalid-url-image-1.html invalid-url-image-1-ref.html
@@ -17,7 +17,7 @@ test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-w
 test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-with-background-2.html image-object-fit-with-background-2-ref.html
 test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-dyn-1.html image-object-position-dyn-1-ref.html
 test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-with-background-1.html image-object-position-with-background-1-ref.html
-test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-with-background-2.html image-object-position-with-background-2-ref.html
+test-pref(layout.css.object-fit-and-position.enabled,true) fuzzy-if(winWidget,117,374) == image-object-position-with-background-2.html image-object-position-with-background-2-ref.html  # Bug 1128229
 
 # Tests for image-orientation used with 'from-image' (note that all
 # image-orientation tests are fuzzy because the JPEG images do not perfectly

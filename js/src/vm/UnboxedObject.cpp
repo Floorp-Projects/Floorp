@@ -14,6 +14,7 @@
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::PodCopy;
+using mozilla::UniquePtr;
 
 using namespace js;
 
@@ -417,9 +418,29 @@ UnboxedTypeIncludes(JSValueType supertype, JSValueType subtype)
     return false;
 }
 
+// Return whether the property names and types in layout are a subset of the
+// specified vector.
+static bool
+PropertiesAreSuperset(const UnboxedLayout::PropertyVector &properties, UnboxedLayout *layout)
+{
+    for (size_t i = 0; i < layout->properties().length(); i++) {
+        const UnboxedLayout::Property &layoutProperty = layout->properties()[i];
+        bool found = false;
+        for (size_t j = 0; j < properties.length(); j++) {
+            if (layoutProperty.name == properties[j].name) {
+                found = (layoutProperty.type == properties[j].type);
+                break;
+            }
+        }
+        if (!found)
+            return false;
+    }
+    return true;
+}
+
 bool
 js::TryConvertToUnboxedLayout(JSContext *cx, Shape *templateShape,
-                              types::ObjectGroup *group, types::PreliminaryObjectArray *objects)
+                              ObjectGroup *group, types::PreliminaryObjectArray *objects)
 {
     if (!cx->runtime()->options().unboxedObjects())
         return true;
@@ -487,42 +508,82 @@ js::TryConvertToUnboxedLayout(JSContext *cx, Shape *templateShape,
         properties[slot].name = JSID_TO_ATOM(r.front().propid())->asPropertyName();
     }
 
-    // Fill in all the unboxed object's property offsets, ordering fields from the
-    // largest down to avoid alignment issues.
+    // Fill in all the unboxed object's property offsets.
     uint32_t offset = 0;
 
+    // Search for an existing unboxed layout which is a subset of this one.
+    // If there are multiple such layouts, use the largest one. If we're able
+    // to find such a layout, use the same property offsets for the shared
+    // properties, which will allow us to generate better code if the objects
+    // have a subtype/supertype relation and are accessed at common sites.
+    UnboxedLayout *bestExisting = nullptr;
+    for (UnboxedLayout *existing = cx->compartment()->unboxedLayouts.getFirst();
+         existing;
+         existing = existing->getNext())
+    {
+        if (PropertiesAreSuperset(properties, existing)) {
+            if (!bestExisting ||
+                existing->properties().length() > bestExisting->properties().length())
+            {
+                bestExisting = existing;
+            }
+        }
+    }
+    if (bestExisting) {
+        for (size_t i = 0; i < bestExisting->properties().length(); i++) {
+            const UnboxedLayout::Property &existingProperty = bestExisting->properties()[i];
+            for (size_t j = 0; j < templateShape->slotSpan(); j++) {
+                if (existingProperty.name == properties[j].name) {
+                    MOZ_ASSERT(existingProperty.type == properties[j].type);
+                    properties[j].offset = existingProperty.offset;
+                }
+            }
+        }
+        offset = bestExisting->size();
+    }
+
+    // Order remaining properties from the largest down for the best space
+    // utilization.
     static const size_t typeSizes[] = { 8, 4, 1 };
 
-    Vector<int32_t, 8, SystemAllocPolicy> objectOffsets, stringOffsets;
-
-    DebugOnly<size_t> addedProperties = 0;
     for (size_t i = 0; i < ArrayLength(typeSizes); i++) {
         size_t size = typeSizes[i];
         for (size_t j = 0; j < templateShape->slotSpan(); j++) {
+            if (properties[j].offset != UINT32_MAX)
+                continue;
             JSValueType type = properties[j].type;
             if (UnboxedTypeSize(type) == size) {
-                if (type == JSVAL_TYPE_OBJECT) {
-                    if (!objectOffsets.append(offset))
-                        return false;
-                } else if (type == JSVAL_TYPE_STRING) {
-                    if (!stringOffsets.append(offset))
-                        return false;
-                }
-                addedProperties++;
+                offset = JS_ROUNDUP(offset, size);
                 properties[j].offset = offset;
                 offset += size;
             }
         }
     }
-    MOZ_ASSERT(addedProperties == templateShape->slotSpan());
 
     // The entire object must be allocatable inline.
     if (sizeof(JSObject) + offset > JSObject::MAX_BYTE_SIZE)
         return true;
 
-    UnboxedLayout *layout = group->zone()->new_<UnboxedLayout>(properties, offset);
+    UniquePtr<UnboxedLayout, JS::DeletePolicy<UnboxedLayout> > layout;
+    layout.reset(group->zone()->new_<UnboxedLayout>(properties, offset));
     if (!layout)
         return false;
+
+    cx->compartment()->unboxedLayouts.insertFront(layout.get());
+
+    // Figure out the offsets of any objects or string properties.
+    Vector<int32_t, 8, SystemAllocPolicy> objectOffsets, stringOffsets;
+    for (size_t i = 0; i < templateShape->slotSpan(); i++) {
+        MOZ_ASSERT(properties[i].offset != UINT32_MAX);
+        JSValueType type = properties[i].type;
+        if (type == JSVAL_TYPE_OBJECT) {
+            if (!objectOffsets.append(properties[i].offset))
+                return false;
+        } else if (type == JSVAL_TYPE_STRING) {
+            if (!stringOffsets.append(properties[i].offset))
+                return false;
+        }
+    }
 
     // Construct the layout's trace list.
     if (!objectOffsets.empty() || !stringOffsets.empty()) {
@@ -582,7 +643,7 @@ js::TryConvertToUnboxedLayout(JSContext *cx, Shape *templateShape,
         layout->setNewScript(newScript);
 
     group->setClasp(&UnboxedPlainObject::class_);
-    group->setUnboxedLayout(layout);
+    group->setUnboxedLayout(layout.get());
 
     size_t valueCursor = 0;
     for (size_t i = 0; i < types::PreliminaryObjectArray::COUNT; i++) {
@@ -597,5 +658,6 @@ js::TryConvertToUnboxedLayout(JSContext *cx, Shape *templateShape,
     }
 
     MOZ_ASSERT(valueCursor == values.length());
+    layout.release();
     return true;
 }

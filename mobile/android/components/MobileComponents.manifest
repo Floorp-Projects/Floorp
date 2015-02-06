@@ -30,11 +30,6 @@ component {ef0f7a87-c1ee-45a8-8d67-26f586e46a4b} DirectoryProvider.js
 contract @mozilla.org/browser/directory-provider;1 {ef0f7a87-c1ee-45a8-8d67-26f586e46a4b}
 category xpcom-directory-providers browser-directory-provider @mozilla.org/browser/directory-provider;1
 
-# Sidebar.js
-component {22117140-9c6e-11d3-aaf1-00805f8a4905} Sidebar.js
-contract @mozilla.org/sidebar;1 {22117140-9c6e-11d3-aaf1-00805f8a4905}
-category wakeup-request Sidebar @mozilla.org/sidebar;1,nsISidebarExternal,getService,Sidebar:AddSearchProvider
-
 # SessionStore.js
 component {8c1f07d6-cba3-4226-a315-8bd43d67d032} SessionStore.js
 contract @mozilla.org/browser/sessionstore;1 {8c1f07d6-cba3-4226-a315-8bd43d67d032}
