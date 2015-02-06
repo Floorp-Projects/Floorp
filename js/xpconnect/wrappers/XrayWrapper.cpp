@@ -83,6 +83,7 @@ IsJSXraySupported(JSProtoKey key)
       case JSProto_Array:
       case JSProto_Function:
       case JSProto_TypedArray:
+      case JSProto_SavedFrame:
         return true;
       default:
         return false;
