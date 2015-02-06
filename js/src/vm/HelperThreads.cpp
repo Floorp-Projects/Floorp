@@ -896,7 +896,7 @@ GlobalHelperThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void
          !iter.done();
          iter.next())
     {
-        types::ObjectGroup *group = iter.get<types::ObjectGroup>();
+        ObjectGroup *group = iter.get<ObjectGroup>();
         TaggedProto proto(group->proto());
         if (!proto.isObject())
             continue;

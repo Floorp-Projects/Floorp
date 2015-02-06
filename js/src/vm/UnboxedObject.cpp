@@ -419,7 +419,7 @@ UnboxedTypeIncludes(JSValueType supertype, JSValueType subtype)
 
 bool
 js::TryConvertToUnboxedLayout(JSContext *cx, Shape *templateShape,
-                              types::ObjectGroup *group, types::PreliminaryObjectArray *objects)
+                              ObjectGroup *group, types::PreliminaryObjectArray *objects)
 {
     if (!cx->runtime()->options().unboxedObjects())
         return true;

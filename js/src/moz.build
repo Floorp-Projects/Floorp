@@ -253,6 +253,7 @@ UNIFIED_SOURCES += [
     'vm/MemoryMetrics.cpp',
     'vm/Monitor.cpp',
     'vm/NativeObject.cpp',
+    'vm/ObjectGroup.cpp',
     'vm/PIC.cpp',
     'vm/Probes.cpp',
     'vm/ProxyObject.cpp',

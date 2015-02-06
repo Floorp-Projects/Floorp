@@ -1059,19 +1059,6 @@ js::DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
     return true;
 }
 
-js::types::ObjectGroup*
-JSObject::uninlinedGetGroup(JSContext *cx)
-{
-    return getGroup(cx);
-}
-
-void
-JSObject::uninlinedSetGroup(js::types::ObjectGroup *group)
-{
-    setGroup(group);
-}
-
-
 /*** Seal and freeze *****************************************************************************/
 
 static unsigned
@@ -1268,7 +1255,7 @@ NewObjectGCKind(const js::Class *clasp)
 }
 
 static inline JSObject *
-NewObject(ExclusiveContext *cx, types::ObjectGroup *groupArg, JSObject *parent, gc::AllocKind kind,
+NewObject(ExclusiveContext *cx, ObjectGroup *groupArg, JSObject *parent, gc::AllocKind kind,
           NewObjectKind newKind)
 {
     const Class *clasp = groupArg->clasp();
@@ -1367,7 +1354,7 @@ js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
     Rooted<TaggedProto> proto(cxArg, protoArg);
     RootedObject parent(cxArg, parentArg);
 
-    types::ObjectGroup *group = cxArg->getNewGroup(clasp, proto, nullptr);
+    ObjectGroup *group = ObjectGroup::defaultNewGroup(cxArg, clasp, proto, nullptr);
     if (!group)
         return nullptr;
 
@@ -1549,7 +1536,7 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
         return nullptr;
 
     Rooted<TaggedProto> taggedProto(cxArg, TaggedProto(proto));
-    types::ObjectGroup *group = cxArg->getNewGroup(clasp, taggedProto);
+    ObjectGroup *group = ObjectGroup::defaultNewGroup(cxArg, clasp, taggedProto);
     if (!group)
         return nullptr;
 
@@ -1618,16 +1605,16 @@ js::NewObjectScriptedCall(JSContext *cx, MutableHandleObject pobj)
     jsbytecode *pc;
     RootedScript script(cx, cx->currentScript(&pc));
     gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
-    NewObjectKind newKind = script
-                            ? UseSingletonForInitializer(script, pc, &PlainObject::class_)
-                            : GenericObject;
+    NewObjectKind newKind = GenericObject;
+    if (script && ObjectGroup::useSingletonForAllocationSite(script, pc, &PlainObject::class_))
+        newKind = SingletonObject;
     RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind, newKind));
     if (!obj)
         return false;
 
     if (script) {
         /* Try to specialize the group of the object to the scripted call site. */
-        if (!types::SetInitializerObjectGroup(cx, script, pc, obj, newKind))
+        if (!ObjectGroup::setAllocationSiteObjectGroup(cx, script, pc, obj, newKind == SingletonObject))
             return false;
     }
 
@@ -1707,8 +1694,8 @@ js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject 
     RootedObject res(cx);
 
     if (proto) {
-        RootedObjectGroup group(cx, cx->getNewGroup(nullptr, TaggedProto(proto),
-                                                    &callee->as<JSFunction>()));
+        RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, nullptr, TaggedProto(proto),
+                                                                 &callee->as<JSFunction>()));
         if (!group)
             return nullptr;
 
@@ -1719,8 +1706,8 @@ js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject 
             if (regenerate) {
                 // The script was analyzed successfully and may have changed
                 // the new type table, so refetch the group.
-                group = cx->getNewGroup(nullptr, TaggedProto(proto),
-                                        &callee->as<JSFunction>());
+                group = ObjectGroup::defaultNewGroup(cx, nullptr, TaggedProto(proto),
+                                                     &callee->as<JSFunction>());
                 MOZ_ASSERT(group && group->newScript());
             }
         }
@@ -1980,9 +1967,9 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind 
         if (!JSObject::setSingleton(cx, clone))
             return nullptr;
     } else if (obj->is<ArrayObject>()) {
-        FixArrayGroup(cx, &clone->as<ArrayObject>());
+        ObjectGroup::fixArrayGroup(cx, &clone->as<ArrayObject>());
     } else {
-        FixObjectGroup(cx, &clone->as<PlainObject>());
+        ObjectGroup::fixPlainObjectGroup(cx, &clone->as<PlainObject>());
     }
 
     if (obj->is<ArrayObject>() && obj->denseElementsAreCopyOnWrite()) {
@@ -2190,9 +2177,9 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleNativeObject obj)
             if (!JSObject::setSingleton(cx, obj))
                 return false;
         } else if (isArray) {
-            FixArrayGroup(cx, &obj->as<ArrayObject>());
+            ObjectGroup::fixArrayGroup(cx, &obj->as<ArrayObject>());
         } else {
-            FixObjectGroup(cx, &obj->as<PlainObject>());
+            ObjectGroup::fixPlainObjectGroup(cx, &obj->as<PlainObject>());
         }
     }
 
@@ -2243,7 +2230,8 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
         JSObject *proto = cx->global()->getOrCreateObjectPrototype(cx);
         if (!proto)
             return nullptr;
-        RootedObjectGroup group(cx, cx->getNewGroup(&PlainObject::class_, TaggedProto(proto)));
+        RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &PlainObject::class_,
+                                                                 TaggedProto(proto)));
         if (!group)
             return nullptr;
 
@@ -2748,7 +2736,7 @@ js::SetClassAndProto(JSContext *cx, HandleObject obj,
             return false;
     }
 
-    ObjectGroup *group = cx->getNewGroup(clasp, proto);
+    ObjectGroup *group = ObjectGroup::defaultNewGroup(cx, clasp, proto);
     if (!group)
         return false;
 

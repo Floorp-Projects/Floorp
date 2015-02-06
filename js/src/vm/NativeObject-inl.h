@@ -99,7 +99,7 @@ NativeObject::initDenseElementWithType(ExclusiveContext *cx, uint32_t index,
 inline void
 NativeObject::setDenseElementHole(ExclusiveContext *cx, uint32_t index)
 {
-    types::MarkObjectGroupFlags(cx, this, types::OBJECT_FLAG_NON_PACKED);
+    types::MarkObjectGroupFlags(cx, this, OBJECT_FLAG_NON_PACKED);
     setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
 }
 
@@ -108,8 +108,8 @@ NativeObject::removeDenseElementForSparseIndex(ExclusiveContext *cx,
                                                HandleNativeObject obj, uint32_t index)
 {
     types::MarkObjectGroupFlags(cx, obj,
-                                types::OBJECT_FLAG_NON_PACKED |
-                                types::OBJECT_FLAG_SPARSE_INDEXES);
+                                OBJECT_FLAG_NON_PACKED |
+                                OBJECT_FLAG_SPARSE_INDEXES);
     if (obj->containsDenseElement(index))
         obj->setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
 }
@@ -124,7 +124,7 @@ inline void
 NativeObject::markDenseElementsNotPacked(ExclusiveContext *cx)
 {
     MOZ_ASSERT(isNative());
-    MarkObjectGroupFlags(cx, this, types::OBJECT_FLAG_NON_PACKED);
+    types::MarkObjectGroupFlags(cx, this, OBJECT_FLAG_NON_PACKED);
 }
 
 inline void
