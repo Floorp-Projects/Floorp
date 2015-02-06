@@ -369,6 +369,13 @@ class GlobalObject : public NativeObject
         return nullptr;
     }
 
+    static NativeObject *getOrCreateSavedFramePrototype(JSContext *cx,
+                                                        Handle<GlobalObject*> global) {
+        if (!ensureConstructor(cx, global, JSProto_SavedFrame))
+            return nullptr;
+        return &global->getPrototype(JSProto_SavedFrame).toObject().as<NativeObject>();
+    }
+
     static JSObject *getOrCreateArrayBufferPrototype(JSContext *cx, Handle<GlobalObject*> global) {
         if (!ensureConstructor(cx, global, JSProto_ArrayBuffer))
             return nullptr;
