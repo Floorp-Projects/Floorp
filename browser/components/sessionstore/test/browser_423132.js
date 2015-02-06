@@ -30,44 +30,53 @@ function test() {
       newWin.gBrowser.loadURI(testURL, null, null);
 
       promiseBrowserLoaded(newWin.gBrowser.selectedBrowser).then(() => {
-        // get the sessionstore state for the window
-        TabState.flush(newWin.gBrowser.selectedBrowser);
-        let state = ss.getWindowState(newWin);
+        let ready = () => {
+          // get the sessionstore state for the window
+          TabState.flush(newWin.gBrowser.selectedBrowser);
+          let state = ss.getWindowState(newWin);
 
-        // verify our cookie got set during pageload
-        let e = cs.enumerator;
-        let cookie;
-        let i = 0;
-        while (e.hasMoreElements()) {
-          cookie = e.getNext().QueryInterface(Ci.nsICookie);
-          i++;
+          // verify our cookie got set during pageload
+          let e = cs.enumerator;
+          let cookie;
+          let i = 0;
+          while (e.hasMoreElements()) {
+            cookie = e.getNext().QueryInterface(Ci.nsICookie);
+            i++;
+          }
+          is(i, 1, "expected one cookie");
+
+          // remove the cookie
+          cs.removeAll();
+
+          // restore the window state
+          ss.setWindowState(newWin, state, true);
+
+          // at this point, the cookie should be restored...
+          e = cs.enumerator;
+          let cookie2;
+          while (e.hasMoreElements()) {
+            cookie2 = e.getNext().QueryInterface(Ci.nsICookie);
+            if (cookie.name == cookie2.name)
+              break;
+          }
+          is(cookie.name, cookie2.name, "cookie name successfully restored");
+          is(cookie.value, cookie2.value, "cookie value successfully restored");
+          is(cookie.path, cookie2.path, "cookie path successfully restored");
+
+          // clean up
+          if (gPrefService.prefHasUserValue("browser.sessionstore.interval"))
+            gPrefService.clearUserPref("browser.sessionstore.interval");
+          cs.removeAll();
+          newWin.close();
+          finish();
+        };
+
+        if (newWin.gMultiProcessBrowser) {
+          let tab = newWin.gBrowser.selectedTab;
+          promiseTabRestored(tab).then(ready);
+        } else {
+          ready();
         }
-        is(i, 1, "expected one cookie");
-
-        // remove the cookie
-        cs.removeAll();
-
-        // restore the window state
-        ss.setWindowState(newWin, state, true);
-
-        // at this point, the cookie should be restored...
-        e = cs.enumerator;
-        let cookie2;
-        while (e.hasMoreElements()) {
-          cookie2 = e.getNext().QueryInterface(Ci.nsICookie);
-          if (cookie.name == cookie2.name)
-            break;
-        }
-        is(cookie.name, cookie2.name, "cookie name successfully restored");
-        is(cookie.value, cookie2.value, "cookie value successfully restored");
-        is(cookie.path, cookie2.path, "cookie path successfully restored");
-
-        // clean up
-        if (gPrefService.prefHasUserValue("browser.sessionstore.interval"))
-          gPrefService.clearUserPref("browser.sessionstore.interval");
-        cs.removeAll();
-        newWin.close();
-        finish();
       }, true, testURL);
     });
   }, false);
