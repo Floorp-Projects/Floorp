@@ -925,6 +925,10 @@ DeleteElement(JSContext *cx, js::HandleObject obj, uint32_t index, bool *succeed
 extern bool
 SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj, bool *succeeded);
 
+extern bool
+GetPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
+                      MutableHandle<PropertyDescriptor> desc);
+
 /*
  * Deprecated. A version of HasProperty that also returns the object on which
  * the property was found (but that information is unreliable for proxies), and

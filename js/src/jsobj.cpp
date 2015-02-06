@@ -3339,6 +3339,30 @@ js::SetImmutablePrototype(ExclusiveContext *cx, HandleObject obj, bool *succeede
 }
 
 bool
+js::GetPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
+                          MutableHandle<PropertyDescriptor> desc)
+{
+    RootedObject pobj(cx);
+
+    for (pobj = obj; pobj;) {
+        if (pobj->is<ProxyObject>())
+            return Proxy::getPropertyDescriptor(cx, pobj, id, desc);
+
+        if (!GetOwnPropertyDescriptor(cx, pobj, id, desc))
+            return false;
+
+        if (desc.object())
+            return true;
+
+        if (!GetPrototype(cx, pobj, &pobj))
+            return false;
+    }
+
+    MOZ_ASSERT(!desc.object());
+    return true;
+}
+
+bool
 js::ToPrimitive(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp)
 {
     bool ok;
