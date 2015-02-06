@@ -11024,6 +11024,10 @@ nsGlobalWindow::ShowSlowScriptDialog()
     return ContinueSlowScriptAndKeepNotifying;
   }
 
+  // Reached only on non-e10s - once per slow script dialog.
+  // On e10s - we probe once at ProcessHangsMonitor.jsm
+  Telemetry::Accumulate(Telemetry::SLOW_SCRIPT_NOTICE_COUNT, 1);
+
   // Get the nsIPrompt interface from the docshell
   nsCOMPtr<nsIDocShell> ds = GetDocShell();
   NS_ENSURE_TRUE(ds, KillSlowScript);

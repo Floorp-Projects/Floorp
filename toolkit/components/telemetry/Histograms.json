@@ -7373,5 +7373,17 @@
     "expires_in_version": "45",
     "kind": "count",
     "description": "The number of Sync 1.5 migrations completed by Android Sync."
+  },
+  "SLOW_SCRIPT_NOTICE_COUNT": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Count slow script notices"
+  },
+  "PLUGIN_HANG_NOTICE_COUNT": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Count plugin hang notices in e10s"
   }
 }
