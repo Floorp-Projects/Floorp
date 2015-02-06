@@ -168,13 +168,14 @@ class TextSelection extends Layer implements GeckoEventListener {
                         anchorHandle.setVisibility(View.GONE);
                         caretHandle.setVisibility(View.GONE);
                         focusHandle.setVisibility(View.GONE);
+
                     } else if (event.equals("TextSelection:PositionHandles")) {
-                        final boolean rtl = message.getBoolean("rtl");
                         final JSONArray positions = message.getJSONArray("positions");
                         for (int i=0; i < positions.length(); i++) {
                             JSONObject position = positions.getJSONObject(i);
-                            int left = position.getInt("left");
-                            int top = position.getInt("top");
+                            final int left = position.getInt("left");
+                            final int top = position.getInt("top");
+                            final boolean rtl = position.getBoolean("rtl");
 
                             TextSelectionHandle handle = getHandle(position.getString("handle"));
                             handle.setVisibility(position.getBoolean("hidden") ? View.GONE : View.VISIBLE);
