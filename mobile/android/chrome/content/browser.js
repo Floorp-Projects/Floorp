@@ -371,6 +371,7 @@ var BrowserApp = {
         // Queue up some other performance-impacting initializations
         Services.tm.mainThread.dispatch(function() {
           Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+          Services.search.init();
 
           CastingApps.init();
           DownloadNotifications.init();
