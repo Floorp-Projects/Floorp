@@ -109,7 +109,10 @@ function test3(e) {
   numPendingChildTests++;
 
   onTryAgain();
-  waitForPendingTests(function() { test4(); });
+  waitForPendingTests(function() {
+    mm.removeMessageListener('test-try-again', onTryAgain);
+    test4();
+  });
 }
 
 function test4() {
@@ -240,7 +243,10 @@ function test6f() {
   numPendingChildTests++;
 
   onTryAgain();
-  waitForPendingTests(test6g);
+  waitForPendingTests(function() {
+    mm.removeMessageListener('test-try-again', onTryAgain);
+    test6g();
+  });
 }
 
 function test6g() {
@@ -269,7 +275,10 @@ function test6g() {
   numPendingChildTests++;
 
   onTryAgain();
-  waitForPendingTests(test6h);
+  waitForPendingTests(function() {
+    mm.removeMessageListener('test-try-again', onTryAgain);
+    test6h();
+  });
 }
 
 function test6h() {
