@@ -52,7 +52,6 @@ class Texture : public RefCountObject
 
     const SamplerState &getSamplerState() const { return mSamplerState; }
     SamplerState &getSamplerState() { return mSamplerState; }
-    void getSamplerStateWithNativeOffset(SamplerState *sampler);
 
     void setUsage(GLenum usage);
     GLenum getUsage() const;
@@ -69,15 +68,16 @@ class Texture : public RefCountObject
 
     virtual bool isSamplerComplete(const SamplerState &samplerState, const TextureCapsMap &textureCaps, const Extensions &extensions, int clientVersion) const = 0;
 
-    rx::TextureStorage *getNativeTexture();
+    virtual Error generateMipmaps();
 
-    virtual void generateMipmaps();
-    virtual void copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source);
+    virtual Error copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source);
 
-    unsigned int getTextureSerial();
+    // Texture serials provide a unique way of identifying a Texture that isn't a raw pointer.
+    // "id" is not good enough, as Textures can be deleted, then re-allocated with the same id.
+    unsigned int getTextureSerial() const;
 
     bool isImmutable() const;
-    int immutableLevelCount();
+    GLsizei immutableLevelCount();
 
     rx::TextureImpl *getImplementation() { return mTexture; }
     const rx::TextureImpl *getImplementation() const { return mTexture; }
@@ -86,17 +86,20 @@ class Texture : public RefCountObject
 
   protected:
     int mipLevels() const;
+    const rx::Image *getBaseLevelImage() const;
+    static unsigned int issueTextureSerial();
 
     rx::TextureImpl *mTexture;
 
     SamplerState mSamplerState;
     GLenum mUsage;
 
-    bool mImmutable;
+    GLsizei mImmutableLevelCount;
 
     GLenum mTarget;
 
-    const rx::Image *getBaseLevelImage() const;
+    const unsigned int mTextureSerial;
+    static unsigned int mCurrentTextureSerial;
 
   private:
     DISALLOW_COPY_AND_ASSIGN(Texture);
@@ -117,17 +120,17 @@ class Texture2D : public Texture
     bool isDepth(GLint level) const;
 
     Error setImage(GLint level, GLsizei width, GLsizei height, GLenum internalFormat, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels);
-    Error setCompressedImage(GLint level, GLenum format, GLsizei width, GLsizei height, GLsizei imageSize, const void *pixels);
+    Error setCompressedImage(GLint level, GLenum format, GLsizei width, GLsizei height, GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels);
     Error subImage(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels);
-    Error subImageCompressed(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *pixels);
-    void copyImage(GLint level, GLenum format, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source);
-    void storage(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height);
+    Error subImageCompressed(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels);
+    Error copyImage(GLint level, GLenum format, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source);
+    Error storage(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height);
 
     virtual bool isSamplerComplete(const SamplerState &samplerState, const TextureCapsMap &textureCaps, const Extensions &extensions, int clientVersion) const;
     virtual void bindTexImage(egl::Surface *surface);
     virtual void releaseTexImage();
 
-    virtual void generateMipmaps();
+    virtual Error generateMipmaps();
 
   private:
     DISALLOW_COPY_AND_ASSIGN(Texture2D);
@@ -153,11 +156,11 @@ class TextureCubeMap : public Texture
     bool isDepth(GLenum target, GLint level) const;
 
     Error setImage(GLenum target, GLint level, GLsizei width, GLsizei height, GLenum internalFormat, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels);
-    Error setCompressedImage(GLenum target, GLint level, GLenum format, GLsizei width, GLsizei height, GLsizei imageSize, const void *pixels);
+    Error setCompressedImage(GLenum target, GLint level, GLenum format, GLsizei width, GLsizei height, GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels);
     Error subImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels);
-    Error subImageCompressed(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *pixels);
-    void copyImage(GLenum target, GLint level, GLenum format, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source);
-    void storage(GLsizei levels, GLenum internalformat, GLsizei size);
+    Error subImageCompressed(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels);
+    Error copyImage(GLenum target, GLint level, GLenum format, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source);
+    Error storage(GLsizei levels, GLenum internalformat, GLsizei size);
 
     virtual bool isSamplerComplete(const SamplerState &samplerState, const TextureCapsMap &textureCaps, const Extensions &extensions, int clientVersion) const;
 
@@ -189,10 +192,10 @@ class Texture3D : public Texture
     bool isDepth(GLint level) const;
 
     Error setImage(GLint level, GLsizei width, GLsizei height, GLsizei depth, GLenum internalFormat, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels);
-    Error setCompressedImage(GLint level, GLenum format, GLsizei width, GLsizei height, GLsizei depth, GLsizei imageSize, const void *pixels);
+    Error setCompressedImage(GLint level, GLenum format, GLsizei width, GLsizei height, GLsizei depth, GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels);
     Error subImage(GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels);
-    Error subImageCompressed(GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const void *pixels);
-    void storage(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth);
+    Error subImageCompressed(GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels);
+    Error storage(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth);
 
     virtual bool isSamplerComplete(const SamplerState &samplerState, const TextureCapsMap &textureCaps, const Extensions &extensions, int clientVersion) const;
 
@@ -219,10 +222,10 @@ class Texture2DArray : public Texture
     bool isDepth(GLint level) const;
 
     Error setImage(GLint level, GLsizei width, GLsizei height, GLsizei depth, GLenum internalFormat, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels);
-    Error setCompressedImage(GLint level, GLenum format, GLsizei width, GLsizei height, GLsizei depth, GLsizei imageSize, const void *pixels);
+    Error setCompressedImage(GLint level, GLenum format, GLsizei width, GLsizei height, GLsizei depth, GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels);
     Error subImage(GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const PixelUnpackState &unpack, const void *pixels);
-    Error subImageCompressed(GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const void *pixels);
-    void storage(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth);
+    Error subImageCompressed(GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const PixelUnpackState &unpack, const void *pixels);
+    Error storage(GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth);
 
     virtual bool isSamplerComplete(const SamplerState &samplerState, const TextureCapsMap &textureCaps, const Extensions &extensions, int clientVersion) const;
 

@@ -194,4 +194,15 @@ bool VertexFormat::operator<(const VertexFormat& other) const
     return mPureInteger < other.mPureInteger;
 }
 
+bool Box::operator==(const Box &other) const
+{
+    return (x == other.x && y == other.y && z == other.z &&
+            width == other.width && height == other.height && depth == other.depth);
+}
+
+bool Box::operator!=(const Box &other) const
+{
+    return !(*this == other);
+}
+
 }

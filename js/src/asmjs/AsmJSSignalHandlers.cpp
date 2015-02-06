@@ -350,20 +350,9 @@ SetXMMRegToNaN(Scalar::Type viewType, T *xmm_reg)
         dbls[1] = 0;
         break;
       }
-      case Scalar::Float32x4: {
-        JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(float));
-        float *floats = reinterpret_cast<float*>(xmm_reg);
-        for (unsigned i = 0; i < 4; i++)
-            floats[i] = GenericNaN();
-        break;
-      }
-      case Scalar::Int32x4: {
-        JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(int32_t));
-        int32_t *ints = reinterpret_cast<int32_t*>(xmm_reg);
-        for (unsigned i = 0; i < 4; i++)
-            ints[i] = 0;
-        break;
-      }
+      // Float32x4 and Int32x4 out of bounds are handled with the OutOfBounds stub.
+      case Scalar::Float32x4:
+      case Scalar::Int32x4:
       case Scalar::Int8:
       case Scalar::Uint8:
       case Scalar::Int16:
@@ -423,6 +412,13 @@ SetRegisterToCoercedUndefined(CONTEXT *context, Scalar::Type viewType, AnyRegist
     }
 }
 # endif  // !XP_MACOSX
+
+static void
+RedirectToOutOfBoundsLabel(uint8_t **ppc, const AsmJSModule &module)
+{
+    MOZ_ASSERT(module.containsFunctionPC(*ppc));
+    *ppc = module.outOfBoundsExit();
+}
 #endif // JS_CODEGEN_X64
 
 #if defined(XP_WIN)
@@ -488,16 +484,23 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!heapAccess)
         return false;
 
+    // We now know that this is an out-of-bounds access made by an asm.js
+    // load/store that we should handle.
+
+    // SIMD out-of-bounds loads and stores just need to throw.
+    if (Scalar::isSimdType(heapAccess->type())) {
+        RedirectToOutOfBoundsLabel(ppc, module);
+        return true;
+    }
+
     // Also not necessary, but, since we can, do.
     if (heapAccess->isLoad() != !record->ExceptionInformation[0])
         return false;
 
-    // We now know that this is an out-of-bounds access made by an asm.js
-    // load/store that we should handle. If this is a load, assign the
-    // JS-defined result value to the destination register (ToInt32(undefined)
-    // or ToNumber(undefined), determined by the type of the destination
-    // register) and set the PC to the next op. Upon return from the handler,
-    // execution will resume at this next PC.
+    // If this is a load, assign the JS-defined result value to the destination
+    // register (ToInt32(undefined) or ToNumber(undefined), determined by the
+    // type of the destination register) and set the PC to the next op. Upon
+    // return from the handler, execution will resume at this next PC.
     if (heapAccess->isLoad())
         SetRegisterToCoercedUndefined(context, heapAccess->type(), heapAccess->loadedReg());
     *ppc += heapAccess->opLength();
@@ -671,16 +674,22 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
         return false;
 
     // We now know that this is an out-of-bounds access made by an asm.js
-    // load/store that we should handle. If this is a load, assign the
-    // JS-defined result value to the destination register (ToInt32(undefined)
-    // or ToNumber(undefined), determined by the type of the destination
-    // register) and set the PC to the next op. Upon return from the handler,
-    // execution will resume at this next PC.
-    if (heapAccess->isLoad()) {
-        if (!SetRegisterToCoercedUndefined(rtThread, state.uts.ts64, *heapAccess))
-            return false;
+    // load/store that we should handle.
+
+    if (Scalar::isSimdType(heapAccess->type())) {
+        // SIMD out-of-bounds loads and stores just need to throw.
+        RedirectToOutOfBoundsLabel(ppc, module);
+    } else {
+        // If this is a load, assign the JS-defined result value to the destination
+        // register (ToInt32(undefined) or ToNumber(undefined), determined by the
+        // type of the destination register) and set the PC to the next op. Upon
+        // return from the handler, execution will resume at this next PC.
+        if (heapAccess->isLoad()) {
+            if (!SetRegisterToCoercedUndefined(rtThread, state.uts.ts64, *heapAccess))
+                return false;
+        }
+        *ppc += heapAccess->opLength();
     }
-    *ppc += heapAccess->opLength();
 
     // Update the thread state with the new pc.
     kret = thread_set_state(rtThread, x86_THREAD_STATE, (thread_state_t)&state, x86_THREAD_STATE_COUNT);
@@ -885,11 +894,18 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
         return false;
 
     // We now know that this is an out-of-bounds access made by an asm.js
-    // load/store that we should handle. If this is a load, assign the
-    // JS-defined result value to the destination register (ToInt32(undefined)
-    // or ToNumber(undefined), determined by the type of the destination
-    // register) and set the PC to the next op. Upon return from the handler,
-    // execution will resume at this next PC.
+    // load/store that we should handle.
+
+    // SIMD out-of-bounds loads and stores just need to throw.
+    if (Scalar::isSimdType(heapAccess->type())) {
+        RedirectToOutOfBoundsLabel(ppc, module);
+        return true;
+    }
+
+    // If this is a load, assign the JS-defined result value to the destination
+    // register (ToInt32(undefined) or ToNumber(undefined), determined by the
+    // type of the destination register) and set the PC to the next op. Upon
+    // return from the handler, execution will resume at this next PC.
     if (heapAccess->isLoad())
         SetRegisterToCoercedUndefined(context, heapAccess->type(), heapAccess->loadedReg());
     *ppc += heapAccess->opLength();

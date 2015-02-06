@@ -494,7 +494,7 @@ public:
      */
     PPluginWidgetChild* AllocPPluginWidgetChild() MOZ_OVERRIDE;
     bool DeallocPPluginWidgetChild(PPluginWidgetChild* aActor) MOZ_OVERRIDE;
-    already_AddRefed<nsIWidget> CreatePluginWidget(nsIWidget* aParent);
+    nsresult CreatePluginWidget(nsIWidget* aParent, nsIWidget** aOut);
 
     nsIntPoint GetChromeDisplacement() { return mChromeDisp; };
 

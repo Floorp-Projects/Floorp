@@ -27,18 +27,20 @@ Image::Image()
     mDirty = false;
 }
 
-void Image::copy(GLint xoffset, GLint yoffset, GLint zoffset, const gl::Rectangle &area, gl::Framebuffer *source)
+gl::Error Image::copy(GLint xoffset, GLint yoffset, GLint zoffset, const gl::Rectangle &area, gl::Framebuffer *source)
 {
     gl::FramebufferAttachment *colorbuffer = source->getReadColorbuffer();
+    ASSERT(colorbuffer);
 
-    if (!colorbuffer)
+    RenderTarget *renderTarget = NULL;
+    gl::Error error = GetAttachmentRenderTarget(colorbuffer, &renderTarget);
+    if (error.isError())
     {
-        return gl::error(GL_OUT_OF_MEMORY);
+        return error;
     }
 
-    RenderTarget *renderTarget = GetAttachmentRenderTarget(colorbuffer);
     ASSERT(renderTarget);
-    copy(xoffset, yoffset, zoffset, area, renderTarget);
+    return copy(xoffset, yoffset, zoffset, area, renderTarget);
 }
 
 }

@@ -461,7 +461,7 @@ void GenerateCaps(IDirect3D9 *d3d9, IDirect3DDevice9 *device, D3DDEVTYPE deviceT
         extensions->textureNPOT = !(deviceCaps.TextureCaps & D3DPTEXTURECAPS_POW2) &&
                                       !(deviceCaps.TextureCaps & D3DPTEXTURECAPS_CUBEMAP_POW2) &&
                                       !(deviceCaps.TextureCaps & D3DPTEXTURECAPS_NONPOW2CONDITIONAL) &&
-                                      !(isWindowsVistaOrGreater() && adapterId.VendorId == VENDOR_ID_AMD);
+                                      !(!isWindowsVistaOrGreater() && adapterId.VendorId == VENDOR_ID_AMD);
     }
     else
     {
@@ -533,10 +533,16 @@ void MakeValidSize(bool isImage, D3DFORMAT format, GLsizei *requestWidth, GLsize
     *levelOffset = upsampleCount;
 }
 
-RenderTarget9 *GetAttachmentRenderTarget(gl::FramebufferAttachment *attachment)
+gl::Error GetAttachmentRenderTarget(gl::FramebufferAttachment *attachment, RenderTarget9 **outRT)
 {
-    RenderTarget *renderTarget = rx::GetAttachmentRenderTarget(attachment);
-    return RenderTarget9::makeRenderTarget9(renderTarget);
+    RenderTarget *renderTarget = NULL;
+    gl::Error error = rx::GetAttachmentRenderTarget(attachment, &renderTarget);
+    if (error.isError())
+    {
+        return error;
+    }
+    *outRT = RenderTarget9::makeRenderTarget9(renderTarget);
+    return gl::Error(GL_NO_ERROR);
 }
 
 Workarounds GenerateWorkarounds()

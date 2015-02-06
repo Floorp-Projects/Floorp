@@ -37,6 +37,17 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     template<typename T>
     void store(Scalar::Type vt, const LAllocation *value, const T &dstAddr);
 
+    template<typename T>
+    void loadSimd(Scalar::Type type, unsigned numElems, T srcAddr, FloatRegister out);
+    void emitSimdLoad(Scalar::Type type, unsigned numElems, const LAllocation *ptr,
+                      FloatRegister out, bool needsBoundsCheck = false, Label *oobLabel = nullptr);
+
+    template<typename T>
+    void storeSimd(Scalar::Type type, unsigned numElems, FloatRegister in, T destAddr);
+    void emitSimdStore(Scalar::Type type, unsigned numElems, FloatRegister in,
+                       const LAllocation *ptr, bool needsBoundsCheck = false,
+                       Label *oobLabel = nullptr);
+
     void memoryBarrier(MemoryBarrierBits barrier);
 
   public:

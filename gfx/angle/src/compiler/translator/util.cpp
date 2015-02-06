@@ -9,6 +9,7 @@
 #include <limits>
 
 #include "compiler/preprocessor/numeric_lex.h"
+#include "compiler/translator/SymbolTable.h"
 #include "common/utilities.h"
 
 bool atof_clamp(const char *str, float *value)
@@ -281,8 +282,47 @@ InterpolationType GetInterpolationType(TQualifier qualifier)
     }
 }
 
+GetVariableTraverser::GetVariableTraverser(const TSymbolTable &symbolTable)
+    : mSymbolTable(symbolTable)
+{
+}
+
+template void GetVariableTraverser::setTypeSpecificInfo(
+    const TType &type, const TString& name, InterfaceBlockField *variable);
+template void GetVariableTraverser::setTypeSpecificInfo(
+    const TType &type, const TString& name, ShaderVariable *variable);
+template void GetVariableTraverser::setTypeSpecificInfo(
+    const TType &type, const TString& name, Uniform *variable);
+
+template<>
+void GetVariableTraverser::setTypeSpecificInfo(
+    const TType &type, const TString& name, Varying *variable)
+{
+    ASSERT(variable);
+    switch (type.getQualifier())
+    {
+      case EvqInvariantVaryingIn:
+      case EvqInvariantVaryingOut:
+        variable->isInvariant = true;
+        break;
+      case EvqVaryingIn:
+      case EvqVaryingOut:
+        if (mSymbolTable.isVaryingInvariant(std::string(name.c_str())))
+        {
+            variable->isInvariant = true;
+        }
+        break;
+      default:
+        break;
+    }
+
+    variable->interpolation = GetInterpolationType(type.getQualifier());
+}
+
 template <typename VarT>
-void GetVariableTraverser::traverse(const TType &type, const TString &name, std::vector<VarT> *output)
+void GetVariableTraverser::traverse(const TType &type,
+                                    const TString &name,
+                                    std::vector<VarT> *output)
 {
     const TStructure *structure = type.getStruct();
 
@@ -309,15 +349,16 @@ void GetVariableTraverser::traverse(const TType &type, const TString &name, std:
             traverse(*field->type(), field->name(), &variable.fields);
         }
     }
-
+    setTypeSpecificInfo(type, name, &variable);
     visitVariable(&variable);
 
     ASSERT(output);
     output->push_back(variable);
 }
 
+template void GetVariableTraverser::traverse(const TType &, const TString &, std::vector<InterfaceBlockField> *);
+template void GetVariableTraverser::traverse(const TType &, const TString &, std::vector<ShaderVariable> *);
 template void GetVariableTraverser::traverse(const TType &, const TString &, std::vector<Uniform> *);
 template void GetVariableTraverser::traverse(const TType &, const TString &, std::vector<Varying> *);
-template void GetVariableTraverser::traverse(const TType &, const TString &, std::vector<InterfaceBlockField> *);
 
 }

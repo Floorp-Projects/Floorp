@@ -1445,6 +1445,49 @@ byteSize(Type atype)
     }
 }
 
+static inline bool
+isSimdType(Type atype) {
+    switch (atype) {
+      case Int8:
+      case Uint8:
+      case Uint8Clamped:
+      case Int16:
+      case Uint16:
+      case Int32:
+      case Uint32:
+      case Float32:
+      case Float64:
+        return false;
+      case Int32x4:
+      case Float32x4:
+        return true;
+      case MaxTypedArrayViewType:
+        break;
+    }
+    MOZ_CRASH("invalid scalar type");
+}
+
+static inline size_t
+scalarByteSize(Type atype) {
+    switch (atype) {
+      case Int32x4:
+      case Float32x4:
+        return 4;
+      case Int8:
+      case Uint8:
+      case Uint8Clamped:
+      case Int16:
+      case Uint16:
+      case Int32:
+      case Uint32:
+      case Float32:
+      case Float64:
+      case MaxTypedArrayViewType:
+        break;
+    }
+    MOZ_CRASH("invalid simd type");
+}
+
 } /* namespace Scalar */
 } /* namespace js */
 

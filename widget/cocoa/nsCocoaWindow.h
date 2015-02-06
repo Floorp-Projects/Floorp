@@ -258,7 +258,6 @@ public:
     NS_IMETHOD              Create(nsIWidget* aParent,
                                    nsNativeWidget aNativeParent,
                                    const nsIntRect &aRect,
-                                   nsDeviceContext *aContext,
                                    nsWidgetInitData *aInitData = nullptr) MOZ_OVERRIDE;
 
     NS_IMETHOD              Destroy() MOZ_OVERRIDE;
@@ -372,8 +371,7 @@ protected:
   nsresult             CreateNativeWindow(const NSRect &aRect,
                                           nsBorderStyle aBorderStyle,
                                           bool aRectIsFrameRect);
-  nsresult             CreatePopupContentView(const nsIntRect &aRect,
-                                              nsDeviceContext *aContext);
+  nsresult             CreatePopupContentView(const nsIntRect &aRect);
   void                 DestroyNativeWindow();
   void                 AdjustWindowShadow();
   void                 SetWindowBackgroundBlur();

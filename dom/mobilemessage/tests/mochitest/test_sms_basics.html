@@ -11,10 +11,17 @@
 <iframe></iframe>
 </div>
 <pre id="test">
-<script type="application/javascript">
-var defaultEnabled = ('mozMobileMessage' in frames[0].navigator);
+<script type="application/javascript;version=1.8">
 
 /** Test for WebSMS **/
+
+// idl interfaces exposed to every page.
+// TODO Bug 859764
+const IDL_IFACE_WITH_PREFIX = ["SmsMessage", "MmsMessage", "MobileMessageThread"];
+
+// webidl interfaces guarded by [AvailableIn=CertifiedApps].
+const WEBIDL_IFACE_WITH_PREFIX = ["SmsEvent", "MmsEvent", "MessageDeletedEvent"];
+const WEBIDL_IFACE = ["DOMMobileMessageError"];
 
 function checkSmsDisabled() {
   ok(!('mozMobileMessage' in frames[0].navigator), "navigator.mozMobileMessage should not exist");
@@ -35,21 +42,43 @@ function checkSmsEnabled() {
      "navigator.mozMobileMessage is an MobileMessageManager object");
 }
 
-function checkSmsDisabledOrEnabled() {
-  if (!defaultEnabled)
-    checkSmsDisabled();
-  else
-    checkSmsEnabled();
+function checkIdlInterfaceInWindow() {
+  for (let i = 0; i < IDL_IFACE_WITH_PREFIX.length; i++) {
+    let iface = IDL_IFACE_WITH_PREFIX[i];
+    ok(!(iface in window), iface + " should be prefixed");
+    ok(("Moz" + iface) in window, iface + " should be prefixed");
+  }
 }
 
-function checkInterface(aInterface) {
-  ok(!(aInterface in window), aInterface + " should be prefixed");
-  ok(("Moz" + aInterface) in window, aInterface + " should be prefixed");
+function checkWebidlInterfaceInWindow() {
+  for (let i = 0; i < WEBIDL_IFACE_WITH_PREFIX.length; i++) {
+    let iface = WEBIDL_IFACE_WITH_PREFIX[i];
+    ok(!(iface in window), iface + " should be prefixed");
+    ok(("Moz" + iface) in window, iface + " should be prefixed");
+  }
+
+  for (let i = 0; i < WEBIDL_IFACE.length; i++) {
+    let iface = WEBIDL_IFACE[i];
+    ok((iface in window), iface + " should be there");
+  }
+}
+
+function checkWebidlInterfaceNotInWindow() {
+  for (let i = 0; i < WEBIDL_IFACE_WITH_PREFIX.length; i++) {
+    let iface = WEBIDL_IFACE_WITH_PREFIX[i];
+    ok(!(iface in window), iface + " should not be there");
+    ok(!(("Moz" + iface) in window), "Moz" + iface + " should not be there");
+  }
+
+  for (let i = 0; i < WEBIDL_IFACE.length; i++) {
+    let iface = WEBIDL_IFACE[i];
+    ok(!(iface in window), iface + " should not be there");
+  }
 }
 
 function test() {
-  checkInterface("SmsMessage");
-  checkInterface("SmsEvent");
+  checkIdlInterfaceInWindow();
+  checkWebidlInterfaceNotInWindow();
 
   // If sms is disabled and permission is removed, sms is disabled.
   SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", false]]}, function() {
@@ -58,7 +87,7 @@ function test() {
 }
 
 function test2() {
-  checkSmsDisabledOrEnabled();
+  checkSmsDisabled();
 
   // If sms is enabled and permission is removed, sms is disabled.
   SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", true]]}, function() {
@@ -67,7 +96,7 @@ function test2() {
 }
 
 function test3() {
-  checkSmsDisabledOrEnabled();
+  checkSmsDisabled();
 
   // If sms is disabled and permission is granted, sms is disabled.
   SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", false]]}, function() {
@@ -76,29 +105,23 @@ function test3() {
 }
 
 function test4() {
-  checkSmsDisabledOrEnabled();
+  checkSmsDisabled();
 
-  // If sms is enabled and permission is granted, sms is enabled.
+  // Even if sms is enabled and permission is granted, sms is still disabled due
+  // to the webidl check "AvailableIn=CertifiedApps."
   SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", true]]}, function() {
     SpecialPowers.pushPermissions([{'type': 'sms', 'allow': true, 'context': document}], test5);
   });
 }
 
 function test5() {
-   checkSmsDisabledOrEnabled();
-
-  // Now, if sms are disabled with the pref, they will still be enabled.
-  // The page has to be reloaded.
-  SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", false]]}, test6);
-}
-
-function test6() {
-  checkSmsDisabledOrEnabled();
+  checkSmsDisabled();
 
   var iframeElt = document.getElementsByTagName('iframe')[0];
   iframeElt.addEventListener("load", function() {
     iframeElt.removeEventListener("load", arguments.callee);
     checkSmsEnabled();
+    checkWebidlInterfaceInWindow();
 
     iframeElt.addEventListener("load", function() {
       iframeElt.removeEventListener("load", arguments.callee);
@@ -114,7 +137,9 @@ function test6() {
     });
   });
 
-  SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", true]]}, function() {
+  // Ignore webidl checks, then enabling sms takes effect on reload.
+  SpecialPowers.pushPrefEnv({"set": [["dom.ignore_webidl_scope_checks", true],
+                                     ["dom.sms.enabled", true]]}, function() {
     frames[0].location.reload();
   });
 }

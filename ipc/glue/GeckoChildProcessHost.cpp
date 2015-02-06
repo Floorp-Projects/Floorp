@@ -97,7 +97,7 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     mDelegate(nullptr),
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
     mEnableSandboxLogging(false),
-    mEnableNPAPISandbox(false),
+    mSandboxLevel(0),
     mMoreStrictSandbox(false),
 #endif
     mChildProcessHandle(0)
@@ -801,6 +801,10 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   bool shouldSandboxCurrentProcess = false;
+
+  // XXX: Bug 1124167: We should get rid of the process specific logic for
+  // sandboxing in this class at some point. Unfortunately it will take a bit
+  // of reorganizing so I don't think this patch is the right time.
   switch (mProcessType) {
     case GeckoProcessType_Content:
 #if defined(MOZ_CONTENT_SANDBOX)
@@ -812,9 +816,9 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 #endif // MOZ_CONTENT_SANDBOX
       break;
     case GeckoProcessType_Plugin:
-      if (mEnableNPAPISandbox &&
+      if (mSandboxLevel > 0 &&
           !PR_GetEnv("MOZ_DISABLE_NPAPI_SANDBOX")) {
-        mSandboxBroker.SetSecurityLevelForPluginProcess(mMoreStrictSandbox);
+        mSandboxBroker.SetSecurityLevelForPluginProcess(mSandboxLevel);
         cmdLine.AppendLooseValue(UTF8ToWide("-sandbox"));
         shouldSandboxCurrentProcess = true;
       }

@@ -167,26 +167,12 @@ ShaderValidator::ValidateAndTranslate(const char* source)
 }
 
 void
-ShaderValidator::GetInfo(ShShaderInfo pname, size_t* params) const
-{
-    MOZ_ASSERT(mHasRun);
-
-    ShGetInfo(mHandle, pname, params);
-}
-
-void
 ShaderValidator::GetInfoLog(nsACString* out) const
 {
     MOZ_ASSERT(mHasRun);
 
-    size_t lenWithNull = 0;
-    GetInfo(SH_INFO_LOG_LENGTH, &lenWithNull);
-    MOZ_ASSERT(lenWithNull >= 1);
-
-    // SetLength allocates len+1, for the null-term.
-    out->SetLength(lenWithNull - 1);
-
-    ShGetInfoLog(mHandle, out->BeginWriting());
+    const std::string &log = ShGetInfoLog(mHandle);
+    out->Assign(log.data(), log.length());
 }
 
 void
@@ -194,14 +180,8 @@ ShaderValidator::GetOutput(nsACString* out) const
 {
     MOZ_ASSERT(mHasRun);
 
-    size_t lenWithNull = 0;
-    GetInfo(SH_OBJECT_CODE_LENGTH, &lenWithNull);
-    MOZ_ASSERT(lenWithNull >= 1);
-
-    // SetLength allocates len+1, for the null-term.
-    out->SetLength(lenWithNull - 1);
-
-    ShGetObjectCode(mHandle, out->BeginWriting());
+    const std::string &output = ShGetObjectCode(mHandle);
+    out->Assign(output.data(), output.length());
 }
 
 template<size_t N>

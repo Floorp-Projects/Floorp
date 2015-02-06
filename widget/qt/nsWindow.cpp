@@ -134,7 +134,6 @@ nsresult
 nsWindow::Create(nsIWidget        *aParent,
                  nsNativeWidget    aNativeParent,
                  const nsIntRect  &aRect,
-                 nsDeviceContext *aContext,
                  nsWidgetInitData *aInitData)
 {
     // only set the base parent if we're not going to be a dialog or a
@@ -142,7 +141,7 @@ nsWindow::Create(nsIWidget        *aParent,
     nsIWidget *baseParent = aParent;
 
     // initialize all the common bits of this class
-    BaseCreate(baseParent, aRect, aContext, aInitData);
+    BaseCreate(baseParent, aRect, aInitData);
 
     mVisible = true;
 
