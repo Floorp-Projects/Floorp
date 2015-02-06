@@ -698,7 +698,13 @@ MarionetteServerConnection.prototype = {
    */
   setSessionCapabilities: function(newCaps) {
     const copy = (from, to={}) => {
+      let errors = {};
       for (let key in from) {
+        if (key === "desiredCapabilities"){
+          // Keeping desired capabilities separate for now so that we can keep
+          // backwards compatibility
+          to = copy(from[key], to);
+        }
         to[key] = from[key];
       }
       return to;
