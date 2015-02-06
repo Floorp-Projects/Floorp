@@ -29,7 +29,7 @@ let PerformanceView = {
   /**
    * Sets up the view with event binding and main subviews.
    */
-  initialize: function () {
+  initialize: Task.async(function* () {
     this._recordButton = $("#main-record-button");
     this._importButton = $("#import-button");
     this._clearButton = $("#clear-button");
@@ -59,22 +59,23 @@ let PerformanceView = {
 
     this.setState("empty");
 
-    return promise.all([
-      RecordingsView.initialize(),
-      OverviewView.initialize(),
-      ToolbarView.initialize(),
-      DetailsView.initialize()
-    ]);
-  },
+    // Initialize the ToolbarView first, because other views may need access
+    // to the OptionsView via the controller, to read prefs.
+    yield ToolbarView.initialize();
+    yield RecordingsView.initialize();
+    yield OverviewView.initialize();
+    yield DetailsView.initialize();
+  }),
 
   /**
    * Unbinds events and destroys subviews.
    */
-  destroy: function () {
+  destroy: Task.async(function* () {
     for (let button of $$(".record-button")) {
       button.removeEventListener("click", this._onRecordButtonClick);
     }
     this._importButton.removeEventListener("click", this._onImportButtonClick);
+    this._clearButton.removeEventListener("click", this._onClearButtonClick);
 
     PerformanceController.off(EVENTS.RECORDING_WILL_START, this._onRecordingWillStart);
     PerformanceController.off(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
@@ -82,13 +83,11 @@ let PerformanceView = {
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
 
-    return promise.all([
-      RecordingsView.destroy(),
-      OverviewView.destroy(),
-      ToolbarView.destroy(),
-      DetailsView.destroy()
-    ]);
-  },
+    yield ToolbarView.destroy();
+    yield RecordingsView.destroy();
+    yield OverviewView.destroy();
+    yield DetailsView.destroy();
+  }),
 
   /**
    * Sets the state of the profiler view. Possible options are "empty",
@@ -104,6 +103,7 @@ let PerformanceView = {
     }
 
     this._state = state;
+    this.emit(EVENTS.UI_STATE_CHANGED, state);
   },
 
   /**

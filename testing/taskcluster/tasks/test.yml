@@ -5,7 +5,7 @@ task:
   metadata:
     source: http://todo.com/soon
     owner: {{owner}}
-  workerType: test-c4-2xlarge
+  workerType: b2gtest
   provisionerId: aws-provisioner
   schedulerId: task-graph-scheduler
 

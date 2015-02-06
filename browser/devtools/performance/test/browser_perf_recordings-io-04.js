@@ -8,8 +8,21 @@
 
 let test = Task.async(function*() {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, PerformanceController, DetailsSubview } = panel.panelWin;
+  let { EVENTS, PerformanceController, DetailsView, DetailsSubview } = panel.panelWin;
 
+  // Enable memory to test the memory-calltree and memory-flamegraph.
+  Services.prefs.setBoolPref(MEMORY_PREF, true);
+
+  // Cycle through all the views to initialize them, otherwise we can't use
+  // `waitForWidgetsRendered`. The waterfall is shown by default, but all the
+  // other views are created lazily, so won't emit any events.
+  yield DetailsView.selectView("js-calltree");
+  yield DetailsView.selectView("js-flamegraph");
+  yield DetailsView.selectView("memory-calltree");
+  yield DetailsView.selectView("memory-flamegraph");
+
+  // Need to allow widgets to be updated while hidden, otherwise we can't use
+  // `waitForWidgetsRendered`.
   DetailsSubview.canUpdateWhileHidden = true;
 
   yield startRecording(panel);

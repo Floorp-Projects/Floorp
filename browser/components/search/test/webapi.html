@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<script>
+function installEngine() {
+  var query = window.location.search.substring(1).split(":");
+  var func = query[0];
+  var args = JSON.parse(decodeURIComponent(query[1]));
+
+  if (func == "AddSearchProvider")
+    window.external.AddSearchProvider(...args);
+  else if (func == "addSearchEngine")
+    window.sidebar.addSearchEngine(...args);
+}
+</script>
+</head>
+<body onload="installEngine()">
+</body>
+</html>

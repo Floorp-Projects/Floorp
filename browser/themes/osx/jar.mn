@@ -30,6 +30,7 @@ browser.jar:
   skin/classic/browser/content-contextmenu.svg
   skin/classic/browser/dots.png                             (../shared/dots.png)
   skin/classic/browser/dots@2x.png                          (../shared/dots@2x.png)
+  skin/classic/browser/drm-icon.svg                         (../shared/drm-icon.svg)
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/fullscreen-darknoise.png
   skin/classic/browser/Geolocation-16.png

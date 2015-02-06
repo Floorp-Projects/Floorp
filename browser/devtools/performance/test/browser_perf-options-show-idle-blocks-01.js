@@ -1,18 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const IDLE_PREF = "devtools.performance.ui.show-idle-blocks";
-
 /**
- * Tests that the js Flamegraphs gets rerendered when toggling `show-idle-blocks`
+ * Tests that the js flamegraphs get rerendered when toggling `show-idle-blocks`
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView, JsFlameGraphView } = panel.panelWin;
 
-  DetailsView.selectView("js-flamegraph");
-
   Services.prefs.setBoolPref(IDLE_PREF, true);
+
+  yield DetailsView.selectView("js-flamegraph");
 
   yield startRecording(panel);
   yield busyWait(100);

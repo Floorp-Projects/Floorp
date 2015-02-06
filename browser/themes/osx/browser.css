@@ -4612,6 +4612,17 @@ window > chatbox {
   border-bottom-right-radius: @toolbarbuttonCornerRadius@;
 }
 
+/* EME notifications */
+
+.popup-notification-icon[popupid="drmContentPlaying"],
+#eme-notification-icon {
+  list-style-image: url("chrome://browser/skin/drm-icon.svg#chains");
+}
+
+#eme-notification-icon:hover:active {
+  list-style-image: url("chrome://browser/skin/drm-icon.svg#chains-pressed");
+}
+
 /* Customization mode */
 
 %include ../shared/customizableui/customizeMode.inc.css
