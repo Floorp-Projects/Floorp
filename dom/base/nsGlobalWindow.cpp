@@ -7265,7 +7265,7 @@ nsGlobalWindow::ScrollTo(const CSSIntPoint& aScroll,
 NS_IMETHODIMP
 nsGlobalWindow::ScrollBy(int32_t aXScrollDif, int32_t aYScrollDif)
 {
-  ScrollBy(aXScrollDif, aYScrollDif);
+  ScrollBy(double(aXScrollDif), double(aYScrollDif));
 
   return NS_OK;
 }
