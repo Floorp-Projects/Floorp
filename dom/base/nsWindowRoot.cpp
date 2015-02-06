@@ -34,6 +34,7 @@ using namespace mozilla::dom;
 nsWindowRoot::nsWindowRoot(nsPIDOMWindow* aWindow)
 {
   mWindow = aWindow;
+  MOZ_ASSERT(mWindow->IsOuterWindow());
 }
 
 nsWindowRoot::~nsWindowRoot()
