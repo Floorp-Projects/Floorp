@@ -1153,7 +1153,7 @@ PresShell::Destroy()
 
   mUpdateImageVisibilityEvent.Revoke();
 
-  ClearVisibleImagesList();
+  ClearVisibleImagesList(/* aRequestDiscard = */ true);
 
   if (mCaret) {
     mCaret->Terminate();
@@ -5820,7 +5820,7 @@ PresShell::MarkImagesInListVisible(const nsDisplayList& aList)
 static PLDHashOperator
 DecrementVisibleCount(nsRefPtrHashKey<nsIImageLoadingContent>* aEntry, void*)
 {
-  aEntry->GetKey()->DecrementVisibleCount();
+  aEntry->GetKey()->DecrementVisibleCount(/* aRequestDiscard = */ false);
   return PL_DHASH_NEXT;
 }
 
@@ -5844,7 +5844,7 @@ PresShell::ClearImageVisibilityVisited(nsView* aView, bool aClear)
   if (aClear) {
     PresShell* presShell = static_cast<PresShell*>(vm->GetPresShell());
     if (!presShell->mImageVisibilityVisited) {
-      presShell->ClearVisibleImagesList();
+      presShell->ClearVisibleImagesList(/* aRequestDiscard = */ false);
     }
     presShell->mImageVisibilityVisited = false;
   }
@@ -5853,10 +5853,20 @@ PresShell::ClearImageVisibilityVisited(nsView* aView, bool aClear)
   }
 }
 
-void
-PresShell::ClearVisibleImagesList()
+static PLDHashOperator
+DecrementVisibleCountAndDiscard(nsRefPtrHashKey<nsIImageLoadingContent>* aEntry,
+                                void*)
 {
-  mVisibleImages.EnumerateEntries(DecrementVisibleCount, nullptr);
+  aEntry->GetKey()->DecrementVisibleCount(/* aRequestDiscard = */ true);
+  return PL_DHASH_NEXT;
+}
+
+void
+PresShell::ClearVisibleImagesList(bool aRequestDiscard)
+{
+  auto enumerator = aRequestDiscard ? DecrementVisibleCountAndDiscard
+                                    : DecrementVisibleCount;
+  mVisibleImages.EnumerateEntries(enumerator, nullptr);
   mVisibleImages.Clear();
 }
 
@@ -5986,7 +5996,7 @@ PresShell::UpdateImageVisibility()
   // call update on that frame
   nsIFrame* rootFrame = GetRootFrame();
   if (!rootFrame) {
-    ClearVisibleImagesList();
+    ClearVisibleImagesList(/* aRequestDiscard = */ true);
     return;
   }
 
@@ -6145,7 +6155,7 @@ PresShell::RemoveImageFromVisibleList(nsIImageLoadingContent* aImage)
   mVisibleImages.RemoveEntry(aImage);
   if (mVisibleImages.Count() < count) {
     // aImage was in the hashtable, so we need to decrement its visible count
-    aImage->DecrementVisibleCount();
+    aImage->DecrementVisibleCount(/* aRequestDiscard = */ false);
   }
 }
 
