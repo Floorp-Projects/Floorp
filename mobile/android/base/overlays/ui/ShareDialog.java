@@ -264,14 +264,15 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
         subtitleView.setSelected(true);
 
         final ImageView foxIcon = (ImageView) findViewById(R.id.share_overlay_icon);
-        final LinearLayout topBar = (LinearLayout) findViewById(R.id.share_overlay_top_bar);
+        final View titleView = findViewById(R.id.title);
 
         if (state == State.DEVICES_ONLY) {
             bookmarkButton.setVisibility(View.GONE);
             readingListButton.setVisibility(View.GONE);
 
             foxIcon.setOnClickListener(null);
-            topBar.setOnClickListener(null);
+            titleView.setOnClickListener(null);
+            subtitleView.setOnClickListener(null);
             return;
         }
 
@@ -287,7 +288,8 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
         };
 
         foxIcon.setOnClickListener(launchBrowser);
-        topBar.setOnClickListener(launchBrowser);
+        titleView.setOnClickListener(launchBrowser);
+        subtitleView.setOnClickListener(launchBrowser);
 
         final LocalBrowserDB browserDB = new LocalBrowserDB(getCurrentProfile());
         setButtonState(url, browserDB);
