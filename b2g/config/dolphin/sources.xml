@@ -134,9 +134,9 @@
   <project name="platform/hardware/akm" path="hardware/akm" revision="6d3be412647b0eab0adff8a2768736cf4eb68039"/>
   <project groups="invensense" name="platform/hardware/invensense" path="hardware/invensense" revision="e6d9ab28b4f4e7684f6c07874ee819c9ea0002a2"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="865ce3b4a2ba0b3a31421ca671f4d6c5595f8690"/>
-  <project name="kernel/common" path="kernel" revision="9dea122b814940f8856c3927b7482d36aa970f31"/>
+  <project name="kernel/common" path="kernel" rev="6c6f012cea17fb8b3263605737816cf6663432f1" revision="9dea122b814940f8856c3927b7482d36aa970f31"/>
   <project name="platform/system/core" path="system/core" revision="53d584d4a4b4316e4de9ee5f210d662f89b44e7e"/>
-  <project name="u-boot" path="u-boot" revision="d5469d36f18fae90bca89a236c6ac23ed543c29c"/>
+  <project name="u-boot" path="u-boot" rev="cb37a7434073bb47c4c066f6922006442dcd8531" revision="d5469d36f18fae90bca89a236c6ac23ed543c29c"/>
   <project name="vendor/sprd/gps" path="vendor/sprd/gps" revision="6974f8e771d4d8e910357a6739ab124768891e8f"/>
   <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="f56ab768cb9f1ad42fb0809ffec1424b1e693369"/>
   <project name="vendor/sprd/partner" path="vendor/sprd/partner" revision="8649c7145972251af11b0639997edfecabfc7c2e"/>
