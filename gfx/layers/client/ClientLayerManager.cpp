@@ -185,7 +185,7 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   NS_ASSERTION(!InTransaction(), "Nested transactions not allowed");
   mPhase = PHASE_CONSTRUCTION;
 
-  MOZ_ASSERT(mKeepAlive.IsEmpty(), "uncommitted txn?");
+  NS_ABORT_IF_FALSE(mKeepAlive.IsEmpty(), "uncommitted txn?");
   nsRefPtr<gfxContext> targetContext = aTarget;
 
   // If the last transaction was incomplete (a failed DoEmptyTransaction),
@@ -644,11 +644,11 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
 ShadowableLayer*
 ClientLayerManager::Hold(Layer* aLayer)
 {
-  MOZ_ASSERT(HasShadowManager(),
-             "top-level tree, no shadow tree to remote to");
+  NS_ABORT_IF_FALSE(HasShadowManager(),
+                    "top-level tree, no shadow tree to remote to");
 
   ShadowableLayer* shadowable = ClientLayer::ToClientLayer(aLayer);
-  MOZ_ASSERT(shadowable, "trying to remote an unshadowable layer");
+  NS_ABORT_IF_FALSE(shadowable, "trying to remote an unshadowable layer");
 
   mKeepAlive.AppendElement(aLayer);
   return shadowable;

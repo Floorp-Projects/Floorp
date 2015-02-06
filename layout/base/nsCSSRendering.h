@@ -463,7 +463,7 @@ struct nsCSSRendering {
   static nsStyleContext*
   FindCanvasBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame)
   {
-    MOZ_ASSERT(IsCanvasFrame(aForFrame), "not a canvas frame");
+    NS_ABORT_IF_FALSE(IsCanvasFrame(aForFrame), "not a canvas frame");
     if (aRootElementFrame)
       return FindRootFrameBackground(aRootElementFrame);
 

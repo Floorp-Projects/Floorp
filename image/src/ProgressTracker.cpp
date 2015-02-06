@@ -87,15 +87,15 @@ CheckProgressConsistency(Progress aProgress)
 void
 ProgressTracker::SetImage(Image* aImage)
 {
-  MOZ_ASSERT(aImage, "Setting null image");
-  MOZ_ASSERT(!mImage, "Setting image when we already have one");
+  NS_ABORT_IF_FALSE(aImage, "Setting null image");
+  NS_ABORT_IF_FALSE(!mImage, "Setting image when we already have one");
   mImage = aImage;
 }
 
 void
 ProgressTracker::ResetImage()
 {
-  MOZ_ASSERT(mImage, "Resetting image when it's already null!");
+  NS_ABORT_IF_FALSE(mImage, "Resetting image when it's already null!");
   mImage = nullptr;
 }
 

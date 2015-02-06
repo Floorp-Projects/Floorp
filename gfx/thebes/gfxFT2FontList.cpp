@@ -631,9 +631,8 @@ public:
 
         PL_DHashTableInit(&mMap, &mOps, sizeof(FNCMapEntry), 0);
 
-        MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default,
-                   "StartupCacheFontNameCache should only be used in chrome "
-                   "process");
+        NS_ABORT_IF_FALSE(XRE_GetProcessType() == GeckoProcessType_Default,
+                          "StartupCacheFontNameCache should only be used in chrome process");
         mCache = mozilla::scache::StartupCache::GetSingleton();
 
         Init();

@@ -113,14 +113,14 @@ private:
   }
 
   void ReplaceItem(uint32_t aIndex, const float &aNumber) {
-    MOZ_ASSERT(aIndex < mNumbers.Length(),
-               "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    NS_ABORT_IF_FALSE(aIndex < mNumbers.Length(),
+                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mNumbers[aIndex] = aNumber;
   }
 
   void RemoveItem(uint32_t aIndex) {
-    MOZ_ASSERT(aIndex < mNumbers.Length(),
-               "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    NS_ABORT_IF_FALSE(aIndex < mNumbers.Length(),
+                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mNumbers.RemoveElementAt(aIndex);
   }
 

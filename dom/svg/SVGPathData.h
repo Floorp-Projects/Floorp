@@ -263,7 +263,7 @@ public:
    */
   bool IsIdentity() const {
     if (!mElement) {
-      MOZ_ASSERT(IsEmpty(), "target element propagation failure");
+      NS_ABORT_IF_FALSE(IsEmpty(), "target element propagation failure");
       return true;
     }
     return false;

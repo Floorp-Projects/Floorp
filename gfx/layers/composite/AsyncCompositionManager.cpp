@@ -479,9 +479,9 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
       dom::Animation::GetComputedTimingAt(
         Nullable<TimeDuration>(elapsedDuration), timing);
 
-    MOZ_ASSERT(0.0 <= computedTiming.mTimeFraction &&
-               computedTiming.mTimeFraction <= 1.0,
-               "time fraction should be in [0-1]");
+    NS_ABORT_IF_FALSE(0.0 <= computedTiming.mTimeFraction &&
+                      computedTiming.mTimeFraction <= 1.0,
+                      "time fraction should be in [0-1]");
 
     int segmentIndex = 0;
     AnimationSegment* segment = animation.segments().Elements();

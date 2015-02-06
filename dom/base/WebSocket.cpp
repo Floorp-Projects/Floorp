@@ -1482,7 +1482,7 @@ WebSocketImpl::Init(JSContext* aCx,
 void
 WebSocketImpl::AsyncOpen(ErrorResult& aRv)
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
+  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
 
   nsCString asciiOrigin;
   aRv = nsContentUtils::GetASCIIOrigin(mPrincipal, asciiOrigin);
@@ -1527,7 +1527,7 @@ nsresult
 WebSocketImpl::InitializeConnection()
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(!mChannel, "mChannel should be null");
+  NS_ABORT_IF_FALSE(!mChannel, "mChannel should be null");
 
   nsCOMPtr<nsIWebSocketChannel> wsChannel;
   nsAutoCloseWS autoClose(this);

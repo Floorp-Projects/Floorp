@@ -8991,7 +8991,7 @@ nsCSSFrameConstructor::MaybeRecreateFramesForElement(Element* aElement)
 static bool
 IsWhitespaceFrame(nsIFrame* aFrame)
 {
-  MOZ_ASSERT(aFrame, "invalid argument");
+  NS_ABORT_IF_FALSE(aFrame, "invalid argument");
   return aFrame->GetType() == nsGkAtoms::textFrame &&
     aFrame->GetContent()->TextIsOnlyWhitespace();
 }
@@ -9599,9 +9599,9 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
         // else, we have a next child and it does not want to be wrapped.  So,
         // we jump back to the beginning of the loop to skip over that child
         // (and anything else non-wrappable after it)
-        MOZ_ASSERT(!iter.IsDone() &&
-                   !iter.item().NeedsAnonFlexOrGridItem(aState),
-                   "hitEnd and/or nextChildNeedsAnonItem lied");
+        NS_ABORT_IF_FALSE(!iter.IsDone() &&
+                          !iter.item().NeedsAnonFlexOrGridItem(aState),
+                          "hitEnd and/or nextChildNeedsAnonItem lied");
         continue;
       }
     }
@@ -9644,10 +9644,10 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
       newItem->mStyleContext->StyleDisplay()->IsInlineOutsideStyle();
     newItem->mIsBlock = !newItem->mIsAllInline;
 
-    MOZ_ASSERT(!newItem->mIsAllInline && newItem->mIsBlock,
-               "expecting anonymous flex/grid items to be block-level "
-               "(this will make a difference when we encounter "
-               "'align-items: baseline')");
+    NS_ABORT_IF_FALSE(!newItem->mIsAllInline && newItem->mIsBlock,
+                      "expecting anonymous flex/grid items to be block-level "
+                      "(this will make a difference when we encounter "
+                      "'align-items: baseline')");
 
     // Anonymous flex and grid items induce line boundaries around their
     // contents.
@@ -10244,17 +10244,17 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
                  "ProcessChildren() codepath for this frame");
 #endif
     // Assert some things about this content
-    MOZ_ASSERT(!(content->GetFlags() &
-                 (NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME)),
-               "Should not be marked as needing frames");
-    MOZ_ASSERT(!content->IsElement() ||
-               !(content->GetFlags() & ELEMENT_ALL_RESTYLE_FLAGS),
-               "Should have no pending restyle flags");
-    MOZ_ASSERT(!content->GetPrimaryFrame(),
-               "Should have no existing frame");
-    MOZ_ASSERT(!content->IsNodeOfType(nsINode::eCOMMENT) &&
-               !content->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION),
-               "Why is someone creating garbage anonymous content");
+    NS_ABORT_IF_FALSE(!(content->GetFlags() &
+                        (NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME)),
+                      "Should not be marked as needing frames");
+    NS_ABORT_IF_FALSE(!content->IsElement() ||
+                      !(content->GetFlags() & ELEMENT_ALL_RESTYLE_FLAGS),
+                      "Should have no pending restyle flags");
+    NS_ABORT_IF_FALSE(!content->GetPrimaryFrame(),
+                      "Should have no existing frame");
+    NS_ABORT_IF_FALSE(!content->IsNodeOfType(nsINode::eCOMMENT) &&
+                      !content->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION),
+                      "Why is someone creating garbage anonymous content");
 
     nsRefPtr<nsStyleContext> styleContext;
     TreeMatchContext::AutoParentDisplayBasedStyleFixupSkipper
@@ -10342,8 +10342,8 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   GetAnonymousContent(aContent, aPossiblyLeafFrame, anonymousItems);
 #ifdef DEBUG
   for (uint32_t i = 0; i < anonymousItems.Length(); ++i) {
-    MOZ_ASSERT(anonymousItems[i].mContent->IsRootOfAnonymousSubtree(),
-               "Content should know it's an anonymous subtree");
+    NS_ABORT_IF_FALSE(anonymousItems[i].mContent->IsRootOfAnonymousSubtree(),
+                      "Content should know it's an anonymous subtree");
   }
 #endif
   AddFCItemsForAnonymousContent(aState, aFrame, anonymousItems,

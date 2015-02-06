@@ -131,8 +131,8 @@ EncodeInputStream_Encoder(nsIInputStream* aStream,
 
   // Encode the bulk of the
   uint32_t encodeLength = countRemaining - countRemaining % 3;
-  MOZ_ASSERT(encodeLength % 3 == 0,
-             "Should have an exact number of triplets!");
+  NS_ABORT_IF_FALSE(encodeLength % 3 == 0,
+                    "Should have an exact number of triplets!");
   Encode(src, encodeLength, state->buffer);
   state->buffer += (encodeLength / 3) * 4;
   src += encodeLength;
@@ -143,7 +143,7 @@ EncodeInputStream_Encoder(nsIInputStream* aStream,
 
   if (countRemaining) {
     // We should never have a full triplet left at this point.
-    MOZ_ASSERT(countRemaining < 3, "We should have encoded more!");
+    NS_ABORT_IF_FALSE(countRemaining < 3, "We should have encoded more!");
     state->c[0] = src[0];
     state->c[1] = (countRemaining == 2) ? src[1] : '\0';
     state->charsOnStack = countRemaining;

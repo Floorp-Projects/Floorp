@@ -310,7 +310,7 @@ function would return true for |Actor[]|."""
 
 def _abortIfFalse(cond, msg):
     return StmtExpr(ExprCall(
-        ExprVar('MOZ_ASSERT'),
+        ExprVar('NS_ABORT_IF_FALSE'),
         [ cond, ExprLiteral.String(msg) ]))
 
 def _runtimeAbort(msg):
