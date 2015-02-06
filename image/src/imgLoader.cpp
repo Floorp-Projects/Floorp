@@ -1076,8 +1076,8 @@ void imgLoader::VerifyCacheSizes()
   uint32_t trackersize = 0;
   for (nsExpirationTracker<imgCacheEntry, 3>::Iterator it(mCacheTracker); it.Next(); )
     trackersize++;
-  NS_ABORT_IF_FALSE(queuesize == trackersize, "Queue and tracker sizes out of sync!");
-  NS_ABORT_IF_FALSE(queuesize <= cachesize, "Queue has more elements than cache!");
+  MOZ_ASSERT(queuesize == trackersize, "Queue and tracker sizes out of sync!");
+  MOZ_ASSERT(queuesize <= cachesize, "Queue has more elements than cache!");
 #endif
 }
 
@@ -1190,7 +1190,7 @@ imgLoader::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aD
 
   // (Nothing else should bring us here)
   else {
-    NS_ABORT_IF_FALSE(0, "Invalid topic received");
+    MOZ_ASSERT(0, "Invalid topic received");
   }
 
   return NS_OK;
@@ -1727,7 +1727,7 @@ bool imgLoader::RemoveFromCache(nsCString& spec,
   if (cache.Get(spec, getter_AddRefs(entry)) && entry) {
     cache.Remove(spec);
 
-    NS_ABORT_IF_FALSE(!entry->Evicted(), "Evicting an already-evicted cache entry!");
+    MOZ_ASSERT(!entry->Evicted(), "Evicting an already-evicted cache entry!");
 
     // Entries with no proxies are in the tracker.
     if (entry->HasNoProxies()) {
@@ -1990,7 +1990,7 @@ nsresult imgLoader::LoadImage(nsIURI *aURI,
       // If this entry has no proxies, its request has no reference to the entry.
       if (entry->HasNoProxies()) {
         LOG_FUNC_WITH_PARAM(GetImgLog(), "imgLoader::LoadImage() adding proxyless entry", "uri", spec.get());
-        NS_ABORT_IF_FALSE(!request->HasCacheEntry(), "Proxyless entry's request has cache entry!");
+        MOZ_ASSERT(!request->HasCacheEntry(), "Proxyless entry's request has cache entry!");
         request->SetCacheEntry(entry);
 
         if (mCacheTracker)
@@ -2238,7 +2238,7 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel *channel, imgINotificationOb
         // If this entry has no proxies, its request has no reference to the entry.
         if (entry->HasNoProxies()) {
           LOG_FUNC_WITH_PARAM(GetImgLog(), "imgLoader::LoadImageWithChannel() adding proxyless entry", "uri", spec.get());
-          NS_ABORT_IF_FALSE(!request->HasCacheEntry(), "Proxyless entry's request has cache entry!");
+          MOZ_ASSERT(!request->HasCacheEntry(), "Proxyless entry's request has cache entry!");
           request->SetCacheEntry(entry);
 
           if (mCacheTracker)
@@ -2576,9 +2576,9 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
 
         // Proxies waiting on cache validation should be deferring notifications.
         // Undefer them.
-        NS_ABORT_IF_FALSE(proxy->NotificationsDeferred(),
-                          "Proxies waiting on cache validation should be "
-                          "deferring notifications!");
+        MOZ_ASSERT(proxy->NotificationsDeferred(),
+                   "Proxies waiting on cache validation should be "
+                   "deferring notifications!");
         proxy->SetNotificationsDeferred(false);
 
         // Notify synchronously, because we're already in OnStartRequest, an

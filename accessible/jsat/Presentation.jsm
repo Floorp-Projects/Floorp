@@ -75,6 +75,12 @@ Presenter.prototype = {
   selectionChanged: function selectionChanged(aObject) {}, // jshint ignore:line
 
   /**
+   * Name has changed.
+   * @param {nsIAccessible} aAccessible the object whose value has changed.
+   */
+  nameChanged: function nameChanged(aAccessible) {}, // jshint ignore: line
+
+  /**
    * Value has changed.
    * @param {nsIAccessible} aAccessible the object whose value has changed.
    */
@@ -514,6 +520,17 @@ B2GPresenter.prototype.pivotChanged =
     };
   };
 
+B2GPresenter.prototype.nameChanged =
+  function B2GPresenter_nameChanged(aAccessible) {
+    return {
+      type: this.type,
+      details: {
+        eventType: 'name-change',
+        data: aAccessible.name
+      }
+    };
+  };
+
 B2GPresenter.prototype.valueChanged =
   function B2GPresenter_valueChanged(aAccessible) {
 
@@ -687,6 +704,10 @@ this.Presentation = { // jshint ignore:line
                                                       aIsFromUserInput) {
     return [p.textSelectionChanged(aText, aStart, aEnd, aOldStart, aOldEnd, // jshint ignore:line
       aIsFromUserInput) for each (p in this.presenters)]; // jshint ignore:line
+  },
+
+  nameChanged: function nameChanged(aAccessible) {
+    return [ p.nameChanged(aAccessible) for (p of this.presenters) ]; // jshint ignore:line
   },
 
   valueChanged: function valueChanged(aAccessible) {

@@ -20,7 +20,7 @@ interface nsIURI;
 
 typedef unsigned short CSPDirective;
 
-[scriptable, uuid(9454a677-5342-4220-8154-e619410e07e7)]
+[scriptable, uuid(68434447-b816-4473-a731-efc4f6d59902)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
   /**
@@ -48,7 +48,6 @@ interface nsIContentSecurityPolicy : nsISerializable
   const unsigned short BASE_URI_DIRECTIVE         = 13;
   const unsigned short FORM_ACTION_DIRECTIVE      = 14;
   const unsigned short REFERRER_DIRECTIVE         = 15;
-  const unsigned short SANDBOX_DIRECTIVE          = 16;
 
   /**
    * Accessor method for a read-only string version of the policy at a given
@@ -262,17 +261,6 @@ interface nsIContentSecurityPolicy : nsISerializable
    *    directive. (block the pending operation if false).
    */
   boolean permits(in nsIURI aURI, in CSPDirective aDir, in boolean aSpecific);
-
-  /**
-   * Delegate method called by the service when the protected document is loaded.
-   * Returns the intersection of all the sandbox flags contained in
-   * CSP policies. This is the most restricting sandbox policy.
-   * See nsSandboxFlags.h for the possible flags.
-   *
-   * @return
-   *    sandbox flags or SANDBOXED_NONE if no sandbox directive exists
-   */
-  uint32_t getCSPSandboxFlags();
 
   /**
    * Delegate method called by the service when sub-elements of the protected

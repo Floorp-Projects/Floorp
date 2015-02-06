@@ -416,8 +416,11 @@ bool PACDnsResolve(JSContext *cx, unsigned int argc, JS::Value *vp)
     return false;
   }
 
-  JS::Rooted<JSString*> arg1(cx);
-  if (!JS_ConvertArguments(cx, args, "S", arg1.address()))
+  if (!args.requireAtLeast(cx, "dnsResolve", 1))
+    return false;
+
+  JS::Rooted<JSString*> arg1(cx, JS::ToString(cx, args[0]));
+  if (!arg1)
     return false;
 
   nsAutoJSString hostName;
@@ -465,8 +468,11 @@ bool PACProxyAlert(JSContext *cx, unsigned int argc, JS::Value *vp)
 {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
 
-  JS::Rooted<JSString*> arg1(cx);
-  if (!JS_ConvertArguments(cx, args, "S", arg1.address()))
+  if (!args.requireAtLeast(cx, "alert", 1))
+    return false;
+
+  JS::Rooted<JSString*> arg1(cx, JS::ToString(cx, args[0]));
+  if (!arg1)
     return false;
 
   nsAutoJSString message;
@@ -634,7 +640,7 @@ nsresult
 ProxyAutoConfig::SetupJS()
 {
   mJSNeedsSetup = false;
-  NS_ABORT_IF_FALSE(!GetRunning(), "JIT is running");
+  MOZ_ASSERT(!GetRunning(), "JIT is running");
 
   delete mJSRuntime;
   mJSRuntime = nullptr;
@@ -762,7 +768,7 @@ ProxyAutoConfig::~ProxyAutoConfig()
 void
 ProxyAutoConfig::Shutdown()
 {
-  NS_ABORT_IF_FALSE(!NS_IsMainThread(), "wrong thread for shutdown");
+  MOZ_ASSERT(!NS_IsMainThread(), "wrong thread for shutdown");
 
   if (GetRunning() || mShutdown)
     return;

@@ -34,47 +34,50 @@
   <![CDATA[
 
     function runTest() {
-      // Sanity checks.
-      ok(PlacesUtils, "PlacesUtils is running in chrome context");
-      ok(PlacesUIUtils, "PlacesUIUtils is running in chrome context");
-      ok(PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION > 0,
-         "Left pane version in chrome context, " +
-           "current version is: " + PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION );
+      SimpleTest.waitForExplicitFinish();
 
-      var fakeLeftPanes = [];
-      var as = PlacesUtils.annotations;
-      var bs = PlacesUtils.bookmarks;
+      Task.spawn(function* () {
+        // Sanity checks.
+        ok(PlacesUtils, "PlacesUtils is running in chrome context");
+        ok(PlacesUIUtils, "PlacesUIUtils is running in chrome context");
+        ok(PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION > 0,
+           "Left pane version in chrome context, " +
+             "current version is: " + PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION );
 
-      // We need 2 left pane folders to simulate a corrupt profile.
-      do {
-        let leftPaneItems = as.getItemsWithAnnotation(PlacesUIUtils.ORGANIZER_FOLDER_ANNO);
-        // Create a fake left pane folder.
-        let fakeLeftPaneRoot = bs.createFolder(PlacesUtils.placesRootId, "",
-                                               bs.DEFAULT_INDEX);
-        as.setItemAnnotation(fakeLeftPaneRoot, PlacesUIUtils.ORGANIZER_FOLDER_ANNO,
-                             PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION, 0,
-                             as.EXPIRE_NEVER);
-        fakeLeftPanes.push(fakeLeftPaneRoot);
-      } while (fakeLeftPanes.length < 2);
+        let fakeLeftPanes = [];
+        // We need 2 left pane folders to simulate a corrupt profile.
+        do {
+          let leftPaneItems = PlacesUtils.annotations.getItemsWithAnnotation(PlacesUIUtils.ORGANIZER_FOLDER_ANNO);
 
-      // Initialize the left pane queries.
-      PlacesUIUtils.leftPaneFolderId;
+          // Create a fake left pane folder.
+          let folder = yield PlacesUtils.bookmarks.insert({
+            parentGuid: PlacesUtils.bookmarks.rootGuid,
+            index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+            type: PlacesUtils.bookmarks.TYPE_FOLDER
+          });
 
-      // Check left pane.
-      ok(PlacesUIUtils.leftPaneFolderId > 0,
-         "Left pane folder correctly created");
-      var leftPaneItems = as.getItemsWithAnnotation(PlacesUIUtils.ORGANIZER_FOLDER_ANNO);
-      is(leftPaneItems.length, 1,
-         "We correctly have only 1 left pane folder");
+          let fakeLeftPaneRoot = yield PlacesUtils.promiseItemId(folder.guid);
+          PlacesUtils.annotations.setItemAnnotation(fakeLeftPaneRoot, PlacesUIUtils.ORGANIZER_FOLDER_ANNO,
+                               PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION, 0,
+                               PlacesUtils.annotations.EXPIRE_NEVER);
+          fakeLeftPanes.push(folder.guid);
+        } while (fakeLeftPanes.length < 2);
 
-      // Check that all old left pane items have been removed.
-      fakeLeftPanes.forEach(function(aItemId) {
-        try {
-          bs.getItemTitle(aItemId);
-          throw("This folder should have been removed");
-        } catch (ex) {}
-      });
+        // Initialize the left pane queries.
+        PlacesUIUtils.leftPaneFolderId;
 
+        // Check left pane.
+        ok(PlacesUIUtils.leftPaneFolderId > 0,
+           "Left pane folder correctly created");
+        let leftPaneItems = PlacesUtils.annotations.getItemsWithAnnotation(PlacesUIUtils.ORGANIZER_FOLDER_ANNO);
+        is(leftPaneItems.length, 1,
+           "We correctly have only 1 left pane folder");
+
+        // Check that all old left pane items have been removed.
+        for (let guid of fakeLeftPanes) {
+          ok(!(yield PlacesUtils.bookmarks.fetch({guid})), "This folder should have been removed");
+        }
+      }).then(() => SimpleTest.finish());
     }
   ]]>
   </script>

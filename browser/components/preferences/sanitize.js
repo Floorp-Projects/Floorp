@@ -4,6 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 let gSanitizeDialog = Object.freeze({
+  init: function() {
+    let customWidthElements = document.getElementsByAttribute("dialogWidth", "*");
+    let isInSubdialog = document.documentElement.hasAttribute("subdialog");
+    for (let element of customWidthElements) {
+      element.style.width = element.getAttribute(isInSubdialog ? "subdialogWidth" : "dialogWidth");
+    }
+    onClearHistoryChanged();
+  },
+
   onClearHistoryChanged: function () {
     let downloadsPref = document.getElementById("privacy.clearOnShutdown.downloads");
     let historyPref = document.getElementById("privacy.clearOnShutdown.history");

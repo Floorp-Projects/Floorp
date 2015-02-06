@@ -28,16 +28,16 @@ public:
 
   const nsSMILInstanceTime* Begin() const
   {
-    NS_ABORT_IF_FALSE(mBegin && mEnd,
-        "Requesting Begin() on un-initialized instance time");
+    MOZ_ASSERT(mBegin && mEnd,
+               "Requesting Begin() on un-initialized instance time");
     return mBegin;
   }
   nsSMILInstanceTime* Begin();
 
   const nsSMILInstanceTime* End() const
   {
-    NS_ABORT_IF_FALSE(mBegin && mEnd,
-        "Requesting End() on un-initialized instance time");
+    MOZ_ASSERT(mBegin && mEnd,
+               "Requesting End() on un-initialized instance time");
     return mEnd;
   }
   nsSMILInstanceTime* End();

@@ -305,7 +305,6 @@ JitFrameIterator::operator++()
     returnAddressToFp_ = current()->returnAddress();
     current_ = prev;
 
-
     return *this;
 }
 
@@ -3062,6 +3061,9 @@ AssertJitStackInvariants(JSContext *cx)
                   "The rectifier frame should keep the alignment");
 
                 size_t expectedFrameSize = 0
+#if defined(JS_CODEGEN_X86)
+                    + sizeof(void *) /* frame pointer */
+#endif
                     + sizeof(Value) * (frames.callee()->nargs() + 1 /* |this| argument */ )
                     + sizeof(JitFrameLayout);
                 MOZ_RELEASE_ASSERT(frameSize >= expectedFrameSize,
@@ -3069,6 +3071,17 @@ AssertJitStackInvariants(JSContext *cx)
                 MOZ_RELEASE_ASSERT(expectedFrameSize + JitStackAlignment > frameSize,
                   "The frame size is optimal");
             }
+
+            if (frames.isIonJS()) {
+                // Ideally, we should not have such requirement, but keep the
+                // alignment-delta as part of the Safepoint such that we can pad
+                // accordingly when making out-of-line calls.  In the mean time,
+                // let us have check-points where we can garantee that
+                // everything can properly be aligned before adding complexity.
+                MOZ_RELEASE_ASSERT(frames.ionScript()->frameSize() % JitStackAlignment == 0,
+                  "Ensure that if the Ion frame is aligned, then the spill base is also aligned");
+            }
+
         }
 
         MOZ_RELEASE_ASSERT(frames.type() == JitFrame_Entry,

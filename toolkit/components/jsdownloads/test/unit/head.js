@@ -320,13 +320,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
   persist.persistFlags |=
     Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
-  // We must create the nsITransfer implementation using its class ID because
-  // the "@mozilla.org/transfer;1" contract is currently implemented in
-  // "toolkit/components/downloads".  When the other folder is not included in
-  // builds anymore (bug 851471), we'll be able to use the contract ID.
-  let transfer =
-      Components.classesByID["{1b4c85df-cbdd-4bb6-b04e-613caece083c}"]
-                .createInstance(Ci.nsITransfer);
+  let transfer = Cc["@mozilla.org/transfer;1"].createInstance(Ci.nsITransfer);
 
   let deferred = Promise.defer();
 
@@ -832,19 +826,5 @@ add_task(function test_common_initialize()
   do_register_cleanup(function () {
     registrar.unregisterFactory(cid, mockFactory);
     registrar.registerFactory(cid, "", contractID, oldFactory);
-  });
-
-  // We must also make sure that nsIExternalHelperAppService uses the
-  // JavaScript implementation of nsITransfer, because the
-  // "@mozilla.org/transfer;1" contract is currently implemented in
-  // "toolkit/components/downloads".  When the other folder is not included in
-  // builds anymore (bug 851471), we'll not need to do this anymore.
-  let transferContractID = "@mozilla.org/transfer;1";
-  let transferNewCid = Components.ID("{1b4c85df-cbdd-4bb6-b04e-613caece083c}");
-  let transferCid = registrar.contractIDToCID(transferContractID);
-
-  registrar.registerFactory(transferNewCid, "", transferContractID, null);
-  do_register_cleanup(function () {
-    registrar.registerFactory(transferCid, "", transferContractID, null);
   });
 });

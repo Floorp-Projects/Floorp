@@ -927,7 +927,7 @@ XULDocument::AttributeWillChange(nsIDocument* aDocument,
                                  Element* aElement, int32_t aNameSpaceID,
                                  nsIAtom* aAttribute, int32_t aModType)
 {
-    NS_ABORT_IF_FALSE(aElement, "Null content!");
+    MOZ_ASSERT(aElement, "Null content!");
     NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
 
     // XXXbz check aNameSpaceID, dammit!

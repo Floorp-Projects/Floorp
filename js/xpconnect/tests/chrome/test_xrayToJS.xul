@@ -331,7 +331,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       iwin.eval(`(function() {
                  var o = new Object({
                    primitiveProp: 42, objectProp: { foo: 2 },
-                   xoProp: top.location, hasOwnProperty: 10,
+                   xoProp: top, hasOwnProperty: 10,
                    get getterProp() { return 2; },
                    set setterProp(x) { },
                    get getterSetterProp() { return 3; },
@@ -365,7 +365,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       iwin.eval(`var trickyArray = [];
                  trickyArray.primitiveProp = 42;
                  trickyArray.objectProp = { foo: 2 };
-                 trickyArray.xoProp = top.location;
+                 trickyArray.xoProp = top;
                  trickyArray.hasOwnProperty = 10;
                  Object.defineProperty(trickyArray, 'getterProp', { get: function() { return 2; }});
                  Object.defineProperty(trickyArray, 'setterProp', { set: function(x) {}});
@@ -405,7 +405,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
     // Make sure it looks right under the hood.
     is(trickyObject.wrappedJSObject.getterProp, 2, "Underlying object has getter");
-    is(Cu.unwaiveXrays(trickyObject.wrappedJSObject.xoProp), top.location, "Underlying object has xo property");
+    is(Cu.unwaiveXrays(trickyObject.wrappedJSObject.xoProp), top, "Underlying object has xo property");
 
     // Test getOwnPropertyNames.
     var expectedNames = ['objectProp', 'primitiveProp'];

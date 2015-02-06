@@ -1447,10 +1447,10 @@ nsDocumentViewer::Open(nsISupports *aState, nsISHEntry *aSHEntry)
     DetachFromTopLevelWidget();
 
     nsViewManager *vm = GetViewManager();
-    NS_ABORT_IF_FALSE(vm, "no view manager");
+    MOZ_ASSERT(vm, "no view manager");
     nsView* v = vm->GetRootView();
-    NS_ABORT_IF_FALSE(v, "no root view");
-    NS_ABORT_IF_FALSE(mParentWidget, "no mParentWidget to set");
+    MOZ_ASSERT(v, "no root view");
+    MOZ_ASSERT(mParentWidget, "no mParentWidget to set");
     v->AttachToTopLevelWidget(mParentWidget);
 
     mAttachedToParent = true;
@@ -3592,8 +3592,7 @@ nsDocViewerFocusListener::HandleEvent(nsIDOMEvent* aEvent)
       selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
     }
   } else {
-    NS_ABORT_IF_FALSE(eventType.EqualsLiteral("blur"),
-                      "Unexpected event type");
+    MOZ_ASSERT(eventType.EqualsLiteral("blur"), "Unexpected event type");
     // If selection was on, disable it.
     if(selectionStatus == nsISelectionController::SELECTION_ON ||
        selectionStatus == nsISelectionController::SELECTION_ATTENTION) {

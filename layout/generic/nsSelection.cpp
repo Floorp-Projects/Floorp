@@ -145,22 +145,6 @@ struct CachedOffsetForFrame {
   bool mCanCacheFrameOffset;    // cached frame offset is valid?
 };
 
-// Stack-class to turn on/off selection batching for table selection
-class MOZ_STACK_CLASS nsSelectionBatcher MOZ_FINAL
-{
-private:
-  nsCOMPtr<nsISelectionPrivate> mSelection;
-public:
-  explicit nsSelectionBatcher(nsISelectionPrivate *aSelection) : mSelection(aSelection)
-  {
-    if (mSelection) mSelection->StartBatchChanges();
-  }
-  ~nsSelectionBatcher() 
-  { 
-    if (mSelection) mSelection->EndBatchChanges();
-  }
-};
-
 class nsAutoScrollTimer MOZ_FINAL : public nsITimerCallback
 {
 public:
@@ -2175,7 +2159,7 @@ nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
 
   // Stack-class to wrap all table selection changes in 
   //  BeginBatchChanges() / EndBatchChanges()
-  nsSelectionBatcher selectionBatcher(mDomSelections[index]);
+  SelectionBatcher selectionBatcher(mDomSelections[index]);
 
   int32_t startRowIndex, startColIndex, curRowIndex, curColIndex;
   if (mDragState && mDragSelectingCells)
