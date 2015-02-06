@@ -818,7 +818,7 @@ MaybeConstructorFromType(types::Type ty)
 {
     if (ty.isUnknown() || ty.isAnyObject() || !ty.isGroup())
         return nullptr;
-    types::ObjectGroup *obj = ty.group();
+    ObjectGroup *obj = ty.group();
     types::TypeNewScript *newScript = obj->newScript();
     if (!newScript && obj->maybeUnboxedLayout())
         newScript = obj->unboxedLayout().newScript();
@@ -954,7 +954,7 @@ jit::WriteIonTrackedOptimizationsTable(JSContext *cx, CompactBufferWriter &write
         } else {
             JSScript *script;
             uint32_t offset;
-            if (cx->findAllocationSiteForType(ty, &script, &offset)) {
+            if (ObjectGroup::findAllocationSiteForType(cx, ty, &script, &offset)) {
                 if (!allTypes->append(IonTrackedTypeWithAddendum(ty, script, offset)))
                     return false;
                 SpewAllocationSite(ty, script, offset);
