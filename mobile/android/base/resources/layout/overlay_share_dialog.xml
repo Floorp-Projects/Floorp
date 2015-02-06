@@ -84,7 +84,7 @@
 
             <!-- "Add to reading list" -->
             <org.mozilla.gecko.overlays.ui.OverlayDialogButton
-                style="@style/ShareOverlayButton.Text"
+                style="@style/ShareOverlayButton.Text.Container"
                 android:id="@+id/overlay_share_reading_list_btn"
                 android:enabled="false"/>
 
@@ -96,7 +96,7 @@
 
             <!-- "Add bookmark" -->
             <org.mozilla.gecko.overlays.ui.OverlayDialogButton
-                style="@style/ShareOverlayButton.Text"
+                style="@style/ShareOverlayButton.Text.Container"
                 android:id="@+id/overlay_share_bookmark_btn"
                 android:enabled="false"/>
 
