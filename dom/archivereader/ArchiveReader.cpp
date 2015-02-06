@@ -37,7 +37,7 @@ ArchiveReader::Constructor(const GlobalObject& aGlobal,
   nsAutoCString encoding;
   if (!EncodingUtils::FindEncodingForLabelNoReplacement(aOptions.mEncoding,
                                                         encoding)) {
-    aError.ThrowTypeError(MSG_ENCODING_NOT_SUPPORTED, &aOptions.mEncoding);
+    aError.ThrowRangeError(MSG_ENCODING_NOT_SUPPORTED, &aOptions.mEncoding);
     return nullptr;
   }
 

@@ -2872,7 +2872,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
             dom::TabChild* tc = dom::TabChild::GetFrom(topWindow);
             if (tc) {
               // This returns a PluginWidgetProxy which remotes a number of calls.
-              mWidget = tc->CreatePluginWidget(parentWidget.get());
+              rv = tc->CreatePluginWidget(parentWidget.get(), getter_AddRefs(mWidget));
+              if (NS_FAILED(rv)) {
+                return rv;
+              }
             }
           }
         }
@@ -2888,7 +2891,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
       initData.clipChildren = true;
       initData.clipSiblings = true;
       rv = mWidget->Create(parentWidget.get(), nullptr, nsIntRect(0,0,0,0),
-                           nullptr, &initData);
+                           &initData);
       if (NS_FAILED(rv)) {
         mWidget->Destroy();
         mWidget = nullptr;

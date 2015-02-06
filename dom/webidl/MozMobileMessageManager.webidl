@@ -75,7 +75,9 @@ dictionary MobileMessageFilter
   [EnforceRange] unsigned long long? threadId = 0;
 };
 
-[Pref="dom.sms.enabled"]
+[Pref="dom.sms.enabled",
+ CheckPermissions="sms",
+ AvailableIn="CertifiedApps"]
 interface MozMobileMessageManager : EventTarget
 {
   [Throws]
