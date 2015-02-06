@@ -278,6 +278,17 @@ let ProcessHangMonitor = {
       return;
     }
 
+    // On e10s this counts slow-script/hanged-plugin notice only once.
+    // This code is not reached on non-e10s.
+    if (report.hangType == report.SLOW_SCRIPT) {
+      // On non-e10s, SLOW_SCRIPT_NOTICE_COUNT is probed at nsGlobalWindow.cpp
+      Services.telemetry.getHistogramById("SLOW_SCRIPT_NOTICE_COUNT").add();
+    } else if (report.hangType == report.PLUGIN_HANG) {
+      // On non-e10s we have sufficient plugin telemetry probes,
+      // so PLUGIN_HANG_NOTICE_COUNT is only probed on e10s.
+      Services.telemetry.getHistogramById("PLUGIN_HANG_NOTICE_COUNT").add();
+    }
+
     // Otherwise create a new timer and display the report.
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     timer.initWithCallback(this, HANG_EXPIRATION_TIME, timer.TYPE_ONE_SHOT);

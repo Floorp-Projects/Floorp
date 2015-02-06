@@ -31,6 +31,8 @@ class TypedArrayObject;
 class ObjectElements;
 class NativeObject;
 class HeapSlot;
+class ObjectGroup;
+
 void SetGCZeal(JSRuntime *, uint8_t, uint32_t);
 
 namespace gc {
@@ -38,10 +40,6 @@ struct Cell;
 class Collector;
 class MinorCollectionTracer;
 } /* namespace gc */
-
-namespace types {
-struct ObjectGroup;
-}
 
 namespace jit {
 class CodeGenerator;
@@ -117,7 +115,7 @@ class Nursery
     /* Free a slots array. */
     void freeSlots(HeapSlot *slots);
 
-    typedef Vector<types::ObjectGroup *, 0, SystemAllocPolicy> ObjectGroupList;
+    typedef Vector<ObjectGroup *, 0, SystemAllocPolicy> ObjectGroupList;
 
     /*
      * Do a minor collection, optionally specifying a list to store groups which

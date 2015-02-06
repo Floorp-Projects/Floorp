@@ -116,7 +116,7 @@ js::ExistingCloneFunctionAtCallsite(const CallsiteCloneTable &table, JSFunction 
 {
     MOZ_ASSERT(fun->nonLazyScript()->shouldCloneAtCallsite());
     MOZ_ASSERT(!fun->nonLazyScript()->enclosingStaticScope());
-    MOZ_ASSERT(types::UseSingletonForClone(fun));
+    MOZ_ASSERT(ObjectGroup::useSingletonForClone(fun));
 
     /*
      * If we start allocating function objects in the nursery, then the callsite
@@ -253,7 +253,7 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
          * This printing depends on atoms still existing.
          */
         for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
-            c->types.print(cx, false);
+            types::PrintTypes(cx, c, false);
     }
     if (mode == DCM_FORCE_GC) {
         MOZ_ASSERT(!rt->isHeapBusy());

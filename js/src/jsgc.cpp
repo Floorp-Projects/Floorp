@@ -286,7 +286,7 @@ const uint32_t Arena::ThingSizes[] = CHECK_MIN_THING_SIZE(
     sizeof(Shape),              /* FINALIZE_SHAPE               */
     sizeof(AccessorShape),      /* FINALIZE_ACCESSOR_SHAPE      */
     sizeof(BaseShape),          /* FINALIZE_BASE_SHAPE          */
-    sizeof(types::ObjectGroup), /* FINALIZE_OBJECT_GROUP        */
+    sizeof(ObjectGroup),        /* FINALIZE_OBJECT_GROUP        */
     sizeof(JSFatInlineString),  /* FINALIZE_FAT_INLINE_STRING   */
     sizeof(JSString),           /* FINALIZE_STRING              */
     sizeof(JSExternalString),   /* FINALIZE_EXTERNAL_STRING     */
@@ -317,7 +317,7 @@ const uint32_t Arena::FirstThingOffsets[] = {
     OFFSET(Shape),              /* FINALIZE_SHAPE               */
     OFFSET(AccessorShape),      /* FINALIZE_ACCESSOR_SHAPE      */
     OFFSET(BaseShape),          /* FINALIZE_BASE_SHAPE          */
-    OFFSET(types::ObjectGroup), /* FINALIZE_OBJECT_GROUP        */
+    OFFSET(ObjectGroup),        /* FINALIZE_OBJECT_GROUP        */
     OFFSET(JSFatInlineString),  /* FINALIZE_FAT_INLINE_STRING   */
     OFFSET(JSString),           /* FINALIZE_STRING              */
     OFFSET(JSExternalString),   /* FINALIZE_EXTERNAL_STRING     */
@@ -609,7 +609,7 @@ FinalizeArenas(FreeOp *fop,
       case FINALIZE_BASE_SHAPE:
         return FinalizeTypedArenas<BaseShape>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_OBJECT_GROUP:
-        return FinalizeTypedArenas<types::ObjectGroup>(fop, src, dest, thingKind, budget, keepArenas);
+        return FinalizeTypedArenas<ObjectGroup>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_STRING:
         return FinalizeTypedArenas<JSString>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_FAT_INLINE_STRING:
@@ -2226,7 +2226,7 @@ GCRuntime::sweepTypesAfterCompacting(Zone *zone)
     }
 
     for (ZoneCellIterUnderGC i(zone, FINALIZE_OBJECT_GROUP); !i.done(); i.next()) {
-        types::ObjectGroup *group = i.get<types::ObjectGroup>();
+        ObjectGroup *group = i.get<ObjectGroup>();
         group->maybeSweep(&oom);
     }
 
@@ -2247,7 +2247,7 @@ GCRuntime::sweepZoneAfterCompacting(Zone *zone)
         c->sweepCrossCompartmentWrappers();
         c->sweepBaseShapeTable();
         c->sweepInitialShapeTable();
-        c->sweepObjectGroupTables();
+        c->objectGroups.sweep(fop);
         c->sweepRegExps();
         c->sweepCallsiteClones();
         c->sweepSavedStacks();
@@ -2311,7 +2311,7 @@ UpdateCellPointers(MovingTracer *trc, ArenaHeader *arena)
         UpdateCellPointersTyped<BaseShape>(trc, arena, traceKind);
         return;
       case FINALIZE_OBJECT_GROUP:
-        UpdateCellPointersTyped<types::ObjectGroup>(trc, arena, traceKind);
+        UpdateCellPointersTyped<ObjectGroup>(trc, arena, traceKind);
         return;
       case FINALIZE_JITCODE:
         UpdateCellPointersTyped<jit::JitCode>(trc, arena, traceKind);
@@ -4872,7 +4872,7 @@ SweepInitialShapesTask::run()
 SweepObjectGroupsTask::run()
 {
     for (GCCompartmentGroupIter c(runtime); !c.done(); c.next())
-        c->sweepObjectGroupTables();
+        c->objectGroups.sweep(runtime->defaultFreeOp());
 }
 
 /* virtual */ void
@@ -5197,7 +5197,7 @@ SweepThing(JSScript *script, types::AutoClearTypeInferenceStateOnOOM *oom)
 }
 
 static void
-SweepThing(types::ObjectGroup *group, types::AutoClearTypeInferenceStateOnOOM *oom)
+SweepThing(ObjectGroup *group, types::AutoClearTypeInferenceStateOnOOM *oom)
 {
     group->maybeSweep(oom);
 }
@@ -5250,7 +5250,7 @@ GCRuntime::sweepPhase(SliceBudget &sliceBudget)
                 if (!SweepArenaList<JSScript>(&al.gcScriptArenasToUpdate, sliceBudget, &oom))
                     return NotFinished;
 
-                if (!SweepArenaList<types::ObjectGroup>(
+                if (!SweepArenaList<ObjectGroup>(
                         &al.gcObjectGroupArenasToUpdate, sliceBudget, &oom))
                 {
                     return NotFinished;
@@ -6542,7 +6542,7 @@ gc::MergeCompartments(JSCompartment *source, JSCompartment *target)
     }
 
     for (ZoneCellIter iter(source->zone(), FINALIZE_OBJECT_GROUP); !iter.done(); iter.next()) {
-        types::ObjectGroup *group = iter.get<types::ObjectGroup>();
+        ObjectGroup *group = iter.get<ObjectGroup>();
         group->setGeneration(target->zone()->types.generation);
     }
 
@@ -6967,7 +6967,7 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime *rt)
      * that have been moved.
      */
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-        c->checkObjectGroupTablesAfterMovingGC();
+        c->objectGroups.checkTablesAfterMovingGC();
         c->checkInitialShapesTableAfterMovingGC();
         c->checkWrapperMapAfterMovingGC();
         c->checkBaseShapeTableAfterMovingGC();
@@ -7123,7 +7123,7 @@ JS::IncrementalReferenceBarrier(GCCellPtr thing)
       case JSTRACE_BASE_SHAPE:
         return BaseShape::writeBarrierPre(static_cast<BaseShape*>(thing.asCell()));
       case JSTRACE_OBJECT_GROUP:
-        return types::ObjectGroup::writeBarrierPre(static_cast<types::ObjectGroup *>(thing.asCell()));
+        return ObjectGroup::writeBarrierPre(static_cast<ObjectGroup *>(thing.asCell()));
       default:
         MOZ_CRASH("Invalid trace kind in IncrementalReferenceBarrier.");
     }
