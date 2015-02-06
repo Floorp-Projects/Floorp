@@ -880,6 +880,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mDPI(0)
   , mDefaultScale(0)
   , mIPCOpen(true)
+  , mParentIsActive(false)
 {
   if (!sActiveDurationMsSet) {
     Preferences::AddIntVarCache(&sActiveDurationMs,
@@ -1889,7 +1890,8 @@ TabChild::DoFakeShow(const ScrollingBehavior& aScrolling,
                      PRenderFrameChild* aRenderFrame)
 {
   ShowInfo info(EmptyString(), false, false, 0, 0);
-  RecvShow(nsIntSize(0, 0), info, aScrolling, aTextureFactoryIdentifier, aLayersId, aRenderFrame);
+  RecvShow(nsIntSize(0, 0), info, aScrolling, aTextureFactoryIdentifier,
+           aLayersId, aRenderFrame, mParentIsActive);
   mDidFakeShow = true;
 }
 
@@ -1991,12 +1993,14 @@ TabChild::RecvShow(const nsIntSize& aSize,
                    const ScrollingBehavior& aScrolling,
                    const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                    const uint64_t& aLayersId,
-                   PRenderFrameChild* aRenderFrame)
+                   PRenderFrameChild* aRenderFrame,
+                   const bool& aParentIsActive)
 {
     MOZ_ASSERT((!mDidFakeShow && aRenderFrame) || (mDidFakeShow && !aRenderFrame));
 
     if (mDidFakeShow) {
         ApplyShowInfo(aInfo);
+        RecvParentActivated(aParentIsActive);
         return true;
     }
 
@@ -2022,6 +2026,7 @@ TabChild::RecvShow(const nsIntSize& aSize,
 
     bool res = InitTabChildGlobal();
     ApplyShowInfo(aInfo);
+    RecvParentActivated(aParentIsActive);
     return res;
 }
 
@@ -2272,6 +2277,8 @@ bool TabChild::RecvDeactivate()
 
 bool TabChild::RecvParentActivated(const bool& aActivated)
 {
+  mParentIsActive = aActivated;
+
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, true);
 
