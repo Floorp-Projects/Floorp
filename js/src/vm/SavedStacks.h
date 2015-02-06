@@ -14,6 +14,11 @@
 
 namespace js {
 
+class SavedFrame;
+typedef JS::Handle<SavedFrame*> HandleSavedFrame;
+typedef JS::MutableHandle<SavedFrame*> MutableHandleSavedFrame;
+typedef JS::Rooted<SavedFrame*> RootedSavedFrame;
+
 class SavedFrame : public NativeObject {
     friend class SavedStacks;
 
@@ -82,12 +87,9 @@ class SavedFrame : public NativeObject {
     bool parentMoved();
     void updatePrivateParent();
 
-    static SavedFrame *checkThis(JSContext *cx, CallArgs &args, const char *fnName);
+    static bool checkThis(JSContext *cx, CallArgs &args, const char *fnName,
+                          MutableHandleSavedFrame frame);
 };
-
-typedef JS::Handle<SavedFrame*> HandleSavedFrame;
-typedef JS::MutableHandle<SavedFrame*> MutableHandleSavedFrame;
-typedef JS::Rooted<SavedFrame*> RootedSavedFrame;
 
 struct SavedFrame::HashPolicy
 {
