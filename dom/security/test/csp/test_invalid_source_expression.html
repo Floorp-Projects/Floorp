@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1086612 - CSP: Let source expression be the empty set in case no valid source can be parsed</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="visibility: hidden">
+    <iframe style="width:100%;" id="testframe"></iframe>
+  </div>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We try to parse a policy:
+ *   script-src bankid:/*
+ * where the source expression (bankid:/*) is invalid. In that case the source-expression
+ * should be the empty set ('none'), see: http://www.w3.org/TR/CSP11/#source-list-parsing
+ * We confirm that the script is blocked by CSP.
+ */
+
+const policy = "script-src bankid:/*";
+
+function runTest() {
+  var src = "file_testserver.sjs";
+  // append the file that should be served
+  src += "?file=" + escape("tests/dom/security/test/csp/file_invalid_source_expression.html");
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(policy);
+
+  document.getElementById("testframe").addEventListener("load", test, false);
+  document.getElementById("testframe").src = src;
+}
+
+function test() {
+  try {
+    document.getElementById("testframe").removeEventListener('load', test, false);
+    var testframe = document.getElementById("testframe");
+    var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
+    is(divcontent, "blocked", "should be 'blocked'!");
+  }
+  catch (e) {
+    ok(false, "ERROR: could not access content!");
+  }
+  SimpleTest.finish();
+}
+
+runTest();
+
+</script>
+</body>
+</html>
