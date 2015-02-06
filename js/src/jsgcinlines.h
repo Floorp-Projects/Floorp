@@ -437,7 +437,7 @@ CheckAllocatorState(ExclusiveContext *cx, AllocKind kind)
 
     // For testing out of memory conditions
     if (!PossiblyFail()) {
-        js_ReportOutOfMemory(cx->asJSContext());
+        js_ReportOutOfMemory(ncx);
         return false;
     }
 
@@ -446,7 +446,6 @@ CheckAllocatorState(ExclusiveContext *cx, AllocKind kind)
         if (rt->gc.needZealousGC())
             rt->gc.runDebugGC();
 #endif
-
         if (rt->hasPendingInterrupt()) {
             // Invoking the interrupt callback can fail and we can't usefully
             // handle that here. Just check in case we need to collect instead.
