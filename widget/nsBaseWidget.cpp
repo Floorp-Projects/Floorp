@@ -52,6 +52,7 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/dom/TabParent.h"
 #include "nsRefPtrHashtable.h"
+#include "TouchEvents.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
@@ -916,6 +917,25 @@ nsBaseWidget::CreateRootContentController()
   return controller.forget();
 }
 
+class ChromeProcessSetTargetAPZCCallback : public SetTargetAPZCCallback {
+public:
+  explicit ChromeProcessSetTargetAPZCCallback(APZCTreeManager* aTreeManager)
+    : mTreeManager(aTreeManager)
+  {}
+
+  void Run(uint64_t aInputBlockId, const nsTArray<ScrollableLayerGuid>& aTargets) const MOZ_OVERRIDE {
+    MOZ_ASSERT(NS_IsMainThread());
+    // need a local var to disambiguate between the SetTargetAPZC overloads.
+    void (APZCTreeManager::*setTargetApzcFunc)(uint64_t, const nsTArray<ScrollableLayerGuid>&)
+        = &APZCTreeManager::SetTargetAPZC;
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+        mTreeManager.get(), setTargetApzcFunc, aInputBlockId, aTargets));
+  }
+
+private:
+  nsRefPtr<APZCTreeManager> mTreeManager;
+};
+
 void nsBaseWidget::ConfigureAPZCTreeManager()
 {
   uint64_t rootLayerTreeId = mCompositorParent->RootLayerTreeId();
@@ -923,6 +943,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
   MOZ_ASSERT(mAPZC);
 
   mAPZC->SetDPI(GetDPI());
+  mSetTargetAPZCCallback = new ChromeProcessSetTargetAPZCCallback(mAPZC);
 
   nsRefPtr<GeckoContentController> controller = CreateRootContentController();
   if (controller) {
@@ -953,15 +974,12 @@ nsBaseWidget::DispatchEventForAPZ(WidgetGUIEvent* aEvent,
   DispatchEvent(aEvent, status);
 
   if (mAPZC && !context.WasRoutedToChildProcess()) {
-    // APZ did not find a dispatch-to-content region in the child process,
-    // and EventStateManager did not route the event into the child process.
+    // EventStateManager did not route the event into the child process.
     // It's safe to communicate to APZ that the event has been processed.
-
-    // need a local var to disambiguate between the SetTargetAPZC overloads.
-    void (APZCTreeManager::*setTargetApzcFunc)(uint64_t, const ScrollableLayerGuid&)
-        = &APZCTreeManager::SetTargetAPZC;
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
-        mAPZC.get(), setTargetApzcFunc, aInputBlockId, aGuid));
+    if (aEvent->AsWheelEvent() || (aEvent->AsTouchEvent() && aEvent->AsTouchEvent()->message == NS_TOUCH_START)) {
+      APZCCallbackHelper::SendSetTargetAPZCNotification(this, GetDocument(), *aEvent,
+          aGuid, aInputBlockId, mSetTargetAPZCCallback);
+    }
     bool defaultPrevented = aEvent->AsTouchEvent()
       ? (nsIPresShell::gPreventMouseEvents || aEvent->mFlags.mMultipleActionsPrevented)
       : aEvent->mFlags.mDefaultPrevented;
@@ -981,6 +999,17 @@ nsBaseWidget::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
   }
 
   aHints.AppendElement(LayersBackend::LAYERS_BASIC);
+}
+
+nsIDocument*
+nsBaseWidget::GetDocument() const
+{
+  if (mWidgetListener) {
+    if (nsIPresShell* presShell = mWidgetListener->GetPresShell()) {
+      return presShell->GetDocument();
+    }
+  }
+  return nullptr;
 }
 
 void nsBaseWidget::CreateCompositorVsyncDispatcher()
@@ -1562,15 +1591,7 @@ void
 nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
                                    UIStateChangeType aShowFocusRings)
 {
-  if (!mWidgetListener)
-    return;
-
-  nsIPresShell* presShell = mWidgetListener->GetPresShell();
-  if (!presShell)
-    return;
-
-  nsIDocument* doc = presShell->GetDocument();
-  if (doc) {
+  if (nsIDocument* doc = GetDocument()) {
     nsPIDOMWindow* win = doc->GetWindow();
     if (win) {
       win->SetKeyboardIndicators(aShowAccelerators, aShowFocusRings);
