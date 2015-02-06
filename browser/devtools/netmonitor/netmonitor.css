@@ -28,6 +28,11 @@
   overflow: auto;
 }
 
+#headers-summary-url-value .textbox-input {
+  /* workaround for textbox not supporting the @crop attribute */
+  text-overflow: ellipsis;
+}
+
 /* Responsive sidebar */
 @media (max-width: 700px) {
   #toolbar-spacer,
