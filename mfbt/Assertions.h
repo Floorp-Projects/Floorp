@@ -123,26 +123,6 @@ __declspec(dllimport) void* __stdcall GetCurrentProcess(void);
 extern "C" {
 #endif
 
-static MOZ_COLD MOZ_NEVER_INLINE void
-MOZ_ReportAssertionFailureHelper(const char* aStr1, const char* aStr2,
-                                 const char* aStr3, const char* aFilename,
-                                 int aLine)
-  MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
-{
-#ifdef ANDROID
-  __android_log_print(ANDROID_LOG_FATAL, "MOZ_Assert",
-                      "Assertion failure: %s%s%s, at %s:%d\n",
-                      aStr1, aStr2, aStr3, aFilename, aLine);
-#else
-  fprintf(stderr, "Assertion failure: %s%s%s, at %s:%d\n", aStr1, aStr2, aStr3,
-          aFilename, aLine);
-#ifdef MOZ_DUMP_ASSERTION_STACK
-  nsTraceRefcnt::WalkTheStack(stderr);
-#endif
-  fflush(stderr);
-#endif
-}
-
 /*
  * Prints |aStr| as an assertion failure (using aFilename and aLine as the
  * location of the assertion) to the standard debug-output channel.
@@ -155,7 +135,17 @@ static MOZ_COLD MOZ_ALWAYS_INLINE void
 MOZ_ReportAssertionFailure(const char* aStr, const char* aFilename, int aLine)
   MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
 {
-  MOZ_ReportAssertionFailureHelper(aStr, "", "", aFilename, aLine);
+#ifdef ANDROID
+  __android_log_print(ANDROID_LOG_FATAL, "MOZ_Assert",
+                      "Assertion failure: %s, at %s:%d\n",
+                      aStr, aFilename, aLine);
+#else
+  fprintf(stderr, "Assertion failure: %s, at %s:%d\n", aStr, aFilename, aLine);
+#ifdef MOZ_DUMP_ASSERTION_STACK
+  nsTraceRefcnt::WalkTheStack(stderr);
+#endif
+  fflush(stderr);
+#endif
 }
 
 static MOZ_COLD MOZ_ALWAYS_INLINE void
@@ -280,11 +270,11 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
  * MOZ_ASSERT is fatal: no recovery is possible.  Do not assert a condition
  * which can correctly be falsy.
  *
- * The optional explanation-string, if provided, must be a |const char*|
- * (string literal or a variable) explaining the assertion.  It is intended for
- * use with assertions whose correctness or rationale is non-obvious, and for
- * assertions where the "real" condition being tested is best described
- * prosaically.  Don't provide an explanation if it's not actually helpful.
+ * The optional explanation-string, if provided, must be a string literal
+ * explaining the assertion.  It is intended for use with assertions whose
+ * correctness or rationale is non-obvious, and for assertions where the "real"
+ * condition being tested is best described prosaically.  Don't provide an
+ * explanation if it's not actually helpful.
  *
  *   // No explanation needed: pointer arguments often must not be NULL.
  *   MOZ_ASSERT(arg);
@@ -378,8 +368,7 @@ struct AssertionConditionType
   do { \
     MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr); \
     if (MOZ_UNLIKELY(!(expr))) { \
-      MOZ_ReportAssertionFailureHelper(#expr " (", explain, ")", \
-                                       __FILE__, __LINE__); \
+      MOZ_ReportAssertionFailure(#expr " (" explain ")", __FILE__, __LINE__); \
       MOZ_REALLY_CRASH(); \
     } \
   } while (0)
