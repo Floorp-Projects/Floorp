@@ -60,7 +60,7 @@ class TypeWrapper {
             return t_.singletonNoBarrier();
         return nullptr;
     }
-    inline types::ObjectGroup *getGroupNoBarrier(unsigned) const {
+    inline ObjectGroup *getGroupNoBarrier(unsigned) const {
         if (t_.isGroup())
             return t_.groupNoBarrier();
         return nullptr;
@@ -146,8 +146,8 @@ MacroAssembler::guardTypeSet(const Source &address, const TypeSet *types, Barrie
             extractObject(address, scratch);
         loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
         branchTestPtr(Assembler::NonZero,
-                      Address(scratch, types::ObjectGroup::offsetOfFlags()),
-                      Imm32(types::OBJECT_FLAG_UNKNOWN_PROPERTIES), &matched);
+                      Address(scratch, ObjectGroup::offsetOfFlags()),
+                      Imm32(OBJECT_FLAG_UNKNOWN_PROPERTIES), &matched);
 
         assumeUnreachable("Unexpected object type");
 #endif
@@ -210,7 +210,7 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet *types,
             if (lastBranch.isInitialized())
                 lastBranch.emit(*this);
 
-            types::ObjectGroup *group = types->getGroupNoBarrier(i);
+            ObjectGroup *group = types->getGroupNoBarrier(i);
             lastBranch = BranchGCPtr(Equal, scratch, ImmGCPtr(group), &matched);
         }
     }

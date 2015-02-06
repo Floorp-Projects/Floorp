@@ -153,7 +153,7 @@ CallObject::createSingleton(JSContext *cx, HandleShape shape, uint32_t lexicalBe
     MOZ_ASSERT(CanBeFinalizedInBackground(kind, &CallObject::class_));
     kind = gc::GetBackgroundAllocKind(kind);
 
-    RootedObjectGroup group(cx, cx->getLazySingletonGroup(&class_, TaggedProto(nullptr)));
+    RootedObjectGroup group(cx, ObjectGroup::lazySingletonGroup(cx, &class_, TaggedProto(nullptr)));
     if (!group)
         return nullptr;
     RootedObject obj(cx, JSObject::create(cx, kind, gc::TenuredHeap, shape, group));
@@ -178,7 +178,7 @@ CallObject::createTemplateObject(JSContext *cx, HandleScript script, gc::Initial
     RootedShape shape(cx, script->bindings.callObjShape());
     MOZ_ASSERT(shape->getObjectClass() == &class_);
 
-    RootedObjectGroup group(cx, cx->getNewGroup(&class_, TaggedProto(nullptr)));
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
     if (!group)
         return nullptr;
 
@@ -326,7 +326,7 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::Initi
 {
     MOZ_ASSERT(IsNurseryAllocable(FINALIZE_KIND));
 
-    RootedObjectGroup group(cx, cx->getNewGroup(&class_, TaggedProto(nullptr)));
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
     if (!group)
         return nullptr;
 
@@ -400,7 +400,7 @@ js::XDRStaticWithObject(XDRState<XDR_DECODE> *, HandleObject, MutableHandle<Stat
 StaticWithObject *
 StaticWithObject::create(ExclusiveContext *cx)
 {
-    RootedObjectGroup group(cx, cx->getNewGroup(&class_, TaggedProto(nullptr)));
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
     if (!group)
         return nullptr;
 
@@ -433,7 +433,8 @@ DynamicWithObject::create(JSContext *cx, HandleObject object, HandleObject enclo
                           HandleObject staticWith, WithKind kind)
 {
     MOZ_ASSERT(staticWith->is<StaticWithObject>());
-    RootedObjectGroup group(cx, cx->getNewGroup(&class_, TaggedProto(staticWith.get())));
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_,
+                                                             TaggedProto(staticWith.get())));
     if (!group)
         return nullptr;
 
@@ -563,7 +564,7 @@ const Class DynamicWithObject::class_ = {
 /* static */ StaticEvalObject *
 StaticEvalObject::create(JSContext *cx, HandleObject enclosing)
 {
-    RootedObjectGroup group(cx, cx->getNewGroup(&class_, TaggedProto(nullptr)));
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
     if (!group)
         return nullptr;
 
@@ -596,7 +597,8 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Hand
 {
     MOZ_ASSERT(block->getClass() == &BlockObject::class_);
 
-    RootedObjectGroup group(cx, cx->getNewGroup(&BlockObject::class_, TaggedProto(block.get())));
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &BlockObject::class_,
+                                                             TaggedProto(block.get())));
     if (!group)
         return nullptr;
 
@@ -668,7 +670,8 @@ ClonedBlockObject::copyUnaliasedValues(AbstractFramePtr frame)
 StaticBlockObject *
 StaticBlockObject::create(ExclusiveContext *cx)
 {
-    RootedObjectGroup group(cx, cx->getNewGroup(&BlockObject::class_, TaggedProto(nullptr)));
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &BlockObject::class_,
+                                                             TaggedProto(nullptr)));
     if (!group)
         return nullptr;
 
@@ -880,7 +883,7 @@ js::CloneNestedScopeObject(JSContext *cx, HandleObject enclosingScope, Handle<Ne
 /* static */ UninitializedLexicalObject *
 UninitializedLexicalObject::create(JSContext *cx, HandleObject enclosing)
 {
-    RootedObjectGroup group(cx, cx->getNewGroup(&class_, TaggedProto(nullptr)));
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
     if (!group)
         return nullptr;
 
