@@ -1779,8 +1779,8 @@ WebGLContext::InitAndValidateGL()
 
     MakeContextCurrent();
 
-    // For OpenGL compat. profiles, we always keep vertex attrib 0 array enabled.
-    if (gl->IsCompatibilityProfile())
+    // on desktop OpenGL, we always keep vertex attrib 0 array enabled
+    if (!gl->IsGLES())
         gl->fEnableVertexAttribArray(0);
 
     if (MinCapabilityMode())
@@ -1889,7 +1889,7 @@ WebGLContext::InitAndValidateGL()
     // Always 1 for GLES2
     mMaxFramebufferColorAttachments = 1;
 
-    if (gl->IsCompatibilityProfile()) {
+    if (!gl->IsGLES()) {
         // gl_PointSize is always available in ES2 GLSL, but has to be
         // specifically enabled on desktop GLSL.
         gl->fEnable(LOCAL_GL_VERTEX_PROGRAM_POINT_SIZE);
