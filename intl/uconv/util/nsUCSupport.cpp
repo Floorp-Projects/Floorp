@@ -41,8 +41,8 @@ NS_IMPL_ISUPPORTS(nsBasicDecoderSupport, nsIUnicodeDecoder)
 void
 nsBasicDecoderSupport::SetInputErrorBehavior(int32_t aBehavior)
 {
-  NS_ABORT_IF_FALSE(aBehavior == kOnError_Recover || aBehavior == kOnError_Signal,
-                    "Unknown behavior for SetInputErrorBehavior");
+  MOZ_ASSERT(aBehavior == kOnError_Recover || aBehavior == kOnError_Signal,
+             "Unknown behavior for SetInputErrorBehavior");
   mErrBehavior = aBehavior;
 }
 

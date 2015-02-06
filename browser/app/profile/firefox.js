@@ -1756,6 +1756,12 @@ pref("identity.fxaccounts.remote.signin.uri", "https://accounts.firefox.com/sign
 // "identity.fxaccounts.remote.signup.uri" pref.
 pref("identity.fxaccounts.settings.uri", "https://accounts.firefox.com/settings");
 
+// The remote URL of the FxA Profile Server
+pref("identity.fxaccounts.remote.profile.uri", "https://profile.accounts.firefox.com/v1");
+
+// The remote URL of the FxA OAuth Server
+pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com/v1");
+
 // Migrate any existing Firefox Account data from the default profile to the
 // Developer Edition profile.
 #ifdef MOZ_DEV_EDITION

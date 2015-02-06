@@ -191,7 +191,6 @@ nsHttpHandler::nsHttpHandler()
     , mAllowPush(true)
     , mEnableAltSvc(true)
     , mEnableAltSvcOE(true)
-    , mDebug1102923(false)
     , mSpdySendingChunkSize(ASpdySession::kSendingChunkSize)
     , mSpdySendBufferSize(ASpdySession::kTCPSendBufferSize)
     , mSpdyPushAllowance(32768)
@@ -1303,13 +1302,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("spdy.send-buffer-size"), &val);
         if (NS_SUCCEEDED(rv))
             mSpdySendBufferSize = (uint32_t) clamped(val, 1500, 0x7fffffff);
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("spdy.debug-1102923"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("spdy.debug-1102923"), &cVar);
-        if (NS_SUCCEEDED(rv)) {
-            mDebug1102923 = cVar;
-        }
     }
 
     // The maximum amount of time to wait for socket transport to be

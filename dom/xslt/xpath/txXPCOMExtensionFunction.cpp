@@ -325,10 +325,10 @@ txParamArrayHolder::~txParamArrayHolder()
             if (variant.type.TagPart() == nsXPTType::T_DOMSTRING)
                 delete (nsAString*)variant.val.p;
             else {
-                NS_ABORT_IF_FALSE(variant.type.TagPart() == nsXPTType::T_INTERFACE ||
-                                  variant.type.TagPart() == nsXPTType::T_INTERFACE_IS,
-                                  "We only support cleanup of strings and interfaces "
-                                  "here, and this looks like neither!");
+                MOZ_ASSERT(variant.type.TagPart() == nsXPTType::T_INTERFACE ||
+                           variant.type.TagPart() == nsXPTType::T_INTERFACE_IS,
+                           "We only support cleanup of strings and interfaces "
+                           "here, and this looks like neither!");
                 static_cast<nsISupports*>(variant.val.p)->Release();
             }
         }

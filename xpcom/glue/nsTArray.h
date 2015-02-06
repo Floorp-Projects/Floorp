@@ -1530,8 +1530,8 @@ public:
   void TruncateLength(size_type aNewLen)
   {
     size_type oldLen = Length();
-    NS_ABORT_IF_FALSE(aNewLen <= oldLen,
-                      "caller should use SetLength instead");
+    MOZ_ASSERT(aNewLen <= oldLen,
+               "caller should use SetLength instead");
     RemoveElementsAt(aNewLen, oldLen - aNewLen);
   }
 

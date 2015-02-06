@@ -33,6 +33,7 @@ Request::Request(nsIGlobalObject* aOwner, InternalRequest* aRequest)
   : FetchBody<Request>()
   , mOwner(aOwner)
   , mRequest(aRequest)
+  , mContext(RequestContext::Fetch)
 {
 }
 

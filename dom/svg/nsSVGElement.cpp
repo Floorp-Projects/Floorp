@@ -288,8 +288,8 @@ nsSVGElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
   // whose data it points to (by virtue of being stored in
   // mAttrsAndChildren->mMappedAttributes, meaning it's shared between
   // elements), the pointer will dangle. See bug 724680.
-  NS_ABORT_IF_FALSE(!mAttrsAndChildren.HasMappedAttrs(),
-    "Unexpected use of nsMappedAttributes within SVG");
+  MOZ_ASSERT(!mAttrsAndChildren.HasMappedAttrs(),
+             "Unexpected use of nsMappedAttributes within SVG");
 
   // If this is an svg presentation attribute we need to map it into
   // the content stylerule.
@@ -301,8 +301,8 @@ nsSVGElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
   }
 
   if (IsEventAttributeName(aName) && aValue) {
-    NS_ABORT_IF_FALSE(aValue->Type() == nsAttrValue::eString,
-      "Expected string value for script body");
+    MOZ_ASSERT(aValue->Type() == nsAttrValue::eString,
+               "Expected string value for script body");
     nsresult rv = SetEventHandler(GetEventNameForAttr(aName),
                                   aValue->GetStringValue());
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1176,9 +1176,9 @@ MappedAttrParser::MappedAttrParser(css::Loader* aLoader,
 
 MappedAttrParser::~MappedAttrParser()
 {
-  NS_ABORT_IF_FALSE(!mDecl,
-                    "If mDecl was initialized, it should have been converted "
-                    "into a style rule (and had its pointer cleared)");
+  MOZ_ASSERT(!mDecl,
+             "If mDecl was initialized, it should have been converted "
+             "into a style rule (and had its pointer cleared)");
 }
 
 void
@@ -1200,8 +1200,8 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
                           mNodePrincipal, mDecl, &changed, false, true);
     return;
   }
-  NS_ABORT_IF_FALSE(aMappedAttrName == nsGkAtoms::lang,
-                    "Only 'lang' should be unrecognized!");
+  MOZ_ASSERT(aMappedAttrName == nsGkAtoms::lang,
+             "Only 'lang' should be unrecognized!");
   // nsCSSParser doesn't know about 'lang', so we need to handle it specially.
   if (aMappedAttrName == nsGkAtoms::lang) {
     propertyID = eCSSProperty__x_lang;
@@ -1315,19 +1315,18 @@ ReleaseStyleRule(void*    aObject,       /* unused */
                  void*    aPropertyValue,
                  void*    aData          /* unused */)
 {
-  NS_ABORT_IF_FALSE(aPropertyName == SMIL_MAPPED_ATTR_STYLERULE_ATOM,
-                    "unexpected property name, for "
-                    "animated content style rule");
+  MOZ_ASSERT(aPropertyName == SMIL_MAPPED_ATTR_STYLERULE_ATOM,
+             "unexpected property name, for animated content style rule");
   css::StyleRule* styleRule = static_cast<css::StyleRule*>(aPropertyValue);
-  NS_ABORT_IF_FALSE(styleRule, "unexpected null style rule");
+  MOZ_ASSERT(styleRule, "unexpected null style rule");
   styleRule->Release();
 }
 
 void
 nsSVGElement::UpdateAnimatedContentStyleRule()
 {
-  NS_ABORT_IF_FALSE(!GetAnimatedContentStyleRule(),
-                    "Animated content style rule already set");
+  MOZ_ASSERT(!GetAnimatedContentStyleRule(),
+             "Animated content style rule already set");
 
   nsIDocument* doc = OwnerDoc();
   if (!doc) {
@@ -1352,8 +1351,8 @@ nsSVGElement::UpdateAnimatedContentStyleRule()
                   animContentStyleRule.get(),
                   ReleaseStyleRule);
     unused << animContentStyleRule.forget();
-    NS_ABORT_IF_FALSE(rv == NS_OK,
-                      "SetProperty failed (or overwrote something)");
+    MOZ_ASSERT(rv == NS_OK,
+               "SetProperty failed (or overwrote something)");
   }
 }
 
@@ -1434,7 +1433,7 @@ nsSVGElement::WillChangeValue(nsIAtom* aName)
   // SVG elements aren't expected to overload BeforeSetAttr in such a way that
   // it may fail. So long as this is the case we don't need to check and pass on
   // the return value which simplifies the calling code significantly.
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Unexpected failure from BeforeSetAttr");
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "Unexpected failure from BeforeSetAttr");
 
   // We only need to set the old value if we have listeners since otherwise it
   // isn't used.
@@ -1577,7 +1576,7 @@ nsSVGElement::SetLength(nsIAtom* aName, const nsSVGLength2 &aLength)
       return;
     }
   }
-  NS_ABORT_IF_FALSE(false, "no length found to set");
+  MOZ_ASSERT(false, "no length found to set");
 }
 
 nsAttrValue
@@ -1628,7 +1627,7 @@ nsSVGElement::GetAnimatedLength(const nsIAtom *aAttrName)
       return &lengthInfo.mLengths[i];
     }
   }
-  NS_ABORT_IF_FALSE(false, "no matching length found");
+  MOZ_ASSERT(false, "no matching length found");
   return nullptr;
 }
 
@@ -1759,7 +1758,7 @@ nsSVGElement::GetNumberListInfo()
 void
 nsSVGElement::NumberListAttributesInfo::Reset(uint8_t aAttrEnum)
 {
-  NS_ABORT_IF_FALSE(aAttrEnum < mNumberListCount, "Bad attr enum");
+  MOZ_ASSERT(aAttrEnum < mNumberListCount, "Bad attr enum");
   mNumberLists[aAttrEnum].ClearBaseValue(aAttrEnum);
   // caller notifies
 }
@@ -1776,10 +1775,10 @@ nsSVGElement::DidChangeNumberList(uint8_t aAttrEnum,
 {
   NumberListAttributesInfo info = GetNumberListInfo();
 
-  NS_ABORT_IF_FALSE(info.mNumberListCount > 0,
-    "DidChangeNumberList on element with no number list attribs");
-  NS_ABORT_IF_FALSE(aAttrEnum < info.mNumberListCount,
-    "aAttrEnum out of range");
+  MOZ_ASSERT(info.mNumberListCount > 0,
+             "DidChangeNumberList on element with no number list attribs");
+  MOZ_ASSERT(aAttrEnum < info.mNumberListCount,
+             "aAttrEnum out of range");
 
   nsAttrValue newValue;
   newValue.SetTo(info.mNumberLists[aAttrEnum].GetBaseValue(), nullptr);
@@ -1795,7 +1794,7 @@ nsSVGElement::DidAnimateNumberList(uint8_t aAttrEnum)
 
   if (frame) {
     NumberListAttributesInfo info = GetNumberListInfo();
-    NS_ABORT_IF_FALSE(aAttrEnum < info.mNumberListCount, "aAttrEnum out of range");
+    MOZ_ASSERT(aAttrEnum < info.mNumberListCount, "aAttrEnum out of range");
 
     frame->AttributeChanged(kNameSpaceID_None,
                             *info.mNumberListInfo[aAttrEnum].mName,
@@ -1810,7 +1809,7 @@ nsSVGElement::GetAnimatedNumberList(uint8_t aAttrEnum)
   if (aAttrEnum < info.mNumberListCount) {
     return &(info.mNumberLists[aAttrEnum]);
   }
-  NS_ABORT_IF_FALSE(false, "Bad attrEnum");
+  MOZ_ASSERT(false, "Bad attrEnum");
   return nullptr;
 }
 
@@ -1823,23 +1822,23 @@ nsSVGElement::GetAnimatedNumberList(nsIAtom *aAttrName)
       return &info.mNumberLists[i];
     }
   }
-  NS_ABORT_IF_FALSE(false, "Bad caller");
+  MOZ_ASSERT(false, "Bad caller");
   return nullptr;
 }
 
 nsAttrValue
 nsSVGElement::WillChangePointList()
 {
-  NS_ABORT_IF_FALSE(GetPointListAttrName(),
-                    "Changing non-existent point list?");
+  MOZ_ASSERT(GetPointListAttrName(),
+             "Changing non-existent point list?");
   return WillChangeValue(GetPointListAttrName());
 }
 
 void
 nsSVGElement::DidChangePointList(const nsAttrValue& aEmptyOrOldValue)
 {
-  NS_ABORT_IF_FALSE(GetPointListAttrName(),
-                    "Changing non-existent point list?");
+  MOZ_ASSERT(GetPointListAttrName(),
+             "Changing non-existent point list?");
 
   nsAttrValue newValue;
   newValue.SetTo(GetAnimatedPointList()->GetBaseValue(), nullptr);
@@ -1850,8 +1849,8 @@ nsSVGElement::DidChangePointList(const nsAttrValue& aEmptyOrOldValue)
 void
 nsSVGElement::DidAnimatePointList()
 {
-  NS_ABORT_IF_FALSE(GetPointListAttrName(),
-                    "Animating non-existent path data?");
+  MOZ_ASSERT(GetPointListAttrName(),
+             "Animating non-existent path data?");
 
   ClearAnyCachedPath();
 
@@ -1867,16 +1866,16 @@ nsSVGElement::DidAnimatePointList()
 nsAttrValue
 nsSVGElement::WillChangePathSegList()
 {
-  NS_ABORT_IF_FALSE(GetPathDataAttrName(),
-                    "Changing non-existent path seg list?");
+  MOZ_ASSERT(GetPathDataAttrName(),
+             "Changing non-existent path seg list?");
   return WillChangeValue(GetPathDataAttrName());
 }
 
 void
 nsSVGElement::DidChangePathSegList(const nsAttrValue& aEmptyOrOldValue)
 {
-  NS_ABORT_IF_FALSE(GetPathDataAttrName(),
-                    "Changing non-existent path seg list?");
+  MOZ_ASSERT(GetPathDataAttrName(),
+             "Changing non-existent path seg list?");
 
   nsAttrValue newValue;
   newValue.SetTo(GetAnimPathSegList()->GetBaseValue(), nullptr);
@@ -1887,8 +1886,8 @@ nsSVGElement::DidChangePathSegList(const nsAttrValue& aEmptyOrOldValue)
 void
 nsSVGElement::DidAnimatePathSegList()
 {
-  NS_ABORT_IF_FALSE(GetPathDataAttrName(),
-                    "Animating non-existent path data?");
+  MOZ_ASSERT(GetPathDataAttrName(),
+             "Animating non-existent path data?");
 
   ClearAnyCachedPath();
 
@@ -2336,8 +2335,8 @@ nsSVGElement::WillChangeTransformList()
 void
 nsSVGElement::DidChangeTransformList(const nsAttrValue& aEmptyOrOldValue)
 {
-  NS_ABORT_IF_FALSE(GetTransformListAttrName(),
-                    "Changing non-existent transform list?");
+  MOZ_ASSERT(GetTransformListAttrName(),
+             "Changing non-existent transform list?");
 
   // The transform attribute is being set, so we must ensure that the
   // SVGAnimatedTransformList is/has been allocated:
@@ -2350,8 +2349,8 @@ nsSVGElement::DidChangeTransformList(const nsAttrValue& aEmptyOrOldValue)
 void
 nsSVGElement::DidAnimateTransformList(int32_t aModType)
 {
-  NS_ABORT_IF_FALSE(GetTransformListAttrName(),
-                    "Animating non-existent transform data?");
+  MOZ_ASSERT(GetTransformListAttrName(),
+             "Animating non-existent transform data?");
 
   nsIFrame* frame = GetPrimaryFrame();
 
@@ -2650,7 +2649,7 @@ nsSVGElement::GetAnimatedAttr(int32_t aNamespaceID, nsIAtom* aName)
       NumberListAttributesInfo info = GetNumberListInfo();
       for (uint32_t i = 0; i < info.mNumberListCount; i++) {
         if (aName == *info.mNumberListInfo[i].mName) {
-          NS_ABORT_IF_FALSE(i <= UCHAR_MAX, "Too many attributes");
+          MOZ_ASSERT(i <= UCHAR_MAX, "Too many attributes");
           return info.mNumberLists[i].ToSMILAttr(this, uint8_t(i));
         }
       }
@@ -2661,7 +2660,7 @@ nsSVGElement::GetAnimatedAttr(int32_t aNamespaceID, nsIAtom* aName)
       LengthListAttributesInfo info = GetLengthListInfo();
       for (uint32_t i = 0; i < info.mLengthListCount; i++) {
         if (aName == *info.mLengthListInfo[i].mName) {
-          NS_ABORT_IF_FALSE(i <= UCHAR_MAX, "Too many attributes");
+          MOZ_ASSERT(i <= UCHAR_MAX, "Too many attributes");
           return info.mLengthLists[i].ToSMILAttr(this,
                                                  uint8_t(i),
                                                  info.mLengthListInfo[i].mAxis,

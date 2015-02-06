@@ -354,12 +354,6 @@ partial interface Document {
 partial interface Document {
   [ChromeOnly] readonly attribute boolean isSrcdocDocument;
 };
-// Extension to give chrome JS the ability to get the underlying
-// sandbox flag attribute
-partial interface Document {
-  [ChromeOnly] readonly attribute DOMString? sandboxFlagsAsString;
-};
-
 
 /**
  * Chrome document anonymous content management.

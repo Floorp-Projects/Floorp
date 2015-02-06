@@ -269,7 +269,7 @@ nsDOMDataChannel::Send(const nsAString& aData, ErrorResult& aRv)
 void
 nsDOMDataChannel::Send(File& aData, ErrorResult& aRv)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
 
   nsCOMPtr<nsIInputStream> msgStream;
   nsresult rv = aData.GetInternalStream(getter_AddRefs(msgStream));
@@ -296,7 +296,7 @@ nsDOMDataChannel::Send(File& aData, ErrorResult& aRv)
 void
 nsDOMDataChannel::Send(const ArrayBuffer& aData, ErrorResult& aRv)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
 
   aData.ComputeLengthAndData();
 
@@ -312,7 +312,7 @@ nsDOMDataChannel::Send(const ArrayBuffer& aData, ErrorResult& aRv)
 void
 nsDOMDataChannel::Send(const ArrayBufferView& aData, ErrorResult& aRv)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
 
   aData.ComputeLengthAndData();
 

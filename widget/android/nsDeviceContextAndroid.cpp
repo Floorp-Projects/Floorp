@@ -36,7 +36,7 @@ nsDeviceContextSpecAndroid::GetSurfaceForPrinter(gfxASurface** aSurface)
   surface = new gfxPDFSurface(stream, surfaceSize);
 
 
-  NS_ABORT_IF_FALSE(surface, "valid address expected");
+  MOZ_ASSERT(surface, "valid address expected");
   surface.swap(*aSurface);
   return NS_OK;
 }
