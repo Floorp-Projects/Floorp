@@ -3213,7 +3213,7 @@ GCRuntime::maybeGC(Zone *zone)
     }
 #endif
 
-    if (gcIfNeeded())
+    if (gcIfRequested())
         return true;
 
     if (zone->usage.gcBytes() > 1024 * 1024 &&
@@ -6418,7 +6418,7 @@ GCRuntime::enableGenerationalGC()
 }
 
 bool
-GCRuntime::gcIfNeeded(JSContext *cx /* = nullptr */)
+GCRuntime::gcIfRequested(JSContext *cx /* = nullptr */)
 {
     // This method returns whether a major GC was performed.
 
