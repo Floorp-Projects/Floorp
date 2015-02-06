@@ -8,7 +8,7 @@ function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView, JsCallTreeView } = panel.panelWin;
 
-  DetailsView.selectView("js-calltree");
+  yield DetailsView.selectView("js-calltree");
 
   yield startRecording(panel);
 
