@@ -92,12 +92,6 @@ function refTest(test,ref) {
 
 var caretBlinkTime = null;
 function endTest() {
-  if (caretBlinkTime !== null) {
-    SpecialPowers.setIntPref("ui.caretBlinkTime", caretBlinkTime);
-  } else {
-    SpecialPowers.clearUserPref("ui.caretBlinkTime");
-  }
-
   // finish(), yet let the test actually end first, to be safe.
   SimpleTest.executeSoon(SimpleTest.finish);
 }
@@ -115,7 +109,7 @@ var tests = [
     // The following test cases are all involving with one sending
     // synthesizeKey(), the other without. They ought to be failed
     // when touch caret preference on. Test them with preference off.
-    function() {SpecialPowers.setBoolPref("touchcaret.enabled", false);} ,
+    function() {SpecialPowers.pushPrefEnv({'set': [['touchcaret.enabled', false]]}, nextTest);} ,
     [ 'bug240933-1.html' , 'bug240933-1-ref.html' ] ,
     [ 'bug240933-2.html' , 'bug240933-1-ref.html' ] ,
     [ 'bug389321-1.html' , 'bug389321-1-ref.html' ] ,
@@ -139,13 +133,13 @@ var tests = [
     [ 'bug633044-1.html' , 'bug633044-1-ref.html' ] ,
     [ 'bug634406-1.html' , 'bug634406-1-ref.html' ] ,
     [ 'bug644428-1.html' , 'bug644428-1-ref.html' ] ,
-    function() {SpecialPowers.setBoolPref("bidi.browser.ui", true);} ,
+    function() {SpecialPowers.pushPrefEnv({'set': [['bidi.browser.ui', true]]}, nextTest);} ,
     [ 'bug646382-1.html' , 'bug646382-1-ref.html' ] ,
     [ 'bug646382-2.html' , 'bug646382-2-ref.html' ] ,
     [ 'bug664087-1.html' , 'bug664087-1-ref.html' ] ,
     [ 'bug664087-2.html' , 'bug664087-2-ref.html' ] ,
     [ 'bug682712-1.html' , 'bug682712-1-ref.html' ] ,
-    function() {SpecialPowers.clearUserPref("bidi.browser.ui");} ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['bidi.browser.ui']]}, nextTest);} ,
     [ 'bug746993-1.html' , 'bug746993-1-ref.html' ] ,
     [ 'bug1007065-1.html' , 'bug1007065-1-ref.html' ] ,
     [ 'bug1007067-1.html' , 'bug1007067-1-ref.html' ] ,
@@ -155,21 +149,21 @@ var tests = [
     // [ 'bug1123067-1.html' , 'bug1123067-ref.html'  ] , TODO: bug 1129205
     [ 'bug1123067-2.html' , 'bug1123067-ref.html'  ] ,
     [ 'bug1123067-3.html' , 'bug1123067-ref.html'  ] ,
-    function() {SpecialPowers.clearUserPref("touchcaret.enabled");} ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['touchcaret.enabled']]}, nextTest);} ,
 ];
 
 if (navigator.appVersion.indexOf("Android") == -1 &&
   SpecialPowers.Services.appinfo.name != "B2G") {
-  tests.push(function() {SpecialPowers.setBoolPref("touchcaret.enabled", false);});
+  tests.push(function() {SpecialPowers.pushPrefEnv({'set': [['touchcaret.enabled', false]]}, nextTest);});
   tests.push([ 'bug512295-1.html' , 'bug512295-1-ref.html' ]);
   tests.push([ 'bug512295-2.html' , 'bug512295-2-ref.html' ]);
   tests.push([ 'bug923376.html'   , 'bug923376-ref.html'   ]);
-  tests.push(function() {SpecialPowers.clearUserPref("touchcaret.enabled");});
-  tests.push(function() {SpecialPowers.setBoolPref("layout.css.overflow-clip-box.enabled", true);});
+  tests.push(function() {SpecialPowers.pushPrefEnv({'clear': [['touchcaret.enabled']]}, nextTest);});
+  tests.push(function() {SpecialPowers.pushPrefEnv({'set': [['layout.css.overflow-clip-box.enabled', true]]}, nextTest);});
   tests.push([ 'bug966992-1.html' , 'bug966992-1-ref.html' ]);
   tests.push([ 'bug966992-2.html' , 'bug966992-2-ref.html' ]);
   tests.push([ 'bug966992-3.html' , 'bug966992-3-ref.html' ]);
-  tests.push(function() {SpecialPowers.setBoolPref("layout.css.overflow-clip-box.enabled", false);});
+  tests.push(function() {SpecialPowers.pushPrefEnv({'clear': [['layout.css.overflow-clip-box.enabled']]}, nextTest);});
 } else {
   is(SpecialPowers.getIntPref("layout.spellcheckDefault"), 0, "Spellcheck should be turned off for this platrom or this if..else check removed");
 }
@@ -180,7 +174,6 @@ function nextTest() {
   if (testIndex < tests.length) {
     if (typeof(tests[testIndex]) == 'function') {
       tests[testIndex]();
-      SimpleTest.executeSoon(nextTest);
     } else {
       refTest(tests[testIndex][0],tests[testIndex][1]);
     }
@@ -194,9 +187,7 @@ function runTests() {
     try {
       caretBlinkTime = SpecialPowers.getIntPref("ui.caretBlinkTime");
     } catch (e) {}
-    SpecialPowers.setIntPref("ui.caretBlinkTime", -1);
-
-    nextTest();
+    SpecialPowers.pushPrefEnv({'set': [['ui.caretBlinkTime', -1]]}, nextTest);
   } catch(e) {
     endTest();
   }
