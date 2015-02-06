@@ -69,22 +69,6 @@ var gSavePrintSettings = false;
 var gFocusedElement = null;
 
 var PrintUtils = {
-  bailOut: function () {
-    let pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    let allow_for_testing = false;
-    try {
-      allow_for_testing = pref.getBoolPref("print.enable_e10s_testing");
-    } catch(e) {
-      // The pref wasn't set, so I guess we're not overriding.
-    }
-    if (this.usingRemoteTabs && !allow_for_testing) {
-      alert("e10s printing is not implemented yet. Bug 927188.");
-      return true;
-    }
-    return false;
-  },
-
   /**
    * Shows the page setup dialog, and saves any settings changed in
    * that dialog if print.save_print_settings is set to true.
@@ -92,9 +76,6 @@ var PrintUtils = {
    * @return true on success, false on failure
    */
   showPageSetup: function () {
-    if (this.bailOut()) {
-      return;
-    }
     try {
       var printSettings = this.getPrintSettings();
       var PRINTPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
@@ -132,10 +113,6 @@ var PrintUtils = {
    */
   print: function (aWindow, aBrowser)
   {
-    if (this.bailOut()) {
-      return;
-    }
-
     if (!aWindow) {
       // If we're using remote browsers, chances are that window.content will
       // not be defined.
@@ -205,9 +182,6 @@ var PrintUtils = {
    */
   printPreview: function (aListenerObj)
   {
-    if (this.bailOut()) {
-      return;
-    }
     // if we're already in PP mode, don't set the listener; chances
     // are it is null because someone is calling printPreview() to
     // get us to refresh the display.
