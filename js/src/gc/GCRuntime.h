@@ -845,6 +845,7 @@ class GCRuntime
 
     template <AllowGC allowGC>
     static void *refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind);
+    static void *tryRefillFreeListFromMainThread(JSContext *cx, AllocKind thingKind);
     static void *refillFreeListOffMainThread(ExclusiveContext *cx, AllocKind thingKind);
 
     /*
