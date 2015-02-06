@@ -260,43 +260,43 @@ TimerThread::Run()
           RemoveTimerInternal(timer);
           timer = nullptr;
 
+#ifdef DEBUG_TIMERS
+          if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
+            PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
+                   ("Timer thread woke up %fms from when it was supposed to\n",
+                    fabs((now - timerRef->mTimeout).ToMilliseconds())));
+          }
+#endif
+
           {
             // We release mMonitor around the Fire call to avoid deadlock.
             MonitorAutoUnlock unlock(mMonitor);
-
-#ifdef DEBUG_TIMERS
-            if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
-              PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
-                     ("Timer thread woke up %fms from when it was supposed to\n",
-                      fabs((now - timerRef->mTimeout).ToMilliseconds())));
-            }
-#endif
 
             // We are going to let the call to PostTimerEvent here handle the
             // release of the timer so that we don't end up releasing the timer
             // on the TimerThread instead of on the thread it targets.
             timerRef = nsTimerImpl::PostTimerEvent(timerRef.forget());
+          }
 
-            if (timerRef) {
-              // We got our reference back due to an error.
-              // Unhook the nsRefPtr, and release manually so we can get the
-              // refcount.
-              nsrefcnt rc = timerRef.forget().take()->Release();
-              (void)rc;
+          if (timerRef) {
+            // We got our reference back due to an error.
+            // Unhook the nsRefPtr, and release manually so we can get the
+            // refcount.
+            nsrefcnt rc = timerRef.forget().take()->Release();
+            (void)rc;
 
-              // The nsITimer interface requires that its users keep a reference
-              // to the timers they use while those timers are initialized but
-              // have not yet fired.  If this ever happens, it is a bug in the
-              // code that created and used the timer.
-              //
-              // Further, note that this should never happen even with a
-              // misbehaving user, because nsTimerImpl::Release checks for a
-              // refcount of 1 with an armed timer (a timer whose only reference
-              // is from the timer thread) and when it hits this will remove the
-              // timer from the timer thread and thus destroy the last reference,
-              // preventing this situation from occurring.
-              MOZ_ASSERT(rc != 0, "destroyed timer off its target thread!");
-            }
+            // The nsITimer interface requires that its users keep a reference
+            // to the timers they use while those timers are initialized but
+            // have not yet fired.  If this ever happens, it is a bug in the
+            // code that created and used the timer.
+            //
+            // Further, note that this should never happen even with a
+            // misbehaving user, because nsTimerImpl::Release checks for a
+            // refcount of 1 with an armed timer (a timer whose only reference
+            // is from the timer thread) and when it hits this will remove the
+            // timer from the timer thread and thus destroy the last reference,
+            // preventing this situation from occurring.
+            MOZ_ASSERT(rc != 0, "destroyed timer off its target thread!");
           }
 
           if (mShutdown) {
