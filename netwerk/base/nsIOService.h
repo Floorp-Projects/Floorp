@@ -154,6 +154,8 @@ private:
     // Hashtable of (appId, nsIAppOffineInfo::mode) pairs
     // that is used especially in IsAppOffline
     nsDataHashtable<nsUint32HashKey, int32_t> mAppsOfflineStatus;
+
+    static bool                          sTelemetryEnabled;
 public:
     // Used for all default buffer sizes that necko allocates.
     static uint32_t   gDefaultSegmentSize;
