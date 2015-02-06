@@ -338,17 +338,18 @@ SavedFrame::checkThis(JSContext *cx, CallArgs &args, const char *fnName,
         return false;
     }
 
-    JSObject &thisObject = thisValue.toObject();
-    if (!thisObject.is<SavedFrame>()) {
+    JSObject *thisObject = CheckedUnwrap(&thisValue.toObject());
+    if (!thisObject || !thisObject->is<SavedFrame>()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                             SavedFrame::class_.name, fnName, thisObject.getClass()->name);
+                             SavedFrame::class_.name, fnName,
+                             thisObject ? thisObject->getClass()->name : "object");
         return false;
     }
 
     // Check for SavedFrame.prototype, which has the same class as SavedFrame
     // instances, however doesn't actually represent a captured stack frame. It
     // is the only object that is<SavedFrame>() but doesn't have a source.
-    if (thisObject.as<SavedFrame>().getReservedSlot(JSSLOT_SOURCE).isNull()) {
+    if (thisObject->as<SavedFrame>().getReservedSlot(JSSLOT_SOURCE).isNull()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              SavedFrame::class_.name, fnName, "prototype object");
         return false;
@@ -356,7 +357,7 @@ SavedFrame::checkThis(JSContext *cx, CallArgs &args, const char *fnName,
 
     // The caller might not have the principals to see this frame's data, so get
     // the first one they _do_ have access to.
-    frame.set(GetFirstSubsumedFrame(cx, &thisObject.as<SavedFrame>()));
+    frame.set(GetFirstSubsumedFrame(cx, &thisObject->as<SavedFrame>()));
     return true;
 }
 
