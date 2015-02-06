@@ -38,29 +38,49 @@
      */
 
     function runTest() {
-      PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                           NetUtil.newURI("place:folder=UNFILED_BOOKMARKS"),
-                                           PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                           "shortcut");
-      PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                           NetUtil.newURI("place:folder=UNFILED_BOOKMARKS&maxResults=10"),
-                                           PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                           "query");
-      let folderId = PlacesUtils.bookmarks.createFolder(PlacesUtils.unfiledBookmarksFolderId,
-                                                        "folder",
-                                                        PlacesUtils.bookmarks.DEFAULT_INDEX);
-      let itemId = PlacesUtils.bookmarks.insertBookmark(folderId,
-                                                        NetUtil.newURI("http://www.mozilla.org/"),
-                                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                                        "bookmark");
-      // Setup the places tree contents.
-      var tree = document.getElementById("tree");
-      tree.place = "place:folder=UNFILED_BOOKMARKS";
+      SimpleTest.waitForExplicitFinish();
 
-      // Select the last bookmark.
-      tree.selectItems([itemId]);
-      is (tree.selectedNode.itemId, itemId, "The right node was selected");
+      Task.spawn(function* () {
+        yield PlacesUtils.bookmarks.insert({
+          parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+          index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          url: "place:folder=UNFILED_BOOKMARKS",
+          title: "shortcut"
+        });
+
+        yield PlacesUtils.bookmarks.insert({
+          parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+          index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          url: "place:folder=UNFILED_BOOKMARKS&maxResults=10",
+          title: "query"
+        });
+
+        let folder = yield PlacesUtils.bookmarks.insert({
+          parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+          index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          title: "folder"
+        });
+
+        let bm = yield PlacesUtils.bookmarks.insert({
+          parentGuid: folder.guid,
+          index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          url: "http://www.mozilla.org/",
+          title: "bookmark"
+        });
+
+        // Setup the places tree contents.
+        let tree = document.getElementById("tree");
+        tree.place = "place:folder=UNFILED_BOOKMARKS";
+
+        // Select the last bookmark.
+        let itemId = yield PlacesUtils.promiseItemId(bm.guid);
+        tree.selectItems([itemId]);
+        is (tree.selectedNode.itemId, itemId, "The right node was selected");
+      }).then(SimpleTest.finish);
     }
-
   ]]></script>
 </window>

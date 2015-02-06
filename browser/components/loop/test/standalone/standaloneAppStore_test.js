@@ -38,16 +38,6 @@ describe("loop.store.StandaloneAppStore", function () {
       }).to.Throw(/sdk/);
     });
 
-    it("should throw an error if helper is missing", function() {
-      expect(function() {
-        new loop.store.StandaloneAppStore({
-          dispatcher: dispatcher,
-          sdk: {},
-          conversation: {}
-        });
-      }).to.Throw(/helper/);
-    });
-
     it("should throw an error if conversation is missing", function() {
       expect(function() {
         new loop.store.StandaloneAppStore({
@@ -67,8 +57,8 @@ describe("loop.store.StandaloneAppStore", function () {
         windowPath: ""
       };
 
-      helper = new sharedUtils.Helper();
-      sandbox.stub(helper, "isIOS").returns(false);
+      sandbox.stub(loop.shared.utils, "getUnsupportedPlatform").returns();
+      sandbox.stub(loop.shared.utils, "isFirefox").returns(true);
 
       fakeSdk = {
         checkSystemRequirements: sinon.stub().returns(true)
@@ -88,16 +78,39 @@ describe("loop.store.StandaloneAppStore", function () {
       });
     });
 
-    it("should set windowType to `unsupportedDevice` for IOS", function() {
-      // The stub should return true for this test.
-      helper.isIOS.returns(true);
+    it("should set isFirefox to true for Firefox", function() {
+      store.extractTokenInfo(
+        new sharedActions.ExtractTokenInfo(fakeGetWindowData));
+
+      expect(store.getStoreState().isFirefox).eql(true);
+    });
+
+    it("should set isFirefox to false for non-Firefox", function() {
+      loop.shared.utils.isFirefox.returns(false);
 
       store.extractTokenInfo(
         new sharedActions.ExtractTokenInfo(fakeGetWindowData));
 
-      expect(store.getStoreState()).eql({
-        windowType: "unsupportedDevice"
-      });
+      expect(store.getStoreState().isFirefox).eql(false);
+    });
+
+    it("should store the platform for unsupported platforms", function() {
+      loop.shared.utils.getUnsupportedPlatform.returns("fake");
+
+      store.extractTokenInfo(
+        new sharedActions.ExtractTokenInfo(fakeGetWindowData));
+
+      expect(store.getStoreState().unsupportedPlatform).eql("fake");
+    });
+
+    it("should set windowType to `unsupportedDevice` for ios", function() {
+      // The stub should return a platform for this test.
+      loop.shared.utils.getUnsupportedPlatform.returns("ios");
+
+      store.extractTokenInfo(
+        new sharedActions.ExtractTokenInfo(fakeGetWindowData));
+
+      expect(store.getStoreState().windowType).eql("unsupportedDevice");
     });
 
     it("should set windowType to `unsupportedBrowser` for browsers the sdk does not support",
@@ -108,9 +121,7 @@ describe("loop.store.StandaloneAppStore", function () {
         store.extractTokenInfo(
           new sharedActions.ExtractTokenInfo(fakeGetWindowData));
 
-        expect(store.getStoreState()).eql({
-          windowType: "unsupportedBrowser"
-        });
+        expect(store.getStoreState().windowType).eql("unsupportedBrowser");
       });
 
     it("should set windowType to `outgoing` for old style call hashes", function() {
@@ -119,9 +130,7 @@ describe("loop.store.StandaloneAppStore", function () {
       store.extractTokenInfo(
         new sharedActions.ExtractTokenInfo(fakeGetWindowData));
 
-      expect(store.getStoreState()).eql({
-        windowType: "outgoing"
-      });
+      expect(store.getStoreState().windowType).eql("outgoing");
     });
 
     it("should set windowType to `outgoing` for new style call paths", function() {
@@ -130,9 +139,7 @@ describe("loop.store.StandaloneAppStore", function () {
       store.extractTokenInfo(
         new sharedActions.ExtractTokenInfo(fakeGetWindowData));
 
-      expect(store.getStoreState()).eql({
-        windowType: "outgoing"
-      });
+      expect(store.getStoreState().windowType).eql("outgoing");
     });
 
     it("should set windowType to `room` for room paths", function() {
@@ -141,9 +148,7 @@ describe("loop.store.StandaloneAppStore", function () {
       store.extractTokenInfo(
         new sharedActions.ExtractTokenInfo(fakeGetWindowData));
 
-      expect(store.getStoreState()).eql({
-        windowType: "room"
-      });
+      expect(store.getStoreState().windowType).eql("room");
     });
 
     it("should set windowType to `home` for unknown paths", function() {
@@ -152,9 +157,7 @@ describe("loop.store.StandaloneAppStore", function () {
       store.extractTokenInfo(
         new sharedActions.ExtractTokenInfo(fakeGetWindowData));
 
-      expect(store.getStoreState()).eql({
-        windowType: "home"
-      });
+      expect(store.getStoreState().windowType).eql("home");
     });
 
     it("should set the loopToken on the conversation for old style call hashes",

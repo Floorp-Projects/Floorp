@@ -50,62 +50,69 @@
      * Ensures that date in places treeviews is correctly formatted.
      */
 
-    SimpleTest.waitForExplicitFinish();
-
     function runTest() {
-      // The mochitest page is added to history.
-      PlacesTestUtils.clearHistory().then(continue_test);
-    }
+      SimpleTest.waitForExplicitFinish();
 
-    function continue_test() {
-      var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-               getService(Ci.nsINavHistoryService);
-      var bh = hs.QueryInterface(Ci.nsIBrowserHistory);
-      var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-               getService(Ci.nsINavBookmarksService);
-      var ds = Cc["@mozilla.org/intl/scriptabledateformat;1"].
+      let ds = Cc["@mozilla.org/intl/scriptabledateformat;1"].
                getService(Ci.nsIScriptableDateFormat);
 
-      var iosvc = Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService);
       function uri(spec) {
-        return iosvc.newURI(spec, null, null);
+        return Services.io.newURI(spec, null, null);
       }
 
-      var midnight = new Date();
-      midnight.setHours(0);
-      midnight.setMinutes(0);
-      midnight.setSeconds(0);
-      midnight.setMilliseconds(0);
+      Task.spawn(function* () {
+        yield PlacesTestUtils.clearHistory();
 
-      function addVisitsCallback() {
+        let midnight = new Date();
+        midnight.setHours(0);
+        midnight.setMinutes(0);
+        midnight.setSeconds(0);
+        midnight.setMilliseconds(0);
+
+        // Add a visit 1ms before midnight, a visit at midnight, and
+        // a visit 1ms after midnight.
+        yield new Promise(resolve => addVisits(
+          [{uri: uri("http://before.midnight.com/"),
+             visitDate: (midnight.getTime() - 1) * 1000,
+             transition: PlacesUtils.history.TRANSITION_TYPED},
+           {uri: uri("http://at.midnight.com/"),
+             visitDate: (midnight.getTime()) * 1000,
+             transition: PlacesUtils.history.TRANSITION_TYPED},
+           {uri: uri("http://after.midnight.com/"),
+             visitDate: (midnight.getTime() + 1) * 1000,
+             transition: PlacesUtils.history.TRANSITION_TYPED}],
+          resolve));
+
         // add a bookmark to the midnight visit
-        var itemId = bs.insertBookmark(bs.toolbarFolder,
-                                       uri("http://at.midnight.com/"),
-                                       bs.DEFAULT_INDEX,
-                                       "A bookmark at midnight");
+        let bm = yield PlacesUtils.bookmarks.insert({
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+          index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+          url: "http://at.midnight.com/",
+          title: "A bookmark at midnight",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK
+        });
 
         // Make a history query.
-        var query = hs.getNewQuery();
-        var opts = hs.getNewQueryOptions();
-        var queryURI = hs.queriesToQueryString([query], 1, opts);
+        let query = PlacesUtils.history.getNewQuery();
+        let opts = PlacesUtils.history.getNewQueryOptions();
+        let queryURI = PlacesUtils.history.queriesToQueryString([query], 1, opts);
 
         // Setup the places tree contents.
-        var tree = document.getElementById("tree");
+        let tree = document.getElementById("tree");
         tree.place = queryURI;
 
         // loop through the rows and check formatting
-        var treeView = tree.view;
-        var rc = treeView.rowCount;
+        let treeView = tree.view;
+        let rc = treeView.rowCount;
         ok(rc >= 3, "Rows found");
-        var columns = tree.columns;
+        let columns = tree.columns;
         ok(columns.count > 0, "Columns found");
-        for (var r = 0; r < rc; r++) {
-          var node = treeView.nodeForTreeIndex(r);
+        for (let r = 0; r < rc; r++) {
+          let node = treeView.nodeForTreeIndex(r);
           ok(node, "Places node found");
-          for (var ci = 0; ci < columns.count; ci++) {
-            var c = columns.getColumnAt(ci);
-            var text = treeView.getCellText(r, c);
+          for (let ci = 0; ci < columns.count; ci++) {
+            let c = columns.getColumnAt(ci);
+            let text = treeView.getCellText(r, c);
             switch (c.element.getAttribute("anonid")) {
               case "title":
                 // The title can differ, we did not set any title so we would
@@ -118,9 +125,9 @@
                 is(text, node.uri, "Uri is correct");
                 break;
               case "date":
-                var timeObj = new Date(node.time / 1000);
+                let timeObj = new Date(node.time / 1000);
                 // Default is short date format.
-                var dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
+                let dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
                 // For today's visits we don't show date portion.
                 if (node.uri == "http://at.midnight.com/" ||
                     node.uri == "http://after.midnight.com/")
@@ -132,7 +139,7 @@
                   // a redirecting uri could be put in the tree while we test.
                   break;
                 }
-                var timeStr = ds.FormatDateTime("", dateFormat,
+                let timeStr = ds.FormatDateTime("", dateFormat,
                       Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
                       timeObj.getFullYear(), timeObj.getMonth() + 1,
                       timeObj.getDate(), timeObj.getHours(),
@@ -146,26 +153,12 @@
             }
           }
         }
+
         // Cleanup.
-        bs.removeItem(itemId);
-        PlacesTestUtils.clearHistory().then(SimpleTest.finish);
-      }
-
-      // Add a visit 1ms before midnight, a visit at midnight, and
-      // a visit 1ms after midnight.
-      addVisits(
-        [{uri: uri("http://before.midnight.com/"),
-           visitDate: (midnight.getTime() - 1) * 1000,
-           transition: hs.TRANSITION_TYPED},
-         {uri: uri("http://at.midnight.com/"),
-           visitDate: (midnight.getTime()) * 1000,
-           transition: hs.TRANSITION_TYPED},
-         {uri: uri("http://after.midnight.com/"),
-           visitDate: (midnight.getTime() + 1) * 1000,
-           transition: hs.TRANSITION_TYPED}],
-        addVisitsCallback);
+        yield PlacesUtils.bookmarks.remove(bm.guid);
+        yield PlacesTestUtils.clearHistory();
+      }).then(SimpleTest.finish);
     }
-
   ]]>
   </script>
 </window>
