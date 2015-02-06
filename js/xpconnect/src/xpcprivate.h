@@ -507,7 +507,7 @@ public:
     // Mapping of often used strings to jsid atoms that live 'forever'.
     //
     // To add a new string: add to this list and to XPCJSRuntime::mStrings
-    // at the top of XPCJSRuntime.cpp
+    // at the top of xpcjsruntime.cpp
     enum {
         IDX_CONSTRUCTOR             = 0 ,
         IDX_TO_STRING               ,
