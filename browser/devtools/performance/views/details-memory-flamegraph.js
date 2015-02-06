@@ -9,7 +9,11 @@
  */
 let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
 
-  rerenderPrefs: ["flatten-tree-recursion", "show-idle-blocks"],
+  rerenderPrefs: [
+    "invert-flame-graph",
+    "flatten-tree-recursion",
+    "show-idle-blocks"
+  ],
 
   /**
    * Sets up the view with event binding.
@@ -48,6 +52,7 @@ let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
 
     let samples = RecordingUtils.getSamplesFromAllocations(allocations);
     let data = FlameGraphUtils.createFlameGraphDataFromSamples(samples, {
+      invertStack: PerformanceController.getPref("invert-flame-graph"),
       flattenRecursion: PerformanceController.getPref("flatten-tree-recursion"),
       showIdleBlocks: PerformanceController.getPref("show-idle-blocks") && L10N.getStr("table.idle")
     });
