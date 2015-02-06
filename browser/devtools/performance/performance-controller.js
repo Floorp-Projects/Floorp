@@ -301,8 +301,6 @@ let PerformanceController = {
   _createRecording: function () {
     let recording = new RecordingModel({ front: gFront, performance });
     this._recordings.push(recording);
-
-    this.emit(EVENTS.RECORDING_CREATED, recording);
     return recording;
   },
 
