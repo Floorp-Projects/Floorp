@@ -41,26 +41,25 @@
      * Ensures that history views are updated after deleting entries.
      */
 
-    SimpleTest.waitForExplicitFinish();
-
     function runTest() {
-      // The mochitest page is added to history.
-      PlacesTestUtils.clearHistory().then(continue_test);
-    }
+      SimpleTest.waitForExplicitFinish();
 
-    function continue_test() {
-      // Add some visits.
-      let vtime = Date.now() * 1000;
-      const ttype = PlacesUtils.history.TRANSITION_TYPED;
-      let places =
-        [{ uri: Services.io.newURI("http://example.tld/", null, null),
-           visitDate: ++vtime, transition: ttype },
-         { uri: Services.io.newURI("http://example2.tld/", null, null),
-           visitDate: ++vtime, transition: ttype },
-         { uri: Services.io.newURI("http://example3.tld/", null, null),
-           visitDate: ++vtime, transition: ttype }];
+      Task.spawn(function* () {
+        yield PlacesTestUtils.clearHistory();
 
-      addVisits(places, function() {
+        // Add some visits.
+        let vtime = Date.now() * 1000;
+        const ttype = PlacesUtils.history.TRANSITION_TYPED;
+        let places =
+          [{ uri: Services.io.newURI("http://example.tld/", null, null),
+             visitDate: ++vtime, transition: ttype },
+           { uri: Services.io.newURI("http://example2.tld/", null, null),
+             visitDate: ++vtime, transition: ttype },
+           { uri: Services.io.newURI("http://example3.tld/", null, null),
+             visitDate: ++vtime, transition: ttype }];
+
+        yield new Promise(resolve => addVisits(places, resolve));
+
         // Make a history query.
         let query = PlacesUtils.history.getNewQuery();
         let opts = PlacesUtils.history.getNewQueryOptions();
@@ -87,29 +86,28 @@
 
         // First check live-update of the view when adding visits.
         places.forEach(place => place.visitDate = ++vtime);
-        addVisits(places, function() {
-          for (let i = 0; i < rc; i++) {
-            selection.select(i);
-            let node = tree.selectedNode;
-            is(node.uri, places[rc - i - 1].uri.spec,
-               "Found expected node at position " + i + ".");
-          }
+        yield new Promise(resolve => addVisits(places, resolve));
 
-          // Now remove the pages and verify live-update again.
-          for (let i = 0; i < rc; i++) {
-            selection.select(0);
-            let node = tree.selectedNode;
-            tree.controller.remove("Removing page");
-            ok(treeView.treeIndexForNode(node) == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE,
-              node.uri + " removed.");
-            ok(treeView.rowCount == rc - i - 1, "Rows count decreased");
-          }
+        for (let i = 0; i < rc; i++) {
+          selection.select(i);
+          let node = tree.selectedNode;
+          is(node.uri, places[rc - i - 1].uri.spec,
+             "Found expected node at position " + i + ".");
+        }
 
-          // Cleanup.
-          PlacesTestUtils.clearHistory().then(SimpleTest.finish);
-        });
-      });
+        // Now remove the pages and verify live-update again.
+        for (let i = 0; i < rc; i++) {
+          selection.select(0);
+          let node = tree.selectedNode;
+          tree.controller.remove("Removing page");
+          ok(treeView.treeIndexForNode(node) == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE,
+            node.uri + " removed.");
+          ok(treeView.rowCount == rc - i - 1, "Rows count decreased");
+        }
+
+        // Cleanup.
+        yield PlacesTestUtils.clearHistory();
+      }).then(() => SimpleTest.finish());
     }
-
   ]]></script>
 </window>
