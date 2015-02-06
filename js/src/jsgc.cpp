@@ -3208,7 +3208,7 @@ GCRuntime::maybeGC(Zone *zone)
 #ifdef JS_GC_ZEAL
     if (zealMode == ZealAllocValue || zealMode == ZealPokeValue) {
         JS::PrepareForFullGC(rt);
-        gc(GC_NORMAL, JS::gcreason::MAYBEGC);
+        gc(GC_NORMAL, JS::gcreason::DEBUG_GC);
         return true;
     }
 #endif
@@ -3222,7 +3222,7 @@ GCRuntime::maybeGC(Zone *zone)
         !isBackgroundSweeping())
     {
         PrepareZoneForGC(zone);
-        startGC(GC_NORMAL, JS::gcreason::MAYBEGC);
+        startGC(GC_NORMAL, JS::gcreason::EAGER_ALLOC_TRIGGER);
         return true;
     }
 
@@ -3248,7 +3248,7 @@ GCRuntime::maybePeriodicFullGC()
             numArenasFreeCommitted > decommitThreshold)
         {
             JS::PrepareForFullGC(rt);
-            startGC(GC_SHRINK, JS::gcreason::MAYBEGC);
+            startGC(GC_SHRINK, JS::gcreason::PERIODIC_FULL_GC);
         } else {
             nextFullGCTime = now + GC_IDLE_FULL_SPAN;
         }
@@ -6091,7 +6091,7 @@ IsDeterministicGCReason(JS::gcreason::Reason reason)
         return false;
     }
 
-    if (reason == JS::gcreason::MAYBEGC)
+    if (reason == JS::gcreason::EAGER_ALLOC_TRIGGER)
         return false;
 
     return true;
