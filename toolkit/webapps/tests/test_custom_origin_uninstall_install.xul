@@ -80,8 +80,10 @@ let runTest = Task.async(function*() {
 
   confirmNextPopup();
 
-  let (request = navigator.mozApps.installPackage(app.manifestURL)) {
-    let (deferred = Promise.defer()) {
+  {
+    let request = navigator.mozApps.installPackage(app.manifestURL);
+    {
+      let deferred = Promise.defer();
       request.onerror = function() {
         deferred.reject(this.error.name);
       };
@@ -92,14 +94,15 @@ let runTest = Task.async(function*() {
     let appObject = request.result;
     ok(appObject, "app is non-null");
 
-    let (deferred = Promise.defer()) {
+    {
+      let deferred = Promise.defer();
       appObject.ondownloaderror = function() {
         deferred.reject(appObject.downloadError.name);
       };
       appObject.ondownloadapplied = deferred.resolve;
       yield deferred.promise;
-    };
-  };
+    }
+  }
 
   while (!WebappOSUtils.isLaunchable(app)) {
     yield wait(1000);
@@ -112,8 +115,10 @@ let runTest = Task.async(function*() {
 
   confirmNextPopup();
 
-  let (request = navigator.mozApps.installPackage(app.manifestURL)) {
-    let (deferred = Promise.defer()) {
+  {
+    let request = navigator.mozApps.installPackage(app.manifestURL);
+    {
+      let deferred = Promise.defer();
       request.onerror = function() {
         deferred.reject(this.error.name);
       };
@@ -124,14 +129,15 @@ let runTest = Task.async(function*() {
     let appObject = request.result;
     ok(appObject, "app is non-null");
 
-    let (deferred = Promise.defer()) {
+    {
+      let deferred = Promise.defer();
       appObject.ondownloaderror = function() {
         deferred.reject(appObject.downloadError.name);
       };
       appObject.ondownloadapplied = deferred.resolve;
       yield deferred.promise;
-    };
-  };
+    }
+  }
 
   while (!WebappOSUtils.isLaunchable(app)) {
     yield wait(1000);
