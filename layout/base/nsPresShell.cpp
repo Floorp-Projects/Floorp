@@ -1153,7 +1153,7 @@ PresShell::Destroy()
 
   mUpdateImageVisibilityEvent.Revoke();
 
-  ClearVisibleImagesList(/* aRequestDiscard = */ true);
+  ClearVisibleImagesList(nsIImageLoadingContent::ON_NONVISIBLE_REQUEST_DISCARD);
 
   if (mCaret) {
     mCaret->Terminate();
@@ -5820,7 +5820,8 @@ PresShell::MarkImagesInListVisible(const nsDisplayList& aList)
 static PLDHashOperator
 DecrementVisibleCount(nsRefPtrHashKey<nsIImageLoadingContent>* aEntry, void*)
 {
-  aEntry->GetKey()->DecrementVisibleCount(/* aRequestDiscard = */ false);
+  aEntry->GetKey()->DecrementVisibleCount(
+    nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION);
   return PL_DHASH_NEXT;
 }
 
@@ -5844,7 +5845,8 @@ PresShell::ClearImageVisibilityVisited(nsView* aView, bool aClear)
   if (aClear) {
     PresShell* presShell = static_cast<PresShell*>(vm->GetPresShell());
     if (!presShell->mImageVisibilityVisited) {
-      presShell->ClearVisibleImagesList(/* aRequestDiscard = */ false);
+      presShell->ClearVisibleImagesList(
+        nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION);
     }
     presShell->mImageVisibilityVisited = false;
   }
@@ -5857,15 +5859,18 @@ static PLDHashOperator
 DecrementVisibleCountAndDiscard(nsRefPtrHashKey<nsIImageLoadingContent>* aEntry,
                                 void*)
 {
-  aEntry->GetKey()->DecrementVisibleCount(/* aRequestDiscard = */ true);
+  aEntry->GetKey()->DecrementVisibleCount(
+    nsIImageLoadingContent::ON_NONVISIBLE_REQUEST_DISCARD);
   return PL_DHASH_NEXT;
 }
 
 void
-PresShell::ClearVisibleImagesList(bool aRequestDiscard)
+PresShell::ClearVisibleImagesList(uint32_t aNonvisibleAction)
 {
-  auto enumerator = aRequestDiscard ? DecrementVisibleCountAndDiscard
-                                    : DecrementVisibleCount;
+  auto enumerator
+    = aNonvisibleAction == nsIImageLoadingContent::ON_NONVISIBLE_REQUEST_DISCARD
+    ? DecrementVisibleCountAndDiscard
+    : DecrementVisibleCount;
   mVisibleImages.EnumerateEntries(enumerator, nullptr);
   mVisibleImages.Clear();
 }
@@ -5996,7 +6001,8 @@ PresShell::UpdateImageVisibility()
   // call update on that frame
   nsIFrame* rootFrame = GetRootFrame();
   if (!rootFrame) {
-    ClearVisibleImagesList(/* aRequestDiscard = */ true);
+    ClearVisibleImagesList(
+      nsIImageLoadingContent::ON_NONVISIBLE_REQUEST_DISCARD);
     return;
   }
 
@@ -6155,7 +6161,8 @@ PresShell::RemoveImageFromVisibleList(nsIImageLoadingContent* aImage)
   mVisibleImages.RemoveEntry(aImage);
   if (mVisibleImages.Count() < count) {
     // aImage was in the hashtable, so we need to decrement its visible count
-    aImage->DecrementVisibleCount(/* aRequestDiscard = */ false);
+    aImage->DecrementVisibleCount(
+      nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION);
   }
 }
 
