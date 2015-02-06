@@ -350,7 +350,7 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
                      uri,
                      mPrincipal,
                      nsILoadInfo::SEC_NORMAL,
-                     mRequest->GetContext(),
+                     mRequest->ContentPolicyType(),
                      mLoadGroup,
                      nullptr, /* aCallbacks */
                      nsIRequest::LOAD_NORMAL | credentialsFlag,

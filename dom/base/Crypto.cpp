@@ -56,7 +56,7 @@ Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
                         JS::MutableHandle<JSObject*> aRetval,
                         ErrorResult& aRv)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Called on the wrong thread");
+  MOZ_ASSERT(NS_IsMainThread(), "Called on the wrong thread");
 
   JS::Rooted<JSObject*> view(aCx, aArray.Obj());
 

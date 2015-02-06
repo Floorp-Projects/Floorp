@@ -1032,8 +1032,7 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
         // If that changes then we probably want to add methods to the
         // corresponding SVG types to compare their base values.
         // As a shortcut, however, we can begin by comparing the pointers.
-        NS_ABORT_IF_FALSE(false, "Comparing nsAttrValues that point to SVG "
-          "data");
+        MOZ_ASSERT(false, "Comparing nsAttrValues that point to SVG data");
         return false;
       }
       NS_NOTREACHED("unknown type stored in MiscContainer");
@@ -1754,7 +1753,7 @@ nsAttrValue::ResetMiscAtomOrString()
 void
 nsAttrValue::SetSVGType(ValueType aType, const void* aValue,
                         const nsAString* aSerialized) {
-  NS_ABORT_IF_FALSE(IsSVGType(aType), "Not an SVG type");
+  MOZ_ASSERT(IsSVGType(aType), "Not an SVG type");
 
   MiscContainer* cont = EnsureEmptyMiscContainer();
   // All SVG types are just pointers to classes so just setting any of them

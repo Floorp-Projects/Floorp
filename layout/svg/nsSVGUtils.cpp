@@ -167,8 +167,8 @@ nsRect
 nsSVGUtils::GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
                                             const nsRect &aPreFilterRect)
 {
-  NS_ABORT_IF_FALSE(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT,
-                    "Called on invalid frame type");
+  MOZ_ASSERT(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT,
+             "Called on invalid frame type");
 
   nsSVGFilterProperty *property = nsSVGEffects::GetFilterProperty(aFrame);
   if (!property || !property->ReferencesValidResources()) {
@@ -200,8 +200,8 @@ nsSVGUtils::AnyOuterSVGIsCallingReflowSVG(nsIFrame* aFrame)
 void
 nsSVGUtils::ScheduleReflowSVG(nsIFrame *aFrame)
 {
-  NS_ABORT_IF_FALSE(aFrame->IsFrameOfType(nsIFrame::eSVG),
-                    "Passed bad frame!");
+  MOZ_ASSERT(aFrame->IsFrameOfType(nsIFrame::eSVG),
+             "Passed bad frame!");
 
   // If this is triggered, the callers should be fixed to call us before
   // ReflowSVG is called. If we try to mark dirty bits on frames while we're
@@ -242,15 +242,15 @@ nsSVGUtils::ScheduleReflowSVG(nsIFrame *aFrame)
       }
       f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
       f = f->GetParent();
-      NS_ABORT_IF_FALSE(f->IsFrameOfType(nsIFrame::eSVG),
-                        "NS_STATE_IS_OUTER_SVG check above not valid!");
+      MOZ_ASSERT(f->IsFrameOfType(nsIFrame::eSVG),
+                 "NS_STATE_IS_OUTER_SVG check above not valid!");
     }
 
     outerSVGFrame = static_cast<nsSVGOuterSVGFrame*>(f);
 
-    NS_ABORT_IF_FALSE(outerSVGFrame &&
-                      outerSVGFrame->GetType() == nsGkAtoms::svgOuterSVGFrame,
-                      "Did not find nsSVGOuterSVGFrame!");
+    MOZ_ASSERT(outerSVGFrame &&
+               outerSVGFrame->GetType() == nsGkAtoms::svgOuterSVGFrame,
+               "Did not find nsSVGOuterSVGFrame!");
   }
 
   if (outerSVGFrame->GetStateBits() & NS_FRAME_IN_REFLOW) {
@@ -270,8 +270,8 @@ nsSVGUtils::ScheduleReflowSVG(nsIFrame *aFrame)
 bool
 nsSVGUtils::NeedsReflowSVG(nsIFrame *aFrame)
 {
-  NS_ABORT_IF_FALSE(aFrame->IsFrameOfType(nsIFrame::eSVG),
-                    "SVG uses bits differently!");
+  MOZ_ASSERT(aFrame->IsFrameOfType(nsIFrame::eSVG),
+             "SVG uses bits differently!");
 
   // The flags we test here may change, hence why we have this separate
   // function.
@@ -281,8 +281,8 @@ nsSVGUtils::NeedsReflowSVG(nsIFrame *aFrame)
 void
 nsSVGUtils::NotifyAncestorsOfFilterRegionChange(nsIFrame *aFrame)
 {
-  NS_ABORT_IF_FALSE(!(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG),
-                    "Not expecting to be called on the outer SVG Frame");
+  MOZ_ASSERT(!(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG),
+             "Not expecting to be called on the outer SVG Frame");
 
   aFrame = aFrame->GetParent();
 
@@ -911,7 +911,7 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
       // needs investigation to check that we won't break too much content.
       // NOTE: When changing this to apply to other frame types, make sure to
       // also update nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset.
-      NS_ABORT_IF_FALSE(content->IsSVG(), "bad cast");
+      MOZ_ASSERT(content->IsSVG(), "bad cast");
       nsSVGElement *element = static_cast<nsSVGElement*>(content);
       matrix = element->PrependLocalTransformsTo(matrix,
                           nsSVGElement::eChildToUserSpace);
@@ -1114,7 +1114,7 @@ nsSVGUtils::GetNonScalingStrokeTransform(nsIFrame *aFrame,
   }
 
   nsIContent *content = aFrame->GetContent();
-  NS_ABORT_IF_FALSE(content->IsSVG(), "bad cast");
+  MOZ_ASSERT(content->IsSVG(), "bad cast");
 
   *aUserToOuterSVG = ThebesMatrix(SVGContentUtils::GetCTM(
                        static_cast<nsSVGElement*>(content), true));

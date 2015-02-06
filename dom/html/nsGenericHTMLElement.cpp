@@ -712,8 +712,8 @@ nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (IsEventAttributeName(aName) && aValue) {
-      NS_ABORT_IF_FALSE(aValue->Type() == nsAttrValue::eString,
-        "Expected string value for script body");
+      MOZ_ASSERT(aValue->Type() == nsAttrValue::eString,
+                 "Expected string value for script body");
       nsresult rv = SetEventHandler(aName, aValue->GetStringValue());
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -2152,8 +2152,8 @@ nsGenericHTMLFormElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 
     if (mForm && (aName == nsGkAtoms::name || aName == nsGkAtoms::id) &&
         aValue && !aValue->IsEmptyString()) {
-      NS_ABORT_IF_FALSE(aValue->Type() == nsAttrValue::eAtom,
-        "Expected atom value for name/id");
+      MOZ_ASSERT(aValue->Type() == nsAttrValue::eAtom,
+                 "Expected atom value for name/id");
       mForm->AddElementToTable(this,
         nsDependentAtomString(aValue->GetAtomValue()));
     }

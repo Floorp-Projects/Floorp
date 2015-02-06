@@ -206,10 +206,10 @@ public:
    */
   void ClearHasChanged()
   {
-    NS_ABORT_IF_FALSE(HasChanged(),
-                      "clearing mHasChanged flag, when it's already false");
-    NS_ABORT_IF_FALSE(!IsActiveOrFrozen(),
-                      "clearing mHasChanged flag for active animation");
+    MOZ_ASSERT(HasChanged(),
+               "clearing mHasChanged flag, when it's already false");
+    MOZ_ASSERT(!IsActiveOrFrozen(),
+               "clearing mHasChanged flag for active animation");
     mHasChanged = false;
   }
 

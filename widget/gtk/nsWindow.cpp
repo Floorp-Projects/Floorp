@@ -681,14 +681,14 @@ nsWindow::Destroy(void)
         gtk_widget_destroy(mShell);
         mShell = nullptr;
         mContainer = nullptr;
-        NS_ABORT_IF_FALSE(!mGdkWindow,
-                          "mGdkWindow should be NULL when mContainer is destroyed");
+        MOZ_ASSERT(!mGdkWindow,
+                   "mGdkWindow should be NULL when mContainer is destroyed");
     }
     else if (mContainer) {
         gtk_widget_destroy(GTK_WIDGET(mContainer));
         mContainer = nullptr;
-        NS_ABORT_IF_FALSE(!mGdkWindow,
-                          "mGdkWindow should be NULL when mContainer is destroyed");
+        MOZ_ASSERT(!mGdkWindow,
+                   "mGdkWindow should be NULL when mContainer is destroyed");
     }
     else if (mGdkWindow) {
         // Destroy child windows to ensure that their mThebesSurfaces are
@@ -763,8 +763,8 @@ nsWindow::SetParent(nsIWidget *aNewParent)
     if (!oldContainer) {
         // The GdkWindows have been destroyed so there is nothing else to
         // reparent.
-        NS_ABORT_IF_FALSE(gdk_window_is_destroyed(mGdkWindow),
-                          "live GdkWindow with no widget");
+        MOZ_ASSERT(gdk_window_is_destroyed(mGdkWindow),
+                   "live GdkWindow with no widget");
         return NS_OK;
     }
 
@@ -795,12 +795,12 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
     if (!oldContainer) {
         // The GdkWindows have been destroyed so there is nothing else to
         // reparent.
-        NS_ABORT_IF_FALSE(gdk_window_is_destroyed(mGdkWindow),
-                          "live GdkWindow with no widget");
+        MOZ_ASSERT(gdk_window_is_destroyed(mGdkWindow),
+                   "live GdkWindow with no widget");
         return NS_OK;
     }
-    NS_ABORT_IF_FALSE(!gdk_window_is_destroyed(mGdkWindow),
-                      "destroyed GdkWindow with widget");
+    MOZ_ASSERT(!gdk_window_is_destroyed(mGdkWindow),
+               "destroyed GdkWindow with widget");
     
     nsWindow* newParent = static_cast<nsWindow*>(aNewParent);
     GdkWindow* newParentWindow = newParent->mGdkWindow;
@@ -826,14 +826,14 @@ nsWindow::ReparentNativeWidgetInternal(nsIWidget* aNewParent,
 {
     if (!aNewContainer) {
         // The new parent GdkWindow has been destroyed.
-        NS_ABORT_IF_FALSE(!aNewParentWindow ||
-                          gdk_window_is_destroyed(aNewParentWindow),
-                          "live GdkWindow with no widget");
+        MOZ_ASSERT(!aNewParentWindow ||
+                   gdk_window_is_destroyed(aNewParentWindow),
+                   "live GdkWindow with no widget");
         Destroy();
     } else {
         if (aNewContainer != aOldContainer) {
-            NS_ABORT_IF_FALSE(!gdk_window_is_destroyed(aNewParentWindow),
-                              "destroyed GdkWindow with widget");
+            MOZ_ASSERT(!gdk_window_is_destroyed(aNewParentWindow),
+                       "destroyed GdkWindow with widget");
             SetWidgetForHierarchy(mGdkWindow, aOldContainer, aNewContainer);
 
             if (aOldContainer == gInvisibleContainer) {
@@ -6318,12 +6318,19 @@ nsWindow::GetDragInfo(WidgetMouseEvent* aMouseEvent,
     if (!gdk_window) {
         return false;
     }
-    NS_ABORT_IF_FALSE(GDK_IS_WINDOW(gdk_window), "must really be window");
+#ifdef DEBUG
+    // GDK_IS_WINDOW(...) expands to a statement-expression, and
+    // statement-expressions are not allowed in template-argument lists. So we
+    // have to make the MOZ_ASSERT condition indirect.
+    if (!GDK_IS_WINDOW(gdk_window)) {
+        MOZ_ASSERT(false, "must really be window");
+    }
+#endif
 
     // find the top-level window
     gdk_window = gdk_window_get_toplevel(gdk_window);
-    NS_ABORT_IF_FALSE(gdk_window,
-                      "gdk_window_get_toplevel should not return null");
+    MOZ_ASSERT(gdk_window,
+               "gdk_window_get_toplevel should not return null");
     *aWindow = gdk_window;
 
     if (!aMouseEvent->widget) {
@@ -6345,9 +6352,9 @@ nsWindow::GetDragInfo(WidgetMouseEvent* aMouseEvent,
 NS_IMETHODIMP
 nsWindow::BeginMoveDrag(WidgetMouseEvent* aEvent)
 {
-    NS_ABORT_IF_FALSE(aEvent, "must have event");
-    NS_ABORT_IF_FALSE(aEvent->mClass == eMouseEventClass,
-                      "event must have correct struct type");
+    MOZ_ASSERT(aEvent, "must have event");
+    MOZ_ASSERT(aEvent->mClass == eMouseEventClass,
+               "event must have correct struct type");
 
     GdkWindow *gdk_window;
     gint button, screenX, screenY;

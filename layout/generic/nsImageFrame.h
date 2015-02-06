@@ -326,14 +326,14 @@ private:
     NS_DECL_IMGINOTIFICATIONOBSERVER
 
     void AddIconObserver(nsImageFrame *frame) {
-        NS_ABORT_IF_FALSE(!mIconObservers.Contains(frame),
-                          "Observer shouldn't aleady be in array");
+        MOZ_ASSERT(!mIconObservers.Contains(frame),
+                   "Observer shouldn't aleady be in array");
         mIconObservers.AppendElement(frame);
     }
 
     void RemoveIconObserver(nsImageFrame *frame) {
       mozilla::DebugOnly<bool> didRemove = mIconObservers.RemoveElement(frame);
-      NS_ABORT_IF_FALSE(didRemove, "Observer not in array");
+      MOZ_ASSERT(didRemove, "Observer not in array");
     }
 
   private:

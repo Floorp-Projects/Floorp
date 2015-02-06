@@ -236,7 +236,7 @@ bool InitEventTracing(bool aLog)
 
   // Create a thread that will fire events back at the
   // main thread to measure responsiveness.
-  NS_ABORT_IF_FALSE(!sTracerThread, "Event tracing already initialized!");
+  MOZ_ASSERT(!sTracerThread, "Event tracing already initialized!");
   sTracerThread = PR_CreateThread(PR_USER_THREAD,
                                   TracerThread,
                                   args,

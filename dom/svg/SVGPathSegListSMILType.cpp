@@ -23,7 +23,7 @@ namespace mozilla {
 void
 SVGPathSegListSMILType::Init(nsSMILValue &aValue) const
 {
-  NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected value type");
+  MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
   aValue.mU.mPtr = new SVGPathDataAndInfo();
   aValue.mType = this;
 }
@@ -67,10 +67,10 @@ static bool
 ArcFlagsDiffer(SVGPathDataAndInfo::const_iterator aPathData1,
                SVGPathDataAndInfo::const_iterator aPathData2)
 {
-  NS_ABORT_IF_FALSE
+  MOZ_ASSERT
     (SVGPathSegUtils::IsArcType(SVGPathSegUtils::DecodeType(aPathData1[0])),
                                 "ArcFlagsDiffer called with non-arc segment");
-  NS_ABORT_IF_FALSE
+  MOZ_ASSERT
     (SVGPathSegUtils::IsArcType(SVGPathSegUtils::DecodeType(aPathData2[0])),
                                 "ArcFlagsDiffer called with non-arc segment");
 
@@ -125,8 +125,8 @@ CanInterpolate(const SVGPathDataAndInfo& aStart,
     pEnd += 1 + SVGPathSegUtils::ArgCountForType(endType);
   }
 
-  NS_ABORT_IF_FALSE(pStart <= pStartDataEnd && pEnd <= pEndDataEnd,
-                    "Iterated past end of buffer! (Corrupt path data?)");
+  MOZ_ASSERT(pStart <= pStartDataEnd && pEnd <= pEndDataEnd,
+             "Iterated past end of buffer! (Corrupt path data?)");
 
   if (pStart != pStartDataEnd || pEnd != pEndDataEnd) {
     return eCannotInterpolate;
@@ -176,12 +176,12 @@ AddWeightedPathSegs(double aCoeff1,
                     SVGPathDataAndInfo::const_iterator& aSeg2,
                     SVGPathDataAndInfo::iterator& aResultSeg)
 {
-  NS_ABORT_IF_FALSE(aSeg2, "2nd segment must be non-null");
-  NS_ABORT_IF_FALSE(aResultSeg, "result segment must be non-null");
+  MOZ_ASSERT(aSeg2, "2nd segment must be non-null");
+  MOZ_ASSERT(aResultSeg, "result segment must be non-null");
 
   uint32_t segType = SVGPathSegUtils::DecodeType(aSeg2[0]);
-  NS_ABORT_IF_FALSE(!aSeg1 || SVGPathSegUtils::DecodeType(*aSeg1) == segType,
-                    "unexpected segment type");
+  MOZ_ASSERT(!aSeg1 || SVGPathSegUtils::DecodeType(*aSeg1) == segType,
+             "unexpected segment type");
 
   // FIRST: Directly copy the arguments that don't make sense to add.
   aResultSeg[0] = aSeg2[0];  // encoded segment type
@@ -189,8 +189,8 @@ AddWeightedPathSegs(double aCoeff1,
   bool isArcType = SVGPathSegUtils::IsArcType(segType);
   if (isArcType) {
     // Copy boolean arc flags.
-    NS_ABORT_IF_FALSE(!aSeg1 || !ArcFlagsDiffer(aSeg1, aSeg2),
-                      "Expecting arc flags to match");
+    MOZ_ASSERT(!aSeg1 || !ArcFlagsDiffer(aSeg1, aSeg2),
+               "Expecting arc flags to match");
     aResultSeg[LARGE_ARC_FLAG_IDX] = aSeg2[LARGE_ARC_FLAG_IDX];
     aResultSeg[SWEEP_FLAG_IDX]     = aSeg2[SWEEP_FLAG_IDX];
   }
@@ -237,16 +237,16 @@ AddWeightedPathSegLists(double aCoeff1, const SVGPathDataAndInfo& aList1,
                         double aCoeff2, const SVGPathDataAndInfo& aList2,
                         SVGPathDataAndInfo& aResult)
 {
-  NS_ABORT_IF_FALSE(aCoeff1 >= 0.0 && aCoeff2 >= 0.0,
-                    "expecting non-negative coefficients");
-  NS_ABORT_IF_FALSE(!aList2.IsIdentity(),
-                    "expecting 2nd list to be non-identity");
-  NS_ABORT_IF_FALSE(aList1.IsIdentity() || aList1.Length() == aList2.Length(),
-                    "expecting 1st list to be identity or to have same "
-                    "length as 2nd list");
-  NS_ABORT_IF_FALSE(aResult.IsIdentity() || aResult.Length() == aList2.Length(),
-                    "expecting result list to be identity or to have same "
-                    "length as 2nd list");
+  MOZ_ASSERT(aCoeff1 >= 0.0 && aCoeff2 >= 0.0,
+             "expecting non-negative coefficients");
+  MOZ_ASSERT(!aList2.IsIdentity(),
+             "expecting 2nd list to be non-identity");
+  MOZ_ASSERT(aList1.IsIdentity() || aList1.Length() == aList2.Length(),
+             "expecting 1st list to be identity or to have same "
+             "length as 2nd list");
+  MOZ_ASSERT(aResult.IsIdentity() || aResult.Length() == aList2.Length(),
+             "expecting result list to be identity or to have same "
+             "length as 2nd list");
 
   SVGPathDataAndInfo::const_iterator iter1, end1;
   if (aList1.IsIdentity()) {
@@ -264,7 +264,7 @@ AddWeightedPathSegLists(double aCoeff1, const SVGPathDataAndInfo& aList1,
   // record that our first operand is an identity value.)
   if (aResult.IsIdentity()) {
     DebugOnly<bool> success = aResult.SetLength(aList2.Length());
-    NS_ABORT_IF_FALSE(success, "infallible nsTArray::SetLength should succeed");
+    MOZ_ASSERT(success, "infallible nsTArray::SetLength should succeed");
     aResult.SetElement(aList2.Element()); // propagate target element info!
   }
 
@@ -276,10 +276,10 @@ AddWeightedPathSegLists(double aCoeff1, const SVGPathDataAndInfo& aList1,
                         aCoeff2, iter2,
                         resultIter);
   }
-  NS_ABORT_IF_FALSE((!iter1 || iter1 == end1) &&
-                    iter2 == end2 &&
-                    resultIter == aResult.end(),
-                    "Very, very bad - path data corrupt");
+  MOZ_ASSERT((!iter1 || iter1 == end1) &&
+             iter2 == end2 &&
+             resultIter == aResult.end(),
+             "Very, very bad - path data corrupt");
 }
 
 static void
@@ -307,7 +307,7 @@ ConvertPathSegmentData(SVGPathDataAndInfo::const_iterator& aStart,
     return;
   }
 
-  NS_ABORT_IF_FALSE
+  MOZ_ASSERT
       (SVGPathSegUtils::SameTypeModuloRelativeness(startType, endType),
        "Incompatible path segment types passed to ConvertPathSegmentData!");
 
@@ -315,7 +315,7 @@ ConvertPathSegmentData(SVGPathDataAndInfo::const_iterator& aStart,
     SVGPathSegUtils::IsRelativeType(startType) ? eRelativeToAbsolute
                                                : eAbsoluteToRelative;
 
-  NS_ABORT_IF_FALSE
+  MOZ_ASSERT
     (segmentLengthIncludingType ==
        1 + SVGPathSegUtils::ArgCountForType(endType),
      "Compatible path segment types for interpolation had different lengths!");
@@ -388,8 +388,8 @@ ConvertAllPathSegmentData(SVGPathDataAndInfo::const_iterator aStart,
   while (aStart < aStartDataEnd && aEnd < aEndDataEnd) {
     ConvertPathSegmentData(aStart, aEnd, aResult, state);
   }
-  NS_ABORT_IF_FALSE(aStart == aStartDataEnd && aEnd == aEndDataEnd,
-                    "Failed to convert all path segment data! (Corrupt?)");
+  MOZ_ASSERT(aStart == aStartDataEnd && aEnd == aEndDataEnd,
+             "Failed to convert all path segment data! (Corrupt?)");
 }
 
 nsresult
@@ -411,8 +411,8 @@ SVGPathSegListSMILType::Add(nsSMILValue& aDest,
 
   if (!dest.IsIdentity()) {
     // Neither value is identity; make sure they're compatible.
-    NS_ABORT_IF_FALSE(dest.Element() == valueToAdd.Element(),
-                      "adding values from different elements...?");
+    MOZ_ASSERT(dest.Element() == valueToAdd.Element(),
+               "adding values from different elements...?");
 
     PathInterpolationResult check = CanInterpolate(dest, valueToAdd);
     if (check == eCannotInterpolate) {
@@ -466,8 +466,8 @@ SVGPathSegListSMILType::Interpolate(const nsSMILValue& aStartVal,
     *static_cast<const SVGPathDataAndInfo*>(aEndVal.mU.mPtr);
   SVGPathDataAndInfo& result =
     *static_cast<SVGPathDataAndInfo*>(aResult.mU.mPtr);
-  NS_ABORT_IF_FALSE(result.IsIdentity(),
-                    "expecting outparam to start out as identity");
+  MOZ_ASSERT(result.IsIdentity(),
+             "expecting outparam to start out as identity");
 
   PathInterpolationResult check = CanInterpolate(start, end); 
 
@@ -483,7 +483,7 @@ SVGPathSegListSMILType::Interpolate(const nsSMILValue& aStartVal,
     // Can't convert |start| in-place, since it's const. Instead, we copy it
     // into |result|, converting the types as we go, and use that as our start.
     DebugOnly<bool> success = result.SetLength(end.Length());
-    NS_ABORT_IF_FALSE(success, "infallible nsTArray::SetLength should succeed");
+    MOZ_ASSERT(success, "infallible nsTArray::SetLength should succeed");
     result.SetElement(end.Element()); // propagate target element info!
 
     ConvertAllPathSegmentData(start.begin(), start.end(),

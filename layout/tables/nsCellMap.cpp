@@ -1172,7 +1172,7 @@ nsCellMap::~nsCellMap()
 void
 nsCellMap::Init()
 {
-  NS_ABORT_IF_FALSE(!sEmptyRow, "How did that happen?");
+  MOZ_ASSERT(!sEmptyRow, "How did that happen?");
   sEmptyRow = new nsCellMap::CellDataArray();
 }
 
@@ -2898,8 +2898,8 @@ nsCellMapColumnIterator::GetNextFrame(int32_t* aRow, int32_t* aColSpan)
 
     ++mFoundCells;
 
-    NS_ABORT_IF_FALSE(cellData == mMap->GetDataAt(*aRow, mCol),
-                      "Giving caller bogus row?");
+    MOZ_ASSERT(cellData == mMap->GetDataAt(*aRow, mCol),
+               "Giving caller bogus row?");
 
     return cellFrame;
   }

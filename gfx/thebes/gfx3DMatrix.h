@@ -66,12 +66,12 @@ public:
 
   Point4D& operator[](int aIndex)
   {
-      NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
+      MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
       return *reinterpret_cast<Point4D*>((&_11)+4*aIndex);
   }
   const Point4D& operator[](int aIndex) const
   {
-      NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
+      MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
       return *reinterpret_cast<const Point4D*>((&_11)+4*aIndex);
   }
 

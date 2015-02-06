@@ -553,9 +553,9 @@ nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
                                bool aResetVisibility)
 {
   AssertNoWindow();
-  NS_ABORT_IF_FALSE(!aWidgetInitData ||
-                    aWidgetInitData->mWindowType != eWindowType_popup,
-                    "Use CreateWidgetForPopup");
+  MOZ_ASSERT(!aWidgetInitData ||
+             aWidgetInitData->mWindowType != eWindowType_popup,
+             "Use CreateWidgetForPopup");
 
   DefaultWidgetInitData defaultInitData;
   bool initDataPassedIn = !!aWidgetInitData;
@@ -594,10 +594,10 @@ nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
                                         bool aResetVisibility)
 {
   AssertNoWindow();
-  NS_ABORT_IF_FALSE(!aWidgetInitData ||
-                    aWidgetInitData->mWindowType != eWindowType_popup,
-                    "Use CreateWidgetForPopup");
-  NS_ABORT_IF_FALSE(aParentWidget, "Parent widget required");
+  MOZ_ASSERT(!aWidgetInitData ||
+             aWidgetInitData->mWindowType != eWindowType_popup,
+             "Use CreateWidgetForPopup");
+  MOZ_ASSERT(aParentWidget, "Parent widget required");
 
   DefaultWidgetInitData defaultInitData;
   aWidgetInitData = aWidgetInitData ? aWidgetInitData : &defaultInitData;
@@ -623,9 +623,9 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
                                        bool aResetVisibility)
 {
   AssertNoWindow();
-  NS_ABORT_IF_FALSE(aWidgetInitData, "Widget init data required");
-  NS_ABORT_IF_FALSE(aWidgetInitData->mWindowType == eWindowType_popup,
-                    "Use one of the other CreateWidget methods");
+  MOZ_ASSERT(aWidgetInitData, "Widget init data required");
+  MOZ_ASSERT(aWidgetInitData->mWindowType == eWindowType_popup,
+             "Use one of the other CreateWidget methods");
 
   nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
@@ -665,7 +665,7 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
 void
 nsView::InitializeWindow(bool aEnableDragDrop, bool aResetVisibility)
 {
-  NS_ABORT_IF_FALSE(mWindow, "Must have a window to initialize");
+  MOZ_ASSERT(mWindow, "Must have a window to initialize");
 
   mWindow->SetWidgetListener(this);
 
@@ -815,9 +815,8 @@ nsPoint nsView::GetOffsetTo(const nsView* aOther) const
 
 nsPoint nsView::GetOffsetTo(const nsView* aOther, const int32_t aAPD) const
 {
-  NS_ABORT_IF_FALSE(GetParent() || !aOther || aOther->GetParent() ||
-                    this == aOther, "caller of (outer) GetOffsetTo must not "
-                    "pass unrelated views");
+  MOZ_ASSERT(GetParent() || !aOther || aOther->GetParent() || this == aOther,
+             "caller of (outer) GetOffsetTo must not pass unrelated views");
   // We accumulate the final result in offset
   nsPoint offset(0, 0);
   // The offset currently accumulated at the current APD

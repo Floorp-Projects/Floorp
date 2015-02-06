@@ -334,7 +334,7 @@ nsBaseWidget::CreateChild(const nsIntRect  &aRect,
     // nativeWidget parameter.
     nativeParent = parent ? parent->GetNativeData(NS_NATIVE_WIDGET) : nullptr;
     parent = nativeParent ? nullptr : parent;
-    NS_ABORT_IF_FALSE(!parent || !nativeParent, "messed up logic");
+    MOZ_ASSERT(!parent || !nativeParent, "messed up logic");
   }
 
   nsCOMPtr<nsIWidget> widget;
@@ -1027,7 +1027,8 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   mCompositorChild = new CompositorChild(lm);
   mCompositorChild->Open(parentChannel, childMessageLoop, ipc::ChildSide);
 
-  if (gfxPrefs::AsyncPanZoomEnabled()) {
+  if (gfxPrefs::AsyncPanZoomEnabled() &&
+      (WindowType() == eWindowType_toplevel || WindowType() == eWindowType_child)) {
     ConfigureAPZCTreeManager();
   }
 

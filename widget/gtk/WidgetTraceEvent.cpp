@@ -48,12 +48,12 @@ void CleanUpWidgetTracing()
 // This function is called from the background tracer thread.
 bool FireAndWaitForTracerEvent()
 {
-  NS_ABORT_IF_FALSE(sMutex && sCondVar, "Tracing not initialized!");
+  MOZ_ASSERT(sMutex && sCondVar, "Tracing not initialized!");
 
   // Send a default-priority idle event through the
   // event loop, and wait for it to finish.
   MutexAutoLock lock(*sMutex);
-  NS_ABORT_IF_FALSE(!sTracerProcessed, "Tracer synchronization state is wrong");
+  MOZ_ASSERT(!sTracerProcessed, "Tracer synchronization state is wrong");
   g_idle_add_full(G_PRIORITY_DEFAULT,
                   TracerCallback,
                   nullptr,

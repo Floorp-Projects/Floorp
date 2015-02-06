@@ -54,7 +54,7 @@ SharedMemoryBasic::~SharedMemoryBasic()
 bool
 SharedMemoryBasic::Create(size_t aNbytes)
 {
-  NS_ABORT_IF_FALSE(-1 == mShmFd, "Already Create()d");
+  MOZ_ASSERT(-1 == mShmFd, "Already Create()d");
 
   // Carve a new instance off of /dev/ashmem
   int shmfd = open("/" ASHMEM_NAME_DEF, O_RDWR, 0600);
@@ -77,7 +77,7 @@ SharedMemoryBasic::Create(size_t aNbytes)
 bool
 SharedMemoryBasic::Map(size_t nBytes)
 {
-  NS_ABORT_IF_FALSE(nullptr == mMemory, "Already Map()d");
+  MOZ_ASSERT(nullptr == mMemory, "Already Map()d");
 
   mMemory = mmap(nullptr, nBytes,
                  PROT_READ | PROT_WRITE,
@@ -98,7 +98,7 @@ bool
 SharedMemoryBasic::ShareToProcess(base::ProcessHandle/*unused*/,
                                   Handle* aNewHandle)
 {
-  NS_ABORT_IF_FALSE(mShmFd >= 0, "Should have been Create()d by now");
+  MOZ_ASSERT(mShmFd >= 0, "Should have been Create()d by now");
 
   int shmfdDup = dup(mShmFd);
   if (-1 == shmfdDup) {

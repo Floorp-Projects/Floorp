@@ -23,6 +23,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsClient",
 XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
   "resource://gre/modules/identity/jwcrypto.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsOAuthGrantClient",
+  "resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
+
 // All properties exposed by the public FxAccounts API.
 let publicProperties = [
   "accountStatus",
@@ -32,6 +35,7 @@ let publicProperties = [
   "getAssertion",
   "getKeys",
   "getSignedInUser",
+  "getOAuthToken",
   "loadAndPoll",
   "localtimeOffsetMsec",
   "now",
@@ -904,6 +908,28 @@ FxAccountsInternal.prototype = {
       newQueryPortion += "email=" + encodeURIComponent(accountData.email);
       return url + newQueryPortion;
     }).then(result => currentState.resolve(result));
+  },
+
+  /*
+   * Get an OAuth token for the user
+   */
+  getOAuthToken: function (options = {}) {
+    log.debug("getOAuthToken enter");
+
+    if (!options.scope) {
+      throw new Error("Missing 'scope' option");
+    }
+
+    let oAuthURL = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.oauth.uri");
+
+    let client = options.client || new FxAccountsOAuthGrantClient({
+      serverURL: oAuthURL,
+      client_id: FX_OAUTH_CLIENT_ID
+    });
+
+    return this.getAssertion(oAuthURL)
+      .then(assertion => client.getTokenFromAssertion(assertion, options.scope))
+      .then(result => result.access_token);
   }
 };
 

@@ -71,7 +71,7 @@ public:
    */
   static inline already_AddRefed<nsIFile> GetPath(Type aType)
   {
-    NS_ABORT_IF_FALSE(IsInitialized(), "Omnijar not initialized");
+    MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
     nsCOMPtr<nsIFile> path = sPath[aType];
     return path.forget();
   }
@@ -82,7 +82,7 @@ public:
    */
   static inline bool HasOmnijar(Type aType)
   {
-    NS_ABORT_IF_FALSE(IsInitialized(), "Omnijar not initialized");
+    MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
     return !!sPath[aType];
   }
 
@@ -92,7 +92,7 @@ public:
    */
   static inline already_AddRefed<nsZipArchive> GetReader(Type aType)
   {
-    NS_ABORT_IF_FALSE(IsInitialized(), "Omnijar not initialized");
+    MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
     nsRefPtr<nsZipArchive> reader = sReader[aType];
     return reader.forget();
   }

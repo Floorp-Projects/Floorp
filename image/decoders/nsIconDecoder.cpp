@@ -31,7 +31,7 @@ nsIconDecoder::~nsIconDecoder()
 void
 nsIconDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 {
-  NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
+  MOZ_ASSERT(!HasError(), "Shouldn't call WriteInternal after error!");
 
   // We put this here to avoid errors about crossing initialization with case
   // jumps on linux.

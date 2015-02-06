@@ -43,6 +43,8 @@ DrawTargetTiled::Init(const TileSet& aTiles)
     mRect.y = min(mRect.y, mTiles[i].mTileOrigin.y);
     mRect.width = newXMost - mRect.x;
     mRect.height = newYMost - mRect.y;
+    mTiles[i].mDrawTarget->SetTransform(Matrix::Translation(mTiles[i].mTileOrigin.x,
+                                                            mTiles[i].mTileOrigin.y));
   }
   mFormat = mTiles[0].mDrawTarget->GetFormat();
   return true;

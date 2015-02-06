@@ -49,9 +49,8 @@ ProcessingInstruction::ProcessingInstruction(already_AddRefed<mozilla::dom::Node
                                              const nsAString& aData)
   : nsGenericDOMDataNode(Move(aNodeInfo))
 {
-  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() ==
-                      nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
-                    "Bad NodeType in aNodeInfo");
+  MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
+             "Bad NodeType in aNodeInfo");
 
   SetTextInternal(0, mText.GetLength(),
                   aData.BeginReading(), aData.Length(),

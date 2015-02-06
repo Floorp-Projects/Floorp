@@ -311,10 +311,20 @@ parsererror|sourcetext {
 
 div:-moz-native-anonymous.moz-touchcaret,
 div:-moz-native-anonymous.moz-selectioncaret-left,
-div:-moz-native-anonymous.moz-selectioncaret-right,
+div:-moz-native-anonymous.moz-selectioncaret-right {
+  position: fixed;
+}
+
 div:-moz-native-anonymous.moz-selectioncaret-left > div,
 div:-moz-native-anonymous.moz-selectioncaret-right > div {
   position: absolute;
+}
+
+div:-moz-native-anonymous.moz-touchcaret,
+div:-moz-native-anonymous.moz-selectioncaret-left,
+div:-moz-native-anonymous.moz-selectioncaret-right,
+div:-moz-native-anonymous.moz-selectioncaret-left > div,
+div:-moz-native-anonymous.moz-selectioncaret-right > div {
   width: 29px;
   height: 31px;
   background-position: center center;

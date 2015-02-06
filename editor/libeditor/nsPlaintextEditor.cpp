@@ -840,7 +840,7 @@ nsPlaintextEditor::BeginIMEComposition(WidgetCompositionEvent* aEvent)
 nsresult
 nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
 {
-  NS_ABORT_IF_FALSE(aDOMTextEvent, "aDOMTextEvent must not be nullptr");
+  MOZ_ASSERT(aDOMTextEvent, "aDOMTextEvent must not be nullptr");
 
   WidgetCompositionEvent* compositionChangeEvent =
     aDOMTextEvent->GetInternalNSEvent()->AsCompositionEvent();
@@ -1584,6 +1584,7 @@ nsPlaintextEditor::SelectEntireDocument(Selection* aSelection)
     return aSelection->Collapse(rootElement, 0);
   }
 
+  SelectionBatcher selectionBatcher(aSelection);
   nsresult rv = nsEditor::SelectEntireDocument(aSelection);
   NS_ENSURE_SUCCESS(rv, rv);
 

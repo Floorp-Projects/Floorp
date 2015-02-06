@@ -22,10 +22,10 @@ GetCSSComputedValue(Element* aElem,
                     nsCSSProperty aPropID,
                     nsAString& aResult)
 {
-  NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aPropID),
-                    "Can't look up computed value of shorthand property");
-  NS_ABORT_IF_FALSE(nsSMILCSSProperty::IsPropertyAnimatable(aPropID),
-                    "Shouldn't get here for non-animatable properties");
+  MOZ_ASSERT(!nsCSSProps::IsShorthand(aPropID),
+             "Can't look up computed value of shorthand property");
+  MOZ_ASSERT(nsSMILCSSProperty::IsPropertyAnimatable(aPropID),
+             "Shouldn't get here for non-animatable properties");
 
   nsIDocument* doc = aElem->GetCurrentDoc();
   if (!doc) {
@@ -53,9 +53,9 @@ nsSMILCSSProperty::nsSMILCSSProperty(nsCSSProperty aPropID,
                                      Element* aElement)
   : mPropID(aPropID), mElement(aElement)
 {
-  NS_ABORT_IF_FALSE(IsPropertyAnimatable(mPropID),
-                    "Creating a nsSMILCSSProperty for a property "
-                    "that's not supported for animation");
+  MOZ_ASSERT(IsPropertyAnimatable(mPropID),
+             "Creating a nsSMILCSSProperty for a property "
+             "that's not supported for animation");
 }
 
 nsSMILValue

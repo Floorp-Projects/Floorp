@@ -30,25 +30,16 @@ function handleRequest(request, response)
     query[name] = unescape(value);
   });
 
+  var csp = unescape(query['csp']);
+  var file = unescape(query['file']);
+
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
-  if (query['csp']) {
-    var csp = unescape(query['csp']);
-    // Deliver the CSP policy encoded in the URI
-    response.setHeader("Content-Security-Policy", csp, false);
-  }
+  // Deliver the CSP policy encoded in the URI
+  response.setHeader("Content-Security-Policy", csp, false);
 
-  if (query['cspRO']) {
-    var cspRO = unescape(query['cspRO']);
-    // Deliver the CSP report-only policy encoded in the URI
-    response.setHeader("Content-Security-Policy-Report-Only", cspRO, false);
-  }
-
-  if (query['file']) {
-    var file = unescape(query['file']);
-    // Send HTML to test allowed/blocked behaviors
-    response.setHeader("Content-Type", "text/html", false);
-    response.write(loadHTMLFromFile(file));
-  }
+  // Send HTML to test allowed/blocked behaviors
+  response.setHeader("Content-Type", "text/html", false);
+  response.write(loadHTMLFromFile(file));
 }

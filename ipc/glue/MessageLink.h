@@ -143,8 +143,8 @@ class ProcessLink
 
     void AssertIOThread() const
     {
-        NS_ABORT_IF_FALSE(mIOLoop == MessageLoop::current(),
-                          "not on I/O thread!");
+        MOZ_ASSERT(mIOLoop == MessageLoop::current(),
+                   "not on I/O thread!");
     }
 
   public:

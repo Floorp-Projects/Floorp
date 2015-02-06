@@ -15,7 +15,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/net/ReferrerPolicy.h"
-#include "nsContentUtils.h"
 
 using namespace mozilla;
 
@@ -913,39 +912,6 @@ nsCSPParser::reportURIList(nsTArray<nsCSPBaseSrc*>& outSrcs)
   }
 }
 
-/* Helper function for parsing sandbox flags. This function solely
- * concatenates all the source list tokens (the sandbox flags) so the
- * attribute parser (nsContentUtils::ParseSandboxAttributeToFlags) can
- * use them.
- */
-void
-nsCSPParser::sandboxFlagList(nsTArray<nsCSPBaseSrc*>& outSrcs)
-{
-  nsAutoString flags;
-
-  // remember, srcs start at index 1
-  for (uint32_t i = 1; i < mCurDir.Length(); i++) {
-    mCurToken = mCurDir[i];
-
-    CSPPARSERLOG(("nsCSPParser::sandboxFlagList, mCurToken: %s, mCurValue: %s",
-                 NS_ConvertUTF16toUTF8(mCurToken).get(),
-                 NS_ConvertUTF16toUTF8(mCurValue).get()));
-
-    if (!nsContentUtils::IsValidSandboxFlag(mCurToken)) {
-      const char16_t* params[] = { mCurToken.get() };
-      logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSandboxFlag",
-                               params, ArrayLength(params));
-      continue;
-    }
-    flags.Append(mCurToken);
-    if (i != mCurDir.Length() - 1) {
-      flags.AppendASCII(" ");
-    }
-  }
-  nsCSPSandboxFlags* sandboxFlags = new nsCSPSandboxFlags(flags);
-  outSrcs.AppendElement(sandboxFlags);
-}
-
 // directive-value = *( WSP / <VCHAR except ";" and ","> )
 void
 nsCSPParser::directiveValue(nsTArray<nsCSPBaseSrc*>& outSrcs)
@@ -964,13 +930,6 @@ nsCSPParser::directiveValue(nsTArray<nsCSPBaseSrc*>& outSrcs)
   // source lists)
   if (CSP_IsDirective(mCurDir[0], nsIContentSecurityPolicy::REFERRER_DIRECTIVE)) {
     referrerDirectiveValue();
-    return;
-  }
-
-  // For the sandbox flag the source list is a list of flags, so we're
-  // special casing this directive
-  if (CSP_IsDirective(mCurDir[0], nsIContentSecurityPolicy::SANDBOX_DIRECTIVE)) {
-    sandboxFlagList(outSrcs);
     return;
   }
 

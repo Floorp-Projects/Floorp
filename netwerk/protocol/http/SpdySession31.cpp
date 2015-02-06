@@ -733,13 +733,6 @@ SpdySession31::GenerateRstStream(uint32_t aStatusCode, uint32_t aID)
   aStatusCode = PR_htonl(aStatusCode);
   memcpy(packet + 12, &aStatusCode, 4);
 
-  // Intentionally crash on debug builds when the debug 1102923 pref is set
-  // We hope to get useful stack traces to solve bug 1102923 when running
-  // test_spdy.js
-  if (gHttpHandler->Debug1102923()) {
-    MOZ_CRASH("Debug 1102923");
-  }
-
   LogIO(this, nullptr, "Generate Reset", packet, 16);
   FlushOutputQueue();
 }

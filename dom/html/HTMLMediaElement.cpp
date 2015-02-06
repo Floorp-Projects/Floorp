@@ -275,7 +275,7 @@ public:
     : mElement(aElement),
       mLoadID(aElement->GetCurrentLoadID())
   {
-    NS_ABORT_IF_FALSE(mElement, "Must pass an element to call back");
+    MOZ_ASSERT(mElement, "Must pass an element to call back");
   }
 
 private:

@@ -1001,8 +1001,8 @@ nsSocketTransport::ResolveHost()
     if (!mProxyHost.IsEmpty()) {
         if (!mProxyTransparent || mProxyTransparentResolvesHost) {
 #if defined(XP_UNIX)
-            NS_ABORT_IF_FALSE(!mNetAddrIsSet || mNetAddr.raw.family != AF_LOCAL,
-                              "Unix domain sockets can't be used with proxies");
+            MOZ_ASSERT(!mNetAddrIsSet || mNetAddr.raw.family != AF_LOCAL,
+                       "Unix domain sockets can't be used with proxies");
 #endif
             // When not resolving mHost locally, we still want to ensure that
             // it only contains valid characters.  See bug 304904 for details.
@@ -1072,8 +1072,8 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
     }
     else {
 #if defined(XP_UNIX)
-        NS_ABORT_IF_FALSE(!mNetAddrIsSet || mNetAddr.raw.family != AF_LOCAL,
-                          "Unix domain sockets can't be used with socket types");
+        MOZ_ASSERT(!mNetAddrIsSet || mNetAddr.raw.family != AF_LOCAL,
+                   "Unix domain sockets can't be used with socket types");
 #endif
 
         fd = nullptr;

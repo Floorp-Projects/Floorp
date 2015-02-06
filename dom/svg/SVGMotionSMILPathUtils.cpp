@@ -22,8 +22,8 @@ void
 SVGMotionSMILPathUtils::PathGenerator::
   MoveToOrigin()
 {
-  NS_ABORT_IF_FALSE(!mHaveReceivedCommands,
-                    "Not expecting requests for mid-path MoveTo commands");
+  MOZ_ASSERT(!mHaveReceivedCommands,
+             "Not expecting requests for mid-path MoveTo commands");
   mHaveReceivedCommands = true;
   mPathBuilder->MoveTo(Point(0, 0));
 }
@@ -33,8 +33,8 @@ bool
 SVGMotionSMILPathUtils::PathGenerator::
   MoveToAbsolute(const nsAString& aCoordPairStr)
 {
-  NS_ABORT_IF_FALSE(!mHaveReceivedCommands,
-                    "Not expecting requests for mid-path MoveTo commands");
+  MOZ_ASSERT(!mHaveReceivedCommands,
+             "Not expecting requests for mid-path MoveTo commands");
   mHaveReceivedCommands = true;
 
   float xVal, yVal;

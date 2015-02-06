@@ -18,13 +18,13 @@
     sendMouseEvent({type:'click'}, 'a_link');
   }
 </script>
-<script src='file_csp_sandbox_pass.js'></script>
+<script src='file_iframe_sandbox_pass.js'></script>
 <body onLoad='ok(true, "documents sandboxed with allow-scripts should be able to run script from event listeners");doStuff();'>
-  I am sandboxed but with "allow-same-origin" and allow-scripts"
+  I am sandboxed but with "allow-scripts"
   <img src="http://example.org/tests/dom/base/test/csp/file_CSP.sjs?testid=img6_bad&type=img/png"> </img>
   <script src='http://example.org/tests/dom/base/test/csp/file_CSP.sjs?testid=script6_bad&type=text/javascript'></script>
 
-  <form method="get" action="/tests/content/html/content/test/file_iframe_sandbox_form_fail.html" id="a_form">
+  <form method="get" action="file_iframe_sandbox_form_fail.html" id="a_form">
     First name: <input type="text" name="firstname">
     Last name: <input type="text" name="lastname">
     <input type="submit" onclick="doSubmit()" id="a_button">

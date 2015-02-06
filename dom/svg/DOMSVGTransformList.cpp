@@ -393,7 +393,7 @@ DOMSVGTransformList::GetItemAt(uint32_t aIndex)
 void
 DOMSVGTransformList::MaybeInsertNullInAnimValListAt(uint32_t aIndex)
 {
-  NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
+  MOZ_ASSERT(!IsAnimValList(), "call from baseVal to animVal");
 
   DOMSVGTransformList* animVal = mAList->mAnimVal;
 
@@ -402,8 +402,8 @@ DOMSVGTransformList::MaybeInsertNullInAnimValListAt(uint32_t aIndex)
     return;
   }
 
-  NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
-                    "animVal list not in sync!");
+  MOZ_ASSERT(animVal->mItems.Length() == mItems.Length(),
+             "animVal list not in sync!");
 
   animVal->mItems.InsertElementAt(aIndex,
                                   static_cast<SVGTransform*>(nullptr));
@@ -414,7 +414,7 @@ DOMSVGTransformList::MaybeInsertNullInAnimValListAt(uint32_t aIndex)
 void
 DOMSVGTransformList::MaybeRemoveItemFromAnimValListAt(uint32_t aIndex)
 {
-  NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
+  MOZ_ASSERT(!IsAnimValList(), "call from baseVal to animVal");
 
   // This needs to be a strong reference; otherwise, the RemovingFromList call
   // below might drop the last reference to animVal before we're done with it.
@@ -425,8 +425,8 @@ DOMSVGTransformList::MaybeRemoveItemFromAnimValListAt(uint32_t aIndex)
     return;
   }
 
-  NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
-                    "animVal list not in sync!");
+  MOZ_ASSERT(animVal->mItems.Length() == mItems.Length(),
+             "animVal list not in sync!");
 
   if (animVal->mItems[aIndex]) {
     animVal->mItems[aIndex]->RemovingFromList();

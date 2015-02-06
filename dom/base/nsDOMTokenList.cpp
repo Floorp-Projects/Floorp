@@ -182,7 +182,7 @@ void
 nsDOMTokenList::RemoveInternal(const nsAttrValue* aAttr,
                                const nsTArray<nsString>& aTokens)
 {
-  NS_ABORT_IF_FALSE(aAttr, "Need an attribute");
+  MOZ_ASSERT(aAttr, "Need an attribute");
 
   nsAutoString input;
   aAttr->ToString(input);
@@ -204,7 +204,7 @@ nsDOMTokenList::RemoveInternal(const nsAttrValue* aAttr,
     if (iter == end) {
       // At this point we're sure the last seen token (if any) wasn't to be
       // removed. So the trailing spaces will need to be kept.
-      NS_ABORT_IF_FALSE(!lastTokenRemoved, "How did this happen?");
+      MOZ_ASSERT(!lastTokenRemoved, "How did this happen?");
 
       output.Append(Substring(copyStart, end));
       break;
@@ -227,8 +227,8 @@ nsDOMTokenList::RemoveInternal(const nsAttrValue* aAttr,
     } else {
 
       if (lastTokenRemoved && !output.IsEmpty()) {
-        NS_ABORT_IF_FALSE(!nsContentUtils::IsHTMLWhitespace(
-          output.Last()), "Invalid last output token");
+        MOZ_ASSERT(!nsContentUtils::IsHTMLWhitespace(output.Last()),
+                   "Invalid last output token");
         output.Append(char16_t(' '));
       }
       lastTokenRemoved = false;

@@ -1056,8 +1056,8 @@ void
 TransferZoomLevels(nsIDocument* aFromDoc,
                    nsIDocument* aToDoc)
 {
-  NS_ABORT_IF_FALSE(aFromDoc && aToDoc,
-                    "transferring zoom levels from/to null doc");
+  MOZ_ASSERT(aFromDoc && aToDoc,
+             "transferring zoom levels from/to null doc");
 
   nsIPresShell* fromShell = aFromDoc->GetShell();
   if (!fromShell)
@@ -1083,8 +1083,8 @@ TransferZoomLevels(nsIDocument* aFromDoc,
 void
 TransferShowingState(nsIDocument* aFromDoc, nsIDocument* aToDoc)
 {
-  NS_ABORT_IF_FALSE(aFromDoc && aToDoc,
-                    "transferring showing state from/to null doc");
+  MOZ_ASSERT(aFromDoc && aToDoc,
+             "transferring showing state from/to null doc");
 
   if (aFromDoc->IsShowing()) {
     aToDoc->OnPageShow(true, nullptr);
@@ -1624,8 +1624,8 @@ ClearAllBoxObjects(nsIContent* aKey, nsPIBoxObject* aBoxObject, void* aUserArg)
 
 nsIDocument::~nsIDocument()
 {
-  NS_ABORT_IF_FALSE(PR_CLIST_IS_EMPTY(&mDOMMediaQueryLists),
-                    "must not have media query lists left");
+  MOZ_ASSERT(PR_CLIST_IS_EMPTY(&mDOMMediaQueryLists),
+             "must not have media query lists left");
 
   if (mNodeInfoManager) {
     mNodeInfoManager->DropDocumentReference();
@@ -2211,8 +2211,8 @@ nsDocument::Init()
   // mNodeInfo keeps NodeInfoManager alive!
   mNodeInfo = mNodeInfoManager->GetDocumentNodeInfo();
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_OUT_OF_MEMORY);
-  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_NODE,
-                    "Bad NodeType in aNodeInfo");
+  MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_NODE,
+             "Bad NodeType in aNodeInfo");
 
   NS_ASSERTION(OwnerDoc() == this, "Our nodeinfo is busted!");
 
@@ -2864,7 +2864,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
 
   // Figure out if we need to apply an app default CSP or a CSP from an app manifest
-  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
+  nsIPrincipal* principal = NodePrincipal();
 
   uint16_t appStatus = principal->GetAppStatus();
   bool applyAppDefaultCSP = false;
@@ -3036,30 +3036,11 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     // speculative loads.
   }
 
-  // ----- Set sandbox flags according to CSP header
-  // The document may already have some sandbox flags set (e.g., if the
-  // document is an iframe with the sandbox attribute set).  If we have a CSP
-  // sandbox directive, intersect the CSP sandbox flags with the existing
-  // flags.  This corresponds to the _least_ permissive policy.
-  uint32_t cspSandboxFlags = SANDBOXED_NONE;
-  rv = csp->GetCSPSandboxFlags(&cspSandboxFlags);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mSandboxFlags |= cspSandboxFlags;
-
-  if (cspSandboxFlags & SANDBOXED_ORIGIN) {
-    // If the new CSP sandbox flags do not have the allow-same-origin flag
-    // reset the document principal to a null principal
-    principal = do_CreateInstance("@mozilla.org/nullprincipal;1");
-    SetPrincipal(principal);
-  }
-
-
   rv = principal->SetCsp(csp);
   NS_ENSURE_SUCCESS(rv, rv);
 #ifdef PR_LOGGING
   PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-         ("Inserted CSP into principal %p", principal.get()));
+         ("Inserted CSP into principal %p", principal));
 #endif
 
   return NS_OK;
@@ -3727,12 +3708,6 @@ void
 nsDocument::RemoveCharSetObserver(nsIObserver* aObserver)
 {
   mCharSetObservers.RemoveElement(aObserver);
-}
-
-void
-nsIDocument::GetSandboxFlagsAsString(nsAString& aFlags)
-{
-  nsContentUtils::SandboxFlagsToString(mSandboxFlags, aFlags);
 }
 
 void
@@ -4697,11 +4672,11 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
                  "Script global object must be an inner window!");
   }
 #endif
-  NS_ABORT_IF_FALSE(aScriptGlobalObject || !mAnimationController ||
-                    mAnimationController->IsPausedByType(
-                        nsSMILTimeContainer::PAUSE_PAGEHIDE |
-                        nsSMILTimeContainer::PAUSE_BEGIN),
-                    "Clearing window pointer while animations are unpaused");
+  MOZ_ASSERT(aScriptGlobalObject || !mAnimationController ||
+             mAnimationController->IsPausedByType(
+               nsSMILTimeContainer::PAUSE_PAGEHIDE |
+               nsSMILTimeContainer::PAUSE_BEGIN),
+             "Clearing window pointer while animations are unpaused");
 
   if (mScriptGlobalObject && !aScriptGlobalObject) {
     // We're detaching from the window.  We need to grab a pointer to
@@ -10431,8 +10406,8 @@ nsDocument::RemoveImage(imgIRequest* aImage, uint32_t aFlags)
   // Get the old count. It should exist and be > 0.
   uint32_t count = 0;
   DebugOnly<bool> found = mImageTracker.Get(aImage, &count);
-  NS_ABORT_IF_FALSE(found, "Removing image that wasn't in the tracker!");
-  NS_ABORT_IF_FALSE(count > 0, "Entry in the cache tracker with count 0!");
+  MOZ_ASSERT(found, "Removing image that wasn't in the tracker!");
+  MOZ_ASSERT(count > 0, "Entry in the cache tracker with count 0!");
 
   // We're removing, so decrement the count.
   count--;

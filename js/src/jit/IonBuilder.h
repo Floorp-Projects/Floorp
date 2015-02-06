@@ -805,6 +805,8 @@ class IonBuilder
     InliningStatus inlineConstructSimdObject(CallInfo &callInfo, SimdTypeDescr *target);
     InliningStatus inlineSimdInt32x4BinaryArith(CallInfo &callInfo, JSNative native,
                                                 MSimdBinaryArith::Operation op);
+    InliningStatus inlineSimdInt32x4BinaryBitwise(CallInfo &callInfo, JSNative native,
+                                                  MSimdBinaryBitwise::Operation op);
 
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo &callInfo);

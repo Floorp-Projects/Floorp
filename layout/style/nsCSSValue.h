@@ -395,7 +395,7 @@ public:
   explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
   {
-    NS_ABORT_IF_FALSE(aUnit <= eCSSUnit_DummyInherit, "not a valueless unit");
+    MOZ_ASSERT(aUnit <= eCSSUnit_DummyInherit, "not a valueless unit");
   }
 
   nsCSSValue(int32_t aValue, nsCSSUnit aUnit);
@@ -500,36 +500,36 @@ public:
 
   int32_t GetIntValue() const
   {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Integer ||
-                      mUnit == eCSSUnit_Enumerated ||
-                      mUnit == eCSSUnit_EnumColor,
-                      "not an int value");
+    MOZ_ASSERT(mUnit == eCSSUnit_Integer ||
+               mUnit == eCSSUnit_Enumerated ||
+               mUnit == eCSSUnit_EnumColor,
+               "not an int value");
     return mValue.mInt;
   }
 
   nsCSSKeyword GetKeywordValue() const
   {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Enumerated, "not a keyword value");
+    MOZ_ASSERT(mUnit == eCSSUnit_Enumerated, "not a keyword value");
     return static_cast<nsCSSKeyword>(mValue.mInt);
   }
 
   float GetPercentValue() const
   {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Percent, "not a percent value");
+    MOZ_ASSERT(mUnit == eCSSUnit_Percent, "not a percent value");
     return mValue.mFloat;
   }
 
   float GetFloatValue() const
   {
-    NS_ABORT_IF_FALSE(eCSSUnit_Number <= mUnit, "not a float value");
+    MOZ_ASSERT(eCSSUnit_Number <= mUnit, "not a float value");
     MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
     return mValue.mFloat;
   }
 
   float GetAngleValue() const
   {
-    NS_ABORT_IF_FALSE(eCSSUnit_Degree <= mUnit &&
-                 mUnit <= eCSSUnit_Turn, "not an angle value");
+    MOZ_ASSERT(eCSSUnit_Degree <= mUnit && mUnit <= eCSSUnit_Turn,
+               "not an angle value");
     return mValue.mFloat;
   }
 
@@ -538,7 +538,7 @@ public:
 
   nsAString& GetStringValue(nsAString& aBuffer) const
   {
-    NS_ABORT_IF_FALSE(UnitHasStringValue(), "not a string value");
+    MOZ_ASSERT(UnitHasStringValue(), "not a string value");
     aBuffer.Truncate();
     uint32_t len = NS_strlen(GetBufferValue(mValue.mString));
     mValue.mString->ToString(len, aBuffer);
@@ -547,7 +547,7 @@ public:
 
   const char16_t* GetStringBufferValue() const
   {
-    NS_ABORT_IF_FALSE(UnitHasStringValue(), "not a string value");
+    MOZ_ASSERT(UnitHasStringValue(), "not a string value");
     return GetBufferValue(mValue.mString);
   }
 
@@ -556,40 +556,40 @@ public:
 
   Array* GetArrayValue() const
   {
-    NS_ABORT_IF_FALSE(UnitHasArrayValue(), "not an array value");
+    MOZ_ASSERT(UnitHasArrayValue(), "not an array value");
     return mValue.mArray;
   }
 
   nsIURI* GetURLValue() const
   {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
-                 "not a URL value");
+    MOZ_ASSERT(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
+               "not a URL value");
     return mUnit == eCSSUnit_URL ?
       mValue.mURL->GetURI() : mValue.mImage->GetURI();
   }
 
   nsCSSValueGradient* GetGradientValue() const
   {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Gradient, "not a gradient value");
+    MOZ_ASSERT(mUnit == eCSSUnit_Gradient, "not a gradient value");
     return mValue.mGradient;
   }
 
   nsCSSValueTokenStream* GetTokenStreamValue() const
   {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_TokenStream, "not a token stream value");
+    MOZ_ASSERT(mUnit == eCSSUnit_TokenStream, "not a token stream value");
     return mValue.mTokenStream;
   }
 
   nsCSSValueSharedList* GetSharedListValue() const
   {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_SharedList, "not a shared list value");
+    MOZ_ASSERT(mUnit == eCSSUnit_SharedList, "not a shared list value");
     return mValue.mSharedList;
   }
 
   mozilla::FontFamilyList* GetFontFamilyListValue() const
   {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_FontFamilyList,
-                      "not a font family list value");
+    MOZ_ASSERT(mUnit == eCSSUnit_FontFamilyList,
+               "not a font family list value");
     NS_ASSERTION(mValue.mFontFamilyList != nullptr,
                  "font family list value should never be null");
     return mValue.mFontFamilyList;
@@ -616,27 +616,27 @@ public:
   {
     // Not allowing this for Image values, because if the caller takes
     // a ref to them they won't be able to delete them properly.
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_URL, "not a URL value");
+    MOZ_ASSERT(mUnit == eCSSUnit_URL, "not a URL value");
     return mValue.mURL;
   }
 
   mozilla::css::ImageValue* GetImageStructValue() const
   {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Image, "not an Image value");
+    MOZ_ASSERT(mUnit == eCSSUnit_Image, "not an Image value");
     return mValue.mImage;
   }
 
   mozilla::css::GridTemplateAreasValue* GetGridTemplateAreas() const
   {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_GridTemplateAreas,
-                      "not a grid-template-areas value");
+    MOZ_ASSERT(mUnit == eCSSUnit_GridTemplateAreas,
+               "not a grid-template-areas value");
     return mValue.mGridTemplateAreas;
   }
 
   const char16_t* GetOriginalURLValue() const
   {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
-                      "not a URL value");
+    MOZ_ASSERT(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
+               "not a URL value");
     return GetBufferValue(mUnit == eCSSUnit_URL ?
                             mValue.mURL->mString :
                             mValue.mImage->mString);
@@ -777,12 +777,12 @@ struct nsCSSValue::Array MOZ_FINAL {
   }
 
   nsCSSValue& operator[](size_t aIndex) {
-    NS_ABORT_IF_FALSE(aIndex < mCount, "out of range");
+    MOZ_ASSERT(aIndex < mCount, "out of range");
     return mArray[aIndex];
   }
 
   const nsCSSValue& operator[](size_t aIndex) const {
-    NS_ABORT_IF_FALSE(aIndex < mCount, "out of range");
+    MOZ_ASSERT(aIndex < mCount, "out of range");
     return mArray[aIndex];
   }
 
@@ -837,7 +837,7 @@ private:
   nsCSSValue mArray[1];
 
   void* operator new(size_t aSelfSize, size_t aItemCount) CPP_THROW_NEW {
-    NS_ABORT_IF_FALSE(aItemCount > 0, "cannot have a 0 item count");
+    MOZ_ASSERT(aItemCount > 0, "cannot have a 0 item count");
     return ::operator new(aSelfSize + sizeof(nsCSSValue) * (aItemCount - 1));
   }
 
@@ -970,7 +970,7 @@ nsCSSValue::GetListValue()
   if (mUnit == eCSSUnit_List)
     return mValue.mList;
   else {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_ListDep, "not a pairlist value");
+    MOZ_ASSERT(mUnit == eCSSUnit_ListDep, "not a pairlist value");
     return mValue.mListDependent;
   }
 }
@@ -981,7 +981,7 @@ nsCSSValue::GetListValue() const
   if (mUnit == eCSSUnit_List)
     return mValue.mList;
   else {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_ListDep, "not a pairlist value");
+    MOZ_ASSERT(mUnit == eCSSUnit_ListDep, "not a pairlist value");
     return mValue.mListDependent;
   }
 }
@@ -1061,14 +1061,14 @@ private:
 inline nsCSSRect&
 nsCSSValue::GetRectValue()
 {
-  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Rect, "not a rect value");
+  MOZ_ASSERT(mUnit == eCSSUnit_Rect, "not a rect value");
   return *mValue.mRect;
 }
 
 inline const nsCSSRect&
 nsCSSValue::GetRectValue() const
 {
-  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Rect, "not a rect value");
+  MOZ_ASSERT(mUnit == eCSSUnit_Rect, "not a rect value");
   return *mValue.mRect;
 }
 
@@ -1252,28 +1252,28 @@ private:
 inline nsCSSValuePair&
 nsCSSValue::GetPairValue()
 {
-  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Pair, "not a pair value");
+  MOZ_ASSERT(mUnit == eCSSUnit_Pair, "not a pair value");
   return *mValue.mPair;
 }
 
 inline const nsCSSValuePair&
 nsCSSValue::GetPairValue() const
 {
-  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Pair, "not a pair value");
+  MOZ_ASSERT(mUnit == eCSSUnit_Pair, "not a pair value");
   return *mValue.mPair;
 }
 
 inline nsCSSValueTriplet&
 nsCSSValue::GetTripletValue()
 {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Triplet, "not a triplet value");
+    MOZ_ASSERT(mUnit == eCSSUnit_Triplet, "not a triplet value");
     return *mValue.mTriplet;
 }
 
 inline const nsCSSValueTriplet&
 nsCSSValue::GetTripletValue() const
 {
-    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Triplet, "not a triplet value");
+    MOZ_ASSERT(mUnit == eCSSUnit_Triplet, "not a triplet value");
     return *mValue.mTriplet;
 }
 
@@ -1332,7 +1332,7 @@ nsCSSValue::GetPairListValue()
   if (mUnit == eCSSUnit_PairList)
     return mValue.mPairList;
   else {
-    NS_ABORT_IF_FALSE (mUnit == eCSSUnit_PairListDep, "not a pairlist value");
+    MOZ_ASSERT (mUnit == eCSSUnit_PairListDep, "not a pairlist value");
     return mValue.mPairListDependent;
   }
 }
@@ -1343,7 +1343,7 @@ nsCSSValue::GetPairListValue() const
   if (mUnit == eCSSUnit_PairList)
     return mValue.mPairList;
   else {
-    NS_ABORT_IF_FALSE (mUnit == eCSSUnit_PairListDep, "not a pairlist value");
+    MOZ_ASSERT (mUnit == eCSSUnit_PairListDep, "not a pairlist value");
     return mValue.mPairListDependent;
   }
 }

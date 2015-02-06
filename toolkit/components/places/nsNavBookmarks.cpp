@@ -2707,7 +2707,7 @@ nsNavBookmarks::OnDeleteURI(nsIURI* aURI,
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   int64_t placeId;
   nsAutoCString placeGuid;
-  NS_ABORT_IF_FALSE(
+  MOZ_ASSERT(
     history && NS_SUCCEEDED(history->GetIdForPage(aURI, &placeId, placeGuid)) && !placeId,
     "OnDeleteURI was notified for a page that still exists?"
   );

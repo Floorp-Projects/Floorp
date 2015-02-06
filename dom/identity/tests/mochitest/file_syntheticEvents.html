@@ -20,7 +20,7 @@
 <script type="application/javascript;version=1.8">
 
   function postResults(message) {
-    window.realParent.postMessage(JSON.stringify(message), "*");
+    doPostMessage(JSON.stringify(message), "*");
   }
 
   onmessage = function(event) {

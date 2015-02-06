@@ -40,6 +40,10 @@
       document.getElementById('iframe').setAttribute('aria-hidden', true);
     }
 
+    function renameFruit() {
+      document.getElementById('fruit').setAttribute('aria-label', 'banana');
+    }
+
   </script>
   <style>
     #windows {
@@ -84,5 +88,6 @@
     <div id="appframe"></div>
   </div>
   <button id="home">Home</button>
+  <button id="fruit" aria-label="apple"></button>
 </body>
 </html>

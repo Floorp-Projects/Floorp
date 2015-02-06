@@ -580,9 +580,9 @@ EventSource::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
 nsresult
 EventSource::OnRedirectVerifyCallback(nsresult aResult)
 {
-  NS_ABORT_IF_FALSE(mRedirectCallback, "mRedirectCallback not set in callback");
-  NS_ABORT_IF_FALSE(mNewRedirectChannel,
-                    "mNewRedirectChannel not set in callback");
+  MOZ_ASSERT(mRedirectCallback, "mRedirectCallback not set in callback");
+  MOZ_ASSERT(mNewRedirectChannel,
+             "mNewRedirectChannel not set in callback");
 
   NS_ENSURE_SUCCESS(aResult, aResult);
 

@@ -1,12 +1,12 @@
 # This directory contains tests for vertical text and logical layout coordinates
 # It should not be included in layout/reftests/reftest.list until vertical layout
 # is turned on
-== 1079154-1-vertical-rl-columns.html 1079154-1-vertical-rl-columns-ref.html
+HTTP(..) == 1079154-1-vertical-rl-columns.html 1079154-1-vertical-rl-columns-ref.html
 == 1082844.html 1082844-ref.html
-== 1083748.html 1083748-ref.html
-== 1083848-1-inline-border.html 1083848-1-inline-border-ref.html
-== 1083848-2-inline-background.html 1083848-2-inline-background-ref.html
-== 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat-ref.html
+HTTP(..) == 1083748.html 1083748-ref.html
+HTTP(..) == 1083848-1-inline-border.html 1083848-1-inline-border-ref.html
+HTTP(..) == 1083848-2-inline-background.html 1083848-2-inline-background-ref.html
+fuzzy-if(gtk2Widget,255,2) fuzzy-if(winWidget||Android||B2G,4,8704) HTTP(..) == 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat-ref.html
 == 1083892-1.html 1083892-1-ref.html
 == 1086883-1a.html 1086883-1-ref.html
 == 1086883-1b.html 1086883-1-ref.html
@@ -17,7 +17,7 @@
 == 1090168-1.html 1090168-1-ref.html
 != 1090168-1.html 1090168-1-notref.html
 == 1090168-2.html 1090168-2-ref.html
-== 1090168-3.html 1090168-3-ref.html
+fuzzy-if(B2G,244,173) == 1090168-3.html 1090168-3-ref.html
 == 1091058-1.html 1091058-1-ref.html
 random-if(gtk2Widget) == 1094434-1.html 1094434-1-ref.html # bug 1094845
 random-if(gtk2Widget) == 1094434-2.html 1094434-2-ref.html # bug 1094845
@@ -33,7 +33,7 @@ fails == 1102175-1a.html 1102175-1-ref.html
 == 1106669-1-intrinsic-for-container.html 1106669-1-intrinsic-for-container-ref.html
 == 1108923-1-percentage-margins.html 1108923-1-percentage-margins-ref.html
 == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html
-HTTP(..) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
+fuzzy(116,64) HTTP(..) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
 == 1122366-1-margin-collapse.html 1122366-1-margin-collapse-ref.html
 == 1124636-1-fieldset-max-height.html 1124636-1-fieldset-max-height-ref.html
 == 1124636-2-fieldset-min-height.html 1124636-2-fieldset-min-height-ref.html

@@ -20,10 +20,10 @@ class nsSVGElement;
 namespace mozilla {
 
 #define CHECK_ARG_COUNT_IN_SYNC(segType)                                      \
-          NS_ABORT_IF_FALSE(ArrayLength(mArgs) ==                             \
-            SVGPathSegUtils::ArgCountForType(uint32_t(segType)) ||            \
-            uint32_t(segType) == PATHSEG_CLOSEPATH,                           \
-            "Arg count/array size out of sync")
+  MOZ_ASSERT(ArrayLength(mArgs) ==                                            \
+               SVGPathSegUtils::ArgCountForType(uint32_t(segType)) ||         \
+             uint32_t(segType) == PATHSEG_CLOSEPATH,                          \
+             "Arg count/array size out of sync")
 
 #define IMPL_SVGPATHSEG_SUBCLASS_COMMON(segName, segType)                     \
   explicit DOMSVGPathSeg##segName(const float *aArgs)                         \
