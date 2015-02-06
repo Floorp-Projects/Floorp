@@ -60,6 +60,13 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMMutationRecord,
 
 // Observer
 
+bool
+nsMutationReceiverBase::IsObservable(nsIContent* aContent)
+{
+  return !aContent->ChromeOnlyAccess() &&
+    (Observer()->IsChrome() || !aContent->IsInAnonymousSubtree());
+}
+
 NS_IMPL_ADDREF(nsMutationReceiver)
 NS_IMPL_RELEASE(nsMutationReceiver)
 
@@ -107,8 +114,7 @@ nsMutationReceiver::AttributeWillChange(nsIDocument* aDocument,
                                         int32_t aModType)
 {
   if (nsAutoMutationBatch::IsBatching() ||
-      !ObservesAttr(aElement, aNameSpaceID, aAttribute) ||
-      aElement->ChromeOnlyAccess()) {
+      !ObservesAttr(RegisterTarget(), aElement, aNameSpaceID, aAttribute)) {
     return;
   }
 
@@ -143,14 +149,16 @@ nsMutationReceiver::CharacterDataWillChange(nsIDocument *aDocument,
                                             CharacterDataChangeInfo* aInfo)
 {
   if (nsAutoMutationBatch::IsBatching() ||
-      !CharacterData() || !(Subtree() || aContent == Target()) ||
-      aContent->ChromeOnlyAccess()) {
+      !CharacterData() ||
+      (!Subtree() && aContent != Target()) ||
+      (Subtree() && RegisterTarget()->SubtreeRoot() != aContent->SubtreeRoot()) ||
+      !IsObservable(aContent)) {
     return;
   }
-  
+
   nsDOMMutationRecord* m =
     Observer()->CurrentRecord(nsGkAtoms::characterData);
- 
+
   NS_ASSERTION(!m->mTarget || m->mTarget == aContent,
                "Wrong target!");
 
@@ -169,8 +177,11 @@ nsMutationReceiver::ContentAppended(nsIDocument* aDocument,
                                     int32_t aNewIndexInContainer)
 {
   nsINode* parent = NODE_FROM(aContainer, aDocument);
-  bool wantsChildList = ChildList() && (Subtree() || parent == Target());
-  if (!wantsChildList || aFirstNewContent->ChromeOnlyAccess()) {
+  bool wantsChildList =
+    ChildList() &&
+    ((Subtree() && RegisterTarget()->SubtreeRoot() == parent->SubtreeRoot()) ||
+     parent == Target());
+  if (!wantsChildList || !IsObservable(aFirstNewContent)) {
     return;
   }
 
@@ -207,8 +218,11 @@ nsMutationReceiver::ContentInserted(nsIDocument* aDocument,
                                     int32_t aIndexInContainer)
 {
   nsINode* parent = NODE_FROM(aContainer, aDocument);
-  bool wantsChildList = ChildList() && (Subtree() || parent == Target());
-  if (!wantsChildList || aChild->ChromeOnlyAccess()) {
+  bool wantsChildList =
+    ChildList() &&
+    ((Subtree() && RegisterTarget()->SubtreeRoot() == parent->SubtreeRoot()) ||
+     parent == Target());
+  if (!wantsChildList || !IsObservable(aChild)) {
     return;
   }
 
@@ -239,11 +253,14 @@ nsMutationReceiver::ContentRemoved(nsIDocument* aDocument,
                                    int32_t aIndexInContainer,
                                    nsIContent* aPreviousSibling)
 {
-  if (aChild->ChromeOnlyAccess()) {
+  if (!IsObservable(aChild)) {
     return;
   }
 
   nsINode* parent = NODE_FROM(aContainer, aDocument);
+  if (Subtree() && parent->SubtreeRoot() != RegisterTarget()->SubtreeRoot()) {
+    return;
+  }
   if (nsAutoMutationBatch::IsBatching()) {
     if (nsAutoMutationBatch::IsRemovalDone()) {
       // This can happen for example if HTML parser parses to
@@ -261,7 +278,7 @@ nsMutationReceiver::ContentRemoved(nsIDocument* aDocument,
     }
 
     return;
-  }                                                                   
+  }
 
   if (Subtree()) {
     // Try to avoid creating transient observer if the node
@@ -607,8 +624,9 @@ nsDOMMutationObserver::Constructor(const mozilla::dom::GlobalObject& aGlobal,
     return nullptr;
   }
   MOZ_ASSERT(window->IsInnerWindow());
+  bool isChrome = nsContentUtils::IsChromeDoc(window->GetExtantDoc());
   nsRefPtr<nsDOMMutationObserver> observer =
-    new nsDOMMutationObserver(window.forget(), aCb);
+    new nsDOMMutationObserver(window.forget(), aCb, isChrome);
   return observer.forget();
 }
 
