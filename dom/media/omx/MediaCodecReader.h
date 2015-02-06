@@ -65,7 +65,7 @@ public:
   virtual bool IsWaitingMediaResources();
 
   // True when this reader need to become dormant state
-  virtual bool IsDormantNeeded();
+  virtual bool IsDormantNeeded() { return true;}
 
   // Release media resources they should be released in dormant state
   virtual void ReleaseMediaResources();

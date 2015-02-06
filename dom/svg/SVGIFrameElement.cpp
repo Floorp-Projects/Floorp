@@ -78,7 +78,7 @@ SVGIFrameElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
   if (aWhich == eChildToUserSpace) {
     return toUserSpace;
   }
-  NS_ABORT_IF_FALSE(aWhich == eAllTransforms, "Unknown TransformTypes");
+  MOZ_ASSERT(aWhich == eAllTransforms, "Unknown TransformTypes");
   return toUserSpace * fromUserSpace;
 }
   

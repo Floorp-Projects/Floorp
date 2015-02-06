@@ -384,12 +384,24 @@ void
 LIRGenerator::lowerCallArguments(MCall *call)
 {
     uint32_t argc = call->numStackArgs();
-    if (argc > maxargslots_)
-        maxargslots_ = argc;
+
+    // Align the arguments of a call such that the callee would keep the same
+    // alignment as the caller.
+    uint32_t baseSlot = 0;
+    static const uint32_t alignment = JitStackAlignment / sizeof(Value);
+    if (alignment > 1)
+        baseSlot = AlignBytes(argc, alignment);
+    else
+        baseSlot = argc;
+
+    // Save the maximum number of argument, such that we can have one unique
+    // frame size.
+    if (baseSlot > maxargslots_)
+        maxargslots_ = baseSlot;
 
     for (size_t i = 0; i < argc; i++) {
         MDefinition *arg = call->getArg(i);
-        uint32_t argslot = argc - i;
+        uint32_t argslot = baseSlot - i;
 
         // Values take a slow path.
         if (arg->type() == MIRType_Value) {

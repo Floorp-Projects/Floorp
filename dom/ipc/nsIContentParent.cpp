@@ -26,9 +26,9 @@ using namespace mozilla::jsipc;
 
 // XXX need another bug to move this to a common header.
 #ifdef DISABLE_ASSERTS_FOR_FUZZING
-#define ASSERT_UNLESS_FUZZING(...) do { } while (0)
+#define ASSERT_UNLESS_FUZZING() do { } while (0)
 #else
-#define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
+#define ASSERT_UNLESS_FUZZING() MOZ_ASSERT(false)
 #endif
 
 namespace mozilla {
@@ -77,19 +77,19 @@ nsIContentParent::CanOpenBrowser(const IPCTabContext& aContext)
   // (PopupIPCTabContext lets the child process prove that it has access to
   // the app it's trying to open.)
   if (appBrowser.type() != IPCTabAppBrowserContext::TPopupIPCTabContext) {
-    ASSERT_UNLESS_FUZZING("Unexpected IPCTabContext type.  Aborting AllocPBrowserParent.");
+    ASSERT_UNLESS_FUZZING();
     return false;
   }
 
   const PopupIPCTabContext& popupContext = appBrowser.get_PopupIPCTabContext();
   if (popupContext.opener().type() != PBrowserOrId::TPBrowserParent) {
-    ASSERT_UNLESS_FUZZING("Unexpected PopupIPCTabContext type.  Aborting AllocPBrowserParent.");
+    ASSERT_UNLESS_FUZZING();
     return false;
   }
 
   auto opener = TabParent::GetFrom(popupContext.opener().get_PBrowserParent());
   if (!opener) {
-    ASSERT_UNLESS_FUZZING("Got null opener from child; aborting AllocPBrowserParent.");
+    ASSERT_UNLESS_FUZZING();
     return false;
   }
 
@@ -97,7 +97,7 @@ nsIContentParent::CanOpenBrowser(const IPCTabContext& aContext)
   // isBrowser.  Allocating a !isBrowser frame with same app ID would allow
   // the content to access data it's not supposed to.
   if (!popupContext.isBrowserElement() && opener->IsBrowserElement()) {
-    ASSERT_UNLESS_FUZZING("Child trying to escalate privileges!  Aborting AllocPBrowserParent.");
+    ASSERT_UNLESS_FUZZING();
     return false;
   }
 

@@ -246,22 +246,22 @@ let tests = [
     onShown: function (popup) {
       let self = this;
       let progressListener = {
-        onLocationChange: function onLocationChange(aBrowser) {
-          if (aBrowser != gBrowser.selectedBrowser) {
-            return;
-          }
-          let notification = PopupNotifications.getNotification(self.notifyObj.id,
-                                                                self.notifyObj.browser);
-          ok(notification != null, "Notification remained when subframe navigated");
-          self.notifyObj.options.eventCallback = undefined;
+        onLocationChange: function onLocationChange() {
+          gBrowser.removeProgressListener(progressListener);
 
-          notification.remove();
-          gBrowser.removeTabsProgressListener(progressListener);
+	  executeSoon(() => {
+            let notification = PopupNotifications.getNotification(self.notifyObj.id,
+                                                                  self.notifyObj.browser);
+            ok(notification != null, "Notification remained when subframe navigated");
+            self.notifyObj.options.eventCallback = undefined;
+
+            notification.remove();
+	  });
         },
       };
 
       info("Adding progress listener and performing navigation");
-      gBrowser.addTabsProgressListener(progressListener);
+      gBrowser.addProgressListener(progressListener);
       content.document.getElementById("iframe")
                       .setAttribute("src", "http://example.org/");
     },

@@ -422,7 +422,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
                                     dom::AnimationTimeline* aTimeline,
                                     AnimationPlayerPtrArray& aPlayers)
 {
-  NS_ABORT_IF_FALSE(aPlayers.IsEmpty(), "expect empty array");
+  MOZ_ASSERT(aPlayers.IsEmpty(), "expect empty array");
 
   ResolvedStyleCache resolvedStyles;
 
@@ -483,9 +483,9 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     for (uint32_t ruleIdx = 0, ruleEnd = rule->StyleRuleCount();
          ruleIdx != ruleEnd; ++ruleIdx) {
       css::Rule* cssRule = rule->GetStyleRuleAt(ruleIdx);
-      NS_ABORT_IF_FALSE(cssRule, "must have rule");
-      NS_ABORT_IF_FALSE(cssRule->GetType() == css::Rule::KEYFRAME_RULE,
-                        "must be keyframe rule");
+      MOZ_ASSERT(cssRule, "must have rule");
+      MOZ_ASSERT(cssRule->GetType() == css::Rule::KEYFRAME_RULE,
+                 "must be keyframe rule");
       nsCSSKeyframeRule *kfRule = static_cast<nsCSSKeyframeRule*>(cssRule);
 
       const nsTArray<float> &keys = kfRule->GetKeys();
@@ -656,9 +656,9 @@ nsAnimationManager::BuildSegment(InfallibleTArray<AnimationPropertySegment>&
 /* virtual */ void
 nsAnimationManager::WillRefresh(mozilla::TimeStamp aTime)
 {
-  NS_ABORT_IF_FALSE(mPresContext,
-                    "refresh driver should not notify additional observers "
-                    "after pres context has been destroyed");
+  MOZ_ASSERT(mPresContext,
+             "refresh driver should not notify additional observers "
+             "after pres context has been destroyed");
   if (!mPresContext->GetPresShell()) {
     // Someone might be keeping mPresContext alive past the point
     // where it has been torn down; don't bother doing anything in

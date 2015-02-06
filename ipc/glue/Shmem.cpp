@@ -185,11 +185,11 @@ GetSections(Shmem::SharedMemory* aSegment,
             char** aData,
             char** aBackSentinel)
 {
-  NS_ABORT_IF_FALSE(aSegment && aFrontSentinel && aData && aBackSentinel,
-                    "NULL param(s)");
+  MOZ_ASSERT(aSegment && aFrontSentinel && aData && aBackSentinel,
+             "null param(s)");
 
   *aFrontSentinel = reinterpret_cast<char*>(aSegment->memory());
-  NS_ABORT_IF_FALSE(*aFrontSentinel, "NULL memory()");
+  MOZ_ASSERT(*aFrontSentinel, "null memory()");
 
   *aHeader = reinterpret_cast<Header*>(*aFrontSentinel);
 
@@ -211,7 +211,7 @@ GetHeader(Shmem::SharedMemory* aSegment)
 static void
 Protect(SharedMemory* aSegment)
 {
-  NS_ABORT_IF_FALSE(aSegment, "NULL segment");
+  MOZ_ASSERT(aSegment, "null segment");
   aSegment->Protect(reinterpret_cast<char*>(aSegment->memory()),
                     aSegment->Size(),
                     RightsNone);
@@ -220,7 +220,7 @@ Protect(SharedMemory* aSegment)
 static void
 Unprotect(SharedMemory* aSegment)
 {
-  NS_ABORT_IF_FALSE(aSegment, "NULL segment");
+  MOZ_ASSERT(aSegment, "null segment");
   aSegment->Protect(reinterpret_cast<char*>(aSegment->memory()),
                     aSegment->Size(),
                     RightsRead | RightsWrite);
@@ -281,8 +281,8 @@ Shmem::Shmem(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
     mData(nullptr),
     mSize(0)
 {
-  NS_ABORT_IF_FALSE(mSegment, "NULL segment");
-  NS_ABORT_IF_FALSE(aId != 0, "invalid ID");
+  MOZ_ASSERT(mSegment, "null segment");
+  MOZ_ASSERT(aId != 0, "invalid ID");
 
   Unprotect(mSegment);
 
@@ -296,8 +296,8 @@ Shmem::Shmem(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   char check = *frontSentinel;
   (void)check;
 
-  NS_ABORT_IF_FALSE(!strncmp(header->mMagic, sMagic, sizeof(sMagic)),
-                      "invalid segment");
+  MOZ_ASSERT(!strncmp(header->mMagic, sMagic, sizeof(sMagic)),
+             "invalid segment");
   mSize = static_cast<size_t>(header->mSize);
 
   size_t pageSize = SharedMemory::SystemPageSize();
@@ -314,9 +314,9 @@ Shmem::Shmem(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
 void
 Shmem::AssertInvariants() const
 {
-  NS_ABORT_IF_FALSE(mSegment, "NULL segment");
-  NS_ABORT_IF_FALSE(mData, "NULL data pointer");
-  NS_ABORT_IF_FALSE(mSize > 0, "invalid size");
+  MOZ_ASSERT(mSegment, "null segment");
+  MOZ_ASSERT(mData, "null data pointer");
+  MOZ_ASSERT(mSize > 0, "invalid size");
   // if the segment isn't owned by the current process, these will
   // trigger SIGSEGV
   char checkMappingFront = *reinterpret_cast<char*>(mData);
@@ -354,7 +354,7 @@ Shmem::Alloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
              bool aProtect)
 {
   NS_ASSERTION(aNBytes <= UINT32_MAX, "Will truncate shmem segment size!");
-  NS_ABORT_IF_FALSE(!aProtect || !aUnsafe, "protect => !unsafe");
+  MOZ_ASSERT(!aProtect || !aUnsafe, "protect => !unsafe");
 
   size_t pageSize = SharedMemory::SystemPageSize();
   nsRefPtr<SharedMemory> segment;
@@ -386,8 +386,8 @@ Shmem::Alloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   // NB: this can't be a static assert because technically pageSize
   // isn't known at compile time, event though in practice it's always
   // going to be 4KiB
-  NS_ABORT_IF_FALSE(sizeof(Header) <= pageSize,
-                    "Shmem::Header has gotten too big");
+  MOZ_ASSERT(sizeof(Header) <= pageSize,
+             "Shmem::Header has gotten too big");
   memcpy(header->mMagic, sMagic, sizeof(sMagic));
   header->mSize = static_cast<uint32_t>(aNBytes);
   header->mUnsafe = aUnsafe;
@@ -638,7 +638,7 @@ Shmem::ShareTo(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   }
 #endif
   else {
-    NS_ABORT_IF_FALSE(false, "unknown shmem type (here?!)");
+    MOZ_ASSERT(false, "unknown shmem type (here?!)");
     return nullptr;
   }
 

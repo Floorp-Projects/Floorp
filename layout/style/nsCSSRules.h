@@ -714,8 +714,8 @@ public:
 
   const nsCSSValue& GetDesc(nsCSSCounterDesc aDescID) const
   {
-    NS_ABORT_IF_FALSE(aDescID >= 0 && aDescID < eCSSCounterDesc_COUNT,
-                      "descriptor ID out of range");
+    MOZ_ASSERT(aDescID >= 0 && aDescID < eCSSCounterDesc_COUNT,
+               "descriptor ID out of range");
     return mValues[aDescID];
   }
 

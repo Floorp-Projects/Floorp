@@ -169,7 +169,7 @@ nsSimpleURI::GetSpec(nsACString &result)
     if (mIsRefValid) {
         result += NS_LITERAL_CSTRING("#") + mRef;
     } else {
-        NS_ABORT_IF_FALSE(mRef.IsEmpty(), "mIsRefValid/mRef invariant broken");
+        MOZ_ASSERT(mRef.IsEmpty(), "mIsRefValid/mRef invariant broken");
     }
     return NS_OK;
 }
@@ -375,7 +375,7 @@ NS_IMETHODIMP
 nsSimpleURI::GetRef(nsACString &result)
 {
     if (!mIsRefValid) {
-      NS_ABORT_IF_FALSE(mRef.IsEmpty(), "mIsRefValid/mRef invariant broken");
+      MOZ_ASSERT(mRef.IsEmpty(), "mIsRefValid/mRef invariant broken");
       result.Truncate();
     } else {
       result = mRef;

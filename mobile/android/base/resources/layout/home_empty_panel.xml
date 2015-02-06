@@ -25,13 +25,12 @@
 
     <TextView android:id="@+id/home_empty_text"
               android:layout_width="match_parent"
-              android:layout_height="0dip"
+              android:layout_height="wrap_content"
               android:gravity="top|center"
-              android:textAppearance="@style/TextAppearance.EmptyMessage"
-              android:layout_weight="1"/>
+              android:textAppearance="@style/TextAppearance.EmptyMessage"/>
 
     <TextView android:id="@+id/home_empty_hint"
-              android:layout_width="match_parent"
+              android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:visibility="gone"
               android:gravity="top|center"

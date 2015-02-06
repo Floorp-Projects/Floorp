@@ -64,7 +64,7 @@
                class="devtools-toolbar">
         <hbox id="recordings-controls"
               class="devtools-toolbarbutton-group">
-          <toolbarbutton id="record-button"
+          <toolbarbutton id="main-record-button"
                          class="devtools-toolbarbutton record-button"
                          tooltiptext="&profilerUI.recordButton.tooltip;"/>
           <toolbarbutton id="import-button"

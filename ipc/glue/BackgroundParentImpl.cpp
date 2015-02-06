@@ -23,9 +23,9 @@
 #include "nsXULAppAPI.h"
 
 #ifdef DISABLE_ASSERTS_FOR_FUZZING
-#define ASSERT_UNLESS_FUZZING(...) do { } while (0)
+#define ASSERT_UNLESS_FUZZING() do { } while (0)
 #else
-#define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false)
+#define ASSERT_UNLESS_FUZZING() MOZ_ASSERT(false)
 #endif
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
