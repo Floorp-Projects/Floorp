@@ -132,26 +132,22 @@ function handleRequest(req, res) {
       res.setHeader("X-Received-Test-Header", val);
     }
   } else if (u.pathname == "/push") {
-    res.push('/push.js',
+    var stream = res.push('/push.js',
      { 'content-type': 'application/javascript',
        'pushed' : 'yes',
        'content-length' : 11,
-       'X-Connection-Spdy': 'yes'},
-     function(err, stream) {
-       if (err) return;
-         stream.end('// comments');
-       }).on('error', function(){});
+       'X-Connection-Spdy': 'yes'});
+      stream.on('error', function(){});
+      stream.end('// comments');
       content = '<head> <script src="push.js"/></head>body text';
   } else if (u.pathname == "/push2") {
-      res.push('/push2.js',
+      var stream = res.push('/push2.js',
        { 'content-type': 'application/javascript',
 	 'pushed' : 'yes',
 	 // no content-length
-	 'X-Connection-Spdy': 'yes'},
-       function(err, stream) {
-        if (err) return;
-         stream.end('// comments');
-       }).on('error', function(){});
+	 'X-Connection-Spdy': 'yes'});
+      stream.on('error', function(){});
+      stream.end('// comments');
       content = '<head> <script src="push2.js"/></head>body text';
   } else if (u.pathname == "/big") {
     content = getHugeContent(128 * 1024);
