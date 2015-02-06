@@ -279,6 +279,10 @@ protected:
   already_AddRefed<AudioTrack> CreateAudioTrack(AudioStreamTrack* aStreamTrack);
   already_AddRefed<VideoTrack> CreateVideoTrack(VideoStreamTrack* aStreamTrack);
 
+  // Called when MediaStreamGraph has finished an iteration where tracks were
+  // created.
+  void TracksCreated();
+
   void CheckTracksAvailable();
 
   class StreamListener;
@@ -298,6 +302,9 @@ protected:
   nsRefPtr<StreamListener> mListener;
 
   nsTArray<nsAutoPtr<OnTracksAvailableCallback> > mRunOnTracksAvailable;
+
+  // Set to true after MediaStreamGraph has created tracks for mStream.
+  bool mTracksCreated;
 
   nsString mID;
 

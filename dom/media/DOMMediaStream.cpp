@@ -98,6 +98,35 @@ public:
     }
   }
 
+  class TracksCreatedRunnable : public nsRunnable {
+  public:
+    explicit TracksCreatedRunnable(StreamListener* aListener)
+      : mListener(aListener)
+    {
+    }
+
+    NS_IMETHOD Run()
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      DOMMediaStream* stream = mListener->GetStream();
+      if (!stream) {
+        return NS_OK;
+      }
+
+      stream->TracksCreated();
+      return NS_OK;
+    }
+
+    nsRefPtr<StreamListener> mListener;
+  };
+
+  virtual void NotifyFinishedTrackCreation(MediaStreamGraph* aGraph) MOZ_OVERRIDE
+  {
+    nsRefPtr<TracksCreatedRunnable> runnable = new TracksCreatedRunnable(this);
+    aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
+  }
+
 private:
   // These fields may only be accessed on the main thread
   DOMMediaStream* mStream;
@@ -145,7 +174,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 
 DOMMediaStream::DOMMediaStream()
   : mLogicalStreamStartTime(0),
-    mStream(nullptr), mHintContents(0), mTrackTypesAvailable(0),
+    mStream(nullptr), mTracksCreated(false),
     mNotifiedOfMediaStreamGraphShutdown(false), mCORSMode(CORS_NONE)
 {
   nsresult rv;
@@ -476,9 +505,17 @@ DOMMediaStream::OnTracksAvailable(OnTracksAvailableCallback* aRunnable)
 }
 
 void
+DOMMediaStream::TracksCreated()
+{
+  MOZ_ASSERT(!mTracks.IsEmpty());
+  mTracksCreated = true;
+  CheckTracksAvailable();
+}
+
+void
 DOMMediaStream::CheckTracksAvailable()
 {
-  if (mTrackTypesAvailable == 0) {
+  if (!mTracksCreated) {
     return;
   }
   nsTArray<nsAutoPtr<OnTracksAvailableCallback> > callbacks;

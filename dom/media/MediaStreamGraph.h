@@ -177,6 +177,13 @@ public:
                                         StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
                                         const MediaSegment& aQueuedMedia) {}
+
+  /**
+   * Notify that all new tracks this iteration have been created.
+   * This is to ensure that tracks added atomically to MediaStreamGraph
+   * are also notified of atomically to MediaStreamListeners.
+   */
+  virtual void NotifyFinishedTrackCreation(MediaStreamGraph* aGraph) {}
 };
 
 /**
