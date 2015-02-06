@@ -5818,9 +5818,9 @@ function handleLinkClick(event, href, linkNode) {
 
   urlSecurityCheck(href, doc.nodePrincipal);
   let params = { charset: doc.characterSet,
-                 allowMixedContent: persistAllowMixedContentInChildTab };
-  if (!BrowserUtils.linkHasNoReferrer(linkNode))
-    params.referrerURI = referrerURI;
+                 allowMixedContent: persistAllowMixedContentInChildTab,
+                 referrerURI: referrerURI,
+                 noReferrer: BrowserUtils.linkHasNoReferrer(linkNode) };
   openLinkIn(href, where, params);
   event.preventDefault();
   return true;

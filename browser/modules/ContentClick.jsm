@@ -68,9 +68,9 @@ let ContentClick = {
 
     // Todo(903022): code for where == save
 
-    let params = { charset: browser.characterSet };
-    if (!json.noReferrer)
-      params.referrerURI = browser.documentURI;
+    let params = { charset: browser.characterSet,
+                   referrerURI: browser.documentURI,
+                   noReferrer: json.noReferrer };
     window.openLinkIn(json.href, where, params);
 
     // Mark the page as a user followed link.  This is done so that history can
