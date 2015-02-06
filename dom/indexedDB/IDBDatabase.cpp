@@ -458,6 +458,7 @@ IDBDatabase::CreateObjectStore(
   IDBTransaction* transaction = IDBTransaction::GetCurrent();
 
   if (!transaction ||
+      transaction->Database() != this ||
       transaction->GetMode() != IDBTransaction::VERSION_CHANGE) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     return nullptr;
@@ -525,6 +526,7 @@ IDBDatabase::DeleteObjectStore(const nsAString& aName, ErrorResult& aRv)
   IDBTransaction* transaction = IDBTransaction::GetCurrent();
 
   if (!transaction ||
+      transaction->Database() != this ||
       transaction->GetMode() != IDBTransaction::VERSION_CHANGE) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     return;
