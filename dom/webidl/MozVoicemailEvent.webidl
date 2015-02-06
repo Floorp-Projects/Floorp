@@ -4,7 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional MozVoicemailEventInit eventInitDict), Pref="dom.voicemail.enabled"]
+[Constructor(DOMString type, optional MozVoicemailEventInit eventInitDict),
+ Pref="dom.voicemail.enabled",
+ CheckPermissions="voicemail",
+ AvailableIn="CertifiedApps"]
 interface MozVoicemailEvent : Event
 {
   readonly attribute MozVoicemailStatus? status;

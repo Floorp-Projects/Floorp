@@ -120,12 +120,23 @@ DirectoryProvider.prototype = {
     if (!localePlugins.exists())
       return;
 
-    let curLocale = Services.prefs.getCharPref("general.useragent.locale");
-    let curLocalePlugins = localePlugins.clone();
-    curLocalePlugins.append(curLocale);
-    if (curLocalePlugins.exists()) {
-      array.push(curLocalePlugins);
-      return;
+    let curLocale = "";
+    try {
+      curLocale = Services.prefs.getComplexValue("general.useragent.locale", Ci.nsIPrefLocalizedString).data;
+    } catch (e) {
+      try {
+        curLocale = Services.prefs.getCharPref("general.useragent.locale");
+      } catch (ee) {
+      }
+    }
+
+    if (curLocale) {
+      let curLocalePlugins = localePlugins.clone();
+      curLocalePlugins.append(curLocale);
+      if (curLocalePlugins.exists()) {
+        array.push(curLocalePlugins);
+        return;
+      }
     }
 
     // We didn't append the locale dir - try the default one.

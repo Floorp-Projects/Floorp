@@ -1120,6 +1120,26 @@ this.UITour = {
   },
 
   /**
+   * The node to which a highlight or notification(-popup) is anchored is sometimes
+   * obscured because it may be inside an overflow menu. This function should figure
+   * that out and offer the overflow chevron as an alternative.
+   *
+   * @param {Node} aAnchor The element that's supposed to be the anchor
+   * @type {Node}
+   */
+  _correctAnchor: function(aAnchor) {
+    // If the target is in the overflow panel, just return the overflow button.
+    if (aAnchor.getAttribute("overflowedItem")) {
+      let doc = aAnchor.ownerDocument;
+      let placement = CustomizableUI.getPlacementOfWidget(aAnchor.id);
+      let areaNode = doc.getElementById(placement.area);
+      return areaNode.overflowable._chevron;
+    }
+
+    return aAnchor;
+  },
+
+  /**
    * @param aChromeWindow The chrome window that the highlight is in. Necessary since some targets
    *                      are in a sub-frame so the defaultView is not the same as the chrome
    *                      window.
@@ -1158,16 +1178,7 @@ this.UITour = {
       highlighter.parentElement.setAttribute("targetName", aTarget.targetName);
       highlighter.parentElement.hidden = false;
 
-      let highlightAnchor;
-      // If the target is in the overflow panel, just highlight the overflow button.
-      if (aTarget.node.getAttribute("overflowedItem")) {
-        let doc = aTarget.node.ownerDocument;
-        let placement = CustomizableUI.getPlacementOfWidget(aTarget.widgetName || aTarget.node.id);
-        let areaNode = doc.getElementById(placement.area);
-        highlightAnchor = areaNode.overflowable._chevron;
-      } else {
-        highlightAnchor = aTarget.node;
-      }
+      let highlightAnchor = this._correctAnchor(aTarget.node);
       let targetRect = highlightAnchor.getBoundingClientRect();
       let highlightHeight = targetRect.height;
       let highlightWidth = targetRect.width;
@@ -1366,7 +1377,7 @@ this.UITour = {
 
     this._setAppMenuStateForAnnotation(aChromeWindow, "info",
                                        this.targetIsInAppMenu(aAnchor),
-                                       showInfoPanel.bind(this, aAnchor.node));
+                                       showInfoPanel.bind(this, this._correctAnchor(aAnchor.node)));
   },
 
   hideInfo: function(aWindow) {

@@ -1,7 +1,7 @@
 %filter substitution
 
 %define form_border #bfbfbf
-%define form_border_radius-radius 2px
+%define form_border_radius 2px
 %define form_text #363b40
 %define form_text_disabled #bebebe
 %define form_background white

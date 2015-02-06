@@ -9,7 +9,7 @@ random != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint divisi
 == tableboxshadow-trshadow.html tableboxshadow-trshadow-ref.html
 == tableboxshadow-tdshadow.html tableboxshadow-tdshadow-ref.html
 == boxshadow-rounding.html boxshadow-rounding-ref.html
-fails-if(B2G) == boxshadow-button.html boxshadow-button-ref.html
+fails-if(Android||B2G) == boxshadow-button.html boxshadow-button-ref.html
 fails-if(Android||B2G) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
 == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html

@@ -69,6 +69,8 @@ function init_all() {
   window.addEventListener("hashchange", onHashChange);
   gotoPref();
 
+  init_dynamic_padding();
+
   var initFinished = new CustomEvent("Initialized", {
     'bubbles': true,
     'cancelable': true
@@ -78,7 +80,18 @@ function init_all() {
   let helpCmd = document.getElementById("help-button");
   helpCmd.addEventListener("command", helpButtonCommand);
 
-  // Make the space above the categories list shrink on low window heights
+  // Wait until initialization of all preferences are complete before
+  // notifying observers that the UI is now ready.
+  Services.obs.notifyObservers(window, "advanced-pane-loaded", null);
+}
+
+window.addEventListener("unload", function onUnload() {
+  gSubDialog.uninit();
+});
+
+// Make the space above the categories list shrink on low window heights
+function init_dynamic_padding() {
+  let categories = document.getElementById("categories");
   let catPadding = Number.parseInt(getComputedStyle(categories)
                                      .getPropertyValue('padding-top'));
   let fullHeight = categories.lastElementChild.getBoundingClientRect().bottom;
@@ -93,15 +106,7 @@ function init_all() {
   mediaStyle.setAttribute('type', 'text/css');
   mediaStyle.appendChild(document.createCDATASection(mediaRule));
   document.documentElement.appendChild(mediaStyle);
-
-  // Wait until initialization of all preferences are complete before
-  // notifying observers that the UI is now ready.
-  Services.obs.notifyObservers(window, "advanced-pane-loaded", null);
 }
-
-window.addEventListener("unload", function onUnload() {
-  gSubDialog.uninit();
-});
 
 function onHashChange() {
   gotoPref();

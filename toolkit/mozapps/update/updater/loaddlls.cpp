@@ -74,7 +74,7 @@ struct AutoLoadSystemDependencies
     WCHAR systemDirectory[MAX_PATH + 1] = { L'\0' };
     // If GetSystemDirectory fails we accept that we'll load the DLLs from the
     // normal search path.
-    GetSystemDirectory(systemDirectory, MAX_PATH + 1);
+    GetSystemDirectoryW(systemDirectory, MAX_PATH + 1);
     size_t systemDirLen = wcslen(systemDirectory);
 
     // Make the system directory path terminate with a slash
