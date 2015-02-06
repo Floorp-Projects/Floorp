@@ -5,61 +5,42 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!-- Serves to position the content on the screen (bottom, centered) and provide the drop-shadow -->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/sharedialog"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:layout_marginLeft="15dp"
     android:layout_marginRight="15dp"
-    android:layout_marginBottom="-12dp"
     android:paddingTop="30dp"
-    android:layout_gravity="bottom|center"
     android:clipChildren="false"
     android:clipToPadding="false">
 
     <LinearLayout
-        android:id="@+id/share_overlay_content"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
         android:paddingTop="8dp"
-        android:orientation="vertical"
-        android:background="@drawable/share_overlay_background">
+        android:orientation="vertical">
 
-        <!-- Header -->
-        <LinearLayout
-            android:id="@+id/share_overlay_top_bar"
+        <!-- Title -->
+        <TextView
+            android:id="@+id/title"
+            style="@style/ShareOverlayTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="0dp"
-            android:background="@color/overlay_share_header_background"
-            android:orientation="vertical"
-            android:paddingTop="10dp"
-            android:paddingBottom="15dp"
-            android:paddingLeft="15dp"
-            android:paddingRight="15dp"
-            android:layout_gravity="center">
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:scrollHorizontally="true"
+            android:textSize="24sp"/>
 
-            <!-- Title -->
-            <TextView
-                android:id="@+id/title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingBottom="7dp"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:scrollHorizontally="true"
-                android:textColor="@color/text_color_primary"
-                android:textSize="17sp"/>
+        <!-- Subtitle (url) -->
+        <TextView
+            android:id="@+id/subtitle"
+            style="@style/ShareOverlayTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
-            <!-- Subtitle (url) -->
-            <TextView
-                android:id="@+id/subtitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_color_secondary"/>
-
-        </LinearLayout>
-
+        <!-- TODO: Add back drop shadow? -->
         <!-- Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -108,9 +89,8 @@
         android:id="@+id/share_overlay_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/share_overlay_content"
+        android:layout_gravity="top|center"
         android:scaleType="center"
-        android:layout_centerHorizontal="true"
         android:src="@drawable/icon"
         android:layout_marginBottom="-6dp"/>
-</RelativeLayout>
+</FrameLayout>

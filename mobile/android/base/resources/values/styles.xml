@@ -776,6 +776,14 @@
         <item name="android:gravity">right</item>
     </style>
 
+    <style name="ShareOverlayTitle">
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:paddingBottom">18dp</item>
+        <item name="android:paddingLeft">15dp</item>
+        <item name="android:paddingRight">15dp</item>
+    </style>
+
     <!-- TODO: Clean up this and inherited styles. -->
     <style name="ShareOverlayButton">
         <item name="android:layout_width">match_parent</item>
