@@ -101,5 +101,4 @@ let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
     // Memory allocation samples don't contain cateogry labels.
     root.toggleCategories(false);
   }
-
 });

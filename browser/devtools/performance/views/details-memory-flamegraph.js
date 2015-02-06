@@ -72,5 +72,15 @@ let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
   _onRangeChangeInGraph: function () {
     let interval = this.graph.getViewRange();
     OverviewView.setTimeInterval(interval, { stopPropagation: true });
+  },
+
+  /**
+   * Called whenever a pref is changed and this view needs to be rerendered.
+   */
+  _onRerenderPrefChanged: function() {
+    let recording = PerformanceController.getCurrentRecording();
+    let allocations = recording.getAllocations();
+    let samples = RecordingUtils.getSamplesFromAllocations(allocations);
+    FlameGraphUtils.removeFromCache(samples);
   }
 });
