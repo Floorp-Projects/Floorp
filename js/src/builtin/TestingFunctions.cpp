@@ -967,30 +967,9 @@ SaveStack(JSContext *cx, unsigned argc, jsval *vp)
         maxFrameCount = d;
     }
 
-    JSCompartment *targetCompartment = cx->compartment();
-    if (args.length() >= 2) {
-        if (!args[1].isObject()) {
-            js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                                     JSDVG_SEARCH_STACK, args[0], JS::NullPtr(),
-                                     "not an object", NULL);
-            return false;
-        }
-        RootedObject obj(cx, UncheckedUnwrap(&args[1].toObject()));
-        if (!obj)
-            return false;
-        targetCompartment = obj->compartment();
-    }
-
-    RootedObject stack(cx);
-    {
-        AutoCompartment ac(cx, targetCompartment);
-        if (!JS::CaptureCurrentStack(cx, &stack, maxFrameCount))
-            return false;
-    }
-
-    if (stack && !cx->compartment()->wrap(cx, &stack))
+    Rooted<JSObject*> stack(cx);
+    if (!JS::CaptureCurrentStack(cx, &stack, maxFrameCount))
         return false;
-
     args.rval().setObjectOrNull(stack);
     return true;
 }
@@ -2417,15 +2396,13 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  SavedStacks cache."),
 
     JS_FN_HELP("saveStack", SaveStack, 0, 0,
-"saveStack([maxDepth [, compartment]])",
-"  Capture a stack. If 'maxDepth' is given, capture at most 'maxDepth' number\n"
-"  of frames. If 'compartment' is given, allocate the js::SavedFrame instances\n"
-"  with the given object's compartment."),
+"saveStack()",
+"  Capture a stack.\n"),
 
     JS_FN_HELP("enableTrackAllocations", EnableTrackAllocations, 0, 0,
 "enableTrackAllocations()",
-"  Start capturing the JS stack at every allocation. Note that this sets an\n"
-"  object metadata callback that will override any other object metadata\n"
+"  Start capturing the JS stack at every allocation. Note that this sets an "
+"  object metadata callback that will override any other object metadata "
 "  callback that may be set."),
 
     JS_FN_HELP("disableTrackAllocations", DisableTrackAllocations, 0, 0,
