@@ -190,11 +190,11 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
       }
     }
     finished = aStream->mUpdateFinished;
+    bool notifiedTrackCreated = false;
     for (int32_t i = aStream->mUpdateTracks.Length() - 1; i >= 0; --i) {
       SourceMediaStream::TrackData* data = &aStream->mUpdateTracks[i];
       aStream->ApplyTrackDisabling(data->mID, data->mData);
-      for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
-        MediaStreamListener* l = aStream->mListeners[j];
+      for (MediaStreamListener* l : aStream->mListeners) {
         StreamTime offset = (data->mCommands & SourceMediaStream::TRACK_CREATE)
             ? data->mStart : aStream->mBuffer.FindTrack(data->mID)->GetSegment()->GetDuration();
         l->NotifyQueuedTrackChanges(this, data->mID,
@@ -212,6 +212,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
         // data->mData with an empty clone.
         data->mData = segment->CreateEmptyClone();
         data->mCommands &= ~SourceMediaStream::TRACK_CREATE;
+        notifiedTrackCreated = true;
       } else if (data->mData->GetDuration() > 0) {
         MediaSegment* dest = aStream->mBuffer.FindTrack(data->mID)->GetSegment();
         STREAM_LOG(PR_LOG_DEBUG+1, ("SourceMediaStream %p track %d, advancing end from %lld to %lld",
@@ -224,6 +225,11 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
       if (data->mCommands & SourceMediaStream::TRACK_END) {
         aStream->mBuffer.FindTrack(data->mID)->SetEnded();
         aStream->mUpdateTracks.RemoveElementAt(i);
+      }
+    }
+    if (notifiedTrackCreated) {
+      for (MediaStreamListener* l : aStream->mListeners) {
+        l->NotifyFinishedTrackCreation(this);
       }
     }
     if (!aStream->mFinished) {
@@ -1938,6 +1944,9 @@ MediaStream::EnsureTrack(TrackID aTrackId)
       l->NotifyQueuedTrackChanges(Graph(), aTrackId, 0,
                                   MediaStreamListener::TRACK_EVENT_CREATED,
                                   *segment);
+      // TODO If we ever need to ensure several tracks at once, we will have to
+      // change this.
+      l->NotifyFinishedTrackCreation(Graph());
     }
     track = &mBuffer.AddTrack(aTrackId, 0, segment.forget());
   }
