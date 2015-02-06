@@ -73,5 +73,15 @@ let JsFlameGraphView = Heritage.extend(DetailsSubview, {
   _onRangeChangeInGraph: function () {
     let interval = this.graph.getViewRange();
     OverviewView.setTimeInterval(interval, { stopPropagation: true });
+  },
+
+  /**
+   * Called whenever a pref is changed and this view needs to be rerendered.
+   */
+  _onRerenderPrefChanged: function() {
+    let recording = PerformanceController.getCurrentRecording();
+    let profile = recording.getProfile();
+    let samples = profile.threads[0].samples;
+    FlameGraphUtils.removeFromCache(samples);
   }
 });

@@ -114,6 +114,10 @@ let DetailsSubview = {
       return;
     }
 
+    if (this._onRerenderPrefChanged) {
+      this._onRerenderPrefChanged();
+    }
+
     if (DetailsView.isViewSelected(this) || this.canUpdateWhileHidden) {
       this.render(OverviewView.getTimeInterval());
     } else {
