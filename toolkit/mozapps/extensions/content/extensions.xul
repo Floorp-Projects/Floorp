@@ -177,6 +177,7 @@
       </menupopup>
     </toolbarbutton>
     <textbox id="header-search" type="search" searchbutton="true"
+             searchbuttonlabel="&search.buttonlabel;"
              placeholder="&search.placeholder;"/>
   </hbox>
 
