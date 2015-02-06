@@ -1,19 +1,18 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const INVERT_PREF = "devtools.performance.ui.invert-call-tree";
-
 /**
- * Tests that the memory call tree view is re-rendered after the
- * "invert-call-tree" pref is changed.
+ * Tests that the memory call tree views get rerendered when toggling `invert-call-tree`
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView, MemoryCallTreeView } = panel.panelWin;
 
+  // Enable memory to test
+  Services.prefs.setBoolPref(MEMORY_PREF, true);
   Services.prefs.setBoolPref(INVERT_PREF, true);
 
-  DetailsView.selectView("memory-calltree");
+  yield DetailsView.selectView("memory-calltree");
   ok(DetailsView.isViewSelected(MemoryCallTreeView), "The call tree is now selected.");
 
   yield startRecording(panel);
