@@ -2164,7 +2164,6 @@ nsCocoaWindow::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
   return keyBindings->Execute(aEvent, aCallback, aCallbackData);
 }
 
-
 @implementation WindowDelegate
 
 // We try to find a gecko menu bar to paint. If one does not exist, just paint
@@ -3346,7 +3345,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   }
 }
 
-- (NSPoint)fullScreenButtonPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
+- (NSPoint)fullScreenButtonPositionWithDefaultPosition:(NSPoint)aDefaultPosition
 {
   if ([self drawsContentsIntoWindowFrame] && !NSIsEmptyRect(mFullScreenButtonRect)) {
     return NSMakePoint(std::min(mFullScreenButtonRect.origin.x, aDefaultPosition.x),
