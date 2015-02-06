@@ -111,7 +111,7 @@ Proxy::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
         return false;
     if (desc.object())
         return true;
-    INVOKE_ON_PROTOTYPE(cx, handler, proxy, JS_GetPropertyDescriptorById(cx, proto, id, desc));
+    INVOKE_ON_PROTOTYPE(cx, handler, proxy, GetPropertyDescriptor(cx, proto, id, desc));
 }
 
 bool
