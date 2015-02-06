@@ -120,11 +120,13 @@ EGLDisplay __stdcall eglGetPlatformDisplayEXT(EGLenum platform, void *native_dis
 
     EGLNativeDisplayType displayId = static_cast<EGLNativeDisplayType>(native_display);
 
+#if !defined(ANGLE_ENABLE_WINDOWS_STORE)
     // Validate the display device context
     if (WindowFromDC(displayId) == NULL)
     {
         return egl::success(EGL_NO_DISPLAY);
     }
+#endif
 
     EGLint requestedDisplayType = EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE;
     if (attrib_list)

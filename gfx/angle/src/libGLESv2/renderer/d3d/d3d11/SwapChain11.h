@@ -58,7 +58,7 @@ class SwapChain11 : public SwapChain
     unsigned int mSwapInterval;
     bool mPassThroughResourcesInit;
 
-    IDXGISwapChain *mSwapChain;
+    DXGISwapChain *mSwapChain;
     IDXGIKeyedMutex *mKeyedMutex;
 
     ID3D11Texture2D *mBackBufferTexture;

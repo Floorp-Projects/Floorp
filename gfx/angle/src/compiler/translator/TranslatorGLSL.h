@@ -9,14 +9,16 @@
 
 #include "compiler/translator/Compiler.h"
 
-class TranslatorGLSL : public TCompiler {
-public:
+class TranslatorGLSL : public TCompiler
+{
+  public:
     TranslatorGLSL(sh::GLenum type, ShShaderSpec spec);
 
-protected:
-    virtual void translate(TIntermNode* root);
+  protected:
+    virtual void translate(TIntermNode *root);
 
-private:
+  private:
+    void writeVersion(TIntermNode *root);
     void writeExtensionBehavior();
 };
 

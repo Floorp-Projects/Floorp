@@ -211,7 +211,6 @@ NS_IMETHODIMP
 nsWindow::Create(nsIWidget *aParent,
                  nsNativeWidget aNativeParent,
                  const nsIntRect &aRect,
-                 nsDeviceContext *aContext,
                  nsWidgetInitData *aInitData)
 {
     ALOG("nsWindow[%p]::Create %p [%d %d %d %d]", (void*)this, (void*)aParent, aRect.x, aRect.y, aRect.width, aRect.height);
@@ -234,7 +233,7 @@ nsWindow::Create(nsIWidget *aParent,
         mBounds.height = gAndroidBounds.height;
     }
 
-    BaseCreate(nullptr, mBounds, aContext, aInitData);
+    BaseCreate(nullptr, mBounds, aInitData);
 
     NS_ASSERTION(IsTopLevel() || parent, "non top level windowdoesn't have a parent!");
 

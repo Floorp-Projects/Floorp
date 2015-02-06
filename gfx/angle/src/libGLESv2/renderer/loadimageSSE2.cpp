@@ -17,6 +17,12 @@ void LoadA8ToBGRA8_SSE2(size_t width, size_t height, size_t depth,
                         const uint8_t *input, size_t inputRowPitch, size_t inputDepthPitch,
                         uint8_t *output, size_t outputRowPitch, size_t outputDepthPitch)
 {
+#if defined(_M_ARM)
+    // Ensure that this function is reported as not implemented for ARM builds because
+    // the instructions below are not present for that architecture.
+    UNIMPLEMENTED();
+    return;
+#else
     __m128i zeroWide = _mm_setzero_si128();
 
     for (size_t z = 0; z < depth; z++)
@@ -54,12 +60,19 @@ void LoadA8ToBGRA8_SSE2(size_t width, size_t height, size_t depth,
             }
         }
     }
+#endif
 }
 
 void LoadRGBA8ToBGRA8_SSE2(size_t width, size_t height, size_t depth,
                            const uint8_t *input, size_t inputRowPitch, size_t inputDepthPitch,
                            uint8_t *output, size_t outputRowPitch, size_t outputDepthPitch)
 {
+#if defined(_M_ARM)
+    // Ensure that this function is reported as not implemented for ARM builds because
+    // the instructions below are not present for that architecture.
+    UNIMPLEMENTED();
+    return;
+#else
     __m128i brMask = _mm_set1_epi32(0x00ff00ff);
 
     for (size_t z = 0; z < depth; z++)
@@ -99,6 +112,7 @@ void LoadRGBA8ToBGRA8_SSE2(size_t width, size_t height, size_t depth,
             }
         }
     }
+#endif
 }
 
 }

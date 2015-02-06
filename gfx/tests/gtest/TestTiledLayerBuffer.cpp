@@ -21,6 +21,10 @@ struct TestTiledLayerTile {
   bool operator!= (const TestTiledLayerTile& o) const {
     return value != o.value;
   }
+
+  bool IsPlaceholderTile() const {
+    return value == -1;
+  }
 };
 
 class TestTiledLayerBuffer : public TiledLayerBuffer<TestTiledLayerBuffer, TestTiledLayerTile>

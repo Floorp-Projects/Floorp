@@ -32,8 +32,9 @@ function _dump(str) {
 
 // Disable automatic network detection, so tests work correctly when
 // not connected to a network.
-let (ios = Components.classes["@mozilla.org/network/io-service;1"]
-           .getService(Components.interfaces.nsIIOService2)) {
+{
+  let ios = Components.classes["@mozilla.org/network/io-service;1"]
+             .getService(Components.interfaces.nsIIOService2);
   ios.manageOfflineStatus = false;
   ios.offline = false;
 }
@@ -74,12 +75,11 @@ try { // nsIXULRuntime is not available in some configurations.
       "@mozilla.org/toolkit/crash-reporter;1" in Components.classes) {
     // Remember to update </toolkit/crashreporter/test/unit/test_crashreporter.js>
     // too if you change this initial setting.
-    let (crashReporter =
+    let crashReporter =
           Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
-          .getService(Components.interfaces.nsICrashReporter)) {
-      crashReporter.enabled = true;
-      crashReporter.minidumpPath = do_get_cwd();
-    }
+          .getService(Components.interfaces.nsICrashReporter);
+    crashReporter.enabled = true;
+    crashReporter.minidumpPath = do_get_cwd();
   }
 }
 catch (e) { }
@@ -280,33 +280,32 @@ function do_get_idle() {
 // Map resource://test/ to current working directory and
 // resource://testing-common/ to the shared test modules directory.
 function _register_protocol_handlers() {
-  let (ios = Components.classes["@mozilla.org/network/io-service;1"]
-             .getService(Components.interfaces.nsIIOService)) {
-    let protocolHandler =
-      ios.getProtocolHandler("resource")
-         .QueryInterface(Components.interfaces.nsIResProtocolHandler);
-    let curDirURI = ios.newFileURI(do_get_cwd());
-    protocolHandler.setSubstitution("test", curDirURI);
+  let ios = Components.classes["@mozilla.org/network/io-service;1"]
+             .getService(Components.interfaces.nsIIOService);
+  let protocolHandler =
+    ios.getProtocolHandler("resource")
+       .QueryInterface(Components.interfaces.nsIResProtocolHandler);
+  let curDirURI = ios.newFileURI(do_get_cwd());
+  protocolHandler.setSubstitution("test", curDirURI);
 
-    if (this._TESTING_MODULES_DIR) {
-      let modulesFile = Components.classes["@mozilla.org/file/local;1"].
-                        createInstance(Components.interfaces.nsILocalFile);
-      modulesFile.initWithPath(_TESTING_MODULES_DIR);
+  if (this._TESTING_MODULES_DIR) {
+    let modulesFile = Components.classes["@mozilla.org/file/local;1"].
+                      createInstance(Components.interfaces.nsILocalFile);
+    modulesFile.initWithPath(_TESTING_MODULES_DIR);
 
-      if (!modulesFile.exists()) {
-        throw new Error("Specified modules directory does not exist: " +
-                        _TESTING_MODULES_DIR);
-      }
-
-      if (!modulesFile.isDirectory()) {
-        throw new Error("Specified modules directory is not a directory: " +
-                        _TESTING_MODULES_DIR);
-      }
-
-      let modulesURI = ios.newFileURI(modulesFile);
-
-      protocolHandler.setSubstitution("testing-common", modulesURI);
+    if (!modulesFile.exists()) {
+      throw new Error("Specified modules directory does not exist: " +
+                      _TESTING_MODULES_DIR);
     }
+
+    if (!modulesFile.isDirectory()) {
+      throw new Error("Specified modules directory is not a directory: " +
+                      _TESTING_MODULES_DIR);
+    }
+
+    let modulesURI = ios.newFileURI(modulesFile);
+
+    protocolHandler.setSubstitution("testing-common", modulesURI);
   }
 }
 

@@ -63,8 +63,8 @@ gl::Context *glGetCurrentContext();
 rx::Renderer *glCreateRenderer(egl::Display *display, EGLNativeDisplayType nativeDisplay, EGLint requestedDisplayType);
 void glDestroyRenderer(rx::Renderer *renderer);
 
-__eglMustCastToProperFunctionPointerType __stdcall glGetProcAddress(const char *procname);
-bool __stdcall glBindTexImage(egl::Surface *surface);
+__eglMustCastToProperFunctionPointerType EGLAPIENTRY glGetProcAddress(const char *procname);
+bool EGLAPIENTRY glBindTexImage(egl::Surface *surface);
 }
 
 #endif   // LIBGLESV2_MAIN_H_
