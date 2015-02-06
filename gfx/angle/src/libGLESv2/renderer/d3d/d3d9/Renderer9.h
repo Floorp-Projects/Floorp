@@ -48,11 +48,11 @@ class Renderer9 : public Renderer
     void startScene();
     void endScene();
 
-    virtual void sync(bool block);
+    virtual gl::Error sync(bool block);
 
     virtual SwapChain *createSwapChain(rx::NativeWindow nativeWindow, HANDLE shareHandle, GLenum backBufferFormat, GLenum depthBufferFormat);
 
-    IDirect3DQuery9* allocateEventQuery();
+    gl::Error allocateEventQuery(IDirect3DQuery9 **outQuery);
     void freeEventQuery(IDirect3DQuery9* query);
 
     // resource creation
@@ -61,7 +61,7 @@ class Renderer9 : public Renderer
     HRESULT createVertexBuffer(UINT Length, DWORD Usage, IDirect3DVertexBuffer9 **ppVertexBuffer);
     HRESULT createIndexBuffer(UINT Length, DWORD Usage, D3DFORMAT Format, IDirect3DIndexBuffer9 **ppIndexBuffer);
     virtual gl::Error generateSwizzle(gl::Texture *texture);
-    virtual gl::Error setSamplerState(gl::SamplerType type, int index, const gl::SamplerState &sampler);
+    virtual gl::Error setSamplerState(gl::SamplerType type, int index, gl::Texture *texture, const gl::SamplerState &sampler);
     virtual gl::Error setTexture(gl::SamplerType type, int index, gl::Texture *texture);
 
     virtual gl::Error setUniformBuffers(const gl::Buffer *vertexUniformBuffers[], const gl::Buffer *fragmentUniformBuffers[]);
@@ -154,7 +154,7 @@ class Renderer9 : public Renderer
 
     // Image operations
     virtual Image *createImage();
-    virtual void generateMipmap(Image *dest, Image *source);
+    virtual gl::Error generateMipmap(Image *dest, Image *source);
     virtual TextureStorage *createTextureStorage2D(SwapChain *swapChain);
     virtual TextureStorage *createTextureStorage2D(GLenum internalformat, bool renderTarget, GLsizei width, GLsizei height, int levels);
     virtual TextureStorage *createTextureStorageCube(GLenum internalformat, bool renderTarget, int size, int levels);
@@ -174,7 +174,8 @@ class Renderer9 : public Renderer
 
     // Query and Fence creation
     virtual QueryImpl *createQuery(GLenum type);
-    virtual FenceImpl *createFence();
+    virtual FenceNVImpl *createFenceNV();
+    virtual FenceSyncImpl *createFenceSync();
 
     // Transform Feedback creation
     virtual TransformFeedbackImpl* createTransformFeedback();

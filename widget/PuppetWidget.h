@@ -59,14 +59,12 @@ public:
   NS_IMETHOD Create(nsIWidget*        aParent,
                     nsNativeWidget    aNativeParent,
                     const nsIntRect&  aRect,
-                    nsDeviceContext*  aContext,
                     nsWidgetInitData* aInitData = nullptr) MOZ_OVERRIDE;
 
   void InitIMEState();
 
   virtual already_AddRefed<nsIWidget>
   CreateChild(const nsIntRect  &aRect,
-              nsDeviceContext  *aContext,
               nsWidgetInitData *aInitData = nullptr,
               bool             aForceUseIWidgetParent = false) MOZ_OVERRIDE;
 

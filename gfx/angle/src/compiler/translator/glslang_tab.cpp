@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 2.7.1.  */
+/* A Bison parser, made by GNU Bison 2.7.12-4996.  */
 
 /* Bison implementation for Yacc-like parsers in C
    
@@ -44,7 +44,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "2.7.1"
+#define YYBISON_VERSION "2.7.12-4996"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -796,31 +796,31 @@ static const yytype_int16 yyrhs[] =
 static const yytype_uint16 yyrline[] =
 {
        0,   206,   206,   207,   210,   234,   237,   242,   247,   252,
-     257,   263,   266,   269,   272,   275,   285,   298,   306,   406,
-     409,   417,   420,   426,   430,   437,   443,   452,   460,   463,
-     473,   476,   486,   496,   517,   518,   519,   524,   525,   533,
-     544,   545,   553,   564,   568,   569,   579,   589,   599,   612,
-     613,   623,   636,   640,   644,   648,   649,   662,   663,   676,
-     677,   690,   691,   708,   709,   722,   723,   724,   725,   726,
-     730,   733,   744,   752,   760,   787,   793,   804,   808,   812,
-     816,   823,   879,   882,   889,   897,   918,   939,   949,   977,
-     982,   992,   997,  1007,  1010,  1013,  1016,  1022,  1029,  1032,
-    1036,  1040,  1044,  1051,  1055,  1059,  1066,  1070,  1074,  1081,
-    1090,  1096,  1099,  1105,  1111,  1118,  1127,  1136,  1144,  1147,
-    1154,  1158,  1165,  1168,  1172,  1176,  1185,  1194,  1202,  1212,
-    1224,  1227,  1230,  1236,  1243,  1246,  1252,  1255,  1258,  1264,
-    1267,  1282,  1286,  1290,  1294,  1298,  1302,  1307,  1312,  1317,
-    1322,  1327,  1332,  1337,  1342,  1347,  1352,  1357,  1362,  1367,
-    1372,  1377,  1382,  1387,  1392,  1397,  1402,  1407,  1411,  1415,
-    1419,  1423,  1427,  1431,  1435,  1439,  1443,  1447,  1451,  1455,
-    1459,  1463,  1467,  1475,  1483,  1487,  1500,  1500,  1503,  1503,
-    1509,  1512,  1528,  1531,  1540,  1544,  1550,  1557,  1572,  1576,
-    1580,  1581,  1587,  1588,  1589,  1590,  1591,  1595,  1596,  1596,
-    1596,  1606,  1607,  1611,  1611,  1612,  1612,  1617,  1620,  1630,
-    1633,  1639,  1640,  1644,  1652,  1656,  1666,  1671,  1688,  1688,
-    1693,  1693,  1700,  1700,  1708,  1711,  1717,  1720,  1726,  1730,
-    1737,  1744,  1751,  1758,  1769,  1778,  1782,  1789,  1792,  1798,
-    1798
+     257,   263,   266,   269,   272,   275,   285,   298,   306,   423,
+     426,   434,   437,   443,   447,   454,   460,   469,   477,   480,
+     490,   493,   503,   513,   535,   536,   537,   542,   543,   551,
+     562,   563,   571,   582,   586,   587,   597,   607,   617,   630,
+     631,   641,   654,   658,   662,   666,   667,   680,   681,   694,
+     695,   708,   709,   726,   727,   740,   741,   742,   743,   744,
+     748,   751,   762,   770,   778,   805,   811,   822,   826,   830,
+     834,   841,   897,   900,   907,   915,   936,   957,   967,   995,
+    1000,  1010,  1015,  1025,  1028,  1031,  1034,  1040,  1047,  1050,
+    1054,  1058,  1062,  1069,  1073,  1077,  1084,  1088,  1092,  1099,
+    1108,  1114,  1117,  1123,  1129,  1136,  1145,  1154,  1162,  1165,
+    1172,  1176,  1183,  1186,  1190,  1194,  1203,  1212,  1220,  1230,
+    1242,  1245,  1248,  1254,  1261,  1264,  1270,  1273,  1276,  1282,
+    1285,  1300,  1304,  1308,  1312,  1316,  1320,  1325,  1330,  1335,
+    1340,  1345,  1350,  1355,  1360,  1365,  1370,  1375,  1380,  1385,
+    1390,  1395,  1400,  1405,  1410,  1415,  1420,  1425,  1429,  1433,
+    1437,  1441,  1445,  1449,  1453,  1457,  1461,  1465,  1469,  1473,
+    1477,  1481,  1485,  1493,  1501,  1505,  1518,  1518,  1521,  1521,
+    1527,  1530,  1546,  1549,  1558,  1562,  1568,  1575,  1590,  1594,
+    1598,  1599,  1605,  1606,  1607,  1608,  1609,  1613,  1614,  1614,
+    1614,  1624,  1625,  1629,  1629,  1630,  1630,  1635,  1638,  1648,
+    1651,  1657,  1658,  1662,  1670,  1674,  1684,  1689,  1706,  1706,
+    1711,  1711,  1718,  1718,  1726,  1729,  1735,  1738,  1744,  1748,
+    1755,  1762,  1769,  1776,  1787,  1796,  1800,  1807,  1810,  1816,
+    1816
 };
 #endif
 
@@ -2736,6 +2736,15 @@ yyreduce:
                         // Treat it like a built-in unary operator.
                         //
                         (yyval.interm.intermTypedNode) = context->intermediate.addUnaryMath(op, (yyvsp[(1) - (1)].interm).intermNode, (yylsp[(1) - (1)]));
+                        const TType& returnType = fnCandidate->getReturnType();
+                        if (returnType.getBasicType() == EbtBool) {
+                            // Bool types should not have precision, so we'll override any precision
+                            // that might have been set by addUnaryMath.
+                            (yyval.interm.intermTypedNode)->setType(returnType);
+                        } else {
+                            // addUnaryMath has set the precision of the node based on the operand.
+                            (yyval.interm.intermTypedNode)->setTypePreservePrecision(returnType);
+                        }
                         if ((yyval.interm.intermTypedNode) == 0)  {
                             std::stringstream extraInfoStream;
                             extraInfoStream << "built in unary operator function.  Type: " << static_cast<TIntermTyped*>((yyvsp[(1) - (1)].interm).intermNode)->getCompleteString();
@@ -2744,20 +2753,29 @@ yyreduce:
                             YYERROR;
                         }
                     } else {
-                        (yyval.interm.intermTypedNode) = context->intermediate.setAggregateOperator((yyvsp[(1) - (1)].interm).intermAggregate, op, (yylsp[(1) - (1)]));
+                        TIntermAggregate *aggregate = context->intermediate.setAggregateOperator((yyvsp[(1) - (1)].interm).intermAggregate, op, (yylsp[(1) - (1)]));
+                        aggregate->setType(fnCandidate->getReturnType());
+                        aggregate->setPrecisionFromChildren();
+                        (yyval.interm.intermTypedNode) = aggregate;
                     }
                 } else {
                     // This is a real function call
 
-                    (yyval.interm.intermTypedNode) = context->intermediate.setAggregateOperator((yyvsp[(1) - (1)].interm).intermAggregate, EOpFunctionCall, (yylsp[(1) - (1)]));
-                    (yyval.interm.intermTypedNode)->setType(fnCandidate->getReturnType());
+                    TIntermAggregate *aggregate = context->intermediate.setAggregateOperator((yyvsp[(1) - (1)].interm).intermAggregate, EOpFunctionCall, (yylsp[(1) - (1)]));
+                    aggregate->setType(fnCandidate->getReturnType());
 
                     // this is how we know whether the given function is a builtIn function or a user defined function
                     // if builtIn == false, it's a userDefined -> could be an overloaded builtIn function also
                     // if builtIn == true, it's definitely a builtIn function with EOpNull
                     if (!builtIn)
-                        (yyval.interm.intermTypedNode)->getAsAggregate()->setUserDefined();
-                    (yyval.interm.intermTypedNode)->getAsAggregate()->setName(fnCandidate->getMangledName());
+                        aggregate->setUserDefined();
+                    aggregate->setName(fnCandidate->getMangledName());
+
+                    // This needs to happen after the name is set
+                    if (builtIn)
+                        aggregate->setBuiltInFunctionPrecision();
+
+                    (yyval.interm.intermTypedNode) = aggregate;
 
                     TQualifier qual;
                     for (size_t i = 0; i < fnCandidate->getParamCount(); ++i) {
@@ -2770,7 +2788,6 @@ yyreduce:
                         }
                     }
                 }
-                (yyval.interm.intermTypedNode)->setType(fnCandidate->getReturnType());
             } else {
                 // error message was put out by PaFindFunction()
                 // Put on a dummy node for error recovery
@@ -2919,6 +2936,7 @@ yyreduce:
                 const char* errorOp = "";
                 switch((yyvsp[(1) - (2)].interm).op) {
                 case EOpNegative:   errorOp = "-"; break;
+                case EOpPositive:   errorOp = "+"; break;
                 case EOpLogicalNot: errorOp = "!"; break;
                 default: break;
                 }
@@ -2933,7 +2951,7 @@ yyreduce:
 
   case 34:
 
-    { (yyval.interm).op = EOpNull; }
+    { (yyval.interm).op = EOpPositive; }
     break;
 
   case 35:

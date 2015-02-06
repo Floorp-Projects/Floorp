@@ -273,7 +273,7 @@ AsmJSModule::lookupHeapAccess(void *pc) const
 
 bool
 AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembler &masm,
-                    const Label &interruptLabel)
+                    const Label &interruptLabel, const Label &outOfBoundsLabel)
 {
     MOZ_ASSERT(isFinishedWithFunctionBodies() && !isFinished());
 
@@ -315,6 +315,7 @@ AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembl
     // Copy over metadata, making sure to update all offsets on ARM.
 
     staticLinkData_.interruptExitOffset = masm.actualOffset(interruptLabel.offset());
+    staticLinkData_.outOfBoundsExitOffset = masm.actualOffset(outOfBoundsLabel.offset());
 
     // Heap-access metadata used for link-time patching and fault-handling.
     heapAccesses_ = masm.extractAsmJSHeapAccesses();
@@ -463,6 +464,13 @@ OnDetached()
     // See hasDetachedHeap comment in LinkAsmJS.
     JSContext *cx = JSRuntime::innermostAsmJSActivation()->cx();
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
+}
+
+static void
+OnOutOfBounds()
+{
+    JSContext *cx = JSRuntime::innermostAsmJSActivation()->cx();
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
 }
 
 static bool
@@ -659,6 +667,8 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         return RedirectCall(FuncCast(AsmJSReportOverRecursed), Args_General0);
       case AsmJSImm_OnDetached:
         return RedirectCall(FuncCast(OnDetached), Args_General0);
+      case AsmJSImm_OnOutOfBounds:
+        return RedirectCall(FuncCast(OnOutOfBounds), Args_General0);
       case AsmJSImm_HandleExecutionInterrupt:
         return RedirectCall(FuncCast(AsmJSHandleExecutionInterrupt), Args_General0);
       case AsmJSImm_InvokeFromAsmJS_Ignore:
@@ -730,6 +740,7 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
     // Process staticLinkData_
 
     interruptExit_ = code_ + staticLinkData_.interruptExitOffset;
+    outOfBoundsExit_ = code_ + staticLinkData_.outOfBoundsExitOffset;
 
     for (size_t i = 0; i < staticLinkData_.relativeLinks.length(); i++) {
         RelativeLink link = staticLinkData_.relativeLinks[i];
@@ -763,6 +774,16 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
     MOZ_ASSERT(isStaticallyLinked());
 }
 
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+static size_t
+ByteSizeOfHeapAccess(const jit::AsmJSHeapAccess access)
+{
+    Scalar::Type type = access.type();
+    if (Scalar::isSimdType(type))
+        return Scalar::scalarByteSize(type) * access.numSimdElems();
+    return TypedArrayElemSize(type);
+}
+#endif
 void
 AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx)
 {
@@ -783,7 +804,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
             //      ptr + data-type-byte-size > heapLength
             // i.e. ptr >= heapLength + 1 - data-type-byte-size
             // (Note that we need >= as this is what codegen uses.)
-            size_t scalarByteSize = TypedArrayElemSize(access.type());
+            size_t scalarByteSize = ByteSizeOfHeapAccess(access);
             X86Encoding::SetPointer(access.patchLengthAt(code_),
                                     (void*)(heap->byteLength() + 1 - scalarByteSize));
         }
@@ -805,7 +826,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
         const jit::AsmJSHeapAccess &access = heapAccesses_[i];
         if (access.hasLengthCheck()) {
             // See comment above for x86 codegen.
-            size_t scalarByteSize = TypedArrayElemSize(access.type());
+            size_t scalarByteSize = ByteSizeOfHeapAccess(access);
             X86Encoding::SetInt32(access.patchLengthAt(code_), heapLength + 1 - scalarByteSize);
         }
     }

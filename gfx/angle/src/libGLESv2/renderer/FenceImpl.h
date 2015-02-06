@@ -4,29 +4,47 @@
 // found in the LICENSE file.
 //
 
-// FenceImpl.h: Defines the rx::FenceImpl class.
+// FenceImpl.h: Defines the rx::FenceNVImpl and rx::FenceSyncImpl classes.
 
 #ifndef LIBGLESV2_RENDERER_FENCEIMPL_H_
 #define LIBGLESV2_RENDERER_FENCEIMPL_H_
 
+#include "libGLESv2/Error.h"
+
 #include "common/angleutils.h"
+
+#include "angle_gl.h"
 
 namespace rx
 {
 
-class FenceImpl
+class FenceNVImpl
 {
   public:
-    FenceImpl() { };
-    virtual ~FenceImpl() { };
+    FenceNVImpl() { };
+    virtual ~FenceNVImpl() { };
 
-    virtual bool isSet() const = 0;
-    virtual void set() = 0;
-    virtual bool test(bool flushCommandBuffer) = 0;
-    virtual bool hasError() const = 0;
+    virtual gl::Error set() = 0;
+    virtual gl::Error test(bool flushCommandBuffer, GLboolean *outFinished) = 0;
+    virtual gl::Error finishFence(GLboolean *outFinished) = 0;
 
   private:
-    DISALLOW_COPY_AND_ASSIGN(FenceImpl);
+    DISALLOW_COPY_AND_ASSIGN(FenceNVImpl);
+};
+
+class FenceSyncImpl
+{
+  public:
+    FenceSyncImpl() { };
+    virtual ~FenceSyncImpl() { };
+
+    virtual gl::Error set() = 0;
+    virtual gl::Error clientWait(GLbitfield flags, GLuint64 timeout, GLenum *outResult) = 0;
+    virtual gl::Error serverWait(GLbitfield flags, GLuint64 timeout) = 0;
+    virtual gl::Error getStatus(GLint *outResult) = 0;
+
+  private:
+    DISALLOW_COPY_AND_ASSIGN(FenceSyncImpl);
 };
 
 }
