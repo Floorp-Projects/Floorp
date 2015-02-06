@@ -121,14 +121,14 @@ private:
   }
 
   void ReplaceItem(uint32_t aIndex, const SVGPoint &aPoint) {
-    NS_ABORT_IF_FALSE(aIndex < mItems.Length(),
-                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    MOZ_ASSERT(aIndex < mItems.Length(),
+               "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mItems[aIndex] = aPoint;
   }
 
   void RemoveItem(uint32_t aIndex) {
-    NS_ABORT_IF_FALSE(aIndex < mItems.Length(),
-                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    MOZ_ASSERT(aIndex < mItems.Length(),
+               "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mItems.RemoveElementAt(aIndex);
   }
 
@@ -181,7 +181,7 @@ public:
    */
   bool IsIdentity() const {
     if (!mElement) {
-      NS_ABORT_IF_FALSE(IsEmpty(), "target element propagation failure");
+      MOZ_ASSERT(IsEmpty(), "target element propagation failure");
       return true;
     } 
     return false;

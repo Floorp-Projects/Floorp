@@ -45,26 +45,24 @@ let gTests = [
   {
     setPref("identity.fxaccounts.remote.signup.uri",
             "https://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
-    yield promiseNewTabLoadEvent("about:accounts");
+    let tab = yield promiseNewTabLoadEvent("about:accounts");
+    let mm = tab.linkedBrowser.messageManager;
 
     let deferred = Promise.defer();
 
     let results = 0;
     try {
-      let win = gBrowser.contentWindow;
-      win.addEventListener("message", function testLoad(e) {
-        if (e.data.type == "testResult") {
-          ok(e.data.pass, e.data.info);
+      mm.addMessageListener("test:response", function responseHandler(msg) {
+        let data = msg.data.data;
+        if (data.type == "testResult") {
+          ok(data.pass, data.info);
           results++;
-        }
-        else if (e.data.type == "testsComplete") {
-          is(results, e.data.count, "Checking number of results received matches the number of tests that should have run");
-          win.removeEventListener("message", testLoad, false, true);
+        } else if (data.type == "testsComplete") {
+          is(results, data.count, "Checking number of results received matches the number of tests that should have run");
+          mm.removeMessageListener("test:response", responseHandler);
           deferred.resolve();
         }
-
-      }, false, true);
-
+      });
     } catch(e) {
       ok(false, "Failed to get all commands");
       deferred.reject();

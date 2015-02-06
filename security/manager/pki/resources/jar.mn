@@ -27,7 +27,6 @@ pippki.jar:
     content/pippki/deletecert.xul            (content/deletecert.xul)
     content/pippki/deletecert.js             (content/deletecert.js)
     content/pippki/viewCertDetails.js        (content/viewCertDetails.js)
-    content/pippki/getp12password.xul        (content/getp12password.xul)
     content/pippki/setp12password.xul        (content/setp12password.xul)
     content/pippki/pippki.js                 (content/pippki.js)
     content/pippki/clientauthask.xul	     (content/clientauthask.xul)

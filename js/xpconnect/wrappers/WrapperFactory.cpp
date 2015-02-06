@@ -424,24 +424,29 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
         wrapper = &CrossCompartmentWrapper::singleton;
     }
 
-    // If this is a chrome function being exposed to content, we need to allow
-    // call (but nothing else). We allow CPOWs that purport to be function's
-    // here, but only in the content process.
-    else if (originIsChrome && !targetIsChrome &&
-             (IdentifyStandardInstance(obj) == JSProto_Function ||
-              (jsipc::IsCPOW(obj) && JS::IsCallable(obj) &&
-               XRE_GetProcessType() == GeckoProcessType_Content)))
-    {
-        wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
-    }
+    // Special handling for chrome objects being exposed to content.
+    else if (originIsChrome && !targetIsChrome) {
+        // If this is a chrome function being exposed to content, we need to allow
+        // call (but nothing else). We allow CPOWs that purport to be function's
+        // here, but only in the content process.
+        if ((IdentifyStandardInstance(obj) == JSProto_Function ||
+            (jsipc::IsCPOW(obj) && JS::IsCallable(obj) &&
+             XRE_GetProcessType() == GeckoProcessType_Content)))
+        {
+            wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
+        }
 
-    // For Vanilla JSObjects exposed from chrome to content, we use a wrapper
-    // that supports __exposedProps__. We'd like to get rid of these eventually,
-    // but in their current form they don't cause much trouble.
-    else if (originIsChrome && !targetIsChrome &&
-             IdentifyStandardInstance(obj) == JSProto_Object)
-    {
-        wrapper = &ChromeObjectWrapper::singleton;
+        // For Vanilla JSObjects exposed from chrome to content, we use a wrapper
+        // that supports __exposedProps__. We'd like to get rid of these eventually,
+        // but in their current form they don't cause much trouble.
+        else if (IdentifyStandardInstance(obj) == JSProto_Object) {
+            wrapper = &ChromeObjectWrapper::singleton;
+        }
+
+        // Otherwise we get an opaque wrapper.
+        else {
+            wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
+        }
     }
 
     //

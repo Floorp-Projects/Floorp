@@ -271,16 +271,15 @@ ParseOptionalOffset(RangedPtr<const char16_t>& aIter,
 bool
 ParseAccessKey(const nsAString& aSpec, nsSMILTimeValueSpecParams& aResult)
 {
-  NS_ABORT_IF_FALSE(StringBeginsWith(aSpec, ACCESSKEY_PREFIX_CC) ||
-      StringBeginsWith(aSpec, ACCESSKEY_PREFIX_LC),
-      "Calling ParseAccessKey on non-accesskey-type spec");
+  MOZ_ASSERT(StringBeginsWith(aSpec, ACCESSKEY_PREFIX_CC) ||
+             StringBeginsWith(aSpec, ACCESSKEY_PREFIX_LC),
+             "Calling ParseAccessKey on non-accesskey-type spec");
 
   nsSMILTimeValueSpecParams result;
   result.mType = nsSMILTimeValueSpecParams::ACCESSKEY;
 
-  NS_ABORT_IF_FALSE(
-      ACCESSKEY_PREFIX_LC.Length() == ACCESSKEY_PREFIX_CC.Length(),
-      "Case variations for accesskey prefix differ in length");
+  MOZ_ASSERT(ACCESSKEY_PREFIX_LC.Length() == ACCESSKEY_PREFIX_CC.Length(),
+             "Case variations for accesskey prefix differ in length");
 
   RangedPtr<const char16_t> iter(SVGContentUtils::GetStartRangedPtr(aSpec));
   RangedPtr<const char16_t> end(SVGContentUtils::GetEndRangedPtr(aSpec));
@@ -371,7 +370,7 @@ ConvertTokenToAtom(const nsAString& aToken,
   bool escape = false;
 
   while (read != end) {
-    NS_ABORT_IF_FALSE(write <= read, "Writing past where we've read");
+    MOZ_ASSERT(write <= read, "Writing past where we've read");
     if (!escape && *read == '\\') {
       escape = true;
       ++read;

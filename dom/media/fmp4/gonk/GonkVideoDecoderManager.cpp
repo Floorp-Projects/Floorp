@@ -656,6 +656,9 @@ void GonkVideoDecoderManager::ReleaseAllPendingVideoBuffers()
 
 void GonkVideoDecoderManager::ReleaseMediaResources() {
   GVDM_LOG("ReleseMediaResources");
+  if (mDecoder == nullptr) {
+    return;
+  }
   ReleaseAllPendingVideoBuffers();
   mDecoder->ReleaseMediaResources();
 }

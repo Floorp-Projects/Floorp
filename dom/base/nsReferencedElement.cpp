@@ -18,7 +18,7 @@ void
 nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
                            bool aWatch, bool aReferenceImage)
 {
-  NS_ABORT_IF_FALSE(aFromContent, "Reset() expects non-null content pointer");
+  MOZ_ASSERT(aFromContent, "Reset() expects non-null content pointer");
 
   Unlink();
 

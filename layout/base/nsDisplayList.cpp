@@ -3126,9 +3126,22 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
     return;
   }
   // XXX handle other pointerEvents values for SVG
+
   // XXX Do something clever here for the common case where the border box
   // is obviously entirely inside mHitRegion.
-  nsRect borderBox(aBuilder->ToReferenceFrame(aFrame), aFrame->GetSize());
+  nsRect borderBox;
+  if (nsLayoutUtils::GetScrollableFrameFor(aFrame)) {
+    // If the frame is content of a scrollframe, then we need to pick up the
+    // area corresponding to the overflow rect as well. Otherwise the parts of
+    // the overflow that are not occupied by descendants get skipped and the
+    // APZ code sends touch events to the content underneath instead.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
+    borderBox = aFrame->GetScrollableOverflowRect();
+  } else {
+    borderBox = nsRect(nsPoint(0, 0), aFrame->GetSize());
+  }
+  borderBox += aBuilder->ToReferenceFrame(aFrame);
+
   const DisplayItemClip* clip = aBuilder->ClipState().GetCurrentCombinedClip(aBuilder);
   bool borderBoxHasRoundedCorners =
     nsLayoutUtils::HasNonZeroCorner(aFrame->StyleBorder()->mBorderRadius);
@@ -4628,7 +4641,7 @@ nsDisplayScrollLayer::GetScrollLayerCount()
   // layers were created or the property was deleted to early. If the latter,
   // make sure that nsDisplayScrollInfoLayer is on the bottom of the list so
   // that it is processed last.
-  NS_ABORT_IF_FALSE(hasCount, "nsDisplayScrollLayer should always be defined");
+  MOZ_ASSERT(hasCount, "nsDisplayScrollLayer should always be defined");
   return result;
 #else
   return reinterpret_cast<intptr_t>(props.Get(nsIFrame::ScrollLayerCount()));
@@ -4873,8 +4886,8 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   , mIndex(aIndex)
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
-  NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
-  NS_ABORT_IF_FALSE(!aFrame->IsTransformed(), "Can't specify a transform getter for a transformed frame!");
+  MOZ_ASSERT(aFrame, "Must have a frame!");
+  MOZ_ASSERT(!aFrame->IsTransformed(), "Can't specify a transform getter for a transformed frame!");
   Init(aBuilder);
 }
 
@@ -4917,7 +4930,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   , mIndex(aIndex)
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
-  NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
+  MOZ_ASSERT(aFrame, "Must have a frame!");
   SetReferenceFrameToAncestor(aBuilder);
   Init(aBuilder);
 }
@@ -4933,7 +4946,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   , mIndex(aIndex)
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
-  NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
+  MOZ_ASSERT(aFrame, "Must have a frame!");
   SetReferenceFrameToAncestor(aBuilder);
   Init(aBuilder);
 }
@@ -4985,7 +4998,7 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
         NSAppUnitsToFloatPixels(*dimensions[index], aAppUnitsPerPixel) *
         coord.GetPercentValue();
     } else {
-      NS_ABORT_IF_FALSE(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
+      MOZ_ASSERT(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
       coords[index] =
         NSAppUnitsToFloatPixels(coord.GetCoordValue(), aAppUnitsPerPixel);
     }
@@ -5069,7 +5082,7 @@ nsDisplayTransform::GetDeltaToPerspectiveOrigin(const nsIFrame* aFrame,
         NSAppUnitsToFloatPixels(*dimensions[index], aAppUnitsPerPixel) *
         coord.GetPercentValue();
     } else {
-      NS_ABORT_IF_FALSE(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
+      MOZ_ASSERT(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
       *coords[index] =
         NSAppUnitsToFloatPixels(coord.GetCoordValue(), aAppUnitsPerPixel);
     }
