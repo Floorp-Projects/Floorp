@@ -1468,7 +1468,7 @@ AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLay
             aDisplayPort.width, aDisplayPort.height,
             aDisplayResolution.scale, aLayersUpdated);
 
-    MOZ_ASSERT(viewTransform, "No view transform object!");
+    NS_ABORT_IF_FALSE(viewTransform, "No view transform object!");
 
     aScrollOffset = ParentLayerPoint(viewTransform->X(), viewTransform->Y());
     aScale.scale = viewTransform->Scale();
@@ -1500,7 +1500,7 @@ void AndroidBridge::SyncFrameMetrics(const ParentLayerPoint& aScrollOffset, floa
             aLayersUpdated, dp.x, dp.y, dp.width, dp.height, aDisplayResolution.scale,
             aIsFirstPaint);
 
-    MOZ_ASSERT(viewTransform, "No view transform object!");
+    NS_ABORT_IF_FALSE(viewTransform, "No view transform object!");
 
     aFixedLayerMargins.top = viewTransform->FixedLayerMarginTop();
     aFixedLayerMargins.right = viewTransform->FixedLayerMarginRight();

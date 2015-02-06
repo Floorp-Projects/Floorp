@@ -840,7 +840,7 @@ nsPlaintextEditor::BeginIMEComposition(WidgetCompositionEvent* aEvent)
 nsresult
 nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
 {
-  MOZ_ASSERT(aDOMTextEvent, "aDOMTextEvent must not be nullptr");
+  NS_ABORT_IF_FALSE(aDOMTextEvent, "aDOMTextEvent must not be nullptr");
 
   WidgetCompositionEvent* compositionChangeEvent =
     aDOMTextEvent->GetInternalNSEvent()->AsCompositionEvent();

@@ -56,8 +56,8 @@ SVGContentUtils::GetOuterSVGElement(nsSVGElement *aSVGElement)
 void
 SVGContentUtils::ActivateByHyperlink(nsIContent *aContent)
 {
-  MOZ_ASSERT(aContent->IsNodeOfType(nsINode::eANIMATION),
-             "Expecting an animation element");
+  NS_ABORT_IF_FALSE(aContent->IsNodeOfType(nsINode::eANIMATION),
+                    "Expecting an animation element");
 
   static_cast<SVGAnimationElement*>(aContent)->ActivateByHyperlink();
 }
@@ -282,17 +282,17 @@ SVGContentUtils::GetFontSize(Element *aElement)
 float
 SVGContentUtils::GetFontSize(nsIFrame *aFrame)
 {
-  MOZ_ASSERT(aFrame, "NULL frame in GetFontSize");
+  NS_ABORT_IF_FALSE(aFrame, "NULL frame in GetFontSize");
   return GetFontSize(aFrame->StyleContext());
 }
 
 float
 SVGContentUtils::GetFontSize(nsStyleContext *aStyleContext)
 {
-  MOZ_ASSERT(aStyleContext, "NULL style context in GetFontSize");
+  NS_ABORT_IF_FALSE(aStyleContext, "NULL style context in GetFontSize");
 
   nsPresContext *presContext = aStyleContext->PresContext();
-  MOZ_ASSERT(presContext, "NULL pres context in GetFontSize");
+  NS_ABORT_IF_FALSE(presContext, "NULL pres context in GetFontSize");
 
   nscoord fontSize = aStyleContext->StyleFont()->mSize;
   return nsPresContext::AppUnitsToFloatCSSPixels(fontSize) / 
@@ -320,17 +320,17 @@ SVGContentUtils::GetFontXHeight(Element *aElement)
 float
 SVGContentUtils::GetFontXHeight(nsIFrame *aFrame)
 {
-  MOZ_ASSERT(aFrame, "NULL frame in GetFontXHeight");
+  NS_ABORT_IF_FALSE(aFrame, "NULL frame in GetFontXHeight");
   return GetFontXHeight(aFrame->StyleContext());
 }
 
 float
 SVGContentUtils::GetFontXHeight(nsStyleContext *aStyleContext)
 {
-  MOZ_ASSERT(aStyleContext, "NULL style context in GetFontXHeight");
+  NS_ABORT_IF_FALSE(aStyleContext, "NULL style context in GetFontXHeight");
 
   nsPresContext *presContext = aStyleContext->PresContext();
-  MOZ_ASSERT(presContext, "NULL pres context in GetFontXHeight");
+  NS_ABORT_IF_FALSE(presContext, "NULL pres context in GetFontXHeight");
 
   nsRefPtr<nsFontMetrics> fontMetrics;
   nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext,

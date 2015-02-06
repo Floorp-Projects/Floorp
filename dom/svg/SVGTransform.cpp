@@ -113,9 +113,10 @@ SVGTransform::SVGTransform(DOMSVGTransformList *aList,
   , mTransform(nullptr)
 {
   // These shifts are in sync with the members in the header.
-  MOZ_ASSERT(aList && aListIndex <= MaxListIndex(), "bad arg");
+  NS_ABORT_IF_FALSE(aList &&
+                    aListIndex <= MaxListIndex(), "bad arg");
 
-  MOZ_ASSERT(IndexIsValid(), "Bad index for DOMSVGNumber!");
+  NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGNumber!");
 }
 
 SVGTransform::SVGTransform()
@@ -300,21 +301,21 @@ SVGTransform::InsertingIntoList(DOMSVGTransformList *aList,
                                 uint32_t aListIndex,
                                 bool aIsAnimValItem)
 {
-  MOZ_ASSERT(!HasOwner(), "Inserting item that is already in a list");
+  NS_ABORT_IF_FALSE(!HasOwner(), "Inserting item that is already in a list");
 
   mList = aList;
   mListIndex = aListIndex;
   mIsAnimValItem = aIsAnimValItem;
   mTransform = nullptr;
 
-  MOZ_ASSERT(IndexIsValid(), "Bad index for DOMSVGLength!");
+  NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGLength!");
 }
 
 void
 SVGTransform::RemovingFromList()
 {
-  MOZ_ASSERT(!mTransform,
-             "Item in list also has another non-list value associated with it");
+  NS_ABORT_IF_FALSE(!mTransform,
+      "Item in list also has another non-list value associated with it");
 
   mTransform = new nsSVGTransform(InternalItem());
   mList = nullptr;
@@ -355,8 +356,8 @@ SVGTransform::IndexIsValid()
 void
 SVGTransform::SetMatrix(const gfxMatrix& aMatrix)
 {
-  MOZ_ASSERT(!mIsAnimValItem,
-             "Attempting to modify read-only transform");
+  NS_ABORT_IF_FALSE(!mIsAnimValItem,
+      "Attempting to modify read-only transform");
 
   if (Transform().Type() == SVG_TRANSFORM_MATRIX &&
       nsSVGTransform::MatricesEqual(Matrixgfx(), aMatrix)) {

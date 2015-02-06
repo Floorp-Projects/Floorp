@@ -107,12 +107,11 @@ DOMSVGLength::DOMSVGLength(DOMSVGLengthList *aList,
   , mVal(nullptr)
 {
   // These shifts are in sync with the members in the header.
-  MOZ_ASSERT(aList &&
-             aAttrEnum < (1 << 4) &&
-             aListIndex <= MaxListIndex(),
-             "bad arg");
+  NS_ABORT_IF_FALSE(aList &&
+                    aAttrEnum < (1 << 4) &&
+                    aListIndex <= MaxListIndex(), "bad arg");
 
-  MOZ_ASSERT(IndexIsValid(), "Bad index for DOMSVGNumber!");
+  NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGNumber!");
 }
 
 DOMSVGLength::DOMSVGLength()
@@ -536,7 +535,7 @@ DOMSVGLength::InsertingIntoList(DOMSVGLengthList *aList,
   mListIndex = aListIndex;
   mIsAnimValItem = aIsAnimValItem;
 
-  MOZ_ASSERT(IndexIsValid(), "Bad index for DOMSVGLength!");
+  NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGLength!");
 }
 
 void

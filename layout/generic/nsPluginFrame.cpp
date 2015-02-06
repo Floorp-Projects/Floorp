@@ -1424,7 +1424,7 @@ nsPluginFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   } else {
     NS_ASSERTION(aItem->GetType() == nsDisplayItem::TYPE_PLUGIN_READBACK,
                  "Unknown item type");
-    MOZ_ASSERT(!IsOpaque(), "Opaque plugins don't use backgrounds");
+    NS_ABORT_IF_FALSE(!IsOpaque(), "Opaque plugins don't use backgrounds");
 
     if (!layer) {
       layer = aManager->CreateReadbackLayer();

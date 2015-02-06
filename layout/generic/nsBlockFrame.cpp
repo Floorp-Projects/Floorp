@@ -2691,7 +2691,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
                          line_iterator aLine,
                          bool* aKeepReflowGoing)
 {
-  MOZ_ASSERT(aLine->GetChildCount(), "reflowing empty line");
+  NS_ABORT_IF_FALSE(aLine->GetChildCount(), "reflowing empty line");
 
   // Setup the line-layout for the new line
   aState.mCurrentLine = aLine;
@@ -2742,9 +2742,9 @@ nsBlockFrame::PullFrameFrom(nsLineBox*           aLine,
                             nsLineList::iterator aFromLine)
 {
   nsLineBox* fromLine = aFromLine;
-  MOZ_ASSERT(fromLine, "bad line to pull from");
-  MOZ_ASSERT(fromLine->GetChildCount(), "empty line");
-  MOZ_ASSERT(aLine->GetChildCount(), "empty line");
+  NS_ABORT_IF_FALSE(fromLine, "bad line to pull from");
+  NS_ABORT_IF_FALSE(fromLine->GetChildCount(), "empty line");
+  NS_ABORT_IF_FALSE(aLine->GetChildCount(), "empty line");
 
   NS_ASSERTION(fromLine->IsBlock() == fromLine->mFirstChild->IsBlockOutside(),
                "Disagreement about whether it's a block or not");
@@ -2945,7 +2945,7 @@ IsNonAutoNonZeroBSize(const nsStyleCoord& aCoord)
     return nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) > 0 ||
            nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) > 0;
   }
-  MOZ_ASSERT(false, "unexpected unit for height or min-height");
+  NS_ABORT_IF_FALSE(false, "unexpected unit for height or min-height");
   return true;
 }
 
@@ -4125,8 +4125,8 @@ nsBlockFrame::SplitFloat(nsBlockReflowState& aState,
   if (aFloat->StyleDisplay()->mFloats == NS_STYLE_FLOAT_LEFT) {
     aState.mFloatManager->SetSplitLeftFloatAcrossBreak();
   } else {
-    MOZ_ASSERT(aFloat->StyleDisplay()->mFloats == NS_STYLE_FLOAT_RIGHT,
-               "unexpected float side");
+    NS_ABORT_IF_FALSE(aFloat->StyleDisplay()->mFloats ==
+                        NS_STYLE_FLOAT_RIGHT, "unexpected float side");
     aState.mFloatManager->SetSplitRightFloatAcrossBreak();
   }
 
@@ -4171,10 +4171,10 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
                         nsIFrame* aFrame,
                         LineReflowStatus* aLineReflowStatus)
 {
-  MOZ_ASSERT(aLine->IsInline(), "illegal SplitLine on block line");
+  NS_ABORT_IF_FALSE(aLine->IsInline(), "illegal SplitLine on block line");
 
   int32_t pushCount = aLine->GetChildCount() - aLineLayout.GetCurrentSpanCount();
-  MOZ_ASSERT(pushCount >= 0, "bad push count"); 
+  NS_ABORT_IF_FALSE(pushCount >= 0, "bad push count"); 
 
 #ifdef DEBUG
   if (gNoisyReflow) {
@@ -4195,8 +4195,8 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
 #endif
 
   if (0 != pushCount) {
-    MOZ_ASSERT(aLine->GetChildCount() > pushCount, "bad push");
-    MOZ_ASSERT(nullptr != aFrame, "whoops");
+    NS_ABORT_IF_FALSE(aLine->GetChildCount() > pushCount, "bad push");
+    NS_ABORT_IF_FALSE(nullptr != aFrame, "whoops");
 #ifdef DEBUG
     {
       nsIFrame *f = aFrame;
@@ -7346,7 +7346,7 @@ nsBlockFrame::VerifyLines(bool aFinalCheckOK)
       cursor = nullptr;
     }
     if (aFinalCheckOK) {
-      MOZ_ASSERT(line->GetChildCount(), "empty line");
+      NS_ABORT_IF_FALSE(line->GetChildCount(), "empty line");
       if (line->IsBlock()) {
         NS_ASSERTION(1 == line->GetChildCount(), "bad first line");
       }

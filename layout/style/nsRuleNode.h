@@ -32,14 +32,14 @@ private:
   void* mArray[Count];
 public:
   void*& operator[](nsStyleStructID aIndex) {
-    MOZ_ASSERT(MinIndex <= aIndex && aIndex < (MinIndex + Count),
-               "out of range");
+    NS_ABORT_IF_FALSE(MinIndex <= aIndex && aIndex < (MinIndex + Count),
+                      "out of range");
     return mArray[aIndex - MinIndex];
   }
 
   const void* operator[](nsStyleStructID aIndex) const {
-    MOZ_ASSERT(MinIndex <= aIndex && aIndex < (MinIndex + Count),
-               "out of range");
+    NS_ABORT_IF_FALSE(MinIndex <= aIndex && aIndex < (MinIndex + Count),
+                      "out of range");
     return mArray[aIndex - MinIndex];
   }
 };
@@ -124,8 +124,8 @@ struct nsCachedStyleData
   nsResetStyleData* mResetData;
 
   static bool IsReset(const nsStyleStructID aSID) {
-    MOZ_ASSERT(0 <= aSID && aSID < nsStyleStructID_Length,
-               "must be an inherited or reset SID");
+    NS_ABORT_IF_FALSE(0 <= aSID && aSID < nsStyleStructID_Length,
+                      "must be an inherited or reset SID");
     return nsStyleStructID_Reset_Start <= aSID;
   }
 
