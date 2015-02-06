@@ -1,0 +1,60 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html, body {
+  background: white;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 90%;
+}
+
+div {
+  margin-bottom: 1em;
+}
+
+#qr-code {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#qr-code-wrapper {
+  flex: 1;
+  width: 100%;
+  margin: 2em 0;
+  text-align: center;
+}
+
+#qr-code img {
+  height: 100%;
+}
+
+.toggle-scanner {
+  color: #4C9ED9;
+  font-size: small;
+  cursor: pointer;
+  border-bottom: 1px dotted;
+}
+
+#token {
+  display: none;
+}
+
+body[token] > #token {
+  display: flex;
+  flex-direction: column;
+}
+
+body[token] > #qr-code {
+  display: none;
+}
+
+#token pre,
+#token a {
+  align-self: center;
+}

@@ -18,6 +18,7 @@
 #include "jsobjinlines.h"
 
 #include "vm/NativeObject-inl.h"
+#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::types;
@@ -637,7 +638,7 @@ js::ObjectCreateImpl(JSContext *cx, HandleObject proto, NewObjectKind newKind,
         // instead.
         RootedObjectGroup ngroup(cx, group);
         if (!ngroup) {
-            ngroup = GetCallerInitGroup(cx, JSProto_Null);
+            ngroup = ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Null);
             if (!ngroup)
                 return nullptr;
         }

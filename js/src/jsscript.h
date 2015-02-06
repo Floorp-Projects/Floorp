@@ -875,13 +875,6 @@ class JSScript : public js::gc::TenuredCell
                                   * Reset if the script's JIT code is forcibly
                                   * discarded. */
 
-#ifdef DEBUG
-    // Unique identifier within the compartment for this script, used for
-    // printing analysis information.
-    uint32_t        id_;
-    uint32_t        idpad;
-#endif
-
     // 16-bit fields.
 
     uint16_t        version;    /* JS version under which script was compiled */
@@ -1458,12 +1451,6 @@ class JSScript : public js::gc::TenuredCell
 
     /* Return whether this script was compiled for 'eval' */
     bool isForEval() { return isCachedEval() || isActiveEval(); }
-
-#ifdef DEBUG
-    unsigned id();
-#else
-    unsigned id() { return 0; }
-#endif
 
     /* Ensure the script has a TypeScript. */
     inline bool ensureHasTypes(JSContext *cx);

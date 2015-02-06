@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cu} = require("chrome");
+const {Cu, Ci} = require("chrome");
 const {Devices} = Cu.import("resource://gre/modules/devtools/Devices.jsm");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {Simulator} = Cu.import("resource://gre/modules/devtools/Simulator.jsm");
@@ -11,6 +11,10 @@ const {DebuggerServer} = require("resource://gre/modules/devtools/dbg-server.jsm
 const discovery = require("devtools/toolkit/discovery/discovery");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const promise = require("promise");
+loader.lazyRequireGetter(this, "AuthenticationResult",
+  "devtools/toolkit/security/auth", true);
+loader.lazyRequireGetter(this, "DevToolsUtils",
+  "devtools/toolkit/DevToolsUtils");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
@@ -448,7 +452,7 @@ WiFiRuntime.prototype = {
       return promise.reject(new Error("Can't find device: " + this.name));
     }
     connection.advertisement = service;
-    // TODO: Customize client authentication UX
+    connection.authenticator.sendOOB = this.sendOOB;
     connection.connect();
     return promise.resolve();
   },
@@ -458,6 +462,81 @@ WiFiRuntime.prototype = {
   get name() {
     return this.deviceName;
   },
+
+  /**
+   * During OOB_CERT authentication, a notification dialog like this is used to
+   * to display a token which the user must transfer through some mechanism to the
+   * server to authenticate the devices.
+   *
+   * This implementation presents the token as text for the user to transfer
+   * manually.  For a mobile device, you should override this implementation with
+   * something more convenient, such as displaying a QR code.
+   *
+   * This method receives an object containing:
+   * @param host string
+   *        The host name or IP address of the debugger server.
+   * @param port number
+   *        The port number of the debugger server.
+   * @param cert object (optional)
+   *        The server's cert details.
+   * @param authResult AuthenticationResult
+   *        Authentication result sent from the server.
+   * @param oob object (optional)
+   *        The token data to be transferred during OOB_CERT step 8:
+   *        * sha256: hash(ClientCert)
+   *        * k     : K(random 128-bit number)
+   * @return object containing:
+   *         * close: Function to hide the notification
+   */
+  sendOOB(session) {
+    const WINDOW_ID = "devtools:wifi-auth";
+    let { authResult } = session;
+    // Only show in the PENDING state
+    if (authResult != AuthenticationResult.PENDING) {
+      throw new Error("Expected PENDING result, got " + authResult);
+    }
+
+    // Listen for the window our prompt opens, so we can close it programatically
+    let promptWindow;
+    let windowListener = {
+      onOpenWindow(xulWindow) {
+        let win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindow);
+        win.addEventListener("load", function listener() {
+          win.removeEventListener("load", listener, false);
+          if (win.document.documentElement.getAttribute("id") != WINDOW_ID) {
+            return;
+          }
+          // Found the window
+          promptWindow = win;
+          Services.wm.removeListener(windowListener);
+        }, false);
+      },
+      onCloseWindow() {},
+      onWindowTitleChange() {}
+    };
+    Services.wm.addListener(windowListener);
+
+    // |openDialog| is typically a blocking API, so |executeSoon| to get around this
+    DevToolsUtils.executeSoon(() => {
+      let win = Services.wm.getMostRecentWindow("devtools:webide");
+      let width = win.outerWidth * 0.8;
+      let height = win.outerHeight * 0.5;
+      win.openDialog("chrome://webide/content/wifi-auth.xhtml",
+                     WINDOW_ID,
+                     "modal=yes,width=" + width + ",height=" + height, session);
+    });
+
+    return {
+      close() {
+        if (!promptWindow) {
+          return;
+        }
+        promptWindow.close();
+        promptWindow = null;
+      }
+    };
+  }
 };
 
 // For testing use only

@@ -523,7 +523,7 @@ ArrayBufferObject::neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer,
         // flag change will be observed.
         if (!cx->global()->getGroup(cx))
             CrashAtUnhandlableOOM("ArrayBufferObject::neuter");
-        types::MarkObjectGroupFlags(cx, cx->global(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED);
+        types::MarkObjectGroupFlags(cx, cx->global(), OBJECT_FLAG_TYPED_OBJECT_NEUTERED);
         cx->compartment()->neuteredTypedObjects = 1;
     }
 

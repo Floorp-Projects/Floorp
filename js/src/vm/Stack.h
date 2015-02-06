@@ -26,6 +26,7 @@ namespace js {
 class ArgumentsObject;
 class AsmJSModule;
 class InterpreterRegs;
+class CallObject;
 class ScopeObject;
 class ScriptFrameIter;
 class SPSProfiler;

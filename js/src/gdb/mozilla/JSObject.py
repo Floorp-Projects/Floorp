@@ -34,8 +34,8 @@ class JSObjectPtrOrRef(prettyprinters.Pointer):
     def summary(self):
         shape = deref(self.value['shape_'])
         baseshape = deref(shape['base_'])
-        otype = deref(self.value['type_'])
-        class_name = otype['clasp_']['name'].string()
+        group = deref(self.value['group_'])
+        class_name = group['clasp_']['name'].string()
         flags = baseshape['flags']
         is_delegate = bool(flags & self.otc.flag_DELEGATE)
         name = None
