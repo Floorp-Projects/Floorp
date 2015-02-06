@@ -119,7 +119,7 @@ MultipartImage::MultipartImage(Image* aImage, ProgressTracker* aTracker)
 
 MultipartImage::~MultipartImage() { }
 
-NS_IMPL_QUERY_INTERFACE_INHERITED0(MultipartImage, ImageWrapper) 
+NS_IMPL_QUERY_INTERFACE_INHERITED0(MultipartImage, ImageWrapper)
 NS_IMPL_ADDREF(MultipartImage)
 NS_IMPL_RELEASE(MultipartImage)
 
