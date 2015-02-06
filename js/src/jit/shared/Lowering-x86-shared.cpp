@@ -510,7 +510,7 @@ LIRGeneratorX86Shared::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *
     MOZ_ASSERT(ptr->type() == MIRType_Int32);
 
     bool byteArray = false;
-    switch (ins->viewType()) {
+    switch (ins->accessType()) {
       case Scalar::Int8:
       case Scalar::Uint8:
         byteArray = true;
@@ -555,7 +555,7 @@ LIRGeneratorX86Shared::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
     MOZ_ASSERT(ptr->type() == MIRType_Int32);
 
     bool byteArray = false;
-    switch (ins->viewType()) {
+    switch (ins->accessType()) {
       case Scalar::Int8:
       case Scalar::Uint8:
         byteArray = true;

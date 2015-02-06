@@ -91,8 +91,13 @@ gl::Error VertexBuffer11::storeVertexAttributes(const gl::VertexAttribute &attri
     {
         if (buffer)
         {
-            Buffer11 *storage = Buffer11::makeBuffer11(buffer->getImplementation());
-            input = static_cast<const uint8_t*>(storage->getData()) + static_cast<int>(attrib.offset);
+            BufferD3D *storage = BufferD3D::makeFromBuffer(buffer);
+            gl::Error error = storage->getData(&input);
+            if (error.isError())
+            {
+                return error;
+            }
+            input += static_cast<int>(attrib.offset);
         }
         else
         {

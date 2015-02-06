@@ -31,6 +31,7 @@
 //
 
 #include <assert.h>
+#include <set>
 
 #include "common/angleutils.h"
 #include "compiler/translator/InfoSink.h"
@@ -299,19 +300,21 @@ class TSymbolTableLevel
     tLevel level;
 };
 
-enum ESymbolLevel
-{
-    COMMON_BUILTINS = 0,
-    ESSL1_BUILTINS = 1,
-    ESSL3_BUILTINS = 2,
-    LAST_BUILTIN_LEVEL = ESSL3_BUILTINS,
-    GLOBAL_LEVEL = 3
-};
+// Define ESymbolLevel as int rather than an enum since level can go
+// above GLOBAL_LEVEL and cause atBuiltInLevel() to fail if the
+// compiler optimizes the >= of the last element to ==.
+typedef int ESymbolLevel;
+const int COMMON_BUILTINS = 0;
+const int ESSL1_BUILTINS = 1;
+const int ESSL3_BUILTINS = 2;
+const int LAST_BUILTIN_LEVEL = ESSL3_BUILTINS;
+const int GLOBAL_LEVEL = 3;
 
 class TSymbolTable
 {
   public:
     TSymbolTable()
+        : mGlobalInvariant(false)
     {
         // The symbol table cannot be used until push() is called, but
         // the lack of an initial call to push() can be used to detect
@@ -408,6 +411,25 @@ class TSymbolTable
     // for the specified TBasicType
     TPrecision getDefaultPrecision(TBasicType type) const;
 
+    // This records invariant varyings declared through
+    // "invariant varying_name;".
+    void addInvariantVarying(const std::string &originalName)
+    {
+        mInvariantVaryings.insert(originalName);
+    }
+    // If this returns false, the varying could still be invariant
+    // if it is set as invariant during the varying variable
+    // declaration - this piece of information is stored in the
+    // variable's type, not here.
+    bool isVaryingInvariant(const std::string &originalName) const
+    {
+      return (mGlobalInvariant ||
+              mInvariantVaryings.count(originalName) > 0);
+    }
+
+    void setGlobalInvariant() { mGlobalInvariant = true; }
+    bool getGlobalInvariant() const { return mGlobalInvariant; }
+
     static int nextUniqueId()
     {
         return ++uniqueIdCounter;
@@ -422,6 +444,9 @@ class TSymbolTable
     std::vector<TSymbolTableLevel *> table;
     typedef TMap<TBasicType, TPrecision> PrecisionStackLevel;
     std::vector< PrecisionStackLevel *> precisionStack;
+
+    std::set<std::string> mInvariantVaryings;
+    bool mGlobalInvariant;
 
     static int uniqueIdCounter;
 };

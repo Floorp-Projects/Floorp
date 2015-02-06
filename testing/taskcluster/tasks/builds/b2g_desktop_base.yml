@@ -5,6 +5,7 @@ task:
     name: "[TC] B2G Desktop {{build_type}}"
     description: B2G Desktop {{build_type}}
 
+  workerType: b2gbuild-desktop
   scopes:
     - 'docker-worker:cache:sources-gecko'
     - 'docker-worker:cache:sources-gaia'

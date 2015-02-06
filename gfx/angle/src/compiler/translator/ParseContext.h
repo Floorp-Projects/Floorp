@@ -116,7 +116,7 @@ struct TParseContext {
     bool supportsExtension(const char* extension);
     bool isExtensionEnabled(const char* extension) const;
     void handleExtensionDirective(const TSourceLoc& loc, const char* extName, const char* behavior);
-    void handlePragmaDirective(const TSourceLoc& loc, const char* name, const char* value);
+    void handlePragmaDirective(const TSourceLoc& loc, const char* name, const char* value, bool stdgl);
 
     bool containsSampler(TType& type);
     bool areAllChildConst(TIntermAggregate* aggrNode);
