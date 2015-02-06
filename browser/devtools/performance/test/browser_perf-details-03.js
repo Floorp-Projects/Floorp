@@ -40,6 +40,7 @@ function spawnTest () {
 
   ok(DetailsView.isViewSelected(WaterfallView),
     "The waterfall view is now selected when toggling off enable-memory when a memory panel is selected.");
+
   Services.prefs.setBoolPref(MEMORY_PREF, true);
 
   selected = DetailsView.whenViewSelected(MemoryFlameGraphView);

@@ -25,6 +25,7 @@ function spawnTest () {
   yield startRecording(panel);
   Services.prefs.setBoolPref(MEMORY_PREF, false);
   yield stopRecording(panel);
+
   is(PerformanceController.getCurrentRecording().getConfiguration().withMemory, true,
     "The recording finished with tracking memory.");
   is(PerformanceController.getCurrentRecording().getConfiguration().withAllocations, true,

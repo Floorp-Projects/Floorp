@@ -2,8 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that the js call tree view is re-rendered after the
- * "invert-call-tree" pref is changed.
+ * Tests that the js call tree views get rerendered when toggling `invert-call-tree`
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
@@ -11,7 +10,7 @@ function spawnTest () {
 
   Services.prefs.setBoolPref(INVERT_PREF, true);
 
-  DetailsView.selectView("js-calltree");
+  yield DetailsView.selectView("js-calltree");
   ok(DetailsView.isViewSelected(JsCallTreeView), "The call tree is now selected.");
 
   yield startRecording(panel);

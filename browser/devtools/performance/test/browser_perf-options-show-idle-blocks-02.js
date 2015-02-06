@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that the memory Flamegraphs gets rerendered when toggling `show-idle-blocks`
+ * Tests that the memory flamegraphs get rerendered when toggling `show-idle-blocks`
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
@@ -10,9 +10,9 @@ function spawnTest () {
 
   // Enable memory to test
   Services.prefs.setBoolPref(MEMORY_PREF, true);
-  DetailsView.selectView("memory-flamegraph");
-
   Services.prefs.setBoolPref(IDLE_PREF, true);
+
+  yield DetailsView.selectView("memory-flamegraph");
 
   yield startRecording(panel);
   yield busyWait(100);

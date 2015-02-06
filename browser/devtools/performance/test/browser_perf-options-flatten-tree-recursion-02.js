@@ -2,18 +2,17 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that the memory Flamegraphs gets rerendered when toggling `flatten-tree-recursion`
+ * Tests that the memory flamegraphs get rerendered when toggling `flatten-tree-recursion`
  */
 function spawnTest () {
-  // Enable memory to test
-  Services.prefs.setBoolPref(MEMORY_PREF, true);
-
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView, MemoryFlameGraphView } = panel.panelWin;
 
-  DetailsView.selectView("memory-flamegraph");
-
+  // Enable memory to test
+  Services.prefs.setBoolPref(MEMORY_PREF, true);
   Services.prefs.setBoolPref(FLATTEN_PREF, true);
+
+  yield DetailsView.selectView("memory-flamegraph");
 
   yield startRecording(panel);
   yield busyWait(100);

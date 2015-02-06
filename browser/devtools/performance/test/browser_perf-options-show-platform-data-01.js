@@ -2,15 +2,15 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that the JsCallTree get rerendered when toggling `show-platform-data`
+ * Tests that the js call tree views get rerendered when toggling `show-platform-data`
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, DetailsView, JsFlameGraphView, JsCallTreeView } = panel.panelWin;
-
-  DetailsView.selectView("js-calltree");
+  let { EVENTS, DetailsView, JsCallTreeView } = panel.panelWin;
 
   Services.prefs.setBoolPref(PLATFORM_DATA_PREF, true);
+
+  yield DetailsView.selectView("js-calltree");
 
   yield startRecording(panel);
   yield busyWait(100);

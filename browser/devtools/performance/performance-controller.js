@@ -60,9 +60,8 @@ const EVENTS = {
   // Fired by the OptionsView when a preference changes.
   PREF_CHANGED: "Performance:PrefChanged",
 
-  // Emitted by the PerformanceController or RecordingView
-  // when a recording model is selected
-  RECORDING_SELECTED: "Performance:RecordingSelected",
+  // Emitted by the PerformanceView when the state (display mode) changes.
+  UI_STATE_CHANGED: "Performance:UI:StateChanged",
 
   // Emitted by the PerformanceView on clear button click
   UI_CLEAR_RECORDINGS: "Performance:UI:ClearRecordings",
@@ -81,6 +80,10 @@ const EVENTS = {
   RECORDING_STOPPED: "Performance:RecordingStopped",
   RECORDING_WILL_START: "Performance:RecordingWillStart",
   RECORDING_WILL_STOP: "Performance:RecordingWillStop",
+
+  // Emitted by the PerformanceController or RecordingView
+  // when a recording model is selected
+  RECORDING_SELECTED: "Performance:RecordingSelected",
 
   // When recordings have been cleared out
   RECORDINGS_CLEARED: "Performance:RecordingsCleared",
@@ -241,7 +244,6 @@ let PerformanceController = {
     let recording = this._getLatestRecording();
 
     this.emit(EVENTS.RECORDING_WILL_STOP, recording);
-
     yield recording.stopRecording();
     this.emit(EVENTS.RECORDING_STOPPED, recording);
   }),

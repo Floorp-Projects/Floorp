@@ -11,13 +11,13 @@ function spawnTest () {
 
   yield startRecording(panel);
 
-  // Wait for the overview graph to be rendered while recording.
-  yield once(OverviewView, EVENTS.OVERVIEW_RENDERED);
+  yield Promise.all([
+    once(OverviewView, EVENTS.FRAMERATE_GRAPH_RENDERED),
+    once(OverviewView, EVENTS.MARKERS_GRAPH_RENDERED),
+    once(OverviewView, EVENTS.OVERVIEW_RENDERED)
+  ]);
 
   yield stopRecording(panel);
-
-  // Wait for the overview graph to be rerendered *after* recording.
-  yield once(OverviewView, EVENTS.OVERVIEW_RENDERED);
 
   let graph = OverviewView.markersOverview;
   let MAX = graph.width;

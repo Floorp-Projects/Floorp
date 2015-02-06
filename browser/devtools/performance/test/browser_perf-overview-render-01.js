@@ -8,6 +8,9 @@ function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, OverviewView } = panel.panelWin;
 
+  // Enable memory to test all the overview graphs.
+  Services.prefs.setBoolPref(MEMORY_PREF, true);
+
   yield startRecording(panel);
 
   yield Promise.all([

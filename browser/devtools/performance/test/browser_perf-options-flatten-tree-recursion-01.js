@@ -2,15 +2,15 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that the js Flamegraphs gets rerendered when toggling `flatten-tree-recursion`
+ * Tests that the js flamegraphs get rerendered when toggling `flatten-tree-recursion`
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView, JsFlameGraphView } = panel.panelWin;
 
-  DetailsView.selectView("js-flamegraph");
-
   Services.prefs.setBoolPref(FLATTEN_PREF, true);
+
+  yield DetailsView.selectView("js-flamegraph");
 
   yield startRecording(panel);
   yield busyWait(100);
