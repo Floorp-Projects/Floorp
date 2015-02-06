@@ -1482,7 +1482,7 @@ nsHttpTransaction::HandleContentStart()
             break;
         case 421:
             if (!mConnInfo->GetAuthenticationHost().IsEmpty()) {
-                LOG(("Not Authoritative.\n"));
+                LOG(("Misdirected Request.\n"));
                 gHttpHandler->ConnMgr()->
                     ClearHostMapping(mConnInfo->GetHost(), mConnInfo->Port());
             }

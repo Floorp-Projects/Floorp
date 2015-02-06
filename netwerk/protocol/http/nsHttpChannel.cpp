@@ -1278,16 +1278,10 @@ nsHttpChannel::ProcessAltService()
         return;
     }
 
-    if (isHttp && !gHttpHandler->AllowAltSvcOE()) {
-        return;
-    }
-
     const char *altSvc;
     if (!(altSvc = mResponseHead->PeekHeader(nsHttp::Alternate_Service))) {
         return;
     }
-
-    LOG(("nsHttpChannel %p Alt-Svc Response Header %s\n", this, altSvc));
 
     nsCString buf(altSvc);
     if (!nsHttp::IsReasonableHeaderValue(buf)) {
@@ -1295,87 +1289,24 @@ nsHttpChannel::ProcessAltService()
         return;
     }
 
-    ParsedHeaderValueListList parsedAltSvc(buf);
-    nsRefPtr<AltSvcMapping> mapping;
-
     nsAutoCString originHost;
     int32_t originPort = 80;
     mURI->GetPort(&originPort);
     if (NS_FAILED(mURI->GetHost(originHost))) {
         return;
     }
-    uint32_t now = NowInSeconds(), currentAge = 0;
-    mResponseHead->ComputeCurrentAge(now, mRequestTime, &currentAge);
 
-    for (uint32_t index = 0; index < parsedAltSvc.mValues.Length(); ++index) {
-        uint32_t maxage = 86400; // default
-        nsAutoCString hostname; // Always empty in the header form
-        nsAutoCString npnToken;
-        int32_t portno = originPort;
-
-        for (uint32_t pairIndex = 0;
-             pairIndex < parsedAltSvc.mValues[index].mValues.Length();
-             ++pairIndex) {
-            nsDependentCSubstring &currentName =
-                parsedAltSvc.mValues[index].mValues[pairIndex].mName;
-            nsDependentCSubstring &currentValue =
-                parsedAltSvc.mValues[index].mValues[pairIndex].mValue;
-
-            if (!pairIndex) {
-                // h2=:443
-                npnToken = currentName;
-                int32_t colonIndex = currentValue.FindChar(':');
-                if (colonIndex >= 0) {
-                    portno =
-                        atoi(PromiseFlatCString(currentValue).get() + colonIndex + 1);
-                } else {
-                    colonIndex = 0;
-                }
-                hostname.Assign(currentValue.BeginReading(), colonIndex);
-            } else if (currentName.Equals(NS_LITERAL_CSTRING("ma"))) {
-                maxage = atoi(PromiseFlatCString(currentValue).get());
-                break;
-            }
-        }
-
-        // unescape modifies a c string in place, so afterwards
-        // update nsCString length
-        nsUnescape(npnToken.BeginWriting());
-        npnToken.SetLength(strlen(npnToken.BeginReading()));
-
-        uint32_t spdyIndex;
-        SpdyInformation *spdyInfo = gHttpHandler->SpdyInfo();
-        if (!(NS_SUCCEEDED(spdyInfo->GetNPNIndex(npnToken, &spdyIndex)) &&
-              spdyInfo->ProtocolEnabled(spdyIndex))) {
-            LOG(("Alt Svc %p unknown protocol %s, ignoring", this, npnToken.get()));
-            continue;
-        }
-
-        mapping = new AltSvcMapping(scheme,
-                                    originHost, originPort,
-                                    mUsername, mPrivateBrowsing,
-                                    NowInSeconds() + maxage,
-                                    hostname, portno, npnToken);
-        if (!mapping) {
-            continue;
-        }
-
-        nsCOMPtr<nsIInterfaceRequestor> callbacks;
-        NS_NewNotificationCallbacksAggregation(mCallbacks, mLoadGroup,
-                                               getter_AddRefs(callbacks));
-        if (!callbacks) {
-            return;
-        }
-
-        nsCOMPtr<nsProxyInfo> proxyInfo;
-        if (mProxyInfo) {
-            proxyInfo = do_QueryInterface(mProxyInfo);
-        }
-
-        gHttpHandler->
-            UpdateAltServiceMapping(mapping, proxyInfo, callbacks,
-                                    mCaps & NS_HTTP_DISALLOW_SPDY);
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    nsCOMPtr<nsProxyInfo> proxyInfo;
+    NS_NewNotificationCallbacksAggregation(mCallbacks, mLoadGroup,
+                                           getter_AddRefs(callbacks));
+    if (mProxyInfo) {
+        proxyInfo = do_QueryInterface(mProxyInfo);
     }
+
+    AltSvcMapping::ProcessHeader(buf, scheme, originHost, originPort,
+                                 mUsername, mPrivateBrowsing, callbacks, proxyInfo,
+                                 mCaps & NS_HTTP_DISALLOW_SPDY);
 }
 
 nsresult
@@ -4854,7 +4785,17 @@ nsHttpChannel::BeginConnect()
         LOG(("nsHttpChannel %p Alt Service Mapping Found %s://%s:%d\n", this,
              scheme.get(), mapping->AlternateHost().get(),
              mapping->AlternatePort()));
-        mRequestHead.SetHeader(nsHttp::Alternate_Service_Used, NS_LITERAL_CSTRING("1"));
+
+        if (!(mLoadFlags & LOAD_ANONYMOUS) && !mPrivateBrowsing) {
+            nsAutoCString altUsedLine(mapping->AlternateHost());
+            bool defaultPort = mapping->AlternatePort() ==
+                (isHttps ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT);
+            if (!defaultPort) {
+                altUsedLine.AppendLiteral(":");
+                altUsedLine.AppendInt(mapping->AlternatePort());
+            }
+            mRequestHead.SetHeader(nsHttp::Alternate_Service_Used, altUsedLine);
+        }
 
         nsCOMPtr<nsIConsoleService> consoleService =
             do_GetService(NS_CONSOLESERVICE_CONTRACTID);
