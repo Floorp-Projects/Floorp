@@ -216,14 +216,20 @@ protected:
     mRegisterTarget->OwnerDoc()->SetMayHaveDOMMutationObservers();
   }
 
-  bool ObservesAttr(mozilla::dom::Element* aElement,
+  bool IsObservable(nsIContent* aContent);
+
+  bool ObservesAttr(nsINode* aRegisterTarget,
+                    mozilla::dom::Element* aElement,
                     int32_t aNameSpaceID,
                     nsIAtom* aAttr)
   {
     if (mParent) {
-      return mParent->ObservesAttr(aElement, aNameSpaceID, aAttr);
+      return mParent->ObservesAttr(aRegisterTarget, aElement, aNameSpaceID, aAttr);
     }
-    if (!Attributes() || (!Subtree() && aElement != Target())) {
+    if (!Attributes() ||
+        (!Subtree() && aElement != Target()) ||
+        (Subtree() && aRegisterTarget->SubtreeRoot() != aElement->SubtreeRoot()) ||
+        !IsObservable(aElement)) {
       return false;
     }
     if (AllAttributes()) {
@@ -342,9 +348,10 @@ class nsDOMMutationObserver MOZ_FINAL : public nsISupports,
 {
 public:
   nsDOMMutationObserver(already_AddRefed<nsPIDOMWindow>&& aOwner,
-                        mozilla::dom::MutationCallback& aCb)
+                        mozilla::dom::MutationCallback& aCb,
+                        bool aChrome)
   : mOwner(aOwner), mLastPendingMutation(nullptr), mPendingMutationCount(0),
-    mCallback(&aCb), mWaitingForRun(false), mId(++sCount)
+    mCallback(&aCb), mWaitingForRun(false), mIsChrome(aChrome), mId(++sCount)
   {
   }
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -364,6 +371,11 @@ public:
   nsISupports* GetParentObject() const
   {
     return mOwner;
+  }
+
+  bool IsChrome()
+  {
+    return mIsChrome;
   }
 
   void Observe(nsINode& aTarget,
@@ -462,6 +474,7 @@ protected:
   nsRefPtr<mozilla::dom::MutationCallback>           mCallback;
 
   bool                                               mWaitingForRun;
+  bool                                               mIsChrome;
 
   uint64_t                                           mId;
 
