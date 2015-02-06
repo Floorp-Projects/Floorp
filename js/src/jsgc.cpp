@@ -2953,22 +2953,14 @@ GCRuntime::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
     ArenaLists *arenas = cx->arenas();
     Zone *zone = cx->zone();
 
-    // If we have grown past our GC heap threshold while in the middle of an
-    // incremental GC, we're growing faster than we're GCing, so stop the world
-    // and do a full, non-incremental GC right now, if possible.
-    const bool mustCollectNow = allowGC && rt->gc.isIncrementalGCInProgress() &&
-                                zone->usage.gcBytes() > zone->threshold.gcTriggerBytes();
-
     bool outOfMemory = false;  // Set true if we fail to allocate.
     bool ranGC = false;  // Once we've GC'd and still cannot allocate, report.
     do {
-        if (MOZ_UNLIKELY(mustCollectNow || outOfMemory)) {
+        if (MOZ_UNLIKELY(outOfMemory)) {
             // If we are doing a fallible allocation, percolate up the OOM
             // instead of reporting it.
-            if (!allowGC) {
-                MOZ_ASSERT(!mustCollectNow);
+            if (!allowGC)
                 return nullptr;
-            }
 
             if (void *thing = RunLastDitchGC(cx, zone, thingKind))
                 return thing;
