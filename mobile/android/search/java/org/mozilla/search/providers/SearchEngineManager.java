@@ -54,7 +54,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     private static final String PREF_REGION_KEY = "search.region";
 
     // URL for the geo-ip location service. Keep in sync with "browser.search.geoip.url" perference in Gecko.
-    private static final String GEOIP_LOCATION_URL = "https://location.services.mozilla.com/v1/country?key=" + AppConstants.MOZ_STUMBLER_API_KEY;
+    private static final String GEOIP_LOCATION_URL = "https://location.services.mozilla.com/v1/country?key=" + AppConstants.MOZ_MOZILLA_API_KEY;
 
     // This should go through GeckoInterface to get the UA, but the search activity
     // doesn't use a GeckoView yet. Until it does, get the UA directly.
