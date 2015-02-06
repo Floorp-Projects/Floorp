@@ -1438,6 +1438,7 @@ pref("devtools.profiler.ui.show-idle-blocks", true);
 
 // The default Performance UI settings
 pref("devtools.performance.ui.invert-call-tree", true);
+pref("devtools.performance.ui.invert-flame-graph", false);
 pref("devtools.performance.ui.flatten-tree-recursion", true);
 pref("devtools.performance.ui.show-platform-data", false);
 pref("devtools.performance.ui.show-idle-blocks", true);
