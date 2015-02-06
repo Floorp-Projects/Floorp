@@ -1134,7 +1134,7 @@ void
 IncrementalFinalizeRunnable::ReleaseNow(bool aLimited)
 {
   if (mReleasing) {
-    MOZ_ASSERT(false, "Try to avoid re-entering ReleaseNow!");
+    NS_WARNING("Re-entering ReleaseNow");
     return;
   }
   {
