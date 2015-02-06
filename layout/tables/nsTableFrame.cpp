@@ -47,6 +47,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::image;
 using namespace mozilla::layout;
 
 /********************************************************************************
@@ -1114,6 +1115,7 @@ public:
   }
 #endif
 
+  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion *aInvalidRegion) MOZ_OVERRIDE;
@@ -1136,25 +1138,10 @@ IsFrameAllowedInTable(nsIAtom* aType)
 }
 #endif
 
-/* static */ bool
-nsTableFrame::AnyTablePartHasUndecodedBackgroundImage(nsIFrame* aStart,
-                                                      nsIFrame* aEnd)
+nsDisplayItemGeometry*
+nsDisplayTableBorderBackground::AllocateGeometry(nsDisplayListBuilder* aBuilder)
 {
-  for (nsIFrame* f = aStart; f != aEnd; f = f->GetNextSibling()) {
-    NS_ASSERTION(IsFrameAllowedInTable(f->GetType()), "unexpected frame type");
-
-    if (!nsCSSRendering::AreAllBackgroundImagesDecodedForFrame(f))
-      return true;
-
-    nsTableCellFrame *cellFrame = do_QueryFrame(f);
-    if (cellFrame)
-      continue;
-
-    if (AnyTablePartHasUndecodedBackgroundImage(f->PrincipalChildList().FirstChild(), nullptr))
-      return true;
-  }
-  
-  return false;
+  return new nsDisplayItemGenericImageGeometry(this, aBuilder);
 }
 
 void
@@ -1162,13 +1149,13 @@ nsDisplayTableBorderBackground::ComputeInvalidationRegion(nsDisplayListBuilder* 
                                                           const nsDisplayItemGeometry* aGeometry,
                                                           nsRegion *aInvalidRegion)
 {
-  if (aBuilder->ShouldSyncDecodeImages()) {
-    if (nsTableFrame::AnyTablePartHasUndecodedBackgroundImage(mFrame, mFrame->GetNextSibling()) ||
-        nsTableFrame::AnyTablePartHasUndecodedBackgroundImage(
-          mFrame->GetChildList(nsIFrame::kColGroupList).FirstChild(), nullptr)) {
-      bool snap;
-      aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
-    }
+  auto geometry =
+    static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
+
+  if (aBuilder->ShouldSyncDecodeImages() &&
+      geometry->ShouldInvalidateToSyncDecodeImages()) {
+    bool snap;
+    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
   }
 
   nsDisplayTableItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
@@ -1178,10 +1165,12 @@ void
 nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
                                       nsRenderingContext* aCtx)
 {
-  static_cast<nsTableFrame*>(mFrame)->
+  DrawResult result = static_cast<nsTableFrame*>(mFrame)->
     PaintTableBorderBackground(*aCtx, mVisibleRect,
                                ToReferenceFrame(),
                                aBuilder->GetBackgroundPaintFlags());
+
+  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }
 
 static int32_t GetTablePartRank(nsDisplayItem* aItem)
@@ -1352,7 +1341,7 @@ nsTableFrame::GetDeflationForBackground(nsPresContext* aPresContext) const
 
 // XXX We don't put the borders and backgrounds in tree order like we should.
 // That requires some major surgery which we aren't going to do right now.
-void
+DrawResult
 nsTableFrame::PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
                                          const nsRect& aDirtyRect,
                                          nsPoint aPt, uint32_t aBGPaintFlags)
@@ -1365,8 +1354,8 @@ nsTableFrame::PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
   nsMargin deflate = GetDeflationForBackground(presContext);
   // If 'deflate' is (0,0,0,0) then we'll paint the table background
   // in a separate display item, so don't do it here.
-  nsresult rv = painter.PaintTable(this, deflate, deflate != nsMargin(0, 0, 0, 0));
-  if (NS_FAILED(rv)) return;
+  DrawResult result =
+    painter.PaintTable(this, deflate, deflate != nsMargin(0, 0, 0, 0));
 
   if (StyleVisibility()->IsVisible()) {
     if (!IsBorderCollapse()) {
@@ -1390,6 +1379,8 @@ nsTableFrame::PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
       PaintBCBorders(aRenderingContext, aDirtyRect - aPt);
     }
   }
+
+  return result;
 }
 
 nsIFrame::LogicalSides
