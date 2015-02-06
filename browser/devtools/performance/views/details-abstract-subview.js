@@ -102,11 +102,10 @@ let DetailsSubview = {
   /**
    * Fired when a preference in `devtools.performance.ui.` is changed.
    */
-  _onPrefChanged: function (_, prefName, value) {
+  _onPrefChanged: function (_, prefName) {
     // All detail views require a recording to be complete, so do not
     // attempt to render if recording is in progress or does not exist.
     let recording = PerformanceController.getCurrentRecording();
-
     if (!recording || recording.isRecording()) {
       return;
     }

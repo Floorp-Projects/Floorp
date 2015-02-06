@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests if the performance tool can jump to the debugger, when the source was already
- * loaded in that tool.
+ * Tests if the performance tool can jump to the debugger, when the source was
+ * already loaded in that tool.
  */
 
 function spawnTest() {
