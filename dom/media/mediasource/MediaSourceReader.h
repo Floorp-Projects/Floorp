@@ -157,14 +157,16 @@ private:
   // Switch the current audio/video source to the source that
   // contains aTarget (or up to aTolerance after target). Both
   // aTarget and aTolerance are in microseconds.
+  // Search can be made using a fuzz factor. Should an approximated value be
+  // found instead, aTarget will be updated to the actual target found.
   enum SwitchSourceResult {
     SOURCE_ERROR = -1,
     SOURCE_EXISTING = 0,
     SOURCE_NEW = 1,
   };
 
-  SwitchSourceResult SwitchAudioSource(int64_t aTarget);
-  SwitchSourceResult SwitchVideoSource(int64_t aTarget);
+  SwitchSourceResult SwitchAudioSource(int64_t* aTarget);
+  SwitchSourceResult SwitchVideoSource(int64_t* aTarget);
 
   void DoAudioRequest();
   void DoVideoRequest();
