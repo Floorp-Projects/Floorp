@@ -19,6 +19,9 @@ task:
   payload:
     image: '{{#docker_image}}tester{{/docker_image}}'
     maxRunTime: 3600
+    env:
+      MOZHARNESS_REPOSITORY: '{{mozharness_repository}}'
+      MOZHARNESS_REV: '{{mozharness_rev}}'
 
   extra:
     treeherder:
