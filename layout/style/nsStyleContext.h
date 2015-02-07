@@ -9,6 +9,7 @@
 #define _nsStyleContext_h_
 
 #include "mozilla/RestyleLogging.h"
+#include "mozilla/Assertions.h"
 #include "nsRuleNode.h"
 #include "nsCSSPseudoElements.h"
 
@@ -430,6 +431,35 @@ private:
   // returns the structs we cache ourselves; never consults the ruletree.
   inline const void* GetCachedStyleData(nsStyleStructID aSID);
 
+#ifdef DEBUG
+  struct AutoCheckDependency {
+
+    nsStyleContext* mStyleContext;
+    nsStyleStructID mOuterSID;
+
+    AutoCheckDependency(nsStyleContext* aContext, nsStyleStructID aInnerSID)
+      : mStyleContext(aContext)
+    {
+      mOuterSID = aContext->mComputingStruct;
+      MOZ_ASSERT(mOuterSID == nsStyleStructID_None ||
+                 DependencyAllowed(mOuterSID, aInnerSID),
+                 "Undeclared dependency, see generate-stylestructlist.py");
+      aContext->mComputingStruct = aInnerSID;
+    }
+
+    ~AutoCheckDependency()
+    {
+      mStyleContext->mComputingStruct = mOuterSID;
+    }
+
+  };
+
+#define AUTO_CHECK_DEPENDENCY(sid_) \
+  AutoCheckDependency checkNesting_(this, sid_)
+#else
+#define AUTO_CHECK_DEPENDENCY(sid_)
+#endif
+
   // Helper functions for GetStyle* and PeekStyle*
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                  \
     const nsStyle##name_ * DoGetStyle##name_(bool aComputeData) {       \
@@ -439,6 +469,7 @@ private:
       if (cachedData) /* Have it cached already, yay */                 \
         return cachedData;                                              \
       /* Have the rulenode deal */                                      \
+      AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                      \
       return mRuleNode->GetStyle##name_(this, aComputeData);            \
     }
   #define STYLE_STRUCT_RESET(name_, checkdata_cb_)                      \
@@ -450,6 +481,7 @@ private:
       if (cachedData) /* Have it cached already, yay */                 \
         return cachedData;                                              \
       /* Have the rulenode deal */                                      \
+      AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                      \
       return mRuleNode->GetStyle##name_(this, aComputeData);            \
     }
   #include "nsStyleStructList.h"
@@ -519,6 +551,8 @@ private:
   uint32_t                mRefCnt;
 
 #ifdef DEBUG
+  nsStyleStructID         mComputingStruct;
+
   static bool DependencyAllowed(nsStyleStructID aOuterSID,
                                 nsStyleStructID aInnerSID)
   {
