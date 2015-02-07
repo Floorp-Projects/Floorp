@@ -2642,6 +2642,15 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
                               int32_t aRunScript, gfxFont *aPrevMatchedFont,
                               uint8_t *aMatchType)
 {
+    // If the char is a cluster extender, we want to use the same font
+    // as the preceding character if possible. This is preferable to using
+    // the font group because it avoids breaks in shaping within a cluster.
+    if (aPrevMatchedFont && IsClusterExtender(aCh) &&
+        aPrevMatchedFont->HasCharacter(aCh)) {
+        nsRefPtr<gfxFont> ret = aPrevMatchedFont;
+        return ret.forget();
+    }
+
     // To optimize common cases, try the first font in the font-group
     // before going into the more detailed checks below
     uint32_t nextIndex = 0;
