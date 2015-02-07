@@ -20,7 +20,6 @@
   <Param name="hsimp"  value="yhsm-002" />
   <Param name="p"  value="{searchTerms}" />
 </Url>
-https://search.yahoo.com/yhs/search?hspart=mozilla&hsimp=yhs-001&p=flowers
 <!-- tablet search -->
 <Url type="application/x-moz-tabletsearch" method="GET" template="https://search.yahoo.com/yhs/search">
   <Param name="ei"     value="UTF-8" />

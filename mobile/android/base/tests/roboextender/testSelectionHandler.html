@@ -201,6 +201,7 @@ function testReadonlyInput() {
 function testCloseSelection() {
   let sh = getSelectionHandler();
   let inputNode = document.getElementById("inputNode");
+  let browserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
   inputNode.value = INPUT_TEXT;
 
   // Check the initial state of the selection handler.
@@ -210,12 +211,12 @@ function testCloseSelection() {
   // Various ways to close an active selection.
   ]).then(function() {
     sh.startSelection(inputNode);
-    sh.observe(null, "TextSelection:End", {});
+    Services.obs.notifyObservers(null, "TextSelection:End", {});
     return ok(!sh.isSelectionActive(), "TextSelection:End should close active selection");
 
   }).then(function() {
     sh.startSelection(inputNode);
-    sh.observe(null, "Tab:Selected", {});
+    Services.obs.notifyObservers(null, "Tab:Selected", browserApp.selectedTab.id);
     return ok(!sh.isSelectionActive(), "Tab:Selected should close active selection");
 
   }).then(function() {
@@ -312,7 +313,7 @@ function testAttachCaret() {
     ]);
 
   }).then(function() {
-    sh.observe(null, "TextSelection:End", {});
+    Services.obs.notifyObservers(null, "TextSelection:End", {});
 
     return Promise.all([
       ok(!sh.isSelectionActive(), "Selection should not be active at end of testAttachCaret"),
