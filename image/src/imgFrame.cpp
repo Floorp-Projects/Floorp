@@ -123,7 +123,7 @@ static bool AllowedImageAndFrameDimensions(const nsIntSize& aImageSize,
   }
   nsIntRect imageRect(0, 0, aImageSize.width, aImageSize.height);
   if (!imageRect.Contains(aFrameRect)) {
-    return false;
+    NS_WARNING("Animated image frame does not fit inside bounds of image");
   }
   return true;
 }
