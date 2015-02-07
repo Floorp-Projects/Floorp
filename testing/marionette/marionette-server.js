@@ -1128,10 +1128,16 @@ MarionetteServerConnection.prototype = {
       }
     }
 
-    curWindow.onerror = function (errorMsg, url, lineNumber) {
-      chromeAsyncReturnFunc(errorMsg + " at: " + url + " line: " + lineNumber, 17);
-      return true;
-    };
+    // NB: curWindow.onerror is not hooked by default due to the inability to
+    //     differentiate content exceptions from chrome exceptions. See bug
+    //     1128760 for more details. A 'debug_script' flag can be set to
+    //     reenable onerror hooking to help debug test scripts.
+    if (aRequest.parameters.debug_script) {
+      curWindow.onerror = function (errorMsg, url, lineNumber) {
+        chromeAsyncReturnFunc(errorMsg + " at: " + url + " line: " + lineNumber, 17);
+        return true;
+      };
+    }
 
     function chromeAsyncFinish() {
       chromeAsyncReturnFunc(that.sandbox.generate_results(), 0);
