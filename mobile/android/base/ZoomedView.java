@@ -87,6 +87,8 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
                 if (dragged) {
                     dragged = false;
                 } else {
+                    GeckoEvent eClickInZoomedView = GeckoEvent.createBroadcastEvent("Gesture:ClickInZoomedView", "");
+                    GeckoAppShell.sendEventToGecko(eClickInZoomedView);
                     layerView.dispatchTouchEvent(actionDownEvent);
                     actionDownEvent.recycle();
                     PointF convertedPosition = getUnzoomedPositionFromPointInZoomedView(event.getX(), event.getY());

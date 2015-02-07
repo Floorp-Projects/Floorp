@@ -4908,8 +4908,10 @@ Tab.prototype = {
 
 var BrowserEventHandler = {
   init: function init() {
+    this._clickInZoomedView = false;
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
     Services.obs.addObserver(this, "Gesture:CancelTouch", false);
+    Services.obs.addObserver(this, "Gesture:ClickInZoomedView", false);
     Services.obs.addObserver(this, "Gesture:DoubleTap", false);
     Services.obs.addObserver(this, "Gesture:Scroll", false);
     Services.obs.addObserver(this, "dom-touch-listener-added", false);
@@ -5103,6 +5105,10 @@ var BrowserEventHandler = {
         this._cancelTapHighlight();
         break;
 
+      case "Gesture:ClickInZoomedView":
+        this._clickInZoomedView = true;
+        break;
+
       case "Gesture:SingleTap": {
         try {
           // If the element was previously focused, show the caret attached to it.
@@ -5120,7 +5126,7 @@ var BrowserEventHandler = {
         let data = JSON.parse(aData);
         let {x, y} = data;
 
-        if (this._inCluster) {
+        if (this._inCluster && this._clickInZoomedView != true) {
           this._clusterClicked(x, y);
         } else {
           // The _highlightElement was chosen after fluffing the touch events
@@ -5130,6 +5136,7 @@ var BrowserEventHandler = {
           this._sendMouseEvent("mousedown", x, y);
           this._sendMouseEvent("mouseup",   x, y);
         }
+        this._clickInZoomedView = false;
         // scrollToFocusedInput does its own checks to find out if an element should be zoomed into
         BrowserApp.scrollToFocusedInput(BrowserApp.selectedBrowser);
 
