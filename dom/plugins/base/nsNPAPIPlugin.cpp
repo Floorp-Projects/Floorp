@@ -1508,9 +1508,8 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
   }
 
   obj = JS_ObjectToInnerObject(cx, obj);
-  MOZ_ASSERT(obj,
-             "JS_ObjectToInnerObject should never return null with non-null "
-             "input.");
+  NS_ABORT_IF_FALSE(obj,
+    "JS_ObjectToInnerObject should never return null with non-null input.");
 
   if (result) {
     // Initialize the out param to void

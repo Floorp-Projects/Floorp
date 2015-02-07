@@ -57,7 +57,7 @@ SVGPathData::GetValueAsString(nsAString& aValue) const
     aValue.Append(segAsString);
     i += 1 + SVGPathSegUtils::ArgCountForType(mData[i]);
     if (i >= mData.Length()) {
-      MOZ_ASSERT(i == mData.Length(), "Very, very bad - mData corrupt");
+      NS_ABORT_IF_FALSE(i == mData.Length(), "Very, very bad - mData corrupt");
       return;
     }
     aValue.Append(' ');
@@ -106,7 +106,7 @@ SVGPathData::GetPathLength() const
     i += 1 + SVGPathSegUtils::ArgCountForType(mData[i]);
   }
 
-  MOZ_ASSERT(i == mData.Length(), "Very, very bad - mData corrupt");
+  NS_ABORT_IF_FALSE(i == mData.Length(), "Very, very bad - mData corrupt");
 
   return state.length;
 }
@@ -122,7 +122,7 @@ SVGPathData::CountItems() const
     count++;
   }
 
-  MOZ_ASSERT(i == mData.Length(), "Very, very bad - mData corrupt");
+  NS_ABORT_IF_FALSE(i == mData.Length(), "Very, very bad - mData corrupt");
 
   return count;
 }
@@ -145,7 +145,7 @@ SVGPathData::GetSegmentLengths(nsTArray<double> *aLengths) const
     i += 1 + SVGPathSegUtils::ArgCountForType(mData[i]);
   }
 
-  MOZ_ASSERT(i == mData.Length(), "Very, very bad - mData corrupt");
+  NS_ABORT_IF_FALSE(i == mData.Length(), "Very, very bad - mData corrupt");
 
   return true;
 }
@@ -181,7 +181,7 @@ SVGPathData::GetDistancesFromOriginToEndsOfVisibleSegments(FallibleTArray<double
     i += 1 + SVGPathSegUtils::ArgCountForType(segType);
   }
 
-  MOZ_ASSERT(i == mData.Length(), "Very, very bad - mData corrupt?");
+  NS_ABORT_IF_FALSE(i == mData.Length(), "Very, very bad - mData corrupt?");
 
   return true;
 }
@@ -206,7 +206,7 @@ SVGPathData::GetPathSegAtLength(float aDistance) const
     segIndex++;
   }
 
-  MOZ_ASSERT(i == mData.Length(), "Very, very bad - mData corrupt");
+  NS_ABORT_IF_FALSE(i == mData.Length(), "Very, very bad - mData corrupt");
 
   return std::max(0U, segIndex - 1); // -1 because while loop takes us 1 too far
 }
@@ -497,9 +497,9 @@ SVGPathData::BuildPath(PathBuilder* builder,
     segStart = segEnd;
   }
 
-  MOZ_ASSERT(i == mData.Length(), "Very, very bad - mData corrupt");
-  MOZ_ASSERT(prevSegType == segType,
-             "prevSegType should be left at the final segType");
+  NS_ABORT_IF_FALSE(i == mData.Length(), "Very, very bad - mData corrupt");
+  NS_ABORT_IF_FALSE(prevSegType == segType,
+                    "prevSegType should be left at the final segType");
 
   MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
 
@@ -815,7 +815,7 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
     default:
       // Leave any existing marks in aMarks so we have a visual indication of
       // when things went wrong.
-      MOZ_ASSERT(false, "Unknown segment type - path corruption?");
+      NS_ABORT_IF_FALSE(false, "Unknown segment type - path corruption?");
       return;
     }
 
@@ -857,7 +857,7 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
     prevSegEndAngle = segEndAngle;
   }
 
-  MOZ_ASSERT(i == mData.Length(), "Very, very bad - mData corrupt");
+  NS_ABORT_IF_FALSE(i == mData.Length(), "Very, very bad - mData corrupt");
 
   if (aMarks->Length()) {
     if (prevSegType != PATHSEG_CLOSEPATH) {

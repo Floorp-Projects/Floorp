@@ -3172,8 +3172,8 @@ TabChild::InitRenderingState(const ScrollingBehavior& aScrolling,
     ShadowLayerForwarder* lf =
         mWidget->GetLayerManager(shadowManager, mTextureFactoryIdentifier.mParentBackend)
                ->AsShadowForwarder();
-    MOZ_ASSERT(lf && lf->HasShadowManager(),
-               "PuppetWidget should have shadow manager");
+    NS_ABORT_IF_FALSE(lf && lf->HasShadowManager(),
+                      "PuppetWidget should have shadow manager");
     lf->IdentifyTextureHost(mTextureFactoryIdentifier);
     ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
 

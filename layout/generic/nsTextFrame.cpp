@@ -4372,7 +4372,7 @@ nsTextFrame::SetTextRun(gfxTextRun* aTextRun, TextRunType aWhichTextRun,
     }
     SetFontSizeInflation(aInflation);
   } else {
-    MOZ_ASSERT(aInflation == 1.0f, "unexpected inflation");
+    NS_ABORT_IF_FALSE(aInflation == 1.0f, "unexpected inflation");
     if (HasFontSizeInflation()) {
       Properties().Set(UninflatedTextRunProperty(), aTextRun);
       return;

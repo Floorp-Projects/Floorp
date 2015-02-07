@@ -438,7 +438,7 @@ static void RemoveArg(char **argv)
 static ArgResult
 CheckArg(const char* aArg, bool aCheckOSInt = false, const char **aParam = nullptr, bool aRemArg = true)
 {
-  MOZ_ASSERT(gArgv, "gArgv must be initialized before CheckArg()");
+  NS_ABORT_IF_FALSE(gArgv, "gArgv must be initialized before CheckArg()");
 
   char **curarg = gArgv + 1; // skip argv[0]
   ArgResult ar = ARG_NONE;

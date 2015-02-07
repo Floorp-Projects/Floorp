@@ -1062,7 +1062,7 @@ nsINode::IsEqualNode(nsINode* aOther)
         break;
       }
       default:
-        MOZ_ASSERT(false, "Unknown node type");
+        NS_ABORT_IF_FALSE(false, "Unknown node type");
     }
 
     nsINode* nextNode = node1->GetFirstChild();
@@ -1357,7 +1357,7 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
         // return early.
         nsIContent* parent = tmp->GetParent();
         if (parent && !parent->UnoptimizableCCNode() && parent->IsBlack()) {
-          MOZ_ASSERT(parent->IndexOf(tmp) >= 0, "Parent doesn't own us?");
+          NS_ABORT_IF_FALSE(parent->IndexOf(tmp) >= 0, "Parent doesn't own us?");
           return false;
         }
       }
@@ -2584,7 +2584,7 @@ FindMatchingElements(nsINode* aRoot, nsCSSSelectorList* aSelectorList, T &aList,
 struct ElementHolder {
   ElementHolder() : mElement(nullptr) {}
   void AppendElement(Element* aElement) {
-    MOZ_ASSERT(!mElement, "Should only get one element");
+    NS_ABORT_IF_FALSE(!mElement, "Should only get one element");
     mElement = aElement;
   }
   void SetCapacity(uint32_t aCapacity) { MOZ_CRASH("Don't call me!"); }

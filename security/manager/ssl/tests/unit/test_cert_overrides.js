@@ -59,11 +59,13 @@ function check_telemetry() {
   do_check_eq(histogram.counts[ 6], 0); // SEC_ERROR_UNTRUSTED_CERT
   do_check_eq(histogram.counts[ 7], 0); // SEC_ERROR_INADEQUATE_KEY_USAGE
   do_check_eq(histogram.counts[ 8], 2); // SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED
-  do_check_eq(histogram.counts[ 9], 5); // SSL_ERROR_BAD_CERT_DOMAIN
+  do_check_eq(histogram.counts[ 9], 6); // SSL_ERROR_BAD_CERT_DOMAIN
   do_check_eq(histogram.counts[10], 5); // SEC_ERROR_EXPIRED_CERTIFICATE
   do_check_eq(histogram.counts[11], 2); // MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY
   do_check_eq(histogram.counts[12], 1); // MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA
   do_check_eq(histogram.counts[13], 1); // MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE
+  do_check_eq(histogram.counts[14], 2); // MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE
+  do_check_eq(histogram.counts[15], 1); // MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE
   run_next_test();
 }
 
@@ -91,6 +93,10 @@ function add_simple_tests() {
   add_cert_override_test("expired.example.com",
                          Ci.nsICertOverrideService.ERROR_TIME,
                          getXPCOMStatusFromNSS(SEC_ERROR_EXPIRED_CERTIFICATE));
+  add_cert_override_test("notyetvalid.example.com",
+                         Ci.nsICertOverrideService.ERROR_TIME,
+                         getXPCOMStatusFromNSS(
+                           MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE));
   add_cert_override_test("selfsigned.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
                          getXPCOMStatusFromNSS(SEC_ERROR_UNKNOWN_ISSUER));
@@ -100,6 +106,10 @@ function add_simple_tests() {
   add_cert_override_test("expiredissuer.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
                          getXPCOMStatusFromNSS(SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE));
+  add_cert_override_test("notyetvalidissuer.example.com",
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         getXPCOMStatusFromNSS(
+                           MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE));
   add_cert_override_test("md5signature.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
                          getXPCOMStatusFromNSS(
@@ -158,6 +168,10 @@ function add_simple_tests() {
 
 function add_combo_tests() {
   add_cert_override_test("mismatch-expired.example.com",
+                         Ci.nsICertOverrideService.ERROR_MISMATCH |
+                         Ci.nsICertOverrideService.ERROR_TIME,
+                         getXPCOMStatusFromNSS(SSL_ERROR_BAD_CERT_DOMAIN));
+  add_cert_override_test("mismatch-notYetValid.example.com",
                          Ci.nsICertOverrideService.ERROR_MISMATCH |
                          Ci.nsICertOverrideService.ERROR_TIME,
                          getXPCOMStatusFromNSS(SSL_ERROR_BAD_CERT_DOMAIN));

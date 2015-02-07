@@ -25,7 +25,7 @@ public:
 #ifdef DEBUG
   ~nsSVGAttrTearoffTable()
   {
-    MOZ_ASSERT(!mTable, "Tear-off objects remain in hashtable at shutdown.");
+    NS_ABORT_IF_FALSE(!mTable, "Tear-off objects remain in hashtable at shutdown.");
   }
 #endif
 
@@ -55,8 +55,8 @@ nsSVGAttrTearoffTable<SimpleType, TearoffType>::GetTearoff(SimpleType* aSimple)
   bool found =
 #endif
     mTable->Get(aSimple, &tearoff);
-  MOZ_ASSERT(!found || tearoff,
-             "null pointer stored in attribute tear-off map");
+  NS_ABORT_IF_FALSE(!found || tearoff,
+      "NULL pointer stored in attribute tear-off map");
 
   return tearoff;
 }
@@ -73,7 +73,7 @@ nsSVGAttrTearoffTable<SimpleType, TearoffType>::AddTearoff(SimpleType* aSimple,
   // We shouldn't be adding a tear-off if there already is one. If that happens,
   // something is wrong.
   if (mTable->Get(aSimple, nullptr)) {
-    MOZ_ASSERT(false, "There is already a tear-off for this object.");
+    NS_ABORT_IF_FALSE(false, "There is already a tear-off for this object.");
     return;
   }
 

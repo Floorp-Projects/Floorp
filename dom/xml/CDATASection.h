@@ -19,8 +19,8 @@ class CDATASection MOZ_FINAL : public Text,
 private:
   void Init()
   {
-    MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::CDATA_SECTION_NODE,
-               "Bad NodeType in aNodeInfo");
+    NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::CDATA_SECTION_NODE,
+                      "Bad NodeType in aNodeInfo");
   }
 
   virtual ~CDATASection();

@@ -319,7 +319,7 @@ nsBaseWidget::CreateChild(const nsIntRect  &aRect,
     // nativeWidget parameter.
     nativeParent = parent ? parent->GetNativeData(NS_NATIVE_WIDGET) : nullptr;
     parent = nativeParent ? nullptr : parent;
-    MOZ_ASSERT(!parent || !nativeParent, "messed up logic");
+    NS_ABORT_IF_FALSE(!parent || !nativeParent, "messed up logic");
   }
 
   nsCOMPtr<nsIWidget> widget;

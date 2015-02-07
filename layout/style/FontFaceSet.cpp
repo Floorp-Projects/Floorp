@@ -874,8 +874,8 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   if (unit == eCSSUnit_Array) {
     unicodeRanges = new gfxCharacterMap();
     const nsCSSValue::Array& sources = *val.GetArrayValue();
-    MOZ_ASSERT(sources.Count() % 2 == 0,
-               "odd number of entries in a unicode-range: array");
+    NS_ABORT_IF_FALSE(sources.Count() % 2 == 0,
+                      "odd number of entries in a unicode-range: array");
 
     for (uint32_t i = 0; i < sources.Count(); i += 2) {
       uint32_t min = sources[i].GetIntValue();

@@ -23,6 +23,7 @@ enum nsStyleStructID {
  * one type or the other.
  */
 
+nsStyleStructID_None = -1,
 nsStyleStructID_Inherited_Start = 0,
 // a dummy value so the value after it is the same as ..._Inherited_Start
 nsStyleStructID_DUMMY1 = nsStyleStructID_Inherited_Start - 1,

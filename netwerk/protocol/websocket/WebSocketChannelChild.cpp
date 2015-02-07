@@ -53,7 +53,7 @@ WebSocketChannelChild::WebSocketChannelChild(bool aEncrypted)
  : mIPCState(Closed)
  , mMutex("WebSocketChannelChild::mMutex")
 {
-  MOZ_ASSERT(NS_IsMainThread(), "not main thread");
+  NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
 
   LOG(("WebSocketChannelChild::WebSocketChannelChild() %p\n", this));
   mEncrypted = aEncrypted;
@@ -72,7 +72,7 @@ WebSocketChannelChild::AddIPDLReference()
 
   {
     MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(mIPCState == Closed, "Attempt to retain more than one IPDL reference");
+    NS_ABORT_IF_FALSE(mIPCState == Closed, "Attempt to retain more than one IPDL reference");
     mIPCState = Opened;
   }
 
@@ -86,7 +86,7 @@ WebSocketChannelChild::ReleaseIPDLReference()
 
   {
     MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(mIPCState != Closed, "Attempt to release nonexistent IPDL reference");
+    NS_ABORT_IF_FALSE(mIPCState != Closed, "Attempt to release nonexistent IPDL reference");
     mIPCState = Closed;
   }
 
@@ -460,9 +460,9 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
 {
   LOG(("WebSocketChannelChild::AsyncOpen() %p\n", this));
 
-  MOZ_ASSERT(NS_IsMainThread(), "not main thread");
-  MOZ_ASSERT(aURI && aListener && !mListenerMT,
-             "Invalid state for WebSocketChannelChild::AsyncOpen");
+  NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
+  NS_ABORT_IF_FALSE(aURI && aListener && !mListenerMT,
+                    "Invalid state for WebSocketChannelChild::AsyncOpen");
 
   mozilla::dom::TabChild* tabChild = nullptr;
   nsCOMPtr<nsITabChild> iTabChild;

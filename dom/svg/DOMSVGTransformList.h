@@ -76,8 +76,9 @@ public:
    * hit OOM in which case our length will be zero.
    */
   uint32_t LengthNoFlush() const {
-    MOZ_ASSERT(mItems.IsEmpty() || mItems.Length() == InternalList().Length(),
-               "DOM wrapper's list length is out of sync");
+    NS_ABORT_IF_FALSE(mItems.IsEmpty() ||
+      mItems.Length() == InternalList().Length(),
+      "DOM wrapper's list length is out of sync");
     return mItems.Length();
   }
 
@@ -134,8 +135,8 @@ private:
 
   /// Used to determine if this list is the baseVal or animVal list.
   bool IsAnimValList() const {
-    MOZ_ASSERT(this == mAList->mBaseVal || this == mAList->mAnimVal,
-               "Calling IsAnimValList() too early?!");
+    NS_ABORT_IF_FALSE(this == mAList->mBaseVal || this == mAList->mAnimVal,
+                      "Calling IsAnimValList() too early?!");
     return this == mAList->mAnimVal;
   }
 

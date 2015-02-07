@@ -203,9 +203,11 @@ function fakeLoopAboutModule() {
 
 fakeLoopAboutModule.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
-  newChannel: function (aURI) {
+  newChannel: function (aURI, aLoadInfo) {
     let rootDir = getRootDirectory(gTestPath);
-    let chan = Services.io.newChannel(rootDir + "get_user_media.html", null, null);
+    let uri = Services.io.newURI(rootDir + "get_user_media.html", null, null);
+    let chan = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
+
     chan.owner = Services.scriptSecurityManager.getSystemPrincipal();
     return chan;
   },

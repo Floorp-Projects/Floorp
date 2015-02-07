@@ -53,7 +53,7 @@ void SignalTracerThread()
 // This function is called from the background tracer thread.
 bool FireAndWaitForTracerEvent()
 {
-  MOZ_ASSERT(sMutex && sCondVar, "Tracing not initialized!");
+  NS_ABORT_IF_FALSE(sMutex && sCondVar, "Tracing not initialized!");
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
   MutexAutoLock lock(*sMutex);
   if (sTracerProcessed) {

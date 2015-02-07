@@ -12,14 +12,13 @@
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxTypes.h"                   // for gfxFloat
 #include "nsBoundingMetrics.h"          // for nsBoundingMetrics
-#include "nsDebug.h"                    // for NS_ERROR
+#include "nsDebug.h"                    // for NS_ERROR, NS_ABORT_IF_FALSE
 #include "nsDeviceContext.h"            // for nsDeviceContext
 #include "nsIAtom.h"                    // for nsIAtom
 #include "nsMathUtils.h"                // for NS_round
 #include "nsRenderingContext.h"         // for nsRenderingContext
-#include "nsString.h"                   // for nsString
+#include "nsString.h"               // for nsString
 #include "nsStyleConsts.h"              // for NS_STYLE_HYPHENS_NONE
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT
 
 class gfxUserFontSet;
 
@@ -127,7 +126,7 @@ nsFontMetrics::Init(const nsFont& aFont,
                     gfxUserFontSet *aUserFontSet,
                     gfxTextPerfMetrics *aTextPerf)
 {
-    MOZ_ASSERT(mP2A == 0, "already initialized");
+    NS_ABORT_IF_FALSE(mP2A == 0, "already initialized");
 
     mFont = aFont;
     mLanguage = aLanguage;

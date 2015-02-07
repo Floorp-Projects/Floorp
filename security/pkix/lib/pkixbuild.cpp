@@ -95,6 +95,8 @@ PathBuildingStep::RecordResult(Result newResult, /*out*/ bool& keepGoing)
     newResult = Result::ERROR_UNTRUSTED_ISSUER;
   } else if (newResult == Result::ERROR_EXPIRED_CERTIFICATE) {
     newResult = Result::ERROR_EXPIRED_ISSUER_CERTIFICATE;
+  } else if (newResult == Result::ERROR_NOT_YET_VALID_CERTIFICATE) {
+    newResult = Result::ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE;
   }
 
   if (resultWasSet) {
