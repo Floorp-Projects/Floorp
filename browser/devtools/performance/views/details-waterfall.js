@@ -77,5 +77,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
   _onResize: function () {
     this.waterfall.recalculateBounds();
     this.render();
-  }
+  },
+
+  toString: () => "[object WaterfallView]"
 });

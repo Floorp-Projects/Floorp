@@ -6,7 +6,7 @@
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, PerformanceController, DetailsView, MemoryFlameGraphView } = panel.panelWin;
+  let { EVENTS, PerformanceController, DetailsView, MemoryFlameGraphView, RecordingUtils, FlameGraphUtils } = panel.panelWin;
 
   // Enable memory to test
   Services.prefs.setBoolPref(MEMORY_PREF, true);

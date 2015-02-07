@@ -164,7 +164,9 @@ let DetailsView = {
    */
   _onViewToggle: function (e) {
     this.selectView(e.target.getAttribute("data-view"));
-  }
+  },
+
+  toString: () => "[object DetailsView]"
 };
 
 /**

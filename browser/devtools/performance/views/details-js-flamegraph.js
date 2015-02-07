@@ -89,5 +89,7 @@ let JsFlameGraphView = Heritage.extend(DetailsSubview, {
     let profile = recording.getProfile();
     let samples = profile.threads[0].samples;
     FlameGraphUtils.removeFromCache(samples);
-  }
+  },
+
+  toString: () => "[object JsFlameGraphView]"
 });
