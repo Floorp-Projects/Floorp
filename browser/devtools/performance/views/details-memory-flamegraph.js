@@ -87,5 +87,7 @@ let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
     let allocations = recording.getAllocations();
     let samples = RecordingUtils.getSamplesFromAllocations(allocations);
     FlameGraphUtils.removeFromCache(samples);
-  }
+  },
+
+  toString: () => "[object MemoryFlameGraphView]"
 });

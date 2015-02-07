@@ -201,7 +201,9 @@ let PerformanceView = {
     } else {
       this.setState("recorded");
     }
-  }
+  },
+
+  toString: () => "[object PerformanceView]"
 };
 
 /**
