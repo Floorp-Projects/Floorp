@@ -70,16 +70,11 @@ public:
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result VerifySignedData(const SignedDataWithSignature& signedData,
-                          Input subjectPublicKeyInfo) final override
-  {
-    return TestVerifySignedData(signedData, subjectPublicKeyInfo);
-  }
-
-  Result DigestBuf(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
+  Result DigestBuf(Input item, DigestAlgorithm digestAlg,
+                   /*out*/ uint8_t* digestBuf, size_t digestBufLen)
                    final override
   {
-    return TestDigestBuf(item, digestBuf, digestBufLen);
+    return TestDigestBuf(item, digestAlg, digestBuf, digestBufLen);
   }
 
   Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
@@ -88,9 +83,21 @@ public:
     return Success;
   }
 
+  Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                                    Input subjectPublicKeyInfo) override
+  {
+    return TestVerifyRSAPKCS1SignedDigest(signedDigest, subjectPublicKeyInfo);
+  }
+
   Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) final override
   {
     return Success;
+  }
+
+  Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                 Input subjectPublicKeyInfo) override
+  {
+    return TestVerifyECDSASignedDigest(signedDigest, subjectPublicKeyInfo);
   }
 
   OCSPTestTrustDomain(const OCSPTestTrustDomain&) = delete;

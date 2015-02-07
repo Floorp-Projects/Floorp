@@ -153,16 +153,10 @@ private:
     return Success;
   }
 
-  Result VerifySignedData(const SignedDataWithSignature& signedData,
-                          Input subjectPublicKeyInfo) override
+  Result DigestBuf(Input input, DigestAlgorithm digestAlg,
+                   /*out*/ uint8_t* digestBuf, size_t digestLen) override
   {
-    return TestVerifySignedData(signedData, subjectPublicKeyInfo);
-  }
-
-  Result DigestBuf(Input, /*out*/ uint8_t*, size_t) override
-  {
-    ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return TestDigestBuf(input, digestAlg, digestBuf, digestLen);
   }
 
   Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
@@ -171,9 +165,21 @@ private:
     return Success;
   }
 
+  Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                                    Input subjectPublicKeyInfo) override
+  {
+    return TestVerifyRSAPKCS1SignedDigest(signedDigest, subjectPublicKeyInfo);
+  }
+
   Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
   {
     return Success;
+  }
+
+  Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                 Input subjectPublicKeyInfo) override
+  {
+    return TestVerifyECDSASignedDigest(signedDigest, subjectPublicKeyInfo);
   }
 
 
@@ -322,16 +328,10 @@ public:
     return Success;
   }
 
-  Result VerifySignedData(const SignedDataWithSignature& signedData,
-                          Input subjectPublicKeyInfo) override
+  Result DigestBuf(Input input, DigestAlgorithm digestAlg,
+                   /*out*/ uint8_t* digestBuf, size_t digestLen) override
   {
-    return TestVerifySignedData(signedData, subjectPublicKeyInfo);
-  }
-
-  Result DigestBuf(Input, /*out*/uint8_t*, size_t) override
-  {
-    ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return TestDigestBuf(input, digestAlg, digestBuf, digestLen);
   }
 
   Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
@@ -340,9 +340,21 @@ public:
     return Success;
   }
 
+  Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                                    Input subjectPublicKeyInfo) override
+  {
+    return TestVerifyRSAPKCS1SignedDigest(signedDigest, subjectPublicKeyInfo);
+  }
+
   Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
   {
     return Success;
+  }
+
+  Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                    Input subjectPublicKeyInfo) override
+  {
+    return TestVerifyECDSASignedDigest(signedDigest, subjectPublicKeyInfo);
   }
 
 private:
@@ -411,13 +423,7 @@ public:
     return Success;
   }
 
-  Result VerifySignedData(const SignedDataWithSignature&, Input) override
-  {
-    ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-
-  Result DigestBuf(Input, /*out*/uint8_t*, size_t) override
+  Result DigestBuf(Input, DigestAlgorithm, /*out*/uint8_t*, size_t) override
   {
     ADD_FAILURE();
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
@@ -426,12 +432,26 @@ public:
   Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
                                             override
   {
-    return Success;
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  Result VerifyRSAPKCS1SignedDigest(const SignedDigest&, Input) override
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
   Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
   {
-    return Success;
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  Result VerifyECDSASignedDigest(const SignedDigest&, Input) override
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 };
 
@@ -514,16 +534,10 @@ public:
     return Success;
   }
 
-  Result VerifySignedData(const SignedDataWithSignature& signedData,
-                          Input subjectPublicKeyInfo) override
+  Result DigestBuf(Input input, DigestAlgorithm digestAlg,
+                   /*out*/ uint8_t* digestBuf, size_t digestLen) override
   {
-    return TestVerifySignedData(signedData, subjectPublicKeyInfo);
-  }
-
-  Result DigestBuf(Input, /*out*/uint8_t*, size_t) override
-  {
-    ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return TestDigestBuf(input, digestAlg, digestBuf, digestLen);
   }
 
   Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
@@ -532,9 +546,21 @@ public:
     return Success;
   }
 
+  Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                                    Input subjectPublicKeyInfo) override
+  {
+    return TestVerifyRSAPKCS1SignedDigest(signedDigest, subjectPublicKeyInfo);
+  }
+
   Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
   {
     return Success;
+  }
+
+  Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                    Input subjectPublicKeyInfo) override
+  {
+    return TestVerifyECDSASignedDigest(signedDigest, subjectPublicKeyInfo);
   }
 
 private:

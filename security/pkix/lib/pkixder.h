@@ -600,14 +600,34 @@ OptionalExtensions(Reader& input, uint8_t tag,
 Result DigestAlgorithmIdentifier(Reader& input,
                                  /*out*/ DigestAlgorithm& algorithm);
 
-Result SignatureAlgorithmIdentifier(Reader& input,
-                                    /*out*/ SignatureAlgorithm& algorithm);
+enum PublicKeyAlgorithm
+{
+  RSA_PKCS1,
+  ECDSA,
+};
+
+Result SignatureAlgorithmIdentifierValue(
+         Reader& input,
+         /*out*/ PublicKeyAlgorithm& publicKeyAlgorithm,
+         /*out*/ DigestAlgorithm& digestAlgorithm);
+
+struct SignedDataWithSignature final
+{
+public:
+  Input data;
+  Input algorithm;
+  Input signature;
+
+  void operator=(const SignedDataWithSignature&) = delete;
+};
 
 // Parses a SEQUENCE into tbs and then parses an AlgorithmIdentifier followed
 // by a BIT STRING into signedData. This handles the commonality between
 // parsing the signed/signature fields of certificates and OCSP responses. In
 // the case of an OCSP response, the caller needs to parse the certs
 // separately.
+//
+// Note that signatureAlgorithm is NOT parsed or validated.
 //
 // Certificate  ::=  SEQUENCE  {
 //        tbsCertificate       TBSCertificate,

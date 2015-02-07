@@ -677,7 +677,7 @@ VFY_DestroyContext
 VFY_End
 VFY_Update
 VFY_VerifyData
-VFY_VerifyDataDirect
 VFY_VerifyDataWithAlgorithmID
+VFY_VerifyDigestDirect
 _SGN_VerifyPKCS1DigestInfo
 PK11_PQG_ParamGenV2
