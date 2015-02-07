@@ -7,6 +7,7 @@ task:
     description: XPCShell test run {{chunk}}
 
   payload:
+    maxRunTime: 6000
     command:
       - entrypoint
       - >
