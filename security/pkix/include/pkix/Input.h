@@ -80,6 +80,9 @@ public:
   {
   }
 
+  // This is intentionally not explicit in order to allow value semantics.
+  Input(const Input&) = default;
+
   // Initialize the input. data must be non-null and len must be less than
   // 65536. Init may not be called more than once.
   Result Init(const uint8_t* data, size_t len)
@@ -271,7 +274,7 @@ public:
 
   Result SkipToEnd(/*out*/ Input& skipped)
   {
-    return Skip(static_cast<size_t>(end - input), skipped);
+    return Skip(static_cast<Input::size_type>(end - input), skipped);
   }
 
   Result EnsureLength(Input::size_type len)
@@ -286,6 +289,8 @@ public:
 
   class Mark final
   {
+  public:
+    Mark(const Mark&) = default; // Intentionally not explicit.
   private:
     friend class Reader;
     Mark(const Reader& input, const uint8_t* mark) : input(input), mark(mark) { }

@@ -25,7 +25,7 @@
 #include <functional>
 #include <vector>
 
-#include "gtest/gtest.h"
+#include "pkixgtest.h"
 #include "pkix/pkixtypes.h"
 #include "pkixder.h"
 

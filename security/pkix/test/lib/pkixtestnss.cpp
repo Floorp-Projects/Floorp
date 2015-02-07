@@ -115,7 +115,8 @@ public:
     }
 
     SECItem signatureItem;
-    if (SEC_SignData(&signatureItem, tbs.data(), tbs.length(),
+    if (SEC_SignData(&signatureItem, tbs.data(),
+                     static_cast<int>(tbs.length()),
                      privateKey.get(), signatureAlgorithmOidTag)
           != SECSuccess) {
       return MapPRErrorCodeToResult(PR_GetError());

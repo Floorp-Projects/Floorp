@@ -55,7 +55,7 @@ enum Constructed
   CONSTRUCTED = 1 << 5
 };
 
-enum Tag
+enum Tag : uint8_t
 {
   BOOLEAN = UNIVERSAL | 0x01,
   INTEGER = UNIVERSAL | 0x02,

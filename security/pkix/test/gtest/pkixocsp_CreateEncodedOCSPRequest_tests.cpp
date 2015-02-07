@@ -22,7 +22,7 @@
  * limitations under the License.
  */
 
-#include "gtest/gtest.h"
+#include "pkixgtest.h"
 #include "pkix/pkix.h"
 #include "pkixder.h"
 #include "pkixtestutil.h"
@@ -71,7 +71,7 @@ private:
     return TestDigestBuf(item, digestBuf, digestBufLen);
   }
 
-  Result CheckPublicKey(Input subjectPublicKeyInfo) override
+  Result CheckPublicKey(Input) override
   {
     ADD_FAILURE();
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
