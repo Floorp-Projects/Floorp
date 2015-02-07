@@ -834,9 +834,8 @@ GLContextGLX::~GLContextGLX()
     bool success =
 #endif
     mGLX->xMakeCurrent(mDisplay, None, nullptr);
-    MOZ_ASSERT(success,
-               "glXMakeCurrent failed to release GL context before we call "
-               "glXDestroyContext!");
+    NS_ABORT_IF_FALSE(success,
+        "glXMakeCurrent failed to release GL context before we call glXDestroyContext!");
 
     mGLX->xDestroyContext(mDisplay, mContext);
 
@@ -1126,8 +1125,7 @@ CreateOffscreenPixmapContext(const gfxIntSize& size)
     }
 
     MOZ_ASSERT(numConfigs > 0,
-               "glXChooseFBConfig() failed to match our requested format and "
-               "violated its spec!");
+               "glXChooseFBConfig() failed to match our requested format and violated its spec!");
 
     int visid = None;
     int chosenIndex = 0;

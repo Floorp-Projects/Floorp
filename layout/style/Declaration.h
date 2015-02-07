@@ -143,8 +143,8 @@ public:
    * Callers must make sure mOrder is updated as necessary.
    */
   void CompressFrom(nsCSSExpandedDataBlock *aExpandedData) {
-    MOZ_ASSERT(!mData, "oops");
-    MOZ_ASSERT(!mImportantData, "oops");
+    NS_ABORT_IF_FALSE(!mData, "oops");
+    NS_ABORT_IF_FALSE(!mImportantData, "oops");
     aExpandedData->Compress(getter_Transfers(mData),
                             getter_Transfers(mImportantData),
                             mOrder);
@@ -162,7 +162,7 @@ public:
     AssertMutable();
     aExpandedData->AssertInitialState();
 
-    MOZ_ASSERT(mData, "oops");
+    NS_ABORT_IF_FALSE(mData, "oops");
     aExpandedData->Expand(mData.forget(), mImportantData.forget());
   }
 
@@ -171,16 +171,16 @@ public:
    * rule using this declaration for storage.
    */
   void MapNormalRuleInfoInto(nsRuleData *aRuleData) const {
-    MOZ_ASSERT(mData, "called while expanded");
+    NS_ABORT_IF_FALSE(mData, "called while expanded");
     mData->MapRuleInfoInto(aRuleData);
     if (mVariables) {
       mVariables->MapRuleInfoInto(aRuleData);
     }
   }
   void MapImportantRuleInfoInto(nsRuleData *aRuleData) const {
-    MOZ_ASSERT(mData, "called while expanded");
-    MOZ_ASSERT(mImportantData || mImportantVariables,
-               "must have important data or variables");
+    NS_ABORT_IF_FALSE(mData, "called while expanded");
+    NS_ABORT_IF_FALSE(mImportantData || mImportantVariables,
+                      "must have important data or variables");
     if (mImportantData) {
       mImportantData->MapRuleInfoInto(aRuleData);
     }
@@ -204,7 +204,7 @@ public:
                          bool* aChanged)
   {
     AssertMutable();
-    MOZ_ASSERT(mData, "called while expanded");
+    NS_ABORT_IF_FALSE(mData, "called while expanded");
 
     if (nsCSSProps::IsShorthand(aProperty)) {
       *aChanged = false;
@@ -220,16 +220,16 @@ public:
 #ifdef DEBUG
     {
       nsCSSCompressedDataBlock *other = aIsImportant ? mData : mImportantData;
-      MOZ_ASSERT(!other || !other->ValueFor(aProperty) ||
-                 !block->ValueFor(aProperty),
-                 "Property both important and not?");
+      NS_ABORT_IF_FALSE(!other || !other->ValueFor(aProperty) ||
+                        !block->ValueFor(aProperty),
+                        "Property both important and not?");
     }
 #endif
     return block->TryReplaceValue(aProperty, aFromBlock, aChanged);
   }
 
   bool HasNonImportantValueFor(nsCSSProperty aProperty) const {
-    MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty), "must be longhand");
+    NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty), "must be longhand");
     return !!mData->ValueFor(aProperty);
   }
 
@@ -249,7 +249,7 @@ public:
    * Crash if |this| cannot be modified.
    */
   void AssertMutable() const {
-    MOZ_ASSERT(IsMutable(), "someone forgot to call EnsureMutable");
+    NS_ABORT_IF_FALSE(IsMutable(), "someone forgot to call EnsureMutable");
   }
 
   /**
