@@ -19,7 +19,6 @@ include DOMTypes;
 include JavaScriptTypes;
 include URIParams;
 include PContentPermission;
-include ServiceWorkerRegistrarTypes;
 
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
@@ -64,11 +63,6 @@ struct NativeKeyBinding
   CommandInt[] singleLineCommands;
   CommandInt[] multiLineCommands;
   CommandInt[] richTextCommands;
-};
-
-struct BrowserConfiguration
-{
-  ServiceWorkerRegistrationData[] serviceWorkerRegistrations;
 };
 
 union MaybeNativeKeyBinding
@@ -476,7 +470,7 @@ child:
          uint64_t layersId,
          nullable PRenderFrame renderFrame);
 
-    LoadURL(nsCString uri, BrowserConfiguration config);
+    LoadURL(nsCString uri);
 
     CacheFileDescriptor(nsString path, FileDescriptor fd);
 
