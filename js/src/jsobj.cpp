@@ -1172,22 +1172,21 @@ js::TestIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level, bo
     if (!GetPropertyKeys(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY | JSITER_SYMBOLS, &props))
         return false;
 
-    // Steps 9-11. The spec does not permit stopping as soon as we find out the
-    // answer is false, so we are cheating a little here (bug 1120512).
+    // Step 11.
     RootedId id(cx);
     Rooted<PropertyDescriptor> desc(cx);
     for (size_t i = 0, len = props.length(); i < len; i++) {
         id = props[i];
 
+        // Steps 11.a-b.
         if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
             return false;
 
+        // Step 11.c.
         if (!desc.object())
             continue;
 
-        // If the property is configurable, this object is neither sealed nor
-        // frozen. If the property is a writable data property, this object is
-        // not frozen.
+        // Steps 11.c.i-ii.
         if (!desc.isPermanent() ||
             (level == IntegrityLevel::Frozen && desc.isDataDescriptor() && desc.isWritable()))
         {
@@ -1196,7 +1195,7 @@ js::TestIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level, bo
         }
     }
 
-    // All properties checked out. This object is sealed/frozen.
+    // Step 12.
     *result = true;
     return true;
 }
