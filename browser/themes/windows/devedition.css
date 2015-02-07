@@ -4,6 +4,12 @@
 
 %include ../shared/devedition.inc.css
 
+:root[devtoolstheme="dark"],
+:root[devtoolstheme="light"] {
+   /* Matches the #browser-border-start, #browser-border-end color */
+  --chrome-nav-bar-separator-color: rgba(10, 31, 51, 0.35);
+}
+
 #TabsToolbar::after {
   display: none;
 }
@@ -43,13 +49,63 @@
   padding-bottom: 2px;
 }
 
+.tabbrowser-tab {
+  background-color: var(--tab-background-color);
+}
+
+/* It'd be nice if there was an element in the scrollbox's inner content
+   that collapsed to the current width of the tabs. Since there isn't we
+   need to handle overflowing and non-overflowing tabs separately.
+
+   In the case of overflowing tabs, set a border-top on the entire container,
+   otherwise we need to set it on each element individually */
+#main-window[sizemode=normal] .tabbrowser-tabs[overflow="true"] {
+  background-clip: padding-box;
+  border-top: 1px solid var(--chrome-nav-bar-separator-color);
+  -moz-border-end: 1px solid var(--chrome-nav-bar-separator-color);
+  background-color: var(--tab-background-color); /* Make sure there is no transparent gap during tab close animation */
+}
+
+/* Add a border to the left of the first tab (or scroll arrow).  Using .tabbrowser-tabs
+   instead of #TabsToolbar because it will work even in customize mode. */
+#main-window[sizemode=normal] .tabbrowser-tabs {
+  background-clip: padding-box;
+  -moz-border-start: 1px solid var(--chrome-nav-bar-separator-color);
+  -moz-border-end: 1px solid transparent;
+}
+
+#main-window[sizemode=normal] .tabbrowser-tabs:not([overflow="true"]) .tabbrowser-tab,
+#main-window[sizemode=normal] .tabbrowser-tabs:not([overflow="true"]) .tabbrowser-arrowscrollbox > .scrollbutton-down,
+#main-window[sizemode=normal] .tabbrowser-tabs:not([overflow="true"]) .tabbrowser-arrowscrollbox > .scrollbutton-up,
+#main-window[sizemode=normal] .tabbrowser-tabs:not([overflow="true"]) .tabs-newtab-button {
+  background-clip: padding-box;
+  border-top: 1px solid var(--chrome-nav-bar-separator-color);
+}
+
+/* Allow the border-top rule to take effect */
+#main-window[sizemode=normal] .tabbrowser-tabs:not([overflow="true"]) .tabbrowser-tab {
+  -moz-border-top-colors: none;
+}
+
+#main-window[sizemode=normal] .tabbrowser-tabs:not([overflow="true"]) .closing-tabs-spacer {
+  background-clip: padding-box;
+  -moz-border-start: 1px solid var(--chrome-nav-bar-separator-color);
+}
+
+.tabs-newtab-button {
+  background: var(--tab-background-color);
+}
+
+/* Use default window colors when in non-maximized mode */
+#tabbrowser-tabs,
+#TabsToolbar,
 #browser-panel,
 #titlebar-content {
   background: transparent;
 }
 
 /* Ensure that the entire background is styled when maximized */
-#main-window[sizemode="maximized"] #browser-panel {
+#main-window[sizemode="maximized"]:not([customizing]) #browser-panel {
   background: var(--chrome-background-color) !important;
 }
 
@@ -63,16 +119,23 @@
   color: inherit;
 }
 
+/* Use less opacity than normal since this is very dark, and on top of the default toolbar color */
+.tabbrowser-arrowscrollbox > .scrollbutton-up[disabled],
+.tabbrowser-arrowscrollbox > .scrollbutton-down[disabled] {
+  opacity: .6;
+}
+
+/* Override scrollbutton gradients in normal and hover state */
+.tabbrowser-arrowscrollbox > .scrollbutton-down,
+.tabbrowser-arrowscrollbox > .scrollbutton-up {
+  background-image: none !important;
+  transition: none; /* scrollbutton-down has an unwanted transition on background color */
+}
+
 /* Restore draggable space on the sides of tabs when maximized */
 #main-window[sizemode="maximized"] .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
   padding-left: 15px;
   padding-right: 15px;
-}
-
-@media (-moz-windows-classic) {
-  #main-window[sizemode="maximized"] #TabsToolbar {
-    background: transparent;
-  }
 }
 
 #toolbar-menubar {
@@ -80,28 +143,9 @@
 }
 
 /* Override the padding that's intended to compensate for tabs that can overlap border-radius on nav-bar in default theme. */
-#main-window[sizemode=normal] #TabsToolbar {
+#main-window[sizemode=normal]:not([customizing]) #TabsToolbar {
   padding-left: 0;
   padding-right: 0;
-}
-
-#main-window[tabsintitlebar][sizemode="normal"]:not([inFullscreen])[chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar,
-#main-window[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
-  margin-top: 22px;
-}
-
-
-/* Enough space so that the dark background doesn't begin until after the
- * window resize controls end on Aero Basic, which has different positioning for the
- * window caption buttons, and therefore needs to be special-cased.
- */
-@media (-moz-windows-default-theme) {
-  @media not all and (-moz-windows-compositor) {
-    #main-window[tabsintitlebar][sizemode="normal"]:not([inFullscreen])[chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar,
-    #main-window[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
-      margin-top: 28px;
-    }
-  }
 }
 
 /* This rule is specific to the dark theme, because we only set the dropdown image there */

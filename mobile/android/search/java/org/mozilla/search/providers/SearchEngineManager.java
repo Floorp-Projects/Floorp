@@ -18,12 +18,14 @@ import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoJarReader;
+import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.RawResource;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.search.Constants;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,7 +33,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -44,6 +49,17 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
 
     // Key for shared preference that stores default engine name.
     private static final String PREF_DEFAULT_ENGINE_KEY = "search.engines.defaultname";
+
+    // Key for shared preference that stores search region.
+    private static final String PREF_REGION_KEY = "search.region";
+
+    // URL for the geo-ip location service. Keep in sync with "browser.search.geoip.url" perference in Gecko.
+    private static final String GEOIP_LOCATION_URL = "https://location.services.mozilla.com/v1/country?key=" + AppConstants.MOZ_MOZILLA_API_KEY;
+
+    // This should go through GeckoInterface to get the UA, but the search activity
+    // doesn't use a GeckoView yet. Until it does, get the UA directly.
+    private static final String USER_AGENT = HardwareUtils.isTablet() ?
+        AppConstants.USER_AGENT_FENNEC_TABLET : AppConstants.USER_AGENT_FENNEC_MOBILE;
 
     private Context context;
     private Distribution distribution;
@@ -179,7 +195,11 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
                 // First look for a default name stored in shared preferences.
                 String name = GeckoSharedPrefs.forApp(context).getString(PREF_DEFAULT_ENGINE_KEY, null);
 
-                if (name != null) {
+                // Check for a region stored in shared preferences. If we don't have a region,
+                // we should force a recheck of the default engine.
+                String region = GeckoSharedPrefs.forApp(context).getString(PREF_REGION_KEY, null);
+
+                if (name != null && region != null) {
                     Log.d(LOG_TAG, "Found default engine name in SharedPreferences: " + name);
                 } else {
                     // First, look for the default search engine in a distribution.
@@ -252,6 +272,86 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     }
 
     /**
+     * Helper function for converting an InputStream to a String.
+     * @param is InputStream you want to convert to a String
+     *
+     * @return String containing the data
+     */
+    private String getHttpResponse(HttpURLConnection conn) {
+        InputStream is = null;
+        try {
+            is = new BufferedInputStream(conn.getInputStream());
+            return new java.util.Scanner(is).useDelimiter("\\A").next();
+        } catch (Exception e) {
+            return "";
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    Log.e(LOG_TAG, "Error closing InputStream", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Gets the country code based on the current IP, using the Mozilla Location Service.
+     * We cache the country code in a shared preference, so we only fetch from the network
+     * once.
+     *
+     * @return String containing the country code
+     */
+    private String fetchCountryCode() {
+        // First, we look to see if we have a cached code.
+        final String region = GeckoSharedPrefs.forApp(context).getString(PREF_REGION_KEY, null);
+        if (region != null) {
+            return region;
+        }
+
+        // Since we didn't have a cached code, we need to fetch a code from the service.
+        try {
+            String responseText = null;
+
+            URL url = new URL(GEOIP_LOCATION_URL);
+            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+            try {
+                // POST an empty JSON object.
+                final String message = "{}";
+
+                urlConnection.setDoOutput(true);
+                urlConnection.setConnectTimeout(10000);
+                urlConnection.setReadTimeout(10000);
+                urlConnection.setRequestMethod("POST");
+                urlConnection.setRequestProperty("User-Agent", USER_AGENT);
+                urlConnection.setRequestProperty("Content-Type", "application/json");
+                urlConnection.setFixedLengthStreamingMode(message.getBytes().length);
+
+                final OutputStream out = urlConnection.getOutputStream();
+                out.write(message.getBytes());
+                out.close();
+
+                responseText = getHttpResponse(urlConnection);
+            } finally {
+                urlConnection.disconnect();
+            }
+
+            if (responseText == null) {
+                Log.e(LOG_TAG, "Country code fetch failed");
+                return null;
+            }
+
+            // Extract the country code and save it for later in a cache.
+            final JSONObject response = new JSONObject(responseText);
+            return response.optString("country_code", null);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Country code fetch failed", e);
+        }
+
+        return null;
+    }
+
+    /**
      * Looks for the default search engine shipped in the locale.
      *
      * @return search engine name.
@@ -259,6 +359,29 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     private String getDefaultEngineNameFromLocale() {
         try {
             final JSONObject browsersearch = new JSONObject(RawResource.getAsString(context, R.raw.browsersearch));
+
+            // Get the region used to fence search engines.
+            String region = fetchCountryCode();
+
+            // Store the result, even if it's empty. If we fail to get a region, we never
+            // try to get it again, and we will always fallback to the non-region engine.
+            GeckoSharedPrefs.forApp(context)
+                            .edit()
+                            .putString(PREF_REGION_KEY, (region == null ? "" : region))
+                            .apply();
+
+            if (region != null) {
+                if (browsersearch.has("regions")) {
+                    final JSONObject regions = browsersearch.getJSONObject("regions");
+                    if (regions.has(region)) {
+                        final JSONObject regionData = regions.getJSONObject(region);
+                        Log.d(LOG_TAG, "Found region-specific default engine name in browsersearch.json.");
+                        return regionData.getString("default");
+                    }
+                }
+            }
+
+            // Either we have no geoip region, or we didn't find the right region and we are falling back to the default.
             if (browsersearch.has("default")) {
                 Log.d(LOG_TAG, "Found default engine name in browsersearch.json.");
                 return browsersearch.getString("default");

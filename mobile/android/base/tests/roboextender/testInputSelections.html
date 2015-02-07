@@ -106,7 +106,7 @@ function testLTR_selectAll() {
 
   ]).then(function() {
     // Close selection and complete test.
-    sh.observe(null, "TextSelection:End", {});
+    Services.obs.notifyObservers(null, "TextSelection:End", {});
 
     return Promise.all([
       ok(!sh.isSelectionActive(),
@@ -175,7 +175,7 @@ function testRTL_selectAll() {
 
   ]).then(function() {
     // Close selection and complete test.
-    sh.observe(null, "TextSelection:End", {});
+    Services.obs.notifyObservers(null, "TextSelection:End", {});
 
     return Promise.all([
       ok(!sh.isSelectionActive(),
@@ -204,13 +204,13 @@ function testLTR_dragFocusHandleToSelf() {
   let initialSelectionText = sh._getSelectedText();
 
   // Drag focus handle and note results.
-  sh.observe(null, "TextSelection:Move",
+  Services.obs.notifyObservers(null, "TextSelection:Move",
     JSON.stringify({ handleType : FOCUS,
       x : initialSelection.focusPt.x,
       y : initialSelection.focusPt.y
     })
   );
-  sh.observe(null, "TextSelection:Position",
+  Services.obs.notifyObservers(null, "TextSelection:Position",
     JSON.stringify({ handleType : FOCUS })
   );
 
@@ -220,7 +220,7 @@ function testLTR_dragFocusHandleToSelf() {
   let focusDragSelectionText = sh._getSelectedText();
 
   // Complete test, and report.
-  sh.observe(null, "TextSelection:End", {});
+  Services.obs.notifyObservers(null, "TextSelection:End", {});
 
   return Promise.all([
     ok(true, "testLTR_dragFocusHandleToSelf - Test Starts."),
@@ -264,13 +264,13 @@ function testLTR_dragAnchorHandleToSelf() {
   // Drag anchor handle and note results.
   // Note, due to edge case with border boundaries, we actually
   // move inside a pixel, to maintain Selection position.
-  sh.observe(null, "TextSelection:Move",
+  Services.obs.notifyObservers(null, "TextSelection:Move",
     JSON.stringify({ handleType : ANCHOR,
       x : initialSelection.anchorPt.x,
       y : initialSelection.anchorPt.y - 1
     })
   );
-  sh.observe(null, "TextSelection:Position",
+  Services.obs.notifyObservers(null, "TextSelection:Position",
     JSON.stringify({ handleType : ANCHOR })
   );
   let anchorDraggedSelection =
@@ -279,7 +279,7 @@ function testLTR_dragAnchorHandleToSelf() {
   let anchorDragSelectionText = sh._getSelectedText();
 
   // Complete test, and report.
-  sh.observe(null, "TextSelection:End", {});
+  Services.obs.notifyObservers(null, "TextSelection:End", {});
 
   return Promise.all([
     ok(true, "testLTR_dragAnchorHandleToSelf - Test Starts."),
@@ -321,13 +321,13 @@ function testRTL_dragFocusHandleToSelf() {
   let initialSelectionText = sh._getSelectedText();
 
   // Drag focus handle and note results.
-  sh.observe(null, "TextSelection:Move",
+  Services.obs.notifyObservers(null, "TextSelection:Move",
     JSON.stringify({ handleType : FOCUS,
       x : initialSelection.focusPt.x,
       y : initialSelection.focusPt.y
     })
   );
-  sh.observe(null, "TextSelection:Position",
+  Services.obs.notifyObservers(null, "TextSelection:Position",
     JSON.stringify({ handleType : FOCUS })
   );
 
@@ -337,7 +337,7 @@ function testRTL_dragFocusHandleToSelf() {
   let focusDragSelectionText = sh._getSelectedText();
 
   // Complete test, and report.
-  sh.observe(null, "TextSelection:End", {});
+  Services.obs.notifyObservers(null, "TextSelection:End", {});
 
   return Promise.all([
     ok(true, "testRTL_dragFocusHandleToSelf - Test Starts."),
@@ -381,13 +381,13 @@ function testRTL_dragAnchorHandleToSelf() {
   // Drag anchor handle and note results.
   // Note, due to edge case with border boundaries, we actually
   // move inside a pixel, to maintain Selection position.
-  sh.observe(null, "TextSelection:Move",
+  Services.obs.notifyObservers(null, "TextSelection:Move",
     JSON.stringify({ handleType : ANCHOR,
       x : initialSelection.anchorPt.x,
       y : initialSelection.anchorPt.y - 1
     })
   );
-  sh.observe(null, "TextSelection:Position",
+  Services.obs.notifyObservers(null, "TextSelection:Position",
     JSON.stringify({ handleType : ANCHOR })
   );
   let anchorDraggedSelection =
@@ -396,7 +396,7 @@ function testRTL_dragAnchorHandleToSelf() {
   let anchorDragSelectionText = sh._getSelectedText();
 
   // Complete test, and report.
-  sh.observe(null, "TextSelection:End", {});
+  Services.obs.notifyObservers(null, "TextSelection:End", {});
 
   return Promise.all([
     ok(true, "testRTL_dragAnchorHandleToSelf - Test Starts."),

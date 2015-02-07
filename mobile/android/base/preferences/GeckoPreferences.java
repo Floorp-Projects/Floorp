@@ -888,7 +888,7 @@ OnSharedPreferenceChangeListener
                 .putExtra("pref", PREFS_GEO_REPORTING)
                 .putExtra("branch", GeckoSharedPrefs.APP_PREFS_NAME)
                 .putExtra("enabled", value)
-                .putExtra("moz_mozilla_api_key", AppConstants.MOZ_STUMBLER_API_KEY);
+                .putExtra("moz_mozilla_api_key", AppConstants.MOZ_MOZILLA_API_KEY);
        if (GeckoAppShell.getGeckoInterface() != null) {
            intent.putExtra("user_agent", GeckoAppShell.getGeckoInterface().getDefaultUAString());
        }
