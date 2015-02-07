@@ -334,14 +334,6 @@
   width: 3px;
 }
 
-/* Handle a case where the last separator in a customized tab bar with a
-   separated new tab button causes the width of the tab to extend and causes
-   jittering with a small tab curve width (Bug 1111091). */
-#TabsToolbar[currentset]:not([currentset*="tabbrowser-tabs,new-tab-button"]) #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([selected]):not([beforehovered]):not(:hover)::after {
-  -moz-margin-start: -3px;
-  -moz-margin-end: 0;
-}
-
 /* New tab button */
 
 .tabs-newtab-button {

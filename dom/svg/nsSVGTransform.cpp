@@ -155,9 +155,10 @@ nsSVGTransform::SetSkewY(float aAngle)
 SVGTransformSMILData::SVGTransformSMILData(const nsSVGTransform& aTransform)
   : mTransformType(aTransform.Type())
 {
-  MOZ_ASSERT(mTransformType >= SVG_TRANSFORM_MATRIX &&
-             mTransformType <= SVG_TRANSFORM_SKEWY,
-             "Unexpected transform type");
+  NS_ABORT_IF_FALSE(
+    mTransformType >= SVG_TRANSFORM_MATRIX &&
+    mTransformType <= SVG_TRANSFORM_SKEWY,
+    "Unexpected transform type");
 
   for (uint32_t i = 0; i < NUM_STORED_PARAMS; ++i) {
     mParams[i] = 0.f;

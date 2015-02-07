@@ -797,7 +797,7 @@ GetSystemFontInfo(LookAndFeel::FontID aID,
         gtk_widget_destroy(window);  // no unref, windows are different
 
     } else {
-        MOZ_ASSERT(aID == LookAndFeel::eFont_Menu, "unexpected font ID");
+        NS_ABORT_IF_FALSE(aID == LookAndFeel::eFont_Menu, "unexpected font ID");
         GtkWidget *accel_label = gtk_accel_label_new("M");
         GtkWidget *menuitem = gtk_menu_item_new();
         GtkWidget *menu = gtk_menu_new();

@@ -124,17 +124,16 @@ void
 nsSMILValue::InitAndCheckPostcondition(const nsISMILType* aNewType)
 {
   aNewType->Init(*this);
-  MOZ_ASSERT(mType == aNewType,
-             "Post-condition of Init failed. nsSMILValue is invalid");
+  NS_ABORT_IF_FALSE(mType == aNewType,
+                    "Post-condition of Init failed. nsSMILValue is invalid");
 }
                 
 void
 nsSMILValue::DestroyAndCheckPostcondition()
 {
   mType->Destroy(*this);
-  MOZ_ASSERT(IsNull(),
-             "Post-condition of Destroy failed. "
-             "nsSMILValue not null after destroying");
+  NS_ABORT_IF_FALSE(IsNull(), "Post-condition of Destroy failed. "
+                    "nsSMILValue not null after destroying");
 }
 
 void

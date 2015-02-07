@@ -13,7 +13,7 @@ let Paths;
 let SessionFile;
 
 // We need a XULAppInfo to initialize SessionFile
-let (XULAppInfo = {
+let XULAppInfo = {
   vendor: "Mozilla",
   name: "SessionRestoreTest",
   ID: "{230de50e-4cd1-11dc-8314-0800200c9a66}",
@@ -30,19 +30,19 @@ let (XULAppInfo = {
     Ci.nsIXULAppInfo,
     Ci.nsIXULRuntime,
   ])
-}) {
-  let XULAppInfoFactory = {
-    createInstance: function (outer, iid) {
-      if (outer != null)
-        throw Cr.NS_ERROR_NO_AGGREGATION;
-      return XULAppInfo.QueryInterface(iid);
-    }
-  };
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"),
-                            "XULAppInfo", "@mozilla.org/xre/app-info;1",
-                            XULAppInfoFactory);
 };
+
+let XULAppInfoFactory = {
+  createInstance: function (outer, iid) {
+    if (outer != null)
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    return XULAppInfo.QueryInterface(iid);
+  }
+};
+let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"),
+                          "XULAppInfo", "@mozilla.org/xre/app-info;1",
+                          XULAppInfoFactory);
 
 function run_test() {
   run_next_test();

@@ -5029,13 +5029,14 @@ class LClampIToUint8 : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LClampDToUint8 : public LInstructionHelper<1, 1, 0>
+class LClampDToUint8 : public LInstructionHelper<1, 1, 1>
 {
   public:
     LIR_HEADER(ClampDToUint8)
 
-    explicit LClampDToUint8(const LAllocation &in) {
+    LClampDToUint8(const LAllocation &in, const LDefinition &temp) {
         setOperand(0, in);
+        setTemp(0, temp);
     }
 };
 

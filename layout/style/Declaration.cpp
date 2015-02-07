@@ -50,10 +50,10 @@ Declaration::~Declaration()
 void
 Declaration::ValueAppended(nsCSSProperty aProperty)
 {
-  MOZ_ASSERT(!mData && !mImportantData,
-             "should only be called while expanded");
-  MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),
-             "shorthands forbidden");
+  NS_ABORT_IF_FALSE(!mData && !mImportantData,
+                    "should only be called while expanded");
+  NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty),
+                    "shorthands forbidden");
   // order IS important for CSS, so remove and add to the end
   mOrder.RemoveElement(static_cast<uint32_t>(aProperty));
   mOrder.AppendElement(static_cast<uint32_t>(aProperty));
@@ -66,7 +66,7 @@ Declaration::RemoveProperty(nsCSSProperty aProperty)
 
   nsCSSExpandedDataBlock data;
   ExpandTo(&data);
-  MOZ_ASSERT(!mData && !mImportantData, "Expand didn't null things out");
+  NS_ABORT_IF_FALSE(!mData && !mImportantData, "Expand didn't null things out");
 
   if (nsCSSProps::IsShorthand(aProperty)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty,
@@ -85,8 +85,9 @@ Declaration::RemoveProperty(nsCSSProperty aProperty)
 bool
 Declaration::HasProperty(nsCSSProperty aProperty) const
 {
-  MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
-             "property ID out of range");
+  NS_ABORT_IF_FALSE(0 <= aProperty &&
+                    aProperty < eCSSProperty_COUNT_no_shorthands,
+                    "property ID out of range");
 
   nsCSSCompressedDataBlock *data = GetValueIsImportant(aProperty)
                                       ? mImportantData : mData;
@@ -99,8 +100,9 @@ Declaration::AppendValueToString(nsCSSProperty aProperty,
                                  nsAString& aResult,
                                  nsCSSValue::Serialization aSerialization) const
 {
-  MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
-             "property ID out of range");
+  NS_ABORT_IF_FALSE(0 <= aProperty &&
+                    aProperty < eCSSProperty_COUNT_no_shorthands,
+                    "property ID out of range");
 
   nsCSSCompressedDataBlock *data = GetValueIsImportant(aProperty)
                                       ? mImportantData : mData;
@@ -175,8 +177,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     }
     ++totalCount;
     const nsCSSValue *val = mData->ValueFor(*p);
-    MOZ_ASSERT(!val || !mImportantData || !mImportantData->ValueFor(*p),
-               "can't be in both blocks");
+    NS_ABORT_IF_FALSE(!val || !mImportantData || !mImportantData->ValueFor(*p),
+                      "can't be in both blocks");
     if (!val && mImportantData) {
       ++importantCount;
       val = mImportantData->ValueFor(*p);
@@ -247,14 +249,14 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     case eCSSProperty_border_width: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
-      MOZ_ASSERT(nsCSSProps::GetStringValue(subprops[0]).Find("-top") !=
-                 kNotFound, "first subprop must be top");
-      MOZ_ASSERT(nsCSSProps::GetStringValue(subprops[1]).Find("-right") !=
-                 kNotFound, "second subprop must be right");
-      MOZ_ASSERT(nsCSSProps::GetStringValue(subprops[2]).Find("-bottom") !=
-                 kNotFound, "third subprop must be bottom");
-      MOZ_ASSERT(nsCSSProps::GetStringValue(subprops[3]).Find("-left") !=
-                 kNotFound, "fourth subprop must be left");
+      NS_ABORT_IF_FALSE(nsCSSProps::GetStringValue(subprops[0]).Find("-top") !=
+                        kNotFound, "first subprop must be top");
+      NS_ABORT_IF_FALSE(nsCSSProps::GetStringValue(subprops[1]).Find("-right") !=
+                        kNotFound, "second subprop must be right");
+      NS_ABORT_IF_FALSE(nsCSSProps::GetStringValue(subprops[2]).Find("-bottom") !=
+                        kNotFound, "third subprop must be bottom");
+      NS_ABORT_IF_FALSE(nsCSSProps::GetStringValue(subprops[3]).Find("-left") !=
+                        kNotFound, "fourth subprop must be left");
       const nsCSSValue* vals[4] = {
         data->ValueFor(subprops[0]),
         data->ValueFor(subprops[1]),
@@ -373,9 +375,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     case eCSSProperty_outline: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
-      MOZ_ASSERT(StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
-                                NS_LITERAL_CSTRING("-color")),
-                 "third subprop must be the color property");
+      NS_ABORT_IF_FALSE(StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
+                                       NS_LITERAL_CSTRING("-color")),
+                        "third subprop must be the color property");
       const nsCSSValue *colorValue = data->ValueFor(subprops[2]);
       bool isMozUseTextColor =
         colorValue->GetUnit() == eCSSUnit_Enumerated &&
@@ -456,9 +458,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
                                        aSerialization);
         }
 
-        MOZ_ASSERT(clip->mValue.GetUnit() == eCSSUnit_Enumerated &&
-                   origin->mValue.GetUnit() == eCSSUnit_Enumerated,
-                   "should not have inherit/initial within list");
+        NS_ABORT_IF_FALSE(clip->mValue.GetUnit() == eCSSUnit_Enumerated &&
+                          origin->mValue.GetUnit() == eCSSUnit_Enumerated,
+                          "should not have inherit/initial within list");
 
         if (clip->mValue.GetIntValue() != NS_STYLE_BG_CLIP_BORDER ||
             origin->mValue.GetIntValue() != NS_STYLE_BG_ORIGIN_PADDING) {
@@ -715,9 +717,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       const nsCSSValue *decorationStyle =
         data->ValueFor(eCSSProperty_text_decoration_style);
 
-      MOZ_ASSERT(decorationStyle->GetUnit() == eCSSUnit_Enumerated,
-                 nsPrintfCString("bad text-decoration-style unit %d",
-                                 decorationStyle->GetUnit()).get());
+      NS_ABORT_IF_FALSE(decorationStyle->GetUnit() == eCSSUnit_Enumerated,
+                        nsPrintfCString("bad text-decoration-style unit %d",
+                                        decorationStyle->GetUnit()).get());
 
       AppendValueToString(eCSSProperty_text_decoration_line, aValue,
                           aSerialization);
@@ -745,18 +747,18 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       const nsCSSValue *transDelay =
         data->ValueFor(eCSSProperty_transition_delay);
 
-      MOZ_ASSERT(transDuration->GetUnit() == eCSSUnit_List ||
-                 transDuration->GetUnit() == eCSSUnit_ListDep,
-                 nsPrintfCString("bad t-duration unit %d",
-                                 transDuration->GetUnit()).get());
-      MOZ_ASSERT(transTiming->GetUnit() == eCSSUnit_List ||
-                 transTiming->GetUnit() == eCSSUnit_ListDep,
-                 nsPrintfCString("bad t-timing unit %d",
-                                 transTiming->GetUnit()).get());
-      MOZ_ASSERT(transDelay->GetUnit() == eCSSUnit_List ||
-                 transDelay->GetUnit() == eCSSUnit_ListDep,
-                 nsPrintfCString("bad t-delay unit %d",
-                                 transDelay->GetUnit()).get());
+      NS_ABORT_IF_FALSE(transDuration->GetUnit() == eCSSUnit_List ||
+                        transDuration->GetUnit() == eCSSUnit_ListDep,
+                        nsPrintfCString("bad t-duration unit %d",
+                                        transDuration->GetUnit()).get());
+      NS_ABORT_IF_FALSE(transTiming->GetUnit() == eCSSUnit_List ||
+                        transTiming->GetUnit() == eCSSUnit_ListDep,
+                        nsPrintfCString("bad t-timing unit %d",
+                                        transTiming->GetUnit()).get());
+      NS_ABORT_IF_FALSE(transDelay->GetUnit() == eCSSUnit_List ||
+                        transDelay->GetUnit() == eCSSUnit_ListDep,
+                        nsPrintfCString("bad t-delay unit %d",
+                                        transDelay->GetUnit()).get());
 
       const nsCSSValueList* dur = transDuration->GetListValue();
       const nsCSSValueList* tim = transTiming->GetListValue();
@@ -783,10 +785,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
           aValue.Truncate();
         }
       } else {
-        MOZ_ASSERT(transProp->GetUnit() == eCSSUnit_List ||
-                   transProp->GetUnit() == eCSSUnit_ListDep,
-                   nsPrintfCString("bad t-prop unit %d",
-                                   transProp->GetUnit()).get());
+        NS_ABORT_IF_FALSE(transProp->GetUnit() == eCSSUnit_List ||
+                          transProp->GetUnit() == eCSSUnit_ListDep,
+                          nsPrintfCString("bad t-prop unit %d",
+                                          transProp->GetUnit()).get());
         const nsCSSValueList* pro = transProp->GetListValue();
         for (;;) {
           pro->mValue.AppendToString(eCSSProperty_transition_property,
@@ -820,25 +822,26 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_animation);
       static const size_t numProps = 8;
-      MOZ_ASSERT(subprops[numProps] == eCSSProperty_UNKNOWN,
-                 "unexpected number of subproperties");
+      NS_ABORT_IF_FALSE(subprops[numProps] == eCSSProperty_UNKNOWN,
+                        "unexpected number of subproperties");
       const nsCSSValue* values[numProps];
       const nsCSSValueList* lists[numProps];
 
       for (uint32_t i = 0; i < numProps; ++i) {
         values[i] = data->ValueFor(subprops[i]);
-        MOZ_ASSERT(values[i]->GetUnit() == eCSSUnit_List ||
-                   values[i]->GetUnit() == eCSSUnit_ListDep,
-                   nsPrintfCString("bad a-duration unit %d",
-                                   values[i]->GetUnit()).get());
+        NS_ABORT_IF_FALSE(values[i]->GetUnit() == eCSSUnit_List ||
+                          values[i]->GetUnit() == eCSSUnit_ListDep,
+                          nsPrintfCString("bad a-duration unit %d",
+                                          values[i]->GetUnit()).get());
         lists[i] = values[i]->GetListValue();
       }
 
       for (;;) {
         // We must serialize 'animation-name' last in case it has
         // a value that conflicts with one of the other keyword properties.
-        MOZ_ASSERT(subprops[numProps - 1] == eCSSProperty_animation_name,
-                   "animation-name must be last");
+        NS_ABORT_IF_FALSE(subprops[numProps - 1] ==
+                            eCSSProperty_animation_name,
+                          "animation-name must be last");
         bool done = false;
         for (uint32_t i = 0;;) {
           lists[i]->mValue.AppendToString(subprops[i], aValue, aSerialization);
@@ -901,8 +904,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       // flex-direction, flex-wrap, separated by single space
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
-      MOZ_ASSERT(subprops[2] == eCSSProperty_UNKNOWN,
-                 "must have exactly two subproperties");
+      NS_ABORT_IF_FALSE(subprops[2] == eCSSProperty_UNKNOWN,
+                        "must have exactly two subproperties");
 
       AppendValueToString(subprops[0], aValue, aSerialization);
       aValue.Append(char16_t(' '));
@@ -914,8 +917,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       // grid-{row,column}-start, grid-{row,column}-end, separated by a slash
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
-      MOZ_ASSERT(subprops[2] == eCSSProperty_UNKNOWN,
-                 "must have exactly two subproperties");
+      NS_ABORT_IF_FALSE(subprops[2] == eCSSProperty_UNKNOWN,
+                        "must have exactly two subproperties");
 
       // TODO: should we simplify when possible?
       AppendValueToString(subprops[0], aValue, aSerialization);
@@ -926,8 +929,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     case eCSSProperty_grid_area: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
-      MOZ_ASSERT(subprops[4] == eCSSProperty_UNKNOWN,
-                 "must have exactly four subproperties");
+      NS_ABORT_IF_FALSE(subprops[4] == eCSSProperty_UNKNOWN,
+                        "must have exactly four subproperties");
 
       // TODO: should we simplify when possible?
       AppendValueToString(subprops[0], aValue, aSerialization);
@@ -1079,8 +1082,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       // shorthands that are just aliases with different parsing rules
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
-      MOZ_ASSERT(subprops[1] == eCSSProperty_UNKNOWN,
-                 "must have exactly one subproperty");
+      NS_ABORT_IF_FALSE(subprops[1] == eCSSProperty_UNKNOWN,
+                        "must have exactly one subproperty");
       AppendValueToString(subprops[0], aValue, aSerialization);
       break;
     }
@@ -1091,7 +1094,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       // so serialize as the empty string.
       break;
     default:
-      MOZ_ASSERT(false, "no other shorthands");
+      NS_ABORT_IF_FALSE(false, "no other shorthands");
       break;
   }
 }
@@ -1142,10 +1145,11 @@ Declaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
                                             nsAutoString& aValue,
                                             nsAString& aResult) const
 {
-  MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
-             "property enum out of range");
-  MOZ_ASSERT((aProperty < eCSSProperty_COUNT_no_shorthands) == aValue.IsEmpty(),
-             "aValue should be given for shorthands but not longhands");
+  NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+                    "property enum out of range");
+  NS_ABORT_IF_FALSE((aProperty < eCSSProperty_COUNT_no_shorthands) ==
+                    aValue.IsEmpty(),
+                    "aValue should be given for shorthands but not longhands");
   AppendASCIItoUTF16(nsCSSProps::GetStringValue(aProperty), aResult);
   aResult.AppendLiteral(": ");
   if (aValue.IsEmpty())
@@ -1313,7 +1317,7 @@ Declaration::ToString(nsAString& aString) const
     if (doneProperty)
       continue;
 
-    MOZ_ASSERT(value.IsEmpty(), "value should be empty now");
+    NS_ABORT_IF_FALSE(value.IsEmpty(), "value should be empty now");
     AppendPropertyAndValueToString(property, value, aString);
   }
   if (! aString.IsEmpty()) {
@@ -1362,14 +1366,14 @@ Declaration::GetNthProperty(uint32_t aIndex, nsAString& aReturn) const
 void
 Declaration::InitializeEmpty()
 {
-  MOZ_ASSERT(!mData && !mImportantData, "already initialized");
+  NS_ABORT_IF_FALSE(!mData && !mImportantData, "already initialized");
   mData = nsCSSCompressedDataBlock::CreateEmptyBlock();
 }
 
 Declaration*
 Declaration::EnsureMutable()
 {
-  MOZ_ASSERT(mData, "should only be called when not expanded");
+  NS_ABORT_IF_FALSE(mData, "should only be called when not expanded");
   if (!IsMutable()) {
     return new Declaration(*this);
   } else {

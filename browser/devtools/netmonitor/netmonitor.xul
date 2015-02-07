@@ -299,10 +299,10 @@
                         align="center">
                     <label class="plain tabpanel-summary-label"
                            value="&netmonitorUI.summary.url;"/>
-                    <label id="headers-summary-url-value"
-                           class="plain tabpanel-summary-value devtools-monospace"
-                           crop="end"
-                           flex="1"/>
+                    <textbox id="headers-summary-url-value"
+                             class="plain tabpanel-summary-value devtools-monospace"
+                             flex="1"
+                             readonly="true"/>
                   </hbox>
                   <hbox id="headers-summary-method"
                         class="tabpanel-summary-container"

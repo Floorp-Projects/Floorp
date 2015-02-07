@@ -2303,7 +2303,7 @@ DefineProperty(JSContext *cx, HandleObject obj, const char *name, HandleValue va
 
     RootedId id(cx);
     if (attrs & JSPROP_INDEX) {
-        id.set(INT_TO_JSID(intptr_t(name)));
+        id = INT_TO_JSID(intptr_t(name));
         attrs &= ~JSPROP_INDEX;
     } else {
         JSAtom *atom = Atomize(cx, name, strlen(name));

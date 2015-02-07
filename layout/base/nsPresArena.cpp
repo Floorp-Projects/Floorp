@@ -24,8 +24,6 @@
 #include "nsArenaMemoryStats.h"
 #include "nsPrintfCString.h"
 
-#include <inttypes.h>
-
 // Size to use for PLArena block allocations.
 static const size_t ARENA_PAGE_SIZE = 8192;
 
@@ -45,7 +43,7 @@ nsPresArena::~nsPresArena()
 void*
 nsPresArena::Allocate(uint32_t aCode, size_t aSize)
 {
-  MOZ_ASSERT(aSize > 0, "PresArena cannot allocate zero bytes");
+  NS_ABORT_IF_FALSE(aSize > 0, "PresArena cannot allocate zero bytes");
 
   // We only hand out aligned sizes
   aSize = PL_ARENA_ALIGN(&mPool, aSize);
@@ -56,11 +54,11 @@ nsPresArena::Allocate(uint32_t aCode, size_t aSize)
 
   nsTArray<void*>::index_type len = list->mEntries.Length();
   if (list->mEntrySize == 0) {
-    MOZ_ASSERT(len == 0, "list with entries but no recorded size");
+    NS_ABORT_IF_FALSE(len == 0, "list with entries but no recorded size");
     list->mEntrySize = aSize;
   } else {
-    MOZ_ASSERT(list->mEntrySize == aSize,
-               "different sizes for same object type code");
+    NS_ABORT_IF_FALSE(list->mEntrySize == aSize,
+                      "different sizes for same object type code");
   }
 
   void* result;
@@ -75,14 +73,15 @@ nsPresArena::Allocate(uint32_t aCode, size_t aSize)
       char* limit = p + list->mEntrySize;
       for (; p < limit; p += sizeof(uintptr_t)) {
         uintptr_t val = *reinterpret_cast<uintptr_t*>(p);
-        MOZ_ASSERT(val == mozPoisonValue(),
-                   nsPrintfCString("PresArena: poison overwritten; "
-                                   "wanted %.16" PRIx64 " "
-                                   "found %.16" PRIx64 " "
-                                   "errors in bits %.16" PRIx64 " ",
-                                   uint64_t(mozPoisonValue()),
-                                   uint64_t(val),
-                                   uint64_t(mozPoisonValue() ^ val)).get());
+        NS_ABORT_IF_FALSE(val == mozPoisonValue(),
+                          nsPrintfCString("PresArena: poison overwritten; "
+                                          "wanted %.16llx "
+                                          "found %.16llx "
+                                          "errors in bits %.16llx",
+                                          uint64_t(mozPoisonValue()),
+                                          uint64_t(val),
+                                          uint64_t(mozPoisonValue() ^ val)
+                                          ).get());
       }
     }
 #endif
@@ -104,8 +103,8 @@ nsPresArena::Free(uint32_t aCode, void* aPtr)
 {
   // Try to recycle this entry.
   FreeList* list = mFreeLists.GetEntry(aCode);
-  MOZ_ASSERT(list, "no free list for pres arena object");
-  MOZ_ASSERT(list->mEntrySize > 0, "PresArena cannot free zero bytes");
+  NS_ABORT_IF_FALSE(list, "no free list for pres arena object");
+  NS_ABORT_IF_FALSE(list->mEntrySize > 0, "PresArena cannot free zero bytes");
 
   mozWritePoison(aPtr, list->mEntrySize);
 

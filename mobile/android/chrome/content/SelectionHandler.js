@@ -38,7 +38,7 @@ var SelectionHandler = {
 
   // Keeps track of data about the dimensions of the selection. Coordinates
   // stored here are relative to the _contentWindow window.
-  _cache: null,
+  _cache: { anchorPt: {}, focusPt: {} },
   _targetIsRTL: false,
   _anchorIsRTL: false,
   _focusIsRTL: false,
@@ -85,7 +85,6 @@ var SelectionHandler = {
   _addObservers: function sh_addObservers() {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
     Services.obs.addObserver(this, "Tab:Selected", false);
-    Services.obs.addObserver(this, "after-viewport-change", false);
     Services.obs.addObserver(this, "TextSelection:Move", false);
     Services.obs.addObserver(this, "TextSelection:Position", false);
     Services.obs.addObserver(this, "TextSelection:End", false);
@@ -100,7 +99,6 @@ var SelectionHandler = {
   _removeObservers: function sh_removeObservers() {
     Services.obs.removeObserver(this, "Gesture:SingleTap");
     Services.obs.removeObserver(this, "Tab:Selected");
-    Services.obs.removeObserver(this, "after-viewport-change");
     Services.obs.removeObserver(this, "TextSelection:Move");
     Services.obs.removeObserver(this, "TextSelection:Position");
     Services.obs.removeObserver(this, "TextSelection:End");
@@ -122,9 +120,6 @@ var SelectionHandler = {
       // Update handle/caret position on page reflow (keyboard open/close,
       // dynamic DOM changes, orientation updates, etc).
       case "TextSelection:LayerReflow": {
-        if (this._activeType == this.TYPE_SELECTION) {
-          this._updateCacheForSelection();
-        }
         if (this._activeType != this.TYPE_NONE) {
           this._positionHandlesOnChange();
         }
@@ -151,13 +146,6 @@ var SelectionHandler = {
           }
         }
         break;
-      case "after-viewport-change": {
-        if (this._activeType == this.TYPE_SELECTION) {
-          // Update the cache after the viewport changes (e.g. panning, zooming).
-          this._updateCacheForSelection();
-        }
-        break;
-      }
 
       case "TextSelection:Move": {
         let data = JSON.parse(aData);
@@ -183,8 +171,6 @@ var SelectionHandler = {
           this._startDraggingHandles();
           this._ensureSelectionDirection();
           this._stopDraggingHandles();
-
-          this._updateCacheForSelection();
           this._positionHandles();
 
           // Changes to handle position can affect selection context and actionbar display
@@ -320,7 +306,6 @@ var SelectionHandler = {
     }
 
     // Update the selection handle positions.
-    this._updateCacheForSelection();
     this._positionHandles();
   },
 
@@ -367,12 +352,8 @@ var SelectionHandler = {
     selection.QueryInterface(Ci.nsISelectionPrivate).addSelectionListener(this);
     this._activeType = this.TYPE_SELECTION;
 
-    // Initialize the cache
-    this._cache = { anchorPt: {}, focusPt: {}};
-    this._updateCacheForSelection();
-
-    let scroll = this._getScrollPos();
     // Figure out the distance between the selection and the click
+    let scroll = this._getScrollPos();
     let positions = this._getHandlePositions(scroll);
 
     if (aOptions.mode == this.SELECT_AT_POINT &&
@@ -1111,7 +1092,6 @@ var SelectionHandler = {
     this._contentWindow = null;
     this._targetElement = null;
     this._targetIsRTL = false;
-    this._cache = null;
     this._ignoreCompositionChanges = false;
     this._prevHandlePositions = [];
     this._prevTargetElementHasText = null;
@@ -1215,7 +1195,7 @@ var SelectionHandler = {
     return (nodeStyle.direction == "rtl");
   },
 
-  _getHandlePositions: function sh_getHandlePositions(scroll) {
+  _getHandlePositions: function(scroll = this._getScrollPos()) {
     // the checkHidden function tests to see if the given point is hidden inside an
     // iframe/subdocument. this is so that if we select some text inside an iframe and
     // scroll the iframe so the selection is out of view, we hide the handles rather
@@ -1230,7 +1210,6 @@ var SelectionHandler = {
       };
     }
 
-    let positions = null;
     if (this._activeType == this.TYPE_CURSOR) {
       // The left and top properties returned are relative to the client area
       // of the window, so we don't need to account for a sub-frame offset.
@@ -1245,27 +1224,21 @@ var SelectionHandler = {
                 top: y + scroll.Y,
                 rtl: this._targetIsRTL,
                 hidden: checkHidden(x, y) }];
-    } else {
-      let anchorX = this._cache.anchorPt.x;
-      let anchorY = this._cache.anchorPt.y;
-      let focusX = this._cache.focusPt.x;
-      let focusY = this._cache.focusPt.y;
-
-      // Translate coordinates to account for selections in sub-frames. We can't cache
-      // this because the top-level page may have scrolled since selection started.
-      let offset = this._getViewOffset();
-
-      return  [{ handle: this.HANDLE_TYPE_ANCHOR,
-                 left: anchorX + offset.x + scroll.X,
-                 top: anchorY + offset.y + scroll.Y,
-                 rtl: this._anchorIsRTL,
-                 hidden: checkHidden(anchorX, anchorY) },
-               { handle: this.HANDLE_TYPE_FOCUS,
-                 left: focusX + offset.x + scroll.X,
-                 top: focusY + offset.y + scroll.Y,
-                 rtl: this._focusIsRTL,
-                 hidden: checkHidden(focusX, focusY) }];
     }
+
+    // Determine the handle screen coords
+    this._updateCacheForSelection();
+    let offset = this._getViewOffset();
+    return  [{ handle: this.HANDLE_TYPE_ANCHOR,
+               left: this._cache.anchorPt.x + offset.x + scroll.X,
+               top: this._cache.anchorPt.y + offset.y + scroll.Y,
+               rtl: this._anchorIsRTL,
+               hidden: checkHidden(this._cache.anchorPt.x, this._cache.anchorPt.y) },
+             { handle: this.HANDLE_TYPE_FOCUS,
+               left: this._cache.focusPt.x + offset.x + scroll.X,
+               top: this._cache.focusPt.y + offset.y + scroll.Y,
+               rtl: this._focusIsRTL,
+               hidden: checkHidden(this._cache.focusPt.x, this._cache.focusPt.y) }];
   },
 
   // Position handles, but avoid superfluous re-positioning (helps during
@@ -1287,7 +1260,7 @@ var SelectionHandler = {
       return true;
     }
 
-    let positions = this._getHandlePositions(this._getScrollPos());
+    let positions = this._getHandlePositions();
     if (!samePositions(this._prevHandlePositions, positions)) {
       this._positionHandles(positions);
     }
@@ -1297,10 +1270,7 @@ var SelectionHandler = {
   // to invalid position, then releases, we can put it back where it started
   // positions is an array of objects with data about handle positions,
   // which we get from _getHandlePositions.
-  _positionHandles: function sh_positionHandles(positions) {
-    if (!positions) {
-      positions = this._getHandlePositions(this._getScrollPos());
-    }
+  _positionHandles: function(positions = this._getHandlePositions()) {
     Messaging.sendRequest({
       type: "TextSelection:PositionHandles",
       positions: positions,
@@ -1330,9 +1300,6 @@ var SelectionHandler = {
       if (view == scrollView) {
         // The selection is in a view (or sub-view) of the view that scrolled.
         // So we need to reposition the handles.
-        if (this._activeType == this.TYPE_SELECTION) {
-          this._updateCacheForSelection();
-        }
         this._positionHandles();
         break;
       }

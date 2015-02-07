@@ -147,6 +147,9 @@ pref("dom.enable_resource_timing", true);
 // Enable high-resolution timing markers for users
 pref("dom.enable_user_timing", true);
 
+// Enable printing performance marks/measures to log
+pref("dom.performance.enable_user_timing_logging", false);
+
 // Whether the Gamepad API is enabled
 pref("dom.gamepad.enabled", true);
 #ifdef RELEASE_BUILD

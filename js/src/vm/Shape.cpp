@@ -256,18 +256,6 @@ ShapeTable::search(jsid id, bool adding)
     MOZ_CRASH("Shape::search failed to find an expected entry.");
 }
 
-void
-ShapeTable::fixupAfterMovingGC()
-{
-    uint32_t size = capacity();
-    for (HashNumber i = 0; i < size; i++) {
-        Entry &entry = getEntry(i);
-        Shape *shape = entry.shape();
-        if (shape && IsForwarded(shape))
-            entry.setPreservingCollision(Forwarded(shape));
-    }
-}
-
 bool
 ShapeTable::change(int log2Delta, ExclusiveContext *cx)
 {

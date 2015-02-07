@@ -28,14 +28,17 @@ struct BadCertHost
 const BadCertHost sBadCertHosts[] =
 {
   { "expired.example.com", "expired" },
+  { "notyetvalid.example.com", "notYetValid" },
   { "selfsigned.example.com", "selfsigned" },
   { "unknownissuer.example.com", "unknownissuer" },
   { "mismatch.example.com", "mismatch" },
   { "expiredissuer.example.com", "expiredissuer" },
+  { "notyetvalidissuer.example.com", "notYetValidIssuer" },
   { "md5signature.example.com", "md5signature" },
   { "untrusted.example.com", "localhostAndExampleCom" },
   { "untrustedissuer.example.com", "untrustedissuer" },
   { "mismatch-expired.example.com", "mismatch-expired" },
+  { "mismatch-notYetValid.example.com", "mismatch-notYetValid" },
   { "mismatch-untrusted.example.com", "mismatch-untrusted" },
   { "untrusted-expired.example.com", "untrusted-expired" },
   { "md5signature-expired.example.com", "md5signature-expired" },

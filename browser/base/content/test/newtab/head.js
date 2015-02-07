@@ -51,25 +51,28 @@ Object.keys(requiredSize).forEach(prop => {
     gBrowser.contentWindow[prop] = requiredSize[prop];
   }
 });
-let (screenHeight = {}, screenWidth = {}) {
-  Cc["@mozilla.org/gfx/screenmanager;1"].
-    getService(Ci.nsIScreenManager).
-    primaryScreen.
-    GetAvailRectDisplayPix({}, {}, screenWidth, screenHeight);
-  screenHeight = screenHeight.value;
-  screenWidth = screenWidth.value;
-  if (screenHeight < gBrowser.contentWindow.outerHeight) {
-    info("Warning: Browser outer height is now " +
-         gBrowser.contentWindow.outerHeight + ", which is larger than the " +
-         "available screen height, " + screenHeight +
-         ". That may cause problems.");
-  }
-  if (screenWidth < gBrowser.contentWindow.outerWidth) {
-    info("Warning: Browser outer width is now " +
-         gBrowser.contentWindow.outerWidth + ", which is larger than the " +
-         "available screen width, " + screenWidth +
-         ". That may cause problems.");
-  }
+
+let screenHeight = {};
+let screenWidth = {};
+Cc["@mozilla.org/gfx/screenmanager;1"].
+  getService(Ci.nsIScreenManager).
+  primaryScreen.
+  GetAvailRectDisplayPix({}, {}, screenWidth, screenHeight);
+screenHeight = screenHeight.value;
+screenWidth = screenWidth.value;
+
+if (screenHeight < gBrowser.contentWindow.outerHeight) {
+  info("Warning: Browser outer height is now " +
+       gBrowser.contentWindow.outerHeight + ", which is larger than the " +
+       "available screen height, " + screenHeight +
+       ". That may cause problems.");
+}
+
+if (screenWidth < gBrowser.contentWindow.outerWidth) {
+  info("Warning: Browser outer width is now " +
+       gBrowser.contentWindow.outerWidth + ", which is larger than the " +
+       "available screen width, " + screenWidth +
+       ". That may cause problems.");
 }
 
 registerCleanupFunction(function () {

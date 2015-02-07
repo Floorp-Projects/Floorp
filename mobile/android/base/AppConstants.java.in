@@ -98,13 +98,13 @@ public class AppConstants {
     // add additional quotes we end up with ""x.y"", which is a syntax error.
     public static final String MOZILLA_VERSION = @MOZILLA_VERSION@;
 
-    public static final String MOZ_STUMBLER_API_KEY =
+    public static final String MOZ_MOZILLA_API_KEY = "@MOZ_MOZILLA_API_KEY@";
+    public static final boolean MOZ_STUMBLER_BUILD_TIME_ENABLED =
 //#ifdef MOZ_ANDROID_MLS_STUMBLER
-    "@MOZ_STUMBLER_API_KEY@";
+    true;
 //#else
-    null;
+    false;
 //#endif
-    public static final boolean MOZ_STUMBLER_BUILD_TIME_ENABLED = (MOZ_STUMBLER_API_KEY != null);
 
     public static final String MOZ_CHILD_PROCESS_NAME = "@MOZ_CHILD_PROCESS_NAME@";
     public static final String MOZ_UPDATE_CHANNEL = "@MOZ_UPDATE_CHANNEL@";

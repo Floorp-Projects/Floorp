@@ -423,8 +423,8 @@ class BarrieredBase : public BarrieredBaseMixins<T>
         this->value = v;
     }
 
-    bool operator==(const T &other) const { return value == other; }
-    bool operator!=(const T &other) const { return value != other; }
+    DECLARE_POINTER_COMPARISON_OPS(T);
+    DECLARE_POINTER_CONSTREF_OPS(T);
 
     /* Use this if the automatic coercion to T isn't working. */
     const T &get() const { return value; }
@@ -436,10 +436,6 @@ class BarrieredBase : public BarrieredBaseMixins<T>
     T *unsafeGet() { return &value; }
     const T *unsafeGet() const { return &value; }
     void unsafeSet(T v) { value = v; }
-
-    T operator->() const { return value; }
-
-    operator const T &() const { return value; }
 
     /* For users who need to manually barrier the raw types. */
     static void writeBarrierPre(const T &v) { InternalGCMethods<T>::preBarrier(v); }
@@ -483,18 +479,13 @@ class PreBarriered : public BarrieredBase<T>
         this->value = nullptr;
     }
 
-    PreBarriered<T> &operator=(T v) {
+    DECLARE_POINTER_ASSIGN_OPS(PreBarriered, T);
+
+  private:
+    void set(const T &v) {
         this->pre();
         MOZ_ASSERT(!GCMethods<T>::poisoned(v));
         this->value = v;
-        return *this;
-    }
-
-    PreBarriered<T> &operator=(const PreBarriered<T> &v) {
-        this->pre();
-        MOZ_ASSERT(!GCMethods<T>::poisoned(v.value));
-        this->value = v.value;
-        return *this;
     }
 };
 
@@ -524,21 +515,7 @@ class HeapPtr : public BarrieredBase<T>
         post();
     }
 
-    HeapPtr<T> &operator=(T v) {
-        this->pre();
-        MOZ_ASSERT(!GCMethods<T>::poisoned(v));
-        this->value = v;
-        post();
-        return *this;
-    }
-
-    HeapPtr<T> &operator=(const HeapPtr<T> &v) {
-        this->pre();
-        MOZ_ASSERT(!GCMethods<T>::poisoned(v.value));
-        this->value = v.value;
-        post();
-        return *this;
-    }
+    DECLARE_POINTER_ASSIGN_OPS(HeapPtr, T);
 
   protected:
     void post() { InternalGCMethods<T>::postBarrier(&this->value); }
@@ -551,6 +528,13 @@ class HeapPtr : public BarrieredBase<T>
                      HeapPtr<T2*> &v2, T2 *val2);
 
   private:
+    void set(const T &v) {
+        this->pre();
+        MOZ_ASSERT(!GCMethods<T>::poisoned(v));
+        this->value = v;
+        post();
+    }
+
     /*
      * Unlike RelocatablePtr<T>, HeapPtr<T> must be managed with GC lifetimes.
      * Specifically, the memory used by the pointer itself must be live until
@@ -628,7 +612,10 @@ class RelocatablePtr : public BarrieredBase<T>
             relocate();
     }
 
-    RelocatablePtr<T> &operator=(T v) {
+    DECLARE_POINTER_ASSIGN_OPS(RelocatablePtr, T);
+
+  protected:
+    void set(const T &v) {
         this->pre();
         MOZ_ASSERT(!GCMethods<T>::poisoned(v));
         if (GCMethods<T>::needsPostBarrier(v)) {
@@ -640,26 +627,8 @@ class RelocatablePtr : public BarrieredBase<T>
         } else {
             this->value = v;
         }
-        return *this;
     }
 
-    RelocatablePtr<T> &operator=(const RelocatablePtr<T> &v) {
-        this->pre();
-        MOZ_ASSERT(!GCMethods<T>::poisoned(v.value));
-        if (GCMethods<T>::needsPostBarrier(v.value)) {
-            this->value = v.value;
-            post();
-        } else if (GCMethods<T>::needsPostBarrier(this->value)) {
-            relocate();
-            this->value = v;
-        } else {
-            this->value = v;
-        }
-
-        return *this;
-    }
-
-  protected:
     void post() {
         MOZ_ASSERT(GCMethods<T>::needsPostBarrier(this->value));
         InternalGCMethods<T>::postBarrierRelocate(&this->value);

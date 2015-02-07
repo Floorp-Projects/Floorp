@@ -1757,7 +1757,7 @@ class HeapBase<JS::Value> : public ValueOperations<JS::Heap<JS::Value> >
     const JS::Value * extract() const { return static_cast<const Outer*>(this)->address(); }
 
     void setBarriered(const JS::Value &v) {
-        static_cast<JS::Heap<JS::Value> *>(this)->set(v);
+        *static_cast<JS::Heap<JS::Value> *>(this) = v;
     }
 
   public:
