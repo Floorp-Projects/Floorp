@@ -10,7 +10,8 @@
          xmlns:cert="http://netscape.com/rdf-cert#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <vbox class="box-padded" id="certPrettyPrint" flex="1">
-  <label class="header" value="&certmgr.hierarchy.label;"/>
+  <label class="header" value="&certmgr.hierarchy.label;"
+         control="treesetDump" accesskey="&certmgr.hierarchy.accesskey2;"/>
   <tree id="treesetDump" onselect="updateCertDump();" flex="1"
         hidecolumnpicker="true" style="min-height: 8em;">
     <treecols>
@@ -18,7 +19,8 @@
     </treecols>
   </tree>
 
-  <label class="header" value="&certmgr.details.label;"/>
+  <label class="header" value="&certmgr.details.label;"
+         control="prettyDumpTree" accesskey="&certmgr.details.accesskey;"/>
   <tree id="prettyDumpTree" style="min-height: 15em" treelines="true" flex="1"
             onselect="displaySelected();" hidecolumnpicker="true">
     <treecols>
@@ -27,7 +29,8 @@
     <treechildren/>
   </tree>
 
-  <label class="header" value="&certmgr.fields.label;"/>
+  <label class="header" value="&certmgr.fields.label;"
+         control="certDumpVal" accesskey="&certmgr.fields.accesskey;"/>
   <textbox id="certDumpVal" multiline="true" flex="1"
            readonly="true" style="min-height: 11em; font-family: -moz-fixed;"/>
 
