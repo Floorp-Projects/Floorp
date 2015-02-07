@@ -81,7 +81,7 @@ function testLTR_selectionPoints() {
     let midpointSelText = sh._getSelectedText();
 
     // Close selection and complete test.
-    sh.observe(null, "TextSelection:End", {});
+    Services.obs.notifyObservers(null, "TextSelection:End", {});
 
     return Promise.all([
       selectionExists(selection, "LTR Selection existed at points"),
@@ -125,7 +125,7 @@ function testRTL_selectionPoints() {
     let midpointSelText = sh._getSelectedText();
 
     // Close selection and complete test.
-    sh.observe(null, "TextSelection:End", {});
+    Services.obs.notifyObservers(null, "TextSelection:End", {});
 
     return Promise.all([
       selectionExists(selection, "RTL Selection existed at points"),
@@ -166,13 +166,13 @@ function test_selectionLineHeight() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Force selection focus to next lower line (estimate distance required).
-  sh.observe(null, "TextSelection:Move",
+  Services.obs.notifyObservers(null, "TextSelection:Move",
     JSON.stringify({ handleType : FOCUS,
       x : initialSelection.focusPt.x,
       y : initialSelection.focusPt.y + EST_SEL_LINE_CHG_PTS
     })
   );
-  sh.observe(null, "TextSelection:Position",
+  Services.obs.notifyObservers(null, "TextSelection:Position",
     JSON.stringify({ handleType : FOCUS })
   );
 
@@ -190,7 +190,7 @@ function test_selectionLineHeight() {
 
   ]).then(function() {
     // Complete test, and report.
-    sh.observe(null, "TextSelection:End", {});
+    Services.obs.notifyObservers(null, "TextSelection:End", {});
 
     return Promise.all([
       greaterThan(selectionLineHeight, 0, "Distance from one line to another " +
@@ -226,13 +226,13 @@ function testLTR_moveFocusHandleDown() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Force selection focus to next lower line (estimate distance required).
-  sh.observe(null, "TextSelection:Move",
+  Services.obs.notifyObservers(null, "TextSelection:Move",
     JSON.stringify({ handleType : FOCUS,
       x : initialSelection.focusPt.x,
       y : initialSelection.focusPt.y + EST_SEL_LINE_CHG_PTS
     })
   );
-  sh.observe(null, "TextSelection:Position",
+  Services.obs.notifyObservers(null, "TextSelection:Position",
     JSON.stringify({ handleType : FOCUS })
   );
 
@@ -241,7 +241,7 @@ function testLTR_moveFocusHandleDown() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Complete test, and report.
-  sh.observe(null, "TextSelection:End", {});
+  Services.obs.notifyObservers(null, "TextSelection:End", {});
 
   return Promise.all([
     ok(true, "testLTR_moveFocusHandleDown - Test Starts."),
@@ -291,13 +291,13 @@ function testLTR_moveFocusHandleUp() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Force selection focus to next upper line (estimate distance required).
-  sh.observe(null, "TextSelection:Move",
+  Services.obs.notifyObservers(null, "TextSelection:Move",
     JSON.stringify({ handleType : FOCUS,
       x : initialSelection.focusPt.x,
       y : initialSelection.focusPt.y - selectionLineHeight - EST_SEL_LINE_CHG_PTS
     })
   );
-  sh.observe(null, "TextSelection:Position",
+  Services.obs.notifyObservers(null, "TextSelection:Position",
     JSON.stringify({ handleType : FOCUS })
   );
 
@@ -306,7 +306,7 @@ function testLTR_moveFocusHandleUp() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Complete test, and report.
-  sh.observe(null, "TextSelection:End", {});
+  Services.obs.notifyObservers(null, "TextSelection:End", {});
 
   return Promise.all([
     ok(true, "testLTR_moveFocusHandleUp - Test Starts."),
@@ -359,13 +359,13 @@ function testLTR_moveAnchorHandleUp() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Force selection anchor to next upper line (estimate distance required).
-  sh.observe(null, "TextSelection:Move",
+  Services.obs.notifyObservers(null, "TextSelection:Move",
     JSON.stringify({ handleType : ANCHOR,
       x : initialSelection.anchorPt.x,
       y : initialSelection.anchorPt.y - selectionLineHeight - EST_SEL_LINE_CHG_PTS
     })
   );
-  sh.observe(null, "TextSelection:Position",
+  Services.obs.notifyObservers(null, "TextSelection:Position",
     JSON.stringify({ handleType : ANCHOR })
   );
 
@@ -374,7 +374,7 @@ function testLTR_moveAnchorHandleUp() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Complete test, and report.
-  sh.observe(null, "TextSelection:End", {});
+  Services.obs.notifyObservers(null, "TextSelection:End", {});
 
   return Promise.all([
     ok(true, "testLTR_moveAnchorHandleUp - Test Starts."),
@@ -423,13 +423,13 @@ function testLTR_moveAnchorHandleDown() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Force selection anchor to next lower line (estimate distance required).
-  sh.observe(null, "TextSelection:Move",
+  Services.obs.notifyObservers(null, "TextSelection:Move",
     JSON.stringify({ handleType : ANCHOR,
       x : initialSelection.anchorPt.x,
       y : initialSelection.anchorPt.y + EST_SEL_LINE_CHG_PTS
     })
   );
-  sh.observe(null, "TextSelection:Position",
+  Services.obs.notifyObservers(null, "TextSelection:Position",
     JSON.stringify({ handleType : ANCHOR })
   );
 
@@ -438,7 +438,7 @@ function testLTR_moveAnchorHandleDown() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Complete test, and report.
-  sh.observe(null, "TextSelection:End", {});
+  Services.obs.notifyObservers(null, "TextSelection:End", {});
 
   return Promise.all([
     ok(true, "testLTR_moveAnchorHandleDown - Test Starts."),
@@ -491,13 +491,13 @@ function testRTL_moveFocusHandleDown() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Force selection focus to next lower line (estimate distance required).
-  sh.observe(null, "TextSelection:Move",
+  Services.obs.notifyObservers(null, "TextSelection:Move",
     JSON.stringify({ handleType : FOCUS,
       x : initialSelection.focusPt.x,
       y : initialSelection.focusPt.y + EST_SEL_LINE_CHG_PTS
     })
   );
-  sh.observe(null, "TextSelection:Position",
+  Services.obs.notifyObservers(null, "TextSelection:Position",
     JSON.stringify({ handleType : FOCUS })
   );
 
@@ -506,7 +506,7 @@ function testRTL_moveFocusHandleDown() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Complete test, and report.
-  sh.observe(null, "TextSelection:End", {});
+  Services.obs.notifyObservers(null, "TextSelection:End", {});
 
   return Promise.all([
     ok(true, "testRTL_moveFocusHandleDown - Test Starts."),
@@ -555,13 +555,13 @@ function testRTL_moveFocusHandleUp() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Force selection focus to next upper line (estimate distance required).
-  sh.observe(null, "TextSelection:Move",
+  Services.obs.notifyObservers(null, "TextSelection:Move",
     JSON.stringify({ handleType : FOCUS,
       x : initialSelection.focusPt.x,
       y : initialSelection.focusPt.y - selectionLineHeight - EST_SEL_LINE_CHG_PTS
     })
   );
-  sh.observe(null, "TextSelection:Position",
+  Services.obs.notifyObservers(null, "TextSelection:Position",
     JSON.stringify({ handleType : FOCUS })
   );
 
@@ -570,7 +570,7 @@ function testRTL_moveFocusHandleUp() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Complete test, and report.
-  sh.observe(null, "TextSelection:End", {});
+  Services.obs.notifyObservers(null, "TextSelection:End", {});
 
   return Promise.all([
     ok(true, "testRTL_moveFocusHandleUp - Test Starts."),
@@ -623,13 +623,13 @@ function testRTL_moveAnchorHandleUp() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Force selection anchor to next upper line (estimate distance required).
-  sh.observe(null, "TextSelection:Move",
+  Services.obs.notifyObservers(null, "TextSelection:Move",
     JSON.stringify({ handleType : ANCHOR,
       x : initialSelection.anchorPt.x,
       y : initialSelection.anchorPt.y - selectionLineHeight - EST_SEL_LINE_CHG_PTS
     })
   );
-  sh.observe(null, "TextSelection:Position",
+  Services.obs.notifyObservers(null, "TextSelection:Position",
     JSON.stringify({ handleType : ANCHOR })
   );
 
@@ -638,7 +638,7 @@ function testRTL_moveAnchorHandleUp() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Complete test, and report.
-  sh.observe(null, "TextSelection:End", {});
+  Services.obs.notifyObservers(null, "TextSelection:End", {});
 
   return Promise.all([
     ok(true, "testRTL_moveAnchorHandleUp - Test Starts."),
@@ -687,13 +687,13 @@ function testRTL_moveAnchorHandleDown() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Force selection anchor to next lower line (estimate distance required).
-  sh.observe(null, "TextSelection:Move",
+  Services.obs.notifyObservers(null, "TextSelection:Move",
     JSON.stringify({ handleType : ANCHOR,
       x : initialSelection.anchorPt.x,
       y : initialSelection.anchorPt.y + EST_SEL_LINE_CHG_PTS
     })
   );
-  sh.observe(null, "TextSelection:Position",
+  Services.obs.notifyObservers(null, "TextSelection:Position",
     JSON.stringify({ handleType : ANCHOR })
   );
 
@@ -702,7 +702,7 @@ function testRTL_moveAnchorHandleDown() {
                        focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
 
   // Complete test, and report.
-  sh.observe(null, "TextSelection:End", {});
+  Services.obs.notifyObservers(null, "TextSelection:End", {});
 
   return Promise.all([
     ok(true, "testRTL_moveAnchorHandleDown - Test Starts."),
