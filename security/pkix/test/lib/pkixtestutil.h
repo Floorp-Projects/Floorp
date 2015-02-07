@@ -96,7 +96,37 @@ const ByteString md2WithRSAEncryption(alg_md2WithRSAEncryption,
 mozilla::pkix::Time YMDHMS(uint16_t year, uint16_t month, uint16_t day,
                            uint16_t hour, uint16_t minutes, uint16_t seconds);
 
-ByteString TLV(uint8_t tag, const ByteString& value);
+ByteString TLV(uint8_t tag, size_t length, const ByteString& value);
+
+inline ByteString
+TLV(uint8_t tag, const ByteString& value)
+{
+  return TLV(tag, value.length(), value);
+}
+
+// Although we can't enforce it without relying on Cuser-defined literals,
+// which aren't supported by all of our compilers yet, you should only pass
+// string literals as the last parameter to the following two functions.
+
+template <size_t N>
+inline ByteString
+TLV(uint8_t tag, const char(&value)[N])
+{
+  static_assert(N > 0, "cannot have string literal of size 0");
+  assert(value[N - 1] == 0);
+  return TLV(tag, ByteString(reinterpret_cast<const uint8_t*>(&value), N - 1));
+}
+
+template <size_t N>
+inline ByteString
+TLV(uint8_t tag, size_t length, const char(&value)[N])
+{
+  static_assert(N > 0, "cannot have string literal of size 0");
+  assert(value[N - 1] == 0);
+  return TLV(tag, length,
+             ByteString(reinterpret_cast<const uint8_t*>(&value), N - 1));
+}
+
 ByteString Boolean(bool value);
 ByteString Integer(long value);
 

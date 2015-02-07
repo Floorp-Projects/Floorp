@@ -548,6 +548,72 @@ TimeChoice(Reader& tagged, uint8_t expectedTag, /*out*/ Time& time)
   return Success;
 }
 
+Result
+IntegralBytes(Reader& input, uint8_t tag,
+              IntegralValueRestriction valueRestriction,
+              /*out*/ Input& value,
+              /*optional out*/ Input::size_type* significantBytes)
+{
+  Result rv = ExpectTagAndGetValue(input, tag, value);
+  if (rv != Success) {
+    return rv;
+  }
+  Reader reader(value);
+
+  // There must be at least one byte in the value. (Zero is encoded with a
+  // single 0x00 value byte.)
+  uint8_t firstByte;
+  rv = reader.Read(firstByte);
+  if (rv != Success) {
+    return rv;
+  }
+
+  // If there is a byte after an initial 0x00/0xFF, then the initial byte
+  // indicates a positive/negative integer value with its high bit set/unset.
+  bool prefixed = !reader.AtEnd() && (firstByte == 0 || firstByte == 0xff);
+
+  if (prefixed) {
+    uint8_t nextByte;
+    if (reader.Read(nextByte) != Success) {
+      return NotReached("Read of one byte failed but not at end.",
+                        Result::FATAL_ERROR_LIBRARY_FAILURE);
+    }
+    if ((firstByte & 0x80) == (nextByte & 0x80)) {
+      return Result::ERROR_BAD_DER;
+    }
+  }
+
+  switch (valueRestriction) {
+    case IntegralValueRestriction::MustBe0To127:
+      if (value.GetLength() != 1 || (firstByte & 0x80) != 0) {
+        return Result::ERROR_BAD_DER;
+      }
+      break;
+
+    case IntegralValueRestriction::MustBePositive:
+      if ((value.GetLength() == 1 && firstByte == 0) ||
+          (firstByte & 0x80) != 0) {
+        return Result::ERROR_BAD_DER;
+      }
+      break;
+
+    case IntegralValueRestriction::NoRestriction:
+      break;
+  }
+
+  if (significantBytes) {
+    *significantBytes = value.GetLength();
+    if (prefixed) {
+      assert(*significantBytes > 1);
+      --*significantBytes;
+    }
+
+    assert(*significantBytes > 0);
+  }
+
+  return Success;
+}
+
 } // namespace internal
 
 } } } // namespace mozilla::pkix::der
