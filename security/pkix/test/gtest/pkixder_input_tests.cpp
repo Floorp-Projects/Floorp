@@ -24,7 +24,7 @@
 
 #include <functional>
 #include <vector>
-#include <gtest/gtest.h>
+#include "pkixgtest.h"
 
 #include "pkixder.h"
 
@@ -467,7 +467,7 @@ TEST_F(pkixder_input_tests, MarkAndGetInput)
 }
 
 // Cannot run this test on debug builds because of the NotReached
-#ifndef DEBUG
+#ifdef NDEBUG
 TEST_F(pkixder_input_tests, MarkAndGetInputDifferentInput)
 {
   const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
@@ -847,7 +847,7 @@ TEST_F(pkixder_input_tests, NestedOf)
                      [&readValues](Reader& r) {
                        return NestedOfHelper(r, readValues);
                      }));
-  ASSERT_EQ((size_t) 3, readValues.size());
+  ASSERT_EQ(3u, readValues.size());
   ASSERT_EQ(0x01, readValues[0]);
   ASSERT_EQ(0x02, readValues[1]);
   ASSERT_EQ(0x03, readValues[2]);
@@ -865,7 +865,7 @@ TEST_F(pkixder_input_tests, NestedOfWithTruncatedData)
                      [&readValues](Reader& r) {
                        return NestedOfHelper(r, readValues);
                      }));
-  ASSERT_EQ((size_t) 0, readValues.size());
+  ASSERT_EQ(0u, readValues.size());
 }
 
 TEST_F(pkixder_input_tests, MatchRestAtEnd)

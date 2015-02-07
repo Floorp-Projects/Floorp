@@ -93,12 +93,8 @@ const ByteString md2WithRSAEncryption(alg_md2WithRSAEncryption,
   MOZILLA_PKIX_ARRAY_LENGTH(alg_md2WithRSAEncryption));
 
 // e.g. YMDHMS(2016, 12, 31, 1, 23, 45) => 2016-12-31:01:23:45 (GMT)
-mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
-                           int16_t hour, int16_t minutes, int16_t seconds);
-
-// e.g. YMDHMS(2016, 12, 31, 1, 23, 45) => 2016-12-31:01:23:45 (GMT)
-mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
-                           int16_t hour, int16_t minutes, int16_t seconds);
+mozilla::pkix::Time YMDHMS(uint16_t year, uint16_t month, uint16_t day,
+                           uint16_t hour, uint16_t minutes, uint16_t seconds);
 
 ByteString TLV(uint8_t tag, const ByteString& value);
 ByteString Boolean(bool value);
@@ -168,7 +164,7 @@ template <size_t L>
 inline ByteString
 RFC822Name(const char (&bytes)[L])
 {
-  return RFC822Name(ByteString(reinterpret_cast<const uint8_t (&)[L]>(bytes),
+  return RFC822Name(ByteString(reinterpret_cast<const uint8_t*>(&bytes),
                                L - 1));
 }
 
@@ -183,7 +179,7 @@ template <size_t L>
 inline ByteString
 DNSName(const char (&bytes)[L])
 {
-  return DNSName(ByteString(reinterpret_cast<const uint8_t (&)[L]>(bytes),
+  return DNSName(ByteString(reinterpret_cast<const uint8_t*>(&bytes),
                             L - 1));
 }
 
