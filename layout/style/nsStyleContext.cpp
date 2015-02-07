@@ -32,6 +32,35 @@ using namespace mozilla;
 
 //----------------------------------------------------------------------
 
+#ifdef DEBUG
+
+// Check that the style struct IDs are in the same order as they are
+// in nsStyleStructList.h, since when we set up the IDs, we include
+// the inherited and reset structs spearately from nsStyleStructList.h
+enum DebugStyleStruct {
+#define STYLE_STRUCT(name, checkdata_cb) eDebugStyleStruct_##name,
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+};
+
+#define STYLE_STRUCT(name, checkdata_cb) \
+  static_assert(static_cast<int>(eDebugStyleStruct_##name) == \
+                  static_cast<int>(eStyleStruct_##name), \
+                "Style struct IDs are not declared in order?");
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+
+const uint32_t nsStyleContext::sDependencyTable[] = {
+#define STYLE_STRUCT(name, checkdata_cb)
+#define STYLE_STRUCT_DEP(dep) NS_STYLE_INHERIT_BIT(dep) |
+#define STYLE_STRUCT_END() 0,
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+#undef STYLE_STRUCT_DEP
+#undef STYLE_STRUCT_END
+};
+
+#endif
 
 nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                                nsIAtom* aPseudoTag,
@@ -53,6 +82,12 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                 nsCSSPseudoElements::ePseudo_MAX,
                 "pseudo element bits no longer fit in a uint64_t");
   MOZ_ASSERT(aRuleNode);
+
+#ifdef DEBUG
+  static_assert(MOZ_ARRAY_LENGTH(nsStyleContext::sDependencyTable)
+                  == nsStyleStructID_Length,
+                "Number of items in dependency table doesn't match IDs");
+#endif
 
   mNextSibling = this;
   mPrevSibling = this;
