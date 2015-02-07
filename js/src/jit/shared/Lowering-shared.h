@@ -197,7 +197,7 @@ class LIRGeneratorShared : public MDefinitionVisitor
     // effects (if any), it may check pre-conditions and bailout if they do not
     // hold. This function informs the register allocator that it will need to
     // capture appropriate state.
-    bool assignSnapshot(LInstruction *ins, BailoutKind kind);
+    void assignSnapshot(LInstruction *ins, BailoutKind kind);
 
     // Marks this instruction as needing to call into either the VM or GC. This
     // function may build a snapshot that captures the result of its own
