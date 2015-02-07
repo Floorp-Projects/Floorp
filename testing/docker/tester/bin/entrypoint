@@ -1,4 +1,4 @@
-#! /bin/bash -vex
+#! /bin/bash -ex
 
 test $MOZHARNESS_REPOSITORY # mozharness repository
 test $MOZHARNESS_REV # mozharness revision
@@ -18,7 +18,7 @@ export DISPLAY=:0
 #   $ docker -v your_mozharness:/home/worker/mozharness ...
 #
 if [ ! -d mozharness ]; then
-  tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV
+  buildbot_step 'Checkout mozharness' tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV
 fi
 
-eval $@
+buildbot_step 'Running tests' $@
