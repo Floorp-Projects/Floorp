@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "MigrationUtils",
 let gProfD = do_get_profile();
 
 // Create a fake XULAppInfo to satisfy the eventual needs of the migrators.
-let (XULAppInfo = {
+let XULAppInfo = {
   // nsIXUlAppInfo
   get vendor() "Mozilla",
   get name() "XPCShell",
@@ -48,17 +48,17 @@ let (XULAppInfo = {
       throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
   }
-}) {
-  const CONTRACT_ID = "@mozilla.org/xre/app-info;1";
-  const CID = Components.ID("7685dac8-3637-4660-a544-928c5ec0e714}");
+};
 
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.registerFactory(CID, "XULAppInfo", CONTRACT_ID, {
-    createInstance: function (aOuter, aIID) {
-      if (aOuter != null)
-        throw Cr.NS_ERROR_NO_AGGREGATION;
-      return XULAppInfo.QueryInterface(aIID);
-    },
-    QueryInterface: XPCOMUtils.generateQI(Ci.nsIFactory)
-  });
-}
+const CONTRACT_ID = "@mozilla.org/xre/app-info;1";
+const CID = Components.ID("7685dac8-3637-4660-a544-928c5ec0e714}");
+
+let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+registrar.registerFactory(CID, "XULAppInfo", CONTRACT_ID, {
+  createInstance: function (aOuter, aIID) {
+    if (aOuter != null)
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    return XULAppInfo.QueryInterface(aIID);
+  },
+  QueryInterface: XPCOMUtils.generateQI(Ci.nsIFactory)
+});

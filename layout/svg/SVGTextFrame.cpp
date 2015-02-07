@@ -3121,7 +3121,7 @@ public:
       mDisableSubpixelAA(false)
   {
     MOZ_COUNT_CTOR(nsDisplaySVGText);
-    MOZ_ASSERT(aFrame, "Must have a frame!");
+    NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplaySVGText() {
@@ -3513,8 +3513,8 @@ SVGTextFrame::FindCloserFrameForSelection(
 void
 SVGTextFrame::NotifySVGChanged(uint32_t aFlags)
 {
-  MOZ_ASSERT(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
-             "Invalidation logic may need adjusting");
+  NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
+                    "Invalidation logic may need adjusting");
 
   bool needNewBounds = false;
   bool needGlyphMetricsUpdate = false;
@@ -3832,8 +3832,8 @@ SVGTextFrame::ReflowSVG()
   NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
                "This call is probaby a wasteful mistake");
 
-  MOZ_ASSERT(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
-             "ReflowSVG mechanism not designed for this");
+  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
+                    "ReflowSVG mechanism not designed for this");
 
   if (!nsSVGUtils::NeedsReflowSVG(this)) {
     NS_ASSERTION(!(mState & NS_STATE_SVG_POSITIONING_DIRTY), "How did this happen?");

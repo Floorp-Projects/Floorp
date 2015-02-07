@@ -4641,7 +4641,7 @@ nsDisplayScrollLayer::GetScrollLayerCount()
   // layers were created or the property was deleted to early. If the latter,
   // make sure that nsDisplayScrollInfoLayer is on the bottom of the list so
   // that it is processed last.
-  MOZ_ASSERT(hasCount, "nsDisplayScrollLayer should always be defined");
+  NS_ABORT_IF_FALSE(hasCount, "nsDisplayScrollLayer should always be defined");
   return result;
 #else
   return reinterpret_cast<intptr_t>(props.Get(nsIFrame::ScrollLayerCount()));
@@ -4886,8 +4886,8 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   , mIndex(aIndex)
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
-  MOZ_ASSERT(aFrame, "Must have a frame!");
-  MOZ_ASSERT(!aFrame->IsTransformed(), "Can't specify a transform getter for a transformed frame!");
+  NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
+  NS_ABORT_IF_FALSE(!aFrame->IsTransformed(), "Can't specify a transform getter for a transformed frame!");
   Init(aBuilder);
 }
 
@@ -4930,7 +4930,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   , mIndex(aIndex)
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
-  MOZ_ASSERT(aFrame, "Must have a frame!");
+  NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
   SetReferenceFrameToAncestor(aBuilder);
   Init(aBuilder);
 }
@@ -4946,7 +4946,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   , mIndex(aIndex)
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
-  MOZ_ASSERT(aFrame, "Must have a frame!");
+  NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
   SetReferenceFrameToAncestor(aBuilder);
   Init(aBuilder);
 }
@@ -4998,7 +4998,7 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
         NSAppUnitsToFloatPixels(*dimensions[index], aAppUnitsPerPixel) *
         coord.GetPercentValue();
     } else {
-      MOZ_ASSERT(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
+      NS_ABORT_IF_FALSE(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
       coords[index] =
         NSAppUnitsToFloatPixels(coord.GetCoordValue(), aAppUnitsPerPixel);
     }
@@ -5082,7 +5082,7 @@ nsDisplayTransform::GetDeltaToPerspectiveOrigin(const nsIFrame* aFrame,
         NSAppUnitsToFloatPixels(*dimensions[index], aAppUnitsPerPixel) *
         coord.GetPercentValue();
     } else {
-      MOZ_ASSERT(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
+      NS_ABORT_IF_FALSE(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
       *coords[index] =
         NSAppUnitsToFloatPixels(coord.GetCoordValue(), aAppUnitsPerPixel);
     }

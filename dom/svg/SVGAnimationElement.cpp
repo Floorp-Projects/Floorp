@@ -82,9 +82,9 @@ SVGAnimationElement::GetTargetElementContent()
   if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
     return mHrefTarget.get();
   }
-  MOZ_ASSERT(!mHrefTarget.get(),
-             "We shouldn't have an xlink:href target "
-             "if we don't have an xlink:href attribute");
+  NS_ABORT_IF_FALSE(!mHrefTarget.get(),
+                    "We shouldn't have an xlink:href target "
+                    "if we don't have an xlink:href attribute");
 
   // No "xlink:href" attribute --> I should target my parent.
   nsIContent* parent = GetFlattenedTreeParent();
@@ -191,8 +191,9 @@ SVGAnimationElement::BindToTree(nsIDocument* aDocument,
                                 nsIContent* aBindingParent,
                                 bool aCompileEventHandlers)
 {
-  MOZ_ASSERT(!mHrefTarget.get(),
-             "Shouldn't have href-target yet (or it should've been cleared)");
+  NS_ABORT_IF_FALSE(!mHrefTarget.get(),
+                    "Shouldn't have href-target yet "
+                    "(or it should've been cleared)");
   nsresult rv = SVGAnimationElementBase::BindToTree(aDocument, aParent,
                                                     aBindingParent,
                                                     aCompileEventHandlers);
@@ -313,8 +314,8 @@ SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
     mHrefTarget.Unlink();
     AnimationTargetChanged();
   } else if (IsInDoc()) {
-    MOZ_ASSERT(aValue->Type() == nsAttrValue::eString,
-               "Expected href attribute to be string type");
+    NS_ABORT_IF_FALSE(aValue->Type() == nsAttrValue::eString,
+                      "Expected href attribute to be string type");
     UpdateHrefTarget(this, aValue->GetStringValue());
   } // else: we're not yet in a document -- we'll update the target on
     // next BindToTree call.

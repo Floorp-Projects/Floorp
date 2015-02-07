@@ -438,7 +438,7 @@ SVGUseElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
   if (aWhich == eChildToUserSpace) {
     return toUserSpace * aMatrix;
   }
-  MOZ_ASSERT(aWhich == eAllTransforms, "Unknown TransformTypes");
+  NS_ABORT_IF_FALSE(aWhich == eAllTransforms, "Unknown TransformTypes");
   return toUserSpace * fromUserSpace;
 }
 

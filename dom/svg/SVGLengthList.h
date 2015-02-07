@@ -110,14 +110,14 @@ private:
   }
 
   void ReplaceItem(uint32_t aIndex, const SVGLength &aLength) {
-    MOZ_ASSERT(aIndex < mLengths.Length(),
-               "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    NS_ABORT_IF_FALSE(aIndex < mLengths.Length(),
+                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mLengths[aIndex] = aLength;
   }
 
   void RemoveItem(uint32_t aIndex) {
-    MOZ_ASSERT(aIndex < mLengths.Length(),
-               "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    NS_ABORT_IF_FALSE(aIndex < mLengths.Length(),
+                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mLengths.RemoveElementAt(aIndex);
   }
 
@@ -203,14 +203,14 @@ public:
    */
   bool IsIdentity() const {
     if (!mElement) {
-      MOZ_ASSERT(IsEmpty(), "target element propagation failure");
+      NS_ABORT_IF_FALSE(IsEmpty(), "target element propagation failure");
       return true;
     }
     return false;
   }
 
   uint8_t Axis() const {
-    MOZ_ASSERT(mElement, "Axis() isn't valid");
+    NS_ABORT_IF_FALSE(mElement, "Axis() isn't valid");
     return mAxis;
   }
 
