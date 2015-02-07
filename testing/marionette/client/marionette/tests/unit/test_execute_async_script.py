@@ -133,3 +133,8 @@ marionetteScriptFinished(5);
             var callback = arguments[arguments.length - 1];
             setTimeout("callback(foo())", 50);
             """)
+        self.assertRaises(JavascriptException,
+            self.marionette.execute_async_script, """
+            var callback = arguments[arguments.length - 1];
+            setTimeout("callback(foo())", 50);
+            """, debug_script=True)
