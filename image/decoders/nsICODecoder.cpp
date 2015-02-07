@@ -78,7 +78,7 @@ void
 nsICODecoder::FinishInternal()
 {
   // We shouldn't be called in error cases
-  MOZ_ASSERT(!HasError(), "Shouldn't call FinishInternal after error!");
+  NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call FinishInternal after error!");
 
   // Finish the internally used decoder as well
   if (mContainedDecoder) {
@@ -216,7 +216,7 @@ nsICODecoder::SetHotSpotIfCursor()
 void
 nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 {
-  MOZ_ASSERT(!HasError(), "Shouldn't call WriteInternal after error!");
+  NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
 
   if (!aCount) {
     if (mContainedDecoder) {
@@ -538,7 +538,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         }
 
         // Ensure memory has been allocated before decoding.
-        MOZ_ASSERT(mRow, "mRow is null");
+        NS_ABORT_IF_FALSE(mRow, "mRow is null");
         if (!mRow) {
           PostDataError();
           return;

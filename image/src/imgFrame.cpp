@@ -123,7 +123,7 @@ static bool AllowedImageAndFrameDimensions(const nsIntSize& aImageSize,
   }
   nsIntRect imageRect(0, 0, aImageSize.width, aImageSize.height);
   if (!imageRect.Contains(aFrameRect)) {
-    return false;
+    NS_WARNING("Animated image frame does not fit inside bounds of image");
   }
   return true;
 }
@@ -1143,7 +1143,7 @@ imgFrame::SizeOfExcludingThis(gfxMemoryLocation aLocation,
 
   // aMallocSizeOf is only used if aLocation==gfxMemoryLocation::IN_PROCESS_HEAP.  It
   // should be nullptr otherwise.
-  MOZ_ASSERT(
+  NS_ABORT_IF_FALSE(
     (aLocation == gfxMemoryLocation::IN_PROCESS_HEAP &&  aMallocSizeOf) ||
     (aLocation != gfxMemoryLocation::IN_PROCESS_HEAP && !aMallocSizeOf),
     "mismatch between aLocation and aMallocSizeOf");

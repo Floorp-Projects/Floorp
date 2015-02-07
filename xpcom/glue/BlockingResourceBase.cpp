@@ -212,7 +212,7 @@ BlockingResourceBase::BlockingResourceBase(
   , mAcquired()
 #endif
 {
-  MOZ_ASSERT(mName, "Name must be nonnull");
+  NS_ABORT_IF_FALSE(mName, "Name must be nonnull");
   // PR_CallOnce guaranatees that InitStatics is called in a
   // thread-safe way
   if (PR_SUCCESS != PR_CallOnce(&sCallOnce, InitStatics)) {
