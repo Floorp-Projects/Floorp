@@ -966,8 +966,6 @@ struct TypeSetObjectKey
 
     const Class *clasp();
     TaggedProto proto();
-    TaggedProto protoMaybeInNursery();
-    bool hasTenuredProto();
     TypeNewScript *newScript();
 
     bool unknownProperties();
