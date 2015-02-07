@@ -121,7 +121,7 @@
   <project name="platform/libcore" path="libcore" revision="1a07f00d8163f497a785a3285ec55fe551ba95c1"/>
   <project name="platform/libnativehelper" path="libnativehelper" revision="4834b58ed7af3ee69523177e00e55603ac90ed50"/>
   <project name="platform/ndk" path="ndk" revision="869c05cab7b4315c2bc607493db3f5b18ead2580"/>
-  <project name="platform/prebuilts/misc" path="prebuilts/misc" revision="de282aa3cc6a3917fa42968fc85676846db776b0"/>
+  <project name="platform_prebuilts_misc" path="prebuilts/misc" remote="b2g" revision="da8b660db117e2a69a7624bfdca2f02cad397f2e"/>
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="5fd638a4a0ff3677fc3c970fab038d6db1bb7665"/>
   <project name="platform/prebuilts/qemu-kernel" path="prebuilts/qemu-kernel" revision="530cad9b205442d2db29361e796299dc323ef9ce"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="a982f43b7f2d5916dc3a859667a8ba78e50b6202"/>
