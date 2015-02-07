@@ -15,10 +15,13 @@ task:
     - 'docker-worker:image:{{#docker_image}}tester{{/docker_image}}'
     - 'queue:define-task:aws-provisioner/test-c4-2xlarge'
     - 'queue:create-task:aws-provisioner/test-c4-2xlarge'
+    - 'docker-worker:cache:tc-vcs'
 
   payload:
     image: '{{#docker_image}}tester{{/docker_image}}'
     maxRunTime: 3600
+    cache:
+      tc-vcs: '/home/worker/.tc-vcs'
     env:
       GAIA_HEAD_REPOSITORY: '{{{gaia_head_repository}}}'
       GAIA_BASE_REPOSITORY: '{{{gaia_base_repository}}}'
