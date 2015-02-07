@@ -561,7 +561,7 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
                                             stackState[i-1].name,
                                             parentFrame,
                                             stackState[i-1].principals);
-        parentFrame.set(getOrCreateSavedFrame(cx, lookup));
+        parentFrame = getOrCreateSavedFrame(cx, lookup);
         if (!parentFrame)
             return false;
     }

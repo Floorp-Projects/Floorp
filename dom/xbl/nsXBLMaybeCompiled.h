@@ -138,11 +138,11 @@ public:
   JSObject* GetJSFunctionPreserveColor() const { return extract()->GetJSFunctionPreserveColor(); }
 
   void SetUncompiled(UncompiledT* source) {
-    wrapper().set(nsXBLMaybeCompiled<UncompiledT>(source));
+    wrapper() = nsXBLMaybeCompiled<UncompiledT>(source);
   }
 
   void SetJSFunction(JSObject* function) {
-    wrapper().set(nsXBLMaybeCompiled<UncompiledT>(function));
+    wrapper() = nsXBLMaybeCompiled<UncompiledT>(function);
   }
 
   JS::Heap<JSObject*>& AsHeapObject()

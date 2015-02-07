@@ -431,7 +431,7 @@ js::intrinsic_DefineDataProperty(JSContext *cx, unsigned argc, Value *vp)
     PropDesc::Writability writable =
         PropDesc::Writability(bool(attributes & ATTR_WRITABLE));
 
-    desc.set(PropDesc(value, writable, enumerable, configurable));
+    desc = PropDesc(value, writable, enumerable, configurable);
 
     bool result;
     return StandardDefineProperty(cx, obj, id, desc, true, &result);

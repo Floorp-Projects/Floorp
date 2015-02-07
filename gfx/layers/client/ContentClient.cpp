@@ -290,8 +290,8 @@ ContentClientRemoteBuffer::BuildTextureClients(SurfaceFormat aFormat,
   // real transaction. That is kind of fragile, and this assert will catch
   // circumstances where we screw that up, e.g., by unnecessarily recreating our
   // buffers.
-  MOZ_ASSERT(!mIsNewBuffer,
-             "Bad! Did we create a buffer twice without painting?");
+  NS_ABORT_IF_FALSE(!mIsNewBuffer,
+                    "Bad! Did we create a buffer twice without painting?");
 
   mIsNewBuffer = true;
 
@@ -382,7 +382,7 @@ ContentClientRemoteBuffer::GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
 
   NS_ASSERTION(BufferRect().Contains(aRegionToDraw.GetBounds()),
                "Update outside of buffer rect!");
-  MOZ_ASSERT(mTextureClient, "should have a back buffer by now");
+  NS_ABORT_IF_FALSE(mTextureClient, "should have a back buffer by now");
 
   return updatedRegion;
 }
