@@ -36,6 +36,7 @@ class CompositorChild;
 class CompositorParent;
 class APZCTreeManager;
 class GeckoContentController;
+class APZEventState;
 struct ScrollableLayerGuid;
 struct SetTargetAPZCCallback;
 }
@@ -91,6 +92,7 @@ protected:
   typedef mozilla::layers::APZCTreeManager APZCTreeManager;
   typedef mozilla::layers::GeckoContentController GeckoContentController;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
+  typedef mozilla::layers::APZEventState APZEventState;
   typedef mozilla::layers::SetTargetAPZCCallback SetTargetAPZCCallback;
   typedef mozilla::ScreenRotation ScreenRotation;
 
@@ -440,6 +442,7 @@ protected:
   nsRefPtr<CompositorParent> mCompositorParent;
   nsRefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   nsRefPtr<APZCTreeManager> mAPZC;
+  nsRefPtr<APZEventState> mAPZEventState;
   nsRefPtr<SetTargetAPZCCallback> mSetTargetAPZCCallback;
   nsRefPtr<WidgetShutdownObserver> mShutdownObserver;
   nsRefPtr<TextEventDispatcher> mTextEventDispatcher;

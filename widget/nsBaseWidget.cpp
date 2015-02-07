@@ -46,6 +46,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/ChromeProcessController.h"
 #include "mozilla/layers/InputAPZContext.h"
@@ -936,6 +937,24 @@ private:
   nsRefPtr<APZCTreeManager> mTreeManager;
 };
 
+class ChromeProcessContentReceivedInputBlockCallback : public ContentReceivedInputBlockCallback {
+public:
+  explicit ChromeProcessContentReceivedInputBlockCallback(APZCTreeManager* aTreeManager)
+    : mTreeManager(aTreeManager)
+  {}
+
+  void Run(const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId, bool aPreventDefault) const MOZ_OVERRIDE {
+    MOZ_ASSERT(NS_IsMainThread());
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+        mTreeManager.get(), &APZCTreeManager::ContentReceivedInputBlock,
+        aInputBlockId, aPreventDefault));
+  }
+
+private:
+  nsRefPtr<APZCTreeManager> mTreeManager;
+};
+
+
 void nsBaseWidget::ConfigureAPZCTreeManager()
 {
   uint64_t rootLayerTreeId = mCompositorParent->RootLayerTreeId();
@@ -943,6 +962,8 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
   MOZ_ASSERT(mAPZC);
 
   mAPZC->SetDPI(GetDPI());
+  mAPZEventState = new APZEventState(this,
+      new ChromeProcessContentReceivedInputBlockCallback(mAPZC));
   mSetTargetAPZCCallback = new ChromeProcessSetTargetAPZCCallback(mAPZC);
 
   nsRefPtr<GeckoContentController> controller = CreateRootContentController();
@@ -976,16 +997,19 @@ nsBaseWidget::DispatchEventForAPZ(WidgetGUIEvent* aEvent,
   if (mAPZC && !context.WasRoutedToChildProcess()) {
     // EventStateManager did not route the event into the child process.
     // It's safe to communicate to APZ that the event has been processed.
-    if (aEvent->AsWheelEvent() || (aEvent->AsTouchEvent() && aEvent->AsTouchEvent()->message == NS_TOUCH_START)) {
+    // TODO: Eventually we'll be able to move the SendSetTargetAPZCNotification
+    // call into APZEventState::Process*Event() as well.
+    if (WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent()) {
+      if (touchEvent->message == NS_TOUCH_START) {
+        APZCCallbackHelper::SendSetTargetAPZCNotification(this, GetDocument(), *aEvent,
+            aGuid, aInputBlockId, mSetTargetAPZCCallback);
+      }
+      mAPZEventState->ProcessTouchEvent(*touchEvent, aGuid, aInputBlockId);
+    } else if (WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent()) {
       APZCCallbackHelper::SendSetTargetAPZCNotification(this, GetDocument(), *aEvent,
-          aGuid, aInputBlockId, mSetTargetAPZCCallback);
+                aGuid, aInputBlockId, mSetTargetAPZCCallback);
+      mAPZEventState->ProcessWheelEvent(*wheelEvent, aGuid, aInputBlockId);
     }
-    bool defaultPrevented = aEvent->AsTouchEvent()
-      ? (nsIPresShell::gPreventMouseEvents || aEvent->mFlags.mMultipleActionsPrevented)
-      : aEvent->mFlags.mDefaultPrevented;
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
-        mAPZC.get(), &APZCTreeManager::ContentReceivedInputBlock, aInputBlockId,
-        defaultPrevented));
   }
 
   return status;
