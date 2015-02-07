@@ -6,13 +6,7 @@ task:
     name: '[TC] Gaia Unit Test'
     description: Gaia Unit Test
 
-  scopes:
-    - 'docker-worker:cache:sources-gaia'
-
   payload:
-    cache:
-      sources-gaia: '/home/worker/gaia'
-
     command:
       - entrypoint
       - ./bin/pull_gaia.sh &&

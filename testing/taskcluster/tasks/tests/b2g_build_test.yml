@@ -6,13 +6,7 @@ task:
     name: '[TC] Gaia Build Test'
     description: Gaia Build Test test run
 
-  scopes:
-    - 'docker-worker:cache:sources-gaia'
-
   payload:
-    cache:
-      sources-gaia: '/home/worker/gaia'
-
     command:
       - entrypoint # entrypoint ensures we are running in xvfb
       - ./bin/pull_gaia.sh &&
