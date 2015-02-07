@@ -54,7 +54,9 @@ public:
 
   const Input GetDER() const { return der; }
   der::Version GetVersion() const { return version; }
-  const SignedDataWithSignature& GetSignedData() const { return signedData; }
+  const der::SignedDataWithSignature& GetSignedData() const {
+    return signedData;
+  }
   const Input GetIssuer() const { return issuer; }
   // XXX: "validity" is a horrible name for the structure that holds
   // notBefore & notAfter, but that is the name used in RFC 5280 and we use the
@@ -107,8 +109,6 @@ public:
   BackCert const* const childCert;
 
 private:
-  der::Version version;
-
   // When parsing certificates in BackCert::Init, we don't accept empty
   // extensions. Consequently, we don't have to store a distinction between
   // empty extensions and extensions that weren't included. However, when
@@ -120,13 +120,16 @@ private:
     return item.GetLength() > 0 ? &item : nullptr;
   }
 
-  SignedDataWithSignature signedData;
+  der::SignedDataWithSignature signedData;
+
+  der::Version version;
+  Input serialNumber;
+  Input signature;
   Input issuer;
   // XXX: "validity" is a horrible name for the structure that holds
   // notBefore & notAfter, but that is the name used in RFC 5280 and we use the
   // RFC 5280 names for everything.
   Input validity;
-  Input serialNumber;
   Input subject;
   Input subjectPublicKeyInfo;
 
@@ -197,19 +200,23 @@ DaysBeforeYear(unsigned int year)
        + ((year - 1u) / 400u); // except years divisible by 400.
 }
 
-// Ensures that we do not call the TrustDomain's VerifySignedData function if
-// the algorithm is unsupported.
-inline Result
-WrappedVerifySignedData(TrustDomain& trustDomain,
-                        const SignedDataWithSignature& signedData,
-                        Input subjectPublicKeyInfo)
-{
-  if (signedData.algorithm == SignatureAlgorithm::unsupported_algorithm) {
-    return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
-  }
+static const size_t MAX_DIGEST_SIZE_IN_BYTES = 512 / 8; // sha-512
 
-  return trustDomain.VerifySignedData(signedData, subjectPublicKeyInfo);
-}
+Result DigestSignedData(TrustDomain& trustDomain,
+                        const der::SignedDataWithSignature& signedData,
+                        /*out*/ uint8_t(&digestBuf)[MAX_DIGEST_SIZE_IN_BYTES],
+                        /*out*/ der::PublicKeyAlgorithm& publicKeyAlg,
+                        /*out*/ SignedDigest& signedDigest);
+
+Result VerifySignedDigest(TrustDomain& trustDomain,
+                          der::PublicKeyAlgorithm publicKeyAlg,
+                          const SignedDigest& signedDigest,
+                          Input signerSubjectPublicKeyInfo);
+
+// Combines DigestSignedData and VerifySignedDigest
+Result VerifySignedData(TrustDomain& trustDomain,
+                        const der::SignedDataWithSignature& signedData,
+                        Input signerSubjectPublicKeyInfo);
 
 // In a switch over an enum, sometimes some compilers are not satisfied that
 // all control flow paths have been considered unless there is a default case.

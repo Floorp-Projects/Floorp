@@ -214,17 +214,12 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
 }
 
 Result
-AppTrustDomain::VerifySignedData(const SignedDataWithSignature& signedData,
-                                 Input subjectPublicKeyInfo)
-{
-  return VerifySignedDataNSS(signedData, subjectPublicKeyInfo, mPinArg);
-}
-
-Result
-AppTrustDomain::DigestBuf(Input item, /*out*/ uint8_t* digestBuf,
+AppTrustDomain::DigestBuf(Input item,
+                          DigestAlgorithm digestAlg,
+                          /*out*/ uint8_t* digestBuf,
                           size_t digestBufLen)
 {
-  return DigestBufNSS(item, digestBuf, digestBufLen);
+  return DigestBufNSS(item, digestAlg, digestBuf, digestBufLen);
 }
 
 Result
@@ -259,6 +254,14 @@ AppTrustDomain::CheckRSAPublicKeyModulusSizeInBits(
 }
 
 Result
+AppTrustDomain::VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                                           Input subjectPublicKeyInfo)
+{
+  return VerifyRSAPKCS1SignedDigestNSS(signedDigest, subjectPublicKeyInfo,
+                                       mPinArg);
+}
+
+Result
 AppTrustDomain::CheckECDSACurveIsAcceptable(EndEntityOrCA /*endEntityOrCA*/,
                                             NamedCurve curve)
 {
@@ -270,6 +273,14 @@ AppTrustDomain::CheckECDSACurveIsAcceptable(EndEntityOrCA /*endEntityOrCA*/,
   }
 
   return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
+}
+
+Result
+AppTrustDomain::VerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                        Input subjectPublicKeyInfo)
+{
+  return VerifyECDSASignedDigestNSS(signedDigest, subjectPublicKeyInfo,
+                                    mPinArg);
 }
 
 } } // namespace mozilla::psm

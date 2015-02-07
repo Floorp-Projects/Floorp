@@ -51,44 +51,13 @@ enum class NamedCurve
   secp256r1 = 3,
 };
 
-enum class SignatureAlgorithm
+struct SignedDigest final
 {
-  // ecdsa-with-SHA512 (OID 1.2.840.10045.4.3.4, RFC 5758 Section 3.2)
-  ecdsa_with_sha512 = 1,
-
-  // ecdsa-with-SHA384 (OID 1.2.840.10045.4.3.3, RFC 5758 Section 3.2)
-  ecdsa_with_sha384 = 4,
-
-  // ecdsa-with-SHA256 (OID 1.2.840.10045.4.3.2, RFC 5758 Section 3.2)
-  ecdsa_with_sha256 = 7,
-
-  // ecdsa-with-SHA1 (OID 1.2.840.10045.4.1, RFC 3279 Section 2.2.3)
-  ecdsa_with_sha1 = 10,
-
-  // sha512WithRSAEncryption (OID 1.2.840.113549.1.1.13, RFC 4055 Section 5)
-  rsa_pkcs1_with_sha512 = 13,
-
-  // sha384WithRSAEncryption (OID 1.2.840.113549.1.1.12, RFC 4055 Section 5)
-  rsa_pkcs1_with_sha384 = 14,
-
-  // sha256WithRSAEncryption (OID 1.2.840.113549.1.1.11, RFC 4055 Section 5)
-  rsa_pkcs1_with_sha256 = 15,
-
-  // sha-1WithRSAEncryption (OID 1.2.840.113549.1.1.5, RFC 3279 Section 2.2.1)
-  rsa_pkcs1_with_sha1 = 16,
-
-  // Used to indicate any unsupported algorithm.
-  unsupported_algorithm = 19,
-};
-
-struct SignedDataWithSignature final
-{
-public:
-  Input data;
-  SignatureAlgorithm algorithm;
+  Input digest;
+  DigestAlgorithm digestAlgorithm;
   Input signature;
 
-  void operator=(const SignedDataWithSignature&) = delete;
+  void operator=(const SignedDigest&) = delete;
 };
 
 enum class EndEntityOrCA { MustBeEndEntity = 0, MustBeCA = 1 };
@@ -311,6 +280,17 @@ public:
                    EndEntityOrCA endEntityOrCA,
                    unsigned int modulusSizeInBits) = 0;
 
+  // Verify the given RSA PKCS#1.5 signature on the given digest using the
+  // given RSA public key.
+  //
+  // CheckRSAPublicKeyModulusSizeInBits will be called before calling this
+  // function, so it is not necessary to repeat those checks here. However,
+  // VerifyRSAPKCS1SignedDigest *is* responsible for doing the mathematical
+  // verification of the public key validity as specified in NIST SP 800-56A.
+  virtual Result VerifyRSAPKCS1SignedDigest(
+                   const SignedDigest& signedDigest,
+                   Input subjectPublicKeyInfo) = 0;
+
   // Check that the given named ECC curve is acceptable for ECDSA signatures.
   //
   // Return Success if the curve is acceptable,
@@ -319,31 +299,29 @@ public:
   virtual Result CheckECDSACurveIsAcceptable(EndEntityOrCA endEntityOrCA,
                                              NamedCurve curve) = 0;
 
-  // Verify the given signature using the given public key.
+  // Verify the given ECDSA signature on the given digest using the given ECC
+  // public key.
   //
-  // Most implementations of this function should probably forward the call
-  // directly to mozilla::pkix::VerifySignedData.
-  //
-  // CheckRSAPublicKeyModulusSizeInBits or CheckECDSACurveIsAcceptable will
-  // be called before calling this function, so it is not necessary to repeat
-  // those checks in VerifySignedData. However, VerifySignedData *is*
-  // responsible for doing the mathematical verification of the public key
-  // validity as specified in NIST SP 800-56A.
-  virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
-                                  Input subjectPublicKeyInfo) = 0;
+  // CheckECDSACurveIsAcceptable will be called before calling this function,
+  // so it is not necessary to repeat that check here. However,
+  // VerifyECDSASignedDigest *is* responsible for doing the mathematical
+  // verification of the public key validity as specified in NIST SP 800-56A.
+  virtual Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                         Input subjectPublicKeyInfo) = 0;
 
-  // Compute the SHA-1 hash of the data in the current item.
+  // Compute a digest of the data in item using the given digest algorithm.
   //
   // item contains the data to hash.
-  // digestBuf must point to a buffer to where the SHA-1 hash will be written.
-  // digestBufLen must be DIGEST_LENGTH (20, the length of a SHA-1 hash).
+  // digestBuf points to a buffer to where the digest will be written.
+  // digestBufLen will be the size of the digest output (20 for SHA-1,
+  // 32 for SHA-256, etc.).
   //
-  // TODO(bug 966856): Add SHA-2 support
   // TODO: Taking the output buffer as (uint8_t*, size_t) is counter to our
   // other, extensive, memory safety efforts in mozilla::pkix, and we should
   // find a way to provide a more-obviously-safe interface.
-  static const size_t DIGEST_LENGTH = 20; // length of SHA-1 digest
-  virtual Result DigestBuf(Input item, /*out*/ uint8_t* digestBuf,
+  virtual Result DigestBuf(Input item,
+                           DigestAlgorithm digestAlg,
+                           /*out*/ uint8_t* digestBuf,
                            size_t digestBufLen) = 0;
 protected:
   TrustDomain() { }

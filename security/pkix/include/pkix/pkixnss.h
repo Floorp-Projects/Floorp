@@ -31,23 +31,32 @@
 
 namespace mozilla { namespace pkix {
 
-// Verify the given signed data using the given public key.
-Result VerifySignedDataNSS(const SignedDataWithSignature& sd,
-                           Input subjectPublicKeyInfo,
-                           void* pkcs11PinArg);
+// Verifies the PKCS#1.5 signature on the given data using the given RSA public
+// key.
+Result VerifyRSAPKCS1SignedDigestNSS(const SignedDigest& sd,
+                                     Input subjectPublicKeyInfo,
+                                     void* pkcs11PinArg);
 
-// Computes the SHA-1 hash of the data in the current item.
+// Verifies the ECDSA signature on the given data using the given ECC public
+// key.
+Result VerifyECDSASignedDigestNSS(const SignedDigest& sd,
+                                  Input subjectPublicKeyInfo,
+                                  void* pkcs11PinArg);
+
+// Computes the digest of the given data using the given digest algorithm.
 //
 // item contains the data to hash.
-// digestBuf must point to a buffer to where the SHA-1 hash will be written.
-// digestBufLen must be 20 (the length of a SHA-1 hash,
-//              TrustDomain::DIGEST_LENGTH).
+// digestBuf must point to a buffer to where the digest will be written.
+// digestBufLen must be the size of the buffer, which must be exactly equal
+//              to the size of the digest output (20 for SHA-1, 32 for SHA-256,
+//              etc.)
 //
-// TODO(bug 966856): Add SHA-2 support
 // TODO: Taking the output buffer as (uint8_t*, size_t) is counter to our
 // other, extensive, memory safety efforts in mozilla::pkix, and we should find
 // a way to provide a more-obviously-safe interface.
-Result DigestBufNSS(Input item, /*out*/ uint8_t* digestBuf,
+Result DigestBufNSS(Input item,
+                    DigestAlgorithm digestAlg,
+                    /*out*/ uint8_t* digestBuf,
                     size_t digestBufLen);
 
 Result MapPRErrorCodeToResult(PRErrorCode errorCode);
@@ -83,6 +92,8 @@ inline SECItem UnsafeMapInputToSECItem(Input input)
     const_cast<uint8_t*>(input.UnsafeGetData()),
     input.GetLength()
   };
+  static_assert(sizeof(decltype(input.GetLength())) <= sizeof(result.len),
+                "input.GetLength() must fit in a SECItem");
   return result;
 }
 

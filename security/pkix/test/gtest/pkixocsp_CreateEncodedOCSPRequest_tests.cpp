@@ -59,27 +59,36 @@ private:
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result VerifySignedData(const SignedDataWithSignature&, Input) override
+  Result DigestBuf(Input item, DigestAlgorithm digestAlg,
+                   /*out*/ uint8_t *digestBuf, size_t digestBufLen)
+                   override
+  {
+    return TestDigestBuf(item, digestAlg, digestBuf, digestBufLen);
+  }
+
+  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
+                                            final override
   {
     ADD_FAILURE();
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result DigestBuf(Input item, /*out*/ uint8_t *digestBuf, size_t digestBufLen)
-                   override
+  Result VerifyRSAPKCS1SignedDigest(const SignedDigest&, Input) override
   {
-    return TestDigestBuf(item, digestBuf, digestBufLen);
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
-                                            override
+  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) final override
   {
-    return Success;
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
+  Result VerifyECDSASignedDigest(const SignedDigest&, Input) override
   {
-    return Success;
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 };
 
