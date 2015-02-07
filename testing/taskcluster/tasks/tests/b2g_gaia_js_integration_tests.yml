@@ -6,13 +6,7 @@ task:
     name: '[TC] Gaia JS Integration Test'
     description: Gaia JS Integration Test run {{chunk}}
 
-  scopes:
-    - 'docker-worker:cache:sources-gaia'
-
   payload:
-    cache:
-      sources-gaia: '/home/worker/gaia'
-
     command:
       - entrypoint # entrypoint ensures we are running in xvfb
       - ./bin/pull_gaia.sh &&
