@@ -105,8 +105,8 @@ ChannelEventQueue::ShouldEnqueue()
 {
   bool answer =  mForced || mSuspended || mFlushing;
 
-  MOZ_ASSERT(answer == true || mEventQueue.IsEmpty(),
-             "Should always enqueue if ChannelEventQueue not empty");
+  NS_ABORT_IF_FALSE(answer == true || mEventQueue.IsEmpty(),
+                    "Should always enqueue if ChannelEventQueue not empty");
 
   return answer;
 }

@@ -48,8 +48,10 @@ public class UploadAlarmReceiver extends BroadcastReceiver {
 
         @Override
         protected void onHandleIntent(Intent intent) {
-            // Default to a repeating alarm, which is what Fennec Stumbler uses
-            boolean isRepeating = (intent == null)? true : intent.getBooleanExtra(EXTRA_IS_REPEATING, true);
+            if (intent == null) {
+                return;
+            }
+            boolean isRepeating = intent.getBooleanExtra(EXTRA_IS_REPEATING, true);
             if (DataStorageManager.getInstance() == null) {
                 DataStorageManager.createGlobalInstance(this, null);
             }

@@ -353,7 +353,7 @@ private:
   DOMTimeMilliSec GetPerformanceTimingFromString(const nsAString& aTimingName);
   DOMHighResTimeStamp ConvertDOMMilliSecToHighRes(const DOMTimeMilliSec aTime);
   void DispatchBufferFullEvent();
-  void InsertPerformanceEntry(PerformanceEntry* aEntry);
+  void InsertPerformanceEntry(PerformanceEntry* aEntry, bool aShouldPrint);
   void ClearEntries(const mozilla::dom::Optional<nsAString>& aEntryName,
                     const nsAString& aEntryType);
   nsCOMPtr<nsPIDOMWindow> mWindow;

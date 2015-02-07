@@ -346,8 +346,8 @@ SVGMarkerElement::GetViewBoxTransform()
 
     nsSVGViewBoxRect viewbox = GetViewBoxRect();
 
-    MOZ_ASSERT(viewbox.width > 0.0f && viewbox.height > 0.0f,
-               "Rendering should be disabled");
+    NS_ABORT_IF_FALSE(viewbox.width > 0.0f && viewbox.height > 0.0f,
+                      "Rendering should be disabled");
 
     gfx::Matrix viewBoxTM =
       SVGContentUtils::GetViewBoxTransform(viewportWidth, viewportHeight,

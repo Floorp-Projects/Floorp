@@ -417,8 +417,8 @@ nsBlockReflowState::ReconstructMarginBefore(nsLineList::iterator aLine)
 void
 nsBlockReflowState::SetupPushedFloatList()
 {
-  MOZ_ASSERT(!GetFlag(BRS_PROPTABLE_FLOATCLIST) == !mPushedFloats,
-             "flag mismatch");
+  NS_ABORT_IF_FALSE(!GetFlag(BRS_PROPTABLE_FLOATCLIST) == !mPushedFloats,
+                    "flag mismatch");
   if (!GetFlag(BRS_PROPTABLE_FLOATCLIST)) {
     // If we're being re-Reflow'd without our next-in-flow having been
     // reflowed, some pushed floats from our previous reflow might
@@ -558,13 +558,13 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
   NS_PRECONDITION(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
                   "aFloat must be an out-of-flow frame");
 
-  MOZ_ASSERT(aFloat->GetParent(), "float must have parent");
-  MOZ_ASSERT(aFloat->GetParent()->IsFrameOfType(nsIFrame::eBlockFrame),
-             "float's parent must be block");
-  MOZ_ASSERT(aFloat->GetParent() == mBlock ||
-             (aFloat->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT),
-             "float should be in this block unless it was marked as "
-             "pushed float");
+  NS_ABORT_IF_FALSE(aFloat->GetParent(), "float must have parent");
+  NS_ABORT_IF_FALSE(aFloat->GetParent()->IsFrameOfType(nsIFrame::eBlockFrame),
+                    "float's parent must be block");
+  NS_ABORT_IF_FALSE(aFloat->GetParent() == mBlock ||
+                    (aFloat->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT),
+                    "float should be in this block unless it was marked as "
+                    "pushed float");
   if (aFloat->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
     // If, in a previous reflow, the float was pushed entirely to
     // another column/page, we need to steal it back.  (We might just
@@ -948,7 +948,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   }
   DebugOnly<nsresult> rv = mFloatManager->AddFloat(aFloat, region, wm,
                                                    mContainerWidth);
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "bad float placement");
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "bad float placement");
   // store region
   nsFloatManager::StoreRegionFor(wm, aFloat, region, mContainerWidth);
 
@@ -1009,8 +1009,9 @@ nsBlockReflowState::PushFloatPastBreak(nsIFrame *aFloat)
   if (aFloat->StyleDisplay()->mFloats == NS_STYLE_FLOAT_LEFT) {
     mFloatManager->SetPushedLeftFloatPastBreak();
   } else {
-    MOZ_ASSERT(aFloat->StyleDisplay()->mFloats == NS_STYLE_FLOAT_RIGHT,
-               "unexpected float value");
+    NS_ABORT_IF_FALSE(aFloat->StyleDisplay()->mFloats ==
+                        NS_STYLE_FLOAT_RIGHT,
+                      "unexpected float value");
     mFloatManager->SetPushedRightFloatPastBreak();
   }
 

@@ -133,7 +133,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
   if (aState) {
     // Use the provided state.
     floatCount = aState->mFloatInfoCount;
-    MOZ_ASSERT(floatCount <= mFloats.Length(), "bad state");
+    NS_ABORT_IF_FALSE(floatCount <= mFloats.Length(), "bad state");
   } else {
     // Use our current state.
     floatCount = mFloats.Length();

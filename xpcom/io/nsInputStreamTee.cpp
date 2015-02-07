@@ -95,7 +95,7 @@ public:
                  "memory not allocated\n");
       return NS_OK;
     }
-    MOZ_ASSERT(mSink, "mSink is null!");
+    NS_ABORT_IF_FALSE(mSink, "mSink is null!");
 
     //  The output stream could have been invalidated between when
     //  this event was dispatched and now, so check before writing.

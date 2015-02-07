@@ -26,11 +26,10 @@ function test() {
   }
 
   // delete existing sessionstore.js, to make sure we're not reading
-  // the mtime of an old one initialy
-  let (sessionStoreJS = getSessionstoreFile()) {
-    if (sessionStoreJS.exists())
-      sessionStoreJS.remove(false);
-  }
+  // the mtime of an old one initially.
+  let sessionStoreJS = getSessionstoreFile();
+  if (sessionStoreJS.exists())
+    sessionStoreJS.remove(false);
 
   // test content URL
   const TEST_URL = "data:text/html;charset=utf-8,"

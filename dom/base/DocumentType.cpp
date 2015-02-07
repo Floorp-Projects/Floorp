@@ -74,8 +74,8 @@ DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
   mSystemId(aSystemId),
   mInternalSubset(aInternalSubset)
 {
-  MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE,
-             "Bad NodeType in aNodeInfo");
+  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE,
+                    "Bad NodeType in aNodeInfo");
 }
 
 DocumentType::~DocumentType()

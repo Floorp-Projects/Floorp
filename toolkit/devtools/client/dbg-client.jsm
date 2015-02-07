@@ -265,10 +265,10 @@ this.DebuggerClient = function (aTransport)
   this._transport.hooks = this;
 
   // Map actor ID to client instance for each actor type.
-  this._clients = new Map;
+  this._clients = new Map();
 
-  this._pendingRequests = [];
-  this._activeRequests = new Map;
+  this._pendingRequests = new Map();
+  this._activeRequests = new Map();
   this._eventsEnabled = true;
 
   this.traits = {};
@@ -435,6 +435,10 @@ DebuggerClient.prototype = {
         // All clients detached.
         this._transport.close();
         this._transport = null;
+        this._activeRequests.clear();
+        this._activeRequests = null;
+        this._pendingRequests.clear();
+        this._pendingRequests = null;
         return;
       }
       if (client.detach) {
@@ -704,8 +708,7 @@ DebuggerClient.prototype = {
       request.on("json-reply", aOnResponse);
     }
 
-    this._pendingRequests.push(request);
-    this._sendRequests();
+    this._sendOrQueueRequest(request);
 
     // Implement a Promise like API on the returned object
     // that resolves/rejects on request response
@@ -824,37 +827,69 @@ DebuggerClient.prototype = {
     request = new Request(request);
     request.format = "bulk";
 
-    this._pendingRequests.push(request);
-    this._sendRequests();
+    this._sendOrQueueRequest(request);
 
     return request;
   },
 
   /**
-   * Send pending requests to any actors that don't already have an
-   * active request.
+   * If a new request can be sent immediately, do so.  Otherwise, queue it.
    */
-  _sendRequests: function () {
-    this._pendingRequests = this._pendingRequests.filter((request) => {
-      let dest = request.actor;
+  _sendOrQueueRequest(request) {
+    let actor = request.actor;
+    if (!this._activeRequests.has(actor)) {
+      this._sendRequest(request);
+    } else {
+      this._queueRequest(request);
+    }
+  },
 
-      if (this._activeRequests.has(dest)) {
-        return true;
-      }
+  /**
+   * Send a request.
+   * @throws Error if there is already an active request in flight for the same
+   *         actor.
+   */
+  _sendRequest(request) {
+    let actor = request.actor;
+    this.expectReply(actor, request);
 
-      this.expectReply(dest, request);
-
-      if (request.format === "json") {
-        this._transport.send(request.request);
-        return false;
-      }
-
-      this._transport.startBulkSend(request.request).then((...args) => {
-        request.emit("bulk-send-ready", ...args);
-      });
-
+    if (request.format === "json") {
+      this._transport.send(request.request);
       return false;
+    }
+
+    this._transport.startBulkSend(request.request).then((...args) => {
+      request.emit("bulk-send-ready", ...args);
     });
+  },
+
+  /**
+   * Queue a request to be sent later.  Queues are only drained when an in
+   * flight request to a given actor completes.
+   */
+  _queueRequest(request) {
+    let actor = request.actor;
+    let queue = this._pendingRequests.get(actor) || [];
+    queue.push(request);
+    this._pendingRequests.set(actor, queue);
+  },
+
+  /**
+   * Attempt the next request to a given actor (if any).
+   */
+  _attemptNextRequest(actor) {
+    if (this._activeRequests.has(actor)) {
+      return;
+    }
+    let queue = this._pendingRequests.get(actor);
+    if (!queue) {
+      return;
+    }
+    let request = queue.shift();
+    if (queue.length === 0) {
+      this._pendingRequests.delete(actor);
+    }
+    this._sendRequest(request);
   },
 
   /**
@@ -929,6 +964,11 @@ DebuggerClient.prototype = {
       this._activeRequests.delete(aPacket.from);
     }
 
+    // If there is a subsequent request for the same actor, hand it off to the
+    // transport.  Delivery of packets on the other end is always async, even
+    // in the local transport case.
+    this._attemptNextRequest(aPacket.from);
+
     // Packets that indicate thread state changes get special treatment.
     if (aPacket.type in ThreadStateTypes &&
         this._clients.has(aPacket.from) &&
@@ -945,6 +985,7 @@ DebuggerClient.prototype = {
       let resumption = { from: thread._actor, type: "resumed" };
       thread._onThreadState(resumption);
     }
+
     // Only try to notify listeners on events, not responses to requests
     // that lack a packet type.
     if (aPacket.type) {
@@ -954,8 +995,6 @@ DebuggerClient.prototype = {
     if (activeRequest) {
       activeRequest.emit("json-reply", aPacket);
     }
-
-    this._sendRequests();
   },
 
   /**
@@ -1007,9 +1046,13 @@ DebuggerClient.prototype = {
 
     let activeRequest = this._activeRequests.get(actor);
     this._activeRequests.delete(actor);
-    activeRequest.emit("bulk-reply", packet);
 
-    this._sendRequests();
+    // If there is a subsequent request for the same actor, hand it off to the
+    // transport.  Delivery of packets on the other end is always async, even
+    // in the local transport case.
+    this._attemptNextRequest(actor);
+
+    activeRequest.emit("bulk-reply", packet);
   },
 
   /**
