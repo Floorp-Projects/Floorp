@@ -261,6 +261,18 @@ ExpectTagAndGetValueAtEnd(Input outer, uint8_t expectedTag,
 
 namespace internal {
 
+enum class IntegralValueRestriction
+{
+  NoRestriction,
+  MustBePositive,
+  MustBe0To127,
+};
+
+Result IntegralBytes(Reader& input, uint8_t tag,
+                     IntegralValueRestriction valueRestriction,
+             /*out*/ Input& value,
+    /*optional out*/ Input::size_type* significantBytes = nullptr);
+
 // This parser will only parse values between 0..127. If this range is
 // increased then callers will need to be changed.
 template <typename T> inline Result
@@ -269,21 +281,22 @@ IntegralValue(Reader& input, uint8_t tag, T& value)
   // Conveniently, all the Integers that we actually have to be able to parse
   // are positive and very small. Consequently, this parser is *much* simpler
   // than a general Integer parser would need to be.
-  Reader valueReader;
-  Result rv = ExpectTagAndGetValue(input, tag, valueReader);
+  Input valueBytes;
+  Result rv = IntegralBytes(input, tag, IntegralValueRestriction::MustBe0To127,
+                            valueBytes, nullptr);
   if (rv != Success) {
     return rv;
   }
+  Reader valueReader(valueBytes);
   uint8_t valueByte;
   rv = valueReader.Read(valueByte);
   if (rv != Success) {
-    return rv;
-  }
-  if (valueByte & 0x80) { // negative
-    return Result::ERROR_BAD_DER;
+    return NotReached("IntegralBytes already validated the value.", rv);
   }
   value = valueByte;
-  return End(valueReader);
+  rv = End(valueReader);
+  assert(rv == Success); // guaranteed by IntegralBytes's range checks.
+  return rv;
 }
 
 } // namespace internal
@@ -375,6 +388,19 @@ TimeChoice(Reader& input, /*out*/ Time& time)
   return internal::TimeChoice(input, expectedTag, time);
 }
 
+// Parse a DER integer value into value. Empty values, negative values, and
+// zero are rejected. If significantBytes is not null, then it will be set to
+// the number of significant bytes in the value (the length of the value, less
+// the length of any leading padding), which is useful for key size checks.
+inline Result
+PositiveInteger(Reader& input, /*out*/ Input& value,
+                /*optional out*/ Input::size_type* significantBytes = nullptr)
+{
+  return internal::IntegralBytes(
+           input, INTEGER, internal::IntegralValueRestriction::MustBePositive,
+           value, significantBytes);
+}
+
 // This parser will only parse values between 0..127. If this range is
 // increased then callers will need to be changed.
 inline Result
@@ -446,40 +472,9 @@ CertificateSerialNumber(Reader& input, /*out*/ Input& value)
   // * "Note: Non-conforming CAs may issue certificates with serial numbers
   //   that are negative or zero.  Certificate users SHOULD be prepared to
   //   gracefully handle such certificates."
-
-  Result rv = ExpectTagAndGetValue(input, INTEGER, value);
-  if (rv != Success) {
-    return rv;
-  }
-
-  if (value.GetLength() == 0) {
-    return Result::ERROR_BAD_DER;
-  }
-
-  // Check for overly-long encodings. If the first byte is 0x00 then the high
-  // bit on the second byte must be 1; otherwise the same *positive* value
-  // could be encoded without the leading 0x00 byte. If the first byte is 0xFF
-  // then the second byte must NOT have its high bit set; otherwise the same
-  // *negative* value could be encoded without the leading 0xFF byte.
-  if (value.GetLength() > 1) {
-    Reader valueInput(value);
-    uint8_t firstByte;
-    rv = valueInput.Read(firstByte);
-    if (rv != Success) {
-      return rv;
-    }
-    uint8_t secondByte;
-    rv = valueInput.Read(secondByte);
-    if (rv != Success) {
-      return rv;
-    }
-    if ((firstByte == 0x00 && (secondByte & 0x80) == 0) ||
-        (firstByte == 0xff && (secondByte & 0x80) != 0)) {
-      return Result::ERROR_BAD_DER;
-    }
-  }
-
-  return Success;
+  return internal::IntegralBytes(
+           input, INTEGER, internal::IntegralValueRestriction::NoRestriction,
+           value);
 }
 
 // x.509 and OCSP both use this same version numbering scheme, though OCSP
