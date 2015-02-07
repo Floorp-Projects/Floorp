@@ -22,7 +22,14 @@
 #include "mozilla/dom/PerformanceBinding.h"
 #include "mozilla/dom/PerformanceTimingBinding.h"
 #include "mozilla/dom/PerformanceNavigationBinding.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/TimeStamp.h"
+
+#ifdef MOZ_WIDGET_GONK
+#define PERFLOG(msg, ...)  __android_log_print(ANDROID_LOG_INFO, "PerformanceTiming", msg, ##__VA_ARGS__)
+#else
+#define PERFLOG(msg, ...) printf_stderr(msg, ##__VA_ARGS__)
+#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -589,7 +596,7 @@ nsPerformance::AddEntry(nsIHttpChannel* channel,
       initiatorType = NS_LITERAL_STRING("other");
     }
     performanceEntry->SetInitiatorType(initiatorType);
-    InsertPerformanceEntry(performanceEntry);
+    InsertPerformanceEntry(performanceEntry, false);
   }
 }
 
@@ -598,8 +605,8 @@ nsPerformance::PerformanceEntryComparator::Equals(
     const PerformanceEntry* aElem1,
     const PerformanceEntry* aElem2) const
 {
-  MOZ_ASSERT(aElem1 && aElem2,
-             "Trying to compare null performance entries");
+  NS_ABORT_IF_FALSE(aElem1 && aElem2,
+      "Trying to compare null performance entries");
   return aElem1->StartTime() == aElem2->StartTime();
 }
 
@@ -608,19 +615,35 @@ nsPerformance::PerformanceEntryComparator::LessThan(
     const PerformanceEntry* aElem1,
     const PerformanceEntry* aElem2) const
 {
-  MOZ_ASSERT(aElem1 && aElem2,
-             "Trying to compare null performance entries");
+  NS_ABORT_IF_FALSE(aElem1 && aElem2,
+      "Trying to compare null performance entries");
   return aElem1->StartTime() < aElem2->StartTime();
 }
 
 void
-nsPerformance::InsertPerformanceEntry(PerformanceEntry* aEntry)
+nsPerformance::InsertPerformanceEntry(PerformanceEntry* aEntry,
+                                      bool aShouldPrint)
 {
   MOZ_ASSERT(aEntry);
   MOZ_ASSERT(mEntries.Length() < mPrimaryBufferSize);
   if (mEntries.Length() == mPrimaryBufferSize) {
     NS_WARNING("Performance Entry buffer size maximum reached!");
     return;
+  }
+  if (aShouldPrint && nsContentUtils::IsUserTimingLoggingEnabled()) {
+    nsAutoCString uri;
+    nsresult rv = mWindow->GetDocumentURI()->GetHost(uri);
+    if(NS_FAILED(rv)) {
+      // If we have no URI, just put in "none".
+      uri.AssignLiteral("none");
+    }
+    PERFLOG("Performance Entry: %s|%s|%s|%f|%f|%" PRIu64 "\n",
+            uri.get(),
+            NS_ConvertUTF16toUTF8(aEntry->GetEntryType()).get(),
+            NS_ConvertUTF16toUTF8(aEntry->GetName()).get(),
+            aEntry->StartTime(),
+            aEntry->Duration(),
+            static_cast<uint64_t>(PR_Now() / PR_USEC_PER_MSEC));
   }
   mEntries.InsertElementSorted(aEntry,
                                PerformanceEntryComparator());
@@ -645,7 +668,7 @@ nsPerformance::Mark(const nsAString& aName, ErrorResult& aRv)
   }
   nsRefPtr<PerformanceMark> performanceMark =
     new PerformanceMark(this, aName);
-  InsertPerformanceEntry(performanceMark);
+  InsertPerformanceEntry(performanceMark, true);
 }
 
 void
@@ -722,7 +745,7 @@ nsPerformance::Measure(const nsAString& aName,
   }
   nsRefPtr<PerformanceMeasure> performanceMeasure =
     new PerformanceMeasure(this, aName, startTime, endTime);
-  InsertPerformanceEntry(performanceMeasure);
+  InsertPerformanceEntry(performanceMeasure, true);
 }
 
 void

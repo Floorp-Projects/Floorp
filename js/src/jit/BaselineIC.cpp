@@ -346,6 +346,13 @@ ICStub::trace(JSTracer *trc)
         MarkShape(trc, &propStub->holderShape(), "baseline-getpropnativeproto-stub-holdershape");
         break;
       }
+      case ICStub::GetProp_UnboxedPrototype: {
+        ICGetProp_UnboxedPrototype *propStub = toGetProp_UnboxedPrototype();
+        MarkObjectGroup(trc, &propStub->group(), "baseline-getpropnativeproto-stub-group");
+        MarkObject(trc, &propStub->holder(), "baseline-getpropnativeproto-stub-holder");
+        MarkShape(trc, &propStub->holderShape(), "baseline-getpropnativeproto-stub-holdershape");
+        break;
+      }
       case ICStub::GetProp_NativeDoesNotExist: {
         ICGetProp_NativeDoesNotExist *propStub = toGetProp_NativeDoesNotExist();
         JS_STATIC_ASSERT(ICGetProp_NativeDoesNotExist::MAX_PROTO_CHAIN_DEPTH == 8);
@@ -3285,7 +3292,11 @@ static bool
 IsCacheableProtoChain(JSObject *obj, JSObject *holder, bool isDOMProxy=false)
 {
     MOZ_ASSERT_IF(isDOMProxy, IsCacheableDOMProxy(obj));
-    MOZ_ASSERT_IF(!isDOMProxy, obj->isNative());
+
+    if (!isDOMProxy && !obj->isNative()) {
+        if (!obj->is<UnboxedPlainObject>() || obj == holder)
+            return false;
+    }
 
     // Don't handle objects which require a prototype guard. This should
     // be uncommon so handling it is likely not worth the complexity.
@@ -6433,7 +6444,7 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     bool isCallProp = (JSOp(*pc) == JSOP_CALLPROP);
 
     ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
-    if (!isDOMProxy && obj->isNative() && IsCacheableGetPropReadSlot(obj, holder, shape)) {
+    if (!isDOMProxy && IsCacheableGetPropReadSlot(obj, holder, shape)) {
         bool isFixedSlot;
         uint32_t offset;
         GetFixedOrDynamicSlotOffset(&holder->as<NativeObject>(), shape->slot(), &isFixedSlot, &offset);
@@ -6442,8 +6453,15 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         if (IsIonEnabled(cx))
             types::EnsureTrackPropertyTypes(cx, holder, NameToId(name));
 
-        ICStub::Kind kind = (obj == holder) ? ICStub::GetProp_Native
-                                            : ICStub::GetProp_NativePrototype;
+        ICStub::Kind kind;
+        if (obj == holder)
+            kind = ICStub::GetProp_Native;
+        else if (obj->isNative())
+            kind = ICStub::GetProp_NativePrototype;
+        else if (obj->is<UnboxedPlainObject>())
+            kind = ICStub::GetProp_UnboxedPrototype;
+        else
+            MOZ_CRASH("Bad kind");
 
         JitSpew(JitSpew_BaselineIC, "  Generating GetProp(%s %s) stub",
                     isDOMProxy ? "DOMProxy" : "Native",
@@ -7068,7 +7086,7 @@ ICGetProp_Primitive::Compiler::generateStubCode(MacroAssembler &masm)
     if (!isFixedSlot_)
         masm.loadPtr(Address(holderReg, NativeObject::offsetOfSlots()), holderReg);
 
-    masm.load32(Address(BaselineStubReg, ICGetPropNativeStub::offsetOfOffset()), scratchReg);
+    masm.load32(Address(BaselineStubReg, ICGetProp_Primitive::offsetOfOffset()), scratchReg);
     masm.loadValue(BaseIndex(holderReg, scratchReg, TimesOne), R0);
 
     // Enter type monitor IC to type-check result.
@@ -7078,6 +7096,37 @@ ICGetProp_Primitive::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
     return true;
+}
+
+ICGetPropNativeStub *
+ICGetPropNativeCompiler::getStub(ICStubSpace *space)
+{
+    switch (kind) {
+      case ICStub::GetProp_Native: {
+        MOZ_ASSERT(obj_ == holder_);
+        RootedShape shape(cx, obj_->lastProperty());
+        return ICGetProp_Native::New(space, getStubCode(), firstMonitorStub_, shape, offset_);
+      }
+
+      case ICStub::GetProp_NativePrototype: {
+        MOZ_ASSERT(obj_ != holder_);
+        RootedShape shape(cx, obj_->lastProperty());
+        RootedShape holderShape(cx, holder_->lastProperty());
+        return ICGetProp_NativePrototype::New(space, getStubCode(), firstMonitorStub_, shape,
+                                              offset_, holder_, holderShape);
+      }
+
+      case ICStub::GetProp_UnboxedPrototype: {
+        MOZ_ASSERT(obj_ != holder_);
+        RootedObjectGroup group(cx, obj_->group());
+        RootedShape holderShape(cx, holder_->lastProperty());
+        return ICGetProp_UnboxedPrototype::New(space, getStubCode(), firstMonitorStub_, group,
+                                               offset_, holder_, holderShape);
+      }
+
+      default:
+        MOZ_CRASH("Bad stub kind");
+    }
 }
 
 bool
@@ -7099,15 +7148,27 @@ ICGetPropNativeCompiler::generateStubCode(MacroAssembler &masm)
 
     Register scratch = regs.takeAnyExcluding(BaselineTailCallReg);
 
-    // Shape guard.
-    masm.loadPtr(Address(BaselineStubReg, ICGetPropNativeStub::offsetOfShape()), scratch);
-    masm.branchTestObjShape(Assembler::NotEqual, objReg, scratch, &failure);
+    // Shape/group guard.
+    if (kind == ICStub::GetProp_UnboxedPrototype) {
+        masm.loadPtr(Address(BaselineStubReg, ICGetProp_UnboxedPrototype::offsetOfGroup()), scratch);
+        masm.branchPtr(Assembler::NotEqual, Address(objReg, JSObject::offsetOfGroup()), scratch,
+                       &failure);
+    } else {
+        MOZ_ASSERT(ICGetProp_Native::offsetOfShape() ==
+                   ICGetProp_NativePrototype::offsetOfShape());
+        masm.loadPtr(Address(BaselineStubReg, ICGetProp_Native::offsetOfShape()), scratch);
+        masm.branchTestObjShape(Assembler::NotEqual, objReg, scratch, &failure);
+    }
 
     Register holderReg;
     if (obj_ == holder_) {
         holderReg = objReg;
     } else {
         // Shape guard holder.
+        MOZ_ASSERT(ICGetProp_NativePrototype::offsetOfHolder() ==
+                   ICGetProp_UnboxedPrototype::offsetOfHolder());
+        MOZ_ASSERT(ICGetProp_NativePrototype::offsetOfHolderShape() ==
+                   ICGetProp_UnboxedPrototype::offsetOfHolderShape());
         holderReg = regs.takeAny();
         masm.loadPtr(Address(BaselineStubReg, ICGetProp_NativePrototype::offsetOfHolder()),
                      holderReg);
@@ -11671,10 +11732,8 @@ ICGetProp_Primitive::ICGetProp_Primitive(JitCode *stubCode, ICStub *firstMonitor
 { }
 
 ICGetPropNativeStub::ICGetPropNativeStub(ICStub::Kind kind, JitCode *stubCode,
-                                         ICStub *firstMonitorStub,
-                                         HandleShape shape, uint32_t offset)
+                                         ICStub *firstMonitorStub, uint32_t offset)
   : ICMonitoredStub(kind, stubCode, firstMonitorStub),
-    shape_(shape),
     offset_(offset)
 { }
 
@@ -11689,7 +11748,8 @@ ICGetProp_Native::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorS
 ICGetProp_NativePrototype::ICGetProp_NativePrototype(JitCode *stubCode, ICStub *firstMonitorStub,
                                                      HandleShape shape, uint32_t offset,
                                                      HandleObject holder, HandleShape holderShape)
-  : ICGetPropNativeStub(GetProp_NativePrototype, stubCode, firstMonitorStub, shape, offset),
+  : ICGetPropNativeStub(GetProp_NativePrototype, stubCode, firstMonitorStub, offset),
+    shape_(shape),
     holder_(holder),
     holderShape_(holderShape)
 { }
@@ -11702,6 +11762,26 @@ ICGetProp_NativePrototype::Clone(JSContext *cx, ICStubSpace *space, ICStub *firs
     RootedObject holder(cx, other.holder_);
     RootedShape holderShape(cx, other.holderShape_);
     return New(space, other.jitCode(), firstMonitorStub, shape, other.offset(),
+               holder, holderShape);
+}
+
+ICGetProp_UnboxedPrototype::ICGetProp_UnboxedPrototype(JitCode *stubCode, ICStub *firstMonitorStub,
+                                                       HandleObjectGroup group, uint32_t offset,
+                                                       HandleObject holder, HandleShape holderShape)
+  : ICGetPropNativeStub(GetProp_UnboxedPrototype, stubCode, firstMonitorStub, offset),
+    group_(group),
+    holder_(holder),
+    holderShape_(holderShape)
+{ }
+
+/* static */ ICGetProp_UnboxedPrototype *
+ICGetProp_UnboxedPrototype::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+                                  ICGetProp_UnboxedPrototype &other)
+{
+    RootedObjectGroup group(cx, other.group());
+    RootedObject holder(cx, other.holder_);
+    RootedShape holderShape(cx, other.holderShape_);
+    return New(space, other.jitCode(), firstMonitorStub, group, other.offset(),
                holder, holderShape);
 }
 

@@ -596,3 +596,37 @@ TEST_F(TLSIntoleranceTest, TLS_Per_Site_Fallback_Limit)
   ASSERT_TRUE(helpers.fallbackLimitReached(example_org, SSL_LIBRARY_VERSION_TLS_1_1));
   ASSERT_TRUE(helpers.fallbackLimitReached(example_org, SSL_LIBRARY_VERSION_TLS_1_0));
 }
+
+TEST_F(TLSIntoleranceTest, TLS_Static_Fallback_List)
+{
+  NS_NAMED_LITERAL_CSTRING(fallback_test, "fallback.test");
+  NS_NAMED_LITERAL_CSTRING(no_fallback_test, "no.fallback.test");
+
+  helpers.mVersionFallbackLimit = SSL_LIBRARY_VERSION_TLS_1_0;
+  helpers.mUseStaticFallbackList = false;
+
+  ASSERT_FALSE(helpers.fallbackLimitReached(fallback_test, SSL_LIBRARY_VERSION_TLS_1_2));
+  ASSERT_FALSE(helpers.fallbackLimitReached(fallback_test, SSL_LIBRARY_VERSION_TLS_1_1));
+  ASSERT_TRUE(helpers.fallbackLimitReached(fallback_test, SSL_LIBRARY_VERSION_TLS_1_0));
+  ASSERT_FALSE(helpers.fallbackLimitReached(no_fallback_test, SSL_LIBRARY_VERSION_TLS_1_2));
+  ASSERT_FALSE(helpers.fallbackLimitReached(no_fallback_test, SSL_LIBRARY_VERSION_TLS_1_1));
+  ASSERT_TRUE(helpers.fallbackLimitReached(no_fallback_test, SSL_LIBRARY_VERSION_TLS_1_0));
+
+  helpers.mVersionFallbackLimit = SSL_LIBRARY_VERSION_TLS_1_2;
+
+  ASSERT_TRUE(helpers.fallbackLimitReached(fallback_test, SSL_LIBRARY_VERSION_TLS_1_2));
+  ASSERT_TRUE(helpers.fallbackLimitReached(fallback_test, SSL_LIBRARY_VERSION_TLS_1_1));
+  ASSERT_TRUE(helpers.fallbackLimitReached(fallback_test, SSL_LIBRARY_VERSION_TLS_1_0));
+  ASSERT_TRUE(helpers.fallbackLimitReached(no_fallback_test, SSL_LIBRARY_VERSION_TLS_1_2));
+  ASSERT_TRUE(helpers.fallbackLimitReached(no_fallback_test, SSL_LIBRARY_VERSION_TLS_1_1));
+  ASSERT_TRUE(helpers.fallbackLimitReached(no_fallback_test, SSL_LIBRARY_VERSION_TLS_1_0));
+
+  helpers.mUseStaticFallbackList = true;
+
+  ASSERT_FALSE(helpers.fallbackLimitReached(fallback_test, SSL_LIBRARY_VERSION_TLS_1_2));
+  ASSERT_FALSE(helpers.fallbackLimitReached(fallback_test, SSL_LIBRARY_VERSION_TLS_1_1));
+  ASSERT_TRUE(helpers.fallbackLimitReached(fallback_test, SSL_LIBRARY_VERSION_TLS_1_0));
+  ASSERT_TRUE(helpers.fallbackLimitReached(no_fallback_test, SSL_LIBRARY_VERSION_TLS_1_2));
+  ASSERT_TRUE(helpers.fallbackLimitReached(no_fallback_test, SSL_LIBRARY_VERSION_TLS_1_1));
+  ASSERT_TRUE(helpers.fallbackLimitReached(no_fallback_test, SSL_LIBRARY_VERSION_TLS_1_0));
+}

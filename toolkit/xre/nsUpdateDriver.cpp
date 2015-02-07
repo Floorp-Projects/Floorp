@@ -1172,7 +1172,7 @@ nsUpdateProcessor::ProcessUpdate(nsIUpdate* aUpdate)
 
   mUpdate = aUpdate;
 
-  MOZ_ASSERT(NS_IsMainThread(), "not main thread");
+  NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
   return NS_NewThread(getter_AddRefs(mProcessWatcher),
                       NS_NewRunnableMethod(this, &nsUpdateProcessor::StartStagedUpdate));
 }
@@ -1182,7 +1182,7 @@ nsUpdateProcessor::ProcessUpdate(nsIUpdate* aUpdate)
 void
 nsUpdateProcessor::StartStagedUpdate()
 {
-  MOZ_ASSERT(!NS_IsMainThread(), "main thread");
+  NS_ABORT_IF_FALSE(!NS_IsMainThread(), "main thread");
 
   nsresult rv = ProcessUpdates(mInfo.mGREDir,
                                mInfo.mAppDir,
@@ -1212,7 +1212,7 @@ nsUpdateProcessor::StartStagedUpdate()
 void
 nsUpdateProcessor::ShutdownWatcherThread()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "not main thread");
+  NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
   mProcessWatcher->Shutdown();
   mProcessWatcher = nullptr;
   mUpdate = nullptr;
@@ -1221,7 +1221,7 @@ nsUpdateProcessor::ShutdownWatcherThread()
 void
 nsUpdateProcessor::WaitForProcess()
 {
-  MOZ_ASSERT(!NS_IsMainThread(), "main thread");
+  NS_ABORT_IF_FALSE(!NS_IsMainThread(), "main thread");
   ::WaitForProcess(mUpdaterPID);
   NS_DispatchToMainThread(NS_NewRunnableMethod(this, &nsUpdateProcessor::UpdateDone));
 }
@@ -1229,7 +1229,7 @@ nsUpdateProcessor::WaitForProcess()
 void
 nsUpdateProcessor::UpdateDone()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "not main thread");
+  NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
 
   nsCOMPtr<nsIUpdateManager> um =
     do_GetService("@mozilla.org/updates/update-manager;1");

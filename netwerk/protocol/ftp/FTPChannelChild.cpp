@@ -59,7 +59,7 @@ FTPChannelChild::~FTPChannelChild()
 void
 FTPChannelChild::AddIPDLReference()
 {
-  MOZ_ASSERT(!mIPCOpen, "Attempt to retain more than one IPDL reference");
+  NS_ABORT_IF_FALSE(!mIPCOpen, "Attempt to retain more than one IPDL reference");
   mIPCOpen = true;
   AddRef();
 }
@@ -67,7 +67,7 @@ FTPChannelChild::AddIPDLReference()
 void
 FTPChannelChild::ReleaseIPDLReference()
 {
-  MOZ_ASSERT(mIPCOpen, "Attempt to release nonexistent IPDL reference");
+  NS_ABORT_IF_FALSE(mIPCOpen, "Attempt to release nonexistent IPDL reference");
   mIPCOpen = false;
   Release();
 }

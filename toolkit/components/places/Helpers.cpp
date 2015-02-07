@@ -28,7 +28,7 @@ NS_IMPL_ISUPPORTS(
 NS_IMETHODIMP
 AsyncStatementCallback::HandleResult(mozIStorageResultSet *aResultSet)
 {
-  MOZ_ASSERT(false, "Was not expecting a resultset, but got it.");
+  NS_ABORT_IF_FALSE(false, "Was not expecting a resultset, but got it.");
   return NS_OK;
 }
 

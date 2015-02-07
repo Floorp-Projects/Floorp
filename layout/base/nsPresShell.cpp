@@ -10885,8 +10885,9 @@ void PresShell::QueryIsActive()
       // Ok, we're an external resource document -- we need to use our display
       // document's docshell to determine "IsActive" status, since we lack
       // a container.
-      MOZ_ASSERT(!container,
-                 "external resource doc shouldn't have its own container");
+      NS_ABORT_IF_FALSE(!container,
+                        "external resource doc shouldn't have "
+                        "its own container");
 
       nsIPresShell* displayPresShell = displayDoc->GetShell();
       if (displayPresShell) {

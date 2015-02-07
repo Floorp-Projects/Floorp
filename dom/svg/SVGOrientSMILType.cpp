@@ -17,7 +17,7 @@ namespace mozilla {
 void
 SVGOrientSMILType::Init(nsSMILValue& aValue) const
 {
-  MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
+  NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected value type");
 
   aValue.mU.mOrient.mAngle = 0.0f;
   aValue.mU.mOrient.mUnit = SVG_ANGLETYPE_UNSPECIFIED;

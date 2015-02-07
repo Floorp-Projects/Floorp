@@ -86,7 +86,7 @@ struct CompositableTransaction
   }
   void AddNoSwapEdit(const CompositableOperation& op)
   {
-    MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
+    NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
     mOperations.push_back(op);
   }
   void AddEdit(const CompositableOperation& op)
@@ -205,8 +205,8 @@ static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
 {
   ReentrantMonitorAutoEnter autoMon(*aBarrier);
 
-  MOZ_ASSERT(InImageBridgeChildThread(),
-             "Should be in ImageBridgeChild thread.");
+  NS_ABORT_IF_FALSE(InImageBridgeChildThread(),
+                    "Should be in ImageBridgeChild thread.");
   if (sImageBridgeChildSingleton) {
     // Force all managed protocols to shut themselves down cleanly
     InfallibleTArray<PCompositableChild*> compositables;
@@ -233,8 +233,8 @@ static void ImageBridgeShutdownStep2(ReentrantMonitor *aBarrier, bool *aDone)
 {
   ReentrantMonitorAutoEnter autoMon(*aBarrier);
 
-  MOZ_ASSERT(InImageBridgeChildThread(),
-             "Should be in ImageBridgeChild thread.");
+  NS_ABORT_IF_FALSE(InImageBridgeChildThread(),
+                    "Should be in ImageBridgeChild thread.");
 
   sImageBridgeChildSingleton->SendStop();
 
@@ -636,7 +636,7 @@ void ImageBridgeChild::ShutDown()
 
 bool ImageBridgeChild::StartUpOnThread(Thread* aThread)
 {
-  MOZ_ASSERT(aThread, "ImageBridge needs a thread.");
+  NS_ABORT_IF_FALSE(aThread, "ImageBridge needs a thread.");
   if (sImageBridgeChildSingleton == nullptr) {
     sImageBridgeChildThread = aThread;
     if (!aThread->IsRunning()) {

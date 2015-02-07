@@ -33,7 +33,7 @@ static const char kProfileProperties[] =
 nsresult
 CreateResetProfile(nsIToolkitProfileService* aProfileSvc, nsIToolkitProfile* *aNewProfile)
 {
-  MOZ_ASSERT(aProfileSvc, "NULL profile service");
+  NS_ABORT_IF_FALSE(aProfileSvc, "NULL profile service");
 
   nsCOMPtr<nsIToolkitProfile> newProfile;
   // Make the new profile "default-" + the time in seconds since epoch for uniqueness.

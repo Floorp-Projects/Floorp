@@ -152,8 +152,8 @@ public:
     FragmentOrElement(aNodeInfo),
     mState(NS_EVENT_STATE_MOZ_READONLY)
   {
-    MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::ELEMENT_NODE,
-               "Bad NodeType in aNodeInfo");
+    NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::ELEMENT_NODE,
+                      "Bad NodeType in aNodeInfo");
     SetIsElement();
   }
 #endif // MOZILLA_INTERNAL_API

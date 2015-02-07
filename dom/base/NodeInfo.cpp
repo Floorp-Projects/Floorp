@@ -48,7 +48,7 @@ NodeInfo::NodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
                    nsNodeInfoManager *aOwnerManager)
 {
   CheckValidNodeInfo(aNodeType, aName, aNamespaceID, aExtraName);
-  MOZ_ASSERT(aOwnerManager, "Invalid aOwnerManager");
+  NS_ABORT_IF_FALSE(aOwnerManager, "Invalid aOwnerManager");
 
   // Initialize mInner
   NS_ADDREF(mInner.mName = aName);
@@ -104,7 +104,8 @@ NodeInfo::NodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
       SetDOMStringToNull(mLocalName);
       break;
     default:
-      MOZ_ASSERT(aNodeType == UINT16_MAX, "Unknown node type");
+      NS_ABORT_IF_FALSE(aNodeType == UINT16_MAX,
+                        "Unknown node type");
   }
 }
 
