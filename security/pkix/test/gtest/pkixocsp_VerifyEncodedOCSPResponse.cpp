@@ -53,7 +53,7 @@ public:
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result CheckRevocation(EndEntityOrCA endEntityOrCA, const CertID&, Time time,
+  Result CheckRevocation(EndEntityOrCA, const CertID&, Time,
                          /*optional*/ const Input*, /*optional*/ const Input*)
                          final override
   {
@@ -119,7 +119,8 @@ public:
       abort();
     }
 
-    serialNumberDER = CreateEncodedSerialNumber(++rootIssuedCount);
+    serialNumberDER =
+      CreateEncodedSerialNumber(static_cast<long>(++rootIssuedCount));
     if (ENCODING_FAILED(serialNumberDER)) {
       abort();
     }
@@ -143,7 +144,7 @@ public:
   }
 
   static ScopedTestKeyPair rootKeyPair;
-  static long rootIssuedCount;
+  static uint32_t rootIssuedCount;
   OCSPTestTrustDomain trustDomain;
 
   // endEntityCertID references rootKeyPair, rootNameDER, and serialNumberDER.
@@ -154,7 +155,7 @@ public:
 };
 
 /*static*/ ScopedTestKeyPair pkixocsp_VerifyEncodedResponse::rootKeyPair;
-/*static*/ long pkixocsp_VerifyEncodedResponse::rootIssuedCount = 0;
+/*static*/ uint32_t pkixocsp_VerifyEncodedResponse::rootIssuedCount = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 // responseStatus
@@ -258,7 +259,7 @@ public:
     context.signatureAlgorithm = signatureAlgorithm;
     context.certs = certs;
 
-    context.certStatus = certStatus;
+    context.certStatus = static_cast<uint8_t>(certStatus);
     context.thisUpdate = thisUpdate;
     context.nextUpdate = nextUpdate ? *nextUpdate : 0;
     context.includeNextUpdate = nextUpdate != nullptr;
@@ -408,7 +409,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful, check_validThrough)
     ASSERT_FALSE(expired);
     // The response was created to be valid until one day after now, so the
     // value we got for validThrough should be after that.
-    Time oneDayAfterNowAsPKIXTime(TimeFromEpochInSeconds(oneDayAfterNow));
+    Time oneDayAfterNowAsPKIXTime(
+          TimeFromEpochInSeconds(static_cast<uint64_t>(oneDayAfterNow)));
     ASSERT_TRUE(validThrough > oneDayAfterNowAsPKIXTime);
   }
   {
@@ -518,7 +520,8 @@ protected:
                                 /*optional*/ const ByteString* extensions,
                                              const TestKeyPair& signerKeyPair)
   {
-    ByteString serialNumberDER(CreateEncodedSerialNumber(serialNumber));
+    ByteString serialNumberDER(CreateEncodedSerialNumber(
+                                 static_cast<long>(serialNumber)));
     if (ENCODING_FAILED(serialNumberDER)) {
       return ByteString();
     }
@@ -634,8 +637,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_expired)
   ScopedTestKeyPair signerKeyPair(GenerateKeyPair());
   ByteString signerDER(CreateEncodedCertificate(
                           ++rootIssuedCount, sha256WithRSAEncryption, rootName,
-                          now - (10 * Time::ONE_DAY_IN_SECONDS),
-                          now - (2 * Time::ONE_DAY_IN_SECONDS),
+                          now - (10 * ONE_DAY_IN_SECONDS_AS_TIME_T),
+                          now - (2 * ONE_DAY_IN_SECONDS_AS_TIME_T),
                           signerName, *signerKeyPair, extensions,
                           *rootKeyPair));
   ASSERT_FALSE(ENCODING_FAILED(signerDER));
@@ -670,8 +673,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_future)
   ByteString signerDER(CreateEncodedCertificate(
                          ++rootIssuedCount, sha256WithRSAEncryption,
                          rootName,
-                         now + (2 * Time::ONE_DAY_IN_SECONDS),
-                         now + (10 * Time::ONE_DAY_IN_SECONDS),
+                         now + (2 * ONE_DAY_IN_SECONDS_AS_TIME_T),
+                         now + (10 * ONE_DAY_IN_SECONDS_AS_TIME_T),
                          signerName, *signerKeyPair, extensions,
                          *rootKeyPair));
   ASSERT_FALSE(ENCODING_FAILED(signerDER));
@@ -1017,13 +1020,14 @@ TEST_F(pkixocsp_VerifyEncodedResponse_GetCertTrust, ActivelyDistrusted)
 {
   ASSERT_TRUE(trustDomain.SetCertTrust(signerCertDER,
                                        TrustLevel::ActivelyDistrusted));
-  Input response;
+  Input responseInput;
   ASSERT_EQ(Success,
-            response.Init(responseString.data(), responseString.length()));
+            responseInput.Init(responseString.data(),
+                               responseString.length()));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
             VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                      response, expired));
+                                      responseInput, expired));
   ASSERT_FALSE(expired);
 }

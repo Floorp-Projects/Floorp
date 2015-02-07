@@ -53,7 +53,7 @@ public:
   Result Init();
 
   const Input GetDER() const { return der; }
-  const der::Version GetVersion() const { return version; }
+  der::Version GetVersion() const { return version; }
   const SignedDataWithSignature& GetSignedData() const { return signedData; }
   const Input GetIssuer() const { return issuer; }
   // XXX: "validity" is a horrible name for the structure that holds
@@ -232,24 +232,25 @@ WrappedVerifySignedData(TrustDomain& trustDomain,
 //         MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
 //       }
 //     }
-#if defined(__clang__) && (__clang_major__ == 3 && __clang_minor__ < 5)
-  // Earlier versions of Clang will warn if not all cases are covered
-  // (-Wswitch-enum) AND they always, inappropriately, assume the default case
-  // is unreachable. This was fixed in
-  // http://llvm.org/klaus/clang/commit/28cd22d7c2d2458575ce9cc19dfe63c6321010ce/
-# define MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM // empty
-#elif defined(__GNUC__) || defined(__clang__)
-  // GCC and recent versions of clang will warn if not all cases are covered
-  // (-Wswitch-enum). They do not assume that the default case is unreachable.
-# define MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM \
-         default: assert(false); __builtin_unreachable();
+#if defined(__clang__)
+// Clang will warn if not all cases are covered (-Wswitch-enum) AND it will
+// warn if a switch statement that covers every enum label has a default case
+// (-W-covered-switch-default). Versions prior to 3.5 warned about unreachable
+// code in such default cases (-Wunreachable-code) even when
+// -W-covered-switch-default was disabled, but that changed in Clang 3.5.
+#define MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM // empty
+#elif defined(__GNUC__)
+// GCC will warn if not all cases are covered (-Wswitch-enum). It does not
+// assume that the default case is unreachable.
+#define MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM \
+        default: assert(false); __builtin_unreachable();
 #elif defined(_MSC_VER)
-  // MSVC will warn if not all cases are covered (C4061, level 4). It does not
-  // assume that the default case is unreachable.
-# define MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM \
-         default: assert(false); __assume(0);
+// MSVC will warn if not all cases are covered (C4061, level 4). It does not
+// assume that the default case is unreachable.
+#define MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM \
+        default: assert(false); __assume(0);
 #else
-# error Unsupported compiler for MOZILLA_PKIX_UNREACHABLE_DEFAULT.
+#error Unsupported compiler for MOZILLA_PKIX_UNREACHABLE_DEFAULT.
 #endif
 
 } } // namespace mozilla::pkix

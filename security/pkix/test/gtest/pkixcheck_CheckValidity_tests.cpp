@@ -22,7 +22,7 @@
  * limitations under the License.
  */
 
-#include "gtest/gtest.h"
+#include "pkixgtest.h"
 #include "pkix/pkixtypes.h"
 #include "pkixtestutil.h"
 

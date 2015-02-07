@@ -24,7 +24,7 @@
 
 #include <limits>
 #include <vector>
-#include <gtest/gtest.h>
+#include "pkixgtest.h"
 
 #include "pkixder.h"
 #include "pkixtestutil.h"
@@ -287,8 +287,9 @@ TEST_F(pkixder_universal_types_tests, EnumeratedInvalidZeroLength)
 // other encodings is actually encouraged.
 
 // e.g. TWO_CHARS(53) => '5', '3'
-#define TWO_CHARS(t) static_cast<uint8_t>('0' + ((t) / 10u)), \
-                     static_cast<uint8_t>('0' + ((t) % 10u))
+#define TWO_CHARS(t) \
+  static_cast<uint8_t>('0' + (static_cast<uint8_t>(t) / 10u)), \
+  static_cast<uint8_t>('0' + (static_cast<uint8_t>(t) % 10u))
 
 // Calls TimeChoice on the UTCTime variant of the given generalized time.
 template <uint16_t LENGTH>
@@ -555,7 +556,7 @@ static const uint8_t DAYS_IN_MONTH[] = {
 
 TEST_F(pkixder_universal_types_tests, TimeMonthDaysValidRange)
 {
-  for (uint8_t month = 1; month <= 12; ++month) {
+  for (uint16_t month = 1; month <= 12; ++month) {
     for (uint8_t day = 1; day <= DAYS_IN_MONTH[month]; ++day) {
       const uint8_t DER[] = {
         0x18,                           // Generalized Time
@@ -604,7 +605,7 @@ TEST_F(pkixder_universal_types_tests, TimeDayInvalid0)
 
 TEST_F(pkixder_universal_types_tests, TimeMonthDayInvalidPastEndOfMonth)
 {
-  for (uint8_t month = 1; month <= 12; ++month) {
+  for (int16_t month = 1; month <= 12; ++month) {
     const uint8_t DER[] = {
       0x18,                           // Generalized Time
       15,                             // Length = 15
@@ -905,7 +906,7 @@ TEST_F(pkixder_universal_types_tests, Integer_0_127)
     Input input(DER);
     Reader reader(input);
 
-    uint8_t value = i + 1; // initialize with a value that is NOT i.
+    uint8_t value = i + 1u; // initialize with a value that is NOT i.
     ASSERT_EQ(Success, Integer(reader, value));
     ASSERT_EQ(i, value);
   }
