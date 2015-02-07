@@ -12,7 +12,6 @@ task:
       - entrypoint
       - >
         python ./mozharness/scripts/b2g_emulator_unittest.py
-        --no-read-buildbot-config
         --config-file ./mozharness/configs/b2g/emulator_automation_config.py
         --config-file ./mozharness_configs/emulator_override.py
         --download-symbols ondemand
