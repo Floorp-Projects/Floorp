@@ -236,8 +236,6 @@ public:
 
   virtual int64_t GetLastModified(ErrorResult& aRv) = 0;
 
-  virtual void SetLastModified(int64_t aLastModified) = 0;
-
   virtual void GetMozFullPath(nsAString& aName, ErrorResult& aRv) = 0;
 
   virtual void GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv) = 0;
@@ -363,8 +361,6 @@ public:
   virtual nsresult GetPath(nsAString& aName) MOZ_OVERRIDE;
 
   virtual int64_t GetLastModified(ErrorResult& aRv) MOZ_OVERRIDE;
-
-  virtual void SetLastModified(int64_t aLastModified) MOZ_OVERRIDE;
 
   virtual void GetMozFullPath(nsAString& aName, ErrorResult& aRv) MOZ_OVERRIDE;
 
@@ -742,7 +738,6 @@ public:
   virtual uint64_t GetSize(ErrorResult& aRv) MOZ_OVERRIDE;
   virtual void GetType(nsAString& aType) MOZ_OVERRIDE;
   virtual int64_t GetLastModified(ErrorResult& aRv) MOZ_OVERRIDE;
-  virtual void SetLastModified(int64_t aLastModified) MOZ_OVERRIDE;
   virtual void GetMozFullPathInternal(nsAString& aFullPath,
                                       ErrorResult& aRv) MOZ_OVERRIDE;
   virtual nsresult GetInternalStream(nsIInputStream**) MOZ_OVERRIDE;
