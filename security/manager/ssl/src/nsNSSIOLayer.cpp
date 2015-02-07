@@ -9,6 +9,7 @@
 #include "pkix/ScopedPtr.h"
 #include "pkix/pkixtypes.h"
 #include "nsNSSComponent.h"
+#include "mozilla/BinarySearch.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Telemetry.h"
@@ -51,6 +52,8 @@
 #include "keyhi.h"
 
 #include <algorithm>
+
+#include "IntolerantFallbackList.inc"
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -864,8 +867,7 @@ bool
 nsSSLIOLayerHelpers::fallbackLimitReached(const nsACString& hostName,
                                           uint16_t intolerant)
 {
-  MutexAutoLock lock(mutex);
-  if (mInsecureFallbackSites.Contains(hostName)) {
+  if (isInsecureFallbackSite(hostName)) {
     return intolerant <= SSL_LIBRARY_VERSION_TLS_1_0;
   }
   return intolerant <= mVersionFallbackLimit;
@@ -1460,7 +1462,8 @@ nsSSLIOLayerHelpers::nsSSLIOLayerHelpers()
   : mTreatUnsafeNegotiationAsBroken(false)
   , mWarnLevelMissingRFC5746(1)
   , mTLSIntoleranceInfo()
-  , mFalseStartRequireNPN(true)
+  , mFalseStartRequireNPN(false)
+  , mUseStaticFallbackList(true)
   , mVersionFallbackLimit(SSL_LIBRARY_VERSION_TLS_1_0)
   , mutex("nsSSLIOLayerHelpers.mutex")
 {
@@ -1684,6 +1687,9 @@ PrefObserver::Observe(nsISupports* aSubject, const char* aTopic,
       nsCString insecureFallbackHosts;
       Preferences::GetCString("security.tls.insecure_fallback_hosts", &insecureFallbackHosts);
       mOwner->setInsecureFallbackSites(insecureFallbackHosts);
+    } else if (prefName.EqualsLiteral("security.tls.insecure_fallback_hosts.use_static_list")) {
+      mOwner->mUseStaticFallbackList =
+        Preferences::GetBool("security.tls.insecure_fallback_hosts.use_static_list", true);
     }
   }
   return NS_OK;
@@ -1785,6 +1791,8 @@ nsSSLIOLayerHelpers::Init()
   nsCString insecureFallbackHosts;
   Preferences::GetCString("security.tls.insecure_fallback_hosts", &insecureFallbackHosts);
   setInsecureFallbackSites(insecureFallbackHosts);
+  mUseStaticFallbackList =
+    Preferences::GetBool("security.tls.insecure_fallback_hosts.use_static_list", true);
 
   mPrefObserver = new PrefObserver(this);
   Preferences::AddStrongObserver(mPrefObserver,
@@ -1843,9 +1851,31 @@ nsSSLIOLayerHelpers::setInsecureFallbackSites(const nsCString& str)
   }
 }
 
+struct FallbackListComparator
+{
+  explicit FallbackListComparator(const char* aTarget)
+    : mTarget(aTarget)
+  {}
+
+  int operator()(const char* aVal) const {
+    return strcmp(mTarget, aVal);
+  }
+
+private:
+  const char* mTarget;
+};
+
 bool
 nsSSLIOLayerHelpers::isInsecureFallbackSite(const nsACString& hostname)
 {
+  size_t match;
+  if (mUseStaticFallbackList &&
+      BinarySearchIf(kIntolerantFallbackList, 0,
+        ArrayLength(kIntolerantFallbackList),
+        FallbackListComparator(PromiseFlatCString(hostname).get()),
+        &match)) {
+    return true;
+  }
   MutexAutoLock lock(mutex);
   return mInsecureFallbackSites.Contains(hostname);
 }
