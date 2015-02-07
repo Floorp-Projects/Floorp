@@ -2092,7 +2092,7 @@ TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, AutoIdVector &proper
             return false;
 
         for (int32_t index = 0; index < typedObj->length(); index++) {
-            id.set(INT_TO_JSID(index));
+            id = INT_TO_JSID(index);
             properties.infallibleAppend(id);
         }
         break;
@@ -2104,7 +2104,7 @@ TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, AutoIdVector &proper
             return false;
 
         for (size_t index = 0; index < fieldCount; index++) {
-            id.set(AtomToId(&descr->as<StructTypeDescr>().fieldName(index)));
+            id = AtomToId(&descr->as<StructTypeDescr>().fieldName(index));
             properties.infallibleAppend(id);
         }
         break;

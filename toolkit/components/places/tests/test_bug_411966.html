@@ -19,11 +19,18 @@
     <pre id="test">
       <script class="testbody" type="text/javascript">
 
+      Cu.import("resource://gre/modules/Services.jsm");
+
       /** Test for Bug 411966 **/
       addVisits(typedURI, function() {
         histsvc.markPageAsTyped(typedURI);
 
-        var clickedLinkChannel = ios.newChannelFromURI(clickedLinkURI);
+        var clickedLinkChannel = ios.newChannelFromURI2(clickedLinkURI,
+                                                        null,      // aLoadingNode
+                                                        Services.scriptSecurityManager.getSystemPrincipal(),
+                                                        null,      // aTriggeringPrincipal
+                                                        Ci.nsILoadInfo.SEC_NORMAL,
+                                                        Ci.nsIContentPolicy.TYPE_OTHER);
         clickedLinkChannel.QueryInterface(Ci.nsIHttpChannel).referrer = typedURI;
         var listener = new StreamListener(clickedLinkChannel, checkDB);
         clickedLinkChannel.notificationCallbacks = listener;

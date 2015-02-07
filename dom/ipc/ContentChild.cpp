@@ -1956,8 +1956,8 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
         services::GetPermissionManager();
     nsPermissionManager* permissionManager =
         static_cast<nsPermissionManager*>(permissionManagerIface.get());
-    MOZ_ASSERT(permissionManager,
-               "We have no permissionManager in the Content process !");
+    NS_ABORT_IF_FALSE(permissionManager,
+                     "We have no permissionManager in the Content process !");
 
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + nsCString(permission.host));

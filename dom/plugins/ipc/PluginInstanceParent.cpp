@@ -745,7 +745,7 @@ PluginInstanceParent::SetBackgroundUnknown()
 
     if (mBackground) {
         DestroyBackground();
-        MOZ_ASSERT(!mBackground, "Background not destroyed");
+        NS_ABORT_IF_FALSE(!mBackground, "Background not destroyed");
     }
 
     return NS_OK;
@@ -764,8 +764,8 @@ PluginInstanceParent::BeginUpdateBackground(const nsIntRect& aRect,
         // update, there's no guarantee that later updates will be for
         // the entire background area until successful.  We might want
         // to fix that eventually.
-        MOZ_ASSERT(aRect.TopLeft() == nsIntPoint(0, 0),
-                   "Expecting rect for whole frame");
+        NS_ABORT_IF_FALSE(aRect.TopLeft() == nsIntPoint(0, 0),
+                          "Expecting rect for whole frame");
         if (!CreateBackground(aRect.Size())) {
             *aCtx = nullptr;
             return NS_OK;
@@ -774,8 +774,8 @@ PluginInstanceParent::BeginUpdateBackground(const nsIntRect& aRect,
 
     gfxIntSize sz = mBackground->GetSize();
 #ifdef DEBUG
-    MOZ_ASSERT(nsIntRect(0, 0, sz.width, sz.height).Contains(aRect),
-               "Update outside of background area");
+    NS_ABORT_IF_FALSE(nsIntRect(0, 0, sz.width, sz.height).Contains(aRect),
+                      "Update outside of background area");
 #endif
 
     RefPtr<gfx::DrawTarget> dt = gfxPlatform::GetPlatform()->
@@ -821,7 +821,7 @@ PluginInstanceParent::GetAsyncSurrogate()
 bool
 PluginInstanceParent::CreateBackground(const nsIntSize& aSize)
 {
-    MOZ_ASSERT(!mBackground, "Already have a background");
+    NS_ABORT_IF_FALSE(!mBackground, "Already have a background");
 
     // XXX refactor me
 
@@ -866,7 +866,7 @@ PluginInstanceParent::DestroyBackground()
 mozilla::plugins::SurfaceDescriptor
 PluginInstanceParent::BackgroundDescriptor()
 {
-    MOZ_ASSERT(mBackground, "Need a background here");
+    NS_ABORT_IF_FALSE(mBackground, "Need a background here");
 
     // XXX refactor me
 
@@ -876,8 +876,8 @@ PluginInstanceParent::BackgroundDescriptor()
 #endif
 
 #ifdef XP_WIN
-    MOZ_ASSERT(gfxSharedImageSurface::IsSharedImage(mBackground),
-               "Expected shared image surface");
+    NS_ABORT_IF_FALSE(gfxSharedImageSurface::IsSharedImage(mBackground),
+                      "Expected shared image surface");
     gfxSharedImageSurface* shmem =
         static_cast<gfxSharedImageSurface*>(mBackground.get());
     return shmem->GetShmem();

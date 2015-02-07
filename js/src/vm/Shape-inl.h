@@ -200,13 +200,6 @@ GetShapeAttributes(JSObject *obj, Shape *shape)
     return shape->attributes();
 }
 
-inline void
-BaseShape::fixupAfterMovingGC()
-{
-    if (hasTable())
-        table().fixupAfterMovingGC();
-}
-
 } /* namespace js */
 
 #endif /* vm_Shape_inl_h */

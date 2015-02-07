@@ -13,7 +13,7 @@ namespace mozilla {
 void
 SVGIntegerPairSMILType::Init(nsSMILValue& aValue) const
 {
-  MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
+  NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected value type");
 
   aValue.mU.mIntPair[0] = 0;
   aValue.mU.mIntPair[1] = 0;

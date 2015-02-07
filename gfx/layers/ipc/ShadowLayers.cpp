@@ -28,6 +28,7 @@
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr, getter_AddRefs, etc
+#include "nsDebug.h"                    // for NS_ABORT_IF_FALSE, etc
 #include "nsRect.h"                     // for nsIntRect
 #include "nsSize.h"                     // for nsIntSize
 #include "nsTArray.h"                   // for nsAutoTArray, nsTArray, etc
@@ -83,7 +84,7 @@ public:
   }
   void AddEdit(const Edit& aEdit)
   {
-    MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
+    NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
     mCset.push_back(aEdit);
   }
   void AddEdit(const CompositableOperation& aEdit)
@@ -103,17 +104,17 @@ public:
 
   void AddNoSwapPaint(const Edit& aPaint)
   {
-    MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
+    NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
     mPaints.push_back(aPaint);
   }
   void AddNoSwapPaint(const CompositableOperation& aPaint)
   {
-    MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
+    NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
     mPaints.push_back(Edit(aPaint));
   }
   void AddMutant(ShadowableLayer* aLayer)
   {
-    MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
+    NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
     mMutants.insert(aLayer);
   }
   void End()
@@ -176,7 +177,7 @@ ShadowLayerForwarder::ShadowLayerForwarder()
 
 ShadowLayerForwarder::~ShadowLayerForwarder()
 {
-  MOZ_ASSERT(mTxn->Finished(), "unfinished transaction?");
+  NS_ABORT_IF_FALSE(mTxn->Finished(), "unfinished transaction?");
   delete mTxn;
   if (mShadowManager) {
     mShadowManager->SetForwarder(nullptr);
@@ -189,8 +190,8 @@ ShadowLayerForwarder::BeginTransaction(const nsIntRect& aTargetBounds,
                                        ScreenRotation aRotation,
                                        dom::ScreenOrientation aOrientation)
 {
-  MOZ_ASSERT(HasShadowManager(), "no manager to forward to");
-  MOZ_ASSERT(mTxn->Finished(), "uncommitted txn?");
+  NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
+  NS_ABORT_IF_FALSE(mTxn->Finished(), "uncommitted txn?");
   mTxn->Begin(aTargetBounds, aRotation, aOrientation);
 }
 
@@ -571,8 +572,8 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     js::ProfileEntry::Category::GRAPHICS);
 
   RenderTraceScope rendertrace("Foward Transaction", "000091");
-  MOZ_ASSERT(HasShadowManager(), "no manager to forward to");
-  MOZ_ASSERT(!mTxn->Finished(), "forgot BeginTransaction?");
+  NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
+  NS_ABORT_IF_FALSE(!mTxn->Finished(), "forgot BeginTransaction?");
 
   DiagnosticTypes diagnostics = gfxPlatform::GetPlatform()->GetLayerDiagnosticTypes();
   if (mDiagnosticTypes != diagnostics) {
@@ -604,7 +605,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
       continue;
     }
     Layer* mutant = shadow->AsLayer();
-    MOZ_ASSERT(!!mutant, "unshadowable layer?");
+    NS_ABORT_IF_FALSE(!!mutant, "unshadowable layer?");
 
     LayerAttributes attrs;
     CommonLayerAttributes& common = attrs.common();
@@ -659,7 +660,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
 
   AutoInfallibleTArray<Edit, 10> cset;
   size_t nCsets = mTxn->mCset.size() + mTxn->mPaints.size();
-  MOZ_ASSERT(nCsets > 0 || mWindowOverlayChanged || mTxn->RotationChanged(), "should have bailed by now");
+  NS_ABORT_IF_FALSE(nCsets > 0 || mWindowOverlayChanged || mTxn->RotationChanged(), "should have bailed by now");
 
   cset.SetCapacity(nCsets);
   if (!mTxn->mCset.empty()) {
@@ -727,7 +728,7 @@ ShadowLayerForwarder::AllocShmem(size_t aSize,
                                  ipc::SharedMemory::SharedMemoryType aType,
                                  ipc::Shmem* aShmem)
 {
-  MOZ_ASSERT(HasShadowManager(), "no shadow manager");
+  NS_ABORT_IF_FALSE(HasShadowManager(), "no shadow manager");
   if (!HasShadowManager() ||
       !mShadowManager->IPCOpen()) {
     return false;
@@ -739,7 +740,7 @@ ShadowLayerForwarder::AllocUnsafeShmem(size_t aSize,
                                           ipc::SharedMemory::SharedMemoryType aType,
                                           ipc::Shmem* aShmem)
 {
-  MOZ_ASSERT(HasShadowManager(), "no shadow manager");
+  NS_ABORT_IF_FALSE(HasShadowManager(), "no shadow manager");
   if (!HasShadowManager() ||
       !mShadowManager->IPCOpen()) {
     return false;
@@ -749,7 +750,7 @@ ShadowLayerForwarder::AllocUnsafeShmem(size_t aSize,
 void
 ShadowLayerForwarder::DeallocShmem(ipc::Shmem& aShmem)
 {
-  MOZ_ASSERT(HasShadowManager(), "no shadow manager");
+  NS_ABORT_IF_FALSE(HasShadowManager(), "no shadow manager");
   if (!HasShadowManager() ||
       !mShadowManager->IPCOpen()) {
     return;
@@ -780,7 +781,7 @@ ShadowLayerForwarder::IsSameProcess() const
 PLayerChild*
 ShadowLayerForwarder::ConstructShadowFor(ShadowableLayer* aLayer)
 {
-  MOZ_ASSERT(HasShadowManager(), "no manager to forward to");
+  NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
   if (!HasShadowManager() ||
       !mShadowManager->IPCOpen()) {
     return nullptr;

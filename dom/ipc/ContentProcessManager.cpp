@@ -15,9 +15,9 @@
 
 // XXX need another bug to move this to a common header.
 #ifdef DISABLE_ASSERTS_FOR_FUZZING
-#define ASSERT_UNLESS_FUZZING() do { } while (0)
+#define ASSERT_UNLESS_FUZZING(...) do { } while (0)
 #else
-#define ASSERT_UNLESS_FUZZING() MOZ_ASSERT(false)
+#define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
 #endif
 
 namespace mozilla {
@@ -78,7 +78,7 @@ ContentProcessManager::AddGrandchildProcess(const ContentParentId& aParentCpId,
 
   auto iter = mContentParentMap.find(aParentCpId);
   if (NS_WARN_IF(iter == mContentParentMap.end())) {
-    ASSERT_UNLESS_FUZZING();
+    ASSERT_UNLESS_FUZZING("Parent process should be already in map!");
     return false;
   }
   iter->second.mChildrenCpId.insert(aChildCpId);
@@ -155,7 +155,7 @@ ContentProcessManager::AllocateTabId(const TabId& aOpenerTabId,
   if (appBrowser.type() == IPCTabAppBrowserContext::TPopupIPCTabContext) {
     auto remoteFrameIter = iter->second.mRemoteFrames.find(aOpenerTabId);
     if (remoteFrameIter == iter->second.mRemoteFrames.end()) {
-      ASSERT_UNLESS_FUZZING();
+      ASSERT_UNLESS_FUZZING("Failed to find parent frame's opener id.");
       return TabId(0);
     }
 
@@ -166,7 +166,7 @@ ContentProcessManager::AllocateTabId(const TabId& aOpenerTabId,
 
     remoteFrameIter = iter->second.mRemoteFrames.find(ipcContext.opener().get_TabId());
     if (remoteFrameIter == iter->second.mRemoteFrames.end()) {
-      ASSERT_UNLESS_FUZZING();
+      ASSERT_UNLESS_FUZZING("Failed to find tab id.");
       return TabId(0);
     }
 

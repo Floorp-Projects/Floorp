@@ -273,6 +273,11 @@ RegisterErrorTable()
       "deprecated and should not be used to sign other certificates." },
     { "MOZILLA_PKIX_ERROR_NO_RFC822NAME_MATCH",
       "The certificate is not valid for the given email address." },
+    { "MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE",
+      "The server presented a certificate that is not yet valid." },
+    { "MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE",
+      "A certificate that is not yet valid was used to issue the server's "
+      "certificate." },
   };
   // Note that these error strings are not localizable.
   // When these strings change, update the localization information too.

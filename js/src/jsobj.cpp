@@ -1389,7 +1389,7 @@ FindClassPrototype(ExclusiveContext *cx, MutableHandleObject protop, const Class
         if (shape->hasSlot()) {
             RootedValue v(cx, pobj->as<NativeObject>().getSlot(shape->slot()));
             if (v.isObject())
-                ctor.set(&v.toObject());
+                ctor = &v.toObject();
         }
     }
 

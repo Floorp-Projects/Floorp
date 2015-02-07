@@ -1718,8 +1718,8 @@ protected:
 
   ~nsGlobalChromeWindow()
   {
-    MOZ_ASSERT(mCleanMessageManager,
-               "chrome windows may always disconnect the msg manager");
+    NS_ABORT_IF_FALSE(mCleanMessageManager,
+                      "chrome windows may always disconnect the msg manager");
 
     mGroupMessageManagers.EnumerateRead(DisconnectGroupMessageManager, nullptr);
     mGroupMessageManagers.Clear();

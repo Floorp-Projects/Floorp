@@ -5648,13 +5648,13 @@ GCRuntime::resetIncrementalGC(const char *reason)
         abortSweepAfterCurrentGroup = true;
 
         /* Don't perform any compaction after sweeping. */
-        JSGCInvocationKind oldInvocationKind = invocationKind;
-        invocationKind = GC_NORMAL;
+        bool wasCompacting = isCompacting;
+        isCompacting = false;
 
         SliceBudget budget;
         incrementalCollectSlice(budget, JS::gcreason::RESET);
 
-        invocationKind = oldInvocationKind;
+        isCompacting = wasCompacting;
 
         {
             gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
@@ -5669,13 +5669,13 @@ GCRuntime::resetIncrementalGC(const char *reason)
             rt->gc.waitBackgroundSweepOrAllocEnd();
         }
 
-        JSGCInvocationKind oldInvocationKind = invocationKind;
-        invocationKind = GC_NORMAL;
+        bool wasCompacting = isCompacting;
+        isCompacting = false;
 
         SliceBudget budget;
         incrementalCollectSlice(budget, JS::gcreason::RESET);
 
-        invocationKind = oldInvocationKind;
+        isCompacting = wasCompacting;
         break;
       }
 
@@ -5764,6 +5764,17 @@ GCRuntime::pushZealSelectedObjects()
 #endif
 }
 
+static bool
+ShouldCleanUpEverything(JS::gcreason::Reason reason, JSGCInvocationKind gckind)
+{
+    // During shutdown, we must clean everything up, for the sake of leak
+    // detection. When a runtime has no contexts, or we're doing a GC before a
+    // shutdown CC, those are strong indications that we're shutting down.
+    return reason == JS::gcreason::DESTROY_RUNTIME ||
+           reason == JS::gcreason::SHUTDOWN_CC ||
+           gckind == GC_SHRINK;
+}
+
 void
 GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason reason)
 {
@@ -5799,15 +5810,14 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
         budget.makeUnlimited();
     }
 
-    if (incrementalState == NO_INCREMENTAL) {
-        incrementalState = MARK_ROOTS;
-        lastMarkSlice = false;
-    }
-
-    if (incrementalState == MARK)
-        AutoGCRooter::traceAllWrappers(&marker);
-
     switch (incrementalState) {
+      case NO_INCREMENTAL:
+        cleanUpEverything = ShouldCleanUpEverything(reason, invocationKind);
+        isCompacting = shouldCompact();
+        lastMarkSlice = false;
+
+        incrementalState = MARK_ROOTS;
+        /* fall through */
 
       case MARK_ROOTS:
         if (!beginMarkPhase(reason)) {
@@ -5826,6 +5836,8 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
         /* fall through */
 
       case MARK:
+        AutoGCRooter::traceAllWrappers(&marker);
+
         /* If we needed delayed marking for gray roots, then collect until done. */
         if (!marker.hasBufferedGrayRoots()) {
             budget.makeUnlimited();
@@ -5878,11 +5890,11 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
         incrementalState = COMPACT;
 
         /* Yield before compacting since it is not incremental. */
-        if (shouldCompact() && isIncremental)
+        if (isCompacting && isIncremental)
             break;
 
       case COMPACT:
-        if (shouldCompact() && compactPhase(lastGC) == NotFinished)
+        if (isCompacting && compactPhase(lastGC) == NotFinished)
             break;
         finishCollection();
         incrementalState = NO_INCREMENTAL;
@@ -6086,17 +6098,6 @@ IsDeterministicGCReason(JS::gcreason::Reason reason)
 }
 #endif
 
-static bool
-ShouldCleanUpEverything(JS::gcreason::Reason reason, JSGCInvocationKind gckind)
-{
-    // During shutdown, we must clean everything up, for the sake of leak
-    // detection. When a runtime has no contexts, or we're doing a GC before a
-    // shutdown CC, those are strong indications that we're shutting down.
-    return reason == JS::gcreason::DESTROY_RUNTIME ||
-           reason == JS::gcreason::SHUTDOWN_CC ||
-           gckind == GC_SHRINK;
-}
-
 gcstats::ZoneGCStats
 GCRuntime::scanZonesBeforeGC()
 {
@@ -6152,8 +6153,6 @@ GCRuntime::collect(bool incremental, SliceBudget budget, JS::gcreason::Reason re
                                      reason == JS::gcreason::DESTROY_RUNTIME);
 
     gcstats::AutoGCSlice agc(stats, scanZonesBeforeGC(), invocationKind, reason);
-
-    cleanUpEverything = ShouldCleanUpEverything(reason, invocationKind);
 
     bool repeat = false;
     do {

@@ -126,8 +126,9 @@ public:
   explicit SVGTransformSMILData(uint16_t aType)
   : mTransformType(aType)
   {
-    MOZ_ASSERT(aType >= SVG_TRANSFORM_MATRIX && aType <= SVG_TRANSFORM_SKEWY,
-               "Unexpected transform type");
+    NS_ABORT_IF_FALSE(aType >= SVG_TRANSFORM_MATRIX &&
+                      aType <= SVG_TRANSFORM_SKEWY,
+                      "Unexpected transform type");
     for (uint32_t i = 0; i < NUM_STORED_PARAMS; ++i) {
       mParams[i] = 0.f;
     }
@@ -136,8 +137,9 @@ public:
   SVGTransformSMILData(uint16_t aType, float (&aParams)[NUM_SIMPLE_PARAMS])
   : mTransformType(aType)
   {
-    MOZ_ASSERT(aType >= SVG_TRANSFORM_TRANSLATE && aType <= SVG_TRANSFORM_SKEWY,
-               "Expected 'simple' transform type");
+    NS_ABORT_IF_FALSE(aType >= SVG_TRANSFORM_TRANSLATE &&
+                      aType <= SVG_TRANSFORM_SKEWY,
+                      "Expected 'simple' transform type");
     for (uint32_t i = 0; i < NUM_SIMPLE_PARAMS; ++i) {
       mParams[i] = aParams[i];
     }

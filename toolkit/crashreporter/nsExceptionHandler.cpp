@@ -2714,8 +2714,8 @@ OOPInit()
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  MOZ_ASSERT(gExceptionHandler != nullptr,
-             "attempt to initialize OOP crash reporter before in-process crashreporter!");
+  NS_ABORT_IF_FALSE(gExceptionHandler != nullptr,
+                    "attempt to initialize OOP crash reporter before in-process crashreporter!");
 
 #if defined(XP_WIN)
   childCrashNotifyPipe =
@@ -2959,7 +2959,7 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
   if (crashPipe.Equals(kNullNotifyPipe))
     return true;
 
-  MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
+  NS_ABORT_IF_FALSE(!gExceptionHandler, "crash client already init'd");
 
   gExceptionHandler = new google_breakpad::
     ExceptionHandler(L"",
@@ -3003,7 +3003,7 @@ CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd)
 bool
 SetRemoteExceptionHandler()
 {
-  MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
+  NS_ABORT_IF_FALSE(!gExceptionHandler, "crash client already init'd");
 
 #ifndef XP_LINUX
   xpstring path = "";
@@ -3040,7 +3040,7 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
   if (crashPipe.Equals(kNullNotifyPipe))
     return true;
 
-  MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
+  NS_ABORT_IF_FALSE(!gExceptionHandler, "crash client already init'd");
 
   gExceptionHandler = new google_breakpad::
     ExceptionHandler("",
