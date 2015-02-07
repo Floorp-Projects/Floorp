@@ -6,12 +6,7 @@ task:
     name: '[TC] Reftest'
     description: Reftest test run {{chunk}}
 
-  scopes:
-    - 'docker-worker:cache:sources-gaia'
-
   payload:
-    cache:
-      sources-gaia: '/home/worker/gaia'
     env:
       MOZ_DISABLE_NONLOCAL_CONNECTIONS: 0
     command:

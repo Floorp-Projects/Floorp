@@ -5,12 +5,8 @@ task:
   metadata:
     name: '[TC] Gaia Linter'
     description: Linter Test
-  scopes:
-    - 'docker-worker:cache:sources-gaia'
 
   payload:
-    cache:
-      sources-gaia: '/home/worker/gaia'
     command:
       - entrypoint
       - ./bin/pull_gaia.sh &&
