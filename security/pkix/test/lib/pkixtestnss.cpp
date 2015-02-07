@@ -385,18 +385,31 @@ SHA1(const ByteString& toHash)
 }
 
 Result
-TestVerifySignedData(const SignedDataWithSignature& signedData,
-                     Input subjectPublicKeyInfo)
+TestVerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                            Input subjectPublicKeyInfo)
 {
   InitNSSIfNeeded();
-  return VerifySignedDataNSS(signedData, subjectPublicKeyInfo, nullptr);
+  return VerifyECDSASignedDigestNSS(signedDigest, subjectPublicKeyInfo,
+                                    nullptr);
 }
 
 Result
-TestDigestBuf(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
+TestVerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                               Input subjectPublicKeyInfo)
 {
   InitNSSIfNeeded();
-  return DigestBufNSS(item, digestBuf, digestBufLen);
+  return VerifyRSAPKCS1SignedDigestNSS(signedDigest, subjectPublicKeyInfo,
+                                       nullptr);
+}
+
+Result
+TestDigestBuf(Input item,
+              DigestAlgorithm digestAlg,
+              /*out*/ uint8_t* digestBuf,
+              size_t digestBufLen)
+{
+  InitNSSIfNeeded();
+  return DigestBufNSS(item, digestAlg, digestBuf, digestBufLen);
 }
 
 } } } // namespace mozilla::pkix::test

@@ -14,6 +14,7 @@ SOURCES += [
     'lib/pkixocsp.cpp',
     'lib/pkixresult.cpp',
     'lib/pkixtime.cpp',
+    'lib/pkixverify.cpp',
 ]
 
 LOCAL_INCLUDES += [
