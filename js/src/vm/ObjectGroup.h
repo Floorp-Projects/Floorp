@@ -9,6 +9,7 @@
 
 #include "jsbytecode.h"
 #include "jsfriendapi.h"
+#include "jsinfer.h"
 
 #include "ds/IdValuePair.h"
 #include "gc/Barrier.h"
@@ -18,16 +19,10 @@ namespace js {
 class TypeDescr;
 class UnboxedLayout;
 
-namespace types {
-
-class Type;
 class TypeNewScript;
 class HeapTypeSet;
-struct Property;
 class AutoClearTypeInferenceStateOnOOM;
 class CompilerConstraintList;
-
-} // namespace types
 
 // Information about an object prototype, which can be either a particular
 // object, null, or a lazily generated object. The latter is only used by
@@ -117,81 +112,6 @@ class RootedBase<TaggedProto> : public TaggedProtoOperations<Rooted<TaggedProto>
         return static_cast<const Rooted<TaggedProto> *>(this)->address();
     }
 };
-
-/* Flags and other state stored in ObjectGroupFlags */
-enum : uint32_t {
-    /* Whether this group is associated with some allocation site. */
-    OBJECT_FLAG_FROM_ALLOCATION_SITE  = 0x1,
-
-    /* (0x2 and 0x4 are unused) */
-
-    /* Mask/shift for the number of properties in propertySet */
-    OBJECT_FLAG_PROPERTY_COUNT_MASK   = 0xfff8,
-    OBJECT_FLAG_PROPERTY_COUNT_SHIFT  = 3,
-    OBJECT_FLAG_PROPERTY_COUNT_LIMIT  =
-        OBJECT_FLAG_PROPERTY_COUNT_MASK >> OBJECT_FLAG_PROPERTY_COUNT_SHIFT,
-
-    /* Whether any objects this represents may have sparse indexes. */
-    OBJECT_FLAG_SPARSE_INDEXES        = 0x00010000,
-
-    /* Whether any objects this represents may not have packed dense elements. */
-    OBJECT_FLAG_NON_PACKED            = 0x00020000,
-
-    /*
-     * Whether any objects this represents may be arrays whose length does not
-     * fit in an int32.
-     */
-    OBJECT_FLAG_LENGTH_OVERFLOW       = 0x00040000,
-
-    /* Whether any objects have been iterated over. */
-    OBJECT_FLAG_ITERATED              = 0x00080000,
-
-    /* For a global object, whether flags were set on the RegExpStatics. */
-    OBJECT_FLAG_REGEXP_FLAGS_SET      = 0x00100000,
-
-    /*
-     * For the function on a run-once script, whether the function has actually
-     * run multiple times.
-     */
-    OBJECT_FLAG_RUNONCE_INVALIDATED   = 0x00200000,
-
-    /*
-     * For a global object, whether any array buffers in this compartment with
-     * typed object views have been neutered.
-     */
-    OBJECT_FLAG_TYPED_OBJECT_NEUTERED = 0x00400000,
-
-    /*
-     * Whether objects with this type should be allocated directly in the
-     * tenured heap.
-     */
-    OBJECT_FLAG_PRE_TENURE            = 0x00800000,
-
-    /* Whether objects with this type might have copy on write elements. */
-    OBJECT_FLAG_COPY_ON_WRITE         = 0x01000000,
-
-    /* Whether this type has had its 'new' script cleared in the past. */
-    OBJECT_FLAG_NEW_SCRIPT_CLEARED    = 0x02000000,
-
-    /*
-     * Whether all properties of this object are considered unknown.
-     * If set, all other flags in DYNAMIC_MASK will also be set.
-     */
-    OBJECT_FLAG_UNKNOWN_PROPERTIES    = 0x04000000,
-
-    /* Flags which indicate dynamic properties of represented objects. */
-    OBJECT_FLAG_DYNAMIC_MASK          = 0x07ff0000,
-
-    // Mask/shift for the kind of addendum attached to this group.
-    OBJECT_FLAG_ADDENDUM_MASK         = 0x38000000,
-    OBJECT_FLAG_ADDENDUM_SHIFT        = 27,
-
-    // Mask/shift for this group's generation. If out of sync with the
-    // TypeZone's generation, this group hasn't been swept yet.
-    OBJECT_FLAG_GENERATION_MASK       = 0x40000000,
-    OBJECT_FLAG_GENERATION_SHIFT      = 30,
-};
-typedef uint32_t ObjectGroupFlags;
 
 /*
  * Lazy object groups overview.
@@ -301,9 +221,9 @@ class ObjectGroup : public gc::TenuredCell
             ((flags_ & OBJECT_FLAG_ADDENDUM_MASK) >> OBJECT_FLAG_ADDENDUM_SHIFT);
     }
 
-    types::TypeNewScript *newScriptDontCheckGeneration() const {
+    TypeNewScript *newScriptDontCheckGeneration() const {
         if (addendumKind() == Addendum_NewScript)
-            return reinterpret_cast<types::TypeNewScript *>(addendum_);
+            return reinterpret_cast<TypeNewScript *>(addendum_);
         return nullptr;
     }
 
@@ -313,7 +233,7 @@ class ObjectGroup : public gc::TenuredCell
         return nullptr;
     }
 
-    types::TypeNewScript *anyNewScript();
+    TypeNewScript *anyNewScript();
     void detachNewScript(bool writeBarrier);
 
   public:
@@ -333,12 +253,12 @@ class ObjectGroup : public gc::TenuredCell
         flags_ &= ~flags;
     }
 
-    types::TypeNewScript *newScript() {
+    TypeNewScript *newScript() {
         maybeSweep(nullptr);
         return newScriptDontCheckGeneration();
     }
 
-    void setNewScript(types::TypeNewScript *newScript) {
+    void setNewScript(TypeNewScript *newScript) {
         setAddendum(Addendum_NewScript, newScript);
     }
 
@@ -385,13 +305,71 @@ class ObjectGroup : public gc::TenuredCell
         setAddendum(Addendum_InterpretedFunction, fun);
     }
 
+    class Property
+    {
+      public:
+        // Identifier for this property, JSID_VOID for the aggregate integer
+        // index property, or JSID_EMPTY for properties holding constraints
+        // listening to changes in the group's state.
+        HeapId id;
+
+        // Possible own types for this property.
+        HeapTypeSet types;
+
+        explicit Property(jsid id)
+          : id(id)
+        {}
+
+        Property(const Property &o)
+          : id(o.id.get()), types(o.types)
+        {}
+
+        static uint32_t keyBits(jsid id) { return uint32_t(JSID_BITS(id)); }
+        static jsid getKey(Property *p) { return p->id; }
+    };
+
   private:
-    // Properties of this object. This may contain JSID_VOID, representing the
-    // types of all integer indexes of the object, and/or JSID_EMPTY, holding
-    // constraints listening to changes to the object's state.
-    //
-    // See types::Property for more detail about the types represented here.
-    types::Property **propertySet;
+    /*
+     * Properties of this object.
+     *
+     * The type sets in the properties of a group describe the possible values
+     * that can be read out of that property in actual JS objects. In native
+     * objects, property types account for plain data properties (those with a
+     * slot and no getter or setter hook) and dense elements. In typed objects
+     * and unboxed objects, property types account for object and value
+     * properties and elements in the object.
+     *
+     * For accesses on these properties, the correspondence is as follows:
+     *
+     * 1. If the group has unknownProperties(), the possible properties and
+     *    value types for associated JSObjects are unknown.
+     *
+     * 2. Otherwise, for any |obj| in |group|, and any |id| which is a property
+     *    in |obj|, before obj->getProperty(id) the property in |group| for
+     *    |id| must reflect the result of the getProperty.
+     *
+     * There are several exceptions to this:
+     *
+     * 1. For properties of global JS objects which are undefined at the point
+     *    where the property was (lazily) generated, the property type set will
+     *    remain empty, and the 'undefined' type will only be added after a
+     *    subsequent assignment or deletion. After these properties have been
+     *    assigned a defined value, the only way they can become undefined
+     *    again is after such an assign or deletion.
+     *
+     * 2. Array lengths are special cased by the compiler and VM and are not
+     *    reflected in property types.
+     *
+     * 3. In typed objects (but not unboxed objects), the initial values of
+     *    properties (null pointers and undefined values) are not reflected in
+     *    the property types. These values are always possible when reading the
+     *    property.
+     *
+     * We establish these by using write barriers on calls to setProperty and
+     * defineProperty which are on native properties, and on any jitcode which
+     * might update the property with a new type.
+     */
+    Property **propertySet;
   public:
 
     inline ObjectGroup(const Class *clasp, TaggedProto proto, ObjectGroupFlags initialFlags);
@@ -415,7 +393,7 @@ class ObjectGroup : public gc::TenuredCell
         return hasAnyFlags(OBJECT_FLAG_PRE_TENURE) && !unknownProperties();
     }
 
-    gc::InitialHeap initialHeap(types::CompilerConstraintList *constraints);
+    gc::InitialHeap initialHeap(CompilerConstraintList *constraints);
 
     bool canPreTenure() {
         return !unknownProperties();
@@ -434,17 +412,17 @@ class ObjectGroup : public gc::TenuredCell
      * Get or create a property of this object. Only call this for properties which
      * a script accesses explicitly.
      */
-    inline types::HeapTypeSet *getProperty(ExclusiveContext *cx, jsid id);
+    inline HeapTypeSet *getProperty(ExclusiveContext *cx, jsid id);
 
     /* Get a property only if it already exists. */
-    inline types::HeapTypeSet *maybeGetProperty(jsid id);
+    inline HeapTypeSet *maybeGetProperty(jsid id);
 
     inline unsigned getPropertyCount();
-    inline types::Property *getProperty(unsigned i);
+    inline Property *getProperty(unsigned i);
 
     /* Helpers */
 
-    void updateNewPropertyTypes(ExclusiveContext *cx, jsid id, types::HeapTypeSet *types);
+    void updateNewPropertyTypes(ExclusiveContext *cx, jsid id, HeapTypeSet *types);
     bool addDefiniteProperties(ExclusiveContext *cx, Shape *shape);
     bool matchDefiniteProperties(HandleObject obj);
     void markPropertyNonData(ExclusiveContext *cx, jsid id);
@@ -460,7 +438,7 @@ class ObjectGroup : public gc::TenuredCell
     void print();
 
     inline void clearProperties();
-    void maybeSweep(types::AutoClearTypeInferenceStateOnOOM *oom);
+    void maybeSweep(AutoClearTypeInferenceStateOnOOM *oom);
 
   private:
 #ifdef DEBUG
@@ -568,12 +546,13 @@ class ObjectGroup : public gc::TenuredCell
     static ArrayObject *getCopyOnWriteObject(JSScript *script, jsbytecode *pc);
 
     // Returns false if not found.
-    static bool findAllocationSiteForType(JSContext *cx, types::Type type,
-                                          JSScript **script, uint32_t *offset);
+    static bool findAllocationSite(JSContext *cx, ObjectGroup *group,
+                                   JSScript **script, uint32_t *offset);
 
   private:
     static ObjectGroup *defaultNewGroup(JSContext *cx, JSProtoKey key);
-    static void setGroupToHomogenousArray(ExclusiveContext *cx, JSObject *obj, types::Type type);
+    static void setGroupToHomogenousArray(ExclusiveContext *cx, JSObject *obj,
+                                          TypeSet::Type type);
 };
 
 // Structure used to manage the groups in a compartment.
