@@ -342,14 +342,8 @@ WebGLContext::DestroyResourcesAndContext()
     mBoundTransformFeedback = nullptr;
     mDefaultTransformFeedback = nullptr;
 
-    if (mBoundTransformFeedbackBuffers) {
-        for (GLuint i = 0; i < mGLMaxTransformFeedbackSeparateAttribs; i++) {
-            mBoundTransformFeedbackBuffers[i] = nullptr;
-        }
-    }
-
-    for (GLuint i = 0; i < mGLMaxUniformBufferBindings; i++)
-        mBoundUniformBuffers[i] = nullptr;
+    mBoundTransformFeedbackBuffers.Clear();
+    mBoundUniformBuffers.Clear();
 
     while (!mTextures.isEmpty())
         mTextures.getLast()->DeleteOnce();
