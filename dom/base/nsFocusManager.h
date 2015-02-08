@@ -26,12 +26,6 @@ class nsIMessageBroadcaster;
 
 struct nsDelayedBlurOrFocusEvent;
 
-enum ParentFocusType {
-  ParentFocusType_Ignore, // Parent or single process window or unknown
-  ParentFocusType_Active, // Child process window in active parent
-  ParentFocusType_Inactive, // Child process window in inactive parent
-};
-
 /**
  * The focus manager keeps track of where the focus is, that is, the node
  * which receives key events.
@@ -96,11 +90,6 @@ public:
    * Update the caret with current mode (whether in caret browsing mode or not).
    */
   void UpdateCaretForCaretBrowsingMode();
-
-  bool IsParentActivated()
-  {
-    return mParentFocusType == ParentFocusType_Active;
-  }
 
   /**
    * Returns the content node that would be focused if aWindow was in an
@@ -548,9 +537,6 @@ private:
   // and the caller can access the document node, the caller should succeed in
   // moving focus.
   nsCOMPtr<nsIDocument> mMouseButtonEventHandlingDocument;
-
-  // Indicates a child process that is in an active window.
-  ParentFocusType mParentFocusType;
 
   static bool sTestMode;
 
