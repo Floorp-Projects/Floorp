@@ -6,7 +6,7 @@
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, PerformanceController, DetailsView, JsFlameGraphView } = panel.panelWin;
+  let { EVENTS, PerformanceController, DetailsView, JsFlameGraphView, FlameGraphUtils } = panel.panelWin;
 
   Services.prefs.setBoolPref(FLATTEN_PREF, true);
 

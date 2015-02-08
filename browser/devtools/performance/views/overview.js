@@ -313,7 +313,9 @@ let OverviewView = {
     if (prefName === "enable-framerate") {
       $("#time-framerate").hidden = !PerformanceController.getPref("enable-framerate");
     }
-  }
+  },
+
+  toString: () => "[object OverviewView]"
 };
 
 // Decorates the OverviewView as an EventEmitter

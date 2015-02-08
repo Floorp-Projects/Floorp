@@ -364,7 +364,9 @@ let PerformanceController = {
    */
   _onPrefChanged: function (_, prefName, value) {
     this.emit(EVENTS.PREF_CHANGED, prefName, value);
-  }
+  },
+
+  toString: () => "[object PerformanceController]"
 };
 
 /**
