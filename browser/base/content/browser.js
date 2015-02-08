@@ -2534,8 +2534,8 @@ let gMenuButtonUpdateBadge = {
         let badge = document.getAnonymousElementByAttribute(PanelUI.menuButton,
                                                             "class",
                                                             "toolbarbutton-badge");
-        badge.style.backgroundColor = 'green';
-        PanelUI.menuButton.setAttribute("badge", "\u2605");
+        badge.style.backgroundColor = '#74BF43';
+        PanelUI.menuButton.setAttribute("badge", "\u2B06");
 
         let brandBundle = document.getElementById("bundle_brand");
         let brandShortName = brandBundle.getString("brandShortName");
