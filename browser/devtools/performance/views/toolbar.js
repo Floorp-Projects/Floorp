@@ -37,7 +37,9 @@ let ToolbarView = {
   _onPrefChanged: function (_, prefName) {
     let value = Services.prefs.getBoolPref(BRANCH_NAME + prefName);
     this.emit(EVENTS.PREF_CHANGED, prefName, value);
-  }
+  },
+
+  toString: () => "[object ToolbarView]"
 };
 
 EventEmitter.decorate(ToolbarView);

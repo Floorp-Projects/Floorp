@@ -108,6 +108,8 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
     let contentOnly = !PerformanceController.getPref("show-platform-data");
     root.toggleCategories(!contentOnly);
   },
+
+  toString: () => "[object JsCallTreeView]"
 });
 
 /**
