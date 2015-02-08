@@ -116,7 +116,7 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
           }
         }
       }
-      throw new Task.Result(actors);
+      return actors;
     }.bind(this));
   },
 
@@ -142,7 +142,7 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
         let imports = yield this._getImported(actor);
         actors = actors.concat(imports);
       }
-      throw new Task.Result(actors);
+      return actors;
     }.bind(this));
   },
 
@@ -180,7 +180,7 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
         }
       }
 
-      throw new Task.Result(imported);
+      return imported;
     }.bind(this));
   },
 
