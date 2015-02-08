@@ -43,22 +43,22 @@ add_test(function test_Header_decode() {
 
 add_test(function test_WellKnownHeader_decode() {
   wsp_decode_test(WSP.WellKnownHeader, [0xFF], null, "NotWellKnownEncodingError");
-  let (entry = WSP.WSP_HEADER_FIELDS["push-flag"]) {
-    // Test for Short-Integer
-    wsp_decode_test(WSP.WellKnownHeader, [entry.number | 0x80, 0x80],
-                        {name: entry.name, value: 0});
-    // Test for NoValue
-    wsp_decode_test(WSP.WellKnownHeader, [entry.number | 0x80, 0],
-                        {name: entry.name, value: null});
-    // Test for TokenText
-    wsp_decode_test(WSP.WellKnownHeader, [entry.number | 0x80, 65, 0],
-                        {name: entry.name, value: "A"});
-    // Test for QuotedString
-    wsp_decode_test(WSP.WellKnownHeader, [entry.number | 0x80, 34, 128, 0],
-                        {name: entry.name, value: String.fromCharCode(128)});
-    // Test for skipValue
-    wsp_decode_test(WSP.WellKnownHeader, [entry.number | 0x80, 2, 0, 0], null);
-  }
+  let entry = WSP.WSP_HEADER_FIELDS["push-flag"];
+
+  // Test for Short-Integer
+  wsp_decode_test(WSP.WellKnownHeader, [entry.number | 0x80, 0x80],
+                      {name: entry.name, value: 0});
+  // Test for NoValue
+  wsp_decode_test(WSP.WellKnownHeader, [entry.number | 0x80, 0],
+                      {name: entry.name, value: null});
+  // Test for TokenText
+  wsp_decode_test(WSP.WellKnownHeader, [entry.number | 0x80, 65, 0],
+                      {name: entry.name, value: "A"});
+  // Test for QuotedString
+  wsp_decode_test(WSP.WellKnownHeader, [entry.number | 0x80, 34, 128, 0],
+                      {name: entry.name, value: String.fromCharCode(128)});
+  // Test for skipValue
+  wsp_decode_test(WSP.WellKnownHeader, [entry.number | 0x80, 2, 0, 0], null);
 
   run_next_test();
 });
@@ -109,9 +109,8 @@ add_test(function test_FieldName_decode() {
   wsp_decode_test(WSP.FieldName, [0], "");
   wsp_decode_test(WSP.FieldName, [65, 0], "a");
   wsp_decode_test(WSP.FieldName, [97, 0], "a");
-  let (entry = WSP.WSP_HEADER_FIELDS["content-length"]) {
-    wsp_decode_test(WSP.FieldName, [entry.number | 0x80], entry.name);
-  }
+  let entry = WSP.WSP_HEADER_FIELDS["content-length"];
+  wsp_decode_test(WSP.FieldName, [entry.number | 0x80], entry.name);
   wsp_decode_test(WSP.FieldName, [0xFF], null, "NotWellKnownEncodingError");
 
   run_next_test();
@@ -146,37 +145,36 @@ add_test(function test_PduHelper_parseHeaders() {
 
 add_test(function StringContent_decode() {
   //Test for utf-8
-  let (entry = WSP.WSP_WELL_KNOWN_CHARSETS["utf-8"]) {
-    // "Mozilla" in full width.
-    let str = "\uff2d\uff4f\uff5a\uff49\uff4c\uff4c\uff41";
+  let entry = WSP.WSP_WELL_KNOWN_CHARSETS["utf-8"];
 
-    let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-               .createInstance(Ci.nsIScriptableUnicodeConverter);
-    conv.charset = entry.converter;
+  // "Mozilla" in full width.
+  let str = "\uff2d\uff4f\uff5a\uff49\uff4c\uff4c\uff41";
 
-    let raw = conv.convertToByteArray(str);
-    let data = {array: raw, offset: 0};
-    let octetArray = WSP.Octet.decodeMultiple(data, data.array.length);
-    wsp_decode_test_ex(function(data) {
-        return WSP.PduHelper.decodeStringContent(data.array, "utf-8");
-      }, octetArray, str);
-  }
+  let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+             .createInstance(Ci.nsIScriptableUnicodeConverter);
+  conv.charset = entry.converter;
 
-  let (entry = WSP.WSP_WELL_KNOWN_CHARSETS["utf-16"]) {
-    // "Mozilla" in full width.
-    let str = "\u004d\u006F\u007A\u0069\u006C\u006C\u0061";
+  let raw = conv.convertToByteArray(str);
+  let data = {array: raw, offset: 0};
+  let octetArray = WSP.Octet.decodeMultiple(data, data.array.length);
+  wsp_decode_test_ex(function(data) {
+      return WSP.PduHelper.decodeStringContent(data.array, "utf-8");
+    }, octetArray, str);
 
-    let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-               .createInstance(Ci.nsIScriptableUnicodeConverter);
-    conv.charset = entry.converter;
+  entry = WSP.WSP_WELL_KNOWN_CHARSETS["utf-16"];
+  // "Mozilla" in full width.
+  str = "\u004d\u006F\u007A\u0069\u006C\u006C\u0061";
 
-    let raw = conv.convertToByteArray(str);
-    let data = {array: raw, offset: 0};
-    let octetArray = WSP.Octet.decodeMultiple(data, data.array.length);
-    wsp_decode_test_ex(function(data) {
-        return WSP.PduHelper.decodeStringContent(data.array, "utf-16");
-      }, raw, str);
-  }
+  conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+         .createInstance(Ci.nsIScriptableUnicodeConverter);
+  conv.charset = entry.converter;
+
+  raw = conv.convertToByteArray(str);
+  data = {array: raw, offset: 0};
+  octetArray = WSP.Octet.decodeMultiple(data, data.array.length);
+  wsp_decode_test_ex(function(data) {
+      return WSP.PduHelper.decodeStringContent(data.array, "utf-16");
+    }, raw, str);
 
   run_next_test();
 });

@@ -78,7 +78,7 @@ public:
 
   explicit AsyncCompositionManager(LayerManagerComposite* aManager)
     : mLayerManager(aManager)
-    , mIsFirstPaint(false)
+    , mIsFirstPaint(true)
     , mLayersUpdated(false)
     , mReadyForCompose(true)
   {
