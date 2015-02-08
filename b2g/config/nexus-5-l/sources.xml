@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="7f2ee9f4cb926684883fc2a2e407045fd9db2199">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="a0e71e61922bde009a3b6714cbe965021d3279f1"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="994896b89ba10cad39a87f90eeaba9ae5e17c3a6"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2262d4a77d4f46ab230fd747bb91e9b77bad36cb"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="e354d8de334a4ad52d131f0575ccf9f79e86cadd"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="6203b5a0780f717c888bb1fc3637eaf47bc3b23f"/>
   <!-- Stock Android things -->
   <project groups="pdk,linux" name="platform/prebuilts/clang/linux-x86/host/3.5" path="prebuilts/clang/linux-x86/host/3.5" revision="50d1ca4ab8add54523b7bc692860d57e8ee4c0d1"/>
   <project groups="pdk,linux,arm" name="platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" path="prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" revision="fb3845864573857677f9b500040a8f011eaf5078"/>
@@ -121,7 +121,7 @@
   <project name="platform/libcore" path="libcore" revision="1a07f00d8163f497a785a3285ec55fe551ba95c1"/>
   <project name="platform/libnativehelper" path="libnativehelper" revision="4834b58ed7af3ee69523177e00e55603ac90ed50"/>
   <project name="platform/ndk" path="ndk" revision="869c05cab7b4315c2bc607493db3f5b18ead2580"/>
-  <project name="platform/prebuilts/misc" path="prebuilts/misc" revision="de282aa3cc6a3917fa42968fc85676846db776b0"/>
+  <project name="platform_prebuilts_misc" path="prebuilts/misc" remote="b2g" revision="da8b660db117e2a69a7624bfdca2f02cad397f2e"/>
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="5fd638a4a0ff3677fc3c970fab038d6db1bb7665"/>
   <project name="platform/prebuilts/qemu-kernel" path="prebuilts/qemu-kernel" revision="530cad9b205442d2db29361e796299dc323ef9ce"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="a982f43b7f2d5916dc3a859667a8ba78e50b6202"/>
