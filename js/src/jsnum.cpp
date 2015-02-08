@@ -39,7 +39,6 @@
 #include "vm/String-inl.h"
 
 using namespace js;
-using namespace js::types;
 
 using mozilla::Abs;
 using mozilla::ArrayLength;

@@ -2295,7 +2295,7 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
     // Requesting a non-GC pointer is safe here since we never re-enter C++
     // from inside a type barrier test.
 
-    const types::TemporaryTypeSet *types = ins->resultTypeSet();
+    const TemporaryTypeSet *types = ins->resultTypeSet();
     bool needTemp = !types->unknownObject() && types->getObjectCount() > 0;
 
     MIRType inputType = ins->getOperand(0)->type();
@@ -2325,7 +2325,7 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
     }
 
     // Handle typebarrier with specific ObjectGroup/SingleObjects.
-    if (inputType == MIRType_Object && !types->hasType(types::Type::AnyObjectType()) &&
+    if (inputType == MIRType_Object && !types->hasType(TypeSet::AnyObjectType()) &&
         ins->barrierKind() != BarrierKind::TypeTagOnly)
     {
         LDefinition tmp = needTemp ? temp() : LDefinition::BogusTemp();
@@ -2346,7 +2346,7 @@ LIRGenerator::visitMonitorTypes(MMonitorTypes *ins)
     // Requesting a non-GC pointer is safe here since we never re-enter C++
     // from inside a type check.
 
-    const types::TemporaryTypeSet *types = ins->typeSet();
+    const TemporaryTypeSet *types = ins->typeSet();
     bool needTemp = !types->unknownObject() && types->getObjectCount() > 0;
     LDefinition tmp = needTemp ? temp() : tempToUnbox();
 

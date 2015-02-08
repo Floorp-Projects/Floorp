@@ -59,7 +59,7 @@ class OptimizationTypeInfo
 {
     JS::TrackedTypeSite site_;
     MIRType mirType_;
-    types::TypeSet::TypeList types_;
+    TypeSet::TypeList types_;
 
   public:
     OptimizationTypeInfo(OptimizationTypeInfo &&other)
@@ -73,12 +73,12 @@ class OptimizationTypeInfo
         mirType_(mirType)
     { }
 
-    bool trackTypeSet(types::TemporaryTypeSet *typeSet);
-    bool trackType(types::Type type);
+    bool trackTypeSet(TemporaryTypeSet *typeSet);
+    bool trackType(TypeSet::Type type);
 
     JS::TrackedTypeSite site() const { return site_; }
     MIRType mirType() const { return mirType_; }
-    const types::TypeSet::TypeList &types() const { return types_; }
+    const TypeSet::TypeList &types() const { return types_; }
 
     bool operator ==(const OptimizationTypeInfo &other) const;
     bool operator !=(const OptimizationTypeInfo &other) const;
@@ -421,7 +421,7 @@ class IonTrackedOptimizationsAttempts
 
 struct IonTrackedTypeWithAddendum
 {
-    types::Type type;
+    TypeSet::Type type;
 
     enum HasAddendum {
         HasNothing,
@@ -441,19 +441,19 @@ struct IonTrackedTypeWithAddendum
         JSFunction *constructor;
     };
 
-    explicit IonTrackedTypeWithAddendum(types::Type type)
+    explicit IonTrackedTypeWithAddendum(TypeSet::Type type)
       : type(type),
         hasAddendum(HasNothing)
     { }
 
-    IonTrackedTypeWithAddendum(types::Type type, JSScript *script, uint32_t offset)
+    IonTrackedTypeWithAddendum(TypeSet::Type type, JSScript *script, uint32_t offset)
       : type(type),
         hasAddendum(HasAllocationSite),
         script(script),
         offset(offset)
     { }
 
-    IonTrackedTypeWithAddendum(types::Type type, JSFunction *constructor)
+    IonTrackedTypeWithAddendum(TypeSet::Type type, JSFunction *constructor)
       : type(type),
         hasAddendum(HasConstructor),
         constructor(constructor)
@@ -482,7 +482,7 @@ class IonTrackedOptimizationsTypeInfo
     // Unlike IonTrackedOptimizationAttempts,
     // JS::ForEachTrackedOptimizaitonTypeInfoOp cannot be used directly. The
     // internal API needs to deal with engine-internal data structures (e.g.,
-    // types::Type) directly.
+    // TypeSet::Type) directly.
     struct ForEachOp
     {
         virtual void readType(const IonTrackedTypeWithAddendum &tracked) = 0;
