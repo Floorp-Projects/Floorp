@@ -48,6 +48,9 @@ public:
   // Called by PBrowser when it receives a Destroy() call from the child.
   void ParentDestroy();
 
+  // Sets mWidget's parent
+  void SetParent(nsIWidget* aParent);
+
 private:
   void ShutdownCommon(bool aParentInitiated);
 
