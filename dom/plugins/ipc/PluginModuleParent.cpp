@@ -1928,9 +1928,7 @@ PluginModuleParent::RecvNP_InitializeResult(const NPError& aError)
     }
 
     if (mIsStartingAsync) {
-#if defined(XP_WIN)
         SetPluginFuncs(mNPPIface);
-#endif
         InitAsyncSurrogates();
     }
 
