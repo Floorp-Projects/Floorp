@@ -1488,6 +1488,14 @@ SpecialPowersAPI.prototype = {
     return this._os;
   },
 
+  get isB2G() {
+#ifdef MOZ_B2G
+    return true;
+#else
+    return false;
+#endif
+  },
+
   addSystemEventListener: function(target, type, listener, useCapture) {
     Cc["@mozilla.org/eventlistenerservice;1"].
       getService(Ci.nsIEventListenerService).

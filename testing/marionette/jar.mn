@@ -23,7 +23,7 @@ marionette.jar:
 % content specialpowers %content/
   content/specialpowers.js (../specialpowers/content/specialpowers.js)
   content/SpecialPowersObserver.js (../specialpowers/components/SpecialPowersObserver.js)
-  content/specialpowersAPI.js (../specialpowers/content/specialpowersAPI.js)
+* content/specialpowersAPI.js (../specialpowers/content/specialpowersAPI.js)
   content/SpecialPowersObserverAPI.js (../specialpowers/content/SpecialPowersObserverAPI.js)
   content/ChromePowers.js (../mochitest/tests/SimpleTest/ChromePowers.js)
   content/MozillaLogger.js (../specialpowers/content/MozillaLogger.js)
