@@ -54,10 +54,10 @@ public:
   virtual void CaptureMouseEvents(bool aGrabMouseEvents) = 0;
 
   /**
-   * Returns the height of a single row in the list.  This is the
-   * maximum of the heights of all the options/optgroups.
+   * Returns the block size of a single row in the list.  This is the
+   * maximum of the block sizes of all the options/optgroups.
    */
-  virtual nscoord GetHeightOfARow() = 0;
+  virtual nscoord GetBSizeOfARow() = 0;
 
   /**
    * Returns the number of options in the listbox
