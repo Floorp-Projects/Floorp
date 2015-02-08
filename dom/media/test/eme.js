@@ -73,7 +73,7 @@ function Log(token, msg) {
   info(TimeStamp(token) + " " + msg);
 }
 
-function UpdateSessionFunc(test, token, sessionType) {
+function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
   return function(ev) {
     var msgStr = ArrayBufferToString(ev.message);
     var msg = JSON.parse(msgStr);
@@ -110,7 +110,11 @@ function UpdateSessionFunc(test, token, sessionType) {
 
     ev.target.update(StringToArrayBuffer(update)).then(function() {
       Log(token, "MediaKeySession update ok!");
-    }, bail(token + " MediaKeySession update failed"));
+      resolve(ev.target);
+    }).catch(function(reason) {
+      bail(token + " MediaKeySession update failed")(reason);
+      reject();
+    });
   }
 }
 
@@ -256,14 +260,23 @@ function SetupEME(test, token, params)
       if (params && params.onsessioncreated) {
         params.onsessioncreated(session);
       }
-      session.addEventListener("message", UpdateSessionFunc(test, token, sessionType));
-      var p = session.generateRequest(ev.initDataType, ev.initData);
-      var r = bail(token + ": session.generateRequest failed");
-      return chain(p, r);
+
+      return new Promise(function (resolve, reject) {
+        session.addEventListener("message", UpdateSessionFunc(test, token, sessionType, resolve, reject));
+        session.generateRequest(ev.initDataType, ev.initData).catch(function(reason) {
+          // Reject the promise if generateRequest() failed. Otherwise it will
+          // be resolve in UpdateSessionFunc().
+          bail(token + ": session.generateRequest failed")(reason);
+          reject();
+        });
+      });
     })
 
-    .then(function() {
+    .then(function(session) {
       Log(token, ": session.generateRequest succeeded");
+      if (params && params.onsessionupdated) {
+        params.onsessionupdated(session);
+      }
     });
   });
   return v;

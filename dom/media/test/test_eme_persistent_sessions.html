@@ -71,7 +71,7 @@ function startTest(test, token)
 
   var v = SetupEME(test, token,
     {
-      onsessioncreated: function(session) {
+      onsessionupdated: function(session) {
         Log(token, "Session created");
         var sessionId;
         initialSession = session;
