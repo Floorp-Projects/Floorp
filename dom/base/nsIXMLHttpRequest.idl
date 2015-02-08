@@ -68,7 +68,7 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  * you're aware of all the security implications.  And then think twice about
  * it.
  */
-[scriptable, uuid(704e91dc-a3f6-4e4d-9f5f-4bb85159aeb7)]
+[scriptable, uuid(6f54214c-7175-498d-9d2d-0429e38c2869)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**
@@ -209,15 +209,6 @@ interface nsIXMLHttpRequest : nsISupports
    *             calling send.
    */
   void   send([optional] in nsIVariant body);
-
-  /**
-   * A variant of the send() method used to send binary data.
-   *
-   * @param body The request body as a DOM string.  The string data will be
-   *             converted to a single-byte string by truncation (i.e., the
-   *             high-order byte of each character will be discarded).
-   */
-  void   sendAsBinary(in DOMString body);
 
   /**
    * Sets a HTTP request header for HTTP requests. You must call open

@@ -2350,60 +2350,6 @@ nsXMLHttpRequest::ChangeStateToDone()
   }
 }
 
-NS_IMETHODIMP
-nsXMLHttpRequest::SendAsBinary(const nsAString &aBody)
-{
-  ErrorResult rv;
-  SendAsBinary(aBody, rv);
-  return rv.ErrorCode();
-}
-
-void
-nsXMLHttpRequest::SendAsBinary(const nsAString &aBody,
-                               ErrorResult& aRv)
-{
-  char *data = static_cast<char*>(NS_Alloc(aBody.Length() + 1));
-  if (!data) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
-
-  if (GetOwner() && GetOwner()->GetExtantDoc()) {
-    GetOwner()->GetExtantDoc()->WarnOnceAbout(nsIDocument::eSendAsBinary);
-  }
-
-  nsAString::const_iterator iter, end;
-  aBody.BeginReading(iter);
-  aBody.EndReading(end);
-  char *p = data;
-  while (iter != end) {
-    if (*iter & 0xFF00) {
-      NS_Free(data);
-      aRv.Throw(NS_ERROR_DOM_INVALID_CHARACTER_ERR);
-      return;
-    }
-    *p++ = static_cast<char>(*iter++);
-  }
-  *p = '\0';
-
-  nsCOMPtr<nsIInputStream> stream;
-  aRv = NS_NewByteInputStream(getter_AddRefs(stream), data, aBody.Length(),
-                              NS_ASSIGNMENT_ADOPT);
-  if (aRv.Failed()) {
-    NS_Free(data);
-    return;
-  }
-
-  nsCOMPtr<nsIWritableVariant> variant = new nsVariant();
-
-  aRv = variant->SetAsISupports(stream);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  aRv = Send(variant);
-}
-
 static nsresult
 GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult,
                uint64_t* aContentLength, nsACString& aContentType,
