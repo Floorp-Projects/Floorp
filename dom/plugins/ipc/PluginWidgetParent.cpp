@@ -75,6 +75,14 @@ PluginWidgetParent::GetTabParent()
   return static_cast<mozilla::dom::TabParent*>(Manager());
 }
 
+void
+PluginWidgetParent::SetParent(nsIWidget* aParent)
+{
+  if (mWidget && aParent) {
+    mWidget->SetParent(aParent);
+  }
+}
+
 #if defined(XP_WIN)
 // static
 void
