@@ -80,6 +80,21 @@ BuildScrollContainerLayers()
   return !sContainerlessScrollingEnabled;
 }
 
+static uint32_t
+GetOverflowChange(const nsRect& aCurScrolledRect, const nsRect& aPrevScrolledRect)
+{
+  uint32_t result = 0;
+  if (aPrevScrolledRect.x != aCurScrolledRect.x ||
+      aPrevScrolledRect.width != aCurScrolledRect.width) {
+    result |= nsIScrollableFrame::HORIZONTAL;
+  }
+  if (aPrevScrolledRect.y != aCurScrolledRect.y ||
+      aPrevScrolledRect.height != aCurScrolledRect.height) {
+    result |= nsIScrollableFrame::VERTICAL;
+  }
+  return result;
+}
+
 //----------------------------------------------------------------------
 
 //----------nsHTMLScrollFrame-------------------------------------------
@@ -913,6 +928,8 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
   if (mHelper.mIsRoot && !oldScrolledAreaBounds.IsEqualEdges(newScrolledAreaBounds)) {
     mHelper.PostScrolledAreaEvent();
   }
+
+  mHelper.UpdatePrevScrolledRect();
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -4525,6 +4542,8 @@ nsXULScrollFrame::Layout(nsBoxLayoutState& aState)
     f->SetRect(clippedRect);
   }
 
+  mHelper.UpdatePrevScrolledRect();
+
   mHelper.PostOverflowEvent();
   return NS_OK;
 }
@@ -4668,9 +4687,27 @@ ScrollFrameHelper::UpdateOverflow()
   nsIScrollableFrame* sf = do_QueryFrame(mOuter);
   ScrollbarStyles ss = sf->GetScrollbarStyles();
 
-  if (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN ||
-      ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
-      GetScrollPosition() != nsPoint()) {
+  // Reflow when the change in overflow leads to one of our scrollbars
+  // changing or might require repositioning the scrolled content due to
+  // reduced extents.
+  nsRect scrolledRect = GetScrolledRect();
+  uint32_t overflowChange = GetOverflowChange(scrolledRect, mPrevScrolledRect);
+  mPrevScrolledRect = scrolledRect;
+
+  bool needReflow = false;
+  nsPoint scrollPosition = GetScrollPosition();
+  if (overflowChange & nsIScrollableFrame::HORIZONTAL) {
+    if (ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN || scrollPosition.x) {
+      needReflow = true;
+    }
+  }
+  if (overflowChange & nsIScrollableFrame::VERTICAL) {
+    if (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN || scrollPosition.y) {
+      needReflow = true;
+    }
+  }
+
+  if (needReflow) {
     // If there are scrollbars, or we're not at the beginning of the pane,
     // the scroll position may change. In this case, mark the frame as
     // needing reflow. Don't use NS_FRAME_IS_DIRTY as dirty as that means
@@ -4697,6 +4734,12 @@ ScrollFrameHelper::UpdateSticky()
     nsIScrollableFrame* scrollFrame = do_QueryFrame(mOuter);
     ssc->UpdatePositions(scrollFrame->GetScrollPosition(), mOuter);
   }
+}
+
+void
+ScrollFrameHelper::UpdatePrevScrolledRect()
+{
+  mPrevScrolledRect = GetScrolledRect();
 }
 
 void
