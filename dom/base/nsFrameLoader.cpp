@@ -76,6 +76,8 @@
 #include "AppProcessChecker.h"
 #include "ContentParent.h"
 #include "TabParent.h"
+#include "mozilla/plugins/PPluginWidgetParent.h"
+#include "../plugins/ipc/PluginWidgetParent.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Preferences.h"
@@ -970,6 +972,8 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
                                          nsRefPtr<nsFrameLoader>& aFirstToSwap,
                                          nsRefPtr<nsFrameLoader>& aSecondToSwap)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   Element* ourContent = mOwnerContent;
   Element* otherContent = aOther->mOwnerContent;
 
@@ -1022,6 +1026,17 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
   if (NS_FAILED(rv)) {
     mInSwap = aOther->mInSwap = false;
     return rv;
+  }
+
+  // Native plugin windows used by this remote content need to be reparented.
+  const nsTArray<mozilla::plugins::PPluginWidgetParent*>& plugins =
+    aOther->mRemoteBrowser->ManagedPPluginWidgetParent();
+  nsPIDOMWindow* newWin = ourDoc->GetWindow();
+  if (newWin) {
+    nsRefPtr<nsIWidget> newParent = ((nsGlobalWindow*)newWin)->GetMainWidget();
+    for (uint32_t idx = 0; idx < plugins.Length(); ++idx) {
+      static_cast<mozilla::plugins::PluginWidgetParent*>(plugins[idx])->SetParent(newParent);
+    }
   }
 
   SetOwnerContent(otherContent);
