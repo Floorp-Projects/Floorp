@@ -81,9 +81,9 @@ NativeObject::setDenseElementWithType(ExclusiveContext *cx, uint32_t index,
 {
     // Avoid a slow AddTypePropertyId call if the type is the same as the type
     // of the previous element.
-    types::Type thisType = types::GetValueType(val);
-    if (index == 0 || types::GetValueType(elements_[index - 1]) != thisType)
-        types::AddTypePropertyId(cx, this, JSID_VOID, thisType);
+    TypeSet::Type thisType = TypeSet::GetValueType(val);
+    if (index == 0 || TypeSet::GetValueType(elements_[index - 1]) != thisType)
+        AddTypePropertyId(cx, this, JSID_VOID, thisType);
     setDenseElementMaybeConvertDouble(index, val);
 }
 
@@ -92,14 +92,14 @@ NativeObject::initDenseElementWithType(ExclusiveContext *cx, uint32_t index,
                                        const Value &val)
 {
     MOZ_ASSERT(!shouldConvertDoubleElements());
-    types::AddTypePropertyId(cx, this, JSID_VOID, val);
+    AddTypePropertyId(cx, this, JSID_VOID, val);
     initDenseElement(index, val);
 }
 
 inline void
 NativeObject::setDenseElementHole(ExclusiveContext *cx, uint32_t index)
 {
-    types::MarkObjectGroupFlags(cx, this, OBJECT_FLAG_NON_PACKED);
+    MarkObjectGroupFlags(cx, this, OBJECT_FLAG_NON_PACKED);
     setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
 }
 
@@ -107,9 +107,7 @@ NativeObject::setDenseElementHole(ExclusiveContext *cx, uint32_t index)
 NativeObject::removeDenseElementForSparseIndex(ExclusiveContext *cx,
                                                HandleNativeObject obj, uint32_t index)
 {
-    types::MarkObjectGroupFlags(cx, obj,
-                                OBJECT_FLAG_NON_PACKED |
-                                OBJECT_FLAG_SPARSE_INDEXES);
+    MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_NON_PACKED | OBJECT_FLAG_SPARSE_INDEXES);
     if (obj->containsDenseElement(index))
         obj->setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
 }
@@ -124,7 +122,7 @@ inline void
 NativeObject::markDenseElementsNotPacked(ExclusiveContext *cx)
 {
     MOZ_ASSERT(isNative());
-    types::MarkObjectGroupFlags(cx, this, OBJECT_FLAG_NON_PACKED);
+    MarkObjectGroupFlags(cx, this, OBJECT_FLAG_NON_PACKED);
 }
 
 inline void
@@ -320,7 +318,7 @@ NativeObject::setSlotWithType(ExclusiveContext *cx, Shape *shape,
     if (overwriting)
         shape->setOverwritten();
 
-    types::AddTypePropertyId(cx, this, shape->propid(), value);
+    AddTypePropertyId(cx, this, shape->propid(), value);
 }
 
 /* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
