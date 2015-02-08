@@ -67,15 +67,15 @@ let test = Task.async(function*() {
     "The imported legacy data was successfully converted for the current tool (1).");
   is(importedData.duration, data.duration,
     "The imported legacy data was successfully converted for the current tool (2).");
-  is(importedData.markers.toSource(), data.markers.toSource(),
+  is(importedData.markers.toSource(), [].toSource(),
     "The imported legacy data was successfully converted for the current tool (3).");
-  is(importedData.frames.toSource(), data.frames.toSource(),
+  is(importedData.frames.toSource(), [].toSource(),
     "The imported legacy data was successfully converted for the current tool (4).");
-  is(importedData.memory.toSource(), data.memory.toSource(),
+  is(importedData.memory.toSource(), [].toSource(),
     "The imported legacy data was successfully converted for the current tool (5).");
   is(importedData.ticks.toSource(), data.ticks.toSource(),
     "The imported legacy data was successfully converted for the current tool (6).");
-  is(importedData.allocations.toSource(), data.allocations.toSource(),
+  is(importedData.allocations.toSource(), ({sites:[], timestamps:[], frames:[], counts:[]}).toSource(),
     "The imported legacy data was successfully converted for the current tool (7).");
   is(importedData.profile.toSource(), data.profile.toSource(),
     "The imported legacy data was successfully converted for the current tool (8).");
