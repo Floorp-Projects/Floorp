@@ -650,7 +650,7 @@ this.DOMApplicationRegistry = {
   //   c. for all apps in the new core registry, install them if they are not
   //      yet in the current registry, and run installPermissions()
   installSystemApps: function() {
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       let file;
       try {
         file = FileUtils.getFile("coreAppsDir", ["webapps", "webapps.json"], false);
@@ -727,7 +727,7 @@ this.DOMApplicationRegistry = {
   },
 
   loadAndUpdateApps: function() {
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       let runUpdate = AppsUtils.isFirstRun(Services.prefs);
 
       yield this.loadCurrentRegistry();
@@ -760,13 +760,16 @@ this.DOMApplicationRegistry = {
       if (runUpdate) {
 
         // Run migration before uninstall of core apps happens.
-        try {
-          let appMigrator = Components.classes["@mozilla.org/app-migrator;1"].createInstance(Components.interfaces.nsIObserver);
-          appMigrator.observe(null, "webapps-before-update-merge", null);
-        } catch(e) {
-          debug("Exception running app migration: ");
-          debug(e.name + " " + e.message);
-          debug("Skipping app migration.");
+        let appMigrator = Components.classes["@mozilla.org/app-migrator;1"];
+        if (appMigrator) {
+          try {
+              appMigrator = appMigrator.createInstance(Components.interfaces.nsIObserver);
+              appMigrator.observe(null, "webapps-before-update-merge", null);
+          } catch(e) {
+            debug("Exception running app migration: ");
+            debug(e.name + " " + e.message);
+            debug("Skipping app migration.");
+          }
         }
 
 #ifdef MOZ_WIDGET_GONK
@@ -2357,7 +2360,6 @@ this.DOMApplicationRegistry = {
     });
   },
 
-
   updatePackagedApp: Task.async(function*(aData, aId, aApp, aNewManifest) {
     debug("updatePackagedApp");
 
@@ -3035,7 +3037,7 @@ this.DOMApplicationRegistry = {
                            this.webapps[id].manifestURL, jsonManifest);
     }
 
-    for each (let prop in ["installState", "downloadAvailable", "downloading",
+    for (let prop of ["installState", "downloadAvailable", "downloading",
                            "downloadSize", "readyToApplyDownload"]) {
       aData.app[prop] = appObject[prop];
     }
@@ -3347,7 +3349,6 @@ this.DOMApplicationRegistry = {
     }
 
     oldPackage = oldPackage || (hash == aOldApp.packageHash);
-
 
     if (oldPackage) {
       debug("package's etag or hash unchanged; sending 'applied' event");
