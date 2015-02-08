@@ -4,7 +4,7 @@ metadata:
   description: |
     {{project}} push for {{owner}} with comment: {{comment}}.
   owner: "{{owner}}"
-  source: "{{source}}"
+  source: "{{{source}}}"
 
 scopes:
   # Note the below scopes are insecure however these get overriden on the server
@@ -34,8 +34,8 @@ tasks:
 
       payload:
         env:
-          GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-central'
-          GECKO_HEAD_REPOSITORY: '{{url}}'
+          GECKO_BASE_REPOSITORY: '{{{url}}}'
+          GECKO_HEAD_REPOSITORY: '{{{url}}}'
           GECKO_HEAD_REF: '{{revision}}'
           GECKO_HEAD_REV: '{{revision}}'
 

@@ -123,11 +123,7 @@ enum : uint32_t {
     /* Whether this group is associated with some allocation site. */
     OBJECT_FLAG_FROM_ALLOCATION_SITE  = 0x1,
 
-    /*
-     * If set, the object's prototype might be in the nursery and can't be
-     * used during Ion compilation (which may be occurring off thread).
-     */
-    OBJECT_FLAG_NURSERY_PROTO         = 0x2,
+    /* (0x2 and 0x4 are unused) */
 
     /* Mask/shift for the number of properties in propertySet */
     OBJECT_FLAG_PROPERTY_COUNT_MASK   = 0xfff8,
@@ -255,7 +251,7 @@ class ObjectGroup : public gc::TenuredCell
     HeapPtrObject &protoRaw() { return proto_; }
     HeapPtrObject &singletonRaw() { return singleton_; }
 
-    void setProto(JSContext *cx, TaggedProto proto);
+    void setProto(TaggedProto proto);
     void setProtoUnchecked(TaggedProto proto);
 
     void initSingleton(JSObject *singleton) {
@@ -417,10 +413,6 @@ class ObjectGroup : public gc::TenuredCell
 
     bool shouldPreTenure() {
         return hasAnyFlags(OBJECT_FLAG_PRE_TENURE) && !unknownProperties();
-    }
-
-    bool hasTenuredProto() {
-        return !(flags() & OBJECT_FLAG_NURSERY_PROTO);
     }
 
     gc::InitialHeap initialHeap(types::CompilerConstraintList *constraints);

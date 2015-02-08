@@ -836,6 +836,7 @@ Messages.Simple.prototype = Heritage.extend(Messages.BaseMessage.prototype,
 
     let icon = this.document.createElementNS(XHTML_NS, "span");
     icon.className = "icon";
+    icon.title = l10n.getStr("severity." + this._severityNameCompat);
 
     // Apply the current group by indenting appropriately.
     // TODO: remove this once bug 778766 is fixed.

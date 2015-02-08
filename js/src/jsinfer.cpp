@@ -1069,26 +1069,7 @@ TypeSetObjectKey::clasp()
 TaggedProto
 TypeSetObjectKey::proto()
 {
-    MOZ_ASSERT(hasTenuredProto());
     return isGroup() ? group()->proto() : singleton()->getTaggedProto();
-}
-
-TaggedProto
-TypeSetObjectKey::protoMaybeInNursery()
-{
-    return isGroup() ? group()->proto() : singleton()->getTaggedProto();
-}
-
-bool
-JSObject::hasTenuredProto() const
-{
-    return group_->hasTenuredProto();
-}
-
-bool
-TypeSetObjectKey::hasTenuredProto()
-{
-    return isGroup() ? group()->hasTenuredProto() : singleton()->hasTenuredProto();
 }
 
 TypeNewScript *
@@ -2205,7 +2186,7 @@ TemporaryTypeSet::getCommonPrototype(CompilerConstraintList *constraints)
         if (!key)
             continue;
 
-        if (key->unknownProperties() || !key->hasTenuredProto())
+        if (key->unknownProperties())
             return nullptr;
 
         TaggedProto nproto = key->proto();
@@ -2271,8 +2252,6 @@ PrototypeHasIndexedProperty(CompilerConstraintList *constraints, JSObject *obj)
             return true;
         HeapTypeSetKey index = key->property(JSID_VOID);
         if (index.nonData(constraints) || index.isOwnProperty(constraints))
-            return true;
-        if (!obj->hasTenuredProto())
             return true;
         obj = obj->getProto();
     } while (obj);

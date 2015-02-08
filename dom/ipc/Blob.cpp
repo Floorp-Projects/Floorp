@@ -1926,6 +1926,9 @@ public:
   virtual int64_t
   GetLastModified(ErrorResult& aRv) MOZ_OVERRIDE;
 
+  virtual void
+  SetLastModified(int64_t aLastModified) MOZ_OVERRIDE;
+
   virtual nsresult
   SetMutable(bool aMutable) MOZ_OVERRIDE;
 
@@ -2061,6 +2064,9 @@ public:
 
   virtual int64_t
   GetLastModified(ErrorResult& aRv) MOZ_OVERRIDE;
+
+  virtual void
+  SetLastModified(int64_t aLastModified) MOZ_OVERRIDE;
 
   virtual void
   GetMozFullPath(nsAString& aName, ErrorResult& aRv) MOZ_OVERRIDE;
@@ -2408,6 +2414,13 @@ RemoteBlobImpl::GetLastModified(ErrorResult& aRv)
   return mLastModificationDate;
 }
 
+void
+BlobChild::
+RemoteBlobImpl::SetLastModified(int64_t aLastModified)
+{
+  MOZ_CRASH("SetLastModified of a remote blob is not allowed!");
+}
+
 nsresult
 BlobChild::
 RemoteBlobImpl::SetMutable(bool aMutable)
@@ -2736,6 +2749,13 @@ BlobParent::
 RemoteBlobImpl::GetLastModified(ErrorResult& aRv)
 {
   return mBlobImpl->GetLastModified(aRv);
+}
+
+void
+BlobParent::
+RemoteBlobImpl::SetLastModified(int64_t aLastModified)
+{
+  MOZ_CRASH("SetLastModified of a remote blob is not allowed!");
 }
 
 void

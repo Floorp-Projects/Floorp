@@ -11,6 +11,10 @@ let browser1, browser2;
 
 function test() {
   waitForExplicitFinish();
+  waitForFocus(reallyRunTests);
+}
+
+function reallyRunTests() {
 
   let tab1 = gBrowser.addTab();
   let tab2 = gBrowser.addTab();

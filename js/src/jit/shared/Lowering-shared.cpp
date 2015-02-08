@@ -256,7 +256,7 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
 }
 #endif
 
-bool
+void
 LIRGeneratorShared::assignSnapshot(LInstruction *ins, BailoutKind kind)
 {
     // assignSnapshot must be called before define/add, since
@@ -264,11 +264,10 @@ LIRGeneratorShared::assignSnapshot(LInstruction *ins, BailoutKind kind)
     MOZ_ASSERT(ins->id() == 0);
 
     LSnapshot *snapshot = buildSnapshot(ins, lastResumePoint_, kind);
-    if (!snapshot)
-        return false;
-
-    ins->assignSnapshot(snapshot);
-    return true;
+    if (snapshot)
+        ins->assignSnapshot(snapshot);
+    else
+        gen->abort("buildSnapshot failed");
 }
 
 void

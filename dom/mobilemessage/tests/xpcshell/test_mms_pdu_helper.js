@@ -665,31 +665,29 @@ add_test(function test_EncodedStringValue_decode() {
   // Test for non-well-known charset
   wsp_decode_test(MMS.EncodedStringValue, [1, 0x80], null, "NotWellKnownEncodingError");
   // Test for utf-8
-  let (entry = MMS.WSP.WSP_WELL_KNOWN_CHARSETS["utf-8"]) {
-    // "Mozilla" in full width.
-    let str = "\uff2d\uff4f\uff5a\uff49\uff4c\uff4c\uff41";
+  let entry = MMS.WSP.WSP_WELL_KNOWN_CHARSETS["utf-8"];
+  // "Mozilla" in full width.
+  let str = "\uff2d\uff4f\uff5a\uff49\uff4c\uff4c\uff41";
 
-    let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-               .createInstance(Ci.nsIScriptableUnicodeConverter);
-    conv.charset = entry.converter;
+  let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+             .createInstance(Ci.nsIScriptableUnicodeConverter);
+  conv.charset = entry.converter;
 
-    let raw = conv.convertToByteArray(str).concat([0]);
-    wsp_decode_test(MMS.EncodedStringValue,
-                    [raw.length + 2, 0x80 | entry.number, 127].concat(raw), str);
-  }
+  let raw = conv.convertToByteArray(str).concat([0]);
+  wsp_decode_test(MMS.EncodedStringValue,
+                  [raw.length + 2, 0x80 | entry.number, 127].concat(raw), str);
 
-  let (entry = MMS.WSP.WSP_WELL_KNOWN_CHARSETS["utf-16"]) {
-    // "Mozilla" in full width.
-    let str = "\u004d\u006F\u007A\u0069\u006C\u006C\u0061";
+  entry = MMS.WSP.WSP_WELL_KNOWN_CHARSETS["utf-16"];
+  // "Mozilla" in full width.
+  str = "\u004d\u006F\u007A\u0069\u006C\u006C\u0061";
 
-    let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-               .createInstance(Ci.nsIScriptableUnicodeConverter);
-    conv.charset = entry.converter;
+  conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+         .createInstance(Ci.nsIScriptableUnicodeConverter);
+  conv.charset = entry.converter;
 
-    let raw = conv.convertToByteArray(str).concat([0]);
-    wsp_decode_test(MMS.EncodedStringValue,
-                    [raw.length + 3, 2, 3, 247].concat(raw), str);
-  }
+  raw = conv.convertToByteArray(str).concat([0]);
+  wsp_decode_test(MMS.EncodedStringValue,
+                  [raw.length + 3, 2, 3, 247].concat(raw), str);
 
   run_next_test();
 });
@@ -701,28 +699,27 @@ add_test(function test_EncodedStringValue_encode() {
   wsp_encode_test(MMS.EncodedStringValue, "Hello", strToCharCodeArray("Hello"));
 
   // Test for utf-8
-  let (entry = MMS.WSP.WSP_WELL_KNOWN_CHARSETS["utf-8"]) {
-    // "Mozilla" in full width.
-    let str = "\uff2d\uff4f\uff5a\uff49\uff4c\uff4c\uff41";
+  let entry = MMS.WSP.WSP_WELL_KNOWN_CHARSETS["utf-8"];
+  // "Mozilla" in full width.
+  let str = "\uff2d\uff4f\uff5a\uff49\uff4c\uff4c\uff41";
 
-    let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-               .createInstance(Ci.nsIScriptableUnicodeConverter);
-    conv.charset = entry.converter;
+  let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+             .createInstance(Ci.nsIScriptableUnicodeConverter);
+  conv.charset = entry.converter;
 
-    let raw = conv.convertToByteArray(str).concat([0]);
-    wsp_encode_test(MMS.EncodedStringValue, str,
-                    [raw.length + 2, 0x80 | entry.number, 127].concat(raw));
+  let raw = conv.convertToByteArray(str).concat([0]);
+  wsp_encode_test(MMS.EncodedStringValue, str,
+                  [raw.length + 2, 0x80 | entry.number, 127].concat(raw));
 
-    // MMS.EncodedStringValue encodes non us-ascii characters (128 ~ 255)
-    // (e.g., 'Ñ' or 'ü') by the utf-8 encoding. Otherwise, for us-ascii
-    // characters (0 ~ 127), still use the normal TextString encoding.
+  // MMS.EncodedStringValue encodes non us-ascii characters (128 ~ 255)
+  // (e.g., 'Ñ' or 'ü') by the utf-8 encoding. Otherwise, for us-ascii
+  // characters (0 ~ 127), still use the normal TextString encoding.
 
-    // "Ñü" in full width.
-    str = "\u00d1\u00fc";
-    raw = conv.convertToByteArray(str).concat([0]);
-    wsp_encode_test(MMS.EncodedStringValue, str,
-                    [raw.length + 2, 0x80 | entry.number, 127].concat(raw));
-  }
+  // "Ñü" in full width.
+  str = "\u00d1\u00fc";
+  raw = conv.convertToByteArray(str).concat([0]);
+  wsp_encode_test(MMS.EncodedStringValue, str,
+                  [raw.length + 2, 0x80 | entry.number, 127].concat(raw));
 
   run_next_test();
 });
@@ -790,10 +787,9 @@ add_test(function test_FromValue_decode() {
   // Test for Insert-address-token:
   wsp_decode_test(MMS.FromValue, [1, 129], null);
   // Test for Address-present-token:
-  let (addr = strToCharCodeArray("+123/TYPE=PLMN")) {
-    wsp_decode_test(MMS.FromValue, [addr.length + 1, 128].concat(addr),
-                        {address: "+123", type: "PLMN"});
-  }
+  let addr = strToCharCodeArray("+123/TYPE=PLMN");
+  wsp_decode_test(MMS.FromValue, [addr.length + 1, 128].concat(addr),
+                      {address: "+123", type: "PLMN"});
 
   run_next_test();
 });
@@ -804,10 +800,9 @@ add_test(function test_FromValue_encode() {
   // Test for Insert-address-token:
   wsp_encode_test(MMS.FromValue, null, [1, 129]);
   // Test for Address-present-token:
-  let (addr = strToCharCodeArray("+123/TYPE=PLMN")) {
-    wsp_encode_test(MMS.FromValue, {address: "+123", type: "PLMN"},
-                    [addr.length + 1, 128].concat(addr));
-  }
+  let addr = strToCharCodeArray("+123/TYPE=PLMN");
+  wsp_encode_test(MMS.FromValue, {address: "+123", type: "PLMN"},
+                  [addr.length + 1, 128].concat(addr));
 
   run_next_test();
 });
@@ -1371,4 +1366,3 @@ add_test(function test_PduHelper_encodeHeaders() {
 
   run_next_test();
 });
-

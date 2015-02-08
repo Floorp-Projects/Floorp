@@ -275,15 +275,14 @@ add_test(function test_AcceptCharsetValue_decode() {
   wsp_decode_test(WSP.AcceptCharsetValue, [128], {charset: "*"});
   // Test for Constrained-Charset
   wsp_decode_test(WSP.AcceptCharsetValue, [65, 0], {charset: "A"});
-  let (entry = WSP.WSP_WELL_KNOWN_CHARSETS["utf-8"]) {
-    wsp_decode_test(WSP.AcceptCharsetValue, [entry.number | 0x80], {charset: entry.name});
-  }
+  let entry = WSP.WSP_WELL_KNOWN_CHARSETS["utf-8"];
+  wsp_decode_test(WSP.AcceptCharsetValue, [entry.number | 0x80], {charset: entry.name});
+
   // Test for Accept-Charset-General-Form
   wsp_decode_test(WSP.AcceptCharsetValue, [1, 128], {charset: "*"});
-  let (entry = WSP.WSP_WELL_KNOWN_CHARSETS["utf-8"]) {
-    wsp_decode_test(WSP.AcceptCharsetValue, [2, 1, entry.number], {charset: entry.name});
-    wsp_decode_test(WSP.AcceptCharsetValue, [1, entry.number | 0x80], {charset: entry.name});
-  }
+  entry = WSP.WSP_WELL_KNOWN_CHARSETS["utf-8"];
+  wsp_decode_test(WSP.AcceptCharsetValue, [2, 1, entry.number], {charset: entry.name});
+  wsp_decode_test(WSP.AcceptCharsetValue, [1, entry.number | 0x80], {charset: entry.name});
   wsp_decode_test(WSP.AcceptCharsetValue, [3, 65, 0, 100], {charset: "A", q: 0.99});
 
   run_next_test();
@@ -551,10 +550,9 @@ add_test(function test_ApplicationIdValue_decode() {
   wsp_decode_test(WSP.ApplicationIdValue, [0], "");
   wsp_decode_test(WSP.ApplicationIdValue, [65, 0], "A");
   wsp_decode_test(WSP.ApplicationIdValue, [97, 0], "a");
-  let (entry = WSP.OMNA_PUSH_APPLICATION_IDS["x-wap-application:mms.ua"]) {
-    wsp_decode_test(WSP.ApplicationIdValue, [entry.number | 0x80], entry.urn);
-    wsp_decode_test(WSP.ApplicationIdValue, [1, entry.number], entry.urn);
-  }
+  let entry = WSP.OMNA_PUSH_APPLICATION_IDS["x-wap-application:mms.ua"];
+  wsp_decode_test(WSP.ApplicationIdValue, [entry.number | 0x80], entry.urn);
+  wsp_decode_test(WSP.ApplicationIdValue, [1, entry.number], entry.urn);
   wsp_decode_test(WSP.ApplicationIdValue, [0xFF], null, "NotWellKnownEncodingError");
 
   run_next_test();

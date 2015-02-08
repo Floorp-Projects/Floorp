@@ -4435,10 +4435,8 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
         JSObject *obj;
         if (key->isSingleton())
             obj = key->singleton();
-        else if (key->hasTenuredProto())
-            obj = key->proto().toObjectOrNull();
         else
-            obj = nullptr;
+            obj = key->proto().toObjectOrNull();
 
         while (obj) {
             if (!obj->getClass()->isNative())
@@ -4462,8 +4460,6 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                 }
             }
 
-            if (!obj->hasTenuredProto())
-                break;
             obj = obj->getProto();
         }
     }
@@ -4526,7 +4522,7 @@ jit::PropertyReadOnPrototypeNeedsTypeBarrier(types::CompilerConstraintList *cons
         if (!key)
             continue;
         while (true) {
-            if (!key->hasStableClassAndProto(constraints) || !key->hasTenuredProto())
+            if (!key->hasStableClassAndProto(constraints))
                 return BarrierKind::TypeSet;
             if (!key->proto().isObject())
                 break;
