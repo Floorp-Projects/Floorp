@@ -9,6 +9,7 @@
 #define __mozilla_widget_GfxInfo_h__
 
 #include "GfxInfoBase.h"
+#include "nsIGfxInfo2.h"
 
 namespace mozilla {
 namespace widget {
@@ -50,10 +51,11 @@ public:
 
   virtual uint32_t OperatingSystemVersion() MOZ_OVERRIDE { return mWindowsVersion; }
 
-#ifdef DEBUG
   NS_DECL_ISUPPORTS_INHERITED
+#ifdef DEBUG
   NS_DECL_NSIGFXINFODEBUG
 #endif
+  NS_DECL_NSIGFXINFO2
 
 protected:
 
@@ -67,6 +69,9 @@ protected:
 private:
 
   void AddCrashReportAnnotations();
+  void GetCountryCode();
+
+  nsString mCountryCode;
   nsString mDeviceString;
   nsString mDeviceID;
   nsString mDriverVersion;

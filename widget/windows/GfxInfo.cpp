@@ -27,7 +27,9 @@ using namespace mozilla;
 using namespace mozilla::widget;
 
 #ifdef DEBUG
-NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
+NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfo2, nsIGfxInfoDebug)
+#else
+NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfo2)
 #endif
 
 static const uint32_t allWindowsVersions = 0xffffffff;
@@ -549,6 +551,8 @@ GfxInfo::Init()
 
   AddCrashReportAnnotations();
 
+  GetCountryCode();
+
   return rv;
 }
 
@@ -715,6 +719,15 @@ CheckForCiscoVPN() {
 }
 #endif
 
+/* interface nsIGfxInfo2 */
+/* readonly attribute DOMString countryCode; */
+NS_IMETHODIMP
+GfxInfo::GetCountryCode(nsAString& aCountryCode)
+{
+  aCountryCode = mCountryCode;
+  return NS_OK;
+}
+
 void
 GfxInfo::AddCrashReportAnnotations()
 {
@@ -794,6 +807,28 @@ GfxInfo::AddCrashReportAnnotations()
   CrashReporter::AppendAppNotesToCrashReport(note);
 
 #endif
+}
+
+void
+GfxInfo::GetCountryCode()
+{
+  GEOID geoid = GetUserGeoID(GEOCLASS_NATION);
+  if (geoid == GEOID_NOT_AVAILABLE) {
+    return;
+  }
+  // Get required length
+  int numChars = GetGeoInfoW(geoid, GEO_ISO2, nullptr, 0, 0);
+  if (!numChars) {
+    return;
+  }
+  // Now get the string for real
+  mCountryCode.SetLength(numChars);
+  numChars = GetGeoInfoW(geoid, GEO_ISO2, mCountryCode.BeginWriting(),
+                         mCountryCode.Length(), 0);
+  if (numChars) {
+    // numChars includes null terminator
+    mCountryCode.Truncate(numChars - 1);
+  }
 }
 
 static OperatingSystem
