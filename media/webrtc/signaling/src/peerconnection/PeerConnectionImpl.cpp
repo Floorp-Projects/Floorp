@@ -182,10 +182,7 @@ public:
                           size_t numNewVideoTracks,
                           const std::string& pcHandle,
                           nsRefPtr<PeerConnectionObserver> aObserver)
-  : DOMMediaStream::OnTracksAvailableCallback(
-      // Once DOMMediaStream can handle more than one of each, this will change.
-      (numNewAudioTracks ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
-      (numNewVideoTracks ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0))
+  : DOMMediaStream::OnTracksAvailableCallback()
   , mObserver(aObserver)
   , mPcHandle(pcHandle)
   {}
@@ -450,10 +447,10 @@ PeerConnectionImpl::~PeerConnectionImpl()
 }
 
 already_AddRefed<DOMMediaStream>
-PeerConnectionImpl::MakeMediaStream(uint32_t aHint)
+PeerConnectionImpl::MakeMediaStream()
 {
   nsRefPtr<DOMMediaStream> stream =
-    DOMMediaStream::CreateSourceStream(GetWindow(), aHint);
+    DOMMediaStream::CreateSourceStream(GetWindow());
 
 #ifdef MOZILLA_INTERNAL_API
   // Make the stream data (audio/video samples) accessible to the receiving page.
@@ -486,11 +483,7 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
   MOZ_ASSERT(aInfo);
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  // We need to pass a dummy hint here because FakeMediaStream currently
-  // needs to actually propagate a hint for local streams.
-  // TODO(ekr@rtfm.com): Clean up when we have explicit track lists.
-  // See bug 834835.
-  nsRefPtr<DOMMediaStream> stream = MakeMediaStream(0);
+  nsRefPtr<DOMMediaStream> stream = MakeMediaStream();
   if (!stream) {
     return NS_ERROR_FAILURE;
   }

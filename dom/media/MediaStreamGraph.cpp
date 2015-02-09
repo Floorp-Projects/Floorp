@@ -2737,7 +2737,7 @@ ProcessedMediaStream::DestroyImpl()
 
 MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
                                            TrackRate aSampleRate,
-                                           DOMMediaStream::TrackTypeHints aHint= DOMMediaStream::HINT_CONTENTS_UNKNOWN,
+                                           bool aStartWithAudioDriver,
                                            dom::AudioChannel aChannel)
   : MediaStreamGraph(aSampleRate)
   , mProcessingGraphUpdateIndex(0)
@@ -2776,7 +2776,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
 #endif
 
   if (mRealtime) {
-    if (aHint & DOMMediaStream::HINT_CONTENTS_AUDIO) {
+    if (aStartWithAudioDriver) {
       AudioCallbackDriver* driver = new AudioCallbackDriver(this, aChannel);
       mDriver = driver;
       mMixer.AddCallback(driver);
@@ -2784,7 +2784,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
       mDriver = new SystemClockDriver(this);
     }
   } else {
-     mDriver = new OfflineClockDriver(this, MEDIA_GRAPH_TARGET_PERIOD_MS);
+    mDriver = new OfflineClockDriver(this, MEDIA_GRAPH_TARGET_PERIOD_MS);
   }
 
   mLastMainThreadUpdate = TimeStamp::Now();
@@ -2833,7 +2833,8 @@ MediaStreamGraphShutdownObserver::Observe(nsISupports *aSubject,
 }
 
 MediaStreamGraph*
-MediaStreamGraph::GetInstance(DOMMediaStream::TrackTypeHints aHint, dom::AudioChannel aChannel)
+MediaStreamGraph::GetInstance(bool aStartWithAudioDriver,
+                              dom::AudioChannel aChannel)
 {
   NS_ASSERTION(NS_IsMainThread(), "Main thread only");
 
@@ -2848,7 +2849,7 @@ MediaStreamGraph::GetInstance(DOMMediaStream::TrackTypeHints aHint, dom::AudioCh
 
     CubebUtils::InitPreferredSampleRate();
 
-    graph = new MediaStreamGraphImpl(true, CubebUtils::PreferredSampleRate(), aHint, aChannel);
+    graph = new MediaStreamGraphImpl(true, CubebUtils::PreferredSampleRate(), aStartWithAudioDriver, aChannel);
     gGraphs.Put(channel, graph);
 
     STREAM_LOG(PR_LOG_DEBUG, ("Starting up MediaStreamGraph %p", graph));
