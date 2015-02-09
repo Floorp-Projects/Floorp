@@ -52,7 +52,6 @@
 
 using namespace js;
 using namespace js::gc;
-using namespace js::types;
 using namespace js::unicode;
 
 using JS::Symbol;
@@ -3788,7 +3787,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
     if (!group)
         return false;
-    AddTypePropertyId(cx, group, JSID_VOID, Type::StringType());
+    AddTypePropertyId(cx, group, JSID_VOID, TypeSet::StringType());
 
     /* Step 5: Use the second argument as the split limit, if given. */
     uint32_t limit;

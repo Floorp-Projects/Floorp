@@ -97,7 +97,6 @@
 
 using namespace js;
 using namespace js::gc;
-using namespace js::types;
 
 using mozilla::Maybe;
 using mozilla::PodCopy;

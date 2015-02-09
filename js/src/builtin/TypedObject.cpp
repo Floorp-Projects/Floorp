@@ -2729,7 +2729,7 @@ js::StoreReference##T::Func(JSContext *cx, unsigned argc, Value *vp)    \
     int32_t offset = args[1].toInt32();                                         \
                                                                                 \
     jsid id = args[2].isString()                                                \
-              ? types::IdToTypeId(AtomToId(&args[2].toString()->asAtom()))      \
+              ? IdToTypeId(AtomToId(&args[2].toString()->asAtom()))             \
               : JSID_VOID;                                                      \
                                                                                 \
     /* Should be guaranteed by the typed objects API: */                        \
@@ -2795,8 +2795,8 @@ StoreReferenceHeapValue::store(JSContext *cx, HeapValue *heap, const Value &v,
     // considered to contain undefined.
     if (!v.isUndefined()) {
         if (cx->isJSContext())
-            types::AddTypePropertyId(cx->asJSContext(), obj, id, v);
-        else if (!types::HasTypePropertyId(obj, id, v))
+            AddTypePropertyId(cx->asJSContext(), obj, id, v);
+        else if (!HasTypePropertyId(obj, id, v))
             return false;
     }
 
@@ -2815,8 +2815,8 @@ StoreReferenceHeapPtrObject::store(JSContext *cx, HeapPtrObject *heap, const Val
     // considered to contain null.
     if (v.isObject()) {
         if (cx->isJSContext())
-            types::AddTypePropertyId(cx->asJSContext(), obj, id, v);
-        else if (!types::HasTypePropertyId(obj, id, v))
+            AddTypePropertyId(cx->asJSContext(), obj, id, v);
+        else if (!HasTypePropertyId(obj, id, v))
             return false;
     }
 
