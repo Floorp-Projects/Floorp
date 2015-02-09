@@ -324,6 +324,16 @@ class JSFunction : public js::NativeObject
         return u.i.s.script_;
     }
 
+    bool getLength(JSContext *cx, uint16_t *length) {
+        JS::RootedFunction self(cx, this);
+        if (self->isInterpretedLazy() && !self->getOrCreateScript(cx))
+            return false;
+
+        *length = self->hasScript() ? self->nonLazyScript()->funLength()
+                                    : (self->nargs() - self->hasRest());
+        return true;
+    }
+
     // Returns non-callsited-clone version of this.  Use when return
     // value can flow to arbitrary JS (see Bug 944975).
     JSFunction* originalFunction() {
