@@ -5,10 +5,10 @@
   <head>
     <meta charset="utf8">
     <title></title>
+
     <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
     <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
     <script type="application/javascript;version=1.8" src="head.js"></script>
-    <script type="application/javascript;version=1.8" src="device_front_shared.js"></script>
     <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   </head>
 
@@ -18,12 +18,8 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        Task.spawn(function*() {
+        Task.spawn(function* () {
           Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
-
-          if (SpecialPowers.isMainProcess()) {
-            Cu.import("resource://gre/modules/SettingsRequestManager.jsm");
-          }
 
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();
@@ -32,48 +28,45 @@
 
           let win = yield openWebIDE();
 
-          let settingIframe = win.document.querySelector("#deck-panel-devicesettings");
-
-          win.AppManager.update("runtimelist");
+          let permIframe = win.document.querySelector("#deck-panel-permissionstable");
 
           yield connectToLocalRuntime(win);
 
-          let settings = win.document.querySelector("#cmd_showSettings");
+          let perm = win.document.querySelector("#cmd_showPermissionsTable");
 
-          ok(!settings.hasAttribute("disabled"), "device settings cmd enabled");
+          ok(!perm.hasAttribute("disabled"), "perm cmd enabled");
 
           let deck = win.document.querySelector("#deck");
 
-          win.Cmds.showSettings();
-          is(deck.selectedPanel, settingIframe, "device settings iframe selected");
+          win.Cmds.showPermissionsTable();
+          is(deck.selectedPanel, permIframe, "permission iframe selected");
 
           yield nextTick();
 
-          yield documentIsLoaded(settingIframe.contentWindow.document);
+          yield documentIsLoaded(permIframe.contentWindow.document);
 
           yield nextTick();
 
-          yield settingIframe.contentWindow.getAllSettings;
+          yield permIframe.contentWindow.getRawPermissionsTablePromise;
 
-          setDocument(settingIframe);
+          doc = permIframe.contentWindow.document;
+          trs = doc.querySelectorAll(".line");
+          found = false;
+          for (let tr of trs) {
+            let [name,v1,v2,v3] = tr.querySelectorAll("td");
+            if (name.textContent == "geolocation") {
+              found = true;
+              is(v1.className, "permprompt", "geolocation perm is valid");
+              is(v2.className, "permprompt", "geolocation perm is valid");
+              is(v3.className, "permprompt", "geolocation perm is valid");
+              break;
+            }
+          }
+          ok(found, "Found geolocation line");
 
-          let fields = doc.querySelectorAll(".editable");
+          doc.querySelector("#close").click();
 
-          addNewField();
-
-          addNewFieldWithEnter();
-
-          editExistingField();
-
-          addNewFieldInteger();
-
-          yield editFieldInteger();
-
-          yield resetNewField("new-string-field");
-
-          addNewFieldBoolean();
-
-          searchFields(deck, "new-boolean-field2");
+          ok(!deck.selectedPanel, "No panel selected");
 
           DebuggerServer.destroy();
 
