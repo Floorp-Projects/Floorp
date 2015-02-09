@@ -40,7 +40,6 @@
 #include "vm/WrapperObject.h"
 
 #include "jsatominlines.h"
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/Shape-inl.h"
