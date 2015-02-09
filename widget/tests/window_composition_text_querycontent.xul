@@ -2978,93 +2978,6 @@ function runIsComposingTest()
   textarea.value = "";
 }
 
-function runRedundantChangeTest()
-{
-  textarea.focus();
-
-  var result = {};
-  function clearResult()
-  {
-    result = { compositionupdate: false, compositionend: false, text: false, input: false };
-  }
-
-  function handler(aEvent)
-  {
-    result[aEvent.type] = true;
-  }
-
-  textarea.addEventListener("compositionupdate", handler, true);
-  textarea.addEventListener("compositionend", handler, true);
-  textarea.addEventListener("input", handler, true);
-  textarea.addEventListener("text", handler, true);
-
-  textarea.value = "";
-
-  // synthesize change event
-  clearResult();
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u3042",
-        "clauses":
-        [
-          { "length": 1, "attr": COMPOSITION_ATTR_SELECTED_CLAUSE }
-        ]
-      },
-      "caret": { "start": 1, "length": 0 }
-    });
-
-  is(result.compositionupdate, true, "runRedundantChangeTest: compositionupdate should be fired after synthesizing composition change #1");
-  is(result.compositionend, false, "runRedundantChangeTest: compositionend shouldn't be fired after synthesizing composition change #1");
-  is(result.text, true, "runRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string #1");
-  is(result.input, true, "runRedundantChangeTest: input should be fired after synthesizing composition change #1");
-  is(textarea.value, "\u3042", "runRedundantChangeTest: textarea has uncommitted string #1");
-
-  // synthesize another change event
-  clearResult();
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u3042\u3044",
-        "clauses":
-        [
-          { "length": 2, "attr": COMPOSITION_ATTR_SELECTED_CLAUSE }
-        ]
-      },
-      "caret": { "start": 2, "length": 0 }
-    });
-
-  is(result.compositionupdate, true, "runRedundantChangeTest: compositionupdate should be fired after synthesizing composition change #2");
-  is(result.compositionend, false, "runRedundantChangeTest: compositionend shouldn't be fired after synthesizing composition change #2");
-  is(result.text, true, "runRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string #2");
-  is(result.input, true, "runRedundantChangeTest: input should be fired after synthesizing composition change #2");
-  is(textarea.value, "\u3042\u3044", "runRedundantChangeTest: textarea has uncommitted string #2");
-
-  // synthesize same change event again
-  clearResult();
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u3042\u3044",
-        "clauses":
-        [
-          { "length": 2, "attr": COMPOSITION_ATTR_SELECTED_CLAUSE }
-        ]
-      },
-      "caret": { "start": 2, "length": 0 }
-    });
-
-  is(result.compositionupdate, false, "runRedundantChangeTest: compositionupdate shouldn't be fired after synthesizing composition change again");
-  is(result.compositionend, false, "runRedundantChangeTest: compositionend shouldn't be fired after synthesizing composition change again");
-  is(result.text, false, "runRedundantChangeTest: text shouldn't be fired after synthesizing composition change again because it's dispatched when there is composing string");
-  is(result.input, false, "runRedundantChangeTest: input shouldn't be fired after synthesizing composition change again");
-  is(textarea.value, "\u3042\u3044", "runRedundantChangeTest: textarea has uncommitted string #3");
-
-  synthesizeComposition({ type: "compositioncommit" });
-
-  textarea.removeEventListener("compositionupdate", handler, true);
-  textarea.removeEventListener("compositionend", handler, true);
-  textarea.removeEventListener("input", handler, true);
-  textarea.removeEventListener("text", handler, true);
-}
-
 function runRemoveContentTest(aCallback)
 {
   var events = [];
@@ -3637,7 +3550,6 @@ function runTest()
   runForceCommitTest();
   runBug811755Test();
   runIsComposingTest();
-  runRedundantChangeTest();
   runAsyncForceCommitTest(function () {
     runRemoveContentTest(function () {
       runFrameTest();
