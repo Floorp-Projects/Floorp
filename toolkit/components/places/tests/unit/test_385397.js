@@ -20,7 +20,7 @@ add_task(function test_execute()
     let testURI = uri(site);
     let testImageURI = uri(site + "blank.gif");
     let when = now + (i * TOTAL_SITES);
-    yield promiseAddVisits([
+    yield PlacesTestUtils.addVisits([
       { uri: testURI, visitDate: when, transition: TRANSITION_TYPED },
       { uri: testImageURI, visitDate: ++when, transition: TRANSITION_EMBED },
       { uri: testImageURI, visitDate: ++when, transition: TRANSITION_FRAMED_LINK },

@@ -16,8 +16,10 @@ add_task(function* test_tab_matches() {
   let uri2 = NetUtil.newURI("http://xyz.net/");
   let uri3 = NetUtil.newURI("about:mozilla");
   let uri4 = NetUtil.newURI("data:text/html,test");
-  yield promiseAddVisits([ { uri: uri1, title: "ABC rocks" },
-                           { uri: uri2, title: "xyz.net - we're better than ABC" } ]);
+  yield PlacesTestUtils.addVisits([
+    { uri: uri1, title: "ABC rocks" },
+    { uri: uri2, title: "xyz.net - we're better than ABC" }
+  ]);
   addOpenPages(uri1, 1);
   // Pages that cannot be registered in history.
   addOpenPages(uri3, 1);

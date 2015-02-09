@@ -28,7 +28,7 @@ add_task(function test_execute()
 
 function task_test_url(aURL) {
   print("Testing url: " + aURL.u);
-  yield promiseAddVisits(uri(aURL.u));
+  yield PlacesTestUtils.addVisits(uri(aURL.u));
   let query = hs.getNewQuery();
   query.searchTerms = aURL.s;
   let options = hs.getNewQueryOptions();
