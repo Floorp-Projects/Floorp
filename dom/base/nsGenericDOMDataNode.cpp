@@ -113,6 +113,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericDOMDataNode)
   nsINode::Unlink(tmp);
 
+  // Clear flag here because unlinking slots will clear the
+  // containing shadow root pointer.
+  tmp->UnsetFlags(NODE_IS_IN_SHADOW_TREE);
+
   nsDataSlots *slots = tmp->GetExistingDataSlots();
   if (slots) {
     slots->Unlink();
@@ -562,8 +566,7 @@ nsGenericDOMDataNode::UnbindFromTree(bool aDeep, bool aNullParent)
              NS_REFRAME_IF_WHITESPACE);
 
   nsIDocument* document =
-    HasFlag(NODE_FORCE_XBL_BINDINGS) || IsInShadowTree() ?
-      OwnerDoc() : GetUncomposedDoc();
+    HasFlag(NODE_FORCE_XBL_BINDINGS) ? OwnerDoc() : GetComposedDoc();
 
   if (aNullParent) {
     if (GetParent()) {
