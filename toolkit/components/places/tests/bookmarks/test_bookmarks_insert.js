@@ -80,16 +80,6 @@ add_task(function* invalid_input_throws() {
   Assert.throws(() => PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                      url: "te st" }),
                 /Invalid value for property 'url'/);
-
-  Assert.throws(() => PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                                     keyword: 10 }),
-                /Invalid value for property 'keyword'/);
-  Assert.throws(() => PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                                     keyword: null }),
-                /Invalid value for property 'keyword'/);
-  Assert.throws(() => PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                                     keyword: "" }),
-                /Invalid value for property 'keyword'/);
 });
 
 add_task(function* invalid_properties_for_bookmark_type() {
@@ -102,12 +92,6 @@ add_task(function* invalid_properties_for_bookmark_type() {
   Assert.throws(() => PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
                                                      title: "test" }),
                 /Invalid value for property 'title'/);
-  Assert.throws(() => PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-                                                     keyword: "test" }),
-                /Invalid value for property 'keyword'/);
-  Assert.throws(() => PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                                                     keyword: "test" }),
-                /Invalid value for property 'keyword'/);
 });
 
 add_task(function* long_title_trim() {
@@ -125,7 +109,6 @@ add_task(function* long_title_trim() {
   Assert.equal(bm.type, PlacesUtils.bookmarks.TYPE_FOLDER);
   Assert.equal(bm.title.length, 4096, "title should have been trimmed");
   Assert.ok(!("url" in bm), "url should not be set");
-  Assert.ok(!("keyword" in bm), "keyword should not be set");
 });
 
 add_task(function* create_separator() {
@@ -243,28 +226,12 @@ add_task(function* create_bookmark() {
   let parent = yield PlacesUtils.bookmarks.fetch({ guid: bm.parentGuid });
   Assert.deepEqual(parent.lastModified, bm.dateAdded);
 
-  // While here, also check keywords are case-insensitive.
-  bm = yield PlacesUtils.bookmarks.insert({ parentGuid: parentGuid,
-                                            type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                            url: NetUtil.newURI("http://example.com/"),
-                                            keyword: "tEsT" });
-  checkBookmarkObject(bm);
-  Assert.equal(bm.parentGuid, parentGuid);
-  Assert.equal(bm.index, 1);
-  Assert.equal(bm.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-  Assert.equal(bm.url.href, "http://example.com/");
-  Assert.equal(bm.keyword, "test");
-
-  // Check parent lastModified.
-  parent = yield PlacesUtils.bookmarks.fetch({ guid: bm.parentGuid });
-  Assert.deepEqual(parent.lastModified, bm.dateAdded);
-
   bm = yield PlacesUtils.bookmarks.insert({ parentGuid: parentGuid,
                                             type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                             url: new URL("http://example.com/") });
   checkBookmarkObject(bm);
   Assert.equal(bm.parentGuid, parentGuid);
-  Assert.equal(bm.index, 2);
+  Assert.equal(bm.index, 1);
   Assert.equal(bm.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
   Assert.equal(bm.url.href, "http://example.com/");
   Assert.ok(!("title" in bm), "title should not be set");
