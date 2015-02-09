@@ -57,6 +57,9 @@ public:
                       const ScrollableLayerGuid& aGuid,
                       uint64_t aInputBlockId,
                       float aPresShellResolution);
+  void ProcessLongTapUp(const CSSPoint& aPoint,
+                        const ScrollableLayerGuid& aGuid,
+                        float aPresShellResolution);
   void ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId);

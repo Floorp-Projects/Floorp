@@ -2102,7 +2102,9 @@ TabChild::RecvHandleLongTap(const CSSPoint& aPoint, const ScrollableLayerGuid& a
 bool
 TabChild::RecvHandleLongTapUp(const CSSPoint& aPoint, const ScrollableLayerGuid& aGuid)
 {
-  RecvHandleSingleTap(aPoint, aGuid);
+  if (mGlobal && mTabChildGlobal) {
+    mAPZEventState->ProcessLongTapUp(aPoint, aGuid, GetPresShellResolution());
+  }
   return true;
 }
 
