@@ -893,6 +893,9 @@ def group_unified_files(files, unified_prefix, unified_suffix,
     files, and determining which original source files go in which unified
     file."""
 
+    # Make sure the input list is sorted. If it's not, bad things could happen!
+    files = sorted(files)
+
     # Our last returned list of source filenames may be short, and we
     # don't want the fill value inserted by izip_longest to be an
     # issue.  So we do a little dance to filter it out ourselves.

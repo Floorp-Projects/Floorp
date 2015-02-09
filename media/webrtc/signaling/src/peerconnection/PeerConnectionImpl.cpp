@@ -309,8 +309,6 @@ namespace mozilla {
 
 class nsIDOMDataChannel;
 
-static const int MEDIA_STREAM_MUTE = 0x80;
-
 PRLogModuleInfo *signalingLogInfo() {
   static PRLogModuleInfo *logModuleInfo = nullptr;
   if (!logModuleInfo) {
@@ -1008,39 +1006,6 @@ PeerConnectionImpl::GetIdentity() const
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   return mIdentity;
-}
-
-nsresult
-PeerConnectionImpl::CreateFakeMediaStream(uint32_t aHint, DOMMediaStream** aRetval)
-{
-  MOZ_ASSERT(aRetval);
-  PC_AUTO_ENTER_API_CALL(false);
-
-  bool mute = false;
-
-  // Hack to allow you to mute the stream
-  if (aHint & MEDIA_STREAM_MUTE) {
-    mute = true;
-    aHint &= ~MEDIA_STREAM_MUTE;
-  }
-
-  nsRefPtr<DOMMediaStream> stream = MakeMediaStream(aHint);
-  if (!stream) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!mute) {
-    if (aHint & DOMMediaStream::HINT_CONTENTS_AUDIO) {
-      new Fake_AudioGenerator(stream);
-    } else {
-#ifdef MOZILLA_INTERNAL_API
-    new Fake_VideoGenerator(stream);
-#endif
-    }
-  }
-
-  stream.forget(aRetval);
-  return NS_OK;
 }
 
 // Data channels won't work without a window, so in order for the C++ unit

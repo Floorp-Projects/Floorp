@@ -29,15 +29,3 @@ status = summary + ' ' + inSection(3);
 re = RegExp("[^\\/]+$");
 actual = re.toString();
 reportCompare(expect, actual, status);
-
-status = summary + ' ' + inSection(4);
-re = RegExp("[^\/]+$");
-actual = re.toString();
-reportCompare(expect, actual, status);
-
-status = summary + ' ' + inSection(5);
-re = RegExp("[^/]+$");
-actual = re.toString();
-reportCompare(expect, actual, status);
-
-
