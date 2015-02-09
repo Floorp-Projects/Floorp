@@ -31,10 +31,6 @@ add_task(function* invalid_input_throws() {
                                                     url: "http://example.com"}),
                 /Unexpected number of conditions provided: 2/);
 
-  Assert.throws(() => PlacesUtils.bookmarks.fetch({ keyword: "test",
-                                                    url: "http://example.com"}),
-                /Unexpected number of conditions provided: 2/);
-
   Assert.throws(() => PlacesUtils.bookmarks.fetch("test"),
                 /Invalid value for property 'guid'/);
   Assert.throws(() => PlacesUtils.bookmarks.fetch(123),
@@ -74,15 +70,6 @@ add_task(function* invalid_input_throws() {
   Assert.throws(() => PlacesUtils.bookmarks.fetch({ url: -10 }),
                 /Invalid value for property 'url'/);
 
-  Assert.throws(() => PlacesUtils.bookmarks.fetch({ keyword: "te st" }),
-                /Invalid value for property 'keyword'/);
-  Assert.throws(() => PlacesUtils.bookmarks.fetch({ keyword: null }),
-                /Invalid value for property 'keyword'/);
-  Assert.throws(() => PlacesUtils.bookmarks.fetch({ keyword: "" }),
-                /Invalid value for property 'keyword'/);
-  Assert.throws(() => PlacesUtils.bookmarks.fetch({ keyword: 5 }),
-                /Invalid value for property 'keyword'/);
-
   Assert.throws(() => PlacesUtils.bookmarks.fetch("123456789012", "test"),
                 /onResult callback must be a valid function/);
   Assert.throws(() => PlacesUtils.bookmarks.fetch("123456789012", {}),
@@ -117,7 +104,6 @@ add_task(function* fetch_bookmark() {
   Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
   Assert.equal(bm2.url.href, "http://example.com/");
   Assert.equal(bm2.title, "a bookmark");
-  Assert.ok(!("keyword" in bm2));
 
   yield PlacesUtils.bookmarks.remove(bm1.guid);
 });
@@ -135,7 +121,6 @@ add_task(function* fetch_bookmar_empty_title() {
   Assert.deepEqual(bm1, bm2);
   Assert.equal(bm2.index, 0);
   Assert.ok(!("title" in bm2));
-  Assert.ok(!("keyword" in bm2));
 
   yield PlacesUtils.bookmarks.remove(bm1.guid);
 });
@@ -156,7 +141,6 @@ add_task(function* fetch_folder() {
   Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_FOLDER);
   Assert.equal(bm2.title, "a folder");
   Assert.ok(!("url" in bm2));
-  Assert.ok(!("keyword" in bm2));
 
   yield PlacesUtils.bookmarks.remove(bm1.guid);
 });
@@ -192,7 +176,6 @@ add_task(function* fetch_separator() {
   Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
   Assert.ok(!("url" in bm2));
   Assert.ok(!("title" in bm2));
-  Assert.ok(!("keyword" in bm2));
 
   yield PlacesUtils.bookmarks.remove(bm1.guid);  
 });
@@ -235,7 +218,6 @@ add_task(function* fetch_byposition() {
   Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
   Assert.equal(bm2.url.href, "http://example.com/");
   Assert.equal(bm2.title, "a bookmark");
-  Assert.ok(!("keyword" in bm2));
 });
 
 add_task(function* fetch_byposition_default_index() {
@@ -260,7 +242,6 @@ add_task(function* fetch_byposition_default_index() {
   Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
   Assert.equal(bm2.url.href, "http://example.com/last");
   Assert.equal(bm2.title, "last child");
-  Assert.ok(!("keyword" in bm2));
 
   yield PlacesUtils.bookmarks.remove(bm1.guid);
 });
@@ -295,7 +276,6 @@ add_task(function* fetch_byurl() {
   Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
   Assert.equal(bm2.url.href, "http://byurl.com/");
   Assert.equal(bm2.title, "a bookmark");
-  Assert.ok(!("keyword" in bm2));
 
   let bm3 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -323,70 +303,6 @@ add_task(function* fetch_byurl() {
 
   // cleanup
   PlacesUtils.tagging.untagURI(uri(bm1.url.href), ["Test Tag"]);
-});
-
-add_task(function* fetch_bykeyword_nonexisting() {
-  let bm = yield PlacesUtils.bookmarks.fetch({ keyword: "nonexisting" },
-                                             gAccumulator.callback);
-  Assert.equal(bm, null);
-  Assert.equal(gAccumulator.results.length, 0);
-});
-
-add_task(function* fetch_bykeyword() {
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                 type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                                 url: "http://bykeyword1.com/",
-                                                 keyword: "bykeyword" });
-  checkBookmarkObject(bm1);
-
-  let bm2 = yield PlacesUtils.bookmarks.fetch({ keyword: "bykeyword" },
-                                              gAccumulator.callback);
-  checkBookmarkObject(bm2);
-  Assert.equal(gAccumulator.results.length, 1);
-  checkBookmarkObject(gAccumulator.results[0]);
-  Assert.deepEqual(gAccumulator.results[0], bm1);
-
-  Assert.deepEqual(bm1, bm2);
-  Assert.equal(bm2.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
-  Assert.deepEqual(bm2.dateAdded, bm2.lastModified);
-  Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-  Assert.equal(bm2.url.href, "http://bykeyword1.com/");
-  Assert.equal(bm2.keyword, "bykeyword");
-
-  // Add a second url using the same keyword.
-  let bm3 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                 type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                                 url: "http://bykeyword2.com/",
-                                                 keyword: "bykeyword" });
-  let bm4 = yield PlacesUtils.bookmarks.fetch({ keyword: "bykeyword" },
-                                              gAccumulator.callback);
-  checkBookmarkObject(bm4);
-  Assert.deepEqual(bm3, bm4);
-  Assert.equal(gAccumulator.results.length, 2);
-  gAccumulator.results.forEach(checkBookmarkObject);
-  Assert.deepEqual(gAccumulator.results[0], bm4);
-
-  // After an update the returned bookmark should change.
-  yield PlacesUtils.bookmarks.update({ guid: bm1.guid, title: "new title" });
-  let bm5 = yield PlacesUtils.bookmarks.fetch({ keyword: "bykeyword" },
-                                              gAccumulator.callback);
-  checkBookmarkObject(bm5);
-  // Cannot use deepEqual cause lastModified changed.
-  Assert.equal(bm1.guid, bm5.guid);
-  Assert.ok(bm5.lastModified > bm1.lastModified);
-  Assert.equal(gAccumulator.results.length, 2);
-  gAccumulator.results.forEach(checkBookmarkObject);
-  Assert.deepEqual(gAccumulator.results[0], bm5);
-
-  // Check fetching by keyword is case-insensitive.
-  let bm6 = yield PlacesUtils.bookmarks.fetch({ keyword: "ByKeYwOrD" },
-                                              gAccumulator.callback);
-  checkBookmarkObject(bm6);
-  // Cannot use deepEqual cause lastModified changed.
-  Assert.equal(bm1.guid, bm6.guid);
-  Assert.equal(gAccumulator.results.length, 2);
-  gAccumulator.results.forEach(checkBookmarkObject);
-  Assert.deepEqual(gAccumulator.results[0], bm6);
 });
 
 function run_test() {

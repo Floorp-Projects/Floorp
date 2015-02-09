@@ -70,27 +70,6 @@ add_task(function* insert_bookmark_notitle_notification() {
                  ]);
 });
 
-add_task(function* insert_bookmark_keyword_notification() {
-  let observer = expectNotifications();
-  let bm = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                                parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                url: new URL("http://example.com/"),
-                                                keyword: "Kw" });
-  let itemId = yield PlacesUtils.promiseItemId(bm.guid);
-  let parentId = yield PlacesUtils.promiseItemId(bm.parentGuid);
-  // Keywords are case-insensitive.
-  Assert.equal(bm.keyword, "kw");
-  observer.check([ { name: "onItemAdded",
-                     arguments: [ itemId, parentId, bm.index, bm.type,
-                                  bm.url, null, bm.dateAdded,
-                                  bm.guid, bm.parentGuid ] },
-                   { name: "onItemChanged",
-                     arguments: [ itemId, "keyword", false, bm.keyword,
-                                  bm.lastModified, bm.type, parentId,
-                                  bm.guid, bm.parentGuid ] }
-                 ]);
-});
-
 add_task(function* insert_bookmark_tag_notification() {
   let bm = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -165,32 +144,6 @@ add_task(function* update_bookmark_uri() {
 
   observer.check([ { name: "onItemChanged",
                      arguments: [ itemId, "uri", false, bm.url.href,
-                                  bm.lastModified, bm.type, parentId, bm.guid,
-                                  bm.parentGuid ] }
-                 ]);
-});
-
-add_task(function* update_bookmark_keyword() {
-  let bm = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                                parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                url: new URL("http://keyword.example.com/") });
-  let observer = expectNotifications();
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid, keyword: "kW" });
-  // Keywords are case-insensitive.
-  Assert.equal(bm.keyword, "kw");
-  let itemId = yield PlacesUtils.promiseItemId(bm.guid);
-  let parentId = yield PlacesUtils.promiseItemId(bm.parentGuid);
-
-  observer.check([ { name: "onItemChanged",
-                     arguments: [ itemId, "keyword", false, bm.keyword,
-                                  bm.lastModified, bm.type, parentId, bm.guid,
-                                  bm.parentGuid ] }
-                 ]);
-
-  observer = expectNotifications();
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid, keyword: "" });
-  observer.check([ { name: "onItemChanged",
-                     arguments: [ itemId, "keyword", false, "",
                                   bm.lastModified, bm.type, parentId, bm.guid,
                                   bm.parentGuid ] }
                  ]);
