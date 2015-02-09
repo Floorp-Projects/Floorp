@@ -233,13 +233,13 @@ MP4Sample::~MP4Sample()
 }
 
 void
-MP4Sample::Update(int64_t& aMediaTime, int64_t& aTimestampOffset)
+MP4Sample::Update(int64_t& aMediaTime)
 {
   sp<MetaData> m = mMediaBuffer->meta_data();
   // XXXbholley - Why don't we adjust decode_timestamp for aMediaTime?
   // According to k17e, this code path is no longer used - we should probably remove it.
-  decode_timestamp = FindInt64(m, kKeyDecodingTime) + aTimestampOffset;
-  composition_timestamp = FindInt64(m, kKeyTime) - aMediaTime + aTimestampOffset;
+  decode_timestamp = FindInt64(m, kKeyDecodingTime);
+  composition_timestamp = FindInt64(m, kKeyTime) - aMediaTime;
   duration = FindInt64(m, kKeyDuration);
   byte_offset = FindInt64(m, kKey64BitFileOffset);
   is_sync_point = FindInt32(m, kKeyIsSyncFrame);
