@@ -823,7 +823,7 @@ class JSScript : public js::gc::TenuredCell
 
   private:
     /* Persistent type information retained across GCs. */
-    js::types::TypeScript *types_;
+    js::TypeScript *types_;
 
     // This script's ScriptSourceObject, or a CCW thereof.
     //
@@ -1455,9 +1455,9 @@ class JSScript : public js::gc::TenuredCell
     /* Ensure the script has a TypeScript. */
     inline bool ensureHasTypes(JSContext *cx);
 
-    inline js::types::TypeScript *types();
+    inline js::TypeScript *types();
 
-    void maybeSweepTypes(js::types::AutoClearTypeInferenceStateOnOOM *oom);
+    void maybeSweepTypes(js::AutoClearTypeInferenceStateOnOOM *oom);
 
     inline js::GlobalObject &global() const;
     js::GlobalObject &uninlinedGlobal() const;

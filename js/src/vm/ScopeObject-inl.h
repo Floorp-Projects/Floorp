@@ -24,7 +24,7 @@ ScopeObject::setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name
 
     if (isSingleton()) {
         MOZ_ASSERT(name);
-        types::AddTypePropertyId(cx, this, NameToId(name), v);
+        AddTypePropertyId(cx, this, NameToId(name), v);
 
         // Keep track of properties which have ever been overwritten.
         if (!getSlot(sc.slot()).isUndefined()) {
@@ -42,7 +42,7 @@ CallObject::setAliasedVar(JSContext *cx, AliasedFormalIter fi, PropertyName *nam
     MOZ_ASSERT(name == fi->name());
     setSlot(fi.scopeSlot(), v);
     if (isSingleton())
-        types::AddTypePropertyId(cx, this, NameToId(name), v);
+        AddTypePropertyId(cx, this, NameToId(name), v);
 }
 
 inline void
@@ -50,7 +50,7 @@ CallObject::setAliasedVarFromArguments(JSContext *cx, const Value &argsValue, js
 {
     setSlot(ArgumentsObject::SlotFromMagicScopeSlotValue(argsValue), v);
     if (isSingleton())
-        types::AddTypePropertyId(cx, this, id, v);
+        AddTypePropertyId(cx, this, id, v);
 }
 
 inline void
