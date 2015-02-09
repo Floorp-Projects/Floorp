@@ -25,7 +25,7 @@ static bool sActiveDurationMsSet = false;
 
 APZEventState::APZEventState(nsIWidget* aWidget,
                              const nsRefPtr<ContentReceivedInputBlockCallback>& aCallback)
-  : mWidget(do_GetWeakReference(aWidget))
+  : mWidget(nullptr)  // initialized in constructor body
   , mActiveElementManager(new ActiveElementManager())
   , mContentReceivedInputBlockCallback(aCallback)
   , mPendingTouchPreventedResponse(false)
@@ -33,6 +33,11 @@ APZEventState::APZEventState(nsIWidget* aWidget,
   , mEndTouchIsClick(false)
   , mTouchEndCancelled(false)
 {
+  nsresult rv;
+  mWidget = do_GetWeakReference(aWidget, &rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "APZEventState constructed with a widget that"
+      " does not support weak references. APZ will NOT work!");
+
   if (!sActiveDurationMsSet) {
     Preferences::AddIntVarCache(&sActiveDurationMs,
                                 "ui.touch_activation.duration_ms",
