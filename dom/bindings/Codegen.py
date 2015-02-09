@@ -6834,7 +6834,6 @@ class CGMethodCall(CGThing):
         def filteredSignatures(signatures, descriptor):
             def typeExposedInWorkers(type):
                 return (not type.isGeckoInterface() or
-                        type.inner.isExternal() or
                         type.inner.isExposedInAnyWorker())
             if descriptor.workers:
                 # Filter out the signatures that should not be exposed in a
