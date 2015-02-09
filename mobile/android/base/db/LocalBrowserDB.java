@@ -63,22 +63,22 @@ import static org.mozilla.gecko.util.IOUtils.ConsumedInputStream;
 import static org.mozilla.gecko.favicons.LoadFaviconTask.DEFAULT_FAVICON_BUFFER_SIZE;
 
 public class LocalBrowserDB implements BrowserDB {
-    // Calculate these once, at initialization. isLoggable is too expensive to
-    // have in-line in each log call.
     private static final String LOGTAG = "GeckoLocalBrowserDB";
 
-    // Sentinel value used to indicate a failure to locate an ID for a default favicon.
-    private static final int FAVICON_ID_NOT_FOUND = Integer.MIN_VALUE;
-
-    // Constant used to indicate that no folder was found for particular GUID.
-    private static final long FOLDER_NOT_FOUND = -1L;
-
+    // Calculate this once, at initialization. isLoggable is too expensive to
+    // have in-line in each log call.
     private static final boolean logDebug = Log.isLoggable(LOGTAG, Log.DEBUG);
     protected static void debug(String message) {
         if (logDebug) {
             Log.d(LOGTAG, message);
         }
     }
+
+    // Sentinel value used to indicate a failure to locate an ID for a default favicon.
+    private static final int FAVICON_ID_NOT_FOUND = Integer.MIN_VALUE;
+
+    // Constant used to indicate that no folder was found for particular GUID.
+    private static final long FOLDER_NOT_FOUND = -1L;
 
     private final String mProfile;
 
