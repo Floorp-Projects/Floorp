@@ -580,7 +580,7 @@ VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVecto
 
     if (obj->isSingleton() && !obj->setIteratedSingleton(cx))
         return false;
-    types::MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
+    MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
 
     Rooted<PropertyIteratorObject *> iterobj(cx, NewPropertyIteratorObject(cx, flags));
     if (!iterobj)
@@ -623,7 +623,7 @@ VectorToValueIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVec
 
     if (obj->isSingleton() && !obj->setIteratedSingleton(cx))
         return false;
-    types::MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
+    MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
 
     Rooted<PropertyIteratorObject*> iterobj(cx, NewPropertyIteratorObject(cx, flags));
     if (!iterobj)

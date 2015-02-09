@@ -771,7 +771,7 @@ CloneOldBaselineStub(JSContext *cx, DebugModeOSREntryVector &entries, size_t ent
 static bool
 InvalidateScriptsInZone(JSContext *cx, Zone *zone, const Vector<DebugModeOSREntry> &entries)
 {
-    types::RecompileInfoVector invalid;
+    RecompileInfoVector invalid;
     for (UniqueScriptOSREntryIter iter(entries); !iter.done(); ++iter) {
         JSScript *script = iter.entry().script;
         if (script->compartment()->zone() != zone)
