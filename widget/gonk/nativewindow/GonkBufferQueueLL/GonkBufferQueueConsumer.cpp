@@ -516,7 +516,7 @@ sp<NativeHandle> GonkBufferQueueConsumer::getSidebandStream() const {
     return mCore->mSidebandStream;
 }
 
-void GonkBufferQueueConsumer::dump(String8& result, const char* prefix) const {
+void GonkBufferQueueConsumer::dumpToString(String8& result, const char* prefix) const {
     mCore->dump(result, prefix);
 }
 
