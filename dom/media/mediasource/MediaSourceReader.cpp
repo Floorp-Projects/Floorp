@@ -202,13 +202,12 @@ MediaSourceReader::OnAudioDecoded(AudioData* aSample)
 static void
 AdjustEndTime(int64_t* aEndTime, SourceBufferDecoder* aDecoder)
 {
-  if (aDecoder && aDecoder->GetReader()) {
+  if (aDecoder) {
     nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
-    aDecoder->GetReader()->GetBuffered(ranges);
+    aDecoder->GetBuffered(ranges);
     if (ranges->Length() > 0) {
       // End time is a double so we convert to nearest by adding 0.5.
-      int64_t end =
-        (ranges->GetEndTime() + aDecoder->GetTimestampOffset()) * USECS_PER_S + 0.5;
+      int64_t end = ranges->GetEndTime() * USECS_PER_S + 0.5;
       *aEndTime = std::max(*aEndTime, end);
     }
   }
