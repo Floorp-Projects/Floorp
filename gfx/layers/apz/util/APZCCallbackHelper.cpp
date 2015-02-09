@@ -419,6 +419,25 @@ APZCCallbackHelper::DispatchSynthesizedMouseEvent(uint32_t aMsg,
   return DispatchWidgetEvent(event);
 }
 
+bool
+APZCCallbackHelper::DispatchMouseEvent(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
+                                       const nsString& aType,
+                                       const CSSPoint& aPoint,
+                                       int32_t aButton,
+                                       int32_t aClickCount,
+                                       int32_t aModifiers,
+                                       bool aIgnoreRootScrollFrame,
+                                       unsigned short aInputSourceArg)
+{
+  NS_ENSURE_TRUE(aUtils, true);
+
+  bool defaultPrevented = false;
+  aUtils->SendMouseEvent(aType, aPoint.x, aPoint.y, aButton, aClickCount, aModifiers,
+                         aIgnoreRootScrollFrame, 0, aInputSourceArg, false, 4, &defaultPrevented);
+  return defaultPrevented;
+}
+
+
 void
 APZCCallbackHelper::FireSingleTapEvent(const LayoutDevicePoint& aPoint,
                                        nsIWidget* aWidget)
