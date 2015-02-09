@@ -99,7 +99,7 @@ public:
    */
   explicit MediaStreamGraphImpl(bool aRealtime,
                                 TrackRate aSampleRate,
-                                DOMMediaStream::TrackTypeHints aHint,
+                                bool aStartWithAudioDriver = false,
                                 dom::AudioChannel aChannel = dom::AudioChannel::Normal);
 
   /**

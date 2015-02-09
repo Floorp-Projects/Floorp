@@ -274,20 +274,18 @@ DOMMediaStream::IsFinished()
 }
 
 void
-DOMMediaStream::InitSourceStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents)
+DOMMediaStream::InitSourceStream(nsIDOMWindow* aWindow)
 {
   mWindow = aWindow;
-  SetHintContents(aHintContents);
-  MediaStreamGraph* gm = MediaStreamGraph::GetInstance(aHintContents);
+  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
   InitStreamCommon(gm->CreateSourceStream(this));
 }
 
 void
-DOMMediaStream::InitTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents)
+DOMMediaStream::InitTrackUnionStream(nsIDOMWindow* aWindow)
 {
   mWindow = aWindow;
-  SetHintContents(aHintContents);
-  MediaStreamGraph* gm = MediaStreamGraph::GetInstance(aHintContents);
+  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
   InitStreamCommon(gm->CreateTrackUnionStream(this));
 }
 
@@ -302,18 +300,18 @@ DOMMediaStream::InitStreamCommon(MediaStream* aStream)
 }
 
 already_AddRefed<DOMMediaStream>
-DOMMediaStream::CreateSourceStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents)
+DOMMediaStream::CreateSourceStream(nsIDOMWindow* aWindow)
 {
   nsRefPtr<DOMMediaStream> stream = new DOMMediaStream();
-  stream->InitSourceStream(aWindow, aHintContents);
+  stream->InitSourceStream(aWindow);
   return stream.forget();
 }
 
 already_AddRefed<DOMMediaStream>
-DOMMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents)
+DOMMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow)
 {
   nsRefPtr<DOMMediaStream> stream = new DOMMediaStream();
-  stream->InitTrackUnionStream(aWindow, aHintContents);
+  stream->InitTrackUnionStream(aWindow);
   return stream.forget();
 }
 
@@ -386,23 +384,15 @@ DOMMediaStream::RemovePrincipalChangeObserver(PrincipalChangeObserver* aObserver
   return mPrincipalChangeObservers.RemoveElement(aObserver);
 }
 
-void
-DOMMediaStream::SetHintContents(TrackTypeHints aHintContents)
-{
-  mHintContents |= aHintContents;
-}
-
 MediaStreamTrack*
 DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
 {
   MediaStreamTrack* track;
   switch (aType) {
   case MediaSegment::AUDIO:
-    mHintContents |= HINT_CONTENTS_AUDIO;
     track = new AudioStreamTrack(this, aTrackID);
     break;
   case MediaSegment::VIDEO:
-    mHintContents |= HINT_CONTENTS_VIDEO;
     track = new VideoStreamTrack(this, aTrackID);
     break;
   default:
@@ -424,7 +414,6 @@ DOMMediaStream::BindDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
       track = mTracks[i]->AsAudioStreamTrack();
       if (track && track->GetTrackID() == aTrackID) {
         bindSuccess = true;
-        mTrackTypesAvailable |= HINT_CONTENTS_AUDIO;
         break;
       }
     }
@@ -435,7 +424,6 @@ DOMMediaStream::BindDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
       track = mTracks[i]->AsVideoStreamTrack();
       if (track && track->GetTrackID() == aTrackID) {
         bindSuccess = true;
-        mTrackTypesAvailable |= HINT_CONTENTS_VIDEO;
         break;
       }
     }
@@ -443,9 +431,6 @@ DOMMediaStream::BindDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
   }
   default:
     MOZ_CRASH("Unhandled track type");
-  }
-  if (bindSuccess) {
-    CheckTracksAvailable();
   }
   return bindSuccess ? track : nullptr;
 }
@@ -513,13 +498,7 @@ DOMMediaStream::CheckTracksAvailable()
   callbacks.SwapElements(mRunOnTracksAvailable);
 
   for (uint32_t i = 0; i < callbacks.Length(); ++i) {
-    OnTracksAvailableCallback* cb = callbacks[i];
-    if (~mTrackTypesAvailable & cb->GetExpectedTracks()) {
-      // Some expected tracks not available yet. Try this callback again later.
-      *mRunOnTracksAvailable.AppendElement() = callbacks[i].forget();
-      continue;
-    }
-    cb->NotifyTracksAvailable(this);
+    callbacks[i]->NotifyTracksAvailable(this);
   }
 }
 
@@ -552,14 +531,10 @@ void
 DOMMediaStream::ConstructMediaTracks(AudioTrackList* aAudioTrackList,
                                      VideoTrackList* aVideoTrackList)
 {
-  if (mHintContents & DOMMediaStream::HINT_CONTENTS_AUDIO) {
-    MediaTrackListListener listener(aAudioTrackList);
-    mMediaTrackListListeners.AppendElement(listener);
-  }
-  if (mHintContents & DOMMediaStream::HINT_CONTENTS_VIDEO) {
-    MediaTrackListListener listener(aVideoTrackList);
-    mMediaTrackListListeners.AppendElement(listener);
-  }
+  MediaTrackListListener audioListener(aAudioTrackList);
+  mMediaTrackListListeners.AppendElement(audioListener);
+  MediaTrackListListener videoListener(aVideoTrackList);
+  mMediaTrackListListeners.AppendElement(videoListener);
 
   int firstEnabledVideo = -1;
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
@@ -648,20 +623,18 @@ DOMLocalMediaStream::Stop()
 }
 
 already_AddRefed<DOMLocalMediaStream>
-DOMLocalMediaStream::CreateSourceStream(nsIDOMWindow* aWindow,
-                                        TrackTypeHints aHintContents)
+DOMLocalMediaStream::CreateSourceStream(nsIDOMWindow* aWindow)
 {
   nsRefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
-  stream->InitSourceStream(aWindow, aHintContents);
+  stream->InitSourceStream(aWindow);
   return stream.forget();
 }
 
 already_AddRefed<DOMLocalMediaStream>
-DOMLocalMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
-                                            TrackTypeHints aHintContents)
+DOMLocalMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow)
 {
   nsRefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
-  stream->InitTrackUnionStream(aWindow, aHintContents);
+  stream->InitTrackUnionStream(aWindow);
   return stream.forget();
 }
 
@@ -676,10 +649,9 @@ DOMAudioNodeMediaStream::~DOMAudioNodeMediaStream()
 
 already_AddRefed<DOMAudioNodeMediaStream>
 DOMAudioNodeMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
-                                                AudioNode* aNode,
-                                                TrackTypeHints aHintContents)
+                                                AudioNode* aNode)
 {
   nsRefPtr<DOMAudioNodeMediaStream> stream = new DOMAudioNodeMediaStream(aNode);
-  stream->InitTrackUnionStream(aWindow, aHintContents);
+  stream->InitTrackUnionStream(aWindow);
   return stream.forget();
 }
