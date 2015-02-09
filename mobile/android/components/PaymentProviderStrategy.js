@@ -43,7 +43,6 @@ PaymentProviderStrategy.prototype = {
 
   get iccInfo() {
     if (!this._iccInfo) {
-      this.__DOM_IMPL_._clearCachedIccInfoValue();
       // XXX Multi-SIM support for Android payments. Bug 1112052
       this._iccInfo = [{
         mcc: this._getNetworkInfo("mcc"),
