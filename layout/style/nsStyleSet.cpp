@@ -39,6 +39,8 @@
 #include "nsIFrame.h"
 #include "RestyleManager.h"
 
+#include <inttypes.h>
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -755,16 +757,15 @@ ReplaceAnimationRule(nsRuleNode *aOldRuleNode,
   }
 
   if (aOldAnimRule) {
-    NS_ABORT_IF_FALSE(n->GetRule() == aOldAnimRule, "wrong rule");
-    NS_ABORT_IF_FALSE(n->GetLevel() == nsStyleSet::eAnimationSheet,
-                      "wrong level");
+    MOZ_ASSERT(n->GetRule() == aOldAnimRule, "wrong rule");
+    MOZ_ASSERT(n->GetLevel() == nsStyleSet::eAnimationSheet,
+               "wrong level");
     n = n->GetParent();
   }
 
-  NS_ABORT_IF_FALSE(!IsMoreSpecificThanAnimation(n) &&
-                    (n->IsRoot() ||
-                     n->GetLevel() != nsStyleSet::eAnimationSheet),
-                    "wrong level");
+  MOZ_ASSERT(!IsMoreSpecificThanAnimation(n) &&
+             (n->IsRoot() || n->GetLevel() != nsStyleSet::eAnimationSheet),
+             "wrong level");
 
   if (aNewAnimRule) {
     n = n->Transition(aNewAnimRule, nsStyleSet::eAnimationSheet, false);
@@ -887,27 +888,26 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
     nsIStyleRule *oldAnimRule = GetAnimationRule(aRuleNode);
     nsIStyleRule *animRule = PresContext()->AnimationManager()->
       CheckAnimationRule(result, aElementForAnimation);
-    NS_ABORT_IF_FALSE(result->RuleNode() == aRuleNode,
-                      "unexpected rule node");
-    NS_ABORT_IF_FALSE(!result->GetStyleIfVisited() == !aVisitedRuleNode,
-                      "unexpected visited rule node");
-    NS_ABORT_IF_FALSE(!aVisitedRuleNode ||
-                      result->GetStyleIfVisited()->RuleNode() ==
-                        aVisitedRuleNode,
-                      "unexpected visited rule node");
-    NS_ABORT_IF_FALSE(!aVisitedRuleNode ||
-                      oldAnimRule == GetAnimationRule(aVisitedRuleNode),
-                      "animation rule mismatch between rule nodes");
+    MOZ_ASSERT(result->RuleNode() == aRuleNode,
+               "unexpected rule node");
+    MOZ_ASSERT(!result->GetStyleIfVisited() == !aVisitedRuleNode,
+               "unexpected visited rule node");
+    MOZ_ASSERT(!aVisitedRuleNode ||
+               result->GetStyleIfVisited()->RuleNode() == aVisitedRuleNode,
+               "unexpected visited rule node");
+    MOZ_ASSERT(!aVisitedRuleNode ||
+               oldAnimRule == GetAnimationRule(aVisitedRuleNode),
+               "animation rule mismatch between rule nodes");
     if (oldAnimRule != animRule) {
       nsRuleNode *ruleNode =
         ReplaceAnimationRule(aRuleNode, oldAnimRule, animRule);
       nsRuleNode *visitedRuleNode = aVisitedRuleNode
         ? ReplaceAnimationRule(aVisitedRuleNode, oldAnimRule, animRule)
         : nullptr;
-      NS_ABORT_IF_FALSE(!visitedRuleNode ||
-                        GetAnimationRule(ruleNode) ==
-                          GetAnimationRule(visitedRuleNode),
-                        "animation rule mismatch between rule nodes");
+      MOZ_ASSERT(!visitedRuleNode ||
+                 GetAnimationRule(ruleNode) ==
+                   GetAnimationRule(visitedRuleNode),
+                 "animation rule mismatch between rule nodes");
       result = GetContext(aParentContext, ruleNode, visitedRuleNode,
                           aPseudoTag, aPseudoType, nullptr,
                           aFlags & ~eDoAnimation);
@@ -1408,7 +1408,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
                                         eRestyle_ForceDescendants)),
                     // FIXME: Once bug 979133 lands we'll have a better
                     // way to print these.
-                    nsPrintfCString("unexpected replacement bits 0x%lX",
+                    nsPrintfCString("unexpected replacement bits 0x%" PRIX32,
                                     uint32_t(aReplacements)).get());
 
   // If we're changing animation phase, we have to reconsider what rules
@@ -2132,9 +2132,9 @@ SkipAnimationRules(nsRuleNode* aRuleNode, Element* aElementOrPseudoElement,
       ruleNode->GetLevel() == nsStyleSet::eTransitionSheet) {
     ruleNode = ruleNode->GetParent();
   }
-  NS_ABORT_IF_FALSE(ruleNode->IsRoot() ||
-                    ruleNode->GetLevel() != nsStyleSet::eTransitionSheet,
-                    "can't have more than one transition rule");
+  MOZ_ASSERT(ruleNode->IsRoot() ||
+             ruleNode->GetLevel() != nsStyleSet::eTransitionSheet,
+             "can't have more than one transition rule");
 
   // Use our existing ReplaceAnimationRule function to replace the
   // animation rule, if present.

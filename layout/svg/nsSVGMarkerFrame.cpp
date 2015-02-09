@@ -265,8 +265,8 @@ nsSVGMarkerAnonChildFrame::Init(nsIContent*       aContent,
                                 nsContainerFrame* aParent,
                                 nsIFrame*         aPrevInFlow)
 {
-  NS_ABORT_IF_FALSE(aParent->GetType() == nsGkAtoms::svgMarkerFrame,
-                    "Unexpected parent");
+  MOZ_ASSERT(aParent->GetType() == nsGkAtoms::svgMarkerFrame,
+             "Unexpected parent");
   nsSVGMarkerAnonChildFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 #endif

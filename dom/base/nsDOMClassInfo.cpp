@@ -1765,7 +1765,7 @@ GetXPCProto(nsIXPConnect *aXPConnect, JSContext *cx, nsGlobalWindow *aWin,
   nsCOMPtr<nsIClassInfo> ci;
   if (aNameStruct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
     int32_t id = aNameStruct->mDOMClassInfoID;
-    NS_ABORT_IF_FALSE(id >= 0, "Negative DOM classinfo?!?");
+    MOZ_ASSERT(id >= 0, "Negative DOM classinfo?!?");
 
     nsDOMClassInfoID ci_id = (nsDOMClassInfoID)id;
 

@@ -52,14 +52,14 @@ nsISVGPoint::InsertingIntoList(DOMSVGPointList *aList,
                                uint32_t aListIndex,
                                bool aIsAnimValItem)
 {
-  NS_ABORT_IF_FALSE(!HasOwner(), "Inserting item that already has an owner");
+  MOZ_ASSERT(!HasOwner(), "Inserting item that already has an owner");
 
   mList = aList;
   mListIndex = aListIndex;
   mIsReadonly = false;
   mIsAnimValItem = aIsAnimValItem;
 
-  NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGPoint!");
+  MOZ_ASSERT(IndexIsValid(), "Bad index for DOMSVGPoint!");
 }
 
 void
@@ -67,7 +67,7 @@ nsISVGPoint::RemovingFromList()
 {
   mPt = InternalItem();
   mList = nullptr;
-  NS_ABORT_IF_FALSE(!mIsReadonly, "mIsReadonly set for list");
+  MOZ_ASSERT(!mIsReadonly, "mIsReadonly set for list");
   mIsAnimValItem = false;
 }
 

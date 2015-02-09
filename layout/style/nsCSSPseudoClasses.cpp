@@ -85,8 +85,8 @@ nsCSSPseudoClasses::HasNthPairArg(Type aType)
 void
 nsCSSPseudoClasses::PseudoTypeToString(Type aType, nsAString& aString)
 {
-  NS_ABORT_IF_FALSE(aType < ePseudoClass_Count, "Unexpected type");
-  NS_ABORT_IF_FALSE(aType >= 0, "Very unexpected type");
+  MOZ_ASSERT(aType < ePseudoClass_Count, "Unexpected type");
+  MOZ_ASSERT(aType >= 0, "Very unexpected type");
   (*CSSPseudoClasses_info[aType].mAtom)->ToString(aString);
 }
 

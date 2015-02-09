@@ -74,7 +74,7 @@ TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument,
   }
   else if (aValue.EqualsFunction(eCSSKeyword__moz_image_rect)) {
     nsCSSValue::Array* arguments = aValue.GetArrayValue();
-    NS_ABORT_IF_FALSE(arguments->Count() == 6, "unexpected num of arguments");
+    MOZ_ASSERT(arguments->Count() == 6, "unexpected num of arguments");
 
     const nsCSSValue& image = arguments->Item(1);
     TryToStartImageLoadOnValue(image, aDocument, aTokenStream);
@@ -121,7 +121,7 @@ MapSinglePropertyInto(nsCSSProperty aProp,
                       nsCSSValue* aTarget,
                       nsRuleData* aRuleData)
 {
-    NS_ABORT_IF_FALSE(aValue->GetUnit() != eCSSUnit_Null, "oops");
+    MOZ_ASSERT(aValue->GetUnit() != eCSSUnit_Null, "oops");
 
     // Although aTarget is the nsCSSValue we are going to write into,
     // we also look at its value before writing into it.  This is done
@@ -131,10 +131,10 @@ MapSinglePropertyInto(nsCSSProperty aProp,
     // then records any resulting ImageValue objects on the
     // nsCSSValueTokenStream object we found on aTarget.  See the comment
     // above nsCSSValueTokenStream::mImageValues for why.
-    NS_ABORT_IF_FALSE(aTarget->GetUnit() == eCSSUnit_TokenStream ||
-                      aTarget->GetUnit() == eCSSUnit_Null,
-                      "aTarget must only be a token stream (when re-parsing "
-                      "properties with variable references) or null");
+    MOZ_ASSERT(aTarget->GetUnit() == eCSSUnit_TokenStream ||
+               aTarget->GetUnit() == eCSSUnit_Null,
+               "aTarget must only be a token stream (when re-parsing "
+               "properties with variable references) or null");
 
     nsCSSValueTokenStream* tokenStream =
         aTarget->GetUnit() == eCSSUnit_TokenStream ?
@@ -267,8 +267,8 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
 const nsCSSValue*
 nsCSSCompressedDataBlock::ValueFor(nsCSSProperty aProperty) const
 {
-    NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty),
-                      "Don't call for shorthands");
+    MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),
+               "Don't call for shorthands");
 
     // If we have no data for this struct, then return immediately.
     // This optimization should make us return most of the time, so we
@@ -293,8 +293,8 @@ nsCSSCompressedDataBlock::TryReplaceValue(nsCSSProperty aProperty,
                                           bool *aChanged)
 {
     nsCSSValue* newValue = aFromBlock.PropertyAt(aProperty);
-    NS_ABORT_IF_FALSE(newValue && newValue->GetUnit() != eCSSUnit_Null,
-                      "cannot replace with empty value");
+    MOZ_ASSERT(newValue && newValue->GetUnit() != eCSSUnit_Null,
+               "cannot replace with empty value");
 
     const nsCSSValue* oldValue = ValueFor(aProperty);
     if (!oldValue) {
@@ -330,7 +330,7 @@ nsCSSCompressedDataBlock::~nsCSSCompressedDataBlock()
         (void)PropertyAtIndex(i);   // this checks the property is in range
 #endif
         const nsCSSValue* val = ValueAtIndex(i);
-        NS_ABORT_IF_FALSE(val->GetUnit() != eCSSUnit_Null, "oops");
+        MOZ_ASSERT(val->GetUnit() != eCSSUnit_Null, "oops");
         val->~nsCSSValue();
     }
 }
@@ -409,18 +409,18 @@ nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
      */
     for (uint32_t i = 0; i < aBlock->mNumProps; i++) {
         nsCSSProperty iProp = aBlock->PropertyAtIndex(i);
-        NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
-        NS_ABORT_IF_FALSE(!HasPropertyBit(iProp),
-                          "compressed block has property multiple times");
+        MOZ_ASSERT(!nsCSSProps::IsShorthand(iProp), "out of range");
+        MOZ_ASSERT(!HasPropertyBit(iProp),
+                   "compressed block has property multiple times");
         SetPropertyBit(iProp);
         if (aImportant)
             SetImportantBit(iProp);
 
         const nsCSSValue* val = aBlock->ValueAtIndex(i);
         nsCSSValue* dest = PropertyAt(iProp);
-        NS_ABORT_IF_FALSE(val->GetUnit() != eCSSUnit_Null, "oops");
-        NS_ABORT_IF_FALSE(dest->GetUnit() == eCSSUnit_Null,
-                          "expanding into non-empty block");
+        MOZ_ASSERT(val->GetUnit() != eCSSUnit_Null, "oops");
+        MOZ_ASSERT(dest->GetUnit() == eCSSUnit_Null,
+                   "expanding into non-empty block");
 #ifdef NS_BUILD_REFCNT_LOGGING
         dest->~nsCSSValue();
 #endif
@@ -437,7 +437,7 @@ void
 nsCSSExpandedDataBlock::Expand(nsCSSCompressedDataBlock *aNormalBlock,
                                nsCSSCompressedDataBlock *aImportantBlock)
 {
-    NS_ABORT_IF_FALSE(aNormalBlock, "unexpected null block");
+    MOZ_ASSERT(aNormalBlock, "unexpected null block");
     AssertInitialState();
 
     DoExpand(aNormalBlock, false);
@@ -460,9 +460,9 @@ nsCSSExpandedDataBlock::ComputeNumProps(uint32_t* aNumPropsNormal,
 #ifdef DEBUG
             nsCSSProperty iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
 #endif
-            NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
-            NS_ABORT_IF_FALSE(PropertyAt(iProp)->GetUnit() != eCSSUnit_Null,
-                              "null value while computing size");
+            MOZ_ASSERT(!nsCSSProps::IsShorthand(iProp), "out of range");
+            MOZ_ASSERT(PropertyAt(iProp)->GetUnit() != eCSSUnit_Null,
+                       "null value while computing size");
             if (mPropertiesImportant.HasPropertyAt(iHigh, iLow))
                 (*aNumPropsImportant)++;
             else
@@ -503,17 +503,17 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
             // a custom property
             continue;
         }
-        NS_ABORT_IF_FALSE(mPropertiesSet.HasProperty(iProp),
-                          "aOrder identifies a property not in the expanded "
-                          "data block");
-        NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
+        MOZ_ASSERT(mPropertiesSet.HasProperty(iProp),
+                   "aOrder identifies a property not in the expanded "
+                   "data block");
+        MOZ_ASSERT(!nsCSSProps::IsShorthand(iProp), "out of range");
         bool important = mPropertiesImportant.HasProperty(iProp);
         nsCSSCompressedDataBlock *result =
             important ? result_important : result_normal;
         uint32_t* ip = important ? &i_important : &i_normal;
         nsCSSValue* val = PropertyAt(iProp);
-        NS_ABORT_IF_FALSE(val->GetUnit() != eCSSUnit_Null,
-                          "Null value while compressing");
+        MOZ_ASSERT(val->GetUnit() != eCSSUnit_Null,
+                   "Null value while compressing");
         result->SetPropertyAtIndex(*ip, iProp);
         result->RawCopyValueToIndex(*ip, val);
         new (val) nsCSSValue();
@@ -522,10 +522,10 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
             nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[iProp]);
     }
 
-    NS_ABORT_IF_FALSE(numPropsNormal == i_normal, "bad numProps");
+    MOZ_ASSERT(numPropsNormal == i_normal, "bad numProps");
 
     if (result_important) {
-        NS_ABORT_IF_FALSE(numPropsImportant == i_important, "bad numProps");
+        MOZ_ASSERT(numPropsImportant == i_important, "bad numProps");
     }
 
 #ifdef DEBUG
@@ -543,9 +543,8 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
               }
           }
       }
-      NS_ABORT_IF_FALSE(numPropsNormal + numPropsImportant == numPropsInSet,
-                        "aOrder missing properties from the expanded data "
-                        "block");
+      MOZ_ASSERT(numPropsNormal + numPropsImportant == numPropsInSet,
+                 "aOrder missing properties from the expanded data block");
     }
 #endif
 
@@ -559,8 +558,8 @@ void
 nsCSSExpandedDataBlock::AddLonghandProperty(nsCSSProperty aProperty,
                                             const nsCSSValue& aValue)
 {
-    NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty),
-                      "property out of range");
+    MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),
+               "property out of range");
     nsCSSValue& storage = *static_cast<nsCSSValue*>(PropertyAt(aProperty));
     storage = aValue;
     SetPropertyBit(aProperty);
@@ -599,7 +598,7 @@ nsCSSExpandedDataBlock::ClearProperty(nsCSSProperty aPropID)
 void
 nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSProperty aPropID)
 {
-    NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aPropID), "out of range");
+    MOZ_ASSERT(!nsCSSProps::IsShorthand(aPropID), "out of range");
 
     ClearPropertyBit(aPropID);
     ClearImportantBit(aPropID);
@@ -644,7 +643,7 @@ nsCSSExpandedDataBlock::DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
                                             css::Declaration* aDeclaration)
 {
   bool changed = false;
-  NS_ABORT_IF_FALSE(aFromBlock.HasPropertyBit(aPropID), "oops");
+  MOZ_ASSERT(aFromBlock.HasPropertyBit(aPropID), "oops");
   if (aIsImportant) {
     if (!HasImportantBit(aPropID))
       changed = true;
@@ -712,8 +711,8 @@ nsCSSExpandedDataBlock::DoAssertInitialState()
 
     for (uint32_t i = 0; i < eCSSProperty_COUNT_no_shorthands; ++i) {
         nsCSSProperty prop = nsCSSProperty(i);
-        NS_ABORT_IF_FALSE(PropertyAt(prop)->GetUnit() == eCSSUnit_Null,
-                          "not initial state");
+        MOZ_ASSERT(PropertyAt(prop)->GetUnit() == eCSSUnit_Null,
+                   "not initial state");
     }
 }
 #endif

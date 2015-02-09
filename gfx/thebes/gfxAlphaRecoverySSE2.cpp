@@ -230,7 +230,7 @@ gfxAlphaRecovery::AlignRectForSubimageRecovery(const nsIntRect& aRect,
 
 FOUND_SOLUTION:
     nsIntRect solution = nsIntRect(x - dx, y - dy, w + dr + dx, h + dy);
-    NS_ABORT_IF_FALSE(nsIntRect(0, 0, sw, surfaceSize.height).Contains(solution),
-                      "'Solution' extends outside surface bounds!");
+    MOZ_ASSERT(nsIntRect(0, 0, sw, surfaceSize.height).Contains(solution),
+               "'Solution' extends outside surface bounds!");
     return solution;
 }

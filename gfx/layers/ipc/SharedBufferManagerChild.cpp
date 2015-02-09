@@ -52,8 +52,8 @@ DeleteSharedBufferManagerSync(ReentrantMonitor *aBarrier, bool *aDone)
 {
   ReentrantMonitorAutoEnter autoMon(*aBarrier);
 
-  NS_ABORT_IF_FALSE(InSharedBufferManagerChildThread(),
-                    "Should be in SharedBufferManagerChild thread.");
+  MOZ_ASSERT(InSharedBufferManagerChildThread(),
+             "Should be in SharedBufferManagerChild thread.");
   SharedBufferManagerChild::sSharedBufferManagerChildSingleton = nullptr;
   SharedBufferManagerChild::sSharedBufferManagerParentSingleton = nullptr;
   *aDone = true;
@@ -153,7 +153,7 @@ SharedBufferManagerChild::ShutDown()
 bool
 SharedBufferManagerChild::StartUpOnThread(base::Thread* aThread)
 {
-  NS_ABORT_IF_FALSE(aThread, "SharedBufferManager needs a thread.");
+  MOZ_ASSERT(aThread, "SharedBufferManager needs a thread.");
   if (sSharedBufferManagerChildSingleton != nullptr) {
     return false;
   }
@@ -174,8 +174,8 @@ SharedBufferManagerChild::StartUpOnThread(base::Thread* aThread)
 void
 SharedBufferManagerChild::DestroyManager()
 {
-  NS_ABORT_IF_FALSE(!InSharedBufferManagerChildThread(),
-                    "This method must not be called in this thread.");
+  MOZ_ASSERT(!InSharedBufferManagerChildThread(),
+             "This method must not be called in this thread.");
   // ...because we are about to dispatch synchronous messages to the
   // BufferManagerChild thread.
 

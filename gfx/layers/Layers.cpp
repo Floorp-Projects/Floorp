@@ -2020,8 +2020,8 @@ LayerManager::InitLog()
 /*static*/ bool
 LayerManager::IsLogEnabled()
 {
-  NS_ABORT_IF_FALSE(!!sLog,
-                    "layer manager must be created before logging is allowed");
+  MOZ_ASSERT(!!sLog,
+             "layer manager must be created before logging is allowed");
   return PR_LOG_TEST(sLog, PR_LOG_DEBUG);
 }
 

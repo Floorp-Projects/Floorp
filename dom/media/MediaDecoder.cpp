@@ -718,7 +718,7 @@ nsresult MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   UpdateDormantState(false /* aDormantTimeout */, true /* aActivity */);
 
-  NS_ABORT_IF_FALSE(aTime >= 0.0, "Cannot seek to a negative value.");
+  MOZ_ASSERT(aTime >= 0.0, "Cannot seek to a negative value.");
 
   int64_t timeUsecs = 0;
   nsresult rv = SecondsToUsecs(aTime, timeUsecs);

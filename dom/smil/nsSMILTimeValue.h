@@ -88,8 +88,8 @@ public:
   bool IsDefinite() const { return mState == STATE_DEFINITE; }
   nsSMILTime GetMillis() const
   {
-    NS_ABORT_IF_FALSE(mState == STATE_DEFINITE,
-       "GetMillis() called for unresolved or indefinite time");
+    MOZ_ASSERT(mState == STATE_DEFINITE,
+               "GetMillis() called for unresolved or indefinite time");
 
     return mState == STATE_DEFINITE ? mMilliseconds : kUnresolvedMillis;
   }

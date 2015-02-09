@@ -42,7 +42,7 @@ private: //data
 NS_IMETHODIMP
 ArchiveRequestEvent::Run()
 {
-  NS_ABORT_IF_FALSE(mRequest, "the request is not longer valid");
+  MOZ_ASSERT(mRequest, "the request is not longer valid");
   mRequest->Run();
   return NS_OK;
 }

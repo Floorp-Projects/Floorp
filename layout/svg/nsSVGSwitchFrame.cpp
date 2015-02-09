@@ -179,8 +179,8 @@ nsSVGSwitchFrame::ReflowSVG()
   NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
                "This call is probably a wasteful mistake");
 
-  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
-                    "ReflowSVG mechanism not designed for this");
+  MOZ_ASSERT(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
+             "ReflowSVG mechanism not designed for this");
 
   if (!nsSVGUtils::NeedsReflowSVG(this)) {
     return;
@@ -207,8 +207,8 @@ nsSVGSwitchFrame::ReflowSVG()
   nsIFrame *child = GetActiveChildFrame();
   nsISVGChildFrame* svgChild = do_QueryFrame(child);
   if (svgChild) {
-    NS_ABORT_IF_FALSE(!(child->GetStateBits() & NS_FRAME_IS_NONDISPLAY),
-                      "Check for this explicitly in the |if|, then");
+    MOZ_ASSERT(!(child->GetStateBits() & NS_FRAME_IS_NONDISPLAY),
+               "Check for this explicitly in the |if|, then");
     svgChild->ReflowSVG();
 
     // We build up our child frame overflows here instead of using
