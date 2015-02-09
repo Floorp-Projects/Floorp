@@ -295,23 +295,21 @@ class MediaRecorder::Session: public nsIObserver
      : mSession(aSession) {}
     virtual void NotifyTracksAvailable(DOMMediaStream* aStream)
     {
-      uint8_t trackType = aStream->GetHintContents();
-      // ToDo: GetHintContents return 0 when recording media tags.
-      if (trackType == 0) {
-        nsTArray<nsRefPtr<mozilla::dom::AudioStreamTrack> > audioTracks;
-        aStream->GetAudioTracks(audioTracks);
-        nsTArray<nsRefPtr<mozilla::dom::VideoStreamTrack> > videoTracks;
-        aStream->GetVideoTracks(videoTracks);
-        // What is inside the track
-        if (videoTracks.Length() > 0) {
-          trackType |= DOMMediaStream::HINT_CONTENTS_VIDEO;
-        }
-        if (audioTracks.Length() > 0) {
-          trackType |= DOMMediaStream::HINT_CONTENTS_AUDIO;
-        }
+      uint8_t trackTypes = 0;
+      nsTArray<nsRefPtr<mozilla::dom::AudioStreamTrack>> audioTracks;
+      aStream->GetAudioTracks(audioTracks);
+      if (!audioTracks.IsEmpty()) {
+        trackTypes |= ContainerWriter::CREATE_AUDIO_TRACK;
       }
-      LOG(PR_LOG_DEBUG, ("Session.NotifyTracksAvailable track type = (%d)", trackType));
-      mSession->InitEncoder(trackType);
+
+      nsTArray<nsRefPtr<mozilla::dom::VideoStreamTrack>> videoTracks;
+      aStream->GetVideoTracks(videoTracks);
+      if (!videoTracks.IsEmpty()) {
+        trackTypes |= ContainerWriter::CREATE_VIDEO_TRACK;
+      }
+
+      LOG(PR_LOG_DEBUG, ("Session.NotifyTracksAvailable track type = (%d)", trackTypes));
+      mSession->InitEncoder(trackTypes);
     }
   private:
     nsRefPtr<Session> mSession;
@@ -542,7 +540,7 @@ private:
       domStream->OnTracksAvailable(tracksAvailableCallback);
     } else {
       // Web Audio node has only audio.
-      InitEncoder(DOMMediaStream::HINT_CONTENTS_AUDIO);
+      InitEncoder(ContainerWriter::CREATE_AUDIO_TRACK);
     }
   }
 

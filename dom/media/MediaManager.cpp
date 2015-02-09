@@ -567,14 +567,10 @@ public:
                          MediaEngineSource* aAudioSource,
                          MediaEngineSource* aVideoSource)
   {
-    DOMMediaStream::TrackTypeHints hints =
-      (aAudioSource ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
-      (aVideoSource ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
-
     nsRefPtr<nsDOMUserMediaStream> stream = new nsDOMUserMediaStream(aListener,
                                                                      aAudioSource,
                                                                      aVideoSource);
-    stream->InitTrackUnionStream(aWindow, hints);
+    stream->InitTrackUnionStream(aWindow);
     return stream.forget();
   }
 
