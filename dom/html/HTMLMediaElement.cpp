@@ -685,8 +685,7 @@ void HTMLMediaElement::AbortExistingLoads()
   mHaveQueuedSelectResource = false;
   mSuspendedForPreloadNone = false;
   mDownloadSuspendedByCache = false;
-  mHasAudio = false;
-  mHasVideo = false;
+  mMediaInfo = MediaInfo();
   mSourcePointer = nullptr;
   mLastNextFrameStatus = NEXT_FRAME_UNINITIALIZED;
 
@@ -926,18 +925,13 @@ void HTMLMediaElement::NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream)
     return;
   }
 
-  bool oldHasVideo = mHasVideo;
+  bool oldHasVideo = HasVideo();
 
-  nsAutoTArray<nsRefPtr<AudioStreamTrack>,1> audioTracks;
-  mSrcStream->GetAudioTracks(audioTracks);
-  nsAutoTArray<nsRefPtr<VideoStreamTrack>,1> videoTracks;
-  mSrcStream->GetVideoTracks(videoTracks);
+  mMediaInfo.mAudio.mHasAudio = !AudioTracks()->IsEmpty();
+  mMediaInfo.mVideo.mHasVideo = !VideoTracks()->IsEmpty();
 
-  mHasAudio = !audioTracks.IsEmpty();
-  mHasVideo = !videoTracks.IsEmpty();
-
-  if (IsVideo() && oldHasVideo != mHasVideo) {
-    // We are a video element and mHasVideo changed so update the screen wakelock
+  if (IsVideo() && oldHasVideo != HasVideo()) {
+    // We are a video element and HasVideo() changed so update the screen wakelock
     NotifyOwnerDocumentActivityChanged();
   }
 
@@ -1866,8 +1860,8 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded)
   OutputMediaStream* out = mOutputStreams.AppendElement();
   uint8_t hints = 0;
   if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_METADATA) {
-    hints = (mHasAudio? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
-            (mHasVideo? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
+    hints = (HasAudio()? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
+            (HasVideo()? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
   } else {
 #ifdef DEBUG
     // Estimate hints based on the type of the media element
@@ -2087,8 +2081,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mSuspendedForPreloadNone(false),
     mMediaSecurityVerified(false),
     mCORSMode(CORS_NONE),
-    mHasAudio(false),
-    mHasVideo(false),
     mIsEncrypted(false),
     mDownloadSuspendedByCache(false),
     mAudioChannelFaded(false),
@@ -3070,8 +3062,7 @@ void HTMLMediaElement::ProcessMediaFragmentURI()
 void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
                                       nsAutoPtr<const MetadataTags> aTags)
 {
-  mHasAudio = aInfo->HasAudio();
-  mHasVideo = aInfo->HasVideo();
+  mMediaInfo = *aInfo;
   mIsEncrypted = aInfo->mIsEncrypted;
   mTags = aTags.forget();
   mLoadedDataFired = false;
@@ -3083,7 +3074,7 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   }
 
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
-  if (IsVideo() && mHasVideo) {
+  if (IsVideo() && HasVideo()) {
     mMediaSize = aInfo->mVideo.mDisplay;
     DispatchAsyncEvent(NS_LITERAL_STRING("resize"));
   }
@@ -3094,8 +3085,8 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   }
 
   // Tracks just got known, pass the info along to the output streams
-  uint8_t hints = (mHasAudio ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
-                  (mHasVideo ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
+  uint8_t hints = (HasAudio() ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
+                  (HasVideo() ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
   for (uint32_t i = 0; i < mOutputStreams.Length(); ++i) {
     OutputMediaStream* out = &mOutputStreams[i];
     out->mStream->SetHintContents(hints);
@@ -3401,17 +3392,17 @@ void HTMLMediaElement::UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatu
   }
 
   if (mSrcStream && mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
-    if ((!mHasAudio && !mHasVideo) ||
-        (IsVideo() && mHasVideo && mMediaSize == nsIntSize(-1, -1))) {
+    if ((!HasAudio() && !HasVideo()) ||
+        (IsVideo() && HasVideo() && mMediaSize == nsIntSize(-1, -1))) {
       return;
     }
 
     // We are playing a stream that has video and a video frame is now set.
     // This means we have all metadata needed to change ready state.
     MediaInfo mediaInfo;
-    mediaInfo.mAudio.mHasAudio = mHasAudio;
-    mediaInfo.mVideo.mHasVideo = mHasVideo;
-    if (mHasVideo) {
+    mediaInfo.mAudio.mHasAudio = !AudioTracks()->IsEmpty();
+    mediaInfo.mVideo.mHasVideo = !VideoTracks()->IsEmpty();
+    if (mediaInfo.HasVideo()) {
       mediaInfo.mVideo.mDisplay = mMediaSize;
     }
     MetadataLoaded(&mediaInfo, nsAutoPtr<const MetadataTags>(nullptr));
@@ -3422,7 +3413,7 @@ void HTMLMediaElement::UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatu
     return;
   }
 
-  if (IsVideo() && mHasVideo && !IsPlaybackEnded() &&
+  if (IsVideo() && HasVideo() && !IsPlaybackEnded() &&
         GetImageContainer() && !GetImageContainer()->HasCurrentImage()) {
     // Don't advance if we are playing video, but don't have a video frame.
     // Also, if video became available after advancing to HAVE_CURRENT_DATA
