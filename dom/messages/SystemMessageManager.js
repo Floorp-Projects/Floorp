@@ -267,7 +267,7 @@ SystemMessageManager.prototype = {
     }
 
     let messages = (aMessage.name == "SystemMessageManager:Message")
-                   ? [msg.msg]
+                   ? [{ msg: msg.msg, msgID: msg.msgID }]
                    : msg.msgQueue;
 
     // We only dispatch messages when a handler is registered.
@@ -285,7 +285,7 @@ SystemMessageManager.prototype = {
       }
 
       messages.forEach(function(aMsg) {
-        this._dispatchMessage(msg.type, dispatcher, aMsg, msg.msgID);
+        this._dispatchMessage(msg.type, dispatcher, aMsg.msg, aMsg.msgID);
       }, this);
 
     } else {
