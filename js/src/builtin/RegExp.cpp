@@ -233,29 +233,20 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         }
 
         /*
-         * Only extract the 'flags' out of sourceObj; do not reuse the
-         * RegExpShared since it may be from a different compartment.
+         * Extract the 'source' and the 'flags' out of sourceObj; do not reuse
+         * the RegExpShared since it may be from a different compartment.
          */
+        RootedAtom sourceAtom(cx);
         RegExpFlag flags;
         {
             RegExpGuard g(cx);
             if (!RegExpToShared(cx, sourceObj, &g))
                 return false;
 
+            sourceAtom = g->getSource();
             flags = g->getFlags();
         }
 
-        /*
-         * 'toSource' is a permanent read-only property, so this is equivalent
-         * to executing RegExpObject::getSource on the unwrapped object.
-         */
-        RootedValue v(cx);
-        if (!GetProperty(cx, sourceObj, sourceObj, cx->names().source, &v))
-            return false;
-
-        // For proxies like CPOWs, we can't assume the result of a property get
-        // for 'source' is atomized.
-        Rooted<JSAtom*> sourceAtom(cx, AtomizeString(cx, v.toString()));
         RegExpObject *reobj = builder.build(sourceAtom, flags);
         if (!reobj)
             return false;
@@ -431,8 +422,138 @@ regexp_flags(JSContext *cx, unsigned argc, JS::Value *vp)
     return true;
 }
 
+/* ES6 draft rev32 21.2.5.4. */
+MOZ_ALWAYS_INLINE bool
+regexp_global_impl(JSContext *cx, CallArgs args)
+{
+    MOZ_ASSERT(IsRegExp(args.thisv()));
+    Rooted<RegExpObject*> reObj(cx, &args.thisv().toObject().as<RegExpObject>());
+
+    /* Steps 4-6. */
+    args.rval().setBoolean(reObj->global());
+    return true;
+}
+
+static bool
+regexp_global(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    /* Steps 1-3. */
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsRegExp, regexp_global_impl>(cx, args);
+}
+
+/* ES6 draft rev32 21.2.5.5. */
+MOZ_ALWAYS_INLINE bool
+regexp_ignoreCase_impl(JSContext *cx, CallArgs args)
+{
+    MOZ_ASSERT(IsRegExp(args.thisv()));
+    Rooted<RegExpObject*> reObj(cx, &args.thisv().toObject().as<RegExpObject>());
+
+    /* Steps 4-6. */
+    args.rval().setBoolean(reObj->ignoreCase());
+    return true;
+}
+
+static bool
+regexp_ignoreCase(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    /* Steps 1-3. */
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsRegExp, regexp_ignoreCase_impl>(cx, args);
+}
+
+/* ES6 draft rev32 21.2.5.7. */
+MOZ_ALWAYS_INLINE bool
+regexp_multiline_impl(JSContext *cx, CallArgs args)
+{
+    MOZ_ASSERT(IsRegExp(args.thisv()));
+    Rooted<RegExpObject*> reObj(cx, &args.thisv().toObject().as<RegExpObject>());
+
+    /* Steps 4-6. */
+    args.rval().setBoolean(reObj->multiline());
+    return true;
+}
+
+static bool
+regexp_multiline(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    /* Steps 1-3. */
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsRegExp, regexp_multiline_impl>(cx, args);
+}
+
+/* ES6 draft rev32 21.2.5.10. */
+MOZ_ALWAYS_INLINE bool
+regexp_source_impl(JSContext *cx, CallArgs args)
+{
+    MOZ_ASSERT(IsRegExp(args.thisv()));
+    Rooted<RegExpObject*> reObj(cx, &args.thisv().toObject().as<RegExpObject>());
+
+    /* Step 5. */
+    RootedAtom src(cx, reObj->getSource());
+    if (!src)
+        return false;
+
+    args.rval().setString(src);
+    return true;
+}
+
+static bool
+regexp_source(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    /* Steps 1-4. */
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsRegExp, regexp_source_impl>(cx, args);
+}
+
+/* ES6 draft rev32 21.2.5.12. */
+MOZ_ALWAYS_INLINE bool
+regexp_sticky_impl(JSContext *cx, CallArgs args)
+{
+    MOZ_ASSERT(IsRegExp(args.thisv()));
+    Rooted<RegExpObject*> reObj(cx, &args.thisv().toObject().as<RegExpObject>());
+
+    /* Steps 4-6. */
+    args.rval().setBoolean(reObj->sticky());
+    return true;
+}
+
+static bool
+regexp_sticky(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    /* Steps 1-3. */
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsRegExp, regexp_sticky_impl>(cx, args);
+}
+
+/* ES6 draft rev32 21.2.5.15. */
+MOZ_ALWAYS_INLINE bool
+regexp_unicode_impl(JSContext *cx, CallArgs args)
+{
+    MOZ_ASSERT(IsRegExp(args.thisv()));
+
+    /* Steps 4-6. */
+    /* FIXME: When the /u flags is supported, return correct value. */
+    args.rval().setBoolean(false);
+    return true;
+}
+
+static bool
+regexp_unicode(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    /* Steps 1-3. */
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsRegExp, regexp_unicode_impl>(cx, args);
+}
+
 static const JSPropertySpec regexp_properties[] = {
     JS_PSG("flags", regexp_flags, 0),
+    JS_PSG("global", regexp_global, 0),
+    JS_PSG("ignoreCase", regexp_ignoreCase, 0),
+    JS_PSG("multiline", regexp_multiline, 0),
+    JS_PSG("source", regexp_source, 0),
+    JS_PSG("sticky", regexp_sticky, 0),
+    JS_PSG("unicode", regexp_unicode, 0),
     JS_PS_END
 };
 
