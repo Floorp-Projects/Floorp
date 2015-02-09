@@ -171,6 +171,16 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
 }
 
 void
+APZEventState::ProcessLongTapUp(const CSSPoint& aPoint,
+                                const ScrollableLayerGuid& aGuid,
+                                float aPresShellResolution)
+{
+  APZES_LOG("Handling long tap up at %s\n", Stringify(aPoint).c_str());
+
+  ProcessSingleTap(aPoint, aGuid, aPresShellResolution);
+}
+
+void
 APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                                  const ScrollableLayerGuid& aGuid,
                                  uint64_t aInputBlockId)
