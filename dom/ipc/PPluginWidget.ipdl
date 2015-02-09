@@ -48,11 +48,12 @@ parent:
 
 child:
   /**
-   * Sent from chrome when the chrome side widget is getting torn down.
-   * @param aParentInitiated - indicates if the shutdown is associated
-   * with a tab closure vs. content reload.
+   * Sent from content when a plugin is unloaded via layout. We shut down
+   * some things in response to this so that we don't end up firing async
+   * msgs after the child is destroyed. We know that after this call
+   * the child actor may not be on the other side.
    */
-  async ParentShutdown(bool aParentInitiated);
+  async ParentShutdown();
 
   /**
    * Requests a full update of the plugin window.

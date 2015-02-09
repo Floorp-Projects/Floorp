@@ -419,7 +419,9 @@ public:
   void ReceiveNullableObjectSequence(JSContext*, nsTArray<JSObject*>&);
 
   void PassSequenceOfSequences(const Sequence< Sequence<int32_t> >&);
+  void PassSequenceOfSequencesOfSequences(const Sequence<Sequence<Sequence<int32_t>>>&);
   void ReceiveSequenceOfSequences(nsTArray< nsTArray<int32_t> >&);
+  void ReceiveSequenceOfSequencesOfSequences(nsTArray<nsTArray<nsTArray<int32_t>>>&);
 
   // MozMap types
   void PassMozMap(const MozMap<int32_t> &);

@@ -206,14 +206,11 @@ class Configuration:
             elif key == 'isNavigatorProperty':
                 getter = lambda x: x.interface.getNavigatorProperty() != None
             elif key == 'isExposedInAnyWorker':
-                getter = lambda x: (not x.interface.isExternal() and
-                                    x.interface.isExposedInAnyWorker())
+                getter = lambda x: x.interface.isExposedInAnyWorker()
             elif key == 'isExposedInSystemGlobals':
-                getter = lambda x: (not x.interface.isExternal() and
-                                    x.interface.isExposedInSystemGlobals())
+                getter = lambda x: x.interface.isExposedInSystemGlobals()
             elif key == 'isExposedInWindow':
-                getter = lambda x: (not x.interface.isExternal() and
-                                    x.interface.isExposedInWindow())
+                getter = lambda x: x.interface.isExposedInWindow()
             else:
                 # Have to watch out: just closing over "key" is not enough,
                 # since we're about to mutate its value

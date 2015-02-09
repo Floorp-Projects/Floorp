@@ -416,17 +416,17 @@ class GCSchedulingTunables
  *   not all bad: minimizing size[allocated] also minimizes the chance of OOM
  *   and sweeping remains one of the hardest areas to further incrementalize.
  *
- *      MAYBEGC
- *      -------
+ *      EAGER_ALLOC_TRIGGER
+ *      -------------------
  *      Occurs when we return to the event loop and find our heap is getting
  *      largish, but before t[marking] OR t[sweeping] is too large for a
  *      responsive non-incremental GC. This is intended to be the common case
  *      in normal web applications: e.g. we just finished an event handler and
  *      the few objects we allocated when computing the new whatzitz have
  *      pushed us slightly over the limit. After this GC we rescale the new
- *      MAYBEGC trigger to 150% of size[retained] so that our non-incremental
- *      GC times will always be proportional to this size rather than being
- *      dominated by sweeping.
+ *      EAGER_ALLOC_TRIGGER trigger to 150% of size[retained] so that our
+ *      non-incremental GC times will always be proportional to this size
+ *      rather than being dominated by sweeping.
  *
  *      As a concession to mutators that allocate heavily during their startup
  *      phase, we have a highFrequencyGCMode that ups the growth rate to 300%
@@ -436,6 +436,14 @@ class GCSchedulingTunables
  *          Assumptions:
  *            -> Responsiveness is proportional to t[marking] + t[sweeping].
  *            -> size[retained] is proportional only to GC allocations.
+ *
+ *      PERIODIC_FULL_GC
+ *      ----------------
+ *      When we return to the event loop and it has been 20 seconds since we've
+ *      done a GC, we start an incremenal, all-zones, shrinking GC.
+ *
+ *          Assumptions:
+ *            -> Our triggers are incomplete.
  *
  *      ALLOC_TRIGGER (non-incremental)
  *      -------------------------------
@@ -602,7 +610,7 @@ class GCRuntime
         gcstats::AutoPhase ap(stats, gcstats::PHASE_EVICT_NURSERY);
         minorGCImpl(reason, nullptr);
     }
-    bool gcIfNeeded(JSContext *cx = nullptr);
+    bool gcIfRequested(JSContext *cx = nullptr);
     void gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
     void startGC(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
     void gcSlice(JS::gcreason::Reason reason, int64_t millis = 0);
@@ -732,7 +740,7 @@ class GCRuntime
 
     void setMaxMallocBytes(size_t value);
     void resetMallocBytes();
-    bool isTooMuchMalloc() const { return mallocBytes <= 0; }
+    bool isTooMuchMalloc() const { return mallocBytesUntilGC <= 0; }
     void updateMallocCounter(JS::Zone *zone, size_t nbytes);
     void onTooMuchMalloc();
 
@@ -1178,11 +1186,11 @@ class GCRuntime
      * Malloc counter to measure memory pressure for GC scheduling. It runs
      * from maxMallocBytes down to zero.
      */
-    mozilla::Atomic<ptrdiff_t, mozilla::ReleaseAcquire> mallocBytes;
+    mozilla::Atomic<ptrdiff_t, mozilla::ReleaseAcquire> mallocBytesUntilGC;
 
     /*
-     * Whether a GC has been triggered as a result of mallocBytes falling
-     * below zero.
+     * Whether a GC has been triggered as a result of mallocBytesUntilGC
+     * falling below zero.
      */
     mozilla::Atomic<bool, mozilla::ReleaseAcquire> mallocGCTriggered;
 

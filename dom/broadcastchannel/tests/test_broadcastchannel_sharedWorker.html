@@ -29,8 +29,6 @@ function runTests() {
     if (event.data == "READY") {
       ok(true, "SharedWorker is ready!");
       bc.postMessage('hello world from the window');
-    } else if(event.data == "OK") {
-      ok(true, "SharedWorker has received the message");
     } else {
       ok(false, "Something wrong happened");
     }

@@ -267,50 +267,6 @@ expectDescriptor(pd, expected);
 
 o = /foo/im;
 
-pd = Object.getOwnPropertyDescriptor(o, "source");
-expected =
-  {
-    value: "foo",
-    writable: false,
-    enumerable: false,
-    configurable: false
-  };
-
-expectDescriptor(pd, expected);
-
-pd = Object.getOwnPropertyDescriptor(o, "global");
-expected =
-  {
-    value: false,
-    writable: false,
-    enumerable: false,
-    configurable: false
-  };
-
-expectDescriptor(pd, expected);
-
-pd = Object.getOwnPropertyDescriptor(o, "ignoreCase");
-expected =
-  {
-    value: true,
-    writable: false,
-    enumerable: false,
-    configurable: false
-  };
-
-expectDescriptor(pd, expected);
-
-pd = Object.getOwnPropertyDescriptor(o, "multiline");
-expected =
-  {
-    value: true,
-    writable: false,
-    enumerable: false,
-    configurable: false
-  };
-
-expectDescriptor(pd, expected);
-
 pd = Object.getOwnPropertyDescriptor(o, "lastIndex");
 expected =
   {

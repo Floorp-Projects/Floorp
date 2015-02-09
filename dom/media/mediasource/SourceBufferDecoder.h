@@ -42,7 +42,6 @@ public:
   virtual bool IsTransportSeekable() MOZ_FINAL MOZ_OVERRIDE;
   virtual bool OnDecodeThread() const MOZ_FINAL MOZ_OVERRIDE;
   virtual bool OnStateMachineThread() const MOZ_FINAL MOZ_OVERRIDE;
-  virtual int64_t GetTimestampOffset() const MOZ_FINAL MOZ_OVERRIDE { return mTimestampOffset; }
   virtual int64_t GetMediaDuration() MOZ_FINAL MOZ_OVERRIDE;
   virtual layers::ImageContainer* GetImageContainer() MOZ_FINAL MOZ_OVERRIDE;
   virtual MediaDecoderOwner* GetOwner() MOZ_FINAL MOZ_OVERRIDE;
@@ -66,6 +65,8 @@ public:
   virtual bool HasInitializationData() MOZ_FINAL MOZ_OVERRIDE;
 
   // SourceBufferResource specific interface below.
+  int64_t GetTimestampOffset() const { return mTimestampOffset; }
+  void SetTimestampOffset(int64_t aOffset)  { mTimestampOffset = aOffset; }
 
   // Warning: this mirrors GetBuffered in MediaDecoder, but this class's base is
   // AbstractMediaDecoder, which does not supply this interface.
@@ -77,7 +78,7 @@ public:
     mReader = aReader;
   }
 
-  MediaDecoderReader* GetReader()
+  MediaDecoderReader* GetReader() const
   {
     return mReader;
   }

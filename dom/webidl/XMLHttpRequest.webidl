@@ -142,7 +142,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
 
   [Throws]
   void sendAsBinary(DOMString body);
-  [Throws, ChromeOnly]
+  [Throws, ChromeOnly, Exposed=Window]
   any getInterface(IID iid);
 
   readonly attribute boolean mozAnon;

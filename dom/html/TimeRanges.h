@@ -61,6 +61,9 @@ public:
 
   virtual double End(uint32_t aIndex, ErrorResult& aRv);
 
+  // Shift all values by aOffset seconds.
+  void Shift(double aOffset);
+
 private:
   ~TimeRanges();
 

@@ -18,8 +18,8 @@ interface URLUtilsReadOnly {};
 </script>
 <!-- DOM IDLs -->
 <script type=text/plain class=untested>
-[Constructor(DOMString type, optional EventInit eventInitDict),
- Exposed=Window,Worker]
+[Constructor(DOMString type, optional EventInit eventInitDict)/*,
+ Exposed=(Window,Worker)*/]
 interface Event {
   readonly attribute DOMString type;
   readonly attribute EventTarget? target;
@@ -50,8 +50,8 @@ dictionary EventInit {
   boolean cancelable = false;
 };
 
-[Constructor(DOMString type, optional CustomEventInit eventInitDict),
- Exposed=Window,Worker]
+[Constructor(DOMString type, optional CustomEventInit eventInitDict)/*,
+ Exposed=(Window,Worker)*/]
 interface CustomEvent : Event {
   readonly attribute any detail;
 
@@ -62,7 +62,7 @@ dictionary CustomEventInit : EventInit {
   any detail = null;
 };
 
-[Exposed=Window,Worker]
+//[Exposed=(Window,Worker)]
 interface EventTarget {
   void addEventListener(DOMString type, EventListener? callback, optional boolean capture = false);
   void removeEventListener(DOMString type, EventListener? callback, optional boolean capture = false);
@@ -82,16 +82,16 @@ DocumentFragment implements NonElementParentNode;
 
 [NoInterfaceObject]
 interface ParentNode {
-  readonly attribute HTMLCollection children;
+  [SameObject] readonly attribute HTMLCollection children;
   readonly attribute Element? firstElementChild;
   readonly attribute Element? lastElementChild;
   readonly attribute unsigned long childElementCount;
 
-  void prepend((Node or DOMString)... nodes);
-  void append((Node or DOMString)... nodes);
+  [Unscopeable] void prepend((Node or DOMString)... nodes);
+  [Unscopeable] void append((Node or DOMString)... nodes);
 
-  Element? query(DOMString relativeSelectors);
-  [NewObject] Elements queryAll(DOMString relativeSelectors);
+  [Unscopeable] Element? query(DOMString relativeSelectors);
+  [NewObject, Unscopeable] Elements queryAll(DOMString relativeSelectors);
   Element? querySelector(DOMString selectors);
   [NewObject] NodeList querySelectorAll(DOMString selectors);
 };
@@ -109,10 +109,10 @@ CharacterData implements NonDocumentTypeChildNode;
 
 [NoInterfaceObject]
 interface ChildNode {
-  void before((Node or DOMString)... nodes);
-  void after((Node or DOMString)... nodes);
-  void replace((Node or DOMString)... nodes);
-  void remove();
+  [Unscopeable] void before((Node or DOMString)... nodes);
+  [Unscopeable] void after((Node or DOMString)... nodes);
+  [Unscopeable] void replaceWith((Node or DOMString)... nodes);
+  [Unscopeable] void remove();
 };
 DocumentType implements ChildNode;
 Element implements ChildNode;
@@ -126,10 +126,10 @@ CharacterData implements ChildNode;
 //  Elements queryAll(DOMString relativeSelectors);
 //};
 
-[ArrayClass]
 interface NodeList {
   getter Node? item(unsigned long index);
   readonly attribute unsigned long length;
+//  iterable<Node>;
 };
 
 interface HTMLCollection {
@@ -201,7 +201,7 @@ interface Node : EventTarget {
            attribute DOMString? textContent;
   void normalize();
 
-  Node cloneNode(optional boolean deep = false);
+  [NewObject] Node cloneNode(optional boolean deep = false);
   boolean isEqualNode(Node? node);
 
   const unsigned short DOCUMENT_POSITION_DISCONNECTED = 0x01;
@@ -247,11 +247,11 @@ interface Document : Node {
   [NewObject] Comment createComment(DOMString data);
   [NewObject] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
 
-  Node importNode(Node node, optional boolean deep = false);
+  [NewObject] Node importNode(Node node, optional boolean deep = false);
   Node adoptNode(Node node);
 
-  Attr createAttribute(DOMString localName);
-  Attr createAttributeNS(DOMString namespace, DOMString name);
+  [NewObject] Attr createAttribute(DOMString localName);
+  [NewObject] Attr createAttributeNS(DOMString? namespace, DOMString name);
 
   [NewObject] Event createEvent(DOMString interface);
 
@@ -304,7 +304,7 @@ interface Element : Node {
   boolean hasAttributeNS(DOMString? namespace, DOMString localName);
 
   Attr? getAttributeNode(DOMString name);
-  Attr? getAttributeNodeNS(DOMString namespace, DOMString localName);
+  Attr? getAttributeNodeNS(DOMString? namespace, DOMString localName);
   Attr? setAttributeNode(Attr attr);
   Attr? setAttributeNodeNS(Attr attr);
   Attr removeAttributeNode(Attr attr);
@@ -334,7 +334,8 @@ interface Attr {
   readonly attribute DOMString localName;
   readonly attribute DOMString name;
            attribute DOMString value;
-           attribute DOMString textContent; // alias of .value
+           attribute DOMString nodeValue; // legacy alias of .value
+           attribute DOMString textContent; // legacy alias of .value
 
   readonly attribute Element? ownerElement;
 
@@ -467,6 +468,7 @@ interface DOMTokenList {
   void remove(DOMString... tokens);
   boolean toggle(DOMString token, optional boolean force);
   stringifier;
+//  iterable<DOMString>;
 };
 
 interface DOMSettableTokenList : DOMTokenList {
