@@ -415,6 +415,7 @@ this.NetworkStatsService = {
       }
     }
 
+    let browsingTrafficOnly = msg.browsingTrafficOnly || false;
     let serviceType = msg.serviceType || "";
 
     let start = new Date(msg.start);
@@ -424,7 +425,7 @@ this.NetworkStatsService = {
       this._db.find(function onStatsFound(aError, aResult) {
         mm.sendAsyncMessage("NetworkStats:Get:Return",
                             { id: msg.id, error: aError, result: aResult });
-      }, appId, serviceType, network, start, end, appManifestURL);
+      }, appId, browsingTrafficOnly, serviceType, network, start, end, appManifestURL);
     }).bind(this);
 
     this.validateNetwork(network, function onValidateNetwork(aNetId) {
@@ -439,6 +440,7 @@ this.NetworkStatsService = {
       if (this._networks[aNetId].status == NETWORK_STATUS_READY) {
         debug("getstats for network " + network.id + " of type " + network.type);
         debug("appId: " + appId + " from appManifestURL: " + appManifestURL);
+        debug("browsingTrafficOnly: " + browsingTrafficOnly);
         debug("serviceType: " + serviceType);
 
         if (appId || serviceType) {
@@ -456,7 +458,7 @@ this.NetworkStatsService = {
       this._db.find(function onStatsFound(aError, aResult) {
         mm.sendAsyncMessage("NetworkStats:Get:Return",
                             { id: msg.id, error: aError, result: aResult });
-      }, appId, serviceType, network, start, end, appManifestURL);
+      }, appId, browsingTrafficOnly, serviceType, network, start, end, appManifestURL);
     }.bind(this));
   },
 
@@ -779,10 +781,11 @@ this.NetworkStatsService = {
           aStats.networkType + " " + aStats.date + " " +
           aStats.rxBytes + " " + aStats.txBytes);
 
-    // Generate an unique key from |appId|, |serviceType| and |netId|,
-    // which is used to retrieve data in |cachedStats|.
+    // Generate an unique key from |appId|, |isInBrowser|, |serviceType| and
+    // |netId|, which is used to retrieve data in |cachedStats|.
     let netId = this.getNetworkId(aStats.networkId, aStats.networkType);
-    let key = aStats.appId + "" + aStats.serviceType + "" + netId;
+    let key = aStats.appId + "" + aStats.isInBrowser + "" +
+              aStats.serviceType + "" + netId;
 
     // |cachedStats| only keeps the data with the same date.
     // If the incoming date is different from |cachedStatsDate|,
