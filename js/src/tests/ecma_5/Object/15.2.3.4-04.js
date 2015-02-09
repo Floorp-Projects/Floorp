@@ -16,7 +16,7 @@ print(BUGNUMBER + ": " + summary);
  **************/
 
 var actual = Object.getOwnPropertyNames(/a/);
-var expected = ["lastIndex", "source", "global", "ignoreCase", "multiline"];
+var expected = ["lastIndex"];
 
 for (var i = 0; i < expected.length; i++)
 {
