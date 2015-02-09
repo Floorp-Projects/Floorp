@@ -1551,7 +1551,7 @@ bool MediaDecoder::OnDecodeThread() const {
 }
 
 ReentrantMonitor& MediaDecoder::GetReentrantMonitor() {
-  return mReentrantMonitor.GetReentrantMonitor();
+  return mReentrantMonitor;
 }
 
 ImageContainer* MediaDecoder::GetImageContainer()
