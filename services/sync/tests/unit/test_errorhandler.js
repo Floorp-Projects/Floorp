@@ -470,6 +470,22 @@ add_identity_test(this, function test_shouldReportError_master_password() {
   yield deferred.promise;
 });
 
+// Test that even if we don't have a cluster URL, a login failure due to
+// authentication errors is always reported.
+add_identity_test(this, function test_shouldReportLoginErrorWithNoCluster() {
+  // Ensure no clusterURL - any error not specific to login should not be reported.
+  Service.serverURL  = "";
+  Service.clusterURL = "";
+
+  // Test dontIgnoreErrors, non-network, non-prolonged, login error reported
+  Status.resetSync();
+  Status.login = LOGIN_FAILED_LOGIN_REJECTED;
+  // this one looks like a mid-sync error.
+  do_check_false(errorHandler.shouldReportError());
+  // this one is explicitly a login error.
+  do_check_true(errorHandler.shouldReportError("weave:service:login:error"));
+});
+
 // XXX - how to arrange for 'Service.identity.basicPassword = null;' in
 // an fxaccounts environment?
 add_task(function test_login_syncAndReportErrors_non_network_error() {
