@@ -161,6 +161,21 @@ ChromeProcessController::HandleLongTap(const mozilla::CSSPoint& aPoint, int32_t 
 }
 
 void
+ChromeProcessController::HandleLongTapUp(const CSSPoint& aPoint, int32_t aModifiers,
+                                         const ScrollableLayerGuid& aGuid)
+{
+  if (MessageLoop::current() != mUILoop) {
+    mUILoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &ChromeProcessController::HandleLongTapUp,
+                          aPoint, aModifiers, aGuid));
+    return;
+  }
+
+  mAPZEventState->ProcessLongTapUp(aPoint, aGuid, GetPresShellResolution());
+}
+
+void
 ChromeProcessController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                                               APZStateChange aChange,
                                               int aArg)
