@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     x="0"
+     y="0"
+     height="16"
+     width="16"
+     viewBox="0 0 16 16">
+  <style>
+    use:not(:target) {
+      display: none;
+    }
+    use {
+      fill: MenuText;
+    }
+    use[id$="-disabled"] {
+      fill: GrayText;
+    }
+    use[id$="-hover"] {
+      fill: HighlightText;
+    }
+  </style>
+  <defs style="display: none;">
+    <path id="arrow-shape" d="m 6,4 0,8 5,-4 z"/>
+  </defs>
+  <use id="arrow" xlink:href="#arrow-shape"/>
+  <use id="arrow-disabled" xlink:href="#arrow-shape"/>
+  <use id="arrow-hover" xlink:href="#arrow-shape"/>
+</svg>
