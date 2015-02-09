@@ -25,7 +25,7 @@ static bool sActiveDurationMsSet = false;
 
 APZEventState::APZEventState(nsIWidget* aWidget,
                              const nsRefPtr<ContentReceivedInputBlockCallback>& aCallback)
-  : mWidget(aWidget)
+  : mWidget(do_GetWeakReference(aWidget))
   , mActiveElementManager(new ActiveElementManager())
   , mContentReceivedInputBlockCallback(aCallback)
   , mPendingTouchPreventedResponse(false)
@@ -49,10 +49,10 @@ class DelayedFireSingleTapEvent MOZ_FINAL : public nsITimerCallback
 public:
   NS_DECL_ISUPPORTS
 
-  DelayedFireSingleTapEvent(nsIWidget* aWidget,
+  DelayedFireSingleTapEvent(nsWeakPtr aWidget,
                             LayoutDevicePoint& aPoint,
                             nsITimer* aTimer)
-    : mWidget(do_GetWeakReference(aWidget))
+    : mWidget(aWidget)
     , mPoint(aPoint)
     // Hold the reference count until we are called back.
     , mTimer(aTimer)
@@ -92,18 +92,23 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
   APZES_LOG("Handling single tap at %s on %s with %d\n",
     Stringify(aPoint).c_str(), Stringify(aGuid).c_str(), mTouchEndCancelled);
 
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return;
+  }
+
   if (mTouchEndCancelled) {
     return;
   }
 
   LayoutDevicePoint currentPoint =
       APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid, aPresShellResolution)
-    * mWidget->GetDefaultScale();;
+    * widget->GetDefaultScale();;
   if (!mActiveElementManager->ActiveElementUsesStyle()) {
     // If the active element isn't visually affected by the :active style, we
     // have no need to wait the extra sActiveDurationMs to make the activation
     // visually obvious to the user.
-    APZCCallbackHelper::FireSingleTapEvent(currentPoint, mWidget);
+    APZCCallbackHelper::FireSingleTapEvent(currentPoint, widget);
     return;
   }
 
@@ -130,6 +135,11 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
 {
   APZES_LOG("Handling long tap at %s\n", Stringify(aPoint).c_str());
 
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return;
+  }
+
   SendPendingTouchPreventedResponse(false, aGuid);
 
   bool eventHandled =
@@ -144,10 +154,10 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
   if (!eventHandled) {
     LayoutDevicePoint currentPoint =
         APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid, aPresShellResolution)
-      * mWidget->GetDefaultScale();
+      * widget->GetDefaultScale();
     int time = 0;
     nsEventStatus status =
-        APZCCallbackHelper::DispatchSynthesizedMouseEvent(NS_MOUSE_MOZLONGTAP, time, currentPoint, mWidget);
+        APZCCallbackHelper::DispatchSynthesizedMouseEvent(NS_MOUSE_MOZLONGTAP, time, currentPoint, widget);
     eventHandled = (status == nsEventStatus_eConsumeNoDefault);
     APZES_LOG("MOZLONGTAP event handled: %d\n", eventHandled);
   }
@@ -287,6 +297,13 @@ APZEventState::SendPendingTouchPreventedResponse(bool aPreventDefault,
         mPendingTouchPreventedBlockId, aPreventDefault);
     mPendingTouchPreventedResponse = false;
   }
+}
+
+already_AddRefed<nsIWidget>
+APZEventState::GetWidget() const
+{
+  nsCOMPtr<nsIWidget> result = do_QueryReferent(mWidget);
+  return result.forget();
 }
 
 }
