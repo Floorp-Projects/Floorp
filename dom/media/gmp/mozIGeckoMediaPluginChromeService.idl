@@ -1,0 +1,47 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIFile.idl"
+
+[scriptable, uuid(5878366c-73f6-486e-ad2f-9aca602864e4)]
+interface mozIGeckoMediaPluginChromeService : nsISupports
+{
+  /**
+   * Add a directory to scan for gecko media plugins.
+   * @note Main-thread API.
+   */
+  void addPluginDirectory(in AString directory);
+
+  /**
+   * Remove a directory for gecko media plugins.
+   * @note Main-thread API.
+   */
+  void removePluginDirectory(in AString directory);
+
+  /**
+   * Remove a directory for gecko media plugins and delete it from disk.
+   * @note Main-thread API.
+   */
+  void removeAndDeletePluginDirectory(in AString directory);
+
+  /**
+   * Clears storage data associated with the origin.
+   */
+  void forgetThisSite(in AString origin);
+
+  /**
+   * Returns true if the given node id is allowed to store things
+   * persistently on disk. Private Browsing and local content are not
+   * allowed to store persistent data.
+   */
+  bool isPersistentStorageAllowed(in ACString nodeId);
+
+  /**
+   * Returns the directory to use as the base for storing data about GMPs.
+   */
+  nsIFile getStorageDir();
+
+};
