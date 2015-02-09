@@ -280,7 +280,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   static already_AddRefed<Fake_DOMMediaStream>
-  CreateSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents) {
+  CreateSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents = 0) {
     Fake_SourceMediaStream *source = new Fake_SourceMediaStream();
 
     nsRefPtr<Fake_DOMMediaStream> ds = new Fake_DOMMediaStream(source);
