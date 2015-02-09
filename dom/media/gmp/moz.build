@@ -7,6 +7,7 @@
 XPIDL_MODULE = 'content_geckomediaplugins'
 
 XPIDL_SOURCES += [
+    'mozIGeckoMediaPluginChromeService.idl',
     'mozIGeckoMediaPluginService.idl',
 ]
 
@@ -46,6 +47,7 @@ EXPORTS += [
     'GMPProcessChild.h',
     'GMPProcessParent.h',
     'GMPService.h',
+    'GMPServiceParent.h',
     'GMPSharedMemManager.h',
     'GMPStorageChild.h',
     'GMPStorageParent.h',
@@ -84,6 +86,7 @@ UNIFIED_SOURCES += [
     'GMPProcessChild.cpp',
     'GMPProcessParent.cpp',
     'GMPService.cpp',
+    'GMPServiceParent.cpp',
     'GMPSharedMemManager.cpp',
     'GMPStorageChild.cpp',
     'GMPStorageParent.cpp',
