@@ -4053,7 +4053,9 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                         declArgs=declArgs)
 
     def incrementNestingLevel():
-        return 1 if nestingLevel is "" else ++nestingLevel
+        if nestingLevel is "":
+            return 1
+        return nestingLevel + 1
 
     assert not (isEnforceRange and isClamp)  # These are mutually exclusive
 
