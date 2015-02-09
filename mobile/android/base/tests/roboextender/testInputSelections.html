@@ -4,7 +4,11 @@
     <meta name="viewport" content="initial-scale=1.0"/>
     <script type="application/javascript"
       src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+    <script type="application/javascript" src="SelectionUtils.js"></script>
     <script type="application/javascript;version=1.8">
+
+// Name of this test.
+const TYPE_NAME = "Robocop:testInputSelections";
 
 // Used to create handle movement events for SelectionHandler.
 const ANCHOR = "ANCHOR";
@@ -21,11 +25,6 @@ const EST_SEL_TEXT_BOUND_CHARS = 5;
 const LTR_INPUT_TEXT_VALUE = "This input text is one character short of it's maxmimum.";
 const RTL_INPUT_TEXT_VALUE = "טקסט קלט זה קצר תו אחד של זה גדול.";
 
-
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-Cu.import("resource://gre/modules/Messaging.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import('resource://gre/modules/Geometry.jsm');
 
 /* =================================================================================
  *
@@ -418,123 +417,6 @@ function testRTL_dragAnchorHandleToSelf() {
   ]);
 }
 
-/* =================================================================================
- *
- * After finish of all selection tests, wrap up and go home.
- *
- */
-function finishTests() {
-  Messaging.sendRequest({
-    type: "Robocop:testInputSelections",
-    result: true,
-    msg: "Done!",
-    done: true
-  });
-}
-
-/* ============================== Utility functions ======================
- *
- * Common functions available to all tests.
- *
- */
-function getSelectionHandler() {
-  return (!this._selectionHandler) ?
-    this._selectionHandler = Services.wm.getMostRecentWindow("navigator:browser").SelectionHandler :
-    this._selectionHandler;
-}
-
-function todo(result, msg) {
-  return Messaging.sendRequestForResult({
-    type: "Robocop:testInputSelections",
-    todo: result,
-    msg: msg
-  });
-}
-
-function ok(result, msg) {
-  return Messaging.sendRequestForResult({
-    type: "Robocop:testInputSelections",
-    result: result,
-    msg: msg
-  });
-}
-
-function is(one, two, msg) {
-  return Messaging.sendRequestForResult({
-    type: "Robocop:testInputSelections",
-    result: one === two,
-    msg: msg + " : " + one + " === " + two
-  });
-}
-
-function isNot(one, two, msg) {
-  return Messaging.sendRequestForResult({
-    type: "Robocop:testInputSelections",
-    result: one !== two,
-    msg: msg + " : " + one + " !== " + two
-  });
-}
-
-function lessThan(n1, n2, msg) {
-  return Messaging.sendRequestForResult({
-    type: "Robocop:testInputSelections",
-    result: n1 < n2,
-    msg: msg + " : " + n1 + " < " + n2
-  });
-}
-
-function greaterThan(n1, n2, msg) {
-  return Messaging.sendRequestForResult({
-    type: "Robocop:testInputSelections",
-    result: n1 > n2,
-    msg: msg + " : " + n1 + " > " + n2
-  });
-}
-
-// Use fuzzy logic to compare screen coords.
-function truncPoint(point) {
-  return new Point(Math.trunc(point.x), Math.trunc(point.y));
-}
-
-function pointEquals(p1, p2, msg) {
-  return Messaging.sendRequestForResult({
-    type: "Robocop:testInputSelections",
-    result: truncPoint(p1).equals(truncPoint(p2)),
-    msg: msg + " : " + p1.toString() + " == " + p2.toString()
-  });
-}
-
-function pointNotEquals(p1, p2, msg) {
-  return Messaging.sendRequestForResult({
-    type: "Robocop:testInputSelections",
-    result: !truncPoint(p1).equals(truncPoint(p2)),
-    msg: msg + " : " + p1.toString() + " == " + p2.toString()
-  });
-}
-
-function selectionExists(selection, msg) {
-  return Messaging.sendRequestForResult({
-    type: "Robocop:testInputSelections",
-    result: !truncPoint(selection.anchorPt).equals(truncPoint(selection.focusPt)),
-    msg: msg + " : anchor:" + selection.anchorPt.toString() +
-      " focus:" + selection.focusPt.toString()
-  });
-}
-
-function selectionEquals(s1, s2, msg) {
-  return Messaging.sendRequestForResult({
-    type: "Robocop:testInputSelections",
-    result: truncPoint(s1.anchorPt).equals(truncPoint(s2.anchorPt)) &&
-            truncPoint(s1.focusPt).equals(truncPoint(s2.focusPt)),
-    msg: msg
-  });
-}
-
-/* =================================================================================
- *
- * Page definition for all tests.
- *
- */
     </script>
   </head>
 
