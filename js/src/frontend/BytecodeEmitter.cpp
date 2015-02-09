@@ -1902,7 +1902,7 @@ BindNameToSlotHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * has no object to stand in the static scope chain, 2. to minimize memory
      * bloat where a single live function keeps its whole global script
      * alive.), ScopeCoordinateToTypeSet is not able to find the var/let's
-     * associated types::TypeSet.
+     * associated TypeSet.
      */
     if (skip) {
         BytecodeEmitter *bceSkipped = bce;
@@ -3704,7 +3704,7 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
                 // used PNK_NUMBER instead, but also watch for ids which TI treats
                 // as indexes for simplification of downstream analysis.
                 jsid id = NameToId(name);
-                if (id != types::IdToTypeId(id)) {
+                if (id != IdToTypeId(id)) {
                     if (!EmitTree(cx, bce, key))                       // ... OBJ OBJ KEY
                         return false;
                 } else {
@@ -6622,7 +6622,7 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             // used PNK_NUMBER instead, but also watch for ids which TI treats
             // as indexes for simpliciation of downstream analysis.
             jsid id = NameToId(key->pn_atom->asPropertyName());
-            if (id != types::IdToTypeId(id)) {
+            if (id != IdToTypeId(id)) {
                 if (!EmitTree(cx, bce, key))
                     return false;
                 isIndex = true;

@@ -17,7 +17,6 @@
 
 using namespace js;
 using namespace js::gc;
-using namespace js::types;
 
 JS_STATIC_ASSERT(AllocKinds == FINALIZE_LIMIT);
 JS_STATIC_ASSERT(LastObjectAllocKind == FINALIZE_OBJECT_LAST);

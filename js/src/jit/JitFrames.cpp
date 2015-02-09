@@ -2115,7 +2115,7 @@ SnapshotIterator::computeInstructionResults(JSContext *cx, RInstructionResults *
 
         // Use AutoEnterAnalysis to avoid invoking the object metadata callback,
         // which could try to walk the stack while bailing out.
-        types::AutoEnterAnalysis enter(cx);
+        AutoEnterAnalysis enter(cx);
 
         // Fill with the results of recover instructions.
         SnapshotIterator s(*this);
