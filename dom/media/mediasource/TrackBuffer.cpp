@@ -206,8 +206,6 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
   }
 
   if (gotMedia) {
-    start += aTimestampOffset;
-    end += aTimestampOffset;
     if (mLastEndTimestamp &&
         (!mParser->TimestampsFuzzyEqual(start, mLastEndTimestamp.value()) ||
          mLastTimestampOffset != aTimestampOffset ||
