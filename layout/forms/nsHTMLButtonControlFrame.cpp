@@ -263,7 +263,6 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
                                                nsIFrame* aFirstKid)
 {
   WritingMode wm = GetWritingMode();
-  bool isVertical = wm.IsVertical();
   LogicalSize availSize = aButtonReflowState.ComputedSize(wm);
   availSize.BSize(wm) = NS_INTRINSICSIZE;
 
@@ -283,7 +282,8 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   // our intrinsic min iSize, that means that the kid wouldn't really fit; for a
   // better look in such cases we adjust the available iSize and our inline-start
   // offset to allow the kid to spill start-wards into our padding.
-  nscoord ioffset = focusPadding.IStart(wm) + clbp.IStart(wm);
+  LogicalPoint childPos(wm);
+  childPos.I(wm) = focusPadding.IStart(wm) + clbp.IStart(wm);
   nscoord extraISize = GetMinISize(aButtonReflowState.rendContext) -
     aButtonReflowState.ComputedISize();
   if (extraISize > 0) {
@@ -295,7 +295,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
     const LogicalMargin& padding = aButtonReflowState.ComputedLogicalPadding();
     extraIStart = std::min(extraIStart, padding.IStart(wm));
     extraIEnd = std::min(extraIEnd, padding.IEnd(wm));
-    ioffset -= extraIStart;
+    childPos.I(wm) -= extraIStart;
     availSize.ISize(wm) = availSize.ISize(wm) + extraIStart + extraIEnd;
   }
   availSize.ISize(wm) = std::max(availSize.ISize(wm), 0);
@@ -312,12 +312,13 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
 
   nsReflowStatus contentsReflowStatus;
   nsHTMLReflowMetrics contentsDesiredSize(aButtonReflowState);
-  nscoord boffset = focusPadding.BStart(wm) + clbp.BStart(wm);
+  childPos.B(wm) = focusPadding.BStart(wm) + clbp.BStart(wm);
+
+  // We just pass 0 for containerWidth here, as the child will be repositioned
+  // later by FinishReflowChild.
   ReflowChild(aFirstKid, aPresContext,
               contentsDesiredSize, contentsReflowState,
-              isVertical ? boffset : ioffset,
-              isVertical ? ioffset : boffset,
-              0, contentsReflowStatus);
+              wm, childPos, 0, 0, contentsReflowStatus);
   MOZ_ASSERT(NS_FRAME_IS_COMPLETE(contentsReflowStatus),
              "We gave button-contents frame unconstrained available height, "
              "so it should be complete");
@@ -350,18 +351,19 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
     buttonContentBoxBSize - focusPadding.BStartEnd(wm) -
     contentsDesiredSize.BSize(wm);
 
-  boffset = std::max(0, extraSpace / 2);
+  childPos.B(wm) = std::max(0, extraSpace / 2);
 
-  // Adjust boffset to be in terms of the button's frame-rect, instead of
+  // Adjust childPos.B() to be in terms of the button's frame-rect, instead of
   // its focus-padding rect:
-  boffset += focusPadding.BStart(wm) + clbp.BStart(wm);
+  childPos.B(wm) += focusPadding.BStart(wm) + clbp.BStart(wm);
+
+  nscoord containerWidth = contentsDesiredSize.Width() +
+    clbp.LeftRight(wm) + focusPadding.LeftRight(wm);
 
   // Place the child
   FinishReflowChild(aFirstKid, aPresContext,
                     contentsDesiredSize, &contentsReflowState,
-                    isVertical ? boffset : ioffset,
-                    isVertical ? ioffset : boffset,
-                    0);
+                    wm, childPos, containerWidth, 0);
 
   // Make sure we have a useful 'ascent' value for the child
   if (contentsDesiredSize.BlockStartAscent() ==
@@ -385,7 +387,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
     aButtonDesiredSize.SetBlockStartAscent(contentsDesiredSize.ISize(wm));
   } else {
     aButtonDesiredSize.SetBlockStartAscent(contentsDesiredSize.BlockStartAscent() +
-                                           boffset);
+                                           childPos.B(wm));
   }
 
   aButtonDesiredSize.SetOverflowAreasToDesiredBounds();
