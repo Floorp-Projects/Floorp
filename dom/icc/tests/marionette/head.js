@@ -288,6 +288,36 @@ function waitForTargetEvent(aEventTarget, aEventName, aMatchFun) {
 }
 
 /**
+ * Wait for one named system message.
+ *
+ * Resolve if that named message is received. Never reject.
+ *
+ * Fulfill params: the message passed.
+ *
+ * @param aEventName
+ *        A string message name.
+ * @param aMatchFun [optional]
+ *        A matching function returns true or false to filter the message. If no
+ *        matching function passed the promise is resolved after receiving the
+ *        first message.
+ *
+ * @return A deferred promise.
+ */
+function waitForSystemMessage(aMessageName, aMatchFun) {
+  let target = workingFrame.contentWindow.navigator;
+
+  return new Promise(function(aResolve, aReject) {
+    target.mozSetMessageHandler(aMessageName, function(aMessage) {
+      if (!aMatchFun || aMatchFun(aMessage)) {
+        target.mozSetMessageHandler(aMessageName, null);
+        ok(true, "System message '" + aMessageName + "' got.");
+        aResolve(aMessage);
+      }
+    });
+  });
+}
+
+/**
  * Set radio enabling state and wait for "radiostatechange" event.
  *
  * Resolve if radio state changed to the expected one. Never reject.
