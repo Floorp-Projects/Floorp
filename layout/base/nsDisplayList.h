@@ -432,9 +432,13 @@ public:
 
   /**
    * Return true if we're currently building a display list for the root
-   * presshell which is the presshell of a chrome document.
+   * presshell which is the presshell of a chrome document, or if we're
+   * building the display list for a popup and have not entered a subdocument
+   * inside that popup.
    */
-  bool IsInRootChromeDocument() { return mIsInRootChromeDocument; }
+  bool IsInRootChromeDocumentOrPopup() {
+    return (mIsInChromePresContext || mIsBuildingForPopup) && !IsInSubdocument();
+  }
 
   /**
    * @return true if images have been set to decode synchronously.
@@ -911,7 +915,7 @@ private:
   // True when we're building a display list that's directly or indirectly
   // under an nsDisplayTransform
   bool                           mInTransform;
-  bool                           mIsInRootChromeDocument;
+  bool                           mIsInChromePresContext;
   bool                           mSyncDecodeImages;
   bool                           mIsPaintingToWindow;
   bool                           mIsCompositingCheap;
@@ -923,6 +927,7 @@ private:
   // which WantsAsyncScroll().
   bool                           mHaveScrollableDisplayPort;
   bool                           mWindowDraggingAllowed;
+  bool                           mIsBuildingForPopup;
 };
 
 class nsDisplayItem;
