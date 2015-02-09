@@ -11,12 +11,13 @@
 #include "GMPVideoDecoderProxy.h"
 #include "GMPVideoEncoderProxy.h"
 #include "GMPDecryptorProxy.h"
-#include "GMPService.h"
+#include "GMPServiceParent.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "mozilla/Atomics.h"
 #include "nsNSSComponent.h"
+#include "mozilla/DebugOnly.h"
 
 #if defined(XP_WIN)
 #include "mozilla/WindowsVersion.h"
@@ -158,8 +159,8 @@ template<typename T>
 static nsresult
 EnumerateGMPStorageDir(const nsACString& aDir, T&& aDirIter)
 {
-  nsRefPtr<GeckoMediaPluginService> service =
-    GeckoMediaPluginService::GetGeckoMediaPluginService();
+  nsRefPtr<GeckoMediaPluginServiceParent> service =
+    GeckoMediaPluginServiceParent::GetSingleton();
   MOZ_ASSERT(service);
 
   // $profileDir/gmp/
@@ -317,8 +318,8 @@ GetNodeId(const nsAString& aOrigin,
           const nsAString& aTopLevelOrigin,
           bool aInPBMode)
 {
-  nsRefPtr<GeckoMediaPluginService> service =
-    GeckoMediaPluginService::GetGeckoMediaPluginService();
+  nsRefPtr<GeckoMediaPluginServiceParent> service =
+    GeckoMediaPluginServiceParent::GetSingleton();
   EXPECT_TRUE(service);
   nsCString nodeId;
   nsresult rv = service->GetNodeId(aOrigin,
@@ -332,8 +333,8 @@ GetNodeId(const nsAString& aOrigin,
 static bool
 IsGMPStorageIsEmpty()
 {
-  nsRefPtr<GeckoMediaPluginService> service =
-    GeckoMediaPluginService::GetGeckoMediaPluginService();
+  nsRefPtr<GeckoMediaPluginServiceParent> service =
+    GeckoMediaPluginServiceParent::GetSingleton();
   MOZ_ASSERT(service);
   nsCOMPtr<nsIFile> storage;
   nsresult rv = service->GetStorageDir(getter_AddRefs(storage));
@@ -545,8 +546,8 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   }
 
   void TestForgetThisSite_Forget(nsAutoPtr<NodeInfo> aSiteInfo) {
-    nsRefPtr<GeckoMediaPluginService> service =
-        GeckoMediaPluginService::GetGeckoMediaPluginService();
+    nsRefPtr<GeckoMediaPluginServiceParent> service =
+        GeckoMediaPluginServiceParent::GetSingleton();
     service->ForgetThisSite(NS_ConvertUTF8toUTF16(aSiteInfo->siteToForget));
 
     nsCOMPtr<nsIThread> thread;
