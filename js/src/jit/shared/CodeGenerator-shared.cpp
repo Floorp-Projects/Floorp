@@ -874,7 +874,7 @@ class ReadTempAttemptsVectorOp : public JS::ForEachTrackedOptimizationAttemptOp
 struct ReadTempTypeInfoVectorOp : public IonTrackedOptimizationsTypeInfo::ForEachOp
 {
     TempOptimizationTypeInfoVector *types_;
-    types::TypeSet::TypeList accTypes_;
+    TypeSet::TypeList accTypes_;
 
   public:
     explicit ReadTempTypeInfoVectorOp(TempOptimizationTypeInfoVector *types)

@@ -237,7 +237,7 @@ struct Zone : public JS::shadow::Zone,
   public:
     js::gc::ArenaLists arenas;
 
-    js::types::TypeZone types;
+    js::TypeZone types;
 
     // The set of compartments in this zone.
     typedef js::Vector<JSCompartment *, 1, js::SystemAllocPolicy> CompartmentVector;

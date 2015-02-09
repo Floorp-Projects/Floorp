@@ -13,7 +13,6 @@
 #include "vm/Stack-inl.h"
 
 using namespace js;
-using namespace js::types;
 
 JSObject *
 GeneratorObject::create(JSContext *cx, AbstractFramePtr frame)
