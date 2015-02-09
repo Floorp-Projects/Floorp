@@ -214,8 +214,7 @@ function checkPayloadInfo(payload, reason) {
   }
 }
 
-function checkPayload(request, reason, successfulPings) {
-  let payload = decodeRequestPayload(request);
+function checkPayload(request, payload, reason, successfulPings) {
   // Take off ["","submit","telemetry"].
   let pathComponents = request.path.split("/").slice(3);
 
@@ -599,11 +598,11 @@ add_task(function* test_saveLoadPing() {
 
   // Check we have the correct two requests. Ordering is not guaranteed.
   if (payload1.info.reason === "test-ping") {
-    checkPayloadInfo(payload1, "test-ping");
-    checkPayloadInfo(payload2, "saved-session");
+    checkPayload(request1, payload1, "test-ping", 1);
+    checkPayload(request2, payload2, "saved-session", 1);
   } else {
-    checkPayloadInfo(payload1, "saved-session");
-    checkPayloadInfo(payload2, "test-ping");
+    checkPayload(request1, payload1, "saved-session", 1);
+    checkPayload(request2, payload2, "test-ping", 1);
   }
 });
 
