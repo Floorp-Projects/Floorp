@@ -118,20 +118,20 @@ class MacroAssembler : public MacroAssemblerSpecific
     };
 
     /*
-     * Creates a branch based on a specific types::Type.
-     * Note: emits number test (int/double) for types::Type::DoubleType()
+     * Creates a branch based on a specific TypeSet::Type.
+     * Note: emits number test (int/double) for TypeSet::DoubleType()
      */
     class BranchType : public Branch
     {
-        types::Type type_;
+        TypeSet::Type type_;
 
       public:
         BranchType()
           : Branch(),
-            type_(types::Type::UnknownType())
+            type_(TypeSet::UnknownType())
         { }
 
-        BranchType(Condition cond, Register reg, types::Type type, Label *jump)
+        BranchType(Condition cond, Register reg, TypeSet::Type type, Label *jump)
           : Branch(cond, reg, jump),
             type_(type)
         { }
@@ -278,7 +278,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename TypeSet>
     void guardObjectType(Register obj, const TypeSet *types, Register scratch, Label *miss);
     template <typename Source>
-    void guardType(const Source &address, types::Type type, Register scratch, Label *miss);
+    void guardType(const Source &address, TypeSet::Type type, Register scratch, Label *miss);
 
     void loadObjShape(Register objReg, Register dest) {
         loadPtr(Address(objReg, JSObject::offsetOfShape()), dest);

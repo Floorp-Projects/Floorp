@@ -19,7 +19,6 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-using namespace js::types;
 
 using mozilla::ArrayLength;
 using mozilla::Maybe;
