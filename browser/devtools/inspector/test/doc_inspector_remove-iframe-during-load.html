@@ -7,29 +7,37 @@
 <body>
   <div id="yay"></div>
   <script type="text/javascript">
-      var yay = document.querySelector("#yay");
-      yay.textContent = "nothing";
+    var yay = document.querySelector("#yay");
+    yay.textContent = "nothing";
 
-      var iframe = document.createElement('iframe');
+    // Create a custom event to let the test know when the window has finished
+    // loading.
+    var event = new Event("test-page-processing-done");
+
+    // Create/remove an iframe before load.
+    var iframe = document.createElement("iframe");
+    document.body.appendChild(iframe);
+    iframe.remove();
+    yay.textContent = "before events";
+
+    // Create/remove an iframe on DOMContentLoaded.
+    document.addEventListener("DOMContentLoaded", function() {
+      var iframe = document.createElement("iframe");
       document.body.appendChild(iframe);
       iframe.remove();
+      yay.textContent = "DOMContentLoaded";
+    });
 
-      yay.textContent = "before events";
+    // Create/remove an iframe on window load.
+    window.addEventListener("load", function() {
+      var iframe = document.createElement("iframe");
+      document.body.appendChild(iframe);
+      iframe.remove();
+      yay.textContent = "load";
 
-      document.addEventListener("DOMContentLoaded", function() {
-        var iframe = document.createElement('iframe');
-        document.body.appendChild(iframe);
-        iframe.remove();
-
-        yay.textContent = "DOMContentLoaded";
-      });
-      window.addEventListener("load", function() {
-        var iframe = document.createElement('iframe');
-        document.body.appendChild(iframe);
-        iframe.remove();
-
-        yay.textContent = "load";
-      });
+      // Dispatch the done event.
+      window.dispatchEvent(event);
+    });
   </script>
 </body>
 </html>
