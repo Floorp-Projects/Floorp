@@ -471,6 +471,13 @@ already_AddRefed<ParticularProcessPriorityManager>
 ProcessPriorityManagerImpl::GetParticularProcessPriorityManager(
   ContentParent* aContentParent)
 {
+#ifdef MOZ_NUWA_PROCESS
+  // Do not attempt to change the priority of the Nuwa process
+  if (aContentParent->IsNuwaProcess()) {
+    return nullptr;
+  }
+#endif
+
   nsRefPtr<ParticularProcessPriorityManager> pppm;
   uint64_t cpId = aContentParent->ChildID();
   mParticularManagers.Get(cpId, &pppm);
@@ -494,7 +501,9 @@ ProcessPriorityManagerImpl::SetProcessPriority(ContentParent* aContentParent,
   MOZ_ASSERT(aContentParent);
   nsRefPtr<ParticularProcessPriorityManager> pppm =
     GetParticularProcessPriorityManager(aContentParent);
-  pppm->SetPriorityNow(aPriority, aBackgroundLRU);
+  if (pppm) {
+    pppm->SetPriorityNow(aPriority, aBackgroundLRU);
+  }
 }
 
 void
@@ -806,13 +815,6 @@ ParticularProcessPriorityManager::OnRemoteBrowserFrameShown(nsISupports* aSubjec
   nsCOMPtr<nsIFrameLoader> fl = do_QueryInterface(aSubject);
   NS_ENSURE_TRUE_VOID(fl);
 
-  // Ignore notifications that aren't from a BrowserOrApp
-  bool isBrowserOrApp;
-  fl->GetOwnerIsBrowserOrAppFrame(&isBrowserOrApp);
-  if (!isBrowserOrApp) {
-    return;
-  }
-
   TabParent* tp = TabParent::GetFrom(fl);
   NS_ENSURE_TRUE_VOID(tp);
 
@@ -821,7 +823,17 @@ ParticularProcessPriorityManager::OnRemoteBrowserFrameShown(nsISupports* aSubjec
     return;
   }
 
-  ResetPriority();
+  // Ignore notifications that aren't from a BrowserOrApp
+  bool isBrowserOrApp;
+  fl->GetOwnerIsBrowserOrAppFrame(&isBrowserOrApp);
+  if (isBrowserOrApp) {
+    ResetPriority();
+  }
+
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  if (os) {
+    os->RemoveObserver(this, "remote-browser-shown");
+  }
 }
 
 void
@@ -1039,13 +1051,6 @@ ParticularProcessPriorityManager::SetPriorityNow(ProcessPriority aPriority,
                                                  ProcessCPUPriority aCPUPriority,
                                                  uint32_t aBackgroundLRU)
 {
-#ifdef MOZ_NUWA_PROCESS
-  // Do not attempt to change the priority of the Nuwa process
-  if (mContentParent->IsNuwaProcess()) {
-    return;
-  }
-#endif
-
   if (aPriority == PROCESS_PRIORITY_UNKNOWN) {
     MOZ_ASSERT(false);
     return;
