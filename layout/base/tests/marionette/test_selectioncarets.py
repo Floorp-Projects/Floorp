@@ -105,7 +105,7 @@ class SelectionCaretsTest(MarionetteTestCase):
         self.actions.flick(el, caret2_x, caret2_y, end_caret_x, end_caret_y).perform()
 
         # Move the left caret to the previous position of the right caret.
-        self.actions.flick(el, caret1_x, caret2_y, caret2_x, caret2_y).perform()
+        self.actions.flick(el, caret1_x, caret1_y, caret2_x, caret2_y).perform()
 
         # Ignore extra spaces at the beginning of the content in comparison.
         assertFunc(target_content.lstrip(), sel.selected_content.lstrip())
@@ -140,7 +140,7 @@ class SelectionCaretsTest(MarionetteTestCase):
 
         # Move the right caret to the position of the left caret.
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
-        self.actions.flick(el, caret2_x, caret2_y, caret1_x, caret1_y,).perform()
+        self.actions.flick(el, caret2_x, caret2_y, caret1_x, caret1_y).perform()
 
         assertFunc(target_content, sel.selected_content)
 
@@ -173,7 +173,7 @@ class SelectionCaretsTest(MarionetteTestCase):
         self.openTestHtml(enabled=True)
         self._test_move_selection_carets(self._input, self.assertEqual)
 
-    def test_input_minimum_select_one_caracter(self):
+    def test_input_minimum_select_one_character(self):
         self.openTestHtml(enabled=True)
         self._test_minimum_select_one_character(self._input, self.assertEqual)
 
@@ -211,7 +211,7 @@ class SelectionCaretsTest(MarionetteTestCase):
         self.openTestHtml(enabled=True)
         self._test_move_selection_carets(self._textarea, self.assertEqual)
 
-    def test_textarea_minimum_select_one_caracter(self):
+    def test_textarea_minimum_select_one_character(self):
         self.openTestHtml(enabled=True)
         self._test_minimum_select_one_character(self._textarea, self.assertEqual)
 
@@ -249,7 +249,7 @@ class SelectionCaretsTest(MarionetteTestCase):
         self.openTestHtml(enabled=True)
         self._test_move_selection_carets(self._textarea_rtl, self.assertEqual)
 
-    def test_textarea_rtl_minimum_select_one_caracter(self):
+    def test_textarea_rtl_minimum_select_one_character(self):
         self.openTestHtml(enabled=True)
         self._test_minimum_select_one_character(self._textarea_rtl, self.assertEqual)
 
