@@ -31,15 +31,10 @@ function test() {
 
     /* Test function proxies. */
     var proxy = Proxy.createFunction({
-        get: function(obj, name) {
-            return Function.prototype[name];
-        },
-        getOwnPropertyDescriptor: function(obj, name) {
-            return Object.getOwnPropertyDescriptor(Function.prototype, name);
-        },
-        fix: function() {
-            return ({});
-        }
+        get: function(obj,name) { return Function.prototype[name]; },
+	fix: function() {
+	    return ({});
+	}
     }, function() { return "call"; });
 
     assertEq(proxy(), "call");
@@ -55,15 +50,8 @@ function test() {
 
     /* Test function proxies as constructors. */
     var proxy = Proxy.createFunction({
-        get: function(obj, name) {
-            return Function.prototype[name];
-        },
-        getOwnPropertyDescriptor: function(obj, name) {
-            return Object.getOwnPropertyDescriptor(Function.prototype, name);
-        },
-        fix: function() {
-            return ({});
-        }
+        get: function(obj, name) { return Function.prototype[name]; },
+	fix: function() { return ({}); }
     },
     function() { var x = {}; x.origin = "call"; return x; },
     function() { var x = {}; x.origin = "new"; return x; })
