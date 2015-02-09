@@ -540,35 +540,6 @@ let ClickEventHandler = {
     } else if (ownerDoc.documentURI.startsWith("about:neterror")) {
       this.onAboutNetError(originalTarget, ownerDoc);
     }
-
-    let [href, node] = this._hrefAndLinkNodeForClickEvent(event);
-
-    let json = { button: event.button, shiftKey: event.shiftKey,
-                 ctrlKey: event.ctrlKey, metaKey: event.metaKey,
-                 altKey: event.altKey, href: null, title: null,
-                 bookmark: false };
-
-    if (href) {
-      json.href = href;
-      if (node) {
-        json.title = node.getAttribute("title");
-        if (event.button == 0 && !event.ctrlKey && !event.shiftKey &&
-            !event.altKey && !event.metaKey) {
-          json.bookmark = node.getAttribute("rel") == "sidebar";
-          if (json.bookmark) {
-            event.preventDefault(); // Need to prevent the pageload.
-          }
-        }
-      }
-
-      sendAsyncMessage("Content:Click", json);
-      return;
-    }
-
-    // This might be middle mouse navigation.
-    if (event.button == 1) {
-      sendAsyncMessage("Content:Click", json);
-    }
   },
 
   onAboutCertError: function (targetElement, ownerDoc) {
