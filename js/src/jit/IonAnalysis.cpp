@@ -16,7 +16,6 @@
 #include "jit/Lowering.h"
 #include "jit/MIRGraph.h"
 
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 

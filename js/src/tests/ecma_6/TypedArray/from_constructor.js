@@ -27,7 +27,7 @@ for (var constructor of constructors) {
     assertEq(obj instanceof constructor, false);
     assertEq(Object.getPrototypeOf(obj), RegExp.prototype);
     assertEq(Object.getOwnPropertyNames(obj).join(","),
-             "0,lastIndex,source,global,ignoreCase,multiline,sticky");
+             "0,lastIndex");
     assertEq(obj.length, undefined);
 
     // Or any JS function.

@@ -22,7 +22,6 @@
 #include "js/Conversions.h"
 
 #include "jsatominlines.h"
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;

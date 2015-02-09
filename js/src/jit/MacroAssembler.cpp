@@ -6,7 +6,6 @@
 
 #include "jit/MacroAssembler.h"
 
-#include "jsinfer.h"
 #include "jsprf.h"
 
 #include "builtin/TypedObject.h"
@@ -22,7 +21,6 @@
 #include "vm/TraceLogging.h"
 
 #include "jsgcinlines.h"
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "vm/Interpreter-inl.h"
 
@@ -769,10 +767,17 @@ MacroAssembler::storeUnboxedProperty(T address, JSValueType type,
                 jump(failure);
             }
         } else {
-            if (failure)
-                branchTestNumber(Assembler::NotEqual, value.reg().valueReg(), failure);
-            unboxValue(value.reg().valueReg(), AnyRegister(ScratchDoubleReg));
+            ValueOperand reg = value.reg().valueReg();
+            Label notInt32, end;
+            branchTestInt32(Assembler::NotEqual, reg, &notInt32);
+            int32ValueToDouble(reg, ScratchDoubleReg);
             storeDouble(ScratchDoubleReg, address);
+            jump(&end);
+            bind(&notInt32);
+            if (failure)
+                branchTestDouble(Assembler::NotEqual, reg, failure);
+            storeValue(reg, address);
+            bind(&end);
         }
         break;
 

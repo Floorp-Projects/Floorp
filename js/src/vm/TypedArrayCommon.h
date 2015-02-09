@@ -444,6 +444,8 @@ class ElementSpecific
         }
         if (MOZ_UNLIKELY(mozilla::IsNaN(d)))
             return T(0);
+        if (SpecificArray::ArrayTypeID() == Scalar::Uint8Clamped)
+            return T(d);
         if (TypeIsUnsigned<T>())
             return T(JS::ToUint32(d));
         return T(JS::ToInt32(d));

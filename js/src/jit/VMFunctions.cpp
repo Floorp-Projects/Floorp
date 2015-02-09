@@ -18,14 +18,13 @@
 #include "vm/Interpreter.h"
 #include "vm/TraceLogging.h"
 
-#include "jsinferinlines.h"
-
 #include "jit/BaselineFrame-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/StringObject-inl.h"
+#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::jit;

@@ -1,6 +1,5 @@
 load(libdir + "asserts.js");
 var g = newGlobal();
 var a = g.RegExp("x");
-assertThrowsInstanceOf(function () { Object.defineProperty(a, "ignoreCase", {value: undefined}); },
-                       g.TypeError);
+Object.defineProperty(a, "ignoreCase", {value: undefined});
 a.toString();

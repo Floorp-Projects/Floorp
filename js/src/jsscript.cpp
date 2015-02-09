@@ -47,7 +47,6 @@
 #include "vm/Xdr.h"
 
 #include "jsfuninlines.h"
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/ScopeObject-inl.h"

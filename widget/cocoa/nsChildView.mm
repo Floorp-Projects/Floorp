@@ -2361,11 +2361,11 @@ GatherThemeGeometryRegion(const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeomet
   return region;
 }
 
-template<typename T>
-static void MakeRegionsNonOverlappingImpl(T& aOutUnion) { }
+template<typename Region>
+static void MakeRegionsNonOverlappingImpl(Region& aOutUnion) { }
 
-template<typename T, typename ... TT>
-static void MakeRegionsNonOverlappingImpl(T& aOutUnion, T& aFirst, TT& ... aRest)
+template<typename Region, typename ... Regions>
+static void MakeRegionsNonOverlappingImpl(Region& aOutUnion, Region& aFirst, Regions& ... aRest)
 {
   MakeRegionsNonOverlappingImpl(aOutUnion, aRest...);
   aFirst.SubOut(aOutUnion);
@@ -2376,10 +2376,10 @@ static void MakeRegionsNonOverlappingImpl(T& aOutUnion, T& aFirst, TT& ... aRest
 // Each region in the argument list will have the union of all the regions
 // *following* it subtracted from itself. In other words, the arguments are
 // sorted low priority to high priority.
-template<typename T, typename ... TT>
-static void MakeRegionsNonOverlapping(T& aFirst, TT& ... aRest)
+template<typename Region, typename ... Regions>
+static void MakeRegionsNonOverlapping(Region& aFirst, Regions& ... aRest)
 {
-  T unionOfAll;
+  Region unionOfAll;
   MakeRegionsNonOverlappingImpl(unionOfAll, aFirst, aRest...);
 }
 

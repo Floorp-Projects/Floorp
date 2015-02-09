@@ -500,6 +500,9 @@ XDRScriptRegExpObject(XDRState<mode> *xdr, MutableHandle<RegExpObject*> objp);
 extern JSObject *
 CloneScriptRegExpObject(JSContext *cx, RegExpObject &re);
 
+JSAtom *
+EscapeRegExpPattern(JSContext *cx, HandleAtom src);
+
 } /* namespace js */
 
 #endif /* vm_RegExpObject_h */
