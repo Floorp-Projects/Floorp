@@ -1858,31 +1858,7 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded)
   }
 #endif
   OutputMediaStream* out = mOutputStreams.AppendElement();
-  uint8_t hints = 0;
-  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_METADATA) {
-    hints = (HasAudio()? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
-            (HasVideo()? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
-  } else {
-#ifdef DEBUG
-    // Estimate hints based on the type of the media element
-    // under the preference media.capturestream_hints for the
-    // debug builds only. This allows WebRTC Peer Connection
-    // to behave appropriately when media streams generated
-    // via mozCaptureStream*() are added to the Peer Connection.
-    // This functionality is planned to be used as part of Audio
-    // Quality Performance testing for WebRTC.
-    // Bug932845: Revisit this once hints mechanism is dealt with
-    // holistically.
-    if (Preferences::GetBool("media.capturestream_hints.enabled")) {
-      if (IsVideo() && GetVideoFrameContainer()) {
-        hints = DOMMediaStream::HINT_CONTENTS_VIDEO | DOMMediaStream::HINT_CONTENTS_AUDIO;
-      } else {
-        hints = DOMMediaStream::HINT_CONTENTS_AUDIO;
-      }
-    }
-#endif
-  }
-  out->mStream = DOMMediaStream::CreateTrackUnionStream(window, hints);
+  out->mStream = DOMMediaStream::CreateTrackUnionStream(window);
   nsRefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
   out->mStream->CombineWithPrincipal(principal);
   out->mStream->SetCORSMode(mCORSMode);
@@ -1896,6 +1872,17 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded)
   if (mDecoder) {
     mDecoder->AddOutputStream(
         out->mStream->GetStream()->AsProcessedStream(), aFinishWhenEnded);
+    if (mReadyState >= HAVE_METADATA) {
+      // Expose the tracks to JS directly.
+      if (HasAudio()) {
+        TrackID audioTrackId = mMediaInfo.mAudio.mTrackInfo.mOutputId;
+        out->mStream->CreateDOMTrack(audioTrackId, MediaSegment::AUDIO);
+      }
+      if (HasVideo()) {
+        TrackID videoTrackId = mMediaInfo.mVideo.mTrackInfo.mOutputId;
+        out->mStream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO);
+      }
+    }
   }
   nsRefPtr<DOMMediaStream> result = out->mStream;
   return result.forget();
@@ -2928,9 +2915,8 @@ class HTMLMediaElement::MediaStreamTracksAvailableCallback:
     public DOMMediaStream::OnTracksAvailableCallback
 {
 public:
-  explicit MediaStreamTracksAvailableCallback(HTMLMediaElement* aElement,
-                                              DOMMediaStream::TrackTypeHints aExpectedTracks = 0):
-      DOMMediaStream::OnTracksAvailableCallback(aExpectedTracks),
+  explicit MediaStreamTracksAvailableCallback(HTMLMediaElement* aElement):
+      DOMMediaStream::OnTracksAvailableCallback(),
       mElement(aElement)
     {}
   virtual void NotifyTracksAvailable(DOMMediaStream* aStream)
@@ -2987,9 +2973,6 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
     GetSrcMediaStream()->ChangeExplicitBlockerCount(1);
   }
 
-  mSrcStream->OnTracksAvailable(new MediaStreamTracksAvailableCallback(this, DOMMediaStream::HINT_CONTENTS_AUDIO));
-  mSrcStream->OnTracksAvailable(new MediaStreamTracksAvailableCallback(this, DOMMediaStream::HINT_CONTENTS_VIDEO));
-
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
 
   ChangeDelayLoadStatus(false);
@@ -3005,6 +2988,8 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   // Note: we must call DisconnectTrackListListeners(...)  before dropping
   // mSrcStream
   mSrcStream->ConstructMediaTracks(AudioTracks(), VideoTracks());
+
+  mSrcStream->OnTracksAvailable(new MediaStreamTracksAvailableCallback(this));
 
   // FirstFrameLoaded() will be called when the stream has current data.
 }
@@ -3084,12 +3069,16 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
     mDecoder->SetFragmentEndTime(mFragmentEnd);
   }
 
-  // Tracks just got known, pass the info along to the output streams
-  uint8_t hints = (HasAudio() ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
-                  (HasVideo() ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
-  for (uint32_t i = 0; i < mOutputStreams.Length(); ++i) {
-    OutputMediaStream* out = &mOutputStreams[i];
-    out->mStream->SetHintContents(hints);
+  // Expose the tracks to JS directly.
+  for (OutputMediaStream& out : mOutputStreams) {
+    if (aInfo->HasAudio()) {
+      TrackID audioTrackId = aInfo->mAudio.mTrackInfo.mOutputId;
+      out.mStream->CreateDOMTrack(audioTrackId, MediaSegment::AUDIO);
+    }
+    if (aInfo->HasVideo()) {
+      TrackID videoTrackId = aInfo->mVideo.mTrackInfo.mOutputId;
+      out.mStream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO);
+    }
   }
 
   // If this element had a video track, but consists only of an audio track now,
@@ -4265,8 +4254,7 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
       (HasAttr(kNameSpaceID_None, nsGkAtoms::loop) ||
        (mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
         !IsPlaybackEnded() &&
-        !(mSrcStream && !(mSrcStream->GetTrackTypesAvailable() &
-                          DOMMediaStream::HINT_CONTENTS_AUDIO))) ||
+        (!mSrcStream || HasAudio())) ||
        mPlayingThroughTheAudioChannelBeforeSeek));
   if (playingThroughTheAudioChannel != mPlayingThroughTheAudioChannel) {
     mPlayingThroughTheAudioChannel = playingThroughTheAudioChannel;
