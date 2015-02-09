@@ -54,6 +54,8 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   , mTimeThreshold(0)
   , mDropAudioBeforeThreshold(false)
   , mDropVideoBeforeThreshold(false)
+  , mAudioDiscontinuity(false)
+  , mVideoDiscontinuity(false)
   , mEnded(false)
   , mMediaSourceDuration(0)
   , mHasEssentialTrackBuffers(false)
@@ -161,6 +163,9 @@ MediaSourceReader::OnAudioDecoded(AudioData* aSample)
   mAudioRequest.Complete();
 
   int64_t ourTime = aSample->mTime + mAudioSourceDecoder->GetTimestampOffset();
+  if (aSample->mDiscontinuity) {
+    mAudioDiscontinuity = true;
+  }
 
   MSE_DEBUGV("MediaSourceReader(%p)::OnAudioDecoded [mTime=%lld mDuration=%lld mDiscontinuity=%d]",
              this, ourTime, aSample->mDuration, aSample->mDiscontinuity);
@@ -183,6 +188,10 @@ MediaSourceReader::OnAudioDecoded(AudioData* aSample)
                                                      ourTime,
                                                      aSample->mDuration);
   mLastAudioTime = newSample->GetEndTime();
+  if (mAudioDiscontinuity) {
+    newSample->mDiscontinuity = true;
+    mAudioDiscontinuity = false;
+  }
 
   mAudioPromise.Resolve(newSample, __func__);
 }
@@ -306,6 +315,9 @@ MediaSourceReader::OnVideoDecoded(VideoData* aSample)
 
   // Adjust the sample time into our reference.
   int64_t ourTime = aSample->mTime + mVideoSourceDecoder->GetTimestampOffset();
+  if (aSample->mDiscontinuity) {
+    mVideoDiscontinuity = true;
+  }
 
   MSE_DEBUGV("MediaSourceReader(%p)::OnVideoDecoded [mTime=%lld mDuration=%lld mDiscontinuity=%d]",
              this, ourTime, aSample->mDuration, aSample->mDiscontinuity);
@@ -327,6 +339,10 @@ MediaSourceReader::OnVideoDecoded(VideoData* aSample)
                                                      aSample->mDuration);
 
   mLastVideoTime = newSample->GetEndTime();
+  if (mVideoDiscontinuity) {
+    newSample->mDiscontinuity = true;
+    mVideoDiscontinuity = false;
+  }
 
   mVideoPromise.Resolve(newSample, __func__);
 }
