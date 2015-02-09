@@ -565,27 +565,27 @@ public:
                    const uint8_t* aString) MOZ_OVERRIDE
   {
     if (NS_WARN_IF(NS_FAILED(aStatus))) {
-      Fail(NS_ERROR_DOM_NETWORK_ERR);
+      Fail(NS_ERROR_DOM_TYPE_ERR);
       return aStatus;
     }
 
     nsCOMPtr<nsIRequest> request;
     nsresult rv = aLoader->GetRequest(getter_AddRefs(request));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      Fail(NS_ERROR_DOM_NETWORK_ERR);
+      Fail(NS_ERROR_DOM_TYPE_ERR);
       return rv;
     }
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
     if (!httpChannel) {
-      Fail(NS_ERROR_DOM_NETWORK_ERR);
+      Fail(NS_ERROR_DOM_TYPE_ERR);
       return NS_ERROR_FAILURE;
     }
 
     bool requestSucceeded;
     rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
     if (NS_WARN_IF(NS_FAILED(rv) || !requestSucceeded)) {
-      Fail(NS_ERROR_DOM_NETWORK_ERR);
+      Fail(NS_ERROR_DOM_TYPE_ERR);
       return rv;
     }
 
@@ -746,11 +746,16 @@ private:
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Fail(rv);
     }
-    // FIXME(nsm): Set redirect limit.
 
-    // Don't let serviceworker intercept.
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+    if (httpChannel) {
+      // Spec says no redirects allowed for SW scripts.
+      httpChannel->SetRedirectionLimit(0);
+    }
+
     nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(channel);
     if (internalChannel) {
+      // Don't let serviceworker intercept.
       internalChannel->ForceNoIntercept();
     }
 
