@@ -88,7 +88,7 @@ public:
 protected:
   virtual void InitTags(nsTArray<nsCString>& aTags);
   virtual nsCString GetNodeId();
-  virtual GMPUniquePtr<GMPVideoEncodedFrame> CreateFrame(mp4_demuxer::MP4Sample* aSample);
+  virtual GMPUnique<GMPVideoEncodedFrame>::Ptr CreateFrame(mp4_demuxer::MP4Sample* aSample);
 
 private:
   const mp4_demuxer::VideoDecoderConfig& mConfig;

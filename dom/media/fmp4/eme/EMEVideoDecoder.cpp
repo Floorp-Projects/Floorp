@@ -35,10 +35,10 @@ EMEVideoDecoder::GetNodeId()
   return mProxy->GetNodeId();
 }
 
-GMPUniquePtr<GMPVideoEncodedFrame>
+GMPUnique<GMPVideoEncodedFrame>::Ptr
 EMEVideoDecoder::CreateFrame(mp4_demuxer::MP4Sample* aSample)
 {
-  GMPUniquePtr<GMPVideoEncodedFrame> frame = GMPVideoDecoder::CreateFrame(aSample);
+  GMPUnique<GMPVideoEncodedFrame>::Ptr frame = GMPVideoDecoder::CreateFrame(aSample);
   if (frame && aSample->crypto.valid) {
     static_cast<gmp::GMPVideoEncodedFrameImpl*>(frame.get())->InitCrypto(aSample->crypto);
   }

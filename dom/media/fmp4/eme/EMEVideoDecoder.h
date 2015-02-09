@@ -44,7 +44,7 @@ public:
 private:
   virtual void InitTags(nsTArray<nsCString>& aTags) MOZ_OVERRIDE;
   virtual nsCString GetNodeId() MOZ_OVERRIDE;
-  virtual GMPUniquePtr<GMPVideoEncodedFrame> CreateFrame(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
+  virtual GMPUnique<GMPVideoEncodedFrame>::Ptr CreateFrame(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
 
   nsRefPtr<CDMProxy> mProxy;
 };
