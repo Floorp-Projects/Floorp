@@ -71,7 +71,7 @@
           win.AppManager.runtimeList.usb.push(fakeRuntime);
           win.AppManager.update("runtimelist");
 
-          yield waitForUpdate(win, "list-tabs-response");
+          yield waitForUpdate(win, "runtime-apps-found");
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Automatically reconnected");
 
