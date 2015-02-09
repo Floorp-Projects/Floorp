@@ -40,7 +40,7 @@ class AddrInfo;
  */
 nsresult
 GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
-            AddrInfo** aAddrInfo, bool aGetTtl);
+            const char* aNetworkInterface, AddrInfo** aAddrInfo, bool aGetTtl);
 
 /**
  * Initialize the GetAddrInfo module.
