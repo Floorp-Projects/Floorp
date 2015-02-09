@@ -56,11 +56,15 @@ ChildDNSService::~ChildDNSService()
 void
 ChildDNSService::GetDNSRecordHashKey(const nsACString &aHost,
                                      uint32_t aFlags,
+                                     const nsACString &aNetworkInterface,
                                      nsIDNSListener* aListener,
                                      nsACString &aHashKey)
 {
   aHashKey.Assign(aHost);
   aHashKey.AppendInt(aFlags);
+  if (!aNetworkInterface.IsEmpty()) {
+    aHashKey.Append(aNetworkInterface);
+  }
   aHashKey.AppendPrintf("%p", aListener);
 }
 
@@ -74,6 +78,18 @@ ChildDNSService::AsyncResolve(const nsACString  &hostname,
                               nsIDNSListener    *listener,
                               nsIEventTarget    *target_,
                               nsICancelable    **result)
+{
+  return AsyncResolveExtended(hostname, flags, EmptyCString(), listener,
+                              target_, result);
+}
+
+NS_IMETHODIMP
+ChildDNSService::AsyncResolveExtended(const nsACString  &hostname,
+                                      uint32_t           flags,
+                                      const nsACString  &aNetworkInterface,
+                                      nsIDNSListener    *listener,
+                                      nsIEventTarget    *target_,
+                                      nsICancelable    **result)
 {
   NS_ENSURE_TRUE(gNeckoChild != nullptr, NS_ERROR_FAILURE);
 
@@ -108,12 +124,15 @@ ChildDNSService::AsyncResolve(const nsACString  &hostname,
   }
 
   nsRefPtr<DNSRequestChild> childReq =
-    new DNSRequestChild(nsCString(hostname), flags, listener, target);
+    new DNSRequestChild(nsCString(hostname), flags,
+                        nsCString(aNetworkInterface),
+                        listener, target);
 
   {
     MutexAutoLock lock(mPendingRequestsLock);
     nsCString key;
-    GetDNSRecordHashKey(hostname, originalFlags, originalListener, key);
+    GetDNSRecordHashKey(hostname, originalFlags, aNetworkInterface,
+                        originalListener, key);
     nsTArray<nsRefPtr<DNSRequestChild>> *hashEntry;
     if (mPendingRequests.Get(key, &hashEntry)) {
       hashEntry->AppendElement(childReq);
@@ -136,6 +155,17 @@ ChildDNSService::CancelAsyncResolve(const nsACString  &aHostname,
                                     nsIDNSListener    *aListener,
                                     nsresult           aReason)
 {
+  return CancelAsyncResolveExtended(aHostname, aFlags, EmptyCString(),
+                                    aListener, aReason);
+}
+
+NS_IMETHODIMP
+ChildDNSService::CancelAsyncResolveExtended(const nsACString &aHostname,
+                                            uint32_t          aFlags,
+                                            const nsACString &aNetworkInterface,
+                                            nsIDNSListener   *aListener,
+                                            nsresult          aReason)
+{
   if (mDisablePrefetch && (aFlags & RESOLVE_SPECULATE)) {
     return NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
   }
@@ -143,7 +173,7 @@ ChildDNSService::CancelAsyncResolve(const nsACString  &aHostname,
   MutexAutoLock lock(mPendingRequestsLock);
   nsTArray<nsRefPtr<DNSRequestChild>> *hashEntry;
   nsCString key;
-  GetDNSRecordHashKey(aHostname, aFlags, aListener, key);
+  GetDNSRecordHashKey(aHostname, aFlags, aNetworkInterface, aListener, key);
   if (mPendingRequests.Get(key, &hashEntry)) {
     // We cancel just one.
     hashEntry->ElementAt(0)->Cancel(aReason);
@@ -195,7 +225,8 @@ ChildDNSService::NotifyRequestDone(DNSRequestChild *aDnsRequest)
   MutexAutoLock lock(mPendingRequestsLock);
 
   nsCString key;
-  GetDNSRecordHashKey(aDnsRequest->mHost, originalFlags, originalListener, key);
+  GetDNSRecordHashKey(aDnsRequest->mHost, originalFlags,
+                      aDnsRequest->mNetworkInterface, originalListener, key);
 
   nsTArray<nsRefPtr<DNSRequestChild>> *hashEntry;
 
