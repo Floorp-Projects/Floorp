@@ -158,6 +158,7 @@ VideoData::ShallowCopyUpdateDuration(VideoData* aOther,
                                         aOther->mKeyframe,
                                         aOther->mTimecode,
                                         aOther->mDisplay);
+  v->mDiscontinuity = aOther->mDiscontinuity;
   v->mImage = aOther->mImage;
   return v.forget();
 }
@@ -174,6 +175,7 @@ VideoData::ShallowCopyUpdateTimestamp(VideoData* aOther,
                                         aOther->mKeyframe,
                                         aOther->mTimecode,
                                         aOther->mDisplay);
+  v->mDiscontinuity = aOther->mDiscontinuity;
   v->mImage = aOther->mImage;
   return v.forget();
 }
@@ -191,6 +193,7 @@ VideoData::ShallowCopyUpdateTimestampAndDuration(VideoData* aOther,
                                         aOther->mKeyframe,
                                         aOther->mTimecode,
                                         aOther->mDisplay);
+  v->mDiscontinuity = aOther->mDiscontinuity;
   v->mImage = aOther->mImage;
   return v.forget();
 }
