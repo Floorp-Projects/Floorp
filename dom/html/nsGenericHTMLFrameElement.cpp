@@ -499,11 +499,3 @@ nsGenericHTMLFrameElement::AllowCreateFrameLoader()
   mFrameLoaderCreationDisallowed = false;
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::InitializeBrowserAPI()
-{
-  MOZ_ASSERT(mFrameLoader);
-  InitBrowserElementAPI();
-  return NS_OK;
-}
