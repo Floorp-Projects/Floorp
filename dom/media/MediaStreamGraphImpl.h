@@ -430,6 +430,11 @@ public:
     return mDriver;
   }
 
+  bool RemoveMixerCallback(MixerCallbackReceiver* aReceiver)
+  {
+    return mMixer.RemoveCallback(aReceiver);
+  }
+
   /**
    * Effectively set the new driver, while we are switching.
    * It is only safe to call this at the very end of an iteration, when there
