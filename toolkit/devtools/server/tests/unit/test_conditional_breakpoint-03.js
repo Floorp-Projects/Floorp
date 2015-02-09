@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Check conditional breakpoint when condition throws and make sure it is ignored
+ * Check conditional breakpoint when condition throws and make sure it pauses
  */
 
 var gDebuggee;
@@ -33,8 +33,8 @@ function test_simple_breakpoint()
     }, function (aResponse, bpClient) {
       gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check the return value.
-        do_check_eq(aPacket.why.type, "debuggerStatement");
-        do_check_eq(aPacket.frame.where.line, 4);
+        do_check_eq(aPacket.why.type, "breakpoint");
+        do_check_eq(aPacket.frame.where.line, 3);
 
         // Remove the breakpoint.
         bpClient.remove(function (aResponse) {
@@ -53,8 +53,7 @@ function test_simple_breakpoint()
 
   Components.utils.evalInSandbox("debugger;\n" +   // 1
                                  "var a = 1;\n" +  // 2
-                                 "var b = 2;\n" +  // 3
-                                 "debugger;",      // 4
+                                 "var b = 2;\n",  // 3
                                  gDebuggee,
                                  "1.8",
                                  "test.js",
