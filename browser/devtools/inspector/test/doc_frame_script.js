@@ -228,19 +228,24 @@ addMessageListener("Test:GetAllAdjustedQuads", function(msg) {
  * - {Number} y
  * - {Boolean} center If set to true, x/y will be ignored and
  *             synthesizeMouseAtCenter will be used instead
- * - {String} type
+ * - {Object} options Other event options
  * The msg.objects part should be the element.
  * @param {Object} data Event detail properties:
  */
 addMessageListener("Test:SynthesizeMouse", function(msg) {
   let {node} = msg.objects;
-  let {x, y, center, type} = msg.data;
+  let {x, y, center, options} = msg.data;
 
   if (center) {
-    EventUtils.synthesizeMouseAtCenter(node, {type}, node.ownerDocument.defaultView);
+    EventUtils.synthesizeMouseAtCenter(node, options, node.ownerDocument.defaultView);
   } else {
-    EventUtils.synthesizeMouse(node, x, y, {type}, node.ownerDocument.defaultView);
+    EventUtils.synthesizeMouse(node, x, y, options, node.ownerDocument.defaultView);
   }
+
+  // Most consumers won't need to listen to this message, unless they want to
+  // wait for the mouse event to be synthesized and don't have another event
+  // to listen to instead.
+  sendAsyncMessage("Test:SynthesizeMouse");
 });
 
 /**
