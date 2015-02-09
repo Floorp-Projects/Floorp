@@ -6,8 +6,8 @@
 
 /* Definitions related to javascript type inference. */
 
-#ifndef jsinfer_h
-#define jsinfer_h
+#ifndef vm_TypeInference_h
+#define vm_TypeInference_h
 
 #include "mozilla/MemoryReporting.h"
 
@@ -421,8 +421,8 @@ class TypeSet
 
     /*
      * Iterate through the objects in this set. getObjectCount overapproximates
-     * in the hash case (see SET_ARRAY_SIZE in jsinferinlines.h), and getObject
-     * may return nullptr.
+     * in the hash case (see SET_ARRAY_SIZE in TypeInference-inl.h), and
+     * getObject may return nullptr.
      */
     inline unsigned getObjectCount() const;
     inline ObjectKey *getObject(unsigned i) const;
@@ -1232,4 +1232,4 @@ template<> struct Concrete<js::ObjectGroup> : TracerConcrete<js::ObjectGroup> { 
 }
 }
 
-#endif /* jsinfer_h */
+#endif /* vm_TypeInference_h */
