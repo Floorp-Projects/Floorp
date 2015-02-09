@@ -765,6 +765,9 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aIgnored /* Used only for ogg whi
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mWaitingForSeekData = true;
+    mDropAudioBeforeThreshold = false;
+    mDropVideoBeforeThreshold = false;
+    mTimeThreshold = 0;
   }
 
   AttemptSeek();
