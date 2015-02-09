@@ -497,10 +497,10 @@ SystemMessageInternal.prototype = {
           return;
         }
 
-        // Return the |msg| of each pending message (drop the |msgID|).
+        // Return the |msg| of each pending message.
         let pendingMessages = [];
         page.pendingMessages.forEach(function(aMessage) {
-          pendingMessages.push(aMessage.msg);
+          pendingMessages.push({ msg: aMessage.msg, msgID: aMessage.msgID });
         });
 
         // Clear the pending queue for this page. This is OK since we'll store

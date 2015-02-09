@@ -90,7 +90,7 @@ BaselineCompiler::compile()
         return Method_Error;
 
     // Pin analysis info during compilation.
-    types::AutoEnterAnalysis autoEnterAnalysis(cx);
+    AutoEnterAnalysis autoEnterAnalysis(cx);
 
     MOZ_ASSERT(!script->hasBaselineScript());
 
@@ -250,7 +250,7 @@ BaselineCompiler::compile()
 #endif
 
     uint32_t *bytecodeMap = baselineScript->bytecodeTypeMap();
-    types::FillBytecodeTypeMap(script, bytecodeMap);
+    FillBytecodeTypeMap(script, bytecodeMap);
 
     // The last entry in the last index found, and is used to avoid binary
     // searches for the sought entry when queries are in linear order.
