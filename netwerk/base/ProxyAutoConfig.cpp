@@ -640,7 +640,7 @@ nsresult
 ProxyAutoConfig::SetupJS()
 {
   mJSNeedsSetup = false;
-  NS_ABORT_IF_FALSE(!GetRunning(), "JIT is running");
+  MOZ_ASSERT(!GetRunning(), "JIT is running");
 
   delete mJSRuntime;
   mJSRuntime = nullptr;
@@ -768,7 +768,7 @@ ProxyAutoConfig::~ProxyAutoConfig()
 void
 ProxyAutoConfig::Shutdown()
 {
-  NS_ABORT_IF_FALSE(!NS_IsMainThread(), "wrong thread for shutdown");
+  MOZ_ASSERT(!NS_IsMainThread(), "wrong thread for shutdown");
 
   if (GetRunning() || mShutdown)
     return;

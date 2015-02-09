@@ -174,10 +174,10 @@ AudioSession::QueryInterface(REFIID iid, void **ppv)
 nsresult
 AudioSession::Start()
 {
-  NS_ABORT_IF_FALSE(mState == UNINITIALIZED || 
-                    mState == CLONED ||
-                    mState == AUDIO_SESSION_DISCONNECTED,
-                    "State invariants violated");
+  MOZ_ASSERT(mState == UNINITIALIZED ||
+             mState == CLONED ||
+             mState == AUDIO_SESSION_DISCONNECTED,
+             "State invariants violated");
 
   const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
   const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
@@ -196,8 +196,8 @@ AudioSession::Start()
     if (XRE_GetProcessType() == GeckoProcessType_Content)
       return NS_ERROR_FAILURE;
 
-    NS_ABORT_IF_FALSE(XRE_GetProcessType() == GeckoProcessType_Default,
-                      "Should only get here in a chrome process!");
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default,
+               "Should only get here in a chrome process!");
 
     nsCOMPtr<nsIStringBundleService> bundleService = 
       do_GetService(NS_STRINGBUNDLE_CONTRACTID);
@@ -225,8 +225,8 @@ AudioSession::Start()
 
   mState = FAILED;
 
-  NS_ABORT_IF_FALSE(!mDisplayName.IsEmpty() || !mIconPath.IsEmpty(),
-                    "Should never happen ...");
+  MOZ_ASSERT(!mDisplayName.IsEmpty() || !mIconPath.IsEmpty(),
+             "Should never happen ...");
 
   nsRefPtr<IMMDeviceEnumerator> enumerator;
   hr = ::CoCreateInstance(CLSID_MMDeviceEnumerator,
@@ -306,10 +306,10 @@ AudioSession::StopInternal()
 nsresult
 AudioSession::Stop()
 {
-  NS_ABORT_IF_FALSE(mState == STARTED ||
-                    mState == UNINITIALIZED || // XXXremove this
-                    mState == FAILED,
-                    "State invariants violated");
+  MOZ_ASSERT(mState == STARTED ||
+             mState == UNINITIALIZED || // XXXremove this
+             mState == FAILED,
+             "State invariants violated");
   mState = STOPPED;
 
   nsRefPtr<AudioSession> kungFuDeathGrip;
@@ -340,10 +340,10 @@ AudioSession::GetSessionData(nsID& aID,
                              nsString& aSessionName,
                              nsString& aIconPath)
 {
-  NS_ABORT_IF_FALSE(mState == FAILED ||
-                    mState == STARTED ||
-                    mState == CLONED,
-                    "State invariants violated");
+  MOZ_ASSERT(mState == FAILED ||
+             mState == STARTED ||
+             mState == CLONED,
+             "State invariants violated");
 
   CopynsID(aID, mSessionGroupingParameter);
   aSessionName = mDisplayName;
@@ -360,10 +360,10 @@ AudioSession::SetSessionData(const nsID& aID,
                              const nsString& aSessionName,
                              const nsString& aIconPath)
 {
-  NS_ABORT_IF_FALSE(mState == UNINITIALIZED,
-                    "State invariants violated");
-  NS_ABORT_IF_FALSE(XRE_GetProcessType() != GeckoProcessType_Default,
-                    "Should never get here in a chrome process!");
+  MOZ_ASSERT(mState == UNINITIALIZED,
+             "State invariants violated");
+  MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Default,
+             "Should never get here in a chrome process!");
   mState = CLONED;
 
   CopynsID(mSessionGroupingParameter, aID);

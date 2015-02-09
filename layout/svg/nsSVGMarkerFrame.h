@@ -76,10 +76,10 @@ public:
 
   virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     // Any children must be added to our single anonymous inner frame kid.
-    NS_ABORT_IF_FALSE(GetFirstPrincipalChild() &&
-                      GetFirstPrincipalChild()->GetType() ==
-                        nsGkAtoms::svgMarkerAnonChildFrame,
-                      "Where is our anonymous child?");
+    MOZ_ASSERT(GetFirstPrincipalChild() &&
+               GetFirstPrincipalChild()->GetType() ==
+                 nsGkAtoms::svgMarkerAnonChildFrame,
+               "Where is our anonymous child?");
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
   }
 

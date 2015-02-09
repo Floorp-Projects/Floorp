@@ -79,20 +79,20 @@ ComputeCalc(const typename CalcOps::input_type& aValue, CalcOps &aOps)
   switch (CalcOps::GetUnit(aValue)) {
     case eCSSUnit_Calc: {
       typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
-      NS_ABORT_IF_FALSE(arr->Count() == 1, "unexpected length");
+      MOZ_ASSERT(arr->Count() == 1, "unexpected length");
       return ComputeCalc(arr->Item(0), aOps);
     }
     case eCSSUnit_Calc_Plus:
     case eCSSUnit_Calc_Minus: {
       typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
-      NS_ABORT_IF_FALSE(arr->Count() == 2, "unexpected length");
+      MOZ_ASSERT(arr->Count() == 2, "unexpected length");
       typename CalcOps::result_type lhs = ComputeCalc(arr->Item(0), aOps),
                                     rhs = ComputeCalc(arr->Item(1), aOps);
       return aOps.MergeAdditive(CalcOps::GetUnit(aValue), lhs, rhs);
     }
     case eCSSUnit_Calc_Times_L: {
       typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
-      NS_ABORT_IF_FALSE(arr->Count() == 2, "unexpected length");
+      MOZ_ASSERT(arr->Count() == 2, "unexpected length");
       float lhs = aOps.ComputeNumber(arr->Item(0));
       typename CalcOps::result_type rhs = ComputeCalc(arr->Item(1), aOps);
       return aOps.MergeMultiplicativeL(CalcOps::GetUnit(aValue), lhs, rhs);
@@ -100,7 +100,7 @@ ComputeCalc(const typename CalcOps::input_type& aValue, CalcOps &aOps)
     case eCSSUnit_Calc_Times_R:
     case eCSSUnit_Calc_Divided: {
       typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
-      NS_ABORT_IF_FALSE(arr->Count() == 2, "unexpected length");
+      MOZ_ASSERT(arr->Count() == 2, "unexpected length");
       typename CalcOps::result_type lhs = ComputeCalc(arr->Item(0), aOps);
       float rhs = aOps.ComputeNumber(arr->Item(1));
       return aOps.MergeMultiplicativeR(CalcOps::GetUnit(aValue), lhs, rhs);
@@ -143,8 +143,8 @@ struct BasicCoordCalcOps
     if (aCalcFunction == eCSSUnit_Calc_Plus) {
       return NSCoordSaturatingAdd(aValue1, aValue2);
     }
-    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Minus,
-                      "unexpected unit");
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Minus,
+               "unexpected unit");
     return NSCoordSaturatingSubtract(aValue1, aValue2, 0);
   }
 
@@ -152,8 +152,8 @@ struct BasicCoordCalcOps
   MergeMultiplicativeL(nsCSSUnit aCalcFunction,
                        float aValue1, result_type aValue2)
   {
-    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Times_L,
-                      "unexpected unit");
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Times_L,
+               "unexpected unit");
     return NSCoordSaturatingMultiply(aValue2, aValue1);
   }
 
@@ -161,9 +161,9 @@ struct BasicCoordCalcOps
   MergeMultiplicativeR(nsCSSUnit aCalcFunction,
                        result_type aValue1, float aValue2)
   {
-    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Times_R ||
-                      aCalcFunction == eCSSUnit_Calc_Divided,
-                      "unexpected unit");
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Times_R ||
+               aCalcFunction == eCSSUnit_Calc_Divided,
+               "unexpected unit");
     if (aCalcFunction == eCSSUnit_Calc_Divided) {
       aValue2 = 1.0f / aValue2;
     }
@@ -182,8 +182,8 @@ struct BasicFloatCalcOps
     if (aCalcFunction == eCSSUnit_Calc_Plus) {
       return aValue1 + aValue2;
     }
-    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Minus,
-                      "unexpected unit");
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Minus,
+               "unexpected unit");
     return aValue1 - aValue2;
   }
 
@@ -191,8 +191,8 @@ struct BasicFloatCalcOps
   MergeMultiplicativeL(nsCSSUnit aCalcFunction,
                        float aValue1, result_type aValue2)
   {
-    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Times_L,
-                      "unexpected unit");
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Times_L,
+               "unexpected unit");
     return aValue1 * aValue2;
   }
 
@@ -203,8 +203,8 @@ struct BasicFloatCalcOps
     if (aCalcFunction == eCSSUnit_Calc_Times_R) {
       return aValue1 * aValue2;
     }
-    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Divided,
-                      "unexpected unit");
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Divided,
+               "unexpected unit");
     return aValue1 / aValue2;
   }
 };
@@ -217,7 +217,7 @@ struct NumbersAlreadyNormalizedOps : public CSSValueInputCalcOps
 {
   float ComputeNumber(const nsCSSValue& aValue)
   {
-    NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
+    MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
     return aValue.GetFloatValue();
   }
 };
@@ -260,7 +260,7 @@ SerializeCalc(const typename CalcOps::input_type& aValue, CalcOps &aOps)
   nsCSSUnit unit = CalcOps::GetUnit(aValue);
   if (unit == eCSSUnit_Calc) {
     const typename CalcOps::input_array_type *array = aValue.GetArrayValue();
-    NS_ABORT_IF_FALSE(array->Count() == 1, "unexpected length");
+    MOZ_ASSERT(array->Count() == 1, "unexpected length");
     SerializeCalcInternal(array->Item(0), aOps);
   } else {
     SerializeCalcInternal(aValue, aOps);
@@ -292,14 +292,14 @@ SerializeCalcInternal(const typename CalcOps::input_type& aValue, CalcOps &aOps)
   nsCSSUnit unit = CalcOps::GetUnit(aValue);
   if (IsCalcAdditiveUnit(unit)) {
     const typename CalcOps::input_array_type *array = aValue.GetArrayValue();
-    NS_ABORT_IF_FALSE(array->Count() == 2, "unexpected length");
+    MOZ_ASSERT(array->Count() == 2, "unexpected length");
 
     SerializeCalcInternal(array->Item(0), aOps);
 
     if (eCSSUnit_Calc_Plus == unit) {
       aOps.Append(" + ");
     } else {
-      NS_ABORT_IF_FALSE(eCSSUnit_Calc_Minus == unit, "unexpected unit");
+      MOZ_ASSERT(eCSSUnit_Calc_Minus == unit, "unexpected unit");
       aOps.Append(" - ");
     }
 
@@ -313,7 +313,7 @@ SerializeCalcInternal(const typename CalcOps::input_type& aValue, CalcOps &aOps)
     }
   } else if (IsCalcMultiplicativeUnit(unit)) {
     const typename CalcOps::input_array_type *array = aValue.GetArrayValue();
-    NS_ABORT_IF_FALSE(array->Count() == 2, "unexpected length");
+    MOZ_ASSERT(array->Count() == 2, "unexpected length");
 
     bool needParens = IsCalcAdditiveUnit(CalcOps::GetUnit(array->Item(0)));
     if (needParens) {
@@ -331,7 +331,7 @@ SerializeCalcInternal(const typename CalcOps::input_type& aValue, CalcOps &aOps)
     if (eCSSUnit_Calc_Times_L == unit || eCSSUnit_Calc_Times_R == unit) {
       aOps.Append(" * ");
     } else {
-      NS_ABORT_IF_FALSE(eCSSUnit_Calc_Divided == unit, "unexpected unit");
+      MOZ_ASSERT(eCSSUnit_Calc_Divided == unit, "unexpected unit");
       aOps.Append(" / ");
     }
 

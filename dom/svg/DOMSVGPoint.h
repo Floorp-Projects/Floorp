@@ -57,10 +57,9 @@ public:
     mIsAnimValItem = aIsAnimValItem;
 
     // These shifts are in sync with the members.
-    NS_ABORT_IF_FALSE(aList &&
-                      aListIndex <= MaxListIndex(), "bad arg");
+    MOZ_ASSERT(aList && aListIndex <= MaxListIndex(), "bad arg");
 
-    NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGPoint!");
+    MOZ_ASSERT(IndexIsValid(), "Bad index for DOMSVGPoint!");
   }
 
   explicit DOMSVGPoint(const DOMSVGPoint *aPt = nullptr)

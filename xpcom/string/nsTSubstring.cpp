@@ -399,7 +399,7 @@ nsTSubstring_CharT::Assign(const self_type& aStr, const fallible_t& aFallible)
     nsStringBuffer::FromData(mData)->AddRef();
     return true;
   } else if (aStr.mFlags & F_LITERAL) {
-    NS_ABORT_IF_FALSE(aStr.mFlags & F_TERMINATED, "Unterminated literal");
+    MOZ_ASSERT(aStr.mFlags & F_TERMINATED, "Unterminated literal");
 
     AssignLiteral(aStr.mData, aStr.mLength);
     return true;

@@ -685,9 +685,8 @@ void
 SVGSVGElement::ChildrenOnlyTransformChanged(uint32_t aFlags)
 {
   // Avoid wasteful calls:
-  NS_ABORT_IF_FALSE(!(GetPrimaryFrame()->GetStateBits() &
-                      NS_FRAME_IS_NONDISPLAY),
-                    "Non-display SVG frames don't maintain overflow rects");
+  MOZ_ASSERT(!(GetPrimaryFrame()->GetStateBits() & NS_FRAME_IS_NONDISPLAY),
+             "Non-display SVG frames don't maintain overflow rects");
 
   nsChangeHint changeHint;
 
@@ -963,7 +962,7 @@ SVGSVGElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
       // the common case
       return ThebesMatrix(GetViewBoxTransform()) * gfxMatrix::Translation(x, y) * fromUserSpace;
     }
-    NS_ABORT_IF_FALSE(aWhich == eChildToUserSpace, "Unknown TransformTypes");
+    MOZ_ASSERT(aWhich == eChildToUserSpace, "Unknown TransformTypes");
     return ThebesMatrix(GetViewBoxTransform()) * gfxMatrix::Translation(x, y) * aMatrix;
   }
 
@@ -1027,8 +1026,8 @@ SVGSVGElement::HasViewBoxRect() const
 bool
 SVGSVGElement::ShouldSynthesizeViewBox() const
 {
-  NS_ABORT_IF_FALSE(!HasViewBoxRect(),
-                    "Should only be called if we lack a viewBox");
+  MOZ_ASSERT(!HasViewBoxRect(),
+             "Should only be called if we lack a viewBox");
 
   nsIDocument* doc = GetUncomposedDoc();
   return doc &&
@@ -1045,8 +1044,8 @@ SVGSVGElement::SetPreserveAspectRatioProperty(const SVGPreserveAspectRatio& aPAR
                             pAROverridePtr,
                             nsINode::DeleteProperty<SVGPreserveAspectRatio>,
                             true);
-  NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
-                    "Setting override value when it's already set...?"); 
+  MOZ_ASSERT(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
+             "Setting override value when it's already set...?");
 
   if (MOZ_UNLIKELY(NS_FAILED(rv))) {
     // property-insertion failed (e.g. OOM in property-table code)
@@ -1079,8 +1078,8 @@ SVGSVGElement::
   SetImageOverridePreserveAspectRatio(const SVGPreserveAspectRatio& aPAR)
 {
 #ifdef DEBUG
-  NS_ABORT_IF_FALSE(OwnerDoc()->IsBeingUsedAsImage(),
-                    "should only override preserveAspectRatio in images");
+  MOZ_ASSERT(OwnerDoc()->IsBeingUsedAsImage(),
+             "should only override preserveAspectRatio in images");
 #endif
 
   bool hasViewBoxRect = HasViewBoxRect();
@@ -1109,8 +1108,8 @@ void
 SVGSVGElement::ClearImageOverridePreserveAspectRatio()
 {
 #ifdef DEBUG
-  NS_ABORT_IF_FALSE(OwnerDoc()->IsBeingUsedAsImage(),
-                    "should only override image preserveAspectRatio in images");
+  MOZ_ASSERT(OwnerDoc()->IsBeingUsedAsImage(),
+             "should only override image preserveAspectRatio in images");
 #endif
 
   mIsPaintingSVGImageElement = false;
@@ -1129,9 +1128,9 @@ SVGSVGElement::ClearImageOverridePreserveAspectRatio()
 void
 SVGSVGElement::FlushImageTransformInvalidation()
 {
-  NS_ABORT_IF_FALSE(!GetParent(), "Should only be called on root node");
-  NS_ABORT_IF_FALSE(OwnerDoc()->IsBeingUsedAsImage(),
-                    "Should only be called on image documents");
+  MOZ_ASSERT(!GetParent(), "Should only be called on root node");
+  MOZ_ASSERT(OwnerDoc()->IsBeingUsedAsImage(),
+             "Should only be called on image documents");
 
   if (mImageNeedsTransformInvalidation) {
     InvalidateTransformNotifyFrame();
@@ -1147,8 +1146,8 @@ SVGSVGElement::SetViewBoxProperty(const nsSVGViewBoxRect& aViewBox)
                             pViewBoxOverridePtr,
                             nsINode::DeleteProperty<nsSVGViewBoxRect>,
                             true);
-  NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
-                    "Setting override value when it's already set...?"); 
+  MOZ_ASSERT(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
+             "Setting override value when it's already set...?");
 
   if (MOZ_UNLIKELY(NS_FAILED(rv))) {
     // property-insertion failed (e.g. OOM in property-table code)
@@ -1182,8 +1181,8 @@ SVGSVGElement::SetZoomAndPanProperty(uint16_t aValue)
   nsresult rv = SetProperty(nsGkAtoms::zoomAndPan,
                             reinterpret_cast<void*>(aValue),
                             nullptr, true);
-  NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
-                    "Setting override value when it's already set...?"); 
+  MOZ_ASSERT(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
+             "Setting override value when it's already set...?");
 
   return NS_SUCCEEDED(rv);
 }
@@ -1212,8 +1211,8 @@ SVGSVGElement::SetTransformProperty(const SVGTransformList& aTransform)
                             pTransformOverridePtr,
                             nsINode::DeleteProperty<SVGTransformList>,
                             true);
-  NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
-                    "Setting override value when it's already set...?"); 
+  MOZ_ASSERT(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
+             "Setting override value when it's already set...?");
 
   if (MOZ_UNLIKELY(NS_FAILED(rv))) {
     // property-insertion failed (e.g. OOM in property-table code)

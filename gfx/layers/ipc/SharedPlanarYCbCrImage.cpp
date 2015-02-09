@@ -104,7 +104,7 @@ SharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
 uint8_t*
 SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 {
-  NS_ABORT_IF_FALSE(!mTextureClient, "This image already has allocated data");
+  MOZ_ASSERT(!mTextureClient, "This image already has allocated data");
   size_t size = YCbCrImageDataSerializer::ComputeMinBufferSize(aSize);
   if (!size) {
     return nullptr;
@@ -129,7 +129,7 @@ SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 void
 SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 {
-  NS_ABORT_IF_FALSE(mTextureClient, "This Image should have already allocated data");
+  MOZ_ASSERT(mTextureClient, "This Image should have already allocated data");
   mData = aData;
   mSize = aData.mPicSize;
   /* SetDataNoCopy is used to update YUV plane offsets without (re)allocating
@@ -156,8 +156,8 @@ SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 uint8_t*
 SharedPlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
 {
-  NS_ABORT_IF_FALSE(!mTextureClient,
-                    "This image already has allocated data");
+  MOZ_ASSERT(!mTextureClient,
+             "This image already has allocated data");
   mTextureClient = TextureClient::CreateWithBufferSize(mCompositable->GetForwarder(),
                                                        gfx::SurfaceFormat::YUV, aSize,
                                                        mCompositable->GetTextureFlags());
@@ -175,8 +175,8 @@ SharedPlanarYCbCrImage::IsValid() {
 bool
 SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData)
 {
-  NS_ABORT_IF_FALSE(!mTextureClient,
-                    "This image already has allocated data");
+  MOZ_ASSERT(!mTextureClient,
+             "This image already has allocated data");
 
   mTextureClient = TextureClient::CreateForYCbCr(mCompositable->GetForwarder(),
                                                  aData.mYSize, aData.mCbCrSize,

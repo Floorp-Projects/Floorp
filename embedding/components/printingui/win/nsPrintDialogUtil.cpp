@@ -494,8 +494,8 @@ static HWND CreateGroupBox(HINSTANCE        aHInst,
 // Localizes and initializes the radio buttons and group
 static void InitializeExtendedDialog(HWND hdlg, int16_t aHowToEnableFrameUI) 
 {
-  NS_ABORT_IF_FALSE(aHowToEnableFrameUI != nsIPrintSettings::kFrameEnableNone,
-                    "should not be called");
+  MOZ_ASSERT(aHowToEnableFrameUI != nsIPrintSettings::kFrameEnableNone,
+             "should not be called");
 
   // Localize the new controls in the print dialog
   nsCOMPtr<nsIStringBundle> strBundle;

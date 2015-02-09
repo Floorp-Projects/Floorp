@@ -225,8 +225,8 @@ struct AnimationPlayerCollection : public PRCList
   }
   ~AnimationPlayerCollection()
   {
-    NS_ABORT_IF_FALSE(mCalledPropertyDtor,
-                      "must call destructor through element property dtor");
+    MOZ_ASSERT(mCalledPropertyDtor,
+               "must call destructor through element property dtor");
     MOZ_COUNT_DTOR(AnimationPlayerCollection);
     PR_REMOVE_LINK(this);
     mManager->ElementCollectionRemoved();

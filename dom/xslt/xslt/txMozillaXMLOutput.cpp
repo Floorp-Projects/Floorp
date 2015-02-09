@@ -300,7 +300,7 @@ txMozillaXMLOutput::endElement()
         } else if ((ns == kNameSpaceID_XHTML || ns == kNameSpaceID_SVG) &&
                    localName == nsGkAtoms::script) {
             nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(element);
-            NS_ABORT_IF_FALSE(sele, "script elements need to implement nsIScriptElement");
+            MOZ_ASSERT(sele, "script elements need to implement nsIScriptElement");
             bool block = sele->AttemptToExecute();
             // If the act of insertion evaluated the script, we're fine.
             // Else, add this script element to the array of loading scripts.

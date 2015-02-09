@@ -706,8 +706,8 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
   if (mClassList) {
     if (isPseudoElement) {
 #ifdef MOZ_XUL
-      NS_ABORT_IF_FALSE(nsCSSAnonBoxes::IsTreePseudoElement(mLowercaseTag),
-                        "must be tree pseudo-element");
+      MOZ_ASSERT(nsCSSAnonBoxes::IsTreePseudoElement(mLowercaseTag),
+                 "must be tree pseudo-element");
 
       aString.Append(char16_t('('));
       for (nsAtomList* list = mClassList; list; list = list->mNext) {
@@ -1396,7 +1396,7 @@ void
 StyleRule::RuleMatched()
 {
   if (!mWasMatched) {
-    NS_ABORT_IF_FALSE(!mImportantRule, "should not have important rule yet");
+    MOZ_ASSERT(!mImportantRule, "should not have important rule yet");
 
     mWasMatched = true;
     mDeclaration->SetImmutable();
@@ -1465,8 +1465,8 @@ StyleRule::DeclarationChanged(Declaration* aDecl,
 /* virtual */ void
 StyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  NS_ABORT_IF_FALSE(mWasMatched,
-                    "somebody forgot to call css::StyleRule::RuleMatched");
+  MOZ_ASSERT(mWasMatched,
+             "somebody forgot to call css::StyleRule::RuleMatched");
   mDeclaration->MapNormalRuleInfoInto(aRuleData);
 }
 

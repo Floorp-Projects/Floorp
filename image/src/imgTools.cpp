@@ -49,8 +49,8 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
                                         const nsACString& aMimeType,
                                         imgIContainer **aContainer)
 {
-  NS_ABORT_IF_FALSE(*aContainer == nullptr,
-                    "Cannot provide an existing image container to DecodeImageData");
+  MOZ_ASSERT(*aContainer == nullptr,
+             "Cannot provide an existing image container to DecodeImageData");
 
   return DecodeImage(aInStr, aMimeType, aContainer);
 }

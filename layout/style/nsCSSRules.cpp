@@ -48,7 +48,7 @@ using namespace mozilla::dom;
   { return this; }
 #define IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(class_, super_) \
 /* virtual */ void class_::MapRuleInfoInto(nsRuleData* aRuleData) \
-  { NS_ABORT_IF_FALSE(false, "should not be called"); }
+  { MOZ_ASSERT(false, "should not be called"); }
 
 #define IMPL_STYLE_RULE_INHERIT(class_, super_) \
 IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_) \
@@ -541,7 +541,7 @@ GroupRule::GroupRule(const GroupRule& aCopy)
 
 GroupRule::~GroupRule()
 {
-  NS_ABORT_IF_FALSE(!mSheet, "SetStyleSheet should have been called");
+  MOZ_ASSERT(!mSheet, "SetStyleSheet should have been called");
   mRules.EnumerateForwards(SetParentRuleReference, nullptr);
   if (mRuleCollection) {
     mRuleCollection->DropReference();
@@ -2130,7 +2130,7 @@ nsCSSKeyframeStyleDeclaration::GetParentRule(nsIDOMCSSRule **aParent)
 nsresult
 nsCSSKeyframeStyleDeclaration::SetCSSDeclaration(css::Declaration* aDecl)
 {
-  NS_ABORT_IF_FALSE(aDecl, "must be non-null");
+  MOZ_ASSERT(aDecl, "must be non-null");
   mRule->ChangeDeclaration(aDecl);
   return NS_OK;
 }
@@ -2295,7 +2295,7 @@ nsCSSKeyframeRule::DoGetKeyText(nsAString& aKeyText) const
 {
   aKeyText.Truncate();
   uint32_t i = 0, i_end = mKeys.Length();
-  NS_ABORT_IF_FALSE(i_end != 0, "must have some keys");
+  MOZ_ASSERT(i_end != 0, "must have some keys");
   for (;;) {
     aKeyText.AppendFloat(mKeys[i] * 100.0f);
     aKeyText.Append(char16_t('%'));
@@ -2623,7 +2623,7 @@ nsCSSKeyframesRule::FindRule(const nsAString& aKey,
 nsCSSKeyframesRule::UseForPresentation(nsPresContext* aPresContext,
                                        nsMediaQueryResultCacheKey& aKey)
 {
-  NS_ABORT_IF_FALSE(false, "should not be called");
+  MOZ_ASSERT(false, "should not be called");
   return false;
 }
 
@@ -2691,7 +2691,7 @@ nsCSSPageStyleDeclaration::GetParentRule(nsIDOMCSSRule** aParent)
 nsresult
 nsCSSPageStyleDeclaration::SetCSSDeclaration(css::Declaration* aDecl)
 {
-  NS_ABORT_IF_FALSE(aDecl, "must be non-null");
+  MOZ_ASSERT(aDecl, "must be non-null");
   mRule->ChangeDeclaration(aDecl);
   return NS_OK;
 }
@@ -3211,16 +3211,16 @@ const nsCSSValue&
 nsCSSCounterStyleRule::GetSystemArgument() const
 {
   const nsCSSValue& system = GetDesc(eCSSCounterDesc_System);
-  NS_ABORT_IF_FALSE(system.GetUnit() == eCSSUnit_Pair,
-                    "Invalid system value");
+  MOZ_ASSERT(system.GetUnit() == eCSSUnit_Pair,
+             "Invalid system value");
   return system.GetPairValue().mYValue;
 }
 
 void
 nsCSSCounterStyleRule::SetDesc(nsCSSCounterDesc aDescID, const nsCSSValue& aValue)
 {
-  NS_ABORT_IF_FALSE(aDescID >= 0 && aDescID < eCSSCounterDesc_COUNT,
-                    "descriptor ID out of range");
+  MOZ_ASSERT(aDescID >= 0 && aDescID < eCSSCounterDesc_COUNT,
+             "descriptor ID out of range");
 
   nsIDocument* doc = GetDocument();
   MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);

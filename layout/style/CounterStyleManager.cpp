@@ -53,8 +53,8 @@ GetCyclicCounterText(CounterValue aOrdinal,
                      nsSubstring& aResult,
                      const nsTArray<nsString>& aSymbols)
 {
-  NS_ABORT_IF_FALSE(aSymbols.Length() >= 1,
-                    "No symbol available for cyclic counter.");
+  MOZ_ASSERT(aSymbols.Length() >= 1,
+             "No symbol available for cyclic counter.");
   auto n = aSymbols.Length();
   CounterValue index = (aOrdinal - 1) % n;
   aResult = aSymbols[index >= 0 ? index : index + n];
@@ -81,9 +81,9 @@ GetSymbolicCounterText(CounterValue aOrdinal,
                        nsSubstring& aResult,
                        const nsTArray<nsString>& aSymbols)
 {
-  NS_ABORT_IF_FALSE(aSymbols.Length() >= 1,
-                    "No symbol available for symbolic counter.");
-  NS_ABORT_IF_FALSE(aOrdinal >= 0, "Invalid ordinal.");
+  MOZ_ASSERT(aSymbols.Length() >= 1,
+             "No symbol available for symbolic counter.");
+  MOZ_ASSERT(aOrdinal >= 0, "Invalid ordinal.");
   if (aOrdinal == 0) {
     return false;
   }
@@ -110,9 +110,9 @@ GetAlphabeticCounterText(CounterValue aOrdinal,
                          nsSubstring& aResult,
                          const nsTArray<nsString>& aSymbols)
 {
-  NS_ABORT_IF_FALSE(aSymbols.Length() >= 2,
-                    "Too few symbols for alphabetic counter.");
-  NS_ABORT_IF_FALSE(aOrdinal >= 0, "Invalid ordinal.");
+  MOZ_ASSERT(aSymbols.Length() >= 2,
+             "Too few symbols for alphabetic counter.");
+  MOZ_ASSERT(aOrdinal >= 0, "Invalid ordinal.");
   if (aOrdinal == 0) {
     return false;
   }
@@ -140,9 +140,9 @@ GetNumericCounterText(CounterValue aOrdinal,
                       nsSubstring& aResult,
                       const nsTArray<nsString>& aSymbols)
 {
-  NS_ABORT_IF_FALSE(aSymbols.Length() >= 2,
-                    "Too few symbols for numeric counter.");
-  NS_ABORT_IF_FALSE(aOrdinal >= 0, "Invalid ordinal.");
+  MOZ_ASSERT(aSymbols.Length() >= 2,
+             "Too few symbols for numeric counter.");
+  MOZ_ASSERT(aOrdinal >= 0, "Invalid ordinal.");
 
   if (aOrdinal == 0) {
     aResult = aSymbols[0];
@@ -168,7 +168,7 @@ GetAdditiveCounterText(CounterValue aOrdinal,
                        nsSubstring& aResult,
                        const nsTArray<AdditiveSymbol>& aSymbols)
 {
-  NS_ABORT_IF_FALSE(aOrdinal >= 0, "Invalid ordinal.");
+  MOZ_ASSERT(aOrdinal >= 0, "Invalid ordinal.");
 
   if (aOrdinal == 0) {
     const AdditiveSymbol& last = aSymbols.LastElement();
@@ -545,8 +545,8 @@ EthiopicToText(CounterValue aOrdinal, nsSubstring& aResult)
 static uint8_t
 GetDefaultSpeakAsForSystem(uint8_t aSystem)
 {
-  NS_ABORT_IF_FALSE(aSystem != NS_STYLE_COUNTER_SYSTEM_EXTENDS,
-                    "Extends system does not have static default speak-as");
+  MOZ_ASSERT(aSystem != NS_STYLE_COUNTER_SYSTEM_EXTENDS,
+             "Extends system does not have static default speak-as");
   switch (aSystem) {
     case NS_STYLE_COUNTER_SYSTEM_ALPHABETIC:
       return NS_STYLE_COUNTER_SPEAKAS_SPELL_OUT;
@@ -560,8 +560,8 @@ GetDefaultSpeakAsForSystem(uint8_t aSystem)
 static bool
 SystemUsesNegativeSign(uint8_t aSystem)
 {
-  NS_ABORT_IF_FALSE(aSystem != NS_STYLE_COUNTER_SYSTEM_EXTENDS,
-                    "Cannot check this for extending style");
+  MOZ_ASSERT(aSystem != NS_STYLE_COUNTER_SYSTEM_EXTENDS,
+             "Cannot check this for extending style");
   switch (aSystem) {
     case NS_STYLE_COUNTER_SYSTEM_SYMBOLIC:
     case NS_STYLE_COUNTER_SYSTEM_ALPHABETIC:
@@ -960,7 +960,7 @@ public:
       mManager(aManager)
   {
     NS_ASSERTION(IsDependentStyle(), "Not a dependent builtin style");
-    NS_ABORT_IF_FALSE(!IsCustomStyle(), "Not a builtin style");
+    MOZ_ASSERT(!IsCustomStyle(), "Not a builtin style");
   }
 
   virtual CounterStyle* GetFallback() MOZ_OVERRIDE;
@@ -1261,8 +1261,8 @@ CustomCounterStyle::GetSpokenCounterText(CounterValue aOrdinal,
     CounterStyle::GetSpokenCounterText(
         aOrdinal, aWritingMode, aResult, aIsBullet);
   } else {
-    NS_ABORT_IF_FALSE(mSpeakAsCounter,
-                      "mSpeakAsCounter should have been initialized.");
+    MOZ_ASSERT(mSpeakAsCounter,
+               "mSpeakAsCounter should have been initialized.");
     mSpeakAsCounter->GetSpokenCounterText(
         aOrdinal, aWritingMode, aResult, aIsBullet);
   }
@@ -1961,7 +1961,7 @@ CounterStyleManager::CounterStyleManager(nsPresContext* aPresContext)
 
 CounterStyleManager::~CounterStyleManager()
 {
-  NS_ABORT_IF_FALSE(!mPresContext, "Disconnect should have been called");
+  MOZ_ASSERT(!mPresContext, "Disconnect should have been called");
 }
 
 /* static */ void
@@ -2037,10 +2037,10 @@ CounterStyleManager::BuildCounterStyle(const nsCSSValue::Array* aParams)
 /* static */ CounterStyle*
 CounterStyleManager::GetBuiltinStyle(int32_t aStyle)
 {
-  NS_ABORT_IF_FALSE(0 <= aStyle && aStyle < NS_STYLE_LIST_STYLE__MAX,
-                    "Require a valid builtin style constant");
-  NS_ABORT_IF_FALSE(!gBuiltinStyleTable[aStyle].IsDependentStyle(),
-                    "Cannot get dependent builtin style");
+  MOZ_ASSERT(0 <= aStyle && aStyle < NS_STYLE_LIST_STYLE__MAX,
+             "Require a valid builtin style constant");
+  MOZ_ASSERT(!gBuiltinStyleTable[aStyle].IsDependentStyle(),
+             "Cannot get dependent builtin style");
   return &gBuiltinStyleTable[aStyle];
 }
 
