@@ -424,8 +424,8 @@ AppendEscapedLineTerminator(StringBuffer &sb, const char16_t c)
     return true;
 }
 
-static template <typename CharT>
-MOZ_ALWAYS_INLINE bool
+template <typename CharT>
+static MOZ_ALWAYS_INLINE bool
 SetupBuffer(StringBuffer &sb, const CharT *oldChars, size_t oldLen, const CharT *it)
 {
     if (mozilla::IsSame<CharT, char16_t>::value && !sb.ensureTwoByteChars())
