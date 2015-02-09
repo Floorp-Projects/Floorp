@@ -14,6 +14,8 @@
 body { font-family: Ahem; font-size: 20px; }
 s { -moz-user-select: none; }
 n { display: none; }
+a { position:absolute; bottom: 0; right:0; }
+.text { -moz-user-select: text; }
 </style>
 
 </head>
@@ -31,6 +33,7 @@ n { display: none; }
 <div id="testA">aaaaaaa<n>bbb<s>bbbbb</s></n>ccccccc</div>
 <div id="testB"><n><s>aaaa</s>aaa</n>bbbbbbbbccccccc</div>
 <div id="testC">aaaaaaabbbbbbbb<n>cc<s>c</s>cccc</n></div>
+<div id="testE">aaa<s id="testEc1">aaaa<a class="text">bbbb</a>dd<a>cccc</a>ddddddd</s>eeee</div>
 
 <iframe id="testD" src="data:text/html,<body>aaaa<span style='-moz-user-select:none'>bbbb</span>cccc"></iframe>
 
@@ -43,6 +46,14 @@ function test()
   {
     var sel = (w ? w : window).getSelection();
     sel.removeAllRanges();
+  }
+  function doneTest(e)
+  {
+    // We hide the elements we're done with so that later tests
+    // are inside the rather narrow iframe mochitest gives us.
+    // It matters for synthesizeMouse event tests.
+    e.style.display = 'none';
+    e.offsetHeight;
   }
 
   function dragSelect(e, x1, x2, x3)
@@ -75,16 +86,18 @@ function test()
     }
   }
 
+  function NL(s) { return s.replace(/(\r\n|\n\r|\r)/g, '\n'); }
+
   function checkText(text, e)
   {
     var sel = window.getSelection();
-    is(sel.toString(), text, e.id + ": selected text")
+    is(NL(sel.toString()), text, e.id + ": selected text")
   }
 
   function checkRangeText(text, index)
   {
     var r = window.getSelection().getRangeAt(index);
-    is(r.toString(), text, e.id + ": range["+index+"].toString()")
+    is(NL(r.toString()), text, e.id + ": range["+index+"].toString()")
   }
 
   function node(e, index)
@@ -92,17 +105,27 @@ function test()
     return index == -1 ? e : e.childNodes[index];
   }
 
-  function checkRanges(arr, e)
+  function checkRangeCount(n, e)
   {
     var sel = window.getSelection();
-    is(sel.rangeCount, arr.length, e.id + ": Selection range count");
+    is(sel.rangeCount, n, e.id + ": Selection range count");
+  }
+
+  function checkRange(i, expected, e) {
+    var sel = window.getSelection();
+    var r = sel.getRangeAt(i);
+    is(r.startContainer, node(e, expected[0]), e.id + ": range["+i+"].startContainer");
+    is(r.startOffset, expected[1], e.id + ": range["+i+"].startOffset");
+    is(r.endContainer, node(e, expected[2]), e.id + ": range["+i+"].endContainer");
+    is(r.endOffset, expected[3], e.id + ": range["+i+"].endOffset");
+  }
+
+  function checkRanges(arr, e)
+  {
+    checkRangeCount(arr.length, e);
     for (i = 0; i < arr.length; ++i) {
       var expected = arr[i];
-      var r = sel.getRangeAt(i);
-      is(r.startContainer, node(e, expected[0]), e.id + ": range["+i+"].startContainer");
-      is(r.startOffset, expected[1], e.id + ": range["+i+"].startOffset");
-      is(r.endContainer, node(e, expected[2]), e.id + ": range["+i+"].endContainer");
-      is(r.endOffset, expected[3], e.id + ": range["+i+"].endOffset");
+      checkRange(i, expected, e);
     }
   }
 
@@ -119,6 +142,7 @@ function test()
   dragSelect(e, 20, 260, 120);
   checkText('aaaaa', e);
   checkRanges([[0,1,0,6]], e);
+  doneTest(e);
 
   clear();
   e = document.getElementById('test2');
@@ -130,48 +154,56 @@ function test()
   dragSelect(e, 340, 20, 140);
   checkText('bbbbbbbbcc', e);
   checkRanges([[1,0,1,10]], e);
+  // #test2 is used again below
 
   clear();
   e = document.getElementById('test3');
   dragSelect(e, 20, 340, 295);
   checkText('aaaaaabbbbbbbb', e);
   checkRanges([[0,1,0,15]], e);
+  // #test3 is used again below
 
   clear();
   e = document.getElementById('test4');
   dragSelect(e, 20, 340);
   checkText('aaaaaacc', e);
   checkRanges([[0,1,1,0], [2,0,2,2]], e);
+  doneTest(e);
 
   clear();
   e = document.getElementById('test5');
   dragSelect(e, 340, 20, 140);
   checkText('bbbbbbbbcc', e);
   checkRanges([[1,0,1,10]], e);
+  doneTest(e);
 
   clear();
   e = document.getElementById('test6');
   dragSelect(e, 20, 340, 295);
   checkText('aaaaaabbbbbbbb', e);
   checkRanges([[0,1,0,15]], e);
+  doneTest(e);
 
   clear();
   e = document.getElementById('test7');
   dragSelect(e, 20, 340);
   checkText('aaaaaacccccc', e);
   checkRanges([[0,1,1,0], [2,0,2,6]], e);
+  doneTest(e);
 
   clear();
   e = document.getElementById('test8');
   dragSelect(e, 340, 20, 140);
   checkText('bbbbbccccc', e);
   checkRanges([[1,3,1,13]], e);
+  doneTest(e);
 
   clear();
   e = document.getElementById('test9');
   dragSelect(e, 20, 340, 295);
   checkText('aaaaaabbbbbbbb', e);
   checkRanges([[0,1,0,15]], e);
+  doneTest(e);
 
   clear();
   e = document.getElementById('testA');
@@ -179,18 +211,24 @@ function test()
   checkText('aaaaaaccccccc', e);
   checkRanges([[0,1,2,7]], e);
   checkRangeText('aaaaaabbbbbbbbccccccc', 0);
+  doneTest(e);
 
   clear();
   e = document.getElementById('testB');
   dragSelect(e, 340, 20, 140);
   checkText('bbbbbbbccccccc', e);
   checkRanges([[1,1,1,15]], e);
+  doneTest(e);
 
   clear();
-  e = document.getElementById('test9');
-  dragSelect(e, 20, 340, 295);
-  checkText('aaaaaabbbbbbbb', e);
-  checkRanges([[0,1,0,15]], e);
+  e = document.getElementById('testE');
+  dragSelect(e, 20, 360, 295);
+  checkText('aa\nbbbb\nee', e);
+  checkRangeCount(3, e);
+  checkRange(0, [0,1,-1,1], e);
+  checkRange(1, [1,0,-1,2], e.children[0]);
+  checkRange(2, [2,0,2,2], e);
+  doneTest(e);
 
   // ======================================================
   // ================== shift+click tests =================
@@ -206,6 +244,7 @@ function test()
   checkRangeText('bbbbbbbbcc', 0);
   checkText('bbbbbbbbcc', e);
   checkRanges([[-1,1,1,10]], e);
+  doneTest(e);
 
   // test extending a selection that end in a -moz-user-select:none node
   clear();
@@ -217,6 +256,7 @@ function test()
   checkRangeText('aaaaaabbbbbbbb', 0);
   checkText('aaaaaabbbbbbbb', e);
   checkRanges([[0,1,-1,1]], e);
+  doneTest(e);
 
   // ======================================================
   // ==================== Script tests ====================
@@ -247,6 +287,7 @@ function test()
   is(sel.rangeCount, 2, "testD: kbd selection is filtered");
   is(sel.getRangeAt(0).toString(), 'aaaa', "testD: kbd selection is filtered");
   is(sel.getRangeAt(1).toString(), 'cccc', "testD: kbd selection is filtered");
+  doneTest(e);
 
   clear();
   SimpleTest.finish();
