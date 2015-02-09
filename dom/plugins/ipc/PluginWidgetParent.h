@@ -52,8 +52,6 @@ public:
   void SetParent(nsIWidget* aParent);
 
 private:
-  void ShutdownCommon(bool aParentInitiated);
-
   // The tab our connection is associated with.
   mozilla::dom::TabParent* GetTabParent();
   // The chrome side native widget.
