@@ -368,22 +368,179 @@ RegExpObject::init(ExclusiveContext *cx, HandleAtom source, RegExpFlag flags)
     return true;
 }
 
+static MOZ_ALWAYS_INLINE bool
+IsLineTerminator(const JS::Latin1Char c)
+{
+    return c == '\n' || c == '\r';
+}
+
+static MOZ_ALWAYS_INLINE bool
+IsLineTerminator(const char16_t c)
+{
+    return c == '\n' || c == '\r' || c == 0x2028 || c == 0x2029;
+}
+
+static MOZ_ALWAYS_INLINE bool
+AppendEscapedLineTerminator(StringBuffer &sb, const JS::Latin1Char c)
+{
+    switch (c) {
+      case '\n':
+        if (!sb.append('n'))
+            return false;
+        break;
+      case '\r':
+        if (!sb.append('r'))
+            return false;
+        break;
+      default:
+        MOZ_CRASH("Bad LineTerminator");
+    }
+    return true;
+}
+
+static MOZ_ALWAYS_INLINE bool
+AppendEscapedLineTerminator(StringBuffer &sb, const char16_t c)
+{
+    switch (c) {
+      case '\n':
+        if (!sb.append('n'))
+            return false;
+        break;
+      case '\r':
+        if (!sb.append('r'))
+            return false;
+        break;
+      case 0x2028:
+        if (!sb.append("u2028"))
+            return false;
+        break;
+      case 0x2029:
+        if (!sb.append("u2029"))
+            return false;
+        break;
+      default:
+        MOZ_CRASH("Bad LineTerminator");
+    }
+    return true;
+}
+
+static template <typename CharT>
+MOZ_ALWAYS_INLINE bool
+SetupBuffer(StringBuffer &sb, const CharT *oldChars, size_t oldLen, const CharT *it)
+{
+    if (mozilla::IsSame<CharT, char16_t>::value && !sb.ensureTwoByteChars())
+        return false;
+
+    if (!sb.reserve(oldLen + 1))
+        return false;
+
+    sb.infallibleAppend(oldChars, size_t(it - oldChars));
+    return true;
+}
+
+// Note: returns the original if no escaping need be performed.
+template <typename CharT>
+static bool
+EscapeRegExpPattern(StringBuffer &sb, const CharT *oldChars, size_t oldLen)
+{
+    bool inBrackets = false;
+    bool previousCharacterWasBackslash = false;
+
+    for (const CharT *it = oldChars; it < oldChars + oldLen; ++it) {
+        CharT ch = *it;
+        if (!previousCharacterWasBackslash) {
+            if (inBrackets) {
+                if (ch == ']')
+                    inBrackets = false;
+            } else if (ch == '/') {
+                // There's a forward slash that needs escaping.
+                if (sb.empty()) {
+                    // This is the first char we've seen that needs escaping,
+                    // copy everything up to this point.
+                    if (!SetupBuffer(sb, oldChars, oldLen, it))
+                        return false;
+                }
+                if (!sb.append('\\'))
+                    return false;
+            } else if (ch == '[') {
+                inBrackets = true;
+            }
+        }
+
+        if (IsLineTerminator(ch)) {
+            // There's LineTerminator that needs escaping.
+            if (sb.empty()) {
+                // This is the first char we've seen that needs escaping,
+                // copy everything up to this point.
+                if (!SetupBuffer(sb, oldChars, oldLen, it))
+                    return false;
+            }
+            if (!previousCharacterWasBackslash) {
+                if (!sb.append('\\'))
+                    return false;
+            }
+            if (!AppendEscapedLineTerminator(sb, ch))
+                return false;
+        } else if (!sb.empty()) {
+            if (!sb.append(ch))
+                return false;
+        }
+
+        if (previousCharacterWasBackslash)
+            previousCharacterWasBackslash = false;
+        else if (ch == '\\')
+            previousCharacterWasBackslash = true;
+    }
+
+    return true;
+}
+
+// ES6 draft rev32 21.2.3.2.4.
+JSAtom *
+js::EscapeRegExpPattern(JSContext *cx, HandleAtom src)
+{
+    // Step 2.
+    if (src->length() == 0)
+        return cx->names().emptyRegExp;
+
+    // We may never need to use |sb|. Start using it lazily.
+    StringBuffer sb(cx);
+
+    if (src->hasLatin1Chars()) {
+        JS::AutoCheckCannotGC nogc;
+        if (!::EscapeRegExpPattern(sb, src->latin1Chars(nogc), src->length()))
+            return nullptr;
+    } else {
+        JS::AutoCheckCannotGC nogc;
+        if (!::EscapeRegExpPattern(sb, src->twoByteChars(nogc), src->length()))
+            return nullptr;
+    }
+
+    // Step 3.
+    return sb.empty() ? src : sb.finishAtom();
+}
+
+// ES6 draft rev32 21.2.5.14. Optimized for RegExpObject.
 JSFlatString *
 RegExpObject::toString(JSContext *cx) const
 {
-    JSAtom *src = getSource();
+    // Steps 3-4.
+    RootedAtom src(cx, getSource());
+    if (!src)
+        return nullptr;
+    RootedAtom escapedSrc(cx, EscapeRegExpPattern(cx, src));
+
+    // Step 7.
     StringBuffer sb(cx);
-    if (size_t len = src->length()) {
-        if (!sb.reserve(len + 2))
-            return nullptr;
-        sb.infallibleAppend('/');
-        if (!sb.append(src))
-            return nullptr;
-        sb.infallibleAppend('/');
-    } else {
-        if (!sb.append("/(?:)/"))
-            return nullptr;
-    }
+    size_t len = escapedSrc->length();
+    if (!sb.reserve(len + 2))
+        return nullptr;
+    sb.infallibleAppend('/');
+    if (!sb.append(escapedSrc))
+        return nullptr;
+    sb.infallibleAppend('/');
+
+    // Steps 5-7.
     if (global() && !sb.append('g'))
         return nullptr;
     if (ignoreCase() && !sb.append('i'))
