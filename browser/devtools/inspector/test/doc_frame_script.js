@@ -21,6 +21,17 @@ let EventUtils = {};
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
 
 /**
+ * If the test page creates and triggeres the custom event
+ * "test-page-processing-done", then the Test:TestPageProcessingDone message
+ * will be sent to the parent process for tests to wait for this event if needed.
+ */
+addEventListener("DOMWindowCreated", () => {
+  content.addEventListener("test-page-processing-done", () => {
+    sendAsyncMessage("Test:TestPageProcessingDone");
+  }, false);
+});
+
+/**
  * Given an actorID and connection prefix, get the corresponding actor from the
  * debugger-server connection.
  * @param {String} actorID
