@@ -60,6 +60,8 @@ Tests of DOM Worker Navigator
     SimpleTest.finish();
   }
 
+  worker.postMessage({ 'isB2G': SpecialPowers.isB2G });
+
   SimpleTest.waitForExplicitFinish();
 
 </script>
