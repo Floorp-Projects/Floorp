@@ -6838,6 +6838,9 @@ class CGMethodCall(CGThing):
                 # Filter out the signatures that should not be exposed in a
                 # worker.  The IDL parser enforces the return value being
                 # exposed correctly, but we have to check the argument types.
+                #
+                # If this code changes, adjust the self._deps
+                # computation in CGDDescriptor.__init__ as needed.
                 assert all(typeExposedInWorkers(sig[0]) for sig in signatures)
                 signatures = filter(
                     lambda sig: all(typeExposedInWorkers(arg.type)
@@ -11008,6 +11011,21 @@ class CGDescriptor(CGThing):
         assert not descriptor.concrete or descriptor.interface.hasInterfacePrototypeObject()
 
         self._deps = descriptor.interface.getDeps()
+        # If we have a worker descriptor, add dependencies on interface types we
+        # have as method arguments to overloaded methods.  See the
+        # filteredSignatures() bit in CGMethodCall.  Note that we have to add
+        # both interfaces that _are_ exposed in workers and ones that aren't;
+        # the idea is that we have to notice when the exposure set changes.
+        if descriptor.workers:
+            methods = (m for m in descriptor.interface.members if
+                       m.isMethod() and isMaybeExposedIn(m, descriptor) and
+                       len(m.signatures()) != 1)
+            for m in methods:
+                for sig in m.signatures():
+                    for arg in sig[1]:
+                        if (arg.type.isGeckoInterface() and
+                            not arg.type.inner.isExternal()):
+                            self._deps.add(arg.type.inner.filename())
 
         cgThings = []
         cgThings.append(CGGeneric(declare="typedef %s NativeType;\n" %
