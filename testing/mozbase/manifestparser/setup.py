@@ -5,7 +5,7 @@
 from setuptools import setup
 
 PACKAGE_NAME = "manifestparser"
-PACKAGE_VERSION = '1.0'
+PACKAGE_VERSION = '0.9'
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
