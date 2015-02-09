@@ -60,7 +60,7 @@ CommonAnimationManager::CommonAnimationManager(nsPresContext *aPresContext)
 
 CommonAnimationManager::~CommonAnimationManager()
 {
-  NS_ABORT_IF_FALSE(!mPresContext, "Disconnect should have been called");
+  MOZ_ASSERT(!mPresContext, "Disconnect should have been called");
 }
 
 void
@@ -190,8 +190,8 @@ CommonAnimationManager::MediumFeaturesChanged(nsPresContext* aPresContext)
 /* virtual */ void
 CommonAnimationManager::RulesMatching(ElementRuleProcessorData* aData)
 {
-  NS_ABORT_IF_FALSE(aData->mPresContext == mPresContext,
-                    "pres context mismatch");
+  MOZ_ASSERT(aData->mPresContext == mPresContext,
+             "pres context mismatch");
   nsIStyleRule *rule =
     GetAnimationRule(aData->mElement,
                      nsCSSPseudoElements::ePseudo_NotPseudoElement);
@@ -203,8 +203,8 @@ CommonAnimationManager::RulesMatching(ElementRuleProcessorData* aData)
 /* virtual */ void
 CommonAnimationManager::RulesMatching(PseudoElementRuleProcessorData* aData)
 {
-  NS_ABORT_IF_FALSE(aData->mPresContext == mPresContext,
-                    "pres context mismatch");
+  MOZ_ASSERT(aData->mPresContext == mPresContext,
+             "pres context mismatch");
   if (aData->mPseudoType != nsCSSPseudoElements::ePseudo_before &&
       aData->mPseudoType != nsCSSPseudoElements::ePseudo_after) {
     return;
@@ -293,9 +293,9 @@ CommonAnimationManager::ExtractComputedValueForTransition(
                                                           aStyleContext,
                                                           aComputedValue);
   if (aProperty == eCSSProperty_visibility) {
-    NS_ABORT_IF_FALSE(aComputedValue.GetUnit() ==
-                        StyleAnimationValue::eUnit_Enumerated,
-                      "unexpected unit");
+    MOZ_ASSERT(aComputedValue.GetUnit() ==
+                 StyleAnimationValue::eUnit_Enumerated,
+               "unexpected unit");
     aComputedValue.SetIntValue(aComputedValue.GetIntValue(),
                                StyleAnimationValue::eUnit_Visibility);
   }
@@ -354,7 +354,7 @@ nsIStyleRule*
 CommonAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
                                          nsCSSPseudoElements::Type aPseudoType)
 {
-  NS_ABORT_IF_FALSE(
+  MOZ_ASSERT(
     aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
     aPseudoType == nsCSSPseudoElements::ePseudo_before ||
     aPseudoType == nsCSSPseudoElements::ePseudo_after,
@@ -435,7 +435,7 @@ AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
         bool ok =
 #endif
           StyleAnimationValue::UncomputeValue(cv.mProperty, cv.mValue, *prop);
-        NS_ABORT_IF_FALSE(ok, "could not store computed value");
+        MOZ_ASSERT(ok, "could not store computed value");
       }
     }
   }
@@ -684,7 +684,7 @@ AnimationPlayerCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
   AnimationPlayerCollection* collection =
     static_cast<AnimationPlayerCollection*>(aPropertyValue);
 #ifdef DEBUG
-  NS_ABORT_IF_FALSE(!collection->mCalledPropertyDtor, "can't call dtor twice");
+  MOZ_ASSERT(!collection->mCalledPropertyDtor, "can't call dtor twice");
   collection->mCalledPropertyDtor = true;
 #endif
   delete collection;

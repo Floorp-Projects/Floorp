@@ -69,7 +69,7 @@ SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue)
       break;
 
     default:
-      NS_ABORT_IF_FALSE(false, "Unknown segment type");
+      MOZ_ASSERT(false, "Unknown segment type");
       aValue = MOZ_UTF16("<unknown-segment-type>");
       return;
     }

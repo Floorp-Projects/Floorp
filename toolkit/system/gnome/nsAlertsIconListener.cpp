@@ -43,7 +43,7 @@ static void notify_closed_marshal(GClosure* closure,
                                   gpointer invocation_hint,
                                   gpointer marshal_data)
 {
-  NS_ABORT_IF_FALSE(n_param_values >= 1, "No object in params");
+  MOZ_ASSERT(n_param_values >= 1, "No object in params");
 
   nsAlertsIconListener* alert =
     static_cast<nsAlertsIconListener*>(closure->data);

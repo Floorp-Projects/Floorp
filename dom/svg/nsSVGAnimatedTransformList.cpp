@@ -172,8 +172,8 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
   bool& aPreventCachingOfSandwich) const
 {
   NS_ENSURE_TRUE(aSrcElement, NS_ERROR_FAILURE);
-  NS_ABORT_IF_FALSE(aValue.IsNull(),
-    "aValue should have been cleared before calling ValueFromString");
+  MOZ_ASSERT(aValue.IsNull(),
+             "aValue should have been cleared before calling ValueFromString");
 
   const nsAttrValue* typeAttr = aSrcElement->GetAnimAttr(nsGkAtoms::type);
   const nsIAtom* transformType = nsGkAtoms::translate; // default val
@@ -198,7 +198,7 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
   const nsIAtom* aTransformType,
   nsSMILValue& aResult)
 {
-  NS_ABORT_IF_FALSE(aResult.IsNull(), "Unexpected type for SMIL value");
+  MOZ_ASSERT(aResult.IsNull(), "Unexpected type for SMIL value");
 
   static_assert(SVGTransformSMILData::NUM_SIMPLE_PARAMS == 3,
                 "nsSVGSMILTransform constructor should be expecting array "
@@ -292,9 +292,8 @@ nsresult
 nsSVGAnimatedTransformList::SMILAnimatedTransformList::SetAnimValue(
   const nsSMILValue& aNewAnimValue)
 {
-  NS_ABORT_IF_FALSE(
-    aNewAnimValue.mType == SVGTransformListSMILType::Singleton(),
-    "Unexpected type to assign animated value");
+  MOZ_ASSERT(aNewAnimValue.mType == SVGTransformListSMILType::Singleton(),
+             "Unexpected type to assign animated value");
   SVGTransformList animVal;
   if (!SVGTransformListSMILType::GetTransforms(aNewAnimValue,
                                                animVal.mItems)) {

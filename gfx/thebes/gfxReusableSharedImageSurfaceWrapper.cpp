@@ -35,7 +35,7 @@ void
 gfxReusableSharedImageSurfaceWrapper::ReadUnlock()
 {
   int32_t readCount = mSurface->ReadUnlock();
-  NS_ABORT_IF_FALSE(readCount >= 0, "Read count should not be negative");
+  MOZ_ASSERT(readCount >= 0, "Read count should not be negative");
 
   if (readCount == 0) {
     mAllocator->DeallocShmem(mSurface->GetShmem());
@@ -48,7 +48,7 @@ gfxReusableSharedImageSurfaceWrapper::GetWritable(gfxImageSurface** aSurface)
   NS_ASSERT_OWNINGTHREAD(gfxReusableSharedImageSurfaceWrapper);
 
   int32_t readCount = mSurface->GetReadCount();
-  NS_ABORT_IF_FALSE(readCount > 0, "A ReadLock must be held when calling GetWritable");
+  MOZ_ASSERT(readCount > 0, "A ReadLock must be held when calling GetWritable");
   if (readCount == 1) {
     *aSurface = mSurface;
     return this;
@@ -72,7 +72,7 @@ gfxReusableSharedImageSurfaceWrapper::GetWritable(gfxImageSurface** aSurface)
 const unsigned char*
 gfxReusableSharedImageSurfaceWrapper::GetReadOnlyData() const
 {
-  NS_ABORT_IF_FALSE(mSurface->GetReadCount() > 0, "Should have read lock");
+  MOZ_ASSERT(mSurface->GetReadCount() > 0, "Should have read lock");
   return mSurface->Data();
 }
 

@@ -554,7 +554,7 @@ IsShortcutPath(const nsAString& aPath)
   // Under Windows, the shortcuts are just files with a ".lnk" extension.
   // Note also that we don't resolve links in the middle of paths.
   // i.e. "c:\foo.lnk\bar.txt" is invalid.
-  NS_ABORT_IF_FALSE(!aPath.IsEmpty(), "don't pass an empty string");
+  MOZ_ASSERT(!aPath.IsEmpty(), "don't pass an empty string");
   int32_t len = aPath.Length();
   return len >= 4 && (StringTail(aPath, 4).LowerCaseEqualsASCII(".lnk"));
 }

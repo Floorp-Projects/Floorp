@@ -2027,8 +2027,8 @@ History::NotifyVisited(nsIURI* aURI)
       link->SetLinkState(eLinkState_Visited);
       // Verify that the observers hash doesn't mutate while looping through
       // the links associated with this URI.
-      NS_ABORT_IF_FALSE(key == mObservers.GetEntry(aURI),
-                        "The URIs hash mutated!");
+      MOZ_ASSERT(key == mObservers.GetEntry(aURI),
+                 "The URIs hash mutated!");
     }
   }
 
@@ -2349,7 +2349,7 @@ History::GetService()
   }
 
   nsCOMPtr<IHistory> service(do_GetService(NS_IHISTORY_CONTRACTID));
-  NS_ABORT_IF_FALSE(service, "Cannot obtain IHistory service!");
+  MOZ_ASSERT(service, "Cannot obtain IHistory service!");
   NS_ASSERTION(gService, "Our constructor was not run?!");
 
   return gService;

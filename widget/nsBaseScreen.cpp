@@ -36,12 +36,11 @@ nsBaseScreen::GetAvailRectDisplayPix(int32_t *outLeft,  int32_t *outTop,
 NS_IMETHODIMP
 nsBaseScreen::LockMinimumBrightness(uint32_t aBrightness)
 {
-  NS_ABORT_IF_FALSE(
-    aBrightness < nsIScreen::BRIGHTNESS_LEVELS,
-    "Invalid brightness level to lock");
+  MOZ_ASSERT(aBrightness < nsIScreen::BRIGHTNESS_LEVELS,
+             "Invalid brightness level to lock");
   mBrightnessLocks[aBrightness]++;
-  NS_ABORT_IF_FALSE(mBrightnessLocks[aBrightness] > 0,
-    "Overflow after locking brightness level");
+  MOZ_ASSERT(mBrightnessLocks[aBrightness] > 0,
+             "Overflow after locking brightness level");
 
   CheckMinimumBrightness();
 
@@ -51,11 +50,10 @@ nsBaseScreen::LockMinimumBrightness(uint32_t aBrightness)
 NS_IMETHODIMP
 nsBaseScreen::UnlockMinimumBrightness(uint32_t aBrightness)
 {
-  NS_ABORT_IF_FALSE(
-    aBrightness < nsIScreen::BRIGHTNESS_LEVELS,
-    "Invalid brightness level to lock");
-  NS_ABORT_IF_FALSE(mBrightnessLocks[aBrightness] > 0,
-    "Unlocking a brightness level with no corresponding lock");
+  MOZ_ASSERT(aBrightness < nsIScreen::BRIGHTNESS_LEVELS,
+             "Invalid brightness level to lock");
+  MOZ_ASSERT(mBrightnessLocks[aBrightness] > 0,
+             "Unlocking a brightness level with no corresponding lock");
   mBrightnessLocks[aBrightness]--;
 
   CheckMinimumBrightness();

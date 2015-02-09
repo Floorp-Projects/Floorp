@@ -189,8 +189,9 @@ public:
     // provided to the line layout. However, floats should never be
     // associated with ruby text containers, hence this method should
     // not be called in that case.
-    NS_ABORT_IF_FALSE(mBlockRS, "Should not call this method "
-                      "if there is no block reflow state available");
+    MOZ_ASSERT(mBlockRS,
+               "Should not call this method if there is no block reflow state "
+               "available");
     return mBlockRS->AddFloat(this, aFloat, aAvailableISize);
   }
 

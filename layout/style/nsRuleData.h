@@ -65,19 +65,18 @@ struct nsRuleData
    */
   nsCSSValue* ValueFor(nsCSSProperty aProperty)
   {
-    NS_ABORT_IF_FALSE(aProperty < eCSSProperty_COUNT_no_shorthands,
-                      "invalid or shorthand property");
+    MOZ_ASSERT(aProperty < eCSSProperty_COUNT_no_shorthands,
+               "invalid or shorthand property");
 
     nsStyleStructID sid = nsCSSProps::kSIDTable[aProperty];
     size_t indexInStruct = nsCSSProps::PropertyIndexInStruct(aProperty);
 
     // This should really be nsCachedStyleData::GetBitForSID, but we can't
     // include that here since it includes us.
-    NS_ABORT_IF_FALSE(mSIDs & (1 << sid),
-                      "calling nsRuleData::ValueFor on property not in mSIDs");
-    NS_ABORT_IF_FALSE(sid != eStyleStruct_BackendOnly &&
-                      indexInStruct != size_t(-1),
-                      "backend-only or logical property");
+    MOZ_ASSERT(mSIDs & (1 << sid),
+               "calling nsRuleData::ValueFor on property not in mSIDs");
+    MOZ_ASSERT(sid != eStyleStruct_BackendOnly && indexInStruct != size_t(-1),
+               "backend-only or logical property");
 
     return mValueStorage + mValueOffsets[sid] + indexInStruct;
   }
@@ -99,15 +98,15 @@ struct nsRuleData
   #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,        \
                    kwtable_, stylestruct_, stylestructoffset_, animtype_)    \
     nsCSSValue* ValueFor##method_() {                                        \
-      NS_ABORT_IF_FALSE(mSIDs & NS_STYLE_INHERIT_BIT(stylestruct_),          \
-                        "Calling nsRuleData::ValueFor" #method_ " without "  \
-                        "NS_STYLE_INHERIT_BIT(" #stylestruct_ " in mSIDs."); \
+      MOZ_ASSERT(mSIDs & NS_STYLE_INHERIT_BIT(stylestruct_),                 \
+                 "Calling nsRuleData::ValueFor" #method_ " without "         \
+                 "NS_STYLE_INHERIT_BIT(" #stylestruct_ " in mSIDs.");        \
       nsStyleStructID sid = eStyleStruct_##stylestruct_;                     \
       size_t indexInStruct =                                                 \
         nsCSSProps::PropertyIndexInStruct(eCSSProperty_##id_);               \
-      NS_ABORT_IF_FALSE(sid != eStyleStruct_BackendOnly &&                   \
-                        indexInStruct != size_t(-1),                         \
-                        "backend-only property");                            \
+      MOZ_ASSERT(sid != eStyleStruct_BackendOnly &&                          \
+                 indexInStruct != size_t(-1),                                \
+                 "backend-only property");                                   \
       return mValueStorage + mValueOffsets[sid] + indexInStruct;             \
     }                                                                        \
     const nsCSSValue* ValueFor##method_() const {                            \

@@ -306,9 +306,8 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     nsSVGLength2 &width =
       content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
     if (width.IsPercentage()) {
-      NS_ABORT_IF_FALSE(intrinsicSize.width.GetUnit() == eStyleUnit_None,
-                        "GetIntrinsicSize should have reported no "
-                        "intrinsic width");
+      MOZ_ASSERT(intrinsicSize.width.GetUnit() == eStyleUnit_None,
+                 "GetIntrinsicSize should have reported no intrinsic width");
       float val = width.GetAnimValInSpecifiedUnits() / 100.0f;
       if (val < 0.0f) val = 0.0f;
       intrinsicSize.width.SetCoordValue(val * cbSize.Width(aWM));
@@ -319,17 +318,16 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     NS_ASSERTION(aCBSize.BSize(aWM) != NS_AUTOHEIGHT,
                  "root should not have auto-height containing block");
     if (height.IsPercentage()) {
-      NS_ABORT_IF_FALSE(intrinsicSize.height.GetUnit() == eStyleUnit_None,
-                        "GetIntrinsicSize should have reported no "
-                        "intrinsic height");
+      MOZ_ASSERT(intrinsicSize.height.GetUnit() == eStyleUnit_None,
+                 "GetIntrinsicSize should have reported no intrinsic height");
       float val = height.GetAnimValInSpecifiedUnits() / 100.0f;
       if (val < 0.0f) val = 0.0f;
       intrinsicSize.height.SetCoordValue(val * cbSize.Height(aWM));
     }
-    NS_ABORT_IF_FALSE(intrinsicSize.height.GetUnit() == eStyleUnit_Coord &&
-                      intrinsicSize.width.GetUnit() == eStyleUnit_Coord,
-                      "We should have just handled the only situation where"
-                      "we lack an intrinsic height or width.");
+    MOZ_ASSERT(intrinsicSize.height.GetUnit() == eStyleUnit_Coord &&
+               intrinsicSize.width.GetUnit() == eStyleUnit_Coord,
+               "We should have just handled the only situation where"
+               "we lack an intrinsic height or width.");
   }
 
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aWM,
@@ -436,8 +434,9 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
     // including our anonymous wrapper kid:
     anonKid->AddStateBits(mState & NS_FRAME_IS_DIRTY);
     anonKid->ReflowSVG();
-    NS_ABORT_IF_FALSE(!anonKid->GetNextSibling(),
-      "We should have one anonymous child frame wrapping our real children");
+    MOZ_ASSERT(!anonKid->GetNextSibling(),
+               "We should have one anonymous child frame wrapping our real "
+               "children");
   }
   mCallingReflowSVG = false;
 
@@ -759,10 +758,10 @@ nsSVGOuterSVGFrame::GetType() const
 void
 nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
 {
-  NS_ABORT_IF_FALSE(aFlags &&
-                    !(aFlags & ~(COORD_CONTEXT_CHANGED | TRANSFORM_CHANGED |
-                                 FULL_ZOOM_CHANGED)),
-                    "Unexpected aFlags value");
+  MOZ_ASSERT(aFlags &&
+             !(aFlags & ~(COORD_CONTEXT_CHANGED | TRANSFORM_CHANGED |
+                          FULL_ZOOM_CHANGED)),
+             "Unexpected aFlags value");
 
   // No point in doing anything when were not init'ed yet:
   if (!mViewportInitialized) {
@@ -944,8 +943,8 @@ nsSVGOuterSVGAnonChildFrame::Init(nsIContent*       aContent,
                                   nsContainerFrame* aParent,
                                   nsIFrame*         aPrevInFlow)
 {
-  NS_ABORT_IF_FALSE(aParent->GetType() == nsGkAtoms::svgOuterSVGFrame,
-                    "Unexpected parent");
+  MOZ_ASSERT(aParent->GetType() == nsGkAtoms::svgOuterSVGFrame,
+             "Unexpected parent");
   nsSVGOuterSVGAnonChildFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 #endif
