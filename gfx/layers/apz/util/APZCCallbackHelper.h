@@ -125,6 +125,17 @@ public:
                                                        const LayoutDevicePoint& aRefPoint,
                                                        nsIWidget* aWidget);
 
+    /* Dispatch a mouse event with the given parameters.
+     * Return whether or not any listeners have called preventDefault on the event. */
+    static bool DispatchMouseEvent(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
+                                   const nsString& aType,
+                                   const CSSPoint& aPoint,
+                                   int32_t aButton,
+                                   int32_t aClickCount,
+                                   int32_t aModifiers,
+                                   bool aIgnoreRootScrollFrame,
+                                   unsigned short aInputSourceArg);
+
     /* Fire a single-tap event at the given point. The event is dispatched
      * via the given widget. */
     static void FireSingleTapEvent(const LayoutDevicePoint& aPoint,
