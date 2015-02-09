@@ -13,7 +13,6 @@
 #include <stdint.h>
 
 #include "jsfriendapi.h"
-#include "jsinfer.h"
 #include "jsobj.h"
 #include "NamespaceImports.h"
 
@@ -23,6 +22,7 @@
 #include "js/Value.h"
 #include "vm/Shape.h"
 #include "vm/String.h"
+#include "vm/TypeInference.h"
 
 namespace js {
 

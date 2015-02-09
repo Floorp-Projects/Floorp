@@ -583,7 +583,7 @@ CopyFrontToBack(TextureClient* aFront,
     return false;
   }
 
-  if (!aBack->Lock(OpenMode::OPEN_WRITE)) {
+  if (!aBack->Lock(OpenMode::OPEN_READ_WRITE)) {
     NS_WARNING("Failed to lock the tile's back buffer");
     return false;
   }

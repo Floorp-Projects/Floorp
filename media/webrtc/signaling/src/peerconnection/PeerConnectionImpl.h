@@ -321,9 +321,6 @@ public:
   // Get the DTLS identity (local side)
   mozilla::RefPtr<DtlsIdentity> const GetIdentity() const;
 
-  // Create a fake media stream
-  nsresult CreateFakeMediaStream(uint32_t hint, mozilla::DOMMediaStream** retval);
-
   nsPIDOMWindow* GetWindow() const {
     PC_AUTO_ENTER_API_CALL_NO_CHECK();
     return mWindow;
