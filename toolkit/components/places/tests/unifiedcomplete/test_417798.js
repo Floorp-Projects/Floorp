@@ -12,7 +12,7 @@ add_task(function* test_javascript_match() {
 
   let uri1 = NetUtil.newURI("http://abc/def");
   let uri2 = NetUtil.newURI("javascript:5");
-  yield promiseAddVisits([ { uri: uri1, title: "Title with javascript:" } ]);
+  yield PlacesTestUtils.addVisits([ { uri: uri1, title: "Title with javascript:" } ]);
   addBookmark({ uri: uri2,
                 title: "Title with javascript:" });
 

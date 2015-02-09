@@ -42,7 +42,7 @@ add_task(function test_execute()
 
   // add a visit
   var testURI = uri("http://mozilla.com");
-  yield promiseAddVisits(testURI);
+  yield PlacesTestUtils.addVisits(testURI);
 
   // now query for the visit, setting sorting and limit such that
   // we should retrieve only the visit we just added
@@ -69,8 +69,8 @@ add_task(function test_execute()
 
   // add another visit for the same URI, and a third visit for a different URI
   var testURI2 = uri("http://google.com/");
-  yield promiseAddVisits(testURI);
-  yield promiseAddVisits(testURI2);
+  yield PlacesTestUtils.addVisits(testURI);
+  yield PlacesTestUtils.addVisits(testURI2);
 
   options.maxResults = 5;
   options.resultType = options.RESULTS_AS_URI;
@@ -149,7 +149,7 @@ add_task(function test_execute()
   do_check_true(!histsvc.historyDisabled);
 
   // test getPageTitle
-  yield promiseAddVisits({ uri: uri("http://example.com"), title: "title" });
+  yield PlacesTestUtils.addVisits({ uri: uri("http://example.com"), title: "title" });
   let placeInfo = yield PlacesUtils.promisePlaceInfo(uri("http://example.com"));
   do_check_eq(placeInfo.title, "title");
 
@@ -171,7 +171,7 @@ add_task(function test_execute()
   }
 
   // bug 394741 - regressed history text searches
-  yield promiseAddVisits(uri("http://mozilla.com"));
+  yield PlacesTestUtils.addVisits(uri("http://mozilla.com"));
   var options = histsvc.getNewQueryOptions();
   //options.resultType = options.RESULTS_AS_VISIT;
   var query = histsvc.getNewQuery();

@@ -7,7 +7,7 @@ add_autocomplete_test([
   "MOZ",
   { autoFilled: "MOZilla.org/", completed: "mozilla.org/" },
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/test/") });
+    PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://mozilla.org/test/") });
   }
 ]);
 
@@ -16,7 +16,7 @@ add_autocomplete_test([
   "mozilla.org/T",
   { autoFilled: "mozilla.org/T", completed: "mozilla.org/T" },
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/test/") });
+    PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://mozilla.org/test/") });
   }
 ]);
 
@@ -25,7 +25,7 @@ add_autocomplete_test([
   "mozilla.org/T",
   { autoFilled: "mozilla.org/Test/", completed: "http://mozilla.org/Test/" },
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/") });
+    PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/") });
   }
 ]);
 
@@ -34,7 +34,7 @@ add_autocomplete_test([
   "mOzilla.org/t",
   { autoFilled: "mOzilla.org/t", completed: "mOzilla.org/t" },
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/") });
+    PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/") });
   },
 ]);
 
@@ -43,7 +43,7 @@ add_autocomplete_test([
   "mOzilla.org/T",
   { autoFilled: "mOzilla.org/Test/", completed: "http://mozilla.org/Test/" },
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/") });
+    PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/") });
   },
 ]);
 
@@ -52,7 +52,7 @@ add_autocomplete_test([
   "http://mOz",
   { autoFilled: "http://mOzilla.org/", completed: "http://mozilla.org/" },
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/") });
+    PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/") });
   },
 ]);
 
@@ -61,7 +61,7 @@ add_autocomplete_test([
   "http://www.mOz",
   { autoFilled: "http://www.mOzilla.org/", completed: "http://www.mozilla.org/" },
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://www.mozilla.org/Test/") });
+    PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://www.mozilla.org/Test/") });
   },
 ]);
 
@@ -70,7 +70,7 @@ add_autocomplete_test([
   "http://mOzilla.org/t",
   { autoFilled: "http://mOzilla.org/t", completed: "http://mOzilla.org/t" },
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/") });
+    PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/") });
   },
 ]);
 
@@ -79,7 +79,7 @@ add_autocomplete_test([
   "http://mOzilla.org/T",
   { autoFilled: "http://mOzilla.org/Test/", completed: "http://mozilla.org/Test/" },
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/") });
+    PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://mozilla.org/Test/") });
   },
 ]);
 
@@ -88,7 +88,7 @@ add_autocomplete_test([
   "http://www.mOzilla.org/t",
   { autoFilled: "http://www.mOzilla.org/t", completed: "http://www.mOzilla.org/t" },
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://www.mozilla.org/Test/") });
+    PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://www.mozilla.org/Test/") });
   },
 ]);
 
@@ -97,6 +97,6 @@ add_autocomplete_test([
   "http://www.mOzilla.org/T",
   { autoFilled: "http://www.mOzilla.org/Test/", completed: "http://www.mozilla.org/Test/" },
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://www.mozilla.org/Test/") });
+    PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://www.mozilla.org/Test/") });
   },
 ]);

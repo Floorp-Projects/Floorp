@@ -38,7 +38,7 @@ function task_add_normalized_visit(aURI, aTime, aDayOffset) {
   var PRTimeWithOffset = (previousDateObj.getTime() - DSTCorrection) * 1000;
   var timeInMs = new Date(PRTimeWithOffset/1000);
   print("Adding visit to " + aURI.spec + " at " + timeInMs);
-  yield promiseAddVisits({
+  yield PlacesTestUtils.addVisits({
     uri: aURI,
     visitDate: PRTimeWithOffset
   });

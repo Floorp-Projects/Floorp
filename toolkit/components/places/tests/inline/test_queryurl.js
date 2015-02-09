@@ -7,11 +7,13 @@ add_autocomplete_test([
   "file",
   "file.org/",
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://file.org/test/"),
-                       transition: TRANSITION_TYPED },
-                     { uri: NetUtil.newURI("file:///c:/test.html"),
-                       transition: TRANSITION_TYPED }
-                    );
+    PlacesTestUtils.addVisits({
+      uri: NetUtil.newURI("http://file.org/test/"),
+      transition: TRANSITION_TYPED
+    }, {
+      uri: NetUtil.newURI("file:///c:/test.html"),
+      transition: TRANSITION_TYPED
+    });
   },
 ]);
 
@@ -20,11 +22,13 @@ add_autocomplete_test([
   "file.org/",
   "file.org/",
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://file.org/test/"),
-                       transition: TRANSITION_TYPED },
-                     { uri: NetUtil.newURI("file:///c:/test.html"),
-                       transition: TRANSITION_TYPED }
-                    );
+    PlacesTestUtils.addVisits({
+      uri: NetUtil.newURI("http://file.org/test/"),
+      transition: TRANSITION_TYPED
+    }, {
+      uri: NetUtil.newURI("file:///c:/test.html"),
+      transition: TRANSITION_TYPED
+    });
   },
 ]);
 
@@ -33,11 +37,13 @@ add_autocomplete_test([
   "file.org/t",
   "file.org/test/",
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://file.org/test/"),
-                       transition: TRANSITION_TYPED },
-                     { uri: NetUtil.newURI("file:///c:/test.html"),
-                       transition: TRANSITION_TYPED }
-                    );
+    PlacesTestUtils.addVisits({
+      uri: NetUtil.newURI("http://file.org/test/"),
+      transition: TRANSITION_TYPED
+    }, {
+      uri: NetUtil.newURI("file:///c:/test.html"),
+      transition: TRANSITION_TYPED
+    });
   },
 ]);
 
@@ -46,7 +52,9 @@ add_autocomplete_test([
   "file",
   "file",
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("file:///c:/test.html"),
-                       transition: TRANSITION_TYPED });
+    PlacesTestUtils.addVisits({
+      uri: NetUtil.newURI("file:///c:/test.html"),
+      transition: TRANSITION_TYPED
+    });
   },
 ]);

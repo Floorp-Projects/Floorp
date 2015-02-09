@@ -10,8 +10,10 @@ add_autocomplete_test([
   "mozilla.org ",
   "mozilla.org ",
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
-                       transition: TRANSITION_TYPED });
+    PlacesTestUtils.addVisits({
+      uri: NetUtil.newURI("http://mozilla.org/link/"),
+      transition: TRANSITION_TYPED
+    });
   }
 ]);
 
@@ -20,8 +22,10 @@ add_autocomplete_test([
   "mozilla.org/ ",
   "mozilla.org/ ",
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
-                       transition: TRANSITION_TYPED });
+    PlacesTestUtils.addVisits({
+      uri: NetUtil.newURI("http://mozilla.org/link/"),
+      transition: TRANSITION_TYPED
+    });
   }
 ]);
 
@@ -30,8 +34,10 @@ add_autocomplete_test([
   "mozilla.org/link ",
   "mozilla.org/link ",
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
-                       transition: TRANSITION_TYPED });
+    PlacesTestUtils.addVisits({
+      uri: NetUtil.newURI("http://mozilla.org/link/"),
+      transition: TRANSITION_TYPED
+    });
   }
 ]);
 
@@ -40,8 +46,10 @@ add_autocomplete_test([
   "mozilla.org/link/ ",
   "mozilla.org/link/ ",
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
-                       transition: TRANSITION_TYPED });
+    PlacesTestUtils.addVisits({
+      uri: NetUtil.newURI("http://mozilla.org/link/"),
+      transition: TRANSITION_TYPED
+    });
   }
 ]);
 
@@ -51,8 +59,10 @@ add_autocomplete_test([
   "moz illa ",
   "moz illa ",
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
-                       transition: TRANSITION_TYPED });
+    PlacesTestUtils.addVisits({
+      uri: NetUtil.newURI("http://mozilla.org/link/"),
+      transition: TRANSITION_TYPED
+    });
   }
 ]);
 
@@ -61,7 +71,9 @@ add_autocomplete_test([
   " mozilla",
   " mozilla",
   function () {
-    promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
-                       transition: TRANSITION_TYPED });
+    PlacesTestUtils.addVisits({
+      uri: NetUtil.newURI("http://mozilla.org/link/"),
+      transition: TRANSITION_TYPED
+    });
   }
 ]);

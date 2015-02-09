@@ -25,6 +25,6 @@ add_task(function ()
   do_check_eq(frecencyForUrl(TEST_URI), 0);
 
   // Now add a valid visit to the page, frecency should increase.
-  yield promiseAddVisits({ uri: TEST_URI });
+  yield PlacesTestUtils.addVisits({ uri: TEST_URI });
   do_check_true(frecencyForUrl(TEST_URI) > 0);
 });

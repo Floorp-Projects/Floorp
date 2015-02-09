@@ -9,7 +9,7 @@ let tests = [
 function test_history_query() {
   let uri = NetUtil.newURI("http://test.visit.mozilla.com/");
   let title = "Test visit";
-  promiseAddVisits({ uri: uri, title: title }).then(function () {
+  PlacesTestUtils.addVisits({ uri: uri, title: title }).then(function () {
     let options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
     let query = PlacesUtils.history.getNewQuery();

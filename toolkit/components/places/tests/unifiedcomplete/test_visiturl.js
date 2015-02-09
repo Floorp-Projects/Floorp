@@ -27,7 +27,7 @@ add_task(function*() {
   // This is distinct because of how we predict being able to url autofill via
   // host lookups.
   do_print("visit url, host matching visited host but not visited url");
-  yield promiseAddVisits([
+  yield PlacesTestUtils.addVisits([
     { uri: NetUtil.newURI("http://mozilla.org/wine/"), title: "Mozilla Wine", transition: TRANSITION_TYPED },
   ]);
   yield check_autocomplete({
@@ -42,7 +42,7 @@ add_task(function*() {
                                        "http://s.example.com/search");
   let engine = Services.search.getEngineByName("MozSearch");
   Services.search.currentEngine = engine;
-  yield promiseAddVisits([
+  yield PlacesTestUtils.addVisits([
     { uri: NetUtil.newURI("http://mozilla/bourbon/"), title: "Mozilla Bourbon", transition: TRANSITION_TYPED },
   ]);
   yield check_autocomplete({

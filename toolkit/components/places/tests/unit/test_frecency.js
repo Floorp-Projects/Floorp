@@ -129,7 +129,7 @@ function task_setCountDate(aURI, aCount, aDate)
   for (let i = 0; i < aCount; i++) {
     visits.push({ uri: aURI, visitDate: aDate, transition: TRANSITION_TYPED });
   }
-  yield promiseAddVisits(visits);
+  yield PlacesTestUtils.addVisits(visits);
 }
 
 function setBookmark(aURI)

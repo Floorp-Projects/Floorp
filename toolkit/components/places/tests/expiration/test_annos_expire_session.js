@@ -27,7 +27,7 @@ add_task(function test_annos_expire_session() {
   let now = Date.now() * 1000;
   for (let i = 0; i < 10; i++) {
     let pageURI = uri("http://session_page_anno." + i + ".mozilla.org/");
-    yield promiseAddVisits({ uri: pageURI, visitDate: now++ });
+    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
     as.setPageAnnotation(pageURI, "test1", "test", 0, as.EXPIRE_SESSION);
     as.setPageAnnotation(pageURI, "test2", "test", 0, as.EXPIRE_SESSION);
   }

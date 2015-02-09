@@ -9,7 +9,7 @@
 
 add_task(function* test_enabled() {
   let uri = NetUtil.newURI("http://url/0");
-  yield promiseAddVisits([ { uri: uri, title: "title" } ]);
+  yield PlacesTestUtils.addVisits([ { uri: uri, title: "title" } ]);
 
   do_print("plain search");
   yield check_autocomplete({

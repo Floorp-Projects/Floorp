@@ -40,13 +40,13 @@ add_task(function test_execute()
     let site = "http://www.test-" + i + ".com/";
     let testURI = uri(site);
     let when = Date.now() * 1000 + (i * TOTAL_SITES);
-    yield promiseAddVisits({ uri: testURI, visitDate: when });
+    yield PlacesTestUtils.addVisits({ uri: testURI, visitDate: when });
   }
   for (var i = 0; i < TOTAL_SITES; i++) {
     let site = "http://www.test.com/" + i + "/";
     let testURI = uri(site);
     let when = Date.now() * 1000 + (i * TOTAL_SITES);
-    yield promiseAddVisits({ uri: testURI, visitDate: when });
+    yield PlacesTestUtils.addVisits({ uri: testURI, visitDate: when });
   }
 
   // set a page annotation on one of the urls that will be removed

@@ -78,7 +78,7 @@ add_task(function test_moz_hosts_update()
     places.push(place);
   });
 
-  yield promiseAddVisits(places);
+  yield PlacesTestUtils.addVisits(places);
 
   do_check_true(isHostInMozHosts(urls[0].uri, urls[0].typed, urls[0].prefix));
   do_check_true(isHostInMozHosts(urls[1].uri, urls[1].typed, urls[1].prefix));
@@ -142,7 +142,7 @@ add_task(function test_moz_hosts_typed_update()
                 , transition: TRANSITION_TYPED
                 }];
 
-  yield promiseAddVisits(places);
+  yield PlacesTestUtils.addVisits(places);
 
   do_check_true(isHostInMozHosts(TEST_URI, true, null));
   yield PlacesTestUtils.clearHistory();
@@ -160,7 +160,7 @@ add_task(function test_moz_hosts_www_remove()
                   , transition: TRANSITION_TYPED
                   }];
 
-    yield promiseAddVisits(places);
+    yield PlacesTestUtils.addVisits(places);
     print("removing " + aURIToRemove.spec + " keeping " + aURIToKeep);
     dump_table("moz_hosts");
     dump_table("moz_places");
@@ -183,8 +183,10 @@ add_task(function test_moz_hosts_ftp_matchall()
   const TEST_URI_1 = NetUtil.newURI("ftp://www.mozilla.com/");
   const TEST_URI_2 = NetUtil.newURI("ftp://mozilla.com/");
 
-  yield promiseAddVisits([{ uri: TEST_URI_1, transition: TRANSITION_TYPED },
-                          { uri: TEST_URI_2, transition: TRANSITION_TYPED }]);
+  yield PlacesTestUtils.addVisits([
+    { uri: TEST_URI_1, transition: TRANSITION_TYPED },
+    { uri: TEST_URI_2, transition: TRANSITION_TYPED }
+  ]);
 
   do_check_true(isHostInMozHosts(TEST_URI_1, true, "ftp://"));
 });
@@ -194,8 +196,10 @@ add_task(function test_moz_hosts_ftp_not_matchall()
   const TEST_URI_1 = NetUtil.newURI("http://mozilla.com/");
   const TEST_URI_2 = NetUtil.newURI("ftp://mozilla.com/");
 
-  yield promiseAddVisits([{ uri: TEST_URI_1, transition: TRANSITION_TYPED },
-                          { uri: TEST_URI_2, transition: TRANSITION_TYPED }]);
+  yield PlacesTestUtils.addVisits([
+    { uri: TEST_URI_1, transition: TRANSITION_TYPED },
+    { uri: TEST_URI_2, transition: TRANSITION_TYPED }
+  ]);
 
   do_check_true(isHostInMozHosts(TEST_URI_1, true, null));
 });
@@ -211,7 +215,7 @@ add_task(function test_moz_hosts_update_2()
                 },
                 { uri: TEST_URI_2
                 }];
-  yield promiseAddVisits(places);
+  yield PlacesTestUtils.addVisits(places);
 
   do_check_true(isHostInMozHosts(TEST_URI_1, true, "https://www."));
 });
