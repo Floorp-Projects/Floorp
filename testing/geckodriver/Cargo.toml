@@ -5,15 +5,23 @@ authors = ["James Graham <james@hoppipolla.co.uk>"]
 build = "make"
 
 [dependencies]
-getopts = "0.1.4"
-log = "0.1.9"
-rustc-serialize = "0.2.7"
+getopts = "=0.1.4"
+log = "=0.1.9"
+rustc-serialize = "=0.2.7"
+uuid = "=0.1.7"
 
-[dependencies.hyper]
-git = "https://github.com/hyperium/hyper.git"
-
-[dependencies.uuid]
-git = "https://github.com/rust-lang/uuid.git"
+[dependencies.argparse]
+git = "http://github.com/tailhook/rust-argparse.git"
 
 [dependencies.webdriver]
-git = "https://github.com/jgraham/webdriver-rust.git"
+path = "../webdriver"
+
+[dependencies.rust_mozprofile]
+path = "../rust_mozprofile"
+
+[dependencies.rust_mozrunner]
+path = "../rust_mozrunner"
+
+[dependencies.hyper]
+git = "https://github.com/servo/hyper"
+branch = "old_servo_new_cookies"
