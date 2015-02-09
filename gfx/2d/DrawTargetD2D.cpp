@@ -20,6 +20,7 @@
 #include "FilterNodeSoftware.h"
 
 #include "FilterNodeD2D1.h"
+#include "ExtendInputEffectD2D1.h"
 
 #include <dwrite.h>
 
@@ -2697,6 +2698,12 @@ DrawTargetD2D::factory()
     gfxWarning() << "Failed to create Direct2D factory.";
   }
 
+  RefPtr<ID2D1Factory1> factoryD2D1;
+  hr = mFactory->QueryInterface((ID2D1Factory1**)byRef(factoryD2D1));
+  if (SUCCEEDED(hr)) {
+    ExtendInputEffectD2D1::Register(factoryD2D1);
+  }
+
   return mFactory;
 }
 
@@ -2704,6 +2711,12 @@ void
 DrawTargetD2D::CleanupD2D()
 {
   if (mFactory) {
+    RefPtr<ID2D1Factory1> factoryD2D1;
+    HRESULT hr = mFactory->QueryInterface((ID2D1Factory1**)byRef(factoryD2D1));
+    if (SUCCEEDED(hr)) {
+      ExtendInputEffectD2D1::Unregister(factoryD2D1);
+    }
+
     mFactory->Release();
     mFactory = nullptr;
   }
