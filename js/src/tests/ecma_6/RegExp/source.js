@@ -3,9 +3,12 @@ var summary = "Implement RegExp.prototype.source";
 
 print(BUGNUMBER + ": " + summary);
 
+assertEq(RegExp.prototype.source, "(?:)");
 assertEq(/foo/.source, "foo");
 assertEq(/foo/iymg.source, "foo");
 assertEq(/\//.source, "\\/");
+assertEq(RegExp("").source, "(?:)");
+assertEq(RegExp("", "mygi").source, "(?:)");
 assertEq(RegExp("/").source, "\\/");
 
 assertThrowsInstanceOf(() => genericSource(), TypeError);
