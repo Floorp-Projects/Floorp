@@ -1535,12 +1535,28 @@ this.MozLoopService = {
     let urlStr = this.getLoopPref("gettingStarted.url");
     let url = new URL(Services.urlFormatter.formatURL(urlStr));
     for (let paramName in aAdditionalParams) {
-      url.searchParams.append(paramName, aAdditionalParams[paramName]);
+      url.searchParams.set(paramName, aAdditionalParams[paramName]);
     }
     if (aSrc) {
       url.searchParams.set("utm_source", "firefox-browser");
       url.searchParams.set("utm_medium", "firefox-browser");
       url.searchParams.set("utm_campaign", aSrc);
+    }
+
+    // Find the most recent pageID that has the Loop prefix.
+    let mostRecentLoopPageID = {id: null, lastSeen: null};
+    for (let pageID of UITour.pageIDsForSession) {
+      if (pageID[0] && pageID[0].startsWith("hello-tour_OpenPanel_") &&
+          pageID[1] && pageID[1].lastSeen > mostRecentLoopPageID.lastSeen) {
+        mostRecentLoopPageID.id = pageID[0];
+        mostRecentLoopPageID.lastSeen = pageID[1].lastSeen;
+      }
+    }
+
+    const PAGE_ID_EXPIRATION_MS = 60 * 60 * 1000;
+    if (mostRecentLoopPageID.id &&
+        mostRecentLoopPageID.lastSeen > Date.now() - PAGE_ID_EXPIRATION_MS) {
+      url.searchParams.set("utm_content", mostRecentLoopPageID.id);
     }
     return url;
   },
