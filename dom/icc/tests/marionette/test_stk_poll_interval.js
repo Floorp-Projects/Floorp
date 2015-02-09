@@ -5,16 +5,38 @@ MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
 const TEST_DATA = [
-  {command: "D009" + // Length
-            "8103010400" + // Command details
-            "82028182", // Device identities
-   expect: {commandQualifier: 0x00}}
+  {command: "D00D" + // Length
+            "8103010300" + // Command details
+            "82028182" + // Device identities
+            "8402001A", // Duration
+   expect: {commandQualifier: 0x00,
+            timeUnit: MozIccManager.STK_TIME_UNIT_MINUTE,
+            timeInterval: 0x1A}},
+  {command: "D00D" + // Length
+            "8103010300" + // Command details
+            "82028182" + // Device identities
+            "8402010A", // Duration
+   expect: {commandQualifier: 0x00,
+            timeUnit: MozIccManager.STK_TIME_UNIT_SECOND,
+            timeInterval: 0x0A}},
+  {command: "D00D" + // Length
+            "8103010300" + // Command details
+            "82028182" + // Device identities
+            "84020205", // Duration
+   expect: {commandQualifier: 0x00,
+            timeUnit: MozIccManager.STK_TIME_UNIT_TENTH_SECOND,
+            timeInterval: 0x05}},
 ];
 
 function testPollOff(aCommand, aExpect) {
   is(aCommand.commandNumber, 0x01, "commandNumber");
-  is(aCommand.typeOfCommand, MozIccManager.STK_CMD_POLL_OFF, "typeOfCommand");
+  is(aCommand.typeOfCommand, MozIccManager.STK_CMD_POLL_INTERVAL,
+     "typeOfCommand");
   is(aCommand.commandQualifier, aExpect.commandQualifier, "commandQualifier");
+  is(aCommand.options.timeUnit, aExpect.timeUnit,
+     "options.timeUnit");
+  is(aCommand.options.timeInterval, aExpect.timeInterval,
+     "options.timeInterval");
 }
 
 // Start tests
@@ -24,7 +46,7 @@ startTestCommon(function() {
   for (let i = 0; i < TEST_DATA.length; i++) {
     let data = TEST_DATA[i];
     promise = promise.then(() => {
-      log("poll_off_cmd: " + data.command);
+      log("poll_interval_cmd: " + data.command);
 
       let promises = [];
       // Wait onstkcommand event.
