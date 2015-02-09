@@ -57,18 +57,21 @@ NSS_VERSION=3
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
-GLIB_VERSION=1.2.0
+GLIB_VERSION=2.22
+# 2_26 is the earliest version we can set GLIB_VERSION_MIN_REQUIRED.
+# The macro won't be used when compiling with earlier versions anyway.
+GLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_26
+GIO_VERSION=2.22
 PERL_VERSION=5.006
 CAIRO_VERSION=1.10
 PANGO_VERSION=1.22.0
 GTK2_VERSION=2.18.0
-GTK3_VERSION=3.0.0
+GTK3_VERSION=3.4.0
 WINDRES_VERSION=2.14.90
 W32API_VERSION=3.14
 GNOMEVFS_VERSION=2.0
 GNOMEUI_VERSION=2.2.0
 GCONF_VERSION=1.2.1
-GIO_VERSION=2.20
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 SQLITE_VERSION=3.8.8.2
@@ -4407,13 +4410,19 @@ if test "$COMPILE_ENVIRONMENT"; then
     dnl of a make reference because of how TK_LIBS is mangled in toolkit/library/moz.build
     dnl for GTK+3 builds.
     TK_LIBS=$MOZ_GTK3_LIBS
+    GLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_32
+  fi
+  if test "$MOZ_ENABLE_GTK2"; then
+    GLIB_VERSION_MAX_ALLOWED=$GLIB_VERSION_MIN_REQUIRED
   fi
   if test "$MOZ_ENABLE_GTK"; then
     if test "$MOZ_X11"; then
       GDK_PACKAGES=gdk-x11-2.0
     fi
+    AC_DEFINE_UNQUOTED(GLIB_VERSION_MIN_REQUIRED,$GLIB_VERSION_MIN_REQUIRED)
+    AC_DEFINE_UNQUOTED(GLIB_VERSION_MAX_ALLOWED,$GLIB_VERSION_MAX_ALLOWED)
 
-    PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 glib-2.0 gobject-2.0 $GDK_PACKAGES)
+    PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 glib-2.0 >= $GLIB_VERSION gobject-2.0 $GDK_PACKAGES)
     MOZ_GTK2_CFLAGS="-I${_topsrcdir}/widget/gtk/compat $MOZ_GTK2_CFLAGS"
   fi
 
