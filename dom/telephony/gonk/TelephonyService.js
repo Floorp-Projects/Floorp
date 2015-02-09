@@ -507,9 +507,8 @@ TelephonyService.prototype = {
       return;
     }
 
-    // Dial a non-emergency call when only emergency call is allowed.
-    if (!isEmergencyNumber &&
-        (aIsDialEmergency || this._isEmergencyOnly(aClientId))) {
+    // DialEmergency accepts only emergency number.
+    if (aIsDialEmergency && !isEmergencyNumber) {
       if (DEBUG) debug("Error: Dail a non-emergency by dialEmergency. Drop.");
       aCallback.notifyError(DIAL_ERROR_BAD_NUMBER);
       return;
@@ -591,6 +590,11 @@ TelephonyService.prototype = {
     }
 
     let isEmergency = gDialNumberUtils.isEmergency(aNumber);
+    if (!isEmergency && this._isEmergencyOnly()) {
+      if (DEBUG) debug("Error: Dail a normal call when emergencyCallsOnly. Drop");
+      aCallback.notifyError(DIAL_ERROR_BAD_NUMBER);
+    }
+
     if (isEmergency) {
       // Automatically select a proper clientId for emergency call.
       aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
