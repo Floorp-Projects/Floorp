@@ -525,7 +525,7 @@ InvokeInterruptCallback(JSContext *cx)
 {
     MOZ_ASSERT(cx->runtime()->requestDepth >= 1);
 
-    cx->gcIfNeeded();
+    cx->runtime()->gc.gcIfRequested();
 
     // A worker thread may have requested an interrupt after finishing an Ion
     // compilation.

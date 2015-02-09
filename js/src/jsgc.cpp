@@ -1127,7 +1127,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
 #endif
     validate(true),
     fullCompartmentChecks(false),
-    mallocBytes(0),
+    mallocBytesUntilGC(0),
     mallocGCTriggered(false),
     alwaysPreserveCode(false),
 #ifdef DEBUG
@@ -1655,14 +1655,14 @@ GCRuntime::setMaxMallocBytes(size_t value)
 void
 GCRuntime::resetMallocBytes()
 {
-    mallocBytes = ptrdiff_t(maxMallocBytes);
+    mallocBytesUntilGC = ptrdiff_t(maxMallocBytes);
     mallocGCTriggered = false;
 }
 
 void
 GCRuntime::updateMallocCounter(JS::Zone *zone, size_t nbytes)
 {
-    mallocBytes -= ptrdiff_t(nbytes);
+    mallocBytesUntilGC -= ptrdiff_t(nbytes);
     if (MOZ_UNLIKELY(isTooMuchMalloc()))
         onTooMuchMalloc();
     else if (zone)
@@ -3208,12 +3208,12 @@ GCRuntime::maybeGC(Zone *zone)
 #ifdef JS_GC_ZEAL
     if (zealMode == ZealAllocValue || zealMode == ZealPokeValue) {
         JS::PrepareForFullGC(rt);
-        gc(GC_NORMAL, JS::gcreason::MAYBEGC);
+        gc(GC_NORMAL, JS::gcreason::DEBUG_GC);
         return true;
     }
 #endif
 
-    if (gcIfNeeded())
+    if (gcIfRequested())
         return true;
 
     if (zone->usage.gcBytes() > 1024 * 1024 &&
@@ -3222,7 +3222,7 @@ GCRuntime::maybeGC(Zone *zone)
         !isBackgroundSweeping())
     {
         PrepareZoneForGC(zone);
-        startGC(GC_NORMAL, JS::gcreason::MAYBEGC);
+        startGC(GC_NORMAL, JS::gcreason::EAGER_ALLOC_TRIGGER);
         return true;
     }
 
@@ -3248,7 +3248,7 @@ GCRuntime::maybePeriodicFullGC()
             numArenasFreeCommitted > decommitThreshold)
         {
             JS::PrepareForFullGC(rt);
-            startGC(GC_SHRINK, JS::gcreason::MAYBEGC);
+            startGC(GC_SHRINK, JS::gcreason::PERIODIC_FULL_GC);
         } else {
             nextFullGCTime = now + GC_IDLE_FULL_SPAN;
         }
@@ -6091,7 +6091,7 @@ IsDeterministicGCReason(JS::gcreason::Reason reason)
         return false;
     }
 
-    if (reason == JS::gcreason::MAYBEGC)
+    if (reason == JS::gcreason::EAGER_ALLOC_TRIGGER)
         return false;
 
     return true;
@@ -6418,7 +6418,7 @@ GCRuntime::enableGenerationalGC()
 }
 
 bool
-GCRuntime::gcIfNeeded(JSContext *cx /* = nullptr */)
+GCRuntime::gcIfRequested(JSContext *cx /* = nullptr */)
 {
     // This method returns whether a major GC was performed.
 

@@ -540,8 +540,8 @@ EmitLoopEntry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *nextpn)
 }
 
 /*
- * If op is JOF_TYPESET (see the type barriers comment in jsinfer.h), reserve
- * a type set to store its result.
+ * If op is JOF_TYPESET (see the type barriers comment in TypeInference.h),
+ * reserve a type set to store its result.
  */
 static inline void
 CheckTypeSet(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)

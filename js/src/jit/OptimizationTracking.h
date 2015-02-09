@@ -9,11 +9,11 @@
 
 #include "mozilla/Maybe.h"
 
-#include "jsinfer.h"
 #include "jit/CompactBuffer.h"
 #include "jit/CompileInfo.h"
 #include "jit/JitAllocPolicy.h"
 #include "js/TrackedOptimizationInfo.h"
+#include "vm/TypeInference.h"
 
 namespace js {
 

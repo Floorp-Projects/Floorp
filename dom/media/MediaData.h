@@ -84,6 +84,15 @@ public:
     , mRate(aRate)
     , mAudioData(aData) {}
 
+  // Creates a new VideoData identical to aOther, but with a different
+  // specified timestamp and duration. All data from aOther is copied
+  // into the new AudioData but the audio data which is transferred.
+  // After such call, the original aOther is unusable.
+  static already_AddRefed<AudioData>
+  TransferAndUpdateTimestampAndDuration(AudioData* aOther,
+                                        int64_t aTimestamp,
+                                        int64_t aDuration);
+
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   // If mAudioBuffer is null, creates it from mAudioData.

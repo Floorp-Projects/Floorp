@@ -29,7 +29,7 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
       mInitRange = MediaByteRange(0, box.Range().mEnd);
       ParseMoov(box);
     } else if (box.IsType("moof")) {
-      Moof moof(box, mTrex, mMdhd, mEdts, mSinf, mTimestampOffset);
+      Moof moof(box, mTrex, mMdhd, mEdts, mSinf);
 
       if (!mMoofs.IsEmpty()) {
         // Stitch time ranges together in the case of a (hopefully small) time
@@ -214,8 +214,9 @@ MoofParser::ParseEncrypted(Box& aBox)
   }
 }
 
-Moof::Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf, Microseconds aTimestampOffset) :
-    mRange(aBox.Range()), mTimestampOffset(aTimestampOffset), mMaxRoundingError(0)
+Moof::Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf)
+  : mRange(aBox.Range())
+  , mMaxRoundingError(0)
 {
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("traf")) {
@@ -399,10 +400,10 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
     sample.mByteRange = MediaByteRange(offset, offset + sampleSize);
     offset += sampleSize;
 
-    sample.mDecodeTime = aMdhd.ToMicroseconds(decodeTime) + mTimestampOffset;
+    sample.mDecodeTime = aMdhd.ToMicroseconds(decodeTime);
     sample.mCompositionRange = Interval<Microseconds>(
-      aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset - aEdts.mMediaStart) + mTimestampOffset,
-      aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart) + mTimestampOffset);
+      aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset - aEdts.mMediaStart),
+      aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart));
     decodeTime += sampleDuration;
 
     sample.mSync = !(sampleFlags & 0x1010000);
@@ -509,7 +510,8 @@ Trex::Trex(Box& aBox)
   mValid = true;
 }
 
-Tfhd::Tfhd(Box& aBox, Trex& aTrex) : Trex(aTrex)
+Tfhd::Tfhd(Box& aBox, Trex& aTrex)
+  : Trex(aTrex)
 {
   MOZ_ASSERT(aBox.IsType("tfhd"));
   MOZ_ASSERT(aBox.Parent()->IsType("traf"));

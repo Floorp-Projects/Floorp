@@ -11,7 +11,6 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jshashutil.h"
-#include "jsinfer.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jswrapper.h"
@@ -30,7 +29,6 @@
 #include "vm/WrapperObject.h"
 
 #include "jsgcinlines.h"
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"

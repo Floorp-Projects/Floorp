@@ -23,8 +23,6 @@
 #include "vm/RegExpStatics.h"
 #include "vm/TraceLogging.h"
 
-#include "jsinferinlines.h"
-#include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"
 

@@ -11,7 +11,7 @@
 
 #include "vm/String.h"
 
-#include "jsinferinlines.h"
+#include "vm/TypeInference-inl.h"
 
 namespace js {
 

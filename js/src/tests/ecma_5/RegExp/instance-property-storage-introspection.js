@@ -47,33 +47,18 @@ var choices = [{ msg: "RegExp.prototype",
                { msg: "/(?:)/",
                  get: Function("return /(?:)/;") }];
 
-function checkRegExp(r, msg, lastIndex, global, ignoreCase, multiline)
+function checkRegExp(r, msg, lastIndex)
 {
   var expect;
 
   expect = { value: lastIndex, enumerable: false, configurable: false, writable: true };
   checkDataProperty(r, "lastIndex", expect, msg);
-
-  // check source specially: its value is under-defined in the spec
-  var d = Object.getOwnPropertyDescriptor(r, "source");
-  assertEq(d.writable, false, "bad writable: " + msg);
-  assertEq(d.enumerable, false, "bad enumerable: " + msg);
-  assertEq(d.configurable, false, "bad configurable: " + msg);
-
-  expect = { value: global, enumerable: false, configurable: false, writable: false };
-  checkDataProperty(r, "global", expect, msg);
-
-  expect = { value: ignoreCase, enumerable: false, configurable: false, writable: false };
-  checkDataProperty(r, "ignoreCase", expect, msg);
-
-  expect = { value: multiline, enumerable: false, configurable: false, writable: false };
-  checkDataProperty(r, "multiline", expect, msg);
 }
 
-checkRegExp(RegExp.prototype, "RegExp.prototype", 0, false, false, false);
-checkRegExp(new RegExp(), "new RegExp()", 0, false, false, false);
-checkRegExp(/(?:)/, "/(?:)/", 0, false, false, false);
-checkRegExp(Function("return /(?:)/;")(), 'Function("return /(?:)/;")()', 0, false, false, false);
+checkRegExp(RegExp.prototype, "RegExp.prototype", 0);
+checkRegExp(new RegExp(), "new RegExp()", 0);
+checkRegExp(/(?:)/, "/(?:)/", 0);
+checkRegExp(Function("return /(?:)/;")(), 'Function("return /(?:)/;")()', 0);
 
 for (var i = 0; i < choices.length; i++)
 {
@@ -81,67 +66,60 @@ for (var i = 0; i < choices.length; i++)
   var msg = choice.msg;
   var r = choice.get();
 
-  checkRegExp(r, msg, 0, false, false, false);
+  checkRegExp(r, msg, 0);
 }
 
 // Now test less generic regular expressions
 
-checkRegExp(/a/gim, "/a/gim", 0, true, true, true);
+checkRegExp(/a/gim, "/a/gim", 0);
 
 var r;
 
 do
 {
   r = /abcd/mg;
-  checkRegExp(r, "/abcd/mg initially", 0, true, false, true);
+  checkRegExp(r, "/abcd/mg initially", 0);
   r.exec("abcdefg");
-  checkRegExp(r, "/abcd/mg step 1", 4, true, false, true);
+  checkRegExp(r, "/abcd/mg step 1", 4);
   r.exec("abcdabcd");
-  checkRegExp(r, "/abcd/mg step 2", 8, true, false, true);
+  checkRegExp(r, "/abcd/mg step 2", 8);
   r.exec("abcdabcd");
-  checkRegExp(r, "/abcd/mg end", 0, true, false, true);
+  checkRegExp(r, "/abcd/mg end", 0);
 
   r = /cde/ig;
-  checkRegExp(r, "/cde/ig initially", 0, true, true, false);
+  checkRegExp(r, "/cde/ig initially", 0);
   var obj = r.lastIndex = { valueOf: function() { return 2; } };
-  checkRegExp(r, "/cde/ig after lastIndex", obj, true, true, false);
+  checkRegExp(r, "/cde/ig after lastIndex", obj);
   r.exec("aaacdef");
-  checkRegExp(r, "/cde/ig after exec", 6, true, true, false);
+  checkRegExp(r, "/cde/ig after exec", 6);
   Object.defineProperty(r, "lastIndex", { value: 3 });
-  checkRegExp(r, "/cde/ig after define 3", 3, true, true, false);
+  checkRegExp(r, "/cde/ig after define 3", 3);
   Object.defineProperty(r, "lastIndex", { value: obj });
-  checkRegExp(r, "/cde/ig after lastIndex", obj, true, true, false);
+  checkRegExp(r, "/cde/ig after lastIndex", obj);
 
 
   // Tricky bits of testing: make sure that redefining lastIndex doesn't change
   // the slot where the lastIndex property is initially stored, even if
   // the redefinition also changes writability.
   r = /a/g;
-  checkRegExp(r, "/a/g initially", 0, true, false, false);
+  checkRegExp(r, "/a/g initially", 0);
   Object.defineProperty(r, "lastIndex", { value: 2 });
   r.exec("aabbbba");
-  checkRegExp(r, "/a/g after first exec", 7, true, false, false);
+  checkRegExp(r, "/a/g after first exec", 7);
   assertEq(r.lastIndex, 7);
   r.lastIndex = 2;
-  checkRegExp(r, "/a/g after assign", 2, true, false, false);
+  checkRegExp(r, "/a/g after assign", 2);
   r.exec("aabbbba");
   assertEq(r.lastIndex, 7); // check in reverse order
-  checkRegExp(r, "/a/g after second exec", 7, true, false, false);
+  checkRegExp(r, "/a/g after second exec", 7);
 
   r = /c/g;
   r.lastIndex = 2;
-  checkRegExp(r, "/c/g initially", 2, true, false, false);
+  checkRegExp(r, "/c/g initially", 2);
   Object.defineProperty(r, "lastIndex", { writable: false });
   assertEq(Object.getOwnPropertyDescriptor(r, "lastIndex").writable, false);
   try { r.exec("aabbbba"); } catch (e) { /* swallow error if thrown */ }
   assertEq(Object.getOwnPropertyDescriptor(r, "lastIndex").writable, false);
-  assertEq(Object.getOwnPropertyDescriptor(r, "source").writable, false);
-  assertEq(Object.getOwnPropertyDescriptor(r, "global").value, true);
-  assertEq(Object.getOwnPropertyDescriptor(r, "global").writable, false);
-  assertEq(Object.getOwnPropertyDescriptor(r, "ignoreCase").value, false);
-  assertEq(Object.getOwnPropertyDescriptor(r, "ignoreCase").writable, false);
-  assertEq(Object.getOwnPropertyDescriptor(r, "multiline").value, false);
-  assertEq(Object.getOwnPropertyDescriptor(r, "multiline").writable, false);
 }
 while (Math.random() > 17); // fake loop to discourage RegExp object caching
 

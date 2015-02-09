@@ -22,7 +22,6 @@
 #include "vm/UnboxedObject.h"
 
 #include "jscompartmentinlines.h"
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 #include "gc/Nursery-inl.h"

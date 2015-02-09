@@ -770,6 +770,7 @@ add_test(function test_icc_notify_stk_proactive_command() {
       typeOfCommand: RIL.STK_CMD_SELECT_ITEM,
       commandQualifier: RIL.STK_PRESENTATION_TYPE_NOT_SPECIFIED,
       options: {
+        title: null,
         items: [
           { identifier: 0x01, text: "Menu Item 1" },
           { identifier: 0x02, text: "Menu Item 2" },
@@ -915,6 +916,7 @@ add_test(function test_icc_notify_stk_proactive_command() {
         isUCS2: false,
         isYesNoRequested: true,
         isHelpAvailable: true,
+        defaultText: null,
         iconSelfExplanatory: false,
         icons: [colorIcon]
       }
@@ -934,6 +936,7 @@ add_test(function test_icc_notify_stk_proactive_command() {
         hideInput: true,
         isPacked: true,
         isHelpAvailable: false,
+        defaultText: null,
         iconSelfExplanatory: true,
         icons: [basicIcon]
       }
@@ -1001,6 +1004,7 @@ add_test(function test_icc_notify_stk_proactive_command() {
       typeOfCommand: RIL.STK_CMD_PLAY_TONE,
       commandQualifier: 0x01, // isVibrate
       options: {
+        text: null,
         isVibrate: true
       }
     },
@@ -1048,6 +1052,7 @@ add_test(function test_icc_notify_stk_proactive_command() {
       typeOfCommand: RIL.STK_CMD_OPEN_CHANNEL,
       commandQualifier: 0x00,  //RFU
       options: {
+        text: null,
       }
     },
     // STK_CMD_OPEN_CHANNEL with optional properties.
@@ -1078,6 +1083,7 @@ add_test(function test_icc_notify_stk_proactive_command() {
       typeOfCommand: RIL.STK_CMD_SEND_DATA,
       commandQualifier: 0x00,  //RFU
       options: {
+        text: null,
         iconSelfExplanatory: false,
         icons: [basicIcon]
       }
