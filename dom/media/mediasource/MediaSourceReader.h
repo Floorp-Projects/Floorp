@@ -257,6 +257,9 @@ private:
   bool mDropAudioBeforeThreshold;
   bool mDropVideoBeforeThreshold;
 
+  bool mAudioDiscontinuity;
+  bool mVideoDiscontinuity;
+
   bool mEnded;
   double mMediaSourceDuration;
 
