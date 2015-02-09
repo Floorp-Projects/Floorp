@@ -84,7 +84,7 @@ struct TextRangeStyle
            IsLineStyleDefined() && mLineStyle == LINESTYLE_NONE;
   }
 
-  bool Equals(const TextRangeStyle& aOther) const
+  bool Equals(const TextRangeStyle& aOther)
   {
     if (mDefinedStyles != aOther.mDefinedStyles)
       return false;
@@ -103,12 +103,12 @@ struct TextRangeStyle
     return true;
   }
 
-  bool operator !=(const TextRangeStyle &aOther) const
+  bool operator !=(const TextRangeStyle &aOther)
   {
     return !Equals(aOther);
   }
 
-  bool operator ==(const TextRangeStyle &aOther) const
+  bool operator ==(const TextRangeStyle &aOther)
   {
     return Equals(aOther);
   }
@@ -166,14 +166,6 @@ struct TextRange
                "Invalid range type");
     return mRangeType != NS_TEXTRANGE_CARETPOSITION;
   }
-
-  bool Equals(const TextRange& aOther) const
-  {
-    return mStartOffset == aOther.mStartOffset &&
-           mEndOffset == aOther.mEndOffset &&
-           mRangeType == aOther.mRangeType &&
-           mRangeStyle == aOther.mRangeStyle;
-  }
 };
 
 /******************************************************************************
@@ -208,20 +200,6 @@ public:
       }
     }
     return 0;
-  }
-
-  bool Equals(const TextRangeArray& aOther) const
-  {
-    size_t len = Length();
-    if (len != aOther.Length()) {
-      return false;
-    }
-    for (size_t i = 0; i < len; i++) {
-      if (!ElementAt(i).Equals(aOther.ElementAt(i))) {
-        return false;
-      }
-    }
-    return true;
   }
 };
 

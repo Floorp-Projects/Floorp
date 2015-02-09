@@ -224,18 +224,6 @@ TextComposition::DispatchCompositionEvent(
     dispatchEvent = dispatchDOMTextEvent = false;
   }
 
-  // widget may dispatch redundant NS_COMPOSITION_CHANGE event
-  // which modifies neither composition string, clauses nor caret
-  // position.  In such case, we shouldn't dispatch DOM events.
-  if (dispatchDOMTextEvent &&
-      aCompositionEvent->message == NS_COMPOSITION_CHANGE &&
-      mLastData == aCompositionEvent->mData &&
-      ((!mRanges && !aCompositionEvent->mRanges) ||
-       (mRanges && aCompositionEvent->mRanges &&
-        mRanges->Equals(*aCompositionEvent->mRanges)))) {
-    dispatchEvent = dispatchDOMTextEvent = false;
-  }
-
   if (dispatchDOMTextEvent) {
     if (!MaybeDispatchCompositionUpdate(aCompositionEvent)) {
       return;
