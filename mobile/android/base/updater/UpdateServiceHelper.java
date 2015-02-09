@@ -168,6 +168,10 @@ public class UpdateServiceHelper {
     }
 
     public static void registerForUpdates(final Context context) {
+        if (!isUpdaterEnabled()) {
+             return;
+        }
+
         final HashMap<String, Object> prefs = new HashMap<String, Object>();
 
         PrefsHelper.getPrefs(Pref.names, new PrefsHelper.PrefHandlerBase() {
