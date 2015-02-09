@@ -44,11 +44,10 @@
 #include "vm/ScopeObject.h"
 #include "vm/StringBuffer.h"
 
-#include "jsinferinlines.h"
-
 #include "vm/Interpreter-inl.h"
 #include "vm/String-inl.h"
 #include "vm/StringObject-inl.h"
+#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::gc;
