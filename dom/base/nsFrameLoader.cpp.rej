@@ -1,0 +1,21 @@
+--- nsFrameLoader.cpp
++++ nsFrameLoader.cpp
+@@ -48,17 +48,17 @@
+ #include "nsIDOMHTMLDocument.h"
+ #include "nsIXULWindow.h"
+ #include "nsIEditor.h"
+ #include "nsIMozBrowserFrame.h"
+ #include "nsIPermissionManager.h"
+ #include "nsISHistory.h"
+ #include "nsNullPrincipal.h"
+ #include "nsIScriptError.h"
+-
++#include "nsGlobalWindow.h"
+ #include "nsLayoutUtils.h"
+ #include "nsView.h"
+ 
+ #include "nsIURI.h"
+ #include "nsIURL.h"
+ #include "nsNetUtil.h"
+ 
+ #include "nsGkAtoms.h"

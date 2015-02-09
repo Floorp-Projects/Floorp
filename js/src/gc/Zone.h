@@ -12,11 +12,11 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "jscntxt.h"
-#include "jsinfer.h"
 
 #include "gc/FindSCCs.h"
 #include "gc/GCRuntime.h"
 #include "js/TracingAPI.h"
+#include "vm/TypeInference.h"
 
 namespace js {
 
