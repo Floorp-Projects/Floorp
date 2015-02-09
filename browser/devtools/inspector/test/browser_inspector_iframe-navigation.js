@@ -19,10 +19,11 @@ add_task(function* () {
 
   info("Waiting for highlighter to activate.");
   let highlighterShowing = toolbox.once("highlighter-ready");
-  executeInContent("Test:SynthesizeMouse",
-                   {type: "mousemove", x: 1, y: 1},
-                   {node: content.document.body},
-                   false);
+  executeInContent("Test:SynthesizeMouse", {
+    options: {type: "mousemove"},
+    x: 1,
+    y: 1
+  }, {node: content.document.body}, false);
   yield highlighterShowing;
 
   let isVisible = yield isHighlighting(toolbox);
