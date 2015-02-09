@@ -48,16 +48,17 @@ add_test(function test_saveAppStats() {
 
   do_check_eq(Object.keys(cachedStats).length, 0);
 
-  nssProxy.saveAppStats(1, wifi, timestamp, 10, 20, false,
+  nssProxy.saveAppStats(1, false, wifi, timestamp, 10, 20, false,
                         function (success, message) {
     do_check_eq(success, true);
-    nssProxy.saveAppStats(1, mobile, timestamp, 10, 20, false,
+    nssProxy.saveAppStats(1, false, mobile, timestamp, 10, 20, false,
                           function (success, message) {
-      var key1 = 1 + "" + NetworkStatsService.getNetworkId(wifi.id, wifi.type);
-      var key2 = 1 + "" + mobileNetId + "";
+      var key1 = 1 + "" + false + "" + NetworkStatsService.getNetworkId(wifi.id, wifi.type);
+      var key2 = 1 + "" + false + "" + mobileNetId + "";
 
       do_check_eq(Object.keys(cachedStats).length, 2);
       do_check_eq(cachedStats[key1].appId, 1);
+      do_check_eq(cachedStats[key1].isInBrowser, false);
       do_check_eq(cachedStats[key1].serviceType.length, 0);
       do_check_eq(cachedStats[key1].networkId, wifi.id);
       do_check_eq(cachedStats[key1].networkType, wifi.type);
@@ -104,12 +105,13 @@ add_test(function test_saveServiceStats() {
       nssProxy.saveServiceStats(serviceType, mobile, timestamp, 10, 20, false,
                                 function (success, message) {
         do_check_eq(success, true);
-        var key1 = 0 + "" + serviceType +
+        var key1 = 0 + "" + false + "" + serviceType +
                    NetworkStatsService.getNetworkId(wifi.id, wifi.type);
-        var key2 = 0 + "" + serviceType + mobileNetId + "";
+        var key2 = 0 + "" + false + "" + serviceType + mobileNetId + "";
 
         do_check_eq(Object.keys(cachedStats).length, 2);
         do_check_eq(cachedStats[key1].appId, 0);
+        do_check_eq(cachedStats[key1].isInBrowser, false);
         do_check_eq(cachedStats[key1].serviceType, serviceType);
         do_check_eq(cachedStats[key1].networkId, wifi.id);
         do_check_eq(cachedStats[key1].networkType, wifi.type);
@@ -142,18 +144,19 @@ add_test(function test_saveStatsWithDifferentDates() {
     do_check_eq(success, true);
 
     do_check_eq(Object.keys(NetworkStatsService.cachedStats).length, 0);
-    nssProxy.saveAppStats(1, mobile, today.getTime(), 10, 20, false,
+    nssProxy.saveAppStats(1, false, mobile, today.getTime(), 10, 20, false,
                           function (success, message) {
       do_check_eq(success, true);
-      nssProxy.saveAppStats(2, mobile, tomorrow.getTime(), 30, 40, false,
+      nssProxy.saveAppStats(2, false, mobile, tomorrow.getTime(), 30, 40, false,
                             function (success, message) {
         do_check_eq(success, true);
 
         var cachedStats = NetworkStatsService.cachedStats;
-        var key = 2 + "" +
+        var key = 2 + "" + false + "" +
                   NetworkStatsService.getNetworkId(mobile.id, mobile.type);
         do_check_eq(Object.keys(cachedStats).length, 1);
         do_check_eq(cachedStats[key].appId, 2);
+        do_check_eq(cachedStats[key].isInBrowser, false);
         do_check_eq(cachedStats[key].networkId, mobile.id);
         do_check_eq(cachedStats[key].networkType, mobile.type);
         do_check_eq(new Date(cachedStats[key].date).getTime() / 1000,
@@ -177,11 +180,11 @@ add_test(function test_saveStatsWithMaxCachedTraffic() {
 
     var cachedStats = NetworkStatsService.cachedStats;
     do_check_eq(Object.keys(cachedStats).length, 0);
-    nssProxy.saveAppStats(1, wifi, timestamp, 10, 20, false,
+    nssProxy.saveAppStats(1, false, wifi, timestamp, 10, 20, false,
                           function (success, message) {
       do_check_eq(success, true);
       do_check_eq(Object.keys(cachedStats).length, 1);
-      nssProxy.saveAppStats(1, wifi, timestamp, maxtraffic, 20, false,
+      nssProxy.saveAppStats(1, false, wifi, timestamp, maxtraffic, 20, false,
                             function (success, message) {
         do_check_eq(success, true);
         do_check_eq(Object.keys(cachedStats).length, 0);
@@ -207,7 +210,7 @@ add_test(function test_saveAppStats() {
 
   do_check_eq(Object.keys(cachedStats).length, 0);
 
-  nssProxy.saveAppStats(1, wifi, timestamp, 10, 20, false, { notify:
+  nssProxy.saveAppStats(1, false, wifi, timestamp, 10, 20, false, { notify:
                         function (success, message) {
     do_check_eq(success, true);
     var iterations = 10;
@@ -219,7 +222,7 @@ add_test(function test_saveAppStats() {
     };
 
     for (var i = 0; i < iterations; i++) {
-      nssProxy.saveAppStats(1, mobile, timestamp, 10, 20, false, callback);
+      nssProxy.saveAppStats(1, false, mobile, timestamp, 10, 20, false, callback);
     }
   }});
 });
