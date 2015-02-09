@@ -6,10 +6,10 @@
 
 /* Check the undefined pattern is equivalent to empty string. */
 
-assertEq(RegExp(undefined).source, '');
+assertEq(RegExp(undefined).source, '(?:)');
 assertEq(RegExp(undefined).global, false);
 assertEq("test".replace(RegExp(undefined), "*"), '*test');
-assertEq(new RegExp(undefined).source, '');
+assertEq(new RegExp(undefined).source, '(?:)');
 assertEq(new RegExp(undefined).global, false);
 assertEq('test'.replace(new RegExp(undefined), "*"), '*test');
 

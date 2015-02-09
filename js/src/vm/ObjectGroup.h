@@ -9,10 +9,10 @@
 
 #include "jsbytecode.h"
 #include "jsfriendapi.h"
-#include "jsinfer.h"
 
 #include "ds/IdValuePair.h"
 #include "gc/Barrier.h"
+#include "vm/TypeInference.h"
 
 namespace js {
 
