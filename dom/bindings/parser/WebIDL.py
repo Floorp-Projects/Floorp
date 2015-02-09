@@ -448,15 +448,65 @@ class IDLIdentifierPlaceholder(IDLObjectWithIdentifier):
         obj = self.identifier.resolve(scope, None)
         return scope.lookupIdentifier(obj)
 
-class IDLExternalInterface(IDLObjectWithIdentifier):
+class IDLExposureMixins():
+    def __init__(self, location):
+        # _exposureGlobalNames are the global names listed in our [Exposed]
+        # extended attribute.  exposureSet is the exposure set as defined in the
+        # Web IDL spec: it contains interface names.
+        self._exposureGlobalNames = set()
+        self.exposureSet = set()
+        self._location = location
+
+    def finish(self, scope):
+        # Verify that our [Exposed] value, if any, makes sense.
+        for globalName in self._exposureGlobalNames:
+            if globalName not in scope.globalNames:
+                raise WebIDLError("Unknown [Exposed] value %s" % globalName,
+                                  [self._location])
+
+        if len(self._exposureGlobalNames) == 0:
+            self._exposureGlobalNames.add(scope.primaryGlobalName)
+
+        globalNameSetToExposureSet(scope, self._exposureGlobalNames,
+                                   self.exposureSet)
+
+    def isExposedInWindow(self):
+        return 'Window' in self.exposureSet
+
+    def isExposedInAnyWorker(self):
+        return len(self.getWorkerExposureSet()) > 0
+
+    def isExposedInSystemGlobals(self):
+        return 'BackstagePass' in self.exposureSet
+
+    def isExposedInSomeButNotAllWorkers(self):
+        """
+        Returns true if the Exposed extended attribute for this interface
+        exposes it in some worker globals but not others.  The return value does
+        not depend on whether the interface is exposed in Window or System
+        globals.
+        """
+        if not self.isExposedInAnyWorker():
+            return False
+        workerScopes = self.parentScope.globalNameMapping["Worker"]
+        return len(workerScopes.difference(self.exposureSet)) > 0
+
+    def getWorkerExposureSet(self):
+        # Subclasses that might be exposed in workers should override as needed
+        return set()
+
+
+class IDLExternalInterface(IDLObjectWithIdentifier, IDLExposureMixins):
     def __init__(self, location, parentScope, identifier):
         assert isinstance(identifier, IDLUnresolvedIdentifier)
         assert isinstance(parentScope, IDLScope)
         self.parent = None
         IDLObjectWithIdentifier.__init__(self, location, parentScope, identifier)
+        IDLExposureMixins.__init__(self, location)
         IDLObjectWithIdentifier.resolve(self, parentScope)
 
     def finish(self, scope):
+        IDLExposureMixins.finish(self, scope)
         pass
 
     def validate(self):
@@ -547,7 +597,7 @@ def globalNameSetToExposureSet(globalScope, nameSet, exposureSet):
     for name in nameSet:
         exposureSet.update(globalScope.globalNameMapping[name])
 
-class IDLInterface(IDLObjectWithScope):
+class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
     def __init__(self, location, parentScope, name, parent, members,
                  isKnownNonPartial):
         assert isinstance(parentScope, IDLScope)
@@ -582,13 +632,9 @@ class IDLInterface(IDLObjectWithScope):
         self.totalMembersInSlots = 0
         # Tracking of the number of own own members we have in slots
         self._ownMembersInSlots = 0
-        # _exposureGlobalNames are the global names listed in our [Exposed]
-        # extended attribute.  exposureSet is the exposure set as defined in the
-        # Web IDL spec: it contains interface names.
-        self._exposureGlobalNames = set()
-        self.exposureSet = set()
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
+        IDLExposureMixins.__init__(self, location)
 
         if isKnownNonPartial:
             self.setNonPartial(location, parent, members)
@@ -628,17 +674,7 @@ class IDLInterface(IDLObjectWithScope):
                               "declaration" % self.identifier.name,
                               [self.location])
 
-        # Verify that our [Exposed] value, if any, makes sense.
-        for globalName in self._exposureGlobalNames:
-            if globalName not in scope.globalNames:
-                raise WebIDLError("Unknown [Exposed] value %s" % globalName,
-                                  [self.location])
-
-        if len(self._exposureGlobalNames) == 0:
-            self._exposureGlobalNames.add(scope.primaryGlobalName)
-
-        globalNameSetToExposureSet(scope, self._exposureGlobalNames,
-                                   self.exposureSet)
+        IDLExposureMixins.finish(self, scope)
 
         # Now go ahead and merge in our partial interfaces.
         for partial in self._partialInterfaces:
@@ -1062,27 +1098,6 @@ class IDLInterface(IDLObjectWithScope):
             # operations have the same identifier
             len(set(m.identifier.name for m in self.members if
                     m.isMethod() and not m.isStatic())) == 1)
-
-    def isExposedInWindow(self):
-        return 'Window' in self.exposureSet
-
-    def isExposedInAnyWorker(self):
-        return len(self.getWorkerExposureSet()) > 0
-
-    def isExposedInSystemGlobals(self):
-        return 'BackstagePass' in self.exposureSet
-
-    def isExposedInSomeButNotAllWorkers(self):
-        """
-        Returns true if the Exposed extended attribute for this interface
-        exposes it in some worker globals but not others.  The return value does
-        not depend on whether the interface is exposed in Window or System
-        globals.
-        """
-        if not self.isExposedInAnyWorker():
-            return False
-        workerScopes = self.parentScope.globalNameMapping["Worker"]
-        return len(workerScopes.difference(self.exposureSet)) > 0
 
     def getWorkerExposureSet(self):
         workerScopes = self.parentScope.globalNameMapping["Worker"]
