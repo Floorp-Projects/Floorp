@@ -24,6 +24,10 @@ class ia2AccessibleRelation MOZ_FINAL : public IAccessibleRelation
 public:
   ia2AccessibleRelation(RelationType aType, Relation* aRel);
 
+  ia2AccessibleRelation(RelationType aType,
+                        nsTArray<nsRefPtr<Accessible>>&& aTargets) :
+    mType(aType), mTargets(Move(aTargets)) {}
+
   // IUnknown
   DECL_IUNKNOWN
 
