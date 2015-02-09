@@ -1220,12 +1220,6 @@ SelectionCarets::ScrollPositionChanged()
                                            SelectionState::Updateposition);
       }
     }
-  } else {
-    nsRefPtr<dom::Selection> selection = GetSelection();
-    if (selection && selection->RangeCount() && selection->IsCollapsed()) {
-      DispatchSelectionStateChangedEvent(selection,
-                                         SelectionState::Updateposition);
-    }
   }
 }
 
@@ -1321,12 +1315,6 @@ SelectionCarets::Reflow(DOMHighResTimeStamp aStart, DOMHighResTimeStamp aEnd)
     // bubble in drag mode. So, don't dispatch event here.
     if (mDragMode == NONE) {
       DispatchSelectionStateChangedEvent(GetSelection(),
-                                         SelectionState::Updateposition);
-    }
-  } else {
-    nsRefPtr<dom::Selection> selection = GetSelection();
-    if (selection && selection->RangeCount() && selection->IsCollapsed()) {
-      DispatchSelectionStateChangedEvent(selection,
                                          SelectionState::Updateposition);
     }
   }
