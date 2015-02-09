@@ -582,7 +582,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mAllowMergingAndFlattening(true),
       mWillComputePluginGeometry(false),
       mInTransform(false),
-      mIsInRootChromeDocument(false),
+      mIsInChromePresContext(false),
       mSyncDecodeImages(false),
       mIsPaintingToWindow(false),
       mIsCompositingCheap(false),
@@ -590,7 +590,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mAncestorHasTouchEventHandler(false),
       mAncestorHasScrollEventHandler(false),
       mHaveScrollableDisplayPort(false),
-      mWindowDraggingAllowed(false)
+      mWindowDraggingAllowed(false),
+      mIsBuildingForPopup(nsLayoutUtils::IsPopup(aReferenceFrame))
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
   PL_InitArenaPool(&mPool, "displayListArena", 1024,
@@ -1015,8 +1016,7 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
 
   nsPresContext* pc = aReferenceFrame->PresContext();
   pc->GetDocShell()->GetWindowDraggingAllowed(&mWindowDraggingAllowed);
-
-  mIsInRootChromeDocument = !IsInSubdocument() && pc->IsChrome();
+  mIsInChromePresContext = pc->IsChrome();
 }
 
 void
@@ -1032,7 +1032,7 @@ nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame)
   if (!mPresShellStates.IsEmpty()) {
     nsPresContext* pc = CurrentPresContext();
     pc->GetDocShell()->GetWindowDraggingAllowed(&mWindowDraggingAllowed);
-    mIsInRootChromeDocument = !IsInSubdocument() && pc->IsChrome();
+    mIsInChromePresContext = pc->IsChrome();
   }
 }
 
@@ -2117,7 +2117,7 @@ static void
 RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       nsITheme::ThemeGeometryType aType)
 {
-  if (aBuilder->IsInRootChromeDocument() && !aBuilder->IsInTransform()) {
+  if (aBuilder->IsInRootChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
     nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(aFrame);
     nsRect borderBox(aFrame->GetOffsetTo(displayRoot), aFrame->GetSize());
     aBuilder->RegisterThemeGeometry(aType,
@@ -2257,7 +2257,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   if (isThemed) {
     nsITheme* theme = presContext->GetTheme();
     if (theme->NeedToClearBackgroundBehindWidget(aFrame->StyleDisplay()->mAppearance) &&
-        aBuilder->IsInRootChromeDocument() && !aBuilder->IsInTransform()) {
+        aBuilder->IsInRootChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
       bgItemList.AppendNewToTop(
         new (aBuilder) nsDisplayClearBackground(aBuilder, aFrame));
     }
