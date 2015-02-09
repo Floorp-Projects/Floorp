@@ -408,6 +408,16 @@ public:
 
   double Duration() const;
 
+  bool HasAudio() const
+  {
+    return mMediaInfo.HasAudio();
+  }
+
+  bool HasVideo() const
+  {
+    return mMediaInfo.HasVideo();
+  }
+
   bool IsEncrypted() const
   {
     return mIsEncrypted;
@@ -1300,11 +1310,8 @@ protected:
   // The CORS mode when loading the media element
   CORSMode mCORSMode;
 
-  // True if the media has an audio track
-  bool mHasAudio;
-
-  // True if the media has a video track
-  bool mHasVideo;
+  // Info about the played media.
+  MediaInfo mMediaInfo;
 
   // True if the media has encryption information.
   bool mIsEncrypted;
