@@ -19,13 +19,13 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="a85b768ababe56fbb6c22bf09bf72b64e5eb0a59"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="ac318c15573dc94e1a857ef1fd8e4592a0845d93"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2262d4a77d4f46ab230fd747bb91e9b77bad36cb"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="eb1795a9002eb142ac58c8d68f8f4ba094af07ca"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="2c31ac3a31a340b40ecd9c291df9b9613d3afa72"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="fe893bb760a3bb64375f62fdf4762a58c59df9ef"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="0d6ed91bdcc40fe0878fac9a6b7362c7b2680d57"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="da777082e02eec11c4b7e27679bdb15f47a44f66"/>
   <!-- Stock Android things -->
   <project name="platform/abi/cpp" path="abi/cpp" revision="dd924f92906085b831bf1cbbc7484d3c043d613c"/>
   <project name="platform_bionic" path="bionic" remote="b2g" revision="e2b3733ba3fa5e3f404e983d2e4142b1f6b1b846"/>
