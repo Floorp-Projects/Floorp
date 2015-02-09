@@ -15,7 +15,6 @@ EXTRA_JS_MODULES += [
     'BrowserUITelemetry.jsm',
     'CastingApps.jsm',
     'Chat.jsm',
-    'ContentClick.jsm',
     'ContentLinkHandler.jsm',
     'ContentSearch.jsm',
     'ContentWebRTC.jsm',
