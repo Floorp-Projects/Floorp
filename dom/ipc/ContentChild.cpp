@@ -607,9 +607,6 @@ ContentChild::Init(MessageLoop* aIOLoop,
     // Make sure there's an nsAutoScriptBlocker on the stack when dispatching
     // urgent messages.
     GetIPCChannel()->BlockScripts();
-    // If communications with the parent have broken down, take the process
-    // down so it's not hanging around.
-    GetIPCChannel()->SetAbortOnError(true);
 
 #ifdef MOZ_X11
     // Send the parent our X socket to act as a proxy reference for our X
