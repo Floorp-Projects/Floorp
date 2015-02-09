@@ -4,12 +4,7 @@
  * This program is made available under an ISC-style license.  See the
  * accompanying file LICENSE for details.
  */
-// This enables assert in release, and lets us have debug-only code
-#ifdef NDEBUG
-#define DEBUG
 #undef NDEBUG
-#endif // #ifdef NDEBUG
-
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
@@ -80,86 +75,18 @@ void SafeRelease(T * ptr)
   }
 }
 
-/* This wraps a critical section to track the owner in debug mode, adapted from
- * NSPR and http://blogs.msdn.com/b/oldnewthing/archive/2013/07/12/10433554.aspx */
-class owned_critical_section
-{
-public:
-
-  owned_critical_section()
-#ifdef DEBUG
-    : owner(0)
-#endif
-  {
-    InitializeCriticalSection(&critical_section);
-  }
-
-  ~owned_critical_section()
-  {
-    DeleteCriticalSection(&critical_section);
-  }
-
-  void enter()
-  {
-    EnterCriticalSection(&critical_section);
-#ifdef DEBUG
-    assert(owner != GetCurrentThreadId(), "recursive locking");
-    owner = GetCurrentThreadId();
-#endif
-  }
-
-  void leave()
-  {
-#ifdef DEBUG
-    /* GetCurrentThreadId cannot return 0: it is not a the valid thread id */
-    owner = 0;
-#endif
-    LeaveCriticalSection(&critical_section);
-  }
-
-#ifdef DEBUG
-  /* This is guaranteed to have the good behaviour if it succeeds. The behaviour
-   * is undefined otherwise. */
-  void assert_current_thread_owns()
-  {
-    /* This implies owner != 0, because GetCurrentThreadId cannot return 0. */
-    assert(owner == GetCurrentThreadId());
-  }
-#endif
-
-private:
-  CRITICAL_SECTION critical_section;
-#ifdef DEBUG
-  DWORD owner;
-#endif
-};
-
 struct auto_lock {
-  auto_lock(owned_critical_section * lock)
+  auto_lock(CRITICAL_SECTION * lock)
     :lock(lock)
   {
-    lock->enter();
+    EnterCriticalSection(lock);
   }
   ~auto_lock()
   {
-    lock->leave();
+    LeaveCriticalSection(lock);
   }
 private:
-  owned_critical_section * lock;
-};
-
-struct auto_unlock {
-  auto_unlock(owned_critical_section * lock)
-    :lock(lock)
-  {
-    lock->leave();
-  }
-  ~auto_unlock()
-  {
-    lock->enter();
-  }
-private:
-  owned_critical_section * lock;
+  CRITICAL_SECTION * lock;
 };
 
 struct auto_com {
@@ -259,7 +186,7 @@ struct cubeb_stream
   HANDLE thread;
   /* We synthetize our clock from the callbacks. */
   LONG64 clock;
-  owned_critical_section * stream_reset_lock;
+  CRITICAL_SECTION stream_reset_lock;
   /* Maximum number of frames we can be requested in a callback. */
   uint32_t buffer_frame_count;
   /* Resampler instance. Resampling will only happen if necessary. */
@@ -330,7 +257,7 @@ public:
     /* Close the stream */
     wasapi_stream_stop(stm);
     {
-      auto_lock lock(stm->stream_reset_lock);
+      auto_lock lock(&stm->stream_reset_lock);
       close_wasapi_stream(stm);
       /* Reopen a stream and start it immediately. This will automatically pick the
        * new default device for this role. */
@@ -385,12 +312,6 @@ bool should_upmix(cubeb_stream * stream)
 bool should_downmix(cubeb_stream * stream)
 {
   return stream->mix_params.channels < stream->stream_params.channels;
-}
-
-float stream_to_mix_samplerate_ratio(cubeb_stream * stream)
-{
-  auto_lock lock(stream->stream_reset_lock);
-  return float(stream->stream_params.rate) / stream->mix_params.rate;
 }
 
 /* Upmix function, copies a mono channel in two interleaved
@@ -466,9 +387,9 @@ refill(cubeb_stream * stm, float * data, long frames_needed)
     dest = data;
   }
 
-  long out_frames = cubeb_resampler_fill(stm->resampler, dest, frames_needed);
+  stm->clock = InterlockedAdd64(&stm->clock, frames_needed);
 
-  stm->clock = InterlockedAdd64(&stm->clock, frames_needed * stream_to_mix_samplerate_ratio(stm));
+  long out_frames = cubeb_resampler_fill(stm->resampler, dest, frames_needed);
 
   /* XXX: Handle this error. */
   if (out_frames < 0) {
@@ -626,10 +547,13 @@ HRESULT register_notification_client(cubeb_stream * stm)
 
 HRESULT unregister_notification_client(cubeb_stream * stm)
 {
-  assert(stm);
+  HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator),
+                                NULL, CLSCTX_INPROC_SERVER,
+                                IID_PPV_ARGS(&stm->device_enumerator));
 
-  if (!stm->device_enumerator) {
-    return S_OK;
+  if (FAILED(hr)) {
+    LOG("Could not get device enumerator: %x", hr);
+    return hr;
   }
 
   stm->device_enumerator->UnregisterEndpointNotificationCallback(stm->notification_client);
@@ -925,11 +849,7 @@ int setup_wasapi_stream(cubeb_stream * stm)
   IMMDevice * device;
   WAVEFORMATEX * mix_format;
 
-  stm->stream_reset_lock->assert_current_thread_owns();
-
   auto_com com;
-
-  assert(!stm->client && "WASAPI stream already setup, close it first.");
 
   hr = get_default_endpoint(&device);
   if (FAILED(hr)) {
@@ -1060,16 +980,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   stm->draining = false;
   stm->latency = latency;
   stm->clock = 0;
-
-  /* Null out WASAPI-specific state */
-  stm->resampler = nullptr;
-  stm->client = nullptr;
-  stm->render_client = nullptr;
-  stm->audio_stream_volume = nullptr;
-  stm->device_enumerator = nullptr;
-  stm->notification_client = nullptr;
-
-  stm->stream_reset_lock = new owned_critical_section();
+  InitializeCriticalSection(&stm->stream_reset_lock);
 
   stm->shutdown_event = CreateEvent(NULL, 0, 0, NULL);
   stm->refill_event = CreateEvent(NULL, 0, 0, NULL);
@@ -1087,15 +998,9 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
     return CUBEB_ERROR;
   }
 
-  {
-    /* Locking here is not stricly necessary, because we don't have a
-       notification client that can reset the stream yet, but it lets us
-       assert that the lock is held in the function. */
-    auto_lock lock(stm->stream_reset_lock);
-    rv = setup_wasapi_stream(stm);
-    if (rv != CUBEB_OK) {
-      return rv;
-    }
+  rv = setup_wasapi_stream(stm);
+  if (rv != CUBEB_OK) {
+    return rv;
   }
 
   hr = register_notification_client(stm);
@@ -1114,28 +1019,17 @@ void close_wasapi_stream(cubeb_stream * stm)
 {
   assert(stm);
 
-  stm->stream_reset_lock->assert_current_thread_owns();
-
   SafeRelease(stm->client);
-  stm->client = nullptr;
-
   SafeRelease(stm->render_client);
-  stm->client = nullptr;
 
-  if (stm->resampler) {
-    cubeb_resampler_destroy(stm->resampler);
-    stm->resampler = nullptr;
-  }
+  cubeb_resampler_destroy(stm->resampler);
 
   free(stm->mix_buffer);
-  stm->mix_buffer = nullptr;
 }
 
 void wasapi_stream_destroy(cubeb_stream * stm)
 {
   assert(stm);
-
-  unregister_notification_client(stm);
 
   if (stm->thread) {
     SetEvent(stm->shutdown_event);
@@ -1146,13 +1040,11 @@ void wasapi_stream_destroy(cubeb_stream * stm)
 
   SafeRelease(stm->shutdown_event);
   SafeRelease(stm->refill_event);
+  DeleteCriticalSection(&stm->stream_reset_lock);
 
-  {
-    auto_lock lock(stm->stream_reset_lock);
-    close_wasapi_stream(stm);
-  }
+  close_wasapi_stream(stm);
 
-  delete stm->stream_reset_lock;
+  unregister_notification_client(stm);
 
   free(stm);
 }
@@ -1161,7 +1053,7 @@ int wasapi_stream_start(cubeb_stream * stm)
 {
   HRESULT hr;
 
-  auto_lock lock(stm->stream_reset_lock);
+  auto_lock lock(&stm->stream_reset_lock);
 
   assert(stm);
 
@@ -1186,7 +1078,7 @@ int wasapi_stream_stop(cubeb_stream * stm)
 {
   assert(stm && stm->shutdown_event);
 
-  auto_lock lock(stm->stream_reset_lock);
+  auto_lock lock(&stm->stream_reset_lock);
 
   SetEvent(stm->shutdown_event);
 
@@ -1196,7 +1088,6 @@ int wasapi_stream_stop(cubeb_stream * stm)
   }
 
   if (stm->thread) {
-    auto_unlock lock(stm->stream_reset_lock);
     WaitForSingleObject(stm->thread, INFINITE);
     CloseHandle(stm->thread);
     stm->thread = NULL;
@@ -1220,7 +1111,7 @@ int wasapi_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 {
   assert(stm && latency);
 
-  auto_lock lock(stm->stream_reset_lock);
+  auto_lock lock(&stm->stream_reset_lock);
 
   /* The GetStreamLatency method only works if the
    * AudioClient has been initialized. */
@@ -1243,7 +1134,7 @@ int wasapi_stream_set_volume(cubeb_stream * stm, float volume)
   /* up to 9.1 for now */
   float volumes[10];
 
-  auto_lock lock(stm->stream_reset_lock);
+  auto_lock lock(&stm->stream_reset_lock);
 
   hr = stm->audio_stream_volume->GetChannelCount(&channels);
   if (hr != S_OK) {
