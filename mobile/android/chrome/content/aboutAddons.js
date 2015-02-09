@@ -348,6 +348,10 @@ var Addons = {
             let event = document.createEvent("Events");
             event.initEvent("AddonOptionsLoad", true, false);
             window.dispatchEvent(event);
+          } else {
+            // Reset the options URL to hide the options header if there are no
+            // valid settings to show.
+            detailItem.setAttribute("optionsURL", "");
           }
 
           // Also send a notification to match the behavior of desktop Firefox
