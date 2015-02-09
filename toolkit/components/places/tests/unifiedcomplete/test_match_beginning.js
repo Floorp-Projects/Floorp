@@ -12,8 +12,10 @@ add_task(function* test_match_beginning() {
 
   let uri1 = NetUtil.newURI("http://x.com/y");
   let uri2 = NetUtil.newURI("https://y.com/x");
-  yield promiseAddVisits([ { uri: uri1, title: "a b" },
-                           { uri: uri2, title: "b a" } ]);
+  yield PlacesTestUtils.addVisits([
+    { uri: uri1, title: "a b" },
+    { uri: uri2, title: "b a" }
+  ]);
 
   do_print("Match at the beginning of titles");
   Services.prefs.setIntPref("browser.urlbar.matchBehavior", 3);

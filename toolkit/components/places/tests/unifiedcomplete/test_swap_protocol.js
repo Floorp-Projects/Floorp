@@ -20,14 +20,16 @@ add_task(function* test_swap_protocol() {
   let uri6 = NetUtil.newURI("https://site/");
   let uri7 = NetUtil.newURI("http://woohoo/");
   let uri8 = NetUtil.newURI("http://wwwwwwacko/");
-  yield promiseAddVisits([ { uri: uri1, title: "title" },
-                           { uri: uri2, title: "title" },
-                           { uri: uri3, title: "title" },
-                           { uri: uri4, title: "title" },
-                           { uri: uri5, title: "title" },
-                           { uri: uri6, title: "title" },
-                           { uri: uri7, title: "title" },
-                           { uri: uri8, title: "title" } ]);
+  yield PlacesTestUtils.addVisits([
+    { uri: uri1, title: "title" },
+    { uri: uri2, title: "title" },
+    { uri: uri3, title: "title" },
+    { uri: uri4, title: "title" },
+    { uri: uri5, title: "title" },
+    { uri: uri6, title: "title" },
+    { uri: uri7, title: "title" },
+    { uri: uri8, title: "title" }
+  ]);
 
   let allMatches = [
     { uri: uri1, title: "title" },

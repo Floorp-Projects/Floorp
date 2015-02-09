@@ -30,7 +30,7 @@ function ensurePlacesInfoObjectsAreEqual(a, b) {
 
 function test_getPlacesInfoExistentPlace() {
   let testURI = NetUtil.newURI("http://www.example.tld");
-  yield promiseAddVisits(testURI);
+  yield PlacesTestUtils.addVisits(testURI);
 
   let getPlacesInfoResult = yield promiseGetPlacesInfo([testURI]);
   do_check_eq(getPlacesInfoResult.results.length, 1);
@@ -56,7 +56,7 @@ add_task(test_getPlacesInfoNonExistentPlace);
 
 function test_promisedHelper() {
   let (uri = NetUtil.newURI("http://www.helper_existent_example.tld")) {
-    yield promiseAddVisits(uri);
+    yield PlacesTestUtils.addVisits(uri);
     let placeInfo = yield PlacesUtils.promisePlaceInfo(uri);
     do_check_true(placeInfo instanceof Ci.mozIPlaceInfo);
   };
@@ -73,7 +73,7 @@ add_task(test_promisedHelper);
 
 function test_infoByGUID() {
   let testURI = NetUtil.newURI("http://www.guid_example.tld");
-  yield promiseAddVisits(testURI);
+  yield PlacesTestUtils.addVisits(testURI);
 
   let placeInfoByURI = yield PlacesUtils.promisePlaceInfo(testURI);
   let placeInfoByGUID = yield PlacesUtils.promisePlaceInfo(placeInfoByURI.guid);
@@ -93,12 +93,12 @@ add_task(test_invalid_guid);
 function test_mixed_selection() {
   let placeInfo1, placeInfo2;
   let (uri = NetUtil.newURI("http://www.mixed_selection_test_1.tld")) {
-    yield promiseAddVisits(uri);
+    yield PlacesTestUtils.addVisits(uri);
     placeInfo1 = yield PlacesUtils.promisePlaceInfo(uri);
   };
 
   let (uri = NetUtil.newURI("http://www.mixed_selection_test_2.tld")) {
-    yield promiseAddVisits(uri);
+    yield PlacesTestUtils.addVisits(uri);
     placeInfo2 = yield PlacesUtils.promisePlaceInfo(uri);
   };
 

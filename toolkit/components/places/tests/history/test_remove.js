@@ -14,7 +14,7 @@ Cu.importGlobalProperties(["URL"]);
 // Test removing a single page
 add_task(function* test_remove_single() {
   let WITNESS_URI = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove/" + Math.random());
-  yield promiseAddVisits(WITNESS_URI);
+  yield PlacesTestUtils.addVisits(WITNESS_URI);
   Assert.ok(page_in_database(WITNESS_URI));
 
   let remover = Task.async(function*(name, filter, options) {
@@ -24,7 +24,7 @@ add_task(function* test_remove_single() {
 
     let uri = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove/" + Math.random());
     let title = "Visit " + Math.random();
-    yield promiseAddVisits({uri: uri, title: title});
+    yield PlacesTestUtils.addVisits({uri: uri, title: title});
     Assert.ok(visits_in_database(uri), "History entry created");
 
     let removeArg = yield filter(uri);
@@ -141,7 +141,7 @@ add_task(function* test_remove_many() {
 
   do_print("Adding a witness page");
   let WITNESS_URI = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove/" + Math.random());;
-  yield promiseAddVisits(WITNESS_URI);
+  yield PlacesTestUtils.addVisits(WITNESS_URI);
   Assert.ok(page_in_database(WITNESS_URI), "Witness page added");
 
   do_print("Generating samples");
@@ -167,7 +167,7 @@ add_task(function* test_remove_many() {
     do_print("Pushing: " + uri.spec);
     pages.push(page);
 
-    yield promiseAddVisits(page);
+    yield PlacesTestUtils.addVisits(page);
     page.guid = do_get_guid_for_uri(uri);
     if (hasBookmark) {
       PlacesUtils.bookmarks.insertBookmark(

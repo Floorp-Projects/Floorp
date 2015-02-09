@@ -38,6 +38,6 @@ add_task(function test_execute()
 {
   const SEARCH_TERM = "ユニコード";
   const TEST_URL = "http://example.com/" + SEARCH_TERM + "/";
-  yield promiseAddVisits(uri(TEST_URL));
+  yield PlacesTestUtils.addVisits(uri(TEST_URL));
   do_check_true(search_has_result(SEARCH_TERM));
 });

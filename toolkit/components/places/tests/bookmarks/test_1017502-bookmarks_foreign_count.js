@@ -27,7 +27,7 @@ add_task(function* add_remove_change_bookmark_test() {
   let conn = yield PlacesUtils.promiseDBConnection();
 
   // Simulate a visit to the url
-  yield promiseAddVisits(T_URI);
+  yield PlacesTestUtils.addVisits(T_URI);
   Assert.equal((yield getForeignCountForURL(conn, T_URI)), 0);
 
   // Add 1st bookmark which should increment foreign_count by 1
@@ -63,7 +63,7 @@ add_task(function* maintenance_foreign_count_test() {
   let conn = yield PlacesUtils.promiseDBConnection();
 
   // Simulate a visit to the url
-  yield promiseAddVisits(T_URI);
+  yield PlacesTestUtils.addVisits(T_URI);
 
   // Adjust the foreign_count for the added entry to an incorrect value
   let deferred = Promise.defer();
@@ -93,7 +93,7 @@ add_task(function* maintenance_foreign_count_test() {
 add_task(function* add_remove_tags_test(){
   let conn = yield PlacesUtils.promiseDBConnection();
 
-  yield promiseAddVisits(T_URI);
+  yield PlacesTestUtils.addVisits(T_URI);
   Assert.equal((yield getForeignCountForURL(conn, T_URI)), 0);
 
   // Check foreign count incremented by 1 for a single tag

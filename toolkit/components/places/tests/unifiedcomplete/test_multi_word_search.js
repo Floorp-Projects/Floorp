@@ -17,10 +17,12 @@ add_task(function* test_match_beginning() {
   let uri2 = NetUtil.newURI("http://d.e.f/g-h_i/h/t/p");
   let uri3 = NetUtil.newURI("http://g.h.i/j-k_l/h/t/p");
   let uri4 = NetUtil.newURI("http://j.k.l/m-n_o/h/t/p");
-  yield promiseAddVisits([ { uri: uri1, title: "f(o)o b<a>r" },
-                           { uri: uri2, title: "b(a)r b<a>z" },
-                           { uri: uri3, title: "f(o)o b<a>r" },
-                           { uri: uri4, title: "f(o)o b<a>r" } ]);
+  yield PlacesTestUtils.addVisits([
+    { uri: uri1, title: "f(o)o b<a>r" },
+    { uri: uri2, title: "b(a)r b<a>z" },
+    { uri: uri3, title: "f(o)o b<a>r" },
+    { uri: uri4, title: "f(o)o b<a>r" }
+  ]);
   addBookmark({ uri: uri3, title: "f(o)o b<a>r" });
   addBookmark({ uri: uri4, title: "b(a)r b<a>z" });
 

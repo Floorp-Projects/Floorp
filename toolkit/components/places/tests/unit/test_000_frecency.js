@@ -89,7 +89,7 @@ function task_initializeBucket(bucket) {
         }
         else {
           matchTitle = searchTerm + "UnvisitedTyped";
-          yield promiseAddVisits({
+          yield PlacesTestUtils.addVisits({
             uri: calculatedURI,
             title: matchTitle,
             transition: visitType,
@@ -126,7 +126,7 @@ function task_initializeBucket(bucket) {
       }
       else
         matchTitle = calculatedURI.spec.substr(calculatedURI.spec.lastIndexOf("/")+1);
-      yield promiseAddVisits({
+      yield PlacesTestUtils.addVisits({
         uri: calculatedURI,
         transition: visitType,
         visitDate: dateInPeriod
@@ -135,7 +135,7 @@ function task_initializeBucket(bucket) {
 
     if (calculatedURI && frecency) {
       results.push([calculatedURI, frecency, matchTitle]);
-      yield promiseAddVisits({
+      yield PlacesTestUtils.addVisits({
         uri: calculatedURI,
         title: matchTitle,
         transition: visitType,

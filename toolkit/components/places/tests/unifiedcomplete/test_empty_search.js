@@ -16,15 +16,14 @@ add_task(function* test_javascript_match() {
   let uri6 = NetUtil.newURI("http://t.foo/5");
   let uri7 = NetUtil.newURI("http://t.foo/6");
 
-  yield promiseAddVisits([ { uri: uri1, title: "title" },
-                           { uri: uri2, title: "title" },
-                           { uri: uri3, title: "title",
-                             transition: TRANSITION_TYPED},
-                           { uri: uri4, title: "title",
-                             transition: TRANSITION_TYPED },
-                           { uri: uri6, title: "title",
-                             transition: TRANSITION_TYPED },
-                           { uri: uri7, title: "title" } ]);
+  yield PlacesTestUtils.addVisits([
+    { uri: uri1, title: "title" },
+    { uri: uri2, title: "title" },
+    { uri: uri3, title: "title", transition: TRANSITION_TYPED},
+    { uri: uri4, title: "title", transition: TRANSITION_TYPED },
+    { uri: uri6, title: "title", transition: TRANSITION_TYPED },
+    { uri: uri7, title: "title" }
+  ]);
 
   addBookmark({ uri: uri2,
                 title: "title" });
