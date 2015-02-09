@@ -199,7 +199,7 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
     if (clasp->spec.shouldDefineConstructor()) {
         // Stash type information, so that what we do here is equivalent to
         // initBuiltinConstructor.
-        types::AddTypePropertyId(cx, global, id, ObjectValue(*ctor));
+        AddTypePropertyId(cx, global, id, ObjectValue(*ctor));
     }
 
     return true;
@@ -224,7 +224,7 @@ GlobalObject::initBuiltinConstructor(JSContext *cx, Handle<GlobalObject*> global
     global->setPrototype(key, ObjectValue(*proto));
     global->setConstructorPropertySlot(key, ObjectValue(*ctor));
 
-    types::AddTypePropertyId(cx, global, id, ObjectValue(*ctor));
+    AddTypePropertyId(cx, global, id, ObjectValue(*ctor));
     return true;
 }
 

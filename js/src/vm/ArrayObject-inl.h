@@ -22,7 +22,7 @@ ArrayObject::setLength(ExclusiveContext *cx, uint32_t length)
 
     if (length > INT32_MAX) {
         /* Track objects with overflowing lengths in type information. */
-        types::MarkObjectGroupFlags(cx, this, OBJECT_FLAG_LENGTH_OVERFLOW);
+        MarkObjectGroupFlags(cx, this, OBJECT_FLAG_LENGTH_OVERFLOW);
     }
 
     getElementsHeader()->length = length;
