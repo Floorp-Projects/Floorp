@@ -1,4 +1,4 @@
-#filter substitution;
+#filter substitution
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -51,13 +51,6 @@ let AppConstants = Object.freeze({
 
   MOZ_SERVICES_HEALTHREPORT:
 #ifdef MOZ_SERVICES_HEALTHREPORT
-  true,
-#else
-  false,
-#endif
-
-  MOZ_DEVICES:
-#ifdef MOZ_DEVICES
   true,
 #else
   false,
