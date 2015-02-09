@@ -21,8 +21,11 @@ add_task(function*() {
   let isVisible = yield isHighlighting(toolbox);
   ok(isVisible, "the highlighter is shown");
 
+  info("listen to the highlighter's hidden event");
+  let onHidden = waitForHighlighterEvent("hidden", toolbox.highlighter);
   info("mouse-leave the markup-view");
   yield mouseLeaveMarkupView(inspector);
+  yield onHidden;
   isVisible = yield isHighlighting(toolbox);
   ok(!isVisible, "the highlighter is hidden after mouseleave");
 

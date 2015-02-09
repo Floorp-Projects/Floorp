@@ -26,13 +26,13 @@ add_task(function*() {
 
   info("Check that the highlighter is hidden by default");
 
-  let hidden = yield getAttribute(highlighter, "hidden");
+  let hidden = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "hidden");
   is(hidden, "true", "The highlighter is hidden by default");
 
   info("Check that nothing is shown if no rect is passed");
 
   yield highlighter.show(body);
-  hidden = yield getAttribute(highlighter, "hidden");
+  hidden = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "hidden");
   is(hidden, "true", "The highlighter is hidden when no rect is passed");
 
   info("Check that nothing is shown if rect is incomplete or invalid");
@@ -40,25 +40,25 @@ add_task(function*() {
   yield highlighter.show(body, {
     rect: {x: 0, y: 0}
   });
-  hidden = yield getAttribute(highlighter, "hidden");
+  hidden = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "hidden");
   is(hidden, "true", "The highlighter is hidden when the rect is incomplete");
 
   yield highlighter.show(body, {
     rect: {x: 0, y: 0, width: -Infinity, height: 0}
   });
-  hidden = yield getAttribute(highlighter, "hidden");
+  hidden = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "hidden");
   is(hidden, "true", "The highlighter is hidden when the rect is invalid (1)");
 
   yield highlighter.show(body, {
     rect: {x: 0, y: 0, width: 5, height: -45}
   });
-  hidden = yield getAttribute(highlighter, "hidden");
+  hidden = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "hidden");
   is(hidden, "true", "The highlighter is hidden when the rect is invalid (2)");
 
   yield highlighter.show(body, {
     rect: {x: "test", y: 0, width: 5, height: 5}
   });
-  hidden = yield getAttribute(highlighter, "hidden");
+  hidden = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "hidden");
   is(hidden, "true", "The highlighter is hidden when the rect is invalid (3)");
 
   info("Check that the highlighter is displayed when valid options are passed");
@@ -66,9 +66,9 @@ add_task(function*() {
   yield highlighter.show(body, {
     rect: {x: 5, y: 5, width: 50, height: 50}
   });
-  hidden = yield getAttribute(highlighter, "hidden");
+  hidden = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "hidden");
   ok(!hidden, "The highlighter is displayed");
-  let style = yield getAttribute(highlighter, "style");
+  let style = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "style");
   is(style, "left:5px;top:5px;width:50px;height:50px;",
     "The highlighter is positioned correctly");
 
@@ -77,9 +77,9 @@ add_task(function*() {
   yield highlighter.show(body, {
     rect: {x: 0, y: 0, width: 50, height: 50}
   });
-  hidden = yield getAttribute(highlighter, "hidden");
+  hidden = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "hidden");
   ok(!hidden, "The highlighter is displayed when x=0 and y=0");
-  style = yield getAttribute(highlighter, "style");
+  style = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "style");
   is(style, "left:0px;top:0px;width:50px;height:50px;",
     "The highlighter is positioned correctly");
 
@@ -88,7 +88,7 @@ add_task(function*() {
   yield highlighter.show(body, {
     rect: {x: 0, y: 0, width: 0, height: 0}
   });
-  hidden = yield getAttribute(highlighter, "hidden");
+  hidden = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "hidden");
   is(hidden, "true", "The highlighter is hidden width and height are 0");
 
   info("Check that a fill color can be passed");
@@ -97,21 +97,12 @@ add_task(function*() {
     rect: {x: 100, y: 200, width: 500, height: 200},
     fill: "red"
   });
-  hidden = yield getAttribute(highlighter, "hidden");
+  hidden = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "hidden");
   ok(!hidden, "The highlighter is displayed");
-  style = yield getAttribute(highlighter, "style");
+  style = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "style");
   is(style, "left:100px;top:200px;width:500px;height:200px;background:red;",
     "The highlighter has the right background color");
 
   yield highlighter.hide();
   yield highlighter.finalize();
 });
-
-function* getAttribute(highlighter, name) {
-  let {data: value} = yield executeInContent("Test:GetHighlighterAttribute", {
-    nodeID: "highlighted-rect",
-    name: name,
-    actorID: highlighter.actorID
-  });
-  return value;
-}
