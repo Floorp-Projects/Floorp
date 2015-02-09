@@ -1232,7 +1232,11 @@ let Cmds = {
   },
 
   disconnectRuntime: function() {
-    return UI.busyUntil(AppManager.disconnectRuntime(), "disconnecting from runtime");
+    let disconnecting = Task.spawn(function*() {
+      yield UI.destroyToolbox();
+      yield AppManager.disconnectRuntime();
+    });
+    return UI.busyUntil(disconnecting, "disconnecting from runtime");
   },
 
   takeScreenshot: function() {
