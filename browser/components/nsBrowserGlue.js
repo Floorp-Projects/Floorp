@@ -23,9 +23,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "UITour",
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ContentClick",
-                                  "resource:///modules/ContentClick.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "DirectoryLinksProvider",
                                   "resource:///modules/DirectoryLinksProvider.jsm");
 
@@ -588,7 +585,6 @@ BrowserGlue.prototype = {
     ContentSearch.init();
     FormValidationHandler.init();
 
-    ContentClick.init();
     RemotePrompt.init();
     ContentPrefServiceParent.init();
 
