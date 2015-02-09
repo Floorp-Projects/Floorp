@@ -190,9 +190,11 @@ private:
   // AppendData.  Accessed on the main thread only.
   int64_t mLastStartTimestamp;
   Maybe<int64_t> mLastEndTimestamp;
+  void AdjustDecodersTimestampOffset(int32_t aOffset);
 
   // The timestamp offset used by our current decoder, in microseconds.
   int64_t mLastTimestampOffset;
+  int64_t mAdjustedTimestamp;
 
   // Set when the first decoder used by this TrackBuffer is initialized.
   // Protected by mParentDecoder's monitor.
