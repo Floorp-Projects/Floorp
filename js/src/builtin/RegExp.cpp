@@ -139,54 +139,6 @@ js::ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
     return CreateRegExpMatchResult(cx, input, matches, rval);
 }
 
-/* Note: returns the original if no escaping need be performed. */
-template <typename CharT>
-static bool
-EscapeNakedForwardSlashes(StringBuffer &sb, const CharT *oldChars, size_t oldLen)
-{
-    for (const CharT *it = oldChars; it < oldChars + oldLen; ++it) {
-        if (*it == '/' && (it == oldChars || it[-1] != '\\')) {
-            /* There's a forward slash that needs escaping. */
-            if (sb.empty()) {
-                /* This is the first one we've seen, copy everything up to this point. */
-                if (mozilla::IsSame<CharT, char16_t>::value && !sb.ensureTwoByteChars())
-                    return false;
-
-                if (!sb.reserve(oldLen + 1))
-                    return false;
-
-                sb.infallibleAppend(oldChars, size_t(it - oldChars));
-            }
-            if (!sb.append('\\'))
-                return false;
-        }
-
-        if (!sb.empty() && !sb.append(*it))
-            return false;
-    }
-
-    return true;
-}
-
-static JSAtom *
-EscapeNakedForwardSlashes(JSContext *cx, JSAtom *unescaped)
-{
-    /* We may never need to use |sb|. Start using it lazily. */
-    StringBuffer sb(cx);
-
-    if (unescaped->hasLatin1Chars()) {
-        JS::AutoCheckCannotGC nogc;
-        if (!EscapeNakedForwardSlashes(sb, unescaped->latin1Chars(nogc), unescaped->length()))
-            return nullptr;
-    } else {
-        JS::AutoCheckCannotGC nogc;
-        if (!EscapeNakedForwardSlashes(sb, unescaped->twoByteChars(nogc), unescaped->length()))
-            return nullptr;
-    }
-
-    return sb.empty() ? unescaped : sb.finishAtom();
-}
-
 /*
  * Compile a new |RegExpShared| for the |RegExpObject|.
  *
@@ -275,20 +227,16 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
             return false;
     }
 
-    RootedAtom escapedSourceStr(cx, EscapeNakedForwardSlashes(cx, source));
-    if (!escapedSourceStr)
-        return false;
-
     CompileOptions options(cx);
     frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
 
-    if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), escapedSourceStr))
+    if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), source))
         return false;
 
     RegExpStatics *res = cx->global()->getRegExpStatics(cx);
     if (!res)
         return false;
-    RegExpObject *reobj = builder.build(escapedSourceStr, RegExpFlag(flags | res->getFlags()));
+    RegExpObject *reobj = builder.build(source, RegExpFlag(flags | res->getFlags()));
     if (!reobj)
         return false;
 
@@ -495,11 +443,11 @@ regexp_source_impl(JSContext *cx, CallArgs args)
         return false;
 
     /* Step 7. */
-    if (src->length() == 0)
-        args.rval().setString(cx->names().emptyRegExp);
-    else
-        args.rval().setString(src);
+    RootedString str(cx, EscapeRegExpPattern(cx, src));
+    if (!str)
+        return false;
 
+    args.rval().setString(str);
     return true;
 }
 
