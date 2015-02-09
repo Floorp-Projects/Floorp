@@ -84,7 +84,7 @@
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
 
-          yield waitForUpdate(win, "list-tabs-response");
+          yield waitForUpdate(win, "runtime-apps-found");
 
           ok(isPlayActive(), "play button is enabled 1");
           ok(!isStopActive(), "stop button is disabled 1");
@@ -114,7 +114,7 @@
 
           win.document.querySelectorAll(".runtime-panel-item-other")[1].click();
 
-          yield waitForUpdate(win, "list-tabs-response");
+          yield waitForUpdate(win, "runtime-apps-found");
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Locally connected");
 
