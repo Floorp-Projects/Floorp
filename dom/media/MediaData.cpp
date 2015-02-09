@@ -48,6 +48,27 @@ AudioData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return size;
 }
 
+/* static */
+already_AddRefed<AudioData>
+AudioData::TransferAndUpdateTimestampAndDuration(AudioData* aOther,
+                                                  int64_t aTimestamp,
+                                                  int64_t aDuration)
+{
+  NS_ENSURE_TRUE(aOther, nullptr);
+  nsRefPtr<AudioData> v = new AudioData(aOther->mOffset,
+                                        aTimestamp,
+                                        aDuration,
+                                        aOther->mFrames,
+                                        aOther->mAudioData,
+                                        aOther->mChannels,
+                                        aOther->mRate);
+  v->mDiscontinuity = aOther->mDiscontinuity;
+  // Remove aOther's AudioData as it can't be shared across two targets.
+  aOther->mAudioData.forget();
+
+  return v.forget();
+}
+
 static bool
 ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane)
 {
