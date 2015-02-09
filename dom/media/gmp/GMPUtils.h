@@ -18,8 +18,11 @@ struct DestroyPolicy
   }
 };
 
+// Ideally, this would be a template alias, but GCC 4.6 doesn't support them.  See bug 1124021.
 template<typename T>
-using GMPUniquePtr = mozilla::UniquePtr<T, DestroyPolicy<T>>;
+struct GMPUnique {
+  typedef mozilla::UniquePtr<T, DestroyPolicy<T>> Ptr;
+};
 
 } // namespace mozilla
 
