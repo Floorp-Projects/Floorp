@@ -22,10 +22,12 @@ add_task(function*() {
   is(rect.width, 100, "The highlighter has the right width.");
 
   info("Changing the test element's size and waiting for the highlighter to update");
+  let {actorID, connPrefix} = getHighlighterActorID(toolbox.highlighter);
   yield executeInContent("Test:ChangeHighlightedNodeWaitForUpdate", {
     name: "style",
     value: "width: 200px; height: 100px; background:yellow;",
-    actorID: getHighlighterActorID(toolbox)
+    actorID,
+    connPrefix
   });
 
   rect = yield getSimpleBorderRect(toolbox);

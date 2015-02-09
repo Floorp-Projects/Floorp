@@ -600,6 +600,11 @@ CanvasFrameAnonymousContentHelper.prototype = {
  * - this.currentNode: the node to be shown
  * - this.currentQuads: all of the node's box model region quads
  * - this.win: the current window
+ *
+ * Emits the following events:
+ * - shown
+ * - hidden
+ * - updated
  */
 function AutoRefreshHighlighter(tabActor) {
   EventEmitter.decorate(this);
@@ -638,6 +643,8 @@ AutoRefreshHighlighter.prototype = {
     this._updateAdjustedQuads();
     this._startRefreshLoop();
     this._show();
+
+    this.emit("shown");
   },
 
   /**
@@ -653,6 +660,8 @@ AutoRefreshHighlighter.prototype = {
     this.currentNode = null;
     this.currentQuads = {};
     this.options = null;
+
+    this.emit("hidden");
   },
 
   /**
