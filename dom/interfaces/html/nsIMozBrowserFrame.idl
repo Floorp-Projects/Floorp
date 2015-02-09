@@ -85,4 +85,10 @@ interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
    * It is an error to call this method if we already have a frame loader.
    */
   void createRemoteFrameLoader(in nsITabParent aTabParent);
+
+  /**
+   * Initialize the API, and add frame message listener to listen to API
+   * invocations.
+   */
+  [noscript] void initializeBrowserAPI();
 };
