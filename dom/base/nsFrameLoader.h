@@ -312,8 +312,6 @@ private:
   // own-or-containing-app.
   void ResetPermissionManagerStatus();
 
-  void InitializeBrowserAPI();
-
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   mozilla::dom::Element* mOwnerContent; // WEAK
@@ -353,6 +351,7 @@ private:
   bool mRemoteFrame : 1;
   bool mClipSubdocument : 1;
   bool mClampScrollPosition : 1;
+  bool mRemoteBrowserInitialized : 1;
   bool mObservingOwnerContent : 1;
 
   // Backs nsIFrameLoader::{Get,Set}Visible.  Visibility state here relates to
@@ -370,6 +369,9 @@ private:
   // See nsIFrameLoader.idl. EVENT_MODE_NORMAL_DISPATCH automatically
   // forwards some input events to out-of-process content.
   uint32_t mEventMode;
+
+  // Indicate if we have sent 'remote-browser-pending'.
+  bool mPendingFrameSent;
 };
 
 #endif
