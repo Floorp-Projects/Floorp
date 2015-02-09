@@ -628,7 +628,7 @@ ErrorHandler.prototype = {
         this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
                           LOG_PREFIX_ERROR);
 
-        if (this.shouldReportError(topic)) {
+        if (this.shouldReportError()) {
           this.notifyOnNextTick("weave:ui:login:error");
         } else {
           this.notifyOnNextTick("weave:ui:clear-error");
@@ -644,7 +644,7 @@ ErrorHandler.prototype = {
         this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
                           LOG_PREFIX_ERROR);
 
-        if (this.shouldReportError(topic)) {
+        if (this.shouldReportError()) {
           this.notifyOnNextTick("weave:ui:sync:error");
         } else {
           this.notifyOnNextTick("weave:ui:sync:finish");
@@ -671,7 +671,7 @@ ErrorHandler.prototype = {
           this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
                             LOG_PREFIX_ERROR);
 
-          if (this.shouldReportError(topic)) {
+          if (this.shouldReportError()) {
             this.dontIgnoreErrors = false;
             this.notifyOnNextTick("weave:ui:sync:error");
             break;
@@ -827,7 +827,7 @@ ErrorHandler.prototype = {
     }
   },
 
-  shouldReportError: function shouldReportError(topic = "") {
+  shouldReportError: function shouldReportError() {
     if (Status.login == MASTER_PASSWORD_LOCKED) {
       this._log.trace("shouldReportError: false (master password locked).");
       return false;
@@ -851,11 +851,10 @@ ErrorHandler.prototype = {
       return true;
     }
 
-    // We might have got a 401 mid-sync (see bug 1081158 for subtleties).
-    // If so, wait for the next sync before actually handling an error. This
-    // assumes that we'll get a 401 again on a login fetch in order to report
-    // the error.
-    if (topic != "weave:service:login:error" && !this.service.clusterURL) {
+    // We got a 401 mid-sync. Wait for the next sync before actually handling
+    // an error. This assumes that we'll get a 401 again on a login fetch in
+    // order to report the error.
+    if (!this.service.clusterURL) {
       this._log.trace("shouldReportError: false (no cluster URL; " +
                       "possible node reassignment).");
       return false;
