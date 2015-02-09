@@ -458,7 +458,7 @@ CustomElementCallback::Call()
 
       // If ELEMENT is in a document and this document has a browsing context,
       // enqueue attached callback for ELEMENT.
-      nsIDocument* document = mThisObject->GetUncomposedDoc();
+      nsIDocument* document = mThisObject->GetComposedDoc();
       if (document && document->GetDocShell()) {
         document->EnqueueLifecycleCallback(nsIDocument::eAttached, mThisObject);
       }

@@ -1473,13 +1473,6 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Being added to a document.
     SetInDocument();
 
-    // Attached callback must be enqueued whenever custom element is inserted into a
-    // document and this document has a browsing context.
-    if (GetCustomElementData() && aDocument->GetDocShell()) {
-      // Enqueue an attached callback for the custom element.
-      aDocument->EnqueueLifecycleCallback(nsIDocument::eAttached, this);
-    }
-
     // Unset this flag since we now really are in a document.
     UnsetFlags(NODE_FORCE_XBL_BINDINGS |
                // And clear the lazy frame construction bits.
@@ -1500,6 +1493,16 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // If we're not in the doc and not in a shadow tree,
     // update our subtree pointer.
     SetSubtreeRootPointer(aParent->SubtreeRoot());
+  }
+
+  nsIDocument* composedDoc = GetComposedDoc();
+  if (composedDoc) {
+    // Attached callback must be enqueued whenever custom element is inserted into a
+    // document and this document has a browsing context.
+    if (GetCustomElementData() && composedDoc->GetDocShell()) {
+      // Enqueue an attached callback for the custom element.
+      composedDoc->EnqueueLifecycleCallback(nsIDocument::eAttached, this);
+    }
   }
 
   // Propagate scoped style sheet tracking bit.
