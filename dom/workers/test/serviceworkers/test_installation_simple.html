@@ -77,9 +77,17 @@
 
   function networkError404() {
     return navigator.serviceWorker.register("404.js", { scope: "network_error/"}).then(function(w) {
-        ok(false, "Should fail with NetworkError");
+        ok(false, "404 response should fail with TypeError");
       }, function(e) {
-        ok(e.name === "NetworkError", "Should fail with NetworkError");
+        ok(e.name === "TypeError", "404 response should fail with TypeError");
+      });
+  }
+
+  function redirectError() {
+    return navigator.serviceWorker.register("redirect_serviceworker.sjs", { scope: "redirect_error/" }).then(function(swr) {
+        ok(false, "redirection should fail with TypeError");
+      }, function (e) {
+        ok(e.name === "TypeError", "redirection should fail with TypeError");
       });
   }
 
@@ -163,6 +171,7 @@
       .then(httpsOnly)
       .then(realWorker)
       .then(networkError404)
+      .then(redirectError)
       .then(parseError)
       .then(updatefound)
       .then(checkReadyPromise)
