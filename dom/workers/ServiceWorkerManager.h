@@ -294,78 +294,52 @@ public:
     return res;
   }
 
-  /*
-   * This struct is used for passive ServiceWorker management.
-   * Actively running ServiceWorkers use the SharedWorker infrastructure in
-   * RuntimeService for execution and lifetime management.
-   */
-  struct ServiceWorkerDomainInfo
+  // Ordered list of scopes for glob matching.
+  // Each entry is an absolute URL representing the scope.
+  //
+  // An array is used for now since the number of controlled scopes per
+  // domain is expected to be relatively low. If that assumption was proved
+  // wrong this should be replaced with a better structure to avoid the
+  // memmoves associated with inserting stuff in the middle of the array.
+  nsTArray<nsCString> mOrderedScopes;
+
+  // Scope to registration. 
+  // The scope should be a fully qualified valid URL.
+  nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerRegistrationInfo> mServiceWorkerRegistrationInfos;
+
+  nsTObserverArray<ServiceWorkerRegistration*> mServiceWorkerRegistrations;
+
+  nsRefPtrHashtable<nsISupportsHashKey, ServiceWorkerRegistrationInfo> mControlledDocuments;
+
+  // Maps scopes to job queues.
+  nsClassHashtable<nsCStringHashKey, ServiceWorkerJobQueue> mJobQueues;
+
+  nsDataHashtable<nsCStringHashKey, bool> mSetOfScopesBeingUpdated;
+
+  already_AddRefed<ServiceWorkerRegistrationInfo>
+  GetRegistration(const nsCString& aScope) const
   {
-    // Ordered list of scopes for glob matching.
-    // Each entry is an absolute URL representing the scope.
-    //
-    // An array is used for now since the number of controlled scopes per
-    // domain is expected to be relatively low. If that assumption was proved
-    // wrong this should be replaced with a better structure to avoid the
-    // memmoves associated with inserting stuff in the middle of the array.
-    nsTArray<nsCString> mOrderedScopes;
+    nsRefPtr<ServiceWorkerRegistrationInfo> reg;
+    mServiceWorkerRegistrationInfos.Get(aScope, getter_AddRefs(reg));
+    return reg.forget();
+  }
 
-    // Scope to registration.
-    nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerRegistrationInfo> mServiceWorkerRegistrationInfos;
+  ServiceWorkerRegistrationInfo*
+  CreateNewRegistration(const nsCString& aScope);
 
-    nsTObserverArray<ServiceWorkerRegistration*> mServiceWorkerRegistrations;
+  void
+  RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration)
+  {
+    MOZ_ASSERT(mServiceWorkerRegistrationInfos.Contains(aRegistration->mScope));
+    ServiceWorkerManager::RemoveScope(mOrderedScopes, aRegistration->mScope);
+    mServiceWorkerRegistrationInfos.Remove(aRegistration->mScope);
+  }
 
-    nsRefPtrHashtable<nsISupportsHashKey, ServiceWorkerRegistrationInfo> mControlledDocuments;
-
-    nsClassHashtable<nsCStringHashKey, ServiceWorkerJobQueue> mJobQueues;
-
-    nsDataHashtable<nsCStringHashKey, bool> mSetOfScopesBeingUpdated;
-
-    ServiceWorkerDomainInfo()
-    { }
-
-    already_AddRefed<ServiceWorkerRegistrationInfo>
-    GetRegistration(const nsCString& aScope) const
-    {
-      nsRefPtr<ServiceWorkerRegistrationInfo> reg;
-      mServiceWorkerRegistrationInfos.Get(aScope, getter_AddRefs(reg));
-      return reg.forget();
-    }
-
-    ServiceWorkerRegistrationInfo*
-    CreateNewRegistration(const nsCString& aScope)
-    {
-      ServiceWorkerRegistrationInfo* registration =
-        new ServiceWorkerRegistrationInfo(aScope);
-      // From now on ownership of registration is with
-      // mServiceWorkerRegistrationInfos.
-      mServiceWorkerRegistrationInfos.Put(aScope, registration);
-      ServiceWorkerManager::AddScope(mOrderedScopes, aScope);
-      return registration;
-    }
-
-    void
-    RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration)
-    {
-      MOZ_ASSERT(mServiceWorkerRegistrationInfos.Contains(aRegistration->mScope));
-      ServiceWorkerManager::RemoveScope(mOrderedScopes, aRegistration->mScope);
-      mServiceWorkerRegistrationInfos.Remove(aRegistration->mScope);
-    }
-
-    ServiceWorkerJobQueue*
-    GetOrCreateJobQueue(const nsCString& aScope)
-    {
-      return mJobQueues.LookupOrAdd(aScope);
-    }
-
-    NS_INLINE_DECL_REFCOUNTING(ServiceWorkerDomainInfo)
-
-  private:
-    ~ServiceWorkerDomainInfo()
-    { }
-  };
-
-  nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerDomainInfo> mDomainMap;
+  ServiceWorkerJobQueue*
+  GetOrCreateJobQueue(const nsCString& aScope)
+  {
+    return mJobQueues.LookupOrAdd(aScope);
+  }
 
   void
   FinishFetch(ServiceWorkerRegistrationInfo* aRegistration);
@@ -410,20 +384,6 @@ private:
   CreateServiceWorker(const nsACString& aScriptSpec,
                       const nsACString& aScope,
                       ServiceWorker** aServiceWorker);
-
-  static PLDHashOperator
-  CleanupServiceWorkerInformation(const nsACString& aDomain,
-                                  ServiceWorkerDomainInfo* aDomainInfo,
-                                  void *aUnused);
-
-  already_AddRefed<ServiceWorkerDomainInfo>
-  GetDomainInfo(nsIDocument* aDoc);
-
-  already_AddRefed<ServiceWorkerDomainInfo>
-  GetDomainInfo(nsIURI* aURI);
-
-  already_AddRefed<ServiceWorkerDomainInfo>
-  GetDomainInfo(const nsCString& aURL);
 
   NS_IMETHODIMP
   GetServiceWorkerForScope(nsIDOMWindow* aWindow,
