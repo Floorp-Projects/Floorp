@@ -229,13 +229,12 @@ SampleIterator::GetNextKeyframeTime()
 }
 
 Index::Index(const stagefright::Vector<MediaSource::Indice>& aIndex,
-             Stream* aSource, uint32_t aTrackId, Microseconds aTimestampOffset,
-             Monitor* aMonitor)
+             Stream* aSource, uint32_t aTrackId, Monitor* aMonitor)
   : mSource(aSource)
   , mMonitor(aMonitor)
 {
   if (aIndex.isEmpty()) {
-    mMoofParser = new MoofParser(aSource, aTrackId, aTimestampOffset, aMonitor);
+    mMoofParser = new MoofParser(aSource, aTrackId, aMonitor);
   } else {
     for (size_t i = 0; i < aIndex.size(); i++) {
       const MediaSource::Indice& indice = aIndex[i];
