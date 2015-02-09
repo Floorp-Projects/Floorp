@@ -298,29 +298,28 @@ Submitter.prototype = {
     let manager = Services.crashmanager;
     let submissionID = manager.generateSubmissionID();
 
-    let self = this;
-    xhr.addEventListener("readystatechange", function (aEvt) {
+    xhr.addEventListener("readystatechange", (evt) => {
       if (xhr.readyState == 4) {
         let ret =
           xhr.status == 200 ? parseKeyValuePairs(xhr.responseText) : {};
         let submitted = !!ret.CrashID;
 
-        if (self.recordSubmission) {
+        if (this.recordSubmission) {
           let result = submitted ? manager.SUBMISSION_RESULT_OK :
                                    manager.SUBMISSION_RESULT_FAILED;
-          manager.addSubmissionResult(self.id, submissionID, new Date(),
+          manager.addSubmissionResult(this.id, submissionID, new Date(),
                                       result);
           if (submitted) {
-            manager.setRemoteCrashID(self.id, ret.CrashID);
+            manager.setRemoteCrashID(this.id, ret.CrashID);
           }
         }
 
         if (submitted) {
-          self.submitSuccess(ret);
+          this.submitSuccess(ret);
         }
         else {
-           self.notifyStatus(FAILED);
-           self.cleanup();
+           this.notifyStatus(FAILED);
+           this.cleanup();
         }
       }
     }, false);
