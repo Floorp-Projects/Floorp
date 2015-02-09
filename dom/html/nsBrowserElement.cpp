@@ -19,90 +19,11 @@
 #include "nsIDOMDOMRequest.h"
 #include "nsIDOMElement.h"
 #include "nsINode.h"
-#include "nsIObserver.h"
-#include "nsIObserverService.h"
 #include "nsIPrincipal.h"
-#include "nsWeakReference.h"
 
 using namespace mozilla::dom;
 
 namespace mozilla {
-
-static const char kRemoteBrowserPending[] = "remote-browser-pending";
-static const char kInprocessBrowserShown[] = "inprocess-browser-shown";
-
-class nsBrowserElement::BrowserShownObserver : public nsIObserver
-                                             , public nsSupportsWeakReference
-{
-public:
-  explicit BrowserShownObserver(nsBrowserElement* aBrowserElement);
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-  void AddObserver();
-  void RemoveObserver();
-private:
-  virtual ~BrowserShownObserver();
-
-  // Weak reference to the browser element. nsBrowserElement has a
-  // reference to us. nsBrowserElement's destructor is responsible to
-  // null out this weak reference via RemoveObserver()
-  nsBrowserElement* mBrowserElement;
-};
-
-NS_IMPL_ISUPPORTS(nsBrowserElement::BrowserShownObserver, nsIObserver, nsISupportsWeakReference)
-
-nsBrowserElement::BrowserShownObserver::BrowserShownObserver(nsBrowserElement* aBrowserElement)
-  : mBrowserElement(aBrowserElement)
-{
-}
-
-nsBrowserElement::BrowserShownObserver::~BrowserShownObserver()
-{
-  RemoveObserver();
-}
-
-NS_IMETHODIMP
-nsBrowserElement::BrowserShownObserver::Observe(nsISupports* aSubject,
-                                                const char* aTopic,
-                                                const char16_t* aData)
-{
-  NS_ENSURE_TRUE(mBrowserElement, NS_OK);
-
-  if (!strcmp(aTopic, kRemoteBrowserPending) ||
-      !strcmp(aTopic, kInprocessBrowserShown)) {
-    nsCOMPtr<nsIFrameLoader> frameLoader = do_QueryInterface(aSubject);
-    nsCOMPtr<nsIFrameLoader> myFrameLoader = mBrowserElement->GetFrameLoader();
-    // The browser element API needs the frameloader to
-    // initialize. We still use the observer to get notified when the
-    // frameloader is created. So we check if the frameloader created
-    // is ours, then initialize the browser element API.
-    if (frameLoader && frameLoader == myFrameLoader) {
-      mBrowserElement->InitBrowserElementAPI();
-    }
-  }
-  return NS_OK;
-}
-
-void
-nsBrowserElement::BrowserShownObserver::AddObserver()
-{
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs) {
-    obs->AddObserver(this, kRemoteBrowserPending, true);
-    obs->AddObserver(this, kInprocessBrowserShown, true);
-  }
-}
-
-void
-nsBrowserElement::BrowserShownObserver::RemoveObserver()
-{
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs) {
-    obs->RemoveObserver(this, kRemoteBrowserPending);
-    obs->RemoveObserver(this, kInprocessBrowserShown);
-  }
-  mBrowserElement = nullptr;
-}
 
 bool
 nsBrowserElement::IsBrowserElementOrThrow(ErrorResult& aRv)
@@ -143,18 +64,6 @@ nsBrowserElement::InitBrowserElementAPI()
   if (mBrowserElementAPI) {
     mBrowserElementAPI->SetFrameLoader(frameLoader);
   }
-}
-
-nsBrowserElement::nsBrowserElement()
-  : mOwnerIsWidget(false)
-{
-  mObserver = new BrowserShownObserver(this);
-  mObserver->AddObserver();
-}
-
-nsBrowserElement::~nsBrowserElement()
-{
-  mObserver->RemoveObserver();
 }
 
 void
