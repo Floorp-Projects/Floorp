@@ -1323,7 +1323,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // Makes a call using the only two methods that it is sane for
     // independent code to make a call.
     void callJit(Register callee);
-    void callJitFromAsmJS(Register callee);
+    void callJitFromAsmJS(Register callee) { as_blx(callee); }
 
     void reserveStack(uint32_t amount);
     void freeStack(uint32_t amount);
