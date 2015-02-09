@@ -42,6 +42,9 @@ public:
 
   uint32_t ChildrenCount() const { return mChildren.Length(); }
   ProxyAccessible* ChildAt(uint32_t aIdx) const { return mChildren[aIdx]; }
+
+  // XXX evaluate if this is fast enough.
+  size_t IndexInParent() const { return mParent->mChildren.IndexOf(this); }
   bool MustPruneChildren() const;
 
   void Shutdown();
