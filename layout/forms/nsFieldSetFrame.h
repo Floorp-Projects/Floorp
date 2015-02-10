@@ -7,10 +7,13 @@
 #define nsFieldSetFrame_h___
 
 #include "mozilla/Attributes.h"
+#include "imgIContainer.h"
 #include "nsContainerFrame.h"
 
 class nsFieldSetFrame MOZ_FINAL : public nsContainerFrame
 {
+  typedef mozilla::image::DrawResult DrawResult;
+
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -47,8 +50,9 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  void PaintBorderBackground(nsRenderingContext& aRenderingContext,
-    nsPoint aPt, const nsRect& aDirtyRect, uint32_t aBGFlags);
+  DrawResult PaintBorderBackground(nsRenderingContext& aRenderingContext,
+                                   nsPoint aPt, const nsRect& aDirtyRect,
+                                   uint32_t aBGFlags);
 
 #ifdef DEBUG
   virtual void SetInitialChildList(ChildListID    aListID,
