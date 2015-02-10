@@ -45,7 +45,8 @@ import android.os.Bundle;
 public class AndroidFxAccount {
   protected static final String LOG_TAG = AndroidFxAccount.class.getSimpleName();
 
-  public static final int CURRENT_PREFS_VERSION = 1;
+  public static final int CURRENT_SYNC_PREFS_VERSION = 1;
+  public static final int CURRENT_RL_PREFS_VERSION = 1;
 
   // When updating the account, do not forget to update AccountPickler.
   public static final int CURRENT_ACCOUNT_VERSION = 3;
@@ -241,10 +242,7 @@ public class AndroidFxAccount {
     return accountManager.getUserData(account, ACCOUNT_KEY_TOKEN_SERVER);
   }
 
-  /**
-   * This needs to return a string because of the tortured prefs access in GlobalSession.
-   */
-  public String getSyncPrefsPath() throws GeneralSecurityException, UnsupportedEncodingException {
+  private String constructPrefsPath(String product, long version, String extra) throws GeneralSecurityException, UnsupportedEncodingException {
     String profile = getProfile();
     String username = account.name;
 
@@ -256,26 +254,42 @@ public class AndroidFxAccount {
       throw new IllegalStateException("Missing username. Cannot fetch prefs.");
     }
 
-    final String tokenServerURI = getTokenServerURI();
-    if (tokenServerURI == null) {
-      throw new IllegalStateException("No token server URI. Cannot fetch prefs.");
-    }
-
     final String fxaServerURI = getAccountServerURI();
     if (fxaServerURI == null) {
       throw new IllegalStateException("No account server URI. Cannot fetch prefs.");
     }
 
-    final String product = GlobalConstants.BROWSER_INTENT_PACKAGE + ".fxa";
-    final long version = CURRENT_PREFS_VERSION;
-
     // This is unique for each syncing 'view' of the account.
-    final String serverURLThing = fxaServerURI + "!" + tokenServerURI;
+    final String serverURLThing = fxaServerURI + "!" + extra;
     return Utils.getPrefsPath(product, username, serverURLThing, profile, version);
+  }
+
+  /**
+   * This needs to return a string because of the tortured prefs access in GlobalSession.
+   */
+  public String getSyncPrefsPath() throws GeneralSecurityException, UnsupportedEncodingException {
+    final String tokenServerURI = getTokenServerURI();
+    if (tokenServerURI == null) {
+      throw new IllegalStateException("No token server URI. Cannot fetch prefs.");
+    }
+
+    final String product = GlobalConstants.BROWSER_INTENT_PACKAGE + ".fxa";
+    final long version = CURRENT_SYNC_PREFS_VERSION;
+    return constructPrefsPath(product, version, tokenServerURI);
+  }
+
+  public String getReadingListPrefsPath() throws GeneralSecurityException, UnsupportedEncodingException {
+    final String product = GlobalConstants.BROWSER_INTENT_PACKAGE + ".reading";
+    final long version = CURRENT_RL_PREFS_VERSION;
+    return constructPrefsPath(product, version, "");
   }
 
   public SharedPreferences getSyncPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
     return context.getSharedPreferences(getSyncPrefsPath(), Utils.SHARED_PREFERENCES_MODE);
+  }
+
+  public SharedPreferences getReadingListPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
+    return context.getSharedPreferences(getReadingListPrefsPath(), Utils.SHARED_PREFERENCES_MODE);
   }
 
   /**

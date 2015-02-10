@@ -9,6 +9,13 @@
                 android:name="android.accounts.AccountAuthenticator"
                 android:resource="@xml/fxaccount_authenticator" />
         </service>
+
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.receivers.FxAccountDeletedService" >
+        </service>
+
+        <!-- Firefox Sync. -->
         <service
             android:exported="false"
             android:name="org.mozilla.gecko.fxa.sync.FxAccountSyncService" >
@@ -20,7 +27,18 @@
                 android:name="android.content.SyncAdapter"
                 android:resource="@xml/fxaccount_syncadapter" />
         </service>
+
+        <!-- Reading List. -->
+#ifdef MOZ_ANDROID_READING_LIST_SERVICE
         <service
             android:exported="false"
-            android:name="org.mozilla.gecko.fxa.receivers.FxAccountDeletedService" >
+            android:name="org.mozilla.gecko.reading.ReadingListSyncService" >
+            <intent-filter >
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/readinglist_syncadapter" />
         </service>
+#endif

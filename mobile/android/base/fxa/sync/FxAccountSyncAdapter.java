@@ -86,117 +86,43 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     this.notificationManager = new FxAccountNotificationManager(NOTIFICATION_ID);
   }
 
-  protected static class SyncDelegate {
-    protected final CountDownLatch latch;
-    protected final SyncResult syncResult;
-    protected final AndroidFxAccount fxAccount;
+  protected static class SyncDelegate extends FxAccountSyncDelegate {
+    @Override
+    public void handleSuccess() {
+      Logger.info(LOG_TAG, "Sync succeeded.");
+      super.handleSuccess();
+    }
+
+    @Override
+    public void handleError(Exception e) {
+      Logger.error(LOG_TAG, "Got exception syncing.", e);
+      super.handleError(e);
+    }
+
+    @Override
+    public void handleCannotSync(State finalState) {
+      Logger.warn(LOG_TAG, "Cannot sync from state: " + finalState.getStateLabel());
+      super.handleCannotSync(finalState);
+    }
+
+    @Override
+    public void postponeSync(long millis) {
+      if (millis <= 0) {
+        Logger.debug(LOG_TAG, "Asked to postpone sync, but zero delay.");
+      }
+      super.postponeSync(millis);
+    }
+
+    @Override
+    public void rejectSync() {
+      super.rejectSync();
+    }
+
     protected final Collection<String> stageNamesToSync;
 
     public SyncDelegate(CountDownLatch latch, SyncResult syncResult, AndroidFxAccount fxAccount, Collection<String> stageNamesToSync) {
-      if (latch == null) {
-        throw new IllegalArgumentException("latch must not be null");
-      }
-      if (syncResult == null) {
-        throw new IllegalArgumentException("syncResult must not be null");
-      }
-      if (fxAccount == null) {
-        throw new IllegalArgumentException("fxAccount must not be null");
-      }
-      this.latch = latch;
-      this.syncResult = syncResult;
-      this.fxAccount = fxAccount;
+      super(latch, syncResult, fxAccount);
       this.stageNamesToSync = Collections.unmodifiableCollection(stageNamesToSync);
-    }
-
-    /**
-     * No error!  Say that we made progress.
-     */
-    protected void setSyncResultSuccess() {
-      syncResult.stats.numUpdates += 1;
-    }
-
-    /**
-     * Soft error. Say that we made progress, so that Android will sync us again
-     * after exponential backoff.
-     */
-    protected void setSyncResultSoftError() {
-      syncResult.stats.numUpdates += 1;
-      syncResult.stats.numIoExceptions += 1;
-    }
-
-    /**
-     * Hard error. We don't want Android to sync us again, even if we make
-     * progress, until the user intervenes.
-     */
-    protected void setSyncResultHardError() {
-      syncResult.stats.numAuthExceptions += 1;
-    }
-
-    public void handleSuccess() {
-      Logger.info(LOG_TAG, "Sync succeeded.");
-      setSyncResultSuccess();
-      latch.countDown();
-    }
-
-    public void handleError(Exception e) {
-      Logger.error(LOG_TAG, "Got exception syncing.", e);
-      setSyncResultSoftError();
-      // This is awful, but we need to propagate bad assertions back up the
-      // chain somehow, and this will do for now.
-      if (e instanceof TokenServerException) {
-        // We should only get here *after* we're locked into the married state.
-        State state = fxAccount.getState();
-        if (state.getStateLabel() == StateLabel.Married) {
-          Married married = (Married) state;
-          fxAccount.setState(married.makeCohabitingState());
-        }
-      }
-      latch.countDown();
-    }
-
-    /**
-     * When the login machine terminates, we might not be in the
-     * <code>Married</code> state, and therefore we can't sync. This method
-     * messages as much to the user.
-     * <p>
-     * To avoid stopping us syncing altogether, we set a soft error rather than
-     * a hard error. In future, we would like to set a hard error if we are in,
-     * for example, the <code>Separated</code> state, and then have some user
-     * initiated activity mark the Android account as ready to sync again. This
-     * is tricky, though, so we play it safe for now.
-     *
-     * @param finalState
-     *          that login machine ended in.
-     */
-    public void handleCannotSync(State finalState) {
-      Logger.warn(LOG_TAG, "Cannot sync from state: " + finalState.getStateLabel());
-      setSyncResultSoftError();
-      latch.countDown();
-    }
-
-    public void postponeSync(long millis) {
-      if (millis <= 0) {
-        Logger.debug(LOG_TAG, "Asked to postpone sync, but zero delay. Short-circuiting.");
-      } else {
-        // delayUntil is broken: https://code.google.com/p/android/issues/detail?id=65669
-        // So we don't bother doing this. Instead, we rely on the periodic sync
-        // we schedule, and the backoff handler for the rest.
-        /*
-        Logger.warn(LOG_TAG, "Postponing sync by " + millis + "ms.");
-        syncResult.delayUntil = millis / 1000;
-         */
-      }
-      setSyncResultSoftError();
-      latch.countDown();
-    }
-
-    /**
-     * Simply don't sync, without setting any error flags.
-     * This is the appropriate behavior when a routine backoff has not yet
-     * been met.
-     */
-    public void rejectSync() {
-      latch.countDown();
     }
 
     public Collection<String> getStageNamesToSync() {
