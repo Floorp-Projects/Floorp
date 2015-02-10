@@ -179,7 +179,9 @@ public:
   nsRect mContentRect;
 };
 
-class nsDisplayBackgroundGeometry : public nsDisplayItemGeometry
+class nsDisplayBackgroundGeometry
+  : public nsDisplayItemGeometry
+  , public nsImageGeometryMixin<nsDisplayBackgroundGeometry>
 {
 public:
   nsDisplayBackgroundGeometry(nsDisplayBackgroundImage* aItem, nsDisplayListBuilder* aBuilder);
