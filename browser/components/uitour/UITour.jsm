@@ -139,23 +139,23 @@ this.UITour = {
     ["loop-newRoom", {
       infoPanelPosition: "leftcenter topright",
       query: (aDocument) => {
-        let loopUI = aDocument.defaultView.LoopUI;
-        if (loopUI.selectedTab != "rooms") {
+        let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop-panel-iframe");
+        if (!loopBrowser) {
           return null;
         }
         // Use the parentElement full-width container of the button so our arrow
         // doesn't overlap the panel contents much.
-        return loopUI.browser.contentDocument.querySelector(".new-room-button").parentElement;
+        return loopBrowser.contentDocument.querySelector(".new-room-button").parentElement;
       },
     }],
     ["loop-roomList", {
       infoPanelPosition: "leftcenter topright",
       query: (aDocument) => {
-        let loopUI = aDocument.defaultView.LoopUI;
-        if (loopUI.selectedTab != "rooms") {
+        let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop-panel-iframe");
+        if (!loopBrowser) {
           return null;
         }
-        return loopUI.browser.contentDocument.querySelector(".room-list");
+        return loopBrowser.contentDocument.querySelector(".room-list");
       },
     }],
     ["loop-selectedRoomButtons", {
@@ -178,7 +178,7 @@ this.UITour = {
     }],
     ["loop-signInUpLink", {
       query: (aDocument) => {
-        let loopBrowser = aDocument.defaultView.LoopUI.browser;
+        let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop-panel-iframe");
         if (!loopBrowser) {
           return null;
         }
