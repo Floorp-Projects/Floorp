@@ -1629,6 +1629,9 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
                      1.0f/containerParameters.mYScale);
   root->SetScaleToResolution(presShell->ScaleToResolution(),
       containerParameters.mXScale);
+  root->SetForceDispatchToContentRegion(
+      aBuilder->IsBuildingLayerEventRegions() &&
+      nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell));
 
   if (gfxPrefs::LayoutUseContainersForRootFrames()) {
     bool isRoot = presContext->IsRootContentDocument();
@@ -4061,6 +4064,9 @@ nsDisplaySubDocument::nsDisplaySubDocument(nsDisplayListBuilder* aBuilder,
     , mScrollParentId(aBuilder->GetCurrentScrollParentId())
 {
   MOZ_COUNT_CTOR(nsDisplaySubDocument);
+  mForceDispatchToContentRegion =
+    aBuilder->IsBuildingLayerEventRegions() &&
+    nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresContext()->PresShell());
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -4082,7 +4088,9 @@ nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
     params.mInLowPrecisionDisplayPort = true; 
   }
 
-  return nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, params);
+  nsRefPtr<Layer> layer = nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, params);
+  layer->AsContainerLayer()->SetForceDispatchToContentRegion(mForceDispatchToContentRegion);
+  return layer.forget();
 }
 
 UniquePtr<FrameMetrics>

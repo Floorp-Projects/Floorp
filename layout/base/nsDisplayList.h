@@ -3036,6 +3036,7 @@ public:
 
 protected:
   ViewID mScrollParentId;
+  bool mForceDispatchToContentRegion;
 };
 
 /**
