@@ -3,28 +3,15 @@ metadata:
   name: 'Taskcluster decision task for {{project}}'
   description: |
     Try push for {{owner}} with {{comment}}.
-  owner: "{{owner}}"
+  owner: mozilla-taskcluster-maintenance@mozilla.com
   source: "{{{source}}}"
 
 scopes:
-  - "queue:define-task:aws-provisioner/gecko-decision"
-  - "queue:create-task:aws-provisioner/gecko-decision"
-  - "docker-worker:cache:*"
-  - "docker-worker:image:quay.io/mozilla/decision:0.0.3"
-  - "queue:route:tc-treeherder-stage.{{project}}.{{revision_hash}}"
-  - "queue:route:tc-treeherder.{{project}}.{{revision_hash}}"
-  - 'queue:define-task:aws-provisioner/test-c4-2xlarge'
-  - 'queue:create-task:aws-provisioner/test-c4-2xlarge'
-  - 'queue:define-task:aws-provisioner/build-c4-2xlarge'
-  - 'queue:create-task:aws-provisioner/build-c4-2xlarge'
-  - "docker-worker:cache:tc-vcs"
-  - "docker-worker:image:quay.io/mozilla/builder:0.0.30"
-  - "queue:define-task:aws-provisioner/build-c4-2xlarge"
-  - "queue:create-task:aws-provisioner/build-c4-2xlarge"
-  - "docker-worker:cache:sources-gecko"
-  - "docker-worker:cache:build-mulet-linux-objects"
-  - "docker-worker:cache:tooltool-cache"
-  - "docker-worker:image:quay.io/mozilla/tester:0.0.9"
+  # Note the below scopes are insecure however these get overriden on the server
+  # side to whatever scopes are set by mozilla-taskcluster.
+  - queue:*
+  - docker-worker:*
+  - scheduler:*
 
 tasks:
   - taskId: '{{#as_slugid}}decision task{{/as_slugid}}'
@@ -32,8 +19,8 @@ tasks:
       created: '{{now}}'
       deadline: '{{#from_now}}1 day{{/from_now}}'
       metadata:
+        owner: mozilla-taskcluster-maintenance@mozilla.com
         source: {{{source}}}
-        owner: {{owner}}
         name: "[tc] Initial decision task for try ({{comment}})"
         description: |
           This is the single most important task as it decides how all other tasks
@@ -41,6 +28,9 @@ tasks:
 
       workerType: "gecko-decision"
       provisionerId: "aws-provisioner"
+
+      tags:
+        createdForUser: {{owner}}
 
       scopes:
         - "docker-worker:cache:tc-vcs-public-sources"
