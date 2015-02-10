@@ -862,8 +862,8 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     // means, there has already been data transfered.
 
     ReentrantMonitorAutoEnter lock(mReentrantMonitor);
-    PL_DHashTableAdd(&mTransferringRequests, aRequest, fallible);
-
+    PL_DHashTableAdd(&mTransferringRequests, aRequest);
+    
     return NS_OK;
   }
 

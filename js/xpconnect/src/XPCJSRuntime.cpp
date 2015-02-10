@@ -1536,8 +1536,9 @@ void XPCJSRuntime::DestroyJSContextStack()
 
 void XPCJSRuntime::SystemIsBeingShutDown()
 {
-    mDetachedWrappedNativeProtoMap->
-        Enumerate(DetachedWrappedNativeProtoShutdownMarker, nullptr);
+    if (mDetachedWrappedNativeProtoMap)
+        mDetachedWrappedNativeProtoMap->
+            Enumerate(DetachedWrappedNativeProtoShutdownMarker, nullptr);
 }
 
 #define JS_OPTIONS_DOT_STR "javascript.options."
@@ -1619,33 +1620,51 @@ XPCJSRuntime::~XPCJSRuntime()
     JS_SetRuntimePrivate(Runtime(), nullptr);
 
     // clean up and destroy maps...
-    mWrappedJSMap->ShutdownMarker();
-    delete mWrappedJSMap;
-    mWrappedJSMap = nullptr;
+    if (mWrappedJSMap) {
+        mWrappedJSMap->ShutdownMarker();
+        delete mWrappedJSMap;
+        mWrappedJSMap = nullptr;
+    }
 
-    delete mWrappedJSClassMap;
-    mWrappedJSClassMap = nullptr;
+    if (mWrappedJSClassMap) {
+        delete mWrappedJSClassMap;
+        mWrappedJSClassMap = nullptr;
+    }
 
-    delete mIID2NativeInterfaceMap;
-    mIID2NativeInterfaceMap = nullptr;
+    if (mIID2NativeInterfaceMap) {
+        delete mIID2NativeInterfaceMap;
+        mIID2NativeInterfaceMap = nullptr;
+    }
 
-    delete mClassInfo2NativeSetMap;
-    mClassInfo2NativeSetMap = nullptr;
+    if (mClassInfo2NativeSetMap) {
+        delete mClassInfo2NativeSetMap;
+        mClassInfo2NativeSetMap = nullptr;
+    }
 
-    delete mNativeSetMap;
-    mNativeSetMap = nullptr;
+    if (mNativeSetMap) {
+        delete mNativeSetMap;
+        mNativeSetMap = nullptr;
+    }
 
-    delete mThisTranslatorMap;
-    mThisTranslatorMap = nullptr;
+    if (mThisTranslatorMap) {
+        delete mThisTranslatorMap;
+        mThisTranslatorMap = nullptr;
+    }
 
-    delete mNativeScriptableSharedMap;
-    mNativeScriptableSharedMap = nullptr;
+    if (mNativeScriptableSharedMap) {
+        delete mNativeScriptableSharedMap;
+        mNativeScriptableSharedMap = nullptr;
+    }
 
-    delete mDyingWrappedNativeProtoMap;
-    mDyingWrappedNativeProtoMap = nullptr;
+    if (mDyingWrappedNativeProtoMap) {
+        delete mDyingWrappedNativeProtoMap;
+        mDyingWrappedNativeProtoMap = nullptr;
+    }
 
-    delete mDetachedWrappedNativeProtoMap;
-    mDetachedWrappedNativeProtoMap = nullptr;
+    if (mDetachedWrappedNativeProtoMap) {
+        delete mDetachedWrappedNativeProtoMap;
+        mDetachedWrappedNativeProtoMap = nullptr;
+    }
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
     // Tell the profiler that the runtime is gone
@@ -3495,38 +3514,42 @@ XPCJSRuntime::DebugDump(int16_t depth)
         }
 
         XPC_LOG_ALWAYS(("mWrappedJSClassMap @ %x with %d wrapperclasses(s)",  \
-                        mWrappedJSClassMap, mWrappedJSClassMap->Count()));
+                        mWrappedJSClassMap, mWrappedJSClassMap ?              \
+                        mWrappedJSClassMap->Count() : 0));
         // iterate wrappersclasses...
-        if (depth && mWrappedJSClassMap->Count()) {
+        if (depth && mWrappedJSClassMap && mWrappedJSClassMap->Count()) {
             XPC_LOG_INDENT();
             mWrappedJSClassMap->Enumerate(WrappedJSClassMapDumpEnumerator, &depth);
             XPC_LOG_OUTDENT();
         }
         XPC_LOG_ALWAYS(("mWrappedJSMap @ %x with %d wrappers(s)",             \
-                        mWrappedJSMap, mWrappedJSMap->Count()));
+                        mWrappedJSMap, mWrappedJSMap ?                        \
+                        mWrappedJSMap->Count() : 0));
         // iterate wrappers...
-        if (depth && mWrappedJSMap->Count()) {
+        if (depth && mWrappedJSMap && mWrappedJSMap->Count()) {
             XPC_LOG_INDENT();
             mWrappedJSMap->Dump(depth);
             XPC_LOG_OUTDENT();
         }
 
         XPC_LOG_ALWAYS(("mIID2NativeInterfaceMap @ %x with %d interface(s)",  \
-                        mIID2NativeInterfaceMap,
-                        mIID2NativeInterfaceMap->Count()));
+                        mIID2NativeInterfaceMap, mIID2NativeInterfaceMap ?    \
+                        mIID2NativeInterfaceMap->Count() : 0));
 
         XPC_LOG_ALWAYS(("mClassInfo2NativeSetMap @ %x with %d sets(s)",       \
-                        mClassInfo2NativeSetMap,                              \
-                        mClassInfo2NativeSetMap->Count()));
+                        mClassInfo2NativeSetMap, mClassInfo2NativeSetMap ?    \
+                        mClassInfo2NativeSetMap->Count() : 0));
 
         XPC_LOG_ALWAYS(("mThisTranslatorMap @ %x with %d translator(s)",      \
-                        mThisTranslatorMap, mThisTranslatorMap->Count()));
+                        mThisTranslatorMap, mThisTranslatorMap ?              \
+                        mThisTranslatorMap->Count() : 0));
 
         XPC_LOG_ALWAYS(("mNativeSetMap @ %x with %d sets(s)",                 \
-                        mNativeSetMap, mNativeSetMap->Count()));
+                        mNativeSetMap, mNativeSetMap ?                        \
+                        mNativeSetMap->Count() : 0));
 
         // iterate sets...
-        if (depth && mNativeSetMap->Count()) {
+        if (depth && mNativeSetMap && mNativeSetMap->Count()) {
             XPC_LOG_INDENT();
             mNativeSetMap->Enumerate(NativeSetDumpEnumerator, &depth);
             XPC_LOG_OUTDENT();
