@@ -378,6 +378,16 @@ private:
 };
 
 namespace {
+void clock_add(cubeb_stream * stm, LONG64 value)
+{
+  InterlockedExchangeAdd64(&stm->clock, value);
+}
+
+LONG64 clock_get(cubeb_stream * stm)
+{
+  return InterlockedExchangeAdd64(&stm->clock, 0);
+}
+
 bool should_upmix(cubeb_stream * stream)
 {
   return stream->mix_params.channels > stream->stream_params.channels;
@@ -469,7 +479,7 @@ refill(cubeb_stream * stm, float * data, long frames_needed)
 
   long out_frames = cubeb_resampler_fill(stm->resampler, dest, frames_needed);
 
-  stm->clock = InterlockedAdd64(&stm->clock, frames_needed * stream_to_mix_samplerate_ratio(stm));
+  clock_add(stm, frames_needed * stream_to_mix_samplerate_ratio(stm));
 
   /* XXX: Handle this error. */
   if (out_frames < 0) {
@@ -1221,7 +1231,7 @@ int wasapi_stream_get_position(cubeb_stream * stm, uint64_t * position)
 {
   assert(stm && position);
 
-  *position = InterlockedAdd64(&stm->clock, 0);
+  *position = clock_get(stm);
 
   return CUBEB_OK;
 }
