@@ -49,5 +49,23 @@ APZThreadUtils::AssertOnCompositorThread()
   }
 }
 
+/*static*/ void
+APZThreadUtils::RunOnControllerThread(Task* aTask)
+{
+#ifdef MOZ_WIDGET_GONK
+  // On B2G the controller thread is the compositor thread, and this function
+  // is always called from the libui thread or the main thread.
+  MessageLoop* loop = CompositorParent::CompositorLoop();
+  MOZ_ASSERT(MessageLoop::current() != loop);
+  loop->PostTask(FROM_HERE, aTask);
+#else
+  // On non-B2G platforms this is only ever called from the controller thread
+  // itself.
+  AssertOnControllerThread();
+  aTask->Run();
+  delete aTask;
+#endif
+}
+
 } // namespace layers
 } // namespace mozilla
