@@ -41,7 +41,11 @@ def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
     # Import the harness directly and under a different name here to avoid
     # "marionette" being importable from two locations when "testing/marionette/client"
     # is on sys.path.
-    # See bug 1050511.
+    # See bug 1050511 and bug 1114474. This needs to be removed with the
+    # resolution of bug 1109183.
+    clientdir = os.path.join(topsrcdir, 'testing/marionette/client')
+    if clientdir in sys.path:
+        sys.path.remove(clientdir)
     path = os.path.join(topsrcdir, 'testing/marionette/client/marionette/runtests.py')
     with open(path, 'r') as fh:
         imp.load_module('marionetteharness', fh, path,
