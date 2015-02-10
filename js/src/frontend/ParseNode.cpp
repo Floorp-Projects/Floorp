@@ -168,7 +168,7 @@ PushListNodeChildren(ParseNode *node, NodeStack *stack)
 }
 
 static PushResult
-PushTernaryNodeChildren(ParseNode *node, NodeStack *stack)
+PushTernaryNodeNullableChildren(ParseNode *node, NodeStack *stack)
 {
     MOZ_ASSERT(node->isArity(PN_TERNARY));
 
@@ -319,6 +319,9 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_SHORTHAND:
       case PNK_DOWHILE:
       case PNK_WHILE:
+      case PNK_SWITCH:
+      case PNK_LETBLOCK:
+      case PNK_FOR:
         return PushBinaryNodeChildren(pn, stack);
 
       // Default nodes, for dumb reasons that we're not changing now (mostly
@@ -357,6 +360,26 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         stack->push(pn->pn_kid3);
         return PushResult::Recyclable;
       }
+
+      // For for-in and for-of, the first child is any declaration present in
+      // the for-loop (and null if not).  The second child is the expression or
+      // pattern assigned every loop, and the third child is the expression
+      // looped over.  For example, in |for (var p in obj)|, the first child is
+      // |var p|, the second child is |p| (a node distinct from the one in
+      // |var p|), and the third child is |obj|.
+      case PNK_FORIN:
+      case PNK_FOROF: {
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        if (pn->pn_kid1)
+            stack->push(pn->pn_kid1);
+        stack->push(pn->pn_kid2);
+        stack->push(pn->pn_kid3);
+        return PushResult::Recyclable;
+      }
+
+      // for (;;) nodes have one child per optional component of the loop head.
+      case PNK_FORHEAD:
+        return PushTernaryNodeNullableChildren(pn, stack);
 
       // if-statement nodes have condition and consequent children and a
       // possibly-null alternative.
@@ -415,18 +438,18 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_CATCHLIST:
         return PushListNodeChildren(pn, stack);
 
+      case PNK_LABEL:
+        return PushNameNodeChildren(pn, stack);
+
       case PNK_DOT:
       case PNK_ELEM:
       case PNK_STATEMENTLIST:
-      case PNK_LABEL:
       case PNK_CALL:
       case PNK_NAME:
       case PNK_TEMPLATE_STRING_LIST:
       case PNK_TAGGED_TEMPLATE:
       case PNK_CALLSITEOBJ:
       case PNK_FUNCTION:
-      case PNK_SWITCH:
-      case PNK_FOR:
       case PNK_WITH:
       case PNK_RETURN:
       case PNK_NEW:
@@ -435,7 +458,6 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_ARRAYCOMP:
       case PNK_LEXICALSCOPE:
       case PNK_LET:
-      case PNK_LETBLOCK:
       case PNK_LETEXPR:
       case PNK_IMPORT:
       case PNK_IMPORT_SPEC_LIST:
@@ -444,9 +466,6 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_EXPORT_SPEC_LIST:
       case PNK_EXPORT_SPEC:
       case PNK_SEQ:
-      case PNK_FORIN:
-      case PNK_FOROF:
-      case PNK_FORHEAD:
       case PNK_ARGSBODY:
         break; // for now
 
@@ -466,7 +485,7 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         return PushListNodeChildren(pn, stack);
 
       case PN_TERNARY:
-        return PushTernaryNodeChildren(pn, stack);
+        return PushTernaryNodeNullableChildren(pn, stack);
 
       case PN_BINARY:
       case PN_BINARY_OBJ:
