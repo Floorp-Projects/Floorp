@@ -49,6 +49,7 @@ class ServiceWorkerJobQueue;
 
 class ServiceWorkerJob : public nsISupports
 {
+protected:
   // The queue keeps the jobs alive, so they can hold a rawptr back to the
   // queue.
   ServiceWorkerJobQueue* mQueue;
@@ -151,7 +152,6 @@ public:
   // removed since documents may be controlled. It is marked as
   // pendingUninstall and when all controlling documents go away, removed.
   bool mPendingUninstall;
-  bool mWaitingToActivate;
 
   explicit ServiceWorkerRegistrationInfo(const nsACString& aScope,
                                          nsIPrincipal* aPrincipal);
@@ -289,12 +289,9 @@ class ServiceWorkerManager MOZ_FINAL
   : public nsIServiceWorkerManager
   , public nsIIPCBackgroundChildCreateCallback
 {
-  friend class ActivationRunnable;
   friend class GetReadyPromiseRunnable;
   friend class GetRegistrationsRunnable;
   friend class GetRegistrationRunnable;
-  friend class QueueFireUpdateFoundRunnable;
-  friend class ServiceWorkerActivateAfterUnloadingJob;
   friend class ServiceWorkerRegisterJob;
   friend class ServiceWorkerRegistrationInfo;
   friend class ServiceWorkerUnregisterJob;
@@ -494,6 +491,9 @@ private:
                                       void* aUnused);
 
   nsClassHashtable<nsISupportsHashKey, PendingReadyPromise> mPendingReadyPromises;
+ 
+  void
+  MaybeRemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration);
 
   mozilla::ipc::PBackgroundChild* mActor;
 
