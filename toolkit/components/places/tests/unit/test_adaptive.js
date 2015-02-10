@@ -87,7 +87,7 @@ function task_setCountRank(aURI, aCount, aRank, aSearch, aBookmark)
   for (let i = 0; i < aCount; i++) {
     visits.push({ uri: aURI, visitDate: d1, transition: TRANSITION_TYPED });
   }
-  yield promiseAddVisits(visits);
+  yield PlacesTestUtils.addVisits(visits);
 
   // Make a nsIAutoCompleteController and friends for instrumentation feedback.
   let thing = {

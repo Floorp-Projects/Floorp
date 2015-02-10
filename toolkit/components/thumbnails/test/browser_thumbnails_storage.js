@@ -53,17 +53,17 @@ function runTests() {
 }
 
 function clearFile(aFile, aURL) {
-  if (aFile.exists())
+  if (aFile.exists()) {
     // Re-add our URL to the history so that history observer's onDeleteURI()
     // is called again.
-    addVisits(makeURI(aURL), function() {
+    PlacesTestUtils.addVisits(makeURI(aURL)).then(() => {
       // Try again...
-      yield clearHistory(true);
-      clearFile(aFile, aURL);
+      clearHistory(true, () => clearFile(aFile, aURL));
     });
+  }
 }
 
-function clearHistory(aUseRange) {
+function clearHistory(aUseRange, aCallback = next) {
   let s = new Sanitizer();
   s.prefDomain = "privacy.cpd.";
 
@@ -88,7 +88,7 @@ function clearHistory(aUseRange) {
   s.range = null;
   s.ignoreTimespan = true;
 
-  executeSoon(next);
+  executeSoon(aCallback);
 }
 
 function createThumbnail() {

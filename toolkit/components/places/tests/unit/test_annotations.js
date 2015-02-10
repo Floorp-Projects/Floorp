@@ -103,7 +103,7 @@ add_task(function test_execute()
 
   // test getPagesWithAnnotation
   var uri2 = uri("http://www.tests.tld");
-  yield promiseAddVisits(uri2);
+  yield PlacesTestUtils.addVisits(uri2);
   annosvc.setPageAnnotation(uri2, testAnnoName, testAnnoVal, 0, 0);
   var pages = annosvc.getPagesWithAnnotation(testAnnoName);
   do_check_eq(pages.length, 2);
@@ -155,7 +155,7 @@ add_task(function test_execute()
 
   // copy annotations to another uri
   var newURI = uri("http://mozilla.org");
-  yield promiseAddVisits(newURI);
+  yield PlacesTestUtils.addVisits(newURI);
   annosvc.setPageAnnotation(testURI, "oldAnno", "new", 0, 0);
   annosvc.setPageAnnotation(newURI, "oldAnno", "old", 0, 0);
   var annoNames = annosvc.getPageAnnotationNames(newURI);

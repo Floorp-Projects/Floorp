@@ -517,6 +517,7 @@ Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserv = null;
+var httpserv2 = null;
 var ios = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService);
 
@@ -530,23 +531,48 @@ var altsvcClientListener = {
   },
 
   onStopRequest: function test_onStopR(request, ctx, status) {
-    var isHttp2Connection = checkIsHttp2(request);
+    var isHttp2Connection = checkIsHttp2(request.QueryInterface(Components.interfaces.nsIHttpChannel));
     if (!isHttp2Connection) {
-      // not over tls yet - retry. It's all async and transparent to client
-      var chan = ios.newChannel2("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1",
-                                 null,
-                                 null,
-                                 null,      // aLoadingNode
-                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                 null,      // aTriggeringPrincipal
-                                 Ci.nsILoadInfo.SEC_NORMAL,
-                                 Ci.nsIContentPolicy.TYPE_OTHER)
+      dump("/altsvc1 not over h2 yet - retry\n");
+      var chan = makeChan("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1")
                 .QueryInterface(Components.interfaces.nsIHttpChannel);
-      chan.asyncOpen(altsvcClientListener, null);
+      // we use this header to tell the server to issue a altsvc frame for the
+      // speficied origin we will use in the next part of the test
+      chan.setRequestHeader("x-redirect-origin",
+                 "http://localhost:" + httpserv2.identity.primaryPort, false);
+      chan.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
+      chan.asyncOpen(altsvcClientListener, chan);
     } else {
       do_check_true(isHttp2Connection);
-      httpserv.stop(do_test_finished);
+      var chan = makeChan("http://localhost:" + httpserv2.identity.primaryPort + "/altsvc2")
+                .QueryInterface(Components.interfaces.nsIHttpChannel);
+      chan.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
+      chan.asyncOpen(altsvcClientListener2, chan);
+    }
+  }
+};
+
+var altsvcClientListener2 = {
+  onStartRequest: function test_onStartR(request, ctx) {
+    do_check_eq(request.status, Components.results.NS_OK);
+  },
+
+  onDataAvailable: function test_ODA(request, cx, stream, offset, cnt) {
+   read_stream(stream, cnt);
+  },
+
+  onStopRequest: function test_onStopR(request, ctx, status) {
+    var isHttp2Connection = checkIsHttp2(request.QueryInterface(Components.interfaces.nsIHttpChannel));
+    if (!isHttp2Connection) {
+      dump("/altsvc2 not over h2 yet - retry\n");
+      var chan = makeChan("http://localhost:" + httpserv2.identity.primaryPort + "/altsvc2")
+                .QueryInterface(Components.interfaces.nsIHttpChannel);
+      chan.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
+      chan.asyncOpen(altsvcClientListener2, chan);
+    } else {
+      do_check_true(isHttp2Connection);
       run_next_test();
+      do_test_finished();
     }
   }
 };
@@ -554,26 +580,27 @@ var altsvcClientListener = {
 function altsvcHttp1Server(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "text/plain", false);
+  response.setHeader("Connection", "close", false);
   response.setHeader("Alt-Svc", 'h2-16=":' + serverPort + '"', false);
   var body = "this is where a cool kid would write something neat.\n";
   response.bodyOutputStream.write(body, body.length);
 }
 
-function test_http2_altsvc() {
-  httpserv = new HttpServer();
-  httpserv.registerPathHandler("/altsvc1", altsvcHttp1Server);
-  httpserv.start(-1);
+function altsvcHttp1Server2(metadata, response) {
+// this server should never be used thanks to an alt svc frame from the
+// h2 server.. but in case of some async lag in setting the alt svc route
+// up we have it.
+  response.setStatusLine(metadata.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "text/plain", false);
+  response.setHeader("Connection", "close", false);
+  var body = "hanging.\n";
+  response.bodyOutputStream.write(body, body.length);
+}
 
-  var chan = ios.newChannel2("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1",
-                             null,
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER)
-                .QueryInterface(Components.interfaces.nsIHttpChannel);
-  chan.asyncOpen(altsvcClientListener, null);
+function test_http2_altsvc() {
+  var chan = makeChan("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1")
+           .QueryInterface(Components.interfaces.nsIHttpChannel);
+  chan.asyncOpen(altsvcClientListener, chan);
 }
 
 var Http2PushApiListener = function() {};
@@ -718,6 +745,11 @@ function test_http2_continuations() {
 
 function test_complete() {
   resetPrefs();
+  do_test_pending();
+  httpserv.stop(do_test_finished);
+  do_test_pending();
+  httpserv2.stop(do_test_finished);
+
   do_test_finished();
   do_timeout(0,run_next_test);
 }
@@ -748,12 +780,13 @@ var tests = [ test_http2_post_big
             , test_http2_post
             , test_http2_patch
             , test_http2_pushapi_1
+            , test_http2_continuations
             // These next two must always come in this order
+	    // best to add new tests before h1 streams get too involved
             , test_http2_h11required_stream
             , test_http2_h11required_session
             , test_http2_retry_rst
             , test_http2_wrongsuite
-            , test_http2_continuations
 
             // cleanup
             , test_complete
@@ -880,6 +913,14 @@ function run_test() {
   prefs.setBoolPref("network.http.altsvc.oe", true);
 
   loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
+
+  httpserv = new HttpServer();
+  httpserv.registerPathHandler("/altsvc1", altsvcHttp1Server);
+  httpserv.start(-1);
+
+  httpserv2 = new HttpServer();
+  httpserv2.registerPathHandler("/altsvc2", altsvcHttp1Server2);
+  httpserv2.start(-1);
 
   // And make go!
   run_next_test();

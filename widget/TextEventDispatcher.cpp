@@ -28,20 +28,23 @@ TextEventDispatcher::TextEventDispatcher(nsIWidget* aWidget)
 }
 
 nsresult
-TextEventDispatcher::Init(TextEventDispatcherListener* aListener)
+TextEventDispatcher::BeginInputTransaction(
+                       TextEventDispatcherListener* aListener)
 {
-  return InitInternal(aListener, false);
+  return BeginInputTransactionInternal(aListener, false);
 }
 
 nsresult
-TextEventDispatcher::InitForTests(TextEventDispatcherListener* aListener)
+TextEventDispatcher::BeginInputTransactionForTests(
+                       TextEventDispatcherListener* aListener)
 {
-  return InitInternal(aListener, true);
+  return BeginInputTransactionInternal(aListener, true);
 }
 
 nsresult
-TextEventDispatcher::InitInternal(TextEventDispatcherListener* aListener,
-                                  bool aForTests)
+TextEventDispatcher::BeginInputTransactionInternal(
+                       TextEventDispatcherListener* aListener,
+                       bool aForTests)
 {
   if (NS_WARN_IF(!aListener)) {
     return NS_ERROR_INVALID_ARG;

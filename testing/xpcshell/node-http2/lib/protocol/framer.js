@@ -785,7 +785,7 @@ Deserializer.CONTINUATION = function readContinuation(buffer, frame) {
   frame.data = buffer;
 };
 
-// [ALTSVC](http://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-04#section-4)
+// [ALTSVC](http://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-06#section-4)
 // ------------------------------------------------------------
 //
 // The ALTSVC frame (type=0xA) advertises the availability of an alternative service to the client.
@@ -799,79 +799,40 @@ frameFlags.ALTSVC = [];
 //     0                   1                   2                   3
 //     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 //    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//    |                          Max-Age (32)                         |
-//    +-------------------------------+----------------+--------------+
-//    |            Port (16)          |  Reserved (8)  | PID_LEN (8)  |
-//    +-------------------------------+----------------+--------------+
-//    |                        Protocol-ID (*)                        |
-//    +---------------+-----------------------------------------------+
-//    | HOST_LEN (8)  |                   Host (*)                  ...
-//    +---------------+-----------------------------------------------+
-//    |                          Origin? (*)                        ...
+//    |         Origin-Len (16)       | Origin? (*)                 ...
+//    +-------------------------------+-------------------------------+
+//    |                   Alt-Svc-Field-Value (*)                   ...
 //    +---------------------------------------------------------------+
 //
 // The ALTSVC frame contains the following fields:
 //
-// Max-Age: An unsigned, 32-bit integer indicating the freshness
-//    lifetime of the alternative service association, as per [ALT-SVC](http://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-01)
-//    section 2.2.
+// Origin-Len: An unsinged 16 bit integer indicating the length of the origin
+//    field. Must be empty for non zero stream id
 //
-// Port: An unsigned, 16-bit integer indicating the port that the
-//    alternative service is available upon.
+// Origin: origin this directive applies to. If empty it applies to the
+//    same origin as the stream with the same id
 //
-// Reserved: For future use. Senders MUST set these bits to '0', and
-//    recipients MUST ignore them.
-//
-// PID_LEN: An unsigned, 8-bit integer indicating the length, in
-//    octets, of the Protocol-ID field.
-//
-// Protocol-ID: A sequence of bytes (length determined by PID_LEN)
-//    containing the ALPN protocol identifier of the alternative
-//    service.
-//
-// HOST_LEN: An unsigned, 8-bit integer indicating the length, in
-//    octets, of the Host field.
-//
-// Host: A sequence of characters (length determined by HOST_LEN)
-//    containing an ASCII string indicating the host that the
-//    alternative service is available upon. An internationalized
-//    domain [IDNA] MUST be expressed using A-labels.
-//
-// Origin: An optional sequence of characters (length determined by
-//    subtracting the length of all lpreceding fields from the frame
-//    length) containing ASCII serialisation of an origin ([RFC6454](http://tools.ietf.org/html/rfc6454),
-//    Section 6.2) that the alternate service is applicable to.
+// Alt-Svc-Field-Value: an ascaii string corresponding to the HTTP response
+//    header field value for Alt-Svc
 
 typeSpecificAttributes.ALTSVC = ['maxAge', 'port', 'protocolID', 'host',
                                  'origin'];
 
 Serializer.ALTSVC = function writeAltSvc(frame, buffers) {
-  var buffer = new Buffer(8);
-  buffer.writeUInt32BE(frame.maxAge, 0);
-  buffer.writeUInt16BE(frame.port, 4);
-  buffer.writeUInt8(0, 6);
-  buffer.writeUInt8(frame.protocolID.length, 7);
+  var hdr = frame.protocolID + "=\"" + frame.host + ":" + frame.port + "\"";
+  if (frame.maxAge) {
+   hdr += "; ma=" + frame.maxAge;
+  }
+  
+  buffer = new Buffer(2);
+  buffer.writeUInt16BE(frame.origin.length, 0);
   buffers.push(buffer);
-
-  buffers.push(new Buffer(frame.protocolID, 'ascii'));
-
-  buffer = new Buffer(1);
-  buffer.writeUInt8(frame.host.length, 0);
-  buffers.push(buffer);
-
-  buffers.push(new Buffer(frame.host, 'ascii'));
-
   buffers.push(new Buffer(frame.origin, 'ascii'));
+  buffers.push(new Buffer(hdr, 'ascii'));
 };
 
 Deserializer.ALTSVC = function readAltSvc(buffer, frame) {
-  frame.maxAge = buffer.readUInt32BE(0);
-  frame.port = buffer.readUInt16BE(4);
-  var pidLength = buffer.readUInt8(7);
-  frame.protocolID = buffer.toString('ascii', 8, 8 + pidLength);
-  var hostLength = buffer.readUInt8(8 + pidLength);
-  frame.host = buffer.toString('ascii', 9 + pidLength, 9 + pidLength + hostLength);
-  frame.origin = buffer.toString('ascii', 9 + pidLength + hostLength);
+  // todo
 };
 
 // BLOCKED

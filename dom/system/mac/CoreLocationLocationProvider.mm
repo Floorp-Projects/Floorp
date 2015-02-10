@@ -12,6 +12,7 @@
 #include "CoreLocationLocationProvider.h"
 #include "nsCocoaFeatures.h"
 #include "prtime.h"
+#include "mozilla/Telemetry.h"
 
 #include <CoreLocation/CLError.h>
 #include <CoreLocation/CLLocation.h>
@@ -44,7 +45,7 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
 @implementation LocationDelegate
 - (id) init:(CoreLocationLocationProvider*) aProvider
 {
-  if (self = [super init]) {
+  if ((self = [super init])) {
     mProvider = aProvider;
   }
 
@@ -125,6 +126,7 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
                       PR_Now());
 
   mProvider->Update(geoPosition);
+  Telemetry::Accumulate(Telemetry::GEOLOCATION_OSX_SOURCE_IS_MLS, false);
 }
 @end
 
@@ -145,6 +147,7 @@ CoreLocationLocationProvider::MLSUpdate::Update(nsIDOMGeoPosition *position)
   }
 
   mParentLocationProvider.Update(position);
+  Telemetry::Accumulate(Telemetry::GEOLOCATION_OSX_SOURCE_IS_MLS, true);
   return NS_OK;
 }
 
@@ -160,7 +163,6 @@ CoreLocationLocationProvider::MLSUpdate::NotifyError(uint16_t error)
   mParentLocationProvider.NotifyError(error);
   return NS_OK;
 }
-
 
 class CoreLocationObjects {
 public:

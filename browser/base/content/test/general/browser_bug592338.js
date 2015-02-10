@@ -16,13 +16,41 @@ function wait_for_notification(aCallback) {
 }
 
 var TESTS = [
+function test_install_http() {
+  is(LightweightThemeManager.currentTheme, null, "Should be no lightweight theme selected");
+
+  var pm = Services.perms;
+  pm.add(makeURI("http://example.org/"), "install", pm.ALLOW_ACTION);
+
+  gBrowser.selectedTab = gBrowser.addTab("http://example.org/browser/browser/base/content/test/general/bug592338.html");
+  gBrowser.selectedBrowser.addEventListener("pageshow", function() {
+    if (gBrowser.contentDocument.location.href == "about:blank")
+      return;
+
+    gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, false);
+
+    executeSoon(function() {
+      var link = gBrowser.contentDocument.getElementById("theme-install");
+      EventUtils.synthesizeMouse(link, 2, 2, {}, gBrowser.contentWindow);
+
+      is(LightweightThemeManager.currentTheme, null, "Should not have installed the test theme");
+
+      gBrowser.removeTab(gBrowser.selectedTab);
+
+      pm.remove("example.org", "install");
+
+      runNextTest();
+    });
+  }, false);
+},
+
 function test_install_lwtheme() {
   is(LightweightThemeManager.currentTheme, null, "Should be no lightweight theme selected");
 
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-  gBrowser.selectedTab = gBrowser.addTab("http://example.com/browser/browser/base/content/test/general/bug592338.html");
+  gBrowser.selectedTab = gBrowser.addTab("https://example.com/browser/browser/base/content/test/general/bug592338.html");
   gBrowser.selectedBrowser.addEventListener("pageshow", function() {
     if (gBrowser.contentDocument.location.href == "about:blank")
       return;
@@ -54,9 +82,9 @@ function test_lwtheme_switch_theme() {
     Services.prefs.setBoolPref("extensions.dss.enabled", false);
 
     var pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+    pm.add(makeURI("https://example.com/"), "install", pm.ALLOW_ACTION);
 
-    gBrowser.selectedTab = gBrowser.addTab("http://example.com/browser/browser/base/content/test/general/bug592338.html");
+    gBrowser.selectedTab = gBrowser.addTab("https://example.com/browser/browser/base/content/test/general/bug592338.html");
     gBrowser.selectedBrowser.addEventListener("pageshow", function() {
       if (gBrowser.contentDocument.location.href == "about:blank")
         return;

@@ -71,8 +71,8 @@ static ShortTermURISpecCache *sSpecCache;
 static bool
 InitGlobals()
 {
-  NS_ABORT_IF_FALSE(!sConsoleService && !sScriptErrorFactory && !sStringBundle,
-                    "should not have been called");
+  MOZ_ASSERT(!sConsoleService && !sScriptErrorFactory && !sStringBundle,
+             "should not have been called");
 
   if (NS_FAILED(Preferences::AddBoolVarCache(&sReportErrors, CSS_ERRORS_PREF,
                                              true))) {

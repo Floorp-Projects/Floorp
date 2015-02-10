@@ -1027,9 +1027,9 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
 
 nsRefreshDriver::~nsRefreshDriver()
 {
-  NS_ABORT_IF_FALSE(ObserverCount() == 0,
-                    "observers should have unregistered");
-  NS_ABORT_IF_FALSE(!mActiveTimer, "timer should be gone");
+  MOZ_ASSERT(ObserverCount() == 0,
+             "observers should have unregistered");
+  MOZ_ASSERT(!mActiveTimer, "timer should be gone");
   
   if (mRootRefresh) {
     mRootRefresh->RemoveRefreshObserver(this, Flush_Style);
@@ -1354,7 +1354,7 @@ nsRefreshDriver::ArrayFor(mozFlushType aFlushType)
     case Flush_Display:
       return mObservers[2];
     default:
-      NS_ABORT_IF_FALSE(false, "bad flush type");
+      MOZ_ASSERT(false, "bad flush type");
       return *static_cast<ObserverArray*>(nullptr);
   }
 }
@@ -1739,7 +1739,7 @@ nsRefreshDriver::ImageRequestEnumerator(nsISupportsHashKey* aEntry,
   nsCOMArray<imgIContainer>* imagesToRefresh =
     static_cast<nsCOMArray<imgIContainer>*> (aUserArg);
   imgIRequest* req = static_cast<imgIRequest*>(aEntry->GetKey());
-  NS_ABORT_IF_FALSE(req, "Unable to retrieve the image request");
+  MOZ_ASSERT(req, "Unable to retrieve the image request");
   nsCOMPtr<imgIContainer> image;
   if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
     imagesToRefresh->AppendElement(image);
@@ -1756,7 +1756,7 @@ nsRefreshDriver::BeginRefreshingImages(nsISupportsHashKey* aEntry,
     static_cast<ImageRequestParameters*> (aUserArg);
 
   imgIRequest* req = static_cast<imgIRequest*>(aEntry->GetKey());
-  NS_ABORT_IF_FALSE(req, "Unable to retrieve the image request");
+  MOZ_ASSERT(req, "Unable to retrieve the image request");
 
   parms->mRequests->PutEntry(req);
 

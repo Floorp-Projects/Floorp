@@ -37,6 +37,9 @@ private:
   virtual ~nsScreenManagerGtk();
 
   nsresult EnsureInit();
+  nsresult ScreenForRectPix(int32_t aX, int32_t aY,
+                            int32_t aWidth, int32_t aHeight,
+                            nsIScreen **aOutScreen);
 
   // Cached screen array.  Its length is the number of screens we have.
   nsCOMArray<nsIScreen> mCachedScreenArray;
@@ -49,4 +52,4 @@ private:
 #endif
 };
 
-#endif  // nsScreenManagerGtk_h___ 
+#endif  // nsScreenManagerGtk_h___

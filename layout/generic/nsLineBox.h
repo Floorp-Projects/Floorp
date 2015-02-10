@@ -776,44 +776,44 @@ class nsLineList_iterator {
 
     reference operator*()
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return *static_cast<pointer>(mCurrent);
     }
 
     pointer operator->()
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<pointer>(mCurrent);
     }
 
     pointer get()
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<pointer>(mCurrent);
     }
 
     operator pointer()
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<pointer>(mCurrent);
     }
 
     const_reference operator*() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return *static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer operator->() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
 
 #ifndef __MWERKS__
     operator const_pointer() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
 #endif /* !__MWERKS__ */
@@ -846,22 +846,22 @@ class nsLineList_iterator {
     // to keep AIX happy.
     bool operator==(const iterator_self_type aOther) const
     {
-      NS_ABORT_IF_FALSE(mListLink == aOther.mListLink, "comparing iterators over different lists");
+      MOZ_ASSERT(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
     bool operator!=(const iterator_self_type aOther) const
     {
-      NS_ABORT_IF_FALSE(mListLink == aOther.mListLink, "comparing iterators over different lists");
+      MOZ_ASSERT(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }
     bool operator==(const iterator_self_type aOther)
     {
-      NS_ABORT_IF_FALSE(mListLink == aOther.mListLink, "comparing iterators over different lists");
+      MOZ_ASSERT(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
     bool operator!=(const iterator_self_type aOther)
     {
-      NS_ABORT_IF_FALSE(mListLink == aOther.mListLink, "comparing iterators over different lists");
+      MOZ_ASSERT(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }
 
@@ -935,44 +935,44 @@ class nsLineList_reverse_iterator {
 
     reference operator*()
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return *static_cast<pointer>(mCurrent);
     }
 
     pointer operator->()
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<pointer>(mCurrent);
     }
 
     pointer get()
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<pointer>(mCurrent);
     }
 
     operator pointer()
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<pointer>(mCurrent);
     }
 
     const_reference operator*() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return *static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer operator->() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
 
 #ifndef __MWERKS__
     operator const_pointer() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
 #endif /* !__MWERKS__ */
@@ -1075,26 +1075,26 @@ class nsLineList_const_iterator {
 
     const_reference operator*() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return *static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer operator->() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer get() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
 
 #ifndef __MWERKS__
     operator const_pointer() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
 #endif /* !__MWERKS__ */
@@ -1209,26 +1209,26 @@ class nsLineList_const_reverse_iterator {
 
     const_reference operator*() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return *static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer operator->() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
 
     const_pointer get() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
 
 #ifndef __MWERKS__
     operator const_pointer() const
     {
-      NS_ABORT_IF_FALSE(mCurrent != mListLink, "running past end");
+      MOZ_ASSERT(mCurrent != mListLink, "running past end");
       return static_cast<const_pointer>(mCurrent);
     }
 #endif /* !__MWERKS__ */

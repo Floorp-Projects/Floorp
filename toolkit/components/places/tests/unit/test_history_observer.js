@@ -42,7 +42,7 @@ function onNotify(callback) {
 function task_add_visit(uri, timestamp, transition) {
   uri = uri || NetUtil.newURI("http://firefox.com/");
   timestamp = timestamp || Date.now() * 1000;
-  yield promiseAddVisits({
+  yield PlacesTestUtils.addVisits({
     uri: uri,
     transition: transition || TRANSITION_TYPED,
     visitDate: timestamp
@@ -137,7 +137,7 @@ add_task(function test_onTitleChanged() {
 
   let [testuri] = yield task_add_visit();
   let title = "test-title";
-  yield promiseAddVisits({
+  yield PlacesTestUtils.addVisits({
     uri: testuri,
     title: title
   });

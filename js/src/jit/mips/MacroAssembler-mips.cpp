@@ -1561,16 +1561,6 @@ MacroAssemblerMIPSCompat::callJit(Register callee)
         ma_callJit(callee);
     }
 }
-void
-MacroAssemblerMIPSCompat::callJitFromAsmJS(Register callee)
-{
-    ma_callJitNoPush(callee);
-
-    // The JIT ABI has the callee pop the return address off the stack.
-    // The asm.js caller assumes that the call leaves sp unchanged, so bump
-    // the stack.
-    subPtr(Imm32(sizeof(void*)), StackPointer);
-}
 
 void
 MacroAssemblerMIPSCompat::reserveStack(uint32_t amount)

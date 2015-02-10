@@ -1581,8 +1581,6 @@ public abstract class GeckoApp
             mZoomedView = (ZoomedView) stub.inflate();
         }
 
-        UpdateServiceHelper.registerForUpdates(GeckoApp.this);
-
         // Trigger the completion of the telemetry timer that wraps activity startup,
         // then grab the duration to give to FHR.
         mJavaUiStartupTimer.stop();
@@ -1595,6 +1593,8 @@ public abstract class GeckoApp
                 if (rec != null) {
                     rec.recordJavaStartupTime(javaDuration);
                 }
+
+                UpdateServiceHelper.registerForUpdates(GeckoApp.this);
 
                 // Kick off our background services. We do this by invoking the broadcast
                 // receiver, which uses the system alarm infrastructure to perform tasks at

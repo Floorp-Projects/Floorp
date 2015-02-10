@@ -169,13 +169,12 @@ function test() {
   ok(PlacesUtils, "PlacesUtils in context");
 
   // Add visits, a bookmark and a tag.
-  addVisits(
+  PlacesTestUtils.addVisits(
     [{ uri: PlacesUtils._uri(TEST_URL), visitDate: Date.now() * 1000,
        transition: PlacesUtils.history.TRANSITION_TYPED },
      { uri: PlacesUtils._uri(TEST_DOWNLOAD_URL), visitDate: Date.now() * 1000,
-       transition: PlacesUtils.history.TRANSITION_DOWNLOAD }],
-    window,
-    function() {
+       transition: PlacesUtils.history.TRANSITION_DOWNLOAD }]
+    ).then(() => {
       PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                            PlacesUtils._uri(TEST_URL),
                                            PlacesUtils.bookmarks.DEFAULT_INDEX,

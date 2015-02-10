@@ -363,7 +363,6 @@ xul|button[type="menu"] > xul|menupopup xul|menuseparator {
   height: 30px;
   color: #333;
   line-height: 20px;
-  text-shadow: 0 1px 1px #fefffe;
   padding-right: 10px;
   padding-left: 10px;
   border: 1px solid #c1c1c1;
@@ -651,6 +650,11 @@ xul|tree {
   -moz-appearance: none;
   font-size: 1em;
   border: 1px solid #c1c1c1;
+}
+
+xul|tree:-moz-focusring,
+xul|richlistbox:-moz-focusring {
+  border: 1px dotted #0095dd;
 }
 
 xul|listheader,

@@ -16,7 +16,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
   initialize: function () {
     DetailsSubview.initialize.call(this);
 
-    this.waterfall = new Waterfall($("#waterfall-breakdown"), $("#details-pane"), TIMELINE_BLUEPRINT);
+    this.waterfall = new Waterfall($("#waterfall-breakdown"), $("#waterfall-view"), TIMELINE_BLUEPRINT);
     this.details = new MarkerDetails($("#waterfall-details"), $("#waterfall-view > splitter"));
 
     this._onMarkerSelected = this._onMarkerSelected.bind(this);

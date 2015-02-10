@@ -82,8 +82,8 @@ SharedMemory::Mapped(size_t aNBytes)
 void
 SharedMemory::Unmapped()
 {
-  NS_ABORT_IF_FALSE(gShmemMapped >= mMappedSize,
-                    "Can't unmap more than mapped");
+  MOZ_ASSERT(gShmemMapped >= mMappedSize,
+             "Can't unmap more than mapped");
   gShmemMapped -= mMappedSize;
   mMappedSize = 0;
 }
@@ -91,8 +91,8 @@ SharedMemory::Unmapped()
 /*static*/ void
 SharedMemory::Destroyed()
 {
-  NS_ABORT_IF_FALSE(gShmemAllocated >= mAllocSize,
-                    "Can't destroy more than allocated");
+  MOZ_ASSERT(gShmemAllocated >= mAllocSize,
+             "Can't destroy more than allocated");
   gShmemAllocated -= mAllocSize;
   mAllocSize = 0;
 }

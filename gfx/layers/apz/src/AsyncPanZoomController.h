@@ -1041,25 +1041,6 @@ public:
    */
   static void SetFrameTime(const TimeStamp& aMilliseconds);
   /**
-   * In the gtest environment everything runs on one thread, so we
-   * shouldn't assert that we're on a particular thread. This enables
-   * that behaviour.
-   */
-  static void SetThreadAssertionsEnabled(bool aEnabled);
-  static bool GetThreadAssertionsEnabled();
-  /**
-   * This can be used to assert that the current thread is the
-   * controller/UI thread (on which input events are received).
-   * This does nothing if thread assertions are disabled.
-   */
-  static void AssertOnControllerThread();
-  /**
-   * This can be used to assert that the current thread is the
-   * compositor thread (which applies the async transform).
-   * This does nothing if thread assertions are disabled.
-   */
-  static void AssertOnCompositorThread();
-  /**
    * Set an extra offset for testing async scrolling.
    */
   void SetTestAsyncScrollOffset(const CSSPoint& aPoint)

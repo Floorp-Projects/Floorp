@@ -212,8 +212,9 @@ nsresult FileBlockCache::Run()
     // mDataMonitor to take mFileMonitor.
     int32_t blockIndex = mChangeIndexList.PopFront();
     nsRefPtr<BlockChange> change = mBlockChanges[blockIndex];
-    NS_ABORT_IF_FALSE(change,
-      "Change index list should only contain entries for blocks with changes");
+    MOZ_ASSERT(change,
+               "Change index list should only contain entries for blocks "
+               "with changes");
     {
       MonitorAutoUnlock unlock(mDataMonitor);
       MonitorAutoLock lock(mFileMonitor);
