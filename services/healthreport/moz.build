@@ -6,7 +6,7 @@
 
 SPHINX_TREES['healthreport'] = 'docs'
 
-TEST_DIRS += ['tests']
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
 EXTRA_PP_COMPONENTS += [
     'HealthReportComponents.manifest',
