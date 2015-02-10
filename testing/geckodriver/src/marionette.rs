@@ -2,7 +2,13 @@ use rustc_serialize::json;
 use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
 use std::io::{IoResult, TcpStream, IoError};
+use std::io::timer::Timer;
+use std::path::Path;
 use std::sync::Mutex;
+use std::time::duration::Duration;
+
+use mozrunner::runner::{Runner, FirefoxRunner};
+use mozprofile::preferences::{PrefValue};
 
 use webdriver::command::{WebDriverMessage};
 use webdriver::command::WebDriverCommand::{
@@ -33,24 +39,55 @@ use webdriver::server::{WebDriverHandler, Session};
 
 
 pub struct MarionetteHandler {
-    connection: Mutex<Option<MarionetteConnection>>
+    connection: Mutex<Option<MarionetteConnection>>,
+    binary: Path,
+    browser: Option<FirefoxRunner>,
+    port: u16,
 }
 
 impl MarionetteHandler {
-    pub fn new() -> MarionetteHandler {
+    pub fn new(binary: Path, port: u16) -> MarionetteHandler {
         MarionetteHandler {
-            connection: Mutex::new(None)
+            connection: Mutex::new(None),
+            binary: binary,
+            browser: None,
+            port: port
         }
     }
 
     fn create_connection(&mut self, session_id: &Option<String>) -> WebDriverResult<()> {
-        let mut connection = MarionetteConnection::new(session_id.clone());
-        if connection.connect().is_err() {
+        if self.start_browser().is_err() {
+            error!("Erros starting browser");
             return Err(WebDriverError::new(
                 ErrorStatus::UnknownError,
-                "Failed to start marionette connection"));
+                "Failed to start browser")
+            )
+        };
+        debug!("Creating connection");
+        let mut connection = MarionetteConnection::new(self.port, session_id.clone());
+        debug!("Starting marionette connection");
+        if let Err(e) = connection.connect() {
+            return Err(WebDriverError::new(
+                ErrorStatus::UnknownError,
+                format!("Failed to start marionette connection:\n{}", e.desc).as_slice()));
         }
+        debug!("Marionette connection started");
         self.connection = Mutex::new(Some(connection));
+        Ok(())
+    }
+
+    fn start_browser(&mut self) -> IoResult<()> {
+        let mut runner = try!(FirefoxRunner::new(self.binary.clone(), None));
+        runner.profile.preferences.insert("marionette.defaultPrefs.enabled",
+                                          PrefValue::PrefBool(true));
+        runner.profile.preferences.insert("marionette.defaultPrefs.port",
+                                          PrefValue::PrefInt(self.port as isize));
+        runner.start();
+
+        self.browser = Some(runner);
+
+        debug!("Browser started");
+
         Ok(())
     }
 }
@@ -103,7 +140,13 @@ impl WebDriverHandler for MarionetteHandler {
                 conn.close();
             }
         }
+        if let Some(ref mut runner) = self.browser {
+            if runner.stop().is_err() {
+                error!("Failed to kill browser");
+            };
+        }
         self.connection = Mutex::new(None);
+        self.browser = None;
     }
 }
 
@@ -384,21 +427,52 @@ impl MarionetteSession {
 }
 
 pub struct MarionetteConnection {
-    stream: IoResult<TcpStream>,
+    port: u16,
+    stream: Option<TcpStream>,
     pub session: MarionetteSession
 }
 
 impl MarionetteConnection {
-    pub fn new(session_id: Option<String>) -> MarionetteConnection {
-        let stream = TcpStream::connect("127.0.0.1:2828");
+    pub fn new(port: u16, session_id: Option<String>) -> MarionetteConnection {
         MarionetteConnection {
-            stream: stream,
+            port: port,
+            stream: None,
             session: MarionetteSession::new(session_id)
         }
     }
 
     pub fn connect(&mut self) -> Result<(), IoError> {
+        let mut timer = try!(Timer::new());
+        let timeout = 60 * 1000;
+        let poll_interval = Duration::milliseconds(100);
+        let poll_attempts = timeout / poll_interval.num_milliseconds();
+        let mut poll_attempt = 0;
+        loop {
+            match TcpStream::connect(("127.0.0.1", self.port)) {
+                Ok(stream) => {
+                    self.stream = Some(stream);
+                    break
+                },
+                Err(e) => {
+                    debug!("{}/{}", poll_attempt, poll_attempts);
+                    if poll_attempt <= poll_attempts {
+                        poll_attempt += 1;
+                        timer.sleep(poll_interval);
+                    } else {
+                        return Err(e);
+                    }
+                }
+            }
+        };
+
+        debug!("TCP stream open");
+
+        self.handshake()
+    }
+
+    fn handshake(&mut self) -> Result<(), IoError> {
         try!(self.read_resp());
+
         //Would get traits and application type here
         let mut msg = BTreeMap::new();
         msg.insert("name".to_string(), "getMarionetteID".to_json());
@@ -436,11 +510,16 @@ impl MarionetteConnection {
     fn send(&mut self, msg: &Json) -> WebDriverResult<String> {
         let data = self.encode_msg(msg);
         debug!("Sending {}", data);
-        match self.stream.write_str(data.as_slice()) {
-            Ok(_) => {},
-            Err(_) => {
+        match self.stream {
+            Some(ref mut stream) => {
+                if stream.write_str(data.as_slice()).is_err() {
+                    return Err(WebDriverError::new(ErrorStatus::UnknownError,
+                                                   "Failed to write response to stream"))
+                }
+            },
+            None => {
                 return Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                               "Failed to write response to stream"))
+                                               "Tried to write before opening stream"))
             }
         }
         match self.read_resp() {
@@ -455,8 +534,10 @@ impl MarionetteConnection {
 
     fn read_resp(&mut self) -> Result<String, IoError> {
         let mut bytes = 0us;
+        //TODO: Check before we unwrap?
+        let mut stream = self.stream.as_mut().unwrap();
         loop {
-            let byte = try!(self.stream.read_byte()) as char;
+            let byte = try!(stream.read_byte()) as char;
             match byte {
                 '0'...'9' => {
                     bytes = bytes * 10;
@@ -468,7 +549,7 @@ impl MarionetteConnection {
                 _ => {}
             }
         }
-        let data = try!(self.stream.read_exact(bytes));
+        let data = try!(stream.read_exact(bytes));
         //Need to handle the error here
         Ok(String::from_utf8(data).unwrap())
     }

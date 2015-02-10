@@ -2,7 +2,6 @@
 name = "wires"
 version = "0.0.1"
 authors = ["James Graham <james@hoppipolla.co.uk>"]
-build = "make"
 
 [dependencies]
 getopts = "=0.1.4"
@@ -16,10 +15,10 @@ git = "http://github.com/tailhook/rust-argparse.git"
 [dependencies.webdriver]
 path = "../webdriver"
 
-[dependencies.rust_mozprofile]
+[dependencies.mozprofile]
 path = "../rust_mozprofile"
 
-[dependencies.rust_mozrunner]
+[dependencies.mozrunner]
 path = "../rust_mozrunner"
 
 [dependencies.hyper]
