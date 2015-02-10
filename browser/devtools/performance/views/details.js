@@ -29,6 +29,7 @@ let DetailsView = {
     this.toolbar = $("#performance-toolbar-controls-detail-views");
 
     this._onViewToggle = this._onViewToggle.bind(this);
+    this._onRecordingStoppedOrSelected = this._onRecordingStoppedOrSelected.bind(this);
     this.setAvailableViews = this.setAvailableViews.bind(this);
 
     for (let button of $$("toolbarbutton[data-view]", this.toolbar)) {
@@ -38,6 +39,8 @@ let DetailsView = {
     yield this.selectView(DEFAULT_DETAILS_SUBVIEW);
     yield this.setAvailableViews();
 
+    PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
+    PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.PREF_CHANGED, this.setAvailableViews);
   }),
 
@@ -53,6 +56,8 @@ let DetailsView = {
       component.initialized && (yield component.view.destroy());
     }
 
+    PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
+    PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.PREF_CHANGED, this.setAvailableViews);
   }),
 
@@ -63,15 +68,15 @@ let DetailsView = {
    */
   setAvailableViews: Task.async(function* () {
     for (let [name, { view, pref }] of Iterator(this.components)) {
-      if (!pref) {
-        continue;
-      }
-      let value = PerformanceController.getPref(pref);
-      $(`toolbarbutton[data-view=${name}]`).hidden = !value;
+      let recording = PerformanceController.getCurrentRecording();
+
+      let isRecorded = recording && !recording.isRecording();
+      let isEnabled = !pref || PerformanceController.getPref(pref);
+      $(`toolbarbutton[data-view=${name}]`).hidden = !isRecorded || !isEnabled;
 
       // If the view is currently selected and not enabled, go back to the
       // default view.
-      if (!value && this.isViewSelected(view)) {
+      if (!isEnabled && this.isViewSelected(view)) {
         yield this.selectView(DEFAULT_DETAILS_SUBVIEW);
       }
     }
@@ -158,6 +163,13 @@ let DetailsView = {
       component.view.shouldUpdateWhenShown = true;
     }
   }),
+
+  /**
+   * Called when recording stops or is selected.
+   */
+  _onRecordingStoppedOrSelected: function(_, recording) {
+    this.setAvailableViews();
+  },
 
   /**
    * Called when a view button is clicked.

@@ -8,6 +8,9 @@ function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView, MemoryFlameGraphView } = panel.panelWin;
 
+  // Enable memory to test.
+  Services.prefs.setBoolPref(MEMORY_PREF, true);
+
   yield DetailsView.selectView("memory-flamegraph");
   ok(DetailsView.isViewSelected(MemoryFlameGraphView), "The flamegraph is now selected.");
 
