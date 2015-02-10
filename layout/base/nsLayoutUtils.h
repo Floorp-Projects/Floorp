@@ -2553,6 +2553,7 @@ public:
                                       mozilla::WritingMode aFrameWM);
 
   static bool HasApzAwareListeners(mozilla::EventListenerManager* aElm);
+  static bool HasDocumentLevelListenersForApzAwareEvents(nsIPresShell* aShell);
 
 private:
   static uint32_t sFontSizeInflationEmPerLine;
