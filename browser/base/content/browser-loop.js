@@ -206,6 +206,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
       let state = "";
       if (MozLoopService.errors.size) {
         state = "error";
+      } else if (MozLoopService.screenShareActive) {
+        state = "action";
       } else if (aReason == "login" && MozLoopService.userProfile) {
         state = "active";
       } else if (MozLoopService.doNotDisturb) {
