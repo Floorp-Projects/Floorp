@@ -225,6 +225,152 @@ CanRecycleNullaryNode(ParseNode *node, NodeStack *stack)
 static PushResult
 PushNodeChildren(ParseNode *pn, NodeStack *stack)
 {
+    switch (pn->getKind()) {
+      // Trivial nodes that refer to no nodes, are referred to by nothing
+      // but their parents, are never used, and are never a definition.
+      case PNK_NOP:
+      case PNK_STRING:
+      case PNK_TEMPLATE_STRING:
+      case PNK_REGEXP:
+      case PNK_TRUE:
+      case PNK_FALSE:
+      case PNK_NULL:
+      case PNK_THIS:
+      case PNK_ELISION:
+      case PNK_GENERATOR:
+      case PNK_NUMBER:
+      case PNK_BREAK:
+      case PNK_CONTINUE:
+      case PNK_DEBUGGER:
+      case PNK_EXPORT_BATCH_SPEC:
+        MOZ_ASSERT(pn->isArity(PN_NULLARY));
+        MOZ_ASSERT(!pn->isUsed(), "handle non-trivial cases separately");
+        MOZ_ASSERT(!pn->isDefn(), "handle non-trivial cases separately");
+        return PushResult::Recyclable;
+
+      case PNK_SEMI:
+      case PNK_COMMA:
+      case PNK_CONDITIONAL:
+      case PNK_COLON:
+      case PNK_SHORTHAND:
+      case PNK_POS:
+      case PNK_NEG:
+      case PNK_PREINCREMENT:
+      case PNK_POSTINCREMENT:
+      case PNK_PREDECREMENT:
+      case PNK_POSTDECREMENT:
+      case PNK_DOT:
+      case PNK_ELEM:
+      case PNK_ARRAY:
+      case PNK_STATEMENTLIST:
+      case PNK_LABEL:
+      case PNK_OBJECT:
+      case PNK_CALL:
+      case PNK_NAME:
+      case PNK_COMPUTED_NAME:
+      case PNK_TEMPLATE_STRING_LIST:
+      case PNK_TAGGED_TEMPLATE:
+      case PNK_CALLSITEOBJ:
+
+      case PNK_FUNCTION:
+      case PNK_IF:
+      case PNK_SWITCH:
+      case PNK_CASE:
+      case PNK_DEFAULT:
+      case PNK_WHILE:
+      case PNK_DOWHILE:
+      case PNK_FOR:
+      case PNK_VAR:
+      case PNK_CONST:
+      case PNK_GLOBALCONST:
+      case PNK_WITH:
+      case PNK_RETURN:
+      case PNK_NEW:
+      case PNK_DELETE:
+      case PNK_TRY:
+      case PNK_CATCH:
+      case PNK_CATCHLIST:
+      case PNK_THROW:
+      case PNK_YIELD:
+      case PNK_YIELD_STAR:
+      case PNK_GENEXP:
+      case PNK_ARRAYCOMP:
+      case PNK_ARRAYPUSH:
+      case PNK_LEXICALSCOPE:
+      case PNK_LET:
+      case PNK_LETBLOCK:
+      case PNK_LETEXPR:
+      case PNK_IMPORT:
+      case PNK_IMPORT_SPEC_LIST:
+      case PNK_IMPORT_SPEC:
+      case PNK_EXPORT:
+      case PNK_EXPORT_FROM:
+      case PNK_EXPORT_SPEC_LIST:
+      case PNK_EXPORT_SPEC:
+      case PNK_SEQ:
+      case PNK_FORIN:
+      case PNK_FOROF:
+      case PNK_FORHEAD:
+      case PNK_ARGSBODY:
+      case PNK_SPREAD:
+      case PNK_MUTATEPROTO:
+
+        /* Unary operators. */
+      case PNK_TYPEOF:
+      case PNK_VOID:
+      case PNK_NOT:
+      case PNK_BITNOT:
+
+        /*
+         * Binary operators.
+         * These must be in the same order as TOK_OR and friends in TokenStream.h.
+         */
+      case PNK_OR:
+      case PNK_AND:
+      case PNK_BITOR:
+      case PNK_BITXOR:
+      case PNK_BITAND:
+      case PNK_STRICTEQ:
+      case PNK_EQ:
+      case PNK_STRICTNE:
+      case PNK_NE:
+      case PNK_LT:
+      case PNK_LE:
+      case PNK_GT:
+      case PNK_GE:
+      case PNK_INSTANCEOF:
+      case PNK_IN:
+      case PNK_LSH:
+      case PNK_RSH:
+      case PNK_URSH:
+      case PNK_ADD:
+      case PNK_SUB:
+      case PNK_STAR:
+      case PNK_DIV:
+      case PNK_MOD:
+
+        /* Assignment operators (= += -= etc.). */
+        /* ParseNode::isAssignment assumes all these are consecutive. */
+      case PNK_ASSIGN:
+      case PNK_ADDASSIGN:
+      case PNK_SUBASSIGN:
+      case PNK_BITORASSIGN:
+      case PNK_BITXORASSIGN:
+      case PNK_BITANDASSIGN:
+      case PNK_LSHASSIGN:
+      case PNK_RSHASSIGN:
+      case PNK_URSHASSIGN:
+      case PNK_MULASSIGN:
+      case PNK_DIVASSIGN:
+      case PNK_MODASSIGN:
+        break; // for now
+
+      case PNK_LIMIT: // invalid sentinel value
+      default:
+        MOZ_CRASH("invalid node kind");
+    }
+
+    // Fallthrough for not-yet-handled kinds.
     switch (pn->getArity()) {
       case PN_CODE:
         return PushCodeNodeChildren(pn, stack);
