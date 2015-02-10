@@ -7719,15 +7719,17 @@ Parser<ParseHandler>::arrayInitializer()
     TokenKind tt;
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return null();
+
+    // Handle an ES7 array comprehension first.
+    if (tt == TOK_FOR)
+        return arrayComprehension(begin);
+
     if (tt == TOK_RB) {
         /*
          * Mark empty arrays as non-constant, since we cannot easily
          * determine their type.
          */
         handler.setListFlag(literal, PNX_NONCONST);
-    } else if (tt == TOK_FOR) {
-        // ES6 array comprehension.
-        return arrayComprehension(begin);
     } else {
         tokenStream.ungetToken();
 
