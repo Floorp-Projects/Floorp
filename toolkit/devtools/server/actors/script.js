@@ -2039,8 +2039,8 @@ ThreadActor.prototype = {
     let source = this.sources.createNonSourceMappedActor(aScript.source);
     for (let bpActor of this.breakpointActorMap.findActors({ sourceActor: source })) {
       // Limit the search to the line numbers contained in the new script.
-      if (bpActor.location.line >= aScript.startLine
-          && bpActor.location.line <= endLine) {
+      if (bpActor.generatedLocation.line >= aScript.startLine
+          && bpActor.generatedLocation.line <= endLine) {
         source.setBreakpointForActor(bpActor);
       }
     }
@@ -2761,17 +2761,21 @@ SourceActor.prototype = {
    * NB: This will override a pre-existing BreakpointActor's condition with
    * the given the location's condition.
    *
-   * @param Object location
-   *        The breakpoint location. See BreakpointStore.prototype.setActor
-   *        for more information.
+   * @param Object originalLocation
+   *        The original location of the breakpoint.
+   * @param Object generatedLocation
+   *        The generated location of the breakpoint.
    * @returns BreakpointActor
    */
-  _getOrCreateBreakpointActor: function (location, condition) {
-    let actor = this.breakpointActorMap.getActor(location);
+  _getOrCreateBreakpointActor: function (originalLocation, generatedLocation,
+                                         condition)
+  {
+    let actor = this.breakpointActorMap.getActor(generatedLocation);
     if (!actor) {
-      actor = new BreakpointActor(this.threadActor, location, condition);
+      actor = new BreakpointActor(this.threadActor, originalLocation,
+                                  generatedLocation, condition);
       this.threadActor.threadLifetimePool.addActor(actor);
-      this.breakpointActorMap.setActor(location, actor);
+      this.breakpointActorMap.setActor(generatedLocation, actor);
       return actor;
     }
 
@@ -2872,13 +2876,17 @@ SourceActor.prototype = {
    *        A condition for the breakpoint.
    */
   setBreakpoint: function (originalLine, originalColumn, condition) {
-    return this.threadActor.sources.getGeneratedLocation({
+    let originalLocation = {
       sourceActor: this,
       line: originalLine,
       column: originalColumn
-    }).then(generatedLocation => {
-      let actor = this._getOrCreateBreakpointActor(generatedLocation, condition);
+    };
 
+    return this.threadActor.sources.getGeneratedLocation(originalLocation)
+                                   .then(generatedLocation => {
+      let actor = this._getOrCreateBreakpointActor(originalLocation,
+                                                   generatedLocation,
+                                                   condition);
       return generatedLocation.sourceActor.setBreakpointForActor(actor);
     });
   },
@@ -2894,8 +2902,8 @@ SourceActor.prototype = {
   setBreakpointForActor: function (actor) {
     let generatedLocation = {
       sourceActor: this,
-      line: actor.location.line,
-      column: actor.location.column
+      line: actor.generatedLocation.line,
+      column: actor.generatedLocation.column
     };
 
     let { line: generatedLine, column: generatedColumn } = generatedLocation;
@@ -2976,7 +2984,7 @@ SourceActor.prototype = {
           actualLocation
         };
       } else {
-        actor.location = actualLocation;
+        actor.generatedLocation = actualLocation;
         this.breakpointActorMap.deleteActor(generatedLocation);
         this.breakpointActorMap.setActor(actualLocation, actor);
       }
@@ -4640,8 +4648,13 @@ FrameActor.prototype.requestTypes = {
  *
  * @param ThreadActor aThreadActor
  *        The parent thread actor that contains this breakpoint.
- * @param object aLocation
- *        Optional. An object with the following properties:
+ * @param object aOriginalLocation
+ *        An object with the following properties:
+ *        - sourceActor: A SourceActor that represents the source
+ *        - line: the specified line
+ *        - column: the specified column
+ * @param object aGeneratedLocation
+ *        An object with the following properties:
  *        - sourceActor: A SourceActor that represents the source
  *        - line: the specified line
  *        - column: the specified column
@@ -4649,14 +4662,15 @@ FrameActor.prototype.requestTypes = {
  *        Optional. A condition which, when false, will cause the breakpoint to
  *        be skipped.
  */
-function BreakpointActor(aThreadActor, aLocation, aCondition)
+function BreakpointActor(aThreadActor, aOriginalLocation, aGeneratedLocation, aCondition)
 {
   // The set of Debugger.Script instances that this breakpoint has been set
   // upon.
   this.scripts = new Set();
 
   this.threadActor = aThreadActor;
-  this.location = aLocation;
+  this.originalLocation = aOriginalLocation;
+  this.generatedLocation = aGeneratedLocation;
   this.condition = aCondition;
 }
 
@@ -4745,10 +4759,8 @@ BreakpointActor.prototype = {
    */
   onDelete: function (aRequest) {
     // Remove from the breakpoint store.
-    if (this.location) {
-      this.threadActor.breakpointActorMap.deleteActor(
-        update({}, this.location, { source: this.location.sourceActor.form() })
-      );
+    if (this.generatedLocation) {
+      this.threadActor.breakpointActorMap.deleteActor(this.generatedLocation);
     }
     this.threadActor.threadLifetimePool.removeActor(this);
     // Remove the actual breakpoint from the associated scripts.
