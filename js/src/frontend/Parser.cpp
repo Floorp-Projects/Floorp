@@ -7770,8 +7770,7 @@ Parser<ParseHandler>::arrayInitializer()
                     return null();
                 if (foldConstants && !FoldConstants(context, &element, this))
                     return null();
-                if (!handler.addArrayElement(literal, element))
-                    return null();
+                handler.addArrayElement(literal, element);
             }
 
             if (tt != TOK_COMMA) {
