@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1089431 - Meet the specification for line breaking between ruby bases</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    body { line-height: 3; }
+  </style>
+</head>
+<body>
+  <div style="width: .5em; border: 1px solid silver;">
+    <ruby>
+      <rb>「<rb>な<rb>に<rb>、<rb>誰<rb>？<rb>」<rb>「<rb>私<rb>です<rb>」</rb>
+      <!-- Check if ruby text containers are skipped from the text run -->
+      <rtc><rt>
+    </ruby>
+  </div>
+</body>
+</html>
