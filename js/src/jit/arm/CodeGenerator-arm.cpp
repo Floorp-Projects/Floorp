@@ -2018,20 +2018,7 @@ CodeGeneratorARM::visitUDiv(LUDiv *ins)
     Register output = ToRegister(ins->output());
 
     Label done;
-    if (ins->mir()->canBeDivideByZero()) {
-        masm.ma_cmp(rhs, Imm32(0));
-        if (ins->mir()->isTruncated()) {
-            // Infinity|0 == 0
-            Label skip;
-            masm.ma_b(&skip, Assembler::NotEqual);
-            masm.ma_mov(Imm32(0), output);
-            masm.ma_b(&done);
-            masm.bind(&skip);
-        } else {
-            MOZ_ASSERT(ins->mir()->fallible());
-            bailoutIf(Assembler::Equal, ins->snapshot());
-        }
-    }
+    generateUDivModZeroCheck(rhs, output, &done, ins->snapshot(), ins->mir());
 
     masm.ma_udiv(lhs, rhs, output);
 
@@ -2049,22 +2036,9 @@ CodeGeneratorARM::visitUMod(LUMod *ins)
     Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
     Register output = ToRegister(ins->output());
-    Label done;
 
-    if (ins->mir()->canBeDivideByZero()) {
-        masm.ma_cmp(rhs, Imm32(0));
-        if (ins->mir()->isTruncated()) {
-            // Infinity|0 == 0
-            Label skip;
-            masm.ma_b(&skip, Assembler::NotEqual);
-            masm.ma_mov(Imm32(0), output);
-            masm.ma_b(&done);
-            masm.bind(&skip);
-        } else {
-            MOZ_ASSERT(ins->mir()->fallible());
-            bailoutIf(Assembler::Equal, ins->snapshot());
-        }
-    }
+    Label done;
+    generateUDivModZeroCheck(rhs, output, &done, ins->snapshot(), ins->mir());
 
     masm.ma_umod(lhs, rhs, output);
 
@@ -2074,6 +2048,30 @@ CodeGeneratorARM::visitUMod(LUMod *ins)
     }
 
     masm.bind(&done);
+}
+
+template<class T>
+void
+CodeGeneratorARM::generateUDivModZeroCheck(Register rhs, Register output, Label *done,
+                                           LSnapshot *snapshot, T *mir)
+{
+    if (!mir)
+        return;
+    if (mir->canBeDivideByZero()) {
+        masm.ma_cmp(rhs, Imm32(0));
+        if (mir->isTruncated()) {
+            Label skip;
+            masm.ma_b(&skip, Assembler::NotEqual);
+            // Infinity|0 == 0
+            masm.ma_mov(Imm32(0), output);
+            masm.ma_b(done);
+            masm.bind(&skip);
+        } else {
+            // Bailout for divide by zero
+            MOZ_ASSERT(mir->fallible());
+            bailoutIf(Assembler::Equal, snapshot);
+        }
+    }
 }
 
 void
@@ -2090,28 +2088,11 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod *ins)
     MOZ_ASSERT_IF(ins->mirRaw()->isMod(), output == r1);
 
     Label done;
-
     MDiv *div = ins->mir()->isDiv() ? ins->mir()->toDiv() : nullptr;
     MMod *mod = !div ? ins->mir()->toMod() : nullptr;
-    bool canBeDivideByZero = (div && div->canBeDivideByZero()) || (mod && mod->canBeDivideByZero());
-    bool isTruncated = (div && div->isTruncated()) || (mod && mod->isTruncated());
-    bool isFallible = (div && div->fallible()) || (mod && mod->fallible());
 
-    if (canBeDivideByZero) {
-        masm.ma_cmp(rhs, Imm32(0));
-        if (isTruncated) {
-            Label skip;
-            masm.ma_b(&skip, Assembler::NotEqual);
-            // Infinity|0 == 0
-            masm.ma_mov(Imm32(0), output);
-            masm.ma_b(&done);
-            masm.bind(&skip);
-        } else {
-            // Bailout for divide by zero
-            MOZ_ASSERT(isFallible);
-            bailoutIf(Assembler::Equal, ins->snapshot());
-        }
-    }
+    generateUDivModZeroCheck(rhs, output, &done, ins->snapshot(), div);
+    generateUDivModZeroCheck(rhs, output, &done, ins->snapshot(), mod);
 
     masm.setupAlignedABICall(2);
     masm.passABIArg(lhs);
@@ -2123,13 +2104,14 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod *ins)
 
     // uidivmod returns the quotient in r0, and the remainder in r1.
     if (div && !div->canTruncateRemainder()) {
-        MOZ_ASSERT(isFallible);
+        MOZ_ASSERT(div->fallible());
         masm.ma_cmp(r1, Imm32(0));
         bailoutIf(Assembler::NonZero, ins->snapshot());
     }
 
     // Bailout for big unsigned results
-    if (!isTruncated) {
+    if ((div && !div->isTruncated()) || (mod && !mod->isTruncated())) {
+        DebugOnly<bool> isFallible = (div && div->fallible()) || (mod && mod->fallible());
         MOZ_ASSERT(isFallible);
         masm.ma_cmp(output, Imm32(0));
         bailoutIf(Assembler::LessThan, ins->snapshot());
