@@ -314,8 +314,7 @@ MediaDecoderReader::Shutdown()
   } else {
     // If we don't own our task queue, we resolve immediately (though
     // asynchronously).
-    p = new ShutdownPromise(__func__);
-    p->Resolve(true, __func__);
+    p = ShutdownPromise::CreateAndResolve(true, __func__);
   }
 
   return p;
