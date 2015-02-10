@@ -98,6 +98,122 @@ class NodeStack {
 
 } /* anonymous namespace */
 
+enum class PushResult { Recyclable, CleanUpLater };
+
+static PushResult
+PushCodeNodeChildren(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_CODE));
+
+    /*
+     * Function nodes are linked into the function box tree, and may appear
+     * on method lists. Both of those lists are singly-linked, so trying to
+     * update them now could result in quadratic behavior when recycling
+     * trees containing many functions; and the lists can be very long. So
+     * we put off cleaning the lists up until just before function
+     * analysis, when we call CleanFunctionList.
+     *
+     * In fact, we can't recycle the parse node yet, either: it may appear
+     * on a method list, and reusing the node would corrupt that. Instead,
+     * we clear its pn_funbox pointer to mark it as deleted;
+     * CleanFunctionList recycles it as well.
+     *
+     * We do recycle the nodes around it, though, so we must clear pointers
+     * to them to avoid leaving dangling references where someone can find
+     * them.
+     */
+    node->pn_funbox = nullptr;
+    stack->pushUnlessNull(node->pn_body);
+    node->pn_body = nullptr;
+
+    return PushResult::CleanUpLater;
+}
+
+static PushResult
+PushNameNodeChildren(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_NAME));
+
+    /*
+     * Because used/defn nodes appear in AtomDefnMaps and elsewhere, we
+     * don't recycle them. (We'll recover their storage when we free the
+     * temporary arena.) However, we do recycle the nodes around them, so
+     * clean up the pointers to avoid dangling references. The top-level
+     * decls table carries references to them that later iterations through
+     * the compileScript loop may find, so they need to be neat.
+     *
+     * pn_expr and pn_lexdef share storage; the latter isn't an owning
+     * reference.
+     */
+    if (!node->isUsed()) {
+        stack->pushUnlessNull(node->pn_expr);
+        node->pn_expr = nullptr;
+    }
+
+    if (!node->isUsed() && !node->isDefn())
+        return PushResult::Recyclable;
+
+    return PushResult::CleanUpLater;
+}
+
+static PushResult
+PushListNodeChildren(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_LIST));
+    node->checkListConsistency();
+
+    stack->pushList(node);
+
+    return PushResult::Recyclable;
+}
+
+static PushResult
+PushTernaryNodeChildren(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_TERNARY));
+
+    stack->pushUnlessNull(node->pn_kid1);
+    stack->pushUnlessNull(node->pn_kid2);
+    stack->pushUnlessNull(node->pn_kid3);
+
+    return PushResult::Recyclable;
+}
+
+static PushResult
+PushUnaryNodeChild(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    stack->pushUnlessNull(node->pn_kid);
+
+    return PushResult::Recyclable;
+}
+
+static PushResult
+PushBinaryNodeChildren(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_BINARY) || node->isArity(PN_BINARY_OBJ));
+
+    // This is *probably* PNK_SHORTHAND, but that's not yet clear.
+    if (node->pn_left != node->pn_right)
+        stack->pushUnlessNull(node->pn_left);
+
+    stack->pushUnlessNull(node->pn_right);
+
+    return PushResult::Recyclable;
+}
+
+static PushResult
+CanRecycleNullaryNode(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_NULLARY));
+
+    if (node->isUsed() || node->isDefn())
+        return PushResult::CleanUpLater;
+
+    return PushResult::Recyclable;
+}
+
 /*
  * Push the children of |pn| on |stack|. Return true if |pn| itself could be
  * safely recycled, or false if it must be cleaned later (pn_used and pn_defn
@@ -106,76 +222,36 @@ class NodeStack {
  * (js::ParseNodeAllocator::prepareNodeForMutation) don't care about |pn|, and
  * just need to take care of its children.
  */
-static bool
+static PushResult
 PushNodeChildren(ParseNode *pn, NodeStack *stack)
 {
     switch (pn->getArity()) {
       case PN_CODE:
-        /*
-         * Function nodes are linked into the function box tree, and may appear
-         * on method lists. Both of those lists are singly-linked, so trying to
-         * update them now could result in quadratic behavior when recycling
-         * trees containing many functions; and the lists can be very long. So
-         * we put off cleaning the lists up until just before function
-         * analysis, when we call CleanFunctionList.
-         *
-         * In fact, we can't recycle the parse node yet, either: it may appear
-         * on a method list, and reusing the node would corrupt that. Instead,
-         * we clear its pn_funbox pointer to mark it as deleted;
-         * CleanFunctionList recycles it as well.
-         *
-         * We do recycle the nodes around it, though, so we must clear pointers
-         * to them to avoid leaving dangling references where someone can find
-         * them.
-         */
-        pn->pn_funbox = nullptr;
-        stack->pushUnlessNull(pn->pn_body);
-        pn->pn_body = nullptr;
-        return false;
+        return PushCodeNodeChildren(pn, stack);
 
       case PN_NAME:
-        /*
-         * Because used/defn nodes appear in AtomDefnMaps and elsewhere, we
-         * don't recycle them. (We'll recover their storage when we free the
-         * temporary arena.) However, we do recycle the nodes around them, so
-         * clean up the pointers to avoid dangling references. The top-level
-         * decls table carries references to them that later iterations through
-         * the compileScript loop may find, so they need to be neat.
-         *
-         * pn_expr and pn_lexdef share storage; the latter isn't an owning
-         * reference.
-         */
-        if (!pn->isUsed()) {
-            stack->pushUnlessNull(pn->pn_expr);
-            pn->pn_expr = nullptr;
-        }
-        return !pn->isUsed() && !pn->isDefn();
+        return PushNameNodeChildren(pn, stack);
 
       case PN_LIST:
-        pn->checkListConsistency();
-        stack->pushList(pn);
-        break;
+        return PushListNodeChildren(pn, stack);
+
       case PN_TERNARY:
-        stack->pushUnlessNull(pn->pn_kid1);
-        stack->pushUnlessNull(pn->pn_kid2);
-        stack->pushUnlessNull(pn->pn_kid3);
-        break;
+        return PushTernaryNodeChildren(pn, stack);
+
       case PN_BINARY:
       case PN_BINARY_OBJ:
-        if (pn->pn_left != pn->pn_right)
-            stack->pushUnlessNull(pn->pn_left);
-        stack->pushUnlessNull(pn->pn_right);
-        break;
-      case PN_UNARY:
-        stack->pushUnlessNull(pn->pn_kid);
-        break;
-      case PN_NULLARY:
-        return !pn->isUsed() && !pn->isDefn();
-      default:
-        ;
-    }
+        return PushBinaryNodeChildren(pn, stack);
 
-    return true;
+      case PN_UNARY:
+        return PushUnaryNodeChild(pn, stack);
+
+      case PN_NULLARY:
+        return CanRecycleNullaryNode(pn, stack);
+
+      default:
+        MOZ_CRASH("huh?");
+        return PushResult::CleanUpLater;
+    }
 }
 
 /*
@@ -186,19 +262,20 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
 void
 ParseNodeAllocator::prepareNodeForMutation(ParseNode *pn)
 {
-    if (!pn->isArity(PN_NULLARY)) {
-        /* Put |pn|'s children (but not |pn| itself) on a work stack. */
-        NodeStack stack;
-        PushNodeChildren(pn, &stack);
-        /*
-         * For each node on the work stack, push its children on the work stack,
-         * and free the node if we can.
-         */
-        while (!stack.empty()) {
-            pn = stack.pop();
-            if (PushNodeChildren(pn, &stack))
-                freeNode(pn);
-        }
+    // Nothing to do for nullary nodes.
+    if (pn->isArity(PN_NULLARY))
+        return;
+
+    // Put |pn|'s children (but not |pn| itself) on a work stack.
+    NodeStack stack;
+    PushNodeChildren(pn, &stack);
+
+    // For each node on the work stack, push its children on the work stack,
+    // and free the node if we can.
+    while (!stack.empty()) {
+        pn = stack.pop();
+        if (PushNodeChildren(pn, &stack) == PushResult::Recyclable)
+            freeNode(pn);
     }
 }
 
@@ -216,7 +293,7 @@ ParseNodeAllocator::freeTree(ParseNode *pn)
 
     NodeStack stack;
     for (;;) {
-        if (PushNodeChildren(pn, &stack))
+        if (PushNodeChildren(pn, &stack) == PushResult::Recyclable)
             freeNode(pn);
         if (stack.empty())
             break;
