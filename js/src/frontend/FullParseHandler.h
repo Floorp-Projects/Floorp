@@ -217,10 +217,10 @@ class FullParseHandler
         TokenPos pos(left->pn_pos.begin, right->pn_pos.end);
         return new_<BinaryNode>(kind, op, pos, left, right);
     }
-    ParseNode *newBinaryOrAppend(ParseNodeKind kind, ParseNode *left, ParseNode *right,
-                                 ParseContext<FullParseHandler> *pc, JSOp op = JSOP_NOP)
+    ParseNode *appendOrCreateList(ParseNodeKind kind, ParseNode *left, ParseNode *right,
+                                  ParseContext<FullParseHandler> *pc, JSOp op = JSOP_NOP)
     {
-        return ParseNode::newBinaryOrAppend(kind, op, left, right, this, pc, foldConstants);
+        return ParseNode::appendOrCreateList(kind, op, left, right, this, pc, foldConstants);
     }
 
     ParseNode *newTernary(ParseNodeKind kind,
@@ -559,7 +559,7 @@ class FullParseHandler
     ParseNode *newAssignment(ParseNodeKind kind, ParseNode *lhs, ParseNode *rhs,
                              ParseContext<FullParseHandler> *pc, JSOp op)
     {
-        return newBinaryOrAppend(kind, lhs, rhs, pc, op);
+        return newBinary(kind, lhs, rhs, op);
     }
 
     bool isUnparenthesizedYieldExpression(ParseNode *node) {

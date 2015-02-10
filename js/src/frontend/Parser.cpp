@@ -3881,7 +3881,7 @@ Parser<ParseHandler>::variables(ParseNodeKind kind, bool *psimple,
                 if (!bindBeforeInitializer && !checkDestructuring(&data, pn2))
                     return null();
 
-                pn2 = handler.newBinaryOrAppend(PNK_ASSIGN, pn2, init, pc);
+                pn2 = handler.newBinary(PNK_ASSIGN, pn2, init);
                 if (!pn2)
                     return null();
                 handler.addList(pn, pn2);
@@ -6083,7 +6083,7 @@ Parser<ParseHandler>::orExpr1(InvokedPrediction invoked)
             depth--;
             ParseNodeKind combiningPnk = kindStack[depth];
             JSOp combiningOp = BinaryOpParseNodeKindToJSOp(combiningPnk);
-            pn = handler.newBinaryOrAppend(combiningPnk, nodeStack[depth], pn, pc, combiningOp);
+            pn = handler.appendOrCreateList(combiningPnk, nodeStack[depth], pn, pc, combiningOp);
             if (!pn)
                 return pn;
         }
