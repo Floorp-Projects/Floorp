@@ -849,7 +849,6 @@ public:
     // so that it can't accidentally read it after the decoder
     // is destroyed.
     mDecoder->GetReader()->Shutdown();
-    mDecoder->GetReader()->ClearDecoder();
     RefPtr<nsIRunnable> task = new ReleaseDecoderTask(mDecoder);
     mDecoder = nullptr;
     // task now holds the only ref to the decoder.
