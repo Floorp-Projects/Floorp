@@ -730,7 +730,7 @@ namespace js {
  * internal methods in vm/NativeObject.h.
  *
  * Proxies override the behavior of internal methods. So when 'obj' is a proxy,
- * any one of the functions below could do just about anything. See jsproxy.h.
+ * any one of the functions below could do just about anything. See js/Proxy.h.
  */
 
 /*
