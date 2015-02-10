@@ -104,7 +104,7 @@ class FullParseHandler
         return dn;
     }
 
-    ParseNode *newIdentifier(JSAtom *atom, const TokenPos &pos) {
+    ParseNode *newObjectLiteralPropertyName(JSAtom *atom, const TokenPos &pos) {
         return new_<NullaryNode>(PNK_NAME, JSOP_NOP, pos, atom);
     }
 
@@ -293,13 +293,30 @@ class FullParseHandler
         return true;
     }
 
-    bool addPropertyDefinition(ParseNode *literal, ParseNode *name, ParseNode *expr,
-                               bool isShorthand = false) {
+    bool addPropertyDefinition(ParseNode *literal, ParseNode *key, ParseNode *val) {
+        MOZ_ASSERT(literal->isKind(PNK_OBJECT));
         MOZ_ASSERT(literal->isArity(PN_LIST));
-        ParseNode *propdef = newBinary(isShorthand ? PNK_SHORTHAND : PNK_COLON, name, expr,
-                                       JSOP_INITPROP);
-        if (isShorthand)
-            literal->pn_xflags |= PNX_NONCONST;
+        MOZ_ASSERT(key->isKind(PNK_NUMBER) ||
+                   key->isKind(PNK_NAME) ||
+                   key->isKind(PNK_STRING) ||
+                   key->isKind(PNK_COMPUTED_NAME));
+
+        ParseNode *propdef = newBinary(PNK_COLON, key, val, JSOP_INITPROP);
+        if (!propdef)
+            return false;
+        literal->append(propdef);
+        return true;
+    }
+
+    bool addShorthand(ParseNode *literal, ParseNode *name, ParseNode *expr) {
+        MOZ_ASSERT(literal->isKind(PNK_OBJECT));
+        MOZ_ASSERT(literal->isArity(PN_LIST));
+        MOZ_ASSERT(name->isKind(PNK_NAME));
+        MOZ_ASSERT(expr->isKind(PNK_NAME));
+        MOZ_ASSERT(name->pn_atom == expr->pn_atom);
+
+        setListFlag(literal, PNX_NONCONST);
+        ParseNode *propdef = newBinary(PNK_SHORTHAND, name, expr, JSOP_INITPROP);
         if (!propdef)
             return false;
         literal->append(propdef);
