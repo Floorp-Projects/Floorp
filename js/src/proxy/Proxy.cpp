@@ -115,17 +115,6 @@ Proxy::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
 }
 
 bool
-Proxy::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id, MutableHandleValue vp)
-{
-    JS_CHECK_RECURSION(cx, return false);
-
-    Rooted<PropertyDescriptor> desc(cx);
-    if (!Proxy::getPropertyDescriptor(cx, proxy, id, &desc))
-        return false;
-    return NewPropertyDescriptorObject(cx, desc, vp);
-}
-
-bool
 Proxy::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                 MutableHandle<PropertyDescriptor> desc)
 {
@@ -137,18 +126,6 @@ Proxy::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
     if (!policy.allowed())
         return policy.returnValue();
     return handler->getOwnPropertyDescriptor(cx, proxy, id, desc);
-}
-
-bool
-Proxy::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                MutableHandleValue vp)
-{
-    JS_CHECK_RECURSION(cx, return false);
-
-    Rooted<PropertyDescriptor> desc(cx);
-    if (!Proxy::getOwnPropertyDescriptor(cx, proxy, id, &desc))
-        return false;
-    return NewPropertyDescriptorObject(cx, desc, vp);
 }
 
 bool
