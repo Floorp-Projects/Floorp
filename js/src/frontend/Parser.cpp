@@ -7939,7 +7939,7 @@ Parser<ParseHandler>::objectLiteral()
                 op = atom == context->names().get ? JSOP_INITPROP_GETTER
                                                   : JSOP_INITPROP_SETTER;
             } else {
-                propname = handler.newIdentifier(atom, pos());
+                propname = handler.newObjectLiteralPropertyName(atom, pos());
                 if (!propname)
                     return null();
                 break;
@@ -7952,7 +7952,7 @@ Parser<ParseHandler>::objectLiteral()
                 return null();
             if (tt == TOK_NAME) {
                 atom = tokenStream.currentName();
-                propname = newName(atom->asPropertyName());
+                propname = handler.newObjectLiteralPropertyName(atom, pos());
                 if (!propname)
                     return null();
             } else if (tt == TOK_STRING) {
@@ -7985,7 +7985,7 @@ Parser<ParseHandler>::objectLiteral()
             } else {
                 // Not an accessor property after all.
                 tokenStream.ungetToken();
-                propname = handler.newIdentifier(atom, pos());
+                propname = handler.newObjectLiteralPropertyName(atom, pos());
                 if (!propname)
                     return null();
                 op = JSOP_INITPROP;
@@ -8064,20 +8064,16 @@ Parser<ParseHandler>::objectLiteral()
                     report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
                     return null();
                 }
-                if (!abortIfSyntaxParser())
-                    return null();
+
                 tokenStream.ungetToken();
                 if (!tokenStream.checkForKeyword(atom, nullptr))
                     return null();
-                PropertyName *name = handler.isName(propname);
-                MOZ_ASSERT(atom);
-                propname = newName(name);
-                if (!propname)
+
+                Node nameExpr = identifierName();
+                if (!nameExpr)
                     return null();
-                Node ident = identifierName();
-                if (!ident)
-                    return null();
-                if (!handler.addPropertyDefinition(literal, propname, ident, true))
+
+                if (!handler.addShorthand(literal, propname, nameExpr))
                     return null();
             } else if (tt == TOK_LP) {
                 tokenStream.ungetToken();
