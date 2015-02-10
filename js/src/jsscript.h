@@ -1417,7 +1417,7 @@ class JSScript : public js::gc::TenuredCell
     }
 
     bool isRelazifiable() const {
-        return (selfHosted() || lazyScript) &&
+        return (selfHosted() || lazyScript) && !types_ &&
                !isGenerator() && !hasBaselineScript() && !hasAnyIonScript();
     }
     void setLazyScript(js::LazyScript *lazy) {
