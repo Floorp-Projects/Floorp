@@ -262,7 +262,6 @@ RasterImage::RasterImage(ProgressTracker* aProgressTracker,
   mSourceBuffer(new SourceBuffer()),
   mFrameCount(0),
   mHasSize(false),
-  mBlockedOnload(false),
   mDecodeOnDraw(false),
   mTransient(false),
   mDiscardable(false),
@@ -1159,12 +1158,15 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus,
 
   Progress loadProgress = LoadCompleteProgress(aLastPart, mError, finalStatus);
 
-  if (mBlockedOnload) {
+  if (mDecodeOnDraw) {
     // For decode-on-draw images, we want to send notifications as if we've
     // already finished decoding. Otherwise some observers will never even try
-    // to draw.
-    MOZ_ASSERT(mDecodeOnDraw, "Blocked onload but not decode-on-draw");
-    loadProgress |= FLAG_FRAME_COMPLETE |
+    // to draw. (We may have already sent some of these notifications from
+    // NotifyForDecodeOnDrawOnly(), but ProgressTracker will ensure no duplicate
+    // notifications get sent.)
+    loadProgress |= FLAG_ONLOAD_BLOCKED |
+                    FLAG_DECODE_STARTED |
+                    FLAG_FRAME_COMPLETE |
                     FLAG_DECODE_COMPLETE |
                     FLAG_ONLOAD_UNBLOCKED;
   }
@@ -1176,16 +1178,14 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus,
 }
 
 void
-RasterImage::BlockOnloadForDecodeOnDraw()
+RasterImage::NotifyForDecodeOnDrawOnly()
 {
-  if (mHasSourceData) {
-    // OnImageDataComplete got called before we got to run. No point in blocking
-    // onload now.
-    return;
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &RasterImage::NotifyForDecodeOnDrawOnly);
+    NS_DispatchToMainThread(runnable);
   }
 
-  // Block onload. We'll unblock it in OnImageDataComplete.
-  mBlockedOnload = true;
   NotifyProgress(FLAG_DECODE_STARTED | FLAG_ONLOAD_BLOCKED);
 }
 
@@ -1199,9 +1199,9 @@ RasterImage::OnImageDataAvailable(nsIRequest*,
   nsresult rv;
 
   if (MOZ_UNLIKELY(mDecodeOnDraw && aOffset == 0)) {
-    nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this, &RasterImage::BlockOnloadForDecodeOnDraw);
-    NS_DispatchToMainThread(runnable);
+    // If we're a decode-on-draw image, send notifications as if we've just
+    // started decoding.
+    NotifyForDecodeOnDrawOnly();
   }
 
   // WriteToSourceBuffer always consumes everything it gets if it doesn't run
