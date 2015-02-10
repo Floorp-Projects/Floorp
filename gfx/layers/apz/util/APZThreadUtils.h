@@ -6,6 +6,8 @@
 #ifndef mozilla_layers_APZThreadUtils_h
 #define mozilla_layers_APZThreadUtils_h
 
+class Task;
+
 namespace mozilla {
 namespace layers {
 
@@ -33,6 +35,13 @@ public:
    * This does nothing if thread assertions are disabled.
    */
   static void AssertOnCompositorThread();
+
+  /**
+   * Run the given task on the APZ "controller thread" for this platform. If
+   * this function is called from the controller thread itself then the task is
+   * run immediately without getting queued.
+   */
+  static void RunOnControllerThread(Task* aTask);
 };
 
 } // namespace layers

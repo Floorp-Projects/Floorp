@@ -16,6 +16,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/LayerTransactionParent.h"
 #include "nsContentUtils.h"
@@ -531,7 +532,9 @@ RenderFrameParent::ContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
     return;
   }
   if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->ContentReceivedInputBlock(aInputBlockId, aPreventDefault);
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+        GetApzcTreeManager(), &APZCTreeManager::ContentReceivedInputBlock,
+        aInputBlockId, aPreventDefault));
   }
 }
 
@@ -547,7 +550,12 @@ RenderFrameParent::SetTargetAPZC(uint64_t aInputBlockId,
     }
   }
   if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->SetTargetAPZC(aInputBlockId, aTargets);
+    // need a local var to disambiguate between the SetTargetAPZC overloads.
+    void (APZCTreeManager::*setTargetApzcFunc)(uint64_t, const nsTArray<ScrollableLayerGuid>&)
+        = &APZCTreeManager::SetTargetAPZC;
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+        GetApzcTreeManager(), setTargetApzcFunc,
+        aInputBlockId, aTargets));
   }
 }
 
