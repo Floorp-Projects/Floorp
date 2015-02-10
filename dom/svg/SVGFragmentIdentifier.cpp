@@ -238,8 +238,8 @@ bool
 SVGFragmentIdentifier::ProcessFragmentIdentifier(nsIDocument* aDocument,
                                                  const nsAString& aAnchorName)
 {
-  NS_ABORT_IF_FALSE(aDocument->GetRootElement()->IsSVG(nsGkAtoms::svg),
-                    "expecting an SVG root element");
+  MOZ_ASSERT(aDocument->GetRootElement()->IsSVG(nsGkAtoms::svg),
+             "expecting an SVG root element");
 
   dom::SVGSVGElement* rootElement =
     static_cast<dom::SVGSVGElement*>(aDocument->GetRootElement());

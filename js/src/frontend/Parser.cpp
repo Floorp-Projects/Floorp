@@ -1040,7 +1040,6 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
             return null();
     } else {
         MOZ_ASSERT(type == ExpressionBody);
-        MOZ_ASSERT(JS_HAS_EXPR_CLOSURES);
 
         Node kid = assignExpr();
         if (!kid)
@@ -2553,12 +2552,20 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
             return false;
         }
 
-        if (kind != Arrow)
+        if (kind != Arrow) {
+#if JS_HAS_EXPR_CLOSURES
             sawDeprecatedExpressionClosure = true;
+#else
+            report(ParseError, false, null(), JSMSG_CURLY_BEFORE_BODY);
+            return false;
+#endif
+        }
 
         tokenStream.ungetToken();
         bodyType = ExpressionBody;
+#if JS_HAS_EXPR_CLOSURES
         fun->setIsExprClosure();
+#endif
     }
 
     Node body = functionBody(kind, bodyType);
@@ -2568,9 +2575,7 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
     if (fun->name() && !checkStrictBinding(fun->name(), pn))
         return false;
 
-#if JS_HAS_EXPR_CLOSURES
     if (bodyType == StatementListBody) {
-#endif
         bool matched;
         if (!tokenStream.matchToken(&matched, TOK_RC))
             return false;
@@ -2579,15 +2584,16 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
             return false;
         }
         funbox->bufEnd = pos().begin + 1;
-#if JS_HAS_EXPR_CLOSURES
     } else {
+#if not JS_HAS_EXPR_CLOSURES
+        MOZ_ASSERT(kind == Arrow);
+#endif
         if (tokenStream.hadError())
             return false;
         funbox->bufEnd = pos().end;
         if (kind == Statement && !MatchOrInsertSemicolon(tokenStream))
             return false;
     }
-#endif
 
     return finishFunctionDefinition(pn, funbox, prelude, body);
 }

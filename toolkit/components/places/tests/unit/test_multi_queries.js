@@ -13,7 +13,7 @@
  *        The referring URI for the given URI.  This can be null.
  */
 function add_visit(aURI, aDayOffset, aTransition) {
-  yield promiseAddVisits({
+  yield PlacesTestUtils.addVisits({
     uri: aURI,
     transition: aTransition,
     visitDate: (Date.now() + aDayOffset*86400000) * 1000

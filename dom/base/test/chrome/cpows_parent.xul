@@ -126,6 +126,14 @@
       ok(j2.a[2] === 3, "JSON array index");
       ok(j2.s === "hello", "JSON string property");
       ok(j2.o.x === 10, "JSON object property");
+
+      let with_proto = message.objects.with_proto;
+      let proto = Object.getPrototypeOf(with_proto);
+      ok(proto.data == 42, "Object.getPrototypeOf works on CPOW");
+
+      let with_null_proto = message.objects.with_null_proto;
+      proto = Object.getPrototypeOf(with_null_proto);
+      ok(proto === null, "Object.getPrototypeOf works on CPOW (null proto)");
     }
 
     function recvAsyncMessage(message) {

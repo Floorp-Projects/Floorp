@@ -86,7 +86,7 @@ struct CompositableTransaction
   }
   void AddNoSwapEdit(const CompositableOperation& op)
   {
-    NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
+    MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
     mOperations.push_back(op);
   }
   void AddEdit(const CompositableOperation& op)
@@ -205,8 +205,8 @@ static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
 {
   ReentrantMonitorAutoEnter autoMon(*aBarrier);
 
-  NS_ABORT_IF_FALSE(InImageBridgeChildThread(),
-                    "Should be in ImageBridgeChild thread.");
+  MOZ_ASSERT(InImageBridgeChildThread(),
+             "Should be in ImageBridgeChild thread.");
   if (sImageBridgeChildSingleton) {
     // Force all managed protocols to shut themselves down cleanly
     InfallibleTArray<PCompositableChild*> compositables;
@@ -233,8 +233,8 @@ static void ImageBridgeShutdownStep2(ReentrantMonitor *aBarrier, bool *aDone)
 {
   ReentrantMonitorAutoEnter autoMon(*aBarrier);
 
-  NS_ABORT_IF_FALSE(InImageBridgeChildThread(),
-                    "Should be in ImageBridgeChild thread.");
+  MOZ_ASSERT(InImageBridgeChildThread(),
+             "Should be in ImageBridgeChild thread.");
 
   sImageBridgeChildSingleton->SendStop();
 
@@ -364,6 +364,10 @@ static void ReleaseImageClientNow(ImageClient* aClient)
 // static
 void ImageBridgeChild::DispatchReleaseImageClient(ImageClient* aClient)
 {
+  if (!aClient) {
+    return;
+  }
+
   if (!IsCreated()) {
     // CompositableClient::Release should normally happen in the ImageBridgeChild
     // thread because it usually generate some IPDL messages.
@@ -423,7 +427,7 @@ static void UpdateImageClientNow(ImageClient* aClient, ImageContainer* aContaine
 void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
                                                  ImageContainer* aContainer)
 {
-  if (!IsCreated()) {
+  if (!aClient || !aContainer || !IsCreated()) {
     return;
   }
 
@@ -636,7 +640,7 @@ void ImageBridgeChild::ShutDown()
 
 bool ImageBridgeChild::StartUpOnThread(Thread* aThread)
 {
-  NS_ABORT_IF_FALSE(aThread, "ImageBridge needs a thread.");
+  MOZ_ASSERT(aThread, "ImageBridge needs a thread.");
   if (sImageBridgeChildSingleton == nullptr) {
     sImageBridgeChildThread = aThread;
     if (!aThread->IsRunning()) {

@@ -101,6 +101,18 @@ invoke_copy_to_stack(uint64_t * d, uint32_t paramCount, nsXPTCVariant * s,
     }
 }
 
+// Disable avx for the next function to allow compilation with
+// -march=native on new machines, or similar hardcoded -march options.
+// Having avx enabled appears to change the alignment behavior of alloca
+// (apparently adding an extra 16 bytes) of padding/alignment (and using
+// 32-byte alignment instead of 16-byte).  This seems to be the best
+// available workaround, given that this code, which should perhaps
+// better be written in assembly, is written in C++.
+#ifndef __clang__
+#pragma GCC push_options
+#pragma GCC target ("no-avx")
+#endif
+
 EXPORT_XPCOM_API(nsresult)
 NS_InvokeByIndex(nsISupports * that, uint32_t methodIndex,
                  uint32_t paramCount, nsXPTCVariant * params)
@@ -164,3 +176,7 @@ NS_InvokeByIndex(nsISupports * that, uint32_t methodIndex,
                                               d6, d7);
     return result;
 }
+
+#ifndef __clang__
+#pragma GCC pop_options
+#endif

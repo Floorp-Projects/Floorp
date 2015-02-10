@@ -227,7 +227,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitDeleteElement(MDeleteElement *ins);
     void visitGetNameCache(MGetNameCache *ins);
     void visitCallGetIntrinsicValue(MCallGetIntrinsicValue *ins);
-    void visitCallsiteCloneCache(MCallsiteCloneCache *ins);
     void visitCallGetElement(MCallGetElement *ins);
     void visitCallSetElement(MCallSetElement *ins);
     void visitCallInitElementArray(MCallInitElementArray *ins);

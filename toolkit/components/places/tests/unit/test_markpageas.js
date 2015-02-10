@@ -48,8 +48,10 @@ add_task(function test_execute()
      // because it is a top level visit with no referrer,
      // it will result in TRANSITION_LINK
     }
-    yield promiseAddVisits({uri: uri(visit.url),
-                            transition: visit.transition});
+    yield PlacesTestUtils.addVisits({
+      uri: uri(visit.url),
+      transition: visit.transition
+    });
   }
 
   yield completionPromise;

@@ -262,7 +262,6 @@ RasterImage::RasterImage(ProgressTracker* aProgressTracker,
   mSourceBuffer(new SourceBuffer()),
   mFrameCount(0),
   mHasSize(false),
-  mBlockedOnload(false),
   mDecodeOnDraw(false),
   mTransient(false),
   mDiscardable(false),
@@ -1010,7 +1009,7 @@ RasterImage::StartAnimation()
   if (mError)
     return NS_ERROR_FAILURE;
 
-  NS_ABORT_IF_FALSE(ShouldAnimate(), "Should not animate!");
+  MOZ_ASSERT(ShouldAnimate(), "Should not animate!");
 
   // If we don't have mAnim yet, then we're not ready to animate.  Setting
   // mPendingAnimation will cause us to start animating as soon as we have a
@@ -1038,7 +1037,7 @@ RasterImage::StartAnimation()
 nsresult
 RasterImage::StopAnimation()
 {
-  NS_ABORT_IF_FALSE(mAnimating, "Should be animating!");
+  MOZ_ASSERT(mAnimating, "Should be animating!");
 
   nsresult rv = NS_OK;
   if (mError) {
@@ -1159,12 +1158,15 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus,
 
   Progress loadProgress = LoadCompleteProgress(aLastPart, mError, finalStatus);
 
-  if (mBlockedOnload) {
+  if (mDecodeOnDraw) {
     // For decode-on-draw images, we want to send notifications as if we've
     // already finished decoding. Otherwise some observers will never even try
-    // to draw.
-    MOZ_ASSERT(mDecodeOnDraw, "Blocked onload but not decode-on-draw");
-    loadProgress |= FLAG_FRAME_COMPLETE |
+    // to draw. (We may have already sent some of these notifications from
+    // NotifyForDecodeOnDrawOnly(), but ProgressTracker will ensure no duplicate
+    // notifications get sent.)
+    loadProgress |= FLAG_ONLOAD_BLOCKED |
+                    FLAG_DECODE_STARTED |
+                    FLAG_FRAME_COMPLETE |
                     FLAG_DECODE_COMPLETE |
                     FLAG_ONLOAD_UNBLOCKED;
   }
@@ -1176,16 +1178,14 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus,
 }
 
 void
-RasterImage::BlockOnloadForDecodeOnDraw()
+RasterImage::NotifyForDecodeOnDrawOnly()
 {
-  if (mHasSourceData) {
-    // OnImageDataComplete got called before we got to run. No point in blocking
-    // onload now.
-    return;
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &RasterImage::NotifyForDecodeOnDrawOnly);
+    NS_DispatchToMainThread(runnable);
   }
 
-  // Block onload. We'll unblock it in OnImageDataComplete.
-  mBlockedOnload = true;
   NotifyProgress(FLAG_DECODE_STARTED | FLAG_ONLOAD_BLOCKED);
 }
 
@@ -1199,9 +1199,9 @@ RasterImage::OnImageDataAvailable(nsIRequest*,
   nsresult rv;
 
   if (MOZ_UNLIKELY(mDecodeOnDraw && aOffset == 0)) {
-    nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this, &RasterImage::BlockOnloadForDecodeOnDraw);
-    NS_DispatchToMainThread(runnable);
+    // If we're a decode-on-draw image, send notifications as if we've just
+    // started decoding.
+    NotifyForDecodeOnDrawOnly();
   }
 
   // WriteToSourceBuffer always consumes everything it gets if it doesn't run
@@ -1209,7 +1209,7 @@ RasterImage::OnImageDataAvailable(nsIRequest*,
   uint32_t bytesRead;
   rv = aInStr->ReadSegments(WriteToSourceBuffer, this, aCount, &bytesRead);
 
-  NS_ABORT_IF_FALSE(bytesRead == aCount || HasError() || NS_FAILED(rv),
+  MOZ_ASSERT(bytesRead == aCount || HasError() || NS_FAILED(rv),
     "WriteToSourceBuffer should consume everything if ReadSegments succeeds or "
     "the image must be in error!");
 
@@ -1467,13 +1467,6 @@ RasterImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
   LookupFrame(0, targetSize, flags);
 
   return NS_OK;
-}
-
-bool
-RasterImage::IsDecoded()
-{
-  // XXX(seth): We need to get rid of this; it's not reliable.
-  return mHasBeenDecoded || mError || (mDecodeOnDraw && mHasSourceData);
 }
 
 NS_IMETHODIMP
@@ -1866,8 +1859,8 @@ RasterImage::UnlockImage()
     return NS_ERROR_FAILURE;
 
   // It's an error to call this function if the lock count is 0
-  NS_ABORT_IF_FALSE(mLockCount > 0,
-                    "Calling UnlockImage with mLockCount == 0!");
+  MOZ_ASSERT(mLockCount > 0,
+             "Calling UnlockImage with mLockCount == 0!");
   if (mLockCount == 0)
     return NS_ERROR_ABORT;
 

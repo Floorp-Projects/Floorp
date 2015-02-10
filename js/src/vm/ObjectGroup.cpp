@@ -97,9 +97,6 @@ ObjectGroup::useSingletonForClone(JSFunction *fun)
     if (!fun->isInterpreted())
         return false;
 
-    if (fun->hasScript() && fun->nonLazyScript()->shouldCloneAtCallsite())
-        return true;
-
     if (fun->isArrow())
         return false;
 

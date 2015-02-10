@@ -380,6 +380,10 @@ loop.store.ActiveRoomStore = (function() {
      */
     screenSharingState: function(actionData) {
       this.setStoreState({screenSharingState: actionData.state});
+
+      this._mozLoop.setScreenShareState(
+        this.getStoreState().windowId,
+        actionData.state === SCREEN_SHARE_STATES.ACTIVE);
     },
 
     /**
@@ -416,6 +420,13 @@ loop.store.ActiveRoomStore = (function() {
      */
     windowUnload: function() {
       this._leaveRoom(ROOM_STATES.CLOSING);
+
+      // If we're closing the window, then ensure the screensharing state
+      // is cleared. We don't do this on leave room, as we might still be
+      // sharing.
+      this._mozLoop.setScreenShareState(
+        this.getStoreState().windowId,
+        false);
 
       if (!this._onUpdateListener) {
         return;

@@ -31,16 +31,18 @@ add_task(function* test_escape() {
   let uri9 = NetUtil.newURI("http://ideograph/");
   let uri10 = NetUtil.newURI("http://camel/pleaseMatchMe/");
 
-  yield promiseAddVisits([ { uri: uri1, title: "title1" },
-                           { uri: uri2, title: "title1" },
-                           { uri: uri3, title: "matchme2" },
-                           { uri: uri4, title: "dontmatchme3" },
-                           { uri: uri5, title: "title1" },
-                           { uri: uri6, title: "title1" },
-                           { uri: uri7, title: "!@#$%^&*()_+{}|:<>?word" },
-                           { uri: uri8, title: katakana.join("") },
-                           { uri: uri9, title: ideograph.join("") },
-                           { uri: uri10, title: "title1" } ]);
+  yield PlacesTestUtils.addVisits([
+    { uri: uri1, title: "title1" },
+    { uri: uri2, title: "title1" },
+    { uri: uri3, title: "matchme2" },
+    { uri: uri4, title: "dontmatchme3" },
+    { uri: uri5, title: "title1" },
+    { uri: uri6, title: "title1" },
+    { uri: uri7, title: "!@#$%^&*()_+{}|:<>?word" },
+    { uri: uri8, title: katakana.join("") },
+    { uri: uri9, title: ideograph.join("") },
+    { uri: uri10, title: "title1" }
+  ]);
   addBookmark( { uri: uri5, title: "title1", tags: [ "matchme2" ] } );
   addBookmark( { uri: uri6, title: "title1", tags: [ "dontmatchme3" ] } );
 

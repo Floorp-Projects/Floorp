@@ -446,19 +446,19 @@ XRE_InitChildProcess(int aArgc,
   // child processes launched by GeckoChildProcessHost get this magic
   // argument appended to their command lines
   const char* const parentPIDString = aArgv[aArgc-1];
-  NS_ABORT_IF_FALSE(parentPIDString, "NULL parent PID");
+  MOZ_ASSERT(parentPIDString, "NULL parent PID");
   --aArgc;
 
   char* end = 0;
   base::ProcessId parentPID = strtol(parentPIDString, &end, 10);
-  NS_ABORT_IF_FALSE(!*end, "invalid parent PID");
+  MOZ_ASSERT(!*end, "invalid parent PID");
 
   // Retrieve the parent process handle. We need this for shared memory use and
   // for creating new transports in the child.
   base::ProcessHandle parentHandle = 0;
   if (XRE_GetProcessType() != GeckoProcessType_GMPlugin) {
     mozilla::DebugOnly<bool> ok = base::OpenProcessHandle(parentPID, &parentHandle);
-    NS_ABORT_IF_FALSE(ok, "can't open handle to parent");
+    MOZ_ASSERT(ok, "can't open handle to parent");
   }
 
 #if defined(XP_WIN)
@@ -748,10 +748,10 @@ struct RunnableMethodTraits<ContentChild>
 void
 XRE_ShutdownChildProcess()
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   mozilla::DebugOnly<MessageLoop*> ioLoop = XRE_GetIOMessageLoop();
-  NS_ABORT_IF_FALSE(!!ioLoop, "Bad shutdown order");
+  MOZ_ASSERT(!!ioLoop, "Bad shutdown order");
 
   // Quit() sets off the following chain of events
   //  (1) UI loop starts quitting

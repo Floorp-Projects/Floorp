@@ -32,8 +32,8 @@ nsresult
 nsJARInputStream::InitFile(nsJAR *aJar, nsZipItem *item)
 {
     nsresult rv = NS_OK;
-    NS_ABORT_IF_FALSE(aJar, "Argument may not be null");
-    NS_ABORT_IF_FALSE(item, "Argument may not be null");
+    MOZ_ASSERT(aJar, "Argument may not be null");
+    MOZ_ASSERT(item, "Argument may not be null");
 
     // Mark it as closed, in case something fails in initialisation
     mMode = MODE_CLOSED;
@@ -72,8 +72,8 @@ nsJARInputStream::InitDirectory(nsJAR* aJar,
                                 const nsACString& aJarDirSpec,
                                 const char* aDir)
 {
-    NS_ABORT_IF_FALSE(aJar, "Argument may not be null");
-    NS_ABORT_IF_FALSE(aDir, "Argument may not be null");
+    MOZ_ASSERT(aJar, "Argument may not be null");
+    MOZ_ASSERT(aDir, "Argument may not be null");
 
     // Mark it as closed, in case something fails in initialisation
     mMode = MODE_CLOSED;

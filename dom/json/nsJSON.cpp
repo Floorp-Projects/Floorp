@@ -536,7 +536,7 @@ nsJSONListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 
   JS::ConstTwoByteChars chars(reinterpret_cast<const char16_t*>(mBufferedChars.Elements()),
                               mBufferedChars.Length());
-  bool ok = JS_ParseJSONWithReviver(mCx, chars.get(),
+  bool ok = JS_ParseJSONWithReviver(mCx, chars.start().get(),
                                       uint32_t(mBufferedChars.Length()),
                                       reviver, &value);
 
@@ -645,7 +645,7 @@ nsJSONListener::ConsumeConverted(const char* aBuffer, uint32_t aByteLength)
   rv = mDecoder->Convert(aBuffer, &srcLen, endelems, &unicharLength);
   if (NS_FAILED(rv))
     return rv;
-  NS_ABORT_IF_FALSE(preLength >= unicharLength, "GetMaxLength lied");
+  MOZ_ASSERT(preLength >= unicharLength, "GetMaxLength lied");
   if (preLength > unicharLength)
     mBufferedChars.TruncateLength(mBufferedChars.Length() - (preLength - unicharLength));
   return NS_OK;

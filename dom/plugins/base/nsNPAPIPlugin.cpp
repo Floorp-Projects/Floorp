@@ -1508,8 +1508,9 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
   }
 
   obj = JS_ObjectToInnerObject(cx, obj);
-  NS_ABORT_IF_FALSE(obj,
-    "JS_ObjectToInnerObject should never return null with non-null input.");
+  MOZ_ASSERT(obj,
+             "JS_ObjectToInnerObject should never return null with non-null "
+             "input.");
 
   if (result) {
     // Initialize the out param to void
@@ -2171,19 +2172,6 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     nsNPAPIPluginInstance *inst =
       (nsNPAPIPluginInstance *) (npp ? npp->ndata : nullptr);
     double scaleFactor = inst ? inst->GetContentsScaleFactor() : 1.0;
-    // Work around a Flash ActionScript bug that causes long hangs if
-    // Flash thinks HiDPI support is available. Adobe is tracking this as
-    // ADBE 3921114. If this turns out to be Adobe's fault and they fix it,
-    // we'll no longer need this quirk. See QUIRK_FLASH_HIDE_HIDPI_SUPPORT
-    // in PluginModuleChild.h, and also bug 1118615.
-    if (inst) {
-      const char *mimeType;
-      inst->GetMIMEType(&mimeType);
-      NS_NAMED_LITERAL_CSTRING(flash, "application/x-shockwave-flash");
-      if (!PL_strncasecmp(mimeType, flash.get(), flash.Length())) {
-        scaleFactor = 1.0;
-      }
-    }
     *(double*)result = scaleFactor;
     return NPERR_NO_ERROR;
   }

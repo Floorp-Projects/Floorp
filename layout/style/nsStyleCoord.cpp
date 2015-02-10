@@ -74,7 +74,7 @@ bool nsStyleCoord::operator==(const nsStyleCoord& aOther) const
     case eStyleUnit_Calc:
       return *this->GetCalcValue() == *aOther.GetCalcValue();
   }
-  NS_ABORT_IF_FALSE(false, "unexpected unit");
+  MOZ_ASSERT(false, "unexpected unit");
   return false;
 }
 
@@ -108,7 +108,7 @@ uint32_t nsStyleCoord::HashValue(uint32_t aHash = 0) const
       }
       return aHash;
   }
-  NS_ABORT_IF_FALSE(false, "unexpected unit");
+  MOZ_ASSERT(false, "unexpected unit");
   return aHash;
 }
 

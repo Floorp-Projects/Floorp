@@ -108,7 +108,7 @@ var LocalStore = Class({
       return promise.reject(new Error(path + " does not belong to " + this.path));
     }
 
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       let parent = yield this.resourceFor(OS.Path.dirname(path));
 
       let info;
@@ -122,7 +122,7 @@ var LocalStore = Class({
 
       let resource = this._forPath(path, info);
       parent.addChild(resource);
-      throw new Task.Result(resource);
+      return resource;
     }.bind(this));
   },
 

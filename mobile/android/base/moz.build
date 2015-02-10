@@ -566,6 +566,10 @@ if CONFIG['MOZ_ANDROID_NEW_TABLET_UI'] and max_sdk_version >= 11:
         'tabs/TabStripView.java'
     ]
 
+# Selectively include reading list service code.
+if CONFIG['MOZ_ANDROID_READING_LIST_SERVICE']:
+    gbjar.sources += reading_list_service_java_files
+
 gbjar.sources += sync_java_files
 gbjar.extra_jars += [
     'gecko-R.jar',

@@ -15,8 +15,10 @@
 add_task(function* test_keyword_searc() {
   let uri1 = NetUtil.newURI("http://abc/?search=%s");
   let uri2 = NetUtil.newURI("http://abc/?search=ThisPageIsInHistory");
-  yield promiseAddVisits([ { uri: uri1, title: "Generic page title" },
-                           { uri: uri2, title: "Generic page title" } ]);
+  yield PlacesTestUtils.addVisits([
+    { uri: uri1, title: "Generic page title" },
+    { uri: uri2, title: "Generic page title" }
+  ]);
   addBookmark({ uri: uri1, title: "Keyword title", keyword: "key"});
 
   do_print("Plain keyword query");
@@ -63,7 +65,7 @@ add_task(function* test_keyword_searc() {
 
   // This adds a second keyword so anything after this will match 2 keywords
   let uri3 = NetUtil.newURI("http://xyz/?foo=%s");
-  yield promiseAddVisits([ { uri: uri3, title: "Generic page title" } ]);
+  yield PlacesTestUtils.addVisits([ { uri: uri3, title: "Generic page title" } ]);
   addBookmark({ uri: uri3, title: "Keyword title", keyword: "key", style: ["keyword"] });
 
   do_print("Two keywords matched");

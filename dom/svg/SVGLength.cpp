@@ -77,8 +77,8 @@ IsAbsoluteUnit(uint8_t aUnit)
  */
 inline static float GetAbsUnitsPerAbsUnit(uint8_t aUnits, uint8_t aPerUnit)
 {
-  NS_ABORT_IF_FALSE(IsAbsoluteUnit(aUnits), "Not a CSS absolute unit");
-  NS_ABORT_IF_FALSE(IsAbsoluteUnit(aPerUnit), "Not a CSS absolute unit");
+  MOZ_ASSERT(IsAbsoluteUnit(aUnits), "Not a CSS absolute unit");
+  MOZ_ASSERT(IsAbsoluteUnit(aPerUnit), "Not a CSS absolute unit");
 
   float CSSAbsoluteUnitConversionFactors[5][5] = { // columns: cm, mm, in, pt, pc
     // cm per...:

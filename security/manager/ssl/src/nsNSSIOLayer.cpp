@@ -1227,26 +1227,6 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
     return false;
   }
 
-  // Allow PR_CONNECT_RESET_ERROR only for whitelisted sites.
-  if (err == PR_CONNECT_RESET_ERROR &&
-      !socketInfo->SharedState().IOLayerHelpers()
-        .isInsecureFallbackSite(socketInfo->GetHostName())) {
-    return false;
-  }
-
-  if ((err == SSL_ERROR_NO_CYPHER_OVERLAP || err == PR_END_OF_FILE_ERROR ||
-       err == PR_CONNECT_RESET_ERROR) &&
-      nsNSSComponent::AreAnyWeakCiphersEnabled()) {
-    if (socketInfo->SharedState().IOLayerHelpers()
-                  .rememberStrongCiphersFailed(socketInfo->GetHostName(),
-                                               socketInfo->GetPort(), err)) {
-      Telemetry::Accumulate(Telemetry::SSL_WEAK_CIPHERS_FALLBACK,
-                            tlsIntoleranceTelemetryBucket(err));
-      return true;
-    }
-    Telemetry::Accumulate(Telemetry::SSL_WEAK_CIPHERS_FALLBACK, 0);
-  }
-
   // When not using a proxy we'll see a connection reset error.
   // When using a proxy, we'll see an end of file error.
   // In addition check for some error codes where it is reasonable
@@ -2635,18 +2615,20 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   infoObject->SharedState().IOLayerHelpers()
     .adjustForTLSIntolerance(infoObject->GetHostName(), infoObject->GetPort(),
                              range, strongCiphersStatus);
+  bool useWeakCiphers = range.max <= SSL_LIBRARY_VERSION_TLS_1_0 &&
+                        nsNSSComponent::AreAnyWeakCiphersEnabled();
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
          ("[%p] nsSSLIOLayerSetOptions: using TLS version range (0x%04x,0x%04x)%s\n",
           fd, static_cast<unsigned int>(range.min),
               static_cast<unsigned int>(range.max),
-          strongCiphersStatus == StrongCiphersFailed ? " with weak ciphers" : ""));
+          useWeakCiphers ? " with weak ciphers" : ""));
 
   if (SSL_VersionRangeSet(fd, &range) != SECSuccess) {
     return NS_ERROR_FAILURE;
   }
   infoObject->SetTLSVersionRange(range);
 
-  if (strongCiphersStatus == StrongCiphersFailed) {
+  if (useWeakCiphers) {
     nsNSSComponent::UseWeakCiphersOnSocket(fd);
   }
 

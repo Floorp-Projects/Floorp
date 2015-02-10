@@ -372,6 +372,30 @@ function handleRequest(req, res) {
     push.end("ok");
   }
 
+  else if (u.pathname === "/altsvc1") {
+    if (req.httpVersionMajor != 2 ||
+      req.scheme != "http" ||
+      req.headers['alt-used'] != ("localhost:" + serverPort)) {
+      res.setHeader('Connection', 'close');
+      res.writeHead(400);
+      res.end("WHAT?");
+      return;
+   }
+   // test the alt svc frame for use with altsvc2
+   res.altsvc("localhost", serverPort, "h2-16", 3600, req.headers['x-redirect-origin']);
+  }
+
+  else if (u.pathname === "/altsvc2") {
+    if (req.httpVersionMajor != 2 ||
+      req.scheme != "http" ||
+      req.headers['alt-used'] != ("localhost:" + serverPort)) {
+      res.setHeader('Connection', 'close');
+      res.writeHead(400);
+      res.end("WHAT?");
+      return;
+   }
+  }
+
   res.setHeader('Content-Type', 'text/html');
   if (req.httpVersionMajor != 2) {
     res.setHeader('Connection', 'close');

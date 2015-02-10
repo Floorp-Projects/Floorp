@@ -837,14 +837,12 @@ class IonBuilder
     InliningStatus inlineSingleCall(CallInfo &callInfo, JSObject *target);
 
     // Call functions
-    InliningStatus inlineCallsite(const ObjectVector &targets, ObjectVector &originals,
-                                  CallInfo &callInfo);
-    bool inlineCalls(CallInfo &callInfo, const ObjectVector &targets, ObjectVector &originals,
-                     BoolVector &choiceSet, MGetPropertyCache *maybeCache);
+    InliningStatus inlineCallsite(const ObjectVector &targets, CallInfo &callInfo);
+    bool inlineCalls(CallInfo &callInfo, const ObjectVector &targets, BoolVector &choiceSet,
+                     MGetPropertyCache *maybeCache);
 
     // Inlining helpers.
-    bool inlineGenericFallback(JSFunction *target, CallInfo &callInfo, MBasicBlock *dispatchBlock,
-                               bool clonedAtCallsite);
+    bool inlineGenericFallback(JSFunction *target, CallInfo &callInfo, MBasicBlock *dispatchBlock);
     bool inlineObjectGroupFallback(CallInfo &callInfo, MBasicBlock *dispatchBlock,
                                    MObjectGroupDispatch *dispatch, MGetPropertyCache *cache,
                                    MBasicBlock **fallbackTarget);
@@ -854,9 +852,8 @@ class IonBuilder
 
     bool testNeedsArgumentCheck(JSFunction *target, CallInfo &callInfo);
 
-    MDefinition *makeCallsiteClone(JSFunction *target, MDefinition *fun);
-    MCall *makeCallHelper(JSFunction *target, CallInfo &callInfo, bool cloneAtCallsite);
-    bool makeCall(JSFunction *target, CallInfo &callInfo, bool cloneAtCallsite);
+    MCall *makeCallHelper(JSFunction *target, CallInfo &callInfo);
+    bool makeCall(JSFunction *target, CallInfo &callInfo);
 
     MDefinition *patchInlinedReturn(CallInfo &callInfo, MBasicBlock *exit, MBasicBlock *bottom);
     MDefinition *patchInlinedReturns(CallInfo &callInfo, MIRGraphReturns &returns,

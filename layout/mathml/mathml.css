@@ -327,7 +327,11 @@ mscarries {
 }
 */
 
-/* Do not expose the <mphantom> element to the accessible tree. */
+/* "The mphantom element renders invisibly, but with the same size and other
+   dimensions, including baseline position, that its contents would have if
+   they were rendered normally.".
+   Also, we do not expose the <mphantom> element to the accessible tree
+   (see bug 1108378). */
 mphantom {
     visibility: hidden;
 }

@@ -12,6 +12,9 @@
      "downloads": {}
    },
   "launch_path": "tests/dom/apps/tests/file_packaged_app.sjs",
+  "icons": {
+    "15": "icon.png"
+  },
   "developer": {
     "name": "DEVELOPERTOKEN",
     "url": "DEVELOPERURLTOKEN"

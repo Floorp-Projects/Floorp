@@ -2264,7 +2264,7 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
         int64_t bytes = std::min<int64_t>(size, streamWithPartialBlock->mChannelOffset - mStreamOffset);
         // Clamp bytes until 64-bit file size issues are fixed.
         bytes = std::min(bytes, int64_t(INT32_MAX));
-        NS_ABORT_IF_FALSE(bytes >= 0 && bytes <= aCount, "Bytes out of range.");
+        MOZ_ASSERT(bytes >= 0 && bytes <= aCount, "Bytes out of range.");
         memcpy(aBuffer,
           reinterpret_cast<char*>(streamWithPartialBlock->mPartialBlockBuffer.get()) + offsetInStreamBlock, bytes);
         if (mCurrentMode == MODE_METADATA) {
@@ -2289,7 +2289,7 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 
     int64_t offset = cacheBlock*BLOCK_SIZE + offsetInStreamBlock;
     int32_t bytes;
-    NS_ABORT_IF_FALSE(size >= 0 && size <= INT32_MAX, "Size out of range.");
+    MOZ_ASSERT(size >= 0 && size <= INT32_MAX, "Size out of range.");
     nsresult rv = gMediaCache->ReadCacheFile(offset, aBuffer + count, int32_t(size), &bytes);
     if (NS_FAILED(rv)) {
       if (count == 0)
@@ -2361,7 +2361,7 @@ MediaCacheStream::ReadFromCache(char* aBuffer, int64_t aOffset, int64_t aCount)
       // Clamp bytes until 64-bit file size issues are fixed.
       int64_t toCopy = std::min<int64_t>(size, mChannelOffset - streamOffset);
       bytes = std::min(toCopy, int64_t(INT32_MAX));
-      NS_ABORT_IF_FALSE(bytes >= 0 && bytes <= toCopy, "Bytes out of range.");
+      MOZ_ASSERT(bytes >= 0 && bytes <= toCopy, "Bytes out of range.");
       memcpy(aBuffer + count,
         reinterpret_cast<char*>(mPartialBlockBuffer.get()) + offsetInStreamBlock, bytes);
     } else {
@@ -2370,7 +2370,7 @@ MediaCacheStream::ReadFromCache(char* aBuffer, int64_t aOffset, int64_t aCount)
         return NS_ERROR_FAILURE;
       }
       int64_t offset = cacheBlock*BLOCK_SIZE + offsetInStreamBlock;
-      NS_ABORT_IF_FALSE(size >= 0 && size <= INT32_MAX, "Size out of range.");
+      MOZ_ASSERT(size >= 0 && size <= INT32_MAX, "Size out of range.");
       nsresult rv = gMediaCache->ReadCacheFile(offset, aBuffer + count, int32_t(size), &bytes);
       if (NS_FAILED(rv)) {
         return rv;

@@ -18,6 +18,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
       return this.toolbarButton = CustomizableUI.getWidget("loop-button").forWindow(window);
     },
 
+    get panel() {
+      delete this.panel;
+      return this.panel = document.getElementById("loop-notification-panel");
+    },
+
     /**
      * @return {Promise}
      */
@@ -32,6 +37,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
           resolve();
         });
       });
+    },
+
+    togglePanel: function(event, tabId = null) {
+      if (this.panel.state == "open") {
+        this.panel.hidePopup();
+      } else {
+        this.openCallPanel(event, tabId);
+      }
     },
 
     /**
@@ -193,6 +206,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
       let state = "";
       if (MozLoopService.errors.size) {
         state = "error";
+      } else if (MozLoopService.screenShareActive) {
+        state = "action";
       } else if (aReason == "login" && MozLoopService.userProfile) {
         state = "active";
       } else if (MozLoopService.doNotDisturb) {

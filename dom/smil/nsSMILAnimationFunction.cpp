@@ -220,10 +220,10 @@ nsSMILAnimationFunction::ComposeResult(const nsISMILAttr& aSMILAttr,
     return;
 
   // If this interval is active, we must have a non-negative mSampleTime
-  NS_ABORT_IF_FALSE(mSampleTime >= 0 || !mIsActive,
-      "Negative sample time for active animation");
-  NS_ABORT_IF_FALSE(mSimpleDuration.IsResolved() || mLastValue,
-      "Unresolved simple duration for active or frozen animation");
+  MOZ_ASSERT(mSampleTime >= 0 || !mIsActive,
+             "Negative sample time for active animation");
+  MOZ_ASSERT(mSimpleDuration.IsResolved() || mLastValue,
+             "Unresolved simple duration for active or frozen animation");
 
   // If we want to add but don't have a base value then just fail outright.
   // This can happen when we skipped getting the base value because there's an
@@ -303,8 +303,8 @@ nsSMILAnimationFunction::CompareTo(const nsSMILAnimationFunction* aOther) const
 
   // Animations that appear later in the document sort after those earlier in
   // the document
-  NS_ABORT_IF_FALSE(mAnimationElement != aOther->mAnimationElement,
-      "Two animations cannot have the same animation content element!");
+  MOZ_ASSERT(mAnimationElement != aOther->mAnimationElement,
+             "Two animations cannot have the same animation content element!");
 
   return (nsContentUtils::PositionIsBefore(mAnimationElement, aOther->mAnimationElement))
           ? -1 : 1;
@@ -368,8 +368,8 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
   if (mSimpleDuration.IsDefinite()) {
     nsSMILTime dur = mSimpleDuration.GetMillis();
 
-    NS_ABORT_IF_FALSE(dur >= 0, "Simple duration should not be negative");
-    NS_ABORT_IF_FALSE(mSampleTime >= 0, "Sample time should not be negative");
+    MOZ_ASSERT(dur >= 0, "Simple duration should not be negative");
+    MOZ_ASSERT(mSampleTime >= 0, "Sample time should not be negative");
 
     if (mSampleTime >= dur || mSampleTime < 0) {
       NS_ERROR("Animation sampled outside interval");
@@ -388,7 +388,7 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
     const nsSMILValue* from = nullptr;
     const nsSMILValue* to = nullptr;
     // Init to -1 to make sure that if we ever forget to set this, the
-    // NS_ABORT_IF_FALSE that tests that intervalProgress is in range will fail.
+    // MOZ_ASSERT that tests that intervalProgress is in range will fail.
     double intervalProgress = -1.f;
     if (IsToAnimation()) {
       from = &aBaseValue;
@@ -421,10 +421,10 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
     }
 
     if (NS_SUCCEEDED(rv)) {
-      NS_ABORT_IF_FALSE(from, "NULL from-value during interpolation");
-      NS_ABORT_IF_FALSE(to, "NULL to-value during interpolation");
-      NS_ABORT_IF_FALSE(0.0f <= intervalProgress && intervalProgress < 1.0f,
-                      "Interval progress should be in the range [0, 1)");
+      MOZ_ASSERT(from, "NULL from-value during interpolation");
+      MOZ_ASSERT(to, "NULL to-value during interpolation");
+      MOZ_ASSERT(0.0f <= intervalProgress && intervalProgress < 1.0f,
+                 "Interval progress should be in the range [0, 1)");
       rv = from->Interpolate(*to, intervalProgress, aResult);
     }
   }
@@ -502,7 +502,7 @@ nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
                "aSimpleProgress is out of bounds");
   NS_ASSERTION(GetCalcMode() == CALC_PACED,
                "Calling paced-specific function, but not in paced mode");
-  NS_ABORT_IF_FALSE(aValues.Length() >= 2, "Unexpected number of values");
+  MOZ_ASSERT(aValues.Length() >= 2, "Unexpected number of values");
 
   // Trivial case: If we have just 2 values, then there's only one interval
   // for us to traverse, and our progress across that interval is the exact
@@ -548,9 +548,9 @@ nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
     nsresult rv =
 #endif
       aValues[i].ComputeDistance(aValues[i+1], curIntervalDist);
-    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv),
-                      "If we got through ComputePacedTotalDistance, we should "
-                      "be able to recompute each sub-distance without errors");
+    MOZ_ASSERT(NS_SUCCEEDED(rv),
+               "If we got through ComputePacedTotalDistance, we should "
+               "be able to recompute each sub-distance without errors");
 
     NS_ASSERTION(curIntervalDist >= 0, "distance values must be non-negative");
     // Clamp distance value at 0, just in case ComputeDistance is evil.
@@ -604,7 +604,7 @@ nsSMILAnimationFunction::ComputePacedTotalDistance(
 
     // Clamp distance value to 0, just in case we have an evil ComputeDistance
     // implementation somewhere
-    NS_ABORT_IF_FALSE(tmpDist >= 0.0f, "distance values must be non-negative");
+    MOZ_ASSERT(tmpDist >= 0.0f, "distance values must be non-negative");
     tmpDist = std::max(tmpDist, 0.0);
 
     totalDistance += tmpDist;
@@ -634,9 +634,9 @@ nsSMILAnimationFunction::ScaleSimpleProgress(double aProgress,
     // needn't be 1. So check if we're in the last 'interval', that is, the
     // space between the final value and 1.0.
     if (aProgress >= mKeyTimes[i+1]) {
-      NS_ABORT_IF_FALSE(i == numTimes - 2,
-          "aProgress is not in range of the current interval, yet the current"
-          " interval is not the last bounded interval either.");
+      MOZ_ASSERT(i == numTimes - 2,
+                 "aProgress is not in range of the current interval, yet the "
+                 "current interval is not the last bounded interval either.");
       ++i;
     }
     return (double)i / numTimes;
@@ -663,8 +663,8 @@ nsSMILAnimationFunction::ScaleIntervalProgress(double aProgress,
   if (!HasAttr(nsGkAtoms::keySplines))
     return aProgress;
 
-  NS_ABORT_IF_FALSE(aIntervalIndex < mKeySplines.Length(),
-                    "Invalid interval index");
+  MOZ_ASSERT(aIntervalIndex < mKeySplines.Length(),
+             "Invalid interval index");
 
   nsSMILKeySpline const &spline = mKeySplines[aIntervalIndex];
   return spline.GetSplineValue(aProgress);
