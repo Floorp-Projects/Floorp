@@ -108,8 +108,10 @@ invoke_copy_to_stack(uint64_t * d, uint32_t paramCount, nsXPTCVariant * s,
 // 32-byte alignment instead of 16-byte).  This seems to be the best
 // available workaround, given that this code, which should perhaps
 // better be written in assembly, is written in C++.
+#ifndef __clang__
 #pragma GCC push_options
 #pragma GCC target ("no-avx")
+#endif
 
 EXPORT_XPCOM_API(nsresult)
 NS_InvokeByIndex(nsISupports * that, uint32_t methodIndex,
@@ -175,4 +177,6 @@ NS_InvokeByIndex(nsISupports * that, uint32_t methodIndex,
     return result;
 }
 
+#ifndef __clang__
 #pragma GCC pop_options
+#endif
