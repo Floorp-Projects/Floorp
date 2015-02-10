@@ -10,6 +10,7 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
 let DEFAULT_PROFILER_ENTRIES = 1000000;
 let DEFAULT_PROFILER_INTERVAL = 1;
 let DEFAULT_PROFILER_FEATURES = ["js"];
+let DEFAULT_PROFILER_THREADFILTERS = ["GeckoMain"];
 
 /**
  * The nsIProfiler is target agnostic and interacts with the whole platform.
@@ -47,19 +48,31 @@ ProfilerActor.prototype = {
   },
 
   /**
+   * Returns an array of feature strings, describing the profiler features
+   * that are available on this platform. Can be called while the profiler
+   * is stopped.
+   */
+  onGetFeatures: function() {
+    return { features: nsIProfilerModule.GetFeatures([]) };
+  },
+
+  /**
    * Starts the nsIProfiler module. Doing so will discard any samples
    * that might have been accumulated so far.
    *
    * @param number entries [optional]
    * @param number interval [optional]
    * @param array:string features [optional]
+   * @param array:string threadFilters [description]
    */
   onStartProfiler: function(request = {}) {
     nsIProfilerModule.StartProfiler(
       (request.entries || DEFAULT_PROFILER_ENTRIES),
       (request.interval || DEFAULT_PROFILER_INTERVAL),
       (request.features || DEFAULT_PROFILER_FEATURES),
-      (request.features || DEFAULT_PROFILER_FEATURES).length);
+      (request.features || DEFAULT_PROFILER_FEATURES).length,
+      (request.threadFilters || DEFAULT_PROFILER_THREADFILTERS),
+      (request.threadFilters || DEFAULT_PROFILER_THREADFILTERS).length);
 
     return { started: true };
   },
@@ -86,6 +99,15 @@ ProfilerActor.prototype = {
     let isActive = nsIProfilerModule.IsActive();
     let elapsedTime = isActive ? getElapsedTime() : undefined;
     return { isActive: isActive, currentTime: elapsedTime };
+  },
+
+  /**
+   * Returns a stringified JSON object that describes the shared libraries
+   * which are currently loaded into our process. Can be called while the
+   * profiler is stopped.
+   */
+  onGetSharedLibraryInformation: function() {
+    return { sharedLibraryInformation: nsIProfilerModule.getSharedLibraryInformation() };
   },
 
   /**
@@ -297,11 +319,16 @@ function checkProfilerConsumers() {
 
 /**
  * The request types this actor can handle.
+ * At the moment there are two known users of the Profiler actor:
+ * the devtools and the Gecko Profiler addon, which uses the debugger
+ * protocol to get profiles from Fennec.
  */
 ProfilerActor.prototype.requestTypes = {
+  "getFeatures": ProfilerActor.prototype.onGetFeatures,
   "startProfiler": ProfilerActor.prototype.onStartProfiler,
   "stopProfiler": ProfilerActor.prototype.onStopProfiler,
   "isActive": ProfilerActor.prototype.onIsActive,
+  "getSharedLibraryInformation": ProfilerActor.prototype.onGetSharedLibraryInformation,
   "getProfile": ProfilerActor.prototype.onGetProfile,
   "registerEventNotifications": ProfilerActor.prototype.onRegisterEventNotifications,
   "unregisterEventNotifications": ProfilerActor.prototype.onUnregisterEventNotifications
