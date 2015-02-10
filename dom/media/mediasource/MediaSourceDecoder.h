@@ -21,7 +21,11 @@ class MediaResource;
 class MediaDecoderStateMachine;
 class SourceBufferDecoder;
 class TrackBuffer;
-enum MSRangeRemovalAction : uint8_t;
+
+enum MSRangeRemovalAction: uint8_t {
+  RUN = 0,
+  SKIP = 1
+};
 
 namespace dom {
 
