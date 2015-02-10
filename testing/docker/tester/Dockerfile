@@ -16,7 +16,7 @@ RUN chmod u+x /home/worker/bin/buildbot_step
 RUN pip install virtualenv;
 RUN mkdir Documents; mkdir Pictures; mkdir Music; mkdir Videos; mkdir artifacts
 RUN chown -R worker:worker /home/worker/* /home/worker/.*
-RUN npm install -g taskcluster-vcs@2.1.3
+RUN npm install -g taskcluster-vcs@2.2.0
 ENV PATH $PATH:/home/worker/bin
 
 # TODO Re-enable worker when bug 1093833 lands
