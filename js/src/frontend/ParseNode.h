@@ -131,6 +131,8 @@ class UpvarCookie
     F(ARRAYPUSH) \
     F(LEXICALSCOPE) \
     F(LET) \
+    F(LETBLOCK) \
+    F(LETEXPR) \
     F(IMPORT) \
     F(IMPORT_SPEC_LIST) \
     F(IMPORT_SPEC) \
