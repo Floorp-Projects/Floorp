@@ -13,6 +13,32 @@
 
 class nsTransformedTextRun;
 
+struct nsTransformedCharStyle MOZ_FINAL {
+  NS_INLINE_DECL_REFCOUNTING(nsTransformedCharStyle)
+
+  explicit nsTransformedCharStyle(nsStyleContext* aContext)
+    : mFont(aContext->StyleFont()->mFont)
+    , mLanguage(aContext->StyleFont()->mLanguage)
+    , mPresContext(aContext->PresContext())
+    , mScriptSizeMultiplier(aContext->StyleFont()->mScriptSizeMultiplier)
+    , mTextTransform(aContext->StyleText()->mTextTransform)
+    , mMathVariant(aContext->StyleFont()->mMathVariant)
+    , mExplicitLanguage(aContext->StyleFont()->mExplicitLanguage) {}
+
+  nsFont                  mFont;
+  nsCOMPtr<nsIAtom>       mLanguage;
+  nsRefPtr<nsPresContext> mPresContext;
+  float                   mScriptSizeMultiplier;
+  uint8_t                 mTextTransform;
+  uint8_t                 mMathVariant;
+  bool                    mExplicitLanguage;
+
+private:
+  ~nsTransformedCharStyle() {}
+  nsTransformedCharStyle(const nsTransformedCharStyle& aOther) = delete;
+  nsTransformedCharStyle& operator=(const nsTransformedCharStyle& aOther) = delete;
+};
+
 class nsTransformingTextRunFactory {
 public:
   virtual ~nsTransformingTextRunFactory() {}
@@ -21,12 +47,12 @@ public:
   nsTransformedTextRun* MakeTextRun(const uint8_t* aString, uint32_t aLength,
                                     const gfxFontGroup::Parameters* aParams,
                                     gfxFontGroup* aFontGroup, uint32_t aFlags,
-                                    nsStyleContext** aStyles,
+                                    nsTArray<nsRefPtr<nsTransformedCharStyle>>&& aStyles,
                                     bool aOwnsFactory);
   nsTransformedTextRun* MakeTextRun(const char16_t* aString, uint32_t aLength,
                                     const gfxFontGroup::Parameters* aParams,
                                     gfxFontGroup* aFontGroup, uint32_t aFlags,
-                                    nsStyleContext** aStyles,
+                                    nsTArray<nsRefPtr<nsTransformedCharStyle>>&& aStyles,
                                     bool aOwnsFactory);
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun,
@@ -74,7 +100,7 @@ public:
                               nsTArray<bool>& aDeletedCharsArray,
                               nsTransformedTextRun* aTextRun = nullptr,
                               nsTArray<uint8_t>* aCanBreakBeforeArray = nullptr,
-                              nsTArray<nsStyleContext*>* aStyleArray = nullptr);
+                              nsTArray<nsRefPtr<nsTransformedCharStyle>>* aStyleArray = nullptr);
 
 protected:
   nsAutoPtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;
@@ -87,11 +113,13 @@ protected:
  */
 class nsTransformedTextRun MOZ_FINAL : public gfxTextRun {
 public:
+
   static nsTransformedTextRun *Create(const gfxTextRunFactory::Parameters* aParams,
                                       nsTransformingTextRunFactory* aFactory,
                                       gfxFontGroup* aFontGroup,
                                       const char16_t* aString, uint32_t aLength,
-                                      const uint32_t aFlags, nsStyleContext** aStyles,
+                                      const uint32_t aFlags,
+                                      nsTArray<nsRefPtr<nsTransformedCharStyle>>&& aStyles,
                                       bool aOwnsFactory);
 
   ~nsTransformedTextRun() {
@@ -125,7 +153,7 @@ public:
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) MOZ_MUST_OVERRIDE;
 
   nsTransformingTextRunFactory       *mFactory;
-  nsTArray<nsRefPtr<nsStyleContext> > mStyles;
+  nsTArray<nsRefPtr<nsTransformedCharStyle>> mStyles;
   nsTArray<bool>                      mCapitalize;
   nsString                            mString;
   bool                                mOwnsFactory;
@@ -136,18 +164,14 @@ private:
                        nsTransformingTextRunFactory* aFactory,
                        gfxFontGroup* aFontGroup,
                        const char16_t* aString, uint32_t aLength,
-                       const uint32_t aFlags, nsStyleContext** aStyles,
+                       const uint32_t aFlags,
+                       nsTArray<nsRefPtr<nsTransformedCharStyle>>&& aStyles,
                        bool aOwnsFactory)
     : gfxTextRun(aParams, aLength, aFontGroup, aFlags),
-      mFactory(aFactory), mString(aString, aLength),
+      mFactory(aFactory), mStyles(aStyles), mString(aString, aLength),
       mOwnsFactory(aOwnsFactory), mNeedsRebuild(true)
   {
     mCharacterGlyphs = reinterpret_cast<CompressedGlyph*>(this + 1);
-
-    uint32_t i;
-    for (i = 0; i < aLength; ++i) {
-      mStyles.AppendElement(aStyles[i]);
-    }
   }
 };
 
