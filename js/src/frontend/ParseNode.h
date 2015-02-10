@@ -651,8 +651,7 @@ class ParseNode
      */
     static ParseNode *
     appendOrCreateList(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
-                       FullParseHandler *handler, ParseContext<FullParseHandler> *pc,
-                       bool foldConstants);
+                       FullParseHandler *handler, ParseContext<FullParseHandler> *pc);
 
     inline PropertyName *name() const;
     inline JSAtom *atom() const;

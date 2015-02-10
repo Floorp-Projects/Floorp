@@ -516,7 +516,7 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     sawDeprecatedExpressionClosure(false),
     sawDeprecatedLetBlock(false),
     sawDeprecatedLetExpression(false),
-    handler(cx, *alloc, tokenStream, foldConstants, syntaxParser, lazyOuterFunction)
+    handler(cx, *alloc, tokenStream, syntaxParser, lazyOuterFunction)
 {
     {
         AutoLockForExclusiveAccess lock(cx);
