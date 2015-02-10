@@ -63,6 +63,47 @@ nsScreenGtk :: GetAvailRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth
   
 } // GetAvailRect
 
+double
+nsScreenGtk :: GetDPIScale()
+{
+  double dpiScale = nsIWidget::DefaultScaleOverride();
+  if (dpiScale <= 0.0) {
+    dpiScale = gfxPlatformGtk::GetDPIScale();
+  }
+  return dpiScale;
+}
+
+NS_IMETHODIMP
+nsScreenGtk :: GetRectDisplayPix(int32_t *outLeft,  int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
+{
+  int32_t left, top, width, height;
+
+  GetRect(&left, &top, &width, &height);
+
+  double scaleFactor = 1.0 / GetDPIScale();
+  *outLeft = NSToIntRound(left * scaleFactor);
+  *outTop = NSToIntRound(top * scaleFactor);
+  *outWidth = NSToIntRound(width * scaleFactor);
+  *outHeight = NSToIntRound(height * scaleFactor);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScreenGtk :: GetAvailRectDisplayPix(int32_t *outLeft,  int32_t *outTop,  int32_t *outWidth, int32_t *outHeight)
+{
+  int32_t left, top, width, height;
+
+  GetAvailRect(&left, &top, &width, &height);
+
+  double scaleFactor = 1.0 / GetDPIScale();
+  *outLeft = NSToIntRound(left * scaleFactor);
+  *outTop = NSToIntRound(top * scaleFactor);
+  *outWidth = NSToIntRound(width * scaleFactor);
+  *outHeight = NSToIntRound(height * scaleFactor);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP 
 nsScreenGtk :: GetPixelDepth(int32_t *aPixelDepth)

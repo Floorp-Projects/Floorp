@@ -229,6 +229,16 @@ gfxPlatformGtk::GetDPI()
     return sDPI;
 }
 
+double
+gfxPlatformGtk::GetDPIScale()
+{
+    // We want to set the default CSS to device pixel ratio as the
+    // closest _integer_ multiple, so round the ratio of actual dpi
+    // to CSS dpi (96)
+    int32_t dpi = GetDPI();
+    return (dpi > 96) ? round(dpi/96.0) : 1.0;
+}
+
 gfxImageFormat
 gfxPlatformGtk::GetOffscreenFormat()
 {
