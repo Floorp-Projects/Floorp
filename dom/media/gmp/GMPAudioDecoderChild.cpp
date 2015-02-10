@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPAudioDecoderChild.h"
-#include "GMPChild.h"
+#include "GMPContentChild.h"
 #include "GMPAudioHost.h"
 #include "mozilla/unused.h"
 #include <stdio.h>
@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace gmp {
 
-GMPAudioDecoderChild::GMPAudioDecoderChild(GMPChild* aPlugin)
+GMPAudioDecoderChild::GMPAudioDecoderChild(GMPContentChild* aPlugin)
   : mPlugin(aPlugin)
   , mAudioDecoder(nullptr)
 {

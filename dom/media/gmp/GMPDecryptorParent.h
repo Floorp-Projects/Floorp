@@ -17,7 +17,7 @@ class CryptoSample;
 namespace mozilla {
 namespace gmp {
 
-class GMPParent;
+class GMPContentParent;
 
 class GMPDecryptorParent final : public GMPDecryptorProxy
                                , public PGMPDecryptorParent
@@ -25,7 +25,7 @@ class GMPDecryptorParent final : public GMPDecryptorProxy
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPDecryptorParent)
 
-  explicit GMPDecryptorParent(GMPParent *aPlugin);
+  explicit GMPDecryptorParent(GMPContentParent *aPlugin);
 
   // GMPDecryptorProxy
 
@@ -104,12 +104,14 @@ private:
 
   virtual bool RecvSetCaps(const uint64_t& aCaps) override;
 
+  virtual bool RecvShutdown() override;
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   virtual bool Recv__delete__() override;
 
   bool mIsOpen;
   bool mShuttingDown;
-  nsRefPtr<GMPParent> mPlugin;
+  nsRefPtr<GMPContentParent> mPlugin;
   nsCString mPluginId;
   GMPDecryptorProxyCallback* mCallback;
 #ifdef DEBUG

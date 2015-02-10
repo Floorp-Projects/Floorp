@@ -91,6 +91,11 @@ protected:
   friend class GMPParent;
   void ReAddOnGMPThread(nsRefPtr<GMPParent>& aOld);
   virtual void InitializePlugins() override;
+  virtual bool GetContentParentFrom(const nsACString& aNodeId,
+                                    const nsCString& aAPI,
+                                    const nsTArray<nsCString>& aTags,
+                                    UniquePtr<GetGMPContentParentCallback>&& aCallback)
+    override;
 private:
   GMPParent* ClonePlugin(const GMPParent* aOriginal);
   nsresult EnsurePluginsOnDiskScanned();

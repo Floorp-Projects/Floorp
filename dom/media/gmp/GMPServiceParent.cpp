@@ -297,6 +297,26 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
+bool
+GeckoMediaPluginServiceParent::GetContentParentFrom(const nsACString& aNodeId,
+                                                    const nsCString& aAPI,
+                                                    const nsTArray<nsCString>& aTags,
+                                                    UniquePtr<GetGMPContentParentCallback>&& aCallback)
+{
+  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId, aAPI, aTags);
+
+#ifdef PR_LOGGING
+  nsCString api = aTags[0];
+  LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)this, (void *)gmp, api.get()));
+#endif
+
+  if (!gmp) {
+    return false;
+  }
+
+  return gmp->GetGMPContentParent(Move(aCallback));
+}
+
 void
 GeckoMediaPluginServiceParent::InitializePlugins()
 {

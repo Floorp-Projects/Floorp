@@ -18,7 +18,7 @@
 namespace mozilla {
 namespace gmp {
 
-GMPDecryptorChild::GMPDecryptorChild(GMPChild* aPlugin,
+GMPDecryptorChild::GMPDecryptorChild(GMPContentChild* aPlugin,
                                      const nsTArray<uint8_t>& aPluginVoucher,
                                      const nsTArray<uint8_t>& aSandboxVoucher)
   : mSession(nullptr)

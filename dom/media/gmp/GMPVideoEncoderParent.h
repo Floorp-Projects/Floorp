@@ -18,7 +18,7 @@
 namespace mozilla {
 namespace gmp {
 
-class GMPParent;
+class GMPContentParent;
 
 class GMPVideoEncoderParent : public GMPVideoEncoderProxy,
                               public PGMPVideoEncoderParent,
@@ -27,7 +27,7 @@ class GMPVideoEncoderParent : public GMPVideoEncoderProxy,
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPVideoEncoderParent)
 
-  explicit GMPVideoEncoderParent(GMPParent *aPlugin);
+  explicit GMPVideoEncoderParent(GMPContentParent *aPlugin);
 
   GMPVideoHostImpl& Host();
   void Shutdown();
@@ -69,6 +69,7 @@ private:
   virtual bool RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame,
                            InfallibleTArray<uint8_t>&& aCodecSpecificInfo) override;
   virtual bool RecvError(const GMPErr& aError) override;
+  virtual bool RecvShutdown() override;
   virtual bool RecvParentShmemForPool(Shmem&& aFrameBuffer) override;
   virtual bool AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
                                Shmem* aMem) override;
@@ -76,7 +77,7 @@ private:
 
   bool mIsOpen;
   bool mShuttingDown;
-  nsRefPtr<GMPParent> mPlugin;
+  nsRefPtr<GMPContentParent> mPlugin;
   GMPVideoEncoderCallbackProxy* mCallback;
   GMPVideoHostImpl mVideoHost;
   nsCOMPtr<nsIThread> mEncodedThread;

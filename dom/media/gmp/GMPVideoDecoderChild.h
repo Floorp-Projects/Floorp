@@ -16,14 +16,14 @@
 namespace mozilla {
 namespace gmp {
 
-class GMPChild;
+class GMPContentChild;
 
 class GMPVideoDecoderChild : public PGMPVideoDecoderChild,
                              public GMPVideoDecoderCallback,
                              public GMPSharedMemManager
 {
 public:
-  explicit GMPVideoDecoderChild(GMPChild* aPlugin);
+  explicit GMPVideoDecoderChild(GMPContentChild* aPlugin);
   virtual ~GMPVideoDecoderChild();
 
   void Init(GMPVideoDecoder* aDecoder);
@@ -74,7 +74,7 @@ private:
   virtual bool RecvDrain() override;
   virtual bool RecvDecodingComplete() override;
 
-  GMPChild* mPlugin;
+  GMPContentChild* mPlugin;
   GMPVideoDecoder* mVideoDecoder;
   GMPVideoHostImpl mVideoHost;
 };

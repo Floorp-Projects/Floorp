@@ -281,18 +281,20 @@ GeckoMediaPluginService::GetThread(nsIThread** aThread)
   return NS_OK;
 }
 
-class GetGMPParentForAudioDecoderDone
+class GetGMPContentParentForAudioDecoderDone : public GetGMPContentParentCallback
 {
 public:
-  explicit GetGMPParentForAudioDecoderDone(UniquePtr<GetGMPAudioDecoderCallback>&& aCallback)
+  explicit GetGMPContentParentForAudioDecoderDone(UniquePtr<GetGMPAudioDecoderCallback>&& aCallback)
    : mCallback(Move(aCallback))
   {
   }
 
-  void Done(GMPParent* aGMPParent)
+  virtual void Done(GMPContentParent* aGMPParent) override
   {
     GMPAudioDecoderParent* gmpADP = nullptr;
-    aGMPParent->GetGMPAudioDecoder(&gmpADP);
+    if (aGMPParent) {
+      aGMPParent->GetGMPAudioDecoder(&gmpADP);
+    }
     mCallback->Done(gmpADP);
   }
 
@@ -313,32 +315,29 @@ GeckoMediaPluginService::GetGMPAudioDecoder(nsTArray<nsCString>* aTags,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId,
-                                               NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
-                                               *aTags);
-  if (!gmp) {
+  UniquePtr<GetGMPContentParentCallback> callback(
+    new GetGMPContentParentForAudioDecoderDone(Move(aCallback)));
+  if (!GetContentParentFrom(aNodeId, NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
+                            *aTags, Move(callback))) {
     return NS_ERROR_FAILURE;
   }
-
-  GetGMPParentForAudioDecoderDone(Move(aCallback)).Done(gmp);
 
   return NS_OK;
 }
 
-class GetGMPParentForVideoDecoderDone
+class GetGMPContentParentForVideoDecoderDone : public GetGMPContentParentCallback
 {
 public:
-  explicit GetGMPParentForVideoDecoderDone(UniquePtr<GetGMPVideoDecoderCallback>&& aCallback)
+  explicit GetGMPContentParentForVideoDecoderDone(UniquePtr<GetGMPVideoDecoderCallback>&& aCallback)
    : mCallback(Move(aCallback))
   {
   }
 
-  void Done(GMPParent* aGMPParent)
+  virtual void Done(GMPContentParent* aGMPParent) override
   {
     GMPVideoDecoderParent* gmpVDP = nullptr;
     GMPVideoHostImpl* videoHost = nullptr;
-    nsresult rv = aGMPParent->GetGMPVideoDecoder(&gmpVDP);
-    if (NS_SUCCEEDED(rv)) {
+    if (aGMPParent && NS_SUCCEEDED(aGMPParent->GetGMPVideoDecoder(&gmpVDP))) {
       videoHost = &gmpVDP->Host();
     }
     mCallback->Done(gmpVDP, videoHost);
@@ -361,37 +360,29 @@ GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId,
-                                               NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                                               *aTags);
-#ifdef PR_LOGGING
-  nsCString api = (*aTags)[0];
-  LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)this, (void *)gmp, api.get()));
-#endif
-  if (!gmp) {
+  UniquePtr<GetGMPContentParentCallback> callback(
+    new GetGMPContentParentForVideoDecoderDone(Move(aCallback)));
+  if (!GetContentParentFrom(aNodeId, NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+                            *aTags, Move(callback))) {
     return NS_ERROR_FAILURE;
   }
-
-
-  GetGMPParentForVideoDecoderDone(Move(aCallback)).Done(gmp);
 
   return NS_OK;
 }
 
-class GetGMPParentForVideoEncoderDone
+class GetGMPContentParentForVideoEncoderDone : public GetGMPContentParentCallback
 {
 public:
-  explicit GetGMPParentForVideoEncoderDone(UniquePtr<GetGMPVideoEncoderCallback>&& aCallback)
+  explicit GetGMPContentParentForVideoEncoderDone(UniquePtr<GetGMPVideoEncoderCallback>&& aCallback)
    : mCallback(Move(aCallback))
   {
   }
 
-  void Done(GMPParent* aGMPParent)
+  virtual void Done(GMPContentParent* aGMPParent) override
   {
     GMPVideoEncoderParent* gmpVEP = nullptr;
     GMPVideoHostImpl* videoHost = nullptr;
-    nsresult rv = aGMPParent->GetGMPVideoEncoder(&gmpVEP);
-    if (NS_SUCCEEDED(rv)) {
+    if (aGMPParent && NS_SUCCEEDED(aGMPParent->GetGMPVideoEncoder(&gmpVEP))) {
       videoHost = &gmpVEP->Host();
     }
     mCallback->Done(gmpVEP, videoHost);
@@ -414,34 +405,30 @@ GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId,
-                                               NS_LITERAL_CSTRING(GMP_API_VIDEO_ENCODER),
-                                               *aTags);
-#ifdef PR_LOGGING
-  nsCString api = (*aTags)[0];
-  LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)this, (void *)gmp, api.get()));
-#endif
-  if (!gmp) {
+  UniquePtr<GetGMPContentParentCallback> callback(
+    new GetGMPContentParentForVideoEncoderDone(Move(aCallback)));
+  if (!GetContentParentFrom(aNodeId, NS_LITERAL_CSTRING(GMP_API_VIDEO_ENCODER),
+                            *aTags, Move(callback))) {
     return NS_ERROR_FAILURE;
   }
-
-  GetGMPParentForVideoEncoderDone(Move(aCallback)).Done(gmp);
 
   return NS_OK;
 }
 
-class GetGMPParentForDecryptorDone
+class GetGMPContentParentForDecryptorDone : public GetGMPContentParentCallback
 {
 public:
-  explicit GetGMPParentForDecryptorDone(UniquePtr<GetGMPDecryptorCallback>&& aCallback)
+  explicit GetGMPContentParentForDecryptorDone(UniquePtr<GetGMPDecryptorCallback>&& aCallback)
    : mCallback(Move(aCallback))
   {
   }
 
-  void Done(GMPParent* aGMPParent)
+  virtual void Done(GMPContentParent* aGMPParent) override
   {
     GMPDecryptorParent* ksp = nullptr;
-    aGMPParent->GetGMPDecryptor(&ksp);
+    if (aGMPParent) {
+      aGMPParent->GetGMPDecryptor(&ksp);
+    }
     mCallback->Done(ksp);
   }
 
@@ -470,14 +457,12 @@ GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId,
-                                               NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
-                                               *aTags);
-  if (!gmp) {
+  UniquePtr<GetGMPContentParentCallback> callback(
+    new GetGMPContentParentForDecryptorDone(Move(aCallback)));
+  if (!GetContentParentFrom(aNodeId, NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
+                            *aTags, Move(callback))) {
     return NS_ERROR_FAILURE;
   }
-
-  GetGMPParentForDecryptorDone(Move(aCallback)).Done(gmp);
 
   return NS_OK;
 }
