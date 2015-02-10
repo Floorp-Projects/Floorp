@@ -479,8 +479,7 @@ NeckoParent::DeallocPUDPSocketParent(PUDPSocketParent* actor)
 
 PDNSRequestParent*
 NeckoParent::AllocPDNSRequestParent(const nsCString& aHost,
-                                    const uint32_t& aFlags,
-                                    const nsCString& aNetworkInterface)
+                                    const uint32_t& aFlags)
 {
   DNSRequestParent *p = new DNSRequestParent();
   p->AddRef();
@@ -490,11 +489,9 @@ NeckoParent::AllocPDNSRequestParent(const nsCString& aHost,
 bool
 NeckoParent::RecvPDNSRequestConstructor(PDNSRequestParent* aActor,
                                         const nsCString& aHost,
-                                        const uint32_t& aFlags,
-                                        const nsCString& aNetworkInterface)
+                                        const uint32_t& aFlags)
 {
-  static_cast<DNSRequestParent*>(aActor)->DoAsyncResolve(aHost, aFlags,
-                                                         aNetworkInterface);
+  static_cast<DNSRequestParent*>(aActor)->DoAsyncResolve(aHost, aFlags);
   return true;
 }
 
