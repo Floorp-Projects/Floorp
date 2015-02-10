@@ -136,7 +136,7 @@ TrackBuffer::ContinueShutdown()
     return;
   }
 
-  mCurrentDecoder = nullptr;
+  MOZ_ASSERT(!mCurrentDecoder, "Detach() should have been called");
   mInitializedDecoders.Clear();
   mParentDecoder = nullptr;
 
@@ -674,6 +674,7 @@ TrackBuffer::RegisterDecoder(SourceBufferDecoder* aDecoder)
 void
 TrackBuffer::DiscardCurrentDecoder()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
   EndCurrentDecoder();
   mCurrentDecoder = nullptr;
