@@ -325,6 +325,11 @@
     "kind": "flag",
     "description": "Has seen location error"
   },
+  "GEOLOCATION_OSX_SOURCE_IS_MLS": {
+    "expires_in_version": "default",
+    "kind": "boolean",
+    "description": "Geolocation on OS X is either MLS or CoreLocation"
+  },
   "JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT": {
     "expires_in_version": "never",
     "kind": "enumerated",
