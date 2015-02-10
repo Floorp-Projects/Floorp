@@ -314,6 +314,7 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_DIVASSIGN:
       case PNK_MODASSIGN:
       // ...and a few others.
+      case PNK_ELEM:
       case PNK_COLON:
       case PNK_CASE:
       case PNK_SHORTHAND:
@@ -323,6 +324,17 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_LETBLOCK:
       case PNK_FOR:
         return PushBinaryNodeChildren(pn, stack);
+
+      // PNK_WITH is PN_BINARY_OBJ -- that is, PN_BINARY with (irrelevant for
+      // this method's purposes) the addition of the StaticWithObject as
+      // pn_binary_obj.  Both left (expression) and right (statement) are
+      // non-null.
+      case PNK_WITH: {
+        MOZ_ASSERT(pn->isArity(PN_BINARY_OBJ));
+        stack->push(pn->pn_left);
+        stack->push(pn->pn_right);
+        return PushResult::Recyclable;
+      }
 
       // Default nodes, for dumb reasons that we're not changing now (mostly
       // structural semi-consistency with PNK_CASE nodes), have a null left
@@ -351,6 +363,20 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         stack->push(pn->pn_right);
         return PushResult::Recyclable;
       }
+
+      // A return node's left half is what you'd expect: the return expression,
+      // if any.  The right half is non-null only for returns inside generator
+      // functions, with the structure described in the assertions.
+      case PNK_RETURN:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+#ifdef DEBUG
+        if (pn->pn_right) {
+            MOZ_ASSERT(pn->pn_right->isKind(PNK_NAME));
+            MOZ_ASSERT(pn->pn_right->pn_atom->equals(".genrval"));
+            MOZ_ASSERT(pn->pn_right->isAssigned());
+        }
+#endif
+        return PushBinaryNodeNullableChildren(pn, stack);
 
       // Ternary nodes with all children non-null.
       case PNK_CONDITIONAL: {
@@ -405,6 +431,19 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         return PushResult::Recyclable;
       }
 
+      // A catch node has first kid as catch-variable pattern, the second kid
+      // as catch condition (which, if non-null, records the |<cond>| in
+      // SpiderMonkey's |catch (e if <cond>)| extension), and third kid as the
+      // statements in the catch block.
+      case PNK_CATCH: {
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        stack->push(pn->pn_kid1);
+        if (pn->pn_kid2)
+            stack->push(pn->pn_kid2);
+        stack->push(pn->pn_kid3);
+        return PushResult::Recyclable;
+      }
+
       // List nodes with all non-null children.
       case PNK_OR:
       case PNK_AND:
@@ -430,6 +469,9 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_DIV:
       case PNK_MOD:
       case PNK_COMMA:
+      case PNK_NEW:
+      case PNK_CALL:
+      case PNK_GENEXP:
       case PNK_ARRAY:
       case PNK_OBJECT:
       case PNK_VAR:
@@ -441,22 +483,15 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         return PushListNodeChildren(pn, stack);
 
       case PNK_LABEL:
+      case PNK_DOT:
         return PushNameNodeChildren(pn, stack);
 
-      case PNK_DOT:
-      case PNK_ELEM:
       case PNK_STATEMENTLIST:
-      case PNK_CALL:
       case PNK_NAME:
       case PNK_TEMPLATE_STRING_LIST:
       case PNK_TAGGED_TEMPLATE:
       case PNK_CALLSITEOBJ:
       case PNK_FUNCTION:
-      case PNK_WITH:
-      case PNK_RETURN:
-      case PNK_NEW:
-      case PNK_CATCH:
-      case PNK_GENEXP:
       case PNK_ARRAYCOMP:
       case PNK_LEXICALSCOPE:
       case PNK_LET:
