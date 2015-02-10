@@ -258,7 +258,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     AllocationSiteList allocationsLog;
     size_t allocationsLogLength;
     size_t maxAllocationsLogLength;
+    bool allocationsLogOverflowed;
+
     static const size_t DEFAULT_MAX_ALLOCATIONS_LOG_LENGTH = 5000;
+
     bool appendAllocationSite(JSContext *cx, HandleSavedFrame frame, int64_t when);
     void emptyAllocationsLog();
 
