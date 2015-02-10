@@ -7,8 +7,7 @@
 @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 html|body,
-xul|page,
-xul|window {
+xul|page {
   font: message-box;
   -moz-appearance: none;
   background-color: #fbfbfb;

@@ -4,13 +4,12 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<?xml-stylesheet href="chrome://global/skin/in-content/info-pages.css" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/config.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/config.dtd">
 
 <window id="config"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         title="&window.title;"
         windowtype="Preferences:ConfigManager"
         role="application"
@@ -53,18 +52,17 @@
 <deck id="configDeck" flex="1">
   <vbox id="warningScreen" flex="1" align="center" style="overflow: auto;">
     <spacer flex="1"/>
-    <vbox id="warningBox" class="container">
-      <hbox class="title" flex="1">
-        <label id="warningTitle" class="title-text" flex="1">&aboutWarningTitle.label;</label>
-      </hbox>
-      <vbox class="description" flex="1">
+    <hbox id="warningBox" align="top">
+      <image id="exclam"/>
+      <vbox id="warningInnerBox" flex="1">
+        <label id="warningTitle">&aboutWarningTitle.label;</label>
         <label id="warningText">&aboutWarningText.label;</label>
         <checkbox id="showWarningNextTime" label="&aboutWarningCheckbox.label;" checked="true"/>
         <hbox pack="center">
-          <button id="warningButton" class="primary" oncommand="ShowPrefs();" label="&aboutWarningButton.label;"/>
+          <button id="warningButton" oncommand="ShowPrefs();" label="&aboutWarningButton.label;"/>
         </hbox>
       </vbox>
-    </vbox>
+    </hbox>
     <spacer flex="2"/>
   </vbox>
   <vbox flex="1">
