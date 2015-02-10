@@ -698,6 +698,7 @@ uint32_t GetIndexFromString(JSString *str);
 bool DebugPrologue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustReturn);
 bool DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok);
 bool DebugEpilogueOnBaselineReturn(JSContext *cx, BaselineFrame *frame, jsbytecode *pc);
+void FrameIsDebuggeeCheck(BaselineFrame *frame);
 
 JSObject *CreateGenerator(JSContext *cx, BaselineFrame *frame);
 bool NormalSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc,
