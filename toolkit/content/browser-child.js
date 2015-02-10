@@ -67,7 +67,8 @@ let WebProgressListener = {
       aWebProgress = {
         isTopLevel: aWebProgress.isTopLevel,
         isLoadingDocument: aWebProgress.isLoadingDocument,
-        loadType: aWebProgress.loadType
+        loadType: aWebProgress.loadType,
+        DOMWindowID: aWebProgress.DOMWindowID,
       };
     }
 
