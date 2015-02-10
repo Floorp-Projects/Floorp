@@ -7,6 +7,7 @@
 #include "nsIThread.idl"
 
 %{C++
+#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 #include "nsStringGlue.h"
 class GMPAudioDecoderProxy;
@@ -14,16 +15,36 @@ class GMPDecryptorProxy;
 class GMPVideoDecoderProxy;
 class GMPVideoEncoderProxy;
 class GMPVideoHost;
+
+template<class T>
+class GMPGetterCallback
+{
+public:
+  GMPGetterCallback() { MOZ_COUNT_CTOR(GMPGetterCallback<T>); }
+  virtual ~GMPGetterCallback() { MOZ_COUNT_DTOR(GMPGetterCallback<T>); }
+  virtual void Done(T*) = 0;
+};
+template<class T>
+class GMPVideoGetterCallback
+{
+public:
+  GMPVideoGetterCallback() { MOZ_COUNT_CTOR(GMPVideoGetterCallback<T>); }
+  virtual ~GMPVideoGetterCallback() { MOZ_COUNT_DTOR(GMPVideoGetterCallback<T>); }
+  virtual void Done(T*, GMPVideoHost*) = 0;
+};
+typedef GMPGetterCallback<GMPDecryptorProxy> GetGMPDecryptorCallback;
+typedef GMPGetterCallback<GMPAudioDecoderProxy> GetGMPAudioDecoderCallback;
+typedef GMPVideoGetterCallback<GMPVideoDecoderProxy> GetGMPVideoDecoderCallback;
+typedef GMPVideoGetterCallback<GMPVideoEncoderProxy> GetGMPVideoEncoderCallback;
 %}
 
-[ptr] native GMPVideoDecoderProxy(GMPVideoDecoderProxy);
-[ptr] native GMPVideoEncoderProxy(GMPVideoEncoderProxy);
-[ptr] native GMPVideoHost(GMPVideoHost);
 [ptr] native TagArray(nsTArray<nsCString>);
-[ptr] native GMPDecryptorProxy(GMPDecryptorProxy);
-[ptr] native GMPAudioDecoderProxy(GMPAudioDecoderProxy);
+native GetGMPDecryptorCallback(mozilla::UniquePtr<GetGMPDecryptorCallback>&&);
+native GetGMPAudioDecoderCallback(mozilla::UniquePtr<GetGMPAudioDecoderCallback>&&);
+native GetGMPVideoDecoderCallback(mozilla::UniquePtr<GetGMPVideoDecoderCallback>&&);
+native GetGMPVideoEncoderCallback(mozilla::UniquePtr<GetGMPVideoEncoderCallback>&&);
 
-[scriptable, uuid(fed4d2d8-87d8-42fe-a141-98c15b5f7a1e)]
+[scriptable, uuid(11bb248b-7a4b-4f62-bebb-8211551d8c20)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
 
@@ -52,35 +73,63 @@ interface mozIGeckoMediaPluginService : nsISupports
    * The array of tags should at least contain a codec tag, and optionally
    * other tags such as for EME keysystem.
    * Callable only on GMP thread.
+   * This is an asynchronous operation, the Done method of the callback object
+   * will be called on the GMP thread with the result (which might be null in
+   * the case of failure). This method always takes ownership of the callback
+   * object, but if this method returns an error then the Done method of the
+   * callback object will not be called at all.
    */
   [noscript]
-  GMPVideoDecoderProxy getGMPVideoDecoder(in TagArray tags,
-                                          [optional] in ACString nodeId,
-                                          out GMPVideoHost outVideoHost);
+  void getGMPVideoDecoder(in TagArray tags,
+                          [optional] in ACString nodeId,
+                          in GetGMPVideoDecoderCallback callback);
 
   /**
    * Get a video encoder that supports the specified tags.
    * The array of tags should at least contain a codec tag, and optionally
    * other tags.
    * Callable only on GMP thread.
+   * This is an asynchronous operation, the Done method of the callback object
+   * will be called on the GMP thread with the result (which might be null in
+   * the case of failure). This method always takes ownership of the callback
+   * object, but if this method returns an error then the Done method of the
+   * callback object will not be called at all.
    */
   [noscript]
-  GMPVideoEncoderProxy getGMPVideoEncoder(in TagArray tags,
-		                                      [optional] in ACString nodeId,
-		                                      out GMPVideoHost outVideoHost);
+  void getGMPVideoEncoder(in TagArray tags,
+		                      [optional] in ACString nodeId,
+		                      in GetGMPVideoEncoderCallback callback);
 
-  // Returns an audio decoder that supports the specified tags.
-  // The array of tags should at least contain a codec tag, and optionally
-  // other tags such as for EME keysystem.
-  // Callable only on GMP thread.
-  GMPAudioDecoderProxy getGMPAudioDecoder(in TagArray tags,
-                                          [optional] in ACString nodeId);
+  /**
+   * Returns an audio decoder that supports the specified tags.
+   * The array of tags should at least contain a codec tag, and optionally
+   * other tags such as for EME keysystem.
+   * Callable only on GMP thread.
+   * This is an asynchronous operation, the Done method of the callback object
+   * will be called on the GMP thread with the result (which might be null in
+   * the case of failure). This method always takes ownership of the callback
+   * object, but if this method returns an error then the Done method of the
+   * callback object will not be called at all.
+   */
+  [noscript]
+  void getGMPAudioDecoder(in TagArray tags,
+                          [optional] in ACString nodeId,
+                          in GetGMPAudioDecoderCallback callback);
 
-  // Returns a decryption session manager that supports the specified tags.
-  // The array of tags should at least contain a key system tag, and optionally
-  // other tags.
-  // Callable only on GMP thread.
-  GMPDecryptorProxy getGMPDecryptor(in TagArray tags, in ACString nodeId);
+  /**
+   * Returns a decryption session manager that supports the specified tags.
+   * The array of tags should at least contain a key system tag, and optionally
+   * other tags.
+   * Callable only on GMP thread.
+   * This is an asynchronous operation, the Done method of the callback object
+   * will be called on the GMP thread with the result (which might be null in
+   * the case of failure). This method always takes ownership of the callback
+   * object, but if this method returns an error then the Done method of the
+   * callback object will not be called at all.
+   */
+  [noscript]
+  void getGMPDecryptor(in TagArray tags, in ACString nodeId,
+                       in GetGMPDecryptorCallback callback);
 
   /**
    * Gets the NodeId for a (origin, urlbarOrigin, isInprivateBrowsing) tuple.

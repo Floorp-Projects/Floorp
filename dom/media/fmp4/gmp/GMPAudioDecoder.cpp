@@ -133,6 +133,39 @@ GMPAudioDecoder::GetNodeId()
   return NS_LITERAL_CSTRING("");
 }
 
+void
+GMPAudioDecoder::GetGMPAPI(GMPInitDoneRunnable* aInitDone)
+{
+  MOZ_ASSERT(IsOnGMPThread());
+
+  nsTArray<nsCString> tags;
+  InitTags(tags);
+  UniquePtr<GetGMPAudioDecoderCallback> callback(
+    new GMPInitDoneCallback(this, aInitDone));
+  if (NS_FAILED(mMPS->GetGMPAudioDecoder(&tags, GetNodeId(), Move(callback)))) {
+    aInitDone->Dispatch();
+  }
+}
+
+void
+GMPAudioDecoder::GMPInitDone(GMPAudioDecoderProxy* aGMP)
+{
+  MOZ_ASSERT(aGMP);
+  nsTArray<uint8_t> codecSpecific;
+  codecSpecific.AppendElements(mConfig.audio_specific_config->Elements(),
+                               mConfig.audio_specific_config->Length());
+
+  nsresult rv = aGMP->InitDecode(kGMPAudioCodecAAC,
+                                 mConfig.channel_count,
+                                 mConfig.bits_per_sample,
+                                 mConfig.samples_per_second,
+                                 codecSpecific,
+                                 mAdapter);
+  if (NS_SUCCEEDED(rv)) {
+    mGMP = aGMP;
+  }
+}
+
 nsresult
 GMPAudioDecoder::Init()
 {
@@ -141,25 +174,20 @@ GMPAudioDecoder::Init()
   mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   MOZ_ASSERT(mMPS);
 
-  nsTArray<nsCString> tags;
-  InitTags(tags);
-  nsresult rv = mMPS->GetGMPAudioDecoder(&tags, GetNodeId(), &mGMP);
-  NS_ENSURE_SUCCESS(rv, rv);
-  MOZ_ASSERT(mGMP);
+  nsCOMPtr<nsIThread> gmpThread = NS_GetCurrentThread();
 
-  nsTArray<uint8_t> codecSpecific;
-  codecSpecific.AppendElements(mConfig.audio_specific_config->Elements(),
-                               mConfig.audio_specific_config->Length());
+  nsRefPtr<GMPInitDoneRunnable> initDone(new GMPInitDoneRunnable());
+  gmpThread->Dispatch(
+    NS_NewRunnableMethodWithArg<GMPInitDoneRunnable*>(this,
+                                                      &GMPAudioDecoder::GetGMPAPI,
+                                                      initDone),
+    NS_DISPATCH_NORMAL);
 
-  rv = mGMP->InitDecode(kGMPAudioCodecAAC,
-                        mConfig.channel_count,
-                        mConfig.bits_per_sample,
-                        mConfig.samples_per_second,
-                        codecSpecific,
-                        mAdapter);
-  NS_ENSURE_SUCCESS(rv, rv);
+  while (!initDone->IsDone()) {
+    NS_ProcessNextEvent(gmpThread, true);
+  }
 
-  return NS_OK;
+  return mGMP ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult

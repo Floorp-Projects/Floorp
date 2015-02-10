@@ -174,6 +174,7 @@ public:
 #endif
 
 private:
+  friend class gmp_InitDoneCallback;
 
   struct InitData {
     uint32_t mPromiseId;
@@ -183,7 +184,8 @@ private:
   };
 
   // GMP thread only.
-  void gmp_Init(nsAutoPtr<InitData> aData);
+  void gmp_Init(nsAutoPtr<InitData>&& aData);
+  void gmp_InitDone(GMPDecryptorProxy* aCDM, nsAutoPtr<InitData>&& aData);
 
   // GMP thread only.
   void gmp_Shutdown();
@@ -320,6 +322,10 @@ private:
   // from it.
   // GMP thread only.
   uint32_t mDecryptionJobCount;
+
+  // True if CDMProxy::gmp_Shutdown was called.
+  // GMP thread only.
+  bool mShutdownCalled;
 };
 
 
