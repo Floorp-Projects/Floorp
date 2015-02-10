@@ -8,7 +8,7 @@
 <script type="application/javascript">
   createHTML({
     bug: "1017888",
-    title: "Renegotiation: add second audio stream"
+    title: "Renegotiation: add second audio stream, no bundle"
   });
 
   var test;
@@ -19,10 +19,19 @@
         function PC_LOCAL_ADD_SECOND_STREAM(test) {
           test.setMediaConstraints([{audio: true}, {audio: true}],
                                    [{audio: true}]);
+          // Since this is a NoBundle variant, adding a track will cause us to
+          // go back to checking.
+          test.pcLocal.iceCheckingRestartExpected = true;
           return test.pcLocal.getAllUserMedia([{audio: true}]);
+        },
+        function PC_REMOTE_EXPECT_ICE_CHECKING(test) {
+          test.pcRemote.iceCheckingRestartExpected = true;
         },
       ]
     );
+
+    test.chain.insertAfterEach('PC_LOCAL_CREATE_OFFER',
+                              PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER);
 
     // TODO(bug 1093835): figure out how to verify if media flows through the new stream
     test.setMediaConstraints([{audio: true}], [{audio: true}]);

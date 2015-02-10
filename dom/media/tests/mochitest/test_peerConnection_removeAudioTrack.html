@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
@@ -8,7 +8,7 @@
 <script type="application/javascript">
   createHTML({
     bug: "1017888",
-    title: "Renegotiation: add second audio stream"
+    title: "Renegotiation: remove audio track"
   });
 
   var test;
@@ -16,15 +16,16 @@
     test = new PeerConnectionTest(options);
     addRenegotiation(test.chain,
       [
-        function PC_LOCAL_ADD_SECOND_STREAM(test) {
-          test.setMediaConstraints([{audio: true}, {audio: true}],
-                                   [{audio: true}]);
-          return test.pcLocal.getAllUserMedia([{audio: true}]);
+        function PC_LOCAL_REMOVE_AUDIO_TRACK(test) {
+          test.setOfferOptions({ offerToReceiveAudio: true });
+          test.setMediaConstraints([], [{audio: true}]);
+          return test.pcLocal.removeSender(0);
         },
       ]
     );
 
-    // TODO(bug 1093835): figure out how to verify if media flows through the new stream
+    // TODO(bug 1093835): figure out how to verify that media stopped flowing from pcLocal
+
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.run();
   });
