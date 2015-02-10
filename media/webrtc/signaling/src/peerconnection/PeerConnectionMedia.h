@@ -86,9 +86,6 @@ public:
   nsresult StorePipeline(const std::string& trackId,
                          const RefPtr<MediaPipeline>& aPipeline);
 
-  nsresult StoreConduit(const std::string& trackId,
-                        RefPtr<MediaSessionConduit> aConduit);
-
   virtual void AddTrack(const std::string& trackId) { mTracks.insert(trackId); }
   void RemoveTrack(const std::string& trackId);
   bool HasTrack(const std::string& trackId) const
@@ -102,7 +99,6 @@ public:
   const std::map<std::string, RefPtr<MediaPipeline>>&
   GetPipelines() const { return mPipelines; }
   RefPtr<MediaPipeline> GetPipelineByTrackId_m(const std::string& trackId);
-  RefPtr<MediaSessionConduit> GetConduitByTrackId_m(const std::string& trackId);
   const std::string& GetId() const { return mId; }
 
   void DetachTransport_s();
@@ -116,7 +112,6 @@ protected:
   // and conduits are set up once offer/answer completes.
   std::set<std::string> mTracks;
   std::map<std::string, RefPtr<MediaPipeline>> mPipelines;
-  std::map<std::string, RefPtr<MediaSessionConduit>> mConduits;
 };
 
 // TODO(ekr@rtfm.com): Refactor {Local,Remote}SourceStreamInfo
@@ -324,42 +319,43 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   static void DtlsConnected_m(const std::string& aParentHandle,
                               bool aPrivacyRequested);
 
-  RefPtr<MediaSessionConduit> GetConduit(const std::string& streamId,
-                                         const std::string& trackId,
-                                         bool aReceive) {
-    SourceStreamInfo* info;
-    if (aReceive) {
-      info = GetRemoteStreamById(streamId);
-    } else {
-      info = GetLocalStreamById(streamId);
-    }
-
-    if (!info) {
-      MOZ_ASSERT(false);
+  RefPtr<AudioSessionConduit> GetAudioConduit(size_t level) {
+    auto it = mConduits.find(level);
+    if (it == mConduits.end()) {
       return nullptr;
     }
 
-    return info->GetConduitByTrackId_m(trackId);
+    if (it->second.first) {
+      MOZ_ASSERT(false, "In GetAudioConduit, we found a video conduit!");
+      return nullptr;
+    }
+
+    return RefPtr<AudioSessionConduit>(
+        static_cast<AudioSessionConduit*>(it->second.second.get()));
+  }
+
+  RefPtr<VideoSessionConduit> GetVideoConduit(size_t level) {
+    auto it = mConduits.find(level);
+    if (it == mConduits.end()) {
+      return nullptr;
+    }
+
+    if (!it->second.first) {
+      MOZ_ASSERT(false, "In GetVideoConduit, we found an audio conduit!");
+      return nullptr;
+    }
+
+    return RefPtr<VideoSessionConduit>(
+        static_cast<VideoSessionConduit*>(it->second.second.get()));
   }
 
   // Add a conduit
-  void AddConduit(const std::string& streamId,
-                  const std::string& trackId,
-                  bool aReceive,
-                  const RefPtr<MediaSessionConduit> &aConduit) {
-    SourceStreamInfo* info;
-    if (aReceive) {
-      info = GetRemoteStreamById(streamId);
-    } else {
-      info = GetLocalStreamById(streamId);
-    }
+  void AddAudioConduit(size_t level, const RefPtr<AudioSessionConduit> &aConduit) {
+    mConduits[level] = std::make_pair(false, aConduit);
+  }
 
-    if (!info) {
-      MOZ_ASSERT(false);
-      return;
-    }
-
-    info->StoreConduit(trackId, aConduit);
+  void AddVideoConduit(size_t level, const RefPtr<VideoSessionConduit> &aConduit) {
+    mConduits[level] = std::make_pair(true, aConduit);
   }
 
   // ICE state signals
@@ -454,6 +450,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // A list of streams provided by the other side
   // This is only accessed on the main thread (with one special exception)
   nsTArray<nsRefPtr<RemoteSourceStreamInfo> > mRemoteSourceStreams;
+
+  std::map<size_t, std::pair<bool, RefPtr<MediaSessionConduit>>> mConduits;
 
   // Allow loopback for ICE.
   bool mAllowIceLoopback;

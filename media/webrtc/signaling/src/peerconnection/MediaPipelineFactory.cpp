@@ -353,6 +353,19 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
 
   RefPtr<MediaPipeline> pipeline =
     stream->GetPipelineByTrackId_m(aTrack.GetTrackId());
+
+  if (pipeline && pipeline->level() != static_cast<int>(level)) {
+    MOZ_MTLOG(ML_WARNING, "Track " << aTrack.GetTrackId() <<
+                          " has moved from level " << pipeline->level() <<
+                          " to level " << level <<
+                          ". This requires re-creating the MediaPipeline.");
+    // Since we do not support changing the conduit on a pre-existing
+    // MediaPipeline
+    pipeline = nullptr;
+    stream->RemoveTrack(aTrack.GetTrackId());
+    stream->AddTrack(aTrack.GetTrackId());
+  }
+
   if (pipeline) {
     pipeline->UpdateTransport_m(level, rtpFlow, rtcpFlow, filter);
     return NS_OK;
@@ -366,11 +379,11 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
 
   RefPtr<MediaSessionConduit> conduit;
   if (aTrack.GetMediaType() == SdpMediaSection::kAudio) {
-    rv = CreateAudioConduit(aTrackPair, aTrack, &conduit);
+    rv = GetOrCreateAudioConduit(aTrackPair, aTrack, &conduit);
     if (NS_FAILED(rv))
       return rv;
   } else if (aTrack.GetMediaType() == SdpMediaSection::kVideo) {
-    rv = CreateVideoConduit(aTrackPair, aTrack, &conduit);
+    rv = GetOrCreateVideoConduit(aTrackPair, aTrack, &conduit);
     if (NS_FAILED(rv))
       return rv;
   } else {
@@ -527,9 +540,10 @@ MediaPipelineFactory::CreateMediaPipelineSending(
 }
 
 nsresult
-MediaPipelineFactory::CreateAudioConduit(const JsepTrackPair& aTrackPair,
-                                         const JsepTrack& aTrack,
-                                         RefPtr<MediaSessionConduit>* aConduitp)
+MediaPipelineFactory::GetOrCreateAudioConduit(
+    const JsepTrackPair& aTrackPair,
+    const JsepTrack& aTrack,
+    RefPtr<MediaSessionConduit>* aConduitp)
 {
 
   if (!aTrack.GetNegotiatedDetails()) {
@@ -540,18 +554,18 @@ MediaPipelineFactory::CreateAudioConduit(const JsepTrackPair& aTrackPair,
   bool receiving =
       aTrack.GetDirection() == JsepTrack::Direction::kJsepTrackReceiving;
 
-  RefPtr<AudioSessionConduit> conduit = AudioSessionConduit::Create(
-      static_cast<AudioSessionConduit*>(nullptr));
+  RefPtr<AudioSessionConduit> conduit =
+    mPCMedia->GetAudioConduit(aTrackPair.mLevel);
 
   if (!conduit) {
-    MOZ_MTLOG(ML_ERROR, "Could not create audio conduit");
-    return NS_ERROR_FAILURE;
-  }
+    conduit = AudioSessionConduit::Create();
+    if (!conduit) {
+      MOZ_MTLOG(ML_ERROR, "Could not create audio conduit");
+      return NS_ERROR_FAILURE;
+    }
 
-  mPCMedia->AddConduit(aTrack.GetStreamId(),
-                       aTrack.GetTrackId(),
-                       receiving,
-                       conduit);
+    mPCMedia->AddAudioConduit(aTrackPair.mLevel, conduit);
+  }
 
   size_t numCodecs = aTrack.GetNegotiatedDetails()->GetCodecCount();
   if (numCodecs == 0) {
@@ -641,9 +655,10 @@ MediaPipelineFactory::CreateAudioConduit(const JsepTrackPair& aTrackPair,
 }
 
 nsresult
-MediaPipelineFactory::CreateVideoConduit(const JsepTrackPair& aTrackPair,
-                                         const JsepTrack& aTrack,
-                                         RefPtr<MediaSessionConduit>* aConduitp)
+MediaPipelineFactory::GetOrCreateVideoConduit(
+    const JsepTrackPair& aTrackPair,
+    const JsepTrack& aTrack,
+    RefPtr<MediaSessionConduit>* aConduitp)
 {
 
   if (!aTrack.GetNegotiatedDetails()) {
@@ -654,18 +669,18 @@ MediaPipelineFactory::CreateVideoConduit(const JsepTrackPair& aTrackPair,
   bool receiving =
       aTrack.GetDirection() == JsepTrack::Direction::kJsepTrackReceiving;
 
-  RefPtr<VideoSessionConduit> conduit = VideoSessionConduit::Create(
-      static_cast<VideoSessionConduit*>(nullptr), receiving);
+  RefPtr<VideoSessionConduit> conduit =
+    mPCMedia->GetVideoConduit(aTrackPair.mLevel);
 
   if (!conduit) {
-    MOZ_MTLOG(ML_ERROR, "Could not create video conduit");
-    return NS_ERROR_FAILURE;
-  }
+    conduit = VideoSessionConduit::Create();
+    if (!conduit) {
+      MOZ_MTLOG(ML_ERROR, "Could not create audio conduit");
+      return NS_ERROR_FAILURE;
+    }
 
-  mPCMedia->AddConduit(aTrack.GetStreamId(),
-                       aTrack.GetTrackId(),
-                       receiving,
-                       conduit);
+    mPCMedia->AddVideoConduit(aTrackPair.mLevel, conduit);
+  }
 
   size_t numCodecs = aTrack.GetNegotiatedDetails()->GetCodecCount();
   if (numCodecs == 0) {

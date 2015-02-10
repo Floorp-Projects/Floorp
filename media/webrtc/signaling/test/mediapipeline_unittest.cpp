@@ -132,7 +132,7 @@ class TestAgent {
  public:
   TestAgent() :
       audio_config_(109, "opus", 48000, 960, 2, 64000),
-      audio_conduit_(mozilla::AudioSessionConduit::Create(nullptr)),
+      audio_conduit_(mozilla::AudioSessionConduit::Create()),
       audio_(),
       audio_pipeline_() {
   }
@@ -623,14 +623,14 @@ TEST_F(MediaPipelineFilterTest, TestFilterReport1SSRCTruncated) {
     SSRC(16),
     0,0,0
   };
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rr, sizeof(rr)));
   const unsigned char sr[] = {
     RTCP_TYPEINFO(1, MediaPipelineFilter::RECEIVER_REPORT_T, 12),
     REPORT_FRAGMENT(16),
     0,0,0
   };
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(sr, sizeof(rr)));
 }
 
@@ -670,10 +670,18 @@ TEST_F(MediaPipelineFilterTest, TestFilterReport1Inconsistent) {
   // So, when RTCP shows up with a remote SSRC that matches, and a local
   // ssrc that doesn't, we assume the other end has messed up and put ssrcs
   // from more than one m-line in the packet.
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  // TODO: Currently, the webrtc.org code will continue putting old ssrcs
+  // in RTCP that have been negotiated away, causing the RTCP to be dropped
+  // if we leave this checking in. Not sure how we're supposed to prompt
+  // the webrtc.org code to stop doing this.
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rtcp_sr_s16_r17, sizeof(rtcp_sr_s16_r17)));
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rtcp_rr_s16_r17, sizeof(rtcp_rr_s16_r17)));
+  //ASSERT_EQ(MediaPipelineFilter::FAIL,
+  //          filter.FilterRTCP(rtcp_sr_s16_r17, sizeof(rtcp_sr_s16_r17)));
+  //ASSERT_EQ(MediaPipelineFilter::FAIL,
+  //          filter.FilterRTCP(rtcp_rr_s16_r17, sizeof(rtcp_rr_s16_r17)));
 }
 
 TEST_F(MediaPipelineFilterTest, TestFilterReport1NeitherMatch) {
@@ -712,23 +720,35 @@ TEST_F(MediaPipelineFilterTest, TestFilterReport2Inconsistent101) {
   MediaPipelineFilter filter;
   filter.AddRemoteSSRC(16);
   filter.AddLocalSSRC(18);
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rtcp_sr_s16_r17_18,
                               sizeof(rtcp_sr_s16_r17_18)));
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rtcp_rr_s16_r17_18,
                               sizeof(rtcp_rr_s16_r17_18)));
+  //ASSERT_EQ(MediaPipelineFilter::FAIL,
+  //          filter.FilterRTCP(rtcp_sr_s16_r17_18,
+  //                            sizeof(rtcp_sr_s16_r17_18)));
+  //ASSERT_EQ(MediaPipelineFilter::FAIL,
+  //          filter.FilterRTCP(rtcp_rr_s16_r17_18,
+  //                            sizeof(rtcp_rr_s16_r17_18)));
 }
 
 TEST_F(MediaPipelineFilterTest, TestFilterReport2Inconsistent001) {
   MediaPipelineFilter filter;
   filter.AddLocalSSRC(18);
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rtcp_sr_s16_r17_18,
                               sizeof(rtcp_sr_s16_r17_18)));
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rtcp_rr_s16_r17_18,
                               sizeof(rtcp_rr_s16_r17_18)));
+  //ASSERT_EQ(MediaPipelineFilter::FAIL,
+  //          filter.FilterRTCP(rtcp_sr_s16_r17_18,
+  //                            sizeof(rtcp_sr_s16_r17_18)));
+  //ASSERT_EQ(MediaPipelineFilter::FAIL,
+  //          filter.FilterRTCP(rtcp_rr_s16_r17_18,
+  //                            sizeof(rtcp_rr_s16_r17_18)));
 }
 
 TEST_F(MediaPipelineFilterTest, TestFilterUnknownRTCPType) {

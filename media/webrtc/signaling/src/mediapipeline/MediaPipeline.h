@@ -110,7 +110,7 @@ class MediaPipeline : public sigslot::has_slots<> {
 
       // PipelineTransport() will access this->sts_thread_; moved here for safety
       transport_ = new PipelineTransport(this);
-  }
+    }
 
   // Must be called on the STS thread.  Must be called after ShutdownMedia_m().
   void ShutdownTransport_s();
@@ -118,6 +118,12 @@ class MediaPipeline : public sigslot::has_slots<> {
   // Must be called on the main thread.
   void ShutdownMedia_m() {
     ASSERT_ON_THREAD(main_thread_);
+
+    if (direction_ == RECEIVE) {
+      conduit_->StopReceiving();
+    } else {
+      conduit_->StopTransmitting();
+    }
 
     if (stream_) {
       DetachMediaStream();
