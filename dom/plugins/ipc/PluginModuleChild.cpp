@@ -2153,7 +2153,6 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
     if (specialType == nsPluginHost::eSpecialType_Flash) {
         mQuirks |= QUIRK_FLASH_AVOID_CGMODE_CRASHES;
         mQuirks |= QUIRK_ALLOW_OFFLINE_RENDERER;
-        mQuirks |= QUIRK_FLASH_HIDE_HIDPI_SUPPORT;
     } else if (FindInReadable(quicktime, mPluginFilename)) {
         mQuirks |= QUIRK_ALLOW_OFFLINE_RENDERER;
     }

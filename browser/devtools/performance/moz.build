@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES.devtools.performance += [
+    'modules/compatibility.js',
     'modules/front.js',
     'modules/io.js',
     'modules/recording-model.js',

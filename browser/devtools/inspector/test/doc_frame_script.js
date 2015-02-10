@@ -21,18 +21,32 @@ let EventUtils = {};
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
 
 /**
- * Given an actorID, get the corresponding actor from the first debugger-server
- * connection.
- * @param {String} actorID
+ * If the test page creates and triggeres the custom event
+ * "test-page-processing-done", then the Test:TestPageProcessingDone message
+ * will be sent to the parent process for tests to wait for this event if needed.
  */
-function getHighlighterActor(actorID) {
+addEventListener("DOMWindowCreated", () => {
+  content.addEventListener("test-page-processing-done", () => {
+    sendAsyncMessage("Test:TestPageProcessingDone");
+  }, false);
+});
+
+/**
+ * Given an actorID and connection prefix, get the corresponding actor from the
+ * debugger-server connection.
+ * @param {String} actorID
+ * @param {String} connPrefix
+ */
+function getHighlighterActor(actorID, connPrefix) {
   let {DebuggerServer} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
   if (!DebuggerServer.initialized) {
     return;
   }
 
-  let connID = Object.keys(DebuggerServer._connections)[0];
-  let conn = DebuggerServer._connections[connID];
+  let conn = DebuggerServer._connections[connPrefix];
+  if (!conn) {
+    return;
+  }
 
   return conn.getActor(actorID);
 }
@@ -44,9 +58,10 @@ function getHighlighterActor(actorID) {
  * the highlighter, inserted into the nsCanvasFrame.
  * @see /toolkit/devtools/server/actors/highlighter.js
  * @param {String} actorID
+ * @param {String} connPrefix
  */
-function getHighlighterCanvasFrameHelper(actorID) {
-  let actor = getHighlighterActor(actorID);
+function getHighlighterCanvasFrameHelper(actorID, connPrefix) {
+  let actor = getHighlighterActor(actorID, connPrefix);
   if (actor && actor._highlighter) {
     return actor._highlighter.markup;
   }
@@ -59,13 +74,14 @@ function getHighlighterCanvasFrameHelper(actorID) {
  * - {String} nodeID The full ID of the element to get the attribute for
  * - {String} name The name of the attribute to get
  * - {String} actorID The highlighter actor ID
+ * - {String} connPrefix The highlighter actor ID's connection prefix
  * @return {String} The value, if found, null otherwise
  */
 addMessageListener("Test:GetHighlighterAttribute", function(msg) {
-  let {nodeID, name, actorID} = msg.data;
+  let {nodeID, name, actorID, connPrefix} = msg.data;
 
   let value;
-  let helper = getHighlighterCanvasFrameHelper(actorID);
+  let helper = getHighlighterCanvasFrameHelper(actorID, connPrefix);
   if (helper) {
     value = helper.getAttributeForElement(nodeID, name);
   }
@@ -79,13 +95,14 @@ addMessageListener("Test:GetHighlighterAttribute", function(msg) {
  * @param {Object} msg The msg.data part expects the following properties
  * - {String} nodeID The full ID of the element to get the attribute for
  * - {String} actorID The highlighter actor ID
+ * - {String} connPrefix The highlighter connection prefix
  * @return {String} The textcontent value
  */
 addMessageListener("Test:GetHighlighterTextContent", function(msg) {
-  let {nodeID, actorID} = msg.data;
+  let {nodeID, actorID, connPrefix} = msg.data;
 
   let value;
-  let helper = getHighlighterCanvasFrameHelper(actorID);
+  let helper = getHighlighterCanvasFrameHelper(actorID, connPrefix);
   if (helper) {
     value = helper.getTextContentForElement(nodeID);
   }
@@ -97,12 +114,13 @@ addMessageListener("Test:GetHighlighterTextContent", function(msg) {
  * Get the number of box-model highlighters created by the SelectorHighlighter
  * @param {Object} msg The msg.data part expects the following properties:
  * - {String} actorID The highlighter actor ID
+ * - {String} connPrefix The highlighter connection prefix
  * @return {Number} The number of box-model highlighters created, or null if the
  * SelectorHighlighter was not found.
  */
 addMessageListener("Test:GetSelectorHighlighterBoxNb", function(msg) {
-  let {actorID} = msg.data;
-  let {_highlighter: h} = getHighlighterActor(actorID);
+  let {actorID, connPrefix} = msg.data;
+  let {_highlighter: h} = getHighlighterActor(actorID, connPrefix);
   if (!h || !h._highlighters) {
     sendAsyncMessage("Test:GetSelectorHighlighterBoxNb", null);
   } else {
@@ -118,11 +136,12 @@ addMessageListener("Test:GetSelectorHighlighterBoxNb", function(msg) {
  * - {String} the name of the attribute to be changed
  * - {String} the new value for the attribute
  * - {String} actorID The highlighter actor ID
+ * - {String} connPrefix The highlighter connection prefix
  */
 addMessageListener("Test:ChangeHighlightedNodeWaitForUpdate", function(msg) {
   // The name and value of the attribute to be changed
-  let {name, value, actorID} = msg.data;
-  let {_highlighter: h} = getHighlighterActor(actorID);
+  let {name, value, actorID, connPrefix} = msg.data;
+  let {_highlighter: h} = getHighlighterActor(actorID, connPrefix);
 
   h.once("updated", () => {
     sendAsyncMessage("Test:ChangeHighlightedNodeWaitForUpdate");
@@ -132,19 +151,36 @@ addMessageListener("Test:ChangeHighlightedNodeWaitForUpdate", function(msg) {
 });
 
 /**
+ * Subscribe to a given highlighter event and respond when the event is received.
+ * @param {Object} msg The msg.data part expects the following properties
+ * - {String} event The name of the highlighter event to listen to
+ * - {String} actorID The highlighter actor ID
+ * - {String} connPrefix The highlighter connection prefix
+ */
+addMessageListener("Test:WaitForHighlighterEvent", function(msg) {
+  let {event, actorID, connPrefix} = msg.data;
+  let {_highlighter: h} = getHighlighterActor(actorID, connPrefix);
+
+  h.once(event, () => {
+    sendAsyncMessage("Test:WaitForHighlighterEvent");
+  });
+});
+
+/**
  * Change the zoom level of the page.
  * Optionally subscribe to the box-model highlighter's update event and waiting
  * for it to refresh before responding.
  * @param {Object} msg The msg.data part expects the following properties
  * - {Number} level The new zoom level
  * - {String} actorID Optional. The highlighter actor ID
+ * - {String} connPrefix Optional. The highlighter connection prefix
  */
 addMessageListener("Test:ChangeZoomLevel", function(msg) {
-  let {level, actorID} = msg.data;
+  let {level, actorID, connPrefix} = msg.data;
   dumpn("Zooming page to " + level);
 
   if (actorID) {
-    let {_highlighter: h} = getHighlighterActor(actorID);
+    let {_highlighter: h} = getHighlighterActor(actorID, connPrefix);
     h.once("updated", () => {
       sendAsyncMessage("Test:ChangeZoomLevel");
     });
@@ -203,19 +239,24 @@ addMessageListener("Test:GetAllAdjustedQuads", function(msg) {
  * - {Number} y
  * - {Boolean} center If set to true, x/y will be ignored and
  *             synthesizeMouseAtCenter will be used instead
- * - {String} type
+ * - {Object} options Other event options
  * The msg.objects part should be the element.
  * @param {Object} data Event detail properties:
  */
 addMessageListener("Test:SynthesizeMouse", function(msg) {
   let {node} = msg.objects;
-  let {x, y, center, type} = msg.data;
+  let {x, y, center, options} = msg.data;
 
   if (center) {
-    EventUtils.synthesizeMouseAtCenter(node, {type}, node.ownerDocument.defaultView);
+    EventUtils.synthesizeMouseAtCenter(node, options, node.ownerDocument.defaultView);
   } else {
-    EventUtils.synthesizeMouse(node, x, y, {type}, node.ownerDocument.defaultView);
+    EventUtils.synthesizeMouse(node, x, y, options, node.ownerDocument.defaultView);
   }
+
+  // Most consumers won't need to listen to this message, unless they want to
+  // wait for the mouse event to be synthesized and don't have another event
+  // to listen to instead.
+  sendAsyncMessage("Test:SynthesizeMouse");
 });
 
 /**

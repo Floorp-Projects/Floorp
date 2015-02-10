@@ -617,7 +617,7 @@ add_task(function test_bookmarks() {
   // bug 378820
   let uri1 = uri("http://foo.tld/a");
   bs.insertBookmark(testRoot, uri1, bs.DEFAULT_INDEX, "");
-  yield promiseAddVisits(uri1);
+  yield PlacesTestUtils.addVisits(uri1);
 
   // bug 646993 - test bookmark titles longer than the maximum allowed length
   let title15 = Array(TITLE_LENGTH_MAX + 5).join("X");

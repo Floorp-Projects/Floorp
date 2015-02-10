@@ -944,7 +944,7 @@ const CustomizableWidgets = [
       node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
       node.setAttribute("removable", "true");
       node.addEventListener("command", function(event) {
-        aDocument.defaultView.LoopUI.openCallPanel(event);
+        aDocument.defaultView.LoopUI.togglePanel(event);
       });
 
       return node;

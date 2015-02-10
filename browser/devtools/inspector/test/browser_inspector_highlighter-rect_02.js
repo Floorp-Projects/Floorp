@@ -22,7 +22,7 @@ add_task(function*() {
     rect: {x: 50, y: 50, width: 100, height: 100}
   });
 
-  let style = yield getAttribute(highlighter, "style");
+  let style = yield getHighlighterNodeAttribute(highlighter, "highlighted-rect", "style");
 
   // The parent body has margin=50px and border=10px
   // The parent iframe also has margin=50px and border=10px
@@ -34,12 +34,3 @@ add_task(function*() {
   yield highlighter.hide();
   yield highlighter.finalize();
 });
-
-function* getAttribute(highlighter, name) {
-  let {data: value} = yield executeInContent("Test:GetHighlighterAttribute", {
-    nodeID: "highlighted-rect",
-    name: name,
-    actorID: highlighter.actorID
-  });
-  return value;
-}

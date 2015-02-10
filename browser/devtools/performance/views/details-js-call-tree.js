@@ -95,6 +95,9 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
     // Bind events.
     root.on("link", this._onLink);
 
+    // Pipe "focus" events to the view, mostly for tests
+    root.on("focus", () => this.emit("focus"));
+
     // Clear out other call trees.
     let container = $("#js-calltree-view > .call-tree-cells-container");
     container.innerHTML = "";

@@ -32,7 +32,7 @@ add_task(function test_annos_expire_history() {
   let now = getExpirablePRTime();
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://page_anno." + i + ".mozilla.org/");
-    yield promiseAddVisits({ uri: pageURI, visitDate: now++ });
+    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
     as.setPageAnnotation(pageURI, "page_expire1", "test", 0, as.EXPIRE_WITH_HISTORY);
     as.setPageAnnotation(pageURI, "page_expire2", "test", 0, as.EXPIRE_WITH_HISTORY);
   }
@@ -46,7 +46,7 @@ add_task(function test_annos_expire_history() {
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
     // We also add a visit before bookmarking.
-    yield promiseAddVisits({ uri: pageURI, visitDate: now++ });
+    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
     let id = bs.insertBookmark(bs.unfiledBookmarksFolder, pageURI,
                                bs.DEFAULT_INDEX, null);
     // Notice we use page annotations here, items annotations can't use this
@@ -64,7 +64,7 @@ add_task(function test_annos_expire_history() {
   // We won't expire these visits, so the annotations should survive.
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://persist_page_anno." + i + ".mozilla.org/");
-    yield promiseAddVisits({ uri: pageURI, visitDate: now++ });
+    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
     as.setPageAnnotation(pageURI, "page_persist1", "test", 0, as.EXPIRE_WITH_HISTORY);
     as.setPageAnnotation(pageURI, "page_persist2", "test", 0, as.EXPIRE_WITH_HISTORY);
   }

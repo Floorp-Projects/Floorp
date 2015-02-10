@@ -43,7 +43,7 @@ function continue_test() {
     places.push({uri: uri(pages[i]), visitDate: (time - i) * 1000,
                  transition: hs.TRANSITION_TYPED});
   }
-  addVisits(places, window, function() {
+  PlacesTestUtils.addVisits(places).then(() => {
     toggleSidebar("viewHistorySidebar", true);
   });
 
