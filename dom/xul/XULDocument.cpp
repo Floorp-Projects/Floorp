@@ -216,8 +216,7 @@ XULDocument::~XULDocument()
 
     // Destroy our broadcaster map.
     if (mBroadcasterMap) {
-        PL_DHashTableFinish(mBroadcasterMap);
-        delete mBroadcasterMap;
+        PL_DHashTableDestroy(mBroadcasterMap);
     }
 
     delete mTemplateBuilderTable;
@@ -769,8 +768,12 @@ XULDocument::AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
     };
 
     if (! mBroadcasterMap) {
-        mBroadcasterMap = new PLDHashTable();
-        PL_DHashTableInit(mBroadcasterMap, &gOps, sizeof(BroadcasterMapEntry));
+        mBroadcasterMap = PL_NewDHashTable(&gOps, sizeof(BroadcasterMapEntry));
+
+        if (! mBroadcasterMap) {
+            aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+            return;
+        }
     }
 
     BroadcasterMapEntry* entry =
@@ -778,8 +781,9 @@ XULDocument::AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
                    (PL_DHashTableSearch(mBroadcasterMap, &aBroadcaster));
 
     if (!entry) {
-        entry = static_cast<BroadcasterMapEntry*>
-            (PL_DHashTableAdd(mBroadcasterMap, &aBroadcaster, fallible));
+        entry =
+            static_cast<BroadcasterMapEntry*>
+                       (PL_DHashTableAdd(mBroadcasterMap, &aBroadcaster));
 
         if (! entry) {
             aRv.Throw(NS_ERROR_OUT_OF_MEMORY);

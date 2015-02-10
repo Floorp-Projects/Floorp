@@ -1420,8 +1420,7 @@ nsRuleNode::DestroyInternal(nsRuleNode ***aDestroyQueueTail)
     PL_DHashTableEnumerate(children, EnqueueRuleNodeChildren,
                            &destroyQueueTail);
     *destroyQueueTail = nullptr; // ensure null-termination
-    PL_DHashTableFinish(children);
-    delete children;
+    PL_DHashTableDestroy(children);
   } else if (HaveChildren()) {
     *destroyQueueTail = ChildrenList();
     do {
@@ -1534,7 +1533,7 @@ nsRuleNode::Transition(nsIStyleRule* aRule, uint8_t aLevel,
 
   if (ChildrenAreHashed()) {
     ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>
-      (PL_DHashTableAdd(ChildrenHash(), &key, fallible));
+                                          (PL_DHashTableAdd(ChildrenHash(), &key));
     if (!entry) {
       NS_WARNING("out of memory");
       return this;
@@ -1604,13 +1603,15 @@ nsRuleNode::ConvertChildrenToHash(int32_t aNumKids)
 {
   NS_ASSERTION(!ChildrenAreHashed() && HaveChildren(),
                "must have a non-empty list of children");
-  PLDHashTable *hash = new PLDHashTable();
-  PL_DHashTableInit(hash, &ChildrenHashOps, sizeof(ChildrenHashEntry),
-                    aNumKids);
+  PLDHashTable *hash = PL_NewDHashTable(&ChildrenHashOps,
+                                        sizeof(ChildrenHashEntry),
+                                        aNumKids);
+  if (!hash)
+    return;
   for (nsRuleNode* curr = ChildrenList(); curr; curr = curr->mNextSibling) {
     // This will never fail because of the initial size we gave the table.
     ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(
-      PL_DHashTableAdd(hash, curr->mRule, fallible));
+      PL_DHashTableAdd(hash, curr->mRule));
     NS_ASSERTION(!entry->mRuleNode, "duplicate entries in list");
     entry->mRuleNode = curr;
   }
@@ -9231,8 +9232,7 @@ nsRuleNode::SweepChildren(nsTArray<nsRuleNode*>& aSweepQueue)
     PL_DHashTableEnumerate(children, SweepHashEntry, &survivorsWithChildren);
     childrenDestroyed = oldChildCount - children->EntryCount();
     if (childrenDestroyed == oldChildCount) {
-      PL_DHashTableFinish(children);
-      delete children;
+      PL_DHashTableDestroy(children);
       mChildren.asVoid = nullptr;
     }
   } else {

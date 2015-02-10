@@ -90,7 +90,7 @@ public:
 protected:
   virtual ~nsCertTree();
 
-  void InitCompareHash();
+  nsresult InitCompareHash();
   void ClearCompareHash();
   void RemoveCacheEntry(void *key);
 

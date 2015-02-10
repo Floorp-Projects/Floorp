@@ -178,11 +178,14 @@ void nsCertTree::ClearCompareHash()
   }
 }
 
-void nsCertTree::InitCompareHash()
+nsresult nsCertTree::InitCompareHash()
 {
   ClearCompareHash();
-  PL_DHashTableInit(&mCompareCache, &gMapOps,
-                    sizeof(CompareCacheHashEntryPtr), 64);
+  if (!PL_DHashTableInit(&mCompareCache, &gMapOps,
+                         sizeof(CompareCacheHashEntryPtr), fallible, 64)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
 }
 
 nsCertTree::~nsCertTree()
@@ -201,8 +204,9 @@ CompareCacheHashEntry *
 nsCertTree::getCacheEntry(void *cache, void *aCert)
 {
   PLDHashTable &aCompareCache = *reinterpret_cast<PLDHashTable*>(cache);
-  CompareCacheHashEntryPtr *entryPtr = static_cast<CompareCacheHashEntryPtr*>
-    (PL_DHashTableAdd(&aCompareCache, aCert, fallible));
+  CompareCacheHashEntryPtr *entryPtr = 
+    static_cast<CompareCacheHashEntryPtr*>
+               (PL_DHashTableAdd(&aCompareCache, aCert));
   return entryPtr ? entryPtr->entry : nullptr;
 }
 
@@ -659,11 +663,11 @@ nsCertTree::LoadCertsFromCache(nsINSSCertCache *aCache, uint32_t aType)
     mTreeArray = nullptr;
     mNumRows = 0;
   }
-  InitCompareHash();
+  nsresult rv = InitCompareHash();
+  if (NS_FAILED(rv)) return rv;
 
-  nsresult rv =
-    GetCertsByTypeFromCache(aCache, aType, GetCompareFuncFromCertType(aType),
-                            &mCompareCache);
+  rv = GetCertsByTypeFromCache(aCache, aType, 
+                               GetCompareFuncFromCertType(aType), &mCompareCache);
   if (NS_FAILED(rv)) return rv;
   return UpdateUIContents();
 }
@@ -677,10 +681,11 @@ nsCertTree::LoadCerts(uint32_t aType)
     mTreeArray = nullptr;
     mNumRows = 0;
   }
-  InitCompareHash();
+  nsresult rv = InitCompareHash();
+  if (NS_FAILED(rv)) return rv;
 
-  nsresult rv =
-    GetCertsByType(aType, GetCompareFuncFromCertType(aType), &mCompareCache);
+  rv = GetCertsByType(aType, 
+                      GetCompareFuncFromCertType(aType), &mCompareCache);
   if (NS_FAILED(rv)) return rv;
   return UpdateUIContents();
 }
