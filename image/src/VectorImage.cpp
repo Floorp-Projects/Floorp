@@ -928,12 +928,6 @@ VectorImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
   return NS_OK;
 }
 
-bool
-VectorImage::IsDecoded()
-{
-  return mIsFullyLoaded || mError;
-}
-
 //******************************************************************************
 /* void lockImage() */
 NS_IMETHODIMP
