@@ -1230,19 +1230,9 @@ struct BindData
 
 template <typename ParseHandler>
 JSFunction *
-Parser<ParseHandler>::newFunction(GenericParseContext *pc, HandleAtom atom,
-                                  FunctionSyntaxKind kind, JSObject *proto)
+Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind, JSObject *proto)
 {
     MOZ_ASSERT_IF(kind == Statement, atom != nullptr);
-
-    /*
-     * Find the global compilation context in order to pre-set the newborn
-     * function's parent slot to pc->sc->as<GlobalObject>()->scopeChain. If the
-     * global context is a compile-and-go one, we leave the pre-set parent
-     * intact; otherwise we clear parent and proto.
-     */
-    while (pc->parent)
-        pc = pc->parent;
 
     RootedFunction fun(context);
     JSFunction::Flags flags = (kind == Expression)
@@ -2189,7 +2179,7 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName,
         if (!proto)
             return null();
     }
-    RootedFunction fun(context, newFunction(pc, funName, kind, proto));
+    RootedFunction fun(context, newFunction(funName, kind, proto));
     if (!fun)
         return null();
 
@@ -7062,7 +7052,7 @@ Parser<ParseHandler>::generatorComprehensionLambda(GeneratorKind comprehensionKi
             return null();
     }
 
-    RootedFunction fun(context, newFunction(outerpc, /* atom = */ NullPtr(), Expression, proto));
+    RootedFunction fun(context, newFunction(/* atom = */ NullPtr(), Expression, proto));
     if (!fun)
         return null();
 
