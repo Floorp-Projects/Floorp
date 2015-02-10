@@ -6,8 +6,8 @@ dependencies = [
  "getopts 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.1.1 (git+https://github.com/servo/hyper?branch=old_servo_new_cookies)",
  "log 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "rust_mozprofile 0.0.1",
- "rust_mozrunner 0.0.1",
+ "mozprofile 0.0.1",
+ "mozrunner 0.0.1",
  "rustc-serialize 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "webdriver 0.0.1",
@@ -86,6 +86,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "mozprofile"
+version = "0.0.1"
+
+[[package]]
+name = "mozrunner"
+version = "0.0.1"
+dependencies = [
+ "mozprofile 0.0.1",
+]
+
+[[package]]
 name = "mucell"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -121,17 +132,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "regex"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "rust_mozprofile"
-version = "0.0.1"
-
-[[package]]
-name = "rust_mozrunner"
-version = "0.0.1"
-dependencies = [
- "rust_mozprofile 0.0.1",
-]
 
 [[package]]
 name = "rustc-serialize"
