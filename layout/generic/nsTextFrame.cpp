@@ -2125,26 +2125,21 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       new MathMLTextRunFactory(transformingFactory.forget(), mathFlags,
                                sstyScriptLevel, fontInflation);
   }
-  nsTArray<nsRefPtr<nsTransformedCharStyle>> styles;
+  nsTArray<nsStyleContext*> styles;
   if (transformingFactory) {
     iter.SetOriginalOffset(0);
     for (uint32_t i = 0; i < mMappedFlows.Length(); ++i) {
       MappedFlow* mappedFlow = &mMappedFlows[i];
       nsTextFrame* f;
-      nsStyleContext* sc = nullptr;
-      nsRefPtr<nsTransformedCharStyle> charStyle;
       for (f = mappedFlow->mStartFrame; f != mappedFlow->mEndFrame;
            f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
         uint32_t offset = iter.GetSkippedOffset();
         iter.AdvanceOriginal(f->GetContentLength());
         uint32_t end = iter.GetSkippedOffset();
-        if (sc != f->StyleContext()) {
-          sc = f->StyleContext();
-          charStyle = new nsTransformedCharStyle(sc);
-        }
+        nsStyleContext* sc = f->StyleContext();
         uint32_t j;
         for (j = offset; j < end; ++j) {
-          styles.AppendElement(charStyle);
+          styles.AppendElement(sc);
         }
       }
     }
@@ -2165,7 +2160,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     if (transformingFactory) {
       textRun = transformingFactory->MakeTextRun(text, transformedLength,
                                                  &params, fontGroup, textFlags,
-                                                 Move(styles), true);
+                                                 styles.Elements(), true);
       if (textRun) {
         // ownership of the factory has passed to the textrun
         transformingFactory.forget();
@@ -2180,7 +2175,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     if (transformingFactory) {
       textRun = transformingFactory->MakeTextRun(text, transformedLength,
                                                  &params, fontGroup, textFlags,
-                                                 Move(styles), true);
+                                                 styles.Elements(), true);
       if (textRun) {
         // ownership of the factory has passed to the textrun
         transformingFactory.forget();
