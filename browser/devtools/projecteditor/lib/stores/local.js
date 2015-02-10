@@ -122,7 +122,7 @@ var LocalStore = Class({
 
       let resource = this._forPath(path, info);
       parent.addChild(resource);
-      return resource;
+      throw new Task.Result(resource);
     }.bind(this));
   },
 
