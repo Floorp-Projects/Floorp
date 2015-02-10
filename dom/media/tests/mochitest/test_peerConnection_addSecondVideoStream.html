@@ -8,7 +8,7 @@
 <script type="application/javascript">
   createHTML({
     bug: "1017888",
-    title: "Renegotiation: add second audio stream"
+    title: "Renegotiation: add second video stream"
   });
 
   var test;
@@ -17,15 +17,15 @@
     addRenegotiation(test.chain,
       [
         function PC_LOCAL_ADD_SECOND_STREAM(test) {
-          test.setMediaConstraints([{audio: true}, {audio: true}],
-                                   [{audio: true}]);
-          return test.pcLocal.getAllUserMedia([{audio: true}]);
+          test.setMediaConstraints([{video: true}, {video: true}],
+                                   [{video: true}]);
+          return test.pcLocal.getAllUserMedia([{video: true}]);
         },
       ]
     );
 
     // TODO(bug 1093835): figure out how to verify if media flows through the new stream
-    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.setMediaConstraints([{video: true}], [{video: true}]);
     test.run();
   });
 </script>

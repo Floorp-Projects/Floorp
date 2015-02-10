@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
@@ -8,26 +8,26 @@
 <script type="application/javascript">
   createHTML({
     bug: "1017888",
-    title: "Renegotiation: add second audio stream"
+    title: "Renegotiation: add DataChannel"
   });
 
   var test;
   runNetworkTest(function (options) {
     test = new PeerConnectionTest(options);
     addRenegotiation(test.chain,
-      [
-        function PC_LOCAL_ADD_SECOND_STREAM(test) {
-          test.setMediaConstraints([{audio: true}, {audio: true}],
-                                   [{audio: true}]);
-          return test.pcLocal.getAllUserMedia([{audio: true}]);
-        },
-      ]
-    );
+                     commandsCreateDataChannel,
+                     commandsCheckDataChannel);
 
-    // TODO(bug 1093835): figure out how to verify if media flows through the new stream
+    // Insert before the second PC_LOCAL_CHECK_MEDIA_TRACKS
+    test.chain.insertBefore('PC_LOCAL_CHECK_MEDIA_TRACKS',
+                            commandsWaitForDataChannel,
+                            false,
+                            1);
+
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.run();
   });
+
 </script>
 </pre>
 </body>

@@ -1,0 +1,43 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1017888",
+    title: "Renegotiation: add second video stream, no bundle"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    addRenegotiation(test.chain,
+      [
+        function PC_LOCAL_ADD_SECOND_STREAM(test) {
+          test.setMediaConstraints([{video: true}, {video: true}],
+                                   [{video: true}]);
+          // Since this is a NoBundle variant, adding a track will cause us to
+          // go back to checking.
+          test.pcLocal.iceCheckingRestartExpected = true;
+          return test.pcLocal.getAllUserMedia([{video: true}]);
+        },
+        function PC_REMOTE_EXPECT_ICE_CHECKING(test) {
+          test.pcRemote.iceCheckingRestartExpected = true;
+        },
+      ]
+    );
+
+    test.chain.insertAfterEach('PC_LOCAL_CREATE_OFFER',
+                              PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER);
+
+    // TODO(bug 1093835): figure out how to verify if media flows through the new stream
+    test.setMediaConstraints([{video: true}], [{video: true}]);
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

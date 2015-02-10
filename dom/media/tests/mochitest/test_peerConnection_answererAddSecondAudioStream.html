@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
@@ -8,13 +8,13 @@
 <script type="application/javascript">
   createHTML({
     bug: "1017888",
-    title: "Renegotiation: add second audio stream"
+    title: "Renegotiation: answerer adds second audio stream"
   });
 
   var test;
   runNetworkTest(function (options) {
     test = new PeerConnectionTest(options);
-    addRenegotiation(test.chain,
+    addRenegotiationAnswerer(test.chain,
       [
         function PC_LOCAL_ADD_SECOND_STREAM(test) {
           test.setMediaConstraints([{audio: true}, {audio: true}],
@@ -24,7 +24,6 @@
       ]
     );
 
-    // TODO(bug 1093835): figure out how to verify if media flows through the new stream
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.run();
   });
@@ -32,3 +31,4 @@
 </pre>
 </body>
 </html>
+
