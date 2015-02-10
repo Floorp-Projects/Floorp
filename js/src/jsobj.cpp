@@ -1277,7 +1277,7 @@ NewObjectCache::fillProto(EntryIndex entry, const Class *clasp, js::TaggedProto 
 
 JSObject *
 js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
-                            js::TaggedProto protoArg, JSObject *parentArg,
+                            js::TaggedProto protoArg, HandleObject parentArg,
                             gc::AllocKind allocKind, NewObjectKind newKind)
 {
     if (CanBeFinalizedInBackground(allocKind, clasp))
@@ -1301,10 +1301,8 @@ js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
                     return obj;
                 } else {
                     Rooted<TaggedProto> proto(cxArg, protoArg);
-                    RootedObject parent(cxArg, parentArg);
                     obj = cache.newObjectFromHit<CanGC>(cx, entry, GetInitialHeap(newKind, clasp));
                     MOZ_ASSERT(!obj);
-                    parentArg = parent;
                     protoArg = proto;
                 }
             } else {
@@ -1438,18 +1436,19 @@ FindProto(ExclusiveContext *cx, const js::Class *clasp, MutableHandleObject prot
 
 
 JSObject *
-js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
-                                  const js::Class *clasp, JSObject *protoArg, JSObject *parentArg,
-                                  gc::AllocKind allocKind, NewObjectKind newKind)
+js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg, const Class *clasp, JSObject *protoArg,
+                                  HandleObject maybeParent, gc::AllocKind allocKind,
+                                  NewObjectKind newKind)
 {
-    if (protoArg)
-        return NewObjectWithGivenProto(cxArg, clasp, TaggedProto(protoArg), parentArg, allocKind, newKind);
+    if (protoArg) {
+        return NewObjectWithGivenProto(cxArg, clasp, TaggedProto(protoArg), maybeParent, allocKind,
+                                       newKind);
+    }
 
     if (CanBeFinalizedInBackground(allocKind, clasp))
         allocKind = GetBackgroundAllocKind(allocKind);
 
-    if (!parentArg)
-        parentArg = cxArg->global();
+    HandleObject parent = maybeParent ? maybeParent : GlobalObject::upcast(cxArg->global());
 
     /*
      * Use the object cache, except for classes without a cached proto key.
@@ -1467,23 +1466,21 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
     if (JSContext *cx = cxArg->maybeJSContext()) {
         JSRuntime *rt = cx->runtime();
         NewObjectCache &cache = rt->newObjectCache;
-        if (parentArg->is<GlobalObject>() &&
+        if (parent->is<GlobalObject>() &&
             protoKey != JSProto_Null &&
             newKind == GenericObject &&
             clasp->isNative() &&
             !cx->compartment()->hasObjectMetadataCallback())
         {
-            if (cache.lookupGlobal(clasp, &parentArg->as<GlobalObject>(), allocKind, &entry)) {
+            if (cache.lookupGlobal(clasp, &parent->as<GlobalObject>(), allocKind, &entry)) {
                 JSObject *obj = cache.newObjectFromHit<NoGC>(cx, entry, GetInitialHeap(newKind, clasp));
                 if (obj) {
                     return obj;
                 } else {
-                    RootedObject parent(cxArg, parentArg);
                     RootedObject proto(cxArg, protoArg);
                     obj = cache.newObjectFromHit<CanGC>(cx, entry, GetInitialHeap(newKind, clasp));
                     MOZ_ASSERT(!obj);
                     protoArg = proto;
-                    parentArg = parent;
                 }
             } else {
                 gcNumber = rt->gc.gcNumber();
@@ -1491,7 +1488,6 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
         }
     }
 
-    RootedObject parent(cxArg, parentArg);
     RootedObject proto(cxArg, protoArg);
 
     if (!FindProto(cxArg, clasp, &proto))
@@ -1593,7 +1589,7 @@ js::CreateThis(JSContext *cx, const Class *newclasp, HandleObject callee)
         return nullptr;
 
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : nullptr;
-    JSObject *parent = callee->getParent();
+    RootedObject parent(cx, callee->getParent());
     gc::AllocKind kind = NewObjectGCKind(newclasp);
     return NewObjectWithClassProto(cx, newclasp, proto, parent, kind);
 }
@@ -1677,8 +1673,9 @@ js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject 
 
         res = CreateThisForFunctionWithGroup(cx, group, callee->getParent(), newKind);
     } else {
+        RootedObject parent(cx, callee->getParent());
         gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
-        res = NewObjectWithProto<PlainObject>(cx, proto, callee->getParent(), allocKind, newKind);
+        res = NewObjectWithProto<PlainObject>(cx, proto, parent, allocKind, newKind);
     }
 
     if (res) {
@@ -2464,7 +2461,7 @@ ClearClassObject(JSObject *obj, JSProtoKey key)
 
 static NativeObject *
 DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, HandleAtom atom,
-                              JSObject *protoProto, const Class *clasp,
+                              HandleObject protoProto, const Class *clasp,
                               Native constructor, unsigned nargs,
                               const JSPropertySpec *ps, const JSFunctionSpec *fs,
                               const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
@@ -2593,7 +2590,7 @@ bad:
 }
 
 NativeObject *
-js_InitClass(JSContext *cx, HandleObject obj, JSObject *protoProto_,
+js_InitClass(JSContext *cx, HandleObject obj, HandleObject protoProto_,
              const Class *clasp, Native constructor, unsigned nargs,
              const JSPropertySpec *ps, const JSFunctionSpec *fs,
              const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
