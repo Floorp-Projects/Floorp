@@ -4681,77 +4681,74 @@ IonBuilder::makeInliningDecision(JSObject *targetArg, CallInfo &callInfo)
     // Heuristics!
     JSScript *targetScript = target->nonLazyScript();
 
-    // Skip heuristics if we have an explicit hint to inline.
-    if (!targetScript->shouldInline()) {
-        // Cap the inlining depth.
-        if (js_JitOptions.isSmallFunction(targetScript)) {
-            if (inliningDepth_ >= optimizationInfo().smallFunctionMaxInlineDepth()) {
-                trackOptimizationOutcome(TrackedOutcome::CantInlineExceededDepth);
-                return DontInline(targetScript, "Vetoed: exceeding allowed inline depth");
-            }
-        } else {
-            if (inliningDepth_ >= optimizationInfo().maxInlineDepth()) {
-                trackOptimizationOutcome(TrackedOutcome::CantInlineExceededDepth);
-                return DontInline(targetScript, "Vetoed: exceeding allowed inline depth");
-            }
+    // Cap the inlining depth.
+    if (js_JitOptions.isSmallFunction(targetScript)) {
+        if (inliningDepth_ >= optimizationInfo().smallFunctionMaxInlineDepth()) {
+            trackOptimizationOutcome(TrackedOutcome::CantInlineExceededDepth);
+            return DontInline(targetScript, "Vetoed: exceeding allowed inline depth");
+        }
+    } else {
+        if (inliningDepth_ >= optimizationInfo().maxInlineDepth()) {
+            trackOptimizationOutcome(TrackedOutcome::CantInlineExceededDepth);
+            return DontInline(targetScript, "Vetoed: exceeding allowed inline depth");
+        }
 
-            if (targetScript->hasLoops()) {
-                // Currently, we are not inlining function which have loops because
-                // the cost inherent to inlining the function overcome the cost
-                // calling it. The reason is not yet clear to everybody, and we
-                // hope that we might be able to remove this restriction in the
-                // future.
-                //
-                // In the mean time, if we have opportunities to optimize the
-                // loop better, then we should try it. Such opportunity might be
-                // suggested by:
-                //
-                //  - Constant as argument. Inlining a function called with a
-                //    constant, might help GVN, as well as UCE, and potentially
-                //    improve bound check removal.
-                //
-                //  - Inner function as argument. Inlining a function called
-                //    with an inner function might help scalar replacement at
-                //    removing the scope chain, and thus using registers within
-                //    the loop instead of writting everything back to memory.
-                bool hasOpportunities = false;
-                for (size_t i = 0, e = callInfo.argv().length(); !hasOpportunities && i < e; i++) {
-                    MDefinition *arg = callInfo.argv()[i];
-                    hasOpportunities = arg->isLambda() || arg->isConstantValue();
-                }
-
-                if (!hasOpportunities) {
-                    trackOptimizationOutcome(TrackedOutcome::CantInlineBigLoop);
-                    return DontInline(targetScript, "Vetoed: big function that contains a loop");
-                }
+        if (targetScript->hasLoops()) {
+            // Currently, we are not inlining function which have loops because
+            // the cost inherent to inlining the function overcome the cost
+            // calling it. The reason is not yet clear to everybody, and we
+            // hope that we might be able to remove this restriction in the
+            // future.
+            //
+            // In the mean time, if we have opportunities to optimize the
+            // loop better, then we should try it. Such opportunity might be
+            // suggested by:
+            //
+            //  - Constant as argument. Inlining a function called with a
+            //    constant, might help GVN, as well as UCE, and potentially
+            //    improve bound check removal.
+            //
+            //  - Inner function as argument. Inlining a function called
+            //    with an inner function might help scalar replacement at
+            //    removing the scope chain, and thus using registers within
+            //    the loop instead of writting everything back to memory.
+            bool hasOpportunities = false;
+            for (size_t i = 0, e = callInfo.argv().length(); !hasOpportunities && i < e; i++) {
+                MDefinition *arg = callInfo.argv()[i];
+                hasOpportunities = arg->isLambda() || arg->isConstantValue();
             }
 
-            // Caller must not be excessively large.
-            if (script()->length() >= optimizationInfo().inliningMaxCallerBytecodeLength()) {
-                trackOptimizationOutcome(TrackedOutcome::CantInlineBigCaller);
-                return DontInline(targetScript, "Vetoed: caller excessively large");
+            if (!hasOpportunities) {
+                trackOptimizationOutcome(TrackedOutcome::CantInlineBigLoop);
+                return DontInline(targetScript, "Vetoed: big function that contains a loop");
             }
         }
 
-        // Callee must not be excessively large.
-        // This heuristic also applies to the callsite as a whole.
-        if (targetScript->length() > optimizationInfo().inlineMaxTotalBytecodeLength()) {
-            trackOptimizationOutcome(TrackedOutcome::CantInlineBigCallee);
-            return DontInline(targetScript, "Vetoed: callee excessively large");
+        // Caller must not be excessively large.
+        if (script()->length() >= optimizationInfo().inliningMaxCallerBytecodeLength()) {
+            trackOptimizationOutcome(TrackedOutcome::CantInlineBigCaller);
+            return DontInline(targetScript, "Vetoed: caller excessively large");
         }
+    }
 
-        // Callee must have been called a few times to have somewhat stable
-        // type information, except for definite properties analysis,
-        // as the caller has not run yet.
-        if (targetScript->getWarmUpCount() < optimizationInfo().inliningWarmUpThreshold() &&
-            !targetScript->baselineScript()->ionCompiledOrInlined() &&
-            info().analysisMode() != Analysis_DefiniteProperties)
-        {
-            trackOptimizationOutcome(TrackedOutcome::CantInlineNotHot);
-            JitSpew(JitSpew_Inlining, "Cannot inline %s:%u: callee is insufficiently hot.",
-                    targetScript->filename(), targetScript->lineno());
-            return InliningDecision_WarmUpCountTooLow;
-        }
+    // Callee must not be excessively large.
+    // This heuristic also applies to the callsite as a whole.
+    if (targetScript->length() > optimizationInfo().inlineMaxTotalBytecodeLength()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineBigCallee);
+        return DontInline(targetScript, "Vetoed: callee excessively large");
+    }
+
+    // Callee must have been called a few times to have somewhat stable
+    // type information, except for definite properties analysis,
+    // as the caller has not run yet.
+    if (targetScript->getWarmUpCount() < optimizationInfo().inliningWarmUpThreshold() &&
+        !targetScript->baselineScript()->ionCompiledOrInlined() &&
+        info().analysisMode() != Analysis_DefiniteProperties)
+    {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNotHot);
+        JitSpew(JitSpew_Inlining, "Cannot inline %s:%u: callee is insufficiently hot.",
+                targetScript->filename(), targetScript->lineno());
+        return InliningDecision_WarmUpCountTooLow;
     }
 
     // TI calls ObjectStateChange to trigger invalidation of the caller.
@@ -4972,8 +4969,7 @@ IonBuilder::inlineSingleCall(CallInfo &callInfo, JSObject *targetArg)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineCallsite(const ObjectVector &targets, ObjectVector &originals,
-                           CallInfo &callInfo)
+IonBuilder::inlineCallsite(const ObjectVector &targets, CallInfo &callInfo)
 {
     if (targets.empty()) {
         trackOptimizationAttempt(TrackedStrategy::Call_Inline);
@@ -5033,15 +5029,14 @@ IonBuilder::inlineCallsite(const ObjectVector &targets, ObjectVector &originals,
         return InliningStatus_NotInlined;
 
     // Perform a polymorphic dispatch.
-    if (!inlineCalls(callInfo, targets, originals, choiceSet, propCache.get()))
+    if (!inlineCalls(callInfo, targets, choiceSet, propCache.get()))
         return InliningStatus_Error;
 
     return InliningStatus_Inlined;
 }
 
 bool
-IonBuilder::inlineGenericFallback(JSFunction *target, CallInfo &callInfo, MBasicBlock *dispatchBlock,
-                                  bool clonedAtCallsite)
+IonBuilder::inlineGenericFallback(JSFunction *target, CallInfo &callInfo, MBasicBlock *dispatchBlock)
 {
     // Generate a new block with all arguments on-stack.
     MBasicBlock *fallbackBlock = newBlock(dispatchBlock, pc);
@@ -5057,7 +5052,7 @@ IonBuilder::inlineGenericFallback(JSFunction *target, CallInfo &callInfo, MBasic
     // Generate an MCall, which uses stateful |current|.
     if (!setCurrentAndSpecializePhis(fallbackBlock))
         return false;
-    if (!makeCall(target, fallbackInfo, clonedAtCallsite))
+    if (!makeCall(target, fallbackInfo))
         return false;
 
     // Pass return block to caller as |current|.
@@ -5153,7 +5148,7 @@ IonBuilder::inlineObjectGroupFallback(CallInfo &callInfo, MBasicBlock *dispatchB
     getPropBlock->end(MGoto::New(alloc(), preCallBlock));
 
     // Now inline the MCallGeneric, using preCallBlock as the dispatch point.
-    if (!inlineGenericFallback(nullptr, fallbackInfo, preCallBlock, false))
+    if (!inlineGenericFallback(nullptr, fallbackInfo, preCallBlock))
         return false;
 
     // inlineGenericFallback() set the return block as |current|.
@@ -5163,8 +5158,7 @@ IonBuilder::inlineObjectGroupFallback(CallInfo &callInfo, MBasicBlock *dispatchB
 }
 
 bool
-IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets,
-                        ObjectVector &originals, BoolVector &choiceSet,
+IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets, BoolVector &choiceSet,
                         MGetPropertyCache *maybeCache)
 {
     // Only handle polymorphic inlining.
@@ -5177,17 +5171,12 @@ IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets,
     callInfo.setImplicitlyUsedUnchecked();
     callInfo.pushFormals(dispatchBlock);
 
-    // Patch any InlinePropertyTable to only contain functions that are inlineable.
-    //
-    // Note that we trim using originals, as callsite clones are not user
-    // visible. We don't patch the entries inside the table with the cloned
-    // targets, as the entries should only be used for comparison.
-    //
-    // The InlinePropertyTable will also be patched at the end to exclude native functions
-    // that vetoed inlining.
+    // Patch any InlinePropertyTable to only contain functions that are
+    // inlineable. The InlinePropertyTable will also be patched at the end to
+    // exclude native functions that vetoed inlining.
     if (maybeCache) {
         InlinePropertyTable *propTable = maybeCache->propTable();
-        propTable->trimToTargets(originals);
+        propTable->trimToTargets(targets);
         if (propTable->numEntries() == 0)
             maybeCache = nullptr;
     }
@@ -5235,7 +5224,6 @@ IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets,
         maybeCache ? maybeCache->object()->resultTypeSet() : nullptr;
 
     // Inline each of the inlineable targets.
-    MOZ_ASSERT(targets.length() == originals.length());
     for (uint32_t i = 0; i < targets.length(); i++) {
         // Target must be inlineable.
         if (!choiceSet[i])
@@ -5245,14 +5233,9 @@ IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets,
         // be amending them below.
         amendOptimizationAttempt(i);
 
-        // When original != target, the target is a callsite clone. The
-        // original should be used for guards, and the target should be the
-        // actual function inlined.
-        JSFunction *original = &originals[i]->as<JSFunction>();
-        JSFunction *target = &targets[i]->as<JSFunction>();
-
         // Target must be reachable by the MDispatchInstruction.
-        if (maybeCache && !maybeCache->propTable()->hasFunction(original)) {
+        JSFunction *target = &targets[i]->as<JSFunction>();
+        if (maybeCache && !maybeCache->propTable()->hasFunction(target)) {
             choiceSet[i] = false;
             trackOptimizationOutcome(TrackedOutcome::CantInlineNotInDispatch);
             continue;
@@ -5289,7 +5272,7 @@ IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets,
         if (maybeCache) {
             MOZ_ASSERT(callInfo.thisArg() == maybeCache->object());
             TemporaryTypeSet *targetThisTypes =
-                maybeCache->propTable()->buildTypeSetForFunction(original);
+                maybeCache->propTable()->buildTypeSetForFunction(target);
             if (!targetThisTypes)
                 return false;
             maybeCache->object()->setResultTypeSet(targetThisTypes);
@@ -5316,11 +5299,8 @@ IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets,
         setCurrent(dispatchBlock);
 
         // Connect the inline path to the returnBlock.
-        //
-        // Note that guarding is on the original function pointer even
-        // if there is a clone, since cloning occurs at the callsite.
-        ObjectGroup *funcGroup = original->isSingleton() ? nullptr : original->group();
-        dispatch->addCase(original, funcGroup, inlineBlock);
+        ObjectGroup *funcGroup = target->isSingleton() ? nullptr : target->group();
+        dispatch->addCase(target, funcGroup, inlineBlock);
 
         MDefinition *retVal = inlineReturnBlock->peek(-1);
         retPhi->addInput(retVal);
@@ -5330,13 +5310,11 @@ IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets,
     }
 
     // Patch the InlinePropertyTable to not dispatch to vetoed paths.
-    //
-    // Note that like above, we trim using originals instead of targets.
     if (maybeCache) {
         maybeCache->object()->setResultTypeSet(cacheObjectTypeSet);
 
         InlinePropertyTable *propTable = maybeCache->propTable();
-        propTable->trimTo(originals, choiceSet);
+        propTable->trimTo(targets, choiceSet);
 
         // If all paths were vetoed, output only a generic fallback path.
         if (propTable->numEntries() == 0) {
@@ -5359,29 +5337,22 @@ IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets,
             dispatch->addFallback(fallbackTarget);
         } else {
             JSFunction *remaining = nullptr;
-            bool clonedAtCallsite = false;
 
             // If there is only 1 remaining case, we can annotate the fallback call
             // with the target information.
-            if (dispatch->numCases() + 1 == originals.length()) {
-                for (uint32_t i = 0; i < originals.length(); i++) {
+            if (dispatch->numCases() + 1 == targets.length()) {
+                for (uint32_t i = 0; i < targets.length(); i++) {
                     if (choiceSet[i])
                         continue;
 
                     MOZ_ASSERT(!remaining);
-
-                    if (targets[i]->is<JSFunction>()) {
-                        JSFunction *target = &targets[i]->as<JSFunction>();
-                        if (target->isSingleton()) {
-                            remaining = target;
-                            clonedAtCallsite = target != originals[i];
-                        }
-                    }
+                    if (targets[i]->is<JSFunction>() && targets[i]->as<JSFunction>().isSingleton())
+                        remaining = &targets[i]->as<JSFunction>();
                     break;
                 }
             }
 
-            if (!inlineGenericFallback(remaining, callInfo, dispatchBlock, clonedAtCallsite))
+            if (!inlineGenericFallback(remaining, callInfo, dispatchBlock))
                 return false;
             dispatch->addFallback(current);
         }
@@ -5607,7 +5578,7 @@ IonBuilder::jsop_funcall(uint32_t argc)
         CallInfo callInfo(alloc(), false);
         if (!callInfo.init(current, argc))
             return false;
-        return makeCall(native, callInfo, false);
+        return makeCall(native, callInfo);
     }
     current->peek(calleeDepth)->setImplicitlyUsedUnchecked();
 
@@ -5650,7 +5621,7 @@ IonBuilder::jsop_funcall(uint32_t argc)
     }
 
     // Call without inlining.
-    return makeCall(target, callInfo, false);
+    return makeCall(target, callInfo);
 }
 
 bool
@@ -5664,7 +5635,7 @@ IonBuilder::jsop_funapply(uint32_t argc)
         CallInfo callInfo(alloc(), false);
         if (!callInfo.init(current, argc))
             return false;
-        return makeCall(native, callInfo, false);
+        return makeCall(native, callInfo);
     }
 
     // Disable compilation if the second argument to |apply| cannot be guaranteed
@@ -5682,7 +5653,7 @@ IonBuilder::jsop_funapply(uint32_t argc)
         CallInfo callInfo(alloc(), false);
         if (!callInfo.init(current, argc))
             return false;
-        return makeCall(native, callInfo, false);
+        return makeCall(native, callInfo);
     }
 
     if ((!native || !native->isNative() ||
@@ -5786,7 +5757,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
             return inlineScriptedCall(callInfo, target);
     }
 
-    return makeCall(target, callInfo, false);
+    return makeCall(target, callInfo);
 }
 
 bool
@@ -5811,39 +5782,17 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     int calleeDepth = -((int)argc + 2);
 
     // Acquire known call target if existent.
-    ObjectVector originals(alloc());
-    TemporaryTypeSet *calleeTypes = current->peek(calleeDepth)->resultTypeSet();
-    if (calleeTypes && !getPolyCallTargets(calleeTypes, constructing, originals, 4))
-        return false;
-
-    // If any call targets need to be cloned, look for existing clones to use.
-    // Keep track of the originals as we need to case on them for poly inline.
-    bool hasClones = false;
     ObjectVector targets(alloc());
-    if (!targets.reserve(originals.length()))
+    TemporaryTypeSet *calleeTypes = current->peek(calleeDepth)->resultTypeSet();
+    if (calleeTypes && !getPolyCallTargets(calleeTypes, constructing, targets, 4))
         return false;
-    for (uint32_t i = 0; i < originals.length(); i++) {
-        JSObject *obj = originals[i];
-        if (obj->is<JSFunction>()) {
-            JSFunction *fun = &obj->as<JSFunction>();
-            if (fun->hasScript() && fun->nonLazyScript()->shouldCloneAtCallsite()) {
-                if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment->callsiteClones(),
-                                                                        fun, script(), pc))
-                {
-                    obj = clone;
-                    hasClones = true;
-                }
-            }
-        }
-        targets.infallibleAppend(obj);
-    }
 
     CallInfo callInfo(alloc(), constructing);
     if (!callInfo.init(current, argc))
         return false;
 
     // Try inlining
-    InliningStatus status = inlineCallsite(targets, originals, callInfo);
+    InliningStatus status = inlineCallsite(targets, callInfo);
     if (status == InliningStatus_Inlined)
         return true;
     if (status == InliningStatus_Error)
@@ -5862,27 +5811,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
         current->add(check);
     }
 
-    return makeCall(target, callInfo, hasClones);
-}
-
-MDefinition *
-IonBuilder::makeCallsiteClone(JSFunction *target, MDefinition *fun)
-{
-    // Bake in the clone eagerly if we have a known target. We have arrived here
-    // because TI told us that the known target is a should-clone-at-callsite
-    // function, which means that target already is the clone. Make sure to ensure
-    // that the old definition remains in resume points.
-    if (target) {
-        fun->setImplicitlyUsedUnchecked();
-        return constant(ObjectValue(*target));
-    }
-
-    // Add a callsite clone IC if we have multiple targets. Note that we
-    // should have checked already that at least some targets are marked as
-    // should-clone-at-callsite.
-    MCallsiteCloneCache *clone = MCallsiteCloneCache::New(alloc(), fun, pc);
-    current->add(clone);
-    return clone;
+    return makeCall(target, callInfo);
 }
 
 bool
@@ -5966,7 +5895,7 @@ IonBuilder::testNeedsArgumentCheck(JSFunction *target, CallInfo &callInfo)
 }
 
 MCall *
-IonBuilder::makeCallHelper(JSFunction *target, CallInfo &callInfo, bool cloneAtCallsite)
+IonBuilder::makeCallHelper(JSFunction *target, CallInfo &callInfo)
 {
     // This function may be called with mutated stack.
     // Querying TI for popped types is invalid.
@@ -6030,13 +5959,6 @@ IonBuilder::makeCallHelper(JSFunction *target, CallInfo &callInfo, bool cloneAtC
     MDefinition *thisArg = callInfo.thisArg();
     call->addArg(0, thisArg);
 
-    // Add a callsite clone IC for multiple targets which all should be
-    // callsite cloned, or bake in the clone for a single target.
-    if (cloneAtCallsite) {
-        MDefinition *fun = makeCallsiteClone(target, callInfo.fun());
-        callInfo.setFun(fun);
-    }
-
     if (target && !testNeedsArgumentCheck(target, callInfo))
         call->disableArgCheck();
 
@@ -6064,14 +5986,14 @@ DOMCallNeedsBarrier(const JSJitInfo* jitinfo, TemporaryTypeSet *types)
 }
 
 bool
-IonBuilder::makeCall(JSFunction *target, CallInfo &callInfo, bool cloneAtCallsite)
+IonBuilder::makeCall(JSFunction *target, CallInfo &callInfo)
 {
     // Constructor calls to non-constructors should throw. We don't want to use
     // CallKnown in this case.
     MOZ_ASSERT_IF(callInfo.constructing() && target,
                   target->isInterpretedConstructor() || target->isNativeConstructor());
 
-    MCall *call = makeCallHelper(target, callInfo, cloneAtCallsite);
+    MCall *call = makeCallHelper(target, callInfo);
     if (!call)
         return false;
 
@@ -6162,7 +6084,7 @@ IonBuilder::jsop_eval(uint32_t argc)
                 if (!evalCallInfo.init(current, /* argc = */ 0))
                     return false;
 
-                return makeCall(nullptr, evalCallInfo, false);
+                return makeCall(nullptr, evalCallInfo);
             }
         }
 
@@ -10313,7 +10235,7 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
     }
 
     JSFunction *tenuredCommonGetter = IsInsideNursery(commonGetter) ? nullptr : commonGetter;
-    if (!makeCall(tenuredCommonGetter, callInfo, false))
+    if (!makeCall(tenuredCommonGetter, callInfo))
         return false;
 
     // If the getter could have been inlined, don't track success. The call to
@@ -10788,7 +10710,7 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
     }
 
     JSFunction *tenuredCommonSetter = IsInsideNursery(commonSetter) ? nullptr : commonSetter;
-    MCall *call = makeCallHelper(tenuredCommonSetter, callInfo, false);
+    MCall *call = makeCallHelper(tenuredCommonSetter, callInfo);
     if (!call)
         return false;
 

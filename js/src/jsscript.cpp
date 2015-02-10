@@ -2389,7 +2389,7 @@ JSScript::Create(ExclusiveContext *cx, HandleObject enclosingScope, bool savedCa
     PodZero(script.get());
     new (&script->bindings) Bindings;
 
-    script->enclosingScopeOrOriginalFunction_ = enclosingScope;
+    script->enclosingStaticScope_ = enclosingScope;
     script->savedCallerFun_ = savedCallerFun;
     script->initCompartment(cx);
 
@@ -3125,11 +3125,6 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     dst->isGeneratorExp_ = src->isGeneratorExp();
     dst->setGeneratorKind(src->generatorKind());
 
-    /* Copy over hints. */
-    dst->shouldInline_ = src->shouldInline();
-    dst->shouldCloneAtCallsite_ = src->shouldCloneAtCallsite();
-    dst->isCallsiteClone_ = src->isCallsiteClone();
-
     if (nconsts != 0) {
         HeapValue *vector = Rebase<HeapValue>(dst, src, src->consts()->vector);
         dst->consts()->vector = vector;
@@ -3421,8 +3416,8 @@ JSScript::markChildren(JSTracer *trc)
     if (functionNonDelazifying())
         MarkObject(trc, &function_, "function");
 
-    if (enclosingScopeOrOriginalFunction_)
-        MarkObject(trc, &enclosingScopeOrOriginalFunction_, "enclosing");
+    if (enclosingStaticScope_)
+        MarkObject(trc, &enclosingStaticScope_, "enclosingStaticScope");
 
     if (maybeLazyScript())
         MarkLazyScriptUnbarriered(trc, &lazyScript, "lazyScript");
