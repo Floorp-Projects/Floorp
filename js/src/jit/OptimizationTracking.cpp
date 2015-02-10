@@ -829,8 +829,17 @@ static void
 SpewConstructor(TypeSet::Type ty, JSFunction *constructor)
 {
 #ifdef DEBUG
+    if (!constructor->isInterpreted()) {
+        JitSpew(JitSpew_OptimizationTracking, "   Unique type %s has native constructor",
+                TypeSet::TypeString(ty));
+        return;
+    }
+
     char buf[512];
-    PutEscapedString(buf, 512, constructor->displayAtom(), 0);
+    if (constructor->displayAtom())
+        PutEscapedString(buf, 512, constructor->displayAtom(), 0);
+    else
+        JS_snprintf(buf, mozilla::ArrayLength(buf), "??");
 
     const char *filename;
     uint32_t lineno;
