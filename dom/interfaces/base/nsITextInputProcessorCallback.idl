@@ -30,9 +30,11 @@ interface nsITextInputProcessorNotification : nsISupports
    *   nsITextInputProcessorCallback::onNotify() has to handle this
    *   notification.
    *
-   * "notify-detached" (optional)
+   * "notify-end-input-transaction" (optional)
    *   This is notified when the callback is detached from
-   *   nsITextInputProcessor.
+   *   nsITextInputProcessor.  I.e., the TextInputProcessor lost the rights
+   *   to input text and needs to call .beginInputTransaction() before next
+   *   input.
    *
    * "notify-focus" (optional)
    *   This is notified when an editable editor gets focus and Gecko starts
