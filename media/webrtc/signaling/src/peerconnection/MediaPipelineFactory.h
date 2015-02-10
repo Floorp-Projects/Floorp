@@ -44,13 +44,13 @@ private:
       nsAutoPtr<MediaPipelineFilter> filter,
       const RefPtr<MediaSessionConduit>& aConduit);
 
-  nsresult CreateAudioConduit(const JsepTrackPair& aTrackPair,
-                              const JsepTrack& aTrack,
-                              RefPtr<MediaSessionConduit>* aConduitp);
+  nsresult GetOrCreateAudioConduit(const JsepTrackPair& aTrackPair,
+                                   const JsepTrack& aTrack,
+                                   RefPtr<MediaSessionConduit>* aConduitp);
 
-  nsresult CreateVideoConduit(const JsepTrackPair& aTrackPair,
-                              const JsepTrack& aTrack,
-                              RefPtr<MediaSessionConduit>* aConduitp);
+  nsresult GetOrCreateVideoConduit(const JsepTrackPair& aTrackPair,
+                                   const JsepTrack& aTrack,
+                                   RefPtr<MediaSessionConduit>* aConduitp);
 
   MediaConduitErrorCode EnsureExternalCodec(VideoSessionConduit& aConduit,
                                             VideoCodecConfig* aConfig,

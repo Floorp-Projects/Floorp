@@ -1424,7 +1424,7 @@ class SignalingAgent {
 
 
     // Check feedback method for video
-    if (flags & PIPELINE_VIDEO) {
+    if ((flags & PIPELINE_VIDEO) && !(flags & PIPELINE_SEND)) {
         mozilla::MediaSessionConduit *conduit = pipeline->Conduit();
         ASSERT_TRUE(conduit);
         ASSERT_EQ(conduit->type(), mozilla::MediaSessionConduit::VIDEO);
@@ -2777,9 +2777,9 @@ TEST_P(SignalingTest, RenegotiationOffererSwapsMsids)
   WaitForCompleted();
 
   // Wait for some more data to get received
-  ASSERT_TRUE_WAIT(a2_->GetPacketsReceived(1) >= 40, kDefaultTimeout * 2);
+  ASSERT_TRUE_WAIT(a2_->GetPacketsReceived(1) >= 80, kDefaultTimeout * 2);
   // Not really packets, but audio segments, happens later
-  ASSERT_TRUE_WAIT(a1_->GetPacketsSent(1) >= 40, kDefaultTimeout * 2);
+  ASSERT_TRUE_WAIT(a1_->GetPacketsSent(1) >= 80, kDefaultTimeout * 2);
 
   CloseStreams();
 
