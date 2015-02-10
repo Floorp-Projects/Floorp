@@ -4575,7 +4575,10 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     ptrdiff_t tryEnd = bce->offset();
 
     // If this try has a catch block, emit it.
-    if (ParseNode *pn2 = pn->pn_kid2) {
+    ParseNode *catchList = pn->pn_kid2;
+    if (catchList) {
+        MOZ_ASSERT(catchList->isKind(PNK_CATCHLIST));
+
         // The emitted code for a catch block looks like:
         //
         // [pushblockscope]             only if any local aliased
@@ -4601,7 +4604,7 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         // code if appropriate, and is also used for the catch-all trynote for
         // capturing exceptions thrown from catch{} blocks.
         //
-        for (ParseNode *pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
+        for (ParseNode *pn3 = catchList->pn_head; pn3; pn3 = pn3->pn_next) {
             MOZ_ASSERT(bce->stackDepth == depth);
 
             // Emit the lexical scope and catch body.
@@ -4676,7 +4679,7 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     // Add the try note last, to let post-order give us the right ordering
     // (first to last for a given nesting level, inner to outer by level).
-    if (pn->pn_kid2 && !bce->tryNoteList.append(JSTRY_CATCH, depth, tryStart, tryEnd))
+    if (catchList && !bce->tryNoteList.append(JSTRY_CATCH, depth, tryStart, tryEnd))
         return false;
 
     // If we've got a finally, mark try+catch region with additional

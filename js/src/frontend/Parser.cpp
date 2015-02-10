@@ -5629,7 +5629,7 @@ Parser<ParseHandler>::tryStatement()
     if (!tokenStream.getToken(&tt))
         return null();
     if (tt == TOK_CATCH) {
-        catchList = handler.newList(PNK_CATCH);
+        catchList = handler.newCatchList();
         if (!catchList)
             return null();
 
