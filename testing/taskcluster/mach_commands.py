@@ -28,6 +28,7 @@ from taskcluster_graph.templates import Templates
 import taskcluster_graph.build_task
 
 ROOT = os.path.dirname(os.path.realpath(__file__))
+GECKO = os.path.realpath(os.path.join(ROOT, '..', '..'))
 DOCKER_ROOT = os.path.join(ROOT, '..', 'docker')
 
 # XXX: If/when we have the taskcluster queue use construct url instead
@@ -92,6 +93,35 @@ def get_task(task_id):
     return json.load(urllib2.urlopen("https://queue.taskcluster.net/v1/task/" + task_id))
 
 
+def gaia_info():
+    '''
+    Fetch details from in tree gaia.json (which links this version of
+    gecko->gaia) and construct the usual base/head/ref/rev pairing...
+    '''
+    gaia = json.load(open(os.path.join(GECKO, 'b2g', 'config', 'gaia.json')))
+
+    if gaia['git'] is None or \
+       gaia['git']['remote'] == '' or \
+       gaia['git']['git_revision'] == '' or \
+       gaia['git']['branch'] == '':
+
+       # Just use the hg params...
+       return {
+         'gaia_base_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
+         'gaia_head_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
+         'gaia_ref': gaia['revision'],
+         'gaia_rev': gaia['revision']
+       }
+
+    else:
+        # Use git
+        return {
+            'gaia_base_repository': gaia['git']['remote'],
+            'gaia_head_repository': gaia['git']['remote'],
+            'gaia_rev': gaia['git']['git_revision'],
+            'gaia_ref': gaia['git']['branch'],
+        }
+
 @CommandProvider
 class DecisionTask(object):
     @Command('taskcluster-decision', category="ci",
@@ -117,7 +147,7 @@ class DecisionTask(object):
     def run_task(self, **params):
         templates = Templates(ROOT)
         # Template parameters used when expanding the graph
-        parameters = {
+        parameters = dict(gaia_info().items() + {
             'source': 'http://todo.com/soon',
             'project': params['project'],
             'comment': params['comment'],
@@ -128,7 +158,7 @@ class DecisionTask(object):
             'as_slugid': SlugidJar(),
             'from_now': json_time_from_now,
             'now': datetime.datetime.now().isoformat()
-        }
+        }.items())
         task = templates.load(params['task'], parameters)
         print(json.dumps(task, indent=4))
 
@@ -187,7 +217,7 @@ class Graph(object):
 
         job_graph = parse_commit(message, jobs)
         # Template parameters used when expanding the graph
-        parameters = {
+        parameters = dict(gaia_info().items() + {
             'docker_image': docker_image,
             'base_repository': params['base_repository'] or \
                 params['head_repository'],
@@ -200,7 +230,7 @@ class Graph(object):
             'mozharness_repository': params['mozharness_repository'],
             'mozharness_rev': params['mozharness_rev'],
             'revision_hash': params['revision_hash']
-        }
+        }.items())
 
         treeherder_route = '{}.{}.{}'.format(
             TREEHERDER_ROUTE_PREFIX,
