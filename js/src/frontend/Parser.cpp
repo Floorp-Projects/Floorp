@@ -7008,26 +7008,30 @@ template <>
 ParseNode*
 Parser<FullParseHandler>::legacyArrayComprehension(ParseNode *array)
 {
-    array->setKind(PNK_ARRAYCOMP);
-
-    // Remove the single element from array's linked list, leaving us with an
-    // empty array literal and a comprehension expression.
+    // Discard our presumed array literal containing only a single element, and
+    // instead return an array comprehension node.  Extract the few bits of
+    // information needed from the array literal, then free it.
+    MOZ_ASSERT(array->isKind(PNK_ARRAY));
     MOZ_ASSERT(array->pn_count == 1);
-    ParseNode *bodyExpr = array->last();
+
+    uint32_t arrayBegin = handler.getPosition(array).begin;
+    uint32_t blockid = array->pn_blockid;
+
+    ParseNode *bodyExpr = array->pn_head;
     array->pn_count = 0;
     array->pn_tail = &array->pn_head;
     *array->pn_tail = nullptr;
 
-    ParseNode *comp = legacyComprehensionTail(bodyExpr, array->pn_blockid, NotGenerator,
-                                              nullptr, LegacyComprehensionHeadBlockScopeDepth(pc));
+    handler.freeTree(array);
+
+    ParseNode *comp = legacyComprehensionTail(bodyExpr, blockid, NotGenerator, nullptr,
+                                              LegacyComprehensionHeadBlockScopeDepth(pc));
     if (!comp)
         return null();
 
     MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_AFTER_ARRAY_COMPREHENSION);
 
-    TokenPos p = handler.getPosition(array);
-    p.end = pos().end;
-    return handler.newArrayComprehension(comp, array->pn_blockid, p);
+    return handler.newArrayComprehension(comp, blockid, TokenPos(arrayBegin, pos().end));
 }
 
 template <>
