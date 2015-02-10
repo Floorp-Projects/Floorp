@@ -1678,9 +1678,11 @@ BacktrackingAllocator::minimalInterval(const LiveInterval *interval, bool *pfixe
         return minimalDef(interval, reg.ins());
     }
 
-    bool fixed = false, minimal = false;
+    bool fixed = false, minimal = false, multiple = false;
 
     for (UsePositionIterator iter = interval->usesBegin(); iter != interval->usesEnd(); iter++) {
+        if (iter != interval->usesBegin())
+            multiple = true;
         LUse *use = iter->use;
 
         switch (use->policy()) {
@@ -1701,6 +1703,11 @@ BacktrackingAllocator::minimalInterval(const LiveInterval *interval, bool *pfixe
             break;
         }
     }
+
+    // If an interval contains a fixed use and at least one other use,
+    // splitAtAllRegisterUses will split each use into a different interval.
+    if (multiple && fixed)
+        minimal = false;
 
     if (pfixed)
         *pfixed = fixed;
@@ -2024,11 +2031,15 @@ BacktrackingAllocator::splitAtAllRegisterUses(LiveInterval *interval)
             // interval that covers both the instruction's input and output, so
             // that the register is not reused for an output.
             CodePosition from = inputOf(ins);
-            CodePosition to = iter->pos.next();
+            CodePosition to = iter->use->usedAtStart() ? outputOf(ins) : iter->pos.next();
 
             // Use the same interval for duplicate use positions, except when
             // the uses are fixed (they may require incompatible registers).
-            if (newIntervals.empty() || newIntervals.back()->end() != to || iter->use->policy() == LUse::FIXED) {
+            if (newIntervals.empty() ||
+                newIntervals.back()->end() != to ||
+                newIntervals.back()->usesBegin()->use->policy() == LUse::FIXED ||
+                iter->use->policy() == LUse::FIXED)
+            {
                 if (!addLiveInterval(newIntervals, vreg, spillInterval, from, to))
                     return false;
             }
