@@ -1651,9 +1651,15 @@ pref("pdfjs.firstRun", true);
 pref("pdfjs.previousHandler.preferredAction", 0);
 pref("pdfjs.previousHandler.alwaysAskBeforeHandling", false);
 
+// Shumway is only bundled in Nightly.
 #ifdef NIGHTLY_BUILD
-// Shumway component (SWF player) is disabled by default. Also see bug 904346.
+// By default, Shumway (SWF player) is only enabled for whitelisted SWFs on Windows + OS X.
+#ifdef UNIX_BUT_NOT_MAC
 pref("shumway.disabled", true);
+#else
+pref("shumway.disabled", false);
+pref("shumway.swf.whitelist", "http://g-ecx.images-amazon.com/*/AiryBasicRenderer*.swf");
+#endif
 #endif
 
 // The maximum amount of decoded image data we'll willingly keep around (we
