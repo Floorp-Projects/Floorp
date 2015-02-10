@@ -317,6 +317,8 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_COLON:
       case PNK_CASE:
       case PNK_SHORTHAND:
+      case PNK_DOWHILE:
+      case PNK_WHILE:
         return PushBinaryNodeChildren(pn, stack);
 
       // Default nodes, for dumb reasons that we're not changing now (mostly
@@ -326,6 +328,39 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         MOZ_ASSERT(pn->pn_left == nullptr);
         stack->push(pn->pn_right);
+        return PushResult::Recyclable;
+      }
+
+      // Ternary nodes with all children non-null.
+      case PNK_CONDITIONAL: {
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        stack->push(pn->pn_kid1);
+        stack->push(pn->pn_kid2);
+        stack->push(pn->pn_kid3);
+        return PushResult::Recyclable;
+      }
+
+      // if-statement nodes have condition and consequent children and a
+      // possibly-null alternative.
+      case PNK_IF: {
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        stack->push(pn->pn_kid1);
+        stack->push(pn->pn_kid2);
+        if (pn->pn_kid3)
+            stack->push(pn->pn_kid3);
+        return PushResult::Recyclable;
+      }
+
+      // try-statements have statements to execute, and one or both of a
+      // catch-list and a finally-block.
+      case PNK_TRY: {
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        MOZ_ASSERT(pn->pn_kid2 || pn->pn_kid3);
+        stack->push(pn->pn_kid1);
+        if (pn->pn_kid2)
+            stack->push(pn->pn_kid2);
+        if (pn->pn_kid3)
+            stack->push(pn->pn_kid3);
         return PushResult::Recyclable;
       }
 
@@ -359,9 +394,9 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_VAR:
       case PNK_CONST:
       case PNK_GLOBALCONST:
+      case PNK_CATCHLIST:
         return PushListNodeChildren(pn, stack);
 
-      case PNK_CONDITIONAL:
       case PNK_DOT:
       case PNK_ELEM:
       case PNK_STATEMENTLIST:
@@ -372,17 +407,12 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_TAGGED_TEMPLATE:
       case PNK_CALLSITEOBJ:
       case PNK_FUNCTION:
-      case PNK_IF:
       case PNK_SWITCH:
-      case PNK_WHILE:
-      case PNK_DOWHILE:
       case PNK_FOR:
       case PNK_WITH:
       case PNK_RETURN:
       case PNK_NEW:
-      case PNK_TRY:
       case PNK_CATCH:
-      case PNK_CATCHLIST:
       case PNK_YIELD:
       case PNK_YIELD_STAR:
       case PNK_GENEXP:
