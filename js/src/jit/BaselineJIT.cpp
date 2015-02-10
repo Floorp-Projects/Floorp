@@ -273,22 +273,6 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, InterpreterFrame *osrFra
     if (script->incWarmUpCounter() <= js_JitOptions.baselineWarmUpThreshold)
         return Method_Skipped;
 
-    if (script->isCallsiteClone()) {
-        // Ensure the original function is compiled too, so that bailouts from
-        // Ion code have a BaselineScript to resume into.
-        RootedScript original(cx, script->donorFunction()->nonLazyScript());
-        MOZ_ASSERT(original != script);
-
-        if (!original->canBaselineCompile())
-            return Method_CantCompile;
-
-        if (!original->hasBaselineScript()) {
-            MethodStatus status = BaselineCompile(cx, original);
-            if (status != Method_Compiled)
-                return status;
-        }
-    }
-
     // Frames can be marked as debuggee frames independently of its underlying
     // script being a debuggee script, e.g., when performing
     // Debugger.Frame.prototype.eval.

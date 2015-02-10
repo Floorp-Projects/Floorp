@@ -145,25 +145,6 @@ JSScript::principals()
     return compartment()->principals;
 }
 
-inline JSFunction *
-JSScript::donorFunction() const
-{
-    if (!isCallsiteClone())
-        return nullptr;
-    return &enclosingScopeOrOriginalFunction_->as<JSFunction>();
-}
-
-inline void
-JSScript::setIsCallsiteClone(JSObject *fun)
-{
-    MOZ_ASSERT(shouldCloneAtCallsite());
-    shouldCloneAtCallsite_ = false;
-    isCallsiteClone_ = true;
-    MOZ_ASSERT(isCallsiteClone());
-    MOZ_ASSERT(fun->is<JSFunction>());
-    enclosingScopeOrOriginalFunction_ = fun;
-}
-
 inline void
 JSScript::setBaselineScript(JSContext *maybecx, js::jit::BaselineScript *baselineScript)
 {

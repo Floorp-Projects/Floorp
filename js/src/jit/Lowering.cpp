@@ -3062,16 +3062,6 @@ LIRGenerator::visitCallGetIntrinsicValue(MCallGetIntrinsicValue *ins)
 }
 
 void
-LIRGenerator::visitCallsiteCloneCache(MCallsiteCloneCache *ins)
-{
-    MOZ_ASSERT(ins->callee()->type() == MIRType_Object);
-
-    LCallsiteCloneCache *lir = new(alloc()) LCallsiteCloneCache(useRegister(ins->callee()));
-    define(lir, ins);
-    assignSafepoint(lir, ins);
-}
-
-void
 LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType_Object);
