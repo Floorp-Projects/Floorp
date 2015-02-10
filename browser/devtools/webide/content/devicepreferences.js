@@ -74,8 +74,16 @@ function BuildUI() {
     configView.kind = "Pref";
     configView.includeTypeName = true;
 
-    getAllPrefs = AppManager.preferenceFront.getAllPrefs()
-                  .then(json => configView.generateDisplay(json));
+    getAllPrefs = AppManager.preferenceFront.getAllPrefs();
+    getAllPrefs.then(json => {
+      let deviceItems = Object.keys(json);
+      deviceItems.sort();
+      configView.keys = deviceItems;
+      for (let i = 0; i < configView.keys.length; i++) {
+        let key = configView.keys[i];
+        configView.generateField(key, json[key].value, json[key].hasUserValue);
+      }
+    });
   } else {
     CloseUI();
   }
