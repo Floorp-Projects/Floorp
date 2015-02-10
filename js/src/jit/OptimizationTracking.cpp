@@ -498,7 +498,7 @@ IonTrackedOptimizationsRegion::findIndex(uint32_t offset) const
         uint32_t startOffset, endOffset;
         uint8_t index;
         iter.readNext(&startOffset, &endOffset, &index);
-        if (startOffset <= offset && offset < endOffset)
+        if (startOffset <= offset && offset <= endOffset)
             return Some(index);
     }
     return Nothing();
@@ -1113,13 +1113,14 @@ IonBuilder::trackInlineSuccessUnchecked(InliningStatus status)
 }
 
 JS_PUBLIC_API(void)
-JS::ForEachTrackedOptimizationAttempt(JSRuntime *rt, void *addr, uint8_t index,
+JS::ForEachTrackedOptimizationAttempt(JSRuntime *rt, void *addr,
                                       ForEachTrackedOptimizationAttemptOp &op)
 {
     JitcodeGlobalTable *table = rt->jitRuntime()->getJitcodeGlobalTable();
     JitcodeGlobalEntry entry;
     table->lookupInfallible(addr, &entry, rt);
-    entry.trackedOptimizationAttempts(index).forEach(op);
+    Maybe<uint8_t> index = entry.trackedOptimizationIndexAtAddr(addr);
+    entry.trackedOptimizationAttempts(index.value()).forEach(op);
 }
 
 static void
@@ -1203,12 +1204,13 @@ class ForEachTypeInfoAdapter : public IonTrackedOptimizationsTypeInfo::ForEachOp
 };
 
 JS_PUBLIC_API(void)
-JS::ForEachTrackedOptimizationTypeInfo(JSRuntime *rt, void *addr, uint8_t index,
+JS::ForEachTrackedOptimizationTypeInfo(JSRuntime *rt, void *addr,
                                        ForEachTrackedOptimizationTypeInfoOp &op)
 {
     JitcodeGlobalTable *table = rt->jitRuntime()->getJitcodeGlobalTable();
     JitcodeGlobalEntry entry;
     table->lookupInfallible(addr, &entry, rt);
     ForEachTypeInfoAdapter adapter(op);
-    entry.trackedOptimizationTypeInfo(index).forEach(adapter, entry.allTrackedTypes());
+    Maybe<uint8_t> index = entry.trackedOptimizationIndexAtAddr(addr);
+    entry.trackedOptimizationTypeInfo(index.value()).forEach(adapter, entry.allTrackedTypes());
 }

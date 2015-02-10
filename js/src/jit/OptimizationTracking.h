@@ -291,7 +291,8 @@ class IonTrackedOptimizationsRegion
     uint32_t startOffset() const { return startOffset_; }
     uint32_t endOffset() const { return endOffset_; }
 
-    class RangeIterator {
+    class RangeIterator
+    {
         const uint8_t *cur_;
         const uint8_t *start_;
         const uint8_t *end_;
