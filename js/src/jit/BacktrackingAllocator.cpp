@@ -172,10 +172,15 @@ BacktrackingAllocator::canAddToGroup(VirtualRegisterGroup *group, BacktrackingVi
 }
 
 static bool
+IsArgumentSlotDefinition(LDefinition *def)
+{
+    return def->policy() == LDefinition::FIXED && def->output()->isArgument();
+}
+
+static bool
 IsThisSlotDefinition(LDefinition *def)
 {
-    return def->policy() == LDefinition::FIXED &&
-           def->output()->isArgument() &&
+    return IsArgumentSlotDefinition(def) &&
            def->output()->toArgument()->index() < THIS_FRAME_ARGSLOT + sizeof(Value);
 }
 
@@ -195,6 +200,16 @@ BacktrackingAllocator::tryGroupRegisters(uint32_t vreg0, uint32_t vreg1)
     // hold the |this| value, as required by JitFrame tracing and by the Ion
     // constructor calling convention.
     if (IsThisSlotDefinition(reg0->def()) || IsThisSlotDefinition(reg1->def())) {
+        if (*reg0->def()->output() != *reg1->def()->output())
+            return true;
+    }
+
+    // Registers which might spill to the frame's argument slots can only be
+    // grouped with other such registers if the frame might access those
+    // arguments through a lazy arguments object.
+    if ((IsArgumentSlotDefinition(reg0->def()) || IsArgumentSlotDefinition(reg1->def())) &&
+        graph.mir().entryBlock()->info().script()->argumentsAliasesFormals())
+    {
         if (*reg0->def()->output() != *reg1->def()->output())
             return true;
     }
