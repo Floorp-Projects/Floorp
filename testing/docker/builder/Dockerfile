@@ -23,7 +23,7 @@ RUN git config --global user.email "docker@docker.com" && \
     git config --global user.name "docker"
 
 # VCS Tools
-RUN npm install -g taskcluster-vcs@2.1.2
+RUN npm install -g taskcluster-vcs@2.2.0
 
 # Add bin tools last as they are most likely to change
 COPY bin /home/worker/bin
