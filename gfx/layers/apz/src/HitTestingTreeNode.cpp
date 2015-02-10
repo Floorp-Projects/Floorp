@@ -9,6 +9,7 @@
 #include "AsyncPanZoomController.h"                     // for AsyncPanZoomController
 #include "LayersLogging.h"                              // for Stringify
 #include "mozilla/gfx/Point.h"                          // for Point4D
+#include "mozilla/layers/APZThreadUtils.h"              // for AssertOnCompositorThread
 #include "mozilla/layers/AsyncCompositionManager.h"     // for ViewTransform::operator Matrix4x4()
 #include "nsPrintfCString.h"                            // for nsPrintfCString
 #include "UnitTransforms.h"                             // for ViewAs
@@ -43,7 +44,7 @@ HitTestingTreeNode::~HitTestingTreeNode()
 void
 HitTestingTreeNode::Destroy()
 {
-  AsyncPanZoomController::AssertOnCompositorThread();
+  APZThreadUtils::AssertOnCompositorThread();
 
   mPrevSibling = nullptr;
   mLastChild = nullptr;

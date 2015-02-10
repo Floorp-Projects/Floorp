@@ -190,9 +190,9 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
     dataIndex += 1 + SVGPathSegUtils::ArgCountForType(newSegType);
   }
 
-  NS_ABORT_IF_FALSE((index == length && dataIndex <= dataLength) ||
-                    (index <= length && dataIndex == dataLength),
-                    "very bad - list corruption?");
+  MOZ_ASSERT((index == length && dataIndex <= dataLength) ||
+             (index <= length && dataIndex == dataLength),
+             "very bad - list corruption?");
 
   if (index < length) {
     // aNewValue has fewer items than our previous internal counterpart
@@ -232,8 +232,8 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
     }
   }
 
-  NS_ABORT_IF_FALSE(dataIndex == dataLength, "Serious processing error");
-  NS_ABORT_IF_FALSE(index == length, "Serious counting error");
+  MOZ_ASSERT(dataIndex == dataLength, "Serious processing error");
+  MOZ_ASSERT(index == length, "Serious counting error");
 }
 
 bool
@@ -252,7 +252,7 @@ DOMSVGPathSegList::InternalList() const
 SVGAnimatedPathSegList&
 DOMSVGPathSegList::InternalAList() const
 {
-  NS_ABORT_IF_FALSE(mElement->GetAnimPathSegList(), "Internal error");
+  MOZ_ASSERT(mElement->GetAnimPathSegList(), "Internal error");
   return *mElement->GetAnimPathSegList();
 }
 
@@ -518,7 +518,7 @@ DOMSVGPathSegList::
                                  uint32_t aInternalIndex,
                                  uint32_t aArgCountForItem)
 {
-  NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
+  MOZ_ASSERT(!IsAnimValList(), "call from baseVal to animVal");
 
   if (AttrIsAnimating()) {
     // animVal not a clone of baseVal
@@ -533,8 +533,8 @@ DOMSVGPathSegList::
     return;
   }
 
-  NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
-                    "animVal list not in sync!");
+  MOZ_ASSERT(animVal->mItems.Length() == mItems.Length(),
+             "animVal list not in sync!");
 
   animVal->mItems.InsertElementAt(aIndex, ItemProxy(nullptr, aInternalIndex));
 
@@ -546,7 +546,7 @@ DOMSVGPathSegList::
   MaybeRemoveItemFromAnimValListAt(uint32_t aIndex,
                                    int32_t aArgCountForItem)
 {
-  NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
+  MOZ_ASSERT(!IsAnimValList(), "call from baseVal to animVal");
 
   if (AttrIsAnimating()) {
     // animVal not a clone of baseVal
@@ -562,8 +562,8 @@ DOMSVGPathSegList::
     return;
   }
 
-  NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
-                    "animVal list not in sync!");
+  MOZ_ASSERT(animVal->mItems.Length() == mItems.Length(),
+             "animVal list not in sync!");
 
   if (animVal->ItemAt(aIndex)) {
     animVal->ItemAt(aIndex)->RemovingFromList();

@@ -16,22 +16,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=608030
 
 /** Test for Bug 608030 **/
 
-function get_pref()
-{
-  return SpecialPowers.getBoolPref("dom.send_after_paint_to_content");
-}
-
-function set_pref(val)
-{
-  SpecialPowers.setBoolPref("dom.send_after_paint_to_content", val);
-}
-
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 
 window.addEventListener("load", step0, false);
 
-is(get_pref(), true, "pref defaults to true in mochitest harness");
+is(SpecialPowers.getBoolPref("dom.send_after_paint_to_content"), true, "pref defaults to true in mochitest harness");
 
 function print_rect(rect) {
   return "(top=" + rect.top + ",left=" + rect.left + ",width=" + rect.width + ",height=" + rect.height + ")";
@@ -82,12 +72,11 @@ function step2(event)
   ok(true, "got MozAfterPaint (timeout for next step is " + timeout + "ms)");
 
   // Set the pref for our second test
-  set_pref(false);
 
   // When there was previously another page in our window, we seem to
   // get duplicate events, simultaneously, so we need to register our
   // next listener after a zero timeout.
-  setTimeout(step3, 0, timeout);
+  SpecialPowers.pushPrefEnv({'set': [['dom.send_after_paint_to_content', false]]}, function() {setTimeout(step3, 0, timeout);});
 }
 function step3(timeout)
 {
@@ -113,9 +102,7 @@ function step4()
   window.removeEventListener("MozAfterPaint", failstep, false);
 
   // Set the pref back in its initial state.
-  set_pref(true);
-
-  SimpleTest.finish();
+  SpecialPowers.pushPrefEnv({'set': [['dom.send_after_paint_to_content', true]]}, SimpleTest.finish);
 }
 
 </script>

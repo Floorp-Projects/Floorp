@@ -668,10 +668,10 @@ abort:
 
 nsresult NrIceCtx::StartGathering() {
   ASSERT_ON_THREAD(sts_target_);
-  MOZ_ASSERT(ctx_->state == ICE_CTX_INIT);
-  if (ctx_->state != ICE_CTX_INIT) {
+  MOZ_ASSERT(connection_state_ == ICE_CTX_INIT);
+  if (connection_state_ != ICE_CTX_INIT) {
     MOZ_MTLOG(ML_ERROR, "ICE ctx in the wrong state for gathering: '"
-              << name_ << "'");
+              << name_ << "'  state: " << connection_state_);
     SetConnectionState(ICE_CTX_FAILED);
     return NS_ERROR_FAILURE;
   }
@@ -833,4 +833,3 @@ void nr_ice_compute_codeword(char *buf, int len,char *codeword) {
 
     return;
 }
-

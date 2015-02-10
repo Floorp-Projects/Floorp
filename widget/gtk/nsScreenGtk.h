@@ -33,6 +33,8 @@ public:
   NS_IMETHOD GetId(uint32_t* aId);
   NS_IMETHOD GetRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight);
   NS_IMETHOD GetAvailRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight);
+  NS_IMETHOD GetRectDisplayPix(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight);
+  NS_IMETHOD GetAvailRectDisplayPix(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight);
   NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth);
   NS_IMETHOD GetColorDepth(int32_t* aColorDepth);
 
@@ -41,6 +43,8 @@ public:
   void Init(XineramaScreenInfo *aScreenInfo);
 #endif /* MOZ_X11 */
 
+  static double GetDPIScale();
+
 private:
   uint32_t mScreenNum;
   nsIntRect mRect;
@@ -48,4 +52,4 @@ private:
   uint32_t mId;
 };
 
-#endif  // nsScreenGtk_h___ 
+#endif  // nsScreenGtk_h___

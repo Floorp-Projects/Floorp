@@ -98,7 +98,7 @@ void ProfileEntry::log()
   //   mTagData   (const char*)  c,s
   //   mTagPtr    (void*)        d,l,L,B (immediate backtrace), S(start-of-stack),
   //                             J (JIT code addr)
-  //   mTagInt    (int)          n,f,y,o (JIT optimization info index), T (thread id)
+  //   mTagInt    (int)          n,f,y, T (thread id)
   //   mTagChar   (char)         h
   //   mTagFloat  (double)       r,t,p,R (resident memory), U (unshared memory)
   switch (mTagName) {
@@ -108,7 +108,7 @@ void ProfileEntry::log()
       LOGF("%c \"%s\"", mTagName, mTagData); break;
     case 'd': case 'l': case 'L': case 'J': case 'B': case 'S':
       LOGF("%c %p", mTagName, mTagPtr); break;
-    case 'n': case 'f': case 'y': case 'o': case 'T':
+    case 'n': case 'f': case 'y': case 'T':
       LOGF("%c %d", mTagName, mTagInt); break;
     case 'h':
       LOGF("%c \'%c\'", mTagName, mTagChar); break;
@@ -441,11 +441,6 @@ void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JS
                       if (readAheadPos != mWritePos &&
                           mEntries[readAheadPos].mTagName == 'J') {
                         void* pc = mEntries[readAheadPos].mTagPtr;
-                        incBy++;
-                        readAheadPos = (framePos + incBy) % mEntrySize;
-                        MOZ_ASSERT(readAheadPos != mWritePos &&
-                                   mEntries[readAheadPos].mTagName == 'o');
-                        uint32_t index = mEntries[readAheadPos].mTagInt;
 
                         // TODOshu: cannot stream tracked optimization info if
                         // the JS engine has already shut down when streaming.
@@ -453,9 +448,9 @@ void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JS
                           b.Name("opts");
                           b.BeginArray();
                             StreamOptimizationTypeInfoOp typeInfoOp(b);
-                            JS::ForEachTrackedOptimizationTypeInfo(rt, pc, index, typeInfoOp);
+                            JS::ForEachTrackedOptimizationTypeInfo(rt, pc, typeInfoOp);
                             StreamOptimizationAttemptsOp attemptOp(b);
-                            JS::ForEachTrackedOptimizationAttempt(rt, pc, index, attemptOp);
+                            JS::ForEachTrackedOptimizationAttempt(rt, pc, attemptOp);
                           b.EndArray();
                         }
                       }

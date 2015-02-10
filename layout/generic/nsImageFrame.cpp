@@ -1246,7 +1246,7 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
                                  nsPoint              aPt)
 {
   // We should definitely have a gIconLoad here.
-  NS_ABORT_IF_FALSE(gIconLoad, "How did we succeed in Init then?");
+  MOZ_ASSERT(gIconLoad, "How did we succeed in Init then?");
 
   // Calculate the inner area
   nsRect  inner = GetInnerArea() + aPt;
@@ -1426,7 +1426,7 @@ nsDisplayImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
     static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
 
   if (aBuilder->ShouldSyncDecodeImages() &&
-      geometry->LastDrawResult() != DrawResult::SUCCESS) {
+      geometry->ShouldInvalidateToSyncDecodeImages()) {
     bool snap;
     aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
   }

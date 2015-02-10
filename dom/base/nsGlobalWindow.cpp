@@ -1524,7 +1524,7 @@ nsGlobalWindow::CleanUp()
   }
 
   if (mCleanMessageManager) {
-    NS_ABORT_IF_FALSE(mIsChrome, "only chrome should have msg manager cleaned");
+    MOZ_ASSERT(mIsChrome, "only chrome should have msg manager cleaned");
     nsGlobalChromeWindow *asChrome = static_cast<nsGlobalChromeWindow*>(this);
     if (asChrome->mMessageManager) {
       static_cast<nsFrameMessageManager*>(
@@ -8119,10 +8119,10 @@ PopulateMessagePortList(MessagePortBase* aKey, MessagePortBase* aValue, void* aC
 NS_IMETHODIMP
 PostMessageEvent::Run()
 {
-  NS_ABORT_IF_FALSE(mTargetWindow->IsOuterWindow(),
-                    "should have been passed an outer window!");
-  NS_ABORT_IF_FALSE(!mSource || mSource->IsOuterWindow(),
-                    "should have been passed an outer window!");
+  MOZ_ASSERT(mTargetWindow->IsOuterWindow(),
+             "should have been passed an outer window!");
+  MOZ_ASSERT(!mSource || mSource->IsOuterWindow(),
+             "should have been passed an outer window!");
 
   AutoJSAPI jsapi;
   jsapi.Init();
@@ -8137,8 +8137,8 @@ PostMessageEvent::Run()
       targetWindow->IsClosedOrClosing())
     return NS_OK;
 
-  NS_ABORT_IF_FALSE(targetWindow->IsInnerWindow(),
-                    "we ordered an inner window!");
+  MOZ_ASSERT(targetWindow->IsInnerWindow(),
+             "we ordered an inner window!");
   JSAutoCompartment ac(cx, targetWindow->GetWrapperPreserveColor());
 
   // Ensure that any origin which might have been provided is the origin of this
@@ -8235,8 +8235,8 @@ nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   nsRefPtr<nsGlobalWindow> callerInnerWin = CallerInnerWindow();
   nsIPrincipal* callerPrin;
   if (callerInnerWin) {
-    NS_ABORT_IF_FALSE(callerInnerWin->IsInnerWindow(),
-                      "should have gotten an inner window here");
+    MOZ_ASSERT(callerInnerWin->IsInnerWindow(),
+               "should have gotten an inner window here");
 
     // Compute the caller's origin either from its principal or, in the case the
     // principal doesn't carry a URI (e.g. the system principal), the caller's

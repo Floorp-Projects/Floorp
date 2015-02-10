@@ -76,8 +76,8 @@ nsSVGFilterInstance::ComputeBounds()
 
   // Set the user space bounds (i.e. the filter region in user space).
   nsSVGLength2 XYWH[4];
-  NS_ABORT_IF_FALSE(sizeof(mFilterElement->mLengthAttributes) == sizeof(XYWH),
-                    "XYWH size incorrect");
+  static_assert(sizeof(mFilterElement->mLengthAttributes) == sizeof(XYWH),
+                "XYWH size incorrect");
   memcpy(XYWH, mFilterElement->mLengthAttributes,
     sizeof(mFilterElement->mLengthAttributes));
   XYWH[0] = *mFilterFrame->GetLengthValue(SVGFilterElement::ATTR_X);

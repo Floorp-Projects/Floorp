@@ -221,14 +221,17 @@ SandboxBroker::SetSecurityLevelForGMPlugin()
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
   sandbox::MitigationFlags mitigations =
+    sandbox::MITIGATION_BOTTOM_UP_ASLR |
     sandbox::MITIGATION_HEAP_TERMINATE |
     sandbox::MITIGATION_SEHOP |
+    sandbox::MITIGATION_DEP_NO_ATL_THUNK |
     sandbox::MITIGATION_DEP;
 
   result = mPolicy->SetProcessMitigations(mitigations);
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
   mitigations =
+    sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
     sandbox::MITIGATION_DLL_SEARCH_ORDER;
 
   result = mPolicy->SetDelayedProcessMitigations(mitigations);

@@ -473,6 +473,33 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t *ptr, HeapAccess *access)
         }
         kind = HeapAccess::Store;
         break;
+      case Pack2ByteOpcode(OP2_MOVD_VdEd):
+        MOZ_ASSERT(!haveImm);
+        otherOperand = OtherOperand(xmm);
+        switch (type) {
+          case VEX_PD: memSize = 4; break;
+          default: MOZ_CRASH("Unexpected VEX type");
+        }
+        kind = HeapAccess::Load;
+        break;
+      case Pack2ByteOpcode(OP2_MOVQ_WdVd):
+        MOZ_ASSERT(!haveImm);
+        otherOperand = OtherOperand(xmm);
+        switch (type) {
+          case VEX_PD: memSize = 8; break;
+          default: MOZ_CRASH("Unexpected VEX type");
+        }
+        kind = HeapAccess::Store;
+        break;
+      case Pack2ByteOpcode(OP2_MOVD_EdVd): // aka OP2_MOVQ_VdWd
+        MOZ_ASSERT(!haveImm);
+        otherOperand = OtherOperand(xmm);
+        switch (type) {
+          case VEX_SS: memSize = 8; kind = HeapAccess::Load; break;
+          case VEX_PD: memSize = 4; kind = HeapAccess::Store; break;
+          default: MOZ_CRASH("Unexpected VEX type");
+        }
+        break;
       default:
         MOZ_CRASH("Unable to disassemble instruction");
     }

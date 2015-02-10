@@ -832,10 +832,7 @@ class JSScript : public js::gc::TenuredCell
     js::HeapPtrObject sourceObject_;
 
     js::HeapPtrFunction function_;
-
-    // For callsite clones, which cannot have enclosing scopes, the original
-    // function; otherwise the enclosing scope
-    js::HeapPtrObject   enclosingScopeOrOriginalFunction_;
+    js::HeapPtrObject   enclosingStaticScope_;
 
     /* Information attached by Baseline/Ion for sequential mode execution. */
     js::jit::IonScript *ion;
@@ -961,15 +958,6 @@ class JSScript : public js::gc::TenuredCell
 
     // 'this', 'arguments' and f.apply() are used. This is likely to be a wrapper.
     bool usesArgumentsApplyAndThis_:1;
-
-    // PJS FIXME bug 1121433 - clone at call site may be obsolete
-    /* script is attempted to be cloned anew at each callsite. This is
-       temporarily needed for ParallelArray selfhosted code until type
-       information can be made context sensitive. See discussion in
-       bug 826148. */
-    bool shouldCloneAtCallsite_:1;
-    bool isCallsiteClone_:1; /* is a callsite clone; has a link to the original function */
-    bool shouldInline_:1;    /* hint to inline when possible */
 
     // IonMonkey compilation hints.
     bool failedBoundsCheck_:1; /* script has had hoisted bounds checks fail */
@@ -1205,19 +1193,6 @@ class JSScript : public js::gc::TenuredCell
     }
     void setUsesArgumentsApplyAndThis() { usesArgumentsApplyAndThis_ = true; }
 
-    bool shouldCloneAtCallsite() const {
-        return shouldCloneAtCallsite_;
-    }
-    bool shouldInline() const {
-        return shouldInline_;
-    }
-
-    void setShouldCloneAtCallsite() { shouldCloneAtCallsite_ = true; }
-    void setShouldInline() { shouldInline_ = true; }
-
-    bool isCallsiteClone() const {
-        return isCallsiteClone_;
-    }
     bool isGeneratorExp() const { return isGeneratorExp_; }
 
     bool failedBoundsCheck() const {
@@ -1396,7 +1371,7 @@ class JSScript : public js::gc::TenuredCell
     }
 
     bool isRelazifiable() const {
-        return (selfHosted() || lazyScript) &&
+        return (selfHosted() || lazyScript) && !types_ &&
                !isGenerator() && !hasBaselineScript() && !hasAnyIonScript() &&
                !hasScriptCounts() && !doNotRelazify_;
     }
@@ -1425,12 +1400,6 @@ class JSScript : public js::gc::TenuredCell
      * that expects the function to be non-lazy.
      */
     inline void ensureNonLazyCanonicalFunction(JSContext *cx);
-
-    /*
-     * Donor provided itself to callsite clone; null if this is non-clone.
-     */
-    JSFunction *donorFunction() const;
-    void setIsCallsiteClone(JSObject *fun);
 
     JSFlatString *sourceData(JSContext *cx);
 
@@ -1464,9 +1433,7 @@ class JSScript : public js::gc::TenuredCell
 
     /* See StaticScopeIter comment. */
     JSObject *enclosingStaticScope() const {
-        if (isCallsiteClone())
-            return nullptr;
-        return enclosingScopeOrOriginalFunction_;
+        return enclosingStaticScope_;
     }
 
   private:

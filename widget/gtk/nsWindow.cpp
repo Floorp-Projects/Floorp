@@ -19,6 +19,7 @@
 #include "nsWidgetsCID.h"
 #include "nsDragService.h"
 #include "nsIWidgetListener.h"
+#include "nsIScreenManager.h"
 
 #include "nsGtkKeyUtils.h"
 #include "nsGtkCursors.h"
@@ -681,14 +682,14 @@ nsWindow::Destroy(void)
         gtk_widget_destroy(mShell);
         mShell = nullptr;
         mContainer = nullptr;
-        NS_ABORT_IF_FALSE(!mGdkWindow,
-                          "mGdkWindow should be NULL when mContainer is destroyed");
+        MOZ_ASSERT(!mGdkWindow,
+                   "mGdkWindow should be NULL when mContainer is destroyed");
     }
     else if (mContainer) {
         gtk_widget_destroy(GTK_WIDGET(mContainer));
         mContainer = nullptr;
-        NS_ABORT_IF_FALSE(!mGdkWindow,
-                          "mGdkWindow should be NULL when mContainer is destroyed");
+        MOZ_ASSERT(!mGdkWindow,
+                   "mGdkWindow should be NULL when mContainer is destroyed");
     }
     else if (mGdkWindow) {
         // Destroy child windows to ensure that their mThebesSurfaces are
@@ -741,7 +742,11 @@ nsWindow::GetDPI()
 double
 nsWindow::GetDefaultScaleInternal()
 {
+#if (MOZ_WIDGET_GTK == 3)
     return GdkScaleFactor();
+#else
+    return gfxPlatformGtk::GetDPIScale();
+#endif
 }
 
 NS_IMETHODIMP
@@ -763,8 +768,8 @@ nsWindow::SetParent(nsIWidget *aNewParent)
     if (!oldContainer) {
         // The GdkWindows have been destroyed so there is nothing else to
         // reparent.
-        NS_ABORT_IF_FALSE(gdk_window_is_destroyed(mGdkWindow),
-                          "live GdkWindow with no widget");
+        MOZ_ASSERT(gdk_window_is_destroyed(mGdkWindow),
+                   "live GdkWindow with no widget");
         return NS_OK;
     }
 
@@ -795,12 +800,12 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
     if (!oldContainer) {
         // The GdkWindows have been destroyed so there is nothing else to
         // reparent.
-        NS_ABORT_IF_FALSE(gdk_window_is_destroyed(mGdkWindow),
-                          "live GdkWindow with no widget");
+        MOZ_ASSERT(gdk_window_is_destroyed(mGdkWindow),
+                   "live GdkWindow with no widget");
         return NS_OK;
     }
-    NS_ABORT_IF_FALSE(!gdk_window_is_destroyed(mGdkWindow),
-                      "destroyed GdkWindow with widget");
+    MOZ_ASSERT(!gdk_window_is_destroyed(mGdkWindow),
+               "destroyed GdkWindow with widget");
     
     nsWindow* newParent = static_cast<nsWindow*>(aNewParent);
     GdkWindow* newParentWindow = newParent->mGdkWindow;
@@ -826,14 +831,14 @@ nsWindow::ReparentNativeWidgetInternal(nsIWidget* aNewParent,
 {
     if (!aNewContainer) {
         // The new parent GdkWindow has been destroyed.
-        NS_ABORT_IF_FALSE(!aNewParentWindow ||
-                          gdk_window_is_destroyed(aNewParentWindow),
-                          "live GdkWindow with no widget");
+        MOZ_ASSERT(!aNewParentWindow ||
+                   gdk_window_is_destroyed(aNewParentWindow),
+                   "live GdkWindow with no widget");
         Destroy();
     } else {
         if (aNewContainer != aOldContainer) {
-            NS_ABORT_IF_FALSE(!gdk_window_is_destroyed(aNewParentWindow),
-                              "destroyed GdkWindow with widget");
+            MOZ_ASSERT(!gdk_window_is_destroyed(aNewParentWindow),
+                       "destroyed GdkWindow with widget");
             SetWidgetForHierarchy(mGdkWindow, aOldContainer, aNewContainer);
 
             if (aOldContainer == gInvisibleContainer) {
@@ -878,29 +883,61 @@ nsWindow::IsVisible() const
 NS_IMETHODIMP
 nsWindow::ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY)
 {
-    if (mIsTopLevel && mShell) {
-        int width = GdkCoordToDevicePixels(gdk_screen_width());
-        int height = GdkCoordToDevicePixels(gdk_screen_height());
-        if (aAllowSlop) {
-            if (*aX < (kWindowPositionSlop - mBounds.width))
-                *aX = kWindowPositionSlop - mBounds.width;
-            if (*aX > (width - kWindowPositionSlop))
-                *aX = width - kWindowPositionSlop;
-            if (*aY < (kWindowPositionSlop - mBounds.height))
-                *aY = kWindowPositionSlop - mBounds.height;
-            if (*aY > (height - kWindowPositionSlop))
-                *aY = height - kWindowPositionSlop;
-        } else {
-            if (*aX < 0)
-                *aX = 0;
-            if (*aX > (width - mBounds.width))
-                *aX = width - mBounds.width;
-            if (*aY < 0)
-                *aY = 0;
-            if (*aY > (height - mBounds.height))
-                *aY = height - mBounds.height;
-        }
+    if (!mIsTopLevel || !mShell)  
+      return NS_OK;
+
+    double dpiScale = GetDefaultScale().scale;
+
+    // we need to use the window size in logical screen pixels
+    int32_t logWidth = std::max(NSToIntRound(mBounds.width / dpiScale), 1);
+    int32_t logHeight = std::max(NSToIntRound(mBounds.height / dpiScale), 1);  
+
+    /* get our playing field. use the current screen, or failing that
+      for any reason, use device caps for the default screen. */
+    nsCOMPtr<nsIScreen> screen;
+    nsCOMPtr<nsIScreenManager> screenmgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
+    if (screenmgr) {
+      screenmgr->ScreenForRect(*aX, *aY, logWidth, logHeight,
+                               getter_AddRefs(screen));
     }
+
+    // We don't have any screen so leave the coordinates as is
+    if (!screen)
+      return NS_OK;
+
+    nsIntRect screenRect;
+    if (mSizeMode != nsSizeMode_Fullscreen) {
+      // For normalized windows, use the desktop work area.
+      screen->GetAvailRectDisplayPix(&screenRect.x, &screenRect.y,
+                                     &screenRect.width, &screenRect.height);
+    } else {
+      // For full screen windows, use the desktop.
+      screen->GetRectDisplayPix(&screenRect.x, &screenRect.y,
+                                &screenRect.width, &screenRect.height);
+    }
+
+    if (aAllowSlop) {
+      if (*aX < screenRect.x - logWidth + kWindowPositionSlop)
+          *aX = screenRect.x - logWidth + kWindowPositionSlop;
+      else if (*aX >= screenRect.XMost() - kWindowPositionSlop)
+          *aX = screenRect.XMost() - kWindowPositionSlop;
+
+      if (*aY < screenRect.y - logHeight + kWindowPositionSlop)
+          *aY = screenRect.y - logHeight + kWindowPositionSlop;
+      else if (*aY >= screenRect.YMost() - kWindowPositionSlop)
+          *aY = screenRect.YMost() - kWindowPositionSlop;
+    } else {  
+      if (*aX < screenRect.x)
+          *aX = screenRect.x;
+      else if (*aX >= screenRect.XMost() - logWidth)
+          *aX = screenRect.XMost() - logWidth;
+
+      if (*aY < screenRect.y)
+          *aY = screenRect.y;
+      else if (*aY >= screenRect.YMost() - logHeight)
+          *aY = screenRect.YMost() - logHeight;
+    }
+
     return NS_OK;
 }
 
@@ -6317,12 +6354,19 @@ nsWindow::GetDragInfo(WidgetMouseEvent* aMouseEvent,
     if (!gdk_window) {
         return false;
     }
-    NS_ABORT_IF_FALSE(GDK_IS_WINDOW(gdk_window), "must really be window");
+#ifdef DEBUG
+    // GDK_IS_WINDOW(...) expands to a statement-expression, and
+    // statement-expressions are not allowed in template-argument lists. So we
+    // have to make the MOZ_ASSERT condition indirect.
+    if (!GDK_IS_WINDOW(gdk_window)) {
+        MOZ_ASSERT(false, "must really be window");
+    }
+#endif
 
     // find the top-level window
     gdk_window = gdk_window_get_toplevel(gdk_window);
-    NS_ABORT_IF_FALSE(gdk_window,
-                      "gdk_window_get_toplevel should not return null");
+    MOZ_ASSERT(gdk_window,
+               "gdk_window_get_toplevel should not return null");
     *aWindow = gdk_window;
 
     if (!aMouseEvent->widget) {
@@ -6344,9 +6388,9 @@ nsWindow::GetDragInfo(WidgetMouseEvent* aMouseEvent,
 NS_IMETHODIMP
 nsWindow::BeginMoveDrag(WidgetMouseEvent* aEvent)
 {
-    NS_ABORT_IF_FALSE(aEvent, "must have event");
-    NS_ABORT_IF_FALSE(aEvent->mClass == eMouseEventClass,
-                      "event must have correct struct type");
+    MOZ_ASSERT(aEvent, "must have event");
+    MOZ_ASSERT(aEvent->mClass == eMouseEventClass,
+               "event must have correct struct type");
 
     GdkWindow *gdk_window;
     gint button, screenX, screenY;

@@ -346,14 +346,6 @@ public:
   // the seek target.
   virtual nsresult Seek(double aTime, SeekTarget::Type aSeekType);
 
-  // Enables decoders to supply an enclosing byte range for a seek offset.
-  // E.g. used by ChannelMediaResource to download a whole cluster for
-  // DASH-WebM.
-  virtual nsresult GetByteRangeForSeek(int64_t const aOffset,
-                                       MediaByteRange &aByteRange) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   // Initialize state machine and schedule it.
   nsresult InitializeStateMachine(MediaDecoder* aCloneDonor);
 
@@ -487,17 +479,17 @@ public:
     bool mStreamFinishedOnMainThread;
   };
 
+  class OutputStreamListener;
+
   struct OutputStreamData {
-    void Init(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
-    {
-      mStream = aStream;
-      mFinishWhenEnded = aFinishWhenEnded;
-    }
+    void Init(MediaDecoder* aDecoder, ProcessedMediaStream* aStream);
+    ~OutputStreamData();
     nsRefPtr<ProcessedMediaStream> mStream;
     // mPort connects mDecodedStream->mStream to our mStream.
     nsRefPtr<MediaInputPort> mPort;
-    bool mFinishWhenEnded;
+    nsRefPtr<OutputStreamListener> mListener;
   };
+
   /**
    * Connects mDecodedStream->mStream to aStream->mStream.
    */
@@ -1082,40 +1074,11 @@ protected:
   // Media data resource.
   nsRefPtr<MediaResource> mResource;
 
+private:
   // |ReentrantMonitor| for detecting when the video play state changes. A call
   // to |Wait| on this monitor will block the thread until the next state
-  // change.
-  // Using a wrapper class to restrict direct access to the |ReentrantMonitor|
-  // object. Subclasses may override |MediaDecoder|::|GetReentrantMonitor|
-  // e.g. |DASHRepDecoder|::|GetReentrantMonitor| returns the monitor in the
-  // main |DASHDecoder| object. In this case, directly accessing the
-  // member variable mReentrantMonitor in |DASHRepDecoder| is wrong.
-  // The wrapper |RestrictedAccessMonitor| restricts use to the getter
-  // function rather than the object itself.
-private:
-  class RestrictedAccessMonitor
-  {
-  public:
-    explicit RestrictedAccessMonitor(const char* aName) :
-      mReentrantMonitor(aName)
-    {
-      MOZ_COUNT_CTOR(RestrictedAccessMonitor);
-    }
-    ~RestrictedAccessMonitor()
-    {
-      MOZ_COUNT_DTOR(RestrictedAccessMonitor);
-    }
-
-    // Returns a ref to the reentrant monitor
-    ReentrantMonitor& GetReentrantMonitor() {
-      return mReentrantMonitor;
-    }
-  private:
-    ReentrantMonitor mReentrantMonitor;
-  };
-
-  // The |RestrictedAccessMonitor| member object.
-  RestrictedAccessMonitor mReentrantMonitor;
+  // change.  Explicitly private for force access via GetReentrantMonitor.
+  ReentrantMonitor mReentrantMonitor;
 
 #ifdef MOZ_EME
   nsRefPtr<CDMProxy> mProxy;

@@ -498,7 +498,7 @@ IonTrackedOptimizationsRegion::findIndex(uint32_t offset) const
         uint32_t startOffset, endOffset;
         uint8_t index;
         iter.readNext(&startOffset, &endOffset, &index);
-        if (startOffset <= offset && offset < endOffset)
+        if (startOffset <= offset && offset <= endOffset)
             return Some(index);
     }
     return Nothing();
@@ -829,8 +829,17 @@ static void
 SpewConstructor(TypeSet::Type ty, JSFunction *constructor)
 {
 #ifdef DEBUG
+    if (!constructor->isInterpreted()) {
+        JitSpew(JitSpew_OptimizationTracking, "   Unique type %s has native constructor",
+                TypeSet::TypeString(ty));
+        return;
+    }
+
     char buf[512];
-    PutEscapedString(buf, 512, constructor->displayAtom(), 0);
+    if (constructor->displayAtom())
+        PutEscapedString(buf, 512, constructor->displayAtom(), 0);
+    else
+        JS_snprintf(buf, mozilla::ArrayLength(buf), "??");
 
     const char *filename;
     uint32_t lineno;
@@ -1113,13 +1122,14 @@ IonBuilder::trackInlineSuccessUnchecked(InliningStatus status)
 }
 
 JS_PUBLIC_API(void)
-JS::ForEachTrackedOptimizationAttempt(JSRuntime *rt, void *addr, uint8_t index,
+JS::ForEachTrackedOptimizationAttempt(JSRuntime *rt, void *addr,
                                       ForEachTrackedOptimizationAttemptOp &op)
 {
     JitcodeGlobalTable *table = rt->jitRuntime()->getJitcodeGlobalTable();
     JitcodeGlobalEntry entry;
     table->lookupInfallible(addr, &entry, rt);
-    entry.trackedOptimizationAttempts(index).forEach(op);
+    Maybe<uint8_t> index = entry.trackedOptimizationIndexAtAddr(addr);
+    entry.trackedOptimizationAttempts(index.value()).forEach(op);
 }
 
 static void
@@ -1203,12 +1213,13 @@ class ForEachTypeInfoAdapter : public IonTrackedOptimizationsTypeInfo::ForEachOp
 };
 
 JS_PUBLIC_API(void)
-JS::ForEachTrackedOptimizationTypeInfo(JSRuntime *rt, void *addr, uint8_t index,
+JS::ForEachTrackedOptimizationTypeInfo(JSRuntime *rt, void *addr,
                                        ForEachTrackedOptimizationTypeInfoOp &op)
 {
     JitcodeGlobalTable *table = rt->jitRuntime()->getJitcodeGlobalTable();
     JitcodeGlobalEntry entry;
     table->lookupInfallible(addr, &entry, rt);
     ForEachTypeInfoAdapter adapter(op);
-    entry.trackedOptimizationTypeInfo(index).forEach(adapter, entry.allTrackedTypes());
+    Maybe<uint8_t> index = entry.trackedOptimizationIndexAtAddr(addr);
+    entry.trackedOptimizationTypeInfo(index.value()).forEach(adapter, entry.allTrackedTypes());
 }

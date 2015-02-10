@@ -752,8 +752,9 @@ FindSuitableDTD(CParserContext& aParserContext)
   aParserContext.mAutoDetectStatus = ePrimaryDetect;
 
   // Quick check for view source.
-  NS_ABORT_IF_FALSE(aParserContext.mParserCommand != eViewSource,
-    "The old parser is not supposed to be used for View Source anymore.");
+  MOZ_ASSERT(aParserContext.mParserCommand != eViewSource,
+             "The old parser is not supposed to be used for View Source "
+             "anymore.");
 
   // Now see if we're parsing HTML (which, as far as we're concerned, simply
   // means "not XML").

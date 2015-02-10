@@ -100,7 +100,7 @@ nsGIFDecoder2::~nsGIFDecoder2()
 void
 nsGIFDecoder2::FinishInternal()
 {
-  NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call FinishInternal after error!");
+  MOZ_ASSERT(!HasError(), "Shouldn't call FinishInternal after error!");
 
   // If the GIF got cut off, handle it anyway
   if (!IsSizeDecode() && mGIFOpen) {
@@ -570,7 +570,7 @@ ConvertColormap(uint32_t* aColormap, uint32_t aColors)
 void
 nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount)
 {
-  NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
+  MOZ_ASSERT(!HasError(), "Shouldn't call WriteInternal after error!");
 
   // These variables changed names; renaming would make a much bigger patch :(
   const uint8_t* buf = (const uint8_t*)aBuffer;
