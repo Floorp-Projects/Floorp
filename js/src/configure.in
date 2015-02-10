@@ -150,7 +150,7 @@ MOZ_ARG_DISABLE_BOOL(export-js,
 [  --disable-export-js
                           Do not mark JS symbols as DLL exported/visible.],
     DISABLE_EXPORT_JS=1,
-    DISABLE_SHARED_JS=)
+    DISABLE_EXPORT_JS=)
 
 if test "$DISABLE_SHARED_JS" = "1" ; then
   if test "$DISABLE_EXPORT_JS" = "1"; then
