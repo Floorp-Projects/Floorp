@@ -38,10 +38,11 @@ protected:
   virtual ~TextInputProcessor();
 
 private:
-  nsresult InitInternal(nsIDOMWindow* aWindow,
-                        nsITextInputProcessorCallback* aCallback,
-                        bool aForTests,
-                        bool& aSucceeded);
+  nsresult BeginInputTransactionInternal(
+             nsIDOMWindow* aWindow,
+             nsITextInputProcessorCallback* aCallback,
+             bool aForTests,
+             bool& aSucceeded);
   nsresult CommitCompositionInternal(const nsAString* aCommitString = nullptr,
                                      bool* aSucceeded = nullptr);
   nsresult CancelCompositionInternal();
