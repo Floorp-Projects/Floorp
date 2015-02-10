@@ -286,10 +286,11 @@ enum ParseNodeKind
  *                          pn_kid3:  update expr after second ';' or nullptr
  * PNK_THROW    unary       pn_op: JSOP_THROW, pn_kid: exception
  * PNK_TRY      ternary     pn_kid1: try block
- *                          pn_kid2: null or PNK_CATCHLIST list of
- *                          PNK_LEXICALSCOPE nodes, each with pn_expr pointing
- *                          to a PNK_CATCH node
+ *                          pn_kid2: null or PNK_CATCHLIST list
  *                          pn_kid3: null or finally block
+ * PNK_CATCHLIST list       pn_head: list of PNK_LEXICALSCOPE nodes, one per
+ *                                   catch-block, each with pn_expr pointing
+ *                                   to a PNK_CATCH node
  * PNK_CATCH    ternary     pn_kid1: PNK_NAME, PNK_ARRAY, or PNK_OBJECT catch var node
  *                                   (PNK_ARRAY or PNK_OBJECT if destructuring)
  *                          pn_kid2: null or the catch guard expression
