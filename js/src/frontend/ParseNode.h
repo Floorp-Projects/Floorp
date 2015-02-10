@@ -103,7 +103,6 @@ class UpvarCookie
     F(THIS) \
     F(FUNCTION) \
     F(IF) \
-    F(ELSE) \
     F(SWITCH) \
     F(CASE) \
     F(DEFAULT) \
