@@ -7,9 +7,12 @@
 
 #include "MainThreadUtils.h"    // for NS_IsMainThread()
 #include "base/message_loop.h"  // for MessageLoop
+#include "mozilla/dom/Element.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
+#include "mozilla/layers/APZEventState.h"
 #include "nsIDocument.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
 #include "nsView.h"
@@ -18,8 +21,10 @@ using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
 
-ChromeProcessController::ChromeProcessController(nsIWidget* aWidget)
+ChromeProcessController::ChromeProcessController(nsIWidget* aWidget,
+                                                 APZEventState* aAPZEventState)
   : mWidget(aWidget)
+  , mAPZEventState(aAPZEventState)
   , mUILoop(MessageLoop::current())
 {
   // Otherwise we're initializing mUILoop incorrectly.
@@ -40,9 +45,7 @@ ChromeProcessController::InitializeRoot()
   // The displayport is zero-margin because this element is generally not
   // actually scrollable (if it is, APZC will set proper margins when it's
   // scrolled).
-  nsView* view = nsView::GetViewFor(mWidget);
-  MOZ_ASSERT(view);
-  nsIPresShell* presShell = view->GetPresShell();
+  nsIPresShell* presShell = GetPresShell();
   MOZ_ASSERT(presShell);
   MOZ_ASSERT(presShell->GetDocument());
   nsIContent* content = presShell->GetDocument()->GetDocumentElement();
@@ -106,6 +109,24 @@ ChromeProcessController::GetPresShellResolution() const
   return 1.0f;
 }
 
+nsIPresShell*
+ChromeProcessController::GetPresShell() const
+{
+  nsView* view = nsView::GetViewFor(mWidget);
+  MOZ_ASSERT(view);
+  return view->GetPresShell();
+}
+
+already_AddRefed<nsIDOMWindowUtils>
+ChromeProcessController::GetDOMWindowUtils() const
+{
+  if (nsIDocument* doc = GetPresShell()->GetDocument()) {
+    nsCOMPtr<nsIDOMWindowUtils> result = do_GetInterface(doc->GetWindow());
+    return result.forget();
+  }
+  return nullptr;
+}
+
 void
 ChromeProcessController::HandleSingleTap(const CSSPoint& aPoint,
                                          int32_t aModifiers,
@@ -119,9 +140,40 @@ ChromeProcessController::HandleSingleTap(const CSSPoint& aPoint,
     return;
   }
 
-  LayoutDevicePoint point =
-      APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid, GetPresShellResolution())
-    * mWidget->GetDefaultScale();
-
-  APZCCallbackHelper::FireSingleTapEvent(point, mWidget);
+  mAPZEventState->ProcessSingleTap(aPoint, aGuid, GetPresShellResolution());
 }
+
+void
+ChromeProcessController::HandleLongTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
+                                       const ScrollableLayerGuid& aGuid,
+                                       uint64_t aInputBlockId)
+{
+  if (MessageLoop::current() != mUILoop) {
+    mUILoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &ChromeProcessController::HandleLongTap,
+                          aPoint, aModifiers, aGuid, aInputBlockId));
+    return;
+  }
+
+  mAPZEventState->ProcessLongTap(GetDOMWindowUtils(), aPoint, aGuid,
+      aInputBlockId, GetPresShellResolution());
+}
+
+void
+ChromeProcessController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
+                                              APZStateChange aChange,
+                                              int aArg)
+{
+  if (MessageLoop::current() != mUILoop) {
+    mUILoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &ChromeProcessController::NotifyAPZStateChange,
+                          aGuid, aChange, aArg));
+    return;
+  }
+
+  mAPZEventState->ProcessAPZStateChange(GetPresShell()->GetDocument(), aGuid.mScrollId, aChange, aArg);
+}
+
+
