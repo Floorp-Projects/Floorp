@@ -600,6 +600,9 @@ class FullParseHandler
         return new_<ListNode>(kind, op, kid);
     }
 
+    ParseNode *newCatchList() {
+        return new_<ListNode>(PNK_CATCHLIST, JSOP_NOP, pos());
+    }
 
     ParseNode *newCommaExpressionList(ParseNode *kid) {
         return newList(PNK_COMMA, kid, JSOP_NOP);

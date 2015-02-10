@@ -267,6 +267,10 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
+    Node newCatchList() {
+        return newList(PNK_CATCHLIST, JSOP_NOP);
+    }
+
     Node newCommaExpressionList(Node kid) {
         return NodeUnparenthesizedCommaExpr;
     }

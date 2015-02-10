@@ -2302,11 +2302,11 @@ ASTSerializer::tryStatement(ParseNode *pn, MutableHandleValue dst)
     NodeVector guarded(cx);
     RootedValue unguarded(cx, NullValue());
 
-    if (pn->pn_kid2) {
-        if (!guarded.reserve(pn->pn_kid2->pn_count))
+    if (ParseNode *catchList = pn->pn_kid2) {
+        if (!guarded.reserve(catchList->pn_count))
             return false;
 
-        for (ParseNode *next = pn->pn_kid2->pn_head; next; next = next->pn_next) {
+        for (ParseNode *next = catchList->pn_head; next; next = next->pn_next) {
             RootedValue clause(cx);
             bool isGuarded;
             if (!catchClause(next->pn_expr, &isGuarded, &clause))
