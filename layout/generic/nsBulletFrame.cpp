@@ -177,7 +177,7 @@ class nsDisplayBulletGeometry
 public:
   nsDisplayBulletGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
     : nsDisplayItemGenericGeometry(aItem, aBuilder)
-    , nsImageGeometryMixin(aItem)
+    , nsImageGeometryMixin(aItem, aBuilder)
   {
     nsBulletFrame* f = static_cast<nsBulletFrame*>(aItem->Frame());
     mOrdinal = f->GetOrdinal();
@@ -239,7 +239,7 @@ public:
 
     nsCOMPtr<imgIContainer> image = f->GetImage();
     if (aBuilder->ShouldSyncDecodeImages() && image &&
-        geometry->LastDrawResult() != DrawResult::SUCCESS) {
+        geometry->ShouldInvalidateToSyncDecodeImages()) {
       bool snap;
       aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
     }
