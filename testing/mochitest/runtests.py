@@ -46,6 +46,7 @@ from automationutils import (
 
 from datetime import datetime
 from manifestparser import TestManifest
+from manifestparser.filters import subsuite
 from mochitest_options import MochitestOptions
 from mozprofile import Profile, Preferences
 from mozprofile.permissions import ServerLocations
@@ -1661,15 +1662,17 @@ class Mochitest(MochitestUtilsMixin):
          testPath.endswith('.xul') or \
          testPath.endswith('.js'):
           # In the case where we have a single file, we don't want to filter based on options such as subsuite.
-          tests = manifest.active_tests(disabled=disabled, options=None, **info)
+          tests = manifest.active_tests(disabled=disabled, **info)
           for test in tests:
             if 'disabled' in test:
               del test['disabled']
 
       else:
-        tests = manifest.active_tests(disabled=disabled, options=options, **info)
+        filters = [subsuite(options.subsuite)]
+        tests = manifest.active_tests(
+            disabled=disabled, filters=filters, **info)
         if len(tests) == 0:
-          tests = manifest.active_tests(disabled=True, options=options, **info)
+          tests = manifest.active_tests(disabled=True, **info)
 
     paths = []
 

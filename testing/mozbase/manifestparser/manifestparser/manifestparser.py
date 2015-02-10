@@ -12,9 +12,11 @@ import shutil
 import sys
 
 from .ini import read_ini
-from .expression import (
-    parse,
-    ParseError,
+from .filters import (
+    DEFAULT_FILTERS,
+    enabled,
+    exists as _exists,
+    filterlist,
 )
 
 relpath = os.path.relpath
@@ -311,11 +313,13 @@ class ManifestParser(object):
     ### methods for auditing
 
     def missing(self, tests=None):
-        """return list of tests that do not exist on the filesystem"""
+        """
+        return list of tests that do not exist on the filesystem
+        """
         if tests is None:
             tests = self.tests
-        return [test for test in tests
-                if not os.path.exists(test['path'])]
+        existing = list(_exists(tests, {}))
+        return [t for t in tests if t not in existing]
 
     def check_missing(self, tests=None):
         missing = self.missing(tests=tests)
@@ -703,115 +707,43 @@ class TestManifest(ManifestParser):
     specific harnesses may subclass from this if they need more logic
     """
 
-    def filter(self, values, tests):
+    def __init__(self, *args, **kwargs):
+        ManifestParser.__init__(self, *args, **kwargs)
+        self.filters = filterlist(DEFAULT_FILTERS)
+
+    def active_tests(self, exists=True, disabled=True, filters=None, **values):
         """
-        filter on a specific list tag, e.g.:
-        run-if = os == win linux
-        skip-if = os == mac
-        """
+        Run all applied filters on the set of tests.
 
-        # tags:
-        run_tag = 'run-if'
-        skip_tag = 'skip-if'
-        fail_tag = 'fail-if'
-
-        cache = {}
-
-        def _parse(cond):
-            if '#' in cond:
-                cond = cond[:cond.index('#')]
-            cond = cond.strip()
-            if cond in cache:
-                ret = cache[cond]
-            else:
-                ret = parse(cond, **values)
-                cache[cond] = ret
-            return ret
-
-        # loop over test
-        for test in tests:
-            reason = None # reason to disable
-
-            # tagged-values to run
-            if run_tag in test:
-                condition = test[run_tag]
-                if not _parse(condition):
-                    reason = '%s: %s' % (run_tag, condition)
-
-            # tagged-values to skip
-            if skip_tag in test:
-                condition = test[skip_tag]
-                if _parse(condition):
-                    reason = '%s: %s' % (skip_tag, condition)
-
-            # mark test as disabled if there's a reason
-            if reason:
-                test.setdefault('disabled', reason)
-
-            # mark test as a fail if so indicated
-            if fail_tag in test:
-                condition = test[fail_tag]
-                if _parse(condition):
-                    test['expected'] = 'fail'
-
-    def active_tests(self, exists=True, disabled=True, options=None, **values):
-        """
-        - exists : return only existing tests
-        - disabled : whether to return disabled tests
-        - options: an optparse or argparse options object, used for subsuites
-        - values : keys and values to filter on (e.g. `os = linux mac`)
+        :param exists: filter out non-existing tests (default True)
+        :param disabled: whether to return disabled tests (default True)
+        :param values: keys and values to filter on (e.g. `os = linux mac`)
+        :param filters: list of filters to apply to the tests
+        :returns: list of test objects that were not filtered out
         """
         tests = [i.copy() for i in self.tests] # shallow copy
 
-        # Conditional subsuites are specified using:
-        #    subsuite = foo,condition
-        # where 'foo' is the subsuite name, and 'condition' is the same type of
-        # condition used for skip-if.  If the condition doesn't evaluate to true,
-        # the subsuite designation will be removed from the test.
-        #
-        # Look for conditional subsuites, and replace them with the subsuite itself
-        # (if the condition is true), or nothing.
-        for test in tests:
-            subsuite = test.get('subsuite', '')
-            if ',' in subsuite:
-                try:
-                    subsuite, condition = subsuite.split(',')
-                except ValueError:
-                    raise ParseError("subsuite condition can't contain commas")
-                # strip any comments from the condition
-                condition = condition.split('#')[0]
-                matched = parse(condition, **values)
-                if matched:
-                    test['subsuite'] = subsuite
-                else:
-                    test['subsuite'] = ''
-
-        # Filter on current subsuite
-        if options:
-            if hasattr(options, 'subsuite') and options.subsuite:
-                tests = [test for test in tests if options.subsuite == test['subsuite']]
-            else:
-                tests = [test for test in tests if not test['subsuite']]
-
-        # mark all tests as passing unless indicated otherwise
+        # mark all tests as passing
         for test in tests:
             test['expected'] = test.get('expected', 'pass')
 
-        # ignore tests that do not exist
+        # make a copy so original doesn't get modified
+        fltrs = self.filters[:]
         if exists:
-            missing = self.check_missing(tests)
-            tests = [test for test in tests if test not in missing]
+            if self.strict:
+                self.check_missing(tests)
+            else:
+                fltrs.append(_exists)
 
-        # filter by tags
-        self.filter(values, tests)
-
-        # ignore disabled tests if specified
         if not disabled:
-            tests = [test for test in tests
-                     if not 'disabled' in test]
+            fltrs.append(enabled)
 
-        # return active tests
-        return tests
+        if filters:
+            fltrs += filters
+
+        for fn in fltrs:
+            tests = fn(tests, values)
+        return list(tests)
 
     def test_paths(self):
         return [test['path'] for test in self.active_tests()]
