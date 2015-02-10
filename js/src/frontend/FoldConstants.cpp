@@ -76,6 +76,7 @@ ContainsHoistedDeclaration(ExclusiveContext *cx, ParseNode *node, bool *result)
       // statement, are handled by PNK_GLOBALCONST and PNK_VAR.)
       case PNK_LET:
       case PNK_CONST:
+        MOZ_ASSERT(node->isArity(PN_LIST));
         *result = false;
         return true;
 
@@ -86,23 +87,30 @@ ContainsHoistedDeclaration(ExclusiveContext *cx, ParseNode *node, bool *result)
       // by a function statement, as observed by this function, isn't a hoisted
       // declaration.
       case PNK_FUNCTION:
+        MOZ_ASSERT(node->isArity(PN_CODE));
         *result = false;
         return true;
 
       // Statements with no sub-components at all.
       case PNK_NOP: // induced by function f() {} function f() {}
       case PNK_DEBUGGER:
+        MOZ_ASSERT(node->isArity(PN_NULLARY));
         *result = false;
         return true;
 
       // Statements containing only an expression have no declarations.
       case PNK_SEMI:
-      case PNK_RETURN:
       case PNK_THROW:
+        MOZ_ASSERT(node->isArity(PN_UNARY));
+        *result = false;
+        return true;
+
+      case PNK_RETURN:
       // These two aren't statements in the spec, but we sometimes insert them
       // in statement lists anyway.
       case PNK_YIELD_STAR:
       case PNK_YIELD:
+        MOZ_ASSERT(node->isArity(PN_BINARY));
         *result = false;
         return true;
 
@@ -298,6 +306,7 @@ ContainsHoistedDeclaration(ExclusiveContext *cx, ParseNode *node, bool *result)
       }
 
       case PNK_LEXICALSCOPE: {
+        MOZ_ASSERT(node->isArity(PN_NAME));
         ParseNode *expr = node->pn_expr;
 
         if (expr->isKind(PNK_FOR))
