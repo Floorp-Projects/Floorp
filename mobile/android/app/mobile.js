@@ -865,6 +865,3 @@ pref("device.storage.enabled", true);
 
 // Enable meta-viewport support for font inflation code
 pref("dom.meta-viewport.enabled", true);
-
-// disable the search service geoIP check
-pref("browser.search.geoip.url", "");
