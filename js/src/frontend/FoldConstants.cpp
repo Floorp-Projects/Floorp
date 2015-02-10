@@ -814,6 +814,7 @@ Fold(ExclusiveContext *cx, ParseNode **pnp,
              * NB: pn must be a PNK_IF as PNK_CONDITIONAL can never have a null
              * kid or an empty statement for a child.
              */
+            handler.prepareNodeForMutation(pn);
             pn->setKind(PNK_STATEMENTLIST);
             pn->setArity(PN_LIST);
             pn->makeEmpty();
