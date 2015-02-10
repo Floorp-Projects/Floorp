@@ -2579,6 +2579,16 @@ EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
   for (nsIFrame* current = targetFrame; current;
        current = nsLayoutUtils::GetCrossDocParentFrame(current)) {
 
+    // e10s - mark remote content as pannable. This is a work around since
+    // we don't have access to remote frame scroll info here. Apz data may
+    // assist is solving this.
+    if (current && IsRemoteTarget(current->GetContent())) {
+      panDirection = WidgetGestureNotifyEvent::ePanBoth;
+      // We don't know when we reach bounds, so just disable feedback for now.
+      displayPanFeedback = false;
+      break;
+    }
+
     nsIAtom* currentFrameType = current->GetType();
 
     // Scrollbars should always be draggable
