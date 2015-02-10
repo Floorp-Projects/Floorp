@@ -203,6 +203,17 @@ PushUnaryNodeNullableChild(ParseNode *node, NodeStack *stack)
 static PushResult
 PushBinaryNodeChildren(ParseNode *node, NodeStack *stack)
 {
+    MOZ_ASSERT(node->isArity(PN_BINARY));
+
+    stack->push(node->pn_left);
+    stack->push(node->pn_right);
+
+    return PushResult::Recyclable;
+}
+
+static PushResult
+PushBinaryNodeNullableChildren(ParseNode *node, NodeStack *stack)
+{
     MOZ_ASSERT(node->isArity(PN_BINARY) || node->isArity(PN_BINARY_OBJ));
 
     // This is *probably* PNK_SHORTHAND, but that's not yet clear.
@@ -278,6 +289,21 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_MUTATEPROTO:
       case PNK_EXPORT:
         return PushUnaryNodeChild(pn, stack);
+
+      // Assignment nodes are binary with two non-null children.
+      case PNK_ASSIGN:
+      case PNK_ADDASSIGN:
+      case PNK_SUBASSIGN:
+      case PNK_BITORASSIGN:
+      case PNK_BITXORASSIGN:
+      case PNK_BITANDASSIGN:
+      case PNK_LSHASSIGN:
+      case PNK_RSHASSIGN:
+      case PNK_URSHASSIGN:
+      case PNK_MULASSIGN:
+      case PNK_DIVASSIGN:
+      case PNK_MODASSIGN:
+        return PushBinaryNodeChildren(pn, stack);
 
       // List nodes with all non-null children.
       case PNK_OR:
@@ -357,21 +383,6 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_FOROF:
       case PNK_FORHEAD:
       case PNK_ARGSBODY:
-
-        /* Assignment operators (= += -= etc.). */
-        /* ParseNode::isAssignment assumes all these are consecutive. */
-      case PNK_ASSIGN:
-      case PNK_ADDASSIGN:
-      case PNK_SUBASSIGN:
-      case PNK_BITORASSIGN:
-      case PNK_BITXORASSIGN:
-      case PNK_BITANDASSIGN:
-      case PNK_LSHASSIGN:
-      case PNK_RSHASSIGN:
-      case PNK_URSHASSIGN:
-      case PNK_MULASSIGN:
-      case PNK_DIVASSIGN:
-      case PNK_MODASSIGN:
         break; // for now
 
       case PNK_LIMIT: // invalid sentinel value
@@ -394,7 +405,7 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
 
       case PN_BINARY:
       case PN_BINARY_OBJ:
-        return PushBinaryNodeChildren(pn, stack);
+        return PushBinaryNodeNullableChildren(pn, stack);
 
       case PN_UNARY:
         return PushUnaryNodeNullableChild(pn, stack);
