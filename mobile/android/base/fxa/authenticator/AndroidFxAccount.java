@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.common.GlobalConstants;
@@ -84,6 +85,21 @@ public class AndroidFxAccount {
   protected final Account account;
 
   /**
+   * A cache associating Account name (email address) to a representation of the
+   * account's internal bundle.
+   * <p>
+   * The cache is invalidated entirely when <it>any</it> new Account is added,
+   * because there is no reliable way to know that an Account has been removed
+   * and then re-added.
+   */
+  protected static final ConcurrentHashMap<String, ExtendedJSONObject> perAccountBundleCache =
+      new ConcurrentHashMap<>();
+
+  public static void invalidateCaches() {
+    perAccountBundleCache.clear();
+  }
+
+  /**
    * Create an Android Firefox Account instance backed by an Android Account
    * instance.
    * <p>
@@ -138,15 +154,28 @@ public class AndroidFxAccount {
    * Saves the given data as the internal bundle associated with this account.
    * @param bundle to write to account.
    */
-  protected void persistBundle(ExtendedJSONObject bundle) {
+  protected synchronized void persistBundle(ExtendedJSONObject bundle) {
+    perAccountBundleCache.put(account.name, bundle);
     accountManager.setUserData(account, ACCOUNT_KEY_DESCRIPTOR, bundle.toJSONString());
+  }
+
+  protected ExtendedJSONObject unbundle() {
+    return unbundle(true);
   }
 
   /**
    * Retrieve the internal bundle associated with this account.
    * @return bundle associated with account.
    */
-  protected ExtendedJSONObject unbundle() {
+  protected synchronized ExtendedJSONObject unbundle(boolean allowCachedBundle) {
+    if (allowCachedBundle) {
+      final ExtendedJSONObject cachedBundle = perAccountBundleCache.get(account.name);
+      if (cachedBundle != null) {
+        Logger.debug(LOG_TAG, "Returning cached account bundle.");
+        return cachedBundle;
+      }
+    }
+
     final int version = getAccountVersion();
     if (version < CURRENT_ACCOUNT_VERSION) {
       // Needs upgrade. For now, do nothing. We'd like to just put your account
@@ -159,11 +188,14 @@ public class AndroidFxAccount {
       return null;
     }
 
-    String bundle = accountManager.getUserData(account, ACCOUNT_KEY_DESCRIPTOR);
-    if (bundle == null) {
+    String bundleString = accountManager.getUserData(account, ACCOUNT_KEY_DESCRIPTOR);
+    if (bundleString == null) {
       return null;
     }
-    return unbundleAccountV2(bundle);
+    final ExtendedJSONObject bundle = unbundleAccountV2(bundleString);
+    perAccountBundleCache.put(account.name, bundle);
+    Logger.info(LOG_TAG, "Account bundle persisted to cache.");
+    return bundle;
   }
 
   protected String getBundleData(String key) {
@@ -194,25 +226,18 @@ public class AndroidFxAccount {
     return o.getByteArrayHex(key);
   }
 
-  protected void updateBundleDataBytes(String key, byte[] value) {
-    updateBundleValue(key, value == null ? null : Utils.byte2Hex(value));
-  }
-
-  protected void updateBundleValue(String key, boolean value) {
+  protected void updateBundleValues(String key, String value, String... more) {
+    if (more.length % 2 != 0) {
+      throw new IllegalArgumentException("more must be a list of key, value pairs");
+    }
     ExtendedJSONObject descriptor = unbundle();
     if (descriptor == null) {
       return;
     }
     descriptor.put(key, value);
-    persistBundle(descriptor);
-  }
-
-  protected void updateBundleValue(String key, String value) {
-    ExtendedJSONObject descriptor = unbundle();
-    if (descriptor == null) {
-      return;
+    for (int i = 0; i + 1 < more.length; i += 2) {
+      descriptor.put(more[i], more[i+1]);
     }
-    descriptor.put(key, value);
     persistBundle(descriptor);
   }
 
@@ -497,8 +522,9 @@ public class AndroidFxAccount {
     }
     Logger.info(LOG_TAG, "Moving account named like " + getObfuscatedEmail() +
         " to state " + state.getStateLabel().toString());
-    updateBundleValue(BUNDLE_KEY_STATE_LABEL, state.getStateLabel().name());
-    updateBundleValue(BUNDLE_KEY_STATE, state.toJSONObject().toJSONString());
+    updateBundleValues(
+        BUNDLE_KEY_STATE_LABEL, state.getStateLabel().name(),
+        BUNDLE_KEY_STATE, state.toJSONObject().toJSONString());
     broadcastAccountStateChangedIntent();
   }
 
@@ -511,11 +537,10 @@ public class AndroidFxAccount {
   public synchronized State getState() {
     String stateLabelString = getBundleData(BUNDLE_KEY_STATE_LABEL);
     String stateString = getBundleData(BUNDLE_KEY_STATE);
-    if (stateLabelString == null) {
-      throw new IllegalStateException("stateLabelString must not be null");
-    }
-    if (stateString == null) {
-      throw new IllegalStateException("stateString must not be null");
+    if (stateLabelString == null || stateString == null) {
+      throw new IllegalStateException("stateLabelString and stateString must not be null, but: " +
+          "(stateLabelString == null) = " + (stateLabelString == null) +
+          " and (stateString == null) = " + (stateString == null));
     }
 
     try {
