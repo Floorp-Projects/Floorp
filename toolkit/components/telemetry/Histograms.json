@@ -5459,6 +5459,18 @@
     "n_values": 244,
     "description": "The H.264 profile number (profile_idc) as extracted from the codecs parameter passed to HTMLMediaElement.canPlayType."
   },
+  "VIDEO_DECODED_H264_SPS_LEVEL": {
+    "expires_in_version": "40",
+    "kind": "enumerated",
+    "n_values": 51,
+    "description": "The H.264 level (level_idc) as extracted from the decoded SPS, from levels 1 (10) to 5.2 (51), with the addition of 0 for unknown values."
+  },
+  "VIDEO_DECODED_H264_SPS_PROFILE": {
+    "expires_in_version": "40",
+    "kind": "enumerated",
+    "n_values": 244,
+    "description": "The H.264 profile number (profile_idc) as extracted from the decoded SPS."
+  },
   "WEBRTC_ICE_FINAL_CONNECTION_STATE": {
     "expires_in_version": "never",
     "kind": "enumerated",
