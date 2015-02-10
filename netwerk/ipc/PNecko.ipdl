@@ -67,7 +67,7 @@ parent:
   PTCPServerSocket(uint16_t localPort, uint16_t backlog, nsString binaryType);
   PUDPSocket(nsCString filter);
 
-  PDNSRequest(nsCString hostName, uint32_t flags, nsCString networkInterface);
+  PDNSRequest(nsCString hostName, uint32_t flags);
 
   PRemoteOpenFile(SerializedLoadContext loadContext,
                   URIParams fileuri,

@@ -32,7 +32,6 @@ struct DNSCacheEntries
     nsTArray<nsCString> hostaddr;
     uint16_t family;
     int64_t expiration;
-    nsCString netInterface;
 };
 
 struct HttpConnInfo
