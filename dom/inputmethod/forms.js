@@ -1243,7 +1243,8 @@ let CompositionManager =  {
         Cc["@mozilla.org/text-input-processor;1"].
           createInstance(Ci.nsITextInputProcessor);
     }
-    return this._textInputProcessor.init(aWindow, this._callback);
+    return this._textInputProcessor.beginInputTransaction(aWindow,
+                                                          this._callback);
   },
 
   setComposition: function cm_setComposition(element, text, cursor, clauses) {
