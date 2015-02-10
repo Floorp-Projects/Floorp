@@ -318,18 +318,6 @@ struct nsRubyBaseContainerFrame::ReflowState
   const nsTArray<UniquePtr<nsHTMLReflowState>>& mTextReflowStates;
 };
 
-// Check whether the given extra isize can fit in the line in base level.
-static bool
-ShouldBreakBefore(const nsHTMLReflowState& aReflowState, nscoord aExtraISize)
-{
-  nsLineLayout* lineLayout = aReflowState.mLineLayout;
-  int32_t offset;
-  gfxBreakPriority priority;
-  nscoord icoord = lineLayout->GetCurrentICoord();
-  return icoord + aExtraISize > aReflowState.AvailableISize() &&
-         lineLayout->GetLastOptionalBreakPosition(&offset, &priority);
-}
-
 /* virtual */ void
 nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
                                  nsHTMLReflowMetrics& aDesiredSize,
@@ -436,7 +424,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   // When there are no frames inside the ruby base container, EndSpan
   // will return 0. However, in this case, the actual width of the
   // container could be non-zero because of non-empty ruby annotations.
-  MOZ_ASSERT(NS_INLINE_IS_BREAK_BEFORE(aStatus) ||
+  MOZ_ASSERT(NS_INLINE_IS_BREAK(aStatus) ||
              isize == lineSpanSize || mFrames.IsEmpty());
 
   // If there exists any span, the columns must either be completely
@@ -450,13 +438,10 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
       false, false, textContainers, aReflowState, reflowStates
     };
     nscoord spanISize = ReflowSpans(reflowState);
-    nscoord deltaISize = spanISize - isize;
-    if (deltaISize > 0) {
-      if (allowLineBreak && ShouldBreakBefore(aReflowState, deltaISize)) {
-        aStatus = NS_INLINE_LINE_BREAK_BEFORE();
-      } else {
-        isize = spanISize;
-      }
+    isize = std::max(isize, spanISize);
+    if (isize > aReflowState.AvailableISize() &&
+        aReflowState.mLineLayout->HasOptionalBreakPosition()) {
+      aStatus = NS_INLINE_LINE_BREAK_BEFORE();
     }
   }
 
@@ -721,14 +706,6 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
       columnISize = std::max(columnISize, textISize);
     }
   }
-  if (aReflowState.mAllowLineBreak &&
-      ShouldBreakBefore(baseReflowState, columnISize)) {
-    // Since ruby text container uses an independent line layout, it
-    // may successfully place a frame because the line is empty while
-    // the line of base container is not.
-    aStatus = NS_INLINE_LINE_BREAK_BEFORE();
-    return 0;
-  }
 
   // Reflow the base frame
   if (aColumn.mBaseFrame) {
@@ -769,8 +746,15 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
     }
   }
 
-  // Align all the line layout to the new coordinate.
   nscoord icoord = istart + columnISize;
+  // If we can break here, do it now.
+  if (icoord > baseReflowState.AvailableISize() &&
+      baseReflowState.mLineLayout->HasOptionalBreakPosition()) {
+    aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+    return 0;
+  }
+
+  // Align all the line layout to the new coordinate.
   nscoord deltaISize = icoord - baseReflowState.mLineLayout->GetCurrentICoord();
   if (deltaISize > 0) {
     baseReflowState.mLineLayout->AdvanceICoord(deltaISize);
