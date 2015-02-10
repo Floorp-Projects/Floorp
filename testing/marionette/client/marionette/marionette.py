@@ -403,6 +403,25 @@ class Actions(object):
         self.action_chain.append(['release'])
         return self
 
+    def key_down(self, key_code):
+        """
+        Perform a "keyDown" action for the given key code. Modifier keys are
+        respected by the server for the course of an action chain.
+
+        :param key_code: The key to press as a result of this action.
+        """
+        self.action_chain.append(['keyDown', key_code])
+        return self
+
+    def key_up(self, key_code):
+        """
+        Perform a "keyUp" action for the given key code. Modifier keys are
+        respected by the server for the course of an action chain.
+        :param key_up: The key to release as a result of this action.
+        """
+        self.action_chain.append(['keyUp', key_code])
+        return self
+
     def perform(self):
         '''
         Sends the action chain built so far to the server side for execution and clears the current chain of actions.
