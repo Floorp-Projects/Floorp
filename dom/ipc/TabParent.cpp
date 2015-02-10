@@ -1927,6 +1927,7 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
       aEvent.mReply.mOffset = aEvent.mInput.mOffset;
       aEvent.mReply.mRect =
         aEvent.mReply.mRect - LayoutDevicePixel::FromUntyped(GetChildProcessOffset());
+      aEvent.mReply.mWritingMode = mWritingMode;
       aEvent.mSucceeded = true;
     }
     break;
