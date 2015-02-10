@@ -2708,52 +2708,8 @@ SourceActor.prototype = {
                message: "Breakpoints can only be set while the debuggee is paused."};
     }
 
-    let loc = {
-      url: this.url,
-      line: aRequest.location.line,
-      column: aRequest.location.column,
-    };
-    let originalLoc = loc;
-
-    return this.threadActor.sources.getGeneratedLocation({
-      sourceActor: this,
-      line: loc.line,
-      column: loc.column
-    }).then(genLoc => {
-      return this._createBreakpoint(genLoc, originalLoc, aRequest.condition);
-    });
-  },
-
-  _createBreakpoint: function(loc, originalLoc, condition) {
-    return this.setBreakpoint(originalLoc.line, originalLoc.column, condition)
-               .then(response =>
-    {
-      return Promise.resolve().then(() => {
-        var actual = response.actualLocation ? response.actualLocation : loc;
-        if (actual.sourceActor.source) {
-          return this.threadActor.sources.getOriginalLocation({
-            source: actual.sourceActor.source,
-            line: actual.line,
-            column: actual.column
-          });
-        } else {
-          return actual;
-        }
-      }).then((location) => {
-        if (location.sourceActor.url !== originalLoc.url ||
-            location.line !== originalLoc.line)
-        {
-          response.actualLocation = {
-            source: location.sourceActor.form(),
-            line: location.line,
-            column: location.column
-          };
-        }
-        return response;
-      });
-    }).then(null, error => {
-      DevToolsUtils.reportException("onSetBreakpoint", error);
-    });
+    return this.setBreakpoint(aRequest.location.line, aRequest.location.column,
+                              aRequest.condition);
   },
 
   /** Get or create the BreakpointActor for the breakpoint at the given location.
@@ -2900,6 +2856,7 @@ SourceActor.prototype = {
    *        The BreakpointActor to set as breakpoint handler.
    */
   setBreakpointForActor: function (actor) {
+    let originalLocation = actor.originalLocation;
     let generatedLocation = {
       sourceActor: this,
       line: actor.generatedLocation.line,
@@ -2923,79 +2880,102 @@ SourceActor.prototype = {
       // store and the breakpoint will be set at that time. This is similar to
       // GDB's "pending" breakpoints for shared libraries that aren't loaded
       // yet.
-      return {
+      return Promise.resolve({
         actor: actor.actorID
-      };
+      });
     }
 
     // Ignore scripts for which the BreakpointActor is already a breakpoint
     // handler.
     scripts = scripts.filter((script) => !actor.hasScript(script));
 
+    let actualLocation;
+
+    // If generatedColumn is something other than 0, assume this is a column
+    // breakpoint and do not perform breakpoint sliding.
     if (generatedColumn) {
-      return this._setBreakpointAtColumn(scripts, generatedLocation, actor);
-    }
-
-    let result;
-    if (actor.scripts.size === 0) {
-      // If the BreakpointActor is not a breakpoint handler for any script, its
-      // location is not yet fixed. Use breakpoint sliding to select the first
-      // line greater than or equal to the requested line that has one or more
-      // offsets.
-      result = this._findNextLineWithOffsets(scripts, generatedLine);
+      this._setBreakpointAtColumn(scripts, generatedLocation, actor);
+      actualLocation = generatedLocation;
     } else {
-      // If the BreakpointActor is a breakpoint handler for at least one script,
-      // breakpoint sliding has already been carried out, so select the
-      // requested line, even if it does not have any offsets.
-      let entryPoints = findEntryPointsForLine(scripts, generatedLine)
-      if (entryPoints) {
-        result = {
-          line: generatedLine,
-          entryPoints: entryPoints
-        };
-      }
-    }
-
-    if (!result) {
-      return {
-        error: "noCodeAtLineColumn",
-        actor: actor.actorID
-      };
-    }
-
-    const { line: actualLine, entryPoints } = result;
-
-    const actualLocation = actualLine !== generatedLine
-                         ? { sourceActor: this, line: actualLine }
-      : undefined;
-
-    if (actualLocation) {
-      // Check whether we already have a breakpoint actor for the actual
-      // location. If we do have an existing actor, then the actor we created
-      // above is redundant and must be destroyed. If we do not have an existing
-      // actor, we need to update the breakpoint store with the new location.
-
-      let existingActor = this.breakpointActorMap.getActor(actualLocation);
-      if (existingActor) {
-        actor.onDelete();
-        this.breakpointActorMap.deleteActor(generatedLocation);
-        return {
-          actor: existingActor.actorID,
-          actualLocation
-        };
+      let result;
+      if (actor.scripts.size === 0) {
+        // If the BreakpointActor is not a breakpoint handler for any script, its
+        // location is not yet fixed. Use breakpoint sliding to select the first
+        // line greater than or equal to the requested line that has one or more
+        // offsets.
+        result = this._findNextLineWithOffsets(scripts, generatedLine);
       } else {
-        actor.generatedLocation = actualLocation;
-        this.breakpointActorMap.deleteActor(generatedLocation);
-        this.breakpointActorMap.setActor(actualLocation, actor);
+        // If the BreakpointActor is a breakpoint handler for at least one script,
+        // breakpoint sliding has already been carried out, so select the
+        // requested line, even if it does not have any offsets.
+        let entryPoints = findEntryPointsForLine(scripts, generatedLine)
+        if (entryPoints) {
+          result = {
+            line: generatedLine,
+            entryPoints: entryPoints
+          };
+        }
+      }
+
+      if (!result) {
+        return Promise.resolve({
+          error: "noCodeAtLineColumn",
+          actor: actor.actorID
+        });
+      }
+
+      if (result.line !== generatedLine) {
+        actualLocation = {
+          sourceActor: generatedLocation.sourceActor,
+          line: result.line,
+          column: generatedLocation.column
+        };
+
+        // Check whether we already have a breakpoint actor for the actual
+        // location. If we do have an existing actor, then the actor we created
+        // above is redundant and must be destroyed. If we do not have an existing
+        // actor, we need to update the breakpoint store with the new location.
+
+        let existingActor = this.breakpointActorMap.getActor(actualLocation);
+        if (existingActor) {
+          actor.onDelete();
+          this.breakpointActorMap.deleteActor(generatedLocation);
+          actor = existingActor;
+        } else {
+          actor.generatedLocation = actualLocation;
+          this.breakpointActorMap.deleteActor(generatedLocation);
+          this.breakpointActorMap.setActor(actualLocation, actor);
+          setBreakpointOnEntryPoints(this.threadActor, actor, result.entryPoints);
+        }
+      } else {
+        setBreakpointOnEntryPoints(this.threadActor, actor, result.entryPoints);
+        actualLocation = generatedLocation;
       }
     }
 
-    setBreakpointOnEntryPoints(this.threadActor, actor, entryPoints);
-
-    return {
-      actor: actor.actorID,
-      actualLocation
-    };
+    return Promise.resolve().then(() => {
+      if (actualLocation.sourceActor.source) {
+        return this.threadActor.sources.getOriginalLocation({
+          source: actualLocation.sourceActor.source,
+          line: actualLocation.line,
+          column: actualLocation.column
+        });
+      } else {
+        return actualLocation;
+      }
+    }).then((actualLocation) => {
+      let response = { actor: actor.actorID };
+      if (actualLocation.sourceActor.url !== originalLocation.sourceActor.url ||
+          actualLocation.line !== originalLocation.line)
+      {
+        response.actualLocation = {
+          source: actualLocation.sourceActor.form(),
+          line: actualLocation.line,
+          column: actualLocation.column
+        };
+      }
+      return response;
+    });
   },
 
   /**
