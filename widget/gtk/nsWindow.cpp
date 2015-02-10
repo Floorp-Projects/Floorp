@@ -19,6 +19,7 @@
 #include "nsWidgetsCID.h"
 #include "nsDragService.h"
 #include "nsIWidgetListener.h"
+#include "nsIScreenManager.h"
 
 #include "nsGtkKeyUtils.h"
 #include "nsGtkCursors.h"
@@ -741,7 +742,11 @@ nsWindow::GetDPI()
 double
 nsWindow::GetDefaultScaleInternal()
 {
+#if (MOZ_WIDGET_GTK == 3)
     return GdkScaleFactor();
+#else
+    return gfxPlatformGtk::GetDPIScale();
+#endif
 }
 
 NS_IMETHODIMP
@@ -878,29 +883,61 @@ nsWindow::IsVisible() const
 NS_IMETHODIMP
 nsWindow::ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY)
 {
-    if (mIsTopLevel && mShell) {
-        int width = GdkCoordToDevicePixels(gdk_screen_width());
-        int height = GdkCoordToDevicePixels(gdk_screen_height());
-        if (aAllowSlop) {
-            if (*aX < (kWindowPositionSlop - mBounds.width))
-                *aX = kWindowPositionSlop - mBounds.width;
-            if (*aX > (width - kWindowPositionSlop))
-                *aX = width - kWindowPositionSlop;
-            if (*aY < (kWindowPositionSlop - mBounds.height))
-                *aY = kWindowPositionSlop - mBounds.height;
-            if (*aY > (height - kWindowPositionSlop))
-                *aY = height - kWindowPositionSlop;
-        } else {
-            if (*aX < 0)
-                *aX = 0;
-            if (*aX > (width - mBounds.width))
-                *aX = width - mBounds.width;
-            if (*aY < 0)
-                *aY = 0;
-            if (*aY > (height - mBounds.height))
-                *aY = height - mBounds.height;
-        }
+    if (!mIsTopLevel || !mShell)  
+      return NS_OK;
+
+    double dpiScale = GetDefaultScale().scale;
+
+    // we need to use the window size in logical screen pixels
+    int32_t logWidth = std::max(NSToIntRound(mBounds.width / dpiScale), 1);
+    int32_t logHeight = std::max(NSToIntRound(mBounds.height / dpiScale), 1);  
+
+    /* get our playing field. use the current screen, or failing that
+      for any reason, use device caps for the default screen. */
+    nsCOMPtr<nsIScreen> screen;
+    nsCOMPtr<nsIScreenManager> screenmgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
+    if (screenmgr) {
+      screenmgr->ScreenForRect(*aX, *aY, logWidth, logHeight,
+                               getter_AddRefs(screen));
     }
+
+    // We don't have any screen so leave the coordinates as is
+    if (!screen)
+      return NS_OK;
+
+    nsIntRect screenRect;
+    if (mSizeMode != nsSizeMode_Fullscreen) {
+      // For normalized windows, use the desktop work area.
+      screen->GetAvailRectDisplayPix(&screenRect.x, &screenRect.y,
+                                     &screenRect.width, &screenRect.height);
+    } else {
+      // For full screen windows, use the desktop.
+      screen->GetRectDisplayPix(&screenRect.x, &screenRect.y,
+                                &screenRect.width, &screenRect.height);
+    }
+
+    if (aAllowSlop) {
+      if (*aX < screenRect.x - logWidth + kWindowPositionSlop)
+          *aX = screenRect.x - logWidth + kWindowPositionSlop;
+      else if (*aX >= screenRect.XMost() - kWindowPositionSlop)
+          *aX = screenRect.XMost() - kWindowPositionSlop;
+
+      if (*aY < screenRect.y - logHeight + kWindowPositionSlop)
+          *aY = screenRect.y - logHeight + kWindowPositionSlop;
+      else if (*aY >= screenRect.YMost() - kWindowPositionSlop)
+          *aY = screenRect.YMost() - kWindowPositionSlop;
+    } else {  
+      if (*aX < screenRect.x)
+          *aX = screenRect.x;
+      else if (*aX >= screenRect.XMost() - logWidth)
+          *aX = screenRect.XMost() - logWidth;
+
+      if (*aY < screenRect.y)
+          *aY = screenRect.y;
+      else if (*aY >= screenRect.YMost() - logHeight)
+          *aY = screenRect.YMost() - logHeight;
+    }
+
     return NS_OK;
 }
 
