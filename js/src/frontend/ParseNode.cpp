@@ -436,6 +436,8 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_CONST:
       case PNK_GLOBALCONST:
       case PNK_CATCHLIST:
+      case PNK_SEQ:
+      case PNK_ARGSBODY:
         return PushListNodeChildren(pn, stack);
 
       case PNK_LABEL:
@@ -465,8 +467,6 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_EXPORT_FROM:
       case PNK_EXPORT_SPEC_LIST:
       case PNK_EXPORT_SPEC:
-      case PNK_SEQ:
-      case PNK_ARGSBODY:
         break; // for now
 
       case PNK_LIMIT: // invalid sentinel value
