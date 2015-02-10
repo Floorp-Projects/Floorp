@@ -15,11 +15,11 @@
   <remote fetch="https://git.mozilla.org/external/apitrace" name="apitrace"/>
   <default remote="caf" revision="refs/tags/android-4.0.4_r2.1" sync-j="4"/>
   <!-- Gonk specific things and forks -->
-  <project name="platform_build" path="build" remote="b2g" revision="df362ace56338da8173d30d3e09e08c42c1accfa">
+  <project name="platform_build" path="build" remote="b2g" revision="6295c4eb38de793159368aa7f745ef3faf7208aa">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="6ef10ac58f5bce320d844e19aa8e0badf84568bd"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="be6bfc6ee1d5cc459744d2735bfb24c32c7fd117"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2262d4a77d4f46ab230fd747bb91e9b77bad36cb"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="eb1795a9002eb142ac58c8d68f8f4ba094af07ca"/>
