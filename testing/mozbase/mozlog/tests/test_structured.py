@@ -117,9 +117,10 @@ class TestStructuredLog(BaseStructuredTest):
         self.assert_log_equals({"action": "test_start",
                                 "test":"test1"})
 
-        self.logger.test_start(("test1", "==", "test1-ref"))
+        self.logger.test_start(("test1", "==", "test1-ref"), path="path/to/test")
         self.assert_log_equals({"action": "test_start",
-                                "test":("test1", "==", "test1-ref")})
+                                "test":("test1", "==", "test1-ref"),
+                                "path": "path/to/test"})
         self.logger.suite_end()
 
     def test_start_inprogress(self):
