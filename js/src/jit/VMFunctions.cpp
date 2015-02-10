@@ -680,11 +680,6 @@ GetIndexFromString(JSString *str)
 bool
 DebugPrologue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustReturn)
 {
-    // Mark the BaselineFrame as a debuggee frame if necessary. This must be
-    // done dynamically, so we might as well do it here.
-    if (frame->script()->isDebuggee())
-        frame->setIsDebuggee();
-
     *mustReturn = false;
 
     switch (Debugger::onEnterFrame(cx, frame)) {
@@ -759,6 +754,13 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
     // builds after each callVM, to ensure this flag is not set.
     frame->clearOverridePc();
     return true;
+}
+
+void
+FrameIsDebuggeeCheck(BaselineFrame *frame)
+{
+    if (frame->script()->isDebuggee())
+        frame->setIsDebuggee();
 }
 
 JSObject *
