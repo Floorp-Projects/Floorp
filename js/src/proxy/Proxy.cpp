@@ -753,6 +753,11 @@ JS_FRIEND_API(JSObject *)
 js::NewProxyObject(JSContext *cx, const BaseProxyHandler *handler, HandleValue priv, JSObject *proto_,
                    JSObject *parent_, const ProxyOptions &options)
 {
+    if (options.lazyProto()) {
+        MOZ_ASSERT(!proto_);
+        proto_ = TaggedProto::LazyProto;
+    }
+
     return ProxyObject::New(cx, handler, priv, TaggedProto(proto_), parent_,
                             options);
 }
