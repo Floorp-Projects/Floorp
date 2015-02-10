@@ -7,8 +7,10 @@
 add_task(function* test_zzero_frec_domain() {
   do_print("Searching for zero frecency domain should not autoFill it");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
-  yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/framed_link/"),
-                           transition: TRANSITION_FRAMED_LINK });
+  yield PlacesTestUtils.addVisits({
+    uri: NetUtil.newURI("http://mozilla.org/framed_link/"),
+    transition: TRANSITION_FRAMED_LINK
+  });
   yield check_autocomplete({
     search: "moz",
     autofilled: "moz",
@@ -20,8 +22,10 @@ add_task(function* test_zzero_frec_domain() {
 add_task(function* test_zzero_frec_url() {
   do_print("Searching for zero frecency url should not autoFill it");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
-  yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/framed_link/"),
-                           transition: TRANSITION_FRAMED_LINK });
+  yield PlacesTestUtils.addVisits({
+    uri: NetUtil.newURI("http://mozilla.org/framed_link/"),
+    transition: TRANSITION_FRAMED_LINK
+  });
   yield check_autocomplete({
     search: "mozilla.org/f",
     autofilled: "mozilla.org/f",

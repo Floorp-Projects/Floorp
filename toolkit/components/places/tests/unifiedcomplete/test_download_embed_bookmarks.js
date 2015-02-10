@@ -16,18 +16,14 @@ add_task(function* test_download_embed_bookmarks() {
   let uri4 = NetUtil.newURI("http://download");
   let uri5 = NetUtil.newURI("http://embed");
   let uri6 = NetUtil.newURI("http://framed");
-  yield promiseAddVisits([ { uri: uri1, title: "download-bookmark",
-                             transition: TRANSITION_DOWNLOAD },
-                           { uri: uri2, title: "embed-bookmark",
-                             transition: TRANSITION_EMBED },
-                           { uri: uri3, title: "framed-bookmark",
-                             transition: TRANSITION_FRAMED_LINK},
-                           { uri: uri4, title: "download2",
-                             transition: TRANSITION_DOWNLOAD },
-                           { uri: uri5, title: "embed2",
-                             transition: TRANSITION_EMBED },
-                           { uri: uri6, title: "framed2",
-                             transition: TRANSITION_FRAMED_LINK } ]);
+  yield PlacesTestUtils.addVisits([
+    { uri: uri1, title: "download-bookmark", transition: TRANSITION_DOWNLOAD },
+    { uri: uri2, title: "embed-bookmark", transition: TRANSITION_EMBED },
+    { uri: uri3, title: "framed-bookmark", transition: TRANSITION_FRAMED_LINK},
+    { uri: uri4, title: "download2", transition: TRANSITION_DOWNLOAD },
+    { uri: uri5, title: "embed2", transition: TRANSITION_EMBED },
+    { uri: uri6, title: "framed2", transition: TRANSITION_FRAMED_LINK }
+  ]);
   addBookmark({ uri: uri1,
                 title: "download-bookmark" });
   addBookmark({ uri: uri2,

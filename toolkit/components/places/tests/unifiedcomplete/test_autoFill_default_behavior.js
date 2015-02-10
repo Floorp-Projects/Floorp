@@ -13,7 +13,7 @@ add_task(function* test_default_behavior_host() {
   let uri4 = NetUtil.newURI("http://tpbk/");
   let uri5 = NetUtil.newURI("http://tagged/");
 
-  yield promiseAddVisits([
+  yield PlacesTestUtils.addVisits([
     { uri: uri1, title: "typed", transition: TRANSITION_TYPED },
     { uri: uri2, title: "visited" },
     { uri: uri4, title: "tpbk", transition: TRANSITION_TYPED },
@@ -195,7 +195,7 @@ add_task(function* test_default_behavior_url() {
   let uri3 = NetUtil.newURI("http://bookmarked/bo/");
   let uri4 = NetUtil.newURI("http://tpbk/tp/");
 
-  yield promiseAddVisits([
+  yield PlacesTestUtils.addVisits([
     { uri: uri1, title: "typed", transition: TRANSITION_TYPED },
     { uri: uri2, title: "visited" },
     { uri: uri4, title: "tpbk", transition: TRANSITION_TYPED },

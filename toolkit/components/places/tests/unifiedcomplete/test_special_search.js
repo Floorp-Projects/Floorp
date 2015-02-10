@@ -29,12 +29,14 @@ add_task(function* test_special_searches() {
   let uri10 = NetUtil.newURI("http://url/tag/2");
   let uri11 = NetUtil.newURI("http://foo.bar/tag");
   let uri12 = NetUtil.newURI("http://foo.bar/tag/2");
-  yield promiseAddVisits([ { uri: uri1, title: "title", transition: TRANSITION_TYPED },
-                           { uri: uri2, title: "foo.bar" },
-                           { uri: uri3, title: "title" },
-                           { uri: uri4, title: "foo.bar", transition: TRANSITION_TYPED },
-                           { uri: uri6, title: "foo.bar" },
-                           { uri: uri11, title: "title", transition: TRANSITION_TYPED } ]);
+  yield PlacesTestUtils.addVisits([
+    { uri: uri1, title: "title", transition: TRANSITION_TYPED },
+    { uri: uri2, title: "foo.bar" },
+    { uri: uri3, title: "title" },
+    { uri: uri4, title: "foo.bar", transition: TRANSITION_TYPED },
+    { uri: uri6, title: "foo.bar" },
+    { uri: uri11, title: "title", transition: TRANSITION_TYPED }
+  ]);
   addBookmark( { uri: uri5, title: "title" } );
   addBookmark( { uri: uri6, title: "foo.bar" } );
   addBookmark( { uri: uri7, title: "title" } );

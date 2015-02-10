@@ -12,6 +12,7 @@ let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
 let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+let { merge } = devtools.require("sdk/util/object");
 let { getPerformanceActorsConnection, PerformanceFront } = devtools.require("devtools/performance/front");
 
 let nsIProfilerModule = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
@@ -161,7 +162,7 @@ function test () {
   Task.spawn(spawnTest).then(finish, handleError);
 }
 
-function initBackend(aUrl) {
+function initBackend(aUrl, targetOps={}) {
   info("Initializing a performance front.");
 
   if (!DebuggerServer.initialized) {
@@ -175,6 +176,13 @@ function initBackend(aUrl) {
 
     yield target.makeRemote();
 
+    // Attach addition options to `target`. This is used to force mock fronts
+    // to smokescreen test different servers where memory or timeline actors
+    // may not exist. Possible options that will actually work:
+    // TEST_MOCK_MEMORY_ACTOR = true
+    // TEST_MOCK_TIMELINE_ACTOR = true
+    merge(target, targetOps);
+
     yield gDevTools.showToolbox(target, "performance");
 
     let connection = getPerformanceActorsConnection(target);
@@ -185,7 +193,7 @@ function initBackend(aUrl) {
   });
 }
 
-function initPerformance(aUrl, selectedTool="performance") {
+function initPerformance(aUrl, selectedTool="performance", targetOps={}) {
   info("Initializing a performance pane.");
 
   return Task.spawn(function*() {
@@ -193,6 +201,13 @@ function initPerformance(aUrl, selectedTool="performance") {
     let target = TargetFactory.forTab(tab);
 
     yield target.makeRemote();
+
+    // Attach addition options to `target`. This is used to force mock fronts
+    // to smokescreen test different servers where memory or timeline actors
+    // may not exist. Possible options that will actually work:
+    // TEST_MOCK_MEMORY_ACTOR = true
+    // TEST_MOCK_TIMELINE_ACTOR = true
+    merge(target, targetOps);
 
     let toolbox = yield gDevTools.showToolbox(target, selectedTool);
     let panel = toolbox.getCurrentPanel();
@@ -390,4 +405,11 @@ function dropSelection(graph) {
 function getSourceActor(aSources, aURL) {
   let item = aSources.getItemForAttachment(a => a.source.url === aURL);
   return item && item.value;
+}
+
+/**
+ * Fires a key event, like "VK_UP", "VK_DOWN", etc.
+ */
+function fireKey (e) {
+  EventUtils.synthesizeKey(e, {});
 }

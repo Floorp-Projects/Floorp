@@ -274,8 +274,11 @@ let getSimpleBorderRect = Task.async(function*(toolbox) {
   };
 });
 
-function getHighlighterActorID(toolbox) {
-  return toolbox.highlighter.actorID;
+function getHighlighterActorID(highlighter) {
+  let actorID = highlighter.actorID;
+  let connPrefix = actorID.substring(0, actorID.indexOf(highlighter.typeName));
+
+  return {actorID, connPrefix};
 }
 
 /**
@@ -304,32 +307,13 @@ let getBoxModelStatus = Task.async(function*(toolbox) {
 });
 
 let getGuideStatus = Task.async(function*(location, toolbox) {
-  let actorID = getHighlighterActorID(toolbox);
-  let {data: hidden} = yield executeInContent("Test:GetHighlighterAttribute", {
-    nodeID: "box-model-guide-" + location,
-    name: "hidden",
-    actorID
-  });
-  let {data: x1} = yield executeInContent("Test:GetHighlighterAttribute", {
-    nodeID: "box-model-guide-" + location,
-    name: "x1",
-    actorID
-  });
-  let {data: y1} = yield executeInContent("Test:GetHighlighterAttribute", {
-    nodeID: "box-model-guide-" + location,
-    name: "y1",
-    actorID
-  });
-  let {data: x2} = yield executeInContent("Test:GetHighlighterAttribute", {
-    nodeID: "box-model-guide-" + location,
-    name: "x2",
-    actorID
-  });
-  let {data: y2} = yield executeInContent("Test:GetHighlighterAttribute", {
-    nodeID: "box-model-guide-" + location,
-    name: "y2",
-    actorID
-  });
+  let id = "box-model-guide-" + location;
+
+  let hidden = yield getHighlighterNodeAttribute(toolbox.highlighter, id, "hidden");
+  let x1 = yield getHighlighterNodeAttribute(toolbox.highlighter, id, "x1");
+  let y1 = yield getHighlighterNodeAttribute(toolbox.highlighter, id, "y1");
+  let x2 = yield getHighlighterNodeAttribute(toolbox.highlighter, id, "x2");
+  let y2 = yield getHighlighterNodeAttribute(toolbox.highlighter, id, "y2");
 
   return {
     visible: !hidden,
@@ -345,11 +329,8 @@ let getGuideStatus = Task.async(function*(location, toolbox) {
  * box model highlighter.
  */
 let getPointsForRegion = Task.async(function*(region, toolbox) {
-  let {data: points} = yield executeInContent("Test:GetHighlighterAttribute", {
-    nodeID: "box-model-" + region,
-    name: "points",
-    actorID: getHighlighterActorID(toolbox)
-  });
+  let points = yield getHighlighterNodeAttribute(toolbox.highlighter,
+                                                 "box-model-" + region, "points");
   points = points.split(/[, ]/);
 
   return {
@@ -377,11 +358,8 @@ let getPointsForRegion = Task.async(function*(region, toolbox) {
  * hidden?
  */
 let isRegionHidden = Task.async(function*(region, toolbox) {
-  let {data: value} = yield executeInContent("Test:GetHighlighterAttribute", {
-    nodeID: "box-model-" + region,
-    name: "hidden",
-    actorID: getHighlighterActorID(toolbox)
-  });
+  let value = yield getHighlighterNodeAttribute(toolbox.highlighter,
+                                                "box-model-" + region, "hidden");
   return value !== null;
 });
 
@@ -389,11 +367,8 @@ let isRegionHidden = Task.async(function*(region, toolbox) {
  * Is the highlighter currently visible on the page?
  */
 let isHighlighting = Task.async(function*(toolbox) {
-  let {data: value} = yield executeInContent("Test:GetHighlighterAttribute", {
-    nodeID: "box-model-elements",
-    name: "hidden",
-    actorID: getHighlighterActorID(toolbox)
-  });
+  let value = yield getHighlighterNodeAttribute(toolbox.highlighter,
+                                                "box-model-elements", "hidden");
   return value === null;
 });
 
@@ -558,10 +533,50 @@ let clickContainer = Task.async(function*(selector, inspector) {
  * new zoom level.
  * @return {Promise}
  */
-let zoomPageTo = Task.async(function*(level, actorID) {
+let zoomPageTo = Task.async(function*(level, actorID, connPrefix) {
   yield executeInContent("Test:ChangeZoomLevel",
-                         {level, actorID});
+                         {level, actorID, connPrefix});
 });
+
+/**
+ * Get the value of an attribute on one of the highlighter's node.
+ * @param {Front} highlighter The front of the highlighter.
+ * @param {String} nodeID The Id of the node in the highlighter.
+ * @param {String} name The name of the attribute.
+ * @return {String} value
+ */
+let getHighlighterNodeAttribute = Task.async(function*(highlighter, nodeID, name) {
+  let {actorID, connPrefix} = getHighlighterActorID(highlighter);
+  let {data: value} = yield executeInContent("Test:GetHighlighterAttribute",
+                                             {nodeID, name, actorID, connPrefix});
+  return value;
+});
+
+/**
+ * Get the textContent value of one of the highlighter's node.
+ * @param {Front} highlighter The front of the highlighter.
+ * @param {String} nodeID The Id of the node in the highlighter.
+ * @return {String} value
+ */
+let getHighlighterNodeTextContent = Task.async(function*(highlighter, nodeID) {
+  let {actorID, connPrefix} = getHighlighterActorID(highlighter);
+  let {data: value} = yield executeInContent("Test:GetHighlighterTextContent",
+                                             {nodeID, actorID, connPrefix});
+  return value;
+});
+
+/**
+ * Subscribe to a given highlighter event and return a promise that resolves
+ * when the event is received.
+ * @param {String} event The name of the highlighter event to listen to.
+ * @param {Front} highlighter The front of the highlighter.
+ * @return {Promise}
+ */
+function waitForHighlighterEvent(event, highlighter) {
+  let {actorID, connPrefix} = getHighlighterActorID(highlighter);
+  return executeInContent("Test:WaitForHighlighterEvent",
+                          {event, actorID, connPrefix});
+}
 
 /**
  * Simulate the mouse leaving the markup-view area
