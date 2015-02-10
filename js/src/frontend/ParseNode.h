@@ -121,7 +121,6 @@ class UpvarCookie
     F(TRY) \
     F(CATCH) \
     F(CATCHLIST) \
-    F(FINALLY) \
     F(THROW) \
     F(DEBUGGER) \
     F(GENERATOR) \
