@@ -151,17 +151,13 @@ typedef mozilla::RangedPtr<const char16_t> ConstCharPtr;
 /*
  * Like TwoByteChars, but the chars are const.
  */
-class ConstTwoByteChars : public mozilla::RangedPtr<const char16_t>
+class ConstTwoByteChars : public mozilla::Range<const char16_t>
 {
-  public:
-    ConstTwoByteChars(const ConstTwoByteChars &s) : ConstCharPtr(s) {}
-    MOZ_IMPLICIT ConstTwoByteChars(const mozilla::RangedPtr<const char16_t> &s) : ConstCharPtr(s) {}
-    ConstTwoByteChars(const char16_t *s, size_t len) : ConstCharPtr(s, len) {}
-    ConstTwoByteChars(const char16_t *pos, const char16_t *start, size_t len)
-      : ConstCharPtr(pos, start, len)
-    {}
+    typedef mozilla::Range<const char16_t> Base;
 
-    using ConstCharPtr::operator=;
+  public:
+    ConstTwoByteChars() : Base() {}
+    ConstTwoByteChars(const char16_t *aChars, size_t aLength) : Base(aChars, aLength) {}
 };
 
 /*
