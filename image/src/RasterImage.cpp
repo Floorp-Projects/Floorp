@@ -1184,6 +1184,7 @@ RasterImage::NotifyForDecodeOnDrawOnly()
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethod(this, &RasterImage::NotifyForDecodeOnDrawOnly);
     NS_DispatchToMainThread(runnable);
+    return;
   }
 
   NotifyProgress(FLAG_DECODE_STARTED | FLAG_ONLOAD_BLOCKED);
