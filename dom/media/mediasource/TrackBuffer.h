@@ -114,6 +114,7 @@ public:
 
 private:
   friend class DecodersToInitialize;
+  friend class ReleaseDecoderTask;
   ~TrackBuffer();
 
   // Create a new decoder, set mCurrentDecoder to the new decoder and
