@@ -894,6 +894,26 @@ GMPParent::ForgetGMPContentParent()
   return Move(mGMPContentParent.forget());
 }
 
+bool
+GMPParent::EnsureProcessLoaded(base::ProcessId* aID)
+{
+  if (!EnsureProcessLoaded()) {
+    return false;
+  }
+  *aID = OtherPid();
+  return true;
+}
+
+bool
+GMPParent::Bridge(GMPServiceParent* aGMPServiceParent)
+{
+  if (!PGMPContent::Bridge(aGMPServiceParent, this)) {
+    return false;
+  }
+  ++mGMPContentChildCount;
+  return true;
+}
+
 } // namespace gmp
 } // namespace mozilla
 

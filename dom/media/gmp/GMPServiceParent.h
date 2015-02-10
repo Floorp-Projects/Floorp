@@ -7,6 +7,7 @@
 #define GMPServiceParent_h_
 
 #include "GMPService.h"
+#include "mozilla/gmp/PGMPServiceParent.h"
 #include "mozIGeckoMediaPluginChromeService.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
@@ -53,6 +54,8 @@ public:
   int32_t AsyncShutdownTimeoutMs();
 
 private:
+  friend class GMPServiceParent;
+
   virtual ~GeckoMediaPluginServiceParent();
 
   void ClearStorage();
@@ -168,6 +171,39 @@ private:
 
 nsresult ReadSalt(nsIFile* aPath, nsACString& aOutData);
 bool MatchOrigin(nsIFile* aPath, const nsACString& aOrigin);
+
+class GMPServiceParent final : public PGMPServiceParent
+{
+public:
+  explicit GMPServiceParent(GeckoMediaPluginServiceParent* aService)
+    : mService(aService)
+  {
+  }
+  virtual ~GMPServiceParent();
+
+  virtual bool RecvLoadGMP(const nsCString& aNodeId,
+                           const nsCString& aApi,
+                           nsTArray<nsCString>&& aTags,
+                           nsTArray<ProcessId>&& aAlreadyBridgedTo,
+                           base::ProcessId* aID,
+                           nsCString* aDisplayName,
+                           nsCString* aPluginId) override;
+  virtual bool RecvGetGMPNodeId(const nsString& aOrigin,
+                                const nsString& aTopLevelOrigin,
+                                const bool& aInPrivateBrowsing,
+                                nsCString* aID) override;
+  static bool RecvGetGMPPluginVersionForAPI(const nsCString& aAPI,
+                                            nsTArray<nsCString>&& aTags,
+                                            bool* aHasPlugin,
+                                            nsCString* aVersion);
+
+  virtual void ActorDestroy(ActorDestroyReason aWhy);
+
+  static PGMPServiceParent* Create(Transport* aTransport, ProcessId aOtherPid);
+
+private:
+  nsRefPtr<GeckoMediaPluginServiceParent> mService;
+};
 
 } // namespace gmp
 } // namespace mozilla

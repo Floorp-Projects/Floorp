@@ -110,7 +110,9 @@ private:
     bool mInitDone;
     nsCOMPtr<nsIThread> mThread;
   };
+
   void GetGMPAPI(GMPInitDoneRunnable* aInitDone);
+
   class GMPInitDoneCallback : public GetGMPAudioDecoderCallback
   {
   public:
