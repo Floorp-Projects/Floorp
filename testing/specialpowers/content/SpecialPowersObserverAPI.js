@@ -16,15 +16,13 @@ if (typeof(Cc) == 'undefined') {
 /**
  * Special Powers Exception - used to throw exceptions nicely
  **/
-this.SpecialPowersException = function SpecialPowersException(aMsg) {
+function SpecialPowersException(aMsg) {
   this.message = aMsg;
   this.name = "SpecialPowersException";
 }
 
-SpecialPowersException.prototype = {
-  toString: function SPE_toString() {
-    return this.name + ': "' + this.message + '"';
-  }
+SpecialPowersException.prototype.toString = function() {
+  return this.name + ': "' + this.message + '"';
 };
 
 this.SpecialPowersObserverAPI = function SpecialPowersObserverAPI() {
