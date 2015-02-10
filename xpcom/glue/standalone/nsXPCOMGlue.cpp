@@ -30,7 +30,7 @@ static bool do_preload = false;
 #endif
 
 #if defined(SUNOS4) || defined(NEXTSTEP) || \
-    defined(XP_DARWIN) || \
+    defined(XP_MACOSX) || \
     (defined(OPENBSD) || defined(NETBSD)) && !defined(__ELF__)
 #define LEADING_UNDERSCORE "_"
 #else
