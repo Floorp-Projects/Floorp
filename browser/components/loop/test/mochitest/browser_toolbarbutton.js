@@ -104,3 +104,11 @@ add_task(function* test_panelToggle_on_click() {
   LoopUI.toolbarButton.node.click();
   Assert.strictEqual(LoopUI.panel.state, "closed", "Panel should be closed");
 });
+
+add_task(function* test_screen_share() {
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
+  MozLoopService.setScreenShareState("1", true);
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "action", "Check button is in action state");
+  MozLoopService.setScreenShareState("1", false);
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
+});
