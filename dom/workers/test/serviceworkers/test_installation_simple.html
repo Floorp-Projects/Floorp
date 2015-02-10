@@ -75,25 +75,6 @@
     });
   }
 
-  function abortPrevious() {
-    var p = navigator.serviceWorker.register("worker2.js", { scope: "foo/" });
-    var q = navigator.serviceWorker.register("worker3.js", { scope: "foo/" });
-
-    return Promise.all([
-      p.then(function(wr) {
-        ok(false, "First registration should fail with AbortError");
-      }, function(e) {
-        ok(e.name === "AbortError", "First registration should fail with AbortError");
-      }),
-
-      q.then(function(wr) {
-        ok(wr instanceof ServiceWorkerRegistration, "Second registration should succeed");
-      }, function(e) {
-        ok(false, "Second registration should succeed");
-      })
-    ]);
-  }
-
   function networkError404() {
     return navigator.serviceWorker.register("404.js", { scope: "network_error/"}).then(function(w) {
         ok(false, "Should fail with NetworkError");
@@ -111,7 +92,6 @@
         is(swr, undefined, "A failed registration for a scope with no prior controllers should clear itself");
       });
     }, function(e) {
-    info("NSM " + e.name);
       ok(e instanceof Error, "Registration should fail with parse error");
     });
   }
@@ -182,7 +162,6 @@
       .then(sameOriginScope)
       .then(httpsOnly)
       .then(realWorker)
-      .then(abortPrevious)
       .then(networkError404)
       .then(parseError)
       .then(updatefound)
