@@ -86,8 +86,6 @@ void
 SourceStreamInfo::RemoveTrack(const std::string& trackId)
 {
   mTracks.erase(trackId);
-  // Pipelines are already holding onto a ref to these.
-  mConduits.erase(trackId);
   RefPtr<MediaPipeline> pipeline = GetPipelineByTrackId_m(trackId);
   if (pipeline) {
     mPipelines.erase(trackId);
@@ -1134,19 +1132,6 @@ SourceStreamInfo::StorePipeline(
   return NS_OK;
 }
 
-nsresult
-SourceStreamInfo::StoreConduit(const std::string& trackId,
-                               RefPtr<MediaSessionConduit> aConduit)
-{
-  MOZ_ASSERT(mConduits.find(trackId) == mConduits.end());
-  if (mConduits.find(trackId) != mConduits.end()) {
-    CSFLogError(logTag, "%s: Storing duplicate track", __FUNCTION__);
-    return NS_ERROR_FAILURE;
-  }
-  mConduits[trackId] = aConduit;
-  return NS_OK;
-}
-
 void
 RemoteSourceStreamInfo::SyncPipeline(
   RefPtr<MediaPipelineReceive> aPipeline)
@@ -1187,24 +1172,6 @@ RefPtr<MediaPipeline> SourceStreamInfo::GetPipelineByTrackId_m(
   if (mMediaStream) {
     if (mPipelines.count(trackId)) {
       return mPipelines[trackId];
-    }
-  }
-
-  return nullptr;
-}
-
-RefPtr<MediaSessionConduit> SourceStreamInfo::GetConduitByTrackId_m(
-    const std::string& trackId) {
-  ASSERT_ON_THREAD(mParent->GetMainThread());
-
-  // Refuse to hand out references if we're tearing down.
-  // (Since teardown involves a dispatch to and from STS before MediaConduits
-  // are released, it is safe to start other dispatches to and from STS with a
-  // RefPtr<MediaConduit>, since that reference won't be the last one
-  // standing)
-  if (mMediaStream) {
-    if (mConduits.count(trackId)) {
-      return mConduits[trackId];
     }
   }
 

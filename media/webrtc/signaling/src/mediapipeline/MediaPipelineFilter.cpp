@@ -171,7 +171,6 @@ bool MediaPipelineFilter::CheckRtcpReport(const unsigned char* data,
   if (ssrcs_must_match && ssrcs_must_not_match) {
     MOZ_MTLOG(ML_ERROR, "Received an RTCP packet with SSRCs from "
               "multiple m-lines! This is broken.");
-    return false;
   }
 
   // This is set if any ssrc matched

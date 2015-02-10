@@ -65,6 +65,12 @@ MediaPipeline::~MediaPipeline() {
 nsresult MediaPipeline::Init() {
   ASSERT_ON_THREAD(main_thread_);
 
+  if (direction_ == RECEIVE) {
+    conduit_->SetReceiverTransport(transport_);
+  } else {
+    conduit_->SetTransmitterTransport(transport_);
+  }
+
   RUN_ON_THREAD(sts_thread_,
                 WrapRunnable(
                     nsRefPtr<MediaPipeline>(this),
@@ -76,7 +82,6 @@ nsresult MediaPipeline::Init() {
 
 nsresult MediaPipeline::Init_s() {
   ASSERT_ON_THREAD(sts_thread_);
-  conduit_->AttachTransport(transport_);
 
   return AttachTransport_s();
 }
@@ -88,6 +93,7 @@ nsresult MediaPipeline::Init_s() {
 void MediaPipeline::ShutdownTransport_s() {
   ASSERT_ON_THREAD(sts_thread_);
   MOZ_ASSERT(!stream_); // verifies that ShutdownMedia_m() has run
+
   DetachTransport_s();
 }
 
@@ -1341,7 +1347,6 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
             track_rate_,
             0,  // TODO(ekr@rtfm.com): better estimate of "capture" (really playout) delay
             samples_length);
-    MOZ_ASSERT(samples_length < AUDIO_SAMPLE_BUFFER_MAX);
 
     if (err != kMediaConduitNoError) {
       // Insert silence on conduit/GIPS failure (extremely unlikely)
@@ -1349,10 +1354,11 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
                 << ") to return data @ " << played_ticks_
                 << " (desired " << desired_time << " -> "
                 << source_->StreamTimeToSeconds(desired_time) << ")");
-      MOZ_ASSERT(err == kMediaConduitNoError);
       samples_length = (track_rate_/100)*sizeof(uint16_t); // if this is not enough we'll loop and provide more
       memset(samples_data, '\0', samples_length);
     }
+
+    MOZ_ASSERT(samples_length < AUDIO_SAMPLE_BUFFER_MAX);
 
     MOZ_MTLOG(ML_DEBUG, "Audio conduit returned buffer of length "
               << samples_length);
