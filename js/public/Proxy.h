@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsproxy_h
-#define jsproxy_h
+#ifndef js_Proxy_h
+#define js_Proxy_h
 
 #include "mozilla/Maybe.h"
 
@@ -679,4 +679,4 @@ inline void assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id,
 extern JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, JS::HandleObject obj);
 
-#endif /* jsproxy_h */
+#endif /* js_Proxy_h */

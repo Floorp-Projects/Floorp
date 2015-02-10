@@ -7,7 +7,7 @@
 #ifndef proxy_DeadObjectProxy_h
 #define proxy_DeadObjectProxy_h
 
-#include "jsproxy.h"
+#include "js/Proxy.h"
 
 namespace js {
 

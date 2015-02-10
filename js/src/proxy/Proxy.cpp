@@ -4,13 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/Proxy.h"
+
 #include <string.h>
 
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsproxy.h"
 #include "jswrapper.h"
 
 #include "gc/Marking.h"
