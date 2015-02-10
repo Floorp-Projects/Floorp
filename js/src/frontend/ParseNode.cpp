@@ -279,17 +279,43 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_EXPORT:
         return PushUnaryNodeChild(pn, stack);
 
-      case PNK_SEMI:
+      // List nodes with all non-null children.
+      case PNK_OR:
+      case PNK_AND:
+      case PNK_BITOR:
+      case PNK_BITXOR:
+      case PNK_BITAND:
+      case PNK_STRICTEQ:
+      case PNK_EQ:
+      case PNK_STRICTNE:
+      case PNK_NE:
+      case PNK_LT:
+      case PNK_LE:
+      case PNK_GT:
+      case PNK_GE:
+      case PNK_INSTANCEOF:
+      case PNK_IN:
+      case PNK_LSH:
+      case PNK_RSH:
+      case PNK_URSH:
+      case PNK_ADD:
+      case PNK_SUB:
+      case PNK_STAR:
+      case PNK_DIV:
+      case PNK_MOD:
       case PNK_COMMA:
+      case PNK_ARRAY:
+      case PNK_OBJECT:
+        return PushListNodeChildren(pn, stack);
+
+      case PNK_SEMI:
       case PNK_CONDITIONAL:
       case PNK_COLON:
       case PNK_SHORTHAND:
       case PNK_DOT:
       case PNK_ELEM:
-      case PNK_ARRAY:
       case PNK_STATEMENTLIST:
       case PNK_LABEL:
-      case PNK_OBJECT:
       case PNK_CALL:
       case PNK_NAME:
       case PNK_TEMPLATE_STRING_LIST:
@@ -332,34 +358,6 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_FORHEAD:
       case PNK_ARGSBODY:
 
-        /*
-         * Binary operators.
-         * These must be in the same order as TOK_OR and friends in TokenStream.h.
-         */
-      case PNK_OR:
-      case PNK_AND:
-      case PNK_BITOR:
-      case PNK_BITXOR:
-      case PNK_BITAND:
-      case PNK_STRICTEQ:
-      case PNK_EQ:
-      case PNK_STRICTNE:
-      case PNK_NE:
-      case PNK_LT:
-      case PNK_LE:
-      case PNK_GT:
-      case PNK_GE:
-      case PNK_INSTANCEOF:
-      case PNK_IN:
-      case PNK_LSH:
-      case PNK_RSH:
-      case PNK_URSH:
-      case PNK_ADD:
-      case PNK_SUB:
-      case PNK_STAR:
-      case PNK_DIV:
-      case PNK_MOD:
-
         /* Assignment operators (= += -= etc.). */
         /* ParseNode::isAssignment assumes all these are consecutive. */
       case PNK_ASSIGN:
@@ -377,7 +375,6 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         break; // for now
 
       case PNK_LIMIT: // invalid sentinel value
-      default:
         MOZ_CRASH("invalid node kind");
     }
 
