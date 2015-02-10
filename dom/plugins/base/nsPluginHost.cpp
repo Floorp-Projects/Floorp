@@ -934,6 +934,14 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
   PR_LogFlush();
 #endif
 
+#ifdef XP_WIN
+  bool changed;
+  if ((mRegKeyHKLM && NS_SUCCEEDED(mRegKeyHKLM->HasChanged(&changed)) && changed) ||
+      (mRegKeyHKCU && NS_SUCCEEDED(mRegKeyHKCU->HasChanged(&changed)) && changed)) {
+    ReloadPlugins();
+  }
+#endif
+
   nsRefPtr<nsNPAPIPlugin> plugin;
   GetPlugin(aMimeType, getter_AddRefs(plugin));
   if (!plugin) {
@@ -2108,6 +2116,24 @@ nsPluginHost::SetChromeEpochForContent(uint32_t aEpoch)
   mPluginEpoch = aEpoch;
 }
 
+static void
+WatchRegKey(uint32_t aRoot, nsCOMPtr<nsIWindowsRegKey>& aKey)
+{
+  MOZ_ASSERT(!aKey);
+  aKey = do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  if (!aKey) {
+    return;
+  }
+  nsresult rv = aKey->Open(aRoot,
+                           NS_LITERAL_STRING("Software\\MozillaPlugins"),
+                           nsIWindowsRegKey::ACCESS_READ | nsIWindowsRegKey::ACCESS_NOTIFY);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aKey = nullptr;
+    return;
+  }
+  aKey->StartWatching(true);
+}
+
 nsresult nsPluginHost::LoadPlugins()
 {
 #ifdef ANDROID
@@ -2122,6 +2148,11 @@ nsresult nsPluginHost::LoadPlugins()
 
   if (mPluginsDisabled)
     return NS_OK;
+
+#ifdef XP_WIN
+  WatchRegKey(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, mRegKeyHKLM);
+  WatchRegKey(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER, mRegKeyHKCU);
+#endif
 
   bool pluginschanged;
   nsresult rv = FindPlugins(true, &pluginschanged);
