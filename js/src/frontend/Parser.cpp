@@ -7917,6 +7917,8 @@ Parser<ParseHandler>::objectLiteral()
             if (!atom)
                 return null();
             propname = newNumber(tokenStream.currentToken());
+            if (!propname)
+                return null();
             break;
 
           case TOK_LB: {
@@ -8072,6 +8074,8 @@ Parser<ParseHandler>::objectLiteral()
                 if (!propname)
                     return null();
                 Node ident = identifierName();
+                if (!ident)
+                    return null();
                 if (!handler.addPropertyDefinition(literal, propname, ident, true))
                     return null();
             } else if (tt == TOK_LP) {
