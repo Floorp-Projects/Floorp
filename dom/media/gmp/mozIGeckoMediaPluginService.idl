@@ -36,6 +36,13 @@ typedef GMPGetterCallback<GMPDecryptorProxy> GetGMPDecryptorCallback;
 typedef GMPGetterCallback<GMPAudioDecoderProxy> GetGMPAudioDecoderCallback;
 typedef GMPVideoGetterCallback<GMPVideoDecoderProxy> GetGMPVideoDecoderCallback;
 typedef GMPVideoGetterCallback<GMPVideoEncoderProxy> GetGMPVideoEncoderCallback;
+class GetNodeIdCallback
+{
+public:
+  GetNodeIdCallback() { MOZ_COUNT_CTOR(GetNodeIdCallback); }
+  virtual ~GetNodeIdCallback() { MOZ_COUNT_DTOR(GetNodeIdCallback); }
+  virtual void Done(nsresult aResult, const nsACString& aNodeId) = 0;
+};
 %}
 
 [ptr] native TagArray(nsTArray<nsCString>);
@@ -43,8 +50,9 @@ native GetGMPDecryptorCallback(mozilla::UniquePtr<GetGMPDecryptorCallback>&&);
 native GetGMPAudioDecoderCallback(mozilla::UniquePtr<GetGMPAudioDecoderCallback>&&);
 native GetGMPVideoDecoderCallback(mozilla::UniquePtr<GetGMPVideoDecoderCallback>&&);
 native GetGMPVideoEncoderCallback(mozilla::UniquePtr<GetGMPVideoEncoderCallback>&&);
+native GetNodeIdCallback(mozilla::UniquePtr<GetNodeIdCallback>&&);
 
-[scriptable, uuid(11bb248b-7a4b-4f62-bebb-8211551d8c20)]
+[scriptable, uuid(2b0c90e1-df89-4583-a123-8bdb2f5f7e39)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
 
@@ -134,7 +142,9 @@ interface mozIGeckoMediaPluginService : nsISupports
   /**
    * Gets the NodeId for a (origin, urlbarOrigin, isInprivateBrowsing) tuple.
    */
-  ACString getNodeId(in AString origin,
-                     in AString topLevelOrigin,
-                     in bool inPrivateBrowsingMode);
+  [noscript]
+  void getNodeId(in AString origin,
+                 in AString topLevelOrigin,
+                 in bool inPrivateBrowsingMode,
+                 in GetNodeIdCallback callback);
 };

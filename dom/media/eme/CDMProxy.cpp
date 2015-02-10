@@ -125,25 +125,69 @@ private:
   nsAutoPtr<CDMProxy::InitData> mData;
 };
 
+class gmp_InitGetGMPDecryptorCallback : public GetNodeIdCallback
+{
+public:
+  gmp_InitGetGMPDecryptorCallback(CDMProxy* aCDMProxy,
+                                  nsAutoPtr<CDMProxy::InitData>&& aData)
+    : mCDMProxy(aCDMProxy),
+      mData(aData)
+  {
+  }
+
+  void Done(nsresult aResult, const nsACString& aNodeId)
+  {
+    mCDMProxy->gmp_InitGetGMPDecryptor(aResult, aNodeId, Move(mData));
+  }
+
+private:
+  nsRefPtr<CDMProxy> mCDMProxy;
+  nsAutoPtr<CDMProxy::InitData> mData;
+};
+
 void
 CDMProxy::gmp_Init(nsAutoPtr<InitData>&& aData)
 {
   MOZ_ASSERT(IsOnGMPThread());
 
-  uint32_t promiseID = aData->mPromiseId;
   nsCOMPtr<mozIGeckoMediaPluginService> mps =
     do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   if (!mps) {
+    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  // Make a copy before we transfer ownership of aData to the
+  // gmp_InitGetGMPDecryptorCallback.
+  InitData data(*aData);
+  UniquePtr<GetNodeIdCallback> callback(
+    new gmp_InitGetGMPDecryptorCallback(this, Move(aData)));
+  nsresult rv = mps->GetNodeId(data.mOrigin,
+                               data.mTopLevelOrigin,
+                               data.mInPrivateBrowsing,
+                               Move(callback));
+  if (NS_FAILED(rv)) {
+    RejectPromise(data.mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+}
+
+void
+CDMProxy::gmp_InitGetGMPDecryptor(nsresult aResult,
+                                  const nsACString& aNodeId,
+                                  nsAutoPtr<InitData>&& aData)
+{
+  uint32_t promiseID = aData->mPromiseId;
+  if (NS_FAILED(aResult)) {
     RejectPromise(promiseID, NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  nsresult rv = mps->GetNodeId(aData->mOrigin,
-                               aData->mTopLevelOrigin,
-                               aData->mInPrivateBrowsing,
-                               mNodeId);
+  mNodeId = aNodeId;
   MOZ_ASSERT(!GetNodeId().IsEmpty());
-  if (NS_FAILED(rv)) {
+
+  nsCOMPtr<mozIGeckoMediaPluginService> mps =
+    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  if (!mps) {
     RejectPromise(promiseID, NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -159,7 +203,7 @@ CDMProxy::gmp_Init(nsAutoPtr<InitData>&& aData)
 
   UniquePtr<GetGMPDecryptorCallback> callback(new gmp_InitDoneCallback(this,
                                                                        Move(aData)));
-  rv = mps->GetGMPDecryptor(&tags, GetNodeId(), Move(callback));
+  nsresult rv = mps->GetGMPDecryptor(&tags, GetNodeId(), Move(callback));
   if (NS_FAILED(rv)) {
     RejectPromise(promiseID, NS_ERROR_DOM_INVALID_STATE_ERR);
   }
