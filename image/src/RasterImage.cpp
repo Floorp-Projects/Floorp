@@ -1469,13 +1469,6 @@ RasterImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
   return NS_OK;
 }
 
-bool
-RasterImage::IsDecoded()
-{
-  // XXX(seth): We need to get rid of this; it's not reliable.
-  return mHasBeenDecoded || mError || (mDecodeOnDraw && mHasSourceData);
-}
-
 NS_IMETHODIMP
 RasterImage::Decode(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
 {
