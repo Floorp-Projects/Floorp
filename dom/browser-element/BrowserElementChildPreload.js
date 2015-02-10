@@ -808,10 +808,10 @@ BrowserElementChild.prototype = {
       }
     }
 
-    // The value returned by the contextmenu sync call is true iff the embedder
+    // The value returned by the contextmenu sync call is true if the embedder
     // called preventDefault() on its contextmenu event.
     //
-    // We call preventDefault() on our contextmenu event iff the embedder called
+    // We call preventDefault() on our contextmenu event if the embedder called
     // preventDefault() on /its/ contextmenu event.  This way, if the embedder
     // ignored the contextmenu event, TabChild will fire a click.
     if (sendSyncMsg('contextmenu', menuData)[0]) {
@@ -837,6 +837,29 @@ BrowserElementChild.prototype = {
       let hasVideo = !(elem.readyState >= elem.HAVE_METADATA &&
                        (elem.videoWidth == 0 || elem.videoHeight == 0));
       return {uri: elem.currentSrc || elem.src, hasVideo: hasVideo};
+    }
+    if (elem instanceof Ci.nsIDOMHTMLInputElement &&
+        elem.hasAttribute("name")) {
+      // For input elements, we look for a parent <form> and if there is
+      // one we return the form's method and action uri.
+      let parent = elem.parentNode;
+      while (parent) {
+        if (parent instanceof Ci.nsIDOMHTMLFormElement &&
+            parent.hasAttribute("action")) {
+          let actionHref = docShell.QueryInterface(Ci.nsIWebNavigation)
+                                   .currentURI
+                                   .resolve(parent.getAttribute("action"));
+          let method = parent.hasAttribute("method")
+            ? parent.getAttribute("method").toLowerCase()
+            : "get";
+          return {
+            action: actionHref,
+            method: method,
+            name: elem.getAttribute("name"),
+          }
+        }
+        parent = parent.parentNode;
+      }
     }
     return false;
   },

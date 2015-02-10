@@ -165,9 +165,45 @@ function checkAudioinVideoContextMenu() {
       is(target.data.uri, audioUrl, 'Reports uri correctly in data');
       is(target.data.hasVideo, false, 'Audio data in video tag reports no "hasVideo"');
 
-      SimpleTest.finish();
+      checkFormNoMethod();
     }, /* ignorePreventDefault */ true);
   });
+}
+
+function checkFormNoMethod() {
+  sendContextMenuTo('#menu7-trigger', function onContextMenu(detail) {
+    var target = detail.systemTargets[0];
+    is(target.nodeName, 'INPUT', 'Reports correct nodeName');
+    is(target.data.method, 'get', 'Reports correct method');
+    is(target.data.action, 'no_method', 'Reports correct action url');
+    is(target.data.name, 'input1', 'Reports correct input name');
+
+    checkFormGetMethod();
+  }, /* ignorePreventDefault */ true);
+}
+
+function checkFormGetMethod() {
+  sendContextMenuTo('#menu8-trigger', function onContextMenu(detail) {
+    var target = detail.systemTargets[0];
+    is(target.nodeName, 'INPUT', 'Reports correct nodeName');
+    is(target.data.method, 'get', 'Reports correct method');
+    is(target.data.action, 'http://example.com/get_method', 'Reports correct action url');
+    is(target.data.name, 'input2', 'Reports correct input name');
+
+    checkFormPostMethod();
+  }, /* ignorePreventDefault */ true);
+}
+
+function checkFormPostMethod() {
+  sendContextMenuTo('#menu9-trigger', function onContextMenu(detail) {
+    var target = detail.systemTargets[0];
+    is(target.nodeName, 'INPUT', 'Reports correct nodeName');
+    is(target.data.method, 'post', 'Reports correct method');
+    is(target.data.action, 'post_method', 'Reports correct action url');
+    is(target.data.name, 'input3', 'Reports correct input name');
+
+    SimpleTest.finish();
+  }, /* ignorePreventDefault */ true);
 }
 
 /* Helpers */
@@ -240,6 +276,9 @@ function createIframe(callback) {
     '<video id="menu4-trigger" src="' + videoUrl + '"></video>' +
     '<video id="menu5-trigger" preload="metadata"></video>' +
     '<audio id="menu6-trigger" src="' + audioUrl + '"></audio>' +
+    '<form action="no_method"><input id="menu7-trigger" name="input1"></input></form>' +
+    '<form action="http://example.com/get_method" method="get"><input id="menu8-trigger" name="input2"></input></form>' +
+    '<form action="post_method" method="post"><input id="menu9-trigger" name="input3"></input></form>' +
     '</body></html>';
   document.body.appendChild(iframe);
 
