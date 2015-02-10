@@ -72,12 +72,14 @@ function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_INSTALL_REQUIRESECUREORIGIN, false);
   Services.wm.addListener(gAddonAndWindowListener);
   AddonManager.addInstallListener(gAddonAndWindowListener);
   registerCleanupFunction(function() {
     Services.wm.removeListener(gAddonAndWindowListener);
     AddonManager.removeInstallListener(gAddonAndWindowListener);
     Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
+    Services.prefs.clearUserPref(PREF_INSTALL_REQUIRESECUREORIGIN);
 
     Services.perms.remove("example.com", "install");
     Services.perms.remove("example.org", "install");
