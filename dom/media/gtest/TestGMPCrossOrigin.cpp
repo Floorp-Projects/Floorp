@@ -460,6 +460,26 @@ SimulatePBModeExit()
   NS_DispatchToMainThread(new NotifyObserversTask("last-pb-context-exited"), NS_DISPATCH_SYNC);
 }
 
+class TestGetNodeIdCallback : public GetNodeIdCallback
+{
+public:
+  TestGetNodeIdCallback(nsCString& aNodeId, nsresult& aResult)
+    : mNodeId(aNodeId),
+      mResult(aResult)
+  {
+  }
+
+  void Done(nsresult aResult, const nsACString& aNodeId)
+  {
+    mResult = aResult;
+    mNodeId = aNodeId;
+  }
+
+private:
+  nsCString& mNodeId;
+  nsresult& mResult;
+};
+
 static nsCString
 GetNodeId(const nsAString& aOrigin,
           const nsAString& aTopLevelOrigin,
@@ -469,11 +489,16 @@ GetNodeId(const nsAString& aOrigin,
     GeckoMediaPluginServiceParent::GetSingleton();
   EXPECT_TRUE(service);
   nsCString nodeId;
+  nsresult result;
+  UniquePtr<GetNodeIdCallback> callback(new TestGetNodeIdCallback(nodeId,
+                                                                  result));
+  // We rely on the fact that the GetNodeId implementation for
+  // GeckoMediaPluginServiceParent is synchronous.
   nsresult rv = service->GetNodeId(aOrigin,
                                    aTopLevelOrigin,
                                    aInPBMode,
-                                   nodeId);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+                                   Move(callback));
+  EXPECT_TRUE(NS_SUCCEEDED(rv) && NS_SUCCEEDED(result));
   return nodeId;
 }
 
