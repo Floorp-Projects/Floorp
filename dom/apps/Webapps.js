@@ -267,6 +267,7 @@ WebappsRegistry.prototype = {
     cpmm.sendAsyncMessage("Webapps:UnregisterForMessages",
                           ["Webapps:Install:Return:OK",
                            "Webapps:AdditionalLanguageChange"]);
+    this._window.removeEventListener("pagehide", this);
   },
 
   installPackage: function(aURL, aParams) {
@@ -337,6 +338,7 @@ WebappsRegistry.prototype = {
     const prefs = new Preferences();
 
     this._window = aWindow;
+    this._window.addEventListener("pagehide", this);
 
     this.initDOMRequestHelper(aWindow, ["Webapps:Install:Return:OK",
                                         "Webapps:AdditionalLanguageChange"]);
@@ -373,6 +375,15 @@ WebappsRegistry.prototype = {
     this.hasMgmtPrivilege = hasWebappsPermission ||
          (isCurrentHomescreen && hasHomescreenPermission);
     this.hasFullMgmtPrivilege = hasWebappsPermission;
+  },
+
+  handleEvent(event) {
+    if (event.type == "pagehide" &&
+        event.target.defaultView == this._window) {
+      cpmm.sendAsyncMessage("Webapps:LocationChange", {
+        oid: this._id,
+      });
+    }
   },
 
   classID: Components.ID("{fff440b3-fae2-45c1-bf03-3b5a2e432270}"),
