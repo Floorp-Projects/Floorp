@@ -180,7 +180,7 @@ class SyntaxParseHandler
     Node newArrayLiteral(uint32_t begin, unsigned blockid) { return NodeGeneric; }
     bool addElision(Node literal, const TokenPos &pos) { return true; }
     bool addSpreadElement(Node literal, uint32_t begin, Node inner) { return true; }
-    bool addArrayElement(Node literal, Node element) { return true; }
+    void addArrayElement(Node literal, Node element) { }
 
     Node newObjectLiteral(uint32_t begin) { return NodeGeneric; }
     bool addPrototypeMutation(Node literal, uint32_t begin, Node expr) { return true; }
