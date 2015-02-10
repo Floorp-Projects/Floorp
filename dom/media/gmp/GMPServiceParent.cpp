@@ -1329,5 +1329,138 @@ GeckoMediaPluginServiceParent::ClearStorage()
   NS_DispatchToMainThread(new NotifyObserversTask("gmp-clear-storage-complete"), NS_DISPATCH_NORMAL);
 }
 
+GMPServiceParent::~GMPServiceParent()
+{
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+                                   new DeleteTask<Transport>(GetTransport()));
+}
+
+bool
+GMPServiceParent::RecvLoadGMP(const nsCString& aNodeId,
+                              const nsCString& aAPI,
+                              nsTArray<nsCString>&& aTags,
+                              nsTArray<ProcessId>&& aAlreadyBridgedTo,
+                              ProcessId* aId,
+                              nsCString* aDisplayName,
+                              nsCString* aPluginId)
+{
+  nsRefPtr<GMPParent> gmp = mService->SelectPluginForAPI(aNodeId, aAPI, aTags);
+
+#ifdef PR_LOGGING
+  nsCString api = aTags[0];
+  LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)this, (void *)gmp, api.get()));
+#endif
+
+  if (!gmp || !gmp->EnsureProcessLoaded(aId)) {
+    return false;
+  }
+
+  *aDisplayName = gmp->GetDisplayName();
+  *aPluginId = gmp->GetPluginId();
+
+  return aAlreadyBridgedTo.Contains(*aId) || gmp->Bridge(this);
+}
+
+bool
+GMPServiceParent::RecvGetGMPNodeId(const nsString& aOrigin,
+                                   const nsString& aTopLevelOrigin,
+                                   const bool& aInPrivateBrowsing,
+                                   nsCString* aID)
+{
+  nsresult rv = mService->GetNodeId(aOrigin, aTopLevelOrigin,
+                                    aInPrivateBrowsing, *aID);
+  return NS_SUCCEEDED(rv);
+}
+
+/* static */
+bool
+GMPServiceParent::RecvGetGMPPluginVersionForAPI(const nsCString& aAPI,
+                                                nsTArray<nsCString>&& aTags,
+                                                bool* aHasPlugin,
+                                                nsCString* aVersion)
+{
+  nsRefPtr<GeckoMediaPluginServiceParent> service =
+    GeckoMediaPluginServiceParent::GetSingleton();
+  return service &&
+         NS_SUCCEEDED(service->GetPluginVersionForAPI(aAPI, &aTags, aHasPlugin,
+                                                      *aVersion));
+}
+
+class DeleteGMPServiceParent : public nsRunnable
+{
+public:
+  explicit DeleteGMPServiceParent(GMPServiceParent* aToDelete)
+    : mToDelete(aToDelete)
+  {
+  }
+
+  NS_IMETHODIMP Run()
+  {
+    return NS_OK;
+  }
+
+private:
+  nsAutoPtr<GMPServiceParent> mToDelete;
+};
+
+void
+GMPServiceParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  NS_DispatchToCurrentThread(new DeleteGMPServiceParent(this));
+}
+
+class OpenPGMPServiceParent : public nsRunnable
+{
+public:
+  OpenPGMPServiceParent(GMPServiceParent* aGMPServiceParent,
+                        mozilla::ipc::Transport* aTransport,
+                        base::ProcessId aOtherPid,
+                        bool* aResult)
+    : mGMPServiceParent(aGMPServiceParent),
+      mTransport(aTransport),
+      mOtherPid(aOtherPid),
+      mResult(aResult)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    *mResult = mGMPServiceParent->Open(mTransport, mOtherPid,
+                                       XRE_GetIOMessageLoop(), ipc::ParentSide);
+    return NS_OK;
+  }
+
+private:
+  GMPServiceParent* mGMPServiceParent;
+  mozilla::ipc::Transport* mTransport;
+  base::ProcessId mOtherPid;
+  bool* mResult;
+};
+
+/* static */
+PGMPServiceParent*
+GMPServiceParent::Create(Transport* aTransport, ProcessId aOtherPid)
+{
+  nsRefPtr<GeckoMediaPluginServiceParent> gmp =
+    GeckoMediaPluginServiceParent::GetSingleton();
+
+  nsAutoPtr<GMPServiceParent> serviceParent(new GMPServiceParent(gmp));
+
+  nsCOMPtr<nsIThread> gmpThread;
+  nsresult rv = gmp->GetThread(getter_AddRefs(gmpThread));
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  bool ok;
+  rv = gmpThread->Dispatch(new OpenPGMPServiceParent(serviceParent,
+                                                     aTransport,
+                                                     aOtherPid, &ok),
+                           NS_DISPATCH_SYNC);
+  if (NS_FAILED(rv) || !ok) {
+    return nullptr;
+  }
+
+  return serviceParent.forget();
+}
+
 } // namespace gmp
 } // namespace mozilla

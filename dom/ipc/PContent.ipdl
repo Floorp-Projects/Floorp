@@ -27,7 +27,15 @@ include protocol PImageBridge;
 include protocol PMemoryReportRequest;
 include protocol PMobileConnection;
 include protocol PNecko;
+// FIXME This is pretty ridiculous, but we have to keep the order of the
+//       following 4 includes, or the parser is confused about PGMPContent
+//       bridging PContent and PGMP. As soon as it registers the bridge between
+//       PContent and PPluginModule it seems to think that PContent's parent and
+//       child live in the same process!
+include protocol PGMPContent;
+include protocol PGMPService;
 include protocol PPluginModule;
+include protocol PGMP;
 include protocol PPrinting;
 include protocol POfflineCacheUpdate;
 include protocol PScreenManager;
@@ -364,6 +372,7 @@ prio(normal upto urgent) sync protocol PContent
     parent opens PProcessHangMonitor;
     parent opens PSharedBufferManager;
     parent opens PImageBridge;
+    parent opens PGMPService;
     child opens PBackground;
 
     manages PAsmJSCacheEntry;
@@ -607,6 +616,10 @@ parent:
                             TabId openerTabId)
         returns (ContentParentId cpId, bool isForApp, bool isForBrowser, TabId tabId);
     sync BridgeToChildProcess(ContentParentId cpId);
+
+    async CreateGMPService();
+    sync GetGMPPluginVersionForAPI(nsCString api, nsCString[] tags)
+        returns (bool hasPlugin, nsCString version);
 
     /**
      * This call connects the content process to a plugin process. While this

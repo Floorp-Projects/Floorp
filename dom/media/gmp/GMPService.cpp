@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPServiceParent.h"
+#include "GMPServiceChild.h"
 #include "prio.h"
 #include "prlog.h"
 #include "GMPParent.h"
@@ -108,11 +109,18 @@ private:
     MOZ_ASSERT(NS_IsMainThread());
 
     if (!sSingletonService) {
-      nsRefPtr<GeckoMediaPluginServiceParent> service =
-        new GeckoMediaPluginServiceParent();
-      service->Init();
+      if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        nsRefPtr<GeckoMediaPluginServiceParent> service =
+          new GeckoMediaPluginServiceParent();
+        service->Init();
+        sSingletonService = service;
+      } else {
+        nsRefPtr<GeckoMediaPluginServiceChild> service =
+          new GeckoMediaPluginServiceChild();
+        service->Init();
+        sSingletonService = service;
+      }
 
-      sSingletonService = service;
       ClearOnShutdown(&sSingletonService);
     }
 

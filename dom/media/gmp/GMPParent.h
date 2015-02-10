@@ -139,6 +139,10 @@ public:
   bool GetGMPContentParent(UniquePtr<GetGMPContentParentCallback>&& aCallback);
   already_AddRefed<GMPContentParent> ForgetGMPContentParent();
 
+  bool EnsureProcessLoaded(base::ProcessId* aID);
+
+  bool Bridge(GMPServiceParent* aGMPServiceParent);
+
 private:
   ~GMPParent();
   nsRefPtr<GeckoMediaPluginServiceParent> mService;

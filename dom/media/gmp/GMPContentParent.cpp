@@ -7,6 +7,7 @@
 #include "GMPAudioDecoderParent.h"
 #include "GMPDecryptorParent.h"
 #include "GMPParent.h"
+#include "GMPServiceChild.h"
 #include "GMPVideoDecoderParent.h"
 #include "GMPVideoEncoderParent.h"
 #include "mozIGeckoMediaPluginService.h"
@@ -128,7 +129,15 @@ GMPContentParent::CloseIfUnused()
       mDecryptors.IsEmpty() &&
       mVideoDecoders.IsEmpty() &&
       mVideoEncoders.IsEmpty()) {
-    nsRefPtr<GMPContentParent> toClose(mParent->ForgetGMPContentParent());
+    nsRefPtr<GMPContentParent> toClose;
+    if (mParent) {
+      toClose = mParent->ForgetGMPContentParent();
+    } else {
+      toClose = this;
+      nsRefPtr<GeckoMediaPluginServiceChild> gmp(
+        GeckoMediaPluginServiceChild::GetSingleton());
+      gmp->RemoveGMPContentParent(toClose);
+    }
     NS_DispatchToCurrentThread(NS_NewRunnableMethod(toClose,
                                                     &GMPContentParent::Close));
   }

@@ -28,7 +28,7 @@ class GMPContentParent final : public PGMPContentParent,
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPContentParent)
 
-  explicit GMPContentParent(GMPParent* aParent);
+  explicit GMPContentParent(GMPParent* aParent = nullptr);
 
   nsresult GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD);
   void VideoDecoderDestroyed(GMPVideoDecoderParent* aDecoder);
