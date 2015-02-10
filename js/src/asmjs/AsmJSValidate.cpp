@@ -8330,7 +8330,7 @@ GenerateCheckForHeapDetachment(ModuleCompiler &m, Register scratch)
         return;
 
     MacroAssembler &masm = m.masm();
-    MOZ_ASSERT(masm.framePushed() >= ShadowStackSpace);
+    MOZ_ASSERT(int(masm.framePushed()) >= int(ShadowStackSpace));
     AssertStackAlignment(masm, ABIStackAlignment);
 #if defined(JS_CODEGEN_X86)
     CodeOffsetLabel label = masm.movlWithPatch(PatchedAbsoluteAddress(), scratch);
