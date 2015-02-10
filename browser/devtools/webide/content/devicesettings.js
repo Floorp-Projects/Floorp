@@ -75,7 +75,15 @@ function BuildUI() {
     configView.includeTypeName = false;
 
     getAllSettings = AppManager.settingsFront.getAllSettings()
-                     .then(json => configView.generateDisplay(json));
+    getAllSettings.then(json => {
+      let deviceItems = Object.keys(json);
+      deviceItems.sort();
+      configView.keys = deviceItems;
+      for (let i = 0; i < configView.keys.length; i++) {
+        let key = configView.keys[i];
+        configView.generateField(key, json[key].value, json[key].hasUserValue);
+      }
+    });
   } else {
     CloseUI();
   }

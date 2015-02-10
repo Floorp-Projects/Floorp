@@ -5,7 +5,6 @@
 const Cu = Components.utils;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
-const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {AppManager} = require("devtools/webide/app-manager");
 const {Connection} = require("devtools/client/connection-manager");
 const {RuntimeTypes} = require("devtools/webide/runtimes");
@@ -42,23 +41,6 @@ function OnAppManagerUpdate(event, what) {
   }
 }
 
-function generateFields(json) {
-  let table = document.querySelector("table");
-  let deferred = promise.defer();
-  for (let name in json) {
-    let tr = document.createElement("tr");
-    let td = document.createElement("td");
-    td.textContent = name;
-    tr.appendChild(td);
-    td = document.createElement("td");
-    td.textContent = json[name];
-    tr.appendChild(td);
-    table.appendChild(tr);
-  };
-  deferred.resolve();
-  return deferred.promise;
-}
-
 let getDescriptionPromise; // Used by tests
 function BuildUI() {
   let table = document.querySelector("table");
@@ -66,8 +48,19 @@ function BuildUI() {
   if (AppManager.connection &&
       AppManager.connection.status == Connection.Status.CONNECTED &&
       AppManager.deviceFront) {
-    getDescriptionPromise = AppManager.deviceFront.getDescription().then(json =>
-      generateFields(json));
+    getDescriptionPromise = AppManager.deviceFront.getDescription();
+    getDescriptionPromise.then(json => {
+      for (let name in json) {
+        let tr = document.createElement("tr");
+        let td = document.createElement("td");
+        td.textContent = name;
+        tr.appendChild(td);
+        td = document.createElement("td");
+        td.textContent = json[name];
+        tr.appendChild(td);
+        table.appendChild(tr);
+      }
+    });
   } else {
     CloseUI();
   }
