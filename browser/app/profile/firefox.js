@@ -1180,9 +1180,6 @@ pref("toolbar.customization.usesheet", true);
 pref("toolbar.customization.usesheet", false);
 #endif
 
-// Disable Flash protected mode to reduce hang/crash rates.
-pref("dom.ipc.plugins.flash.disable-protected-mode", true);
-
 #ifdef XP_MACOSX
 // On mac, the default pref is per-architecture
 pref("dom.ipc.plugins.enabled.i386", true);
@@ -1200,7 +1197,7 @@ pref("browser.tabs.remote.desktopbehavior", true);
 // To get a different setting for a particular plugin replace "default", with
 // the plugin's nice file name, see: nsPluginTag::GetNiceFileName.
 pref("dom.ipc.plugins.sandbox.default", false);
-pref("dom.ipc.plugins.sandbox.flash", true);
+pref("dom.ipc.plugins.sandbox.flash", false);
 #endif
 
 #if defined(MOZ_CONTENT_SANDBOX) && defined(XP_WIN)
