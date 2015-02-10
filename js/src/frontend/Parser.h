@@ -443,11 +443,10 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                                 Directives directives, GeneratorKind generatorKind);
 
     /*
-     * Create a new function object given parse context (pc) and a name (which
-     * is optional if this is a function expression).
+     * Create a new function object given a name (which is optional if this is
+     * a function expression).
      */
-    JSFunction *newFunction(GenericParseContext *pc, HandleAtom atom, FunctionSyntaxKind kind,
-                            JSObject *proto = nullptr);
+    JSFunction *newFunction(HandleAtom atom, FunctionSyntaxKind kind, JSObject *proto = nullptr);
 
     void trace(JSTracer *trc);
 
