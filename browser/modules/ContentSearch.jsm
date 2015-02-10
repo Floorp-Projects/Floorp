@@ -24,6 +24,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "SearchSuggestionController",
 
 const INBOUND_MESSAGE = "ContentSearch";
 const OUTBOUND_MESSAGE = INBOUND_MESSAGE;
+const MAX_LOCAL_SUGGESTIONS = 3;
+const MAX_SUGGESTIONS = 6;
 
 /**
  * ContentSearch receives messages named INBOUND_MESSAGE and sends messages
@@ -268,8 +270,8 @@ this.ContentSearch = {
     let browserData = this._suggestionDataForBrowser(msg.target, true);
     let { controller } = browserData;
     let ok = SearchSuggestionController.engineOffersSuggestions(engine);
-    controller.maxLocalResults = ok ? 2 : 6;
-    controller.maxRemoteResults = ok ? 6 : 0;
+    controller.maxLocalResults = ok ? MAX_LOCAL_SUGGESTIONS : MAX_SUGGESTIONS;
+    controller.maxRemoteResults = ok ? MAX_SUGGESTIONS : 0;
     controller.remoteTimeout = data.remoteTimeout || undefined;
     let priv = PrivateBrowsingUtils.isBrowserPrivate(msg.target);
     // fetch() rejects its promise if there's a pending request, but since we
