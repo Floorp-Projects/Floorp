@@ -316,6 +316,8 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       // ...and a few others.
       case PNK_ELEM:
       case PNK_LETEXPR:
+      case PNK_IMPORT_SPEC:
+      case PNK_EXPORT_SPEC:
       case PNK_COLON:
       case PNK_CASE:
       case PNK_SHORTHAND:
@@ -378,6 +380,20 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         }
 #endif
         return PushBinaryNodeNullableChildren(pn, stack);
+
+      // Import and export-from nodes have a list of specifiers on the left
+      // and a module string on the right.
+      case PNK_IMPORT:
+      case PNK_EXPORT_FROM: {
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        MOZ_ASSERT_IF(pn->isKind(PNK_IMPORT), pn->pn_left->isKind(PNK_IMPORT_SPEC_LIST));
+        MOZ_ASSERT_IF(pn->isKind(PNK_EXPORT_FROM), pn->pn_left->isKind(PNK_EXPORT_SPEC_LIST));
+        MOZ_ASSERT(pn->pn_left->isArity(PN_LIST));
+        MOZ_ASSERT(pn->pn_right->isKind(PNK_STRING));
+        stack->pushList(pn->pn_left);
+        stack->push(pn->pn_right);
+        return PushResult::Recyclable;
+      }
 
       // Ternary nodes with all children non-null.
       case PNK_CONDITIONAL: {
@@ -484,6 +500,8 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_LET:
       case PNK_CATCHLIST:
       case PNK_STATEMENTLIST:
+      case PNK_IMPORT_SPEC_LIST:
+      case PNK_EXPORT_SPEC_LIST:
       case PNK_SEQ:
       case PNK_ARGSBODY:
         return PushListNodeChildren(pn, stack);
@@ -503,19 +521,13 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
 
       case PNK_LABEL:
       case PNK_DOT:
+      case PNK_LEXICALSCOPE:
         return PushNameNodeChildren(pn, stack);
 
       case PNK_FUNCTION:
         return PushCodeNodeChildren(pn, stack);
 
       case PNK_NAME:
-      case PNK_LEXICALSCOPE:
-      case PNK_IMPORT:
-      case PNK_IMPORT_SPEC_LIST:
-      case PNK_IMPORT_SPEC:
-      case PNK_EXPORT_FROM:
-      case PNK_EXPORT_SPEC_LIST:
-      case PNK_EXPORT_SPEC:
         break; // for now
 
       case PNK_LIMIT: // invalid sentinel value
