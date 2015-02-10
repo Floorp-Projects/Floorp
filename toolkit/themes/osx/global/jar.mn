@@ -19,7 +19,7 @@ toolkit.jar:
   skin/classic/global/checkbox.css
   skin/classic/global/colorpicker.css
   skin/classic/global/commonDialog.css
-  skin/classic/global/config.css                                     (../../shared/config.css)
+* skin/classic/global/config.css
   skin/classic/global/customizeToolbar.css
   skin/classic/global/dialog.css
   skin/classic/global/dropmarker.css
@@ -143,7 +143,6 @@ toolkit.jar:
   skin/classic/global/icons/question-64.png                          (icons/question-64.png)
   skin/classic/global/icons/question-large.png                       (icons/question-large.png)
   skin/classic/global/icons/sslWarning.png                           (icons/sslWarning.png)
-  skin/classic/global/icons/warning.svg                              (../../shared/incontent-icons/warning.svg)
   skin/classic/global/icons/webapps-16.png                           (icons/webapps-16.png)
   skin/classic/global/icons/webapps-16@2x.png                        (icons/webapps-16@2x.png)
   skin/classic/global/icons/webapps-64.png                           (icons/webapps-64.png)
