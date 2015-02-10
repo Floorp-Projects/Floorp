@@ -59,6 +59,7 @@ nsDisplayBorderGeometry::MoveBy(const nsPoint& aOffset)
 nsDisplayBackgroundGeometry::nsDisplayBackgroundGeometry(nsDisplayBackgroundImage* aItem,
                                                          nsDisplayListBuilder* aBuilder)
   : nsDisplayItemGeometry(aItem, aBuilder)
+  , nsImageGeometryMixin(aItem, aBuilder)
   , mPositioningArea(aItem->GetPositioningArea())
 {}
 
