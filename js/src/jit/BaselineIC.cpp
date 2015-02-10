@@ -9167,13 +9167,18 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
     }
 
     if (JitSupportsSimd()) {
-        if (native == js::simd_int32x4_add || native == js::simd_int32x4_and) {
+#define ADD_INT32X4_SIMD_OP_NAME_(OP) || native == js::simd_int32x4_##OP
+       if (false
+           ARITH_COMMONX4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
+           BITWISE_COMMONX4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_))
+       {
             Rooted<TypeDescr *> descr(cx, &Int32x4::GetTypeDescr(*cx->global()));
             res.set(TypedObject::createZeroed(cx, descr, 0, gc::TenuredHeap));
             if (!res)
                 return false;
             return true;
-        }
+       }
+#undef ADD_INT32X4_SIMD_OP_NAME_
     }
 
     return true;

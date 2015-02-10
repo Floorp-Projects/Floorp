@@ -5852,22 +5852,12 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
     AsmJSSimdType opType = global->simdOperationType();
 
     switch (global->simdOperation()) {
-      case AsmJSSimdOperation_add:
-        return CheckSimdBinary(f, call, opType, MSimdBinaryArith::Add, def, type);
-      case AsmJSSimdOperation_sub:
-        return CheckSimdBinary(f, call, opType, MSimdBinaryArith::Sub, def, type);
-      case AsmJSSimdOperation_mul:
-        return CheckSimdBinary(f, call, opType, MSimdBinaryArith::Mul, def, type);
-      case AsmJSSimdOperation_div:
-        return CheckSimdBinary(f, call, opType, MSimdBinaryArith::Div, def, type);
-      case AsmJSSimdOperation_max:
-        return CheckSimdBinary(f, call, opType, MSimdBinaryArith::Max, def, type);
-      case AsmJSSimdOperation_min:
-        return CheckSimdBinary(f, call, opType, MSimdBinaryArith::Min, def, type);
-      case AsmJSSimdOperation_maxNum:
-        return CheckSimdBinary(f, call, opType, MSimdBinaryArith::MaxNum, def, type);
-      case AsmJSSimdOperation_minNum:
-        return CheckSimdBinary(f, call, opType, MSimdBinaryArith::MinNum, def, type);
+#define OP_CHECK_CASE_LIST_(OP)                                                         \
+      case AsmJSSimdOperation_##OP:                                                     \
+        return CheckSimdBinary(f, call, opType, MSimdBinaryArith::Op_##OP, def, type);
+      ARITH_COMMONX4_SIMD_OP(OP_CHECK_CASE_LIST_)
+      ARITH_FLOAT32X4_SIMD_OP(OP_CHECK_CASE_LIST_)
+#undef OP_CHECK_CASE_LIST_
 
       case AsmJSSimdOperation_lessThan:
         return CheckSimdBinary(f, call, opType, MSimdBinaryComp::lessThan, def, type);
