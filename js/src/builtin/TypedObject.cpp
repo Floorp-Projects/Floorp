@@ -489,7 +489,7 @@ CreatePrototypeObjectForComplexTypeInstance(JSContext *cx, HandleObject ctorProt
 
     return NewObjectWithProto<TypedProto>(cx,
                                           &*ctorPrototypePrototype,
-                                          nullptr,
+                                          NullPtr(),
                                           TenuredObject);
 }
 
@@ -586,7 +586,7 @@ ArrayMetaTypeDescr::create(JSContext *cx,
                            int32_t length)
 {
     Rooted<ArrayTypeDescr*> obj(cx);
-    obj = NewObjectWithProto<ArrayTypeDescr>(cx, arrayTypePrototype, nullptr, SingletonObject);
+    obj = NewObjectWithProto<ArrayTypeDescr>(cx, arrayTypePrototype, NullPtr(), SingletonObject);
     if (!obj)
         return nullptr;
 
@@ -778,11 +778,11 @@ StructMetaTypeDescr::create(JSContext *cx,
     int32_t alignment = 1;             // Alignment of struct.
     bool opaque = false;               // Opacity of struct.
 
-    userFieldOffsets = NewObjectWithProto<PlainObject>(cx, nullptr, nullptr, TenuredObject);
+    userFieldOffsets = NewObjectWithProto<PlainObject>(cx, nullptr, NullPtr(), TenuredObject);
     if (!userFieldOffsets)
         return nullptr;
 
-    userFieldTypes = NewObjectWithProto<PlainObject>(cx, nullptr, nullptr, TenuredObject);
+    userFieldTypes = NewObjectWithProto<PlainObject>(cx, nullptr, NullPtr(), TenuredObject);
     if (!userFieldTypes)
         return nullptr;
 
@@ -912,7 +912,7 @@ StructMetaTypeDescr::create(JSContext *cx,
         return nullptr;
 
     Rooted<StructTypeDescr*> descr(cx);
-    descr = NewObjectWithProto<StructTypeDescr>(cx, structTypePrototype, nullptr,
+    descr = NewObjectWithProto<StructTypeDescr>(cx, structTypePrototype, NullPtr(),
                                                 SingletonObject);
     if (!descr)
         return nullptr;
@@ -1154,7 +1154,7 @@ DefineSimpleTypeDescr(JSContext *cx,
         return false;
 
     Rooted<T*> descr(cx);
-    descr = NewObjectWithProto<T>(cx, funcProto, global, SingletonObject);
+    descr = NewObjectWithProto<T>(cx, funcProto, GlobalObject::upcast(global), SingletonObject);
     if (!descr)
         return false;
 
@@ -1174,7 +1174,7 @@ DefineSimpleTypeDescr(JSContext *cx,
     // Create the typed prototype for the scalar type. This winds up
     // not being user accessible, but we still create one for consistency.
     Rooted<TypedProto*> proto(cx);
-    proto = NewObjectWithProto<TypedProto>(cx, objProto, nullptr, TenuredObject);
+    proto = NewObjectWithProto<TypedProto>(cx, objProto, NullPtr(), TenuredObject);
     if (!proto)
         return false;
     descr->initReservedSlot(JS_DESCR_SLOT_TYPROTO, ObjectValue(*proto));
@@ -1209,7 +1209,8 @@ DefineMetaTypeDescr(JSContext *cx,
 
     // Create ctor.prototype, which inherits from Function.__proto__
 
-    RootedObject proto(cx, NewObjectWithProto<PlainObject>(cx, funcProto, global,
+    RootedObject proto(cx, NewObjectWithProto<PlainObject>(cx, funcProto,
+                                                           GlobalObject::upcast(global),
                                                            SingletonObject));
     if (!proto)
         return nullptr;
@@ -1221,7 +1222,7 @@ DefineMetaTypeDescr(JSContext *cx,
         return nullptr;
     RootedObject protoProto(cx);
     protoProto = NewObjectWithProto<PlainObject>(cx, objProto,
-                                                 global, SingletonObject);
+                                                 GlobalObject::upcast(global), SingletonObject);
     if (!protoProto)
         return nullptr;
 
@@ -1268,7 +1269,8 @@ GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
         return false;
 
     Rooted<TypedObjectModuleObject*> module(cx);
-    module = NewObjectWithProto<TypedObjectModuleObject>(cx, objProto, global);
+    module = NewObjectWithProto<TypedObjectModuleObject>(cx, objProto,
+                                                         GlobalObject::upcast(global));
     if (!module)
         return false;
 

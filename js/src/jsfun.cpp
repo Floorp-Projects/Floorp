@@ -393,7 +393,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
         return nullptr;
 
     RootedPlainObject proto(cx, NewObjectWithGivenProto<PlainObject>(cx, objProto,
-                                                                     nullptr, SingletonObject));
+                                                                     NullPtr(), SingletonObject));
     if (!proto)
         return nullptr;
 
@@ -1984,8 +1984,9 @@ js::NewFunctionWithProto(ExclusiveContext *cx, HandleObject funobjArg, Native na
         // isSingleton implies isInterpreted.
         if (native && !IsAsmJSModuleNative(native))
             newKind = SingletonObject;
-        funobj = NewObjectWithClassProto(cx, &JSFunction::class_, proto,
-                                         SkipScopeParent(parent), allocKind, newKind);
+        RootedObject realParent(cx, SkipScopeParent(parent));
+        funobj = NewObjectWithClassProto(cx, &JSFunction::class_, proto, realParent, allocKind,
+                                         newKind);
         if (!funobj)
             return nullptr;
     }
@@ -2022,8 +2023,8 @@ js::CloneFunctionObjectUseSameScript(JSCompartment *compartment, HandleFunction 
 }
 
 JSFunction *
-js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, gc::AllocKind allocKind,
-                        NewObjectKind newKindArg /* = GenericObject */)
+js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
+                        gc::AllocKind allocKind, NewObjectKind newKindArg /* = GenericObject */)
 {
     MOZ_ASSERT(parent);
     MOZ_ASSERT(!fun->isBoundFunction());
@@ -2040,8 +2041,9 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, 
         if (!cloneProto)
             return nullptr;
     }
-    JSObject *cloneobj = NewObjectWithClassProto(cx, &JSFunction::class_, cloneProto,
-                                                 SkipScopeParent(parent), allocKind, newKind);
+    RootedObject realParent(cx, SkipScopeParent(parent));
+    JSObject *cloneobj = NewObjectWithClassProto(cx, &JSFunction::class_, cloneProto, realParent,
+                                                 allocKind, newKind);
     if (!cloneobj)
         return nullptr;
     RootedFunction clone(cx, &cloneobj->as<JSFunction>());

@@ -497,27 +497,27 @@ class AutoPropDescVector : public AutoVectorRooter<PropDesc>
  * default to the prototype's global if the prototype is non-null.
  */
 JSObject *
-NewObjectWithGivenProto(ExclusiveContext *cx, const js::Class *clasp, TaggedProto proto, JSObject *parent,
-                        gc::AllocKind allocKind, NewObjectKind newKind);
+NewObjectWithGivenProto(ExclusiveContext *cx, const Class *clasp, TaggedProto proto,
+                        HandleObject parent, gc::AllocKind allocKind, NewObjectKind newKind);
 
 inline JSObject *
-NewObjectWithGivenProto(ExclusiveContext *cx, const js::Class *clasp, TaggedProto proto, JSObject *parent,
-                        NewObjectKind newKind = GenericObject)
+NewObjectWithGivenProto(ExclusiveContext *cx, const Class *clasp, TaggedProto proto,
+                        HandleObject parent, NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
     return NewObjectWithGivenProto(cx, clasp, proto, parent, allocKind, newKind);
 }
 
 inline JSObject *
-NewObjectWithGivenProto(ExclusiveContext *cx, const js::Class *clasp, JSObject *proto, JSObject *parent,
-                        NewObjectKind newKind = GenericObject)
+NewObjectWithGivenProto(ExclusiveContext *cx, const Class *clasp, JSObject *proto,
+                        HandleObject parent, NewObjectKind newKind = GenericObject)
 {
     return NewObjectWithGivenProto(cx, clasp, TaggedProto(proto), parent, newKind);
 }
 
 template <typename T>
 inline T *
-NewObjectWithGivenProto(ExclusiveContext *cx, TaggedProto proto, JSObject *parent,
+NewObjectWithGivenProto(ExclusiveContext *cx, TaggedProto proto, HandleObject parent,
                         NewObjectKind newKind = GenericObject)
 {
     JSObject *obj = NewObjectWithGivenProto(cx, &T::class_, proto, parent, newKind);
@@ -526,7 +526,7 @@ NewObjectWithGivenProto(ExclusiveContext *cx, TaggedProto proto, JSObject *paren
 
 template <typename T>
 inline T *
-NewObjectWithGivenProto(ExclusiveContext *cx, JSObject *proto, JSObject *parent,
+NewObjectWithGivenProto(ExclusiveContext *cx, JSObject *proto, HandleObject parent,
                         NewObjectKind newKind = GenericObject)
 {
     return NewObjectWithGivenProto<T>(cx, TaggedProto(proto), parent, newKind);
@@ -534,7 +534,7 @@ NewObjectWithGivenProto(ExclusiveContext *cx, JSObject *proto, JSObject *parent,
 
 template <typename T>
 inline T *
-NewObjectWithGivenProto(ExclusiveContext *cx, JSObject *proto, JSObject *parent,
+NewObjectWithGivenProto(ExclusiveContext *cx, JSObject *proto, HandleObject parent,
                         gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
     JSObject *obj = NewObjectWithGivenProto(cx, &T::class_, TaggedProto(proto), parent, allocKind,
@@ -560,19 +560,21 @@ NewObjectWithGivenProto(ExclusiveContext *cx, JSObject *proto, JSObject *parent,
  * parent will be that global.
  */
 JSObject *
-NewObjectWithClassProtoCommon(ExclusiveContext *cx, const js::Class *clasp, JSObject *proto, JSObject *parent,
-                              gc::AllocKind allocKind, NewObjectKind newKind);
+NewObjectWithClassProtoCommon(ExclusiveContext *cx, const Class *clasp, JSObject *proto,
+                              HandleObject parent, gc::AllocKind allocKind,
+                              NewObjectKind newKind);
 
 inline JSObject *
-NewObjectWithClassProto(ExclusiveContext *cx, const js::Class *clasp, JSObject *proto, JSObject *parent,
-                        gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
+NewObjectWithClassProto(ExclusiveContext *cx, const Class *clasp, JSObject *proto,
+                        HandleObject parent, gc::AllocKind allocKind,
+                        NewObjectKind newKind = GenericObject)
 {
     return NewObjectWithClassProtoCommon(cx, clasp, proto, parent, allocKind, newKind);
 }
 
 inline JSObject *
-NewObjectWithClassProto(ExclusiveContext *cx, const js::Class *clasp, JSObject *proto, JSObject *parent,
-                        NewObjectKind newKind = GenericObject)
+NewObjectWithClassProto(ExclusiveContext *cx, const Class *clasp, JSObject *proto,
+                        HandleObject parent, NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
     return NewObjectWithClassProto(cx, clasp, proto, parent, allocKind, newKind);
@@ -580,7 +582,7 @@ NewObjectWithClassProto(ExclusiveContext *cx, const js::Class *clasp, JSObject *
 
 template<typename T>
 inline T *
-NewObjectWithProto(ExclusiveContext *cx, JSObject *proto, JSObject *parent,
+NewObjectWithProto(ExclusiveContext *cx, JSObject *proto, HandleObject parent,
                    gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
     JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, parent, allocKind, newKind);
@@ -589,7 +591,7 @@ NewObjectWithProto(ExclusiveContext *cx, JSObject *proto, JSObject *parent,
 
 template<typename T>
 inline T *
-NewObjectWithProto(ExclusiveContext *cx, JSObject *proto, JSObject *parent,
+NewObjectWithProto(ExclusiveContext *cx, JSObject *proto, HandleObject parent,
                    NewObjectKind newKind = GenericObject)
 {
     JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, parent, newKind);
@@ -604,7 +606,7 @@ inline JSObject *
 NewBuiltinClassInstance(ExclusiveContext *cx, const Class *clasp, gc::AllocKind allocKind,
                         NewObjectKind newKind = GenericObject)
 {
-    return NewObjectWithClassProto(cx, clasp, nullptr, nullptr, allocKind, newKind);
+    return NewObjectWithClassProto(cx, clasp, nullptr, NullPtr(), allocKind, newKind);
 }
 
 inline JSObject *
@@ -800,7 +802,7 @@ ApplyAttributes(unsigned attrs, bool enumerable, bool writable, bool configurabl
 } /* namespace js */
 
 extern js::NativeObject *
-js_InitClass(JSContext *cx, js::HandleObject obj, JSObject *parent_proto,
+js_InitClass(JSContext *cx, js::HandleObject obj, js::HandleObject parent_proto,
              const js::Class *clasp, JSNative constructor, unsigned nargs,
              const JSPropertySpec *ps, const JSFunctionSpec *fs,
              const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
