@@ -22,8 +22,8 @@ nsChromeRegistryContent::RegisterRemoteChrome(
     const nsACString& aLocale,
     bool aReset)
 {
-  NS_ABORT_IF_FALSE(aReset || mLocale.IsEmpty(),
-                    "RegisterChrome twice?");
+  MOZ_ASSERT(aReset || mLocale.IsEmpty(),
+             "RegisterChrome twice?");
 
   if (aReset) {
     mPackagesHash.Clear();

@@ -115,19 +115,19 @@ public:
    */
   static float EncodeType(uint32_t aType) {
     static_assert(sizeof(uint32_t) == sizeof(float), "sizeof uint32_t and float must be the same");
-    NS_ABORT_IF_FALSE(IsValidType(aType), "Seg type not recognized");
+    MOZ_ASSERT(IsValidType(aType), "Seg type not recognized");
     return *(reinterpret_cast<float*>(&aType));
   }
 
   static uint32_t DecodeType(float aType) {
     static_assert(sizeof(uint32_t) == sizeof(float), "sizeof uint32_t and float must be the same");
     uint32_t type = *(reinterpret_cast<uint32_t*>(&aType));
-    NS_ABORT_IF_FALSE(IsValidType(type), "Seg type not recognized");
+    MOZ_ASSERT(IsValidType(type), "Seg type not recognized");
     return type;
   }
 
   static char16_t GetPathSegTypeAsLetter(uint32_t aType) {
-    NS_ABORT_IF_FALSE(IsValidType(aType), "Seg type not recognized");
+    MOZ_ASSERT(IsValidType(aType), "Seg type not recognized");
 
     static const char16_t table[] = {
       char16_t('x'),  //  0 == PATHSEG_UNKNOWN
@@ -157,7 +157,7 @@ public:
   }
 
   static uint32_t ArgCountForType(uint32_t aType) {
-    NS_ABORT_IF_FALSE(IsValidType(aType), "Seg type not recognized");
+    MOZ_ASSERT(IsValidType(aType), "Seg type not recognized");
 
     static const uint8_t table[] = {
       0,  //  0 == PATHSEG_UNKNOWN
@@ -219,7 +219,7 @@ public:
   }
 
   static bool IsRelativeOrAbsoluteType(uint32_t aType) {
-    NS_ABORT_IF_FALSE(IsValidType(aType), "Seg type not recognized");
+    MOZ_ASSERT(IsValidType(aType), "Seg type not recognized");
 
     // When adding a new path segment type, ensure that the returned condition
     // below is still correct.
@@ -230,7 +230,7 @@ public:
   }
 
   static bool IsRelativeType(uint32_t aType) {
-    NS_ABORT_IF_FALSE
+    MOZ_ASSERT
       (IsRelativeOrAbsoluteType(aType),
        "IsRelativeType called with segment type that does not come in relative and absolute forms");
 
@@ -243,7 +243,7 @@ public:
   }
 
   static uint32_t RelativeVersionOfType(uint32_t aType) {
-    NS_ABORT_IF_FALSE
+    MOZ_ASSERT
       (IsRelativeOrAbsoluteType(aType),
        "RelativeVersionOfType called with segment type that does not come in relative and absolute forms");
 

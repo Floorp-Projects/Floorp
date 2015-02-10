@@ -82,6 +82,7 @@ public:
 #endif
 
     static int32_t GetDPI();
+    static double  GetDPIScale();
 
     bool UseXRender() {
 #if defined(MOZ_X11)

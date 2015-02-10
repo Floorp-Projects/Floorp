@@ -61,7 +61,7 @@ public:
    */
   const T& Top() const
   {
-    NS_ABORT_IF_FALSE(!mElements.IsEmpty(), "Empty queue");
+    MOZ_ASSERT(!mElements.IsEmpty(), "Empty queue");
     return mElements[0];
   }
 
@@ -99,7 +99,7 @@ public:
    */
   T Pop()
   {
-    NS_ABORT_IF_FALSE(!mElements.IsEmpty(), "Empty queue");
+    MOZ_ASSERT(!mElements.IsEmpty(), "Empty queue");
     T pop = mElements[0];
 
     // Move last to front

@@ -9,12 +9,11 @@
 
 #include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 namespace mozilla {
 namespace dom {
-
-class Promise;
-
 namespace workers {
 
 class ServiceWorkerClient MOZ_FINAL : public nsISupports,
@@ -39,6 +38,10 @@ public:
   {
     return mOwner;
   }
+
+  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                   const Optional<Sequence<JS::Value>>& aTransferable,
+                   ErrorResult& aRv);
 
   JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 

@@ -13,10 +13,12 @@ add_task(function* test_javascript_match() {
   let uri2 = NetUtil.newURI("http://page2");
   let uri3 = NetUtil.newURI("http://page3");
   let uri4 = NetUtil.newURI("http://page4");
-  yield promiseAddVisits([ { uri: uri1, title: "tagged" },
-                           { uri: uri2, title: "tagged" },
-                           { uri: uri3, title: "tagged" },
-                           { uri: uri4, title: "tagged" } ]);
+  yield PlacesTestUtils.addVisits([
+    { uri: uri1, title: "tagged" },
+    { uri: uri2, title: "tagged" },
+    { uri: uri3, title: "tagged" },
+    { uri: uri4, title: "tagged" }
+  ]);
   addBookmark({ uri: uri1,
                 title: "tagged",
                 tags: [ "tag1" ] });

@@ -211,7 +211,7 @@ function task_addPageBook(aURI, aTitle, aBook, aTags, aKey, aTransitionType, aNo
 
   // Add the page and a visit if we need to
   if (!aNoVisit) {
-    yield promiseAddVisits({
+    yield PlacesTestUtils.addVisits({
       uri: uri,
       transition: aTransitionType || TRANSITION_LINK,
       visitDate: gDate,
@@ -304,7 +304,7 @@ function markTyped(aURIs, aTitle)
 function task_markTyped(aURIs, aTitle)
 {
   for (let uri of aURIs) {
-    yield promiseAddVisits({
+    yield PlacesTestUtils.addVisits({
       uri: toURI(kURIs[uri]),
       transition: TRANSITION_TYPED,
       title: kTitles[aTitle]

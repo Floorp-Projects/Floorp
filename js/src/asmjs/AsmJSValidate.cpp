@@ -8044,10 +8044,10 @@ CheckModuleReturn(ModuleCompiler &m)
 }
 
 static void
-AssertStackAlignment(MacroAssembler &masm, uint32_t alignment)
+AssertStackAlignment(MacroAssembler &masm, uint32_t alignment, uint32_t addBeforeAssert = 0)
 {
-    MOZ_ASSERT((sizeof(AsmJSFrame) + masm.framePushed()) % alignment == 0);
-    masm.assertStackAlignment(alignment);
+    MOZ_ASSERT((sizeof(AsmJSFrame) + masm.framePushed() + addBeforeAssert) % alignment == 0);
+    masm.assertStackAlignment(alignment, addBeforeAssert);
 }
 
 static unsigned
@@ -8330,6 +8330,7 @@ GenerateCheckForHeapDetachment(ModuleCompiler &m, Register scratch)
         return;
 
     MacroAssembler &masm = m.masm();
+    MOZ_ASSERT(int(masm.framePushed()) >= int(ShadowStackSpace));
     AssertStackAlignment(masm, ABIStackAlignment);
 #if defined(JS_CODEGEN_X86)
     CodeOffsetLabel label = masm.movlWithPatch(PatchedAbsoluteAddress(), scratch);
@@ -8434,17 +8435,9 @@ GenerateFFIInterpExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &e
     return m.finishGeneratingInterpExit(exitIndex, &begin, &profilingReturn) && !masm.oom();
 }
 
-// On ARM/MIPS, we need to include an extra word of space at the top of the
-// stack so we can explicitly store the return address before making the call
-// to C++ or Ion and an extra word to store the pinned global-data register. On
-// x86/x64, neither is necessary since the call instruction pushes the return
-// address and global data is reachable via immediate or rip-relative
-// addressing.
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
-static const unsigned MaybeRetAddr = sizeof(void*);
 static const unsigned MaybeSavedGlobalReg = sizeof(void*);
 #else
-static const unsigned MaybeRetAddr = 0;
 static const unsigned MaybeSavedGlobalReg = 0;
 #endif
 
@@ -8453,38 +8446,26 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
                    unsigned exitIndex, Label *throwLabel)
 {
     MacroAssembler &masm = m.masm();
-
-    // The same stack frame is used for the call into Ion and (possibly) a call
-    // into C++ to coerce the return type. To do this, we compute the amount of
-    // space required for both calls and take the maximum. In both cases,
-    // include space for MaybeSavedGlobalReg, since this goes below the Ion/coerce.
+    MOZ_ASSERT(masm.framePushed() == 0);
 
     // Ion calls use the following stack layout (sp grows to the left):
-    //   | return address | descriptor | callee | argc | this | arg1 | arg2 | ...
-    unsigned offsetToIonArgs = MaybeRetAddr;
-    unsigned ionArgBytes = 3 * sizeof(size_t) + (1 + exit.sig().args().length()) * sizeof(Value);
-    unsigned totalIonBytes = offsetToIonArgs + ionArgBytes + MaybeSavedGlobalReg;
-    unsigned ionFrameSize = StackDecrementForCall(masm, AsmJSStackAlignment, totalIonBytes);
-
-    // Coercion calls use the following stack layout (sp grows to the left):
-    //   | stack args | padding | Value argv[1] | ...
-    // The padding between args and argv ensures that argv is aligned.
-    MIRTypeVector coerceArgTypes(m.cx());
-    if (!coerceArgTypes.append(MIRType_Pointer)) // argv
-        return false;
-
-    unsigned offsetToCoerceArgv = AlignBytes(StackArgBytes(coerceArgTypes), sizeof(double));
-    unsigned totalCoerceBytes = offsetToCoerceArgv + sizeof(Value) + MaybeSavedGlobalReg;
-    unsigned coerceFrameSize = StackDecrementForCall(masm, AsmJSStackAlignment, totalCoerceBytes);
-
-    unsigned framePushed = Max(ionFrameSize, coerceFrameSize);
+    //   | retaddr | descriptor | callee | argc | this | arg1..N |
+    // After the Ion frame, the global register (if present) is saved since Ion
+    // does not preserve non-volatile regs. Also, unlike most ABIs, Ion requires
+    // that sp be JitStackAlignment-aligned *after* pushing the return address.
+    static_assert(AsmJSStackAlignment >= JitStackAlignment, "subsumes");
+    unsigned sizeOfRetAddr = sizeof(void*);
+    unsigned ionFrameBytes = 3 * sizeof(void*) + (1 + exit.sig().args().length()) * sizeof(Value);
+    unsigned totalIonBytes = sizeOfRetAddr + ionFrameBytes + MaybeSavedGlobalReg;
+    unsigned ionFramePushed = StackDecrementForCall(masm, JitStackAlignment, totalIonBytes) -
+                              sizeOfRetAddr;
 
     Label begin;
-    GenerateAsmJSExitPrologue(masm, framePushed, AsmJSExit::JitFFI, &begin);
+    GenerateAsmJSExitPrologue(masm, ionFramePushed, AsmJSExit::JitFFI, &begin);
 
     // 1. Descriptor
-    size_t argOffset = offsetToIonArgs;
-    uint32_t descriptor = MakeFrameDescriptor(framePushed, JitFrame_Entry);
+    size_t argOffset = 0;
+    uint32_t descriptor = MakeFrameDescriptor(ionFramePushed, JitFrame_Entry);
     masm.storePtr(ImmWord(uintptr_t(descriptor)), Address(StackPointer, argOffset));
     argOffset += sizeof(size_t);
 
@@ -8523,10 +8504,10 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     argOffset += sizeof(Value);
 
     // 5. Fill the arguments
-    unsigned offsetToCallerStackArgs = framePushed + sizeof(AsmJSFrame);
+    unsigned offsetToCallerStackArgs = ionFramePushed + sizeof(AsmJSFrame);
     FillArgumentArray(m, exit.sig().args(), argOffset, offsetToCallerStackArgs, scratch);
     argOffset += exit.sig().args().length() * sizeof(Value);
-    MOZ_ASSERT(argOffset == offsetToIonArgs + ionArgBytes);
+    MOZ_ASSERT(argOffset == ionFrameBytes);
 
     // 6. Jit code will clobber all registers, even non-volatiles. GlobalReg and
     //    HeapReg are removed from the general register set for asm.js code, so
@@ -8535,11 +8516,8 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     //    HeapReg must be reloaded (from global data) after the call since the
     //    heap may change during the FFI call.
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
-    JS_STATIC_ASSERT(MaybeSavedGlobalReg > 0);
-    unsigned savedGlobalOffset = framePushed - MaybeSavedGlobalReg;
-    masm.storePtr(GlobalReg, Address(StackPointer, savedGlobalOffset));
-#else
-    JS_STATIC_ASSERT(MaybeSavedGlobalReg == 0);
+    static_assert(MaybeSavedGlobalReg == sizeof(void*), "stack frame accounting");
+    masm.storePtr(GlobalReg, Address(StackPointer, ionFrameBytes));
 #endif
 
     {
@@ -8601,10 +8579,9 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         masm.storePtr(reg1, Address(reg0, offsetOfProfilingActivation));
     }
 
-    // 2. Call
-    AssertStackAlignment(masm, AsmJSStackAlignment);
+    AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddr);
     masm.callJitFromAsmJS(callee);
-    AssertStackAlignment(masm, AsmJSStackAlignment);
+    AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddr);
 
     {
         // Disable Activation.
@@ -8653,15 +8630,20 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         masm.storePtr(reg2, Address(reg0, offsetOfJitActivation));
     }
 
-    MOZ_ASSERT(masm.framePushed() == framePushed);
-
     // Reload the global register since Ion code can clobber any register.
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
-    JS_STATIC_ASSERT(MaybeSavedGlobalReg > 0);
-    masm.loadPtr(Address(StackPointer, savedGlobalOffset), GlobalReg);
-#else
-    JS_STATIC_ASSERT(MaybeSavedGlobalReg == 0);
+    static_assert(MaybeSavedGlobalReg == sizeof(void*), "stack frame accounting");
+    masm.loadPtr(Address(StackPointer, ionFrameBytes), GlobalReg);
 #endif
+
+    // As explained above, the frame was aligned for Ion such that
+    //   (sp + sizeof(void*)) % JitStackAlignment == 0
+    // But now we possibly want to call one of several different C++ functions,
+    // so subtract the sizeof(void*) so that sp is aligned for an ABI call.
+    static_assert(ABIStackAlignment <= JitStackAlignment, "subsumes");
+    masm.reserveStack(sizeOfRetAddr);
+    unsigned nativeFramePushed = masm.framePushed();
+    AssertStackAlignment(masm, ABIStackAlignment);
 
     masm.branchTestMagic(Assembler::Equal, JSReturnOperand, throwLabel);
 
@@ -8692,11 +8674,19 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     GenerateCheckForHeapDetachment(m, ABIArgGenerator::NonReturn_VolatileReg0);
 
     Label profilingReturn;
-    GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::JitFFI, &profilingReturn);
+    GenerateAsmJSExitEpilogue(masm, masm.framePushed(), AsmJSExit::JitFFI, &profilingReturn);
 
     if (oolConvert.used()) {
         masm.bind(&oolConvert);
-        masm.setFramePushed(framePushed);
+        masm.setFramePushed(nativeFramePushed);
+
+        // Coercion calls use the following stack layout (sp grows to the left):
+        //   | args | padding | Value argv[1] | padding | exit AsmJSFrame |
+        MIRTypeVector coerceArgTypes(m.cx());
+        JS_ALWAYS_TRUE(coerceArgTypes.append(MIRType_Pointer));
+        unsigned offsetToCoerceArgv = AlignBytes(StackArgBytes(coerceArgTypes), sizeof(Value));
+        MOZ_ASSERT(nativeFramePushed >= offsetToCoerceArgv + sizeof(Value));
+        AssertStackAlignment(masm, ABIStackAlignment);
 
         // Store return value into argv[0]
         masm.storeValue(JSReturnOperand, Address(StackPointer, offsetToCoerceArgv));

@@ -84,8 +84,8 @@ CryptoTask::Run()
 void
 CryptoTask::virtualDestroyNSSReference()
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(),
-                    "virtualDestroyNSSReference called off the main thread");
+  MOZ_ASSERT(NS_IsMainThread(),
+             "virtualDestroyNSSReference called off the main thread");
   if (!mReleasedNSSResources) {
     mReleasedNSSResources = true;
     ReleaseNSSResources();

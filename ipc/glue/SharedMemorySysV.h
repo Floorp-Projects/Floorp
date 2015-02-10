@@ -103,8 +103,8 @@ public:
     if (shmctl(mHandle, IPC_STAT, &info) < 0)
       return false;
 
-    NS_ABORT_IF_FALSE(nBytes <= info.shm_segsz,
-                      "Segment doesn't have enough space!");
+    MOZ_ASSERT(nBytes <= info.shm_segsz,
+               "Segment doesn't have enough space!");
 #endif
 
     Mapped(nBytes);
@@ -123,7 +123,7 @@ public:
 
   Handle GetHandle() const
   {
-    NS_ABORT_IF_FALSE(IsHandleValid(mHandle), "invalid handle");
+    MOZ_ASSERT(IsHandleValid(mHandle), "invalid handle");
     return mHandle;
   }
 

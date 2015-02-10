@@ -1398,6 +1398,7 @@ nsSecureBrowserUIImpl::GetSSLStatus(nsISSLStatus** _result)
 
   switch (mNotifiedSecurityState)
   {
+    case lis_broken_security:
     case lis_mixed_security:
     case lis_high_security:
       break;
@@ -1405,7 +1406,6 @@ nsSecureBrowserUIImpl::GetSSLStatus(nsISSLStatus** _result)
     default:
       NS_NOTREACHED("if this is reached you must add more entries to the switch");
     case lis_no_security:
-    case lis_broken_security:
       *_result = nullptr;
       return NS_OK;
   }

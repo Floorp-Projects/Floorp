@@ -92,8 +92,8 @@ nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
   if (mParams.mType != nsSMILTimeValueSpecParams::SYNCBASE && !IsEventBased())
     return;
 
-  NS_ABORT_IF_FALSE(aContextNode,
-      "null context node for resolving timing references against");
+  MOZ_ASSERT(aContextNode,
+             "null context node for resolving timing references against");
 
   // If we're not bound to the document yet, don't worry, we'll get called again
   // when that happens
@@ -113,10 +113,10 @@ nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
     mReferencedElement.ResetWithElement(target);
   } else if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
     nsIDocument* doc = aContextNode->GetCurrentDoc();
-    NS_ABORT_IF_FALSE(doc, "We are in the document but current doc is null");
+    MOZ_ASSERT(doc, "We are in the document but current doc is null");
     mReferencedElement.ResetWithElement(doc->GetRootElement());
   } else {
-    NS_ABORT_IF_FALSE(false, "Syncbase or repeat spec without ID");
+    MOZ_ASSERT(false, "Syncbase or repeat spec without ID");
   }
   UpdateReferencedElement(oldReferencedElement, mReferencedElement.get());
 }
@@ -297,11 +297,12 @@ nsSMILTimeValueSpec::IsWhitelistedEvent()
 void
 nsSMILTimeValueSpec::RegisterEventListener(Element* aTarget)
 {
-  NS_ABORT_IF_FALSE(IsEventBased(),
-    "Attempting to register event-listener for unexpected nsSMILTimeValueSpec"
-    " type");
-  NS_ABORT_IF_FALSE(mParams.mEventSymbol,
-    "Attempting to register event-listener but there is no event name");
+  MOZ_ASSERT(IsEventBased(),
+             "Attempting to register event-listener for unexpected "
+             "nsSMILTimeValueSpec type");
+  MOZ_ASSERT(mParams.mEventSymbol,
+             "Attempting to register event-listener but there is no event "
+             "name");
 
   if (!aTarget)
     return;
@@ -343,7 +344,7 @@ nsSMILTimeValueSpec::UnregisterEventListener(Element* aTarget)
 EventListenerManager*
 nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget)
 {
-  NS_ABORT_IF_FALSE(aTarget, "null target; can't get EventListenerManager");
+  MOZ_ASSERT(aTarget, "null target; can't get EventListenerManager");
 
   nsCOMPtr<EventTarget> target;
 
@@ -367,10 +368,10 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget)
 void
 nsSMILTimeValueSpec::HandleEvent(nsIDOMEvent* aEvent)
 {
-  NS_ABORT_IF_FALSE(mEventListener, "Got event without an event listener");
-  NS_ABORT_IF_FALSE(IsEventBased(),
-                    "Got event for non-event nsSMILTimeValueSpec");
-  NS_ABORT_IF_FALSE(aEvent, "No event supplied");
+  MOZ_ASSERT(mEventListener, "Got event without an event listener");
+  MOZ_ASSERT(IsEventBased(),
+             "Got event for non-event nsSMILTimeValueSpec");
+  MOZ_ASSERT(aEvent, "No event supplied");
 
   // XXX In the long run we should get the time from the event itself which will
   // store the time in global document time which we'll need to convert to our
@@ -509,8 +510,8 @@ nsSMILTimeValueSpec::ConvertBetweenTimeContainers(
     // time. Just return the indefinite time.
     return docTime;
 
-  NS_ABORT_IF_FALSE(docTime.IsDefinite(),
-    "ContainerToParentTime gave us an unresolved or indefinite time");
+  MOZ_ASSERT(docTime.IsDefinite(),
+             "ContainerToParentTime gave us an unresolved or indefinite time");
 
   return dstContainer->ParentToContainerTime(docTime.GetMillis());
 }

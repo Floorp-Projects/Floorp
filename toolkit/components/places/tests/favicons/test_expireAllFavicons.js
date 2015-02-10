@@ -32,7 +32,7 @@ add_test(function test_expireAllFavicons() {
   }, PlacesUtils.TOPIC_FAVICONS_EXPIRED, false);
 
   // Add a visited page.
-  promiseAddVisits({ uri: TEST_PAGE_URI, transition: TRANSITION_TYPED }).then(
+  PlacesTestUtils.addVisits({ uri: TEST_PAGE_URI, transition: TRANSITION_TYPED }).then(
     function () {
       PlacesUtils.favicons.setAndFetchFaviconForPage(TEST_PAGE_URI,
                                                      SMALLPNG_DATA_URI, true,

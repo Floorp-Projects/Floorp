@@ -10,6 +10,7 @@
 
 #include "gfxBlur.h"
 #include "gfxContext.h"
+#include "imgIContainer.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/Rect.h"
 #include "nsLayoutUtils.h"
@@ -109,6 +110,7 @@ struct CSSSizeOrRatio
  */
 class nsImageRenderer {
 public:
+  typedef mozilla::image::DrawResult DrawResult;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::ImageContainer ImageContainer;
 
@@ -202,12 +204,12 @@ public:
    * arguments.
    * @see nsLayoutUtils::DrawImage() for parameters.
    */
-  void DrawBackground(nsPresContext*       aPresContext,
-                      nsRenderingContext&  aRenderingContext,
-                      const nsRect&        aDest,
-                      const nsRect&        aFill,
-                      const nsPoint&       aAnchor,
-                      const nsRect&        aDirty);
+  DrawResult DrawBackground(nsPresContext*       aPresContext,
+                            nsRenderingContext&  aRenderingContext,
+                            const nsRect&        aDest,
+                            const nsRect&        aFill,
+                            const nsPoint&       aAnchor,
+                            const nsRect&        aDirty);
 
   /**
    * Draw the image to a single component of a border-image style rendering.
@@ -247,13 +249,13 @@ private:
    *
    * @see nsLayoutUtils::DrawImage() for other parameters.
    */
-  void Draw(nsPresContext*       aPresContext,
-            nsRenderingContext&  aRenderingContext,
-            const nsRect&        aDirtyRect,
-            const nsRect&        aDest,
-            const nsRect&        aFill,
-            const nsPoint&       aAnchor,
-            const mozilla::CSSIntRect& aSrc);
+  DrawResult Draw(nsPresContext*       aPresContext,
+                  nsRenderingContext&  aRenderingContext,
+                  const nsRect&        aDirtyRect,
+                  const nsRect&        aDest,
+                  const nsRect&        aFill,
+                  const nsPoint&       aAnchor,
+                  const mozilla::CSSIntRect& aSrc);
 
   /**
    * Helper method for creating a gfxDrawable from mPaintServerFrame or 
@@ -321,6 +323,7 @@ struct nsCSSRendering {
   typedef mozilla::gfx::Float Float;
   typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
+  typedef mozilla::image::DrawResult DrawResult;
   typedef nsIFrame::Sides Sides;
 
   /**
@@ -463,7 +466,7 @@ struct nsCSSRendering {
   static nsStyleContext*
   FindCanvasBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame)
   {
-    NS_ABORT_IF_FALSE(IsCanvasFrame(aForFrame), "not a canvas frame");
+    MOZ_ASSERT(IsCanvasFrame(aForFrame), "not a canvas frame");
     if (aRootElementFrame)
       return FindRootFrameBackground(aRootElementFrame);
 
@@ -554,14 +557,14 @@ struct nsCSSRendering {
      */
     PAINTBG_TO_WINDOW = 0x04
   };
-  static void PaintBackground(nsPresContext* aPresContext,
-                              nsRenderingContext& aRenderingContext,
-                              nsIFrame* aForFrame,
-                              const nsRect& aDirtyRect,
-                              const nsRect& aBorderArea,
-                              uint32_t aFlags,
-                              nsRect* aBGClipRect = nullptr,
-                              int32_t aLayer = -1);
+  static DrawResult PaintBackground(nsPresContext* aPresContext,
+                                    nsRenderingContext& aRenderingContext,
+                                    nsIFrame* aForFrame,
+                                    const nsRect& aDirtyRect,
+                                    const nsRect& aBorderArea,
+                                    uint32_t aFlags,
+                                    nsRect* aBGClipRect = nullptr,
+                                    int32_t aLayer = -1);
 
   /**
    * Same as |PaintBackground|, except using the provided style structs.
@@ -572,16 +575,16 @@ struct nsCSSRendering {
    * The background color will only be painted if the back-most layer is also
    * being painted.
    */
-  static void PaintBackgroundWithSC(nsPresContext* aPresContext,
-                                    nsRenderingContext& aRenderingContext,
-                                    nsIFrame* aForFrame,
-                                    const nsRect& aDirtyRect,
-                                    const nsRect& aBorderArea,
-                                    nsStyleContext *aStyleContext,
-                                    const nsStyleBorder& aBorder,
-                                    uint32_t aFlags,
-                                    nsRect* aBGClipRect = nullptr,
-                                    int32_t aLayer = -1);
+  static DrawResult PaintBackgroundWithSC(nsPresContext* aPresContext,
+                                          nsRenderingContext& aRenderingContext,
+                                          nsIFrame* aForFrame,
+                                          const nsRect& aDirtyRect,
+                                          const nsRect& aBorderArea,
+                                          nsStyleContext *aStyleContext,
+                                          const nsStyleBorder& aBorder,
+                                          uint32_t aFlags,
+                                          nsRect* aBGClipRect = nullptr,
+                                          int32_t aLayer = -1);
 
   /**
    * Returns the rectangle covered by the given background layer image, taking
@@ -594,18 +597,6 @@ struct nsCSSRendering {
                                        const nsRect& aClipRect,
                                        const nsStyleBackground::Layer& aLayer,
                                        uint32_t aFlags);
-
-  /**
-   * Checks if image in layer aLayer of aBackground is currently decoded.
-   */
-  static bool IsBackgroundImageDecodedForStyleContextAndLayer(
-    const nsStyleBackground *aBackground, uint32_t aLayer);
-
-  /**
-   * Checks if all images that are part of the background for aFrame are
-   * currently decoded.
-   */
-  static bool AreAllBackgroundImagesDecodedForFrame(nsIFrame* aFrame);
 
   /**
    * Called when we start creating a display list. The frame tree will not

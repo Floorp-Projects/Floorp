@@ -19,23 +19,23 @@ nsSMILInterval::nsSMILInterval(const nsSMILInterval& aOther)
   mBeginFixed(false),
   mEndFixed(false)
 {
-  NS_ABORT_IF_FALSE(aOther.mDependentTimes.IsEmpty(),
-      "Attempting to copy-construct an interval with dependent times, "
-      "this will lead to instance times being shared between intervals.");
+  MOZ_ASSERT(aOther.mDependentTimes.IsEmpty(),
+             "Attempt to copy-construct an interval with dependent times; this "
+             "will lead to instance times being shared between intervals.");
 
   // For the time being we don't allow intervals with fixed endpoints to be
   // copied since we only ever copy-construct to establish a new current
   // interval. If we ever need to copy historical intervals we may need to move
   // the ReleaseFixedEndpoint calls from Unlink to the dtor.
-  NS_ABORT_IF_FALSE(!aOther.mBeginFixed && !aOther.mEndFixed,
-      "Attempting to copy-construct an interval with fixed endpoints");
+  MOZ_ASSERT(!aOther.mBeginFixed && !aOther.mEndFixed,
+             "Attempt to copy-construct an interval with fixed endpoints");
 }
 
 nsSMILInterval::~nsSMILInterval()
 {
-  NS_ABORT_IF_FALSE(mDependentTimes.IsEmpty(),
-      "Destroying interval without disassociating dependent instance times. "
-      "Unlink was not called");
+  MOZ_ASSERT(mDependentTimes.IsEmpty(),
+             "Destroying interval without disassociating dependent instance "
+             "times. Unlink was not called");
 }
 
 void
@@ -62,31 +62,31 @@ nsSMILInterval::Unlink(bool aFiltered)
 nsSMILInstanceTime*
 nsSMILInterval::Begin()
 {
-  NS_ABORT_IF_FALSE(mBegin && mEnd,
-      "Requesting Begin() on un-initialized interval.");
+  MOZ_ASSERT(mBegin && mEnd,
+             "Requesting Begin() on un-initialized interval.");
   return mBegin;
 }
 
 nsSMILInstanceTime*
 nsSMILInterval::End()
 {
-  NS_ABORT_IF_FALSE(mBegin && mEnd,
-      "Requesting End() on un-initialized interval.");
+  MOZ_ASSERT(mBegin && mEnd,
+             "Requesting End() on un-initialized interval.");
   return mEnd;
 }
 
 void
 nsSMILInterval::SetBegin(nsSMILInstanceTime& aBegin)
 {
-  NS_ABORT_IF_FALSE(aBegin.Time().IsDefinite(),
-      "Attempting to set unresolved or indefinite begin time on interval");
-  NS_ABORT_IF_FALSE(!mBeginFixed,
-      "Attempting to set begin time but the begin point is fixed");
+  MOZ_ASSERT(aBegin.Time().IsDefinite(),
+             "Attempt to set unresolved or indefinite begin time on interval");
+  MOZ_ASSERT(!mBeginFixed,
+             "Attempt to set begin time but the begin point is fixed");
   // Check that we're not making an instance time dependent on itself. Such an
   // arrangement does not make intuitive sense and should be detected when
   // creating or updating intervals.
-  NS_ABORT_IF_FALSE(!mBegin || aBegin.GetBaseTime() != mBegin,
-      "Attempting to make self-dependent instance time");
+  MOZ_ASSERT(!mBegin || aBegin.GetBaseTime() != mBegin,
+             "Attempt to make self-dependent instance time");
 
   mBegin = &aBegin;
 }
@@ -94,12 +94,12 @@ nsSMILInterval::SetBegin(nsSMILInstanceTime& aBegin)
 void
 nsSMILInterval::SetEnd(nsSMILInstanceTime& aEnd)
 {
-  NS_ABORT_IF_FALSE(!mEndFixed,
-      "Attempting to set end time but the end point is fixed");
+  MOZ_ASSERT(!mEndFixed,
+             "Attempt to set end time but the end point is fixed");
   // As with SetBegin, check we're not making an instance time dependent on
   // itself.
-  NS_ABORT_IF_FALSE(!mEnd || aEnd.GetBaseTime() != mEnd,
-      "Attempting to make self-dependent instance time");
+  MOZ_ASSERT(!mEnd || aEnd.GetBaseTime() != mEnd,
+             "Attempting to make self-dependent instance time");
 
   mEnd = &aEnd;
 }
@@ -107,9 +107,9 @@ nsSMILInterval::SetEnd(nsSMILInstanceTime& aEnd)
 void
 nsSMILInterval::FixBegin()
 {
-  NS_ABORT_IF_FALSE(mBegin && mEnd,
-      "Fixing begin point on un-initialized interval");
-  NS_ABORT_IF_FALSE(!mBeginFixed, "Duplicate calls to FixBegin()");
+  MOZ_ASSERT(mBegin && mEnd,
+             "Fixing begin point on un-initialized interval");
+  MOZ_ASSERT(!mBeginFixed, "Duplicate calls to FixBegin()");
   mBeginFixed = true;
   mBegin->AddRefFixedEndpoint();
 }
@@ -117,11 +117,11 @@ nsSMILInterval::FixBegin()
 void
 nsSMILInterval::FixEnd()
 {
-  NS_ABORT_IF_FALSE(mBegin && mEnd,
-      "Fixing end point on un-initialized interval");
-  NS_ABORT_IF_FALSE(mBeginFixed,
-      "Fixing the end of an interval without a fixed begin");
-  NS_ABORT_IF_FALSE(!mEndFixed, "Duplicate calls to FixEnd()");
+  MOZ_ASSERT(mBegin && mEnd,
+             "Fixing end point on un-initialized interval");
+  MOZ_ASSERT(mBeginFixed,
+             "Fixing the end of an interval without a fixed begin");
+  MOZ_ASSERT(!mEndFixed, "Duplicate calls to FixEnd()");
   mEndFixed = true;
   mEnd->AddRefFixedEndpoint();
 }
@@ -143,7 +143,7 @@ nsSMILInterval::RemoveDependentTime(const nsSMILInstanceTime& aTime)
   bool found =
 #endif
     mDependentTimes.RemoveElementSorted(&aTime);
-  NS_ABORT_IF_FALSE(found, "Couldn't find instance time to delete.");
+  MOZ_ASSERT(found, "Couldn't find instance time to delete.");
 }
 
 void

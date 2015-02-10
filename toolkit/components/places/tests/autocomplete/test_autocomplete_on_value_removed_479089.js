@@ -28,7 +28,7 @@ add_task(function test_autocomplete_on_value_removed()
 
   // add history visit
   var testUri = uri("http://foo.mozilla.com/");
-  yield promiseAddVisits({
+  yield PlacesTestUtils.addVisits({
     uri: testUri,
     referrer: uri("http://mozilla.com/")
   });

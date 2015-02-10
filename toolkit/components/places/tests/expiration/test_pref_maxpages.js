@@ -84,7 +84,7 @@ add_task(function test_pref_maxpages() {
     let now = getExpirablePRTime();
     for (let i = 0; i < currentTest.addPages; i++) {
       let page = "http://" + testIndex + "." + i + ".mozilla.org/";
-      yield promiseAddVisits({ uri: uri(page), visitDate: now++ });
+      yield PlacesTestUtils.addVisits({ uri: uri(page), visitDate: now++ });
     }
 
     // Observe history.

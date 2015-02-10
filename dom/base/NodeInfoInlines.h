@@ -75,42 +75,42 @@ inline void
 CheckValidNodeInfo(uint16_t aNodeType, nsIAtom *aName, int32_t aNamespaceID,
                    nsIAtom* aExtraName)
 {
-  NS_ABORT_IF_FALSE(aNodeType == nsIDOMNode::ELEMENT_NODE ||
-                    aNodeType == nsIDOMNode::ATTRIBUTE_NODE ||
-                    aNodeType == nsIDOMNode::TEXT_NODE ||
-                    aNodeType == nsIDOMNode::CDATA_SECTION_NODE ||
-                    aNodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
-                    aNodeType == nsIDOMNode::COMMENT_NODE ||
-                    aNodeType == nsIDOMNode::DOCUMENT_NODE ||
-                    aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE ||
-                    aNodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE ||
-                    aNodeType == UINT16_MAX,
-                    "Invalid nodeType");
-  NS_ABORT_IF_FALSE((aNodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
-                     aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) ==
-                    !!aExtraName,
-                    "Supply aExtraName for and only for PIs and doctypes");
-  NS_ABORT_IF_FALSE(aNodeType == nsIDOMNode::ELEMENT_NODE ||
-                    aNodeType == nsIDOMNode::ATTRIBUTE_NODE ||
-                    aNodeType == UINT16_MAX ||
-                    aNamespaceID == kNameSpaceID_None,
-                    "Only attributes and elements can be in a namespace");
-  NS_ABORT_IF_FALSE(aName && aName != nsGkAtoms::_empty, "Invalid localName");
-  NS_ABORT_IF_FALSE(((aNodeType == nsIDOMNode::TEXT_NODE) ==
-                     (aName == nsGkAtoms::textTagName)) &&
-                    ((aNodeType == nsIDOMNode::CDATA_SECTION_NODE) ==
-                     (aName == nsGkAtoms::cdataTagName)) &&
-                    ((aNodeType == nsIDOMNode::COMMENT_NODE) ==
-                     (aName == nsGkAtoms::commentTagName)) &&
-                    ((aNodeType == nsIDOMNode::DOCUMENT_NODE) ==
-                     (aName == nsGkAtoms::documentNodeName)) &&
-                    ((aNodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) ==
-                     (aName == nsGkAtoms::documentFragmentNodeName)) &&
-                    ((aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) ==
-                     (aName == nsGkAtoms::documentTypeNodeName)) &&
-                    ((aNodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE) ==
-                     (aName == nsGkAtoms::processingInstructionTagName)),
-                    "Wrong localName for nodeType");
+  MOZ_ASSERT(aNodeType == nsIDOMNode::ELEMENT_NODE ||
+             aNodeType == nsIDOMNode::ATTRIBUTE_NODE ||
+             aNodeType == nsIDOMNode::TEXT_NODE ||
+             aNodeType == nsIDOMNode::CDATA_SECTION_NODE ||
+             aNodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
+             aNodeType == nsIDOMNode::COMMENT_NODE ||
+             aNodeType == nsIDOMNode::DOCUMENT_NODE ||
+             aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE ||
+             aNodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE ||
+             aNodeType == UINT16_MAX,
+             "Invalid nodeType");
+  MOZ_ASSERT((aNodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
+              aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) ==
+             !!aExtraName,
+             "Supply aExtraName for and only for PIs and doctypes");
+  MOZ_ASSERT(aNodeType == nsIDOMNode::ELEMENT_NODE ||
+             aNodeType == nsIDOMNode::ATTRIBUTE_NODE ||
+             aNodeType == UINT16_MAX ||
+             aNamespaceID == kNameSpaceID_None,
+             "Only attributes and elements can be in a namespace");
+  MOZ_ASSERT(aName && aName != nsGkAtoms::_empty, "Invalid localName");
+  MOZ_ASSERT(((aNodeType == nsIDOMNode::TEXT_NODE) ==
+              (aName == nsGkAtoms::textTagName)) &&
+             ((aNodeType == nsIDOMNode::CDATA_SECTION_NODE) ==
+              (aName == nsGkAtoms::cdataTagName)) &&
+             ((aNodeType == nsIDOMNode::COMMENT_NODE) ==
+              (aName == nsGkAtoms::commentTagName)) &&
+             ((aNodeType == nsIDOMNode::DOCUMENT_NODE) ==
+              (aName == nsGkAtoms::documentNodeName)) &&
+             ((aNodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) ==
+              (aName == nsGkAtoms::documentFragmentNodeName)) &&
+             ((aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) ==
+              (aName == nsGkAtoms::documentTypeNodeName)) &&
+             ((aNodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE) ==
+              (aName == nsGkAtoms::processingInstructionTagName)),
+             "Wrong localName for nodeType");
 }
 
 #endif /* mozilla_dom_NodeInfoInlines_h___ */

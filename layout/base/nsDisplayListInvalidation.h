@@ -73,6 +73,8 @@ public:
   nsRect mBorderRect;
 };
 
+bool ShouldSyncDecodeImages(nsDisplayListBuilder* aBuilder);
+
 /**
  * nsImageGeometryMixin is a mixin for geometry items that draw images. Geometry
  * items that include this mixin can track drawing results and use that
@@ -86,13 +88,24 @@ template <typename T>
 class nsImageGeometryMixin
 {
 public:
-  explicit nsImageGeometryMixin(nsDisplayItem* aItem)
+  nsImageGeometryMixin(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
     : mLastDrawResult(mozilla::image::DrawResult::NOT_READY)
+    , mWaitingForPaint(false)
   {
+    // Transfer state from the previous version of this geometry item.
     auto lastGeometry =
       static_cast<T*>(mozilla::FrameLayerBuilder::GetMostRecentGeometry(aItem));
     if (lastGeometry) {
-      mLastDrawResult = lastGeometry->LastDrawResult();
+      mLastDrawResult = lastGeometry->mLastDrawResult;
+      mWaitingForPaint = lastGeometry->mWaitingForPaint;
+    }
+
+    // If our display item is going to invalidate to trigger sync decoding of
+    // images, mark ourselves as waiting for a paint. If we actually get
+    // painted, UpdateDrawResult will get called, and we'll clear the flag.
+    if (ShouldSyncDecodeImages(aBuilder) &&
+        ShouldInvalidateToSyncDecodeImages()) {
+      mWaitingForPaint = true;
     }
   }
 
@@ -103,13 +116,31 @@ public:
       static_cast<T*>(mozilla::FrameLayerBuilder::GetMostRecentGeometry(aItem));
     if (lastGeometry) {
       lastGeometry->mLastDrawResult = aResult;
+      lastGeometry->mWaitingForPaint = false;
     }
   }
 
-  mozilla::image::DrawResult LastDrawResult() const { return mLastDrawResult; }
+  bool ShouldInvalidateToSyncDecodeImages() const
+  {
+    if (mWaitingForPaint) {
+      // We previously invalidated for sync decoding and haven't gotten painted
+      // since them. This suggests that our display item is completely occluded
+      // and there's no point in invalidating again - and because the reftest
+      // harness takes a new snapshot every time we invalidate, doing so might
+      // lead to an invalidation loop if we're in a reftest.
+      return false;
+    }
+
+    if (mLastDrawResult == mozilla::image::DrawResult::SUCCESS) {
+      return false;
+    }
+
+    return true;
+  }
 
 private:
   mozilla::image::DrawResult mLastDrawResult;
+  bool mWaitingForPaint;
 };
 
 /**
@@ -126,7 +157,7 @@ public:
   nsDisplayItemGenericImageGeometry(nsDisplayItem* aItem,
                                     nsDisplayListBuilder* aBuilder)
     : nsDisplayItemGenericGeometry(aItem, aBuilder)
-    , nsImageGeometryMixin(aItem)
+    , nsImageGeometryMixin(aItem, aBuilder)
   { }
 };
 
@@ -148,7 +179,9 @@ public:
   nsRect mContentRect;
 };
 
-class nsDisplayBackgroundGeometry : public nsDisplayItemGeometry
+class nsDisplayBackgroundGeometry
+  : public nsDisplayItemGeometry
+  , public nsImageGeometryMixin<nsDisplayBackgroundGeometry>
 {
 public:
   nsDisplayBackgroundGeometry(nsDisplayBackgroundImage* aItem, nsDisplayListBuilder* aBuilder);

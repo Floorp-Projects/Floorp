@@ -161,6 +161,7 @@ public:
   CostEntry GetCostEntry() { return image::CostEntry(this, mCost); }
   nsExpirationState* GetExpirationState() { return &mExpirationState; }
   Lifetime GetLifetime() const { return mLifetime; }
+  bool IsDecoded() const { return mSurface->IsImageComplete(); }
 
   // A helper type used by SurfaceCacheImpl::SizeOfSurfacesSum.
   struct SizeOfSurfacesSum
@@ -315,6 +316,17 @@ private:
     }
 
     MOZ_ASSERT(context->mBestMatch, "Should have a current best match");
+
+    // Always prefer completely decoded surfaces.
+    bool bestMatchIsDecoded = context->mBestMatch->IsDecoded();
+    if (bestMatchIsDecoded && !aSurface->IsDecoded()) {
+      return PL_DHASH_NEXT;
+    }
+    if (!bestMatchIsDecoded && aSurface->IsDecoded()) {
+      context->mBestMatch = aSurface;
+      return PL_DHASH_NEXT;
+    }
+
     SurfaceKey bestMatchKey = context->mBestMatch->GetSurfaceKey();
 
     // Compare sizes. We use an area-based heuristic here instead of computing a

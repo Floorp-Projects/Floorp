@@ -1,0 +1,105 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 982726 - Test service worker post message advanced </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  var registration;
+  var base = ["string", true, 42];
+  var blob = new Blob(["blob_content"]);
+  var file = new File(["file_content"], "file");
+  var obj = { body : "object_content" };
+
+  function readBlob(blob) {
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsText(blob);
+    });
+  }
+
+  function equals(v1, v2) {
+    return Promise.all([v1, v2]).then(function(val) {
+      ok(val[0] === val[1], "Values should match.");
+    });
+  }
+
+  function blob_equals(b1, b2) {
+    return equals(readBlob(b1), readBlob(b2));
+  }
+
+  function file_equals(f1, f2) {
+    return equals(f1.name, f2.name).then(blob_equals(f1, f2));
+  }
+
+  function obj_equals(o1, o2) {
+    return equals(o1.body, o2.body);
+  }
+
+  function start() {
+    return navigator.serviceWorker.register("message_posting_worker.js",
+                                            { scope: "./sw_clients/" })
+      .then((swr) => registration = swr);
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    });
+  }
+
+  function testPostMessageObject(obj, test) {
+    var p = new Promise(function(res, rej) {
+      window.onmessage = function(e) {
+        if (e.data === "READY") {
+          registration.active.postMessage(obj)
+        } else {
+          test(obj, e.data).then(res);
+        }
+      }
+    });
+
+    var content = document.getElementById("content");
+    ok(content, "Parent exists.");
+
+    iframe = document.createElement("iframe");
+    iframe.setAttribute('src', "sw_clients/service_worker_controlled.html");
+    content.appendChild(iframe);
+
+    return p.then(() => content.removeChild(iframe));
+  }
+
+  function runTest() {
+    start()
+      .then(testPostMessageObject.bind(this, base[0], equals))
+      .then(testPostMessageObject.bind(this, base[1], equals))
+      .then(testPostMessageObject.bind(this, base[2], equals))
+      .then(testPostMessageObject.bind(this, blob, blob_equals))
+      .then(testPostMessageObject.bind(this, file, file_equals))
+      .then(testPostMessageObject.bind(this, obj, obj_equals))
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+

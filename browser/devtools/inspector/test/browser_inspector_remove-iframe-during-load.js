@@ -9,25 +9,31 @@
 const TEST_URL = TEST_URL_ROOT + "doc_inspector_remove-iframe-during-load.html";
 
 add_task(function* () {
-  let { inspector, toolbox } = yield openInspectorForURL("about:blank");
-
+  let {inspector, toolbox} = yield openInspectorForURL("about:blank");
   yield selectNode("body", inspector);
 
-  let loaded = once(gBrowser.selectedBrowser, "load", true);
+  // We do not want to wait for the inspector to be fully ready before testing
+  // so we load TEST_URL and just wait for the content window to be done loading.
+  let done = waitForContentMessage("Test:TestPageProcessingDone");
   content.location = TEST_URL;
+  yield done;
 
-  info("Waiting for test page to load.");
-  yield loaded;
-
-  // The content doc contains a script that creates an iframe and deletes
-  // it immediately after. This is what used to make the inspector go
+  // The content doc contains a script that creates iframes and deletes them
+  // immediately after. It does this before the load event, after
+  // DOMContentLoaded and after load. This is what used to make the inspector go
   // blank when navigating to that page.
+  // At this stage, there should be no iframes in the page anymore.
+  ok(!getNode("iframe", {expectNoMatch: true}),
+    "Iframes added by the content page should have been removed");
+
+  // Create/remove an extra one now, after the load event.
   info("Creating and removing an iframe.");
-  var iframe = content.document.createElement("iframe");
+  let iframe = content.document.createElement("iframe");
   content.document.body.appendChild(iframe);
   iframe.remove();
 
-  ok(!getNode("iframe", {expectNoMatch: true}), "Iframe has been removed.");
+  ok(!getNode("iframe", {expectNoMatch: true}),
+    "The after-load iframe should have been removed.");
 
   info("Waiting for markup-view to load.");
   yield inspector.once("markuploaded");

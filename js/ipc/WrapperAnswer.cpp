@@ -557,6 +557,32 @@ WrapperAnswer::RecvClassName(const ObjectId &objId, nsString *name)
 }
 
 bool
+WrapperAnswer::RecvGetPrototypeOf(const ObjectId &objId, ReturnStatus *rs, ObjectOrNullVariant *result)
+{
+    *result = NullVariant();
+
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
+
+    RootedObject obj(cx, findObjectById(cx, objId));
+    if (!obj)
+        return fail(cx, rs);
+
+    JS::RootedObject proto(cx);
+    if (!JS_GetPrototype(cx, obj, &proto))
+        return fail(cx, rs);
+
+    if (!toObjectOrNullVariant(cx, proto, result))
+        return fail(cx, rs);
+
+    LOG("getPrototypeOf(%s)", ReceiverObj(objId));
+
+    return ok(rs);
+}
+
+bool
 WrapperAnswer::RecvRegExpToShared(const ObjectId &objId, ReturnStatus *rs,
                                   nsString *source, uint32_t *flags)
 {

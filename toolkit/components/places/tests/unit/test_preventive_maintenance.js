@@ -1154,18 +1154,18 @@ tests.push({
     let now = Date.now() * 1000;
     // Add a page with 1 visit.
     let url = "http://1.moz.org/";
-    yield promiseAddVisits({ uri: uri(url), visitDate: now++ });
+    yield PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
     // Add a page with 1 visit and set wrong visit_count.
     url = "http://2.moz.org/";
-    yield promiseAddVisits({ uri: uri(url), visitDate: now++ });
+    yield PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
     setVisitCount(url, 10);
     // Add a page with 1 visit and set wrong last_visit_date.
     url = "http://3.moz.org/";
-    yield promiseAddVisits({ uri: uri(url), visitDate: now++ });
+    yield PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
     setLastVisitDate(url, now++);
     // Add a page with 1 visit and set wrong stats.
     url = "http://4.moz.org/";
-    yield promiseAddVisits({ uri: uri(url), visitDate: now++ });
+    yield PlacesTestUtils.addVisits({ uri: uri(url), visitDate: now++ });
     setVisitCount(url, 10);
     setLastVisitDate(url, now++);
 
@@ -1209,7 +1209,7 @@ tests.push({
   desc: "recalculate hidden for redirects.",
 
   setup: function() {
-    promiseAddVisits([
+    PlacesTestUtils.addVisits([
       { uri: NetUtil.newURI("http://l3.moz.org/"),
         transition: TRANSITION_TYPED },
       { uri: NetUtil.newURI("http://l3.moz.org/redirecting/"),
@@ -1264,7 +1264,7 @@ tests.push({
 
   setup: function() {
     // use valid api calls to create a bunch of items
-    yield promiseAddVisits([
+    yield PlacesTestUtils.addVisits([
       { uri: this._uri1 },
       { uri: this._uri2 },
     ]);
@@ -1325,7 +1325,7 @@ add_task(function test_preventive_maintenance()
 {
   // Force initialization of the bookmarks hash. This test could cause
   // it to go out of sync due to direct queries on the database.
-  yield promiseAddVisits(uri("http://force.bookmarks.hash"));
+  yield PlacesTestUtils.addVisits(uri("http://force.bookmarks.hash"));
   do_check_false(bs.isBookmarked(uri("http://force.bookmarks.hash")));
 
   // Get current bookmarks max ID for cleanup

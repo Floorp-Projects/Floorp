@@ -417,6 +417,9 @@ gfxHarfBuzzShaper::FindGlyf(hb_codepoint_t aGlyph, bool *aEmptyGlyf) const
         uint32_t len;
         gfxFontEntry::AutoTable headTable(entry,
                                           TRUETYPE_TAG('h','e','a','d'));
+        if (!headTable) {
+            return nullptr;
+        }
         const HeadTable* head =
             reinterpret_cast<const HeadTable*>(hb_blob_get_data(headTable,
                                                                 &len));

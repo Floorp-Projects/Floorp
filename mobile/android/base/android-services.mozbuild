@@ -882,6 +882,7 @@ sync_java_files = [
     'fxa/sync/FxAccountNotificationManager.java',
     'fxa/sync/FxAccountSchedulePolicy.java',
     'fxa/sync/FxAccountSyncAdapter.java',
+    'fxa/sync/FxAccountSyncDelegate.java',
     'fxa/sync/FxAccountSyncService.java',
     'fxa/sync/FxAccountSyncStatusHelper.java',
     'fxa/sync/SchedulePolicy.java',
@@ -1148,4 +1149,8 @@ sync_java_files = [
     'tokenserver/TokenServerClientDelegate.java',
     'tokenserver/TokenServerException.java',
     'tokenserver/TokenServerToken.java',
+]
+reading_list_service_java_files = [
+    'reading/ReadingListSyncAdapter.java',
+    'reading/ReadingListSyncService.java',
 ]

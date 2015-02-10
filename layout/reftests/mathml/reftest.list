@@ -19,6 +19,8 @@ skip-if(B2G&&browserIsRemote) random-if(smallScreen&&Android) fuzzy(255,200) == 
 != mirror-op-3.html mirror-op-3-ref.html
 != mirror-op-4.html mirror-op-4-ref.html
 == dynamic-mi.xhtml dynamic-mi-ref.xhtml
+== mphantom-1.html mphantom-1-ref.html
+== mphantom-2.html mphantom-2-ref.html
 == mfenced-1.xhtml mfenced-1-ref.xhtml
 == mfenced-2a.xhtml mfenced-2-ref.xhtml
 == mfenced-2b.xhtml mfenced-2-ref.xhtml

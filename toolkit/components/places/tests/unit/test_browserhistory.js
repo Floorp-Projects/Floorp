@@ -8,7 +8,7 @@ const TEST_URI = NetUtil.newURI("http://mozilla.com/");
 const TEST_SUBDOMAIN_URI = NetUtil.newURI("http://foobar.mozilla.com/");
 
 add_task(function* test_addPage() {
-  yield promiseAddVisits(TEST_URI);
+  yield PlacesTestUtils.addVisits(TEST_URI);
   do_check_eq(1, PlacesUtils.history.hasHistoryEntries);
 });
 
@@ -23,7 +23,7 @@ add_task(function* test_removePages() {
     pages.push(NetUtil.newURI(TEST_URI.spec + i));
   }
 
-  yield promiseAddVisits(pages.map(function (uri) ({ uri: uri })));
+  yield PlacesTestUtils.addVisits(pages.map(function (uri) ({ uri: uri })));
   // Bookmarked item should not be removed from moz_places.
   const ANNO_INDEX = 1;
   const ANNO_NAME = "testAnno";
@@ -69,7 +69,7 @@ add_task(function* test_removePagesByTimeframe() {
     });
   }
 
-  yield promiseAddVisits(visits);
+  yield PlacesTestUtils.addVisits(visits);
 
   // Delete all pages except the first and the last.
   PlacesUtils.bhistory.removePagesByTimeframe(startDate + 1, startDate + 8);
@@ -86,13 +86,13 @@ add_task(function* test_removePagesByTimeframe() {
 });
 
 add_task(function* test_removePagesFromHost() {
-  yield promiseAddVisits(TEST_URI);
+  yield PlacesTestUtils.addVisits(TEST_URI);
   PlacesUtils.bhistory.removePagesFromHost("mozilla.com", true);
   do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
 });
 
 add_task(function* test_removePagesFromHost_keepSubdomains() {
-  yield promiseAddVisits([{ uri: TEST_URI }, { uri: TEST_SUBDOMAIN_URI }]);
+  yield PlacesTestUtils.addVisits([{ uri: TEST_URI }, { uri: TEST_SUBDOMAIN_URI }]);
   PlacesUtils.bhistory.removePagesFromHost("mozilla.com", false);
   do_check_eq(1, PlacesUtils.history.hasHistoryEntries);
 });
@@ -104,7 +104,7 @@ add_task(function* test_history_clear() {
 
 add_task(function* test_getObservers() {
   // Ensure that getObservers() invalidates the hasHistoryEntries cache.
-  yield promiseAddVisits(TEST_URI);
+  yield PlacesTestUtils.addVisits(TEST_URI);
   do_check_eq(1, PlacesUtils.history.hasHistoryEntries);
   // This is just for testing purposes, never do it.
   return new Promise((resolve, reject) => {

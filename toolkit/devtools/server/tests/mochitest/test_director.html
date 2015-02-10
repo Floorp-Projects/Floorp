@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+  <script type="application/javascript;version=1.8" src="./director-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+const WAIT_EVENT_TIMEOUT = 3000;
+
+window.onload = function() {
+  Task.spawn(function* () {
+    SimpleTest.waitForExplicitFinish();
+
+    var tests = [
+      runDirectorRegistryActorTest
+    ].map((testCase) => {
+      return function* () {
+        setup();
+        yield testCase().then(null, (e) => {
+          console.error("Exception during testCase run", e);
+          ok(false, "Exception during testCase run: " + [e, e.fileName, e.lineNumber].join("\n\t"));
+        });
+
+        teardown();
+      };
+    });
+
+    for (var test of tests) {
+      yield test();
+    }
+  }).then(
+    function success() {
+      SimpleTest.finish()
+    },
+    function error(e) {
+      console.error("Exception during testCase run", e);
+      ok(false, "Exception during testCase run: " + [e, e.fileName, e.lineNumber].join("\n\t"));
+
+      SimpleTest.finish();
+    }
+  );
+};
+
+var targetWin = null;
+
+function setup() {
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init(() => true);
+    DebuggerServer.addBrowserActors();
+
+    SimpleTest.registerCleanupFunction(teardown);
+  }
+}
+
+function teardown() {
+  purgeInstalledDirectorScripts();
+
+  DebuggerServer.destroy();
+  if (targetWin) {
+    targetWin.close();
+  }
+}
+
+/***********************************
+ *  test cases
+ **********************************/
+
+
+function runDirectorRegistryActorTest() {
+  let testDirectorScriptOptions = {
+    scriptCode: "(" + (function() {
+      module.exports = function({port}) {
+        port.onmessage = function(evt) {
+          // echo messages
+          evt.source.postMessage(evt.data);
+        };
+      };
+    }).toString() + ")();",
+    scriptOptions: {}
+  }
+
+  return Task.spawn(function* () {
+    let { client, root } = yield newConnectedDebuggerClient();
+
+    var directorRegistryClient = new DirectorRegistryFront(client, root);
+
+    let installed = yield directorRegistryClient.install("testDirectorScript", testDirectorScriptOptions);
+    is(installed, true, "DirectorManager.install returns true");
+
+    let list = yield directorRegistryClient.list();
+    is(JSON.stringify(list), JSON.stringify(["testDirectorScript"]),
+       "DirectorManager.list contains the installed director script");
+
+    let uninstalled = yield directorRegistryClient.uninstall("testDirectorScript");
+    is(uninstalled, true, "DirectorManager.uninstall return true");
+
+    yield client.close();
+  });
+}
+
+
+  </script>
+</pre>
+</body>
+</html>

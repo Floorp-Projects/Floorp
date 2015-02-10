@@ -322,7 +322,7 @@
     do_print("Add visits and tag the URIs");
     for (let [pURI, tags] in Iterator(urisAndTags)) {
       let nsiuri = uri(pURI);
-      yield promiseAddVisits(nsiuri);
+      yield PlacesTestUtils.addVisits(nsiuri);
       if (tags)
         PlacesUtils.tagging.tagURI(nsiuri, tags);
     }
@@ -493,7 +493,7 @@
     do_print("Add visits and tag the URIs");
     for (let [pURI, tags] in Iterator(urisAndTags)) {
       let nsiuri = uri(pURI);
-      yield promiseAddVisits(nsiuri);
+      yield PlacesTestUtils.addVisits(nsiuri);
       if (tags)
         PlacesUtils.tagging.tagURI(nsiuri, tags);
     }
@@ -629,7 +629,7 @@ function task_doWithBookmark(aTags, aCallback) {
  *        A function that will be called after the visit has been tagged
  */
 function task_doWithVisit(aTags, aCallback) {
-  yield promiseAddVisits(TEST_URI);
+  yield PlacesTestUtils.addVisits(TEST_URI);
   PlacesUtils.tagging.tagURI(TEST_URI, aTags);
   yield aCallback(TEST_URI);
   PlacesUtils.tagging.untagURI(TEST_URI, aTags);

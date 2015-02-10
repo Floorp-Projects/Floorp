@@ -9,8 +9,8 @@
     </label>
     <hbox id="customization-empty" hidden="true">
       <label>&customizeMode.menuAndToolbars.empty;</label>
-      <label onclick="BrowserOpenAddonsMgr('addons://discovery/');"
-             onkeypress="BrowserOpenAddonsMgr('addons://discovery/');"
+      <label onclick="BrowserOpenAddonsMgr('addons://discover/');"
+             onkeypress="BrowserOpenAddonsMgr('addons://discover/');"
              id="customization-more-tools"
              class="text-link">
         &customizeMode.menuAndToolbars.emptyLink;
