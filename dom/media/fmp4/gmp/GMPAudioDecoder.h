@@ -80,6 +80,61 @@ protected:
   virtual nsCString GetNodeId();
 
 private:
+  class GMPInitDoneRunnable : public nsRunnable
+  {
+  public:
+    GMPInitDoneRunnable()
+      : mInitDone(false),
+        mThread(do_GetCurrentThread())
+    {
+    }
+
+    NS_IMETHOD Run()
+    {
+      mInitDone = true;
+      return NS_OK;
+    }
+
+    void Dispatch()
+    {
+      mThread->Dispatch(this, NS_DISPATCH_NORMAL);
+    }
+
+    bool IsDone()
+    {
+      MOZ_ASSERT(nsCOMPtr<nsIThread>(do_GetCurrentThread()) == mThread);
+      return mInitDone;
+    }
+
+  private:
+    bool mInitDone;
+    nsCOMPtr<nsIThread> mThread;
+  };
+  void GetGMPAPI(GMPInitDoneRunnable* aInitDone);
+  class GMPInitDoneCallback : public GetGMPAudioDecoderCallback
+  {
+  public:
+    GMPInitDoneCallback(GMPAudioDecoder* aDecoder,
+                        GMPInitDoneRunnable* aGMPInitDone)
+      : mDecoder(aDecoder)
+      , mGMPInitDone(aGMPInitDone)
+    {
+    }
+
+    virtual void Done(GMPAudioDecoderProxy* aGMP)
+    {
+      if (aGMP) {
+        mDecoder->GMPInitDone(aGMP);
+      }
+      mGMPInitDone->Dispatch();
+    }
+
+  private:
+    nsRefPtr<GMPAudioDecoder> mDecoder;
+    nsRefPtr<GMPInitDoneRunnable> mGMPInitDone;
+  };
+  void GMPInitDone(GMPAudioDecoderProxy* aGMP);
+
   const mp4_demuxer::AudioDecoderConfig& mConfig;
   MediaDataDecoderCallbackProxy* mCallback;
   nsCOMPtr<mozIGeckoMediaPluginService> mMPS;

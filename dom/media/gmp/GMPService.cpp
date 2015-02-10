@@ -281,14 +281,33 @@ GeckoMediaPluginService::GetThread(nsIThread** aThread)
   return NS_OK;
 }
 
+class GetGMPParentForAudioDecoderDone
+{
+public:
+  explicit GetGMPParentForAudioDecoderDone(UniquePtr<GetGMPAudioDecoderCallback>&& aCallback)
+   : mCallback(Move(aCallback))
+  {
+  }
+
+  void Done(GMPParent* aGMPParent)
+  {
+    GMPAudioDecoderParent* gmpADP = nullptr;
+    aGMPParent->GetGMPAudioDecoder(&gmpADP);
+    mCallback->Done(gmpADP);
+  }
+
+private:
+  UniquePtr<GetGMPAudioDecoderCallback> mCallback;
+};
+
 NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPAudioDecoder(nsTArray<nsCString>* aTags,
                                             const nsACString& aNodeId,
-                                            GMPAudioDecoderProxy** aGMPAD)
+                                            UniquePtr<GetGMPAudioDecoderCallback>&& aCallback)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   NS_ENSURE_ARG(aTags && aTags->Length() > 0);
-  NS_ENSURE_ARG(aGMPAD);
+  NS_ENSURE_ARG(aCallback);
 
   if (mShuttingDownOnGMPThread) {
     return NS_ERROR_FAILURE;
@@ -301,27 +320,42 @@ GeckoMediaPluginService::GetGMPAudioDecoder(nsTArray<nsCString>* aTags,
     return NS_ERROR_FAILURE;
   }
 
-  GMPAudioDecoderParent* gmpADP;
-  nsresult rv = gmp->GetGMPAudioDecoder(&gmpADP);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  *aGMPAD = gmpADP;
+  GetGMPParentForAudioDecoderDone(Move(aCallback)).Done(gmp);
 
   return NS_OK;
 }
 
+class GetGMPParentForVideoDecoderDone
+{
+public:
+  explicit GetGMPParentForVideoDecoderDone(UniquePtr<GetGMPVideoDecoderCallback>&& aCallback)
+   : mCallback(Move(aCallback))
+  {
+  }
+
+  void Done(GMPParent* aGMPParent)
+  {
+    GMPVideoDecoderParent* gmpVDP = nullptr;
+    GMPVideoHostImpl* videoHost = nullptr;
+    nsresult rv = aGMPParent->GetGMPVideoDecoder(&gmpVDP);
+    if (NS_SUCCEEDED(rv)) {
+      videoHost = &gmpVDP->Host();
+    }
+    mCallback->Done(gmpVDP, videoHost);
+  }
+
+private:
+  UniquePtr<GetGMPVideoDecoderCallback> mCallback;
+};
+
 NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
                                             const nsACString& aNodeId,
-                                            GMPVideoHost** aOutVideoHost,
-                                            GMPVideoDecoderProxy** aGMPVD)
+                                            UniquePtr<GetGMPVideoDecoderCallback>&& aCallback)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   NS_ENSURE_ARG(aTags && aTags->Length() > 0);
-  NS_ENSURE_ARG(aOutVideoHost);
-  NS_ENSURE_ARG(aGMPVD);
+  NS_ENSURE_ARG(aCallback);
 
   if (mShuttingDownOnGMPThread) {
     return NS_ERROR_FAILURE;
@@ -339,28 +373,42 @@ GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
   }
 
 
-  GMPVideoDecoderParent* gmpVDP;
-  nsresult rv = gmp->GetGMPVideoDecoder(&gmpVDP);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  *aGMPVD = gmpVDP;
-  *aOutVideoHost = &gmpVDP->Host();
+  GetGMPParentForVideoDecoderDone(Move(aCallback)).Done(gmp);
 
   return NS_OK;
 }
 
+class GetGMPParentForVideoEncoderDone
+{
+public:
+  explicit GetGMPParentForVideoEncoderDone(UniquePtr<GetGMPVideoEncoderCallback>&& aCallback)
+   : mCallback(Move(aCallback))
+  {
+  }
+
+  void Done(GMPParent* aGMPParent)
+  {
+    GMPVideoEncoderParent* gmpVEP = nullptr;
+    GMPVideoHostImpl* videoHost = nullptr;
+    nsresult rv = aGMPParent->GetGMPVideoEncoder(&gmpVEP);
+    if (NS_SUCCEEDED(rv)) {
+      videoHost = &gmpVEP->Host();
+    }
+    mCallback->Done(gmpVEP, videoHost);
+  }
+
+private:
+  UniquePtr<GetGMPVideoEncoderCallback> mCallback;
+};
+
 NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
                                             const nsACString& aNodeId,
-                                            GMPVideoHost** aOutVideoHost,
-                                            GMPVideoEncoderProxy** aGMPVE)
+                                            UniquePtr<GetGMPVideoEncoderCallback>&& aCallback)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   NS_ENSURE_ARG(aTags && aTags->Length() > 0);
-  NS_ENSURE_ARG(aOutVideoHost);
-  NS_ENSURE_ARG(aGMPVE);
+  NS_ENSURE_ARG(aCallback);
 
   if (mShuttingDownOnGMPThread) {
     return NS_ERROR_FAILURE;
@@ -377,22 +425,34 @@ GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
     return NS_ERROR_FAILURE;
   }
 
-  GMPVideoEncoderParent* gmpVEP;
-  nsresult rv = gmp->GetGMPVideoEncoder(&gmpVEP);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  *aGMPVE = gmpVEP;
-  *aOutVideoHost = &gmpVEP->Host();
+  GetGMPParentForVideoEncoderDone(Move(aCallback)).Done(gmp);
 
   return NS_OK;
 }
 
+class GetGMPParentForDecryptorDone
+{
+public:
+  explicit GetGMPParentForDecryptorDone(UniquePtr<GetGMPDecryptorCallback>&& aCallback)
+   : mCallback(Move(aCallback))
+  {
+  }
+
+  void Done(GMPParent* aGMPParent)
+  {
+    GMPDecryptorParent* ksp = nullptr;
+    aGMPParent->GetGMPDecryptor(&ksp);
+    mCallback->Done(ksp);
+  }
+
+private:
+  UniquePtr<GetGMPDecryptorCallback> mCallback;
+};
+
 NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
                                          const nsACString& aNodeId,
-                                         GMPDecryptorProxy** aDecryptor)
+                                         UniquePtr<GetGMPDecryptorCallback>&& aCallback)
 {
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
   if (!SandboxInfo::Get().CanSandboxMedia()) {
@@ -404,7 +464,7 @@ GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
 
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   NS_ENSURE_ARG(aTags && aTags->Length() > 0);
-  NS_ENSURE_ARG(aDecryptor);
+  NS_ENSURE_ARG(aCallback);
 
   if (mShuttingDownOnGMPThread) {
     return NS_ERROR_FAILURE;
@@ -417,13 +477,7 @@ GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
     return NS_ERROR_FAILURE;
   }
 
-  GMPDecryptorParent* ksp;
-  nsresult rv = gmp->GetGMPDecryptor(&ksp);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  *aDecryptor = static_cast<GMPDecryptorProxy*>(ksp);
+  GetGMPParentForDecryptorDone(Move(aCallback)).Done(gmp);
 
   return NS_OK;
 }
