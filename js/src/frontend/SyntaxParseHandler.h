@@ -163,8 +163,8 @@ class SyntaxParseHandler
     Node newBinary(ParseNodeKind kind, Node left, Node right, JSOp op = JSOP_NOP) {
         return NodeGeneric;
     }
-    Node newBinaryOrAppend(ParseNodeKind kind, Node left, Node right,
-                           ParseContext<SyntaxParseHandler> *pc, JSOp op = JSOP_NOP) {
+    Node appendOrCreateList(ParseNodeKind kind, Node left, Node right,
+                            ParseContext<SyntaxParseHandler> *pc, JSOp op = JSOP_NOP) {
         return NodeGeneric;
     }
 
@@ -292,7 +292,7 @@ class SyntaxParseHandler
     {
         if (kind == PNK_ASSIGN)
             return NodeUnparenthesizedAssignment;
-        return newBinaryOrAppend(kind, lhs, rhs, pc, op);
+        return newBinary(kind, lhs, rhs, op);
     }
 
     bool isUnparenthesizedYieldExpression(Node node) {
