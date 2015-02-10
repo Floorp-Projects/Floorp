@@ -315,6 +315,7 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_MODASSIGN:
       // ...and a few others.
       case PNK_ELEM:
+      case PNK_LETEXPR:
       case PNK_COLON:
       case PNK_CASE:
       case PNK_SHORTHAND:
@@ -474,10 +475,15 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_GENEXP:
       case PNK_ARRAY:
       case PNK_OBJECT:
+      case PNK_TEMPLATE_STRING_LIST:
+      case PNK_TAGGED_TEMPLATE:
+      case PNK_CALLSITEOBJ:
       case PNK_VAR:
       case PNK_CONST:
       case PNK_GLOBALCONST:
+      case PNK_LET:
       case PNK_CATCHLIST:
+      case PNK_STATEMENTLIST:
       case PNK_SEQ:
       case PNK_ARGSBODY:
         return PushListNodeChildren(pn, stack);
@@ -486,16 +492,12 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_DOT:
         return PushNameNodeChildren(pn, stack);
 
-      case PNK_STATEMENTLIST:
-      case PNK_NAME:
-      case PNK_TEMPLATE_STRING_LIST:
-      case PNK_TAGGED_TEMPLATE:
-      case PNK_CALLSITEOBJ:
       case PNK_FUNCTION:
+        return PushCodeNodeChildren(pn, stack);
+
+      case PNK_NAME:
       case PNK_ARRAYCOMP:
       case PNK_LEXICALSCOPE:
-      case PNK_LET:
-      case PNK_LETEXPR:
       case PNK_IMPORT:
       case PNK_IMPORT_SPEC_LIST:
       case PNK_IMPORT_SPEC:
