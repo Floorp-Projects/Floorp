@@ -1122,9 +1122,18 @@ Fold(ExclusiveContext *cx, ParseNode **pnp,
                 return false;
             ReplaceNode(pnp, expr);
 
-            pn->pn_left = nullptr;
-            pn->pn_right = nullptr;
+            // Supposing we're replacing |obj["prop"]| with |obj.prop|, we now
+            // can free the |"prop"| node and |obj["prop"]| nodes -- but not
+            // the |obj| node now a sub-node of |expr|.  Mutate |pn| into a
+            // node with |"prop"| as its child so that our |pn| doesn't have a
+            // necessarily-weird structure (say, by nulling out |pn->pn_left|
+            // only) that would fail AST sanity assertions performed by
+            // |handler.freeTree(pn)|.
+            pn->setKind(PNK_TYPEOF);
+            pn->setArity(PN_UNARY);
+            pn->pn_kid = pn2;
             handler.freeTree(pn);
+
             pn = expr;
         }
         break;
