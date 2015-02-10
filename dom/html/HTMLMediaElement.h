@@ -25,13 +25,6 @@
 #endif
 #include "nsGkAtoms.h"
 
-// Something on Linux #defines None, which is an entry in the
-// MediaWaitingFor enum, so undef it here before including the binfing,
-// so that the build doesn't fail...
-#ifdef None
-#undef None
-#endif
-
 // X.h on Linux #defines CurrentTime as 0L, so we have to #undef it here.
 #ifdef CurrentTime
 #undef CurrentTime
@@ -547,8 +540,6 @@ public:
 
   already_AddRefed<Promise> SetMediaKeys(MediaKeys* mediaKeys,
                                          ErrorResult& aRv);
-
-  MediaWaitingFor WaitingFor() const;
 
   mozilla::dom::EventHandlerNonNull* GetOnencrypted();
   void SetOnencrypted(mozilla::dom::EventHandlerNonNull* listener);
@@ -1331,8 +1322,6 @@ protected:
   nsRefPtr<AudioTrackList> mAudioTrackList;
 
   nsRefPtr<VideoTrackList> mVideoTrackList;
-
-  MediaWaitingFor mWaitingFor;
 
   enum ElementInTreeState {
     // The MediaElement is not in the DOM tree now.
