@@ -275,7 +275,7 @@ CodeGeneratorX64::loadSimd(Scalar::Type type, unsigned numElems, const Operand &
           // In memory-to-register mode, movd zeroes out the high lanes.
           case 1: masm.vmovd(srcAddr, out); break;
           // See comment above, which also applies to movq.
-          case 2: masm.movq(srcAddr, out); break;
+          case 2: masm.vmovq(srcAddr, out); break;
           case 4: masm.loadUnalignedInt32x4(srcAddr, out); break;
           default: MOZ_CRASH("unexpected size for partial load");
         }
@@ -429,7 +429,7 @@ CodeGeneratorX64::storeSimd(Scalar::Type type, unsigned numElems, FloatRegister 
           // In memory-to-register mode, movd zeroes out the high lanes.
           case 1: masm.vmovd(in, dstAddr); break;
           // See comment above, which also applies to movq.
-          case 2: masm.movq(in, dstAddr); break;
+          case 2: masm.vmovq(in, dstAddr); break;
           case 4: masm.storeUnalignedInt32x4(in, dstAddr); break;
           default: MOZ_CRASH("unexpected size for partial load");
         }
