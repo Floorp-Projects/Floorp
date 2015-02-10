@@ -331,6 +331,24 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         return PushResult::Recyclable;
       }
 
+      // The left half is the expression being yielded.  The right half is
+      // internal goop: a name reference to the invisible '.generator' local
+      // variable, or an assignment of a PNK_GENERATOR node to the '.generator'
+      // local, for a synthesized, prepended initial yield.  Yum!
+      case PNK_YIELD_STAR:
+      case PNK_YIELD: {
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        MOZ_ASSERT(pn->pn_right);
+        MOZ_ASSERT(pn->pn_right->isKind(PNK_NAME) ||
+                   (pn->pn_right->isKind(PNK_ASSIGN) &&
+                    pn->pn_right->pn_left->isKind(PNK_NAME) &&
+                    pn->pn_right->pn_right->isKind(PNK_GENERATOR)));
+        if (pn->pn_left)
+            stack->push(pn->pn_left);
+        stack->push(pn->pn_right);
+        return PushResult::Recyclable;
+      }
+
       // Ternary nodes with all children non-null.
       case PNK_CONDITIONAL: {
         MOZ_ASSERT(pn->isArity(PN_TERNARY));
@@ -413,8 +431,6 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_RETURN:
       case PNK_NEW:
       case PNK_CATCH:
-      case PNK_YIELD:
-      case PNK_YIELD_STAR:
       case PNK_GENEXP:
       case PNK_ARRAYCOMP:
       case PNK_LEXICALSCOPE:
