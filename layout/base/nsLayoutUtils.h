@@ -63,6 +63,7 @@ struct nsStyleImageOrientation;
 struct nsOverflowAreas;
 
 namespace mozilla {
+class EventListenerManager;
 class SVGImageContext;
 struct IntrinsicSize;
 struct ContainerLayerParameters;
@@ -2550,6 +2551,8 @@ public:
                                       const mozilla::LogicalMargin& aFramePadding,
                                       mozilla::WritingMode aLineWM,
                                       mozilla::WritingMode aFrameWM);
+
+  static bool HasApzAwareListeners(mozilla::EventListenerManager* aElm);
 
 private:
   static uint32_t sFontSizeInflationEmPerLine;
