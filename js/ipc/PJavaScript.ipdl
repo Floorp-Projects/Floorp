@@ -40,6 +40,7 @@ both:
     prio(high) sync HasInstance(uint64_t objId, JSVariant v) returns (ReturnStatus rs, bool has);
     prio(high) sync ObjectClassIs(uint64_t objId, uint32_t classValue) returns (bool result);
     prio(high) sync ClassName(uint64_t objId) returns (nsString name);
+    prio(high) sync GetPrototypeOf(uint64_t objId) returns (ReturnStatus rs, ObjectOrNullVariant result);
     prio(high) sync RegExpToShared(uint64_t objId) returns (ReturnStatus rs, nsString source, uint32_t flags);
 
     prio(high) sync GetPropertyKeys(uint64_t objId, uint32_t flags) returns (ReturnStatus rs, JSIDVariant[] ids);
