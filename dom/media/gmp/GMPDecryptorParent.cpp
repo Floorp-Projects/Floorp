@@ -4,14 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPDecryptorParent.h"
-#include "GMPParent.h"
+#include "GMPContentParent.h"
 #include "mp4_demuxer/DecoderData.h"
 #include "mozilla/unused.h"
 
 namespace mozilla {
 namespace gmp {
 
-GMPDecryptorParent::GMPDecryptorParent(GMPParent* aPlugin)
+GMPDecryptorParent::GMPDecryptorParent(GMPContentParent* aPlugin)
   : mIsOpen(false)
   , mShuttingDown(false)
   , mPlugin(aPlugin)
@@ -304,6 +304,13 @@ GMPDecryptorParent::RecvDecrypted(const uint32_t& aId,
     return false;
   }
   mCallback->Decrypted(aId, aErr, aBuffer);
+  return true;
+}
+
+bool
+GMPDecryptorParent::RecvShutdown()
+{
+  Shutdown();
   return true;
 }
 
