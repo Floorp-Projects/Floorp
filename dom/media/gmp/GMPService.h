@@ -24,7 +24,7 @@ extern PRLogModuleInfo* GetGMPLog();
 
 namespace gmp {
 
-class GMPParent;
+class GetGMPContentParentCallback;
 
 #define GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT 3000
 
@@ -94,9 +94,10 @@ protected:
   virtual ~GeckoMediaPluginService();
 
   virtual void InitializePlugins() = 0;
-  virtual GMPParent* SelectPluginForAPI(const nsACString& aNodeId,
-                                const nsCString& aAPI,
-                                const nsTArray<nsCString>& aTags) = 0;
+  virtual bool GetContentParentFrom(const nsACString& aNodeId,
+                                    const nsCString& aAPI,
+                                    const nsTArray<nsCString>& aTags,
+                                    UniquePtr<GetGMPContentParentCallback>&& aCallback) = 0;
 
   nsresult GMPDispatch(nsIRunnable* event, uint32_t flags = NS_DISPATCH_NORMAL);
   void ShutdownGMPThread();

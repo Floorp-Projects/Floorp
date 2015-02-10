@@ -13,13 +13,13 @@
 namespace mozilla {
 namespace gmp {
 
-class GMPChild;
+class GMPContentChild;
 
 class GMPAudioDecoderChild : public PGMPAudioDecoderChild,
                              public GMPAudioDecoderCallback
 {
 public:
-  explicit GMPAudioDecoderChild(GMPChild* aPlugin);
+  explicit GMPAudioDecoderChild(GMPContentChild* aPlugin);
   virtual ~GMPAudioDecoderChild();
 
   void Init(GMPAudioDecoder* aDecoder);
@@ -40,7 +40,7 @@ private:
   virtual bool RecvDrain() override;
   virtual bool RecvDecodingComplete() override;
 
-  GMPChild* mPlugin;
+  GMPContentChild* mPlugin;
   GMPAudioDecoder* mAudioDecoder;
   GMPAudioHostImpl mAudioHost;
 };

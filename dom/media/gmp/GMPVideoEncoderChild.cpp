@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPVideoEncoderChild.h"
-#include "GMPChild.h"
+#include "GMPContentChild.h"
 #include <stdio.h>
 #include "mozilla/unused.h"
 #include "GMPVideoEncodedFrameImpl.h"
@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace gmp {
 
-GMPVideoEncoderChild::GMPVideoEncoderChild(GMPChild* aPlugin)
+GMPVideoEncoderChild::GMPVideoEncoderChild(GMPContentChild* aPlugin)
 : GMPSharedMemManager(aPlugin),
   mPlugin(aPlugin),
   mVideoEncoder(nullptr),
