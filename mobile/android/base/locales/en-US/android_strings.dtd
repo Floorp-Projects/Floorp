@@ -561,6 +561,13 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY actionbar_menu "Menu">
 <!ENTITY actionbar_done "Done">
 
+<!-- Voice search in the awesome bar -->
+<!ENTITY voicesearch_prompt "Speak now">
+<!ENTITY voicesearch_failed_title "&brandShortName; Voice Search">
+<!ENTITY voicesearch_failed_message "There is a problem with voice search right now. Please try later.">
+<!ENTITY voicesearch_failed_message_recoverable "Sorry! We could not recognize your words. Please try again.">
+<!ENTITY voicesearch_failed_retry "Try again">
+
 <!-- Localization note (remote_tabs_last_synced): the variable is replaced by a
      "relative time span string" produced by Android.  This string describes the
      time the tabs were last synced relative to the current time; examples

@@ -484,6 +484,13 @@
   <string name="actionbar_menu">&actionbar_menu;</string>
   <string name="actionbar_done">&actionbar_done;</string>
 
+  <!-- Voice search from the Awesome Bar -->
+  <string name="voicesearch_prompt">&voicesearch_prompt;</string>
+  <string name="voicesearch_failed_title">&voicesearch_failed_title;</string>
+  <string name="voicesearch_failed_message">&voicesearch_failed_message;</string>
+  <string name="voicesearch_failed_message_recoverable">&voicesearch_failed_message_recoverable;</string>
+  <string name="voicesearch_failed_retry">&voicesearch_failed_retry;</string>
+
   <!-- Miscellaneous -->
   <string name="ellipsis">&ellipsis;</string>
 
