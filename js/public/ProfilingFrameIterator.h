@@ -104,7 +104,6 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
         void *activation;
         const char *label;
         bool hasTrackedOptimizations;
-        uint8_t trackedOptimizationIndex;
     };
     uint32_t extractStack(Frame *frames, uint32_t offset, uint32_t end) const;
 
