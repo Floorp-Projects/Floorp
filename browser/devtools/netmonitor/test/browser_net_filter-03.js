@@ -5,6 +5,22 @@
  * Test if filtering items in the network table works correctly with new requests
  * and while sorting is enabled.
  */
+const BASIC_REQUESTS = [
+  { url: "sjs_content-type-test-server.sjs?fmt=html&res=undefined" },
+  { url: "sjs_content-type-test-server.sjs?fmt=css" },
+  { url: "sjs_content-type-test-server.sjs?fmt=js" },
+];
+
+const REQUESTS_WITH_MEDIA = BASIC_REQUESTS.concat([
+  { url: "sjs_content-type-test-server.sjs?fmt=font" },
+  { url: "sjs_content-type-test-server.sjs?fmt=image" },
+  { url: "sjs_content-type-test-server.sjs?fmt=audio" },
+  { url: "sjs_content-type-test-server.sjs?fmt=video" },
+]);
+
+const REQUESTS_WITH_MEDIA_AND_FLASH = REQUESTS_WITH_MEDIA.concat([
+  { url: "sjs_content-type-test-server.sjs?fmt=flash" },
+]);
 
 function test() {
   initNetMonitor(FILTERING_URL).then(([aTab, aDebuggee, aMonitor]) => {
@@ -44,7 +60,7 @@ function test() {
         })
         .then(() => {
           info("Performing more requests.");
-          aDebuggee.performRequests('{ "getMedia": true }');
+          performRequestsInContent(REQUESTS_WITH_MEDIA);
           return waitForNetworkEvents(aMonitor, 7);
         })
         .then(() => {
@@ -55,7 +71,7 @@ function test() {
         })
         .then(() => {
           info("Performing more requests.");
-          aDebuggee.performRequests('{ "getMedia": true }');
+          performRequestsInContent(REQUESTS_WITH_MEDIA);
           return waitForNetworkEvents(aMonitor, 7);
         })
         .then(() => {
@@ -167,7 +183,15 @@ function test() {
       return promise.resolve(null);
     }
 
-    let str = "'<p>'" + new Array(10).join(Math.random(10)) + "'</p>'";
-    aDebuggee.performRequests('{ "htmlContent": "' + str + '", "getMedia": true }');
+    // The test assumes that the first HTML request here has a longer response
+    // body than the other HTML requests performed later during the test.
+    let requests = Cu.cloneInto(REQUESTS_WITH_MEDIA, {});
+
+    let newres = "res=<p>" + new Array(10).join(Math.random(10)) + "</p>";
+    requests[0].url = requests[0].url.replace("res=undefined", newres);
+
+    loadCommonFrameScript();
+    performRequestsInContent(requests);
+
   });
 }
