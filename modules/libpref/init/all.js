@@ -2731,11 +2731,10 @@ pref("font.name.monospace.x-western", "Courier New");
 pref("font.name.cursive.x-western", "Comic Sans MS");
 
 pref("font.name.serif.zh-CN", "SimSun");
-pref("font.name.sans-serif.zh-CN", "Microsoft YaHei");
+pref("font.name.sans-serif.zh-CN", "SimSun");
 pref("font.name.monospace.zh-CN", "SimSun");
-pref("font.name.cursive.zh-CN", "KaiTi");
 pref("font.name-list.serif.zh-CN", "MS Song, SimSun, SimSun-ExtB");
-pref("font.name-list.sans-serif.zh-CN", "Microsoft YaHei, SimHei, Arial Unicode MS");
+pref("font.name-list.sans-serif.zh-CN", "MS Song, SimSun, SimSun-ExtB");
 pref("font.name-list.monospace.zh-CN", "MS Song, SimSun, SimSun-ExtB");
 
 // Per Taiwanese users' demand. They don't want to use TC fonts for
