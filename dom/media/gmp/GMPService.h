@@ -44,18 +44,20 @@ public:
                              bool *aRetVal) override;
   NS_IMETHOD GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
                                 const nsACString& aNodeId,
-                                GMPVideoHost** aOutVideoHost,
-                                GMPVideoDecoderProxy** aGMPVD) override;
+                                UniquePtr<GetGMPVideoDecoderCallback>&& aCallback)
+    override;
   NS_IMETHOD GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
                                 const nsACString& aNodeId,
-                                GMPVideoHost **aOutVideoHost,
-                                GMPVideoEncoderProxy** aGMPVE) override;
+                                UniquePtr<GetGMPVideoEncoderCallback>&& aCallback)
+    override;
   NS_IMETHOD GetGMPAudioDecoder(nsTArray<nsCString>* aTags,
                                 const nsACString& aNodeId,
-                                GMPAudioDecoderProxy **aGMPAD) override;
+                                UniquePtr<GetGMPAudioDecoderCallback>&& aCallback)
+    override;
   NS_IMETHOD GetGMPDecryptor(nsTArray<nsCString>* aTags,
                              const nsACString& aNodeId,
-                             GMPDecryptorProxy** aDecryptor) override;
+                             UniquePtr<GetGMPDecryptorCallback>&& aCallback)
+    override;
 
   int32_t AsyncShutdownTimeoutMs();
 

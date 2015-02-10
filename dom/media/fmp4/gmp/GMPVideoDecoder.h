@@ -96,6 +96,61 @@ protected:
   virtual GMPUnique<GMPVideoEncodedFrame>::Ptr CreateFrame(mp4_demuxer::MP4Sample* aSample);
 
 private:
+  class GMPInitDoneRunnable : public nsRunnable
+  {
+  public:
+    GMPInitDoneRunnable()
+      : mInitDone(false),
+        mThread(do_GetCurrentThread())
+    {
+    }
+
+    NS_IMETHOD Run()
+    {
+      mInitDone = true;
+      return NS_OK;
+    }
+
+    void Dispatch()
+    {
+      mThread->Dispatch(this, NS_DISPATCH_NORMAL);
+    }
+
+    bool IsDone()
+    {
+      MOZ_ASSERT(nsCOMPtr<nsIThread>(do_GetCurrentThread()) == mThread);
+      return mInitDone;
+    }
+
+  private:
+    bool mInitDone;
+    nsCOMPtr<nsIThread> mThread;
+  };
+  void GetGMPAPI(GMPInitDoneRunnable* aInitDone);
+  class GMPInitDoneCallback : public GetGMPVideoDecoderCallback
+  {
+  public:
+    GMPInitDoneCallback(GMPVideoDecoder* aDecoder,
+                        GMPInitDoneRunnable* aGMPInitDone)
+      : mDecoder(aDecoder)
+      , mGMPInitDone(aGMPInitDone)
+    {
+    }
+
+    virtual void Done(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
+    {
+      if (aGMP) {
+        mDecoder->GMPInitDone(aGMP, aHost);
+      }
+      mGMPInitDone->Dispatch();
+    }
+
+  private:
+    nsRefPtr<GMPVideoDecoder> mDecoder;
+    nsRefPtr<GMPInitDoneRunnable> mGMPInitDone;
+  };
+  void GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost);
+
   const mp4_demuxer::VideoDecoderConfig& mConfig;
   MediaDataDecoderCallbackProxy* mCallback;
   nsCOMPtr<mozIGeckoMediaPluginService> mMPS;
