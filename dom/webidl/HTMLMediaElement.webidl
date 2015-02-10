@@ -142,12 +142,6 @@ partial interface HTMLMediaElement {
   // * onmozinterruptend - called when the interruption is concluded
 };
 
-enum MediaWaitingFor {
-  "none",
-  "data",
-  "key"
-};
-
 #ifdef MOZ_EME
 // Encrypted Media Extensions
 partial interface HTMLMediaElement {
@@ -160,8 +154,5 @@ partial interface HTMLMediaElement {
 
   [Pref="media.eme.enabled"]
   attribute EventHandler onencrypted;
-
-  [Pref="media.eme.enabled"]
-  readonly attribute MediaWaitingFor waitingFor;
 };
 #endif
