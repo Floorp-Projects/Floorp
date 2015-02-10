@@ -13,48 +13,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
 
 (function() {
   LoopUI = {
-    /**
-     * @var {XULWidgetSingleWrapper} toolbarButton Getter for the Loop toolbarbutton
-     *                                             instance for this window.
-     */
     get toolbarButton() {
       delete this.toolbarButton;
       return this.toolbarButton = CustomizableUI.getWidget("loop-button").forWindow(window);
     },
 
-    /**
-     * @var {XULElement} panel Getter for the Loop panel element.
-     */
     get panel() {
       delete this.panel;
       return this.panel = document.getElementById("loop-notification-panel");
-    },
-
-    /**
-     * @var {XULElement|null} browser Getter for the Loop panel browser element.
-     *                                Will be NULL if the panel hasn't loaded yet.
-     */
-    get browser() {
-      let browser = document.querySelector("#loop-notification-panel > #loop-panel-iframe");
-      if (browser) {
-        delete this.browser;
-        this.browser = browser;
-      }
-      return browser;
-    },
-
-    /**
-     * @var {String|null} selectedTab Getter for the name of the currently selected
-     *                                tab inside the Loop panel. Will be NULL if
-     *                                the panel hasn't loaded yet.
-     */
-    get selectedTab() {
-      if (!this.browser) {
-        return null;
-      }
-
-      let selectedTab = this.browser.contentDocument.querySelector(".tab-view > .selected");
-      return selectedTab && selectedTab.getAttribute("data-tab-name");
     },
 
     /**
@@ -73,24 +39,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
       });
     },
 
-    /**
-     * Toggle between opening or hiding the Loop panel.
-     *
-     * @param {DOMEvent} [event] Optional event that triggered the call to this
-     *                           function.
-     * @param {String}   [tabId] Optional name of the tab to select after the panel
-     *                           has opened. Does nothing when the panel is hidden.
-     * @return {Promise}
-     */
     togglePanel: function(event, tabId = null) {
       if (this.panel.state == "open") {
-        return new Promise(resolve => {
-          this.panel.hidePopup();
-          resolve();
-        });
+        this.panel.hidePopup();
+      } else {
+        this.openCallPanel(event, tabId);
       }
-
-      return this.openCallPanel(event, tabId);
     },
 
     /**

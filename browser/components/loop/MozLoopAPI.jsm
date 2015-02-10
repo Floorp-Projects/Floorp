@@ -738,15 +738,13 @@ function injectLoopAPI(targetWindow) {
      * Notifies the UITour module that an event occurred that it might be
      * interested in.
      *
-     * @param {String} subject  Subject of the notification
-     * @param {mixed}  [params] Optional parameters, providing more details to
-     *                          the notification subject
+     * @param {String} subject Subject of the notification
      */
     notifyUITour: {
       enumerable: true,
       writable: true,
-      value: function(subject, params) {
-        UITour.notify(subject, params);
+      value: function(subject) {
+        UITour.notify(subject);
       }
     },
 
