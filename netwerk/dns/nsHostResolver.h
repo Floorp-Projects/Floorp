@@ -37,7 +37,6 @@ struct nsHostKey
     const char *host;
     uint16_t    flags;
     uint16_t    af;
-    const char *netInterface;
 };
 
 /**
@@ -242,7 +241,6 @@ public:
     nsresult ResolveHost(const char            *hostname,
                          uint16_t               flags,
                          uint16_t               af,
-                         const char            *netInterface,
                          nsResolveHostCallback *callback);
 
     /**
@@ -254,7 +252,6 @@ public:
     void DetachCallback(const char            *hostname,
                         uint16_t               flags,
                         uint16_t               af,
-                        const char            *netInterface,
                         nsResolveHostCallback *callback,
                         nsresult               status);
 
@@ -268,7 +265,6 @@ public:
     void CancelAsyncRequest(const char            *host,
                             uint16_t               flags,
                             uint16_t               af,
-                            const char            *netInterface,
                             nsIDNSListener        *aListener,
                             nsresult               status);
     /**
