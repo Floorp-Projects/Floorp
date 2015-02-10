@@ -558,7 +558,7 @@ this.BrowserUITelemetry = {
     if (Components.isSuccessCode(searchResult)) {
       result.currentSearchEngine = Services.search.currentEngine.name;
     }
-
+    result.oneOffSearchEnabled = Services.prefs.getBoolPref("browser.search.showOneOffButtons");
     return result;
   },
 
