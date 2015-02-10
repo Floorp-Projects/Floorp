@@ -65,23 +65,6 @@ TrackBuffer::~TrackBuffer()
   MOZ_COUNT_DTOR(TrackBuffer);
 }
 
-class ReleaseDecoderTask : public nsRunnable {
-public:
-  explicit ReleaseDecoderTask(SourceBufferDecoder* aDecoder)
-    : mDecoder(aDecoder)
-  {
-  }
-
-  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL {
-    mDecoder->GetReader()->BreakCycles();
-    mDecoder = nullptr;
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<SourceBufferDecoder> mDecoder;
-};
-
 class MOZ_STACK_CLASS DecodersToInitialize MOZ_FINAL {
 public:
   explicit DecodersToInitialize(TrackBuffer* aOwner)
@@ -839,10 +822,34 @@ TrackBuffer::Dump(const char* aPath)
 }
 #endif
 
+class ReleaseDecoderTask : public nsRunnable {
+public:
+  ReleaseDecoderTask(SourceBufferDecoder* aDecoder, TrackBuffer* aTrackBuffer)
+    : mDecoder(aDecoder)
+    , mTrackBuffer(aTrackBuffer)
+  {
+  }
+
+  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL {
+    if (mTrackBuffer->mCurrentDecoder == mDecoder) {
+      mTrackBuffer->DiscardCurrentDecoder();
+    }
+
+    mDecoder->GetReader()->BreakCycles();
+    mDecoder = nullptr;
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<SourceBufferDecoder> mDecoder;
+  nsRefPtr<TrackBuffer> mTrackBuffer;
+};
+
 class DelayedDispatchToMainThread : public nsRunnable {
 public:
-  explicit DelayedDispatchToMainThread(SourceBufferDecoder* aDecoder)
+  DelayedDispatchToMainThread(SourceBufferDecoder* aDecoder, TrackBuffer* aTrackBuffer)
     : mDecoder(aDecoder)
+    , mTrackBuffer(aTrackBuffer)
   {
   }
 
@@ -852,7 +859,7 @@ public:
     // is destroyed.
     mDecoder->GetReader()->Shutdown();
     mDecoder->GetReader()->ClearDecoder();
-    RefPtr<nsIRunnable> task = new ReleaseDecoderTask(mDecoder);
+    RefPtr<nsIRunnable> task = new ReleaseDecoderTask(mDecoder, mTrackBuffer);
     mDecoder = nullptr;
     // task now holds the only ref to the decoder.
     NS_DispatchToMainThread(task);
@@ -860,14 +867,15 @@ public:
   }
 
 private:
-  RefPtr<SourceBufferDecoder> mDecoder;
+  nsRefPtr<SourceBufferDecoder> mDecoder;
+  nsRefPtr<TrackBuffer> mTrackBuffer;
 };
 
 void
 TrackBuffer::RemoveDecoder(SourceBufferDecoder* aDecoder)
 {
-  RefPtr<nsIRunnable> task = new DelayedDispatchToMainThread(aDecoder);
-
+  MSE_DEBUG("TrackBuffer(%p)::RemoveDecoder(%p, %p)", this, aDecoder, aDecoder->GetReader());
+  RefPtr<nsIRunnable> task = new DelayedDispatchToMainThread(aDecoder, this);
   {
     ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
     // There should be no other references to the decoder. Assert that
@@ -875,10 +883,6 @@ TrackBuffer::RemoveDecoder(SourceBufferDecoder* aDecoder)
     MOZ_ASSERT(!mParentDecoder->IsActiveReader(aDecoder->GetReader()));
     mInitializedDecoders.RemoveElement(aDecoder);
     mDecoders.RemoveElement(aDecoder);
-
-    if (mCurrentDecoder == aDecoder) {
-      DiscardCurrentDecoder();
-    }
   }
   aDecoder->GetReader()->GetTaskQueue()->Dispatch(task);
 }
