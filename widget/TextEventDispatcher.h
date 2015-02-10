@@ -55,8 +55,9 @@ public:
    *                              TextEventDispatcher.  See mListener
    *                              definition below.
    */
-  nsresult Init(TextEventDispatcherListener* aListener);
-  nsresult InitForTests(TextEventDispatcherListener* aListener);
+  nsresult BeginInputTransaction(TextEventDispatcherListener* aListener);
+  nsresult BeginInputTransactionForTests(
+             TextEventDispatcherListener* aListener);
 
   /**
    * OnDestroyWidget() is called when mWidget is being destroyed.
@@ -67,8 +68,9 @@ public:
    * GetState() returns current state of this class.
    *
    * @return        NS_OK: Fine to compose text.
-   *                NS_ERROR_NOT_INITIALIZED: Init() or InitForTests() should
-   *                                          be called.
+   *                NS_ERROR_NOT_INITIALIZED: BeginInputTransaction() or
+   *                                          BeginInputTransactionForTests()
+   *                                          should be called.
    *                NS_ERROR_NOT_AVAILABLE: The widget isn't available for
    *                                        composition.
    */
@@ -197,7 +199,9 @@ private:
   // See IsComposing().
   bool mIsComposing;
 
-  nsresult InitInternal(TextEventDispatcherListener* aListener, bool aForTests);
+  nsresult BeginInputTransactionInternal(
+             TextEventDispatcherListener* aListener,
+             bool aForTests);
 
   /**
    * InitEvent() initializes aEvent.  This must be called before dispatching

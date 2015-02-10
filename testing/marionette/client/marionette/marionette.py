@@ -713,6 +713,8 @@ class Marionette(object):
             raise errors.FrameSendFailureError(message=message, status=status, stacktrace=stacktrace)
         elif status == errors.ErrorCodes.UNSUPPORTED_OPERATION:
             raise errors.UnsupportedOperationException(message=message, status=status, stacktrace=stacktrace)
+        elif status == errors.ErrorCodes.SESSION_NOT_CREATED:
+            raise errors.SessionNotCreatedException(message=message, status=status, stacktrace=stacktrace)
         else:
             raise errors.MarionetteException(message=message, status=status, stacktrace=stacktrace)
 
@@ -1306,7 +1308,7 @@ class Marionette(object):
                                       filename=os.path.basename(frame[0]))
         return self.unwrapValue(response)
 
-    def execute_async_script(self, script, script_args=None, new_sandbox=True, special_powers=False, script_timeout=None):
+    def execute_async_script(self, script, script_args=None, new_sandbox=True, special_powers=False, script_timeout=None, debug_script=False):
         '''
         Executes an asynchronous JavaScript script, and returns the result (or None if the script does return a value).
 
@@ -1324,6 +1326,8 @@ class Marionette(object):
         :param new_sandbox: If False, preserve global variables from the last
          execute_*script call. This is True by default, in which case no
          globals are preserved.
+        :param debug_script: Capture javascript exceptions when in
+         CONTEXT_CHROME context.
 
         Usage example:
 
@@ -1351,7 +1355,8 @@ class Marionette(object):
                                       specialPowers=special_powers,
                                       scriptTimeout=script_timeout,
                                       line=int(frame[1]),
-                                      filename=os.path.basename(frame[0]))
+                                      filename=os.path.basename(frame[0]),
+                                      debug_script=debug_script)
         return self.unwrapValue(response)
 
     def find_element(self, method, target, id=None):

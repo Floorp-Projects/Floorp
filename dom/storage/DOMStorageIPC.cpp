@@ -42,7 +42,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) DOMStorageDBChild::Release(void)
 void
 DOMStorageDBChild::AddIPDLReference()
 {
-  NS_ABORT_IF_FALSE(!mIPCOpen, "Attempting to retain multiple IPDL references");
+  MOZ_ASSERT(!mIPCOpen, "Attempting to retain multiple IPDL references");
   mIPCOpen = true;
   AddRef();
 }
@@ -50,7 +50,7 @@ DOMStorageDBChild::AddIPDLReference()
 void
 DOMStorageDBChild::ReleaseIPDLReference()
 {
-  NS_ABORT_IF_FALSE(mIPCOpen, "Attempting to release non-existent IPDL reference");
+  MOZ_ASSERT(mIPCOpen, "Attempting to release non-existent IPDL reference");
   mIPCOpen = false;
   Release();
 }
@@ -275,7 +275,7 @@ NS_IMPL_RELEASE(DOMStorageDBParent)
 void
 DOMStorageDBParent::AddIPDLReference()
 {
-  NS_ABORT_IF_FALSE(!mIPCOpen, "Attempting to retain multiple IPDL references");
+  MOZ_ASSERT(!mIPCOpen, "Attempting to retain multiple IPDL references");
   mIPCOpen = true;
   AddRef();
 }
@@ -283,7 +283,7 @@ DOMStorageDBParent::AddIPDLReference()
 void
 DOMStorageDBParent::ReleaseIPDLReference()
 {
-  NS_ABORT_IF_FALSE(mIPCOpen, "Attempting to release non-existent IPDL reference");
+  MOZ_ASSERT(mIPCOpen, "Attempting to release non-existent IPDL reference");
   mIPCOpen = false;
   Release();
 }

@@ -1537,40 +1537,41 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
 
   if (dataStringBuf && dataStringLength > 0) {
     AutoSafeJSContext cx;
-    JS::Rooted<JSObject*> global(cx, mGlobal->GetJSObject());
-    if (global) {
-      JSAutoCompartment ac(cx, global);
-      JS::CompileOptions options(cx);
-      options.setFileAndLine(url.get(), 1);
-      options.setNoScriptRval(true);
-      JS::Rooted<JSScript*> script(cx);
+    // Compile the script in the compilation scope instead of the current global
+    // to avoid keeping the current compartment alive.
+    JS::Rooted<JSObject*> global(cx, xpc::CompilationScope());
 
-      if (aRunInGlobalScope) {
-        if (!JS::Compile(cx, JS::NullPtr(), options, srcBuf, &script)) {
-          return;
-        }
-      } else {
-        // We can't clone compile-and-go scripts.
-        options.setCompileAndGo(false);
-        if (!JS::Compile(cx, JS::NullPtr(), options, srcBuf, &script)) {
-          return;
-        }
+    JSAutoCompartment ac(cx, global);
+    JS::CompileOptions options(cx, JSVERSION_LATEST);
+    options.setFileAndLine(url.get(), 1);
+    options.setNoScriptRval(true);
+    JS::Rooted<JSScript*> script(cx);
+
+    if (aRunInGlobalScope) {
+      if (!JS::Compile(cx, JS::NullPtr(), options, srcBuf, &script)) {
+        return;
       }
-
-      aScriptp.set(script);
-
-      nsAutoCString scheme;
-      uri->GetScheme(scheme);
-      // We don't cache data: scripts!
-      if (aShouldCache && !scheme.EqualsLiteral("data")) {
-        nsFrameScriptObjectExecutorHolder* holder;
-
-        // Root the object also for caching.
-        if (script) {
-          holder = new nsFrameScriptObjectExecutorHolder(cx, script, aRunInGlobalScope);
-        }
-        sCachedScripts->Put(aURL, holder);
+    } else {
+      // We can't clone compile-and-go scripts.
+      options.setCompileAndGo(false);
+      if (!JS::Compile(cx, JS::NullPtr(), options, srcBuf, &script)) {
+        return;
       }
+    }
+
+    aScriptp.set(script);
+
+    nsAutoCString scheme;
+    uri->GetScheme(scheme);
+    // We don't cache data: scripts!
+    if (aShouldCache && !scheme.EqualsLiteral("data")) {
+      nsFrameScriptObjectExecutorHolder* holder;
+
+      // Root the object also for caching.
+      if (script) {
+        holder = new nsFrameScriptObjectExecutorHolder(cx, script, aRunInGlobalScope);
+      }
+      sCachedScripts->Put(aURL, holder);
     }
   }
 }

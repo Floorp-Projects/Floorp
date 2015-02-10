@@ -57,27 +57,9 @@ VMFunction::addToFunctions()
 }
 
 bool
-InvokeFunction(JSContext *cx, HandleObject obj0, uint32_t argc, Value *argv, Value *rval)
+InvokeFunction(JSContext *cx, HandleObject obj, uint32_t argc, Value *argv, Value *rval)
 {
     AutoArrayRooter argvRoot(cx, argc + 1, argv);
-
-    RootedObject obj(cx, obj0);
-    if (obj->is<JSFunction>()) {
-        RootedFunction fun(cx, &obj->as<JSFunction>());
-        if (fun->isInterpreted()) {
-            if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
-                return false;
-
-            // Clone function at call site if needed.
-            if (fun->nonLazyScript()->shouldCloneAtCallsite()) {
-                jsbytecode *pc;
-                RootedScript script(cx, cx->currentScript(&pc));
-                fun = CloneFunctionAtCallsite(cx, fun, script, pc);
-                if (!fun)
-                    return false;
-            }
-        }
-    }
 
     // Data in the argument vector is arranged for a JIT -> JIT call.
     Value thisv = argv[0];
@@ -698,11 +680,6 @@ GetIndexFromString(JSString *str)
 bool
 DebugPrologue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustReturn)
 {
-    // Mark the BaselineFrame as a debuggee frame if necessary. This must be
-    // done dynamically, so we might as well do it here.
-    if (frame->script()->isDebuggee())
-        frame->setIsDebuggee();
-
     *mustReturn = false;
 
     switch (Debugger::onEnterFrame(cx, frame)) {
@@ -777,6 +754,13 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
     // builds after each callVM, to ensure this flag is not set.
     frame->clearOverridePc();
     return true;
+}
+
+void
+FrameIsDebuggeeCheck(BaselineFrame *frame)
+{
+    if (frame->script()->isDebuggee())
+        frame->setIsDebuggee();
 }
 
 JSObject *

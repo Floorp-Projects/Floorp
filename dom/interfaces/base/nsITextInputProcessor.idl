@@ -10,11 +10,12 @@ interface nsITextInputProcessorCallback;
 
 /**
  * An nsITextInputProcessor instance is associated with a top level widget which
- * handles native IME.  It's associated by calling init() or initForTests().
- * While an instance has composition, nobody can steal the rights to make
- * composition on the top level widget.  In other words, if another instance is
- * composing on a top level widget, either init() or initForTests() returns
- * false (i.e., not throws an exception).
+ * handles native IME.  It's associated by calling beginInputTransaction() or
+ * beginInputTransactionForTests().  While an instance has composition, nobody
+ * can steal the rights to make composition on the top level widget.  In other
+ * words, if another instance is composing on a top level widget, either
+ * beginInputTransaction() or beginInputTransactionForTests() returns false
+ * (i.e., not throws an exception).
  *
  * NOTE: See nsITextInputProcessorCallback.idl for examples of |callback| in
  *       following examples,
@@ -23,7 +24,7 @@ interface nsITextInputProcessorCallback;
  *
  *   var TIP = Components.classes["@mozilla.org/text-input-processor;1"].
  *               createInstance(Components.interfaces.nsITextInputProcessor);
- *   if (!TIP.init(window, callback)) {
+ *   if (!TIP.beginInputTransaction(window, callback)) {
  *     return; // You failed to get the rights to make composition
  *   }
  *   // Set new composition string first
@@ -84,14 +85,14 @@ interface nsITextInputProcessorCallback;
  *
  * Example #6 JS-IME can insert text only with commitComposition():
  *
- *   if (!TIP.init(window, callback)) {
+ *   if (!TIP.beginInputTransaction(window, callback)) {
  *     return; // You failed to get the rights to make composition
  *   }
  *   TIP.commitComposition("Some words");
  *
  * Example #7 JS-IME can start composition explicitly:
  *
- *   if (!TIP.init(window, callback)) {
+ *   if (!TIP.beginInputTransaction(window, callback)) {
  *     return; // You failed to get the rights to make composition
  *   }
  *   // If JS-IME don't want to show composing string in the focused editor,
@@ -104,12 +105,12 @@ interface nsITextInputProcessorCallback;
  *   TIP.commitComposition("selected-words");
  */
 
-[scriptable, builtinclass, uuid(8c20753c-8339-4e9c-86c5-ae30f1b456c3)]
+[scriptable, builtinclass, uuid(512f1efe-9e0f-48a4-b423-3936ef948f34)]
 interface nsITextInputProcessor : nsISupports
 {
   /**
-   * When you create an instance, you must call init() first except when you
-   * created the instance for automated tests.
+   * When you create an instance, you must call beginInputTransaction() first
+   * except when you created the instance for automated tests.
    *
    * @param aWindow         A DOM window.  The instance will look for a top
    *                        level widget from this.
@@ -122,18 +123,20 @@ interface nsITextInputProcessor : nsISupports
    *                        when this returns true.  If this returns false,
    *                        your TIP should wait next chance.
    */
-  boolean init(in nsIDOMWindow aWindow,
-               in nsITextInputProcessorCallback aCallback);
+  boolean beginInputTransaction(in nsIDOMWindow aWindow,
+                                in nsITextInputProcessorCallback aCallback);
 
   /**
    * When you create an instance for automated test, you must call
-   * initForTest(), first.  See init() for more detail of this.
+   * beginInputTransaction(), first.  See beginInputTransaction() for more
+   * detail of this.
    * Note that aCallback can be null.  If it's null, nsITextInputProcessor
    * implementation will handle them automatically.
    */
   [optional_argc] boolean
-    initForTests(in nsIDOMWindow aWindow,
-                 [optional] in nsITextInputProcessorCallback aCallback);
+    beginInputTransactionForTests(
+      in nsIDOMWindow aWindow,
+      [optional] in nsITextInputProcessorCallback aCallback);
 
   /**
    * startComposition() dispatches compositionstart event explicitly.

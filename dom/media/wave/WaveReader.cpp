@@ -338,8 +338,8 @@ WaveReader::LoadRIFFChunk()
   char riffHeader[RIFF_INITIAL_SIZE];
   const char* p = riffHeader;
 
-  NS_ABORT_IF_FALSE(mDecoder->GetResource()->Tell() == 0,
-                    "LoadRIFFChunk called when resource in invalid state");
+  MOZ_ASSERT(mDecoder->GetResource()->Tell() == 0,
+             "LoadRIFFChunk called when resource in invalid state");
 
   if (!ReadAll(riffHeader, sizeof(riffHeader))) {
     return false;
@@ -371,8 +371,8 @@ WaveReader::LoadFormatChunk(uint32_t aChunkSize)
   const char* p = waveFormat;
 
   // RIFF chunks are always word (two byte) aligned.
-  NS_ABORT_IF_FALSE(mDecoder->GetResource()->Tell() % 2 == 0,
-                    "LoadFormatChunk called with unaligned resource");
+  MOZ_ASSERT(mDecoder->GetResource()->Tell() % 2 == 0,
+             "LoadFormatChunk called with unaligned resource");
 
   if (!ReadAll(waveFormat, sizeof(waveFormat))) {
     return false;
@@ -433,8 +433,8 @@ WaveReader::LoadFormatChunk(uint32_t aChunkSize)
   }
 
   // RIFF chunks are always word (two byte) aligned.
-  NS_ABORT_IF_FALSE(mDecoder->GetResource()->Tell() % 2 == 0,
-                    "LoadFormatChunk left resource unaligned");
+  MOZ_ASSERT(mDecoder->GetResource()->Tell() % 2 == 0,
+             "LoadFormatChunk left resource unaligned");
 
   // Make sure metadata is fairly sane.  The rate check is fairly arbitrary,
   // but the channels check is intentionally limited to mono or stereo
@@ -467,8 +467,8 @@ bool
 WaveReader::FindDataOffset(uint32_t aChunkSize)
 {
   // RIFF chunks are always word (two byte) aligned.
-  NS_ABORT_IF_FALSE(mDecoder->GetResource()->Tell() % 2 == 0,
-                    "FindDataOffset called with unaligned resource");
+  MOZ_ASSERT(mDecoder->GetResource()->Tell() % 2 == 0,
+             "FindDataOffset called with unaligned resource");
 
   int64_t offset = mDecoder->GetResource()->Tell();
   if (offset <= 0 || offset > UINT32_MAX) {
@@ -485,21 +485,21 @@ WaveReader::FindDataOffset(uint32_t aChunkSize)
 double
 WaveReader::BytesToTime(int64_t aBytes) const
 {
-  NS_ABORT_IF_FALSE(aBytes >= 0, "Must be >= 0");
+  MOZ_ASSERT(aBytes >= 0, "Must be >= 0");
   return float(aBytes) / mSampleRate / mFrameSize;
 }
 
 int64_t
 WaveReader::TimeToBytes(double aTime) const
 {
-  NS_ABORT_IF_FALSE(aTime >= 0.0f, "Must be >= 0");
+  MOZ_ASSERT(aTime >= 0.0f, "Must be >= 0");
   return RoundDownToFrame(int64_t(aTime * mSampleRate * mFrameSize));
 }
 
 int64_t
 WaveReader::RoundDownToFrame(int64_t aBytes) const
 {
-  NS_ABORT_IF_FALSE(aBytes >= 0, "Must be >= 0");
+  MOZ_ASSERT(aBytes >= 0, "Must be >= 0");
   return aBytes - (aBytes % mFrameSize);
 }
 
@@ -527,10 +527,10 @@ WaveReader::GetPosition()
 bool
 WaveReader::GetNextChunk(uint32_t* aChunk, uint32_t* aChunkSize)
 {
-  NS_ABORT_IF_FALSE(aChunk, "Must have aChunk");
-  NS_ABORT_IF_FALSE(aChunkSize, "Must have aChunkSize");
-  NS_ABORT_IF_FALSE(mDecoder->GetResource()->Tell() % 2 == 0,
-                    "GetNextChunk called with unaligned resource");
+  MOZ_ASSERT(aChunk, "Must have aChunk");
+  MOZ_ASSERT(aChunkSize, "Must have aChunkSize");
+  MOZ_ASSERT(mDecoder->GetResource()->Tell() % 2 == 0,
+             "GetNextChunk called with unaligned resource");
 
   char chunkHeader[CHUNK_HEADER_SIZE];
   const char* p = chunkHeader;
@@ -552,8 +552,8 @@ WaveReader::LoadListChunk(uint32_t aChunkSize,
                           nsAutoPtr<dom::HTMLMediaElement::MetadataTags> &aTags)
 {
   // List chunks are always word (two byte) aligned.
-  NS_ABORT_IF_FALSE(mDecoder->GetResource()->Tell() % 2 == 0,
-                    "LoadListChunk called with unaligned resource");
+  MOZ_ASSERT(mDecoder->GetResource()->Tell() % 2 == 0,
+             "LoadListChunk called with unaligned resource");
 
   static const unsigned int MAX_CHUNK_SIZE = 1 << 16;
   static_assert(uint64_t(MAX_CHUNK_SIZE) < UINT_MAX / sizeof(char),
@@ -628,8 +628,8 @@ bool
 WaveReader::LoadAllChunks(nsAutoPtr<dom::HTMLMediaElement::MetadataTags> &aTags)
 {
   // Chunks are always word (two byte) aligned.
-  NS_ABORT_IF_FALSE(mDecoder->GetResource()->Tell() % 2 == 0,
-                    "LoadAllChunks called with unaligned resource");
+  MOZ_ASSERT(mDecoder->GetResource()->Tell() % 2 == 0,
+             "LoadAllChunks called with unaligned resource");
 
   bool loadFormatChunk = false;
   bool findDataOffset = false;

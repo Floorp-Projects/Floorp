@@ -472,8 +472,9 @@ public:
 
   mozilla::WritingMode GetWritingMode(void) const
   {
-    NS_ASSERTION(message == NS_QUERY_SELECTED_TEXT,
-                 "not querying selection");
+    NS_ASSERTION(message == NS_QUERY_SELECTED_TEXT ||
+                 message == NS_QUERY_TEXT_RECT,
+                 "not querying selection or text rect");
     return mReply.mWritingMode;
   }
 

@@ -78,7 +78,7 @@ SpeakerManager::SetForcespeaker(bool aEnable)
 void
 SpeakerManager::DispatchSimpleEvent(const nsAString& aStr)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
   nsresult rv = CheckInnerWindowCorrectness();
   if (NS_FAILED(rv)) {
     return;

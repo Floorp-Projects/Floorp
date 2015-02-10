@@ -11,6 +11,20 @@
 #include "csutil.hxx"
 #include "atypes.hxx"
 
+// The gcc used to build 32-bit builds of Firefox on Ubuntu
+// miscompiles flag_qsort, using a 32-bit read instead of a 16-bit
+// read while quicksorting an array of 16-bit units.  This causes
+// one of the top Firefox crashes.
+// Given that I haven't been able to produce a reduced testcase to give
+// to gcc developers, just work around the bug by allocating an extra 2
+// bytes on the heap arrays passed to flag_qsort().
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=983817 .
+#if defined(__linux__) && defined(__i386__) && defined(__GNUC__)
+#define EXTRA_QSORT_ALLOC_SIZE 1
+#else
+#define EXTRA_QSORT_ALLOC_SIZE 0
+#endif
+
 // build a hash table from a munched word list
 
 HashMgr::HashMgr(const char * tpath, const char * apath, const char * key)
@@ -265,8 +279,8 @@ int HashMgr::remove(const char * word)
     struct hentry * dp = lookup(word);
     while (dp) {
         if (dp->alen == 0 || !TESTAFF(dp->astr, forbiddenword, dp->alen)) {
-            unsigned short * flags =
-                (unsigned short *) malloc(sizeof(short) * (dp->alen + 1));
+            unsigned short * flags = (unsigned short *)
+              malloc(sizeof(short) * (dp->alen + 1 + EXTRA_QSORT_ALLOC_SIZE));
             if (!flags) return 1;
             for (int i = 0; i < dp->alen; i++) flags[i] = dp->astr[i];
             flags[dp->alen] = forbiddenword;
@@ -508,7 +522,8 @@ int HashMgr::decode_flags(unsigned short ** result, char * flags, FileMgr * af) 
         len = strlen(flags);
         if (len%2 == 1) HUNSPELL_WARNING(stderr, "error: line %d: bad flagvector\n", af->getlinenum());
         len /= 2;
-        *result = (unsigned short *) malloc(len * sizeof(short));
+        *result = (unsigned short *)
+          malloc((len + EXTRA_QSORT_ALLOC_SIZE) * sizeof(short));
         if (!*result) return -1;
         for (int i = 0; i < len; i++) {
             (*result)[i] = (((unsigned short) flags[i * 2]) << 8) + (unsigned short) flags[i * 2 + 1]; 
@@ -524,7 +539,8 @@ int HashMgr::decode_flags(unsigned short ** result, char * flags, FileMgr * af) 
         for (p = flags; *p; p++) {
           if (*p == ',') len++;
         }
-        *result = (unsigned short *) malloc(len * sizeof(short));
+        *result = (unsigned short *)
+          malloc((len + EXTRA_QSORT_ALLOC_SIZE) * sizeof(short));
         if (!*result) return -1;
         dest = *result;
         for (p = flags; *p; p++) {
@@ -548,7 +564,8 @@ int HashMgr::decode_flags(unsigned short ** result, char * flags, FileMgr * af) 
       case FLAG_UNI: { // UTF-8 characters
         w_char w[BUFSIZE/2];
         len = u8_u16(w, BUFSIZE/2, flags);
-        *result = (unsigned short *) malloc(len * sizeof(short));
+        *result =
+          (unsigned short *) malloc((len + EXTRA_QSORT_ALLOC_SIZE) * sizeof(short));
         if (!*result) return -1;
         memcpy(*result, w, len * sizeof(short));
         break;
@@ -556,7 +573,8 @@ int HashMgr::decode_flags(unsigned short ** result, char * flags, FileMgr * af) 
       default: { // Ispell's one-character flags (erfg -> e r f g)
         unsigned short * dest;
         len = strlen(flags);
-        *result = (unsigned short *) malloc(len * sizeof(short));
+        *result = (unsigned short *)
+          malloc((len + EXTRA_QSORT_ALLOC_SIZE) * sizeof(short));
         if (!*result) return -1;
         dest = *result;
         for (unsigned char * p = (unsigned char *) flags; *p; p++) {

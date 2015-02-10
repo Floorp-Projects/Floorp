@@ -7,7 +7,7 @@
 void
 nsTDependentString_CharT::Rebind(const string_type& str, uint32_t startPos)
 {
-  NS_ABORT_IF_FALSE(str.Flags() & F_TERMINATED, "Unterminated flat string");
+  MOZ_ASSERT(str.Flags() & F_TERMINATED, "Unterminated flat string");
 
   // If we currently own a buffer, release it.
   Finalize();
