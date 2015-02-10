@@ -450,7 +450,7 @@ CheckAllocatorState(ExclusiveContext *cx, AllocKind kind)
         if (rt->hasPendingInterrupt()) {
             // Invoking the interrupt callback can fail and we can't usefully
             // handle that here. Just check in case we need to collect instead.
-            rt->gc.gcIfRequested();
+            rt->gc.gcIfRequested(ncx);
         }
     }
 
