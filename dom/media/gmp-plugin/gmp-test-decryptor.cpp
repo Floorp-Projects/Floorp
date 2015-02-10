@@ -271,17 +271,20 @@ public:
   explicit OpenedSecondTimeContinuation(GMPRecord* aRecord,
                                         TestManager* aTestManager,
                                         const string& aTestID)
-    : mRecord(aRecord), mTestmanager(aTestManager), mTestID(aTestID) {}
+    : mRecord(aRecord), mTestmanager(aTestManager), mTestID(aTestID) {
+    MOZ_ASSERT(aRecord);
+  }
 
   virtual void OpenComplete(GMPErr aStatus, GMPRecord* aRecord) MOZ_OVERRIDE {
     if (GMP_SUCCEEDED(aStatus)) {
       FakeDecryptor::Message("FAIL OpenSecondTimeContinuation should not be able to re-open record.");
     }
-
+    if (aRecord) {
+      aRecord->Close();
+    }
     // Succeeded, open should have failed.
     mTestmanager->EndTest(mTestID);
     mRecord->Close();
-    delete this;
   }
 
 private:
@@ -301,12 +304,14 @@ public:
     if (GMP_FAILED(aStatus)) {
       FakeDecryptor::Message("FAIL OpenAgainContinuation to open record initially.");
       mTestmanager->EndTest(mTestID);
+      if (aRecord) {
+        aRecord->Close();
+      }
       return;
     }
 
     auto cont = new OpenedSecondTimeContinuation(aRecord, mTestmanager, mTestID);
     GMPOpenRecord(mID, cont);
-    delete this;
   }
 
 private:
