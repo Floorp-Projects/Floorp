@@ -2116,6 +2116,7 @@ nsPluginHost::SetChromeEpochForContent(uint32_t aEpoch)
   mPluginEpoch = aEpoch;
 }
 
+#ifdef XP_WIN
 static void
 WatchRegKey(uint32_t aRoot, nsCOMPtr<nsIWindowsRegKey>& aKey)
 {
@@ -2133,6 +2134,7 @@ WatchRegKey(uint32_t aRoot, nsCOMPtr<nsIWindowsRegKey>& aKey)
   }
   aKey->StartWatching(true);
 }
+#endif
 
 nsresult nsPluginHost::LoadPlugins()
 {
