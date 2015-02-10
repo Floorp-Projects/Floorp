@@ -26,6 +26,9 @@ fi
 # Figure out where the remote manifest is so we can use caches for it.
 MANIFEST=$(repository-url.py $GECKO_HEAD_REPOSITORY $GECKO_HEAD_REV b2g/config/$TARGET/sources.xml)
 tc-vcs repo-checkout $OBJDIR/B2G https://git.mozilla.org/b2g/B2G.git $MANIFEST
+# Ensure we update gecko prior to invoking mozharness so commits match up
+# initially between manifest and gecko tree...
+pull-gecko.sh $OBJDIR/B2G/gecko
 
 debug_flag=""
 if [ 0$B2G_DEBUG -ne 0 ]; then
