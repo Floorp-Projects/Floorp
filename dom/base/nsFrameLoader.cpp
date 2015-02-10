@@ -90,7 +90,6 @@
 
 #include "jsapi.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
-#include "mozilla/dom/SVGIFrameElement.h"
 #include "nsSandboxFlags.h"
 #include "mozilla/layers/CompositorChild.h"
 
@@ -211,8 +210,7 @@ nsFrameLoader::LoadFrame()
 
   nsAutoString src;
 
-  bool isSrcdoc = (mOwnerContent->IsHTML(nsGkAtoms::iframe) ||
-                   mOwnerContent->IsSVG(nsGkAtoms::iframe)) &&
+  bool isSrcdoc = mOwnerContent->IsHTML(nsGkAtoms::iframe) &&
                   mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::srcdoc);
   if (isSrcdoc) {
     src.AssignLiteral("about:srcdoc");
@@ -415,8 +413,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
   nsCOMPtr<nsIURI> referrer;
   
   nsAutoString srcdoc;
-  bool isSrcdoc = (mOwnerContent->IsHTML(nsGkAtoms::iframe) ||
-                   mOwnerContent->IsSVG(nsGkAtoms::iframe)) &&
+  bool isSrcdoc = mOwnerContent->IsHTML(nsGkAtoms::iframe) &&
                   mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::srcdoc,
                                          srcdoc);
 
@@ -1657,13 +1654,8 @@ nsFrameLoader::MaybeCreateDocShell()
   // Apply sandbox flags even if our owner is not an iframe, as this copies
   // flags from our owning content's owning document.
   uint32_t sandboxFlags = 0;
-  if (!mOwnerContent->IsSVG(nsGkAtoms::iframe)) {
-    HTMLIFrameElement* iframe = HTMLIFrameElement::FromContent(mOwnerContent);
-    if (iframe) {
-      sandboxFlags = iframe->GetSandboxFlags();
-    }
-  } else {
-    SVGIFrameElement* iframe = static_cast<SVGIFrameElement*>(mOwnerContent);
+  HTMLIFrameElement* iframe = HTMLIFrameElement::FromContent(mOwnerContent);
+  if (iframe) {
     sandboxFlags = iframe->GetSandboxFlags();
   }
   ApplySandboxFlags(sandboxFlags);
@@ -1679,8 +1671,7 @@ nsFrameLoader::MaybeCreateDocShell()
   nsAutoString frameName;
 
   int32_t namespaceID = mOwnerContent->GetNameSpaceID();
-  if ((namespaceID == kNameSpaceID_XHTML || namespaceID == kNameSpaceID_SVG)
-      && !mOwnerContent->IsInHTMLDocument()) {
+  if (namespaceID == kNameSpaceID_XHTML && !mOwnerContent->IsInHTMLDocument()) {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, frameName);
   } else {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, frameName);

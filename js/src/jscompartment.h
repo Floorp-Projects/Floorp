@@ -283,14 +283,6 @@ struct JSCompartment
 #endif
 
     /*
-     * Hash table of all manually call site-cloned functions from within
-     * self-hosted code. Cloning according to call site provides extra
-     * sensitivity for type specialization and inlining.
-     */
-    js::CallsiteCloneTable callsiteClones;
-    void sweepCallsiteClones();
-
-    /*
      * Lazily initialized script source object to use for scripts cloned
      * from the self-hosting global.
      */

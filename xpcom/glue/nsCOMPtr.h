@@ -26,7 +26,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 
-#include "nsDebug.h" // for |NS_ABORT_IF_FALSE|, |NS_ASSERTION|
+#include "nsDebug.h" // for |NS_ASSERTION|
 #include "nsISupportsUtils.h" // for |nsresult|, |NS_ADDREF|, |NS_GET_TEMPLATE_IID| et al
 
 #include "nsCycleCollectionNoteChild.h"
@@ -694,8 +694,8 @@ public:
 
   T* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
   {
-    NS_ABORT_IF_FALSE(mRawPtr != 0,
-                      "You can't dereference a NULL nsCOMPtr with operator->().");
+    MOZ_ASSERT(mRawPtr != 0,
+               "You can't dereference a NULL nsCOMPtr with operator->().");
     return get();
   }
 
@@ -706,8 +706,8 @@ public:
 public:
   T& operator*() const
   {
-    NS_ABORT_IF_FALSE(mRawPtr != 0,
-                      "You can't dereference a NULL nsCOMPtr with operator*().");
+    MOZ_ASSERT(mRawPtr != 0,
+               "You can't dereference a NULL nsCOMPtr with operator*().");
     return *get();
   }
 
@@ -973,8 +973,8 @@ public:
 
   nsISupports* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
   {
-    NS_ABORT_IF_FALSE(mRawPtr != 0,
-                      "You can't dereference a NULL nsCOMPtr with operator->().");
+    MOZ_ASSERT(mRawPtr != 0,
+               "You can't dereference a NULL nsCOMPtr with operator->().");
     return get();
   }
 
@@ -986,8 +986,8 @@ public:
 
   nsISupports& operator*() const
   {
-    NS_ABORT_IF_FALSE(mRawPtr != 0,
-                      "You can't dereference a NULL nsCOMPtr with operator*().");
+    MOZ_ASSERT(mRawPtr != 0,
+               "You can't dereference a NULL nsCOMPtr with operator*().");
     return *get();
   }
 

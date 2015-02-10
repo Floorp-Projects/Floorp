@@ -7,7 +7,7 @@
 /*
 Alt-Svc allows separation of transport routing from the origin host without
 using a proxy. See https://httpwg.github.io/http-extensions/alt-svc.html and
-https://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-04
+https://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-06
 
  Nice To Have Future Enhancements::
  * flush on network change event when we have an indicator
@@ -48,6 +48,12 @@ public:
                 const nsACString &alternateHost,
                 int32_t alternatePort,
                 const nsACString &npnToken);
+
+  static void ProcessHeader(const nsCString &buf, const nsCString &originScheme,
+                            const nsCString &originHost, int32_t originPort,
+                            const nsACString &username, bool privateBrowsing,
+                            nsIInterfaceRequestor *callbacks, nsProxyInfo *proxyInfo,
+                            uint32_t caps);
 
   const nsCString &AlternateHost() const { return mAlternateHost; }
   const nsCString &OriginHost() const { return mOriginHost; }

@@ -4,7 +4,7 @@
 
 const EXPORTED_SYMBOLS = ["httpRequest", "percentEncode"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci} = Components;
 
 // Strictly follow RFC 3986 when encoding URI components.
 // Accepts a unescaped string and returns the URI encoded string for use in
@@ -70,7 +70,6 @@ function httpRequest(aUrl, aOptions) {
       if (aOptions.onLoad)
         aOptions.onLoad(target.responseText, this);
     } catch (e) {
-      Cu.reportError(e);
       if (aOptions.onError)
         aOptions.onError(e, aRequest.target.responseText, this);
     }

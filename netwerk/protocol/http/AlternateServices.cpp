@@ -7,6 +7,7 @@
 #include "HttpLog.h"
 
 #include "AlternateServices.h"
+#include "nsEscape.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsHttpHandler.h"
 #include "nsThreadUtils.h"
@@ -17,6 +18,81 @@
 
 namespace mozilla {
 namespace net {
+
+void
+AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme,
+                             const nsCString &originHost, int32_t originPort,
+                             const nsACString &username, bool privateBrowsing,
+                             nsIInterfaceRequestor *callbacks, nsProxyInfo *proxyInfo,
+                             uint32_t caps)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  LOG(("AltSvcMapping::ProcessHeader: %s\n", buf.get()));
+  if (!callbacks) {
+    return;
+  }
+
+  bool isHttp = originScheme.Equals(NS_LITERAL_CSTRING("http"));
+  if (isHttp && !gHttpHandler->AllowAltSvcOE()) {
+    LOG(("Alt-Svc Response Header for http:// origin but OE disabled\n"));
+    return;
+  }
+
+  LOG(("Alt-Svc Response Header %s\n", buf.get()));
+  ParsedHeaderValueListList parsedAltSvc(buf);
+
+  for (uint32_t index = 0; index < parsedAltSvc.mValues.Length(); ++index) {
+    uint32_t maxage = 86400; // default
+    nsAutoCString hostname; // Always empty in the header form
+    nsAutoCString npnToken;
+    int32_t portno = originPort;
+
+    for (uint32_t pairIndex = 0;
+         pairIndex < parsedAltSvc.mValues[index].mValues.Length();
+         ++pairIndex) {
+      nsDependentCSubstring &currentName =
+        parsedAltSvc.mValues[index].mValues[pairIndex].mName;
+      nsDependentCSubstring &currentValue =
+        parsedAltSvc.mValues[index].mValues[pairIndex].mValue;
+
+      if (!pairIndex) {
+        // h2=:443
+        npnToken = currentName;
+        int32_t colonIndex = currentValue.FindChar(':');
+        if (colonIndex >= 0) {
+          portno =
+            atoi(PromiseFlatCString(currentValue).get() + colonIndex + 1);
+        } else {
+          colonIndex = 0;
+        }
+        hostname.Assign(currentValue.BeginReading(), colonIndex);
+      } else if (currentName.Equals(NS_LITERAL_CSTRING("ma"))) {
+        maxage = atoi(PromiseFlatCString(currentValue).get());
+        break;
+      }
+    }
+
+    // unescape modifies a c string in place, so afterwards
+    // update nsCString length
+    nsUnescape(npnToken.BeginWriting());
+    npnToken.SetLength(strlen(npnToken.BeginReading()));
+
+    uint32_t spdyIndex;
+    SpdyInformation *spdyInfo = gHttpHandler->SpdyInfo();
+    if (!(NS_SUCCEEDED(spdyInfo->GetNPNIndex(npnToken, &spdyIndex)) &&
+          spdyInfo->ProtocolEnabled(spdyIndex))) {
+      LOG(("Alt Svc unknown protocol %s, ignoring", npnToken.get()));
+      continue;
+    }
+
+    nsRefPtr<AltSvcMapping> mapping = new AltSvcMapping(originScheme,
+                                                        originHost, originPort,
+                                                        username, privateBrowsing,
+                                                        NowInSeconds() + maxage,
+                                                        hostname, portno, npnToken);
+    gHttpHandler->UpdateAltServiceMapping(mapping, proxyInfo, callbacks, caps);
+  }
+}
 
 AltSvcMapping::AltSvcMapping(const nsACString &originScheme,
                              const nsACString &originHost,

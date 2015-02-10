@@ -83,7 +83,7 @@ ImageResource::DecrementAnimationConsumers()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only to encourage serialization "
                                 "with IncrementAnimationConsumers");
-  NS_ABORT_IF_FALSE(mAnimationConsumers >= 1, "Invalid no. of animation consumers!");
+  MOZ_ASSERT(mAnimationConsumers >= 1, "Invalid no. of animation consumers!");
   mAnimationConsumers--;
 }
 

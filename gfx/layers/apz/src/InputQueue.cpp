@@ -10,6 +10,7 @@
 #include "gfxPrefs.h"
 #include "InputBlockState.h"
 #include "LayersLogging.h"
+#include "mozilla/layers/APZThreadUtils.h"
 #include "OverscrollHandoffState.h"
 
 #define INPQ_LOG(...)
@@ -31,7 +32,7 @@ InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget,
                               bool aTargetConfirmed,
                               const InputData& aEvent,
                               uint64_t* aOutInputBlockId) {
-  AsyncPanZoomController::AssertOnControllerThread();
+  APZThreadUtils::AssertOnControllerThread();
 
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
@@ -266,7 +267,7 @@ InputQueue::StartNewTouchBlock(const nsRefPtr<AsyncPanZoomController>& aTarget,
 CancelableBlockState*
 InputQueue::CurrentBlock() const
 {
-  AsyncPanZoomController::AssertOnControllerThread();
+  APZThreadUtils::AssertOnControllerThread();
 
   MOZ_ASSERT(!mInputBlockQueue.IsEmpty());
   return mInputBlockQueue[0].get();
@@ -298,7 +299,7 @@ InputQueue::ScheduleMainThreadTimeout(const nsRefPtr<AsyncPanZoomController>& aT
 
 void
 InputQueue::MainThreadTimeout(const uint64_t& aInputBlockId) {
-  AsyncPanZoomController::AssertOnControllerThread();
+  APZThreadUtils::AssertOnControllerThread();
 
   INPQ_LOG("got a main thread timeout; block=%" PRIu64 "\n", aInputBlockId);
   bool success = false;
@@ -319,7 +320,7 @@ InputQueue::MainThreadTimeout(const uint64_t& aInputBlockId) {
 
 void
 InputQueue::ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefault) {
-  AsyncPanZoomController::AssertOnControllerThread();
+  APZThreadUtils::AssertOnControllerThread();
 
   INPQ_LOG("got a content response; block=%" PRIu64 "\n", aInputBlockId);
   bool success = false;
@@ -337,7 +338,7 @@ InputQueue::ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefau
 
 void
 InputQueue::SetConfirmedTargetApzc(uint64_t aInputBlockId, const nsRefPtr<AsyncPanZoomController>& aTargetApzc) {
-  AsyncPanZoomController::AssertOnControllerThread();
+  APZThreadUtils::AssertOnControllerThread();
 
   INPQ_LOG("got a target apzc; block=%" PRIu64 " guid=%s\n",
     aInputBlockId, aTargetApzc ? Stringify(aTargetApzc->GetGuid()).c_str() : "");
@@ -357,7 +358,7 @@ InputQueue::SetConfirmedTargetApzc(uint64_t aInputBlockId, const nsRefPtr<AsyncP
 
 void
 InputQueue::SetAllowedTouchBehavior(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aBehaviors) {
-  AsyncPanZoomController::AssertOnControllerThread();
+  APZThreadUtils::AssertOnControllerThread();
 
   INPQ_LOG("got allowed touch behaviours; block=%" PRIu64 "\n", aInputBlockId);
   bool success = false;
@@ -381,7 +382,7 @@ InputQueue::SetAllowedTouchBehavior(uint64_t aInputBlockId, const nsTArray<Touch
 
 void
 InputQueue::ProcessInputBlocks() {
-  AsyncPanZoomController::AssertOnControllerThread();
+  APZThreadUtils::AssertOnControllerThread();
 
   do {
     CancelableBlockState* curBlock = CurrentBlock();

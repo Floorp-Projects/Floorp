@@ -3079,16 +3079,50 @@ IMEInputHandler::SelectedRange()
     return mSelectedRange;
   }
 
+  mWritingMode = selection.GetWritingMode();
+  mRangeForWritingMode = NSMakeRange(selection.mReply.mOffset,
+                                     selection.mReply.mString.Length());
+
   if (mIMEHasFocus) {
-    mSelectedRange.location = selection.mReply.mOffset;
-    mSelectedRange.length = selection.mReply.mString.Length();
-    return mSelectedRange;
+    mSelectedRange = mRangeForWritingMode;
   }
 
-  return NSMakeRange(selection.mReply.mOffset,
-                     selection.mReply.mString.Length());
+  return mRangeForWritingMode;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(mSelectedRange);
+}
+
+bool
+IMEInputHandler::DrawsVerticallyForCharacterAtIndex(uint32_t aCharIndex)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  if (Destroyed()) {
+    return false;
+  }
+
+  if (mRangeForWritingMode.location == NSNotFound) {
+    // Update cached writing-mode value for the current selection.
+    SelectedRange();
+  }
+
+  if (aCharIndex < mRangeForWritingMode.location ||
+      aCharIndex > mRangeForWritingMode.location + mRangeForWritingMode.length) {
+    // It's not clear to me whether this ever happens in practice, but if an
+    // IME ever wants to query writing mode at an offset outside the current
+    // selection, the writing-mode value may not be correct for the index.
+    // In that case, use FirstRectForCharacterRange to get a fresh value.
+    // This does more work than strictly necessary (we don't need the rect here),
+    // but should be a rare case.
+    NS_WARNING("DrawsVerticallyForCharacterAtIndex not using cached writing mode");
+    NSRange range = NSMakeRange(aCharIndex, 1);
+    NSRange actualRange;
+    FirstRectForCharacterRange(range, &actualRange);
+  }
+
+  return mWritingMode.IsVertical();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
 NSRect
@@ -3128,6 +3162,8 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange,
       r = charRect.mReply.mRect;
       actualRange.location = charRect.mReply.mOffset;
       actualRange.length = charRect.mReply.mString.Length();
+      mWritingMode = charRect.GetWritingMode();
+      mRangeForWritingMode = actualRange;
     } else {
       useCaretRect = true;
     }

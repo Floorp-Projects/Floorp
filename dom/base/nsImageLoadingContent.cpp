@@ -136,7 +136,7 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
 
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     // We should definitely have a request here
-    NS_ABORT_IF_FALSE(aRequest, "no request?");
+    MOZ_ASSERT(aRequest, "no request?");
 
     NS_PRECONDITION(aRequest == mCurrentRequest || aRequest == mPendingRequest,
                     "Unknown request");
@@ -227,8 +227,8 @@ nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
   if (aRequest == mPendingRequest) {
     MakePendingRequestCurrent();
   }
-  NS_ABORT_IF_FALSE(aRequest == mCurrentRequest,
-                    "One way or another, we should be current by now");
+  MOZ_ASSERT(aRequest == mCurrentRequest,
+             "One way or another, we should be current by now");
 
   // We just loaded all the data we're going to get. If we're visible and
   // haven't done an initial paint (*), we want to make sure the image starts
@@ -890,9 +890,9 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   // time. It should always be the same as the principal of this node.
 #ifdef DEBUG
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  NS_ABORT_IF_FALSE(thisContent &&
-                    thisContent->NodePrincipal() == aDocument->NodePrincipal(),
-                    "Principal mismatch?");
+  MOZ_ASSERT(thisContent &&
+             thisContent->NodePrincipal() == aDocument->NodePrincipal(),
+             "Principal mismatch?");
 #endif
 
   // Are we blocked?
@@ -1219,7 +1219,7 @@ void
 nsImageLoadingContent::SetBlockedRequest(nsIURI* aURI, int16_t aContentDecision)
 {
   // Sanity
-  NS_ABORT_IF_FALSE(!NS_CP_ACCEPTED(aContentDecision), "Blocked but not?");
+  MOZ_ASSERT(!NS_CP_ACCEPTED(aContentDecision), "Blocked but not?");
 
   // We do some slightly illogical stuff here to maintain consistency with
   // old behavior that people probably depend on. Even in the case where the
@@ -1347,8 +1347,8 @@ nsImageLoadingContent::ClearCurrentRequest(nsresult aReason,
     mCurrentRequestFlags = 0;
     return;
   }
-  NS_ABORT_IF_FALSE(!mCurrentURI,
-                    "Shouldn't have both mCurrentRequest and mCurrentURI!");
+  MOZ_ASSERT(!mCurrentURI,
+             "Shouldn't have both mCurrentRequest and mCurrentURI!");
 
   // Deregister this image from the refresh driver so it no longer receives
   // notifications.

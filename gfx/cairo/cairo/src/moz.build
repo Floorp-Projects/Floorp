@@ -202,18 +202,6 @@ for var in ('MOZ_TREE_CAIRO', 'MOZ_TREE_PIXMAN'):
 # Normally determined by cairo's configure script.
 DEFINES['HAVE_UINT64_T'] = True
 
-if CONFIG['GNU_CC']:
-    DEFINES['HAVE_INTEL_ATOMIC_PRIMITIVES'] = True
-    # We would normally use autoconf to set these up, using AC_CHECK_SIZEOF.
-    # But AC_CHECK_SIZEOF requires running programs to determine the sizes,
-    # and that doesn't work so well with cross-compiling.  So instead we
-    # use these magic macros, available since at least GCC 4.3, to define
-    # the preprocessor macros cairo wanted from autoconf.
-    DEFINES['SIZEOF_VOID_P'] = '__SIZEOF_POINTER__'
-    DEFINES['SIZEOF_INT'] = '__SIZEOF_INT__'
-    DEFINES['SIZEOF_LONG'] = '__SIZEOF_LONG__'
-    DEFINES['SIZEOF_LONG_LONG'] = '__SIZEOF_LONG_LONG__'
-
 if CONFIG['MOZ_TREE_FREETYPE']:
     DEFINES['HAVE_FT_LIBRARY_SETLCDFILTER'] = True
     DEFINES['FT_LCD_FILTER_H'] = '%s/modules/freetype2/include/freetype/ftlcdfil.h' % TOPSRCDIR

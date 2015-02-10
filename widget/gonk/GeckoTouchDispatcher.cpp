@@ -28,6 +28,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/Touch.h"
+#include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "nsAppShell.h"
 #include "nsDebug.h"
@@ -73,48 +74,6 @@ GeckoTouchDispatcher::GeckoTouchDispatcher()
   ClearOnShutdown(&sTouchDispatcher);
 }
 
-class DispatchTouchEventsMainThread : public nsRunnable
-{
-public:
-  DispatchTouchEventsMainThread(GeckoTouchDispatcher* aTouchDispatcher,
-                                TimeStamp aVsyncTime)
-    : mTouchDispatcher(aTouchDispatcher)
-    , mVsyncTime(aVsyncTime)
-  {
-  }
-
-  NS_IMETHOD Run()
-  {
-    mTouchDispatcher->DispatchTouchMoveEvents(mVsyncTime);
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<GeckoTouchDispatcher> mTouchDispatcher;
-  TimeStamp mVsyncTime;
-};
-
-class DispatchSingleTouchMainThread : public nsRunnable
-{
-public:
-  DispatchSingleTouchMainThread(GeckoTouchDispatcher* aTouchDispatcher,
-                                MultiTouchInput& aTouch)
-    : mTouchDispatcher(aTouchDispatcher)
-    , mTouch(aTouch)
-  {
-  }
-
-  NS_IMETHOD Run()
-  {
-    mTouchDispatcher->DispatchTouchEvent(mTouch);
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<GeckoTouchDispatcher> mTouchDispatcher;
-  MultiTouchInput mTouch;
-};
-
 /* static */ void
 GeckoTouchDispatcher::SetCompositorVsyncObserver(mozilla::layers::CompositorVsyncObserver *aObserver)
 {
@@ -143,7 +102,8 @@ GeckoTouchDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp)
   }
 
   if (haveTouchData) {
-    NS_DispatchToMainThread(new DispatchTouchEventsMainThread(sTouchDispatcher, aVsyncTimestamp));
+    layers::APZThreadUtils::AssertOnControllerThread();
+    sTouchDispatcher->DispatchTouchMoveEvents(aVsyncTimestamp);
   }
 
   return haveTouchData;
@@ -171,9 +131,11 @@ GeckoTouchDispatcher::NotifyTouch(MultiTouchInput& aTouch, TimeStamp aEventTime)
       mTouchMoveEvents.back() = aTouch;
     }
 
-    NS_DispatchToMainThread(new DispatchTouchEventsMainThread(this, TimeStamp::Now()));
+    layers::APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+      this, &GeckoTouchDispatcher::DispatchTouchMoveEvents, TimeStamp::Now()));
   } else {
-    NS_DispatchToMainThread(new DispatchSingleTouchMainThread(this, aTouch));
+    layers::APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+      this, &GeckoTouchDispatcher::DispatchTouchEvent, aTouch));
   }
 }
 
@@ -336,7 +298,7 @@ IsExpired(const MultiTouchInput& aTouch)
   return (timeNowMs - aTouch.mTime) > kInputExpirationThresholdMs;
 }
 void
-GeckoTouchDispatcher::DispatchTouchEvent(MultiTouchInput& aMultiTouch)
+GeckoTouchDispatcher::DispatchTouchEvent(MultiTouchInput aMultiTouch)
 {
   if ((aMultiTouch.mType == MultiTouchInput::MULTITOUCH_END ||
        aMultiTouch.mType == MultiTouchInput::MULTITOUCH_CANCEL) &&

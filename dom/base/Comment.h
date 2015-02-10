@@ -19,8 +19,8 @@ class Comment MOZ_FINAL : public nsGenericDOMDataNode,
 private:
   void Init()
   {
-    NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::COMMENT_NODE,
-                      "Bad NodeType in aNodeInfo");
+    MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::COMMENT_NODE,
+               "Bad NodeType in aNodeInfo");
   }
 
   virtual ~Comment();

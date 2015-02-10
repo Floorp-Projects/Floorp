@@ -107,8 +107,8 @@ inline nscoord _nscoordSaturatingMultiply(nscoord aCoord, float aScale,
                                           bool requireNotNegative) {
   VERIFY_COORD(aCoord);
   if (requireNotNegative) {
-    NS_ABORT_IF_FALSE(aScale >= 0.0f,
-                      "negative scaling factors must be handled manually");
+    MOZ_ASSERT(aScale >= 0.0f,
+               "negative scaling factors must be handled manually");
   }
 #ifdef NS_COORD_IS_FLOAT
   return floorf(aCoord * aScale);

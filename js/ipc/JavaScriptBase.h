@@ -99,6 +99,9 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     bool RecvClassName(const uint64_t &objId, nsString *result) {
         return Answer::RecvClassName(ObjectId::deserialize(objId), result);
     }
+    bool RecvGetPrototypeOf(const uint64_t &objId, ReturnStatus *rs, ObjectOrNullVariant *result) {
+        return Answer::RecvGetPrototypeOf(ObjectId::deserialize(objId), rs, result);
+    }
     bool RecvRegExpToShared(const uint64_t &objId, ReturnStatus *rs, nsString *source, uint32_t *flags) {
         return Answer::RecvRegExpToShared(ObjectId::deserialize(objId), rs, source, flags);
     }
@@ -188,6 +191,9 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     bool SendClassName(const ObjectId &objId, nsString *result) {
         return Base::SendClassName(objId.serialize(), result);
     }
+    bool SendGetPrototypeOf(const ObjectId &objId, ReturnStatus *rs, ObjectOrNullVariant *result) {
+        return Base::SendGetPrototypeOf(objId.serialize(), rs, result);
+     }
 
     bool SendRegExpToShared(const ObjectId &objId, ReturnStatus *rs,
                             nsString *source, uint32_t *flags) {

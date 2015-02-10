@@ -128,21 +128,43 @@ setJitCompilerOption("ion.warmup.trigger", 10);
 setJitCompilerOption("baseline.warmup.trigger", 0);
 setJitCompilerOption("offthread-compilation.enable", 0);
 
+var m = asmCompile('g','ffis', USE_ASM + "var ffi1=ffis.ffi1, ffi2=ffis.ffi2; function f() { return ((ffi1()|0) + (ffi2()|0))|0 } return f");
+
 var ffi1 = function() { return 10 }
 var ffi2 = function() { return 73 }
-var f = asmLink(asmCompile('g','ffis', USE_ASM + "var ffi1=ffis.ffi1, ffi2=ffis.ffi2; function f() { return ((ffi1()|0) + (ffi2()|0))|0 } return f"), null, {ffi1,ffi2});
-// Interpreter FFI exit
+var f = asmLink(m, null, {ffi1,ffi2});
+
+// Interp FFI exit
 enableSingleStepProfiling();
 assertEq(f(), 83);
 var stacks = disableSingleStepProfiling();
 assertStackContainsSeq(stacks, ">,f,>,<,f,>,f,>,<,f,>,f,>,>");
 
+// Ion FFI exit
 for (var i = 0; i < 20; i++)
     assertEq(f(), 83);
 enableSingleStepProfiling();
 assertEq(f(), 83);
 var stacks = disableSingleStepProfiling();
 assertStackContainsSeq(stacks, ">,f,>,<,f,>,f,>,<,f,>,f,>,>");
+
+var ffi1 = function() { return { valueOf() { return 20 } } }
+var ffi2 = function() { return { valueOf() { return 74 } } }
+var f = asmLink(m, null, {ffi1,ffi2});
+
+// Interp FFI exit
+enableSingleStepProfiling();
+assertEq(f(), 94);
+var stacks = disableSingleStepProfiling();
+assertStackContainsSeq(stacks, ">,f,>,<,f,>,f,>,<,f,>,f,>,>"); // TODO: add 'valueOf' once interp shows up
+
+// Ion FFI exit
+for (var i = 0; i < 20; i++)
+    assertEq(f(), 94);
+enableSingleStepProfiling();
+assertEq(f(), 94);
+var stacks = disableSingleStepProfiling();
+assertStackContainsSeq(stacks, ">,f,>,<,f,>,f,>,<,f,>,f,>,>"); // TODO: add 'valueOf' once interp shows up
 
 var ffi1 = function() { return 15 }
 var ffi2 = function() { return f2() + 17 }
