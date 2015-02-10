@@ -2367,11 +2367,12 @@ ASTSerializer::statement(ParseNode *pn, MutableHandleValue dst)
       case PNK_GLOBALCONST:
         return declaration(pn, dst);
 
+      case PNK_LETBLOCK:
+        return let(pn, false, dst);
+
       case PNK_LET:
       case PNK_CONST:
-        return pn->isArity(PN_BINARY)
-               ? let(pn, false, dst)
-               : declaration(pn, dst);
+        return declaration(pn, dst);
 
       case PNK_IMPORT:
         return importDeclaration(pn, dst);
@@ -3067,7 +3068,7 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
         LOCAL_ASSERT(pn->pn_count == 1);
         return comprehension(pn->pn_head, dst);
 
-      case PNK_LET:
+      case PNK_LETEXPR:
         return let(pn, true, dst);
 
       default:

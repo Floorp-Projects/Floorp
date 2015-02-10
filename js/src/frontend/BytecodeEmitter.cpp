@@ -7202,12 +7202,14 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = EmitLexicalScope(cx, bce, pn);
         break;
 
-      case PNK_LET:
+      case PNK_LETBLOCK:
+      case PNK_LETEXPR:
+        ok = EmitLet(cx, bce, pn);
+        break;
+
       case PNK_CONST:
-        MOZ_ASSERT_IF(pn->isKind(PNK_CONST), !pn->isArity(PN_BINARY));
-        ok = pn->isArity(PN_BINARY)
-             ? EmitLet(cx, bce, pn)
-             : EmitVariables(cx, bce, pn, InitializeVars);
+      case PNK_LET:
+        ok = EmitVariables(cx, bce, pn, InitializeVars);
         break;
 
       case PNK_IMPORT:
