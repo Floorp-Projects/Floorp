@@ -338,6 +338,15 @@ public:
     return mLayer->GetClipRect();
   }
 
+  bool GetForceDispatchToContentRegion() const {
+    MOZ_ASSERT(IsValid());
+
+    if (mLayer->AsContainerLayer()) {
+      return mLayer->AsContainerLayer()->GetForceDispatchToContentRegion();
+    }
+    return false;
+  }
+
   // Expose an opaque pointer to the layer. Mostly used for printf
   // purposes. This is not intended to be a general-purpose accessor
   // for the underlying layer.
