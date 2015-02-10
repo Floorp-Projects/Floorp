@@ -147,9 +147,6 @@ typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
  * on most architectures, and may be allocated on the stack or within another
  * structure or class (see below for the Init and Finish functions to use).
  *
- * No entry storage is allocated until the first element is added. This means
- * that empty hash tables are cheap, which is good because they are common.
- *
  * There used to be a long, math-heavy comment here about the merits of
  * double hashing vs. chaining; it was removed in bug 1058335. In short, double
  * hashing is more space-efficient unless the element size gets large (in which
@@ -178,7 +175,8 @@ private:
   uint32_t            mEntryCount;    /* number of entries in table */
   uint32_t            mRemovedCount;  /* removed entry sentinels in table */
   uint32_t            mGeneration;    /* entry storage generation number */
-  char*               mEntryStore;    /* entry storage; allocated lazily */
+  char*               mEntryStore;    /* entry storage */
+
 #ifdef PL_DHASHMETER
   struct PLDHashStats
   {
@@ -228,24 +226,25 @@ public:
 
   /*
    * Size in entries (gross, not net of free and removed sentinels) for table.
-   * This can be zero if no elements have been added yet, in which case the
-   * entry storage will not have yet been allocated.
+   * We store mHashShift rather than sizeLog2 to optimize the collision-free
+   * case in SearchTable.
    */
   uint32_t Capacity() const
   {
-    return mEntryStore ? CapacityFromHashShift() : 0;
+    return ((uint32_t)1 << (PL_DHASH_BITS - mHashShift));
   }
 
   uint32_t EntrySize()  const { return mEntrySize; }
   uint32_t EntryCount() const { return mEntryCount; }
   uint32_t Generation() const { return mGeneration; }
 
-  void Init(const PLDHashTableOps* aOps, uint32_t aEntrySize, uint32_t aLength);
+  bool Init(const PLDHashTableOps* aOps, uint32_t aEntrySize,
+            const mozilla::fallible_t&, uint32_t aLength);
 
   void Finish();
 
   PLDHashEntryHdr* Search(const void* aKey);
-  PLDHashEntryHdr* Add(const void* aKey, const mozilla::fallible_t&);
+  PLDHashEntryHdr* Add(const void* aKey);
   void Remove(const void* aKey);
 
   void RawRemove(PLDHashEntryHdr* aEntry);
@@ -297,13 +296,6 @@ public:
 
 private:
   static bool EntryIsFree(PLDHashEntryHdr* aEntry);
-
-  // We store mHashShift rather than sizeLog2 to optimize the collision-free
-  // case in SearchTable.
-  uint32_t CapacityFromHashShift() const
-  {
-    return ((uint32_t)1 << (PL_DHASH_BITS - mHashShift));
-  }
 
   PLDHashNumber ComputeKeyHash(const void* aKey);
 
@@ -434,22 +426,45 @@ void PL_DHashFreeStringKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 const PLDHashTableOps* PL_DHashGetStubOps(void);
 
 /*
- * Initialize aTable with aOps and aEntrySize. The table's initial capacity
- * will be chosen such that |aLength| elements can be inserted without
- * rehashing; if |aLength| is a power-of-two, this capacity will be |2*length|.
- * However, because entry storage is allocated lazily, this initial capacity
- * won't be relevant until the first element is added; prior to that the
- * capacity will be zero.
+ * Dynamically allocate a new PLDHashTable, initialize it using
+ * PL_DHashTableInit, and return its address. Return null on allocation failure.
+ */
+PLDHashTable* PL_NewDHashTable(
+  const PLDHashTableOps* aOps, uint32_t aEntrySize,
+  uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
+
+/*
+ * Free |aTable|'s entry storage and |aTable| itself (both via
+ * aTable->mOps->freeTable). Use this function to destroy a PLDHashTable that
+ * was allocated on the heap via PL_NewDHashTable().
+ */
+void PL_DHashTableDestroy(PLDHashTable* aTable);
+
+/*
+ * Initialize aTable with aOps, aEntrySize, and aCapacity. The table's initial
+ * capacity will be chosen such that |aLength| elements can be inserted without
+ * rehashing. If |aLength| is a power-of-two, this capacity will be |2*length|.
  *
- * This function will crash if |aEntrySize| and/or |aLength| are too large.
+ * This function will crash if it can't allocate enough memory, or if
+ * |aEntrySize| and/or |aLength| are too large.
  */
 void PL_DHashTableInit(
   PLDHashTable* aTable, const PLDHashTableOps* aOps,
   uint32_t aEntrySize, uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
 /*
- * Clear |aTable|'s elements (via aTable->mOps->clearEntry) and free its entry
- * storage, if has any.
+ * Initialize aTable. This is the same as PL_DHashTableInit, except that it
+ * returns a boolean indicating success, rather than crashing on failure.
+ */
+MOZ_WARN_UNUSED_RESULT bool PL_DHashTableInit(
+  PLDHashTable* aTable, const PLDHashTableOps* aOps,
+  uint32_t aEntrySize, const mozilla::fallible_t&,
+  uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
+
+/*
+ * Free |aTable|'s entry storage (via aTable->mOps->freeTable). Use this
+ * function to destroy a PLDHashTable that is allocated on the stack or in
+ * static memory and was created via PL_DHashTableInit().
  */
 void PL_DHashTableFinish(PLDHashTable* aTable);
 
@@ -467,7 +482,7 @@ PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey);
 /*
  * To add an entry identified by key to table, call:
  *
- *  entry = PL_DHashTableAdd(table, key, mozilla::fallible);
+ *  entry = PL_DHashTableAdd(table, key);
  *
  * If entry is null upon return, then either (a) the table is severely
  * overloaded and memory can't be allocated for entry storage, or (b)
@@ -479,14 +494,6 @@ PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey);
  * initialize the key and value parts of the entry sub-type, if they have not
  * been set already (i.e. if entry was not already in the table, and if the
  * optional initEntry hook was not used).
- */
-PLDHashEntryHdr* PL_DHASH_FASTCALL
-PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey,
-                 const mozilla::fallible_t&);
-
-/*
- * This is like the other PL_DHashTableAdd() function, but infallible, and so
- * never returns null.
  */
 PLDHashEntryHdr* PL_DHASH_FASTCALL
 PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey);

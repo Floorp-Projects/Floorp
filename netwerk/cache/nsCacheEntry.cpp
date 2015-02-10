@@ -385,6 +385,7 @@ nsCacheEntryHashTable::ops =
 
 
 nsCacheEntryHashTable::nsCacheEntryHashTable()
+    : initialized(false)
 {
     MOZ_COUNT_CTOR(nsCacheEntryHashTable);
 }
@@ -393,21 +394,30 @@ nsCacheEntryHashTable::nsCacheEntryHashTable()
 nsCacheEntryHashTable::~nsCacheEntryHashTable()
 {
     MOZ_COUNT_DTOR(nsCacheEntryHashTable);
-    Shutdown();
+    if (initialized)
+        Shutdown();
 }
 
 
-void
+nsresult
 nsCacheEntryHashTable::Init()
 {
-    PL_DHashTableInit(&table, &ops, sizeof(nsCacheEntryHashTableEntry), 256);
+    nsresult rv = NS_OK;
+    initialized = PL_DHashTableInit(&table, &ops,
+                                    sizeof(nsCacheEntryHashTableEntry),
+                                    fallible, 256);
+
+    if (!initialized) rv = NS_ERROR_OUT_OF_MEMORY;
+
+    return rv;
 }
 
 void
 nsCacheEntryHashTable::Shutdown()
 {
-    if (table.IsInitialized()) {
+    if (initialized) {
         PL_DHashTableFinish(&table);
+        initialized = false;
     }
 }
 
@@ -415,9 +425,8 @@ nsCacheEntryHashTable::Shutdown()
 nsCacheEntry *
 nsCacheEntryHashTable::GetEntry( const nsCString * key)
 {
-    NS_ASSERTION(table.IsInitialized(),
-                 "nsCacheEntryHashTable not initialized");
-    if (!table.IsInitialized())  return nullptr;
+    NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
+    if (!initialized)  return nullptr;
 
     PLDHashEntryHdr *hashEntry = PL_DHashTableSearch(&table, key);
     return hashEntry ? ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry
@@ -430,12 +439,11 @@ nsCacheEntryHashTable::AddEntry( nsCacheEntry *cacheEntry)
 {
     PLDHashEntryHdr    *hashEntry;
 
-    NS_ASSERTION(table.IsInitialized(),
-                 "nsCacheEntryHashTable not initialized");
-    if (!table.IsInitialized())  return NS_ERROR_NOT_INITIALIZED;
+    NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
+    if (!initialized)  return NS_ERROR_NOT_INITIALIZED;
     if (!cacheEntry)   return NS_ERROR_NULL_POINTER;
 
-    hashEntry = PL_DHashTableAdd(&table, &(cacheEntry->mKey), fallible);
+    hashEntry = PL_DHashTableAdd(&table, &(cacheEntry->mKey));
 #ifndef DEBUG_dougt
     NS_ASSERTION(((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry == 0,
                  "### nsCacheEntryHashTable::AddEntry - entry already used");
@@ -449,11 +457,10 @@ nsCacheEntryHashTable::AddEntry( nsCacheEntry *cacheEntry)
 void
 nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
 {
-    NS_ASSERTION(table.IsInitialized(),
-                 "nsCacheEntryHashTable not initialized");
+    NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
     NS_ASSERTION(cacheEntry, "### cacheEntry == nullptr");
 
-    if (!table.IsInitialized())  return; // NS_ERROR_NOT_INITIALIZED
+    if (!initialized)  return; // NS_ERROR_NOT_INITIALIZED
 
 #if DEBUG
     // XXX debug code to make sure we have the entry we're trying to remove
@@ -467,9 +474,8 @@ nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
 void
 nsCacheEntryHashTable::VisitEntries( PLDHashEnumerator etor, void *arg)
 {
-    NS_ASSERTION(table.IsInitialized(),
-                 "nsCacheEntryHashTable not initialized");
-    if (!table.IsInitialized())  return; // NS_ERROR_NOT_INITIALIZED
+    NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
+    if (!initialized)  return; // NS_ERROR_NOT_INITIALIZED
     PL_DHashTableEnumerate(&table, etor, arg);
 }
 
