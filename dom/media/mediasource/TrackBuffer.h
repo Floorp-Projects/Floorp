@@ -61,7 +61,7 @@ public:
   double Buffered(dom::TimeRanges* aRanges);
 
   // Mark the current decoder's resource as ended, clear mCurrentDecoder and
-  // reset mLast{Start,End}Timestamp.
+  // reset mLast{Start,End}Timestamp.  Main thread only.
   void DiscardCurrentDecoder();
   // Mark the current decoder's resource as ended.
   void EndCurrentDecoder();
@@ -182,6 +182,7 @@ private:
   nsTArray<nsRefPtr<SourceBufferDecoder>> mWaitingDecoders;
 
   // The decoder that the owning SourceBuffer is currently appending data to.
+  // Modified on the main thread only.
   nsRefPtr<SourceBufferDecoder> mCurrentDecoder;
 
   nsRefPtr<MediaSourceDecoder> mParentDecoder;
