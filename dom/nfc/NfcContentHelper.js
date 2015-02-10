@@ -56,8 +56,6 @@ const NFC_IPC_MSG_NAMES = [
   "NFC:MakeReadOnlyResponse",
   "NFC:FormatResponse",
   "NFC:TransceiveResponse",
-  "NFC:ConnectResponse",
-  "NFC:CloseResponse",
   "NFC:CheckP2PRegistrationResponse",
   "NFC:DOMEvent",
   "NFC:NotifySendFileStatusResponse",
