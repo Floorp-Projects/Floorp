@@ -137,8 +137,7 @@ class FullParseHandler
         if (!propExpr)
             return null();
 
-        if (!addArrayElement(callSite, propExpr))
-            return null();
+        addArrayElement(callSite, propExpr);
 
         return callSite;
     }
@@ -146,10 +145,8 @@ class FullParseHandler
     bool addToCallSiteObject(ParseNode *callSiteObj, ParseNode *rawNode, ParseNode *cookedNode) {
         MOZ_ASSERT(callSiteObj->isKind(PNK_CALLSITEOBJ));
 
-        if (!addArrayElement(callSiteObj, cookedNode))
-            return false;
-        if (!addArrayElement(callSiteObj->pn_head, rawNode))
-            return false;
+        addArrayElement(callSiteObj, cookedNode);
+        addArrayElement(callSiteObj->pn_head, rawNode);
 
         /*
          * We don't know when the last noSubstTemplate will come in, and we
@@ -270,11 +267,10 @@ class FullParseHandler
         return true;
     }
 
-    bool addArrayElement(ParseNode *literal, ParseNode *element) {
+    void addArrayElement(ParseNode *literal, ParseNode *element) {
         if (!element->isConstant())
             literal->pn_xflags |= PNX_NONCONST;
         literal->append(element);
-        return true;
     }
 
     ParseNode *newObjectLiteral(uint32_t begin) {
