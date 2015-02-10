@@ -121,6 +121,12 @@ function removeVP8(sdp) {
   return updated_sdp;
 }
 
+var makeDefaultCommands = () => {
+  return [].concat(commandsPeerConnectionInitial,
+                   commandsGetUserMedia,
+                   commandsPeerConnectionOfferAnswer);
+};
+
 /**
  * This class handles tests for peer connections.
  *
@@ -142,7 +148,7 @@ function removeVP8(sdp) {
 function PeerConnectionTest(options) {
   // If no options are specified make it an empty object
   options = options || { };
-  options.commands = options.commands || commandsPeerConnection;
+  options.commands = options.commands || makeDefaultCommands();
   options.is_local = "is_local" in options ? options.is_local : true;
   options.is_remote = "is_remote" in options ? options.is_remote : true;
 
@@ -740,14 +746,22 @@ function PeerConnectionWrapper(label, configuration, h264) {
 
   this.dataChannels = [ ];
 
-  this.addStreamCounter = {audio: 0, video: 0 };
-
   this._local_ice_candidates = [];
   this._remote_ice_candidates = [];
   this.holdIceCandidates = new Promise(r => this.releaseIceCandidates = r);
   this.localRequiresTrickleIce = false;
   this.remoteRequiresTrickleIce = false;
   this.localMediaElements = [];
+
+  this.expectedLocalTrackTypesById = {};
+  this.expectedRemoteTrackTypesById = {};
+  this.observedRemoteTrackTypesById = {};
+
+  this.disableRtpCountChecking = false;
+
+  this.negotiationNeededFired = false;
+
+  this.iceCheckingRestartExpected = false;
 
   this.h264 = typeof h264 !== "undefined" ? true : false;
 
@@ -769,27 +783,6 @@ function PeerConnectionWrapper(label, configuration, h264) {
     });
   };
 
-  /**
-   * Callback for native peer connection 'onaddstream' events.
-   *
-   * @param {Object} event
-   *        Event data which includes the stream to be added
-   */
-  this._pc.onaddstream = event => {
-    info(this + ": 'onaddstream' event fired for " + JSON.stringify(event.stream));
-
-    var type = '';
-    if (event.stream.getAudioTracks().length > 0) {
-      type = 'audio';
-      this.addStreamCounter.audio += this.countTracksInStreams('audio', [event.stream]);
-    }
-    if (event.stream.getVideoTracks().length > 0) {
-      type += 'video';
-      this.addStreamCounter.video += this.countTracksInStreams('video', [event.stream]);
-    }
-    this.attachMedia(event.stream, type, 'remote');
-  };
-
   createOneShotEventWrapper(this, this._pc, 'datachannel');
   this._pc.addEventListener('datachannel', e => {
     var wrapper = new DataChannelWrapper(e.channel, this);
@@ -797,6 +790,7 @@ function PeerConnectionWrapper(label, configuration, h264) {
   });
 
   createOneShotEventWrapper(this, this._pc, 'signalingstatechange');
+  createOneShotEventWrapper(this, this._pc, 'negotiationneeded');
 }
 
 PeerConnectionWrapper.prototype = {
@@ -888,6 +882,12 @@ PeerConnectionWrapper.prototype = {
           is(sender.track, track, "addTrack returns sender");
         });
       }
+
+      stream.getTracks().forEach(track => {
+        ok(track.id, "track has id");
+        ok(track.kind, "track has kind");
+        this.expectedLocalTrackTypesById[track.id] = track.kind;
+      });
     }
 
     var element = createMediaElement(type, this.label + '_' + side + this.streams.length);
@@ -900,6 +900,12 @@ PeerConnectionWrapper.prototype = {
     if (side === 'local') {
       this.localMediaElements.push(element);
     }
+  },
+
+  removeSender : function(index) {
+    var sender = this._pc.getSenders()[index];
+    delete this.expectedLocalTrackTypesById[sender.track.id];
+    this._pc.removeTrack(sender);
   },
 
   /**
@@ -1069,6 +1075,59 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
+   * Checks whether a given track is expected, has not been observed yet, and
+   * is of the correct type. Then, moves the track from
+   * |expectedTrackTypesById| to |observedTrackTypesById|.
+   */
+  checkTrackIsExpected : function(track,
+                                  expectedTrackTypesById,
+                                  observedTrackTypesById) {
+    ok(expectedTrackTypesById[track.id], "track id " + track.id + " was expected");
+    ok(!observedTrackTypesById[track.id], "track id " + track.id + " was not yet observed");
+    var observedKind = track.kind;
+    var expectedKind = expectedTrackTypesById[track.id];
+    is(observedKind, expectedKind,
+        "track id " + track.id + " was of kind " +
+        observedKind + ", which matches " + expectedKind);
+    observedTrackTypesById[track.id] = expectedTrackTypesById[track.id];
+    delete expectedTrackTypesById[track.id];
+  },
+
+  setupAddStreamEventHandler: function() {
+    var resolveAllAddStreamEventsDone;
+
+    // checkMediaTracks waits on this promise later on in the test.
+    this.allAddStreamEventsDonePromise =
+      new Promise(resolve => resolveAllAddStreamEventsDone = resolve);
+
+    this._pc.addEventListener('addstream', event => {
+      info(this + ": 'onaddstream' event fired for " + JSON.stringify(event.stream));
+
+      // TODO(bug 1130185): We need to handle addtrack events once we start
+      // testing addTrack on pre-existing streams.
+
+      event.stream.getTracks().forEach(track => {
+        this.checkTrackIsExpected(track,
+                                  this.expectedRemoteTrackTypesById,
+                                  this.observedRemoteTrackTypesById);
+      });
+
+      if (Object.keys(this.expectedRemoteTrackTypesById).length === 0) {
+        resolveAllAddStreamEventsDone();
+      }
+
+      var type = '';
+      if (event.stream.getAudioTracks().length > 0) {
+        type = 'audio';
+      }
+      if (event.stream.getVideoTracks().length > 0) {
+        type += 'video';
+      }
+      this.attachMedia(event.stream, type, 'remote');
+    });
+  },
+
+  /**
    * Either adds a given ICE candidate right away or stores it to be added
    * later, depending on the state of the PeerConnection.
    *
@@ -1148,7 +1207,14 @@ PeerConnectionWrapper.prototype = {
       var newstate = this._pc.iceConnectionState;
       var oldstate = this.iceConnectionLog[this.iceConnectionLog.length - 1]
       if (Object.keys(iceStateTransitions).indexOf(oldstate) != -1) {
-        ok(iceStateTransitions[oldstate].indexOf(newstate) != -1, this + ": legal ICE state transition from " + oldstate + " to " + newstate);
+        if (this.iceCheckingRestartExpected) {
+          is(newstate, "checking",
+             "iceconnectionstate event \'" + newstate +
+             "\' matches expected state \'checking\'");
+          this.iceCheckingRestartExpected = false;
+        } else {
+          ok(iceStateTransitions[oldstate].indexOf(newstate) != -1, this + ": legal ICE state transition from " + oldstate + " to " + newstate);
+        }
       } else {
         ok(false, this + ": old ICE state " + oldstate + " missing in ICE transition array");
       }
@@ -1284,23 +1350,25 @@ PeerConnectionWrapper.prototype = {
     }
   },
 
-  /*
-   * Counts the amount of tracks of the given type in a set of streams.
-   *
-   * @param type audio|video
-   * @param streams
-   *        An array of streams (as returned by getLocalStreams()) to be
-   *        examined.
-   */
-  countTracksInStreams: function(type, streams) {
-    if (!Array.isArray(streams)) {
-      return 0;
-    }
-    var f = (type === 'video') ? "getVideoTracks" : "getAudioTracks";
+  checkLocalMediaTracks : function() {
+    var observedLocalTrackTypesById = {};
+    // We do not want to empty out this.expectedLocalTrackTypesById, so make a
+    // copy.
+    var expectedLocalTrackTypesById =
+      JSON.parse(JSON.stringify((this.expectedLocalTrackTypesById)));
+    info(this + " Checking local tracks " +
+         JSON.stringify(expectedLocalTrackTypesById));
+    this._pc.getLocalStreams().forEach(stream => {
+      stream.getTracks().forEach(track => {
+        this.checkTrackIsExpected(track,
+                                  expectedLocalTrackTypesById,
+                                  observedLocalTrackTypesById);
+      });
+    });
 
-    return streams.reduce((count, st) => {
-      return count + st[f]().length;
-    }, 0);
+    Object.keys(expectedLocalTrackTypesById).forEach(id => {
+      ok(false, this + " local id " + id + " was observed");
+    });
   },
 
   /**
@@ -1309,42 +1377,18 @@ PeerConnectionWrapper.prototype = {
    * @param {object} constraints
    *        The media constraints of the remote peer connection object
    */
-  checkMediaTracks : function(remoteConstraints) {
-    var waitForExpectedTracks = type => {
-      var outstandingCount = this.countTracksInConstraint(type, remoteConstraints);
-      outstandingCount -= this.addStreamCounter[type];
-      if (outstandingCount <= 0) {
-        return Promise.resolve();
-      }
+  checkMediaTracks : function() {
+    this.checkLocalMediaTracks();
 
-      return new Promise(resolve => {
-        this._pc.addEventListener('addstream', e => {
-          outstandingCount -= this.countTracksInStreams(type, [e.stream]);
-          if (outstandingCount <= 0) {
-            resolve();
-          }
-        });
-      });
-    };
+    info(this + " Checking remote tracks " +
+         JSON.stringify(this.expectedRemoteTrackTypesById));
 
-    var checkTrackCounts = (side, streams, constraints) => {
-      ['audio', 'video'].forEach(type => {
-        var actual = this.countTracksInStreams(type, streams);
-        var expected = this.countTracksInConstraint(type, constraints);
-        is(actual, expected, this + ' has ' + actual + ' ' +
-           side + ' ' + type + ' tracks');
-      });
-    };
+    // No tracks are expected
+    if (Object.keys(this.expectedRemoteTrackTypesById).length === 0) {
+      return;
+    }
 
-    info(this + " checkMediaTracks() got called before onAddStream fired");
-    var checkPromise = Promise.all([
-      waitForExpectedTracks('audio'),
-      waitForExpectedTracks('video')
-    ]).then(() => {
-      checkTrackCounts('local', this._pc.getLocalStreams(), this.constraints);
-      checkTrackCounts('remote', this._pc.getRemoteStreams(), remoteConstraints);
-    });
-    return timerGuard(checkPromise, 60000, "onaddstream never fired");
+    return timerGuard(this.allAddStreamEventsDonePromise, 60000, "onaddstream never fired");
   },
 
   checkMsids: function() {
@@ -1515,10 +1559,12 @@ PeerConnectionWrapper.prototype = {
                 if(res.type == "outboundrtp") {
                   ok(rem.type == "inboundrtp", "Rtcp is inbound");
                   ok(rem.packetsReceived !== undefined, "Rtcp packetsReceived");
-                  ok(rem.packetsReceived <= res.packetsSent, "No more than sent");
                   ok(rem.packetsLost !== undefined, "Rtcp packetsLost");
                   ok(rem.bytesReceived >= rem.packetsReceived, "Rtcp bytesReceived");
-                  ok(rem.bytesReceived <= res.bytesSent, "No more than sent bytes");
+                  if (!this.disableRtpCountChecking) {
+                    ok(rem.packetsReceived <= res.packetsSent, "No more than sent packets");
+                    ok(rem.bytesReceived <= res.bytesSent, "No more than sent bytes");
+                  }
                   ok(rem.jitter !== undefined, "Rtcp jitter");
                   ok(rem.mozRtt !== undefined, "Rtcp rtt");
                   ok(rem.mozRtt >= 0, "Rtcp rtt " + rem.mozRtt + " >= 0");
