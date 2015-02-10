@@ -36,7 +36,7 @@ let DetailsView = {
     }
 
     yield this.selectView(DEFAULT_DETAILS_SUBVIEW);
-    this.setAvailableViews();
+    yield this.setAvailableViews();
 
     PerformanceController.on(EVENTS.PREF_CHANGED, this.setAvailableViews);
   }),
@@ -61,7 +61,7 @@ let DetailsView = {
    * buttons that select them and going to default view if currently selected.
    * Called when a preference changes in `devtools.performance.ui.`.
    */
-  setAvailableViews: function () {
+  setAvailableViews: Task.async(function* () {
     for (let [name, { view, pref }] of Iterator(this.components)) {
       if (!pref) {
         continue;
@@ -72,10 +72,10 @@ let DetailsView = {
       // If the view is currently selected and not enabled, go back to the
       // default view.
       if (!value && this.isViewSelected(view)) {
-        this.selectView(DEFAULT_DETAILS_SUBVIEW);
+        yield this.selectView(DEFAULT_DETAILS_SUBVIEW);
       }
     }
-  },
+  }),
 
   /**
    * Select one of the DetailView's subviews to be rendered,
