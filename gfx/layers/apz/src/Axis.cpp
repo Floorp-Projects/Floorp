@@ -10,6 +10,7 @@
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController
 #include "mozilla/dom/AnimationPlayer.h" // for ComputedTimingFunction
 #include "mozilla/layers/APZCTreeManager.h" // for APZCTreeManager
+#include "mozilla/layers/APZThreadUtils.h" // for AssertOnControllerThread
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "mozilla/Attributes.h"         // for MOZ_FINAL
 #include "mozilla/Preferences.h"        // for Preferences
@@ -58,7 +59,7 @@ float Axis::ToLocalVelocity(float aVelocityInchesPerMs) const {
 
 void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, uint32_t aTimestampMs) {
   // mVelocityQueue is controller-thread only
-  AsyncPanZoomController::AssertOnControllerThread();
+  APZThreadUtils::AssertOnControllerThread();
 
   if (aTimestampMs == mPosTimeMs) {
     // This could be a duplicate event, or it could be a legitimate event
@@ -331,7 +332,7 @@ ParentLayerCoord Axis::PanDistance(ParentLayerCoord aPos) const {
 
 void Axis::EndTouch(uint32_t aTimestampMs) {
   // mVelocityQueue is controller-thread only
-  AsyncPanZoomController::AssertOnControllerThread();
+  APZThreadUtils::AssertOnControllerThread();
 
   mVelocity = 0;
   int count = 0;
@@ -352,7 +353,7 @@ void Axis::EndTouch(uint32_t aTimestampMs) {
 
 void Axis::CancelTouch() {
   // mVelocityQueue is controller-thread only
-  AsyncPanZoomController::AssertOnControllerThread();
+  APZThreadUtils::AssertOnControllerThread();
 
   AXIS_LOG("%p|%s cancelling touch, clearing velocity queue\n",
     mAsyncPanZoomController, Name());
