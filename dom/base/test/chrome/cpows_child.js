@@ -64,11 +64,18 @@ function make_object()
 
   let for_json = { "n": 3, "a": array, "s": "hello", o: { "x": 10 } };
 
+  let proto = { data: 42 };
+  let with_proto = Object.create(proto);
+
+  let with_null_proto = Object.create(null);
+
   return { "data": o,
            "throwing": throwing,
            "document": content.document,
            "array": array,
-           "for_json": for_json
+           "for_json": for_json,
+           "with_proto": with_proto,
+           "with_null_proto": with_null_proto
          };
 }
 
