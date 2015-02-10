@@ -184,7 +184,18 @@ PushUnaryNodeChild(ParseNode *node, NodeStack *stack)
 {
     MOZ_ASSERT(node->isArity(PN_UNARY));
 
-    stack->pushUnlessNull(node->pn_kid);
+    stack->push(node->pn_kid);
+
+    return PushResult::Recyclable;
+}
+
+static PushResult
+PushUnaryNodeNullableChild(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    if (node->pn_kid)
+        stack->push(node->pn_kid);
 
     return PushResult::Recyclable;
 }
@@ -248,17 +259,31 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         MOZ_ASSERT(!pn->isDefn(), "handle non-trivial cases separately");
         return PushResult::Recyclable;
 
-      case PNK_SEMI:
-      case PNK_COMMA:
-      case PNK_CONDITIONAL:
-      case PNK_COLON:
-      case PNK_SHORTHAND:
+      // Nodes with a single non-null child.
+      case PNK_TYPEOF:
+      case PNK_VOID:
+      case PNK_NOT:
+      case PNK_BITNOT:
+      case PNK_THROW:
+      case PNK_DELETE:
       case PNK_POS:
       case PNK_NEG:
       case PNK_PREINCREMENT:
       case PNK_POSTINCREMENT:
       case PNK_PREDECREMENT:
       case PNK_POSTDECREMENT:
+      case PNK_COMPUTED_NAME:
+      case PNK_ARRAYPUSH:
+      case PNK_SPREAD:
+      case PNK_MUTATEPROTO:
+      case PNK_EXPORT:
+        return PushUnaryNodeChild(pn, stack);
+
+      case PNK_SEMI:
+      case PNK_COMMA:
+      case PNK_CONDITIONAL:
+      case PNK_COLON:
+      case PNK_SHORTHAND:
       case PNK_DOT:
       case PNK_ELEM:
       case PNK_ARRAY:
@@ -267,11 +292,9 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_OBJECT:
       case PNK_CALL:
       case PNK_NAME:
-      case PNK_COMPUTED_NAME:
       case PNK_TEMPLATE_STRING_LIST:
       case PNK_TAGGED_TEMPLATE:
       case PNK_CALLSITEOBJ:
-
       case PNK_FUNCTION:
       case PNK_IF:
       case PNK_SWITCH:
@@ -286,16 +309,13 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_WITH:
       case PNK_RETURN:
       case PNK_NEW:
-      case PNK_DELETE:
       case PNK_TRY:
       case PNK_CATCH:
       case PNK_CATCHLIST:
-      case PNK_THROW:
       case PNK_YIELD:
       case PNK_YIELD_STAR:
       case PNK_GENEXP:
       case PNK_ARRAYCOMP:
-      case PNK_ARRAYPUSH:
       case PNK_LEXICALSCOPE:
       case PNK_LET:
       case PNK_LETBLOCK:
@@ -303,7 +323,6 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_IMPORT:
       case PNK_IMPORT_SPEC_LIST:
       case PNK_IMPORT_SPEC:
-      case PNK_EXPORT:
       case PNK_EXPORT_FROM:
       case PNK_EXPORT_SPEC_LIST:
       case PNK_EXPORT_SPEC:
@@ -312,14 +331,6 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_FOROF:
       case PNK_FORHEAD:
       case PNK_ARGSBODY:
-      case PNK_SPREAD:
-      case PNK_MUTATEPROTO:
-
-        /* Unary operators. */
-      case PNK_TYPEOF:
-      case PNK_VOID:
-      case PNK_NOT:
-      case PNK_BITNOT:
 
         /*
          * Binary operators.
@@ -389,7 +400,7 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         return PushBinaryNodeChildren(pn, stack);
 
       case PN_UNARY:
-        return PushUnaryNodeChild(pn, stack);
+        return PushUnaryNodeNullableChild(pn, stack);
 
       case PN_NULLARY:
         return CanRecycleNullaryNode(pn, stack);
