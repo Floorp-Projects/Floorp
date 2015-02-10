@@ -27,7 +27,6 @@ class FullParseHandler
 {
     ParseNodeAllocator allocator;
     TokenStream &tokenStream;
-    bool foldConstants;
 
     ParseNode *allocParseNode(size_t size) {
         MOZ_ASSERT(size == sizeof(ParseNode));
@@ -71,11 +70,10 @@ class FullParseHandler
     typedef Definition *DefinitionNode;
 
     FullParseHandler(ExclusiveContext *cx, LifoAlloc &alloc,
-                     TokenStream &tokenStream, bool foldConstants,
-                     Parser<SyntaxParseHandler> *syntaxParser, LazyScript *lazyOuterFunction)
+                     TokenStream &tokenStream, Parser<SyntaxParseHandler> *syntaxParser,
+                     LazyScript *lazyOuterFunction)
       : allocator(cx, alloc),
         tokenStream(tokenStream),
-        foldConstants(foldConstants),
         lazyOuterFunction_(lazyOuterFunction),
         lazyInnerFunctionIndex(0),
         syntaxParser(syntaxParser)
@@ -220,7 +218,7 @@ class FullParseHandler
     ParseNode *appendOrCreateList(ParseNodeKind kind, ParseNode *left, ParseNode *right,
                                   ParseContext<FullParseHandler> *pc, JSOp op = JSOP_NOP)
     {
-        return ParseNode::appendOrCreateList(kind, op, left, right, this, pc, foldConstants);
+        return ParseNode::appendOrCreateList(kind, op, left, right, this, pc);
     }
 
     ParseNode *newTernary(ParseNodeKind kind,

@@ -97,8 +97,8 @@ class SyntaxParseHandler
 
   public:
     SyntaxParseHandler(ExclusiveContext *cx, LifoAlloc &alloc,
-                       TokenStream &tokenStream, bool foldConstants,
-                       Parser<SyntaxParseHandler> *syntaxParser, LazyScript *lazyOuterFunction)
+                       TokenStream &tokenStream, Parser<SyntaxParseHandler> *syntaxParser,
+                       LazyScript *lazyOuterFunction)
       : lastAtom(nullptr),
         tokenStream(tokenStream)
     {}
