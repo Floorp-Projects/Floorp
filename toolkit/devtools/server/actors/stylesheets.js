@@ -99,7 +99,7 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
    *         Promise that resolves with an array of StyleSheetActors
    */
   _addAllStyleSheets: function() {
-    return Task.spawn(function*() {
+    return Task.spawn(function() {
       let documents = [this.document];
       let actors = [];
 
@@ -132,7 +132,7 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
    */
   _addStyleSheets: function(styleSheets)
   {
-    return Task.spawn(function*() {
+    return Task.spawn(function() {
       let actors = [];
       for (let i = 0; i < styleSheets.length; i++) {
         let actor = this.parentActor.createStyleSheetActor(styleSheets[i]);
@@ -155,7 +155,7 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
    *         A promise that resolves with an array of StyleSheetActors
    */
   _getImported: function(styleSheet) {
-    return Task.spawn(function*() {
+    return Task.spawn(function() {
       let rules = yield styleSheet.getCSSRules();
       let imported = [];
 
