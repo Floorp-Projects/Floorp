@@ -118,8 +118,8 @@ CameraRecorderProfile::CameraRecorderProfile(nsISupports* aParent,
   , mName(aProfile.GetName())
   , mContainerFormat(aProfile.GetContainer())
   , mMimeType(aProfile.GetMimeType())
-  , mVideo(new CameraRecorderVideoProfile(this, aProfile.GetVideo()))
-  , mAudio(new CameraRecorderAudioProfile(this, aProfile.GetAudio()))
+  , mVideo(new CameraRecorderVideoProfile(MOZ_THIS_IN_INITIALIZER_LIST(), aProfile.GetVideo()))
+  , mAudio(new CameraRecorderAudioProfile(MOZ_THIS_IN_INITIALIZER_LIST(), aProfile.GetAudio()))
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   DOM_CAMERA_LOGI("profile: '%s' container=%s mime-type=%s\n",
