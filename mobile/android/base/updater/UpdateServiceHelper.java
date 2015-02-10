@@ -17,7 +17,7 @@ import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.util.Log;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -87,8 +87,8 @@ public class UpdateServiceHelper {
         isEnabled = enabled;
     }
 
-    public static URL expandUpdateUrl(Context context, String updateUrl, boolean force) {
-        if (updateUrl == null) {
+    public static URI expandUpdateURI(Context context, String updateUri, boolean force) {
+        if (updateUri == null) {
             return null;
         }
 
@@ -112,7 +112,7 @@ public class UpdateServiceHelper {
             Log.i(LOGTAG, "Failed to read update locale file, falling back to " + locale);
         }
 
-        String url = updateUrl.replace("%PRODUCT%", AppConstants.MOZ_APP_BASENAME)
+        String url = updateUri.replace("%PRODUCT%", AppConstants.MOZ_APP_BASENAME)
             .replace("%VERSION%", AppConstants.MOZ_APP_VERSION)
             .replace("%BUILD_ID%", force ? "0" : AppConstants.MOZ_APP_BUILDID)
             .replace("%BUILD_TARGET%", "Android_" + AppConstants.MOZ_APP_ABI + pkgSpecial)
@@ -124,8 +124,8 @@ public class UpdateServiceHelper {
             .replace("%MOZ_VERSION%", AppConstants.MOZILLA_VERSION);
 
         try {
-            return new URL(url);
-        } catch (java.net.MalformedURLException e) {
+            return new URI(url);
+        } catch (java.net.URISyntaxException e) {
             Log.e(LOGTAG, "Failed to create update url: ", e);
             return null;
         }
@@ -168,6 +168,10 @@ public class UpdateServiceHelper {
     }
 
     public static void registerForUpdates(final Context context) {
+        if (!isUpdaterEnabled()) {
+             return;
+        }
+
         final HashMap<String, Object> prefs = new HashMap<String, Object>();
 
         PrefsHelper.getPrefs(Pref.names, new PrefsHelper.PrefHandlerBase() {

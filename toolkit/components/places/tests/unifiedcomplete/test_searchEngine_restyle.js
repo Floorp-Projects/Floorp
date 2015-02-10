@@ -11,7 +11,7 @@ add_task(function* test_searchEngine() {
 
   let uri1 = NetUtil.newURI("http://s.example.com/search?q=Terms&client=1");
   let uri2 = NetUtil.newURI("http://s.example.com/search?q=Terms&client=2");
-  yield promiseAddVisits({ uri: uri1, title: "Terms - SearchEngine Search" });
+  yield PlacesTestUtils.addVisits({ uri: uri1, title: "Terms - SearchEngine Search" });
   addBookmark({ uri: uri2, title: "Terms - SearchEngine Search" });
 
   do_print("Past search terms should be styled, unless bookmarked");

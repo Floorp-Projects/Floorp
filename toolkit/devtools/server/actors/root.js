@@ -149,6 +149,8 @@ RootActor.prototype = {
     addNewRule: true,
     // Whether the dom node actor implements the getUniqueSelector method
     getUniqueSelector: true,
+    // Whether the director scripts are supported
+    directorScripts: true,
     // Whether the debugger server supports
     // blackboxing/pretty-printing (not supported in Fever Dream yet)
     noBlackBoxing: false,

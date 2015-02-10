@@ -63,7 +63,7 @@ add_task(function test_notifications_onDeleteURI() {
     let now = getExpirablePRTime();
     for (let i = 0; i < currentTest.addPages; i++) {
       let page = "http://" + testIndex + "." + i + ".mozilla.org/";
-      yield promiseAddVisits({ uri: uri(page), visitDate: now++ });
+      yield PlacesTestUtils.addVisits({ uri: uri(page), visitDate: now++ });
     }
 
     // Setup bookmarks.

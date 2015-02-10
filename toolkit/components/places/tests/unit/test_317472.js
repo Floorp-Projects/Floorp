@@ -18,8 +18,8 @@ function run_test()
 add_task(function test_execute()
 {
   // add pages to history
-  yield promiseAddVisits(TEST_URI);
-  yield promiseAddVisits(TEST_BOOKMARKED_URI);
+  yield PlacesTestUtils.addVisits(TEST_URI);
+  yield PlacesTestUtils.addVisits(TEST_BOOKMARKED_URI);
 
   // create bookmarks on TEST_BOOKMARKED_URI
   var bm1 = PlacesUtils.bookmarks.insertBookmark(

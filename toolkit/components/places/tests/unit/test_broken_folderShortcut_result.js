@@ -26,7 +26,7 @@ add_task(function test_execute()
   );
 
   // Add also a simple visit.
-  yield promiseAddVisits(uri(("http://3.moz.org/")));
+  yield PlacesTestUtils.addVisits(uri(("http://3.moz.org/")));
 
   // Query containing a broken folder shortcuts among results.
   let query = PlacesUtils.history.getNewQuery();

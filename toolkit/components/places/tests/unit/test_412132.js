@@ -52,7 +52,7 @@ add_task(function changeuri_visited_bookmark()
   do_print("Bookmarked => frecency of URI should be != 0");
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
-  yield promiseAddVisits(TEST_URI);
+  yield PlacesTestUtils.addVisits(TEST_URI);
 
   yield PlacesTestUtils.promiseAsyncUpdates();
 

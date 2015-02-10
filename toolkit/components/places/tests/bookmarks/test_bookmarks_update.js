@@ -70,11 +70,6 @@ add_task(function* invalid_input_throws() {
   Assert.throws(() => PlacesUtils.bookmarks.insert({ title: undefined }),
                 /Invalid value for property 'title'/);
 
-  Assert.throws(() => PlacesUtils.bookmarks.update({ keyword: 10 }),
-                /Invalid value for property 'keyword'/);
-  Assert.throws(() => PlacesUtils.bookmarks.update({ keyword: null }),
-                /Invalid value for property 'keyword'/);
-
   Assert.throws(() => PlacesUtils.bookmarks.update({ guid: "123456789012" }),
                 /Not enough properties to update/);
 
@@ -152,13 +147,6 @@ add_task(function* invalid_properties_for_existing_bookmark() {
   } catch (ex) {
     Assert.ok(/Invalid value for property 'url'/.test(ex));
   }
-  try {
-    yield PlacesUtils.bookmarks.update({ guid: folder.guid,
-                                         keyword: "test" });
-    Assert.ok(false, "Should have thrown");
-  } catch (ex) {
-    Assert.ok(/Invalid value for property 'keyword'/.test(ex));
-  }
 
   let separator = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
                                                        parentGuid: PlacesUtils.bookmarks.unfiledGuid });
@@ -168,13 +156,6 @@ add_task(function* invalid_properties_for_existing_bookmark() {
     Assert.ok(false, "Should have thrown");
   } catch (ex) {
     Assert.ok(/Invalid value for property 'url'/.test(ex));
-  }
-  try {
-    yield PlacesUtils.bookmarks.update({ guid: separator.guid,
-                                         keyword: "test" });
-    Assert.ok(false, "Should have thrown");
-  } catch (ex) {
-    Assert.ok(/Invalid value for property 'keyword'/.test(ex));
   }
   try {
     yield PlacesUtils.bookmarks.update({ guid: separator.guid,
@@ -238,48 +219,11 @@ add_task(function* update_lastModified() {
   Assert.ok(!("title" in bm));
 });
 
-add_task(function* update_keyword() {
-  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                                url: "http://example.com/",
-                                                title: "title",
-                                                keyword: "kw" });
-  checkBookmarkObject(bm);
-  let lastModified = bm.lastModified;
-
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid,
-                                            keyword: "KW2" });
-  checkBookmarkObject(bm);
-  Assert.ok(bm.lastModified >= lastModified);
-  // Keywords are case-insensitive.
-  Assert.equal(bm.keyword, "kw2");
-
-  bm = yield PlacesUtils.bookmarks.fetch(bm.guid);
-  // Keywords are case-insensitive.
-  Assert.equal(bm.keyword, "kw2");
-  lastModified = bm.lastModified;
-
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid,
-                                            keyword: "" });
-  Assert.ok(!("keyword" in bm));
-
-  bm = yield PlacesUtils.bookmarks.fetch(bm.guid);
-  Assert.ok(!("keyword" in bm));
-  Assert.ok(bm.lastModified >= lastModified);
-
-  // Check orphan keyword has been removed from the database.
-  let conn = yield PlacesUtils.promiseDBConnection();
-  let rows = yield conn.executeCached(
-    `SELECT id from moz_keywords WHERE keyword >= :keyword`, { keyword: "kw" });
-  Assert.equal(rows.length, 0);
-});
-
 add_task(function* update_url() {
   let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                 url: "http://example.com/",
-                                                title: "title",
-                                                keyword: "kw" });
+                                                title: "title" });
   checkBookmarkObject(bm);
   let lastModified = bm.lastModified;
   let frecency = frecencyForUrl(bm.url);

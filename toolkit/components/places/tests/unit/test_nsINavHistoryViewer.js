@@ -101,7 +101,7 @@ add_test(function check_history_query() {
 
   // nsINavHistoryResultObserver.nodeInserted
   // add a visit
-  promiseAddVisits(testURI).then(function() {
+  PlacesTestUtils.addVisits(testURI).then(function() {
     do_check_eq(testURI.spec, resultObserver.insertedNode.uri);
 
     // nsINavHistoryResultObserver.nodeHistoryDetailsChanged
@@ -109,12 +109,12 @@ add_test(function check_history_query() {
     do_check_eq(root.uri, resultObserver.nodeChangedByHistoryDetails.uri);
 
     // nsINavHistoryResultObserver.itemTitleChanged for a leaf node
-    promiseAddVisits({ uri: testURI, title: "baz" }).then(function () {
+    PlacesTestUtils.addVisits({ uri: testURI, title: "baz" }).then(function () {
       do_check_eq(resultObserver.nodeChangedByTitle.title, "baz");
 
       // nsINavHistoryResultObserver.nodeRemoved
       var removedURI = uri("http://google.com");
-      promiseAddVisits(removedURI).then(function() {
+      PlacesTestUtils.addVisits(removedURI).then(function() {
         bhist.removePage(removedURI);
         do_check_eq(removedURI.spec, resultObserver.removedNode.uri);
 

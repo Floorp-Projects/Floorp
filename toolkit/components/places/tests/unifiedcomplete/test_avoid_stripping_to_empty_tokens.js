@@ -10,7 +10,7 @@ add_task(function* test_protocol_trimming() {
       title: "Test title",
       transition: TRANSITION_TYPED
     };
-    yield promiseAddVisits(visit);
+    yield PlacesTestUtils.addVisits(visit);
     let matches = [{uri: visit.uri, title: visit.title}];
 
     let inputs = [

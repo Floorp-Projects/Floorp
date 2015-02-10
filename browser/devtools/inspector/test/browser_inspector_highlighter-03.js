@@ -65,7 +65,7 @@ add_task(function* () {
 
   function moveMouseOver(node, x, y) {
     info("Waiting for element " + node + " to be highlighted");
-    executeInContent("Test:SynthesizeMouse", {x, y, type: "mousemove"},
+    executeInContent("Test:SynthesizeMouse", {x, y, options: {type: "mousemove"}},
                      {node}, false);
     return inspector.toolbox.once("picker-node-hovered");
   }

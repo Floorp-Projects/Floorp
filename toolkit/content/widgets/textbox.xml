@@ -319,11 +319,11 @@
         <html:input class="textbox-input" anonid="input" mozactionhint="search"
                     xbl:inherits="value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,mozactionhint,spellcheck"/>
         <xul:deck class="textbox-search-icons" anonid="search-icons">
-          <xul:image class="textbox-search-icon"
-                     onclick="document.getBindingParent(this)._iconClick();"
-                     xbl:inherits="src=image,searchbutton,disabled"/>
+          <xul:image class="textbox-search-icon" anonid="searchbutton-icon"
+                     xbl:inherits="src=image,label=searchbuttonlabel,searchbutton,disabled"/>
           <xul:image class="textbox-search-clear"
                      onclick="document.getBindingParent(this)._clearSearch();"
+                     label="&searchTextBox.clear.label;"
                      xbl:inherits="disabled"/>
         </xul:deck>
       </xul:hbox>
@@ -332,6 +332,9 @@
       <field name="_timer">null</field>
       <field name="_searchIcons">
         document.getAnonymousElementByAttribute(this, "anonid", "search-icons");
+      </field>
+      <field name="_searchButtonIcon">
+        document.getAnonymousElementByAttribute(this, "anonid", "searchbutton-icon");
       </field>
       <property name="timeout"
                 onset="this.setAttribute('timeout', val); return val;"
@@ -342,8 +345,11 @@
           if (val) {
             this.setAttribute("searchbutton", "true");
             this.removeAttribute("aria-autocomplete");
+            // Hack for the button to get the right accessible:
+            this._searchButtonIcon.setAttribute("onclick", "true");
           } else {
             this.removeAttribute("searchbutton");
+            this._searchButtonIcon.removeAttribute("onclick");
             this.setAttribute("aria-autocomplete", "list");
           }
           return val;
@@ -366,10 +372,9 @@
         ]]></setter>
       </property>
       <constructor><![CDATA[
-        if (this.searchButton)
-          this.removeAttribute("aria-autocomplete");
-        else
-          this.setAttribute("aria-autocomplete", "list");
+        // Ensure the button state is up to date:
+        this.searchButton = this.searchButton;
+        this._searchButtonIcon.addEventListener("click", (e) => this._iconClick(e), false);
       ]]></constructor>
       <method name="_fireCommand">
         <parameter name="me"/>
