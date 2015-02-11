@@ -282,7 +282,7 @@ MP4Sample::Pad(size_t aPaddingBytes)
   return true;
 }
 
-void
+bool
 MP4Sample::Prepend(const uint8_t* aData, size_t aSize)
 {
   size_t newSize = size + aSize;
@@ -291,7 +291,10 @@ MP4Sample::Prepend(const uint8_t* aData, size_t aSize)
   // not then we copy to a new buffer.
   uint8_t* newData = mMediaBuffer && newSize <= mMediaBuffer->size()
                        ? data
-                       : new uint8_t[newSize];
+                       : new (fallible) uint8_t[newSize];
+  if (!newData) {
+    return false;
+  }
 
   memmove(newData + aSize, data, size);
   memmove(newData, aData, aSize);
@@ -304,6 +307,8 @@ MP4Sample::Prepend(const uint8_t* aData, size_t aSize)
       mMediaBuffer = nullptr;
     }
   }
+
+  return true;
 }
 
 void
