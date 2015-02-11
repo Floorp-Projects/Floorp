@@ -3964,7 +3964,7 @@ nsContentUtils::GetListenerManagerForNode(nsINode *aNode)
 
   EventListenerManagerMapEntry *entry =
     static_cast<EventListenerManagerMapEntry *>
-      (PL_DHashTableAdd(&sEventListenerManagersHash, aNode, fallible));
+               (PL_DHashTableAdd(&sEventListenerManagersHash, aNode));
 
   if (!entry) {
     return nullptr;

@@ -169,7 +169,8 @@ MarionetteComponent.prototype = {
         this.logger.info("Marionette server ready");
       }
       catch(e) {
-        this.logger.error('exception: ' + e.name + ', ' + e.message);
+        this.logger.error('exception: ' + e.name + ', ' + e.message + ': ' +
+                          e.fileName + " :: " + e.lineNumber);
       }
     }
   },

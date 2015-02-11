@@ -5,7 +5,7 @@
     },
     "global": {
         "talos_repo": "https://hg.mozilla.org/build/talos",
-        "talos_revision": "bfd694ae4242"
+        "talos_revision": "3edc0c98940e"
     },
     "extra_options": {
         "android": [ "--apkPath=%(apk_path)s" ]

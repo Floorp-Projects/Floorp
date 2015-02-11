@@ -24,7 +24,7 @@
 
 #include <limits>
 #include <vector>
-#include <gtest/gtest.h>
+#include "pkixgtest.h"
 
 #include "pkixder.h"
 #include "pkixtestutil.h"
@@ -287,8 +287,9 @@ TEST_F(pkixder_universal_types_tests, EnumeratedInvalidZeroLength)
 // other encodings is actually encouraged.
 
 // e.g. TWO_CHARS(53) => '5', '3'
-#define TWO_CHARS(t) static_cast<uint8_t>('0' + ((t) / 10u)), \
-                     static_cast<uint8_t>('0' + ((t) % 10u))
+#define TWO_CHARS(t) \
+  static_cast<uint8_t>('0' + (static_cast<uint8_t>(t) / 10u)), \
+  static_cast<uint8_t>('0' + (static_cast<uint8_t>(t) % 10u))
 
 // Calls TimeChoice on the UTCTime variant of the given generalized time.
 template <uint16_t LENGTH>
@@ -555,7 +556,7 @@ static const uint8_t DAYS_IN_MONTH[] = {
 
 TEST_F(pkixder_universal_types_tests, TimeMonthDaysValidRange)
 {
-  for (uint8_t month = 1; month <= 12; ++month) {
+  for (uint16_t month = 1; month <= 12; ++month) {
     for (uint8_t day = 1; day <= DAYS_IN_MONTH[month]; ++day) {
       const uint8_t DER[] = {
         0x18,                           // Generalized Time
@@ -604,7 +605,7 @@ TEST_F(pkixder_universal_types_tests, TimeDayInvalid0)
 
 TEST_F(pkixder_universal_types_tests, TimeMonthDayInvalidPastEndOfMonth)
 {
-  for (uint8_t month = 1; month <= 12; ++month) {
+  for (int16_t month = 1; month <= 12; ++month) {
     const uint8_t DER[] = {
       0x18,                           // Generalized Time
       15,                             // Length = 15
@@ -894,160 +895,178 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidFractionalSeconds)
   ExpectBadTime(DER_GENERALIZED_TIME_INVALID_FRACTIONAL_SECONDS);
 }
 
-TEST_F(pkixder_universal_types_tests, Integer_0_127)
+struct IntegerTestParams
 {
-  for (uint8_t i = 0; i <= 127; ++i) {
-    const uint8_t DER[] = {
-      0x02, // INTEGER
-      0x01, // length
-      i,    // value
-    };
-    Input input(DER);
-    Reader reader(input);
+  ByteString encoded;
+  struct PositiveIntegerParams
+  {
+    bool isValid;
+    Input::size_type significantBytesIfValid;
+  } positiveInteger;
+  uint8_t smallNonnegativeIntegerValue;
+};
 
-    uint8_t value = i + 1; // initialize with a value that is NOT i.
-    ASSERT_EQ(Success, Integer(reader, value));
-    ASSERT_EQ(i, value);
+class pkixder_universal_types_tests_Integer
+  : public ::testing::Test
+  , public ::testing::WithParamInterface<IntegerTestParams>
+{
+};
+
+#define INVALID 0xFF
+
+static const IntegerTestParams INTEGER_TEST_PARAMS[] =
+{
+  // Zero is encoded with one value byte of 0x00.
+  { TLV(2, ByteString()), { false, INVALID }, INVALID },
+  { TLV(2, "\x00"), { false, INVALID }, 0 },
+
+  // Positive single-byte values
+  { TLV(2, "\x01"), { true, 1 }, 1 },
+  { TLV(2, "\x02"), { true, 1 }, 2 },
+  { TLV(2, "\x7e"), { true, 1 }, 0x7e },
+  { TLV(2, "\x7f"), { true, 1 }, 0x7f },
+
+  // Negative single-byte values
+  { TLV(2, "\x80"), { false, INVALID }, INVALID },
+  { TLV(2, "\x81"), { false, INVALID }, INVALID },
+  { TLV(2, "\xFE"), { false, INVALID }, INVALID },
+  { TLV(2, "\xFF"), { false, INVALID }, INVALID },
+
+  // Positive two-byte values not starting with 0x00
+  { TLV(2, "\x7F\x00"), { true, 2 }, INVALID },
+  { TLV(2, "\x01\x00"), { true, 2 }, INVALID },
+  { TLV(2, "\x01\x02"), { true, 2 }, INVALID },
+
+  // Negative two-byte values not starting with 0xFF
+  { TLV(2, "\x80\x00"), { false, INVALID }, INVALID },
+  { TLV(2, "\x80\x7F"), { false, INVALID }, INVALID },
+  { TLV(2, "\x80\x80"), { false, INVALID }, INVALID },
+  { TLV(2, "\x80\xFF"), { false, INVALID }, INVALID },
+
+  // The leading zero is necessary.
+  { TLV(2, "\x00\x80"), { true, 1}, INVALID },
+  { TLV(2, "\x00\x81"), { true, 1}, INVALID },
+  { TLV(2, "\x00\xFF"), { true, 1}, INVALID },
+
+  // The leading zero is unnecessary.
+  { TLV(2, "\x00\x01"), { false, INVALID }, INVALID },
+  { TLV(2, "\x00\x7F"), { false, INVALID }, INVALID },
+
+  // The leading 0xFF is necessary.
+  { TLV(2, "\xFF\x00"), { false, INVALID }, INVALID },
+  { TLV(2, "\xFF\x7F"), { false, INVALID }, INVALID },
+
+  // The leading 0xFF is unnecessary.
+  { TLV(2, "\xFF\x80"), { false, INVALID }, INVALID },
+  { TLV(2, "\xFF\xFF"), { false, INVALID }, INVALID },
+
+  // Truncated values
+  { TLV(2, 1, ByteString(/*missing value*/)), { false, INVALID }, INVALID },
+  { TLV(2, 3, "\x11\x22" /*truncated*/), { false, INVALID }, INVALID },
+  { TLV(2, 4, "\x11\x22" /*truncated*/), { false, INVALID }, INVALID },
+  { TLV(2, 2, "\x00" /*truncated*/), { false, INVALID }, INVALID },
+  { TLV(2, 2, "\xFF" /*truncated*/), { false, INVALID }, INVALID },
+  { TLV(2, 3, "\x00\x80" /*truncated*/), { false, INVALID }, INVALID },
+  { TLV(2, 3, "\xFF\x00" /*truncated*/), { false, INVALID }, INVALID },
+
+  // Misc. larger values
+  { TLV(2, 4, "\x11\x22\x33\x44"), { true, 4 }, INVALID },
+  { TLV(2,
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"),
+    { true, 256 }, INVALID },
+};
+
+TEST_P(pkixder_universal_types_tests_Integer, Integer)
+{
+  const IntegerTestParams& params(GetParam());
+  Input input;
+  ASSERT_EQ(Success, input.Init(params.encoded.data(),
+                                params.encoded.length()));
+  Reader reader(input);
+  Result expectedResult = params.smallNonnegativeIntegerValue != INVALID
+                        ? Success
+                        : Result::ERROR_BAD_DER;
+  uint8_t value;
+  ASSERT_EQ(expectedResult, der::Integer(reader, value));
+  if (expectedResult == Success) {
+    ASSERT_EQ(params.smallNonnegativeIntegerValue, value);
+    ASSERT_TRUE(reader.AtEnd());
   }
 }
 
-TEST_F(pkixder_universal_types_tests, Integer_Negative1)
+TEST_P(pkixder_universal_types_tests_Integer,
+       PositiveInteger_without_significantBytes)
 {
-  // This is a valid integer value but our integer parser cannot parse
-  // negative values.
-
-  static const uint8_t DER[] = {
-    0x02, // INTEGER
-    0x01, // length
-    0xff, // -1 (two's complement)
-  };
-  Input input(DER);
+  const IntegerTestParams& params(GetParam());
+  Input input;
+  ASSERT_EQ(Success, input.Init(params.encoded.data(),
+                                params.encoded.length()));
   Reader reader(input);
-
-  uint8_t value;
-  ASSERT_EQ(Result::ERROR_BAD_DER, Integer(reader, value));
+  Result expectedResult = params.positiveInteger.isValid
+                        ? Success
+                        : Result::ERROR_BAD_DER;
+  Input value;
+  ASSERT_EQ(expectedResult, der::PositiveInteger(reader, value));
+  if (expectedResult == Success) {
+    Reader anotherReader(input);
+    Input expectedValue;
+    ASSERT_EQ(Success, ExpectTagAndGetValue(anotherReader,
+                                            der::INTEGER, expectedValue));
+    ASSERT_TRUE(InputsAreEqual(expectedValue, value));
+    ASSERT_TRUE(reader.AtEnd());
+  }
 }
 
-TEST_F(pkixder_universal_types_tests, Integer_Negative128)
+TEST_P(pkixder_universal_types_tests_Integer,
+       PositiveInteger_with_significantBytes)
 {
-  // This is a valid integer value but our integer parser cannot parse
-  // negative values.
-
-  static const uint8_t DER[] = {
-    0x02, // INTEGER
-    0x01, // length
-    0x80, // -128 (two's complement)
-  };
-  Input input(DER);
+  const IntegerTestParams& params(GetParam());
+  Input input;
+  ASSERT_EQ(Success, input.Init(params.encoded.data(),
+                                params.encoded.length()));
   Reader reader(input);
+  Result expectedResult = params.positiveInteger.isValid
+                        ? Success
+                        : Result::ERROR_BAD_DER;
+  Input value;
+  Input::size_type significantBytes = INVALID;
+  ASSERT_EQ(expectedResult, der::PositiveInteger(reader, value,
+                                                 &significantBytes));
+  if (expectedResult == Success) {
+    ASSERT_NE(INVALID, params.positiveInteger.significantBytesIfValid);
+    ASSERT_EQ(params.positiveInteger.significantBytesIfValid,
+              significantBytes);
 
-  uint8_t value;
-  ASSERT_EQ(Result::ERROR_BAD_DER, Integer(reader, value));
+    Reader anotherReader(input);
+    Input expectedValue;
+    ASSERT_EQ(Success, ExpectTagAndGetValue(anotherReader,
+                                            der::INTEGER, expectedValue));
+    ASSERT_TRUE(InputsAreEqual(expectedValue, value));
+    ASSERT_TRUE(reader.AtEnd());
+  }
 }
 
-TEST_F(pkixder_universal_types_tests, Integer_128)
-{
-  // This is a valid integer value but our integer parser cannot parse
-  // values that require more than one byte to encode.
+#undef INVALID
 
-  static const uint8_t DER[] = {
-    0x02, // INTEGER
-    0x02, // length
-    0x00, 0x80 // 128
-  };
-  Input input(DER);
-  Reader reader(input);
-
-  uint8_t value;
-  ASSERT_EQ(Result::ERROR_BAD_DER, Integer(reader, value));
-}
-
-TEST_F(pkixder_universal_types_tests, Integer11223344)
-{
-  // This is a valid integer value but our integer parser cannot parse
-  // values that require more than one byte to be encoded.
-
-  static const uint8_t DER[] = {
-    0x02,                       // INTEGER
-    0x04,                       // length
-    0x11, 0x22, 0x33, 0x44      // 0x11223344
-  };
-  Input input(DER);
-  Reader reader(input);
-
-  uint8_t value;
-  ASSERT_EQ(Result::ERROR_BAD_DER, Integer(reader, value));
-}
-
-TEST_F(pkixder_universal_types_tests, IntegerTruncatedOneByte)
-{
-  const uint8_t DER_INTEGER_TRUNCATED[] = {
-    0x02,                       // INTEGER
-    0x01,                       // length
-    // MISSING DATA HERE
-  };
-  Input input(DER_INTEGER_TRUNCATED);
-  Reader reader(input);
-
-  uint8_t value;
-  ASSERT_EQ(Result::ERROR_BAD_DER, Integer(reader, value));
-}
-
-TEST_F(pkixder_universal_types_tests, IntegerTruncatedLarge)
-{
-  const uint8_t DER_INTEGER_TRUNCATED[] = {
-    0x02,                       // INTEGER
-    0x04,                       // length
-    0x11, 0x22                  // 0x1122
-    // MISSING DATA HERE
-  };
-  Input input(DER_INTEGER_TRUNCATED);
-  Reader reader(input);
-
-  uint8_t value;
-  ASSERT_EQ(Result::ERROR_BAD_DER, Integer(reader, value));
-}
-
-TEST_F(pkixder_universal_types_tests, IntegerZeroLength)
-{
-  const uint8_t DER_INTEGER_ZERO_LENGTH[] = {
-    0x02,                       // INTEGER
-    0x00                        // length
-  };
-  Input input(DER_INTEGER_ZERO_LENGTH);
-  Reader reader(input);
-
-  uint8_t value;
-  ASSERT_EQ(Result::ERROR_BAD_DER, Integer(reader, value));
-}
-
-TEST_F(pkixder_universal_types_tests, IntegerOverlyLong1)
-{
-  const uint8_t DER_INTEGER_OVERLY_LONG1[] = {
-    0x02,                       // INTEGER
-    0x02,                       // length
-    0x00, 0x01                  //
-  };
-  Input input(DER_INTEGER_OVERLY_LONG1);
-  Reader reader(input);
-
-  uint8_t value;
-  ASSERT_EQ(Result::ERROR_BAD_DER, Integer(reader, value));
-}
-
-TEST_F(pkixder_universal_types_tests, IntegerOverlyLong2)
-{
-  const uint8_t DER_INTEGER_OVERLY_LONG2[] = {
-    0x02,                       // INTEGER
-    0x02,                       // length
-    0xff, 0x80                  //
-  };
-  Input input(DER_INTEGER_OVERLY_LONG2);
-  Reader reader(input);
-
-  uint8_t value;
-  ASSERT_EQ(Result::ERROR_BAD_DER, Integer(reader, value));
-}
+INSTANTIATE_TEST_CASE_P(pkixder_universal_types_tests_Integer,
+                        pkixder_universal_types_tests_Integer,
+                        testing::ValuesIn(INTEGER_TEST_PARAMS));
 
 TEST_F(pkixder_universal_types_tests, OptionalIntegerSupportedDefault)
 {

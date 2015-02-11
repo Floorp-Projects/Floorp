@@ -12,6 +12,7 @@
 #include <stdint.h>                     // for uint16_t, uint32_t
 #include <sys/types.h>                  // for int32_t
 #include "gfxPlatform.h"                // for GetTileWidth/GetTileHeight
+#include "mozilla/gfx/Logging.h"        // for gfxCriticalError
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRect.h"                     // for nsIntRect
@@ -340,7 +341,7 @@ TiledLayerBuffer<Derived, Tile>::Dump(std::stringstream& aStream,
 }
 
 template<typename Derived, typename Tile> void
-TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
+TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
                                         const nsIntRegion& aPaintRegion)
 {
   gfx::IntSize scaledTileSize = GetScaledTileSize();
@@ -348,13 +349,15 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
   nsTArray<Tile>  newRetainedTiles;
   nsTArray<Tile>& oldRetainedTiles = mRetainedTiles;
   const nsIntRect oldBound = mValidRegion.GetBounds();
-  const nsIntRect newBound = aNewValidRegion.GetBounds();
+  const nsIntRect newBound = newValidRegion.GetBounds();
   const nsIntPoint oldBufferOrigin(RoundDownToTileEdge(oldBound.x, scaledTileSize.width),
                                    RoundDownToTileEdge(oldBound.y, scaledTileSize.height));
   const nsIntPoint newBufferOrigin(RoundDownToTileEdge(newBound.x, scaledTileSize.width),
                                    RoundDownToTileEdge(newBound.y, scaledTileSize.height));
+
+  // This is the reason we break the style guide with newValidRegion instead
+  // of aNewValidRegion - so that the names match better and code easier to read
   const nsIntRegion& oldValidRegion = mValidRegion;
-  const nsIntRegion& newValidRegion = aNewValidRegion;
   const int oldRetainedHeight = mRetainedHeight;
 
   // Pass 1: Recycle valid content from the old buffer
@@ -446,12 +449,23 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
     }
   }
 
-  MOZ_ASSERT(aNewValidRegion.Contains(aPaintRegion), "Painting a region outside the visible region");
+  if (!newValidRegion.Contains(aPaintRegion)) {
+    gfxCriticalError() << "Painting outside visible:"
+		       << " paint " << aPaintRegion.ToString().get()
+                       << " old valid " << oldValidRegion.ToString().get()
+                       << " new valid " << newValidRegion.ToString().get();
+  }
 #ifdef DEBUG
   nsIntRegion oldAndPainted(oldValidRegion);
   oldAndPainted.Or(oldAndPainted, aPaintRegion);
+  if (!oldAndPainted.Contains(newValidRegion)) {
+    gfxCriticalError() << "Not fully painted:"
+		       << " paint " << aPaintRegion.ToString().get()
+                       << " old valid " << oldValidRegion.ToString().get()
+                       << " old painted " << oldAndPainted.ToString().get()
+                       << " new valid " << newValidRegion.ToString().get();
+  }
 #endif
-  MOZ_ASSERT(oldAndPainted.Contains(newValidRegion), "newValidRegion has not been fully painted");
 
   nsIntRegion regionToPaint(aPaintRegion);
 
@@ -553,7 +567,7 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
   // At this point, oldTileCount should be zero
   MOZ_ASSERT(oldTileCount == 0, "Failed to release old tiles");
 
-  mValidRegion = aNewValidRegion;
+  mValidRegion = newValidRegion;
   mPaintedRegion.Or(mPaintedRegion, aPaintRegion);
 }
 

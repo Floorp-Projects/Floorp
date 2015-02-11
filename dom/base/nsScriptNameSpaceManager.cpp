@@ -122,16 +122,19 @@ NS_IMPL_ISUPPORTS(
   nsIMemoryReporter)
 
 nsScriptNameSpaceManager::nsScriptNameSpaceManager()
+  : mIsInitialized(false)
 {
   MOZ_COUNT_CTOR(nsScriptNameSpaceManager);
 }
 
 nsScriptNameSpaceManager::~nsScriptNameSpaceManager()
 {
-  UnregisterWeakMemoryReporter(this);
-  // Destroy the hash
-  PL_DHashTableFinish(&mGlobalNames);
-  PL_DHashTableFinish(&mNavigatorNames);
+  if (mIsInitialized) {
+    UnregisterWeakMemoryReporter(this);
+    // Destroy the hash
+    PL_DHashTableFinish(&mGlobalNames);
+    PL_DHashTableFinish(&mNavigatorNames);
+  }
   MOZ_COUNT_DTOR(nsScriptNameSpaceManager);
 }
 
@@ -139,8 +142,9 @@ nsGlobalNameStruct *
 nsScriptNameSpaceManager::AddToHash(PLDHashTable *aTable, const nsAString *aKey,
                                     const char16_t **aClassName)
 {
-  GlobalNameMapEntry *entry = static_cast<GlobalNameMapEntry *>
-    (PL_DHashTableAdd(aTable, aKey, fallible));
+  GlobalNameMapEntry *entry =
+    static_cast<GlobalNameMapEntry *>
+               (PL_DHashTableAdd(aTable, aKey));
 
   if (!entry) {
     return nullptr;
@@ -322,13 +326,21 @@ nsScriptNameSpaceManager::Init()
     GlobalNameHashInitEntry
   };
 
-  PL_DHashTableInit(&mGlobalNames, &hash_table_ops,
-                    sizeof(GlobalNameMapEntry),
-                    GLOBALNAME_HASHTABLE_INITIAL_LENGTH);
+  mIsInitialized = PL_DHashTableInit(&mGlobalNames, &hash_table_ops,
+                                     sizeof(GlobalNameMapEntry),
+                                     fallible,
+                                     GLOBALNAME_HASHTABLE_INITIAL_LENGTH);
+  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_OUT_OF_MEMORY);
 
-  PL_DHashTableInit(&mNavigatorNames, &hash_table_ops,
-                    sizeof(GlobalNameMapEntry),
-                    GLOBALNAME_HASHTABLE_INITIAL_LENGTH);
+  mIsInitialized = PL_DHashTableInit(&mNavigatorNames, &hash_table_ops,
+                                     sizeof(GlobalNameMapEntry),
+                                     fallible,
+                                     GLOBALNAME_HASHTABLE_INITIAL_LENGTH);
+  if (!mIsInitialized) {
+    PL_DHashTableFinish(&mGlobalNames);
+
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   RegisterWeakMemoryReporter(this);
 

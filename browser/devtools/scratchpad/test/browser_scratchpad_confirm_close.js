@@ -214,10 +214,17 @@ function writeFile(file, content, callback)
 
 function readFile(file, callback)
 {
-  let channel = NetUtil.newChannel(file);
+  let channel = NetUtil.newChannel2(file,
+                                    null,
+                                    null,
+                                    null,      // aLoadingNode
+                                    Services.scriptSecurityManager.getSystemPrincipal(),
+                                    null,      // aTriggeringPrincipal
+                                    Ci.nsILoadInfo.SEC_NORMAL,
+                                    Ci.nsIContentPolicy.TYPE_OTHER);
   channel.contentType = "application/javascript";
 
-  NetUtil.asyncFetch(channel, function(inputStream, status) {
+  NetUtil.asyncFetch2(channel, function(inputStream, status) {
     ok(Components.isSuccessCode(status),
        "file was read successfully");
 

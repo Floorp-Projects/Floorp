@@ -24,8 +24,15 @@
 
 #include "pkix/Time.h"
 #include "pkixutil.h"
+
 #ifdef WIN32
+#ifdef _MSC_VER
+#pragma warning(push, 3)
+#endif
 #include "windows.h"
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 #else
 #include "sys/time.h"
 #endif
@@ -53,7 +60,8 @@ Now()
   //   - http://pubs.opengroup.org/onlinepubs/009695399/functions/gettimeofday.html
   timeval tv;
   (void) gettimeofday(&tv, nullptr);
-  seconds = (DaysBeforeYear(1970) * Time::ONE_DAY_IN_SECONDS) + tv.tv_sec;
+  seconds = (DaysBeforeYear(1970) * Time::ONE_DAY_IN_SECONDS) +
+            static_cast<uint64_t>(tv.tv_sec);
 #endif
 
   return TimeFromElapsedSecondsAD(seconds);

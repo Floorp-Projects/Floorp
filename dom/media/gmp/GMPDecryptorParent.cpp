@@ -269,11 +269,9 @@ GMPDecryptorParent::RecvKeyStatusChanged(const nsCString& aSessionId,
                                          InfallibleTArray<uint8_t>&& aKeyId,
                                          const GMPMediaKeyStatus& aStatus)
 {
-  if (!mIsOpen) {
-    NS_WARNING("Trying to use a dead GMP decrypter!");
-    return false;
+  if (mIsOpen) {
+    mCallback->KeyStatusChanged(aSessionId, aKeyId, aStatus);
   }
-  mCallback->KeyStatusChanged(aSessionId, aKeyId, aStatus);
   return true;
 }
 

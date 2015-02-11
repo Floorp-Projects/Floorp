@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix_test__pkixtestutils_h
-#define mozilla_pkix_test__pkixtestutils_h
+#ifndef mozilla_pkix_test_pkixtestutils_h
+#define mozilla_pkix_test_pkixtestutils_h
 
 #include <ctime>
 #include <stdint.h> // Some Mozilla-supported compilers lack <cstdint>
@@ -31,8 +31,6 @@
 
 #include "pkix/pkixtypes.h"
 #include "pkix/ScopedPtr.h"
-
-static const unsigned int MINIMUM_TEST_KEY_BITS = 1024;
 
 namespace mozilla { namespace pkix { namespace test {
 
@@ -93,14 +91,40 @@ const ByteString md2WithRSAEncryption(alg_md2WithRSAEncryption,
   MOZILLA_PKIX_ARRAY_LENGTH(alg_md2WithRSAEncryption));
 
 // e.g. YMDHMS(2016, 12, 31, 1, 23, 45) => 2016-12-31:01:23:45 (GMT)
-mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
-                           int16_t hour, int16_t minutes, int16_t seconds);
+mozilla::pkix::Time YMDHMS(uint16_t year, uint16_t month, uint16_t day,
+                           uint16_t hour, uint16_t minutes, uint16_t seconds);
 
-// e.g. YMDHMS(2016, 12, 31, 1, 23, 45) => 2016-12-31:01:23:45 (GMT)
-mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
-                           int16_t hour, int16_t minutes, int16_t seconds);
+ByteString TLV(uint8_t tag, size_t length, const ByteString& value);
 
-ByteString TLV(uint8_t tag, const ByteString& value);
+inline ByteString
+TLV(uint8_t tag, const ByteString& value)
+{
+  return TLV(tag, value.length(), value);
+}
+
+// Although we can't enforce it without relying on Cuser-defined literals,
+// which aren't supported by all of our compilers yet, you should only pass
+// string literals as the last parameter to the following two functions.
+
+template <size_t N>
+inline ByteString
+TLV(uint8_t tag, const char(&value)[N])
+{
+  static_assert(N > 0, "cannot have string literal of size 0");
+  assert(value[N - 1] == 0);
+  return TLV(tag, ByteString(reinterpret_cast<const uint8_t*>(&value), N - 1));
+}
+
+template <size_t N>
+inline ByteString
+TLV(uint8_t tag, size_t length, const char(&value)[N])
+{
+  static_assert(N > 0, "cannot have string literal of size 0");
+  assert(value[N - 1] == 0);
+  return TLV(tag, length,
+             ByteString(reinterpret_cast<const uint8_t*>(&value), N - 1));
+}
+
 ByteString Boolean(bool value);
 ByteString Integer(long value);
 
@@ -168,7 +192,7 @@ template <size_t L>
 inline ByteString
 RFC822Name(const char (&bytes)[L])
 {
-  return RFC822Name(ByteString(reinterpret_cast<const uint8_t (&)[L]>(bytes),
+  return RFC822Name(ByteString(reinterpret_cast<const uint8_t*>(&bytes),
                                L - 1));
 }
 
@@ -183,7 +207,7 @@ template <size_t L>
 inline ByteString
 DNSName(const char (&bytes)[L])
 {
-  return DNSName(ByteString(reinterpret_cast<const uint8_t (&)[L]>(bytes),
+  return DNSName(ByteString(reinterpret_cast<const uint8_t*>(&bytes),
                             L - 1));
 }
 
@@ -248,11 +272,12 @@ typedef ScopedPtr<TestKeyPair, DeleteTestKeyPair> ScopedTestKeyPair;
 
 ByteString SHA1(const ByteString& toHash);
 
-Result TestCheckPublicKey(Input subjectPublicKeyInfo);
-Result TestVerifySignedData(const SignedDataWithSignature& signedData,
-                            Input subjectPublicKeyInfo);
-Result TestDigestBuf(Input item, /*out*/ uint8_t* digestBuf,
-                     size_t digestBufLen);
+Result TestVerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                   Input subjectPublicKeyInfo);
+Result TestVerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                                      Input subjectPublicKeyInfo);
+Result TestDigestBuf(Input item, DigestAlgorithm digestAlg,
+                     /*out*/ uint8_t* digestBuf, size_t digestBufLen);
 
 // Replace one substring in item with another of the same length, but only if
 // the substring was found exactly once. The "same length" restriction is
@@ -371,4 +396,4 @@ ByteString CreateEncodedOCSPResponse(OCSPResponseContext& context);
 
 } } } // namespace mozilla::pkix::test
 
-#endif // mozilla_pkix_test__pkixtestutils_h
+#endif // mozilla_pkix_test_pkixtestutils_h

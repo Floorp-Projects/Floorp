@@ -622,8 +622,8 @@ See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
                 ])
             if test "$ac_cv_have_dllimport_exception_bug" = "no"; then
                 WRAP_STL_INCLUDES=1
-                MOZ_MSVC_STL_WRAP__Throw=1
-                AC_DEFINE(MOZ_MSVC_STL_WRAP__Throw)
+                MOZ_MSVC_STL_WRAP_Throw=1
+                AC_DEFINE(MOZ_MSVC_STL_WRAP_Throw)
             fi
         else
             AC_CACHE_CHECK(for overridable _RAISE,
@@ -646,8 +646,8 @@ See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
                 ])
             if test "$ac_cv_have__RAISE" = "yes"; then
                 WRAP_STL_INCLUDES=1
-                MOZ_MSVC_STL_WRAP__RAISE=1
-                AC_DEFINE(MOZ_MSVC_STL_WRAP__RAISE)
+                MOZ_MSVC_STL_WRAP_RAISE=1
+                AC_DEFINE(MOZ_MSVC_STL_WRAP_RAISE)
             else
                 AC_MSG_ERROR([Gecko exception wrapping doesn't understand your your MSVC/SDK.  Please file a bug describing this error and your build configuration.])
             fi
@@ -767,8 +767,8 @@ AC_SUBST(INTEL_CXX)
 
 AC_SUBST(STL_FLAGS)
 AC_SUBST(WRAP_STL_INCLUDES)
-AC_SUBST(MOZ_MSVC_STL_WRAP__Throw)
-AC_SUBST(MOZ_MSVC_STL_WRAP__RAISE)
+AC_SUBST(MOZ_MSVC_STL_WRAP_Throw)
+AC_SUBST(MOZ_MSVC_STL_WRAP_RAISE)
 
 dnl ========================================================
 dnl Checks for programs.
@@ -7283,7 +7283,7 @@ dnl our own linker.
 if test "$OS_TARGET" = Android; then
     MOZ_GLUE_WRAP_LDFLAGS="${MOZ_GLUE_WRAP_LDFLAGS} -Wl,--wrap=PR_GetEnv,--wrap=PR_SetEnv"
     if test "$MOZ_WIDGET_TOOLKIT" = gonk -a -n "$MOZ_NUWA_PROCESS"; then
-        MOZ_GLUE_WRAP_LDFLAGS="${MOZ_GLUE_WRAP_LDFLAGS} -Wl,--wrap=pthread_create,--wrap=epoll_wait,--wrap=poll,--wrap=pthread_cond_timedwait,--wrap=pthread_cond_wait,--wrap=epoll_create,--wrap=epoll_ctl,--wrap=close,--wrap=pthread_key_create,--wrap=pthread_key_delete,--wrap=socketpair,--wrap=pthread_self,--wrap=pthread_mutex_lock,--wrap=pthread_join,--wrap=pipe,--wrap=pipe2"
+        MOZ_GLUE_WRAP_LDFLAGS="${MOZ_GLUE_WRAP_LDFLAGS} -Wl,--wrap=pthread_create,--wrap=epoll_wait,--wrap=poll,--wrap=pthread_cond_timedwait,--wrap=pthread_cond_wait,--wrap=epoll_create,--wrap=epoll_ctl,--wrap=close,--wrap=pthread_key_create,--wrap=pthread_key_delete,--wrap=socketpair,--wrap=pthread_self,--wrap=pthread_mutex_lock,--wrap=pthread_mutex_trylock,--wrap=pthread_join,--wrap=pipe,--wrap=pipe2"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = android; then
         MOZ_GLUE_WRAP_LDFLAGS="${MOZ_GLUE_WRAP_LDFLAGS} -Wl,--wrap=getaddrinfo,--wrap=freeaddrinfo,--wrap=gai_strerror"
