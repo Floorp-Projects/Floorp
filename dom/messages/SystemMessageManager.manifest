@@ -3,3 +3,6 @@ contract @mozilla.org/system-message-manager;1 {bc076ea0-609b-4d8f-83d7-5af7cbdc
 
 component {70589ca5-91ac-4b9e-b839-d6a88167d714} SystemMessageInternal.js
 contract @mozilla.org/system-message-internal;1 {70589ca5-91ac-4b9e-b839-d6a88167d714}
+
+component {5a19d86a-21e5-4ac8-9634-8c364c73f87f} SystemMessageCache.js
+contract @mozilla.org/system-message-cache;1 {5a19d86a-21e5-4ac8-9634-8c364c73f87f}
