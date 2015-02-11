@@ -61,6 +61,7 @@ function responseHandler(request, buffer)
 
 var multipartListener = {
   _buffer: "",
+  _index: 0,
 
   QueryInterface: function(iid) {
     if (iid.equals(Components.interfaces.nsIStreamListener) ||
@@ -84,6 +85,9 @@ var multipartListener = {
   },
 
   onStopRequest: function(request, context, status) {
+    this._index++;
+    // Second part should be last part
+    do_check_eq(request.QueryInterface(Ci.nsIMultiPartChannel).isLastPart, this._index == 2);
     try {
       responseHandler(request, this._buffer);
     } catch (ex) {
