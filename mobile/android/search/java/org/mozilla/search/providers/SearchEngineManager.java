@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.util.Log;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
@@ -16,20 +15,18 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.RawResource;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.search.Constants;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -37,8 +34,6 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 public class SearchEngineManager implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -532,7 +527,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
                     return engine;
                 }
             } catch (IOException e) {
-                Log.e(LOG_TAG, "Error creating earch engine from name: " + name, e);
+                Log.e(LOG_TAG, "Error creating search engine from name: " + name, e);
             }
         }
         return null;
@@ -573,7 +568,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
 
         // First, try a file path for the full locale.
         final String languageTag = Locales.getLanguageTag(locale);
-        String url = getSearchPluginsJarURL(languageTag, fileName);
+        String url = getSearchPluginsJarURL(context, languageTag, fileName);
 
         InputStream in = GeckoJarReader.getStream(url);
         if (in != null) {
@@ -583,7 +578,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         // If that doesn't work, try a file path for just the language.
         final String language = Locales.getLanguage(locale);
         if (!languageTag.equals(language)) {
-            url = getSearchPluginsJarURL(language, fileName);
+            url = getSearchPluginsJarURL(context, language, fileName);
             in = GeckoJarReader.getStream(url);
             if (in != null) {
                 return in;
@@ -591,7 +586,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         }
 
         // Finally, fall back to default locale defined in chrome registry.
-        url = getSearchPluginsJarURL(getFallbackLocale(), fileName);
+        url = getSearchPluginsJarURL(context, getFallbackLocale(), fileName);
         return GeckoJarReader.getStream(url);
     }
 
@@ -606,7 +601,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
             return fallbackLocale;
         }
 
-        final InputStream in = GeckoJarReader.getStream(getJarURL("!/chrome/chrome.manifest"));
+        final InputStream in = GeckoJarReader.getStream(GeckoJarReader.getJarURL(context, "chrome/chrome.manifest"));
         final BufferedReader br = getBufferedReader(in);
 
         try {
@@ -638,13 +633,9 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
      * @param fileName The name of the file to read.
      * @return URL for jar file.
      */
-    private String getSearchPluginsJarURL(String locale, String fileName) {
-        final String path = "!/chrome/" + locale + "/locale/" + locale + "/browser/searchplugins/" + fileName;
-        return getJarURL(path);
-    }
-
-    private String getJarURL(String path) {
-        return "jar:jar:file://" + context.getPackageResourcePath() + "!/" + AppConstants.OMNIJAR_NAME + path;
+    private static String getSearchPluginsJarURL(Context context, String locale, String fileName) {
+        final String path = "chrome/" + locale + "/locale/" + locale + "/browser/searchplugins/" + fileName;
+        return GeckoJarReader.getJarURL(context, path);
     }
 
     private BufferedReader getBufferedReader(InputStream in) {

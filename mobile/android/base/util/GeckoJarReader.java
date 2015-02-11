@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.util;
 
+import android.content.Context;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.mozglue.NativeZip;
 
 import android.content.res.Resources;
@@ -13,6 +15,7 @@ import android.util.Log;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -170,5 +173,24 @@ public final class GeckoJarReader {
             results.push(url);
             return results;
         }
+    }
+
+    public static String getJarURL(Context context, String pathInsideJAR) {
+        // We need to encode the package resource path, because it might contain illegal characters. For example:
+        //   /mnt/asec2/[2]org.mozilla.fennec-1/pkg.apk
+        // The round-trip through a URI does this for us.
+        final String resourcePath = context.getPackageResourcePath();
+        return computeJarURI(resourcePath, pathInsideJAR);
+    }
+
+    /**
+     * Encodes its resource path correctly.
+     */
+    @RobocopTarget
+    public static String computeJarURI(String resourcePath, String pathInsideJAR) {
+        final String resURI = new File(resourcePath).toURI().toString();
+
+        // TODO: do we need to encode the file path, too?
+        return "jar:jar:" + resURI + "!/" + AppConstants.OMNIJAR_NAME + "!/" + pathInsideJAR;
     }
 }
