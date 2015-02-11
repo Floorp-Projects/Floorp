@@ -26,24 +26,34 @@
 
 #include <limits>
 
-#include "cert.h"
 #include "cryptohi.h"
 #include "keyhi.h"
 #include "pk11pub.h"
 #include "pkix/pkix.h"
 #include "pkix/ScopedPtr.h"
-#include "pkixder.h"
+#include "pkixutil.h"
 #include "secerr.h"
 #include "sslerr.h"
 
 namespace mozilla { namespace pkix {
 
-typedef ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey> ScopedSECKeyPublicKey;
+namespace {
 
-static Result
-CheckPublicKeySize(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
-                   /*out*/ ScopedSECKeyPublicKey& publicKey)
+Result
+VerifySignedDigest(const SignedDigest& sd,
+                   Input subjectPublicKeyInfo,
+                   SECOidTag pubKeyAlg,
+                   void* pkcs11PinArg)
 {
+  SECOidTag digestAlg;
+  switch (sd.digestAlgorithm) {
+    case DigestAlgorithm::sha512: digestAlg = SEC_OID_SHA512; break;
+    case DigestAlgorithm::sha384: digestAlg = SEC_OID_SHA384; break;
+    case DigestAlgorithm::sha256: digestAlg = SEC_OID_SHA256; break;
+    case DigestAlgorithm::sha1: digestAlg = SEC_OID_SHA1; break;
+    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
+  }
+
   SECItem subjectPublicKeyInfoSECItem =
     UnsafeMapInputToSECItem(subjectPublicKeyInfo);
   ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
@@ -51,140 +61,17 @@ CheckPublicKeySize(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
   if (!spki) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
-  publicKey = SECKEY_ExtractPublicKey(spki.get());
-  if (!publicKey) {
+  ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey>
+    pubKey(SECKEY_ExtractPublicKey(spki.get()));
+  if (!pubKey) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
 
-  switch (publicKey.get()->keyType) {
-    case ecKey:
-    {
-      SECKEYECParams* encodedParams = &publicKey.get()->u.ec.DEREncodedParams;
-      if (!encodedParams) {
-        return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
-      }
-
-      Input input;
-      Result rv = input.Init(encodedParams->data, encodedParams->len);
-      if (rv != Success) {
-        return rv;
-      }
-
-      Reader reader(input);
-      NamedCurve namedCurve;
-      rv = der::NamedCurveOID(reader, namedCurve);
-      if (rv != Success) {
-        return rv;
-      }
-
-      rv = der::End(reader);
-      if (rv != Success) {
-        return rv;
-      }
-
-      switch (namedCurve) {
-        case NamedCurve::secp256r1: // fall through
-        case NamedCurve::secp384r1: // fall through
-        case NamedCurve::secp521r1:
-          break;
-        default:
-          return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
-      }
-
-      return Success;
-    }
-    case rsaKey:
-      if (SECKEY_PublicKeyStrengthInBits(publicKey.get()) < minimumNonECCBits) {
-        return Result::ERROR_INADEQUATE_KEY_SIZE;
-      }
-      break;
-    case dsaKey: // fall through
-    case nullKey: // fall through
-    case fortezzaKey: // fall through
-    case dhKey: // fall through
-    case keaKey: // fall through
-    case rsaPssKey: // fall through
-    case rsaOaepKey: // fall through
-    default:
-      return Result::ERROR_UNSUPPORTED_KEYALG;
-  }
-
-  return Success;
-}
-
-Result
-CheckPublicKeyNSS(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits)
-{
-  ScopedSECKeyPublicKey unused;
-  return CheckPublicKeySize(subjectPublicKeyInfo, minimumNonECCBits, unused);
-}
-
-Result
-VerifySignedDataNSS(const SignedDataWithSignature& sd,
-                    Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
-                    void* pkcs11PinArg)
-{
-  SECOidTag pubKeyAlg;
-  SECOidTag digestAlg;
-  switch (sd.algorithm) {
-    case SignatureAlgorithm::ecdsa_with_sha512:
-      pubKeyAlg = SEC_OID_ANSIX962_EC_PUBLIC_KEY;
-      digestAlg = SEC_OID_SHA512;
-      break;
-    case SignatureAlgorithm::ecdsa_with_sha384:
-      pubKeyAlg = SEC_OID_ANSIX962_EC_PUBLIC_KEY;
-      digestAlg = SEC_OID_SHA384;
-      break;
-    case SignatureAlgorithm::ecdsa_with_sha256:
-      pubKeyAlg = SEC_OID_ANSIX962_EC_PUBLIC_KEY;
-      digestAlg = SEC_OID_SHA256;
-      break;
-    case SignatureAlgorithm::ecdsa_with_sha1:
-      pubKeyAlg = SEC_OID_ANSIX962_EC_PUBLIC_KEY;
-      digestAlg = SEC_OID_SHA1;
-      break;
-    case SignatureAlgorithm::rsa_pkcs1_with_sha512:
-      pubKeyAlg = SEC_OID_PKCS1_RSA_ENCRYPTION;
-      digestAlg = SEC_OID_SHA512;
-      break;
-    case SignatureAlgorithm::rsa_pkcs1_with_sha384:
-      pubKeyAlg = SEC_OID_PKCS1_RSA_ENCRYPTION;
-      digestAlg = SEC_OID_SHA384;
-      break;
-    case SignatureAlgorithm::rsa_pkcs1_with_sha256:
-      pubKeyAlg = SEC_OID_PKCS1_RSA_ENCRYPTION;
-      digestAlg = SEC_OID_SHA256;
-      break;
-    case SignatureAlgorithm::rsa_pkcs1_with_sha1:
-      pubKeyAlg = SEC_OID_PKCS1_RSA_ENCRYPTION;
-      digestAlg = SEC_OID_SHA1;
-      break;
-    case SignatureAlgorithm::unsupported_algorithm: // fall through
-    default:
-      return NotReached("unknown signature algorithm",
-                        Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
-  }
-
-  Result rv;
-  ScopedSECKeyPublicKey pubKey;
-  rv = CheckPublicKeySize(subjectPublicKeyInfo, minimumNonECCBits, pubKey);
-  if (rv != Success) {
-    return rv;
-  }
-
-  // The static_cast is safe as long as the length of the data in sd.data can
-  // fit in an int. Right now that length is stored as a uint16_t, so this
-  // works. In the future this may change, hence the assertion.
-  // See also bug 921585.
-  static_assert(sizeof(decltype(sd.data.GetLength())) < sizeof(int),
-                "sd.data.GetLength() must fit in an int");
-  SECItem dataSECItem(UnsafeMapInputToSECItem(sd.data));
+  SECItem digestSECItem(UnsafeMapInputToSECItem(sd.digest));
   SECItem signatureSECItem(UnsafeMapInputToSECItem(sd.signature));
-  SECStatus srv = VFY_VerifyDataDirect(dataSECItem.data,
-                                       static_cast<int>(dataSECItem.len),
-                                       pubKey.get(), &signatureSECItem,
-                                       pubKeyAlg, digestAlg, nullptr,
-                                       pkcs11PinArg);
+  SECStatus srv = VFY_VerifyDigestDirect(&digestSECItem, pubKey.get(),
+                                         &signatureSECItem, pubKeyAlg,
+                                         digestAlg, pkcs11PinArg);
   if (srv != SECSuccess) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
@@ -192,14 +79,45 @@ VerifySignedDataNSS(const SignedDataWithSignature& sd,
   return Success;
 }
 
+} // unnamed namespace
+
 Result
-DigestBufNSS(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
+VerifyRSAPKCS1SignedDigestNSS(const SignedDigest& sd,
+                              Input subjectPublicKeyInfo,
+                              void* pkcs11PinArg)
 {
-  static_assert(TrustDomain::DIGEST_LENGTH == SHA1_LENGTH,
-                "TrustDomain::DIGEST_LENGTH must be 20 (SHA-1 digest length)");
-  if (digestBufLen != TrustDomain::DIGEST_LENGTH) {
-    return NotReached("invalid hash length", Result::FATAL_ERROR_INVALID_ARGS);
+  return VerifySignedDigest(sd, subjectPublicKeyInfo,
+                            SEC_OID_PKCS1_RSA_ENCRYPTION, pkcs11PinArg);
+}
+
+Result
+VerifyECDSASignedDigestNSS(const SignedDigest& sd,
+                           Input subjectPublicKeyInfo,
+                           void* pkcs11PinArg)
+{
+  return VerifySignedDigest(sd, subjectPublicKeyInfo,
+                            SEC_OID_ANSIX962_EC_PUBLIC_KEY, pkcs11PinArg);
+}
+
+Result
+DigestBufNSS(Input item,
+             DigestAlgorithm digestAlg,
+             /*out*/ uint8_t* digestBuf,
+             size_t digestBufLen)
+{
+  SECOidTag oid;
+  size_t bits;
+  switch (digestAlg) {
+    case DigestAlgorithm::sha512: oid = SEC_OID_SHA512; bits = 512; break;
+    case DigestAlgorithm::sha384: oid = SEC_OID_SHA384; bits = 384; break;
+    case DigestAlgorithm::sha256: oid = SEC_OID_SHA256; bits = 256; break;
+    case DigestAlgorithm::sha1: oid = SEC_OID_SHA1; bits = 160; break;
+    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
+  if (digestBufLen != bits / 8) {
+    return Result::FATAL_ERROR_INVALID_ARGS;
+  }
+
   SECItem itemSECItem = UnsafeMapInputToSECItem(item);
   if (itemSECItem.len >
         static_cast<decltype(itemSECItem.len)>(
@@ -207,7 +125,7 @@ DigestBufNSS(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
     PR_NOT_REACHED("large items should not be possible here");
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
-  SECStatus srv = PK11_HashBuf(SEC_OID_SHA1, digestBuf, itemSECItem.data,
+  SECStatus srv = PK11_HashBuf(oid, digestBuf, itemSECItem.data,
                                static_cast<int32_t>(itemSECItem.len));
   if (srv != SECSuccess) {
     return MapPRErrorCodeToResult(PR_GetError());
@@ -244,9 +162,7 @@ MapResultToPRErrorCode(Result result)
 
 #undef MOZILLA_PKIX_MAP
 
-    default:
-      PR_NOT_REACHED("Unknown error code in MapResultToPRErrorCode");
-      return SEC_ERROR_LIBRARY_FAILURE;
+    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
 }
 

@@ -386,6 +386,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
         containerLayer->SetInheritedScale(attrs.inheritedXScale(), attrs.inheritedYScale());
         containerLayer->SetScaleToResolution(attrs.scaleToResolution(),
                                              attrs.presShellResolution());
+        containerLayer->SetForceDispatchToContentRegion(attrs.forceDispatchToContentRegion());
 
         if (attrs.hmdInfo()) {
           if (!IsSameProcess()) {

@@ -245,54 +245,36 @@ ParseNodeAllocator::allocNode()
 }
 
 ParseNode *
-ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
-                  FullParseHandler *handler)
+ParseNode::appendOrCreateList(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
+                              FullParseHandler *handler, ParseContext<FullParseHandler> *pc)
 {
-    if (!left || !right)
-        return nullptr;
+    // The asm.js specification is written in ECMAScript grammar terms that
+    // specify *only* a binary tree.  It's a royal pain to implement the asm.js
+    // spec to act upon n-ary lists as created below.  So for asm.js, form a
+    // binary tree of lists exactly as ECMAScript would by skipping the
+    // following optimization.
+    if (!pc->useAsmOrInsideUseAsm()) {
+        // Left-associative trees of a given operator (e.g. |a + b + c|) are
+        // binary trees in the spec: (+ (+ a b) c) in Lisp terms.  Recursively
+        // processing such a tree, exactly implemented that way, would blow the
+        // the stack.  We use a list node that uses O(1) stack to represent
+        // such operations: (+ a b c).
+        if (left->isKind(kind) && left->isOp(op) && (js_CodeSpec[op].format & JOF_LEFTASSOC)) {
+            ListNode *list = &left->as<ListNode>();
 
-    MOZ_ASSERT(left->isKind(kind) && left->isOp(op) && (js_CodeSpec[op].format & JOF_LEFTASSOC));
+            list->append(right);
+            list->pn_pos.end = right->pn_pos.end;
 
-    ListNode *list;
-    if (left->pn_arity == PN_LIST) {
-        list = &left->as<ListNode>();
-    } else {
-        ParseNode *pn1 = left->pn_left, *pn2 = left->pn_right;
-        list = handler->new_<ListNode>(kind, op, pn1);
-        if (!list)
-            return nullptr;
-        list->append(pn2);
+            return list;
+        }
     }
 
-    list->append(right);
-    list->pn_pos.end = right->pn_pos.end;
-
-    return list;
-}
-
-ParseNode *
-ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
-                             FullParseHandler *handler, ParseContext<FullParseHandler> *pc,
-                             bool foldConstants)
-{
-    if (!left || !right)
+    ParseNode *list = handler->new_<ListNode>(kind, op, left);
+    if (!list)
         return nullptr;
 
-    /*
-     * Ensure that the parse tree is faithful to the source when "use asm" (for
-     * the purpose of type checking).
-     */
-    if (pc->useAsmOrInsideUseAsm())
-        return handler->new_<BinaryNode>(kind, op, left, right);
-
-    /*
-     * Flatten a left-associative (left-heavy) tree of a given operator into
-     * a list to reduce js::FoldConstants and js::frontend::EmitTree recursion.
-     */
-    if (left->isKind(kind) && left->isOp(op) && (js_CodeSpec[op].format & JOF_LEFTASSOC))
-        return append(kind, op, left, right, handler);
-
-    return handler->new_<BinaryNode>(kind, op, left, right);
+    list->append(right);
+    return list;
 }
 
 const char *

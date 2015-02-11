@@ -1202,12 +1202,25 @@ class Mochitest(MochitestUtilsMixin):
       apps = None
 
     # preferences
-    prefsPath = os.path.join(SCRIPT_DIR, 'profile_data', 'prefs_general.js')
-    prefs = dict(Preferences.read_prefs(prefsPath))
+    preferences = [ os.path.join(SCRIPT_DIR, 'profile_data', 'prefs_general.js') ]
+
+    # TODO: Let's include those prefs until bug 1072443 is fixed
+    if mozinfo.info.get('buildapp') == 'mulet':
+       preferences += [ os.path.join(SCRIPT_DIR, 'profile_data', 'prefs_b2g_unittest.js') ]
+
+    prefs = {}
+    for path in preferences:
+        prefs.update(Preferences.read_prefs(path))
+
     prefs.update(self.extraPrefs(options.extraPrefs))
 
     # interpolate preferences
     interpolation = {"server": "%s:%s" % (options.webServer, options.httpPort)}
+
+    # TODO: Remove OOP once bug 1072443 is fixed
+    if mozinfo.info.get('buildapp') == 'mulet':
+      interpolation["OOP"] = "false"
+
     prefs = json.loads(json.dumps(prefs) % interpolation)
     for pref in prefs:
       prefs[pref] = Preferences.cast(prefs[pref])

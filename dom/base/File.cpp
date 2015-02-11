@@ -642,6 +642,10 @@ File::Constructor(const GlobalObject& aGlobal,
   }
   MOZ_ASSERT(impl->IsFile());
 
+  if (aBag.mLastModified.WasPassed()) {
+    impl->SetLastModified(aBag.mLastModified.Value());
+  }
+
   nsRefPtr<File> domFile = new File(aGlobal.GetAsSupports(), impl);
   return domFile.forget();
 }
@@ -667,6 +671,10 @@ File::Constructor(const GlobalObject& aGlobal,
   }
   MOZ_ASSERT(impl->IsFile());
 
+  if (aBag.mLastModified.WasPassed()) {
+    impl->SetLastModified(aBag.mLastModified.Value());
+  }
+
   nsRefPtr<File> domFile = new File(aGlobal.GetAsSupports(), impl);
   return domFile.forget();
 }
@@ -690,6 +698,10 @@ File::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
   MOZ_ASSERT(impl->IsFile());
+
+  if (aBag.mLastModified.WasPassed()) {
+    impl->SetLastModified(aBag.mLastModified.Value());
+  }
 
   nsRefPtr<File> domFile = new File(aGlobal.GetAsSupports(), impl);
   return domFile.forget();

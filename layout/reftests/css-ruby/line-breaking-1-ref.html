@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1089431 - Meet the specification for line breaking between ruby bases</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    body { line-height: 3; }
+    span { white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <div style="width: .5em; border: 1px solid silver;">
+    <span>「</span><span>な</span><span>に</span><span>、</span><span>誰</span><span>？</span><span>」</span><span>「</span><span>私</span><span>です</span><span>」</span>
+  </div>
+</body>
+</html>

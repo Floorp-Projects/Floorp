@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__pkixder_h
-#define mozilla_pkix__pkixder_h
+#ifndef mozilla_pkix_pkixder_h
+#define mozilla_pkix_pkixder_h
 
 // Expect* functions advance the input mark and return Success if the input
 // matches the given criteria; they fail with the input mark in an undefined
@@ -55,7 +55,7 @@ enum Constructed
   CONSTRUCTED = 1 << 5
 };
 
-enum Tag
+enum Tag : uint8_t
 {
   BOOLEAN = UNIVERSAL | 0x01,
   INTEGER = UNIVERSAL | 0x02,
@@ -261,6 +261,18 @@ ExpectTagAndGetValueAtEnd(Input outer, uint8_t expectedTag,
 
 namespace internal {
 
+enum class IntegralValueRestriction
+{
+  NoRestriction,
+  MustBePositive,
+  MustBe0To127,
+};
+
+Result IntegralBytes(Reader& input, uint8_t tag,
+                     IntegralValueRestriction valueRestriction,
+             /*out*/ Input& value,
+    /*optional out*/ Input::size_type* significantBytes = nullptr);
+
 // This parser will only parse values between 0..127. If this range is
 // increased then callers will need to be changed.
 template <typename T> inline Result
@@ -269,21 +281,22 @@ IntegralValue(Reader& input, uint8_t tag, T& value)
   // Conveniently, all the Integers that we actually have to be able to parse
   // are positive and very small. Consequently, this parser is *much* simpler
   // than a general Integer parser would need to be.
-  Reader valueReader;
-  Result rv = ExpectTagAndGetValue(input, tag, valueReader);
+  Input valueBytes;
+  Result rv = IntegralBytes(input, tag, IntegralValueRestriction::MustBe0To127,
+                            valueBytes, nullptr);
   if (rv != Success) {
     return rv;
   }
+  Reader valueReader(valueBytes);
   uint8_t valueByte;
   rv = valueReader.Read(valueByte);
   if (rv != Success) {
-    return rv;
-  }
-  if (valueByte & 0x80) { // negative
-    return Result::ERROR_BAD_DER;
+    return NotReached("IntegralBytes already validated the value.", rv);
   }
   value = valueByte;
-  return End(valueReader);
+  rv = End(valueReader);
+  assert(rv == Success); // guaranteed by IntegralBytes's range checks.
+  return rv;
 }
 
 } // namespace internal
@@ -375,6 +388,19 @@ TimeChoice(Reader& input, /*out*/ Time& time)
   return internal::TimeChoice(input, expectedTag, time);
 }
 
+// Parse a DER integer value into value. Empty values, negative values, and
+// zero are rejected. If significantBytes is not null, then it will be set to
+// the number of significant bytes in the value (the length of the value, less
+// the length of any leading padding), which is useful for key size checks.
+inline Result
+PositiveInteger(Reader& input, /*out*/ Input& value,
+                /*optional out*/ Input::size_type* significantBytes = nullptr)
+{
+  return internal::IntegralBytes(
+           input, INTEGER, internal::IntegralValueRestriction::MustBePositive,
+           value, significantBytes);
+}
+
 // This parser will only parse values between 0..127. If this range is
 // increased then callers will need to be changed.
 inline Result
@@ -446,40 +472,9 @@ CertificateSerialNumber(Reader& input, /*out*/ Input& value)
   // * "Note: Non-conforming CAs may issue certificates with serial numbers
   //   that are negative or zero.  Certificate users SHOULD be prepared to
   //   gracefully handle such certificates."
-
-  Result rv = ExpectTagAndGetValue(input, INTEGER, value);
-  if (rv != Success) {
-    return rv;
-  }
-
-  if (value.GetLength() == 0) {
-    return Result::ERROR_BAD_DER;
-  }
-
-  // Check for overly-long encodings. If the first byte is 0x00 then the high
-  // bit on the second byte must be 1; otherwise the same *positive* value
-  // could be encoded without the leading 0x00 byte. If the first byte is 0xFF
-  // then the second byte must NOT have its high bit set; otherwise the same
-  // *negative* value could be encoded without the leading 0xFF byte.
-  if (value.GetLength() > 1) {
-    Reader valueInput(value);
-    uint8_t firstByte;
-    rv = valueInput.Read(firstByte);
-    if (rv != Success) {
-      return rv;
-    }
-    uint8_t secondByte;
-    rv = valueInput.Read(secondByte);
-    if (rv != Success) {
-      return rv;
-    }
-    if ((firstByte == 0x00 && (secondByte & 0x80) == 0) ||
-        (firstByte == 0xff && (secondByte & 0x80) != 0)) {
-      return Result::ERROR_BAD_DER;
-    }
-  }
-
-  return Success;
+  return internal::IntegralBytes(
+           input, INTEGER, internal::IntegralValueRestriction::NoRestriction,
+           value);
 }
 
 // x.509 and OCSP both use this same version numbering scheme, though OCSP
@@ -605,16 +600,34 @@ OptionalExtensions(Reader& input, uint8_t tag,
 Result DigestAlgorithmIdentifier(Reader& input,
                                  /*out*/ DigestAlgorithm& algorithm);
 
-Result SignatureAlgorithmIdentifier(Reader& input,
-                                    /*out*/ SignatureAlgorithm& algorithm);
+enum PublicKeyAlgorithm
+{
+  RSA_PKCS1,
+  ECDSA,
+};
 
-Result NamedCurveOID(Reader& input, /*out*/ NamedCurve& namedCurve);
+Result SignatureAlgorithmIdentifierValue(
+         Reader& input,
+         /*out*/ PublicKeyAlgorithm& publicKeyAlgorithm,
+         /*out*/ DigestAlgorithm& digestAlgorithm);
+
+struct SignedDataWithSignature final
+{
+public:
+  Input data;
+  Input algorithm;
+  Input signature;
+
+  void operator=(const SignedDataWithSignature&) = delete;
+};
 
 // Parses a SEQUENCE into tbs and then parses an AlgorithmIdentifier followed
 // by a BIT STRING into signedData. This handles the commonality between
 // parsing the signed/signature fields of certificates and OCSP responses. In
 // the case of an OCSP response, the caller needs to parse the certs
 // separately.
+//
+// Note that signatureAlgorithm is NOT parsed or validated.
 //
 // Certificate  ::=  SEQUENCE  {
 //        tbsCertificate       TBSCertificate,
@@ -631,4 +644,4 @@ Result SignedData(Reader& input, /*out*/ Reader& tbs,
 
 } } } // namespace mozilla::pkix::der
 
-#endif // mozilla_pkix__pkixder_h
+#endif // mozilla_pkix_pkixder_h
