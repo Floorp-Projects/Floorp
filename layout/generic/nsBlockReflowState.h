@@ -206,8 +206,10 @@ public:
     return mContentArea.Size(wm).ConvertTo(aWM, wm);
   }
 
-  // Physical width. Use only for physical <-> logical coordinate conversion.
-  nscoord mContainerWidth;
+  // Physical size. Use only for physical <-> logical coordinate conversion.
+  nsSize mContainerSize;
+  nscoord ContainerWidth() const { return mContainerSize.width; }
+  nscoord ContainerHeight() const { return mContainerSize.height; }
 
   // Continuation out-of-flow float frames that need to move to our
   // next in flow are placed here during reflow.  It's a pointer to

@@ -168,11 +168,6 @@ bool ServiceResolverThunk::IsFunctionAService(void* local_thunk) const {
 
 NTSTATUS ServiceResolverThunk::PerformPatch(void* local_thunk,
                                             void* remote_thunk) {
-  ServiceFullThunk* full_local_thunk =
-      reinterpret_cast<ServiceFullThunk*>(local_thunk);
-  ServiceFullThunk* full_remote_thunk =
-      reinterpret_cast<ServiceFullThunk*>(remote_thunk);
-
   // Patch the original code.
   ServiceEntry local_service;
   DCHECK_NT(GetInternalThunkSize() >= sizeof(local_service));

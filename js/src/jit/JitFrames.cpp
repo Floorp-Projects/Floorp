@@ -249,6 +249,7 @@ SizeOfFramePrefix(FrameType type)
       case JitFrame_Unwound_IonJS:
         return JitFrameLayout::Size();
       case JitFrame_BaselineStub:
+      case JitFrame_Unwound_BaselineStub:
         return BaselineStubFrameLayout::Size();
       case JitFrame_Rectifier:
         return RectifierFrameLayout::Size();
@@ -256,9 +257,12 @@ SizeOfFramePrefix(FrameType type)
         return IonUnwoundRectifierFrameLayout::Size();
       case JitFrame_Exit:
         return ExitFrameLayout::Size();
-      default:
-        MOZ_CRASH("unknown frame type");
+      case JitFrame_IonAccessorIC:
+      case JitFrame_Unwound_IonAccessorIC:
+        return IonAccessorICFrameLayout::Size();
     }
+
+    MOZ_CRASH("unknown frame type");
 }
 
 uint8_t *
@@ -302,6 +306,8 @@ JitFrameIterator::operator++()
         type_ = JitFrame_BaselineJS;
     else if (type_ == JitFrame_Unwound_BaselineStub)
         type_ = JitFrame_BaselineStub;
+    else if (type_ == JitFrame_Unwound_IonAccessorIC)
+        type_ = JitFrame_IonAccessorIC;
     returnAddressToFp_ = current()->returnAddress();
     current_ = prev;
 
@@ -889,43 +895,51 @@ HandleException(ResumeFromException *rfe)
 void
 EnsureExitFrame(CommonFrameLayout *frame)
 {
-    if (frame->prevType() == JitFrame_Unwound_IonJS ||
-        frame->prevType() == JitFrame_Unwound_BaselineJS ||
-        frame->prevType() == JitFrame_Unwound_BaselineStub ||
-        frame->prevType() == JitFrame_Unwound_Rectifier)
-    {
+    switch (frame->prevType()) {
+      case JitFrame_Unwound_IonJS:
+      case JitFrame_Unwound_BaselineJS:
+      case JitFrame_Unwound_BaselineStub:
+      case JitFrame_Unwound_Rectifier:
+      case JitFrame_Unwound_IonAccessorIC:
         // Already an exit frame, nothing to do.
         return;
-    }
 
-    if (frame->prevType() == JitFrame_Entry) {
+      case JitFrame_Entry:
         // The previous frame type is the entry frame, so there's no actual
         // need for an exit frame.
         return;
-    }
 
-    if (frame->prevType() == JitFrame_Rectifier) {
+      case JitFrame_Rectifier:
         // The rectifier code uses the frame descriptor to discard its stack,
         // so modifying its descriptor size here would be dangerous. Instead,
         // we change the frame type, and teach the stack walking code how to
         // deal with this edge case. bug 717297 would obviate the need
         frame->changePrevType(JitFrame_Unwound_Rectifier);
         return;
-    }
 
-    if (frame->prevType() == JitFrame_BaselineStub) {
+      case JitFrame_BaselineStub:
         frame->changePrevType(JitFrame_Unwound_BaselineStub);
         return;
-    }
 
-
-    if (frame->prevType() == JitFrame_BaselineJS) {
+      case JitFrame_BaselineJS:
         frame->changePrevType(JitFrame_Unwound_BaselineJS);
         return;
+
+      case JitFrame_IonJS:
+        frame->changePrevType(JitFrame_Unwound_IonJS);
+        return;
+
+      case JitFrame_IonAccessorIC:
+        frame->changePrevType(JitFrame_Unwound_IonAccessorIC);
+        return;
+
+      case JitFrame_Exit:
+      case JitFrame_Bailout:
+        // Fall-through to MOZ_CRASH below.
+        break;
     }
 
-    MOZ_ASSERT(frame->prevType() == JitFrame_IonJS);
-    frame->changePrevType(JitFrame_Unwound_IonJS);
+    MOZ_CRASH("Unexpected frame type");
 }
 
 CalleeToken
@@ -1167,6 +1181,14 @@ MarkBaselineStubFrame(JSTracer *trc, const JitFrameIterator &frame)
         MOZ_ASSERT(ICStub::CanMakeCalls(stub->kind()));
         stub->trace(trc);
     }
+}
+
+static void
+MarkIonAccessorICFrame(JSTracer *trc, const JitFrameIterator &frame)
+{
+    MOZ_ASSERT(frame.type() == JitFrame_IonAccessorIC);
+    IonAccessorICFrameLayout *layout = (IonAccessorICFrameLayout *)frame.fp();
+    gc::MarkJitCodeRoot(trc, layout->stubCode(), "ion-ic-accessor-code");
 }
 
 void
@@ -1441,11 +1463,16 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
             break;
           case JitFrame_Unwound_IonJS:
           case JitFrame_Unwound_BaselineJS:
+          case JitFrame_Unwound_BaselineStub:
+          case JitFrame_Unwound_IonAccessorIC:
             MOZ_CRASH("invalid");
           case JitFrame_Rectifier:
             MarkRectifierFrame(trc, frames);
             break;
           case JitFrame_Unwound_Rectifier:
+            break;
+          case JitFrame_IonAccessorIC:
+            MarkIonAccessorICFrame(trc, frames);
             break;
           default:
             MOZ_CRASH("unexpected frame type");
@@ -2660,6 +2687,11 @@ JitFrameIterator::dump() const
         fprintf(stderr, " Rectifier frame\n");
         fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
         break;
+      case JitFrame_IonAccessorIC:
+      case JitFrame_Unwound_IonAccessorIC:
+        fprintf(stderr, " Ion scripted accessor IC\n");
+        fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
+        break;
       case JitFrame_Unwound_IonJS:
       case JitFrame_Unwound_BaselineJS:
         fprintf(stderr, "Warning! Unwound JS frames are not observable.\n");
@@ -3010,6 +3042,18 @@ JitProfilingFrameIterator::operator++()
         }
 
         MOZ_CRASH("Bad frame type prior to rectifier frame.");
+    }
+
+    if (prevType == JitFrame_IonAccessorIC || prevType == JitFrame_Unwound_IonAccessorIC) {
+        IonAccessorICFrameLayout *accessorFrame =
+            GetPreviousRawFrame<JitFrameLayout, IonAccessorICFrameLayout *>(frame);
+
+        MOZ_ASSERT(accessorFrame->prevType() == JitFrame_IonJS);
+
+        returnAddressToFp_ = accessorFrame->returnAddress();
+        fp_ = GetPreviousRawFrame<IonAccessorICFrameLayout, uint8_t *>(accessorFrame);
+        type_ = JitFrame_IonJS;
+        return;
     }
 
     if (prevType == JitFrame_Entry) {

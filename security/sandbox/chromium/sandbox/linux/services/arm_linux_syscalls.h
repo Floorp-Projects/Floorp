@@ -1347,6 +1347,38 @@
 #define __NR_process_vm_writev (__NR_SYSCALL_BASE+377)
 #endif
 
+#if !defined(__NR_kcmp)
+#define __NR_kcmp (__NR_SYSCALL_BASE+378)
+#endif
+
+#if !defined(__NR_finit_module)
+#define __NR_finit_module (__NR_SYSCALL_BASE+379)
+#endif
+
+#if !defined(__NR_sched_setattr)
+#define __NR_sched_setattr (__NR_SYSCALL_BASE+380)
+#endif
+
+#if !defined(__NR_sched_getattr)
+#define __NR_sched_getattr (__NR_SYSCALL_BASE+381)
+#endif
+
+#if !defined(__NR_renameat2)
+#define __NR_renameat2 (__NR_SYSCALL_BASE+382)
+#endif
+
+#if !defined(__NR_seccomp)
+#define __NR_seccomp (__NR_SYSCALL_BASE+383)
+#endif
+
+#if !defined(__NR_getrandom)
+#define __NR_getrandom (__NR_SYSCALL_BASE+384)
+#endif
+
+#if !defined(__NR_memfd_create)
+#define __NR_memfd_create (__NR_SYSCALL_BASE+385)
+#endif
+
 // ARM private syscalls.
 #if !defined(__ARM_NR_breakpoint)
 #define __ARM_NR_breakpoint (__ARM_NR_BASE+1)

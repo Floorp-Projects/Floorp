@@ -5,10 +5,7 @@
 #include "build/build_config.h"
 
 #if defined(COMPILER_MSVC)
-// MSDN says to #include <intrin.h>, but that breaks the VS2005 build.
-extern "C" {
-  void* _ReturnAddress();
-}
+#include <intrin.h>
 #endif
 
 #include "base/location.h"

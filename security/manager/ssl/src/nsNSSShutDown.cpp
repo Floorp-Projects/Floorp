@@ -23,13 +23,11 @@ ObjectSetMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return entry->obj == static_cast<const nsNSSShutDownObject*>(key);
 }
 
-static bool
-ObjectSetInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                     const void *key)
+static void
+ObjectSetInitEntry(PLDHashEntryHdr *hdr, const void *key)
 {
   ObjectHashEntry *entry = static_cast<ObjectHashEntry*>(hdr);
   entry->obj = const_cast<nsNSSShutDownObject*>(static_cast<const nsNSSShutDownObject*>(key));
-  return true;
 }
 
 static const PLDHashTableOps gSetOps = {

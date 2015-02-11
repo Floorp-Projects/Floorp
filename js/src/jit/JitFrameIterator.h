@@ -44,18 +44,17 @@ enum FrameType
     // mismatches in calls.
     JitFrame_Rectifier,
 
+    // Ion IC calling a scripted getter/setter.
+    JitFrame_IonAccessorIC,
+
     // An unwound JS frame is a JS frame signalling that its callee frame has been
     // turned into an exit frame (see EnsureExitFrame). Used by Ion bailouts and
     // Baseline exception unwinding.
     JitFrame_Unwound_BaselineJS,
     JitFrame_Unwound_IonJS,
-
-    // Like Unwound_IonJS, but the caller is a baseline stub frame.
     JitFrame_Unwound_BaselineStub,
-
-    // An unwound rectifier frame is a rectifier frame signalling that its callee
-    // frame has been turned into an exit frame (see EnsureExitFrame).
     JitFrame_Unwound_Rectifier,
+    JitFrame_Unwound_IonAccessorIC,
 
     // An exit frame is necessary for transitioning from a JS frame into C++.
     // From within C++, an exit frame is always the last frame in any

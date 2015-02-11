@@ -20,12 +20,12 @@ namespace sandbox {
 SyncDispatcher::SyncDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall create_params = {
-    {IPC_CREATEEVENT_TAG, WCHAR_TYPE, ULONG_TYPE, ULONG_TYPE},
+    {IPC_CREATEEVENT_TAG, WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE},
     reinterpret_cast<CallbackGeneric>(&SyncDispatcher::CreateEvent)
   };
 
   static const IPCCall open_params = {
-    {IPC_OPENEVENT_TAG, WCHAR_TYPE, ULONG_TYPE},
+    {IPC_OPENEVENT_TAG, WCHAR_TYPE, UINT32_TYPE},
     reinterpret_cast<CallbackGeneric>(&SyncDispatcher::OpenEvent)
   };
 
@@ -42,8 +42,10 @@ bool SyncDispatcher::SetupService(InterceptionManager* manager,
       INTERCEPT_NT(manager, NtOpenEvent, OPEN_EVENT_ID, 16);
 }
 
-bool SyncDispatcher::CreateEvent(IPCInfo* ipc, base::string16* name,
-                                 DWORD event_type, DWORD initial_state) {
+bool SyncDispatcher::CreateEvent(IPCInfo* ipc,
+                                 base::string16* name,
+                                 uint32 event_type,
+                                 uint32 initial_state) {
   const wchar_t* event_name = name->c_str();
   CountedParameterSet<NameBased> params;
   params[NameBased::NAME] = ParamPickerMake(event_name);
@@ -58,8 +60,9 @@ bool SyncDispatcher::CreateEvent(IPCInfo* ipc, base::string16* name,
   return true;
 }
 
-bool SyncDispatcher::OpenEvent(IPCInfo* ipc, base::string16* name,
-                               DWORD desired_access) {
+bool SyncDispatcher::OpenEvent(IPCInfo* ipc,
+                               base::string16* name,
+                               uint32 desired_access) {
   const wchar_t* event_name = name->c_str();
 
   CountedParameterSet<OpenEventParams> params;

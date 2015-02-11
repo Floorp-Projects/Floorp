@@ -652,7 +652,7 @@ multadd
 			Bfree(b);
 			b = b1;
 			}
-		b->x[wds++] = carry;
+		b->x[wds++] = (ULong)carry;
 		b->wds = wds;
 		}
 	return b;
@@ -847,7 +847,7 @@ mult
 				*xc++ = z & FFFFFFFF;
 				}
 				while(x < xae);
-			*xc = carry;
+			*xc = (ULong)carry;
 			}
 		}
 #else
@@ -1511,7 +1511,7 @@ htinit(unsigned char *h, unsigned char *s, int inc)
 {
 	int i, j;
 	for(i = 0; (j = s[i]) !=0; i++)
-		h[j] = i + inc;
+		h[j] = (unsigned char)(i + inc);
 	}
 
  static void
@@ -3303,7 +3303,7 @@ strtod
 #ifdef Avoid_Underflow
 			if (bc.scale && y <= 2*P*Exp_msk1) {
 				if (aadj <= 0x7fffffff) {
-					if ((z = aadj) <= 0)
+					if ((z = (ULong)aadj) <= 0)
 						z = 1;
 					aadj = z;
 					aadj1 = bc.dsign ? aadj : -aadj;
@@ -3859,9 +3859,9 @@ dtoa
 			 */
 			dval(&eps) = 0.5/tens[ilim-1] - dval(&eps);
 			for(i = 0;;) {
-				L = dval(&u);
+				L = (long)dval(&u);
 				dval(&u) -= L;
-				*s++ = '0' + (int)L;
+				*s++ = '0' + (char)L;
 				if (dval(&u) < dval(&eps))
 					goto ret1;
 				if (1. - dval(&u) < dval(&eps))
@@ -3880,7 +3880,7 @@ dtoa
 				L = (Long)(dval(&u));
 				if (!(dval(&u) -= L))
 					ilim = i;
-				*s++ = '0' + (int)L;
+				*s++ = '0' + (char)L;
 				if (i == ilim) {
 					if (dval(&u) > 0.5 + dval(&eps))
 						goto bump_up;
@@ -3923,7 +3923,7 @@ dtoa
 				dval(&u) += ds;
 				}
 #endif
-			*s++ = '0' + (int)L;
+			*s++ = '0' + (char)L;
 			if (!dval(&u)) {
 #ifdef SET_INEXACT
 				inexact = 0;
@@ -4101,7 +4101,7 @@ dtoa
 				else if (!b->x[0] && b->wds <= 1)
 					inexact = 0;
 #endif
-				*s++ = dig;
+				*s++ = (char)dig;
 				goto ret;
 				}
 #endif
@@ -4131,7 +4131,7 @@ dtoa
 						goto round_9_up;
 					}
  accept_dig:
-				*s++ = dig;
+				*s++ = (char)dig;
 				goto ret;
 				}
 			if (j1 > 0) {
@@ -4144,13 +4144,13 @@ dtoa
 					*s++ = '9';
 					goto roundoff;
 					}
-				*s++ = dig + 1;
+				*s++ = (char)dig + 1;
 				goto ret;
 				}
 #ifdef Honor_FLT_ROUNDS
  keep_dig:
 #endif
-			*s++ = dig;
+			*s++ = (char)dig;
 			if (i == ilim)
 				break;
 			b = multadd(b, 10, 0);
@@ -4164,7 +4164,8 @@ dtoa
 		}
 	else
 		for(i = 1;; i++) {
-			*s++ = dig = quorem(b,S) + '0';
+			dig = quorem(b,S) + '0';
+			*s++ = (char)dig;
 			if (!b->x[0] && b->wds <= 1) {
 #ifdef SET_INEXACT
 				inexact = 0;

@@ -5100,6 +5100,19 @@ nsLayoutUtils::GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
   return aContext->DeviceToUser(putativeRect.TopLeft()).y * appUnitsPerDevUnit;
 }
 
+gfxFloat
+nsLayoutUtils::GetSnappedBaselineX(nsIFrame* aFrame, gfxContext* aContext,
+                                   nscoord aX, nscoord aAscent)
+{
+  gfxFloat appUnitsPerDevUnit = aFrame->PresContext()->AppUnitsPerDevPixel();
+  gfxFloat baseline = gfxFloat(aX) + aAscent;
+  gfxRect putativeRect(baseline / appUnitsPerDevUnit, 0, 1, 1);
+  if (!aContext->UserToDevicePixelSnapped(putativeRect, true)) {
+    return baseline;
+  }
+  return aContext->DeviceToUser(putativeRect.TopLeft()).x * appUnitsPerDevUnit;
+}
+
 // Hard limit substring lengths to 8000 characters ... this lets us statically
 // size the cluster buffer array in FindSafeLength
 #define MAX_GFX_TEXT_BUF_SIZE 8000
