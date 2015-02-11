@@ -1,10 +1,13 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set sw=2 sts=2 ts=2 et tw=80:
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+
+#include "mozilla/ipc/URIUtils.h"
 
 #include "nsIconURI.h"
 #include "nsNetUtil.h"
@@ -15,6 +18,7 @@
 #include <stdlib.h>
 
 using namespace mozilla;
+using namespace mozilla::ipc;
 
 #define DEFAULT_IMAGE_SIZE 16
 
@@ -59,7 +63,7 @@ nsMozIconURI::nsMozIconURI()
 nsMozIconURI::~nsMozIconURI()
 { }
 
-NS_IMPL_ISUPPORTS(nsMozIconURI, nsIMozIconURI, nsIURI)
+NS_IMPL_ISUPPORTS(nsMozIconURI, nsIMozIconURI, nsIURI, nsIIPCSerializableURI)
 
 #define MOZICON_SCHEME "moz-icon:"
 #define MOZICON_SCHEME_LEN (sizeof(MOZICON_SCHEME) - 1)
@@ -582,3 +586,59 @@ nsMozIconURI::GetIconState(nsACString& aState)
   return NS_OK;
 }
 ////////////////////////////////////////////////////////////////////////////////
+// nsIIPCSerializableURI methods:
+
+void
+nsMozIconURI::Serialize(URIParams& aParams)
+{
+  IconURIParams params;
+
+  if (mIconURL) {
+    URIParams iconURLParams;
+    SerializeURI(mIconURL, iconURLParams);
+    if (iconURLParams.type() == URIParams::T__None) {
+      // Serialization failed, bail.
+      return;
+    }
+
+    params.uri() = iconURLParams;
+  } else {
+    params.uri() = void_t();
+  }
+
+  params.size() = mSize;
+  params.fileName() = mFileName;
+  params.stockIcon() = mStockIcon;
+  params.iconSize() = mIconSize;
+  params.iconState() = mIconState;
+
+  aParams = params;
+}
+
+bool
+nsMozIconURI::Deserialize(const URIParams& aParams)
+{
+  if (aParams.type() != URIParams::TIconURIParams) {
+    MOZ_ASSERT_UNREACHABLE("Received unknown URI from other process!");
+    return false;
+  }
+
+  const IconURIParams& params = aParams.get_IconURIParams();
+  if (params.uri().type() != OptionalURIParams::Tvoid_t) {
+    nsCOMPtr<nsIURI> uri = DeserializeURI(params.uri().get_URIParams());
+    mIconURL = do_QueryInterface(uri);
+    if (!mIconURL) {
+      MOZ_ASSERT_UNREACHABLE("bad nsIURI passed");
+      return false;
+    }
+  }
+
+  mSize = params.size();
+  mContentType = params.contentType();
+  mFileName = params.fileName();
+  mStockIcon = params.stockIcon();
+  mIconSize = params.iconSize();
+  mIconState = params.iconState();
+
+  return true;
+}
