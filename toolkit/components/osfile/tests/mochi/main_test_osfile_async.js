@@ -89,7 +89,8 @@ let reference_fetch_file = function reference_fetch_file(path, test) {
   test.info("Fetching file " + path);
   let promise = Promise.defer();
   let file = new FileUtils.File(path);
-  NetUtil.asyncFetch(file,
+  NetUtil.asyncFetch2(
+    file,
     function(stream, status) {
       if (!Components.isSuccessCode(status)) {
         promise.reject(status);
@@ -107,7 +108,13 @@ let reference_fetch_file = function reference_fetch_file(path, test) {
       } else {
         promise.resolve(result);
       }
-  });
+    },
+    null,      // aLoadingNode
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null,      // aTriggeringPrincipal
+    Ci.nsILoadInfo.SEC_NORMAL,
+    Ci.nsIContentPolicy.TYPE_OTHER);
+
   return promise.promise;
 };
 
