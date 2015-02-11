@@ -97,8 +97,8 @@ class SyntaxParseHandler
 
   public:
     SyntaxParseHandler(ExclusiveContext *cx, LifoAlloc &alloc,
-                       TokenStream &tokenStream, bool foldConstants,
-                       Parser<SyntaxParseHandler> *syntaxParser, LazyScript *lazyOuterFunction)
+                       TokenStream &tokenStream, Parser<SyntaxParseHandler> *syntaxParser,
+                       LazyScript *lazyOuterFunction)
       : lastAtom(nullptr),
         tokenStream(tokenStream)
     {}
@@ -163,8 +163,8 @@ class SyntaxParseHandler
     Node newBinary(ParseNodeKind kind, Node left, Node right, JSOp op = JSOP_NOP) {
         return NodeGeneric;
     }
-    Node newBinaryOrAppend(ParseNodeKind kind, Node left, Node right,
-                           ParseContext<SyntaxParseHandler> *pc, JSOp op = JSOP_NOP) {
+    Node appendOrCreateList(ParseNodeKind kind, Node left, Node right,
+                            ParseContext<SyntaxParseHandler> *pc, JSOp op = JSOP_NOP) {
         return NodeGeneric;
     }
 
@@ -246,6 +246,14 @@ class SyntaxParseHandler
     Node newLexicalScope(ObjectBox *blockbox) { return NodeGeneric; }
     void setLexicalScopeBody(Node block, Node body) {}
 
+    Node newLetExpression(Node vars, Node block, const TokenPos &pos) {
+        return NodeGeneric;
+    }
+
+    Node newLetBlock(Node vars, Node block, const TokenPos &pos) {
+        return NodeGeneric;
+    }
+
     bool finishInitializerAssignment(Node pn, Node init, JSOp op) { return true; }
 
     void setBeginPosition(Node pn, Node oth) {}
@@ -267,6 +275,10 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
+    Node newCatchList() {
+        return newList(PNK_CATCHLIST, JSOP_NOP);
+    }
+
     Node newCommaExpressionList(Node kid) {
         return NodeUnparenthesizedCommaExpr;
     }
@@ -280,7 +292,7 @@ class SyntaxParseHandler
     {
         if (kind == PNK_ASSIGN)
             return NodeUnparenthesizedAssignment;
-        return newBinaryOrAppend(kind, lhs, rhs, pc, op);
+        return newBinary(kind, lhs, rhs, op);
     }
 
     bool isUnparenthesizedYieldExpression(Node node) {

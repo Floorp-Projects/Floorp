@@ -14,6 +14,7 @@ SOURCES += [
     'lib/pkixocsp.cpp',
     'lib/pkixresult.cpp',
     'lib/pkixtime.cpp',
+    'lib/pkixverify.cpp',
 ]
 
 LOCAL_INCLUDES += [
@@ -25,18 +26,7 @@ TEST_DIRS += [
     'test/lib',
 ]
 
-CXXFLAGS += ['-Wall']
-# -Wall with Visual C++ enables too many problematic warnings
-if CONFIG['_MSC_VER']:
-  CXXFLAGS += [
-    '-wd4514', # 'function': unreferenced inline function has been removed
-    '-wd4668', # 'symbol' is not defined as a preprocessor macro...
-    '-wd4710', # 'function': function not inlined
-    '-wd4711', # function 'function' selected for inline expansion
-    '-wd4820', # 'bytes' bytes padding added after construct 'member_name'
-  ]
-
-FAIL_ON_WARNINGS = True
+include('warnings.mozbuild')
 
 Library('mozillapkix')
 

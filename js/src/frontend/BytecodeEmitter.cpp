@@ -2039,15 +2039,10 @@ CheckSideEffects(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool
             return true;
         }
 
-        if (pn->isOp(JSOP_OR) || pn->isOp(JSOP_AND) || pn->isOp(JSOP_STRICTEQ) ||
-            pn->isOp(JSOP_STRICTNE)) {
-            /*
-             * ||, &&, ===, and !== do not convert their operands via
-             * toString or valueOf method calls.
-             */
-            return CheckSideEffects(cx, bce, pn->pn_left, answer) &&
-                   CheckSideEffects(cx, bce, pn->pn_right, answer);
-        }
+        MOZ_ASSERT(!pn->isOp(JSOP_OR), "|| produces a list now");
+        MOZ_ASSERT(!pn->isOp(JSOP_AND), "&& produces a list now");
+        MOZ_ASSERT(!pn->isOp(JSOP_STRICTEQ), "=== produces a list now");
+        MOZ_ASSERT(!pn->isOp(JSOP_STRICTNE), "!== produces a list now");
 
         /*
          * We can't easily prove that neither operand ever denotes an
@@ -4575,7 +4570,10 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     ptrdiff_t tryEnd = bce->offset();
 
     // If this try has a catch block, emit it.
-    if (ParseNode *pn2 = pn->pn_kid2) {
+    ParseNode *catchList = pn->pn_kid2;
+    if (catchList) {
+        MOZ_ASSERT(catchList->isKind(PNK_CATCHLIST));
+
         // The emitted code for a catch block looks like:
         //
         // [pushblockscope]             only if any local aliased
@@ -4601,7 +4599,7 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         // code if appropriate, and is also used for the catch-all trynote for
         // capturing exceptions thrown from catch{} blocks.
         //
-        for (ParseNode *pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
+        for (ParseNode *pn3 = catchList->pn_head; pn3; pn3 = pn3->pn_next) {
             MOZ_ASSERT(bce->stackDepth == depth);
 
             // Emit the lexical scope and catch body.
@@ -4676,7 +4674,7 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     // Add the try note last, to let post-order give us the right ordering
     // (first to last for a given nesting level, inner to outer by level).
-    if (pn->pn_kid2 && !bce->tryNoteList.append(JSTRY_CATCH, depth, tryStart, tryEnd))
+    if (catchList && !bce->tryNoteList.append(JSTRY_CATCH, depth, tryStart, tryEnd))
         return false;
 
     // If we've got a finally, mark try+catch region with additional
@@ -6328,6 +6326,8 @@ EmitCallOrNew(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 static bool
 EmitLogical(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
+    MOZ_ASSERT(pn->isArity(PN_LIST));
+
     /*
      * JSOP_OR converts the operand on the stack to boolean, leaves the original
      * value on the stack and jumps if true; otherwise it falls into the next
@@ -6337,26 +6337,6 @@ EmitLogical(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * JSOP_AND converts the operand on the stack to boolean and jumps if false;
      * otherwise it falls into the right operand's bytecode.
      */
-
-    if (pn->isArity(PN_BINARY)) {
-        if (!EmitTree(cx, bce, pn->pn_left))
-            return false;
-        ptrdiff_t top = EmitJump(cx, bce, JSOP_BACKPATCH, 0);
-        if (top < 0)
-            return false;
-        if (Emit1(cx, bce, JSOP_POP) < 0)
-            return false;
-        if (!EmitTree(cx, bce, pn->pn_right))
-            return false;
-        ptrdiff_t off = bce->offset();
-        jsbytecode *pc = bce->code(top);
-        SET_JUMP_OFFSET(pc, off - top);
-        *pc = pn->getOp();
-        return true;
-    }
-
-    MOZ_ASSERT(pn->isArity(PN_LIST));
-    MOZ_ASSERT(pn->pn_head->pn_next->pn_next);
 
     /* Left-associative operator chain: avoid too much recursion. */
     ParseNode *pn2 = pn->pn_head;
@@ -7135,29 +7115,21 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_URSH:
       case PNK_STAR:
       case PNK_DIV:
-      case PNK_MOD:
-        if (pn->isArity(PN_LIST)) {
-            /* Left-associative operator chain: avoid too much recursion. */
-            ParseNode *pn2 = pn->pn_head;
-            if (!EmitTree(cx, bce, pn2))
+      case PNK_MOD: {
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        /* Left-associative operator chain: avoid too much recursion. */
+        ParseNode *subexpr = pn->pn_head;
+        if (!EmitTree(cx, bce, subexpr))
+            return false;
+        JSOp op = pn->getOp();
+        while ((subexpr = subexpr->pn_next) != nullptr) {
+            if (!EmitTree(cx, bce, subexpr))
                 return false;
-            JSOp op = pn->getOp();
-            while ((pn2 = pn2->pn_next) != nullptr) {
-                if (!EmitTree(cx, bce, pn2))
-                    return false;
-                if (Emit1(cx, bce, op) < 0)
-                    return false;
-            }
-        } else {
-            /* Binary operators that evaluate both operands unconditionally. */
-            if (!EmitTree(cx, bce, pn->pn_left))
-                return false;
-            if (!EmitTree(cx, bce, pn->pn_right))
-                return false;
-            if (Emit1(cx, bce, pn->getOp()) < 0)
+            if (Emit1(cx, bce, op) < 0)
                 return false;
         }
         break;
+      }
 
       case PNK_THROW:
       case PNK_TYPEOF:
@@ -7199,12 +7171,14 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = EmitLexicalScope(cx, bce, pn);
         break;
 
-      case PNK_LET:
+      case PNK_LETBLOCK:
+      case PNK_LETEXPR:
+        ok = EmitLet(cx, bce, pn);
+        break;
+
       case PNK_CONST:
-        MOZ_ASSERT_IF(pn->isKind(PNK_CONST), !pn->isArity(PN_BINARY));
-        ok = pn->isArity(PN_BINARY)
-             ? EmitLet(cx, bce, pn)
-             : EmitVariables(cx, bce, pn, InitializeVars);
+      case PNK_LET:
+        ok = EmitVariables(cx, bce, pn, InitializeVars);
         break;
 
       case PNK_IMPORT:

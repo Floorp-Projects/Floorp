@@ -992,6 +992,8 @@ Element::CreateShadowRoot(ErrorResult& aError)
   nsRefPtr<ShadowRoot> shadowRoot = new ShadowRoot(this, nodeInfo.forget(),
                                                    protoBinding);
 
+  shadowRoot->SetIsComposedDocParticipant(IsInComposedDoc());
+
   // Replace the old ShadowRoot with the new one and let the old
   // ShadowRoot know about the younger ShadowRoot because the old
   // ShadowRoot is projected into the younger ShadowRoot's shadow
@@ -1007,6 +1009,8 @@ Element::CreateShadowRoot(ErrorResult& aError)
          child = child->GetNextSibling()) {
       child->UnbindFromTree(true, false);
     }
+
+    olderShadow->SetIsComposedDocParticipant(false);
   }
 
   // xblBinding takes ownership of docInfo.
@@ -1469,13 +1473,6 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Being added to a document.
     SetInDocument();
 
-    // Attached callback must be enqueued whenever custom element is inserted into a
-    // document and this document has a browsing context.
-    if (GetCustomElementData() && aDocument->GetDocShell()) {
-      // Enqueue an attached callback for the custom element.
-      aDocument->EnqueueLifecycleCallback(nsIDocument::eAttached, this);
-    }
-
     // Unset this flag since we now really are in a document.
     UnsetFlags(NODE_FORCE_XBL_BINDINGS |
                // And clear the lazy frame construction bits.
@@ -1496,6 +1493,16 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // If we're not in the doc and not in a shadow tree,
     // update our subtree pointer.
     SetSubtreeRootPointer(aParent->SubtreeRoot());
+  }
+
+  nsIDocument* composedDoc = GetComposedDoc();
+  if (composedDoc) {
+    // Attached callback must be enqueued whenever custom element is inserted into a
+    // document and this document has a browsing context.
+    if (GetCustomElementData() && composedDoc->GetDocShell()) {
+      // Enqueue an attached callback for the custom element.
+      composedDoc->EnqueueLifecycleCallback(nsIDocument::eAttached, this);
+    }
   }
 
   // Propagate scoped style sheet tracking bit.
@@ -1578,6 +1585,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   // Call BindToTree on shadow root children.
   ShadowRoot* shadowRoot = GetShadowRoot();
   if (shadowRoot) {
+    shadowRoot->SetIsComposedDocParticipant(IsInComposedDoc());
     for (nsIContent* child = shadowRoot->GetFirstChild(); child;
          child = child->GetNextSibling()) {
       rv = child->BindToTree(nullptr, shadowRoot,
@@ -1635,8 +1643,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
 
   // Make sure to unbind this node before doing the kids
   nsIDocument* document =
-    HasFlag(NODE_FORCE_XBL_BINDINGS) || IsInShadowTree() ?
-      OwnerDoc() : GetUncomposedDoc();
+    HasFlag(NODE_FORCE_XBL_BINDINGS) ? OwnerDoc() : GetComposedDoc();
 
   if (aNullParent) {
     if (IsFullScreenAncestor()) {
@@ -1756,6 +1763,8 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
          child = child->GetNextSibling()) {
       child->UnbindFromTree(true, false);
     }
+
+    shadowRoot->SetIsComposedDocParticipant(false);
   }
 }
 

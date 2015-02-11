@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__ScopedPtr_h
-#define mozilla_pkix__ScopedPtr_h
+#ifndef mozilla_pkix_ScopedPtr_h
+#define mozilla_pkix_ScopedPtr_h
 
 #include "pkix/stdkeywords.h"
 
@@ -103,4 +103,4 @@ operator!=(const ScopedPtr<T, Destroyer>& a, T* b)
 
 } } // namespace mozilla::pkix
 
-#endif // mozilla_pkix__ScopedPtr_h
+#endif // mozilla_pkix_ScopedPtr_h
