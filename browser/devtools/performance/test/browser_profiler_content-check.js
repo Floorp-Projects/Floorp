@@ -7,7 +7,7 @@
  */
 
 function test() {
-  let { FrameNode } = devtools.require("devtools/profiler/tree-model");
+  let { FrameNode } = devtools.require("devtools/shared/profiler/tree-model");
 
   ok(FrameNode.isContent({ location: "http://foo" }),
     "Verifying content/chrome frames is working properly.");

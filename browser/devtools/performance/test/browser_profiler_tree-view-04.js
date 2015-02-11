@@ -7,8 +7,8 @@
  */
 
 function test() {
-  let { ThreadNode } = devtools.require("devtools/profiler/tree-model");
-  let { CallView } = devtools.require("devtools/profiler/tree-view");
+  let { ThreadNode } = devtools.require("devtools/shared/profiler/tree-model");
+  let { CallView } = devtools.require("devtools/shared/profiler/tree-view");
 
   let threadNode = new ThreadNode(gSamples);
   let treeRoot = new CallView({ frame: threadNode });

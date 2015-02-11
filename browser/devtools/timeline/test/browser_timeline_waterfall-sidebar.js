@@ -8,7 +8,7 @@
 add_task(function*() {
   let { target, panel } = yield initTimelinePanel(SIMPLE_URL);
   let { $, $$, EVENTS, TimelineController, TimelineView, TIMELINE_BLUEPRINT} = panel.panelWin;
-  let { L10N } = devtools.require("devtools/timeline/global");
+  let { L10N } = devtools.require("devtools/shared/timeline/global");
 
   yield TimelineController.toggleRecording();
   ok(true, "Recording has started.");

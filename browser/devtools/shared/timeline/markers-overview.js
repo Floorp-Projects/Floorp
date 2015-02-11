@@ -18,7 +18,7 @@ const { colorUtils: { setAlpha }} = require("devtools/css-color");
 const { getColor } = require("devtools/shared/theme");
 
 loader.lazyRequireGetter(this, "L10N",
-  "devtools/timeline/global", true);
+  "devtools/shared/timeline/global", true);
 
 const OVERVIEW_HEADER_HEIGHT = 14; // px
 const OVERVIEW_ROW_HEIGHT = 11; // px

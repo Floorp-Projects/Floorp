@@ -6,7 +6,7 @@
 const {Cc, Ci, Cu, Cr} = require("chrome");
 
 loader.lazyRequireGetter(this, "L10N",
-  "devtools/profiler/global", true);
+  "devtools/shared/profiler/global", true);
 
 loader.lazyImporter(this, "Heritage",
   "resource:///modules/devtools/ViewHelpers.jsm");

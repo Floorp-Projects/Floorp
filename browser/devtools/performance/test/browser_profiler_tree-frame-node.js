@@ -6,7 +6,7 @@
  */
 
 function test() {
-  let { FrameNode } = devtools.require("devtools/profiler/tree-model");
+  let { FrameNode } = devtools.require("devtools/shared/profiler/tree-model");
 
   let frame1 = new FrameNode({
     location: "hello/<.world (http://foo/bar.js:123:987)",
