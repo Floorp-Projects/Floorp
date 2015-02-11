@@ -40,14 +40,13 @@ try {
 }
 
 const kMessages =["SystemMessageManager:GetPendingMessages",
-                  "SystemMessageManager:HasPendingMessages",
                   "SystemMessageManager:Register",
                   "SystemMessageManager:Unregister",
                   "SystemMessageManager:Message:Return:OK",
                   "SystemMessageManager:AskReadyToRegister",
                   "SystemMessageManager:HandleMessagesDone",
                   "SystemMessageManager:HandleMessageDone",
-                  "child-process-shutdown"]
+                  "child-process-shutdown"];
 
 function debug(aMsg) {
   // dump("-- SystemMessageInternal " + Date.now() + " : " + aMsg + "\n");
@@ -176,6 +175,19 @@ SystemMessageInternal.prototype = {
       return page !== null;
     }, this);
     return page;
+  },
+
+  _findCacheForApp: function(aManifestURL) {
+    let cache = [];
+    this._pages.forEach(function(aPage) {
+      if (aPage.manifestURL === aManifestURL &&
+          aPage.pendingMessages.length != 0) {
+        cache.push({ type: aPage.type,
+                     pageURL: aPage.pageURL,
+                     manifestURL: aPage.manifestURL });
+      }
+    });
+    return cache;
   },
 
   sendMessage: function(aType, aMessage, aPageURI, aManifestURI, aExtra) {
@@ -349,6 +361,18 @@ SystemMessageInternal.prototype = {
                        pendingMessages: [] });
   },
 
+  refreshCache: function(aChildMM, aManifestURI) {
+    if (!aManifestURI) {
+      throw Cr.NS_ERROR_INVALID_ARG;
+    }
+    this._refreshCacheInternal(aChildMM, aManifestURI.spec);
+  },
+
+  _refreshCacheInternal: function(aChildMM, aManifestURL) {
+    let cache = this._findCacheForApp(aManifestURL);
+    aChildMM.sendAsyncMessage("SystemMessageCache:RefreshCache", cache);
+  },
+
   _findTargetIndex: function(aTargets, aTarget) {
     if (!aTargets || !aTarget) {
       return -1;
@@ -417,7 +441,6 @@ SystemMessageInternal.prototype = {
          // TODO: fix bug 988142 to re-enable.
          // "SystemMessageManager:Unregister",
          "SystemMessageManager:GetPendingMessages",
-         "SystemMessageManager:HasPendingMessages",
          "SystemMessageManager:Message:Return:OK",
          "SystemMessageManager:HandleMessagesDone",
          "SystemMessageManager:HandleMessageDone"].indexOf(aMessage.name) != -1) {
@@ -456,6 +479,7 @@ SystemMessageInternal.prototype = {
           }
         }
 
+        this._refreshCacheInternal(aMessage.target, msg.manifestURL);
         debug("listeners for " + msg.manifestURL +
               " innerWinID " + msg.innerWindowID);
         break;
@@ -514,21 +538,7 @@ SystemMessageInternal.prototype = {
                                     manifestURL: msg.manifestURL,
                                     pageURL: msg.pageURL,
                                     msgQueue: pendingMessages });
-        break;
-      }
-      case "SystemMessageManager:HasPendingMessages":
-      {
-        debug("received SystemMessageManager:HasPendingMessages " + msg.type +
-          " for " + msg.pageURL + " @ " + msg.manifestURL);
-
-        // This is a sync call used to return if a page has pending messages.
-        // Find the right page to get its corresponding pending messages.
-        let page = this._findPage(msg.type, msg.pageURL, msg.manifestURL);
-        if (!page) {
-          return false;
-        }
-
-        return page.pendingMessages.length != 0;
+        this._refreshCacheInternal(aMessage.target, msg.manifestURL);
         break;
       }
       case "SystemMessageManager:Message:Return:OK":
@@ -697,7 +707,7 @@ SystemMessageInternal.prototype = {
   _isPageMatched: function(aPage, aType, aPageURL, aManifestURL) {
     return (aPage.type === aType &&
             aPage.manifestURL === aManifestURL &&
-            aPage.pageURL === aPageURL)
+            aPage.pageURL === aPageURL);
   },
 
   _createKeyForPage: function _createKeyForPage(aPage) {
