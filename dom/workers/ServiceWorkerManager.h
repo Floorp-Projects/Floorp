@@ -352,14 +352,7 @@ public:
   CreateNewRegistration(const nsCString& aScope, nsIPrincipal* aPrincipal);
 
   void
-  RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration)
-  {
-    MOZ_ASSERT(aRegistration);
-    MOZ_ASSERT(!aRegistration->IsControllingDocuments());
-    MOZ_ASSERT(mServiceWorkerRegistrationInfos.Contains(aRegistration->mScope));
-    ServiceWorkerManager::RemoveScope(mOrderedScopes, aRegistration->mScope);
-    mServiceWorkerRegistrationInfos.Remove(aRegistration->mScope);
-  }
+  RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration);
 
   ServiceWorkerJobQueue*
   GetOrCreateJobQueue(const nsCString& aScope)
