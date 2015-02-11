@@ -226,8 +226,7 @@ protected:
   nsresult OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
   nsresult OnFrameUpdate(imgIRequest* aRequest, const nsIntRect* aRect);
   nsresult OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
-  nsresult FrameChanged(imgIRequest *aRequest,
-                        imgIContainer *aContainer);
+
   /**
    * Notification that aRequest will now be the current request.
    */
@@ -272,18 +271,29 @@ private:
   bool GetSourceToDestTransform(nsTransform2D& aTransform);
 
   /**
-   * Helper functions to check whether the request or image container
-   * corresponds to a load we don't care about.  Most of the decoder
-   * observer methods will bail early if these return true.
+   * Helper function to check whether the request corresponds to a load we don't
+   * care about.  Most of the decoder observer methods will bail early if this
+   * returns true.
    */
   bool IsPendingLoad(imgIRequest* aRequest) const;
-  bool IsPendingLoad(imgIContainer* aContainer) const;
 
   /**
    * Function to convert a dirty rect in the source image to a dirty
    * rect for the image frame.
    */
   nsRect SourceRectToDest(const nsIntRect & aRect);
+
+  /**
+   * Triggers invalidation for both our image display item and, if appropriate,
+   * our alt-feedback display item.
+   *
+   * @param aLayerInvalidRect The area to invalidate in layer space. If null, the
+   *                          entire layer will be invalidated.
+   * @param aFrameInvalidRect The area to invalidate in frame space. If null, the
+   *                          entire frame will be invalidated.
+   */
+  void InvalidateSelf(const nsIntRect* aLayerInvalidRect,
+                      const nsRect* aFrameInvalidRect);
 
   nsImageMap*         mImageMap;
 

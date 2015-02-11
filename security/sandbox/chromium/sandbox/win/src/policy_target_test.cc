@@ -151,8 +151,11 @@ SBOX_TESTS_COMMAND int PolicyTargetTest_process(int argc, wchar_t **argv) {
   STARTUPINFO startup_info = {0};
   startup_info.cb = sizeof(startup_info);
   PROCESS_INFORMATION temp_process_info = {};
-  if (!::CreateProcessW(L"foo.exe", L"foo.exe", NULL, NULL, FALSE, 0,
-                        NULL, NULL, &startup_info, &temp_process_info))
+  // Note: CreateProcessW() can write to its lpCommandLine, don't pass a
+  // raw string literal.
+  base::string16 writable_cmdline_str(L"foo.exe");
+  if (!::CreateProcessW(L"foo.exe", &writable_cmdline_str[0], NULL, NULL, FALSE,
+                        0, NULL, NULL, &startup_info, &temp_process_info))
     return SBOX_TEST_SUCCEEDED;
   base::win::ScopedProcessInformation process_info(temp_process_info);
   return SBOX_TEST_FAILED;

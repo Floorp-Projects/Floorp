@@ -34,6 +34,38 @@ fails == 1102175-1a.html 1102175-1-ref.html
 == 1108923-1-percentage-margins.html 1108923-1-percentage-margins-ref.html
 == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html
 fuzzy(116,64) HTTP(..) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
+== 1117210-1-vertical-baseline-snap.html 1117210-1-vertical-baseline-snap-ref.html
 == 1122366-1-margin-collapse.html 1122366-1-margin-collapse-ref.html
 == 1124636-1-fieldset-max-height.html 1124636-1-fieldset-max-height-ref.html
 == 1124636-2-fieldset-min-height.html 1124636-2-fieldset-min-height-ref.html
+HTTP(..) == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
+HTTP(..) == 1127488-align-start-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
+HTTP(..) == 1127488-align-end-horizontal-tb-ltr.html 1127488-align-top-right-ref.html
+HTTP(..) == 1127488-align-left-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
+HTTP(..) == 1127488-align-right-horizontal-tb-ltr.html 1127488-align-top-right-ref.html
+HTTP(..) == 1127488-align-default-horizontal-tb-rtl.html 1127488-align-top-right-ref.html
+HTTP(..) == 1127488-align-start-horizontal-tb-rtl.html 1127488-align-top-right-ref.html
+HTTP(..) == 1127488-align-end-horizontal-tb-rtl.html 1127488-align-top-left-ref.html
+HTTP(..) == 1127488-align-left-horizontal-tb-rtl.html 1127488-align-top-left-ref.html
+HTTP(..) == 1127488-align-right-horizontal-tb-rtl.html 1127488-align-top-right-ref.html
+HTTP(..) == 1127488-align-default-vertical-rl-rtl.html 1127488-align-bottom-right-ref.html
+HTTP(..) == 1127488-align-start-vertical-rl-rtl.html 1127488-align-bottom-right-ref.html
+HTTP(..) == 1127488-align-end-vertical-rl-rtl.html 1127488-align-top-right-ref.html
+HTTP(..) == 1127488-align-left-vertical-rl-rtl.html 1127488-align-top-right-ref.html
+HTTP(..) == 1127488-align-right-vertical-rl-rtl.html 1127488-align-bottom-right-ref.html
+HTTP(..) == 1127488-align-default-vertical-rl-ltr.html 1127488-align-top-right-ref.html
+HTTP(..) == 1127488-align-start-vertical-rl-ltr.html 1127488-align-top-right-ref.html
+HTTP(..) == 1127488-align-end-vertical-rl-ltr.html 1127488-align-bottom-right-ref.html
+HTTP(..) == 1127488-align-left-vertical-rl-ltr.html 1127488-align-top-right-ref.html
+HTTP(..) == 1127488-align-right-vertical-rl-ltr.html 1127488-align-bottom-right-ref.html
+HTTP(..) == 1127488-align-default-vertical-lr-rtl.html 1127488-align-bottom-left-ref.html
+HTTP(..) == 1127488-align-start-vertical-lr-rtl.html 1127488-align-bottom-left-ref.html
+HTTP(..) == 1127488-align-end-vertical-lr-rtl.html 1127488-align-top-left-ref.html
+HTTP(..) == 1127488-align-left-vertical-lr-rtl.html 1127488-align-top-left-ref.html
+HTTP(..) == 1127488-align-right-vertical-lr-rtl.html 1127488-align-bottom-left-ref.html
+HTTP(..) == 1127488-align-default-vertical-lr-ltr.html 1127488-align-top-left-ref.html
+HTTP(..) == 1127488-align-start-vertical-lr-ltr.html 1127488-align-top-left-ref.html
+HTTP(..) == 1127488-align-end-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
+HTTP(..) == 1127488-align-left-vertical-lr-ltr.html 1127488-align-top-left-ref.html
+HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
+== 1131013-vertical-bidi.html 1131013-vertical-bidi-ref.html

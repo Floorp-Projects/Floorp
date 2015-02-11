@@ -2,133 +2,121 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "sandbox/linux/seccomp-bpf/sandbox_bpf.h"
 #include "sandbox/linux/seccomp-bpf/syscall_iterator.h"
+
+#include <stdint.h>
+
+#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
 #include "sandbox/linux/tests/unit_tests.h"
 
 namespace sandbox {
 
 namespace {
 
+const SyscallSet kSyscallSets[] = {
+    SyscallSet::All(),
+    SyscallSet::InvalidOnly(),
+};
+
 SANDBOX_TEST(SyscallIterator, Monotonous) {
-  for (int i = 0; i < 2; ++i) {
-    bool invalid_only = !i;  // Testing both |invalid_only| cases.
-    SyscallIterator iter(invalid_only);
-    uint32_t next = iter.Next();
+  for (const SyscallSet& set : kSyscallSets) {
+    uint32_t prev = 0;
+    bool have_prev = false;
+    for (uint32_t sysnum : set) {
+      if (have_prev) {
+        SANDBOX_ASSERT(sysnum > prev);
+      } else if (set == SyscallSet::All()) {
+        // The iterator should start at 0.
+        SANDBOX_ASSERT(sysnum == 0);
+      }
 
-    if (!invalid_only) {
-      // The iterator should start at 0.
-      SANDBOX_ASSERT(next == 0);
+      prev = sysnum;
+      have_prev = true;
     }
-    for (uint32_t last = next; !iter.Done(); last = next) {
-      next = iter.Next();
-      SANDBOX_ASSERT(last < next);
-    }
+
     // The iterator should always return 0xFFFFFFFFu as the last value.
-    SANDBOX_ASSERT(next == 0xFFFFFFFFu);
+    SANDBOX_ASSERT(have_prev);
+    SANDBOX_ASSERT(prev == 0xFFFFFFFFu);
   }
 }
 
-SANDBOX_TEST(SyscallIterator, PublicSyscallRange) {
-  SyscallIterator iter(false);
-  uint32_t next = iter.Next();
-
-  // The iterator should cover the public syscall range
-  // MIN_SYSCALL..MAX_PUBLIC_SYSCALL, without skipping syscalls.
-  // We're assuming MIN_SYSCALL == 0 for all architectures,
-  // this is currently valid for Intel and ARM EABI.
-  SANDBOX_ASSERT(MIN_SYSCALL == 0);
-  SANDBOX_ASSERT(next == MIN_SYSCALL);
-  for (uint32_t last = next; next < MAX_PUBLIC_SYSCALL + 1; last = next) {
-    SANDBOX_ASSERT((next = iter.Next()) == last + 1);
-  }
-  SANDBOX_ASSERT(next == MAX_PUBLIC_SYSCALL + 1);
-}
-
-#if defined(__arm__)
-SANDBOX_TEST(SyscallIterator, ARMPrivateSyscallRange) {
-  SyscallIterator iter(false);
-  uint32_t next = iter.Next();
-  while (next < MIN_PRIVATE_SYSCALL - 1) {
-    next = iter.Next();
-  }
-  // The iterator should cover the ARM private syscall range
-  // without skipping syscalls.
-  SANDBOX_ASSERT(next == MIN_PRIVATE_SYSCALL - 1);
-  for (uint32_t last = next; next < MAX_PRIVATE_SYSCALL + 1; last = next) {
-    SANDBOX_ASSERT((next = iter.Next()) == last + 1);
-  }
-  SANDBOX_ASSERT(next == MAX_PRIVATE_SYSCALL + 1);
-}
-
-SANDBOX_TEST(SyscallIterator, ARMHiddenSyscallRange) {
-  SyscallIterator iter(false);
-  uint32_t next = iter.Next();
-  while (next < MIN_GHOST_SYSCALL - 1) {
-    next = iter.Next();
-  }
-  // The iterator should cover the ARM hidden syscall range
-  // without skipping syscalls.
-  SANDBOX_ASSERT(next == MIN_GHOST_SYSCALL - 1);
-  for (uint32_t last = next; next < MAX_SYSCALL + 1; last = next) {
-    SANDBOX_ASSERT((next = iter.Next()) == last + 1);
-  }
-  SANDBOX_ASSERT(next == MAX_SYSCALL + 1);
-}
-#endif
-
-SANDBOX_TEST(SyscallIterator, Invalid) {
-  for (int i = 0; i < 2; ++i) {
-    bool invalid_only = !i;  // Testing both |invalid_only| cases.
-    SyscallIterator iter(invalid_only);
-    uint32_t next = iter.Next();
-
-    while (next < MAX_SYSCALL + 1) {
-      next = iter.Next();
+// AssertRange checks that SyscallIterator produces all system call
+// numbers in the inclusive range [min, max].
+void AssertRange(uint32_t min, uint32_t max) {
+  SANDBOX_ASSERT(min < max);
+  uint32_t prev = min - 1;
+  for (uint32_t sysnum : SyscallSet::All()) {
+    if (sysnum >= min && sysnum <= max) {
+      SANDBOX_ASSERT(prev == sysnum - 1);
+      prev = sysnum;
     }
+  }
+  SANDBOX_ASSERT(prev == max);
+}
 
-    SANDBOX_ASSERT(next == MAX_SYSCALL + 1);
-    while (next < 0x7FFFFFFFu) {
-      next = iter.Next();
+SANDBOX_TEST(SyscallIterator, ValidSyscallRanges) {
+  AssertRange(MIN_SYSCALL, MAX_PUBLIC_SYSCALL);
+#if defined(__arm__)
+  AssertRange(MIN_PRIVATE_SYSCALL, MAX_PRIVATE_SYSCALL);
+  AssertRange(MIN_GHOST_SYSCALL, MAX_SYSCALL);
+#endif
+}
+
+SANDBOX_TEST(SyscallIterator, InvalidSyscalls) {
+  static const uint32_t kExpected[] = {
+#if defined(__mips__)
+    0,
+    MIN_SYSCALL - 1,
+#endif
+    MAX_PUBLIC_SYSCALL + 1,
+#if defined(__arm__)
+    MIN_PRIVATE_SYSCALL - 1,
+    MAX_PRIVATE_SYSCALL + 1,
+    MIN_GHOST_SYSCALL - 1,
+    MAX_SYSCALL + 1,
+#endif
+    0x7FFFFFFFu,
+    0x80000000u,
+    0xFFFFFFFFu,
+  };
+
+  for (const SyscallSet& set : kSyscallSets) {
+    size_t i = 0;
+    for (uint32_t sysnum : set) {
+      if (!SyscallSet::IsValid(sysnum)) {
+        SANDBOX_ASSERT(i < arraysize(kExpected));
+        SANDBOX_ASSERT(kExpected[i] == sysnum);
+        ++i;
+      }
     }
-
-    // The iterator should return the signed/unsigned corner cases.
-    SANDBOX_ASSERT(next == 0x7FFFFFFFu);
-    next = iter.Next();
-    SANDBOX_ASSERT(next == 0x80000000u);
-    SANDBOX_ASSERT(!iter.Done());
-    next = iter.Next();
-    SANDBOX_ASSERT(iter.Done());
-    SANDBOX_ASSERT(next == 0xFFFFFFFFu);
+    SANDBOX_ASSERT(i == arraysize(kExpected));
   }
 }
 
-SANDBOX_TEST(SyscallIterator, InvalidOnly) {
-  bool invalid_only = true;
-  SyscallIterator iter(invalid_only);
-  uint32_t next = iter.Next();
-  // We're assuming MIN_SYSCALL == 0 for all architectures,
-  // this is currently valid for Intel and ARM EABI.
-  // First invalid syscall should then be |MAX_PUBLIC_SYSCALL + 1|.
-  SANDBOX_ASSERT(MIN_SYSCALL == 0);
-  SANDBOX_ASSERT(next == MAX_PUBLIC_SYSCALL + 1);
-
-#if defined(__arm__)
-  next = iter.Next();
-  // The iterator should skip until the last invalid syscall in this range.
-  SANDBOX_ASSERT(next == MIN_PRIVATE_SYSCALL - 1);
-  while (next <= MAX_PRIVATE_SYSCALL) {
-    next = iter.Next();
+SANDBOX_TEST(SyscallIterator, ValidOnlyIsOnlyValid) {
+  for (uint32_t sysnum : SyscallSet::ValidOnly()) {
+    SANDBOX_ASSERT(SyscallSet::IsValid(sysnum));
   }
+}
 
-  next = iter.Next();
-  // The iterator should skip until the last invalid syscall in this range.
-  SANDBOX_ASSERT(next == MIN_GHOST_SYSCALL - 1);
-  while (next <= MAX_SYSCALL) {
-    next = iter.Next();
+SANDBOX_TEST(SyscallIterator, InvalidOnlyIsOnlyInvalid) {
+  for (uint32_t sysnum : SyscallSet::InvalidOnly()) {
+    SANDBOX_ASSERT(!SyscallSet::IsValid(sysnum));
   }
-  SANDBOX_ASSERT(next == MAX_SYSCALL + 1);
-#endif
+}
+
+SANDBOX_TEST(SyscallIterator, AllIsValidOnlyPlusInvalidOnly) {
+  std::vector<uint32_t> merged;
+  const SyscallSet valid_only = SyscallSet::ValidOnly();
+  const SyscallSet invalid_only = SyscallSet::InvalidOnly();
+  std::merge(valid_only.begin(),
+             valid_only.end(),
+             invalid_only.begin(),
+             invalid_only.end(),
+             std::back_inserter(merged));
+
+  const SyscallSet all = SyscallSet::All();
+  SANDBOX_ASSERT(merged == std::vector<uint32_t>(all.begin(), all.end()));
 }
 
 }  // namespace

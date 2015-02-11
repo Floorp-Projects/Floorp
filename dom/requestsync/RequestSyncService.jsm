@@ -56,7 +56,8 @@ this.RequestSyncService = {
                "RequestSync:Registrations",
                "RequestSync:Registration",
                "RequestSyncManager:Registrations",
-               "RequestSyncManager:SetPolicy" ],
+               "RequestSyncManager:SetPolicy",
+               "RequestSyncManager:RunTask" ],
 
   _pendingOperation: false,
   _pendingMessages: [],
@@ -327,6 +328,10 @@ this.RequestSyncService = {
         this.managerSetPolicy(aMessage.target, aMessage.data, principal);
         break;
 
+      case "RequestSyncManager:RunTask":
+        this.managerRunTask(aMessage.target, aMessage.data, principal);
+        break;
+
       default:
         debug("Wrong message: " + aMessage.name);
         break;
@@ -397,7 +402,8 @@ this.RequestSyncService = {
                  dbKey: dbKey,
                  data: aData.params,
                  active: true,
-                 timer: null };
+                 timer: null,
+                 requestIDs: [] };
 
     let self = this;
     this.dbTxn('readwrite', function(aStore) {
@@ -503,6 +509,10 @@ this.RequestSyncService = {
     let toSave = null;
     let self = this;
     this.forEachRegistration(function(aObj) {
+      if (aObj.data.task != aData.task) {
+        return;
+      }
+
       if (aObj.principal.isInBrowserElement != aData.isInBrowserElement ||
           aObj.principal.origin != aData.origin) {
         return;
@@ -539,6 +549,46 @@ this.RequestSyncService = {
       aTarget.sendAsyncMessage("RequestSyncManager:SetPolicy:Return",
                                { requestID: aData.requestID });
     });
+  },
+
+  // Run a task now.
+  managerRunTask: function(aTarget, aData, aPrincipal) {
+    debug("runTask");
+
+    let task = null;
+    this.forEachRegistration(function(aObj) {
+      if (aObj.data.task != aData.task) {
+        return;
+      }
+
+      if (aObj.principal.isInBrowserElement != aData.isInBrowserElement ||
+          aObj.principal.origin != aData.origin) {
+        return;
+      }
+
+      let app = appsService.getAppByLocalId(aObj.principal.appId);
+      if (app && app.manifestURL != aData.manifestURL ||
+          (!app && aData.manifestURL != "")) {
+        return;
+      }
+
+      if (task) {
+        dump("ERROR!! RequestSyncService - RunTask matches more than 1 task.\n");
+        return;
+      }
+
+      task = aObj;
+    });
+
+    if (!task) {
+      aTarget.sendAsyncMessage("RequestSyncManager:RunTask:Return",
+                               { requestID: aData.requestID, error: "UnknownTaskError" });
+      return;
+    }
+
+    // Storing the requestID into the task for the callback.
+    task.requestIDs.push({ target: aTarget, requestID: aData.requestID });
+    this.timeout(task);
   },
 
   // We cannot expose the full internal object to content but just a subset.
@@ -704,6 +754,16 @@ this.RequestSyncService = {
     // One shot? Then this is not active.
     this._activeTask.active = !this._activeTask.data.oneShot;
     this._activeTask.data.lastSync = new Date();
+
+    if (this._activeTask.requestIDs.length) {
+      for (let i = 0; i < this._activeTask.requestIDs.length; ++i) {
+        this._activeTask.requestIDs[i]
+            .target.sendAsyncMessage("RequestSyncManager:RunTask:Return",
+                                     { requestID: this._activeTask.requestIDs[i].requestID });
+      }
+
+      this._activeTask.requestIDs = [];
+    }
 
     let self = this;
     this.updateObjectInDB(this._activeTask, function() {
