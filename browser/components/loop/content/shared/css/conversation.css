@@ -209,10 +209,12 @@
 /* Screen share button */
 .btn-screen-share {
   /* XXX Replace this with the real button: bug 1126286 */
-  background-image: url(../img/video-inverse-14x14.png);
+  background-image: url(../img/icons-16x16.svg#screen-white);
+  background-size: 16px 16px;
 }
 
 .btn-screen-share.active {
+  background-image: url(../img/icons-16x16.svg#screenmute-white);
   background-color: #6CB23E;
   opacity: 1;
 }
