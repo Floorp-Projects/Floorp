@@ -358,7 +358,6 @@ typedef void (*PLDHashInitEntry)(PLDHashEntryHdr* aEntry, const void* aKey);
  *
  * Summary of allocation-related hook usage with C++ placement new emphasis:
  *  initEntry           Call placement new using default key-based ctor.
- *                      Return true on success, false on error.
  *  moveEntry           Call placement new using copy ctor, run dtor on old
  *                      entry storage.
  *  clearEntry          Run dtor on entry.
@@ -483,10 +482,8 @@ PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey);
  *
  *  entry = PL_DHashTableAdd(table, key, mozilla::fallible);
  *
- * If entry is null upon return, then either (a) the table is severely
- * overloaded and memory can't be allocated for entry storage, or (b)
- * aTable->mOps->initEntry is non-null and aTable->mOps->initEntry op has
- * returned false.
+ * If entry is null upon return, then the table is severely overloaded and
+ * memory can't be allocated for entry storage.
  *
  * Otherwise, aEntry->mKeyHash has been set so that
  * PLDHashTable::EntryIsFree(entry) is false, and it is up to the caller to

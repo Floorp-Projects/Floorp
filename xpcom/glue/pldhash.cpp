@@ -683,9 +683,7 @@ PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey)
 {
   PLDHashEntryHdr* entry = PL_DHashTableAdd(aTable, aKey, fallible);
   if (!entry) {
-    // There are two ways the Add could fail: (a) a entry storage reallocation
-    // failed, or (b) mOps->initEntry failed. The number we're reporting here
-    // is the one for case (a), which is the more likely of the two.
+    // Entry storage reallocation failed.
     NS_ABORT_OOM(aTable->EntrySize() * aTable->EntryCount());
   }
   return entry;
