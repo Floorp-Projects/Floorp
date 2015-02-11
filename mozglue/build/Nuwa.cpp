@@ -331,7 +331,7 @@ static bool sForkWaitCondChanged = false;
  * This mutex protects the access to sTLSKeys, which keeps track of existing
  * TLS Keys.
  */
-static pthread_mutex_t sTLSKeyLock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+static pthread_mutex_t sTLSKeyLock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER;
 static int sThreadSkipCount = 0;
 
 static thread_info_t *
