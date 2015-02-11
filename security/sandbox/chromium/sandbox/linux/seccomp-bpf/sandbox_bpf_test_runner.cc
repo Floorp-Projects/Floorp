@@ -5,12 +5,12 @@
 #include "sandbox/linux/seccomp-bpf/sandbox_bpf_test_runner.h"
 
 #include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <linux/filter.h>
 
-#include "base/basictypes.h"
 #include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
+#include "sandbox/linux/bpf_dsl/policy.h"
+#include "sandbox/linux/seccomp-bpf/die.h"
 #include "sandbox/linux/seccomp-bpf/sandbox_bpf.h"
 #include "sandbox/linux/tests/unit_tests.h"
 
@@ -28,7 +28,7 @@ void SandboxBPFTestRunner::Run() {
   DCHECK(bpf_tester_delegate_);
   sandbox::Die::EnableSimpleExit();
 
-  scoped_ptr<SandboxBPFPolicy> policy =
+  scoped_ptr<bpf_dsl::Policy> policy =
       bpf_tester_delegate_->GetSandboxBPFPolicy();
 
   if (sandbox::SandboxBPF::SupportsSeccompSandbox(-1) ==
@@ -60,9 +60,7 @@ void SandboxBPFTestRunner::Run() {
     // if we don't have kernel support.
     sandbox::SandboxBPF sandbox;
     sandbox.SetSandboxPolicy(policy.release());
-    sandbox::SandboxBPF::Program* program =
-        sandbox.AssembleFilter(true /* force_verification */);
-    delete program;
+    sandbox.AssembleFilter(true /* force_verification */);
     sandbox::UnitTests::IgnoreThisTest();
   }
 }

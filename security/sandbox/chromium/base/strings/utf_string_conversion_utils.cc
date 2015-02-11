@@ -71,7 +71,7 @@ bool ReadUnicodeCharacter(const wchar_t* src,
 size_t WriteUnicodeCharacter(uint32 code_point, std::string* output) {
   if (code_point <= 0x7f) {
     // Fast path the common case of one byte.
-    output->push_back(code_point);
+    output->push_back(static_cast<char>(code_point));
     return 1;
   }
 

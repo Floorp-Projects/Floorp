@@ -67,7 +67,7 @@ g_fmt(register char *b, double x)
 		for(j = 2, k = 10; 10*k <= decpt; j++, k *= 10) {}
 		for(;;) {
 			i = decpt / k;
-			*b++ = i + '0';
+			*b++ = (char)i + '0';
 			if (--j <= 0)
 				break;
 			decpt -= i*k;

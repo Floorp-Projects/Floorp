@@ -7,14 +7,15 @@
 #include <errno.h>
 #include <signal.h>
 #include <string.h>
-#include <sys/prctl.h>
 #include <sys/syscall.h>
 
+#include <algorithm>
 #include <limits>
 
 #include "base/logging.h"
-#include "sandbox/linux/seccomp-bpf/codegen.h"
+#include "build/build_config.h"
 #include "sandbox/linux/seccomp-bpf/die.h"
+#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
 #include "sandbox/linux/seccomp-bpf/syscall.h"
 
 // Android's signal.h doesn't define ucontext etc.
@@ -23,6 +24,12 @@
 #endif
 
 namespace {
+
+struct arch_sigsys {
+  void* ip;
+  int nr;
+  unsigned int arch;
+};
 
 const int kCapacityIncrement = 20;
 
@@ -97,7 +104,7 @@ Trap::Trap()
   }
 }
 
-Trap* Trap::GetInstance() {
+bpf_dsl::TrapRegistry* Trap::Registry() {
   // Note: This class is not thread safe. It is the caller's responsibility
   // to avoid race conditions. Normally, this is a non-issue as the sandbox
   // can only be initialized if there are no other threads present.
@@ -150,10 +157,19 @@ void Trap::SigSys(int nr, siginfo_t* info, void* void_context) {
   struct arch_sigsys sigsys;
   memcpy(&sigsys, &info->_sifields, sizeof(sigsys));
 
+#if defined(__mips__)
+  // When indirect syscall (syscall(__NR_foo, ...)) is made on Mips, the
+  // number in register SECCOMP_SYSCALL(ctx) is always __NR_syscall and the
+  // real number of a syscall (__NR_foo) is in SECCOMP_PARM1(ctx)
+  bool sigsys_nr_is_bad = sigsys.nr != static_cast<int>(SECCOMP_SYSCALL(ctx)) &&
+                          sigsys.nr != static_cast<int>(SECCOMP_PARM1(ctx));
+#else
+  bool sigsys_nr_is_bad = sigsys.nr != static_cast<int>(SECCOMP_SYSCALL(ctx));
+#endif
+
   // Some more sanity checks.
   if (sigsys.ip != reinterpret_cast<void*>(SECCOMP_IP(ctx)) ||
-      sigsys.nr != static_cast<int>(SECCOMP_SYSCALL(ctx)) ||
-      sigsys.arch != SECCOMP_ARCH) {
+      sigsys_nr_is_bad || sigsys.arch != SECCOMP_ARCH) {
     // TODO(markus):
     // SANDBOX_DIE() can call LOG(FATAL). This is not normally async-signal
     // safe and can lead to bugs. We should eventually implement a different
@@ -168,16 +184,31 @@ void Trap::SigSys(int nr, siginfo_t* info, void* void_context) {
     if (sigsys.nr == __NR_clone) {
       RAW_SANDBOX_DIE("Cannot call clone() from an UnsafeTrap() handler.");
     }
-    rc = Syscall::Call(sigsys.nr,
+#if defined(__mips__)
+    // Mips supports up to eight arguments for syscall.
+    // However, seccomp bpf can filter only up to six arguments, so using eight
+    // arguments has sense only when using UnsafeTrap() handler.
+    rc = Syscall::Call(SECCOMP_SYSCALL(ctx),
+                       SECCOMP_PARM1(ctx),
+                       SECCOMP_PARM2(ctx),
+                       SECCOMP_PARM3(ctx),
+                       SECCOMP_PARM4(ctx),
+                       SECCOMP_PARM5(ctx),
+                       SECCOMP_PARM6(ctx),
+                       SECCOMP_PARM7(ctx),
+                       SECCOMP_PARM8(ctx));
+#else
+    rc = Syscall::Call(SECCOMP_SYSCALL(ctx),
                        SECCOMP_PARM1(ctx),
                        SECCOMP_PARM2(ctx),
                        SECCOMP_PARM3(ctx),
                        SECCOMP_PARM4(ctx),
                        SECCOMP_PARM5(ctx),
                        SECCOMP_PARM6(ctx));
+#endif  // defined(__mips__)
   } else {
-    const ErrorCode& err = trap_array_[info->si_errno - 1];
-    if (!err.safe_) {
+    const TrapKey& trap = trap_array_[info->si_errno - 1];
+    if (!trap.safe) {
       SetIsInSigHandler();
     }
 
@@ -185,7 +216,9 @@ void Trap::SigSys(int nr, siginfo_t* info, void* void_context) {
     // is what we are showing to TrapFnc callbacks that the system call
     // evaluator registered with the sandbox.
     struct arch_seccomp_data data = {
-        sigsys.nr, SECCOMP_ARCH, reinterpret_cast<uint64_t>(sigsys.ip),
+        static_cast<int>(SECCOMP_SYSCALL(ctx)),
+        SECCOMP_ARCH,
+        reinterpret_cast<uint64_t>(sigsys.ip),
         {static_cast<uint64_t>(SECCOMP_PARM1(ctx)),
          static_cast<uint64_t>(SECCOMP_PARM2(ctx)),
          static_cast<uint64_t>(SECCOMP_PARM3(ctx)),
@@ -195,13 +228,13 @@ void Trap::SigSys(int nr, siginfo_t* info, void* void_context) {
 
     // Now call the TrapFnc callback associated with this particular instance
     // of SECCOMP_RET_TRAP.
-    rc = err.fnc_(data, err.aux_);
+    rc = trap.fnc(data, const_cast<void*>(trap.aux));
   }
 
   // Update the CPU register that stores the return code of the system call
   // that we just handled, and restore "errno" to the value that it had
   // before entering the signal handler.
-  SECCOMP_RESULT(ctx) = static_cast<greg_t>(rc);
+  Syscall::PutValueInUcontext(rc, ctx);
   errno = old_errno;
 
   return;
@@ -217,11 +250,11 @@ bool Trap::TrapKey::operator<(const TrapKey& o) const {
   }
 }
 
-ErrorCode Trap::MakeTrap(TrapFnc fnc, const void* aux, bool safe) {
-  return GetInstance()->MakeTrapImpl(fnc, aux, safe);
+uint16_t Trap::MakeTrap(TrapFnc fnc, const void* aux, bool safe) {
+  return Registry()->Add(fnc, aux, safe);
 }
 
-ErrorCode Trap::MakeTrapImpl(TrapFnc fnc, const void* aux, bool safe) {
+uint16_t Trap::Add(TrapFnc fnc, const void* aux, bool safe) {
   if (!safe && !SandboxDebuggingAllowedByUser()) {
     // Unless the user set the CHROME_SANDBOX_DEBUGGING environment variable,
     // we never return an ErrorCode that is marked as "unsafe". This also
@@ -231,20 +264,19 @@ ErrorCode Trap::MakeTrapImpl(TrapFnc fnc, const void* aux, bool safe) {
 
     // This SANDBOX_DIE() can optionally be removed. It won't break security,
     // but it might make error messages from the BPF compiler a little harder
-    // to understand. Removing the SANDBOX_DIE() allows callers to easyly check
+    // to understand. Removing the SANDBOX_DIE() allows callers to easily check
     // whether unsafe traps are supported (by checking whether the returned
     // ErrorCode is ET_INVALID).
     SANDBOX_DIE(
         "Cannot use unsafe traps unless CHROME_SANDBOX_DEBUGGING "
         "is enabled");
 
-    return ErrorCode();
+    return 0;
   }
 
   // Each unique pair of TrapFnc and auxiliary data make up a distinct instance
   // of a SECCOMP_RET_TRAP.
   TrapKey key(fnc, aux, safe);
-  TrapIds::const_iterator iter = trap_ids_.find(key);
 
   // We return unique identifiers together with SECCOMP_RET_TRAP. This allows
   // us to associate trap with the appropriate handler. The kernel allows us
@@ -254,66 +286,70 @@ ErrorCode Trap::MakeTrapImpl(TrapFnc fnc, const void* aux, bool safe) {
   // trivially look them up from our signal handler without making any system
   // calls that might be async-signal-unsafe.
   // In order to do so, we store all of our traps in a C-style trap_array_.
-  uint16_t id;
+
+  TrapIds::const_iterator iter = trap_ids_.find(key);
   if (iter != trap_ids_.end()) {
     // We have seen this pair before. Return the same id that we assigned
     // earlier.
-    id = iter->second;
-  } else {
-    // This is a new pair. Remember it and assign a new id.
-    if (trap_array_size_ >= SECCOMP_RET_DATA /* 0xFFFF */ ||
-        trap_array_size_ >= std::numeric_limits<typeof(id)>::max()) {
-      // In practice, this is pretty much impossible to trigger, as there
-      // are other kernel limitations that restrict overall BPF program sizes.
-      SANDBOX_DIE("Too many SECCOMP_RET_TRAP callback instances");
-    }
-    id = trap_array_size_ + 1;
-
-    // Our callers ensure that there are no other threads accessing trap_array_
-    // concurrently (typically this is done by ensuring that we are single-
-    // threaded while the sandbox is being set up). But we nonetheless are
-    // modifying a life data structure that could be accessed any time a
-    // system call is made; as system calls could be triggering SIGSYS.
-    // So, we have to be extra careful that we update trap_array_ atomically.
-    // In particular, this means we shouldn't be using realloc() to resize it.
-    // Instead, we allocate a new array, copy the values, and then switch the
-    // pointer. We only really care about the pointer being updated atomically
-    // and the data that is pointed to being valid, as these are the only
-    // values accessed from the signal handler. It is OK if trap_array_size_
-    // is inconsistent with the pointer, as it is monotonously increasing.
-    // Also, we only care about compiler barriers, as the signal handler is
-    // triggered synchronously from a system call. We don't have to protect
-    // against issues with the memory model or with completely asynchronous
-    // events.
-    if (trap_array_size_ >= trap_array_capacity_) {
-      trap_array_capacity_ += kCapacityIncrement;
-      ErrorCode* old_trap_array = trap_array_;
-      ErrorCode* new_trap_array = new ErrorCode[trap_array_capacity_];
-
-      // Language specs are unclear on whether the compiler is allowed to move
-      // the "delete[]" above our preceding assignments and/or memory moves,
-      // iff the compiler believes that "delete[]" doesn't have any other
-      // global side-effects.
-      // We insert optimization barriers to prevent this from happening.
-      // The first barrier is probably not needed, but better be explicit in
-      // what we want to tell the compiler.
-      // The clang developer mailing list couldn't answer whether this is a
-      // legitimate worry; but they at least thought that the barrier is
-      // sufficient to prevent the (so far hypothetical) problem of re-ordering
-      // of instructions by the compiler.
-      memcpy(new_trap_array, trap_array_, trap_array_size_ * sizeof(ErrorCode));
-      asm volatile("" : "=r"(new_trap_array) : "0"(new_trap_array) : "memory");
-      trap_array_ = new_trap_array;
-      asm volatile("" : "=r"(trap_array_) : "0"(trap_array_) : "memory");
-
-      delete[] old_trap_array;
-    }
-    trap_ids_[key] = id;
-    trap_array_[trap_array_size_] = ErrorCode(fnc, aux, safe, id);
-    return trap_array_[trap_array_size_++];
+    return iter->second;
   }
 
-  return ErrorCode(fnc, aux, safe, id);
+  // This is a new pair. Remember it and assign a new id.
+  if (trap_array_size_ >= SECCOMP_RET_DATA /* 0xFFFF */ ||
+      trap_array_size_ >= std::numeric_limits<uint16_t>::max()) {
+    // In practice, this is pretty much impossible to trigger, as there
+    // are other kernel limitations that restrict overall BPF program sizes.
+    SANDBOX_DIE("Too many SECCOMP_RET_TRAP callback instances");
+  }
+
+  // Our callers ensure that there are no other threads accessing trap_array_
+  // concurrently (typically this is done by ensuring that we are single-
+  // threaded while the sandbox is being set up). But we nonetheless are
+  // modifying a live data structure that could be accessed any time a
+  // system call is made; as system calls could be triggering SIGSYS.
+  // So, we have to be extra careful that we update trap_array_ atomically.
+  // In particular, this means we shouldn't be using realloc() to resize it.
+  // Instead, we allocate a new array, copy the values, and then switch the
+  // pointer. We only really care about the pointer being updated atomically
+  // and the data that is pointed to being valid, as these are the only
+  // values accessed from the signal handler. It is OK if trap_array_size_
+  // is inconsistent with the pointer, as it is monotonously increasing.
+  // Also, we only care about compiler barriers, as the signal handler is
+  // triggered synchronously from a system call. We don't have to protect
+  // against issues with the memory model or with completely asynchronous
+  // events.
+  if (trap_array_size_ >= trap_array_capacity_) {
+    trap_array_capacity_ += kCapacityIncrement;
+    TrapKey* old_trap_array = trap_array_;
+    TrapKey* new_trap_array = new TrapKey[trap_array_capacity_];
+    std::copy_n(old_trap_array, trap_array_size_, new_trap_array);
+
+    // Language specs are unclear on whether the compiler is allowed to move
+    // the "delete[]" above our preceding assignments and/or memory moves,
+    // iff the compiler believes that "delete[]" doesn't have any other
+    // global side-effects.
+    // We insert optimization barriers to prevent this from happening.
+    // The first barrier is probably not needed, but better be explicit in
+    // what we want to tell the compiler.
+    // The clang developer mailing list couldn't answer whether this is a
+    // legitimate worry; but they at least thought that the barrier is
+    // sufficient to prevent the (so far hypothetical) problem of re-ordering
+    // of instructions by the compiler.
+    //
+    // TODO(mdempsky): Try to clean this up using base/atomicops or C++11
+    // atomics; see crbug.com/414363.
+    asm volatile("" : "=r"(new_trap_array) : "0"(new_trap_array) : "memory");
+    trap_array_ = new_trap_array;
+    asm volatile("" : "=r"(trap_array_) : "0"(trap_array_) : "memory");
+
+    delete[] old_trap_array;
+  }
+
+  uint16_t id = trap_array_size_ + 1;
+  trap_ids_[key] = id;
+  trap_array_[trap_array_size_] = key;
+  trap_array_size_++;
+  return id;
 }
 
 bool Trap::SandboxDebuggingAllowedByUser() const {
@@ -322,18 +358,21 @@ bool Trap::SandboxDebuggingAllowedByUser() const {
 }
 
 bool Trap::EnableUnsafeTrapsInSigSysHandler() {
-  Trap* trap = GetInstance();
-  if (!trap->has_unsafe_traps_) {
+  return Registry()->EnableUnsafeTraps();
+}
+
+bool Trap::EnableUnsafeTraps() {
+  if (!has_unsafe_traps_) {
     // Unsafe traps are a one-way fuse. Once enabled, they can never be turned
     // off again.
     // We only allow enabling unsafe traps, if the user explicitly set an
     // appropriate environment variable. This prevents bugs that accidentally
     // disable all sandboxing for all users.
-    if (trap->SandboxDebuggingAllowedByUser()) {
+    if (SandboxDebuggingAllowedByUser()) {
       // We only ever print this message once, when we enable unsafe traps the
       // first time.
       SANDBOX_INFO("WARNING! Disabling sandbox for debugging purposes");
-      trap->has_unsafe_traps_ = true;
+      has_unsafe_traps_ = true;
     } else {
       SANDBOX_INFO(
           "Cannot disable sandbox and use unsafe traps unless "
@@ -341,15 +380,7 @@ bool Trap::EnableUnsafeTrapsInSigSysHandler() {
     }
   }
   // Returns the, possibly updated, value of has_unsafe_traps_.
-  return trap->has_unsafe_traps_;
-}
-
-ErrorCode Trap::ErrorCodeFromTrapId(uint16_t id) {
-  if (global_trap_ && id > 0 && id <= global_trap_->trap_array_size_) {
-    return global_trap_->trap_array_[id - 1];
-  } else {
-    return ErrorCode();
-  }
+  return has_unsafe_traps_;
 }
 
 Trap* Trap::global_trap_;

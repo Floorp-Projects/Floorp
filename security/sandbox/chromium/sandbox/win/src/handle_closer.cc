@@ -39,17 +39,25 @@ ResultCode HandleCloser::AddHandle(const base::char16* handle_type,
   if (!handle_type)
     return SBOX_ERROR_BAD_PARAMS;
 
+  base::string16 resolved_name;
+  if (handle_name) {
+    resolved_name = handle_name;
+    if (handle_type == base::string16(L"Key"))
+      if (!ResolveRegistryName(resolved_name, &resolved_name))
+        return SBOX_ERROR_BAD_PARAMS;
+  }
+
   HandleMap::iterator names = handles_to_close_.find(handle_type);
   if (names == handles_to_close_.end()) {  // We have no entries for this type.
     std::pair<HandleMap::iterator, bool> result = handles_to_close_.insert(
         HandleMap::value_type(handle_type, HandleMap::mapped_type()));
     names = result.first;
     if (handle_name)
-      names->second.insert(handle_name);
+      names->second.insert(resolved_name);
   } else if (!handle_name) {  // Now we need to close all handles of this type.
     names->second.clear();
   } else if (!names->second.empty()) {  // Add another name for this type.
-    names->second.insert(handle_name);
+    names->second.insert(resolved_name);
   }  // If we're already closing all handles of type then we're done.
 
   return SBOX_ALL_OK;
