@@ -22,8 +22,8 @@ public:
   static bool ConvertSampleToAnnexB(MP4Sample* aSample);
   // Convert a sample from Annex B to AVCC.
   // an AVCC extradata must not be set.
-  static void ConvertSampleToAVCC(MP4Sample* aSample);
-  static void ConvertSampleTo4BytesAVCC(MP4Sample* aSample);
+  static bool ConvertSampleToAVCC(MP4Sample* aSample);
+  static bool ConvertSampleTo4BytesAVCC(MP4Sample* aSample);
 
   // Parse an AVCC extradata and construct the Annex B sample header.
   static already_AddRefed<ByteBuffer> ConvertExtraDataToAnnexB(
