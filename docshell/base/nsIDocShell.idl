@@ -54,7 +54,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(888fcf04-a69b-11e4-8d33-6fbb72d2eb03)]
+[scriptable, builtinclass, uuid(f84b1ae4-2f78-4bad-b36a-6a8516ee6e40)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -1024,13 +1024,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [noscript,notxpcom,nostdcall] void setOpener(in nsITabParent aOpener);
   [noscript,notxpcom,nostdcall] nsITabParent getOpener();
-
-  /**
-   * See the documentation for setOpener and getOpener about why we
-   * don't use attribute here instead.
-   */
-  [noscript,notxpcom,nostdcall] void setOpenedRemote(in nsITabParent aOpenedRemote);
-  [noscript,notxpcom,nostdcall] nsITabParent getOpenedRemote();
 
   // URLSearchParams for the window.location is owned by the docShell.
   [noscript,notxpcom] URLSearchParams getURLSearchParams();

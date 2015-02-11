@@ -103,7 +103,6 @@ class UpvarCookie
     F(THIS) \
     F(FUNCTION) \
     F(IF) \
-    F(ELSE) \
     F(SWITCH) \
     F(CASE) \
     F(DEFAULT) \
@@ -122,7 +121,6 @@ class UpvarCookie
     F(TRY) \
     F(CATCH) \
     F(CATCHLIST) \
-    F(FINALLY) \
     F(THROW) \
     F(DEBUGGER) \
     F(GENERATOR) \
@@ -133,6 +131,8 @@ class UpvarCookie
     F(ARRAYPUSH) \
     F(LEXICALSCOPE) \
     F(LET) \
+    F(LETBLOCK) \
+    F(LETEXPR) \
     F(IMPORT) \
     F(IMPORT_SPEC_LIST) \
     F(IMPORT_SPEC) \
@@ -287,10 +287,11 @@ enum ParseNodeKind
  *                          pn_kid3:  update expr after second ';' or nullptr
  * PNK_THROW    unary       pn_op: JSOP_THROW, pn_kid: exception
  * PNK_TRY      ternary     pn_kid1: try block
- *                          pn_kid2: null or PNK_CATCHLIST list of
- *                          PNK_LEXICALSCOPE nodes, each with pn_expr pointing
- *                          to a PNK_CATCH node
+ *                          pn_kid2: null or PNK_CATCHLIST list
  *                          pn_kid3: null or finally block
+ * PNK_CATCHLIST list       pn_head: list of PNK_LEXICALSCOPE nodes, one per
+ *                                   catch-block, each with pn_expr pointing
+ *                                   to a PNK_CATCH node
  * PNK_CATCH    ternary     pn_kid1: PNK_NAME, PNK_ARRAY, or PNK_OBJECT catch var node
  *                                   (PNK_ARRAY or PNK_OBJECT if destructuring)
  *                          pn_kid2: null or the catch guard expression
@@ -509,6 +510,11 @@ class ParseNode
         return PNK_ASSIGNMENT_START <= kind && kind <= PNK_ASSIGNMENT_LAST;
     }
 
+    bool isBinaryOperation() const {
+        ParseNodeKind kind = getKind();
+        return PNK_BINOP_FIRST <= kind && kind <= PNK_BINOP_LAST;
+    }
+
     /* Boolean attributes. */
     bool isInParens() const                { return pn_parens; }
     bool isLikelyIIFE() const              { return isInParens(); }
@@ -640,21 +646,12 @@ class ParseNode
 
   public:
     /*
-     * Append right to left, forming a list node.  |left| must have the given
-     * kind and op, and op must be left-associative.
+     * If |left| is a list of the given kind/left-associative op, append
+     * |right| to it and return |left|.  Otherwise return a [left, right] list.
      */
     static ParseNode *
-    append(ParseNodeKind tt, JSOp op, ParseNode *left, ParseNode *right, FullParseHandler *handler);
-
-    /*
-     * Either append right to left, if left meets the conditions necessary to
-     * append (see append), or form a binary node whose children are right and
-     * left.
-     */
-    static ParseNode *
-    newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
-                      FullParseHandler *handler, ParseContext<FullParseHandler> *pc,
-                      bool foldConstants);
+    appendOrCreateList(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
+                       FullParseHandler *handler, ParseContext<FullParseHandler> *pc);
 
     inline PropertyName *name() const;
     inline JSAtom *atom() const;

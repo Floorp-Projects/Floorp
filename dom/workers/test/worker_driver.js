@@ -76,6 +76,11 @@ function workerTestExec(script) {
         type: 'returnOSCPU',
         result: navigator.oscpu
       });
+    } else if (event.data.type == 'getIsB2G') {
+      worker.postMessage({
+        type: 'returnIsB2G',
+        result: SpecialPowers.isB2G
+      });
     }
   }
 

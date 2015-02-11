@@ -103,22 +103,33 @@ private:
     return Success;
   }
 
-  Result VerifySignedData(const SignedDataWithSignature& signedData,
-                          Input subjectPublicKeyInfo) override
+  Result DigestBuf(Input input, DigestAlgorithm digestAlg,
+                   /*out*/ uint8_t* digestBuf, size_t digestLen) override
   {
-    EXPECT_NE(SignatureAlgorithm::unsupported_algorithm, signedData.algorithm);
-    return TestVerifySignedData(signedData, subjectPublicKeyInfo);
+    return TestDigestBuf(input, digestAlg, digestBuf, digestLen);
   }
 
-  Result DigestBuf(Input, uint8_t*, size_t) override
+  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
+                                            override
   {
-    ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return Success;
   }
 
-  Result CheckPublicKey(Input subjectPublicKeyInfo) override
+  Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                                    Input subjectPublicKeyInfo) override
   {
-    return TestCheckPublicKey(subjectPublicKeyInfo);
+    return TestVerifyRSAPKCS1SignedDigest(signedDigest, subjectPublicKeyInfo);
+  }
+
+  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
+  {
+    return Success;
+  }
+
+  Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                 Input subjectPublicKeyInfo) override
+  {
+    return TestVerifyECDSASignedDigest(signedDigest, subjectPublicKeyInfo);
   }
 
   ByteString rootDER;

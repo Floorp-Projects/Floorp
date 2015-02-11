@@ -37,8 +37,7 @@ public:
         NS_ASSERTION(!PL_DHashTableSearch(&mTable, aContent),
                      "aContent already in map");
 
-        Entry* entry = static_cast<Entry*>
-            (PL_DHashTableAdd(&mTable, aContent, fallible));
+        Entry* entry = static_cast<Entry*>(PL_DHashTableAdd(&mTable, aContent));
 
         if (entry) {
             entry->mContent = aContent;

@@ -99,6 +99,19 @@ function workerTestGetOSCPU(cb) {
   });
 }
 
+function workerTestGetIsB2G(cb) {
+  addEventListener('message', function workerTestGetIsB2GCB(e) {
+    if (e.data.type !== 'returnIsB2G') {
+      return;
+    }
+    removeEventListener('message', workerTestGetIsB2GCB);
+    cb(e.data.result);
+  });
+  postMessage({
+    type: 'getIsB2G'
+  });
+}
+
 addEventListener('message', function workerWrapperOnMessage(e) {
   removeEventListener('message', workerWrapperOnMessage);
   var data = e.data;

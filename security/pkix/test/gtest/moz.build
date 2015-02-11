@@ -30,11 +30,24 @@ LOCAL_INCLUDES += [
 
 FINAL_LIBRARY = 'xul-gtest'
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include('../../warnings.mozbuild')
 
-if CONFIG['_MSC_VER']:
+# These warnings are disabled in order to minimize the amount of boilerplate
+# required to implement tests, and/or because they originate in the GTest
+# framework in a way we cannot otherwise work around.
+if CONFIG['CLANG_CXX']:
   CXXFLAGS += [
-    '-wd4275', # non dll-interface class used as base for dll-interface class
+    '-Wno-exit-time-destructors',
+    '-Wno-global-constructors',
+    '-Wno-old-style-cast',
+    '-Wno-used-but-marked-unused',
   ]
-
-FAIL_ON_WARNINGS = True
+elif CONFIG['_MSC_VER']:
+  CXXFLAGS += [
+    '-wd4350', # behavior change: 'std::_Wrap_alloc<std::allocator<_Ty>>::...
+    '-wd4275', # non dll-interface class used as base for dll-interface class
+    '-wd4548', # Expression before comma has no effect
+    '-wd4625', # copy constructor could not be generated.
+    '-wd4626', # assugment operator could not be generated.
+    '-wd4640', # construction of local static object is not thread safe.
+  ]

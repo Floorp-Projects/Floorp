@@ -24,189 +24,118 @@ let utils = {};
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
 
+let keyModifierNames = {
+    "VK_SHIFT": 'shiftKey',
+    "VK_CONTROL": 'ctrlKey',
+    "VK_ALT": 'altKey',
+    "VK_META": 'metaKey'
+};
+
+let keyCodes = {
+  '\uE001': "VK_CANCEL",
+  '\uE002': "VK_HELP",
+  '\uE003': "VK_BACK_SPACE",
+  '\uE004': "VK_TAB",
+  '\uE005': "VK_CLEAR",
+  '\uE006': "VK_RETURN",
+  '\uE007': "VK_RETURN",
+  '\uE008': "VK_SHIFT",
+  '\uE009': "VK_CONTROL",
+  '\uE00A': "VK_ALT",
+  '\uE03D': "VK_META",
+  '\uE00B': "VK_PAUSE",
+  '\uE00C': "VK_ESCAPE",
+  '\uE00D': "VK_SPACE",  // printable
+  '\uE00E': "VK_PAGE_UP",
+  '\uE00F': "VK_PAGE_DOWN",
+  '\uE010': "VK_END",
+  '\uE011': "VK_HOME",
+  '\uE012': "VK_LEFT",
+  '\uE013': "VK_UP",
+  '\uE014': "VK_RIGHT",
+  '\uE015': "VK_DOWN",
+  '\uE016': "VK_INSERT",
+  '\uE017': "VK_DELETE",
+  '\uE018': "VK_SEMICOLON",
+  '\uE019': "VK_EQUALS",
+  '\uE01A': "VK_NUMPAD0",
+  '\uE01B': "VK_NUMPAD1",
+  '\uE01C': "VK_NUMPAD2",
+  '\uE01D': "VK_NUMPAD3",
+  '\uE01E': "VK_NUMPAD4",
+  '\uE01F': "VK_NUMPAD5",
+  '\uE020': "VK_NUMPAD6",
+  '\uE021': "VK_NUMPAD7",
+  '\uE022': "VK_NUMPAD8",
+  '\uE023': "VK_NUMPAD9",
+  '\uE024': "VK_MULTIPLY",
+  '\uE025': "VK_ADD",
+  '\uE026': "VK_SEPARATOR",
+  '\uE027': "VK_SUBTRACT",
+  '\uE028': "VK_DECIMAL",
+  '\uE029': "VK_DIVIDE",
+  '\uE031': "VK_F1",
+  '\uE032': "VK_F2",
+  '\uE033': "VK_F3",
+  '\uE034': "VK_F4",
+  '\uE035': "VK_F5",
+  '\uE036': "VK_F6",
+  '\uE037': "VK_F7",
+  '\uE038': "VK_F8",
+  '\uE039': "VK_F9",
+  '\uE03A': "VK_F10",
+  '\uE03B': "VK_F11",
+  '\uE03C': "VK_F12"
+};
+
+function getKeyCode (c) {
+  if (c in keyCodes) {
+    return keyCodes[c];
+  }
+  return c;
+};
+
+function sendKeyDown (keyToSend, modifiers, document) {
+  modifiers.type = "keydown";
+  sendSingleKey(keyToSend, modifiers, document);
+  if (["VK_SHIFT", "VK_CONTROL",
+       "VK_ALT", "VK_META"].indexOf(getKeyCode(keyToSend)) == -1) {
+    modifiers.type = "keypress";
+    sendSingleKey(keyToSend, modifiers, document);
+  }
+  delete modifiers.type;
+}
+
+function sendKeyUp (keyToSend, modifiers, document) {
+  modifiers.type = "keyup";
+  sendSingleKey(keyToSend, modifiers, document);
+  delete modifiers.type;
+}
+
+function sendSingleKey (keyToSend, modifiers, document) {
+  let keyCode = getKeyCode(keyToSend);
+  if (keyCode in keyModifierNames) {
+    let modName = keyModifierNames[keyCode];
+    modifiers[modName] = !modifiers[modName];
+  } else if (modifiers.shiftKey) {
+    keyCode = keyCode.toUpperCase();
+  }
+  utils.synthesizeKey(keyCode, modifiers, document);
+}
+
 function sendKeysToElement (document, element, keysToSend, successCallback, errorCallback, command_id, context) {
   if (context == "chrome" || checkVisible(element)) {
     element.focus();
-    var value = keysToSend.join("");
-    let hasShift = null;
-    let hasCtrl = null;
-    let hasAlt = null;
-    let hasMeta = null;
+    let modifiers = {
+      shiftKey: false,
+      ctrlKey: false,
+      altKey: false,
+      metaKey: false
+    };
+    let value = keysToSend.join("");
     for (var i = 0; i < value.length; i++) {
-      var keyCode = null;
       var c = value.charAt(i);
-      switch (c) {
-        case '\uE001':
-          keyCode = "VK_CANCEL";
-          break;
-        case '\uE002':
-          keyCode = "VK_HELP";
-          break;
-        case '\uE003':
-          keyCode = "VK_BACK_SPACE";
-          break;
-        case '\uE004':
-          keyCode = "VK_TAB";
-          break;
-        case '\uE005':
-          keyCode = "VK_CLEAR";
-          break;
-        case '\uE006':
-        case '\uE007':
-          keyCode = "VK_RETURN";
-          break;
-        case '\uE008':
-          keyCode = "VK_SHIFT";
-          hasShift = !hasShift;
-          break;
-        case '\uE009':
-          keyCode = "VK_CONTROL";
-          hasCtrl = !hasCtrl;
-          break;
-        case '\uE00A':
-          keyCode = "VK_ALT";
-          hasAlt = !hasAlt;
-          break;
-        case '\uE03D':
-          keyCode = "VK_META";
-          hasMeta = !hasMeta;
-          break;
-        case '\uE00B':
-          keyCode = "VK_PAUSE";
-          break;
-        case '\uE00C':
-          keyCode = "VK_ESCAPE";
-          break;
-        case '\uE00D':
-          keyCode = "VK_SPACE";  // printable
-          break;
-        case '\uE00E':
-          keyCode = "VK_PAGE_UP";
-          break;
-        case '\uE00F':
-          keyCode = "VK_PAGE_DOWN";
-          break;
-        case '\uE010':
-          keyCode = "VK_END";
-          break;
-        case '\uE011':
-          keyCode = "VK_HOME";
-          break;
-        case '\uE012':
-          keyCode = "VK_LEFT";
-          break;
-        case '\uE013':
-          keyCode = "VK_UP";
-          break;
-        case '\uE014':
-          keyCode = "VK_RIGHT";
-          break;
-        case '\uE015':
-          keyCode = "VK_DOWN";
-          break;
-        case '\uE016':
-          keyCode = "VK_INSERT";
-          break;
-        case '\uE017':
-          keyCode = "VK_DELETE";
-          break;
-        case '\uE018':
-          keyCode = "VK_SEMICOLON";
-          break;
-        case '\uE019':
-          keyCode = "VK_EQUALS";
-          break;
-        case '\uE01A':
-          keyCode = "VK_NUMPAD0";
-          break;
-        case '\uE01B':
-          keyCode = "VK_NUMPAD1";
-          break;
-        case '\uE01C':
-          keyCode = "VK_NUMPAD2";
-          break;
-        case '\uE01D':
-          keyCode = "VK_NUMPAD3";
-          break;
-        case '\uE01E':
-          keyCode = "VK_NUMPAD4";
-          break;
-        case '\uE01F':
-          keyCode = "VK_NUMPAD5";
-          break;
-        case '\uE020':
-          keyCode = "VK_NUMPAD6";
-          break;
-        case '\uE021':
-          keyCode = "VK_NUMPAD7";
-          break;
-        case '\uE022':
-          keyCode = "VK_NUMPAD8";
-          break;
-        case '\uE023':
-          keyCode = "VK_NUMPAD9";
-          break;
-        case '\uE024':
-          keyCode = "VK_MULTIPLY";
-          break;
-        case '\uE025':
-          keyCode = "VK_ADD";
-          break;
-        case '\uE026':
-          keyCode = "VK_SEPARATOR";
-          break;
-        case '\uE027':
-          keyCode = "VK_SUBTRACT";
-          break;
-        case '\uE028':
-          keyCode = "VK_DECIMAL";
-          break;
-        case '\uE029':
-          keyCode = "VK_DIVIDE";
-          break;
-        case '\uE031':
-          keyCode = "VK_F1";
-          break;
-        case '\uE032':
-          keyCode = "VK_F2";
-          break;
-        case '\uE033':
-          keyCode = "VK_F3";
-          break;
-        case '\uE034':
-          keyCode = "VK_F4";
-          break;
-        case '\uE035':
-          keyCode = "VK_F5";
-          break;
-        case '\uE036':
-          keyCode = "VK_F6";
-          break;
-        case '\uE037':
-          keyCode = "VK_F7";
-          break;
-        case '\uE038':
-          keyCode = "VK_F8";
-          break;
-        case '\uE039':
-          keyCode = "VK_F9";
-          break;
-        case '\uE03A':
-          keyCode = "VK_F10";
-          break;
-        case '\uE03B':
-          keyCode = "VK_F11";
-          break;
-        case '\uE03C':
-          keyCode = "VK_F12";
-          break;
-      }
-      let charCode = c.charCodeAt(0);
-      let isUpper = charCode >= 65 && charCode <= 90;
-      hasShift = isUpper || hasShift;
-      utils.synthesizeKey(keyCode || value[i],
-                          { shiftKey: hasShift, ctrlKey: hasCtrl, altKey: hasAlt, metaKey: hasMeta },
-                          document);
+      sendSingleKey(c, modifiers, document);
     }
     successCallback(command_id);
   }

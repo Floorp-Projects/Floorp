@@ -230,7 +230,7 @@ nsPropertyTable::SetPropertyInternal(nsPropertyOwner     aObject,
   // value is destroyed
   nsresult result = NS_OK;
   PropertyListMapEntry *entry = static_cast<PropertyListMapEntry*>
-    (PL_DHashTableAdd(&propertyList->mObjectValueMap, aObject, fallible));
+                                           (PL_DHashTableAdd(&propertyList->mObjectValueMap, aObject));
   if (!entry)
     return NS_ERROR_OUT_OF_MEMORY;
   // A nullptr entry->key is the sign that the entry has just been allocated

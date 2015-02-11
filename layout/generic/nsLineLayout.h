@@ -307,6 +307,11 @@ public:
     *aPriority = mLastOptionalBreakPriority;
     return mLastOptionalBreakFrame;
   }
+  // Whether any optional break position has been recorded.
+  bool HasOptionalBreakPosition() const
+  {
+    return mLastOptionalBreakFrame != nullptr;
+  }
   
   /**
    * Check whether frames overflowed the available width and CanPlaceFrame

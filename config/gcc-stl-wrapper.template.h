@@ -10,7 +10,7 @@
 
 // For some reason, Apple's GCC refuses to honor -fno-exceptions when
 // compiling ObjC.
-#if __EXCEPTIONS && !(__OBJC__ && __GNUC__ && XP_IOS)
+#if defined(__EXCEPTIONS) && __EXCEPTIONS && !(__OBJC__ && __GNUC__ && XP_IOS)
 #  error "STL code can only be used with -fno-exceptions"
 #endif
 
