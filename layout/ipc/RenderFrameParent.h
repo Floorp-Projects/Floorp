@@ -166,10 +166,7 @@ class nsDisplayRemote : public nsDisplayItem
 
 public:
   nsDisplayRemote(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                  RenderFrameParent* aRemoteFrame)
-    : nsDisplayItem(aBuilder, aFrame)
-    , mRemoteFrame(aRemoteFrame)
-  {}
+                  RenderFrameParent* aRemoteFrame);
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
@@ -187,6 +184,7 @@ public:
 
 private:
   RenderFrameParent* mRemoteFrame;
+  bool mForceDispatchToContentRegion;
 };
 
 

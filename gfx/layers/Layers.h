@@ -916,6 +916,10 @@ public:
    * outside the dispatch-to-content region, we can initiate a gesture without
    * consulting the content thread. Otherwise we must dispatch the event to
    * content.
+   * Note that if a layer or any ancestor layer returns true for
+   * GetForceDispatchToContentRegion() then we must treat the dispatch-to-content
+   * region as encompassing the hit region, and therefore must consult the
+   * content thread before initiating a gesture.
    */
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1967,6 +1971,20 @@ public:
     mChildrenChanged = aVal;
   }
 
+  void SetForceDispatchToContentRegion(bool aVal) {
+    if (mForceDispatchToContentRegion == aVal) {
+      return;
+    }
+
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ForceDispatchToContentRegion", this));
+    mForceDispatchToContentRegion = aVal;
+    Mutated();
+  }
+
+  bool GetForceDispatchToContentRegion() const {
+    return mForceDispatchToContentRegion;
+  }
+
   /**
    * VR
    */
@@ -2023,6 +2041,7 @@ protected:
   // This is updated by ComputeDifferences. This will be true if we need to invalidate
   // the intermediate surface.
   bool mChildrenChanged;
+  bool mForceDispatchToContentRegion;
   nsRefPtr<gfx::VRHMDInfo> mHMDInfo;
 };
 

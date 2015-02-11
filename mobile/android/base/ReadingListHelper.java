@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.DBUtils;
+import org.mozilla.gecko.db.ReadingListAccessor;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.NativeEventListener;
@@ -30,18 +31,17 @@ public final class ReadingListHelper implements NativeEventListener {
 
     protected final Context context;
     private final BrowserDB db;
-
-    private final Uri readingListUriWithProfile;
+    private final ReadingListAccessor readingListAccessor;
     private final ContentObserver contentObserver;
 
     public ReadingListHelper(Context context, GeckoProfile profile) {
         this.context = context;
         this.db = profile.getDB();
+        this.readingListAccessor = db.getReadingListAccessor();
 
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
             "Reader:AddToList", "Reader:UpdateList", "Reader:FaviconRequest", "Reader:ListStatusRequest", "Reader:RemoveFromList");
 
-        readingListUriWithProfile = DBUtils.appendProfile(profile.getName(), ReadingListItems.CONTENT_URI);
 
         contentObserver = new ContentObserver(null) {
             @Override
@@ -50,7 +50,7 @@ public final class ReadingListHelper implements NativeEventListener {
             }
         };
 
-        context.getContentResolver().registerContentObserver(readingListUriWithProfile, false, contentObserver);
+        this.readingListAccessor.registerContentObserver(context, contentObserver);
     }
 
     public void uninit() {
@@ -104,11 +104,11 @@ public final class ReadingListHelper implements NativeEventListener {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                if (db.isReadingListItem(cr, url)) {
+                if (readingListAccessor.isReadingListItem(cr, url)) {
                     showToast(R.string.reading_list_duplicate, Toast.LENGTH_SHORT);
                     callback.sendError("URL already in reading list: " + url);
                 } else {
-                    db.addReadingListItem(cr, values);
+                    readingListAccessor.addReadingListItem(cr, values);
                     showToast(R.string.reading_list_added, Toast.LENGTH_SHORT);
                     callback.sendSuccess(url);
                 }
@@ -126,7 +126,7 @@ public final class ReadingListHelper implements NativeEventListener {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                db.updateReadingListItem(cr, values);
+                readingListAccessor.updateReadingListItem(cr, values);
             }
         });
     }
@@ -192,7 +192,7 @@ public final class ReadingListHelper implements NativeEventListener {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                db.removeReadingListItemWithURL(context.getContentResolver(), url);
+                readingListAccessor.removeReadingListItemWithURL(context.getContentResolver(), url);
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Removed", url));
                 showToast(R.string.page_removed, Toast.LENGTH_SHORT);
             }
@@ -207,7 +207,7 @@ public final class ReadingListHelper implements NativeEventListener {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                final int inReadingList = db.isReadingListItem(context.getContentResolver(), url) ? 1 : 0;
+                final int inReadingList = readingListAccessor.isReadingListItem(context.getContentResolver(), url) ? 1 : 0;
 
                 final JSONObject json = new JSONObject();
                 try {
@@ -239,7 +239,7 @@ public final class ReadingListHelper implements NativeEventListener {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                final Cursor c = db.getReadingListUnfetched(context.getContentResolver());
+                final Cursor c = readingListAccessor.getReadingListUnfetched(context.getContentResolver());
                 try {
                     while (c.moveToNext()) {
                         JSONObject json = new JSONObject();

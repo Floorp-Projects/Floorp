@@ -363,7 +363,7 @@ public abstract class HomeFragment extends Fragment {
                     break;
 
                 case READING_LIST:
-                    mDB.removeReadingListItemWithURL(cr, mUrl);
+                    mDB.getReadingListAccessor().removeReadingListItemWithURL(cr, mUrl);
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Removed", mUrl));
                     break;
 

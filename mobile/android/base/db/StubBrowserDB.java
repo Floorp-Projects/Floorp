@@ -26,6 +26,48 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 
+class StubReadingListAccessor implements ReadingListAccessor {
+    @Override
+    public Cursor getReadingList(ContentResolver cr) {
+        return null;
+    }
+
+    @Override
+    public int getCount(ContentResolver cr) {
+        return 0;
+    }
+
+    @Override
+    public Cursor getReadingListUnfetched(ContentResolver cr) {
+        return null;
+    }
+
+    @Override
+    public boolean isReadingListItem(ContentResolver cr, String uri) {
+        return false;
+    }
+
+    @Override
+    public void addReadingListItem(ContentResolver cr, ContentValues values) {
+
+    }
+
+    @Override
+    public void updateReadingListItem(ContentResolver cr, ContentValues values) {
+
+    }
+
+    @Override
+    public void removeReadingListItemWithURL(ContentResolver cr, String uri) {
+
+    }
+
+    @Override
+    public void registerContentObserver(Context context, ContentObserver observer) {
+
+    }
+}
+
 class StubSearches implements Searches {
     public StubSearches() {
     }
@@ -91,6 +133,7 @@ public class StubBrowserDB implements BrowserDB {
     private final StubSearches searches = new StubSearches();
     private final StubTabsAccessor tabsAccessor = new StubTabsAccessor();
     private final StubURLMetadata urlMetadata = new StubURLMetadata();
+    private final StubReadingListAccessor readingListAccessor = new StubReadingListAccessor();
 
     @Override
     public Searches getSearches() {
@@ -105,6 +148,11 @@ public class StubBrowserDB implements BrowserDB {
     @Override
     public URLMetadata getURLMetadata() {
         return urlMetadata;
+    }
+
+    @Override
+    public ReadingListAccessor getReadingListAccessor() {
+        return readingListAccessor;
     }
 
     protected static final Integer FAVICON_ID_NOT_FOUND = Integer.MIN_VALUE;
