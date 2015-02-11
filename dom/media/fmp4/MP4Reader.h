@@ -260,9 +260,6 @@ private:
   // True if we've read the streams' metadata.
   bool mDemuxerInitialized;
 
-  // True if we've gathered telemetry from an SPS.
-  bool mFoundSPSForTelemetry;
-
   // Synchronized by decoder monitor.
   bool mIsEncrypted;
 
