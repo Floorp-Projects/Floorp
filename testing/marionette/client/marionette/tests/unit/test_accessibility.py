@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_test import MarionetteTestCase
-from marionette_driver.errors import (ElementNotAccessibleException,
-                                     ElementNotVisibleException)
+from errors import ElementNotAccessibleException
+from errors import ElementNotVisibleException
 
 
 class TestAccessibility(MarionetteTestCase):

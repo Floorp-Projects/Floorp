@@ -4,7 +4,7 @@
 
 from marionette_test import MarionetteTestCase
 from datetime import datetime
-from marionette_driver.date_time_value import DateTimeValue
+from date_time_value import DateTimeValue
 
 class TestDateTime(MarionetteTestCase):
 
