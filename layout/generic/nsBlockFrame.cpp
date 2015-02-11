@@ -1141,6 +1141,16 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     PrepareResizeReflow(state);
   }
 
+  // The same for percentage text-indent, except conditioned on the
+  // parent resizing.
+  if (!(GetStateBits() & NS_FRAME_IS_DIRTY) &&
+      reflowState->mCBReflowState &&
+      reflowState->mCBReflowState->IsIResize() &&
+      reflowState->mStyleText->mTextIndent.HasPercent() &&
+      !mLines.empty()) {
+    mLines.front()->MarkDirty();
+  }
+
   LazyMarkLinesDirty();
 
   mState &= ~NS_FRAME_FIRST_REFLOW;
