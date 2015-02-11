@@ -19,7 +19,7 @@ const xpcInspector = require("xpcInspector");
 const mapURIToAddonID = require("./utils/map-uri-to-addon-id");
 const ScriptStore = require("./utils/ScriptStore");
 
-const { defer, resolve, reject, all } = require("devtools/toolkit/deprecated-sync-thenables");
+const { defer, resolve, reject, all } = promise;
 
 loader.lazyGetter(this, "Debugger", () => {
   let Debugger = require("Debugger");
