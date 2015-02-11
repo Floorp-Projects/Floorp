@@ -414,7 +414,7 @@ partial interface Navigator {
 
 #ifdef MOZ_EME
 partial interface Navigator {
-  [Pref="media.eme.enabled", NewObject]
+  [Pref="media.eme.apiVisible", NewObject]
   Promise<MediaKeySystemAccess>
   requestMediaKeySystemAccess(DOMString keySystem,
                               optional sequence<MediaKeySystemOptions> supportedConfigurations);
