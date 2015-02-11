@@ -155,8 +155,8 @@ class MP4Sample
 {
 public:
   MP4Sample();
-  MP4Sample(const MP4Sample& copy);
   virtual ~MP4Sample();
+  MP4Sample* Clone() const;
   void Update(int64_t& aMediaTime);
   void Pad(size_t aPaddingBytes);
 
@@ -178,6 +178,8 @@ public:
   void Replace(const uint8_t* aData, size_t aSize);
 
   nsAutoArrayPtr<uint8_t> extra_buffer;
+private:
+  MP4Sample(const MP4Sample&); // Not implemented
 };
 }
 
