@@ -2968,9 +2968,9 @@ GCRuntime::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
         if (!allowGC)
             return nullptr;
 
-        JS::PrepareZoneForGC(cx->zone());
+        JS::PrepareForFullGC(rt);
         AutoKeepAtoms keepAtoms(cx->perThreadData);
-        rt->gc.gc(GC_NORMAL, JS::gcreason::LAST_DITCH);
+        rt->gc.gc(GC_SHRINK, JS::gcreason::LAST_DITCH);
     }
 
     // Retry the allocation after the last-ditch GC.

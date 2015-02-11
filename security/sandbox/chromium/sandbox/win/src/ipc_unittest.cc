@@ -251,7 +251,7 @@ TEST(IPCTest, CrossCallIntPacking) {
   uint32 param_size = 1;
   void* param_addr = actual_params->GetRawParameter(0, &param_size, &type);
   ASSERT_EQ(sizeof(dw), param_size);
-  EXPECT_EQ(ULONG_TYPE, type);
+  EXPECT_EQ(UINT32_TYPE, type);
   ASSERT_TRUE(NULL != param_addr);
   EXPECT_EQ(0, memcmp(&dw, param_addr, param_size));
 
@@ -282,7 +282,7 @@ TEST(IPCTest, CrossCallIntPacking) {
   type = INVALID_TYPE;
   param_addr = actual_params->GetRawParameter(1, &param_size, &type);
   ASSERT_EQ(sizeof(dw), param_size);
-  EXPECT_EQ(ULONG_TYPE, type);
+  EXPECT_EQ(UINT32_TYPE, type);
   ASSERT_TRUE(NULL != param_addr);
   EXPECT_EQ(0, memcmp(&dw, param_addr, param_size));
   type = INVALID_TYPE;
@@ -302,7 +302,7 @@ TEST(IPCTest, CrossCallValidation) {
   const uint32 kTag = 33;
   const uint32 kBufferSize = 256;
   ActualCallParams<1, kBufferSize> params_1(kTag);
-  params_1.CopyParamIn(0, &value, sizeof(value), false, ULONG_TYPE);
+  params_1.CopyParamIn(0, &value, sizeof(value), false, UINT32_TYPE);
   void* buffer = const_cast<void*>(params_1.GetBuffer());
 
   uint32 out_size = 0;
@@ -322,7 +322,7 @@ TEST(IPCTest, CrossCallValidation) {
   for (int32 ix = -1; ix != 3; ++ix) {
     uint32 fake_num_params = (kuint32max / kPtrDiffSz) + ix;
     ActualCallParams<1, kBufferSize> params_2(kTag, fake_num_params);
-    params_2.CopyParamIn(0, &value, sizeof(value), false, ULONG_TYPE);
+    params_2.CopyParamIn(0, &value, sizeof(value), false, UINT32_TYPE);
     buffer = const_cast<void*>(params_2.GetBuffer());
 
     EXPECT_TRUE(NULL != buffer);
@@ -333,7 +333,7 @@ TEST(IPCTest, CrossCallValidation) {
   }
 
   ActualCallParams<1, kBufferSize> params_3(kTag, 1);
-  params_3.CopyParamIn(0, &value, sizeof(value), false, ULONG_TYPE);
+  params_3.CopyParamIn(0, &value, sizeof(value), false, UINT32_TYPE);
   buffer = const_cast<void*>(params_3.GetBuffer());
   EXPECT_TRUE(NULL != buffer);
 
@@ -352,7 +352,7 @@ TEST(IPCTest, CrossCallValidation) {
 
   // Make sure that two parameters work as expected.
   ActualCallParams<2, kBufferSize> params_4(kTag, 2);
-  params_4.CopyParamIn(0, &value, sizeof(value), false, ULONG_TYPE);
+  params_4.CopyParamIn(0, &value, sizeof(value), false, UINT32_TYPE);
   params_4.CopyParamIn(1, buffer, sizeof(buffer), false, VOIDPTR_TYPE);
   buffer = const_cast<void*>(params_4.GetBuffer());
   EXPECT_TRUE(NULL != buffer);
@@ -572,25 +572,25 @@ class UnitTestIPCDispatcher : public Dispatcher {
   }
 
  private:
-  bool CallOneHandler(IPCInfo* ipc, HANDLE p1, DWORD p2) {
+  bool CallOneHandler(IPCInfo* ipc, HANDLE p1, uint32 p2) {
     ipc->return_info.extended[0].handle = p1;
     ipc->return_info.extended[1].unsigned_int = p2;
     return true;
   }
 
-  bool CallTwoHandler(IPCInfo* ipc, HANDLE p1, DWORD p2) {
+  bool CallTwoHandler(IPCInfo* ipc, HANDLE p1, uint32 p2) {
     return true;
   }
 };
 
 UnitTestIPCDispatcher::UnitTestIPCDispatcher() {
   static const IPCCall call_one = {
-    {CALL_ONE_TAG, VOIDPTR_TYPE, ULONG_TYPE},
+    {CALL_ONE_TAG, VOIDPTR_TYPE, UINT32_TYPE},
     reinterpret_cast<CallbackGeneric>(
         &UnitTestIPCDispatcher::CallOneHandler)
   };
   static const IPCCall call_two = {
-    {CALL_TWO_TAG, VOIDPTR_TYPE, ULONG_TYPE},
+    {CALL_TWO_TAG, VOIDPTR_TYPE, UINT32_TYPE},
     reinterpret_cast<CallbackGeneric>(
         &UnitTestIPCDispatcher::CallTwoHandler)
   };

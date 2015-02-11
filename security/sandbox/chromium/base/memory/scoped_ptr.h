@@ -58,7 +58,7 @@
 //     TakesOwnership(ptr.Pass());           // ptr no longer owns Foo("yay").
 //     scoped_ptr<Foo> ptr2 = CreateFoo();   // ptr2 owns the return Foo.
 //     scoped_ptr<Foo> ptr3 =                // ptr3 now owns what was in ptr2.
-//         PassThru(ptr2.Pass());            // ptr2 is correspondingly NULL.
+//         PassThru(ptr2.Pass());            // ptr2 is correspondingly nullptr.
 //   }
 //
 // Notice that if you do not call Pass() when returning from PassThru(), or
@@ -73,16 +73,6 @@
 //
 //   scoped_ptr<Foo> foo(new Foo());
 //   scoped_ptr<FooParent> parent(foo.Pass());
-//
-// PassAs<>() should be used to upcast return value in return statement:
-//
-//   scoped_ptr<Foo> CreateFoo() {
-//     scoped_ptr<FooChild> result(new FooChild());
-//     return result.PassAs<Foo>();
-//   }
-//
-// Note that PassAs<>() is implemented only for scoped_ptr<T>, but not for
-// scoped_ptr<T[]>. This is because casting array pointers may not be safe.
 
 #ifndef BASE_MEMORY_SCOPED_PTR_H_
 #define BASE_MEMORY_SCOPED_PTR_H_
@@ -184,12 +174,23 @@ template <typename T> struct IsNotRefCounted {
   };
 };
 
+template <typename T>
+struct ShouldAbortOnSelfReset {
+  template <typename U>
+  static NoType Test(const typename U::AllowSelfReset*);
+
+  template <typename U>
+  static YesType Test(...);
+
+  static const bool value = sizeof(Test<T>(0)) == sizeof(YesType);
+};
+
 // Minimal implementation of the core logic of scoped_ptr, suitable for
 // reuse in both scoped_ptr and its specializations.
 template <class T, class D>
 class scoped_ptr_impl {
  public:
-  explicit scoped_ptr_impl(T* p) : data_(p) { }
+  explicit scoped_ptr_impl(T* p) : data_(p) {}
 
   // Initializer for deleters that have data parameters.
   scoped_ptr_impl(T* p, const D& d) : data_(p, d) {}
@@ -214,7 +215,7 @@ class scoped_ptr_impl {
   }
 
   ~scoped_ptr_impl() {
-    if (data_.ptr != NULL) {
+    if (data_.ptr != nullptr) {
       // Not using get_deleter() saves one function call in non-optimized
       // builds.
       static_cast<D&>(data_)(data_.ptr);
@@ -222,9 +223,9 @@ class scoped_ptr_impl {
   }
 
   void reset(T* p) {
-    // This is a self-reset, which is no longer allowed: http://crbug.com/162971
-    if (p != NULL && p == data_.ptr)
-      abort();
+    // This is a self-reset, which is no longer allowed for default deleters:
+    // https://crbug.com/162971
+    assert(!ShouldAbortOnSelfReset<D>::value || p == nullptr || p != data_.ptr);
 
     // Note that running data_.ptr = p can lead to undefined behavior if
     // get_deleter()(get()) deletes this. In order to prevent this, reset()
@@ -236,13 +237,13 @@ class scoped_ptr_impl {
     // then it will incorrectly dispatch calls to |p| rather than the original
     // value of |data_.ptr|.
     //
-    // During the transition period, set the stored pointer to NULL while
+    // During the transition period, set the stored pointer to nullptr while
     // deleting the object. Eventually, this safety check will be removed to
     // prevent the scenario initially described from occuring and
     // http://crbug.com/176091 can be closed.
     T* old = data_.ptr;
-    data_.ptr = NULL;
-    if (old != NULL)
+    data_.ptr = nullptr;
+    if (old != nullptr)
       static_cast<D&>(data_)(old);
     data_.ptr = p;
   }
@@ -263,7 +264,7 @@ class scoped_ptr_impl {
 
   T* release() {
     T* old_ptr = data_.ptr;
-    data_.ptr = NULL;
+    data_.ptr = nullptr;
     return old_ptr;
   }
 
@@ -293,8 +294,8 @@ class scoped_ptr_impl {
 // A scoped_ptr<T> is like a T*, except that the destructor of scoped_ptr<T>
 // automatically deletes the pointer it holds (if any).
 // That is, scoped_ptr<T> owns the T object that it points to.
-// Like a T*, a scoped_ptr<T> may hold either NULL or a pointer to a T object.
-// Also like T*, scoped_ptr<T> is thread-compatible, and once you
+// Like a T*, a scoped_ptr<T> may hold either nullptr or a pointer to a T
+// object. Also like T*, scoped_ptr<T> is thread-compatible, and once you
 // dereference it, you get the thread safety guarantees of T.
 //
 // The size of scoped_ptr is small. On most compilers, when using the
@@ -308,7 +309,7 @@ class scoped_ptr_impl {
 // types.
 template <class T, class D = base::DefaultDeleter<T> >
 class scoped_ptr {
-  MOVE_ONLY_TYPE_FOR_CPP_03(scoped_ptr, RValue)
+  MOVE_ONLY_TYPE_WITH_MOVE_CONSTRUCTOR_FOR_CPP_03(scoped_ptr)
 
   COMPILE_ASSERT(base::internal::IsNotRefCounted<T>::value,
                  T_is_refcounted_type_and_needs_scoped_refptr);
@@ -318,14 +319,17 @@ class scoped_ptr {
   typedef T element_type;
   typedef D deleter_type;
 
-  // Constructor.  Defaults to initializing with NULL.
-  scoped_ptr() : impl_(NULL) { }
+  // Constructor.  Defaults to initializing with nullptr.
+  scoped_ptr() : impl_(nullptr) {}
 
   // Constructor.  Takes ownership of p.
-  explicit scoped_ptr(element_type* p) : impl_(p) { }
+  explicit scoped_ptr(element_type* p) : impl_(p) {}
 
   // Constructor.  Allows initialization of a stateful deleter.
-  scoped_ptr(element_type* p, const D& d) : impl_(p, d) { }
+  scoped_ptr(element_type* p, const D& d) : impl_(p, d) {}
+
+  // Constructor.  Allows construction from a nullptr.
+  scoped_ptr(decltype(nullptr)) : impl_(nullptr) {}
 
   // Constructor.  Allows construction from a scoped_ptr rvalue for a
   // convertible type and deleter.
@@ -338,12 +342,10 @@ class scoped_ptr {
   // use of SFINAE. You only need to care about this if you modify the
   // implementation of scoped_ptr.
   template <typename U, typename V>
-  scoped_ptr(scoped_ptr<U, V> other) : impl_(&other.impl_) {
+  scoped_ptr(scoped_ptr<U, V>&& other)
+      : impl_(&other.impl_) {
     COMPILE_ASSERT(!base::is_array<U>::value, U_cannot_be_an_array);
   }
-
-  // Constructor.  Move constructor for C++03 move emulation of this type.
-  scoped_ptr(RValue rvalue) : impl_(&rvalue.object->impl_) { }
 
   // operator=.  Allows assignment from a scoped_ptr rvalue for a convertible
   // type and deleter.
@@ -356,24 +358,31 @@ class scoped_ptr {
   // You only need to care about this if you modify the implementation of
   // scoped_ptr.
   template <typename U, typename V>
-  scoped_ptr& operator=(scoped_ptr<U, V> rhs) {
+  scoped_ptr& operator=(scoped_ptr<U, V>&& rhs) {
     COMPILE_ASSERT(!base::is_array<U>::value, U_cannot_be_an_array);
     impl_.TakeState(&rhs.impl_);
     return *this;
   }
 
+  // operator=.  Allows assignment from a nullptr. Deletes the currently owned
+  // object, if any.
+  scoped_ptr& operator=(decltype(nullptr)) {
+    reset();
+    return *this;
+  }
+
   // Reset.  Deletes the currently owned object, if any.
   // Then takes ownership of a new object, if given.
-  void reset(element_type* p = NULL) { impl_.reset(p); }
+  void reset(element_type* p = nullptr) { impl_.reset(p); }
 
   // Accessors to get the owned object.
   // operator* and operator-> will assert() if there is no current object.
   element_type& operator*() const {
-    assert(impl_.get() != NULL);
+    assert(impl_.get() != nullptr);
     return *impl_.get();
   }
   element_type* operator->() const  {
-    assert(impl_.get() != NULL);
+    assert(impl_.get() != nullptr);
     return impl_.get();
   }
   element_type* get() const { return impl_.get(); }
@@ -394,7 +403,9 @@ class scoped_ptr {
       scoped_ptr::*Testable;
 
  public:
-  operator Testable() const { return impl_.get() ? &scoped_ptr::impl_ : NULL; }
+  operator Testable() const {
+    return impl_.get() ? &scoped_ptr::impl_ : nullptr;
+  }
 
   // Comparison operators.
   // These return whether two scoped_ptr refer to the same object, not just to
@@ -408,23 +419,11 @@ class scoped_ptr {
   }
 
   // Release a pointer.
-  // The return value is the current pointer held by this object.
-  // If this object holds a NULL pointer, the return value is NULL.
-  // After this operation, this object will hold a NULL pointer,
-  // and will not own the object any more.
+  // The return value is the current pointer held by this object. If this object
+  // holds a nullptr, the return value is nullptr. After this operation, this
+  // object will hold a nullptr, and will not own the object any more.
   element_type* release() WARN_UNUSED_RESULT {
     return impl_.release();
-  }
-
-  // C++98 doesn't support functions templates with default parameters which
-  // makes it hard to write a PassAs() that understands converting the deleter
-  // while preserving simple calling semantics.
-  //
-  // Until there is a use case for PassAs() with custom deleters, just ignore
-  // the custom deleter.
-  template <typename PassAsType>
-  scoped_ptr<PassAsType> PassAs() {
-    return scoped_ptr<PassAsType>(Pass());
   }
 
  private:
@@ -445,15 +444,15 @@ class scoped_ptr {
 
 template <class T, class D>
 class scoped_ptr<T[], D> {
-  MOVE_ONLY_TYPE_FOR_CPP_03(scoped_ptr, RValue)
+  MOVE_ONLY_TYPE_WITH_MOVE_CONSTRUCTOR_FOR_CPP_03(scoped_ptr)
 
  public:
   // The element and deleter types.
   typedef T element_type;
   typedef D deleter_type;
 
-  // Constructor.  Defaults to initializing with NULL.
-  scoped_ptr() : impl_(NULL) { }
+  // Constructor.  Defaults to initializing with nullptr.
+  scoped_ptr() : impl_(nullptr) {}
 
   // Constructor. Stores the given array. Note that the argument's type
   // must exactly match T*. In particular:
@@ -463,32 +462,39 @@ class scoped_ptr<T[], D> {
   //   T and the derived types had different sizes access would be
   //   incorrectly calculated). Deletion is also always undefined
   //   (C++98 [expr.delete]p3). If you're doing this, fix your code.
-  // - it cannot be NULL, because NULL is an integral expression, not a
-  //   pointer to T. Use the no-argument version instead of explicitly
-  //   passing NULL.
   // - it cannot be const-qualified differently from T per unique_ptr spec
   //   (http://cplusplus.github.com/LWG/lwg-active.html#2118). Users wanting
   //   to work around this may use implicit_cast<const T*>().
   //   However, because of the first bullet in this comment, users MUST
   //   NOT use implicit_cast<Base*>() to upcast the static type of the array.
-  explicit scoped_ptr(element_type* array) : impl_(array) { }
+  explicit scoped_ptr(element_type* array) : impl_(array) {}
 
-  // Constructor.  Move constructor for C++03 move emulation of this type.
-  scoped_ptr(RValue rvalue) : impl_(&rvalue.object->impl_) { }
+  // Constructor.  Allows construction from a nullptr.
+  scoped_ptr(decltype(nullptr)) : impl_(nullptr) {}
 
-  // operator=.  Move operator= for C++03 move emulation of this type.
-  scoped_ptr& operator=(RValue rhs) {
-    impl_.TakeState(&rhs.object->impl_);
+  // Constructor.  Allows construction from a scoped_ptr rvalue.
+  scoped_ptr(scoped_ptr&& other) : impl_(&other.impl_) {}
+
+  // operator=.  Allows assignment from a scoped_ptr rvalue.
+  scoped_ptr& operator=(scoped_ptr&& rhs) {
+    impl_.TakeState(&rhs.impl_);
+    return *this;
+  }
+
+  // operator=.  Allows assignment from a nullptr. Deletes the currently owned
+  // array, if any.
+  scoped_ptr& operator=(decltype(nullptr)) {
+    reset();
     return *this;
   }
 
   // Reset.  Deletes the currently owned array, if any.
   // Then takes ownership of a new object, if given.
-  void reset(element_type* array = NULL) { impl_.reset(array); }
+  void reset(element_type* array = nullptr) { impl_.reset(array); }
 
   // Accessors to get the owned array.
   element_type& operator[](size_t i) const {
-    assert(impl_.get() != NULL);
+    assert(impl_.get() != nullptr);
     return impl_.get()[i];
   }
   element_type* get() const { return impl_.get(); }
@@ -504,7 +510,9 @@ class scoped_ptr<T[], D> {
       scoped_ptr::*Testable;
 
  public:
-  operator Testable() const { return impl_.get() ? &scoped_ptr::impl_ : NULL; }
+  operator Testable() const {
+    return impl_.get() ? &scoped_ptr::impl_ : nullptr;
+  }
 
   // Comparison operators.
   // These return whether two scoped_ptr refer to the same object, not just to
@@ -518,10 +526,9 @@ class scoped_ptr<T[], D> {
   }
 
   // Release a pointer.
-  // The return value is the current pointer held by this object.
-  // If this object holds a NULL pointer, the return value is NULL.
-  // After this operation, this object will hold a NULL pointer,
-  // and will not own the object any more.
+  // The return value is the current pointer held by this object. If this object
+  // holds a nullptr, the return value is nullptr. After this operation, this
+  // object will hold a nullptr, and will not own the object any more.
   element_type* release() WARN_UNUSED_RESULT {
     return impl_.release();
   }

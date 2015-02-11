@@ -9,10 +9,19 @@
 
 #include "base/basictypes.h"
 #include "base/logging.h"
+#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
 
 namespace sandbox {
 
 namespace {
+
+#if defined(ARCH_CPU_X86_FAMILY) || defined(ARCH_CPU_ARM_FAMILY) || \
+    defined(ARCH_CPU_MIPS_FAMILY)
+// Number that's not currently used by any Linux kernel ABIs.
+const int kInvalidSyscallNumber = 0x351d3;
+#else
+#error Unrecognized architecture
+#endif
 
 asm(// We need to be able to tell the kernel exactly where we made a
     // system call. The C++ compiler likes to sometimes clone or
@@ -50,10 +59,10 @@ asm(// We need to be able to tell the kernel exactly where we made a
     // that are used internally (e.g. %ebx for position-independent
     // code, and %ebp for the frame pointer), and as we need to keep at
     // least a few registers available for the register allocator.
-    "1:push %esi; .cfi_adjust_cfa_offset 4\n"
-    "push %edi; .cfi_adjust_cfa_offset 4\n"
-    "push %ebx; .cfi_adjust_cfa_offset 4\n"
-    "push %ebp; .cfi_adjust_cfa_offset 4\n"
+    "1:push %esi; .cfi_adjust_cfa_offset 4; .cfi_rel_offset esi, 0\n"
+    "push %edi; .cfi_adjust_cfa_offset 4; .cfi_rel_offset edi, 0\n"
+    "push %ebx; .cfi_adjust_cfa_offset 4; .cfi_rel_offset ebx, 0\n"
+    "push %ebp; .cfi_adjust_cfa_offset 4; .cfi_rel_offset ebp, 0\n"
     // Copy entries from the array holding the arguments into the
     // correct CPU registers.
     "movl  0(%edi), %ebx\n"
@@ -68,10 +77,10 @@ asm(// We need to be able to tell the kernel exactly where we made a
     "2:"
     // Restore any clobbered registers that we didn't declare to the
     // compiler.
-    "pop  %ebp; .cfi_adjust_cfa_offset -4\n"
-    "pop  %ebx; .cfi_adjust_cfa_offset -4\n"
-    "pop  %edi; .cfi_adjust_cfa_offset -4\n"
-    "pop  %esi; .cfi_adjust_cfa_offset -4\n"
+    "pop  %ebp; .cfi_restore ebp; .cfi_adjust_cfa_offset -4\n"
+    "pop  %ebx; .cfi_restore ebx; .cfi_adjust_cfa_offset -4\n"
+    "pop  %edi; .cfi_restore edi; .cfi_adjust_cfa_offset -4\n"
+    "pop  %esi; .cfi_restore esi; .cfi_adjust_cfa_offset -4\n"
     "ret\n"
     ".cfi_endproc\n"
     "9:.size SyscallAsm, 9b-SyscallAsm\n"
@@ -80,28 +89,28 @@ asm(// We need to be able to tell the kernel exactly where we made a
     ".align 16, 0x90\n"
     ".type SyscallAsm, @function\n"
     "SyscallAsm:.cfi_startproc\n"
-    // Check if "%rax" is negative. If so, do not attempt to make a
+    // Check if "%rdi" is negative. If so, do not attempt to make a
     // system call. Instead, compute the return address that is visible
     // to the kernel after we execute "syscall". This address can be
     // used as a marker that BPF code inspects.
-    "test %rax, %rax\n"
+    "test %rdi, %rdi\n"
     "jge  1f\n"
     // Always make sure that our code is position-independent, or the
     // linker will throw a hissy fit on x86-64.
-    "call 0f;   .cfi_adjust_cfa_offset  8\n"
-    "0:pop  %rax; .cfi_adjust_cfa_offset -8\n"
-    "addq $2f-0b, %rax\n"
+    "lea 2f(%rip), %rax\n"
     "ret\n"
-    // We declared all clobbered registers to the compiler. On x86-64,
-    // there really isn't much of a problem with register pressure. So,
-    // we can go ahead and directly copy the entries from the arguments
-    // array into the appropriate CPU registers.
-    "1:movq  0(%r12), %rdi\n"
-    "movq  8(%r12), %rsi\n"
-    "movq 16(%r12), %rdx\n"
-    "movq 24(%r12), %r10\n"
-    "movq 32(%r12), %r8\n"
-    "movq 40(%r12), %r9\n"
+    // Now we load the registers used to pass arguments to the system
+    // call: system call number in %rax, and arguments in %rdi, %rsi,
+    // %rdx, %r10, %r8, %r9. Note: These are all caller-save registers
+    // (only %rbx, %rbp, %rsp, and %r12-%r15 are callee-save), so no
+    // need to worry here about spilling registers or CFI directives.
+    "1:movq %rdi, %rax\n"
+    "movq  0(%rsi), %rdi\n"
+    "movq 16(%rsi), %rdx\n"
+    "movq 24(%rsi), %r10\n"
+    "movq 32(%rsi), %r8\n"
+    "movq 40(%rsi), %r9\n"
+    "movq  8(%rsi), %rsi\n"
     // Enter the kernel.
     "syscall\n"
     // This is our "magic" return address that the BPF filter sees.
@@ -171,10 +180,88 @@ asm(// We need to be able to tell the kernel exactly where we made a
 #endif
     ".fnend\n"
     "9:.size SyscallAsm, 9b-SyscallAsm\n"
+#elif defined(__mips__)
+    ".text\n"
+    ".align 4\n"
+    ".type SyscallAsm, @function\n"
+    "SyscallAsm:.ent SyscallAsm\n"
+    ".frame  $sp, 40, $ra\n"
+    ".set   push\n"
+    ".set   noreorder\n"
+    "addiu  $sp, $sp, -40\n"
+    "sw     $ra, 36($sp)\n"
+    // Check if "v0" is negative. If so, do not attempt to make a
+    // system call. Instead, compute the return address that is visible
+    // to the kernel after we execute "syscall". This address can be
+    // used as a marker that BPF code inspects.
+    "bgez   $v0, 1f\n"
+    " nop\n"
+    "la     $v0, 2f\n"
+    "b      2f\n"
+    " nop\n"
+    // On MIPS first four arguments go to registers a0 - a3 and any
+    // argument after that goes to stack. We can go ahead and directly
+    // copy the entries from the arguments array into the appropriate
+    // CPU registers and on the stack.
+    "1:lw     $a3, 28($a0)\n"
+    "lw     $a2, 24($a0)\n"
+    "lw     $a1, 20($a0)\n"
+    "lw     $t0, 16($a0)\n"
+    "sw     $a3, 28($sp)\n"
+    "sw     $a2, 24($sp)\n"
+    "sw     $a1, 20($sp)\n"
+    "sw     $t0, 16($sp)\n"
+    "lw     $a3, 12($a0)\n"
+    "lw     $a2, 8($a0)\n"
+    "lw     $a1, 4($a0)\n"
+    "lw     $a0, 0($a0)\n"
+    // Enter the kernel
+    "syscall\n"
+    // This is our "magic" return address that the BPF filter sees.
+    // Restore the return address from the stack.
+    "2:lw     $ra, 36($sp)\n"
+    "jr     $ra\n"
+    " addiu  $sp, $sp, 40\n"
+    ".set    pop\n"
+    ".end    SyscallAsm\n"
+    ".size   SyscallAsm,.-SyscallAsm\n"
+#elif defined(__aarch64__)
+    ".text\n"
+    ".align 2\n"
+    ".type SyscallAsm, %function\n"
+    "SyscallAsm:\n"
+    ".cfi_startproc\n"
+    "cmp x0, #0\n"
+    "b.ge 1f\n"
+    "adr x0,2f\n"
+    "b 2f\n"
+    "1:ldr x5, [x6, #40]\n"
+    "ldr x4, [x6, #32]\n"
+    "ldr x3, [x6, #24]\n"
+    "ldr x2, [x6, #16]\n"
+    "ldr x1, [x6, #8]\n"
+    "mov x8, x0\n"
+    "ldr x0, [x6, #0]\n"
+    // Enter the kernel
+    "svc 0\n"
+    "2:ret\n"
+    ".cfi_endproc\n"
+    ".size SyscallAsm, .-SyscallAsm\n"
 #endif
     );  // asm
 
+#if defined(__x86_64__)
+extern "C" {
+intptr_t SyscallAsm(intptr_t nr, const intptr_t args[6]);
+}
+#endif
+
 }  // namespace
+
+intptr_t Syscall::InvalidCall() {
+  // Explicitly pass eight zero arguments just in case.
+  return Call(kInvalidSyscallNumber, 0, 0, 0, 0, 0, 0, 0, 0);
+}
 
 intptr_t Syscall::Call(int nr,
                        intptr_t p0,
@@ -197,11 +284,15 @@ intptr_t Syscall::Call(int nr,
 
   // TODO(nedeljko): Enable use of more than six parameters on architectures
   //                 where that makes sense.
+#if defined(__mips__)
+  const intptr_t args[8] = {p0, p1, p2, p3, p4, p5, p6, p7};
+#else
   DCHECK_EQ(p6, 0) << " Support for syscalls with more than six arguments not "
                       "added for this architecture";
   DCHECK_EQ(p7, 0) << " Support for syscalls with more than six arguments not "
                       "added for this architecture";
   const intptr_t args[6] = {p0, p1, p2, p3, p4, p5};
+#endif  // defined(__mips__)
 
 // Invoke our file-scope assembly code. The constraints have been picked
 // carefully to match what the rest of the assembly code expects in input,
@@ -215,28 +306,7 @@ intptr_t Syscall::Call(int nr,
       : "0"(ret), "D"(args)
       : "cc", "esp", "memory", "ecx", "edx");
 #elif defined(__x86_64__)
-  intptr_t ret = nr;
-  {
-    register const intptr_t* data __asm__("r12") = args;
-    asm volatile(
-        "lea  -128(%%rsp), %%rsp\n"  // Avoid red zone.
-        "call SyscallAsm\n"
-        "lea  128(%%rsp), %%rsp\n"
-        // N.B. These are not the calling conventions normally used by the ABI.
-        : "=a"(ret)
-        : "0"(ret), "r"(data)
-        : "cc",
-          "rsp",
-          "memory",
-          "rcx",
-          "rdi",
-          "rsi",
-          "rdx",
-          "r8",
-          "r9",
-          "r10",
-          "r11");
-  }
+  intptr_t ret = SyscallAsm(nr, args);
 #elif defined(__arm__)
   intptr_t ret;
   {
@@ -268,10 +338,76 @@ intptr_t Syscall::Call(int nr,
         );
     ret = inout;
   }
+#elif defined(__mips__)
+  int err_status;
+  intptr_t ret = Syscall::SandboxSyscallRaw(nr, args, &err_status);
+
+  if (err_status) {
+    // On error, MIPS returns errno from syscall instead of -errno.
+    // The purpose of this negation is for SandboxSyscall() to behave
+    // more like it would on other architectures.
+    ret = -ret;
+  }
+#elif defined(__aarch64__)
+  intptr_t ret;
+  {
+    register intptr_t inout __asm__("x0") = nr;
+    register const intptr_t* data __asm__("x6") = args;
+    asm volatile("bl SyscallAsm\n"
+                 : "=r"(inout)
+                 : "0"(inout), "r"(data)
+                 : "memory", "x1", "x2", "x3", "x4", "x5", "x8", "x30");
+    ret = inout;
+  }
+
 #else
 #error "Unimplemented architecture"
 #endif
   return ret;
 }
+
+void Syscall::PutValueInUcontext(intptr_t ret_val, ucontext_t* ctx) {
+#if defined(__mips__)
+  // Mips ABI states that on error a3 CPU register has non zero value and if
+  // there is no error, it should be zero.
+  if (ret_val <= -1 && ret_val >= -4095) {
+    // |ret_val| followes the Syscall::Call() convention of being -errno on
+    // errors. In order to write correct value to return register this sign
+    // needs to be changed back.
+    ret_val = -ret_val;
+    SECCOMP_PARM4(ctx) = 1;
+  } else
+    SECCOMP_PARM4(ctx) = 0;
+#endif
+  SECCOMP_RESULT(ctx) = static_cast<greg_t>(ret_val);
+}
+
+#if defined(__mips__)
+intptr_t Syscall::SandboxSyscallRaw(int nr,
+                                    const intptr_t* args,
+                                    intptr_t* err_ret) {
+  register intptr_t ret __asm__("v0") = nr;
+  // a3 register becomes non zero on error.
+  register intptr_t err_stat __asm__("a3") = 0;
+  {
+    register const intptr_t* data __asm__("a0") = args;
+    asm volatile(
+        "la $t9, SyscallAsm\n"
+        "jalr $t9\n"
+        " nop\n"
+        : "=r"(ret), "=r"(err_stat)
+        : "0"(ret),
+          "r"(data)
+          // a2 is in the clober list so inline assembly can not change its
+          // value.
+        : "memory", "ra", "t9", "a2");
+  }
+
+  // Set an error status so it can be used outside of this function
+  *err_ret = err_stat;
+
+  return ret;
+}
+#endif  // defined(__mips__)
 
 }  // namespace sandbox

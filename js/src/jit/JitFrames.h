@@ -428,6 +428,21 @@ class RectifierFrameLayout : public JitFrameLayout
     }
 };
 
+class IonAccessorICFrameLayout : public CommonFrameLayout
+{
+  protected:
+    // Pointer to root the stub's JitCode.
+    JitCode *stubCode_;
+
+  public:
+    JitCode **stubCode() {
+        return &stubCode_;
+    }
+    static size_t Size() {
+        return sizeof(IonAccessorICFrameLayout);
+    }
+};
+
 // The callee token is now dead.
 class IonUnwoundRectifierFrameLayout : public RectifierFrameLayout
 {

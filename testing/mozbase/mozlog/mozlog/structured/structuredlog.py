@@ -24,6 +24,7 @@ Allowed actions, and subfields:
 
   test_start
       test - ID for the test
+      path - Relative path to test (optional)
 
   test_end
       test - ID for the test
@@ -248,11 +249,14 @@ class StructuredLogger(object):
 
         self._log_data("suite_end")
 
-    @log_action(TestId("test"))
+    @log_action(TestId("test"),
+                Unicode("path", default=None, optional=True))
     def test_start(self, data):
         """Log a test_start message
 
         :param test: Identifier of the test that will run.
+        :param path: Path to test relative to some base (typically the root of
+                     the source tree).
         """
         if not self._state.suite_started:
             self.error("Got test_start message before suite_start for test %s" %

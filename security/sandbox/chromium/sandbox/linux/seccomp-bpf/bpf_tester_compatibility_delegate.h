@@ -5,15 +5,8 @@
 #ifndef SANDBOX_LINUX_SECCOMP_BPF_BPF_TESTER_COMPATIBILITY_DELEGATE_H_
 #define SANDBOX_LINUX_SECCOMP_BPF_BPF_TESTER_COMPATIBILITY_DELEGATE_H_
 
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include "base/memory/scoped_ptr.h"
-#include "sandbox/linux/seccomp-bpf/sandbox_bpf_compatibility_policy.h"
 #include "sandbox/linux/seccomp-bpf/sandbox_bpf_test_runner.h"
-#include "sandbox/linux/tests/sandbox_test_runner.h"
-#include "sandbox/linux/tests/unit_tests.h"
 
 namespace sandbox {
 
@@ -24,29 +17,25 @@ namespace sandbox {
 // This allows both the policy and the test function to take a pointer to an
 // object of type "Aux" as a parameter. This is used to implement the BPF_TEST
 // macro and should generally not be used directly.
-template <class Aux>
+template <class Policy, class Aux>
 class BPFTesterCompatibilityDelegate : public BPFTesterDelegate {
  public:
-  typedef Aux AuxType;
-  BPFTesterCompatibilityDelegate(
-      void (*test_function)(AuxType*),
-      typename CompatibilityPolicy<AuxType>::SyscallEvaluator policy_function)
-      : aux_(),
-        test_function_(test_function),
-        policy_function_(policy_function) {}
+  typedef void (*TestFunction)(Aux*);
+
+  explicit BPFTesterCompatibilityDelegate(TestFunction test_function)
+      : aux_(), test_function_(test_function) {}
 
   virtual ~BPFTesterCompatibilityDelegate() {}
 
-  virtual scoped_ptr<SandboxBPFPolicy> GetSandboxBPFPolicy() OVERRIDE {
+  virtual scoped_ptr<bpf_dsl::Policy> GetSandboxBPFPolicy() override {
     // The current method is guaranteed to only run in the child process
     // running the test. In this process, the current object is guaranteed
     // to live forever. So it's ok to pass aux_pointer_for_policy_ to
     // the policy, which could in turn pass it to the kernel via Trap().
-    return scoped_ptr<SandboxBPFPolicy>(
-        new CompatibilityPolicy<AuxType>(policy_function_, &aux_));
+    return scoped_ptr<bpf_dsl::Policy>(new Policy(&aux_));
   }
 
-  virtual void RunTestFunction() OVERRIDE {
+  virtual void RunTestFunction() override {
     // Run the actual test.
     // The current object is guaranteed to live forever in the child process
     // where this will run.
@@ -54,9 +43,9 @@ class BPFTesterCompatibilityDelegate : public BPFTesterDelegate {
   }
 
  private:
-  AuxType aux_;
-  void (*test_function_)(AuxType*);
-  typename CompatibilityPolicy<AuxType>::SyscallEvaluator policy_function_;
+  Aux aux_;
+  TestFunction test_function_;
+
   DISALLOW_COPY_AND_ASSIGN(BPFTesterCompatibilityDelegate);
 };
 

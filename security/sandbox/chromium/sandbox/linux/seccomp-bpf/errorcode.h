@@ -5,13 +5,13 @@
 #ifndef SANDBOX_LINUX_SECCOMP_BPF_ERRORCODE_H__
 #define SANDBOX_LINUX_SECCOMP_BPF_ERRORCODE_H__
 
-#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
 #include "sandbox/linux/seccomp-bpf/trap.h"
 #include "sandbox/sandbox_export.h"
 
 namespace sandbox {
-
-struct arch_seccomp_data;
+namespace bpf_dsl {
+class PolicyCompiler;
+}
 
 // This class holds all the possible values that can be returned by a sandbox
 // policy.
@@ -41,9 +41,14 @@ class SANDBOX_EXPORT ErrorCode {
     //       indicate success, but it won't actually run the system call.
     //       This is very different from return ERR_ALLOWED.
     ERR_MIN_ERRNO = 0,
+#if defined(__mips__)
+    // MIPS only supports errno up to 1133
+    ERR_MAX_ERRNO = 1133,
+#else
     // TODO(markus): Android only supports errno up to 255
     // (crbug.com/181647).
     ERR_MAX_ERRNO = 4095,
+#endif
   };
 
   // While BPF filter programs always operate on 32bit quantities, the kernel
@@ -82,18 +87,10 @@ class SANDBOX_EXPORT ErrorCode {
     TP_64BIT,
   };
 
+  // Deprecated.
   enum Operation {
     // Test whether the system call argument is equal to the operand.
     OP_EQUAL,
-
-    // Test whether the system call argument is greater (or equal) to the
-    // operand. Please note that all tests always operate on unsigned
-    // values. You can generally emulate signed tests, if that's what you
-    // need.
-    // TODO(markus): Check whether we should automatically emulate signed
-    //               operations.
-    OP_GREATER_UNSIGNED,
-    OP_GREATER_EQUAL_UNSIGNED,
 
     // Tests a system call argument against a bit mask.
     // The "ALL_BITS" variant performs this test: "arg & mask == mask"
@@ -102,9 +99,6 @@ class SANDBOX_EXPORT ErrorCode {
     // This implies that a mask of zero always results in a failing test.
     OP_HAS_ALL_BITS,
     OP_HAS_ANY_BITS,
-
-    // Total number of operations.
-    OP_NUM_OPS,
   };
 
   enum ErrorType {
@@ -119,7 +113,7 @@ class SANDBOX_EXPORT ErrorCode {
   // when compiling a BPF filter, we deliberately generate an invalid
   // program that will get flagged both by our Verifier class and by
   // the Linux kernel.
-  ErrorCode() : error_type_(ET_INVALID), err_(SECCOMP_RET_INVALID) {}
+  ErrorCode();
   explicit ErrorCode(int err);
 
   // For all practical purposes, ErrorCodes are treated as if they were
@@ -140,10 +134,10 @@ class SANDBOX_EXPORT ErrorCode {
 
   bool safe() const { return safe_; }
 
+  uint64_t mask() const { return mask_; }
   uint64_t value() const { return value_; }
   int argno() const { return argno_; }
   ArgType width() const { return width_; }
-  Operation op() const { return op_; }
   const ErrorCode* passed() const { return passed_; }
   const ErrorCode* failed() const { return failed_; }
 
@@ -154,6 +148,7 @@ class SANDBOX_EXPORT ErrorCode {
   };
 
  private:
+  friend bpf_dsl::PolicyCompiler;
   friend class CodeGen;
   friend class SandboxBPF;
   friend class Trap;
@@ -161,13 +156,13 @@ class SANDBOX_EXPORT ErrorCode {
   // If we are wrapping a callback, we must assign a unique id. This id is
   // how the kernel tells us which one of our different SECCOMP_RET_TRAP
   // cases has been triggered.
-  ErrorCode(Trap::TrapFnc fnc, const void* aux, bool safe, uint16_t id);
+  ErrorCode(uint16_t trap_id, Trap::TrapFnc fnc, const void* aux, bool safe);
 
   // Some system calls require inspection of arguments. This constructor
   // allows us to specify additional constraints.
   ErrorCode(int argno,
             ArgType width,
-            Operation op,
+            uint64_t mask,
             uint64_t value,
             const ErrorCode* passed,
             const ErrorCode* failed);
@@ -184,10 +179,10 @@ class SANDBOX_EXPORT ErrorCode {
 
     // Fields needed when inspecting additional arguments.
     struct {
+      uint64_t mask_;            // Mask that we are comparing under.
       uint64_t value_;           // Value that we are comparing with.
       int argno_;                // Syscall arg number that we are inspecting.
       ArgType width_;            // Whether we are looking at a 32/64bit value.
-      Operation op_;             // Comparison operation.
       const ErrorCode* passed_;  // Value to be returned if comparison passed,
       const ErrorCode* failed_;  //   or if it failed.
     };

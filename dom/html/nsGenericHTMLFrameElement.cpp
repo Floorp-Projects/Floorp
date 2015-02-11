@@ -42,9 +42,9 @@ NS_IMPL_RELEASE_INHERITED(nsGenericHTMLFrameElement, nsGenericHTMLElement)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsGenericHTMLFrameElement)
   NS_INTERFACE_TABLE_INHERITED(nsGenericHTMLFrameElement,
+                               nsIFrameLoaderOwner,
                                nsIDOMMozBrowserFrame,
-                               nsIMozBrowserFrame,
-                               nsIFrameLoaderOwner)
+                               nsIMozBrowserFrame)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
 NS_IMPL_BOOL_ATTR(nsGenericHTMLFrameElement, Mozbrowser, mozbrowser)
 
@@ -52,6 +52,96 @@ int32_t
 nsGenericHTMLFrameElement::TabIndexDefault()
 {
   return 0;
+}
+
+nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
+{
+  if (mFrameLoader) {
+    mFrameLoader->Destroy();
+  }
+}
+
+nsresult
+nsGenericHTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
+{
+  NS_PRECONDITION(aContentDocument, "Null out param");
+  nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(GetContentDocument());
+  document.forget(aContentDocument);
+  return NS_OK;
+}
+
+nsIDocument*
+nsGenericHTMLFrameElement::GetContentDocument()
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetContentWindow();
+  if (!win) {
+    return nullptr;
+  }
+
+  nsIDocument *doc = win->GetDoc();
+
+  // Return null for cross-origin contentDocument.
+  if (!nsContentUtils::SubjectPrincipal()->
+        SubsumesConsideringDomain(doc->NodePrincipal())) {
+    return nullptr;
+  }
+  return doc;
+}
+
+nsresult
+nsGenericHTMLFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
+{
+  NS_PRECONDITION(aContentWindow, "Null out param");
+  nsCOMPtr<nsPIDOMWindow> window = GetContentWindow();
+  window.forget(aContentWindow);
+  return NS_OK;
+}
+
+already_AddRefed<nsPIDOMWindow>
+nsGenericHTMLFrameElement::GetContentWindow()
+{
+  EnsureFrameLoader();
+
+  if (!mFrameLoader) {
+    return nullptr;
+  }
+
+  bool depthTooGreat = false;
+  mFrameLoader->GetDepthTooGreat(&depthTooGreat);
+  if (depthTooGreat) {
+    // Claim to have no contentWindow
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocShell> doc_shell;
+  mFrameLoader->GetDocShell(getter_AddRefs(doc_shell));
+
+  nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(doc_shell);
+
+  if (!win) {
+    return nullptr;
+  }
+
+  NS_ASSERTION(win->IsOuterWindow(),
+               "Uh, this window should always be an outer window!");
+
+  return win.forget();
+}
+
+void
+nsGenericHTMLFrameElement::EnsureFrameLoader()
+{
+  if (!IsInDoc() || mFrameLoader || mFrameLoaderCreationDisallowed) {
+    // If frame loader is there, we just keep it around, cached
+    return;
+  }
+
+  // Strangely enough, this method doesn't actually ensure that the
+  // frameloader exists.  It's more of a best-effort kind of thing.
+  mFrameLoader = nsFrameLoader::Create(this, mNetworkCreated);
+  if (mIsPrerendered) {
+    mFrameLoader->SetIsPrerendered();
+  }
 }
 
 nsresult
@@ -70,6 +160,54 @@ nsGenericHTMLFrameElement::CreateRemoteFrameLoader(nsITabParent* aTabParent)
     mFrameLoader->UpdatePositionAndSize(subdocFrame);
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::GetFrameLoader(nsIFrameLoader **aFrameLoader)
+{
+  NS_IF_ADDREF(*aFrameLoader = mFrameLoader);
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(already_AddRefed<nsFrameLoader>)
+nsGenericHTMLFrameElement::GetFrameLoader()
+{
+  nsRefPtr<nsFrameLoader> loader = mFrameLoader;
+  return loader.forget();
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner)
+{
+  // We don't support this yet
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::SetIsPrerendered()
+{
+  MOZ_ASSERT(!mFrameLoader, "Please call SetIsPrerendered before frameLoader is created");
+  mIsPrerendered = true;
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLFrameElement::LoadSrc()
+{
+  EnsureFrameLoader();
+
+  if (!mFrameLoader) {
+    return NS_OK;
+  }
+
+  nsresult rv = mFrameLoader->LoadFrame();
+#ifdef DEBUG
+  if (NS_FAILED(rv)) {
+    NS_WARNING("failed to load URL");
+  }
+#endif
+
+  return rv;
 }
 
 nsresult
@@ -507,3 +645,11 @@ nsGenericHTMLFrameElement::InitializeBrowserAPI()
   InitBrowserElementAPI();
   return NS_OK;
 }
+
+void
+nsGenericHTMLFrameElement::SwapFrameLoaders(nsXULElement& aOtherOwner,
+                                            ErrorResult& aError)
+{
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+

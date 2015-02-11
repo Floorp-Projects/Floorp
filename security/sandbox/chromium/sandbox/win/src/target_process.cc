@@ -88,14 +88,16 @@ TargetProcess::~TargetProcess() {
   // from showing up in purify.
   if (sandbox_process_info_.IsValid()) {
     ::WaitForSingleObject(sandbox_process_info_.process_handle(), 50);
+    // At this point, the target process should have been killed.  Check.
     if (!::GetExitCodeProcess(sandbox_process_info_.process_handle(),
                               &exit_code) || (STILL_ACTIVE == exit_code)) {
-      // It is an error to destroy this object while the target process is still
-      // alive because we need to destroy the IPC subsystem and cannot risk to
-      // have an IPC reach us after this point.
+      // Something went wrong.  We don't know if the target is in a state where
+      // it can manage to do another IPC call.  If it can, and we've destroyed
+      // the |ipc_server_|, it will crash the broker.  So we intentionally leak
+      // that.
       if (shared_section_.IsValid())
         shared_section_.Take();
-      SharedMemIPCServer* server = ipc_server_.release();
+      ipc_server_.release();
       sandbox_process_info_.TakeProcessHandle();
       return;
     }
@@ -132,7 +134,7 @@ DWORD TargetProcess::Create(const wchar_t* exe_path,
   }
 
   PROCESS_INFORMATION temp_process_info = {};
-  if (!::CreateProcessAsUserW(lockdown_token_,
+  if (!::CreateProcessAsUserW(lockdown_token_.Get(),
                               exe_path,
                               cmd_line.get(),
                               NULL,   // No security attribute.
@@ -164,7 +166,7 @@ DWORD TargetProcess::Create(const wchar_t* exe_path,
     // impersonation token with more rights. This allows the target to start;
     // otherwise it will crash too early for us to help.
     HANDLE temp_thread = process_info.thread_handle();
-    if (!::SetThreadToken(&temp_thread, initial_token_)) {
+    if (!::SetThreadToken(&temp_thread, initial_token_.Get())) {
       win_result = ::GetLastError();
       // It might be a security breach if we let the target run outside the job
       // so kill it before it causes damage.
@@ -261,13 +263,13 @@ DWORD TargetProcess::Init(Dispatcher* ipc_dispatcher, void* policy,
 
   DWORD access = FILE_MAP_READ | FILE_MAP_WRITE;
   HANDLE target_shared_section;
-  if (!::DuplicateHandle(::GetCurrentProcess(), shared_section_,
+  if (!::DuplicateHandle(::GetCurrentProcess(), shared_section_.Get(),
                          sandbox_process_info_.process_handle(),
                          &target_shared_section, access, FALSE, 0)) {
     return ::GetLastError();
   }
 
-  void* shared_memory = ::MapViewOfFile(shared_section_,
+  void* shared_memory = ::MapViewOfFile(shared_section_.Get(),
                                         FILE_MAP_WRITE|FILE_MAP_READ,
                                         0, 0, 0);
   if (NULL == shared_memory) {

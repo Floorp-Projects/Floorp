@@ -20,32 +20,32 @@ namespace sandbox {
 FilesystemDispatcher::FilesystemDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall create_params = {
-    {IPC_NTCREATEFILE_TAG, WCHAR_TYPE, ULONG_TYPE, ULONG_TYPE, ULONG_TYPE,
-     ULONG_TYPE, ULONG_TYPE, ULONG_TYPE},
+    {IPC_NTCREATEFILE_TAG, WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE,
+     UINT32_TYPE, UINT32_TYPE, UINT32_TYPE},
     reinterpret_cast<CallbackGeneric>(&FilesystemDispatcher::NtCreateFile)
   };
 
   static const IPCCall open_file = {
-    {IPC_NTOPENFILE_TAG, WCHAR_TYPE, ULONG_TYPE, ULONG_TYPE, ULONG_TYPE,
-     ULONG_TYPE},
+    {IPC_NTOPENFILE_TAG, WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE,
+     UINT32_TYPE},
     reinterpret_cast<CallbackGeneric>(&FilesystemDispatcher::NtOpenFile)
   };
 
   static const IPCCall attribs = {
-    {IPC_NTQUERYATTRIBUTESFILE_TAG, WCHAR_TYPE, ULONG_TYPE, INOUTPTR_TYPE},
+    {IPC_NTQUERYATTRIBUTESFILE_TAG, WCHAR_TYPE, UINT32_TYPE, INOUTPTR_TYPE},
     reinterpret_cast<CallbackGeneric>(
         &FilesystemDispatcher::NtQueryAttributesFile)
   };
 
   static const IPCCall full_attribs = {
-    {IPC_NTQUERYFULLATTRIBUTESFILE_TAG, WCHAR_TYPE, ULONG_TYPE, INOUTPTR_TYPE},
+    {IPC_NTQUERYFULLATTRIBUTESFILE_TAG, WCHAR_TYPE, UINT32_TYPE, INOUTPTR_TYPE},
     reinterpret_cast<CallbackGeneric>(
           &FilesystemDispatcher::NtQueryFullAttributesFile)
   };
 
   static const IPCCall set_info = {
     {IPC_NTSETINFO_RENAME_TAG, VOIDPTR_TYPE, INOUTPTR_TYPE, INOUTPTR_TYPE,
-     ULONG_TYPE, ULONG_TYPE},
+     UINT32_TYPE, UINT32_TYPE},
     reinterpret_cast<CallbackGeneric>(
         &FilesystemDispatcher::NtSetInformationFile)
   };
@@ -82,10 +82,14 @@ bool FilesystemDispatcher::SetupService(InterceptionManager* manager,
   }
 }
 
-bool FilesystemDispatcher::NtCreateFile(
-    IPCInfo* ipc, base::string16* name, DWORD attributes, DWORD desired_access,
-    DWORD file_attributes, DWORD share_access, DWORD create_disposition,
-    DWORD create_options) {
+bool FilesystemDispatcher::NtCreateFile(IPCInfo* ipc,
+                                        base::string16* name,
+                                        uint32 attributes,
+                                        uint32 desired_access,
+                                        uint32 file_attributes,
+                                        uint32 share_access,
+                                        uint32 create_disposition,
+                                        uint32 create_options) {
   if (!PreProcessName(*name, name)) {
     // The path requested might contain a reparse point.
     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
@@ -94,7 +98,7 @@ bool FilesystemDispatcher::NtCreateFile(
 
   const wchar_t* filename = name->c_str();
 
-  ULONG broker = TRUE;
+  uint32 broker = TRUE;
   CountedParameterSet<OpenFile> params;
   params[OpenFile::NAME] = ParamPickerMake(filename);
   params[OpenFile::ACCESS] = ParamPickerMake(desired_access);
@@ -125,9 +129,12 @@ bool FilesystemDispatcher::NtCreateFile(
   return true;
 }
 
-bool FilesystemDispatcher::NtOpenFile(
-    IPCInfo* ipc, base::string16* name, DWORD attributes, DWORD desired_access,
-    DWORD share_access, DWORD open_options) {
+bool FilesystemDispatcher::NtOpenFile(IPCInfo* ipc,
+                                      base::string16* name,
+                                      uint32 attributes,
+                                      uint32 desired_access,
+                                      uint32 share_access,
+                                      uint32 open_options) {
   if (!PreProcessName(*name, name)) {
     // The path requested might contain a reparse point.
     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
@@ -136,7 +143,7 @@ bool FilesystemDispatcher::NtOpenFile(
 
   const wchar_t* filename = name->c_str();
 
-  ULONG broker = TRUE;
+  uint32 broker = TRUE;
   CountedParameterSet<OpenFile> params;
   params[OpenFile::NAME] = ParamPickerMake(filename);
   params[OpenFile::ACCESS] = ParamPickerMake(desired_access);
@@ -165,8 +172,10 @@ bool FilesystemDispatcher::NtOpenFile(
   return true;
 }
 
-bool FilesystemDispatcher::NtQueryAttributesFile(
-    IPCInfo* ipc, base::string16* name, DWORD attributes, CountedBuffer* info) {
+bool FilesystemDispatcher::NtQueryAttributesFile(IPCInfo* ipc,
+                                                 base::string16* name,
+                                                 uint32 attributes,
+                                                 CountedBuffer* info) {
   if (sizeof(FILE_BASIC_INFORMATION) != info->Size())
     return false;
 
@@ -176,7 +185,7 @@ bool FilesystemDispatcher::NtQueryAttributesFile(
     return true;
   }
 
-  ULONG broker = TRUE;
+  uint32 broker = TRUE;
   const wchar_t* filename = name->c_str();
   CountedParameterSet<FileName> params;
   params[FileName::NAME] = ParamPickerMake(filename);
@@ -203,8 +212,10 @@ bool FilesystemDispatcher::NtQueryAttributesFile(
   return true;
 }
 
-bool FilesystemDispatcher::NtQueryFullAttributesFile(
-    IPCInfo* ipc, base::string16* name, DWORD attributes, CountedBuffer* info) {
+bool FilesystemDispatcher::NtQueryFullAttributesFile(IPCInfo* ipc,
+                                                     base::string16* name,
+                                                     uint32 attributes,
+                                                     CountedBuffer* info) {
   if (sizeof(FILE_NETWORK_OPEN_INFORMATION) != info->Size())
     return false;
 
@@ -214,7 +225,7 @@ bool FilesystemDispatcher::NtQueryFullAttributesFile(
     return true;
   }
 
-  ULONG broker = TRUE;
+  uint32 broker = TRUE;
   const wchar_t* filename = name->c_str();
   CountedParameterSet<FileName> params;
   params[FileName::NAME] = ParamPickerMake(filename);
@@ -243,9 +254,12 @@ bool FilesystemDispatcher::NtQueryFullAttributesFile(
   return true;
 }
 
-bool FilesystemDispatcher::NtSetInformationFile(
-    IPCInfo* ipc, HANDLE handle, CountedBuffer* status, CountedBuffer* info,
-    DWORD length, DWORD info_class) {
+bool FilesystemDispatcher::NtSetInformationFile(IPCInfo* ipc,
+                                                HANDLE handle,
+                                                CountedBuffer* status,
+                                                CountedBuffer* info,
+                                                uint32 length,
+                                                uint32 info_class) {
   if (sizeof(IO_STATUS_BLOCK) != status->Size())
     return false;
   if (length != info->Size())
@@ -266,7 +280,7 @@ bool FilesystemDispatcher::NtSetInformationFile(
     return true;
   }
 
-  ULONG broker = TRUE;
+  uint32 broker = TRUE;
   const wchar_t* filename = name.c_str();
   CountedParameterSet<FileName> params;
   params[FileName::NAME] = ParamPickerMake(filename);

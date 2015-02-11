@@ -50,6 +50,14 @@ const char kWaitForDebugger[]               = "wait-for-debugger";
 // Sends a pretty-printed version of tracing info to the console.
 const char kTraceToConsole[]                = "trace-to-console";
 
+// Sends trace events from these categories to a file.
+// --trace-to-file on its own sends to default categories.
+const char kTraceToFile[]                   = "trace-to-file";
+
+// Specifies the file name for --trace-to-file. If unspecified, it will
+// go to a default file name.
+const char kTraceToFileName[]               = "trace-to-file-name";
+
 // Configure whether chrome://profiler will contain timing information. This
 // option is enabled by default. A value of "0" will disable profiler timing,
 // while all other values will enable it.

@@ -71,17 +71,12 @@ CompareCacheMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return entryPtr->entry->key == key;
 }
 
-static bool
-CompareCacheInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                     const void *key)
+static void
+CompareCacheInitEntry(PLDHashEntryHdr *hdr, const void *key)
 {
   new (hdr) CompareCacheHashEntryPtr();
   CompareCacheHashEntryPtr *entryPtr = static_cast<CompareCacheHashEntryPtr*>(hdr);
-  if (!entryPtr->entry) {
-    return false;
-  }
   entryPtr->entry->key = (void*)key;
-  return true;
 }
 
 static void

@@ -37,44 +37,44 @@ class PolicyBase : public Dispatcher, public TargetPolicy {
   PolicyBase();
 
   // TargetPolicy:
-  virtual void AddRef() OVERRIDE;
-  virtual void Release() OVERRIDE;
+  virtual void AddRef() override;
+  virtual void Release() override;
   virtual ResultCode SetTokenLevel(TokenLevel initial,
-                                   TokenLevel lockdown) OVERRIDE;
-  virtual TokenLevel GetInitialTokenLevel() const OVERRIDE;
-  virtual TokenLevel GetLockdownTokenLevel() const OVERRIDE;
+                                   TokenLevel lockdown) override;
+  virtual TokenLevel GetInitialTokenLevel() const override;
+  virtual TokenLevel GetLockdownTokenLevel() const override;
   virtual ResultCode SetJobLevel(JobLevel job_level,
-                                 uint32 ui_exceptions) OVERRIDE;
-  virtual ResultCode SetJobMemoryLimit(size_t memory_limit) OVERRIDE;
-  virtual ResultCode SetAlternateDesktop(bool alternate_winstation) OVERRIDE;
-  virtual base::string16 GetAlternateDesktop() const OVERRIDE;
-  virtual ResultCode CreateAlternateDesktop(bool alternate_winstation) OVERRIDE;
-  virtual void DestroyAlternateDesktop() OVERRIDE;
-  virtual ResultCode SetIntegrityLevel(IntegrityLevel integrity_level) OVERRIDE;
-  virtual IntegrityLevel GetIntegrityLevel() const OVERRIDE;
+                                 uint32 ui_exceptions) override;
+  virtual ResultCode SetJobMemoryLimit(size_t memory_limit) override;
+  virtual ResultCode SetAlternateDesktop(bool alternate_winstation) override;
+  virtual base::string16 GetAlternateDesktop() const override;
+  virtual ResultCode CreateAlternateDesktop(bool alternate_winstation) override;
+  virtual void DestroyAlternateDesktop() override;
+  virtual ResultCode SetIntegrityLevel(IntegrityLevel integrity_level) override;
+  virtual IntegrityLevel GetIntegrityLevel() const override;
   virtual ResultCode SetDelayedIntegrityLevel(
-      IntegrityLevel integrity_level) OVERRIDE;
-  virtual ResultCode SetAppContainer(const wchar_t* sid) OVERRIDE;
-  virtual ResultCode SetCapability(const wchar_t* sid) OVERRIDE;
-  virtual ResultCode SetProcessMitigations(MitigationFlags flags) OVERRIDE;
-  virtual MitigationFlags GetProcessMitigations() OVERRIDE;
+      IntegrityLevel integrity_level) override;
+  virtual ResultCode SetAppContainer(const wchar_t* sid) override;
+  virtual ResultCode SetCapability(const wchar_t* sid) override;
+  virtual ResultCode SetProcessMitigations(MitigationFlags flags) override;
+  virtual MitigationFlags GetProcessMitigations() override;
   virtual ResultCode SetDelayedProcessMitigations(
-      MitigationFlags flags) OVERRIDE;
-  virtual MitigationFlags GetDelayedProcessMitigations() const OVERRIDE;
-  virtual void SetStrictInterceptions() OVERRIDE;
-  virtual ResultCode SetStdoutHandle(HANDLE handle) OVERRIDE;
-  virtual ResultCode SetStderrHandle(HANDLE handle) OVERRIDE;
+      MitigationFlags flags) override;
+  virtual MitigationFlags GetDelayedProcessMitigations() const override;
+  virtual void SetStrictInterceptions() override;
+  virtual ResultCode SetStdoutHandle(HANDLE handle) override;
+  virtual ResultCode SetStderrHandle(HANDLE handle) override;
   virtual ResultCode AddRule(SubSystem subsystem, Semantics semantics,
-                             const wchar_t* pattern) OVERRIDE;
-  virtual ResultCode AddDllToUnload(const wchar_t* dll_name);
+                             const wchar_t* pattern) override;
+  virtual ResultCode AddDllToUnload(const wchar_t* dll_name) override;
   virtual ResultCode AddKernelObjectToClose(
       const base::char16* handle_type,
-      const base::char16* handle_name) OVERRIDE;
+      const base::char16* handle_name) override;
 
   // Dispatcher:
   virtual Dispatcher* OnMessageReady(IPCParams* ipc,
-                                     CallbackGeneric* callback) OVERRIDE;
-  virtual bool SetupService(InterceptionManager* manager, int service) OVERRIDE;
+                                     CallbackGeneric* callback) override;
+  virtual bool SetupService(InterceptionManager* manager, int service) override;
 
   // Creates a Job object with the level specified in a previous call to
   // SetJobLevel().
@@ -84,7 +84,7 @@ class PolicyBase : public Dispatcher, public TargetPolicy {
   // SetTokenLevel().
   ResultCode MakeTokens(HANDLE* initial, HANDLE* lockdown);
 
-  const AppContainerAttributes* GetAppContainer();
+  const AppContainerAttributes* GetAppContainer() const;
 
   // Adds a target process to the internal list of targets. Internally a
   // call to TargetProcess::Init() is issued.
@@ -114,6 +114,10 @@ class PolicyBase : public Dispatcher, public TargetPolicy {
 
   // Sets up the handle closer for a new target.
   bool SetupHandleCloser(TargetProcess* target);
+
+  ResultCode AddRuleInternal(SubSystem subsystem,
+                             Semantics semantics,
+                             const wchar_t* pattern);
 
   // This lock synchronizes operations on the targets_ collection.
   CRITICAL_SECTION lock_;

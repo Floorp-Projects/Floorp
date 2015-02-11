@@ -3957,8 +3957,8 @@ SubDocClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   }
 }
 
-static bool
-SubDocInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
+static void
+SubDocInitEntry(PLDHashEntryHdr *entry, const void *key)
 {
   SubDocMapEntry *e =
     const_cast<SubDocMapEntry *>
@@ -3968,7 +3968,6 @@ SubDocInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
   NS_ADDREF(e->mKey);
 
   e->mSubDocument = nullptr;
-  return true;
 }
 
 nsresult

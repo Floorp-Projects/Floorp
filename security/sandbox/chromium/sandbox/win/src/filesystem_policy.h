@@ -103,6 +103,11 @@ class FileSystemPolicy {
 // the path cannot be trusted.
 bool PreProcessName(const base::string16& path, base::string16* new_path);
 
+// Corrects global paths to have a correctly escaped NT prefix at the
+// beginning. If the name has no NT prefix (either normal or escaped)
+// add the escaped form to the string
+base::string16 FixNTPrefixForMatch(const base::string16& name);
+
 }  // namespace sandbox
 
 #endif  // SANDBOX_SRC_FILESYSTEM_POLICY_H__

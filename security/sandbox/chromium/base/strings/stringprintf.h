@@ -16,16 +16,16 @@ namespace base {
 
 // Return a C++ string given printf-like input.
 BASE_EXPORT std::string StringPrintf(const char* format, ...)
-    PRINTF_FORMAT(1, 2);
+    PRINTF_FORMAT(1, 2) WARN_UNUSED_RESULT;
 // OS_ANDROID's libc does not support wchar_t, so several overloads are omitted.
 #if !defined(OS_ANDROID)
 BASE_EXPORT std::wstring StringPrintf(const wchar_t* format, ...)
-    WPRINTF_FORMAT(1, 2);
+    WPRINTF_FORMAT(1, 2) WARN_UNUSED_RESULT;
 #endif
 
 // Return a C++ string given vprintf-like input.
 BASE_EXPORT std::string StringPrintV(const char* format, va_list ap)
-    PRINTF_FORMAT(1, 0);
+    PRINTF_FORMAT(1, 0) WARN_UNUSED_RESULT;
 
 // Store result into a supplied string and return it.
 BASE_EXPORT const std::string& SStringPrintf(std::string* dst,

@@ -28,21 +28,14 @@
 #include "build/build_config.h"
 
 #if defined(COMPILER_MSVC)
+#include <unordered_map>
+#include <unordered_set>
 
-#pragma push_macro("_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS")
-#define _SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS
-#include <hash_map>
-#include <hash_set>
-#pragma pop_macro("_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS")
-
-#define BASE_HASH_NAMESPACE stdext
+#define BASE_HASH_NAMESPACE std
 
 #elif defined(COMPILER_GCC)
-#if defined(OS_ANDROID)
-#define BASE_HASH_NAMESPACE std
-#else
-#define BASE_HASH_NAMESPACE __gnu_cxx
-#endif
+
+#define BASE_HASH_NAMESPACE base_hash
 
 // This is a hack to disable the gcc 4.4 warning about hash_map and hash_set
 // being deprecated.  We can get rid of this when we upgrade to VS2008 and we
@@ -55,9 +48,11 @@
 #if defined(OS_ANDROID)
 #include <hash_map>
 #include <hash_set>
+#define BASE_HASH_IMPL_NAMESPACE std
 #else
 #include <ext/hash_map>
 #include <ext/hash_set>
+#define BASE_HASH_IMPL_NAMESPACE __gnu_cxx
 #endif
 
 #include <string>
@@ -68,6 +63,26 @@
 #endif
 
 namespace BASE_HASH_NAMESPACE {
+
+// The pre-standard hash behaves like C++11's std::hash, except around pointers.
+// const char* is specialized to hash the C string and hash functions for
+// general T* are missing. Define a BASE_HASH_NAMESPACE::hash which aligns with
+// the C++11 behavior.
+
+template<typename T>
+struct hash {
+  std::size_t operator()(const T& value) const {
+    return BASE_HASH_IMPL_NAMESPACE::hash<T>()(value);
+  }
+};
+
+template<typename T>
+struct hash<T*> {
+  std::size_t operator()(T* value) const {
+    return BASE_HASH_IMPL_NAMESPACE::hash<uintptr_t>()(
+        reinterpret_cast<uintptr_t>(value));
+  }
+};
 
 #if !defined(OS_ANDROID)
 // The GNU C++ library provides identity hash functions for many integral types,
@@ -118,10 +133,67 @@ DEFINE_STRING_HASH(base::string16);
 #endif  // COMPILER
 
 namespace base {
-using BASE_HASH_NAMESPACE::hash_map;
-using BASE_HASH_NAMESPACE::hash_multimap;
-using BASE_HASH_NAMESPACE::hash_multiset;
-using BASE_HASH_NAMESPACE::hash_set;
+
+// On MSVC, use the C++11 containers.
+#if defined(COMPILER_MSVC)
+
+template<class Key, class T,
+         class Hash = std::hash<Key>,
+         class Pred = std::equal_to<Key>,
+         class Alloc = std::allocator<std::pair<const Key, T>>>
+using hash_map = std::unordered_map<Key, T, Hash, Pred, Alloc>;
+
+template<class Key, class T,
+         class Hash = std::hash<Key>,
+         class Pred = std::equal_to<Key>,
+         class Alloc = std::allocator<std::pair<const Key, T>>>
+using hash_multimap = std::unordered_multimap<Key, T, Hash, Pred, Alloc>;
+
+template<class Key,
+         class Hash = std::hash<Key>,
+         class Pred = std::equal_to<Key>,
+         class Alloc = std::allocator<Key>>
+using hash_multiset = std::unordered_multiset<Key, Hash, Pred, Alloc>;
+
+template<class Key,
+         class Hash = std::hash<Key>,
+         class Pred = std::equal_to<Key>,
+         class Alloc = std::allocator<Key>>
+using hash_set = std::unordered_set<Key, Hash, Pred, Alloc>;
+
+#else  // !COMPILER_MSVC
+
+// Otherwise, use the pre-standard ones, but override the default hash to match
+// C++11.
+template<class Key, class T,
+         class Hash = BASE_HASH_NAMESPACE::hash<Key>,
+         class Pred = std::equal_to<Key>,
+         class Alloc = std::allocator<std::pair<const Key, T>>>
+using hash_map = BASE_HASH_IMPL_NAMESPACE::hash_map<Key, T, Hash, Pred, Alloc>;
+
+template<class Key, class T,
+         class Hash = BASE_HASH_NAMESPACE::hash<Key>,
+         class Pred = std::equal_to<Key>,
+         class Alloc = std::allocator<std::pair<const Key, T>>>
+using hash_multimap =
+    BASE_HASH_IMPL_NAMESPACE::hash_multimap<Key, T, Hash, Pred, Alloc>;
+
+template<class Key,
+         class Hash = BASE_HASH_NAMESPACE::hash<Key>,
+         class Pred = std::equal_to<Key>,
+         class Alloc = std::allocator<Key>>
+using hash_multiset =
+    BASE_HASH_IMPL_NAMESPACE::hash_multiset<Key, Hash, Pred, Alloc>;
+
+template<class Key,
+         class Hash = BASE_HASH_NAMESPACE::hash<Key>,
+         class Pred = std::equal_to<Key>,
+         class Alloc = std::allocator<Key>>
+using hash_set = BASE_HASH_IMPL_NAMESPACE::hash_set<Key, Hash, Pred, Alloc>;
+
+#undef BASE_HASH_IMPL_NAMESPACE
+
+#endif  // COMPILER_MSVC
 
 // Implement hashing for pairs of at-most 32 bit integer values.
 // When size_t is 32 bits, we turn the 64-bit hash code into 32 bits by using
@@ -241,24 +313,12 @@ namespace BASE_HASH_NAMESPACE {
 // Implement methods for hashing a pair of integers, so they can be used as
 // keys in STL containers.
 
-#if defined(COMPILER_MSVC)
-
-template<typename Type1, typename Type2>
-inline std::size_t hash_value(const std::pair<Type1, Type2>& value) {
-  return base::HashPair(value.first, value.second);
-}
-
-#elif defined(COMPILER_GCC)
 template<typename Type1, typename Type2>
 struct hash<std::pair<Type1, Type2> > {
   std::size_t operator()(std::pair<Type1, Type2> value) const {
     return base::HashPair(value.first, value.second);
   }
 };
-
-#else
-#error define hash<std::pair<Type1, Type2> > for your compiler
-#endif  // COMPILER
 
 }
 

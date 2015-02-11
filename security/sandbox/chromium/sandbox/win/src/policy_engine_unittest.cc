@@ -61,8 +61,8 @@ TEST(PolicyEngineTest, Rules1) {
   policy->opcode_count = 7;
 
   const wchar_t* filename = L"c:\\Documents and Settings\\Microsoft\\BLAH.txt";
-  unsigned long creation_mode = OPEN_EXISTING;
-  unsigned long flags = FILE_ATTRIBUTE_NORMAL;
+  uint32 creation_mode = OPEN_EXISTING;
+  uint32 flags = FILE_ATTRIBUTE_NORMAL;
   void* security_descriptor = NULL;
 
   POLPARAMS_BEGIN(eval_params)

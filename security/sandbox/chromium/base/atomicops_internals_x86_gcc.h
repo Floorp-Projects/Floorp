@@ -7,20 +7,6 @@
 #ifndef BASE_ATOMICOPS_INTERNALS_X86_GCC_H_
 #define BASE_ATOMICOPS_INTERNALS_X86_GCC_H_
 
-#include "base/base_export.h"
-
-// This struct is not part of the public API of this module; clients may not
-// use it.  (However, it's exported via BASE_EXPORT because clients implicitly
-// do use it at link time by inlining these functions.)
-// Features of this x86.  Values may not be correct before main() is run,
-// but are set conservatively.
-struct AtomicOps_x86CPUFeatureStruct {
-  bool has_amd_lock_mb_bug; // Processor has AMD memory-barrier bug; do lfence
-                            // after acquire compare-and-swap.
-};
-BASE_EXPORT extern struct AtomicOps_x86CPUFeatureStruct
-    AtomicOps_Internalx86CPUFeatures;
-
 #define ATOMICOPS_COMPILER_BARRIER() __asm__ __volatile__("" : : : "memory")
 
 namespace base {

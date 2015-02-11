@@ -28,37 +28,15 @@ typedef integral_constant<bool, false> false_type;
 template <class T> struct is_pointer : false_type {};
 template <class T> struct is_pointer<T*> : true_type {};
 
-// Member function pointer detection up to four params. Add more as needed
-// below. This is built-in to C++ 11, and we can remove this when we switch.
+// Member function pointer detection. This is built-in to C++ 11's stdlib, and
+// we can remove this when we switch to it.
 template<typename T>
 struct is_member_function_pointer : false_type {};
 
-template <typename R, typename Z>
-struct is_member_function_pointer<R(Z::*)()> : true_type {};
-template <typename R, typename Z>
-struct is_member_function_pointer<R(Z::*)() const> : true_type {};
-
-template <typename R, typename Z, typename A>
-struct is_member_function_pointer<R(Z::*)(A)> : true_type {};
-template <typename R, typename Z, typename A>
-struct is_member_function_pointer<R(Z::*)(A) const> : true_type {};
-
-template <typename R, typename Z, typename A, typename B>
-struct is_member_function_pointer<R(Z::*)(A, B)> : true_type {};
-template <typename R, typename Z, typename A, typename B>
-struct is_member_function_pointer<R(Z::*)(A, B) const> : true_type {};
-
-template <typename R, typename Z, typename A, typename B, typename C>
-struct is_member_function_pointer<R(Z::*)(A, B, C)> : true_type {};
-template <typename R, typename Z, typename A, typename B, typename C>
-struct is_member_function_pointer<R(Z::*)(A, B, C) const> : true_type {};
-
-template <typename R, typename Z, typename A, typename B, typename C,
-          typename D>
-struct is_member_function_pointer<R(Z::*)(A, B, C, D)> : true_type {};
-template <typename R, typename Z, typename A, typename B, typename C,
-          typename D>
-struct is_member_function_pointer<R(Z::*)(A, B, C, D) const> : true_type {};
+template <typename R, typename Z, typename... A>
+struct is_member_function_pointer<R(Z::*)(A...)> : true_type {};
+template <typename R, typename Z, typename... A>
+struct is_member_function_pointer<R(Z::*)(A...) const> : true_type {};
 
 
 template <class T, class U> struct is_same : public false_type {};

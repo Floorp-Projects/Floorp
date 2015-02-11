@@ -82,10 +82,25 @@ void DeregisterPeerTracker(PeerTracker* peer) {
   }
 }
 
+// Utility function to determine whether a token for the specified policy can
+// be cached.
+bool IsTokenCacheable(const sandbox::PolicyBase* policy) {
+  const sandbox::AppContainerAttributes* app_container =
+      policy->GetAppContainer();
+
+  // We cannot cache tokens with an app container.
+  if (app_container)
+    return false;
+
+  return true;
+}
+
 // Utility function to pack token values into a key for the cache map.
 uint32_t GenerateTokenCacheKey(const sandbox::PolicyBase* policy) {
   const size_t kTokenShift = 3;
   uint32_t key;
+
+  DCHECK(IsTokenCacheable(policy));
 
   // Make sure our token values aren't too large to pack into the key.
   static_assert(sandbox::USER_LAST <= (1 << kTokenShift),
@@ -340,32 +355,38 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
   HANDLE lockdown_token_temp;
   ResultCode result = SBOX_ALL_OK;
 
-  // Create the master tokens only once and save them in a cache. That way
-  // can just duplicate them to avoid hammering LSASS on every sandboxed
-  // process launch.
-  uint32_t token_key = GenerateTokenCacheKey(policy_base);
-  TokenCacheMap::iterator it = token_cache_.find(token_key);
-  if (it != token_cache_.end()) {
-    initial_token_temp = it->second.first;
-    lockdown_token_temp = it->second.second;
+  if (IsTokenCacheable(policy_base)) {
+    // Create the master tokens only once and save them in a cache. That way
+    // can just duplicate them to avoid hammering LSASS on every sandboxed
+    // process launch.
+    uint32_t token_key = GenerateTokenCacheKey(policy_base);
+    TokenCacheMap::iterator it = token_cache_.find(token_key);
+    if (it != token_cache_.end()) {
+      initial_token_temp = it->second.first;
+      lockdown_token_temp = it->second.second;
+    } else {
+      result =
+          policy_base->MakeTokens(&initial_token_temp, &lockdown_token_temp);
+      if (SBOX_ALL_OK != result)
+        return result;
+      token_cache_[token_key] =
+          std::pair<HANDLE, HANDLE>(initial_token_temp, lockdown_token_temp);
+    }
+
+    if (!::DuplicateToken(initial_token_temp, SecurityImpersonation,
+                          &initial_token_temp)) {
+      return SBOX_ERROR_GENERIC;
+    }
+
+    if (!::DuplicateTokenEx(lockdown_token_temp, TOKEN_ALL_ACCESS, 0,
+                            SecurityIdentification, TokenPrimary,
+                            &lockdown_token_temp)) {
+      return SBOX_ERROR_GENERIC;
+    }
   } else {
-    result = policy_base->MakeTokens(&initial_token_temp,
-                                     &lockdown_token_temp);
+    result = policy_base->MakeTokens(&initial_token_temp, &lockdown_token_temp);
     if (SBOX_ALL_OK != result)
       return result;
-    token_cache_[token_key] =
-        std::pair<HANDLE, HANDLE>(initial_token_temp, lockdown_token_temp);
-  }
-
-  if (!::DuplicateToken(initial_token_temp, SecurityImpersonation,
-                        &initial_token_temp)) {
-    return SBOX_ERROR_GENERIC;
-  }
-
-  if (!::DuplicateTokenEx(lockdown_token_temp, TOKEN_ALL_ACCESS, 0,
-                          SecurityIdentification, TokenPrimary,
-                          &lockdown_token_temp)) {
-    return SBOX_ERROR_GENERIC;
   }
 
   base::win::ScopedHandle initial_token(initial_token_temp);
@@ -465,7 +486,7 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
   base::win::ScopedProcessInformation process_info;
   TargetProcess* target = new TargetProcess(initial_token.Take(),
                                             lockdown_token.Take(),
-                                            job,
+                                            job.Get(),
                                             thread_pool_);
 
   DWORD win_result = target->Create(exe_path, command_line, inherit_handles,
@@ -542,8 +563,8 @@ ResultCode BrokerServicesBase::AddTargetPeer(HANDLE peer_process) {
     return SBOX_ERROR_BAD_PARAMS;
 
   if (!::RegisterWaitForSingleObject(
-          &peer->wait_object, peer->process, RemovePeer, peer.get(), INFINITE,
-          WT_EXECUTEONLYONCE | WT_EXECUTEINWAITTHREAD)) {
+          &peer->wait_object, peer->process.Get(), RemovePeer, peer.get(),
+          INFINITE, WT_EXECUTEONLYONCE | WT_EXECUTEINWAITTHREAD)) {
     peer_map_.erase(peer->id);
     return SBOX_ERROR_GENERIC;
   }

@@ -34,7 +34,8 @@ RequestSyncManager.prototype = {
                                          Ci.nsIDOMGlobalPropertyInitializer]),
 
   _messages: [ "RequestSyncManager:Registrations:Return",
-               "RequestSyncManager:SetPolicy:Return" ],
+               "RequestSyncManager:SetPolicy:Return",
+               "RequestSyncManager:RunTask:Return" ],
 
   init: function(aWindow) {
     debug("init");
@@ -69,6 +70,16 @@ RequestSyncManager.prototype = {
         isInBrowserElement: aIsInBrowserElement,
         state: aState,
         overwrittenMinInterval: aOverwrittenMinInterval });
+  },
+
+  runTask: function(aTask, aOrigin, aManifestURL, aIsInBrowserElement) {
+    debug('runTask');
+
+    return this.sendMessage("RequestSyncManager:RunTask",
+      { task: aTask,
+        origin: aOrigin,
+        manifestURL: aManifestURL,
+        isInBrowserElement: aIsInBrowserElement });
   },
 
   registrationsResult: function(aData) {

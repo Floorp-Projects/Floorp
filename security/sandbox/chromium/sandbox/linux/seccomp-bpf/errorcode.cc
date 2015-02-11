@@ -2,10 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "sandbox/linux/seccomp-bpf/die.h"
 #include "sandbox/linux/seccomp-bpf/errorcode.h"
 
+#include "sandbox/linux/seccomp-bpf/die.h"
+#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
+
 namespace sandbox {
+
+ErrorCode::ErrorCode() : error_type_(ET_INVALID), err_(SECCOMP_RET_INVALID) {
+}
 
 ErrorCode::ErrorCode(int err) {
   switch (err) {
@@ -27,30 +32,31 @@ ErrorCode::ErrorCode(int err) {
   }
 }
 
-ErrorCode::ErrorCode(Trap::TrapFnc fnc, const void* aux, bool safe, uint16_t id)
+ErrorCode::ErrorCode(uint16_t trap_id,
+                     Trap::TrapFnc fnc,
+                     const void* aux,
+                     bool safe)
     : error_type_(ET_TRAP),
       fnc_(fnc),
       aux_(const_cast<void*>(aux)),
       safe_(safe),
-      err_(SECCOMP_RET_TRAP + id) {}
+      err_(SECCOMP_RET_TRAP + trap_id) {
+}
 
 ErrorCode::ErrorCode(int argno,
                      ArgType width,
-                     Operation op,
+                     uint64_t mask,
                      uint64_t value,
                      const ErrorCode* passed,
                      const ErrorCode* failed)
     : error_type_(ET_COND),
+      mask_(mask),
       value_(value),
       argno_(argno),
       width_(width),
-      op_(op),
       passed_(passed),
       failed_(failed),
       err_(SECCOMP_RET_INVALID) {
-  if (op < 0 || op >= OP_NUM_OPS) {
-    SANDBOX_DIE("Invalid opcode in BPF sandbox rules");
-  }
 }
 
 bool ErrorCode::Equals(const ErrorCode& err) const {
@@ -63,9 +69,9 @@ bool ErrorCode::Equals(const ErrorCode& err) const {
   if (error_type_ == ET_SIMPLE || error_type_ == ET_TRAP) {
     return err_ == err.err_;
   } else if (error_type_ == ET_COND) {
-    return value_ == err.value_ && argno_ == err.argno_ &&
-           width_ == err.width_ && op_ == err.op_ &&
-           passed_->Equals(*err.passed_) && failed_->Equals(*err.failed_);
+    return mask_ == err.mask_ && value_ == err.value_ && argno_ == err.argno_ &&
+           width_ == err.width_ && passed_->Equals(*err.passed_) &&
+           failed_->Equals(*err.failed_);
   } else {
     SANDBOX_DIE("Corrupted ErrorCode");
   }
@@ -85,14 +91,14 @@ bool ErrorCode::LessThan(const ErrorCode& err) const {
     if (error_type_ == ET_SIMPLE || error_type_ == ET_TRAP) {
       return err_ < err.err_;
     } else if (error_type_ == ET_COND) {
-      if (value_ != err.value_) {
+      if (mask_ != err.mask_) {
+        return mask_ < err.mask_;
+      } else if (value_ != err.value_) {
         return value_ < err.value_;
       } else if (argno_ != err.argno_) {
         return argno_ < err.argno_;
       } else if (width_ != err.width_) {
         return width_ < err.width_;
-      } else if (op_ != err.op_) {
-        return op_ < err.op_;
       } else if (!passed_->Equals(*err.passed_)) {
         return passed_->LessThan(*err.passed_);
       } else if (!failed_->Equals(*err.failed_)) {

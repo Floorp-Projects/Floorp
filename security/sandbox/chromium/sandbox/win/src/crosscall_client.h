@@ -47,7 +47,7 @@ const uint32 kIPCChannelSize = 1024;
 // IPC. These template facility can be made more sophisticated as need arises.
 
 // The default copy helper. It catches the general case where no other
-// specialized template matches better. We set the type to ULONG_TYPE, so this
+// specialized template matches better. We set the type to UINT32_TYPE, so this
 // only works with objects whose size is 32 bits.
 template<typename T>
 class CopyHelper {
@@ -79,7 +79,7 @@ class CopyHelper {
   // Returns this object's type.
   ArgType GetType() {
     COMPILE_ASSERT(sizeof(T) == sizeof(uint32), need_specialization);
-    return ULONG_TYPE;
+    return UINT32_TYPE;
   }
 
  private:

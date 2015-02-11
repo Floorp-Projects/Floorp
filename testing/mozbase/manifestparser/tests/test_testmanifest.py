@@ -4,7 +4,9 @@ import os
 import shutil
 import tempfile
 import unittest
+
 from manifestparser import TestManifest, ParseError
+from manifestparser.filters import subsuite
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -26,11 +28,11 @@ class TestTestManifest(unittest.TestCase):
                          ['fleem'])
 
         # You should be able to expect failures:
-        last_test = manifest.active_tests(exists=False, toolkit='gtk2')[-1]
-        self.assertEqual(last_test['name'], 'linuxtest')
-        self.assertEqual(last_test['expected'], 'pass')
-        last_test = manifest.active_tests(exists=False, toolkit='cocoa')[-1]
-        self.assertEqual(last_test['expected'], 'fail')
+        last = manifest.active_tests(exists=False, toolkit='gtk2')[-1]
+        self.assertEqual(last['name'], 'linuxtest')
+        self.assertEqual(last['expected'], 'pass')
+        last = manifest.active_tests(exists=False, toolkit='cocoa')[-1]
+        self.assertEqual(last['expected'], 'fail')
 
     def test_missing_paths(self):
         """
@@ -61,47 +63,45 @@ class TestTestManifest(unittest.TestCase):
         """
         test subsuites and conditional subsuites
         """
-        class AttributeDict(dict):
-            def __getattr__(self, attr):
-                return self[attr]
-            def __setattr__(self, attr, value):
-                self[attr] = value
-
         relative_path = os.path.join(here, 'subsuite.ini')
         manifest = TestManifest(manifests=(relative_path,))
         info = {'foo': 'bar'}
-        options = {'subsuite': 'bar'}
 
         # 6 tests total
-        self.assertEquals(len(manifest.active_tests(exists=False, **info)), 6)
+        tests = manifest.active_tests(exists=False, **info)
+        self.assertEquals(len(tests), 6)
 
         # only 3 tests for subsuite bar when foo==bar
-        self.assertEquals(len(manifest.active_tests(exists=False,
-                                                    options=AttributeDict(options),
-                                                    **info)), 3)
+        tests = manifest.active_tests(exists=False,
+                                      filters=[subsuite('bar')],
+                                      **info)
+        self.assertEquals(len(tests), 3)
 
-        options = {'subsuite': 'baz'}
-        other = {'something': 'else'}
         # only 1 test for subsuite baz, regardless of conditions
-        self.assertEquals(len(manifest.active_tests(exists=False,
-                                                    options=AttributeDict(options),
-                                                    **info)), 1)
-        self.assertEquals(len(manifest.active_tests(exists=False,
-                                                    options=AttributeDict(options),
-                                                    **other)), 1)
+        other = {'something': 'else'}
+        tests = manifest.active_tests(exists=False,
+                                      filters=[subsuite('baz')],
+                                      **info)
+        self.assertEquals(len(tests), 1)
+        tests = manifest.active_tests(exists=False,
+                                      filters=[subsuite('baz')],
+                                      **other)
+        self.assertEquals(len(tests), 1)
 
         # 4 tests match when the condition doesn't match (all tests except
         # the unconditional subsuite)
         info = {'foo': 'blah'}
-        options = {'subsuite': None}
-        self.assertEquals(len(manifest.active_tests(exists=False,
-                                                    options=AttributeDict(options),
-                                                    **info)), 5)
+        tests = manifest.active_tests(exists=False,
+                                      filters=[subsuite()],
+                                      **info)
+        self.assertEquals(len(tests), 5)
 
         # test for illegal subsuite value
         manifest.tests[0]['subsuite'] = 'subsuite=bar,foo=="bar",type="nothing"'
-        self.assertRaises(ParseError, manifest.active_tests, exists=False,
-                          options=AttributeDict(options), **info)
+        with self.assertRaises(ParseError):
+            manifest.active_tests(exists=False,
+                                  filters=[subsuite('foo')],
+                                  **info)
 
     def test_none_and_empty_manifest(self):
         """

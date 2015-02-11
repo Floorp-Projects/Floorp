@@ -671,8 +671,11 @@ class TemporaryTypeSet : public TypeSet
     ForAllResult forAllClasses(CompilerConstraintList *constraints,
                                bool (*func)(const Class *clasp));
 
-    /* Get the prototype shared by all objects in this set, or nullptr. */
-    JSObject *getCommonPrototype(CompilerConstraintList *constraints);
+    /*
+     * Returns true if all objects in this set have the same prototype, and
+     * assigns this object to *proto. The proto can be nullptr.
+     */
+    bool getCommonPrototype(CompilerConstraintList *constraints, JSObject **proto);
 
     /* Get the typed array type of all objects in this set, or Scalar::MaxTypedArrayViewType. */
     Scalar::Type getTypedArrayType(CompilerConstraintList *constraints);

@@ -25,6 +25,7 @@ class nsPresContext;
 class nsRenderingContext;
 class nsBlockInFlowLineIterator;
 class nsStyleContext;
+struct nsSize;
 template<class T> class nsTHashtable;
 namespace mozilla { class WritingMode; }
 
@@ -161,7 +162,7 @@ public:
   static void ReorderFrames(nsIFrame*            aFirstFrameOnLine,
                             int32_t              aNumFramesOnLine,
                             mozilla::WritingMode aLineWM,
-                            nscoord              aLineWidth,
+                            const nsSize&        aContainerSize,
                             nscoord              aStart);
 
   /**
@@ -430,7 +431,7 @@ private:
                               nscoord&               aStart,
                               nsContinuationStates*  aContinuationStates,
                               mozilla::WritingMode   aContainerWM,
-                              nscoord                aContainerWidth);
+                              const nsSize&          aContainerSize);
 
   /*
    * Initialize the continuation state(nsFrameContinuationState) to
@@ -483,7 +484,7 @@ private:
   static void RepositionInlineFrames(BidiLineData* aBld,
                                      nsIFrame* aFirstChild,
                                      mozilla::WritingMode aLineWM,
-                                     nscoord aLineWidth,
+                                     const nsSize& aContainerSize,
                                      nscoord aStart);
   
   /**

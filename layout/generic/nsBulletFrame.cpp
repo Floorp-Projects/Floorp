@@ -420,13 +420,19 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
       nscoord ascent = wm.IsLineInverted()
                          ? fm->MaxDescent() : fm->MaxAscent();
       aPt.MoveBy(padding.left, padding.top);
+      gfxContext *ctx = aRenderingContext.ThebesContext();
       if (wm.IsVertical()) {
-        // XXX what about baseline snapping?
-        aPt.x += (wm.IsVerticalLR() ? ascent
-                                    : mRect.width - ascent);
+        if (wm.IsVerticalLR()) {
+          aPt.x = NSToCoordRound(nsLayoutUtils::GetSnappedBaselineX(
+                                   this, ctx, aPt.x, ascent));
+        } else {
+          aPt.x = NSToCoordRound(nsLayoutUtils::GetSnappedBaselineX(
+                                   this, ctx, aPt.x + mRect.width,
+                                   -ascent));
+        }
       } else {
         aPt.y = NSToCoordRound(nsLayoutUtils::GetSnappedBaselineY(
-                this, aRenderingContext.ThebesContext(), aPt.y, ascent));
+                                 this, ctx, aPt.y, ascent));
       }
       nsPresContext* presContext = PresContext();
       if (!presContext->BidiEnabled() && HasRTLChars(text)) {

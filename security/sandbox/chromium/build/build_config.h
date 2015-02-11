@@ -4,7 +4,8 @@
 
 // This file adds defines about the platform we're currently building on.
 //  Operating System:
-//    OS_WIN / OS_MACOSX / OS_LINUX / OS_POSIX (MACOSX or LINUX) / OS_NACL
+//    OS_WIN / OS_MACOSX / OS_LINUX / OS_POSIX (MACOSX or LINUX) /
+//    OS_NACL (NACL_SFI or NACL_NONSFI) / OS_NACL_SFI / OS_NACL_NONSFI
 //  Compiler:
 //    COMPILER_MSVC / COMPILER_GCC
 //  Processor:
@@ -14,17 +15,25 @@
 #ifndef BUILD_BUILD_CONFIG_H_
 #define BUILD_BUILD_CONFIG_H_
 
-#if defined(__APPLE__)
-#include <TargetConditionals.h>
-#endif
-
 // A set of macros to use for platform detection.
 #if defined(__native_client__)
 // __native_client__ must be first, so that other OS_ defines are not set.
 #define OS_NACL 1
+// OS_NACL comes in two sandboxing technology flavors, SFI or Non-SFI.
+// PNaCl toolchain defines __native_client_nonsfi__ macro in Non-SFI build
+// mode, while it does not in SFI build mode.
+#if defined(__native_client_nonsfi__)
+#define OS_NACL_NONSFI
+#else
+#define OS_NACL_SFI
+#endif
 #elif defined(ANDROID)
 #define OS_ANDROID 1
 #elif defined(__APPLE__)
+// only include TargetConditions after testing ANDROID as some android builds
+// on mac don't have this header available and it's not needed unless the target
+// is really mac/ios.
+#include <TargetConditionals.h>
 #define OS_MACOSX 1
 #if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
 #define OS_IOS 1
@@ -113,10 +122,17 @@
 #define ARCH_CPU_32_BITS 1
 #define ARCH_CPU_LITTLE_ENDIAN 1
 #elif defined(__MIPSEL__)
+#if defined(__LP64__)
+#define ARCH_CPU_MIPS64_FAMILY 1
+#define ARCH_CPU_MIPS64EL 1
+#define ARCH_CPU_64_BITS 1
+#define ARCH_CPU_LITTLE_ENDIAN 1
+#else
 #define ARCH_CPU_MIPS_FAMILY 1
 #define ARCH_CPU_MIPSEL 1
 #define ARCH_CPU_32_BITS 1
 #define ARCH_CPU_LITTLE_ENDIAN 1
+#endif
 #else
 #error Please add support for your architecture in build/build_config.h
 #endif

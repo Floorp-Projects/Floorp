@@ -206,7 +206,7 @@ TEST(PolicyEngineTest, IfNotStrMatchTwoRulesWild1) {
   EXPECT_TRUE(policyGen.Done());
 
   const wchar_t* filename = NULL;
-  unsigned long access = 0;
+  uint32 access = 0;
   POLPARAMS_BEGIN(eval_params)
     POLPARAM(filename)                // Argument 0
     POLPARAM(access)                  // Argument 1
@@ -255,8 +255,8 @@ TEST(PolicyEngineTest, IfNotStrMatchTwoRulesWild2) {
   EXPECT_TRUE(policyGen.Done());
 
   const wchar_t* filename = NULL;
-  unsigned long access = 0;
-  unsigned long sharing = 66;
+  uint32 access = 0;
+  uint32 sharing = 66;
 
   POLPARAMS_BEGIN(eval_params)
     POLPARAM(filename)                // Argument 0
@@ -329,8 +329,8 @@ TEST(PolicyEngineTest, OneRuleTest) {
   EXPECT_TRUE(policyGen.Done());
 
   const wchar_t* filename = L"c:\\Documents and Settings\\Microsoft\\BLAH.txt";
-  unsigned long creation_mode = OPEN_EXISTING;
-  unsigned long flags = FILE_ATTRIBUTE_NORMAL;
+  uint32 creation_mode = OPEN_EXISTING;
+  uint32 flags = FILE_ATTRIBUTE_NORMAL;
   void* security_descriptor = NULL;
 
   POLPARAMS_BEGIN(eval_params)
@@ -472,7 +472,8 @@ TEST(PolicyEngineTest, ThreeRulesTest) {
 
   // Check the type of the first and last opcode of each service.
 
-  EXPECT_EQ(OP_ULONG_AND_MATCH, policy->entry[kNtFakeNone]->opcodes[0].GetID());
+  EXPECT_EQ(OP_NUMBER_AND_MATCH,
+            policy->entry[kNtFakeNone]->opcodes[0].GetID());
   EXPECT_EQ(OP_ACTION, policy->entry[kNtFakeNone]->opcodes[tc1-1].GetID());
   EXPECT_EQ(OP_WSTRING_MATCH,
             policy->entry[kNtFakeCreateFile]->opcodes[0].GetID());
@@ -485,8 +486,8 @@ TEST(PolicyEngineTest, ThreeRulesTest) {
   // Test the policy evaluation.
 
   const wchar_t* filename = L"";
-  unsigned long creation_mode = OPEN_EXISTING;
-  unsigned long flags = FILE_ATTRIBUTE_NORMAL;
+  uint32 creation_mode = OPEN_EXISTING;
+  uint32 flags = FILE_ATTRIBUTE_NORMAL;
   void* security_descriptor = NULL;
 
   POLPARAMS_BEGIN(params)

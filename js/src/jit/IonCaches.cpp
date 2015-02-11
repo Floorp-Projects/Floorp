@@ -653,6 +653,26 @@ IsCacheableGetPropCallNative(JSObject *obj, JSObject *holder, Shape *shape)
 }
 
 static bool
+IsCacheableGetPropCallScripted(JSObject *obj, JSObject *holder, Shape *shape)
+{
+    if (!shape || !IsCacheableProtoChainForIon(obj, holder))
+        return false;
+
+    if (!shape->hasGetterValue() || !shape->getterValue().isObject())
+        return false;
+
+    if (!shape->getterValue().toObject().is<JSFunction>())
+        return false;
+
+    JSFunction& getter = shape->getterValue().toObject().as<JSFunction>();
+    if (!getter.hasJITCode())
+        return false;
+
+    // See IsCacheableGetPropCallNative.
+    return !obj->getClass()->ext.outerObject;
+}
+
+static bool
 IsCacheableGetPropCallPropertyOp(JSObject *obj, JSObject *holder, Shape *shape)
 {
     if (!shape || !IsCacheableProtoChainForIon(obj, holder))
@@ -920,20 +940,15 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
     // to try so hard to not use the stack.  Scratch regs are just taken from the register
     // set not including the input, current value saved on the stack, and restored when
     // we're done with it.
-    Register scratchReg      = regSet.takeGeneral();
-    Register argJSContextReg = regSet.takeGeneral();
-    Register argUintNReg     = regSet.takeGeneral();
-    Register argVpReg        = regSet.takeGeneral();
+    Register scratchReg = regSet.takeGeneral();
 
-    // Shape has a getter function.
-    bool callNative = IsCacheableGetPropCallNative(obj, holder, shape);
-    MOZ_ASSERT_IF(!callNative, IsCacheableGetPropCallPropertyOp(obj, holder, shape));
+    // Shape has a JSNative, PropertyOp or scripted getter function.
+    if (IsCacheableGetPropCallNative(obj, holder, shape)) {
+        Register argJSContextReg = regSet.takeGeneral();
+        Register argUintNReg     = regSet.takeGeneral();
+        Register argVpReg        = regSet.takeGeneral();
 
-    if (callNative) {
-        MOZ_ASSERT(shape->hasGetterValue() && shape->getterValue().isObject() &&
-                   shape->getterValue().toObject().is<JSFunction>());
         JSFunction *target = &shape->getterValue().toObject().as<JSFunction>();
-
         MOZ_ASSERT(target);
         MOZ_ASSERT(target->isNative());
 
@@ -977,7 +992,10 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 
         // masm.leaveExitFrame & pop locals
         masm.adjustStack(IonOOLNativeExitFrameLayout::Size(0));
-    } else {
+    } else if (IsCacheableGetPropCallPropertyOp(obj, holder, shape)) {
+        Register argJSContextReg = regSet.takeGeneral();
+        Register argUintNReg     = regSet.takeGeneral();
+        Register argVpReg        = regSet.takeGeneral();
         Register argObjReg       = argUintNReg;
         Register argIdReg        = regSet.takeGeneral();
 
@@ -1023,6 +1041,51 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 
         // masm.leaveExitFrame & pop locals.
         masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
+    } else {
+        MOZ_ASSERT(IsCacheableGetPropCallScripted(obj, holder, shape));
+
+        JSFunction *target = &shape->getterValue().toObject().as<JSFunction>();
+        uint32_t framePushedBefore = masm.framePushed();
+
+        // Construct IonAccessorICFrameLayout.
+        uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS);
+        attacher.pushStubCodePointer(masm);
+        masm.Push(Imm32(descriptor));
+        masm.Push(ImmPtr(returnAddr));
+
+        // The JitFrameLayout pushed below will be aligned to JitStackAlignment,
+        // so we just have to make sure the stack is aligned after we push the
+        // |this| + argument Values.
+        uint32_t argSize = (target->nargs() + 1) * sizeof(Value);
+        uint32_t padding = ComputeByteAlignment(masm.framePushed() + argSize, JitStackAlignment);
+        MOZ_ASSERT(padding % sizeof(uintptr_t) == 0);
+        MOZ_ASSERT(padding < JitStackAlignment);
+        masm.reserveStack(padding);
+
+        for (size_t i = 0; i < target->nargs(); i++)
+            masm.Push(UndefinedValue());
+        masm.Push(TypedOrValueRegister(MIRType_Object, AnyRegister(object)));
+
+        masm.movePtr(ImmMaybeNurseryPtr(target), scratchReg);
+
+        descriptor = MakeFrameDescriptor(argSize + padding, JitFrame_IonAccessorIC);
+        masm.Push(Imm32(0)); // argc
+        masm.Push(scratchReg);
+        masm.Push(Imm32(descriptor));
+
+        // Check stack alignment. Add sizeof(uintptr_t) for the return address.
+        MOZ_ASSERT(((masm.framePushed() + sizeof(uintptr_t)) % JitStackAlignment) == 0);
+
+        // The getter has JIT code now and we will only discard the getter's JIT
+        // code when discarding all JIT code in the Zone, so we can assume it'll
+        // still have JIT code.
+        MOZ_ASSERT(target->hasJITCode());
+        masm.loadPtr(Address(scratchReg, JSFunction::offsetOfNativeOrScript()), scratchReg);
+        masm.loadBaselineOrIonRaw(scratchReg, scratchReg, nullptr);
+        masm.callJit(scratchReg);
+        masm.storeCallResultValue(output);
+
+        masm.freeStack(masm.framePushed() - framePushedBefore);
     }
 
     masm.icRestoreLive(liveRegs, aic);
@@ -1240,12 +1303,13 @@ CanAttachNativeGetProp(typename GetPropCache::Context cx, const GetPropCache &ca
     //
     // Be careful when adding support for other getters here: for outer window
     // proxies, IonBuilder can innerize and pass us the inner window (the global),
-    // see IonBuilder::getPropTryInnerize. This is fine for native getters because
-    // IsCacheableGetPropCallNative checks they can handle both the inner and
-    // outer object, but scripted getters would need a similar mechanism.
+    // see IonBuilder::getPropTryInnerize. This is fine for native/scripted getters
+    // because IsCacheableGetPropCallNative and IsCacheableGetPropCallScripted
+    // handle this.
     if (cache.allowGetters() &&
         (IsCacheableGetPropCallNative(obj, holder, shape) ||
-         IsCacheableGetPropCallPropertyOp(obj, holder, shape)))
+         IsCacheableGetPropCallPropertyOp(obj, holder, shape) ||
+         IsCacheableGetPropCallScripted(obj, holder, shape)))
     {
         // Don't enable getter call if cache is idempotent, since they can be
         // effectful. This is handled by allowGetters()
@@ -1996,6 +2060,19 @@ IsCacheableSetPropCallNative(HandleObject obj, HandleObject holder, HandleShape 
 }
 
 static bool
+IsCacheableSetPropCallScripted(HandleObject obj, HandleObject holder, HandleShape shape)
+{
+    MOZ_ASSERT(obj->isNative());
+
+    if (!shape || !IsCacheableProtoChainForIon(obj, holder))
+        return false;
+
+    return shape->hasSetterValue() && shape->setterObject() &&
+           shape->setterObject()->is<JSFunction>() &&
+           shape->setterObject()->as<JSFunction>().hasJITCode();
+}
+
+static bool
 IsCacheableSetPropCallPropertyOp(HandleObject obj, HandleObject holder, HandleShape shape)
 {
     MOZ_ASSERT(obj->isNative());
@@ -2238,14 +2315,12 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
     //
     // Be very careful not to use any of these before value is pushed, since they
     // might shadow.
-    Register scratchReg     = regSet.takeGeneral();
-    Register argJSContextReg = regSet.takeGeneral();
-    Register argVpReg        = regSet.takeGeneral();
+    Register scratchReg = regSet.takeGeneral();
 
-    bool callNative = IsCacheableSetPropCallNative(obj, holder, shape);
-    MOZ_ASSERT_IF(!callNative, IsCacheableSetPropCallPropertyOp(obj, holder, shape));
+    if (IsCacheableSetPropCallNative(obj, holder, shape)) {
+        Register argJSContextReg = regSet.takeGeneral();
+        Register argVpReg        = regSet.takeGeneral();
 
-    if (callNative) {
         MOZ_ASSERT(shape->hasSetterValue() && shape->setterObject() &&
                    shape->setterObject()->is<JSFunction>());
         JSFunction *target = &shape->setterObject()->as<JSFunction>();
@@ -2290,7 +2365,9 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
 
         // masm.leaveExitFrame & pop locals.
         masm.adjustStack(IonOOLNativeExitFrameLayout::Size(1));
-    } else {
+    } else if (IsCacheableSetPropCallPropertyOp(obj, holder, shape)) {
+        Register argJSContextReg = regSet.takeGeneral();
+        Register argVpReg        = regSet.takeGeneral();
         Register argObjReg       = regSet.takeGeneral();
         Register argIdReg        = regSet.takeGeneral();
         Register argStrictReg    = regSet.takeGeneral();
@@ -2338,6 +2415,52 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
 
         // masm.leaveExitFrame & pop locals.
         masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
+    } else {
+        MOZ_ASSERT(IsCacheableSetPropCallScripted(obj, holder, shape));
+
+        JSFunction *target = &shape->setterValue().toObject().as<JSFunction>();
+        uint32_t framePushedBefore = masm.framePushed();
+
+        // Construct IonAccessorICFrameLayout.
+        uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS);
+        attacher.pushStubCodePointer(masm);
+        masm.Push(Imm32(descriptor));
+        masm.Push(ImmPtr(returnAddr));
+
+        // The JitFrameLayout pushed below will be aligned to JitStackAlignment,
+        // so we just have to make sure the stack is aligned after we push the
+        // |this| + argument Values.
+        uint32_t numArgs = Max(size_t(1), target->nargs());
+        uint32_t argSize = (numArgs + 1) * sizeof(Value);
+        uint32_t padding = ComputeByteAlignment(masm.framePushed() + argSize, JitStackAlignment);
+        MOZ_ASSERT(padding % sizeof(uintptr_t) == 0);
+        MOZ_ASSERT(padding < JitStackAlignment);
+        masm.reserveStack(padding);
+
+        for (size_t i = 1; i < target->nargs(); i++)
+            masm.Push(UndefinedValue());
+        masm.Push(value);
+        masm.Push(TypedOrValueRegister(MIRType_Object, AnyRegister(object)));
+
+        masm.movePtr(ImmMaybeNurseryPtr(target), scratchReg);
+
+        descriptor = MakeFrameDescriptor(argSize + padding, JitFrame_IonAccessorIC);
+        masm.Push(Imm32(1)); // argc
+        masm.Push(scratchReg);
+        masm.Push(Imm32(descriptor));
+
+        // Check stack alignment. Add sizeof(uintptr_t) for the return address.
+        MOZ_ASSERT(((masm.framePushed() + sizeof(uintptr_t)) % JitStackAlignment) == 0);
+
+        // The setter has JIT code now and we will only discard the setter's JIT
+        // code when discarding all JIT code in the Zone, so we can assume it'll
+        // still have JIT code.
+        MOZ_ASSERT(target->hasJITCode());
+        masm.loadPtr(Address(scratchReg, JSFunction::offsetOfNativeOrScript()), scratchReg);
+        masm.loadBaselineOrIonRaw(scratchReg, scratchReg, nullptr);
+        masm.callJit(scratchReg);
+
+        masm.freeStack(masm.framePushed() - framePushedBefore);
     }
 
     masm.icRestoreLive(liveRegs, aic);
@@ -2364,7 +2487,8 @@ IsCacheableDOMProxyUnshadowedSetterCall(JSContext *cx, HandleObject obj, HandleP
         return true;
 
     if (!IsCacheableSetPropCallNative(checkObj, holder, shape) &&
-        !IsCacheableSetPropCallPropertyOp(checkObj, holder, shape))
+        !IsCacheableSetPropCallPropertyOp(checkObj, holder, shape) &&
+        !IsCacheableSetPropCallScripted(checkObj, holder, shape))
     {
         return true;
     }
@@ -2729,7 +2853,8 @@ CanAttachNativeSetProp(JSContext *cx, HandleObject obj, HandleId id, ConstantOrR
         return SetPropertyIC::MaybeCanAttachAddSlot;
 
     if (IsCacheableSetPropCallPropertyOp(obj, holder, shape) ||
-        IsCacheableSetPropCallNative(obj, holder, shape))
+        IsCacheableSetPropCallNative(obj, holder, shape) ||
+        IsCacheableSetPropCallScripted(obj, holder, shape))
     {
         return SetPropertyIC::CanAttachCallSetter;
     }
@@ -4095,7 +4220,8 @@ IsCacheableNameCallGetter(HandleObject scopeChain, HandleObject obj, HandleObjec
         return false;
 
     return IsCacheableGetPropCallNative(obj, holder, shape) ||
-        IsCacheableGetPropCallPropertyOp(obj, holder, shape);
+        IsCacheableGetPropCallPropertyOp(obj, holder, shape) ||
+        IsCacheableGetPropCallScripted(obj, holder, shape);
 }
 
 bool

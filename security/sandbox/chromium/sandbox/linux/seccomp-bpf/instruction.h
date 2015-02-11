@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#include <cstddef>
+
 namespace sandbox {
 
 // The fields in this structure have the same meaning as the corresponding
@@ -27,33 +29,29 @@ struct Instruction {
   // Constructor for an non-jumping instruction or for an unconditional
   // "always" jump.
   Instruction(uint16_t c, uint32_t parm, Instruction* n)
-      : code(c), next(n), k(parm) {}
+      : code(c), jt(0), jf(0), jt_ptr(NULL), jf_ptr(NULL), next(n), k(parm) {}
 
   // Constructor for a conditional jump instruction.
   Instruction(uint16_t c, uint32_t parm, Instruction* jt, Instruction* jf)
-      : code(c), jt_ptr(jt), jf_ptr(jf), k(parm) {}
+      : code(c), jt(0), jf(0), jt_ptr(jt), jf_ptr(jf), next(NULL), k(parm) {}
 
   uint16_t code;
-  union {
-    // When code generation is complete, we will have computed relative
-    // branch targets that are in the range 0..255.
-    struct {
-      uint8_t jt, jf;
-    };
 
-    // While assembling the BPF program, we use pointers for branch targets.
-    // Once we have computed basic blocks, these pointers will be entered as
-    // keys in a TargetsToBlocks map and should no longer be dereferenced
-    // directly.
-    struct {
-      Instruction* jt_ptr, *jf_ptr;
-    };
+  // When code generation is complete, we will have computed relative
+  // branch targets that are in the range 0..255.
+  uint8_t jt, jf;
 
-    // While assembling the BPF program, non-jumping instructions are linked
-    // by the "next_" pointer. This field is no longer needed when we have
-    // computed basic blocks.
-    Instruction* next;
-  };
+  // While assembling the BPF program, we use pointers for branch targets.
+  // Once we have computed basic blocks, these pointers will be entered as
+  // keys in a TargetsToBlocks map and should no longer be dereferenced
+  // directly.
+  Instruction* jt_ptr, *jf_ptr;
+
+  // While assembling the BPF program, non-jumping instructions are linked
+  // by the "next_" pointer. This field is no longer needed when we have
+  // computed basic blocks.
+  Instruction* next;
+
   uint32_t k;
 };
 

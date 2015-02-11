@@ -349,8 +349,7 @@ typedef void (*PLDHashClearEntry)(PLDHashTable* aTable,
  * new one.  At that point, aEntry->mKeyHash is not set yet, to avoid claiming
  * the last free entry in a severely overloaded table.
  */
-typedef bool (*PLDHashInitEntry)(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
-                                 const void* aKey);
+typedef void (*PLDHashInitEntry)(PLDHashEntryHdr* aEntry, const void* aKey);
 
 /*
  * Finally, the "vtable" structure for PLDHashTable.  The first four hooks

@@ -16,3 +16,4 @@
 == text-indent-intrinsic-min.html text-indent-intrinsic-min-ref.html
 == text-indent-negative-intrinsic-pref.html text-indent-negative-intrinsic-pref-ref.html
 == text-indent-negative-intrinsic-min.html text-indent-negative-intrinsic-min-ref.html
+== text-indent-parent-dynamic.html text-indent-parent-dynamic-ref.html

@@ -19,11 +19,17 @@
 //
 // These classes are represented as only a 64-bit value, so they can be
 // efficiently passed by value.
+//
+// Definitions of operator<< are provided to make these types work with
+// DCHECK_EQ() and other log macros. For human-readable formatting, see
+// "base/i18n/time_formatting.h".
 
 #ifndef BASE_TIME_TIME_H_
 #define BASE_TIME_TIME_H_
 
 #include <time.h>
+
+#include <iosfwd>
 
 #include "base/base_export.h"
 #include "base/basictypes.h"
@@ -206,6 +212,9 @@ inline TimeDelta operator*(int64 a, TimeDelta td) {
   return TimeDelta(a * td.delta_);
 }
 
+// For logging use only.
+BASE_EXPORT std::ostream& operator<<(std::ostream& os, TimeDelta time_delta);
+
 // Time -----------------------------------------------------------------------
 
 // Represents a wall clock time in UTC.
@@ -223,6 +232,10 @@ class BASE_EXPORT Time {
   static const int64 kNanosecondsPerSecond = kNanosecondsPerMicrosecond *
                                              kMicrosecondsPerSecond;
 
+  // The representation of Jan 1, 1970 UTC in microseconds since the
+  // platform-dependent epoch.
+  static const int64 kTimeTToMicrosecondsOffset;
+
 #if !defined(OS_WIN)
   // On Mac & Linux, this value is the delta from the Windows epoch of 1601 to
   // the Posix delta of 1970. This is used for migrating between the old
@@ -230,6 +243,11 @@ class BASE_EXPORT Time {
   // this global header and put in the platform-specific ones when we remove the
   // migration code.
   static const int64 kWindowsEpochDeltaMicroseconds;
+#else
+  // To avoid overflow in QPC to Microseconds calculations, since we multiply
+  // by kMicrosecondsPerSecond, then the QPC value should not exceed
+  // (2^63 - 1) / 1E6. If it exceeds that threshold, we divide then multiply.
+  static const int64 kQPCOverflowThreshold = 0x8637BD05AF7;
 #endif
 
   // Represents an exploded time that can be formatted nicely. This is kind of
@@ -335,13 +353,7 @@ class BASE_EXPORT Time {
   // treat it as static across all windows versions.
   static const int kMinLowResolutionThresholdMs = 16;
 
-  // Enable or disable Windows high resolution timer. If the high resolution
-  // timer is not enabled, calls to ActivateHighResolutionTimer will fail.
-  // When disabling the high resolution timer, this function will not cause
-  // the high resolution timer to be deactivated, but will prevent future
-  // activations.
-  // Must be called from the main thread.
-  // For more details see comments in time_win.cc.
+  // Enable or disable Windows high resolution timer.
   static void EnableHighResolutionTimer(bool enable);
 
   // Activates or deactivates the high resolution timer based on the |activate|
@@ -484,20 +496,6 @@ class BASE_EXPORT Time {
                                  bool is_local,
                                  Time* parsed_time);
 
-  // The representation of Jan 1, 1970 UTC in microseconds since the
-  // platform-dependent epoch.
-  static const int64 kTimeTToMicrosecondsOffset;
-
-#if defined(OS_WIN)
-  // Indicates whether fast timers are usable right now.  For instance,
-  // when using battery power, we might elect to prevent high speed timers
-  // which would draw more power.
-  static bool high_resolution_timer_enabled_;
-  // Count of activations on the high resolution timer.  Only use in tests
-  // which are single threaded.
-  static int high_resolution_timer_activated_;
-#endif
-
   // Time in microseconds in UTC.
   int64 us_;
 };
@@ -549,7 +547,7 @@ inline TimeDelta TimeDelta::FromSecondsD(double secs) {
   // Preserve max to prevent overflow.
   if (secs == std::numeric_limits<double>::infinity())
     return Max();
-  return TimeDelta(secs * Time::kMicrosecondsPerSecond);
+  return TimeDelta(static_cast<int64>(secs * Time::kMicrosecondsPerSecond));
 }
 
 // static
@@ -557,7 +555,7 @@ inline TimeDelta TimeDelta::FromMillisecondsD(double ms) {
   // Preserve max to prevent overflow.
   if (ms == std::numeric_limits<double>::infinity())
     return Max();
-  return TimeDelta(ms * Time::kMicrosecondsPerMillisecond);
+  return TimeDelta(static_cast<int64>(ms * Time::kMicrosecondsPerMillisecond));
 }
 
 // static
@@ -571,6 +569,9 @@ inline TimeDelta TimeDelta::FromMicroseconds(int64 us) {
 inline Time TimeDelta::operator+(Time t) const {
   return Time(t.us_ + delta_);
 }
+
+// For logging use only.
+BASE_EXPORT std::ostream& operator<<(std::ostream& os, Time time);
 
 // TimeTicks ------------------------------------------------------------------
 
@@ -633,14 +634,6 @@ class BASE_EXPORT TimeTicks {
   // Returns true if the high resolution clock is working on this system.
   // This is only for testing.
   static bool IsHighResClockWorking();
-
-  // Enable high resolution time for TimeTicks::Now(). This function will
-  // test for the availability of a working implementation of
-  // QueryPerformanceCounter(). If one is not available, this function does
-  // nothing and the resolution of Now() remains 1ms. Otherwise, all future
-  // calls to TimeTicks::Now() will have the higher resolution provided by QPC.
-  // Returns true if high resolution time was successfully enabled.
-  static bool SetNowIsHighResNowIfSupported();
 
   // Returns a time value that is NOT rollover protected.
   static TimeTicks UnprotectedNow();
@@ -741,6 +734,9 @@ class BASE_EXPORT TimeTicks {
 inline TimeTicks TimeDelta::operator+(TimeTicks t) const {
   return TimeTicks(t.ticks_ + delta_);
 }
+
+// For logging use only.
+BASE_EXPORT std::ostream& operator<<(std::ostream& os, TimeTicks time_ticks);
 
 }  // namespace base
 

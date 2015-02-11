@@ -1394,5 +1394,33 @@
 #define __NR_kcmp 349
 #endif
 
+#if !defined(__NR_finit_module)
+#define __NR_finit_module 350
+#endif
+
+#if !defined(__NR_sched_setattr)
+#define __NR_sched_setattr 351
+#endif
+
+#if !defined(__NR_sched_getattr)
+#define __NR_sched_getattr 352
+#endif
+
+#if !defined(__NR_renameat2)
+#define __NR_renameat2 353
+#endif
+
+#if !defined(__NR_seccomp)
+#define __NR_seccomp 354
+#endif
+
+#if !defined(__NR_getrandom)
+#define __NR_getrandom 355
+#endif
+
+#if !defined(__NR_memfd_create)
+#define __NR_memfd_create 356
+#endif
+
 #endif  // SANDBOX_LINUX_SERVICES_X86_32_LINUX_SYSCALLS_H_
 

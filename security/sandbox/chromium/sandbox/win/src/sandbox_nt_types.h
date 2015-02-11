@@ -37,7 +37,6 @@ struct NtExports {
 // This is the value used for the ntdll level allocator.
 enum AllocationType {
   NT_ALLOC,
-  NT_PLACE,
   NT_PAGE
 };
 

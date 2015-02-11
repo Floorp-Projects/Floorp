@@ -379,13 +379,11 @@ public:
   nsRefPtr<EventListenerManager> mListenerManager;
 };
 
-static bool
-EventListenerManagerHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
-                                  const void *key)
+static void
+EventListenerManagerHashInitEntry(PLDHashEntryHdr *entry, const void *key)
 {
   // Initialize the entry with placement new
   new (entry) EventListenerManagerMapEntry(key);
-  return true;
 }
 
 static void

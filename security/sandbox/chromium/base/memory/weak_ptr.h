@@ -48,17 +48,18 @@
 // ------------------------- IMPORTANT: Thread-safety -------------------------
 
 // Weak pointers may be passed safely between threads, but must always be
-// dereferenced and invalidated on the same thread otherwise checking the
-// pointer would be racey.
+// dereferenced and invalidated on the same SequencedTaskRunner otherwise
+// checking the pointer would be racey.
 //
 // To ensure correct use, the first time a WeakPtr issued by a WeakPtrFactory
 // is dereferenced, the factory and its WeakPtrs become bound to the calling
-// thread, and cannot be dereferenced or invalidated on any other thread. Bound
-// WeakPtrs can still be handed off to other threads, e.g. to use to post tasks
-// back to object on the bound thread.
+// thread or current SequencedWorkerPool token, and cannot be dereferenced or
+// invalidated on any other task runner. Bound WeakPtrs can still be handed
+// off to other task runners, e.g. to use to post tasks back to object on the
+// bound sequence.
 //
-// Invalidating the factory's WeakPtrs un-binds it from the thread, allowing it
-// to be passed for a different thread to use or delete it.
+// Invalidating the factory's WeakPtrs un-binds it from the sequence, allowing
+// it to be passed for a different sequence to use or delete it.
 
 #ifndef BASE_MEMORY_WEAK_PTR_H_
 #define BASE_MEMORY_WEAK_PTR_H_
@@ -81,8 +82,8 @@ namespace internal {
 
 class BASE_EXPORT WeakReference {
  public:
-  // Although Flag is bound to a specific thread, it may be deleted from another
-  // via base::WeakPtr::~WeakPtr().
+  // Although Flag is bound to a specific SequencedTaskRunner, it may be
+  // deleted from another via base::WeakPtr::~WeakPtr().
   class BASE_EXPORT Flag : public RefCountedThreadSafe<Flag> {
    public:
     Flag();

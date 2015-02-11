@@ -5,44 +5,19 @@
 #ifndef SANDBOX_LINUX_SECCOMP_BPF_SANDBOX_BPF_H__
 #define SANDBOX_LINUX_SECCOMP_BPF_SANDBOX_BPF_H__
 
-#include <stddef.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
-#include <algorithm>
-#include <limits>
-#include <map>
-#include <set>
-#include <utility>
-#include <vector>
+#include <stdint.h>
 
 #include "base/compiler_specific.h"
+#include "base/macros.h"
 #include "base/memory/scoped_ptr.h"
-#include "sandbox/linux/seccomp-bpf/die.h"
-#include "sandbox/linux/seccomp-bpf/errorcode.h"
-#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
+#include "sandbox/linux/seccomp-bpf/codegen.h"
 #include "sandbox/sandbox_export.h"
 
 namespace sandbox {
-
-// This must match the kernel's seccomp_data structure.
-struct arch_seccomp_data {
-  int nr;
-  uint32_t arch;
-  uint64_t instruction_pointer;
-  uint64_t args[6];
-};
-
-struct arch_sigsys {
-  void* ip;
-  int nr;
-  unsigned int arch;
-};
-
-class CodeGen;
-class SandboxBPFPolicy;
-class SandboxUnittestHelper;
-struct Instruction;
+struct arch_seccomp_data;
+namespace bpf_dsl {
+class Policy;
+}
 
 class SANDBOX_EXPORT SandboxBPF {
  public:
@@ -65,10 +40,6 @@ class SANDBOX_EXPORT SandboxBPF {
     // has not been contributed to upstream Linux.
     PROCESS_MULTI_THREADED,   // The program may be multi-threaded.
   };
-
-  // A vector of BPF instructions that need to be installed as a filter
-  // program in the kernel.
-  typedef std::vector<struct sock_filter> Program;
 
   // Constructors and destructors.
   // NOTE: Setting a policy and starting the sandbox is a one-way operation.
@@ -95,6 +66,10 @@ class SANDBOX_EXPORT SandboxBPF {
   // provided by the caller.
   static SandboxStatus SupportsSeccompSandbox(int proc_fd);
 
+  // Determines if the kernel has support for the seccomp() system call to
+  // synchronize BPF filters across a thread group.
+  static SandboxStatus SupportsSeccompThreadFilterSynchronization();
+
   // The sandbox needs to be able to access files in "/proc/self". If this
   // directory is not accessible when "startSandbox()" gets called, the caller
   // can provide an already opened file descriptor by calling "set_proc_fd()".
@@ -104,27 +79,11 @@ class SANDBOX_EXPORT SandboxBPF {
 
   // Set the BPF policy as |policy|. Ownership of |policy| is transfered here
   // to the sandbox object.
-  void SetSandboxPolicy(SandboxBPFPolicy* policy);
+  void SetSandboxPolicy(bpf_dsl::Policy* policy);
 
-  // We can use ErrorCode to request calling of a trap handler. This method
-  // performs the required wrapping of the callback function into an
-  // ErrorCode object.
-  // The "aux" field can carry a pointer to arbitrary data. See EvaluateSyscall
-  // for a description of how to pass data from SetSandboxPolicy() to a Trap()
-  // handler.
-  ErrorCode Trap(Trap::TrapFnc fnc, const void* aux);
-
-  // Calls a user-space trap handler and disables all sandboxing for system
-  // calls made from this trap handler.
-  // This feature is available only if explicitly enabled by the user having
-  // set the CHROME_SANDBOX_DEBUGGING environment variable.
-  // Returns an ET_INVALID ErrorCode, if called when not enabled.
-  // NOTE: This feature, by definition, disables all security features of
-  //   the sandbox. It should never be used in production, but it can be
-  //   very useful to diagnose code that is incompatible with the sandbox.
-  //   If even a single system call returns "UnsafeTrap", the security of
-  //   entire sandbox should be considered compromised.
-  ErrorCode UnsafeTrap(Trap::TrapFnc fnc, const void* aux);
+  // UnsafeTraps require some syscalls to always be allowed.
+  // This helper function returns true for these calls.
+  static bool IsRequiredForUnsafeTrap(int sysno);
 
   // From within an UnsafeTrap() it is often useful to be able to execute
   // the system call that triggered the trap. The ForwardSyscall() method
@@ -135,26 +94,6 @@ class SANDBOX_EXPORT SandboxBPF {
   // details. In other words, the return value from ForwardSyscall() is
   // directly suitable as a return value for a trap handler.
   static intptr_t ForwardSyscall(const struct arch_seccomp_data& args);
-
-  // We can also use ErrorCode to request evaluation of a conditional
-  // statement based on inspection of system call parameters.
-  // This method wrap an ErrorCode object around the conditional statement.
-  // Argument "argno" (1..6) will be compared to "value" using comparator
-  // "op". If the condition is true "passed" will be returned, otherwise
-  // "failed".
-  // If "is32bit" is set, the argument must in the range of 0x0..(1u << 32 - 1)
-  // If it is outside this range, the sandbox treats the system call just
-  // the same as any other ABI violation (i.e. it aborts with an error
-  // message).
-  ErrorCode Cond(int argno,
-                 ErrorCode::ArgType is_32bit,
-                 ErrorCode::Operation op,
-                 uint64_t value,
-                 const ErrorCode& passed,
-                 const ErrorCode& failed);
-
-  // Kill the program and print an error message.
-  ErrorCode Kill(const char* msg);
 
   // This is the main public entry point. It finds all system calls that
   // need rewriting, sets up the resources needed by the sandbox, and
@@ -179,28 +118,9 @@ class SANDBOX_EXPORT SandboxBPF {
   // through the verifier, iff the program was built in debug mode.
   // But by setting "force_verification", the caller can request that the
   // verifier is run unconditionally. This is useful for unittests.
-  Program* AssembleFilter(bool force_verification);
-
-  // Returns the fatal ErrorCode that is used to indicate that somebody
-  // attempted to pass a 64bit value in a 32bit system call argument.
-  // This method is primarily needed for testing purposes.
-  ErrorCode Unexpected64bitArgument();
+  scoped_ptr<CodeGen::Program> AssembleFilter(bool force_verification);
 
  private:
-  friend class CodeGen;
-  friend class SandboxUnittestHelper;
-  friend class ErrorCode;
-
-  struct Range {
-    Range(uint32_t f, uint32_t t, const ErrorCode& e)
-        : from(f), to(t), err(e) {}
-    uint32_t from, to;
-    ErrorCode err;
-  };
-  typedef std::vector<Range> Ranges;
-  typedef std::map<uint32_t, ErrorCode> ErrMap;
-  typedef std::set<ErrorCode, struct ErrorCode::LessThan> Conds;
-
   // Get a file descriptor pointing to "/proc", if currently available.
   int proc_fd() { return proc_fd_; }
 
@@ -208,7 +128,7 @@ class SANDBOX_EXPORT SandboxBPF {
   // policy. The caller has to make sure that "this" has not yet been
   // initialized with any other policies.
   bool RunFunctionInPolicy(void (*code_in_sandbox)(),
-                           scoped_ptr<SandboxBPFPolicy> policy);
+                           scoped_ptr<bpf_dsl::Policy> policy);
 
   // Performs a couple of sanity checks to verify that the kernel supports the
   // features that we need for successful sandboxing.
@@ -216,50 +136,21 @@ class SANDBOX_EXPORT SandboxBPF {
   // any other policies.
   bool KernelSupportSeccompBPF();
 
-  // Verify that the current policy passes some basic sanity checks.
-  void PolicySanityChecks(SandboxBPFPolicy* policy);
-
   // Assembles and installs a filter based on the policy that has previously
   // been configured with SetSandboxPolicy().
-  void InstallFilter(SandboxThreadState thread_state);
+  void InstallFilter(bool must_sync_threads);
 
   // Verify the correctness of a compiled program by comparing it against the
   // current policy. This function should only ever be called by unit tests and
   // by the sandbox internals. It should not be used by production code.
-  void VerifyProgram(const Program& program, bool has_unsafe_traps);
-
-  // Finds all the ranges of system calls that need to be handled. Ranges are
-  // sorted in ascending order of system call numbers. There are no gaps in the
-  // ranges. System calls with identical ErrorCodes are coalesced into a single
-  // range.
-  void FindRanges(Ranges* ranges);
-
-  // Returns a BPF program snippet that implements a jump table for the
-  // given range of system call numbers. This function runs recursively.
-  Instruction* AssembleJumpTable(CodeGen* gen,
-                                 Ranges::const_iterator start,
-                                 Ranges::const_iterator stop);
-
-  // Returns a BPF program snippet that makes the BPF filter program exit
-  // with the given ErrorCode "err". N.B. the ErrorCode may very well be a
-  // conditional expression; if so, this function will recursively call
-  // CondExpression() and possibly RetExpression() to build a complex set of
-  // instructions.
-  Instruction* RetExpression(CodeGen* gen, const ErrorCode& err);
-
-  // Returns a BPF program that evaluates the conditional expression in
-  // "cond" and returns the appropriate value from the BPF filter program.
-  // This function recursively calls RetExpression(); it should only ever be
-  // called from RetExpression().
-  Instruction* CondExpression(CodeGen* gen, const ErrorCode& cond);
+  void VerifyProgram(const CodeGen::Program& program);
 
   static SandboxStatus status_;
 
   bool quiet_;
   int proc_fd_;
-  scoped_ptr<const SandboxBPFPolicy> policy_;
-  Conds* conds_;
   bool sandbox_has_started_;
+  scoped_ptr<bpf_dsl::Policy> policy_;
 
   DISALLOW_COPY_AND_ASSIGN(SandboxBPF);
 };

@@ -103,7 +103,7 @@ template<typename CHAR, int BASE> class BaseCharToDigit<CHAR, BASE, true> {
  public:
   static bool Convert(CHAR c, uint8* digit) {
     if (c >= '0' && c < '0' + BASE) {
-      *digit = c - '0';
+      *digit = static_cast<uint8>(c - '0');
       return true;
     }
     return false;

@@ -165,10 +165,10 @@ SBOX_TESTS_COMMAND int CheckDep(int argc, wchar_t **argv) {
       return SBOX_TEST_THIRD_ERROR;
     }
 
-    const int MEM_EXECUTE_OPTION_ENABLE = 1;
-    const int MEM_EXECUTE_OPTION_DISABLE = 2;
-    const int MEM_EXECUTE_OPTION_ATL7_THUNK_EMULATION = 4;
-    const int MEM_EXECUTE_OPTION_PERMANENT = 8;
+    static const int MEM_EXECUTE_OPTION_ENABLE = 1;
+    static const int MEM_EXECUTE_OPTION_DISABLE = 2;
+    static const int MEM_EXECUTE_OPTION_ATL7_THUNK_EMULATION = 4;
+    static const int MEM_EXECUTE_OPTION_PERMANENT = 8;
     dep_flags &= 0xff;
 
     if (dep_flags != (MEM_EXECUTE_OPTION_DISABLE |

@@ -37,6 +37,7 @@
 #include "base/basictypes.h"
 #include "base/containers/hash_tables.h"
 #include "base/strings/string16.h"
+#include "mozilla/Attributes.h"
 
 namespace base {
 
@@ -178,10 +179,10 @@ template <typename STRING_TYPE> class BasicStringPiece {
   // in a "const char*" or a "string" wherever a "StringPiece" is
   // expected (likewise for char16, string16, StringPiece16).
   BasicStringPiece() : ptr_(NULL), length_(0) {}
-  BasicStringPiece(const value_type* str)
+  MOZ_IMPLICIT BasicStringPiece(const value_type* str)
       : ptr_(str),
         length_((str == NULL) ? 0 : STRING_TYPE::traits_type::length(str)) {}
-  BasicStringPiece(const STRING_TYPE& str)
+  MOZ_IMPLICIT BasicStringPiece(const STRING_TYPE& str)
       : ptr_(str.data()), length_(str.size()) {}
   BasicStringPiece(const value_type* offset, size_type len)
       : ptr_(offset), length_(len) {}
@@ -439,7 +440,6 @@ BASE_EXPORT std::ostream& operator<<(std::ostream& o,
   return result;                                                        \
 
 namespace BASE_HASH_NAMESPACE {
-#if defined(COMPILER_GCC)
 
 template<>
 struct hash<base::StringPiece> {
@@ -453,17 +453,6 @@ struct hash<base::StringPiece16> {
     HASH_STRING_PIECE(base::StringPiece16, sp16);
   }
 };
-
-#elif defined(COMPILER_MSVC)
-
-inline size_t hash_value(const base::StringPiece& sp) {
-  HASH_STRING_PIECE(base::StringPiece, sp);
-}
-inline size_t hash_value(const base::StringPiece16& sp16) {
-  HASH_STRING_PIECE(base::StringPiece16, sp16);
-}
-
-#endif  // COMPILER
 
 }  // namespace BASE_HASH_NAMESPACE
 

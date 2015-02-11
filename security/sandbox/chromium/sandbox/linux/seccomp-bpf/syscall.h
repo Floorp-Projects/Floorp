@@ -5,10 +5,16 @@
 #ifndef SANDBOX_LINUX_SECCOMP_BPF_SYSCALL_H__
 #define SANDBOX_LINUX_SECCOMP_BPF_SYSCALL_H__
 
+#include <signal.h>
 #include <stdint.h>
 
 #include "base/macros.h"
 #include "sandbox/sandbox_export.h"
+
+// Android's signal.h doesn't define ucontext etc.
+#if defined(OS_ANDROID)
+#include "sandbox/linux/services/android_ucontext.h"
+#endif
 
 namespace sandbox {
 
@@ -16,6 +22,13 @@ namespace sandbox {
 // low-level control.
 class SANDBOX_EXPORT Syscall {
  public:
+  // InvalidCall() invokes Call() with a platform-appropriate syscall
+  // number that is guaranteed to not be implemented (i.e., normally
+  // returns -ENOSYS).
+  // This is primarily meant to be useful for writing sandbox policy
+  // unit tests.
+  static intptr_t InvalidCall();
+
   // System calls can take up to six parameters (up to eight on some
   // architectures). Traditionally, glibc
   // implements this property by using variadic argument lists. This works, but
@@ -112,6 +125,11 @@ class SANDBOX_EXPORT Syscall {
     return Call(nr, 0, 0, 0, 0, 0, 0, 0, 0);
   }
 
+  // Set the registers in |ctx| to match what they would be after a system call
+  // returning |ret_val|. |ret_val| must follow the Syscall::Call() convention
+  // of being -errno on errors.
+  static void PutValueInUcontext(intptr_t ret_val, ucontext_t* ctx);
+
  private:
   // This performs system call |nr| with the arguments p0 to p7 from a constant
   // userland address, which is for instance observable by seccomp-bpf filters.
@@ -128,6 +146,21 @@ class SANDBOX_EXPORT Syscall {
                        intptr_t p5,
                        intptr_t p6,
                        intptr_t p7);
+
+#if defined(__mips__)
+  // This function basically does on MIPS what SandboxSyscall() is doing on
+  // other architectures. However, because of specificity of MIPS regarding
+  // handling syscall errors, SandboxSyscall() is made as a wrapper for this
+  // function in order for SandboxSyscall() to behave more like on other
+  // architectures on places where return value from SandboxSyscall() is used
+  // directly (like in most tests).
+  // The syscall "nr" is called with arguments that are set in an array on which
+  // pointer "args" points to and an information weather there is an error or no
+  // is returned to SandboxSyscall() by err_stat.
+  static intptr_t SandboxSyscallRaw(int nr,
+                                    const intptr_t* args,
+                                    intptr_t* err_stat);
+#endif  // defined(__mips__)
 
   DISALLOW_IMPLICIT_CONSTRUCTORS(Syscall);
 };

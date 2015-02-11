@@ -169,6 +169,7 @@ function test_managerRegistrations(state, overwrittenMinInterval) {
     is(results[0].state, state, "navigator.sync.registrations()[0].state is correct");
     is(results[0].overwrittenMinInterval, overwrittenMinInterval, "navigator.sync.registrations()[0].overwrittenMinInterval is correct");
     ok("setPolicy" in results[0], "navigator.sync.registrations()[0].setPolicy is correct");
+    ok("runNow" in results[0], "navigator.sync.registrations()[0].runNow is correct");
     runTests();
   },
   genericError);
