@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_test import MarionetteTestCase, skip_if_b2g
-from marionette_driver.keys import Keys
-from marionette_driver.errors import ElementNotVisibleException
+from keys import Keys
+from errors import ElementNotVisibleException
 
 
 class TestTyping(MarionetteTestCase):

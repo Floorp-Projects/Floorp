@@ -4,11 +4,8 @@
 
 import os
 from marionette_test import MarionetteTestCase
-from marionette_driver.marionette import HTMLElement
-from marionette_driver.errors import (NoSuchElementException,
-                                      JavascriptException,
-                                      MarionetteException,
-                                      ScriptTimeoutException)
+from marionette import HTMLElement
+from errors import NoSuchElementException, JavascriptException, MarionetteException, ScriptTimeoutException
 
 class TestTimeouts(MarionetteTestCase):
     def test_pagetimeout_notdefinetimeout_pass(self):

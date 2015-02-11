@@ -4,7 +4,7 @@
 
 import os
 from marionette_test import MarionetteTestCase
-from marionette_driver.errors import JavascriptException
+from errors import JavascriptException
 
 class TestImportScript(MarionetteTestCase):
     def setUp(self):
@@ -18,14 +18,14 @@ class TestImportScript(MarionetteTestCase):
     def check_file_exists(self):
         return self.marionette.execute_script("""
           let FileUtils = SpecialPowers.Cu.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
-          let importedScripts = FileUtils.getFile('TmpD', ['marionetteContentScripts']);
+          let importedScripts = FileUtils.getFile('TmpD', ['marionetteContentScripts']); 
           return importedScripts.exists();
         """, special_powers=True)
 
     def get_file_size(self):
         return self.marionette.execute_script("""
           let FileUtils = SpecialPowers.Cu.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
-          let importedScripts = FileUtils.getFile('TmpD', ['marionetteContentScripts']);
+          let importedScripts = FileUtils.getFile('TmpD', ['marionetteContentScripts']); 
           return importedScripts.fileSize;
         """, special_powers=True)
 
@@ -109,7 +109,7 @@ class TestImportScript(MarionetteTestCase):
         self.marionette.import_script(firstjs)
         self.marionette.import_script(secondjs)
 
-        self.assertEqual("i'm a test function!",
+        self.assertEqual("i'm a test function!", 
                 self.marionette.execute_script("return testFunc();"))
 
         self.assertEqual("i'm yet another test function!",
@@ -129,14 +129,14 @@ class TestImportScriptChrome(TestImportScript):
     def check_file_exists(self):
         return self.marionette.execute_async_script("""
           let FileUtils = Components.utils.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
-          let importedScripts = FileUtils.getFile('TmpD', ['marionetteChromeScripts']);
+          let importedScripts = FileUtils.getFile('TmpD', ['marionetteChromeScripts']); 
           marionetteScriptFinished(importedScripts.exists());
         """)
 
     def get_file_size(self):
         return self.marionette.execute_async_script("""
           let FileUtils = Components.utils.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
-          let importedScripts = FileUtils.getFile('TmpD', ['marionetteChromeScripts']);
+          let importedScripts = FileUtils.getFile('TmpD', ['marionetteChromeScripts']); 
           marionetteScriptFinished(importedScripts.fileSize);
         """)
 

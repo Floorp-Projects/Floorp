@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-from marionette_driver.errors import JavascriptException
+from errors import JavascriptException
 from marionette_test import MarionetteTestCase
 
 class TestLog(MarionetteTestCase):
