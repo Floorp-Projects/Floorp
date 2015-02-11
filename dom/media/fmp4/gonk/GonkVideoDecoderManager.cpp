@@ -445,7 +445,10 @@ GonkVideoDecoderManager::Input(mp4_demuxer::MP4Sample* aSample)
   status_t rv;
   if (aSample != nullptr) {
     // We must prepare samples in AVC Annex B.
-    mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample);
+    if (!mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
+      return NS_ERROR_FAILURE;
+    }
+
     // Forward sample data to the decoder.
 
     QueueFrameTimeIn(aSample->composition_timestamp, aSample->duration);
