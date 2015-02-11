@@ -387,10 +387,10 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     // Border and padding are suppressed on ruby text containers.
     // If the writing mode is vertical-rl, the horizontal position of
     // rt frames will be updated when reflowing this text container,
-    // hence leave container width 0 here for now.
+    // hence leave container size 0 here for now.
     lineLayout->BeginLineReflow(0, 0, reflowState->ComputedISize(),
                                 NS_UNCONSTRAINEDSIZE,
-                                false, false, lineWM, 0);
+                                false, false, lineWM, nsSize(0, 0));
     lineLayout->AttachRootFrameToBaseLineLayout();
   }
 

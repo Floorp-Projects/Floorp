@@ -9,6 +9,7 @@
 #include <winioctl.h>
 
 #include "base/win/scoped_handle.h"
+#include "sandbox/win/src/filesystem_policy.h"
 #include "sandbox/win/src/nt_internals.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/sandbox_factory.h"
@@ -594,6 +595,30 @@ TEST(FilePolicyTest, DISABLED_TestReparsePoint) {
   // Cleanup.
   EXPECT_TRUE(::DeleteFile(temp_file_in_temp.c_str()));
   EXPECT_TRUE(::RemoveDirectory(subfolder.c_str()));
+}
+
+TEST(FilePolicyTest, CheckExistingNTPrefixEscape) {
+  base::string16 name = L"\\??\\NAME";
+
+  base::string16 result = FixNTPrefixForMatch(name);
+
+  EXPECT_STREQ(result.c_str(), L"\\/?/?\\NAME");
+}
+
+TEST(FilePolicyTest, CheckEscapedNTPrefixNoEscape) {
+  base::string16 name = L"\\/?/?\\NAME";
+
+  base::string16 result = FixNTPrefixForMatch(name);
+
+  EXPECT_STREQ(result.c_str(), name.c_str());
+}
+
+TEST(FilePolicyTest, CheckMissingNTPrefixEscape) {
+  base::string16 name = L"C:\\NAME";
+
+  base::string16 result = FixNTPrefixForMatch(name);
+
+  EXPECT_STREQ(result.c_str(), L"\\/?/?\\C:\\NAME");
 }
 
 }  // namespace sandbox

@@ -97,25 +97,25 @@ namespace sandbox {
 ThreadProcessDispatcher::ThreadProcessDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall open_thread = {
-    {IPC_NTOPENTHREAD_TAG, ULONG_TYPE, ULONG_TYPE},
+    {IPC_NTOPENTHREAD_TAG, UINT32_TYPE, UINT32_TYPE},
     reinterpret_cast<CallbackGeneric>(
         &ThreadProcessDispatcher::NtOpenThread)
   };
 
   static const IPCCall open_process = {
-    {IPC_NTOPENPROCESS_TAG, ULONG_TYPE, ULONG_TYPE},
+    {IPC_NTOPENPROCESS_TAG, UINT32_TYPE, UINT32_TYPE},
     reinterpret_cast<CallbackGeneric>(
         &ThreadProcessDispatcher::NtOpenProcess)
   };
 
   static const IPCCall process_token = {
-    {IPC_NTOPENPROCESSTOKEN_TAG, VOIDPTR_TYPE, ULONG_TYPE},
+    {IPC_NTOPENPROCESSTOKEN_TAG, VOIDPTR_TYPE, UINT32_TYPE},
     reinterpret_cast<CallbackGeneric>(
         &ThreadProcessDispatcher::NtOpenProcessToken)
   };
 
   static const IPCCall process_tokenex = {
-    {IPC_NTOPENPROCESSTOKENEX_TAG, VOIDPTR_TYPE, ULONG_TYPE, ULONG_TYPE},
+    {IPC_NTOPENPROCESSTOKENEX_TAG, VOIDPTR_TYPE, UINT32_TYPE, UINT32_TYPE},
     reinterpret_cast<CallbackGeneric>(
         &ThreadProcessDispatcher::NtOpenProcessTokenEx)
   };
@@ -155,8 +155,9 @@ bool ThreadProcessDispatcher::SetupService(InterceptionManager* manager,
   }
 }
 
-bool ThreadProcessDispatcher::NtOpenThread(IPCInfo* ipc, DWORD desired_access,
-                                           DWORD thread_id) {
+bool ThreadProcessDispatcher::NtOpenThread(IPCInfo* ipc,
+                                           uint32 desired_access,
+                                           uint32 thread_id) {
   HANDLE handle;
   NTSTATUS ret = ProcessPolicy::OpenThreadAction(*ipc->client_info,
                                                  desired_access, thread_id,
@@ -166,8 +167,9 @@ bool ThreadProcessDispatcher::NtOpenThread(IPCInfo* ipc, DWORD desired_access,
   return true;
 }
 
-bool ThreadProcessDispatcher::NtOpenProcess(IPCInfo* ipc, DWORD desired_access,
-                                            DWORD process_id) {
+bool ThreadProcessDispatcher::NtOpenProcess(IPCInfo* ipc,
+                                            uint32 desired_access,
+                                            uint32 process_id) {
   HANDLE handle;
   NTSTATUS ret = ProcessPolicy::OpenProcessAction(*ipc->client_info,
                                                   desired_access, process_id,
@@ -177,8 +179,9 @@ bool ThreadProcessDispatcher::NtOpenProcess(IPCInfo* ipc, DWORD desired_access,
   return true;
 }
 
-bool ThreadProcessDispatcher::NtOpenProcessToken(IPCInfo* ipc, HANDLE process,
-                                                 DWORD desired_access) {
+bool ThreadProcessDispatcher::NtOpenProcessToken(IPCInfo* ipc,
+                                                 HANDLE process,
+                                                 uint32 desired_access) {
   HANDLE handle;
   NTSTATUS ret = ProcessPolicy::OpenProcessTokenAction(*ipc->client_info,
                                                        process, desired_access,
@@ -188,9 +191,10 @@ bool ThreadProcessDispatcher::NtOpenProcessToken(IPCInfo* ipc, HANDLE process,
   return true;
 }
 
-bool ThreadProcessDispatcher::NtOpenProcessTokenEx(IPCInfo* ipc, HANDLE process,
-                                                   DWORD desired_access,
-                                                   DWORD attributes) {
+bool ThreadProcessDispatcher::NtOpenProcessTokenEx(IPCInfo* ipc,
+                                                   HANDLE process,
+                                                   uint32 desired_access,
+                                                   uint32 attributes) {
   HANDLE handle;
   NTSTATUS ret = ProcessPolicy::OpenProcessTokenExAction(*ipc->client_info,
                                                          process,

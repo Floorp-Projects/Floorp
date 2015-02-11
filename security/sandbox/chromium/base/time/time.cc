@@ -4,12 +4,15 @@
 
 #include "base/time/time.h"
 
+#include <ios>
 #include <limits>
 #include <ostream>
+#include <sstream>
 
 #include "base/float_util.h"
 #include "base/lazy_instance.h"
 #include "base/logging.h"
+#include "base/strings/stringprintf.h"
 #include "base/third_party/nspr/prtime.h"
 
 namespace base {
@@ -92,6 +95,10 @@ int64 TimeDelta::InMicroseconds() const {
     return std::numeric_limits<int64>::max();
   }
   return delta_;
+}
+
+std::ostream& operator<<(std::ostream& os, TimeDelta time_delta) {
+  return os << time_delta.InSecondsF() << "s";
 }
 
 // Time -----------------------------------------------------------------------
@@ -230,6 +237,20 @@ bool Time::FromStringInternal(const char* time_string,
   return true;
 }
 
+std::ostream& operator<<(std::ostream& os, Time time) {
+  Time::Exploded exploded;
+  time.UTCExplode(&exploded);
+  // Use StringPrintf because iostreams formatting is painful.
+  return os << StringPrintf("%04d-%02d-%02d %02d:%02d:%02d.%03d UTC",
+                            exploded.year,
+                            exploded.month,
+                            exploded.day_of_month,
+                            exploded.hour,
+                            exploded.minute,
+                            exploded.second,
+                            exploded.millisecond);
+}
+
 // Local helper class to hold the conversion from Time to TickTime at the
 // time of the Unix epoch.
 class UnixEpochSingleton {
@@ -251,6 +272,16 @@ static LazyInstance<UnixEpochSingleton>::Leaky
 // Static
 TimeTicks TimeTicks::UnixEpoch() {
   return leaky_unix_epoch_singleton_instance.Get().unix_epoch();
+}
+
+std::ostream& operator<<(std::ostream& os, TimeTicks time_ticks) {
+  // This function formats a TimeTicks object as "bogo-microseconds".
+  // The origin and granularity of the count are platform-specific, and may very
+  // from run to run. Although bogo-microseconds usually roughly correspond to
+  // real microseconds, the only real guarantee is that the number never goes
+  // down during a single run.
+  const TimeDelta as_time_delta = time_ticks - TimeTicks();
+  return os << as_time_delta.InMicroseconds() << " bogo-microseconds";
 }
 
 // Time::Exploded -------------------------------------------------------------

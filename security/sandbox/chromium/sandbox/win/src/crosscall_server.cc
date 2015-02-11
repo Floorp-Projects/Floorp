@@ -215,7 +215,7 @@ bool CrossCallParamsEx::GetParameter32(uint32 index, uint32* param) {
   uint32 size = 0;
   ArgType type;
   void* start = GetRawParameter(index, &size, &type);
-  if ((NULL == start) || (4 != size) || (ULONG_TYPE != type)) {
+  if ((NULL == start) || (4 != size) || (UINT32_TYPE != type)) {
     return false;
   }
   // Copy the 4 bytes.
