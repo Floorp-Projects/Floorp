@@ -164,7 +164,7 @@ private:
 
 struct auto_com {
   auto_com()
-  : need_uninit(true) {
+  : need_uninit(false) {
     HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     // This is for information purposes only, in anycase, COM is initialized
     // at the end of the constructor.
@@ -172,14 +172,15 @@ struct auto_com {
       // This is an error, COM was not initialized by this function, so it is
       // not necessary to uninit it.
       LOG("COM already initialized in STA.");
-      need_uninit = false;
     } else if (hr == S_FALSE) {
       // This is not an error. We are allowed to call CoInitializeEx more than
       // once, as long as it is matches by an CoUninitialize call.
       // We do that in the dtor which is guaranteed to be called.
       LOG("COM already initialized in MTA");
+      need_uninit = true;
     } else if (hr == S_OK) {
       LOG("COM initialized.");
+      need_uninit = true;
     }
   }
   ~auto_com() {
