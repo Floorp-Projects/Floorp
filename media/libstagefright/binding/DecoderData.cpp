@@ -210,19 +210,24 @@ MP4Sample::MP4Sample()
 {
 }
 
-MP4Sample::MP4Sample(const MP4Sample& copy)
-  : mMediaBuffer(nullptr)
-  , decode_timestamp(copy.decode_timestamp)
-  , composition_timestamp(copy.composition_timestamp)
-  , duration(copy.duration)
-  , byte_offset(copy.byte_offset)
-  , is_sync_point(copy.is_sync_point)
-  , size(copy.size)
-  , crypto(copy.crypto)
-  , extra_data(copy.extra_data)
+MP4Sample*
+MP4Sample::Clone() const
 {
-  extra_buffer = data = new uint8_t[size];
-  memcpy(data, copy.data, size);
+  nsAutoPtr<MP4Sample> s(new MP4Sample());
+  s->decode_timestamp = decode_timestamp;
+  s->composition_timestamp = composition_timestamp;
+  s->duration = duration;
+  s->byte_offset = byte_offset;
+  s->is_sync_point = is_sync_point;
+  s->size = size;
+  s->crypto = crypto;
+  s->extra_data = extra_data;
+  s->extra_buffer = s->data = new (fallible) uint8_t[size];
+  if (!s->extra_buffer) {
+    return nullptr;
+  }
+  memcpy(s->data, data, size);
+  return s.forget();
 }
 
 MP4Sample::~MP4Sample()
