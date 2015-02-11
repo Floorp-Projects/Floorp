@@ -147,7 +147,8 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   RemoteSourceStreamInfo(already_AddRefed<DOMMediaStream> aMediaStream,
                          PeerConnectionMedia *aParent,
                          const std::string& aId)
-    : SourceStreamInfo(aMediaStream, aParent, aId)
+    : SourceStreamInfo(aMediaStream, aParent, aId),
+      mPipelinesCreated(false)
   {
   }
 
@@ -162,6 +163,11 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   virtual void AddTrack(const std::string& track) MOZ_OVERRIDE
   {
     mTrackIdMap.push_back(track);
+    MOZ_ASSERT(!mPipelinesCreated || mTracksToQueue.empty(),
+               "Track added while waiting for existing tracks to be queued.");
+    if (!mPipelinesCreated) {
+      mTracksToQueue.insert(track);
+    }
     SourceStreamInfo::AddTrack(track);
   }
 
@@ -186,6 +192,17 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
     return NS_OK;
   }
 
+  /**
+   * Returns true if a |MediaPipeline| should be queueing its track instead of
+   * adding it to the |SourceMediaStream| directly.
+   */
+  bool QueueTracks() const
+  {
+    return !mPipelinesCreated || !mTracksToQueue.empty();
+  }
+
+  void TrackQueued(const std::string& trackId);
+
  private:
   // For remote streams, the MediaStreamGraph API forces us to select a
   // numeric track id before creation of the MediaStreamTrack, and does not
@@ -195,6 +212,14 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   // and have the numeric track id selected for us, in which case this variable
   // and its dependencies can go away.
   std::vector<std::string> mTrackIdMap;
+
+  // When a remote stream gets created we need to add its initial set of tracks
+  // atomically. Here we track which tracks we have created Pipelines for and
+  // that will be queued later on.
+  std::set<std::string> mTracksToQueue;
+
+  // True if we have finished creating the initial set of pipelines
+  bool mPipelinesCreated;
 };
 
 class PeerConnectionMedia : public sigslot::has_slots<> {
