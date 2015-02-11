@@ -11,9 +11,9 @@ let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
  */
 
 loader.lazyRequireGetter(this, "L10N",
-  "devtools/timeline/global", true);
+  "devtools/shared/timeline/global", true);
 loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
-  "devtools/timeline/global", true);
+  "devtools/shared/timeline/global", true);
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
 

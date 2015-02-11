@@ -3,12 +3,12 @@
 
 /**
  * Tests if the profiler's tree view implementation works properly and
- * correctly emits events when certain DOM nodes are clicked.
+ * can toggle categories hidden or visible.
  */
 
-let test = Task.async(function*() {
-  let { ThreadNode } = devtools.require("devtools/profiler/tree-model");
-  let { CallView } = devtools.require("devtools/profiler/tree-view");
+function test() {
+  let { ThreadNode } = devtools.require("devtools/shared/profiler/tree-model");
+  let { CallView } = devtools.require("devtools/shared/profiler/tree-view");
 
   let threadNode = new ThreadNode(gSamples);
   let treeRoot = new CallView({ frame: threadNode });
@@ -16,24 +16,20 @@ let test = Task.async(function*() {
   let container = document.createElement("vbox");
   treeRoot.attachTo(container);
 
-  let A = treeRoot.getChild();
-  let B = A.getChild();
-  let D = B.getChild();
+  let categories = container.querySelectorAll(".call-tree-category");
+  is(categories.length, 7,
+    "The call tree displays a correct number of categories.");
+  ok(!container.hasAttribute("categories-hidden"),
+    "All categories should be visible in the tree.");
 
-  let receivedLinkEvent = treeRoot.once("link");
-  EventUtils.sendMouseEvent({ type: "mousedown" }, D.target.querySelector(".call-tree-url"));
-
-  let eventItem = yield receivedLinkEvent;
-  is(eventItem, D, "The 'link' event target is correct.");
-
-  let receivedZoomEvent = treeRoot.once("zoom");
-  EventUtils.sendMouseEvent({ type: "mousedown" }, D.target.querySelector(".call-tree-zoom"));
-
-  eventItem = yield receivedZoomEvent;
-  is(eventItem, D, "The 'zoom' event target is correct.");
+  treeRoot.toggleCategories(false);
+  is(categories.length, 7,
+    "The call tree displays the same number of categories.");
+  ok(container.hasAttribute("categories-hidden"),
+    "All categories should now be hidden in the tree.");
 
   finish();
-});
+}
 
 let gSamples = [{
   time: 5,

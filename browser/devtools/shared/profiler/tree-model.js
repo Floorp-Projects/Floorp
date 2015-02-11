@@ -7,11 +7,11 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "L10N",
-  "devtools/profiler/global", true);
+  "devtools/shared/profiler/global", true);
 loader.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
-  "devtools/profiler/global", true);
+  "devtools/shared/profiler/global", true);
 loader.lazyRequireGetter(this, "CATEGORY_JIT",
-  "devtools/profiler/global", true);
+  "devtools/shared/profiler/global", true);
 
 const CHROME_SCHEMES = ["chrome://", "resource://"];
 const CONTENT_SCHEMES = ["http://", "https://", "file://"];

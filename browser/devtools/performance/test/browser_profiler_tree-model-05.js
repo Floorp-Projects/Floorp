@@ -43,7 +43,7 @@ let samples = [{
 }];
 
 function test() {
-  let { ThreadNode } = devtools.require("devtools/profiler/tree-model");
+  let { ThreadNode } = devtools.require("devtools/shared/profiler/tree-model");
 
   let root = new ThreadNode(samples, { invertTree: true });
 

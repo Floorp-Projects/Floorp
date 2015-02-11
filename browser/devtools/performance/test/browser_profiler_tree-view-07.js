@@ -3,32 +3,34 @@
 
 /**
  * Tests if the profiler's tree view implementation works properly and
- * can toggle categories hidden or visible.
+ * has the correct 'root', 'parent', 'level' etc. accessors on child nodes.
  */
 
-function test() {
-  let { ThreadNode } = devtools.require("devtools/profiler/tree-model");
-  let { CallView } = devtools.require("devtools/profiler/tree-view");
+function spawnTest () {
+  let { ThreadNode } = devtools.require("devtools/shared/profiler/tree-model");
+  let { CallView } = devtools.require("devtools/shared/profiler/tree-view");
 
   let threadNode = new ThreadNode(gSamples);
   let treeRoot = new CallView({ frame: threadNode });
 
   let container = document.createElement("vbox");
+  container.id = "call-tree-container";
   treeRoot.attachTo(container);
 
-  let categories = container.querySelectorAll(".call-tree-category");
-  is(categories.length, 7,
-    "The call tree displays a correct number of categories.");
-  ok(!container.hasAttribute("categories-hidden"),
-    "All categories should be visible in the tree.");
+  let A = treeRoot.getChild();
+  let B = A.getChild();
+  let D = B.getChild();
 
-  treeRoot.toggleCategories(false);
-  is(categories.length, 7,
-    "The call tree displays the same number of categories.");
-  ok(container.hasAttribute("categories-hidden"),
-    "All categories should now be hidden in the tree.");
-
-  finish();
+  is(D.root, treeRoot,
+    "The .A.B.D node has the correct root.");
+  is(D.parent, B,
+    "The .A.B.D node has the correct parent.");
+  is(D.level, 3,
+    "The .A.B.D node has the correct level.");
+  is(D.target.className, "call-tree-item",
+    "The .A.B.D node has the correct target node.");
+  is(D.container.id, "call-tree-container",
+    "The .A.B.D node has the correct container node.");
 }
 
 let gSamples = [{
