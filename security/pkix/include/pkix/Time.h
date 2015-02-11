@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__Time_h
-#define mozilla_pkix__Time_h
+#ifndef mozilla_pkix_Time_h
+#define mozilla_pkix_Time_h
 
 #include <ctime>
 #include <limits>
@@ -124,4 +124,4 @@ Time TimeFromEpochInSeconds(uint64_t secondsSinceEpoch);
 
 } } // namespace mozilla::pkix
 
-#endif // mozilla_pkix__Time_h
+#endif // mozilla_pkix_Time_h

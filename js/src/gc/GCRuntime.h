@@ -468,6 +468,13 @@ class GCSchedulingTunables
  *      the allocator does not return to the event loop frequently, we should
  *      not have to fall back to a non-incremental GC.
  *
+ *      INCREMENTAL_TOO_SLOW
+ *      --------------------
+ *      Do a full, non-incremental GC if we overflow ALLOC_TRIGGER during an
+ *      incremental GC. When in the middle of an incremental GC, we suppress
+ *      our other triggers, so we need a way to backstop the IGC if the
+ *      mutator allocates faster than the IGC can clean things up.
+ *
  *      TOO_MUCH_MALLOC
  *      ---------------
  *      Performs a GC before size[allocated] - size[retained] gets too large
@@ -845,6 +852,7 @@ class GCRuntime
 
     template <AllowGC allowGC>
     static void *refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind);
+    static void *tryRefillFreeListFromMainThread(JSContext *cx, AllocKind thingKind);
     static void *refillFreeListOffMainThread(ExclusiveContext *cx, AllocKind thingKind);
 
     /*

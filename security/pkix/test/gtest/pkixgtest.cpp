@@ -30,10 +30,15 @@
 
 namespace mozilla { namespace pkix { namespace test {
 
+const std::time_t ONE_DAY_IN_SECONDS_AS_TIME_T =
+  static_cast<std::time_t>(Time::ONE_DAY_IN_SECONDS);
+
 // This assumes that time/time_t are POSIX-compliant in that time() returns
 // the number of seconds since the Unix epoch.
 const std::time_t now(time(nullptr));
-const std::time_t oneDayBeforeNow(time(nullptr) - Time::ONE_DAY_IN_SECONDS);
-const std::time_t oneDayAfterNow(time(nullptr) + Time::ONE_DAY_IN_SECONDS);
+const std::time_t oneDayBeforeNow(time(nullptr) -
+                                  ONE_DAY_IN_SECONDS_AS_TIME_T);
+const std::time_t oneDayAfterNow(time(nullptr) +
+                                 ONE_DAY_IN_SECONDS_AS_TIME_T);
 
 } } } // namespace mozilla::pkix::test
