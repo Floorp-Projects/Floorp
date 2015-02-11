@@ -9,6 +9,7 @@ EXPORTS.mozilla.dom += [
     'ServiceWorkerCommon.h',
     'ServiceWorkerContainer.h',
     'ServiceWorkerEvents.h',
+    'ServiceWorkerRegistrar.h',
     'ServiceWorkerRegistration.h',
     'WorkerPrivate.h',
     'WorkerRunnable.h',
@@ -66,6 +67,7 @@ UNIFIED_SOURCES += [
     'ServiceWorkerContainer.cpp',
     'ServiceWorkerEvents.cpp',
     'ServiceWorkerManager.cpp',
+    'ServiceWorkerRegistrar.cpp',
     'ServiceWorkerRegistration.cpp',
     'SharedWorker.cpp',
     'URL.cpp',
@@ -76,6 +78,10 @@ UNIFIED_SOURCES += [
     'WorkerThread.cpp',
     'XMLHttpRequest.cpp',
     'XMLHttpRequestUpload.cpp',
+]
+
+IPDL_SOURCES += [
+    'ServiceWorkerRegistrarTypes.ipdlh',
 ]
 
 FAIL_ON_WARNINGS = True
@@ -108,3 +114,5 @@ MOCHITEST_MANIFESTS += [
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
+
+TEST_DIRS += ['test/gtest']
