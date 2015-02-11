@@ -23,7 +23,7 @@ namespace base {
 namespace win {
 
 // This class is a wrapper for the Portable Executable File Format (PE).
-// It's main purpose is to provide an easy way to work with imports and exports
+// Its main purpose is to provide an easy way to work with imports and exports
 // from a file, mapped in memory as image.
 class PEImage {
  public:
@@ -83,6 +83,8 @@ class PEImage {
   explicit PEImage(const void* module) {
     module_ = reinterpret_cast<HMODULE>(const_cast<void*>(module));
   }
+
+  virtual ~PEImage() {}
 
   // Gets the HMODULE for this object.
   HMODULE module() const;

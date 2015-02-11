@@ -5,8 +5,9 @@
 #ifndef SANDBOX_WIN_SRC_POLICY_ENGINE_OPCODES_H_
 #define SANDBOX_WIN_SRC_POLICY_ENGINE_OPCODES_H_
 
-#include "sandbox/win/src/policy_engine_params.h"
 #include "base/basictypes.h"
+#include "base/numerics/safe_conversions.h"
+#include "sandbox/win/src/policy_engine_params.h"
 
 // The low-level policy is implemented using the concept of policy 'opcodes'.
 // An opcode is a structure that contains enough information to perform one
@@ -74,8 +75,8 @@ enum OpcodeID {
   OP_ALWAYS_FALSE,  // Evaluates to false (EVAL_FALSE).
   OP_ALWAYS_TRUE,  // Evaluates to true (EVAL_TRUE).
   OP_NUMBER_MATCH,  // Match a 32-bit integer as n == a.
-  OP_ULONG_MATCH_RANGE,  // Match an ulong integer as a <= n <= b.
-  OP_ULONG_AND_MATCH,  // Match using bitwise AND; as in: n & a != 0.
+  OP_NUMBER_MATCH_RANGE,  // Match a 32-bit integer as a <= n <= b.
+  OP_NUMBER_AND_MATCH,  // Match using bitwise AND; as in: n & a != 0.
   OP_WSTRING_MATCH,  // Match a string for equality.
   OP_ACTION  // Evaluates to an action opcode.
 };
@@ -194,8 +195,8 @@ class PolicyOpcode {
   }
 
   // Sets the stored options such as kPolNegateEval.
-  void SetOptions(int16 options) {
-    options_ = options;
+  void SetOptions(uint32 options) {
+    options_ = base::checked_cast<uint16>(options);
   }
 
  private:
@@ -218,7 +219,10 @@ class PolicyOpcode {
                            MatchContext* match);
   OpcodeID opcode_id_;
   int16 parameter_;
-  int16 options_;
+  // TODO(cpu): Making |options_| a uint32 would avoid casting, but causes test
+  // failures.  Somewhere code is relying on the size of this struct.
+  // http://crbug.com/420296
+  uint16 options_;
   OpcodeArgument arguments_[PolicyOpcode::kArgumentCount];
 };
 
@@ -303,27 +307,29 @@ class OpcodeFactory {
   PolicyOpcode* MakeOpAction(EvalResult action, uint32 options);
 
   // Creates an OpNumberMatch opcode.
-  // selected_param: index of the input argument. It must be a ulong or the
+  // selected_param: index of the input argument. It must be a uint32 or the
   // evaluation result will generate a EVAL_ERROR.
   // match: the number to compare against the selected_param.
-  PolicyOpcode* MakeOpNumberMatch(int16 selected_param, unsigned long match,
+  PolicyOpcode* MakeOpNumberMatch(int16 selected_param,
+                                  uint32 match,
                                   uint32 options);
 
   // Creates an OpNumberMatch opcode (void pointers are cast to numbers).
   // selected_param: index of the input argument. It must be an void* or the
   // evaluation result will generate a EVAL_ERROR.
   // match: the pointer numeric value to compare against selected_param.
-  PolicyOpcode* MakeOpVoidPtrMatch(int16 selected_param, const void* match,
+  PolicyOpcode* MakeOpVoidPtrMatch(int16 selected_param,
+                                   const void* match,
                                    uint32 options);
 
-  // Creates an OpUlongMatchRange opcode using the memory passed in the ctor.
-  // selected_param: index of the input argument. It must be a ulong or the
+  // Creates an OpNumberMatchRange opcode using the memory passed in the ctor.
+  // selected_param: index of the input argument. It must be a uint32 or the
   // evaluation result will generate a EVAL_ERROR.
   // lower_bound, upper_bound: the range to compare against selected_param.
-  PolicyOpcode* MakeOpUlongMatchRange(int16 selected_param,
-                                      unsigned long lower_bound,
-                                      unsigned long upper_bound,
-                                      uint32 options);
+  PolicyOpcode* MakeOpNumberMatchRange(int16 selected_param,
+                                       uint32 lower_bound,
+                                       uint32 upper_bound,
+                                       uint32 options);
 
   // Creates an OpWStringMatch opcode using the raw memory passed in the ctor.
   // selected_param: index of the input argument. It must be a wide string
@@ -344,13 +350,13 @@ class OpcodeFactory {
                                    StringMatchOptions match_opts,
                                    uint32 options);
 
-  // Creates an OpUlongAndMatch opcode using the raw memory passed in the ctor.
-  // selected_param: index of the input argument. It must be ulong or the
+  // Creates an OpNumberAndMatch opcode using the raw memory passed in the ctor.
+  // selected_param: index of the input argument. It must be uint32 or the
   // evaluation result will generate a EVAL_ERROR.
   // match: the value to bitwise AND against selected_param.
-  PolicyOpcode* MakeOpUlongAndMatch(int16 selected_param,
-                                    unsigned long match,
-                                    uint32 options);
+  PolicyOpcode* MakeOpNumberAndMatch(int16 selected_param,
+                                     uint32 match,
+                                     uint32 options);
 
  private:
   // Constructs the common part of every opcode. selected_param is the index

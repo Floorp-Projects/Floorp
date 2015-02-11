@@ -22,24 +22,11 @@
 typedef int8_t int8;
 typedef uint8_t uint8;
 typedef int16_t int16;
-typedef int32_t int32;
 typedef uint16_t uint16;
+typedef int32_t int32;
 typedef uint32_t uint32;
-
-// TODO(vtl): Figure what's up with the 64-bit types. Can we just define them as
-// |int64_t|/|uint64_t|?
-// The NSPR system headers define 64-bit as |long| when possible, except on
-// Mac OS X.  In order to not have typedef mismatches, we do the same on LP64.
-//
-// On Mac OS X, |long long| is used for 64-bit types for compatibility with
-// <inttypes.h> format macros even in the LP64 model.
-#if defined(__LP64__) && !defined(OS_MACOSX) && !defined(OS_OPENBSD)
-typedef long int64;
-typedef unsigned long uint64;
-#else
-typedef long long int64;
-typedef unsigned long long uint64;
-#endif
+typedef int64_t int64;
+typedef uint64_t uint64;
 
 // DEPRECATED: Please use std::numeric_limits (from <limits>) instead.
 const uint8  kuint8max  =  0xFF;
