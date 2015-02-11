@@ -17,8 +17,6 @@
 #include "nsThreadUtils.h"
 #endif
 
-using namespace base;
-
 namespace mozilla {
 namespace dom {
 

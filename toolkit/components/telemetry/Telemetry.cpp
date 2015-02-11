@@ -73,9 +73,15 @@
 
 namespace {
 
-using namespace base;
 using namespace mozilla;
 using namespace mozilla::HangMonitor;
+
+using base::BooleanHistogram;
+using base::CountHistogram;
+using base::FlagHistogram;
+using base::Histogram;
+using base::LinearHistogram;
+using base::StatisticsRecorder;
 
 const char KEYED_HISTOGRAM_NAME_SEPARATOR[] = "#";
 
