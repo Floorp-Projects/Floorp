@@ -92,6 +92,8 @@ let gSubDialog = {
     // Clear the sizing attributes
     this._box.removeAttribute("width");
     this._box.removeAttribute("height");
+    this._box.style.removeProperty("min-height");
+    this._box.style.removeProperty("min-width");
 
     setTimeout(() => {
       // Unload the dialog after the event listeners run so that the load of about:blank isn't
@@ -144,12 +146,22 @@ let gSubDialog = {
     // Do this on load to wait for the CSS to load and apply before calculating the size.
     let docEl = this._frame.contentDocument.documentElement;
 
-    // padding-bottom doesn't seem to be included in the scrollHeight of the document element in XUL
-    // so add it ourselves.
-    let paddingBottom = parseFloat(this._frame.contentWindow.getComputedStyle(docEl).paddingBottom);
+    let groupBoxTitle = document.getAnonymousElementByAttribute(this._box, "class", "groupbox-title");
+    let groupBoxTitleHeight = groupBoxTitle.clientHeight +
+                              parseFloat(getComputedStyle(groupBoxTitle).borderBottomWidth);
 
-    this._frame.style.width = docEl.style.width || docEl.scrollWidth + "px";
-    this._frame.style.height = docEl.style.height || (docEl.scrollHeight + paddingBottom) + "px";
+    let groupBoxBody = document.getAnonymousElementByAttribute(this._box, "class", "groupbox-body");
+    let boxVerticalPadding = 2 * parseFloat(getComputedStyle(groupBoxBody).paddingTop);
+    let boxHorizontalPadding = 2 * parseFloat(getComputedStyle(groupBoxBody).paddingLeft);
+    let frameWidth = docEl.scrollWidth;
+    let frameHeight = docEl.scrollHeight;
+    let boxVerticalBorder = 2 * parseFloat(getComputedStyle(this._box).borderTopWidth);
+    let boxHorizontalBorder = 2 * parseFloat(getComputedStyle(this._box).borderLeftWidth);
+
+    this._frame.style.width = frameWidth + "px";
+    this._frame.style.height = frameHeight + "px";
+    this._box.style.minHeight = (boxVerticalBorder + groupBoxTitleHeight + boxVerticalPadding + frameHeight) + "px";
+    this._box.style.minWidth = (boxHorizontalBorder + boxHorizontalPadding + frameWidth) + "px";
 
     this._overlay.style.visibility = "visible";
     this._frame.focus();
