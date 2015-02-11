@@ -78,7 +78,6 @@ public class FxAccountStatusFragment
   protected Preference needsUpgradePreference;
   protected Preference needsVerificationPreference;
   protected Preference needsMasterSyncAutomaticallyEnabledPreference;
-  protected Preference needsAccountEnabledPreference;
   protected Preference needsFinishMigratingPreference;
 
   protected PreferenceCategory syncCategory;
@@ -143,7 +142,6 @@ public class FxAccountStatusFragment
     needsUpgradePreference = ensureFindPreference("needs_upgrade");
     needsVerificationPreference = ensureFindPreference("needs_verification");
     needsMasterSyncAutomaticallyEnabledPreference = ensureFindPreference("needs_master_sync_automatically_enabled");
-    needsAccountEnabledPreference = ensureFindPreference("needs_account_enabled");
     needsFinishMigratingPreference = ensureFindPreference("needs_finish_migrating");
 
     syncCategory = (PreferenceCategory) ensureFindPreference("sync_category");
@@ -163,7 +161,6 @@ public class FxAccountStatusFragment
 
     needsPasswordPreference.setOnPreferenceClickListener(this);
     needsVerificationPreference.setOnPreferenceClickListener(this);
-    needsAccountEnabledPreference.setOnPreferenceClickListener(this);
     needsFinishMigratingPreference.setOnPreferenceClickListener(this);
 
     bookmarksPreference.setOnPreferenceClickListener(this);
@@ -238,13 +235,6 @@ public class FxAccountStatusFragment
       return true;
     }
 
-    if (preference == needsAccountEnabledPreference) {
-      fxAccount.enableSyncing();
-      refresh();
-
-      return true;
-    }
-
     if (preference == bookmarksPreference ||
         preference == historyPreference ||
         preference == passwordsPreference ||
@@ -301,7 +291,6 @@ public class FxAccountStatusFragment
         this.needsUpgradePreference,
         this.needsVerificationPreference,
         this.needsMasterSyncAutomaticallyEnabledPreference,
-        this.needsAccountEnabledPreference,
         this.needsFinishMigratingPreference,
     };
     for (Preference errorPreference : errorPreferences) {
@@ -342,12 +331,6 @@ public class FxAccountStatusFragment
                                                    R.string.fxaccount_status_needs_master_sync_automatically_enabled :
                                                    R.string.fxaccount_status_needs_master_sync_automatically_enabled_v21);
     showOnlyOneErrorPreference(needsMasterSyncAutomaticallyEnabledPreference);
-    setCheckboxesEnabled(false);
-  }
-
-  protected void showNeedsAccountEnabled() {
-    syncCategory.setTitle(R.string.fxaccount_status_sync);
-    showOnlyOneErrorPreference(needsAccountEnabledPreference);
     setCheckboxesEnabled(false);
   }
 
@@ -478,17 +461,10 @@ public class FxAccountStatusFragment
 
     try {
       // There are error states determined by Android, not the login state
-      // machine, and we have a chance to present these states here.  We handle
+      // machine, and we have a chance to present these states here. We handle
       // them specially, since we can't surface these states as part of syncing,
-      // because they generally stop syncs from happening regularly.
-
-      // The action to enable syncing the Firefox Account doesn't require
-      // leaving this activity, so let's present it first.
-      final boolean isSyncing = fxAccount.isSyncing();
-      if (!isSyncing) {
-        showNeedsAccountEnabled();
-        return;
-      }
+      // because they generally stop syncs from happening regularly. Right now
+      // there are no such states.
 
       // Interrogate the Firefox Account's state.
       State state = fxAccount.getState();
