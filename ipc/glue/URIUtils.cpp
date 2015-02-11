@@ -12,7 +12,6 @@
 #include "nsDebug.h"
 #include "nsID.h"
 #include "nsJARURI.h"
-#include "nsIconURI.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
@@ -25,6 +24,23 @@ namespace {
 NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 NS_DEFINE_CID(kJARURICID, NS_JARURI_CID);
+
+struct StringWithLengh
+{
+  const char* string;
+  size_t length;
+};
+
+#define STRING_WITH_LENGTH(_str) \
+  { _str, ArrayLength(_str) - 1 }
+
+const StringWithLengh kGenericURIAllowedSchemes[] = {
+  STRING_WITH_LENGTH("about:"),
+  STRING_WITH_LENGTH("javascript:"),
+  STRING_WITH_LENGTH("javascript")
+};
+
+#undef STRING_WITH_LENGTH
 
 } // anonymous namespace
 
@@ -39,14 +55,41 @@ SerializeURI(nsIURI* aURI,
   MOZ_ASSERT(aURI);
 
   nsCOMPtr<nsIIPCSerializableURI> serializable = do_QueryInterface(aURI);
-  if (!serializable) {
-    MOZ_CRASH("All IPDL URIs must be serializable!");
+  if (serializable) {
+    serializable->Serialize(aParams);
+    if (aParams.type() == URIParams::T__None) {
+      MOZ_CRASH("Serialize failed!");
+    }
+    return;
   }
 
-  serializable->Serialize(aParams);
-  if (aParams.type() == URIParams::T__None) {
-    MOZ_CRASH("Serialize failed!");
+  nsCString scheme;
+  if (NS_FAILED(aURI->GetScheme(scheme))) {
+    MOZ_CRASH("This must never fail!");
   }
+
+  bool allowed = false;
+
+  for (size_t i = 0; i < ArrayLength(kGenericURIAllowedSchemes); i++) {
+    const StringWithLengh& entry = kGenericURIAllowedSchemes[i];
+    if (scheme.EqualsASCII(entry.string, entry.length)) {
+      allowed = true;
+      break;
+    }
+  }
+
+  if (!allowed) {
+    MOZ_CRASH("All IPDL URIs must be serializable or an allowed "
+              "scheme!");
+  }
+
+  GenericURIParams params;
+  if (NS_FAILED(aURI->GetSpec(params.spec())) ||
+      NS_FAILED(aURI->GetOriginCharset(params.charset()))) {
+    MOZ_CRASH("This must never fail!");
+  }
+
+  aParams = params;
 }
 
 void
@@ -70,38 +113,70 @@ DeserializeURI(const URIParams& aParams)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIIPCSerializableURI> serializable;
+  nsCOMPtr<nsIURI> uri;
 
-  switch (aParams.type()) {
-    case URIParams::TSimpleURIParams:
-      serializable = do_CreateInstance(kSimpleURICID);
-      break;
+  if (aParams.type() != URIParams::TGenericURIParams) {
+    nsCOMPtr<nsIIPCSerializableURI> serializable;
 
-    case URIParams::TStandardURLParams:
-      serializable = do_CreateInstance(kStandardURLCID);
-      break;
+    switch (aParams.type()) {
+      case URIParams::TSimpleURIParams:
+        serializable = do_CreateInstance(kSimpleURICID);
+        break;
 
-    case URIParams::TJARURIParams:
-      serializable = do_CreateInstance(kJARURICID);
-      break;
+      case URIParams::TStandardURLParams:
+        serializable = do_CreateInstance(kStandardURLCID);
+        break;
 
-    case URIParams::TIconURIParams:
-      serializable = new nsMozIconURI();
-      break;
+      case URIParams::TJARURIParams:
+        serializable = do_CreateInstance(kJARURICID);
+        break;
 
-    default:
-      MOZ_CRASH("Unknown params!");
+      default:
+        MOZ_CRASH("Unknown params!");
+    }
+
+    MOZ_ASSERT(serializable);
+
+    if (!serializable->Deserialize(aParams)) {
+      MOZ_ASSERT(false, "Deserialize failed!");
+      return nullptr;
+    }
+
+    uri = do_QueryInterface(serializable);
+    MOZ_ASSERT(uri);
+
+    return uri.forget();
   }
 
-  MOZ_ASSERT(serializable);
+  MOZ_ASSERT(aParams.type() == URIParams::TGenericURIParams);
 
-  if (!serializable->Deserialize(aParams)) {
-    MOZ_ASSERT(false, "Deserialize failed!");
+  const GenericURIParams& params = aParams.get_GenericURIParams();
+
+  if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), params.spec(),
+                          params.charset().get()))) {
+    NS_WARNING("Failed to make new URI!");
     return nullptr;
   }
 
-  nsCOMPtr<nsIURI> uri = do_QueryInterface(serializable);
-  MOZ_ASSERT(uri);
+  nsCString scheme;
+  if (NS_FAILED(uri->GetScheme(scheme))) {
+    MOZ_CRASH("This must never fail!");
+  }
+
+  bool allowed = false;
+
+  for (size_t i = 0; i < ArrayLength(kGenericURIAllowedSchemes); i++) {
+    const StringWithLengh& entry = kGenericURIAllowedSchemes[i];
+    if (scheme.EqualsASCII(entry.string, entry.length)) {
+      allowed = true;
+      break;
+    }
+  }
+
+  if (!allowed) {
+    MOZ_ASSERT(false, "This type of URI is not allowed!");
+    return nullptr;
+  }
 
   return uri.forget();
 }

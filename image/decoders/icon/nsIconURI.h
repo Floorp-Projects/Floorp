@@ -10,7 +10,6 @@
 #include "nsIIconURI.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsIIPCSerializableURI.h"
 
 #define NS_MOZICONURI_CID                            \
 {                                                    \
@@ -21,13 +20,11 @@
 }
 
 class nsMozIconURI MOZ_FINAL : public nsIMozIconURI
-                             , public nsIIPCSerializableURI
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURI
   NS_DECL_NSIMOZICONURI
-  NS_DECL_NSIIPCSERIALIZABLEURI
 
   // nsMozIconURI
   nsMozIconURI();
