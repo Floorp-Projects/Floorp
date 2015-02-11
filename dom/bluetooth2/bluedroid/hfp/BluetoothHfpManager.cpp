@@ -260,7 +260,8 @@ BluetoothHfpManager::Init()
   return true;
 }
 
-class CleanupInitResultHandler MOZ_FINAL : public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::CleanupInitResultHandler MOZ_FINAL
+  : public BluetoothHandsfreeResultHandler
 {
 public:
   CleanupInitResultHandler(BluetoothHandsfreeInterface* aInterface,
@@ -309,7 +310,8 @@ private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
-class InitResultHandlerRunnable MOZ_FINAL : public nsRunnable
+class BluetoothHfpManager::InitResultHandlerRunnable MOZ_FINAL
+  : public nsRunnable
 {
 public:
   InitResultHandlerRunnable(CleanupInitResultHandler* aRes)
@@ -328,7 +330,8 @@ private:
   nsRefPtr<CleanupInitResultHandler> mRes;
 };
 
-class OnErrorProfileResultHandlerRunnable MOZ_FINAL : public nsRunnable
+class BluetoothHfpManager::OnErrorProfileResultHandlerRunnable MOZ_FINAL
+  : public nsRunnable
 {
 public:
   OnErrorProfileResultHandlerRunnable(BluetoothProfileResultHandler* aRes,
@@ -413,7 +416,8 @@ BluetoothHfpManager::~BluetoothHfpManager()
   hal::UnregisterBatteryObserver(this);
 }
 
-class CleanupResultHandler MOZ_FINAL : public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::CleanupResultHandler MOZ_FINAL
+  : public BluetoothHandsfreeResultHandler
 {
 public:
   CleanupResultHandler(BluetoothProfileResultHandler* aRes)
@@ -440,7 +444,8 @@ private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
-class DeinitResultHandlerRunnable MOZ_FINAL : public nsRunnable
+class BluetoothHfpManager::DeinitResultHandlerRunnable MOZ_FINAL
+  : public nsRunnable
 {
 public:
   DeinitResultHandlerRunnable(BluetoothProfileResultHandler* aRes)
@@ -590,8 +595,8 @@ BluetoothHfpManager::NotifyDialer(const nsAString& aCommand)
   BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(type, parameters);
 }
 
-class VolumeControlResultHandler MOZ_FINAL
-: public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::VolumeControlResultHandler MOZ_FINAL
+  : public BluetoothHandsfreeResultHandler
 {
 public:
   void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
@@ -728,7 +733,7 @@ BluetoothHfpManager::HandleShutdown()
   sBluetoothHfpManager = nullptr;
 }
 
-class ClccResponseResultHandler MOZ_FINAL
+class BluetoothHfpManager::ClccResponseResultHandler MOZ_FINAL
 : public BluetoothHandsfreeResultHandler
 {
 public:
@@ -765,8 +770,8 @@ BluetoothHfpManager::SendCLCC(Call& aCall, int aIndex)
     aCall.mType, new ClccResponseResultHandler());
 }
 
-class FormattedAtResponseResultHandler MOZ_FINAL
-: public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::FormattedAtResponseResultHandler MOZ_FINAL
+  : public BluetoothHandsfreeResultHandler
 {
 public:
   void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
@@ -785,8 +790,8 @@ BluetoothHfpManager::SendLine(const char* aMessage)
     aMessage, new FormattedAtResponseResultHandler());
 }
 
-class AtResponseResultHandler MOZ_FINAL
-: public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::AtResponseResultHandler MOZ_FINAL
+  : public BluetoothHandsfreeResultHandler
 {
 public:
   void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
@@ -805,8 +810,8 @@ BluetoothHfpManager::SendResponse(BluetoothHandsfreeAtResponse aResponseCode)
     aResponseCode, 0, new AtResponseResultHandler());
 }
 
-class PhoneStateChangeResultHandler MOZ_FINAL
-: public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::PhoneStateChangeResultHandler MOZ_FINAL
+  : public BluetoothHandsfreeResultHandler
 {
 public:
   void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
@@ -837,7 +842,7 @@ BluetoothHfpManager::UpdatePhoneCIND(uint32_t aCallIndex)
     new PhoneStateChangeResultHandler());
 }
 
-class DeviceStatusNotificationResultHandler MOZ_FINAL
+class BluetoothHfpManager::DeviceStatusNotificationResultHandler MOZ_FINAL
 : public BluetoothHandsfreeResultHandler
 {
 public:
@@ -1093,8 +1098,8 @@ BluetoothHfpManager::ToggleCalls()
                              nsITelephonyService::CALL_STATE_CONNECTED;
 }
 
-class ConnectAudioResultHandler MOZ_FINAL
-: public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::ConnectAudioResultHandler MOZ_FINAL
+  : public BluetoothHandsfreeResultHandler
 {
 public:
   void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
@@ -1119,8 +1124,8 @@ BluetoothHfpManager::ConnectSco()
   return true;
 }
 
-class DisconnectAudioResultHandler MOZ_FINAL
-: public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::DisconnectAudioResultHandler MOZ_FINAL
+  : public BluetoothHandsfreeResultHandler
 {
 public:
   void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
@@ -1165,7 +1170,8 @@ BluetoothHfpManager::OnConnectError()
   mDeviceAddress.Truncate();
 }
 
-class ConnectResultHandler MOZ_FINAL : public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::ConnectResultHandler MOZ_FINAL
+  : public BluetoothHandsfreeResultHandler
 {
 public:
   ConnectResultHandler(BluetoothHfpManager* aHfpManager)
@@ -1218,7 +1224,8 @@ BluetoothHfpManager::OnDisconnectError()
   mController->NotifyCompletion(NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
 }
 
-class DisconnectResultHandler MOZ_FINAL : public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::DisconnectResultHandler MOZ_FINAL
+  : public BluetoothHandsfreeResultHandler
 {
 public:
   DisconnectResultHandler(BluetoothHfpManager* aHfpManager)
@@ -1491,8 +1498,8 @@ BluetoothHfpManager::CnumNotification()
   SendResponse(HFP_AT_RESPONSE_OK);
 }
 
-class CindResponseResultHandler MOZ_FINAL
-: public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::CindResponseResultHandler MOZ_FINAL
+  : public BluetoothHandsfreeResultHandler
 {
 public:
   void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
@@ -1519,8 +1526,8 @@ BluetoothHfpManager::CindNotification()
                                        new CindResponseResultHandler());
 }
 
-class CopsResponseResultHandler MOZ_FINAL
-: public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::CopsResponseResultHandler MOZ_FINAL
+  : public BluetoothHandsfreeResultHandler
 {
 public:
   void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE

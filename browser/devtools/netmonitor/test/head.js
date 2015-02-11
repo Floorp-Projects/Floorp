@@ -49,6 +49,8 @@ const CORS_SJS_PATH = "/browser/browser/devtools/netmonitor/test/sjs_cors-test-s
 const TEST_IMAGE = EXAMPLE_URL + "test-image.png";
 const TEST_IMAGE_DATA_URI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg==";
 
+const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js"
+
 gDevTools.testing = true;
 SimpleTest.registerCleanupFunction(() => {
   gDevTools.testing = false;
@@ -415,4 +417,78 @@ function testFilterButtonsCustom(aMonitor, aIsChecked) {
         "The " + button.id + " button should not have a 'checked' attribute.");
     }
   }
+}
+
+/**
+ * Loads shared/frame-script-utils.js in the specified tab.
+ *
+ * @param tab
+ *        Optional tab to load the frame script in. Defaults to the current tab.
+ */
+function loadCommonFrameScript(tab) {
+  let browser = tab ? tab.linkedBrowser : gBrowser.selectedBrowser;
+
+  browser.messageManager.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
+}
+
+/**
+ * Perform the specified requests in the context of the page content.
+ *
+ * @param Array requests
+ *        An array of objects specifying the requests to perform. See
+ *        shared/frame-script-utils.js for more information.
+ *
+ * @return A promise that resolves once the requests complete.
+ */
+function performRequestsInContent(requests) {
+  info("Performing requests in the context of the content.");
+  return executeInContent("devtools:test:xhr", requests)
+}
+
+/**
+ * Send an async message to the frame script (chrome -> content) and wait for a
+ * response message with the same name (content -> chrome).
+ *
+ * @param String name
+ *        The message name. Should be one of the messages defined
+ *        shared/frame-script-utils.js
+ * @param Object data
+ *        Optional data to send along
+ * @param Object objects
+ *        Optional CPOW objects to send along
+ * @param Boolean expectResponse
+ *        If set to false, don't wait for a response with the same name from the
+ *        content script. Defaults to true.
+ *
+ * @return Promise
+ *         Resolves to the response data if a response is expected, immediately
+ *         resolves otherwise
+ */
+function executeInContent(name, data={}, objects={}, expectResponse=true) {
+  let mm = gBrowser.selectedBrowser.messageManager;
+
+  mm.sendAsyncMessage(name, data, objects);
+  if (expectResponse) {
+    return waitForContentMessage(name);
+  } else {
+    return promise.resolve();
+  }
+}
+
+/**
+ * Wait for a content -> chrome message on the message manager (the window
+ * messagemanager is used).
+ * @param {String} name The message name
+ * @return {Promise} A promise that resolves to the response data when the
+ * message has been received
+ */
+function waitForContentMessage(name) {
+  let mm = gBrowser.selectedBrowser.messageManager;
+
+  let def = promise.defer();
+  mm.addMessageListener(name, function onMessage(msg) {
+    mm.removeMessageListener(name, onMessage);
+    def.resolve(msg);
+  });
+  return def.promise;
 }

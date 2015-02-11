@@ -75,7 +75,7 @@ typedef void (*IterateTagsCallback)(const ProfileEntry& entry, const char* tagSt
 
 class ProfileBuffer {
 public:
-  NS_INLINE_DECL_REFCOUNTING(ProfileBuffer)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProfileBuffer)
 
   explicit ProfileBuffer(int aEntrySize);
 

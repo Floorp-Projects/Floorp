@@ -25,13 +25,22 @@ loop.panel = (function(_, mozL10n) {
     propTypes: {
       buttonsHidden: React.PropTypes.array,
       // The selectedTab prop is used by the UI showcase.
-      selectedTab: React.PropTypes.string
+      selectedTab: React.PropTypes.string,
+      mozLoop: React.PropTypes.object
     },
 
     getDefaultProps: function() {
       return {
         buttonsHidden: []
       };
+    },
+
+    shouldComponentUpdate: function(nextProps, nextState) {
+      var tabChange = this.state.selectedTab !== nextState.selectedTab;
+      if (tabChange) {
+        this.props.mozLoop.notifyUITour("Loop:PanelTabChanged", nextState.selectedTab);
+      }
+      return tabChange;
     },
 
     getInitialState: function() {
@@ -799,7 +808,7 @@ loop.panel = (function(_, mozL10n) {
           React.createElement(NotificationListView, {notifications: this.props.notifications, 
                                 clearOnDocumentHidden: true}), 
           React.createElement(TabView, {ref: "tabView", selectedTab: this.props.selectedTab, 
-            buttonsHidden: hideButtons}, 
+            buttonsHidden: hideButtons, mozLoop: this.props.mozLoop}, 
             React.createElement(Tab, {name: "rooms"}, 
               React.createElement(RoomList, {dispatcher: this.props.dispatcher, 
                         store: this.props.roomStore, 
