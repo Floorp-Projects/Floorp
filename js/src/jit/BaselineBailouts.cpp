@@ -329,10 +329,11 @@ struct BaselineStackBuilder
         BufferPointer<JitFrameLayout> topFrame = topFrameAddress();
         FrameType type = topFrame->prevType();
 
-        // For IonJS and Entry frames, the "saved" frame pointer in the baseline
-        // frame is meaningless, since Ion saves all registers before calling other ion
-        // frames, and the entry frame saves all registers too.
-        if (type == JitFrame_IonJS || type == JitFrame_Entry)
+        // For IonJS, IonAccessorIC and Entry frames, the "saved" frame pointer
+        // in the baseline frame is meaningless, since Ion saves all registers
+        // before calling other ion frames, and the entry frame saves all
+        // registers too.
+        if (type == JitFrame_IonJS || type == JitFrame_Entry || type == JitFrame_IonAccessorIC)
             return nullptr;
 
         // BaselineStub - Baseline calling into Ion.
@@ -1348,7 +1349,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIter
     MOZ_ASSERT(prevFrameType == JitFrame_IonJS ||
                prevFrameType == JitFrame_BaselineStub ||
                prevFrameType == JitFrame_Entry ||
-               prevFrameType == JitFrame_Rectifier);
+               prevFrameType == JitFrame_Rectifier ||
+               prevFrameType == JitFrame_IonAccessorIC);
 
     // All incoming frames are going to look like this:
     //
