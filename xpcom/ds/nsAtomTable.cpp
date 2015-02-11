@@ -283,13 +283,10 @@ AtomTableClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
   }
 }
 
-static bool
-AtomTableInitEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
-                   const void* aKey)
+static void
+AtomTableInitEntry(PLDHashEntryHdr* aEntry, const void* aKey)
 {
   static_cast<AtomTableEntry*>(aEntry)->mAtom = nullptr;
-
-  return true;
 }
 
 

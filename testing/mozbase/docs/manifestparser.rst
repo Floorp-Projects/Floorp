@@ -1,6 +1,8 @@
 Managing lists of tests
 =======================
 
+.. py:currentmodule:: manifestparser
+
 We don't always want to run all tests, all the time. Sometimes a test
 may be broken, in other cases we only want to run a test on a specific
 platform or build of Mozilla. To handle these cases (and more), we
@@ -262,33 +264,73 @@ and
 https://github.com/mozilla/mozbase/blob/master/manifestparser/manifestparser.py
 in particular.
 
-Using Manifests
-```````````````
+Filtering Manifests
+```````````````````
 
-A test harness will normally call `TestManifest.active_tests`:
+After creating a `TestManifest` object, all manifest files are read and a list
+of test objects can be accessed via `TestManifest.tests`. However this list contains
+all test objects, whether they should be run or not. Normally they need to be
+filtered down only to the set of tests that should be run by the test harness.
+
+To do this, a test harness can call `TestManifest.active_tests`:
+
+.. code-block:: python
+
+    tests = manifest.active_tests(exists=True, disabled=True, **tags)
+
+By default, `active_tests` runs the filters found in
+:attr:`~.DEFAULT_FILTERS`. It also accepts two convenience arguments:
+
+1. `exists`: if True (default), filter out tests that do not exist on the local file system.
+2. `disabled`: if True (default), do not filter out tests containing the 'disabled' key
+   (which can be set by `skip-if`, `run-if` or manually).
+
+This works for simple cases, but there are other built-in filters, or even custom filters
+that can be applied to the `TestManifest`. To do so, add the filter to `TestManifest.filters`:
+
+.. code-block:: python
+
+    from manifestparser.filters import subsuite
+    import mozinfo
+
+    filters = [subsuite('devtools')]
+    tests = manifest.active_tests(filters=filters, **mozinfo.info)
+
+.. automodule:: manifestparser.filters
+    :members:
+    :exclude-members: filterlist,InstanceFilter,DEFAULT_FILTERS
+
+.. autodata::  manifestparser.filters.DEFAULT_FILTERS
+    :annotation:
+
+For example, suppose we want to introduce a new key called `timeout-if` that adds a
+'timeout' property to a test if a certain condition is True. The syntax in the manifest
+files will look like this:
 
 .. code-block:: text
 
-    def active_tests(self, exists=True, disabled=True, **tags):
+    [test_foo.py]
+    timeout-if = 300, os == 'win'
 
-The manifests are passed to the `__init__` or `read` methods with
-appropriate arguments.  `active_tests` then allows you to select the
-tests you want:
+The value is <timeout>, <condition> where condition is the same format as the one in
+`skip-if`. In the above case, if os == 'win', a timeout of 300 seconds will be
+applied. Otherwise, no timeout will be applied. All we need to do is define the filter
+and add it:
 
-- exists : return only existing tests
-- disabled : whether to return disabled tests; if not these will be
-  filtered out; if True (the default), the `disabled` key of a
-  test's metadata will be present and will be set to the reason that a
-  test is disabled
-- tags : keys and values to filter on (e.g. `os='linux'`)
+.. code-block:: python
 
-`active_tests` looks for tests with `skip-if`
-`run-if`.  If the condition is or is not fulfilled,
-respectively, the test is marked as disabled.  For instance, if you
-pass `**dict(os='linux')` as `**tags`, if a test contains a line
-`skip-if = os == 'linux'` this test will be disabled, or
-`run-if = os = 'win'` in which case the test will also be disabled.  It
-is up to the harness to pass in tags appropriate to its usage.
+    from manifestparser.expression import parse
+    import mozinfo
+
+    def timeout_if(tests, values):
+        for test in tests:
+            if 'timeout-if' in test:
+                timeout, condition = test['timeout-if'].split(',', 1)
+                if parse(condition, **values):
+                    test['timeout'] = timeout
+            yield test
+
+    tests = manifest.active_tests(filters=[timeout_if], **mozinfo.info)
 
 Creating Manifests
 ``````````````````
