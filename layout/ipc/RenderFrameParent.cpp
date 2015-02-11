@@ -615,6 +615,17 @@ RenderFrameParent::TakeFocusForClick()
 }  // namespace layout
 }  // namespace mozilla
 
+nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
+                                 nsIFrame* aFrame,
+                                 RenderFrameParent* aRemoteFrame)
+  : nsDisplayItem(aBuilder, aFrame)
+  , mRemoteFrame(aRemoteFrame)
+{
+  mForceDispatchToContentRegion =
+    aBuilder->IsBuildingLayerEventRegions() &&
+    nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresContext()->PresShell());
+}
+
 already_AddRefed<Layer>
 nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager,
@@ -624,6 +635,9 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
   nsIntRect visibleRect = GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
   visibleRect += aContainerParameters.mOffset;
   nsRefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, visibleRect, this, aContainerParameters);
+  if (layer && layer->AsContainerLayer()) {
+    layer->AsContainerLayer()->SetForceDispatchToContentRegion(mForceDispatchToContentRegion);
+  }
   return layer.forget();
 }
 
