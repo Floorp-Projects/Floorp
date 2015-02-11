@@ -408,9 +408,6 @@ pref("browser.search.showOneOffButtons", true);
 // comma seperated list of of engines to hide in the search panel.
 pref("browser.search.hiddenOneOffs", "");
 
-// How many times to show the new search highlight
-pref("browser.search.highlightCount", 5);
-
 pref("browser.sessionhistory.max_entries", 50);
 
 // handle links targeting new windows
