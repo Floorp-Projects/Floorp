@@ -22,8 +22,20 @@
  * limitations under the License.
  */
 
+#if defined(_MSC_VER) && _MSC_VER < 1900
+// When building with -D_HAS_EXCEPTIONS=0, MSVC's <xtree> header triggers
+// warning C4702: unreachable code.
+// https://connect.microsoft.com/VisualStudio/feedback/details/809962
+#pragma warning(push)
+#pragma warning(disable: 4702)
+#endif
+
 #include <map>
-#include "cert.h"
+
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#pragma warning(pop)
+#endif
+
 #include "pkix/pkix.h"
 #include "pkixgtest.h"
 #include "pkixtestutil.h"
@@ -110,7 +122,7 @@ private:
     return Success;
   }
 
-  Result FindIssuer(Input encodedIssuerName, IssuerChecker& checker, Time time)
+  Result FindIssuer(Input encodedIssuerName, IssuerChecker& checker, Time)
                     override
   {
     ByteString subjectDER(InputToByteString(encodedIssuerName));
@@ -141,23 +153,35 @@ private:
     return Success;
   }
 
-  Result VerifySignedData(const SignedDataWithSignature& signedData,
-                          Input subjectPublicKeyInfo) override
+  Result DigestBuf(Input input, DigestAlgorithm digestAlg,
+                   /*out*/ uint8_t* digestBuf, size_t digestLen) override
   {
-    return TestVerifySignedData(signedData, subjectPublicKeyInfo);
+    return TestDigestBuf(input, digestAlg, digestBuf, digestLen);
   }
 
-  Result DigestBuf(Input item, /*out*/ uint8_t *digestBuf, size_t digestBufLen)
-                   override
+  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
+                                            override
   {
-    ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return Success;
   }
 
-  Result CheckPublicKey(Input subjectPublicKeyInfo) override
+  Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                                    Input subjectPublicKeyInfo) override
   {
-    return TestCheckPublicKey(subjectPublicKeyInfo);
+    return TestVerifyRSAPKCS1SignedDigest(signedDigest, subjectPublicKeyInfo);
   }
+
+  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
+  {
+    return Success;
+  }
+
+  Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                 Input subjectPublicKeyInfo) override
+  {
+    return TestVerifyECDSASignedDigest(signedDigest, subjectPublicKeyInfo);
+  }
+
 
   std::map<ByteString, ByteString> subjectDERToCertDER;
   ByteString leafCACertDER;
@@ -261,9 +285,8 @@ public:
   }
 
   // The CertPolicyId argument is unused because we don't care about EV.
-  Result GetCertTrust(EndEntityOrCA endEntityOrCA, const CertPolicyId&,
-                      Input candidateCert, /*out*/ TrustLevel& trustLevel)
-                      override
+  Result GetCertTrust(EndEntityOrCA, const CertPolicyId&, Input candidateCert,
+                      /*out*/ TrustLevel& trustLevel) override
   {
     Input rootCert;
     Result rv = rootCert.Init(rootDER.data(), rootDER.length());
@@ -278,8 +301,7 @@ public:
     return Success;
   }
 
-  Result FindIssuer(Input encodedIssuerName, IssuerChecker& checker, Time time)
-                    override
+  Result FindIssuer(Input, IssuerChecker& checker, Time) override
   {
     // keepGoing is an out parameter from IssuerChecker.Check. It would tell us
     // whether or not to continue attempting other potential issuers. We only
@@ -306,21 +328,33 @@ public:
     return Success;
   }
 
-  Result VerifySignedData(const SignedDataWithSignature& signedData,
-                          Input subjectPublicKeyInfo) override
+  Result DigestBuf(Input input, DigestAlgorithm digestAlg,
+                   /*out*/ uint8_t* digestBuf, size_t digestLen) override
   {
-    return TestVerifySignedData(signedData, subjectPublicKeyInfo);
+    return TestDigestBuf(input, digestAlg, digestBuf, digestLen);
   }
 
-  Result DigestBuf(Input, /*out*/uint8_t*, size_t) override
+  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
+                                            override
   {
-    ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return Success;
   }
 
-  Result CheckPublicKey(Input subjectPublicKeyInfo) override
+  Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                                    Input subjectPublicKeyInfo) override
   {
-    return TestCheckPublicKey(subjectPublicKeyInfo);
+    return TestVerifyRSAPKCS1SignedDigest(signedDigest, subjectPublicKeyInfo);
+  }
+
+  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
+  {
+    return Success;
+  }
+
+  Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                    Input subjectPublicKeyInfo) override
+  {
+    return TestVerifyECDSASignedDigest(signedDigest, subjectPublicKeyInfo);
   }
 
 private:
@@ -343,7 +377,7 @@ TEST_F(pkixbuild, NoRevocationCheckingForExpiredCert)
   ByteString certDER(CreateEncodedCertificate(
                        v3, sha256WithRSAEncryption,
                        serialNumber, issuerDER,
-                       oneDayBeforeNow - Time::ONE_DAY_IN_SECONDS,
+                       oneDayBeforeNow - ONE_DAY_IN_SECONDS_AS_TIME_T,
                        oneDayBeforeNow,
                        subjectDER, *reusedKey, nullptr, *reusedKey,
                        sha256WithRSAEncryption));
@@ -389,22 +423,35 @@ public:
     return Success;
   }
 
-  Result VerifySignedData(const SignedDataWithSignature& signedData,
-                          Input subjectPublicKeyInfo) override
+  Result DigestBuf(Input, DigestAlgorithm, /*out*/uint8_t*, size_t) override
   {
     ADD_FAILURE();
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result DigestBuf(Input, /*out*/uint8_t*, size_t) override
+  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
+                                            override
   {
     ADD_FAILURE();
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result CheckPublicKey(Input subjectPublicKeyInfo) override
+  Result VerifyRSAPKCS1SignedDigest(const SignedDigest&, Input) override
   {
-    return TestCheckPublicKey(subjectPublicKeyInfo);
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  Result VerifyECDSASignedDigest(const SignedDigest&, Input) override
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 };
 
@@ -463,7 +510,7 @@ public:
     return Success;
   }
 
-  Result FindIssuer(Input subjectCert, IssuerChecker& checker, Time) override
+  Result FindIssuer(Input, IssuerChecker& checker, Time) override
   {
     Input issuerInput;
     EXPECT_EQ(Success, issuerInput.Init(issuer.data(), issuer.length()));
@@ -487,21 +534,33 @@ public:
     return Success;
   }
 
-  Result VerifySignedData(const SignedDataWithSignature& signedData,
-                          Input subjectPublicKeyInfo) override
+  Result DigestBuf(Input input, DigestAlgorithm digestAlg,
+                   /*out*/ uint8_t* digestBuf, size_t digestLen) override
   {
-    return TestVerifySignedData(signedData, subjectPublicKeyInfo);
+    return TestDigestBuf(input, digestAlg, digestBuf, digestLen);
   }
 
-  Result DigestBuf(Input, /*out*/uint8_t*, size_t) override
+  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
+                                            override
   {
-    ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return Success;
   }
 
-  Result CheckPublicKey(Input subjectPublicKeyInfo) override
+  Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                                    Input subjectPublicKeyInfo) override
   {
-    return TestCheckPublicKey(subjectPublicKeyInfo);
+    return TestVerifyRSAPKCS1SignedDigest(signedDigest, subjectPublicKeyInfo);
+  }
+
+  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
+  {
+    return Success;
+  }
+
+  Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                    Input subjectPublicKeyInfo) override
+  {
+    return TestVerifyECDSASignedDigest(signedDigest, subjectPublicKeyInfo);
   }
 
 private:

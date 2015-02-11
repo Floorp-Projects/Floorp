@@ -390,17 +390,8 @@ nsINode::GetComposedDocInternal() const
   MOZ_ASSERT(HasFlag(NODE_IS_IN_SHADOW_TREE) && IsContent(),
              "Should only be caled on nodes in the shadow tree.");
 
-  // Cross ShadowRoot boundary.
   ShadowRoot* containingShadow = AsContent()->GetContainingShadow();
-
-  nsIContent* poolHost = containingShadow->GetPoolHost();
-  if (!poolHost) {
-    // This node is in an older shadow root that does not get projected into
-    // an insertion point, thus this node can not be in the composed document.
-    return nullptr;
-  }
-
-  return poolHost->GetComposedDoc();
+  return containingShadow->IsComposedDocParticipant() ?  OwnerDoc() : nullptr;
 }
 
 #ifdef DEBUG

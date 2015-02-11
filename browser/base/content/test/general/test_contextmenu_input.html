@@ -160,7 +160,8 @@ function runTest(testNum) {
     case 8: // email
     case 9: // url
     case 10: // tel
-        // Context menu for tel, password, email and url input fields.
+    case 11: // type='number'
+        // Context menu for tel, password, email, url and number input fields.
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
                           "context-cut",         false,
@@ -181,15 +182,16 @@ function runTest(testNum) {
         } else if (testNum == 9) {
           input.type = 'tel';
         } else if (testNum == 10) {
+          input.type = 'number';
+        } else if (testNum == 11) {
           input.type = 'date';
         }
 
         openContextMenuFor(input); // Invoke context menu for next test.
         break;
 
-    case 11: // type='date'
-    case 12: // type='time'
-    case 13: // type='number'
+    case 12: // type='date'
+    case 13: // type='time'
     case 14: // type='color'
     case 15: // type='range'
         checkContextMenu(["context-navigation", null,
@@ -209,10 +211,8 @@ function runTest(testNum) {
                           "context-inspect",     true]);
         closeContextMenu();
 
-        if (testNum == 11) {
+        if (testNum == 12) {
           input.type = 'time';
-        } else if (testNum == 12) {
-          input.type = 'number';
         } else if (testNum == 13) {
           input.type = 'color';
         } else if (testNum == 14) {

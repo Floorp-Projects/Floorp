@@ -175,9 +175,8 @@ nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
     PL_DHashTableInit(&mPlaceholderMap, &PlaceholderMapOps,
                       sizeof(PlaceholderMapEntry));
   }
-  PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>
-    (PL_DHashTableAdd(&mPlaceholderMap,
-                      aPlaceholderFrame->GetOutOfFlowFrame(), fallible));
+  PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>(PL_DHashTableAdd(&mPlaceholderMap,
+                              aPlaceholderFrame->GetOutOfFlowFrame()));
   if (!entry)
     return NS_ERROR_OUT_OF_MEMORY;
 

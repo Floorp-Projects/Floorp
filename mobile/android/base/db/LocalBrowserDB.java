@@ -98,11 +98,11 @@ public class LocalBrowserDB implements BrowserDB {
     private final Uri mUpdateHistoryUriWithProfile;
     private final Uri mFaviconsUriWithProfile;
     private final Uri mThumbnailsUriWithProfile;
-    private final Uri mReadingListUriWithProfile;
 
     private LocalSearches searches;
     private LocalTabsAccessor tabsAccessor;
     private LocalURLMetadata urlMetadata;
+    private LocalReadingListAccessor readingListAccessor;
 
     private static final String[] DEFAULT_BOOKMARK_COLUMNS =
             new String[] { Bookmarks._ID,
@@ -123,7 +123,6 @@ public class LocalBrowserDB implements BrowserDB {
         mCombinedUriWithProfile = DBUtils.appendProfile(profile, Combined.CONTENT_URI);
         mFaviconsUriWithProfile = DBUtils.appendProfile(profile, Favicons.CONTENT_URI);
         mThumbnailsUriWithProfile = DBUtils.appendProfile(profile, Thumbnails.CONTENT_URI);
-        mReadingListUriWithProfile = DBUtils.appendProfile(profile, ReadingListItems.CONTENT_URI);
 
         mUpdateHistoryUriWithProfile =
                 mHistoryUriWithProfile.buildUpon()
@@ -134,6 +133,7 @@ public class LocalBrowserDB implements BrowserDB {
         searches = new LocalSearches(mProfile);
         tabsAccessor = new LocalTabsAccessor(mProfile);
         urlMetadata = new LocalURLMetadata(mProfile);
+        readingListAccessor = new LocalReadingListAccessor(mProfile);
     }
 
     @Override
@@ -149,6 +149,11 @@ public class LocalBrowserDB implements BrowserDB {
     @Override
     public URLMetadata getURLMetadata() {
         return urlMetadata;
+    }
+
+    @Override
+    public ReadingListAccessor getReadingListAccessor() {
+        return readingListAccessor;
     }
 
     /**
@@ -468,18 +473,13 @@ public class LocalBrowserDB implements BrowserDB {
      *         compatible with the favicon decoder (most probably a PNG or ICO file).
      */
     private static ConsumedInputStream getDefaultFaviconFromPath(Context context, String name) {
-        int faviconId = getFaviconId(name);
+        final int faviconId = getFaviconId(name);
         if (faviconId == FAVICON_ID_NOT_FOUND) {
             return null;
         }
 
-        String path = context.getString(faviconId);
-
-        String apkPath = context.getPackageResourcePath();
-        File apkFile = new File(apkPath);
-        String bitmapPath = "jar:jar:" + apkFile.toURI() + "!/" + AppConstants.OMNIJAR_NAME + "!/" + path;
-
-        InputStream iStream = GeckoJarReader.getStream(bitmapPath);
+        final String bitmapPath = GeckoJarReader.getJarURL(context, context.getString(faviconId));
+        final InputStream iStream = GeckoJarReader.getStream(bitmapPath);
 
         return IOUtils.readFully(iStream, DEFAULT_FAVICON_BUFFER_SIZE);
     }
@@ -581,9 +581,6 @@ public class LocalBrowserDB implements BrowserDB {
         } else if ("favicons".equals(database)) {
             uri = mFaviconsUriWithProfile;
             columns = new String[] { Favicons._ID };
-        } else if ("readinglist".equals(database)) {
-            uri = mReadingListUriWithProfile;
-            columns = new String[] { ReadingListItems._ID };
         }
 
         if (uri != null) {
@@ -825,26 +822,6 @@ public class LocalBrowserDB implements BrowserDB {
     }
 
     @Override
-    public boolean isReadingListItem(ContentResolver cr, String uri) {
-        final Cursor c = cr.query(mReadingListUriWithProfile,
-                                  new String[] { ReadingListItems._ID },
-                                  ReadingListItems.URL + " = ? ",
-                                  new String[] { uri },
-                                  null);
-
-        if (c == null) {
-            Log.e(LOGTAG, "Null cursor in isReadingListItem");
-            return false;
-        }
-
-        try {
-            return c.getCount() > 0;
-        } finally {
-            c.close();
-        }
-    }
-
-    @Override
     public String getUrlForKeyword(ContentResolver cr, String keyword) {
         final Cursor c = cr.query(mBookmarksUriWithProfile,
                                   new String[] { Bookmarks.URL },
@@ -971,70 +948,6 @@ public class LocalBrowserDB implements BrowserDB {
         final String urlEquals = Bookmarks.URL + " = ? AND " + Bookmarks.PARENT + " != ? ";
 
         cr.delete(contentUri, urlEquals, urlArgs);
-    }
-
-    @Override
-    public Cursor getReadingList(ContentResolver cr) {
-        return cr.query(mReadingListUriWithProfile,
-                        ReadingListItems.DEFAULT_PROJECTION,
-                        null,
-                        null,
-                        null);
-    }
-
-    @Override
-    public Cursor getReadingListUnfetched(ContentResolver cr) {
-        return cr.query(mReadingListUriWithProfile,
-                        new String[] { ReadingListItems._ID, ReadingListItems.URL },
-                        ReadingListItems.CONTENT_STATUS + " = " + ReadingListItems.STATUS_UNFETCHED,
-                        null,
-                        null);
-
-    }
-
-    @Override
-    public void addReadingListItem(ContentResolver cr, ContentValues values) {
-        // Check that required fields are present.
-        for (String field: ReadingListItems.REQUIRED_FIELDS) {
-            if (!values.containsKey(field)) {
-                throw new IllegalArgumentException("Missing required field for reading list item: " + field);
-            }
-        }
-
-        // Clear delete flag if necessary
-        values.put(ReadingListItems.IS_DELETED, 0);
-
-        // Restore deleted record if possible
-        final Uri insertUri = mReadingListUriWithProfile
-                              .buildUpon()
-                              .appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true")
-                              .build();
-
-        final int updated = cr.update(insertUri,
-                                      values,
-                                      ReadingListItems.URL + " = ? ",
-                                      new String[] { values.getAsString(ReadingListItems.URL) });
-
-        debug("Updated " + updated + " rows to new modified time.");
-    }
-
-    @Override
-    public void updateReadingListItem(ContentResolver cr, ContentValues values) {
-        if (!values.containsKey(ReadingListItems._ID)) {
-            throw new IllegalArgumentException("Cannot update reading list item without an ID");
-        }
-
-        final int updated = cr.update(mReadingListUriWithProfile,
-                                      values,
-                                      ReadingListItems._ID + " = ? ",
-                                      new String[] { values.getAsString(ReadingListItems._ID) });
-
-        debug("Updated " + updated + " reading list rows.");
-    }
-
-    @Override
-    public void removeReadingListItemWithURL(ContentResolver cr, String uri) {
-        cr.delete(mReadingListUriWithProfile, ReadingListItems.URL + " = ? ", new String[] { uri });
     }
 
     @Override
