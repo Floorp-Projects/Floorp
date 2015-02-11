@@ -4,15 +4,17 @@
 
 #include "base/cpu.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 #include <algorithm>
 
 #include "base/basictypes.h"
+#include "base/strings/string_piece.h"
 #include "build/build_config.h"
 
 #if defined(ARCH_CPU_ARM_FAMILY) && (defined(OS_ANDROID) || defined(OS_LINUX))
-#include "base/file_util.h"
+#include "base/files/file_util.h"
 #include "base/lazy_instance.h"
 #endif
 
@@ -44,6 +46,7 @@ CPU::CPU()
     has_avx_hardware_(false),
     has_aesni_(false),
     has_non_stop_time_stamp_counter_(false),
+    has_broken_neon_(false),
     cpu_vendor_("unknown") {
   Initialize();
 }
@@ -51,16 +54,6 @@ CPU::CPU()
 namespace {
 
 #if defined(ARCH_CPU_X86_FAMILY)
-#if defined(_MSC_VER) && (_MSC_FULL_VER < 160040219)
-// Prior to VS2010 SP1, _xgetbv is not defined in immintrin.h, so we need to
-// define our own version using the assembly operation.
-// By using __fastcall we ensure that xcr is already in register ecx for xgetbv
-// and xgetbv populates the correct registers (eax edx) for our return value.
-uint64_t __fastcall _xgetbv(uint32_t xcr) {
-  __asm xgetbv;
-}
-#endif
-
 #ifndef _MSC_VER
 
 #if defined(__pic__) && defined(__i386__)
@@ -100,51 +93,98 @@ uint64 _xgetbv(uint32 xcr) {
 #endif  // ARCH_CPU_X86_FAMILY
 
 #if defined(ARCH_CPU_ARM_FAMILY) && (defined(OS_ANDROID) || defined(OS_LINUX))
+class LazyCpuInfoValue {
+ public:
+  LazyCpuInfoValue() : has_broken_neon_(false) {
+    // This function finds the value from /proc/cpuinfo under the key "model
+    // name" or "Processor". "model name" is used in Linux 3.8 and later (3.7
+    // and later for arm64) and is shown once per CPU. "Processor" is used in
+    // earler versions and is shown only once at the top of /proc/cpuinfo
+    // regardless of the number CPUs.
+    const char kModelNamePrefix[] = "model name\t: ";
+    const char kProcessorPrefix[] = "Processor\t: ";
 
-// Returns the string found in /proc/cpuinfo under the key "model name" or
-// "Processor". "model name" is used in Linux 3.8 and later (3.7 and later for
-// arm64) and is shown once per CPU. "Processor" is used in earler versions and
-// is shown only once at the top of /proc/cpuinfo regardless of the number CPUs.
-std::string ParseCpuInfo() {
-  const char kModelNamePrefix[] = "model name\t: ";
-  const char kProcessorPrefix[] = "Processor\t: ";
-  std::string contents;
-  ReadFileToString(FilePath("/proc/cpuinfo"), &contents);
-  DCHECK(!contents.empty());
-  std::string cpu_brand;
-  if (!contents.empty()) {
+    // This function also calculates whether we believe that this CPU has a
+    // broken NEON unit based on these fields from cpuinfo:
+    unsigned implementer = 0, architecture = 0, variant = 0, part = 0,
+             revision = 0;
+    const struct {
+      const char key[17];
+      unsigned *result;
+    } kUnsignedValues[] = {
+      {"CPU implementer", &implementer},
+      {"CPU architecture", &architecture},
+      {"CPU variant", &variant},
+      {"CPU part", &part},
+      {"CPU revision", &revision},
+    };
+
+    std::string contents;
+    ReadFileToString(FilePath("/proc/cpuinfo"), &contents);
+    DCHECK(!contents.empty());
+    if (contents.empty()) {
+      return;
+    }
+
     std::istringstream iss(contents);
     std::string line;
     while (std::getline(iss, line)) {
-      if (line.compare(0, strlen(kModelNamePrefix), kModelNamePrefix) == 0) {
-        cpu_brand.assign(line.substr(strlen(kModelNamePrefix)));
-        break;
+      if (brand_.empty() &&
+          (line.compare(0, strlen(kModelNamePrefix), kModelNamePrefix) == 0 ||
+           line.compare(0, strlen(kProcessorPrefix), kProcessorPrefix) == 0)) {
+        brand_.assign(line.substr(strlen(kModelNamePrefix)));
       }
-      if (line.compare(0, strlen(kProcessorPrefix), kProcessorPrefix) == 0) {
-        cpu_brand.assign(line.substr(strlen(kProcessorPrefix)));
-        break;
+
+      for (size_t i = 0; i < arraysize(kUnsignedValues); i++) {
+        const char *key = kUnsignedValues[i].key;
+        const size_t len = strlen(key);
+
+        if (line.compare(0, len, key) == 0 &&
+            line.size() >= len + 1 &&
+            (line[len] == '\t' || line[len] == ' ' || line[len] == ':')) {
+          size_t colon_pos = line.find(':', len);
+          if (colon_pos == std::string::npos) {
+            continue;
+          }
+
+          const StringPiece line_sp(line);
+          StringPiece value_sp = line_sp.substr(colon_pos + 1);
+          while (!value_sp.empty() &&
+                 (value_sp[0] == ' ' || value_sp[0] == '\t')) {
+            value_sp = value_sp.substr(1);
+          }
+
+          // The string may have leading "0x" or not, so we use strtoul to
+          // handle that.
+          char *endptr;
+          std::string value(value_sp.as_string());
+          unsigned long int result = strtoul(value.c_str(), &endptr, 0);
+          if (*endptr == 0 && result <= UINT_MAX) {
+            *kUnsignedValues[i].result = result;
+          }
+        }
       }
     }
-  }
-  return cpu_brand;
-}
 
-class LazyCpuInfoValue {
- public:
-  LazyCpuInfoValue() : value_(ParseCpuInfo()) {}
-  const std::string& value() { return value_; }
+    has_broken_neon_ =
+      implementer == 0x51 &&
+      architecture == 7 &&
+      variant == 1 &&
+      part == 0x4d &&
+      revision == 0;
+  }
+
+  const std::string& brand() const { return brand_; }
+  bool has_broken_neon() const { return has_broken_neon_; }
 
  private:
-  const std::string value_;
+  std::string brand_;
+  bool has_broken_neon_;
   DISALLOW_COPY_AND_ASSIGN(LazyCpuInfoValue);
 };
 
-base::LazyInstance<LazyCpuInfoValue> g_lazy_cpu_brand =
+base::LazyInstance<LazyCpuInfoValue>::Leaky g_lazy_cpuinfo =
     LAZY_INSTANCE_INITIALIZER;
-
-const std::string& CpuBrandInfo() {
-  return g_lazy_cpu_brand.Get().value();
-}
 
 #endif  // defined(ARCH_CPU_ARM_FAMILY) && (defined(OS_ANDROID) ||
         // defined(OS_LINUX))
@@ -229,7 +269,8 @@ void CPU::Initialize() {
     has_non_stop_time_stamp_counter_ = (cpu_info[3] & (1 << 8)) != 0;
   }
 #elif defined(ARCH_CPU_ARM_FAMILY) && (defined(OS_ANDROID) || defined(OS_LINUX))
-  cpu_brand_.assign(CpuBrandInfo());
+  cpu_brand_.assign(g_lazy_cpuinfo.Get().brand());
+  has_broken_neon_ = g_lazy_cpuinfo.Get().has_broken_neon();
 #endif
 }
 

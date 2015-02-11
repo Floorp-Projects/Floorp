@@ -622,11 +622,8 @@ PLDHashTable::Add(const void* aKey)
       mRemovedCount--;
       keyHash |= COLLISION_FLAG;
     }
-    if (mOps->initEntry && !mOps->initEntry(this, entry, aKey)) {
-      /* We haven't claimed entry yet; fail with null return. */
-      memset(entry + 1, 0, mEntrySize - sizeof(*entry));
-      entry = nullptr;
-      goto exit;
+    if (mOps->initEntry) {
+      mOps->initEntry(entry, aKey);
     }
     entry->mKeyHash = keyHash;
     mEntryCount++;

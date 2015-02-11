@@ -2,132 +2,141 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <errno.h>
+#include "sandbox/linux/seccomp-bpf/codegen.h"
 
-#include <algorithm>
+#include <linux/filter.h>
+
 #include <set>
+#include <string>
 #include <vector>
 
-#include "sandbox/linux/seccomp-bpf/codegen.h"
-#include "sandbox/linux/seccomp-bpf/sandbox_bpf.h"
-#include "sandbox/linux/tests/unit_tests.h"
+#include "sandbox/linux/seccomp-bpf/basicblock.h"
+#include "sandbox/linux/seccomp-bpf/errorcode.h"
+#include "sandbox/linux/seccomp-bpf/instruction.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace sandbox {
-
-class SandboxUnittestHelper : public SandboxBPF {
- public:
-  typedef SandboxBPF::Program Program;
-};
 
 // We want to access some of the private methods in the code generator. We
 // do so by defining a "friend" that makes these methods public for us.
 class CodeGenUnittestHelper : public CodeGen {
  public:
-  void FindBranchTargets(const Instruction& instructions,
-                         BranchTargets* branch_targets) {
-    CodeGen::FindBranchTargets(instructions, branch_targets);
-  }
-
-  BasicBlock* CutGraphIntoBasicBlocks(Instruction* insns,
-                                      const BranchTargets& branch_targets,
-                                      TargetsToBlocks* blocks) {
-    return CodeGen::CutGraphIntoBasicBlocks(insns, branch_targets, blocks);
-  }
-
-  void MergeTails(TargetsToBlocks* blocks) { CodeGen::MergeTails(blocks); }
+  using CodeGen::CutGraphIntoBasicBlocks;
+  using CodeGen::FindBranchTargets;
+  using CodeGen::MergeTails;
 };
 
-enum { NO_FLAGS = 0x0000, HAS_MERGEABLE_TAILS = 0x0001, };
+namespace {
 
-Instruction* SampleProgramOneInstruction(CodeGen* codegen, int* flags) {
+enum {
+  NO_FLAGS = 0x0000,
+  HAS_MERGEABLE_TAILS = 0x0001,
+};
+
+using ProgramTestFunc = void (*)(CodeGenUnittestHelper* gen,
+                                 Instruction* head,
+                                 int flags);
+
+class ProgramTest : public ::testing::TestWithParam<ProgramTestFunc> {
+ protected:
+  ProgramTest() : gen_() {}
+
+  // RunTest runs the test function argument.  It should be called at
+  // the end of each program test case.
+  void RunTest(Instruction* head, int flags) { GetParam()(&gen_, head, flags); }
+
+  Instruction* MakeInstruction(uint16_t code,
+                               uint32_t k,
+                               Instruction* next = nullptr) {
+    Instruction* ret = gen_.MakeInstruction(code, k, next);
+    EXPECT_NE(nullptr, ret);
+    EXPECT_EQ(code, ret->code);
+    EXPECT_EQ(k, ret->k);
+    if (code == BPF_JMP + BPF_JA) {
+      // Annoying inconsistency.
+      EXPECT_EQ(nullptr, ret->next);
+      EXPECT_EQ(next, ret->jt_ptr);
+    } else {
+      EXPECT_EQ(next, ret->next);
+      EXPECT_EQ(nullptr, ret->jt_ptr);
+    }
+    EXPECT_EQ(nullptr, ret->jf_ptr);
+    return ret;
+  }
+
+  Instruction* MakeInstruction(uint16_t code,
+                               uint32_t k,
+                               Instruction* jt,
+                               Instruction* jf) {
+    Instruction* ret = gen_.MakeInstruction(code, k, jt, jf);
+    EXPECT_NE(nullptr, ret);
+    EXPECT_EQ(code, ret->code);
+    EXPECT_EQ(k, ret->k);
+    EXPECT_EQ(nullptr, ret->next);
+    EXPECT_EQ(jt, ret->jt_ptr);
+    EXPECT_EQ(jf, ret->jf_ptr);
+    return ret;
+  }
+
+ private:
+  CodeGenUnittestHelper gen_;
+};
+
+TEST_P(ProgramTest, OneInstruction) {
   // Create the most basic valid BPF program:
-  //    RET ERR_ALLOWED
-  *flags = NO_FLAGS;
-  return codegen->MakeInstruction(BPF_RET + BPF_K,
-                                  ErrorCode(ErrorCode::ERR_ALLOWED));
+  //    RET 0
+  Instruction* head = MakeInstruction(BPF_RET + BPF_K, 0);
+  RunTest(head, NO_FLAGS);
 }
 
-Instruction* SampleProgramSimpleBranch(CodeGen* codegen, int* flags) {
+TEST_P(ProgramTest, SimpleBranch) {
   // Create a program with a single branch:
   //    JUMP if eq 42 then $0 else $1
-  // 0: RET EPERM
-  // 1: RET ERR_ALLOWED
-  *flags = NO_FLAGS;
-  return codegen->MakeInstruction(
-      BPF_JMP + BPF_JEQ + BPF_K,
-      42,
-      codegen->MakeInstruction(BPF_RET + BPF_K, ErrorCode(EPERM)),
-      codegen->MakeInstruction(BPF_RET + BPF_K,
-                               ErrorCode(ErrorCode::ERR_ALLOWED)));
+  // 0: RET 1
+  // 1: RET 0
+  Instruction* head = MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K,
+                                      42,
+                                      MakeInstruction(BPF_RET + BPF_K, 1),
+                                      MakeInstruction(BPF_RET + BPF_K, 0));
+  RunTest(head, NO_FLAGS);
 }
 
-Instruction* SampleProgramAtypicalBranch(CodeGen* codegen, int* flags) {
+TEST_P(ProgramTest, AtypicalBranch) {
   // Create a program with a single branch:
   //    JUMP if eq 42 then $0 else $0
-  // 0: RET ERR_ALLOWED
+  // 0: RET 0
+
+  Instruction* ret = MakeInstruction(BPF_RET + BPF_K, 0);
+  Instruction* head = MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 42, ret, ret);
 
   // N.B.: As the instructions in both sides of the branch are already
   //       the same object, we do not actually have any "mergeable" branches.
   //       This needs to be reflected in our choice of "flags".
-  *flags = NO_FLAGS;
-
-  Instruction* ret = codegen->MakeInstruction(
-      BPF_RET + BPF_K, ErrorCode(ErrorCode::ERR_ALLOWED));
-  return codegen->MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 42, ret, ret);
+  RunTest(head, NO_FLAGS);
 }
 
-Instruction* SampleProgramComplex(CodeGen* codegen, int* flags) {
+TEST_P(ProgramTest, Complex) {
   // Creates a basic BPF program that we'll use to test some of the code:
   //    JUMP if eq 42 the $0 else $1     (insn6)
   // 0: LD 23                            (insn5)
   // 1: JUMP if eq 42 then $2 else $4    (insn4)
-  // 2: JUMP to $3                       (insn1)
-  // 3: LD 42                            (insn0)
-  //    RET ErrorCode(42)                (insn2)
+  // 2: JUMP to $3                       (insn2)
+  // 3: LD 42                            (insn1)
+  //    RET 42                           (insn0)
   // 4: LD 42                            (insn3)
-  //    RET ErrorCode(42)                (insn3+)
-  *flags = HAS_MERGEABLE_TAILS;
-
-  Instruction* insn0 = codegen->MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 42);
-  SANDBOX_ASSERT(insn0);
-  SANDBOX_ASSERT(insn0->code == BPF_LD + BPF_W + BPF_ABS);
-  SANDBOX_ASSERT(insn0->k == 42);
-  SANDBOX_ASSERT(insn0->next == NULL);
-
-  Instruction* insn1 = codegen->MakeInstruction(BPF_JMP + BPF_JA, 0, insn0);
-  SANDBOX_ASSERT(insn1);
-  SANDBOX_ASSERT(insn1->code == BPF_JMP + BPF_JA);
-  SANDBOX_ASSERT(insn1->jt_ptr == insn0);
-
-  Instruction* insn2 = codegen->MakeInstruction(BPF_RET + BPF_K, ErrorCode(42));
-  SANDBOX_ASSERT(insn2);
-  SANDBOX_ASSERT(insn2->code == BPF_RET + BPF_K);
-  SANDBOX_ASSERT(insn2->next == NULL);
+  //    RET 42                           (insn3+)
+  Instruction* insn0 = MakeInstruction(BPF_RET + BPF_K, 42);
+  Instruction* insn1 = MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 42, insn0);
+  Instruction* insn2 = MakeInstruction(BPF_JMP + BPF_JA, 0, insn1);
 
   // We explicitly duplicate instructions so that MergeTails() can coalesce
   // them later.
-  Instruction* insn3 = codegen->MakeInstruction(
-      BPF_LD + BPF_W + BPF_ABS,
-      42,
-      codegen->MakeInstruction(BPF_RET + BPF_K, ErrorCode(42)));
+  Instruction* insn3 = MakeInstruction(
+      BPF_LD + BPF_W + BPF_ABS, 42, MakeInstruction(BPF_RET + BPF_K, 42));
 
   Instruction* insn4 =
-      codegen->MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 42, insn1, insn3);
-  SANDBOX_ASSERT(insn4);
-  SANDBOX_ASSERT(insn4->code == BPF_JMP + BPF_JEQ + BPF_K);
-  SANDBOX_ASSERT(insn4->k == 42);
-  SANDBOX_ASSERT(insn4->jt_ptr == insn1);
-  SANDBOX_ASSERT(insn4->jf_ptr == insn3);
-
-  codegen->JoinInstructions(insn0, insn2);
-  SANDBOX_ASSERT(insn0->next == insn2);
-
-  Instruction* insn5 =
-      codegen->MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 23, insn4);
-  SANDBOX_ASSERT(insn5);
-  SANDBOX_ASSERT(insn5->code == BPF_LD + BPF_W + BPF_ABS);
-  SANDBOX_ASSERT(insn5->k == 23);
-  SANDBOX_ASSERT(insn5->next == insn4);
+      MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 42, insn2, insn3);
+  Instruction* insn5 = MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 23, insn4);
 
   // Force a basic block that ends in neither a jump instruction nor a return
   // instruction. It only contains "insn5". This exercises one of the less
@@ -136,12 +145,12 @@ Instruction* SampleProgramComplex(CodeGen* codegen, int* flags) {
   // another aspect of the topo-sort algorithm (namely, the ability to
   // correctly count the incoming branches for subtrees that are not disjunct).
   Instruction* insn6 =
-      codegen->MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 42, insn5, insn4);
+      MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 42, insn5, insn4);
 
-  return insn6;
+  RunTest(insn6, HAS_MERGEABLE_TAILS);
 }
 
-Instruction* SampleProgramConfusingTails(CodeGen* codegen, int* flags) {
+TEST_P(ProgramTest, ConfusingTails) {
   // This simple program demonstrates https://crbug.com/351103/
   // The two "LOAD 0" instructions are blocks of their own. MergeTails() could
   // be tempted to merge them since they are the same. However, they are
@@ -157,26 +166,22 @@ Instruction* SampleProgramConfusingTails(CodeGen* codegen, int* flags) {
   //  3) if A == 0x2; then JMP 4 else JMP 5
   //  4) LOAD 0  // System call number
   //  5) if A == 0x1; then JMP 6 else JMP 7
-  //  6) RET 0x50000  // errno = 0
-  //  7) RET 0x50001  // errno = 1
-  *flags = NO_FLAGS;
+  //  6) RET 0
+  //  7) RET 1
 
-  Instruction* i7 = codegen->MakeInstruction(BPF_RET, ErrorCode(1));
-  Instruction* i6 = codegen->MakeInstruction(BPF_RET, ErrorCode(0));
-  Instruction* i5 =
-      codegen->MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 1, i6, i7);
-  Instruction* i4 = codegen->MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 0, i5);
-  Instruction* i3 =
-      codegen->MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 2, i4, i5);
-  Instruction* i2 = codegen->MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 0, i3);
-  Instruction* i1 =
-      codegen->MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 1, i2, i3);
-  Instruction* i0 = codegen->MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 1, i1);
+  Instruction* i7 = MakeInstruction(BPF_RET + BPF_K, 1);
+  Instruction* i6 = MakeInstruction(BPF_RET + BPF_K, 0);
+  Instruction* i5 = MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 1, i6, i7);
+  Instruction* i4 = MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 0, i5);
+  Instruction* i3 = MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 2, i4, i5);
+  Instruction* i2 = MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 0, i3);
+  Instruction* i1 = MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 1, i2, i3);
+  Instruction* i0 = MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 1, i1);
 
-  return i0;
+  RunTest(i0, NO_FLAGS);
 }
 
-Instruction* SampleProgramConfusingTailsBasic(CodeGen* codegen, int* flags) {
+TEST_P(ProgramTest, ConfusingTailsBasic) {
   // Without the fix for https://crbug.com/351103/, (see
   // SampleProgramConfusingTails()), this would generate a cyclic graph and
   // crash as the two "LOAD 0" instructions would get merged.
@@ -186,23 +191,19 @@ Instruction* SampleProgramConfusingTailsBasic(CodeGen* codegen, int* flags) {
   // 2) LOAD 0  // System call number
   // 3) if A == 0x2; then JMP 4 else JMP 5
   // 4) LOAD 0  // System call number
-  // 5) RET 0x50001  // errno = 1
-  *flags = NO_FLAGS;
+  // 5) RET 1
 
-  Instruction* i5 = codegen->MakeInstruction(BPF_RET, ErrorCode(1));
-  Instruction* i4 = codegen->MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 0, i5);
-  Instruction* i3 =
-      codegen->MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 2, i4, i5);
-  Instruction* i2 = codegen->MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 0, i3);
-  Instruction* i1 =
-      codegen->MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 1, i2, i3);
-  Instruction* i0 = codegen->MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 1, i1);
+  Instruction* i5 = MakeInstruction(BPF_RET + BPF_K, 1);
+  Instruction* i4 = MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 0, i5);
+  Instruction* i3 = MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 2, i4, i5);
+  Instruction* i2 = MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 0, i3);
+  Instruction* i1 = MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 1, i2, i3);
+  Instruction* i0 = MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 1, i1);
 
-  return i0;
+  RunTest(i0, NO_FLAGS);
 }
 
-Instruction* SampleProgramConfusingTailsMergeable(CodeGen* codegen,
-                                                  int* flags) {
+TEST_P(ProgramTest, ConfusingTailsMergeable) {
   // This is similar to SampleProgramConfusingTails(), except that
   // instructions 2 and 4 are now RET instructions.
   // In PointerCompare(), this exercises the path where two blocks are of the
@@ -211,54 +212,28 @@ Instruction* SampleProgramConfusingTailsMergeable(CodeGen* codegen,
   //
   // 0) LOAD 1  // ???
   // 1) if A == 0x1; then JMP 2 else JMP 3
-  // 2) RET 0x5002a  // errno = 42
+  // 2) RET 42
   // 3) if A == 0x2; then JMP 4 else JMP 5
-  // 4) RET 0x5002a  // errno = 42
+  // 4) RET 42
   // 5) if A == 0x1; then JMP 6 else JMP 7
-  // 6) RET 0x50000  // errno = 0
-  // 7) RET 0x50001  // errno = 1
-  *flags = HAS_MERGEABLE_TAILS;
+  // 6) RET 0
+  // 7) RET 1
 
-  Instruction* i7 = codegen->MakeInstruction(BPF_RET, ErrorCode(1));
-  Instruction* i6 = codegen->MakeInstruction(BPF_RET, ErrorCode(0));
-  Instruction* i5 =
-      codegen->MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 1, i6, i7);
-  Instruction* i4 = codegen->MakeInstruction(BPF_RET, ErrorCode(42));
-  Instruction* i3 =
-      codegen->MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 2, i4, i5);
-  Instruction* i2 = codegen->MakeInstruction(BPF_RET, ErrorCode(42));
-  Instruction* i1 =
-      codegen->MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 1, i2, i3);
-  Instruction* i0 = codegen->MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 1, i1);
+  Instruction* i7 = MakeInstruction(BPF_RET + BPF_K, 1);
+  Instruction* i6 = MakeInstruction(BPF_RET + BPF_K, 0);
+  Instruction* i5 = MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 1, i6, i7);
+  Instruction* i4 = MakeInstruction(BPF_RET + BPF_K, 42);
+  Instruction* i3 = MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 2, i4, i5);
+  Instruction* i2 = MakeInstruction(BPF_RET + BPF_K, 42);
+  Instruction* i1 = MakeInstruction(BPF_JMP + BPF_JEQ + BPF_K, 1, i2, i3);
+  Instruction* i0 = MakeInstruction(BPF_LD + BPF_W + BPF_ABS, 1, i1);
 
-  return i0;
-}
-void ForAllPrograms(void (*test)(CodeGenUnittestHelper*, Instruction*, int)) {
-  Instruction* (*function_table[])(CodeGen* codegen, int* flags) = {
-    SampleProgramOneInstruction,
-    SampleProgramSimpleBranch,
-    SampleProgramAtypicalBranch,
-    SampleProgramComplex,
-    SampleProgramConfusingTails,
-    SampleProgramConfusingTailsBasic,
-    SampleProgramConfusingTailsMergeable,
-  };
-
-  for (size_t i = 0; i < arraysize(function_table); ++i) {
-    CodeGenUnittestHelper codegen;
-    int flags = NO_FLAGS;
-    Instruction *prg = function_table[i](&codegen, &flags);
-    test(&codegen, prg, flags);
-  }
+  RunTest(i0, HAS_MERGEABLE_TAILS);
 }
 
 void MakeInstruction(CodeGenUnittestHelper* codegen,
                      Instruction* program, int) {
   // Nothing to do here
-}
-
-SANDBOX_TEST(CodeGen, MakeInstruction) {
-  ForAllPrograms(MakeInstruction);
 }
 
 void FindBranchTargets(CodeGenUnittestHelper* codegen, Instruction* prg, int) {
@@ -279,28 +254,28 @@ void FindBranchTargets(CodeGenUnittestHelper* codegen, Instruction* prg, int) {
     all_instructions.insert(insn);
     if (BPF_CLASS(insn->code) == BPF_JMP) {
       target_instructions.insert(insn->jt_ptr);
-      SANDBOX_ASSERT(insn->jt_ptr != NULL);
-      SANDBOX_ASSERT(branch_targets.find(insn->jt_ptr) != end);
+      ASSERT_TRUE(insn->jt_ptr != NULL);
+      ASSERT_TRUE(branch_targets.find(insn->jt_ptr) != end);
       if (BPF_OP(insn->code) != BPF_JA) {
         target_instructions.insert(insn->jf_ptr);
-        SANDBOX_ASSERT(insn->jf_ptr != NULL);
-        SANDBOX_ASSERT(branch_targets.find(insn->jf_ptr) != end);
+        ASSERT_TRUE(insn->jf_ptr != NULL);
+        ASSERT_TRUE(branch_targets.find(insn->jf_ptr) != end);
         stack.push_back(insn->jf_ptr);
       }
       insn = insn->jt_ptr;
     } else if (BPF_CLASS(insn->code) == BPF_RET) {
-      SANDBOX_ASSERT(insn->next == NULL);
+      ASSERT_TRUE(insn->next == NULL);
       if (stack.empty()) {
         break;
       }
       insn = stack.back();
       stack.pop_back();
     } else {
-      SANDBOX_ASSERT(insn->next != NULL);
+      ASSERT_TRUE(insn->next != NULL);
       insn = insn->next;
     }
   }
-  SANDBOX_ASSERT(target_instructions.size() == branch_targets.size());
+  ASSERT_TRUE(target_instructions.size() == branch_targets.size());
 
   // We can now subtract the set of the branch targets from the set of all
   // instructions. This gives us a set with the instructions that nobody
@@ -316,11 +291,9 @@ void FindBranchTargets(CodeGenUnittestHelper* codegen, Instruction* prg, int) {
   for (Instructions::const_iterator iter = non_target_instructions.begin();
        iter != non_target_instructions.end();
        ++iter) {
-    SANDBOX_ASSERT(branch_targets.find(*iter) == end);
+    ASSERT_TRUE(branch_targets.find(*iter) == end);
   }
 }
-
-SANDBOX_TEST(CodeGen, FindBranchTargets) { ForAllPrograms(FindBranchTargets); }
 
 void CutGraphIntoBasicBlocks(CodeGenUnittestHelper* codegen,
                              Instruction* prg,
@@ -330,8 +303,8 @@ void CutGraphIntoBasicBlocks(CodeGenUnittestHelper* codegen,
   TargetsToBlocks all_blocks;
   BasicBlock* first_block =
       codegen->CutGraphIntoBasicBlocks(prg, branch_targets, &all_blocks);
-  SANDBOX_ASSERT(first_block != NULL);
-  SANDBOX_ASSERT(first_block->instructions.size() > 0);
+  ASSERT_TRUE(first_block != NULL);
+  ASSERT_TRUE(first_block->instructions.size() > 0);
   Instruction* first_insn = first_block->instructions[0];
 
   // Basic blocks are supposed to start with a branch target and end with
@@ -342,29 +315,25 @@ void CutGraphIntoBasicBlocks(CodeGenUnittestHelper* codegen,
        bb_iter != all_blocks.end();
        ++bb_iter) {
     BasicBlock* bb = bb_iter->second;
-    SANDBOX_ASSERT(bb != NULL);
-    SANDBOX_ASSERT(bb->instructions.size() > 0);
+    ASSERT_TRUE(bb != NULL);
+    ASSERT_TRUE(bb->instructions.size() > 0);
     Instruction* insn = bb->instructions[0];
-    SANDBOX_ASSERT(insn == first_insn ||
-                   branch_targets.find(insn) != branch_targets.end());
+    ASSERT_TRUE(insn == first_insn ||
+                branch_targets.find(insn) != branch_targets.end());
     for (Instructions::const_iterator insn_iter = bb->instructions.begin();;) {
       insn = *insn_iter;
       if (++insn_iter != bb->instructions.end()) {
-        SANDBOX_ASSERT(BPF_CLASS(insn->code) != BPF_JMP);
-        SANDBOX_ASSERT(BPF_CLASS(insn->code) != BPF_RET);
+        ASSERT_TRUE(BPF_CLASS(insn->code) != BPF_JMP);
+        ASSERT_TRUE(BPF_CLASS(insn->code) != BPF_RET);
       } else {
-        SANDBOX_ASSERT(BPF_CLASS(insn->code) == BPF_JMP ||
-                       BPF_CLASS(insn->code) == BPF_RET ||
-                       branch_targets.find(insn->next) != branch_targets.end());
+        ASSERT_TRUE(BPF_CLASS(insn->code) == BPF_JMP ||
+                    BPF_CLASS(insn->code) == BPF_RET ||
+                    branch_targets.find(insn->next) != branch_targets.end());
         break;
       }
-      SANDBOX_ASSERT(branch_targets.find(*insn_iter) == branch_targets.end());
+      ASSERT_TRUE(branch_targets.find(*insn_iter) == branch_targets.end());
     }
   }
-}
-
-SANDBOX_TEST(CodeGen, CutGraphIntoBasicBlocks) {
-  ForAllPrograms(CutGraphIntoBasicBlocks);
 }
 
 void MergeTails(CodeGenUnittestHelper* codegen, Instruction* prg, int flags) {
@@ -439,16 +408,12 @@ void MergeTails(CodeGenUnittestHelper* codegen, Instruction* prg, int flags) {
     }
     codegen->MergeTails(&all_blocks);
   }
-  SANDBOX_ASSERT(graph[0] == graph[1]);
+  ASSERT_TRUE(graph[0] == graph[1]);
   if (flags & HAS_MERGEABLE_TAILS) {
-    SANDBOX_ASSERT(edges[0] != edges[1]);
+    ASSERT_TRUE(edges[0] != edges[1]);
   } else {
-    SANDBOX_ASSERT(edges[0] == edges[1]);
+    ASSERT_TRUE(edges[0] == edges[1]);
   }
-}
-
-SANDBOX_TEST(CodeGen, MergeTails) {
-  ForAllPrograms(MergeTails);
 }
 
 void CompileAndCompare(CodeGenUnittestHelper* codegen, Instruction* prg, int) {
@@ -496,14 +461,14 @@ void CompileAndCompare(CodeGenUnittestHelper* codegen, Instruction* prg, int) {
   }
 
   // Compile the program
-  SandboxUnittestHelper::Program bpf;
+  CodeGen::Program bpf;
   codegen->Compile(prg, &bpf);
 
   // Serialize the resulting BPF instructions.
   std::string assembly;
   std::vector<int> assembly_stack;
   for (int idx = 0; idx >= 0;) {
-    SANDBOX_ASSERT(idx < (int)bpf.size());
+    ASSERT_TRUE(idx < (int)bpf.size());
     struct sock_filter& insn = bpf[idx];
     if (BPF_CLASS(insn.code) == BPF_JMP) {
       if (BPF_OP(insn.code) == BPF_JA) {
@@ -528,11 +493,21 @@ void CompileAndCompare(CodeGenUnittestHelper* codegen, Instruction* prg, int) {
     assembly.append(reinterpret_cast<char*>(&insn.code), sizeof(insn.code));
     assembly.append(reinterpret_cast<char*>(&insn.k), sizeof(insn.k));
   }
-  SANDBOX_ASSERT(source == assembly);
+  ASSERT_TRUE(source == assembly);
 }
 
-SANDBOX_TEST(CodeGen, All) {
-  ForAllPrograms(CompileAndCompare);
-}
+const ProgramTestFunc kProgramTestFuncs[] = {
+    MakeInstruction,
+    FindBranchTargets,
+    CutGraphIntoBasicBlocks,
+    MergeTails,
+    CompileAndCompare,
+};
+
+INSTANTIATE_TEST_CASE_P(CodeGen,
+                        ProgramTest,
+                        ::testing::ValuesIn(kProgramTestFuncs));
+
+}  // namespace
 
 }  // namespace sandbox

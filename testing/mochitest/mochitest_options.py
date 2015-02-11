@@ -163,7 +163,7 @@ class MochitestOptions(optparse.OptionParser):
         { "action": "store",
           "dest": "subsuite",
           "help": "subsuite of tests to run",
-          "default": "",
+          "default": None,
         }],
         [["--jetpack-package"],
         { "action": "store_true",
