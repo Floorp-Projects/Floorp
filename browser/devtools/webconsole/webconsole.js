@@ -1499,6 +1499,7 @@ WebConsoleFrame.prototype = {
     let clipboardText = request.method + " " + request.url;
     let severity = SEVERITY_LOG;
     if (networkInfo.isXHR) {
+      clipboardText = request.method + " XHR " + request.url;
       severity = SEVERITY_INFO;
     }
     let mixedRequest =
@@ -1522,6 +1523,14 @@ WebConsoleFrame.prototype = {
 
     let body = methodNode.parentNode;
     body.setAttribute("aria-haspopup", true);
+
+    if (networkInfo.isXHR) {
+      let xhrNode = this.document.createElementNS(XHTML_NS, "span");
+      xhrNode.className = "xhr";
+      xhrNode.textContent = l10n.getStr("webConsoleXhrIndicator");
+      body.appendChild(xhrNode);
+      body.appendChild(this.document.createTextNode(" "));
+    }
 
     let displayUrl = request.url;
     let pos = displayUrl.indexOf("?");
@@ -1855,6 +1864,7 @@ WebConsoleFrame.prototype = {
     let hasEventTimings = updates.indexOf("eventTimings") > -1;
     let hasResponseStart = updates.indexOf("responseStart") > -1;
     let request = networkInfo.request;
+    let methodText = (networkInfo.isXHR)? request.method + ' XHR' : request.method;
     let response = networkInfo.response;
     let updated = false;
 
@@ -1872,7 +1882,7 @@ WebConsoleFrame.prototype = {
       let statusNode = messageNode.getElementsByClassName("status")[0];
       statusNode.textContent = statusText;
 
-      messageNode.clipboardText = [request.method, request.url, statusText]
+      messageNode.clipboardText = [methodText, request.url, statusText]
                                   .join(" ");
 
       if (hasResponseStart && response.status >= MIN_HTTP_ERROR_CODE &&
