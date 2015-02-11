@@ -1367,6 +1367,128 @@ IonBuilder::inlineStringObject(CallInfo &callInfo)
 }
 
 IonBuilder::InliningStatus
+IonBuilder::inlineConstantStringSplit(CallInfo &callInfo)
+{
+    if (!callInfo.thisArg()->isConstant())
+        return InliningStatus_NotInlined;
+
+    if (!callInfo.getArg(0)->isConstant())
+        return InliningStatus_NotInlined;
+
+    const js::Value *argval = callInfo.getArg(0)->toConstant()->vp();
+    if (!argval->isString())
+        return InliningStatus_NotInlined;
+
+    const js::Value *strval = callInfo.thisArg()->toConstant()->vp();
+    if (!strval->isString())
+        return InliningStatus_NotInlined;
+
+    MOZ_ASSERT(callInfo.getArg(0)->type() == MIRType_String);
+    MOZ_ASSERT(callInfo.thisArg()->type() == MIRType_String);
+
+    // Check if exist a template object in stub.
+    JSString *stringThis = nullptr;
+    JSString *stringArg = nullptr;
+    NativeObject *templateObject = nullptr;
+    if (!inspector->isOptimizableCallStringSplit(pc, &stringThis, &stringArg, &templateObject))
+        return InliningStatus_NotInlined;
+
+    MOZ_ASSERT(stringThis);
+    MOZ_ASSERT(stringArg);
+    MOZ_ASSERT(templateObject);
+    MOZ_ASSERT(templateObject->is<ArrayObject>());
+
+    if (strval->toString() != stringThis)
+        return InliningStatus_NotInlined;
+
+    if (argval->toString() != stringArg)
+        return InliningStatus_NotInlined;
+
+    // Check if |templateObject| is valid.
+    TypeSet::ObjectKey *retType = TypeSet::ObjectKey::get(templateObject);
+    if (retType->unknownProperties())
+        return InliningStatus_NotInlined;
+
+    HeapTypeSetKey key = retType->property(JSID_VOID);
+    if (!key.maybeTypes())
+        return InliningStatus_NotInlined;
+
+    if (!key.maybeTypes()->hasType(TypeSet::StringType()))
+        return InliningStatus_NotInlined;
+
+    uint32_t initLength = templateObject->as<ArrayObject>().length();
+    if (templateObject->getDenseInitializedLength() != initLength)
+        return InliningStatus_NotInlined;
+
+    Vector<MConstant *, 0, SystemAllocPolicy> arrayValues;
+    for (uint32_t i = 0; i < initLength; i++) {
+        MConstant *value = MConstant::New(alloc(), templateObject->getDenseElement(i), constraints());
+        if (!TypeSetIncludes(key.maybeTypes(), value->type(), value->resultTypeSet()))
+            return InliningStatus_NotInlined;
+
+        if (!arrayValues.append(value))
+            return InliningStatus_Error;
+    }
+    callInfo.setImplicitlyUsedUnchecked();
+
+    TemporaryTypeSet::DoubleConversion conversion =
+            getInlineReturnTypeSet()->convertDoubleElements(constraints());
+    if (conversion == TemporaryTypeSet::AlwaysConvertToDoubles)
+        return InliningStatus_NotInlined;
+
+    MConstant *templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
+    current->add(templateConst);
+
+    MNewArray *ins = MNewArray::New(alloc(), constraints(), initLength, templateConst,
+                                    templateObject->group()->initialHeap(constraints()),
+                                    NewArray_FullyAllocating);
+
+    current->add(ins);
+    current->push(ins);
+
+    if (!initLength) {
+        if (!resumeAfter(ins))
+            return InliningStatus_Error;
+        return InliningStatus_Inlined;
+    }
+
+    // Get the elements vector.
+    MElements *elements = MElements::New(alloc(), ins);
+    current->add(elements);
+
+    // Store all values, no need to initialize the length after each as
+    // jsop_initelem_array is doing because we do not expect to bailout
+    // because the memory is supposed to be allocated by now.
+    MConstant *id = nullptr;
+    for (uint32_t i = 0; i < initLength; i++) {
+       id = MConstant::New(alloc(), Int32Value(i));
+       current->add(id);
+
+       MConstant *value = arrayValues[i];
+       current->add(value);
+
+       MStoreElement *store = MStoreElement::New(alloc(), elements, id, value,
+                                                 /* needsHoleCheck = */ false);
+       current->add(store);
+
+       // There is normally no need for a post barrier on these writes
+       // because the new array will be in the nursery. However, this
+       // assumption is volated if we specifically requested pre-tenuring.
+       if (ins->initialHeap() == gc::TenuredHeap)
+           current->add(MPostWriteBarrier::New(alloc(), ins, value));
+    }
+
+    // Update the length.
+    MSetInitializedLength *length = MSetInitializedLength::New(alloc(), elements, id);
+    current->add(length);
+
+    if (!resumeAfter(length))
+        return InliningStatus_Error;
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
 IonBuilder::inlineStringSplit(CallInfo &callInfo)
 {
     if (callInfo.argc() != 1 || callInfo.constructing()) {
@@ -1378,6 +1500,10 @@ IonBuilder::inlineStringSplit(CallInfo &callInfo)
         return InliningStatus_NotInlined;
     if (callInfo.getArg(0)->type() != MIRType_String)
         return InliningStatus_NotInlined;
+
+    IonBuilder::InliningStatus resultConstStringSplit = inlineConstantStringSplit(callInfo);
+    if (resultConstStringSplit != InliningStatus_NotInlined)
+        return resultConstStringSplit;
 
     JSObject *templateObject = inspector->getTemplateObjectForNative(pc, js::str_split);
     if (!templateObject)

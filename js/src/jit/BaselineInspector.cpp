@@ -476,11 +476,32 @@ BaselineInspector::getTemplateObjectForNative(jsbytecode *pc, Native native)
     for (ICStub *stub = entry.firstStub(); stub; stub = stub->next()) {
         if (stub->isCall_Native() && stub->toCall_Native()->callee()->native() == native)
             return stub->toCall_Native()->templateObject();
-        if (stub->isCall_StringSplit() && native == js::str_split)
-            return stub->toCall_StringSplit()->templateObject();
     }
 
     return nullptr;
+}
+
+bool
+BaselineInspector::isOptimizableCallStringSplit(jsbytecode *pc, JSString **stringOut, JSString **stringArg,
+                                                NativeObject **objOut)
+{
+    if (!hasBaselineScript())
+        return false;
+
+    const ICEntry &entry = icEntryFromPC(pc);
+
+    // If StringSplit stub is attached, must have only one stub attached.
+    if (entry.fallbackStub()->numOptimizedStubs() != 1)
+        return false;
+
+    ICStub *stub = entry.firstStub();
+    if (stub->kind() != ICStub::Call_StringSplit)
+        return false;
+
+    *stringOut = stub->toCall_StringSplit()->expectedThis();
+    *stringArg = stub->toCall_StringSplit()->expectedArg();
+    *objOut = stub->toCall_StringSplit()->templateObject();
+    return true;
 }
 
 JSObject *
