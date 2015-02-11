@@ -14,7 +14,7 @@ interface nsISlowScriptDebugCallback : nsISupports
 };
 
 [scriptable, function, uuid(b1c6ecd0-8fa4-11e4-b4a9-0800200c9a66)]
-interface nsISlowScriptDebugerStartupCallback : nsISupports
+interface nsISlowScriptDebuggerStartupCallback : nsISupports
 {
   void finishDebuggerStartup();
 };
@@ -23,7 +23,7 @@ interface nsISlowScriptDebugerStartupCallback : nsISupports
 interface nsISlowScriptDebugRemoteCallback : nsISupports
 {
   void handleSlowScriptDebug(in nsIDOMEventTarget aBrowser,
-      	                     in nsISlowScriptDebugerStartupCallback aCallback);
+                             in nsISlowScriptDebuggerStartupCallback aCallback);
 };
 
 [scriptable, uuid(f75d4164-3aa7-4395-ba44-a5f95b2e8427)]
