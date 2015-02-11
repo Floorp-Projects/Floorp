@@ -527,6 +527,7 @@ struct JSCompartment
         DeprecatedExpressionClosure = 3,    // Added in JS 1.8
         DeprecatedLetBlock = 4,             // Added in JS 1.7
         DeprecatedLetExpression = 5,        // Added in JS 1.7
+        DeprecatedNoSuchMethod = 6,         // JS 1.7+
         DeprecatedLanguageExtensionCount
     };
 
