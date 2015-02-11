@@ -64,6 +64,12 @@ ProxyAccessible::Name(nsString& aName) const
 }
 
 void
+ProxyAccessible::Value(nsString& aValue) const
+{
+  unused << mDoc->SendValue(mID, &aValue);
+}
+
+void
 ProxyAccessible::Description(nsString& aDesc) const
 {
   unused << mDoc->SendDescription(mID, &aDesc);
