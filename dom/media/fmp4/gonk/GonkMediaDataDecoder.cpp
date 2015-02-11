@@ -63,7 +63,9 @@ GonkDecoderManager::Input(mp4_demuxer::MP4Sample* aSample)
     mp4_demuxer::MP4Sample* tmp;
     if (aSample) {
       tmp = aSample;
-      PerformFormatSpecificProcess(aSample);
+      if (!PerformFormatSpecificProcess(aSample)) {
+        return NS_ERROR_FAILURE;
+      }
     } else {
       tmp = sample;
     }

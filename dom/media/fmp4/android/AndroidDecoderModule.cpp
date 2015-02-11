@@ -66,7 +66,10 @@ public:
   }
 
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE {
-    mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample);
+    if (!mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     return MediaCodecDataDecoder::Input(aSample);
   }
 

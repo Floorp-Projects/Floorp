@@ -108,7 +108,7 @@ GonkAudioDecoderManager::SendSampleToOMX(mp4_demuxer::MP4Sample* aSample)
                          0);
 }
 
-void
+bool
 GonkAudioDecoderManager::PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample)
 {
   if (aSample && mUseAdts) {
@@ -120,8 +120,11 @@ GonkAudioDecoderManager::PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aS
                                                aSample);
     if (!rv) {
       GADM_LOG("Failed to apply ADTS header");
+      return false;
     }
   }
+
+  return true;
 }
 
 nsresult
