@@ -33,7 +33,7 @@ public:
                           nsRefPtr<MediaData>& aOutput) MOZ_OVERRIDE;
 
 protected:
-  virtual void PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
+  virtual bool PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
 
   virtual status_t SendSampleToOMX(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
 
