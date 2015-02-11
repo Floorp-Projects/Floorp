@@ -240,8 +240,9 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
     mLastEndTimestamp.emplace(end);
   }
 
-  if (gotMedia && start > 0 &&
-      (start < FUZZ_TIMESTAMP_OFFSET || start < mAdjustedTimestamp)) {
+  if (gotMedia && start != mAdjustedTimestamp &&
+      ((start < 0 && -start < FUZZ_TIMESTAMP_OFFSET && start < mAdjustedTimestamp) ||
+       (start > 0 && (start < FUZZ_TIMESTAMP_OFFSET || start < mAdjustedTimestamp)))) {
     AdjustDecodersTimestampOffset(mAdjustedTimestamp - start);
     mAdjustedTimestamp = start;
   }
