@@ -622,6 +622,9 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
             // This was the last delimiter so we can stop processing
             rv = SendData(cursor, LengthToToken(cursor, token));
             if (NS_FAILED(rv)) return rv;
+            if (mPartChannel) {
+                mPartChannel->SetIsLastPart();
+            }
             return SendStop(NS_OK);
         }
 
