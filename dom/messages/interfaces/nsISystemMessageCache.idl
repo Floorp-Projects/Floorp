@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(e888447c-6d4d-4045-92bd-1a5985404375)]
+interface nsISystemMessageCache : nsISupports
+{
+  boolean hasPendingMessage(in DOMString type,
+                            in DOMString pageURL,
+                            in DOMString manifestURL);
+};

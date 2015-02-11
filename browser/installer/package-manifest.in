@@ -579,6 +579,7 @@
 @RESPATH@/components/TCPSocket.manifest
 
 #ifdef MOZ_ACTIVITIES
+@RESPATH@/components/SystemMessageCache.js
 @RESPATH@/components/SystemMessageInternal.js
 @RESPATH@/components/SystemMessageManager.js
 @RESPATH@/components/SystemMessageManager.manifest

@@ -132,10 +132,27 @@ public:
   void KeyPressedNotification() MOZ_OVERRIDE;
 
 private:
+  class AtResponseResultHandler;
   class GetVolumeTask;
+  class CindResponseResultHandler;
+  class ClccResponseResultHandler;
+  class CleanupResultHandler;
+  class CleanupInitResultHandler;
   class CloseScoTask;
   class CloseScoRunnable;
+  class ConnectAudioResultHandler;
+  class ConnectResultHandler;
+  class CopsResponseResultHandler;
+  class DeinitResultHandlerRunnable;
+  class DeviceStatusNotificationResultHandler;
+  class DisconnectAudioResultHandler;
+  class DisconnectResultHandler;
+  class FormattedAtResponseResultHandler;
+  class InitResultHandlerRunnable;
+  class OnErrorProfileResultHandlerRunnable;
+  class PhoneStateChangeResultHandler;
   class RespondToBLDNTask;
+  class VolumeControlResultHandler;
 
   friend class BluetoothHfpManagerObserver;
   friend class GetVolumeTask;

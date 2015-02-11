@@ -355,7 +355,7 @@ loop.shared.views = (function(_, l10n) {
       /* jshint ignore:start */
       return (
         <div className="video-layout-wrapper">
-          <div className="conversation">
+          <div className="conversation in-call">
             <div className="media nested">
               <div className="video_wrapper remote_wrapper">
                 <div className="video_inner remote remote-stream"></div>

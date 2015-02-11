@@ -193,10 +193,16 @@ SystemMessageManager.prototype = {
       return false;
     }
 
-    return cpmm.sendSyncMessage("SystemMessageManager:HasPendingMessages",
-                                { type: aType,
-                                  pageURL: this._pageURL,
-                                  manifestURL: this._manifestURL })[0];
+
+    /*
+     * NB: If the system message is fired after we received the cache
+     *     and before we registered the pageURL we will get false
+     *     negative however this is unlikely and will do no harm.
+     */
+    let cache = Cc["@mozilla.org/system-message-cache;1"]
+                  .getService(Ci.nsISystemMessageCache);
+
+    return cache.hasPendingMessage(aType, this._pageURL, this._manifestURL);
   },
 
   mozIsHandlingMessage: function() {
