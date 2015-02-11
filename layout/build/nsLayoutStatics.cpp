@@ -301,6 +301,8 @@ nsLayoutStatics::Initialize()
 
   IMEStateManager::Init();
 
+  ServiceWorkerRegistrar::Initialize();
+
 #ifdef MOZ_B2G
   RequestSyncWifiService::Init();
 #endif

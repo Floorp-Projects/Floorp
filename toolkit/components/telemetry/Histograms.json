@@ -7039,6 +7039,13 @@
     "n_values": 3,
     "description": "Doorhanger shown = 0, Disable = 1, Enable = 2"
   },
+  "SERVICE_WORKER_REGISTRATION_LOADING": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 20,
+    "description": "Tracking how ServiceWorkerRegistrar loads data before the first content is shown"
+  },
   "LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS": {
     "expires_in_version": "never",
     "kind": "boolean",
