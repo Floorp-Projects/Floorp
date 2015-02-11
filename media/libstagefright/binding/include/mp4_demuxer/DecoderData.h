@@ -175,7 +175,7 @@ public:
   nsRefPtr<ByteBuffer> extra_data;
 
   bool Prepend(const uint8_t* aData, size_t aSize);
-  void Replace(const uint8_t* aData, size_t aSize);
+  bool Replace(const uint8_t* aData, size_t aSize);
 
   nsAutoArrayPtr<uint8_t> extra_buffer;
 private:
