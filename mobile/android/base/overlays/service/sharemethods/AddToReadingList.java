@@ -34,7 +34,7 @@ public class AddToReadingList extends ShareMethod {
         values.put(Bookmarks.TITLE, shareData.title);
         values.put(Bookmarks.URL, shareData.url);
 
-        browserDB.addReadingListItem(resolver, values);
+        browserDB.getReadingListAccessor().addReadingListItem(resolver, values);
 
         return Result.SUCCESS;
     }
