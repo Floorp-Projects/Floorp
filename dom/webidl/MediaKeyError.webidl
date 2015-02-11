@@ -13,7 +13,7 @@
 // According to the spec, "The future of error events and MediaKeyError
 // is uncertain."
 // https://www.w3.org/Bugs/Public/show_bug.cgi?id=21798
-[Pref="media.eme.enabled"]
+[Pref="media.eme.apiVisible"]
 interface MediaKeyError : Event {
   readonly attribute unsigned long systemCode;
 };
