@@ -2,7 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_test import MarionetteTestCase, skip_if_b2g
+from marionette_test import (MarionetteTestCase,
+                             skip_if_b2g,
+                             skip_if_e10s)
 from keys import Keys
 from marionette import Actions
 
@@ -68,6 +70,7 @@ class TestKeyActions(MarionetteTestCase):
         self.assertEqual(self.key_reporter_value, "")
 
     @skip_if_b2g
+    @skip_if_e10s
     def test_open_in_new_window_shortcut(self):
         el = self.marionette.find_element('id', 'updatediv')
         start_win = self.marionette.current_chrome_window_handle
