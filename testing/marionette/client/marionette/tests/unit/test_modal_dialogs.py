@@ -36,80 +36,95 @@ class TestTabModals(MarionetteTestCase):
     def test_alert_accept(self):
         self.marionette.find_element('id', 'modal-alert').click()
         self.wait_for_alert()
-        Alert(self.marionette).accept()
+        alert = self.marionette.switch_to_alert()
+        alert.accept()
 
     def test_alert_dismiss(self):
         self.marionette.find_element('id', 'modal-alert').click()
         self.wait_for_alert()
-        Alert(self.marionette).dismiss()
+        alert = self.marionette.switch_to_alert()
+        alert.dismiss()
 
     def test_confirm_accept(self):
         self.marionette.find_element('id', 'modal-confirm').click()
         self.wait_for_alert()
-        Alert(self.marionette).accept()
+        alert = self.marionette.switch_to_alert()
+        alert.accept()
         self.wait_for_condition(lambda mn: mn.find_element('id', 'confirm-result').text == 'true')
 
     def test_confirm_dismiss(self):
         self.marionette.find_element('id', 'modal-confirm').click()
         self.wait_for_alert()
-        Alert(self.marionette).dismiss()
+        alert = self.marionette.switch_to_alert()
+        alert.dismiss()
         self.wait_for_condition(lambda mn: mn.find_element('id', 'confirm-result').text == 'false')
 
     def test_prompt_accept(self):
         self.marionette.find_element('id', 'modal-prompt').click()
         self.wait_for_alert()
-        Alert(self.marionette).accept()
+        alert = self.marionette.switch_to_alert()
+        alert.accept()
         self.wait_for_condition(lambda mn: mn.find_element('id', 'prompt-result').text == '')
 
     def test_prompt_dismiss(self):
         self.marionette.find_element('id', 'modal-prompt').click()
         self.wait_for_alert()
-        Alert(self.marionette).dismiss()
+        alert = self.marionette.switch_to_alert()
+        alert.dismiss()
         self.wait_for_condition(lambda mn: mn.find_element('id', 'prompt-result').text == 'null')
 
     def test_alert_text(self):
         with self.assertRaises(NoAlertPresentException):
-            Alert(self.marionette).text
+            alert = self.marionette.switch_to_alert()
+            alert.text
         self.marionette.find_element('id', 'modal-alert').click()
         self.wait_for_alert()
-        self.assertEqual(Alert(self.marionette).text, 'Marionette alert')
-        Alert(self.marionette).accept()
+        alert = self.marionette.switch_to_alert()
+        self.assertEqual(alert.text, 'Marionette alert')
+        alert.accept()
 
     def test_prompt_text(self):
         with self.assertRaises(NoAlertPresentException):
-            Alert(self.marionette).text
+            alert = self.marionette.switch_to_alert()
+            alert.text
         self.marionette.find_element('id', 'modal-prompt').click()
         self.wait_for_alert()
-        self.assertEqual(Alert(self.marionette).text, 'Marionette prompt')
-        Alert(self.marionette).accept()
+        alert = self.marionette.switch_to_alert()
+        self.assertEqual(alert.text, 'Marionette prompt')
+        alert.accept()
 
     def test_confirm_text(self):
         with self.assertRaises(NoAlertPresentException):
-            Alert(self.marionette).text
+            alert = self.marionette.switch_to_alert()
+            alert.text
         self.marionette.find_element('id', 'modal-confirm').click()
         self.wait_for_alert()
-        self.assertEqual(Alert(self.marionette).text, 'Marionette confirm')
-        Alert(self.marionette).accept()
+        alert = self.marionette.switch_to_alert()
+        self.assertEqual(alert.text, 'Marionette confirm')
+        alert.accept()
 
     def test_set_text_throws(self):
         self.assertRaises(NoAlertPresentException, Alert(self.marionette).send_keys, "Foo")
         self.marionette.find_element('id', 'modal-alert').click()
         self.wait_for_alert()
-        self.assertRaises(ElementNotVisibleException, Alert(self.marionette).send_keys, "Foo")
-        Alert(self.marionette).accept()
+        alert = self.marionette.switch_to_alert()
+        self.assertRaises(ElementNotVisibleException, alert.send_keys, "Foo")
+        alert.accept()
 
     def test_set_text_accept(self):
         self.marionette.find_element('id', 'modal-prompt').click()
         self.wait_for_alert()
-        Alert(self.marionette).send_keys("Some text!");
-        Alert(self.marionette).accept()
+        alert = self.marionette.switch_to_alert()
+        alert.send_keys("Some text!");
+        alert.accept()
         self.wait_for_condition(lambda mn: mn.find_element('id', 'prompt-result').text == 'Some text!')
 
     def test_set_text_dismiss(self):
         self.marionette.find_element('id', 'modal-prompt').click()
         self.wait_for_alert()
-        Alert(self.marionette).send_keys("Some text!");
-        Alert(self.marionette).dismiss()
+        alert = self.marionette.switch_to_alert()
+        alert.send_keys("Some text!");
+        alert.dismiss()
         self.wait_for_condition(lambda mn: mn.find_element('id', 'prompt-result').text == 'null')
 
     def test_onbeforeunload_dismiss(self):
@@ -121,9 +136,9 @@ class TestTabModals(MarionetteTestCase):
             """))
         self.marionette.navigate("about:blank")
         self.wait_for_alert()
-        alert_text = Alert(self.marionette).text
-        self.assertTrue(alert_text.startswith("This page is asking you to confirm"))
-        Alert(self.marionette).dismiss()
+        alert = self.marionette.switch_to_alert()
+        self.assertTrue(alert.text.startswith("This page is asking you to confirm"))
+        alert.dismiss()
         self.assertTrue(self.marionette.get_url().startswith(start_url))
 
     def test_onbeforeunload_accept(self):
@@ -134,9 +149,9 @@ class TestTabModals(MarionetteTestCase):
             """))
         self.marionette.navigate("about:blank")
         self.wait_for_alert()
-        alert_text = Alert(self.marionette).text
-        self.assertTrue(alert_text.startswith("This page is asking you to confirm"))
-        Alert(self.marionette).accept()
+        alert = self.marionette.switch_to_alert()
+        self.assertTrue(alert.text.startswith("This page is asking you to confirm"))
+        alert.accept()
         self.assertEqual(self.marionette.get_url(), "about:blank")
 
     @skip_if_e10s
@@ -156,7 +171,8 @@ class TestTabModals(MarionetteTestCase):
         text = self.marionette.find_element('id', 'click-result').text
         self.assertEqual(text, '')
 
-        Alert(self.marionette).accept()
+        alert = self.marionette.switch_to_alert()
+        alert.accept()
 
         Wait(self.marionette).until(lambda _: not self.alert_present())
 
