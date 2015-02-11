@@ -403,8 +403,8 @@ pref("browser.search.context.loadInBackground", false);
 
 pref("browser.search.showOneOffButtons", true);
 
-// How many times to show the new search highlight
-pref("browser.search.highlightCount", 5);
+// Never show the new search highlight on Firefox 37.
+pref("browser.search.highlightCount", 0);
 
 pref("browser.sessionhistory.max_entries", 50);
 
