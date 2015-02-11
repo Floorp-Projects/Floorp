@@ -325,8 +325,8 @@ div:-moz-native-anonymous.moz-selectioncaret-left,
 div:-moz-native-anonymous.moz-selectioncaret-right,
 div:-moz-native-anonymous.moz-selectioncaret-left > div,
 div:-moz-native-anonymous.moz-selectioncaret-right > div {
-  width: 29px;
-  height: 31px;
+  width: 44px;
+  height: 47px;
   background-position: center center;
   background-size: 100% 100%;
   z-index: 2147483647;
@@ -341,17 +341,17 @@ div:-moz-native-anonymous.moz-selectioncaret-right > div {
 div:-moz-native-anonymous.moz-touchcaret,
 div:-moz-native-anonymous.moz-selectioncaret-left,
 div:-moz-native-anonymous.moz-selectioncaret-right {
-  margin-left: -15px;
+  margin-left: -23px;
 }
 
 div:-moz-native-anonymous.moz-selectioncaret-left.tilt > div {
   background-image: url("resource://gre/res/text_caret_tilt_left.png");
-  margin-left: -14px;
+  margin-left: -17px;
 }
 
 div:-moz-native-anonymous.moz-selectioncaret-right.tilt > div {
   background-image: url("resource://gre/res/text_caret_tilt_right.png");
-  margin-left: 14px;
+  margin-left: 18px;
 }
 
 @media (min-resolution: 1.5dppx) {
