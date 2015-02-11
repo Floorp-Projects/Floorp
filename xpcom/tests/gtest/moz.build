@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     'Helpers.cpp',
+    'TestCloneInputStream.cpp',
     'TestCRT.cpp',
     'TestEncoding.cpp',
     'TestExpirationTracker.cpp',
