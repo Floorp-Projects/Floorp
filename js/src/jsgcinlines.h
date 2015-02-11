@@ -437,7 +437,7 @@ CheckAllocatorState(ExclusiveContext *cx, AllocKind kind)
 
     // For testing out of memory conditions
     if (!PossiblyFail()) {
-        js_ReportOutOfMemory(cx->asJSContext());
+        js_ReportOutOfMemory(ncx);
         return false;
     }
 
@@ -446,11 +446,21 @@ CheckAllocatorState(ExclusiveContext *cx, AllocKind kind)
         if (rt->gc.needZealousGC())
             rt->gc.runDebugGC();
 #endif
-
         if (rt->hasPendingInterrupt()) {
             // Invoking the interrupt callback can fail and we can't usefully
             // handle that here. Just check in case we need to collect instead.
-            rt->gc.gcIfRequested();
+            rt->gc.gcIfRequested(ncx);
+        }
+
+        // If we have grown past our GC heap threshold while in the middle of
+        // an incremental GC, we're growing faster than we're GCing, so stop
+        // the world and do a full, non-incremental GC right now, if possible.
+        if (rt->gc.isIncrementalGCInProgress() &&
+            ncx->zone()->usage.gcBytes() > ncx->zone()->threshold.gcTriggerBytes())
+        {
+            PrepareZoneForGC(ncx->zone());
+            AutoKeepAtoms keepAtoms(cx->perThreadData);
+            rt->gc.gc(GC_NORMAL, JS::gcreason::INCREMENTAL_TOO_SLOW);
         }
     }
 

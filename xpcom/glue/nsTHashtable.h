@@ -149,21 +149,19 @@ public:
    */
   EntryType* PutEntry(KeyType aKey)
   {
-    NS_ASSERTION(mTable.IsInitialized(),
-                 "nsTHashtable was not initialized properly.");
-
-    return static_cast<EntryType*>  // infallible add
-      (PL_DHashTableAdd(&mTable, EntryType::KeyToPointer(aKey)));
+    EntryType* e = PutEntry(aKey, mozilla::fallible);
+    if (!e) {
+      NS_ABORT_OOM(mTable.EntrySize() * mTable.EntryCount());
+    }
+    return e;
   }
 
-  EntryType* PutEntry(KeyType aKey, const fallible_t&) NS_WARN_UNUSED_RESULT
-  {
+  EntryType* PutEntry(KeyType aKey, const fallible_t&) NS_WARN_UNUSED_RESULT {
     NS_ASSERTION(mTable.IsInitialized(),
                  "nsTHashtable was not initialized properly.");
 
-    return static_cast<EntryType*>
-      (PL_DHashTableAdd(&mTable, EntryType::KeyToPointer(aKey),
-                        mozilla::fallible));
+    return static_cast<EntryType*>(PL_DHashTableAdd(
+      &mTable, EntryType::KeyToPointer(aKey)));
   }
 
   /**

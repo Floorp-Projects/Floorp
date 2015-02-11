@@ -99,18 +99,8 @@ class HTMLElement(object):
         '''
         Sends the string via synthesized keypresses to the element.
         '''
-        typing = []
-        for val in string:
-            if isinstance(val, Keys):
-                typing.append(val)
-            elif isinstance(val, int):
-                val = str(val)
-                for i in range(len(val)):
-                    typing.append(val[i])
-            else:
-                for i in range(len(val)):
-                    typing.append(val[i])
-        return self.marionette._send_message('sendKeysToElement', 'ok', id=self.id, value=typing)
+        keys = Marionette.convert_keys(*string)
+        return self.marionette._send_message('sendKeysToElement', 'ok', id=self.id, value=keys)
 
     def clear(self):
         '''
@@ -403,6 +393,25 @@ class Actions(object):
         self.action_chain.append(['release'])
         return self
 
+    def key_down(self, key_code):
+        """
+        Perform a "keyDown" action for the given key code. Modifier keys are
+        respected by the server for the course of an action chain.
+
+        :param key_code: The key to press as a result of this action.
+        """
+        self.action_chain.append(['keyDown', key_code])
+        return self
+
+    def key_up(self, key_code):
+        """
+        Perform a "keyUp" action for the given key code. Modifier keys are
+        respected by the server for the course of an action chain.
+        :param key_up: The key to release as a result of this action.
+        """
+        self.action_chain.append(['keyUp', key_code])
+        return self
+
     def perform(self):
         '''
         Sends the action chain built so far to the server side for execution and clears the current chain of actions.
@@ -453,6 +462,42 @@ class MultiActions(object):
         Perform all the actions added to this object.
         '''
         return self.marionette._send_message('multiAction', 'ok', value=self.multi_actions, max_length=self.max_length)
+
+class Alert(object):
+    '''
+    A class for interacting with alerts.
+
+    ::
+
+      Alert(marionette).accept()
+      Alert(merionette).dismiss()
+    '''
+
+    def __init__(self, marionette):
+        self.marionette = marionette
+
+    def accept(self):
+        """Accept a currently displayed modal dialog.
+        """
+        self.marionette._send_message('acceptDialog', 'ok')
+
+    def dismiss(self):
+        """Dismiss a currently displayed modal dialog.
+        """
+        self.marionette._send_message('dismissDialog', 'ok')
+
+    @property
+    def text(self):
+        """Return the currently displayed text in a tab modal.
+        """
+        return self.marionette._send_message('getTextFromDialog', 'value')
+
+    def send_keys(self, *string):
+        """Send keys to the currently displayed text input area in an open
+        tab modal dialog.
+        """
+        keys = Marionette.convert_keys(*string)
+        self.marionette._send_message('sendKeysToDialog', 'ok', value=keys)
 
 
 class Marionette(object):
@@ -744,6 +789,21 @@ class Marionette(object):
                 (name, returncode))
         return crashed
 
+    @staticmethod
+    def convert_keys(*string):
+        typing = []
+        for val in string:
+            if isinstance(val, Keys):
+                typing.append(val)
+            elif isinstance(val, int):
+                val = str(val)
+                for i in range(len(val)):
+                    typing.append(val[i])
+            else:
+                for i in range(len(val)):
+                    typing.append(val[i])
+        return typing
+
     def enforce_gecko_prefs(self, prefs):
         """
         Checks if the running instance has the given prefs. If not, it will kill the
@@ -980,7 +1040,6 @@ class Marionette(object):
         '''
         response = self._send_message('getPageSource', 'value')
         return response
-
     def close(self):
         """Close the current window, ending the session if it's the last
         window currently open.
@@ -1039,6 +1098,18 @@ class Marionette(object):
             yield
         finally:
             self.set_context(scope)
+
+    def switch_to_alert(self):
+        '''
+        Returns an Alert object for interacting with a currently displayed alert.
+
+        ::
+
+            alert = self.marionette.switch_to_alert()
+            text = alert.text
+            alert.accept()
+        '''
+        return Alert(self)
 
     def switch_to_window(self, window_id):
         '''

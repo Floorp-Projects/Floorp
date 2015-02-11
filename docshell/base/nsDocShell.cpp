@@ -13754,19 +13754,6 @@ nsDocShell::GetOpener()
   return opener;
 }
 
-void
-nsDocShell::SetOpenedRemote(nsITabParent* aOpenedRemote)
-{
-  mOpenedRemote = do_GetWeakReference(aOpenedRemote);
-}
-
-nsITabParent*
-nsDocShell::GetOpenedRemote()
-{
-  nsCOMPtr<nsITabParent> openedRemote(do_QueryReferent(mOpenedRemote));
-  return openedRemote;
-}
-
 URLSearchParams*
 nsDocShell::GetURLSearchParams()
 {

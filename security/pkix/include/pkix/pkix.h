@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__pkix_h
-#define mozilla_pkix__pkix_h
+#ifndef mozilla_pkix_pkix_h
+#define mozilla_pkix_pkix_h
 
 #include "pkixtypes.h"
 
@@ -149,4 +149,4 @@ Result VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
 
 } } // namespace mozilla::pkix
 
-#endif // mozilla_pkix__pkix_h
+#endif // mozilla_pkix_pkix_h

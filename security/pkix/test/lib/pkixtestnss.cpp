@@ -115,7 +115,8 @@ public:
     }
 
     SECItem signatureItem;
-    if (SEC_SignData(&signatureItem, tbs.data(), tbs.length(),
+    if (SEC_SignData(&signatureItem, tbs.data(),
+                     static_cast<int>(tbs.length()),
                      privateKey.get(), signatureAlgorithmOidTag)
           != SECSuccess) {
       return MapPRErrorCodeToResult(PR_GetError());
@@ -384,26 +385,31 @@ SHA1(const ByteString& toHash)
 }
 
 Result
-TestCheckPublicKey(Input subjectPublicKeyInfo)
+TestVerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                            Input subjectPublicKeyInfo)
 {
   InitNSSIfNeeded();
-  return CheckPublicKeyNSS(subjectPublicKeyInfo, MINIMUM_TEST_KEY_BITS);
+  return VerifyECDSASignedDigestNSS(signedDigest, subjectPublicKeyInfo,
+                                    nullptr);
 }
 
 Result
-TestVerifySignedData(const SignedDataWithSignature& signedData,
-                     Input subjectPublicKeyInfo)
+TestVerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                               Input subjectPublicKeyInfo)
 {
   InitNSSIfNeeded();
-  return VerifySignedDataNSS(signedData, subjectPublicKeyInfo,
-                             MINIMUM_TEST_KEY_BITS, nullptr);
+  return VerifyRSAPKCS1SignedDigestNSS(signedDigest, subjectPublicKeyInfo,
+                                       nullptr);
 }
 
 Result
-TestDigestBuf(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
+TestDigestBuf(Input item,
+              DigestAlgorithm digestAlg,
+              /*out*/ uint8_t* digestBuf,
+              size_t digestBufLen)
 {
   InitNSSIfNeeded();
-  return DigestBufNSS(item, digestBuf, digestBufLen);
+  return DigestBufNSS(item, digestAlg, digestBuf, digestBufLen);
 }
 
 } } } // namespace mozilla::pkix::test
