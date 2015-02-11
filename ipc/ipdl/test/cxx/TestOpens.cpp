@@ -18,7 +18,6 @@ struct RunnableMethodTraits<mozilla::_ipdltest2::TestOpensOpenedChild>
     static void ReleaseCallee(mozilla::_ipdltest2::TestOpensOpenedChild* obj) { }
 };
 
-using namespace base;
 using namespace mozilla::ipc;
 
 namespace mozilla {
