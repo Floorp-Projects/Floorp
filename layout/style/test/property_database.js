@@ -2485,6 +2485,12 @@ var gCSSProperties = {
                      "font-size-adjust", "font-feature-settings", "font-language-override",
                      "font-kerning", "font-synthesis", "font-variant-alternates", "font-variant-caps", "font-variant-east-asian",
                      "font-variant-ligatures", "font-variant-numeric", "font-variant-position" ],
+    /*
+     * Vertical vs horizontal writing-mode can affect the line-height component
+     * of the 'font' shorthand because font metrics may not be symmetrical,
+     * so we require writing-mode:initial to ensure consistency.
+     */
+    prerequisites: { "writing-mode": "initial" },
     initial_values: [ (gInitialFontFamilyIsSansSerif ? "medium sans-serif" : "medium serif") ],
     other_values: [ "large serif", "9px fantasy", "bold italic small-caps 24px/1.4 Times New Roman, serif", "small inherit roman", "small roman inherit",
       // system fonts
@@ -2747,8 +2753,11 @@ var gCSSProperties = {
      * value is.  And they even require consistent font metrics for
      * computation of 'normal'.   -moz-block-height requires height
      * on a block.
+     * Vertical vs horizontal writing-mode can affect line-height
+     * because font metrics may not be symmetrical, so we require
+     * writing-mode:initial to ensure consistency.
      */
-    prerequisites: { "font-size": "19px", "font-size-adjust": "none", "font-family": "serif", "font-weight": "normal", "font-style": "normal", "height": "18px", "display": "block"},
+    prerequisites: { "font-size": "19px", "font-size-adjust": "none", "font-family": "serif", "font-weight": "normal", "font-style": "normal", "height": "18px", "display": "block", "writing-mode": "initial"},
     initial_values: [ "normal" ],
     other_values: [ "1.0", "1", "1em", "47px", "-moz-block-height" ],
     invalid_values: []
