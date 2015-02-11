@@ -74,10 +74,12 @@
 namespace mozilla {
 namespace layers {
 
-using namespace base;
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
 using namespace std;
+
+using base::ProcessHandle;
+using base::Thread;
 
 CompositorParent::LayerTreeState::LayerTreeState()
   : mParent(nullptr)
