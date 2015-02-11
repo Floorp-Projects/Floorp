@@ -9,7 +9,7 @@
 let { AbstractTreeItem } = Cu.import("resource:///modules/devtools/AbstractTreeItem.jsm", {});
 let { Heritage } = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
 
-let test = Task.async(function*() {
+function spawnTest () {
   let container = document.createElement("vbox");
   gBrowser.selectedBrowser.parentNode.appendChild(container);
 
@@ -146,7 +146,7 @@ let test = Task.async(function*() {
 
   container.remove();
   finish();
-});
+}
 
 function MyCustomTreeItem(dataSrc, properties) {
   AbstractTreeItem.call(this, properties);

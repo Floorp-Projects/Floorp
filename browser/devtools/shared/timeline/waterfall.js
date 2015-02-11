@@ -11,7 +11,7 @@
 const {Ci, Cu} = require("chrome");
 
 loader.lazyRequireGetter(this, "L10N",
-  "devtools/timeline/global", true);
+  "devtools/shared/timeline/global", true);
 
 loader.lazyImporter(this, "setNamedTimeout",
   "resource:///modules/devtools/ViewHelpers.jsm");

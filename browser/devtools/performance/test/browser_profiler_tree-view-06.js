@@ -3,35 +3,34 @@
 
 /**
  * Tests if the profiler's tree view implementation works properly and
- * has the correct 'root', 'parent', 'level' etc. accessors on child nodes.
+ * correctly emits events when certain DOM nodes are clicked.
  */
 
-function test() {
-  let { ThreadNode } = devtools.require("devtools/profiler/tree-model");
-  let { CallView } = devtools.require("devtools/profiler/tree-view");
+function spawnTest () {
+  let { ThreadNode } = devtools.require("devtools/shared/profiler/tree-model");
+  let { CallView } = devtools.require("devtools/shared/profiler/tree-view");
 
   let threadNode = new ThreadNode(gSamples);
   let treeRoot = new CallView({ frame: threadNode });
 
   let container = document.createElement("vbox");
-  container.id = "call-tree-container";
   treeRoot.attachTo(container);
 
   let A = treeRoot.getChild();
   let B = A.getChild();
   let D = B.getChild();
 
-  is(D.root, treeRoot,
-    "The .A.B.D node has the correct root.");
-  is(D.parent, B,
-    "The .A.B.D node has the correct parent.");
-  is(D.level, 3,
-    "The .A.B.D node has the correct level.");
-  is(D.target.className, "call-tree-item",
-    "The .A.B.D node has the correct target node.");
-  is(D.container.id, "call-tree-container",
-    "The .A.B.D node has the correct container node.");
+  let receivedLinkEvent = treeRoot.once("link");
+  EventUtils.sendMouseEvent({ type: "mousedown" }, D.target.querySelector(".call-tree-url"));
 
+  let eventItem = yield receivedLinkEvent;
+  is(eventItem, D, "The 'link' event target is correct.");
+
+  let receivedZoomEvent = treeRoot.once("zoom");
+  EventUtils.sendMouseEvent({ type: "mousedown" }, D.target.querySelector(".call-tree-zoom"));
+
+  eventItem = yield receivedZoomEvent;
+  is(eventItem, D, "The 'zoom' event target is correct.");
   finish();
 }
 

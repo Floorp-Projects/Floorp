@@ -17,7 +17,7 @@ const { colorUtils: { setAlpha }} = require("devtools/css-color");
 const { getColor } = require("devtools/shared/theme");
 
 loader.lazyRequireGetter(this, "L10N",
-  "devtools/timeline/global", true);
+  "devtools/shared/timeline/global", true);
 
 const OVERVIEW_DAMPEN_VALUES = 0.95;
 

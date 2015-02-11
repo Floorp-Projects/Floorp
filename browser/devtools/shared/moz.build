@@ -31,6 +31,20 @@ EXTRA_JS_MODULES.devtools += [
     'widgets/ViewHelpers.jsm',
 ]
 
+EXTRA_JS_MODULES.devtools.shared.profiler += [
+    'profiler/global.js',
+    'profiler/tree-model.js',
+    'profiler/tree-view.js',
+]
+
+EXTRA_JS_MODULES.devtools.shared.timeline += [
+    'timeline/global.js',
+    'timeline/marker-details.js',
+    'timeline/markers-overview.js',
+    'timeline/memory-overview.js',
+    'timeline/waterfall.js',
+]
+
 EXTRA_JS_MODULES.devtools.shared += [
     'autocomplete-popup.js',
     'd3.js',
