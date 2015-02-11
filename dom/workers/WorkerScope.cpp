@@ -590,7 +590,7 @@ public:
     // We don't need to check if the principal can load this mScope because a
     // ServiceWorkerGlobalScope can always unregister itself.
 
-    rv = swm->Unregister(mWorkerPrivate->GetPrincipal(), this, mScope);
+    rv = swm->Unregister(this, mScope);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       UnregisterFailed();
       return NS_OK;
