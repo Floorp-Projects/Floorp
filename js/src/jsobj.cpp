@@ -1821,7 +1821,7 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind 
     RootedNativeObject deepObj(cx);
 
     if (obj->is<ArrayObject>()) {
-        clone = NewDenseUnallocatedArray(cx, obj->as<ArrayObject>().length(), nullptr, newKind);
+        clone = NewDenseUnallocatedArray(cx, obj->as<ArrayObject>().length(), NullPtr(), newKind);
     } else {
         // Object literals are tenured by default as holded by the JSScript.
         MOZ_ASSERT(obj->isTenured());
@@ -1922,7 +1922,7 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleNativeObject obj)
             return false;
 
         if (mode == XDR_DECODE)
-            obj.set(NewDenseUnallocatedArray(cx, length, NULL, js::MaybeSingletonObject));
+            obj.set(NewDenseUnallocatedArray(cx, length, NullPtr(), js::MaybeSingletonObject));
 
     } else {
         // Code the alloc kind of the object.
@@ -2154,7 +2154,8 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
     MOZ_ASSERT(srcArray->getElementsHeader()->ownerObject() == srcObj);
 
     size_t length = srcArray->as<ArrayObject>().length();
-    RootedArrayObject res(cx, NewDenseFullyAllocatedArray(cx, length, nullptr, MaybeSingletonObject));
+    RootedArrayObject res(cx, NewDenseFullyAllocatedArray(cx, length, NullPtr(),
+                                                          MaybeSingletonObject));
     if (!res)
         return nullptr;
 
