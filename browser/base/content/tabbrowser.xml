@@ -3202,7 +3202,8 @@
                                           addonInfo: aMessage.data.addonInfo };
               let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
               let event = gContextMenuContentData.event;
-              popup.openPopupAtScreen(event.screenX, event.screenY, true);
+              let pos = browser.mapScreenCoordinatesFromContent(event.screenX, event.screenY);
+              popup.openPopupAtScreen(pos.x, pos.y, true);
               break;
             }
             case "DOMWebNotificationClicked": {
