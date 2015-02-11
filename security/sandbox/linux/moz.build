@@ -20,10 +20,40 @@ EXPORTS.mozilla += [
 
 SOURCES += [
     '../chromium-shim/base/logging.cpp',
+    '../chromium/base/at_exit.cc',
+    '../chromium/base/callback_internal.cc',
+    '../chromium/base/lazy_instance.cc',
+    '../chromium/base/memory/ref_counted.cc',
+    '../chromium/base/memory/singleton.cc',
+    '../chromium/base/strings/string16.cc',
+    '../chromium/base/strings/string_piece.cc',
+    '../chromium/base/strings/string_util.cc',
+    '../chromium/base/strings/string_util_constants.cc',
+    '../chromium/base/strings/stringprintf.cc',
+    '../chromium/base/strings/utf_string_conversion_utils.cc',
+    '../chromium/base/strings/utf_string_conversions.cc',
+    '../chromium/base/synchronization/condition_variable_posix.cc',
+    '../chromium/base/synchronization/lock.cc',
+    '../chromium/base/synchronization/lock_impl_posix.cc',
+    '../chromium/base/synchronization/waitable_event_posix.cc',
+    '../chromium/base/third_party/icu/icu_utf.cc',
+    '../chromium/base/threading/platform_thread_linux.cc',
+    '../chromium/base/threading/platform_thread_posix.cc',
+    '../chromium/base/threading/thread_collision_warner.cc',
+    '../chromium/base/threading/thread_id_name_manager.cc',
+    '../chromium/base/threading/thread_local_posix.cc',
+    '../chromium/base/threading/thread_restrictions.cc',
+    '../chromium/base/time/time.cc',
+    '../chromium/base/time/time_posix.cc',
+    '../chromium/sandbox/linux/bpf_dsl/bpf_dsl.cc',
+    '../chromium/sandbox/linux/bpf_dsl/dump_bpf.cc',
+    '../chromium/sandbox/linux/bpf_dsl/policy_compiler.cc',
     '../chromium/sandbox/linux/seccomp-bpf/basicblock.cc',
     '../chromium/sandbox/linux/seccomp-bpf/codegen.cc',
     '../chromium/sandbox/linux/seccomp-bpf/die.cc',
+    '../chromium/sandbox/linux/seccomp-bpf/errorcode.cc',
     '../chromium/sandbox/linux/seccomp-bpf/syscall.cc',
+    '../chromium/sandbox/linux/seccomp-bpf/syscall_iterator.cc',
     'Sandbox.cpp',
     'SandboxAssembler.cpp',
     'SandboxFilter.cpp',
@@ -40,6 +70,8 @@ DISABLE_STL_WRAPPING = True
 
 LOCAL_INCLUDES += ['/security/sandbox/chromium-shim']
 LOCAL_INCLUDES += ['/security/sandbox/chromium']
+LOCAL_INCLUDES += ['/nsprpub']
+
 
 if CONFIG['OS_TARGET'] != 'Android':
     # Needed for clock_gettime with glibc < 2.17:

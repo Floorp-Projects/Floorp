@@ -2,17 +2,28 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <string.h>
-
-#include "sandbox/linux/seccomp-bpf/sandbox_bpf.h"
-#include "sandbox/linux/seccomp-bpf/sandbox_bpf_policy.h"
-#include "sandbox/linux/seccomp-bpf/syscall_iterator.h"
 #include "sandbox/linux/seccomp-bpf/verifier.h"
 
+#include <string.h>
+
+#include <limits>
+
+#include "sandbox/linux/bpf_dsl/bpf_dsl.h"
+#include "sandbox/linux/bpf_dsl/bpf_dsl_impl.h"
+#include "sandbox/linux/bpf_dsl/policy.h"
+#include "sandbox/linux/bpf_dsl/policy_compiler.h"
+#include "sandbox/linux/seccomp-bpf/errorcode.h"
+#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
+#include "sandbox/linux/seccomp-bpf/sandbox_bpf.h"
+#include "sandbox/linux/seccomp-bpf/syscall_iterator.h"
 
 namespace sandbox {
 
 namespace {
+
+const uint64_t kLower32Bits = std::numeric_limits<uint32_t>::max();
+const uint64_t kUpper32Bits = static_cast<uint64_t>(kLower32Bits) << 32;
+const uint64_t kFull64Bits = std::numeric_limits<uint64_t>::max();
 
 struct State {
   State(const std::vector<struct sock_filter>& p,
@@ -28,7 +39,7 @@ struct State {
   DISALLOW_IMPLICIT_CONSTRUCTORS(State);
 };
 
-uint32_t EvaluateErrorCode(SandboxBPF* sandbox,
+uint32_t EvaluateErrorCode(bpf_dsl::PolicyCompiler* compiler,
                            const ErrorCode& code,
                            const struct arch_seccomp_data& data) {
   if (code.error_type() == ErrorCode::ET_SIMPLE ||
@@ -39,44 +50,17 @@ uint32_t EvaluateErrorCode(SandboxBPF* sandbox,
         (data.args[code.argno()] >> 32) &&
         (data.args[code.argno()] & 0xFFFFFFFF80000000ull) !=
             0xFFFFFFFF80000000ull) {
-      return sandbox->Unexpected64bitArgument().err();
+      return compiler->Unexpected64bitArgument().err();
     }
-    switch (code.op()) {
-      case ErrorCode::OP_EQUAL:
-        return EvaluateErrorCode(sandbox,
-                                 (code.width() == ErrorCode::TP_32BIT
-                                      ? uint32_t(data.args[code.argno()])
-                                      : data.args[code.argno()]) == code.value()
-                                     ? *code.passed()
-                                     : *code.failed(),
-                                 data);
-      case ErrorCode::OP_HAS_ALL_BITS:
-        return EvaluateErrorCode(sandbox,
-                                 ((code.width() == ErrorCode::TP_32BIT
-                                       ? uint32_t(data.args[code.argno()])
-                                       : data.args[code.argno()]) &
-                                  code.value()) == code.value()
-                                     ? *code.passed()
-                                     : *code.failed(),
-                                 data);
-      case ErrorCode::OP_HAS_ANY_BITS:
-        return EvaluateErrorCode(sandbox,
-                                 (code.width() == ErrorCode::TP_32BIT
-                                      ? uint32_t(data.args[code.argno()])
-                                      : data.args[code.argno()]) &
-                                         code.value()
-                                     ? *code.passed()
-                                     : *code.failed(),
-                                 data);
-      default:
-        return SECCOMP_RET_INVALID;
-    }
+    bool equal = (data.args[code.argno()] & code.mask()) == code.value();
+    return EvaluateErrorCode(
+        compiler, equal ? *code.passed() : *code.failed(), data);
   } else {
     return SECCOMP_RET_INVALID;
   }
 }
 
-bool VerifyErrorCode(SandboxBPF* sandbox,
+bool VerifyErrorCode(bpf_dsl::PolicyCompiler* compiler,
                      const std::vector<struct sock_filter>& program,
                      struct arch_seccomp_data* data,
                      const ErrorCode& root_code,
@@ -87,7 +71,7 @@ bool VerifyErrorCode(SandboxBPF* sandbox,
     uint32_t computed_ret = Verifier::EvaluateBPF(program, *data, err);
     if (*err) {
       return false;
-    } else if (computed_ret != EvaluateErrorCode(sandbox, root_code, *data)) {
+    } else if (computed_ret != EvaluateErrorCode(compiler, root_code, *data)) {
       // For efficiency's sake, we'd much rather compare "computed_ret"
       // against "code.err()". This works most of the time, but it doesn't
       // always work for nested conditional expressions. The test values
@@ -103,114 +87,83 @@ bool VerifyErrorCode(SandboxBPF* sandbox,
       *err = "Invalid argument number in error code";
       return false;
     }
-    switch (code.op()) {
-      case ErrorCode::OP_EQUAL:
-        // Verify that we can check a 32bit value (or the LSB of a 64bit value)
-        // for equality.
-        data->args[code.argno()] = code.value();
-        if (!VerifyErrorCode(
-                 sandbox, program, data, root_code, *code.passed(), err)) {
-          return false;
-        }
 
-        // Change the value to no longer match and verify that this is detected
-        // as an inequality.
-        data->args[code.argno()] = code.value() ^ 0x55AA55AA;
-        if (!VerifyErrorCode(
-                 sandbox, program, data, root_code, *code.failed(), err)) {
-          return false;
-        }
+    // TODO(mdempsky): The test values generated here try to provide good
+    // coverage for generated BPF instructions while avoiding combinatorial
+    // explosion on large policies. Ideally we would instead take a fuzzing-like
+    // approach and generate a bounded number of test cases regardless of policy
+    // size.
 
-        // BPF programs can only ever operate on 32bit values. So, we have
-        // generated additional BPF instructions that inspect the MSB. Verify
-        // that they behave as intended.
-        if (code.width() == ErrorCode::TP_32BIT) {
-          if (code.value() >> 32) {
-            SANDBOX_DIE(
-                "Invalid comparison of a 32bit system call argument "
-                "against a 64bit constant; this test is always false.");
-          }
+    // Verify that we can check a value for simple equality.
+    data->args[code.argno()] = code.value();
+    if (!VerifyErrorCode(
+            compiler, program, data, root_code, *code.passed(), err)) {
+      return false;
+    }
 
-          // If the system call argument was intended to be a 32bit parameter,
-          // verify that it is a fatal error if a 64bit value is ever passed
-          // here.
-          data->args[code.argno()] = 0x100000000ull;
-          if (!VerifyErrorCode(sandbox,
-                               program,
-                               data,
-                               root_code,
-                               sandbox->Unexpected64bitArgument(),
-                               err)) {
-            return false;
-          }
-        } else {
-          // If the system call argument was intended to be a 64bit parameter,
-          // verify that we can handle (in-)equality for the MSB. This is
-          // essentially the same test that we did earlier for the LSB.
-          // We only need to verify the behavior of the inequality test. We
-          // know that the equality test already passed, as unlike the kernel
-          // the Verifier does operate on 64bit quantities.
-          data->args[code.argno()] = code.value() ^ 0x55AA55AA00000000ull;
-          if (!VerifyErrorCode(
-                   sandbox, program, data, root_code, *code.failed(), err)) {
-            return false;
-          }
-        }
-        break;
-      case ErrorCode::OP_HAS_ALL_BITS:
-      case ErrorCode::OP_HAS_ANY_BITS:
-        // A comprehensive test of bit values is difficult and potentially
-        // rather
-        // time-expensive. We avoid doing so at run-time and instead rely on the
-        // unittest for full testing. The test that we have here covers just the
-        // common cases. We test against the bitmask itself, all zeros and all
-        // ones.
-        {
-          // Testing "any" bits against a zero mask is always false. So, there
-          // are some cases, where we expect tests to take the "failed()" branch
-          // even though this is a test that normally should take "passed()".
-          const ErrorCode& passed =
-              (!code.value() && code.op() == ErrorCode::OP_HAS_ANY_BITS) ||
-
-                      // On a 32bit system, it is impossible to pass a 64bit
-                      // value as a
-                      // system call argument. So, some additional tests always
-                      // evaluate
-                      // as false.
-                      ((code.value() & ~uint64_t(uintptr_t(-1))) &&
-                       code.op() == ErrorCode::OP_HAS_ALL_BITS) ||
-                      (code.value() && !(code.value() & uintptr_t(-1)) &&
-                       code.op() == ErrorCode::OP_HAS_ANY_BITS)
-                  ? *code.failed()
-                  : *code.passed();
-
-          // Similary, testing for "all" bits in a zero mask is always true. So,
-          // some cases pass despite them normally failing.
-          const ErrorCode& failed =
-              !code.value() && code.op() == ErrorCode::OP_HAS_ALL_BITS
-                  ? *code.passed()
-                  : *code.failed();
-
-          data->args[code.argno()] = code.value() & uintptr_t(-1);
-          if (!VerifyErrorCode(
-                   sandbox, program, data, root_code, passed, err)) {
-            return false;
-          }
-          data->args[code.argno()] = uintptr_t(-1);
-          if (!VerifyErrorCode(
-                   sandbox, program, data, root_code, passed, err)) {
-            return false;
-          }
-          data->args[code.argno()] = 0;
-          if (!VerifyErrorCode(
-                   sandbox, program, data, root_code, failed, err)) {
-            return false;
-          }
-        }
-        break;
-      default:  // TODO(markus): Need to add support for OP_GREATER
-        *err = "Unsupported operation in conditional error code";
+    // If mask ignores any bits, verify that setting those bits is still
+    // detected as equality.
+    uint64_t ignored_bits = ~code.mask();
+    if (code.width() == ErrorCode::TP_32BIT) {
+      ignored_bits = static_cast<uint32_t>(ignored_bits);
+    }
+    if ((ignored_bits & kLower32Bits) != 0) {
+      data->args[code.argno()] = code.value() | (ignored_bits & kLower32Bits);
+      if (!VerifyErrorCode(
+              compiler, program, data, root_code, *code.passed(), err)) {
         return false;
+      }
+    }
+    if ((ignored_bits & kUpper32Bits) != 0) {
+      data->args[code.argno()] = code.value() | (ignored_bits & kUpper32Bits);
+      if (!VerifyErrorCode(
+              compiler, program, data, root_code, *code.passed(), err)) {
+        return false;
+      }
+    }
+
+    // Verify that changing bits included in the mask is detected as inequality.
+    if ((code.mask() & kLower32Bits) != 0) {
+      data->args[code.argno()] = code.value() ^ (code.mask() & kLower32Bits);
+      if (!VerifyErrorCode(
+              compiler, program, data, root_code, *code.failed(), err)) {
+        return false;
+      }
+    }
+    if ((code.mask() & kUpper32Bits) != 0) {
+      data->args[code.argno()] = code.value() ^ (code.mask() & kUpper32Bits);
+      if (!VerifyErrorCode(
+              compiler, program, data, root_code, *code.failed(), err)) {
+        return false;
+      }
+    }
+
+    if (code.width() == ErrorCode::TP_32BIT) {
+      // For 32-bit system call arguments, we emit additional instructions to
+      // validate the upper 32-bits. Here we test that validation.
+
+      // Arbitrary 64-bit values should be rejected.
+      data->args[code.argno()] = 1ULL << 32;
+      if (!VerifyErrorCode(compiler,
+                           program,
+                           data,
+                           root_code,
+                           compiler->Unexpected64bitArgument(),
+                           err)) {
+        return false;
+      }
+
+      // Upper 32-bits set without the MSB of the lower 32-bits set should be
+      // rejected too.
+      data->args[code.argno()] = kUpper32Bits;
+      if (!VerifyErrorCode(compiler,
+                           program,
+                           data,
+                           root_code,
+                           compiler->Unexpected64bitArgument(),
+                           err)) {
+        return false;
+      }
     }
   } else {
     *err = "Attempting to return invalid error code from BPF program";
@@ -220,7 +173,8 @@ bool VerifyErrorCode(SandboxBPF* sandbox,
 }
 
 void Ld(State* state, const struct sock_filter& insn, const char** err) {
-  if (BPF_SIZE(insn.code) != BPF_W || BPF_MODE(insn.code) != BPF_ABS) {
+  if (BPF_SIZE(insn.code) != BPF_W || BPF_MODE(insn.code) != BPF_ABS ||
+      insn.jt != 0 || insn.jf != 0) {
     *err = "Invalid BPF_LD instruction";
     return;
   }
@@ -360,13 +314,12 @@ void Alu(State* state, const struct sock_filter& insn, const char** err) {
 
 }  // namespace
 
-bool Verifier::VerifyBPF(SandboxBPF* sandbox,
+bool Verifier::VerifyBPF(bpf_dsl::PolicyCompiler* compiler,
                          const std::vector<struct sock_filter>& program,
-                         const SandboxBPFPolicy& policy,
+                         const bpf_dsl::Policy& policy,
                          const char** err) {
   *err = NULL;
-  for (SyscallIterator iter(false); !iter.Done();) {
-    uint32_t sysnum = iter.Next();
+  for (uint32_t sysnum : SyscallSet::All()) {
     // We ideally want to iterate over the full system call range and values
     // just above and just below this range. This gives us the full result set
     // of the "evaluators".
@@ -387,10 +340,10 @@ bool Verifier::VerifyBPF(SandboxBPF* sandbox,
     }
 #endif
 #endif
-    ErrorCode code = iter.IsValid(sysnum)
-                         ? policy.EvaluateSyscall(sandbox, sysnum)
-                         : policy.InvalidSyscall(sandbox);
-    if (!VerifyErrorCode(sandbox, program, &data, code, code, err)) {
+    ErrorCode code = SyscallSet::IsValid(sysnum)
+                         ? policy.EvaluateSyscall(sysnum)->Compile(compiler)
+                         : policy.InvalidSyscall()->Compile(compiler);
+    if (!VerifyErrorCode(compiler, program, &data, code, code, err)) {
       return false;
     }
   }

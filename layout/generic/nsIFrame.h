@@ -2224,6 +2224,9 @@ public:
    * If no layer is found, calls InvalidateFrame() instead.
    *
    * @param aDamageRect Area of the layer to invalidate.
+   * @param aFrameDamageRect If no layer is found, the area of the frame to
+   *                         invalidate. If null, the entire frame will be
+   *                         invalidated.
    * @param aDisplayItemKey Display item type.
    * @param aFlags UPDATE_IS_ASYNC : Will skip the invalidation
    * if the found layer is being composited by a remote
@@ -2233,7 +2236,10 @@ public:
   enum {
     UPDATE_IS_ASYNC = 1 << 0
   };
-  Layer* InvalidateLayer(uint32_t aDisplayItemKey, const nsIntRect* aDamageRect = nullptr, uint32_t aFlags = 0);
+  Layer* InvalidateLayer(uint32_t aDisplayItemKey,
+                         const nsIntRect* aDamageRect = nullptr,
+                         const nsRect* aFrameDamageRect = nullptr,
+                         uint32_t aFlags = 0);
 
   /**
    * Returns a rect that encompasses everything that might be painted by

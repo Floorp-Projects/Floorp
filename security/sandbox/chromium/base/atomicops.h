@@ -28,8 +28,11 @@
 #ifndef BASE_ATOMICOPS_H_
 #define BASE_ATOMICOPS_H_
 
+#include <cassert>  // Small C++ header which defines implementation specific
+                    // macros used to identify the STL implementation.
 #include <stdint.h>
 
+#include "base/base_export.h"
 #include "build/build_config.h"
 
 #if defined(OS_WIN) && defined(ARCH_CPU_64_BITS)
@@ -137,26 +140,65 @@ Atomic64 Release_Load(volatile const Atomic64* ptr);
 }  // namespace subtle
 }  // namespace base
 
-// Include our platform specific implementation.
-#if defined(THREAD_SANITIZER)
-#include "base/atomicops_internals_tsan.h"
-#elif defined(OS_WIN) && defined(COMPILER_MSVC) && defined(ARCH_CPU_X86_FAMILY)
-#include "base/atomicops_internals_x86_msvc.h"
-#elif defined(OS_MACOSX)
-#include "base/atomicops_internals_mac.h"
-#elif defined(OS_NACL)
-#include "base/atomicops_internals_gcc.h"
-#elif defined(COMPILER_GCC) && defined(ARCH_CPU_ARMEL)
-#include "base/atomicops_internals_arm_gcc.h"
-#elif defined(COMPILER_GCC) && defined(ARCH_CPU_ARM64)
-#include "base/atomicops_internals_arm64_gcc.h"
-#elif defined(COMPILER_GCC) && defined(ARCH_CPU_X86_FAMILY)
-#include "base/atomicops_internals_x86_gcc.h"
-#elif defined(COMPILER_GCC) && defined(ARCH_CPU_MIPS_FAMILY)
-#include "base/atomicops_internals_mips_gcc.h"
-#else
-#error "Atomic operations are not supported on your platform"
+// The following x86 CPU features are used in atomicops_internals_x86_gcc.h, but
+// this file is duplicated inside of Chrome: protobuf and tcmalloc rely on the
+// struct being present at link time. Some parts of Chrome can currently use the
+// portable interface whereas others still use GCC one. The include guards are
+// the same as in atomicops_internals_x86_gcc.cc.
+#if defined(__i386__) || defined(__x86_64__)
+// This struct is not part of the public API of this module; clients may not
+// use it.  (However, it's exported via BASE_EXPORT because clients implicitly
+// do use it at link time by inlining these functions.)
+// Features of this x86.  Values may not be correct before main() is run,
+// but are set conservatively.
+struct AtomicOps_x86CPUFeatureStruct {
+  bool has_amd_lock_mb_bug; // Processor has AMD memory-barrier bug; do lfence
+                            // after acquire compare-and-swap.
+  // The following fields are unused by Chrome's base implementation but are
+  // still used by copies of the same code in other parts of the code base. This
+  // causes an ODR violation, and the other code is likely reading invalid
+  // memory.
+  // TODO(jfb) Delete these fields once the rest of the Chrome code base doesn't
+  //           depend on them.
+  bool has_sse2;            // Processor has SSE2.
+  bool has_cmpxchg16b;      // Processor supports cmpxchg16b instruction.
+};
+BASE_EXPORT extern struct AtomicOps_x86CPUFeatureStruct
+    AtomicOps_Internalx86CPUFeatures;
 #endif
+
+// Try to use a portable implementation based on C++11 atomics.
+//
+// Some toolchains support C++11 language features without supporting library
+// features (recent compiler, older STL). Whitelist libstdc++ and libc++ that we
+// know will have <atomic> when compiling C++11.
+#if ((__cplusplus >= 201103L) &&                            \
+     ((defined(__GLIBCXX__) && (__GLIBCXX__ > 20110216)) || \
+      (defined(_LIBCPP_VERSION) && (_LIBCPP_STD_VER >= 11))))
+#  include "base/atomicops_internals_portable.h"
+#else  // Otherwise use a platform specific implementation.
+#  if defined(THREAD_SANITIZER)
+#    error "Thread sanitizer must use the portable atomic operations"
+#  elif (defined(OS_WIN) && defined(COMPILER_MSVC) && \
+         defined(ARCH_CPU_X86_FAMILY))
+#    include "base/atomicops_internals_x86_msvc.h"
+#  elif defined(OS_MACOSX)
+#    include "base/atomicops_internals_mac.h"
+#  elif defined(OS_NACL)
+#    include "base/atomicops_internals_gcc.h"
+#  elif defined(COMPILER_GCC) && defined(ARCH_CPU_ARMEL)
+#    include "base/atomicops_internals_arm_gcc.h"
+#  elif defined(COMPILER_GCC) && defined(ARCH_CPU_ARM64)
+#    include "base/atomicops_internals_arm64_gcc.h"
+#  elif defined(COMPILER_GCC) && defined(ARCH_CPU_X86_FAMILY)
+#    include "base/atomicops_internals_x86_gcc.h"
+#  elif (defined(COMPILER_GCC) && \
+         (defined(ARCH_CPU_MIPS_FAMILY) || defined(ARCH_CPU_MIPS64_FAMILY)))
+#    include "base/atomicops_internals_mips_gcc.h"
+#  else
+#    error "Atomic operations are not supported on your platform"
+#  endif
+#endif   // Portable / non-portable includes.
 
 // On some platforms we need additional declarations to make
 // AtomicWord compatible with our other Atomic* types.
