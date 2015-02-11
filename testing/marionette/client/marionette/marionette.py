@@ -1099,6 +1099,18 @@ class Marionette(object):
         finally:
             self.set_context(scope)
 
+    def switch_to_alert(self):
+        '''
+        Returns an Alert object for interacting with a currently displayed alert.
+
+        ::
+
+            alert = self.marionette.switch_to_alert()
+            text = alert.text
+            alert.accept()
+        '''
+        return Alert(self)
+
     def switch_to_window(self, window_id):
         '''
         Switch to the specified window; subsequent commands will be directed at the new window.
