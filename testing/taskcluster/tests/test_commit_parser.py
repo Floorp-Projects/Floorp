@@ -343,6 +343,62 @@ class TestCommitParser(unittest.TestCase):
         result = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
 
+    def test_specific_chunks(self):
+        '''
+        This test covers specifying specific chunks for a given test suite.
+        '''
+        commit = 'try: -b o -p linux -u mochitest-1,mochitest-2 -t none'
+        jobs = {
+            'flags': {
+                'builds': ['linux'],
+                'tests': ['mochitest'],
+            },
+            'builds': {
+                'linux': {
+                    'types': {
+                        'opt': {
+                            'task': 'task/linux',
+                         },
+                        'debug': {
+                            'task': 'task/linux-debug'
+                        }
+                    }
+                },
+            },
+            'tests': {
+                'mochitest': {
+                    'allowed_build_tasks': {
+                        'task/linux': {
+                            'task': 'task/mochitest',
+                            'chunks': 5
+                        },
+                    }
+                }
+            }
+        }
+
+        expected = [
+            {
+                'task': 'task/linux',
+                'dependents': [
+                    {
+                        'allowed_build_tasks': {
+                            'task/linux': {
+                                'task': 'task/mochitest',
+                                'chunks': 5,
+                                'only_chunks': set([1, 2])
+                            },
+                        }
+                    }
+                ],
+                'additional-parameters': {}
+            }
+        ]
+        result = parse_commit(commit, jobs)
+        self.assertEqual(expected, result)
+
+
+
     def test_commit_with_builds_and_tests(self):
         '''
         This test covers the broad case of a commit which has both builds and
