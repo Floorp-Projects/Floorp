@@ -388,8 +388,6 @@ class SelectionCaretsTest(MarionetteTestCase):
     ########################################################################
     # <div> contenteditable2 test cases with selection carets enabled
     ########################################################################
-    def test_contenteditable_minimum_select_one_character(self):
+    def test_contenteditable2_minimum_select_one_character(self):
         self.openTestHtml(enabled=True)
         self._test_minimum_select_one_character(self._contenteditable2, self.assertEqual)
-
-
