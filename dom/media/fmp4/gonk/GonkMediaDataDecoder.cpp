@@ -76,7 +76,10 @@ GonkDecoderManager::Input(mp4_demuxer::MP4Sample* aSample)
   // Current valid sample can't be sent into OMX, adding the clone one into queue
   // for next round.
   if (!sample) {
-      sample = new mp4_demuxer::MP4Sample(*aSample);
+      sample = aSample->Clone();
+      if (!sample) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
   }
   mQueueSample.AppendElement(sample);
 
