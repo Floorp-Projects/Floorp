@@ -334,15 +334,6 @@ UnboxedPlainObject::obj_getOwnPropertyDescriptor(JSContext *cx, HandleObject obj
 }
 
 /* static */ bool
-UnboxedPlainObject::obj_setPropertyAttributes(JSContext *cx, HandleObject obj,
-                                              HandleId id, unsigned *attrsp)
-{
-    if (!obj->as<UnboxedPlainObject>().convertToNative(cx))
-        return false;
-    return SetPropertyAttributes(cx, obj, id, attrsp);
-}
-
-/* static */ bool
 UnboxedPlainObject::obj_deleteProperty(JSContext *cx, HandleObject obj, HandleId id,
                                        bool *succeeded)
 {
@@ -393,7 +384,6 @@ const Class UnboxedPlainObject::class_ = {
         UnboxedPlainObject::obj_getProperty,
         UnboxedPlainObject::obj_setProperty,
         UnboxedPlainObject::obj_getOwnPropertyDescriptor,
-        UnboxedPlainObject::obj_setPropertyAttributes,
         UnboxedPlainObject::obj_deleteProperty,
         UnboxedPlainObject::obj_watch,
         nullptr,   /* No unwatch needed, as watch() converts the object to native */

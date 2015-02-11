@@ -302,7 +302,6 @@ namespace js {
             js::proxy_GetProperty,                                                      \
             js::proxy_SetProperty,                                                      \
             js::proxy_GetOwnPropertyDescriptor,                                         \
-            js::proxy_SetPropertyAttributes,                                            \
             js::proxy_DeleteProperty,                                                   \
             js::proxy_Watch, js::proxy_Unwatch,                                         \
             js::proxy_GetElements,                                                      \
@@ -341,9 +340,6 @@ proxy_SetProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
 extern JS_FRIEND_API(bool)
 proxy_GetOwnPropertyDescriptor(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                                JS::MutableHandle<JSPropertyDescriptor> desc);
-extern JS_FRIEND_API(bool)
-proxy_SetPropertyAttributes(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                            unsigned *attrsp);
 extern JS_FRIEND_API(bool)
 proxy_DeleteProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *succeeded);
 
