@@ -5314,14 +5314,6 @@ ThreadSources.prototype = {
         }
       } catch(ex) {
         // Not a valid URI.
-
-        // bug 1124536: fix getSourceText on scripts associated "javascript:SOURCE" urls
-        // (e.g. 'evaluate(sandbox, sourcecode, "javascript:"+sourcecode)' )
-        if (url.indexOf("javascript:") === 0) {
-          spec.contentType = "text/javascript";
-        } else {
-          console.warn("unable to parse url during SourceActor type detection", url, ex);
-        }
       }
     }
     else {
