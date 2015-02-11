@@ -44,15 +44,21 @@ sandbox::SboxTestResult CreateProcessHelper(const base::string16& exe,
   if (!exe.empty())
     exe_name = exe.c_str();
 
-  const wchar_t *cmd_line = NULL;
-  if (!command.empty())
-    cmd_line = command.c_str();
+  base::string16 writable_command = command;
 
   // Create the process with the unicode version of the API.
   sandbox::SboxTestResult ret1 = sandbox::SBOX_TEST_FAILED;
   PROCESS_INFORMATION temp_process_info = {};
-  if (::CreateProcessW(exe_name, const_cast<wchar_t*>(cmd_line), NULL, NULL,
-                       FALSE, 0, NULL, NULL, &si, &temp_process_info)) {
+  if (::CreateProcessW(exe_name,
+                       command.empty() ? NULL : &writable_command[0],
+                       NULL,
+                       NULL,
+                       FALSE,
+                       0,
+                       NULL,
+                       NULL,
+                       &si,
+                       &temp_process_info)) {
     pi.Set(temp_process_info);
     ret1 = sandbox::SBOX_TEST_SUCCEEDED;
   } else {
@@ -72,12 +78,11 @@ sandbox::SboxTestResult CreateProcessHelper(const base::string16& exe,
   STARTUPINFOA sia = {sizeof(sia)};
   sandbox::SboxTestResult ret2 = sandbox::SBOX_TEST_FAILED;
 
-  std::string narrow_cmd_line;
-  if (cmd_line)
-    narrow_cmd_line = base::SysWideToMultiByte(cmd_line, CP_UTF8);
+  std::string narrow_cmd_line =
+      base::SysWideToMultiByte(command.c_str(), CP_UTF8);
   if (::CreateProcessA(
         exe_name ? base::SysWideToMultiByte(exe_name, CP_UTF8).c_str() : NULL,
-        cmd_line ? const_cast<char*>(narrow_cmd_line.c_str()) : NULL,
+        command.empty() ? NULL : &narrow_cmd_line[0],
         NULL, NULL, FALSE, 0, NULL, NULL, &sia, &temp_process_info)) {
     pi.Set(temp_process_info);
     ret2 = sandbox::SBOX_TEST_SUCCEEDED;

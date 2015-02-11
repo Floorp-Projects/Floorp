@@ -313,10 +313,11 @@ bool PEImage::EnumRelocs(EnumRelocsFunction callback, PVOID cookie) const {
   PIMAGE_BASE_RELOCATION base = reinterpret_cast<PIMAGE_BASE_RELOCATION>(
       directory);
 
-  if (directory == NULL || size < sizeof(IMAGE_BASE_RELOCATION))
+  if (!directory)
     return true;
 
-  while (base->SizeOfBlock) {
+  while (size >= sizeof(IMAGE_BASE_RELOCATION) && base->SizeOfBlock &&
+         size >= base->SizeOfBlock) {
     PWORD reloc = reinterpret_cast<PWORD>(base + 1);
     UINT num_relocs = (base->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) /
         sizeof(WORD);
@@ -329,6 +330,7 @@ bool PEImage::EnumRelocs(EnumRelocsFunction callback, PVOID cookie) const {
         return false;
     }
 
+    size -= base->SizeOfBlock;
     base = reinterpret_cast<PIMAGE_BASE_RELOCATION>(
                reinterpret_cast<char*>(base) + base->SizeOfBlock);
   }

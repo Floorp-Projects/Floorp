@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+ <head>
+   <meta charset="UTF-8">
+   <title>CSS Writing Modes</title>
+   <link rel="author" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
+   <link rel="help" href="http://www.w3.org/TR/css-writing-modes-3/#vertical-layout" title="7.1 Principles of Layout in Vertical Writing Modes">
+  <style type="text/css">
+  body {
+    margin: 0;
+  }
+  div.outer {
+    background: red url("right-top-300x300.png");
+    height: 300px;
+    width: 300px;
+    text-align: start;
+    writing-mode: vertical-rl;
+    direction: ltr;
+  }
+  div.inner {
+    display: inline-block;
+    background-color: green;
+    height: 100px;
+    width: 100px;
+  }
+  </style>
+ </head>
+ <body>
+  <div class="outer"><div class="inner"></div></div>
+ </body>
+</html>

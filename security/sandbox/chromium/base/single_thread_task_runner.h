@@ -29,7 +29,7 @@ class BASE_EXPORT SingleThreadTaskRunner : public SequencedTaskRunner {
   }
 
  protected:
-  virtual ~SingleThreadTaskRunner() {}
+  ~SingleThreadTaskRunner() override {}
 };
 
 }  // namespace base
