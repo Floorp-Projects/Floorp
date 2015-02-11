@@ -1955,6 +1955,11 @@ CommandResult NetworkUtils::addHostRoute(NetworkParams& aOptions)
  */
 CommandResult NetworkUtils::addHostRouteLegacy(NetworkParams& aOptions)
 {
+  if (aOptions.mGateway.IsEmpty()) {
+    ERROR("addHostRouteLegacy does not support empty gateway.");
+    return EINVAL;
+  }
+
   NS_ConvertUTF16toUTF8 autoIfname(aOptions.mIfname);
   NS_ConvertUTF16toUTF8 autoHostname(aOptions.mIp);
   NS_ConvertUTF16toUTF8 autoGateway(aOptions.mGateway);
