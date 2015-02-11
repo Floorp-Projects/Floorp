@@ -11,11 +11,7 @@
 <!ENTITY devmgr.devlist.label                   "Security Modules and Devices">
 <!ENTITY devmgr.details.title                   "Details">
 <!ENTITY devmgr.details.title2                  "Value">
-<!ENTITY devmgr.status.label                    "Status">
-<!ENTITY devmgr.version.label                   "Version">
 
-<!ENTITY devmgr.button.changeslotname.label     "Change Slot Name">
-<!ENTITY devmgr.button.changeslotname.accesskey "C">
 <!ENTITY devmgr.button.login.label              "Log In">
 <!ENTITY devmgr.button.login.accesskey          "n">
 <!ENTITY devmgr.button.logout.label             "Log Out">
