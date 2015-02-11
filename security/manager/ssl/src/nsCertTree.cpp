@@ -77,9 +77,6 @@ CompareCacheInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
 {
   new (hdr) CompareCacheHashEntryPtr();
   CompareCacheHashEntryPtr *entryPtr = static_cast<CompareCacheHashEntryPtr*>(hdr);
-  if (!entryPtr->entry) {
-    return false;
-  }
   entryPtr->entry->key = (void*)key;
   return true;
 }
