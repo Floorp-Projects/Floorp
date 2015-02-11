@@ -15,6 +15,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/IntentionalCrash.h"
+#include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestChild.h"
 #include "mozilla/plugins/PluginWidgetChild.h"
 #include "mozilla/ipc/DocumentRendererChild.h"
@@ -99,6 +100,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
+using namespace mozilla::dom::workers;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
@@ -1566,7 +1568,7 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
   }
 
   if (!urlToLoad.IsEmpty()) {
-    newChild->RecvLoadURL(urlToLoad);
+    newChild->RecvLoadURL(urlToLoad, BrowserConfiguration());
   }
 
   nsCOMPtr<nsIDOMWindow> win = do_GetInterface(newChild->WebNavigation());
@@ -1717,11 +1719,12 @@ TabChild::IsRootContentDocument()
 }
 
 bool
-TabChild::RecvLoadURL(const nsCString& uri)
+TabChild::RecvLoadURL(const nsCString& aURI,
+                      const BrowserConfiguration& aConfiguration)
 {
     SetProcessNameToAppName();
 
-    nsresult rv = WebNavigation()->LoadURI(NS_ConvertUTF8toUTF16(uri).get(),
+    nsresult rv = WebNavigation()->LoadURI(NS_ConvertUTF8toUTF16(aURI).get(),
                                            nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
                                            nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_OWNER,
                                            nullptr, nullptr, nullptr);
@@ -1730,8 +1733,12 @@ TabChild::RecvLoadURL(const nsCString& uri)
     }
 
 #ifdef MOZ_CRASHREPORTER
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("URL"), uri);
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("URL"), aURI);
 #endif
+
+    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    MOZ_ASSERT(swm);
+    swm->LoadRegistrations(aConfiguration.serviceWorkerRegistrations());
 
     return true;
 }
