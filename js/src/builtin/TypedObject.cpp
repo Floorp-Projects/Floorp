@@ -927,7 +927,7 @@ StructMetaTypeDescr::create(JSContext *cx,
     {
         RootedObject fieldNamesVec(cx);
         fieldNamesVec = NewDenseCopiedArray(cx, fieldNames.length(),
-                                            fieldNames.begin(), nullptr,
+                                            fieldNames.begin(), NullPtr(),
                                             TenuredObject);
         if (!fieldNamesVec)
             return nullptr;
@@ -939,7 +939,7 @@ StructMetaTypeDescr::create(JSContext *cx,
     {
         RootedObject fieldTypeVec(cx);
         fieldTypeVec = NewDenseCopiedArray(cx, fieldTypeObjs.length(),
-                                           fieldTypeObjs.begin(), nullptr,
+                                           fieldTypeObjs.begin(), NullPtr(),
                                            TenuredObject);
         if (!fieldTypeVec)
             return nullptr;
@@ -951,7 +951,7 @@ StructMetaTypeDescr::create(JSContext *cx,
     {
         RootedObject fieldOffsetsVec(cx);
         fieldOffsetsVec = NewDenseCopiedArray(cx, fieldOffsets.length(),
-                                              fieldOffsets.begin(), nullptr,
+                                              fieldOffsets.begin(), NullPtr(),
                                               TenuredObject);
         if (!fieldOffsetsVec)
             return nullptr;

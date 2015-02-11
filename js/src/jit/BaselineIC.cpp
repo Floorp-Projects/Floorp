@@ -9114,7 +9114,7 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
             count = args.length();
         else if (args.length() == 1 && args[0].isInt32() && args[0].toInt32() >= 0)
             count = args[0].toInt32();
-        res.set(NewDenseUnallocatedArray(cx, count, nullptr, TenuredObject));
+        res.set(NewDenseUnallocatedArray(cx, count, NullPtr(), TenuredObject));
         if (!res)
             return false;
 
@@ -9126,7 +9126,7 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
     }
 
     if (native == intrinsic_NewDenseArray) {
-        res.set(NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject));
+        res.set(NewDenseUnallocatedArray(cx, 0, NullPtr(), TenuredObject));
         if (!res)
             return false;
 
@@ -9141,7 +9141,8 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
         if (args.thisv().isObject() && args.thisv().toObject().is<ArrayObject>() &&
             !args.thisv().toObject().isSingleton())
         {
-            res.set(NewDenseEmptyArray(cx, args.thisv().toObject().getProto(), TenuredObject));
+            RootedObject proto(cx, args.thisv().toObject().getProto());
+            res.set(NewDenseEmptyArray(cx, proto, TenuredObject));
             if (!res)
                 return false;
             res->setGroup(args.thisv().toObject().group());
@@ -9150,7 +9151,7 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
     }
 
     if (native == js::str_split && args.length() == 1 && args[0].isString()) {
-        res.set(NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject));
+        res.set(NewDenseUnallocatedArray(cx, 0, NullPtr(), TenuredObject));
         if (!res)
             return false;
 
@@ -9460,7 +9461,7 @@ CopyArray(JSContext *cx, HandleArrayObject obj, MutableHandleValue result)
     if (!group)
         return false;
 
-    RootedArrayObject newObj(cx, NewDenseFullyAllocatedArray(cx, length, nullptr, TenuredObject));
+    RootedArrayObject newObj(cx, NewDenseFullyAllocatedArray(cx, length, NullPtr(), TenuredObject));
     if (!newObj)
         return false;
 
@@ -12220,7 +12221,7 @@ static bool DoRestFallback(JSContext *cx, ICRest_Fallback *stub,
     unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
     Value *rest = frame->argv() + numFormals;
 
-    ArrayObject *obj = NewDenseCopiedArray(cx, numRest, rest, nullptr);
+    ArrayObject *obj = NewDenseCopiedArray(cx, numRest, rest, NullPtr());
     if (!obj)
         return false;
     ObjectGroup::fixRestArgumentsGroup(cx, obj);
