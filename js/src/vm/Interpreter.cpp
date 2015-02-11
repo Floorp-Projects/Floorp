@@ -199,6 +199,8 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
     args[1].setObject(*argsobj);
     bool ok = Invoke(cx, args);
     vp[0] = args.rval();
+
+    cx->compartment()->addTelemetry(JSCompartment::DeprecatedNoSuchMethod);
     return ok;
 }
 
