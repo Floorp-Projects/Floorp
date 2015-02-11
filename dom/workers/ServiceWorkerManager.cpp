@@ -422,7 +422,7 @@ public:
                                                        const nsMainThreadPtrHandle<nsISupports> aJob)
     : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
     , mJob(aJob)
-  { 
+  {
     AssertIsOnMainThread();
   }
 
@@ -2689,4 +2689,36 @@ ServiceWorkerManager::MaybeRemoveRegistration(ServiceWorkerRegistrationInfo* aRe
   }
 }
 
+void
+ServiceWorkerManager::RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration)
+{
+  MOZ_ASSERT(aRegistration);
+  MOZ_ASSERT(!aRegistration->IsControllingDocuments());
+  MOZ_ASSERT(mServiceWorkerRegistrationInfos.Contains(aRegistration->mScope));
+  ServiceWorkerManager::RemoveScope(mOrderedScopes, aRegistration->mScope);
+
+  // Hold a ref since the hashtable may be the last ref.
+  nsRefPtr<ServiceWorkerRegistrationInfo> reg;
+  mServiceWorkerRegistrationInfos.Remove(aRegistration->mScope,
+                                         getter_AddRefs(reg));
+  MOZ_ASSERT(reg);
+
+  // All callers should be either from a job in which case the actor is
+  // available, or from MaybeStopControlling(), in which case, this will only be
+  // called if a valid registration is found. If a valid registration exists,
+  // it means the actor is available since the original map of registrations is
+  // populated by it, and any new registrations wait until the actor is
+  // available before proceeding (See ServiceWorkerRegisterJob::Start).
+  MOZ_ASSERT(mActor);
+
+  PrincipalInfo principalInfo;
+  if (NS_WARN_IF(NS_FAILED(PrincipalToPrincipalInfo(reg->mPrincipal,
+                                                    &principalInfo)))) {
+    //XXXnsm I can't think of any other reason a stored principal would fail to
+    //convert.
+    NS_WARNING("Unable to unregister serviceworker due to possible OOM");
+    return;
+  }
+  mActor->SendUnregisterServiceWorker(principalInfo, NS_ConvertUTF8toUTF16(reg->mScope));
+}
 END_WORKERS_NAMESPACE
