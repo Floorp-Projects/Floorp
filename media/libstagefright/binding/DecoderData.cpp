@@ -254,7 +254,7 @@ MP4Sample::Update(int64_t& aMediaTime)
   crypto.Update(m);
 }
 
-void
+bool
 MP4Sample::Pad(size_t aPaddingBytes)
 {
   size_t newSize = size + aPaddingBytes;
@@ -263,7 +263,10 @@ MP4Sample::Pad(size_t aPaddingBytes)
   // not then we copy to a new buffer.
   uint8_t* newData = mMediaBuffer && newSize <= mMediaBuffer->size()
                        ? data
-                       : new uint8_t[newSize];
+                       : new (fallible) uint8_t[newSize];
+  if (!newData) {
+    return false;
+  }
 
   memset(newData + size, 0, aPaddingBytes);
 
@@ -275,6 +278,8 @@ MP4Sample::Pad(size_t aPaddingBytes)
       mMediaBuffer = nullptr;
     }
   }
+
+  return true;
 }
 
 void
