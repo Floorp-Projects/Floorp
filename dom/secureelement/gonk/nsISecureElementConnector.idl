@@ -1,0 +1,104 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(1ff3f35a-1b6f-4e65-a89e-a363b8604cd7)]
+interface nsISEChannelCallback : nsISupports
+{
+  /**
+   * Callback function to notify on successfully opening a logical channel.
+   *
+   * @param channel
+   *        The Channel Number/Handle that is successfully opened.
+   * @param openResponse
+   *        Response from SE for OpenChannel operation.
+   */
+  void notifyOpenChannelSuccess(in long channel, in DOMString openResponse);
+
+  /**
+   * Callback function to notify on successfully closing the logical channel.
+   *
+   */
+  void notifyCloseChannelSuccess();
+
+  /**
+   * Callback function to notify the status of 'seExchangeAPDU' command.
+   *
+   * @param sw1
+   *        Response's First Status Byte
+   * @param sw2
+   *        Response's Second Status Byte
+   * @param data
+   *        Response's data
+   */
+  void notifyExchangeAPDUResponse(in octet sw1,
+                                  in octet sw2,
+                                  in DOMString data);
+
+  /**
+   * Callback function to notify error
+   *
+   * @param error
+   *        Error describing the reason for failure.
+   */
+  void notifyError(in DOMString error);
+};
+
+[scriptable, uuid(88e23684-0de3-4792-83a0-0eb67a6ca448)]
+interface nsISecureElementConnector : nsISupports
+{
+   /**
+    * Open a logical communication channel with the specific secure element type
+    *
+    * @param aid
+    *        Application Identifier of the Card Applet on the secure element.
+    * @param callback
+    *        callback to notify the result of the operation.
+    */
+    void openChannel(in DOMString aid,
+                     in nsISEChannelCallback callback);
+
+   /**
+    * Exchanges APDU channel with the specific secure element type
+    *
+    * @param channel
+    *        Channel on which C-APDU to be transmitted.
+    * @param cla
+             Class Byte.
+    * @param ins
+             Instruction Byte
+    * @param p1
+             Reference parameter first byte
+    * @param p2
+             Reference parameter second byte
+    *        Refer to 3G TS 31.101 , 10.2 'Command APDU Structure' for all the cases.
+    * @param data
+             Sequence of C-APDU data octets
+    * @param le [optional]
+    *        le is the length of expected response. If the response is not expected,
+             it should be explicitly set to -1.
+    * @param callback
+    *        callback to notify the result of the operation.
+    */
+    void exchangeAPDU(in long channel,
+                      in octet cla,
+                      in octet ins,
+                      in octet p1,
+                      in octet p2,
+                      in DOMString data,
+                      in short le,
+                      in nsISEChannelCallback callback);
+
+   /**
+    * Closes the logical communication channel to the specific secure element type
+    *
+    * @param channel
+    *        Channel to be closed.
+    * @param callback
+    *        callback to notify the result of the operation.
+    */
+   void closeChannel(in long channel,
+                     in nsISEChannelCallback callback);
+};
