@@ -355,7 +355,7 @@ loop.shared.views = (function(_, l10n) {
       /* jshint ignore:start */
       return (
         React.createElement("div", {className: "video-layout-wrapper"}, 
-          React.createElement("div", {className: "conversation"}, 
+          React.createElement("div", {className: "conversation in-call"}, 
             React.createElement("div", {className: "media nested"}, 
               React.createElement("div", {className: "video_wrapper remote_wrapper"}, 
                 React.createElement("div", {className: "video_inner remote remote-stream"})
