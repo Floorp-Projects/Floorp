@@ -262,6 +262,17 @@ a {
   margin: 0 6px;
 }
 
+.message[category=network] .xhr {
+  background-color: var(--theme-body-color-alt);
+  color: var(--theme-body-background);
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 10px;
+  padding: 2px;
+  line-height: 10px;
+  -moz-margin-end: 1ex;
+}
+
 /* CSS styles */
 .webconsole-filter-button[category="css"] > .toolbarbutton-menubutton-button:before {
   background-image: linear-gradient(#2DC3F3, #00B6F0);
