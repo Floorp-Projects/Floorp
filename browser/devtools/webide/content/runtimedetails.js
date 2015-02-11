@@ -41,6 +41,20 @@ function OnAppManagerUpdate(event, what) {
   }
 }
 
+function generateFields(json) {
+  let table = document.querySelector("table");
+  for (let name in json) {
+    let tr = document.createElement("tr");
+    let td = document.createElement("td");
+    td.textContent = name;
+    tr.appendChild(td);
+    td = document.createElement("td");
+    td.textContent = json[name];
+    tr.appendChild(td);
+    table.appendChild(tr);
+  };
+}
+
 let getDescriptionPromise; // Used by tests
 function BuildUI() {
   let table = document.querySelector("table");
@@ -48,19 +62,8 @@ function BuildUI() {
   if (AppManager.connection &&
       AppManager.connection.status == Connection.Status.CONNECTED &&
       AppManager.deviceFront) {
-    getDescriptionPromise = AppManager.deviceFront.getDescription();
-    getDescriptionPromise.then(json => {
-      for (let name in json) {
-        let tr = document.createElement("tr");
-        let td = document.createElement("td");
-        td.textContent = name;
-        tr.appendChild(td);
-        td = document.createElement("td");
-        td.textContent = json[name];
-        tr.appendChild(td);
-        table.appendChild(tr);
-      }
-    });
+    getDescriptionPromise = AppManager.deviceFront.getDescription()
+                            .then(json => generateFields(json));
   } else {
     CloseUI();
   }
