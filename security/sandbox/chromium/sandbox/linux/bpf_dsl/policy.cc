@@ -2,16 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "sandbox/linux/seccomp-bpf/sandbox_bpf_policy.h"
+#include "sandbox/linux/bpf_dsl/policy.h"
 
 #include <errno.h>
 
-#include "sandbox/linux/seccomp-bpf/errorcode.h"
+#include "sandbox/linux/bpf_dsl/bpf_dsl.h"
 
 namespace sandbox {
+namespace bpf_dsl {
 
-ErrorCode SandboxBPFPolicy::InvalidSyscall(SandboxBPF* sandbox_compiler) const {
-  return ErrorCode(ENOSYS);
+ResultExpr Policy::InvalidSyscall() const {
+  return Error(ENOSYS);
 }
 
+}  // namespace bpf_dsl
 }  // namespace sandbox

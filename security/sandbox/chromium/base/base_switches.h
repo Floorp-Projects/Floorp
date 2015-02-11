@@ -20,6 +20,8 @@ extern const char kProfilerTiming[];
 extern const char kProfilerTimingDisabledValue[];
 extern const char kTestChildProcess[];
 extern const char kTraceToConsole[];
+extern const char kTraceToFile[];
+extern const char kTraceToFileName[];
 extern const char kV[];
 extern const char kVModule[];
 extern const char kWaitForDebugger[];

@@ -7,10 +7,14 @@
 
 #include <stdint.h>
 
-#include "base/basictypes.h"
+#include <iterator>
+
+#include "base/macros.h"
 #include "sandbox/sandbox_export.h"
 
 namespace sandbox {
+
+// TODO(mdempsky): Rename this header to syscall_set.h.
 
 // Iterates over the entire system call range from 0..0xFFFFFFFFu. This
 // iterator is aware of how system calls look like and will skip quickly
@@ -20,36 +24,81 @@ namespace sandbox {
 // first invalid value after a valid range of syscalls. It iterates over
 // individual values whenever it is in the normal range for system calls
 // (typically MIN_SYSCALL..MAX_SYSCALL).
-// If |invalid_only| is true, this iterator will only return invalid
-// syscall numbers, but will still skip quickly over invalid ranges,
-// returning the first invalid value in the range and then skipping
-// to the last invalid value in the range.
 //
 // Example usage:
-//   for (SyscallIterator iter(false); !iter.Done(); ) {
-//     uint32_t sysnum = iter.Next();
+//   for (uint32_t sysnum : SyscallSet::All()) {
 //     // Do something with sysnum.
 //   }
-//
-// TODO(markus): Make this a classic C++ iterator.
-class SANDBOX_EXPORT SyscallIterator {
+class SANDBOX_EXPORT SyscallSet {
  public:
-  explicit SyscallIterator(bool invalid_only)
-      : invalid_only_(invalid_only), done_(false), num_(0) {}
+  class Iterator;
 
-  bool Done() const { return done_; }
-  uint32_t Next();
+  SyscallSet(const SyscallSet& ss) : set_(ss.set_) {}
+  ~SyscallSet() {}
+
+  Iterator begin() const;
+  Iterator end() const;
+
+  // All returns a SyscallSet that contains both valid and invalid
+  // system call numbers.
+  static SyscallSet All() { return SyscallSet(Set::ALL); }
+
+  // ValidOnly returns a SyscallSet that contains only valid system
+  // call numbers.
+  static SyscallSet ValidOnly() { return SyscallSet(Set::VALID_ONLY); }
+
+  // InvalidOnly returns a SyscallSet that contains only invalid
+  // system call numbers, but still omits numbers in the middle of a
+  // range of invalid system call numbers.
+  static SyscallSet InvalidOnly() { return SyscallSet(Set::INVALID_ONLY); }
+
+  // IsValid returns whether |num| specifies a valid system call
+  // number.
   static bool IsValid(uint32_t num);
 
  private:
-  static bool IsArmPrivate(uint32_t num);
+  enum class Set { ALL, VALID_ONLY, INVALID_ONLY };
 
-  bool invalid_only_;
+  explicit SyscallSet(Set set) : set_(set) {}
+
+  Set set_;
+
+  friend bool operator==(const SyscallSet&, const SyscallSet&);
+  DISALLOW_ASSIGN(SyscallSet);
+};
+
+SANDBOX_EXPORT bool operator==(const SyscallSet& lhs, const SyscallSet& rhs);
+
+// Iterator provides C++ input iterator semantics for traversing a
+// SyscallSet.
+class SyscallSet::Iterator
+    : public std::iterator<std::input_iterator_tag, uint32_t> {
+ public:
+  Iterator(const Iterator& it)
+      : set_(it.set_), done_(it.done_), num_(it.num_) {}
+  ~Iterator() {}
+
+  uint32_t operator*() const;
+  Iterator& operator++();
+
+ private:
+  Iterator(Set set, bool done);
+
+  uint32_t NextSyscall() const;
+
+  Set set_;
   bool done_;
   uint32_t num_;
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(SyscallIterator);
+  friend SyscallSet;
+  friend bool operator==(const Iterator&, const Iterator&);
+  DISALLOW_ASSIGN(Iterator);
 };
+
+SANDBOX_EXPORT bool operator==(const SyscallSet::Iterator& lhs,
+                               const SyscallSet::Iterator& rhs);
+SANDBOX_EXPORT bool operator!=(const SyscallSet::Iterator& lhs,
+                               const SyscallSet::Iterator& rhs);
 
 }  // namespace sandbox
 

@@ -79,7 +79,6 @@ DWORD HandlePolicy::DuplicateHandleProxyAction(EvalResult eval_result,
   // (this process) is the valid target.
   HANDLE target_process = remote_target_process.IsValid() ?
                           remote_target_process.Get() : ::GetCurrentProcess();
-  DWORD result = ERROR_SUCCESS;
   if (!::DuplicateHandle(::GetCurrentProcess(), source_handle, target_process,
                          target_handle, desired_access, FALSE,
                          options)) {

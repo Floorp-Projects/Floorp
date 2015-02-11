@@ -39,7 +39,7 @@ SBOX_TESTS_COMMAND int Handle_DuplicateEvent(int argc, wchar_t **argv) {
 
   HANDLE handle = NULL;
   ResultCode result = SandboxFactory::GetTargetServices()->DuplicateHandle(
-      test_event, target_process_id, &handle, 0, DUPLICATE_SAME_ACCESS);
+      test_event.Get(), target_process_id, &handle, 0, DUPLICATE_SAME_ACCESS);
 
   return (result == SBOX_ALL_OK) ? SBOX_TEST_SUCCEEDED : SBOX_TEST_DENIED;
 }

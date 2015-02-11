@@ -1,5 +1,3 @@
 Chromium Commit                            Directory / File (relative to security/sandbox/)
 ----------------------------------------   ------------------------------------------------
-9522fad406dd161400daa518075828e47bd47f60   chromium
-8e2be8d727b46e1f6f1694786dc2161b11146bd4   chromium/base/compiler_specific.h
-                                           (Note: above is to keep MSVC2010 support.)
+df7cc6c04725630dd4460f29d858a77507343b24   chromium

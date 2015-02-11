@@ -23,33 +23,45 @@ class FilesystemDispatcher : public Dispatcher {
 
  private:
   // Processes IPC requests coming from calls to NtCreateFile in the target.
-  bool NtCreateFile(IPCInfo* ipc, base::string16* name, DWORD attributes,
-                    DWORD desired_access, DWORD file_attributes,
-                    DWORD share_access, DWORD create_disposition,
-                    DWORD create_options);
+  bool NtCreateFile(IPCInfo* ipc,
+                    base::string16* name,
+                    uint32 attributes,
+                    uint32 desired_access,
+                    uint32 file_attributes,
+                    uint32 share_access,
+                    uint32 create_disposition,
+                    uint32 create_options);
 
   // Processes IPC requests coming from calls to NtOpenFile in the target.
-  bool NtOpenFile(IPCInfo* ipc, base::string16* name, DWORD attributes,
-                  DWORD desired_access, DWORD share_access,
-                  DWORD create_options);
+  bool NtOpenFile(IPCInfo* ipc,
+                  base::string16* name,
+                  uint32 attributes,
+                  uint32 desired_access,
+                  uint32 share_access,
+                  uint32 create_options);
 
     // Processes IPC requests coming from calls to NtQueryAttributesFile in the
   // target.
-  bool NtQueryAttributesFile(IPCInfo* ipc, base::string16* name,
-                             DWORD attributes,
+  bool NtQueryAttributesFile(IPCInfo* ipc,
+                             base::string16* name,
+                             uint32 attributes,
                              CountedBuffer* info);
 
   // Processes IPC requests coming from calls to NtQueryFullAttributesFile in
   // the target.
-  bool NtQueryFullAttributesFile(IPCInfo* ipc, base::string16* name,
-                                 DWORD attributes, CountedBuffer* info);
+  bool NtQueryFullAttributesFile(IPCInfo* ipc,
+                                 base::string16* name,
+                                 uint32 attributes,
+                                 CountedBuffer* info);
 
   // Processes IPC requests coming from calls to NtSetInformationFile with the
   // rename information class.
-  bool NtSetInformationFile(IPCInfo* ipc, HANDLE handle,
+  bool NtSetInformationFile(IPCInfo* ipc,
+                            HANDLE handle,
                             CountedBuffer* status,
-                            CountedBuffer* info, DWORD length,
-                            DWORD info_class);
+                            CountedBuffer* info,
+                            uint32 length,
+                            uint32 info_class);
 
   PolicyBase* policy_base_;
   DISALLOW_COPY_AND_ASSIGN(FilesystemDispatcher);

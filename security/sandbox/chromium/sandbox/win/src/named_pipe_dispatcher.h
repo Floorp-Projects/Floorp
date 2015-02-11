@@ -24,10 +24,14 @@ class NamedPipeDispatcher : public Dispatcher {
  private:
   // Processes IPC requests coming from calls to CreateNamedPipeW() in the
   // target.
-  bool CreateNamedPipe(IPCInfo* ipc, base::string16* name, DWORD open_mode,
-                       DWORD pipe_mode, DWORD max_instances,
-                       DWORD out_buffer_size, DWORD in_buffer_size,
-                       DWORD default_timeout);
+  bool CreateNamedPipe(IPCInfo* ipc,
+                       base::string16* name,
+                       uint32 open_mode,
+                       uint32 pipe_mode,
+                       uint32 max_instances,
+                       uint32 out_buffer_size,
+                       uint32 in_buffer_size,
+                       uint32 default_timeout);
 
   PolicyBase* policy_base_;
   DISALLOW_COPY_AND_ASSIGN(NamedPipeDispatcher);
