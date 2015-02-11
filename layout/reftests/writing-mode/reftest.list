@@ -68,3 +68,4 @@ HTTP(..) == 1127488-align-start-vertical-lr-ltr.html 1127488-align-top-left-ref.
 HTTP(..) == 1127488-align-end-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
 HTTP(..) == 1127488-align-left-vertical-lr-ltr.html 1127488-align-top-left-ref.html
 HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
+== 1131013-vertical-bidi.html 1131013-vertical-bidi-ref.html
