@@ -36,9 +36,17 @@ function runTest() {
 
   SimpleTest.waitForExplicitFinish();
 
+  if (DEBUG_AUS_TEST) {
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, true);
+  }
+
   closeUpdateWindow();
 
-  resetPrefs();
+  // Always leave the app.update.enabled and app.update.staging.enabled
+  // preferences set to false when cleaning up.
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, false);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
+
   resetFiles();
   removeUpdateDirsAndFiles();
   reloadUpdateManagerData();
@@ -63,7 +71,7 @@ function runTest() {
                                          AUS_Ci.nsILocalFile);
   addonPrepDir.append(ADDON_PREP_DIR);
   // Not being able to remove the directory used to create the test add-ons
-  // will not adversely affect subsequent tests so wrap it in a try lock and
+  // will not adversely affect subsequent tests so wrap it in a try block and
   // don't test whether its removal was successful.
   try {
     removeDirRecursive(addonPrepDir);
@@ -74,7 +82,16 @@ function runTest() {
          "Exception: " + e + "\n");
   }
 
-  resetAddons(SimpleTest.finish);
+  resetAddons(finishTest);
+}
+
+function finishTest() {
+  debugDump("entering");
+
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_LOG)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_LOG);
+  }
+  SimpleTest.finish();
 }
 
 ]]>
