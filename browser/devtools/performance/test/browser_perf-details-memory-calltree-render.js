@@ -8,6 +8,9 @@ function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView, MemoryCallTreeView } = panel.panelWin;
 
+  // Enable memory to test.
+  Services.prefs.setBoolPref(MEMORY_PREF, true);
+
   yield DetailsView.selectView("memory-calltree");
   ok(DetailsView.isViewSelected(MemoryCallTreeView), "The call tree is now selected.");
 

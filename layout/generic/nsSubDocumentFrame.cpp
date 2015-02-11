@@ -487,8 +487,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
               ? nsLayoutUtils::FindOrCreateIDFor(rootScrollFrame->GetContent())
               : aBuilder->GetCurrentScrollParentId());
 
-      aBuilder->SetAncestorHasTouchEventHandler(false);
-      aBuilder->SetAncestorHasScrollEventHandler(false);
+      aBuilder->SetAncestorHasApzAwareEventHandler(false);
       subdocRootFrame->
         BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);
     }

@@ -255,7 +255,7 @@ public:
                            nsIDOMEvent* aDOMEvent = nullptr,
                            nsEventStatus* aEventStatus = nullptr,
                            EventDispatchingCallback* aCallback = nullptr,
-                           nsCOMArray<dom::EventTarget>* aTargets = nullptr);
+                           nsTArray<dom::EventTarget*>* aTargets = nullptr);
 
   /**
    * Dispatches an event.

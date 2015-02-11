@@ -397,7 +397,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
                           nsIDOMEvent* aDOMEvent,
                           nsEventStatus* aEventStatus,
                           EventDispatchingCallback* aCallback,
-                          nsCOMArray<EventTarget>* aTargets)
+                          nsTArray<EventTarget*>* aTargets)
 {
   PROFILER_LABEL("EventDispatcher", "Dispatch",
     js::ProfileEntry::Category::EVENTS);
@@ -476,7 +476,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   }
 
 #ifdef DEBUG
-  if (!nsContentUtils::IsSafeToRunScript()) {
+  if (aEvent->message != NS_EVENT_NULL && !nsContentUtils::IsSafeToRunScript()) {
     nsresult rv = NS_ERROR_FAILURE;
     if (target->GetContextForEventHandlers(&rv) ||
         NS_FAILED(rv)) {
@@ -625,7 +625,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
         aTargets->Clear();
         aTargets->SetCapacity(chain.Length());
         for (uint32_t i = 0; i < chain.Length(); ++i) {
-          aTargets->AppendObject(chain[i].CurrentTarget()->GetTargetForDOMEvent());
+          aTargets->AppendElement(chain[i].CurrentTarget()->GetTargetForDOMEvent());
         }
       } else {
         // Event target chain is created. Handle the chain.
