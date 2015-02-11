@@ -99,18 +99,8 @@ class HTMLElement(object):
         '''
         Sends the string via synthesized keypresses to the element.
         '''
-        typing = []
-        for val in string:
-            if isinstance(val, Keys):
-                typing.append(val)
-            elif isinstance(val, int):
-                val = str(val)
-                for i in range(len(val)):
-                    typing.append(val[i])
-            else:
-                for i in range(len(val)):
-                    typing.append(val[i])
-        return self.marionette._send_message('sendKeysToElement', 'ok', id=self.id, value=typing)
+        keys = Marionette.convert_keys(*string)
+        return self.marionette._send_message('sendKeysToElement', 'ok', id=self.id, value=keys)
 
     def clear(self):
         '''
@@ -473,6 +463,42 @@ class MultiActions(object):
         '''
         return self.marionette._send_message('multiAction', 'ok', value=self.multi_actions, max_length=self.max_length)
 
+class Alert(object):
+    '''
+    A class for interacting with alerts.
+
+    ::
+
+      Alert(marionette).accept()
+      Alert(merionette).dismiss()
+    '''
+
+    def __init__(self, marionette):
+        self.marionette = marionette
+
+    def accept(self):
+        """Accept a currently displayed modal dialog.
+        """
+        self.marionette._send_message('acceptDialog', 'ok')
+
+    def dismiss(self):
+        """Dismiss a currently displayed modal dialog.
+        """
+        self.marionette._send_message('dismissDialog', 'ok')
+
+    @property
+    def text(self):
+        """Return the currently displayed text in a tab modal.
+        """
+        return self.marionette._send_message('getTextFromDialog', 'value')
+
+    def send_keys(self, *string):
+        """Send keys to the currently displayed text input area in an open
+        tab modal dialog.
+        """
+        keys = Marionette.convert_keys(*string)
+        self.marionette._send_message('sendKeysToDialog', 'ok', value=keys)
+
 
 class Marionette(object):
     """
@@ -763,6 +789,21 @@ class Marionette(object):
                 (name, returncode))
         return crashed
 
+    @staticmethod
+    def convert_keys(*string):
+        typing = []
+        for val in string:
+            if isinstance(val, Keys):
+                typing.append(val)
+            elif isinstance(val, int):
+                val = str(val)
+                for i in range(len(val)):
+                    typing.append(val[i])
+            else:
+                for i in range(len(val)):
+                    typing.append(val[i])
+        return typing
+
     def enforce_gecko_prefs(self, prefs):
         """
         Checks if the running instance has the given prefs. If not, it will kill the
@@ -999,7 +1040,6 @@ class Marionette(object):
         '''
         response = self._send_message('getPageSource', 'value')
         return response
-
     def close(self):
         """Close the current window, ending the session if it's the last
         window currently open.
