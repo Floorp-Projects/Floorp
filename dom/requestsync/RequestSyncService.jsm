@@ -509,6 +509,10 @@ this.RequestSyncService = {
     let toSave = null;
     let self = this;
     this.forEachRegistration(function(aObj) {
+      if (aObj.data.task != aData.task) {
+        return;
+      }
+
       if (aObj.principal.isInBrowserElement != aData.isInBrowserElement ||
           aObj.principal.origin != aData.origin) {
         return;
@@ -553,6 +557,10 @@ this.RequestSyncService = {
 
     let task = null;
     this.forEachRegistration(function(aObj) {
+      if (aObj.data.task != aData.task) {
+        return;
+      }
+
       if (aObj.principal.isInBrowserElement != aData.isInBrowserElement ||
           aObj.principal.origin != aData.origin) {
         return;
