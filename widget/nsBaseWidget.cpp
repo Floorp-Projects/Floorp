@@ -950,9 +950,12 @@ nsBaseWidget::DispatchEventForAPZ(WidgetGUIEvent* aEvent,
         = &APZCTreeManager::SetTargetAPZC;
     APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
         mAPZC.get(), setTargetApzcFunc, aInputBlockId, aGuid));
+    bool defaultPrevented = aEvent->AsTouchEvent()
+      ? (nsIPresShell::gPreventMouseEvents || aEvent->mFlags.mMultipleActionsPrevented)
+      : aEvent->mFlags.mDefaultPrevented;
     APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
         mAPZC.get(), &APZCTreeManager::ContentReceivedInputBlock, aInputBlockId,
-        aEvent->mFlags.mDefaultPrevented));
+        defaultPrevented));
   }
 
   return status;

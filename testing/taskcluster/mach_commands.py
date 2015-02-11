@@ -315,6 +315,10 @@ class Graph(object):
                     test_parameters['total_chunks'] = test['chunks']
 
                 for chunk in range(1, test_parameters['total_chunks'] + 1):
+                    if 'only_chunks' in test and \
+                        chunk not in test['only_chunks']:
+                        continue;
+
                     test_parameters['chunk'] = chunk
                     test_task = templates.load(test['task'], test_parameters)
                     test_task['taskId'] = slugid()

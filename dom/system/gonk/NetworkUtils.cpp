@@ -1485,7 +1485,6 @@ void NetworkUtils::ExecuteCommand(NetworkParams aOptions)
     BUILD_ENTRY(removeDefaultRoute),
     BUILD_ENTRY(addHostRoute),
     BUILD_ENTRY(removeHostRoute),
-    BUILD_ENTRY(removeHostRoutes),
     BUILD_ENTRY(addSecondaryRoute),
     BUILD_ENTRY(removeSecondaryRoute),
     BUILD_ENTRY(setNetworkInterfaceAlarm),
@@ -1955,6 +1954,11 @@ CommandResult NetworkUtils::addHostRoute(NetworkParams& aOptions)
  */
 CommandResult NetworkUtils::addHostRouteLegacy(NetworkParams& aOptions)
 {
+  if (aOptions.mGateway.IsEmpty()) {
+    ERROR("addHostRouteLegacy does not support empty gateway.");
+    return EINVAL;
+  }
+
   NS_ConvertUTF16toUTF8 autoIfname(aOptions.mIfname);
   NS_ConvertUTF16toUTF8 autoHostname(aOptions.mIp);
   NS_ConvertUTF16toUTF8 autoGateway(aOptions.mGateway);
@@ -2024,27 +2028,6 @@ CommandResult NetworkUtils::removeHostRouteLegacy(NetworkParams& aOptions)
   prefix = type == AF_INET ? 32 : 128;
   return mNetUtils->do_ifc_remove_route(autoIfname.get(), autoHostname.get(),
                                         prefix, autoGateway.get());
-}
-
-/**
- * Remove the routes associated with the named interface.
- */
-CommandResult NetworkUtils::removeHostRoutes(NetworkParams& aOptions)
-{
-  if (SDK_VERSION < 20) {
-    return removeHostRoutesLegacy(aOptions);
-  }
-
-  NU_DBG("Don't know how to remove host routes on a interface");
-  return SUCCESS;
-}
-
-/**
- * Remove the routes associated with the named interface.
- */
-CommandResult NetworkUtils::removeHostRoutesLegacy(NetworkParams& aOptions)
-{
-  return mNetUtils->do_ifc_remove_host_routes(GET_CHAR(mIfname));
 }
 
 CommandResult NetworkUtils::removeNetworkRoute(NetworkParams& aOptions)

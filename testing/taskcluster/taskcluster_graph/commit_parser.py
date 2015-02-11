@@ -3,13 +3,15 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import shlex
 import argparse
-import functools
 import copy
+import functools
+import re
+import shlex
 from try_test_parser import parse_test_opts
 
-TRY_DELIMITER='try:'
+TRY_DELIMITER = 'try:'
+TEST_CHUNK_SUFFIX = re.compile('(.*)-([0-9]+)$')
 
 # The build type aliases are very cryptic and only used in try flags these are
 # mappings from the single char alias to a longer more recognizable form.
@@ -59,9 +61,41 @@ def normalize_test_list(all_tests, job_list):
             if 'platforms' in all_entry:
                 entry['platforms'] = list(all_entry['platforms'])
             results.append(entry)
-        return results
+        return parse_test_chunks(results)
     else:
-        return tests
+        return parse_test_chunks(tests)
+
+def parse_test_chunks(tests):
+    '''
+    Test flags may include parameters to narrow down the number of chunks in a
+    given push. We don't model 1 chunk = 1 job in taskcluster so we must check
+    each test flag to see if it is actually specifying a chunk.
+
+    :param list tests: Result from normalize_test_list
+    :returns: List of jobs
+    '''
+
+    results = []
+    seen_chunks = {}
+    for test in tests:
+        matches = TEST_CHUNK_SUFFIX.match(test['test'])
+
+        if not matches:
+            results.append(test)
+            continue
+
+        name = matches.group(1)
+        chunk = int(matches.group(2))
+
+        if name in seen_chunks:
+            seen_chunks[name].add(chunk)
+        else:
+            seen_chunks[name] = set([chunk])
+            test['test'] = name
+            test['only_chunks'] = seen_chunks[name]
+            results.append(test)
+
+    return results;
 
 def extract_tests_from_platform(test_jobs, build_platform, build_task, tests):
     '''
@@ -104,7 +138,18 @@ def extract_tests_from_platform(test_jobs, build_platform, build_task, tests):
 
         # Add the job to the list and ensure to copy it so we don't accidentally
         # mutate the state of the test job in the future...
-        results.append(copy.deepcopy(test_job))
+        specific_test_job = copy.deepcopy(test_job)
+
+        # Update the task configuration for all tests in the matrix...
+        for build_name in specific_test_job:
+            for test_task_name in specific_test_job[build_name]:
+                test_task = specific_test_job[build_name][test_task_name]
+                # Copy over the chunk restrictions if given...
+                if 'only_chunks' in test_entry:
+                    test_task['only_chunks'] = \
+                            copy.copy(test_entry['only_chunks'])
+
+        results.append(specific_test_job)
 
     return results
 
