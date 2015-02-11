@@ -16,21 +16,21 @@ namespace mp4_demuxer
 
 static const uint8_t kAnnexBDelimiter[] = { 0, 0, 0, 1 };
 
-void
+bool
 AnnexB::ConvertSampleToAnnexB(MP4Sample* aSample)
 {
   MOZ_ASSERT(aSample);
 
   if (!IsAVCC(aSample)) {
-    return;
+    return true;
   }
   MOZ_ASSERT(aSample->data);
 
   ConvertSampleTo4BytesAVCC(aSample);
 
   if (aSample->size < 4) {
-    // Nothing to do, it's corrupted anyway.
-    return;
+    // Nothing to do, it's corrupted anyway.
+    return true;
   }
 
   ByteReader reader(aSample->data, aSample->size);
@@ -55,8 +55,12 @@ AnnexB::ConvertSampleToAnnexB(MP4Sample* aSample)
   if (aSample->is_sync_point) {
     nsRefPtr<ByteBuffer> annexB =
       ConvertExtraDataToAnnexB(aSample->extra_data);
-    aSample->Prepend(annexB->Elements(), annexB->Length());
+    if (!aSample->Prepend(annexB->Elements(), annexB->Length())) {
+      return false;
+    }
   }
+
+  return true;
 }
 
 already_AddRefed<ByteBuffer>
