@@ -70,8 +70,15 @@ var listener = {
 function setupChannel(url) {
   var ios = Components.classes["@mozilla.org/network/io-service;1"].
                        getService(Ci.nsIIOService);
-  var chan = ios.newChannel("http://localhost:" +
-                           httpserver.identity.primaryPort + url, "", null);
+  var chan = ios.newChannel2("http://localhost:" +
+                             httpserver.identity.primaryPort + url,
+                             "",
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_MEDIA);
   var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
   return httpChan;
 }
