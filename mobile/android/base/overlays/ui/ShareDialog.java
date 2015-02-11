@@ -261,7 +261,7 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
                 final ContentResolver contentResolver = getApplicationContext().getContentResolver();
 
                 isBookmark = browserDB.isBookmark(contentResolver, pageURL);
-                isReadingListItem = browserDB.isReadingListItem(contentResolver, pageURL);
+                isReadingListItem = browserDB.getReadingListAccessor().isReadingListItem(contentResolver, pageURL);
 
                 return null;
             }
