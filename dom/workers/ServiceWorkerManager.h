@@ -8,7 +8,6 @@
 #include "nsIServiceWorkerManager.h"
 #include "nsCOMPtr.h"
 
-#include "ipc/IPCMessageUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Preferences.h"
@@ -18,10 +17,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerBinding.h" // For ServiceWorkerState
 #include "mozilla/dom/ServiceWorkerCommon.h"
-#include "mozilla/dom/ServiceWorkerRegistrar.h"
-#include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
-#include "mozilla/ipc/BackgroundUtils.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsRefPtrHashtable.h"
@@ -31,11 +26,6 @@
 class nsIScriptError;
 
 namespace mozilla {
-
-namespace ipc {
-class BackgroundChild;
-}
-
 namespace dom {
 
 class ServiceWorkerRegistration;
@@ -141,8 +131,6 @@ public:
   // the URLs of the following three workers.
   nsCString mScriptSpec;
 
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-
   nsRefPtr<ServiceWorkerInfo> mActiveWorker;
   nsRefPtr<ServiceWorkerInfo> mWaitingWorker;
   nsRefPtr<ServiceWorkerInfo> mInstallingWorker;
@@ -153,8 +141,7 @@ public:
   bool mPendingUninstall;
   bool mWaitingToActivate;
 
-  explicit ServiceWorkerRegistrationInfo(const nsACString& aScope,
-                                         nsIPrincipal* aPrincipal);
+  explicit ServiceWorkerRegistrationInfo(const nsACString& aScope);
 
   already_AddRefed<ServiceWorkerInfo>
   Newest()
@@ -231,12 +218,6 @@ public:
     return mScriptSpec;
   }
 
-  void SetScriptSpec(const nsCString& aSpec)
-  {
-    MOZ_ASSERT(!aSpec.IsEmpty());
-    mScriptSpec = aSpec;
-  }
-
   explicit ServiceWorkerInfo(ServiceWorkerRegistrationInfo* aReg,
                              const nsACString& aScriptSpec)
     : mRegistration(aReg)
@@ -285,9 +266,7 @@ public:
  * installation, querying and event dispatch of ServiceWorkers for all the
  * origins in the process.
  */
-class ServiceWorkerManager MOZ_FINAL
-  : public nsIServiceWorkerManager
-  , public nsIIPCBackgroundChildCreateCallback
+class ServiceWorkerManager MOZ_FINAL : public nsIServiceWorkerManager
 {
   friend class ActivationRunnable;
   friend class ServiceWorkerRegistrationInfo;
@@ -301,12 +280,14 @@ class ServiceWorkerManager MOZ_FINAL
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVICEWORKERMANAGER
-  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_SERVICEWORKERMANAGER_IMPL_IID)
 
   static ServiceWorkerManager* FactoryCreate()
   {
     AssertIsOnMainThread();
+    if (!Preferences::GetBool("dom.serviceWorkers.enabled")) {
+      return nullptr;
+    }
 
     ServiceWorkerManager* res = new ServiceWorkerManager;
     NS_ADDREF(res);
@@ -344,7 +325,7 @@ public:
   }
 
   ServiceWorkerRegistrationInfo*
-  CreateNewRegistration(const nsCString& aScope, nsIPrincipal* aPrincipal);
+  CreateNewRegistration(const nsCString& aScope);
 
   void
   RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration)
@@ -359,9 +340,6 @@ public:
   {
     return mJobQueues.LookupOrAdd(aScope);
   }
-
-  void StoreRegistration(nsIPrincipal* aPrincipal,
-                         ServiceWorkerRegistrationInfo* aRegistration);
 
   void
   FinishFetch(ServiceWorkerRegistrationInfo* aRegistration);
@@ -385,9 +363,6 @@ public:
 
   static already_AddRefed<ServiceWorkerManager>
   GetInstance();
-
- void LoadRegistrations(
-                 const nsTArray<ServiceWorkerRegistrationData>& aRegistrations);
 
 private:
   ServiceWorkerManager();
@@ -475,26 +450,12 @@ private:
     nsRefPtr<Promise> mPromise;
   };
 
-  void AppendPendingOperation(nsIRunnable* aRunnable);
-  void AppendPendingOperation(ServiceWorkerJobQueue* aQueue,
-                              ServiceWorkerJob* aJob);
-
-  bool HasBackgroundActor() const
-  {
-    return !!mActor;
-  }
-
   static PLDHashOperator
   CheckPendingReadyPromisesEnumerator(nsISupports* aSupports,
                                       nsAutoPtr<PendingReadyPromise>& aData,
                                       void* aUnused);
 
   nsClassHashtable<nsISupportsHashKey, PendingReadyPromise> mPendingReadyPromises;
-
-  mozilla::ipc::PBackgroundChild* mActor;
-
-  struct PendingOperation;
-  nsTArray<PendingOperation> mPendingOperations;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ServiceWorkerManager,
