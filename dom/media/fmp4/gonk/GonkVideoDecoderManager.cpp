@@ -452,13 +452,18 @@ GonkVideoDecoderManager::SendSampleToOMX(mp4_demuxer::MP4Sample* aSample)
                          0);
 }
 
-void
+bool
 GonkVideoDecoderManager::PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample)
 {
   if (aSample != nullptr) {
     // We must prepare samples in AVC Annex B.
-    mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample);
+    if (!mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
+      GVDM_LOG("Failed to convert sample to annex B!");
+      return false;
+    }
   }
+
+  return true;
 }
 
 void

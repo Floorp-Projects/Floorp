@@ -62,7 +62,7 @@ public:
 protected:
   // It performs special operation to MP4 sample, the real action is depended on
   // the codec type.
-  virtual void PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) {}
+  virtual bool PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) { return true; }
 
   // It sends MP4Sample to OMX layer. It must be overrided by subclass.
   virtual android::status_t SendSampleToOMX(mp4_demuxer::MP4Sample* aSample) = 0;

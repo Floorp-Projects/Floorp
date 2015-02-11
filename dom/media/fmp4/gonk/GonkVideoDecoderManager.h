@@ -58,7 +58,7 @@ public:
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
 
 protected:
-  virtual void PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
+  virtual bool PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
 
   virtual android::status_t SendSampleToOMX(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
 
