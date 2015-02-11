@@ -4,7 +4,6 @@
 
 #include "ServiceWorkerManager.h"
 
-#include "nsIAppsService.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDocument.h"
 #include "nsIScriptSecurityManager.h"
@@ -22,9 +21,6 @@
 #include "mozilla/dom/InstallEventBinding.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
-#include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/ipc/PBackgroundChild.h"
-#include "mozilla/ipc/PBackgroundSharedTypes.h"
 
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
@@ -49,57 +45,8 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::ipc;
 
 BEGIN_WORKERS_NAMESPACE
-
-struct ServiceWorkerManager::PendingOperation
-{
-  nsCOMPtr<nsIRunnable> mRunnable;
-
-  ServiceWorkerJobQueue* mQueue;
-  nsRefPtr<ServiceWorkerJob> mJob;
-
-  ServiceWorkerRegistrationData mRegistration;
-};
-
-namespace {
-
-nsresult
-PopulateRegistrationData(nsIPrincipal* aPrincipal,
-                         const ServiceWorkerRegistrationInfo* aRegistration,
-                         ServiceWorkerRegistrationData& aData)
-{
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(aRegistration);
-
-  bool isNullPrincipal = true;
-  nsresult rv = aPrincipal->GetIsNullPrincipal(&isNullPrincipal);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // No null principals.
-  if (NS_WARN_IF(isNullPrincipal)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = PrincipalToPrincipalInfo(aPrincipal, &aData.principal());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  aData.scope() = aRegistration->mScope;
-  aData.scriptSpec() = aRegistration->mScriptSpec;
-
-  if (aRegistration->mActiveWorker) {
-    aData.currentWorkerURL() = aRegistration->mActiveWorker->ScriptSpec();
-  }
-
-  return NS_OK;
-}
-
-} // Anonymous namespace
 
 NS_IMPL_ISUPPORTS0(ServiceWorkerJob)
 NS_IMPL_ISUPPORTS0(ServiceWorkerRegistrationInfo)
@@ -146,12 +93,10 @@ ServiceWorkerRegistrationInfo::Clear()
                                                  WhichServiceWorker::ACTIVE_WORKER);
 }
 
-ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(const nsACString& aScope,
-                                                             nsIPrincipal* aPrincipal)
-  : mControlledDocumentsCounter(0)
-  , mScope(aScope)
-  , mPrincipal(aPrincipal)
-  , mPendingUninstall(false)
+ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(const nsACString& aScope)
+  : mControlledDocumentsCounter(0),
+    mScope(aScope),
+    mPendingUninstall(false)
 { }
 
 ServiceWorkerRegistrationInfo::~ServiceWorkerRegistrationInfo()
@@ -170,7 +115,6 @@ NS_IMPL_RELEASE(ServiceWorkerManager)
 
 NS_INTERFACE_MAP_BEGIN(ServiceWorkerManager)
   NS_INTERFACE_MAP_ENTRY(nsIServiceWorkerManager)
-  NS_INTERFACE_MAP_ENTRY(nsIIPCBackgroundChildCreateCallback)
   if (aIID.Equals(NS_GET_IID(ServiceWorkerManager)))
     foundInterface = static_cast<nsIServiceWorkerManager*>(this);
   else
@@ -178,19 +122,7 @@ NS_INTERFACE_MAP_BEGIN(ServiceWorkerManager)
 NS_INTERFACE_MAP_END
 
 ServiceWorkerManager::ServiceWorkerManager()
-  : mActor(nullptr)
 {
-  // Register this component to PBackground.
-  MOZ_ALWAYS_TRUE(BackgroundChild::GetOrCreateForCurrentThread(this));
-
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    nsRefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
-    MOZ_ASSERT(swr);
-
-    nsTArray<ServiceWorkerRegistrationData> data;
-    swr->GetRegistrations(data);
-    LoadRegistrations(data);
-  }
 }
 
 ServiceWorkerManager::~ServiceWorkerManager()
@@ -448,7 +380,6 @@ class ServiceWorkerRegisterJob MOZ_FINAL : public ServiceWorkerJob,
   nsCString mScriptSpec;
   nsRefPtr<ServiceWorkerRegistrationInfo> mRegistration;
   nsRefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
 
   ~ServiceWorkerRegisterJob()
   { }
@@ -466,13 +397,11 @@ public:
   ServiceWorkerRegisterJob(ServiceWorkerJobQueue* aQueue,
                            const nsCString& aScope,
                            const nsCString& aScriptSpec,
-                           ServiceWorkerUpdateFinishCallback* aCallback,
-                           nsIPrincipal* aPrincipal)
+                           ServiceWorkerUpdateFinishCallback* aCallback)
     : ServiceWorkerJob(aQueue)
     , mScope(aScope)
     , mScriptSpec(aScriptSpec)
     , mCallback(aCallback)
-    , mPrincipal(aPrincipal)
     , mJobType(REGISTER_JOB)
   { }
 
@@ -489,17 +418,8 @@ public:
   void
   Start() MOZ_OVERRIDE
   {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (!swm->HasBackgroundActor()) {
-      nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableMethod(this, &ServiceWorkerRegisterJob::Start);
-      swm->AppendPendingOperation(runnable);
-      return;
-    }
-
     if (mJobType == REGISTER_JOB) {
+      nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
       mRegistration = swm->GetRegistration(mScope);
 
       if (mRegistration) {
@@ -512,11 +432,10 @@ public:
           return;
         }
       } else {
-        mRegistration = swm->CreateNewRegistration(mScope, mPrincipal);
+        mRegistration = swm->CreateNewRegistration(mScope);
       }
 
       mRegistration->mScriptSpec = mScriptSpec;
-      swm->StoreRegistration(mPrincipal, mRegistration);
     } else {
       MOZ_ASSERT(mJobType == UPDATE_JOB);
     }
@@ -947,34 +866,11 @@ ServiceWorkerManager::Register(nsIDOMWindow* aWindow,
     new ServiceWorkerResolveWindowPromiseOnUpdateCallback(window, promise);
 
   nsRefPtr<ServiceWorkerRegisterJob> job =
-    new ServiceWorkerRegisterJob(queue, cleanedScope, spec, cb, documentPrincipal);
+    new ServiceWorkerRegisterJob(queue, cleanedScope, spec, cb);
   queue->Append(job);
 
   promise.forget(aPromise);
   return NS_OK;
-}
-
-void
-ServiceWorkerManager::AppendPendingOperation(ServiceWorkerJobQueue* aQueue,
-                                             ServiceWorkerJob* aJob)
-{
-  MOZ_ASSERT(!mActor);
-  MOZ_ASSERT(aQueue);
-  MOZ_ASSERT(aJob);
-
-  PendingOperation* opt = mPendingOperations.AppendElement();
-  opt->mQueue = aQueue;
-  opt->mJob = aJob;
-}
-
-void
-ServiceWorkerManager::AppendPendingOperation(nsIRunnable* aRunnable)
-{
-  MOZ_ASSERT(!mActor);
-  MOZ_ASSERT(aRunnable);
-
-  PendingOperation* opt = mPendingOperations.AppendElement();
-  opt->mRunnable = aRunnable;
 }
 
 /*
@@ -1131,7 +1027,6 @@ ServiceWorkerRegistrationInfo::Activate()
   mActiveWorker->UpdateState(ServiceWorkerState::Activating);
 
   swm->CheckPendingReadyPromises();
-  swm->StoreRegistration(mPrincipal, this);
 
   // "Queue a task to fire a simple event named controllerchange..."
   nsCOMPtr<nsIRunnable> controllerChangeRunnable =
@@ -1487,7 +1382,6 @@ class ServiceWorkerUnregisterJob MOZ_FINAL : public ServiceWorkerJob
   nsRefPtr<ServiceWorkerRegistrationInfo> mRegistration;
   const nsCString mScope;
   nsCOMPtr<nsIServiceWorkerUnregisterCallback> mCallback;
-  PrincipalInfo mPrincipalInfo;
 
   ~ServiceWorkerUnregisterJob()
   { }
@@ -1495,12 +1389,10 @@ class ServiceWorkerUnregisterJob MOZ_FINAL : public ServiceWorkerJob
 public:
   ServiceWorkerUnregisterJob(ServiceWorkerJobQueue* aQueue,
                              const nsACString& aScope,
-                             nsIServiceWorkerUnregisterCallback* aCallback,
-                             PrincipalInfo& aPrincipalInfo)
+                             nsIServiceWorkerUnregisterCallback* aCallback)
     : ServiceWorkerJob(aQueue)
     , mScope(aScope)
     , mCallback(aCallback)
-    , mPrincipalInfo(aPrincipalInfo)
   {
     AssertIsOnMainThread();
   }
@@ -1553,9 +1445,6 @@ private:
       swm->RemoveRegistration(registration);
     }
 
-    MOZ_ASSERT(swm->mActor);
-    swm->mActor->SendUnregisterServiceWorker(mPrincipalInfo,
-                                             NS_ConvertUTF8toUTF16(mScope));
     return NS_OK;
   }
 
@@ -1568,12 +1457,10 @@ private:
 };
 
 NS_IMETHODIMP
-ServiceWorkerManager::Unregister(nsIPrincipal* aPrincipal,
-                                 nsIServiceWorkerUnregisterCallback* aCallback,
+ServiceWorkerManager::Unregister(nsIServiceWorkerUnregisterCallback* aCallback,
                                  const nsAString& aScope)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aCallback);
 
 // This is not accessible by content, and callers should always ensure scope is
@@ -1590,21 +1477,9 @@ ServiceWorkerManager::Unregister(nsIPrincipal* aPrincipal,
   ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(scope);
   MOZ_ASSERT(queue);
 
-  PrincipalInfo principalInfo;
-  if (NS_WARN_IF(NS_FAILED(PrincipalToPrincipalInfo(aPrincipal,
-                                                    &principalInfo)))) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   nsRefPtr<ServiceWorkerUnregisterJob> job =
-    new ServiceWorkerUnregisterJob(queue, scope, aCallback, principalInfo);
-
-  if (mActor) {
-    queue->Append(job);
-    return NS_OK;
-  }
-
-  AppendPendingOperation(queue, job);
+    new ServiceWorkerUnregisterJob(queue, scope, aCallback);
+  queue->Append(job);
   return NS_OK;
 }
 
@@ -1736,85 +1611,6 @@ ServiceWorkerManager::CreateServiceWorkerForWindow(nsPIDOMWindow* aWindow,
 
   serviceWorker.forget(aServiceWorker);
   return rv;
-}
-
-void
-ServiceWorkerManager::LoadRegistrations(
-                  const nsTArray<ServiceWorkerRegistrationData>& aRegistrations)
-{
-  AssertIsOnMainThread();
-
-  for (uint32_t i = 0, len = aRegistrations.Length(); i < len; ++i) {
-    nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(aRegistrations[i].principal());
-    if (!principal) {
-      continue;
-    }
-
-    ServiceWorkerRegistrationInfo* registration =
-      CreateNewRegistration(aRegistrations[i].scope(), principal);
-
-    registration->mScriptSpec = aRegistrations[i].scriptSpec();
-
-    registration->mActiveWorker =
-      new ServiceWorkerInfo(registration, aRegistrations[i].currentWorkerURL());
-  }
-}
-
-void
-ServiceWorkerManager::ActorFailed()
-{
-  MOZ_CRASH("Failed to create a PBackgroundChild actor!");
-}
-
-void
-ServiceWorkerManager::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
-{
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(!mActor);
-  mActor = aActor;
-
-  // Flush the pending requests.
-  for (uint32_t i = 0, len = mPendingOperations.Length(); i < len; ++i) {
-    MOZ_ASSERT(mPendingOperations[i].mRunnable ||
-               (mPendingOperations[i].mJob && mPendingOperations[i].mQueue));
-
-    if (mPendingOperations[i].mRunnable) {
-      nsresult rv = NS_DispatchToCurrentThread(mPendingOperations[i].mRunnable);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to dispatch a runnable.");
-        return;
-      }
-    } else {
-      mPendingOperations[i].mQueue->Append(mPendingOperations[i].mJob);
-    }
-  }
-
-  mPendingOperations.Clear();
-}
-
-void
-ServiceWorkerManager::StoreRegistration(
-                                   nsIPrincipal* aPrincipal,
-                                   ServiceWorkerRegistrationInfo* aRegistration)
-{
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(aRegistration);
-
-  ServiceWorkerRegistrationData data;
-  nsresult rv = PopulateRegistrationData(aPrincipal, aRegistration, data);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  PrincipalInfo principalInfo;
-  if (NS_WARN_IF(NS_FAILED(PrincipalToPrincipalInfo(aPrincipal,
-                                                    &principalInfo)))) {
-    return;
-  }
-
-  mActor->SendRegisterServiceWorker(data);
 }
 
 already_AddRefed<ServiceWorkerRegistrationInfo>
@@ -2370,8 +2166,7 @@ ServiceWorkerManager::FireControllerChange(ServiceWorkerRegistrationInfo* aRegis
 }
 
 ServiceWorkerRegistrationInfo*
-ServiceWorkerManager::CreateNewRegistration(const nsCString& aScope,
-                                            nsIPrincipal* aPrincipal)
+ServiceWorkerManager::CreateNewRegistration(const nsCString& aScope)
 {
 #ifdef DEBUG
   AssertIsOnMainThread();
@@ -2379,7 +2174,7 @@ ServiceWorkerManager::CreateNewRegistration(const nsCString& aScope,
   nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 #endif
-  ServiceWorkerRegistrationInfo* registration = new ServiceWorkerRegistrationInfo(aScope, aPrincipal);
+  ServiceWorkerRegistrationInfo* registration = new ServiceWorkerRegistrationInfo(aScope);
   // From now on ownership of registration is with
   // mServiceWorkerRegistrationInfos.
   mServiceWorkerRegistrationInfos.Put(aScope, registration);
