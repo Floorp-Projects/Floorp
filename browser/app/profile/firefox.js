@@ -1787,8 +1787,10 @@ pref("ui.key.menuAccessKeyFocuses", true);
 // Encrypted media extensions.
 #ifdef RELEASE_BUILD
 pref("media.eme.enabled", false);
+pref("media.eme.apiVisible", false);
 #else
 pref("media.eme.enabled", true);
+pref("media.eme.apiVisible", true);
 #endif
 
 // Play with different values of the decay time and get telemetry,
