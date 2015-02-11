@@ -450,15 +450,6 @@ NetworkService.prototype = {
     });
   },
 
-  removeHostRoutes: function(ifname) {
-    if(DEBUG) debug("Going to remove all host routes on " + ifname);
-    let options = {
-      cmd: "removeHostRoutes",
-      ifname: ifname,
-    };
-    this.controlMessage(options);
-  },
-
   addSecondaryRoute: function(ifname, route) {
     if(DEBUG) debug("Going to add route to secondary table on " + ifname);
     let options = {
