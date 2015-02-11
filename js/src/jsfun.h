@@ -432,16 +432,10 @@ class JSFunction : public js::NativeObject
 
     /* Bound function accessors. */
 
-    inline bool initBoundFunction(JSContext *cx, js::HandleValue thisArg,
+    inline bool initBoundFunction(JSContext *cx, js::HandleObject target, js::HandleValue thisArg,
                                   const js::Value *args, unsigned argslen);
 
-    JSObject *getBoundFunctionTarget() const {
-        MOZ_ASSERT(isBoundFunction());
-
-        /* Bound functions abuse |parent| to store their target function. */
-        return getParent();
-    }
-
+    JSObject *getBoundFunctionTarget() const;
     const js::Value &getBoundFunctionThis() const;
     const js::Value &getBoundFunctionArgument(unsigned which) const;
     size_t getBoundFunctionArgumentCount() const;
