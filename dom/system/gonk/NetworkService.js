@@ -56,6 +56,66 @@ function debug(msg) {
   dump("-*- NetworkService: " + msg + "\n");
 }
 
+function Task(id, params, setupFunction) {
+  this.id = id;
+  this.params = params;
+  this.setupFunction = setupFunction;
+}
+
+function NetworkWorkerRequestQueue(networkService) {
+  this.networkService = networkService;
+  this.tasks = [];
+}
+NetworkWorkerRequestQueue.prototype = {
+  runQueue: function() {
+    if (this.tasks.length === 0) {
+      return;
+    }
+
+    let task = this.tasks[0];
+    if (DEBUG) debug("run task id: " + task.id);
+
+    if (typeof task.setupFunction === 'function') {
+      // If setupFunction returns false, skip sending to Network Worker but call
+      // handleWorkerMessage() directly with task id, as if the response was
+      // returned from Network Worker.
+      if (!task.setupFunction()) {
+        this.networkService.handleWorkerMessage({id: task.id});
+        return;
+      }
+    }
+
+    gNetworkWorker.postMessage(task.params);
+  },
+
+  enqueue: function(id, params, setupFunction) {
+    if (DEBUG) debug("enqueue id: " + id);
+    this.tasks.push(new Task(id, params, setupFunction));
+
+    if (this.tasks.length === 1) {
+      this.runQueue();
+    }
+  },
+
+  dequeue: function(id) {
+    if (DEBUG) debug("dequeue id: " + id);
+
+    if (!this.tasks.length || this.tasks[0].id != id) {
+      if (DEBUG) debug("Id " + id + " is not on top of the queue");
+      return;
+    }
+
+    this.tasks.shift();
+    if (this.tasks.length > 0) {
+      // Run queue on the next tick.
+      Services.tm.currentThread.dispatch(() => {
+        this.runQueue();
+      }, Ci.nsIThread.DISPATCH_NORMAL);
+    }
+  }
+};
+
+
 /**
  * This component watches for network interfaces changing state and then
  * adjusts routes etc. accordingly.
@@ -76,6 +136,8 @@ function NetworkService() {
   // Callbacks to invoke when a reply arrives from the net_worker.
   this.controlCallbacks = Object.create(null);
 
+  this.addedRoutes = new Map();
+  this.netWorkerRequestQueue = new NetworkWorkerRequestQueue(this);
   this.shutdown = false;
   Services.obs.addObserver(this, "xpcom-shutdown", false);
 }
@@ -90,17 +152,26 @@ NetworkService.prototype = {
 
   // Helpers
 
+  addedRoutes: null,
   idgen: 0,
-  controlMessage: function(params, callback) {
+  controlMessage: function(params, callback, setupFunction) {
     if (this.shutdown) {
       return;
     }
 
+    let id = this.idgen++;
+    params.id = id;
     if (callback) {
-      let id = this.idgen++;
-      params.id = id;
       this.controlCallbacks[id] = callback;
     }
+
+    // For now, we use setupFunction to determine if this command needs to be
+    // queued or not.
+    if (setupFunction) {
+      this.netWorkerRequestQueue.enqueue(id, params, setupFunction);
+      return;
+    }
+
     if (gNetworkWorker) {
       gNetworkWorker.postMessage(params);
     }
@@ -118,6 +189,8 @@ NetworkService.prototype = {
       callback.call(this, response);
       delete this.controlCallbacks[id];
     }
+
+    this.netWorkerRequestQueue.dequeue(id);
   },
 
   // nsINetworkService
@@ -307,6 +380,10 @@ NetworkService.prototype = {
     this.controlMessage(options);
   },
 
+  _routeToString: function(interfaceName, host, prefixLength, gateway) {
+    return host + "-" + prefixLength + "-" + gateway + "-" + interfaceName;
+  },
+
   modifyRoute: function(action, interfaceName, host, prefixLength, gateway) {
     let command;
 
@@ -322,8 +399,22 @@ NetworkService.prototype = {
         return Promise.reject();
     }
 
+    let route = this._routeToString(interfaceName, host, prefixLength, gateway);
+    let setupFunc = () => {
+      let count = this.addedRoutes.get(route);
+      if (DEBUG) debug(command + ": " + route + " -> " + count);
+
+      // Return false if there is no need to send the command to network worker.
+      if ((action == Ci.nsINetworkService.MODIFY_ROUTE_ADD && count) ||
+          (action == Ci.nsINetworkService.MODIFY_ROUTE_REMOVE &&
+           (!count || count > 1))) {
+        return false;
+      }
+
+      return true;
+    };
+
     if (DEBUG) debug(command + " " + host + " on " + interfaceName);
-    let deferred = Promise.defer();
     let options = {
       cmd: command,
       ifname: interfaceName,
@@ -331,14 +422,32 @@ NetworkService.prototype = {
       prefixLength: prefixLength,
       ip: host
     };
-    this.controlMessage(options, function(data) {
-      if (data.error) {
-        deferred.reject(data.reason);
-        return;
-      }
-      deferred.resolve();
+
+    return new Promise((aResolve, aReject) => {
+      this.controlMessage(options, (data) => {
+        let count = this.addedRoutes.get(route);
+
+        // Remove route from addedRoutes on success or failure.
+        if (action == Ci.nsINetworkService.MODIFY_ROUTE_REMOVE) {
+          if (count > 1) {
+            this.addedRoutes.set(route, count - 1);
+          } else {
+            this.addedRoutes.delete(route);
+          }
+        }
+
+        if (data.error) {
+          aReject(data.reason);
+          return;
+        }
+
+        if (action == Ci.nsINetworkService.MODIFY_ROUTE_ADD) {
+          this.addedRoutes.set(route, count ? count + 1 : 1);
+        }
+
+        aResolve();
+      }, setupFunc);
     });
-    return deferred.promise;
   },
 
   removeHostRoutes: function(ifname) {
