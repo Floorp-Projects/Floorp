@@ -2995,7 +2995,7 @@ UpdateService.prototype = {
         if (status == STATE_NONE)
           cleanupActiveUpdate();
         self._update = null;
-        this._backgroundUpdateCheckCodePing(PING_BGUC_CHECK_NO_INCOMPAT);
+        self._backgroundUpdateCheckCodePing(PING_BGUC_CHECK_NO_INCOMPAT);
       }
     });
   },
