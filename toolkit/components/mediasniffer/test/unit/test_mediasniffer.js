@@ -6,7 +6,6 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
 
 const PATH = "/file.meh";
 var httpserver = new HttpServer();
@@ -71,16 +70,8 @@ function setupChannel(url, flags)
 {
   var ios = Components.classes["@mozilla.org/network/io-service;1"].
                        getService(Ci.nsIIOService);
-  let uri = "http://localhost:" +
-             httpserver.identity.primaryPort + url;
-  var chan = ios.newChannel2(uri,
-                             "",
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_MEDIA);
+  var chan = ios.newChannel("http://localhost:" +
+                           httpserver.identity.primaryPort + url, "", null);
   chan.loadFlags |= flags;
   var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
   return httpChan;

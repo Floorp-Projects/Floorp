@@ -66,12 +66,7 @@ function run_test() {
 function tryToSetCookie(obj) {
   let requestURI = Services.io.newURI(obj.request, null, null);
   let referrerURI = Services.io.newURI(obj.referrer, null, null);
-  let requestChannel = Services.io.newChannelFromURI2(requestURI,
-                                                      null,      // aLoadingNode
-                                                      Services.scriptSecurityManager.getSystemPrincipal(),
-                                                      null,      // aTriggeringPrincipal
-                                                      Ci.nsILoadInfo.SEC_NORMAL,
-                                                      Ci.nsIContentPolicy.TYPE_OTHER);
+  let requestChannel = Services.io.newChannelFromURI(requestURI);
   gCookieService.setCookieString(referrerURI, null, "Is there a cookie in my jar?", requestChannel);
 }
 

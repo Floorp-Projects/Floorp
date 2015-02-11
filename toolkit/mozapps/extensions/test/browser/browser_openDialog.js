@@ -22,14 +22,7 @@ let CustomChromeProtocol = {
 
   newChannel: function CCP_newChannel(aURI) {
     let url = "chrome:" + aURI.path;
-    let ch = NetUtil.newChannel2(url,
-                                 null,
-                                 null,
-                                 null,      // aLoadingNode
-                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                 null,      // aTriggeringPrincipal
-                                 Ci.nsILoadInfo.SEC_NORMAL,
-                                 Ci.nsIContentPolicy.TYPE_OTHER);
+    let ch = NetUtil.newChannel(url);
     ch.originalURI = aURI;
     return ch;
   },
