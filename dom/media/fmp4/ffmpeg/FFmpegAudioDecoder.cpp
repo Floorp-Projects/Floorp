@@ -88,7 +88,12 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
   AVPacket packet;
   av_init_packet(&packet);
 
-  aSample->Pad(FF_INPUT_BUFFER_PADDING_SIZE);
+  if (!aSample->Pad(FF_INPUT_BUFFER_PADDING_SIZE)) {
+    NS_WARNING("FFmpeg audio decoder failed to allocate sample.");
+    mCallback->Error();
+    return;
+  }
+
   packet.data = aSample->data;
   packet.size = aSample->size;
 
