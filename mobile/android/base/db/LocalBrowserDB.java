@@ -473,13 +473,18 @@ public class LocalBrowserDB implements BrowserDB {
      *         compatible with the favicon decoder (most probably a PNG or ICO file).
      */
     private static ConsumedInputStream getDefaultFaviconFromPath(Context context, String name) {
-        final int faviconId = getFaviconId(name);
+        int faviconId = getFaviconId(name);
         if (faviconId == FAVICON_ID_NOT_FOUND) {
             return null;
         }
 
-        final String bitmapPath = GeckoJarReader.getJarURL(context, context.getString(faviconId));
-        final InputStream iStream = GeckoJarReader.getStream(bitmapPath);
+        String path = context.getString(faviconId);
+
+        String apkPath = context.getPackageResourcePath();
+        File apkFile = new File(apkPath);
+        String bitmapPath = "jar:jar:" + apkFile.toURI() + "!/" + AppConstants.OMNIJAR_NAME + "!/" + path;
+
+        InputStream iStream = GeckoJarReader.getStream(bitmapPath);
 
         return IOUtils.readFully(iStream, DEFAULT_FAVICON_BUFFER_SIZE);
     }
