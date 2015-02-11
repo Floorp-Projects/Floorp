@@ -158,7 +158,7 @@ public:
   virtual ~MP4Sample();
   MP4Sample* Clone() const;
   void Update(int64_t& aMediaTime, int64_t& aTimestampOffset);
-  void Pad(size_t aPaddingBytes);
+  bool Pad(size_t aPaddingBytes);
 
   stagefright::MediaBuffer* mMediaBuffer;
 
