@@ -49,7 +49,8 @@ BluetoothGattManager::Get()
   return sBluetoothGattManager;
 }
 
-class InitGattResultHandler MOZ_FINAL : public BluetoothGattResultHandler
+class BluetoothGattManager::InitGattResultHandler MOZ_FINAL
+  : public BluetoothGattResultHandler
 {
 public:
   InitGattResultHandler(BluetoothProfileResultHandler* aRes)
@@ -107,7 +108,8 @@ BluetoothGattManager::InitGattInterface(BluetoothProfileResultHandler* aRes)
                                 new InitGattResultHandler(aRes));
 }
 
-class CleanupResultHandler MOZ_FINAL : public BluetoothGattResultHandler
+class BluetoothGattManager::CleanupResultHandler MOZ_FINAL
+  : public BluetoothGattResultHandler
 {
 public:
   CleanupResultHandler(BluetoothProfileResultHandler* aRes)
@@ -136,7 +138,8 @@ private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
-class CleanupResultHandlerRunnable MOZ_FINAL : public nsRunnable
+class BluetoothGattManager::CleanupResultHandlerRunnable MOZ_FINAL
+  : public nsRunnable
 {
 public:
   CleanupResultHandlerRunnable(BluetoothProfileResultHandler* aRes)

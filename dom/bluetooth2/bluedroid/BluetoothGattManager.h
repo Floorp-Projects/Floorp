@@ -25,6 +25,10 @@ public:
   virtual ~BluetoothGattManager();
 
 private:
+  class CleanupResultHandler;
+  class CleanupResultHandlerRunnable;
+  class InitGattResultHandler;
+
   BluetoothGattManager();
 
   void HandleShutdown();
