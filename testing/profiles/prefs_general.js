@@ -276,8 +276,6 @@ user_pref("loop.CSP","default-src 'self' about: file: chrome: data: wss://* http
 user_pref("browser.uitour.pinnedTabUrl", "http://%(server)s/uitour-dummy/pinnedTab");
 user_pref("browser.uitour.url", "http://%(server)s/uitour-dummy/tour");
 
-// Don't show the search first run UI by default
-user_pref("browser.search.highlightCount", 0);
 // Tell the search service we are running in the US.  This also has the desired
 // side-effect of preventing our geoip lookup.
 user_pref("browser.search.isUS", true);
