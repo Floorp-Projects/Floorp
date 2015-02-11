@@ -1,0 +1,39 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Marionette Test</title>
+  <script type="text/javascript">
+    function handleAlert () {
+      window.alert('Marionette alert');
+    }
+
+    function handleConfirm () {
+      var alertAccepted = window.confirm('Marionette confirm');
+      document.getElementById('confirm-result').innerHTML = alertAccepted;
+    }
+
+    function handlePrompt () {
+      var promptText = window.prompt('Marionette prompt');
+      document.getElementById('prompt-result').innerHTML = promptText === null ? 'null' : promptText;
+    }
+
+    function onBeforeUnload () {
+      window.onbeforeunload = function () { return "Are you sure?"; }
+    }
+  </script>
+</head>
+<body>
+   <a href="#" id="modal-alert" onclick="handleAlert()">Open an alert dialog.</a>
+   <a href="#" id="modal-confirm" onclick="handleConfirm()">Open a confirm dialog.</a>
+   <a href="#" id="modal-prompt" onclick="handlePrompt()">Open a prompt dialog.</a>
+   <a href="#" id="onbeforeunload-handler" onclick="onBeforeUnload()">Add an onbeforeunload handler.</a>
+   <a href="#" id="click-handler" onclick="document.getElementById('click-result').innerHTML='result';">Make text appear.</a>
+   <div id="confirm-result"></div>
+   <div id="prompt-result"></div>
+   <div id="click-result"></div>
+</body>
+</html>

@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__pkixutil_h
-#define mozilla_pkix__pkixutil_h
+#ifndef mozilla_pkix_pkixutil_h
+#define mozilla_pkix_pkixutil_h
 
 #include "pkixder.h"
 
@@ -53,8 +53,10 @@ public:
   Result Init();
 
   const Input GetDER() const { return der; }
-  const der::Version GetVersion() const { return version; }
-  const SignedDataWithSignature& GetSignedData() const { return signedData; }
+  der::Version GetVersion() const { return version; }
+  const der::SignedDataWithSignature& GetSignedData() const {
+    return signedData;
+  }
   const Input GetIssuer() const { return issuer; }
   // XXX: "validity" is a horrible name for the structure that holds
   // notBefore & notAfter, but that is the name used in RFC 5280 and we use the
@@ -107,8 +109,6 @@ public:
   BackCert const* const childCert;
 
 private:
-  der::Version version;
-
   // When parsing certificates in BackCert::Init, we don't accept empty
   // extensions. Consequently, we don't have to store a distinction between
   // empty extensions and extensions that weren't included. However, when
@@ -120,13 +120,16 @@ private:
     return item.GetLength() > 0 ? &item : nullptr;
   }
 
-  SignedDataWithSignature signedData;
+  der::SignedDataWithSignature signedData;
+
+  der::Version version;
+  Input serialNumber;
+  Input signature;
   Input issuer;
   // XXX: "validity" is a horrible name for the structure that holds
   // notBefore & notAfter, but that is the name used in RFC 5280 and we use the
   // RFC 5280 names for everything.
   Input validity;
-  Input serialNumber;
   Input subject;
   Input subjectPublicKeyInfo;
 
@@ -197,20 +200,66 @@ DaysBeforeYear(unsigned int year)
        + ((year - 1u) / 400u); // except years divisible by 400.
 }
 
-// Ensures that we do not call the TrustDomain's VerifySignedData function if
-// the algorithm is unsupported.
-inline Result
-WrappedVerifySignedData(TrustDomain& trustDomain,
-                        const SignedDataWithSignature& signedData,
-                        Input subjectPublicKeyInfo)
-{
-  if (signedData.algorithm == SignatureAlgorithm::unsupported_algorithm) {
-    return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
-  }
+static const size_t MAX_DIGEST_SIZE_IN_BYTES = 512 / 8; // sha-512
 
-  return trustDomain.VerifySignedData(signedData, subjectPublicKeyInfo);
-}
+Result DigestSignedData(TrustDomain& trustDomain,
+                        const der::SignedDataWithSignature& signedData,
+                        /*out*/ uint8_t(&digestBuf)[MAX_DIGEST_SIZE_IN_BYTES],
+                        /*out*/ der::PublicKeyAlgorithm& publicKeyAlg,
+                        /*out*/ SignedDigest& signedDigest);
+
+Result VerifySignedDigest(TrustDomain& trustDomain,
+                          der::PublicKeyAlgorithm publicKeyAlg,
+                          const SignedDigest& signedDigest,
+                          Input signerSubjectPublicKeyInfo);
+
+// Combines DigestSignedData and VerifySignedDigest
+Result VerifySignedData(TrustDomain& trustDomain,
+                        const der::SignedDataWithSignature& signedData,
+                        Input signerSubjectPublicKeyInfo);
+
+// In a switch over an enum, sometimes some compilers are not satisfied that
+// all control flow paths have been considered unless there is a default case.
+// However, in our code, such a default case is almost always unreachable dead
+// code. That can be particularly problematic when the compiler wants the code
+// to choose a value, such as a return value, for the default case, but there's
+// no appropriate "impossible case" value to choose.
+//
+// MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM accounts for this. Example:
+//
+//     // In xy.cpp
+//     #include "xt.h"
+//
+//     enum class XY { X, Y };
+//
+//     int func(XY xy) {
+//       switch (xy) {
+//         case XY::X: return 1;
+//         case XY::Y; return 2;
+//         MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
+//       }
+//     }
+#if defined(__clang__)
+// Clang will warn if not all cases are covered (-Wswitch-enum) AND it will
+// warn if a switch statement that covers every enum label has a default case
+// (-W-covered-switch-default). Versions prior to 3.5 warned about unreachable
+// code in such default cases (-Wunreachable-code) even when
+// -W-covered-switch-default was disabled, but that changed in Clang 3.5.
+#define MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM // empty
+#elif defined(__GNUC__)
+// GCC will warn if not all cases are covered (-Wswitch-enum). It does not
+// assume that the default case is unreachable.
+#define MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM \
+        default: assert(false); __builtin_unreachable();
+#elif defined(_MSC_VER)
+// MSVC will warn if not all cases are covered (C4061, level 4). It does not
+// assume that the default case is unreachable.
+#define MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM \
+        default: assert(false); __assume(0);
+#else
+#error Unsupported compiler for MOZILLA_PKIX_UNREACHABLE_DEFAULT.
+#endif
 
 } } // namespace mozilla::pkix
 
-#endif // mozilla_pkix__pkixutil_h
+#endif // mozilla_pkix_pkixutil_h

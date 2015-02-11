@@ -230,8 +230,7 @@ nsCommandParams::GetOrMakeEntry(const char* aName, uint8_t entryType)
     return foundEntry;
   }
 
-  foundEntry = static_cast<HashEntry*>
-    (PL_DHashTableAdd(&mValuesHash, (void *)aName, fallible));
+  foundEntry = (HashEntry *)PL_DHashTableAdd(&mValuesHash, (void *)aName);
   if (!foundEntry) {
     return nullptr;
   }

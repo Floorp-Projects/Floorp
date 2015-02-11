@@ -2302,11 +2302,11 @@ ASTSerializer::tryStatement(ParseNode *pn, MutableHandleValue dst)
     NodeVector guarded(cx);
     RootedValue unguarded(cx, NullValue());
 
-    if (pn->pn_kid2) {
-        if (!guarded.reserve(pn->pn_kid2->pn_count))
+    if (ParseNode *catchList = pn->pn_kid2) {
+        if (!guarded.reserve(catchList->pn_count))
             return false;
 
-        for (ParseNode *next = pn->pn_kid2->pn_head; next; next = next->pn_next) {
+        for (ParseNode *next = catchList->pn_head; next; next = next->pn_next) {
             RootedValue clause(cx);
             bool isGuarded;
             if (!catchClause(next->pn_expr, &isGuarded, &clause))
@@ -2367,11 +2367,12 @@ ASTSerializer::statement(ParseNode *pn, MutableHandleValue dst)
       case PNK_GLOBALCONST:
         return declaration(pn, dst);
 
+      case PNK_LETBLOCK:
+        return let(pn, false, dst);
+
       case PNK_LET:
       case PNK_CONST:
-        return pn->isArity(PN_BINARY)
-               ? let(pn, false, dst)
-               : declaration(pn, dst);
+        return declaration(pn, dst);
 
       case PNK_IMPORT:
         return importDeclaration(pn, dst);
@@ -2755,18 +2756,7 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
 
       case PNK_OR:
       case PNK_AND:
-      {
-        if (pn->isArity(PN_BINARY)) {
-            MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
-            MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
-
-            RootedValue left(cx), right(cx);
-            return expression(pn->pn_left, &left) &&
-                   expression(pn->pn_right, &right) &&
-                   builder.logicalExpression(pn->isKind(PNK_OR), left, right, &pn->pn_pos, dst);
-        }
         return leftAssociate(pn, dst);
-      }
 
       case PNK_PREINCREMENT:
       case PNK_PREDECREMENT:
@@ -2836,18 +2826,6 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
       case PNK_BITAND:
       case PNK_IN:
       case PNK_INSTANCEOF:
-        if (pn->isArity(PN_BINARY)) {
-            MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
-            MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
-
-            BinaryOperator op = binop(pn->getKind(), pn->getOp());
-            LOCAL_ASSERT(op > BINOP_ERR && op < BINOP_LIMIT);
-
-            RootedValue left(cx), right(cx);
-            return expression(pn->pn_left, &left) &&
-                   expression(pn->pn_right, &right) &&
-                   builder.binaryExpression(op, left, right, &pn->pn_pos, dst);
-        }
         return leftAssociate(pn, dst);
 
       case PNK_DELETE:
@@ -3067,7 +3045,7 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
         LOCAL_ASSERT(pn->pn_count == 1);
         return comprehension(pn->pn_head, dst);
 
-      case PNK_LET:
+      case PNK_LETEXPR:
         return let(pn, true, dst);
 
       default:

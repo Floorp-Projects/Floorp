@@ -80,6 +80,11 @@ private:
   const unsigned int subCACount;
   const Result deferredSubjectError;
 
+  // Initialized lazily.
+  uint8_t subjectSignatureDigestBuf[MAX_DIGEST_SIZE_IN_BYTES];
+  der::PublicKeyAlgorithm subjectSignaturePublicKeyAlg;
+  SignedDigest subjectSignature;
+
   Result RecordResult(Result currentResult, /*out*/ bool& keepGoing);
   Result result;
   bool resultWasSet;
@@ -192,8 +197,22 @@ PathBuildingStep::Check(Input potentialIssuerDER,
     return RecordResult(rv, keepGoing);
   }
 
-  rv = WrappedVerifySignedData(trustDomain, subject.GetSignedData(),
-                               potentialIssuer.GetSubjectPublicKeyInfo());
+  // Calculate the digest of the subject's signed data if we haven't already
+  // done so. We do this lazily to avoid doing it at all if we backtrack before
+  // getting to this point. We cache the result to avoid recalculating it if we
+  // backtrack after getting to this point.
+  if (subjectSignature.digest.GetLength() == 0) {
+    rv = DigestSignedData(trustDomain, subject.GetSignedData(),
+                          subjectSignatureDigestBuf,
+                          subjectSignaturePublicKeyAlg, subjectSignature);
+    if (rv != Success) {
+      return rv;
+    }
+  }
+
+  rv = VerifySignedDigest(trustDomain, subjectSignaturePublicKeyAlg,
+                          subjectSignature,
+                          potentialIssuer.GetSubjectPublicKeyInfo());
   if (rv != Success) {
     return RecordResult(rv, keepGoing);
   }
@@ -323,14 +342,6 @@ BuildCertChain(TrustDomain& trustDomain, Input certDER,
   // domain name the certificate is valid for.
   BackCert cert(certDER, endEntityOrCA, nullptr);
   Result rv = cert.Init();
-  if (rv != Success) {
-    return rv;
-  }
-
-  // See documentation for CheckPublicKey() in pkixtypes.h for why the public
-  // key also needs to be checked here when trustDomain.VerifySignedData()
-  // should already be doing it.
-  rv = trustDomain.CheckPublicKey(cert.GetSubjectPublicKeyInfo());
   if (rv != Success) {
     return rv;
   }

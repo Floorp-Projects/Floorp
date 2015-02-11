@@ -75,8 +75,7 @@ SpanningCellSorter::AddCell(int32_t aColSpan, int32_t aRow, int32_t aCol)
                               sizeof(HashTableEntry));
         }
         HashTableEntry *entry = static_cast<HashTableEntry*>
-            (PL_DHashTableAdd(&mHashTable, NS_INT32_TO_PTR(aColSpan),
-                              fallible));
+                                           (PL_DHashTableAdd(&mHashTable, NS_INT32_TO_PTR(aColSpan)));
         NS_ENSURE_TRUE(entry, false);
 
         NS_ASSERTION(entry->mColSpan == 0 || entry->mColSpan == aColSpan,

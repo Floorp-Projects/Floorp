@@ -38,7 +38,7 @@ function onOpened(message) {
   ok("lastModifiedDate" in domFile, "lastModifiedDate must be present");
 
   var d = new Date(message.mtime);
-  todo(d.getTime() == domFile.lastModifiedDate.getTime(), "lastModifiedDate should be the same (FIXME: bug 1121722)");
+  is(d.getTime(), domFile.lastModifiedDate.getTime(), "lastModifiedDate should be the same");
 
   var x = new Date();
 
@@ -51,6 +51,11 @@ function onOpened(message) {
   var z = new Date();
 
   ok((x.getTime() <= y.getTime()) && (y.getTime() <= z.getTime()), "lastModifiedDate of file which does not have last modified date should be current time");
+
+
+  var d = new Date(message.fileDate);
+  is(d.getTime(), message.fileWithDate.lastModifiedDate.getTime(), "lastModifiedDate should be the same when lastModified is set: " + message.fileWithDate.lastModified);
+
   script.destroy();
   SimpleTest.finish();
 }
