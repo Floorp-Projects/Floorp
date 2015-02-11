@@ -133,7 +133,7 @@ let editFieldInteger = Task.async(function*() {
 let resetExistingField = Task.async(function*(id) {
   let existing = doc.getElementById(id);
   existing.click();
-  is(existing.checked, false, "Existing boolean value is correct");
+  is(existing.checked, true, "Existing boolean value is correct");
   resetBtn = doc.getElementById("btn-" + id);
   resetBtn.click();
 

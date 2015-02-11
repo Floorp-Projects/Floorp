@@ -34,13 +34,9 @@
 
           let settingIframe = win.document.querySelector("#deck-panel-devicesettings");
 
-          yield documentIsLoaded(settingIframe.contentWindow.document);
-
           win.AppManager.update("runtimelist");
 
           yield connectToLocalRuntime(win);
-
-          yield nextTick();
 
           let settings = win.document.querySelector("#cmd_showSettings");
 
@@ -51,8 +47,13 @@
           win.Cmds.showSettings();
           is(deck.selectedPanel, settingIframe, "device settings iframe selected");
 
-          yield settingIframe.contentWindow.getAllSettings;
           yield nextTick();
+
+          yield lazyIframeIsLoaded(settingIframe);
+
+          yield nextTick();
+
+          yield settingIframe.contentWindow.getAllSettings;
 
           setDocument(settingIframe);
 

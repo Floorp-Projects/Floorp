@@ -85,6 +85,16 @@ ConfigView.prototype = {
     }
   },
 
+  generateDisplay: function(json) {
+    let deviceItems = Object.keys(json);
+    deviceItems.sort();
+    this.keys = deviceItems;
+    for (let i = 0; i < this.keys.length; i++) {
+      let key = this.keys[i];
+      this.generateField(key, json[key].value, json[key].hasUserValue);
+    }
+  },
+
   generateField: function(name, value, hasUserValue, customType, newRow) {
     let table = this._doc.querySelector("table");
     let sResetDefault = Strings.GetStringFromName("device_reset_default");
@@ -113,6 +123,10 @@ ConfigView.prototype = {
         value = JSON.stringify(value);
       }
       input.value = value;
+    }
+
+    if (!(this._includeTypeName || isNaN(parseInt(value, 10)))) {
+      input.type = "number";
     }
 
     td.appendChild(input);
