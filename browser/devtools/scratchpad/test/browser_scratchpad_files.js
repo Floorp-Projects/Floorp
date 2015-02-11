@@ -91,11 +91,18 @@ function fileExported(aStatus)
 
   gFileContent = oldContent;
 
-  let channel = NetUtil.newChannel(gFile);
+  let channel = NetUtil.newChannel2(gFile,
+                                    null,
+                                    null,
+                                    null,      // aLoadingNode
+                                    Services.scriptSecurityManager.getSystemPrincipal(),
+                                    null,      // aTriggeringPrincipal
+                                    Ci.nsILoadInfo.SEC_NORMAL,
+                                    Ci.nsIContentPolicy.TYPE_OTHER);
   channel.contentType = "application/javascript";
 
   // Read back the temporary file.
-  NetUtil.asyncFetch(channel, fileRead);
+  NetUtil.asyncFetch2(channel, fileRead);
 }
 
 function fileExported2()
