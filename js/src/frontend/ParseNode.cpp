@@ -534,34 +534,13 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         MOZ_CRASH("invalid node kind");
     }
 
-    // Fallthrough for not-yet-handled kinds.
-    switch (pn->getArity()) {
-      case PN_CODE:
-        return PushCodeNodeChildren(pn, stack);
+    MOZ_ASSERT(pn->isKind(PNK_NAME), "missed a kind above");
 
-      case PN_NAME:
-        return PushNameNodeChildren(pn, stack);
+    MOZ_ASSERT(pn->isArity(PN_NAME) || pn->isArity(PN_NULLARY));
 
-      case PN_LIST:
-        return PushListNodeChildren(pn, stack);
-
-      case PN_TERNARY:
-        return PushTernaryNodeNullableChildren(pn, stack);
-
-      case PN_BINARY:
-      case PN_BINARY_OBJ:
-        return PushBinaryNodeNullableChildren(pn, stack);
-
-      case PN_UNARY:
-        return PushUnaryNodeNullableChild(pn, stack);
-
-      case PN_NULLARY:
-        return CanRecycleNullaryNode(pn, stack);
-
-      default:
-        MOZ_CRASH("huh?");
-        return PushResult::CleanUpLater;
-    }
+    return pn->isArity(PN_NAME)
+           ? PushNameNodeChildren(pn, stack)
+           : CanRecycleNullaryNode(pn, stack);
 }
 
 /*
