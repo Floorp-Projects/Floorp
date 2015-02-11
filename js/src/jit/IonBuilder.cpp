@@ -7765,7 +7765,6 @@ IonBuilder::pushDerivedTypedObject(bool *emitted,
     // describes.
     TemporaryTypeSet *observedTypes = bytecodeTypes(pc);
     const Class *observedClass = observedTypes->getKnownClass(constraints());
-    JSObject *observedProto = observedTypes->getCommonPrototype(constraints());
 
     // If expectedClass/expectedProto are both non-null (and hence known), we
     // can predict precisely what object group derivedTypedObj will have.
@@ -7784,7 +7783,9 @@ IonBuilder::pushDerivedTypedObject(bool *emitted,
     //
     // Barriers are particularly expensive here because they prevent
     // us from optimizing the MNewDerivedTypedObject away.
-    if (observedClass && observedProto && observedClass == expectedClass &&
+    JSObject *observedProto;
+    if (observedTypes->getCommonPrototype(constraints(), &observedProto) &&
+        observedClass && observedProto && observedClass == expectedClass &&
         observedProto == expectedProto)
     {
         derivedTypedObj->setResultTypeSet(observedTypes);
