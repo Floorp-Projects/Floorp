@@ -326,10 +326,17 @@ function saveRecordingToFile(recordingItem, file) {
 function loadRecordingFromFile(file) {
   let deferred = promise.defer();
 
-  let channel = NetUtil.newChannel(file);
+  let channel = NetUtil.newChannel2(file,
+                                    null,
+                                    null,
+                                    window.document,
+                                    null,  // aLoadingPrincipal
+                                    null,  // aTriggeringPrincipal
+                                    Ci.nsILoadInfo.SEC_NORMAL,
+                                    Ci.nsIContentPolicy.TYPE_OTHER);
   channel.contentType = "text/plain";
 
-  NetUtil.asyncFetch(channel, (inputStream, status) => {
+  NetUtil.asyncFetch2(channel, (inputStream, status) => {
     if (!Components.isSuccessCode(status)) {
       deferred.reject(new Error("Could not import recording data file."));
       return;
