@@ -264,4 +264,26 @@ extern NS_METHOD
 NS_FillArray(FallibleTArray<char>& aDest, nsIInputStream* aInput,
              uint32_t aKeep, uint32_t* aNewBytes);
 
+/**
+ * Clone the provided source stream in the most efficient way possible.  This
+ * first attempts to QI to nsICloneableInputStream to use Clone().  If that is
+ * not supported or its cloneable attribute is false, then a fallback clone is
+ * provided by copying the source to a pipe.  In this case the caller must
+ * replace the source stream with the resulting replacement stream.  The clone
+ * and the replacement stream are then cloneable using nsICloneableInputStream
+ * without duplicating memory.  This fallback clone using the pipe is only
+ * performed if a replacement stream parameter is also passed in.
+ * @param aSource         The input stream to clone.
+ * @param aCloneOut       Required out parameter to hold resulting clone.
+ * @param aReplacementOut Optional out parameter to hold stream to replace
+ *                        original source stream after clone.  If not
+ *                        provided then the fallback clone process is not
+ *                        supported and a non-cloneable source will result
+ *                        in failure.  Replacement streams are non-blocking.
+ * @return NS_OK on successful clone.  Error otherwise.
+ */
+extern nsresult
+NS_CloneInputStream(nsIInputStream* aSource, nsIInputStream** aCloneOut,
+                    nsIInputStream** aReplacementOut = nullptr);
+
 #endif // !nsStreamUtils_h__
