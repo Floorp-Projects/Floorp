@@ -260,7 +260,7 @@ function* getFileData(file) {
   }
   let def = promise.defer();
 
-  NetUtil.asyncFetch(file, function(inputStream, status) {
+  NetUtil.asyncFetch2(file, function(inputStream, status) {
     if (!Components.isSuccessCode(status)) {
       info("ERROR READING TEMP FILE", status);
     }
@@ -275,7 +275,12 @@ function* getFileData(file) {
 
     var data = NetUtil.readInputStreamToString(inputStream, inputStream.available());
     def.resolve(data);
-  });
+  },
+  null,      // aLoadingNode
+  Services.scriptSecurityManager.getSystemPrincipal(),
+  null,      // aTriggeringPrincipal
+  Ci.nsILoadInfo.SEC_NORMAL,
+  Ci.nsIContentPolicy.TYPE_OTHER);
 
   return def.promise;
 }
