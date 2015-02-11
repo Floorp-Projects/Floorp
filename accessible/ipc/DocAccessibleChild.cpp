@@ -82,6 +82,19 @@ DocAccessibleChild::RecvName(const uint64_t& aID, nsString* aName)
 }
 
 bool
+DocAccessibleChild::RecvValue(const uint64_t& aID, nsString* aValue)
+{
+  Accessible* acc =
+    mDoc->GetAccessibleByUniqueID(reinterpret_cast<void*>(aID));
+  if (!acc) {
+    return true;
+  }
+
+  acc->Value(*aValue);
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvDescription(const uint64_t& aID, nsString* aDesc)
 {
   Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
