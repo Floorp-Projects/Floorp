@@ -79,6 +79,10 @@
             android:key="passwords"
             android:persistent="false"
             android:title="@string/fxaccount_status_passwords" />
+        <CheckBoxPreference
+            android:key="reading_list"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_reading_list" />
 
         <EditTextPreference
             android:singleLine="true"
