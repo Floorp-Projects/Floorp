@@ -2547,24 +2547,6 @@ JS_FRIEND_API(bool)
 ForwardToNative(JSContext *cx, JSNative native, const JS::CallArgs &args);
 
 /*
- * Helper function. To approximate a call to the [[DefineOwnProperty]] internal
- * method described in ES5, first call this, then call JS_DefinePropertyById.
- *
- * JS_DefinePropertyById by itself does not enforce the invariants on
- * non-configurable properties when obj->isNative(). This function performs the
- * relevant checks (specified in ES5 8.12.9 [[DefineOwnProperty]] steps 1-11),
- * but only if obj is native.
- *
- * The reason for the messiness here is that ES5 uses [[DefineOwnProperty]] as
- * a sort of extension point, but there is no hook in js::Class,
- * js::ProxyHandler, or the JSAPI with precisely the right semantics for it.
- */
-extern JS_FRIEND_API(bool)
-CheckDefineProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
-                    unsigned attrs,
-                    JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
-
-/*
  * Helper function for HTMLDocument and HTMLFormElement.
  *
  * These are the only two interfaces that have [OverrideBuiltins], a named

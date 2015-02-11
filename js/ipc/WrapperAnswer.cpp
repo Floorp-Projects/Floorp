@@ -179,26 +179,9 @@ WrapperAnswer::RecvDefineProperty(const ObjectId &objId, const JSIDVariant &idVa
     if (!toDescriptor(cx, descriptor, &desc))
         return fail(cx, rs);
 
-    if (!js::CheckDefineProperty(cx, obj, id, desc.value(), desc.attributes(),
-                                 desc.getter(), desc.setter()))
-    {
+    bool ignored;
+    if (!js_DefineOwnProperty(cx, obj, id, desc, &ignored))
         return fail(cx, rs);
-    }
-
-    if (!JS_DefinePropertyById(cx, obj, id, desc.value(),
-                               // Descrriptors never store JSNatives for
-                               // accessors: they have either JSFunctions or
-                               // JSPropertyOps.
-                               desc.attributes() | JSPROP_PROPOP_ACCESSORS,
-                               JS_PROPERTYOP_GETTER(desc.getter()
-                                                    ? desc.getter()
-                                                    : JS_PropertyStub),
-                               JS_PROPERTYOP_SETTER(desc.setter()
-                                                    ? desc.setter()
-                                                    : JS_StrictPropertyStub)))
-    {
-        return fail(cx, rs);
-    }
 
     return ok(rs);
 }

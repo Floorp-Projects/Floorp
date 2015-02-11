@@ -29,7 +29,7 @@ DirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, 
 {
     assertEnteredPolicy(cx, proxy, id, GET | SET | GET_PROPERTY_DESCRIPTOR);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return js::GetOwnPropertyDescriptor(cx, target, id, desc);
+    return GetOwnPropertyDescriptor(cx, target, id, desc);
 }
 
 bool
@@ -38,11 +38,8 @@ DirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId i
 {
     assertEnteredPolicy(cx, proxy, id, SET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    RootedValue v(cx, desc.value());
-    return CheckDefineProperty(cx, target, id, v, desc.attributes(),
-                               desc.getter(), desc.setter()) &&
-           DefineProperty(cx, target, id, v, desc.getter(), desc.setter(),
-                          desc.attributes());
+    bool ignored;
+    return StandardDefineProperty(cx, target, id, desc, &ignored);
 }
 
 bool
