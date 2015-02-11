@@ -56,7 +56,10 @@ Adts::ConvertSample(uint16_t aChannelCount, int8_t aFrequencyIndex,
   header[5] = ((newSize & 7) << 5) + 0x1f;
   header[6] = 0xfc;
 
-  aSample->Prepend(&header[0], ArrayLength(header));
+  if (!aSample->Prepend(&header[0], ArrayLength(header))) {
+    return false;
+  }
+
   if (aSample->crypto.valid) {
     if (aSample->crypto.plain_sizes.Length() == 0) {
       aSample->crypto.plain_sizes.AppendElement(kADTSHeaderSize);
