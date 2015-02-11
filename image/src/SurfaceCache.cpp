@@ -11,7 +11,7 @@
 
 #include <algorithm>
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"  // for MOZ_THIS_IN_INITIALIZER_LIST
+#include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Move.h"

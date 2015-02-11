@@ -1,0 +1,41 @@
+FAIL_ON_WARNINGS = True
+
+if CONFIG['CLANG_CXX']:
+  CXXFLAGS += [
+    '-Weverything',
+
+    '-Wno-c++98-compat',
+    '-Wno-c++98-compat-pedantic',
+    '-Wno-missing-prototypes',
+    '-Wno-missing-variable-declarations',
+    '-Wno-padded',
+    '-Wno-shadow', # XXX: Clang's rules are too strict for constructors.
+    '-Wno-weak-vtables', # We rely on the linker to merge the duplicate vtables.
+  ]
+elif CONFIG['_MSC_VER']:
+  CXXFLAGS += [
+    '-sdl', # Enable additional security checks based on Microsoft's SDL.
+
+    '-Wall',
+
+    '-wd4514', # 'function': unreferenced inline function has been removed
+    '-wd4668', # warning C4668: 'X' is not defined as a preprocessor macro,
+               # replacing with '0' for '#if/#elif'.
+    '-wd4710', # 'function': function not inlined
+    '-wd4711', # function 'function' selected for inline expansion
+    '-wd4800', # forcing value to bool 'true' or 'false'
+    '-wd4820', # 'bytes' bytes padding added after construct 'member_name'
+
+    # XXX: We cannot use /Za (Disable Microsoft Extensions) because windows.h
+    # won't copmile with it.
+    '-Zc:forScope', # Standard C++ rules for variable scope in for loops.
+    '-Zc:inline', # Standard C++ rules requiring definition inline functions.
+    '-Zc:rvalueCast', # Standard C++ rules for result of cast being an rvalue.
+    '-Zc:strictStrings', # Standard C++ rule that string literals are const.
+  ]
+else:
+  CXXFLAGS += [
+    '-Wall',
+    '-Wextra',
+    '-pedantic-errors',
+  ]

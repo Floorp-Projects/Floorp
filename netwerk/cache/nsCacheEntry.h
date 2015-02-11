@@ -267,7 +267,7 @@ public:
     nsCacheEntryHashTable();
     ~nsCacheEntryHashTable();
 
-    void          Init();
+    nsresult      Init();
     void          Shutdown();
 
     nsCacheEntry *GetEntry( const nsCString * key);
@@ -306,6 +306,7 @@ private:
     // member variables
     static const PLDHashTableOps ops;
     PLDHashTable                 table;
+    bool                         initialized;
 };
 
 #endif // _nsCacheEntry_h_

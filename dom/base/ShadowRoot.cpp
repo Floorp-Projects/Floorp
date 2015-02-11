@@ -67,7 +67,7 @@ ShadowRoot::ShadowRoot(nsIContent* aContent,
                        nsXBLPrototypeBinding* aProtoBinding)
   : DocumentFragment(aNodeInfo), mPoolHost(aContent),
     mProtoBinding(aProtoBinding), mShadowElement(nullptr),
-    mInsertionPointChanged(false)
+    mInsertionPointChanged(false), mIsComposedDocParticipant(false)
 {
   SetHost(aContent);
 

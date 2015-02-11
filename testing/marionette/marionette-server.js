@@ -6,6 +6,7 @@
 
 const FRAME_SCRIPT = "chrome://marionette/content/marionette-listener.js";
 const BROWSER_STARTUP_FINISHED = "browser-delayed-startup-finished";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 // import logger
 Cu.import("resource://gre/modules/Log.jsm");
@@ -190,6 +191,8 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
     "device": qemu == "1" ? "qemu" : (!device ? "desktop" : device),
     "version": Services.appinfo.version
   };
+
+  this.observing = null;
 }
 
 MarionetteServerConnection.prototype = {
@@ -598,6 +601,18 @@ MarionetteServerConnection.prototype = {
       }
     }
 
+    if (appName == "Firefox") {
+      this._dialogWindowRef = null;
+      let modalHandler = this.handleDialogLoad.bind(this);
+      this.observing = {
+        "tabmodal-dialog-loaded": modalHandler,
+        "common-dialog-loaded": modalHandler
+      }
+      for (let topic in this.observing) {
+        Services.obs.addObserver(this.observing[topic], topic, false);
+      }
+    }
+
     function waitForWindow() {
       let win = this.getCurrentWindow();
       if (!win) {
@@ -623,7 +638,6 @@ MarionetteServerConnection.prototype = {
         let clickToStart;
         try {
           clickToStart = Services.prefs.getBoolPref('marionette.debugging.clicktostart');
-          Services.prefs.setBoolPref('marionette.debugging.clicktostart', false);
         } catch (e) { }
         if (clickToStart && (appName != "B2G")) {
           let pService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
@@ -2511,8 +2525,9 @@ MarionetteServerConnection.prototype = {
       }
       //delete session in each frame in each browser
       for (let win in this.browsers) {
-        for (let i in this.browsers[win].knownFrames) {
-          this.globalMessageManager.broadcastAsyncMessage("Marionette:deleteSession" + this.browsers[win].knownFrames[i], {});
+        let browser = this.browsers[win];
+        for (let i in browser.knownFrames) {
+          this.globalMessageManager.broadcastAsyncMessage("Marionette:deleteSession" + browser.knownFrames[i], {});
         }
       }
       let winEnum = this.getWinEnumerator();
@@ -2531,6 +2546,13 @@ MarionetteServerConnection.prototype = {
     this.sessionId = null;
     this.deleteFile('marionetteChromeScripts');
     this.deleteFile('marionetteContentScripts');
+
+    if (this.observing !== null) {
+      for (let topic in this.observing) {
+        Services.obs.removeObserver(this.observing[topic], topic);
+      }
+      this.observing = null;
+    }
   },
 
   /**
@@ -2855,12 +2877,140 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
+   * Returns the ChromeWindow associated with an open dialog window if it is
+   * currently attached to the dom.
+   */
+  get activeDialogWindow () {
+    if (this._dialogWindowRef !== null) {
+      let dialogWin = this._dialogWindowRef.get();
+      if (dialogWin && dialogWin.parent) {
+        return dialogWin;
+      }
+    }
+    return null;
+  },
+
+  get activeDialogUI () {
+    let dialogWin = this.activeDialogWindow;
+    if (dialogWin) {
+      return dialogWin.Dialog.ui;
+    }
+    return this.curBrowser.getTabModalUI();
+  },
+
+  /**
+   * Dismisses a currently displayed tab modal, or returns no such alert if
+   * no modal is displayed.
+   */
+  dismissDialog: function MDA_dismissDialog() {
+    this.command_id = this.getCommandId();
+    if (this.activeDialogUI === null) {
+      this.sendError("No tab modal was open when attempting to dismiss the dialog",
+                     27, null, this.command_id);
+      return;
+    }
+
+    let {button0, button1} = this.activeDialogUI;
+    (button1 ? button1 : button0).click();
+    this.sendOk(this.command_id);
+  },
+
+  /**
+   * Accepts a currently displayed tab modal, or returns no such alert if
+   * no modal is displayed.
+   */
+  acceptDialog: function MDA_acceptDialog() {
+    this.command_id = this.getCommandId();
+    if (this.activeDialogUI === null) {
+      this.sendError("No tab modal was open when attempting to accept the dialog",
+                     27, null, this.command_id);
+      return;
+    }
+
+    let {button0} = this.activeDialogUI;
+    button0.click();
+    this.sendOk(this.command_id);
+  },
+
+  /**
+   * Returns the message shown in a currently displayed modal, or returns a no such
+   * alert error if no modal is currently displayed.
+   */
+  getTextFromDialog: function MDA_getTextFromDialog() {
+    this.command_id = this.getCommandId();
+    if (this.activeDialogUI === null) {
+      this.sendError("No tab modal was open when attempting to get the dialog text",
+                     27, null, this.command_id);
+      return;
+    }
+
+    let {infoBody} = this.activeDialogUI;
+    this.sendResponse(infoBody.textContent, this.command_id);
+  },
+
+  /**
+   * Sends keys to the input field of a currently displayed modal, or returns a
+   * no such alert error if no modal is currently displayed. If a tab modal is currently
+   * displayed but has no means for text input, an element not visible error is returned.
+   */
+  sendKeysToDialog: function MDA_sendKeysToDialog(aRequest) {
+    this.command_id = this.getCommandId();
+    if (this.activeDialogUI === null) {
+      this.sendError("No tab modal was open when attempting to send keys to a dialog",
+                     27, null, this.command_id);
+      return;
+    }
+
+    // See toolkit/components/prompts/contentb/commonDialog.js
+    let {loginContainer, loginTextbox} = this.activeDialogUI;
+    if (loginContainer.hidden) {
+      this.sendError("This prompt does not accept text input",
+                     11, null, this.command_id);
+    }
+
+    let win = this.activeDialogWindow ? this.activeDialogWindow : this.getCurrentWindow();
+    utils.sendKeysToElement(win, loginTextbox, aRequest.parameters.value,
+                            this.sendOk.bind(this), this.sendError.bind(this),
+                            this.command_id, "chrome");
+  },
+
+  /**
    * Helper function to convert an outerWindowID into a UID that Marionette
    * tracks.
    */
   generateFrameId: function MDA_generateFrameId(id) {
     let uid = id + (appName == "B2G" ? "-b2g" : "");
     return uid;
+  },
+
+  /**
+   * Handle a dialog opening by shortcutting the current request to prevent the client
+   * from hanging entirely. This is inspired by selenium's mode of dealing with this,
+   * but is significantly lighter weight, and may necessitate a different framework
+   * for handling this as more features are required.
+   */
+  handleDialogLoad: function MDA_handleModalLoad(subject, topic) {
+    // We shouldn't return to the client due to the modal associated with the
+    // jsdebugger.
+    let clickToStart;
+    try {
+      clickToStart = Services.prefs.getBoolPref('marionette.debugging.clicktostart');
+    } catch (e) { }
+    if (clickToStart) {
+      Services.prefs.setBoolPref('marionette.debugging.clicktostart', false);
+      return;
+    }
+
+    if (topic == "common-dialog-loaded") {
+      this._dialogWindowRef = Cu.getWeakReference(subject);
+    }
+
+    if (this.command_id) {
+      // This is a shortcut to get the client to accept our response whether
+      // the expected key is 'ok' (in case a click or similar got us here)
+      // or 'value' (in case an execute script or similar got us here).
+      this.sendToClient({from:this.actorID, ok: true, value: null}, this.command_id);
+    }
   },
 
   /**
@@ -3124,7 +3274,11 @@ MarionetteServerConnection.prototype.requestTypes = {
   "setScreenOrientation": MarionetteServerConnection.prototype.setScreenOrientation,
   "getWindowSize": MarionetteServerConnection.prototype.getWindowSize,
   "setWindowSize": MarionetteServerConnection.prototype.setWindowSize,
-  "maximizeWindow": MarionetteServerConnection.prototype.maximizeWindow
+  "maximizeWindow": MarionetteServerConnection.prototype.maximizeWindow,
+  "dismissDialog": MarionetteServerConnection.prototype.dismissDialog,
+  "acceptDialog": MarionetteServerConnection.prototype.acceptDialog,
+  "getTextFromDialog": MarionetteServerConnection.prototype.getTextFromDialog,
+  "sendKeysToDialog": MarionetteServerConnection.prototype.sendKeysToDialog
 };
 
 /**
@@ -3160,6 +3314,22 @@ BrowserObj.prototype = {
   },
 
   /**
+   * Retrieves the current tabmodal ui object. According to the browser associated
+   * with the currently selected tab.
+   */
+  getTabModalUI: function MDA__getTabModaUI () {
+    let browserForTab = this.browser.getBrowserForTab(this.tab);
+    if (!browserForTab.hasAttribute('tabmodalPromptShowing')) {
+      return null;
+    }
+    // The modal is a direct sibling of the browser element. See tabbrowser.xml's
+    // getTabModalPromptBox.
+    let modals = browserForTab.parentNode
+                              .getElementsByTagNameNS(XUL_NS, 'tabmodalprompt');
+    return modals[0].ui;
+  },
+
+  /**
    * Set the browser if the application is not B2G
    *
    * @param nsIDOMWindow win
@@ -3184,6 +3354,11 @@ BrowserObj.prototype = {
    * Called when we start a session with this browser.
    */
   startSession: function BO_startSession(newSession, win, callback) {
+    if (appName == "Firefox" &&
+        win.gMultiProcessBrowser &&
+        !win.gBrowser.selectedBrowser.isRemoteBrowser) {
+      win.XULBrowserWindow.forceInitialBrowserRemote();
+    }
     callback(win, newSession);
   },
 

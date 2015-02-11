@@ -59,6 +59,7 @@ namespace JS {
     D(FULL_STORE_BUFFER)                        \
     D(SHARED_MEMORY_LIMIT)                      \
     D(PERIODIC_FULL_GC)                         \
+    D(INCREMENTAL_TOO_SLOW)                     \
                                                 \
     /* These are reserved for future use. */    \
     D(RESERVED0)                                \
@@ -78,7 +79,6 @@ namespace JS {
     D(RESERVED14)                               \
     D(RESERVED15)                               \
     D(RESERVED16)                               \
-    D(RESERVED17)                               \
                                                 \
     /* Reasons from Firefox */                  \
     D(DOM_WINDOW_UTILS)                         \

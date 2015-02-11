@@ -189,6 +189,8 @@ MultipartFileImpl::SetLengthAndModifiedDate()
   MOZ_ASSERT(mLastModificationDate == UINT64_MAX);
 
   uint64_t totalLength = 0;
+  uint64_t lastModified = 0;
+  bool lastModifiedSet = false;
 
   for (uint32_t index = 0, count = mBlobImpls.Length(); index < count; index++) {
     nsRefPtr<FileImpl>& blob = mBlobImpls[index];
@@ -204,6 +206,16 @@ MultipartFileImpl::SetLengthAndModifiedDate()
 
     MOZ_ASSERT(UINT64_MAX - subBlobLength >= totalLength);
     totalLength += subBlobLength;
+
+    if (blob->IsFile()) {
+      uint64_t partLastModified = blob->GetLastModified(error);
+      MOZ_ALWAYS_TRUE(!error.Failed());
+
+      if (lastModified < partLastModified) {
+        lastModified = partLastModified;
+        lastModifiedSet = true;
+      }
+    }
   }
 
   mLength = totalLength;
@@ -213,7 +225,8 @@ MultipartFileImpl::SetLengthAndModifiedDate()
     //   var x = new Date(); var f = new File(...);
     //   x.getTime() < f.dateModified.getTime()
     // could fail.
-    mLastModificationDate = JS_Now();
+    mLastModificationDate =
+      lastModifiedSet ? lastModified * PR_USEC_PER_MSEC : JS_Now();
   }
 }
 

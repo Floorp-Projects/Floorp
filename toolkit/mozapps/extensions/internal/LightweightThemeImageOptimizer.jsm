@@ -116,14 +116,21 @@ let ImageCropper = {
 
 let ImageFile = {
   read: function ImageFile_read(aURI, aCallback) {
-    this._netUtil.asyncFetch(aURI, function read_asyncFetch(aInputStream, aStatus, aRequest) {
-      if (Components.isSuccessCode(aStatus) && aRequest instanceof Ci.nsIChannel) {
-        let channel = aRequest.QueryInterface(Ci.nsIChannel);
-        aCallback(aInputStream, channel.contentType);
-      } else {
-        aCallback();
-      }
-    });
+    this._netUtil.asyncFetch2(
+      aURI,
+      function read_asyncFetch(aInputStream, aStatus, aRequest) {
+        if (Components.isSuccessCode(aStatus) && aRequest instanceof Ci.nsIChannel) {
+          let channel = aRequest.QueryInterface(Ci.nsIChannel);
+          aCallback(aInputStream, channel.contentType);
+        } else {
+          aCallback();
+        }
+      },
+      null,      // aLoadingNode
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      null,      // aTriggeringPrincipal
+      Ci.nsILoadInfo.SEC_NORMAL,
+      Ci.nsIContentPolicy.TYPE_IMAGE);
   },
 
   write: function ImageFile_write(aFile, aInputStream, aCallback) {
