@@ -178,7 +178,7 @@ bool GetArgs(CrossCallParamsEx* params, IPCParams* ipc_params,
           args[i] = data.release();
           break;
         }
-        case ULONG_TYPE: {
+        case UINT32_TYPE: {
           uint32 data;
           if (!params->GetParameter32(i, &data)) {
             ReleaseArgs(ipc_params, args);

@@ -594,6 +594,7 @@
 
 @BINPATH@/components/SystemMessageInternal.js
 @BINPATH@/components/SystemMessageManager.js
+@BINPATH@/components/SystemMessageCache.js
 @BINPATH@/components/SystemMessageManager.manifest
 @BINPATH@/components/HCIEventTransactionSystemMessage.manifest
 @BINPATH@/components/HCIEventTransactionSystemMessageConfigurator.js

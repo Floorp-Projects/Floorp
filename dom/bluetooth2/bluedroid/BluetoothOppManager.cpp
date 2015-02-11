@@ -87,7 +87,7 @@ BluetoothOppManager::Observe(nsISupports* aSubject,
   return NS_ERROR_UNEXPECTED;
 }
 
-class SendSocketDataTask : public nsRunnable
+class BluetoothOppManager::SendSocketDataTask : public nsRunnable
 {
 public:
   SendSocketDataTask(uint8_t* aStream, uint32_t aSize)
@@ -111,7 +111,7 @@ private:
   uint32_t mSize;
 };
 
-class ReadFileTask : public nsRunnable
+class BluetoothOppManager::ReadFileTask : public nsRunnable
 {
 public:
   ReadFileTask(nsIInputStream* aInputStream,
@@ -156,7 +156,7 @@ private:
   uint32_t mAvailablePacketSize;
 };
 
-class CloseSocketTask : public Task
+class BluetoothOppManager::CloseSocketTask : public Task
 {
 public:
   CloseSocketTask(BluetoothSocket* aSocket) : mSocket(aSocket)

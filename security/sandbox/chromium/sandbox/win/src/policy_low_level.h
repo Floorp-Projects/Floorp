@@ -145,8 +145,10 @@ class PolicyRule {
   // parameter: the expected index of the argument for this rule.
   // number: the value to compare the input to.
   // comparison_op: the comparison kind (equal, logical and, etc).
-  bool AddNumberMatch(RuleType rule_type, int16 parameter,
-                      unsigned long number, RuleOp comparison_op);
+  bool AddNumberMatch(RuleType rule_type,
+                      int16 parameter,
+                      uint32 number,
+                      RuleOp comparison_op);
 
   // Returns the number of opcodes generated so far.
   size_t GetOpcodeCount() const {

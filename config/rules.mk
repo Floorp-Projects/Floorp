@@ -1158,7 +1158,7 @@ ifdef XPT_NAME #{
 
 ifndef NO_DIST_INSTALL
 ifndef NO_INTERFACES_MANIFEST
-misc:: $(call mkdir_deps,$(FINAL_TARGET)/components)
+export:: $(call mkdir_deps,$(FINAL_TARGET)/components)
 	$(call py_action,buildlist,$(FINAL_TARGET)/components/interfaces.manifest 'interfaces $(XPT_NAME)')
 	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest 'manifest components/interfaces.manifest')
 endif

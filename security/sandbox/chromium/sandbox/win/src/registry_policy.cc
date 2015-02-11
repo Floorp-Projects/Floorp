@@ -16,9 +16,9 @@
 
 namespace {
 
-static const DWORD kAllowedRegFlags = KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS |
-                                      KEY_NOTIFY | KEY_READ | GENERIC_READ |
-                                      GENERIC_EXECUTE | READ_CONTROL;
+static const uint32 kAllowedRegFlags =
+    KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS | KEY_NOTIFY | KEY_READ |
+    GENERIC_READ | GENERIC_EXECUTE | READ_CONTROL;
 
 // Opens the key referenced by |obj_attributes| with |access| and
 // checks what permission was given. Remove the WRITE flags and update
@@ -137,7 +137,7 @@ bool RegistryPolicy::GenerateRules(const wchar_t* name,
       // We consider all flags that are not known to be readonly as potentially
       // used for write. Here we also support MAXIMUM_ALLOWED, but we are going
       // to expand it to read-only before the call.
-      DWORD restricted_flags = ~(kAllowedRegFlags | MAXIMUM_ALLOWED);
+      uint32 restricted_flags = ~(kAllowedRegFlags | MAXIMUM_ALLOWED);
       open.AddNumberMatch(IF_NOT, OpenKey::ACCESS, restricted_flags, AND);
       create.AddNumberMatch(IF_NOT, OpenKey::ACCESS, restricted_flags, AND);
       break;
