@@ -661,6 +661,12 @@ if CONFIG['MOZ_NFC']:
          'NfcOptions.webidl',
     ]
 
+if CONFIG['MOZ_SECUREELEMENT']:
+    WEBIDL_FILES += [
+         'SecureElement.webidl',
+         'SecureElementManager.webidl',
+    ]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     WEBIDL_FILES += [
         'MozNetworkStats.webidl',
