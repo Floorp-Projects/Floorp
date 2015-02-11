@@ -398,11 +398,7 @@ public class BrowserLocaleManager implements LocaleManager {
      */
     public static Collection<String> getPackagedLocaleTags(final Context context) {
         final String resPath = "res/multilocale.json";
-        final String apkPath = context.getPackageResourcePath();
-
-        final String jarURL = "jar:jar:" + new File(apkPath).toURI() + "!/" +
-                              AppConstants.OMNIJAR_NAME + "!/" +
-                              resPath;
+        final String jarURL = GeckoJarReader.getJarURL(context, resPath);
 
         final String contents = GeckoJarReader.getText(jarURL);
         if (contents == null) {
