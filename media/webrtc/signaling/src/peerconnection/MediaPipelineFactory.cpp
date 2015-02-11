@@ -427,6 +427,8 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
   TrackID numericTrackId = stream->GetNumericTrackId(aTrack.GetTrackId());
   MOZ_ASSERT(numericTrackId != TRACK_INVALID);
 
+  bool queue_track = stream->QueueTracks();
+
   MOZ_MTLOG(ML_DEBUG, __FUNCTION__ << ": Creating pipeline for "
             << numericTrackId << " -> " << aTrack.GetTrackId());
 
@@ -442,7 +444,8 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
         static_cast<AudioSessionConduit*>(aConduit.get()), // Ugly downcast.
         aRtpFlow,
         aRtcpFlow,
-        aFilter);
+        aFilter,
+        queue_track);
   } else if (aTrack.GetMediaType() == SdpMediaSection::kVideo) {
     pipeline = new MediaPipelineReceiveVideo(
         mPC->GetHandle(),
@@ -455,7 +458,8 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
         static_cast<VideoSessionConduit*>(aConduit.get()), // Ugly downcast.
         aRtpFlow,
         aRtcpFlow,
-        aFilter);
+        aFilter,
+        queue_track);
   } else {
     MOZ_ASSERT(false);
     MOZ_MTLOG(ML_ERROR, "Invalid media type in CreateMediaPipelineReceiving");
@@ -477,6 +481,10 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
   }
 
   stream->SyncPipeline(pipeline);
+
+  if (queue_track) {
+    stream->TrackQueued(aTrack.GetTrackId());
+  }
   return NS_OK;
 }
 

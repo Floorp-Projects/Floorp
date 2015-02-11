@@ -298,11 +298,12 @@ class GenericReceiveListener : public MediaStreamListener
 {
  public:
   GenericReceiveListener(SourceMediaStream *source, TrackID track_id,
-                         TrackRate track_rate)
+                         TrackRate track_rate, bool queue_track)
     : source_(source),
       track_id_(track_id),
       track_rate_(track_rate),
-      played_ticks_(0) {}
+      played_ticks_(0),
+      queue_track_(queue_track) {}
 
   virtual ~GenericReceiveListener() {}
 
@@ -321,6 +322,7 @@ class GenericReceiveListener : public MediaStreamListener
   TrackID track_id_;
   TrackRate track_rate_;
   TrackTicks played_ticks_;
+  bool queue_track_;
 };
 
 class TrackAddedCallback {
@@ -577,12 +579,13 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
                             RefPtr<AudioSessionConduit> conduit,
                             RefPtr<TransportFlow> rtp_transport,
                             RefPtr<TransportFlow> rtcp_transport,
-                            nsAutoPtr<MediaPipelineFilter> filter) :
+                            nsAutoPtr<MediaPipelineFilter> filter,
+                            bool queue_track) :
       MediaPipelineReceive(pc, main_thread, sts_thread,
                            stream, media_stream_track_id, level, conduit,
                            rtp_transport, rtcp_transport, filter),
       listener_(new PipelineListener(stream->AsSourceStream(),
-                                     numeric_track_id, conduit)) {
+                                     numeric_track_id, conduit, queue_track)) {
   }
 
   virtual void DetachMediaStream() MOZ_OVERRIDE {
@@ -600,7 +603,8 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
   class PipelineListener : public GenericReceiveListener {
    public:
     PipelineListener(SourceMediaStream * source, TrackID track_id,
-                     const RefPtr<MediaSessionConduit>& conduit);
+                     const RefPtr<MediaSessionConduit>& conduit,
+                     bool queue_track);
 
     ~PipelineListener()
     {
@@ -647,13 +651,14 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
                             RefPtr<VideoSessionConduit> conduit,
                             RefPtr<TransportFlow> rtp_transport,
                             RefPtr<TransportFlow> rtcp_transport,
-                            nsAutoPtr<MediaPipelineFilter> filter) :
+                            nsAutoPtr<MediaPipelineFilter> filter,
+                            bool queue_track) :
       MediaPipelineReceive(pc, main_thread, sts_thread,
                            stream, media_stream_track_id, level, conduit,
                            rtp_transport, rtcp_transport, filter),
       renderer_(new PipelineRenderer(this)),
       listener_(new PipelineListener(stream->AsSourceStream(),
-                                     numeric_track_id)) {
+                                     numeric_track_id, queue_track)) {
   }
 
   // Called on the main thread.
@@ -705,7 +710,8 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
   // Separate class to allow ref counting
   class PipelineListener : public GenericReceiveListener {
    public:
-    PipelineListener(SourceMediaStream * source, TrackID track_id);
+    PipelineListener(SourceMediaStream * source, TrackID track_id,
+                     bool queue_track);
 
     // Implement MediaStreamListener
     virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
