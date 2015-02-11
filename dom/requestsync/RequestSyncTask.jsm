@@ -97,5 +97,12 @@ this.RequestSyncTask.prototype = {
         aResolve();
       }, aReject);
     });
+  },
+
+  runNow: function() {
+    debug("runNow");
+    return this._manager.runTask(this._task, this._app.origin,
+                                 this._app.manifestURL,
+                                 this._app.isInBrowserElement);
   }
 };
