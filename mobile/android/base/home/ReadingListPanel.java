@@ -15,6 +15,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.ReadingListAccessor;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
@@ -164,16 +165,16 @@ public class ReadingListPanel extends HomeFragment {
      * Cursor loader for the list of reading list items.
      */
     private static class ReadingListLoader extends SimpleCursorLoader {
-        private final BrowserDB mDB;
+        private final ReadingListAccessor accessor;
 
         public ReadingListLoader(Context context) {
             super(context);
-            mDB = GeckoProfile.get(context).getDB();
+            accessor = GeckoProfile.get(context).getDB().getReadingListAccessor();
         }
 
         @Override
         public Cursor loadCursor() {
-            return mDB.getReadingList(getContext().getContentResolver());
+            return accessor.getReadingList(getContext().getContentResolver());
         }
     }
 
