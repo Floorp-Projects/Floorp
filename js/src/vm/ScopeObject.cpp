@@ -501,13 +501,6 @@ with_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 static bool
-with_SetPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
-{
-    RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return SetPropertyAttributes(cx, actual, id, attrsp);
-}
-
-static bool
 with_DeleteProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
@@ -551,7 +544,6 @@ const Class DynamicWithObject::class_ = {
         with_GetProperty,
         with_SetProperty,
         with_GetOwnPropertyDescriptor,
-        with_SetPropertyAttributes,
         with_DeleteProperty,
         nullptr, nullptr,    /* watch/unwatch */
         nullptr,             /* getElements */
@@ -944,13 +936,6 @@ uninitialized_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId
 }
 
 static bool
-uninitialized_SetPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
-{
-    ReportUninitializedLexicalId(cx, id);
-    return false;
-}
-
-static bool
 uninitialized_DeleteProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
 {
     ReportUninitializedLexicalId(cx, id);
@@ -981,7 +966,6 @@ const Class UninitializedLexicalObject::class_ = {
         uninitialized_GetProperty,
         uninitialized_SetProperty,
         uninitialized_GetOwnPropertyDescriptor,
-        uninitialized_SetPropertyAttributes,
         uninitialized_DeleteProperty,
         nullptr, nullptr,    /* watch/unwatch */
         nullptr,             /* getElements */

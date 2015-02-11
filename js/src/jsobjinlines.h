@@ -197,16 +197,6 @@ js::DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, bool *succeed
 /* * */
 
 inline bool
-js::SetPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
-{
-    MarkTypePropertyNonData(cx, obj, id);
-    SetAttributesOp op = obj->getOps()->setAttributes;
-    if (op)
-        return op(cx, obj, id, attrsp);
-    return NativeSetPropertyAttributes(cx, obj.as<NativeObject>(), id, attrsp);
-}
-
-inline bool
 JSObject::isQualifiedVarObj()
 {
     if (is<js::DebugScopeObject>())
