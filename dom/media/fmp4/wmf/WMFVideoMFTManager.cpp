@@ -236,7 +236,9 @@ WMFVideoMFTManager::Input(mp4_demuxer::MP4Sample* aSample)
 {
   if (mStreamType != VP8 && mStreamType != VP9) {
     // We must prepare samples in AVC Annex B.
-    mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample);
+    if (!mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
+      return E_FAIL;
+    }
   }
   // Forward sample data to the decoder.
   const uint8_t* data = reinterpret_cast<const uint8_t*>(aSample->data);

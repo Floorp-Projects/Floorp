@@ -53,7 +53,12 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(mp4_demuxer::MP4Sample* aSample)
   AVPacket packet;
   av_init_packet(&packet);
 
-  mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample);
+  if (!mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
+    NS_WARNING("FFmpeg h264 decoder failed to convert sample to Annex B.");
+    mCallback->Error();
+    return DecodeResult::DECODE_ERROR;
+  }
+
   if (!aSample->Pad(FF_INPUT_BUFFER_PADDING_SIZE)) {
     NS_WARNING("FFmpeg h264 decoder failed to allocate sample.");
     mCallback->Error();
