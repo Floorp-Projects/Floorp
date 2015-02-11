@@ -3,90 +3,87 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stdlib.h>
-#include "nsIStorageStream.h"
+#include "gtest/gtest.h"
+#include "Helpers.h"
+#include "nsCOMPtr.h"
+#include "nsICloneableInputStream.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsCOMPtr.h"
-#include "gtest/gtest.h"
+#include "nsIStorageStream.h"
 
-TEST(TestStorageStreams, Main)
+namespace {
+void
+WriteData(nsIOutputStream* aOut, nsTArray<char>& aData, uint32_t aNumBytes,
+          nsACString& aDataWritten)
 {
-  char kData[4096];
-  memset(kData, 0, sizeof(kData));
+  uint32_t n;
+  nsresult rv = aOut->Write(aData.Elements(), aNumBytes, &n);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  aDataWritten.Append(aData.Elements(), aNumBytes);
+}
+
+} // anonymous namespace
+TEST(StorageStreams, Main)
+{
+  // generate some test data we will write in 4k chunks to the stream
+  nsTArray<char> kData;
+  testing::CreateData(4096, kData);
+
+  // track how much data was written so we can compare at the end
+  nsAutoCString dataWritten;
 
   nsresult rv;
   nsCOMPtr<nsIStorageStream> stor;
 
-  rv = NS_NewStorageStream(4096, UINT32_MAX, getter_AddRefs(stor));
+  rv = NS_NewStorageStream(kData.Length(), UINT32_MAX, getter_AddRefs(stor));
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 
   nsCOMPtr<nsIOutputStream> out;
   rv = stor->GetOutputStream(0, getter_AddRefs(out));
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 
-  uint32_t n;
-
-  rv = out->Write(kData, sizeof(kData), &n);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-
-  rv = out->Write(kData, sizeof(kData), &n);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  WriteData(out, kData, kData.Length(), dataWritten);
+  WriteData(out, kData, kData.Length(), dataWritten);
 
   rv = out->Close();
   EXPECT_TRUE(NS_SUCCEEDED(rv));
-
   out = nullptr;
 
   nsCOMPtr<nsIInputStream> in;
   rv = stor->NewInputStream(0, getter_AddRefs(in));
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 
-  char buf[4096];
+  nsCOMPtr<nsICloneableInputStream> cloneable = do_QueryInterface(in);
+  ASSERT_TRUE(cloneable != nullptr);
+  ASSERT_TRUE(cloneable->GetCloneable());
 
-  // consume contents of input stream
-  do {
-    rv = in->Read(buf, sizeof(buf), &n);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
-  } while (n != 0);
+  nsCOMPtr<nsIInputStream> clone;
+  rv = cloneable->Clone(getter_AddRefs(clone));
 
-  rv = in->Close();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  testing::ConsumeAndValidateStream(in, dataWritten);
+  testing::ConsumeAndValidateStream(clone, dataWritten);
   in = nullptr;
+  clone = nullptr;
 
   // now, write 3 more full 4k segments + 11 bytes, starting at 8192
   // total written equals 20491 bytes
 
-  rv = stor->GetOutputStream(8192, getter_AddRefs(out));
+  rv = stor->GetOutputStream(dataWritten.Length(), getter_AddRefs(out));
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 
-  rv = out->Write(kData, sizeof(kData), &n);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-
-  rv = out->Write(kData, sizeof(kData), &n);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-
-  rv = out->Write(kData, sizeof(kData), &n);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-
-  rv = out->Write(kData, 11, &n);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  WriteData(out, kData, kData.Length(), dataWritten);
+  WriteData(out, kData, kData.Length(), dataWritten);
+  WriteData(out, kData, kData.Length(), dataWritten);
+  WriteData(out, kData, 11, dataWritten);
 
   rv = out->Close();
   EXPECT_TRUE(NS_SUCCEEDED(rv));
-
   out = nullptr;
 
   // now, read all
   rv = stor->NewInputStream(0, getter_AddRefs(in));
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 
-  // consume contents of input stream
-  do {
-    rv = in->Read(buf, sizeof(buf), &n);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
-  } while (n != 0);
-
-  rv = in->Close();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  testing::ConsumeAndValidateStream(in, dataWritten);
   in = nullptr;
 }
