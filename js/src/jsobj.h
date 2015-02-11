@@ -1207,6 +1207,9 @@ LookupPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, JSObject **objp
                    Shape **propp);
 
 bool
+GetPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, Value *vp);
+
+bool
 GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
                          MutableHandle<PropertyDescriptor> desc);
 
