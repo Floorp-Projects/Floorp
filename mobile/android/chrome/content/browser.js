@@ -7631,7 +7631,7 @@ var Distribution = {
     defaults.setCharPref("distribution.id", global["id"]);
     defaults.setCharPref("distribution.version", global["version"]);
 
-    let locale = Services.prefs.getCharPref("general.useragent.locale");
+    let locale = BrowserApp.getUALocalePref();
     let aboutString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
     aboutString.data = global["about." + locale] || global["about"];
     defaults.setComplexValue("distribution.about", Ci.nsISupportsString, aboutString);
