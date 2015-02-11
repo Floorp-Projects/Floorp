@@ -495,8 +495,6 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
     return NS_ERROR_FAILURE;
   }
 
-  static_cast<SourceMediaStream*>(stream->GetStream())->SetPullEnabled(true);
-
   nsRefPtr<RemoteSourceStreamInfo> remote;
   remote = new RemoteSourceStreamInfo(stream.forget(), mMedia, aStreamID);
   *aInfo = remote;

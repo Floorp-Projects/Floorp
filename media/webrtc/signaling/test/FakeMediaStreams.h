@@ -131,14 +131,18 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
                              mStop(false),
                              mPeriodic(new Fake_MediaPeriodic(this)) {}
 
+  enum {
+    ADDTRACK_QUEUED    = 0x01 // Queue track add until FinishAddTracks()
+  };
   void AddTrack(mozilla::TrackID aID, mozilla::StreamTime aStart,
-                mozilla::MediaSegment* aSegment) {
+                mozilla::MediaSegment* aSegment, uint32_t aFlags = 0) {
     delete aSegment;
   }
   void AddAudioTrack(mozilla::TrackID aID, mozilla::TrackRate aRate, mozilla::StreamTime aStart,
-                     mozilla::AudioSegment* aSegment) {
+                     mozilla::AudioSegment* aSegment, uint32_t aFlags = 0) {
     delete aSegment;
   }
+  void FinishAddTracks() {}
   void EndTrack(mozilla::TrackID aID) {}
 
   bool AppendToTrack(mozilla::TrackID aID, mozilla::MediaSegment* aSegment,
