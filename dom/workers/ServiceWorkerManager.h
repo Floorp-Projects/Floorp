@@ -270,6 +270,13 @@ public:
     mState = aState;
     mRegistration->QueueStateChangeEvent(this, mState);
   }
+
+  // Only used to set initial state when loading from disk!
+  void
+  SetActivateStateUncheckedWithoutEvent(ServiceWorkerState aState)
+  {
+    mState = aState;
+  }
 };
 
 #define NS_SERVICEWORKERMANAGER_IMPL_IID                 \
