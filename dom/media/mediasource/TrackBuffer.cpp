@@ -190,7 +190,7 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
     if (!gotInit) {
       // We need a new decoder, but we can't initialize it yet.
       nsRefPtr<SourceBufferDecoder> decoder =
-        NewDecoder(aTimestampOffset - mAdjustedTimestamp);
+        NewDecoder(aTimestampOffset);
       // The new decoder is stored in mDecoders/mCurrentDecoder, so we
       // don't need to do anything with 'decoder'. It's only a placeholder.
       if (!decoder) {
@@ -198,7 +198,7 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
         return p;
       }
     } else {
-      if (!decoders.NewDecoder(aTimestampOffset - mAdjustedTimestamp)) {
+      if (!decoders.NewDecoder(aTimestampOffset)) {
         mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
         return p;
       }
@@ -224,7 +224,7 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
         // processed or not continuous, so we must create a new decoder
         // to handle the decoding.
         if (!hadCompleteInitData ||
-            !decoders.NewDecoder(aTimestampOffset - mAdjustedTimestamp)) {
+            !decoders.NewDecoder(aTimestampOffset)) {
           mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
           return p;
         }
@@ -455,7 +455,8 @@ TrackBuffer::NewDecoder(int64_t aTimestampOffset)
 
   DiscardCurrentDecoder();
 
-  nsRefPtr<SourceBufferDecoder> decoder = mParentDecoder->CreateSubDecoder(mType, aTimestampOffset);
+  nsRefPtr<SourceBufferDecoder> decoder =
+    mParentDecoder->CreateSubDecoder(mType, aTimestampOffset - mAdjustedTimestamp);
   if (!decoder) {
     return nullptr;
   }
