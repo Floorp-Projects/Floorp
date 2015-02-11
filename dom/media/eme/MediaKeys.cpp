@@ -82,6 +82,7 @@ CloseSessions(const nsAString& aKey,
               void* aClosure)
 {
   aSession->OnClosed();
+  ((MediaKeys*)aClosure)->Release();
   return PL_DHASH_NEXT;
 }
 
@@ -111,7 +112,9 @@ MediaKeys::Shutdown()
     mProxy = nullptr;
   }
 
-  mPromises.Enumerate(&RejectPromises, nullptr);
+  nsRefPtr<MediaKeys> kungFuDeathGrip = this;
+
+  mPromises.Enumerate(&RejectPromises, this);
   mPromises.Clear();
 }
 
