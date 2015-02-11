@@ -1038,31 +1038,47 @@ js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
     } else {
         RootedId id(cx);
         Rooted<PropertyDescriptor> desc(cx);
+
+        const unsigned AllowConfigure = JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY |
+                                        JSPROP_IGNORE_VALUE;
+        const unsigned AllowConfigureAndWritable = AllowConfigure & ~JSPROP_IGNORE_READONLY;
+
+        // 8.a/9.a. The two different loops are merged here.
         for (size_t i = 0; i < keys.length(); i++) {
             id = keys[i];
 
-            if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
-                return false;
+            if (level == IntegrityLevel::Sealed) {
+                // 8.a.i.
+                desc.setAttributes(AllowConfigure | JSPROP_PERMANENT);
+            } else {
+                // 9.a.i-ii.
+                Rooted<PropertyDescriptor> currentDesc(cx);
+                if (!GetOwnPropertyDescriptor(cx, obj, id, &currentDesc))
+                    return false;
 
-            if (!desc.object())
-                continue;
+                // 9.a.iii.
+                if (!currentDesc.object())
+                    continue;
 
-            unsigned attrs = desc.attributes();
-            unsigned new_attrs = GetSealedOrFrozenAttributes(attrs, level);
+                // 9.a.iii.1-2
+                if (currentDesc.isAccessorDescriptor())
+                    desc.setAttributes(AllowConfigure | JSPROP_PERMANENT);
+                else
+                    desc.setAttributes(AllowConfigureAndWritable | JSPROP_PERMANENT | JSPROP_READONLY);
+            }
 
-            // If we already have the attributes we need, skip the setAttributes call.
-            if ((attrs | new_attrs) == attrs)
-                continue;
+            desc.object().set(obj);
 
-            attrs |= new_attrs;
-            if (!SetPropertyAttributes(cx, obj, id, &attrs))
+            // 8.a.i-ii. / 9.a.iii.3-4
+            bool result;
+            if (!StandardDefineProperty(cx, obj, id, desc, &result))
                 return false;
         }
     }
 
     // Ordinarily ArraySetLength handles this, but we're going behind its back
     // right now, so we must do this manually.  Neither the custom property
-    // tree mutations nor the setPropertyAttributes call in the above code will
+    // tree mutations nor the StandardDefineProperty call in the above code will
     // do this for us.
     //
     // ArraySetLength also implements the capacity <= length invariant for

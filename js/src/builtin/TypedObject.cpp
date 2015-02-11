@@ -2043,22 +2043,6 @@ IsOwnId(JSContext *cx, HandleObject obj, HandleId id)
 }
 
 bool
-TypedObject::obj_setPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id,
-                                       unsigned *attrsp)
-{
-    if (IsOwnId(cx, obj, id))
-        return ReportPropertyError(cx, JSMSG_CANT_REDEFINE_PROP, id);
-
-    RootedObject proto(cx, obj->getProto());
-    if (!proto) {
-        *attrsp = 0;
-        return true;
-    }
-
-    return SetPropertyAttributes(cx, proto, id, attrsp);
-}
-
-bool
 TypedObject::obj_deleteProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
 {
     if (IsOwnId(cx, obj, id))
@@ -2333,7 +2317,6 @@ LazyArrayBufferTable::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
             TypedObject::obj_getProperty,                \
             TypedObject::obj_setProperty,                \
             TypedObject::obj_getOwnPropertyDescriptor,   \
-            TypedObject::obj_setPropertyAttributes,      \
             TypedObject::obj_deleteProperty,             \
             nullptr, nullptr, /* watch/unwatch */        \
             nullptr,   /* getElements */                 \
