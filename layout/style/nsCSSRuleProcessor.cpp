@@ -244,13 +244,11 @@ RuleHash_CSMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return match_atom == entry_atom;
 }
 
-static bool
-RuleHash_InitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                   const void *key)
+static void
+RuleHash_InitEntry(PLDHashEntryHdr *hdr, const void *key)
 {
   RuleHashTableEntry* entry = static_cast<RuleHashTableEntry*>(hdr);
   new (entry) RuleHashTableEntry();
-  return true;
 }
 
 static void
@@ -284,14 +282,12 @@ RuleHash_TagTable_MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return match_atom == entry_atom;
 }
 
-static bool
-RuleHash_TagTable_InitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                            const void *key)
+static void
+RuleHash_TagTable_InitEntry(PLDHashEntryHdr *hdr, const void *key)
 {
   RuleHashTagTableEntry* entry = static_cast<RuleHashTagTableEntry*>(hdr);
   new (entry) RuleHashTagTableEntry();
   entry->mTag = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
-  return true;
 }
 
 static void
@@ -836,14 +832,12 @@ AtomSelector_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
   (static_cast<AtomSelectorEntry*>(hdr))->~AtomSelectorEntry();
 }
 
-static bool
-AtomSelector_InitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                       const void *key)
+static void
+AtomSelector_InitEntry(PLDHashEntryHdr *hdr, const void *key)
 {
   AtomSelectorEntry *entry = static_cast<AtomSelectorEntry*>(hdr);
   new (entry) AtomSelectorEntry();
   entry->mAtom = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
-  return true;
 }
 
 static void
@@ -3320,13 +3314,11 @@ MatchWeightEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return entry->data.mWeight == NS_PTR_TO_INT32(key);
 }
 
-static bool
-InitWeightEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                const void *key)
+static void
+InitWeightEntry(PLDHashEntryHdr *hdr, const void *key)
 {
   RuleByWeightEntry* entry = static_cast<RuleByWeightEntry*>(hdr);
   new (entry) RuleByWeightEntry();
-  return true;
 }
 
 static const PLDHashTableOps gRulesByWeightOps = {

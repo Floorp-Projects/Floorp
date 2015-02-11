@@ -63,13 +63,11 @@ RequestMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return entry->r == key;
 }
 
-static bool
-RequestMapInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                     const void *key)
+static void
+RequestMapInitEntry(PLDHashEntryHdr *hdr, const void *key)
 {
   RequestHashEntry *entry = static_cast<RequestHashEntry*>(hdr);
   entry->r = (void*)key;
-  return true;
 }
 
 static const PLDHashTableOps gMapOps = {
