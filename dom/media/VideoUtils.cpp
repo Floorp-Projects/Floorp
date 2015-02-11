@@ -12,6 +12,7 @@
 #include "SharedThreadPool.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Telemetry.h"
 #include "nsIRandomGenerator.h"
 #include "nsIServiceManager.h"
 #include "MediaTaskQueue.h"
@@ -224,13 +225,24 @@ ExtractH264CodecDetails(const nsAString& aCodec,
     return false;
   }
 
-  // Extract the profile_idc, constrains, and level_idc.
+  // Extract the profile_idc and level_idc.
   nsresult rv = NS_OK;
   aProfile = PromiseFlatString(Substring(aCodec, 5, 2)).ToInteger(&rv, 16);
   NS_ENSURE_SUCCESS(rv, false);
 
   aLevel = PromiseFlatString(Substring(aCodec, 9, 2)).ToInteger(&rv, 16);
   NS_ENSURE_SUCCESS(rv, false);
+
+
+  // 244 is the highest meaningful profile value (High 4:4:4 Intra Profile)
+  // that can be represented as single hex byte, otherwise collect 0 for unknown.
+  Telemetry::Accumulate(Telemetry::VIDEO_CANPLAYTYPE_H264_PROFILE,
+                        aProfile <= 244 ? aProfile : 0);
+
+  // Make sure aLevel represents a value between levels 1 and 5.2,
+  // otherwise collect 0 for unknown.
+  Telemetry::Accumulate(Telemetry::VIDEO_CANPLAYTYPE_H264_LEVEL,
+                        (aLevel >= 10 && aLevel <= 52) ? aLevel : 0);
 
   return true;
 }
