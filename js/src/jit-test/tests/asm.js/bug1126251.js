@@ -36,7 +36,8 @@ var v = asmLink(asmCompile('global', `
 
 assertEq(v, NaN);
 
-// Bug 1130618
+// Bug 1130618: without GVN
+setJitCompilerOption("ion.gvn.enable", 0);
 var v = asmLink(asmCompile('global', `
     "use asm";
     var float32x4 = global.SIMD.float32x4;
