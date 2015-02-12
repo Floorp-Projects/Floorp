@@ -40,7 +40,7 @@ public class JavascriptTest extends BaseTest {
         final Actions.EventExpecter expecter = mActions.expectGeckoEvent(EVENT_TYPE);
         mAsserter.dumpLog("Registered listener for " + EVENT_TYPE);
 
-        final String url = getAbsoluteUrl(StringHelper.getHarnessUrlForJavascript(javascriptUrl));
+        final String url = getAbsoluteUrl(mStringHelper.getHarnessUrlForJavascript(javascriptUrl));
         mAsserter.dumpLog("Loading JavaScript test from " + url);
         loadUrl(url);
 
