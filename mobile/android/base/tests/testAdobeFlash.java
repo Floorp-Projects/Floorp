@@ -35,7 +35,7 @@ public class testAdobeFlash extends PixelTest {
 
         blockForGeckoReady();
 
-        String url = getAbsoluteUrl(StringHelper.ROBOCOP_ADOBE_FLASH_URL);
+        String url = getAbsoluteUrl(mStringHelper.ROBOCOP_ADOBE_FLASH_URL);
         PaintedSurface painted = loadAndGetPainted(url);
 
         mAsserter.ispixel(painted.getPixelAt(0, 0), 0, 0xff, 0, "Pixel at 0, 0");

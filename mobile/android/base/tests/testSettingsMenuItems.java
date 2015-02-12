@@ -28,63 +28,63 @@ public class testSettingsMenuItems extends PixelTest {
      */
 
     // Customize menu items.
-    String[] PATH_CUSTOMIZE = { StringHelper.CUSTOMIZE_SECTION_LABEL };
+    String[] PATH_CUSTOMIZE = { mStringHelper.CUSTOMIZE_SECTION_LABEL };
     String[][] OPTIONS_CUSTOMIZE = {
         { "Home" },
         { "Search", "", "Show search suggestions", "Installed search engines"},
-        { StringHelper.TABS_LABEL, "Don't restore after quitting " + StringHelper.BRAND_NAME, "Always restore", "Don't restore after quitting " + StringHelper.BRAND_NAME },
-        { StringHelper.IMPORT_FROM_ANDROID_LABEL, "", "Bookmarks", "History", "Import" },
+        { mStringHelper.TABS_LABEL, "Don't restore after quitting " + mStringHelper.BRAND_NAME, "Always restore", "Don't restore after quitting " + mStringHelper.BRAND_NAME },
+        { mStringHelper.IMPORT_FROM_ANDROID_LABEL, "", "Bookmarks", "History", "Import" },
     };
 
     // Home panel menu items.
-    String[] PATH_HOME = { StringHelper.CUSTOMIZE_SECTION_LABEL, "Home" };
+    String[] PATH_HOME = { mStringHelper.CUSTOMIZE_SECTION_LABEL, "Home" };
     String[][] OPTIONS_HOME = {
       { "Panels" },
       { "Automatic updates", "Enabled", "Enabled", "Only over Wi-Fi" },
     };
 
     // Display menu items.
-    String[] PATH_DISPLAY = { StringHelper.DISPLAY_SECTION_LABEL };
-    final String[] TITLE_BAR_LABEL_ARR = { StringHelper.TITLE_BAR_LABEL, StringHelper.SHOW_PAGE_TITLE_LABEL,
-        StringHelper.SHOW_PAGE_TITLE_LABEL, StringHelper.SHOW_PAGE_ADDRESS_LABEL };
+    String[] PATH_DISPLAY = { mStringHelper.DISPLAY_SECTION_LABEL };
+    final String[] TITLE_BAR_LABEL_ARR = { mStringHelper.TITLE_BAR_LABEL, mStringHelper.SHOW_PAGE_TITLE_LABEL,
+        mStringHelper.SHOW_PAGE_TITLE_LABEL, mStringHelper.SHOW_PAGE_ADDRESS_LABEL };
     String[][] OPTIONS_DISPLAY = {
-        { StringHelper.TEXT_SIZE_LABEL },
+        { mStringHelper.TEXT_SIZE_LABEL },
         TITLE_BAR_LABEL_ARR,
-        { StringHelper.SCROLL_TITLE_BAR_LABEL, "Hide the " + StringHelper.BRAND_NAME + " title bar when scrolling down a page" },
+        { mStringHelper.SCROLL_TITLE_BAR_LABEL, "Hide the " + mStringHelper.BRAND_NAME + " title bar when scrolling down a page" },
         { "Advanced" },
-        { StringHelper.CHARACTER_ENCODING_LABEL, "Don't show menu", "Show menu", "Don't show menu" },
-        { StringHelper.PLUGINS_LABEL, "Tap to play", "Enabled", "Tap to play", "Disabled" },
+        { mStringHelper.CHARACTER_ENCODING_LABEL, "Don't show menu", "Show menu", "Don't show menu" },
+        { mStringHelper.PLUGINS_LABEL, "Tap to play", "Enabled", "Tap to play", "Disabled" },
     };
 
     // Privacy menu items.
-    String[] PATH_PRIVACY = { StringHelper.PRIVACY_SECTION_LABEL };
-    final String[] TRACKING_PROTECTION_LABEL_ARR = { StringHelper.TRACKING_PROTECTION_LABEL };
+    String[] PATH_PRIVACY = { mStringHelper.PRIVACY_SECTION_LABEL };
+    final String[] TRACKING_PROTECTION_LABEL_ARR = { mStringHelper.TRACKING_PROTECTION_LABEL };
     String[][] OPTIONS_PRIVACY = {
         TRACKING_PROTECTION_LABEL_ARR,
-        { StringHelper.DNT_LABEL },
-        { StringHelper.COOKIES_LABEL, "Enabled", "Enabled, excluding 3rd party", "Disabled" },
-        { StringHelper.REMEMBER_PASSWORDS_LABEL },
-        { StringHelper.MASTER_PASSWORD_LABEL },
-        { StringHelper.CLEAR_PRIVATE_DATA_LABEL, "", "Browsing history", "Downloads", "Form & search history", "Cookies & active logins", "Saved passwords", "Cache", "Offline website data", "Site settings", "Clear data" },
+        { mStringHelper.DNT_LABEL },
+        { mStringHelper.COOKIES_LABEL, "Enabled", "Enabled, excluding 3rd party", "Disabled" },
+        { mStringHelper.REMEMBER_PASSWORDS_LABEL },
+        { mStringHelper.MASTER_PASSWORD_LABEL },
+        { mStringHelper.CLEAR_PRIVATE_DATA_LABEL, "", "Browsing history", "Downloads", "Form & search history", "Cookies & active logins", "Saved passwords", "Cache", "Offline website data", "Site settings", "Clear data" },
     };
 
     // Mozilla/vendor menu items.
-    String[] PATH_MOZILLA = { StringHelper.MOZILLA_SECTION_LABEL };
+    String[] PATH_MOZILLA = { mStringHelper.MOZILLA_SECTION_LABEL };
     String[][] OPTIONS_MOZILLA = {
-        { StringHelper.ABOUT_LABEL },
-        { StringHelper.FAQS_LABEL },
-        { StringHelper.FEEDBACK_LABEL },
+        { mStringHelper.ABOUT_LABEL },
+        { mStringHelper.FAQS_LABEL },
+        { mStringHelper.FEEDBACK_LABEL },
         { "Data choices" },
-        { StringHelper.HEALTH_REPORT_LABEL, "Shares data with Mozilla about your browser health and helps you understand your browser performance" },
-        { StringHelper.MY_HEALTH_REPORT_LABEL },
+        { mStringHelper.HEALTH_REPORT_LABEL, "Shares data with Mozilla about your browser health and helps you understand your browser performance" },
+        { mStringHelper.MY_HEALTH_REPORT_LABEL },
     };
 
     // Developer menu items.
-    String[] PATH_DEVELOPER = { StringHelper.DEVELOPER_TOOLS_SECTION_LABEL };
+    String[] PATH_DEVELOPER = { mStringHelper.DEVELOPER_TOOLS_SECTION_LABEL };
     String[][] OPTIONS_DEVELOPER = {
-        { StringHelper.PAINT_FLASHING_LABEL },
-        { StringHelper.REMOTE_DEBUGGING_LABEL },
-        { StringHelper.LEARN_MORE_LABEL },
+        { mStringHelper.PAINT_FLASHING_LABEL },
+        { mStringHelper.REMOTE_DEBUGGING_LABEL },
+        { mStringHelper.LEARN_MORE_LABEL },
     };
 
     /*
@@ -117,21 +117,21 @@ public class testSettingsMenuItems extends PixelTest {
         // Set special handling for Settings items that are conditionally built.
         updateConditionalSettings(settingsMenuItems);
 
-        selectMenuItem(StringHelper.SETTINGS_LABEL);
-        mAsserter.ok(mSolo.waitForText(StringHelper.SETTINGS_LABEL),
-                "The Settings menu did not load", StringHelper.SETTINGS_LABEL);
+        selectMenuItem(mStringHelper.SETTINGS_LABEL);
+        mAsserter.ok(mSolo.waitForText(mStringHelper.SETTINGS_LABEL),
+                "The Settings menu did not load", mStringHelper.SETTINGS_LABEL);
 
         // Dismiss the Settings screen and verify that the view is returned to about:home page
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
 
         // Waiting for page title to appear to be sure that is fully loaded before opening the menu
-        mAsserter.ok(mSolo.waitForText(StringHelper.TITLE_PLACE_HOLDER), "about:home did not load",
-                StringHelper.TITLE_PLACE_HOLDER);
-        verifyUrl(StringHelper.ABOUT_HOME_URL);
+        mAsserter.ok(mSolo.waitForText(mStringHelper.TITLE_PLACE_HOLDER), "about:home did not load",
+                mStringHelper.TITLE_PLACE_HOLDER);
+        verifyUrl(mStringHelper.ABOUT_HOME_URL);
 
-        selectMenuItem(StringHelper.SETTINGS_LABEL);
-        mAsserter.ok(mSolo.waitForText(StringHelper.SETTINGS_LABEL),
-                "The Settings menu did not load", StringHelper.SETTINGS_LABEL);
+        selectMenuItem(mStringHelper.SETTINGS_LABEL);
+        mAsserter.ok(mSolo.waitForText(mStringHelper.SETTINGS_LABEL),
+                "The Settings menu did not load", mStringHelper.SETTINGS_LABEL);
 
         checkForSync(mDevice);
 
@@ -145,8 +145,8 @@ public class testSettingsMenuItems extends PixelTest {
      * but is under "Customize" on large tablets.
      */
     public void checkForSync(Device device) {
-        mAsserter.ok(mSolo.waitForText(StringHelper.SYNC_LABEL), "Waiting for Sync option",
-                StringHelper.SYNC_LABEL);
+        mAsserter.ok(mSolo.waitForText(mStringHelper.SYNC_LABEL), "Waiting for Sync option",
+                mStringHelper.SYNC_LABEL);
     }
 
     /**
@@ -157,7 +157,7 @@ public class testSettingsMenuItems extends PixelTest {
         // Preferences dependent on RELEASE_BUILD
         if (!AppConstants.RELEASE_BUILD) {
             // Text reflow - only built if *not* release build
-            String[] textReflowUi = { StringHelper.TEXT_REFLOW_LABEL };
+            String[] textReflowUi = { mStringHelper.TEXT_REFLOW_LABEL };
             settingsMap.get(PATH_DISPLAY).add(textReflowUi);
 
             if (AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
@@ -182,13 +182,13 @@ public class testSettingsMenuItems extends PixelTest {
 
         // Crash reporter
         if (AppConstants.MOZ_CRASHREPORTER) {
-            String[] crashReporterUi = { "Crash Reporter", StringHelper.BRAND_NAME + " submits crash reports to help Mozilla make your browser more stable and secure" };
+            String[] crashReporterUi = { "Crash Reporter", mStringHelper.BRAND_NAME + " submits crash reports to help Mozilla make your browser more stable and secure" };
             settingsMap.get(PATH_MOZILLA).add(crashReporterUi);
         }
 
         // Telemetry
         if (AppConstants.MOZ_TELEMETRY_REPORTING) {
-            String[] telemetryUi = { "Telemetry", "Shares performance, usage, hardware and customization data about your browser with Mozilla to help us make " + StringHelper.BRAND_NAME + " better" };
+            String[] telemetryUi = { "Telemetry", "Shares performance, usage, hardware and customization data about your browser with Mozilla to help us make " + mStringHelper.BRAND_NAME + " better" };
             settingsMap.get(PATH_MOZILLA).add(telemetryUi);
         }
 
