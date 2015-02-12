@@ -1305,13 +1305,13 @@ ClassProtoKeyOrAnonymousOrNull(const js::Class *clasp)
 }
 
 static inline bool
-NativeGetPureInline(NativeObject *pobj, Shape *shape, Value *vp)
+NativeGetPureInline(NativeObject *pobj, Shape *shape, MutableHandleValue vp)
 {
     if (shape->hasSlot()) {
-        *vp = pobj->getSlot(shape->slot());
-        MOZ_ASSERT(!vp->isMagic());
+        vp.set(pobj->getSlot(shape->slot()));
+        MOZ_ASSERT(!vp.isMagic());
     } else {
-        vp->setUndefined();
+        vp.setUndefined();
     }
 
     /* Fail if we have a custom getter. */
@@ -1350,7 +1350,7 @@ FindClassPrototype(ExclusiveContext *cx, MutableHandleObject protop, const Class
                 return false;
         } else {
             Shape *shape = nctor->lookup(cx, cx->names().prototype);
-            if (!shape || !NativeGetPureInline(nctor, shape, v.address()))
+            if (!shape || !NativeGetPureInline(nctor, shape, &v))
                 return false;
         }
         if (v.isObject())
@@ -1487,7 +1487,6 @@ js::NewObjectWithGroupCommon(JSContext *cx, HandleObjectGroup group, JSObject *p
         parent == group->proto().toObject()->getParent() &&
         newKind == GenericObject &&
         group->clasp()->isNative() &&
-        (!group->newScript() || group->newScript()->analyzed()) &&
         !cx->compartment()->hasObjectMetadataCallback())
     {
         if (cache.lookupGroup(group, allocKind, &entry)) {
@@ -2140,7 +2139,7 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
         AllocKind kind = GetBackgroundAllocKind(GuessObjectGCKind(srcObj->as<PlainObject>().numFixedSlots()));
         MOZ_ASSERT_IF(srcObj->isTenured(), kind == srcObj->asTenured().getAllocKind());
 
-        RootedObject proto(cx, cx->global()->getOrCreateObjectPrototype(cx));
+        JSObject *proto = cx->global()->getOrCreateObjectPrototype(cx);
         if (!proto)
             return nullptr;
         RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &PlainObject::class_,
@@ -2148,17 +2147,8 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
         if (!group)
             return nullptr;
 
-        RootedPlainObject res(cx, NewObjectWithGroup<PlainObject>(cx, group, parent, kind,
-                                                                  MaybeSingletonObject));
-        if (!res)
-            return nullptr;
-
-        RootedShape newShape(cx, ReshapeForParentAndAllocKind(cx, srcObj->lastProperty(),
-                                                              TaggedProto(proto), parent, kind));
-        if (!newShape || !NativeObject::setLastProperty(cx, res, newShape))
-            return nullptr;
-
-        return res;
+        RootedShape shape(cx, srcObj->lastProperty());
+        return NewReshapedObject(cx, group, parent, kind, shape);
     }
 
     RootedArrayObject srcArray(cx, &srcObj->as<ArrayObject>());
@@ -3010,16 +3000,6 @@ js::LookupPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, JSObject **
     *objp = nullptr;
     *propp = nullptr;
     return true;
-}
-
-bool
-js::GetPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, Value *vp)
-{
-    JSObject *pobj;
-    Shape *shape;
-    if (!LookupPropertyPure(cx, obj, id, &pobj, &shape))
-        return false;
-    return pobj->isNative() && NativeGetPureInline(&pobj->as<NativeObject>(), shape, vp);
 }
 
 bool

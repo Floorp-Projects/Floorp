@@ -648,6 +648,11 @@ NewObjectWithGroup(JSContext *cx, HandleObjectGroup group, JSObject *parent,
     return NewObjectWithGroup<T>(cx, group, parent, allocKind, newKind);
 }
 
+JSObject *
+NewReshapedObject(JSContext *cx, HandleObjectGroup group, JSObject *parent,
+                  gc::AllocKind allocKind, HandleShape shape,
+                  NewObjectKind newKind = GenericObject);
+
 /*
  * As for gc::GetGCObjectKind, where numSlots is a guess at the final size of
  * the object, zero if the final size is unknown. This should only be used for

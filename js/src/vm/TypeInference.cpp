@@ -3152,6 +3152,19 @@ PreliminaryObjectArray::registerNewObject(JSObject *res)
     MOZ_CRASH("There should be room for registering the new object");
 }
 
+void
+PreliminaryObjectArray::unregisterNewObject(JSObject *res)
+{
+    for (size_t i = 0; i < COUNT; i++) {
+        if (objects[i] == res) {
+            objects[i] = nullptr;
+            return;
+        }
+    }
+
+    MOZ_CRASH("The object should be one of the preliminary objects");
+}
+
 bool
 PreliminaryObjectArray::full() const
 {
@@ -3227,6 +3240,13 @@ TypeNewScript::registerNewObject(PlainObject *res)
     preliminaryObjects->registerNewObject(res);
 }
 
+void
+TypeNewScript::unregisterNewObject(PlainObject *res)
+{
+    MOZ_ASSERT(!analyzed());
+    preliminaryObjects->unregisterNewObject(res);
+}
+
 // Return whether shape consists entirely of plain data properties.
 static bool
 OnlyHasDataProperties(Shape *shape)
@@ -3274,13 +3294,14 @@ ChangeObjectFixedSlotCount(JSContext *cx, PlainObject *obj, gc::AllocKind allocK
 {
     MOZ_ASSERT(OnlyHasDataProperties(obj->lastProperty()));
 
-    Shape *newShape = ReshapeForParentAndAllocKind(cx, obj->lastProperty(),
-                                                   obj->getTaggedProto(), obj->getParent(),
-                                                   allocKind);
-    if (!newShape)
+    // Make a clone of the object, with the new allocation kind.
+    RootedShape oldShape(cx, obj->lastProperty());
+    RootedObjectGroup group(cx, obj->group());
+    JSObject *clone = NewReshapedObject(cx, group, obj->getParent(), allocKind, oldShape);
+    if (!clone)
         return false;
 
-    obj->setLastPropertyShrinkFixedSlots(newShape);
+    obj->setLastPropertyShrinkFixedSlots(clone->lastProperty());
     return true;
 }
 
@@ -3468,15 +3489,10 @@ TypeNewScript::maybeAnalyze(JSContext *cx, ObjectGroup *group, bool *regenerate,
         MOZ_ASSERT(group->unboxedLayout().newScript() == this);
         destroyNewScript.group = nullptr;
 
-        // Clear out the template object, which is not used for TypeNewScripts
-        // with an unboxed layout. Currently it is a mutant object with a
-        // non-native group and native shape, so make it safe for GC by changing
-        // its group to the default for its prototype.
-        ObjectGroup *plainGroup = ObjectGroup::defaultNewGroup(cx, &PlainObject::class_,
-                                                               group->proto());
-        if (!plainGroup)
-            CrashAtUnhandlableOOM("TypeNewScript::maybeAnalyze");
-        templateObject_->setGroup(plainGroup);
+        // Clear out the template object. This is not used for TypeNewScripts
+        // with an unboxed layout, and additionally this template is now a
+        // mutant object with a non-native class and native shape, and must be
+        // collected by the next GC.
         templateObject_ = nullptr;
 
         return true;

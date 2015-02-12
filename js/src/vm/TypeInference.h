@@ -753,6 +753,7 @@ class PreliminaryObjectArray
     }
 
     void registerNewObject(JSObject *res);
+    void unregisterNewObject(JSObject *res);
 
     JSObject *get(size_t i) const {
         MOZ_ASSERT(i < COUNT);
@@ -888,6 +889,7 @@ class TypeNewScript
     void sweep();
 
     void registerNewObject(PlainObject *res);
+    void unregisterNewObject(PlainObject *res);
     bool maybeAnalyze(JSContext *cx, ObjectGroup *group, bool *regenerate, bool force = false);
 
     bool rollbackPartiallyInitializedObjects(JSContext *cx, ObjectGroup *group);
