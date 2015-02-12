@@ -11,14 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-#define NS_MOZICONURI_CID                            \
-{                                                    \
-    0x43a88e0e,                                      \
-    0x2d37,                                          \
-    0x11d5,                                          \
-    { 0x99, 0x7, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b }   \
-}
-
 class nsMozIconURI MOZ_FINAL : public nsIMozIconURI
 {
 public:
