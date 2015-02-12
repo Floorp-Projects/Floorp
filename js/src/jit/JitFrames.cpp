@@ -3089,6 +3089,7 @@ AssertJitStackInvariants(JSContext *cx)
         JitFrameIterator frames(activations);
         size_t prevFrameSize = 0;
         size_t frameSize = 0;
+        bool isScriptedCallee = false;
         for (; !frames.done(); ++frames) {
             size_t calleeFp = reinterpret_cast<size_t>(frames.fp());
             size_t callerFp = reinterpret_cast<size_t>(frames.prevFp());
@@ -3134,6 +3135,17 @@ AssertJitStackInvariants(JSContext *cx)
                       "The ion frame should keep the alignment");
                 }
             }
+
+            // The stack is dynamically aligned by baseline stubs before calling
+            // any jitted code.
+            if (frames.prevType() == JitFrame_BaselineStub && isScriptedCallee) {
+                MOZ_RELEASE_ASSERT(calleeFp % JitStackAlignment == 0,
+                    "The baseline stub restores the stack alignment");
+            }
+
+            isScriptedCallee = false
+                || frames.isScripted()
+                || frames.type() == JitFrame_Rectifier;
         }
 
         MOZ_RELEASE_ASSERT(frames.type() == JitFrame_Entry,
