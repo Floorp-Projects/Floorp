@@ -19,11 +19,14 @@
                               { 0x99, 0x5, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIconProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMozIconURI)
 
 NS_DEFINE_NAMED_CID(NS_ICONPROTOCOL_CID);
+NS_DEFINE_NAMED_CID(NS_MOZICONURI_CID);
 
 static const mozilla::Module::CIDEntry kIconCIDs[] = {
   { &kNS_ICONPROTOCOL_CID, false, nullptr, nsIconProtocolHandlerConstructor },
+  { &kNS_MOZICONURI_CID, false, nullptr, nsMozIconURIConstructor },
   { nullptr }
 };
 
