@@ -153,8 +153,7 @@ public final class BitmapUtils {
                      }
                  }
              });
-         final GeckoProfile profile = GeckoProfile.get(context);
-         ThumbnailHelper.getInstance().getAndProcessThumbnailFor(tab, profile.getDB());
+         ThumbnailHelper.getInstance().getAndProcessThumbnailFor(tab);
     }
 
     public static Bitmap decodeByteArray(byte[] bytes) {
