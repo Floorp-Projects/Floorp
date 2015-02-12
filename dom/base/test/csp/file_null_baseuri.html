@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1121857 - document.baseURI should not get blocked if baseURI is null</title>
+  </head>
+  <body>
+  <script type="text/javascript">
+    // check the initial base-uri
+    window.parent.postMessage({baseURI: document.baseURI, test: "initial_base_uri"}, "*");
+
+    // append a child and check the base-uri
+    var baseTag = document.head.appendChild(document.createElement('base'));
+    baseTag.href = 'http://www.base-tag.com';
+    window.parent.postMessage({baseURI: document.baseURI, test: "changed_base_uri"}, "*");
+
+    // remove the child and check that the base-uri is back to the initial one
+    document.head.remove(baseTag);
+    window.parent.postMessage({baseURI: document.baseURI, test: "initial_base_uri"}, "*");
+  </script>
+</body>
+</html>

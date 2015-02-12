@@ -200,7 +200,7 @@ ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
   nsRefPtr<UnregisterCallback> cb = new UnregisterCallback(promise);
 
   NS_ConvertUTF8toUTF16 scope(uriSpec);
-  aRv = swm->Unregister(cb, scope);
+  aRv = swm->Unregister(documentPrincipal, cb, scope);
   if (aRv.Failed()) {
     return nullptr;
   }

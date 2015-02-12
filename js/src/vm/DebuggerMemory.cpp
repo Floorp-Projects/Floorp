@@ -42,7 +42,8 @@ DebuggerMemory::create(JSContext *cx, Debugger *dbg)
 
     Value memoryProto = dbg->object->getReservedSlot(Debugger::JSSLOT_DEBUG_MEMORY_PROTO);
     RootedNativeObject memory(cx, NewNativeObjectWithGivenProto(cx, &class_,
-                                                                &memoryProto.toObject(), nullptr));
+                                                                &memoryProto.toObject(),
+                                                                NullPtr()));
     if (!memory)
         return nullptr;
 

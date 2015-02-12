@@ -32,7 +32,7 @@
   </radiogroup>
   <hbox>
     <button id="editca-button" label="&certmgr.editca.label;"
-            oncommand="editCaTrust();"/> 
+            accesskey="&certmgr.editca.accesskey;" oncommand="editCaTrust();"/> 
   </hbox>
 
 </dialog>

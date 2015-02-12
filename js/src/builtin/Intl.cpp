@@ -439,7 +439,7 @@ static bool
 intl_availableLocales(JSContext *cx, CountAvailable countAvailable,
                       GetAvailable getAvailable, MutableHandleValue result)
 {
-    RootedObject locales(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr, nullptr));
+    RootedObject locales(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr, js::NullPtr()));
     if (!locales)
         return false;
 

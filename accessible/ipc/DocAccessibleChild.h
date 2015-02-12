@@ -43,6 +43,8 @@ public:
    */
   virtual bool RecvName(const uint64_t& aID, nsString* aName) MOZ_OVERRIDE;
 
+  virtual bool RecvValue(const uint64_t& aID, nsString* aValue) MOZ_OVERRIDE;
+  
   /*
    * Get the description for the accessible with given id.
    */

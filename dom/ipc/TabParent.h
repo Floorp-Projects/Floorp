@@ -403,6 +403,9 @@ protected:
 
     bool SendCompositionChangeEvent(mozilla::WidgetCompositionEvent& event);
 
+    bool InitBrowserConfiguration(nsIURI* aURI,
+                                  BrowserConfiguration& aConfiguration);
+
     // IME
     static TabParent *mIMETabParent;
     nsString mIMECacheText;

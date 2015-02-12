@@ -126,6 +126,8 @@ nsHttpTransaction::nsHttpTransaction()
     , mDontRouteViaWildCard(false)
     , mForceRestart(false)
     , mReuseOnRestart(false)
+    , mContentDecoding(false)
+    , mContentDecodingCheck(false)
     , mReportedStart(false)
     , mReportedResponseHeader(false)
     , mForTakeResponseHead(nullptr)
@@ -909,11 +911,17 @@ nsHttpTransaction::Close(nsresult reason)
 
         NS_WARNING("Partial transfer, incomplete HTTP response received");
 
-        if ((mHttpVersion >= NS_HTTP_VERSION_1_1) &&
-            gHttpHandler->GetEnforceH1Framing()) {
-            reason = NS_ERROR_NET_PARTIAL_TRANSFER;
-            LOG(("Partial transfer, incomplete HTTP response received: %s",
-                 mChunkedDecoder ? "broken chunk" : "c-l underrun"));
+        if (mHttpVersion >= NS_HTTP_VERSION_1_1) {
+            FrameCheckLevel clevel = gHttpHandler->GetEnforceH1Framing();
+            if (clevel >= FRAMECHECK_BARELY) {
+                if ((clevel == FRAMECHECK_STRICT) ||
+                    (mChunkedDecoder && mChunkedDecoder->GetChunkRemaining()) ||
+                    (!mChunkedDecoder && !mContentDecoding && mContentDecodingCheck) ) {
+                    reason = NS_ERROR_NET_PARTIAL_TRANSFER;
+                    LOG(("Partial transfer, incomplete HTTP response received: %s",
+                         mChunkedDecoder ? "broken chunk" : "c-l underrun"));
+                }
+            }
         }
 
         if (mConnection) {
@@ -1735,6 +1743,12 @@ nsHttpTransaction::ProcessData(char *buf, uint32_t count, uint32_t *countRead)
         if (mResponseIsComplete && countRemaining) {
             MOZ_ASSERT(mConnection);
             mConnection->PushBack(buf + *countRead, countRemaining);
+        }
+
+        if (!mContentDecodingCheck && mResponseHead) {
+            mContentDecoding =
+                !!mResponseHead->PeekHeader(nsHttp::Content_Encoding);
+            mContentDecodingCheck = true;
         }
     }
 

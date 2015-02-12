@@ -130,8 +130,15 @@ SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel)
                                      0 /* ui_exceptions */);
     ret = (sandbox::SBOX_ALL_OK == result);
 
+    sandbox::TokenLevel tokenLevel;
+    if (aSandboxLevel >= 3) {
+      tokenLevel = sandbox::USER_LIMITED;
+    } else {
+      tokenLevel = sandbox::USER_INTERACTIVE;
+    }
+
     result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                                    sandbox::USER_INTERACTIVE);
+                                    tokenLevel);
     ret = ret && (sandbox::SBOX_ALL_OK == result);
 
     sandbox::MitigationFlags mitigations =
