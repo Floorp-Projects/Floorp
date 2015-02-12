@@ -935,9 +935,7 @@ INSTALL_TARGETS += %(prefix)s
             # an mtime newer than the .xpt, it will trigger xpt generation.
             xpt_path = '$(DEPTH)/%s/components/%s.xpt' % (install_target, module)
             xpt_files.add(xpt_path)
-            rule = mk.create_rule([xpt_path])
-            rule.add_dependencies(['$(call mkdir_deps,%s)' % mozpath.dirname(xpt_path)])
-            rule.add_dependencies(manager.idls['%s.idl' % dep]['source'] for dep in deps)
+            mk.add_statement('%s_deps = %s' % (module, ' '.join(deps)))
 
             if install_target.startswith('dist/'):
                 path = mozpath.relpath(xpt_path, '$(DEPTH)/dist')
