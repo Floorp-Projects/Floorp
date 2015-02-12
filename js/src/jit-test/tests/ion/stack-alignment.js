@@ -53,12 +53,59 @@ for (var l = 0; l < 4; l++) {
     ionFrameSize_args[l][a] = gen_ionFrameSize(30 + l, a, "ionFrameSize_callee_verify");;
 }
 
-// Check ion frames during function calls are always correctly aligned.
+// Check ion frames during function apply calls with the argument vector.
 function ionFrame_funApply_0() {
   assertJitStackInvariants.apply(this, arguments);
 }
 function ionFrame_funApply_1() {
   ionFrame_funApply_0.apply(this, arguments);
+}
+
+// Check ion frames during function apply calls with an array of arguments.
+function ionFrame_funApply_2() {
+  var arr = Array.apply(Array, arguments);
+  assertJitStackInvariants.apply(this, arr);
+}
+function ionFrame_funApply_3() {
+  var arr = Array.apply(Array, arguments);
+  ionFrame_funApply_2.apply(this, arr);
+}
+
+// Check ion frames during function .call calls.
+function ionFrame_funCall_0() {
+  assertJitStackInvariants.call(this);
+}
+function ionFrame_funCall_1(a) {
+  assertJitStackInvariants.call(this, a);
+}
+function ionFrame_funCall_2(a, b) {
+  assertJitStackInvariants.call(this, a, b);
+}
+function ionFrame_funCall_3(a, b, c) {
+  assertJitStackInvariants.call(this, a, b, c);
+}
+
+function ionFrame_funCall_x0() {
+  ionFrame_funCall_0.call(this);
+}
+function ionFrame_funCall_x1(a) {
+  ionFrame_funCall_1.call(this, a);
+}
+function ionFrame_funCall_x2(a, b) {
+  ionFrame_funCall_2.call(this, a, b);
+}
+function ionFrame_funCall_x3(a, b, c) {
+  ionFrame_funCall_3.call(this, a, b, c);
+}
+
+// Check ion frames during spread calls.
+function ionFrame_spreadCall_0() {
+  var arr = Array.apply(Array, arguments);
+  assertJitStackInvariants(...arr);
+}
+function ionFrame_spreadCall_1() {
+  var arr = Array.apply(Array, arguments);
+  ionFrame_spreadCall_0(...arr);
 }
 
 
@@ -89,4 +136,31 @@ for (i = 0; i < 40; i++) {
   ionFrame_funApply_1(1);
   ionFrame_funApply_1(1, 2);
   ionFrame_funApply_1(1, 2, 3);
+
+  ionFrame_funApply_2();
+  ionFrame_funApply_2(1);
+  ionFrame_funApply_2(1, 2);
+  ionFrame_funApply_2(1, 2, 3);
+  ionFrame_funApply_3();
+  ionFrame_funApply_3(1);
+  ionFrame_funApply_3(1, 2);
+  ionFrame_funApply_3(1, 2, 3);
+
+  ionFrame_funCall_0();
+  ionFrame_funCall_1(1);
+  ionFrame_funCall_2(1, 2);
+  ionFrame_funCall_3(1, 2, 3);
+  ionFrame_funCall_x0();
+  ionFrame_funCall_x1(1);
+  ionFrame_funCall_x2(1, 2);
+  ionFrame_funCall_x3(1, 2, 3);
+
+  ionFrame_spreadCall_0();
+  ionFrame_spreadCall_0(1);
+  ionFrame_spreadCall_0(1, 2);
+  ionFrame_spreadCall_0(1, 2, 3);
+  ionFrame_spreadCall_1();
+  ionFrame_spreadCall_1(1);
+  ionFrame_spreadCall_1(1, 2);
+  ionFrame_spreadCall_1(1, 2, 3);
 }
