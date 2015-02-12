@@ -753,6 +753,17 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                                    self.parent.identifier.name),
                                   [self.location, self.parent.location])
 
+            # Interfaces which have interface objects can't inherit
+            # from [NoInterfaceObject] interfaces.
+            if (self.parent.getExtendedAttribute("NoInterfaceObject") and
+                not self.getExtendedAttribute("NoInterfaceObject")):
+                raise WebIDLError("Interface %s does not have "
+                                  "[NoInterfaceObject] but inherits from "
+                                  "interface %s which does" %
+                                  (self.identifier.name,
+                                   self.parent.identifier.name),
+                                  [self.location, self.parent.location])
+
         for iface in self.implementedInterfaces:
             iface.finish(scope)
 
