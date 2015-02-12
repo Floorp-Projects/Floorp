@@ -821,17 +821,12 @@ TrackBuffer::Dump(const char* aPath)
 
 class ReleaseDecoderTask : public nsRunnable {
 public:
-  ReleaseDecoderTask(SourceBufferDecoder* aDecoder, TrackBuffer* aTrackBuffer)
+  ReleaseDecoderTask(SourceBufferDecoder* aDecoder)
     : mDecoder(aDecoder)
-    , mTrackBuffer(aTrackBuffer)
   {
   }
 
   NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL {
-    if (mTrackBuffer->mCurrentDecoder == mDecoder) {
-      mTrackBuffer->DiscardCurrentDecoder();
-    }
-
     mDecoder->GetReader()->BreakCycles();
     mDecoder = nullptr;
     return NS_OK;
@@ -839,7 +834,6 @@ public:
 
 private:
   nsRefPtr<SourceBufferDecoder> mDecoder;
-  nsRefPtr<TrackBuffer> mTrackBuffer;
 };
 
 class DelayedDispatchToMainThread : public nsRunnable {
@@ -856,7 +850,7 @@ public:
     // is destroyed.
     mDecoder->GetReader()->Shutdown();
     mDecoder->GetReader()->ClearDecoder();
-    RefPtr<nsIRunnable> task = new ReleaseDecoderTask(mDecoder, mTrackBuffer);
+    RefPtr<nsIRunnable> task = new ReleaseDecoderTask(mDecoder);
     mDecoder = nullptr;
     // task now holds the only ref to the decoder.
     NS_DispatchToMainThread(task);
