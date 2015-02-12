@@ -74,19 +74,14 @@ function createMockAllocations () {
  * @param {TabTarget} target
  * @return {Boolean}
  */
-function* memoryActorSupported (target) {
+function memoryActorSupported (target) {
   // This `target` property is used only in tests to test
   // instances where the memory actor is not available.
   if (target.TEST_MOCK_MEMORY_ACTOR) {
     return false;
   }
 
-  for (let method of REQUIRED_MEMORY_ACTOR_METHODS) {
-    if (!(yield target.actorHasMethod("memory", method))) {
-      return false;
-    }
-  }
-  return true;
+  return !!target.getTrait("memoryActorAllocations");
 }
 exports.memoryActorSupported = Task.async(memoryActorSupported);
 
@@ -97,13 +92,13 @@ exports.memoryActorSupported = Task.async(memoryActorSupported);
  * @param {TabTarget} target
  * @return {Boolean}
  */
-function* timelineActorSupported(target) {
+function timelineActorSupported(target) {
   // This `target` property is used only in tests to test
   // instances where the timeline actor is not available.
   if (target.TEST_MOCK_TIMELINE_ACTOR) {
     return false;
   }
 
-  return yield target.hasActor("timeline");
+  return target.hasActor("timeline");
 }
 exports.timelineActorSupported = Task.async(timelineActorSupported);
