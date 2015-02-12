@@ -1261,11 +1261,10 @@ CacheStorageService::MemoryPool::PurgeExpired()
     nsRefPtr<CacheEntry> entry = mExpirationArray[i];
 
     uint32_t expirationTime = entry->GetExpirationTime();
-    if (expirationTime > 0 && expirationTime <= now) {
-      LOG(("  dooming expired entry=%p, exptime=%u (now=%u)",
+    if (expirationTime > 0 && expirationTime <= now &&
+        entry->Purge(CacheEntry::PURGE_WHOLE)) {
+      LOG(("  purged expired, entry=%p, exptime=%u (now=%u)",
         entry.get(), entry->GetExpirationTime(), now));
-
-      entry->PurgeAndDoom();
       continue;
     }
 
