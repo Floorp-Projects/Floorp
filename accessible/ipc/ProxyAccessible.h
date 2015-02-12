@@ -8,6 +8,7 @@
 #define mozilla_a11y_ProxyAccessible_h
 
 #include "mozilla/a11y/Role.h"
+#include "nsIAccessibleText.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -89,6 +90,18 @@ public:
    */
   void TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
                      nsString& aText) const;
+
+  void GetTextAfterOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                          nsString& aText, int32_t* aStartOffset,
+                          int32_t* aEndOffset);
+
+  void GetTextAtOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                       nsString& aText, int32_t* aStartOffset,
+                       int32_t* aEndOffset);
+
+  void GetTextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                           nsString& aText, int32_t* aStartOffset,
+                           int32_t* aEndOffset);
 
   /**
    * Allow the platform to store a pointers worth of data on us.

@@ -62,6 +62,22 @@ public:
                                  const int32_t& aEndOffset, nsString* aText)
     MOZ_OVERRIDE;
 
+  virtual bool RecvGetTextAfterOffset(const uint64_t& aID,
+                                      const int32_t& aOffset,
+                                      const AccessibleTextBoundary& aBoundaryType,
+                                      nsString* aText, int32_t* aStartOffset,
+                                      int32_t* aEndOffset) MOZ_OVERRIDE;
+  virtual bool RecvGetTextAtOffset(const uint64_t& aID,
+                                   const int32_t& aOffset,
+                                   const AccessibleTextBoundary& aBoundaryType,
+                                   nsString* aText, int32_t* aStartOffset,
+                                   int32_t* aEndOffset) MOZ_OVERRIDE;
+  virtual bool RecvGetTextBeforeOffset(const uint64_t& aID,
+                                       const int32_t& aOffset,
+                                       const AccessibleTextBoundary& aBoundaryType,
+                                       nsString* aText, int32_t* aStartOffset,
+                                       int32_t* aEndOffset) MOZ_OVERRIDE;
+
 private:
   DocAccessible* mDoc;
 };
