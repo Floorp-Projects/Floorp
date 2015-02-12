@@ -106,23 +106,6 @@ GetLoadContext(nsIEditor* aEditor)
 }
 
 /**
- * Helper function for converting underscore to dash in dictionary name,
- * ie. en_CA to en-CA. This is required for some Linux distributions which
- * use underscore as separator in system-wide installed dictionaries.
- * We use it for nsStyleUtil::DashMatchCompare.
- */
-static nsString
-GetDictNameWithDash(const nsAString& aDictName)
-{
-  nsString dictNameWithDash(aDictName);
-  int32_t underScore = dictNameWithDash.FindChar('_');
-  if (underScore != -1) {
-    dictNameWithDash.Replace(underScore, 1, '-');
-  }
-  return dictNameWithDash;
-}
-
-/**
  * Fetches the dictionary stored in content prefs and maintains state during the
  * fetch, which is asynchronous.
  */
@@ -621,7 +604,7 @@ nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
       langCode.Assign(aDictionary);
     }
     if (mPreferredLang.IsEmpty() ||
-        !nsStyleUtil::DashMatchCompare(GetDictNameWithDash(mPreferredLang), langCode, comparator)) {
+        !nsStyleUtil::DashMatchCompare(mPreferredLang, langCode, comparator)) {
       // When user sets dictionary manually, we store this value associated
       // with editor url.
       StoreCurrentDictionary(mEditor, aDictionary);
@@ -806,7 +789,7 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
       // try dictionary.spellchecker preference if it starts with langCode (and
       // if we haven't tried it already)
       if (!preferedDict.IsEmpty() && !dictName.Equals(preferedDict) &&
-          nsStyleUtil::DashMatchCompare(GetDictNameWithDash(preferedDict), langCode, comparator)) {
+          nsStyleUtil::DashMatchCompare(preferedDict, langCode, comparator)) {
         rv = SetCurrentDictionary(preferedDict);
       }
 
@@ -834,7 +817,7 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
             // We have already tried it
             continue;
           }
-          if (nsStyleUtil::DashMatchCompare(GetDictNameWithDash(dictStr), langCode, comparator) &&
+          if (nsStyleUtil::DashMatchCompare(dictStr, langCode, comparator) &&
               NS_SUCCEEDED(SetCurrentDictionary(dictStr))) {
               break;
           }
@@ -859,10 +842,7 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
         if (dot_pos != -1) {
           lang = Substring(lang, 0, dot_pos);
         }
-        // Some Linux distributions use '_' as lang/dialect separator.
-        rv = SetCurrentDictionary(lang);
         if (NS_FAILED(rv)) {
-          // Replace '_' with '-' when dictionary with underscore not found.
           int32_t underScore = lang.FindChar('_');
           if (underScore != -1) {
             lang.Replace(underScore, 1, '-');
@@ -873,14 +853,10 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
       if (NS_FAILED(rv)) {
         rv = SetCurrentDictionary(NS_LITERAL_STRING("en-US"));
         if (NS_FAILED(rv)) {
-          // Some Linux distributions are using '_' as separator for dictionaries.
-          rv = SetCurrentDictionary(NS_LITERAL_STRING("en_US"));
-          if (NS_FAILED(rv)) {
-            nsTArray<nsString> dictList;
-            rv = mSpellChecker->GetDictionaryList(&dictList);
-            if (NS_SUCCEEDED(rv) && dictList.Length() > 0) {
-              SetCurrentDictionary(dictList[0]);
-            }
+          nsTArray<nsString> dictList;
+          rv = mSpellChecker->GetDictionaryList(&dictList);
+          if (NS_SUCCEEDED(rv) && dictList.Length() > 0) {
+            SetCurrentDictionary(dictList[0]);
           }
         }
       }
