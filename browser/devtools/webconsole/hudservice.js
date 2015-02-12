@@ -252,6 +252,21 @@ HUD_SERVICE.prototype =
   },
 
   /**
+   * Opens or focuses the Browser Console.
+   */
+  openBrowserConsoleOrFocus: function HS_openBrowserConsoleOrFocus()
+  {
+    let hud = this.getBrowserConsole();
+    if (hud) {
+      hud.iframeWindow.focus();
+      return promise.resolve(hud);
+    }
+    else {
+      return this.toggleBrowserConsole();
+    }
+  },
+
+  /**
    * Get the Browser Console instance, if open.
    *
    * @return object|null
@@ -763,7 +778,8 @@ const HUDService = new HUD_SERVICE();
 (() => {
   let methods = ["openWebConsole", "openBrowserConsole",
                  "toggleBrowserConsole", "getOpenWebConsole",
-                 "getBrowserConsole", "getHudByWindow", "getHudReferenceById"];
+                 "getBrowserConsole", "getHudByWindow",
+                 "openBrowserConsoleOrFocus", "getHudReferenceById"];
   for (let method of methods) {
     exports[method] = HUDService[method].bind(HUDService);
   }
