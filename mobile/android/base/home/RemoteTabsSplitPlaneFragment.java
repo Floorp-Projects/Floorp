@@ -204,6 +204,13 @@ public class RemoteTabsSplitPlaneFragment extends RemoteTabsBaseFragment {
 
     @Override
     protected void updateUiFromClients(List<RemoteClient> clients, List<RemoteClient> hiddenClients) {
+        if (getView() == null) {
+            // Early abort. It is possible to get UI updates after the view is
+            // destroyed; this can happen due to asynchronous loaders or
+            // animations complete.
+            return;
+        }
+
         // We have three states: no clients (including hidden clients) at all;
         // all clients hidden; some clients hidden. We want to show the empty
         // list view only when we have no clients at all. This flag
