@@ -133,7 +133,6 @@ class WorkerPrivateParent : public DOMEventTargetHelper
   class SynchronizeAndResumeRunnable;
 
 protected:
-  class InterfaceRequestor;
   class EventTarget;
   friend class EventTarget;
 
@@ -151,84 +150,6 @@ public:
     nsCString mSearch;
     nsCString mHash;
     nsString mOrigin;
-  };
-
-  struct LoadInfo
-  {
-    // All of these should be released in ForgetMainThreadObjects.
-    nsCOMPtr<nsIURI> mBaseURI;
-    nsCOMPtr<nsIURI> mResolvedScriptURI;
-    nsCOMPtr<nsIPrincipal> mPrincipal;
-    nsCOMPtr<nsIScriptContext> mScriptContext;
-    nsCOMPtr<nsPIDOMWindow> mWindow;
-    nsCOMPtr<nsIContentSecurityPolicy> mCSP;
-    nsCOMPtr<nsIChannel> mChannel;
-    nsCOMPtr<nsILoadGroup> mLoadGroup;
-
-    // Only set if we have a custom overriden load group
-    nsRefPtr<InterfaceRequestor> mInterfaceRequestor;
-
-    nsAutoPtr<PrincipalInfo> mPrincipalInfo;
-    nsCString mDomain;
-
-    uint64_t mWindowID;
-
-    bool mFromWindow;
-    bool mEvalAllowed;
-    bool mReportCSPViolations;
-    bool mXHRParamsAllowed;
-    bool mPrincipalIsSystem;
-    bool mIsInPrivilegedApp;
-    bool mIsInCertifiedApp;
-    bool mIndexedDBAllowed;
-
-    LoadInfo();
-    ~LoadInfo();
-
-    void
-    StealFrom(LoadInfo& aOther)
-    {
-      MOZ_ASSERT(!mBaseURI);
-      aOther.mBaseURI.swap(mBaseURI);
-
-      MOZ_ASSERT(!mResolvedScriptURI);
-      aOther.mResolvedScriptURI.swap(mResolvedScriptURI);
-
-      MOZ_ASSERT(!mPrincipal);
-      aOther.mPrincipal.swap(mPrincipal);
-
-      MOZ_ASSERT(!mScriptContext);
-      aOther.mScriptContext.swap(mScriptContext);
-
-      MOZ_ASSERT(!mWindow);
-      aOther.mWindow.swap(mWindow);
-
-      MOZ_ASSERT(!mCSP);
-      aOther.mCSP.swap(mCSP);
-
-      MOZ_ASSERT(!mChannel);
-      aOther.mChannel.swap(mChannel);
-
-      MOZ_ASSERT(!mLoadGroup);
-      aOther.mLoadGroup.swap(mLoadGroup);
-
-      MOZ_ASSERT(!mInterfaceRequestor);
-      aOther.mInterfaceRequestor.swap(mInterfaceRequestor);
-
-      MOZ_ASSERT(!mPrincipalInfo);
-      mPrincipalInfo = aOther.mPrincipalInfo.forget();
-
-      mDomain = aOther.mDomain;
-      mWindowID = aOther.mWindowID;
-      mFromWindow = aOther.mFromWindow;
-      mEvalAllowed = aOther.mEvalAllowed;
-      mReportCSPViolations = aOther.mReportCSPViolations;
-      mXHRParamsAllowed = aOther.mXHRParamsAllowed;
-      mPrincipalIsSystem = aOther.mPrincipalIsSystem;
-      mIsInPrivilegedApp = aOther.mIsInPrivilegedApp;
-      mIsInCertifiedApp = aOther.mIsInCertifiedApp;
-      mIndexedDBAllowed = aOther.mIndexedDBAllowed;
-    }
   };
 
 protected:
@@ -249,7 +170,7 @@ private:
   LocationInfo mLocationInfo;
   // The lifetime of these objects within LoadInfo is managed explicitly;
   // they do not need to be cycle collected.
-  LoadInfo mLoadInfo;
+  WorkerLoadInfo mLoadInfo;
 
   // Only used for top level workers.
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
@@ -285,7 +206,7 @@ protected:
                       const nsAString& aScriptURL, bool aIsChromeWorker,
                       WorkerType aWorkerType,
                       const nsACString& aSharedWorkerName,
-                      LoadInfo& aLoadInfo);
+                      WorkerLoadInfo& aLoadInfo);
 
   ~WorkerPrivateParent();
 
@@ -926,12 +847,12 @@ public:
   Constructor(const GlobalObject& aGlobal, const nsAString& aScriptURL,
               bool aIsChromeWorker, WorkerType aWorkerType,
               const nsACString& aSharedWorkerName,
-              LoadInfo* aLoadInfo, ErrorResult& aRv);
+              WorkerLoadInfo* aLoadInfo, ErrorResult& aRv);
 
   static already_AddRefed<WorkerPrivate>
   Constructor(JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
               WorkerType aWorkerType, const nsACString& aSharedWorkerName,
-              LoadInfo* aLoadInfo, ErrorResult& aRv);
+              WorkerLoadInfo* aLoadInfo, ErrorResult& aRv);
 
   static bool
   WorkerAvailable(JSContext* /* unused */, JSObject* /* unused */);
@@ -945,10 +866,10 @@ public:
   static nsresult
   GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow, WorkerPrivate* aParent,
               const nsAString& aScriptURL, bool aIsChromeWorker,
-              LoadGroupBehavior aLoadGroupBehavior, LoadInfo* aLoadInfo);
+              LoadGroupBehavior aLoadGroupBehavior, WorkerLoadInfo* aLoadInfo);
 
   static void
-  OverrideLoadInfoLoadGroup(LoadInfo& aLoadInfo);
+  OverrideLoadInfoLoadGroup(WorkerLoadInfo& aLoadInfo);
 
   WorkerDebugger*
   Debugger() const
@@ -1255,7 +1176,7 @@ private:
   WorkerPrivate(JSContext* aCx, WorkerPrivate* aParent,
                 const nsAString& aScriptURL, bool aIsChromeWorker,
                 WorkerType aWorkerType, const nsACString& aSharedWorkerName,
-                LoadInfo& aLoadInfo);
+                WorkerLoadInfo& aLoadInfo);
 
   void
   ClearMainEventQueue(WorkerRanOrNot aRanOrNot);
