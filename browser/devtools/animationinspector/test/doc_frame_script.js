@@ -44,3 +44,20 @@ addMessageListener("Test:SetNodeStyle", function(msg) {
 
   sendAsyncMessage("Test:SetNodeStyle");
 });
+
+/**
+ * Get the current playState of an animation player on a given node.
+ * @param {Object} data
+ * - {Number} animationIndex The index of the node's animationPlayers to check
+ * @param {Object} objects
+ * - {DOMNode} node The node to check
+ */
+addMessageListener("Test:GetAnimationPlayerState", function(msg) {
+  let {animationIndex} = msg.data;
+  let {node} = msg.objects;
+
+  let player = node.getAnimationPlayers()[animationIndex];
+  player.ready.then(() => {
+    sendAsyncMessage("Test:GetAnimationPlayerState", player.playState);
+  });
+});

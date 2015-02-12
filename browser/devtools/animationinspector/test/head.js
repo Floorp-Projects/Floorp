@@ -18,6 +18,7 @@ waitForExplicitFinish();
 const TEST_URL_ROOT = "http://example.com/browser/browser/devtools/animationinspector/test/";
 const ROOT_TEST_DIR = getRootDirectory(gTestPath);
 const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
+const COMMON_FRAME_SCRIPT_URL = "chrome://browser/content/devtools/frame-script-utils.js";
 
 // Auto clean-up when a test ends
 registerCleanupFunction(function*() {
@@ -63,6 +64,9 @@ function addTab(url) {
   info("Loading the helper frame script " + FRAME_SCRIPT_URL);
   browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
 
+  info("Loading the helper frame script " + COMMON_FRAME_SCRIPT_URL);
+  browser.messageManager.loadFrameScript(COMMON_FRAME_SCRIPT_URL, false);
+
   browser.addEventListener("load", function onload() {
     browser.removeEventListener("load", onload, true);
     info("URL '" + url + "' loading complete");
@@ -71,6 +75,13 @@ function addTab(url) {
   }, true);
 
   return def.promise;
+}
+
+/**
+ * Reload the current tab location.
+ */
+function reloadTab() {
+  return executeInContent("devtools:test:reload", {}, {}, false);
 }
 
 /**
@@ -148,10 +159,7 @@ let openAnimationInspector = Task.async(function*() {
   let win = inspector.sidebar.getWindowForTab("animationinspector");
   let {AnimationsController, AnimationsPanel} = win;
 
-  yield promise.all([
-    AnimationsController.initialized,
-    AnimationsPanel.initialized
-  ]);
+  yield AnimationsPanel.once(AnimationsPanel.PANEL_INITIALIZED);
 
   return {
     toolbox: toolbox,
@@ -281,6 +289,16 @@ let togglePlayPauseButton = Task.async(function*(widget) {
 
   // Wait for the next sate change event to make sure the state is updated
   yield widget.player.once(widget.player.AUTO_REFRESH_EVENT);
+});
+
+/**
+ * Get the current playState of an animation player on a given node.
+ */
+let getAnimationPlayerState = Task.async(function*(selector, animationIndex=0) {
+  let playState = yield executeInContent("Test:GetAnimationPlayerState",
+                                         {animationIndex},
+                                         {node: getNode(selector)});
+  return playState;
 });
 
 /**
