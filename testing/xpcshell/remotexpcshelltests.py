@@ -26,6 +26,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
     def __init__(self, *args, **kwargs):
         xpcshell.XPCShellTestThread.__init__(self, *args, **kwargs)
 
+        self.shellReturnCode = None
         # embed the mobile params from the harness into the TestThread
         mobileArgs = kwargs.get('mobileArgs')
         for key in mobileArgs:
