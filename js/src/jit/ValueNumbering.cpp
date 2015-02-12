@@ -481,9 +481,18 @@ ValueNumberer::removePredecessorAndDoDCE(MBasicBlock *block, MBasicBlock *pred, 
         MDefinition *op = phi->getOperand(predIndex);
         phi->removeOperand(predIndex);
 
-        nextDef_ = *iter;
+        nextDef_ = iter != end ? *iter : nullptr;
         if (!handleUseReleased(op, DontSetUseRemoved) || !processDeadDefs())
             return false;
+
+        // If |nextDef_| became dead while we had it pinned, advance the iterator
+        // and discard it now.
+        while (nextDef_ && !nextDef_->hasUses()) {
+            phi = nextDef_->toPhi();
+            iter++;
+            nextDef_ = iter != end ? *iter : nullptr;
+            discardDefsRecursively(phi);
+        }
     }
     nextDef_ = nullptr;
 
