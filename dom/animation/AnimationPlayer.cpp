@@ -70,6 +70,7 @@ AnimationPlayer::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
   }
 
   UpdateSourceContent();
+  PostUpdate();
 
   // FIXME: Once bug 1074630 is fixed, run the procedure to update a player's
   // finished state for player:
