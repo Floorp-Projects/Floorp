@@ -398,15 +398,15 @@ IsNormalObjectField(ExclusiveContext *cx, ParseNode *pn)
 {
     return pn->isKind(PNK_COLON) &&
            pn->getOp() == JSOP_INITPROP &&
-           BinaryLeft(pn)->isKind(PNK_NAME) &&
-           BinaryLeft(pn)->name() != cx->names().proto;
+           BinaryLeft(pn)->isKind(PNK_OBJECT_PROPERTY_NAME);
 }
 
 static inline PropertyName *
 ObjectNormalFieldName(ExclusiveContext *cx, ParseNode *pn)
 {
     MOZ_ASSERT(IsNormalObjectField(cx, pn));
-    return BinaryLeft(pn)->name();
+    MOZ_ASSERT(BinaryLeft(pn)->isKind(PNK_OBJECT_PROPERTY_NAME));
+    return BinaryLeft(pn)->pn_atom->asPropertyName();
 }
 
 static inline ParseNode *

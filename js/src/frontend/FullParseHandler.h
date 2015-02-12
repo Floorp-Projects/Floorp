@@ -105,7 +105,7 @@ class FullParseHandler
     }
 
     ParseNode *newObjectLiteralPropertyName(JSAtom *atom, const TokenPos &pos) {
-        return new_<NullaryNode>(PNK_NAME, JSOP_NOP, pos, atom);
+        return new_<NullaryNode>(PNK_OBJECT_PROPERTY_NAME, JSOP_NOP, pos, atom);
     }
 
     ParseNode *newNumber(double value, DecimalPoint decimalPoint, const TokenPos &pos) {
@@ -297,7 +297,7 @@ class FullParseHandler
         MOZ_ASSERT(literal->isKind(PNK_OBJECT));
         MOZ_ASSERT(literal->isArity(PN_LIST));
         MOZ_ASSERT(key->isKind(PNK_NUMBER) ||
-                   key->isKind(PNK_NAME) ||
+                   key->isKind(PNK_OBJECT_PROPERTY_NAME) ||
                    key->isKind(PNK_STRING) ||
                    key->isKind(PNK_COMPUTED_NAME));
 
@@ -311,7 +311,7 @@ class FullParseHandler
     bool addShorthand(ParseNode *literal, ParseNode *name, ParseNode *expr) {
         MOZ_ASSERT(literal->isKind(PNK_OBJECT));
         MOZ_ASSERT(literal->isArity(PN_LIST));
-        MOZ_ASSERT(name->isKind(PNK_NAME));
+        MOZ_ASSERT(name->isKind(PNK_OBJECT_PROPERTY_NAME));
         MOZ_ASSERT(expr->isKind(PNK_NAME));
         MOZ_ASSERT(name->pn_atom == expr->pn_atom);
 
@@ -323,12 +323,16 @@ class FullParseHandler
         return true;
     }
 
-    bool addMethodDefinition(ParseNode *literal, ParseNode *name, ParseNode *fn, JSOp op)
+    bool addMethodDefinition(ParseNode *literal, ParseNode *key, ParseNode *fn, JSOp op)
     {
         MOZ_ASSERT(literal->isArity(PN_LIST));
+        MOZ_ASSERT(key->isKind(PNK_NUMBER) ||
+                   key->isKind(PNK_OBJECT_PROPERTY_NAME) ||
+                   key->isKind(PNK_STRING) ||
+                   key->isKind(PNK_COMPUTED_NAME));
         literal->pn_xflags |= PNX_NONCONST;
 
-        ParseNode *propdef = newBinary(PNK_COLON, name, fn, op);
+        ParseNode *propdef = newBinary(PNK_COLON, key, fn, op);
         if (!propdef)
             return false;
         literal->append(propdef);

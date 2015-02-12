@@ -211,17 +211,6 @@ PushBinaryNodeChildren(ParseNode *node, NodeStack *stack)
     return PushResult::Recyclable;
 }
 
-static PushResult
-CanRecycleNullaryNode(ParseNode *node, NodeStack *stack)
-{
-    MOZ_ASSERT(node->isArity(PN_NULLARY));
-
-    if (node->isUsed() || node->isDefn())
-        return PushResult::CleanUpLater;
-
-    return PushResult::Recyclable;
-}
-
 /*
  * Push the children of |pn| on |stack|. Return true if |pn| itself could be
  * safely recycled, or false if it must be cleaned later (pn_used and pn_defn
@@ -251,6 +240,7 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_CONTINUE:
       case PNK_DEBUGGER:
       case PNK_EXPORT_BATCH_SPEC:
+      case PNK_OBJECT_PROPERTY_NAME:
         MOZ_ASSERT(pn->isArity(PN_NULLARY));
         MOZ_ASSERT(!pn->isUsed(), "handle non-trivial cases separately");
         MOZ_ASSERT(!pn->isDefn(), "handle non-trivial cases separately");
@@ -506,25 +496,18 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_LABEL:
       case PNK_DOT:
       case PNK_LEXICALSCOPE:
+      case PNK_NAME:
         return PushNameNodeChildren(pn, stack);
 
       case PNK_FUNCTION:
         return PushCodeNodeChildren(pn, stack);
 
-      case PNK_NAME:
-        break; // for now
-
       case PNK_LIMIT: // invalid sentinel value
         MOZ_CRASH("invalid node kind");
     }
 
-    MOZ_ASSERT(pn->isKind(PNK_NAME), "missed a kind above");
-
-    MOZ_ASSERT(pn->isArity(PN_NAME) || pn->isArity(PN_NULLARY));
-
-    return pn->isArity(PN_NAME)
-           ? PushNameNodeChildren(pn, stack)
-           : CanRecycleNullaryNode(pn, stack);
+    MOZ_CRASH("bad ParseNodeKind");
+    return PushResult::CleanUpLater;
 }
 
 /*

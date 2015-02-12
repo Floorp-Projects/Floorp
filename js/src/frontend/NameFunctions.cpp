@@ -224,12 +224,14 @@ class NameResolver
 
             if (node->isKind(PNK_COLON) || node->isKind(PNK_SHORTHAND)) {
                 ParseNode *left = node->pn_left;
-                if (left->isKind(PNK_NAME) || left->isKind(PNK_STRING)) {
+                if (left->isKind(PNK_OBJECT_PROPERTY_NAME) || left->isKind(PNK_STRING)) {
                     if (!appendPropertyReference(left->pn_atom))
                         return false;
                 } else if (left->isKind(PNK_NUMBER)) {
                     if (!appendNumericPropertyReference(left->pn_dval))
                         return false;
+                } else {
+                    MOZ_ASSERT(left->isKind(PNK_COMPUTED_NAME));
                 }
             } else {
                 /*
