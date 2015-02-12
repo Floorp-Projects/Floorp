@@ -322,6 +322,7 @@ ContainsHoistedDeclaration(ExclusiveContext *cx, ParseNode *node, bool *result)
 
       // Grammar sub-components that should never be reached directly by this
       // method, because some parent component should have asserted itself.
+      case PNK_OBJECT_PROPERTY_NAME:
       case PNK_COMPUTED_NAME:
       case PNK_SPREAD:
       case PNK_MUTATEPROTO:
