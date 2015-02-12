@@ -35,17 +35,21 @@ function openTabWithUrl(url) {
 }
 
 function findInPage(browser, text, nrOfMatches) {
-  let repaintPromise = promiseBrowserEvent(browser, "MozAfterPaint");
   do_print("Send findInPageMessage: " + text + " nth: " + nrOfMatches);
-  Messaging.sendRequest({ type: "Test:FindInPage", text: text, nrOfMatches: nrOfMatches });
-  return repaintPromise;
+  let messagePromise = Messaging.sendRequestForResult({
+    type: "Test:FindInPage",
+    text: text,
+    nrOfMatches: nrOfMatches
+  });
+  let repaintPromise = promiseBrowserEvent(browser, "MozAfterPaint");
+  return Promise.all([messagePromise, repaintPromise]);
 }
 
 function closeFindInPage(browser) {
-  let repaintPromise = promiseBrowserEvent(browser, "MozAfterPaint");
   do_print("Send closeFindInPageMessage");
-  Messaging.sendRequest({ type: "Test:CloseFindInPage" });
-  return repaintPromise;
+  let messagePromise = Messaging.sendRequestForResult({ type: "Test:CloseFindInPage" });
+  let repaintPromise = promiseBrowserEvent(browser, "MozAfterPaint");
+  return Promise.all([messagePromise, repaintPromise]);
 }
 
 function assertSelection(document, expectedSelection = false, expectedAnchorText = false) {
