@@ -13,6 +13,9 @@
 
 namespace mozilla {
 namespace a11y {
+class Accessible;
+class HyperTextAccessible;
+
 class AccShowEvent;
 
   /*
@@ -30,6 +33,9 @@ public:
     mDoc->SetIPCDoc(nullptr);
     MOZ_COUNT_DTOR(DocAccessibleChild);
   }
+
+  Accessible* IdToAccessible(const uint64_t& aID);
+  HyperTextAccessible* IdToHyperTextAccessible(const uint64_t& aID);
 
   void ShowEvent(AccShowEvent* aShowEvent);
 
