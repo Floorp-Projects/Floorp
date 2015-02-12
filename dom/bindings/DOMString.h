@@ -55,6 +55,11 @@ public:
     return AsAString();
   }
 
+  // It doesn't make any sense to convert a DOMString to a const nsString or
+  // nsAString reference; this class is meant for outparams only.
+  operator const nsString&() = delete;
+  operator const nsAString&() = delete;
+
   nsString& AsAString()
   {
     MOZ_ASSERT(!mStringBuffer, "We already have a stringbuffer?");
