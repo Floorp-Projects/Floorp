@@ -16,19 +16,17 @@
 #include "nsThreadUtils.h"
 #include "prlog.h"
 
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* GetMediaSourceAPILog();
+#define MSE_API(arg, ...) PR_LOG(GetMediaSourceAPILog(), PR_LOG_DEBUG, ("SourceBufferList(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define MSE_DEBUG(arg, ...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, ("SourceBufferList(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#else
+#define MSE_API(...)
+#define MSE_DEBUG(...)
+#endif
+
 struct JSContext;
 class JSObject;
-
-#ifdef PR_LOGGING
-extern PRLogModuleInfo* GetMediaSourceLog();
-extern PRLogModuleInfo* GetMediaSourceAPILog();
-
-#define MSE_DEBUG(...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, (__VA_ARGS__))
-#define MSE_API(...) PR_LOG(GetMediaSourceAPILog(), PR_LOG_DEBUG, (__VA_ARGS__))
-#else
-#define MSE_DEBUG(...)
-#define MSE_API(...)
-#endif
 
 namespace mozilla {
 
@@ -111,7 +109,7 @@ void
 SourceBufferList::RangeRemoval(double aStart, double aEnd)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_DEBUG("SourceBufferList(%p)::RangeRemoval(aStart=%f, aEnd=%f", this, aStart, aEnd);
+  MSE_DEBUG("RangeRemoval(aStart=%f, aEnd=%f)", aStart, aEnd);
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->RangeRemoval(aStart, aEnd);
   }
@@ -121,7 +119,7 @@ void
 SourceBufferList::Evict(double aStart, double aEnd)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_DEBUG("SourceBufferList(%p)::Evict(aStart=%f, aEnd=%f)", this, aStart, aEnd);
+  MSE_DEBUG("Evict(aStart=%f, aEnd=%f)", aStart, aEnd);
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->Evict(aStart, aEnd);
   }
@@ -151,14 +149,14 @@ void
 SourceBufferList::DispatchSimpleEvent(const char* aName)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_API("SourceBufferList(%p) Dispatch event '%s'", this, aName);
+  MSE_API("Dispatch event '%s'", aName);
   DispatchTrustedEvent(NS_ConvertUTF8toUTF16(aName));
 }
 
 void
 SourceBufferList::QueueAsyncSimpleEvent(const char* aName)
 {
-  MSE_DEBUG("SourceBufferList(%p) Queuing event '%s'", this, aName);
+  MSE_DEBUG("Queue event '%s'", aName);
   nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<SourceBufferList>(this, aName);
   NS_DispatchToMainThread(event);
 }
@@ -201,6 +199,8 @@ NS_IMPL_RELEASE_INHERITED(SourceBufferList, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SourceBufferList)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
+#undef MSE_API
+#undef MSE_DEBUG
 } // namespace dom
 
 } // namespace mozilla
