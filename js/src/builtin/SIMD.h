@@ -22,6 +22,7 @@
 
 #define FLOAT32X4_UNARY_FUNCTION_LIST(V)                                            \
   V(abs, (UnaryFunc<Float32x4, Abs, Float32x4>), 1, 0)                              \
+  V(check, (UnaryFunc<Float32x4, Identity, Float32x4>), 1, 0)                       \
   V(fromFloat64x2, (FuncConvert<Float64x2, Float32x4> ), 1, 0)                      \
   V(fromFloat64x2Bits, (FuncConvertBits<Float64x2, Float32x4>), 1, 0)               \
   V(fromInt32x4, (FuncConvert<Int32x4, Float32x4> ), 1, 0)                          \
@@ -81,6 +82,7 @@
 
 #define FLOAT64X2_UNARY_FUNCTION_LIST(V)                                            \
   V(abs, (UnaryFunc<Float64x2, Abs, Float64x2>), 1, 0)                              \
+  V(check, (UnaryFunc<Float64x2, Identity, Float64x2>), 1, 0)                       \
   V(fromFloat32x4, (FuncConvert<Float32x4, Float64x2> ), 1, 0)                      \
   V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Float64x2>), 1, 0)               \
   V(fromInt32x4, (FuncConvert<Int32x4, Float64x2> ), 1, 0)                          \
@@ -129,6 +131,7 @@
   FLOAT64X2_SHUFFLE_FUNCTION_LIST(V)
 
 #define INT32X4_UNARY_FUNCTION_LIST(V)                                              \
+  V(check, (UnaryFunc<Int32x4, Identity, Int32x4>), 1, 0)                           \
   V(fromFloat32x4, (FuncConvert<Float32x4, Int32x4>), 1, 0)                         \
   V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Int32x4>), 1, 0)                 \
   V(fromFloat64x2, (FuncConvert<Float64x2, Int32x4>), 1, 0)                         \
