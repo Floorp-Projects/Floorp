@@ -14,6 +14,10 @@
 #include "nsIMultiPartChannel.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
+#include "nsIResponseHeadProvider.h"
+#include "nsHttpResponseHead.h"
+
+using mozilla::net::nsHttpResponseHead;
 
 #define NS_MULTIMIXEDCONVERTER_CID                         \
 { /* 7584CE90-5B25-11d3-A175-0050041CAF44 */         \
@@ -32,6 +36,7 @@
 //
 class nsPartChannel MOZ_FINAL : public nsIChannel,
                                 public nsIByteRangeRequest,
+                                public nsIResponseHeadProvider,
                                 public nsIMultiPartChannel
 {
 public:
@@ -47,11 +52,13 @@ public:
   /* SetContentDisposition expects the full value of the Content-Disposition
    * header */
   void SetContentDisposition(const nsACString& aContentDispositionHeader);
+  void SetResponseHead(nsHttpResponseHead * head) { mResponseHead = head; }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
   NS_DECL_NSIBYTERANGEREQUEST
+  NS_DECL_NSIRESPONSEHEADPROVIDER
   NS_DECL_NSIMULTIPARTCHANNEL
 
 protected:
@@ -60,7 +67,8 @@ protected:
 protected:
   nsCOMPtr<nsIChannel>    mMultipartChannel;
   nsCOMPtr<nsIStreamListener> mListener;
-  
+  nsAutoPtr<nsHttpResponseHead> mResponseHead;
+
   nsresult                mStatus;
   nsLoadFlags             mLoadFlags;
 
@@ -168,6 +176,12 @@ protected:
     bool                mIsByteRangeRequest;
 
     uint32_t            mCurrentPartID;
+
+    // This is true if the content-type is application/package
+    // Streamable packages don't require the boundary in the header
+    // as it can be ascertained from the package file.
+    bool                mPackagedApp;
+    nsAutoPtr<nsHttpResponseHead> mResponseHead;
 };
 
 #endif /* __nsmultimixedconv__h__ */

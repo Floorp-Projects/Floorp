@@ -23,15 +23,10 @@
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaSourceLog();
-extern PRLogModuleInfo* GetMediaSourceAPILog();
 
-#define MSE_DEBUG(...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, (__VA_ARGS__))
-#define MSE_DEBUGV(...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG+1, (__VA_ARGS__))
-#define MSE_API(...) PR_LOG(GetMediaSourceAPILog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define MSE_DEBUG(arg, ...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, ("TrackBuffer(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
 #else
 #define MSE_DEBUG(...)
-#define MSE_DEBUGV(...)
-#define MSE_API(...)
 #endif
 
 // Time in seconds to substract from the current time when deciding the
@@ -57,7 +52,7 @@ TrackBuffer::TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& a
   mTaskQueue = new MediaTaskQueue(GetMediaDecodeThreadPool());
   aParentDecoder->AddTrackBuffer(this);
   mDecoderPerSegment = Preferences::GetBool("media.mediasource.decoder-per-segment", false);
-  MSE_DEBUG("TrackBuffer(%p) created for parent decoder %p", this, aParentDecoder);
+  MSE_DEBUG("TrackBuffer created for parent decoder %p", aParentDecoder);
 }
 
 TrackBuffer::~TrackBuffer()
@@ -158,9 +153,9 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
 
   // TODO: Run more of the buffer append algorithm asynchronously.
   if (newInitData) {
-    MSE_DEBUG("TrackBuffer(%p)::AppendData: New initialization segment.", this);
+    MSE_DEBUG("New initialization segment.");
   } else if (!hadInitData) {
-    MSE_DEBUG("TrackBuffer(%p)::AppendData: Non-init segment appended during initialization.", this);
+    MSE_DEBUG("Non-init segment appended during initialization.");
     mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
     return p;
   }
@@ -199,8 +194,8 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
          mLastTimestampOffset != aTimestampOffset ||
          mDecoderPerSegment ||
          (mCurrentDecoder && mCurrentDecoder->WasTrimmed()))) {
-      MSE_DEBUG("TrackBuffer(%p)::AppendData: Data last=[%lld, %lld] overlaps [%lld, %lld]",
-                this, mLastStartTimestamp, mLastEndTimestamp.value(), start, end);
+      MSE_DEBUG("Data last=[%lld, %lld] overlaps [%lld, %lld]",
+                mLastStartTimestamp, mLastEndTimestamp.value(), start, end);
 
       if (!newInitData) {
         // This data is earlier in the timeline than data we have already
@@ -211,13 +206,14 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
           mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
           return p;
         }
-        MSE_DEBUG("TrackBuffer(%p)::AppendData: Decoder marked as initialized.", this);
+        MSE_DEBUG("Decoder marked as initialized.");
         AppendDataToCurrentResource(oldInit, 0);
       }
       mLastStartTimestamp = start;
     } else {
-      MSE_DEBUG("TrackBuffer(%p)::AppendData: Segment last=[%lld, %lld] [%lld, %lld]",
-                this, mLastStartTimestamp, mLastEndTimestamp ? mLastEndTimestamp.value() : 0, start, end);
+      MSE_DEBUG("Segment last=[%lld, %lld] [%lld, %lld]",
+                mLastStartTimestamp,
+                mLastEndTimestamp ? mLastEndTimestamp.value() : 0, start, end);
     }
     mLastEndTimestamp.reset();
     mLastEndTimestamp.emplace(end);
@@ -334,9 +330,9 @@ TrackBuffer::EvictData(double aPlaybackTime,
       pastCurrentDecoder = false;
     }
 
-    MSE_DEBUG("TrackBuffer(%p)::EvictData decoder=%u/%u threshold=%u "
+    MSE_DEBUG("decoder=%u/%u threshold=%u "
               "toEvict=%lld current=%s pastCurrent=%s",
-              this, i, decoders.Length(), aThreshold, toEvict,
+              i, decoders.Length(), aThreshold, toEvict,
               onCurrent ? "true" : "false",
               pastCurrentDecoder ? "true" : "false");
 
@@ -344,9 +340,9 @@ TrackBuffer::EvictData(double aPlaybackTime,
         !mParentDecoder->IsActiveReader(decoders[i]->GetReader())) {
       // Remove data from older decoders than the current one.
       // Don't remove data if it is currently active.
-      MSE_DEBUG("TrackBuffer(%p)::EvictData evicting all before start "
+      MSE_DEBUG("evicting all before start "
                 "bufferedStart=%f bufferedEnd=%f aPlaybackTime=%f size=%lld",
-                this, buffered->GetStartTime(), buffered->GetEndTime(),
+                buffered->GetStartTime(), buffered->GetEndTime(),
                 aPlaybackTime, decoders[i]->GetResource()->GetSize());
       toEvict -= decoders[i]->GetResource()->EvictAll();
     } else {
@@ -356,9 +352,9 @@ TrackBuffer::EvictData(double aPlaybackTime,
       if (aPlaybackTime > MSE_EVICT_THRESHOLD_TIME) {
         double time = aPlaybackTime - MSE_EVICT_THRESHOLD_TIME;
         int64_t playbackOffset = decoders[i]->ConvertToByteOffset(time);
-        MSE_DEBUG("TrackBuffer(%p)::EvictData evicting some bufferedEnd=%f"
+        MSE_DEBUG("evicting some bufferedEnd=%f"
                   "aPlaybackTime=%f time=%f, playbackOffset=%lld size=%lld",
-                  this, buffered->GetEndTime(), aPlaybackTime, time,
+                  buffered->GetEndTime(), aPlaybackTime, time,
                   playbackOffset, decoders[i]->GetResource()->GetSize());
         if (playbackOffset > 0) {
           toEvict -= decoders[i]->GetResource()->EvictData(playbackOffset,
@@ -372,9 +368,9 @@ TrackBuffer::EvictData(double aPlaybackTime,
   for (i = 0; i < decoders.Length(); ++i) {
     nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
     decoders[i]->GetBuffered(buffered);
-    MSE_DEBUG("TrackBuffer(%p):EvictData maybe remove empty decoders=%d "
+    MSE_DEBUG("maybe remove empty decoders=%d "
               "size=%lld start=%f end=%f",
-              this, i, decoders[i]->GetResource()->GetSize(),
+              i, decoders[i]->GetResource()->GetSize(),
               buffered->GetStartTime(), buffered->GetEndTime());
     if (decoders[i] == mCurrentDecoder
         || mParentDecoder->IsActiveReader(decoders[i]->GetReader())) {
@@ -384,7 +380,7 @@ TrackBuffer::EvictData(double aPlaybackTime,
     if (decoders[i]->GetResource()->GetSize() == 0 ||
         buffered->GetStartTime() < 0.0 ||
         buffered->GetEndTime() < 0.0) {
-      MSE_DEBUG("TrackBuffer(%p):EvictData remove empty decoders=%d", this, i);
+      MSE_DEBUG("remove empty decoders=%d", i);
       RemoveDecoder(decoders[i]);
     }
   }
@@ -407,7 +403,8 @@ TrackBuffer::EvictBefore(double aTime)
   for (uint32_t i = 0; i < mInitializedDecoders.Length(); ++i) {
     int64_t endOffset = mInitializedDecoders[i]->ConvertToByteOffset(aTime);
     if (endOffset > 0) {
-      MSE_DEBUG("TrackBuffer(%p)::EvictBefore decoder=%u offset=%lld", this, i, endOffset);
+      MSE_DEBUG("decoder=%u offset=%lld",
+                i, endOffset);
       mInitializedDecoders[i]->GetResource()->EvictBefore(endOffset);
     }
   }
@@ -470,7 +467,7 @@ TrackBuffer::QueueInitializeDecoder(SourceBufferDecoder* aDecoder)
                                                       &TrackBuffer::InitializeDecoder,
                                                       aDecoder);
   if (NS_FAILED(mTaskQueue->Dispatch(task))) {
-    MSE_DEBUG("TrackBuffer(%p): Failed to enqueue decoder initialization task", this);
+    MSE_DEBUG("failed to enqueue decoder initialization task");
     RemoveDecoder(aDecoder);
     mInitializationPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
     return false;
@@ -482,8 +479,7 @@ void
 TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
 {
   if (!mParentDecoder) {
-    MSE_DEBUG("TrackBuffer(%p) was shutdown. Aborting initialization.",
-              this);
+    MSE_DEBUG("decoder was shutdown. Aborting initialization.");
     return;
   }
   // ReadMetadata may block the thread waiting on data, so we must be able
@@ -494,8 +490,7 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
 
   if (mCurrentDecoder != aDecoder) {
-    MSE_DEBUG("TrackBuffer(%p) append was cancelled. Aborting initialization.",
-              this);
+    MSE_DEBUG("append was cancelled. Aborting initialization.");
     // If we reached this point, the SourceBuffer would have disconnected
     // the promise. So no need to reject it.
     return;
@@ -506,15 +501,15 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
   // need to abort immediately, because the reader has forgotten about us, and
   // important pieces of our state (like mTaskQueue) have also been torn down.
   if (mShutdown) {
-    MSE_DEBUG("TrackBuffer(%p) was shut down. Aborting initialization.", this);
+    MSE_DEBUG("was shut down. Aborting initialization.");
     RemoveDecoder(aDecoder);
     return;
   }
 
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   MediaDecoderReader* reader = aDecoder->GetReader();
-  MSE_DEBUG("TrackBuffer(%p): Initializing subdecoder %p reader %p",
-            this, aDecoder, reader);
+  MSE_DEBUG("Initializing subdecoder %p reader %p",
+            aDecoder, reader);
 
   MediaInfo mi;
   nsAutoPtr<MetadataTags> tags; // TODO: Handle metadata.
@@ -544,7 +539,7 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
 
   reader->SetIdle();
   if (mShutdown) {
-    MSE_DEBUG("TrackBuffer(%p) was shut down while reading metadata. Aborting initialization.", this);
+    MSE_DEBUG("was shut down while reading metadata. Aborting initialization.");
     return;
   }
 
@@ -557,20 +552,20 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
 
   if (NS_FAILED(rv) || (!mi.HasVideo() && !mi.HasAudio())) {
     // XXX: Need to signal error back to owning SourceBuffer.
-    MSE_DEBUG("TrackBuffer(%p): Reader %p failed to initialize rv=%x audio=%d video=%d",
-              this, reader, rv, mi.HasAudio(), mi.HasVideo());
+    MSE_DEBUG("Reader %p failed to initialize rv=%x audio=%d video=%d",
+              reader, rv, mi.HasAudio(), mi.HasVideo());
     RemoveDecoder(aDecoder);
     mInitializationPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
     return;
   }
 
   if (mi.HasVideo()) {
-    MSE_DEBUG("TrackBuffer(%p): Reader %p video resolution=%dx%d",
-              this, reader, mi.mVideo.mDisplay.width, mi.mVideo.mDisplay.height);
+    MSE_DEBUG("Reader %p video resolution=%dx%d",
+              reader, mi.mVideo.mDisplay.width, mi.mVideo.mDisplay.height);
   }
   if (mi.HasAudio()) {
-    MSE_DEBUG("TrackBuffer(%p): Reader %p audio sampleRate=%d channels=%d",
-              this, reader, mi.mAudio.mRate, mi.mAudio.mChannels);
+    MSE_DEBUG("Reader %p audio sampleRate=%d channels=%d",
+              reader, mi.mAudio.mRate, mi.mAudio.mChannels);
   }
 
   RefPtr<nsIRunnable> task =
@@ -578,7 +573,7 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
                                                       &TrackBuffer::CompleteInitializeDecoder,
                                                       aDecoder);
   if (NS_FAILED(NS_DispatchToMainThread(task))) {
-    MSE_DEBUG("TrackBuffer(%p): Failed to enqueue decoder initialization task", this);
+    MSE_DEBUG("Failed to enqueue decoder initialization task");
     RemoveDecoder(aDecoder);
     mInitializationPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
     return;
@@ -589,28 +584,26 @@ void
 TrackBuffer::CompleteInitializeDecoder(SourceBufferDecoder* aDecoder)
 {
   if (!mParentDecoder) {
-    MSE_DEBUG("TrackBuffer(%p) was shutdown. Aborting initialization.",
-              this);
+    MSE_DEBUG("was shutdown. Aborting initialization.");
     return;
   }
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
   if (mCurrentDecoder != aDecoder) {
-    MSE_DEBUG("TrackBuffer(%p) append was cancelled. Aborting initialization.",
-              this);
+    MSE_DEBUG("append was cancelled. Aborting initialization.");
     // If we reached this point, the SourceBuffer would have disconnected
     // the promise. So no need to reject it.
     return;
   }
 
   if (mShutdown) {
-    MSE_DEBUG("TrackBuffer(%p) was shut down. Aborting initialization.", this);
+    MSE_DEBUG("was shut down. Aborting initialization.");
     RemoveDecoder(aDecoder);
     return;
   }
 
   if (!RegisterDecoder(aDecoder)) {
-    MSE_DEBUG("TrackBuffer(%p): Reader %p not activated",
-              this, aDecoder->GetReader());
+    MSE_DEBUG("Reader %p not activated",
+              aDecoder->GetReader());
     RemoveDecoder(aDecoder);
     mInitializationPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
     return;
@@ -627,8 +620,8 @@ TrackBuffer::CompleteInitializeDecoder(SourceBufferDecoder* aDecoder)
   // required when data is appended.
   mParentDecoder->GetReader()->MaybeNotifyHaveData();
 
-  MSE_DEBUG("TrackBuffer(%p): Reader %p activated",
-            this, aDecoder->GetReader());
+  MSE_DEBUG("Reader %p activated",
+            aDecoder->GetReader());
   mInitializationPromise.ResolveIfExists(aDecoder->GetRealMediaDuration() > 0, __func__);
 }
 
@@ -637,7 +630,7 @@ TrackBuffer::ValidateTrackFormats(const MediaInfo& aInfo)
 {
   if (mInfo.HasAudio() != aInfo.HasAudio() ||
       mInfo.HasVideo() != aInfo.HasVideo()) {
-    MSE_DEBUG("TrackBuffer(%p)::ValidateTrackFormats audio/video track mismatch", this);
+    MSE_DEBUG("audio/video track mismatch");
     return false;
   }
 
@@ -645,7 +638,7 @@ TrackBuffer::ValidateTrackFormats(const MediaInfo& aInfo)
   if (mInfo.HasAudio() &&
       (mInfo.mAudio.mRate != aInfo.mAudio.mRate ||
        mInfo.mAudio.mChannels != aInfo.mAudio.mChannels)) {
-    MSE_DEBUG("TrackBuffer(%p)::ValidateTrackFormats audio format mismatch", this);
+    MSE_DEBUG("audio format mismatch");
     return false;
   }
 
@@ -663,7 +656,7 @@ TrackBuffer::RegisterDecoder(SourceBufferDecoder* aDecoder)
     mParentDecoder->OnTrackBufferConfigured(this, mInfo);
   }
   if (!ValidateTrackFormats(info)) {
-    MSE_DEBUG("TrackBuffer(%p)::RegisterDecoder with mismatched audio/video tracks", this);
+    MSE_DEBUG("mismatched audio/video tracks");
     return false;
   }
   mInitializedDecoders.AppendElement(aDecoder);
@@ -907,7 +900,7 @@ TrackBuffer::RangeRemoval(int64_t aStart, int64_t aEnd)
   }
   if (aEnd < bufferedEnd) {
     // TODO. We only handle trimming.
-    NS_WARNING("TrackBuffer::RangeRemoval unsupported arguments. "
+    NS_WARNING("RangeRemoval unsupported arguments. "
                "Can only handle trimming");
     return false;
   }
@@ -926,7 +919,7 @@ TrackBuffer::RangeRemoval(int64_t aStart, int64_t aEnd)
           mParentDecoder->IsActiveReader(decoders[i]->GetReader())) {
         continue;
       }
-      MSE_DEBUG("TrackBuffer(%p):RangeRemoval remove empty decoders=%d", this, i);
+      MSE_DEBUG("remove empty decoders=%d", i);
       RemoveDecoder(decoders[i]);
     }
   }
@@ -941,5 +934,7 @@ TrackBuffer::AdjustDecodersTimestampOffset(int32_t aOffset)
     mDecoders[i]->SetTimestampOffset(mDecoders[i]->GetTimestampOffset() + aOffset);
   }
 }
+
+#undef MSE_DEBUG
 
 } // namespace mozilla

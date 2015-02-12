@@ -10,9 +10,6 @@
 <!ENTITY certmgr.tab.ca                       "Authorities">
 <!ENTITY certmgr.tab.orphan2                  "Others">
 
-<!ENTITY certmgr.ca.builtins                  "Built-in CAs">
-<!ENTITY certmgr.ca.mycas                     "CAs Managed By You">
-
 <!ENTITY certmgr.mine                         "You have certificates from these organizations that identify you:">
 <!ENTITY certmgr.others                       "You have certificates on file that identify these people:">
 <!ENTITY certmgr.websites2                    "You have certificates on file that identify these servers:">
@@ -37,7 +34,6 @@
 <!ENTITY certmgr.certdetail.sha256fingerprint "SHA-256 Fingerprint">
 <!ENTITY certmgr.certdetail.sha1fingerprint   "SHA1 Fingerprint">
 
-<!ENTITY certmgr.editcert.title               "Edit Security Certificate Settings">
 <!ENTITY certmgr.editcacert.title             "Edit CA certificate trust settings">
 <!ENTITY certmgr.editcert.edittrust           "Edit trust settings:">
 <!ENTITY certmgr.editcert.trustssl            "This certificate can identify websites.">
@@ -49,11 +45,6 @@
 <!ENTITY certmgr.editemailcert.donttrust      "Do not trust the authenticity of this certificate.">
 
 <!ENTITY certmgr.deletecert.title             "Delete Certificate">
-<!ENTITY certmgr.deletecert.beforename        "You have requested to delete this certificate:">
-<!ENTITY certmgr.deletecert.aftername         "Are you sure you want to delete this certificate?">
-<!ENTITY certmgr.deleteusercert.title         "Delete Your Certificate">
-<!ENTITY certmgr.deleteusercert.beforename    "You have requested to delete the certificate:">
-<!ENTITY certmgr.deleteusercert.aftername     "Once you have deleted this certificate, you will not be able to read mail that has been encrypted with it.">
 
 <!ENTITY certmgr.certname                     "Certificate Name">
 <!ENTITY certmgr.certserver                   "Server">
@@ -72,8 +63,6 @@
 <!ENTITY certmgr.edit3.accesskey              "E">
 <!ENTITY certmgr.editca.label                 "Edit CA Trust">
 <!ENTITY certmgr.editca.accesskey             "d">
-<!ENTITY certmgr.add.label                    "Add">
-<!ENTITY certmgr.add.accesskey                "A">
 <!ENTITY certmgr.export.label                 "Export…">
 <!ENTITY certmgr.export.accesskey             "x">
 <!ENTITY certmgr.delete2.label                "Delete…">
@@ -91,7 +80,7 @@
 <!ENTITY certmgr.fields.label                 "Field Value">
 <!ENTITY certmgr.fields.accesskey             "V">
 <!ENTITY certmgr.hierarchy.label              "Certificate Hierarchy">
-<!ENTITY certmgr.hierarchy.accesskey          "C">
+<!ENTITY certmgr.hierarchy.accesskey2         "H">
 <!ENTITY certmgr.addException.label           "Add Exception…">
 <!ENTITY certmgr.addException.accesskey       "x">
 

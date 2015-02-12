@@ -393,7 +393,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
         return nullptr;
 
     RootedPlainObject proto(cx, NewObjectWithGivenProto<PlainObject>(cx, objProto,
-                                                                     nullptr, SingletonObject));
+                                                                     NullPtr(), SingletonObject));
     if (!proto)
         return nullptr;
 
@@ -1327,13 +1327,14 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static const uint32_t JSSLOT_BOUND_FUNCTION_THIS       = 0;
-static const uint32_t JSSLOT_BOUND_FUNCTION_ARGS_COUNT = 1;
+static const uint32_t JSSLOT_BOUND_FUNCTION_TARGET     = 0;
+static const uint32_t JSSLOT_BOUND_FUNCTION_THIS       = 1;
+static const uint32_t JSSLOT_BOUND_FUNCTION_ARGS_COUNT = 2;
 
-static const uint32_t BOUND_FUNCTION_RESERVED_SLOTS = 2;
+static const uint32_t BOUND_FUNCTION_RESERVED_SLOTS = 3;
 
 inline bool
-JSFunction::initBoundFunction(JSContext *cx, HandleValue thisArg,
+JSFunction::initBoundFunction(JSContext *cx, HandleObject target, HandleValue thisArg,
                               const Value *args, unsigned argslen)
 {
     RootedFunction self(cx, this);
@@ -1352,12 +1353,21 @@ JSFunction::initBoundFunction(JSContext *cx, HandleValue thisArg,
     if (!NativeObject::setSlotSpan(cx, self, BOUND_FUNCTION_RESERVED_SLOTS + argslen))
         return false;
 
+    self->setSlot(JSSLOT_BOUND_FUNCTION_TARGET, ObjectValue(*target));
     self->setSlot(JSSLOT_BOUND_FUNCTION_THIS, thisArg);
     self->setSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT, PrivateUint32Value(argslen));
 
     self->initSlotRange(BOUND_FUNCTION_RESERVED_SLOTS, args, argslen);
 
     return true;
+}
+
+JSObject*
+JSFunction::getBoundFunctionTarget() const
+{
+    MOZ_ASSERT(isBoundFunction());
+
+    return &getSlot(JSSLOT_BOUND_FUNCTION_TARGET).toObject();
 }
 
 const js::Value &
@@ -1660,21 +1670,17 @@ js_fun_bind(JSContext *cx, HandleObject target, HandleValue thisArg,
 
     JSFunction::Flags flags = target->isConstructor() ? JSFunction::NATIVE_CTOR
                                                       : JSFunction::NATIVE_FUN;
-    RootedObject funobj(cx, NewFunction(cx, js::NullPtr(), CallOrConstructBoundFunction, length,
-                                        flags, target, name));
-    if (!funobj)
+    RootedFunction fun(cx, NewFunction(cx, js::NullPtr(), CallOrConstructBoundFunction, length,
+                                       flags, cx->global(), name));
+    if (!fun)
         return nullptr;
 
-    /* NB: Bound functions abuse |parent| to store their target. */
-    if (!JSObject::setParent(cx, funobj, target))
-        return nullptr;
-
-    if (!funobj->as<JSFunction>().initBoundFunction(cx, thisArg, boundArgs, argslen))
+    if (!fun->initBoundFunction(cx, target, thisArg, boundArgs, argslen))
         return nullptr;
 
     /* Steps 17, 19-21 are handled by fun_resolve. */
     /* Step 18 is the default for new functions. */
-    return funobj;
+    return fun;
 }
 
 /*
@@ -1984,8 +1990,9 @@ js::NewFunctionWithProto(ExclusiveContext *cx, HandleObject funobjArg, Native na
         // isSingleton implies isInterpreted.
         if (native && !IsAsmJSModuleNative(native))
             newKind = SingletonObject;
-        funobj = NewObjectWithClassProto(cx, &JSFunction::class_, proto,
-                                         SkipScopeParent(parent), allocKind, newKind);
+        RootedObject realParent(cx, SkipScopeParent(parent));
+        funobj = NewObjectWithClassProto(cx, &JSFunction::class_, proto, realParent, allocKind,
+                                         newKind);
         if (!funobj)
             return nullptr;
     }
@@ -2022,8 +2029,8 @@ js::CloneFunctionObjectUseSameScript(JSCompartment *compartment, HandleFunction 
 }
 
 JSFunction *
-js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, gc::AllocKind allocKind,
-                        NewObjectKind newKindArg /* = GenericObject */)
+js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
+                        gc::AllocKind allocKind, NewObjectKind newKindArg /* = GenericObject */)
 {
     MOZ_ASSERT(parent);
     MOZ_ASSERT(!fun->isBoundFunction());
@@ -2040,8 +2047,9 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, 
         if (!cloneProto)
             return nullptr;
     }
-    JSObject *cloneobj = NewObjectWithClassProto(cx, &JSFunction::class_, cloneProto,
-                                                 SkipScopeParent(parent), allocKind, newKind);
+    RootedObject realParent(cx, SkipScopeParent(parent));
+    JSObject *cloneobj = NewObjectWithClassProto(cx, &JSFunction::class_, cloneProto, realParent,
+                                                 allocKind, newKind);
     if (!cloneobj)
         return nullptr;
     RootedFunction clone(cx, &cloneobj->as<JSFunction>());

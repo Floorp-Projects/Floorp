@@ -547,16 +547,38 @@ NetworkStatsDB.prototype = {
         if (!cursor) {
           // Empty, so save first element.
 
+          if (!isAccumulative) {
+            this._saveStats(aTxn, aStore, stats);
+            return;
+          }
+
           // There could be a time delay between the point when the network
           // interface comes up and the point when the database is initialized.
           // In this short interval some traffic data are generated but are not
           // registered by the first sample.
-          if (isAccumulative) {
-            stats.rxBytes = stats.rxTotalBytes;
-            stats.txBytes = stats.txTotalBytes;
-          }
+          stats.rxBytes = stats.rxTotalBytes;
+          stats.txBytes = stats.txTotalBytes;
 
-          this._saveStats(aTxn, aStore, stats);
+          // However, if the interface is not switched on after the database is
+          // initialized (dual sim use case) stats should be set to 0.
+          let req = aStore.index("network").openKeyCursor(null, "nextunique");
+          req.onsuccess = function onsuccess(event) {
+            let cursor = event.target.result;
+            if (cursor) {
+              if (cursor.key[1] == stats.network[1]) {
+                stats.rxBytes = 0;
+                stats.txBytes = 0;
+                this._saveStats(aTxn, aStore, stats);
+                return;
+              }
+
+              cursor.continue();
+              return;
+            }
+
+            this._saveStats(aTxn, aStore, stats);
+          }.bind(this);
+
           return;
         }
 

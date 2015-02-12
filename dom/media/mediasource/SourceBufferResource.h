@@ -20,15 +20,6 @@
 #include "nscore.h"
 #include "prlog.h"
 
-#ifdef PR_LOGGING
-extern PRLogModuleInfo* GetMediaSourceLog();
-extern PRLogModuleInfo* GetMediaSourceAPILog();
-
-#define MSE_DEBUG(...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, (__VA_ARGS__))
-#else
-#define MSE_DEBUG(...)
-#endif
-
 #define UNIMPLEMENTED() { /* Logging this is too spammy to do by default */ }
 
 class nsIStreamListener;

@@ -570,7 +570,7 @@ PLDHashTable::Search(const void* aKey)
 }
 
 MOZ_ALWAYS_INLINE PLDHashEntryHdr*
-PLDHashTable::Add(const void* aKey)
+PLDHashTable::Add(const void* aKey, const mozilla::fallible_t&)
 {
   PLDHashNumber keyHash;
   PLDHashEntryHdr* entry;
@@ -672,9 +672,21 @@ PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey)
 }
 
 PLDHashEntryHdr* PL_DHASH_FASTCALL
+PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey,
+                 const fallible_t& aFallible)
+{
+  return aTable->Add(aKey, aFallible);
+}
+
+PLDHashEntryHdr* PL_DHASH_FASTCALL
 PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey)
 {
-  return aTable->Add(aKey);
+  PLDHashEntryHdr* entry = PL_DHashTableAdd(aTable, aKey, fallible);
+  if (!entry) {
+    // Entry storage reallocation failed.
+    NS_ABORT_OOM(aTable->EntrySize() * aTable->EntryCount());
+  }
+  return entry;
 }
 
 void PL_DHASH_FASTCALL

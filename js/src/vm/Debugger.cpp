@@ -450,7 +450,7 @@ Debugger::getScriptFrameWithIter(JSContext *cx, AbstractFramePtr frame,
         /* Create and populate the Debugger.Frame object. */
         JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject();
         RootedNativeObject frameobj(cx, NewNativeObjectWithGivenProto(cx, &DebuggerFrame_class,
-                                                                      proto, nullptr));
+                                                                      proto, NullPtr()));
         if (!frameobj)
             return false;
 
@@ -769,7 +769,8 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, MutableHandleValue rv
     } else {
         /* Create a new Debugger.Environment for env. */
         JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_ENV_PROTO).toObject();
-        envobj = NewNativeObjectWithGivenProto(cx, &DebuggerEnv_class, proto, nullptr, TenuredObject);
+        envobj = NewNativeObjectWithGivenProto(cx, &DebuggerEnv_class, proto, NullPtr(),
+                                               TenuredObject);
         if (!envobj)
             return false;
         envobj->setPrivateGCThing(env);
@@ -811,7 +812,8 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
             /* Create a new Debugger.Object for obj. */
             JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO).toObject();
             NativeObject *dobj =
-                NewNativeObjectWithGivenProto(cx, &DebuggerObject_class, proto, nullptr, TenuredObject);
+                NewNativeObjectWithGivenProto(cx, &DebuggerObject_class, proto, NullPtr(),
+                                              TenuredObject);
             if (!dobj)
                 return false;
             dobj->setPrivateGCThing(obj);
@@ -2874,7 +2876,8 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
      * Debugger.{Frame,Object,Script,Memory}.prototype in reserved slots. The
      * rest of the reserved slots are for hooks; they default to undefined.
      */
-    RootedNativeObject obj(cx, NewNativeObjectWithGivenProto(cx, &Debugger::jsclass, proto, nullptr));
+    RootedNativeObject obj(cx, NewNativeObjectWithGivenProto(cx, &Debugger::jsclass, proto,
+                                                             NullPtr()));
     if (!obj)
         return false;
     for (unsigned slot = JSSLOT_DEBUG_PROTO_START; slot < JSSLOT_DEBUG_PROTO_STOP; slot++)
@@ -3886,7 +3889,8 @@ Debugger::drainTraceLogger(JSContext *cx, unsigned argc, Value *vp)
     /* Add all events to the array. */
     uint32_t index = 0;
     for (EventEntry *eventItem = events; eventItem < events + num; eventItem++, index++) {
-        RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, nullptr, cx->global()));
+        RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, nullptr,
+                                                      GlobalObject::upcast(cx->global())));
         if (!item)
             return false;
 
@@ -4110,7 +4114,7 @@ Debugger::newDebuggerScript(JSContext *cx, HandleScript script)
     JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_SCRIPT_PROTO).toObject();
     MOZ_ASSERT(proto);
     NativeObject *scriptobj = NewNativeObjectWithGivenProto(cx, &DebuggerScript_class,
-                                                            proto, nullptr, TenuredObject);
+                                                            proto, NullPtr(), TenuredObject);
     if (!scriptobj)
         return nullptr;
     scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_OWNER, ObjectValue(*object));
@@ -5132,7 +5136,7 @@ Debugger::newDebuggerSource(JSContext *cx, HandleScriptSource source)
     JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_SOURCE_PROTO).toObject();
     MOZ_ASSERT(proto);
     NativeObject *sourceobj = NewNativeObjectWithGivenProto(cx, &DebuggerSource_class,
-                                                            proto, nullptr, TenuredObject);
+                                                            proto, NullPtr(), TenuredObject);
     if (!sourceobj)
         return nullptr;
     sourceobj->setReservedSlot(JSSLOT_DEBUGSOURCE_OWNER, ObjectValue(*object));
@@ -5772,7 +5776,8 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
         JSObject *proto = GlobalObject::getOrCreateArrayPrototype(cx, global);
         if (!proto)
             return false;
-        argsobj = NewNativeObjectWithGivenProto(cx, &DebuggerArguments_class, proto, global);
+        argsobj = NewNativeObjectWithGivenProto(cx, &DebuggerArguments_class, proto,
+                                                GlobalObject::upcast(global));
         if (!argsobj)
             return false;
         SetReservedSlot(argsobj, JSSLOT_DEBUGARGUMENTS_FRAME, ObjectValue(*thisobj));

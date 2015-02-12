@@ -12,6 +12,7 @@ include protocol PVsync;
 include DOMTypes;
 include PBackgroundSharedTypes;
 include PBackgroundIDBSharedTypes;
+include ServiceWorkerRegistrarTypes;
 
 namespace mozilla {
 namespace ipc {
@@ -34,6 +35,11 @@ parent:
   PVsync();
 
   PBroadcastChannel(PrincipalInfo pInfo, nsString origin, nsString channel);
+
+  RegisterServiceWorker(ServiceWorkerRegistrationData data);
+  UnregisterServiceWorker(PrincipalInfo principalInfo,
+                          nsString scope);
+  ShutdownServiceWorkerRegistrar();
 
 both:
   PBlob(BlobConstructorParams params);

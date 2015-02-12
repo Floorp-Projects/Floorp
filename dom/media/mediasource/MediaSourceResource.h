@@ -12,14 +12,13 @@
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaSourceLog();
-extern PRLogModuleInfo* GetMediaSourceAPILog();
 
-#define MSE_DEBUG(...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define MSE_DEBUG(arg, ...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, ("MediaSourceResource(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
 #else
 #define MSE_DEBUG(...)
 #endif
 
-#define UNIMPLEMENTED() MSE_DEBUG("MediaSourceResource(%p): UNIMPLEMENTED FUNCTION at %s:%d", this, __FILE__, __LINE__)
+#define UNIMPLEMENTED() MSE_DEBUG("UNIMPLEMENTED FUNCTION at %s:%d", __FILE__, __LINE__)
 
 namespace mozilla {
 
@@ -87,6 +86,7 @@ private:
 
 } // namespace mozilla
 
+#undef MSE_DEBUG
 #undef UNIMPLEMENTED
 
 #endif /* MOZILLA_MEDIASOURCERESOURCE_H_ */

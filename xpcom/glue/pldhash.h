@@ -244,7 +244,7 @@ public:
   void Finish();
 
   PLDHashEntryHdr* Search(const void* aKey);
-  PLDHashEntryHdr* Add(const void* aKey);
+  PLDHashEntryHdr* Add(const void* aKey, const mozilla::fallible_t&);
   void Remove(const void* aKey);
 
   void RawRemove(PLDHashEntryHdr* aEntry);
@@ -358,7 +358,6 @@ typedef void (*PLDHashInitEntry)(PLDHashEntryHdr* aEntry, const void* aKey);
  *
  * Summary of allocation-related hook usage with C++ placement new emphasis:
  *  initEntry           Call placement new using default key-based ctor.
- *                      Return true on success, false on error.
  *  moveEntry           Call placement new using copy ctor, run dtor on old
  *                      entry storage.
  *  clearEntry          Run dtor on entry.
@@ -481,18 +480,24 @@ PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey);
 /*
  * To add an entry identified by key to table, call:
  *
- *  entry = PL_DHashTableAdd(table, key);
+ *  entry = PL_DHashTableAdd(table, key, mozilla::fallible);
  *
- * If entry is null upon return, then either (a) the table is severely
- * overloaded and memory can't be allocated for entry storage, or (b)
- * aTable->mOps->initEntry is non-null and aTable->mOps->initEntry op has
- * returned false.
+ * If entry is null upon return, then the table is severely overloaded and
+ * memory can't be allocated for entry storage.
  *
  * Otherwise, aEntry->mKeyHash has been set so that
  * PLDHashTable::EntryIsFree(entry) is false, and it is up to the caller to
  * initialize the key and value parts of the entry sub-type, if they have not
  * been set already (i.e. if entry was not already in the table, and if the
  * optional initEntry hook was not used).
+ */
+PLDHashEntryHdr* PL_DHASH_FASTCALL
+PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey,
+                 const mozilla::fallible_t&);
+
+/*
+ * This is like the other PL_DHashTableAdd() function, but infallible, and so
+ * never returns null.
  */
 PLDHashEntryHdr* PL_DHASH_FASTCALL
 PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey);

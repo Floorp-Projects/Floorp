@@ -199,9 +199,8 @@ CompareCacheHashEntry *
 nsCertTree::getCacheEntry(void *cache, void *aCert)
 {
   PLDHashTable &aCompareCache = *reinterpret_cast<PLDHashTable*>(cache);
-  CompareCacheHashEntryPtr *entryPtr = 
-    static_cast<CompareCacheHashEntryPtr*>
-               (PL_DHashTableAdd(&aCompareCache, aCert));
+  CompareCacheHashEntryPtr *entryPtr = static_cast<CompareCacheHashEntryPtr*>
+    (PL_DHashTableAdd(&aCompareCache, aCert, fallible));
   return entryPtr ? entryPtr->entry : nullptr;
 }
 
