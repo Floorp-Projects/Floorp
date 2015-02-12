@@ -88,15 +88,15 @@ sharedstub:
     # a2 is stack address where extra function params
     # are stored that do not fit in registers
     move     a2, sp
-    addi     a2, FRAMESZ
+    PTR_ADDI a2, FRAMESZ
 
     # a3 is stack address of a1..a7
     move     a3, sp
-    addi     a3, A1OFF
+    PTR_ADDI a3, A1OFF
 
     # a4 is stack address of f13..f19
     move     a4, sp
-    addi     a4, F13OFF
+    PTR_ADDI a4, F13OFF
 
     # PrepareAndDispatch(that, methodIndex, args, gprArgs, fpArgs)
     #                     a0       a1        a2     a3       a4

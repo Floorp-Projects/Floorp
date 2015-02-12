@@ -1768,7 +1768,7 @@ class LApplyArgsGeneric : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES +
     const LDefinition *getTempObject() {
         return getTemp(0);
     }
-    const LDefinition *getTempCopy() {
+    const LDefinition *getTempStackCounter() {
         return getTemp(1);
     }
 };

@@ -6,12 +6,12 @@
 #include "xptcprivate.h"
 #include "xptiprivate.h"
 
-#if (_MIPS_SIM != _ABIN32)
-#error "This code is for MIPS N32 only"
+#if (_MIPS_SIM != _ABIN32) && (_MIPS_SIM != _ABI64)
+#error "This code is for MIPS n32/n64 only"
 #endif
 
 /*
- * This is for MIPS N32 ABI
+ * This is for MIPS n32/n64 ABI
  *
  * When we're called, the "gp" registers are stored in gprData and
  * the "fp" registers are stored in fprData.  There are 8 regs
