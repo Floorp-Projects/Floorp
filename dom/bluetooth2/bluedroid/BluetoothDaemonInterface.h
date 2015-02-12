@@ -11,6 +11,7 @@
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+class BluetoothDaemonListenSocket;
 class BluetoothDaemonChannel;
 class BluetoothDaemonA2dpInterface;
 class BluetoothDaemonAvrcpInterface;
@@ -24,6 +25,7 @@ public:
   class CleanupResultHandler;
   class InitResultHandler;
 
+  friend class BluetoothDaemonListenSocket;
   friend class BluetoothDaemonChannel;
   friend class CleanupResultHandler;
   friend class InitResultHandler;
