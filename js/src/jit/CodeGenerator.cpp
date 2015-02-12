@@ -2006,6 +2006,10 @@ CodeGenerator::visitOsrEntry(LOsrEntry *lir)
     // to 0, before reserving the stack.
     MOZ_ASSERT(masm.framePushed() == frameSize());
     masm.setFramePushed(0);
+
+    // Ensure that the Ion frames is properly aligned.
+    masm.assertStackAlignment(JitStackAlignment, 0);
+
     masm.reserveStack(frameSize());
 }
 
