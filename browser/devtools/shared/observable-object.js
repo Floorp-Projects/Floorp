@@ -125,5 +125,6 @@ Handler.prototype = {
       }
       Object.defineProperty(target, key, desc);
     }
+    return true;
   }
 };
