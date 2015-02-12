@@ -87,6 +87,9 @@
 #elif defined(__sparc__)
 #define ARCH_CPU_SPARC 1
 #define ARCH_CPU_32_BITS 1
+#elif defined(__mips64) && defined(__LP64__)
+#define ARCH_CPU_MIPS 1
+#define ARCH_CPU_64_BITS 1
 #elif defined(__mips__)
 #define ARCH_CPU_MIPS 1
 #define ARCH_CPU_32_BITS 1
