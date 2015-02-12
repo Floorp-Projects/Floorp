@@ -2463,7 +2463,7 @@ ServiceWorkerManager::CreateServiceWorker(nsIPrincipal* aPrincipal,
   AssertIsOnMainThread();
   MOZ_ASSERT(aPrincipal);
 
-  WorkerPrivate::LoadInfo info;
+  WorkerLoadInfo info;
   nsresult rv = NS_NewURI(getter_AddRefs(info.mBaseURI), aScriptSpec, nullptr, nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
