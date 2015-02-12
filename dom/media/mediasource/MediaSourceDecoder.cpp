@@ -13,6 +13,7 @@
 #include "MediaSourceReader.h"
 #include "MediaSourceResource.h"
 #include "MediaSourceUtils.h"
+#include "VideoUtils.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaSourceLog();
@@ -227,7 +228,13 @@ MediaSourceDecoder::SetMediaSourceDuration(double aDuration, MSRangeRemovalActio
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   double oldDuration = mMediaSourceDuration;
   if (aDuration >= 0) {
-    mDecoderStateMachine->SetDuration(aDuration * USECS_PER_S);
+    int64_t checkedDuration;
+    if (NS_FAILED(SecondsToUsecs(aDuration, checkedDuration))) {
+      // INT64_MAX is used as infinity by the state machine.
+      // We want a very bigger number, but not infinity.
+      checkedDuration = INT64_MAX - 1;
+    }
+    mDecoderStateMachine->SetDuration(checkedDuration);
     mMediaSourceDuration = aDuration;
   } else {
     mDecoderStateMachine->SetDuration(INT64_MAX);
