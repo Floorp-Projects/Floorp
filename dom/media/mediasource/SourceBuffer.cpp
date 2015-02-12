@@ -72,8 +72,8 @@ private:
 class RangeRemovalRunnable : public nsRunnable {
 public:
   RangeRemovalRunnable(SourceBuffer* aSourceBuffer,
-                     double aStart,
-                     double aEnd)
+                       double aStart,
+                       double aEnd)
   : mSourceBuffer(aSourceBuffer)
   , mStart(aStart)
   , mEnd(aEnd)
@@ -81,7 +81,12 @@ public:
 
   NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL {
 
+    if (!mSourceBuffer->mUpdating) {
+      // abort was called in between.
+      return NS_OK;
+    }
     mSourceBuffer->DoRangeRemoval(mStart, mEnd);
+    mSourceBuffer->StopUpdating();
 
     return NS_OK;
   }
@@ -260,34 +265,31 @@ SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
-  RangeRemoval(aStart, aEnd);
+
+  StartUpdating();
+  nsRefPtr<nsIRunnable> task = new RangeRemovalRunnable(this, aStart, aEnd);
+  NS_DispatchToMainThread(task);
 }
 
 void
 SourceBuffer::RangeRemoval(double aStart, double aEnd)
 {
   StartUpdating();
-
-  nsRefPtr<nsIRunnable> task = new RangeRemovalRunnable(this, aStart, aEnd);
+  DoRangeRemoval(aStart, aEnd);
+  nsRefPtr<nsIRunnable> task =
+    NS_NewRunnableMethod(this, &SourceBuffer::StopUpdating);
   NS_DispatchToMainThread(task);
 }
 
 void
 SourceBuffer::DoRangeRemoval(double aStart, double aEnd)
 {
-  MSE_DEBUG("SourceBuffer(%p)::DoRangeRemoval (updating:%d)",
-            this, mUpdating);
-  if (!mUpdating) {
-    // abort was called in between.
-    return;
-  }
+  MSE_DEBUG("SourceBuffer(%p)::DoRangeRemoval", this);
   if (mTrackBuffer && !IsInfinite(aStart)) {
     int64_t start = aStart * USECS_PER_S;
     int64_t end = IsInfinite(aEnd) ? INT64_MAX : (int64_t)(aEnd * USECS_PER_S);
     mTrackBuffer->RangeRemoval(start, end);
   }
-
-  StopUpdating();
 }
 
 void
