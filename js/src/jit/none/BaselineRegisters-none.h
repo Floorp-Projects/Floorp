@@ -12,21 +12,21 @@
 namespace js {
 namespace jit {
 
-static MOZ_CONSTEXPR_VAR Register BaselineFrameReg = { 0 };
-static MOZ_CONSTEXPR_VAR Register BaselineStackReg = { 0 };
+static MOZ_CONSTEXPR_VAR Register BaselineFrameReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register BaselineStackReg = { Registers::invalid_reg };
 
 static MOZ_CONSTEXPR_VAR ValueOperand R0 = JSReturnOperand;
 static MOZ_CONSTEXPR_VAR ValueOperand R1 = JSReturnOperand;
 static MOZ_CONSTEXPR_VAR ValueOperand R2 = JSReturnOperand;
 
-static MOZ_CONSTEXPR_VAR Register BaselineTailCallReg = { 0 };
-static MOZ_CONSTEXPR_VAR Register BaselineStubReg = { 0 };
+static MOZ_CONSTEXPR_VAR Register BaselineTailCallReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register BaselineStubReg = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register ExtractTemp0 = { 0 };
-static MOZ_CONSTEXPR_VAR Register ExtractTemp1 = { 0 };
+static MOZ_CONSTEXPR_VAR Register ExtractTemp0 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register ExtractTemp1 = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR FloatRegister FloatReg0 = { 0 };
-static MOZ_CONSTEXPR_VAR FloatRegister FloatReg1 = { 0 };
+static MOZ_CONSTEXPR_VAR FloatRegister FloatReg0 = { FloatRegisters::invalid_reg };
+static MOZ_CONSTEXPR_VAR FloatRegister FloatReg1 = { FloatRegisters::invalid_reg };
 
 } // namespace jit
 } // namespace js

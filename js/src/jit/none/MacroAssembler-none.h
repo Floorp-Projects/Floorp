@@ -17,50 +17,50 @@ namespace jit {
 
 class MDefinition;
 
-static MOZ_CONSTEXPR_VAR Register StackPointer = { 0 };
-static MOZ_CONSTEXPR_VAR Register FramePointer = { 0 };
-static MOZ_CONSTEXPR_VAR Register ReturnReg = { 0 };
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = { 0 };
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = { 0 };
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnSimdReg = { 0 };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = { 0 };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = { 0 };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimdReg = { 0 };
-static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { 0 };
+static MOZ_CONSTEXPR_VAR Register StackPointer = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register FramePointer = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register ReturnReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = { FloatRegisters::invalid_reg };
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = { FloatRegisters::invalid_reg };
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnSimdReg = { FloatRegisters::invalid_reg };
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = { FloatRegisters::invalid_reg };
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = { FloatRegisters::invalid_reg };
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimdReg = { FloatRegisters::invalid_reg };
+static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { FloatRegisters::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register OsrFrameReg = { 0 };
-static MOZ_CONSTEXPR_VAR Register ArgumentsRectifierReg = { 0 };
-static MOZ_CONSTEXPR_VAR Register PreBarrierReg = { 0 };
-static MOZ_CONSTEXPR_VAR Register CallTempReg0 = { 0 };
-static MOZ_CONSTEXPR_VAR Register CallTempReg1 = { 0 };
-static MOZ_CONSTEXPR_VAR Register CallTempReg2 = { 0 };
-static MOZ_CONSTEXPR_VAR Register CallTempReg3 = { 0 };
-static MOZ_CONSTEXPR_VAR Register CallTempReg4 = { 0 };
-static MOZ_CONSTEXPR_VAR Register CallTempReg5 = { 0 };
-static MOZ_CONSTEXPR_VAR Register InvalidReg = { 0 };
+static MOZ_CONSTEXPR_VAR Register OsrFrameReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register ArgumentsRectifierReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register PreBarrierReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register CallTempReg0 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register CallTempReg1 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register CallTempReg2 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register CallTempReg3 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register CallTempReg4 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register CallTempReg5 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register InvalidReg = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register IntArgReg0 = { 0 };
-static MOZ_CONSTEXPR_VAR Register IntArgReg1 = { 0 };
-static MOZ_CONSTEXPR_VAR Register IntArgReg2 = { 0 };
-static MOZ_CONSTEXPR_VAR Register IntArgReg3 = { 0 };
-static MOZ_CONSTEXPR_VAR Register GlobalReg = { 0 };
-static MOZ_CONSTEXPR_VAR Register HeapReg = { 0 };
+static MOZ_CONSTEXPR_VAR Register IntArgReg0 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register IntArgReg1 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register IntArgReg2 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register IntArgReg3 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register GlobalReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register HeapReg = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = { 0 };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = { 0 };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE1 = { 0 };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE2 = { 0 };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE3 = { 0 };
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE1 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE2 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE3 = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnData = { 0 };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnType = { 0 };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = { 0 };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = { 0 };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = { 0 };
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnData = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnType = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = { 0 };
-static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = { 0 };
-static MOZ_CONSTEXPR_VAR Register JSReturnReg = { 0 };
+static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register JSReturnReg = { Registers::invalid_reg };
 
 #if defined(JS_NUNBOX32)
 static MOZ_CONSTEXPR_VAR ValueOperand JSReturnOperand(InvalidReg, InvalidReg);
@@ -72,6 +72,7 @@ static MOZ_CONSTEXPR_VAR ValueOperand JSReturnOperand(InvalidReg);
 
 static const uint32_t ABIStackAlignment = 4;
 static const uint32_t CodeAlignment = 4;
+static const uint32_t JitStackAlignment = 4;
 
 static const Scale ScalePointer = TimesOne;
 
@@ -130,6 +131,13 @@ class Assembler : public AssemblerShared
     static void ToggleCall(CodeLocationLabel, bool) { MOZ_CRASH(); }
 
     static uintptr_t GetPointer(uint8_t *) { MOZ_CRASH(); }
+};
+
+class Operand
+{
+  public:
+    Operand (const Address &) { MOZ_CRASH();}
+
 };
 
 class MacroAssemblerNone : public Assembler
@@ -430,6 +438,11 @@ class MacroAssemblerNone : public Assembler
     void memIntToValue(Address, Address) { MOZ_CRASH(); }
 
     void setPrinter(Sprinter *) { MOZ_CRASH(); }
+    Operand ToPayload(Operand base) { MOZ_CRASH(); }
+
+    // Instrumentation for entering and leaving the profiler.
+    void profilerEnterFrame(Register , Register ) { MOZ_CRASH(); }
+    void profilerExitFrame() { MOZ_CRASH(); }
 
 #ifdef JS_NUNBOX32
     Address ToPayload(Address) { MOZ_CRASH(); }
