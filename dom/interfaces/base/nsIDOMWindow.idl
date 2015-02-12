@@ -23,7 +23,7 @@ interface nsIVariant;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(3addc629-754d-4a2a-99a3-449ed1a2e4bd)]
+[scriptable, uuid(8146f3fc-9fc1-47c5-85ef-95d686e4ca6d)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -257,7 +257,6 @@ interface nsIDOMWindow : nsISupports
   // https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#requests
   // IDBEnvironment
   readonly attribute nsISupports indexedDB;
-  readonly attribute nsISupports mozIndexedDB;
 
 
   // DOM Range
