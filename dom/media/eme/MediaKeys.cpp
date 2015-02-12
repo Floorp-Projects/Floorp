@@ -58,6 +58,7 @@ RejectPromises(const uint32_t& aKey,
                void* aClosure)
 {
   aPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+  ((MediaKeys*)aClosure)->Release();
   return PL_DHASH_NEXT;
 }
 
@@ -82,7 +83,6 @@ CloseSessions(const nsAString& aKey,
               void* aClosure)
 {
   aSession->OnClosed();
-  ((MediaKeys*)aClosure)->Release();
   return PL_DHASH_NEXT;
 }
 
