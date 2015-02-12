@@ -309,4 +309,11 @@ MediaSourceDecoder::IsActiveReader(MediaDecoderReader* aReader)
   return mReader->IsActiveReader(aReader);
 }
 
+double
+MediaSourceDecoder::GetDuration()
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  return mMediaSourceDuration;
+}
+
 } // namespace mozilla
