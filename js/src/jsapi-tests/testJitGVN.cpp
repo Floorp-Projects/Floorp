@@ -205,3 +205,82 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoopNested)
     return true;
 }
 END_TEST(testJitGVN_FixupOSROnlyLoopNested)
+
+BEGIN_TEST(testJitGVN_PinnedPhis)
+{
+    // Set up a loop which gets optimized away, with phis which must be
+    // cleaned up, permitting more phis to be cleaned up.
+
+    MinimalFunc func;
+
+    MBasicBlock *entry = func.createEntryBlock();
+    MBasicBlock *outerHeader = func.createBlock(entry);
+    MBasicBlock *outerBlock = func.createBlock(outerHeader);
+    MBasicBlock *innerHeader = func.createBlock(outerBlock);
+    MBasicBlock *innerBackedge = func.createBlock(innerHeader);
+    MBasicBlock *exit = func.createBlock(innerHeader);
+
+    MPhi *phi0 = MPhi::New(func.alloc);
+    MPhi *phi1 = MPhi::New(func.alloc);
+    MPhi *phi2 = MPhi::New(func.alloc);
+    MPhi *phi3 = MPhi::New(func.alloc);
+
+    MParameter *p = func.createParameter();
+    entry->add(p);
+    MConstant *z0 = MConstant::New(func.alloc, Int32Value(0));
+    MConstant *z1 = MConstant::New(func.alloc, Int32Value(1));
+    MConstant *z2 = MConstant::New(func.alloc, Int32Value(2));
+    MConstant *z3 = MConstant::New(func.alloc, Int32Value(2));
+    phi0->addInputSlow(z0);
+    phi1->addInputSlow(z1);
+    phi2->addInputSlow(z2);
+    phi3->addInputSlow(z3);
+    entry->add(z0);
+    entry->add(z1);
+    entry->add(z2);
+    entry->add(z3);
+    entry->end(MGoto::New(func.alloc, outerHeader));
+
+    outerHeader->addPhi(phi0);
+    outerHeader->addPhi(phi1);
+    outerHeader->addPhi(phi2);
+    outerHeader->addPhi(phi3);
+    outerHeader->end(MGoto::New(func.alloc, outerBlock));
+
+    outerBlock->end(MGoto::New(func.alloc, innerHeader));
+
+    MConstant *true_ = MConstant::New(func.alloc, BooleanValue(true));
+    innerHeader->add(true_);
+    innerHeader->end(MTest::New(func.alloc, true_, innerBackedge, exit));
+
+    innerBackedge->end(MGoto::New(func.alloc, innerHeader));
+
+    MInstruction *z4 = MAdd::New(func.alloc, phi0, phi1);
+    MConstant *z5 = MConstant::New(func.alloc, Int32Value(4));
+    MInstruction *z6 = MAdd::New(func.alloc, phi2, phi3);
+    MConstant *z7 = MConstant::New(func.alloc, Int32Value(6));
+    phi0->addInputSlow(z4);
+    phi1->addInputSlow(z5);
+    phi2->addInputSlow(z6);
+    phi3->addInputSlow(z7);
+    exit->add(z4);
+    exit->add(z5);
+    exit->add(z6);
+    exit->add(z7);
+    exit->end(MGoto::New(func.alloc, outerHeader));
+
+    innerHeader->addPredecessorWithoutPhis(innerBackedge);
+    outerHeader->addPredecessorWithoutPhis(exit);
+
+    outerHeader->setLoopHeader(exit);
+    innerHeader->setLoopHeader(innerBackedge);
+
+    if (!func.runGVN())
+        return false;
+
+    MOZ_RELEASE_ASSERT(innerHeader->phisEmpty());
+    MOZ_RELEASE_ASSERT(exit->isDead());
+
+    return true;
+}
+END_TEST(testJitGVN_PinnedPhis)
