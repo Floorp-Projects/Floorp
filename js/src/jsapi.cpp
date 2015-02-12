@@ -5470,6 +5470,15 @@ JS_SetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt, uint32_t v
         if (value == 0)
             jit::js_JitOptions.setEagerCompilation();
         break;
+      case JSJITCOMPILER_ION_GVN_ENABLE:
+        if (value == 0) {
+            jit::js_JitOptions.enableGvn(false);
+            JitSpew(js::jit::JitSpew_IonScripts, "Disable ion's GVN");
+        } else {
+            jit::js_JitOptions.enableGvn(true);
+            JitSpew(js::jit::JitSpew_IonScripts, "Enable ion's GVN");
+        }
+        break;
       case JSJITCOMPILER_ION_ENABLE:
         if (value == 1) {
             JS::RuntimeOptionsRef(rt).setIon(true);

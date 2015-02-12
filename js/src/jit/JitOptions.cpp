@@ -169,6 +169,12 @@ JitOptions::isSmallFunction(JSScript *script) const
 }
 
 void
+JitOptions::enableGvn(bool enable)
+{
+    disableGvn = !enable;
+}
+
+void
 JitOptions::setEagerCompilation()
 {
     eagerCompilation = true;
