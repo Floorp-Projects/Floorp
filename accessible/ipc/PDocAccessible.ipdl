@@ -6,6 +6,8 @@
 
 include protocol PContent;
 
+using AccessibleTextBoundary from "nsIAccessibleText.h";
+
 namespace mozilla {
 namespace a11y {
 
@@ -46,13 +48,24 @@ parent:
   HideEvent(uint64_t aRootID);
 
 child:
+  // Accessible
   prio(high) sync State(uint64_t aID) returns(uint64_t states);
   prio(high) sync Name(uint64_t aID) returns(nsString name);
   prio(high) sync Value(uint64_t aID) returns(nsString value);
   prio(high) sync Description(uint64_t aID) returns(nsString desc);
   prio(high) sync Attributes(uint64_t aID) returns(Attribute[] attributes);
+
+  // AccessibleText
+
+  // TextSubstring is getText in IDL.
   prio(high) sync TextSubstring(uint64_t aID, int32_t aStartOffset, int32_t
                                 aEndOffset) returns(nsString aText);
+  prio(high) sync GetTextAfterOffset(uint64_t aID, int32_t aOffset, AccessibleTextBoundary aBoundaryType)
+    returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
+  prio(high) sync GetTextAtOffset(uint64_t aID, int32_t aOffset, AccessibleTextBoundary aBoundaryType)
+    returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
+  prio(high) sync GetTextBeforeOffset(uint64_t aID, int32_t aOffset, AccessibleTextBoundary aBoundaryType)
+    returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
 };
 
 }
