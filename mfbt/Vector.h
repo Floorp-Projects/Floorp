@@ -58,6 +58,7 @@ struct VectorImpl
   /*
    * Constructs a default object in the uninitialized memory at *aDst.
    */
+  MOZ_NONNULL(1)
   static inline void new_(T* aDst)
   {
     new(aDst) T();
@@ -67,6 +68,7 @@ struct VectorImpl
    * Constructs an object in the uninitialized memory at *aDst from aSrc.
    */
   template<typename U>
+  MOZ_NONNULL(1)
   static inline void new_(T* aDst, U&& aU)
   {
     new(aDst) T(Forward<U>(aU));
