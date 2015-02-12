@@ -15,6 +15,11 @@ let Reader = {
   STATUS_FETCH_FAILED_UNSUPPORTED_FORMAT: 3,
   STATUS_FETCHED_ARTICLE: 4,
 
+  get _hasUsedToolbar() {
+    delete this._hasUsedToolbar;
+    return this._hasUsedToolbar = Services.prefs.getBoolPref("reader.has_used_toolbar");
+  },
+
   observe: function Reader_observe(aMessage, aTopic, aData) {
     switch (aTopic) {
       case "Reader:FetchContent": {
@@ -103,10 +108,6 @@ let Reader = {
         });
         break;
 
-      case "Reader:ShowToast":
-        NativeWindow.toast.show(message.data.toast, "short");
-        break;
-
       case "Reader:SystemUIVisibility":
         Messaging.sendRequest({
           type: "SystemUI:Visibility",
@@ -114,11 +115,12 @@ let Reader = {
         });
         break;
 
-      case "Reader:ToolbarVisibility":
-        Messaging.sendRequest({
-          type: "BrowserToolbar:Visibility",
-          visible: message.data.visible
-        });
+      case "Reader:ToolbarHidden":
+        if (!this._hasUsedToolbar) {
+          NativeWindow.toast.show(Strings.browser.GetStringFromName("readerMode.toolbarTip"), "short");
+          Services.prefs.setBoolPref("reader.has_used_toolbar", true);
+          this._hasUsedToolbar = true;
+        }
         break;
 
       case "Reader:UpdateReaderButton": {
