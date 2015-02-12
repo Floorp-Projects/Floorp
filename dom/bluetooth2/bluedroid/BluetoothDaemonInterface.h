@@ -108,22 +108,27 @@ public:
 
 protected:
   enum Channel {
+    LISTEN_SOCKET,
     CMD_CHANNEL,
     NTF_CHANNEL
   };
 
-  BluetoothDaemonInterface(BluetoothDaemonChannel* aCmdChannel,
-                           BluetoothDaemonChannel* aNtfChannel,
-                           BluetoothDaemonProtocol* aProtocol);
+  BluetoothDaemonInterface();
   ~BluetoothDaemonInterface();
 
   void OnConnectSuccess(enum Channel aChannel);
   void OnConnectError(enum Channel aChannel);
   void OnDisconnect(enum Channel aChannel);
 
+  nsresult CreateRandomAddressString(const nsACString& aPrefix,
+                                     unsigned long aPostfixLength,
+                                     nsACString& aAddress);
+
 private:
   void DispatchError(BluetoothResultHandler* aRes, BluetoothStatus aStatus);
 
+  nsCString mListenSocketName;
+  nsRefPtr<BluetoothDaemonListenSocket> mListenSocket;
   nsRefPtr<BluetoothDaemonChannel> mCmdChannel;
   nsRefPtr<BluetoothDaemonChannel> mNtfChannel;
   nsAutoPtr<BluetoothDaemonProtocol> mProtocol;
