@@ -1171,7 +1171,7 @@ CacheIndex::HasEntry(const nsACString &aKey, EntryStatus *_retval)
 
 // static
 nsresult
-CacheIndex::GetEntryForEviction(SHA1Sum::Hash *aHash, uint32_t *aCnt)
+CacheIndex::GetEntryForEviction(bool aIgnoreEmptyEntries, SHA1Sum::Hash *aHash, uint32_t *aCnt)
 {
   LOG(("CacheIndex::GetEntryForEviction()"));
 
@@ -1204,11 +1204,17 @@ CacheIndex::GetEntryForEviction(SHA1Sum::Hash *aHash, uint32_t *aCnt)
     if (index->mExpirationArray[i]->mExpirationTime < now) {
       memcpy(&hash, &index->mExpirationArray[i]->mHash, sizeof(SHA1Sum::Hash));
 
-      if (!IsForcedValidEntry(&hash)) {
-        foundEntry = true;
-        break;
+      if (IsForcedValidEntry(&hash)) {
+        continue;
       }
 
+      if (aIgnoreEmptyEntries &&
+          !CacheIndexEntry::GetFileSize(index->mExpirationArray[i])) {
+        continue;
+      }
+
+      foundEntry = true;
+      break;
     } else {
       // all further entries have not expired yet
       break;
@@ -1233,10 +1239,17 @@ CacheIndex::GetEntryForEviction(SHA1Sum::Hash *aHash, uint32_t *aCnt)
     for (j = 0; j < index->mFrecencyArray.Length(); j++) {
       memcpy(&hash, &index->mFrecencyArray[j]->mHash, sizeof(SHA1Sum::Hash));
 
-      if (!IsForcedValidEntry(&hash)) {
-        foundEntry = true;
-        break;
+      if (IsForcedValidEntry(&hash)) {
+        continue;
       }
+
+      if (aIgnoreEmptyEntries &&
+          !CacheIndexEntry::GetFileSize(index->mFrecencyArray[j])) {
+        continue;
+      }
+
+      foundEntry = true;
+      break;
     }
 
     if (!foundEntry)
