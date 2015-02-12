@@ -2089,14 +2089,29 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod *ins)
     MOZ_ASSERT_IF(ins->mirRaw()->isDiv(), output == r0);
     MOZ_ASSERT_IF(ins->mirRaw()->isMod(), output == r1);
 
-    Label afterDiv;
+    Label done;
 
-    masm.ma_cmp(rhs, Imm32(0));
-    Label notzero;
-    masm.ma_b(&notzero, Assembler::NonZero);
-    masm.ma_mov(Imm32(0), output);
-    masm.ma_b(&afterDiv);
-    masm.bind(&notzero);
+    MDiv *div = ins->mir()->isDiv() ? ins->mir()->toDiv() : nullptr;
+    MMod *mod = !div ? ins->mir()->toMod() : nullptr;
+    bool canBeDivideByZero = (div && div->canBeDivideByZero()) || (mod && mod->canBeDivideByZero());
+    bool isTruncated = (div && div->isTruncated()) || (mod && mod->isTruncated());
+    bool isFallible = (div && div->fallible()) || (mod && mod->fallible());
+
+    if (canBeDivideByZero) {
+        masm.ma_cmp(rhs, Imm32(0));
+        if (isTruncated) {
+            Label skip;
+            masm.ma_b(&skip, Assembler::NotEqual);
+            // Infinity|0 == 0
+            masm.ma_mov(Imm32(0), output);
+            masm.ma_b(&done);
+            masm.bind(&skip);
+        } else {
+            // Bailout for divide by zero
+            MOZ_ASSERT(isFallible);
+            bailoutIf(Assembler::Equal, ins->snapshot());
+        }
+    }
 
     masm.setupAlignedABICall(2);
     masm.passABIArg(lhs);
@@ -2107,14 +2122,20 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod *ins)
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_uidivmod));
 
     // uidivmod returns the quotient in r0, and the remainder in r1.
-    MInstruction *mir = ins->mir();
-    if (mir->isDiv() && !mir->toDiv()->canTruncateRemainder()) {
-        MOZ_ASSERT(mir->toDiv()->fallible());
+    if (div && !div->canTruncateRemainder()) {
+        MOZ_ASSERT(isFallible);
         masm.ma_cmp(r1, Imm32(0));
         bailoutIf(Assembler::NonZero, ins->snapshot());
     }
 
-    masm.bind(&afterDiv);
+    // Bailout for big unsigned results
+    if (!isTruncated) {
+        MOZ_ASSERT(isFallible);
+        masm.ma_cmp(output, Imm32(0));
+        bailoutIf(Assembler::LessThan, ins->snapshot());
+    }
+
+    masm.bind(&done);
 }
 
 void
