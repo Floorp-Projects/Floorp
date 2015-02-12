@@ -3136,7 +3136,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 
     // Temporary register for modifying the function object.
     Register objreg = ToRegister(apply->getTempObject());
-    Register copyreg = ToRegister(apply->getTempCopy());
+    Register extraStackSpace = ToRegister(apply->getTempStackCounter());
 
     // Holds the function nargs. Initially undefined.
     Register argcreg = ToRegister(apply->getArgc());
@@ -3150,14 +3150,14 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     }
 
     // Copy the arguments of the current function.
-    emitPushArguments(apply, copyreg);
+    emitPushArguments(apply, extraStackSpace);
 
     masm.checkStackAlignment();
 
     // If the function is native, only emit the call to InvokeFunction.
     if (apply->hasSingleTarget() && apply->getSingleTarget()->isNative()) {
-        emitCallInvokeFunction(apply, copyreg);
-        emitPopArguments(apply, copyreg);
+        emitCallInvokeFunction(apply, extraStackSpace);
+        emitPopArguments(apply, extraStackSpace);
         return;
     }
 
@@ -3176,19 +3176,21 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     {
         // Create the frame descriptor.
         unsigned pushed = masm.framePushed();
-        masm.addPtr(Imm32(pushed), copyreg);
-        masm.makeFrameDescriptor(copyreg, JitFrame_IonJS);
+        Register stackSpace = extraStackSpace;
+        masm.addPtr(Imm32(pushed), stackSpace);
+        masm.makeFrameDescriptor(stackSpace, JitFrame_IonJS);
 
         masm.Push(argcreg);
         masm.Push(calleereg);
-        masm.Push(copyreg); // descriptor
+        masm.Push(stackSpace); // descriptor
 
         Label underflow, rejoin;
 
         // Check whether the provided arguments satisfy target argc.
         if (!apply->hasSingleTarget()) {
-            masm.load16ZeroExtend(Address(calleereg, JSFunction::offsetOfNargs()), copyreg);
-            masm.branch32(Assembler::Below, argcreg, copyreg, &underflow);
+            Register nformals = extraStackSpace;
+            masm.load16ZeroExtend(Address(calleereg, JSFunction::offsetOfNargs()), nformals);
+            masm.branch32(Assembler::Below, argcreg, nformals, &underflow);
         } else {
             masm.branch32(Assembler::Below, argcreg, Imm32(apply->getSingleTarget()->nargs()),
                           &underflow);
@@ -3218,9 +3220,9 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
         markSafepointAt(callOffset, apply);
 
         // Recover the number of arguments from the frame descriptor.
-        masm.loadPtr(Address(StackPointer, 0), copyreg);
-        masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), copyreg);
-        masm.subPtr(Imm32(pushed), copyreg);
+        masm.loadPtr(Address(StackPointer, 0), stackSpace);
+        masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), stackSpace);
+        masm.subPtr(Imm32(pushed), stackSpace);
 
         // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
         // The return address has already been removed from the Ion frame.
@@ -3232,12 +3234,12 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     // Handle uncompiled or native functions.
     {
         masm.bind(&invoke);
-        emitCallInvokeFunction(apply, copyreg);
+        emitCallInvokeFunction(apply, extraStackSpace);
     }
 
     // Pop arguments and continue.
     masm.bind(&end);
-    emitPopArguments(apply, copyreg);
+    emitPopArguments(apply, extraStackSpace);
 }
 
 typedef bool (*ArraySpliceDenseFn)(JSContext *, HandleObject, uint32_t, uint32_t);
