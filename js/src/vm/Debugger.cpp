@@ -361,6 +361,7 @@ Debugger::Debugger(JSContext *cx, NativeObject *dbg)
     allocationSamplingProbability(1.0),
     allocationsLogLength(0),
     maxAllocationsLogLength(DEFAULT_MAX_ALLOCATIONS_LOG_LENGTH),
+    allocationsLogOverflowed(false),
     frames(cx->runtime()),
     scripts(cx),
     sources(cx),
@@ -1623,6 +1624,7 @@ Debugger::appendAllocationSite(JSContext *cx, HandleSavedFrame frame, int64_t wh
 
     if (allocationsLogLength >= maxAllocationsLogLength) {
         js_delete(allocationsLog.getFirst());
+        allocationsLogOverflowed = true;
     } else {
         allocationsLogLength++;
     }
