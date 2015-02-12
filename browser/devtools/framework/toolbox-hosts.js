@@ -287,6 +287,9 @@ CustomHost.prototype = {
     // It's up to the custom frame owner (parent window) to honor
     // "close" or "raise" instructions.
     let topWindow = this.frame.ownerDocument.defaultView;
+    if (!topWindow) {
+      return;
+    }
     let json = {name:"toolbox-" + msg, uid: this.uid};
     if (data) {
       json.data = data;
