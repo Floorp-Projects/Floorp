@@ -193,9 +193,7 @@ let FormAssistant = {
     addEventListener("focus", this, true, false);
     addEventListener("blur", this, true, false);
     addEventListener("resize", this, true, false);
-    // We should not blur the fucus if the submit event is cancelled,
-    // therefore we are binding our event listener in the bubbling phase here.
-    addEventListener("submit", this, false, false);
+    addEventListener("submit", this, true, false);
     addEventListener("pagehide", this, true, false);
     addEventListener("beforeunload", this, true, false);
     addEventListener("input", this, true, false);
@@ -401,7 +399,7 @@ let FormAssistant = {
         }
         // fall through
       case "submit":
-        if (this.focusedElement && !evt.defaultPrevented) {
+        if (this.focusedElement) {
           this.focusedElement.blur();
         }
         break;
