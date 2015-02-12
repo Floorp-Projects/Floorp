@@ -53,6 +53,7 @@ class DebugModeOSRVolatileStub
     { }
 
     bool invalid() const {
+        MOZ_ASSERT(!frame_->isHandlingException());
         ICEntry &entry = frame_->script()->baselineScript()->icEntryFromPCOffset(pcOffset_);
         return stub_ != entry.fallbackStub();
     }
