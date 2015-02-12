@@ -73,12 +73,12 @@ struct MallocProvider
 
     template <class T, class U>
     T *pod_malloc_with_extra(size_t numExtra) {
-        if (numExtra & mozilla::tl::MulOverflowMask<sizeof(U)>::value) {
+        if (MOZ_UNLIKELY(numExtra & mozilla::tl::MulOverflowMask<sizeof(U)>::value)) {
             client()->reportAllocationOverflow();
             return nullptr;
         }
         size_t bytes = sizeof(T) + numExtra * sizeof(U);
-        if (bytes < sizeof(T)) {
+        if (MOZ_UNLIKELY(bytes < sizeof(T))) {
             client()->reportAllocationOverflow();
             return nullptr;
         }
@@ -117,12 +117,12 @@ struct MallocProvider
 
     template <class T, class U>
     T *pod_calloc_with_extra(size_t numExtra) {
-        if (numExtra & mozilla::tl::MulOverflowMask<sizeof(U)>::value) {
+        if (MOZ_UNLIKELY(numExtra & mozilla::tl::MulOverflowMask<sizeof(U)>::value)) {
             client()->reportAllocationOverflow();
             return nullptr;
         }
         size_t bytes = sizeof(T) + numExtra * sizeof(U);
-        if (bytes < sizeof(T)) {
+        if (MOZ_UNLIKELY(bytes < sizeof(T))) {
             client()->reportAllocationOverflow();
             return nullptr;
         }

@@ -124,7 +124,7 @@ struct VectorImpl
     MOZ_ASSERT(!aV.usingInlineStorage());
     MOZ_ASSERT(!CapacityHasExcessSpace<T>(aNewCap));
     T* newbuf = aV.template pod_malloc<T>(aNewCap);
-    if (!newbuf) {
+    if (MOZ_UNLIKELY(!newbuf)) {
       return false;
     }
     T* dst = newbuf;
@@ -204,7 +204,7 @@ struct VectorImpl<T, N, AP, ThisVector, true>
     MOZ_ASSERT(!aV.usingInlineStorage());
     MOZ_ASSERT(!CapacityHasExcessSpace<T>(aNewCap));
     T* newbuf = aV.template pod_realloc<T>(aV.mBegin, aV.mCapacity, aNewCap);
-    if (!newbuf) {
+    if (MOZ_UNLIKELY(!newbuf)) {
       return false;
     }
     aV.mBegin = newbuf;
@@ -720,7 +720,7 @@ VectorBase<T, N, AP, TV>::convertToHeapStorage(size_t aNewCap)
   /* Allocate buffer. */
   MOZ_ASSERT(!detail::CapacityHasExcessSpace<T>(aNewCap));
   T* newBuf = this->template pod_malloc<T>(aNewCap);
-  if (!newBuf) {
+  if (MOZ_UNLIKELY(!newBuf)) {
     return false;
   }
 
@@ -777,7 +777,7 @@ VectorBase<T, N, AP, TV>::growStorageBy(size_t aIncr)
      *
      * doesn't overflow ptrdiff_t (see bug 510319).
      */
-    if (mLength & tl::MulOverflowMask<4 * sizeof(T)>::value) {
+    if (MOZ_UNLIKELY(mLength & tl::MulOverflowMask<4 * sizeof(T)>::value)) {
       this->reportAllocOverflow();
       return false;
     }
@@ -796,8 +796,8 @@ VectorBase<T, N, AP, TV>::growStorageBy(size_t aIncr)
     size_t newMinCap = mLength + aIncr;
 
     /* Did mLength + aIncr overflow?  Will newCap * sizeof(T) overflow? */
-    if (newMinCap < mLength ||
-        newMinCap & tl::MulOverflowMask<2 * sizeof(T)>::value)
+    if (MOZ_UNLIKELY(newMinCap < mLength ||
+                     newMinCap & tl::MulOverflowMask<2 * sizeof(T)>::value))
     {
       this->reportAllocOverflow();
       return false;
@@ -827,7 +827,7 @@ VectorBase<T, N, AP, TV>::initCapacity(size_t aRequest)
     return true;
   }
   T* newbuf = this->template pod_malloc<T>(aRequest);
-  if (!newbuf) {
+  if (MOZ_UNLIKELY(!newbuf)) {
     return false;
   }
   mBegin = newbuf;
@@ -843,7 +843,7 @@ inline bool
 VectorBase<T, N, AP, TV>::reserve(size_t aRequest)
 {
   MOZ_REENTRANCY_GUARD_ET_AL;
-  if (aRequest > mCapacity && !growStorageBy(aRequest - mLength)) {
+  if (aRequest > mCapacity && MOZ_UNLIKELY(!growStorageBy(aRequest - mLength))) {
     return false;
   }
 #ifdef DEBUG
@@ -871,7 +871,7 @@ MOZ_ALWAYS_INLINE bool
 VectorBase<T, N, AP, TV>::growBy(size_t aIncr)
 {
   MOZ_REENTRANCY_GUARD_ET_AL;
-  if (aIncr > mCapacity - mLength && !growStorageBy(aIncr)) {
+  if (aIncr > mCapacity - mLength && MOZ_UNLIKELY(!growStorageBy(aIncr))) {
     return false;
   }
   MOZ_ASSERT(mLength + aIncr <= mCapacity);
@@ -891,7 +891,7 @@ MOZ_ALWAYS_INLINE bool
 VectorBase<T, N, AP, TV>::growByUninitialized(size_t aIncr)
 {
   MOZ_REENTRANCY_GUARD_ET_AL;
-  if (aIncr > mCapacity - mLength && !growStorageBy(aIncr)) {
+  if (aIncr > mCapacity - mLength && MOZ_UNLIKELY(!growStorageBy(aIncr))) {
     return false;
   }
   infallibleGrowByUninitialized(aIncr);
@@ -993,7 +993,7 @@ MOZ_ALWAYS_INLINE bool
 VectorBase<T, N, AP, TV>::appendN(const T& aT, size_t aNeeded)
 {
   MOZ_REENTRANCY_GUARD_ET_AL;
-  if (mLength + aNeeded > mCapacity && !growStorageBy(aNeeded)) {
+  if (mLength + aNeeded > mCapacity && MOZ_UNLIKELY(!growStorageBy(aNeeded))) {
     return false;
   }
 #ifdef DEBUG
@@ -1075,7 +1075,7 @@ VectorBase<T, N, AP, TV>::append(const U* aInsBegin, const U* aInsEnd)
 {
   MOZ_REENTRANCY_GUARD_ET_AL;
   size_t aNeeded = PointerRangeSize(aInsBegin, aInsEnd);
-  if (mLength + aNeeded > mCapacity && !growStorageBy(aNeeded)) {
+  if (mLength + aNeeded > mCapacity && MOZ_UNLIKELY(!growStorageBy(aNeeded))) {
     return false;
   }
 #ifdef DEBUG
@@ -1104,7 +1104,7 @@ MOZ_ALWAYS_INLINE bool
 VectorBase<T, N, AP, TV>::append(U&& aU)
 {
   MOZ_REENTRANCY_GUARD_ET_AL;
-  if (mLength == mCapacity && !growStorageBy(1)) {
+  if (mLength == mCapacity && MOZ_UNLIKELY(!growStorageBy(1))) {
     return false;
   }
 #ifdef DEBUG
