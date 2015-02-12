@@ -13,6 +13,7 @@
 #include "mozilla/BrowserElementParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
+#include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/plugins/PluginWidgetParent.h"
 #include "mozilla/EventStateManager.h"
@@ -45,6 +46,7 @@
 #include "nsIDOMWindowUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadInfo.h"
+#include "nsPrincipal.h"
 #include "nsIPromptFactory.h"
 #include "nsIURI.h"
 #include "nsIWebBrowserChrome.h"
@@ -693,6 +695,19 @@ TabParent::SendLoadRemoteScript(const nsString& aURL,
   return PBrowserParent::SendLoadRemoteScript(aURL, aRunInGlobalScope);
 }
 
+bool
+TabParent::InitBrowserConfiguration(nsIURI* aURI,
+                                    BrowserConfiguration& aConfiguration)
+{
+  // Get the list of ServiceWorkerRegistation for this origin.
+  nsRefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
+  MOZ_ASSERT(swr);
+
+  swr->GetRegistrations(aConfiguration.serviceWorkerRegistrations());
+
+  return true;
+}
+
 void
 TabParent::LoadURL(nsIURI* aURI)
 {
@@ -727,7 +742,13 @@ TabParent::LoadURL(nsIURI* aURI)
     }
     mSendOfflineStatus = false;
 
-    unused << SendLoadURL(spec);
+    // This object contains the configuration for this new app.
+    BrowserConfiguration configuration;
+    if (NS_WARN_IF(!InitBrowserConfiguration(aURI, configuration))) {
+      return;
+    }
+
+    unused << SendLoadURL(spec, configuration);
 
     // If this app is a packaged app then we can speed startup by sending over
     // the file descriptor for the "application.zip" file that it will

@@ -334,7 +334,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 10,
-    "description": "Use of SpiderMonkey's deprecated language extensions in web content: ForEach=0, DestructuringForIn=1, LegacyGenerator=2, ExpressionClosure=3, LetBlock=4, LetExpression=5"
+    "description": "Use of SpiderMonkey's deprecated language extensions in web content: ForEach=0, DestructuringForIn=1, LegacyGenerator=2, ExpressionClosure=3, LetBlock=4, LetExpression=5, NoSuchMethod=6"
   },
   "TELEMETRY_PING": {
     "expires_in_version": "default",
@@ -7038,6 +7038,13 @@
     "kind": "enumerated",
     "n_values": 3,
     "description": "Doorhanger shown = 0, Disable = 1, Enable = 2"
+  },
+  "SERVICE_WORKER_REGISTRATION_LOADING": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 20,
+    "description": "Tracking how ServiceWorkerRegistrar loads data before the first content is shown"
   },
   "LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS": {
     "expires_in_version": "never",

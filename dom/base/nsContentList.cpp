@@ -224,7 +224,7 @@ NS_GetContentList(nsINode* aRootNode,
   // First we look in our hashtable.  Then we create a content list if needed
   if (gContentListHashTable.IsInitialized()) {
     entry = static_cast<ContentListHashEntry *>
-                       (PL_DHashTableAdd(&gContentListHashTable, &hashKey));
+      (PL_DHashTableAdd(&gContentListHashTable, &hashKey, fallible));
     if (entry)
       list = entry->mContentList;
   }
@@ -332,8 +332,7 @@ GetFuncStringContentList(nsINode* aRootNode,
     nsFuncStringCacheKey hashKey(aRootNode, aFunc, aString);
 
     entry = static_cast<FuncStringContentListHashEntry *>
-                       (PL_DHashTableAdd(&gFuncStringContentListHashTable,
-                                         &hashKey));
+      (PL_DHashTableAdd(&gFuncStringContentListHashTable, &hashKey, fallible));
     if (entry) {
       list = entry->mContentList;
 #ifdef DEBUG

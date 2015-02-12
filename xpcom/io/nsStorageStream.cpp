@@ -17,6 +17,7 @@
 #include "nsSegmentedBuffer.h"
 #include "nsStreamUtils.h"
 #include "nsCOMPtr.h"
+#include "nsICloneableInputStream.h"
 #include "nsIInputStream.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "nsISeekableStream.h"
@@ -345,6 +346,7 @@ class nsStorageInputStream MOZ_FINAL
   : public nsIInputStream
   , public nsISeekableStream
   , public nsIIPCSerializableInputStream
+  , public nsICloneableInputStream
 {
 public:
   nsStorageInputStream(nsStorageStream* aStorageStream, uint32_t aSegmentSize)
@@ -360,6 +362,7 @@ public:
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
+  NS_DECL_NSICLONEABLEINPUTSTREAM
 
 private:
   ~nsStorageInputStream()
@@ -394,7 +397,8 @@ private:
 NS_IMPL_ISUPPORTS(nsStorageInputStream,
                   nsIInputStream,
                   nsISeekableStream,
-                  nsIIPCSerializableInputStream)
+                  nsIIPCSerializableInputStream,
+                  nsICloneableInputStream)
 
 NS_IMETHODIMP
 nsStorageStream::NewInputStream(int32_t aStartingOffset,
@@ -614,6 +618,19 @@ nsStorageInputStream::Deserialize(const InputStreamParams& aParams,
 {
   NS_NOTREACHED("We should never attempt to deserialize a storage input stream.");
   return false;
+}
+
+NS_IMETHODIMP
+nsStorageInputStream::GetCloneable(bool* aCloneableOut)
+{
+  *aCloneableOut = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStorageInputStream::Clone(nsIInputStream** aCloneOut)
+{
+  return mStorageStream->NewInputStream(mLogicalCursor, aCloneOut);
 }
 
 nsresult

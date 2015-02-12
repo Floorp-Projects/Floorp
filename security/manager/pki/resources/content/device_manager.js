@@ -522,7 +522,7 @@ function toggleFIPS()
     secmoddb.toggleFIPSMode();
   }
   catch (e) {
-    doPrompt(bundle.getString("unable_to_toggle_FIPS"));
+    doPrompt(bundle.getString("unable_to_toggle_fips"));
     return;
   }
 

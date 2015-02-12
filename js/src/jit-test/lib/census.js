@@ -106,12 +106,12 @@ const Census = {};
     };
   }
 
-  function missingProp() {
-    throw "Census mismatch: subject lacks property present in basis";
+  function missingProp(prop) {
+    throw "Census mismatch: subject lacks property present in basis: " + uneval(prop);
   }
 
-  function extraProp() {
-    throw "Census mismatch: subject has property not present in basis";
+  function extraProp(prop) {
+    throw "Census mismatch: subject has property not present in basis: " + uneval(prop);
   }
 
   // Return a walker that checks that the subject census has counts all equal to
@@ -129,5 +129,23 @@ const Census = {};
     missing: missingProp,
     extra: () => Census.walkAnything
   });
+
+  // Return a walker that checks that the subject census has at most as many
+  // items of each category as |basis|.
+  Census.assertAllNotMoreThan = makeBasisChecker({
+    compare: (subject, basis) => assertEq(subject <= basis, true),
+    missing: missingProp,
+    extra: () => Census.walkAnything
+  });
+
+  // Return a walker that checks that the subject census has within |fudge|
+  // items of each category of the count in |basis|.
+  Census.assertAllWithin = function (fudge, basis) {
+    return makeBasisChecker({
+      compare: (subject, basis) => assertEq(Math.abs(subject - basis) <= fudge, true),
+      missing: missingProp,
+      extra: () => Census.walkAnything
+    })(basis);
+  }
 
 })();

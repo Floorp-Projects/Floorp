@@ -5,6 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    'Helpers.cpp',
+    'TestCloneInputStream.cpp',
     'TestCRT.cpp',
     'TestEncoding.cpp',
     'TestExpirationTracker.cpp',
@@ -13,6 +15,7 @@ UNIFIED_SOURCES += [
     'TestSnappyStreams.cpp',
     'TestStorageStream.cpp',
     'TestStrings.cpp',
+    'TestStringStream.cpp',
     'TestSynchronization.cpp',
     'TestThreadPool.cpp',
     'TestTimeStamp.cpp',

@@ -774,7 +774,9 @@ struct JSRuntime : public JS::shadow::Runtime,
         return numExclusiveThreads > 0;
     }
 
-    /* How many compartments there are across all zones. */
+    // How many compartments there are across all zones. This number includes
+    // ExclusiveContext compartments, so it isn't necessarily equal to the
+    // number of compartments visited by CompartmentsIter.
     size_t              numCompartments;
 
     /* Locale-specific callbacks for string conversion. */

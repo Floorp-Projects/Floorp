@@ -678,6 +678,12 @@ protected:
     if (aOriginalFunction[0] == 0xff && aOriginalFunction[1] == 0x25) {
       return (void*)(**((uint32_t**) (aOriginalFunction + 2)));
     }
+#elif defined(_M_X64)
+    if (aOriginalFunction[0] == 0xe9) {
+      // require for TestDllInterceptor with --disable-optimize
+      int32_t offset = *((int32_t*)(aOriginalFunction + 1));
+      return aOriginalFunction + 5 + offset;
+    }
 #endif
 
     return aOriginalFunction;

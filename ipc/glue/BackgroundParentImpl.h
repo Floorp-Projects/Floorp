@@ -83,6 +83,17 @@ protected:
 
   virtual bool
   DeallocPBroadcastChannelParent(PBroadcastChannelParent* aActor) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvRegisterServiceWorker(const ServiceWorkerRegistrationData& aData)
+                            MOZ_OVERRIDE;
+
+  virtual bool
+  RecvUnregisterServiceWorker(const PrincipalInfo& aPrincipalInfo,
+                              const nsString& aScope) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvShutdownServiceWorkerRegistrar() MOZ_OVERRIDE;
 };
 
 } // namespace ipc

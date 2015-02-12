@@ -171,6 +171,7 @@ protected:
 #ifdef MOZ_SANDBOX
   SandboxBroker mSandboxBroker;
   std::vector<std::wstring> mAllowedFilesRead;
+  std::vector<std::wstring> mAllowedFilesReadWrite;
   bool mEnableSandboxLogging;
   int32_t mSandboxLevel;
   bool mMoreStrictSandbox;
