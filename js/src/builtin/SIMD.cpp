@@ -350,17 +350,6 @@ SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     Rooted<SimdTypeDescr*> descr(cx, &args.callee().as<SimdTypeDescr>());
-    if (args.length() == 1) {
-        // SIMD type used as a coercion
-        if (!CheckVectorObject(args[0], descr->type())) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR);
-            return false;
-        }
-
-        args.rval().setObject(args[0].toObject());
-        return true;
-    }
-
     MOZ_ASSERT(size_t(static_cast<TypeDescr*>(descr)->size()) <= InlineTypedObject::MaximumSize,
                "inline storage is needed for using InternalHandle belows");
 
