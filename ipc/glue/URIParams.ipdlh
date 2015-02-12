@@ -53,11 +53,23 @@ struct JARURIParams
   nsCString charset;
 };
 
+struct IconURIParams
+{
+  OptionalURIParams uri;
+  uint32_t size;
+  nsCString contentType;
+  nsCString fileName;
+  nsCString stockIcon;
+  int32_t iconSize;
+  int32_t iconState;
+};
+
 union URIParams
 {
   SimpleURIParams;
   StandardURLParams;
   JARURIParams;
+  IconURIParams;
 };
 
 union OptionalURIParams
