@@ -191,36 +191,3 @@ function newIncomingParcel(fakeParcelSize, response, request, data) {
 
   return bytes;
 }
-
-/**
- * Test whether specified function throws exception with expected
- * result.
- *
- * @param func
- *        Function to be tested.
- * @param message
- *        Message of expected exception. <code>null</code> for no throws.
- * @param stack
- *        Optional stack object to be printed. <code>null</code> for
- *        Components#stack#caller.
- */
-function do_check_throws(func, message, stack)
-{
-  if (!stack)
-    stack = Components.stack.caller;
-
-  try {
-    func();
-  } catch (exc) {
-    if (exc.message === message) {
-      return;
-    }
-    do_throw("expecting exception '" + message
-             + "', caught '" + exc.message + "'", stack);
-  }
-
-  if (message) {
-    do_throw("expecting exception '" + message + "', none thrown", stack);
-  }
-}
-
