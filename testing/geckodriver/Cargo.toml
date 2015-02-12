@@ -13,13 +13,13 @@ uuid = "=0.1.7"
 git = "http://github.com/tailhook/rust-argparse.git"
 
 [dependencies.webdriver]
-path = "../webdriver"
+git = "http://github.com/jgraham/webdriver-rust.git"
 
 [dependencies.mozprofile]
-path = "../rust_mozprofile"
+git = "http://github.com/jgraham/rust_mozprofile.git"
 
 [dependencies.mozrunner]
-path = "../rust_mozrunner"
+git = "http://github.com/jgraham/rust_mozrunner.git"
 
 [dependencies.hyper]
 git = "https://github.com/servo/hyper"
