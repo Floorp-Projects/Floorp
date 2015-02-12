@@ -138,9 +138,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebChannel",
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
                                   "resource:///modules/ReaderParent.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AddonWatcher",
-                                  "resource://gre/modules/AddonWatcher.jsm");
-
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
 
@@ -567,76 +564,6 @@ BrowserGlue.prototype = {
     this._distributionCustomizer.applyPrefDefaults();
   },
 
-  _notifySlowAddon: function BG_notifySlowAddon(addonId) {
-    let addonCallback = function(addon) {
-      if (!addon) {
-        Cu.reportError("couldn't look up addon: " + addonId);
-        return;
-      }
-      let win = RecentWindow.getMostRecentBrowserWindow();
-
-      if (!win) {
-        return;
-      }
-
-      let brandBundle = win.document.getElementById("bundle_brand");
-      let brandShortName = brandBundle.getString("brandShortName");
-      let message = win.gNavigatorBundle.getFormattedString("addonwatch.slow", [addon.name, brandShortName]);
-      let notificationBox = win.document.getElementById("global-notificationbox");
-      let notificationId = 'addon-slow:' + addonId;
-      let notification = notificationBox.getNotificationWithValue(notificationId);
-      if(notification) {
-        notification.label = message;
-      } else {
-        let buttons = [
-          {
-            label: win.gNavigatorBundle.getFormattedString("addonwatch.disable.label", [addon.name]),
-            accessKey: win.gNavigatorBundle.getString("addonwatch.disable.accesskey"),
-            callback: function() {
-              addon.userDisabled = true;
-              if (addon.pendingOperations != addon.PENDING_NONE) {
-                let restartMessage = win.gNavigatorBundle.getFormattedString("addonwatch.restart.message", [addon.name, brandShortName]);
-                let restartButton = [
-                  {
-                    label: win.gNavigatorBundle.getFormattedString("addonwatch.restart.label", [brandShortName]),
-                    accessKey: win.gNavigatorBundle.getString("addonwatch.restart.accesskey"),
-                    callback: function() {
-                      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
-                        .getService(Ci.nsIAppStartup);
-                      appStartup.quit(appStartup.eForceQuit | appStartup.eRestart);
-                    }
-                  }
-                ];
-                const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-                notificationBox.appendNotification(restartMessage, "restart-" + addonId, "",
-                                                   priority, restartButton);
-              }
-            }
-          },
-          {
-            label: win.gNavigatorBundle.getString("addonwatch.ignoreSession.label"),
-            accessKey: win.gNavigatorBundle.getString("addonwatch.ignoreSession.accesskey"),
-            callback: function() {
-              AddonWatcher.ignoreAddonForSession(addonId);
-            }
-          },
-          {
-            label: win.gNavigatorBundle.getString("addonwatch.ignorePerm.label"),
-            accessKey: win.gNavigatorBundle.getString("addonwatch.ignorePerm.accesskey"),
-            callback: function() {
-              AddonWatcher.ignoreAddonPermanently(addonId);
-            }
-          },
-        ];
-
-        const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-        notificationBox.appendNotification(message, notificationId, "",
-                                             priority, buttons);
-      }
-    };
-    AddonManager.getAddonByID(addonId, addonCallback);
-  },
-
   // runs on startup, before the first command line handler is invoked
   // (i.e. before the first window is opened)
   _finalUIStartup: function BG__finalUIStartup() {
@@ -685,8 +612,6 @@ BrowserGlue.prototype = {
 #endif
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
-
-    AddonWatcher.init(this._notifySlowAddon);
   },
 
   _checkForOldBuildUpdates: function () {
