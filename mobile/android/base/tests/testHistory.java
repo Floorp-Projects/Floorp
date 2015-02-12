@@ -16,9 +16,9 @@ public class testHistory extends AboutHomeTest {
     public void testHistory() {
         blockForGeckoReady();
 
-        String url = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
-        String url2 = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
-        String url3 = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_03_URL);
+        String url = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL);
+        String url2 = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_02_URL);
+        String url3 = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_03_URL);
 
         inputAndLoadUrl(url);
         verifyUrlBarTitle(url);
@@ -66,7 +66,7 @@ public class testHistory extends AboutHomeTest {
 
         // The first item here (since it was just visited) should be a "Switch to tab" item
         // i.e. don't expect a DOMContentLoaded event
-        verifyUrlBarTitle(StringHelper.ROBOCOP_BLANK_PAGE_03_URL);
+        verifyUrlBarTitle(mStringHelper.ROBOCOP_BLANK_PAGE_03_URL);
         verifyUrl(url3);
     }
 }

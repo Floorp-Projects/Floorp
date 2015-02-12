@@ -17,7 +17,7 @@ import org.mozilla.gecko.PaintedSurface;
  */
 public class testAxisLocking extends PixelTest {
     public void testAxisLocking() {
-        String url = getAbsoluteUrl(StringHelper.ROBOCOP_BOXES_URL);
+        String url = getAbsoluteUrl(mStringHelper.ROBOCOP_BOXES_URL);
 
         MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
 

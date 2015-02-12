@@ -17,7 +17,7 @@ public class testSessionOOMSave extends SessionTest {
         pageShowExpecter.blockForEvent();
         pageShowExpecter.unregisterListener();
 
-        PageInfo home = new PageInfo(StringHelper.ABOUT_HOME_URL);
+        PageInfo home = new PageInfo(mStringHelper.ABOUT_HOME_URL);
         PageInfo page1 = new PageInfo("page1");
         PageInfo page2 = new PageInfo("page2");
         PageInfo page3 = new PageInfo("page3");
