@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1055933
+-->
+<head>
+  <title>Test for Bug 1055933</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1055933">Mozilla Bug 1055933</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 1055933 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+	var element = document.getElementById('area');
+	is(getComputedStyle(element).cursor, "pointer", "Does the <area> element return the correct cursor?");
+	//Force mPrimaryFrame to be set
+	requestAnimationFrame( function() {
+		synthesizeMouseAtCenter(document.getElementById('image'), {}, window);
+		is(getComputedStyle(element).cursor, "pointer", "Does the <area> element still return the correct cursor after mPrimaryFrame is set?");
+		SimpleTest.finish();
+	});
+});
+</script>
+</pre>
+  <div style="cursor: crosshair">
+    <img usemap="#map" border ="0" id="image" src="file_bug1055933_circle-xxl.png">
+    <map id="map" name="map">
+      <area id="area" onmousedown="this.setCapture();" onmouseup="this.releaseCapture();" shape="circle" coords="128,129,103" style="cursor: pointer">
+    </map>
+  </div>
+</body>
+</html>
