@@ -44,6 +44,20 @@ SerializeTree(Accessible* aRoot, nsTArray<AccessibleData>& aTree)
     SerializeTree(aRoot->GetChildAt(i), aTree);
 }
 
+Accessible*
+DocAccessibleChild::IdToAccessible(const uint64_t& aID)
+{
+  return mDoc->GetAccessibleByUniqueID(reinterpret_cast<void*>(aID));
+}
+
+HyperTextAccessible*
+DocAccessibleChild::IdToHyperTextAccessible(const uint64_t& aID)
+{
+  Accessible* acc = IdToAccessible(aID);
+  MOZ_ASSERT(!acc || acc->IsHyperText());
+  return acc ? acc->AsHyperText() : nullptr;
+}
+
 void
 DocAccessibleChild::ShowEvent(AccShowEvent* aShowEvent)
 {
@@ -59,7 +73,7 @@ DocAccessibleChild::ShowEvent(AccShowEvent* aShowEvent)
 bool
 DocAccessibleChild::RecvState(const uint64_t& aID, uint64_t* aState)
 {
-  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  Accessible* acc = IdToAccessible(aID);
   if (!acc) {
     *aState = states::DEFUNCT;
     return true;
@@ -73,7 +87,7 @@ DocAccessibleChild::RecvState(const uint64_t& aID, uint64_t* aState)
 bool
 DocAccessibleChild::RecvName(const uint64_t& aID, nsString* aName)
 {
-  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  Accessible* acc = IdToAccessible(aID);
   if (!acc)
     return true;
 
@@ -84,8 +98,7 @@ DocAccessibleChild::RecvName(const uint64_t& aID, nsString* aName)
 bool
 DocAccessibleChild::RecvValue(const uint64_t& aID, nsString* aValue)
 {
-  Accessible* acc =
-    mDoc->GetAccessibleByUniqueID(reinterpret_cast<void*>(aID));
+  Accessible* acc = IdToAccessible(aID);
   if (!acc) {
     return true;
   }
@@ -97,7 +110,7 @@ DocAccessibleChild::RecvValue(const uint64_t& aID, nsString* aValue)
 bool
 DocAccessibleChild::RecvDescription(const uint64_t& aID, nsString* aDesc)
 {
-  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  Accessible* acc = IdToAccessible(aID);
   if (!acc)
     return true;
 
@@ -108,7 +121,7 @@ DocAccessibleChild::RecvDescription(const uint64_t& aID, nsString* aDesc)
 bool
 DocAccessibleChild::RecvAttributes(const uint64_t& aID, nsTArray<Attribute>* aAttributes)
 {
-  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  Accessible* acc = IdToAccessible(aID);
   if (!acc)
     return true;
 
@@ -149,11 +162,12 @@ DocAccessibleChild::RecvTextSubstring(const uint64_t& aID,
                                       const int32_t& aEndOffset,
                                       nsString* aText)
 {
-  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
-  if (!acc || !acc->IsHyperText())
-    return false;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (!acc) {
+    return true;
+  }
 
-  acc->AsHyperText()->TextSubstring(aStartOffset, aEndOffset, *aText);
+  acc->TextSubstring(aStartOffset, aEndOffset, *aText);
   return true;
 }
 }
