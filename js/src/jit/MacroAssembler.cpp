@@ -2296,3 +2296,51 @@ MacroAssembler::profilerPreCallImpl(Register reg, Register reg2)
 
     appendProfilerCallSite(label);
 }
+
+void
+MacroAssembler::alignJitStackBasedOnNArgs(Register nargs)
+{
+    const uint32_t alignment = JitStackAlignment / sizeof(Value);
+    if (alignment == 1)
+        return;
+
+    // A JitFrameLayout is composed of the following:
+    // [padding?] [argN] .. [arg1] [this] [[argc] [callee] [descr] [raddr]]
+    //
+    // We want to ensure that the |raddr| address is aligned.
+    // Which implies that we want to ensure that |this| is aligned.
+    static_assert(sizeof(JitFrameLayout) % JitStackAlignment == 0,
+      "No need to consider the JitFrameLayout for aligning the stack");
+
+    // Which implies that |argN| is aligned if |nargs| is even, and offset by
+    // |sizeof(Value)| if |nargs| is odd.
+    MOZ_ASSERT(alignment == 2);
+
+    // Thus the |padding| is offset by |sizeof(Value)| if |nargs| is even, and
+    // aligned if |nargs| is odd.
+
+    // if (nargs % 2 == 0) {
+    //     if (sp % JitStackAlignment == 0)
+    //         sp -= sizeof(Value);
+    //     MOZ_ASSERT(sp % JitStackAlignment == JitStackAlignment - sizeof(Value));
+    // } else {
+    //     sp = sp & ~(JitStackAlignment - 1);
+    // }
+    Label odd, end;
+    Label *maybeAssert = &end;
+#ifdef DEBUG
+    Label assert;
+    maybeAssert = &assert;
+#endif
+    branchTestPtr(Assembler::NonZero, nargs, Imm32(1), &odd);
+    branchTestPtr(Assembler::NonZero, StackPointer, Imm32(JitStackAlignment - 1), maybeAssert);
+    subPtr(Imm32(sizeof(Value)), StackPointer);
+#ifdef DEBUG
+    bind(&assert);
+#endif
+    assertStackAlignment(JitStackAlignment, sizeof(Value));
+    jump(&end);
+    bind(&odd);
+    andPtr(Imm32(~(JitStackAlignment - 1)), StackPointer);
+    bind(&end);
+}
