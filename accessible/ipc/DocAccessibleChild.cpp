@@ -170,5 +170,60 @@ DocAccessibleChild::RecvTextSubstring(const uint64_t& aID,
   acc->TextSubstring(aStartOffset, aEndOffset, *aText);
   return true;
 }
+
+bool
+DocAccessibleChild::RecvGetTextAfterOffset(const uint64_t& aID,
+                                           const int32_t& aOffset,
+                                           const AccessibleTextBoundary& aBoundaryType,
+                                           nsString* aText,
+                                           int32_t* aStartOffset,
+                                           int32_t* aEndOffset)
+{
+  *aStartOffset = 0;
+  *aEndOffset = 0;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc) {
+    acc->TextAfterOffset(aOffset, aBoundaryType,
+                         aStartOffset, aEndOffset, *aText);
+  }
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvGetTextAtOffset(const uint64_t& aID,
+                                        const int32_t& aOffset,
+                                        const AccessibleTextBoundary& aBoundaryType,
+                                        nsString* aText,
+                                        int32_t* aStartOffset,
+                                        int32_t* aEndOffset)
+{
+  *aStartOffset = 0;
+  *aEndOffset = 0;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc) {
+    acc->TextAtOffset(aOffset, aBoundaryType,
+                      aStartOffset, aEndOffset, *aText);
+  }
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvGetTextBeforeOffset(const uint64_t& aID,
+                                            const int32_t& aOffset,
+                                            const AccessibleTextBoundary& aBoundaryType,
+                                            nsString* aText,
+                                            int32_t* aStartOffset,
+                                            int32_t* aEndOffset)
+{
+  *aStartOffset = 0;
+  *aEndOffset = 0;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc) {
+    acc->TextBeforeOffset(aOffset, aBoundaryType,
+                          aStartOffset, aEndOffset, *aText);
+  }
+  return true;
+}
+
 }
 }

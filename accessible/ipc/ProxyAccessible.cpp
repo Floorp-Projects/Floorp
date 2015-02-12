@@ -87,5 +87,36 @@ ProxyAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
 {
   unused << mDoc->SendTextSubstring(mID, aStartOffset, aEndOfset, &aText);
 }
+
+void
+ProxyAccessible::GetTextAfterOffset(int32_t aOffset,
+                                    AccessibleTextBoundary aBoundaryType,
+                                    nsString& aText, int32_t* aStartOffset,
+                                    int32_t* aEndOffset)
+{
+  unused << mDoc->SendGetTextAfterOffset(mID, aOffset, aBoundaryType,
+                                         &aText, aStartOffset, aEndOffset);
+}
+
+void
+ProxyAccessible::GetTextAtOffset(int32_t aOffset,
+                                 AccessibleTextBoundary aBoundaryType,
+                                 nsString& aText, int32_t* aStartOffset,
+                                 int32_t* aEndOffset)
+{
+  unused << mDoc->SendGetTextAtOffset(mID, aOffset, aBoundaryType,
+                                      &aText, aStartOffset, aEndOffset);
+}
+
+void
+ProxyAccessible::GetTextBeforeOffset(int32_t aOffset,
+                                     AccessibleTextBoundary aBoundaryType,
+                                     nsString& aText, int32_t* aStartOffset,
+                                     int32_t* aEndOffset)
+{
+  unused << mDoc->SendGetTextBeforeOffset(mID, aOffset, aBoundaryType,
+                                          &aText, aStartOffset, aEndOffset);
+}
+
 }
 }
