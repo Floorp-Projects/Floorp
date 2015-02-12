@@ -38,8 +38,9 @@ typedef android::MediaCodecProxy MediaCodecProxy;
 typedef mozilla::layers::TextureClient TextureClient;
 
 public:
-  GonkVideoDecoderManager(mozilla::layers::ImageContainer* aImageContainer,
-		          const mp4_demuxer::VideoDecoderConfig& aConfig);
+  GonkVideoDecoderManager(MediaTaskQueue* aTaskQueue,
+                          mozilla::layers::ImageContainer* aImageContainer,
+		                      const mp4_demuxer::VideoDecoderConfig& aConfig);
 
   ~GonkVideoDecoderManager();
 
@@ -136,6 +137,7 @@ private:
 
   void QueueFrameTimeIn(int64_t aPTS, int64_t aDuration);
   nsresult QueueFrameTimeOut(int64_t aPTS, int64_t& aDuration);
+  void ClearQueueFrameTime();
 
   uint32_t mVideoWidth;
   uint32_t mVideoHeight;
@@ -162,7 +164,6 @@ private:
   // Ideally, it is a FIFO. Input() adds the entry to the end element and
   // CreateVideoData() takes the first entry. However, there are exceptions
   // due to MediaCodec error or seeking.
-  // It is protected by mMonitor.
   nsTArray<FrameTimeInfo> mFrameTimeInfo;
 
   // color converter

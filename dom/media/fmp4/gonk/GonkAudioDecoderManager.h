@@ -23,7 +23,8 @@ namespace mozilla {
 class GonkAudioDecoderManager : public GonkDecoderManager {
 typedef android::MediaCodecProxy MediaCodecProxy;
 public:
-  GonkAudioDecoderManager(const mp4_demuxer::AudioDecoderConfig& aConfig);
+  GonkAudioDecoderManager(MediaTaskQueue* aTaskQueue,
+                          const mp4_demuxer::AudioDecoderConfig& aConfig);
   ~GonkAudioDecoderManager();
 
   virtual android::sp<MediaCodecProxy> Init(MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
