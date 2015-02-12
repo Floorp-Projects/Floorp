@@ -160,6 +160,24 @@ function checkHeadersOrCookies(aArray, aExpected)
   }
 }
 
+function checkRawHeaders(aText, aExpected)
+{
+  let headers = aText.split(/\r\n|\n|\r/);
+  let arr = [];
+  for (let header of headers) {
+    let index = header.indexOf(": ");
+    if (index < 0) {
+      continue;
+    }
+    arr.push({
+      name: header.substr(0, index),
+      value: header.substr(index + 2)
+    });
+  }
+
+  checkHeadersOrCookies(arr, aExpected);
+}
+
 var gTestState = {};
 
 function runTests(aTests, aEndCallback)

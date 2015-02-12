@@ -241,9 +241,10 @@
 
 #ifndef XP_WIN
       <handler event="contextmenu">
-        // Only care about context clicks on the input field itself
-        if (event.target != this.inputField)
+        // Only care about context clicks on the textbox itself.
+        if (event.target != this)
           return;
+
         if (!event.button) // context menu opened via keyboard shortcut
           return;
         this._maybeSelectAll();

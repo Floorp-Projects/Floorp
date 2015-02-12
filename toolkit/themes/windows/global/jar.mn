@@ -20,7 +20,7 @@ toolkit.jar:
         skin/classic/global/checkbox.css
         skin/classic/global/colorpicker.css
         skin/classic/global/commonDialog.css
-*       skin/classic/global/config.css
+        skin/classic/global/config.css                           (../../shared/config.css)
         skin/classic/global/customizeToolbar.css
         skin/classic/global/datetimepicker.css
         skin/classic/global/dialog.css
@@ -73,7 +73,7 @@ toolkit.jar:
         skin/classic/global/arrow/arrow-lft-hov.gif              (arrow/arrow-lft.gif)
         skin/classic/global/arrow/arrow-lft-sharp.gif            (arrow/arrow-lft-sharp.gif)
         skin/classic/global/arrow/arrow-lft-sharp-end.gif        (arrow/arrow-lft-sharp-end.gif)
-        skin/classic/global/arrow/arrow-rit.gif                  (arrow/arrow-rit.gif) 
+        skin/classic/global/arrow/arrow-rit.gif                  (arrow/arrow-rit.gif)
         skin/classic/global/arrow/arrow-rit-dis.gif              (arrow/arrow-rit-dis.gif)
         skin/classic/global/arrow/arrow-rit-hov.gif              (arrow/arrow-rit.gif)
         skin/classic/global/arrow/arrow-rit-sharp.gif            (arrow/arrow-rit-sharp.gif)
@@ -141,6 +141,7 @@ toolkit.jar:
         skin/classic/global/icons/sslWarning.png                 (icons/sslWarning.png)
         skin/classic/global/icons/tabprompts-bgtexture.png       (icons/tabprompts-bgtexture.png)
         skin/classic/global/icons/Warning.png                    (icons/Warning.png)
+        skin/classic/global/icons/warning.svg                    (../../shared/incontent-icons/warning.svg)
         skin/classic/global/icons/warning-large.png              (icons/warning-large.png)
         skin/classic/global/icons/warning-16.png                 (icons/warning-16.png)
         skin/classic/global/icons/warning-24.png                 (icons/warning-24.png)
@@ -218,7 +219,7 @@ toolkit.jar:
         skin/classic/aero/global/checkbox.css
         skin/classic/aero/global/colorpicker.css
         skin/classic/aero/global/commonDialog.css
-*       skin/classic/aero/global/config.css
+        skin/classic/aero/global/config.css                              (../../shared/config.css)
         skin/classic/aero/global/customizeToolbar.css
         skin/classic/aero/global/datetimepicker.css
         skin/classic/aero/global/dialog.css
@@ -271,7 +272,7 @@ toolkit.jar:
         skin/classic/aero/global/arrow/arrow-lft-hov.gif                 (arrow/arrow-lft.gif)
         skin/classic/aero/global/arrow/arrow-lft-sharp.gif               (arrow/arrow-lft-sharp.gif)
         skin/classic/aero/global/arrow/arrow-lft-sharp-end.gif           (arrow/arrow-lft-sharp-end.gif)
-        skin/classic/aero/global/arrow/arrow-rit.gif                     (arrow/arrow-rit.gif) 
+        skin/classic/aero/global/arrow/arrow-rit.gif                     (arrow/arrow-rit.gif)
         skin/classic/aero/global/arrow/arrow-rit-dis.gif                 (arrow/arrow-rit-dis.gif)
         skin/classic/aero/global/arrow/arrow-rit-hov.gif                 (arrow/arrow-rit.gif)
         skin/classic/aero/global/arrow/arrow-rit-sharp.gif               (arrow/arrow-rit-sharp.gif)
@@ -335,6 +336,7 @@ toolkit.jar:
         skin/classic/aero/global/icons/Search-glass.png                  (icons/Search-glass-aero.png)
         skin/classic/aero/global/icons/sslWarning.png                    (icons/sslWarning-aero.png)
         skin/classic/aero/global/icons/tabprompts-bgtexture.png          (icons/tabprompts-bgtexture.png)
+        skin/classic/aero/global/icons/warning.svg                       (../../shared/incontent-icons/warning.svg)
         skin/classic/aero/global/icons/Warning.png                       (icons/Warning-aero.png)
         skin/classic/aero/global/icons/warning-large.png                 (icons/warning-large-aero.png)
         skin/classic/aero/global/icons/warning-16.png                    (icons/warning-16-aero.png)

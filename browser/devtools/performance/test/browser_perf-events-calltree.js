@@ -4,7 +4,7 @@
 /**
  * Tests that the call tree up/down events work for js calltree and memory calltree.
  */
-let { ThreadNode } = devtools.require("devtools/profiler/tree-model");
+let { ThreadNode } = devtools.require("devtools/shared/profiler/tree-model");
 function spawnTest () {
   let focus = 0;
   let focusEvent = () => focus++;

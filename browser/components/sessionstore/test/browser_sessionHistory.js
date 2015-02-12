@@ -209,9 +209,9 @@ add_task(function test_pushstate_replacestate() {
   is(entries.length, 1, "there is one shistory entry");
   is(entries[0].url, "http://example.com/1", "url is correct");
 
-  browser.messageManager.
-    sendAsyncMessage("ss-test:historyPushState", {url: 'test-entry/'});
-  yield promiseContentMessage(browser, "ss-test:historyPushState");
+  yield ContentTask.spawn(browser, {}, function* () {
+    content.window.history.pushState({}, "", 'test-entry/');
+  });
 
   // Check that we have added the history entry.
   TabState.flush(browser);
@@ -219,9 +219,9 @@ add_task(function test_pushstate_replacestate() {
   is(entries.length, 2, "there is another shistory entry");
   is(entries[1].url, "http://example.com/test-entry/", "url is correct");
 
-  browser.messageManager.
-    sendAsyncMessage("ss-test:historyReplaceState", {url: 'test-entry2/'});
-  yield promiseContentMessage(browser, "ss-test:historyReplaceState");
+  yield ContentTask.spawn(browser, {}, function* () {
+    content.window.history.replaceState({}, "", "test-entry2/");
+  });
 
   // Check that we have modified the history entry.
   TabState.flush(browser);

@@ -37,4 +37,5 @@ mochikit.jar:
   content/tests/SimpleTest/NativeKeyCodes.js (tests/SimpleTest/NativeKeyCodes.js)
   content/tests/SimpleTest/paint_listener.js (tests/SimpleTest/paint_listener.js)
   content/tests/SimpleTest/docshell_helpers.js (../../docshell/test/chrome/docshell_helpers.js)
+  content/tests/BrowserTestUtils/content-task.js (BrowserTestUtils/content/content-task.js)
 

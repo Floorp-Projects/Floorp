@@ -30,6 +30,35 @@ function OnAppManagerUpdate(event, what) {
   }
 }
 
+function generateFields(json) {
+  let table = document.querySelector("table");
+  let permissionsTable = json.rawPermissionsTable;
+  for (let name in permissionsTable) {
+    let tr = document.createElement("tr");
+    tr.className = "line";
+    let td = document.createElement("td");
+    td.textContent = name;
+    tr.appendChild(td);
+    for (let type of ["app","privileged","certified"]) {
+      let td = document.createElement("td");
+      if (permissionsTable[name][type] == json.ALLOW_ACTION) {
+        td.textContent = "✓";
+        td.className = "permallow";
+      }
+      if (permissionsTable[name][type] == json.PROMPT_ACTION) {
+        td.textContent = "!";
+        td.className = "permprompt";
+      }
+      if (permissionsTable[name][type] == json.DENY_ACTION) {
+        td.textContent = "✕";
+        td.className = "permdeny"
+      }
+      tr.appendChild(td);
+    }
+    table.appendChild(tr);
+  }
+}
+
 let getRawPermissionsTablePromise; // Used by tests
 function BuildUI() {
   let table = document.querySelector("table");
@@ -41,34 +70,8 @@ function BuildUI() {
   if (AppManager.connection &&
       AppManager.connection.status == Connection.Status.CONNECTED &&
       AppManager.deviceFront) {
-    getRawPermissionsTablePromise = AppManager.deviceFront.getRawPermissionsTable();
-    getRawPermissionsTablePromise.then(json => {
-      let permissionsTable = json.rawPermissionsTable;
-      for (let name in permissionsTable) {
-        let tr = document.createElement("tr");
-        tr.className = "line";
-        let td = document.createElement("td");
-        td.textContent = name;
-        tr.appendChild(td);
-        for (let type of ["app","privileged","certified"]) {
-          let td = document.createElement("td");
-          if (permissionsTable[name][type] == json.ALLOW_ACTION) {
-            td.textContent = "✓";
-            td.className = "permallow";
-          }
-          if (permissionsTable[name][type] == json.PROMPT_ACTION) {
-            td.textContent = "!";
-            td.className = "permprompt";
-          }
-          if (permissionsTable[name][type] == json.DENY_ACTION) {
-            td.textContent = "✕";
-            td.className = "permdeny"
-          }
-          tr.appendChild(td);
-        }
-        table.appendChild(tr);
-      }
-    });
+    getRawPermissionsTablePromise = AppManager.deviceFront.getRawPermissionsTable()
+                                    .then(json => generateFields(json));
   } else {
     CloseUI();
   }
