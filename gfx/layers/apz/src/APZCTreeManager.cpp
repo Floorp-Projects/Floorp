@@ -227,8 +227,7 @@ ComputeClipRegion(GeckoContentController* aController,
     clipRegion = nsIntRegion(*aLayer.GetClipRect());
   } else {
     // if there is no clip on this layer (which should only happen for the
-    // root scrollable layer in a process, or for some of the LayerMetrics
-    // expansions of a multi-metrics layer), fall back to using the comp
+    // root scrollable layer in a process) fall back to using the comp
     // bounds which should be equivalent.
     clipRegion = nsIntRegion(ParentLayerIntRect::ToUntyped(
         RoundedToInt(aLayer.Metrics().mCompositionBounds)));

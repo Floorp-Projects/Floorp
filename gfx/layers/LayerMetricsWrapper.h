@@ -335,11 +335,7 @@ public:
   {
     MOZ_ASSERT(IsValid());
 
-    if (AtBottomLayer()) {
-      return mLayer->GetClipRect();
-    }
-
-    return nullptr;
+    return mLayer->GetClipRect();
   }
 
   bool GetForceDispatchToContentRegion() const {
