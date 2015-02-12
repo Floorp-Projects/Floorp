@@ -1419,7 +1419,7 @@ void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
                "Should be on main or decode thread.");
   AssertCurrentThreadInMonitor();
 
-  if (aDuration == -1) {
+  if (aDuration < 0) {
     mDurationSet = false;
     return;
   }
