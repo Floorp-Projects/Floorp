@@ -242,7 +242,8 @@
     _(store)                         \
     _(storeX)                        \
     _(storeXY)                       \
-    _(storeXYZ)
+    _(storeXYZ)                      \
+    _(check)
 #define FORALL_SIMD_OP(_)            \
     FOREACH_INT32X4_SIMD_OP(_)       \
     FOREACH_FLOAT32X4_SIMD_OP(_)     \
