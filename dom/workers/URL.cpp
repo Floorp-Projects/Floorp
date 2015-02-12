@@ -135,7 +135,8 @@ public:
 
       principal = doc->NodePrincipal();
     } else {
-      MOZ_ASSERT_IF(!mWorkerPrivate->GetParent(), mWorkerPrivate->IsChromeWorker());
+      // We use the worker Principal in case this is a SharedWorker, a
+      // ChromeWorker or a ServiceWorker.
       principal = mWorkerPrivate->GetPrincipal();
     }
 
@@ -191,7 +192,8 @@ public:
 
       principal = doc->NodePrincipal();
     } else {
-      MOZ_ASSERT_IF(!mWorkerPrivate->GetParent(), mWorkerPrivate->IsChromeWorker());
+      // We use the worker Principal in case this is a SharedWorker, a
+      // ChromeWorker or a ServiceWorker.
       principal = mWorkerPrivate->GetPrincipal();
     }
 
