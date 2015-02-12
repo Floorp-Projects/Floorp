@@ -3075,43 +3075,100 @@ CodeGenerator::emitPushArguments(LApplyArgsGeneric *apply, Register extraStackSp
 {
     // Holds the function nargs. Initially undefined.
     Register argcreg = ToRegister(apply->getArgc());
-
     Register copyreg = ToRegister(apply->getTempObject());
-    size_t argvOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
-    Label end;
 
     // Initialize the loop counter AND Compute the stack usage (if == 0)
     masm.movePtr(argcreg, extraStackSpace);
+
+    // Align the JitFrameLayout on the JitStackAlignment.
+    const uint32_t alignment = JitStackAlignment / sizeof(Value);
+    if (alignment > 1) {
+        MOZ_ASSERT(frameSize() % JitStackAlignment == 0,
+            "Stack padding assumes that the frameSize is correct");
+        MOZ_ASSERT(alignment == 2);
+        Label noPaddingNeeded;
+        // if the number of arguments is odd, then we do not need any padding.
+        masm.branchTestPtr(Assembler::NonZero, argcreg, Imm32(1), &noPaddingNeeded);
+        masm.addPtr(Imm32(1), extraStackSpace);
+        masm.bind(&noPaddingNeeded);
+    }
+
+    // Reserve space for copying the arguments.
+    NativeObject::elementsSizeMustNotOverflow();
+    masm.lshiftPtr(Imm32(ValueShift), extraStackSpace);
+    masm.subPtr(extraStackSpace, StackPointer);
+
+#ifdef DEBUG
+    // Put a magic value in the space reserved for padding. Note, this code
+    // cannot be merged with the previous test, as not all architectures can
+    // write below their stack pointers.
+    if (alignment > 1) {
+        MOZ_ASSERT(alignment == 2);
+        Label noPaddingNeeded;
+        // if the number of arguments is odd, then we do not need any padding.
+        masm.branchTestPtr(Assembler::NonZero, argcreg, Imm32(1), &noPaddingNeeded);
+        BaseValueIndex dstPtr(StackPointer, argcreg);
+        masm.storeValue(MagicValue(JS_ARG_POISON), dstPtr);
+        masm.bind(&noPaddingNeeded);
+    }
+#endif
+
+    // Skip the copy of arguments.
+    Label end;
     masm.branchTestPtr(Assembler::Zero, argcreg, argcreg, &end);
+
+    // We are making a copy of the arguments which are above the JitFrameLayout
+    // of the current Ion frame.
+    //
+    // [arg1] [arg0] <- src [this] [JitFrameLayout] [.. frameSize ..] [pad] [arg1] [arg0] <- dst
+
+    // Compute the source and destination offsets into the stack.
+    size_t argvSrcOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
+    size_t argvDstOffset = 0;
+
+    // Save the extra stack space, and re-use the register as a base.
+    masm.push(extraStackSpace);
+    Register argvSrcBase = extraStackSpace;
+    argvSrcOffset += sizeof(void *);
+    argvDstOffset += sizeof(void *);
+
+    // Save the actual number of register, and re-use the register as an index register.
+    masm.push(argcreg);
+    Register argvIndex = argcreg;
+    argvSrcOffset += sizeof(void *);
+    argvDstOffset += sizeof(void *);
+
+    // srcPtr = (StackPointer + extraStackSpace) + argvSrcOffset
+    // dstPtr = (StackPointer                  ) + argvDstOffset
+    masm.addPtr(StackPointer, argvSrcBase);
 
     // Copy arguments.
     {
-        Register count = extraStackSpace; // <- argcreg
         Label loop;
         masm.bind(&loop);
 
-        // We remove sizeof(void*) from argvOffset because without it we target
-        // the address after the memory area that we want to copy.
-        BaseValueIndex disp(StackPointer, argcreg, argvOffset - sizeof(void*));
-
-        // Do not use Push here because other this account to 1 in the framePushed
-        // instead of 0.  These push are only counted by argcreg.
-        masm.loadPtr(disp, copyreg);
-        masm.push(copyreg);
+        // As argvIndex is off by 1, and we use the decBranchPtr instruction
+        // to loop back, we have to substract the size of the word which are
+        // copied.
+        BaseValueIndex srcPtr(argvSrcBase, argvIndex, argvSrcOffset - sizeof(void *));
+        BaseValueIndex dstPtr(StackPointer, argvIndex, argvDstOffset - sizeof(void *));
+        masm.loadPtr(srcPtr, copyreg);
+        masm.storePtr(copyreg, dstPtr);
 
         // Handle 32 bits architectures.
         if (sizeof(Value) == 2 * sizeof(void*)) {
-            masm.loadPtr(disp, copyreg);
-            masm.push(copyreg);
+            BaseValueIndex srcPtrLow(argvSrcBase, argvIndex, argvSrcOffset - 2 * sizeof(void *));
+            BaseValueIndex dstPtrLow(StackPointer, argvIndex, argvDstOffset - 2 * sizeof(void *));
+            masm.loadPtr(srcPtrLow, copyreg);
+            masm.storePtr(copyreg, dstPtrLow);
         }
 
-        masm.decBranchPtr(Assembler::NonZero, count, Imm32(1), &loop);
+        masm.decBranchPtr(Assembler::NonZero, argvIndex, Imm32(1), &loop);
     }
 
-    // Compute the stack usage.
-    masm.movePtr(argcreg, extraStackSpace);
-    NativeObject::elementsSizeMustNotOverflow();
-    masm.lshiftPtr(Imm32(ValueShift), extraStackSpace);
+    // Restore argcreg and the extra stack space counter.
+    masm.pop(argcreg);
+    masm.pop(extraStackSpace);
 
     // Join with all arguments copied and the extra stack usage computed.
     masm.bind(&end);
