@@ -25,12 +25,14 @@
  */
 
 const {Cu} = require("chrome");
+const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {setInterval, clearInterval} = require("sdk/timers");
 const protocol = require("devtools/server/protocol");
 const {ActorClass, Actor, FrontClass, Front, Arg, method, RetVal} = protocol;
 const {NodeActor} = require("devtools/server/actors/inspector");
 const EventEmitter = require("devtools/toolkit/event-emitter");
+const events = require("sdk/event/core");
 
 const PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT = 500; // ms
 
@@ -149,7 +151,9 @@ let AnimationPlayerActor = ActorClass({
       iterationText = iterationText.split(",")[this.playerIndex];
     }
 
-    return parseInt(iterationText, 10);
+    return iterationText === "infinite"
+           ? null
+           : parseInt(iterationText, 10);
   },
 
   /**
@@ -379,10 +383,17 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
 
   initialize: function(conn, tabActor) {
     Actor.prototype.initialize.call(this, conn);
+    this.tabActor = tabActor;
+
+    this.allAnimationsPaused = false;
+    this.onNavigate = this.onNavigate.bind(this);
+    events.on(this.tabActor, "navigate", this.onNavigate);
   },
 
   destroy: function() {
     Actor.prototype.destroy.call(this);
+    events.off(this.tabActor, "navigate", this.onNavigate);
+    this.tabActor = null;
   },
 
   /**
@@ -417,6 +428,77 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
     response: {
       players: RetVal("array:animationplayer")
     }
+  }),
+
+  /**
+   * Iterates through all nodes in all of the tabActor's window documents and
+   * finds all existing animation players.
+   * This is currently used to allow playing/pausing all animations at once
+   * until the WebAnimations API provides a way to play/pause via the document
+   * timeline (alternatively, when bug 1123524 is fixed, we will be able to
+   * only iterate once and then listen for changes).
+   */
+  getAllAnimationPlayers: function() {
+    let players = [];
+
+    // These loops shouldn't be as bad as they look.
+    // Typically, there will be very few windows, and getElementsByTagName is
+    // really fast even on large DOM trees.
+    for (let window of this.tabActor.windows) {
+      let root = window.document.body || window.document;
+      for (let element of root.getElementsByTagNameNS("*", "*")) {
+        players = [...players, ...element.getAnimationPlayers()];
+      }
+    }
+
+    return players;
+  },
+
+  onNavigate: function({isTopLevel}) {
+    if (isTopLevel) {
+      this.allAnimationsPaused = false;
+    }
+  },
+
+  /**
+   * Pause all animations in the current tabActor's frames.
+   */
+  pauseAll: method(function() {
+    for (let player of this.getAllAnimationPlayers()) {
+      player.pause();
+    }
+    this.allAnimationsPaused = true;
+  }, {
+    request: {},
+    response: {}
+  }),
+
+  /**
+   * Play all animations in the current tabActor's frames.
+   * This method only returns when the animations have left their pending states.
+   */
+  playAll: method(function() {
+    let readyPromises = [];
+    for (let player of this.getAllAnimationPlayers()) {
+      player.play();
+      readyPromises.push(player.ready);
+    }
+    this.allAnimationsPaused = false;
+    return promise.all(readyPromises);
+  }, {
+    request: {},
+    response: {}
+  }),
+
+  toggleAll: method(function() {
+    if (this.allAnimationsPaused) {
+      return this.playAll();
+    } else {
+      return this.pauseAll();
+    }
+  }, {
+    request: {},
+    response: {}
   })
 });
 
