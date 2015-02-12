@@ -601,17 +601,21 @@ NativeObject::addPropertyInternal(ExclusiveContext *cx,
     return nullptr;
 }
 
-Shape *
-js::ReshapeForParentAndAllocKind(JSContext *cx, Shape *shape, TaggedProto proto, JSObject *parent,
-                                 gc::AllocKind allocKind)
+JSObject *
+js::NewReshapedObject(JSContext *cx, HandleObjectGroup group, JSObject *parent,
+                      gc::AllocKind allocKind, HandleShape shape, NewObjectKind newKind)
 {
-    // Compute the number of fixed slots with the new allocation kind.
-    size_t nfixed = gc::GetGCKindSlots(allocKind, shape->getObjectClass());
+    RootedPlainObject res(cx, NewObjectWithGroup<PlainObject>(cx, group, parent, allocKind, newKind));
+    if (!res)
+        return nullptr;
 
-    // Get all the ids in the shape, in order.
+    if (shape->isEmptyShape())
+        return res;
+
+    /* Get all the ids in the object, in order. */
     js::AutoIdVector ids(cx);
     {
-        for (unsigned i = 0; i < shape->slotSpan(); i++) {
+        for (unsigned i = 0; i <= shape->slot(); i++) {
             if (!ids.append(JSID_VOID))
                 return nullptr;
         }
@@ -622,13 +626,17 @@ js::ReshapeForParentAndAllocKind(JSContext *cx, Shape *shape, TaggedProto proto,
         }
     }
 
-    // Construct the new shape, without updating type information.
+    /* Construct the new shape, without updating type information. */
     RootedId id(cx);
-    RootedShape newShape(cx, EmptyShape::getInitialShape(cx, shape->getObjectClass(),
-                                                         proto, parent, shape->getObjectMetadata(),
-                                                         nfixed, shape->getObjectFlags()));
+    RootedShape newShape(cx, EmptyShape::getInitialShape(cx, res->getClass(),
+                                                         res->getTaggedProto(),
+                                                         res->getParent(),
+                                                         res->getMetadata(),
+                                                         res->numFixedSlots(),
+                                                         shape->getObjectFlags()));
     for (unsigned i = 0; i < ids.length(); i++) {
         id = ids[i];
+        MOZ_ASSERT(!res->contains(cx, id));
 
         uint32_t index;
         bool indexed = js_IdIsIndex(id, &index);
@@ -646,9 +654,11 @@ js::ReshapeForParentAndAllocKind(JSContext *cx, Shape *shape, TaggedProto proto,
         newShape = cx->compartment()->propertyTree.getChild(cx, newShape, child);
         if (!newShape)
             return nullptr;
+        if (!NativeObject::setLastProperty(cx, res, newShape))
+            return nullptr;
     }
 
-    return newShape;
+    return res;
 }
 
 /*

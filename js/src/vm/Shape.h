@@ -1553,10 +1553,6 @@ IsImplicitDenseOrTypedArrayElement(Shape *prop)
     return prop == reinterpret_cast<Shape*>(1);
 }
 
-Shape *
-ReshapeForParentAndAllocKind(JSContext *cx, Shape *shape, TaggedProto proto, JSObject *parent,
-                             gc::AllocKind allocKind);
-
 } // namespace js
 
 #ifdef _MSC_VER
