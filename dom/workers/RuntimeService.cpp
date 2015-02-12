@@ -2280,7 +2280,7 @@ RuntimeService::CreateServiceWorker(const GlobalObject& aGlobal,
 
 nsresult
 RuntimeService::CreateServiceWorkerFromLoadInfo(JSContext* aCx,
-                                               WorkerPrivate::LoadInfo* aLoadInfo,
+                                               WorkerLoadInfo* aLoadInfo,
                                                const nsAString& aScriptURL,
                                                const nsACString& aScope,
                                                ServiceWorker** aServiceWorker)
@@ -2319,7 +2319,7 @@ RuntimeService::CreateSharedWorkerInternal(const GlobalObject& aGlobal,
 
   JSContext* cx = aGlobal.Context();
 
-  WorkerPrivate::LoadInfo loadInfo;
+  WorkerLoadInfo loadInfo;
   nsresult rv = WorkerPrivate::GetLoadInfo(cx, window, nullptr, aScriptURL,
                                            false,
                                            WorkerPrivate::OverrideLoadGroup,
@@ -2332,7 +2332,7 @@ RuntimeService::CreateSharedWorkerInternal(const GlobalObject& aGlobal,
 
 nsresult
 RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
-                                               WorkerPrivate::LoadInfo* aLoadInfo,
+                                               WorkerLoadInfo* aLoadInfo,
                                                const nsAString& aScriptURL,
                                                const nsACString& aName,
                                                WorkerType aType,
