@@ -19,8 +19,6 @@
 #endif
 <!ENTITY % aboutHomeDTD SYSTEM "chrome://browser/locale/aboutHome.dtd">
 %aboutHomeDTD;
-<!ENTITY % searchBarDTD SYSTEM "chrome://browser/locale/searchbar.dtd">
-%searchBarDTD;
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
 %syncBrandDTD;
 ]>

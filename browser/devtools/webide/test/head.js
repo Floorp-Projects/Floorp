@@ -137,6 +137,15 @@ function documentIsLoaded(doc) {
   return deferred.promise;
 }
 
+function lazyIframeIsLoaded(iframe) {
+  let deferred = promise.defer();
+  iframe.addEventListener("load", function onLoad() {
+    iframe.removeEventListener("load", onLoad, true);
+    deferred.resolve();
+  }, true);
+  return deferred.promise;
+}
+
 function addTab(aUrl, aWindow) {
   info("Adding tab: " + aUrl);
 

@@ -50,13 +50,6 @@
         <Preference
             android:editable="false"
             android:icon="@drawable/fxaccount_sync_error"
-            android:key="needs_account_enabled"
-            android:layout="@layout/fxaccount_status_error_preference"
-            android:persistent="false"
-            android:title="@string/fxaccount_status_needs_account_enabled" />
-        <Preference
-            android:editable="false"
-            android:icon="@drawable/fxaccount_sync_error"
             android:key="needs_finish_migrating"
             android:layout="@layout/fxaccount_status_error_preference"
             android:persistent="false"
@@ -86,6 +79,10 @@
             android:key="passwords"
             android:persistent="false"
             android:title="@string/fxaccount_status_passwords" />
+        <CheckBoxPreference
+            android:key="reading_list"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_reading_list" />
 
         <EditTextPreference
             android:singleLine="true"

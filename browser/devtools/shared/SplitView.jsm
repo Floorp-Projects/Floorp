@@ -204,10 +204,7 @@ SplitView.prototype = {
     this._side.appendChild(aDetails);
 
     if (binding.onCreate) {
-      // queue onCreate handler
-      this._root.ownerDocument.defaultView.setTimeout(function () {
-        binding.onCreate(aSummary, aDetails, binding.data);
-      }, 0);
+      binding.onCreate(aSummary, aDetails, binding.data);
     }
   },
 

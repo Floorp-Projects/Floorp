@@ -45,7 +45,6 @@
   "media.eme.enabled": true,
   "media.eme.apiVisible": true,
   "dom.ipc.tabs.shutdownTimeoutSecs": 0,
-  "browser.search.highlightCount": 0,
   "general.useragent.locale": "en-US",
   "intl.locale.matchOS": "en-US",
   "dom.indexedDB.experimental": true
