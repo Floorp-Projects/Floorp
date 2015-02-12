@@ -20,9 +20,9 @@
 #include "js/Class.h"
 
 #if JS_STACK_GROWTH_DIRECTION > 0
-# define JS_CHECK_STACK_SIZE(limit, sp) ((uintptr_t)(sp) < (limit))
+# define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY(((uintptr_t)(sp) < (limit)))
 #else
-# define JS_CHECK_STACK_SIZE(limit, sp) ((uintptr_t)(sp) > (limit))
+# define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY((uintptr_t)(sp) > (limit)))
 #endif
 
 class JSAtom;
