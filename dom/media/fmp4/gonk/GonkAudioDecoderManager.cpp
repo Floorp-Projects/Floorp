@@ -37,8 +37,9 @@ typedef android::MediaCodecProxy MediaCodecProxy;
 namespace mozilla {
 
 GonkAudioDecoderManager::GonkAudioDecoderManager(
+  MediaTaskQueue* aTaskQueue,
   const mp4_demuxer::AudioDecoderConfig& aConfig)
-  : GonkDecoderManager()
+  : GonkDecoderManager(aTaskQueue)
   , mAudioChannels(aConfig.channel_count)
   , mAudioRate(aConfig.samples_per_second)
   , mAudioProfile(aConfig.aac_profile)
