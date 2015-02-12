@@ -1892,10 +1892,20 @@ public:
         m_formatter.immediate64(imm);
     }
 
-    void movsxd_rr(RegisterID src, RegisterID dst)
+    void movslq_rr(RegisterID src, RegisterID dst)
     {
-        spew("movsxd     %s, %s", GPReg32Name(src), GPReg64Name(dst));
+        spew("movslq     %s, %s", GPReg32Name(src), GPReg64Name(dst));
         m_formatter.oneByteOp64(OP_MOVSXD_GvEv, src, dst);
+    }
+    void movslq_mr(int32_t offset, RegisterID base, RegisterID dst)
+    {
+        spew("movslq     " MEM_ob ", %s", ADDR_ob(offset, base), GPReg64Name(dst));
+        m_formatter.oneByteOp64(OP_MOVSXD_GvEv, offset, base, dst);
+    }
+    void movslq_mr(int32_t offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        spew("movslq     " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), GPReg64Name(dst));
+        m_formatter.oneByteOp64(OP_MOVSXD_GvEv, offset, base, index, scale, dst);
     }
 
     MOZ_WARN_UNUSED_RESULT JmpSrc
