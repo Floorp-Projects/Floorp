@@ -532,30 +532,27 @@ HandleClosingGeneratorReturn(JSContext *cx, const JitFrameIterator &frame, jsbyt
     ForcedReturn(cx, frame, pc, rfe, calledDebugEpilogue);
 }
 
-struct AutoDebuggerHandlingException
+struct AutoBaselineHandlingException
 {
     BaselineFrame *frame;
-    AutoDebuggerHandlingException(BaselineFrame *frame, jsbytecode *pc)
+    AutoBaselineHandlingException(BaselineFrame *frame, jsbytecode *pc)
       : frame(frame)
     {
-        frame->setIsDebuggerHandlingException();
-        frame->setOverridePc(pc); // Will be cleared in HandleException.
+        frame->setIsHandlingException();
+        frame->setOverridePc(pc);
     }
-    ~AutoDebuggerHandlingException() {
-        frame->unsetIsDebuggerHandlingException();
+    ~AutoBaselineHandlingException() {
+        frame->unsetIsHandlingException();
+        frame->clearOverridePc();
     }
 };
 
 static void
 HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFromException *rfe,
-                        jsbytecode **unwoundScopeToPc, bool *calledDebugEpilogue)
+                        jsbytecode *pc, jsbytecode **unwoundScopeToPc, bool *calledDebugEpilogue)
 {
     MOZ_ASSERT(frame.isBaselineJS());
     MOZ_ASSERT(!*calledDebugEpilogue);
-
-    RootedScript script(cx);
-    jsbytecode *pc;
-    frame.baselineScriptAndPc(script.address(), &pc);
 
     // We may be propagating a forced return from the interrupt
     // callback, which cannot easily force a return.
@@ -569,10 +566,6 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
     if (cx->isExceptionPending() && cx->compartment()->isDebuggee() &&
         cx->getPendingException(&exception) && !exception.isMagic(JS_GENERATOR_CLOSING))
     {
-        // Set for debug mode OSR. See note concerning
-        // 'isDebuggerHandlingException' in CollectJitStackScripts.
-        AutoDebuggerHandlingException debuggerHandling(frame.baselineFrame(), pc);
-
         switch (Debugger::onExceptionUnwind(cx, frame.baselineFrame())) {
           case JSTRAP_ERROR:
             // Uncatchable exception.
@@ -592,6 +585,8 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
             MOZ_CRASH("Invalid trap status");
         }
     }
+
+    RootedScript script(cx, frame.baselineFrame()->script());
 
     if (!script->hasTrynotes()) {
         HandleClosingGeneratorReturn(cx, frame, pc, *unwoundScopeToPc, rfe, calledDebugEpilogue);
@@ -689,13 +684,6 @@ struct AutoDeleteDebugModeOSRInfo
     BaselineFrame *frame;
     explicit AutoDeleteDebugModeOSRInfo(BaselineFrame *frame) : frame(frame) { MOZ_ASSERT(frame); }
     ~AutoDeleteDebugModeOSRInfo() { frame->deleteDebugModeOSRInfo(); }
-};
-
-struct AutoClearBaselineOverridePc
-{
-    BaselineFrame *frame;
-    explicit AutoClearBaselineOverridePc(BaselineFrame *frame) : frame(frame) { MOZ_ASSERT(frame); }
-    ~AutoClearBaselineOverridePc() { frame->clearOverridePc(); }
 };
 
 struct AutoResetLastProfilerFrameOnReturnFromException
@@ -814,8 +802,11 @@ HandleException(ResumeFromException *rfe)
             // Remember the pc we unwound the scope to.
             jsbytecode *unwoundScopeToPc = nullptr;
 
-            // Clear the frame's override pc when we leave this block. This is
-            // fine because we're either:
+            // Set a flag on the frame to signal to DebugModeOSR that we're
+            // handling an exception. Also ensure the frame has an override
+            // pc. We clear the frame's override pc when we leave this block,
+            // this is fine because we're either:
+            //
             // (1) Going to enter a catch or finally block. We don't want to
             //     keep the old pc when we're executing JIT code.
             // (2) Going to pop the frame, either here or a forced return.
@@ -823,17 +814,16 @@ HandleException(ResumeFromException *rfe)
             // (3) Performing an exception bailout. In this case
             //     FinishBailoutToBaseline will set the pc to the resume pc
             //     and clear it before it returns to JIT code.
-            AutoClearBaselineOverridePc clearPc(iter.baselineFrame());
+            jsbytecode *pc;
+            iter.baselineScriptAndPc(nullptr, &pc);
+            AutoBaselineHandlingException handlingException(iter.baselineFrame(), pc);
 
-            HandleExceptionBaseline(cx, iter, rfe, &unwoundScopeToPc, &calledDebugEpilogue);
+            HandleExceptionBaseline(cx, iter, rfe, pc, &unwoundScopeToPc, &calledDebugEpilogue);
 
             // If we are propagating an exception through a frame with
             // on-stack recompile info, we should free the allocated
             // RecompileInfo struct before we leave this block, as we will not
             // be returning to the recompile handler.
-            //
-            // We cannot delete it immediately because of the call to
-            // iter.baselineScriptAndPc below.
             AutoDeleteDebugModeOSRInfo deleteDebugModeOSRInfo(iter.baselineFrame());
 
             if (rfe->kind != ResumeFromException::RESUME_ENTRY_FRAME)
