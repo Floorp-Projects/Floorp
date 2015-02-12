@@ -2137,8 +2137,13 @@ IsCoercionCall(ModuleCompiler &m, ParseNode *pn, AsmJSCoercion *coercion, ParseN
         return true;
     }
 
-    if (global->isSimdCtor()) {
-        switch (global->simdCtorType()) {
+    if (global->isSimdCtor() ||
+        (global->isSimdOperation() && global->simdOperation() == AsmJSSimdOperation_check))
+    {
+        AsmJSSimdType type = global->isSimdCtor()
+                             ? global->simdCtorType()
+                             : global->simdOperationType();
+        switch (type) {
           case AsmJSSimdType_int32x4:
             *coercion = AsmJS_ToInt32x4;
             return true;
@@ -5844,6 +5849,17 @@ CheckSimdSelect(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType, bool
 }
 
 static bool
+CheckSimdCheck(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType, MDefinition **def,
+               Type *type)
+{
+    AsmJSCoercion coercion;
+    ParseNode *argNode;
+    if (!IsCoercionCall(f.m(), call, &coercion, &argNode))
+        return f.failf(call, "expected 1 argument in call to check");
+    return CheckCoercionArg(f, argNode, coercion, def, type);
+}
+
+static bool
 CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Global *global,
                        MDefinition **def, Type *type)
 {
@@ -5852,6 +5868,9 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
     AsmJSSimdType opType = global->simdOperationType();
 
     switch (global->simdOperation()) {
+      case AsmJSSimdOperation_check:
+        return CheckSimdCheck(f, call, opType, def, type);
+
 #define OP_CHECK_CASE_LIST_(OP)                                                         \
       case AsmJSSimdOperation_##OP:                                                     \
         return CheckSimdBinary(f, call, opType, MSimdBinaryArith::Op_##OP, def, type);
