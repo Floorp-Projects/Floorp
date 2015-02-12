@@ -64,7 +64,8 @@ describe("loop.panel", function() {
         },
         on: sandbox.stub()
       },
-      confirm: sandbox.stub()
+      confirm: sandbox.stub(),
+      notifyUITour: sandbox.stub()
     };
 
     document.mozL10n.initialize(navigator.mozLoop);
