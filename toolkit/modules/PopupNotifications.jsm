@@ -17,15 +17,19 @@ const NOTIFICATION_EVENT_SWAPPING = "swapping";
 
 const ICON_SELECTOR = ".notification-anchor-icon";
 const ICON_ATTRIBUTE_SHOWING = "showing";
+const ICON_ANCHOR_ATTRIBUTE = "popupnotificationanchor";
 
 const PREF_SECURITY_DELAY = "security.notification_enable_delay";
 
 let popupNotificationsMap = new WeakMap();
 let gNotificationParents = new WeakMap;
 
-function getAnchorFromBrowser(aBrowser) {
-  let anchor = aBrowser.getAttribute("popupnotificationanchor") ||
-                aBrowser.popupnotificationanchor;
+function getAnchorFromBrowser(aBrowser, aAnchorID) {
+  let attrPrefix = aAnchorID ? aAnchorID.replace("notification-icon", "") : "";
+  let anchor = aBrowser.getAttribute(attrPrefix + ICON_ANCHOR_ATTRIBUTE) ||
+               aBrowser[attrPrefix + ICON_ANCHOR_ATTRIBUTE] ||
+               aBrowser.getAttribute(ICON_ANCHOR_ATTRIBUTE) ||
+               aBrowser[ICON_ANCHOR_ATTRIBUTE];
   if (anchor) {
     if (anchor instanceof Ci.nsIDOMXULElement) {
       return anchor;
@@ -74,8 +78,7 @@ Notification.prototype = {
   get anchorElement() {
     let iconBox = this.owner.iconBox;
 
-    let anchorElement = getAnchorFromBrowser(this.browser);
-
+    let anchorElement = getAnchorFromBrowser(this.browser, this.anchorID);
     if (!iconBox)
       return anchorElement;
 
@@ -728,8 +731,18 @@ PopupNotifications.prototype = {
       // remove previous icon classes
       let className = anchorElement.className.replace(/([-\w]+-notification-icon\s?)/g,"")
       className = "default-notification-icon " + className;
-      if (notifications.length == 1) {
-        className = notifications[0].anchorID + " " + className;
+      if (notifications.length > 0) {
+        // Find the first notification this anchor belongs to.
+        let notification = notifications[0];
+        for (let n of notifications) {
+          if (n.anchorElement == anchorElement) {
+            notification = n;
+            break;
+          }
+        }
+        // With this notification we can better approximate the most fitting
+        // style.
+        className = notification.anchorID + " " + className;
       }
       anchorElement.className = className;
     }
