@@ -1120,7 +1120,7 @@ class HashTable : private AllocPolicy
         // Reject all lengths whose initial computed capacity would exceed
         // sMaxCapacity.  Round that maximum length down to the nearest power
         // of two for speedier code.
-        if (length > sMaxInit) {
+        if (MOZ_UNLIKELY(length > sMaxInit)) {
             this->reportAllocOverflow();
             return false;
         }
@@ -1328,7 +1328,7 @@ class HashTable : private AllocPolicy
         uint32_t oldCap = capacity();
         uint32_t newLog2 = sHashBits - hashShift + deltaLog2;
         uint32_t newCapacity = JS_BIT(newLog2);
-        if (newCapacity > sMaxCapacity) {
+        if (MOZ_UNLIKELY(newCapacity > sMaxCapacity)) {
             this->reportAllocOverflow();
             return RehashFailed;
         }
