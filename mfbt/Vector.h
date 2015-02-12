@@ -55,6 +55,23 @@ static bool CapacityHasExcessSpace(size_t aCapacity)
 template<typename T, size_t N, class AP, class ThisVector, bool IsPod>
 struct VectorImpl
 {
+  /*
+   * Constructs a default object in the uninitialized memory at *aDst.
+   */
+  static inline void new_(T* aDst)
+  {
+    new(aDst) T();
+  }
+
+  /*
+   * Constructs an object in the uninitialized memory at *aDst from aSrc.
+   */
+  template<typename U>
+  static inline void new_(T* aDst, U&& aU)
+  {
+    new(aDst) T(Forward<U>(aU));
+  }
+
   /* Destroys constructed objects in the range [aBegin, aEnd). */
   static inline void destroy(T* aBegin, T* aEnd)
   {
@@ -69,7 +86,7 @@ struct VectorImpl
   {
     MOZ_ASSERT(aBegin <= aEnd);
     for (T* p = aBegin; p < aEnd; ++p) {
-      new(p) T();
+      new_(p);
     }
   }
 
@@ -83,7 +100,7 @@ struct VectorImpl
   {
     MOZ_ASSERT(aSrcStart <= aSrcEnd);
     for (const U* p = aSrcStart; p < aSrcEnd; ++p, ++aDst) {
-      new(aDst) T(*p);
+      new_(aDst, *p);
     }
   }
 
@@ -96,7 +113,7 @@ struct VectorImpl
   {
     MOZ_ASSERT(aSrcStart <= aSrcEnd);
     for (U* p = aSrcStart; p < aSrcEnd; ++p, ++aDst) {
-      new(aDst) T(Move(*p));
+      new_(aDst, Move(*p));
     }
   }
 
@@ -108,7 +125,7 @@ struct VectorImpl
   static inline void copyConstructN(T* aDst, size_t aN, const U& aU)
   {
     for (T* end = aDst + aN; aDst < end; ++aDst) {
-      new(aDst) T(aU);
+      new_(aDst, aU);
     }
   }
 
@@ -130,7 +147,7 @@ struct VectorImpl
     T* dst = newbuf;
     T* src = aV.beginNoCheck();
     for (; src < aV.endNoCheck(); ++dst, ++src) {
-      new(dst) T(Move(*src));
+      new_(dst, Move(*src));
     }
     VectorImpl::destroy(aV.beginNoCheck(), aV.endNoCheck());
     aV.free_(aV.mBegin);
@@ -149,6 +166,17 @@ struct VectorImpl
 template<typename T, size_t N, class AP, class ThisVector>
 struct VectorImpl<T, N, AP, ThisVector, true>
 {
+  static inline void new_(T* aDst)
+  {
+    *aDst = T();
+  }
+
+  template<typename U>
+  static inline void new_(T* aDst, U&& aU)
+  {
+    *aDst = Forward<U>(aU);
+  }
+
   static inline void destroy(T*, T*) {}
 
   static inline void initialize(T* aBegin, T* aEnd)
@@ -163,7 +191,7 @@ struct VectorImpl<T, N, AP, ThisVector, true>
      */
     MOZ_ASSERT(aBegin <= aEnd);
     for (T* p = aBegin; p < aEnd; ++p) {
-      new(p) T();
+      new_(p);
     }
   }
 
@@ -180,7 +208,7 @@ struct VectorImpl<T, N, AP, ThisVector, true>
      */
     MOZ_ASSERT(aSrcStart <= aSrcEnd);
     for (const U* p = aSrcStart; p < aSrcEnd; ++p, ++aDst) {
-      *aDst = *p;
+      new_(aDst, *p);
     }
   }
 
@@ -194,7 +222,7 @@ struct VectorImpl<T, N, AP, ThisVector, true>
   static inline void copyConstructN(T* aDst, size_t aN, const T& aT)
   {
     for (T* end = aDst + aN; aDst < end; ++aDst) {
-      *aDst = aT;
+      new_(aDst, aT);
     }
   }
 
@@ -984,7 +1012,7 @@ VectorBase<T, N, AP, TV>::internalAppend(U&& aU)
 {
   MOZ_ASSERT(mLength + 1 <= mReserved);
   MOZ_ASSERT(mReserved <= mCapacity);
-  new(endNoCheck()) T(Forward<U>(aU));
+  Impl::new_(endNoCheck(), Forward<U>(aU));
   ++mLength;
 }
 
