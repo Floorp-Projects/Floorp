@@ -42,8 +42,7 @@ loop.conversation = (function(mozL10n) {
       conversationStore: React.PropTypes.instanceOf(loop.store.ConversationStore)
                               .isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      roomStore: React.PropTypes.instanceOf(loop.store.RoomStore),
-      mozLoop: React.PropTypes.object.isRequired,
+      roomStore: React.PropTypes.instanceOf(loop.store.RoomStore)
     },
 
     getInitialState: function() {
@@ -79,7 +78,6 @@ loop.conversation = (function(mozL10n) {
         case "room": {
           return (<DesktopRoomConversationView
             dispatcher={this.props.dispatcher}
-            mozLoop={this.props.mozLoop}
             roomStore={this.props.roomStore}
           />);
         }
@@ -191,7 +189,6 @@ loop.conversation = (function(mozL10n) {
       conversation={conversation}
       dispatcher={dispatcher}
       sdk={window.OT}
-      mozLoop={navigator.mozLoop}
     />, document.querySelector('#main'));
 
     dispatcher.dispatch(new sharedActions.GetWindowData({
