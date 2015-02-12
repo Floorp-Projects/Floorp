@@ -3087,14 +3087,16 @@ AssertJitStackInvariants(JSContext *cx)
 {
     for (JitActivationIterator activations(cx->runtime()); !activations.done(); ++activations) {
         JitFrameIterator frames(activations);
+        size_t prevFrameSize = 0;
+        size_t frameSize = 0;
         for (; !frames.done(); ++frames) {
+            size_t calleeFp = reinterpret_cast<size_t>(frames.fp());
+            size_t callerFp = reinterpret_cast<size_t>(frames.prevFp());
+            MOZ_ASSERT(callerFp >= calleeFp);
+            prevFrameSize = frameSize;
+            frameSize = callerFp - calleeFp;
 
             if (frames.prevType() == JitFrame_Rectifier) {
-                size_t calleeFp = reinterpret_cast<size_t>(frames.fp());
-                size_t callerFp = reinterpret_cast<size_t>(frames.prevFp());
-                MOZ_ASSERT(callerFp >= calleeFp);
-                size_t frameSize = callerFp - calleeFp;
-
                 MOZ_RELEASE_ASSERT(frameSize % JitStackAlignment == 0,
                   "The rectifier frame should keep the alignment");
 
@@ -3110,6 +3112,12 @@ AssertJitStackInvariants(JSContext *cx)
                   "The frame size is optimal");
             }
 
+            if (frames.type() == JitFrame_Exit) {
+                // For the moment, we do not keep the JitStackAlignment
+                // alignment for exit frames.
+                frameSize -= ExitFrameLayout::Size();
+            }
+
             if (frames.isIonJS()) {
                 // Ideally, we should not have such requirement, but keep the
                 // alignment-delta as part of the Safepoint such that we can pad
@@ -3118,8 +3126,14 @@ AssertJitStackInvariants(JSContext *cx)
                 // everything can properly be aligned before adding complexity.
                 MOZ_RELEASE_ASSERT(frames.ionScript()->frameSize() % JitStackAlignment == 0,
                   "Ensure that if the Ion frame is aligned, then the spill base is also aligned");
-            }
 
+                InlineFrameIterator lastInlinedFrame(cx, &frames);
+                jsbytecode *pc = lastInlinedFrame.pc();
+                if (JSOp(*pc) == JSOP_FUNAPPLY) {
+                    MOZ_RELEASE_ASSERT(prevFrameSize % JitStackAlignment == 0,
+                      "The ion frame should keep the alignment");
+                }
+            }
         }
 
         MOZ_RELEASE_ASSERT(frames.type() == JitFrame_Entry,

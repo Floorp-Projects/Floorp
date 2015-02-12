@@ -53,19 +53,40 @@ for (var l = 0; l < 4; l++) {
     ionFrameSize_args[l][a] = gen_ionFrameSize(30 + l, a, "ionFrameSize_callee_verify");;
 }
 
+// Check ion frames during function calls are always correctly aligned.
+function ionFrame_funApply_0() {
+  assertJitStackInvariants.apply(this, arguments);
+}
+function ionFrame_funApply_1() {
+  ionFrame_funApply_0.apply(this, arguments);
+}
+
+
 for (i = 0; i < 40; i++) {
   entryFrame_1();
   entryFrame_1(0);
   entryFrame_1(0, 1);
+
   rectifierFrame_1(i);
   rectifierFrame_2(i);
   rectifierFrame_3(i);
   rectifierFrame_4(i);
+
   ionFrameSize_0(i);
   ionFrameSize_1(i);
   ionFrameSize_2(i);
   ionFrameSize_3(i);
+
   for (var l = 0; l < 4; l++)
     for (var a = 0; a < 4; a++)
       ionFrameSize_args[l][a](i);
+
+  ionFrame_funApply_0();
+  ionFrame_funApply_0(1);
+  ionFrame_funApply_0(1, 2);
+  ionFrame_funApply_0(1, 2, 3);
+  ionFrame_funApply_1();
+  ionFrame_funApply_1(1);
+  ionFrame_funApply_1(1, 2);
+  ionFrame_funApply_1(1, 2, 3);
 }
