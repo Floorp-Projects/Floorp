@@ -3128,9 +3128,7 @@ AssertJitStackInvariants(JSContext *cx)
                 MOZ_RELEASE_ASSERT(frames.ionScript()->frameSize() % JitStackAlignment == 0,
                   "Ensure that if the Ion frame is aligned, then the spill base is also aligned");
 
-                InlineFrameIterator lastInlinedFrame(cx, &frames);
-                jsbytecode *pc = lastInlinedFrame.pc();
-                if (JSOp(*pc) == JSOP_FUNAPPLY) {
+                if (isScriptedCallee) {
                     MOZ_RELEASE_ASSERT(prevFrameSize % JitStackAlignment == 0,
                       "The ion frame should keep the alignment");
                 }
