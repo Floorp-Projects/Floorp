@@ -250,7 +250,7 @@ ServiceWorkerClients::GetServiced(ErrorResult& aRv)
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  DOMString scope;
+  nsString scope;
   mWorkerScope->GetScope(scope);
 
   nsRefPtr<Promise> promise = Promise::Create(mWorkerScope, aRv);
