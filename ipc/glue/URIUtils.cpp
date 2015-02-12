@@ -12,6 +12,7 @@
 #include "nsDebug.h"
 #include "nsID.h"
 #include "nsJARURI.h"
+#include "nsIIconURI.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
@@ -24,6 +25,7 @@ namespace {
 NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 NS_DEFINE_CID(kJARURICID, NS_JARURI_CID);
+NS_DEFINE_CID(kIconURICID, NS_MOZICONURI_CID);
 
 } // anonymous namespace
 
@@ -82,6 +84,10 @@ DeserializeURI(const URIParams& aParams)
 
     case URIParams::TJARURIParams:
       serializable = do_CreateInstance(kJARURICID);
+      break;
+
+    case URIParams::TIconURIParams:
+      serializable = do_CreateInstance(kIconURICID);
       break;
 
     default:
