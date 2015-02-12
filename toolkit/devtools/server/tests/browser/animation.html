@@ -1,5 +1,14 @@
 <!DOCTYPE html>
 <style>
+  .not-animated {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #eee;
+  }
+
   .simple-animation {
     display: inline-block;
 
@@ -83,6 +92,17 @@
     animation: move .5s 1s 10, glow 1s .75s 30;
   }
 
+  .multiple-animations-2 {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: blue;
+
+    animation: move 2s, glow 1s 2s infinite, grow 3s 1s 100;
+  }
+
   @keyframes move {
     100% {
       transform: translateY(100px);
@@ -94,6 +114,12 @@
       background: yellow;
     }
   }
+
+  @keyframes grow {
+    100% {
+      width: 100px;
+    }
+  }
 </style>
 <div class="not-animated"></div>
 <div class="simple-animation"></div>
@@ -103,6 +129,7 @@
 <div class="delayed-animation"></div>
 <div class="delayed-transition"></div>
 <div class="delayed-multiple-animations"></div>
+<div class="multiple-animations-2"></div>
 <script type="text/javascript">
   // Get the transitions started when the page loads
   var players;
