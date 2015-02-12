@@ -37,12 +37,6 @@ let gSubDialog = {
     // Wait for the stylesheets injected during DOMContentLoaded to load before showing the dialog
     // otherwise there is a flicker of the stylesheet applying.
     this._frame.addEventListener("load", this._onLoad.bind(this));
-
-    chromeBrowser.addEventListener("unload", function(aEvent) {
-      if (aEvent.target.location.href != "about:blank") {
-        this.close();
-      }
-    }.bind(this), true);
   },
 
   uninit: function() {
