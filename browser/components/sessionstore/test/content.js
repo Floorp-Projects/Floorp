@@ -239,20 +239,6 @@ addMessageListener("ss-test:click", function ({data}) {
   sendAsyncMessage("ss-test:click");
 });
 
-addMessageListener("ss-test:historyPushState", function ({data}) {
-  content.window.history.
-    pushState(data.stateObj || {}, data.title || "", data.url);
-
-  sendAsyncMessage("ss-test:historyPushState");
-});
-
-addMessageListener("ss-test:historyReplaceState", function ({data}) {
-  content.window.history.
-    replaceState(data.stateObj || {}, data.title || "", data.url);
-
-  sendAsyncMessage("ss-test:historyReplaceState");
-});
-
 addMessageListener("ss-test:run", function({data, objects}) {
   let f = eval('(' + data.code + ')');
   let result = f(content, objects.arg);

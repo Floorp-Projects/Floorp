@@ -17,15 +17,19 @@ const NOTIFICATION_EVENT_SWAPPING = "swapping";
 
 const ICON_SELECTOR = ".notification-anchor-icon";
 const ICON_ATTRIBUTE_SHOWING = "showing";
+const ICON_ANCHOR_ATTRIBUTE = "popupnotificationanchor";
 
 const PREF_SECURITY_DELAY = "security.notification_enable_delay";
 
 let popupNotificationsMap = new WeakMap();
 let gNotificationParents = new WeakMap;
 
-function getAnchorFromBrowser(aBrowser) {
-  let anchor = aBrowser.getAttribute("popupnotificationanchor") ||
-                aBrowser.popupnotificationanchor;
+function getAnchorFromBrowser(aBrowser, aAnchorID) {
+  let attrPrefix = aAnchorID ? aAnchorID.replace("notification-icon", "") : "";
+  let anchor = aBrowser.getAttribute(attrPrefix + ICON_ANCHOR_ATTRIBUTE) ||
+               aBrowser[attrPrefix + ICON_ANCHOR_ATTRIBUTE] ||
+               aBrowser.getAttribute(ICON_ANCHOR_ATTRIBUTE) ||
+               aBrowser[ICON_ANCHOR_ATTRIBUTE];
   if (anchor) {
     if (anchor instanceof Ci.nsIDOMXULElement) {
       return anchor;
@@ -74,8 +78,7 @@ Notification.prototype = {
   get anchorElement() {
     let iconBox = this.owner.iconBox;
 
-    let anchorElement = getAnchorFromBrowser(this.browser);
-
+    let anchorElement = getAnchorFromBrowser(this.browser, this.anchorID);
     if (!iconBox)
       return anchorElement;
 
@@ -308,13 +311,14 @@ PopupNotifications.prototype = {
     if (isActiveBrowser) {
       if (isActiveWindow) {
         // show panel now
-        this._update(notifications, notification.anchorElement, true);
+        this._update(notifications, new Set([notification.anchorElement]), true);
       } else {
         // indicate attention and update the icon if necessary
         if (!notification.dismissed) {
           this.window.getAttention();
         }
-        this._updateAnchorIcon(notifications, notification.anchorElement);
+        this._updateAnchorIcons(notifications, this._getAnchorsForNotifications(
+          notifications, notification.anchorElement));
         this._notify("backgroundShow");
       }
 
@@ -380,10 +384,8 @@ PopupNotifications.prototype = {
       // get the anchor element if the browser has defined one so it will
       // _update will handle both the tabs iconBox and non-tab permission
       // anchors.
-      let anchorElement = notifications.length > 0 ? notifications[0].anchorElement : null;
-      if (!anchorElement)
-        anchorElement = getAnchorFromBrowser(aBrowser);
-      this._update(notifications, anchorElement);
+      this._update(notifications, this._getAnchorsForNotifications(notifications,
+        getAnchorFromBrowser(aBrowser)));
     }
   },
 
@@ -397,7 +399,7 @@ PopupNotifications.prototype = {
 
     if (this._isActiveBrowser(notification.browser)) {
       let notifications = this._getNotificationsForBrowser(notification.browser);
-      this._update(notifications, notification.anchorElement);
+      this._update(notifications);
     }
   },
 
@@ -652,49 +654,61 @@ PopupNotifications.prototype = {
    * @param notifications an array of Notification instances. if null,
    *                      notifications will be retrieved off the current
    *                      browser tab
-   * @param anchor is a XUL element that the notifications panel will be
-   *                      anchored to
+   * @param anchors       is a XUL element or a Set of XUL elements that the
+   *                      notifications panel(s) will be anchored to.
    * @param dismissShowing if true, dismiss any currently visible notifications
    *                       if there are no notifications to show. Otherwise,
    *                       currently displayed notifications will be left alone.
    */
-  _update: function PopupNotifications_update(notifications, anchor, dismissShowing = false) {
-    let useIconBox = this.iconBox && (!anchor || anchor.parentNode == this.iconBox);
+  _update: function PopupNotifications_update(notifications, anchors = new Set(), dismissShowing = false) {
+    if (anchors instanceof Ci.nsIDOMXULElement)
+      anchors = new Set([anchors]);
+    if (!notifications)
+      notifications = this._currentNotifications;
+    let haveNotifications = notifications.length > 0;
+    if (!anchors.size && haveNotifications)
+      anchors = this._getAnchorsForNotifications(notifications);
+
+    let useIconBox = !!this.iconBox;
+    if (useIconBox && anchors.size) {
+      for (let anchor of anchors) {
+        if (anchor.parentNode == this.iconBox)
+          continue;
+        useIconBox = false;
+        break;
+      }
+    }
+
     if (useIconBox) {
       // hide icons of the previous tab.
       this._hideIcons();
     }
 
-    let anchorElement = anchor, notificationsToShow = [];
-    if (!notifications)
-      notifications = this._currentNotifications;
-    let haveNotifications = notifications.length > 0;
+    let notificationsToShow = [];
     if (haveNotifications) {
       // Filter out notifications that have been dismissed.
       notificationsToShow = notifications.filter(function (n) {
         return !n.dismissed && !n.options.neverShow;
       });
 
-      // If no anchor has been passed in, use the anchor of the first
-      // showable notification.
-      if (!anchorElement && notificationsToShow.length)
-        anchorElement = notificationsToShow[0].anchorElement;
-
       if (useIconBox) {
         this._showIcons(notifications);
         this.iconBox.hidden = false;
-      } else if (anchorElement) {
-        this._updateAnchorIcon(notifications, anchorElement);
+      } else if (anchors.size) {
+        this._updateAnchorIcons(notifications, anchors);
       }
 
       // Also filter out notifications that are for a different anchor.
       notificationsToShow = notificationsToShow.filter(function (n) {
-        return n.anchorElement == anchorElement;
+        return anchors.has(n.anchorElement);
       });
     }
 
     if (notificationsToShow.length > 0) {
-      this._showPanel(notificationsToShow, anchorElement);
+      for (let anchorElement of anchors) {
+        this._showPanel(notificationsToShow, anchorElement);
+        break;
+      }
     } else {
       // Notify observers that we're not showing the popup (useful for testing)
       this._notify("updateNotShowing");
@@ -709,29 +723,43 @@ PopupNotifications.prototype = {
       // Only hide the iconBox if we actually have no notifications (as opposed
       // to not having any showable notifications)
       if (!haveNotifications) {
-        if (useIconBox)
+        if (useIconBox) {
           this.iconBox.hidden = true;
-        else if (anchorElement)
-          anchorElement.removeAttribute(ICON_ATTRIBUTE_SHOWING);
+        } else if (anchors.size) {
+          for (let anchorElement of anchors)
+            anchorElement.removeAttribute(ICON_ATTRIBUTE_SHOWING);
+        }
       }
     }
   },
 
-  _updateAnchorIcon: function PopupNotifications_updateAnchorIcon(notifications,
-                                                                  anchorElement) {
-    anchorElement.setAttribute(ICON_ATTRIBUTE_SHOWING, "true");
-    // Use the anchorID as a class along with the default icon class as a
-    // fallback if anchorID is not defined in CSS. We always use the first
-    // notifications icon, so in the case of multiple notifications we'll
-    // only use the default icon.
-    if (anchorElement.classList.contains("notification-anchor-icon")) {
-      // remove previous icon classes
-      let className = anchorElement.className.replace(/([-\w]+-notification-icon\s?)/g,"")
-      className = "default-notification-icon " + className;
-      if (notifications.length == 1) {
-        className = notifications[0].anchorID + " " + className;
+  _updateAnchorIcons: function PopupNotifications_updateAnchorIcons(notifications,
+                                                                    anchorElements) {
+    for (let anchorElement of anchorElements) {
+      anchorElement.setAttribute(ICON_ATTRIBUTE_SHOWING, "true");
+      // Use the anchorID as a class along with the default icon class as a
+      // fallback if anchorID is not defined in CSS. We always use the first
+      // notifications icon, so in the case of multiple notifications we'll
+      // only use the default icon.
+      if (anchorElement.classList.contains("notification-anchor-icon")) {
+        // remove previous icon classes
+        let className = anchorElement.className.replace(/([-\w]+-notification-icon\s?)/g,"")
+        className = "default-notification-icon " + className;
+        if (notifications.length > 0) {
+          // Find the first notification this anchor used for.
+          let notification = notifications[0];
+          for (let n of notifications) {
+            if (n.anchorElement == anchorElement) {
+              notification = n;
+              break;
+            }
+          }
+          // With this notification we can better approximate the most fitting
+          // style.
+          className = notification.anchorID + " " + className;
+        }
+        anchorElement.className = className;
       }
-      anchorElement.className = className;
     }
   },
 
@@ -766,6 +794,17 @@ PopupNotifications.prototype = {
   _setNotificationsForBrowser: function PopupNotifications_setNotifications(browser, notifications) {
     popupNotificationsMap.set(browser, notifications);
     return notifications;
+  },
+
+  _getAnchorsForNotifications: function PopupNotifications_getAnchorsForNotifications(notifications, defaultAnchor) {
+    let anchors = new Set();
+    for (let notification of notifications) {
+      if (notification.anchorElement)
+        anchors.add(notification.anchorElement)
+    }
+    if (defaultAnchor && !anchors.size)
+      anchors.add(defaultAnchor);
+    return anchors;
   },
 
   _isActiveBrowser: function (browser) {
@@ -861,9 +900,9 @@ PopupNotifications.prototype = {
     other._setNotificationsForBrowser(ourBrowser, otherNotifications);
 
     if (otherNotifications.length > 0)
-      this._update(otherNotifications, otherNotifications[0].anchorElement);
+      this._update(otherNotifications);
     if (ourNotifications.length > 0)
-      other._update(ourNotifications, ourNotifications[0].anchorElement);
+      other._update(ourNotifications);
   },
 
   _fireCallback: function PopupNotifications_fireCallback(n, event, ...args) {

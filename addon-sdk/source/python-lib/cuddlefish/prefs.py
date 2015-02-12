@@ -238,8 +238,6 @@ DEFAULT_TEST_PREFS = {
     'media.eme.apiVisible': True,
     # Don't forceably kill content processes after a timeout
     'dom.ipc.tabs.shutdownTimeoutSecs': 0,
-    # Don't show the search first run UI by default
-    'browser.search.highlightCount': 0,
     'general.useragent.locale': "en-US",
     'intl.locale.matchOS': "en-US",
     'dom.indexedDB.experimental': True

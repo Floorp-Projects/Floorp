@@ -523,24 +523,23 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
       // double-casting will only occur when starting from `addAutomationEvent`,
       // which is only used in tests.
       let param = XPCNativeWrapper.unwrap(node[paramName]);
+      let contentGlobal = Cu.getGlobalForObject(param);
+      let contentArgs = Cu.cloneInto(args, contentGlobal);
 
       // If calling `setValueCurveAtTime`, the first argument
       // is a Float32Array, which won't be able to be serialized
       // over the protocol. Cast a normal array to a Float32Array here.
       if (eventName === "setValueCurveAtTime") {
-        let contentGlobal = Cu.getGlobalForObject(param);
-        // Since we cannot iterate over and modify the actual Float32Array
-        // in the content, we'll have to pass in an array to the constructor
-        // from the same context, since we can iterate over non-TypedArrays.
-        let contentArray = copyInto(new contentGlobal.Array(), args[0]);
-
         // Create a Float32Array from the content, seeding with an array
         // from the same scope.
-        let curve = new contentGlobal.Float32Array(contentArray);
-        args[0] = curve;
+        let curve = new contentGlobal.Float32Array(contentArgs[0]);
+        contentArgs[0] = curve;
       }
 
-      param[eventName].apply(param, args);
+      // Apply the args back from the content scope, which is necessary
+      // due to the method wrapping changing in bug 1130901 to be exported
+      // directly to the content scope.
+      param[eventName].apply(param, contentArgs);
     } catch (e) {
       return constructError(e);
     }

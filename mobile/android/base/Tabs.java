@@ -543,13 +543,14 @@ public class Tabs implements GeckoEventListener {
     }
 
     public void refreshThumbnails() {
-        final ThumbnailHelper helper = ThumbnailHelper.getInstance();
         final BrowserDB db = GeckoProfile.get(mAppContext).getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 for (final Tab tab : mOrder) {
-                    helper.getAndProcessThumbnailFor(tab, db);
+                    if (tab.getThumbnail() == null) {
+                        tab.loadThumbnailFromDB(db);
+                    }
                 }
             }
         });
