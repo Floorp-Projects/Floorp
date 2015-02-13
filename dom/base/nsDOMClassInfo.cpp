@@ -904,6 +904,22 @@ nsDOMClassInfo::Create(nsIXPConnectWrappedNative *wrapper,
 }
 
 NS_IMETHODIMP
+nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
+                           JSContext *cx, JSObject *obj)
+{
+  NS_WARNING("nsDOMClassInfo::PostCreate Don't call me!");
+
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+nsDOMClassInfo::PostTransplant(nsIXPConnectWrappedNative *wrapper,
+                               JSContext *cx, JSObject *obj)
+{
+  MOZ_CRASH("nsDOMClassInfo::PostTransplant Don't call me!");
+}
+
+NS_IMETHODIMP
 nsDOMClassInfo::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             JSObject *obj, jsid id, jsval *vp,
                             bool *_retval)
