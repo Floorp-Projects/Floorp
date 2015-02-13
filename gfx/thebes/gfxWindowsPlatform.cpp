@@ -1913,6 +1913,15 @@ gfxWindowsPlatform::InitD3D11Devices()
   d3d11Module.disown();
 }
 
+static bool
+DwmCompositionEnabled()
+{
+  MOZ_ASSERT(WinUtils::dwmIsCompositionEnabledPtr);
+  BOOL dwmEnabled = false;
+  WinUtils::dwmIsCompositionEnabledPtr(&dwmEnabled);
+  return dwmEnabled;
+}
+
 class D3DVsyncSource MOZ_FINAL : public VsyncSource
 {
 public:
@@ -1926,6 +1935,8 @@ public:
         , mVsyncEnabled(false)
       {
         mVsyncThread = new base::Thread("WindowsVsyncThread");
+        const double rate = 1000 / 60.0;
+        mSoftwareVsyncRate = TimeDuration::FromMilliseconds(rate);
       }
 
       virtual ~D3DVsyncDisplay()
@@ -1973,12 +1984,76 @@ public:
         return mVsyncEnabled;
       }
 
+      void ScheduleSoftwareVsync(TimeStamp aVsyncTimestamp)
+      {
+        MOZ_ASSERT(IsInVsyncThread());
+        NS_WARNING("DwmComposition dynamically disabled, falling back to software timers\n");
+
+        TimeStamp nextVsync = aVsyncTimestamp + mSoftwareVsyncRate;
+        TimeDuration delay = nextVsync - TimeStamp::Now();
+        if (delay.ToMilliseconds() < 0) {
+          delay = mozilla::TimeDuration::FromMilliseconds(0);
+        }
+
+        mVsyncThread->message_loop()->PostDelayedTask(FROM_HERE,
+            NewRunnableMethod(this, &D3DVsyncDisplay::VBlankLoop),
+            delay.ToMilliseconds());
+      }
+
+      void VBlankLoop()
+      {
+        MOZ_ASSERT(IsInVsyncThread());
+
+        DWM_TIMING_INFO vblankTime;
+        // Make sure to init the cbSize, otherwise GetCompositionTiming will fail
+        vblankTime.cbSize = sizeof(DWM_TIMING_INFO);
+
+        LARGE_INTEGER qpcNow;
+        LARGE_INTEGER frequency;
+        QueryPerformanceFrequency(&frequency);
+        TimeStamp vsync = TimeStamp::Now();
+        const int microseconds = 1000000;
+
+        for (;;) {
+          { // scope lock
+            MonitorAutoLock lock(mVsyncEnabledLock);
+            if (!mVsyncEnabled) return;
+          }
+
+          Display::NotifyVsync(vsync);
+
+          // DwmComposition can be dynamically enabled/disabled
+          // so we have to check every time that it's available.
+          // When it is unavailable, we fallback to software but will try
+          // to get back to dwm rendering once it's re-enabled
+          if (!DwmCompositionEnabled()) {
+            ScheduleSoftwareVsync(vsync);
+            return;
+          }
+
+          // Use a combination of DwmFlush + DwmGetCompositionTimingInfoPtr
+          // The qpcVBlank is always AFTER Now(), so it behaves like b2g
+          // Using WaitForVBlank, the whole system dies :/
+          WinUtils::dwmFlushProcPtr();
+          HRESULT hr = WinUtils::dwmGetCompositionTimingInfoPtr(0, &vblankTime);
+          vsync = TimeStamp::Now();
+          if (SUCCEEDED(hr)) {
+            QueryPerformanceCounter(&qpcNow);
+            QPC_TIME adjust = qpcNow.QuadPart - vblankTime.qpcVBlank;
+            MOZ_ASSERT(adjust > 0);
+            uint64_t usAdjust = (adjust * microseconds) / frequency.QuadPart;
+            vsync -= TimeDuration::FromMicroseconds((double) usAdjust);
+          }
+        } // end for
+      }
+
     private:
       bool IsInVsyncThread()
       {
         return mVsyncThread->thread_id() == PlatformThread::CurrentId();
       }
 
+      TimeDuration mSoftwareVsyncRate;
       Monitor mVsyncEnabledLock;
       base::Thread* mVsyncThread;
       bool mVsyncEnabled;
