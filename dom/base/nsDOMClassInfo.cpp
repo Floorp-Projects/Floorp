@@ -978,6 +978,16 @@ nsDOMClassInfo::Resolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 }
 
 NS_IMETHODIMP
+nsDOMClassInfo::Convert(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj, uint32_t type, jsval *vp,
+                        bool *_retval)
+{
+  NS_WARNING("nsDOMClassInfo::Convert Don't call me!");
+
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
 nsDOMClassInfo::Finalize(nsIXPConnectWrappedNative *wrapper, JSFreeOp *fop,
                          JSObject *obj)
 {
