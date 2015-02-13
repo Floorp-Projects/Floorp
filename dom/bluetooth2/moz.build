@@ -89,6 +89,8 @@ if CONFIG['MOZ_B2G_BT']:
                 ]
 
             DEFINES['MOZ_B2G_BT_BLUEDROID'] = True
+            if CONFIG['MOZ_B2G_BT_DAEMON']:
+                DEFINES['MOZ_B2G_BT_DAEMON'] = True
     elif CONFIG['MOZ_ENABLE_DBUS']:
         CFLAGS += CONFIG['MOZ_DBUS_CFLAGS']
         CFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']

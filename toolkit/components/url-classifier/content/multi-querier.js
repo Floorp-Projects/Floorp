@@ -15,6 +15,7 @@
  * @param callback Function callback function that takes true if the condition
  *        passes.
  */
+this.MultiQuerier =
 function MultiQuerier(tokens, tableName, callback) {
   this.tokens_ = tokens;
   this.tableName_ = tableName;
@@ -65,9 +66,17 @@ MultiQuerier.prototype.condition_ = function(value) {
 /**
  * Concrete MultiQuerier that stops if the key exists in the db.
  */
+this.ExistsMultiQuerier =
 function ExistsMultiQuerier(tokens, tableName, callback) {
   MultiQuerier.call(this, tokens, tableName, callback);
   this.debugZone = "existsMultiQuerier";
+}
+
+ExistsMultiQuerier.inherits = function(parentCtor) {
+  var tempCtor = function(){};
+  tempCtor.prototype = parentCtor.prototype;
+  this.superClass_ = parentCtor.prototype;
+  this.prototype = new tempCtor();
 }
 ExistsMultiQuerier.inherits(MultiQuerier);
 
@@ -81,11 +90,19 @@ ExistsMultiQuerier.prototype.condition_ = function(value) {
  * checks the the resulting regular expressions for a match.
  * @param tokens Array of hosts
  */
+this.EnchashMultiQuerier =
 function EnchashMultiQuerier(tokens, tableName, callback, url) {
   MultiQuerier.call(this, tokens, tableName, callback);
   this.url_ = url;
   this.enchashDecrypter_ = new PROT_EnchashDecrypter();
   this.debugZone = "enchashMultiQuerier";
+}
+
+EnchashMultiQuerier.inherits = function(parentCtor) {
+  var tempCtor = function(){};
+  tempCtor.prototype = parentCtor.prototype;
+  this.superClass_ = parentCtor.prototype;
+  this.prototype = new tempCtor();
 }
 EnchashMultiQuerier.inherits(MultiQuerier);
 

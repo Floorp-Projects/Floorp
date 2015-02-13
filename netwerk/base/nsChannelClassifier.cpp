@@ -150,6 +150,16 @@ nsChannelClassifier::ShouldEnableTrackingProtection(nsIChannel *aChannel,
     // the security state. If any channels are subsequently cancelled
     // (page elements blocked) the state will be then updated.
     if (*result) {
+#ifdef DEBUG
+      nsCString topspec;
+      nsCString spec;
+      uri->GetSpec(topspec);
+      aChannel->GetURI(getter_AddRefs(uri));
+      uri->GetSpec(spec);
+      LOG(("nsChannelClassifier[%p]: Enabling tracking protection checks on channel[%p] "
+           "with uri %s for toplevel window %s", this, aChannel, spec.get(),
+           topspec.get()));
+#endif
       return NS_OK;
     }
 
@@ -289,14 +299,25 @@ nsChannelClassifier::StartInternal()
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIPrincipal> principal;
-    rv = securityManager->GetChannelResultPrincipal(mChannel,
-                                                    getter_AddRefs(principal));
+    rv = securityManager->GetChannelURIPrincipal(mChannel, getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
 
     bool expectCallback;
     bool trackingProtectionEnabled = false;
     (void)ShouldEnableTrackingProtection(mChannel, &trackingProtectionEnabled);
 
+#ifdef DEBUG
+    {
+      nsCString uriSpec;
+      uri->GetSpec(uriSpec);
+      nsCOMPtr<nsIURI> principalURI;
+      principal->GetURI(getter_AddRefs(principalURI));
+      nsCString principalSpec;
+      principalURI->GetSpec(principalSpec);
+      LOG(("nsChannelClassifier: Classifying principal %s on channel with uri %s "
+           "[this=%p]", principalSpec.get(), uriSpec.get(), this));
+    }
+#endif
     rv = uriClassifier->Classify(principal, trackingProtectionEnabled, this,
                                  &expectCallback);
     if (NS_FAILED(rv)) {

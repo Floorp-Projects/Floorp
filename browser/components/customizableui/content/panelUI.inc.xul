@@ -42,11 +42,11 @@
           <toolbarseparator/>
           <toolbarbutton id="PanelUI-quit"
 #ifdef XP_WIN
-                         label="&quitApplicationCmdWin.label;"
-                         tooltiptext="&quitApplicationCmdWin.tooltip;"
+                         label="&quitApplicationCmdWin2.label;"
+                         tooltiptext="&quitApplicationCmdWin2.tooltip;"
 #else
 #ifdef XP_MACOSX
-                         label="&quitApplicationCmdMac.label;"
+                         label="&quitApplicationCmdMac2.label;"
 #else
                          label="&quitApplicationCmd.label;"
 #endif

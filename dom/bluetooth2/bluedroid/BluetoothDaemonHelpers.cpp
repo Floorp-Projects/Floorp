@@ -343,6 +343,18 @@ Convert(uint8_t aIn, BluetoothHandsfreeVolumeType& aOut)
 }
 
 nsresult
+Convert(int aIn, int32_t& aOut)
+{
+  if (NS_WARN_IF(aIn < std::numeric_limits<int32_t>::min()) ||
+      NS_WARN_IF(aIn > std::numeric_limits<int32_t>::max())) {
+    aOut = 0; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = static_cast<int32_t>(aIn);
+  return NS_OK;
+}
+
+nsresult
 Convert(int32_t aIn, BluetoothTypeOfDevice& aOut)
 {
   static const BluetoothTypeOfDevice sTypeOfDevice[] = {
@@ -660,6 +672,22 @@ Convert(BluetoothAvrcpNotification aIn, uint8_t& aOut)
 }
 
 nsresult
+Convert(BluetoothAvrcpPlayerAttribute aIn, uint8_t& aOut)
+{
+  static const uint8_t sValue[] = {
+    CONVERT(AVRCP_PLAYER_ATTRIBUTE_EQUALIZER, 0x01),
+    CONVERT(AVRCP_PLAYER_ATTRIBUTE_REPEAT, 0x02),
+    CONVERT(AVRCP_PLAYER_ATTRIBUTE_SHUFFLE, 0x03),
+    CONVERT(AVRCP_PLAYER_ATTRIBUTE_SCAN, 0x04)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sValue))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sValue[aIn];
+  return NS_OK;
+}
+
+nsresult
 Convert(BluetoothAvrcpRemoteFeature aIn, unsigned long& aOut)
 {
   if (NS_WARN_IF(aIn < std::numeric_limits<unsigned long>::min()) ||
@@ -668,6 +696,23 @@ Convert(BluetoothAvrcpRemoteFeature aIn, unsigned long& aOut)
     return NS_ERROR_ILLEGAL_VALUE;
   }
   aOut = static_cast<unsigned long>(aIn);
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothAvrcpStatus aIn, uint8_t& aOut)
+{
+  static const uint8_t sValue[] = {
+    CONVERT(AVRCP_STATUS_BAD_COMMAND, 0x00),
+    CONVERT(AVRCP_STATUS_BAD_PARAMETER, 0x01),
+    CONVERT(AVRCP_STATUS_NOT_FOUND, 0x02),
+    CONVERT(AVRCP_STATUS_INTERNAL_ERROR, 0x03),
+    CONVERT(AVRCP_STATUS_SUCCESS, 0x04)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sValue))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sValue[aIn];
   return NS_OK;
 }
 
@@ -1090,6 +1135,19 @@ PackPDU(BluetoothAvrcpNotification aIn, BluetoothDaemonPDU& aPDU)
 {
   return PackPDU(
     PackConversion<BluetoothAvrcpNotification, uint8_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(BluetoothAvrcpPlayerAttribute aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(
+    PackConversion<BluetoothAvrcpPlayerAttribute, uint8_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(BluetoothAvrcpStatus aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(PackConversion<BluetoothAvrcpStatus, uint8_t>(aIn), aPDU);
 }
 
 nsresult
