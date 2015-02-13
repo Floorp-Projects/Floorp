@@ -7,6 +7,7 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/MediaKeyStatusMap.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/dom/ToJSValue.h"
 
 namespace mozilla {
 namespace dom {
