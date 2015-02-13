@@ -127,9 +127,9 @@ HTMLTableCellElement::SetAbbr(const nsAString& aAbbr)
 NS_IMETHODIMP
 HTMLTableCellElement::GetAbbr(nsAString& aAbbr)
 {
-  nsString abbr;
+  DOMString abbr;
   GetAbbr(abbr);
-  aAbbr = abbr;
+  abbr.ToString(aAbbr);
   return NS_OK;
 }
 
@@ -144,9 +144,9 @@ HTMLTableCellElement::SetAxis(const nsAString& aAxis)
 NS_IMETHODIMP
 HTMLTableCellElement::GetAxis(nsAString& aAxis)
 {
-  nsString axis;
+  DOMString axis;
   GetAxis(axis);
-  aAxis = axis;
+  axis.ToString(aAxis);
   return NS_OK;
 }
 
@@ -161,9 +161,9 @@ HTMLTableCellElement::SetAlign(const nsAString& aAlign)
 NS_IMETHODIMP
 HTMLTableCellElement::GetAlign(nsAString& aAlign)
 {
-  nsString align;
+  DOMString align;
   GetAlign(align);
-  aAlign = align;
+  align.ToString(aAlign);
   return NS_OK;
 }
 
@@ -178,9 +178,9 @@ HTMLTableCellElement::SetVAlign(const nsAString& aVAlign)
 NS_IMETHODIMP
 HTMLTableCellElement::GetVAlign(nsAString& aVAlign)
 {
-  nsString vAlign;
+  DOMString vAlign;
   GetVAlign(vAlign);
-  aVAlign = vAlign;
+  vAlign.ToString(aVAlign);
   return NS_OK;
 }
 
@@ -195,9 +195,9 @@ HTMLTableCellElement::SetCh(const nsAString& aCh)
 NS_IMETHODIMP
 HTMLTableCellElement::GetCh(nsAString& aCh)
 {
-  nsString ch;
+  DOMString ch;
   GetCh(ch);
-  aCh = ch;
+  ch.ToString(aCh);
   return NS_OK;
 }
 
@@ -212,9 +212,9 @@ HTMLTableCellElement::SetChOff(const nsAString& aChOff)
 NS_IMETHODIMP
 HTMLTableCellElement::GetChOff(nsAString& aChOff)
 {
-  nsString chOff;
+  DOMString chOff;
   GetChOff(chOff);
-  aChOff = chOff;
+  chOff.ToString(aChOff);
   return NS_OK;
 }
 
@@ -229,9 +229,9 @@ HTMLTableCellElement::SetBgColor(const nsAString& aBgColor)
 NS_IMETHODIMP
 HTMLTableCellElement::GetBgColor(nsAString& aBgColor)
 {
-  nsString bgColor;
+  DOMString bgColor;
   GetBgColor(bgColor);
-  aBgColor = bgColor;
+  bgColor.ToString(aBgColor);
   return NS_OK;
 }
 
@@ -246,9 +246,9 @@ HTMLTableCellElement::SetHeight(const nsAString& aHeight)
 NS_IMETHODIMP
 HTMLTableCellElement::GetHeight(nsAString& aHeight)
 {
-  nsString height;
+  DOMString height;
   GetHeight(height);
-  aHeight = height;
+  height.ToString(aHeight);
   return NS_OK;
 }
 
@@ -263,9 +263,9 @@ HTMLTableCellElement::SetWidth(const nsAString& aWidth)
 NS_IMETHODIMP
 HTMLTableCellElement::GetWidth(nsAString& aWidth)
 {
-  nsString width;
+  DOMString width;
   GetWidth(width);
-  aWidth = width;
+  width.ToString(aWidth);
   return NS_OK;
 }
 
@@ -295,9 +295,9 @@ HTMLTableCellElement::SetScope(const nsAString& aScope)
 NS_IMETHODIMP
 HTMLTableCellElement::GetScope(nsAString& aScope)
 {
-  nsString scope;
+  DOMString scope;
   GetScope(scope);
-  aScope = scope;
+  scope.ToString(aScope);
   return NS_OK;
 }
 
@@ -312,9 +312,9 @@ HTMLTableCellElement::SetHeaders(const nsAString& aHeaders)
 NS_IMETHODIMP
 HTMLTableCellElement::GetHeaders(nsAString& aHeaders)
 {
-  nsString headers;
+  DOMString headers;
   GetHeaders(headers);
-  aHeaders = headers;
+  headers.ToString(aHeaders);
   return NS_OK;
 }
 
@@ -349,7 +349,7 @@ HTMLTableCellElement::GetRowSpan(int32_t* aRowSpan)
 }
 
 void
-HTMLTableCellElement::GetAlign(nsString& aValue)
+HTMLTableCellElement::GetAlign(DOMString& aValue)
 {
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::align, aValue)) {
     // There's no align attribute, ask the row for the alignment.

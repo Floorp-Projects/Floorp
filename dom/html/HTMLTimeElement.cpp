@@ -32,7 +32,7 @@ HTMLTimeElement::WrapNode(JSContext* cx)
 }
 
 void
-HTMLTimeElement::GetItemValueText(nsAString& text)
+HTMLTimeElement::GetItemValueText(DOMString& text)
 {
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::datetime)) {
     GetDateTime(text);

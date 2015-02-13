@@ -177,7 +177,7 @@ public:
 protected:
   virtual ~HTMLIFrameElement();
 
-  virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
+  virtual void GetItemValueText(DOMString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
 
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
