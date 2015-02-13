@@ -27,7 +27,7 @@ const STRING_TYPE_NAME         = "type.%ID%.name";
 const SEC_IN_A_DAY              = 24 * 60 * 60;
 
 const EME_PREF_ENABLED         = "media.eme.enabled";
-const NS_GRE_BIN_DIR           = "GreBinD";
+const NS_GRE_BIN_DIR           = "GreD";
 const CLEARKEY_PLUGIN_ID       = "gmp-clearkey";
 const CLEARKEY_VERSION         = "0.1";
 
