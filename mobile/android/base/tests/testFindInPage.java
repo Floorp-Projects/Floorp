@@ -11,12 +11,11 @@ import org.mozilla.gecko.Element;
 import org.mozilla.gecko.R;
 
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.util.GeckoEventListener;
 
-import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.json.JSONObject;
 
-public class testFindInPage extends JavascriptTest implements NativeEventListener {
+public class testFindInPage extends JavascriptTest implements GeckoEventListener {
     private static final int WAIT_FOR_TEST = 3000;
     protected Element next, close;
 
@@ -25,15 +24,14 @@ public class testFindInPage extends JavascriptTest implements NativeEventListene
     }
 
     @Override
-    public void handleMessage(final String event, final NativeJSObject message,
-                              final EventCallback callback) {
+    public void handleMessage(String event, final JSONObject message) {
         if (event.equals("Test:FindInPage")) {
             try {
                 final String text = message.getString("text");
-                final int nrOfMatches = message.getInt("nrOfMatches");
+                final int nrOfMatches = Integer.parseInt(message.getString("nrOfMatches"));
                 findText(text, nrOfMatches);
             } catch (Exception e) {
-                callback.sendError("Can't extract find query from JSON :" + e.toString());
+                fFail("Can't extract find query from JSON");
             }
         }
 
@@ -41,11 +39,9 @@ public class testFindInPage extends JavascriptTest implements NativeEventListene
             try {
                 close.click();
             } catch (Exception e) {
-                callback.sendError("FindInPage prompt not opened");
+                fFail("FindInPage prompt not opened");
             }
         }
-
-        callback.sendSuccess("done");
     }
 
     @Override
