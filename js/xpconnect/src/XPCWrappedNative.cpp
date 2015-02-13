@@ -802,6 +802,12 @@ XPCWrappedNative::FinishInit()
     MOZ_ASSERT(1 == mRefCnt, "unexpected refcount value");
     NS_ADDREF(this);
 
+    if (mScriptableInfo && mScriptableInfo->GetFlags().WantCreate() &&
+        NS_FAILED(mScriptableInfo->GetCallback()->Create(this, cx,
+                                                         mFlatJSObject))) {
+        return false;
+    }
+
     // A hack for bug 517665, increase the probability for GC.
     JS_updateMallocCounter(cx, 2 * sizeof(XPCWrappedNative));
 

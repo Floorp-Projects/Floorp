@@ -1613,6 +1613,7 @@ public:
 #define GET_IT(f_) const {return 0 != (mFlags & nsIXPCScriptable:: f_ );}
 
     bool WantPreCreate()                GET_IT(WANT_PRECREATE)
+    bool WantCreate()                   GET_IT(WANT_CREATE)
     bool WantAddProperty()              GET_IT(WANT_ADDPROPERTY)
     bool WantDelProperty()              GET_IT(WANT_DELPROPERTY)
     bool WantGetProperty()              GET_IT(WANT_GETPROPERTY)
