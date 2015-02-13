@@ -2096,8 +2096,8 @@ def methodLength(method):
 
 def isMaybeExposedIn(member, descriptor):
     # All we can say for sure is that if this is a worker descriptor
-    # and member is only exposed in windows, then it's not exposed.
-    return not descriptor.workers or member.exposureSet != set(["Window"])
+    # and member is not exposed in any worker, then it's not exposed.
+    return not descriptor.workers or member.isExposedInAnyWorker()
 
 def clearableCachedAttrs(descriptor):
     return (m for m in descriptor.interface.members if
