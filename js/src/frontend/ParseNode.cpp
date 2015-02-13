@@ -178,17 +178,6 @@ PushUnaryNodeChild(ParseNode *node, NodeStack *stack)
     return PushResult::Recyclable;
 }
 
-static PushResult
-PushBinaryNodeChildren(ParseNode *node, NodeStack *stack)
-{
-    MOZ_ASSERT(node->isArity(PN_BINARY));
-
-    stack->push(node->pn_left);
-    stack->push(node->pn_right);
-
-    return PushResult::Recyclable;
-}
-
 /*
  * Push the children of |pn| on |stack|. Return true if |pn| itself could be
  * safely recycled, or false if it must be cleaned later (pn_used and pn_defn
@@ -279,8 +268,12 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       case PNK_WHILE:
       case PNK_SWITCH:
       case PNK_LETBLOCK:
-      case PNK_FOR:
-        return PushBinaryNodeChildren(pn, stack);
+      case PNK_FOR: {
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        stack->push(pn->pn_left);
+        stack->push(pn->pn_right);
+        return PushResult::Recyclable;
+      }
 
       // PNK_WITH is PN_BINARY_OBJ -- that is, PN_BINARY with (irrelevant for
       // this method's purposes) the addition of the StaticWithObject as
