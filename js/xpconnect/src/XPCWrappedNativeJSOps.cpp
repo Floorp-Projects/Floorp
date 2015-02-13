@@ -781,14 +781,6 @@ XPC_WN_Helper_SetProperty(JSContext *cx, HandleObject obj, HandleId id, bool str
 }
 
 static bool
-XPC_WN_Helper_Convert(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp)
-{
-    PRE_HELPER_STUB
-    Convert(wrapper, cx, obj, type, vp.address(), &retval);
-    POST_HELPER_STUB
-}
-
-static bool
 XPC_WN_Helper_Call(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -1056,10 +1048,7 @@ XPCNativeScriptableShared::PopulateJSClass()
     // We have to figure out resolve strategy at call time
     mJSClass.base.resolve = XPC_WN_Helper_Resolve;
 
-    if (mFlags.WantConvert())
-        mJSClass.base.convert = XPC_WN_Helper_Convert;
-    else
-        mJSClass.base.convert = XPC_WN_Shared_Convert;
+    mJSClass.base.convert = XPC_WN_Shared_Convert;
 
     if (mFlags.WantFinalize())
         mJSClass.base.finalize = XPC_WN_Helper_Finalize;
