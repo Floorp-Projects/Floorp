@@ -43,6 +43,16 @@ endif
 		$(dist_include_dir) $(@D) $(idl_deps_dir) $(libxul_sdk_includes) \
 		$(basename $(notdir $@)) $($(basename $(notdir $@))_deps)
 
+# Chrome manifests may be written from several Makefiles at various times during
+# the build. The 'buildlist' action adds to the file if it already exists, but
+# if it does exist, make considers it to be up-to-date (as we have no inputs to
+# depend on). We use FORCE to ensure that we always add the interface manifest,
+# whether or not the chrome manifest already exists.
+%/chrome.manifest: FORCE
+	$(call py_action,buildlist,$@ 'manifest components/interfaces.manifest')
+
+chrome_manifests := @chrome_manifests@
+
 xpidl_modules := @xpidl_modules@
 xpt_files := @xpt_files@
 
@@ -52,7 +62,7 @@ depends_files := $(foreach root,$(xpidl_modules),$(idl_deps_dir)/$(root).pp)
 
 GARBAGE += $(xpt_files) $(depends_files)
 
-xpidl:: $(xpt_files)
+xpidl:: $(xpt_files) $(chrome_manifests)
 
 $(xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir))
 

@@ -814,7 +814,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         for idl in context['XPIDL_SOURCES']:
             yield XPIDLFile(context, mozpath.join(context.srcdir, idl),
-                xpidl_module)
+                xpidl_module, add_to_manifest=not context['XPIDL_NO_MANIFEST'])
 
     def _process_generated_files(self, context):
         generated_files = context.get('GENERATED_FILES')
