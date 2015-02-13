@@ -17,7 +17,7 @@ import org.json.JSONObject;
 
 import com.jayway.android.robotium.solo.Condition;
 
-public class testFindInPage extends JavascriptTest implements NativeEventListener {
+public class testFindInPage extends JavascriptTest implements GeckoEventListener {
     private static final int WAIT_FOR_CONDITION_MS = 3000;
 
     protected Element next, close;
