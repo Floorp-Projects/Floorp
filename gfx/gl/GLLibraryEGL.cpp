@@ -35,8 +35,7 @@ static const char *sEGLExtensionNames[] = {
     "EGL_EXT_create_context_robustness",
     "EGL_KHR_image",
     "EGL_KHR_fence_sync",
-    "EGL_ANDROID_native_fence_sync",
-    nullptr
+    "EGL_ANDROID_native_fence_sync"
 };
 
 #if defined(ANDROID)
@@ -240,8 +239,8 @@ GLLibraryEGL::EnsureInitialized()
     };
 
     // Do not warn about the failure to load this - see bug 1092191
-    GLLibraryLoader::LoadSymbols(mEGLLibrary, &optionalSymbols[0],
-				 nullptr, nullptr, false);
+    GLLibraryLoader::LoadSymbols(mEGLLibrary, &optionalSymbols[0], nullptr, nullptr,
+                                 false);
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
     MOZ_RELEASE_ASSERT(mSymbols.fQueryStringImplementationANDROID,
@@ -421,15 +420,24 @@ GLLibraryEGL::EnsureInitialized()
 void
 GLLibraryEGL::InitExtensions()
 {
-    const char *extensions = (const char*)fQueryString(mEGLDisplay, LOCAL_EGL_EXTENSIONS);
+    std::vector<nsCString> driverExtensionList;
 
-    if (!extensions) {
+    const char* rawExts = (const char*)fQueryString(mEGLDisplay, LOCAL_EGL_EXTENSIONS);
+    if (rawExts) {
+        nsDependentCString exts(rawExts);
+        SplitByChar(exts, ' ', &driverExtensionList);
+    } else {
         NS_WARNING("Failed to load EGL extension list!");
-        return;
     }
 
-    GLContext::InitializeExtensionsBitSet(mAvailableExtensions, extensions,
-                                          sEGLExtensionNames);
+    const bool shouldDumpExts = GLContext::ShouldDumpExts();
+    if (shouldDumpExts) {
+        printf_stderr("%i EGL driver extensions: (*: recognized)\n",
+                      (uint32_t)driverExtensionList.size());
+    }
+
+    MarkBitfieldByStrings(driverExtensionList, shouldDumpExts, sEGLExtensionNames,
+                          &mAvailableExtensions);
 }
 
 void
