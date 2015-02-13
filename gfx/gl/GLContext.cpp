@@ -584,7 +584,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 "Imagination",
                 "nouveau",
                 "Vivante",
-                "VMware, Inc."
+                "VMware, Inc.",
+                "ARM"
         };
 
         mVendor = GLVendor::Other;
