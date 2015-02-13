@@ -308,7 +308,7 @@ const Class ForOfPIC::jsclass = {
 js::ForOfPIC::createForOfPICObject(JSContext *cx, Handle<GlobalObject*> global)
 {
     assertSameCompartment(cx, global);
-    NativeObject *obj = NewNativeObjectWithGivenProto(cx, &ForOfPIC::jsclass, nullptr, global);
+    NativeObject *obj = NewNativeObjectWithGivenProto(cx, &ForOfPIC::jsclass, NullPtr(), global);
     if (!obj)
         return nullptr;
     ForOfPIC::Chain *chain = cx->new_<ForOfPIC::Chain>();

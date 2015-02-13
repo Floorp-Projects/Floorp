@@ -234,7 +234,7 @@ GlobalObject::createInternal(JSContext *cx, const Class *clasp)
     MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
     MOZ_ASSERT(clasp->trace == JS_GlobalObjectTraceHook);
 
-    JSObject *obj = NewObjectWithGivenProto(cx, clasp, nullptr, NullPtr(), SingletonObject);
+    JSObject *obj = NewObjectWithGivenProto(cx, clasp, NullPtr(), NullPtr(), SingletonObject);
     if (!obj)
         return nullptr;
 
@@ -435,11 +435,11 @@ GlobalObject::createConstructor(JSContext *cx, Native ctor, JSAtom *nameArg, uns
 }
 
 static NativeObject *
-CreateBlankProto(JSContext *cx, const Class *clasp, JSObject &proto, HandleObject global)
+CreateBlankProto(JSContext *cx, const Class *clasp, HandleObject proto, HandleObject global)
 {
     MOZ_ASSERT(clasp != &JSFunction::class_);
 
-    RootedNativeObject blankProto(cx, NewNativeObjectWithGivenProto(cx, clasp, &proto, global,
+    RootedNativeObject blankProto(cx, NewNativeObjectWithGivenProto(cx, clasp, proto, global,
                                                                     SingletonObject));
     if (!blankProto || !blankProto->setDelegate(cx))
         return nullptr;
@@ -451,15 +451,15 @@ NativeObject *
 GlobalObject::createBlankPrototype(JSContext *cx, const Class *clasp)
 {
     Rooted<GlobalObject*> self(cx, this);
-    JSObject *objectProto = getOrCreateObjectPrototype(cx);
+    RootedObject objectProto(cx, getOrCreateObjectPrototype(cx));
     if (!objectProto)
         return nullptr;
 
-    return CreateBlankProto(cx, clasp, *objectProto, self);
+    return CreateBlankProto(cx, clasp, objectProto, self);
 }
 
 NativeObject *
-GlobalObject::createBlankPrototypeInheriting(JSContext *cx, const Class *clasp, JSObject &proto)
+GlobalObject::createBlankPrototypeInheriting(JSContext *cx, const Class *clasp, HandleObject proto)
 {
     Rooted<GlobalObject*> self(cx, this);
     return CreateBlankProto(cx, clasp, proto, self);
@@ -521,7 +521,8 @@ GlobalObject::getOrCreateDebuggers(JSContext *cx, Handle<GlobalObject*> global)
     if (debuggers)
         return debuggers;
 
-    NativeObject *obj = NewNativeObjectWithGivenProto(cx, &GlobalDebuggees_class, nullptr, global);
+    NativeObject *obj = NewNativeObjectWithGivenProto(cx, &GlobalDebuggees_class, NullPtr(),
+                                                      global);
     if (!obj)
         return nullptr;
     debuggers = cx->new_<DebuggerVector>();

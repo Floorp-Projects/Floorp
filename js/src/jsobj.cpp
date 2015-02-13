@@ -1389,9 +1389,9 @@ FindProto(ExclusiveContext *cx, const js::Class *clasp, MutableHandleObject prot
 
 
 JSObject *
-js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg, const Class *clasp, JSObject *protoArg,
-                                  HandleObject maybeParent, gc::AllocKind allocKind,
-                                  NewObjectKind newKind)
+js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg, const Class *clasp,
+                                  HandleObject protoArg, HandleObject maybeParent,
+                                  gc::AllocKind allocKind, NewObjectKind newKind)
 {
     if (protoArg) {
         return NewObjectWithGivenTaggedProto(cxArg, clasp, TaggedProto(protoArg), maybeParent,
@@ -1430,10 +1430,8 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg, const Class *clasp, J
                 if (obj) {
                     return obj;
                 } else {
-                    RootedObject proto(cxArg, protoArg);
                     obj = cache.newObjectFromHit<CanGC>(cx, entry, GetInitialHeap(newKind, clasp));
                     MOZ_ASSERT(!obj);
-                    protoArg = proto;
                 }
             } else {
                 gcNumber = rt->gc.gcNumber();
@@ -1442,7 +1440,6 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg, const Class *clasp, J
     }
 
     RootedObject proto(cxArg, protoArg);
-
     if (!FindProto(cxArg, clasp, &proto))
         return nullptr;
 
@@ -1540,7 +1537,7 @@ js::CreateThis(JSContext *cx, const Class *newclasp, HandleObject callee)
     if (!GetProperty(cx, callee, callee, cx->names().prototype, &protov))
         return nullptr;
 
-    JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : nullptr;
+    RootedObject proto(cx, protov.isObjectOrNull() ? protov.toObjectOrNull() : nullptr);
     RootedObject parent(cx, callee->getParent());
     gc::AllocKind kind = NewObjectGCKind(newclasp);
     return NewObjectWithClassProto(cx, newclasp, proto, parent, kind);
@@ -1605,7 +1602,7 @@ CreateThisForFunctionWithGroup(JSContext *cx, HandleObjectGroup group, JSObject 
 }
 
 JSObject *
-js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject *proto,
+js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, HandleObject proto,
                                    NewObjectKind newKind /* = GenericObject */)
 {
     RootedObject res(cx);
@@ -1652,11 +1649,9 @@ js::CreateThisForFunction(JSContext *cx, HandleObject callee, NewObjectKind newK
     RootedValue protov(cx);
     if (!GetProperty(cx, callee, callee, cx->names().prototype, &protov))
         return nullptr;
-    JSObject *proto;
+    RootedObject proto(cx);
     if (protov.isObject())
         proto = &protov.toObject();
-    else
-        proto = nullptr;
     JSObject *obj = CreateThisForFunctionWithProto(cx, callee, proto, newKind);
 
     if (obj && newKind == SingletonObject) {
@@ -1837,10 +1832,10 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind 
         RootedObjectGroup group(cx, obj->getGroup(cx));
         if (!group)
             return nullptr;
+        RootedObject proto(cx, group->proto().toObject());
         RootedObject parent(cx, obj->getParent());
-        clone = NewNativeObjectWithGivenProto(cx, &PlainObject::class_,
-                                              group->proto().toObject(),
-                                              parent, kind, newKind);
+        clone = NewNativeObjectWithGivenProto(cx, &PlainObject::class_, proto, parent, kind,
+                                              newKind);
     }
 
     // Allocate the same number of slots.

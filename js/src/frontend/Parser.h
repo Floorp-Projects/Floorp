@@ -438,7 +438,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
      * Create a new function object given a name (which is optional if this is
      * a function expression).
      */
-    JSFunction *newFunction(HandleAtom atom, FunctionSyntaxKind kind, JSObject *proto = nullptr);
+    JSFunction *newFunction(HandleAtom atom, FunctionSyntaxKind kind, HandleObject proto);
 
     void trace(JSTracer *trc);
 

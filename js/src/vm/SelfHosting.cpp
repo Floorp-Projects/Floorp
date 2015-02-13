@@ -1257,7 +1257,7 @@ CloneObject(JSContext *cx, HandleNativeObject selfHostedObject)
         clone = NewDenseEmptyArray(cx, nullptr, TenuredObject);
     } else {
         MOZ_ASSERT(selfHostedObject->isNative());
-        clone = NewObjectWithGivenProto(cx, selfHostedObject->getClass(), nullptr, cx->global(),
+        clone = NewObjectWithGivenProto(cx, selfHostedObject->getClass(), NullPtr(), cx->global(),
                                         selfHostedObject->asTenured().getAllocKind(),
                                         SingletonObject);
     }
