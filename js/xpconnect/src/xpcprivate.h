@@ -3753,7 +3753,7 @@ ObjectScope(JSObject *obj)
     return CompartmentPrivate::Get(obj)->scope;
 }
 
-JSObject* NewOutObject(JSContext* cx, JSObject* scope);
+JSObject* NewOutObject(JSContext* cx);
 bool IsOutObject(JSContext* cx, JSObject* obj);
 
 nsresult HasInstance(JSContext *cx, JS::HandleObject objArg, const nsID *iid, bool *bp);
