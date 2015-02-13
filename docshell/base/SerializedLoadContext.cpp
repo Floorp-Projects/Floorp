@@ -34,7 +34,8 @@ SerializedLoadContext::SerializedLoadContext(nsIChannel* aChannel)
     bool isOverriden = false;
     nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(aChannel);
     if (pbChannel &&
-        NS_SUCCEEDED(pbChannel->IsPrivateModeOverriden(&isPrivate, &isOverriden)) &&
+        NS_SUCCEEDED(pbChannel->IsPrivateModeOverriden(&isPrivate,
+                                                       &isOverriden)) &&
         isOverriden) {
       mUsePrivateBrowsing = isPrivate;
       mIsPrivateBitValid = true;

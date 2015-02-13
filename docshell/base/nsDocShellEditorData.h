@@ -19,26 +19,24 @@ class nsIEditor;
 class nsDocShellEditorData
 {
 public:
-
-  explicit nsDocShellEditorData(nsIDocShell* inOwningDocShell);
+  explicit nsDocShellEditorData(nsIDocShell* aOwningDocShell);
   ~nsDocShellEditorData();
 
-  nsresult MakeEditable(bool inWaitForUriLoad);
+  nsresult MakeEditable(bool aWaitForUriLoad);
   bool GetEditable();
   nsresult CreateEditor();
-  nsresult GetEditingSession(nsIEditingSession **outEditingSession);
-  nsresult GetEditor(nsIEditor **outEditor);
-  nsresult SetEditor(nsIEditor *inEditor);
+  nsresult GetEditingSession(nsIEditingSession** aResult);
+  nsresult GetEditor(nsIEditor** aResult);
+  nsresult SetEditor(nsIEditor* aEditor);
   void TearDownEditor();
   nsresult DetachFromWindow();
-  nsresult ReattachToWindow(nsIDocShell *aDocShell);
+  nsresult ReattachToWindow(nsIDocShell* aDocShell);
   bool WaitingForLoad() const { return mMakeEditable; }
 
 protected:
-
   nsresult EnsureEditingSession();
 
-  // The doc shell that owns us. Weak ref, since it always outlives us.  
+  // The doc shell that owns us. Weak ref, since it always outlives us.
   nsIDocShell* mDocShell;
 
   // Only present for the content root docShell. Session is owned here.
@@ -46,7 +44,7 @@ protected:
 
   // Indicates whether to make an editor after a url load.
   bool mMakeEditable;
-  
+
   // If this frame is editable, store editor here. Editor is owned here.
   nsCOMPtr<nsIEditor> mEditor;
 
@@ -62,6 +60,5 @@ protected:
   nsIHTMLDocument::EditingState mDetachedEditingState;
 
 };
-
 
 #endif // nsDocShellEditorData_h__

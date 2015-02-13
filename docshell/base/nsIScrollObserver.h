@@ -27,13 +27,13 @@ public:
    * Called when an async panning/zooming transform has started being applied
    * and passed the scroll offset
    */
-  virtual void AsyncPanZoomStarted(const mozilla::CSSIntPoint scrollPos){};
+  virtual void AsyncPanZoomStarted(const mozilla::CSSIntPoint aScrollPos) {};
 
   /**
    * Called when an async panning/zooming transform is no longer applied
    * and passed the scroll offset
    */
-  virtual void AsyncPanZoomStopped(const mozilla::CSSIntPoint scrollPos){};
+  virtual void AsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos) {};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScrollObserver, NS_ISCROLLOBSERVER_IID)

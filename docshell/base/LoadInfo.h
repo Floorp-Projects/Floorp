@@ -56,11 +56,11 @@ private:
 
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-  nsWeakPtr              mLoadingContext;
-  nsSecurityFlags        mSecurityFlags;
-  nsContentPolicyType    mContentPolicyType;
-  nsCOMPtr<nsIURI>       mBaseURI;
-  uint32_t               mInnerWindowID;
+  nsWeakPtr mLoadingContext;
+  nsSecurityFlags mSecurityFlags;
+  nsContentPolicyType mContentPolicyType;
+  nsCOMPtr<nsIURI> mBaseURI;
+  uint32_t mInnerWindowID;
 };
 
 } // namespace mozilla
