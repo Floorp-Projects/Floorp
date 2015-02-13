@@ -2141,7 +2141,7 @@ HTMLMediaElement::~HTMLMediaElement()
 }
 
 void
-HTMLMediaElement::GetItemValueText(nsAString& aValue)
+HTMLMediaElement::GetItemValueText(DOMString& aValue)
 {
   // Can't call GetSrc because we don't have a JSContext
   GetURIAttr(nsGkAtoms::src, nullptr, aValue);
