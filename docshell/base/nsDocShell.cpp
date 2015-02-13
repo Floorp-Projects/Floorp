@@ -690,9 +690,6 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
   // channel.  The networking subsystem will take care of that for us.
   nsPingListener* pingListener =
     new nsPingListener(info->requireSameHost, aContent, loadGroup);
-  if (!pingListener) {
-    return;
-  }
 
   nsCOMPtr<nsIStreamListener> listener(pingListener);
 
@@ -12772,9 +12769,6 @@ nsDocShell::EnsureTransferableHookData()
 {
   if (!mTransferableHookData) {
     mTransferableHookData = new nsTransferableHookData();
-    if (!mTransferableHookData) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
   }
 
   return NS_OK;
