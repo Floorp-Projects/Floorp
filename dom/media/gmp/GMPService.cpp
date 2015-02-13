@@ -182,6 +182,10 @@ GeckoMediaPluginService::Init()
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "last-pb-context-exited", false)));
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "browser:purge-session-history", false)));
 
+#ifdef DEBUG
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "mediakeys-request", false)));
+#endif
+
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
     prefs->AddObserver("media.gmp.plugin.crash", this, false);
@@ -218,7 +222,8 @@ GeckoMediaPluginService::Observe(nsISupports* aSubject,
                                  const char* aTopic,
                                  const char16_t* aSomeData)
 {
-  LOGD(("%s::%s: %s", __CLASS__, __FUNCTION__, aTopic));
+  LOGD(("%s::%s topic='%s' data='%s'", __CLASS__, __FUNCTION__,
+       aTopic, NS_ConvertUTF16toUTF8(aSomeData).get()));
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsCOMPtr<nsIPrefBranch> branch( do_QueryInterface(aSubject) );
     if (branch) {

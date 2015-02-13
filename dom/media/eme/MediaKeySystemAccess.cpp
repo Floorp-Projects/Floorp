@@ -18,6 +18,8 @@
 #include "nsServiceManagerUtils.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "VideoUtils.h"
+#include "mozilla/Services.h"
+#include "nsIObserverService.h"
 
 namespace mozilla {
 namespace dom {
@@ -90,35 +92,48 @@ HaveGMPFor(mozIGeckoMediaPluginService* aGMPService,
 }
 
 /* static */
-bool
-MediaKeySystemAccess::IsKeySystemSupported(const nsAString& aKeySystem)
+MediaKeySystemStatus
+MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem)
 {
+  MOZ_ASSERT(Preferences::GetBool("media.eme.enabled", false));
   nsCOMPtr<mozIGeckoMediaPluginService> mps =
     do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   if (NS_WARN_IF(!mps)) {
-    return false;
+    return MediaKeySystemStatus::Error;
   }
 
-  if (aKeySystem.EqualsLiteral("org.w3.clearkey") &&
-      HaveGMPFor(mps,
-                 NS_LITERAL_CSTRING("org.w3.clearkey"),
-                 NS_LITERAL_CSTRING(GMP_API_DECRYPTOR))) {
-    return true;
+  if (aKeySystem.EqualsLiteral("org.w3.clearkey")) {
+    if (!Preferences::GetBool("media.eme.clearkey.enabled", true)) {
+      return MediaKeySystemStatus::Cdm_disabled;
+    }
+    if (!HaveGMPFor(mps,
+                    NS_LITERAL_CSTRING("org.w3.clearkey"),
+                    NS_LITERAL_CSTRING(GMP_API_DECRYPTOR))) {
+      return MediaKeySystemStatus::Cdm_not_installed;
+    }
+    return MediaKeySystemStatus::Available;
   }
 
 #ifdef XP_WIN
   if ((aKeySystem.EqualsLiteral("com.adobe.access") ||
-       aKeySystem.EqualsLiteral("com.adobe.primetime")) &&
-      Preferences::GetBool("media.eme.adobe-access.enabled", false) &&
-      IsVistaOrLater() && // Win Vista and later only.
-      HaveGMPFor(mps,
-                 NS_ConvertUTF16toUTF8(aKeySystem),
-                 NS_LITERAL_CSTRING(GMP_API_DECRYPTOR))) {
-      return true;
+       aKeySystem.EqualsLiteral("com.adobe.primetime"))) {
+    // Win Vista and later only.
+    if (!IsVistaOrLater()) {
+      return MediaKeySystemStatus::Cdm_not_supported;
+    }
+    if (!Preferences::GetBool("media.eme.adobe-access.enabled", false)) {
+      return MediaKeySystemStatus::Cdm_disabled;
+    }
+    if (!HaveGMPFor(mps,
+                    NS_ConvertUTF16toUTF8(aKeySystem),
+                    NS_LITERAL_CSTRING(GMP_API_DECRYPTOR))) {
+      return MediaKeySystemStatus::Cdm_not_installed;
+    }
+    return MediaKeySystemStatus::Available;
   }
 #endif
 
-  return false;
+  return MediaKeySystemStatus::Cdm_not_supported;
 }
 
 static bool
@@ -207,6 +222,22 @@ MediaKeySystemAccess::IsSupported(const nsAString& aKeySystem,
     return true;
   }
   return false;
+}
+
+/* static */
+void
+MediaKeySystemAccess::NotifyObservers(const nsAString& aKeySystem,
+                                      MediaKeySystemStatus aStatus)
+{
+  RequestMediaKeySystemAccessNotification data;
+  data.mKeySystem = aKeySystem;
+  data.mStatus = aStatus;
+  nsAutoString json;
+  data.ToJSON(json);
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, "mediakeys-request", json.get());
+  }
 }
 
 } // namespace dom

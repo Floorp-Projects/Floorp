@@ -14,6 +14,8 @@
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
+#include "mozilla/dom/MediaKeysRequestStatusBinding.h"
+
 #include "js/TypeDecls.h"
 
 namespace mozilla {
@@ -42,10 +44,13 @@ public:
 
   already_AddRefed<Promise> CreateMediaKeys(ErrorResult& aRv);
 
-  static bool IsKeySystemSupported(const nsAString& aKeySystem);
+  static MediaKeySystemStatus GetKeySystemStatus(const nsAString& aKeySystem);
 
   static bool IsSupported(const nsAString& aKeySystem,
                           const Sequence<MediaKeySystemOptions>& aOptions);
+
+  static void NotifyObservers(const nsAString& aKeySystem,
+                              MediaKeySystemStatus aStatus);
 
 private:
   nsCOMPtr<nsPIDOMWindow> mParent;
