@@ -723,12 +723,6 @@ nsXPConnect::RescueOrphansInScope(JSContext *aJSContext, JSObject *aScopeArg)
     wrappersToMove.SetCapacity(map->Count());
     map->Enumerate(MoveableWrapperFinder, &wrappersToMove);
 
-    // Now that we have the wrappers, reparent them to the new scope.
-    for (uint32_t i = 0, stop = wrappersToMove.Length(); i < stop; ++i) {
-        nsresult rv = wrappersToMove[i]->RescueOrphans();
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
     return NS_OK;
 }
 
