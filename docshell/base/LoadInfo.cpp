@@ -93,12 +93,12 @@ LoadInfo::TriggeringPrincipal()
 }
 
 NS_IMETHODIMP
-LoadInfo::GetLoadingDocument(nsIDOMDocument** outLoadingDocument)
+LoadInfo::GetLoadingDocument(nsIDOMDocument** aResult)
 {
   nsCOMPtr<nsINode> node = do_QueryReferent(mLoadingContext);
   if (node) {
     nsCOMPtr<nsIDOMDocument> context = do_QueryInterface(node->OwnerDoc());
-    context.forget(outLoadingDocument);
+    context.forget(aResult);
   }
   return NS_OK;
 }
@@ -111,16 +111,17 @@ LoadInfo::LoadingNode()
 }
 
 NS_IMETHODIMP
-LoadInfo::GetSecurityFlags(nsSecurityFlags* outSecurityFlags)
+LoadInfo::GetSecurityFlags(nsSecurityFlags* aResult)
 {
-  *outSecurityFlags = mSecurityFlags;
+  *aResult = mSecurityFlags;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 LoadInfo::GetForceInheritPrincipal(bool* aInheritPrincipal)
 {
-  *aInheritPrincipal = (mSecurityFlags & nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL);
+  *aInheritPrincipal =
+    (mSecurityFlags & nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL);
   return NS_OK;
 }
 
@@ -132,9 +133,9 @@ LoadInfo::GetLoadingSandboxed(bool* aLoadingSandboxed)
 }
 
 NS_IMETHODIMP
-LoadInfo::GetContentPolicyType(nsContentPolicyType* outContentPolicyType)
+LoadInfo::GetContentPolicyType(nsContentPolicyType* aResult)
 {
-  *outContentPolicyType = mContentPolicyType;
+  *aResult = mContentPolicyType;
   return NS_OK;
 }
 
@@ -153,9 +154,9 @@ LoadInfo::BaseURI()
 }
 
 NS_IMETHODIMP
-LoadInfo::GetInnerWindowID(uint32_t* outInnerWindowID)
+LoadInfo::GetInnerWindowID(uint32_t* aResult)
 {
-  *outInnerWindowID = mInnerWindowID;
+  *aResult = mInnerWindowID;
   return NS_OK;
 }
 

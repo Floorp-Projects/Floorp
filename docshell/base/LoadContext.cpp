@@ -159,7 +159,7 @@ LoadContext::GetAppId(uint32_t* aAppId)
 // LoadContext::nsIInterfaceRequestor
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP
-LoadContext::GetInterface(const nsIID &aIID, void **aResult)
+LoadContext::GetInterface(const nsIID& aIID, void** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nullptr;

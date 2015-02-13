@@ -11,7 +11,6 @@ nsTransferableHookData::nsTransferableHookData()
 {
 }
 
-
 nsTransferableHookData::~nsTransferableHookData()
 {
 }
@@ -24,33 +23,34 @@ NS_IMPL_ISUPPORTS(nsTransferableHookData, nsIClipboardDragDropHookList)
 
 NS_IMETHODIMP
 nsTransferableHookData::AddClipboardDragDropHooks(
-                                        nsIClipboardDragDropHooks *aOverrides)
+    nsIClipboardDragDropHooks* aOverrides)
 {
-    NS_ENSURE_ARG(aOverrides);
+  NS_ENSURE_ARG(aOverrides);
 
-    // don't let a hook be added more than once
-    if (mHookList.IndexOfObject(aOverrides) == -1)
-    {
-        if (!mHookList.AppendObject(aOverrides))
-            return NS_ERROR_FAILURE;
+  // don't let a hook be added more than once
+  if (mHookList.IndexOfObject(aOverrides) == -1) {
+    if (!mHookList.AppendObject(aOverrides)) {
+      return NS_ERROR_FAILURE;
     }
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTransferableHookData::RemoveClipboardDragDropHooks(
-                                         nsIClipboardDragDropHooks *aOverrides)
+    nsIClipboardDragDropHooks* aOverrides)
 {
-    NS_ENSURE_ARG(aOverrides);
-    if (!mHookList.RemoveObject(aOverrides))
-        return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG(aOverrides);
+  if (!mHookList.RemoveObject(aOverrides)) {
+    return NS_ERROR_FAILURE;
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTransferableHookData::GetHookEnumerator(nsISimpleEnumerator **aResult)
+nsTransferableHookData::GetHookEnumerator(nsISimpleEnumerator** aResult)
 {
-    return NS_NewArrayEnumerator(aResult, mHookList);
+  return NS_NewArrayEnumerator(aResult, mHookList);
 }

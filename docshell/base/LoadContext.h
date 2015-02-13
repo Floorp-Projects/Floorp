@@ -31,8 +31,9 @@ namespace mozilla {
  * to separate the safebrowsing cookie.
  */
 
-class LoadContext MOZ_FINAL : public nsILoadContext,
-                              public nsIInterfaceRequestor
+class LoadContext MOZ_FINAL
+  : public nsILoadContext
+  , public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS
@@ -112,15 +113,15 @@ public:
 private:
   ~LoadContext() {}
 
-  nsWeakPtr     mTopFrameElement;
-  uint64_t      mNestedFrameId;
-  uint32_t      mAppId;
-  bool          mIsContent;
-  bool          mUsePrivateBrowsing;
-  bool          mUseRemoteTabs;
-  bool          mIsInBrowserElement;
+  nsWeakPtr mTopFrameElement;
+  uint64_t mNestedFrameId;
+  uint32_t mAppId;
+  bool mIsContent;
+  bool mUsePrivateBrowsing;
+  bool mUseRemoteTabs;
+  bool mIsInBrowserElement;
 #ifdef DEBUG
-  bool          mIsNotNull;
+  bool mIsNotNull;
 #endif
 };
 
