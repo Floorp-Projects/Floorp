@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1118689
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1118689</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1118689 **/
+  SimpleTest.requestFlakyTimeout("Just need some random timeout.");
+
+  function test1() {
+    // test 1, check that error handling in data documents is still the same
+    //         as it has been for ages.
+    var d = document.implementation.createHTMLDocument();
+    d.body.innerHTML = "<img onerror='ok(false, \"EventHandler shouldn't be called in data document\")'>";
+    d.body.firstChild.addEventListener("error",
+      function() {
+        ok(true, "EventListener should be called in data document");
+        test2();
+      });
+    d.body.firstChild.addEventListener("load",
+      function() {
+        ok(false, "Images in data document shouldn't be loaded");
+      });
+    d.body.firstChild.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP";
+  }
+
+  function test2() {
+    // test 2, check that load event doesn't keep up being dispatched if
+    //         window has been closed.
+    var win = window.open('data:text/html,<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP" onload="this.src = this.src">',
+                          "", "height=100,width=100");
+    setTimeout(function() {
+        win.close();
+        SimpleTest.finish();
+      }, 2500);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  </script>
+</head>
+<body onload="test1();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1118689">Mozilla Bug 1118689</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
