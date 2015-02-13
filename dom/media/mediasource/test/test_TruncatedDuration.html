@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: truncating the media seeks to end of media and update buffered range</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// This test append data to a mediasource and then seek to half the duration
+// of the video.
+// We then shorten the video to 1/3rd of its original size by modifying the
+// mediasource.duration attribute.
+// We ensure that the buffered range immediately reflect the truncation
+// and that we've seeked to the new end of the media as per W3C spec and
+// video.currentTime got updated.
+
+SimpleTest.waitForExplicitFinish();
+
+function round(n) {
+  return Math.round(n * 1000) / 1000;
+}
+
+function do_seeking(e) {
+  var v = e.target;
+  v.removeEventListener("seeking", do_seeking, false);
+  SimpleTest.finish();
+}
+
+function do_seeked(e) {
+  var v = e.target;
+  v.removeEventListener("seeked", do_seeked, false);
+  var duration = round(v.duration / 3);
+  v._ms.duration = duration
+  v._sb.abort(); // this shouldn't abort updating the duration (bug 1130826).
+  ok(v.seeking, "seeking is true");
+  // test playback position was updated (bug 1130839).
+  is(v.currentTime, duration, "current time was updated");
+  is(v.duration, duration, "element duration was updated");
+  is(v._sb.buffered.length, 1, "One buffered range");
+  is(v._sb.buffered.end(0), duration, "sourcebuffer truncated");
+  // Truncated mediasource duration will cause the video element to seek.
+  v.addEventListener("seeking", do_seeking, false);
+}
+
+function do_loaded(e) {
+  var v = e.target;
+  v.removeEventListener("loadeddata", do_loaded, false);
+  v.currentTime = v.duration / 2;
+  is(v.currentTime, v.duration / 2, "current time was updated");
+  ok(v.seeking, "seeking is true");
+  v.addEventListener("seeked", do_seeked, false);
+}
+
+runWithMSE(function (ms, v) {
+  ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer("video/webm");
+    v._sb = sb;
+    v._ms = ms;
+
+    fetchWithXHR("seek.webm", function (arrayBuffer) {
+      sb.appendBuffer(new Uint8Array(arrayBuffer));
+      v.addEventListener("loadeddata", do_loaded, false);
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

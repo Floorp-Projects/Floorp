@@ -38,10 +38,11 @@ class DebuggerMemory : public NativeObject {
     // Accessor properties of Debugger.Memory.prototype.
     static bool setTrackingAllocationSites(JSContext *cx, unsigned argc, Value *vp);
     static bool getTrackingAllocationSites(JSContext *cx, unsigned argc, Value *vp);
-    static bool setMaxAllocationsLogLength(JSContext*cx, unsigned argc, Value *vp);
-    static bool getMaxAllocationsLogLength(JSContext*cx, unsigned argc, Value *vp);
-    static bool setAllocationSamplingProbability(JSContext*cx, unsigned argc, Value *vp);
-    static bool getAllocationSamplingProbability(JSContext*cx, unsigned argc, Value *vp);
+    static bool setMaxAllocationsLogLength(JSContext *cx, unsigned argc, Value *vp);
+    static bool getMaxAllocationsLogLength(JSContext *cx, unsigned argc, Value *vp);
+    static bool setAllocationSamplingProbability(JSContext *cx, unsigned argc, Value *vp);
+    static bool getAllocationSamplingProbability(JSContext *cx, unsigned argc, Value *vp);
+    static bool getAllocationsLogOverflowed(JSContext *cx, unsigned argc, Value *vp);
 
     // Function properties of Debugger.Memory.prototype.
     static bool takeCensus(JSContext *cx, unsigned argc, Value *vp);

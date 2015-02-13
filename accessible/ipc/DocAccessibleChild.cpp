@@ -8,6 +8,7 @@
 
 #include "Accessible-inl.h"
 #include "ProxyAccessible.h"
+#include "Relation.h"
 
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
@@ -44,6 +45,20 @@ SerializeTree(Accessible* aRoot, nsTArray<AccessibleData>& aTree)
     SerializeTree(aRoot->GetChildAt(i), aTree);
 }
 
+Accessible*
+DocAccessibleChild::IdToAccessible(const uint64_t& aID)
+{
+  return mDoc->GetAccessibleByUniqueID(reinterpret_cast<void*>(aID));
+}
+
+HyperTextAccessible*
+DocAccessibleChild::IdToHyperTextAccessible(const uint64_t& aID)
+{
+  Accessible* acc = IdToAccessible(aID);
+  MOZ_ASSERT(!acc || acc->IsHyperText());
+  return acc ? acc->AsHyperText() : nullptr;
+}
+
 void
 DocAccessibleChild::ShowEvent(AccShowEvent* aShowEvent)
 {
@@ -59,7 +74,7 @@ DocAccessibleChild::ShowEvent(AccShowEvent* aShowEvent)
 bool
 DocAccessibleChild::RecvState(const uint64_t& aID, uint64_t* aState)
 {
-  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  Accessible* acc = IdToAccessible(aID);
   if (!acc) {
     *aState = states::DEFUNCT;
     return true;
@@ -73,7 +88,7 @@ DocAccessibleChild::RecvState(const uint64_t& aID, uint64_t* aState)
 bool
 DocAccessibleChild::RecvName(const uint64_t& aID, nsString* aName)
 {
-  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  Accessible* acc = IdToAccessible(aID);
   if (!acc)
     return true;
 
@@ -82,9 +97,21 @@ DocAccessibleChild::RecvName(const uint64_t& aID, nsString* aName)
 }
 
 bool
+DocAccessibleChild::RecvValue(const uint64_t& aID, nsString* aValue)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (!acc) {
+    return true;
+  }
+
+  acc->Value(*aValue);
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvDescription(const uint64_t& aID, nsString* aDesc)
 {
-  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  Accessible* acc = IdToAccessible(aID);
   if (!acc)
     return true;
 
@@ -95,7 +122,7 @@ DocAccessibleChild::RecvDescription(const uint64_t& aID, nsString* aDesc)
 bool
 DocAccessibleChild::RecvAttributes(const uint64_t& aID, nsTArray<Attribute>* aAttributes)
 {
-  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  Accessible* acc = IdToAccessible(aID);
   if (!acc)
     return true;
 
@@ -131,17 +158,123 @@ DocAccessibleChild::RecvAttributes(const uint64_t& aID, nsTArray<Attribute>* aAt
 }
 
 bool
+DocAccessibleChild::RecvRelationByType(const uint64_t& aID,
+                                       const uint32_t& aType,
+                                       nsTArray<uint64_t>* aTargets)
+{
+  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  if (!acc)
+    return false;
+
+  auto type = static_cast<RelationType>(aType);
+  Relation rel = acc->RelationByType(type);
+  while (Accessible* target = rel.Next())
+    aTargets->AppendElement(reinterpret_cast<uintptr_t>(target));
+
+  return true;
+}
+
+static void
+AddRelation(Accessible* aAcc, RelationType aType,
+            nsTArray<RelationTargets>* aTargets)
+{
+  Relation rel = aAcc->RelationByType(aType);
+  nsTArray<uint64_t> targets;
+  while (Accessible* target = rel.Next())
+    targets.AppendElement(reinterpret_cast<uintptr_t>(target));
+
+  if (!targets.IsEmpty()) {
+    RelationTargets* newRelation =
+      aTargets->AppendElement(RelationTargets(static_cast<uint32_t>(aType),
+                                              nsTArray<uint64_t>()));
+    newRelation->Targets().SwapElements(targets);
+  }
+}
+
+bool
+DocAccessibleChild::RecvRelations(const uint64_t& aID,
+                                  nsTArray<RelationTargets>* aRelations)
+{
+  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  if (!aID)
+    return false;
+
+#define RELATIONTYPE(gecko, s, a, m, i) AddRelation(acc, RelationType::gecko, aRelations);
+
+#include "RelationTypeMap.h"
+#undef RELATIONTYPE
+
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvTextSubstring(const uint64_t& aID,
                                       const int32_t& aStartOffset,
                                       const int32_t& aEndOffset,
                                       nsString* aText)
 {
-  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
-  if (!acc || !acc->IsHyperText())
-    return false;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (!acc) {
+    return true;
+  }
 
-  acc->AsHyperText()->TextSubstring(aStartOffset, aEndOffset, *aText);
+  acc->TextSubstring(aStartOffset, aEndOffset, *aText);
   return true;
 }
+
+bool
+DocAccessibleChild::RecvGetTextAfterOffset(const uint64_t& aID,
+                                           const int32_t& aOffset,
+                                           const AccessibleTextBoundary& aBoundaryType,
+                                           nsString* aText,
+                                           int32_t* aStartOffset,
+                                           int32_t* aEndOffset)
+{
+  *aStartOffset = 0;
+  *aEndOffset = 0;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc) {
+    acc->TextAfterOffset(aOffset, aBoundaryType,
+                         aStartOffset, aEndOffset, *aText);
+  }
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvGetTextAtOffset(const uint64_t& aID,
+                                        const int32_t& aOffset,
+                                        const AccessibleTextBoundary& aBoundaryType,
+                                        nsString* aText,
+                                        int32_t* aStartOffset,
+                                        int32_t* aEndOffset)
+{
+  *aStartOffset = 0;
+  *aEndOffset = 0;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc) {
+    acc->TextAtOffset(aOffset, aBoundaryType,
+                      aStartOffset, aEndOffset, *aText);
+  }
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvGetTextBeforeOffset(const uint64_t& aID,
+                                            const int32_t& aOffset,
+                                            const AccessibleTextBoundary& aBoundaryType,
+                                            nsString* aText,
+                                            int32_t* aStartOffset,
+                                            int32_t* aEndOffset)
+{
+  *aStartOffset = 0;
+  *aEndOffset = 0;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc) {
+    acc->TextBeforeOffset(aOffset, aBoundaryType,
+                          aStartOffset, aEndOffset, *aText);
+  }
+  return true;
+}
+
 }
 }

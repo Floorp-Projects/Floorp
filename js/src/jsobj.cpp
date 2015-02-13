@@ -466,69 +466,6 @@ Reject(JSContext *cx, HandleId id, unsigned errorNumber, bool throwError, bool *
     return true;
 }
 
-static unsigned
-ApplyOrDefaultAttributes(unsigned attrs, Handle<PropertyDescriptor> desc)
-{
-    bool present = !!desc.object();
-    bool enumerable = present ? desc.isEnumerable() : false;
-    bool writable = present ? !desc.isReadonly() : false;
-    bool configurable = present ? !desc.isPermanent() : false;
-    return ApplyAttributes(attrs, enumerable, writable, configurable);
-}
-
-// See comments on CheckDefineProperty in jsfriendapi.h.
-//
-// DefinePropertyOnObject has its own implementation of these checks.
-//
-JS_FRIEND_API(bool)
-js::CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                        unsigned attrs, PropertyOp getter, StrictPropertyOp setter)
-{
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
-
-    if (!obj->isNative())
-        return true;
-
-    // ES5 8.12.9 Step 1. Even though we know obj is native, we use generic
-    // APIs for shorter, more readable code.
-    Rooted<PropertyDescriptor> desc(cx);
-    if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
-        return false;
-
-    // Appropriately handle the potential for ignored attributes. Since the proxy code calls us
-    // directly, these might flow in legitimately. Ensure that we compare against the values that
-    // are intended.
-    attrs = ApplyOrDefaultAttributes(attrs, desc) & ~JSPROP_IGNORE_VALUE;
-
-    // This does not have to check obj's extensibility when !desc.obj (steps
-    // 2-3) because the low-level methods JSObject::{add,put}Property check
-    // for that.
-    if (desc.object() && desc.isPermanent()) {
-        // Steps 6-11, skipping step 10.a.ii. Prohibit redefining a permanent
-        // property with different metadata, except to make a writable property
-        // non-writable.
-        if (getter != desc.getter() ||
-            setter != desc.setter() ||
-            (attrs != desc.attributes() && attrs != (desc.attributes() | JSPROP_READONLY)))
-        {
-            return Throw(cx, id, JSMSG_CANT_REDEFINE_PROP);
-        }
-
-        // Step 10.a.ii. Prohibit changing the value of a non-configurable,
-        // non-writable data property.
-        if ((desc.attributes() & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_READONLY)) == JSPROP_READONLY) {
-            bool same;
-            if (!SameValue(cx, value, desc.value(), &same))
-                return false;
-            if (!same)
-                return JSObject::reportReadOnly(cx, id);
-        }
-    }
-    return true;
-}
-
-
 /*** Standard-compliant property definition (used by Object.defineProperty) **********************/
 
 static bool
@@ -1101,31 +1038,47 @@ js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
     } else {
         RootedId id(cx);
         Rooted<PropertyDescriptor> desc(cx);
+
+        const unsigned AllowConfigure = JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY |
+                                        JSPROP_IGNORE_VALUE;
+        const unsigned AllowConfigureAndWritable = AllowConfigure & ~JSPROP_IGNORE_READONLY;
+
+        // 8.a/9.a. The two different loops are merged here.
         for (size_t i = 0; i < keys.length(); i++) {
             id = keys[i];
 
-            if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
-                return false;
+            if (level == IntegrityLevel::Sealed) {
+                // 8.a.i.
+                desc.setAttributes(AllowConfigure | JSPROP_PERMANENT);
+            } else {
+                // 9.a.i-ii.
+                Rooted<PropertyDescriptor> currentDesc(cx);
+                if (!GetOwnPropertyDescriptor(cx, obj, id, &currentDesc))
+                    return false;
 
-            if (!desc.object())
-                continue;
+                // 9.a.iii.
+                if (!currentDesc.object())
+                    continue;
 
-            unsigned attrs = desc.attributes();
-            unsigned new_attrs = GetSealedOrFrozenAttributes(attrs, level);
+                // 9.a.iii.1-2
+                if (currentDesc.isAccessorDescriptor())
+                    desc.setAttributes(AllowConfigure | JSPROP_PERMANENT);
+                else
+                    desc.setAttributes(AllowConfigureAndWritable | JSPROP_PERMANENT | JSPROP_READONLY);
+            }
 
-            // If we already have the attributes we need, skip the setAttributes call.
-            if ((attrs | new_attrs) == attrs)
-                continue;
+            desc.object().set(obj);
 
-            attrs |= new_attrs;
-            if (!SetPropertyAttributes(cx, obj, id, &attrs))
+            // 8.a.i-ii. / 9.a.iii.3-4
+            bool result;
+            if (!StandardDefineProperty(cx, obj, id, desc, &result))
                 return false;
         }
     }
 
     // Ordinarily ArraySetLength handles this, but we're going behind its back
     // right now, so we must do this manually.  Neither the custom property
-    // tree mutations nor the setPropertyAttributes call in the above code will
+    // tree mutations nor the StandardDefineProperty call in the above code will
     // do this for us.
     //
     // ArraySetLength also implements the capacity <= length invariant for
@@ -1277,7 +1230,7 @@ NewObjectCache::fillProto(EntryIndex entry, const Class *clasp, js::TaggedProto 
 
 JSObject *
 js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
-                            js::TaggedProto protoArg, JSObject *parentArg,
+                            js::TaggedProto protoArg, HandleObject parentArg,
                             gc::AllocKind allocKind, NewObjectKind newKind)
 {
     if (CanBeFinalizedInBackground(allocKind, clasp))
@@ -1301,10 +1254,8 @@ js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
                     return obj;
                 } else {
                     Rooted<TaggedProto> proto(cxArg, protoArg);
-                    RootedObject parent(cxArg, parentArg);
                     obj = cache.newObjectFromHit<CanGC>(cx, entry, GetInitialHeap(newKind, clasp));
                     MOZ_ASSERT(!obj);
-                    parentArg = parent;
                     protoArg = proto;
                 }
             } else {
@@ -1438,18 +1389,19 @@ FindProto(ExclusiveContext *cx, const js::Class *clasp, MutableHandleObject prot
 
 
 JSObject *
-js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
-                                  const js::Class *clasp, JSObject *protoArg, JSObject *parentArg,
-                                  gc::AllocKind allocKind, NewObjectKind newKind)
+js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg, const Class *clasp, JSObject *protoArg,
+                                  HandleObject maybeParent, gc::AllocKind allocKind,
+                                  NewObjectKind newKind)
 {
-    if (protoArg)
-        return NewObjectWithGivenProto(cxArg, clasp, TaggedProto(protoArg), parentArg, allocKind, newKind);
+    if (protoArg) {
+        return NewObjectWithGivenProto(cxArg, clasp, TaggedProto(protoArg), maybeParent, allocKind,
+                                       newKind);
+    }
 
     if (CanBeFinalizedInBackground(allocKind, clasp))
         allocKind = GetBackgroundAllocKind(allocKind);
 
-    if (!parentArg)
-        parentArg = cxArg->global();
+    HandleObject parent = maybeParent ? maybeParent : GlobalObject::upcast(cxArg->global());
 
     /*
      * Use the object cache, except for classes without a cached proto key.
@@ -1467,23 +1419,21 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
     if (JSContext *cx = cxArg->maybeJSContext()) {
         JSRuntime *rt = cx->runtime();
         NewObjectCache &cache = rt->newObjectCache;
-        if (parentArg->is<GlobalObject>() &&
+        if (parent->is<GlobalObject>() &&
             protoKey != JSProto_Null &&
             newKind == GenericObject &&
             clasp->isNative() &&
             !cx->compartment()->hasObjectMetadataCallback())
         {
-            if (cache.lookupGlobal(clasp, &parentArg->as<GlobalObject>(), allocKind, &entry)) {
+            if (cache.lookupGlobal(clasp, &parent->as<GlobalObject>(), allocKind, &entry)) {
                 JSObject *obj = cache.newObjectFromHit<NoGC>(cx, entry, GetInitialHeap(newKind, clasp));
                 if (obj) {
                     return obj;
                 } else {
-                    RootedObject parent(cxArg, parentArg);
                     RootedObject proto(cxArg, protoArg);
                     obj = cache.newObjectFromHit<CanGC>(cx, entry, GetInitialHeap(newKind, clasp));
                     MOZ_ASSERT(!obj);
                     protoArg = proto;
-                    parentArg = parent;
                 }
             } else {
                 gcNumber = rt->gc.gcNumber();
@@ -1491,7 +1441,6 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
         }
     }
 
-    RootedObject parent(cxArg, parentArg);
     RootedObject proto(cxArg, protoArg);
 
     if (!FindProto(cxArg, clasp, &proto))
@@ -1592,7 +1541,7 @@ js::CreateThis(JSContext *cx, const Class *newclasp, HandleObject callee)
         return nullptr;
 
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : nullptr;
-    JSObject *parent = callee->getParent();
+    RootedObject parent(cx, callee->getParent());
     gc::AllocKind kind = NewObjectGCKind(newclasp);
     return NewObjectWithClassProto(cx, newclasp, proto, parent, kind);
 }
@@ -1676,8 +1625,9 @@ js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject 
 
         res = CreateThisForFunctionWithGroup(cx, group, callee->getParent(), newKind);
     } else {
+        RootedObject parent(cx, callee->getParent());
         gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
-        res = NewObjectWithProto<PlainObject>(cx, proto, callee->getParent(), allocKind, newKind);
+        res = NewObjectWithProto<PlainObject>(cx, proto, parent, allocKind, newKind);
     }
 
     if (res) {
@@ -2454,7 +2404,7 @@ ClearClassObject(JSObject *obj, JSProtoKey key)
 
 static NativeObject *
 DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, HandleAtom atom,
-                              JSObject *protoProto, const Class *clasp,
+                              HandleObject protoProto, const Class *clasp,
                               Native constructor, unsigned nargs,
                               const JSPropertySpec *ps, const JSFunctionSpec *fs,
                               const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
@@ -2583,7 +2533,7 @@ bad:
 }
 
 NativeObject *
-js_InitClass(JSContext *cx, HandleObject obj, JSObject *protoProto_,
+js_InitClass(JSContext *cx, HandleObject obj, HandleObject protoProto_,
              const Class *clasp, Native constructor, unsigned nargs,
              const JSPropertySpec *ps, const JSFunctionSpec *fs,
              const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,

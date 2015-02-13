@@ -51,15 +51,15 @@ NESTED(_NS_InvokeByIndex, FRAMESZ, ra)
 
     # assume full size of 16 bytes per param to be safe
     sll      v0, 4         # 16 bytes * num params
-    subu     sp, sp, v0    # make room
+    PTR_SUBU sp, sp, v0    # make room
     move     a0, sp        # a0 - param stack address
 
     # create temporary stack space to write int and fp regs
-    subu     sp, 64        # 64 = 8 regs of 8 bytes
+    PTR_SUBU sp, 64        # 64 = 8 regs of 8 bytes
     move     a3, sp
 
     # save the old sp and save the arg stack
-    subu     sp, sp, 16
+    PTR_SUBU sp, sp, 16
     REG_S    t0, 0(sp)
     REG_S    a0, 8(sp)
 
@@ -78,12 +78,12 @@ NESTED(_NS_InvokeByIndex, FRAMESZ, ra)
 
     # calculate the function we need to jump to,
     # which must then be saved in t9
-    lw       t9, 0(a0)
-    addu     t9, t9, t1
-    lw       t9, (t9)
+    PTR_L    t9, 0(a0)
+    PTR_ADDU t9, t9, t1
+    PTR_L    t9, (t9)
 
     # get register save area from invoke_copy_to_stack
-    subu     t1, t3, 64
+    PTR_SUBU t1, t3, 64
 
     # a1..a7 and f13..f19 should now be set to what
     # invoke_copy_to_stack told us. skip a0 and f12

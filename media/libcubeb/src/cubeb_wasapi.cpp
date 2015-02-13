@@ -164,7 +164,7 @@ private:
 
 struct auto_com {
   auto_com()
-  : need_uninit(true) {
+  : need_uninit(false) {
     HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     // This is for information purposes only, in anycase, COM is initialized
     // at the end of the constructor.
@@ -172,14 +172,15 @@ struct auto_com {
       // This is an error, COM was not initialized by this function, so it is
       // not necessary to uninit it.
       LOG("COM already initialized in STA.");
-      need_uninit = false;
     } else if (hr == S_FALSE) {
       // This is not an error. We are allowed to call CoInitializeEx more than
       // once, as long as it is matches by an CoUninitialize call.
       // We do that in the dtor which is guaranteed to be called.
       LOG("COM already initialized in MTA");
+      need_uninit = true;
     } else if (hr == S_OK) {
       LOG("COM initialized.");
+      need_uninit = true;
     }
   }
   ~auto_com() {
@@ -377,6 +378,16 @@ private:
 };
 
 namespace {
+void clock_add(cubeb_stream * stm, LONG64 value)
+{
+  InterlockedExchangeAdd64(&stm->clock, value);
+}
+
+LONG64 clock_get(cubeb_stream * stm)
+{
+  return InterlockedExchangeAdd64(&stm->clock, 0);
+}
+
 bool should_upmix(cubeb_stream * stream)
 {
   return stream->mix_params.channels > stream->stream_params.channels;
@@ -468,7 +479,7 @@ refill(cubeb_stream * stm, float * data, long frames_needed)
 
   long out_frames = cubeb_resampler_fill(stm->resampler, dest, frames_needed);
 
-  stm->clock = InterlockedAdd64(&stm->clock, frames_needed * stream_to_mix_samplerate_ratio(stm));
+  clock_add(stm, frames_needed * stream_to_mix_samplerate_ratio(stm));
 
   /* XXX: Handle this error. */
   if (out_frames < 0) {
@@ -1220,7 +1231,7 @@ int wasapi_stream_get_position(cubeb_stream * stm, uint64_t * position)
 {
   assert(stm && position);
 
-  *position = InterlockedAdd64(&stm->clock, 0);
+  *position = clock_get(stm);
 
   return CUBEB_OK;
 }

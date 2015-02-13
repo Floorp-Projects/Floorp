@@ -85,6 +85,11 @@ following accessor properties from its prototype:
     at a time. This accessor can be both fetched and stored to. Its default
     value is `5000`.
 
+<code id='allocationsLogOverflowed'>allocationsLogOverflowed</a>
+:   Returns `true` if there have been more than
+    [`maxAllocationsLogLength`][#max-alloc-log] allocations since the last time
+    [`drainAllocationsLog`][#drain-alloc-log] was called and some data has been
+    lost. Returns `false` otherwise.
 
 Function Properties of the `Debugger.Memory.prototype` Object
 -------------------------------------------------------------

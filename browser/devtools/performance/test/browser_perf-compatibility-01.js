@@ -12,6 +12,7 @@ function spawnTest () {
     TEST_MOCK_MEMORY_ACTOR: true,
     TEST_MOCK_TIMELINE_ACTOR: true
   });
+  Services.prefs.setBoolPref(MEMORY_PREF, true);
 
   let { memory, timeline } = front.getMocksInUse();
   ok(memory, "memory should be mocked.");

@@ -1729,6 +1729,7 @@ NetworkEventActor.prototype =
       from: this.actorID,
       headers: this._request.headers,
       headersSize: this._request.headersSize,
+      rawHeaders: this._request.rawHeaders,
     };
   },
 
@@ -1787,6 +1788,7 @@ NetworkEventActor.prototype =
       from: this.actorID,
       headers: this._response.headers,
       headersSize: this._response.headersSize,
+      rawHeaders: this._response.rawHeaders,
     };
   },
 
@@ -1843,11 +1845,19 @@ NetworkEventActor.prototype =
    *
    * @param array aHeaders
    *        The request headers array.
+   * @param string aRawHeaders
+   *        The raw headers source.
    */
-  addRequestHeaders: function NEA_addRequestHeaders(aHeaders)
+  addRequestHeaders: function NEA_addRequestHeaders(aHeaders, aRawHeaders)
   {
     this._request.headers = aHeaders;
     this._prepareHeaders(aHeaders);
+
+    var rawHeaders = this.parent._createStringGrip(aRawHeaders);
+    if (typeof rawHeaders == "object") {
+      this._longStringActors.add(rawHeaders);
+    }
+    this._request.rawHeaders = rawHeaders;
 
     let packet = {
       from: this.actorID,
@@ -1911,9 +1921,17 @@ NetworkEventActor.prototype =
    *
    * @param object aInfo
    *        The response information.
+   * @param string aRawHeaders
+   *        The raw headers source.
    */
-  addResponseStart: function NEA_addResponseStart(aInfo)
+  addResponseStart: function NEA_addResponseStart(aInfo, aRawHeaders)
   {
+    var rawHeaders = this.parent._createStringGrip(aRawHeaders);
+    if (typeof rawHeaders == "object") {
+      this._longStringActors.add(rawHeaders);
+    }
+    this._response.rawHeaders = rawHeaders;
+
     this._response.httpVersion = aInfo.httpVersion;
     this._response.status = aInfo.status;
     this._response.statusText = aInfo.statusText;

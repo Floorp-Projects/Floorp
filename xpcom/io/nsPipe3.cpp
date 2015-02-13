@@ -6,10 +6,12 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "nsICloneableInputStream.h"
 #include "nsIPipe.h"
 #include "nsIEventTarget.h"
 #include "nsISeekableStream.h"
 #include "nsIProgrammingLanguage.h"
+#include "nsRefPtr.h"
 #include "nsSegmentedBuffer.h"
 #include "nsStreamUtils.h"
 #include "nsCOMPtr.h"
@@ -88,35 +90,60 @@ private:
 
 //-----------------------------------------------------------------------------
 
-// the input end of a pipe (allocated as a member of the pipe).
+// This class is used to maintain input stream state.  Its broken out from the
+// nsPipeInputStream class because generally the nsPipe should be modifying
+// this state and not the input stream itself.
+struct nsPipeReadState
+{
+  nsPipeReadState()
+    : mReadCursor(nullptr)
+    , mReadLimit(nullptr)
+    , mSegment(0)
+  { }
+
+  char*    mReadCursor;
+  char*    mReadLimit;
+  int32_t  mSegment;
+};
+
+//-----------------------------------------------------------------------------
+
+// an input end of a pipe (maintained as a list of refs within the pipe)
 class nsPipeInputStream
   : public nsIAsyncInputStream
   , public nsISeekableStream
   , public nsISearchableInputStream
+  , public nsICloneableInputStream
   , public nsIClassInfo
 {
 public:
-  // since this class will be allocated as a member of the pipe, we do not
-  // need our own ref count.  instead, we share the lifetime (the ref count)
-  // of the entire pipe.  this macro is just convenience since it does not
-  // declare a mRefCount variable; however, don't let the name fool you...
-  // we are not inheriting from nsPipe ;-)
-  NS_DECL_ISUPPORTS_INHERITED
-
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
   NS_DECL_NSISEARCHABLEINPUTSTREAM
+  NS_DECL_NSICLONEABLEINPUTSTREAM
   NS_DECL_NSICLASSINFO
 
   explicit nsPipeInputStream(nsPipe* aPipe)
     : mPipe(aPipe)
-    , mReaderRefCnt(0)
     , mLogicalOffset(0)
+    , mInputStatus(NS_OK)
     , mBlocking(true)
     , mBlocked(false)
     , mAvailable(0)
     , mCallbackFlags(0)
+  { }
+
+  explicit nsPipeInputStream(const nsPipeInputStream& aOther)
+    : mPipe(aOther.mPipe)
+    , mLogicalOffset(aOther.mLogicalOffset)
+    , mInputStatus(aOther.mInputStatus)
+    , mBlocking(aOther.mBlocking)
+    , mBlocked(false)
+    , mAvailable(aOther.mAvailable)
+    , mCallbackFlags(0)
+    , mReadState(aOther.mReadState)
   { }
 
   nsresult Fill();
@@ -129,10 +156,6 @@ public:
   {
     return mAvailable;
   }
-  void ReduceAvailable(uint32_t aAvail)
-  {
-    mAvailable -= aAvail;
-  }
 
   // synchronously wait for the pipe to become readable.
   nsresult Wait();
@@ -142,12 +165,27 @@ public:
   bool OnInputReadable(uint32_t aBytesWritten, nsPipeEvents&);
   bool OnInputException(nsresult, nsPipeEvents&);
 
-private:
-  nsPipe*                        mPipe;
+  nsPipeReadState& ReadState()
+  {
+    return mReadState;
+  }
 
-  // separate refcnt so that we know when to close the consumer
-  mozilla::ThreadSafeAutoRefCnt  mReaderRefCnt;
+  const nsPipeReadState& ReadState() const
+  {
+    return mReadState;
+  }
+
+  nsresult Status() const;
+
+private:
+  virtual ~nsPipeInputStream();
+
+  nsRefPtr<nsPipe>               mPipe;
+
   int64_t                        mLogicalOffset;
+  // Individual input streams can be closed without effecting the rest of the
+  // pipe.  So track individual input stream status separately.
+  nsresult                       mInputStatus;
   bool                           mBlocking;
 
   // these variables can only be accessed while inside the pipe's monitor
@@ -155,6 +193,9 @@ private:
   uint32_t                       mAvailable;
   nsCOMPtr<nsIInputStreamCallback> mCallback;
   uint32_t                       mCallbackFlags;
+
+  // treat as an opaque token to pass to nsPipe
+  nsPipeReadState                mReadState;
 };
 
 //-----------------------------------------------------------------------------
@@ -240,32 +281,55 @@ public:
   // methods below may only be called while inside the pipe's monitor
   //
 
-  void PeekSegment(uint32_t aIndex, char*& aCursor, char*& aLimit);
+  void PeekSegment(const nsPipeReadState& aReadState, uint32_t aIndex,
+                   char*& aCursor, char*& aLimit);
 
   //
   // methods below may be called while outside the pipe's monitor
   //
 
-  nsresult GetReadSegment(const char*& aSegment, uint32_t& aSegmentLen);
-  void     AdvanceReadCursor(uint32_t aCount);
+  nsresult GetReadSegment(const nsPipeReadState& aReadState,
+                          const char*& aSegment, uint32_t& aSegmentLen);
+  void     AdvanceReadCursor(nsPipeReadState& aReadState, uint32_t aCount,
+                             uint32_t* aAvailableOut);
 
   nsresult GetWriteSegment(char*& aSegment, uint32_t& aSegmentLen);
   void     AdvanceWriteCursor(uint32_t aCount);
 
+  void     OnInputStreamException(nsPipeInputStream* aStream, nsresult aReason);
   void     OnPipeException(nsresult aReason, bool aOutputOnly = false);
 
+  nsresult CloneInputStream(nsPipeInputStream* aOriginal,
+                            nsIInputStream** aCloneOut);
+
 protected:
+  // Only callable with mReetrantMonitor locked
+  uint32_t CountSegmentReferences(int32_t aSegment);
+  void SetAllNullReadCursors();
+  bool AllReadCursorsMatchWriteCursor();
+  void RollBackAllReadCursors(char* aWriteCursor);
+  void UpdateAllReadCursors(char* aWriteCursor);
+  void ValidateAllReadCursors();
+
   // We can't inherit from both nsIInputStream and nsIOutputStream
   // because they collide on their Close method. Consequently we nest their
   // implementations to avoid the extra object allocation.
-  nsPipeInputStream   mInput;
   nsPipeOutputStream  mOutput;
+
+  // Since the input stream can be cloned, we may have more than one.  Use
+  // a weak reference as the streams will clear their entry here in their
+  // destructor.  Using a strong reference would create a reference cycle.
+  // Only usable while mReentrantMonitor is locked.
+  nsTArray<nsPipeInputStream*> mInputList;
+
+  // But hold a strong ref to our original input stream.  For backward
+  // compatibility we need to be able to consistently return this same
+  // object from GetInputStream().  Note, mOriginalInput is also stored
+  // in mInputList as a weak ref.
+  nsRefPtr<nsPipeInputStream> mOriginalInput;
 
   ReentrantMonitor    mReentrantMonitor;
   nsSegmentedBuffer   mBuffer;
-
-  char*               mReadCursor;
-  char*               mReadLimit;
 
   int32_t             mWriteSegment;
   char*               mWriteCursor;
@@ -280,12 +344,12 @@ protected:
 //
 //       +-----------------+ - - mBuffer.GetSegment(0)
 //       |                 |
-//       + - - - - - - - - + - - mReadCursor
+//       + - - - - - - - - + - - nsPipeReadState.mReadCursor
 //       |/////////////////|
 //       |/////////////////|
 //       |/////////////////|
 //       |/////////////////|
-//       +-----------------+ - - mReadLimit
+//       +-----------------+ - - nsPipeReadState.mReadLimit
 //                |
 //       +-----------------+
 //       |/////////////////|
@@ -307,6 +371,11 @@ protected:
 //
 // (shaded region contains data)
 //
+// NOTE: Each input stream produced by the nsPipe contains its own, separate
+//       nsPipeReadState.  This means there are multiple mReadCursor and
+//       mReadLimit values in play.  The pipe cannot discard old data until
+//       all mReadCursors have moved beyond that point in the stream.
+//
 // NOTE: on some systems (notably OS/2), the heap allocator uses an arena for
 // small allocations (e.g., 64 byte allocations).  this means that buffers may
 // be allocated back-to-back.  in the diagram above, for example, mReadLimit
@@ -319,24 +388,41 @@ protected:
 //-----------------------------------------------------------------------------
 
 nsPipe::nsPipe()
-  : mInput(this)
-  , mOutput(this)
+  : mOutput(this)
+  , mOriginalInput(new nsPipeInputStream(this))
   , mReentrantMonitor("nsPipe.mReentrantMonitor")
-  , mReadCursor(nullptr)
-  , mReadLimit(nullptr)
   , mWriteSegment(-1)
   , mWriteCursor(nullptr)
   , mWriteLimit(nullptr)
   , mStatus(NS_OK)
   , mInited(false)
 {
+  mInputList.AppendElement(mOriginalInput);
 }
 
 nsPipe::~nsPipe()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsPipe, nsIPipe)
+NS_IMPL_ADDREF(nsPipe)
+NS_IMPL_QUERY_INTERFACE(nsPipe, nsIPipe)
+
+NS_IMETHODIMP_(MozExternalRefCountType)
+nsPipe::Release()
+{
+  MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
+  nsrefcnt count = --mRefCnt;
+  NS_LOG_RELEASE(this, count, "nsPipe");
+  if (count == 0) {
+    delete (this);
+    return 0;
+  }
+  if (mOriginalInput && count == 1) {
+    mOriginalInput = nullptr;
+    return 1;
+  }
+  return count;
+}
 
 NS_IMETHODIMP
 nsPipe::Init(bool aNonBlockingIn,
@@ -364,15 +450,17 @@ nsPipe::Init(bool aNonBlockingIn,
     return rv;
   }
 
-  mInput.SetNonBlocking(aNonBlockingIn);
   mOutput.SetNonBlocking(aNonBlockingOut);
+  mOriginalInput->SetNonBlocking(aNonBlockingIn);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPipe::GetInputStream(nsIAsyncInputStream** aInputStream)
 {
-  NS_ADDREF(*aInputStream = &mInput);
+  nsRefPtr<nsPipeInputStream> ref = mOriginalInput;
+  ref.forget(aInputStream);
   return NS_OK;
 }
 
@@ -387,19 +475,22 @@ nsPipe::GetOutputStream(nsIAsyncOutputStream** aOutputStream)
 }
 
 void
-nsPipe::PeekSegment(uint32_t aIndex, char*& aCursor, char*& aLimit)
+nsPipe::PeekSegment(const nsPipeReadState& aReadState, uint32_t aIndex,
+                    char*& aCursor, char*& aLimit)
 {
   if (aIndex == 0) {
-    NS_ASSERTION(!mReadCursor || mBuffer.GetSegmentCount(), "unexpected state");
-    aCursor = mReadCursor;
-    aLimit = mReadLimit;
+    NS_ASSERTION(!aReadState.mReadCursor || mBuffer.GetSegmentCount(),
+                 "unexpected state");
+    aCursor = aReadState.mReadCursor;
+    aLimit = aReadState.mReadLimit;
   } else {
+    uint32_t absoluteIndex = aReadState.mSegment + aIndex;
     uint32_t numSegments = mBuffer.GetSegmentCount();
-    if (aIndex >= numSegments) {
+    if (absoluteIndex >= numSegments) {
       aCursor = aLimit = nullptr;
     } else {
-      aCursor = mBuffer.GetSegment(aIndex);
-      if (mWriteSegment == (int32_t)aIndex) {
+      aCursor = mBuffer.GetSegment(absoluteIndex);
+      if (mWriteSegment == (int32_t)absoluteIndex) {
         aLimit = mWriteCursor;
       } else {
         aLimit = aCursor + mBuffer.GetSegmentSize();
@@ -409,21 +500,23 @@ nsPipe::PeekSegment(uint32_t aIndex, char*& aCursor, char*& aLimit)
 }
 
 nsresult
-nsPipe::GetReadSegment(const char*& aSegment, uint32_t& aSegmentLen)
+nsPipe::GetReadSegment(const nsPipeReadState& aReadState, const char*& aSegment,
+                       uint32_t& aSegmentLen)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  if (mReadCursor == mReadLimit) {
+  if (aReadState.mReadCursor == aReadState.mReadLimit) {
     return NS_FAILED(mStatus) ? mStatus : NS_BASE_STREAM_WOULD_BLOCK;
   }
 
-  aSegment    = mReadCursor;
-  aSegmentLen = mReadLimit - mReadCursor;
+  aSegment    = aReadState.mReadCursor;
+  aSegmentLen = aReadState.mReadLimit - aReadState.mReadCursor;
   return NS_OK;
 }
 
 void
-nsPipe::AdvanceReadCursor(uint32_t aBytesRead)
+nsPipe::AdvanceReadCursor(nsPipeReadState& aReadState, uint32_t aBytesRead,
+                          uint32_t* aAvailableOut)
 {
   NS_ASSERTION(aBytesRead, "don't call if no bytes read");
 
@@ -434,42 +527,61 @@ nsPipe::AdvanceReadCursor(uint32_t aBytesRead)
     LOG(("III advancing read cursor by %u\n", aBytesRead));
     NS_ASSERTION(aBytesRead <= mBuffer.GetSegmentSize(), "read too much");
 
-    mReadCursor += aBytesRead;
-    NS_ASSERTION(mReadCursor <= mReadLimit, "read cursor exceeds limit");
+    aReadState.mReadCursor += aBytesRead;
+    NS_ASSERTION(aReadState.mReadCursor <= aReadState.mReadLimit,
+                 "read cursor exceeds limit");
 
-    mInput.ReduceAvailable(aBytesRead);
+    MOZ_ASSERT(*aAvailableOut >= aBytesRead);
+    *aAvailableOut -= aBytesRead;
 
-    if (mReadCursor == mReadLimit) {
+    if (aReadState.mReadCursor == aReadState.mReadLimit) {
       // we've reached the limit of how much we can read from this segment.
       // if at the end of this segment, then we must discard this segment.
 
       // if still writing in this segment then bail because we're not done
       // with the segment and have to wait for now...
-      if (mWriteSegment == 0 && mWriteLimit > mWriteCursor) {
-        NS_ASSERTION(mReadLimit == mWriteCursor, "unexpected state");
+      if (mWriteSegment == aReadState.mSegment && mWriteLimit > mWriteCursor) {
+        NS_ASSERTION(aReadState.mReadLimit == mWriteCursor, "unexpected state");
         return;
       }
 
-      // shift write segment index (-1 indicates an empty buffer).
-      --mWriteSegment;
+      uint32_t currentSegment = aReadState.mSegment;
 
-      // done with this segment
-      mBuffer.DeleteFirstSegment();
-      LOG(("III deleting first segment\n"));
+      // Move to the next segment to read
+      aReadState.mSegment += 1;
 
-      if (mWriteSegment == -1) {
-        // buffer is completely empty
-        mReadCursor = nullptr;
-        mReadLimit = nullptr;
-        mWriteCursor = nullptr;
-        mWriteLimit = nullptr;
+      // If this was the last reference to the first segment, then remove it.
+      if (currentSegment == 0 && CountSegmentReferences(currentSegment) == 0) {
+
+        // shift write and read segment index (-1 indicates an empty buffer).
+        mWriteSegment -= 1;
+
+        for (uint32_t i = 0; i < mInputList.Length(); ++i) {
+          mInputList[i]->ReadState().mSegment -= 1;
+        }
+
+        // done with this segment
+        mBuffer.DeleteFirstSegment();
+        LOG(("III deleting first segment\n"));
+      }
+
+      if (mWriteSegment < aReadState.mSegment) {
+        // read cursor has hit the end of written data, so reset it
+        MOZ_ASSERT(mWriteSegment == (aReadState.mSegment - 1));
+        aReadState.mReadCursor = nullptr;
+        aReadState.mReadLimit = nullptr;
+        // also, the buffer is completely empty, so reset the write cursor
+        if (mWriteSegment == -1) {
+          mWriteCursor = nullptr;
+          mWriteLimit = nullptr;
+        }
       } else {
         // advance read cursor and limit to next buffer segment
-        mReadCursor = mBuffer.GetSegment(0);
-        if (mWriteSegment == 0) {
-          mReadLimit = mWriteCursor;
+        aReadState.mReadCursor = mBuffer.GetSegment(aReadState.mSegment);
+        if (mWriteSegment == aReadState.mSegment) {
+          aReadState.mReadLimit = mWriteCursor;
         } else {
-          mReadLimit = mReadCursor + mBuffer.GetSegmentSize();
+          aReadState.mReadLimit = aReadState.mReadCursor + mBuffer.GetSegmentSize();
         }
       }
 
@@ -505,17 +617,15 @@ nsPipe::GetWriteSegment(char*& aSegment, uint32_t& aSegmentLen)
   }
 
   // make sure read cursor is initialized
-  if (!mReadCursor) {
-    NS_ASSERTION(mWriteSegment == 0, "unexpected null read cursor");
-    mReadCursor = mReadLimit = mWriteCursor;
-  }
+  SetAllNullReadCursors();
 
   // check to see if we can roll-back our read and write cursors to the
   // beginning of the current/first segment.  this is purely an optimization.
-  if (mReadCursor == mWriteCursor && mWriteSegment == 0) {
+  if (mWriteSegment == 0 && AllReadCursorsMatchWriteCursor()) {
     char* head = mBuffer.GetSegment(0);
     LOG(("OOO rolling back write cursor %u bytes\n", mWriteCursor - head));
-    mWriteCursor = mReadCursor = mReadLimit = head;
+    RollBackAllReadCursors(head);
+    mWriteCursor = head;
   }
 
   aSegment    = mWriteCursor;
@@ -538,35 +648,11 @@ nsPipe::AdvanceWriteCursor(uint32_t aBytesWritten)
     NS_ASSERTION(newWriteCursor <= mWriteLimit, "write cursor exceeds limit");
 
     // update read limit if reading in the same segment
-    if (mWriteSegment == 0 && mReadLimit == mWriteCursor) {
-      mReadLimit = newWriteCursor;
-    }
+    UpdateAllReadCursors(newWriteCursor);
 
     mWriteCursor = newWriteCursor;
 
-    // The only way mReadCursor == mWriteCursor is if:
-    //
-    // - mReadCursor is at the start of a segment (which, based on how
-    //   nsSegmentedBuffer works, means that this segment is the "first"
-    //   segment)
-    // - mWriteCursor points at the location past the end of the current
-    //   write segment (so the current write filled the current write
-    //   segment, so we've incremented mWriteCursor to point past the end
-    //   of it)
-    // - the segment to which data has just been written is located
-    //   exactly one segment's worth of bytes before the first segment
-    //   where mReadCursor is located
-    //
-    // Consequently, the byte immediately after the end of the current
-    // write segment is the first byte of the first segment, so
-    // mReadCursor == mWriteCursor.  (Another way to think about this is
-    // to consider the buffer architecture diagram above, but consider it
-    // with an arena allocator which allocates from the *end* of the
-    // arena to the *beginning* of the arena.)
-    NS_ASSERTION(mReadCursor != mWriteCursor ||
-                 (mBuffer.GetSegment(0) == mReadCursor &&
-                  mWriteCursor == mWriteLimit),
-                 "read cursor is bad");
+    ValidateAllReadCursors();
 
     // update the writable flag on the output stream
     if (mWriteCursor == mWriteLimit) {
@@ -576,8 +662,58 @@ nsPipe::AdvanceWriteCursor(uint32_t aBytesWritten)
     }
 
     // notify input stream that pipe now contains additional data
-    if (mInput.OnInputReadable(aBytesWritten, events)) {
-      mon.Notify();
+    bool needNotify = false;
+    for (uint32_t i = 0; i < mInputList.Length(); ++i) {
+      if (mInputList[i]->OnInputReadable(aBytesWritten, events)) {
+        needNotify = true;
+      }
+    }
+
+    if (needNotify) {
+      mon.NotifyAll();
+    }
+  }
+}
+
+void
+nsPipe::OnInputStreamException(nsPipeInputStream* aStream, nsresult aReason)
+{
+  MOZ_ASSERT(NS_FAILED(aReason));
+
+  nsPipeEvents events;
+  {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+    // Its possible to re-enter this method when we call OnPipeException() or
+    // OnInputExection() below.  If there is a caller stuck in our synchronous
+    // Wait() method, then they will get woken up with a failure code which
+    // re-enters this method.  Therefore, gracefully handle unknown streams
+    // here.
+
+    // If we only have one stream open and it is the given stream, then shut
+    // down the entire pipe.
+    if (mInputList.Length() == 1) {
+      if (mInputList[0] == aStream) {
+        OnPipeException(aReason);
+      }
+      return;
+    }
+
+    // Otherwise just close the particular stream that hit an exception.
+    for (uint32_t i = 0; i < mInputList.Length(); ++i) {
+      if (mInputList[i] != aStream) {
+        continue;
+      }
+
+      bool needNotify = mInputList[i]->OnInputException(aReason, events);
+      mInputList.RemoveElementAt(i);
+
+      // Notify after element is removed in case we re-enter as a result.
+      if (needNotify) {
+        mon.Notify();
+      }
+
+      return;
     }
   }
 }
@@ -599,21 +735,145 @@ nsPipe::OnPipeException(nsresult aReason, bool aOutputOnly)
 
     mStatus = aReason;
 
-    // an output-only exception applies to the input end if the pipe has
-    // zero bytes available.
-    if (aOutputOnly && !mInput.Available()) {
-      aOutputOnly = false;
-    }
+    bool needNotify = false;
 
-    if (!aOutputOnly)
-      if (mInput.OnInputException(aReason, events)) {
-        mon.Notify();
+    nsTArray<nsPipeInputStream*> tmpInputList;
+    for (uint32_t i = 0; i < mInputList.Length(); ++i) {
+      // an output-only exception applies to the input end if the pipe has
+      // zero bytes available.
+      if (aOutputOnly && mInputList[i]->Available()) {
+        tmpInputList.AppendElement(mInputList[i]);
+        continue;
       }
 
+      if (mInputList[i]->OnInputException(aReason, events)) {
+        needNotify = true;
+      }
+    }
+    mInputList = tmpInputList;
+
     if (mOutput.OnOutputException(aReason, events)) {
-      mon.Notify();
+      needNotify = true;
+    }
+
+    // Notify after we have removed any input streams from mInputList
+    if (needNotify) {
+      mon.NotifyAll();
     }
   }
+}
+
+nsresult
+nsPipe::CloneInputStream(nsPipeInputStream* aOriginal,
+                         nsIInputStream** aCloneOut)
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  nsRefPtr<nsPipeInputStream> ref = new nsPipeInputStream(*aOriginal);
+  mInputList.AppendElement(ref);
+  ref.forget(aCloneOut);
+  return NS_OK;
+}
+
+uint32_t
+nsPipe::CountSegmentReferences(int32_t aSegment)
+{
+  mReentrantMonitor.AssertCurrentThreadIn();
+  uint32_t count = 0;
+  for (uint32_t i = 0; i < mInputList.Length(); ++i) {
+    if (aSegment >= mInputList[i]->ReadState().mSegment) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+void
+nsPipe::SetAllNullReadCursors()
+{
+  mReentrantMonitor.AssertCurrentThreadIn();
+  for (uint32_t i = 0; i < mInputList.Length(); ++i) {
+    nsPipeReadState& readState = mInputList[i]->ReadState();
+    if (!readState.mReadCursor) {
+      NS_ASSERTION(mWriteSegment == readState.mSegment,
+                   "unexpected null read cursor");
+      readState.mReadCursor = readState.mReadLimit = mWriteCursor;
+    }
+  }
+}
+
+bool
+nsPipe::AllReadCursorsMatchWriteCursor()
+{
+  mReentrantMonitor.AssertCurrentThreadIn();
+  for (uint32_t i = 0; i < mInputList.Length(); ++i) {
+    const nsPipeReadState& readState = mInputList[i]->ReadState();
+    if (readState.mSegment != mWriteSegment ||
+        readState.mReadCursor != mWriteCursor) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void
+nsPipe::RollBackAllReadCursors(char* aWriteCursor)
+{
+  mReentrantMonitor.AssertCurrentThreadIn();
+  for (uint32_t i = 0; i < mInputList.Length(); ++i) {
+    nsPipeReadState& readState = mInputList[i]->ReadState();
+    MOZ_ASSERT(mWriteSegment == readState.mSegment);
+    MOZ_ASSERT(mWriteCursor == readState.mReadCursor);
+    MOZ_ASSERT(mWriteCursor == readState.mReadLimit);
+    readState.mReadCursor = aWriteCursor;
+    readState.mReadLimit = aWriteCursor;
+  }
+}
+
+void
+nsPipe::UpdateAllReadCursors(char* aWriteCursor)
+{
+  mReentrantMonitor.AssertCurrentThreadIn();
+  for (uint32_t i = 0; i < mInputList.Length(); ++i) {
+    nsPipeReadState& readState = mInputList[i]->ReadState();
+    if (mWriteSegment == readState.mSegment &&
+        readState.mReadLimit == mWriteCursor) {
+      readState.mReadLimit = aWriteCursor;
+    }
+  }
+}
+
+void
+nsPipe::ValidateAllReadCursors()
+{
+  mReentrantMonitor.AssertCurrentThreadIn();
+  // The only way mReadCursor == mWriteCursor is if:
+  //
+  // - mReadCursor is at the start of a segment (which, based on how
+  //   nsSegmentedBuffer works, means that this segment is the "first"
+  //   segment)
+  // - mWriteCursor points at the location past the end of the current
+  //   write segment (so the current write filled the current write
+  //   segment, so we've incremented mWriteCursor to point past the end
+  //   of it)
+  // - the segment to which data has just been written is located
+  //   exactly one segment's worth of bytes before the first segment
+  //   where mReadCursor is located
+  //
+  // Consequently, the byte immediately after the end of the current
+  // write segment is the first byte of the first segment, so
+  // mReadCursor == mWriteCursor.  (Another way to think about this is
+  // to consider the buffer architecture diagram above, but consider it
+  // with an arena allocator which allocates from the *end* of the
+  // arena to the *beginning* of the arena.)
+#ifdef DEBUG
+  for (uint32_t i = 0; i < mInputList.Length(); ++i) {
+    const nsPipeReadState& state = mInputList[i]->ReadState();
+    NS_ASSERTION(state.mReadCursor != mWriteCursor ||
+                 (mBuffer.GetSegment(state.mSegment) == state.mReadCursor &&
+                  mWriteCursor == mWriteLimit),
+                 "read cursor is bad");
+  }
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -640,18 +900,23 @@ nsPipeEvents::~nsPipeEvents()
 // nsPipeInputStream methods:
 //-----------------------------------------------------------------------------
 
+NS_IMPL_ADDREF(nsPipeInputStream);
+NS_IMPL_RELEASE(nsPipeInputStream);
+
 NS_IMPL_QUERY_INTERFACE(nsPipeInputStream,
                         nsIInputStream,
                         nsIAsyncInputStream,
                         nsISeekableStream,
                         nsISearchableInputStream,
+                        nsICloneableInputStream,
                         nsIClassInfo)
 
 NS_IMPL_CI_INTERFACE_GETTER(nsPipeInputStream,
                             nsIInputStream,
                             nsIAsyncInputStream,
                             nsISeekableStream,
-                            nsISearchableInputStream)
+                            nsISearchableInputStream,
+                            nsICloneableInputStream)
 
 NS_IMPL_THREADSAFE_CI(nsPipeInputStream)
 
@@ -662,18 +927,18 @@ nsPipeInputStream::Wait()
 
   ReentrantMonitorAutoEnter mon(mPipe->mReentrantMonitor);
 
-  while (NS_SUCCEEDED(mPipe->mStatus) && (mAvailable == 0)) {
+  while (NS_SUCCEEDED(Status()) && (mAvailable == 0)) {
     LOG(("III pipe input: waiting for data\n"));
 
     mBlocked = true;
     mon.Wait();
     mBlocked = false;
 
-    LOG(("III pipe input: woke up [pipe-status=%x available=%u]\n",
-         mPipe->mStatus, mAvailable));
+    LOG(("III pipe input: woke up [status=%x available=%u]\n",
+         Status(), mAvailable));
   }
 
-  return mPipe->mStatus == NS_BASE_STREAM_CLOSED ? NS_OK : mPipe->mStatus;
+  return Status() == NS_BASE_STREAM_CLOSED ? NS_OK : Status();
 }
 
 bool
@@ -704,6 +969,10 @@ nsPipeInputStream::OnInputException(nsresult aReason, nsPipeEvents& aEvents)
 
   NS_ASSERTION(NS_FAILED(aReason), "huh? successful exception");
 
+  if (NS_SUCCEEDED(mInputStatus)) {
+    mInputStatus = aReason;
+  }
+
   // force count of available bytes to zero.
   mAvailable = 0;
 
@@ -718,32 +987,20 @@ nsPipeInputStream::OnInputException(nsresult aReason, nsPipeEvents& aEvents)
   return result;
 }
 
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsPipeInputStream::AddRef(void)
-{
-  ++mReaderRefCnt;
-  return mPipe->AddRef();
-}
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsPipeInputStream::Release(void)
-{
-  if (--mReaderRefCnt == 0) {
-    Close();
-  }
-  return mPipe->Release();
-}
-
 NS_IMETHODIMP
 nsPipeInputStream::CloseWithStatus(nsresult aReason)
 {
   LOG(("III CloseWithStatus [this=%x reason=%x]\n", this, aReason));
 
+  if (NS_FAILED(mInputStatus)) {
+    return NS_OK;
+  }
+
   if (NS_SUCCEEDED(aReason)) {
     aReason = NS_BASE_STREAM_CLOSED;
   }
 
-  mPipe->OnPipeException(aReason);
+  mPipe->OnInputStreamException(this, aReason);
   return NS_OK;
 }
 
@@ -759,9 +1016,9 @@ nsPipeInputStream::Available(uint64_t* aResult)
   // nsPipeInputStream supports under 4GB stream only
   ReentrantMonitorAutoEnter mon(mPipe->mReentrantMonitor);
 
-  // return error if pipe closed
-  if (!mAvailable && NS_FAILED(mPipe->mStatus)) {
-    return mPipe->mStatus;
+  // return error if closed
+  if (!mAvailable && NS_FAILED(Status())) {
+    return Status();
   }
 
   *aResult = (uint64_t)mAvailable;
@@ -783,7 +1040,7 @@ nsPipeInputStream::ReadSegments(nsWriteSegmentFun aWriter,
 
   *aReadCount = 0;
   while (aCount) {
-    rv = mPipe->GetReadSegment(segment, segmentLen);
+    rv = mPipe->GetReadSegment(mReadState, segment, segmentLen);
     if (NS_FAILED(rv)) {
       // ignore this error if we've already read something.
       if (*aReadCount > 0) {
@@ -806,7 +1063,7 @@ nsPipeInputStream::ReadSegments(nsWriteSegmentFun aWriter,
         rv = NS_OK;
         break;
       }
-      mPipe->OnPipeException(rv);
+      mPipe->OnInputStreamException(this, rv);
       break;
     }
 
@@ -838,7 +1095,7 @@ nsPipeInputStream::ReadSegments(nsWriteSegmentFun aWriter,
     }
 
     if (segmentLen < originalLen) {
-      mPipe->AdvanceReadCursor(originalLen - segmentLen);
+      mPipe->AdvanceReadCursor(mReadState, originalLen - segmentLen, &mAvailable);
     }
   }
 
@@ -884,8 +1141,7 @@ nsPipeInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
       aCallback = proxy;
     }
 
-    if (NS_FAILED(mPipe->mStatus) ||
-        (mAvailable && !(aFlags & WAIT_CLOSURE_ONLY))) {
+    if (NS_FAILED(Status()) || (mAvailable && !(aFlags & WAIT_CLOSURE_ONLY))) {
       // stream is already closed or readable; post event.
       pipeEvents.NotifyInputReady(this, aCallback);
     } else {
@@ -909,9 +1165,9 @@ nsPipeInputStream::Tell(int64_t* aOffset)
 {
   ReentrantMonitorAutoEnter mon(mPipe->mReentrantMonitor);
 
-  // return error if pipe closed
-  if (!mAvailable && NS_FAILED(mPipe->mStatus)) {
-    return mPipe->mStatus;
+  // return error if closed
+  if (!mAvailable && NS_FAILED(Status())) {
+    return Status();
   }
 
   *aOffset = mLogicalOffset;
@@ -945,7 +1201,7 @@ nsPipeInputStream::Search(const char* aForString,
   uint32_t index = 0, offset = 0;
   uint32_t strLen = strlen(aForString);
 
-  mPipe->PeekSegment(0, cursor1, limit1);
+  mPipe->PeekSegment(mReadState, 0, cursor1, limit1);
   if (cursor1 == limit1) {
     *aFound = false;
     *aOffsetSearchedTo = 0;
@@ -974,7 +1230,7 @@ nsPipeInputStream::Search(const char* aForString,
     index++;
     offset += len1;
 
-    mPipe->PeekSegment(index, cursor2, limit2);
+    mPipe->PeekSegment(mReadState, index, cursor2, limit2);
     if (cursor2 == limit2) {
       *aFound = false;
       *aOffsetSearchedTo = offset - strLen + 1;
@@ -1006,6 +1262,30 @@ nsPipeInputStream::Search(const char* aForString,
 
   NS_NOTREACHED("can't get here");
   return NS_ERROR_UNEXPECTED;    // keep compiler happy
+}
+
+NS_IMETHODIMP
+nsPipeInputStream::GetCloneable(bool* aCloneableOut)
+{
+  *aCloneableOut = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPipeInputStream::Clone(nsIInputStream** aCloneOut)
+{
+  return mPipe->CloneInputStream(this, aCloneOut);
+}
+
+nsresult
+nsPipeInputStream::Status() const
+{
+  return NS_FAILED(mInputStatus) ? mInputStatus : mPipe->mStatus;
+}
+
+nsPipeInputStream::~nsPipeInputStream()
+{
+  Close();
 }
 
 //-----------------------------------------------------------------------------

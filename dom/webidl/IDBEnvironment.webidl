@@ -12,9 +12,3 @@ interface IDBEnvironment {
     //[Throws] readonly    attribute IDBFactory indexedDB;
     [Throws] readonly    attribute IDBFactory? indexedDB;
 };
-
-// Mozilla-specific stuff
-partial interface IDBEnvironment {
-    [Exposed=Window, Throws]
-    readonly    attribute IDBFactory? mozIndexedDB;
-};

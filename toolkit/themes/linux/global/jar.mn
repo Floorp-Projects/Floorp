@@ -8,6 +8,7 @@ toolkit.jar:
 +  skin/classic/global/checkbox.css
 +  skin/classic/global/colorpicker.css
 +  skin/classic/global/commonDialog.css
++  skin/classic/global/config.css                              (../../shared/config.css)
 +  skin/classic/global/dropmarker.css
 +  skin/classic/global/filepicker.css
 +  skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
@@ -51,6 +52,7 @@ toolkit.jar:
 +  skin/classic/global/icons/panelarrow-vertical.svg           (icons/panelarrow-vertical.svg)
 +  skin/classic/global/icons/resizer.png                       (icons/resizer.png)
 +  skin/classic/global/icons/sslWarning.png                    (icons/sslWarning.png)
++  skin/classic/global/icons/warning.svg                       (../../shared/incontent-icons/warning.svg)
 +  skin/classic/global/icons/wrap.png                          (icons/wrap.png)
 +  skin/classic/global/icons/webapps-16.png                    (icons/webapps-16.png)
 +  skin/classic/global/icons/webapps-64.png                    (icons/webapps-64.png)

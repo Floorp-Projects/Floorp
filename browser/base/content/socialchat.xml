@@ -12,8 +12,14 @@
           <xul:image class="chat-status-icon" xbl:inherits="src=image"/>
           <xul:label class="chat-title" flex="1" xbl:inherits="value=label" crop="center"/>
         </xul:hbox>
+        <xul:toolbarbutton anonid="webRTC-shareScreen-icon"
+                           class="notification-anchor-icon chat-toolbarbutton"
+                           oncommand="document.getBindingParent(this).showNotifications(this); event.stopPropagation();"/>
+        <xul:toolbarbutton anonid="webRTC-sharingScreen-icon"
+                           class="notification-anchor-icon chat-toolbarbutton"
+                           oncommand="document.getBindingParent(this).showNotifications(this); event.stopPropagation();"/>
         <xul:toolbarbutton anonid="notification-icon" class="notification-anchor-icon chat-toolbarbutton"
-                           oncommand="document.getBindingParent(this).showNotifications(); event.stopPropagation();"/>
+                           oncommand="document.getBindingParent(this).showNotifications(this); event.stopPropagation();"/>
         <xul:toolbarbutton anonid="minimize" class="chat-minimize-button chat-toolbarbutton"
                            oncommand="document.getBindingParent(this).toggle();"/>
         <xul:toolbarbutton anonid="swap" class="chat-swap-button chat-toolbarbutton"
@@ -30,8 +36,20 @@
 
     <implementation implements="nsIDOMEventListener">
       <constructor><![CDATA[
-        this.content.__defineGetter__("popupnotificationanchor",
-                                      () => document.getAnonymousElementByAttribute(this, "anonid", "notification-icon"));
+        const kAnchorMap = new Map([
+          ["", "notification-"],
+          ["webRTC-shareScreen-", ""],
+          ["webRTC-sharingScreen-", ""]
+        ]);
+        for (let [getterPrefix, idPrefix] of kAnchorMap) {
+          let getter = getterPrefix + "popupnotificationanchor";
+          let anonid = (idPrefix || getterPrefix) + "icon";
+          this.content.__defineGetter__(getter, () => {
+            delete this.content[getter];
+            return this.content[getter] = document.getAnonymousElementByAttribute(
+              this, "anonid", anonid);
+          });
+        }
 
         if (!this.chatbar) {
           document.getAnonymousElementByAttribute(this, "anonid", "minimize").hidden = true;
@@ -136,8 +154,9 @@
       </property>
 
       <method name="showNotifications">
+        <parameter name="aAnchor"/>
         <body><![CDATA[
-        PopupNotifications._reshowNotifications(this.content.popupnotificationanchor,
+        PopupNotifications._reshowNotifications(aAnchor,
                                                 this.content);
         ]]></body>
       </method>

@@ -159,7 +159,15 @@ var resolveCallback = SpecialPowers.wrapCallbackObject({
     // The proxyChannel needs to move to at least on-modify-request to
     // have valid ProxyInfo, but we use OnStartRequest during startup()
     // for simplicity.
-    proxyChannel = ioService.newChannel(proxiedHost, null, null);
+    proxyChannel = ioService.newChannel2(proxiedHost,
+                                         null,
+                                         null,
+                                         null,      // aLoadingNode
+                                         SpecialPowers.Services.
+                                         scriptSecurityManager.getSystemPrincipal(),
+                                         null,      // aTriggeringPrincipal
+                                         Ci.nsILoadInfo.SEC_NORMAL,
+                                         Ci.nsIContentPolicy.TYPE_OTHER);
     proxyChannel.asyncOpen(SpecialPowers.wrapCallbackObject(new proxyChannelListener()), null);
   }
 });
@@ -891,8 +899,24 @@ function doTests() {
   is(uname.value, "fill2user", "Checking returned username");
   is(pword.value, "fill2pass", "Checking returned password");
 
-  var channel1 = ioService.newChannel("http://example.com", null, null);
-  var channel2 = ioService.newChannel("http://example2.com", null, null);
+  var channel1 = ioService.newChannel2("http://example.com",
+                                       null,
+                                       null,
+                                       null,      // aLoadingNode
+                                       SpecialPowers.Services.
+                                       scriptSecurityManager.getSystemPrincipal(),
+                                       null,      // aTriggeringPrincipal
+                                       Ci.nsILoadInfo.SEC_NORMAL,
+                                       Ci.nsIContentPolicy.TYPE_OTHER);
+  var channel2 = ioService.newChannel2("http://example2.com",
+                                       null,
+                                       null,
+                                       null,      // aLoadingNode
+                                       SpecialPowers.Services.
+                                       scriptSecurityManager.getSystemPrincipal(),
+                                       null,      // aTriggeringPrincipal
+                                       Ci.nsILoadInfo.SEC_NORMAL,
+                                       Ci.nsIContentPolicy.TYPE_OTHER);
 
   var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
 

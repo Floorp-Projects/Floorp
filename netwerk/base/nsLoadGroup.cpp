@@ -509,9 +509,8 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
     // Add the request to the list of active requests...
     //
 
-    RequestMapEntry *entry =
-        static_cast<RequestMapEntry *>
-                   (PL_DHashTableAdd(&mRequests, request));
+    RequestMapEntry *entry = static_cast<RequestMapEntry *>
+        (PL_DHashTableAdd(&mRequests, request, fallible));
 
     if (!entry) {
         return NS_ERROR_OUT_OF_MEMORY;

@@ -40,11 +40,11 @@ void MacroAssembler::PopRegsInMaskIgnore(RegisterSet, RegisterSet, FloatRegister
 void MacroAssembler::alignFrameForICArguments(AfterICSaveLive &) { MOZ_CRASH(); }
 void MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive &) { MOZ_CRASH(); }
 
-const Register ABIArgGenerator::NonArgReturnReg0 = { 0 };
-const Register ABIArgGenerator::NonArgReturnReg1 = { 0 };
-const Register ABIArgGenerator::NonArg_VolatileReg = { 0 };
-const Register ABIArgGenerator::NonReturn_VolatileReg0 = { 0 };
-const Register ABIArgGenerator::NonReturn_VolatileReg1 = { 0 };
+const Register ABIArgGenerator::NonArgReturnReg0 = { Registers::invalid_reg };
+const Register ABIArgGenerator::NonArgReturnReg1 = {  Registers::invalid_reg };
+const Register ABIArgGenerator::NonArg_VolatileReg = {  Registers::invalid_reg };
+const Register ABIArgGenerator::NonReturn_VolatileReg0 = {  Registers::invalid_reg };
+const Register ABIArgGenerator::NonReturn_VolatileReg1 = {  Registers::invalid_reg };
 
 BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator &iter, BailoutStack *bailout)
 {
@@ -60,3 +60,4 @@ bool ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &) { MOZ_CRASH()
 bool ICCompare_Double::Compiler::generateStubCode(MacroAssembler &) { MOZ_CRASH(); }
 bool ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &) { MOZ_CRASH(); }
 bool ICUnaryArith_Int32::Compiler::generateStubCode(MacroAssembler &) { MOZ_CRASH(); }
+JitCode *JitRuntime::generateProfilerExitFrameTailStub(JSContext *) { MOZ_CRASH(); }

@@ -245,41 +245,6 @@
            mousethrough="always">
       <box id="UITourHighlight"></box>
     </panel>
-    <!-- Used to highlight the new search experience -->
-    <panel id="SearchHighlight1"
-           class="SearchHighlight"
-           type="arrow"
-           hidden="true"
-           noautofocus="true"
-           noautohide="true"
-           orient="vertical"
-           align="stretch">
-      <label class="SearchHighlightTitle">&SearchHighlight1.title;</label>
-      <description class="SearchHighlightText" flex="1">&SearchHighlight1.text;</description>
-      <hbox class="SearchHighlightFooter" align="center">
-        <spacer class="dot filled"/>
-        <spacer class="dot"/>
-        <spacer flex="1"/>
-        <button label="&SearchHighlightNext;"/>
-      </hbox>
-    </panel>
-    <panel id="SearchHighlight2"
-           class="SearchHighlight"
-           type="arrow"
-           hidden="true"
-           noautofocus="true"
-           noautohide="true"
-           orient="vertical"
-           align="stretch">
-      <label class="SearchHighlightTitle">&SearchHighlight2.title;</label>
-      <description class="SearchHighlightText" flex="1">&SearchHighlight2.text;</description>
-      <hbox class="SearchHighlightFooter" align="center">
-        <spacer class="dot"/>
-        <spacer class="dot filled"/>
-        <spacer flex="1"/>
-        <button label="&SearchHighlightClose;"/>
-      </hbox>
-    </panel>
 
     <panel id="abouthome-search-panel" orient="vertical" type="arrow" hidden="true"
            onclick="this.hidePopup()">
@@ -851,10 +816,11 @@
                        hidden="true"
                        tooltiptext="&pageReportIcon.tooltip;"
                        onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
-                <image id="reader-mode-button"
-                       class="urlbar-icon"
-                       hidden="true"
-                       onclick="ReaderParent.toggleReaderMode(event);"/>
+                <toolbarbutton id="reader-mode-button"
+                               class="tabbable"
+                               hidden="true"
+                               onclick="ReaderParent.handleReaderButtonEvent(event);"
+                               onkeypress="ReaderParent.handleReaderButtonEvent(event);"/>
               </hbox>
               <toolbarbutton id="urlbar-go-button"
                              class="chromeclass-toolbar-additional"

@@ -152,6 +152,8 @@ interface nsIAccessible : nsISupports
 
   /**
    * Help text associated with node
+   *
+   * @note As of now, this just returns empty string.
    */
   readonly attribute AString help;
 

@@ -4,14 +4,3 @@
 
 <!ENTITY cmd_engineManager.label        "Manage Search Engines…">
 <!ENTITY searchEndCap.label             "Search">
-
-<!-- LOCALIZATION NOTE: The SearchHighlight strings are used in the
-   - UITour popups that shows on first use of the new search panel. -->
-<!ENTITY SearchHighlight1.title "One-Click Searches">
-<!ENTITY SearchHighlight1.text "Search any of these sites instantly, without changing your default.">
-
-<!ENTITY SearchHighlight2.title "Smart Suggestions">
-<!ENTITY SearchHighlight2.text "Suggestions from your default search engine appear as you type.">
-
-<!ENTITY SearchHighlightNext "Next">
-<!ENTITY SearchHighlightClose "Thanks!">

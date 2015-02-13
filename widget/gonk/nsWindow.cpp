@@ -129,6 +129,8 @@ displayEnabledCallback(bool enabled)
 
 } // anonymous namespace
 
+NS_IMPL_ISUPPORTS_INHERITED(nsWindow, nsBaseWidget, nsISupportsWeakReference)
+
 nsWindow::nsWindow()
 {
     mFramebuffer = nullptr;

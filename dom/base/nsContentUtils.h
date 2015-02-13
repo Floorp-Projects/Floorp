@@ -2177,6 +2177,14 @@ public:
                                         int32_t& aOutEndOffset);
 
   /**
+   * Takes a selection, and return selection's bounding rect which is relative
+   * to root frame.
+   *
+   * @param aSel      Selection to check
+   */
+  static nsRect GetSelectionBoundingRect(mozilla::dom::Selection* aSel);
+
+  /**
    * Takes a frame for anonymous content within a text control (<input> or
    * <textarea>), and returns an offset in the text content, adjusted for a
    * trailing <br> frame.

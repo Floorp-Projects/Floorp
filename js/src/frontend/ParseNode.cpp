@@ -98,6 +98,148 @@ class NodeStack {
 
 } /* anonymous namespace */
 
+enum class PushResult { Recyclable, CleanUpLater };
+
+static PushResult
+PushCodeNodeChildren(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_CODE));
+
+    /*
+     * Function nodes are linked into the function box tree, and may appear
+     * on method lists. Both of those lists are singly-linked, so trying to
+     * update them now could result in quadratic behavior when recycling
+     * trees containing many functions; and the lists can be very long. So
+     * we put off cleaning the lists up until just before function
+     * analysis, when we call CleanFunctionList.
+     *
+     * In fact, we can't recycle the parse node yet, either: it may appear
+     * on a method list, and reusing the node would corrupt that. Instead,
+     * we clear its pn_funbox pointer to mark it as deleted;
+     * CleanFunctionList recycles it as well.
+     *
+     * We do recycle the nodes around it, though, so we must clear pointers
+     * to them to avoid leaving dangling references where someone can find
+     * them.
+     */
+    node->pn_funbox = nullptr;
+    stack->pushUnlessNull(node->pn_body);
+    node->pn_body = nullptr;
+
+    return PushResult::CleanUpLater;
+}
+
+static PushResult
+PushNameNodeChildren(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_NAME));
+
+    /*
+     * Because used/defn nodes appear in AtomDefnMaps and elsewhere, we
+     * don't recycle them. (We'll recover their storage when we free the
+     * temporary arena.) However, we do recycle the nodes around them, so
+     * clean up the pointers to avoid dangling references. The top-level
+     * decls table carries references to them that later iterations through
+     * the compileScript loop may find, so they need to be neat.
+     *
+     * pn_expr and pn_lexdef share storage; the latter isn't an owning
+     * reference.
+     */
+    if (!node->isUsed()) {
+        stack->pushUnlessNull(node->pn_expr);
+        node->pn_expr = nullptr;
+    }
+
+    if (!node->isUsed() && !node->isDefn())
+        return PushResult::Recyclable;
+
+    return PushResult::CleanUpLater;
+}
+
+static PushResult
+PushListNodeChildren(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_LIST));
+    node->checkListConsistency();
+
+    stack->pushList(node);
+
+    return PushResult::Recyclable;
+}
+
+static PushResult
+PushTernaryNodeNullableChildren(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_TERNARY));
+
+    stack->pushUnlessNull(node->pn_kid1);
+    stack->pushUnlessNull(node->pn_kid2);
+    stack->pushUnlessNull(node->pn_kid3);
+
+    return PushResult::Recyclable;
+}
+
+static PushResult
+PushUnaryNodeChild(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    stack->push(node->pn_kid);
+
+    return PushResult::Recyclable;
+}
+
+static PushResult
+PushUnaryNodeNullableChild(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    if (node->pn_kid)
+        stack->push(node->pn_kid);
+
+    return PushResult::Recyclable;
+}
+
+static PushResult
+PushBinaryNodeChildren(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_BINARY));
+
+    stack->push(node->pn_left);
+    stack->push(node->pn_right);
+
+    return PushResult::Recyclable;
+}
+
+static PushResult
+PushBinaryNodeNullableChildren(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_BINARY) || node->isArity(PN_BINARY_OBJ));
+
+    if (node->pn_left != node->pn_right) {
+        // XXX Is it ever the case that left == right any more?  I think this
+        //     used to be PNK_SHORTHAND, but its two children are now different
+        //     nodes that are structurally equivalent, so PNK_SHORTHAND doesn't
+        //     require this.
+        stack->pushUnlessNull(node->pn_left);
+    }
+
+    stack->pushUnlessNull(node->pn_right);
+
+    return PushResult::Recyclable;
+}
+
+static PushResult
+CanRecycleNullaryNode(ParseNode *node, NodeStack *stack)
+{
+    MOZ_ASSERT(node->isArity(PN_NULLARY));
+
+    if (node->isUsed() || node->isDefn())
+        return PushResult::CleanUpLater;
+
+    return PushResult::Recyclable;
+}
+
 /*
  * Push the children of |pn| on |stack|. Return true if |pn| itself could be
  * safely recycled, or false if it must be cleaned later (pn_used and pn_defn
@@ -106,76 +248,259 @@ class NodeStack {
  * (js::ParseNodeAllocator::prepareNodeForMutation) don't care about |pn|, and
  * just need to take care of its children.
  */
-static bool
+static PushResult
 PushNodeChildren(ParseNode *pn, NodeStack *stack)
 {
-    switch (pn->getArity()) {
-      case PN_CODE:
-        /*
-         * Function nodes are linked into the function box tree, and may appear
-         * on method lists. Both of those lists are singly-linked, so trying to
-         * update them now could result in quadratic behavior when recycling
-         * trees containing many functions; and the lists can be very long. So
-         * we put off cleaning the lists up until just before function
-         * analysis, when we call CleanFunctionList.
-         *
-         * In fact, we can't recycle the parse node yet, either: it may appear
-         * on a method list, and reusing the node would corrupt that. Instead,
-         * we clear its pn_funbox pointer to mark it as deleted;
-         * CleanFunctionList recycles it as well.
-         *
-         * We do recycle the nodes around it, though, so we must clear pointers
-         * to them to avoid leaving dangling references where someone can find
-         * them.
-         */
-        pn->pn_funbox = nullptr;
-        stack->pushUnlessNull(pn->pn_body);
-        pn->pn_body = nullptr;
-        return false;
+    switch (pn->getKind()) {
+      // Trivial nodes that refer to no nodes, are referred to by nothing
+      // but their parents, are never used, and are never a definition.
+      case PNK_NOP:
+      case PNK_STRING:
+      case PNK_TEMPLATE_STRING:
+      case PNK_REGEXP:
+      case PNK_TRUE:
+      case PNK_FALSE:
+      case PNK_NULL:
+      case PNK_THIS:
+      case PNK_ELISION:
+      case PNK_GENERATOR:
+      case PNK_NUMBER:
+      case PNK_BREAK:
+      case PNK_CONTINUE:
+      case PNK_DEBUGGER:
+      case PNK_EXPORT_BATCH_SPEC:
+        MOZ_ASSERT(pn->isArity(PN_NULLARY));
+        MOZ_ASSERT(!pn->isUsed(), "handle non-trivial cases separately");
+        MOZ_ASSERT(!pn->isDefn(), "handle non-trivial cases separately");
+        return PushResult::Recyclable;
 
-      case PN_NAME:
-        /*
-         * Because used/defn nodes appear in AtomDefnMaps and elsewhere, we
-         * don't recycle them. (We'll recover their storage when we free the
-         * temporary arena.) However, we do recycle the nodes around them, so
-         * clean up the pointers to avoid dangling references. The top-level
-         * decls table carries references to them that later iterations through
-         * the compileScript loop may find, so they need to be neat.
-         *
-         * pn_expr and pn_lexdef share storage; the latter isn't an owning
-         * reference.
-         */
-        if (!pn->isUsed()) {
-            stack->pushUnlessNull(pn->pn_expr);
-            pn->pn_expr = nullptr;
-        }
-        return !pn->isUsed() && !pn->isDefn();
+      // Nodes with a single non-null child.
+      case PNK_TYPEOF:
+      case PNK_VOID:
+      case PNK_NOT:
+      case PNK_BITNOT:
+      case PNK_THROW:
+      case PNK_DELETE:
+      case PNK_POS:
+      case PNK_NEG:
+      case PNK_PREINCREMENT:
+      case PNK_POSTINCREMENT:
+      case PNK_PREDECREMENT:
+      case PNK_POSTDECREMENT:
+      case PNK_COMPUTED_NAME:
+      case PNK_ARRAYPUSH:
+      case PNK_SPREAD:
+      case PNK_MUTATEPROTO:
+      case PNK_EXPORT:
+        return PushUnaryNodeChild(pn, stack);
 
-      case PN_LIST:
-        pn->checkListConsistency();
-        stack->pushList(pn);
-        break;
-      case PN_TERNARY:
-        stack->pushUnlessNull(pn->pn_kid1);
-        stack->pushUnlessNull(pn->pn_kid2);
-        stack->pushUnlessNull(pn->pn_kid3);
-        break;
-      case PN_BINARY:
-      case PN_BINARY_OBJ:
-        if (pn->pn_left != pn->pn_right)
-            stack->pushUnlessNull(pn->pn_left);
-        stack->pushUnlessNull(pn->pn_right);
-        break;
-      case PN_UNARY:
-        stack->pushUnlessNull(pn->pn_kid);
-        break;
-      case PN_NULLARY:
-        return !pn->isUsed() && !pn->isDefn();
-      default:
-        ;
+      // Nodes with a single nullable child.
+      case PNK_SEMI:
+        return PushUnaryNodeNullableChild(pn, stack);
+
+      // Binary nodes with two non-null children.
+
+      // All assignment and compound assignment nodes qualify.
+      case PNK_ASSIGN:
+      case PNK_ADDASSIGN:
+      case PNK_SUBASSIGN:
+      case PNK_BITORASSIGN:
+      case PNK_BITXORASSIGN:
+      case PNK_BITANDASSIGN:
+      case PNK_LSHASSIGN:
+      case PNK_RSHASSIGN:
+      case PNK_URSHASSIGN:
+      case PNK_MULASSIGN:
+      case PNK_DIVASSIGN:
+      case PNK_MODASSIGN:
+      // ...and a few others.
+      case PNK_COLON:
+      case PNK_CASE:
+      case PNK_SHORTHAND:
+      case PNK_DOWHILE:
+      case PNK_WHILE:
+      case PNK_SWITCH:
+      case PNK_LETBLOCK:
+      case PNK_FOR:
+        return PushBinaryNodeChildren(pn, stack);
+
+      // Default nodes, for dumb reasons that we're not changing now (mostly
+      // structural semi-consistency with PNK_CASE nodes), have a null left
+      // node and a non-null right node.
+      case PNK_DEFAULT: {
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        MOZ_ASSERT(pn->pn_left == nullptr);
+        stack->push(pn->pn_right);
+        return PushResult::Recyclable;
+      }
+
+      // The left half is the expression being yielded.  The right half is
+      // internal goop: a name reference to the invisible '.generator' local
+      // variable, or an assignment of a PNK_GENERATOR node to the '.generator'
+      // local, for a synthesized, prepended initial yield.  Yum!
+      case PNK_YIELD_STAR:
+      case PNK_YIELD: {
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        MOZ_ASSERT(pn->pn_right);
+        MOZ_ASSERT(pn->pn_right->isKind(PNK_NAME) ||
+                   (pn->pn_right->isKind(PNK_ASSIGN) &&
+                    pn->pn_right->pn_left->isKind(PNK_NAME) &&
+                    pn->pn_right->pn_right->isKind(PNK_GENERATOR)));
+        if (pn->pn_left)
+            stack->push(pn->pn_left);
+        stack->push(pn->pn_right);
+        return PushResult::Recyclable;
+      }
+
+      // Ternary nodes with all children non-null.
+      case PNK_CONDITIONAL: {
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        stack->push(pn->pn_kid1);
+        stack->push(pn->pn_kid2);
+        stack->push(pn->pn_kid3);
+        return PushResult::Recyclable;
+      }
+
+      // For for-in and for-of, the first child is any declaration present in
+      // the for-loop (and null if not).  The second child is the expression or
+      // pattern assigned every loop, and the third child is the expression
+      // looped over.  For example, in |for (var p in obj)|, the first child is
+      // |var p|, the second child is |p| (a node distinct from the one in
+      // |var p|), and the third child is |obj|.
+      case PNK_FORIN:
+      case PNK_FOROF: {
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        if (pn->pn_kid1)
+            stack->push(pn->pn_kid1);
+        stack->push(pn->pn_kid2);
+        stack->push(pn->pn_kid3);
+        return PushResult::Recyclable;
+      }
+
+      // for (;;) nodes have one child per optional component of the loop head.
+      case PNK_FORHEAD:
+        return PushTernaryNodeNullableChildren(pn, stack);
+
+      // if-statement nodes have condition and consequent children and a
+      // possibly-null alternative.
+      case PNK_IF: {
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        stack->push(pn->pn_kid1);
+        stack->push(pn->pn_kid2);
+        if (pn->pn_kid3)
+            stack->push(pn->pn_kid3);
+        return PushResult::Recyclable;
+      }
+
+      // try-statements have statements to execute, and one or both of a
+      // catch-list and a finally-block.
+      case PNK_TRY: {
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        MOZ_ASSERT(pn->pn_kid2 || pn->pn_kid3);
+        stack->push(pn->pn_kid1);
+        if (pn->pn_kid2)
+            stack->push(pn->pn_kid2);
+        if (pn->pn_kid3)
+            stack->push(pn->pn_kid3);
+        return PushResult::Recyclable;
+      }
+
+      // List nodes with all non-null children.
+      case PNK_OR:
+      case PNK_AND:
+      case PNK_BITOR:
+      case PNK_BITXOR:
+      case PNK_BITAND:
+      case PNK_STRICTEQ:
+      case PNK_EQ:
+      case PNK_STRICTNE:
+      case PNK_NE:
+      case PNK_LT:
+      case PNK_LE:
+      case PNK_GT:
+      case PNK_GE:
+      case PNK_INSTANCEOF:
+      case PNK_IN:
+      case PNK_LSH:
+      case PNK_RSH:
+      case PNK_URSH:
+      case PNK_ADD:
+      case PNK_SUB:
+      case PNK_STAR:
+      case PNK_DIV:
+      case PNK_MOD:
+      case PNK_COMMA:
+      case PNK_ARRAY:
+      case PNK_OBJECT:
+      case PNK_VAR:
+      case PNK_CONST:
+      case PNK_GLOBALCONST:
+      case PNK_CATCHLIST:
+      case PNK_SEQ:
+      case PNK_ARGSBODY:
+        return PushListNodeChildren(pn, stack);
+
+      case PNK_LABEL:
+        return PushNameNodeChildren(pn, stack);
+
+      case PNK_DOT:
+      case PNK_ELEM:
+      case PNK_STATEMENTLIST:
+      case PNK_CALL:
+      case PNK_NAME:
+      case PNK_TEMPLATE_STRING_LIST:
+      case PNK_TAGGED_TEMPLATE:
+      case PNK_CALLSITEOBJ:
+      case PNK_FUNCTION:
+      case PNK_WITH:
+      case PNK_RETURN:
+      case PNK_NEW:
+      case PNK_CATCH:
+      case PNK_GENEXP:
+      case PNK_ARRAYCOMP:
+      case PNK_LEXICALSCOPE:
+      case PNK_LET:
+      case PNK_LETEXPR:
+      case PNK_IMPORT:
+      case PNK_IMPORT_SPEC_LIST:
+      case PNK_IMPORT_SPEC:
+      case PNK_EXPORT_FROM:
+      case PNK_EXPORT_SPEC_LIST:
+      case PNK_EXPORT_SPEC:
+        break; // for now
+
+      case PNK_LIMIT: // invalid sentinel value
+        MOZ_CRASH("invalid node kind");
     }
 
-    return true;
+    // Fallthrough for not-yet-handled kinds.
+    switch (pn->getArity()) {
+      case PN_CODE:
+        return PushCodeNodeChildren(pn, stack);
+
+      case PN_NAME:
+        return PushNameNodeChildren(pn, stack);
+
+      case PN_LIST:
+        return PushListNodeChildren(pn, stack);
+
+      case PN_TERNARY:
+        return PushTernaryNodeNullableChildren(pn, stack);
+
+      case PN_BINARY:
+      case PN_BINARY_OBJ:
+        return PushBinaryNodeNullableChildren(pn, stack);
+
+      case PN_UNARY:
+        return PushUnaryNodeNullableChild(pn, stack);
+
+      case PN_NULLARY:
+        return CanRecycleNullaryNode(pn, stack);
+
+      default:
+        MOZ_CRASH("huh?");
+        return PushResult::CleanUpLater;
+    }
 }
 
 /*
@@ -186,19 +511,20 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
 void
 ParseNodeAllocator::prepareNodeForMutation(ParseNode *pn)
 {
-    if (!pn->isArity(PN_NULLARY)) {
-        /* Put |pn|'s children (but not |pn| itself) on a work stack. */
-        NodeStack stack;
-        PushNodeChildren(pn, &stack);
-        /*
-         * For each node on the work stack, push its children on the work stack,
-         * and free the node if we can.
-         */
-        while (!stack.empty()) {
-            pn = stack.pop();
-            if (PushNodeChildren(pn, &stack))
-                freeNode(pn);
-        }
+    // Nothing to do for nullary nodes.
+    if (pn->isArity(PN_NULLARY))
+        return;
+
+    // Put |pn|'s children (but not |pn| itself) on a work stack.
+    NodeStack stack;
+    PushNodeChildren(pn, &stack);
+
+    // For each node on the work stack, push its children on the work stack,
+    // and free the node if we can.
+    while (!stack.empty()) {
+        pn = stack.pop();
+        if (PushNodeChildren(pn, &stack) == PushResult::Recyclable)
+            freeNode(pn);
     }
 }
 
@@ -216,7 +542,7 @@ ParseNodeAllocator::freeTree(ParseNode *pn)
 
     NodeStack stack;
     for (;;) {
-        if (PushNodeChildren(pn, &stack))
+        if (PushNodeChildren(pn, &stack) == PushResult::Recyclable)
             freeNode(pn);
         if (stack.empty())
             break;

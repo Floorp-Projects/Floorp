@@ -1,0 +1,22 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIInputStream.idl"
+
+[scriptable, builtinclass, uuid(8149be1f-44d3-4f14-8b65-a57a5fbbeb97)]
+interface nsICloneableInputStream : nsISupports
+{
+  // Allow streams that implement the interface to determine if cloning
+  // possible at runtime.  For example, this allows wrappers to check if
+  // their base stream supports cloning.
+  [infallible] readonly attribute boolean cloneable;
+
+  // Produce a copy of the current stream in the most efficient way possible.
+  // In this case "copy" means that both the original and cloned streams
+  // should produce the same bytes for all future reads.  Bytes that have
+  // already been consumed from the original stream are not copied to the
+  // clone.  Operations on the two streams should be completely independent
+  // after the clone() occurs.
+  nsIInputStream clone();
+};

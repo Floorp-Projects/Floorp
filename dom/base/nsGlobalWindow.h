@@ -977,11 +977,6 @@ public:
     GetDefaultComputedStyle(mozilla::dom::Element& aElt,
                             const nsAString& aPseudoElt,
                             mozilla::ErrorResult& aError);
-  mozilla::dom::indexedDB::IDBFactory*
-    GetMozIndexedDB(mozilla::ErrorResult& aError)
-  {
-    return GetIndexedDB(aError);
-  }
   int32_t MozRequestAnimationFrame(nsIFrameRequestCallback* aRequestCallback,
                                    mozilla::ErrorResult& aError);
   void MozCancelAnimationFrame(int32_t aHandle, mozilla::ErrorResult& aError)

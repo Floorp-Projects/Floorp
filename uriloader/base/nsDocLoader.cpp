@@ -1338,7 +1338,7 @@ nsDocLoader::RefreshAttempted(nsIWebProgress* aWebProgress,
 
 nsresult nsDocLoader::AddRequestInfo(nsIRequest *aRequest)
 {
-  if (!PL_DHashTableAdd(&mRequestInfoHash, aRequest)) {
+  if (!PL_DHashTableAdd(&mRequestInfoHash, aRequest, mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

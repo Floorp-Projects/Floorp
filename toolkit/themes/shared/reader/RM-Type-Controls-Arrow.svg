@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Icons" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+     viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
+<polygon opacity="0.15" fill-rule="evenodd" clip-rule="evenodd" points="16.583,0.015 16.569,0 4.583,12 16.569,24 16.583,23.985
+    "/>
+<g enable-background="new    ">
+    <g>
+        <defs>
+            <rect id="SVGID_2_" x="-125" y="-1086.667" width="22" height="34"/>
+        </defs>
+        <clipPath id="SVGID_1_">
+            <use xlink:href="#SVGID_2_"  overflow="visible"/>
+        </clipPath>
+        <g clip-path="url(#SVGID_1_)">
+            <defs>
+                <rect id="SVGID_6_" x="-221" y="-1491.667" width="1080" height="2896"/>
+            </defs>
+            <clipPath id="SVGID_3_">
+                <use xlink:href="#SVGID_6_"  overflow="visible"/>
+            </clipPath>
+        </g>
+        <g clip-path="url(#SVGID_1_)">
+            <defs>
+                <rect id="SVGID_10_" x="-221" y="-1491.667" width="1080" height="2896"/>
+            </defs>
+            <clipPath id="SVGID_5_">
+                <use xlink:href="#SVGID_10_"  overflow="visible"/>
+            </clipPath>
+        </g>
+        <g clip-path="url(#SVGID_1_)">
+            <defs>
+                <rect id="SVGID_16_" x="-221" y="-1491.667" width="1080" height="2896"/>
+            </defs>
+            <clipPath id="SVGID_7_">
+                <use xlink:href="#SVGID_16_"  overflow="visible"/>
+            </clipPath>
+        </g>
+    </g>
+</g>
+<polygon fill-rule="evenodd" clip-rule="evenodd" fill="#FBFBFB" points="16.575,1.021 16.561,1.008 5.583,12 16.577,23.008
+    16.591,22.994 "/>
+</svg>

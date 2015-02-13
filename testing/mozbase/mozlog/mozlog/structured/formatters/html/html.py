@@ -104,7 +104,7 @@ class HTMLFormatter(base.BaseFormatter):
 
         if status != expected:
             status_name = "UNEXPECTED_" + status
-        elif status != "PASS":
+        elif status not in ("PASS", "SKIP"):
             status_name = "EXPECTED_" + status
 
         self.test_count[status_name] += 1

@@ -26,6 +26,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
     def __init__(self, *args, **kwargs):
         xpcshell.XPCShellTestThread.__init__(self, *args, **kwargs)
 
+        self.shellReturnCode = None
         # embed the mobile params from the harness into the TestThread
         mobileArgs = kwargs.get('mobileArgs')
         for key in mobileArgs:
@@ -46,11 +47,9 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
                 return mapping.remote
         return local
 
-
     def setupTempDir(self):
         # make sure the temp dir exists
-        if not self.device.dirExists(self.remoteTmpDir):
-            self.device.mkDir(self.remoteTmpDir)
+        self.clearRemoteDir(self.remoteTmpDir)
         # env var is set in buildEnvironment
         return self.remoteTmpDir
 
@@ -68,8 +67,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         return pluginsDir
 
     def setupProfileDir(self):
-        self.device.removeDir(self.profileDir)
-        self.device.mkDir(self.profileDir)
+        self.clearRemoteDir(self.profileDir)
         if self.interactive or self.singleFile:
             self.log.info("profile dir is %s" % self.profileDir)
         return self.profileDir
@@ -88,9 +86,10 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
                     continue
 
                 path = remoteJoin(self.remoteHere, f)
-                if not self.device.fileExists(path):
-                    raise Exception('%s file does not exist: %s' % ( kind,
-                        path))
+
+                # skip check for file existence: the convenience of discovering
+                # a missing file does not justify the time cost of the round trip
+                # to the device
 
                 yield path
 
@@ -144,7 +143,6 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         # Guard against an accumulation of hung processes by killing
         # them here. Note also that IPC tests may spawn new instances
         # of xpcshell.
-        self.device.killProcess(cmd[0])
         self.device.killProcess("xpcshell")
         return outputFile
 
@@ -162,8 +160,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         with mozfile.TemporaryDirectory() as dumpDir:
             self.device.getDirectory(self.remoteMinidumpDir, dumpDir)
             crashed = xpcshell.XPCShellTestThread.checkForCrashes(self, dumpDir, symbols_path, test_name)
-            self.device.removeDir(self.remoteMinidumpDir)
-            self.device.mkDir(self.remoteMinidumpDir)
+            self.clearRemoteDir(self.remoteMinidumpDir)
         return crashed
 
     def communicate(self, proc):
@@ -190,6 +187,9 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
 
     def removeDir(self, dirname):
         self.device.removeDir(dirname)
+
+    def clearRemoteDir(self, remoteDir):
+        self.device.shellCheckOutput([self.remoteClearDirScript, remoteDir])
 
     #TODO: consider creating a separate log dir.  We don't have the test file structure,
     #      so we use filename.log.  Would rather see ./logs/filename.log
@@ -238,6 +238,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.remoteComponentsDir = remoteJoin(self.remoteTestRoot, "c")
         self.remoteModulesDir = remoteJoin(self.remoteTestRoot, "m")
         self.remoteMinidumpDir = remoteJoin(self.remoteTestRoot, "minidumps")
+        self.remoteClearDirScript = remoteJoin(self.remoteBinDir, "cleardir")
         self.profileDir = remoteJoin(self.remoteTestRoot, "p")
         self.remoteDebugger = options.debugger
         self.remoteDebuggerArgs = options.debuggerArgs
@@ -278,6 +279,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             'profileDir': self.profileDir,
             'remoteTmpDir': self.remoteTmpDir,
             'remoteMinidumpDir': self.remoteMinidumpDir,
+            'remoteClearDirScript': self.remoteClearDirScript,
         }
         if self.remoteAPK:
             self.mobileArgs['remoteAPK'] = self.remoteAPK
@@ -296,15 +298,32 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         f.write("#!/system/bin/sh\n")
         for envkey, envval in self.env.iteritems():
             f.write("export %s=%s\n" % (envkey, envval))
-        f.write("cd $1\n")
-        f.write("echo xpcw: cd $1\n")
-        f.write("shift\n")
-        f.write("echo xpcw: xpcshell \"$@\"\n")
-        f.write("%s/xpcshell \"$@\"\n" % self.remoteBinDir)
+        f.writelines([
+            "cd $1\n",
+            "echo xpcw: cd $1\n",
+            "shift\n",
+            "echo xpcw: xpcshell \"$@\"\n",
+            "%s/xpcshell \"$@\"\n" % self.remoteBinDir])
         f.close()
         remoteWrapper = remoteJoin(self.remoteBinDir, "xpcw")
         self.device.pushFile(localWrapper, remoteWrapper)
         os.remove(localWrapper)
+
+        # Removing and re-creating a directory is a common operation which
+        # can be implemented more efficiently with a shell script.
+        localWrapper = tempfile.mktemp()
+        f = open(localWrapper, "w")
+        # The directory may not exist initially, so rm may fail. 'rm -f' is not
+        # supported on some Androids. Similarly, 'test' and 'if [ -d ]' are not
+        # universally available, so we just ignore errors from rm.
+        f.writelines([
+            "#!/system/bin/sh\n",
+            "rm -r \"$1\"\n",
+            "mkdir \"$1\"\n"])
+        f.close()
+        self.device.pushFile(localWrapper, self.remoteClearDirScript)
+        os.remove(localWrapper)
+
         self.device.chmodDir(self.remoteBinDir)
 
     def buildEnvironment(self):

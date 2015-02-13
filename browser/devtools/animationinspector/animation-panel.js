@@ -11,6 +11,7 @@
  */
 let AnimationsPanel = {
   UI_UPDATED_EVENT: "ui-updated",
+  PANEL_INITIALIZED: "panel-initialized",
 
   initialize: Task.async(function*() {
     if (this.initialized) {
@@ -21,16 +22,27 @@ let AnimationsPanel = {
     this.playersEl = document.querySelector("#players");
     this.errorMessageEl = document.querySelector("#error-message");
     this.pickerButtonEl = document.querySelector("#element-picker");
+    this.toggleAllButtonEl = document.querySelector("#toggle-all");
+
+    // If the server doesn't support toggling all animations at once, hide the
+    // whole bottom toolbar.
+    if (!AnimationsController.hasToggleAll) {
+      document.querySelector("#toolbar").style.display = "none";
+    }
 
     let hUtils = gToolbox.highlighterUtils;
     this.togglePicker = hUtils.togglePicker.bind(hUtils);
     this.onPickerStarted = this.onPickerStarted.bind(this);
     this.onPickerStopped = this.onPickerStopped.bind(this);
     this.createPlayerWidgets = this.createPlayerWidgets.bind(this);
+    this.toggleAll = this.toggleAll.bind(this);
+    this.onTabNavigated = this.onTabNavigated.bind(this);
 
     this.startListeners();
 
     this.initialized.resolve();
+
+    this.emit(this.PANEL_INITIALIZED);
   }),
 
   destroy: Task.async(function*() {
@@ -47,6 +59,7 @@ let AnimationsPanel = {
     yield this.destroyPlayerWidgets();
 
     this.playersEl = this.errorMessageEl = null;
+    this.toggleAllButtonEl = this.pickerButtonEl = null;
 
     this.destroyed.resolve();
   }),
@@ -54,25 +67,35 @@ let AnimationsPanel = {
   startListeners: function() {
     AnimationsController.on(AnimationsController.PLAYERS_UPDATED_EVENT,
       this.createPlayerWidgets);
+
     this.pickerButtonEl.addEventListener("click", this.togglePicker, false);
     gToolbox.on("picker-started", this.onPickerStarted);
     gToolbox.on("picker-stopped", this.onPickerStopped);
+
+    this.toggleAllButtonEl.addEventListener("click", this.toggleAll, false);
+    gToolbox.target.on("navigate", this.onTabNavigated);
   },
 
   stopListeners: function() {
     AnimationsController.off(AnimationsController.PLAYERS_UPDATED_EVENT,
       this.createPlayerWidgets);
+
     this.pickerButtonEl.removeEventListener("click", this.togglePicker, false);
     gToolbox.off("picker-started", this.onPickerStarted);
     gToolbox.off("picker-stopped", this.onPickerStopped);
+
+    this.toggleAllButtonEl.removeEventListener("click", this.toggleAll, false);
+    gToolbox.target.off("navigate", this.onTabNavigated);
   },
 
   displayErrorMessage: function() {
     this.errorMessageEl.style.display = "block";
+    this.playersEl.style.display = "none";
   },
 
   hideErrorMessage: function() {
     this.errorMessageEl.style.display = "none";
+    this.playersEl.style.display = "block";
   },
 
   onPickerStarted: function() {
@@ -81,6 +104,29 @@ let AnimationsPanel = {
 
   onPickerStopped: function() {
     this.pickerButtonEl.removeAttribute("checked");
+  },
+
+  toggleAll: Task.async(function*() {
+    let btnClass = this.toggleAllButtonEl.classList;
+
+    // Toggling all animations is async and it may be some time before each of
+    // the current players get their states updated, so toggle locally too, to
+    // avoid the timelines from jumping back and forth.
+    if (this.playerWidgets) {
+      let currentWidgetStateChange = [];
+      for (let widget of this.playerWidgets) {
+        currentWidgetStateChange.push(btnClass.contains("paused")
+          ? widget.play() : widget.pause());
+      }
+      yield promise.all(currentWidgetStateChange).catch(Cu.reportError);
+    }
+
+    btnClass.toggle("paused");
+    yield AnimationsController.toggleAll();
+  }),
+
+  onTabNavigated: function() {
+    this.toggleAllButtonEl.classList.remove("paused");
   },
 
   createPlayerWidgets: Task.async(function*() {
@@ -307,12 +353,15 @@ PlayerWidget.prototype = {
    * switched to the right state, and the timeline animation is stopped.
    */
   pause: function() {
+    if (this.player.state.playState === "finished") {
+      return;
+    }
+
     // Switch to the right className on the element right away to avoid waiting
     // for the next state update to change the playPause icon.
     this.updateWidgetState({playState: "paused"});
-    return this.player.pause().then(() => {
-      this.stopTimelineAnimation();
-    });
+    this.stopTimelineAnimation();
+    return this.player.pause();
   },
 
   /**
@@ -321,6 +370,10 @@ PlayerWidget.prototype = {
    * switched to the right state, and the timeline animation is started.
    */
   play: function() {
+    if (this.player.state.playState === "finished") {
+      return;
+    }
+
     // Switch to the right className on the element right away to avoid waiting
     // for the next state update to change the playPause icon.
     this.updateWidgetState({playState: "running"});
