@@ -52,9 +52,6 @@ XPC_MAP_CLASSNAME::GetScriptableFlags()
 #ifdef XPC_MAP_WANT_RESOLVE
     nsIXPCScriptable::WANT_RESOLVE |
 #endif
-#ifdef XPC_MAP_WANT_CONVERT
-    nsIXPCScriptable::WANT_CONVERT |
-#endif
 #ifdef XPC_MAP_WANT_FINALIZE
     nsIXPCScriptable::WANT_FINALIZE |
 #endif
@@ -108,11 +105,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::Enumerate(nsIXPConnectWrappedNative *wrapper, J
 
 #ifndef XPC_MAP_WANT_RESOLVE
 NS_IMETHODIMP XPC_MAP_CLASSNAME::Resolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, jsid id, bool *resolvedp, bool *_retval)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
-#endif
-
-#ifndef XPC_MAP_WANT_CONVERT
-NS_IMETHODIMP XPC_MAP_CLASSNAME::Convert(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, uint32_t type, JS::Value * vp, bool *_retval)
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
@@ -172,10 +164,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreatePrototype(JSContext *cx, JSObject *pr
 
 #ifdef XPC_MAP_WANT_RESOLVE
 #undef XPC_MAP_WANT_RESOLVE
-#endif
-
-#ifdef XPC_MAP_WANT_CONVERT
-#undef XPC_MAP_WANT_CONVERT
 #endif
 
 #ifdef XPC_MAP_WANT_FINALIZE
