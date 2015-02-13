@@ -32,7 +32,7 @@ interface nsIXPConnectWrappedNative;
  * boolean to PR_TRUE before making the call.  Implementations may skip writing
  * to *_retval unless they want to return PR_FALSE.
  */
-[uuid(bdefff68-b286-449c-af13-bebc7dd25af7)]
+[uuid(82755b3f-fd81-4efe-aa14-d4743fbedda1)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
@@ -41,7 +41,7 @@ interface nsIXPCScriptable : nsISupports
     // unused bit here
     // unused bit here
     const uint32_t WANT_ADDPROPERTY                 = 1 <<  3;
-    // unused bit here
+    const uint32_t WANT_DELPROPERTY                 = 1 <<  4;
     const uint32_t WANT_GETPROPERTY                 = 1 <<  5;
     const uint32_t WANT_SETPROPERTY                 = 1 <<  6;
     const uint32_t WANT_ENUMERATE                   = 1 <<  7;
@@ -80,6 +80,9 @@ interface nsIXPCScriptable : nsISupports
     boolean addProperty(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
                        in JSValPtr vp);
+
+    boolean delProperty(in nsIXPConnectWrappedNative wrapper,
+                       in JSContextPtr cx, in JSObjectPtr obj, in jsid id);
 
     // The returnCode should be set to NS_SUCCESS_I_DID_SOMETHING if
     // this method does something.

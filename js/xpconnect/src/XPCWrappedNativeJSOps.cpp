@@ -762,6 +762,16 @@ XPC_WN_Helper_AddProperty(JSContext *cx, HandleObject obj, HandleId id,
     POST_HELPER_STUB
 }
 
+static bool
+XPC_WN_Helper_DelProperty(JSContext *cx, HandleObject obj, HandleId id,
+                          bool *succeeded)
+{
+    *succeeded = true;
+    PRE_HELPER_STUB
+    DelProperty(wrapper, cx, obj, id, &retval);
+    POST_HELPER_STUB
+}
+
 bool
 XPC_WN_Helper_GetProperty(JSContext *cx, HandleObject obj, HandleId id,
                           MutableHandleValue vp)
@@ -1018,7 +1028,9 @@ XPCNativeScriptableShared::PopulateJSClass()
     mJSClass.base.addProperty = addProperty;
 
     JSDeletePropertyOp delProperty;
-    if (mFlags.UseJSStubForDelProperty())
+    if (mFlags.WantDelProperty())
+        delProperty = XPC_WN_Helper_DelProperty;
+    else if (mFlags.UseJSStubForDelProperty())
         delProperty = nullptr;
     else if (mFlags.AllowPropModsDuringResolve())
         delProperty = XPC_WN_MaybeResolvingDeletePropertyStub;
