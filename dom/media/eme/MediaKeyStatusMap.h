@@ -17,10 +17,11 @@
 #include "mozilla/CDMCaps.h"
 
 class nsPIDOMWindow;
-class ArrayBufferViewOrArrayBuffer;
 
 namespace mozilla {
 namespace dom {
+
+class ArrayBufferViewOrArrayBuffer;
 
 class MediaKeyStatusMap MOZ_FINAL : public nsISupports,
                                     public nsWrapperCache
