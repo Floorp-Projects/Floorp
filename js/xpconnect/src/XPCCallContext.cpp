@@ -8,7 +8,6 @@
 
 #include "xpcprivate.h"
 #include "jswrapper.h"
-#include "jsfriendapi.h"
 
 using namespace mozilla;
 using namespace xpc;
@@ -68,9 +67,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mWrapper = XPCWrappedNative::Get(unwrapped);
     } else if (IS_TEAROFF_CLASS(clasp)) {
         mTearOff = (XPCWrappedNativeTearOff*)js::GetObjectPrivate(unwrapped);
-        mWrapper = XPCWrappedNative::Get(
-          &js::GetReservedSlot(unwrapped,
-                               XPC_WN_TEAROFF_FLAT_OBJECT_SLOT).toObject());
+        mWrapper = XPCWrappedNative::Get(js::GetObjectParent(unwrapped));
     }
     if (mWrapper) {
         if (mTearOff)
