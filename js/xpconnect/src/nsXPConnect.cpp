@@ -690,29 +690,6 @@ nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
     return NS_OK;
 }
 
-/* void reparentWrappedNativeIfFound (in JSContextPtr aJSContext,
- *                                    in JSObjectPtr aScope,
- *                                    in JSObjectPtr aNewParent,
- *                                    in nsISupports aCOMObj); */
-NS_IMETHODIMP
-nsXPConnect::ReparentWrappedNativeIfFound(JSContext * aJSContext,
-                                          JSObject * aScopeArg,
-                                          JSObject * aNewParentArg,
-                                          nsISupports *aCOMObj)
-{
-    RootedObject aScope(aJSContext, aScopeArg);
-    RootedObject aNewParent(aJSContext, aNewParentArg);
-
-    XPCWrappedNativeScope* scope = ObjectScope(aScope);
-    XPCWrappedNativeScope* scope2 = ObjectScope(aNewParent);
-    if (!scope || !scope2)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    RootedObject newParent(aJSContext, aNewParent);
-    return XPCWrappedNative::
-        ReparentWrapperIfFound(scope, scope2, newParent, aCOMObj);
-}
-
 static PLDHashOperator
 MoveableWrapperFinder(PLDHashTable *table, PLDHashEntryHdr *hdr,
                       uint32_t number, void *arg)
