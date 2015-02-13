@@ -362,10 +362,8 @@ static const char kPermissionsFileName[] = "permissions.sqlite";
 static const char kHostpermFileName[] = "hostperm.1";
 
 // Default permissions are read from a URL - this is the preference we read
-// to find that URL.
+// to find that URL. If not set, don't use any default permissions.
 static const char kDefaultsUrlPrefName[] = "permissions.manager.defaultsUrl";
-// If the pref above doesn't exist, the URL we use by default.
-static const char kDefaultsUrl[] = "resource://app/chrome/browser/default_permissions";
 
 static const char kPermissionChangeNotification[] = PERM_CHANGE_NOTIFICATION;
 
@@ -1892,13 +1890,9 @@ nsPermissionManager::Import()
 nsresult
 nsPermissionManager::ImportDefaults()
 {
-  // We allow prefs to override the default permissions URI, mainly as a hook
-  // for testing.
-  nsCString defaultsURL;
-  if (mozilla::Preferences::HasUserValue(kDefaultsUrlPrefName)) {
-    defaultsURL = mozilla::Preferences::GetCString(kDefaultsUrlPrefName);
-  } else {
-    defaultsURL = NS_LITERAL_CSTRING(kDefaultsUrl);
+  nsCString defaultsURL = mozilla::Preferences::GetCString(kDefaultsUrlPrefName);
+  if (defaultsURL.IsEmpty()) { // == Don't use built-in permissions.
+    return NS_OK;
   }
 
   nsresult rv;
