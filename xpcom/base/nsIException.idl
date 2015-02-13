@@ -26,6 +26,10 @@ interface nsIStackFrame : nsISupports
     readonly attribute AUTF8String             sourceLine;
     readonly attribute nsIStackFrame           caller;
 
+    // Returns the first frame whose principals are subsumed by the caller's
+    // principals.
+    [noscript, implicit_jscontext] readonly attribute nsIStackFrame sanitized;
+
     // Returns a formatted stack string that looks like the sort of
     // string that would be returned by .stack on JS Error objects.
     // Only works on JS-language stack frames.
@@ -59,7 +63,7 @@ interface nsIException : nsISupports
     readonly attribute AString                 filename;
     // Valid line numbers begin at '1'. '0' indicates unknown.
     readonly attribute uint32_t                lineNumber;
-    // Valid column numbers begin at 0. 
+    // Valid column numbers begin at 0.
     // We don't have an unambiguous indicator for unknown.
     readonly attribute uint32_t                columnNumber;
 

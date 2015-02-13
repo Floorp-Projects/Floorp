@@ -2622,6 +2622,17 @@ GetObjectEnvironmentObjectForFunction(JSFunction *fun);
 extern JS_FRIEND_API(JSPrincipals *)
 GetSavedFramePrincipals(JS::HandleObject savedFrame);
 
+/*
+ * Get the first SavedFrame object in this SavedFrame stack whose principals are
+ * subsumed by the cx's principals. If there is no such frame, return nullptr.
+ *
+ * Do NOT pass a non-SavedFrame object here.
+ *
+ * The savedFrame and cx do not need to be in the same compartment.
+ */
+extern JS_FRIEND_API(JSObject *)
+GetFirstSubsumedSavedFrame(JSContext *cx, JS::HandleObject savedFrame);
+
 } /* namespace js */
 
 extern JS_FRIEND_API(bool)
