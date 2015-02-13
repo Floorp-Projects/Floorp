@@ -6,7 +6,7 @@
 
 XPIDL_SOURCES += [
     'nsIIccInfo.idl',
-    'nsIIccProvider.idl',
+    'nsIIccProvider.idl', # TODO: Bug 815526, deprecate RILContentHelper.
     'nsIIccService.idl',
 ]
 
