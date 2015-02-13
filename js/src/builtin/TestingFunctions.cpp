@@ -1040,7 +1040,7 @@ MakeFakePromise(JSContext *cx, unsigned argc, jsval *vp)
     if (!scope)
         return false;
 
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &FakePromiseClass, nullptr, scope));
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, &FakePromiseClass, NullPtr(), scope));
     if (!obj)
         return false;
 

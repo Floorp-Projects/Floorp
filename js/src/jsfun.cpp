@@ -384,7 +384,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     // the GeneratorObjectPrototype singleton.
     bool isStarGenerator = obj->as<JSFunction>().isStarGenerator();
     Rooted<GlobalObject*> global(cx, &obj->global());
-    JSObject *objProto;
+    RootedObject objProto(cx);
     if (isStarGenerator)
         objProto = GlobalObject::getOrCreateStarGeneratorObjectPrototype(cx, global);
     else
@@ -589,7 +589,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
         return false;
 
     if (mode == XDR_DECODE) {
-        JSObject *proto = nullptr;
+        RootedObject proto(cx);
         if (firstword & IsStarGenerator) {
             proto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
             if (!proto)
@@ -646,7 +646,7 @@ JSObject *
 js::CloneFunctionAndScript(JSContext *cx, HandleObject enclosingScope, HandleFunction srcFun)
 {
     /* NB: Keep this in sync with XDRInterpretedFunction. */
-    JSObject *cloneProto = nullptr;
+    RootedObject cloneProto(cx);
     if (srcFun->isStarGenerator()) {
         cloneProto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
         if (!cloneProto)
@@ -1902,7 +1902,7 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
      * and so would a call to f from another top-level's script or function.
      */
     RootedAtom anonymousAtom(cx, cx->names().anonymous);
-    JSObject *proto = nullptr;
+    RootedObject proto(cx);
     if (isStarGenerator) {
         proto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, global);
         if (!proto)
@@ -1964,14 +1964,14 @@ js::NewFunction(ExclusiveContext *cx, HandleObject funobjArg, Native native, uns
                 gc::AllocKind allocKind /* = JSFunction::FinalizeKind */,
                 NewObjectKind newKind /* = GenericObject */)
 {
-    return NewFunctionWithProto(cx, funobjArg, native, nargs, flags, parent, atom, nullptr,
+    return NewFunctionWithProto(cx, funobjArg, native, nargs, flags, parent, atom, NullPtr(),
                                 allocKind, newKind);
 }
 
 JSFunction *
 js::NewFunctionWithProto(ExclusiveContext *cx, HandleObject funobjArg, Native native,
                          unsigned nargs, JSFunction::Flags flags, HandleObject parent,
-                         HandleAtom atom, JSObject *proto,
+                         HandleAtom atom, HandleObject proto,
                          gc::AllocKind allocKind /* = JSFunction::FinalizeKind */,
                          NewObjectKind newKind /* = GenericObject */)
 {
@@ -2041,7 +2041,7 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
         return nullptr;
 
     NewObjectKind newKind = useSameScript ? newKindArg : SingletonObject;
-    JSObject *cloneProto = nullptr;
+    RootedObject cloneProto(cx);
     if (fun->isStarGenerator()) {
         cloneProto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
         if (!cloneProto)

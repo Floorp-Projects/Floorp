@@ -420,7 +420,7 @@ IntlInitialize(JSContext *cx, HandleObject obj, Handle<PropertyName*> initialize
 static bool
 CreateDefaultOptions(JSContext *cx, MutableHandleValue defaultOptions)
 {
-    RootedObject options(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr, cx->global()));
+    RootedObject options(cx, NewObjectWithGivenProto<PlainObject>(cx, NullPtr(), cx->global()));
     if (!options)
         return false;
     defaultOptions.setObject(*options);
@@ -439,7 +439,7 @@ static bool
 intl_availableLocales(JSContext *cx, CountAvailable countAvailable,
                       GetAvailable getAvailable, MutableHandleValue result)
 {
-    RootedObject locales(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr, js::NullPtr()));
+    RootedObject locales(cx, NewObjectWithGivenProto<PlainObject>(cx, NullPtr(), NullPtr()));
     if (!locales)
         return false;
 

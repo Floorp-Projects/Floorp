@@ -1223,7 +1223,7 @@ struct BindData
 
 template <typename ParseHandler>
 JSFunction *
-Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind, JSObject *proto)
+Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind, HandleObject proto)
 {
     MOZ_ASSERT_IF(kind == Statement, atom != nullptr);
 

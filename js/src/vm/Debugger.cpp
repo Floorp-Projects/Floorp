@@ -449,7 +449,7 @@ Debugger::getScriptFrameWithIter(JSContext *cx, AbstractFramePtr frame,
     FrameMap::AddPtr p = frames.lookupForAdd(frame);
     if (!p) {
         /* Create and populate the Debugger.Frame object. */
-        JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject();
+        RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject());
         RootedNativeObject frameobj(cx, NewNativeObjectWithGivenProto(cx, &DebuggerFrame_class,
                                                                       proto, NullPtr()));
         if (!frameobj)
@@ -769,7 +769,7 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, MutableHandleValue rv
         envobj = &p->value()->as<NativeObject>();
     } else {
         /* Create a new Debugger.Environment for env. */
-        JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_ENV_PROTO).toObject();
+        RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_ENV_PROTO).toObject());
         envobj = NewNativeObjectWithGivenProto(cx, &DebuggerEnv_class, proto, NullPtr(),
                                                TenuredObject);
         if (!envobj)
@@ -811,7 +811,7 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
             vp.setObject(*p->value());
         } else {
             /* Create a new Debugger.Object for obj. */
-            JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO).toObject();
+            RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO).toObject());
             NativeObject *dobj =
                 NewNativeObjectWithGivenProto(cx, &DebuggerObject_class, proto, NullPtr(),
                                               TenuredObject);
@@ -3891,7 +3891,7 @@ Debugger::drainTraceLogger(JSContext *cx, unsigned argc, Value *vp)
     /* Add all events to the array. */
     uint32_t index = 0;
     for (EventEntry *eventItem = events; eventItem < events + num; eventItem++, index++) {
-        RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, nullptr,
+        RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, NullPtr(),
                                                       GlobalObject::upcast(cx->global())));
         if (!item)
             return false;
@@ -3990,7 +3990,8 @@ Debugger::drainTraceLoggerScriptCalls(JSContext *cx, unsigned argc, Value *vp)
     /* Add all events to the array. */
     uint32_t index = 0;
     for (EventEntry *eventItem = events; eventItem < events + num; eventItem++) {
-        RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, nullptr, cx->global()));
+        RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, NullPtr(),
+                                                      cx->global()));
         if (!item)
             return false;
 
@@ -4113,7 +4114,7 @@ Debugger::newDebuggerScript(JSContext *cx, HandleScript script)
 {
     assertSameCompartment(cx, object.get());
 
-    JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_SCRIPT_PROTO).toObject();
+    RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_SCRIPT_PROTO).toObject());
     MOZ_ASSERT(proto);
     NativeObject *scriptobj = NewNativeObjectWithGivenProto(cx, &DebuggerScript_class,
                                                             proto, NullPtr(), TenuredObject);
@@ -5135,7 +5136,7 @@ Debugger::newDebuggerSource(JSContext *cx, HandleScriptSource source)
 {
     assertSameCompartment(cx, object.get());
 
-    JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_SOURCE_PROTO).toObject();
+    RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_SOURCE_PROTO).toObject());
     MOZ_ASSERT(proto);
     NativeObject *sourceobj = NewNativeObjectWithGivenProto(cx, &DebuggerSource_class,
                                                             proto, NullPtr(), TenuredObject);
@@ -5775,7 +5776,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
     if (frame.hasArgs()) {
         /* Create an arguments object. */
         Rooted<GlobalObject*> global(cx, &args.callee().global());
-        JSObject *proto = GlobalObject::getOrCreateArrayPrototype(cx, global);
+        RootedObject proto(cx, GlobalObject::getOrCreateArrayPrototype(cx, global));
         if (!proto)
             return false;
         argsobj = NewNativeObjectWithGivenProto(cx, &DebuggerArguments_class, proto,
@@ -6112,7 +6113,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
     /* If evalWithBindings, create the inner environment. */
     if (evalWithBindings) {
         /* TODO - This should probably be a Call object, like ES5 strict eval. */
-        RootedPlainObject nenv(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr, env));
+        RootedPlainObject nenv(cx, NewObjectWithGivenProto<PlainObject>(cx, NullPtr(), env));
         if (!nenv)
             return false;
         RootedId id(cx);

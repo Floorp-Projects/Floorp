@@ -488,7 +488,7 @@ CreatePrototypeObjectForComplexTypeInstance(JSContext *cx, HandleObject ctorProt
         return nullptr;
 
     return NewObjectWithProto<TypedProto>(cx,
-                                          &*ctorPrototypePrototype,
+                                          ctorPrototypePrototype,
                                           NullPtr(),
                                           TenuredObject);
 }
@@ -778,11 +778,11 @@ StructMetaTypeDescr::create(JSContext *cx,
     int32_t alignment = 1;             // Alignment of struct.
     bool opaque = false;               // Opacity of struct.
 
-    userFieldOffsets = NewObjectWithProto<PlainObject>(cx, nullptr, NullPtr(), TenuredObject);
+    userFieldOffsets = NewObjectWithProto<PlainObject>(cx, NullPtr(), NullPtr(), TenuredObject);
     if (!userFieldOffsets)
         return nullptr;
 
-    userFieldTypes = NewObjectWithProto<PlainObject>(cx, nullptr, NullPtr(), TenuredObject);
+    userFieldTypes = NewObjectWithProto<PlainObject>(cx, NullPtr(), NullPtr(), TenuredObject);
     if (!userFieldTypes)
         return nullptr;
 

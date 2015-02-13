@@ -4664,12 +4664,12 @@ CodeGenerator::visitCreateThis(LCreateThis *lir)
 }
 
 static JSObject *
-CreateThisForFunctionWithProtoWrapper(JSContext *cx, js::HandleObject callee, JSObject *proto)
+CreateThisForFunctionWithProtoWrapper(JSContext *cx, js::HandleObject callee, HandleObject proto)
 {
     return CreateThisForFunctionWithProto(cx, callee, proto);
 }
 
-typedef JSObject *(*CreateThisWithProtoFn)(JSContext *cx, HandleObject callee, JSObject *proto);
+typedef JSObject *(*CreateThisWithProtoFn)(JSContext *cx, HandleObject callee, HandleObject proto);
 static const VMFunction CreateThisWithProtoInfo =
 FunctionInfo<CreateThisWithProtoFn>(CreateThisForFunctionWithProtoWrapper);
 
