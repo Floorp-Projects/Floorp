@@ -190,17 +190,6 @@ PushUnaryNodeChild(ParseNode *node, NodeStack *stack)
 }
 
 static PushResult
-PushUnaryNodeNullableChild(ParseNode *node, NodeStack *stack)
-{
-    MOZ_ASSERT(node->isArity(PN_UNARY));
-
-    if (node->pn_kid)
-        stack->push(node->pn_kid);
-
-    return PushResult::Recyclable;
-}
-
-static PushResult
 PushBinaryNodeChildren(ParseNode *node, NodeStack *stack)
 {
     MOZ_ASSERT(node->isArity(PN_BINARY));
@@ -267,8 +256,12 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         return PushUnaryNodeChild(pn, stack);
 
       // Nodes with a single nullable child.
-      case PNK_SEMI:
-        return PushUnaryNodeNullableChild(pn, stack);
+      case PNK_SEMI: {
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        if (pn->pn_kid)
+            stack->push(pn->pn_kid);
+        return PushResult::Recyclable;
+      }
 
       // Binary nodes with two non-null children.
 
