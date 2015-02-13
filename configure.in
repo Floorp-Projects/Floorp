@@ -240,6 +240,7 @@ if test -n "$gonkdir" ; then
         AC_SUBST(MOZ_OMX_DECODER)
         MOZ_RTSP=1
         MOZ_FMP4=1
+        MOZ_SECUREELEMENT=1
         ;;
     17|18)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include"
@@ -264,6 +265,7 @@ if test -n "$gonkdir" ; then
         AC_SUBST(MOZ_OMX_ENCODER)
         AC_DEFINE(MOZ_OMX_ENCODER)
 	MOZ_FMP4=1
+        MOZ_SECUREELEMENT=1
         ;;
     19)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include"
@@ -279,6 +281,7 @@ if test -n "$gonkdir" ; then
         MOZ_OMX_ENCODER=1
         AC_DEFINE(MOZ_OMX_ENCODER)
         MOZ_AUDIO_OFFLOAD=1
+        MOZ_SECUREELEMENT=1
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
         MOZ_FMP4=1
@@ -7584,6 +7587,15 @@ if test -n "$MOZ_AUDIO_CHANNEL_MANAGER"; then
     AC_DEFINE(MOZ_AUDIO_CHANNEL_MANAGER)
 fi
 AC_SUBST(MOZ_AUDIO_CHANNEL_MANAGER)
+
+dnl ========================================================
+dnl = Enable Support for Secure Element API
+dnl ========================================================
+   MOZ_SECUREELEMENT=1,
+if test -n "$MOZ_SECUREELEMENT"; then
+   AC_DEFINE(MOZ_SECUREELEMENT)
+fi
+ AC_SUBST(MOZ_SECUREELEMENT)
 
 dnl ========================================================
 dnl = Support for demangling undefined symbols
