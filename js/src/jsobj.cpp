@@ -1595,6 +1595,12 @@ CreateThisForFunctionWithGroup(JSContext *cx, HandleObjectGroup group, JSObject 
     }
 
     gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
+
+    if (newKind == SingletonObject) {
+        RootedObject parentRoot(cx, parent);
+        return NewObjectWithGivenProto(cx, &PlainObject::class_, group->proto(), parentRoot,
+                                       allocKind, newKind);
+    }
     return NewObjectWithGroup<PlainObject>(cx, group, parent, allocKind, newKind);
 }
 
