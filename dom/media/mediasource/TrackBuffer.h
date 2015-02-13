@@ -156,6 +156,9 @@ private:
   // function.
   void RemoveDecoder(SourceBufferDecoder* aDecoder);
 
+  // Remove all empty decoders from the provided list;
+  void RemoveEmptyDecoders(nsTArray<SourceBufferDecoder*>& aDecoders);
+
   nsAutoPtr<ContainerParser> mParser;
 
   // A task queue using the shared media thread pool.  Used exclusively to
