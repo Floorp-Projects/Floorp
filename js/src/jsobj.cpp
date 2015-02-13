@@ -1170,7 +1170,7 @@ NewObjectGCKind(const js::Class *clasp)
 }
 
 static inline JSObject *
-NewObject(ExclusiveContext *cx, ObjectGroup *groupArg, JSObject *parent, gc::AllocKind kind,
+NewObject(ExclusiveContext *cx, ObjectGroup *groupArg, HandleObject parent, gc::AllocKind kind,
           NewObjectKind newKind)
 {
     const Class *clasp = groupArg->clasp();
@@ -1464,7 +1464,7 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg, const Class *clasp,
  * avoid losing creation site information for objects made by scripted 'new'.
  */
 JSObject *
-js::NewObjectWithGroupCommon(JSContext *cx, HandleObjectGroup group, JSObject *parent,
+js::NewObjectWithGroupCommon(JSContext *cx, HandleObjectGroup group, HandleObject parent,
                              gc::AllocKind allocKind, NewObjectKind newKind)
 {
     MOZ_ASSERT(parent);
@@ -1488,7 +1488,7 @@ js::NewObjectWithGroupCommon(JSContext *cx, HandleObjectGroup group, JSObject *p
                 return obj;
             } else {
                 obj = cache.newObjectFromHit<CanGC>(cx, entry, GetInitialHeap(newKind, group->clasp()));
-                parent = group->proto().toObject()->getParent();
+                MOZ_ASSERT(!obj);
             }
         }
     }
@@ -1540,7 +1540,7 @@ js::CreateThis(JSContext *cx, const Class *newclasp, HandleObject callee)
 }
 
 static inline JSObject *
-CreateThisForFunctionWithGroup(JSContext *cx, HandleObjectGroup group, JSObject *parent,
+CreateThisForFunctionWithGroup(JSContext *cx, HandleObjectGroup group, HandleObject parent,
                                NewObjectKind newKind)
 {
     if (group->maybeUnboxedLayout() && newKind != SingletonObject)
@@ -1623,7 +1623,8 @@ js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, HandleObj
             }
         }
 
-        res = CreateThisForFunctionWithGroup(cx, group, callee->getParent(), newKind);
+        RootedObject parent(cx, callee->getParent());
+        res = CreateThisForFunctionWithGroup(cx, group, parent, newKind);
     } else {
         RootedObject parent(cx, callee->getParent());
         gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
