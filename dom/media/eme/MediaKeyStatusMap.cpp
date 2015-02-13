@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsPIDOMWindow.h"
 #include "mozilla/dom/MediaKeyStatusMap.h"
+#include "nsPIDOMWindow.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/ToJSValue.h"
 
