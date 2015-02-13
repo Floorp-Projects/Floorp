@@ -32,13 +32,13 @@ interface nsIXPConnectWrappedNative;
  * boolean to PR_TRUE before making the call.  Implementations may skip writing
  * to *_retval unless they want to return PR_FALSE.
  */
-[uuid(24425dab-4e6b-4df5-b621-da2458c3bc42)]
+[uuid(82755b3f-fd81-4efe-aa14-d4743fbedda1)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
 
     const uint32_t WANT_PRECREATE                   = 1 <<  0;
-    const uint32_t WANT_CREATE                      = 1 <<  1;
+    // unused bit here
     // unused bit here
     const uint32_t WANT_ADDPROPERTY                 = 1 <<  3;
     const uint32_t WANT_DELPROPERTY                 = 1 <<  4;
@@ -76,9 +76,6 @@ interface nsIXPCScriptable : nsISupports
 
     void   preCreate(in nsISupports nativeObj, in JSContextPtr cx,
                      in JSObjectPtr globalObj, out JSObjectPtr parentObj);
-
-    void   create(in nsIXPConnectWrappedNative wrapper,
-                  in JSContextPtr cx, in JSObjectPtr obj);
 
     boolean addProperty(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
