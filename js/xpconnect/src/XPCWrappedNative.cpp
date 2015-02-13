@@ -480,36 +480,6 @@ FinishCreate(XPCWrappedNativeScope* Scope,
 
         if (cache && !cache->GetWrapperPreserveColor())
             cache->SetWrapper(flat);
-
-        // Our newly created wrapper is the one that we just added to the table.
-        // All is well. Call PostCreate as necessary.
-        XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
-        if (si && si->GetFlags().WantPostCreate()) {
-            nsresult rv = si->GetCallback()->PostCreate(wrapper, cx, flat);
-            if (NS_FAILED(rv)) {
-                // PostCreate failed and that's Very Bad. We'll remove it from
-                // the map and mark it as invalid, but the PostCreate function
-                // may have handed the partially-constructed-and-now-invalid
-                // wrapper to someone before failing. Or, perhaps worse, the
-                // PostCreate call could have triggered code that reentered
-                // XPConnect and tried to wrap the same object. In that case
-                // *we* hand out the invalid wrapper since it is already in our
-                // map :(
-                NS_ERROR("PostCreate failed! This is known to cause "
-                         "inconsistent state for some class types and may even "
-                         "cause a crash in combination with a JS GC. Fix the "
-                         "failing PostCreate ASAP!");
-
-                map->Remove(wrapper);
-
-                // This would be a good place to tell the wrapper not to remove
-                // itself from the map when it dies... See bug 429442.
-
-                if (cache)
-                    cache->ClearWrapper();
-                return rv;
-            }
-        }
     }
 
     DEBUG_CheckClassInfoClaims(wrapper);
