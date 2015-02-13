@@ -299,11 +299,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
 
     isUndefined_ = false;
 
-    /*
-     * Start with the proper defaults.  XXX shouldn't be necessary when we get
-     * rid of PropDesc::attributes()
-     */
-    attrs = JSPROP_PERMANENT | JSPROP_READONLY;
+    attrs = 0;
 
     bool found = false;
     RootedId id(cx);
@@ -324,8 +320,8 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
         return false;
     if (found) {
         hasConfigurable_ = true;
-        if (ToBoolean(v))
-            attrs &= ~JSPROP_PERMANENT;
+        if (!ToBoolean(v))
+            attrs |= JSPROP_PERMANENT;
     }
 
     /* 8.10.5 step 5 */
@@ -343,8 +339,8 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
         return false;
     if (found) {
         hasWritable_ = true;
-        if (ToBoolean(v))
-            attrs &= ~JSPROP_READONLY;
+        if (!ToBoolean(v))
+            attrs |= JSPROP_READONLY;
     }
 
     /* 8.10.7 step 7 */
@@ -355,7 +351,6 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
         hasGet_ = true;
         get_ = v;
         attrs |= JSPROP_GETTER | JSPROP_SHARED;
-        attrs &= ~JSPROP_READONLY;
         if (checkAccessors && !checkGetter(cx))
             return false;
     }
@@ -368,7 +363,6 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
         hasSet_ = true;
         set_ = v;
         attrs |= JSPROP_SETTER | JSPROP_SHARED;
-        attrs &= ~JSPROP_READONLY;
         if (checkAccessors && !checkSetter(cx))
             return false;
     }
@@ -475,14 +469,21 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
         if (desc.isGenericDescriptor() || desc.isDataDescriptor()) {
             MOZ_ASSERT(!obj->getOps()->defineProperty);
             RootedValue v(cx, desc.hasValue() ? desc.value() : UndefinedValue());
-            return NativeDefineProperty(cx, obj, id, v, nullptr, nullptr, desc.attributes(),
-                                        result);
+            unsigned attrs = desc.attributes();
+            if (!desc.hasConfigurable())
+                attrs |= JSPROP_PERMANENT;
+            if (!desc.hasWritable())
+                attrs |= JSPROP_READONLY;
+            return NativeDefineProperty(cx, obj, id, v, nullptr, nullptr, attrs, result);
         }
 
         MOZ_ASSERT(desc.isAccessorDescriptor());
 
+        unsigned attrs = desc.attributes();
+        if (!desc.hasConfigurable())
+            attrs |= JSPROP_PERMANENT;
         return NativeDefineProperty(cx, obj, id, UndefinedHandleValue,
-                                    desc.getter(), desc.setter(), desc.attributes(), result);
+                                    desc.getter(), desc.setter(), attrs, result);
     }
 
     /* 8.12.9 steps 5-6 (note 5 is merely a special case of 6). */
@@ -687,18 +688,22 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
         getter = IsImplicitDenseOrTypedArrayElement(shape) ? nullptr : shape->getter();
         setter = IsImplicitDenseOrTypedArrayElement(shape) ? nullptr : shape->setter();
     } else if (desc.isDataDescriptor()) {
-        unsigned unchanged = 0;
+        unsigned unchanged = 0, descAttrs = desc.attributes();
         if (!desc.hasConfigurable())
             unchanged |= JSPROP_PERMANENT;
         if (!desc.hasEnumerable())
             unchanged |= JSPROP_ENUMERATE;
         /* Watch out for accessor -> data transformations here. */
-        if (!desc.hasWritable() && shapeDataDescriptor)
-            unchanged |= JSPROP_READONLY;
+        if (!desc.hasWritable()) {
+            if (shapeDataDescriptor)
+                unchanged |= JSPROP_READONLY;
+            else
+                descAttrs |= JSPROP_READONLY;
+        }
 
         if (desc.hasValue())
             v = desc.value();
-        attrs = (desc.attributes() & ~unchanged) | (shapeAttributes & unchanged);
+        attrs = (descAttrs & ~unchanged) | (shapeAttributes & unchanged);
         getter = nullptr;
         setter = nullptr;
     } else {
