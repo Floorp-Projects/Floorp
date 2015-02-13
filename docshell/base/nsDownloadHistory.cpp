@@ -20,17 +20,18 @@ NS_IMPL_ISUPPORTS(nsDownloadHistory, nsIDownloadHistory)
 //// nsIDownloadHistory
 
 NS_IMETHODIMP
-nsDownloadHistory::AddDownload(nsIURI *aSource,
-                               nsIURI *aReferrer,
+nsDownloadHistory::AddDownload(nsIURI* aSource,
+                               nsIURI* aReferrer,
                                PRTime aStartTime,
-                               nsIURI *aDestination)
+                               nsIURI* aDestination)
 {
   NS_ENSURE_ARG_POINTER(aSource);
 
   nsCOMPtr<nsIGlobalHistory2> history =
     do_GetService("@mozilla.org/browser/global-history;2");
-  if (!history)
+  if (!history) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   bool visited;
   nsresult rv = history->IsVisited(aSource, &visited);
@@ -38,12 +39,13 @@ nsDownloadHistory::AddDownload(nsIURI *aSource,
 
   rv = history->AddURI(aSource, false, true, aReferrer);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   if (!visited) {
     nsCOMPtr<nsIObserverService> os =
       do_GetService("@mozilla.org/observer-service;1");
-    if (os)
+    if (os) {
       os->NotifyObservers(aSource, NS_LINK_VISITED_EVENT_TOPIC, nullptr);
+    }
   }
 
   return NS_OK;

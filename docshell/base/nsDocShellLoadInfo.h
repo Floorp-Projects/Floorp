@@ -7,7 +7,6 @@
 #ifndef nsDocShellLoadInfo_h__
 #define nsDocShellLoadInfo_h__
 
-
 // Helper Classes
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -32,21 +31,21 @@ protected:
   virtual ~nsDocShellLoadInfo();
 
 protected:
-  nsCOMPtr<nsIURI>                 mReferrer;
-  nsCOMPtr<nsISupports>            mOwner;
-  bool                             mInheritOwner;
-  bool                             mOwnerIsExplicit;
-  bool                             mSendReferrer;
-  nsDocShellInfoReferrerPolicy     mReferrerPolicy;
-  nsDocShellInfoLoadType           mLoadType;
-  nsCOMPtr<nsISHEntry>             mSHEntry;
-  nsString                         mTarget;
-  nsCOMPtr<nsIInputStream>         mPostDataStream;
-  nsCOMPtr<nsIInputStream>         mHeadersStream;
-  bool                             mIsSrcdocLoad;
-  nsString                         mSrcdocData;
-  nsCOMPtr<nsIDocShell>            mSourceDocShell;
-  nsCOMPtr<nsIURI>                 mBaseURI;
+  nsCOMPtr<nsIURI> mReferrer;
+  nsCOMPtr<nsISupports> mOwner;
+  bool mInheritOwner;
+  bool mOwnerIsExplicit;
+  bool mSendReferrer;
+  nsDocShellInfoReferrerPolicy mReferrerPolicy;
+  nsDocShellInfoLoadType mLoadType;
+  nsCOMPtr<nsISHEntry> mSHEntry;
+  nsString mTarget;
+  nsCOMPtr<nsIInputStream> mPostDataStream;
+  nsCOMPtr<nsIInputStream> mHeadersStream;
+  bool mIsSrcdocLoad;
+  nsString mSrcdocData;
+  nsCOMPtr<nsIDocShell> mSourceDocShell;
+  nsCOMPtr<nsIURI> mBaseURI;
 };
 
 #endif /* nsDocShellLoadInfo_h__ */
