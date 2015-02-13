@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="f47964c89a9c34d9a2e77afa3608d9ec604c3d20">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="2a2b008f9ae957fe19ad540d233d86b5c0b6829e"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="71defd569502274e877b56094e3a44d776033120"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2262d4a77d4f46ab230fd747bb91e9b77bad36cb"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="da777082e02eec11c4b7e27679bdb15f47a44f66"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="8d0d11d190ccc50d7d66009bcc896ad4b42d3f0d"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="95bb5b66b3ec5769c3de8d3f25d681787418e7d2"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="ebdad82e61c16772f6cd47e9f11936bf6ebe9aa0"/>
@@ -101,7 +101,6 @@
   <project name="platform/external/zlib" path="external/zlib" revision="6eb3570ff8fa71bd83bb375b4bf09804c6089fed"/>
   <project name="platform/frameworks/opt/emoji" path="frameworks/opt/emoji" revision="dbbe673145107e99883f62bafd70c5f43f11065c"/>
   <project name="platform/frameworks/wilhelm" path="frameworks/wilhelm" revision="f0c3b4edf597c40aae4ea311575f39c8bcf203df"/>
-  <project name="platform/hardware/libhardware_legacy" path="hardware/libhardware_legacy" revision="adb52b35ecb523bd332854945c09828ee887e575"/>
   <project name="platform/libcore" path="libcore" revision="baf7d8068dd501cfa338d3a8b1b87216d6ce0571"/>
   <project name="platform/libnativehelper" path="libnativehelper" revision="50c4430e32849530ced32680fd6ee98963b3f7ac"/>
   <project name="platform/ndk" path="ndk" revision="e58ef003be4306bb53a8c11331146f39e4eab31f"/>
@@ -118,6 +117,7 @@
   <project name="platform/system/vold" path="system/vold" revision="42fa2a0f14f965970a4b629a176bbd2666edf017"/>
   <project name="platform/external/curl" path="external/curl" revision="e68addd988448959ea8157c5de637346b4180c33"/>
   <project name="platform/external/icu4c" path="external/icu4c" revision="d3ec7428eb276db43b7ed0544e09344a6014806c"/>
+  <project name="platform/hardware/libhardware_legacy" path="hardware/libhardware_legacy" revision="76c4bf4bc430a1b8317f2f21ef735867733e50cc"/>
   <project name="platform/system/media" path="system/media" revision="c1332c21c608f4932a6d7e83450411cde53315ef"/>
   <!--original fetch url was git://github.com/t2m-foxfone/-->
   <remote fetch="https://git.mozilla.org/external/t2m-foxfone" name="t2m"/>
