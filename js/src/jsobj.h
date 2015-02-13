@@ -33,7 +33,7 @@ struct ClassInfo;
 
 namespace js {
 
-class AutoPropDescVector;
+class AutoPropertyDescriptorVector;
 class GCMarker;
 struct NativeIterator;
 class Nursery;
@@ -767,20 +767,13 @@ GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
  * the DefineProperty functions do not enforce some invariants mandated by ES6.
  */
 extern bool
-StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &desc,
-                       ObjectOpResult &result);
-
-extern bool
 StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
                        Handle<PropertyDescriptor> descriptor, ObjectOpResult &result);
 
 /*
- * For convenience, signatures identical to the above except without the
- * ObjectOpResult out-parameter. They throw a TypeError on failure.
+ * Same as above except without the ObjectOpResult out-parameter. Throws a
+ * TypeError on failure.
  */
-extern bool
-StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &desc);
-
 extern bool
 StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
                        Handle<PropertyDescriptor> desc);
@@ -1150,13 +1143,26 @@ DeepCloneObjectLiteral(JSContext *cx, HandleObject obj, NewObjectKind newKind = 
 extern bool
 DefineProperties(JSContext *cx, HandleObject obj, HandleObject props);
 
+/* ES6 draft rev 32 (2015 Feb 2) 6.2.4.5 ToPropertyDescriptor(Obj) */
+bool
+ToPropertyDescriptor(JSContext *cx, HandleValue v, bool checkAccessors,
+                     MutableHandle<PropertyDescriptor> desc);
+
+/*
+ * Throw a TypeError if desc.getterObject() or setterObject() is not
+ * callable. This performs exactly the checks omitted by ToPropertyDescriptor
+ * when checkAccessors is false.
+ */
+bool
+CheckPropertyDescriptorAccessors(JSContext *cx, Handle<PropertyDescriptor> desc);
+
 /*
  * Read property descriptors from props, as for Object.defineProperties. See
  * ES5 15.2.3.7 steps 3-5.
  */
 extern bool
 ReadPropertyDescriptors(JSContext *cx, HandleObject props, bool checkAccessors,
-                        AutoIdVector *ids, AutoPropDescVector *descs);
+                        AutoIdVector *ids, AutoPropertyDescriptorVector *descs);
 
 /* Read the name using a dynamic lookup on the scopeChain. */
 extern bool

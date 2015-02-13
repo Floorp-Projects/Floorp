@@ -136,7 +136,6 @@ js::NewPropertyDescriptorObject(JSContext *cx, Handle<PropertyDescriptor> desc,
     }
 
     Rooted<PropDesc> d(cx);
-
     d.initFromPropertyDescriptor(desc);
     RootedObject descObj(cx);
     if (!d.makeObject(cx, &descObj))
@@ -149,9 +148,6 @@ void
 PropDesc::initFromPropertyDescriptor(Handle<PropertyDescriptor> desc)
 {
     MOZ_ASSERT(isUndefined());
-
-    if (!desc.object())
-        return;
 
     isUndefined_ = false;
     attrs = uint8_t(desc.attributes());
@@ -197,12 +193,14 @@ PropDesc::populatePropertyDescriptor(HandleObject obj, MutableHandle<PropertyDes
     unsigned attrs = attributes();
     if (!hasEnumerable())
         attrs |= JSPROP_IGNORE_ENUMERATE;
-    if (!hasWritable())
-        attrs |= JSPROP_IGNORE_READONLY;
     if (!hasConfigurable())
         attrs |= JSPROP_IGNORE_PERMANENT;
-    if (!hasValue())
-        attrs |= JSPROP_IGNORE_VALUE;
+    if (!isAccessorDescriptor()) {
+        if (!hasWritable())
+            attrs |= JSPROP_IGNORE_READONLY;
+        if (!hasValue())
+            attrs |= JSPROP_IGNORE_VALUE;
+    }
     desc.setAttributes(attrs);
 
     desc.object().set(obj);
@@ -348,6 +346,14 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
         return false;
     if (found) {
+        // Enforce the rule that getters and setters must be objects, even if
+        // checkAccessors is false, because JSPropertyDescriptor's getter and
+        // setter fields can't hold arbitrary Values.
+        if (!v.isObject() && !v.isUndefined()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+                                 js_getter_str);
+            return false;
+        }
         hasGet_ = true;
         get_ = v;
         attrs |= JSPROP_GETTER | JSPROP_SHARED;
@@ -360,6 +366,12 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
     if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
         return false;
     if (found) {
+        // See comment above.
+        if (!v.isObject() && !v.isUndefined()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+                                 js_setter_str);
+            return false;
+        }
         hasSet_ = true;
         set_ = v;
         attrs |= JSPROP_SETTER | JSPROP_SHARED;
@@ -869,9 +881,12 @@ DefinePropertyOnTypedArray(JSContext *cx, HandleObject obj, HandleId id, const P
 }
 
 bool
-js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &desc,
-                           ObjectOpResult &result)
+js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
+                           Handle<PropertyDescriptor> descriptor, ObjectOpResult &result)
 {
+    Rooted<PropDesc> desc(cx);
+    desc.initFromPropertyDescriptor(descriptor);
+
     if (obj->is<ArrayObject>()) {
         Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
         return DefinePropertyOnArray(cx, arr, id, desc, result);
@@ -898,23 +913,6 @@ js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id, const P
 
 bool
 js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
-                           Handle<PropertyDescriptor> descriptor, ObjectOpResult &result)
-{
-    Rooted<PropDesc> desc(cx);
-    desc.initFromPropertyDescriptor(descriptor);
-    return StandardDefineProperty(cx, obj, id, desc, result);
-}
-
-bool
-js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &desc)
-{
-    ObjectOpResult success;
-    return StandardDefineProperty(cx, obj, id, desc, success) &&
-           success.checkStrict(cx, obj, id);
-}
-
-bool
-js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
                            Handle<PropertyDescriptor> desc)
 {
     ObjectOpResult success;
@@ -923,8 +921,35 @@ js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 bool
+js::ToPropertyDescriptor(JSContext *cx, HandleValue v, bool checkAccessors,
+                         MutableHandle<PropertyDescriptor> desc)
+{
+    Rooted<PropDesc> pd(cx);
+    if (!pd.initialize(cx, v, checkAccessors))
+        return false;
+    pd.populatePropertyDescriptor(NullPtr(), desc);
+    return true;
+}
+
+bool
+js::CheckPropertyDescriptorAccessors(JSContext *cx, Handle<PropertyDescriptor> desc)
+{
+    if (desc.hasGetterObject() && !IsCallable(desc.getterObject())) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+                             js_getter_str);
+        return false;
+    }
+    if (desc.hasSetterObject() && !IsCallable(desc.setterObject())) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+                             js_setter_str);
+        return false;
+    }
+    return true;
+}
+
+bool
 js::ReadPropertyDescriptors(JSContext *cx, HandleObject props, bool checkAccessors,
-                            AutoIdVector *ids, AutoPropDescVector *descs)
+                            AutoIdVector *ids, AutoPropertyDescriptorVector *descs)
 {
     if (!GetPropertyKeys(cx, props, JSITER_OWNONLY | JSITER_SYMBOLS, ids))
         return false;
@@ -932,10 +957,10 @@ js::ReadPropertyDescriptors(JSContext *cx, HandleObject props, bool checkAccesso
     RootedId id(cx);
     for (size_t i = 0, len = ids->length(); i < len; i++) {
         id = (*ids)[i];
-        Rooted<PropDesc> desc(cx);
+        Rooted<PropertyDescriptor> desc(cx);
         RootedValue v(cx);
         if (!GetProperty(cx, props, props, id, &v) ||
-            !desc.initialize(cx, v, checkAccessors) ||
+            !ToPropertyDescriptor(cx, v, checkAccessors, &desc) ||
             !descs->append(desc))
         {
             return false;
@@ -948,7 +973,7 @@ bool
 js::DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
 {
     AutoIdVector ids(cx);
-    AutoPropDescVector descs(cx);
+    AutoPropertyDescriptorVector descs(cx);
     if (!ReadPropertyDescriptors(cx, props, true, &ids, &descs))
         return false;
 

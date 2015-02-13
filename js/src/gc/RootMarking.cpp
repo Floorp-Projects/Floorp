@@ -149,8 +149,8 @@ AutoGCRooter::trace(JSTracer *trc)
       }
 
       case DESCVECTOR: {
-        AutoPropDescVector::VectorImpl &descriptors =
-            static_cast<AutoPropDescVector *>(this)->vector;
+        AutoPropertyDescriptorVector::VectorImpl &descriptors =
+            static_cast<AutoPropertyDescriptorVector *>(this)->vector;
         for (size_t i = 0, len = descriptors.length(); i < len; i++)
             descriptors[i].trace(trc);
         return;
