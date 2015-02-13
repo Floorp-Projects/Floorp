@@ -895,15 +895,6 @@ nsDOMClassInfo::PreCreate(nsISupports *nativeObj, JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsDOMClassInfo::Create(nsIXPConnectWrappedNative *wrapper,
-                       JSContext *cx, JSObject *obj)
-{
-  NS_WARNING("nsDOMClassInfo::Create Don't call me!");
-
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
 nsDOMClassInfo::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             JSObject *obj, jsid id, jsval *vp,
                             bool *_retval)
