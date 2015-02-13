@@ -56,7 +56,12 @@ xpidl:: $(xpt_files)
 
 $(xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir))
 
-$(foreach xpt,$(xpt_files),$(eval $(xpt): $(call mkdir_deps,$(dir $(xpt)))))
+define xpt_deps
+$(1): $(call mkdir_deps,$(dir $(1)))
+$(1): $(addsuffix .idl,$(addprefix $(dist_idl_dir)/,$($(basename $(notdir $(1)))_deps)))
+endef
+
+$(foreach xpt,$(xpt_files),$(eval $(call xpt_deps,$(xpt))))
 
 $(call include_deps,$(depends_files))
 
