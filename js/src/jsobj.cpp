@@ -1170,17 +1170,15 @@ NewObjectGCKind(const js::Class *clasp)
 }
 
 static inline JSObject *
-NewObject(ExclusiveContext *cx, ObjectGroup *groupArg, HandleObject parent, gc::AllocKind kind,
+NewObject(ExclusiveContext *cx, HandleObjectGroup group, HandleObject parent, gc::AllocKind kind,
           NewObjectKind newKind)
 {
-    const Class *clasp = groupArg->clasp();
+    const Class *clasp = group->clasp();
 
     MOZ_ASSERT(clasp != &ArrayObject::class_);
     MOZ_ASSERT_IF(clasp == &JSFunction::class_,
                   kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
     MOZ_ASSERT_IF(parent, &parent->global() == cx->global());
-
-    RootedObjectGroup group(cx, groupArg);
 
     JSObject *metadata = nullptr;
     if (!NewObjectMetadata(cx, &metadata))
@@ -1262,7 +1260,7 @@ js::NewObjectWithGivenTaggedProto(ExclusiveContext *cxArg, const Class *clasp,
         }
     }
 
-    ObjectGroup *group = ObjectGroup::defaultNewGroup(cxArg, clasp, proto, nullptr);
+    RootedObjectGroup group(cxArg, ObjectGroup::defaultNewGroup(cxArg, clasp, proto, nullptr));
     if (!group)
         return nullptr;
 
@@ -1440,7 +1438,7 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg, const Class *clasp,
         return nullptr;
 
     Rooted<TaggedProto> taggedProto(cxArg, TaggedProto(proto));
-    ObjectGroup *group = ObjectGroup::defaultNewGroup(cxArg, clasp, taggedProto);
+    RootedObjectGroup group(cxArg, ObjectGroup::defaultNewGroup(cxArg, clasp, taggedProto));
     if (!group)
         return nullptr;
 
