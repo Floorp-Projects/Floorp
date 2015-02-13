@@ -905,6 +905,15 @@ nsDOMClassInfo::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 }
 
 NS_IMETHODIMP
+nsDOMClassInfo::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                            JSObject *obj, jsid id, bool *_retval)
+{
+  NS_WARNING("nsDOMClassInfo::DelProperty Don't call me!");
+
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
 nsDOMClassInfo::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             JSObject *obj, jsid id, jsval *vp,
                             bool *_retval)
