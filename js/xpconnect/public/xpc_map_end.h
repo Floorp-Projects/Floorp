@@ -37,9 +37,6 @@ XPC_MAP_CLASSNAME::GetScriptableFlags()
 #ifdef XPC_MAP_WANT_ADDPROPERTY
     nsIXPCScriptable::WANT_ADDPROPERTY |
 #endif
-#ifdef XPC_MAP_WANT_DELPROPERTY
-    nsIXPCScriptable::WANT_DELPROPERTY |
-#endif
 #ifdef XPC_MAP_WANT_GETPROPERTY
     nsIXPCScriptable::WANT_GETPROPERTY |
 #endif
@@ -86,11 +83,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PreCreate(nsISupports *nativeObj, JSContext * c
 
 #ifndef XPC_MAP_WANT_ADDPROPERTY
 NS_IMETHODIMP XPC_MAP_CLASSNAME::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, jsid id, JS::Value * vp, bool *_retval)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
-#endif
-
-#ifndef XPC_MAP_WANT_DELPROPERTY
-NS_IMETHODIMP XPC_MAP_CLASSNAME::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, jsid id, bool *_retval)
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
@@ -160,10 +152,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreatePrototype(JSContext *cx, JSObject *pr
 
 #ifdef XPC_MAP_WANT_ADDPROPERTY
 #undef XPC_MAP_WANT_ADDPROPERTY
-#endif
-
-#ifdef XPC_MAP_WANT_DELPROPERTY
-#undef XPC_MAP_WANT_DELPROPERTY
 #endif
 
 #ifdef XPC_MAP_WANT_GETPROPERTY
