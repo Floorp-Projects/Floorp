@@ -168,6 +168,8 @@ typedef bool
 (* DefinePropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
                      JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
 typedef bool
+(* HasPropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *foundp);
+typedef bool
 (* GetPropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, JS::HandleId id,
                   JS::MutableHandleValue vp);
 typedef bool
@@ -341,6 +343,7 @@ struct ObjectOps
 {
     LookupPropertyOp    lookupProperty;
     DefinePropertyOp    defineProperty;
+    HasPropertyOp       hasProperty;
     GetPropertyOp       getProperty;
     SetPropertyOp       setProperty;
     GetOwnPropertyOp    getOwnPropertyDescriptor;
@@ -354,7 +357,7 @@ struct ObjectOps
 
 #define JS_NULL_OBJECT_OPS                                                    \
     {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,  \
-     nullptr, nullptr, nullptr}
+     nullptr, nullptr, nullptr, nullptr}
 
 } // namespace js
 
@@ -365,7 +368,7 @@ typedef void (*JSClassInternal)();
 struct JSClass {
     JS_CLASS_MEMBERS(JSFinalizeOp);
 
-    void                *reserved[23];
+    void                *reserved[24];
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot

@@ -299,6 +299,7 @@ namespace js {
         {                                                                               \
             js::proxy_LookupProperty,                                                   \
             js::proxy_DefineProperty,                                                   \
+            js::proxy_HasProperty,                                                      \
             js::proxy_GetProperty,                                                      \
             js::proxy_SetProperty,                                                      \
             js::proxy_GetOwnPropertyDescriptor,                                         \
@@ -331,6 +332,8 @@ proxy_LookupProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::M
 extern JS_FRIEND_API(bool)
 proxy_DefineProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
                      JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
+extern JS_FRIEND_API(bool)
+proxy_HasProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *foundp);
 extern JS_FRIEND_API(bool)
 proxy_GetProperty(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, JS::HandleId id,
                   JS::MutableHandleValue vp);

@@ -394,6 +394,7 @@ class CGDOMJSClass(CGThing):
                     {
                       nullptr, /* lookupProperty */
                       nullptr, /* defineProperty */
+                      nullptr, /* hasProperty */
                       nullptr, /* getProperty */
                       nullptr, /* setProperty */
                       nullptr, /* getOwnPropertyDescriptor */

@@ -684,6 +684,7 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
     {
         nullptr, // lookupProperty
         nullptr, // defineProperty
+        nullptr, // hasProperty
         nullptr, // getProperty
         nullptr, // setProperty
         nullptr, // getOwnPropertyDescriptor
