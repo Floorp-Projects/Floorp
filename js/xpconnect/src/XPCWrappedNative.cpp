@@ -1251,6 +1251,78 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
     return NS_OK;
 }
 
+// Orphans are sad little things - If only we could treat them better. :-(
+//
+// When a wrapper gets reparented to another scope (for example, when calling
+// adoptNode), it's entirely possible that it previously served as the parent for
+// other wrappers (via PreCreate hooks). When it moves, the old mFlatJSObject is
+// replaced by a cross-compartment wrapper. Its descendants really _should_ move
+// too, but we have no way of locating them short of a compartment-wide sweep
+// (which we believe to be prohibitively expensive).
+//
+// So we just leave them behind. In practice, the only time this turns out to
+// be a problem is during subsequent wrapper reparenting. When this happens, we
+// call into the below fixup code at the last minute and straighten things out
+// before proceeding.
+//
+// See bug 751995 for more information.
+
+static nsresult
+RescueOrphans(HandleObject obj)
+{
+    AutoJSContext cx;
+    //
+    // Even if we're not an orphan at the moment, one of our ancestors might
+    // be. If so, we need to recursively rescue up the parent chain.
+    //
+
+    // First, get the parent object. If we're currently an orphan, the parent
+    // object is a cross-compartment wrapper. Follow the parent into its own
+    // compartment and fix it up there. We'll fix up |this| afterwards.
+    //
+    // NB: We pass stopAtOuter=false during the unwrap because Location objects
+    // are parented to outer window proxies.
+    nsresult rv;
+    RootedObject parentObj(cx, js::GetObjectParent(obj));
+    if (!parentObj)
+        return NS_OK; // Global object. We're done.
+    parentObj = js::UncheckedUnwrap(parentObj, /* stopAtOuter = */ false);
+
+    // Recursively fix up orphans on the parent chain.
+    rv = RescueOrphans(parentObj);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Now that we know our parent is in the right place, determine if we've
+    // been orphaned. If not, we have nothing to do.
+    if (!js::IsCrossCompartmentWrapper(parentObj))
+        return NS_OK;
+
+    // We've been orphaned. Find where our parent went, and follow it.
+    if (IS_WN_REFLECTOR(obj)) {
+        RootedObject realParent(cx, js::UncheckedUnwrap(parentObj));
+        XPCWrappedNative *wn =
+            static_cast<XPCWrappedNative*>(js::GetObjectPrivate(obj));
+        return wn->ReparentWrapperIfFound(ObjectScope(parentObj),
+                                          ObjectScope(realParent),
+                                          realParent, wn->GetIdentityObject());
+    }
+
+    JSAutoCompartment ac(cx, obj);
+    return ReparentWrapper(cx, obj);
+}
+
+// Recursively fix up orphans on the parent chain of a wrapper. Note that this
+// can cause a wrapper to move even if it is not an orphan, since its parent
+// might be an orphan and fixing the parent causes this wrapper to become an
+// orphan.
+nsresult
+XPCWrappedNative::RescueOrphans()
+{
+    AutoJSContext cx;
+    RootedObject flatJSObject(cx, mFlatJSObject);
+    return ::RescueOrphans(flatJSObject);
+}
+
 bool
 XPCWrappedNative::ExtendSet(XPCNativeInterface* aInterface)
 {
