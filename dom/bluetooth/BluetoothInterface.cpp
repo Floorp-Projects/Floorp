@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* -*- Mode: c++; c-basic-offset: 3; indent-tabs-mode: nil; tab-width: 40 -*- */
 /* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -98,11 +98,11 @@ BluetoothInterface::GetInstance()
   /* We pick a default backend from the available ones. The branches
    * are ordered by preference.
    */
-#ifdef MOZ_B2G_BT_DAEMON
-  static const char sDefaultBackend[] = "bluetoothd";
-#else
 #ifdef MOZ_B2G_BT_BLUEDROID
   static const char sDefaultBackend[] = "bluedroid";
+#else
+#ifdef MOZ_B2G_BT_DAEMON
+  static const char sDefaultBackend[] = "bluetoothd";
 #else
   static const char* const sDefaultBackend = nullptr;
 #endif
