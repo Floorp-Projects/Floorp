@@ -188,9 +188,6 @@ nsresult
 nsAboutRedirector::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   nsAboutRedirector* about = new nsAboutRedirector();
-  if (!about) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   NS_ADDREF(about);
   nsresult rv = about->QueryInterface(aIID, aResult);
   NS_RELEASE(about);

@@ -1117,16 +1117,6 @@ nsDefaultURIFixup::IsDomainWhitelisted(const nsAutoCString aAsciiHost,
   return Preferences::GetBool(pref.get(), false);
 }
 
-nsresult
-NS_NewURIFixup(nsIURIFixup** aURIFixup)
-{
-  nsDefaultURIFixup* fixup = new nsDefaultURIFixup;
-  if (!fixup) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return fixup->QueryInterface(NS_GET_IID(nsIURIFixup), (void**)aURIFixup);
-}
-
 /* Implementation of nsIURIFixupInfo */
 NS_IMPL_ISUPPORTS(nsDefaultURIFixupInfo, nsIURIFixupInfo)
 
