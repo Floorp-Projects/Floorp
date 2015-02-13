@@ -76,6 +76,8 @@
 #include "nsExceptionHandler.h"
 #endif
 
+#include "VsyncSource.h"
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
@@ -1911,3 +1913,110 @@ gfxWindowsPlatform::InitD3D11Devices()
   d3d11Module.disown();
 }
 
+class D3DVsyncSource MOZ_FINAL : public VsyncSource
+{
+public:
+
+  class D3DVsyncDisplay MOZ_FINAL : public VsyncSource::Display
+  {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(D3DVsyncDisplay)
+    public:
+      D3DVsyncDisplay()
+        : mVsyncEnabledLock("D3DVsyncEnabledLock")
+        , mVsyncEnabled(false)
+      {
+        mVsyncThread = new base::Thread("WindowsVsyncThread");
+      }
+
+      virtual ~D3DVsyncDisplay()
+      {
+        MOZ_ASSERT(NS_IsMainThread());
+        DisableVsync();
+        delete mVsyncThread;
+      }
+
+      virtual void EnableVsync() MOZ_OVERRIDE
+      {
+        MOZ_ASSERT(NS_IsMainThread());
+        { // scope lock
+          MonitorAutoLock lock(mVsyncEnabledLock);
+          if (mVsyncEnabled) {
+            return;
+          }
+          mVsyncEnabled = true;
+        }
+
+        MOZ_RELEASE_ASSERT(mVsyncThread->Start(), "Could not start Windows vsync thread");
+        CancelableTask* vsyncStart = NewRunnableMethod(this,
+            &D3DVsyncDisplay::VBlankLoop);
+        mVsyncThread->message_loop()->PostTask(FROM_HERE, vsyncStart);
+      }
+
+      virtual void DisableVsync() MOZ_OVERRIDE
+      {
+        MOZ_ASSERT(NS_IsMainThread());
+        { // scope lock
+          MonitorAutoLock lock(mVsyncEnabledLock);
+          if (!mVsyncEnabled) {
+            return;
+          }
+          mVsyncEnabled = false;
+        }
+
+        mVsyncThread->Stop();
+      }
+
+      virtual bool IsVsyncEnabled() MOZ_OVERRIDE
+      {
+        MOZ_ASSERT(NS_IsMainThread());
+        MonitorAutoLock lock(mVsyncEnabledLock);
+        return mVsyncEnabled;
+      }
+
+    private:
+      bool IsInVsyncThread()
+      {
+        return mVsyncThread->thread_id() == PlatformThread::CurrentId();
+      }
+
+      Monitor mVsyncEnabledLock;
+      base::Thread* mVsyncThread;
+      bool mVsyncEnabled;
+  }; // end d3dvsyncdisplay
+
+  D3DVsyncSource()
+  {
+    mPrimaryDisplay = new D3DVsyncDisplay();
+  }
+
+  virtual Display& GetGlobalDisplay() MOZ_OVERRIDE
+  {
+    return *mPrimaryDisplay;
+  }
+
+private:
+  virtual ~D3DVsyncSource()
+  {
+  }
+  nsRefPtr<D3DVsyncDisplay> mPrimaryDisplay;
+}; // end D3DVsyncSource
+
+already_AddRefed<mozilla::gfx::VsyncSource>
+gfxWindowsPlatform::CreateHardwareVsyncSource()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (!WinUtils::dwmIsCompositionEnabledPtr) {
+    NS_WARNING("Dwm composition not available, falling back to software vsync\n");
+    return gfxPlatform::CreateHardwareVsyncSource();
+  }
+
+  BOOL dwmEnabled = false;
+  WinUtils::dwmIsCompositionEnabledPtr(&dwmEnabled);
+  if (!dwmEnabled) {
+    NS_WARNING("DWM not enabled, falling back to software vsync\n");
+    return gfxPlatform::CreateHardwareVsyncSource();
+  }
+
+  nsRefPtr<VsyncSource> d3dVsyncSource = new D3DVsyncSource();
+  return d3dVsyncSource.forget();
+}
