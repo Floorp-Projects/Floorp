@@ -4,7 +4,7 @@
 
 // Tests that network log messages bring up the network panel.
 
-const TEST_NETWORK_REQUEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-network-request.html";
+const TEST_NETWORK_REQUEST_URI = "https://example.com/browser/browser/devtools/webconsole/test/test-network-request.html";
 
 const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/test/test-image.png";
 
@@ -20,14 +20,20 @@ let hud, browser;
 function test()
 {
   const PREF = "devtools.webconsole.persistlog";
-  let original = Services.prefs.getBoolPref("devtools.webconsole.filter.networkinfo");
-  let originalXhr = Services.prefs.getBoolPref("devtools.webconsole.filter.netxhr");
-  Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", true);
-  Services.prefs.setBoolPref("devtools.webconsole.filter.netxhr", true);
+  const NET_PREF = "devtools.webconsole.filter.networkinfo";
+  const NETXHR_PREF = "devtools.webconsole.filter.netxhr"
+  const MIXED_AC_PREF = "security.mixed_content.block_active_content"
+  let original = Services.prefs.getBoolPref(NET_PREF);
+  let originalXhr = Services.prefs.getBoolPref(NETXHR_PREF);
+  let originalMixedActive = Services.prefs.getBoolPref(MIXED_AC_PREF);
+  Services.prefs.setBoolPref(NET_PREF, true);
+  Services.prefs.setBoolPref(NETXHR_PREF, true);
+  Services.prefs.setBoolPref(MIXED_AC_PREF, false);
   Services.prefs.setBoolPref(PREF, true);
   registerCleanupFunction(() => {
-    Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", original);
-    Services.prefs.setBoolPref("devtools.webconsole.filter.netxhr", originalXhr);
+    Services.prefs.setBoolPref(NET_PREF, original);
+    Services.prefs.setBoolPref(NETXHR_PREF, originalXhr);
+    Services.prefs.setBoolPref(MIXED_AC_PREF, originalMixedActive);
     Services.prefs.clearUserPref(PREF);
   });
 
@@ -100,11 +106,25 @@ function testXhrGet()
     is(lastRequest.request.method, "GET", "Method is correct");
     lastRequest = null;
     requestCallback = null;
-    executeSoon(testXhrPost);
+    executeSoon(testXhrWarn);
   };
 
   // Start the XMLHttpRequest() GET test.
   content.wrappedJSObject.testXhrGet();
+}
+
+function testXhrWarn()
+{
+  requestCallback = function() {
+    ok(lastRequest, "testXhrWarn() was logged");
+    is(lastRequest.request.method, "GET", "Method is correct");
+    lastRequest = null;
+    requestCallback = null;
+    executeSoon(testXhrPost);
+  };
+
+  // Start the XMLHttpRequest() warn test.
+  content.wrappedJSObject.testXhrWarn();
 }
 
 function testXhrPost()
@@ -143,7 +163,15 @@ function testFormSubmission()
           text: "test-data.json",
           category: CATEGORY_NETWORK,
           severity: SEVERITY_INFO,
+          isXhr: true,
           count: 2,
+        },
+        {
+          text: "http://example.com/",
+          category: CATEGORY_NETWORK,
+          severity: SEVERITY_WARNING,
+          isXhr: true,
+          count: 1,
         },
       ],
     }).then(testLiveFilteringOnSearchStrings);

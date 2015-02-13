@@ -89,6 +89,41 @@ let AnimationPlayerActor = ActorClass({
   },
 
   /**
+   * Some of the player's properties are retrieved from the node's
+   * computed-styles because the Web Animations API does not provide them yet.
+   * But the computed-styles may contain multiple animations for a node and so
+   * we need to know which is the index of the current animation in the style.
+   * @return {Number}
+   */
+  getPlayerIndex: function() {
+    let names = this.styles.animationName;
+
+    // If no names are found, then it's probably a transition, in which case we
+    // can't find the actual index, so just trust the playerIndex passed by
+    // the AnimationsActor at initialization time.
+    // Note that this may be incorrect if by the time the AnimationPlayerActor
+    // is initialized, one of the transitions has ended, but it's the best we
+    // can do for now.
+    if (!names) {
+      return this.playerIndex;
+    }
+
+    // If there's only one name.
+    if (names.contains(",") === -1) {
+      return 0;
+    }
+
+    // If there are several names, retrieve the index of the animation name in
+    // the list.
+    names = names.split(",").map(n => n.trim());
+    for (let i = 0; i < names.length; i ++) {
+      if (names[i] === this.player.source.effect.name) {
+        return i;
+      }
+    }
+  },
+
+  /**
    * Get the animation duration from this player, in milliseconds.
    * Note that the Web Animations API doesn't yet offer a way to retrieve this
    * directly from the AnimationPlayer object, so for now, a duration is only
@@ -105,8 +140,10 @@ let AnimationPlayerActor = ActorClass({
       return null;
     }
 
+    // If the computed duration has multiple entries, we need to find the right
+    // one.
     if (durationText.indexOf(",") !== -1) {
-      durationText = durationText.split(",")[this.playerIndex];
+      durationText = durationText.split(",")[this.getPlayerIndex()];
     }
 
     return parseFloat(durationText) * 1000;
@@ -130,7 +167,7 @@ let AnimationPlayerActor = ActorClass({
     }
 
     if (delayText.indexOf(",") !== -1) {
-      delayText = delayText.split(",")[this.playerIndex];
+      delayText = delayText.split(",")[this.getPlayerIndex()];
     }
 
     return parseFloat(delayText) * 1000;
@@ -148,7 +185,7 @@ let AnimationPlayerActor = ActorClass({
   getIterationCount: function() {
     let iterationText = this.styles.animationIterationCount;
     if (iterationText.indexOf(",") !== -1) {
-      iterationText = iterationText.split(",")[this.playerIndex];
+      iterationText = iterationText.split(",")[this.getPlayerIndex()];
     }
 
     return iterationText === "infinite"
