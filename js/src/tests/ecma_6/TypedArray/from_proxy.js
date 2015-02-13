@@ -31,6 +31,7 @@ for (var constructor of constructors) {
             set: function (t, id, v) {
                 log.push("set", id);
                 t[id] = v;
+                return true;
             }
         };
         return new Proxy(Object(target), h);
