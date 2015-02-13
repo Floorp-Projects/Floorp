@@ -120,7 +120,7 @@
   <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="9d83b3a8e72c773820ada75e5a2cd128a743cf35"/>
   <project name="platform_system_core" path="system/core" remote="b2g" revision="542d1f59dc331b472307e5bd043101d14d5a3a3e"/>
   <project name="platform/system/extras" path="system/extras" revision="18c1180e848e7ab8691940481f5c1c8d22c37b3e"/>
-  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="af112bfefcc5da898136ef82c6c28db4d63b5bda"/>
+  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="3211e72ef1407171b52d8258fb92298cbd3ec651"/>
   <project name="platform/system/media" path="system/media" revision="d90b836f66bf1d9627886c96f3a2d9c3007fbb80"/>
   <project name="platform/system/netd" path="system/netd" revision="56112dd7b811301b718d0643a82fd5cac9522073"/>
   <project name="platform/system/security" path="system/security" revision="f48ff68fedbcdc12b570b7699745abb6e7574907"/>
