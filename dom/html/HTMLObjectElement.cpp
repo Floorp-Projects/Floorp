@@ -111,7 +111,7 @@ HTMLObjectElement::GetForm(nsIDOMHTMLFormElement **aForm)
 }
 
 void
-HTMLObjectElement::GetItemValueText(nsAString& aValue)
+HTMLObjectElement::GetItemValueText(DOMString& aValue)
 {
   GetData(aValue);
 }

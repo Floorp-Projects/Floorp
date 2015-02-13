@@ -3034,7 +3034,7 @@ nsGenericHTMLElement::GetItemValue(JSContext* aCx, JSObject* aScope,
     return;
   }
 
-  nsString string;
+  DOMString string;
   GetItemValueText(string);
   if (!xpc::NonVoidStringToJsval(aCx, string, aRetval)) {
     aError.Throw(NS_ERROR_FAILURE);
@@ -3055,9 +3055,11 @@ nsGenericHTMLElement::GetItemValue(nsIVariant** aValue)
   if (ItemScope()) {
     out->SetAsISupports(static_cast<nsIContent*>(this));
   } else {
-    nsAutoString string;
+    DOMString string;
     GetItemValueText(string);
-    out->SetAsAString(string);
+    nsString xpcomString;
+    string.ToString(xpcomString);
+    out->SetAsAString(xpcomString);
   }
 
   out.forget(aValue);
@@ -3098,7 +3100,7 @@ nsGenericHTMLElement::SetItemValue(nsIVariant* aValue)
 }
 
 void
-nsGenericHTMLElement::GetItemValueText(nsAString& text)
+nsGenericHTMLElement::GetItemValueText(DOMString& text)
 {
   ErrorResult rv;
   GetTextContentInternal(text, rv);
