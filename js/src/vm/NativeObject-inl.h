@@ -345,19 +345,28 @@ CopyInitializerObject(JSContext *cx, HandlePlainObject baseobj, NewObjectKind ne
 }
 
 inline NativeObject *
-NewNativeObjectWithGivenProto(ExclusiveContext *cx, const Class *clasp,
-                              TaggedProto proto, HandleObject parent,
-                              gc::AllocKind allocKind, NewObjectKind newKind)
+NewNativeObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp,
+                                    TaggedProto proto, HandleObject parent,
+                                    gc::AllocKind allocKind, NewObjectKind newKind)
 {
-    return MaybeNativeObject(NewObjectWithGivenProto(cx, clasp, proto, parent, allocKind, newKind));
+    return MaybeNativeObject(NewObjectWithGivenTaggedProto(cx, clasp, proto, parent, allocKind,
+                                                           newKind));
+}
+
+inline NativeObject *
+NewNativeObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp,
+                                    TaggedProto proto, HandleObject parent,
+                                    NewObjectKind newKind = GenericObject)
+{
+    return MaybeNativeObject(NewObjectWithGivenTaggedProto(cx, clasp, proto, parent, newKind));
 }
 
 inline NativeObject *
 NewNativeObjectWithGivenProto(ExclusiveContext *cx, const Class *clasp,
-                              TaggedProto proto, HandleObject parent,
-                              NewObjectKind newKind = GenericObject)
+                              JSObject *proto, HandleObject parent,
+                              gc::AllocKind allocKind, NewObjectKind newKind)
 {
-    return MaybeNativeObject(NewObjectWithGivenProto(cx, clasp, proto, parent, newKind));
+    return MaybeNativeObject(NewObjectWithGivenProto(cx, clasp, proto, parent, allocKind, newKind));
 }
 
 inline NativeObject *

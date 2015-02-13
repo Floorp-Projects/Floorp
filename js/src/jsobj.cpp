@@ -1229,9 +1229,9 @@ NewObjectCache::fillProto(EntryIndex entry, const Class *clasp, js::TaggedProto 
 }
 
 JSObject *
-js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
-                            js::TaggedProto protoArg, HandleObject parentArg,
-                            gc::AllocKind allocKind, NewObjectKind newKind)
+js::NewObjectWithGivenTaggedProto(ExclusiveContext *cxArg, const Class *clasp,
+                                  TaggedProto protoArg, HandleObject parentArg,
+                                  gc::AllocKind allocKind, NewObjectKind newKind)
 {
     if (CanBeFinalizedInBackground(allocKind, clasp))
         allocKind = GetBackgroundAllocKind(allocKind);
@@ -1394,8 +1394,8 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg, const Class *clasp, J
                                   NewObjectKind newKind)
 {
     if (protoArg) {
-        return NewObjectWithGivenProto(cxArg, clasp, TaggedProto(protoArg), maybeParent, allocKind,
-                                       newKind);
+        return NewObjectWithGivenTaggedProto(cxArg, clasp, TaggedProto(protoArg), maybeParent,
+                                             allocKind, newKind);
     }
 
     if (CanBeFinalizedInBackground(allocKind, clasp))
@@ -1598,8 +1598,8 @@ CreateThisForFunctionWithGroup(JSContext *cx, HandleObjectGroup group, JSObject 
 
     if (newKind == SingletonObject) {
         RootedObject parentRoot(cx, parent);
-        return NewObjectWithGivenProto(cx, &PlainObject::class_, group->proto(), parentRoot,
-                                       allocKind, newKind);
+        return NewObjectWithGivenTaggedProto(cx, &PlainObject::class_, group->proto(), parentRoot,
+                                             allocKind, newKind);
     }
     return NewObjectWithGroup<PlainObject>(cx, group, parent, allocKind, newKind);
 }
@@ -1786,7 +1786,7 @@ js::CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, 
 
     RootedObject clone(cx);
     if (obj->isNative()) {
-        clone = NewObjectWithGivenProto(cx, obj->getClass(), proto, parent);
+        clone = NewObjectWithGivenTaggedProto(cx, obj->getClass(), proto, parent);
         if (!clone)
             return nullptr;
 
@@ -1839,7 +1839,7 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind 
             return nullptr;
         RootedObject parent(cx, obj->getParent());
         clone = NewNativeObjectWithGivenProto(cx, &PlainObject::class_,
-                                              TaggedProto(group->proto().toObject()),
+                                              group->proto().toObject(),
                                               parent, kind, newKind);
     }
 
