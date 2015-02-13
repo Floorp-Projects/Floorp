@@ -37,9 +37,6 @@ XPC_MAP_CLASSNAME::GetScriptableFlags()
 #ifdef XPC_MAP_WANT_CREATE
     nsIXPCScriptable::WANT_CREATE |
 #endif
-#ifdef XPC_MAP_WANT_POSTCREATE
-    nsIXPCScriptable::WANT_POSTCREATE |
-#endif
 #ifdef XPC_MAP_WANT_ADDPROPERTY
     nsIXPCScriptable::WANT_ADDPROPERTY |
 #endif
@@ -92,14 +89,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PreCreate(nsISupports *nativeObj, JSContext * c
 
 #ifndef XPC_MAP_WANT_CREATE
 NS_IMETHODIMP XPC_MAP_CLASSNAME::Create(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
-#endif
-
-#ifndef XPC_MAP_WANT_POSTCREATE
-NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
-
-NS_IMETHODIMP XPC_MAP_CLASSNAME::PostTransplant(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj)
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
@@ -179,10 +168,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreatePrototype(JSContext *cx, JSObject *pr
 
 #ifdef XPC_MAP_WANT_CREATE
 #undef XPC_MAP_WANT_CREATE
-#endif
-
-#ifdef XPC_MAP_WANT_POSTCREATE
-#undef XPC_MAP_WANT_POSTCREATE
 #endif
 
 #ifdef XPC_MAP_WANT_ADDPROPERTY
