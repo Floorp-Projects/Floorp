@@ -78,7 +78,7 @@ if (typeof G_GDEBUG == "undefined") {
  *            zone to which this message belongs
  * @param msg Message to output
  */
-function G_Debug(who, msg) {
+this.G_Debug = function G_Debug(who, msg) {
   if (G_GDEBUG) {
     G_GetDebugZone(who).debug(msg);
   }
@@ -87,7 +87,7 @@ function G_Debug(who, msg) {
 /**
  * Debugs loudly
  */
-function G_DebugL(who, msg) {
+this.G_DebugL = function G_DebugL(who, msg) {
   if (G_GDEBUG) {
     var zone = G_GetDebugZone(who);
 
@@ -110,7 +110,7 @@ function G_DebugL(who, msg) {
  *            zone to which this message belongs
  * @param msg Message to output
  */
-function G_TraceCall(who, msg) {
+this.G_TraceCall = function G_TraceCall(who, msg) {
   if (G_GDEBUG) {
     if (G_debugService.callTracingEnabled()) {
       G_debugService.dump(msg + "\n");
@@ -125,7 +125,7 @@ function G_TraceCall(who, msg) {
  *            zone to which this message belongs
  * @param msg Message to output
  */
-function G_Error(who, msg) {
+this.G_Error = function G_Error(who, msg) {
   if (G_GDEBUG) {
     G_GetDebugZone(who).error(msg);
   }
@@ -139,7 +139,7 @@ function G_Error(who, msg) {
  * @param condition Boolean condition to test
  * @param msg Message to output
  */
-function G_Assert(who, condition, msg) {
+this.G_Assert = function G_Assert(who, condition, msg) {
   if (G_GDEBUG) {
     G_GetDebugZone(who).assert(condition, msg);
   }
@@ -153,7 +153,7 @@ function G_Assert(who, condition, msg) {
  *            likely an object that has .debugZone property, or a string.
  * @returns The DebugZone object corresponding to the input
  */
-function G_GetDebugZone(who) {
+this.G_GetDebugZone = function G_GetDebugZone(who) {
   if (G_GDEBUG) {
     var zone = "?";
 
@@ -184,7 +184,7 @@ function G_GetDebugZone(who) {
  *               when creating preferences to control this zone
  * @param zone String indicating the name of the zone
  */
-function G_DebugZone(service, prefix, zone) {
+this.G_DebugZone = function G_DebugZone(service, prefix, zone) {
   if (G_GDEBUG) {
     this.debugService_ = service;
     this.prefix_ = prefix;
@@ -277,7 +277,7 @@ G_DebugZone.prototype.assert = function(condition, msg) {
  * @param opt_prefix Optional string indicating the unique prefix we should 
  *                   use when creating preferences
  */
-function G_DebugService(opt_prefix) {
+this.G_DebugService = function G_DebugService(opt_prefix) {
   if (G_GDEBUG) {
     this.prefix_ = opt_prefix ? opt_prefix : "safebrowsing-debug-service";
     this.consoleEnabledPrefName_ = this.prefix_ + ".alsologtoconsole";
@@ -628,7 +628,7 @@ G_DebugService.prototype.reportScriptError_ = function(message, sourceName,
  *
  * @constructor
  */
-function G_Loggifier() {
+this.G_Loggifier = function G_Loggifier() {
   if (G_GDEBUG) {
     // Careful not to loggify ourselves!
     this.mark_(this);  
@@ -795,7 +795,7 @@ G_Loggifier.prototype.loggify = function(obj) {
  * preferences tree. If a setting isn't in the preferences tree, then we grab it
  * from the defaults.
  */
-function G_DebugSettings() {
+this.G_DebugSettings = function G_DebugSettings() {
   this.defaults_ = {};
   this.prefs_ = new G_Preferences();
 }
@@ -835,9 +835,9 @@ if (G_GDEBUG) {
 // Stubs for the debugging aids scattered through this component.
 // They will be expanded if you compile yourself a debug build.
 
-function G_Debug(who, msg) { }
-function G_Assert(who, condition, msg) { }
-function G_Error(who, msg) { }
-var G_debugService = { __noSuchMethod__: function() { } };
+this.G_Debug = function G_Debug(who, msg) { }
+this.G_Assert = function G_Assert(who, condition, msg) { }
+this.G_Error = function G_Error(who, msg) { }
+this.G_debugService = { __noSuchMethod__: function() { } };
 
 #endif

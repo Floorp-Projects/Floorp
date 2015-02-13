@@ -2,6 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!ENTITY  brandShorterName      "Mozilla Developer Preview">
 <!ENTITY  brandShortName        "Mozilla Developer Preview">
 <!ENTITY  brandFullName         "Mozilla Developer Preview">
 <!ENTITY  vendorShortName       "mozilla.org">

@@ -1557,15 +1557,6 @@ RilObject.prototype = {
   },
 
   /**
-   * Hang up all calls
-   */
-  hangUpAll: function() {
-    for (let callIndex in this.currentCalls) {
-      this.hangUpCall({callIndex: callIndex});
-    }
-  },
-
-  /**
    * Hang up the phone.
    *
    * @param callIndex

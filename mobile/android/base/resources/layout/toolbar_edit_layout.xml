@@ -6,6 +6,11 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
+    <!-- Overall, we want 12dp of padding from mic to the right edge of the toolbar.
+         However, setting a value of 12dp (using the padding from the parent container)
+         does not match drawablePadding=12dp. Part of this is the url_bar_entry drawable
+         overlaps the EditText, but I can't figure out the rest. Thus eyeballing for
+         paddingRight. -->
     <org.mozilla.gecko.toolbar.ToolbarEditText
           android:id="@+id/url_edit_text"
           style="@style/UrlBar.Title"
@@ -17,6 +22,8 @@
           android:selectAllOnFocus="true"
           android:contentDescription="@string/url_bar_default_text"
           android:drawableRight="@drawable/ab_mic"
+          android:drawablePadding="12dp"
+          android:paddingRight="8dp"
           gecko:autoUpdateTheme="false"/>
 
 </merge>

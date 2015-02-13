@@ -36,6 +36,10 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
           throws NetworkErrorException {
     Logger.debug(LOG_TAG, "addAccount");
 
+    // The data associated to each Account should be invalidated when we change
+    // the set of Firefox Accounts on the system.
+    AndroidFxAccount.invalidateCaches();
+
     final Bundle res = new Bundle();
 
     if (!FxAccountConstants.ACCOUNT_TYPE.equals(accountType)) {

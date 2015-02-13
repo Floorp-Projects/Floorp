@@ -24,7 +24,7 @@
     <menupopup id="menu_ToolsPopup">
         <menuitem id="menu_preferences" label="&preferencesCmdMac.label;" key="key_preferencesCmdMac" oncommand="openPreferences();"/>
         <menuitem id="menu_mac_services" label="&servicesMenuMac.label;"/>
-        <menuitem id="menu_mac_hide_app" label="&hideThisAppCmdMac.label;" key="key_hideThisAppCmdMac"/>
+        <menuitem id="menu_mac_hide_app" label="&hideThisAppCmdMac2.label;" key="key_hideThisAppCmdMac"/>
         <menuitem id="menu_mac_hide_others" label="&hideOtherAppsCmdMac.label;" key="key_hideOtherAppsCmdMac"/>
         <menuitem id="menu_mac_show_all" label="&showAllAppsCmdMac.label;"/>
     </menupopup>
@@ -45,8 +45,8 @@
         <menuitem id="menu_openHelp"
                   oncommand="openHelpLink('firefox-help')"
                   onclick="checkForMiddleClick(this, event);"
-                  label="&productHelp.label;"
-                  accesskey="&productHelp.accesskey;"
+                  label="&productHelp2.label;"
+                  accesskey="&productHelp2.accesskey;"
 #ifdef XP_MACOSX
                   key="key_openHelpMac"/>
 #else
@@ -54,8 +54,8 @@
 #endif
         <menuitem id="menu_openTour"
                   oncommand="openTourPage();"
-                  label="&helpShowTour.label;"
-                  accesskey="&helpShowTour.accesskey;"/>
+                  label="&helpShowTour2.label;"
+                  accesskey="&helpShowTour2.accesskey;"/>
         <menuitem id="menu_keyboardShortcuts"
                   oncommand="openHelpLink('keyboard-shortcuts')"
                   onclick="checkForMiddleClick(this, event);"
@@ -63,8 +63,8 @@
                   accesskey="&helpKeyboardShortcuts.accesskey;"/>
 #ifdef MOZ_SERVICES_HEALTHREPORT
         <menuitem id="healthReport"
-                  label="&healthReport.label;"
-                  accesskey="&healthReport.accesskey;"
+                  label="&healthReport2.label;"
+                  accesskey="&healthReport2.accesskey;"
                   oncommand="openHealthReport()"
                   onclick="checkForMiddleClick(this, event);"/>
 #endif
@@ -84,8 +84,8 @@
                   oncommand="safeModeRestart();"/>
         <menuseparator id="aboutSeparator"/>
         <menuitem id="aboutName"
-                  accesskey="&aboutProduct.accesskey;"
-                  label="&aboutProduct.label;"
+                  accesskey="&aboutProduct2.accesskey;"
+                  label="&aboutProduct2.label;"
                   oncommand="openAboutDialog();"/>
       </menupopup>
     </menu>
@@ -101,7 +101,7 @@
              key="&preferencesCmdMac.commandkey;"
              modifiers="accel"/>
         <key id="key_hideThisAppCmdMac"
-             key="&hideThisAppCmdMac.commandkey;"
+             key="&hideThisAppCmdMac2.commandkey;"
              modifiers="accel"/>
         <key id="key_hideOtherAppsCmdMac"
              key="&hideOtherAppsCmdMac.commandkey;"

@@ -7,6 +7,8 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html?" + Date.now();
 
+const TEST_XHR_ERROR_URI = `http://example.com/404.html?${Date.now()}`;
+
 "use strict";
 
 let test = asyncTest(function*() {
@@ -49,6 +51,12 @@ function consoleOpened(hud)
   xhr.open("get", TEST_URI, true);
   xhr.send();
 
+  // Check for xhr error.
+  let xhrErr = new XMLHttpRequest();
+  xhrErr.onload = () => console.log("xhr error loaded, status is: " + xhrErr.status);
+  xhrErr.open("get", TEST_XHR_ERROR_URI, true);
+  xhrErr.send();
+
   return waitForMessages({
     webconsole: hud,
     messages: [
@@ -81,6 +89,14 @@ function consoleOpened(hud)
         text: "test-console.html",
         category: CATEGORY_NETWORK,
         severity: SEVERITY_INFO,
+        isXhr: true,
+      },
+      {
+        name: "xhr error message",
+        text: "404.html",
+        category: CATEGORY_NETWORK,
+        severity: SEVERITY_ERROR,
+        isXhr: true,
       },
     ],
   });

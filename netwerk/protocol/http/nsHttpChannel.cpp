@@ -4853,14 +4853,20 @@ nsHttpChannel::BeginConnect()
             nsCOMPtr<nsIPrincipal> principal = GetPrincipal(false);
             bool tp = false;
             channelClassifier->ShouldEnableTrackingProtection(this, &tp);
-            // See bug 1122691
+            // We skip speculative connections by setting mLocalBlocklist only
+            // when tracking protection is enabled. Though we could do this for
+            // both phishing and malware, it is not necessary for correctness,
+            // since no network events will be received while the
+            // nsChannelClassifier is in progress. See bug 1122691.
             if (tp) {
                 nsresult response = NS_OK;
                 classifier->ClassifyLocal(principal, tp, &response);
                 if (NS_FAILED(response)) {
-                    LOG(("nsHttpChannel::Found principal on local blocklist "
-                         "[this=%p]", this));
+                    LOG(("nsHttpChannel::ClassifyLocal found principal on local "
+                         "blocklist [this=%p]", this));
                     mLocalBlocklist = true;
+                } else {
+                    LOG(("nsHttpChannel::ClassifyLocal no result found [this=%p]", this));
                 }
             }
         }
@@ -4928,25 +4934,29 @@ nsHttpChannel::BeginConnect()
         }
         mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
     }
-    // mLocalBlocklist is true only if the URI is not a tracking domain, it
-    // makes not guarantees about phishing or malware, so we must call
+    if (!(mLoadFlags & LOAD_CLASSIFY_URI)) {
+        return ContinueBeginConnect();
+    }
+    // mLocalBlocklist is true only if tracking protection is enabled and the
+    // URI is a tracking domain, it makes no guarantees about phishing or
+    // malware, so if LOAD_CLASSIFY_URI is true we must call
     // nsChannelClassifier to catch phishing and malware URIs.
     bool callContinueBeginConnect = true;
     if (mCanceled || !mLocalBlocklist) {
-        rv = ContinueBeginConnect();
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
-        callContinueBeginConnect = false;
+       rv = ContinueBeginConnect();
+       if (NS_FAILED(rv)) {
+           return rv;
+       }
+       callContinueBeginConnect = false;
     }
     // nsChannelClassifier calls ContinueBeginConnect if it has not already
     // been called, after optionally cancelling the channel once we have a
     // remote verdict. We call a concrete class instead of an nsI* that might
     // be overridden.
     if (!mCanceled) {
-      LOG(("nsHttpChannel::Starting nsChannelClassifier %p [this=%p]",
+        LOG(("nsHttpChannel::Starting nsChannelClassifier %p [this=%p]",
            channelClassifier.get(), this));
-      channelClassifier->Start(this, callContinueBeginConnect);
+        channelClassifier->Start(this, callContinueBeginConnect);
     }
     return NS_OK;
 }
