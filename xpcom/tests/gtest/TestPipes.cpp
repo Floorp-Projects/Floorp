@@ -4,19 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <algorithm>
+#include "gtest/gtest.h"
+#include "Helpers.h"
+#include "mozilla/ReentrantMonitor.h"
+#include "nsCOMPtr.h"
+#include "nsCRT.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
+#include "nsICloneableInputStream.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
+#include "nsIPipe.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
+#include "nsStreamUtils.h"
+#include "nsString.h"
 #include "nsThreadUtils.h"
 #include "prprf.h"
 #include "prinrval.h"
-#include "nsCRT.h"
-#include "nsIPipe.h"    // new implementation
 
-#include "mozilla/ReentrantMonitor.h"
-
-#include "gtest/gtest.h"
 using namespace mozilla;
 
 #define ITERATIONS      33333
@@ -388,4 +394,269 @@ TEST(Pipes, Main)
 {
     RunTests(16, 1);
     RunTests(4096, 16);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+
+static const uint32_t DEFAULT_SEGMENT_SIZE = 4 * 1024;
+
+// An alternate pipe testing routing that uses NS_ConsumeStream() instead of
+// manual read loop.
+static void TestPipe2(uint32_t aNumBytes,
+                      uint32_t aSegmentSize = DEFAULT_SEGMENT_SIZE)
+{
+  nsCOMPtr<nsIInputStream> reader;
+  nsCOMPtr<nsIOutputStream> writer;
+
+  uint32_t maxSize = std::max(aNumBytes, aSegmentSize);
+
+  nsresult rv = NS_NewPipe(getter_AddRefs(reader), getter_AddRefs(writer),
+                           aSegmentSize, maxSize);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsTArray<char> inputData;
+  testing::CreateData(aNumBytes, inputData);
+  testing::WriteAllAndClose(writer, inputData);
+  testing::ConsumeAndValidateStream(reader, inputData);
+}
+
+} // anonymous namespace
+
+TEST(Pipes, Blocking_32k)
+{
+  TestPipe2(32 * 1024);
+}
+
+TEST(Pipes, Blocking_64k)
+{
+  TestPipe2(64 * 1024);
+}
+
+TEST(Pipes, Blocking_128k)
+{
+  TestPipe2(128 * 1024);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+
+// Utility routine to validate pipe clone before.  There are many knobs.
+//
+// aTotalBytes              Total number of bytes to write to the pipe.
+// aNumWrites               How many separate write calls should be made.  Bytes
+//                          are evenly distributed over these write calls.
+// aNumInitialClones        How many clones of the pipe input stream should be
+//                          made before writing begins.
+// aNumToCloseAfterWrite    How many streams should be closed after each write.
+//                          One stream is always kept open.  This verifies that
+//                          closing one stream does not effect other open
+//                          streams.
+// aNumToCloneAfterWrite    How many clones to create after each write.  Occurs
+//                          after closing any streams.  This tests cloning
+//                          active streams on a pipe that is being written to.
+// aNumStreamToReadPerWrite How many streams to read fully after each write.
+//                          This tests reading cloned streams at different rates
+//                          while the pipe is being written to.
+static void TestPipeClone(uint32_t aTotalBytes,
+                          uint32_t aNumWrites,
+                          uint32_t aNumInitialClones,
+                          uint32_t aNumToCloseAfterWrite,
+                          uint32_t aNumToCloneAfterWrite,
+                          uint32_t aNumStreamsToReadPerWrite,
+                          uint32_t aSegmentSize = DEFAULT_SEGMENT_SIZE)
+{
+  nsCOMPtr<nsIInputStream> reader;
+  nsCOMPtr<nsIOutputStream> writer;
+
+  uint32_t maxSize = std::max(aTotalBytes, aSegmentSize);
+
+  // Use async input streams so we can NS_ConsumeStream() the current data
+  // while the pipe is still being written to.
+  nsresult rv = NS_NewPipe(getter_AddRefs(reader), getter_AddRefs(writer),
+                           aSegmentSize, maxSize,
+                           true, false); // non-blocking - reader, writer
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<nsICloneableInputStream> cloneable = do_QueryInterface(reader);
+  ASSERT_TRUE(cloneable);
+  ASSERT_TRUE(cloneable->GetCloneable());
+
+  nsTArray<nsCString> outputDataList;
+
+  nsTArray<nsCOMPtr<nsIInputStream>> streamList;
+
+  // first stream is our original reader from the pipe
+  streamList.AppendElement(reader);
+  outputDataList.AppendElement();
+
+  // Clone the initial input stream the specified number of times
+  // before performing any writes.
+  for (uint32_t i = 0; i < aNumInitialClones; ++i) {
+    nsCOMPtr<nsIInputStream>* clone = streamList.AppendElement();
+    rv = cloneable->Clone(getter_AddRefs(*clone));
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_TRUE(*clone);
+
+    outputDataList.AppendElement();
+  }
+
+  nsTArray<char> inputData;
+  testing::CreateData(aTotalBytes, inputData);
+
+  const uint32_t bytesPerWrite = ((aTotalBytes - 1)/ aNumWrites) + 1;
+  uint32_t offset = 0;
+  uint32_t remaining = aTotalBytes;
+  uint32_t nextStreamToRead = 0;
+
+  while (remaining) {
+    uint32_t numToWrite = std::min(bytesPerWrite, remaining);
+    testing::Write(writer, inputData, offset, numToWrite);
+    offset += numToWrite;
+    remaining -= numToWrite;
+
+    // Close the specified number of streams.  This allows us to
+    // test that one closed clone does not break other open clones.
+    for (uint32_t i = 0; i < aNumToCloseAfterWrite &&
+                         streamList.Length() > 1; ++i) {
+
+      uint32_t lastIndex = streamList.Length() - 1;
+      streamList[lastIndex]->Close();
+      streamList.RemoveElementAt(lastIndex);
+      outputDataList.RemoveElementAt(lastIndex);
+
+      if (nextStreamToRead >= streamList.Length()) {
+        nextStreamToRead = 0;
+      }
+    }
+
+    // Create the specified number of clones.  This lets us verify
+    // that we can create clones in the middle of pipe reading and
+    // writing.
+    for (uint32_t i = 0; i < aNumToCloneAfterWrite; ++i) {
+      nsCOMPtr<nsIInputStream>* clone = streamList.AppendElement();
+      rv = cloneable->Clone(getter_AddRefs(*clone));
+      ASSERT_TRUE(NS_SUCCEEDED(rv));
+      ASSERT_TRUE(*clone);
+
+      // Initialize the new output data to make whats been read to data for
+      // the original stream.  First stream is always the original stream.
+      nsCString* outputData = outputDataList.AppendElement();
+      *outputData = outputDataList[0];
+    }
+
+    // Read the specified number of streams.  This lets us verify that we
+    // can read from the clones at different rates while the pipe is being
+    // written to.
+    for (uint32_t i = 0; i < aNumStreamsToReadPerWrite; ++i) {
+      nsCOMPtr<nsIInputStream>& stream = streamList[nextStreamToRead];
+      nsCString& outputData = outputDataList[nextStreamToRead];
+
+      // Can't use ConsumeAndValidateStream() here because we're not
+      // guaranteed the exact amount read.  It should just be at least
+      // as many as numToWrite.
+      nsAutoCString tmpOutputData;
+      rv = NS_ConsumeStream(stream, UINT32_MAX, tmpOutputData);
+      ASSERT_TRUE(rv == NS_BASE_STREAM_WOULD_BLOCK || NS_SUCCEEDED(rv));
+      ASSERT_GE(tmpOutputData.Length(), numToWrite);
+
+      outputData += tmpOutputData;
+
+      nextStreamToRead += 1;
+      if (nextStreamToRead >= streamList.Length()) {
+        // Note: When we wrap around on the streams being read, its possible
+        //       we will trigger a segment to be deleted from the pipe.  It
+        //       would be nice to validate this here, but we don't have any
+        //       QI'able interface that would let us check easily.
+
+        nextStreamToRead = 0;
+      }
+    }
+  }
+
+  rv = writer->Close();
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsDependentCSubstring inputString(inputData.Elements(), inputData.Length());
+
+  // Finally, read the remaining bytes from each stream.  This may be
+  // different amounts of data depending on how much reading we did while
+  // writing.  Verify that the end result matches the input data.
+  for (uint32_t i = 0; i < streamList.Length(); ++i) {
+    nsCOMPtr<nsIInputStream>& stream = streamList[i];
+    nsCString& outputData = outputDataList[i];
+
+    nsAutoCString tmpOutputData;
+    rv = NS_ConsumeStream(stream, UINT32_MAX, tmpOutputData);
+    ASSERT_TRUE(rv == NS_BASE_STREAM_WOULD_BLOCK || NS_SUCCEEDED(rv));
+    stream->Close();
+
+    // Append to total amount read from the stream
+    outputData += tmpOutputData;
+
+    ASSERT_EQ(inputString.Length(), outputData.Length());
+    ASSERT_TRUE(inputString.Equals(outputData));
+  }
+}
+
+} // anonymous namespace
+
+TEST(Pipes, Clone_BeforeWrite_ReadAtEnd)
+{
+  TestPipeClone(32 * 1024, // total bytes
+                16,        // num writes
+                3,         // num initial clones
+                0,         // num streams to close after each write
+                0,         // num clones to add after each write
+                0);        // num streams to read after each write
+}
+
+TEST(Pipes, Clone_BeforeWrite_ReadDuringWrite)
+{
+  // Since this reads all streams on every write, it should trigger the
+  // pipe cursor roll back optimization.  Currently we can only verify
+  // this with logging.
+
+  TestPipeClone(32 * 1024, // total bytes
+                16,        // num writes
+                3,         // num initial clones
+                0,         // num streams to close after each write
+                0,         // num clones to add after each write
+                4);        // num streams to read after each write
+}
+
+TEST(Pipes, Clone_DuringWrite_ReadAtEnd)
+{
+  TestPipeClone(32 * 1024, // total bytes
+                16,        // num writes
+                0,         // num initial clones
+                0,         // num streams to close after each write
+                1,         // num clones to add after each write
+                0);        // num streams to read after each write
+}
+
+TEST(Pipes, Clone_DuringWrite_ReadDuringWrite)
+{
+  TestPipeClone(32 * 1024, // total bytes
+                16,        // num writes
+                0,         // num initial clones
+                0,         // num streams to close after each write
+                1,         // num clones to add after each write
+                1);        // num streams to read after each write
+}
+
+TEST(Pipes, Clone_DuringWrite_ReadDuringWrite_CloseDuringWrite)
+{
+  // Since this reads streams faster than we clone new ones, it should
+  // trigger pipe segment deletion periodically.  Currently we can
+  // only verify this with logging.
+
+  TestPipeClone(32 * 1024, // total bytes
+                16,        // num writes
+                1,         // num initial clones
+                1,         // num streams to close after each write
+                2,         // num clones to add after each write
+                3);        // num streams to read after each write
 }

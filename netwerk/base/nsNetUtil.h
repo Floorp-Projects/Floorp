@@ -2421,6 +2421,56 @@ NS_IsInternalSameURIRedirect(nsIChannel *aOldChannel,
   return NS_SUCCEEDED(oldURI->Equals(newURI, &res)) && res;
 }
 
+inline bool
+NS_IsHSTSUpgradeRedirect(nsIChannel *aOldChannel,
+                         nsIChannel *aNewChannel,
+                         uint32_t aFlags)
+{
+  if (!(aFlags & nsIChannelEventSink::REDIRECT_STS_UPGRADE)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> oldURI, newURI;
+  aOldChannel->GetURI(getter_AddRefs(oldURI));
+  aNewChannel->GetURI(getter_AddRefs(newURI));
+
+  if (!oldURI || !newURI) {
+    return false;
+  }
+
+  bool isHttp;
+  if (NS_FAILED(oldURI->SchemeIs("http", &isHttp)) || !isHttp) {
+    return false;
+  }
+
+  bool isHttps;
+  if (NS_FAILED(newURI->SchemeIs("https", &isHttps)) || !isHttps) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> upgradedURI;
+  if (NS_FAILED(oldURI->Clone(getter_AddRefs(upgradedURI)))) {
+    return false;
+  }
+
+  if (NS_FAILED(upgradedURI->SetScheme(NS_LITERAL_CSTRING("https")))) {
+    return false;
+  }
+
+  int32_t oldPort = -1;
+  if (NS_FAILED(oldURI->GetPort(&oldPort))) {
+    return false;
+  }
+  if (oldPort == 80 || oldPort == -1) {
+    upgradedURI->SetPort(-1);
+  } else {
+    upgradedURI->SetPort(oldPort);
+  }
+
+  bool res;
+  return NS_SUCCEEDED(upgradedURI->Equals(newURI, &res)) && res;
+}
+
 inline nsresult
 NS_LinkRedirectChannels(uint32_t channelId,
                         nsIParentChannel *parentChannel,

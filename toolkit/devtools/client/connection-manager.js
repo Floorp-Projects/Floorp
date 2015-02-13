@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cc, Ci, Cu, Cr} = require("chrome");
 const {setTimeout, clearTimeout} = require('sdk/timers');
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
@@ -310,7 +310,11 @@ Connection.prototype = {
       this._client.addOneTimeListener("closed", this._onDisconnected);
       this._client.connect(this._onConnected);
     }, e => {
-      console.error(e);
+      // If we're continuously trying to connect, we expect the connection to be
+      // rejected a couple times, so don't log these.
+      if (!this.keepConnecting || e.result !== Cr.NS_ERROR_CONNECTION_REFUSED) {
+        console.error(e);
+      }
       // In some cases, especially on Mac, the openOutputStream call in
       // DebuggerClient.socketConnect may throw NS_ERROR_NOT_INITIALIZED.
       // It occurs when we connect agressively to the simulator,

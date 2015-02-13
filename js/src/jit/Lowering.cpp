@@ -487,7 +487,7 @@ LIRGenerator::visitApplyArgs(MApplyArgs *apply)
         useFixed(apply->getFunction(), CallTempReg3),
         useFixed(apply->getArgc(), CallTempReg0),
         tempFixed(CallTempReg1),  // object register
-        tempFixed(CallTempReg2)); // copy register
+        tempFixed(CallTempReg2)); // stack counter register
 
     MDefinition *self = apply->getThis();
     useBoxFixed(lir, LApplyArgsGeneric::ThisIndex, self, CallTempReg4, CallTempReg5);

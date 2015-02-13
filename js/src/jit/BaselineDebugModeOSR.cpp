@@ -207,7 +207,7 @@ CollectJitStackScripts(JSContext *cx, const Debugger::ExecutionObservableSet &ob
                 // See cases F and G in PatchBaselineFramesForDebugMode.
                 if (!entries.append(DebugModeOSREntry(script, info)))
                     return false;
-            } else if (frame->isDebuggerHandlingException()) {
+            } else if (frame->isHandlingException()) {
                 // We are in the middle of handling an exception and the frame
                 // must have an override pc.
                 uint32_t offset = script->pcToOffset(frame->overridePc());
@@ -335,7 +335,7 @@ SpewPatchStubFrame(ICStub *oldStub, ICStub *newStub)
 {
     JitSpew(JitSpew_BaselineDebugModeOSR,
             "Patch   stub %p -> %p on BaselineStub frame (%s)",
-            oldStub, newStub, ICStub::KindString(newStub->kind()));
+            oldStub, newStub, newStub ? ICStub::KindString(newStub->kind()) : "exception handler");
 }
 
 static void
@@ -431,7 +431,7 @@ PatchBaselineFramesForDebugMode(JSContext *cx, const Debugger::ExecutionObservab
                 //
                 // Patch the resume address to nullptr, to ensure the old
                 // address is not used anywhere.
-                MOZ_ASSERT(iter.baselineFrame()->isDebuggerHandlingException());
+                MOZ_ASSERT(iter.baselineFrame()->isHandlingException());
                 MOZ_ASSERT(iter.baselineFrame()->overridePc() == pc);
                 uint8_t *retAddr = nullptr;
                 SpewPatchBaselineFrameFromExceptionHandler(prev->returnAddress(), retAddr,
@@ -592,7 +592,7 @@ PatchBaselineFramesForDebugMode(JSContext *cx, const Debugger::ExecutionObservab
             // (i.e. fallback calls), we need to check for recompilation using
             // DebugModeOSRVolatileStub.
             if (layout->maybeStubPtr()) {
-                MOZ_ASSERT(entry.newStub);
+                MOZ_ASSERT(entry.newStub || prevFrame->isHandlingException());
                 SpewPatchStubFrame(entry.oldStub, entry.newStub);
                 layout->setStubPtr(entry.newStub);
             }
@@ -709,6 +709,16 @@ CloneOldBaselineStub(JSContext *cx, DebugModeOSREntryVector &entries, size_t ent
     ICStub *oldStub = entry.oldStub;
     MOZ_ASSERT(ICStub::CanMakeCalls(oldStub->kind()));
 
+    if (entry.frameKind == ICEntry::Kind_Invalid) {
+        // The exception handler can modify the frame's override pc while
+        // unwinding scopes. This is fine, but if we have a stub frame, the code
+        // code below will get confused: the entry's pcOffset doesn't match the
+        // stub that's still on the stack. To prevent that, we just set the new
+        // stub to nullptr as we will never return to this stub frame anyway.
+        entry.newStub = nullptr;
+        return true;
+    }
+
     // Get the new fallback stub from the recompiled baseline script.
     ICFallbackStub *fallbackStub = entry.fallbackStub();
 
@@ -721,9 +731,11 @@ CloneOldBaselineStub(JSContext *cx, DebugModeOSREntryVector &entries, size_t ent
         return true;
     }
 
-    // Check if we have already cloned the stub on a younger frame.
+    // Check if we have already cloned the stub on a younger frame. Ignore
+    // frames that entered the exception handler (entries[i].newStub is nullptr
+    // in that case, see above).
     for (size_t i = 0; i < entryIndex; i++) {
-        if (oldStub == entries[i].oldStub) {
+        if (oldStub == entries[i].oldStub && entries[i].frameKind != ICEntry::Kind_Invalid) {
             MOZ_ASSERT(entries[i].newStub);
             entry.newStub = entries[i].newStub;
             return true;

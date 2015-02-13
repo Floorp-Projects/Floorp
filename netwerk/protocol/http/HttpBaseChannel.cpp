@@ -16,6 +16,7 @@
 
 #include "nsICachingChannel.h"
 #include "nsIPrincipal.h"
+#include "nsIScriptError.h"
 #include "nsISeekableStream.h"
 #include "nsITimedChannel.h"
 #include "nsIEncodedChannel.h"
@@ -1672,6 +1673,39 @@ HttpBaseChannel::AddSecurityMessage(const nsAString &aMessageTag,
   message->SetTag(aMessageTag);
   message->SetCategory(aMessageCategory);
   mSecurityConsoleMessages.AppendElement(message);
+
+  nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  if (!console) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  GetLoadInfo(getter_AddRefs(loadInfo));
+  if (!loadInfo) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t innerWindowID = loadInfo->GetInnerWindowID();
+
+  nsXPIDLString errorText;
+  rv = nsContentUtils::GetLocalizedString(
+          nsContentUtils::eSECURITY_PROPERTIES,
+          NS_ConvertUTF16toUTF8(aMessageTag).get(),
+          errorText);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString spec;
+  if (mURI) {
+    mURI->GetSpec(spec);
+  }
+
+  nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+  error->InitWithWindowID(errorText, NS_ConvertUTF8toUTF16(spec),
+                          EmptyString(), 0, 0, nsIScriptError::warningFlag,
+                          NS_ConvertUTF16toUTF8(aMessageCategory),
+                          innerWindowID);
+  console->LogMessage(error);
+
   return NS_OK;
 }
 

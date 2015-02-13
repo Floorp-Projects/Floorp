@@ -295,15 +295,37 @@ loop.shared.mixins = (function() {
             width: width,
             height: node.offsetHeight
           };
+
           var ratio = this._videoDimensionsCache.remote[videoType].aspectRatio;
+          // Leading axis is the side that has the smallest ratio.
           var leadingAxis = Math.min(ratio.width, ratio.height) === ratio.width ?
             "width" : "height";
-          var slaveSize = remoteVideoDimensions[leadingAxis] +
-            (remoteVideoDimensions[leadingAxis] * (1 - ratio[leadingAxis]));
-          remoteVideoDimensions.streamWidth = leadingAxis === "width" ?
-            remoteVideoDimensions.width : slaveSize;
-          remoteVideoDimensions.streamHeight = leadingAxis === "height" ?
-            remoteVideoDimensions.height: slaveSize;
+          var slaveAxis = leadingAxis === "height" ? "width" : "height";
+
+          // We need to work out if the leading axis of the video is full, by
+          // calculating the expected length of the leading axis based on the
+          // length of the slave axis and aspect ratio.
+          var leadingAxisFull = remoteVideoDimensions[slaveAxis] * ratio[leadingAxis] >
+            remoteVideoDimensions[leadingAxis];
+
+          if (leadingAxisFull) {
+            // If the leading axis is "full" then we need to adjust the slave axis.
+            var slaveAxisSize = remoteVideoDimensions[leadingAxis] / ratio[leadingAxis];
+
+            remoteVideoDimensions.streamWidth = leadingAxis === "width" ?
+              remoteVideoDimensions.width : slaveAxisSize;
+            remoteVideoDimensions.streamHeight = leadingAxis === "height" ?
+              remoteVideoDimensions.height: slaveAxisSize;
+          } else {
+            // If the leading axis is not "full" then we need to adjust it, based
+            // on the length of the leading axis.
+            var leadingAxisSize = remoteVideoDimensions[slaveAxis] * ratio[leadingAxis];
+
+            remoteVideoDimensions.streamWidth = leadingAxis === "height" ?
+              remoteVideoDimensions.width : leadingAxisSize;
+            remoteVideoDimensions.streamHeight = leadingAxis === "width" ?
+              remoteVideoDimensions.height: leadingAxisSize;
+          }
         }
       }, this);
 

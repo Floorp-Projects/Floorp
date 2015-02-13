@@ -19,7 +19,7 @@ toolkit.jar:
   skin/classic/global/checkbox.css
   skin/classic/global/colorpicker.css
   skin/classic/global/commonDialog.css
-* skin/classic/global/config.css
+  skin/classic/global/config.css                                     (../../shared/config.css)
   skin/classic/global/customizeToolbar.css
   skin/classic/global/dialog.css
   skin/classic/global/dropmarker.css
@@ -143,6 +143,7 @@ toolkit.jar:
   skin/classic/global/icons/question-64.png                          (icons/question-64.png)
   skin/classic/global/icons/question-large.png                       (icons/question-large.png)
   skin/classic/global/icons/sslWarning.png                           (icons/sslWarning.png)
+  skin/classic/global/icons/warning.svg                              (../../shared/incontent-icons/warning.svg)
   skin/classic/global/icons/webapps-16.png                           (icons/webapps-16.png)
   skin/classic/global/icons/webapps-16@2x.png                        (icons/webapps-16@2x.png)
   skin/classic/global/icons/webapps-64.png                           (icons/webapps-64.png)
@@ -195,6 +196,13 @@ toolkit.jar:
   skin/classic/global/in-content/radio.svg                           (../../shared/in-content/radio.svg)
   skin/classic/global/in-content/sorter.png                          (../../shared/in-content/sorter.png)
   skin/classic/global/in-content/sorter@2x.png                       (../../shared/in-content/sorter@2x.png)
+  skin/classic/global/reader/RM-Add-24x24.svg                        (../../shared/reader/RM-Add-24x24.svg)
+  skin/classic/global/reader/RM-Close-24x24.svg                      (../../shared/reader/RM-Close-24x24.svg)
+  skin/classic/global/reader/RM-Close-hover-24x24.svg                (../../shared/reader/RM-Close-hover-24x24.svg)
+  skin/classic/global/reader/RM-Delete-24x24.svg                     (../../shared/reader/RM-Delete-24x24.svg)
+  skin/classic/global/reader/RM-Reading-List-24x24.svg               (../../shared/reader/RM-Reading-List-24x24.svg)
+  skin/classic/global/reader/RM-Type-Controls-24x24.svg              (../../shared/reader/RM-Type-Controls-24x24.svg)
+  skin/classic/global/reader/RM-Type-Controls-Arrow.svg              (../../shared/reader/RM-Type-Controls-Arrow.svg)
   skin/classic/global/scale/scale-tray-horiz.gif                     (scale/scale-tray-horiz.gif)
   skin/classic/global/scale/scale-tray-vert.gif                      (scale/scale-tray-vert.gif)
   skin/classic/global/splitter/dimple.png                            (splitter/dimple.png)

@@ -641,7 +641,7 @@ public:
   // cache size is over limit and also returns a total number of all entries in
   // the index minus the number of forced valid entries that we encounter
   // when searching (see below)
-  static nsresult GetEntryForEviction(SHA1Sum::Hash *aHash, uint32_t *aCnt);
+  static nsresult GetEntryForEviction(bool aIgnoreEmptyEntries, SHA1Sum::Hash *aHash, uint32_t *aCnt);
 
   // Checks if a cache entry is currently forced valid. Used to prevent an entry
   // (that has been forced valid) from being evicted when the cache size reaches

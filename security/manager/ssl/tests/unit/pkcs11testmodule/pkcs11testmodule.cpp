@@ -35,6 +35,19 @@ static const CK_VERSION TestLibraryVersion = { 0, 0 };
 static const char TestLibraryDescription[] = "Test PKCS11 Library";
 static const char TestManufacturerID[] = "Test PKCS11 Manufacturer ID";
 
+/* The dest buffer is one in the CK_INFO or CK_TOKEN_INFO structs.
+ * Those buffers are padded with spaces. DestSize corresponds to the declared
+ * size for those buffers (e.g. 32 for `char foo[32]`).
+ * The src buffer is a string litteral. SrcSize includes the string
+ * termination character (e.g. 4 for `const char foo[] = "foo"` */
+template <size_t DestSize, size_t SrcSize>
+void CopyString(unsigned char (&dest)[DestSize], const char (&src)[SrcSize])
+{
+  static_assert(DestSize >= SrcSize - 1, "DestSize >= SrcSize - 1");
+  memcpy(dest, src, SrcSize - 1);
+  memset(dest + SrcSize - 1, ' ', DestSize - SrcSize + 1);
+}
+
 CK_RV Test_C_GetInfo(CK_INFO_PTR pInfo)
 {
   if (!pInfo) {
@@ -42,15 +55,9 @@ CK_RV Test_C_GetInfo(CK_INFO_PTR pInfo)
   }
 
   pInfo->cryptokiVersion = CryptokiVersion;
-  static_assert(sizeof(TestManufacturerID) <= sizeof(pInfo->manufacturerID),
-                "TestManufacturerID too long - make it shorter");
-  memcpy(pInfo->manufacturerID, TestManufacturerID, sizeof(TestManufacturerID));
+  CopyString(pInfo->manufacturerID, TestManufacturerID);
   pInfo->flags = 0; // must be 0
-  static_assert(sizeof(TestLibraryDescription) <=
-                sizeof(pInfo->libraryDescription),
-                "TestLibraryDescription too long - make it shorter");
-  memcpy(pInfo->libraryDescription, TestLibraryDescription,
-         sizeof(TestLibraryDescription));
+  CopyString(pInfo->libraryDescription, TestLibraryDescription);
   pInfo->libraryVersion = TestLibraryVersion;
   return CKR_OK;
 }
@@ -88,13 +95,8 @@ CK_RV Test_C_GetSlotInfo(CK_SLOT_ID, CK_SLOT_INFO_PTR pInfo)
     return CKR_ARGUMENTS_BAD;
   }
 
-  static_assert(sizeof(TestSlotDescription) <= sizeof(pInfo->slotDescription),
-                "TestSlotDescription too long - make it shorter");
-  memcpy(pInfo->slotDescription, TestSlotDescription,
-         sizeof(TestSlotDescription));
-  static_assert(sizeof(TestManufacturerID) <= sizeof(pInfo->manufacturerID),
-                "TestManufacturerID too long - make it shorter");
-  memcpy(pInfo->manufacturerID, TestManufacturerID, sizeof(TestManufacturerID));
+  CopyString(pInfo->slotDescription, TestSlotDescription);
+  CopyString(pInfo->manufacturerID, TestManufacturerID);
   pInfo->flags = (tokenPresent ? CKF_TOKEN_PRESENT : 0) | CKF_REMOVABLE_DEVICE;
   pInfo->hardwareVersion = TestLibraryVersion;
   pInfo->firmwareVersion = TestLibraryVersion;
@@ -113,15 +115,9 @@ CK_RV Test_C_GetTokenInfo(CK_SLOT_ID, CK_TOKEN_INFO_PTR pInfo)
     return CKR_ARGUMENTS_BAD;
   }
 
-  static_assert(sizeof(TestTokenLabel) <= sizeof(pInfo->label),
-                "TestTokenLabel too long - make it shorter");
-  memcpy(pInfo->label, TestTokenLabel, sizeof(TestTokenLabel));
-  static_assert(sizeof(TestManufacturerID) <= sizeof(pInfo->manufacturerID),
-                "TestManufacturerID too long - make it shorter");
-  memcpy(pInfo->manufacturerID, TestManufacturerID, sizeof(TestManufacturerID));
-  static_assert(sizeof(TestTokenModel) <= sizeof(pInfo->model),
-                "TestTokenModel too long - make it shorter");
-  memcpy(pInfo->model, TestTokenModel, sizeof(TestTokenModel));
+  CopyString(pInfo->label, TestTokenLabel);
+  CopyString(pInfo->manufacturerID, TestManufacturerID);
+  CopyString(pInfo->model, TestTokenModel);
   memset(pInfo->serialNumber, 0, sizeof(pInfo->serialNumber));
   pInfo->flags = CKF_TOKEN_INITIALIZED;
   pInfo->ulMaxSessionCount = 1;

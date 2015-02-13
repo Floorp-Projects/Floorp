@@ -23,6 +23,7 @@
 #include "include/SampleTable.h"
 #include "include/ESDS.h"
 
+#include <algorithm>
 #include <ctype.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -3282,14 +3283,14 @@ bool MPEG4Source::ensureSrcBufferAllocated(int32_t aSize) {
 }
 
 bool MPEG4Source::ensureMediaBufferAllocated(int32_t aSize) {
-  if (mBuffer->size() < aSize) {
-      ALOGE("Error insufficient memory, requested %u bytes (had:%u)",
-            aSize, mBuffer->size());
-      mBuffer->release();
-      mBuffer = NULL;
-      return false;
+  if (mBuffer->ensuresize(aSize)) {
+      return true;
   }
-  return true;
+  ALOGE("Error insufficient memory, requested %u bytes (had:%u)",
+        aSize, mBuffer->size());
+  mBuffer->release();
+  mBuffer = NULL;
+  return false;
 }
 
 status_t MPEG4Source::read(
@@ -3416,12 +3417,7 @@ status_t MPEG4Source::read(
 
         int32_t max_size;
         CHECK(mFormat->findInt32(kKeyMaxInputSize, &max_size));
-        if (!ValidInputSize(max_size)) {
-          ALOGE("Invalid max input size %d", max_size);
-          return ERROR_MALFORMED;
-        }
-        mBuffer = new MediaBuffer(max_size);
-        assert(mBuffer);
+        mBuffer = new MediaBuffer(std::min(max_size, 1024 * 1024));
     }
 
     if (!mIsAVC || mWantsNALFragments) {
@@ -3497,7 +3493,14 @@ status_t MPEG4Source::read(
         // Each NAL unit is split up into its constituent fragments and
         // each one of them returned in its own buffer.
 
-        CHECK(mBuffer->range_length() >= mNALLengthSize);
+        if (mBuffer->range_length() < mNALLengthSize) {
+            ALOGE("incomplete NAL unit.");
+
+            mBuffer->release();
+            mBuffer = NULL;
+
+            return ERROR_MALFORMED;
+        }
 
         const uint8_t *src =
             (const uint8_t *)mBuffer->data() + mBuffer->range_offset();
@@ -3560,7 +3563,6 @@ status_t MPEG4Source::read(
             mBuffer->set_range(0, size);
 
         } else {
-            uint8_t *dstData = (uint8_t *)mBuffer->data();
             size_t srcOffset = 0;
             size_t dstOffset = 0;
 
@@ -3587,6 +3589,7 @@ status_t MPEG4Source::read(
                 if (!ensureMediaBufferAllocated(dstOffset + 4 + nalLength)) {
                     return ERROR_MALFORMED;
                 }
+                uint8_t *dstData = (uint8_t *)mBuffer->data();
                 dstData[dstOffset++] = (uint8_t) (nalLength >> 24);
                 dstData[dstOffset++] = (uint8_t) (nalLength >> 16);
                 dstData[dstOffset++] = (uint8_t) (nalLength >> 8);
@@ -3786,12 +3789,7 @@ status_t MPEG4Source::fragmentedRead(
 
         int32_t max_size;
         CHECK(mFormat->findInt32(kKeyMaxInputSize, &max_size));
-        if (!ValidInputSize(max_size)) {
-          ALOGE("Invalid max input size %d", max_size);
-          return ERROR_MALFORMED;
-        }
-        mBuffer = new MediaBuffer(max_size);
-        assert(mBuffer);
+        mBuffer = new MediaBuffer(std::min(max_size, 1024 * 1024));
     }
 
     const Sample *smpl = &mCurrentSamples[mCurrentSampleIndex];
@@ -3859,7 +3857,14 @@ status_t MPEG4Source::fragmentedRead(
         // Each NAL unit is split up into its constituent fragments and
         // each one of them returned in its own buffer.
 
-        CHECK(mBuffer->range_length() >= mNALLengthSize);
+        if (mBuffer->range_length() < mNALLengthSize) {
+            ALOGE("incomplete NAL unit.");
+
+            mBuffer->release();
+            mBuffer = NULL;
+
+            return ERROR_MALFORMED;
+        }
 
         const uint8_t *src =
             (const uint8_t *)mBuffer->data() + mBuffer->range_offset();
@@ -3924,7 +3929,6 @@ status_t MPEG4Source::fragmentedRead(
             mBuffer->set_range(0, size);
 
         } else {
-            uint8_t *dstData = (uint8_t *)mBuffer->data();
             size_t srcOffset = 0;
             size_t dstOffset = 0;
 
@@ -3951,6 +3955,7 @@ status_t MPEG4Source::fragmentedRead(
                 if (!ensureMediaBufferAllocated(dstOffset + 4 + nalLength)) {
                     return ERROR_MALFORMED;
                 }
+                uint8_t *dstData = (uint8_t *)mBuffer->data();
                 dstData[dstOffset++] = (uint8_t) (nalLength >> 24);
                 dstData[dstOffset++] = (uint8_t) (nalLength >> 16);
                 dstData[dstOffset++] = (uint8_t) (nalLength >> 8);

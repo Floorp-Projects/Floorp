@@ -8,6 +8,7 @@ DIRS += [
     'manifests',
     'tests',
     'ssltunnel',
+    'BrowserTestUtils',
 ]
 
 if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':

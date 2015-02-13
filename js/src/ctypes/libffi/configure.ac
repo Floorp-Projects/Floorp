@@ -246,7 +246,7 @@ case "$host" in
   powerpc-*-aix* | rs6000-*-aix*)
 	TARGET=POWERPC_AIX; TARGETDIR=powerpc
 	;;
-  powerpc-*-freebsd* | powerpc-*-openbsd*)
+  powerpc-*-freebsd* | powerpc-*-openbsd* | powerpc-*-netbsd*)
 	TARGET=POWERPC_FREEBSD; TARGETDIR=powerpc
 	HAVE_LONG_DOUBLE_VARIANT=1
 	;;

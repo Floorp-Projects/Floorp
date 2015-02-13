@@ -10,6 +10,12 @@
 #include "nsHttp.h"
 #include "nsString.h"
 
+// This needs to be forward declared here so we can include only this header
+// without also including PHttpChannelParams.h
+namespace IPC {
+    template <typename> struct ParamTraits;
+}
+
 namespace mozilla { namespace net {
 
 //-----------------------------------------------------------------------------

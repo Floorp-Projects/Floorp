@@ -18,6 +18,17 @@ template<class T> struct already_AddRefed;
 namespace mozilla {
 namespace layers {
 
+/* A base class for callbacks to be passed to APZCCallbackHelper::SendSetTargetAPZCNotification.
+ * If we had something like std::function, we could just use
+ * std::function<void(uint64_t, const nsTArray<ScrollableLayerGuid>&)>. */
+struct SetTargetAPZCCallback {
+public:
+  NS_INLINE_DECL_REFCOUNTING(SetTargetAPZCCallback)
+  virtual void Run(uint64_t aInputBlockId, const nsTArray<ScrollableLayerGuid>& aTargets) const = 0;
+protected:
+  virtual ~SetTargetAPZCCallback() {}
+};
+
 /* This class contains some helper methods that facilitate implementing the
    GeckoContentController callback interface required by the AsyncPanZoomController.
    Since different platforms need to implement this interface in similar-but-
@@ -75,19 +86,6 @@ public:
     static void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
                                         const uint32_t& aScrollGeneration);
 
-    /* Save an "input transform" property on the content element corresponding to
-       the scrollable content. This is needed because in some cases when the APZ code
-       sends a paint request via the GeckoContentController interface, we don't always
-       apply the scroll offset that was requested. Since the APZ code doesn't know
-       that we didn't apply it, it will transform inputs assuming that we had applied
-       it, and so we need to apply a fixup to the input to account for the fact that
-       we didn't.
-       The |aApzcMetrics| argument are the metrics that the APZ sent us, and the
-       |aActualMetrics| argument are the metrics representing the gecko state after we
-       applied some or all of the APZ metrics. */
-    static void UpdateCallbackTransform(const FrameMetrics& aApzcMetrics,
-                                        const FrameMetrics& aActualMetrics);
-
     /* Apply an "input transform" to the given |aInput| and return the transformed value.
        The input transform applied is the one for the content element corresponding to
        |aGuid|; this is populated in a previous call to UpdateCallbackTransform. See that
@@ -108,6 +106,13 @@ public:
                            const CSSToLayoutDeviceScale& aScale,
                            float aPresShellResolution);
 
+    /* Convenience function for applying a callback transform to all touch
+     * points of a touch event. */
+    static void ApplyCallbackTransform(WidgetTouchEvent& aEvent,
+                                       const ScrollableLayerGuid& aGuid,
+                                       const CSSToLayoutDeviceScale& aScale,
+                                       float aPresShellResolution);
+
     /* Dispatch a widget event via the widget stored in the event, if any.
      * In a child process, allows the TabParent event-capture mechanism to
      * intercept the event. */
@@ -120,10 +125,34 @@ public:
                                                        const LayoutDevicePoint& aRefPoint,
                                                        nsIWidget* aWidget);
 
+    /* Dispatch a mouse event with the given parameters.
+     * Return whether or not any listeners have called preventDefault on the event. */
+    static bool DispatchMouseEvent(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
+                                   const nsString& aType,
+                                   const CSSPoint& aPoint,
+                                   int32_t aButton,
+                                   int32_t aClickCount,
+                                   int32_t aModifiers,
+                                   bool aIgnoreRootScrollFrame,
+                                   unsigned short aInputSourceArg);
+
     /* Fire a single-tap event at the given point. The event is dispatched
      * via the given widget. */
     static void FireSingleTapEvent(const LayoutDevicePoint& aPoint,
                                    nsIWidget* aWidget);
+
+    /* Perform hit-testing on the touch points of |aEvent| to determine
+     * which scrollable frames they target. If any of these frames don't have
+     * a displayport, set one. Finally, invoke the provided callback with
+     * the guids of the target frames. If any displayports needed to be set,
+     * the callback is invoked after the next refresh, otherwise it's invoked
+     * right away. */
+    static void SendSetTargetAPZCNotification(nsIWidget* aWidget,
+                                              nsIDocument* aDocument,
+                                              const WidgetGUIEvent& aEvent,
+                                              const ScrollableLayerGuid& aGuid,
+                                              uint64_t aInputBlockId,
+                                              const nsRefPtr<SetTargetAPZCCallback>& aCallback);
 };
 
 }

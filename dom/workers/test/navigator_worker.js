@@ -18,61 +18,68 @@ var supportedProps = [
   "languages",
 ];
 
-var isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
-var isB2G = !isDesktop && !navigator.userAgent.contains("Android");
-
-// Prepare the interface map showing if a propery should exist in this build.
-// For example, if interfaceMap[foo] = true means navigator.foo should exist.
-var interfaceMap = {};
-
-for (var prop of supportedProps) {
-  if (typeof(prop) === "string") {
-    interfaceMap[prop] = true;
-    continue;
+self.onmessage = function(event) {
+  if (!event || !event.data) {
+    return;
   }
 
-  if (prop.b2g === !isB2G) {
-    interfaceMap[prop.name] = false;
-    continue;
+  startTest(event.data.isB2G);
+};
+
+function startTest(isB2G) {
+  // Prepare the interface map showing if a propery should exist in this build.
+  // For example, if interfaceMap[foo] = true means navigator.foo should exist.
+  var interfaceMap = {};
+
+  for (var prop of supportedProps) {
+    if (typeof(prop) === "string") {
+      interfaceMap[prop] = true;
+      continue;
+    }
+
+    if (prop.b2g === !isB2G) {
+      interfaceMap[prop.name] = false;
+      continue;
+    }
+
+    interfaceMap[prop.name] = true;
   }
 
-  interfaceMap[prop.name] = true;
-}
-
-for (var prop in navigator) {
-  // Make sure the list is current!
-  if (!interfaceMap[prop]) {
-    throw "Navigator has the '" + prop + "' property that isn't in the list!";
-  }
-}
-
-var obj;
-
-for (var prop in interfaceMap) {
-  // Skip the property that is not supposed to exist in this build.
-  if (!interfaceMap[prop]) {
-    continue;
+  for (var prop in navigator) {
+    // Make sure the list is current!
+    if (!interfaceMap[prop]) {
+      throw "Navigator has the '" + prop + "' property that isn't in the list!";
+    }
   }
 
-  if (typeof navigator[prop] == "undefined") {
-    throw "Navigator has no '" + prop + "' property!";
+  var obj;
+
+  for (var prop in interfaceMap) {
+    // Skip the property that is not supposed to exist in this build.
+    if (!interfaceMap[prop]) {
+      continue;
+    }
+
+    if (typeof navigator[prop] == "undefined") {
+      throw "Navigator has no '" + prop + "' property!";
+    }
+
+    obj = { name:  prop };
+
+    if (prop === "taintEnabled") {
+      obj.value = navigator[prop]();
+    } else if (prop === "getDataStores") {
+      obj.value = typeof navigator[prop];
+    } else {
+      obj.value = navigator[prop];
+    }
+
+    postMessage(JSON.stringify(obj));
   }
 
-  obj = { name:  prop };
-
-  if (prop === "taintEnabled") {
-    obj.value = navigator[prop]();
-  } else if (prop === "getDataStores") {
-    obj.value = typeof navigator[prop];
-  } else {
-    obj.value = navigator[prop];
-  }
+  obj = {
+    name: "testFinished"
+  };
 
   postMessage(JSON.stringify(obj));
 }
-
-obj = {
-  name: "testFinished"
-};
-
-postMessage(JSON.stringify(obj));

@@ -92,6 +92,7 @@ EXPORTS.mozilla.layers += [
     'apz/testutil/APZTestData.h',
     'apz/util/ActiveElementManager.h',
     'apz/util/APZCCallbackHelper.h',
+    'apz/util/APZEventState.h',
     'apz/util/APZThreadUtils.h',
     'apz/util/ChromeProcessController.h',
     'apz/util/InputAPZContext.h',
@@ -227,6 +228,7 @@ UNIFIED_SOURCES += [
     'apz/testutil/APZTestData.cpp',
     'apz/util/ActiveElementManager.cpp',
     'apz/util/APZCCallbackHelper.cpp',
+    'apz/util/APZEventState.cpp',
     'apz/util/APZThreadUtils.cpp',
     'apz/util/ChromeProcessController.cpp',
     'apz/util/InputAPZContext.cpp',
@@ -354,6 +356,10 @@ FAIL_ON_WARNINGS = True
 MSVC_ENABLE_PGO = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/docshell/base',  # for nsDocShell.h
+]
 
 FINAL_LIBRARY = 'xul'
 

@@ -55,7 +55,8 @@ public class TestAccountPickler extends AndroidSyncTestCaseWithAccounts {
   public AndroidFxAccount addTestAccount() throws Exception {
     final State state = new Separated(TEST_USERNAME, "uid", false); // State choice is arbitrary.
     final AndroidFxAccount account = AndroidFxAccount.addAndroidAccount(context, TEST_USERNAME,
-        TEST_PROFILE, TEST_AUTH_SERVER_URI, TEST_TOKEN_SERVER_URI, state);
+        TEST_PROFILE, TEST_AUTH_SERVER_URI, TEST_TOKEN_SERVER_URI, state,
+        AndroidSyncTestCaseWithAccounts.TEST_SYNC_AUTOMATICALLY_MAP_WITH_ALL_AUTHORITIES_DISABLED);
     assertNotNull(account);
     assertNotNull(account.getProfile());
     assertTrue(testAccountsExist()); // Sanity check.
@@ -65,13 +66,12 @@ public class TestAccountPickler extends AndroidSyncTestCaseWithAccounts {
 
   public void testPickle() throws Exception {
     final AndroidFxAccount account = addTestAccount();
-    // Sync is enabled by default so we do a more thorough test by disabling it.
-    account.disableSyncing();
 
     final long now = System.currentTimeMillis();
     final ExtendedJSONObject o = AccountPickler.toJSON(account, now);
+    assertNotNull(o.toJSONString());
 
-    assertEquals(2, o.getLong(AccountPickler.KEY_PICKLE_VERSION).longValue());
+    assertEquals(3, o.getLong(AccountPickler.KEY_PICKLE_VERSION).longValue());
     assertTrue(o.getLong(AccountPickler.KEY_PICKLE_TIMESTAMP).longValue() < System.currentTimeMillis());
 
     assertEquals(AndroidFxAccount.CURRENT_ACCOUNT_VERSION, o.getIntegerSafely(AccountPickler.KEY_ACCOUNT_VERSION).intValue());
@@ -82,14 +82,12 @@ public class TestAccountPickler extends AndroidSyncTestCaseWithAccounts {
     assertEquals(TEST_AUTH_SERVER_URI, o.getString(AccountPickler.KEY_IDP_SERVER_URI));
     assertEquals(TEST_TOKEN_SERVER_URI, o.getString(AccountPickler.KEY_TOKEN_SERVER_URI));
 
-    assertFalse(o.getBoolean(AccountPickler.KEY_IS_SYNCING_ENABLED));
+    assertNotNull(o.getObject(AccountPickler.KEY_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP));
     assertNotNull(o.get(AccountPickler.KEY_BUNDLE));
   }
 
   public void testPickleAndUnpickle() throws Exception {
     final AndroidFxAccount inputAccount = addTestAccount();
-    // Sync is enabled by default so we do a more thorough test by disabling it.
-    inputAccount.disableSyncing();
 
     AccountPickler.pickle(inputAccount, PICKLE_FILENAME);
     final ExtendedJSONObject inputJSON = AccountPickler.toJSON(inputAccount, 0);

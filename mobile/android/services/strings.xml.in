@@ -199,12 +199,12 @@
 <string name="fxaccount_status_needs_upgrade">&fxaccount_status_needs_upgrade;</string>
 <string name="fxaccount_status_needs_master_sync_automatically_enabled">&fxaccount_status_needs_master_sync_automatically_enabled;</string>
 <string name="fxaccount_status_needs_master_sync_automatically_enabled_v21">&fxaccount_status_needs_master_sync_automatically_enabled_v21;</string>
-<string name="fxaccount_status_needs_account_enabled">&fxaccount_status_needs_account_enabled;</string>
 <string name="fxaccount_status_needs_finish_migrating">&fxaccount_status_needs_finish_migrating;</string>
 <string name="fxaccount_status_bookmarks">&fxaccount_status_bookmarks;</string>
 <string name="fxaccount_status_history">&fxaccount_status_history;</string>
 <string name="fxaccount_status_passwords">&fxaccount_status_passwords;</string>
 <string name="fxaccount_status_tabs">&fxaccount_status_tabs;</string>
+<string name="fxaccount_status_reading_list">&reading_list_title;</string>
 <string name="fxaccount_status_legal">&fxaccount_status_legal;</string>
 <string name="fxaccount_status_linktos">&fxaccount_status_linktos;</string>
 <string name="fxaccount_status_linkprivacy">&fxaccount_status_linkprivacy;</string>

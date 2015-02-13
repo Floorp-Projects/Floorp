@@ -172,7 +172,8 @@ let MemoryActor = protocol.ActorClass({
       options: Arg(0, "nullable:AllocationsRecordingOptions")
     },
     response: {
-      value: RetVal(0, "number")
+      // Accept `nullable` in the case of server Gecko <= 37, handled on the front
+      value: RetVal(0, "nullable:number")
     }
   }),
 
@@ -187,7 +188,8 @@ let MemoryActor = protocol.ActorClass({
   }), {
     request: {},
     response: {
-      value: RetVal(0, "number")
+      // Accept `nullable` in the case of server Gecko <= 37, handled on the front
+      value: RetVal(0, "nullable:number")
     }
   }),
 

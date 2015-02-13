@@ -1162,7 +1162,7 @@ RDFServiceImpl::RegisterResource(nsIRDFResource* aResource, bool aReplace)
                 aResource, (const char*) uri));
     }
     else {
-        hdr = PL_DHashTableAdd(&mResources, uri);
+        hdr = PL_DHashTableAdd(&mResources, uri, fallible);
         if (! hdr)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1399,7 +1399,7 @@ RDFServiceImpl::RegisterLiteral(nsIRDFLiteral* aLiteral)
     NS_ASSERTION(!PL_DHashTableSearch(&mLiterals, value),
                  "literal already registered");
 
-    PLDHashEntryHdr *hdr = PL_DHashTableAdd(&mLiterals, value);
+    PLDHashEntryHdr *hdr = PL_DHashTableAdd(&mLiterals, value, fallible);
     if (! hdr)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1451,7 +1451,7 @@ RDFServiceImpl::RegisterInt(nsIRDFInt* aInt)
     NS_ASSERTION(!PL_DHashTableSearch(&mInts, &value),
                  "int already registered");
 
-    PLDHashEntryHdr *hdr = PL_DHashTableAdd(&mInts, &value);
+    PLDHashEntryHdr *hdr = PL_DHashTableAdd(&mInts, &value, fallible);
     if (! hdr)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1503,7 +1503,7 @@ RDFServiceImpl::RegisterDate(nsIRDFDate* aDate)
     NS_ASSERTION(!PL_DHashTableSearch(&mDates, &value),
                  "date already registered");
 
-    PLDHashEntryHdr *hdr = PL_DHashTableAdd(&mDates, &value);
+    PLDHashEntryHdr *hdr = PL_DHashTableAdd(&mDates, &value, fallible);
     if (! hdr)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1550,7 +1550,7 @@ RDFServiceImpl::RegisterBlob(BlobImpl *aBlob)
     NS_ASSERTION(!PL_DHashTableSearch(&mBlobs, &aBlob->mData),
                  "blob already registered");
 
-    PLDHashEntryHdr *hdr = PL_DHashTableAdd(&mBlobs, &aBlob->mData);
+    PLDHashEntryHdr *hdr = PL_DHashTableAdd(&mBlobs, &aBlob->mData, fallible);
     if (! hdr)
         return NS_ERROR_OUT_OF_MEMORY;
 

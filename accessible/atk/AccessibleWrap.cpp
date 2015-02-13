@@ -961,6 +961,40 @@ refRelationSetCB(AtkObject *aAtkObj)
   AtkRelationSet* relation_set =
     ATK_OBJECT_CLASS(parent_class)->ref_relation_set(aAtkObj);
 
+  const AtkRelationType typeMap[] = {
+#define RELATIONTYPE(gecko, s, atk, m, i) atk,
+#include "RelationTypeMap.h"
+#undef RELATIONTYPE
+  };
+
+  if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
+    nsTArray<RelationType> types;
+    nsTArray<nsTArray<ProxyAccessible*>> targetSets;
+    proxy->Relations(&types, &targetSets);
+
+    size_t relationCount = types.Length();
+    for (size_t i = 0; i < relationCount; i++) {
+      if (typeMap[static_cast<uint32_t>(types[i])] == ATK_RELATION_NULL)
+        continue;
+
+      size_t targetCount = targetSets[i].Length();
+      nsAutoTArray<AtkObject*, 5> wrappers;
+      for (size_t j = 0; j < targetCount; j++)
+        wrappers.AppendElement(GetWrapperFor(targetSets[i][j]));
+
+      AtkRelationType atkType = typeMap[static_cast<uint32_t>(types[i])];
+      AtkRelation* atkRelation =
+        atk_relation_set_get_relation_by_type(relation_set, atkType);
+      if (atkRelation)
+        atk_relation_set_remove(relation_set, atkRelation);
+
+      atkRelation = atk_relation_new(wrappers.Elements(), wrappers.Length(),
+                                     atkType);
+      atk_relation_set_add(relation_set, atkRelation);
+      g_object_unref(atkRelation);
+    }
+  }
+
   AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
   if (!accWrap)
     return relation_set;

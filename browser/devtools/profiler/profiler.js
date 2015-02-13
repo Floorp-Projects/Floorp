@@ -19,17 +19,17 @@ devtools.lazyRequireGetter(this, "FramerateFront",
   "devtools/server/actors/framerate", true);
 
 devtools.lazyRequireGetter(this, "L10N",
-  "devtools/profiler/global", true);
+  "devtools/shared/profiler/global", true);
 devtools.lazyRequireGetter(this, "CATEGORIES",
-  "devtools/profiler/global", true);
+  "devtools/shared/profiler/global", true);
 devtools.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
-  "devtools/profiler/global", true);
+  "devtools/shared/profiler/global", true);
 devtools.lazyRequireGetter(this, "CATEGORY_OTHER",
-  "devtools/profiler/global", true);
+  "devtools/shared/profiler/global", true);
 devtools.lazyRequireGetter(this, "ThreadNode",
-  "devtools/profiler/tree-model", true);
+  "devtools/shared/profiler/tree-model", true);
 devtools.lazyRequireGetter(this, "CallView",
-  "devtools/profiler/tree-view", true);
+  "devtools/shared/profiler/tree-view", true);
 
 devtools.lazyImporter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");

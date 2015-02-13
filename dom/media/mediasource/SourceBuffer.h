@@ -113,8 +113,8 @@ public:
   double GetBufferedEnd();
 
   // Runs the range removal algorithm as defined by the MSE spec.
-  // RangeRemoval will queue a call to DoRangeRemoval.
   void RangeRemoval(double aStart, double aEnd);
+  // Actually remove data between aStart and aEnd
   void DoRangeRemoval(double aStart, double aEnd);
 
 #if defined(DEBUG)
@@ -126,6 +126,7 @@ private:
 
   friend class AsyncEventRunner<SourceBuffer>;
   friend class AppendDataRunnable;
+  friend class RangeRemovalRunnable;
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
 
@@ -179,6 +180,7 @@ private:
   uint32_t mUpdateID;
 
   MediaPromiseConsumerHolder<TrackBufferAppendPromise> mPendingAppend;
+  const nsCString mType;
 };
 
 } // namespace dom

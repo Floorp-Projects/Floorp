@@ -30,13 +30,9 @@
 
           let prefIframe = win.document.querySelector("#deck-panel-devicepreferences");
 
-          yield documentIsLoaded(prefIframe.contentWindow.document);
-
           win.AppManager.update("runtimelist");
 
           yield connectToLocalRuntime(win);
-
-          yield nextTick();
 
           let prefs = win.document.querySelector("#cmd_showDevicePrefs");
 
@@ -47,17 +43,23 @@
           win.Cmds.showDevicePrefs();
           is(deck.selectedPanel, prefIframe, "device preferences iframe selected");
 
-          yield prefIframe.contentWindow.getAllPrefs;
           yield nextTick();
+
+          yield lazyIframeIsLoaded(prefIframe);
+
+          yield nextTick();
+
+          yield prefIframe.contentWindow.getAllPrefs;
 
           setDocument(prefIframe);
 
           let fields = doc.querySelectorAll(".editable");
-          let preference = "accessibility.blockautorefresh";
-
-          fieldChange(fields, preference);
 
           addNewField();
+
+          let preference = "accessibility.accesskeycausesactivation";
+
+          fieldChange(fields, preference);
 
           addNewFieldWithEnter();
 

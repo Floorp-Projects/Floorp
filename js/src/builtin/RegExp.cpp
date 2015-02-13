@@ -479,26 +479,6 @@ regexp_sticky(JSContext *cx, unsigned argc, JS::Value *vp)
     return CallNonGenericMethod<IsRegExp, regexp_sticky_impl>(cx, args);
 }
 
-/* ES6 draft rev32 21.2.5.15. */
-MOZ_ALWAYS_INLINE bool
-regexp_unicode_impl(JSContext *cx, CallArgs args)
-{
-    MOZ_ASSERT(IsRegExp(args.thisv()));
-
-    /* Steps 4-6. */
-    /* FIXME: When the /u flags is supported, return correct value. */
-    args.rval().setBoolean(false);
-    return true;
-}
-
-static bool
-regexp_unicode(JSContext *cx, unsigned argc, JS::Value *vp)
-{
-    /* Steps 1-3. */
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsRegExp, regexp_unicode_impl>(cx, args);
-}
-
 static const JSPropertySpec regexp_properties[] = {
     JS_PSG("flags", regexp_flags, 0),
     JS_PSG("global", regexp_global, 0),
@@ -506,7 +486,6 @@ static const JSPropertySpec regexp_properties[] = {
     JS_PSG("multiline", regexp_multiline, 0),
     JS_PSG("source", regexp_source, 0),
     JS_PSG("sticky", regexp_sticky, 0),
-    JS_PSG("unicode", regexp_unicode, 0),
     JS_PS_END
 };
 

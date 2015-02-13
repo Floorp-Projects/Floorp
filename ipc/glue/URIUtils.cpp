@@ -12,6 +12,7 @@
 #include "nsDebug.h"
 #include "nsID.h"
 #include "nsJARURI.h"
+#include "nsIIconURI.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
@@ -24,23 +25,7 @@ namespace {
 NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 NS_DEFINE_CID(kJARURICID, NS_JARURI_CID);
-
-struct StringWithLengh
-{
-  const char* string;
-  size_t length;
-};
-
-#define STRING_WITH_LENGTH(_str) \
-  { _str, ArrayLength(_str) - 1 }
-
-const StringWithLengh kGenericURIAllowedSchemes[] = {
-  STRING_WITH_LENGTH("about:"),
-  STRING_WITH_LENGTH("javascript:"),
-  STRING_WITH_LENGTH("javascript")
-};
-
-#undef STRING_WITH_LENGTH
+NS_DEFINE_CID(kIconURICID, NS_MOZICONURI_CID);
 
 } // anonymous namespace
 
@@ -55,41 +40,14 @@ SerializeURI(nsIURI* aURI,
   MOZ_ASSERT(aURI);
 
   nsCOMPtr<nsIIPCSerializableURI> serializable = do_QueryInterface(aURI);
-  if (serializable) {
-    serializable->Serialize(aParams);
-    if (aParams.type() == URIParams::T__None) {
-      MOZ_CRASH("Serialize failed!");
-    }
-    return;
+  if (!serializable) {
+    MOZ_CRASH("All IPDL URIs must be serializable scheme!");
   }
 
-  nsCString scheme;
-  if (NS_FAILED(aURI->GetScheme(scheme))) {
-    MOZ_CRASH("This must never fail!");
+  serializable->Serialize(aParams);
+  if (aParams.type() == URIParams::T__None) {
+    MOZ_CRASH("Serialize failed!");
   }
-
-  bool allowed = false;
-
-  for (size_t i = 0; i < ArrayLength(kGenericURIAllowedSchemes); i++) {
-    const StringWithLengh& entry = kGenericURIAllowedSchemes[i];
-    if (scheme.EqualsASCII(entry.string, entry.length)) {
-      allowed = true;
-      break;
-    }
-  }
-
-  if (!allowed) {
-    MOZ_CRASH("All IPDL URIs must be serializable or an allowed "
-              "scheme!");
-  }
-
-  GenericURIParams params;
-  if (NS_FAILED(aURI->GetSpec(params.spec())) ||
-      NS_FAILED(aURI->GetOriginCharset(params.charset()))) {
-    MOZ_CRASH("This must never fail!");
-  }
-
-  aParams = params;
 }
 
 void
@@ -113,70 +71,38 @@ DeserializeURI(const URIParams& aParams)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIURI> uri;
+  nsCOMPtr<nsIIPCSerializableURI> serializable;
 
-  if (aParams.type() != URIParams::TGenericURIParams) {
-    nsCOMPtr<nsIIPCSerializableURI> serializable;
-
-    switch (aParams.type()) {
-      case URIParams::TSimpleURIParams:
-        serializable = do_CreateInstance(kSimpleURICID);
-        break;
-
-      case URIParams::TStandardURLParams:
-        serializable = do_CreateInstance(kStandardURLCID);
-        break;
-
-      case URIParams::TJARURIParams:
-        serializable = do_CreateInstance(kJARURICID);
-        break;
-
-      default:
-        MOZ_CRASH("Unknown params!");
-    }
-
-    MOZ_ASSERT(serializable);
-
-    if (!serializable->Deserialize(aParams)) {
-      MOZ_ASSERT(false, "Deserialize failed!");
-      return nullptr;
-    }
-
-    uri = do_QueryInterface(serializable);
-    MOZ_ASSERT(uri);
-
-    return uri.forget();
-  }
-
-  MOZ_ASSERT(aParams.type() == URIParams::TGenericURIParams);
-
-  const GenericURIParams& params = aParams.get_GenericURIParams();
-
-  if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), params.spec(),
-                          params.charset().get()))) {
-    NS_WARNING("Failed to make new URI!");
-    return nullptr;
-  }
-
-  nsCString scheme;
-  if (NS_FAILED(uri->GetScheme(scheme))) {
-    MOZ_CRASH("This must never fail!");
-  }
-
-  bool allowed = false;
-
-  for (size_t i = 0; i < ArrayLength(kGenericURIAllowedSchemes); i++) {
-    const StringWithLengh& entry = kGenericURIAllowedSchemes[i];
-    if (scheme.EqualsASCII(entry.string, entry.length)) {
-      allowed = true;
+  switch (aParams.type()) {
+    case URIParams::TSimpleURIParams:
+      serializable = do_CreateInstance(kSimpleURICID);
       break;
-    }
+
+    case URIParams::TStandardURLParams:
+      serializable = do_CreateInstance(kStandardURLCID);
+      break;
+
+    case URIParams::TJARURIParams:
+      serializable = do_CreateInstance(kJARURICID);
+      break;
+
+    case URIParams::TIconURIParams:
+      serializable = do_CreateInstance(kIconURICID);
+      break;
+
+    default:
+      MOZ_CRASH("Unknown params!");
   }
 
-  if (!allowed) {
-    MOZ_ASSERT(false, "This type of URI is not allowed!");
+  MOZ_ASSERT(serializable);
+
+  if (!serializable->Deserialize(aParams)) {
+    MOZ_ASSERT(false, "Deserialize failed!");
     return nullptr;
   }
+
+  nsCOMPtr<nsIURI> uri = do_QueryInterface(serializable);
+  MOZ_ASSERT(uri);
 
   return uri.forget();
 }

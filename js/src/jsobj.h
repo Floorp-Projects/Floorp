@@ -941,13 +941,6 @@ extern bool
 HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *result);
 
 /*
- * Deprecated. Search the prototype chain for `obj[id]` and redefine it to have
- * the given property attributes.
- */
-inline bool
-SetPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
-
-/*
  * Set a watchpoint: a synchronous callback when the given property of the
  * given object is set.
  *
