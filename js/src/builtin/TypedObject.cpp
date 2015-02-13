@@ -1772,6 +1772,47 @@ TypedObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id, Ha
 }
 
 bool
+TypedObject::obj_hasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp)
+{
+    Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
+    switch (typedObj->typeDescr().kind()) {
+      case type::Scalar:
+      case type::Reference:
+      case type::Simd:
+        break;
+
+      case type::Array: {
+        if (JSID_IS_ATOM(id, cx->names().length)) {
+            *foundp = true;
+            return true;
+        }
+        uint32_t index;
+        // Elements are not inherited from the prototype.
+        if (js_IdIsIndex(id, &index)) {
+            *foundp = (index < uint32_t(typedObj->length()));
+            return true;
+        }
+        break;
+      }
+
+      case type::Struct:
+        size_t index;
+        if (typedObj->typeDescr().as<StructTypeDescr>().fieldIndex(id, &index)) {
+            *foundp = true;
+            return true;
+        }
+    }
+
+    RootedObject proto(cx, obj->getProto());
+    if (!proto) {
+        *foundp = false;
+        return true;
+    }
+
+    return HasProperty(cx, proto, id, foundp);
+}
+
+bool
 TypedObject::obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
                              HandleId id, MutableHandleValue vp)
 {
@@ -1864,6 +1905,7 @@ TypedObject::obj_getArrayElement(JSContext *cx,
                                  uint32_t index,
                                  MutableHandleValue vp)
 {
+    // Elements are not inherited from the prototype.
     if (index >= (size_t) typedObj->length()) {
         vp.setUndefined();
         return true;
@@ -2314,6 +2356,7 @@ LazyArrayBufferTable::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
         {                                                \
             TypedObject::obj_lookupProperty,             \
             TypedObject::obj_defineProperty,             \
+            TypedObject::obj_hasProperty,                \
             TypedObject::obj_getProperty,                \
             TypedObject::obj_setProperty,                \
             TypedObject::obj_getOwnPropertyDescriptor,   \
