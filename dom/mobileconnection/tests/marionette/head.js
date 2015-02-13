@@ -45,13 +45,14 @@ let _pendingEmulatorShellCmdCount = 0;
  * @return A deferred promise.
  */
 function runEmulatorCmdSafe(aCommand) {
+  log("Emulator command: " + aCommand);
   let deferred = Promise.defer();
 
   ++_pendingEmulatorCmdCount;
   runEmulatorCmd(aCommand, function(aResult) {
     --_pendingEmulatorCmdCount;
 
-    ok(true, "Emulator response: " + JSON.stringify(aResult));
+    log("Emulator response: " + JSON.stringify(aResult));
     if (Array.isArray(aResult) &&
         aResult[aResult.length - 1] === "OK") {
       deferred.resolve(aResult);
@@ -718,15 +719,25 @@ function setRadioEnabled(aEnabled, aServiceId) {
  * @return A deferred promise.
  */
 function setRadioEnabledAndWait(aEnabled, aServiceId) {
-  let promises = [];
+  let mobileConn = getMozMobileConnectionByServiceId(aServiceId);
 
-  promises.push(waitForManagerEvent("radiostatechange", aServiceId, function() {
+  if (mobileConn.radioState === (aEnabled ? "enabled" : "disabled")) {
+    return Promise.resolve();
+  }
+
+  let expectedSequence = aEnabled ? ["enabling", "enabled"] :
+                                    ["disabling", "disabled"];
+
+  let p1 = waitForManagerEvent("radiostatechange", aServiceId, function() {
     let mobileConn = getMozMobileConnectionByServiceId(aServiceId);
-    return mobileConn.radioState === aEnabled ? "enabled" : "disabled";
-  }));
-  promises.push(setRadioEnabled(aEnabled, aServiceId));
+    let expectedRadioState = expectedSequence.shift();
+    is(mobileConn.radioState, expectedRadioState, "Check radio state");
+    return expectedSequence.length === 0;
+  });
 
-  return Promise.all(promises);
+  let p2 = setRadioEnabled(aEnabled, aServiceId);
+
+  return Promise.all([p1, p2]);
 }
 
 /**
