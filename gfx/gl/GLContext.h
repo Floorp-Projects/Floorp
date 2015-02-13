@@ -154,6 +154,7 @@ enum class GLVendor {
     Nouveau,
     Vivante,
     VMware,
+    ARM,
     Other
 };
 
