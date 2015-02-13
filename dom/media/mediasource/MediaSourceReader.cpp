@@ -463,27 +463,8 @@ MediaSourceReader::SelectDecoder(int64_t aTarget,
                                  int64_t aTolerance,
                                  const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders)
 {
-  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-
-  // Consider decoders in order of newest to oldest, as a newer decoder
-  // providing a given buffered range is expected to replace an older one.
-  for (int32_t i = aTrackDecoders.Length() - 1; i >= 0; --i) {
-    nsRefPtr<SourceBufferDecoder> newDecoder = aTrackDecoders[i];
-
-    nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
-    newDecoder->GetBuffered(ranges);
-    if (ranges->Find(double(aTarget) / USECS_PER_S,
-                     double(aTolerance) / USECS_PER_S) == dom::TimeRanges::NoIndex) {
-      MSE_DEBUGV("SelectDecoder(%lld fuzz:%lld) newDecoder=%p (%d/%d) target not in ranges=%s",
-                 aTarget, aTolerance, newDecoder.get(), i+1,
-                 aTrackDecoders.Length(), DumpTimeRanges(ranges).get());
-      continue;
-    }
-
-    return newDecoder.forget();
-  }
-
-  return nullptr;
+  return static_cast<MediaSourceDecoder*>(mDecoder)
+      ->SelectDecoder(aTarget, aTolerance, aTrackDecoders);
 }
 
 bool
