@@ -1257,6 +1257,9 @@ NativeDefineElement(ExclusiveContext *cx, HandleNativeObject obj, uint32_t index
                     JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
 
 extern bool
+NativeHasProperty(JSContext *cx, HandleNativeObject obj, HandleId id, bool *foundp);
+
+extern bool
 NativeGetProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver, HandleId id,
                   MutableHandleValue vp);
 
@@ -1378,6 +1381,14 @@ MaybeNativeObject(JSObject *obj)
 
 
 /*** Inline functions declared in jsobj.h that use the native declarations above *****************/
+
+inline bool
+js::HasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp)
+{
+    if (HasPropertyOp op = obj->getOps()->hasProperty)
+        return op(cx, obj, id, foundp);
+    return NativeHasProperty(cx, obj.as<NativeObject>(), id, foundp);
+}
 
 inline bool
 js::GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
