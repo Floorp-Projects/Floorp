@@ -833,18 +833,18 @@
                   oncommand="document.getBindingParent(this)._increaseOrDecreaseMonth(-1);"/>
           <spacer flex="1"/>
           <deck anonid="monthlabeldeck">
-            <label class="datepicker-gridlabel"/>
-            <label class="datepicker-gridlabel"/>
-            <label class="datepicker-gridlabel"/>
-            <label class="datepicker-gridlabel"/>
-            <label class="datepicker-gridlabel"/>
-            <label class="datepicker-gridlabel"/>
-            <label class="datepicker-gridlabel"/>
-            <label class="datepicker-gridlabel"/>
-            <label class="datepicker-gridlabel"/>
-            <label class="datepicker-gridlabel"/>
-            <label class="datepicker-gridlabel"/>
-            <label class="datepicker-gridlabel"/>
+            <label class="datepicker-gridlabel" value=""/>
+            <label class="datepicker-gridlabel" value=""/>
+            <label class="datepicker-gridlabel" value=""/>
+            <label class="datepicker-gridlabel" value=""/>
+            <label class="datepicker-gridlabel" value=""/>
+            <label class="datepicker-gridlabel" value=""/>
+            <label class="datepicker-gridlabel" value=""/>
+            <label class="datepicker-gridlabel" value=""/>
+            <label class="datepicker-gridlabel" value=""/>
+            <label class="datepicker-gridlabel" value=""/>
+            <label class="datepicker-gridlabel" value=""/>
+            <label class="datepicker-gridlabel" value=""/>
           </deck>
           <label anonid="yearlabel" class="datepicker-gridlabel"/>
           <spacer flex="1"/>
