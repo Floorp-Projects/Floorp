@@ -3348,7 +3348,7 @@ NewArray(ExclusiveContext *cxArg, uint32_t length,
             cache.lookupGlobal(&ArrayObject::class_, cx->global(), allocKind, &entry))
         {
             gc::InitialHeap heap = GetInitialHeap(newKind, &ArrayObject::class_);
-            JSObject *obj = cache.newObjectFromHit<NoGC>(cx, entry, heap);
+            JSObject *obj = cache.newObjectFromHit(cx, entry, heap);
             if (obj) {
                 /* Fixup the elements pointer and length, which may be incorrect. */
                 ArrayObject *arr = &obj->as<ArrayObject>();
@@ -3360,9 +3360,6 @@ NewArray(ExclusiveContext *cxArg, uint32_t length,
                     return nullptr;
                 }
                 return arr;
-            } else {
-                obj = cache.newObjectFromHit<CanGC>(cx, entry, heap);
-                MOZ_ASSERT(!obj);
             }
         } else {
             gcNumber = rt->gc.gcNumber();
