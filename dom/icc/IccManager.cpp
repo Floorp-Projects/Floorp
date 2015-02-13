@@ -13,6 +13,7 @@
 // Service instantiation
 #include "ipc/IccIPCService.h"
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+// TODO: Bug 815526, deprecate RILContentHelper.
 #include "nsIRadioInterfaceLayer.h"
 #include "nsRadioInterfaceLayer.h"
 #include "nsIGonkIccService.h"
@@ -147,6 +148,7 @@ NS_CreateIccService()
     service = new mozilla::dom::icc::IccIPCService();
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
   } else {
+    // TODO: Bug 815526, deprecate RILContentHelper.
     nsCOMPtr <nsIRadioInterfaceLayer> ril =
       do_GetService(NS_RADIOINTERFACELAYER_CONTRACTID);
     nsCOMPtr <nsIRadioInterfaceLayer_new> ril_new(do_QueryInterface(ril));
