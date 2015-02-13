@@ -1147,6 +1147,14 @@ VARIABLES = {
         as ``MODULE``.
         """, None),
 
+    'XPIDL_NO_MANIFEST': (bool, bool,
+        """Indicate that the XPIDL module should not be added to a manifest.
+
+        This flag exists primarily to prevent test-only XPIDL modules from being
+        added to the application's chrome manifest. Most XPIDL modules should
+        not use this flag.
+        """, None),
+
     'IPDL_SOURCES': (StrictOrderingOnAppendList, list,
         """IPDL source files.
 
