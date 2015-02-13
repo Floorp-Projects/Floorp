@@ -229,3 +229,5 @@
 <!ENTITY experiment.info.learnmore.accesskey "L">
 <!ENTITY experiment.info.changetelemetry "Telemetry Settings">
 <!ENTITY experiment.info.changetelemetry.accesskey "T">
+
+<!ENTITY setting.learnmore "Learn More…">
