@@ -814,6 +814,7 @@ if CONFIG['MOZ_EME']:
         'MediaKeyMessageEvent.webidl',
         'MediaKeys.webidl',
         'MediaKeySession.webidl',
+        'MediaKeysRequestStatus.webidl',
         'MediaKeyStatusMap.webidl',
         'MediaKeySystemAccess.webidl',
     ]
