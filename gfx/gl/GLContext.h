@@ -153,6 +153,7 @@ MOZ_BEGIN_ENUM_CLASS(GLVendor)
     Nouveau,
     Vivante,
     VMware,
+    ARM,
     Other
 MOZ_END_ENUM_CLASS(GLVendor)
 
