@@ -11,7 +11,6 @@
 #include "nsWrapperCacheInlines.h"
 #include "XPCLog.h"
 #include "jsprf.h"
-#include "jsfriendapi.h"
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
 #include "XrayWrapper.h"
@@ -1573,15 +1572,13 @@ XPCWrappedNative::InitTearOffJSObject(XPCWrappedNativeTearOff* to)
 {
     AutoJSContext cx;
 
-    JSObject* obj = JS_NewObject(cx, Jsvalify(&XPC_WN_Tearoff_JSClass));
+    RootedObject parent(cx, mFlatJSObject);
+    JSObject* obj = JS_NewObject(cx, Jsvalify(&XPC_WN_Tearoff_JSClass), parent);
     if (!obj)
         return false;
 
     JS_SetPrivate(obj, to);
     to->SetJSObject(obj);
-
-    js::SetReservedSlot(obj, XPC_WN_TEAROFF_FLAT_OBJECT_SLOT,
-                        JS::ObjectValue(*mFlatJSObject));
     return true;
 }
 
