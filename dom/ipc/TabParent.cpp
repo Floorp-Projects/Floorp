@@ -1219,7 +1219,10 @@ bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
   if (!MapEventCoordinatesForChildProcess(&event)) {
     return false;
   }
-  return PBrowserParent::SendRealMouseEvent(event);
+  if (event.message == NS_MOUSE_MOVE) {
+    return SendRealMouseMoveEvent(event);
+  }
+  return SendRealMouseButtonEvent(event);
 }
 
 CSSPoint TabParent::AdjustTapToChildWidget(const CSSPoint& aPoint)
