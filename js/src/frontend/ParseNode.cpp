@@ -79,7 +79,6 @@ class NodeStack {
         pn->pn_next = top;
         top = pn;
     }
-    void pushUnlessNull(ParseNode *pn) { if (pn) push(pn); }
     /* Push the children of the PN_LIST node |pn| on the stack. */
     void pushList(ParseNode *pn) {
         /* This clobbers pn->pn_head if the list is empty; should be okay. */
@@ -123,7 +122,8 @@ PushCodeNodeChildren(ParseNode *node, NodeStack *stack)
      * them.
      */
     node->pn_funbox = nullptr;
-    stack->pushUnlessNull(node->pn_body);
+    if (node->pn_body)
+        stack->push(node->pn_body);
     node->pn_body = nullptr;
 
     return PushResult::CleanUpLater;
@@ -146,7 +146,8 @@ PushNameNodeChildren(ParseNode *node, NodeStack *stack)
      * reference.
      */
     if (!node->isUsed()) {
-        stack->pushUnlessNull(node->pn_expr);
+        if (node->pn_expr)
+            stack->push(node->pn_expr);
         node->pn_expr = nullptr;
     }
 
