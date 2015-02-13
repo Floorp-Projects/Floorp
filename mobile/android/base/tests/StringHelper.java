@@ -21,30 +21,30 @@ public class StringHelper {
     public final int DEFAULT_BOOKMARKS_COUNT;
 
     // About pages
-    public final String ABOUT_BLANK_URL;
+    public final String ABOUT_BLANK_URL = "about:blank";
     public final String ABOUT_FIREFOX_URL;
-    public final String ABOUT_RIGHTS_URL;
-    public final String ABOUT_BUILDCONFIG_URL;
-    public final String ABOUT_FEEDBACK_URL;
-    public final String ABOUT_HEALTHREPORT_URL;
-    public final String ABOUT_DOWNLOADS_URL;
-    public final String ABOUT_HOME_URL;
-    public final String ABOUT_ADDONS_URL;
-    public final String ABOUT_APPS_URL;
-    public final String ABOUT_ABOUT_URL;
-    public final String ABOUT_SCHEME;
+    public final String ABOUT_RIGHTS_URL = "about:rights";
+    public final String ABOUT_BUILDCONFIG_URL = "about:buildconfig";
+    public final String ABOUT_FEEDBACK_URL = "about:feedback";
+    public final String ABOUT_HEALTHREPORT_URL = "about:healthreport";
+    public final String ABOUT_DOWNLOADS_URL = "about:downloads";
+    public final String ABOUT_HOME_URL = "about:home";
+    public final String ABOUT_ADDONS_URL = "about:addons";
+    public final String ABOUT_APPS_URL = "about:apps";
+    public final String ABOUT_ABOUT_URL = "about:about";
+    public final String ABOUT_SCHEME = "about:";
 
     // About pages' titles
-    public final String ABOUT_HOME_TITLE;
+    public final String ABOUT_HOME_TITLE = "";
 
     // Context Menu item strings
-    public final String CONTEXT_MENU_BOOKMARK_LINK;
-    public final String CONTEXT_MENU_OPEN_LINK_IN_NEW_TAB;
+    public final String CONTEXT_MENU_BOOKMARK_LINK = "Bookmark Link";
+    public final String CONTEXT_MENU_OPEN_LINK_IN_NEW_TAB = "Open Link in New Tab";
     public final String CONTEXT_MENU_OPEN_IN_NEW_TAB;
-    public final String CONTEXT_MENU_OPEN_LINK_IN_PRIVATE_TAB;
+    public final String CONTEXT_MENU_OPEN_LINK_IN_PRIVATE_TAB = "Open Link in Private Tab";
     public final String CONTEXT_MENU_OPEN_IN_PRIVATE_TAB;
-    public final String CONTEXT_MENU_COPY_LINK;
-    public final String CONTEXT_MENU_SHARE_LINK;
+    public final String CONTEXT_MENU_COPY_LINK = "Copy Link";
+    public final String CONTEXT_MENU_SHARE_LINK = "Share Link";
     public final String CONTEXT_MENU_EDIT;
     public final String CONTEXT_MENU_SHARE;
     public final String CONTEXT_MENU_REMOVE;
@@ -67,46 +67,46 @@ public class StringHelper {
 
     // Robocop page urls
     // Note: please use getAbsoluteUrl(String url) on each robocop url to get the correct url
-    public final String ROBOCOP_BIG_LINK_URL;
-    public final String ROBOCOP_BIG_MAILTO_URL;
-    public final String ROBOCOP_BLANK_PAGE_01_URL;
-    public final String ROBOCOP_BLANK_PAGE_02_URL;
-    public final String ROBOCOP_BLANK_PAGE_03_URL;
-    public final String ROBOCOP_BLANK_PAGE_04_URL;
-    public final String ROBOCOP_BLANK_PAGE_05_URL;
-    public final String ROBOCOP_BOXES_URL;
-    public final String ROBOCOP_GEOLOCATION_URL;
-    public final String ROBOCOP_LOGIN_URL;
-    public final String ROBOCOP_POPUP_URL;
-    public final String ROBOCOP_OFFLINE_STORAGE_URL;
-    public final String ROBOCOP_PICTURE_LINK_URL;
-    public final String ROBOCOP_SEARCH_URL;
-    public final String ROBOCOP_TEXT_PAGE_URL;
-    public final String ROBOCOP_ADOBE_FLASH_URL;
-    public final String ROBOCOP_INPUT_URL;
+    public final String ROBOCOP_BIG_LINK_URL = "/robocop/robocop_big_link.html";
+    public final String ROBOCOP_BIG_MAILTO_URL = "/robocop/robocop_big_mailto.html";
+    public final String ROBOCOP_BLANK_PAGE_01_URL = "/robocop/robocop_blank_01.html";
+    public final String ROBOCOP_BLANK_PAGE_02_URL = "/robocop/robocop_blank_02.html";
+    public final String ROBOCOP_BLANK_PAGE_03_URL = "/robocop/robocop_blank_03.html";
+    public final String ROBOCOP_BLANK_PAGE_04_URL = "/robocop/robocop_blank_04.html";
+    public final String ROBOCOP_BLANK_PAGE_05_URL = "/robocop/robocop_blank_05.html";
+    public final String ROBOCOP_BOXES_URL = "/robocop/robocop_boxes.html";
+    public final String ROBOCOP_GEOLOCATION_URL = "/robocop/robocop_geolocation.html";
+    public final String ROBOCOP_LOGIN_URL = "/robocop/robocop_login.html";
+    public final String ROBOCOP_POPUP_URL = "/robocop/robocop_popup.html";
+    public final String ROBOCOP_OFFLINE_STORAGE_URL = "/robocop/robocop_offline_storage.html";
+    public final String ROBOCOP_PICTURE_LINK_URL = "/robocop/robocop_picture_link.html";
+    public final String ROBOCOP_SEARCH_URL = "/robocop/robocop_search.html";
+    public final String ROBOCOP_TEXT_PAGE_URL = "/robocop/robocop_text_page.html";
+    public final String ROBOCOP_ADOBE_FLASH_URL = "/robocop/robocop_adobe_flash.html";
+    public final String ROBOCOP_INPUT_URL = "/robocop/robocop_input.html";
 
-    private final String ROBOCOP_JS_HARNESS_URL;
+    private final String ROBOCOP_JS_HARNESS_URL = "/robocop/robocop_javascript.html";
 
     // Robocop page titles
-    public final String ROBOCOP_BIG_LINK_TITLE;
-    public final String ROBOCOP_BIG_MAILTO_TITLE;
-    public final String ROBOCOP_BLANK_PAGE_01_TITLE;
-    public final String ROBOCOP_BLANK_PAGE_02_TITLE;
-    public final String ROBOCOP_BLANK_PAGE_03_TITLE;
-    public final String ROBOCOP_BLANK_PAGE_04_TITLE;
-    public final String ROBOCOP_BLANK_PAGE_05_TITLE;
-    public final String ROBOCOP_BOXES_TITLE;
-    public final String ROBOCOP_GEOLOCATION_TITLE;
-    public final String ROBOCOP_LOGIN_TITLE;
-    public final String ROBOCOP_OFFLINE_STORAGE_TITLE;
-    public final String ROBOCOP_PICTURE_LINK_TITLE;
-    public final String ROBOCOP_SEARCH_TITLE;
-    public final String ROBOCOP_TEXT_PAGE_TITLE;
-    public final String ROBOCOP_INPUT_TITLE;
+    public final String ROBOCOP_BIG_LINK_TITLE = "Big Link";
+    public final String ROBOCOP_BIG_MAILTO_TITLE = "Big Mailto";
+    public final String ROBOCOP_BLANK_PAGE_01_TITLE = "Browser Blank Page 01";
+    public final String ROBOCOP_BLANK_PAGE_02_TITLE = "Browser Blank Page 02";
+    public final String ROBOCOP_BLANK_PAGE_03_TITLE = "Browser Blank Page 03";
+    public final String ROBOCOP_BLANK_PAGE_04_TITLE = "Browser Blank Page 04";
+    public final String ROBOCOP_BLANK_PAGE_05_TITLE = "Browser Blank Page 05";
+    public final String ROBOCOP_BOXES_TITLE = "Browser Box test";
+    public final String ROBOCOP_GEOLOCATION_TITLE = "Geolocation Test Page";
+    public final String ROBOCOP_LOGIN_TITLE = "Robocop Login";
+    public final String ROBOCOP_OFFLINE_STORAGE_TITLE = "Robocop offline storage";
+    public final String ROBOCOP_PICTURE_LINK_TITLE = "Picture Link";
+    public final String ROBOCOP_SEARCH_TITLE = "Robocop Search Engine";
+    public final String ROBOCOP_TEXT_PAGE_TITLE = "Robocop Text Page";
+    public final String ROBOCOP_INPUT_TITLE = "Robocop Input";
 
     // Distribution tile labels
-    public final String DISTRIBUTION1_LABEL;
-    public final String DISTRIBUTION2_LABEL;
+    public final String DISTRIBUTION1_LABEL = "Distribution 1";
+    public final String DISTRIBUTION2_LABEL = "Distribution 2";
 
     // Settings menu strings
     // Section labels - ordered as found in the settings menu
@@ -124,15 +124,15 @@ public class StringHelper {
 
     // Display
     public final String TEXT_SIZE_LABEL;
-    public final String TITLE_BAR_LABEL;
+    public final String TITLE_BAR_LABEL = "Title bar";
     public final String SCROLL_TITLE_BAR_LABEL;
     public final String TEXT_REFLOW_LABEL;
     public final String CHARACTER_ENCODING_LABEL;
     public final String PLUGINS_LABEL;
 
     // Title bar
-    public final String SHOW_PAGE_TITLE_LABEL;
-    public final String SHOW_PAGE_ADDRESS_LABEL;
+    public final String SHOW_PAGE_TITLE_LABEL = "Show page title";
+    public final String SHOW_PAGE_ADDRESS_LABEL = "Show page address";
 
     // Privacy
     public final String TRACKING_PROTECTION_LABEL;
@@ -143,12 +143,12 @@ public class StringHelper {
     public final String CLEAR_PRIVATE_DATA_LABEL;
 
     // Mozilla
-    public final String BRAND_NAME;
-    public final String ABOUT_LABEL;
+    public final String BRAND_NAME = "(Fennec|Nightly|Aurora|Firefox Beta|Firefox)";
+    public final String ABOUT_LABEL = "About " + BRAND_NAME ;
     public final String FAQS_LABEL;
     public final String FEEDBACK_LABEL;
-    public final String LOCATION_SERVICES_LABEL;
-    public final String HEALTH_REPORT_LABEL;
+    public final String LOCATION_SERVICES_LABEL = "Mozilla Location Service";
+    public final String HEALTH_REPORT_LABEL = BRAND_NAME + " Health Report";
     public final String MY_HEALTH_REPORT_LABEL;
 
     // Developer tools
@@ -162,7 +162,7 @@ public class StringHelper {
     public final String BOOKMARKS_LABEL;
     public final String READING_LIST_LABEL;
     public final String TODAY_LABEL;
-    public final String TABS_FROM_LAST_TIME_LABEL;
+    public final String TABS_FROM_LAST_TIME_LABEL = "Open all tabs from last time";
 
     // Desktop default bookmarks folders
     public final String BOOKMARKS_UP_TO;
@@ -190,7 +190,7 @@ public class StringHelper {
     public final String PAGE_LABEL;
 
     // Android 2.3 and lower only
-    public final String MORE_LABEL;
+    public final String MORE_LABEL = "More";
     public final String RELOAD_LABEL;
     public final String FORWARD_LABEL;
     public final String BOOKMARK_LABEL;
@@ -205,21 +205,21 @@ public class StringHelper {
     public final String EDIT_BOOKMARK;
 
     // Strings used in doorhanger messages and buttons
-    public final String GEO_MESSAGE;
+    public final String GEO_MESSAGE = "Share your location with";
     public final String GEO_ALLOW;
-    public final String GEO_DENY;
+    public final String GEO_DENY = "Don't share";
 
-    public final String OFFLINE_MESSAGE;
-    public final String OFFLINE_ALLOW;
-    public final String OFFLINE_DENY;
+    public final String OFFLINE_MESSAGE = "to store data on your device for offline use";
+    public final String OFFLINE_ALLOW = "Allow";
+    public final String OFFLINE_DENY = " Don't allow";
 
-    public final String LOGIN_MESSAGE;
-    public final String LOGIN_ALLOW;
-    public final String LOGIN_DENY;
+    public final String LOGIN_MESSAGE = "Save password";
+    public final String LOGIN_ALLOW = "Save";
+    public final String LOGIN_DENY = "Don't save";
 
-    public final String POPUP_MESSAGE;
+    public final String POPUP_MESSAGE = "prevented this site from opening";
     public final String POPUP_ALLOW;
-    public final String POPUP_DENY;
+    public final String POPUP_DENY = "Don't show";
 
     private StringHelper (final Resources res) {
 
@@ -239,30 +239,11 @@ public class StringHelper {
         DEFAULT_BOOKMARKS_COUNT = DEFAULT_BOOKMARKS_TITLES.length;
 
         // About pages
-        ABOUT_BLANK_URL = "about:blank";
         ABOUT_FIREFOX_URL = res.getString(R.string.bookmarkdefaults_url_aboutfirefox);
-        ABOUT_RIGHTS_URL = "about:rights";
-        ABOUT_BUILDCONFIG_URL = "about:buildconfig";
-        ABOUT_FEEDBACK_URL = "about:feedback";
-        ABOUT_HEALTHREPORT_URL = "about:healthreport";
-        ABOUT_DOWNLOADS_URL = "about:downloads";
-        ABOUT_HOME_URL = "about:home";
-        ABOUT_ADDONS_URL = "about:addons";
-        ABOUT_APPS_URL = "about:apps";
-        ABOUT_ABOUT_URL = "about:about";
-        ABOUT_SCHEME = "about:";
-
-        // About pages' titles
-        ABOUT_HOME_TITLE = "";
 
         // Context Menu item strings
-        CONTEXT_MENU_BOOKMARK_LINK = "Bookmark Link";
-        CONTEXT_MENU_OPEN_LINK_IN_NEW_TAB = "Open Link in New Tab";
         CONTEXT_MENU_OPEN_IN_NEW_TAB = res.getString(R.string.contextmenu_open_new_tab);
-        CONTEXT_MENU_OPEN_LINK_IN_PRIVATE_TAB = "Open Link in Private Tab";
         CONTEXT_MENU_OPEN_IN_PRIVATE_TAB = res.getString(R.string.contextmenu_open_private_tab);
-        CONTEXT_MENU_COPY_LINK = "Copy Link";
-        CONTEXT_MENU_SHARE_LINK = "Share Link";
         CONTEXT_MENU_EDIT = res.getString(R.string.contextmenu_top_sites_edit);
         CONTEXT_MENU_SHARE = res.getString(R.string.contextmenu_share);
         CONTEXT_MENU_REMOVE = res.getString(R.string.contextmenu_remove);
@@ -307,49 +288,6 @@ public class StringHelper {
 
         TITLE_PLACE_HOLDER = res.getString(R.string.url_bar_default_text);
 
-        // Robocop page urls
-        // Note: please use getAbsoluteUrl(String url) on each robocop url to get the correct url
-        ROBOCOP_BIG_LINK_URL = "/robocop/robocop_big_link.html";
-        ROBOCOP_BIG_MAILTO_URL = "/robocop/robocop_big_mailto.html";
-        ROBOCOP_BLANK_PAGE_01_URL = "/robocop/robocop_blank_01.html";
-        ROBOCOP_BLANK_PAGE_02_URL = "/robocop/robocop_blank_02.html";
-        ROBOCOP_BLANK_PAGE_03_URL = "/robocop/robocop_blank_03.html";
-        ROBOCOP_BLANK_PAGE_04_URL = "/robocop/robocop_blank_04.html";
-        ROBOCOP_BLANK_PAGE_05_URL = "/robocop/robocop_blank_05.html";
-        ROBOCOP_BOXES_URL = "/robocop/robocop_boxes.html";
-        ROBOCOP_GEOLOCATION_URL = "/robocop/robocop_geolocation.html";
-        ROBOCOP_LOGIN_URL = "/robocop/robocop_login.html";
-        ROBOCOP_POPUP_URL = "/robocop/robocop_popup.html";
-        ROBOCOP_OFFLINE_STORAGE_URL = "/robocop/robocop_offline_storage.html";
-        ROBOCOP_PICTURE_LINK_URL = "/robocop/robocop_picture_link.html";
-        ROBOCOP_SEARCH_URL = "/robocop/robocop_search.html";
-        ROBOCOP_TEXT_PAGE_URL = "/robocop/robocop_text_page.html";
-        ROBOCOP_ADOBE_FLASH_URL = "/robocop/robocop_adobe_flash.html";
-        ROBOCOP_INPUT_URL = "/robocop/robocop_input.html";
-
-        ROBOCOP_JS_HARNESS_URL = "/robocop/robocop_javascript.html";
-
-        // Robocop page titles
-        ROBOCOP_BIG_LINK_TITLE = "Big Link";
-        ROBOCOP_BIG_MAILTO_TITLE = "Big Mailto";
-        ROBOCOP_BLANK_PAGE_01_TITLE = "Browser Blank Page 01";
-        ROBOCOP_BLANK_PAGE_02_TITLE = "Browser Blank Page 02";
-        ROBOCOP_BLANK_PAGE_03_TITLE = "Browser Blank Page 03";
-        ROBOCOP_BLANK_PAGE_04_TITLE = "Browser Blank Page 04";
-        ROBOCOP_BLANK_PAGE_05_TITLE = "Browser Blank Page 05";
-        ROBOCOP_BOXES_TITLE = "Browser Box test";
-        ROBOCOP_GEOLOCATION_TITLE = "Geolocation Test Page";
-        ROBOCOP_LOGIN_TITLE = "Robocop Login";
-        ROBOCOP_OFFLINE_STORAGE_TITLE = "Robocop offline storage";
-        ROBOCOP_PICTURE_LINK_TITLE = "Picture Link";
-        ROBOCOP_SEARCH_TITLE = "Robocop Search Engine";
-        ROBOCOP_TEXT_PAGE_TITLE = "Robocop Text Page";
-        ROBOCOP_INPUT_TITLE = "Robocop Input";
-
-        // Distribution tile labels
-        DISTRIBUTION1_LABEL = "Distribution 1";
-        DISTRIBUTION2_LABEL = "Distribution 2";
-
         // Settings menu strings
         // Section labels - ordered as found in the settings menu
         CUSTOMIZE_SECTION_LABEL = res.getString(R.string.pref_category_customize);
@@ -366,15 +304,10 @@ public class StringHelper {
 
         // Display
         TEXT_SIZE_LABEL = res.getString(R.string.pref_text_size);
-        TITLE_BAR_LABEL = "Title bar";
         SCROLL_TITLE_BAR_LABEL = res.getString(R.string.pref_scroll_title_bar2);
         TEXT_REFLOW_LABEL = res.getString(R.string.pref_reflow_on_zoom);
         CHARACTER_ENCODING_LABEL = res.getString(R.string.pref_char_encoding);
         PLUGINS_LABEL = res.getString(R.string.pref_plugins);
-
-        // Title bar
-        SHOW_PAGE_TITLE_LABEL = "Show page title";
-        SHOW_PAGE_ADDRESS_LABEL = "Show page address";
 
         // Privacy
         TRACKING_PROTECTION_LABEL = res.getString(R.string.pref_tracking_protection_title);
@@ -385,12 +318,8 @@ public class StringHelper {
         CLEAR_PRIVATE_DATA_LABEL = res.getString(R.string.pref_clear_private_data);
 
         // Mozilla
-        BRAND_NAME = "(Fennec|Nightly|Aurora|Firefox Beta|Firefox)";
-        ABOUT_LABEL = "About " + BRAND_NAME;
         FAQS_LABEL = res.getString(R.string.pref_vendor_faqs);
         FEEDBACK_LABEL = res.getString(R.string.pref_vendor_feedback);
-        LOCATION_SERVICES_LABEL = "Mozilla Location Service";
-        HEALTH_REPORT_LABEL = BRAND_NAME + " Health Report";
         MY_HEALTH_REPORT_LABEL = res.getString(R.string.datareporting_abouthr_title);
 
         // Developer tools
@@ -404,9 +333,7 @@ public class StringHelper {
         BOOKMARKS_LABEL = res.getString(R.string.bookmarks_title);
         READING_LIST_LABEL = res.getString(R.string.reading_list_title);
         TODAY_LABEL = res.getString(R.string.history_today_section);
-        TABS_FROM_LAST_TIME_LABEL = "Open all tabs from last time";
 
-        // Desktop default bookmarks folders
         BOOKMARKS_UP_TO = res.getString(R.string.home_move_up_to_filter);
         BOOKMARKS_ROOT_LABEL = res.getString(R.string.bookmarks_title);
         DESKTOP_FOLDER_LABEL = res.getString(R.string.bookmarks_folder_desktop);
@@ -432,7 +359,6 @@ public class StringHelper {
         PAGE_LABEL = res.getString(R.string.page);
 
         // Android 2.3 and lower only
-        MORE_LABEL = "More";
         RELOAD_LABEL = res.getString(R.string.reload);
         FORWARD_LABEL = res.getString(R.string.forward);
         BOOKMARK_LABEL = res.getString(R.string.bookmark);
@@ -447,21 +373,9 @@ public class StringHelper {
         EDIT_BOOKMARK = res.getString(R.string.bookmark_edit_title);
 
         // Strings used in doorhanger messages and buttons
-        GEO_MESSAGE = "Share your location with";
         GEO_ALLOW = res.getString(R.string.share);
-        GEO_DENY = "Don't share";
 
-        OFFLINE_MESSAGE = "to store data on your device for offline use";
-        OFFLINE_ALLOW = "Allow";
-        OFFLINE_DENY = "Don't allow";
-
-        LOGIN_MESSAGE = "Save password";
-        LOGIN_ALLOW = "Save";
-        LOGIN_DENY = "Don't save";
-
-        POPUP_MESSAGE = "prevented this site from opening";
         POPUP_ALLOW = res.getString(R.string.pref_panels_show);
-        POPUP_DENY = "Don't show";
     }
 
     public static void initialize(Resources res) {
