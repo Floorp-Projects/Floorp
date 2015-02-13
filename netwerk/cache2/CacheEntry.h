@@ -113,7 +113,7 @@ public:
 
   // Accessed only on the service management thread
   double mFrecency;
-  uint32_t mSortingExpirationTime;
+  ::mozilla::Atomic<uint32_t, ::mozilla::Relaxed> mSortingExpirationTime;
 
   // Memory reporting
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
