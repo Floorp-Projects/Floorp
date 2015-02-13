@@ -2,21 +2,20 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Test basic functionality of PerformanceFront with mock memory and timeline actors.
+ * Test basic functionality of PerformanceFront with only mock memory.
  */
 
 let WAIT_TIME = 100;
 
 function spawnTest () {
   let { target, front } = yield initBackend(SIMPLE_URL, {
-    TEST_MOCK_MEMORY_ACTOR: true,
-    TEST_MOCK_TIMELINE_ACTOR: true
+    TEST_MOCK_MEMORY_ACTOR: true
   });
   Services.prefs.setBoolPref(MEMORY_PREF, true);
 
   let { memory, timeline } = front.getMocksInUse();
   ok(memory, "memory should be mocked.");
-  ok(timeline, "timeline should be mocked.");
+  ok(!timeline, "timeline should not be mocked.");
 
   let {
     profilerStartTime,
@@ -54,8 +53,8 @@ function spawnTest () {
 
   ok(profilerEndTime > profilerStartTime,
     "The profilerEndTime is after profilerStartTime.");
-  is(timelineEndTime, timelineStartTime,
-    "The timelineEndTime is the same as timelineStartTime.");
+  ok(timelineEndTime > timelineStartTime,
+    "The timelineEndTime is after timelineStartTime.");
   is(memoryEndTime, memoryStartTime,
     "The memoryEndTime is the same as memoryStartTime.");
 

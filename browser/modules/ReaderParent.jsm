@@ -15,6 +15,8 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
 
+const gStringBundle = Services.strings.createBundle("chrome://browser/locale/readerMode.properties");
+
 let ReaderParent = {
 
   MESSAGES: [
@@ -101,13 +103,23 @@ let ReaderParent = {
     if (browser.currentURI.spec.startsWith("about:reader")) {
       button.setAttribute("readeractive", true);
       button.hidden = false;
+      button.setAttribute("tooltiptext", gStringBundle.GetStringFromName("readerMode.exit"));
     } else {
       button.removeAttribute("readeractive");
+      button.setAttribute("tooltiptext", gStringBundle.GetStringFromName("readerMode.enter"));
       button.hidden = !browser.isArticle;
     }
   },
 
-  toggleReaderMode: function(event) {
+  handleReaderButtonEvent: function(event) {
+    event.stopPropagation();
+
+    if ((event.type == "click" && event.button != 0) ||
+        (event.type == "keypress" && event.charCode != Ci.nsIDOMKeyEvent.DOM_VK_SPACE &&
+         event.keyCode != Ci.nsIDOMKeyEvent.DOM_VK_RETURN)) {
+      return; // Left click, space or enter only
+    }
+
     let win = event.target.ownerDocument.defaultView;
     let url = win.gBrowser.selectedBrowser.currentURI.spec;
     if (url.startsWith("about:reader")) {
