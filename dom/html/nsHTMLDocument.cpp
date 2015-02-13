@@ -1664,6 +1664,12 @@ nsHTMLDocument::Open(JSContext* cx,
           }
         }
       }
+
+      nsIXPConnect *xpc = nsContentUtils::XPConnect();
+      rv = xpc->RescueOrphansInScope(cx, oldScope->GetGlobalJSObject());
+      if (rv.Failed()) {
+        return nullptr;
+      }
     }
   }
 
