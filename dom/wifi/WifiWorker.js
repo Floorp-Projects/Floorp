@@ -416,7 +416,7 @@ var WifiManager = (function() {
     let currentNetwork = Object.create(null);
     currentNetwork.netId = manager.connectionInfo.id;
 
-    manager.getNetworkConfiguration(currentNetwork, function (){
+    manager.getNetworkConfiguration(currentNetwork, function () {
       curNetworkKey = getNetworkKey(currentNetwork);
 
       // Add additional information to static ip configuration
@@ -435,15 +435,19 @@ var WifiManager = (function() {
       // If the ssid of current connection is the same as configured ssid
       // It means we need update current connection to use static IP address.
       if (setNetworkKey == curNetworkKey) {
-        // Use configureInterface directly doesn't work, the network iterface
+        // Use configureInterface directly doesn't work, the network interface
         // and routing table is changed but still cannot connect to network
         // so the workaround here is disable interface the enable again to
         // trigger network reconnect with static ip.
         gNetworkService.disableInterface(manager.ifname, function (ok) {
           gNetworkService.enableInterface(manager.ifname, function (ok) {
+            callback(ok);
           });
         });
+        return;
       }
+
+      callback(true);
     });
   }
 
@@ -3494,7 +3498,7 @@ WifiWorker.prototype = {
   },
 
   setStaticIpMode: function(msg) {
-    const message = "WifiManager:setStaticMode:Return";
+    const message = "WifiManager:setStaticIpMode:Return";
     let self = this;
     let network = msg.data.network;
     let info = msg.data.info;
