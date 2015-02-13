@@ -2124,6 +2124,12 @@ public:
                 XPCNativeInterface* Interface,
                 XPCWrappedNative** wrapper);
 
+    static nsresult
+    ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
+                           XPCWrappedNativeScope* aNewScope,
+                           JS::HandleObject aNewParent,
+                           nsISupports* aCOMObj);
+
     void FlatJSObjectFinalized();
     void FlatJSObjectMoved(JSObject *obj, const JSObject *old);
 
