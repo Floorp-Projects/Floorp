@@ -33,7 +33,7 @@ var high = newGlobal({ principal: 0xfffff });
 low .eval('function b() { check("b",        saveStack().toString()); c(); }');
 mid .eval('function c() { check("cba",      saveStack().toString()); d(); }');
 high.eval('function d() { check("dcba",     saveStack().toString()); e(); }');
-     eval('function e() { check("edcba",    saveStack().toString()); f(); }'); // no principal, so checks skipped
+     eval('function e() { check("ecba",     saveStack().toString()); f(); }');
 low .eval('function f() { check("fb",       saveStack().toString()); g(); }');
 mid .eval('function g() { check("gfecba",   saveStack().toString()); h(); }');
 high.eval('function h() { check("hgfedcba", saveStack().toString());      }');
