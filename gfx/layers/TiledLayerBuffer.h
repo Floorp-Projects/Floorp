@@ -558,15 +558,15 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
     x += width;
   }
 
-  mRetainedTiles = newRetainedTiles;
   AsDerived().PostValidate(aPaintRegion);
-  for (unsigned int i = 0; i < mRetainedTiles.Length(); ++i) {
-    AsDerived().UnlockTile(mRetainedTiles[i]);
+  for (unsigned int i = 0; i < newRetainedTiles.Length(); ++i) {
+    AsDerived().UnlockTile(newRetainedTiles[i]);
   }
 
   // At this point, oldTileCount should be zero
   MOZ_ASSERT(oldTileCount == 0, "Failed to release old tiles");
 
+  mRetainedTiles = newRetainedTiles;
   mValidRegion = newValidRegion;
   mPaintedRegion.Or(mPaintedRegion, aPaintRegion);
 }
