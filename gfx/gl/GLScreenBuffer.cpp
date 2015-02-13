@@ -517,43 +517,6 @@ GLScreenBuffer::CreateRead(SharedSurface* surf)
     return ReadBuffer::Create(gl, caps, formats, surf);
 }
 
-void
-GLScreenBuffer::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
-{
-  MOZ_ASSERT(src && dest);
-  MOZ_ASSERT(dest->GetSize() == src->mSize);
-  MOZ_ASSERT(dest->GetFormat() == (src->mHasAlpha ? SurfaceFormat::B8G8R8A8
-                                                  : SurfaceFormat::B8G8R8X8));
-
-  mGL->MakeCurrent();
-
-  bool needsSwap = src != SharedSurf();
-  if (needsSwap) {
-      SharedSurf()->UnlockProd();
-      src->LockProd();
-  }
-
-  {
-      // Even though we're reading. We're doing it on
-      // the producer side. So we call ProducerAcquire
-      // instead of ConsumerAcquire.
-      src->ProducerAcquire();
-
-      UniquePtr<ReadBuffer> buffer = CreateRead(src);
-      MOZ_ASSERT(buffer);
-
-      ScopedBindFramebuffer autoFB(mGL, buffer->mFB);
-      ReadPixelsIntoDataSurface(mGL, dest);
-
-      src->ProducerRelease();
-  }
-
-  if (needsSwap) {
-      src->UnlockProd();
-      SharedSurf()->LockProd();
-  }
-}
-
 bool
 GLScreenBuffer::IsDrawFramebufferDefault() const
 {

@@ -1117,11 +1117,12 @@ WebGLContext::AssertCachedState()
     AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_CLEAR_VALUE, mStencilClearValue);
 
     GLint stencilBits = 0;
-    gl->fGetIntegerv(LOCAL_GL_STENCIL_BITS, &stencilBits);
-    const GLuint stencilRefMask = (1 << stencilBits) - 1;
+    if (GetStencilBits(&stencilBits)) {
+        const GLuint stencilRefMask = (1 << stencilBits) - 1;
 
-    AssertMaskedUintParamCorrect(gl, LOCAL_GL_STENCIL_REF,      stencilRefMask, mStencilRefFront);
-    AssertMaskedUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_REF, stencilRefMask, mStencilRefBack);
+        AssertMaskedUintParamCorrect(gl, LOCAL_GL_STENCIL_REF,      stencilRefMask, mStencilRefFront);
+        AssertMaskedUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_REF, stencilRefMask, mStencilRefBack);
+    }
 
     // GLES 3.0.4, $4.1.4, p177:
     //   [...] the front and back stencil mask are both set to the value `2^s - 1`, where

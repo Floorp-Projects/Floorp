@@ -135,7 +135,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
       if (destSize == readSize && destFormat == format) {
         RefPtr<DataSourceSurface> data =
           Factory::CreateWrappingDataSourceSurface(destData, destStride, destSize, destFormat);
-        mGLContext->Screen()->Readback(frontbuffer, data);
+        mGLContext->Readback(frontbuffer, data);
         if (needsPremult) {
             gfxUtils::PremultiplyDataSurface(data, data);
         }
@@ -154,7 +154,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
   }
 
   // Readback handles Flush/MarkDirty.
-  mGLContext->Screen()->Readback(frontbuffer, resultSurf);
+  mGLContext->Readback(frontbuffer, resultSurf);
   if (needsPremult) {
     gfxUtils::PremultiplyDataSurface(resultSurf, resultSurf);
   }
