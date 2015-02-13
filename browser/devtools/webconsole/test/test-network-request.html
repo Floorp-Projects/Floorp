@@ -19,6 +19,10 @@
         makeXhr('get', 'test-data.json', null, aCallback);
       }
 
+      function testXhrWarn(aCallback) {
+        makeXhr('get', 'http://example.com', null, aCallback);
+      }
+
       function testXhrPost(aCallback) {
         makeXhr('post', 'test-data.json', "Hello world!", aCallback);
       }
@@ -28,7 +32,7 @@
     <h1>Heads Up Display HTTP Logging Testpage</h1>
     <h2>This page is used to test the HTTP logging.</h2>
 
-    <form action="http://example.com/browser/browser/devtools/webconsole/test/test-network-request.html" method="post">
+    <form action="https://example.com/browser/browser/devtools/webconsole/test/test-network-request.html" method="post">
       <input name="name" type="text" value="foo bar"><br>
       <input name="age" type="text" value="144"><br>
     </form>

@@ -44,7 +44,8 @@ const DEFAULT_TIMELINE_DATA_PULL_TIMEOUT = 200; // ms
  */
 protocol.types.addType("array-of-numbers-as-strings", {
   write: (v) => v.join(","),
-  read: (v) => v.split(",")
+  // In Gecko <= 37, `v` is an array; do not transform in this case.
+  read: (v) => typeof v === "string" ? v.split(",") : v
 });
 
 /**
