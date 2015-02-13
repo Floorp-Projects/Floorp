@@ -208,6 +208,13 @@ class MediaPipeline : public sigslot::has_slots<> {
         MOZ_ASSERT(flow);
       }
 
+      void Detach()
+      {
+        transport_ = nullptr;
+        send_srtp_ = nullptr;
+        recv_srtp_ = nullptr;
+      }
+
       RefPtr<TransportFlow> transport_;
       State state_;
       RefPtr<SrtpFlow> send_srtp_;
