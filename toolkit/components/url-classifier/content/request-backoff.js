@@ -12,9 +12,9 @@
 
 // HTTP responses that count as an error.  We also include any 5xx response
 // as an error.
-const HTTP_FOUND                 = 302;
-const HTTP_SEE_OTHER             = 303;
-const HTTP_TEMPORARY_REDIRECT    = 307;
+this.HTTP_FOUND                 = 302;
+this.HTTP_SEE_OTHER             = 303;
+this.HTTP_TEMPORARY_REDIRECT    = 307;
 
 /**
  * @param maxErrors Number of times to request before backing off.
@@ -26,6 +26,7 @@ const HTTP_TEMPORARY_REDIRECT    = 307;
  *     we double this time for consecutive errors
  * @param maxTimeout Number time (ms) maximum timeout period
  */
+this.RequestBackoff =
 function RequestBackoff(maxErrors, retryIncrement,
                         maxRequests, requestPeriod,
                         timeoutIncrement, maxTimeout) {

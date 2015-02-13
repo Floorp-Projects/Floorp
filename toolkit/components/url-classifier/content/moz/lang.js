@@ -27,7 +27,7 @@
  *
  * @returns {function} A partially-applied form of the speficied function.
  */
-function BindToObject(fn, self, opt_args) {
+this.BindToObject = function BindToObject(fn, self, opt_args) {
   var boundargs = fn.boundArgs_ || [];
   boundargs = boundargs.concat(Array.slice(arguments, 2, arguments.length));
 

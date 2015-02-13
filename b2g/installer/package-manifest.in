@@ -183,6 +183,9 @@
 @BINPATH@/components/dom_geolocation.xpt
 @BINPATH@/components/dom_media.xpt
 @BINPATH@/components/dom_network.xpt
+#ifdef MOZ_SECUREELEMENT
+@BINPATH@/components/dom_secureelement.xpt
+#endif
 #ifdef MOZ_NFC
 @BINPATH@/components/dom_nfc.xpt
 #endif
@@ -412,6 +415,12 @@
 @BINPATH@/components/htmlMenuBuilder.manifest
 @BINPATH@/components/PresentationDeviceInfoManager.manifest
 @BINPATH@/components/PresentationDeviceInfoManager.js
+#ifdef MOZ_SECUREELEMENT
+@BINPATH@/components/SecureElement.js
+@BINPATH@/components/SecureElement.manifest
+@BINPATH@/components/UiccConnector.js
+@BINPATH@/components/UiccConnector.manifest
+#endif
 
 ; WiFi, NetworkManager, NetworkStats
 #ifdef MOZ_WIDGET_GONK
@@ -546,6 +555,10 @@
 @BINPATH@/components/Nfc.js
 @BINPATH@/components/NfcContentHelper.manifest
 @BINPATH@/components/NfcContentHelper.js
+#endif
+#ifdef MOZ_SECUREELEMENT
+@BINPATH@/components/DOMSecureElement.manifest
+@BINPATH@/components/DOMSecureElement.js
 #endif
 #ifdef MOZ_ENABLE_DBUS
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@

@@ -1,0 +1,39 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Copyright © 2014 Deutsche Telekom, Inc.
+
+if CONFIG['MOZ_SECUREELEMENT']:
+    EXTRA_COMPONENTS += [
+        'DOMSecureElement.js',
+        'DOMSecureElement.manifest',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_SECUREELEMENT']:
+    EXTRA_COMPONENTS += [
+        'gonk/SecureElement.js',
+        'gonk/SecureElement.manifest',
+    ]
+    XPIDL_MODULE = 'dom_secureelement'
+    XPIDL_SOURCES += [
+        'gonk/nsISecureElementConnector.idl',
+    ]
+    EXTRA_JS_MODULES += [
+        'gonk/se_consts.js',
+        'SEUtils.jsm'
+    ]
+    XPCSHELL_TESTS_MANIFESTS += [
+        'tests/unit/xpcshell.ini'
+    ]
+    if CONFIG['MOZ_B2G_RIL']:
+        EXTRA_COMPONENTS += [
+            'gonk/UiccConnector.js',
+            'gonk/UiccConnector.manifest',
+        ]
+
+FAIL_ON_WARNINGS = True
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'

@@ -1,0 +1,21 @@
+component {4a8b6ec0-4674-11e4-916c-0800200c9a66} DOMSecureElement.js
+contract @mozilla.org/secureelement/manager;1 {4a8b6ec0-4674-11e4-916c-0800200c9a66}
+
+component {1c7bdba3-cd35-4f8b-a546-55b3232457d5} DOMSecureElement.js
+contract @mozilla.org/secureelement/reader;1 {1c7bdba3-cd35-4f8b-a546-55b3232457d5}
+
+component {2b1809f8-17bd-4947-abd7-bdef1498561c} DOMSecureElement.js
+contract @mozilla.org/secureelement/session;1 {2b1809f8-17bd-4947-abd7-bdef1498561c}
+
+component {181ebcf4-5164-4e28-99f2-877ec6fa83b9} DOMSecureElement.js
+contract @mozilla.org/secureelement/channel;1 {181ebcf4-5164-4e28-99f2-877ec6fa83b9}
+
+# component {cb8ccb1c-0e99-4a62-bf7d-11acc13848e0} DOMSecureElement.js
+# contract @mozilla.org/secureelement/command;1 {cb8ccb1c-0e99-4a62-bf7d-11acc13848e0}
+
+component {58bc6c7b-686c-47cc-8867-578a6ed23f4e} DOMSecureElement.js
+contract @mozilla.org/secureelement/response;1 {58bc6c7b-686c-47cc-8867-578a6ed23f4e}
+
+
+
+
