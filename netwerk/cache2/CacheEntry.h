@@ -265,7 +265,11 @@ private:
   nsCOMPtr<nsICacheEntryDoomCallback> mDoomCallback;
 
   nsRefPtr<CacheFile> mFile;
-  nsresult mFileStatus;
+
+  // Using ReleaseAcquire since we only control access to mFile with this.
+  // When mFileStatus is read and found success it is ensured there is mFile and
+  // that it is after a successful call to Init().
+  ::mozilla::Atomic<nsresult, ::mozilla::ReleaseAcquire> mFileStatus;
   nsCOMPtr<nsIURI> mURI;
   nsCString mEnhanceID;
   nsCString mStorageID;
