@@ -49,8 +49,8 @@ public class testFindInPage extends JavascriptTest implements GeckoEventListener
         super.setUp();
 
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
-                "Test:FindInPage",
-                "Test:CloseFindInPage");
+            "Test:FindInPage",
+            "Test:CloseFindInPage");
     }
 
     @Override
@@ -58,12 +58,12 @@ public class testFindInPage extends JavascriptTest implements GeckoEventListener
         super.tearDown();
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
-                "Test:FindInPage",
-                "Test:CloseFindInPage");
+            "Test:FindInPage",
+            "Test:CloseFindInPage");
     }
 
     public void findText(String text, int nrOfMatches){
-        selectMenuItem(mStringHelper.FIND_IN_PAGE_LABEL);
+        selectMenuItem(StringHelper.FIND_IN_PAGE_LABEL);
         close = mDriver.findElement(getActivity(), R.id.find_close);
         boolean success = waitForTest ( new BooleanTest() {
             @Override

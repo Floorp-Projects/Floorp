@@ -24,7 +24,6 @@ import org.mozilla.gecko.updater.UpdateServiceHelper;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.PowerManager;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
@@ -73,8 +72,6 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
     protected Actions mActions;
 
     protected String mProfile;
-
-    protected StringHelper mStringHelper;
 
     protected abstract Intent createActivityIntent();
 
@@ -148,10 +145,6 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         mSolo = new Solo(getInstrumentation(), tempActivity);
         mDriver = new FennecNativeDriver(tempActivity, mSolo, mRootPath);
         mActions = new FennecNativeActions(tempActivity, mSolo, getInstrumentation(), mAsserter);
-
-        final Resources res = getActivity().getResources();
-        StringHelper.initialize(res);
-        mStringHelper = StringHelper.get();
     }
 
     /**

@@ -134,8 +134,8 @@ public class testImportFromAndroid extends AboutHomeTest {
     }
 
     private void importDataFromAndroid() {
-        waitForText(mStringHelper.TITLE_PLACE_HOLDER);
-        selectSettingsItem(mStringHelper.CUSTOMIZE_SECTION_LABEL, mStringHelper.IMPORT_FROM_ANDROID_LABEL);
+        waitForText(StringHelper.TITLE_PLACE_HOLDER);
+        selectSettingsItem(StringHelper.CUSTOMIZE_SECTION_LABEL, StringHelper.IMPORT_FROM_ANDROID_LABEL);
 
         // Wait for the Import form Android pop-up to be opened. It has the same title as the option so waiting for the "Cancel" button
         waitForText("Cancel");
@@ -154,13 +154,13 @@ public class testImportFromAndroid extends AboutHomeTest {
         // Import has finished. Waiting to get back to the Settings Menu and looking for the Import&Export subsection
         if ("phone".equals(mDevice.type)) {
             // Phones don't have headers like tablets, so we need to pop up one more level.
-            waitForText(mStringHelper.IMPORT_FROM_ANDROID_LABEL);
+            waitForText(StringHelper.IMPORT_FROM_ANDROID_LABEL);
             mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         }
-        waitForText(mStringHelper.PRIVACY_SECTION_LABEL); // Settings is a header for the settings menu page. Waiting for Privacy ensures we are back in the top Settings view
+        waitForText(StringHelper.PRIVACY_SECTION_LABEL); // Settings is a header for the settings menu page. Waiting for Privacy ensures we are back in the top Settings view
         mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Exit Settings
         // Make sure the settings menu has been closed.
-        mAsserter.ok(mSolo.waitForText(mStringHelper.TITLE_PLACE_HOLDER), "Waiting for search bar", "Search bar found");
+        mAsserter.ok(mSolo.waitForText(StringHelper.TITLE_PLACE_HOLDER), "Waiting for search bar", "Search bar found");
 
     }
 
