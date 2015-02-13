@@ -690,42 +690,6 @@ nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
     return NS_OK;
 }
 
-static PLDHashOperator
-MoveableWrapperFinder(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                      uint32_t number, void *arg)
-{
-    nsTArray<nsRefPtr<XPCWrappedNative> > *array =
-        static_cast<nsTArray<nsRefPtr<XPCWrappedNative> > *>(arg);
-    XPCWrappedNative *wn = ((Native2WrappedNativeMap::Entry*)hdr)->value;
-
-    // If a wrapper is expired, then there are no references to it from JS, so
-    // we don't have to move it.
-    if (!wn->IsWrapperExpired())
-        array->AppendElement(wn);
-    return PL_DHASH_NEXT;
-}
-
-/* void rescueOrphansInScope(in JSContextPtr aJSContext, in JSObjectPtr  aScope); */
-NS_IMETHODIMP
-nsXPConnect::RescueOrphansInScope(JSContext *aJSContext, JSObject *aScopeArg)
-{
-    RootedObject aScope(aJSContext, aScopeArg);
-
-    XPCWrappedNativeScope *scope = ObjectScope(aScope);
-    if (!scope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    // First, look through the old scope and find all of the wrappers that we
-    // might need to rescue.
-    nsTArray<nsRefPtr<XPCWrappedNative> > wrappersToMove;
-
-    Native2WrappedNativeMap *map = scope->GetWrappedNativeMap();
-    wrappersToMove.SetCapacity(map->Count());
-    map->Enumerate(MoveableWrapperFinder, &wrappersToMove);
-
-    return NS_OK;
-}
-
 /* nsIStackFrame createStackFrameLocation (in uint32_t aLanguage, in string aFilename, in string aFunctionName, in int32_t aLineNumber, in nsIStackFrame aCaller); */
 NS_IMETHODIMP
 nsXPConnect::CreateStackFrameLocation(uint32_t aLanguage,
