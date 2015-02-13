@@ -602,7 +602,7 @@ NativeObject::addPropertyInternal(ExclusiveContext *cx,
 }
 
 JSObject *
-js::NewReshapedObject(JSContext *cx, HandleObjectGroup group, JSObject *parent,
+js::NewReshapedObject(JSContext *cx, HandleObjectGroup group, HandleObject parent,
                       gc::AllocKind allocKind, HandleShape shape, NewObjectKind newKind)
 {
     RootedPlainObject res(cx, NewObjectWithGroup<PlainObject>(cx, group, parent, allocKind, newKind));

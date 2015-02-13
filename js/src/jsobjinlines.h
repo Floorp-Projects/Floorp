@@ -622,12 +622,12 @@ bool
 NewObjectScriptedCall(JSContext *cx, MutableHandleObject obj);
 
 JSObject *
-NewObjectWithGroupCommon(JSContext *cx, HandleObjectGroup group, JSObject *parent,
+NewObjectWithGroupCommon(JSContext *cx, HandleObjectGroup group, HandleObject parent,
                          gc::AllocKind allocKind, NewObjectKind newKind);
 
 template <typename T>
 inline T *
-NewObjectWithGroup(JSContext *cx, HandleObjectGroup group, JSObject *parent,
+NewObjectWithGroup(JSContext *cx, HandleObjectGroup group, HandleObject parent,
                    gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
     JSObject *obj = NewObjectWithGroupCommon(cx, group, parent, allocKind, newKind);
@@ -636,7 +636,7 @@ NewObjectWithGroup(JSContext *cx, HandleObjectGroup group, JSObject *parent,
 
 template <typename T>
 inline T *
-NewObjectWithGroup(JSContext *cx, HandleObjectGroup group, JSObject *parent,
+NewObjectWithGroup(JSContext *cx, HandleObjectGroup group, HandleObject parent,
                    NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(group->clasp());
@@ -644,7 +644,7 @@ NewObjectWithGroup(JSContext *cx, HandleObjectGroup group, JSObject *parent,
 }
 
 JSObject *
-NewReshapedObject(JSContext *cx, HandleObjectGroup group, JSObject *parent,
+NewReshapedObject(JSContext *cx, HandleObjectGroup group, HandleObject parent,
                   gc::AllocKind allocKind, HandleShape shape,
                   NewObjectKind newKind = GenericObject);
 
