@@ -74,6 +74,10 @@ setting[type="bool"][localized="true"] {
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-localized-bool");
 }
 
+setting[type="bool"]:not([learnmore]) .preferences-learnmore {
+  visibility: collapse;
+}
+
 setting[type="boolint"] {
   display: -moz-grid-line;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-boolint");
