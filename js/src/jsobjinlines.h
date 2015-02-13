@@ -474,11 +474,11 @@ class AutoPropDescVector : public AutoVectorRooter<PropDesc>
  * default to the prototype's global if the prototype is non-null.
  */
 JSObject *
-NewObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp, TaggedProto proto,
+NewObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp, Handle<TaggedProto> proto,
                               HandleObject parent, gc::AllocKind allocKind, NewObjectKind newKind);
 
 inline JSObject *
-NewObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp, TaggedProto proto,
+NewObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp, Handle<TaggedProto> proto,
                               HandleObject parent, NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
@@ -487,7 +487,7 @@ NewObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp, TaggedPr
 
 template <typename T>
 inline T *
-NewObjectWithGivenTaggedProto(ExclusiveContext *cx, TaggedProto proto, HandleObject parent,
+NewObjectWithGivenTaggedProto(ExclusiveContext *cx, Handle<TaggedProto> proto, HandleObject parent,
                               NewObjectKind newKind = GenericObject)
 {
     JSObject *obj = NewObjectWithGivenTaggedProto(cx, &T::class_, proto, parent, newKind);
@@ -498,14 +498,15 @@ inline JSObject *
 NewObjectWithGivenProto(ExclusiveContext *cx, const Class *clasp, HandleObject proto,
                         HandleObject parent, gc::AllocKind allocKind, NewObjectKind newKind)
 {
-    return NewObjectWithGivenTaggedProto(cx, clasp, TaggedProto(proto), parent, allocKind, newKind);
+    return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto), parent, allocKind,
+                                         newKind);
 }
 
 inline JSObject *
 NewObjectWithGivenProto(ExclusiveContext *cx, const Class *clasp, HandleObject proto,
                         HandleObject parent, NewObjectKind newKind = GenericObject)
 {
-    return NewObjectWithGivenTaggedProto(cx, clasp, TaggedProto(proto), parent, newKind);
+    return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto), parent, newKind);
 }
 
 template <typename T>
@@ -513,7 +514,7 @@ inline T *
 NewObjectWithGivenProto(ExclusiveContext *cx, HandleObject proto, HandleObject parent,
                         NewObjectKind newKind = GenericObject)
 {
-    return NewObjectWithGivenTaggedProto<T>(cx, TaggedProto(proto), parent, newKind);
+    return NewObjectWithGivenTaggedProto<T>(cx, AsTaggedProto(proto), parent, newKind);
 }
 
 template <typename T>
@@ -521,7 +522,7 @@ inline T *
 NewObjectWithGivenProto(ExclusiveContext *cx, HandleObject proto, HandleObject parent,
                         gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
-    JSObject *obj = NewObjectWithGivenTaggedProto(cx, &T::class_, TaggedProto(proto), parent,
+    JSObject *obj = NewObjectWithGivenTaggedProto(cx, &T::class_, AsTaggedProto(proto), parent,
                                                   allocKind, newKind);
     return obj ? &obj->as<T>() : nullptr;
 }

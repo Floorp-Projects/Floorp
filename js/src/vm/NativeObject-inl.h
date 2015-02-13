@@ -346,7 +346,7 @@ CopyInitializerObject(JSContext *cx, HandlePlainObject baseobj, NewObjectKind ne
 
 inline NativeObject *
 NewNativeObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp,
-                                    TaggedProto proto, HandleObject parent,
+                                    Handle<TaggedProto> proto, HandleObject parent,
                                     gc::AllocKind allocKind, NewObjectKind newKind)
 {
     return MaybeNativeObject(NewObjectWithGivenTaggedProto(cx, clasp, proto, parent, allocKind,
@@ -355,7 +355,7 @@ NewNativeObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp,
 
 inline NativeObject *
 NewNativeObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp,
-                                    TaggedProto proto, HandleObject parent,
+                                    Handle<TaggedProto> proto, HandleObject parent,
                                     NewObjectKind newKind = GenericObject)
 {
     return MaybeNativeObject(NewObjectWithGivenTaggedProto(cx, clasp, proto, parent, newKind));
