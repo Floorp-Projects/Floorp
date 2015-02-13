@@ -620,6 +620,11 @@ public:
     return FinishDecoderSetup(aDecoder, aStream, nullptr, nullptr);
   }
 
+  // Returns true if the media element is being destroyed. Used in
+  // dormancy checks to prevent dormant processing for an element
+  // that will soon be gone.
+  bool IsBeingDestroyed();
+
 protected:
   virtual ~HTMLMediaElement();
 
@@ -962,6 +967,8 @@ protected:
     GetPaused(&isPaused);
     return isPaused;
   }
+
+  void ReportMSETelemetry();
 
   // Check the permissions for audiochannel.
   bool CheckAudioChannelPermissions(const nsAString& aType);
