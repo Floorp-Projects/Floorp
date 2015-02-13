@@ -55,7 +55,7 @@ const Class RegExpStaticsObject::class_ = {
 RegExpStaticsObject *
 RegExpStatics::create(ExclusiveContext *cx, Handle<GlobalObject*> parent)
 {
-    RegExpStaticsObject *obj = NewObjectWithGivenProto<RegExpStaticsObject>(cx, nullptr,
+    RegExpStaticsObject *obj = NewObjectWithGivenProto<RegExpStaticsObject>(cx, NullPtr(),
         GlobalObject::upcast(parent));
     if (!obj)
         return nullptr;
