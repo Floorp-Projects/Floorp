@@ -7,6 +7,8 @@
   <head>
     <meta charset="utf8">
     <title>Security warning test - no violations</title>
+    <!-- ensure no subresource errors so window re-use doesn't cause failures -->
+    <link rel="icon" href="data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC">
     <script>
       console.log("If you haven't seen ssl warnings yet, you won't");
     </script>

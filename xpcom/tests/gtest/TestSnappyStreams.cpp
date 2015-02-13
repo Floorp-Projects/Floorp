@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include "gtest/gtest.h"
+#include "Helpers.h"
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/SnappyUncompressInputStream.h"
 #include "nsIPipe.h"
@@ -18,47 +19,6 @@ namespace {
 
 using mozilla::SnappyCompressOutputStream;
 using mozilla::SnappyUncompressInputStream;
-
-static void CreateData(uint32_t aNumBytes, nsTArray<char>& aDataOut)
-{
-  static const char data[] =
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec egestas "
-    "purus eu condimentum iaculis. In accumsan leo eget odio porttitor, non "
-    "rhoncus nulla vestibulum. Etiam lacinia consectetur nisl nec "
-    "sollicitudin. Sed fringilla accumsan diam, pulvinar varius massa. Duis "
-    "mollis dignissim felis, eget tempus nisi tristique ut. Fusce euismod, "
-    "lectus non lacinia tempor, tellus diam suscipit quam, eget hendrerit "
-    "lacus nunc fringilla ante. Sed ultrices massa vitae risus molestie, ut "
-    "finibus quam laoreet nullam.";
-  static const uint32_t dataLength = sizeof(data) - 1;
-
-  aDataOut.SetCapacity(aNumBytes);
-
-  while (aNumBytes > 0) {
-    uint32_t amount = std::min(dataLength, aNumBytes);
-    aDataOut.AppendElements(data, amount);
-    aNumBytes -= amount;
-  }
-}
-
-static void
-WriteAllAndClose(nsIOutputStream* aStream, const nsTArray<char>& aData)
-{
-  uint32_t offset = 0;
-  uint32_t remaining = aData.Length();
-  while (remaining > 0) {
-    uint32_t numWritten;
-    nsresult rv = aStream->Write(aData.Elements() + offset, remaining,
-                                 &numWritten);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
-    if (numWritten < 1) {
-      break;
-    }
-    offset += numWritten;
-    remaining -= numWritten;
-  }
-  aStream->Close();
-}
 
 static already_AddRefed<nsIOutputStream>
 CompressPipe(nsIInputStream** aReaderOut)
@@ -85,9 +45,9 @@ static void TestCompress(uint32_t aNumBytes)
   ASSERT_TRUE(compress);
 
   nsTArray<char> inputData;
-  CreateData(aNumBytes, inputData);
+  testing::CreateData(aNumBytes, inputData);
 
-  WriteAllAndClose(compress, inputData);
+  testing::WriteAllAndClose(compress, inputData);
 
   nsAutoCString outputData;
   nsresult rv = NS_ConsumeStream(pipeReader, UINT32_MAX, outputData);
@@ -108,9 +68,9 @@ static void TestCompressUncompress(uint32_t aNumBytes)
     new SnappyUncompressInputStream(pipeReader);
 
   nsTArray<char> inputData;
-  CreateData(aNumBytes, inputData);
+  testing::CreateData(aNumBytes, inputData);
 
-  WriteAllAndClose(compress, inputData);
+  testing::WriteAllAndClose(compress, inputData);
 
   nsAutoCString outputData;
   nsresult rv = NS_ConsumeStream(uncompress, UINT32_MAX, outputData);

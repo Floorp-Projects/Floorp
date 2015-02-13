@@ -4,12 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPIDL_SOURCES += [
-    'nsIIconURI.idl',
-]
-
-XPIDL_MODULE = 'imgicon'
-
 UNIFIED_SOURCES += [
     'nsIconModule.cpp',
     'nsIconProtocolHandler.cpp',
@@ -19,6 +13,8 @@ UNIFIED_SOURCES += [
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 platform = None
 

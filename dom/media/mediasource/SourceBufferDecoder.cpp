@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "MediaSourceUtils.h"
 #include "SourceBufferDecoder.h"
 #include "prlog.h"
 #include "AbstractMediaDecoder.h"
@@ -12,13 +13,10 @@
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaSourceLog();
-extern PRLogModuleInfo* GetMediaSourceAPILog();
 
-#define MSE_DEBUG(...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, (__VA_ARGS__))
-#define MSE_API(...) PR_LOG(GetMediaSourceAPILog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define MSE_DEBUG(arg, ...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, (TOSTRING(name) "SourceBufferDecoder(%p:%s)::%s: " arg, this, mResource->GetContentType().get(), __func__, ##__VA_ARGS__))
 #else
 #define MSE_DEBUG(...)
-#define MSE_API(...)
 #endif
 
 namespace mozilla {
@@ -57,14 +55,14 @@ bool
 SourceBufferDecoder::IsShutdown() const
 {
   // SourceBufferDecoder cannot be shut down.
-  MSE_DEBUG("SourceBufferDecoder(%p)::IsShutdown UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
   return false;
 }
 
 void
 SourceBufferDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::NotifyBytesConsumed UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
 }
 
 int64_t
@@ -76,21 +74,21 @@ SourceBufferDecoder::GetMediaDuration()
 VideoFrameContainer*
 SourceBufferDecoder::GetVideoFrameContainer()
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::GetVideoFrameContainer UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
   return nullptr;
 }
 
 bool
 SourceBufferDecoder::IsTransportSeekable()
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::IsTransportSeekable UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
   return false;
 }
 
 bool
 SourceBufferDecoder::IsMediaSeekable()
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::IsMediaSeekable UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
   return false;
 }
 
@@ -99,14 +97,14 @@ SourceBufferDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
                                     nsAutoPtr<MetadataTags> aTags,
                                     bool aRestoredFromDormant)
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::MetadataLoaded UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
 }
 
 void
 SourceBufferDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
                                       bool aRestoredFromDormant)
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::FirstFrameLoaded UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
 }
 
 void
@@ -114,25 +112,25 @@ SourceBufferDecoder::QueueMetadata(int64_t aTime,
                                    nsAutoPtr<MediaInfo> aInfo,
                                    nsAutoPtr<MetadataTags> aTags)
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::QueueMetadata UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
 }
 
 void
 SourceBufferDecoder::RemoveMediaTracks()
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::RemoveMediaTracks UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
 }
 
 void
 SourceBufferDecoder::SetMediaEndTime(int64_t aTime)
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::SetMediaEndTime UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
 }
 
 void
 SourceBufferDecoder::UpdatePlaybackPosition(int64_t aTime)
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::UpdatePlaybackPosition UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
 }
 
 bool
@@ -144,13 +142,13 @@ SourceBufferDecoder::HasInitializationData()
 void
 SourceBufferDecoder::OnReadMetadataCompleted()
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::OnReadMetadataCompleted UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
 }
 
 void
 SourceBufferDecoder::NotifyWaitingForResourcesStatusChanged()
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::NotifyWaitingForResourcesStatusChanged UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
 }
 
 ReentrantMonitor&
@@ -208,13 +206,13 @@ SourceBufferDecoder::Trim(int64_t aDuration)
 void
 SourceBufferDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::UpdateEstimatedMediaDuration UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
 }
 
 void
 SourceBufferDecoder::SetMediaSeekable(bool aMediaSeekable)
 {
-  MSE_DEBUG("SourceBufferDecoder(%p)::SetMediaSeekable UNIMPLEMENTED", this);
+  MSE_DEBUG("UNIMPLEMENTED");
 }
 
 layers::ImageContainer*
@@ -285,4 +283,5 @@ SourceBufferDecoder::ConvertToByteOffset(double aTime)
   return offset;
 }
 
+#undef MSE_DEBUG
 } // namespace mozilla

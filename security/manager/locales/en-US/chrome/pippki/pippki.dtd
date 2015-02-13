@@ -9,7 +9,6 @@
 <!ENTITY setPassword.newPassword.label "New password:">
 <!ENTITY setPassword.reenterPassword.label "New password (again):">
 <!ENTITY setPassword.meter.label "Password quality meter">
-<!ENTITY setPassword.meter.loading "Loading">
 
 <!-- Values for resetpassword.xul -->
 <!ENTITY resetPasswordButtonLabel "Reset">
@@ -21,19 +20,6 @@
 <!ENTITY getPassword.tokenName2.label "Security Device:">
 <!ENTITY getPassword.password.label "Password:">
 
-<!-- These should be common -->
-<!ENTITY piperror.title "Error">
-<!ENTITY pipalert.title "Error - cannot recover">
-
-<!-- Prefs panel strings -->
-<!ENTITY pref.security.general.lHeader "Security">
-<!ENTITY pref.security.general.rHeader "Settings for general security">
-<!ENTITY pref.security.general.header "Settings for general security">
-<!ENTITY pref.security.general.level.title "Security Level">
-<!ENTITY pref.security.general.paranoid.label "Use paranoid security settings">
-<!ENTITY pref.security.general.certificates.title "Certificates">
-<!ENTITY pref.security.general.manageCert.label "Manage Certificates">
-
 <!-- Downloading a cert -->
 <!ENTITY downloadCert.title "Downloading Certificate">
 <!ENTITY downloadCert.message1 "You have been asked to trust a new Certificate Authority (CA).">
@@ -42,9 +28,7 @@
 <!ENTITY downloadCert.trustObjSign "Trust this CA to identify software developers.">
 <!ENTITY downloadCert.message3 "Before trusting this CA for any purpose, you should examine its certificate and its policy and procedures (if available).">
 <!ENTITY downloadCert.viewCert.label "View">
-<!ENTITY downloadCert.viewPolicy.label "Policy">
 <!ENTITY downloadCert.viewCert.text "Examine CA certificate">
-<!ENTITY downloadCert.viewPolicy.text "Examine CA policies and procedures">
 
 <!-- Strings for the SSL client auth ask dialog -->
 <!ENTITY clientAuthAsk.title "User Identification Request">

@@ -408,9 +408,6 @@ pref("browser.search.showOneOffButtons", true);
 // comma seperated list of of engines to hide in the search panel.
 pref("browser.search.hiddenOneOffs", "");
 
-// How many times to show the new search highlight
-pref("browser.search.highlightCount", 5);
-
 pref("browser.sessionhistory.max_entries", 50);
 
 // handle links targeting new windows
@@ -1194,6 +1191,8 @@ pref("security.sandbox.windows.log", false);
 // 0 - no sandbox
 // 1 - sandbox with USER_NON_ADMIN access token level
 // 2 - a more strict sandbox, which might cause functionality issues
+// 3 - the strongest settings we seem to be able to use without breaking
+//     everything, but will definitely cause some functionality restrictions
 pref("dom.ipc.plugins.sandbox-level.default", 0);
 pref("dom.ipc.plugins.sandbox-level.flash", 1);
 
@@ -1668,7 +1667,6 @@ pref("shumway.swf.whitelist", "http://g-ecx.images-amazon.com/*/AiryBasicRendere
 pref("image.mem.max_decoded_image_kb", 256000);
 
 pref("loop.enabled", true);
-pref("loop.screenshare.enabled", false);
 pref("loop.server", "https://loop.services.mozilla.com/v0");
 pref("loop.seenToS", "unseen");
 pref("loop.showPartnerLogo", true);
@@ -1785,8 +1783,10 @@ pref("ui.key.menuAccessKeyFocuses", true);
 // Encrypted media extensions.
 #ifdef RELEASE_BUILD
 pref("media.eme.enabled", false);
+pref("media.eme.apiVisible", false);
 #else
 pref("media.eme.enabled", true);
+pref("media.eme.apiVisible", true);
 #endif
 
 // Play with different values of the decay time and get telemetry,

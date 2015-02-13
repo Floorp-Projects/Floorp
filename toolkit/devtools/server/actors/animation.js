@@ -25,12 +25,14 @@
  */
 
 const {Cu} = require("chrome");
+const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {setInterval, clearInterval} = require("sdk/timers");
 const protocol = require("devtools/server/protocol");
 const {ActorClass, Actor, FrontClass, Front, Arg, method, RetVal} = protocol;
 const {NodeActor} = require("devtools/server/actors/inspector");
 const EventEmitter = require("devtools/toolkit/event-emitter");
+const events = require("sdk/event/core");
 
 const PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT = 500; // ms
 
@@ -87,6 +89,41 @@ let AnimationPlayerActor = ActorClass({
   },
 
   /**
+   * Some of the player's properties are retrieved from the node's
+   * computed-styles because the Web Animations API does not provide them yet.
+   * But the computed-styles may contain multiple animations for a node and so
+   * we need to know which is the index of the current animation in the style.
+   * @return {Number}
+   */
+  getPlayerIndex: function() {
+    let names = this.styles.animationName;
+
+    // If no names are found, then it's probably a transition, in which case we
+    // can't find the actual index, so just trust the playerIndex passed by
+    // the AnimationsActor at initialization time.
+    // Note that this may be incorrect if by the time the AnimationPlayerActor
+    // is initialized, one of the transitions has ended, but it's the best we
+    // can do for now.
+    if (!names) {
+      return this.playerIndex;
+    }
+
+    // If there's only one name.
+    if (names.contains(",") === -1) {
+      return 0;
+    }
+
+    // If there are several names, retrieve the index of the animation name in
+    // the list.
+    names = names.split(",").map(n => n.trim());
+    for (let i = 0; i < names.length; i ++) {
+      if (names[i] === this.player.source.effect.name) {
+        return i;
+      }
+    }
+  },
+
+  /**
    * Get the animation duration from this player, in milliseconds.
    * Note that the Web Animations API doesn't yet offer a way to retrieve this
    * directly from the AnimationPlayer object, so for now, a duration is only
@@ -103,8 +140,10 @@ let AnimationPlayerActor = ActorClass({
       return null;
     }
 
+    // If the computed duration has multiple entries, we need to find the right
+    // one.
     if (durationText.indexOf(",") !== -1) {
-      durationText = durationText.split(",")[this.playerIndex];
+      durationText = durationText.split(",")[this.getPlayerIndex()];
     }
 
     return parseFloat(durationText) * 1000;
@@ -128,7 +167,7 @@ let AnimationPlayerActor = ActorClass({
     }
 
     if (delayText.indexOf(",") !== -1) {
-      delayText = delayText.split(",")[this.playerIndex];
+      delayText = delayText.split(",")[this.getPlayerIndex()];
     }
 
     return parseFloat(delayText) * 1000;
@@ -146,10 +185,12 @@ let AnimationPlayerActor = ActorClass({
   getIterationCount: function() {
     let iterationText = this.styles.animationIterationCount;
     if (iterationText.indexOf(",") !== -1) {
-      iterationText = iterationText.split(",")[this.playerIndex];
+      iterationText = iterationText.split(",")[this.getPlayerIndex()];
     }
 
-    return parseInt(iterationText, 10);
+    return iterationText === "infinite"
+           ? null
+           : parseInt(iterationText, 10);
   },
 
   /**
@@ -379,10 +420,17 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
 
   initialize: function(conn, tabActor) {
     Actor.prototype.initialize.call(this, conn);
+    this.tabActor = tabActor;
+
+    this.allAnimationsPaused = false;
+    this.onNavigate = this.onNavigate.bind(this);
+    events.on(this.tabActor, "navigate", this.onNavigate);
   },
 
   destroy: function() {
     Actor.prototype.destroy.call(this);
+    events.off(this.tabActor, "navigate", this.onNavigate);
+    this.tabActor = null;
   },
 
   /**
@@ -417,6 +465,77 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
     response: {
       players: RetVal("array:animationplayer")
     }
+  }),
+
+  /**
+   * Iterates through all nodes in all of the tabActor's window documents and
+   * finds all existing animation players.
+   * This is currently used to allow playing/pausing all animations at once
+   * until the WebAnimations API provides a way to play/pause via the document
+   * timeline (alternatively, when bug 1123524 is fixed, we will be able to
+   * only iterate once and then listen for changes).
+   */
+  getAllAnimationPlayers: function() {
+    let players = [];
+
+    // These loops shouldn't be as bad as they look.
+    // Typically, there will be very few windows, and getElementsByTagName is
+    // really fast even on large DOM trees.
+    for (let window of this.tabActor.windows) {
+      let root = window.document.body || window.document;
+      for (let element of root.getElementsByTagNameNS("*", "*")) {
+        players = [...players, ...element.getAnimationPlayers()];
+      }
+    }
+
+    return players;
+  },
+
+  onNavigate: function({isTopLevel}) {
+    if (isTopLevel) {
+      this.allAnimationsPaused = false;
+    }
+  },
+
+  /**
+   * Pause all animations in the current tabActor's frames.
+   */
+  pauseAll: method(function() {
+    for (let player of this.getAllAnimationPlayers()) {
+      player.pause();
+    }
+    this.allAnimationsPaused = true;
+  }, {
+    request: {},
+    response: {}
+  }),
+
+  /**
+   * Play all animations in the current tabActor's frames.
+   * This method only returns when the animations have left their pending states.
+   */
+  playAll: method(function() {
+    let readyPromises = [];
+    for (let player of this.getAllAnimationPlayers()) {
+      player.play();
+      readyPromises.push(player.ready);
+    }
+    this.allAnimationsPaused = false;
+    return promise.all(readyPromises);
+  }, {
+    request: {},
+    response: {}
+  }),
+
+  toggleAll: method(function() {
+    if (this.allAnimationsPaused) {
+      return this.playAll();
+    } else {
+      return this.pauseAll();
+    }
+  }, {
+    request: {},
+    response: {}
   })
 });
 

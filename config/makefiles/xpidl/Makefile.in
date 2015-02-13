@@ -41,7 +41,7 @@ endif
 	$(PYTHON_PATH) $(PLY_INCLUDE) -I$(IDL_PARSER_DIR) -I$(IDL_PARSER_CACHE_DIR) \
 		$(process_py) --cache-dir $(IDL_PARSER_CACHE_DIR) $(dist_idl_dir) \
 		$(dist_include_dir) $(@D) $(idl_deps_dir) $(libxul_sdk_includes) \
-		$(basename $(notdir $@ $(filter %.idl,$^)))
+		$(basename $(notdir $@)) $($(basename $(notdir $@))_deps)
 
 xpidl_modules := @xpidl_modules@
 xpt_files := @xpt_files@
@@ -55,6 +55,13 @@ GARBAGE += $(xpt_files) $(depends_files)
 xpidl:: $(xpt_files)
 
 $(xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir))
+
+define xpt_deps
+$(1): $(call mkdir_deps,$(dir $(1)))
+$(1): $(addsuffix .idl,$(addprefix $(dist_idl_dir)/,$($(basename $(notdir $(1)))_deps)))
+endef
+
+$(foreach xpt,$(xpt_files),$(eval $(call xpt_deps,$(xpt))))
 
 $(call include_deps,$(depends_files))
 

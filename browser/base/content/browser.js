@@ -1427,7 +1427,6 @@ var gBrowserInit = {
 
       SocialUI.init();
       TabView.init();
-      SearchHighlight.init();
 
       // Telemetry for master-password - we do this after 5 seconds as it
       // can cause IO if NSS/PSM has not already initialized.
@@ -3636,138 +3635,6 @@ const BrowserSearch = {
   }
 };
 
-const SearchHighlight = {
-  eventsReady: false,
-  // The pref that controls how many times to show the highlight.
-  countPref: "browser.search.highlightCount",
-  // The current highlight to show.
-  currentPos: 0,
-  // Tracks if the popup closed very recently.
-  hideTimer: null,
-
-  // The list of highlights and the items in the panel to anchor them to.
-  highlights: [{
-    id: "SearchHighlight1",
-    anchor: "search-panel-one-offs"
-  }, {
-    id: "SearchHighlight2",
-    anchor: "searchbar-engine",
-  }],
-
-  init: function() {
-    this.panel = document.getElementById("PopupSearchAutoComplete");
-    this.panel.addEventListener("popupshowing", this.searchPanelShown.bind(this), false);
-  },
-
-  initEvents: function() {
-    if (this.eventsReady) {
-      return;
-    }
-
-    this.panel.addEventListener("popuphidden", this.searchPanelHidden.bind(this), false);
-
-    for (let highlight of this.highlights) {
-      highlight.panel = document.getElementById(highlight.id);
-      highlight.panel.addEventListener("popupshowing", this.disablePanelHiding.bind(this), false);
-      highlight.panel.addEventListener("popuphiding", this.enablePanelHiding.bind(this), false);
-
-      highlight.panel.querySelector("button").addEventListener("command", this.highlightButtonClicked.bind(this), false);
-    }
-
-    this.eventsReady = true;
-  },
-
-  get highlightPanel() {
-    return this.highlights[this.currentPos].panel;
-  },
-
-  showHighlight: function() {
-    // Check that all the events are setup.
-    this.initEvents();
-
-    // If a highlight is already showing then do nothing.
-    if (this.highlightPanel.state != "closed") {
-      return;
-    }
-
-    // Show the first highlight.
-    this.currentPos = 0;
-    this.showCurrentHighlight();
-  },
-
-  showCurrentHighlight: function() {
-    let highlight = this.highlights[this.currentPos];
-    let anchor = document.getAnonymousElementByAttribute(this.panel, "anonid", highlight.anchor);
-    highlight.panel.hidden = false;
-    highlight.panel.openPopup(anchor, "leftcenter topright");
-  },
-
-  searchPanelShown: function() {
-    let placement = CustomizableUI.getPlacementOfWidget("search-container");
-    if (placement.area == CustomizableUI.AREA_PANEL) {
-      // Opening a panel anchored to a panel anchored to a panel anchored to the
-      // window doesn't work very well
-      return;
-    }
-
-    if (!BrowserSearch.searchBar.value) {
-      // Don't show the panels when there is no text in the search box
-      return;
-    }
-
-    // If the panel was only very recently closed re-show the last highlight.
-    if (this.hideTimer) {
-      clearTimeout(this.hideTimer);
-      this.hideTimer = null;
-      this.showCurrentHighlight();
-      return;
-    }
-
-    // If the highlight has already been show the appropriate number of times
-    // do nothing.
-    let count = Services.prefs.getIntPref(this.countPref);
-    if (count <= 0)
-      return;
-
-    this.showHighlight();
-    Services.prefs.setIntPref(this.countPref, count - 1);
-  },
-
-  searchPanelHidden: function() {
-    if (this.highlightPanel.state == "closed") {
-      return;
-    }
-
-    this.highlightPanel.hidePopup();
-
-    // Set a flag when the panel was closed in the last short time.
-    this.hideTimer = setTimeout(() => {
-      this.hideTimer = null;
-    }, 500);
-  },
-
-  highlightButtonClicked: function() {
-    // When the button is clicked close the current highlight and open the next
-    // one.
-    this.highlightPanel.hidePopup();
-    this.currentPos++;
-    if (this.currentPos < this.highlights.length) {
-      this.showCurrentHighlight();
-    } else {
-      Services.prefs.setIntPref(this.countPref, 0);
-      this.currentPos = 0;
-    }
-  },
-
-  disablePanelHiding: function() {
-    this.panel.setAttribute("noautohide", "true");
-  },
-
-  enablePanelHiding: function() {
-    this.panel.setAttribute("noautohide", "false");
-  },
-};
-
 function FillHistoryMenu(aParent) {
   // Lazily add the hover listeners on first showing and never remove them
   if (!aParent.hasStatusListener) {
@@ -3814,14 +3681,14 @@ function FillHistoryMenu(aParent) {
     let item = document.createElement("menuitem");
     let entry = sessionHistory.getEntryAtIndex(j, false);
     let uri = entry.URI.spec;
-    let uriCopy = BrowserUtils.makeURI(uri);
+    let entryURI = BrowserUtils.makeURIFromCPOW(entry.URI);
 
     item.setAttribute("uri", uri);
     item.setAttribute("label", entry.title || uri);
     item.setAttribute("index", j);
 
     if (j != index) {
-      PlacesUtils.favicons.getFaviconURLForPage(uriCopy, function (aURI) {
+      PlacesUtils.favicons.getFaviconURLForPage(entryURI, function (aURI) {
         if (aURI) {
           let iconURL = PlacesUtils.favicons.getFaviconLinkForIcon(aURI).spec;
           iconURL = PlacesUtils.getImageURLForResolution(window, iconURL);
@@ -5818,9 +5685,9 @@ function handleLinkClick(event, href, linkNode) {
 
   urlSecurityCheck(href, doc.nodePrincipal);
   let params = { charset: doc.characterSet,
-                 allowMixedContent: persistAllowMixedContentInChildTab };
-  if (!BrowserUtils.linkHasNoReferrer(linkNode))
-    params.referrerURI = referrerURI;
+                 allowMixedContent: persistAllowMixedContentInChildTab,
+                 referrerURI: referrerURI,
+                 noReferrer: BrowserUtils.linkHasNoReferrer(linkNode) };
   openLinkIn(href, where, params);
   event.preventDefault();
   return true;
@@ -7261,7 +7128,7 @@ var gIdentityHandler = {
       break; }
     case this.IDENTITY_MODE_CHROMEUI:
       let brandBundle = document.getElementById("bundle_brand");
-      icon_label = brandBundle.getString("brandShortName");
+      icon_label = brandBundle.getString("brandShorterName");
       break;
     default:
       tooltip = gNavigatorBundle.getString("identity.unknown.tooltip");

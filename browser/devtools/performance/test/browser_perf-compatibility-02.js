@@ -13,6 +13,7 @@ let test = Task.async(function*() {
     TEST_MOCK_MEMORY_ACTOR: true,
     TEST_MOCK_TIMELINE_ACTOR: true
   });
+  Services.prefs.setBoolPref(MEMORY_PREF, true);
   let { EVENTS, gFront, PerformanceController, PerformanceView } = panel.panelWin;
 
   let { memory: memoryMock, timeline: timelineMock } = gFront.getMocksInUse();

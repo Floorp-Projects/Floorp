@@ -91,7 +91,7 @@ js::ErrorObject::create(JSContext *cx, JSExnType errorType, HandleString stack,
     Rooted<ErrorObject*> errObject(cx);
     {
         const Class *clasp = ErrorObject::classForType(errorType);
-        JSObject* obj = NewObjectWithGivenProto(cx, clasp, proto, nullptr);
+        JSObject* obj = NewObjectWithGivenProto(cx, clasp, proto, NullPtr());
         if (!obj)
             return nullptr;
         errObject = &obj->as<ErrorObject>();

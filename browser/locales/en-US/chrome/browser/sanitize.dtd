@@ -3,7 +3,23 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY sanitizePrefs2.title          "Settings for Clearing History">
+<!-- LOCALIZATION NOTE (sanitizePrefs2.modal.width): width of the Clear History on Shutdown dialog.
+     Should be large enough to contain the item* strings on a single line.
+     The column width should be set at half of the dialog width. -->
+<!ENTITY sanitizePrefs2.modal.width    "34em">
+<!ENTITY sanitizePrefs2.column.width   "17em">
+<!-- LOCALIZATION NOTE (sanitizePrefs2.inContent.dialog.width): width of the
+     Clear History on Shutdown subdialog in the in-content preferences.
+     Should be large enough to contain the item* strings on a single line.
+     The column width adjusts the width of the first column in the dialog.
+     You can set the column width to a value that makes the dialog look visually balanced,
+     or at half of the dialog width if unsure. -->
+<!ENTITY sanitizePrefs2.inContent.dialog.width "34em">
+<!ENTITY sanitizePrefs2.inContent.column.width "24em">
+
 <!ENTITY sanitizeDialog2.title         "Clear Recent History">
+<!-- LOCALIZATION NOTE (sanitizeDialog2.width): width of the Clear Recent History dialog -->
+<!ENTITY sanitizeDialog2.width         "34em">
 
 <!ENTITY clearDataSettings2.label     "When I quit &brandShortName;, it should automatically clear all:">
 
@@ -53,18 +69,3 @@ that require it.  -->
      that appears when "Time range to clear" is set to "Everything".  See UI
      mockup at bug 480169 -->
 <!ENTITY sanitizeEverythingUndoWarning     "This action cannot be undone.">
-
-<!-- LOCALIZATION NOTE (dialog.width2): width of the Clear Recent History and
-     Clear History on Shutdown dialogs.  Should be large enough to contain
-     the item* strings above on a single line.  The column width should be set
-     at half of the dialog width. -->
-<!ENTITY dialog.width2                 "34em">
-<!ENTITY column.width2                 "17em">
-<!-- LOCALIZATION NOTE (inContentDialog.width): width of the Clear Recent History and
-     Clear History on Shutdown subdialogs in the in-content preferences. Should be
-     large enough to contain the item* strings above on a single line.  The column
-     width adjusts the width of the first column in the dialog. You can set the
-     column width to a value that makes the dialog look visually balanced, or at half
-     of the dialog width if unsure. -->
-<!ENTITY inContentDialog.width         "34em">
-<!ENTITY inContentColumn.width         "24em">

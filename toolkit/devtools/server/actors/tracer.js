@@ -340,7 +340,7 @@ TracerActor.prototype = {
           let sources = this._parent.threadActor.sources;
 
           sourceMappedLocation = yield sources.getOriginalLocation({
-            source: aFrame.script.source,
+            sourceActor: sources.createNonSourceMappedActor(aFrame.script.source),
             url: aFrame.script.source.url,
             line: aFrame.script.startLine,
             // We should return the location of the start of the script, but

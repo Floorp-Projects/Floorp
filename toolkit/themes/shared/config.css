@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#warningScreen {
+  font-size: 15px;
+  padding-top: 0;
+  padding-bottom: 0;
+  -moz-padding-start: calc(48px + 4.6em);
+  -moz-padding-end: 48px;
+}
+
+.title {
+  background-image: url("chrome://global/skin/icons/warning.svg");
+}
+
+#warningTitle {
+  font-weight: lighter;
+  line-height: 1.2;
+  color: #333;
+  margin: 0;
+  margin-bottom: .5em;
+}
+
+#warningText {
+  margin: 1em 0;
+}
+
+#warningButton {
+  margin-top: 0.6em;
+}
+
+#filterRow {
+  margin-top: 4px;
+  -moz-margin-start: 4px;
+}
+
+#configTree {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+#configTreeBody::-moz-tree-cell-text(user) {
+  font-weight: bold;
+}
+
+#configTreeBody::-moz-tree-cell-text(locked) {
+  font-style: italic;
+}

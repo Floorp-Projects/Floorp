@@ -234,7 +234,7 @@ GlobalObject::createInternal(JSContext *cx, const Class *clasp)
     MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
     MOZ_ASSERT(clasp->trace == JS_GlobalObjectTraceHook);
 
-    JSObject *obj = NewObjectWithGivenProto(cx, clasp, nullptr, nullptr, SingletonObject);
+    JSObject *obj = NewObjectWithGivenProto(cx, clasp, nullptr, NullPtr(), SingletonObject);
     if (!obj)
         return nullptr;
 
@@ -435,11 +435,11 @@ GlobalObject::createConstructor(JSContext *cx, Native ctor, JSAtom *nameArg, uns
 }
 
 static NativeObject *
-CreateBlankProto(JSContext *cx, const Class *clasp, JSObject &proto, GlobalObject &global)
+CreateBlankProto(JSContext *cx, const Class *clasp, JSObject &proto, HandleObject global)
 {
     MOZ_ASSERT(clasp != &JSFunction::class_);
 
-    RootedNativeObject blankProto(cx, NewNativeObjectWithGivenProto(cx, clasp, &proto, &global,
+    RootedNativeObject blankProto(cx, NewNativeObjectWithGivenProto(cx, clasp, &proto, global,
                                                                     SingletonObject));
     if (!blankProto || !blankProto->setDelegate(cx))
         return nullptr;
@@ -455,13 +455,14 @@ GlobalObject::createBlankPrototype(JSContext *cx, const Class *clasp)
     if (!objectProto)
         return nullptr;
 
-    return CreateBlankProto(cx, clasp, *objectProto, *self.get());
+    return CreateBlankProto(cx, clasp, *objectProto, self);
 }
 
 NativeObject *
 GlobalObject::createBlankPrototypeInheriting(JSContext *cx, const Class *clasp, JSObject &proto)
 {
-    return CreateBlankProto(cx, clasp, proto, *this);
+    Rooted<GlobalObject*> self(cx, this);
+    return CreateBlankProto(cx, clasp, proto, self);
 }
 
 bool

@@ -141,8 +141,14 @@ function onRequestHeaders(aState, aResponse)
 
   ok(aResponse.headers.length > 0, "request headers > 0");
   ok(aResponse.headersSize > 0, "request headersSize > 0");
+  ok(!!aResponse.rawHeaders, "request rawHeaders available");
 
   checkHeadersOrCookies(aResponse.headers, {
+    Referer: /network_requests_iframe\.html/,
+    Cookie: /bug768096/,
+  });
+
+  checkRawHeaders(aResponse.rawHeaders, {
     Referer: /network_requests_iframe\.html/,
     Cookie: /bug768096/,
   });
@@ -187,8 +193,14 @@ function onResponseHeaders(aState, aResponse)
 
   ok(aResponse.headers.length > 0, "response headers > 0");
   ok(aResponse.headersSize > 0, "response headersSize > 0");
+  ok(!!aResponse.rawHeaders, "response rawHeaders available");
 
   checkHeadersOrCookies(aResponse.headers, {
+    "Content-Type": /^application\/(json|octet-stream)$/,
+    "Content-Length": /^\d+$/,
+  });
+
+  checkRawHeaders(aResponse.rawHeaders, {
     "Content-Type": /^application\/(json|octet-stream)$/,
     "Content-Length": /^\d+$/,
   });

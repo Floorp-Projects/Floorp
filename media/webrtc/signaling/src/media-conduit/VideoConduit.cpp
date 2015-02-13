@@ -76,6 +76,7 @@ WebrtcVideoConduit::WebrtcVideoConduit():
   mSendingHeight(0),
   mReceivingWidth(640),
   mReceivingHeight(480),
+  mSendingFramerate(DEFAULT_VIDEO_MAX_FRAMERATE),
   mVideoLatencyTestEnable(false),
   mVideoLatencyAvg(0),
   mMinBitrate(200),
@@ -674,6 +675,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
 
   mSendingWidth = 0;
   mSendingHeight = 0;
+  mSendingFramerate = video_codec.maxFramerate;
 
   if(codecConfig->RtcpFbNackIsSet("")) {
     CSFLogDebug(logTag, "Enabling NACK (send) for video stream\n");
@@ -1031,6 +1033,53 @@ WebrtcVideoConduit::SelectSendResolution(unsigned short width,
   }
   return true;
 }
+// TODO(ruil2@cisco.com):combine SelectSendResolution with SelectSendFrameRate Bug 1132318
+bool
+WebrtcVideoConduit::SelectSendFrameRate(unsigned int framerate)
+{
+  // Limit frame rate based on max-mbps
+  mSendingFramerate = framerate;
+  if (mCurSendCodecConfig && mCurSendCodecConfig->mMaxMBPS)
+  {
+    unsigned int cur_fs, mb_width, mb_height, max_fps;
+
+    mb_width = (mSendingWidth + 15) >> 4;
+    mb_height = (mSendingHeight + 15) >> 4;
+
+    cur_fs = mb_width * mb_height;
+    max_fps = mCurSendCodecConfig->mMaxMBPS/cur_fs;
+    if (max_fps < mSendingFramerate)
+      mSendingFramerate = max_fps;
+
+    if (mCurSendCodecConfig->mMaxFrameRate < mSendingFramerate)
+      mSendingFramerate = mCurSendCodecConfig->mMaxFrameRate;
+  }
+  if (mSendingFramerate != framerate)
+  {
+    // Get current vie codec.
+    webrtc::VideoCodec vie_codec;
+    int32_t err;
+
+    if ((err = mPtrViECodec->GetSendCodec(mChannel, vie_codec)) != 0)
+    {
+      CSFLogError(logTag, "%s: GetSendCodec failed, err %d", __FUNCTION__, err);
+      return false;
+    }
+    if (vie_codec.maxFramerate != mSendingFramerate)
+    {
+      vie_codec.maxFramerate = mSendingFramerate;
+      if ((err = mPtrViECodec->SetSendCodec(mChannel, vie_codec)) != 0)
+      {
+        CSFLogError(logTag, "%s: SetSendCodec(%u) failed, err %d",
+                       __FUNCTION__, mSendingFramerate, err);
+        return false;
+      }
+      CSFLogDebug(logTag, "%s: Encoder framerate changed to %u",
+       __FUNCTION__, mSendingFramerate);
+    }
+  }
+  return true;
+}
 
 MediaConduitErrorCode
 WebrtcVideoConduit::SetExternalSendCodec(VideoCodecConfig* config,
@@ -1098,7 +1147,10 @@ WebrtcVideoConduit::SendVideoFrame(unsigned char* video_frame,
   {
     return kMediaConduitCaptureError;
   }
-
+  if (!SelectSendFrameRate(mSendingFramerate))
+  {
+    return kMediaConduitCaptureError;
+  }
   //insert the frame to video engine in I420 format only
   MOZ_ASSERT(mPtrExtCapture);
   if(mPtrExtCapture->IncomingFrame(video_frame,

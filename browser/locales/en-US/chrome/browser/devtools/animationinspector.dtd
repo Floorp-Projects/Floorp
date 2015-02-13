@@ -1,24 +1,29 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+     License, v. 2.0. If a copy of the MPL was not distributed with this
+     file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!-- LOCALIZATION NOTE : FILE This file contains the Animations panel strings.
-  - The Animations panel is part of the Inspector sidebar -->
+     The Animations panel is part of the Inspector sidebar -->
 
 <!-- LOCALIZATION NOTE : FILE The correct localization of this file might be to
-  - keep it in English, or another language commonly spoken among web developers.
-  - You want to make that choice consistent across the developer tools.
-  - A good criteria is the language in which you'd find the best
-  - documentation on web development on the web. -->
+     keep it in English, or another language commonly spoken among web
+     developers. You want to make that choice consistent across the developer
+     tools. A good criteria is the language in which you'd find the best
+     documentation on web development on the web. -->
 
 <!-- LOCALIZATION NOTE (title): This is the label shown in the sidebar tab -->
-<!ENTITY title                  "Animations">
+<!ENTITY title "Animations">
 
 <!-- LOCALIZATION NOTE (invalidElement): This is the label shown in the panel
-  - when an invalid node is currently selected in the inspector. -->
-<!ENTITY invalidElement         "No animations were found for the current element.">
+     when an invalid node is currently selected in the inspector. -->
+<!ENTITY invalidElement "No animations were found for the current element.">
 
 <!-- LOCALIZATION NOTE (selectElement): This is the label shown in the panel
-  - when an invalid node is currently selected in the inspector, to invite the
-  - user to select a new node by clicking on the element-picker icon. -->
-<!ENTITY selectElement         "Pick another element from the page.">
+     when an invalid node is currently selected in the inspector, to invite the
+     user to select a new node by clicking on the element-picker icon. -->
+<!ENTITY selectElement "Pick another element from the page.">
+
+<!-- LOCALIZATION NOTE (allAnimations): This is the label shown at the bottom of
+     the panel, in a toolbar, to let the user know the toolbar applies to all
+     animations, not just the ones applying to the current element. -->
+<!ENTITY allAnimations "All animations">

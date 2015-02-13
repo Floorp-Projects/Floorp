@@ -17,6 +17,8 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIBufferedStreams.h"
+#include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla;
 
@@ -848,4 +850,55 @@ NS_FillArray(FallibleTArray<char>& aDest, nsIInputStream* aInput,
 
   MOZ_ASSERT(aDest.Length() <= aDest.Capacity(), "buffer overflow");
   return rv;
+}
+
+nsresult
+NS_CloneInputStream(nsIInputStream* aSource, nsIInputStream** aCloneOut,
+                    nsIInputStream** aReplacementOut)
+{
+  // Attempt to perform the clone directly on the source stream
+  nsCOMPtr<nsICloneableInputStream> cloneable = do_QueryInterface(aSource);
+  if (cloneable && cloneable->GetCloneable()) {
+    if (aReplacementOut) {
+      *aReplacementOut = nullptr;
+    }
+    return cloneable->Clone(aCloneOut);
+  }
+
+  // If we failed the clone and the caller does not want to replace their
+  // original stream, then we are done.  Return error.
+  if (!aReplacementOut) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // The caller has opted-in to the fallback clone support that replaces
+  // the original stream.  Copy the data to a pipe and return two cloned
+  // input streams.
+
+  nsCOMPtr<nsIInputStream> reader;
+  nsCOMPtr<nsIInputStream> readerClone;
+  nsCOMPtr<nsIOutputStream> writer;
+
+  nsresult rv = NS_NewPipe(getter_AddRefs(reader), getter_AddRefs(writer),
+                           0, 0,        // default segment size and max size
+                           true, true); // non-blocking
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  cloneable = do_QueryInterface(reader);
+  MOZ_ASSERT(cloneable && cloneable->GetCloneable());
+
+  rv = cloneable->Clone(getter_AddRefs(readerClone));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  nsCOMPtr<nsIEventTarget> target =
+    do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = NS_AsyncCopy(aSource, writer, target, NS_ASYNCCOPY_VIA_WRITESEGMENTS);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  readerClone.forget(aCloneOut);
+  reader.forget(aReplacementOut);
+
+  return NS_OK;
 }

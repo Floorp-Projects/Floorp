@@ -8,6 +8,7 @@
 #define mozilla_a11y_ProxyAccessible_h
 
 #include "mozilla/a11y/Role.h"
+#include "nsIAccessibleText.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -16,6 +17,7 @@ namespace a11y {
 
 class Attribute;
 class DocAccessibleParent;
+enum class RelationType;
 
 class ProxyAccessible
 {
@@ -38,6 +40,8 @@ public:
   { mChildren.InsertElementAt(aIdx, aChild); }
 
   uint32_t ChildrenCount() const { return mChildren.Length(); }
+  ProxyAccessible* ChildAt(uint32_t aIdx) const { return mChildren[aIdx]; }
+  bool MustPruneChildren() const;
 
   void Shutdown();
 
@@ -69,6 +73,11 @@ public:
    */
   void Name(nsString& aName) const;
 
+  /*
+   * Set aValue to the value of the proxied accessible.
+   */
+  void Value(nsString& aValue) const;
+
   /**
    * Set aDesc to the description of the proxied accessible.
    */
@@ -80,10 +89,33 @@ public:
   void Attributes(nsTArray<Attribute> *aAttrs) const;
 
   /**
+   * Return set of targets of given relation type.
+   */
+  nsTArray<ProxyAccessible*> RelationByType(RelationType aType) const;
+
+  /**
+   * Get all relations for this accessible.
+   */
+  void Relations(nsTArray<RelationType>* aTypes,
+                 nsTArray<nsTArray<ProxyAccessible*>>* aTargetSets) const;
+
+  /**
    * Get the text between the given offsets.
    */
   void TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
                      nsString& aText) const;
+
+  void GetTextAfterOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                          nsString& aText, int32_t* aStartOffset,
+                          int32_t* aEndOffset);
+
+  void GetTextAtOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                       nsString& aText, int32_t* aStartOffset,
+                       int32_t* aEndOffset);
+
+  void GetTextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                           nsString& aText, int32_t* aStartOffset,
+                           int32_t* aEndOffset);
 
   /**
    * Allow the platform to store a pointers worth of data on us.

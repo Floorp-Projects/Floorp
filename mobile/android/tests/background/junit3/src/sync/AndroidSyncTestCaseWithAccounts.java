@@ -6,9 +6,12 @@ package org.mozilla.gecko.background.sync;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -21,6 +24,15 @@ public class AndroidSyncTestCaseWithAccounts extends AndroidSyncTestCase {
   protected Context context;
   protected AccountManager accountManager;
   protected int numAccounts;
+
+  public static final Map<String, Boolean> TEST_SYNC_AUTOMATICALLY_MAP_WITH_ALL_AUTHORITIES_DISABLED;
+  static {
+    final Map<String, Boolean> m = new HashMap<String, Boolean>();
+    for (String authority : AndroidFxAccount.DEFAULT_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP.keySet()) {
+      m.put(authority, false);
+    }
+    TEST_SYNC_AUTOMATICALLY_MAP_WITH_ALL_AUTHORITIES_DISABLED = m;
+  }
 
   public AndroidSyncTestCaseWithAccounts(String accountType, String accountPrefix) {
     super();
