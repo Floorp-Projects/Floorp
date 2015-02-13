@@ -95,7 +95,7 @@ nsImageLoadingContent::nsImageLoadingContent()
     mFrameCreateCalled(false),
     mVisibleCount(0)
 {
-  if (!nsContentUtils::GetImgLoaderForChannel(nullptr)) {
+  if (!nsContentUtils::GetImgLoaderForChannel(nullptr, nullptr)) {
     mLoadingEnabled = false;
   }
 }
@@ -347,7 +347,7 @@ nsImageLoadingContent::GetLoadingEnabled(bool *aLoadingEnabled)
 NS_IMETHODIMP
 nsImageLoadingContent::SetLoadingEnabled(bool aLoadingEnabled)
 {
-  if (nsContentUtils::GetImgLoaderForChannel(nullptr)) {
+  if (nsContentUtils::GetImgLoaderForChannel(nullptr, nullptr)) {
     mLoadingEnabled = aLoadingEnabled;
   }
   return NS_OK;
@@ -629,7 +629,9 @@ already_AddRefed<nsIStreamListener>
 nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
                                             ErrorResult& aError)
 {
-  if (!nsContentUtils::GetImgLoaderForChannel(aChannel)) {
+  imgLoader* loader =
+    nsContentUtils::GetImgLoaderForChannel(aChannel, GetOurOwnerDoc());
+  if (!loader) {
     aError.Throw(NS_ERROR_NULL_POINTER);
     return nullptr;
   }
@@ -650,7 +652,7 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
   // Do the load.
   nsCOMPtr<nsIStreamListener> listener;
   nsRefPtr<imgRequestProxy>& req = PrepareNextRequest(eImageLoadType_Normal);
-  nsresult rv = nsContentUtils::GetImgLoaderForChannel(aChannel)->
+  nsresult rv = loader->
     LoadImageWithChannel(aChannel, this, doc,
                          getter_AddRefs(listener),
                          getter_AddRefs(req));
@@ -1190,6 +1192,11 @@ nsImageLoadingContent::StringToURI(const nsAString& aSpec,
 nsresult
 nsImageLoadingContent::FireEvent(const nsAString& aEventType)
 {
+  if (nsContentUtils::DocumentInactiveForImageLoads(GetOurOwnerDoc())) {
+    // Don't bother to fire any events, especially error events.
+    return NS_OK;
+  }
+
   // We have to fire the event asynchronously so that we won't go into infinite
   // loops in cases when onLoad handlers reset the src and the new src is in
   // cache.
