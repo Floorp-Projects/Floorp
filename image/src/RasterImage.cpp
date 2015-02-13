@@ -935,10 +935,9 @@ RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
       if (mPendingAnimation && ShouldAnimate()) {
         StartAnimation();
       }
-
-      if (aNewFrameCount > 1) {
-        mAnim->UnionFirstFrameRefreshArea(aNewRefreshArea);
-      }
+    }
+    if (aNewFrameCount > 1) {
+      mAnim->UnionFirstFrameRefreshArea(aNewRefreshArea);
     }
   }
 }
