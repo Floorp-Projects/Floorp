@@ -168,18 +168,6 @@ PushListNodeChildren(ParseNode *node, NodeStack *stack)
 }
 
 static PushResult
-PushTernaryNodeNullableChildren(ParseNode *node, NodeStack *stack)
-{
-    MOZ_ASSERT(node->isArity(PN_TERNARY));
-
-    stack->pushUnlessNull(node->pn_kid1);
-    stack->pushUnlessNull(node->pn_kid2);
-    stack->pushUnlessNull(node->pn_kid3);
-
-    return PushResult::Recyclable;
-}
-
-static PushResult
 PushUnaryNodeChild(ParseNode *node, NodeStack *stack)
 {
     MOZ_ASSERT(node->isArity(PN_UNARY));
@@ -388,8 +376,16 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
       }
 
       // for (;;) nodes have one child per optional component of the loop head.
-      case PNK_FORHEAD:
-        return PushTernaryNodeNullableChildren(pn, stack);
+      case PNK_FORHEAD: {
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        if (pn->pn_kid1)
+            stack->push(pn->pn_kid1);
+        if (pn->pn_kid2)
+            stack->push(pn->pn_kid2);
+        if (pn->pn_kid3)
+            stack->push(pn->pn_kid3);
+        return PushResult::Recyclable;
+      }
 
       // if-statement nodes have condition and consequent children and a
       // possibly-null alternative.
