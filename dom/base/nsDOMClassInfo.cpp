@@ -1991,7 +1991,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     if (aWin->GetDoc()) {
       aWin->GetDoc()->WarnOnceAbout(nsIDocument::eWindow_Controllers);
     }
-    JS::Rooted<JSObject*> shim(cx, JS_NewObject(cx, &ControllersShimClass, obj));
+    MOZ_ASSERT(JS_IsGlobalObject(obj));
+    JS::Rooted<JSObject*> shim(cx, JS_NewObject(cx, &ControllersShimClass));
     if (NS_WARN_IF(!shim)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
