@@ -573,12 +573,12 @@ IsInternalFunctionObject(JSObject *funobj)
     return fun->isLambda() && fun->isInterpreted() && !fun->environment();
 }
 
-class AutoPropDescVector : public AutoVectorRooter<PropDesc>
+class AutoPropertyDescriptorVector : public AutoVectorRooter<PropertyDescriptor>
 {
   public:
-    explicit AutoPropDescVector(JSContext *cx
-                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<PropDesc>(cx, DESCVECTOR)
+    explicit AutoPropertyDescriptorVector(JSContext *cx
+                                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter(cx, DESCVECTOR)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }

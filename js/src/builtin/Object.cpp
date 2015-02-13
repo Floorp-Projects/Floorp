@@ -803,26 +803,28 @@ obj_getOwnPropertySymbols(JSContext *cx, unsigned argc, Value *vp)
                               JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS | JSITER_SYMBOLSONLY);
 }
 
-/* ES5 15.2.3.6: Object.defineProperty(O, P, Attributes) */
+/* ES6 draft rev 32 (2015 Feb 2) 19.1.2.4: Object.defineProperty(O, P, Attributes) */
 bool
 js::obj_defineProperty(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    // Steps 1-3.
     RootedObject obj(cx);
     if (!GetFirstArgumentAsObject(cx, args, "Object.defineProperty", &obj))
         return false;
-
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, args.get(1), &id))
         return false;
 
-    Rooted<PropDesc> desc(cx);
-    if (!desc.initialize(cx, args.get(2)))
+    // Steps 4-5.
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!ToPropertyDescriptor(cx, args.get(2), true, &desc))
         return false;
 
+    // Steps 6-8.
     if (!StandardDefineProperty(cx, obj, id, desc))
         return false;
-
     args.rval().setObject(*obj);
     return true;
 }
