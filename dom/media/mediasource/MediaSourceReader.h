@@ -206,8 +206,8 @@ private:
 
   // Return a decoder from the set available in aTrackDecoders that has data
   // available in the range requested by aTarget.
-  already_AddRefed<SourceBufferDecoder> SelectDecoder(int64_t aTarget,
-                                                      int64_t aTolerance,
+  already_AddRefed<SourceBufferDecoder> SelectDecoder(int64_t aTarget /* microseconds */,
+                                                      int64_t aTolerance /* microseconds */,
                                                       const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders);
   bool HaveData(int64_t aTarget, MediaData::Type aType);
 
