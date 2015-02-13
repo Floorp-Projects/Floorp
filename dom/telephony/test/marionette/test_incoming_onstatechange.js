@@ -14,39 +14,19 @@ startTest(function() {
     .then(() => gCheckAll(null, [inCall], "", [], [inInfo.incoming]))
 
     // Answer incoming call
-    .then(() => {
-      let p1 = gWaitForStateChangeEvent(inCall, "connecting")
-        .then(() => gWaitForStateChangeEvent(inCall, "connected"));
-      let p2 = gAnswer(inCall);
-      return Promise.all([p1, p2]);
-    })
+    .then(() => gAnswer(inCall))
     .then(() => gCheckAll(inCall, [inCall], "", [], [inInfo.active]))
 
     // Hold the call.
-    .then(() => {
-      let p1 = gWaitForStateChangeEvent(inCall, "holding")
-        .then(() => gWaitForStateChangeEvent(inCall, "held"));
-      let p2 = gHold(inCall);
-      return Promise.all([p1, p2]);
-    })
+    .then(() => gHold(inCall))
     .then(() => gCheckAll(null, [inCall], "", [], [inInfo.held]))
 
     // Resume the call.
-    .then(() => {
-      let p1 = gWaitForStateChangeEvent(inCall, "resuming")
-        .then(() => gWaitForStateChangeEvent(inCall, "connected"));
-      let p2 = gResume(inCall);
-      return Promise.all([p1, p2]);
-    })
+    .then(() => gResume(inCall))
     .then(() => gCheckAll(inCall, [inCall], "", [], [inInfo.active]))
 
     // Hang-up call
-    .then(() => {
-      let p1 = gWaitForStateChangeEvent(inCall, "disconnecting")
-        .then(() => gWaitForStateChangeEvent(inCall, "disconnected"));
-      let p2 = gHangUp(inCall);
-      return Promise.all([p1, p2]);
-    })
+    .then(() => gHangUp(inCall))
     .then(() => gCheckAll(null, [], "", [], []))
 
     .catch(error => ok(false, "Promise reject: " + error))

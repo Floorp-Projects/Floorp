@@ -45,13 +45,9 @@ interface TelephonyCall : EventTarget {
   attribute EventHandler onstatechange;
   attribute EventHandler ondialing;
   attribute EventHandler onalerting;
-  attribute EventHandler onconnecting;
   attribute EventHandler onconnected;
-  attribute EventHandler ondisconnecting;
   attribute EventHandler ondisconnected;
-  attribute EventHandler onholding;
   attribute EventHandler onheld;
-  attribute EventHandler onresuming;
   attribute EventHandler onerror;
 
   // Fired whenever the group attribute changes.

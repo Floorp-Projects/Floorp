@@ -31,7 +31,7 @@
  *
  * @constructor
  */
-function G_ObserverWrapper(topic, observeFunction) {
+this.G_ObserverWrapper = function G_ObserverWrapper(topic, observeFunction) {
   this.debugZone = "observer";
   this.topic_ = topic;
   this.observeFunction_ = observeFunction;
@@ -70,6 +70,7 @@ G_ObserverWrapper.prototype.observe = function(subject, topic, data) {
  *
  * @constructor
  */
+this.G_ObserverServiceObserver =
 function G_ObserverServiceObserver(topic, observeFunction, opt_onlyOnce) {
   this.debugZone = "observerserviceobserver";
   this.topic_ = topic;
@@ -101,7 +102,7 @@ G_ObserverServiceObserver.prototype.observe_ = function(subject, topic, data) {
 }
 
 #ifdef DEBUG
-function TEST_G_Observer() {
+this.TEST_G_Observer = function TEST_G_Observer() {
   if (G_GDEBUG) {
 
     var z = "observer UNITTEST";
