@@ -2128,8 +2128,6 @@ public:
                            JS::HandleObject aNewParent,
                            nsISupports* aCOMObj);
 
-    nsresult RescueOrphans();
-
     void FlatJSObjectFinalized();
     void FlatJSObjectMoved(JSObject *obj, const JSObject *old);
 
