@@ -135,19 +135,6 @@ js::IsExtensible(ExclusiveContext *cx, HandleObject obj, bool *extensible)
 }
 
 inline bool
-js::HasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *found)
-{
-    RootedObject pobj(cx);
-    RootedShape prop(cx);
-    if (!LookupProperty(cx, obj, id, &pobj, &prop)) {
-        *found = false;  /* initialize to shut GCC up */
-        return false;
-    }
-    *found = !!prop;
-    return true;
-}
-
-inline bool
 js::HasProperty(JSContext *cx, HandleObject obj, PropertyName *name, bool *found)
 {
     RootedId id(cx, NameToId(name));
