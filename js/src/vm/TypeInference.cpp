@@ -3297,7 +3297,8 @@ ChangeObjectFixedSlotCount(JSContext *cx, PlainObject *obj, gc::AllocKind allocK
     // Make a clone of the object, with the new allocation kind.
     RootedShape oldShape(cx, obj->lastProperty());
     RootedObjectGroup group(cx, obj->group());
-    JSObject *clone = NewReshapedObject(cx, group, obj->getParent(), allocKind, oldShape);
+    RootedObject parent(cx, obj->getParent());
+    JSObject *clone = NewReshapedObject(cx, group, parent, allocKind, oldShape);
     if (!clone)
         return false;
 
