@@ -272,6 +272,23 @@ UnboxedPlainObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId
 }
 
 /* static */ bool
+UnboxedPlainObject::obj_hasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp)
+{
+    if (obj->as<UnboxedPlainObject>().layout().lookup(id)) {
+        *foundp = true;
+        return true;
+    }
+
+    RootedObject proto(cx, obj->getProto());
+    if (!proto) {
+        *foundp = false;
+        return true;
+    }
+
+    return HasProperty(cx, proto, id, foundp);
+}
+
+/* static */ bool
 UnboxedPlainObject::obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
                                     HandleId id, MutableHandleValue vp)
 {
@@ -381,6 +398,7 @@ const Class UnboxedPlainObject::class_ = {
     {
         UnboxedPlainObject::obj_lookupProperty,
         UnboxedPlainObject::obj_defineProperty,
+        UnboxedPlainObject::obj_hasProperty,
         UnboxedPlainObject::obj_getProperty,
         UnboxedPlainObject::obj_setProperty,
         UnboxedPlainObject::obj_getOwnPropertyDescriptor,

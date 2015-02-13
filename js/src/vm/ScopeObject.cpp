@@ -477,6 +477,13 @@ with_DefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue va
 }
 
 static bool
+with_HasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp)
+{
+    RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
+    return HasProperty(cx, actual, id, foundp);
+}
+
+static bool
 with_GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
                  MutableHandleValue vp)
 {
@@ -541,6 +548,7 @@ const Class DynamicWithObject::class_ = {
     {
         with_LookupProperty,
         with_DefineProperty,
+        with_HasProperty,
         with_GetProperty,
         with_SetProperty,
         with_GetOwnPropertyDescriptor,
@@ -912,6 +920,13 @@ uninitialized_LookupProperty(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 static bool
+uninitialized_HasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp)
+{
+    ReportUninitializedLexicalId(cx, id);
+    return false;
+}
+
+static bool
 uninitialized_GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
                           MutableHandleValue vp)
 {
@@ -963,6 +978,7 @@ const Class UninitializedLexicalObject::class_ = {
     {
         uninitialized_LookupProperty,
         nullptr,             /* defineProperty */
+        uninitialized_HasProperty,
         uninitialized_GetProperty,
         uninitialized_SetProperty,
         uninitialized_GetOwnPropertyDescriptor,

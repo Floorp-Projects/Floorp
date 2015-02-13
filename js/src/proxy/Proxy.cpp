@@ -559,6 +559,12 @@ js::proxy_DefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleVal
 }
 
 bool
+js::proxy_HasProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *foundp)
+{
+    return Proxy::has(cx, obj, id, foundp);
+}
+
+bool
 js::proxy_GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
                       MutableHandleValue vp)
 {
