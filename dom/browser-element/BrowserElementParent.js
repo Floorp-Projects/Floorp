@@ -538,7 +538,24 @@ BrowserElementParent.prototype = {
     return this._frameLoader.visible;
   },
 
+  getChildProcessOffset: function() {
+    let offset = { x: 0, y: 0 };
+    let tabParent = this._frameLoader.tabParent;
+    if (tabParent) {
+      let offsetX = {};
+      let offsetY = {};
+      tabParent.getChildProcessOffset(offsetX, offsetY);
+      offset.x = offsetX.value;
+      offset.y = offsetY.value;
+    }
+    return offset;
+  },
+
   sendMouseEvent: defineNoReturnMethod(function(type, x, y, button, clickCount, modifiers) {
+    let offset = this.getChildProcessOffset();
+    x += offset.x;
+    y += offset.y;
+
     this._sendAsyncMsg("send-mouse-event", {
       "type": type,
       "x": x,
@@ -566,6 +583,13 @@ BrowserElementParent.prototype = {
                                  count,
                                  modifiers);
     } else {
+      let offset = this.getChildProcessOffset();
+      for (var i = 0; i < touchesX.length; i++) {
+        touchesX[i] += offset.x;
+      }
+      for (var i = 0; i < touchesY.length; i++) {
+        touchesY[i] += offset.y;
+      }
       this._sendAsyncMsg("send-touch-event", {
         "type": type,
         "identifiers": identifiers,
