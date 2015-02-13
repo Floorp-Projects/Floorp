@@ -124,35 +124,54 @@
 
   var SVGIcon = React.createClass({displayName: "SVGIcon",
     render: function() {
+      var sizeUnit = this.props.size.split("x")[0] + "px";
       return (
         React.createElement("span", {className: "svg-icon", style: {
-          "background-image": "url(/content/shared/img/icons-16x16.svg#" + this.props.shapeId + ")"
+          "backgroundImage": "url(../content/shared/img/icons-" + this.props.size +
+                              ".svg#" + this.props.shapeId + ")",
+          "backgroundSize": sizeUnit + " " + sizeUnit
         }})
       );
     }
   });
 
   var SVGIcons = React.createClass({displayName: "SVGIcons",
-    shapes: [
-      "audio", "audio-hover", "audio-active", "block",
-      "block-red", "block-hover", "block-active", "contacts", "contacts-hover",
-      "contacts-active", "copy", "checkmark", "google", "google-hover",
-      "google-active", "history", "history-hover", "history-active", "leave",
-      "precall", "precall-hover", "precall-active", "settings", "settings-hover",
-      "settings-active", "tag", "tag-hover", "tag-active", "trash", "unblock",
-      "unblock-hover", "unblock-active", "video", "video-hover", "video-active"
-    ],
+    shapes: {
+      "10x10": ["close", "close-active", "close-disabled", "dropdown",
+        "dropdown-white", "dropdown-active", "dropdown-disabled", "expand",
+        "expand-active", "expand-disabled", "minimize", "minimize-active",
+        "minimize-disabled"
+      ],
+      "14x14": ["audio", "audio-active", "audio-disabled", "facemute",
+        "facemute-active", "facemute-disabled", "hangup", "hangup-active",
+        "hangup-disabled", "incoming", "incoming-active", "incoming-disabled",
+        "link", "link-active", "link-disabled", "mute", "mute-active",
+        "mute-disabled", "pause", "pause-active", "pause-disabled", "video",
+        "video-white", "video-active", "video-disabled", "volume", "volume-active",
+        "volume-disabled"
+      ],
+      "16x16": ["audio", "audio-hover", "audio-active", "block", "block-red",
+        "block-hover", "block-active", "contacts", "contacts-hover", "contacts-active",
+        "copy", "checkmark", "google", "google-hover", "google-active", "history",
+        "history-hover", "history-active", "leave", "precall", "precall-hover",
+        "precall-active", "screen-white", "screenmute-white", "settings",
+        "settings-hover", "settings-active", "tag", "tag-hover", "tag-active",
+        "trash", "unblock", "unblock-hover", "unblock-active", "video", "video-hover",
+        "video-active", "tour"
+      ]
+    },
 
     render: function() {
+      var icons = this.shapes[this.props.size].map(function(shapeId, i) {
+        return (
+          React.createElement("li", {key: this.props.size + "-" + i, className: "svg-icon-entry"}, 
+            React.createElement("p", null, React.createElement(SVGIcon, {shapeId: shapeId, size: this.props.size})), 
+            React.createElement("p", null, shapeId)
+          )
+        );
+      }, this);
       return (
-        React.createElement("div", {className: "svg-icon-list"}, 
-          this.shapes.map(function(shapeId, i) {
-            return React.createElement("div", {key: i, className: "svg-icon-entry"}, 
-              React.createElement("p", null, React.createElement(SVGIcon, {shapeId: shapeId})), 
-              React.createElement("p", null, shapeId)
-            );
-          }, this)
-        )
+        React.createElement("ul", {className: "svg-icon-list"}, icons)
       );
     }
   });
@@ -171,7 +190,7 @@
             React.createElement("a", {href: this.makeId("#")}, " ¶")
           ), 
           React.createElement("div", {className: cx({comp: true, dashed: this.props.dashed}), 
-               style: this.props.style || {}}, 
+               style: this.props.style}, 
             this.props.children
           )
         )
@@ -182,7 +201,7 @@
   var Section = React.createClass({displayName: "Section",
     render: function() {
       return (
-        React.createElement("section", {id: this.props.name}, 
+        React.createElement("section", {id: this.props.name, className: this.props.className}, 
           React.createElement("h1", null, this.props.name), 
           this.props.children
         )
@@ -657,9 +676,15 @@
             )
           ), 
 
-          React.createElement(Section, {name: "SVG icons preview"}, 
+          React.createElement(Section, {name: "SVG icons preview", className: "svg-icons"}, 
+            React.createElement(Example, {summary: "10x10"}, 
+              React.createElement(SVGIcons, {size: "10x10"})
+            ), 
+            React.createElement(Example, {summary: "14x14"}, 
+              React.createElement(SVGIcons, {size: "14x14"})
+            ), 
             React.createElement(Example, {summary: "16x16"}, 
-              React.createElement(SVGIcons, null)
+              React.createElement(SVGIcons, {size: "16x16"})
             )
           )
 
