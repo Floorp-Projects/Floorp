@@ -1419,6 +1419,7 @@ RadioInterfaceLayer.prototype = {
                                     interfaces: [Ci.nsIRadioInterfaceLayer]}),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIRadioInterfaceLayer,
+                                         Ci.nsIRadioInterfaceLayer_new,
                                          Ci.nsIObserver]),
 
   /**
