@@ -228,7 +228,7 @@ js::jit::DeallocateExecutableMemory(void *addr, size_t bytes, size_t pageSize)
 
 ExecutablePool::Allocation ExecutableAllocator::systemAlloc(size_t n)
 {
-    void *allocation = NULL;
+    void *allocation = nullptr;
     // Randomization disabled to avoid a performance fault on x64 builds.
     // See bug 728623.
 #ifndef JS_CPU_X64

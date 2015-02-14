@@ -141,9 +141,8 @@ class JitRuntime
 {
     friend class JitCompartment;
 
-    // Executable allocator for all code except asm.js code. Shared with the
-    // runtime.
-    ExecutableAllocator *execAlloc_;
+    // Executable allocator for all code except asm.js code.
+    ExecutableAllocator execAlloc_;
 
     // Shared exception-handler tail.
     JitCode *exceptionTail_;
@@ -257,7 +256,7 @@ class JitRuntime
 
     static void Mark(JSTracer *trc);
 
-    ExecutableAllocator *execAlloc() const {
+    ExecutableAllocator &execAlloc() {
         return execAlloc_;
     }
 

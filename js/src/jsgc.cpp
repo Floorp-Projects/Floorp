@@ -5354,8 +5354,8 @@ GCRuntime::endSweepPhase(bool lastGC)
             SweepScriptData(rt);
 
         /* Clear out any small pools that we're hanging on to. */
-        if (jit::ExecutableAllocator *execAlloc = rt->maybeExecAlloc())
-            execAlloc->purge();
+        if (jit::JitRuntime *jitRuntime = rt->jitRuntime())
+            jitRuntime->execAlloc().purge();
 
         /*
          * This removes compartments from rt->compartment, so we do it last to make
