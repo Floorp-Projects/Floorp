@@ -319,7 +319,7 @@ struct JSCompartment
     enum {
         DebugMode = 1 << 0,
         DebugObservesAllExecution = 1 << 1,
-        DebugNeedDelazification = 1 << 2
+        DebugNeedsDelazification = 1 << 2
     };
 
     // DebugObservesAllExecution is a submode of DebugMode, and is only valid
@@ -470,17 +470,19 @@ struct JSCompartment
         debugModeBits &= ~DebugObservesAllExecution;
     }
 
+    bool needsDelazificationForDebugger() const { return debugModeBits & DebugNeedsDelazification; }
+
     /*
      * Schedule the compartment to be delazified. Called from
      * LazyScript::Create.
      */
-    void scheduleDelazificationForDebugMode() { debugModeBits |= DebugNeedDelazification; }
+    void scheduleDelazificationForDebugger() { debugModeBits |= DebugNeedsDelazification; }
 
     /*
      * If we scheduled delazification for turning on debug mode, delazify all
      * scripts.
      */
-    bool ensureDelazifyScriptsForDebugMode(JSContext *cx);
+    bool ensureDelazifyScriptsForDebugger(JSContext *cx);
 
     void clearBreakpointsIn(js::FreeOp *fop, js::Debugger *dbg, JS::HandleObject handler);
 
