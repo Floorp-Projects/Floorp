@@ -18,14 +18,12 @@ var test_flags = new Array();
 var testPathBase = "/cl_hdrs";
 
 var prefs;
-var enforcePrefStrict;
-var enforcePrefSoft;
+var enforcePref;
 
 function run_test()
 {
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  enforcePrefStrict = prefs.getBoolPref("network.http.enforce-framing.http1");
-  enforcePrefSoft = prefs.getBoolPref("network.http.enforce-framing.soft");
+  enforcePref = prefs.getBoolPref("network.http.enforce-framing.http1");
   prefs.setBoolPref("network.http.enforce-framing.http1", true);
 
   httpserver.start(-1);
@@ -63,9 +61,7 @@ function setupChannel(url)
 
 function endTests()
 {
-  // restore the prefs to pre-test values
-  prefs.setBoolPref("network.http.enforce-framing.http1", enforcePrefStrict);
-  prefs.setBoolPref("network.http.enforce-framing.soft", enforcePrefSoft);
+  prefs.setBoolPref("network.http.enforce-framing.http1", enforcePref);
   httpserver.stop(do_test_finished);
 }
 
@@ -115,9 +111,8 @@ function completeTest2(request, data, ctx)
 {
   do_check_eq(request.status, Components.results.NS_OK);
 
-  // test 3 requires the enforce-framing prefs to be false
+  // test 3 requires the pref to be false
   prefs.setBoolPref("network.http.enforce-framing.http1", false);
-  prefs.setBoolPref("network.http.enforce-framing.soft", false);
   run_test_number(3);
 }
 
@@ -140,7 +135,7 @@ function handler3(metadata, response)
 
 function completeTest3(request, data, ctx)
 {
-  // reset the strict pref in case we add more tests
+  // reset the pref in case we add more tests
   prefs.setBoolPref("network.http.enforce-framing.http1", true);
   do_check_eq(request.status, Components.results.NS_OK);
   endTests();

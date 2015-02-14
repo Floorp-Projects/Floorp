@@ -63,8 +63,8 @@ var enforcePref;
 
 function run_test()
 {
-  enforcePref = Services.prefs.getBoolPref("network.http.enforce-framing.soft");
-  Services.prefs.setBoolPref("network.http.enforce-framing.soft", false);
+  enforcePref = Services.prefs.getBoolPref("network.http.enforce-framing.http1");
+  Services.prefs.setBoolPref("network.http.enforce-framing.http1", false);
 
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/content", contentHandler);
@@ -87,6 +87,6 @@ function firstTimeThrough(request, buffer)
 function finish_test(request, buffer)
 {
   do_check_eq(buffer, responseBody);
-  Services.prefs.setBoolPref("network.http.enforce-framing.soft", enforcePref);
+  Services.prefs.setBoolPref("network.http.enforce-framing.http1", enforcePref);
   httpServer.stop(do_test_finished);
 }
