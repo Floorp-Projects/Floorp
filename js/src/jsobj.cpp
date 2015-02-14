@@ -938,6 +938,29 @@ js::CheckPropertyDescriptorAccessors(JSContext *cx, Handle<PropertyDescriptor> d
     return true;
 }
 
+void
+js::CompletePropertyDescriptor(MutableHandle<PropertyDescriptor> desc)
+{
+    if (desc.isGenericDescriptor() || desc.isDataDescriptor()) {
+        if (!desc.hasValue())
+            desc.value().setUndefined();
+        if (!desc.hasWritable())
+            desc.attributesRef() |= JSPROP_READONLY;
+        desc.attributesRef() &= ~(JSPROP_IGNORE_READONLY | JSPROP_IGNORE_VALUE);
+    } else {
+        if (!desc.hasGetterObject())
+            desc.setGetterObject(nullptr);
+        if (!desc.hasSetterObject())
+            desc.setSetterObject(nullptr);
+        desc.attributesRef() |= JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
+    }
+    if (!desc.hasEnumerable())
+        desc.attributesRef() &= ~JSPROP_ENUMERATE;
+    if (!desc.hasConfigurable())
+        desc.attributesRef() |= JSPROP_PERMANENT;
+    desc.attributesRef() &= ~(JSPROP_IGNORE_PERMANENT | JSPROP_IGNORE_ENUMERATE);
+}
+
 bool
 js::ReadPropertyDescriptors(JSContext *cx, HandleObject props, bool checkAccessors,
                             AutoIdVector *ids, AutoPropertyDescriptorVector *descs)
