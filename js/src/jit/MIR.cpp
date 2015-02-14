@@ -4725,7 +4725,9 @@ AddGroupGuard(TempAllocator &alloc, MBasicBlock *current, MDefinition *obj,
         guard = MGuardObjectGroup::New(alloc, obj, key->group(), bailOnEquality,
                                        Bailout_ObjectIdentityOrTypeGuard);
     } else {
-        guard = MGuardObjectIdentity::New(alloc, obj, key->singleton(), bailOnEquality);
+        MConstant *singletonConst = MConstant::NewConstraintlessObject(alloc, key->singleton());
+        current->add(singletonConst);
+        guard = MGuardObjectIdentity::New(alloc, obj, singletonConst, bailOnEquality);
     }
 
     current->add(guard);
