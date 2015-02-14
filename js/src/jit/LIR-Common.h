@@ -2498,12 +2498,15 @@ class LBitAndAndBranch : public LControlInstructionHelper<2, 2, 0>
     }
 };
 
-class LIsNullOrLikeUndefined : public LInstructionHelper<1, BOX_PIECES, 2>
+// Takes a value and tests whether it is null, undefined, or is an object that
+// emulates |undefined|, as determined by the JSCLASS_EMULATES_UNDEFINED class
+// flag on unwrapped objects.  See also js::EmulatesUndefined.
+class LIsNullOrLikeUndefinedV : public LInstructionHelper<1, BOX_PIECES, 2>
 {
   public:
-    LIR_HEADER(IsNullOrLikeUndefined)
+    LIR_HEADER(IsNullOrLikeUndefinedV)
 
-    LIsNullOrLikeUndefined(const LDefinition &temp, const LDefinition &tempToUnbox)
+    LIsNullOrLikeUndefinedV(const LDefinition &temp, const LDefinition &tempToUnbox)
     {
         setTemp(0, temp);
         setTemp(1, tempToUnbox);
@@ -2524,15 +2527,32 @@ class LIsNullOrLikeUndefined : public LInstructionHelper<1, BOX_PIECES, 2>
     }
 };
 
-class LIsNullOrLikeUndefinedAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 2>
+// Takes an object or object-or-null pointer and tests whether it is null or is
+// an object that emulates |undefined|, as above.
+class LIsNullOrLikeUndefinedT : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(IsNullOrLikeUndefinedT)
+
+    explicit LIsNullOrLikeUndefinedT(const LAllocation &input)
+    {
+        setOperand(0, input);
+    }
+
+    MCompare *mir() {
+        return mir_->toCompare();
+    }
+};
+
+class LIsNullOrLikeUndefinedAndBranchV : public LControlInstructionHelper<2, BOX_PIECES, 2>
 {
     MCompare *cmpMir_;
 
   public:
-    LIR_HEADER(IsNullOrLikeUndefinedAndBranch)
+    LIR_HEADER(IsNullOrLikeUndefinedAndBranchV)
 
-    LIsNullOrLikeUndefinedAndBranch(MCompare *cmpMir, MBasicBlock *ifTrue, MBasicBlock *ifFalse,
-                                    const LDefinition &temp, const LDefinition &tempToUnbox)
+    LIsNullOrLikeUndefinedAndBranchV(MCompare *cmpMir, MBasicBlock *ifTrue, MBasicBlock *ifFalse,
+                                     const LDefinition &temp, const LDefinition &tempToUnbox)
       : cmpMir_(cmpMir)
     {
         setSuccessor(0, ifTrue);
@@ -2563,34 +2583,16 @@ class LIsNullOrLikeUndefinedAndBranch : public LControlInstructionHelper<2, BOX_
     }
 };
 
-// Takes an object and tests whether it emulates |undefined|, as determined by
-// the JSCLASS_EMULATES_UNDEFINED class flag on unwrapped objects.  See also
-// js::EmulatesUndefined.
-class LEmulatesUndefined : public LInstructionHelper<1, 1, 0>
-{
-  public:
-    LIR_HEADER(EmulatesUndefined)
-
-    explicit LEmulatesUndefined(const LAllocation &input)
-    {
-        setOperand(0, input);
-    }
-
-    MCompare *mir() {
-        return mir_->toCompare();
-    }
-};
-
-class LEmulatesUndefinedAndBranch : public LControlInstructionHelper<2, 1, 1>
+class LIsNullOrLikeUndefinedAndBranchT : public LControlInstructionHelper<2, 1, 1>
 {
     MCompare *cmpMir_;
 
   public:
-    LIR_HEADER(EmulatesUndefinedAndBranch)
+    LIR_HEADER(IsNullOrLikeUndefinedAndBranchT)
 
-    LEmulatesUndefinedAndBranch(MCompare *cmpMir, const LAllocation &input,
-                                MBasicBlock *ifTrue, MBasicBlock *ifFalse,
-                                const LDefinition &temp)
+    LIsNullOrLikeUndefinedAndBranchT(MCompare *cmpMir, const LAllocation &input,
+                                     MBasicBlock *ifTrue, MBasicBlock *ifFalse,
+                                     const LDefinition &temp)
       : cmpMir_(cmpMir)
     {
         setOperand(0, input);
@@ -4481,6 +4483,24 @@ class LLoadUnboxedPointerT : public LInstructionHelper<1, 2, 0>
     }
     const LAllocation *index() {
         return getOperand(1);
+    }
+};
+
+class LUnboxObjectOrNull : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(UnboxObjectOrNull);
+
+    explicit LUnboxObjectOrNull(const LAllocation &input)
+    {
+        setOperand(0, input);
+    }
+
+    MUnbox *mir() const {
+        return mir_->toUnbox();
+    }
+    const LAllocation *input() {
+        return getOperand(0);
     }
 };
 

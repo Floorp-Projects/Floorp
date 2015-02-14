@@ -102,6 +102,13 @@ class CodeGeneratorARM : public CodeGeneratorShared
         cond = masm.testObject(cond, value);
         emitBranch(cond, ifTrue, ifFalse);
     }
+    void testZeroEmitBranch(Assembler::Condition cond, Register reg,
+                            MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+    {
+        MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+        masm.cmpPtr(reg, ImmWord(0));
+        emitBranch(cond, ifTrue, ifFalse);
+    }
 
     void emitTableSwitchDispatch(MTableSwitch *mir, Register index, Register base);
 

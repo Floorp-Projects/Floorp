@@ -616,14 +616,18 @@ class MDefinition : public MNode
 
     bool mightBeType(MIRType type) const {
         MOZ_ASSERT(type != MIRType_Value);
+        MOZ_ASSERT(type != MIRType_ObjectOrNull);
 
         if (type == this->type())
             return true;
 
-        if (MIRType_Value != this->type())
-            return false;
+        if (this->type() == MIRType_ObjectOrNull)
+            return type == MIRType_Object || type == MIRType_Null;
 
-        return !resultTypeSet() || resultTypeSet()->mightBeMIRType(type);
+        if (this->type() == MIRType_Value)
+            return !resultTypeSet() || resultTypeSet()->mightBeMIRType(type);
+
+        return false;
     }
 
     bool mightBeMagicType() const;

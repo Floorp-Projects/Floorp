@@ -1728,7 +1728,9 @@ SnapshotIterator::fromStack(int32_t offset) const
 static Value
 FromObjectPayload(uintptr_t payload)
 {
-    return ObjectValue(*reinterpret_cast<JSObject *>(payload));
+    // Note: Both MIRType_Object and MIRType_ObjectOrNull are encoded in
+    // snapshots using JSVAL_TYPE_OBJECT.
+    return ObjectOrNullValue(reinterpret_cast<JSObject *>(payload));
 }
 
 static Value
