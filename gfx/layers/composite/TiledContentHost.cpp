@@ -168,14 +168,14 @@ TiledLayerBufferComposite::Upload()
   ClearPaintedRegion();
 }
 
-TileHost
-TiledLayerBufferComposite::ValidateTile(TileHost aTile,
+void
+TiledLayerBufferComposite::ValidateTile(TileHost& aTile,
                                         const nsIntPoint& aTileOrigin,
                                         const nsIntRegion& aDirtyRect)
 {
   if (aTile.IsPlaceholderTile()) {
     NS_WARNING("Placeholder tile encountered in painted region");
-    return aTile;
+    return;
   }
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
@@ -205,7 +205,6 @@ TiledLayerBufferComposite::ValidateTile(TileHost aTile,
     printf_stderr("Tile Time to upload %i\n", PR_IntervalNow() - start);
   }
 #endif
-  return aTile;
 }
 
 void
