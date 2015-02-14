@@ -70,8 +70,6 @@ CastAsObjectJsval(SetterOp op)
 
 /******************************************************************************/
 
-typedef Vector<PropDesc, 1> PropDescArray;
-
 extern const Class IntlClass;
 extern const Class JSONClass;
 extern const Class MathClass;
@@ -1143,9 +1141,21 @@ DeepCloneObjectLiteral(JSContext *cx, HandleObject obj, NewObjectKind newKind = 
 extern bool
 DefineProperties(JSContext *cx, HandleObject obj, HandleObject props);
 
+inline JSGetterOp
+CastAsGetterOp(JSObject *object)
+{
+    return JS_DATA_TO_FUNC_PTR(JSGetterOp, object);
+}
+
+inline JSSetterOp
+CastAsSetterOp(JSObject *object)
+{
+    return JS_DATA_TO_FUNC_PTR(JSSetterOp, object);
+}
+
 /* ES6 draft rev 32 (2015 Feb 2) 6.2.4.5 ToPropertyDescriptor(Obj) */
 bool
-ToPropertyDescriptor(JSContext *cx, HandleValue v, bool checkAccessors,
+ToPropertyDescriptor(JSContext *cx, HandleValue descval, bool checkAccessors,
                      MutableHandle<PropertyDescriptor> desc);
 
 /*
@@ -1220,8 +1230,9 @@ GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
 bool
 GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp);
 
+/* ES6 draft rev 32 (2015 Feb 2) 6.2.4.4 FromPropertyDescriptor(Desc) */
 bool
-NewPropertyDescriptorObject(JSContext *cx, Handle<PropertyDescriptor> desc, MutableHandleValue vp);
+FromPropertyDescriptor(JSContext *cx, Handle<PropertyDescriptor> desc, MutableHandleValue vp);
 
 extern bool
 IsDelegate(JSContext *cx, HandleObject obj, const Value &v, bool *result);

@@ -475,35 +475,6 @@ JSCompartment::wrap(JSContext *cx, MutableHandle<PropertyDescriptor> desc)
     return wrap(cx, desc.value());
 }
 
-bool
-JSCompartment::wrap(JSContext *cx, MutableHandle<PropDesc> desc)
-{
-    if (desc.isUndefined())
-        return true;
-
-    JSCompartment *comp = cx->compartment();
-
-    if (desc.hasValue()) {
-        RootedValue value(cx, desc.value());
-        if (!comp->wrap(cx, &value))
-            return false;
-        desc.setValue(value);
-    }
-    if (desc.hasGet()) {
-        RootedValue get(cx, desc.getterValue());
-        if (!comp->wrap(cx, &get))
-            return false;
-        desc.setGetter(get);
-    }
-    if (desc.hasSet()) {
-        RootedValue set(cx, desc.setterValue());
-        if (!comp->wrap(cx, &set))
-            return false;
-        desc.setSetter(set);
-    }
-    return true;
-}
-
 /*
  * This method marks pointers that cross compartment boundaries. It is called in
  * per-zone GCs (since full GCs naturally follow pointers across compartments)
