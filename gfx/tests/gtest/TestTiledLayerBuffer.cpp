@@ -36,11 +36,11 @@ public:
     return TestTiledLayerTile(-1);
   }
 
-  TestTiledLayerTile ValidateTile(TestTiledLayerTile aTile, const nsIntPoint& aTileOrigin, const nsIntRegion& aDirtyRect) {
-    return TestTiledLayerTile();
+  void ValidateTile(TestTiledLayerTile& aTile, const nsIntPoint& aTileOrigin, const nsIntRegion& aDirtyRect) {
+    aTile = TestTiledLayerTile();
   }
 
-  void ReleaseTile(TestTiledLayerTile aTile)
+  void ReleaseTile(TestTiledLayerTile& aTile)
   {
 
   }
@@ -57,7 +57,7 @@ public:
     Update(aNewValidRegion, aPaintRegion);
   }
 
-  void UnlockTile(TestTiledLayerTile aTile) {}
+  void UnlockTile(TestTiledLayerTile& aTile) {}
   void PostValidate(const nsIntRegion& aPaintRegion) {}
 };
 
