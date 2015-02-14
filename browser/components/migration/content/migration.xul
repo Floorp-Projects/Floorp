@@ -32,6 +32,7 @@
     <description id="importBookmarks" control="importSourceGroup" hidden="true">&importFromBookmarks.label;</description>
 
     <radiogroup id="importSourceGroup" align="start">
+      <radio id="firefox"   label="&importFromFirefox.label;"   accesskey="&importFromFirefox.accesskey;"/>
 #ifdef XP_WIN
       <radio id="ie"        label="&importFromIE.label;"        accesskey="&importFromIE.accesskey;"/>
       <radio id="chrome"    label="&importFromChrome.label;"    accesskey="&importFromChrome.accesskey;"/>
@@ -42,7 +43,6 @@
 #elifdef XP_UNIX
       <radio id="chrome"    label="&importFromChrome.label;"    accesskey="&importFromChrome.accesskey;"/>
 #endif
-      <radio id="firefox"   label="&importFromFirefox.label;"   accesskey="&importFromFirefox.accesskey;"/>
       <radio id="nothing"   label="&importFromNothing.label;"   accesskey="&importFromNothing.accesskey;" hidden="true"/>
     </radiogroup>
     <label id="noSources" hidden="true">&noMigrationSources.label;</label>
