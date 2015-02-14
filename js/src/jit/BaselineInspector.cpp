@@ -466,6 +466,26 @@ BaselineInspector::getTemplateObject(jsbytecode *pc)
     return nullptr;
 }
 
+JSFunction *
+BaselineInspector::getSingleCallee(jsbytecode *pc)
+{
+    MOZ_ASSERT(*pc == JSOP_NEW);
+
+    if (!hasBaselineScript())
+        return nullptr;
+
+    const ICEntry &entry = icEntryFromPC(pc);
+    ICStub *stub = entry.firstStub();
+
+    if (entry.fallbackStub()->toCall_Fallback()->hadUnoptimizableCall())
+        return nullptr;
+
+    if (!stub->isCall_Scripted() || stub->next() != entry.fallbackStub())
+        return nullptr;
+
+    return stub->toCall_Scripted()->callee();
+}
+
 JSObject *
 BaselineInspector::getTemplateObjectForNative(jsbytecode *pc, Native native)
 {

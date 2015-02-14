@@ -6120,13 +6120,20 @@ class LPostWriteBarrierV : public LInstructionHelper<0, 1 + BOX_PIECES, 1>
 };
 
 // Guard against an object's identity.
-class LGuardObjectIdentity : public LInstructionHelper<0, 1, 0>
+class LGuardObjectIdentity : public LInstructionHelper<0, 2, 0>
 {
   public:
     LIR_HEADER(GuardObjectIdentity)
 
-    explicit LGuardObjectIdentity(const LAllocation &in) {
+    explicit LGuardObjectIdentity(const LAllocation &in, const LAllocation &expected) {
         setOperand(0, in);
+        setOperand(1, expected);
+    }
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LAllocation *expected() {
+        return getOperand(1);
     }
     const MGuardObjectIdentity *mir() const {
         return mir_->toGuardObjectIdentity();
