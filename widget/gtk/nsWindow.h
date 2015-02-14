@@ -127,6 +127,7 @@ public:
     NS_IMETHOD         SetFocus(bool aRaise = false) MOZ_OVERRIDE;
     NS_IMETHOD         GetScreenBounds(nsIntRect &aRect) MOZ_OVERRIDE;
     NS_IMETHOD         GetClientBounds(nsIntRect &aRect) MOZ_OVERRIDE;
+    virtual gfx::IntSize GetClientSize() MOZ_OVERRIDE;
     virtual nsIntPoint GetClientOffset() MOZ_OVERRIDE;
     NS_IMETHOD         SetCursor(nsCursor aCursor) MOZ_OVERRIDE;
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
