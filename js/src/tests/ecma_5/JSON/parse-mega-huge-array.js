@@ -12,10 +12,10 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
-var str = '[';
-for (var i = 0, sz = Math.pow(2, 21); i < sz; i++)
-  str += '0,';
-str += '0]';
+var body = "0,";
+for (var i = 0; i < 21; i++)
+  body = body + body;
+var str = '[' + body + '0]';
 
 var arr = JSON.parse(str);
 assertEq(arr.length, Math.pow(2, 21) + 1);
