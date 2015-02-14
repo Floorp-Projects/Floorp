@@ -29,7 +29,6 @@
 #include "js/RootingAPI.h"
 #include "js/UbiNode.h"
 #include "vm/ObjectGroup.h"
-#include "vm/PropDesc.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -1036,16 +1035,6 @@ class Shape : public gc::TenuredCell
     }
     bool isAccessorDescriptor() const {
         return (attrs & (JSPROP_SETTER | JSPROP_GETTER)) != 0;
-    }
-
-    PropDesc::Writability writability() const {
-        return (attrs & JSPROP_READONLY) ? PropDesc::NonWritable : PropDesc::Writable;
-    }
-    PropDesc::Enumerability enumerability() const {
-        return (attrs & JSPROP_ENUMERATE) ? PropDesc::Enumerable : PropDesc::NonEnumerable;
-    }
-    PropDesc::Configurability configurability() const {
-        return (attrs & JSPROP_PERMANENT) ? PropDesc::NonConfigurable : PropDesc::Configurable;
     }
 
     /*
