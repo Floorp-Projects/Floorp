@@ -138,7 +138,6 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     ownerThread_(nullptr),
     ownerThreadNative_(0),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    execAlloc_(nullptr),
     jitRuntime_(nullptr),
     selfHostingGlobal_(nullptr),
     nativeStackBase(GetNativeStackBase()),
@@ -422,7 +421,6 @@ JSRuntime::~JSRuntime()
     js_free(defaultLocale);
     js_delete(mathCache_);
     js_delete(jitRuntime_);
-    js_delete(execAlloc_);  /* Delete after jitRuntime_. */
 
     js_delete(ionPcScriptCache);
 
@@ -507,8 +505,8 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
     for (ScriptDataTable::Range r = scriptDataTable().all(); !r.empty(); r.popFront())
         rtSizes->scriptData += mallocSizeOf(r.front());
 
-    if (execAlloc_)
-        execAlloc_->addSizeOfCode(&rtSizes->code);
+    if (jitRuntime_)
+        jitRuntime_->execAlloc().addSizeOfCode(&rtSizes->code);
 
     rtSizes->gc.marker += gc.marker.sizeOfExcludingThis(mallocSizeOf);
     rtSizes->gc.nurseryCommitted += gc.nursery.sizeOfHeapCommitted();
@@ -618,18 +616,6 @@ JSRuntime::handleInterrupt(JSContext *cx)
         return InvokeInterruptCallback(cx);
     }
     return true;
-}
-
-jit::ExecutableAllocator *
-JSRuntime::createExecutableAllocator(JSContext *cx)
-{
-    MOZ_ASSERT(!execAlloc_);
-    MOZ_ASSERT(cx->runtime() == this);
-
-    execAlloc_ = js_new<jit::ExecutableAllocator>();
-    if (!execAlloc_)
-        js_ReportOutOfMemory(cx);
-    return execAlloc_;
 }
 
 MathCache *
