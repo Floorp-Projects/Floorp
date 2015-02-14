@@ -1948,9 +1948,9 @@ MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
  * This implements ES6 draft rev 28, 9.1.9 [[Set]] steps 5.c-f, but it
  * is really old code and there are a few barnacles.
  */
-static bool
-SetPropertyByDefining(JSContext *cx, HandleNativeObject obj, HandleObject receiver,
-                      HandleId id, HandleValue v, bool strict, bool objHasOwn)
+bool
+js::SetPropertyByDefining(JSContext *cx, HandleObject obj, HandleObject receiver,
+                          HandleId id, HandleValue v, bool strict, bool objHasOwn)
 {
     // Step 5.c-d: Test whether receiver has an existing own property
     // receiver[id]. The spec calls [[GetOwnProperty]]; js::HasOwnProperty is
@@ -2013,6 +2013,33 @@ SetPropertyByDefining(JSContext *cx, HandleNativeObject obj, HandleObject receiv
 
     Rooted<NativeObject*> nativeReceiver(cx, &receiver->as<NativeObject>());
     return DefinePropertyOrElement(cx, nativeReceiver, id, getter, setter, attrs, v, true, strict);
+}
+
+// When setting |id| for |receiver| and |obj| has no property for id, continue
+// the search up the prototype chain.
+bool
+js::SetPropertyOnProto(JSContext *cx, HandleObject obj, HandleObject receiver,
+                       HandleId id, MutableHandleValue vp, bool strict)
+{
+    MOZ_ASSERT(!obj->is<ProxyObject>());
+
+    RootedObject proto(cx, obj->getProto());
+    if (proto)
+        return SetProperty(cx, proto, receiver, id, vp, strict);
+    return SetPropertyByDefining(cx, obj, receiver, id, vp, strict, false);
+}
+
+bool
+js::SetNonWritableProperty(JSContext *cx, HandleId id, bool strict)
+{
+    // Setting a non-writable property is an error in strict mode code, a
+    // warning with the extra warnings option, and otherwise does nothing.
+
+    if (strict)
+        return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
+    if (cx->compartment()->options().extraWarnings(cx))
+        return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+    return true;
 }
 
 /*
@@ -2154,18 +2181,8 @@ SetExistingProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver
         } else {
             MOZ_ASSERT(shape->isDataDescriptor());
 
-            if (!shape->writable()) {
-                /*
-                 * Error in strict mode code, warn with extra warnings
-                 * options, otherwise do nothing.
-                 */
-
-                if (strict)
-                    return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
-                if (cx->compartment()->options().extraWarnings(cx))
-                    return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
-                return true;
-            }
+            if (!shape->writable())
+                return SetNonWritableProperty(cx, id, strict);
         }
 
         if (pobj == receiver) {

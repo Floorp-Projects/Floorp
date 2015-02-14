@@ -572,10 +572,10 @@ js::proxy_GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, Ha
 }
 
 bool
-js::proxy_SetProperty(JSContext *cx, HandleObject obj, HandleId id,
+js::proxy_SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
                       MutableHandleValue vp, bool strict)
 {
-    return Proxy::set(cx, obj, obj, id, strict, vp);
+    return Proxy::set(cx, obj, receiver, id, strict, vp);
 }
 
 bool
