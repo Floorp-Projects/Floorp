@@ -357,6 +357,7 @@ Debugger::Debugger(JSContext *cx, NativeObject *dbg)
   : object(dbg),
     uncaughtExceptionHook(nullptr),
     enabled(true),
+    allowUnobservedAsmJS(false),
     trackingAllocationSites(false),
     allocationSamplingProbability(1.0),
     allocationsLogLength(0),
@@ -1993,12 +1994,12 @@ Debugger::ensureExecutionObservabilityOfFrame(JSContext *cx, AbstractFramePtr fr
 /* static */ bool
 Debugger::ensureExecutionObservabilityOfCompartment(JSContext *cx, JSCompartment *comp)
 {
-    if (comp->debugObservesAllExecution())
+    if (comp->debuggerObservesAllExecution())
         return true;
     ExecutionObservableCompartments obs(cx);
     if (!obs.init() || !obs.add(comp))
         return false;
-    comp->setDebugObservesAllExecution();
+    comp->updateDebuggerObservesAllExecution();
     return updateExecutionObservability(cx, obs, Observing);
 }
 
@@ -2008,64 +2009,62 @@ Debugger::hookObservesAllExecution(Hook which)
     return which == OnEnterFrame;
 }
 
-bool
-Debugger::hasAnyLiveHooksThatObserveAllExecution() const
+Debugger::IsObserving
+Debugger::observesAllExecution() const
 {
-    if (!enabled)
-        return false;
-    return hasAnyHooksThatObserveAllExecution();
+    if (enabled && !!getHook(OnEnterFrame))
+        return Observing;
+    return NotObserving;
 }
 
-bool
-Debugger::hasAnyHooksThatObserveAllExecution() const
+Debugger::IsObserving
+Debugger::observesAsmJS() const
 {
-    return !!getHook(OnEnterFrame);
-}
-
-/* static */ bool
-Debugger::anyOtherDebuggerObservingAllExecution(GlobalObject *global) const
-{
-    // If we are toggling from Observing to NotObserving, add the
-    // compartment to the observable set only if none of its other
-    // debuggers are observing all execution.
-    GlobalObject::DebuggerVector *debuggers = global->getDebuggers();
-    for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
-        Debugger *dbg = *p;
-        if (dbg != this && dbg->hasAnyLiveHooksThatObserveAllExecution())
-            return true;
-    }
-    return false;
+    if (enabled && !allowUnobservedAsmJS)
+        return Observing;
+    return NotObserving;
 }
 
 // Toggle whether this Debugger's debuggees observe all execution. This is
 // called when a hook that observes all execution is set or unset. See
 // hookObservesAllExecution.
 bool
-Debugger::setObservesAllExecution(JSContext *cx, IsObserving observing)
+Debugger::updateObservesAllExecutionOnDebuggees(JSContext *cx, IsObserving observing)
 {
     ExecutionObservableCompartments obs(cx);
     if (!obs.init())
         return false;
 
     for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
-        GlobalObject * global = r.front();
+        GlobalObject *global = r.front();
         JSCompartment *comp = global->compartment();
 
-        if (comp->debugObservesAllExecution() == observing)
+        if (comp->debuggerObservesAllExecution() == observing)
             continue;
 
-        if (observing) {
-            if (!obs.add(comp))
-                return false;
-            comp->setDebugObservesAllExecution();
-        } else if (!anyOtherDebuggerObservingAllExecution(global)) {
-            // It's expensive to eagerly invalidate and recompile a
-            // compartment, so don't add the compartment to the set.
-            comp->unsetDebugObservesAllExecution();
-        }
+        // It's expensive to eagerly invalidate and recompile a compartment,
+        // so add the compartment to the set only if we are observing.
+        if (observing && !obs.add(comp))
+            return false;
+
+        comp->updateDebuggerObservesAllExecution();
     }
 
     return updateExecutionObservability(cx, obs, observing);
+}
+
+void
+Debugger::updateObservesAsmJSOnDebuggees(IsObserving observing)
+{
+    for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+        GlobalObject *global = r.front();
+        JSCompartment *comp = global->compartment();
+
+        if (comp->debuggerObservesAsmJS() == observing)
+            continue;
+
+        comp->updateDebuggerObservesAsmJS();
+    }
 }
 
 
@@ -2393,11 +2392,12 @@ Debugger::setEnabled(JSContext *cx, unsigned argc, Value *vp)
     if (!args.requireAtLeast(cx, "Debugger.set enabled", 1))
         return false;
 
-    bool enabled = ToBoolean(args[0]);
+    bool wasEnabled = dbg->enabled;
+    dbg->enabled = ToBoolean(args[0]);
 
-    if (enabled != dbg->enabled) {
+    if (wasEnabled != dbg->enabled) {
         for (Breakpoint *bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
-            if (enabled)
+            if (!wasEnabled)
                 bp->site->inc(cx->runtime()->defaultFreeOp());
             else
                 bp->site->dec(cx->runtime()->defaultFreeOp());
@@ -2408,7 +2408,7 @@ Debugger::setEnabled(JSContext *cx, unsigned argc, Value *vp)
          * that care about new globals.
          */
         if (dbg->getHook(OnNewGlobalObject)) {
-            if (enabled) {
+            if (!wasEnabled) {
                 /* If we were not enabled, the link should be a singleton list. */
                 MOZ_ASSERT(JS_CLIST_IS_EMPTY(&dbg->onNewGlobalObjectWatchersLink));
                 JS_APPEND_LINK(&dbg->onNewGlobalObjectWatchersLink,
@@ -2422,18 +2422,12 @@ Debugger::setEnabled(JSContext *cx, unsigned argc, Value *vp)
 
         // Ensure the compartment is observable if we are re-enabling a
         // Debugger with hooks that observe all execution.
-        if (enabled) {
-            if (dbg->hasAnyHooksThatObserveAllExecution()) {
-                if (!dbg->setObservesAllExecution(cx, Observing))
-                    return false;
-            }
-        } else {
-            if (!dbg->setObservesAllExecution(cx, NotObserving))
-                return false;
-        }
+        if (!dbg->updateObservesAllExecutionOnDebuggees(cx, dbg->observesAllExecution()))
+            return false;
+
+        dbg->updateObservesAsmJSOnDebuggees(dbg->observesAsmJS());
     }
 
-    dbg->enabled = enabled;
     args.rval().setUndefined();
     return true;
 }
@@ -2463,11 +2457,8 @@ Debugger::setHookImpl(JSContext *cx, unsigned argc, Value *vp, Hook which)
     }
     dbg->object->setReservedSlot(JSSLOT_DEBUG_HOOK_START + which, args[0]);
     if (hookObservesAllExecution(which)) {
-        if (!dbg->setObservesAllExecution(cx, dbg->hasAnyLiveHooksThatObserveAllExecution()
-                                              ? Observing : NotObserving))
-        {
+        if (!dbg->updateObservesAllExecutionOnDebuggees(cx, dbg->observesAllExecution()))
             return false;
-        }
     }
     args.rval().setUndefined();
     return true;
@@ -2601,6 +2592,32 @@ Debugger::setUncaughtExceptionHook(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
     dbg->uncaughtExceptionHook = args[0].toObjectOrNull();
+    args.rval().setUndefined();
+    return true;
+}
+
+/* static */ bool
+Debugger::getAllowUnobservedAsmJS(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "get allowUnobservedAsmJS", args, dbg);
+    args.rval().setBoolean(dbg->allowUnobservedAsmJS);
+    return true;
+}
+
+/* static */ bool
+Debugger::setAllowUnobservedAsmJS(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "set allowUnobservedAsmJS", args, dbg);
+    if (!args.requireAtLeast(cx, "Debugger.set allowUnobservedAsmJS", 1))
+        return false;
+    dbg->allowUnobservedAsmJS = ToBoolean(args[0]);
+
+    for (GlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
+        GlobalObject *global = r.front();
+        JSCompartment *comp = global->compartment();
+        comp->updateDebuggerObservesAsmJS();
+    }
+
     args.rval().setUndefined();
     return true;
 }
@@ -2988,7 +3005,8 @@ Debugger::addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> global)
             js_ReportOutOfMemory(cx);
         } else {
             debuggeeCompartment->setIsDebuggee();
-            if (!hasAnyLiveHooksThatObserveAllExecution())
+            debuggeeCompartment->updateDebuggerObservesAsmJS();
+            if (!observesAllExecution())
                 return true;
             if (ensureExecutionObservabilityOfCompartment(cx, debuggeeCompartment))
                 return true;
@@ -3072,13 +3090,12 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global, GlobalObjectSe
     if (trackingAllocationSites)
         global->compartment()->forgetObjectMetadataCallback();
 
-    /*
-     * The debuggee needs to be removed from the compartment last, as this can
-     * trigger GCs if the compartment's debug mode is being changed, and the
-     * global cannot be rooted on the stack without a cx.
-     */
-    if (global->getDebuggers()->empty())
+    if (global->getDebuggers()->empty()) {
         global->compartment()->unsetIsDebuggee();
+    } else {
+        global->compartment()->updateDebuggerObservesAllExecution();
+        global->compartment()->updateDebuggerObservesAsmJS();
+    }
 }
 
 static inline ScriptSourceObject *GetSourceReferent(JSObject *obj);
@@ -4048,6 +4065,8 @@ const JSPropertySpec Debugger::properties[] = {
     JS_PSGS("onNewGlobalObject", Debugger::getOnNewGlobalObject, Debugger::setOnNewGlobalObject, 0),
     JS_PSGS("uncaughtExceptionHook", Debugger::getUncaughtExceptionHook,
             Debugger::setUncaughtExceptionHook, 0),
+    JS_PSGS("allowUnobservedAsmJS", Debugger::getAllowUnobservedAsmJS,
+            Debugger::setAllowUnobservedAsmJS, 0),
     JS_PSG("memory", Debugger::getMemory, 0),
     JS_PS_END
 };
