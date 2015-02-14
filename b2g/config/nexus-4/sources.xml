@@ -17,7 +17,7 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="71defd569502274e877b56094e3a44d776033120"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="f0b93e0668ef9565bd6f050b15b4f794d59feb65"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2262d4a77d4f46ab230fd747bb91e9b77bad36cb"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="fe893bb760a3bb64375f62fdf4762a58c59df9ef"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="8d0d11d190ccc50d7d66009bcc896ad4b42d3f0d"/>
@@ -120,7 +120,7 @@
   <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="9d83b3a8e72c773820ada75e5a2cd128a743cf35"/>
   <project name="platform_system_core" path="system/core" remote="b2g" revision="542d1f59dc331b472307e5bd043101d14d5a3a3e"/>
   <project name="platform/system/extras" path="system/extras" revision="18c1180e848e7ab8691940481f5c1c8d22c37b3e"/>
-  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="8fcd25d64f0f67d1a6f7037a4c83ce6d95466770"/>
+  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="3211e72ef1407171b52d8258fb92298cbd3ec651"/>
   <project name="platform/system/media" path="system/media" revision="d90b836f66bf1d9627886c96f3a2d9c3007fbb80"/>
   <project name="platform/system/netd" path="system/netd" revision="56112dd7b811301b718d0643a82fd5cac9522073"/>
   <project name="platform/system/security" path="system/security" revision="f48ff68fedbcdc12b570b7699745abb6e7574907"/>
