@@ -755,7 +755,7 @@ GetNSWindowPropName()
 {
   static wchar_t sPropName[40] = L"";
   if (!*sPropName) {
-    _snwprintf(sPropName, 39, L"MozillansIWidgetPtr%p",
+    _snwprintf(sPropName, 39, L"MozillansIWidgetPtr%u",
                ::GetCurrentProcessId());
     sPropName[39] = '\0';
   }
