@@ -796,6 +796,16 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
     return rv;
   }
 
+  if (trustLevel == TrustLevel::TrustAnchor &&
+      endEntityOrCA == EndEntityOrCA::MustBeEndEntity &&
+      requiredEKUIfPresent == KeyPurposeId::id_kp_OCSPSigning) {
+    // OCSP signer certificates can never be trust anchors, especially
+    // since we don't support designated OCSP responders. All of the checks
+    // below that are dependent on trustLevel rely on this overriding of the
+    // trust level for OCSP signers.
+    trustLevel = TrustLevel::InheritsTrust;
+  }
+
   switch (trustLevel) {
     case TrustLevel::InheritsTrust:
       rv = CheckSignatureAlgorithm(cert.GetSignedData().algorithm,
