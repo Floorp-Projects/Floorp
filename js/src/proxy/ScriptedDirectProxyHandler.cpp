@@ -8,8 +8,6 @@
 
 #include "jsapi.h"
 
-#include "vm/PropDesc.h"
-
 #include "jsobjinlines.h"
 
 using namespace js;
@@ -575,7 +573,7 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
 
     // step 9
     RootedValue descObj(cx);
-    if (!NewPropertyDescriptorObject(cx, desc, &descObj))
+    if (!FromPropertyDescriptor(cx, desc, &descObj))
         return false;
 
     // steps 10-11

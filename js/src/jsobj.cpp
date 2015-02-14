@@ -127,114 +127,56 @@ js::InformalValueTypeName(const Value &v)
 }
 
 bool
-js::NewPropertyDescriptorObject(JSContext *cx, Handle<PropertyDescriptor> desc,
-                                MutableHandleValue vp)
+js::FromPropertyDescriptor(JSContext *cx, Handle<PropertyDescriptor> desc,
+                           MutableHandleValue vp)
 {
     if (!desc.object()) {
         vp.setUndefined();
         return true;
     }
 
-    Rooted<PropDesc> d(cx);
-    d.initFromPropertyDescriptor(desc);
-    RootedObject descObj(cx);
-    if (!d.makeObject(cx, &descObj))
-        return false;
-    vp.setObject(*descObj);
-    return true;
-}
-
-void
-PropDesc::initFromPropertyDescriptor(Handle<PropertyDescriptor> desc)
-{
-    MOZ_ASSERT(isUndefined());
-
-    isUndefined_ = false;
-    attrs = uint8_t(desc.attributes());
-    MOZ_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
-    if (desc.hasGetterOrSetterObject()) {
-        hasGet_ = desc.hasGetterObject();
-        get_ = hasGet_ && desc.getterObject()
-               ? ObjectValue(*desc.getterObject())
-               : UndefinedValue();
-        hasSet_ = desc.hasSetterObject();
-        set_ = hasSet_ && desc.setterObject()
-               ? ObjectValue(*desc.setterObject())
-               : UndefinedValue();
-        hasValue_ = false;
-        value_.setUndefined();
-        hasWritable_ = false;
-    } else {
-        hasGet_ = false;
-        get_.setUndefined();
-        hasSet_ = false;
-        set_.setUndefined();
-        hasValue_ = !(desc.attributes() & JSPROP_IGNORE_VALUE);
-        value_ = hasValue_ ? desc.value() : UndefinedValue();
-        hasWritable_ = !(desc.attributes() & JSPROP_IGNORE_READONLY);
-    }
-    hasEnumerable_ = !(desc.attributes() & JSPROP_IGNORE_ENUMERATE);
-    hasConfigurable_ = !(desc.attributes() & JSPROP_IGNORE_PERMANENT);
-}
-
-void
-PropDesc::populatePropertyDescriptor(HandleObject obj, MutableHandle<PropertyDescriptor> desc) const
-{
-    if (isUndefined()) {
-        desc.object().set(nullptr);
-        return;
-    }
-
-    desc.value().set(hasValue() ? value() : UndefinedValue());
-    desc.setGetter(getter());
-    desc.setSetter(setter());
-
-    // Make sure we honor the "has" notions in some way.
-    unsigned attrs = attributes();
-    if (!hasEnumerable())
-        attrs |= JSPROP_IGNORE_ENUMERATE;
-    if (!hasConfigurable())
-        attrs |= JSPROP_IGNORE_PERMANENT;
-    if (!isAccessorDescriptor()) {
-        if (!hasWritable())
-            attrs |= JSPROP_IGNORE_READONLY;
-        if (!hasValue())
-            attrs |= JSPROP_IGNORE_VALUE;
-    }
-    desc.setAttributes(attrs);
-
-    desc.object().set(obj);
-}
-
-bool
-PropDesc::makeObject(JSContext *cx, MutableHandleObject obj)
-{
-    MOZ_ASSERT(!isUndefined());
-
-    obj.set(NewBuiltinClassInstance<PlainObject>(cx));
+    RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj)
         return false;
 
     const JSAtomState &names = cx->names();
-    RootedValue configurableVal(cx, BooleanValue((attrs & JSPROP_PERMANENT) == 0));
-    RootedValue enumerableVal(cx, BooleanValue((attrs & JSPROP_ENUMERATE) != 0));
-    RootedValue writableVal(cx, BooleanValue((attrs & JSPROP_READONLY) == 0));
-    if ((hasConfigurable() &&
-         !DefineProperty(cx, obj, names.configurable, configurableVal)) ||
-        (hasEnumerable() &&
-         !DefineProperty(cx, obj, names.enumerable, enumerableVal)) ||
-        (hasGet() &&
-         !DefineProperty(cx, obj, names.get, getterValue())) ||
-        (hasSet() &&
-         !DefineProperty(cx, obj, names.set, setterValue())) ||
-        (hasValue() &&
-         !DefineProperty(cx, obj, names.value, value())) ||
-        (hasWritable() &&
-         !DefineProperty(cx, obj, names.writable, writableVal)))
-    {
-        return false;
+    RootedValue v(cx);
+    if (desc.hasConfigurable()) {
+        v.setBoolean(desc.configurable());
+        if (!DefineProperty(cx, obj, names.configurable, v))
+            return false;
     }
-
+    if (desc.hasEnumerable()) {
+        v.setBoolean(desc.enumerable());
+        if (!DefineProperty(cx, obj, names.enumerable, v))
+            return false;
+    }
+    if (desc.hasValue()) {
+        if (!DefineProperty(cx, obj, names.value, desc.value()))
+            return false;
+    }
+    if (desc.hasWritable()) {
+        v.setBoolean(desc.writable());
+        if (!DefineProperty(cx, obj, names.writable, v))
+            return false;
+    }
+    if (desc.hasGetterObject()) {
+        if (JSObject *get = desc.getterObject())
+            v.setObject(*get);
+        else
+            v.setUndefined();
+        if (!DefineProperty(cx, obj, names.get, v))
+            return false;
+    }
+    if (desc.hasSetterObject()) {
+        if (JSObject *set = desc.setterObject())
+            v.setObject(*set);
+        else
+            v.setUndefined();
+        if (!DefineProperty(cx, obj, names.set, v))
+            return false;
+    }
+    vp.setObject(*obj);
     return true;
 }
 
@@ -275,153 +217,6 @@ GetPropertyIfPresent(JSContext *cx, HandleObject obj, HandleId id, MutableHandle
     }
 
     return GetProperty(cx, obj, obj, id, vp);
-}
-
-bool
-PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
-{
-    MOZ_ASSERT(isUndefined());
-
-    RootedValue v(cx, origval);
-
-    /* 8.10.5 step 1 */
-    if (v.isPrimitive()) {
-        UniquePtr<char[], JS::FreePolicy> bytes =
-            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
-        if (!bytes)
-            return false;
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
-        return false;
-    }
-    RootedObject desc(cx, &v.toObject());
-
-    isUndefined_ = false;
-
-    attrs = 0;
-
-    bool found = false;
-    RootedId id(cx);
-
-    /* 8.10.5 step 3 */
-    id = NameToId(cx->names().enumerable);
-    if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
-        return false;
-    if (found) {
-        hasEnumerable_ = true;
-        if (ToBoolean(v))
-            attrs |= JSPROP_ENUMERATE;
-    }
-
-    /* 8.10.5 step 4 */
-    id = NameToId(cx->names().configurable);
-    if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
-        return false;
-    if (found) {
-        hasConfigurable_ = true;
-        if (!ToBoolean(v))
-            attrs |= JSPROP_PERMANENT;
-    }
-
-    /* 8.10.5 step 5 */
-    id = NameToId(cx->names().value);
-    if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
-        return false;
-    if (found) {
-        hasValue_ = true;
-        value_ = v;
-    }
-
-    /* 8.10.6 step 6 */
-    id = NameToId(cx->names().writable);
-    if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
-        return false;
-    if (found) {
-        hasWritable_ = true;
-        if (!ToBoolean(v))
-            attrs |= JSPROP_READONLY;
-    }
-
-    /* 8.10.7 step 7 */
-    id = NameToId(cx->names().get);
-    if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
-        return false;
-    if (found) {
-        // Enforce the rule that getters and setters must be objects, even if
-        // checkAccessors is false, because JSPropertyDescriptor's getter and
-        // setter fields can't hold arbitrary Values.
-        if (!v.isObject() && !v.isUndefined()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
-                                 js_getter_str);
-            return false;
-        }
-        hasGet_ = true;
-        get_ = v;
-        attrs |= JSPROP_GETTER | JSPROP_SHARED;
-        if (checkAccessors && !checkGetter(cx))
-            return false;
-    }
-
-    /* 8.10.7 step 8 */
-    id = NameToId(cx->names().set);
-    if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
-        return false;
-    if (found) {
-        // See comment above.
-        if (!v.isObject() && !v.isUndefined()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
-                                 js_setter_str);
-            return false;
-        }
-        hasSet_ = true;
-        set_ = v;
-        attrs |= JSPROP_SETTER | JSPROP_SHARED;
-        if (checkAccessors && !checkSetter(cx))
-            return false;
-    }
-
-    /* 8.10.7 step 9 */
-    if ((hasGet() || hasSet()) && (hasValue() || hasWritable())) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INVALID_DESCRIPTOR);
-        return false;
-    }
-
-    MOZ_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
-
-    return true;
-}
-
-void
-PropDesc::complete()
-{
-    MOZ_ASSERT(!isUndefined());
-
-    if (isGenericDescriptor() || isDataDescriptor()) {
-        if (!hasValue_) {
-            hasValue_ = true;
-            value_.setUndefined();
-        }
-        if (!hasWritable_) {
-            hasWritable_ = true;
-            attrs |= JSPROP_READONLY;
-        }
-    } else {
-        if (!hasGet_) {
-            hasGet_ = true;
-            get_.setUndefined();
-        }
-        if (!hasSet_) {
-            hasSet_ = true;
-            set_.setUndefined();
-        }
-    }
-    if (!hasEnumerable_) {
-        hasEnumerable_ = true;
-        attrs &= ~JSPROP_ENUMERATE;
-    }
-    if (!hasConfigurable_) {
-        hasConfigurable_ = true;
-        attrs |= JSPROP_PERMANENT;
-    }
 }
 
 bool
@@ -912,28 +707,142 @@ js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 bool
-js::ToPropertyDescriptor(JSContext *cx, HandleValue v, bool checkAccessors,
+CheckCallable(JSContext *cx, JSObject *obj, const char *fieldName)
+{
+    if (obj && !obj->isCallable()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+                             fieldName);
+        return false;
+    }
+    return true;
+}
+
+bool
+js::ToPropertyDescriptor(JSContext *cx, HandleValue descval, bool checkAccessors,
                          MutableHandle<PropertyDescriptor> desc)
 {
-    Rooted<PropDesc> pd(cx);
-    if (!pd.initialize(cx, v, checkAccessors))
+    // step 2
+    if (!descval.isObject()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
+                             InformalValueTypeName(descval));
         return false;
-    pd.populatePropertyDescriptor(NullPtr(), desc);
+    }
+    RootedObject obj(cx, &descval.toObject());
+
+    // step 3
+    desc.clear();
+
+    bool found = false;
+    RootedId id(cx);
+    RootedValue v(cx);
+    unsigned attrs = 0;
+
+    // step 4
+    id = NameToId(cx->names().enumerable);
+    if (!GetPropertyIfPresent(cx, obj, id, &v, &found))
+        return false;
+    if (found) {
+        if (ToBoolean(v))
+            attrs |= JSPROP_ENUMERATE;
+    } else {
+        attrs |= JSPROP_IGNORE_ENUMERATE;
+    }
+
+    // step 5
+    id = NameToId(cx->names().configurable);
+    if (!GetPropertyIfPresent(cx, obj, id, &v, &found))
+        return false;
+    if (found) {
+        if (!ToBoolean(v))
+            attrs |= JSPROP_PERMANENT;
+    } else {
+        attrs |= JSPROP_IGNORE_PERMANENT;
+    }
+
+    // step 6
+    id = NameToId(cx->names().value);
+    if (!GetPropertyIfPresent(cx, obj, id, &v, &found))
+        return false;
+    if (found)
+        desc.value().set(v);
+    else
+        attrs |= JSPROP_IGNORE_VALUE;
+
+    // step 7
+    id = NameToId(cx->names().writable);
+    if (!GetPropertyIfPresent(cx, obj, id, &v, &found))
+        return false;
+    if (found) {
+        if (!ToBoolean(v))
+            attrs |= JSPROP_READONLY;
+    } else {
+        attrs |= JSPROP_IGNORE_READONLY;
+    }
+
+    // step 8
+    bool hasGetOrSet;
+    id = NameToId(cx->names().get);
+    if (!GetPropertyIfPresent(cx, obj, id, &v, &found))
+        return false;
+    hasGetOrSet = found;
+    if (found) {
+        if (v.isObject()) {
+            if (checkAccessors && !CheckCallable(cx, &v.toObject(), js_getter_str))
+                return false;
+            desc.setGetterObject(&v.toObject());
+        } else if (!v.isUndefined()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+                                 js_getter_str);
+            return false;
+        }
+        attrs |= JSPROP_GETTER | JSPROP_SHARED;
+    }
+
+    // step 9
+    id = NameToId(cx->names().set);
+    if (!GetPropertyIfPresent(cx, obj, id, &v, &found))
+        return false;
+    hasGetOrSet |= found;
+    if (found) {
+        if (v.isObject()) {
+            if (checkAccessors && !CheckCallable(cx, &v.toObject(), js_setter_str))
+                return false;
+            desc.setSetterObject(&v.toObject());
+        } else if (!v.isUndefined()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+                                 js_setter_str);
+            return false;
+        }
+        attrs |= JSPROP_SETTER | JSPROP_SHARED;
+    }
+
+    // step 10
+    if (hasGetOrSet) {
+        if (!(attrs & JSPROP_IGNORE_READONLY) || !(attrs & JSPROP_IGNORE_VALUE)) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INVALID_DESCRIPTOR);
+            return false;
+        }
+
+        // By convention, these bits are not used on accessor descriptors.
+        attrs &= ~(JSPROP_IGNORE_READONLY | JSPROP_IGNORE_VALUE);
+    }
+
+    desc.setAttributes(attrs);
+    MOZ_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+    MOZ_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
     return true;
 }
 
 bool
 js::CheckPropertyDescriptorAccessors(JSContext *cx, Handle<PropertyDescriptor> desc)
 {
-    if (desc.hasGetterObject() && !IsCallable(desc.getterObject())) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
-                             js_getter_str);
-        return false;
+    if (desc.hasGetterObject()) {
+        if (!CheckCallable(cx, desc.getterObject(), js_getter_str))
+            return false;
     }
-    if (desc.hasSetterObject() && !IsCallable(desc.setterObject())) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
-                             js_setter_str);
-        return false;
+    if (desc.hasSetterObject()) {
+        if (!CheckCallable(cx, desc.setterObject(), js_setter_str))
+            return false;
     }
     return true;
 }

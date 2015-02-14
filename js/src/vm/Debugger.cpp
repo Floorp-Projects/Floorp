@@ -6688,7 +6688,7 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
-    return NewPropertyDescriptorObject(cx, desc, args.rval());
+    return FromPropertyDescriptor(cx, desc, args.rval());
 }
 
 static bool

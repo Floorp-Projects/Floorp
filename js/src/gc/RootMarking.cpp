@@ -24,7 +24,6 @@
 #include "js/HashTable.h"
 #include "vm/Debugger.h"
 #include "vm/JSONParser.h"
-#include "vm/PropDesc.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
@@ -52,12 +51,6 @@ MarkBindingsRoot(JSTracer *trc, Bindings *bindings, const char *name)
 
 void
 MarkPropertyDescriptorRoot(JSTracer *trc, JSPropertyDescriptor *pd, const char *name)
-{
-    pd->trace(trc);
-}
-
-void
-MarkPropDescRoot(JSTracer *trc, PropDesc *pd, const char *name)
 {
     pd->trace(trc);
 }
@@ -116,7 +109,6 @@ MarkExactStackRootsAcrossTypes(T context, JSTracer *trc)
     MarkExactStackRootList<Bindings, MarkBindingsRoot>(trc, context, "Bindings");
     MarkExactStackRootList<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(
         trc, context, "JSPropertyDescriptor");
-    MarkExactStackRootList<PropDesc, MarkPropDescRoot>(trc, context, "PropDesc");
 }
 
 static void
