@@ -970,51 +970,50 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   }
 
   if (!newAcc && isHTML) {  // HTML accessibles
-    if (roleMapEntry) {
-      // Create pure ARIA grid/treegrid related accessibles if they weren't used
-      // on accessible HTML table elements.
-      if ((roleMapEntry->accTypes & eTableCell)) {
-        if (aContext->IsTableRow() &&
-            (frame->AccessibleType() != eHTMLTableCellType ||
-             aContext->GetContent() != content->GetParent())) {
-          newAcc = new ARIAGridCellAccessibleWrap(content, document);
-        }
+    bool isARIATableOrCell = roleMapEntry &&
+      (roleMapEntry->accTypes & (eTableCell | eTable));
 
-      } else if ((roleMapEntry->IsOfType(eTable)) &&
-                 frame->AccessibleType() != eHTMLTableType) {
+    if (!isARIATableOrCell ||
+        frame->AccessibleType() == eHTMLTableCellType ||
+        frame->AccessibleType() == eHTMLTableType) {
+      // Prefer to use markup (mostly tag name, perhaps attributes) to decide if
+      // and what kind of accessible to create,
+      newAcc = CreateHTMLAccessibleByMarkup(frame, content, aContext);
+      if (!newAcc) // try by frame accessible type.
+        newAcc = CreateAccessibleByFrameType(frame, content, aContext);
+    }
+
+    // In case of ARIA grids use grid-specific classes if it's not native table
+    // based.
+    if (isARIATableOrCell && (!newAcc || newAcc->IsGenericHyperText())) {
+      if ((roleMapEntry->accTypes & eTableCell)) {
+        if (aContext->IsTableRow())
+          newAcc = new ARIAGridCellAccessibleWrap(content, document);
+
+      } else if (roleMapEntry->IsOfType(eTable)) {
         newAcc = new ARIAGridAccessibleWrap(content, document);
       }
     }
 
-    if (!newAcc) {
-      // Prefer to use markup (mostly tag name, perhaps attributes) to decide if
-      // and what kind of accessible to create.
-      newAcc = CreateHTMLAccessibleByMarkup(frame, content, aContext);
-
-      // Try using frame to do it.
-      if (!newAcc)
-        newAcc = CreateAccessibleByFrameType(frame, content, aContext);
-
-      // If table has strong ARIA role then all table descendants shouldn't
-      // expose their native roles.
-      if (!roleMapEntry && newAcc && aContext->HasStrongARIARole()) {
-        if (frame->AccessibleType() == eHTMLTableRowType) {
-          nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
-          if (!contextRoleMap->IsOfType(eTable))
-            roleMapEntry = &aria::gEmptyRoleMap;
-
-        } else if (frame->AccessibleType() == eHTMLTableCellType &&
-                   aContext->ARIARoleMap() == &aria::gEmptyRoleMap) {
+    // If table has strong ARIA role then all table descendants shouldn't
+    // expose their native roles.
+    if (!roleMapEntry && newAcc && aContext->HasStrongARIARole()) {
+      if (frame->AccessibleType() == eHTMLTableRowType) {
+        nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
+        if (!contextRoleMap->IsOfType(eTable))
           roleMapEntry = &aria::gEmptyRoleMap;
 
-        } else if (content->Tag() == nsGkAtoms::dt ||
-                   content->Tag() == nsGkAtoms::li ||
-                   content->Tag() == nsGkAtoms::dd ||
-                   frame->AccessibleType() == eHTMLLiType) {
-          nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
-          if (!contextRoleMap->IsOfType(eList))
-            roleMapEntry = &aria::gEmptyRoleMap;
-        }
+      } else if (frame->AccessibleType() == eHTMLTableCellType &&
+                 aContext->ARIARoleMap() == &aria::gEmptyRoleMap) {
+        roleMapEntry = &aria::gEmptyRoleMap;
+
+      } else if (content->Tag() == nsGkAtoms::dt ||
+                 content->Tag() == nsGkAtoms::li ||
+                 content->Tag() == nsGkAtoms::dd ||
+                 frame->AccessibleType() == eHTMLLiType) {
+        nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
+        if (!contextRoleMap->IsOfType(eList))
+          roleMapEntry = &aria::gEmptyRoleMap;
       }
     }
   }
