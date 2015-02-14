@@ -5531,10 +5531,72 @@ IonBuilder::createThisScriptedSingleton(JSFunction *target, MDefinition *callee)
 }
 
 MDefinition *
+IonBuilder::createThisScriptedBaseline(MDefinition *callee)
+{
+    // Try to inline |this| creation based on Baseline feedback.
+
+    JSFunction *target = inspector->getSingleCallee(pc);
+    if (!target || !target->hasScript())
+        return nullptr;
+
+    JSObject *templateObject = inspector->getTemplateObject(pc);
+    if (!templateObject->is<PlainObject>() && !templateObject->is<UnboxedPlainObject>())
+        return nullptr;
+
+    Shape *shape = target->lookupPure(compartment->runtime()->names().prototype);
+    if (!shape || !shape->hasDefaultGetter() || !shape->hasSlot())
+        return nullptr;
+
+    Value protov = target->getSlot(shape->slot());
+    if (!protov.isObject())
+        return nullptr;
+
+    JSObject *proto = &protov.toObject();
+    if (proto != templateObject->getProto())
+        return nullptr;
+
+    TypeSet::ObjectKey *templateObjectKey = TypeSet::ObjectKey::get(templateObject->group());
+    if (templateObjectKey->hasFlags(constraints(), OBJECT_FLAG_NEW_SCRIPT_CLEARED))
+        return nullptr;
+
+    StackTypeSet *thisTypes = TypeScript::ThisTypes(target->nonLazyScript());
+    if (!thisTypes || !thisTypes->hasType(TypeSet::ObjectType(templateObject)))
+        return nullptr;
+
+    // Shape guard.
+    callee = addShapeGuard(callee, target->lastProperty(), Bailout_ShapeGuard);
+
+    // Guard callee.prototype == proto.
+    MOZ_ASSERT(shape->numFixedSlots() == 0, "Must be a dynamic slot");
+    MSlots *slots = MSlots::New(alloc(), callee);
+    current->add(slots);
+    MLoadSlot *prototype = MLoadSlot::New(alloc(), slots, shape->slot());
+    current->add(prototype);
+    MDefinition *protoConst = constantMaybeNursery(proto);
+    MGuardObjectIdentity *guard = MGuardObjectIdentity::New(alloc(), prototype, protoConst,
+                                                            /* bailOnEquality = */ false);
+    current->add(guard);
+
+    // Generate an inline path to create a new |this| object with
+    // the given prototype.
+    MConstant *templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
+    MCreateThisWithTemplate *createThis =
+        MCreateThisWithTemplate::New(alloc(), constraints(), templateConst,
+                                     templateObject->group()->initialHeap(constraints()));
+    current->add(templateConst);
+    current->add(createThis);
+
+    return createThis;
+}
+
+MDefinition *
 IonBuilder::createThis(JSFunction *target, MDefinition *callee)
 {
-    // Create this for unknown target
+    // Create |this| for unknown target.
     if (!target) {
+        if (MDefinition *createThis = createThisScriptedBaseline(callee))
+            return createThis;
+
         MCreateThis *createThis = MCreateThis::New(alloc(), callee);
         current->add(createThis);
         return createThis;
@@ -5551,8 +5613,10 @@ IonBuilder::createThis(JSFunction *target, MDefinition *callee)
     }
 
     // Try baking in the prototype.
-    MDefinition *createThis = createThisScriptedSingleton(target, callee);
-    if (createThis)
+    if (MDefinition *createThis = createThisScriptedSingleton(target, callee))
+        return createThis;
+
+    if (MDefinition *createThis = createThisScriptedBaseline(callee))
         return createThis;
 
     return createThisScripted(callee);
@@ -11881,7 +11945,9 @@ IonBuilder::jsop_instanceof()
         current->add(slots);
         MLoadSlot *prototype = MLoadSlot::New(alloc(), slots, slot);
         current->add(prototype);
-        MGuardObjectIdentity *guard = MGuardObjectIdentity::New(alloc(), prototype, protoObject,
+        MConstant *protoConst = MConstant::NewConstraintlessObject(alloc(), protoObject);
+        current->add(protoConst);
+        MGuardObjectIdentity *guard = MGuardObjectIdentity::New(alloc(), prototype, protoConst,
                                                                 /* bailOnEquality = */ false);
         current->add(guard);
 

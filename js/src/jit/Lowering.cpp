@@ -3150,7 +3150,8 @@ LIRGenerator::visitBindNameCache(MBindNameCache *ins)
 void
 LIRGenerator::visitGuardObjectIdentity(MGuardObjectIdentity *ins)
 {
-    LGuardObjectIdentity *guard = new(alloc()) LGuardObjectIdentity(useRegister(ins->obj()));
+    LGuardObjectIdentity *guard = new(alloc()) LGuardObjectIdentity(useRegister(ins->obj()),
+                                                                    useRegister(ins->expected()));
     assignSnapshot(guard, Bailout_ObjectIdentityOrTypeGuard);
     add(guard, ins);
     redefine(ins, ins->obj());

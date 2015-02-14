@@ -2504,11 +2504,12 @@ CodeGenerator::visitFunctionEnvironment(LFunctionEnvironment *lir)
 void
 CodeGenerator::visitGuardObjectIdentity(LGuardObjectIdentity *guard)
 {
-    Register obj = ToRegister(guard->input());
+    Register input = ToRegister(guard->input());
+    Register expected = ToRegister(guard->expected());
 
     Assembler::Condition cond =
         guard->mir()->bailOnEquality() ? Assembler::Equal : Assembler::NotEqual;
-    bailoutCmpPtr(cond, obj, ImmGCPtr(guard->mir()->singleObject()), guard->snapshot());
+    bailoutCmpPtr(cond, input, expected, guard->snapshot());
 }
 
 void
