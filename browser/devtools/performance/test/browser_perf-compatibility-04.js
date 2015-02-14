@@ -3,7 +3,7 @@
 
 /**
  * Tests that the recording model is populated correctly when using timeline
- * and memory actor mocks.
+ * and memory actor mocks, and that the correct button/overview displays are shown.
  */
 
 const WAIT_TIME = 1000;
@@ -13,7 +13,7 @@ let test = Task.async(function*() {
     TEST_MOCK_MEMORY_ACTOR: true
   });
   Services.prefs.setBoolPref(MEMORY_PREF, true);
-  let { EVENTS, gFront, PerformanceController, PerformanceView } = panel.panelWin;
+  let { EVENTS, $, gFront, PerformanceController, PerformanceView, DetailsView, WaterfallView } = panel.panelWin;
 
 
   let { memory: memoryMock, timeline: timelineMock } = gFront.getMocksInUse();
@@ -56,6 +56,23 @@ let test = Task.async(function*() {
 
   ok(sampleCount > 0,
     "At least some samples have been iterated over, checking for root nodes.");
+
+  is($("#overview-pane").hidden, false,
+    "overview pane not hidden when only memory mocked.");
+
+  is($("#select-waterfall-view").hidden, false,
+    "waterfall view button not hidden when memory mocked");
+  is($("#select-js-calltree-view").hidden, false,
+    "jscalltree view button not hidden when memory mocked");
+  is($("#select-js-flamegraph-view").hidden, false,
+    "jsflamegraph view button not hidden when memory mocked");
+  is($("#select-memory-calltree-view").hidden, true,
+    "memorycalltree view button hidden when memory mocked");
+  is($("#select-memory-flamegraph-view").hidden, true,
+    "memoryflamegraph view button hidden when memory mocked");
+
+  ok(DetailsView.isViewSelected(WaterfallView),
+    "Waterfall view selected by default when memory mocked.");
 
   yield teardown(panel);
   finish();
