@@ -637,23 +637,27 @@ nsFilePicker::ShowFolderPicker(const nsString& aInitialDir, bool &aWasInitError)
  * File open and save picker invocation
  */
 
+/* static */ bool
+nsFilePicker::GetFileNameWrapper(OPENFILENAMEW* ofn, PickerType aType)
+{
+  MOZ_SEH_TRY {
+    if (aType == PICKER_TYPE_OPEN)
+      return ::GetOpenFileNameW(ofn);
+    else if (aType == PICKER_TYPE_SAVE)
+      return ::GetSaveFileNameW(ofn);
+  } MOZ_SEH_EXCEPT(true) {
+    NS_ERROR("nsFilePicker GetFileName win32 call generated an exception! This is bad!");
+  }
+  return false;
+}
+
 bool
 nsFilePicker::FilePickerWrapper(OPENFILENAMEW* ofn, PickerType aType)
 {
   if (!ofn)
     return false;
-
-  bool result = false;
   AutoWidgetPickerState awps(mParentWidget);
-  MOZ_SEH_TRY {
-    if (aType == PICKER_TYPE_OPEN) 
-      result = ::GetOpenFileNameW(ofn);
-    else if (aType == PICKER_TYPE_SAVE)
-      result = ::GetSaveFileNameW(ofn);
-  } MOZ_SEH_EXCEPT(true) {
-    NS_ERROR("nsFilePicker GetFileName win32 call generated an exception! This is bad!");
-  }
-  return result;
+  return GetFileNameWrapper(ofn, aType);
 }
 
 bool
