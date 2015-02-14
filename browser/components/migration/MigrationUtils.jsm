@@ -45,13 +45,10 @@ function getMigrationBundle() {
  * but it will soon be exposed properly.
  */
 function getMigratorKeyForDefaultBrowser() {
-  // Don't map Firefox to the Firefox migrator, because we don't
-  // expect it to ever show up as an option in the wizard.
-  // We may want to revise this if/when we use separate profiles
-  // for each Firefox-update channel.
   const APP_DESC_TO_KEY = {
     "Internet Explorer": "ie",
     "Safari":            "safari",
+    "Firefox":           "firefox",
     "Google Chrome":     "chrome",  // Windows, Linux
     "Chrome":            "chrome",  // OS X
   };
@@ -485,11 +482,11 @@ this.MigrationUtils = Object.freeze({
   get migrators() {
     let migratorKeysOrdered = [
 #ifdef XP_WIN
-      "ie", "chrome", "safari"
+      "firefox", "ie", "chrome", "safari"
 #elifdef XP_MACOSX
-      "safari", "chrome"
+      "firefox", "safari", "chrome"
 #elifdef XP_UNIX
-      "chrome"
+      "firefox", "chrome"
 #endif
     ];
 
