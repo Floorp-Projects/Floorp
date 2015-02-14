@@ -9353,24 +9353,28 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
         // as a constructor, for later use during Ion compilation.
         RootedObject templateObject(cx);
         if (constructing) {
-            JSObject *thisObject = CreateThisForFunction(cx, fun, MaybeSingletonObject);
-            if (!thisObject)
-                return false;
+            // If we are calling a constructor for which the new script
+            // properties analysis has not been performed yet, don't attach a
+            // stub. After the analysis is performed, CreateThisForFunction may
+            // start returning objects with a different type, and the Ion
+            // compiler will get confused.
 
-            if (thisObject->is<PlainObject>() || thisObject->is<UnboxedPlainObject>()) {
-                templateObject = thisObject;
+            // Only attach a stub if the function already has a prototype and
+            // we can look it up without causing side effects.
+            RootedValue protov(cx);
+            if (!GetPropertyPure(cx, fun, NameToId(cx->names().prototype), protov.address())) {
+                JitSpew(JitSpew_BaselineIC, "  Can't purely lookup function prototype");
+                return true;
+            }
 
-                // If we are calling a constructor for which the new script
-                // properties analysis has not been performed yet, don't attach a
-                // stub. After the analysis is performed, CreateThisForFunction may
-                // start returning objects with a different type, and the Ion
-                // compiler might get confused.
-                TypeNewScript *newScript = templateObject->group()->newScript();
-                if (newScript && !newScript->analyzed()) {
-                    // Clear the object just created from the preliminary objects
-                    // on the TypeNewScript, as it will not be used or filled in by
-                    // running code.
-                    newScript->unregisterNewObject(&templateObject->as<PlainObject>());
+            if (protov.isObject()) {
+                TaggedProto proto(&protov.toObject());
+                ObjectGroup *group = ObjectGroup::defaultNewGroup(cx, nullptr, proto, fun);
+                if (!group)
+                    return false;
+
+                if (group->newScript() && !group->newScript()->analyzed()) {
+                    JitSpew(JitSpew_BaselineIC, "  Function newScript has not been analyzed");
 
                     // This is temporary until the analysis is perfomed, so
                     // don't treat this as unoptimizable.
@@ -9378,6 +9382,13 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
                     return true;
                 }
             }
+
+            JSObject *thisObject = CreateThisForFunction(cx, fun, MaybeSingletonObject);
+            if (!thisObject)
+                return false;
+
+            if (thisObject->is<PlainObject>() || thisObject->is<UnboxedPlainObject>())
+                templateObject = thisObject;
         }
 
         JitSpew(JitSpew_BaselineIC,
