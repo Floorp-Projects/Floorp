@@ -133,6 +133,9 @@ public:
   virtual nsRefPtr<VideoDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold);
 
+  friend class ReRequestVideoWithSkipTask;
+  friend class ReRequestAudioTask;
+
   // By default, the state machine polls the reader once per second when it's
   // in buffering mode. Some readers support a promise-based mechanism by which
   // they notify the state machine when the data arrives.
