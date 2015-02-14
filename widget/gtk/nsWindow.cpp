@@ -11,6 +11,8 @@
 #include "mozilla/TextEvents.h"
 #include <algorithm>
 
+#include "GeckoProfiler.h"
+
 #include "prlink.h"
 #include "nsGTKToolkit.h"
 #include "nsIRollupListener.h"
@@ -1525,6 +1527,12 @@ nsWindow::GetScreenBounds(nsIntRect &aRect)
     return NS_OK;
 }
 
+gfx::IntSize
+nsWindow::GetClientSize()
+{
+  return gfx::IntSize(mBounds.width, mBounds.height);
+}
+
 NS_IMETHODIMP
 nsWindow::GetClientBounds(nsIntRect &aRect)
 {
@@ -1540,6 +1548,8 @@ nsWindow::GetClientBounds(nsIntRect &aRect)
 nsIntPoint
 nsWindow::GetClientOffset()
 {
+    PROFILER_LABEL("nsWindow", "GetClientOffset", js::ProfileEntry::Category::GRAPHICS);
+
     if (!mIsTopLevel) {
         return nsIntPoint(0, 0);
     }

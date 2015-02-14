@@ -391,18 +391,13 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
                             gfx::Rect *aClipRectOut /* = nullptr */,
                             gfx::Rect *aRenderBoundsOut /* = nullptr */)
 {
-  nsIntRect intRect;
-  mWidget->GetClientBounds(intRect);
-  mWidgetSize = gfx::ToIntSize(intRect.Size());
-
-  // The result of GetClientBounds is shifted over by the size of the window
-  // manager styling. We want to ignore that.
-  intRect.MoveTo(0, 0);
+  mWidgetSize = mWidget->GetClientSize();
+  IntRect intRect = gfx::IntRect(IntPoint(), mWidgetSize);
   Rect rect = Rect(0, 0, intRect.width, intRect.height);
 
   // Sometimes the invalid region is larger than we want to draw.
   nsIntRegion invalidRegionSafe;
-  invalidRegionSafe.And(aInvalidRegion, intRect);
+  invalidRegionSafe.And(aInvalidRegion, gfx::ThebesIntRect(intRect));
 
   nsIntRect invalidRect = invalidRegionSafe.GetBounds();
   mInvalidRect = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
