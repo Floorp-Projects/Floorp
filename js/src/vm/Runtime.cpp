@@ -510,9 +510,6 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
     if (execAlloc_)
         execAlloc_->addSizeOfCode(&rtSizes->code);
 
-    if (jitRuntime() && jitRuntime()->ionAlloc(this))
-        jitRuntime()->ionAlloc(this)->addSizeOfCode(&rtSizes->code);
-
     rtSizes->gc.marker += gc.marker.sizeOfExcludingThis(mallocSizeOf);
     rtSizes->gc.nurseryCommitted += gc.nursery.sizeOfHeapCommitted();
     rtSizes->gc.nurseryDecommitted += gc.nursery.sizeOfHeapDecommitted();
