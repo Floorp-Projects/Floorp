@@ -48,6 +48,7 @@ HTMLTableCellAccessible::
   HTMLTableCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   HyperTextAccessibleWrap(aContent, aDoc)
 {
+  mType = eHTMLTableCellType;
   mGenericTypes |= eTableCell;
 }
 
@@ -128,6 +129,13 @@ HTMLTableCellAccessible::NativeAttributes()
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::axis, axisText);
   if (!axisText.IsEmpty())
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::axis, axisText);
+
+#ifdef DEBUG
+  nsAutoString unused;
+  attributes->SetStringProperty(NS_LITERAL_CSTRING("cppclass"),
+                                NS_LITERAL_STRING("HTMLTableCellAccessible"),
+                                unused);
+#endif
 
   return attributes.forget();
 }
