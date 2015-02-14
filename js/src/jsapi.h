@@ -2538,9 +2538,20 @@ class PropertyDescriptorOperations
     // Descriptors with JSGetterOp/JSSetterOp are considered data
     // descriptors. It's complicated.
     bool isAccessorDescriptor() const { return hasGetterOrSetterObject(); }
-    bool isDataDescriptor() const { return !isAccessorDescriptor(); }
+    bool isGenericDescriptor() const {
+        return (desc()->attrs &
+                (JSPROP_GETTER | JSPROP_SETTER | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_VALUE)) ==
+               (JSPROP_IGNORE_READONLY | JSPROP_IGNORE_VALUE);
+    }
+    bool isDataDescriptor() const { return !isAccessorDescriptor() && !isGenericDescriptor(); }
 
-    bool hasValue() const { return isDataDescriptor() && !hasAttributes(JSPROP_IGNORE_VALUE); }
+    bool hasConfigurable() const { return !hasAttributes(JSPROP_IGNORE_PERMANENT); }
+    bool configurable() const { MOZ_ASSERT(hasConfigurable()); return !isPermanent(); }
+    bool hasEnumerable() const { return !hasAttributes(JSPROP_IGNORE_ENUMERATE); }
+    bool enumerable() const { MOZ_ASSERT(hasEnumerable()); return isEnumerable(); }
+    bool hasValue() const { return !isAccessorDescriptor() && !hasAttributes(JSPROP_IGNORE_VALUE); }
+    bool hasWritable() const { return !isAccessorDescriptor() && !hasAttributes(JSPROP_IGNORE_READONLY); }
+    bool writable() const { MOZ_ASSERT(hasWritable()); return !isReadonly(); }
 
     bool isEnumerable() const { return desc()->attrs & JSPROP_ENUMERATE; }
     bool isReadonly() const { return desc()->attrs & JSPROP_READONLY; }
