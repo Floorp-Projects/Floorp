@@ -120,7 +120,7 @@ class ResultsSink:
         if isinstance(output, NullTestOutput):
             if self.options.tinderbox:
                 self.print_tinderbox_result(
-                    'TEST-KNOWN-FAIL', output.test.path, time=output.dt,
+                    'TEST-KNOWN-FAIL', output.test, time=output.dt,
                     skip=True)
             self.counts['SKIP'] += 1
             self.n += 1
@@ -130,7 +130,7 @@ class ResultsSink:
             dev_label = self.LABELS[tup][1]
             if output.timed_out:
                 dev_label = 'TIMEOUTS'
-            self.groups.setdefault(dev_label, []).append(result.test.path)
+            self.groups.setdefault(dev_label, []).append(result)
 
             if dev_label == 'REGRESSIONS':
                 show_output = self.options.show_output \
@@ -178,11 +178,11 @@ class ResultsSink:
                         if label == 'TEST-UNEXPECTED-PASS':
                             label = 'TEST-PASS (EXPECTED RANDOM)'
                         self.print_tinderbox_result(
-                            label, result.test.path, time=output.dt,
+                            label, result.test, time=output.dt,
                             message=msg)
                 tup = (result.result, result.test.expect, result.test.random)
                 self.print_tinderbox_result(
-                    self.LABELS[tup][0], result.test.path, time=output.dt)
+                    self.LABELS[tup][0], result.test, time=output.dt)
                 return
 
             if dev_label:
@@ -219,23 +219,24 @@ class ResultsSink:
         }
 
     def list(self, completed):
-        for label, paths in sorted(self.groups.items()):
+        for label, results in sorted(self.groups.items()):
             if label == '':
                 continue
 
             print(label)
-            for path in paths:
-                print('    {}'.format(path))
+            for result in results:
+                print('    {}'.format(' '.join(result.test.jitflags +
+                                               [result.test.path])))
 
         if self.options.failure_file:
             failure_file = open(self.options.failure_file, 'w')
             if not self.all_passed():
                 if 'REGRESSIONS' in self.groups:
-                    for path in self.groups['REGRESSIONS']:
-                        print(path, file=failure_file)
+                    for result in self.groups['REGRESSIONS']:
+                        print(result.test.path, file=failure_file)
                 if 'TIMEOUTS' in self.groups:
-                    for path in self.groups['TIMEOUTS']:
-                        print(path, file=failure_file)
+                    for result in self.groups['TIMEOUTS']:
+                        print(result.test.path, file=failure_file)
             failure_file.close()
 
         suffix = '' if completed else ' (partial run -- interrupted by user)'
@@ -247,11 +248,15 @@ class ResultsSink:
     def all_passed(self):
         return 'REGRESSIONS' not in self.groups and 'TIMEOUTS' not in self.groups
 
-    def print_tinderbox_result(self, label, path, message=None, skip=False,
+    def print_tinderbox_result(self, label, test, message=None, skip=False,
                                time=None):
         result = label
-        result += " | " + path
-        result += " |" + self.options.shell_args
+        result += " | " + test.path
+        args = []
+        if self.options.shell_args:
+            args.append(self.options.shell_args)
+        args += test.jitflags
+        result += ' | (args: "{}")'.format(' '.join(args))
         if message:
             result += " | " + message
         if skip:
