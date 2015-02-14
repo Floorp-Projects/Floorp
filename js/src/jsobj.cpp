@@ -459,8 +459,8 @@ js::Throw(JSContext *cx, JSObject *obj, unsigned errorNumber)
 /*** Standard-compliant property definition (used by Object.defineProperty) **********************/
 
 static bool
-DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const PropDesc &desc,
-                       ObjectOpResult &result)
+DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id,
+                       Handle<PropertyDescriptor> desc, ObjectOpResult &result)
 {
     /* 8.12.9 step 1. */
     RootedShape shape(cx);
@@ -481,7 +481,8 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
         if (desc.isGenericDescriptor() || desc.isDataDescriptor()) {
             MOZ_ASSERT(!obj->getOps()->defineProperty);
             RootedValue v(cx, desc.hasValue() ? desc.value() : UndefinedValue());
-            unsigned attrs = desc.attributes();
+            unsigned attrs = desc.attributes() & (JSPROP_PERMANENT | JSPROP_ENUMERATE | JSPROP_READONLY);
+
             if (!desc.hasConfigurable())
                 attrs |= JSPROP_PERMANENT;
             if (!desc.hasWritable())
@@ -491,7 +492,8 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
 
         MOZ_ASSERT(desc.isAccessorDescriptor());
 
-        unsigned attrs = desc.attributes();
+        unsigned attrs = desc.attributes() & (JSPROP_PERMANENT | JSPROP_ENUMERATE |
+                                              JSPROP_SHARED | JSPROP_GETTER | JSPROP_SETTER);
         if (!desc.hasConfigurable())
             attrs |= JSPROP_PERMANENT;
         return NativeDefineProperty(cx, obj, id, UndefinedHandleValue,
@@ -529,21 +531,13 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
             if (!shapeAccessorDescriptor)
                 break;
 
-            if (desc.hasGet()) {
-                RootedValue getter(cx, shape->getterOrUndefined());
-                bool same;
-                if (!SameValue(cx, desc.getterValue(), getter, &same))
-                    return false;
-                if (!same)
+            if (desc.hasGetterObject()) {
+                if (!shape->hasGetterValue() || desc.getterObject() != shape->getterObject())
                     break;
             }
 
-            if (desc.hasSet()) {
-                RootedValue setter(cx, shape->setterOrUndefined());
-                bool same;
-                if (!SameValue(cx, desc.setterValue(), setter, &same))
-                    return false;
-                if (!same)
+            if (desc.hasSetterObject()) {
+                if (!shape->hasSetterValue() || desc.setterObject() != shape->setterObject())
                     break;
             }
         } else {
@@ -665,22 +659,21 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
         /* 8.12.9 step 11. */
         MOZ_ASSERT(desc.isAccessorDescriptor() && shape->isAccessorDescriptor());
         if (!shape->configurable()) {
-            if (desc.hasSet()) {
-                RootedValue setter(cx, shape->setterOrUndefined());
-                bool same;
-                if (!SameValue(cx, desc.setterValue(), setter, &same))
-                    return false;
-                if (!same)
-                    return result.fail(JSMSG_CANT_REDEFINE_PROP);
+            // The hasSetterValue() and hasGetterValue() calls below ought to
+            // be redundant here, because accessor shapes should always have
+            // both JSPROP_GETTER and JSPROP_SETTER. But this is not the case
+            // currently; in particular Object.defineProperty(obj, key, {get: fn})
+            // creates a property without JSPROP_SETTER (bug 1133315).
+            if (desc.hasSetterObject() &&
+                desc.setterObject() != (shape->hasSetterValue() ? shape->setterObject() : nullptr))
+            {
+                return result.fail(JSMSG_CANT_REDEFINE_PROP);
             }
 
-            if (desc.hasGet()) {
-                RootedValue getter(cx, shape->getterOrUndefined());
-                bool same;
-                if (!SameValue(cx, desc.getterValue(), getter, &same))
-                    return false;
-                if (!same)
-                    return result.fail(JSMSG_CANT_REDEFINE_PROP);
+            if (desc.hasGetterObject() &&
+                desc.getterObject() != (shape->hasGetterValue() ? shape->getterObject() : nullptr))
+            {
+                return result.fail(JSMSG_CANT_REDEFINE_PROP);
             }
         }
     }
@@ -700,22 +693,24 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
         getter = IsImplicitDenseOrTypedArrayElement(shape) ? nullptr : shape->getter();
         setter = IsImplicitDenseOrTypedArrayElement(shape) ? nullptr : shape->setter();
     } else if (desc.isDataDescriptor()) {
-        unsigned unchanged = 0, descAttrs = desc.attributes();
-        if (!desc.hasConfigurable())
-            unchanged |= JSPROP_PERMANENT;
-        if (!desc.hasEnumerable())
-            unchanged |= JSPROP_ENUMERATE;
         /* Watch out for accessor -> data transformations here. */
-        if (!desc.hasWritable()) {
-            if (shapeDataDescriptor)
-                unchanged |= JSPROP_READONLY;
-            else
-                descAttrs |= JSPROP_READONLY;
+        unsigned changed = JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
+        unsigned descAttrs = desc.attributes();
+        if (desc.hasConfigurable())
+            changed |= JSPROP_PERMANENT;
+        if (desc.hasEnumerable())
+            changed |= JSPROP_ENUMERATE;
+
+        if (desc.hasWritable()) {
+            changed |= JSPROP_READONLY;
+        } else if (!shapeDataDescriptor) {
+            changed |= JSPROP_READONLY;
+            descAttrs |= JSPROP_READONLY;
         }
 
         if (desc.hasValue())
             v = desc.value();
-        attrs = (descAttrs & ~unchanged) | (shapeAttributes & unchanged);
+        attrs = (descAttrs & changed) | (shapeAttributes & ~changed);
         getter = nullptr;
         setter = nullptr;
     } else {
@@ -727,20 +722,20 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
             changed |= JSPROP_PERMANENT;
         if (desc.hasEnumerable())
             changed |= JSPROP_ENUMERATE;
-        if (desc.hasGet())
+        if (desc.hasGetterObject())
             changed |= JSPROP_GETTER | JSPROP_SHARED | JSPROP_READONLY;
-        if (desc.hasSet())
+        if (desc.hasSetterObject())
             changed |= JSPROP_SETTER | JSPROP_SHARED | JSPROP_READONLY;
 
         attrs = (desc.attributes() & changed) | (shapeAttributes & ~changed);
-        if (desc.hasGet()) {
+        if (desc.hasGetterObject()) {
             getter = desc.getter();
         } else {
             getter = (shapeHasDefaultGetter && !shapeHasGetterValue)
                      ? nullptr
                      : shape->getter();
         }
-        if (desc.hasSet()) {
+        if (desc.hasSetterObject()) {
             setter = desc.setter();
         } else {
             setter = (shapeHasDefaultSetter && !shapeHasSetterValue)
@@ -769,8 +764,8 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
 
 /* ES6 20130308 draft 8.4.2.1 [[DefineOwnProperty]] */
 static bool
-DefinePropertyOnArray(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, const PropDesc &desc,
-                      ObjectOpResult &result)
+DefinePropertyOnArray(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
+                      Handle<PropertyDescriptor> desc, ObjectOpResult &result)
 {
     /* Step 2. */
     if (id == NameToId(cx->names().length)) {
@@ -831,8 +826,8 @@ DefinePropertyOnArray(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, cons
 
 // ES6 draft rev31 9.4.5.3 [[DefineOwnProperty]]
 static bool
-DefinePropertyOnTypedArray(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &desc,
-                           ObjectOpResult &result)
+DefinePropertyOnTypedArray(JSContext *cx, HandleObject obj, HandleId id,
+                           Handle<PropertyDescriptor> desc, ObjectOpResult &result)
 {
     MOZ_ASSERT(IsAnyTypedArray(obj));
     // Steps 3.a-c.
@@ -882,11 +877,8 @@ DefinePropertyOnTypedArray(JSContext *cx, HandleObject obj, HandleId id, const P
 
 bool
 js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
-                           Handle<PropertyDescriptor> descriptor, ObjectOpResult &result)
+                           Handle<PropertyDescriptor> desc, ObjectOpResult &result)
 {
-    Rooted<PropDesc> desc(cx);
-    desc.initFromPropertyDescriptor(descriptor);
-
     if (obj->is<ArrayObject>()) {
         Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
         return DefinePropertyOnArray(cx, arr, id, desc, result);
@@ -900,8 +892,7 @@ js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
 
     if (obj->getOps()->lookupProperty) {
         if (obj->is<ProxyObject>()) {
-            Rooted<PropertyDescriptor> pd(cx);
-            desc.populatePropertyDescriptor(obj, &pd);
+            Rooted<PropertyDescriptor> pd(cx, desc);
             pd.object().set(obj);
             return Proxy::defineProperty(cx, obj, id, &pd, result);
         }
