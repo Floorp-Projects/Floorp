@@ -78,14 +78,6 @@ class Linker
     JitCode *newCode(JSContext *cx, CodeKind kind) {
         return newCode<allowGC>(cx, cx->runtime()->jitRuntime()->execAlloc(), kind);
     }
-
-    JitCode *newCodeForIonScript(JSContext *cx) {
-        ExecutableAllocator *alloc = cx->runtime()->jitRuntime()->getIonAlloc(cx);
-        if (!alloc)
-            return nullptr;
-
-        return newCode<CanGC>(cx, alloc, ION_CODE);
-    }
 };
 
 } // namespace jit
