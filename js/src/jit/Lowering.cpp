@@ -703,13 +703,16 @@ LIRGenerator::visitTest(MTest *test)
         if (comp->compareType() == MCompare::Compare_Null ||
             comp->compareType() == MCompare::Compare_Undefined)
         {
-            if (left->type() == MIRType_Object) {
-                MOZ_ASSERT(comp->operandMightEmulateUndefined(),
+            if (left->type() == MIRType_Object || left->type() == MIRType_ObjectOrNull) {
+                MOZ_ASSERT(left->type() == MIRType_ObjectOrNull ||
+                           comp->operandMightEmulateUndefined(),
                            "MCompare::tryFold should handle the never-emulates-undefined case");
 
-                LEmulatesUndefinedAndBranch *lir =
-                    new(alloc()) LEmulatesUndefinedAndBranch(comp, useRegister(left),
-                                                             ifTrue, ifFalse, temp());
+                LDefinition tmp =
+                    comp->operandMightEmulateUndefined() ? temp() : LDefinition::BogusTemp();
+                LIsNullOrLikeUndefinedAndBranchT *lir =
+                    new(alloc()) LIsNullOrLikeUndefinedAndBranchT(comp, useRegister(left),
+                                                                  ifTrue, ifFalse, tmp);
                 add(lir, test);
                 return;
             }
@@ -723,10 +726,10 @@ LIRGenerator::visitTest(MTest *test)
                 tmpToUnbox = LDefinition::BogusTemp();
             }
 
-            LIsNullOrLikeUndefinedAndBranch *lir =
-                new(alloc()) LIsNullOrLikeUndefinedAndBranch(comp, ifTrue, ifFalse,
-                                                             tmp, tmpToUnbox);
-            useBox(lir, LIsNullOrLikeUndefinedAndBranch::Value, left);
+            LIsNullOrLikeUndefinedAndBranchV *lir =
+                new(alloc()) LIsNullOrLikeUndefinedAndBranchV(comp, ifTrue, ifFalse,
+                                                              tmp, tmpToUnbox);
+            useBox(lir, LIsNullOrLikeUndefinedAndBranchV::Value, left);
             add(lir, test);
             return;
         }
@@ -939,11 +942,12 @@ LIRGenerator::visitCompare(MCompare *comp)
     if (comp->compareType() == MCompare::Compare_Null ||
         comp->compareType() == MCompare::Compare_Undefined)
     {
-        if (left->type() == MIRType_Object) {
-            MOZ_ASSERT(comp->operandMightEmulateUndefined(),
+        if (left->type() == MIRType_Object || left->type() == MIRType_ObjectOrNull) {
+            MOZ_ASSERT(left->type() == MIRType_ObjectOrNull ||
+                       comp->operandMightEmulateUndefined(),
                        "MCompare::tryFold should have folded this away");
 
-            define(new(alloc()) LEmulatesUndefined(useRegister(left)), comp);
+            define(new(alloc()) LIsNullOrLikeUndefinedT(useRegister(left)), comp);
             return;
         }
 
@@ -956,8 +960,8 @@ LIRGenerator::visitCompare(MCompare *comp)
             tmpToUnbox = LDefinition::BogusTemp();
         }
 
-        LIsNullOrLikeUndefined *lir = new(alloc()) LIsNullOrLikeUndefined(tmp, tmpToUnbox);
-        useBox(lir, LIsNullOrLikeUndefined::Value, left);
+        LIsNullOrLikeUndefinedV *lir = new(alloc()) LIsNullOrLikeUndefinedV(tmp, tmpToUnbox);
+        useBox(lir, LIsNullOrLikeUndefinedV::Value, left);
         define(lir, comp);
         return;
     }
@@ -2627,7 +2631,7 @@ LIRGenerator::visitLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull *ins)
     MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
     MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
 
-    if (ins->type() == MIRType_Object) {
+    if (ins->type() == MIRType_Object || ins->type() == MIRType_ObjectOrNull) {
         LLoadUnboxedPointerT *lir = new(alloc()) LLoadUnboxedPointerT(useRegister(ins->elements()),
                                                                       useRegisterOrConstant(ins->index()));
         if (ins->nullBehavior() == MLoadUnboxedObjectOrNull::BailOnNull)

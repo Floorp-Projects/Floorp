@@ -425,6 +425,17 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     template <typename T>
+    void storeObjectOrNull(Register src, const T &dest) {
+        Label notNull, done;
+        branchTestPtr(Assembler::NonZero, src, src, &notNull);
+        storeValue(NullValue(), dest);
+        jump(&done);
+        bind(&notNull);
+        storeValue(JSVAL_TYPE_OBJECT, src, dest);
+        bind(&done);
+    }
+
+    template <typename T>
     void storeConstantOrRegister(ConstantOrRegister src, const T &dest) {
         if (src.constant())
             storeValue(src.value(), dest);

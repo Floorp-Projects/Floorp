@@ -378,12 +378,14 @@ CodeGeneratorShared::encodeAllocation(LSnapshot *snapshot, MDefinition *mir,
       case MIRType_String:
       case MIRType_Symbol:
       case MIRType_Object:
+      case MIRType_ObjectOrNull:
       case MIRType_Boolean:
       case MIRType_Double:
       case MIRType_Float32:
       {
         LAllocation *payload = snapshot->payloadOfSlot(*allocIndex);
-        JSValueType valueType = ValueTypeFromMIRType(type);
+        JSValueType valueType =
+            (type == MIRType_ObjectOrNull) ? JSVAL_TYPE_OBJECT : ValueTypeFromMIRType(type);
         if (payload->isMemory()) {
             if (type == MIRType_Float32)
                 alloc = RValueAllocation::Float32(ToStackIndex(payload));
