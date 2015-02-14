@@ -1675,9 +1675,7 @@ JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj, HandleObject rec
         if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, vp))
             return false;
     }
-    if (obj->is<ProxyObject>())
-        return Proxy::set(cx, obj, receiver, id, strict, vp);
-    return obj->getOps()->setProperty(cx, obj, id, vp, strict);
+    return obj->getOps()->setProperty(cx, obj, receiver, id, vp, strict);
 }
 
 /* static */ bool
