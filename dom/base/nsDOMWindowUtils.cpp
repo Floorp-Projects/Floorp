@@ -1322,7 +1322,7 @@ nsDOMWindowUtils::SendNativeMouseEvent(int32_t aScreenX,
   if (!widget)
     return NS_ERROR_FAILURE;
 
-  return widget->SynthesizeNativeMouseEvent(nsIntPoint(aScreenX, aScreenY),
+  return widget->SynthesizeNativeMouseEvent(LayoutDeviceIntPoint(aScreenX, aScreenY),
                                             aNativeMessage, aModifierFlags);
 }
 
@@ -1345,8 +1345,8 @@ nsDOMWindowUtils::SendNativeMouseScrollEvent(int32_t aScreenX,
     return NS_ERROR_FAILURE;
   }
 
-  return widget->SynthesizeNativeMouseScrollEvent(nsIntPoint(aScreenX,
-                                                             aScreenY),
+  return widget->SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint(aScreenX,
+                                                                       aScreenY),
                                                   aNativeMessage,
                                                   aDeltaX, aDeltaY, aDeltaZ,
                                                   aModifierFlags,

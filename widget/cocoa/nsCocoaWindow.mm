@@ -2068,7 +2068,7 @@ void nsCocoaWindow::SetDrawsInTitlebar(bool aState)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
+NS_IMETHODIMP nsCocoaWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
                                                         uint32_t aNativeMessage,
                                                         uint32_t aModifierFlags)
 {
