@@ -113,7 +113,8 @@ BrowserElementChild.prototype = {
             .addProgressListener(this._progressListener,
                                  Ci.nsIWebProgress.NOTIFY_LOCATION |
                                  Ci.nsIWebProgress.NOTIFY_SECURITY |
-                                 Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
+                                 Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
+                                 Ci.nsIWebProgress.NOTIFY_PROGRESS);
 
     docShell.QueryInterface(Ci.nsIWebNavigation)
             .sessionHistory = Cc["@mozilla.org/browser/shistory;1"]
@@ -1371,8 +1372,12 @@ BrowserElementChild.prototype = {
     },
 
     onStatusChange: function(webProgress, request, status, message) {},
+
     onProgressChange: function(webProgress, request, curSelfProgress,
-                               maxSelfProgress, curTotalProgress, maxTotalProgress) {},
+                               maxSelfProgress, curTotalProgress, maxTotalProgress) {
+      sendAsyncMsg('loadprogresschanged', { curTotalProgress: curTotalProgress,
+                                            maxTotalProgress: maxTotalProgress });
+    },
   },
 
   // Expose the message manager for WebApps and others.

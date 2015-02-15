@@ -13,7 +13,8 @@ function runTest() {
   // Load emptypage1 into the iframe, wait for that to finish loading, then
   // call runTest2.
   //
-  // This should trigger loadstart, locationchange, and loadend events.
+  // This should trigger loadstart, locationchange, loadprogresschanged  and
+  // loadend events.
 
   var seenLoadEnd = false;
   var seenLoadStart = false;
@@ -74,6 +75,7 @@ function runTest2() {
   var seenLoadStart = false;
   var seenLoadEnd = false;
   var seenLocationChange = false;
+  var seenLoadProgressChanged = false;
 
   // Add this event listener to the document; the events should bubble.
   document.addEventListener('mozbrowserloadstart', function(e) {
@@ -101,6 +103,14 @@ function runTest2() {
     ok(seenLoadStart, 'Load end after load start.');
     ok(seenLocationChange, 'Load end after location change.');
     is(e.detail.backgroundColor, 'transparent', 'Expected background color reported')
+  });
+
+  iframe.addEventListener('mozbrowserloadprogresschanged', function(e) {
+    ok(e.isTrusted, 'Event should be trusted.');
+    seenLoadProgressChanged = true;
+    ok(seenLoadStart, 'Load end after load start.');
+    ok(seenLocationChange, 'Load end after location change.');
+    ok(!seenLoadEnd, 'Load end after load progress.');
   });
 
   iframe.src = browserElementTestHelpers.emptyPage2;
