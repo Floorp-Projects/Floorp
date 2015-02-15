@@ -49,7 +49,8 @@ ValidatePropertyDescriptor(JSContext *cx, bool extensible, Handle<PropertyDescri
     }
 
     // step 4
-    if ((!desc.hasWritable() || desc.writable() == !current.isReadonly()) &&
+    if ((!desc.hasWritable() ||
+         (current.hasWritable() && desc.writable() == current.writable())) &&
         (!desc.hasGetterObject() || desc.getter() == current.getter()) &&
         (!desc.hasSetterObject() || desc.setter() == current.setter()) &&
         (!desc.hasEnumerable() || desc.enumerable() == current.enumerable()) &&
@@ -136,7 +137,7 @@ IsSealed(JSContext* cx, HandleObject obj, HandleId id, bool *bp)
         return false;
 
     // steps 2-3
-    *bp = desc.object() && desc.isPermanent();
+    *bp = desc.object() && !desc.configurable();
     return true;
 }
 
@@ -484,7 +485,7 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
         }
 
         // substep b
-        if (targetDesc.isPermanent()) {
+        if (!targetDesc.configurable()) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NC_AS_NE);
             return false;
         }
@@ -534,7 +535,7 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
             return false;
         }
 
-        if (!targetDesc.isPermanent()) {
+        if (targetDesc.configurable()) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_C_AS_NC);
             return false;
         }
@@ -605,9 +606,7 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
         return false;
 
     // step 17-18
-    // FIXME bug 1133081: settingConfigFalse should be false if we have
-    // JSPROP_IGNORE_PERMANENT.
-    bool settingConfigFalse = desc.isPermanent();
+    bool settingConfigFalse = desc.hasConfigurable() && !desc.configurable();
     if (!targetDesc.object()) {
         // step 19.a
         if (!extensibleTarget) {
@@ -624,7 +623,7 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
         bool valid;
         if (!ValidatePropertyDescriptor(cx, extensibleTarget, desc, targetDesc, &valid))
             return false;
-        if (!valid || (settingConfigFalse && !targetDesc.isPermanent())) {
+        if (!valid || (settingConfigFalse && targetDesc.configurable())) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_INVALID);
             return false;
         }
@@ -729,7 +728,7 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId 
         return false;
 
     // step 14-15
-    if (desc.object() && desc.isPermanent()) {
+    if (desc.object() && !desc.configurable()) {
         RootedValue v(cx, IdToValue(id));
         ReportValueError(cx, JSMSG_CANT_DELETE, JSDVG_IGNORE_STACK, v, js::NullPtr());
         return false;
@@ -832,7 +831,7 @@ ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, 
             return false;
 
         if (desc.object()) {
-            if (desc.isPermanent()) {
+            if (!desc.configurable()) {
                 JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NC_AS_NE);
                 return false;
             }
@@ -898,7 +897,7 @@ ScriptedDirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject 
 
     // step 12
     if (desc.object()) {
-        if (IsDataDescriptor(desc) && desc.isPermanent() && desc.isReadonly()) {
+        if (desc.isDataDescriptor() && !desc.configurable() && !desc.writable()) {
             bool same;
             if (!SameValue(cx, trapResult, desc.value(), &same))
                 return false;
@@ -908,7 +907,7 @@ ScriptedDirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject 
             }
         }
 
-        if (IsAccessorDescriptor(desc) && desc.isPermanent() && desc.getterObject() == nullptr) {
+        if (desc.isAccessorDescriptor() && !desc.configurable() && desc.getterObject() == nullptr) {
             if (!trapResult.isUndefined()) {
                 JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MUST_REPORT_UNDEFINED);
                 return false;
@@ -968,7 +967,7 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
 
     // step 14
     if (desc.object()) {
-        if (IsDataDescriptor(desc) && desc.isPermanent() && desc.isReadonly()) {
+        if (desc.isDataDescriptor() && !desc.configurable() && !desc.writable()) {
             bool same;
             if (!SameValue(cx, vp, desc.value(), &same))
                 return false;
@@ -978,7 +977,7 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
             }
         }
 
-        if (IsAccessorDescriptor(desc) && desc.isPermanent() && desc.setterObject() == nullptr) {
+        if (desc.isAccessorDescriptor() && !desc.configurable() && desc.setterObject() == nullptr) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_WO_SETTER);
             return false;
         }

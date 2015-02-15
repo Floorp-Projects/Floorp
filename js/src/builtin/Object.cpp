@@ -96,7 +96,7 @@ obj_propertyIsEnumerable(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Steps 4-5. */
-    args.rval().setBoolean(desc.object() && desc.isEnumerable());
+    args.rval().setBoolean(desc.object() && desc.enumerable());
     return true;
 }
 
@@ -196,7 +196,7 @@ js::ObjectToSource(JSContext *cx, HandleObject obj)
 
         int valcnt = 0;
         if (desc.object()) {
-            if (desc.hasGetterOrSetterObject()) {
+            if (desc.isAccessorDescriptor()) {
                 if (desc.hasGetterObject() && desc.getterObject()) {
                     val[valcnt].setObject(*desc.getterObject());
                     gsop[valcnt].set(cx->names().get);

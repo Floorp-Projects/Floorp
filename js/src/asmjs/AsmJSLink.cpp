@@ -96,7 +96,7 @@ GetDataProperty(JSContext *cx, HandleValue objVal, HandlePropertyName field, Mut
     if (!desc.object())
         return LinkFail(cx, "property not present on object");
 
-    if (desc.hasGetterOrSetterObject())
+    if (!desc.isDataDescriptor())
         return LinkFail(cx, "property is not a data property");
 
     v.set(desc.value());
