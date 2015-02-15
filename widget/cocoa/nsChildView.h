@@ -453,11 +453,11 @@ public:
                                             const nsAString& aCharacters,
                                             const nsAString& aUnmodifiedCharacters) MOZ_OVERRIDE;
 
-  virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
+  virtual nsresult SynthesizeNativeMouseEvent(mozilla::LayoutDeviceIntPoint aPoint,
                                               uint32_t aNativeMessage,
                                               uint32_t aModifierFlags) MOZ_OVERRIDE;
 
-  virtual nsresult SynthesizeNativeMouseMove(nsIntPoint aPoint) MOZ_OVERRIDE
+  virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint) MOZ_OVERRIDE
   { return SynthesizeNativeMouseEvent(aPoint, NSMouseMoved, 0); }
 
   // Mac specific methods
