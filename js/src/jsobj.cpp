@@ -1070,8 +1070,8 @@ js::TestIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level, bo
             continue;
 
         // Steps 9.c.i-ii.
-        if (!desc.isPermanent() ||
-            (level == IntegrityLevel::Frozen && desc.isDataDescriptor() && desc.isWritable()))
+        if (desc.configurable() ||
+            (level == IntegrityLevel::Frozen && desc.isDataDescriptor() && desc.writable()))
         {
             *result = false;
             return true;
@@ -3139,7 +3139,7 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
 
     bool doGet = true;
     desc.setAttributes(GetShapeAttributes(obj, shape));
-    if (desc.hasGetterOrSetterObject()) {
+    if (desc.isAccessorDescriptor()) {
         MOZ_ASSERT(desc.isShared());
         doGet = false;
 

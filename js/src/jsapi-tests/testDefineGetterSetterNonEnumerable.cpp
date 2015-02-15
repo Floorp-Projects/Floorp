@@ -50,8 +50,8 @@ BEGIN_TEST(testDefineGetterSetterNonEnumerable)
     CHECK(desc.object());
     CHECK(desc.hasGetterObject());
     CHECK(desc.hasSetterObject());
-    CHECK(desc.isPermanent());
-    CHECK(!desc.isEnumerable());
+    CHECK(!desc.configurable());
+    CHECK(!desc.enumerable());
 
     return true;
 }

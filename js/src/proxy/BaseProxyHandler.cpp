@@ -117,7 +117,7 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, HandleObject obj, HandleId id,
     if (ownDesc.isDataDescriptor()) {
         // Steps 5.a-b, adapted to our nonstandard implementation of ES6
         // [[Set]] return values.
-        if (!ownDesc.isWritable())
+        if (!ownDesc.writable())
             return result.fail(JSMSG_READ_ONLY);
 
         // Nonstandard SpiderMonkey special case: setter ops.
@@ -183,7 +183,7 @@ BaseProxyHandler::getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy
         Rooted<PropertyDescriptor> desc(cx);
         if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
             return false;
-        if (desc.object() && desc.isEnumerable())
+        if (desc.object() && desc.enumerable())
             props[i++].set(id);
     }
 
