@@ -20,7 +20,7 @@ public:
                        const mp4_demuxer::VideoDecoderConfig& aConfig,
                        layers::LayersBackend aLayersBackend,
                        layers::ImageContainer* aImageContainer,
-                       MediaTaskQueue* aVideoTaskQueue,
+                       FlushableMediaTaskQueue* aVideoTaskQueue,
                        MediaDataDecoderCallback* aCallback);
 
   virtual ~AVCCMediaDataDecoder();
@@ -47,7 +47,7 @@ private:
   mp4_demuxer::VideoDecoderConfig mCurrentConfig;
   layers::LayersBackend mLayersBackend;
   nsRefPtr<layers::ImageContainer> mImageContainer;
-  nsRefPtr<MediaTaskQueue> mVideoTaskQueue;
+  nsRefPtr<FlushableMediaTaskQueue> mVideoTaskQueue;
   MediaDataDecoderCallback* mCallback;
   nsRefPtr<MediaDataDecoder> mDecoder;
   nsresult mLastError;
@@ -57,7 +57,7 @@ AVCCMediaDataDecoder::AVCCMediaDataDecoder(PlatformDecoderModule* aPDM,
                                            const mp4_demuxer::VideoDecoderConfig& aConfig,
                                            layers::LayersBackend aLayersBackend,
                                            layers::ImageContainer* aImageContainer,
-                                           MediaTaskQueue* aVideoTaskQueue,
+                                           FlushableMediaTaskQueue* aVideoTaskQueue,
                                            MediaDataDecoderCallback* aCallback)
   : mPDM(aPDM)
   , mCurrentConfig(aConfig)
@@ -239,7 +239,7 @@ already_AddRefed<MediaDataDecoder>
 AVCCDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                                       layers::LayersBackend aLayersBackend,
                                       layers::ImageContainer* aImageContainer,
-                                      MediaTaskQueue* aVideoTaskQueue,
+                                      FlushableMediaTaskQueue* aVideoTaskQueue,
                                       MediaDataDecoderCallback* aCallback)
 {
   nsRefPtr<MediaDataDecoder> decoder;
@@ -265,7 +265,7 @@ AVCCDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aCo
 
 already_AddRefed<MediaDataDecoder>
 AVCCDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
-                                      MediaTaskQueue* aAudioTaskQueue,
+                                      FlushableMediaTaskQueue* aAudioTaskQueue,
                                       MediaDataDecoderCallback* aCallback)
 {
   return mPDM->CreateAudioDecoder(aConfig,

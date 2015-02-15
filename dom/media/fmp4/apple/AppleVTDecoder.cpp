@@ -35,7 +35,7 @@ PRLogModuleInfo* GetAppleMediaLog();
 namespace mozilla {
 
 AppleVTDecoder::AppleVTDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
-                               MediaTaskQueue* aVideoTaskQueue,
+                               FlushableMediaTaskQueue* aVideoTaskQueue,
                                MediaDataDecoderCallback* aCallback,
                                layers::ImageContainer* aImageContainer)
   : AppleVDADecoder(aConfig, aVideoTaskQueue, aCallback, aImageContainer)
