@@ -12,7 +12,6 @@ void
 MediaDataDecoderCallbackProxy::Error()
 {
   mProxyCallback->Error();
-  mProxyDecoder->Shutdown();
 }
 
 void
