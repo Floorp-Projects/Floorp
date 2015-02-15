@@ -797,7 +797,7 @@ nsOuterWindowProxy::defineProperty(JSContext* cx,
   // on windows, until we sort out what exactly the addon SDK is
   // doing.  In the meantime, this still allows us to test web compat
   // behavior.
-  if (false && desc.isPermanent() && !nsContentUtils::IsCallerChrome()) {
+  if (false && !desc.configurable() && !nsContentUtils::IsCallerChrome()) {
     return ThrowErrorMessage(cx, MSG_DEFINE_NON_CONFIGURABLE_PROP_ON_WINDOW);
   }
 

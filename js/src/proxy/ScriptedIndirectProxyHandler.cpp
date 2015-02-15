@@ -353,7 +353,7 @@ ScriptedIndirectProxyHandler::derivedSet(JSContext *cx, HandleObject proxy, Hand
         MOZ_ASSERT(desc.setter() != JS_StrictPropertyStub);
 
         // Check for read-only properties.
-        if (desc.isReadonly())
+        if (desc.isDataDescriptor() && !desc.writable())
             return result.fail(descIsOwn ? JSMSG_READ_ONLY : JSMSG_CANT_REDEFINE_PROP);
 
         if (desc.hasSetterObject() || desc.setter()) {
