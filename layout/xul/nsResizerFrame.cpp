@@ -89,7 +89,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
               break;
           }
 
-          mMouseDownRect = rect.ToNearestPixels(aPresContext->AppUnitsPerDevPixel());
+          mMouseDownRect =
+            LayoutDeviceIntRect::FromAppUnitsToNearest(rect, aPresContext->AppUnitsPerDevPixel());
           doDefault = false;
         }
         else {
@@ -182,7 +183,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         break; // don't do anything if there's nothing to resize
       }
 
-      nsIntRect rect = mMouseDownRect;
+      LayoutDeviceIntRect rect = mMouseDownRect;
 
       // Check if there are any size constraints on this window.
       widget::SizeConstraints sizeConstraints;
@@ -211,7 +212,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
                             NSToIntRound(frameRect.y / scale), 1, 1,
                             getter_AddRefs(screen));
           if (screen) {
-            nsIntRect screenRect;
+            LayoutDeviceIntRect screenRect;
             screen->GetRect(&screenRect.x, &screenRect.y,
                             &screenRect.width, &screenRect.height);
             rect.IntersectRect(rect, screenRect);
@@ -229,7 +230,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         // than be too large. If the popup is too large it could get flipped
         // to the opposite side of the anchor point while resizing.
         nsIntRect screenRectPixels = screenRect.ToInsidePixels(aPresContext->AppUnitsPerDevPixel());
-        rect.IntersectRect(rect, screenRectPixels);
+        rect.IntersectRect(rect, LayoutDevicePixel::FromUntyped(screenRectPixels));
       }
 
       if (contentToResize) {
@@ -237,7 +238,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         // direction, don't allow the new size to be less that the resizer's
         // size. This ensures that content isn't resized too small as to make
         // the resizer invisible.
-        nsRect appUnitsRect = rect.ToAppUnits(aPresContext->AppUnitsPerDevPixel());
+        nsRect appUnitsRect = LayoutDevicePixel::ToUntyped(rect).ToAppUnits(aPresContext->AppUnitsPerDevPixel());
         if (appUnitsRect.width < mRect.width && mouseMove.x)
           appUnitsRect.width = mRect.width;
         if (appUnitsRect.height < mRect.height && mouseMove.y)
