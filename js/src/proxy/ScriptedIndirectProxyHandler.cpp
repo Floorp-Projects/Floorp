@@ -176,9 +176,9 @@ ScriptedIndirectProxyHandler::getPropertyDescriptor(JSContext *cx, HandleObject 
     RootedValue fval(cx), value(cx);
     return GetFundamentalTrap(cx, handler, cx->names().getPropertyDescriptor, &fval) &&
            Trap1(cx, handler, fval, id, &value) &&
-           ((value.get().isUndefined() && IndicatePropertyNotFound(desc)) ||
+           ((value.isUndefined() && IndicatePropertyNotFound(desc)) ||
             (ReturnedValueMustNotBePrimitive(cx, proxy, cx->names().getPropertyDescriptor, value) &&
-             ParsePropertyDescriptorObject(cx, proxy, value, desc)));
+             ObjectToCompletePropertyDescriptor(cx, proxy, value, desc)));
 }
 
 bool
@@ -189,9 +189,9 @@ ScriptedIndirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObje
     RootedValue fval(cx), value(cx);
     return GetFundamentalTrap(cx, handler, cx->names().getOwnPropertyDescriptor, &fval) &&
            Trap1(cx, handler, fval, id, &value) &&
-           ((value.get().isUndefined() && IndicatePropertyNotFound(desc)) ||
+           ((value.isUndefined() && IndicatePropertyNotFound(desc)) ||
             (ReturnedValueMustNotBePrimitive(cx, proxy, cx->names().getPropertyDescriptor, value) &&
-             ParsePropertyDescriptorObject(cx, proxy, value, desc)));
+             ObjectToCompletePropertyDescriptor(cx, proxy, value, desc)));
 }
 
 bool
