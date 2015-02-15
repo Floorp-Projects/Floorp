@@ -125,6 +125,13 @@ public:
                       Result::FATAL_ERROR_LIBRARY_FAILURE);
   }
 
+  Result CheckSignatureDigestAlgorithm(DigestAlgorithm) override
+  {
+    ADD_FAILURE();
+    return NotReached("CheckSignatureDigestAlgorithm should not be called",
+                      Result::FATAL_ERROR_LIBRARY_FAILURE);
+  }
+
   Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
   {
     ADD_FAILURE();
@@ -161,6 +168,11 @@ class DefaultCryptoTrustDomain : public EverythingFailsByDefaultTrustDomain
                    /*out*/ uint8_t* digestBuf, size_t digestBufLen) override
   {
     return TestDigestBuf(item, digestAlg, digestBuf, digestBufLen);
+  }
+
+  Result CheckSignatureDigestAlgorithm(DigestAlgorithm) override
+  {
+    return Success;
   }
 
   Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override

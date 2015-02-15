@@ -33,12 +33,15 @@ namespace mozilla { namespace pkix {
 // 4.1.2.3 signature
 
 Result
-CheckSignatureAlgorithm(Input signatureAlgorithmValue, Input signatureValue)
+CheckSignatureAlgorithm(TrustDomain& trustDomain,
+                        EndEntityOrCA endEntityOrCA,
+                        const der::SignedDataWithSignature& signedData,
+                        Input signatureValue)
 {
   // 4.1.1.2. signatureAlgorithm
   der::PublicKeyAlgorithm publicKeyAlg;
   DigestAlgorithm digestAlg;
-  Reader signatureAlgorithmReader(signatureAlgorithmValue);
+  Reader signatureAlgorithmReader(signedData.algorithm);
   Result rv = der::SignatureAlgorithmIdentifierValue(signatureAlgorithmReader,
                                                      publicKeyAlg, digestAlg);
   if (rv != Success) {
@@ -76,6 +79,44 @@ CheckSignatureAlgorithm(Input signatureAlgorithmValue, Input signatureValue)
   // we consider those OIDs to be equivalent here.
   if (publicKeyAlg != signedPublicKeyAlg || digestAlg != signedDigestAlg) {
     return Result::ERROR_SIGNATURE_ALGORITHM_MISMATCH;
+  }
+
+  // During the time of the deprecation of SHA-1 and the deprecation of RSA
+  // keys of less than 2048 bits, we will encounter many certs signed using
+  // SHA-1 and/or too-small RSA keys. With this in mind, we ask the trust
+  // domain early on if it knows it will reject the signature purely based on
+  // the digest algorithm and/or the RSA key size (if an RSA signature). This
+  // is a good optimization because it completely avoids calling
+  // trustDomain.FindIssuers (which may be slow) for such rejected certs, and
+  // more generally it short-circuits any path building with them (which, of
+  // course, is even slower).
+
+  rv = trustDomain.CheckSignatureDigestAlgorithm(digestAlg);
+  if (rv != Success) {
+    return rv;
+  }
+
+  switch (publicKeyAlg) {
+    case der::PublicKeyAlgorithm::RSA_PKCS1:
+    {
+      // The RSA computation may give a result that requires fewer bytes to
+      // encode than the public key (since it is modular arithmetic). However,
+      // the last step of generating a PKCS#1.5 signature is the I2OSP
+      // procedure, which pads any such shorter result with zeros so that it
+      // is exactly the same length as the public key.
+      unsigned int signatureSizeInBits = signedData.signature.GetLength() * 8u;
+      return trustDomain.CheckRSAPublicKeyModulusSizeInBits(
+               endEntityOrCA, signatureSizeInBits);
+    }
+
+    case der::PublicKeyAlgorithm::ECDSA:
+      // In theory, we could implement a similar early-pruning optimization for
+      // ECDSA curves. However, since there has been no similar deprecation for
+      // for any curve that we support, the chances of us encountering a curve
+      // during path building is too low to be worth bothering with.
+      break;
+
+    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
 
   return Success;
@@ -808,8 +849,8 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
 
   switch (trustLevel) {
     case TrustLevel::InheritsTrust:
-      rv = CheckSignatureAlgorithm(cert.GetSignedData().algorithm,
-                                   cert.GetSignature());
+      rv = CheckSignatureAlgorithm(trustDomain, endEntityOrCA,
+                                   cert.GetSignedData(), cert.GetSignature());
       if (rv != Success) {
         return rv;
       }
