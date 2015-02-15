@@ -233,7 +233,7 @@ public:
   // locked. This is used by dom::Event::GetScreenCoords() to make mouse
   // events' screen coord appear frozen at the last mouse position while
   // the pointer is locked.
-  static nsIntPoint sLastScreenPoint;
+  static LayoutDeviceIntPoint sLastScreenPoint;
 
   // Holds the point in client coords of the last mouse event. Used by
   // dom::Event::GetClientCoords() to make mouse events' client coords appear
