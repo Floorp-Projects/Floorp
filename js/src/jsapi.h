@@ -2691,10 +2691,10 @@ class MutableHandleBase<JSPropertyDescriptor>
 namespace JS {
 
 extern JS_PUBLIC_API(bool)
-ParsePropertyDescriptorObject(JSContext *cx,
-                              JS::HandleObject obj,
-                              JS::HandleValue descriptor,
-                              JS::MutableHandle<JSPropertyDescriptor> desc);
+ObjectToCompletePropertyDescriptor(JSContext *cx,
+                                   JS::HandleObject obj,
+                                   JS::HandleValue descriptor,
+                                   JS::MutableHandle<JSPropertyDescriptor> desc);
 
 } // namespace JS
 
