@@ -592,7 +592,7 @@ MetroWidget::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
 }
 
 nsresult
-MetroWidget::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
+MetroWidget::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
                                         uint32_t aNativeMessage,
                                         uint32_t aModifierFlags)
 {
@@ -616,7 +616,7 @@ MetroWidget::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
 }
 
 nsresult
-MetroWidget::SynthesizeNativeMouseScrollEvent(nsIntPoint aPoint,
+MetroWidget::SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint aPoint,
                                               uint32_t aNativeMessage,
                                               double aDeltaX,
                                               double aDeltaY,
