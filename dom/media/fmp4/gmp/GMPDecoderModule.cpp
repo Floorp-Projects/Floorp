@@ -49,7 +49,7 @@ already_AddRefed<MediaDataDecoder>
 GMPDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                                      layers::LayersBackend aLayersBackend,
                                      layers::ImageContainer* aImageContainer,
-                                     MediaTaskQueue* aVideoTaskQueue,
+                                     FlushableMediaTaskQueue* aVideoTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
   if (strcmp(aConfig.mime_type, "video/avc") != 0) {
@@ -67,7 +67,7 @@ GMPDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aCon
 
 already_AddRefed<MediaDataDecoder>
 GMPDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
-                                     MediaTaskQueue* aAudioTaskQueue,
+                                     FlushableMediaTaskQueue* aAudioTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
   if (strcmp(aConfig.mime_type, "audio/mp4a-latm") != 0) {

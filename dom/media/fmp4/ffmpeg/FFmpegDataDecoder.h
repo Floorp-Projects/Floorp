@@ -24,7 +24,7 @@ template <>
 class FFmpegDataDecoder<LIBAV_VER> : public MediaDataDecoder
 {
 public:
-  FFmpegDataDecoder(MediaTaskQueue* aTaskQueue, AVCodecID aCodecID);
+  FFmpegDataDecoder(FlushableMediaTaskQueue* aTaskQueue, AVCodecID aCodecID);
   virtual ~FFmpegDataDecoder();
 
   static bool Link();
@@ -38,7 +38,7 @@ public:
 protected:
   AVFrame*        PrepareFrame();
 
-  MediaTaskQueue* mTaskQueue;
+  FlushableMediaTaskQueue* mTaskQueue;
   AVCodecContext* mCodecContext;
   AVFrame*        mFrame;
   nsRefPtr<mp4_demuxer::ByteBuffer> mExtraData;

@@ -59,7 +59,7 @@ public:
 class WMFMediaDataDecoder : public MediaDataDecoder {
 public:
   WMFMediaDataDecoder(MFTManager* aOutputSource,
-                      MediaTaskQueue* aAudioTaskQueue,
+                      FlushableMediaTaskQueue* aAudioTaskQueue,
                       MediaDataDecoderCallback* aCallback);
   ~WMFMediaDataDecoder();
 
@@ -97,7 +97,7 @@ private:
   void ProcessShutdown();
   void ProcessReleaseDecoder();
 
-  RefPtr<MediaTaskQueue> mTaskQueue;
+  RefPtr<FlushableMediaTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
   RefPtr<MFTDecoder> mDecoder;
