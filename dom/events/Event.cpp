@@ -877,7 +877,7 @@ Event::Shutdown()
   }
 }
 
-nsIntPoint
+LayoutDeviceIntPoint
 Event::GetScreenCoords(nsPresContext* aPresContext,
                        WidgetEvent* aEvent,
                        LayoutDeviceIntPoint aPoint)
@@ -886,7 +886,7 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
     return EventStateManager::sLastScreenPoint;
   }
 
-  if (!aEvent || 
+  if (!aEvent ||
        (aEvent->mClass != eMouseEventClass &&
         aEvent->mClass != eMouseScrollEventClass &&
         aEvent->mClass != eWheelEventClass &&
@@ -894,19 +894,19 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
         aEvent->mClass != eTouchEventClass &&
         aEvent->mClass != eDragEventClass &&
         aEvent->mClass != eSimpleGestureEventClass)) {
-    return nsIntPoint(0, 0);
+    return LayoutDeviceIntPoint(0, 0);
   }
 
   WidgetGUIEvent* guiEvent = aEvent->AsGUIEvent();
   if (!guiEvent->widget) {
-    return LayoutDeviceIntPoint::ToUntyped(aPoint);
+    return aPoint;
   }
 
   LayoutDeviceIntPoint offset = aPoint + guiEvent->widget->WidgetToScreenOffset();
   nscoord factor =
     aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
-  return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
-                    nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
+  return LayoutDeviceIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
+                              nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
 }
 
 // static
