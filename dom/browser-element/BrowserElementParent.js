@@ -181,6 +181,7 @@ BrowserElementParent.prototype = {
       "hello": this._recvHello,
       "loadstart": this._fireProfiledEventFromMsg,
       "loadend": this._fireProfiledEventFromMsg,
+      "loadprogresschanged": this._fireEventFromMsg,
       "close": this._fireEventFromMsg,
       "error": this._fireEventFromMsg,
       "firstpaint": this._fireProfiledEventFromMsg,
