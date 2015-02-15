@@ -1306,12 +1306,12 @@ MediaCodecReader::CreateTaskQueues()
 {
   if (mAudioTrack.mSource != nullptr && mAudioTrack.mCodec != nullptr &&
       !mAudioTrack.mTaskQueue) {
-    mAudioTrack.mTaskQueue = CreateMediaDecodeTaskQueue();
+    mAudioTrack.mTaskQueue = CreateFlushableMediaDecodeTaskQueue();
     NS_ENSURE_TRUE(mAudioTrack.mTaskQueue, false);
   }
   if (mVideoTrack.mSource != nullptr && mVideoTrack.mCodec != nullptr &&
       !mVideoTrack.mTaskQueue) {
-    mVideoTrack.mTaskQueue = CreateMediaDecodeTaskQueue();
+    mVideoTrack.mTaskQueue = CreateFlushableMediaDecodeTaskQueue();
     NS_ENSURE_TRUE(mVideoTrack.mTaskQueue, false);
     mVideoTrack.mReleaseBufferTaskQueue = CreateMediaDecodeTaskQueue();
     NS_ENSURE_TRUE(mVideoTrack.mReleaseBufferTaskQueue, false);

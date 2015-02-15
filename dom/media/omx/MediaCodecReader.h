@@ -41,7 +41,7 @@ class GonkNativeWindow;
 
 namespace mozilla {
 
-class MediaTaskQueue;
+class FlushableMediaTaskQueue;
 class MP3FrameParser;
 
 namespace layers {
@@ -164,7 +164,7 @@ protected:
     int64_t mSeekTimeUs;
     bool mFlushed; // meaningless when mSeekTimeUs is invalid.
     bool mDiscontinuity;
-    nsRefPtr<MediaTaskQueue> mTaskQueue;
+    nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
     Monitor mTrackMonitor;
 
   private:
