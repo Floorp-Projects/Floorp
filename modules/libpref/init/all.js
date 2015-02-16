@@ -4571,6 +4571,14 @@ pref("reader.toolbar.vertical", true);
 pref("media.gmp.insecure.allow", false);
 #endif
 
+// Use vsync aligned rendering. b2g prefs are in b2g.js
+// Only supported on windows, os x, and b2g
+#if defined(XP_WIN) || defined(XP_MACOSX)
+pref("gfx.vsync.hw-vsync.enabled", false);
+pref("gfx.vsync.compositor", false);
+pref("gfx.vsync.refreshdriver", false);
+#endif
+
 // Secure Element API
 #ifdef MOZ_SECUREELEMENT
 pref("dom.secureelement.enabled", false);
