@@ -61,6 +61,15 @@ fuzzy(116,64) HTTP(..) == 1115916-1-vertical-metrics.html 1115916-1-vertical-met
 == ua-style-sheet-border-6.html ua-style-sheet-border-6-ref.html
 == ua-style-sheet-size-1.html ua-style-sheet-size-1-ref.html
 == ua-style-sheet-size-2.html ua-style-sheet-size-2-ref.html
+
+== ua-style-sheet-fieldset-1.html ua-style-sheet-fieldset-1-ref.html
+skip-if(Android||B2G) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1a-ref.html
+skip-if(!(Android||B2G)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1b-ref.html
+== ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1-ref.html
+skip-if(Android||B2G) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html
+skip-if(!(Android||B2G)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html
+== ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
+fails == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html # bug 1123299
 HTTP(..) == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
 HTTP(..) == 1127488-align-start-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
 HTTP(..) == 1127488-align-end-horizontal-tb-ltr.html 1127488-align-top-right-ref.html
