@@ -144,6 +144,15 @@ class nsStyleSet
                               nsRestyleHint aReplacements,
                               uint32_t aFlags = 0);
 
+  // Resolve style by returning a style context with the specified
+  // animation data removed.  It is allowable to remove all animation
+  // data with eRestyle_ChangeAnimationPhase, or by using any other
+  // hints that are allowed by ResolveStyleWithReplacement.
+  already_AddRefed<nsStyleContext>
+    ResolveStyleWithoutAnimation(mozilla::dom::Element* aElement,
+                                 nsStyleContext* aStyleContext,
+                                 nsRestyleHint aWhichToRemove);
+
   // Get a style context for a non-element (which no rules will match),
   // such as text nodes, placeholder frames, and the nsFirstLetterFrame
   // for everything after the first letter.
