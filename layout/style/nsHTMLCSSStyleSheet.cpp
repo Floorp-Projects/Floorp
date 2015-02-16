@@ -83,6 +83,24 @@ nsHTMLCSSStyleSheet::ElementRulesMatching(nsPresContext* aPresContext,
   }
 }
 
+void
+nsHTMLCSSStyleSheet::PseudoElementRulesMatching(Element* aPseudoElement,
+                                                nsCSSPseudoElements::Type
+                                                  aPseudoType,
+                                                nsRuleWalker* aRuleWalker)
+{
+  MOZ_ASSERT(nsCSSPseudoElements::
+               PseudoElementSupportsStyleAttribute(aPseudoType));
+  MOZ_ASSERT(aPseudoElement);
+
+  // just get the one and only style rule from the content's STYLE attribute
+  css::StyleRule* rule = aPseudoElement->GetInlineStyleRule();
+  if (rule) {
+    rule->RuleMatched();
+    aRuleWalker->Forward(rule);
+  }
+}
+
 /* virtual */ void
 nsHTMLCSSStyleSheet::RulesMatching(PseudoElementRuleProcessorData* aData)
 {
@@ -91,12 +109,8 @@ nsHTMLCSSStyleSheet::RulesMatching(PseudoElementRuleProcessorData* aData)
         "If pseudo element is supposed to support style attribute, it must "
         "have a pseudo element set");
 
-    // just get the one and only style rule from the content's STYLE attribute
-    css::StyleRule* rule = aData->mPseudoElement->GetInlineStyleRule();
-    if (rule) {
-      rule->RuleMatched();
-      aData->mRuleWalker->Forward(rule);
-    }
+    PseudoElementRulesMatching(aData->mPseudoElement, aData->mPseudoType,
+                               aData->mRuleWalker);
   }
 }
 

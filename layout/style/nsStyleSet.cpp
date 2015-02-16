@@ -1392,11 +1392,18 @@ static const CascadeLevel gCascadeLevels[] = {
 
 nsRuleNode*
 nsStyleSet::RuleNodeWithReplacement(Element* aElement,
+                                    Element* aPseudoElement,
                                     nsRuleNode* aOldRuleNode,
                                     nsCSSPseudoElements::Type aPseudoType,
                                     nsRestyleHint aReplacements)
 {
   NS_ASSERTION(mBatching == 0, "rule processors out of date");
+
+  MOZ_ASSERT(!aPseudoElement ==
+             (aPseudoType >= nsCSSPseudoElements::ePseudo_PseudoElementCount ||
+              !(nsCSSPseudoElements::PseudoElementSupportsStyleAttribute(aPseudoType) ||
+                nsCSSPseudoElements::PseudoElementSupportsUserActionState(aPseudoType))),
+             "should have aPseudoElement only for certain pseudo elements");
 
   NS_ABORT_IF_FALSE(!(aReplacements & ~(eRestyle_CSSTransitions |
                                         eRestyle_CSSAnimations |
@@ -1415,25 +1422,10 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
   // are in these four levels.
   if (aReplacements & (eRestyle_ChangeAnimationPhase |
                        eRestyle_ChangeAnimationPhaseDescendants)) {
-    // Animations are only on elements and on :before and :after
-    // pseudo-elements, so those are the only things we need to consider
-    // when changing animation phase.  Furthermore, the :before and
-    // :after pseudo-elements cannot have style attributes (although
-    // some other pseudo-elements can).  This lets us avoid the problem
-    // that the eRestyle_StyleAttribute case below can't handle
-    // pseudo-elements, but not adding that bit to aReplacements for
-    // pseudo-elements, since we don't need it.
-    if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
-      aReplacements |= eRestyle_CSSTransitions |
-                       eRestyle_CSSAnimations |
-                       eRestyle_SVGAttrAnimations |
-                       eRestyle_StyleAttribute;
-    } else if (aPseudoType == nsCSSPseudoElements::ePseudo_before ||
-               aPseudoType == nsCSSPseudoElements::ePseudo_after) {
-      aReplacements |= eRestyle_CSSTransitions |
-                       eRestyle_CSSAnimations |
-                       eRestyle_SVGAttrAnimations;
-    }
+    aReplacements |= eRestyle_CSSTransitions |
+                     eRestyle_CSSAnimations |
+                     eRestyle_SVGAttrAnimations |
+                     eRestyle_StyleAttribute;
   }
 
   // FIXME (perf): This should probably not rebuild the whole path, but
@@ -1518,20 +1510,24 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
 
           if (!level->mIsImportant) {
             // First time through, we handle the non-!important rule.
-            MOZ_ASSERT(aPseudoType ==
-                         nsCSSPseudoElements::ePseudo_NotPseudoElement,
-                       "this code doesn't know how to replace "
-                       "pseudo-element rules");
             nsHTMLCSSStyleSheet* ruleProcessor =
               static_cast<nsHTMLCSSStyleSheet*>(
                 mRuleProcessors[eStyleAttrSheet].get());
-            if (ruleProcessor &&
-                // check condition we asserted above (belt & braces security)
-                aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+            if (ruleProcessor) {
               lastScopedRN = ruleWalker.CurrentNode();
-              ruleProcessor->ElementRulesMatching(PresContext(),
-                                                  aElement,
-                                                  &ruleWalker);
+              if (aPseudoType ==
+                    nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+                ruleProcessor->ElementRulesMatching(PresContext(),
+                                                    aElement,
+                                                    &ruleWalker);
+              } else if (aPseudoType <
+                           nsCSSPseudoElements::ePseudo_PseudoElementCount &&
+                         nsCSSPseudoElements::
+                           PseudoElementSupportsStyleAttribute(aPseudoType)) {
+                ruleProcessor->PseudoElementRulesMatching(aPseudoElement,
+                                                          aPseudoType,
+                                                          &ruleWalker);
+              }
               lastStyleAttrRN = ruleWalker.CurrentNode();
               haveImportantStyleAttrRules =
                 !ruleWalker.GetCheckForImportantRules();
@@ -1575,13 +1571,15 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
 
 already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
+                                        Element* aPseudoElement,
                                         nsStyleContext* aNewParentContext,
                                         nsStyleContext* aOldStyleContext,
                                         nsRestyleHint aReplacements,
                                         uint32_t aFlags)
 {
   nsRuleNode* ruleNode =
-    RuleNodeWithReplacement(aElement, aOldStyleContext->RuleNode(),
+    RuleNodeWithReplacement(aElement, aPseudoElement,
+                            aOldStyleContext->RuleNode(),
                             aOldStyleContext->GetPseudoType(), aReplacements);
 
   nsRuleNode* visitedRuleNode = nullptr;
@@ -1591,7 +1589,8 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
       visitedRuleNode = ruleNode;
     } else {
       visitedRuleNode =
-        RuleNodeWithReplacement(aElement, oldStyleIfVisited->RuleNode(),
+        RuleNodeWithReplacement(aElement, aPseudoElement,
+                                oldStyleIfVisited->RuleNode(),
                                 oldStyleIfVisited->GetPseudoType(),
                                 aReplacements);
     }
@@ -1654,13 +1653,20 @@ nsStyleSet::ResolveStyleWithoutAnimation(dom::Element* aTarget,
                                          nsStyleContext* aStyleContext,
                                          nsRestyleHint aWhichToRemove)
 {
+#ifdef DEBUG
+  nsCSSPseudoElements::Type pseudoType = aStyleContext->GetPseudoType();
+#endif
+  MOZ_ASSERT(pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
+             pseudoType == nsCSSPseudoElements::ePseudo_before ||
+             pseudoType == nsCSSPseudoElements::ePseudo_after,
+             "unexpected type for animations");
   RestyleManager* restyleManager = PresContext()->RestyleManager();
 
   bool oldSkipAnimationRules = restyleManager->SkipAnimationRules();
   restyleManager->SetSkipAnimationRules(true);
 
   nsRefPtr<nsStyleContext> result =
-    ResolveStyleWithReplacement(aTarget, aStyleContext->GetParent(),
+    ResolveStyleWithReplacement(aTarget, nullptr, aStyleContext->GetParent(),
                                 aStyleContext, aWhichToRemove,
                                 eSkipStartingAnimations);
 
