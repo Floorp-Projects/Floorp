@@ -57,6 +57,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadUIHelper",
                                   "resource://gre/modules/DownloadUIHelper.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
                                   "resource://gre/modules/DownloadUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm")
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
@@ -91,11 +93,6 @@ const kDownloadsStringsRequiringFormatting = {
 const kDownloadsStringsRequiringPluralForm = {
   otherDownloads2: true
 };
-
-XPCOMUtils.defineLazyGetter(this, "DownloadsLocalFileCtor", function () {
-  return Components.Constructor("@mozilla.org/file/local;1",
-                                "nsILocalFile", "initWithPath");
-});
 
 const kPartialDownloadSuffix = ".part";
 
@@ -352,12 +349,12 @@ this.DownloadsCommon = {
           break;
         case nsIDM.DOWNLOAD_DOWNLOADING:
           summary.numDownloading++;
-          if (dataItem.maxBytes > 0 && dataItem.speed > 0) {
-            let sizeLeft = dataItem.maxBytes - dataItem.currBytes;
+          if (dataItem.maxBytes > 0 && dataItem.download.speed > 0) {
+            let sizeLeft = dataItem.maxBytes - dataItem.download.currentBytes;
             summary.rawTimeLeft = Math.max(summary.rawTimeLeft,
-                                           sizeLeft / dataItem.speed);
+                                           sizeLeft / dataItem.download.speed);
             summary.slowestSpeed = Math.min(summary.slowestSpeed,
-                                            dataItem.speed);
+                                            dataItem.download.speed);
           }
           break;
       }
@@ -366,7 +363,7 @@ this.DownloadsCommon = {
           dataItem.state != nsIDM.DOWNLOAD_CANCELED &&
           dataItem.state != nsIDM.DOWNLOAD_FAILED) {
         summary.totalSize += dataItem.maxBytes;
-        summary.totalTransferred += dataItem.currBytes;
+        summary.totalTransferred += dataItem.download.currentBytes;
       }
     }
 
@@ -480,7 +477,6 @@ this.DownloadsCommon = {
 
   /**
    * Show a downloaded file in the system file manager.
-   * If you have a dataItem, use dataItem.showLocalFile.
    *
    * @param aFile
    *        a downloaded file.
@@ -733,7 +729,8 @@ DownloadsDataCtor.prototype = {
           }
 
           PlacesUtils.annotations.setPageAnnotation(
-                        NetUtil.newURI(aDataItem.uri), "downloads/metaData",
+                        NetUtil.newURI(aDataItem.download.source.url),
+                        "downloads/metaData",
                         JSON.stringify(downloadMetaData), 0,
                         PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
         } catch (ex) {
@@ -798,7 +795,7 @@ DownloadsDataCtor.prototype = {
     // Sort backwards by start time, ensuring that the most recent
     // downloads are added first regardless of their state.
     let loadedItemsArray = [...this.dataItems];
-    loadedItemsArray.sort((a, b) => b.startTime - a.startTime);
+    loadedItemsArray.sort((a, b) => b.download.startTime - a.download.startTime);
     loadedItemsArray.forEach(dataItem => aView.onDataItemAdded(dataItem, false));
 
     // Notify the view that all data is available.
@@ -873,13 +870,8 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsData", function() {
  *        The Download object with the current state.
  */
 function DownloadsDataItem(aDownload) {
-  this._download = aDownload;
-
-  this.file = aDownload.target.path;
-  this.target = OS.Path.basename(aDownload.target.path);
-  this.uri = aDownload.source.url;
+  this.download = aDownload;
   this.endTime = Date.now();
-
   this.updateFromDownload();
 }
 
@@ -889,44 +881,38 @@ DownloadsDataItem.prototype = {
    */
   updateFromDownload() {
     // Collapse state using the correct priority.
-    if (this._download.succeeded) {
+    if (this.download.succeeded) {
       this.state = nsIDM.DOWNLOAD_FINISHED;
-    } else if (this._download.error &&
-               this._download.error.becauseBlockedByParentalControls) {
+    } else if (this.download.error &&
+               this.download.error.becauseBlockedByParentalControls) {
       this.state = nsIDM.DOWNLOAD_BLOCKED_PARENTAL;
-    } else if (this._download.error &&
-               this._download.error.becauseBlockedByReputationCheck) {
+    } else if (this.download.error &&
+               this.download.error.becauseBlockedByReputationCheck) {
       this.state = nsIDM.DOWNLOAD_DIRTY;
-    } else if (this._download.error) {
+    } else if (this.download.error) {
       this.state = nsIDM.DOWNLOAD_FAILED;
-    } else if (this._download.canceled && this._download.hasPartialData) {
+    } else if (this.download.canceled && this.download.hasPartialData) {
       this.state = nsIDM.DOWNLOAD_PAUSED;
-    } else if (this._download.canceled) {
+    } else if (this.download.canceled) {
       this.state = nsIDM.DOWNLOAD_CANCELED;
-    } else if (this._download.stopped) {
+    } else if (this.download.stopped) {
       this.state = nsIDM.DOWNLOAD_NOTSTARTED;
     } else {
       this.state = nsIDM.DOWNLOAD_DOWNLOADING;
     }
 
-    this.referrer = this._download.source.referrer;
-    this.startTime = this._download.startTime;
-    this.currBytes = this._download.currentBytes;
-    this.resumable = this._download.hasPartialData;
-    this.speed = this._download.speed;
-
-    if (this._download.succeeded) {
+    if (this.download.succeeded) {
       // If the download succeeded, show the final size if available, otherwise
       // use the last known number of bytes transferred.  The final size on disk
       // will be available when bug 941063 is resolved.
-      this.maxBytes = this._download.hasProgress ?
-                             this._download.totalBytes :
-                             this._download.currentBytes;
+      this.maxBytes = this.download.hasProgress ?
+                             this.download.totalBytes :
+                             this.download.currentBytes;
       this.percentComplete = 100;
-    } else if (this._download.hasProgress) {
+    } else if (this.download.hasProgress) {
       // If the final size and progress are known, use them.
-      this.maxBytes = this._download.totalBytes;
-      this.percentComplete = this._download.progress;
+      this.maxBytes = this.download.totalBytes;
+      this.percentComplete = this.download.progress;
     } else {
       // The download final size and progress percentage is unknown.
       this.maxBytes = -1;
@@ -979,13 +965,6 @@ DownloadsDataItem.prototype = {
   },
 
   /**
-   * Indicates whether the download is finished and can be opened.
-   */
-  get openable() {
-    return this.state == nsIDM.DOWNLOAD_FINISHED;
-  },
-
-  /**
    * Indicates whether the download stopped because of an error, and can be
    * resumed manually.
    */
@@ -1000,9 +979,12 @@ DownloadsDataItem.prototype = {
    * @throws if the native path is not valid.  This can happen if the same
    *         profile is used on different platforms, for example if a native
    *         Windows path is stored and then the item is accessed on a Mac.
+   *
+   * @deprecated Callers should use OS.File and "download.target.path".
    */
   get localFile() {
-    return this._getFile(this.file);
+    // We should remove  should use this.download.target.partFilePath and check asyncrhonously.
+    return new FileUtils.File(this.download.target.path);
   },
 
   /**
@@ -1011,89 +993,11 @@ DownloadsDataItem.prototype = {
    * @throws if the native path is not valid.  This can happen if the same
    *         profile is used on different platforms, for example if a native
    *         Windows path is stored and then the item is accessed on a Mac.
+   *
+   * @deprecated Callers should use OS.File and "download.target.partFilePath".
    */
   get partFile() {
-    return this._getFile(this.file + kPartialDownloadSuffix);
-  },
-
-  /**
-   * Returns an nsILocalFile for aFilename. aFilename might be a file URL or
-   * a native path.
-   *
-   * @param aFilename the filename of the file to retrieve.
-   * @return an nsILocalFile for the file.
-   * @throws if the native path is not valid.  This can happen if the same
-   *         profile is used on different platforms, for example if a native
-   *         Windows path is stored and then the item is accessed on a Mac.
-   * @note This function makes no guarantees about the file's existence -
-   *       callers should check that the returned file exists.
-   */
-  _getFile(aFilename) {
-    // The download database may contain targets stored as file URLs or native
-    // paths.  This can still be true for previously stored items, even if new
-    // items are stored using their file URL.  See also bug 239948 comment 12.
-    if (aFilename.startsWith("file:")) {
-      // Assume the file URL we obtained from the downloads database or from the
-      // "spec" property of the target has the UTF-8 charset.
-      let fileUrl = NetUtil.newURI(aFilename).QueryInterface(Ci.nsIFileURL);
-      return fileUrl.file.clone().QueryInterface(Ci.nsILocalFile);
-    } else {
-      // The downloads database contains a native path.  Try to create a local
-      // file, though this may throw an exception if the path is invalid.
-      return new DownloadsLocalFileCtor(aFilename);
-    }
-  },
-
-  /**
-   * Open the target file for this download.
-   */
-  openLocalFile() {
-    this._download.launch().then(null, Cu.reportError);
-  },
-
-  /**
-   * Show the downloaded file in the system file manager.
-   */
-  showLocalFile() {
-    DownloadsCommon.showDownloadedFile(this.localFile);
-  },
-
-  /**
-   * Resumes the download if paused, pauses it if active.
-   * @throws if the download is not resumable or if has already done.
-   */
-  togglePauseResume() {
-    if (this._download.stopped) {
-      this._download.start();
-    } else {
-      this._download.cancel();
-    }
-  },
-
-  /**
-   * Attempts to retry the download.
-   * @throws if we cannot.
-   */
-  retry() {
-    this._download.start();
-  },
-
-  /**
-   * Cancels the download.
-   */
-  cancel() {
-    this._download.cancel();
-    this._download.removePartialData().then(null, Cu.reportError);
-  },
-
-  /**
-   * Remove the download.
-   */
-  remove() {
-    Downloads.getList(Downloads.ALL)
-             .then(list => list.remove(this._download))
-             .then(() => this._download.finalize(true))
-             .then(null, Cu.reportError);
+    return new FileUtils.File(this.download.target.path + kPartialDownloadSuffix);
   },
 };
 
