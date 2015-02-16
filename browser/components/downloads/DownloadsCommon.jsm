@@ -324,26 +324,6 @@ this.DownloadsCommon = {
   },
 
   /**
-   * Returns the highest number of bytes transferred or the known size of the
-   * given Download object, or -1 if the size is not available. Callers should
-   * use Download properties directly when possible.
-   */
-  maxBytesOfDownload(download) {
-    if (download.succeeded) {
-      // If the download succeeded, show the final size if available, otherwise
-      // use the last known number of bytes transferred.  The final size on disk
-      // will be available when bug 941063 is resolved.
-      return download.hasProgress ? download.totalBytes : download.currentBytes;
-    } else if (download.hasProgress) {
-      // If the final size and progress are known, use them.
-      return download.totalBytes;
-    } else {
-      // The download final size and progress percentage is unknown.
-      return -1;
-    }
-  },
-
-  /**
    * Given an iterable collection of Download objects, generates and returns
    * statistics about that collection.
    *
@@ -382,38 +362,32 @@ this.DownloadsCommon = {
     }
 
     for (let download of downloads) {
-      let state = DownloadsCommon.stateOfDownload(download);
-      let maxBytes = DownloadsCommon.maxBytesOfDownload(download);
-
       summary.numActive++;
-      switch (state) {
-        case nsIDM.DOWNLOAD_PAUSED:
-          summary.numPaused++;
-          break;
-        case nsIDM.DOWNLOAD_SCANNING:
-          summary.numScanning++;
-          break;
-        case nsIDM.DOWNLOAD_DOWNLOADING:
-          summary.numDownloading++;
-          if (maxBytes > 0 && download.speed > 0) {
-            let sizeLeft = maxBytes - download.currentBytes;
-            summary.rawTimeLeft = Math.max(summary.rawTimeLeft,
-                                           sizeLeft / download.speed);
-            summary.slowestSpeed = Math.min(summary.slowestSpeed,
-                                            download.speed);
-          }
-          break;
+
+      if (!download.stopped) {
+        summary.numDownloading++;
+        if (download.hasProgress && download.speed > 0) {
+          let sizeLeft = download.totalBytes - download.currentBytes;
+          summary.rawTimeLeft = Math.max(summary.rawTimeLeft,
+                                         sizeLeft / download.speed);
+          summary.slowestSpeed = Math.min(summary.slowestSpeed,
+                                          download.speed);
+        }
+      } else if (download.canceled && download.hasPartialData) {
+        summary.numPaused++;
       }
+
       // Only add to total values if we actually know the download size.
-      if (maxBytes > 0 && state != nsIDM.DOWNLOAD_CANCELED &&
-                          state != nsIDM.DOWNLOAD_FAILED) {
-        summary.totalSize += maxBytes;
+      if (download.succeeded) {
+        summary.totalSize += download.target.size;
+        summary.totalTransferred += download.target.size;
+      } else if (download.hasProgress) {
+        summary.totalSize += download.totalBytes;
         summary.totalTransferred += download.currentBytes;
       }
     }
 
-    if (summary.numActive != 0 && summary.totalSize != 0 &&
-        summary.numActive != summary.numScanning) {
+    if (summary.totalSize != 0) {
       summary.percentComplete = (summary.totalTransferred /
                                  summary.totalSize) * 100;
     }
@@ -743,10 +717,8 @@ DownloadsDataCtor.prototype = {
               state: DownloadsCommon.stateOfDownload(download),
               endTime: download.endTime,
             };
-            if (download.succeeded ||
-                (download.error && download.error.becauseBlocked)) {
-              downloadMetaData.fileSize =
-                DownloadsCommon.maxBytesOfDownload(download);
+            if (download.succeeded) {
+              downloadMetaData.fileSize = download.target.size;
             }
   
             PlacesUtils.annotations.setPageAnnotation(
