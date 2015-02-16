@@ -2142,11 +2142,7 @@ nsStyleSet::GCRuleTrees()
 already_AddRefed<nsStyleContext>
 nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
                                  nsStyleContext* aNewParentContext,
-                                 Element* aElement,
-                                 // aElementOrPseudoElement is temporary
-                                 // until bug 960465 lands, and for
-                                 // SkipAnimationRules only
-                                 Element* aElementOrPseudoElement)
+                                 Element* aElement)
 {
   MOZ_ASSERT(aStyleContext, "aStyleContext must not be null");
 
