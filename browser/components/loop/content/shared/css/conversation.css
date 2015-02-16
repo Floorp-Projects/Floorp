@@ -31,12 +31,12 @@
   height: 64px;
 }
 
-.standalone .remote-stream {
+.standalone .focus-stream {
   /* Set at maximum height, minus height of conversation toolbar */
   height: calc(100% - 64px);
 }
 
-.standalone .in-call .remote-stream {
+.standalone .in-call .focus-stream {
   height: 100%;
 }
 
@@ -231,23 +231,26 @@
   left: 0px;
 }
 
-.standalone .local-stream {
+.standalone .local-stream,
+.standalone .remote-inset-stream {
   /* required to have it superimposed to the control toolbar */
   z-index: 1001;
 }
 
-.standalone .room-conversation .local-stream {
+.standalone .room-conversation .local-stream,
+.standalone .room-conversation .remote-inset-stream {
   box-shadow: none;
 }
 
 /* Side by side video elements */
 
-.conversation .media.side-by-side .remote-stream {
+.conversation .media.side-by-side .focus-stream {
   width: 50%;
   float: left;
 }
 
-.conversation .media.side-by-side .local-stream {
+.conversation .media.side-by-side .local-stream,
+.conversation .media.side-by-side .remote-inset-stream {
   width: 50%;
 }
 
@@ -502,7 +505,7 @@
   max-height: none;
 }
 
-.conversation .media.nested .remote-stream {
+.conversation .media.nested .focus-stream {
   display: inline-block;
   position: absolute; /* workaround for lack of object-fit; see bug 1020445 */
   width: 100%;
@@ -675,7 +678,8 @@ html, .fx-embedded, #main,
     position: fixed;
   }
 
-  .standalone .local-stream {
+  .standalone .local-stream,
+  .standalone .remote-inset-stream {
     position: absolute;
     right: 15px;
     bottom: 15px;
@@ -719,6 +723,10 @@ html, .fx-embedded, #main,
 
   .standalone .media.nested {
     min-height: 500px;
+  }
+
+  .standalone .remote-inset-stream {
+    display: none;
   }
 
   .standalone .local-stream {
@@ -968,7 +976,7 @@ html, .fx-embedded, #main,
     height: 38px;
     padding: 8px;
   }
-  .standalone .remote-stream {
+  .standalone .focus-stream {
     /* Set at maximum height, minus height of conversation toolbar */
     height: 100%;
   }

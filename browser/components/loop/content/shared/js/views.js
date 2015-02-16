@@ -358,7 +358,7 @@ loop.shared.views = (function(_, l10n) {
           React.createElement("div", {className: "conversation in-call"}, 
             React.createElement("div", {className: "media nested"}, 
               React.createElement("div", {className: "video_wrapper remote_wrapper"}, 
-                React.createElement("div", {className: "video_inner remote remote-stream"})
+                React.createElement("div", {className: "video_inner remote focus-stream"})
               ), 
               React.createElement("div", {className: localStreamClasses})
             ), 
