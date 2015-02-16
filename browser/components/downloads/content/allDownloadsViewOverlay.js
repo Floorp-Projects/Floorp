@@ -2,31 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * THE PLACES VIEW IMPLEMENTED IN THIS FILE HAS A VERY PARTICULAR USE CASE.
- * IT IS HIGHLY RECOMMENDED NOT TO EXTEND IT FOR ANY OTHER USE CASES OR RELY
- * ON IT AS AN API.
- */
-
-let Cu = Components.utils;
-let Ci = Components.interfaces;
-let Cc = Components.classes;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/DownloadUtils.jsm");
-Cu.import("resource:///modules/DownloadsCommon.jsm");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadsDataItem",
+                                  "resource:///modules/DownloadsCommon.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
                                   "resource:///modules/RecentWindow.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
 
 const nsIDM = Ci.nsIDownloadManager;
 
@@ -153,12 +132,12 @@ DownloadsHistoryDataItem.prototype = {
  * @param [optional] aHistoryDataItem
  *        The history download, required if aSessionDataItem is not set.
  */
-function DownloadElementShell(aSessionDataItem, aHistoryDataItem) {
-  this._element = document.createElement("richlistitem");
-  this._element._shell = this;
+function HistoryDownloadElementShell(aSessionDataItem, aHistoryDataItem) {
+  this.element = document.createElement("richlistitem");
+  this.element._shell = this;
 
-  this._element.classList.add("download");
-  this._element.classList.add("download-state");
+  this.element.classList.add("download");
+  this.element.classList.add("download-state");
 
   if (aSessionDataItem) {
     this.sessionDataItem = aSessionDataItem;
@@ -168,11 +147,8 @@ function DownloadElementShell(aSessionDataItem, aHistoryDataItem) {
   }
 }
 
-DownloadElementShell.prototype = {
-  /**
-   * The richlistitem for the download.
-   */
-  get element() this._element,
+HistoryDownloadElementShell.prototype = {
+  __proto__: DownloadElementShell.prototype,
 
   /**
    * Manages the "active" state of the shell.  By default all the shells without
@@ -183,17 +159,11 @@ DownloadElementShell.prototype = {
   ensureActive() {
     if (!this._active) {
       this._active = true;
-      this._element.setAttribute("active", true);
+      this.element.setAttribute("active", true);
       this._updateUI();
     }
   },
   get active() !!this._active,
-
-  /**
-   * Download or HistoryDownload object to use for displaying information and
-   * for executing commands in the user interface.
-   */
-  get download() this.dataItem.download,
 
   /**
    * DownloadsDataItem or DownloadsHistoryDataItem object to use for displaying
@@ -236,16 +206,6 @@ DownloadElementShell.prototype = {
     return aValue;
   },
 
-  // The progressmeter element for the download
-  get _progressElement() {
-    if (!("__progressElement" in this)) {
-      this.__progressElement =
-        document.getAnonymousElementByAttribute(this._element, "anonid",
-                                                "progressmeter");
-    }
-    return this.__progressElement;
-  },
-
   _updateUI() {
     // There is nothing to do if the item has always been invisible.
     if (!this.active) {
@@ -255,150 +215,20 @@ DownloadElementShell.prototype = {
     // Since the state changed, we may need to check the target file again.
     this._targetFileChecked = false;
 
-    this._element.setAttribute("displayName", this.displayName);
-    this._element.setAttribute("image", this.image);
-
-    this._updateActiveStatusUI();
+    this._updateState();
   },
 
-  // Updates the download state attribute (and by that hide/unhide the
-  // appropriate buttons and context menu items), the status text label,
-  // and the progress meter.
-  _updateActiveStatusUI() {
-    if (!this.active) {
-      throw new Error("_updateActiveStatusUI called for an inactive item.");
+  get statusTextAndTip() {
+    let status = this.rawStatusTextAndTip;
+
+    // The base object would show extended progress information in the tooltip,
+    // but we move this to the main view and never display a tooltip.
+    if (this.dataItem.state == nsIDM.DOWNLOAD_DOWNLOADING) {
+      status.text = status.tip;
     }
+    status.tip = "";
 
-    this._element.setAttribute("state", this.dataItem.state);
-    this._element.setAttribute("status", this.statusText);
-
-    // We have update the progress meter only for session downloads.
-    if (!this._sessionDataItem) {
-      return;
-    }
-
-    // Copied from updateProgress in downloads.js.
-    if (this.dataItem.starting) {
-      // Before the download starts, the progress meter has its initial value.
-      this._element.setAttribute("progressmode", "normal");
-      this._element.setAttribute("progress", "0");
-    } else if (this.dataItem.state == nsIDM.DOWNLOAD_SCANNING ||
-               this.dataItem.percentComplete == -1) {
-      // We might not know the progress of a running download, and we don't know
-      // the remaining time during the malware scanning phase.
-      this._element.setAttribute("progressmode", "undetermined");
-    } else {
-      // This is a running download of which we know the progress.
-      this._element.setAttribute("progressmode", "normal");
-      this._element.setAttribute("progress", this.dataItem.percentComplete);
-    }
-
-    // Dispatch the ValueChange event for accessibility, if possible.
-    if (this._progressElement) {
-      let event = document.createEvent("Events");
-      event.initEvent("ValueChange", true, true);
-      this._progressElement.dispatchEvent(event);
-    }
-  },
-
-  /**
-   * URI string for the file type icon displayed in the download element.
-   */
-  get image() {
-    if (this.download.target.path) {
-      return "moz-icon://" + this.download.target.path + "?size=32";
-    }
-
-    // Old history downloads may not have a target path.
-    return "moz-icon://.unknown?size=32";
-  },
-
-  /**
-   * The user-facing label for the download.  This is normally the leaf name of
-   * download target file.  In case this is a very old history download for
-   * which the target file is unknown, the download source URI is displayed.
-   */
-  get displayName() {
-    if (!this.download.target.path) {
-      return this.download.source.url;
-    }
-    return OS.Path.basename(this.download.target.path);
-  },
-
-  get statusText() {
-    let s = DownloadsCommon.strings;
-    if (this.dataItem.inProgress) {
-      if (this.dataItem.paused) {
-        let transfer =
-          DownloadUtils.getTransferTotal(this.download.currentBytes,
-                                         this.dataItem.maxBytes);
-
-         // We use the same XUL label to display both the state and the amount
-         // transferred, for example "Paused -  1.1 MB".
-         return s.statusSeparatorBeforeNumber(s.statePaused, transfer);
-      }
-      if (this.dataItem.state == nsIDM.DOWNLOAD_DOWNLOADING) {
-        let [status, newEstimatedSecondsLeft] =
-          DownloadUtils.getDownloadStatus(this.download.currentBytes,
-                                          this.dataItem.maxBytes,
-                                          this.download.speed,
-                                          this._lastEstimatedSecondsLeft || Infinity);
-        this._lastEstimatedSecondsLeft = newEstimatedSecondsLeft;
-        return status;
-      }
-      if (this.dataItem.starting) {
-        return s.stateStarting;
-      }
-      if (this.dataItem.state == nsIDM.DOWNLOAD_SCANNING) {
-        return s.stateScanning;
-      }
-
-      throw new Error("_getStatusText called with a bogus download state");
-    }
-
-    // This is a not-in-progress or history download.
-    let stateLabel = "";
-    switch (this.dataItem.state) {
-      case nsIDM.DOWNLOAD_FAILED:
-        stateLabel = s.stateFailed;
-        break;
-      case nsIDM.DOWNLOAD_CANCELED:
-        stateLabel = s.stateCanceled;
-        break;
-      case nsIDM.DOWNLOAD_BLOCKED_PARENTAL:
-        stateLabel = s.stateBlockedParentalControls;
-        break;
-      case nsIDM.DOWNLOAD_BLOCKED_POLICY:
-        stateLabel = s.stateBlockedPolicy;
-        break;
-      case nsIDM.DOWNLOAD_DIRTY:
-        stateLabel = s.stateDirty;
-        break;
-      case nsIDM.DOWNLOAD_FINISHED:
-        // For completed downloads, show the file size (e.g. "1.5 MB")
-        if (this.dataItem.maxBytes !== undefined) {
-          let [size, unit] =
-              DownloadUtils.convertByteUnits(this.dataItem.maxBytes);
-          stateLabel = s.sizeWithUnits(size, unit);
-          break;
-        }
-        // Fallback to default unknown state.
-      default:
-        stateLabel = s.sizeUnknown;
-        break;
-    }
-
-    let referrer = this.download.source.referrer ||
-                   this.download.source.url;
-    let [displayHost, fullHost] = DownloadUtils.getURIHost(referrer);
-
-    let date = new Date(this.dataItem.endTime);
-    let [displayDate, fullDate] = DownloadUtils.getReadableDates(date);
-
-    // We use the same XUL label to display the state, the host name, and the
-    // end time.
-    let firstPart = s.statusSeparator(stateLabel, displayHost);
-    return s.statusSeparator(firstPart, displayDate);
+    return status;
   },
 
   onStateChanged() {
@@ -409,10 +239,13 @@ DownloadElementShell.prototype = {
     // scheme, this only works if we add one of the parameters explicitly
     // supported by the nsIMozIconURI interface.
     if (this.dataItem.state == nsIDM.DOWNLOAD_FINISHED) {
-      this._element.setAttribute("image", this.image + "&state=normal");
+      this.element.setAttribute("image", this.image + "&state=normal");
     }
 
-    if (this._element.selected) {
+    // Update the user interface after switching states.
+    this.element.setAttribute("state", this.dataItem.state);
+
+    if (this.element.selected) {
       goUpdateDownloadCommands();
     } else {
       goUpdateCommand("downloadsCmd_clearDownloads");
@@ -420,7 +253,7 @@ DownloadElementShell.prototype = {
   },
 
   onChanged() {
-    this._updateActiveStatusUI();
+    this._updateProgress();
   },
 
   /* nsIController */
@@ -602,7 +435,7 @@ DownloadElementShell.prototype = {
     }
 
     // Update the commands only if the element is still selected.
-    if (this._element.selected) {
+    if (this.element.selected) {
       goUpdateDownloadCommands();
     }
   }),
@@ -847,7 +680,7 @@ DownloadsPlacesView.prototype = {
         historyDataItem = new DownloadsHistoryDataItem(aPlacesNode);
         historyDataItem.updateFromMetaData(metaData);
       }
-      let shell = new DownloadElementShell(aDataItem, historyDataItem);
+      let shell = new HistoryDownloadElementShell(aDataItem, historyDataItem);
       shell.element._placesNode = aPlacesNode;
       newOrUpdatedShell = shell;
       shellsForURI.add(shell);
