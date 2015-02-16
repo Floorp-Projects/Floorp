@@ -163,7 +163,10 @@ select[size="1"] {
 textarea {
   resize: none;
   border-width: 1px;
-  padding: 2px 1px 2px 1px;
+  -moz-padding-start: 1px;
+  -moz-padding-end: 1px;
+  padding-block-start: 2px;
+  padding-block-end: 2px;
 }
 
 input[type="button"],
@@ -171,13 +174,19 @@ input[type="submit"],
 input[type="reset"],
 button {
   border-width: 1px;
-  padding: 0 7px 0 7px;
+  -moz-padding-start: 7px;
+  -moz-padding-end: 7px;
+  padding-block-start: 0;
+  padding-block-end: 0;
 }
 
 input[type="radio"],
 input[type="checkbox"] {
   border: 1px solid #a7a7a7 !important;
-  padding: 2px 1px 2px 1px;
+  -moz-padding-start: 1px;
+  -moz-padding-end: 1px;
+  padding-block-start: 2px;
+  padding-block-end: 2px;
 }
 
 select > button {
@@ -263,7 +272,10 @@ input[type="button"][disabled],
 input[type="submit"][disabled],
 input[type="reset"][disabled],
 button[disabled] {
-  padding: 0 7px 0 7px;
+  -moz-padding-start: 7px;
+  -moz-padding-end: 7px;
+  padding-block-start: 0;
+  padding-block-end: 0;
   background: transparent linear-gradient(rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
 }
 
