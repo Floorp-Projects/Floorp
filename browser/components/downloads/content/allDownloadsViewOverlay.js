@@ -28,8 +28,14 @@ const DOWNLOAD_VIEW_SUPPORTED_COMMANDS =
  */
 function HistoryDownload(aPlacesNode) {
   // TODO (bug 829201): history downloads should get the referrer from Places.
-  this.source = { url: aPlacesNode.uri };
-  this.target = { path: undefined, size: undefined };
+  this.source = {
+    url: aPlacesNode.uri,
+  };
+  this.target = {
+    path: undefined,
+    exists: false,
+    size: undefined,
+  };
 
   // In case this download cannot obtain its end time from the Places metadata,
   // use the time from the Places node, that is the start time of the download.
@@ -63,6 +69,10 @@ HistoryDownload.prototype = {
       this.canceled = metaData.state == nsIDM.DOWNLOAD_CANCELED ||
                       metaData.state == nsIDM.DOWNLOAD_PAUSED;
       this.endTime = metaData.endTime;
+
+      // Normal history downloads are assumed to exist until the user interface
+      // is refreshed, at which point these values may be updated.
+      this.target.exists = true;
       this.target.size = metaData.fileSize;
     } catch (ex) {
       // Metadata might be missing from a download that has started but hasn't
@@ -78,13 +88,11 @@ HistoryDownload.prototype = {
       this.succeeded = !this.target.path;
       this.error = this.target.path ? { message: "Unstarted download." } : null;
       this.canceled = false;
-      this.target.size = -1;
-    }
 
-    // This property is currently used to get the size of downloads, but will be
-    // replaced by download.target.size when available for session downloads.
-    this.totalBytes = this.target.size;
-    this.currentBytes = this.target.size;
+      // These properties may be updated if the user interface is refreshed.
+      this.exists = false;
+      this.target.size = undefined;
+    }
   },
 
   /**
@@ -123,6 +131,20 @@ HistoryDownload.prototype = {
 
     return Promise.resolve();
   },
+
+  /**
+   * This method mimicks the "refresh" method of session downloads, except that
+   * it cannot notify that the data changed to the Downloads View.
+   */
+  refresh: Task.async(function* () {
+    try {
+      this.target.size = (yield OS.File.stat(this.target.path)).size;
+      this.target.exists = true;
+    } catch (ex) {
+      // We keep the known file size from the metadata, if any.
+      this.target.exists = false;
+    }
+  }),
 };
 
 /**
@@ -268,20 +290,8 @@ HistoryDownloadElementShell.prototype = {
     }
     switch (aCommand) {
       case "downloadsCmd_open":
-        // We cannot open a session download file unless it's succeeded.
-        // If it's succeeded, we need to make sure the file was not removed,
-        // as we do for past downloads.
-        if (this._sessionDownload && !this.download.succeeded) {
-          return false;
-        }
-
-        if (this._targetFileChecked) {
-          return this._targetFileExists;
-        }
-
-        // If the target file information is not yet fetched,
-        // temporarily assume that the file is in place.
-        return this.download.succeeded;
+        // This property is false if the download did not succeed.
+        return this.download.target.exists;
       case "downloadsCmd_show":
         // TODO: Bug 827010 - Handle part-file asynchronously.
         if (this._sessionDownload && this.download.target.partFilePath) {
@@ -291,13 +301,8 @@ HistoryDownloadElementShell.prototype = {
           }
         }
 
-        if (this._targetFileChecked) {
-          return this._targetFileExists;
-        }
-
-        // If the target file information is not yet fetched,
-        // temporarily assume that the file is in place.
-        return this.download.succeeded;
+        // This property is false if the download did not succeed.
+        return this.download.target.exists;
       case "downloadsCmd_pauseResume":
         return this.download.hasPartialData && !this.download.error;
       case "downloadsCmd_retry":
@@ -434,7 +439,7 @@ HistoryDownloadElementShell.prototype = {
 
   _checkTargetFileOnSelect: Task.async(function* () {
     try {
-      this._targetFileExists = yield OS.File.exists(this.download.target.path);
+      yield this.download.refresh();
     } finally {
       // Do not try to check for existence again if this failed once.
       this._targetFileChecked = true;
@@ -444,6 +449,10 @@ HistoryDownloadElementShell.prototype = {
     if (this.element.selected) {
       goUpdateDownloadCommands();
     }
+
+    // Ensure the interface has been updated based on the new values. We need to
+    // do this because history downloads can't trigger update notifications.
+    this._updateProgress();
   }),
 };
 

@@ -124,6 +124,15 @@ DownloadElementShell.prototype = {
    * namely the progress bar and the status line.
    */
   _updateProgress() {
+    if (this.download.succeeded) {
+      // We only need to add or remove this attribute for succeeded downloads.
+      if (this.download.target.exists) {
+        this.element.setAttribute("exists", "true");
+      } else {
+        this.element.removeAttribute("exists");
+      }
+    }
+
     // The progress bar is only displayed for in-progress downloads.
     if (this.download.hasProgress) {
       this.element.setAttribute("progressmode", "normal");
@@ -164,26 +173,26 @@ DownloadElementShell.prototype = {
     let tip = "";
 
     if (!this.download.stopped) {
-      let maxBytes = DownloadsCommon.maxBytesOfDownload(this.download);
+      let total = this.download.hasProgress ? this.download.totalBytes : -1;
       // By default, extended status information including the individual
       // download rate is displayed in the tooltip. The history view overrides
       // the getter and displays the detials in the main area instead.
       [text] = DownloadUtils.getDownloadStatusNoRate(
                                           this.download.currentBytes,
-                                          maxBytes,
+                                          total,
                                           this.download.speed,
                                           this.lastEstimatedSecondsLeft);
       let newEstimatedSecondsLeft;
       [tip, newEstimatedSecondsLeft] = DownloadUtils.getDownloadStatus(
                                           this.download.currentBytes,
-                                          maxBytes,
+                                          total,
                                           this.download.speed,
                                           this.lastEstimatedSecondsLeft);
       this.lastEstimatedSecondsLeft = newEstimatedSecondsLeft;
     } else if (this.download.canceled && this.download.hasPartialData) {
-      let maxBytes = DownloadsCommon.maxBytesOfDownload(this.download);
+      let total = this.download.hasProgress ? this.download.totalBytes : -1;
       let transfer = DownloadUtils.getTransferTotal(this.download.currentBytes,
-                                                    maxBytes);
+                                                    total);
 
       // We use the same XUL label to display both the state and the amount
       // transferred, for example "Paused -  1.1 MB".
@@ -195,12 +204,13 @@ DownloadElementShell.prototype = {
       let stateLabel;
 
       if (this.download.succeeded) {
-        // For completed downloads, show the file size (e.g. "1.5 MB")
-        let maxBytes = DownloadsCommon.maxBytesOfDownload(this.download);
-        if (maxBytes >= 0) {
-          let [size, unit] = DownloadUtils.convertByteUnits(maxBytes);
+        // For completed downloads, show the file size (e.g. "1.5 MB").
+        if (this.download.target.size !== undefined) {
+          let [size, unit] = DownloadUtils.convertByteUnits(
+                                                  this.download.target.size);
           stateLabel = s.sizeWithUnits(size, unit);
         } else {
+          // History downloads may not have a size defined.
           stateLabel = s.sizeUnknown;
         }
       } else if (this.download.canceled) {

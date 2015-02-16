@@ -539,7 +539,7 @@ const DownloadsPanel = {
       // do these checks on a background thread, and don't prevent the panel to
       // be displayed while these checks are being performed.
       for (let viewItem of DownloadsView._visibleViewItems.values()) {
-        viewItem.verifyTargetExists();
+        viewItem.download.refresh().catch(Cu.reportError);
       }
 
       DownloadsCommon.log("Opening downloads panel popup.");
@@ -991,7 +991,6 @@ function DownloadsViewItem(download, aElement) {
   this.element.classList.add("download-state");
 
   this._updateState();
-  this.verifyTargetExists();
 }
 
 DownloadsViewItem.prototype = {
@@ -1006,40 +1005,10 @@ DownloadsViewItem.prototype = {
     this.element.setAttribute("image", this.image);
     this.element.setAttribute("state",
                               DownloadsCommon.stateOfDownload(this.download));
-
-    if (this.download.succeeded) {
-      // We assume the existence of the target of a download that just completed
-      // successfully, without checking the condition in the background.  If the
-      // panel is already open, this will take effect immediately.  If the panel
-      // is opened later, a new background existence check will be performed.
-      this.element.setAttribute("exists", "true");
-    }
   },
 
   onChanged() {
     this._updateProgress();
-  },
-
-  /**
-   * Starts checking whether the target file of a finished download is still
-   * available on disk, and sets an attribute that controls how the item is
-   * presented visually.
-   *
-   * The existence check is executed on a background thread.
-   */
-  verifyTargetExists() {
-    // We don't need to check if the download is not finished successfully.
-    if (!this.download.succeeded) {
-      return;
-    }
-
-    OS.File.exists(this.download.target.path).then(aExists => {
-      if (aExists) {
-        this.element.setAttribute("exists", "true");
-      } else {
-        this.element.removeAttribute("exists");
-      }
-    }).catch(Cu.reportError);
   },
 };
 
