@@ -696,7 +696,6 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
 /* static */ FrameMetrics
 nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
                                           nsIFrame* aScrollFrame,
-                                          nsIContent* aContent,
                                           const nsIFrame* aReferenceFrame,
                                           Layer* aLayer,
                                           ViewID aScrollParentId,
@@ -712,19 +711,20 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
   metrics.SetViewport(CSSRect::FromAppUnits(aViewport));
 
   ViewID scrollId = FrameMetrics::NULL_SCROLL_ID;
-  if (aContent) {
-    scrollId = nsLayoutUtils::FindOrCreateIDFor(aContent);
+  nsIContent* content = aScrollFrame ? aScrollFrame->GetContent() : nullptr;
+  if (content) {
+    scrollId = nsLayoutUtils::FindOrCreateIDFor(content);
     nsRect dp;
-    if (nsLayoutUtils::GetDisplayPort(aContent, &dp)) {
+    if (nsLayoutUtils::GetDisplayPort(content, &dp)) {
       metrics.SetDisplayPort(CSSRect::FromAppUnits(dp));
       nsLayoutUtils::LogTestDataForPaint(aLayer->Manager(), scrollId, "displayport",
           metrics.GetDisplayPort());
     }
-    if (nsLayoutUtils::GetCriticalDisplayPort(aContent, &dp)) {
+    if (nsLayoutUtils::GetCriticalDisplayPort(content, &dp)) {
       metrics.SetCriticalDisplayPort(CSSRect::FromAppUnits(dp));
     }
     DisplayPortMarginsPropertyData* marginsData =
-        static_cast<DisplayPortMarginsPropertyData*>(aContent->GetProperty(nsGkAtoms::DisplayPortMargins));
+        static_cast<DisplayPortMarginsPropertyData*>(content->GetProperty(nsGkAtoms::DisplayPortMargins));
     if (marginsData) {
       metrics.SetDisplayPortMargins(marginsData->mMargins);
     }
@@ -1633,30 +1633,15 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
       aBuilder->IsBuildingLayerEventRegions() &&
       nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell));
 
-  // If we're using containerless scrolling, there is still one case where we
-  // want the root container layer to have metrics. If the parent process is
-  // using XUL windows, there is no root scrollframe, and without explicitly
-  // creating metrics there will be no guaranteed top-level APZC.
-  if (gfxPrefs::LayoutUseContainersForRootFrames() ||
-      (XRE_IsParentProcess() && !presShell->GetRootScrollFrame()))
-  {
+  if (gfxPrefs::LayoutUseContainersForRootFrames()) {
     bool isRoot = presContext->IsRootContentDocument();
+
+    nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
 
     nsRect viewport(aBuilder->ToReferenceFrame(frame), frame->GetSize());
 
-    // If there is no root scroll frame, pick the document element instead.
-    nsIFrame* scrollFrame = presShell->GetRootScrollFrame();
-    nsIContent* content = nullptr;
-    if (scrollFrame) {
-      content = scrollFrame->GetContent();
-    } else if (document) {
-      content = document->GetDocumentElement();
-    }
-
     root->SetFrameMetrics(
-      nsDisplayScrollLayer::ComputeFrameMetrics(frame,
-                         presShell->GetRootScrollFrame(),
-                         content,
+      nsDisplayScrollLayer::ComputeFrameMetrics(frame, rootScrollFrame,
                          aBuilder->FindReferenceFrameFor(frame),
                          root, FrameMetrics::NULL_SCROLL_ID, viewport,
                          isRoot, containerParameters));
@@ -4133,10 +4118,9 @@ nsDisplaySubDocument::ComputeFrameMetrics(Layer* aLayer,
                     mFrame->GetOffsetToCrossDoc(ReferenceFrame());
 
   return MakeUnique<FrameMetrics>(
-    nsDisplayScrollLayer::ComputeFrameMetrics(
-      mFrame, rootScrollFrame, rootScrollFrame->GetContent(), ReferenceFrame(),
-      aLayer, mScrollParentId, viewport,
-      isRootContentDocument, params));
+    nsDisplayScrollLayer::ComputeFrameMetrics(mFrame, rootScrollFrame, ReferenceFrame(),
+                       aLayer, mScrollParentId, viewport,
+                       isRootContentDocument, params));
 }
 
 static bool
@@ -4469,10 +4453,8 @@ nsDisplayScrollLayer::ComputeFrameMetrics(Layer* aLayer,
                     mScrollFrame->GetOffsetToCrossDoc(ReferenceFrame());
 
   return UniquePtr<FrameMetrics>(new FrameMetrics(
-    ComputeFrameMetrics(
-      mScrolledFrame, mScrollFrame, mScrollFrame->GetContent(),
-      ReferenceFrame(), aLayer,
-      mScrollParentId, viewport, false, params)));
+    ComputeFrameMetrics(mScrolledFrame, mScrollFrame, ReferenceFrame(), aLayer,
+                        mScrollParentId, viewport, false, params)));
 }
 
 bool
