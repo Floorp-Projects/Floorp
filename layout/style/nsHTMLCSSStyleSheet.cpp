@@ -74,15 +74,7 @@ nsHTMLCSSStyleSheet::ElementRulesMatching(nsPresContext* aPresContext,
   rule = aElement->GetSMILOverrideStyleRule();
   if (rule) {
     RestyleManager* restyleManager = aPresContext->RestyleManager();
-    if (restyleManager->SkipAnimationRules()) {
-      // Non-animation restyle -- don't process SMIL override style, because we
-      // don't want SMIL animation to trigger new CSS transitions. Instead,
-      // request an Animation restyle, so we still get noticed.
-      if (restyleManager->PostAnimationRestyles()) {
-        aPresContext->PresShell()->RestyleForAnimation(aElement,
-          eRestyle_StyleAttribute | eRestyle_ChangeAnimationPhase);
-      }
-    } else {
+    if (!restyleManager->SkipAnimationRules()) {
       // Animation restyle (or non-restyle traversal of rules)
       // Now we can walk SMIL overrride style, without triggering transitions.
       rule->RuleMatched();

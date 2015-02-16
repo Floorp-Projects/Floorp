@@ -192,13 +192,6 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     // which causes us to return above).  Thus we shouldn't do anything.
     return;
   }
-
-  // FIXME (bug 960465): This test should go away.
-  if (newStyleContext->PresContext()->RestyleManager()->
-        IsProcessingAnimationStyleChange()) {
-    return;
-  }
-
   if (newStyleContext->GetParent() &&
       newStyleContext->GetParent()->HasPseudoElementData()) {
     // Ignore transitions on things that inherit properties from

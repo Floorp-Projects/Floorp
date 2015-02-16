@@ -1758,24 +1758,8 @@ addAsyncAnimTest(function *() {
   var dyn2_kf1 = dyn2.cssRules[0];
   dyn2_kf1.style.transform = "translate(-100px)";
   yield waitForPaintsFlushed();
-  // FIXME: Bug 978833 (keyframe rules used as nsIStyleRule but doesn't follow
-  // immutability contract)
-  var csTransform = window.getComputedStyle(gDiv).transform;
-  // omta_todo_is asserts that the OMTA style does NOT match the computed style
-  // but in this case we have a bug in the computed style so we assert it is
-  // broken and that the OMTA style is likewise broken. When bug 978833 is fixed
-  // we should replace the following two tests with:
-  //
-  //   omta_is("transform", { tx: -50 }, RunningOn.Compositor,
-  //           "dynamic rule change test, keyframe style set");
-  todo_is(csTransform, "matrix(1, 0, 0, 1, -50, 0)",
+  omta_is("transform", { tx: -50 }, RunningOn.Compositor,
           "dynamic rule change test, keyframe style set");
-  var brokenOMTATransform = convertTo3dMatrix(
-      SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "transform"));
-  var brokenComputedTransform = convertTo3dMatrix(csTransform);
-  ok(matricesRoughlyEqual(brokenOMTATransform, brokenComputedTransform),
-     "dynamic rule change test, keyframe style set" +
-     " - OMTA style is equally as broken as computed style");
   dyn2.name = "dyn2";
   yield waitForPaintsFlushed();
   omta_is("transform", { tx: 25 }, RunningOn.Compositor,

@@ -1658,15 +1658,12 @@ nsStyleSet::ResolveStyleWithoutAnimation(dom::Element* aTarget,
 
   bool oldSkipAnimationRules = restyleManager->SkipAnimationRules();
   restyleManager->SetSkipAnimationRules(true);
-  bool oldPostAnimationRestyles = restyleManager->PostAnimationRestyles();
-  restyleManager->SetPostAnimationRestyles(false);
 
   nsRefPtr<nsStyleContext> result =
     ResolveStyleWithReplacement(aTarget, aStyleContext->GetParent(),
                                 aStyleContext, aWhichToRemove,
                                 eSkipStartingAnimations);
 
-  restyleManager->SetPostAnimationRestyles(oldPostAnimationRestyles);
   restyleManager->SetSkipAnimationRules(oldSkipAnimationRules);
 
   return result.forget();
@@ -2142,43 +2139,6 @@ nsStyleSet::GCRuleTrees()
   }
 }
 
-/**
- * Return an equivalent to aRuleNode with both animation and transition
- * rules removed, and post a restyle if needed.
- */
-static inline nsRuleNode*
-SkipAnimationRules(nsRuleNode* aRuleNode, Element* aElementOrPseudoElement,
-                   bool aPostAnimationRestyles)
-{
-  nsRuleNode* ruleNode = aRuleNode;
-  // The transition rule must be at the top of the cascade.
-  if (!ruleNode->IsRoot() &&
-      ruleNode->GetLevel() == nsStyleSet::eTransitionSheet) {
-    ruleNode = ruleNode->GetParent();
-  }
-  MOZ_ASSERT(ruleNode->IsRoot() ||
-             ruleNode->GetLevel() != nsStyleSet::eTransitionSheet,
-             "can't have more than one transition rule");
-
-  // Use our existing ReplaceAnimationRule function to replace the
-  // animation rule, if present.
-  nsIStyleRule* animationRule = GetAnimationRule(ruleNode);
-  if (animationRule) {
-    ruleNode = ReplaceAnimationRule(ruleNode, animationRule, nullptr);
-  }
-
-  if (ruleNode != aRuleNode && aPostAnimationRestyles) {
-    NS_ASSERTION(aElementOrPseudoElement,
-                 "How can we have transition rules but no element?");
-    // Need to do an animation restyle, just like
-    // nsTransitionManager::WalkTransitionRule and
-    // nsAnimationManager::GetAnimationRule would.
-    aRuleNode->PresContext()->PresShell()->
-      RestyleForAnimation(aElementOrPseudoElement, eRestyle_Self);
-  }
-  return ruleNode;
-}
-
 already_AddRefed<nsStyleContext>
 nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
                                  nsStyleContext* aNewParentContext,
@@ -2201,18 +2161,8 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
   nsCSSPseudoElements::Type pseudoType = aStyleContext->GetPseudoType();
   nsRuleNode* ruleNode = aStyleContext->RuleNode();
 
-  // Skip transition rules as needed just like
-  // nsTransitionManager::WalkTransitionRule would.
-  RestyleManager* restyleManager = PresContext()->RestyleManager();
-  bool skipAnimationRules = restyleManager->SkipAnimationRules();
-  bool postAnimationRestyles = restyleManager->PostAnimationRestyles();
-  if (skipAnimationRules) {
-    // Make sure that we're not using transition rules or animation rules for
-    // our new style context.  If we need them, an animation restyle will
-    // provide.
-    ruleNode = SkipAnimationRules(ruleNode, aElementOrPseudoElement,
-                                  postAnimationRestyles);
-  }
+  NS_ASSERTION(!PresContext()->RestyleManager()->SkipAnimationRules(),
+               "we no longer handle SkipAnimationRules()");
 
   nsRuleNode* visitedRuleNode = nullptr;
   nsStyleContext* visitedContext = aStyleContext->GetStyleIfVisited();
@@ -2221,14 +2171,7 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
   // particular, it doesn't change whether this is a style context for
   // a link.
   if (visitedContext) {
-     visitedRuleNode = visitedContext->RuleNode();
-     // Again, skip transition rules as needed
-     if (skipAnimationRules) {
-      // FIXME do something here for animations?
-       visitedRuleNode =
-         SkipAnimationRules(visitedRuleNode, aElementOrPseudoElement,
-                            postAnimationRestyles);
-     }
+    visitedRuleNode = visitedContext->RuleNode();
   }
 
   uint32_t flags = eNoFlags;
