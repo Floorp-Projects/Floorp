@@ -2159,7 +2159,13 @@ TabChild::RecvMouseEvent(const nsString& aType,
 }
 
 bool
-TabChild::RecvRealMouseEvent(const WidgetMouseEvent& event)
+TabChild::RecvRealMouseMoveEvent(const WidgetMouseEvent& event)
+{
+  return RecvRealMouseButtonEvent(event);
+}
+
+bool
+TabChild::RecvRealMouseButtonEvent(const WidgetMouseEvent& event)
 {
   WidgetMouseEvent localEvent(event);
   localEvent.widget = mWidget;

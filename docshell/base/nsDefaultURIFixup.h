@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -15,56 +15,56 @@ class nsDefaultURIFixupInfo;
 class nsDefaultURIFixup : public nsIURIFixup
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIURIFIXUP
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIURIFIXUP
 
-    nsDefaultURIFixup();
+  nsDefaultURIFixup();
 
 protected:
-    virtual ~nsDefaultURIFixup();
+  virtual ~nsDefaultURIFixup();
 
 private:
-    /* additional members */
-    nsresult FileURIFixup(const nsACString &aStringURI, nsIURI** aURI);
-    nsresult ConvertFileToStringURI(const nsACString& aIn, nsCString& aOut);
-    nsresult FixupURIProtocol(const nsACString& aIn,
-                              nsDefaultURIFixupInfo* aFixupInfo,
-                              nsIURI** aURI);
-    nsresult KeywordURIFixup(const nsACString &aStringURI,
-                             nsDefaultURIFixupInfo* aFixupInfo,
-                             nsIInputStream** aPostData);
-    nsresult TryKeywordFixupForURIInfo(const nsACString &aStringURI,
-                                       nsDefaultURIFixupInfo* aFixupInfo,
-                                       nsIInputStream** aPostData);
-    bool PossiblyByteExpandedFileName(const nsAString& aIn);
-    bool PossiblyHostPortUrl(const nsACString& aUrl);
-    bool MakeAlternateURI(nsIURI *aURI);
-    bool IsLikelyFTP(const nsCString& aHostSpec);
-    bool IsDomainWhitelisted(const nsAutoCString aAsciiHost,
-                             const uint32_t aDotLoc);
+  /* additional members */
+  nsresult FileURIFixup(const nsACString& aStringURI, nsIURI** aURI);
+  nsresult ConvertFileToStringURI(const nsACString& aIn, nsCString& aResult);
+  nsresult FixupURIProtocol(const nsACString& aIn,
+                            nsDefaultURIFixupInfo* aFixupInfo,
+                            nsIURI** aURI);
+  nsresult KeywordURIFixup(const nsACString& aStringURI,
+                           nsDefaultURIFixupInfo* aFixupInfo,
+                           nsIInputStream** aPostData);
+  nsresult TryKeywordFixupForURIInfo(const nsACString& aStringURI,
+                                     nsDefaultURIFixupInfo* aFixupInfo,
+                                     nsIInputStream** aPostData);
+  bool PossiblyByteExpandedFileName(const nsAString& aIn);
+  bool PossiblyHostPortUrl(const nsACString& aUrl);
+  bool MakeAlternateURI(nsIURI* aURI);
+  bool IsLikelyFTP(const nsCString& aHostSpec);
+  bool IsDomainWhitelisted(const nsAutoCString aAsciiHost,
+                           const uint32_t aDotLoc);
 };
 
 class nsDefaultURIFixupInfo : public nsIURIFixupInfo
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIURIFIXUPINFO
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIURIFIXUPINFO
 
-    explicit nsDefaultURIFixupInfo(const nsACString& aOriginalInput);
+  explicit nsDefaultURIFixupInfo(const nsACString& aOriginalInput);
 
-    friend class nsDefaultURIFixup;
+  friend class nsDefaultURIFixup;
 
 protected:
-    virtual ~nsDefaultURIFixupInfo();
+  virtual ~nsDefaultURIFixupInfo();
 
 private:
-    nsCOMPtr<nsISupports> mConsumer;
-    nsCOMPtr<nsIURI> mPreferredURI;
-    nsCOMPtr<nsIURI> mFixedURI;
-    bool mFixupChangedProtocol;
-    bool mFixupCreatedAlternateURI;
-    nsString mKeywordProviderName;
-    nsString mKeywordAsSent;
-    nsAutoCString mOriginalInput;
+  nsCOMPtr<nsISupports> mConsumer;
+  nsCOMPtr<nsIURI> mPreferredURI;
+  nsCOMPtr<nsIURI> mFixedURI;
+  bool mFixupChangedProtocol;
+  bool mFixupCreatedAlternateURI;
+  nsString mKeywordProviderName;
+  nsString mKeywordAsSent;
+  nsAutoCString mOriginalInput;
 };
 #endif

@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -32,82 +32,77 @@ class nsIDocShellTreeItem;
 class nsDocShellEnumerator : public nsISimpleEnumerator
 {
 protected:
-
-  enum {
+  enum
+  {
     enumerateForwards,
     enumerateBackwards
   };
 
-  virtual                     ~nsDocShellEnumerator();
+  virtual ~nsDocShellEnumerator();
 
 public:
-
-                              explicit nsDocShellEnumerator(int32_t inEnumerationDirection);
+  explicit nsDocShellEnumerator(int32_t aEnumerationDirection);
 
   // nsISupports
   NS_DECL_ISUPPORTS
-  
+
   // nsISimpleEnumerator
   NS_DECL_NSISIMPLEENUMERATOR
-  
+
 public:
+  nsresult GetEnumerationRootItem(nsIDocShellTreeItem** aEnumerationRootItem);
+  nsresult SetEnumerationRootItem(nsIDocShellTreeItem* aEnumerationRootItem);
 
-  nsresult                    GetEnumerationRootItem(nsIDocShellTreeItem * *aEnumerationRootItem);
-  nsresult                    SetEnumerationRootItem(nsIDocShellTreeItem * aEnumerationRootItem);
-  
-  nsresult                    GetEnumDocShellType(int32_t *aEnumerationItemType);
-  nsresult                    SetEnumDocShellType(int32_t aEnumerationItemType);
-    
-  nsresult                    First();
+  nsresult GetEnumDocShellType(int32_t* aEnumerationItemType);
+  nsresult SetEnumDocShellType(int32_t aEnumerationItemType);
+
+  nsresult First();
 
 protected:
+  nsresult EnsureDocShellArray();
+  nsresult ClearState();
 
-  nsresult                    EnsureDocShellArray();
-  nsresult                    ClearState();
-  
-  nsresult                    BuildDocShellArray(nsTArray<nsWeakPtr>& inItemArray);
-  virtual nsresult            BuildArrayRecursive(nsIDocShellTreeItem* inItem, nsTArray<nsWeakPtr>& inItemArray) = 0;
-    
+  nsresult BuildDocShellArray(nsTArray<nsWeakPtr>& aItemArray);
+  virtual nsresult BuildArrayRecursive(nsIDocShellTreeItem* aItem,
+                                       nsTArray<nsWeakPtr>& aItemArray) = 0;
+
 protected:
+  nsWeakPtr mRootItem;  // weak ref!
 
-  nsWeakPtr                   mRootItem;      // weak ref!
-  
-  nsTArray<nsWeakPtr>         mItemArray;     // flattened list of items with matching type
-  uint32_t                    mCurIndex;
-  
-  int32_t                     mDocShellType;  // only want shells of this type
-  bool                        mArrayValid;    // is mItemArray up to date?
+  nsTArray<nsWeakPtr> mItemArray;  // flattened list of items with matching type
+  uint32_t mCurIndex;
 
-  const int8_t                mEnumerationDirection;
+  int32_t mDocShellType;  // only want shells of this type
+  bool mArrayValid;  // is mItemArray up to date?
+
+  const int8_t mEnumerationDirection;
 };
-
 
 class nsDocShellForwardsEnumerator : public nsDocShellEnumerator
 {
 public:
-
-                              nsDocShellForwardsEnumerator()
-                              : nsDocShellEnumerator(enumerateForwards)
-                              {                              
-                              }
+  nsDocShellForwardsEnumerator()
+    : nsDocShellEnumerator(enumerateForwards)
+  {
+  }
 
 protected:
-
-  virtual nsresult            BuildArrayRecursive(nsIDocShellTreeItem* inItem, nsTArray<nsWeakPtr>& inItemArray);
+  virtual nsresult BuildArrayRecursive(nsIDocShellTreeItem* aItem,
+                                       nsTArray<nsWeakPtr>& aItemArray);
 
 };
 
 class nsDocShellBackwardsEnumerator : public nsDocShellEnumerator
 {
 public:
+  nsDocShellBackwardsEnumerator()
+    : nsDocShellEnumerator(enumerateBackwards)
+  {
+  }
 
-                              nsDocShellBackwardsEnumerator()
-                              : nsDocShellEnumerator(enumerateBackwards)
-                              {                              
-                              }
 protected:
-
-  virtual nsresult            BuildArrayRecursive(nsIDocShellTreeItem* inItem, nsTArray<nsWeakPtr>& inItemArray);
+  virtual nsresult BuildArrayRecursive(nsIDocShellTreeItem* aItem,
+                                       nsTArray<nsWeakPtr>& aItemArray);
 };
 
 #endif // nsDocShellEnumerator_h___

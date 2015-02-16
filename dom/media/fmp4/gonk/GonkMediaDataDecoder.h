@@ -19,7 +19,7 @@ namespace mozilla {
 // Manage the data flow from inputting encoded data and outputting decode data.
 class GonkDecoderManager {
 public:
-  GonkDecoderManager();
+  GonkDecoderManager(MediaTaskQueue* aTaskQueue);
 
   virtual ~GonkDecoderManager() {}
 
@@ -48,29 +48,31 @@ public:
 
   virtual void ReleaseMediaResources() {}
 
+  // It should be called in MediaTash thread.
   bool HasQueuedSample() {
-    ReentrantMonitorAutoEnter mon(mMonitor);
+    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     return mQueueSample.Length();
+  }
+
+  void ClearQueuedSample() {
+    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+    mQueueSample.Clear();
   }
 
 protected:
   // It performs special operation to MP4 sample, the real action is depended on
   // the codec type.
-  virtual void PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) {}
+  virtual bool PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) { return true; }
 
   // It sends MP4Sample to OMX layer. It must be overrided by subclass.
   virtual android::status_t SendSampleToOMX(mp4_demuxer::MP4Sample* aSample) = 0;
-
-  // It protects mQueueSample.
-  ReentrantMonitor mMonitor;
 
   // An queue with the MP4 samples which are waiting to be sent into OMX.
   // If an element is an empty MP4Sample, that menas EOS. There should not
   // any sample be queued after EOS.
   nsTArray<nsAutoPtr<mp4_demuxer::MP4Sample>> mQueueSample;
 
-  // True when mQueueSample gets an empty MP4Sample.
-  bool mInputEOS;
+  RefPtr<MediaTaskQueue> mTaskQueue;
 };
 
 // Samples are decoded using the GonkDecoder (MediaCodec)

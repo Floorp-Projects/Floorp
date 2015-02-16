@@ -1,9 +1,8 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 
 #include "nsDocShellEditorData.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -14,28 +13,16 @@
 #include "nsIEditingSession.h"
 #include "nsIDocShell.h"
 
-/*---------------------------------------------------------------------------
-
-  nsDocShellEditorData
-
-----------------------------------------------------------------------------*/
-
-nsDocShellEditorData::nsDocShellEditorData(nsIDocShell* inOwningDocShell)
-: mDocShell(inOwningDocShell)
-, mMakeEditable(false)
-, mIsDetached(false)
-, mDetachedMakeEditable(false)
-, mDetachedEditingState(nsIHTMLDocument::eOff)
+nsDocShellEditorData::nsDocShellEditorData(nsIDocShell* aOwningDocShell)
+  : mDocShell(aOwningDocShell)
+  , mMakeEditable(false)
+  , mIsDetached(false)
+  , mDetachedMakeEditable(false)
+  , mDetachedEditingState(nsIHTMLDocument::eOff)
 {
   NS_ASSERTION(mDocShell, "Where is my docShell?");
 }
 
-
-/*---------------------------------------------------------------------------
-
-  ~nsDocShellEditorData
-
-----------------------------------------------------------------------------*/
 nsDocShellEditorData::~nsDocShellEditorData()
 {
   TearDownEditor();
@@ -52,143 +39,103 @@ nsDocShellEditorData::TearDownEditor()
   mIsDetached = false;
 }
 
-
-/*---------------------------------------------------------------------------
-
-  MakeEditable
-
-----------------------------------------------------------------------------*/
 nsresult
-nsDocShellEditorData::MakeEditable(bool inWaitForUriLoad)
+nsDocShellEditorData::MakeEditable(bool aInWaitForUriLoad)
 {
-  if (mMakeEditable)
+  if (mMakeEditable) {
     return NS_OK;
-  
+  }
+
   // if we are already editable, and are getting turned off,
   // nuke the editor.
-  if (mEditor)
-  {
+  if (mEditor) {
     NS_WARNING("Destroying existing editor on frame");
-    
+
     mEditor->PreDestroy(false);
     mEditor = nullptr;
   }
-  
-  if (inWaitForUriLoad)
+
+  if (aInWaitForUriLoad) {
     mMakeEditable = true;
+  }
   return NS_OK;
 }
 
-
-/*---------------------------------------------------------------------------
-
-  GetEditable
-
-----------------------------------------------------------------------------*/
 bool
 nsDocShellEditorData::GetEditable()
 {
   return mMakeEditable || (mEditor != nullptr);
 }
 
-/*---------------------------------------------------------------------------
-
-  CreateEditor
-
-----------------------------------------------------------------------------*/
 nsresult
 nsDocShellEditorData::CreateEditor()
 {
-  nsCOMPtr<nsIEditingSession>   editingSession;    
+  nsCOMPtr<nsIEditingSession> editingSession;
   nsresult rv = GetEditingSession(getter_AddRefs(editingSession));
-  if (NS_FAILED(rv)) return rv;
- 
-  nsCOMPtr<nsIDOMWindow>    domWindow =
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIDOMWindow> domWindow =
     mDocShell ? mDocShell->GetWindow() : nullptr;
   rv = editingSession->SetupEditorOnWindow(domWindow);
-  if (NS_FAILED(rv)) return rv;
-  
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   return NS_OK;
 }
 
-
-/*---------------------------------------------------------------------------
-
-  GetEditingSession
-
-----------------------------------------------------------------------------*/
 nsresult
-nsDocShellEditorData::GetEditingSession(nsIEditingSession **outEditingSession)
+nsDocShellEditorData::GetEditingSession(nsIEditingSession** aResult)
 {
   nsresult rv = EnsureEditingSession();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ADDREF(*outEditingSession = mEditingSession);
+  NS_ADDREF(*aResult = mEditingSession);
 
   return NS_OK;
 }
 
-
-/*---------------------------------------------------------------------------
-
-  GetEditor
-
-----------------------------------------------------------------------------*/
 nsresult
-nsDocShellEditorData::GetEditor(nsIEditor **outEditor)
+nsDocShellEditorData::GetEditor(nsIEditor** aResult)
 {
-  NS_ENSURE_ARG_POINTER(outEditor);
-  NS_IF_ADDREF(*outEditor = mEditor);
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_IF_ADDREF(*aResult = mEditor);
   return NS_OK;
 }
 
-
-/*---------------------------------------------------------------------------
-
-  SetEditor
-
-----------------------------------------------------------------------------*/
 nsresult
-nsDocShellEditorData::SetEditor(nsIEditor *inEditor)
+nsDocShellEditorData::SetEditor(nsIEditor* aEditor)
 {
   // destroy any editor that we have. Checks for equality are
   // necessary to ensure that assigment into the nsCOMPtr does
   // not temporarily reduce the refCount of the editor to zero
-  if (mEditor.get() != inEditor)
-  {
-    if (mEditor)
-    {
+  if (mEditor.get() != aEditor) {
+    if (mEditor) {
       mEditor->PreDestroy(false);
       mEditor = nullptr;
     }
-      
-    mEditor = inEditor;    // owning addref
-    if (!mEditor)
+
+    mEditor = aEditor;  // owning addref
+    if (!mEditor) {
       mMakeEditable = false;
-  }   
-  
+    }
+  }
+
   return NS_OK;
 }
 
-
-/*---------------------------------------------------------------------------
-
-  EnsureEditingSession
-  
-  This creates the editing session on the content docShell that owns
-  'this'.
-
-----------------------------------------------------------------------------*/
+// This creates the editing session on the content docShell that owns 'this'.
 nsresult
 nsDocShellEditorData::EnsureEditingSession()
 {
   NS_ASSERTION(mDocShell, "Should have docShell here");
   NS_ASSERTION(!mIsDetached, "This will stomp editing session!");
-  
+
   nsresult rv = NS_OK;
-  
-  if (!mEditingSession)
-  {
+
+  if (!mEditingSession) {
     mEditingSession =
       do_CreateInstance("@mozilla.org/editor/editingsession;1", &rv);
   }
@@ -201,7 +148,7 @@ nsDocShellEditorData::DetachFromWindow()
 {
   NS_ASSERTION(mEditingSession,
                "Can't detach when we don't have a session to detach!");
-  
+
   nsCOMPtr<nsIDOMWindow> domWindow =
     mDocShell ? mDocShell->GetWindow() : nullptr;
   nsresult rv = mEditingSession->DetachFromWindow(domWindow);
@@ -214,8 +161,9 @@ nsDocShellEditorData::DetachFromWindow()
   nsCOMPtr<nsIDOMDocument> domDoc;
   domWindow->GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(domDoc);
-  if (htmlDoc)
+  if (htmlDoc) {
     mDetachedEditingState = htmlDoc->GetEditingState();
+  }
 
   mDocShell = nullptr;
 
@@ -238,8 +186,9 @@ nsDocShellEditorData::ReattachToWindow(nsIDocShell* aDocShell)
   nsCOMPtr<nsIDOMDocument> domDoc;
   domWindow->GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(domDoc);
-  if (htmlDoc)
+  if (htmlDoc) {
     htmlDoc->SetEditingState(mDetachedEditingState);
- 
+  }
+
   return NS_OK;
 }

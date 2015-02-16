@@ -212,6 +212,22 @@
 #  define MOZ_COLD
 #endif
 
+/**
+ * MOZ_NONNULL tells the compiler that some of the arguments to a function are
+ * known to be non-null. The arguments are a list of 1-based argument indexes
+ * identifying arguments which are known to be non-null.
+ *
+ * Place this attribute at the very beginning of a function definition. For
+ * example, write
+ *
+ *   MOZ_NONNULL(1, 2) int foo(char *p, char *q);
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#  define MOZ_NONNULL(...) __attribute__ ((nonnull(__VA_ARGS__)))
+#else
+#  define MOZ_NONNULL(...)
+#endif
+
 /*
  * MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS, specified at the end of a function
  * declaration, indicates that for the purposes of static analysis, this

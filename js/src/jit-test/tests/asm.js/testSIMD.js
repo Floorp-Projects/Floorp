@@ -259,6 +259,37 @@ assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + "function f() {var x=i4(1,
 assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + "function f() {var x=f4(1,2,3,4); return f4(x)} return f"), this)(), [1,2,3,4]);
 
 // 1.3.5 Coerce and pass arguments
+// Via check
+const CHECK_I32 = 'var c=i4.check;';
+
+assertAsmTypeFail('glob', USE_ASM + I32 + CHECK_I32 + "function f() {c();} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + CHECK_I32 + "function f(x) {x=i4(x); c(x, x);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + CHECK_I32 + "function f() {c(1);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + CHECK_I32 + "function f() {c(1.);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + CHECK_I32 + FROUND + "function f() {c(f32(1.));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + CHECK_I32 + F32 + "function f(x) {x=f4(x); c(x);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + CHECK_I32 + "function f(x) {x=i4(x); return 1 + c(x) | 0;} return f");
+
+var i32x4 = SIMD.int32x4(1, 3, 3, 7);
+assertEq(asmLink(asmCompile('glob', USE_ASM + I32 + CHECK_I32 + "function f(x) {x=c(x)} return f"), this)(i32x4), undefined);
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + CHECK_I32 + "function f(x) {x=i4(x); return c(x);} return f"), this)(i32x4), [1,3,3,7]);
+
+const CHECK_F32 = 'var c=f4.check;';
+
+assertAsmTypeFail('glob', USE_ASM + F32 + CHECK_F32 + "function f() {c();} return f");
+assertAsmTypeFail('glob', USE_ASM + F32 + CHECK_F32 + "function f(x) {x=f4(x); c(x, x);} return f");
+assertAsmTypeFail('glob', USE_ASM + F32 + CHECK_F32 + "function f() {c(1);} return f");
+assertAsmTypeFail('glob', USE_ASM + F32 + CHECK_F32 + "function f() {c(1.);} return f");
+assertAsmTypeFail('glob', USE_ASM + F32 + CHECK_F32 + FROUND + "function f() {c(f32(1.));} return f");
+assertAsmTypeFail('glob', USE_ASM + F32 + CHECK_F32 + I32 + "function f(x) {x=i4(x); c(x);} return f");
+assertAsmTypeFail('glob', USE_ASM + F32 + CHECK_F32 + "function f(x) {x=f4(x); return 1 + c(x) | 0;} return f");
+
+var f32x4 = SIMD.float32x4(13.37, 42.42, -0, NaN);
+assertEq(asmLink(asmCompile('glob', USE_ASM + F32 + CHECK_F32 + "function f(x) {x=c(x)} return f"), this)(f32x4), undefined);
+assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + CHECK_F32 + "function f(x) {x=c(x); return c(x);} return f"), this)(f32x4),
+           [Math.fround(13.37), Math.fround(42.42), -0, NaN]);
+
+// Legacy coercions
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f(x) {x=i4();} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f(x) {x=i4(1,2,3,4);} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f(x,y) {x=i4(y);y=+y} return f");

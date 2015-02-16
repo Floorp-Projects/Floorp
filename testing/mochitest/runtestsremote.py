@@ -13,7 +13,10 @@ import sys
 import tempfile
 import traceback
 
-sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(__file__))))
+sys.path.insert(
+    0, os.path.abspath(
+        os.path.realpath(
+            os.path.dirname(__file__))))
 
 from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
@@ -29,6 +32,7 @@ import moznetwork
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 
+
 class RemoteOptions(MochitestOptions):
 
     def __init__(self, automation, **kwargs):
@@ -36,84 +40,117 @@ class RemoteOptions(MochitestOptions):
         self._automation = automation or Automation()
         MochitestOptions.__init__(self)
 
-        self.add_option("--remote-app-path", action="store",
-                    type = "string", dest = "remoteAppPath",
-                    help = "Path to remote executable relative to device root using only forward slashes. Either this or app must be specified but not both")
+        self.add_option(
+            "--remote-app-path",
+            action="store",
+            type="string",
+            dest="remoteAppPath",
+            help="Path to remote executable relative to device root using only forward slashes. Either this or app must be specified but not both")
         defaults["remoteAppPath"] = None
 
         self.add_option("--deviceIP", action="store",
-                    type = "string", dest = "deviceIP",
-                    help = "ip address of remote device to test")
+                        type="string", dest="deviceIP",
+                        help="ip address of remote device to test")
         defaults["deviceIP"] = None
 
         self.add_option("--deviceSerial", action="store",
-                    type = "string", dest = "deviceSerial",
-                    help = "ip address of remote device to test")
+                        type="string", dest="deviceSerial",
+                        help="ip address of remote device to test")
         defaults["deviceSerial"] = None
 
-        self.add_option("--dm_trans", action="store",
-                    type = "string", dest = "dm_trans",
-                    help = "the transport to use to communicate with device: [adb|sut]; default=sut")
+        self.add_option(
+            "--dm_trans",
+            action="store",
+            type="string",
+            dest="dm_trans",
+            help="the transport to use to communicate with device: [adb|sut]; default=sut")
         defaults["dm_trans"] = "sut"
 
         self.add_option("--devicePort", action="store",
-                    type = "string", dest = "devicePort",
-                    help = "port of remote device to test")
+                        type="string", dest="devicePort",
+                        help="port of remote device to test")
         defaults["devicePort"] = 20701
 
-        self.add_option("--remote-product-name", action="store",
-                    type = "string", dest = "remoteProductName",
-                    help = "The executable's name of remote product to test - either fennec or firefox, defaults to fennec")
+        self.add_option(
+            "--remote-product-name",
+            action="store",
+            type="string",
+            dest="remoteProductName",
+            help="The executable's name of remote product to test - either fennec or firefox, defaults to fennec")
         defaults["remoteProductName"] = "fennec"
 
-        self.add_option("--remote-logfile", action="store",
-                    type = "string", dest = "remoteLogFile",
-                    help = "Name of log file on the device relative to the device root.  PLEASE ONLY USE A FILENAME.")
+        self.add_option(
+            "--remote-logfile",
+            action="store",
+            type="string",
+            dest="remoteLogFile",
+            help="Name of log file on the device relative to the device root.  PLEASE ONLY USE A FILENAME.")
         defaults["remoteLogFile"] = None
 
-        self.add_option("--remote-webserver", action = "store",
-                    type = "string", dest = "remoteWebServer",
-                    help = "ip address where the remote web server is hosted at")
+        self.add_option(
+            "--remote-webserver",
+            action="store",
+            type="string",
+            dest="remoteWebServer",
+            help="ip address where the remote web server is hosted at")
         defaults["remoteWebServer"] = None
 
-        self.add_option("--http-port", action = "store",
-                    type = "string", dest = "httpPort",
-                    help = "http port of the remote web server")
+        self.add_option("--http-port", action="store",
+                        type="string", dest="httpPort",
+                        help="http port of the remote web server")
         defaults["httpPort"] = automation.DEFAULT_HTTP_PORT
 
-        self.add_option("--ssl-port", action = "store",
-                    type = "string", dest = "sslPort",
-                    help = "ssl port of the remote web server")
+        self.add_option("--ssl-port", action="store",
+                        type="string", dest="sslPort",
+                        help="ssl port of the remote web server")
         defaults["sslPort"] = automation.DEFAULT_SSL_PORT
 
-        self.add_option("--robocop-ini", action = "store",
-                    type = "string", dest = "robocopIni",
-                    help = "name of the .ini file containing the list of tests to run")
+        self.add_option(
+            "--robocop-ini",
+            action="store",
+            type="string",
+            dest="robocopIni",
+            help="name of the .ini file containing the list of tests to run")
         defaults["robocopIni"] = ""
 
-        self.add_option("--robocop", action = "store",
-                    type = "string", dest = "robocop",
-                    help = "name of the .ini file containing the list of tests to run. [DEPRECATED- please use --robocop-ini")
+        self.add_option(
+            "--robocop",
+            action="store",
+            type="string",
+            dest="robocop",
+            help="name of the .ini file containing the list of tests to run. [DEPRECATED- please use --robocop-ini")
         defaults["robocop"] = ""
 
-        self.add_option("--robocop-apk", action = "store",
-                    type = "string", dest = "robocopApk",
-                    help = "name of the Robocop APK to use for ADB test running")
+        self.add_option(
+            "--robocop-apk",
+            action="store",
+            type="string",
+            dest="robocopApk",
+            help="name of the Robocop APK to use for ADB test running")
         defaults["robocopApk"] = ""
 
-        self.add_option("--robocop-path", action = "store",
-                    type = "string", dest = "robocopPath",
-                    help = "Path to the folder where robocop.apk is located at.  Primarily used for ADB test running. [DEPRECATED- please use --robocop-apk]")
+        self.add_option(
+            "--robocop-path",
+            action="store",
+            type="string",
+            dest="robocopPath",
+            help="Path to the folder where robocop.apk is located at.  Primarily used for ADB test running. [DEPRECATED- please use --robocop-apk]")
         defaults["robocopPath"] = ""
 
-        self.add_option("--robocop-ids", action = "store",
-                    type = "string", dest = "robocopIds",
-                    help = "name of the file containing the view ID map (fennec_ids.txt)")
+        self.add_option(
+            "--robocop-ids",
+            action="store",
+            type="string",
+            dest="robocopIds",
+            help="name of the file containing the view ID map (fennec_ids.txt)")
         defaults["robocopIds"] = ""
 
-        self.add_option("--remoteTestRoot", action = "store",
-                    type = "string", dest = "remoteTestRoot",
-                    help = "remote directory to use as test root (eg. /mnt/sdcard/tests or /data/local/tests)")
+        self.add_option(
+            "--remoteTestRoot",
+            action="store",
+            type="string",
+            dest="remoteTestRoot",
+            help="remote directory to use as test root (eg. /mnt/sdcard/tests or /data/local/tests)")
         defaults["remoteTestRoot"] = None
 
         defaults["logFile"] = "mochitest.log"
@@ -131,38 +168,43 @@ class RemoteOptions(MochitestOptions):
         if not options.remoteTestRoot:
             options.remoteTestRoot = automation._devicemanager.deviceRoot
 
-        if options.remoteWebServer == None:
+        if options.remoteWebServer is None:
             if os.name != "nt":
                 options.remoteWebServer = moznetwork.get_ip()
             else:
-                options_logger.error("you must specify a --remote-webserver=<ip address>")
+                options_logger.error(
+                    "you must specify a --remote-webserver=<ip address>")
                 return None
 
         options.webServer = options.remoteWebServer
 
-        if (options.dm_trans == 'sut' and options.deviceIP == None):
-            options_logger.error("If --dm_trans = sut, you must provide a device IP")
+        if (options.dm_trans == 'sut' and options.deviceIP is None):
+            options_logger.error(
+                "If --dm_trans = sut, you must provide a device IP")
             return None
 
-        if (options.remoteLogFile == None):
-            options.remoteLogFile = options.remoteTestRoot + '/logs/mochitest.log'
+        if (options.remoteLogFile is None):
+            options.remoteLogFile = options.remoteTestRoot + \
+                '/logs/mochitest.log'
 
         if (options.remoteLogFile.count('/') < 1):
-            options.remoteLogFile = options.remoteTestRoot + '/' + options.remoteLogFile
+            options.remoteLogFile = options.remoteTestRoot + \
+                '/' + options.remoteLogFile
 
         # remoteAppPath or app must be specified to find the product to launch
         if (options.remoteAppPath and options.app):
-            options_logger.error("You cannot specify both the remoteAppPath and the app setting")
+            options_logger.error(
+                "You cannot specify both the remoteAppPath and the app setting")
             return None
         elif (options.remoteAppPath):
             options.app = options.remoteTestRoot + "/" + options.remoteAppPath
-        elif (options.app == None):
+        elif (options.app is None):
             # Neither remoteAppPath nor app are set -- error
             options_logger.error("You must specify either appPath or app")
             return None
 
         # Only reset the xrePath if it wasn't provided
-        if (options.xrePath == None):
+        if (options.xrePath is None):
             options.xrePath = options.utilityPath
 
         if (options.pidFile != ""):
@@ -173,38 +215,49 @@ class RemoteOptions(MochitestOptions):
         # Robocop specific deprecated options.
         if options.robocop:
             if options.robocopIni:
-                options_logger.error("can not use deprecated --robocop and replacement --robocop-ini together")
+                options_logger.error(
+                    "can not use deprecated --robocop and replacement --robocop-ini together")
                 return None
             options.robocopIni = options.robocop
             del options.robocop
 
         if options.robocopPath:
             if options.robocopApk:
-                options_logger.error("can not use deprecated --robocop-path and replacement --robocop-apk together")
+                options_logger.error(
+                    "can not use deprecated --robocop-path and replacement --robocop-apk together")
                 return None
-            options.robocopApk = os.path.join(options.robocopPath, 'robocop.apk')
+            options.robocopApk = os.path.join(
+                options.robocopPath,
+                'robocop.apk')
             del options.robocopPath
 
         # Robocop specific options
         if options.robocopIni != "":
             if not os.path.exists(options.robocopIni):
-                options_logger.error("Unable to find specified robocop .ini manifest '%s'" % options.robocopIni)
+                options_logger.error(
+                    "Unable to find specified robocop .ini manifest '%s'" %
+                    options.robocopIni)
                 return None
             options.robocopIni = os.path.abspath(options.robocopIni)
 
         if options.robocopApk != "":
             if not os.path.exists(options.robocopApk):
-                options_logger.error("Unable to find robocop APK '%s'" % options.robocopApk)
+                options_logger.error(
+                    "Unable to find robocop APK '%s'" %
+                    options.robocopApk)
                 return None
             options.robocopApk = os.path.abspath(options.robocopApk)
 
         if options.robocopIds != "":
             if not os.path.exists(options.robocopIds):
-                options_logger.error("Unable to find specified robocop IDs file '%s'" % options.robocopIds)
+                options_logger.error(
+                    "Unable to find specified robocop IDs file '%s'" %
+                    options.robocopIds)
                 return None
             options.robocopIds = os.path.abspath(options.robocopIds)
 
-        # allow us to keep original application around for cleanup while running robocop via 'am'
+        # allow us to keep original application around for cleanup while
+        # running robocop via 'am'
         options.remoteappname = options.app
         return options
 
@@ -225,6 +278,7 @@ class RemoteOptions(MochitestOptions):
         options.httpPort = tempPort
 
         return options
+
 
 class MochiRemote(Mochitest):
 
@@ -247,20 +301,24 @@ class MochiRemote(Mochitest):
         self._automation.deleteTombstones()
         self.certdbNew = True
         self.remoteNSPR = os.path.join(options.remoteTestRoot, "nspr")
-        self._dm.removeDir(self.remoteNSPR);
-        self._dm.mkDir(self.remoteNSPR);
-        self.remoteChromeTestDir = os.path.join(options.remoteTestRoot, "chrome")
-        self._dm.removeDir(self.remoteChromeTestDir);
-        self._dm.mkDir(self.remoteChromeTestDir);
+        self._dm.removeDir(self.remoteNSPR)
+        self._dm.mkDir(self.remoteNSPR)
+        self.remoteChromeTestDir = os.path.join(
+            options.remoteTestRoot,
+            "chrome")
+        self._dm.removeDir(self.remoteChromeTestDir)
+        self._dm.mkDir(self.remoteChromeTestDir)
 
     def cleanup(self, options):
         if self._dm.fileExists(self.remoteLog):
             self._dm.getFile(self.remoteLog, self.localLog)
             self._dm.removeFile(self.remoteLog)
         else:
-            self.log.warning("Unable to retrieve log file (%s) from remote device" % self.remoteLog)
+            self.log.warning(
+                "Unable to retrieve log file (%s) from remote device" %
+                self.remoteLog)
         self._dm.removeDir(self.remoteProfile)
-        self._dm.removeDir(self.remoteChromeTestDir);
+        self._dm.removeDir(self.remoteChromeTestDir)
         # Don't leave an old robotium.config hanging around; the
         # profile it references was just deleted!
         deviceRoot = self._dm.getDeviceRoot()
@@ -270,7 +328,7 @@ class MochiRemote(Mochitest):
             self._dm.getDirectory(self.remoteNSPR, blobberUploadDir)
         Mochitest.cleanup(self, options)
 
-    def findPath(self, paths, filename = None):
+    def findPath(self, paths, filename=None):
         for path in paths:
             p = path
             if filename:
@@ -286,7 +344,7 @@ class MochiRemote(Mochitest):
         localAutomation.IS_MAC = False
         localAutomation.UNIXISH = False
         hostos = sys.platform
-        if (hostos == 'mac' or  hostos == 'darwin'):
+        if (hostos == 'mac' or hostos == 'darwin'):
             localAutomation.IS_MAC = True
         elif (hostos == 'linux' or hostos == 'linux2'):
             localAutomation.IS_LINUX = True
@@ -315,8 +373,10 @@ class MochiRemote(Mochitest):
             os.path.join('..', self._automation._product)
         ]
         options.xrePath = self.findPath(paths)
-        if options.xrePath == None:
-            self.log.error("unable to find xulrunner path for %s, please specify with --xre-path" % os.name)
+        if options.xrePath is None:
+            self.log.error(
+                "unable to find xulrunner path for %s, please specify with --xre-path" %
+                os.name)
             sys.exit(1)
 
         xpcshell = "xpcshell"
@@ -329,15 +389,17 @@ class MochiRemote(Mochitest):
             paths = [options.xrePath]
         options.utilityPath = self.findPath(paths, xpcshell)
 
-        if options.utilityPath == None:
-            self.log.error("unable to find utility path for %s, please specify with --utility-path" % os.name)
+        if options.utilityPath is None:
+            self.log.error(
+                "unable to find utility path for %s, please specify with --utility-path" %
+                os.name)
             sys.exit(1)
 
         xpcshell_path = os.path.join(options.utilityPath, xpcshell)
         if localAutomation.elf_arm(xpcshell_path):
             self.log.error('xpcshell at %s is an ARM binary; please use '
-                      'the --utility-path argument to specify the path '
-                      'to a desktop version.' % xpcshell_path)
+                           'the --utility-path argument to specify the path '
+                           'to a desktop version.' % xpcshell_path)
             sys.exit(1)
 
         if self.localProfile:
@@ -356,7 +418,11 @@ class MochiRemote(Mochitest):
         """ Create the servers on the host and start them up """
         restoreRemotePaths = self.switchToLocalPaths(options)
         # ignoreSSLTunnelExts is a workaround for bug 1109310
-        Mochitest.startServers(self, options, debuggerInfo, ignoreSSLTunnelExts = True)
+        Mochitest.startServers(
+            self,
+            options,
+            debuggerInfo,
+            ignoreSSLTunnelExts=True)
         restoreRemotePaths()
 
     def buildProfile(self, options):
@@ -368,15 +434,31 @@ class MochiRemote(Mochitest):
         # we do not need this for robotium based tests, lets save a LOT of time
         if options.robocopIni:
             shutil.rmtree(os.path.join(options.profilePath, 'webapps'))
-            shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'mochikit@mozilla.org'))
-            shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'worker-test@mozilla.org'))
-            shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'workerbootstrap-test@mozilla.org'))
+            shutil.rmtree(
+                os.path.join(
+                    options.profilePath,
+                    'extensions',
+                    'staged',
+                    'mochikit@mozilla.org'))
+            shutil.rmtree(
+                os.path.join(
+                    options.profilePath,
+                    'extensions',
+                    'staged',
+                    'worker-test@mozilla.org'))
+            shutil.rmtree(
+                os.path.join(
+                    options.profilePath,
+                    'extensions',
+                    'staged',
+                    'workerbootstrap-test@mozilla.org'))
             os.remove(os.path.join(options.profilePath, 'userChrome.css'))
 
         try:
             self._dm.pushDir(options.profilePath, self.remoteProfile)
         except devicemanager.DMError:
-            self.log.error("Automation Error: Unable to copy profile to device.")
+            self.log.error(
+                "Automation Error: Unable to copy profile to device.")
             raise
 
         restoreRemotePaths()
@@ -392,11 +474,12 @@ class MochiRemote(Mochitest):
         retVal = Mochitest.buildURLOptions(self, options, env)
 
         if not options.robocopIni:
-            #we really need testConfig.js (for browser chrome)
+            # we really need testConfig.js (for browser chrome)
             try:
                 self._dm.pushDir(options.profilePath, self.remoteProfile)
             except devicemanager.DMError:
-                self.log.error("Automation Error: Unable to copy profile to device.")
+                self.log.error(
+                    "Automation Error: Unable to copy profile to device.")
                 raise
 
         options.profilePath = self.remoteProfile
@@ -416,7 +499,11 @@ class MochiRemote(Mochitest):
             # robocop tests.
             return self.buildTestURL(options)
         else:
-            return super(MochiRemote, self).buildTestPath(options, testsToFilter)
+            return super(
+                MochiRemote,
+                self).buildTestPath(
+                options,
+                testsToFilter)
 
     def getChromeTestDir(self, options):
         local = super(MochiRemote, self).getChromeTestDir(options)
@@ -430,7 +517,8 @@ class MochiRemote(Mochitest):
     def getLogFilePath(self, logFile):
         return logFile
 
-    # In the future we could use LogParser: http://hg.mozilla.org/automation/logparser/
+    # In the future we could use LogParser:
+    # http://hg.mozilla.org/automation/logparser/
     def addLogData(self):
         with open(self.localLog) as currentLog:
             data = currentLog.readlines()
@@ -461,7 +549,8 @@ class MochiRemote(Mochitest):
         if fail_found:
             result = 1
         if not end_found:
-            self.log.info("PROCESS-CRASH | Automation Error: Missing end of test marker (process crashed?)")
+            self.log.info(
+                "PROCESS-CRASH | Automation Error: Missing end of test marker (process crashed?)")
             result = 1
         return result
 
@@ -494,7 +583,8 @@ class MochiRemote(Mochitest):
         incr += 1
         logFile.append("%s INFO SimpleTest FINISHED" % incr)
 
-        # TODO: Consider not printing to stdout because we might be duplicating output
+        # TODO: Consider not printing to stdout because we might be duplicating
+        # output
         print '\n'.join(logFile)
         with open(self.localLog, 'w') as localLog:
             localLog.write('\n'.join(logFile))
@@ -506,7 +596,9 @@ class MochiRemote(Mochitest):
     def printScreenshots(self, screenShotDir):
         # TODO: This can be re-written after completion of bug 749421
         if not self._dm.dirExists(screenShotDir):
-            self.log.info("SCREENSHOT: No ScreenShots directory available: " + screenShotDir)
+            self.log.info(
+                "SCREENSHOT: No ScreenShots directory available: " +
+                screenShotDir)
             return
 
         printed = 0
@@ -527,8 +619,13 @@ class MochiRemote(Mochitest):
     def printDeviceInfo(self, printLogcat=False):
         try:
             if printLogcat:
-                logcat = self._dm.getLogcat(filterOutRegexps=fennecLogcatFilters)
-                self.log.info('\n' + ''.join(logcat).decode('utf-8', 'replace'))
+                logcat = self._dm.getLogcat(
+                    filterOutRegexps=fennecLogcatFilters)
+                self.log.info(
+                    '\n' +
+                    ''.join(logcat).decode(
+                        'utf-8',
+                        'replace'))
             self.log.info("Device info: %s" % self._dm.getInfo())
             self.log.info("Test root: %s" % self._dm.deviceRoot)
         except devicemanager.DMError:
@@ -543,7 +640,9 @@ class MochiRemote(Mochitest):
         fHandle.write("profile=%s\n" % (self.remoteProfile))
         fHandle.write("logfile=%s\n" % (options.remoteLogFile))
         fHandle.write("host=http://mochi.test:8888/tests\n")
-        fHandle.write("rawhost=http://%s:%s/tests\n" % (options.remoteWebServer, options.httpPort))
+        fHandle.write(
+            "rawhost=http://%s:%s/tests\n" %
+            (options.remoteWebServer, options.httpPort))
 
         if browserEnv:
             envstr = ""
@@ -551,7 +650,9 @@ class MochiRemote(Mochitest):
             for key, value in browserEnv.items():
                 try:
                     value.index(',')
-                    self.log.error("buildRobotiumConfig: browserEnv - Found a ',' in our value, unable to process value. key=%s,value=%s" % (key, value))
+                    self.log.error(
+                        "buildRobotiumConfig: browserEnv - Found a ',' in our value, unable to process value. key=%s,value=%s" %
+                        (key, value))
                     self.log.error("browserEnv=%s" % browserEnv)
                 except ValueError:
                     envstr += "%s%s=%s" % (delim, key, value)
@@ -561,7 +662,11 @@ class MochiRemote(Mochitest):
         fHandle.close()
 
         self._dm.removeFile(os.path.join(deviceRoot, "robotium.config"))
-        self._dm.pushFile(fHandle.name, os.path.join(deviceRoot, "robotium.config"))
+        self._dm.pushFile(
+            fHandle.name,
+            os.path.join(
+                deviceRoot,
+                "robotium.config"))
         os.unlink(fHandle.name)
 
     def getGMPPluginPath(self, options):
@@ -569,10 +674,15 @@ class MochiRemote(Mochitest):
         return None
 
     def buildBrowserEnv(self, options, debugger=False):
-        browserEnv = Mochitest.buildBrowserEnv(self, options, debugger=debugger)
+        browserEnv = Mochitest.buildBrowserEnv(
+            self,
+            options,
+            debugger=debugger)
         # override nsprLogs to avoid processing in Mochitest base class
         self.nsprLogs = None
-        browserEnv["NSPR_LOG_FILE"] = os.path.join(self.remoteNSPR, self.nsprLogName)
+        browserEnv["NSPR_LOG_FILE"] = os.path.join(
+            self.remoteNSPR,
+            self.nsprLogName)
         self.buildRobotiumConfig(options, browserEnv)
         return browserEnv
 
@@ -593,6 +703,7 @@ class MochiRemote(Mochitest):
 
         return self._automation.runApp(*args, **kwargs)
 
+
 def main(args):
     message_logger = MessageLogger(logger=None)
     process_args = {'messageLogger': message_logger}
@@ -604,13 +715,23 @@ def main(args):
 
     if (options.dm_trans == "adb"):
         if (options.deviceIP):
-            dm = droid.DroidADB(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
+            dm = droid.DroidADB(
+                options.deviceIP,
+                options.devicePort,
+                deviceRoot=options.remoteTestRoot)
         elif (options.deviceSerial):
-            dm = droid.DroidADB(None, None, deviceSerial=options.deviceSerial, deviceRoot=options.remoteTestRoot)
+            dm = droid.DroidADB(
+                None,
+                None,
+                deviceSerial=options.deviceSerial,
+                deviceRoot=options.remoteTestRoot)
         else:
             dm = droid.DroidADB(deviceRoot=options.remoteTestRoot)
     else:
-         dm = droid.DroidSUT(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
+        dm = droid.DroidSUT(
+            options.deviceIP,
+            options.devicePort,
+            deviceRoot=options.remoteTestRoot)
     auto.setDeviceManager(dm)
     options = parser.verifyRemoteOptions(options, auto)
 
@@ -620,23 +741,24 @@ def main(args):
     message_logger.logger = log
     mochitest.message_logger = message_logger
 
-    if (options == None):
-        log.error("Invalid options specified, use --help for a list of valid options")
+    if (options is None):
+        log.error(
+            "Invalid options specified, use --help for a list of valid options")
         return 1
 
     productPieces = options.remoteProductName.split('.')
-    if (productPieces != None):
+    if (productPieces is not None):
         auto.setProduct(productPieces[0])
     else:
         auto.setProduct(options.remoteProductName)
     auto.setAppName(options.remoteappname)
 
     options = parser.verifyOptions(options, mochitest)
-    if (options == None):
+    if (options is None):
         return 1
 
     logParent = os.path.dirname(options.remoteLogFile)
-    dm.mkDir(logParent);
+    dm.mkDir(logParent)
     auto.setRemoteLog(options.remoteLogFile)
     auto.setServerInfo(options.webServer, options.httpPort, options.sslPort)
 
@@ -645,7 +767,9 @@ def main(args):
     # Add Android version (SDK level) to mozinfo so that manifest entries
     # can be conditional on android_version.
     androidVersion = dm.shellCheckOutput(['getprop', 'ro.build.version.sdk'])
-    log.info("Android sdk version '%s'; will use this to filter manifests" % str(androidVersion))
+    log.info(
+        "Android sdk version '%s'; will use this to filter manifests" %
+        str(androidVersion))
     mozinfo.info['android_version'] = androidVersion
 
     deviceRoot = dm.deviceRoot
@@ -677,13 +801,14 @@ def main(args):
             tests.append(test['name'])
 
         if options.totalChunks:
-            tests_per_chunk = math.ceil(len(tests) / (options.totalChunks * 1.0))
-            start = int(round((options.thisChunk-1) * tests_per_chunk))
+            tests_per_chunk = math.ceil(
+                len(tests) / (options.totalChunks * 1.0))
+            start = int(round((options.thisChunk - 1) * tests_per_chunk))
             end = int(round(options.thisChunk * tests_per_chunk))
             if end > len(tests):
                 end = len(tests)
             my_tests = tests[start:end]
-            log.info("Running tests %d-%d/%d" % (start+1, end, len(tests)))
+            log.info("Running tests %d-%d/%d" % (start + 1, end, len(tests)))
 
         options.extraPrefs.append('browser.search.suggest.enabled=true')
         options.extraPrefs.append('browser.search.suggest.prompted=true')
@@ -706,7 +831,9 @@ def main(args):
                 continue
 
             if 'disabled' in test:
-                log.info('TEST-INFO | skipping %s | %s' % (test['name'], test['disabled']))
+                log.info(
+                    'TEST-INFO | skipping %s | %s' %
+                    (test['name'], test['disabled']))
                 continue
 
             active_tests.append(test)
@@ -714,7 +841,8 @@ def main(args):
         log.suite_start([t['name'] for t in active_tests])
 
         for test in active_tests:
-            # When running in a loop, we need to create a fresh profile for each cycle
+            # When running in a loop, we need to create a fresh profile for
+            # each cycle
             if mochitest.localProfile:
                 options.profilePath = mochitest.localProfile
                 os.system("rm -Rf %s" % options.profilePath)
@@ -722,34 +850,75 @@ def main(args):
                 mochitest.localProfile = options.profilePath
 
             options.app = "am"
-            options.browserArgs = ["instrument", "-w", "-e", "deviceroot", deviceRoot, "-e", "class"]
-            options.browserArgs.append("org.mozilla.gecko.tests.%s" % test['name'])
-            options.browserArgs.append("org.mozilla.roboexample.test/org.mozilla.gecko.FennecInstrumentationTestRunner")
+            options.browserArgs = [
+                "instrument",
+                "-w",
+                "-e",
+                "deviceroot",
+                deviceRoot,
+                "-e",
+                "class"]
+            options.browserArgs.append(
+                "org.mozilla.gecko.tests.%s" %
+                test['name'])
+            options.browserArgs.append(
+                "org.mozilla.roboexample.test/org.mozilla.gecko.FennecInstrumentationTestRunner")
             mochitest.nsprLogName = "nspr-%s.log" % test['name']
 
-            # If the test is for checking the import from bookmarks then make sure there is data to import
+            # If the test is for checking the import from bookmarks then make
+            # sure there is data to import
             if test['name'] == "testImportFromAndroid":
 
-                # Get the OS so we can run the insert in the apropriate database and following the correct table schema
+                # Get the OS so we can run the insert in the apropriate
+                # database and following the correct table schema
                 osInfo = dm.getInfo("os")
                 devOS = " ".join(osInfo['os'])
 
                 if ("pandaboard" in devOS):
-                    delete = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser2.db \'delete from bookmarks where _id > 14;\'"]
+                    delete = [
+                        'execsu',
+                        'sqlite3',
+                        "/data/data/com.android.browser/databases/browser2.db \'delete from bookmarks where _id > 14;\'"]
                 else:
-                    delete = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser.db \'delete from bookmarks where _id > 14;\'"]
+                    delete = [
+                        'execsu',
+                        'sqlite3',
+                        "/data/data/com.android.browser/databases/browser.db \'delete from bookmarks where _id > 14;\'"]
                 if (options.dm_trans == "sut"):
                     dm._runCmds([{"cmd": " ".join(delete)}])
 
                 # Insert the bookmarks
-                log.info("Insert bookmarks in the default android browser database")
+                log.info(
+                    "Insert bookmarks in the default android browser database")
                 for i in range(20):
-                   if ("pandaboard" in devOS):
-                       cmd = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser2.db 'insert or replace into bookmarks(_id,title,url,folder,parent,position) values (" + str(30 + i) + ",\"Bookmark"+ str(i) + "\",\"http://www.bookmark" + str(i) + ".com\",0,1," + str(100 + i) + ");'"]
-                   else:
-                       cmd = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser.db 'insert into bookmarks(title,url,bookmark) values (\"Bookmark"+ str(i) + "\",\"http://www.bookmark" + str(i) + ".com\",1);'"]
-                   if (options.dm_trans == "sut"):
-                       dm._runCmds([{"cmd": " ".join(cmd)}])
+                    if ("pandaboard" in devOS):
+                        cmd = [
+                            'execsu',
+                            'sqlite3',
+                            "/data/data/com.android.browser/databases/browser2.db 'insert or replace into bookmarks(_id,title,url,folder,parent,position) values (" +
+                            str(
+                                30 +
+                                i) +
+                            ",\"Bookmark" +
+                            str(i) +
+                            "\",\"http://www.bookmark" +
+                            str(i) +
+                            ".com\",0,1," +
+                            str(
+                                100 +
+                                i) +
+                            ");'"]
+                    else:
+                        cmd = [
+                            'execsu',
+                            'sqlite3',
+                            "/data/data/com.android.browser/databases/browser.db 'insert into bookmarks(title,url,bookmark) values (\"Bookmark" +
+                            str(i) +
+                            "\",\"http://www.bookmark" +
+                            str(i) +
+                            ".com\",1);'"]
+                    if (options.dm_trans == "sut"):
+                        dm._runCmds([{"cmd": " ".join(cmd)}])
             try:
                 screenShotDir = "/mnt/sdcard/Robotium-Screenshots"
                 dm.removeDir(screenShotDir)
@@ -761,11 +930,13 @@ def main(args):
                 if result != 0 or log_result != 0:
                     mochitest.printDeviceInfo(printLogcat=True)
                     mochitest.printScreenshots(screenShotDir)
-                # Ensure earlier failures aren't overwritten by success on this run
+                # Ensure earlier failures aren't overwritten by success on this
+                # run
                 if retVal is None or retVal == 0:
                     retVal = result
             except:
-                log.error("Automation Error: Exception caught while running tests")
+                log.error(
+                    "Automation Error: Exception caught while running tests")
                 traceback.print_exc()
                 mochitest.stopServers()
                 try:
@@ -779,9 +950,15 @@ def main(args):
                 # Clean-up added bookmarks
                 if test['name'] == "testImportFromAndroid":
                     if ("pandaboard" in devOS):
-                        cmd_del = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser2.db \'delete from bookmarks where _id > 14;\'"]
+                        cmd_del = [
+                            'execsu',
+                            'sqlite3',
+                            "/data/data/com.android.browser/databases/browser2.db \'delete from bookmarks where _id > 14;\'"]
                     else:
-                        cmd_del = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser.db \'delete from bookmarks where _id > 14;\'"]
+                        cmd_del = [
+                            'execsu',
+                            'sqlite3',
+                            "/data/data/com.android.browser/databases/browser.db \'delete from bookmarks where _id > 14;\'"]
                     if (options.dm_trans == "sut"):
                         dm._runCmds([{"cmd": " ".join(cmd_del)}])
         if retVal is None:

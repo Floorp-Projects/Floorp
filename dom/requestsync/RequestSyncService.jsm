@@ -69,6 +69,9 @@ this.RequestSyncService = {
   _activeTask: null,
   _queuedTasks: [],
 
+  _timers: {},
+  _pendingRequests: {},
+
   // Initialization of the RequestSyncService.
   init: function() {
     debug("init");
@@ -165,8 +168,8 @@ this.RequestSyncService = {
 
     // At this point we don't have the origin, so we cannot create the full
     // key. Using the partial one is enough to detect the uninstalled app.
-    var partialKey = params.appId + '|' + params.browserOnly + '|';
-    var dbKeys = [];
+    let partialKey = params.appId + '|' + params.browserOnly + '|';
+    let dbKeys = [];
 
     for (let key  in this._registrations) {
       if (key.indexOf(partialKey) != 0) {
@@ -260,7 +263,7 @@ this.RequestSyncService = {
     delete this._registrations[aKey][aTaskName];
 
     // Lets remove the key in case there are not tasks registered.
-    for (var key in this._registrations[aKey]) {
+    for (let key in this._registrations[aKey]) {
       return;
     }
     delete this._registrations[aKey];
@@ -401,9 +404,7 @@ this.RequestSyncService = {
     let data = { principal: aPrincipal,
                  dbKey: dbKey,
                  data: aData.params,
-                 active: true,
-                 timer: null,
-                 requestIDs: [] };
+                 active: true };
 
     let self = this;
     this.dbTxn('readwrite', function(aStore) {
@@ -587,7 +588,7 @@ this.RequestSyncService = {
     }
 
     // Storing the requestID into the task for the callback.
-    task.requestIDs.push({ target: aTarget, requestID: aData.requestID });
+    this.storePendingRequest(task, aTarget, aData.requestID);
     this.timeout(task);
   },
 
@@ -624,10 +625,7 @@ this.RequestSyncService = {
   scheduleTimer: function(aObj) {
     debug("scheduleTimer");
 
-    if (aObj.timer) {
-      aObj.timer.cancel();
-      aObj.timer = null;
-    }
+    this.removeTimer(aObj);
 
     // A  registration can be already inactive if it was 1 shot.
     if (!aObj.active) {
@@ -643,17 +641,7 @@ this.RequestSyncService = {
       return;
     }
 
-    aObj.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
-    let interval = aObj.data.minInterval;
-    if (aObj.data.overwrittenMinInterval > 0) {
-      interval = aObj.data.overwrittenMinInterval;
-    }
-
-    let self = this;
-    aObj.timer.initWithCallback(function() { self.timeout(aObj); },
-                                interval * 1000,
-                                Ci.nsITimer.TYPE_ONE_SHOT);
+    this.createTimer(aObj);
   },
 
   timeout: function(aObj) {
@@ -685,7 +673,7 @@ this.RequestSyncService = {
       return;
     }
 
-    aObj.timer = null;
+    this.removeTimer(aObj);
     this._activeTask = aObj;
 
     if (!manifestURL || !pageURL) {
@@ -755,14 +743,11 @@ this.RequestSyncService = {
     this._activeTask.active = !this._activeTask.data.oneShot;
     this._activeTask.data.lastSync = new Date();
 
-    if (this._activeTask.requestIDs.length) {
-      for (let i = 0; i < this._activeTask.requestIDs.length; ++i) {
-        this._activeTask.requestIDs[i]
-            .target.sendAsyncMessage("RequestSyncManager:RunTask:Return",
-                                     { requestID: this._activeTask.requestIDs[i].requestID });
-      }
-
-      this._activeTask.requestIDs = [];
+    let pendingRequests = this.stealPendingRequests(this._activeTask);
+    for (let i = 0; i < pendingRequests.length; ++i) {
+      pendingRequests[i]
+          .target.sendAsyncMessage("RequestSyncManager:RunTask:Return",
+                                   { requestID: pendingRequests[i].requestID });
     }
 
     let self = this;
@@ -860,13 +845,13 @@ this.RequestSyncService = {
     // This method is used also to remove registations from the map, so we have
     // to make a new list and let _registations free to be used.
     let list = [];
-    for (var key in this._registrations) {
-      for (var task in this._registrations[key]) {
+    for (let key in this._registrations) {
+      for (let task in this._registrations[key]) {
         list.push(this._registrations[key][task]);
       }
     }
 
-    for (var i = 0; i < list.length; ++i) {
+    for (let i = 0; i < list.length; ++i) {
       aCb(list[i]);
     }
   },
@@ -879,9 +864,8 @@ this.RequestSyncService = {
       // Disable all the wifiOnly tasks.
       let self = this;
       this.forEachRegistration(function(aObj) {
-        if (aObj.data.state == RSYNC_STATE_WIFIONLY && aObj.timer) {
-          aObj.timer.cancel();
-          aObj.timer = null;
+        if (aObj.data.state == RSYNC_STATE_WIFIONLY && self.hasTimer(aObj)) {
+          self.removeTimer(aObj);
 
           // It can be that this task has been already schedulated.
           self.removeTaskFromQueue(aObj);
@@ -893,7 +877,7 @@ this.RequestSyncService = {
     // Enable all the tasks.
     let self = this;
     this.forEachRegistration(function(aObj) {
-      if (aObj.active && !aObj.timer) {
+      if (aObj.active && !self.hasTimer(aObj)) {
         if (!aObj.data.wifiOnly) {
           dump("ERROR - Found a disabled task that is not wifiOnly.");
         }
@@ -901,6 +885,50 @@ this.RequestSyncService = {
         self.scheduleTimer(aObj);
       }
     });
+  },
+
+  createTimer: function(aObj) {
+    this._timers[aObj.dbKey] = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
+    let interval = aObj.data.minInterval;
+    if (aObj.data.overwrittenMinInterval > 0) {
+      interval = aObj.data.overwrittenMinInterval;
+    }
+
+    let self = this;
+    this._timers[aObj.dbKey].initWithCallback(function() { self.timeout(aObj); },
+                                              interval * 1000,
+                                              Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
+  hasTimer: function(aObj) {
+    return (aObj.dbKey in this._timers);
+  },
+
+  removeTimer: function(aObj) {
+    if (aObj.dbKey in this._timers) {
+      this._timers[aObj.dbKey].cancel();
+      delete this._timers[aObj.dbKey];
+    }
+  },
+
+  storePendingRequest: function(aObj, aTarget, aRequestID) {
+    if (!(aObj.dbKey in this._pendingRequests)) {
+      this._pendingRequests[aObj.dbKey] = [];
+    }
+
+    this._pendingRequests[aObj.dbKey].push({ target: aTarget,
+                                             requestID: aRequestID });
+  },
+
+  stealPendingRequests: function(aObj) {
+    if (!(aObj.dbKey in this._pendingRequests)) {
+      return [];
+    }
+
+    let requests = this._pendingRequests[aObj.dbKey];
+    delete this._pendingRequests[aObj.dbKey];
+    return requests;
   }
 }
 

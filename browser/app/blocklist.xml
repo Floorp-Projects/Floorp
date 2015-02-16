@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1423263875000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1423697587000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -221,6 +221,26 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i858" id="fftoolbar2014@etech.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+                  <pref>browser.startup.homepage</pref>
+                  <pref>browser.search.defaultenginename</pref>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i854" id="/^(7tG@zEb\.net|ru@gfK0J\.edu)$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i850" id="P2@D.edu">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i554" id="lightningnewtab@gmail.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -264,6 +284,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i620" id="{21EAF666-26B3-4A3C-ABD0-CA2F5A326744}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i856" id="/^({94d62e35-4b43-494c-bf52-ba5935df36ef}|firefox@advanceelite\.com|{bb7b7a60-f574-47c2-8a0b-4c56f2da9802})$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
@@ -448,6 +474,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i744" id="{84a93d51-b7a9-431e-8ff8-d60e5d7f5df1}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i848" id="bcVX5@nQm9l.org">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -1541,6 +1573,12 @@
     </emItem>
       <emItem  blockID="i726" id="{d87d56b2-1379-49f4-b081-af2850c79d8e}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i852" id="6lIy@T.edu">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>

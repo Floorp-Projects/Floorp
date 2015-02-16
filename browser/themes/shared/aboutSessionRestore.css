@@ -11,7 +11,7 @@
 treechildren::-moz-tree-image(icon),
 treechildren::-moz-tree-image(noicon) {
   padding-right: 2px;
-  margin: 0px 2px;
+  margin: 0 2px;
   width: 16px;
   height: 16px;
 }

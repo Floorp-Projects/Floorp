@@ -249,7 +249,7 @@ MouseScrollHandler::ProcessMessage(nsWindowBase* aWidget, UINT msg,
 /* static */
 nsresult
 MouseScrollHandler::SynthesizeNativeMouseScrollEvent(nsWindowBase* aWidget,
-                                                     const nsIntPoint& aPoint,
+                                                     const LayoutDeviceIntPoint& aPoint,
                                                      uint32_t aNativeMessage,
                                                      int32_t aDelta,
                                                      uint32_t aModifierFlags,

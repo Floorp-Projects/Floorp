@@ -2930,9 +2930,22 @@ nsContentUtils::IsInPrivateBrowsing(nsIDocument* aDoc)
   return isPrivate;
 }
 
+bool
+nsContentUtils::DocumentInactiveForImageLoads(nsIDocument* aDocument)
+{
+  if (aDocument && !IsChromeDoc(aDocument) && !aDocument->IsResourceDoc()) {
+    nsCOMPtr<nsPIDOMWindow> win =
+      do_QueryInterface(aDocument->GetScopeObject());
+    return !win || !win->GetDocShell();
+  }
+  return false;
+}
+
 imgLoader*
 nsContentUtils::GetImgLoaderForDocument(nsIDocument* aDoc)
 {
+  NS_ENSURE_TRUE(!DocumentInactiveForImageLoads(aDoc), nullptr);
+
   if (!aDoc) {
     return imgLoader::Singleton();
   }
@@ -2942,8 +2955,11 @@ nsContentUtils::GetImgLoaderForDocument(nsIDocument* aDoc)
 
 // static
 imgLoader*
-nsContentUtils::GetImgLoaderForChannel(nsIChannel* aChannel)
+nsContentUtils::GetImgLoaderForChannel(nsIChannel* aChannel,
+                                       nsIDocument* aContext)
 {
+  NS_ENSURE_TRUE(!DocumentInactiveForImageLoads(aContext), nullptr);
+
   if (!aChannel)
     return imgLoader::Singleton();
   nsCOMPtr<nsILoadContext> context;
@@ -2983,7 +2999,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
   imgLoader* imgLoader = GetImgLoaderForDocument(aLoadingDocument);
   if (!imgLoader) {
     // nothing we can do here
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup = aLoadingDocument->GetDocumentLoadGroup();

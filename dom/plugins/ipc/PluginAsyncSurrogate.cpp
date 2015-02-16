@@ -619,6 +619,9 @@ PluginAsyncSurrogate::GetPropertyHelper(NPObject* aObject, NPIdentifier aName,
 
   PluginScriptableObjectParent* actor =
     static_cast<ParentNPObject*>(realObject)->parent;
+  if (!actor) {
+    return false;
+  }
   bool success = actor->GetPropertyHelper(aName, aHasProperty, aHasMethod, aResult);
   if (!success) {
     const NPNetscapeFuncs* npn = mParent->GetNetscapeFuncs();
