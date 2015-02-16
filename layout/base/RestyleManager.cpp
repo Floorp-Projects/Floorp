@@ -1643,12 +1643,10 @@ RestyleManager::ProcessPendingRestyles()
 #endif
 
   // Before we process any restyles, we need to ensure that style
-  // resulting from any throttled animations (animations that we're
-  // running entirely on the compositor thread) is up-to-date, so that
-  // if any style changes we cause trigger transitions, we have the
-  // correct old style for starting the transition.
-  if (nsLayoutUtils::AreAsyncAnimationsEnabled() &&
-      (mPendingRestyles.Count() > 0 || mDoRebuildAllStyleData)) {
+  // resulting from any animations is up-to-date, so that if any style
+  // changes we cause trigger transitions, we have the correct old style
+  // for starting the transition.
+  if (mHavePendingNonAnimationRestyles || mDoRebuildAllStyleData) {
     IncrementAnimationGeneration();
     UpdateOnlyAnimationStyles();
   }
