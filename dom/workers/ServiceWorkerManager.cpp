@@ -1201,8 +1201,33 @@ public:
 
     nsTArray<nsRefPtr<ServiceWorkerRegistration>> array;
 
+    bool isNullPrincipal = true;
+    nsresult rv = principal->GetIsNullPrincipal(&isNullPrincipal);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (nsContentUtils::IsSystemPrincipal(principal) || isNullPrincipal) {
+      mPromise->MaybeResolve(array);
+      return NS_OK;
+    }
+
     for (uint32_t i = 0; i < swm->mOrderedScopes.Length(); ++i) {
       NS_ConvertUTF8toUTF16 scope(swm->mOrderedScopes[i]);
+
+      nsCOMPtr<nsIURI> scopeURI;
+      nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), scope, nullptr, nullptr);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        mPromise->MaybeReject(rv);
+        break;
+      }
+
+      rv = principal->CheckMayLoad(scopeURI, true /* report */,
+                                   false /* allowIfInheritsPrincipal */);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+
       nsRefPtr<ServiceWorkerRegistration> swr =
         new ServiceWorkerRegistration(mWindow, scope);
 
