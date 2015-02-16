@@ -51,6 +51,7 @@
 #include "mozilla/ipc/InputStreamParams.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/PBackground.h"
+#include "mozilla/storage/Variant.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsClassHashtable.h"
 #include "nsCOMPtr.h"
@@ -137,7 +138,7 @@ static_assert(JS_STRUCTURED_CLONE_VERSION == 5,
               "Need to update the major schema version.");
 
 // Major schema version. Bump for almost everything.
-const uint32_t kMajorSchemaVersion = 17;
+const uint32_t kMajorSchemaVersion = 18;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -249,6 +250,18 @@ const uint32_t kDEBUGTransactionThreadSleepMS = 0;
 
 #endif
 
+struct MozFreeDeleter
+{
+  void
+  operator()(void* aPtr) const
+  {
+    moz_free(aPtr);
+  }
+};
+
+template <typename T>
+using UniqueMozFreePtr = UniquePtr<T, MozFreeDeleter>;
+
 template <size_t N>
 MOZ_CONSTEXPR size_t
 LiteralStringLength(const char (&aArr)[N])
@@ -312,6 +325,9 @@ public:
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FullObjectStoreMetadata);
+
+  bool
+  HasLiveIndexes() const;
 
 private:
   ~FullObjectStoreMetadata()
@@ -429,6 +445,63 @@ private:
   }
 };
 
+struct IndexDataValue final
+{
+  int64_t mIndexId;
+  Key mKey;
+  bool mUnique;
+
+  IndexDataValue()
+    : mIndexId(0)
+    , mUnique(false)
+  {
+    MOZ_COUNT_CTOR(IndexDataValue);
+  }
+
+  explicit
+  IndexDataValue(const IndexDataValue& aOther)
+    : mIndexId(aOther.mIndexId)
+    , mKey(aOther.mKey)
+    , mUnique(aOther.mUnique)
+  {
+    MOZ_ASSERT(!aOther.mKey.IsUnset());
+
+    MOZ_COUNT_CTOR(IndexDataValue);
+  }
+
+  IndexDataValue(int64_t aIndexId, bool aUnique, const Key& aKey)
+    : mIndexId(aIndexId)
+    , mKey(aKey)
+    , mUnique(aUnique)
+  {
+    MOZ_ASSERT(!aKey.IsUnset());
+
+    MOZ_COUNT_CTOR(IndexDataValue);
+  }
+
+  ~IndexDataValue()
+  {
+    MOZ_COUNT_DTOR(IndexDataValue);
+  }
+
+  bool
+  operator==(const IndexDataValue& aOther) const
+  {
+    return mIndexId == aOther.mIndexId &&
+           mKey == aOther.mKey;
+  }
+
+  bool
+  operator<(const IndexDataValue& aOther) const
+  {
+    if (mIndexId == aOther.mIndexId) {
+      return mKey < aOther.mKey;
+    }
+
+    return mIndexId < aOther.mIndexId;
+  }
+};
+
 /*******************************************************************************
  * SQLite functions
  ******************************************************************************/
@@ -522,6 +595,335 @@ GetDatabaseFilename(const nsAString& aName,
   aDatabaseFilename.AppendASCII(substring.get(), substring.Length());
 }
 
+uint32_t
+CompressedByteCountForNumber(uint64_t aNumber)
+{
+  MOZ_ASSERT(aNumber);
+
+  // All bytes have 7 bits available.
+  uint32_t count = 1;
+  while ((aNumber >>= 7)) {
+    count++;
+  }
+
+  return count;
+}
+
+uint32_t
+CompressedByteCountForIndexId(int64_t aIndexId)
+{
+  MOZ_ASSERT(aIndexId);
+  MOZ_ASSERT(UINT64_MAX - uint64_t(aIndexId) >= uint64_t(aIndexId),
+              "Overflow!");
+
+  return CompressedByteCountForNumber(uint64_t(aIndexId * 2));
+}
+
+void
+WriteCompressedNumber(uint64_t aNumber, uint8_t** aIterator)
+{
+  MOZ_ASSERT(aIterator);
+  MOZ_ASSERT(*aIterator);
+
+  uint8_t*& buffer = *aIterator;
+
+#ifdef DEBUG
+  const uint8_t* bufferStart = buffer;
+  const uint64_t originalNumber = aNumber;
+#endif
+
+  while (true) {
+    uint64_t shiftedNumber = aNumber >> 7;
+    if (shiftedNumber) {
+      *buffer++ = uint8_t(0x80 | (aNumber & 0x7f));
+      aNumber = shiftedNumber;
+    } else {
+      *buffer++ = uint8_t(aNumber);
+      break;
+    }
+  }
+
+  MOZ_ASSERT(buffer > bufferStart);
+  MOZ_ASSERT(uint32_t(buffer - bufferStart) ==
+               CompressedByteCountForNumber(originalNumber));
+}
+
+uint64_t
+ReadCompressedNumber(const uint8_t** aIterator, const uint8_t* aEnd)
+{
+  MOZ_ASSERT(aIterator);
+  MOZ_ASSERT(*aIterator);
+  MOZ_ASSERT(aEnd);
+  MOZ_ASSERT(*aIterator < aEnd);
+
+  const uint8_t*& buffer = *aIterator;
+
+  uint8_t shiftCounter = 0;
+  uint64_t result = 0;
+
+  while (true) {
+    MOZ_ASSERT(shiftCounter <= 56, "Shifted too many bits!");
+
+    result += (uint64_t(*buffer & 0x7f) << shiftCounter);
+    shiftCounter += 7;
+
+    if (!(*buffer++ & 0x80)) {
+      break;
+    }
+
+    if (NS_WARN_IF(buffer == aEnd)) {
+      MOZ_ASSERT(false);
+      break;
+    }
+  }
+
+  return result;
+}
+
+void
+WriteCompressedIndexId(int64_t aIndexId, bool aUnique, uint8_t** aIterator)
+{
+  MOZ_ASSERT(aIndexId);
+  MOZ_ASSERT(UINT64_MAX - uint64_t(aIndexId) >= uint64_t(aIndexId),
+             "Overflow!");
+  MOZ_ASSERT(aIterator);
+  MOZ_ASSERT(*aIterator);
+
+  const uint64_t indexId = (uint64_t(aIndexId * 2) | (aUnique ? 1 : 0));
+  WriteCompressedNumber(indexId, aIterator);
+}
+
+void
+ReadCompressedIndexId(const uint8_t** aIterator,
+                      const uint8_t* aEnd,
+                      int64_t* aIndexId,
+                      bool* aUnique)
+{
+  MOZ_ASSERT(aIterator);
+  MOZ_ASSERT(*aIterator);
+  MOZ_ASSERT(aIndexId);
+  MOZ_ASSERT(aUnique);
+
+  uint64_t indexId = ReadCompressedNumber(aIterator, aEnd);
+
+  if (indexId % 2) {
+    *aUnique = true;
+    indexId--;
+  } else {
+    *aUnique = false;
+  }
+
+  MOZ_ASSERT(UINT64_MAX / 2 >= uint64_t(indexId), "Bad index id!");
+
+  *aIndexId = int64_t(indexId / 2);
+}
+
+// static
+nsresult
+MakeCompressedIndexDataValues(
+                          const FallibleTArray<IndexDataValue>& aIndexValues,
+                          UniqueMozFreePtr<uint8_t>& aCompressedIndexDataValues,
+                          uint32_t* aCompressedIndexDataValuesLength)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(!aCompressedIndexDataValues);
+  MOZ_ASSERT(aCompressedIndexDataValuesLength);
+
+  PROFILER_LABEL("IndexedDB",
+                 "MakeCompressedIndexDataValues",
+                 js::ProfileEntry::Category::STORAGE);
+
+  const uint32_t arrayLength = aIndexValues.Length();
+  if (!arrayLength) {
+    *aCompressedIndexDataValuesLength = 0;
+    return NS_OK;
+  }
+
+  // First calculate the size of the final buffer.
+  uint32_t blobDataLength = 0;
+
+  for (uint32_t arrayIndex = 0; arrayIndex < arrayLength; arrayIndex++) {
+    const IndexDataValue& info = aIndexValues[arrayIndex];
+    const nsCString& keyBuffer = info.mKey.GetBuffer();
+    const uint32_t keyBufferLength = keyBuffer.Length();
+
+    MOZ_ASSERT(!keyBuffer.IsEmpty());
+
+    // Don't let |infoLength| overflow.
+    if (NS_WARN_IF(UINT32_MAX - keyBuffer.Length() <
+                   CompressedByteCountForIndexId(info.mIndexId) +
+                   CompressedByteCountForNumber(keyBufferLength))) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    const uint32_t infoLength =
+      CompressedByteCountForIndexId(info.mIndexId) +
+      CompressedByteCountForNumber(keyBufferLength) +
+      keyBufferLength;
+
+    // Don't let |blobDataLength| overflow.
+    if (NS_WARN_IF(UINT32_MAX - infoLength < blobDataLength)) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    blobDataLength += infoLength;
+  }
+
+  UniqueMozFreePtr<uint8_t> blobData(
+    static_cast<uint8_t*>(moz_malloc(blobDataLength)));
+  if (NS_WARN_IF(!blobData)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  uint8_t* blobDataIter = blobData.get();
+
+  for (uint32_t arrayIndex = 0; arrayIndex < arrayLength; arrayIndex++) {
+    const IndexDataValue& info = aIndexValues[arrayIndex];
+    const nsCString& keyBuffer = info.mKey.GetBuffer();
+    const uint32_t keyBufferLength = keyBuffer.Length();
+
+    WriteCompressedIndexId(info.mIndexId, info.mUnique, &blobDataIter);
+    WriteCompressedNumber(keyBuffer.Length(), &blobDataIter);
+
+    memcpy(blobDataIter, keyBuffer.get(), keyBufferLength);
+    blobDataIter += keyBufferLength;
+  }
+
+  MOZ_ASSERT(blobDataIter == blobData.get() + blobDataLength);
+
+  aCompressedIndexDataValues.swap(blobData);
+  *aCompressedIndexDataValuesLength = uint32_t(blobDataLength);
+
+  return NS_OK;
+}
+
+nsresult
+ReadCompressedIndexDataValuesFromBlob(
+                                   const uint8_t* aBlobData,
+                                   uint32_t aBlobDataLength,
+                                   FallibleTArray<IndexDataValue>& aIndexValues)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aBlobData);
+  MOZ_ASSERT(aBlobDataLength);
+  MOZ_ASSERT(aIndexValues.IsEmpty());
+
+  PROFILER_LABEL("IndexedDB",
+                 "ReadCompressedIndexDataValuesFromBlob",
+                 js::ProfileEntry::Category::STORAGE);
+
+  const uint8_t* blobDataIter = aBlobData;
+  const uint8_t* blobDataEnd = aBlobData + aBlobDataLength;
+
+  while (blobDataIter < blobDataEnd) {
+    int64_t indexId;
+    bool unique;
+    ReadCompressedIndexId(&blobDataIter, blobDataEnd, &indexId, &unique);
+
+    if (NS_WARN_IF(blobDataIter == blobDataEnd)) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_FILE_CORRUPTED;
+    }
+
+    // Read key buffer length.
+    const uint64_t keyBufferLength =
+      ReadCompressedNumber(&blobDataIter, blobDataEnd);
+
+    if (NS_WARN_IF(blobDataIter == blobDataEnd) ||
+        NS_WARN_IF(keyBufferLength > uint64_t(UINT32_MAX)) ||
+        NS_WARN_IF(blobDataIter + keyBufferLength > blobDataEnd)) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_FILE_CORRUPTED;
+    }
+
+    nsCString keyBuffer(reinterpret_cast<const char*>(blobDataIter),
+                        uint32_t(keyBufferLength));
+    blobDataIter += keyBufferLength;
+
+    if (NS_WARN_IF(!aIndexValues.InsertElementSorted(
+                      IndexDataValue(indexId, unique, Key(keyBuffer))))) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  MOZ_ASSERT(blobDataIter == blobDataEnd);
+
+  return NS_OK;
+}
+
+// static
+template <typename T>
+nsresult
+ReadCompressedIndexDataValuesFromSource(
+                                   T* aSource,
+                                   uint32_t aColumnIndex,
+                                   FallibleTArray<IndexDataValue>& aIndexValues)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aSource);
+  MOZ_ASSERT(aIndexValues.IsEmpty());
+
+  int32_t columnType;
+  nsresult rv = aSource->GetTypeOfIndex(aColumnIndex, &columnType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (columnType == mozIStorageStatement::VALUE_TYPE_NULL) {
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(columnType == mozIStorageStatement::VALUE_TYPE_BLOB);
+
+  const uint8_t* blobData;
+  uint32_t blobDataLength;
+  rv = aSource->GetSharedBlob(aColumnIndex, &blobDataLength, &blobData);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (NS_WARN_IF(!blobDataLength)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_FILE_CORRUPTED;
+  }
+
+  rv = ReadCompressedIndexDataValuesFromBlob(blobData,
+                                             blobDataLength,
+                                             aIndexValues);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+ReadCompressedIndexDataValues(mozIStorageStatement* aStatement,
+                              uint32_t aColumnIndex,
+                              FallibleTArray<IndexDataValue>& aIndexValues)
+{
+  return ReadCompressedIndexDataValuesFromSource(aStatement,
+                                                 aColumnIndex,
+                                                 aIndexValues);
+}
+
+nsresult
+ReadCompressedIndexDataValues(mozIStorageValueArray* aValues,
+                              uint32_t aColumnIndex,
+                              FallibleTArray<IndexDataValue>& aIndexValues)
+{
+  return ReadCompressedIndexDataValuesFromSource(aValues,
+                                                 aColumnIndex,
+                                                 aIndexValues);
+}
+
 nsresult
 CreateFileTables(mozIStorageConnection* aConnection)
 {
@@ -608,10 +1010,14 @@ CreateTables(mozIStorageConnection* aConnection)
 
   // Table `database`
   nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE database ("
-      "name TEXT NOT NULL, "
-      "version INTEGER NOT NULL DEFAULT 0"
-    ");"
+    "CREATE TABLE database"
+      "( name TEXT PRIMARY KEY"
+      ", origin TEXT NOT NULL"
+      ", version INTEGER NOT NULL DEFAULT 0"
+      ", last_vacuum_time INTEGER NOT NULL DEFAULT 0"
+      ", last_analyze_time INTEGER NOT NULL DEFAULT 0"
+      ", last_vacuum_size INTEGER NOT NULL DEFAULT 0"
+      ") WITHOUT ROWID;"
   ));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -619,30 +1025,12 @@ CreateTables(mozIStorageConnection* aConnection)
 
   // Table `object_store`
   rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE object_store ("
-      "id INTEGER PRIMARY KEY, "
-      "auto_increment INTEGER NOT NULL DEFAULT 0, "
-      "name TEXT NOT NULL, "
-      "key_path TEXT, "
-      "UNIQUE (name)"
-    ");"
-  ));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Table `object_data`
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE object_data ("
-      "id INTEGER PRIMARY KEY, "
-      "object_store_id INTEGER NOT NULL, "
-      "key_value BLOB DEFAULT NULL, "
-      "file_ids TEXT, "
-      "data BLOB NOT NULL, "
-      "UNIQUE (object_store_id, key_value), "
-      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
-        "CASCADE"
-    ");"
+    "CREATE TABLE object_store"
+      "( id INTEGER PRIMARY KEY"
+      ", auto_increment INTEGER NOT NULL DEFAULT 0"
+      ", name TEXT NOT NULL"
+      ", key_path TEXT"
+      ");"
   ));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -650,17 +1038,33 @@ CreateTables(mozIStorageConnection* aConnection)
 
   // Table `index`
   rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE object_store_index ("
-      "id INTEGER PRIMARY KEY, "
-      "object_store_id INTEGER NOT NULL, "
-      "name TEXT NOT NULL, "
-      "key_path TEXT NOT NULL, "
-      "unique_index INTEGER NOT NULL, "
-      "multientry INTEGER NOT NULL, "
-      "UNIQUE (object_store_id, name), "
-      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
-        "CASCADE"
-    ");"
+    "CREATE TABLE object_store_index"
+      "( id INTEGER PRIMARY KEY"
+      ", object_store_id INTEGER NOT NULL"
+      ", name TEXT NOT NULL"
+      ", key_path TEXT NOT NULL"
+      ", unique_index INTEGER NOT NULL"
+      ", multientry INTEGER NOT NULL"
+      ", FOREIGN KEY (object_store_id) "
+          "REFERENCES object_store(id) "
+      ");"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Table `object_data`
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE object_data"
+      "( object_store_id INTEGER NOT NULL"
+      ", key BLOB NOT NULL"
+      ", index_data_values BLOB DEFAULT NULL"
+      ", file_ids TEXT"
+      ", data BLOB NOT NULL"
+      ", PRIMARY KEY (object_store_id, key)"
+      ", FOREIGN KEY (object_store_id) "
+          "REFERENCES object_store(id) "
+      ") WITHOUT ROWID;"
   ));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -668,26 +1072,17 @@ CreateTables(mozIStorageConnection* aConnection)
 
   // Table `index_data`
   rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE index_data ("
-      "index_id INTEGER NOT NULL, "
-      "value BLOB NOT NULL, "
-      "object_data_key BLOB NOT NULL, "
-      "object_data_id INTEGER NOT NULL, "
-      "PRIMARY KEY (index_id, value, object_data_key), "
-      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
-        "CASCADE, "
-      "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
-        "CASCADE"
-    ");"
-  ));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Need this to make cascading deletes from object_data and object_store fast.
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX index_data_object_data_id_index "
-    "ON index_data (object_data_id);"
+    "CREATE TABLE index_data"
+      "( index_id INTEGER NOT NULL"
+      ", value BLOB NOT NULL"
+      ", object_data_key BLOB NOT NULL"
+      ", object_store_id INTEGER NOT NULL"
+      ", PRIMARY KEY (index_id, value, object_data_key)"
+      ", FOREIGN KEY (index_id) "
+          "REFERENCES object_store_index(id) "
+      ", FOREIGN KEY (object_store_id, object_data_key) "
+          "REFERENCES object_data(object_store_id, key) "
+      ") WITHOUT ROWID;"
   ));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -695,27 +1090,17 @@ CreateTables(mozIStorageConnection* aConnection)
 
   // Table `unique_index_data`
   rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE unique_index_data ("
-      "index_id INTEGER NOT NULL, "
-      "value BLOB NOT NULL, "
-      "object_data_key BLOB NOT NULL, "
-      "object_data_id INTEGER NOT NULL, "
-      "PRIMARY KEY (index_id, value, object_data_key), "
-      "UNIQUE (index_id, value), "
-      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
-        "CASCADE "
-      "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
-        "CASCADE"
-    ");"
-  ));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Need this to make cascading deletes from object_data and object_store fast.
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX unique_index_data_object_data_id_index "
-    "ON unique_index_data (object_data_id);"
+    "CREATE TABLE unique_index_data"
+      "( index_id INTEGER NOT NULL"
+      ", value BLOB NOT NULL"
+      ", object_store_id INTEGER NOT NULL"
+      ", object_data_key BLOB NOT NULL"
+      ", PRIMARY KEY (index_id, value)"
+      ", FOREIGN KEY (index_id) "
+          "REFERENCES object_store_index(id) "
+      ", FOREIGN KEY (object_store_id, object_data_key) "
+          "REFERENCES object_data(object_store_id, key) "
+      ") WITHOUT ROWID;"
   ));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -2226,6 +2611,925 @@ UpgradeSchemaFrom16_0To17_0(mozIStorageConnection* aConnection)
   return NS_OK;
 }
 
+class UpgradeSchemaFrom17_0To18_0Helper final
+{
+  class InsertIndexDataValuesFunction;
+  class UpgradeKeyFunction;
+
+public:
+  static nsresult
+  DoUpgrade(mozIStorageConnection* aConnection, const nsACString& aOrigin);
+
+private:
+  static nsresult
+  DoUpgradeInternal(mozIStorageConnection* aConnection,
+                    const nsACString& aOrigin);
+
+  UpgradeSchemaFrom17_0To18_0Helper()
+  {
+    MOZ_ASSERT_UNREACHABLE("Don't create instances of this class!");
+  }
+
+  ~UpgradeSchemaFrom17_0To18_0Helper()
+  {
+    MOZ_ASSERT_UNREACHABLE("Don't create instances of this class!");
+  }
+};
+
+class UpgradeSchemaFrom17_0To18_0Helper::InsertIndexDataValuesFunction final
+  : public mozIStorageFunction
+{
+public:
+  InsertIndexDataValuesFunction()
+  { }
+
+  NS_DECL_ISUPPORTS
+
+private:
+  ~InsertIndexDataValuesFunction()
+  { }
+
+  NS_DECL_MOZISTORAGEFUNCTION
+};
+
+NS_IMPL_ISUPPORTS(UpgradeSchemaFrom17_0To18_0Helper::
+                    InsertIndexDataValuesFunction,
+                  mozIStorageFunction);
+
+NS_IMETHODIMP
+UpgradeSchemaFrom17_0To18_0Helper::
+InsertIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
+                                              nsIVariant** _retval)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aValues);
+  MOZ_ASSERT(_retval);
+
+#ifdef DEBUG
+  {
+    uint32_t argCount;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetNumEntries(&argCount)));
+    MOZ_ASSERT(argCount == 4);
+
+    int32_t valueType;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(0, &valueType)));
+    MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_NULL ||
+               valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(1, &valueType)));
+    MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_INTEGER);
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(2, &valueType)));
+    MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_INTEGER);
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(3, &valueType)));
+    MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
+  }
+#endif
+
+  // Read out the previous value. It may be NULL, in which case we'll just end
+  // up with an empty array.
+  AutoFallibleTArray<IndexDataValue, 32> indexValues;
+  nsresult rv = ReadCompressedIndexDataValues(aValues, 0, indexValues);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  int64_t indexId;
+  rv = aValues->GetInt64(1, &indexId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  int32_t unique;
+  rv = aValues->GetInt32(2, &unique);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  Key value;
+  rv = value.SetFromValueArray(aValues, 3);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Update the array with the new addition.
+  if (NS_WARN_IF(!indexValues.SetCapacity(indexValues.Length() + 1))) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  MOZ_ALWAYS_TRUE(
+    indexValues.InsertElementSorted(IndexDataValue(indexId, !!unique, value)));
+
+  // Compress the array.
+  UniqueMozFreePtr<uint8_t> indexValuesBlob;
+  uint32_t indexValuesBlobLength;
+  rv = MakeCompressedIndexDataValues(indexValues,
+                                     indexValuesBlob,
+                                     &indexValuesBlobLength);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // The compressed blob is the result of this function.
+  std::pair<uint8_t *, int> indexValuesBlobPair(indexValuesBlob.release(),
+                                                indexValuesBlobLength);
+
+  nsCOMPtr<nsIVariant> result =
+    new storage::AdoptedBlobVariant(indexValuesBlobPair);
+
+  result.forget(_retval);
+  return NS_OK;
+}
+
+class UpgradeSchemaFrom17_0To18_0Helper::UpgradeKeyFunction final
+  : public mozIStorageFunction
+{
+public:
+  UpgradeKeyFunction()
+  { }
+
+  static nsresult
+  CopyAndUpgradeKeyBuffer(const uint8_t* aSource,
+                          const uint8_t* aSourceEnd,
+                          uint8_t* aDestination)
+  {
+    return CopyAndUpgradeKeyBufferInternal(aSource,
+                                           aSourceEnd,
+                                           aDestination,
+                                           0 /* aTagOffset */,
+                                           0 /* aRecursionDepth */);
+  }
+
+  NS_DECL_ISUPPORTS
+
+private:
+  ~UpgradeKeyFunction()
+  { }
+
+  static nsresult
+  CopyAndUpgradeKeyBufferInternal(const uint8_t*& aSource,
+                                  const uint8_t* aSourceEnd,
+                                  uint8_t*& aDestination,
+                                  uint8_t aTagOffset,
+                                  uint8_t aRecursionDepth);
+
+  static uint32_t
+  AdjustedSize(uint32_t aMaxSize,
+               const uint8_t* aSource,
+               const uint8_t* aSourceEnd)
+  {
+    MOZ_ASSERT(aMaxSize);
+    MOZ_ASSERT(aSource);
+    MOZ_ASSERT(aSourceEnd);
+    MOZ_ASSERT(aSource <= aSourceEnd);
+
+    return std::min(aMaxSize, uint32_t(aSourceEnd - aSource));
+  }
+
+  NS_DECL_MOZISTORAGEFUNCTION
+};
+
+// static
+nsresult
+UpgradeSchemaFrom17_0To18_0Helper::
+UpgradeKeyFunction::CopyAndUpgradeKeyBufferInternal(const uint8_t*& aSource,
+                                                    const uint8_t* aSourceEnd,
+                                                    uint8_t*& aDestination,
+                                                    uint8_t aTagOffset,
+                                                    uint8_t aRecursionDepth)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aSource);
+  MOZ_ASSERT(*aSource);
+  MOZ_ASSERT(aSourceEnd);
+  MOZ_ASSERT(aSource < aSourceEnd);
+  MOZ_ASSERT(aDestination);
+  MOZ_ASSERT(aTagOffset <=  Key::kMaxArrayCollapse);
+
+  static MOZ_CONSTEXPR_VAR uint8_t kOldNumberTag = 0x1;
+  static MOZ_CONSTEXPR_VAR uint8_t kOldDateTag = 0x2;
+  static MOZ_CONSTEXPR_VAR uint8_t kOldStringTag = 0x3;
+  static MOZ_CONSTEXPR_VAR uint8_t kOldArrayTag = 0x4;
+  static MOZ_CONSTEXPR_VAR uint8_t kOldMaxType = kOldArrayTag;
+
+  if (NS_WARN_IF(aRecursionDepth > Key::kMaxRecursionDepth)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_FILE_CORRUPTED;
+  }
+
+  const uint8_t sourceTag = *aSource - (aTagOffset * kOldMaxType);
+  MOZ_ASSERT(sourceTag);
+
+  if (NS_WARN_IF(sourceTag > kOldMaxType * Key::kMaxArrayCollapse)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_FILE_CORRUPTED;
+  }
+
+  if (sourceTag == kOldNumberTag || sourceTag == kOldDateTag) {
+    // Write the new tag.
+    *aDestination++ =
+      (sourceTag == kOldNumberTag ? Key::eFloat : Key::eDate) +
+      (aTagOffset * Key::eMaxType);
+    aSource++;
+
+    // Numbers and Dates are encoded as 64-bit integers, but trailing 0
+    // bytes have been removed.
+    const uint32_t byteCount =
+      AdjustedSize(sizeof(uint64_t), aSource, aSourceEnd);
+
+    for (uint32_t count = 0; count < byteCount; count++) {
+      *aDestination++ = *aSource++;
+    }
+
+    return NS_OK;
+  }
+
+  if (sourceTag == kOldStringTag) {
+    // Write the new tag.
+    *aDestination++ = Key::eString + (aTagOffset * Key::eMaxType);
+    aSource++;
+
+    while (aSource < aSourceEnd) {
+      const uint8_t byte = *aSource++;
+      *aDestination++ = byte;
+
+      if (!byte) {
+        // Just copied the terminator.
+        break;
+      }
+
+      // Maybe copy one or two extra bytes if the byte is tagged and we have
+      // enough source space.
+      if (byte & 0x80) {
+        const uint32_t byteCount =
+          AdjustedSize((byte & 0x40) ? 2 : 1, aSource, aSourceEnd);
+
+        for (uint32_t count = 0; count < byteCount; count++) {
+          *aDestination++ = *aSource++;
+        }
+      }
+    }
+
+    return NS_OK;
+  }
+
+  if (NS_WARN_IF(sourceTag < kOldArrayTag)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_FILE_CORRUPTED;
+  }
+
+  aTagOffset++;
+
+  if (aTagOffset == Key::kMaxArrayCollapse) {
+    MOZ_ASSERT(sourceTag == kOldArrayTag);
+
+    *aDestination++ = (aTagOffset * Key::eMaxType);
+    aSource++;
+
+    aTagOffset = 0;
+  }
+
+  while (aSource < aSourceEnd &&
+         (*aSource - (aTagOffset * kOldMaxType)) != Key::eTerminator) {
+    nsresult rv = CopyAndUpgradeKeyBufferInternal(aSource,
+                                                  aSourceEnd,
+                                                  aDestination,
+                                                  aTagOffset,
+                                                  aRecursionDepth + 1);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    aTagOffset = 0;
+  }
+
+  if (aSource < aSourceEnd) {
+    MOZ_ASSERT((*aSource - (aTagOffset * kOldMaxType)) == Key::eTerminator);
+    *aDestination++ = Key::eTerminator + (aTagOffset * Key::eMaxType);
+    aSource++;
+  }
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(UpgradeSchemaFrom17_0To18_0Helper::UpgradeKeyFunction,
+                  mozIStorageFunction);
+
+NS_IMETHODIMP
+UpgradeSchemaFrom17_0To18_0Helper::
+UpgradeKeyFunction::OnFunctionCall(mozIStorageValueArray* aValues,
+                                   nsIVariant** _retval)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aValues);
+  MOZ_ASSERT(_retval);
+
+#ifdef DEBUG
+  {
+    uint32_t argCount;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetNumEntries(&argCount)));
+    MOZ_ASSERT(argCount == 1);
+
+    int32_t valueType;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(0, &valueType)));
+    MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
+  }
+#endif
+
+  // Dig the old key out of the values.
+  const uint8_t* blobData;
+  uint32_t blobDataLength;
+  nsresult rv = aValues->GetSharedBlob(0, &blobDataLength, &blobData);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Upgrading the key doesn't change the amount of space needed to hold it.
+  UniqueMozFreePtr<uint8_t> upgradedBlobData(
+    static_cast<uint8_t*>(moz_malloc(blobDataLength)));
+  if (NS_WARN_IF(!upgradedBlobData)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  rv = CopyAndUpgradeKeyBuffer(blobData,
+                               blobData + blobDataLength,
+                               upgradedBlobData.get());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // The upgraded key is the result of this function.
+  std::pair<uint8_t*, int> data(upgradedBlobData.release(),
+                                int(blobDataLength));
+
+  nsCOMPtr<nsIVariant> result = new mozilla::storage::AdoptedBlobVariant(data);
+
+  upgradedBlobData.release();
+
+  result.forget(_retval);
+  return NS_OK;
+}
+
+// static
+nsresult
+UpgradeSchemaFrom17_0To18_0Helper::DoUpgrade(mozIStorageConnection* aConnection,
+                                             const nsACString& aOrigin)
+{
+  MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(!aOrigin.IsEmpty());
+
+  // Register the |upgrade_key| function.
+  nsRefPtr<UpgradeKeyFunction> updateFunction = new UpgradeKeyFunction();
+
+  NS_NAMED_LITERAL_CSTRING(upgradeKeyFunctionName, "upgrade_key");
+
+  nsresult rv =
+    aConnection->CreateFunction(upgradeKeyFunctionName, 1, updateFunction);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Register the |insert_idv| function.
+  nsRefPtr<InsertIndexDataValuesFunction> insertIDVFunction =
+    new InsertIndexDataValuesFunction();
+
+  NS_NAMED_LITERAL_CSTRING(insertIDVFunctionName, "insert_idv");
+
+  rv = aConnection->CreateFunction(insertIDVFunctionName, 4, insertIDVFunction);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      aConnection->RemoveFunction(upgradeKeyFunctionName)));
+    return rv;
+  }
+
+  rv = DoUpgradeInternal(aConnection, aOrigin);
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    aConnection->RemoveFunction(upgradeKeyFunctionName)));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    aConnection->RemoveFunction(insertIDVFunctionName)));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
+UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
+                                             mozIStorageConnection* aConnection,
+                                             const nsACString& aOrigin)
+{
+  MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(!aOrigin.IsEmpty());
+
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // Drop these triggers to avoid unnecessary work during the upgrade process.
+    "DROP TRIGGER object_data_insert_trigger;"
+    "DROP TRIGGER object_data_update_trigger;"
+    "DROP TRIGGER object_data_delete_trigger;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // Drop these indexes before we do anything else to free disk space.
+    "DROP INDEX index_data_object_data_id_index;"
+    "DROP INDEX unique_index_data_object_data_id_index;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Create the new tables and triggers first.
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // This will eventually become the |database| table.
+    "CREATE TABLE database_upgrade "
+      "( name TEXT PRIMARY KEY"
+      ", origin TEXT NOT NULL"
+      ", version INTEGER NOT NULL DEFAULT 0"
+      ", last_vacuum_time INTEGER NOT NULL DEFAULT 0"
+      ", last_analyze_time INTEGER NOT NULL DEFAULT 0"
+      ", last_vacuum_size INTEGER NOT NULL DEFAULT 0"
+      ") WITHOUT ROWID;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+     // This will eventually become the |object_store| table.
+    "CREATE TABLE object_store_upgrade"
+      "( id INTEGER PRIMARY KEY"
+      ", auto_increment INTEGER NOT NULL DEFAULT 0"
+      ", name TEXT NOT NULL"
+      ", key_path TEXT"
+      ");"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // This will eventually become the |object_store_index| table.
+    "CREATE TABLE object_store_index_upgrade"
+      "( id INTEGER PRIMARY KEY"
+      ", object_store_id INTEGER NOT NULL"
+      ", name TEXT NOT NULL"
+      ", key_path TEXT NOT NULL"
+      ", unique_index INTEGER NOT NULL"
+      ", multientry INTEGER NOT NULL"
+      ", FOREIGN KEY (object_store_id) "
+          "REFERENCES object_store(id) "
+      ");"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // This will eventually become the |object_data| table.
+    "CREATE TABLE object_data_upgrade"
+      "( object_store_id INTEGER NOT NULL"
+      ", key BLOB NOT NULL"
+      ", index_data_values BLOB DEFAULT NULL"
+      ", file_ids TEXT"
+      ", data BLOB NOT NULL"
+      ", PRIMARY KEY (object_store_id, key)"
+      ", FOREIGN KEY (object_store_id) "
+          "REFERENCES object_store(id) "
+      ") WITHOUT ROWID;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // This will eventually become the |index_data| table.
+    "CREATE TABLE index_data_upgrade"
+      "( index_id INTEGER NOT NULL"
+      ", value BLOB NOT NULL"
+      ", object_data_key BLOB NOT NULL"
+      ", object_store_id INTEGER NOT NULL"
+      ", PRIMARY KEY (index_id, value, object_data_key)"
+      ", FOREIGN KEY (index_id) "
+          "REFERENCES object_store_index(id) "
+      ", FOREIGN KEY (object_store_id, object_data_key) "
+          "REFERENCES object_data(object_store_id, key) "
+      ") WITHOUT ROWID;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // This will eventually become the |unique_index_data| table.
+    "CREATE TABLE unique_index_data_upgrade"
+      "( index_id INTEGER NOT NULL"
+      ", value BLOB NOT NULL"
+      ", object_store_id INTEGER NOT NULL"
+      ", object_data_key BLOB NOT NULL"
+      ", PRIMARY KEY (index_id, value)"
+      ", FOREIGN KEY (index_id) "
+          "REFERENCES object_store_index(id) "
+      ", FOREIGN KEY (object_store_id, object_data_key) "
+          "REFERENCES object_data(object_store_id, key) "
+      ") WITHOUT ROWID;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // Temporarily store |index_data_values| that we build during the upgrade of
+    // the index tables. We will later move this to the |object_data| table.
+    "CREATE TEMPORARY TABLE temp_index_data_values "
+      "( object_store_id INTEGER NOT NULL"
+      ", key BLOB NOT NULL"
+      ", index_data_values BLOB DEFAULT NULL"
+      ", PRIMARY KEY (object_store_id, key)"
+      ") WITHOUT ROWID;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // These two triggers help build the |index_data_values| blobs. The nested
+    // SELECT statements help us achieve an "INSERT OR UPDATE"-like behavior.
+    "CREATE TEMPORARY TRIGGER unique_index_data_upgrade_insert_trigger "
+      "AFTER INSERT ON unique_index_data_upgrade "
+      "BEGIN "
+        "INSERT OR REPLACE INTO temp_index_data_values "
+          "VALUES "
+          "( NEW.object_store_id"
+          ", NEW.object_data_key"
+          ", insert_idv("
+              "( SELECT index_data_values "
+                  "FROM temp_index_data_values "
+                  "WHERE object_store_id = NEW.object_store_id "
+                  "AND key = NEW.object_data_key "
+              "), NEW.index_id"
+               ", 1" /* unique */
+               ", NEW.value"
+            ")"
+          ");"
+      "END;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMPORARY TRIGGER index_data_upgrade_insert_trigger "
+      "AFTER INSERT ON index_data_upgrade "
+      "BEGIN "
+        "INSERT OR REPLACE INTO temp_index_data_values "
+          "VALUES "
+          "( NEW.object_store_id"
+          ", NEW.object_data_key"
+          ", insert_idv("
+              "("
+                "SELECT index_data_values "
+                  "FROM temp_index_data_values "
+                  "WHERE object_store_id = NEW.object_store_id "
+                  "AND key = NEW.object_data_key "
+              "), NEW.index_id"
+               ", 0" /* not unique */
+               ", NEW.value"
+            ")"
+          ");"
+      "END;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Update the |unique_index_data| table to change the column order, remove the
+  // ON DELETE CASCADE clauses, and to apply the WITHOUT ROWID optimization.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // Insert all the data.
+    "INSERT INTO unique_index_data_upgrade "
+      "SELECT "
+        "unique_index_data.index_id, "
+        "upgrade_key(unique_index_data.value), "
+        "object_data.object_store_id, "
+        "upgrade_key(unique_index_data.object_data_key) "
+        "FROM unique_index_data "
+        "JOIN object_data "
+        "ON unique_index_data.object_data_id = object_data.id;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // The trigger is no longer needed.
+    "DROP TRIGGER unique_index_data_upgrade_insert_trigger;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // The old table is no longer needed.
+    "DROP TABLE unique_index_data;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // Rename the table.
+    "ALTER TABLE unique_index_data_upgrade "
+      "RENAME TO unique_index_data;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Update the |index_data| table to change the column order, remove the ON
+  // DELETE CASCADE clauses, and to apply the WITHOUT ROWID optimization.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // Insert all the data.
+    "INSERT INTO index_data_upgrade "
+      "SELECT "
+        "index_data.index_id, "
+        "upgrade_key(index_data.value), "
+        "upgrade_key(index_data.object_data_key), "
+        "object_data.object_store_id "
+        "FROM index_data "
+        "JOIN object_data "
+        "ON index_data.object_data_id = object_data.id;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // The trigger is no longer needed.
+    "DROP TRIGGER index_data_upgrade_insert_trigger;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // The old table is no longer needed.
+    "DROP TABLE index_data;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // Rename the table.
+    "ALTER TABLE index_data_upgrade "
+      "RENAME TO index_data;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Update the |object_data| table to add the |index_data_values| column,
+  // remove the ON DELETE CASCADE clause, and apply the WITHOUT ROWID
+  // optimization.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // Insert all the data.
+    "INSERT INTO object_data_upgrade "
+      "SELECT "
+        "object_data.object_store_id, "
+        "upgrade_key(object_data.key_value), "
+        "temp_index_data_values.index_data_values, "
+        "object_data.file_ids, "
+        "object_data.data "
+        "FROM object_data "
+        "LEFT JOIN temp_index_data_values "
+        "ON object_data.object_store_id = "
+          "temp_index_data_values.object_store_id "
+        "AND upgrade_key(object_data.key_value) = "
+          "temp_index_data_values.key;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // The temporary table is no longer needed.
+    "DROP TABLE temp_index_data_values;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // The old table is no longer needed.
+    "DROP TABLE object_data;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    // Rename the table.
+    "ALTER TABLE object_data_upgrade "
+      "RENAME TO object_data;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Update the |object_store_index| table to remove the UNIQUE constraint and
+  // the ON DELETE CASCADE clause.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO object_store_index_upgrade "
+      "SELECT * "
+        "FROM object_store_index;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE object_store_index;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE object_store_index_upgrade "
+      "RENAME TO object_store_index;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Update the |object_store| table to remove the UNIQUE constraint.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO object_store_upgrade "
+      "SELECT * "
+        "FROM object_store;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE object_store;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE object_store_upgrade "
+      "RENAME TO object_store;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Update the |database| table to include the origin, vacuum information, and
+  // apply the WITHOUT ROWID optimization.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "INSERT INTO database_upgrade "
+      "SELECT name, :origin, version, 0, 0, 0 "
+        "FROM database;"
+  ), getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("origin"), aOrigin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE database;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE database_upgrade "
+      "RENAME TO database;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+#ifdef DEBUG
+  {
+    // Make sure there's only one entry in the |database| table.
+    nsCOMPtr<mozIStorageStatement> stmt;
+    MOZ_ASSERT(NS_SUCCEEDED(
+      aConnection->CreateStatement(
+        NS_LITERAL_CSTRING("SELECT COUNT(*) "
+                             "FROM database;"),
+        getter_AddRefs(stmt))));
+
+    bool hasResult;
+    MOZ_ASSERT(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
+
+    int64_t count;
+    MOZ_ASSERT(NS_SUCCEEDED(stmt->GetInt64(0, &count)));
+
+    MOZ_ASSERT(count == 1);
+  }
+#endif
+
+  // Recreate file table triggers.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER object_data_insert_trigger "
+      "AFTER INSERT ON object_data "
+      "WHEN NEW.file_ids IS NOT NULL "
+      "BEGIN "
+        "SELECT update_refcount(NULL, NEW.file_ids);"
+      "END;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER object_data_update_trigger "
+      "AFTER UPDATE OF file_ids ON object_data "
+      "WHEN OLD.file_ids IS NOT NULL OR NEW.file_ids IS NOT NULL "
+      "BEGIN "
+        "SELECT update_refcount(OLD.file_ids, NEW.file_ids);"
+      "END;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER object_data_delete_trigger "
+      "AFTER DELETE ON object_data "
+      "WHEN OLD.file_ids IS NOT NULL "
+      "BEGIN "
+        "SELECT update_refcount(OLD.file_ids, NULL);"
+      "END;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Finally, turn on auto_vacuum mode. We use full auto_vacuum mode to reclaim
+  // disk space on mobile devices (at the cost of some COMMIT speed), and
+  // incremental auto_vacuum mode on desktop builds.
+  rv = aConnection->ExecuteSimpleSQL(
+#ifdef IDB_MOBILE
+    NS_LITERAL_CSTRING("PRAGMA auto_vacuum = FULL;")
+#else
+    NS_LITERAL_CSTRING("PRAGMA auto_vacuum = INCREMENTAL;")
+#endif
+  );
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->SetSchemaVersion(MakeSchemaVersion(18, 0));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+UpgradeSchemaFrom17_0To18_0(mozIStorageConnection* aConnection,
+                            const nsACString& aOrigin)
+{
+  MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(!aOrigin.IsEmpty());
+
+  PROFILER_LABEL("IndexedDB",
+                 "UpgradeSchemaFrom17_0To18_0",
+                 js::ProfileEntry::Category::STORAGE);
+
+  return UpgradeSchemaFrom17_0To18_0Helper::DoUpgrade(aConnection, aOrigin);
+}
+
 nsresult
 GetDatabaseFileURL(nsIFile* aDatabaseFile,
                    PersistenceType aPersistenceType,
@@ -2267,8 +3571,15 @@ SetDefaultPragmas(mozIStorageConnection* aConnection)
   MOZ_ASSERT(aConnection);
 
   static const char kBuiltInPragmas[] =
-    // We use foreign keys in lots of places.
-    "PRAGMA foreign_keys = ON;"
+    // We use foreign keys in DEBUG builds only because there is a performance
+    // cost to using them.
+   "PRAGMA foreign_keys = "
+#ifdef DEBUG
+     "ON"
+#else
+     "OFF"
+#endif
+     ";"
 
     // The "INSERT OR REPLACE" statement doesn't fire the update trigger,
     // instead it fires only the insert trigger. This confuses the update
@@ -2607,15 +3918,30 @@ CreateStorageConnection(nsIFile* aDBFile,
   bool journalModeSet = false;
 
   if (schemaVersion != kSQLiteSchemaVersion) {
-    if (!schemaVersion) {
-      // Brand new file.
+    const bool newDatabase = !schemaVersion;
 
+    if (newDatabase) {
+      // Set the page size first.
+      if (kSQLitePageSizeOverride) {
+        rv = connection->ExecuteSimpleSQL(
+          nsPrintfCString("PRAGMA page_size = %lu;", kSQLitePageSizeOverride)
+        );
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+      }
+
+      // We have to set the auto_vacuum mode before opening a transaction.
+      rv = connection->ExecuteSimpleSQL(
 #ifdef IDB_MOBILE
-      // Have to do this before opening a transaction.
-      rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        // Turn on auto_vacuum mode to reclaim disk space on mobile devices.
-        "PRAGMA auto_vacuum = FULL; "
-      ));
+        // Turn on full auto_vacuum mode to reclaim disk space on mobile
+        // devices (at the cost of some COMMIT speed).
+        NS_LITERAL_CSTRING("PRAGMA auto_vacuum = FULL;")
+#else
+        // Turn on incremental auto_vacuum mode on desktop builds.
+        NS_LITERAL_CSTRING("PRAGMA auto_vacuum = INCREMENTAL;")
+#endif
+      );
       if (rv == NS_ERROR_FILE_NO_DEVICE_SPACE) {
         // mozstorage translates SQLITE_FULL to NS_ERROR_FILE_NO_DEVICE_SPACE,
         // which we know better as NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR.
@@ -2624,7 +3950,6 @@ CreateStorageConnection(nsIFile* aDBFile,
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-#endif
 
       rv = SetJournalMode(connection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2632,6 +3957,14 @@ CreateStorageConnection(nsIFile* aDBFile,
       }
 
       journalModeSet = true;
+    } else {
+#ifdef DEBUG
+    // Disable foreign key support while upgrading. This has to be done before
+    // starting a transaction.
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      connection->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("PRAGMA foreign_keys = OFF;"))));
+#endif
     }
 
     bool vacuumNeeded = false;
@@ -2639,8 +3972,7 @@ CreateStorageConnection(nsIFile* aDBFile,
     mozStorageTransaction transaction(connection, false,
                                   mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    if (!schemaVersion) {
-      // Brand new file, initialize our tables.
+    if (newDatabase) {
       rv = CreateTables(connection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -2651,8 +3983,8 @@ CreateStorageConnection(nsIFile* aDBFile,
 
       nsCOMPtr<mozIStorageStatement> stmt;
       nsresult rv = connection->CreateStatement(NS_LITERAL_CSTRING(
-        "INSERT INTO database (name) "
-        "VALUES (:name)"
+        "INSERT INTO database (name, origin) "
+        "VALUES (:name, :origin)"
       ), getter_AddRefs(stmt));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -2663,13 +3995,18 @@ CreateStorageConnection(nsIFile* aDBFile,
         return rv;
       }
 
+      rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("origin"), aOrigin);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
       rv = stmt->Execute();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     } else  {
       // This logic needs to change next time we change the schema!
-      static_assert(kSQLiteSchemaVersion == int32_t((17 << 4) + 0),
+      static_assert(kSQLiteSchemaVersion == int32_t((18 << 4) + 0),
                     "Upgrade function needed due to schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
@@ -2700,6 +4037,9 @@ CreateStorageConnection(nsIFile* aDBFile,
           rv = UpgradeSchemaFrom15_0To16_0(connection);
         } else if (schemaVersion == MakeSchemaVersion(16, 0)) {
           rv = UpgradeSchemaFrom16_0To17_0(connection);
+        } else if (schemaVersion == MakeSchemaVersion(17, 0)) {
+          rv = UpgradeSchemaFrom17_0To18_0(connection, aOrigin);
+          vacuumNeeded = true;
         } else {
           IDB_WARNING("Unable to open IndexedDB database, no upgrade path is "
                       "available!");
@@ -2729,8 +4069,150 @@ CreateStorageConnection(nsIFile* aDBFile,
       return rv;
     }
 
+#ifdef DEBUG
+    if (!newDatabase) {
+      // Re-enable foreign key support after doing a foreign key check.
+      nsCOMPtr<mozIStorageStatement> checkStmt;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+        connection->CreateStatement(
+          NS_LITERAL_CSTRING("PRAGMA foreign_key_check;"),
+          getter_AddRefs(checkStmt))));
+
+      bool hasResult;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(checkStmt->ExecuteStep(&hasResult)));
+      MOZ_ASSERT(!hasResult, "Database has inconsisistent foreign keys!");
+
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+        connection->ExecuteSimpleSQL(
+          NS_LITERAL_CSTRING("PRAGMA foreign_keys = OFF;"))));
+    }
+#endif
+
+    if (kSQLitePageSizeOverride && !newDatabase) {
+      nsCOMPtr<mozIStorageStatement> stmt;
+      rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+        "PRAGMA page_size;"
+      ), getter_AddRefs(stmt));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      bool hasResult;
+      rv = stmt->ExecuteStep(&hasResult);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      MOZ_ASSERT(hasResult);
+
+      int32_t pageSize;
+      rv = stmt->GetInt32(0, &pageSize);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      MOZ_ASSERT(pageSize >= 512 && pageSize <= 65536);
+
+      if (kSQLitePageSizeOverride != uint32_t(pageSize)) {
+        // We must not be in WAL journal mode to change the page size.
+        rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "PRAGMA journal_mode = DELETE;"
+        ));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+          "PRAGMA journal_mode;"
+        ), getter_AddRefs(stmt));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        rv = stmt->ExecuteStep(&hasResult);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        MOZ_ASSERT(hasResult);
+
+        nsCString journalMode;
+        rv = stmt->GetUTF8String(0, journalMode);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        if (journalMode.EqualsLiteral("delete")) {
+          // Successfully set to rollback journal mode so changing the page size
+          // is possible with a VACUUM.
+          rv = connection->ExecuteSimpleSQL(
+            nsPrintfCString("PRAGMA page_size = %lu;", kSQLitePageSizeOverride)
+          );
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+
+          // We will need to VACUUM in order to change the page size.
+          vacuumNeeded = true;
+        } else {
+          NS_WARNING("Failed to set journal_mode for database, unable to "
+                     "change the page size!");
+        }
+      }
+    }
+
     if (vacuumNeeded) {
-      rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
+      rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    if (newDatabase || vacuumNeeded) {
+      if (journalModeSet) {
+        // Make sure we checkpoint to get an accurate file size.
+        rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "PRAGMA wal_checkpoint(FULL);"
+        ));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+      }
+
+      int64_t fileSize;
+      rv = aDBFile->GetFileSize(&fileSize);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      MOZ_ASSERT(fileSize > 0);
+
+      PRTime vacuumTime = PR_Now();
+      MOZ_ASSERT(vacuumTime);
+
+      nsCOMPtr<mozIStorageStatement> vacuumTimeStmt;
+      rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+        "UPDATE database "
+          "SET last_vacuum_time = :time"
+            ", last_vacuum_size = :size;"
+      ), getter_AddRefs(vacuumTimeStmt));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = vacuumTimeStmt->BindInt64ByName(NS_LITERAL_CSTRING("time"),
+                                           vacuumTime);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = vacuumTimeStmt->BindInt64ByName(NS_LITERAL_CSTRING("size"),
+                                           fileSize);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = vacuumTimeStmt->Execute();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -3711,7 +5193,28 @@ protected:
                                           uint32_t aDataIndex,
                                           uint32_t aFileIdsIndex,
                                           FileManager* aFileManager,
-                                          StructuredCloneReadInfo* aInfo);
+                                          StructuredCloneReadInfo* aInfo)
+  {
+    return GetStructuredCloneReadInfoFromSource(aStatement,
+                                                aDataIndex,
+                                                aFileIdsIndex,
+                                                aFileManager,
+                                                aInfo);
+  }
+
+  static nsresult
+  GetStructuredCloneReadInfoFromValueArray(mozIStorageValueArray* aValues,
+                                           uint32_t aDataIndex,
+                                           uint32_t aFileIdsIndex,
+                                           FileManager* aFileManager,
+                                           StructuredCloneReadInfo* aInfo)
+  {
+    return GetStructuredCloneReadInfoFromSource(aValues,
+                                                aDataIndex,
+                                                aFileIdsIndex,
+                                                aFileManager,
+                                                aInfo);
+  }
 
   static nsresult
   BindKeyRangeToStatement(const SerializedKeyRange& aKeyRange,
@@ -3725,14 +5228,61 @@ protected:
                         nsAutoCString& aResult);
 
   static nsresult
-  UpdateIndexes(DatabaseConnection* aConnection,
-                const UniqueIndexTable& aUniqueIndexTable,
-                const Key& aObjectStoreKey,
-                bool aOverwrite,
-                int64_t aObjectDataId,
-                const nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
+  GetUniqueIndexTableForObjectStore(
+                               TransactionBase* aTransaction,
+                               int64_t aObjectStoreId,
+                               Maybe<UniqueIndexTable>& aMaybeUniqueIndexTable);
+
+  static nsresult
+  IndexDataValuesFromUpdateInfos(
+                              const nsTArray<IndexUpdateInfo>& aUpdateInfos,
+                              const UniqueIndexTable& aUniqueIndexTable,
+                              FallibleTArray<IndexDataValue>& aIndexValues);
+
+  static nsresult
+  InsertIndexTableRows(DatabaseConnection* aConnection,
+                       const int64_t aObjectStoreId,
+                       const Key& aObjectStoreKey,
+                       const FallibleTArray<IndexDataValue>& aIndexValues);
+
+  static nsresult
+  DeleteIndexDataTableRows(DatabaseConnection* aConnection,
+                           const Key& aObjectStoreKey,
+                           const FallibleTArray<IndexDataValue>& aIndexValues);
+
+  static nsresult
+  DeleteObjectStoreDataTableRowsWithIndexes(DatabaseConnection* aConnection,
+                                            const int64_t aObjectStoreId,
+                                            const OptionalKeyRange& aKeyRange);
+
+  static nsresult
+  UpdateIndexValues(DatabaseConnection* aConnection,
+                    const int64_t aObjectStoreId,
+                    const Key& aObjectStoreKey,
+                    const FallibleTArray<IndexDataValue>& aIndexValues);
+
+#ifdef DEBUG
+  static bool
+  ObjectStoreHasIndexes(DatabaseConnection* aConnection,
+                        const int64_t aObjectStoreId);
+#endif
 
 private:
+  template <typename T>
+  static nsresult
+  GetStructuredCloneReadInfoFromSource(T* aSource,
+                                       uint32_t aDataIndex,
+                                       uint32_t aFileIdsIndex,
+                                       FileManager* aFileManager,
+                                       StructuredCloneReadInfo* aInfo);
+
+  static nsresult
+  GetStructuredCloneReadInfoFromBlob(const uint8_t* aBlobData,
+                                     uint32_t aBlobDataLength,
+                                     const nsAString& aFileIds,
+                                     FileManager* aFileManager,
+                                     StructuredCloneReadInfo* aInfo);
+
   // Not to be overridden by subclasses.
   NS_DECL_MOZISTORAGEPROGRESSHANDLER
 };
@@ -4553,6 +6103,14 @@ private:
   void
   CommitOrRollbackAutoIncrementCounts();
 
+  void
+  AssertForeignKeyConsistency(DatabaseConnection* aConnection)
+#ifdef DEBUG
+  ;
+#else
+  { }
+#endif
+
   NS_DECL_NSIRUNNABLE
 
   virtual void
@@ -5210,13 +6768,18 @@ class DeleteObjectStoreOp final
   friend class VersionChangeTransaction;
 
   const nsRefPtr<FullObjectStoreMetadata> mMetadata;
+  const bool mIsLastObjectStore;
+  const bool mObjectStoreHasIndexes;
 
 private:
   // Only created by VersionChangeTransaction.
   DeleteObjectStoreOp(VersionChangeTransaction* aTransaction,
-                      FullObjectStoreMetadata* const aMetadata)
+                      FullObjectStoreMetadata* const aMetadata,
+                      const bool aIsLastObjectStore)
     : VersionChangeTransactionOp(aTransaction)
     , mMetadata(aMetadata)
+    , mIsLastObjectStore(aIsLastObjectStore)
+    , mObjectStoreHasIndexes(aMetadata->HasLiveIndexes())
   {
     MOZ_ASSERT(aMetadata->mCommonMetadata.id());
   }
@@ -5234,7 +6797,7 @@ class CreateIndexOp final
   friend class VersionChangeTransaction;
 
   class ThreadLocalJSRuntime;
-  friend class ThreadLocalJSRuntime;
+  class UpdateIndexDataValuesFunction;
 
   static const unsigned int kBadThreadLocalIndex =
     static_cast<unsigned int>(-1);
@@ -5256,11 +6819,11 @@ private:
   ~CreateIndexOp()
   { }
 
-  static void
-  InitThreadLocals();
-
   nsresult
   InsertDataFromObjectStore(DatabaseConnection* aConnection);
+
+  nsresult
+  InsertDataFromObjectStoreInternal(DatabaseConnection* aConnection);
 
   virtual bool
   Init(TransactionBase* aTransaction) override;
@@ -5323,25 +6886,61 @@ private:
   Init();
 };
 
+class CreateIndexOp::UpdateIndexDataValuesFunction final
+  : public mozIStorageFunction
+{
+  nsRefPtr<CreateIndexOp> mOp;
+  nsRefPtr<DatabaseConnection> mConnection;
+  JSContext* mCx;
+
+public:
+  UpdateIndexDataValuesFunction(CreateIndexOp* aOp,
+                                DatabaseConnection* aConnection,
+                                JSContext* aCx)
+    : mOp(aOp)
+    , mConnection(aConnection)
+    , mCx(aCx)
+  {
+    MOZ_ASSERT(aOp);
+    MOZ_ASSERT(aConnection);
+    aConnection->AssertIsOnConnectionThread();
+    MOZ_ASSERT(aCx);
+  }
+
+  NS_DECL_ISUPPORTS
+
+private:
+  ~UpdateIndexDataValuesFunction()
+  { }
+
+  NS_DECL_MOZISTORAGEFUNCTION
+};
+
 class DeleteIndexOp final
   : public VersionChangeTransactionOp
 {
   friend class VersionChangeTransaction;
 
+  const int64_t mObjectStoreId;
   const int64_t mIndexId;
+  const bool mUnique;
+  const bool mIsLastIndex;
 
 private:
   // Only created by VersionChangeTransaction.
   DeleteIndexOp(VersionChangeTransaction* aTransaction,
-                const int64_t aIndexId)
-    : VersionChangeTransactionOp(aTransaction)
-    , mIndexId(aIndexId)
-  {
-    MOZ_ASSERT(aIndexId);
-  }
+                const int64_t aObjectStoreId,
+                const int64_t aIndexId,
+                const bool aUnique,
+                const bool aIsLastIndex);
 
   ~DeleteIndexOp()
   { }
+
+  nsresult
+  RemoveReferencesToIndex(DatabaseConnection* aConnection,
+                          const Key& aObjectDataKey,
+                          FallibleTArray<IndexDataValue>& aIndexValues);
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -5408,6 +7007,7 @@ class ObjectStoreAddOrPutRequestOp final
   const nsCString mOrigin;
   const PersistenceType mPersistenceType;
   const bool mOverwrite;
+  const bool mObjectStoreHasIndexes;
 
 private:
   // Only created by TransactionBase.
@@ -5416,6 +7016,9 @@ private:
 
   ~ObjectStoreAddOrPutRequestOp()
   { }
+
+  nsresult
+  RemoveOldIndexDataValues(DatabaseConnection* aConnection);
 
   nsresult
   CopyFileData(nsIInputStream* aInputStream, nsIOutputStream* aOutputStream);
@@ -5522,13 +7125,11 @@ class ObjectStoreDeleteRequestOp final
 
   const ObjectStoreDeleteParams mParams;
   ObjectStoreDeleteResponse mResponse;
+  const bool mObjectStoreHasIndexes;
 
 private:
   ObjectStoreDeleteRequestOp(TransactionBase* aTransaction,
-                             const ObjectStoreDeleteParams& aParams)
-    : NormalTransactionOp(aTransaction)
-    , mParams(aParams)
-  { }
+                             const ObjectStoreDeleteParams& aParams);
 
   ~ObjectStoreDeleteRequestOp()
   { }
@@ -5550,13 +7151,11 @@ class ObjectStoreClearRequestOp final
 
   const ObjectStoreClearParams mParams;
   ObjectStoreClearResponse mResponse;
+  const bool mObjectStoreHasIndexes;
 
 private:
   ObjectStoreClearRequestOp(TransactionBase* aTransaction,
-                            const ObjectStoreClearParams& aParams)
-    : NormalTransactionOp(aTransaction)
-    , mParams(aParams)
-  { }
+                            const ObjectStoreClearParams& aParams);
 
   ~ObjectStoreClearRequestOp()
   { }
@@ -9213,6 +10812,45 @@ TransactionInfoPair::~TransactionInfoPair()
  * Metadata classes
  ******************************************************************************/
 
+bool
+FullObjectStoreMetadata::HasLiveIndexes() const
+{
+  AssertIsOnBackgroundThread();
+
+  class MOZ_STACK_CLASS Helper final
+  {
+  public:
+    static bool
+    HasLiveIndexes(const FullObjectStoreMetadata* aMetadata)
+    {
+      AssertIsOnBackgroundThread();
+      MOZ_ASSERT(aMetadata);
+
+      bool hasLiveIndexes = false;
+      aMetadata->mIndexes.EnumerateRead(&Enumerate, &hasLiveIndexes);
+
+      return hasLiveIndexes;
+    }
+
+  private:
+    static PLDHashOperator
+    Enumerate(const uint64_t& aKey, FullIndexMetadata* aValue, void* aClosure)
+    {
+      auto* result = static_cast<bool*>(aClosure);
+      MOZ_ASSERT(result);
+
+      if (!aValue->mDeleted) {
+        *result = true;
+        return PL_DHASH_STOP;
+      }
+
+      return PL_DHASH_NEXT;
+    }
+  };
+
+  return Helper::HasLiveIndexes(this);
+}
+
 already_AddRefed<FullDatabaseMetadata>
 FullDatabaseMetadata::Duplicate() const
 {
@@ -10856,6 +12494,8 @@ TransactionBase::VerifyRequestParams(const ObjectStoreAddPutParams& aParams)
       ASSERT_UNLESS_FUZZING();
       return false;
     }
+
+    MOZ_ASSERT(!updates[index].value().GetBuffer().IsEmpty());
   }
 
   const nsTArray<DatabaseFileOrMutableFileId>& files = aParams.files();
@@ -11615,6 +13255,56 @@ VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
 {
   AssertIsOnBackgroundThread();
 
+  class MOZ_STACK_CLASS Helper final
+  {
+    const int64_t mObjectStoreId;
+    bool mIsLastObjectStore;
+    DebugOnly<bool> mFoundTargetId;
+
+  public:
+    static bool
+    IsLastObjectStore(const FullDatabaseMetadata* aDatabaseMetadata,
+                      const int64_t aObjectStoreId)
+    {
+      AssertIsOnBackgroundThread();
+      MOZ_ASSERT(aDatabaseMetadata);
+      MOZ_ASSERT(aObjectStoreId);
+
+      Helper helper(aObjectStoreId);
+      aDatabaseMetadata->mObjectStores.EnumerateRead(&Enumerate, &helper);
+
+      MOZ_ASSERT_IF(helper.mIsLastObjectStore, helper.mFoundTargetId);
+
+      return helper.mIsLastObjectStore;
+    }
+
+  private:
+    explicit
+    Helper(const int64_t aObjectStoreId)
+      : mObjectStoreId(aObjectStoreId)
+      , mIsLastObjectStore(true)
+      , mFoundTargetId(false)
+    { }
+
+    static PLDHashOperator
+    Enumerate(const uint64_t& aKey,
+              FullObjectStoreMetadata* aValue,
+              void* aClosure)
+    {
+      auto* helper = static_cast<Helper*>(aClosure);
+      MOZ_ASSERT(helper);
+
+      if (uint64_t(helper->mObjectStoreId) == aKey) {
+        helper->mFoundTargetId = true;
+      } else if(!aValue->mDeleted) {
+        helper->mIsLastObjectStore = false;
+        return PL_DHASH_STOP;
+      }
+
+      return PL_DHASH_NEXT;
+    }
+  };
+
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
     return false;
@@ -11645,7 +13335,10 @@ VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
   foundMetadata->mDeleted = true;
 
   nsRefPtr<DeleteObjectStoreOp> op =
-    new DeleteObjectStoreOp(this, foundMetadata);
+    new DeleteObjectStoreOp(this,
+                            foundMetadata,
+                            Helper::IsLastObjectStore(dbMetadata,
+                                                      aObjectStoreId));
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
@@ -11733,6 +13426,54 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 {
   AssertIsOnBackgroundThread();
 
+  class MOZ_STACK_CLASS Helper final
+  {
+    const int64_t mIndexId;
+    bool mIsLastIndex;
+    DebugOnly<bool> mFoundTargetId;
+
+  public:
+    static bool
+    IsLastIndex(const FullObjectStoreMetadata* aObjectStoreMetadata,
+                const int64_t aIndexId)
+    {
+      AssertIsOnBackgroundThread();
+      MOZ_ASSERT(aObjectStoreMetadata);
+      MOZ_ASSERT(aIndexId);
+
+      Helper helper(aIndexId);
+      aObjectStoreMetadata->mIndexes.EnumerateRead(&Enumerate, &helper);
+
+      MOZ_ASSERT_IF(helper.mIsLastIndex, helper.mFoundTargetId);
+
+      return helper.mIsLastIndex;
+    }
+
+  private:
+    explicit
+    Helper(const int64_t aIndexId)
+      : mIndexId(aIndexId)
+      , mIsLastIndex(true)
+      , mFoundTargetId(false)
+    { }
+
+    static PLDHashOperator
+    Enumerate(const uint64_t& aKey, FullIndexMetadata* aValue, void* aClosure)
+    {
+      auto* helper = static_cast<Helper*>(aClosure);
+      MOZ_ASSERT(helper);
+
+      if (uint64_t(helper->mIndexId) == aKey) {
+        helper->mFoundTargetId = true;
+      } else if (!aValue->mDeleted) {
+        helper->mIsLastIndex = false;
+        return PL_DHASH_STOP;
+      }
+
+      return PL_DHASH_NEXT;
+    }
+  };
+
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
     return false;
@@ -11781,7 +13522,12 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 
   foundIndexMetadata->mDeleted = true;
 
-  nsRefPtr<DeleteIndexOp> op = new DeleteIndexOp(this, aIndexId);
+  nsRefPtr<DeleteIndexOp> op =
+    new DeleteIndexOp(this,
+                      aObjectStoreId,
+                      aIndexId,
+                      foundIndexMetadata->mCommonMetadata.unique(),
+                      Helper::IsLastIndex(foundObjectStoreMetadata, aIndexId));
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
@@ -13608,41 +15354,83 @@ DatabaseOperationBase::ReinterpretDoubleAsUInt64(double aDouble)
 }
 
 // static
+template <typename T>
 nsresult
-DatabaseOperationBase::GetStructuredCloneReadInfoFromStatement(
-                                               mozIStorageStatement* aStatement,
-                                               uint32_t aDataIndex,
-                                               uint32_t aFileIdsIndex,
-                                               FileManager* aFileManager,
-                                               StructuredCloneReadInfo* aInfo)
+DatabaseOperationBase::GetStructuredCloneReadInfoFromSource(
+                                                 T* aSource,
+                                                 uint32_t aDataIndex,
+                                                 uint32_t aFileIdsIndex,
+                                                 FileManager* aFileManager,
+                                                 StructuredCloneReadInfo* aInfo)
 {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aStatement);
+  MOZ_ASSERT(aSource);
   MOZ_ASSERT(aFileManager);
-
-  PROFILER_LABEL("IndexedDB",
-                 "DatabaseOperationBase::"
-                 "GetStructuredCloneReadInfoFromStatement",
-                 js::ProfileEntry::Category::STORAGE);
+  MOZ_ASSERT(aInfo);
 
 #ifdef DEBUG
   {
-    int32_t type;
-    MOZ_ASSERT(NS_SUCCEEDED(aStatement->GetTypeOfIndex(aDataIndex, &type)));
-    MOZ_ASSERT(type == mozIStorageStatement::VALUE_TYPE_BLOB);
+    int32_t columnType;
+    MOZ_ASSERT(NS_SUCCEEDED(aSource->GetTypeOfIndex(aDataIndex, &columnType)));
+    MOZ_ASSERT(columnType == mozIStorageStatement::VALUE_TYPE_BLOB);
   }
 #endif
 
   const uint8_t* blobData;
   uint32_t blobDataLength;
-  nsresult rv =
-    aStatement->GetSharedBlob(aDataIndex, &blobDataLength, &blobData);
+  nsresult rv = aSource->GetSharedBlob(aDataIndex, &blobDataLength, &blobData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  const char* compressed = reinterpret_cast<const char*>(blobData);
-  size_t compressedLength = size_t(blobDataLength);
+  bool isNull;
+  rv = aSource->GetIsNull(aFileIdsIndex, &isNull);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsString fileIds;
+
+  if (isNull) {
+    fileIds.SetIsVoid(true);
+  } else {
+    rv = aSource->GetString(aFileIdsIndex, fileIds);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  rv = GetStructuredCloneReadInfoFromBlob(blobData,
+                                          blobDataLength,
+                                          fileIds,
+                                          aFileManager,
+                                          aInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
+DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
+                                                 const uint8_t* aBlobData,
+                                                 uint32_t aBlobDataLength,
+                                                 const nsAString& aFileIds,
+                                                 FileManager* aFileManager,
+                                                 StructuredCloneReadInfo* aInfo)
+{
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aFileManager);
+  MOZ_ASSERT(aInfo);
+
+  PROFILER_LABEL("IndexedDB",
+                 "DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob",
+                 js::ProfileEntry::Category::STORAGE);
+
+  const char* compressed = reinterpret_cast<const char*>(aBlobData);
+  size_t compressedLength = size_t(aBlobDataLength);
 
   size_t uncompressedLength;
   if (NS_WARN_IF(!snappy::GetUncompressedLength(compressed, compressedLength,
@@ -13650,7 +15438,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromStatement(
     return NS_ERROR_FILE_CORRUPTED;
   }
 
-  FallibleTArray<uint8_t> uncompressed;
+  AutoFallibleTArray<uint8_t, 512> uncompressed;
   if (NS_WARN_IF(!uncompressed.SetLength(uncompressedLength))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -13664,21 +15452,9 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromStatement(
 
   aInfo->mData.SwapElements(uncompressed);
 
-  bool isNull;
-  rv = aStatement->GetIsNull(aFileIdsIndex, &isNull);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!isNull) {
-    nsString ids;
-    rv = aStatement->GetString(aFileIdsIndex, ids);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
+  if (!aFileIds.IsVoid()) {
     nsAutoTArray<int64_t, 10> array;
-    rv = ConvertFileIdsToArray(ids, array);
+    nsresult rv = ConvertFileIdsToArray(aFileIds, array);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -13759,118 +15535,205 @@ DatabaseOperationBase::AppendConditionClause(const nsACString& aColumnName,
 
 // static
 nsresult
-DatabaseOperationBase::UpdateIndexes(
-                              DatabaseConnection* aConnection,
-                              const UniqueIndexTable& aUniqueIndexTable,
-                              const Key& aObjectStoreKey,
-                              bool aOverwrite,
-                              int64_t aObjectDataId,
-                              const nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
+DatabaseOperationBase::GetUniqueIndexTableForObjectStore(
+                                TransactionBase* aTransaction,
+                                int64_t aObjectStoreId,
+                                Maybe<UniqueIndexTable>& aMaybeUniqueIndexTable)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aTransaction);
+  MOZ_ASSERT(aObjectStoreId);
+  MOZ_ASSERT(aMaybeUniqueIndexTable.isNothing());
+
+  class MOZ_STACK_CLASS Helper final
+  {
+  public:
+    static nsresult
+    CopyUniqueValues(const IndexTable& aIndexes,
+                     Maybe<UniqueIndexTable>& aMaybeUniqueIndexTable)
+    {
+      const uint32_t indexCount = aIndexes.Count();
+      MOZ_ASSERT(indexCount);
+
+      aMaybeUniqueIndexTable.emplace();
+
+      aIndexes.EnumerateRead(Enumerate, aMaybeUniqueIndexTable.ptr());
+
+      if (NS_WARN_IF(aMaybeUniqueIndexTable.ref().Count() != indexCount)) {
+        IDB_REPORT_INTERNAL_ERR();
+        aMaybeUniqueIndexTable.reset();
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+#ifdef DEBUG
+      aMaybeUniqueIndexTable.ref().MarkImmutable();
+#endif
+      return NS_OK;
+    }
+
+  private:
+    static PLDHashOperator
+    Enumerate(const uint64_t& aKey, FullIndexMetadata* aValue, void* aClosure)
+    {
+      auto* uniqueIndexTable = static_cast<UniqueIndexTable*>(aClosure);
+      MOZ_ASSERT(uniqueIndexTable);
+      MOZ_ASSERT(!uniqueIndexTable->Get(aValue->mCommonMetadata.id()));
+
+      if (NS_WARN_IF(!uniqueIndexTable->Put(aValue->mCommonMetadata.id(),
+                                            aValue->mCommonMetadata.unique(),
+                                            fallible))) {
+        return PL_DHASH_STOP;
+      }
+
+      return PL_DHASH_NEXT;
+    }
+  };
+
+  const nsRefPtr<FullObjectStoreMetadata> objectStoreMetadata = 
+    aTransaction->GetMetadataForObjectStoreId(aObjectStoreId);
+  MOZ_ASSERT(objectStoreMetadata);
+
+  if (!objectStoreMetadata->mIndexes.Count()) {
+    return NS_OK;
+  }
+
+  nsresult rv = Helper::CopyUniqueValues(objectStoreMetadata->mIndexes,
+                                         aMaybeUniqueIndexTable);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
+DatabaseOperationBase::IndexDataValuesFromUpdateInfos(
+                                  const nsTArray<IndexUpdateInfo>& aUpdateInfos,
+                                  const UniqueIndexTable& aUniqueIndexTable,
+                                  FallibleTArray<IndexDataValue>& aIndexValues)
+{
+  MOZ_ASSERT(aIndexValues.IsEmpty());
+  MOZ_ASSERT_IF(!aUpdateInfos.IsEmpty(), aUniqueIndexTable.Count());
+
+  PROFILER_LABEL("IndexedDB",
+                 "DatabaseOperationBase::IndexDataValuesFromUpdateInfos",
+                 js::ProfileEntry::Category::STORAGE);
+
+  const uint32_t count = aUpdateInfos.Length();
+
+  if (!count) {
+    return NS_OK;
+  }
+
+  if (NS_WARN_IF(!aIndexValues.SetCapacity(count))) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  for (uint32_t idxIndex = 0; idxIndex < count; idxIndex++) {
+    const IndexUpdateInfo& updateInfo = aUpdateInfos[idxIndex];
+    const int64_t& indexId = updateInfo.indexId();
+    const Key& key = updateInfo.value();
+
+    bool unique;
+    MOZ_ALWAYS_TRUE(aUniqueIndexTable.Get(indexId, &unique));
+
+    MOZ_ALWAYS_TRUE(
+      aIndexValues.InsertElementSorted(IndexDataValue(indexId, unique, key)));
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
+DatabaseOperationBase::InsertIndexTableRows(
+                             DatabaseConnection* aConnection,
+                             const int64_t aObjectStoreId,
+                             const Key& aObjectStoreKey,
+                             const FallibleTArray<IndexDataValue>& aIndexValues)
 {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(!aObjectStoreKey.IsUnset());
 
   PROFILER_LABEL("IndexedDB",
-                 "DatabaseOperationBase::UpdateIndexes",
+                 "DatabaseOperationBase::InsertIndexTableRows",
                  js::ProfileEntry::Category::STORAGE);
 
-  nsresult rv;
-  NS_NAMED_LITERAL_CSTRING(objectDataId, "object_data_id");
-
-  if (aOverwrite) {
-    DatabaseConnection::CachedStatement stmt;
-    rv = aConnection->GetCachedStatement(
-        "DELETE FROM unique_index_data "
-        "WHERE object_data_id = :object_data_id; "
-        "DELETE FROM index_data "
-        "WHERE object_data_id = :object_data_id",
-        &stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = stmt->BindInt64ByName(objectDataId, aObjectDataId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = stmt->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  const uint32_t count = aIndexValues.Length();
+  if (!count) {
+    return NS_OK;
   }
 
-  // Avoid lots of hash lookups for objectStores with lots of indexes by lazily
-  // holding the necessary statements on the stack outside the loop.
+  NS_NAMED_LITERAL_CSTRING(objectStoreIdString, "object_store_id");
+  NS_NAMED_LITERAL_CSTRING(objectDataKeyString, "object_data_key");
+  NS_NAMED_LITERAL_CSTRING(indexIdString, "index_id");
+  NS_NAMED_LITERAL_CSTRING(valueString, "value");
+
   DatabaseConnection::CachedStatement insertUniqueStmt;
   DatabaseConnection::CachedStatement insertStmt;
 
-  for (uint32_t idxCount = aUpdateInfoArray.Length(), idxIndex = 0;
-       idxIndex < idxCount;
-       idxIndex++) {
-    const IndexUpdateInfo& updateInfo = aUpdateInfoArray[idxIndex];
+  nsresult rv;
 
-    bool unique;
-    MOZ_ALWAYS_TRUE(aUniqueIndexTable.Get(updateInfo.indexId(), &unique));
+  for (uint32_t index = 0; index < count; index++) {
+    const IndexDataValue& info = aIndexValues[index];
 
     DatabaseConnection::CachedStatement& stmt =
-      unique ? insertUniqueStmt : insertStmt;
+      info.mUnique ? insertUniqueStmt : insertStmt;
 
     if (stmt) {
       stmt.Reset();
-    } else if (unique) {
+    } else if (info.mUnique) {
       rv = aConnection->GetCachedStatement(
         "INSERT INTO unique_index_data "
-          "(index_id, object_data_id, object_data_key, value) "
-        "VALUES (:index_id, :object_data_id, :object_data_key, :value)",
+          "(index_id, value, object_store_id, object_data_key) "
+          "VALUES (:index_id, :value, :object_store_id, :object_data_key);",
         &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     } else {
       rv = aConnection->GetCachedStatement(
-        "INSERT OR IGNORE INTO index_data ("
-          "index_id, object_data_id, object_data_key, value) "
-        "VALUES (:index_id, :object_data_id, :object_data_key, :value)",
+        "INSERT OR IGNORE INTO index_data "
+          "(index_id, value, object_data_key, object_store_id) "
+          "VALUES (:index_id, :value, :object_data_key, :object_store_id);",
         &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     }
 
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"),
-                               updateInfo.indexId());
+    rv = stmt->BindInt64ByName(indexIdString, info.mIndexId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = stmt->BindInt64ByName(objectDataId, aObjectDataId);
+    rv = info.mKey.BindToStatement(stmt, valueString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = aObjectStoreKey.BindToStatement(stmt,
-                                         NS_LITERAL_CSTRING("object_data_key"));
+    rv = stmt->BindInt64ByName(objectStoreIdString, aObjectStoreId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = updateInfo.value().BindToStatement(stmt, NS_LITERAL_CSTRING("value"));
+    rv = aObjectStoreKey.BindToStatement(stmt, objectDataKeyString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     rv = stmt->Execute();
-    if (rv == NS_ERROR_STORAGE_CONSTRAINT && unique) {
+    if (rv == NS_ERROR_STORAGE_CONSTRAINT && info.mUnique) {
       // If we're inserting multiple entries for the same unique index, then
       // we might have failed to insert due to colliding with another entry for
       // the same index in which case we should ignore it.
-      for (int32_t index = int32_t(idxIndex) - 1;
-           index >= 0 &&
-           aUpdateInfoArray[index].indexId() == updateInfo.indexId();
-           --index) {
-        if (updateInfo.value() == aUpdateInfoArray[index].value()) {
+      for (int32_t index2 = int32_t(index) - 1;
+           index2 >= 0 && aIndexValues[index2].mIndexId == info.mIndexId;
+           --index2) {
+        if (info.mKey == aIndexValues[index2].mKey) {
           // We found a key with the same value for the same index. So we
           // must have had a collision with a value we just inserted.
           rv = NS_OK;
@@ -13886,6 +15749,340 @@ DatabaseOperationBase::UpdateIndexes(
 
   return NS_OK;
 }
+
+// static
+nsresult
+DatabaseOperationBase::DeleteIndexDataTableRows(
+                             DatabaseConnection* aConnection,
+                             const Key& aObjectStoreKey,
+                             const FallibleTArray<IndexDataValue>& aIndexValues)
+{
+  MOZ_ASSERT(aConnection);
+  aConnection->AssertIsOnConnectionThread();
+  MOZ_ASSERT(!aObjectStoreKey.IsUnset());
+
+  PROFILER_LABEL("IndexedDB",
+                 "DatabaseOperationBase::DeleteIndexDataTableRows",
+                 js::ProfileEntry::Category::STORAGE);
+
+  const uint32_t count = aIndexValues.Length();
+  if (!count) {
+    return NS_OK;
+  }
+
+  NS_NAMED_LITERAL_CSTRING(indexIdString, "index_id");
+  NS_NAMED_LITERAL_CSTRING(valueString, "value");
+  NS_NAMED_LITERAL_CSTRING(objectDataKeyString, "object_data_key");
+
+  DatabaseConnection::CachedStatement deleteUniqueStmt;
+  DatabaseConnection::CachedStatement deleteStmt;
+
+  nsresult rv;
+
+  for (uint32_t index = 0; index < count; index++) {
+    const IndexDataValue& indexValue = aIndexValues[index];
+
+    DatabaseConnection::CachedStatement& stmt =
+      indexValue.mUnique ? deleteUniqueStmt : deleteStmt;
+
+    if (stmt) {
+      stmt.Reset();
+    } else if (indexValue.mUnique) {
+      rv = aConnection->GetCachedStatement(
+        "DELETE FROM unique_index_data "
+          "WHERE index_id = :index_id "
+          "AND value = :value;",
+        &stmt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    } else {
+      rv = aConnection->GetCachedStatement(
+        "DELETE FROM index_data "
+          "WHERE index_id = :index_id "
+          "AND value = :value "
+          "AND object_data_key = :object_data_key;",
+        &stmt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    rv = stmt->BindInt64ByName(indexIdString, indexValue.mIndexId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = indexValue.mKey.BindToStatement(stmt, valueString);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!indexValue.mUnique) {
+      rv = aObjectStoreKey.BindToStatement(stmt, objectDataKeyString);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
+DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
+                                              DatabaseConnection* aConnection,
+                                              const int64_t aObjectStoreId,
+                                              const OptionalKeyRange& aKeyRange)
+{
+  MOZ_ASSERT(aConnection);
+  aConnection->AssertIsOnConnectionThread();
+  MOZ_ASSERT(aObjectStoreId);
+  MOZ_ASSERT(ObjectStoreHasIndexes(aConnection, aObjectStoreId),
+             "Don't use this slow method if there are no indexes!");
+
+  PROFILER_LABEL("IndexedDB",
+                 "DatabaseOperationBase::"
+                 "DeleteObjectStoreDataTableRowsWithIndexes",
+                 js::ProfileEntry::Category::STORAGE);
+
+  const bool singleRowOnly =
+    aKeyRange.type() == OptionalKeyRange::TSerializedKeyRange &&
+    aKeyRange.get_SerializedKeyRange().isOnly();
+
+  NS_NAMED_LITERAL_CSTRING(objectStoreIdString, "object_store_id");
+  NS_NAMED_LITERAL_CSTRING(keyString, "key");
+
+  nsresult rv;
+  Key objectStoreKey;
+  DatabaseConnection::CachedStatement selectStmt;
+
+  if (singleRowOnly) {
+    rv = aConnection->GetCachedStatement(
+      "SELECT index_data_values "
+        "FROM object_data "
+        "WHERE object_store_id = :object_store_id "
+        "AND key = :key;",
+      &selectStmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    objectStoreKey = aKeyRange.get_SerializedKeyRange().lower();
+
+    rv = objectStoreKey.BindToStatement(selectStmt, keyString);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    nsAutoCString keyRangeClause;
+    if (aKeyRange.type() == OptionalKeyRange::TSerializedKeyRange) {
+      GetBindingClauseForKeyRange(aKeyRange.get_SerializedKeyRange(),
+                                  keyString,
+                                  keyRangeClause);
+    }
+
+    rv = aConnection->GetCachedStatement(
+      NS_LITERAL_CSTRING("SELECT index_data_values, key "
+                           "FROM object_data "
+                           "WHERE object_store_id = :") + objectStoreIdString +
+      keyRangeClause +
+      NS_LITERAL_CSTRING(";"),
+      &selectStmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (aKeyRange.type() == OptionalKeyRange::TSerializedKeyRange) {
+      rv = BindKeyRangeToStatement(aKeyRange, selectStmt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+  }
+
+  rv = selectStmt->BindInt64ByName(objectStoreIdString, aObjectStoreId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  DatabaseConnection::CachedStatement deleteStmt;
+  AutoFallibleTArray<IndexDataValue, 32> indexValues;
+
+  DebugOnly<uint32_t> resultCountDEBUG = 0;
+
+  bool hasResult;
+  while (NS_SUCCEEDED(rv = selectStmt->ExecuteStep(&hasResult)) && hasResult) {
+    if (!singleRowOnly) {
+      rv = objectStoreKey.SetFromStatement(selectStmt, 1);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      indexValues.ClearAndRetainStorage();
+    }
+
+    rv = ReadCompressedIndexDataValues(selectStmt, 0, indexValues);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = DeleteIndexDataTableRows(aConnection, objectStoreKey, indexValues);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (deleteStmt) {
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(deleteStmt->Reset()));
+    } else {
+      rv = aConnection->GetCachedStatement(
+        "DELETE FROM object_data "
+          "WHERE object_store_id = :object_store_id "
+          "AND key = :key;",
+        &deleteStmt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    rv = deleteStmt->BindInt64ByName(objectStoreIdString, aObjectStoreId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = objectStoreKey.BindToStatement(deleteStmt, keyString);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = deleteStmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    resultCountDEBUG++;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT_IF(singleRowOnly, resultCountDEBUG <= 1);
+
+  return NS_OK;
+}
+
+// static
+nsresult
+DatabaseOperationBase::UpdateIndexValues(
+                             DatabaseConnection* aConnection,
+                             const int64_t aObjectStoreId,
+                             const Key& aObjectStoreKey,
+                             const FallibleTArray<IndexDataValue>& aIndexValues)
+{
+  MOZ_ASSERT(aConnection);
+  aConnection->AssertIsOnConnectionThread();
+  MOZ_ASSERT(!aObjectStoreKey.IsUnset());
+
+  PROFILER_LABEL("IndexedDB",
+                 "DatabaunseOperationBase::UpdateIndexValues",
+                 js::ProfileEntry::Category::STORAGE);
+
+  UniqueMozFreePtr<uint8_t> indexDataValues;
+  uint32_t indexDataValuesLength;
+  nsresult rv = MakeCompressedIndexDataValues(aIndexValues,
+                                              indexDataValues,
+                                              &indexDataValuesLength);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(!indexDataValuesLength == !(indexDataValues.get()));
+
+  DatabaseConnection::CachedStatement updateStmt;
+  rv = aConnection->GetCachedStatement(
+    "UPDATE object_data "
+      "SET index_data_values = :index_data_values "
+      "WHERE object_store_id = :object_store_id "
+      "AND key = :key;",
+    &updateStmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  NS_NAMED_LITERAL_CSTRING(indexDataValuesString, "index_data_values");
+
+  if (indexDataValues) {
+    rv = updateStmt->BindAdoptedBlobByName(indexDataValuesString,
+                                           indexDataValues.get(),
+                                           indexDataValuesLength);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    indexDataValues.release();
+  } else {
+    rv = updateStmt->BindNullByName(indexDataValuesString);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  rv = updateStmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                                   aObjectStoreId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aObjectStoreKey.BindToStatement(updateStmt, NS_LITERAL_CSTRING("key"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = updateStmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+#ifdef DEBUG
+
+// static
+bool
+DatabaseOperationBase::ObjectStoreHasIndexes(DatabaseConnection* aConnection,
+                                             const int64_t aObjectStoreId)
+{
+  MOZ_ASSERT(aConnection);
+  aConnection->AssertIsOnConnectionThread();
+  MOZ_ASSERT(aObjectStoreId);
+
+  DatabaseConnection::CachedStatement stmt;
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    aConnection->GetCachedStatement(
+      "SELECT id "
+        "FROM object_store_index "
+        "WHERE object_store_id = :object_store_id;",
+      &stmt)));
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                          aObjectStoreId)));
+
+  bool hasResult;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
+
+  return hasResult;
+}
+
+#endif // DEBUG
 
 NS_IMPL_ISUPPORTS_INHERITED(DatabaseOperationBase,
                             nsRunnable,
@@ -15902,28 +18099,19 @@ DeleteDatabaseOp::LoadPreviousVersion(nsIFile* aDatabaseFile)
 #ifdef DEBUG
   {
     nsCOMPtr<mozIStorageStatement> stmt;
-    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT name "
-      "FROM database"
-    ), getter_AddRefs(stmt));
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "CreateStatement failed!");
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      connection->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT name "
+          "FROM database"
+        ), getter_AddRefs(stmt))));
 
-    if (NS_SUCCEEDED(rv)) {
-      bool hasResult;
-      rv = stmt->ExecuteStep(&hasResult);
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "ExecuteStep failed!");
+    bool hasResult;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
 
-      if (NS_SUCCEEDED(rv)) {
-        nsString databaseName;
-        rv = stmt->GetString(0, databaseName);
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "GetString failed!");
+    nsString databaseName;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->GetString(0, databaseName)));
 
-        if (NS_SUCCEEDED(rv)) {
-          NS_WARN_IF_FALSE(mCommonParams.metadata().name() == databaseName,
-                           "Database names don't match!");
-        }
-      }
-    }
+    MOZ_ASSERT(mCommonParams.metadata().name() == databaseName);
   }
 #endif
 
@@ -16845,6 +19033,42 @@ CommitOp::CommitOrRollbackAutoIncrementCounts()
   }
 }
 
+#ifdef DEBUG
+
+void
+TransactionBase::
+CommitOp::AssertForeignKeyConsistency(DatabaseConnection* aConnection)
+{
+  MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(mTransaction);
+  mTransaction->AssertIsOnConnectionThread();
+  MOZ_ASSERT(mTransaction->GetMode() != IDBTransaction::READ_ONLY);
+
+  DatabaseConnection::CachedStatement pragmaStmt;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    aConnection->GetCachedStatement("PRAGMA foreign_keys;", &pragmaStmt)));
+
+  bool hasResult;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(pragmaStmt->ExecuteStep(&hasResult)));
+
+  MOZ_ASSERT(hasResult);
+
+  int32_t foreignKeysEnabled;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(pragmaStmt->GetInt32(0, &foreignKeysEnabled)));
+
+  MOZ_ASSERT(foreignKeysEnabled, "Database doesn't have foreign keys enabled!");
+
+  DatabaseConnection::CachedStatement checkStmt;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    aConnection->GetCachedStatement("PRAGMA foreign_key_check;", &checkStmt)));
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(checkStmt->ExecuteStep(&hasResult)));
+
+  MOZ_ASSERT(!hasResult, "Database has inconsisistent foreign keys!");
+}
+
+#endif // DEBUG
+
 NS_IMPL_ISUPPORTS_INHERITED0(TransactionBase::CommitOp, DatabaseOperationBase)
 
 NS_IMETHODIMP
@@ -16884,6 +19108,8 @@ CommitOp::Run()
                            "WriteAutoIncrementCounts() failed!");
 
           if (NS_SUCCEEDED(mResultCode)) {
+            AssertForeignKeyConsistency(connection);
+
             DatabaseConnection::CachedStatement stmt;
             mResultCode = connection->GetCachedStatement("COMMIT", &stmt);
             NS_WARN_IF_FALSE(NS_SUCCEEDED(mResultCode),
@@ -17034,6 +19260,28 @@ CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
   }
 
+#ifdef DEBUG
+  {
+    // Make sure that we're not creating an object store with the same name as
+    // another that already exists. This should be impossible because we should
+    // have thrown an error long before now...
+    DatabaseConnection::CachedStatement stmt;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      aConnection->GetCachedStatement(
+        "SELECT name "
+          "FROM object_store "
+          "WHERE name = :name;",
+        &stmt)));
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mMetadata.name())));
+
+    bool hasResult;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
+    MOZ_ASSERT(!hasResult);
+  }
+#endif
+
   DatabaseConnection::AutoSavepoint autoSave;
   nsresult rv = autoSave.Start(Transaction());
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -17112,39 +19360,211 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
                  "DeleteObjectStoreOp::DoDatabaseWork",
                  js::ProfileEntry::Category::STORAGE);
 
+  NS_NAMED_LITERAL_CSTRING(objectStoreIdString, "object_store_id");
+
+#ifdef DEBUG
+  {
+    // Make sure |mIsLastObjectStore| is telling the truth.
+    DatabaseConnection::CachedStatement stmt;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      aConnection->GetCachedStatement(
+        "SELECT id "
+          "FROM object_store;",
+        &stmt)));
+
+    bool foundThisObjectStore = false;
+    bool foundOtherObjectStore = false;
+
+    while (true) {
+      bool hasResult;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
+
+      if (!hasResult) {
+        break;
+      }
+
+      int64_t id;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->GetInt64(0, &id)));
+
+      if (id == mMetadata->mCommonMetadata.id()) {
+        foundThisObjectStore = true;
+      } else {
+        foundOtherObjectStore = true;
+      }
+    }
+
+    MOZ_ASSERT_IF(mIsLastObjectStore,
+                  foundThisObjectStore && !foundOtherObjectStore);
+    MOZ_ASSERT_IF(!mIsLastObjectStore,
+                  foundThisObjectStore && foundOtherObjectStore);
+
+    // Make sure |hasIndexes| is telling the truth.
+    MOZ_ASSERT(mObjectStoreHasIndexes ==
+                 ObjectStoreHasIndexes(aConnection,
+                                       mMetadata->mCommonMetadata.id()));
+  }
+#endif
+
   DatabaseConnection::AutoSavepoint autoSave;
   nsresult rv = autoSave.Start(Transaction());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  DatabaseConnection::CachedStatement stmt;
-  rv = aConnection->GetCachedStatement(
-    "DELETE FROM object_store "
-    "WHERE id = :id",
-    &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (mIsLastObjectStore) {
+    // We can just delete everything if this is the last object store.
+    DatabaseConnection::CachedStatement stmt;
+    rv = aConnection->GetCachedStatement(
+      "DELETE FROM index_data;",
+      &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = aConnection->GetCachedStatement(
+      "DELETE FROM unique_index_data;",
+      &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = aConnection->GetCachedStatement(
+      "DELETE FROM object_data;",
+      &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = aConnection->GetCachedStatement(
+      "DELETE FROM object_store_index;",
+      &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = aConnection->GetCachedStatement(
+      "DELETE FROM object_store;",
+      &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    if (mObjectStoreHasIndexes) {
+      rv = DeleteObjectStoreDataTableRowsWithIndexes(
+        aConnection,
+        mMetadata->mCommonMetadata.id(),
+        void_t());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      // Now clean up the object store index table.
+      DatabaseConnection::CachedStatement stmt;
+      rv = aConnection->GetCachedStatement(
+        "DELETE FROM object_store_index "
+          "WHERE object_store_id = :object_store_id;",
+        &stmt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = stmt->BindInt64ByName(objectStoreIdString,
+                                 mMetadata->mCommonMetadata.id());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = stmt->Execute();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    } else {
+      // We only have to worry about object data if this object store has no
+      // indexes.
+      DatabaseConnection::CachedStatement stmt;
+      rv = aConnection->GetCachedStatement(
+        "DELETE FROM object_data "
+          "WHERE object_store_id = :object_store_id;",
+        &stmt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = stmt->BindInt64ByName(objectStoreIdString,
+                                 mMetadata->mCommonMetadata.id());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = stmt->Execute();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    DatabaseConnection::CachedStatement stmt;
+    rv = aConnection->GetCachedStatement(
+      "DELETE FROM object_store "
+        "WHERE id = :object_store_id;",
+      &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->BindInt64ByName(objectStoreIdString,
+                               mMetadata->mCommonMetadata.id());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+#ifdef DEBUG
+    {
+      int32_t deletedRowCount;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+        aConnection->GetStorageConnection()->
+          GetAffectedRows(&deletedRowCount)));
+      MOZ_ASSERT(deletedRowCount == 1);
+    }
+#endif
   }
 
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"),
-                             mMetadata->mCommonMetadata.id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
+  rv = autoSave.Commit();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   if (mMetadata->mCommonMetadata.autoIncrement()) {
     Transaction()->ForgetModifiedAutoIncrementObjectStore(mMetadata);
-  }
-
-  rv = autoSave.Commit();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
 
   return NS_OK;
@@ -17163,87 +19583,9 @@ CreateIndexOp::CreateIndexOp(VersionChangeTransaction* aTransaction,
   MOZ_ASSERT(aMetadata.id());
   MOZ_ASSERT(mFileManager);
   MOZ_ASSERT(!mDatabaseId.IsEmpty());
-
-  class MOZ_STACK_CLASS Helper final
-  {
-  public:
-    static void
-    CopyUniqueValues(const IndexTable& aIndexes,
-                     Maybe<UniqueIndexTable>& aMaybeUniqueIndexTable)
-    {
-      aMaybeUniqueIndexTable.emplace();
-
-      const uint32_t indexCount = aIndexes.Count();
-      MOZ_ASSERT(indexCount);
-
-      aIndexes.EnumerateRead(Enumerate, aMaybeUniqueIndexTable.ptr());
-
-      if (NS_WARN_IF(aMaybeUniqueIndexTable.ref().Count() != indexCount)) {
-        aMaybeUniqueIndexTable.reset();
-        return;
-      }
-
-#ifdef DEBUG
-      aMaybeUniqueIndexTable.ref().MarkImmutable();
-#endif
-    }
-
-  private:
-    static PLDHashOperator
-    Enumerate(const uint64_t& aKey, FullIndexMetadata* aValue, void* aClosure)
-    {
-      auto* uniqueIndexTable = static_cast<UniqueIndexTable*>(aClosure);
-      MOZ_ASSERT(uniqueIndexTable);
-      MOZ_ASSERT(!uniqueIndexTable->Get(aValue->mCommonMetadata.id()));
-
-      if (NS_WARN_IF(!uniqueIndexTable->Put(aValue->mCommonMetadata.id(),
-                                            aValue->mCommonMetadata.unique(),
-                                            fallible))) {
-        return PL_DHASH_STOP;
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
-  InitThreadLocals();
-
-  const nsRefPtr<FullObjectStoreMetadata> objectStoreMetadata = 
-    aTransaction->GetMetadataForObjectStoreId(aObjectStoreId);
-  MOZ_ASSERT(objectStoreMetadata);
-
-  Helper::CopyUniqueValues(objectStoreMetadata->mIndexes,
-                           mMaybeUniqueIndexTable);
 }
 
 unsigned int CreateIndexOp::sThreadLocalIndex = kBadThreadLocalIndex;
-
-// static
-void
-CreateIndexOp::InitThreadLocals()
-{
-  AssertIsOnBackgroundThread();
-
-  class MOZ_STACK_CLASS Helper final
-  {
-  public:
-    static void
-    Destroy(void* aThreadLocal)
-    {
-      delete static_cast<ThreadLocalJSRuntime*>(aThreadLocal);
-    }
-  };
-
-  if (sThreadLocalIndex == kBadThreadLocalIndex) {
-    if (NS_WARN_IF(PR_SUCCESS !=
-                     PR_NewThreadPrivateIndex(&sThreadLocalIndex,
-                                              &Helper::Destroy))) {
-      return;
-    }
-  }
-
-  MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex);
-}
 
 nsresult
 CreateIndexOp::InsertDataFromObjectStore(DatabaseConnection* aConnection)
@@ -17257,31 +19599,9 @@ CreateIndexOp::InsertDataFromObjectStore(DatabaseConnection* aConnection)
                  "CreateIndexOp::InsertDataFromObjectStore",
                  js::ProfileEntry::Category::STORAGE);
 
-  DatabaseConnection::CachedStatement stmt;
-  nsresult rv = aConnection->GetCachedStatement(
-    "SELECT id, data, file_ids, key_value "
-    "FROM object_data "
-    "WHERE object_store_id = :osid",
-    &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStoreId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!hasResult) {
-    // Bail early if we have no data to avoid creating the runtime below.
-    return NS_OK;
-  }
+  nsCOMPtr<mozIStorageConnection> storageConnection =
+    aConnection->GetStorageConnection();
+  MOZ_ASSERT(storageConnection);
 
   ThreadLocalJSRuntime* runtime = ThreadLocalJSRuntime::GetOrCreate();
   if (NS_WARN_IF(!runtime)) {
@@ -17293,51 +19613,62 @@ CreateIndexOp::InsertDataFromObjectStore(DatabaseConnection* aConnection)
   JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, runtime->Global());
 
-  do {
-    StructuredCloneReadInfo cloneInfo;
-    rv = GetStructuredCloneReadInfoFromStatement(stmt, 1, 2, mFileManager,
-                                                 &cloneInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  nsRefPtr<UpdateIndexDataValuesFunction> updateFunction =
+    new UpdateIndexDataValuesFunction(this, aConnection, cx);
 
-    JS::Rooted<JS::Value> clone(cx);
-    if (NS_WARN_IF(!IDBObjectStore::DeserializeIndexValue(cx, cloneInfo,
-                                                          &clone))) {
-      return NS_ERROR_DOM_DATA_CLONE_ERR;
-    }
+  NS_NAMED_LITERAL_CSTRING(updateFunctionName, "update_index_data_values");
 
-    nsTArray<IndexUpdateInfo> updateInfo;
-    rv = IDBObjectStore::AppendIndexUpdateInfo(mMetadata.id(),
-                                               mMetadata.keyPath(),
-                                               mMetadata.unique(),
-                                               mMetadata.multiEntry(),
-                                               cx,
-                                               clone,
-                                               updateInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  nsresult rv =
+    storageConnection->CreateFunction(updateFunctionName,
+                                      4,
+                                      updateFunction);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-    int64_t objectDataId = stmt->AsInt64(0);
+  rv = InsertDataFromObjectStoreInternal(aConnection);
 
-    Key key;
-    rv = key.SetFromStatement(stmt, 3);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    storageConnection->RemoveFunction(updateFunctionName)));
 
-    rv = UpdateIndexes(aConnection,
-                       mMaybeUniqueIndexTable.ref(),
-                       key,
-                       false,
-                       objectDataId,
-                       updateInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasResult)) && hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
+  return NS_OK;
+}
+
+nsresult
+CreateIndexOp::InsertDataFromObjectStoreInternal(
+                                                DatabaseConnection* aConnection)
+{
+  MOZ_ASSERT(aConnection);
+  aConnection->AssertIsOnConnectionThread();
+  MOZ_ASSERT(!IndexedDatabaseManager::InLowDiskSpaceMode());
+  MOZ_ASSERT(mMaybeUniqueIndexTable);
+
+  nsCOMPtr<mozIStorageConnection> storageConnection =
+    aConnection->GetStorageConnection();
+  MOZ_ASSERT(storageConnection);
+
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(
+    "UPDATE object_data "
+      "SET index_data_values = update_index_data_values "
+        "(key, index_data_values, file_ids, data) "
+      "WHERE object_store_id = :object_store_id;",
+    &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                             mObjectStoreId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -17351,8 +19682,30 @@ CreateIndexOp::Init(TransactionBase* aTransaction)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aTransaction);
 
-  if (NS_WARN_IF(!mMaybeUniqueIndexTable) ||
-      NS_WARN_IF(sThreadLocalIndex == kBadThreadLocalIndex)) {
+  struct MOZ_STACK_CLASS Helper final
+  {
+    static void
+    Destroy(void* aThreadLocal)
+    {
+      delete static_cast<ThreadLocalJSRuntime*>(aThreadLocal);
+    }
+  };
+
+  if (sThreadLocalIndex == kBadThreadLocalIndex) {
+    if (NS_WARN_IF(PR_SUCCESS !=
+                     PR_NewThreadPrivateIndex(&sThreadLocalIndex,
+                                              &Helper::Destroy))) {
+      return false;
+    }
+  }
+
+  MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex);
+
+  nsresult rv =
+    GetUniqueIndexTableForObjectStore(aTransaction,
+                                      mObjectStoreId,
+                                      mMaybeUniqueIndexTable);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
 
@@ -17372,6 +19725,31 @@ CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
   if (NS_WARN_IF(IndexedDatabaseManager::InLowDiskSpaceMode())) {
     return NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
   }
+
+#ifdef DEBUG
+  {
+    // Make sure that we're not creating an index with the same name and object
+    // store as another that already exists. This should be impossible because
+    // we should have thrown an error long before now...
+    DatabaseConnection::CachedStatement stmt;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      aConnection->GetCachedStatement(
+        "SELECT name "
+          "FROM object_store_index "
+          "WHERE object_store_id = :osid "
+          "AND name = :name;",
+        &stmt)));
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStoreId)));
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mMetadata.name())));
+
+    bool hasResult;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
+
+    MOZ_ASSERT(!hasResult);
+  }
+#endif
 
   DatabaseConnection::AutoSavepoint autoSave;
   nsresult rv = autoSave.Start(Transaction());
@@ -17526,11 +19904,397 @@ ThreadLocalJSRuntime::Init()
   return true;
 }
 
+NS_IMPL_ISUPPORTS(CreateIndexOp::UpdateIndexDataValuesFunction,
+                  mozIStorageFunction);
+
+NS_IMETHODIMP
+CreateIndexOp::
+UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
+                                              nsIVariant** _retval)
+{
+  MOZ_ASSERT(aValues);
+  MOZ_ASSERT(_retval);
+  MOZ_ASSERT(mConnection);
+  mConnection->AssertIsOnConnectionThread();
+  MOZ_ASSERT(mOp);
+  MOZ_ASSERT(mCx);
+
+  PROFILER_LABEL("IndexedDB",
+                 "CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall",
+                 js::ProfileEntry::Category::STORAGE);
+
+#ifdef DEBUG
+  {
+    uint32_t argCount;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetNumEntries(&argCount)));
+    MOZ_ASSERT(argCount == 4); // key, index_data_values, file_ids, data
+
+    int32_t valueType;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(0, &valueType)));
+    MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(1, &valueType)));
+    MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_NULL ||
+               valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(2, &valueType)));
+    MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_NULL ||
+               valueType == mozIStorageValueArray::VALUE_TYPE_TEXT);
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aValues->GetTypeOfIndex(3, &valueType)));
+    MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
+  }
+#endif
+
+  StructuredCloneReadInfo cloneInfo;
+  nsresult rv =
+    GetStructuredCloneReadInfoFromValueArray(aValues,
+                                             /* aDataIndex */ 3,
+                                             /* aFileIdsIndex */ 2,
+                                             mOp->mFileManager,
+                                             &cloneInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  JS::Rooted<JS::Value> clone(mCx);
+  if (NS_WARN_IF(!IDBObjectStore::DeserializeIndexValue(mCx,
+                                                        cloneInfo,
+                                                        &clone))) {
+    return NS_ERROR_DOM_DATA_CLONE_ERR;
+  }
+
+  const IndexMetadata& metadata = mOp->mMetadata;
+  const int64_t& objectStoreId = mOp->mObjectStoreId;
+
+  nsAutoTArray<IndexUpdateInfo, 32> updateInfos;
+  rv = IDBObjectStore::AppendIndexUpdateInfo(metadata.id(),
+                                             metadata.keyPath(),
+                                             metadata.unique(),
+                                             metadata.multiEntry(),
+                                             mCx,
+                                             clone,
+                                             updateInfos);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (updateInfos.IsEmpty()) {
+    // XXX See if we can do this without copying...
+
+    nsCOMPtr<nsIVariant> unmodifiedValue;
+
+    // No changes needed, just return the original value.
+    int32_t valueType;
+    rv = aValues->GetTypeOfIndex(1, &valueType);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_NULL ||
+               valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
+
+    if (valueType == mozIStorageValueArray::VALUE_TYPE_NULL) {
+      unmodifiedValue = new storage::NullVariant();
+      unmodifiedValue.forget(_retval);
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
+
+    const uint8_t* blobData;
+    uint32_t blobDataLength;
+    rv = aValues->GetSharedBlob(1, &blobDataLength, &blobData);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    std::pair<uint8_t *, int> copiedBlobDataPair(
+      static_cast<uint8_t*>(moz_malloc(blobDataLength)),
+      blobDataLength);
+
+    if (!copiedBlobDataPair.first) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    memcpy(copiedBlobDataPair.first, blobData, blobDataLength);
+
+    unmodifiedValue = new storage::AdoptedBlobVariant(copiedBlobDataPair);
+    unmodifiedValue.forget(_retval);
+
+    return NS_OK;
+  }
+
+  Key key;
+  rv = key.SetFromValueArray(aValues, 0);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  AutoFallibleTArray<IndexDataValue, 32> indexValues;
+  rv = ReadCompressedIndexDataValues(aValues, 1, indexValues);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  const bool hadPreviousIndexValues = !indexValues.IsEmpty();
+
+  const uint32_t updateInfoCount = updateInfos.Length();
+
+  if (NS_WARN_IF(!indexValues.SetCapacity(indexValues.Length() +
+                                          updateInfoCount))) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // First construct the full list to update the index_data_values row.
+  for (uint32_t index = 0; index < updateInfoCount; index++) {
+    const IndexUpdateInfo& info = updateInfos[index];
+
+    MOZ_ALWAYS_TRUE(
+      indexValues.InsertElementSorted(IndexDataValue(metadata.id(),
+                                                     metadata.unique(),
+                                                     info.value())));
+  }
+
+  UniqueMozFreePtr<uint8_t> indexValuesBlob;
+  uint32_t indexValuesBlobLength;
+  rv = MakeCompressedIndexDataValues(indexValues,
+                                     indexValuesBlob,
+                                     &indexValuesBlobLength);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(!indexValuesBlobLength == !(indexValuesBlob.get()));
+
+  nsCOMPtr<nsIVariant> value;
+
+  if (!indexValuesBlob) {
+    value = new storage::NullVariant();
+
+    value.forget(_retval);
+    return NS_OK;
+  }
+
+  // Now insert the new table rows. We only need to construct a new list if
+  // the full list is different.
+  if (hadPreviousIndexValues) {
+    indexValues.ClearAndRetainStorage();
+
+    MOZ_ASSERT(indexValues.Capacity() >= updateInfoCount);
+
+    for (uint32_t index = 0; index < updateInfoCount; index++) {
+      const IndexUpdateInfo& info = updateInfos[index];
+
+      MOZ_ALWAYS_TRUE(
+        indexValues.InsertElementSorted(IndexDataValue(metadata.id(),
+                                                       metadata.unique(),
+                                                       info.value())));
+    }
+  }
+
+  rv = InsertIndexTableRows(mConnection, objectStoreId, key, indexValues);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  std::pair<uint8_t *, int> copiedBlobDataPair(indexValuesBlob.get(),
+                                               indexValuesBlobLength);
+
+  value = new storage::AdoptedBlobVariant(copiedBlobDataPair);
+
+  indexValuesBlob.release();
+
+  value.forget(_retval);
+  return NS_OK;
+}
+
+DeleteIndexOp::DeleteIndexOp(VersionChangeTransaction* aTransaction,
+                             const int64_t aObjectStoreId,
+                             const int64_t aIndexId,
+                             const bool aUnique,
+                             const bool aIsLastIndex)
+  : VersionChangeTransactionOp(aTransaction)
+  , mObjectStoreId(aObjectStoreId)
+  , mIndexId(aIndexId)
+  , mUnique(aUnique)
+  , mIsLastIndex(aIsLastIndex)
+{
+  MOZ_ASSERT(aObjectStoreId);
+  MOZ_ASSERT(aIndexId);
+}
+
+nsresult
+DeleteIndexOp::RemoveReferencesToIndex(
+                                   DatabaseConnection* aConnection,
+                                   const Key& aObjectStoreKey,
+                                   FallibleTArray<IndexDataValue>& aIndexValues)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(!aObjectStoreKey.IsUnset());
+  MOZ_ASSERT_IF(!mIsLastIndex, !aIndexValues.IsEmpty());
+
+  struct MOZ_STACK_CLASS IndexIdComparator final
+  {
+    bool
+    Equals(const IndexDataValue& aA, const IndexDataValue& aB) const
+    {
+      // Ignore everything but the index id.
+      return aA.mIndexId == aB.mIndexId;
+    };
+
+    bool
+    LessThan(const IndexDataValue& aA, const IndexDataValue& aB) const
+    {
+      return aA.mIndexId < aB.mIndexId;
+    };
+  };
+
+  PROFILER_LABEL("IndexedDB",
+                 "DeleteIndexOp::RemoveReferencesToIndex",
+                 js::ProfileEntry::Category::STORAGE);
+
+  if (mIsLastIndex) {
+    // There is no need to parse the previous entry in the index_data_values
+    // column if this is the last index. Simply set it to NULL.
+    DatabaseConnection::CachedStatement stmt;
+    nsresult rv = aConnection->GetCachedStatement(
+      "UPDATE object_data "
+        "SET index_data_values = NULL "
+        "WHERE object_store_id = :object_store_id "
+        "AND key = :key;",
+      &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                               mObjectStoreId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = aObjectStoreKey.BindToStatement(stmt, NS_LITERAL_CSTRING("key"));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    return NS_OK;
+  }
+
+  IndexDataValue search;
+  search.mIndexId = mIndexId;
+
+  // This returns the first element that matches our index id found during a
+  // binary search. However, there could still be other elements before that.
+  size_t firstElementIndex =
+    aIndexValues.BinaryIndexOf(search, IndexIdComparator());
+  if (NS_WARN_IF(firstElementIndex == aIndexValues.NoIndex) ||
+      NS_WARN_IF(aIndexValues[firstElementIndex].mIndexId != mIndexId)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_FILE_CORRUPTED;
+  }
+
+  MOZ_ASSERT(aIndexValues[firstElementIndex].mIndexId == mIndexId);
+
+  // Walk backwards to find the real first index.
+  while (firstElementIndex) {
+    if (aIndexValues[firstElementIndex - 1].mIndexId == mIndexId) {
+      firstElementIndex--;
+    } else {
+      break;
+    }
+  }
+
+  MOZ_ASSERT(aIndexValues[firstElementIndex].mIndexId == mIndexId);
+
+  const size_t indexValuesLength = aIndexValues.Length();
+
+  // Find the last element with the same index id.
+  size_t lastElementIndex = firstElementIndex;
+
+  while (lastElementIndex < indexValuesLength) {
+    if (aIndexValues[lastElementIndex].mIndexId == mIndexId) {
+      lastElementIndex++;
+    } else {
+      break;
+    }
+  }
+
+  MOZ_ASSERT(lastElementIndex > firstElementIndex);
+  MOZ_ASSERT_IF(lastElementIndex < indexValuesLength,
+                aIndexValues[lastElementIndex].mIndexId != mIndexId);
+  MOZ_ASSERT(aIndexValues[lastElementIndex - 1].mIndexId == mIndexId);
+
+  aIndexValues.RemoveElementsAt(firstElementIndex,
+                                lastElementIndex - firstElementIndex);
+
+  nsresult rv = UpdateIndexValues(aConnection,
+                                  mObjectStoreId,
+                                  aObjectStoreKey,
+                                  aIndexValues);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 nsresult
 DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
 {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
+
+#ifdef DEBUG
+  {
+    // Make sure |mIsLastIndex| is telling the truth.
+    DatabaseConnection::CachedStatement stmt;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      aConnection->GetCachedStatement(
+        "SELECT id "
+          "FROM object_store_index "
+          "WHERE object_store_id = :object_store_id;",
+        &stmt)));
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                            mObjectStoreId)));
+
+    bool foundThisIndex = false;
+    bool foundOtherIndex = false;
+
+    while (true) {
+      bool hasResult;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
+
+      if (!hasResult) {
+        break;
+      }
+
+      int64_t id;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(stmt->GetInt64(0, &id)));
+
+      if (id == mIndexId) {
+        foundThisIndex = true;
+      } else {
+        foundOtherIndex = true;
+      }
+    }
+
+    MOZ_ASSERT_IF(mIsLastIndex, foundThisIndex && !foundOtherIndex);
+    MOZ_ASSERT_IF(!mIsLastIndex, foundThisIndex && foundOtherIndex);
+  }
+#endif
 
   PROFILER_LABEL("IndexedDB",
                  "DeleteIndexOp::DoDatabaseWork",
@@ -17542,24 +20306,240 @@ DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
-  DatabaseConnection::CachedStatement stmt;
+  DatabaseConnection::CachedStatement selectStmt;
+
+  // mozStorage warns that these statements trigger a sort operation but we
+  // don't care because this is a very rare call and we expect it to be slow.
+  // The cost of having an index on this field is too high.
+  if (mUnique) {
+    if (mIsLastIndex) {
+      rv = aConnection->GetCachedStatement(
+        "/* do not warn (bug someone else) */ "
+        "SELECT value, object_data_key "
+          "FROM unique_index_data "
+          "WHERE index_id = :index_id "
+          "ORDER BY object_data_key ASC;",
+        &selectStmt);
+    } else {
+      rv = aConnection->GetCachedStatement(
+        "/* do not warn (bug out) */ "
+        "SELECT unique_index_data.value, "
+               "unique_index_data.object_data_key, "
+               "object_data.index_data_values "
+          "FROM unique_index_data "
+          "JOIN object_data "
+          "ON unique_index_data.object_data_key = object_data.key "
+          "WHERE unique_index_data.index_id = :index_id "
+          "AND object_data.object_store_id = :object_store_id "
+          "ORDER BY unique_index_data.object_data_key ASC;",
+        &selectStmt);
+    }
+  } else {
+    if (mIsLastIndex) {
+      rv = aConnection->GetCachedStatement(
+        "/* do not warn (bug me not) */ "
+        "SELECT value, object_data_key "
+          "FROM index_data "
+          "WHERE index_id = :index_id "
+          "AND object_store_id = :object_store_id "
+          "ORDER BY object_data_key ASC;",
+        &selectStmt);
+    } else {
+      rv = aConnection->GetCachedStatement(
+        "/* do not warn (bug off) */ "
+        "SELECT index_data.value, "
+               "index_data.object_data_key, "
+               "object_data.index_data_values "
+          "FROM index_data "
+          "JOIN object_data "
+          "ON index_data.object_data_key = object_data.key "
+          "WHERE index_data.index_id = :index_id "
+          "AND object_data.object_store_id = :object_store_id "
+          "ORDER BY index_data.object_data_key ASC;",
+        &selectStmt);
+    }
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  NS_NAMED_LITERAL_CSTRING(indexIdString, "index_id");
+
+  rv = selectStmt->BindInt64ByName(indexIdString, mIndexId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!mUnique || !mIsLastIndex) {
+    rv = selectStmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                                     mObjectStoreId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  NS_NAMED_LITERAL_CSTRING(valueString, "value");
+  NS_NAMED_LITERAL_CSTRING(objectDataKeyString, "object_data_key");
+
+  DatabaseConnection::CachedStatement deleteIndexRowStmt;
+  DatabaseConnection::CachedStatement nullIndexDataValuesStmt;
+
+  Key lastObjectStoreKey;
+  AutoFallibleTArray<IndexDataValue, 32> lastIndexValues;
+
+  bool hasResult;
+  while (NS_SUCCEEDED(rv = selectStmt->ExecuteStep(&hasResult)) && hasResult) {
+    // We always need the index key to delete the index row.
+    Key indexKey;
+    rv = indexKey.SetFromStatement(selectStmt, 0);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (NS_WARN_IF(indexKey.IsUnset())) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_FILE_CORRUPTED;
+    }
+
+    // Don't call |lastObjectStoreKey.BindToStatement()| directly because we
+    // don't want to copy the same key multiple times.
+    const uint8_t* objectStoreKeyData;
+    uint32_t objectStoreKeyDataLength;
+    rv = selectStmt->GetSharedBlob(1,
+                                   &objectStoreKeyDataLength,
+                                   &objectStoreKeyData);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (NS_WARN_IF(!objectStoreKeyDataLength)) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_FILE_CORRUPTED;
+    }
+
+    nsDependentCString currentObjectStoreKeyBuffer(
+      reinterpret_cast<const char*>(objectStoreKeyData),
+      objectStoreKeyDataLength);
+    if (currentObjectStoreKeyBuffer != lastObjectStoreKey.GetBuffer()) {
+      // We just walked to the next object store key.
+      if (!lastObjectStoreKey.IsUnset()) {
+        // Before we move on to the next key we need to update the previous
+        // key's index_data_values column.
+        rv = RemoveReferencesToIndex(aConnection,
+                                      lastObjectStoreKey,
+                                      lastIndexValues);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+      }
+
+      // Save the object store key.
+      lastObjectStoreKey = Key(currentObjectStoreKeyBuffer);
+
+      // And the |index_data_values| row if this isn't the only index.
+      if (!mIsLastIndex) {
+        lastIndexValues.ClearAndRetainStorage();
+        rv = ReadCompressedIndexDataValues(selectStmt, 2, lastIndexValues);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        if (NS_WARN_IF(lastIndexValues.IsEmpty())) {
+          IDB_REPORT_INTERNAL_ERR();
+          return NS_ERROR_FILE_CORRUPTED;
+        }
+      }
+    }
+
+    // Now delete the index row.
+    if (deleteIndexRowStmt) {
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(deleteIndexRowStmt->Reset()));
+    } else {
+      if (mUnique) {
+        rv = aConnection->GetCachedStatement(
+          "DELETE FROM unique_index_data "
+            "WHERE index_id = :index_id "
+            "AND value = :value;",
+          &deleteIndexRowStmt);
+      } else {
+        rv = aConnection->GetCachedStatement(
+          "DELETE FROM index_data "
+            "WHERE index_id = :index_id "
+            "AND value = :value "
+            "AND object_data_key = :object_data_key;",
+          &deleteIndexRowStmt);
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    rv = deleteIndexRowStmt->BindInt64ByName(indexIdString, mIndexId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = indexKey.BindToStatement(deleteIndexRowStmt, valueString);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!mUnique) {
+      rv = lastObjectStoreKey.BindToStatement(deleteIndexRowStmt,
+                                              objectDataKeyString);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    rv = deleteIndexRowStmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Take care of the last key.
+  if (!lastObjectStoreKey.IsUnset()) {
+    MOZ_ASSERT_IF(!mIsLastIndex, !lastIndexValues.IsEmpty());
+
+    rv = RemoveReferencesToIndex(aConnection,
+                                 lastObjectStoreKey,
+                                 lastIndexValues);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  DatabaseConnection::CachedStatement deleteStmt;
   rv = aConnection->GetCachedStatement(
     "DELETE FROM object_store_index "
-    "WHERE id = :id ",
-    &stmt);
+      "WHERE id = :index_id;",
+    &deleteStmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), mIndexId);
+  rv = deleteStmt->BindInt64ByName(indexIdString, mIndexId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = stmt->Execute();
+  rv = deleteStmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+#ifdef DEBUG
+  {
+    int32_t deletedRowCount;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      aConnection->GetStorageConnection()->GetAffectedRows(&deletedRowCount)));
+    MOZ_ASSERT(deletedRowCount == 1);
+  }
+#endif
 
   rv = autoSave.Commit();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -17645,6 +20625,7 @@ ObjectStoreAddOrPutRequestOp::ObjectStoreAddOrPutRequestOp(
   , mOrigin(aTransaction->GetDatabase()->Origin())
   , mPersistenceType(aTransaction->GetDatabase()->Type())
   , mOverwrite(aParams.type() == RequestParams::TObjectStorePutParams)
+  , mObjectStoreHasIndexes(false)
 {
   MOZ_ASSERT(aParams.type() == RequestParams::TObjectStoreAddParams ||
              aParams.type() == RequestParams::TObjectStorePutParams);
@@ -17652,6 +20633,64 @@ ObjectStoreAddOrPutRequestOp::ObjectStoreAddOrPutRequestOp(
   mMetadata =
     aTransaction->GetMetadataForObjectStoreId(mParams.objectStoreId());
   MOZ_ASSERT(mMetadata);
+
+  const_cast<bool&>(mObjectStoreHasIndexes) = mMetadata->HasLiveIndexes();
+}
+
+nsresult
+ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
+                                                DatabaseConnection* aConnection)
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(mOverwrite);
+  MOZ_ASSERT(!mResponse.IsUnset());
+  MOZ_ASSERT(mObjectStoreHasIndexes);
+
+  DatabaseConnection::CachedStatement indexValuesStmt;
+  nsresult rv = aConnection->GetCachedStatement(
+    "SELECT index_data_values "
+      "FROM object_data "
+      "WHERE object_store_id = :object_store_id "
+      "AND key = :key;",
+    &indexValuesStmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = indexValuesStmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                                        mParams.objectStoreId());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = mResponse.BindToStatement(indexValuesStmt, NS_LITERAL_CSTRING("key"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasResult;
+  rv = indexValuesStmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (hasResult) {
+    AutoFallibleTArray<IndexDataValue, 32> existingIndexValues;
+    rv = ReadCompressedIndexDataValues(indexValuesStmt,
+                                        0,
+                                        existingIndexValues);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = DeleteIndexDataTableRows(aConnection, mResponse, existingIndexValues);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -17745,12 +20784,11 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
       }
     }
   } else if (mOverwrite) {
-    // Kinda lame...
     mUniqueIndexTable.emplace();
   }
 
 #ifdef DEBUG
-  if (mUniqueIndexTable) {
+  if (mUniqueIndexTable.isSome()) {
     mUniqueIndexTable.ref().MarkImmutable();
   }
 #endif
@@ -17819,6 +20857,8 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection->GetStorageConnection());
   MOZ_ASSERT_IF(mFileManager, !mStoredFileInfos.IsEmpty());
+  MOZ_ASSERT(mObjectStoreHasIndexes ==
+               ObjectStoreHasIndexes(aConnection, mParams.objectStoreId()));
 
   PROFILER_LABEL("IndexedDB",
                  "ObjectStoreAddOrPutRequestOp::DoDatabaseWork",
@@ -17842,6 +20882,15 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   const int64_t osid = mParams.objectStoreId();
   const KeyPath& keyPath = mMetadata->mCommonMetadata.keyPath();
 
+  // First delete old index_data_values if we're overwriting something and we
+  // have indexes.
+  if (mOverwrite && !keyUnset && mObjectStoreHasIndexes) {
+    rv = RemoveOldIndexDataValues(aConnection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
   // The "|| keyUnset" here is mostly a debugging tool. If a key isn't
   // specified we should never have a collision and so it shouldn't matter
   // if we allow overwrite or not. By not allowing overwrite we raise
@@ -17849,14 +20898,15 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   DatabaseConnection::CachedStatement stmt;
   if (!mOverwrite || keyUnset) {
     rv = aConnection->GetCachedStatement(
-      "INSERT INTO object_data (object_store_id, key_value, data, file_ids) "
-      "VALUES (:osid, :key_value, :data, :file_ids)",
+      "INSERT INTO object_data "
+        "(object_store_id, key, file_ids, data) "
+        "VALUES (:osid, :key, :file_ids, :data);",
       &stmt);
   } else {
     rv = aConnection->GetCachedStatement(
-      "INSERT OR REPLACE INTO object_data (object_store_id, key_value, data, "
-                                          "file_ids) "
-      "VALUES (:osid, :key_value, :data, :file_ids)",
+      "INSERT OR REPLACE INTO object_data "
+        "(object_store_id, key, file_ids, data) "
+        "VALUES (:osid, :key, :file_ids, :data);",
     &stmt);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -17910,7 +20960,7 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     }
   }
 
-  key.BindToStatement(stmt, NS_LITERAL_CSTRING("key_value"));
+  key.BindToStatement(stmt, NS_LITERAL_CSTRING("key"));
 
   // Compress the bytes before adding into the database.
   const char* uncompressed =
@@ -18137,22 +21187,25 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
-  int64_t objectDataId;
-  rv = aConnection->GetStorageConnection()->GetLastInsertRowID(&objectDataId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   // Update our indexes if needed.
-  if (mOverwrite || !mParams.indexUpdateInfos().IsEmpty()) {
-    MOZ_ASSERT(mUniqueIndexTable);
+  if (!mParams.indexUpdateInfos().IsEmpty()) {
+    MOZ_ASSERT(mUniqueIndexTable.isSome());
 
-    rv = UpdateIndexes(aConnection,
-                       mUniqueIndexTable.ref(),
-                       key,
-                       mOverwrite,
-                       objectDataId,
-                       mParams.indexUpdateInfos());
+    // Write the index_data_values column.
+    AutoFallibleTArray<IndexDataValue, 32> indexValues;
+    rv = IndexDataValuesFromUpdateInfos(mParams.indexUpdateInfos(),
+                                        mUniqueIndexTable.ref(),
+                                        indexValues);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = UpdateIndexValues(aConnection, osid, key, indexValues);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = InsertIndexTableRows(aConnection, osid, key, indexValues);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -18286,7 +21339,7 @@ ObjectStoreGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
     GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
-                                NS_LITERAL_CSTRING("key_value"),
+                                NS_LITERAL_CSTRING("key"),
                                 keyRangeClause);
   }
 
@@ -18297,11 +21350,11 @@ ObjectStoreGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   }
 
   nsCString query =
-    NS_LITERAL_CSTRING("SELECT data, file_ids "
+    NS_LITERAL_CSTRING("SELECT file_ids, data "
                        "FROM object_data "
                        "WHERE object_store_id = :osid") +
     keyRangeClause +
-    NS_LITERAL_CSTRING(" ORDER BY key_value ASC") +
+    NS_LITERAL_CSTRING(" ORDER BY key ASC") +
     limitClause;
 
   DatabaseConnection::CachedStatement stmt;
@@ -18330,7 +21383,7 @@ ObjectStoreGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    rv = GetStructuredCloneReadInfoFromStatement(stmt, 0, 1, mFileManager,
+    rv = GetStructuredCloneReadInfoFromStatement(stmt, 1, 0, mFileManager,
                                                  cloneInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -18410,7 +21463,7 @@ ObjectStoreGetAllKeysRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   if (hasKeyRange) {
     GetBindingClauseForKeyRange(
       mParams.optionalKeyRange().get_SerializedKeyRange(),
-      NS_LITERAL_CSTRING("key_value"),
+      NS_LITERAL_CSTRING("key"),
       keyRangeClause);
   }
 
@@ -18421,11 +21474,11 @@ ObjectStoreGetAllKeysRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   }
 
   nsCString query =
-    NS_LITERAL_CSTRING("SELECT key_value "
+    NS_LITERAL_CSTRING("SELECT key "
                        "FROM object_data "
                        "WHERE object_store_id = :osid") +
     keyRangeClause +
-    NS_LITERAL_CSTRING(" ORDER BY key_value ASC") +
+    NS_LITERAL_CSTRING(" ORDER BY key ASC") +
     limitClause;
 
   DatabaseConnection::CachedStatement stmt;
@@ -18481,11 +21534,30 @@ ObjectStoreGetAllKeysRequestOp::GetResponse(RequestResponse& aResponse)
   }
 }
 
+ObjectStoreDeleteRequestOp::ObjectStoreDeleteRequestOp(
+                                         TransactionBase* aTransaction,
+                                         const ObjectStoreDeleteParams& aParams)
+  : NormalTransactionOp(aTransaction)
+  , mParams(aParams)
+  , mObjectStoreHasIndexes(false)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aTransaction);
+
+  nsRefPtr<FullObjectStoreMetadata> metadata =
+    aTransaction->GetMetadataForObjectStoreId(mParams.objectStoreId());
+  MOZ_ASSERT(metadata);
+
+  const_cast<bool&>(mObjectStoreHasIndexes) = metadata->HasLiveIndexes();
+}
+
 nsresult
 ObjectStoreDeleteRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
+  MOZ_ASSERT(mObjectStoreHasIndexes ==
+               ObjectStoreHasIndexes(aConnection, mParams.objectStoreId()));
 
   PROFILER_LABEL("IndexedDB",
                  "ObjectStoreDeleteRequestOp::DoDatabaseWork",
@@ -18497,36 +21569,46 @@ ObjectStoreDeleteRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
-  nsAutoCString keyRangeClause;
-  GetBindingClauseForKeyRange(mParams.keyRange(),
-                              NS_LITERAL_CSTRING("key_value"),
-                              keyRangeClause);
+  if (mObjectStoreHasIndexes) {
+    rv = DeleteObjectStoreDataTableRowsWithIndexes(aConnection,
+                                                   mParams.objectStoreId(),
+                                                   mParams.keyRange());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    NS_NAMED_LITERAL_CSTRING(objectStoreIdString, "object_store_id");
 
-  nsCString query =
-    NS_LITERAL_CSTRING("DELETE FROM object_data "
-                       "WHERE object_store_id = :osid") +
-    keyRangeClause;
+    nsAutoCString keyRangeClause;
+    GetBindingClauseForKeyRange(mParams.keyRange(),
+                                NS_LITERAL_CSTRING("key"),
+                                keyRangeClause);
 
-  DatabaseConnection::CachedStatement stmt;
-  rv = aConnection->GetCachedStatement(query, &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    DatabaseConnection::CachedStatement stmt;
+    rv = aConnection->GetCachedStatement(
+      NS_LITERAL_CSTRING("DELETE FROM object_data "
+                           "WHERE object_store_id = :") + objectStoreIdString +
+      keyRangeClause +
+      NS_LITERAL_CSTRING(";"),
+      &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
-                             mParams.objectStoreId());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    rv = stmt->BindInt64ByName(objectStoreIdString, mParams.objectStoreId());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  rv = BindKeyRangeToStatement(mParams.keyRange(), stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    rv = BindKeyRangeToStatement(mParams.keyRange(), stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   rv = autoSave.Commit();
@@ -18537,11 +21619,30 @@ ObjectStoreDeleteRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   return NS_OK;
 }
 
+ObjectStoreClearRequestOp::ObjectStoreClearRequestOp(
+                                          TransactionBase* aTransaction,
+                                          const ObjectStoreClearParams& aParams)
+  : NormalTransactionOp(aTransaction)
+  , mParams(aParams)
+  , mObjectStoreHasIndexes(false)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aTransaction);
+
+  nsRefPtr<FullObjectStoreMetadata> metadata =
+    aTransaction->GetMetadataForObjectStoreId(mParams.objectStoreId());
+  MOZ_ASSERT(metadata);
+
+  const_cast<bool&>(mObjectStoreHasIndexes) = metadata->HasLiveIndexes();
+}
+
 nsresult
 ObjectStoreClearRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
+  MOZ_ASSERT(mObjectStoreHasIndexes ==
+               ObjectStoreHasIndexes(aConnection, mParams.objectStoreId()));
 
   PROFILER_LABEL("IndexedDB",
                  "ObjectStoreClearRequestOp::DoDatabaseWork",
@@ -18553,24 +21654,33 @@ ObjectStoreClearRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
-  DatabaseConnection::CachedStatement stmt;
-  rv = aConnection->GetCachedStatement(
-    "DELETE FROM object_data "
-    "WHERE object_store_id = :osid",
-    &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  if (mObjectStoreHasIndexes) {
+    rv = DeleteObjectStoreDataTableRowsWithIndexes(aConnection,
+                                                   mParams.objectStoreId(),
+                                                   void_t());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    DatabaseConnection::CachedStatement stmt;
+    rv = aConnection->GetCachedStatement(
+      "DELETE FROM object_data "
+        "WHERE object_store_id = :object_store_id;",
+      &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
-                             mParams.objectStoreId());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                               mParams.objectStoreId());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   rv = autoSave.Commit();
@@ -18598,7 +21708,7 @@ ObjectStoreCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   if (hasKeyRange) {
     GetBindingClauseForKeyRange(
       mParams.optionalKeyRange().get_SerializedKeyRange(),
-      NS_LITERAL_CSTRING("key_value"),
+      NS_LITERAL_CSTRING("key"),
       keyRangeClause);
   }
 
@@ -18781,12 +21891,15 @@ IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   }
 
   nsCString query =
-    NS_LITERAL_CSTRING("SELECT data, file_ids "
+    NS_LITERAL_CSTRING("SELECT file_ids, data "
                        "FROM object_data "
                        "INNER JOIN ") +
     indexTable +
     NS_LITERAL_CSTRING("AS index_table "
-                       "ON object_data.id = index_table.object_data_id "
+                       "ON object_data.object_store_id = "
+                         "index_table.object_store_id "
+                       "AND object_data.key = "
+                         "index_table.object_data_key "
                        "WHERE index_id = :index_id") +
     keyRangeClause +
     limitClause;
@@ -18818,7 +21931,7 @@ IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    rv = GetStructuredCloneReadInfoFromStatement(stmt, 0, 1, mFileManager,
+    rv = GetStructuredCloneReadInfoFromStatement(stmt, 1, 0, mFileManager,
                                                  cloneInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -19209,14 +22322,14 @@ OpenOp::DoObjectStoreDatabaseWork(DatabaseConnection* aConnection)
   const bool usingKeyRange =
     mOptionalKeyRange.type() == OptionalKeyRange::TSerializedKeyRange;
 
-  NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
+  NS_NAMED_LITERAL_CSTRING(keyString, "key");
   NS_NAMED_LITERAL_CSTRING(id, "id");
   NS_NAMED_LITERAL_CSTRING(openLimit, " LIMIT ");
 
   nsCString queryStart =
     NS_LITERAL_CSTRING("SELECT ") +
-    keyValue +
-    NS_LITERAL_CSTRING(", data, file_ids "
+    keyString +
+    NS_LITERAL_CSTRING(", file_ids, data "
                        "FROM object_data "
                        "WHERE object_store_id = :") +
     id;
@@ -19224,11 +22337,11 @@ OpenOp::DoObjectStoreDatabaseWork(DatabaseConnection* aConnection)
   nsAutoCString keyRangeClause;
   if (usingKeyRange) {
     GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
-                                keyValue,
+                                keyString,
                                 keyRangeClause);
   }
 
-  nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + keyValue;
+  nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + keyString;
   switch (mCursor->mDirection) {
     case IDBCursor::NEXT:
     case IDBCursor::NEXT_UNIQUE:
@@ -19288,8 +22401,8 @@ OpenOp::DoObjectStoreDatabaseWork(DatabaseConnection* aConnection)
 
   StructuredCloneReadInfo cloneInfo;
   rv = GetStructuredCloneReadInfoFromStatement(stmt,
-                                               1,
                                                2,
+                                               1,
                                                mCursor->mFileManager,
                                                &cloneInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -19309,13 +22422,13 @@ OpenOp::DoObjectStoreDatabaseWork(DatabaseConnection* aConnection)
       Key upper;
       bool open;
       GetRangeKeyInfo(false, &upper, &open);
-      AppendConditionClause(keyValue, currentKey, false, false,
+      AppendConditionClause(keyString, currentKey, false, false,
                             keyRangeClause);
-      AppendConditionClause(keyValue, currentKey, false, true,
+      AppendConditionClause(keyString, currentKey, false, true,
                             continueToKeyRangeClause);
       if (usingKeyRange && !upper.IsUnset()) {
-        AppendConditionClause(keyValue, rangeKey, true, !open, keyRangeClause);
-        AppendConditionClause(keyValue, rangeKey, true, !open,
+        AppendConditionClause(keyString, rangeKey, true, !open, keyRangeClause);
+        AppendConditionClause(keyString, rangeKey, true, !open,
                               continueToKeyRangeClause);
         mCursor->mRangeKey = upper;
       }
@@ -19327,12 +22440,13 @@ OpenOp::DoObjectStoreDatabaseWork(DatabaseConnection* aConnection)
       Key lower;
       bool open;
       GetRangeKeyInfo(true, &lower, &open);
-      AppendConditionClause(keyValue, currentKey, true, false, keyRangeClause);
-      AppendConditionClause(keyValue, currentKey, true, true,
+      AppendConditionClause(keyString, currentKey, true, false, keyRangeClause);
+      AppendConditionClause(keyString, currentKey, true, true,
                            continueToKeyRangeClause);
       if (usingKeyRange && !lower.IsUnset()) {
-        AppendConditionClause(keyValue, rangeKey, false, !open, keyRangeClause);
-        AppendConditionClause(keyValue, rangeKey, false, !open,
+        AppendConditionClause(keyString, rangeKey, false, !open,
+                              keyRangeClause);
+        AppendConditionClause(keyString, rangeKey, false, !open,
                               continueToKeyRangeClause);
         mCursor->mRangeKey = lower;
       }
@@ -19384,13 +22498,13 @@ OpenOp::DoObjectStoreKeyDatabaseWork(DatabaseConnection* aConnection)
   const bool usingKeyRange =
     mOptionalKeyRange.type() == OptionalKeyRange::TSerializedKeyRange;
 
-  NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
+  NS_NAMED_LITERAL_CSTRING(keyString, "key");
   NS_NAMED_LITERAL_CSTRING(id, "id");
   NS_NAMED_LITERAL_CSTRING(openLimit, " LIMIT ");
 
   nsCString queryStart =
     NS_LITERAL_CSTRING("SELECT ") +
-    keyValue +
+    keyString +
     NS_LITERAL_CSTRING(" FROM object_data "
                        "WHERE object_store_id = :") +
     id;
@@ -19398,11 +22512,11 @@ OpenOp::DoObjectStoreKeyDatabaseWork(DatabaseConnection* aConnection)
   nsAutoCString keyRangeClause;
   if (usingKeyRange) {
     GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
-                                keyValue,
+                                keyString,
                                 keyRangeClause);
   }
 
-  nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + keyValue;
+  nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + keyString;
   switch (mCursor->mDirection) {
     case IDBCursor::NEXT:
     case IDBCursor::NEXT_UNIQUE:
@@ -19473,13 +22587,13 @@ OpenOp::DoObjectStoreKeyDatabaseWork(DatabaseConnection* aConnection)
       Key upper;
       bool open;
       GetRangeKeyInfo(false, &upper, &open);
-      AppendConditionClause(keyValue, currentKey, false, false,
+      AppendConditionClause(keyString, currentKey, false, false,
                             keyRangeClause);
-      AppendConditionClause(keyValue, currentKey, false, true,
+      AppendConditionClause(keyString, currentKey, false, true,
                             continueToKeyRangeClause);
       if (usingKeyRange && !upper.IsUnset()) {
-        AppendConditionClause(keyValue, rangeKey, true, !open, keyRangeClause);
-        AppendConditionClause(keyValue, rangeKey, true, !open,
+        AppendConditionClause(keyString, rangeKey, true, !open, keyRangeClause);
+        AppendConditionClause(keyString, rangeKey, true, !open,
                               continueToKeyRangeClause);
         mCursor->mRangeKey = upper;
       }
@@ -19491,12 +22605,13 @@ OpenOp::DoObjectStoreKeyDatabaseWork(DatabaseConnection* aConnection)
       Key lower;
       bool open;
       GetRangeKeyInfo(true, &lower, &open);
-      AppendConditionClause(keyValue, currentKey, true, false, keyRangeClause);
-      AppendConditionClause(keyValue, currentKey, true, true,
+      AppendConditionClause(keyString, currentKey, true, false, keyRangeClause);
+      AppendConditionClause(keyString, currentKey, true, true,
                             continueToKeyRangeClause);
       if (usingKeyRange && !lower.IsUnset()) {
-        AppendConditionClause(keyValue, rangeKey, false, !open, keyRangeClause);
-        AppendConditionClause(keyValue, rangeKey, false, !open,
+        AppendConditionClause(keyString, rangeKey, false, !open,
+                              keyRangeClause);
+        AppendConditionClause(keyString, rangeKey, false, !open,
                               continueToKeyRangeClause);
         mCursor->mRangeKey = lower;
       }
@@ -19581,13 +22696,16 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
   nsAutoCString queryStart =
     NS_LITERAL_CSTRING("SELECT index_table.value, "
                               "index_table.object_data_key, "
-                              "object_data.data, "
-                              "object_data.file_ids "
+                              "object_data.file_ids, "
+                              "object_data.data "
                        "FROM ") +
     indexTable +
     NS_LITERAL_CSTRING(" AS index_table "
                        "JOIN object_data "
-                       "ON index_table.object_data_id = object_data.id "
+                       "ON index_table.object_store_id = "
+                         "object_data.object_store_id "
+                       "AND index_table.object_data_key = "
+                         "object_data.key "
                        "WHERE index_table.index_id = :") +
     id;
 
@@ -19640,8 +22758,8 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
 
   StructuredCloneReadInfo cloneInfo;
   rv = GetStructuredCloneReadInfoFromStatement(stmt,
-                                               2,
                                                3,
+                                               2,
                                                mCursor->mFileManager,
                                                &cloneInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -20177,8 +23295,8 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
 
       StructuredCloneReadInfo cloneInfo;
       rv = GetStructuredCloneReadInfoFromStatement(stmt,
-                                                   1,
                                                    2,
+                                                   1,
                                                    mCursor->mFileManager,
                                                    &cloneInfo);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -20220,8 +23338,8 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
 
       StructuredCloneReadInfo cloneInfo;
       rv = GetStructuredCloneReadInfoFromStatement(stmt,
-                                                   2,
                                                    3,
+                                                   2,
                                                    mCursor->mFileManager,
                                                    &cloneInfo);
       if (NS_WARN_IF(NS_FAILED(rv))) {
