@@ -31,7 +31,7 @@
     <key key="&focusSearch2.key;" modifiers="accel" oncommand="gCookiesWindow.focusFilterBox();"/>
   </keyset>
 
-  <vbox flex="1" class="contentPane">
+  <vbox flex="1" class="contentPane largeDialogContainer">
     <hbox align="center">
       <label accesskey="&filter.accesskey;" control="filter">&filter.label;</label>
       <textbox type="search" id="filter" flex="1"
