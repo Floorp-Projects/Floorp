@@ -121,7 +121,8 @@ body {
 
 p, dl, multicol {
   display: block;
-  margin: 1em 0;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
 }
 
 dd {
@@ -131,7 +132,10 @@ dd {
 
 blockquote, figure {
   display: block;
-  margin: 1em 40px;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+  -moz-margin-start: 40px;
+  -moz-margin-end: 40px;
 }
 
 address {
@@ -146,7 +150,10 @@ center {
 
 blockquote[type=cite] {
   display: block;
-  margin: 1em 0px;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+  -moz-margin-start: 0;
+  -moz-margin-end: 0;
   -moz-padding-start: 1em;
   -moz-border-start: solid;
   border-color: blue;
@@ -165,7 +172,8 @@ h1 {
   display: block;
   font-size: 2em;
   font-weight: bold;
-  margin: .67em 0;
+  margin-block-start: .67em;
+  margin-block-end: .67em;
 }
 
 h2,
@@ -174,7 +182,8 @@ h1 {
   display: block;
   font-size: 1.5em;
   font-weight: bold;
-  margin: .83em 0;
+  margin-block-start: .83em;
+  margin-block-end: .83em;
 }
 
 h3,
@@ -184,7 +193,8 @@ h1 {
   display: block;
   font-size: 1.17em;
   font-weight: bold;
-  margin: 1em 0;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
 }
 
 h4,
@@ -195,7 +205,8 @@ h1 {
   display: block;
   font-size: 1.00em;
   font-weight: bold;
-  margin: 1.33em 0;
+  margin-block-start: 1.33em;
+  margin-block-end: 1.33em;
 }
 
 h5,
@@ -207,7 +218,8 @@ h1 {
   display: block;
   font-size: 0.83em;
   font-weight: bold;
-  margin: 1.67em 0;
+  margin-block-start: 1.67em;
+  margin-block-end: 1.67em;
 }
 
 h6,
@@ -220,7 +232,8 @@ h1 {
   display: block;
   font-size: 0.67em;
   font-weight: bold;
-  margin: 2.33em 0;
+  margin-block-start: 2.33em;
+  margin-block-end: 2.33em;
 }
 
 listing {
@@ -228,24 +241,25 @@ listing {
   font-family: -moz-fixed;
   font-size: medium;
   white-space: pre;
-  margin: 1em 0;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
 }
 
 xmp, pre, plaintext {
   display: block;
   font-family: -moz-fixed;
   white-space: pre;
-  margin: 1em 0;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
 }
 
 /* tables */
 
 table {
+  writing-mode: horizontal-tb !important; /* XXX remove when bug 1077521 is fixed */
   display: table;
   border-spacing: 2px;
   border-collapse: separate;
-  margin-top: 0;
-  margin-bottom: 0;
   /* XXXldb do we want this if we're border-collapse:collapse ? */
   box-sizing: border-box;
   text-indent: 0;
@@ -359,10 +373,10 @@ table[rules][rules="all"] > th
 
 table[rules][rules="rows"] > tr,
 table[rules][rules="rows"] > * > tr {
-  border-top-width: thin;
-  border-bottom-width: thin;
-  border-top-style: solid;
-  border-bottom-style: solid;
+  border-block-start-width: thin;
+  border-block-end-width: thin;
+  border-block-start-style: solid;
+  border-block-end-style: solid;
 }
 
 
@@ -370,25 +384,25 @@ table[rules][rules="cols"] > tr > td,
 table[rules][rules="cols"] > * > tr > td,
 table[rules][rules="cols"] > tr > th,
 table[rules][rules="cols"] > * > tr > th {
-  border-left-width: thin;
-  border-right-width: thin;
-  border-left-style: solid;
-  border-right-style: solid;
+  -moz-border-start-width: thin;
+  -moz-border-end-width: thin;
+  -moz-border-start-style: solid;
+  -moz-border-end-style: solid;
 }
 
 table[rules][rules="groups"] > colgroup {
-  border-left-width: thin;
-  border-right-width: thin;
-  border-left-style: solid;
-  border-right-style: solid;
+  -moz-border-start-width: thin;
+  -moz-border-end-width: thin;
+  -moz-border-start-style: solid;
+  -moz-border-end-style: solid;
 }
 table[rules][rules="groups"] > tfoot,
 table[rules][rules="groups"] > thead,
 table[rules][rules="groups"] > tbody {
-  border-top-width: thin;
-  border-bottom-width: thin;
-  border-top-style: solid;
-  border-bottom-style: solid;
+  border-block-start-width: thin;
+  border-block-end-width: thin;
+  border-block-start-style: solid;
+  border-block-start-style: solid;
 }
   
   
@@ -399,16 +413,22 @@ caption {
 }
 
 table[align="center"] > caption {
-  margin-left: auto;
-  margin-right: auto;
+  -moz-margin-start: auto;
+  -moz-margin-end: auto;
 }
 
-table[align="center"] > caption[align="left"] {
-  margin-right: 0;
+table[align="center"] > caption[align="left"]:-moz-dir(ltr) {
+  -moz-margin-end: 0;
+}
+table[align="center"] > caption[align="left"]:-moz-dir(rtl) {
+  -moz-margin-start: 0;
 }
 
-table[align="center"] > caption[align="right"] {
-  margin-left: 0;
+table[align="center"] > caption[align="right"]:-moz-dir(ltr) {
+  -moz-margin-start: 0;
+}
+table[align="center"] > caption[align="right"]:-moz-dir(rtl) {
+  -moz-margin-end: 0;
 }
 
 tr {
@@ -540,7 +560,7 @@ mark {
 
 /* titles */
 abbr[title], acronym[title] {
-  border-bottom: dotted 1px;
+  border-block-end: dotted 1px;
 }
 
 /* lists */
@@ -548,7 +568,8 @@ abbr[title], acronym[title] {
 ul, menu, dir {
   display: block;
   list-style-type: disc;
-  margin: 1em 0;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
   -moz-padding-start: 40px;
 }
 
@@ -559,7 +580,8 @@ menu[type="context"] {
 ol {
   display: block;
   list-style-type: decimal;
-  margin: 1em 0;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
   -moz-padding-start: 40px;
 }
 
@@ -573,8 +595,8 @@ li {
 :-moz-any(ul, ol, dir, menu, dl) dir,
 :-moz-any(ul, ol, dir, menu, dl) menu,
 :-moz-any(ul, ol, dir, menu, dl) dl {
-  margin-top: 0;
-  margin-bottom: 0;
+  margin-block-start: 0;
+  margin-block-end: 0;
 }
 
 /* 2 deep unordered lists use a circle */
@@ -600,7 +622,10 @@ li {
 hr {
   display: block;
   border: 1px inset;
-  margin: 0.5em auto 0.5em auto;
+  margin-block-start: 0.5em;
+  margin-block-end: 0.5em;
+  -moz-margin-start: auto;
+  -moz-margin-end: auto;
   color: gray;
   -moz-float-edge: margin-box;
   box-sizing: border-box;
@@ -743,7 +768,7 @@ video > .caption-box {
 
 /* emulation of non-standard HTML <marquee> tag */
 marquee {
-  width: -moz-available;
+  inline-size: -moz-available;
   display: inline-block;
   vertical-align: text-bottom;
   text-align: start;
@@ -752,7 +777,7 @@ marquee {
 
 marquee[direction="up"], marquee[direction="down"] {
   -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-vertical');
-  height: 200px;
+  block-size: 200px;
 }
 
 /* PRINT ONLY rules follow */
