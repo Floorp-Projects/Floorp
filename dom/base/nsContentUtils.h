@@ -614,6 +614,11 @@ public:
                            uint32_t aContentPolicyType = nsIContentPolicy::TYPE_IMAGE);
 
   /**
+   * Returns true if objects in aDocument shouldn't initiate image loads.
+   */
+  static bool DocumentInactiveForImageLoads(nsIDocument* aDocument);
+
+  /**
    * Method to start an image load.  This does not do any security checks.
    * This method will attempt to make aURI immutable; a caller that wants to
    * keep a mutable version around should pass in a clone.
@@ -646,7 +651,8 @@ public:
    * Null document/channel arguments return the public image loader.
    */
   static imgLoader* GetImgLoaderForDocument(nsIDocument* aDoc);
-  static imgLoader* GetImgLoaderForChannel(nsIChannel* aChannel);
+  static imgLoader* GetImgLoaderForChannel(nsIChannel* aChannel,
+                                           nsIDocument* aContext);
 
   /**
    * Returns whether the given URI is in the image cache.

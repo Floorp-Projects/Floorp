@@ -4271,7 +4271,8 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
             pn = pn_head;
         }
 
-        RootedArrayObject obj(cx, NewDenseFullyAllocatedArray(cx, count, nullptr, MaybeSingletonObject));
+        RootedArrayObject obj(cx, NewDenseFullyAllocatedArray(cx, count, NullPtr(),
+                                                              MaybeSingletonObject));
         if (!obj)
             return false;
 

@@ -2518,6 +2518,51 @@ TryEliminateTypeBarrier(MTypeBarrier *barrier, bool *eliminated)
     return true;
 }
 
+static bool
+TryOptimizeLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull *def, MDefinitionVector *peliminateList)
+{
+    if (def->type() != MIRType_Value)
+        return true;
+
+    MDefinitionVector eliminateList(def->block()->graph().alloc());
+
+    for (MUseDefIterator iter(def); iter; ++iter) {
+        MDefinition *ndef = iter.def();
+        switch (ndef->op()) {
+          case MDefinition::Op_Compare:
+            if (ndef->toCompare()->compareType() != MCompare::Compare_Null)
+                return true;
+            break;
+          case MDefinition::Op_PostWriteBarrier:
+            break;
+          case MDefinition::Op_StoreFixedSlot:
+            break;
+          case MDefinition::Op_StoreSlot:
+            break;
+          case MDefinition::Op_ToObjectOrNull:
+            if (!eliminateList.append(ndef->toToObjectOrNull()))
+                return false;
+            break;
+          case MDefinition::Op_Unbox:
+            MOZ_ASSERT(ndef->type() == MIRType_Object);
+            break;
+          default:
+            return true;
+        }
+    }
+
+    def->setResultType(MIRType_ObjectOrNull);
+
+    for (size_t i = 0; i < eliminateList.length(); i++) {
+        MDefinition *ndef = eliminateList[i];
+        ndef->replaceAllUsesWith(def);
+        if (!peliminateList->append(ndef))
+            return false;
+    }
+
+    return true;
+}
+
 static inline MDefinition *
 PassthroughOperand(MDefinition *def)
 {
@@ -2565,6 +2610,8 @@ jit::EliminateRedundantChecks(MIRGraph &graph)
         }
     }
 
+    MDefinitionVector eliminateList(graph.alloc());
+
     // Starting from each self-dominating block, traverse the CFG in pre-order.
     while (!worklist.empty()) {
         MBasicBlock *block = worklist.popCopy();
@@ -2586,6 +2633,9 @@ jit::EliminateRedundantChecks(MIRGraph &graph)
             } else if (def->isTypeBarrier()) {
                 if (!TryEliminateTypeBarrier(def->toTypeBarrier(), &eliminated))
                     return false;
+            } else if (def->isLoadUnboxedObjectOrNull()) {
+                if (!TryOptimizeLoadUnboxedObjectOrNull(def->toLoadUnboxedObjectOrNull(), &eliminateList))
+                    return false;
             } else {
                 // Now that code motion passes have finished, replace
                 // instructions which pass through one of their operands
@@ -2601,6 +2651,12 @@ jit::EliminateRedundantChecks(MIRGraph &graph)
     }
 
     MOZ_ASSERT(index == graph.numBlocks());
+
+    for (size_t i = 0; i < eliminateList.length(); i++) {
+        MDefinition *def = eliminateList[i];
+        def->block()->discardDef(def);
+    }
+
     return true;
 }
 

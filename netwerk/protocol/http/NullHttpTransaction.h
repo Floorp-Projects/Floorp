@@ -59,10 +59,12 @@ protected:
 private:
   // mCapsToClear holds flags that should be cleared in mCaps, e.g. unset
   // NS_HTTP_REFRESH_DNS when DNS refresh request has completed to avoid
-  // redundant requests on the network. To deal with raciness, only unsetting
+  // redundant requests on the network. The member itself is atomic, but
+  // access to it from the networking thread may happen either before or
+  // after the main thread modifies it. To deal with raciness, only unsetting
   // bitfields should be allowed: 'lost races' will thus err on the
   // conservative side, e.g. by going ahead with a 2nd DNS refresh.
-  uint32_t mCapsToClear;
+  Atomic<uint32_t> mCapsToClear;
   nsHttpRequestHead *mRequestHead;
   bool mIsDone;
   bool mClaimed;

@@ -42,13 +42,6 @@ public:
      * and we need to call UpdateOverflow on the frame.
      */
     CHILDREN_CHANGED,
-    /**
-     * The overflow areas of children have changed
-     * and we need to call UpdateOverflow on the frame.
-     * Also call UpdateOverflow on the parent even if the
-     * overflow areas of the frame does not change.
-     */
-    CHILDREN_AND_PARENT_CHANGED
   };
 
   OverflowChangedTracker() :
@@ -121,12 +114,7 @@ public:
       nsIFrame *frame = entry->mFrame;
 
       bool overflowChanged = false;
-      if (entry->mChangeKind == CHILDREN_AND_PARENT_CHANGED) {
-        // Need to union the overflow areas of the children.
-        // Always update the parent, even if the overflow does not change.
-        frame->UpdateOverflow();
-        overflowChanged = true;
-      } else if (entry->mChangeKind == CHILDREN_CHANGED) {
+      if (entry->mChangeKind == CHILDREN_CHANGED) {
         // Need to union the overflow areas of the children.
         // Only update the parent if the overflow changes.
         overflowChanged = frame->UpdateOverflow();

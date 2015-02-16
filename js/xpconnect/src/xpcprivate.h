@@ -214,7 +214,7 @@ extern const char XPC_XPCONNECT_CONTRACTID[];
     return (result || !src) ? NS_OK : NS_ERROR_OUT_OF_MEMORY
 
 
-#define WRAPPER_SLOTS (JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS )
+#define WRAPPER_FLAGS (JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS )
 
 #define INVALID_OBJECT ((JSObject *)1)
 
@@ -507,7 +507,7 @@ public:
     // Mapping of often used strings to jsid atoms that live 'forever'.
     //
     // To add a new string: add to this list and to XPCJSRuntime::mStrings
-    // at the top of xpcjsruntime.cpp
+    // at the top of XPCJSRuntime.cpp
     enum {
         IDX_CONSTRUCTOR             = 0 ,
         IDX_TO_STRING               ,
@@ -959,6 +959,8 @@ extern const js::Class XPC_WN_NoMods_NoCall_Proto_JSClass;
 extern const js::Class XPC_WN_ModsAllowed_WithCall_Proto_JSClass;
 extern const js::Class XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
 extern const js::Class XPC_WN_Tearoff_JSClass;
+#define XPC_WN_TEAROFF_RESERVED_SLOTS 1
+#define XPC_WN_TEAROFF_FLAT_OBJECT_SLOT 0
 extern const js::Class XPC_WN_NoHelper_Proto_JSClass;
 
 extern bool
@@ -975,6 +977,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
     {                                                                         \
         nullptr, /* lookupProperty */                                         \
         nullptr, /* defineProperty */                                         \
+        nullptr, /* hasProperty */                                            \
         nullptr, /* getProperty    */                                         \
         nullptr, /* setProperty    */                                         \
         nullptr, /* getOwnPropertyDescriptor */                               \
@@ -989,6 +992,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
     {                                                                         \
         nullptr, /* lookupProperty */                                         \
         nullptr, /* defineProperty */                                         \
+        nullptr, /* hasProperty */                                            \
         nullptr, /* getProperty    */                                         \
         nullptr, /* setProperty    */                                         \
         nullptr, /* getOwnPropertyDescriptor */                               \
@@ -1609,16 +1613,12 @@ public:
 #define GET_IT(f_) const {return 0 != (mFlags & nsIXPCScriptable:: f_ );}
 
     bool WantPreCreate()                GET_IT(WANT_PRECREATE)
-    bool WantCreate()                   GET_IT(WANT_CREATE)
-    bool WantPostCreate()               GET_IT(WANT_POSTCREATE)
     bool WantAddProperty()              GET_IT(WANT_ADDPROPERTY)
-    bool WantDelProperty()              GET_IT(WANT_DELPROPERTY)
     bool WantGetProperty()              GET_IT(WANT_GETPROPERTY)
     bool WantSetProperty()              GET_IT(WANT_SETPROPERTY)
     bool WantEnumerate()                GET_IT(WANT_ENUMERATE)
     bool WantNewEnumerate()             GET_IT(WANT_NEWENUMERATE)
     bool WantResolve()                  GET_IT(WANT_RESOLVE)
-    bool WantConvert()                  GET_IT(WANT_CONVERT)
     bool WantFinalize()                 GET_IT(WANT_FINALIZE)
     bool WantCall()                     GET_IT(WANT_CALL)
     bool WantConstruct()                GET_IT(WANT_CONSTRUCT)
@@ -2119,14 +2119,6 @@ public:
                 XPCWrappedNativeScope* Scope,
                 XPCNativeInterface* Interface,
                 XPCWrappedNative** wrapper);
-
-    static nsresult
-    ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
-                           XPCWrappedNativeScope* aNewScope,
-                           JS::HandleObject aNewParent,
-                           nsISupports* aCOMObj);
-
-    nsresult RescueOrphans();
 
     void FlatJSObjectFinalized();
     void FlatJSObjectMoved(JSObject *obj, const JSObject *old);
@@ -3761,7 +3753,7 @@ ObjectScope(JSObject *obj)
     return CompartmentPrivate::Get(obj)->scope;
 }
 
-JSObject* NewOutObject(JSContext* cx, JSObject* scope);
+JSObject* NewOutObject(JSContext* cx);
 bool IsOutObject(JSContext* cx, JSObject* obj);
 
 nsresult HasInstance(JSContext *cx, JS::HandleObject objArg, const nsID *iid, bool *bp);

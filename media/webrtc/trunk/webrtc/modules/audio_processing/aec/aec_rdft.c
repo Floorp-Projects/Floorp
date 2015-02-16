@@ -579,7 +579,11 @@ void aec_rdft_init(void) {
 #if defined(MIPS_FPU_LE)
   aec_rdft_init_mips();
 #endif
-#if defined(WEBRTC_DETECT_ARM_NEON) || defined(WEBRTC_ARCH_ARM_NEON)
+#if defined(WEBRTC_DETECT_ARM_NEON)
+  if ((WebRtc_GetCPUFeaturesARM() & kCPUFeatureNEON) != 0) {
+    aec_rdft_init_neon();
+  }
+#elif defined(WEBRTC_ARCH_ARM_NEON)
   aec_rdft_init_neon();
 #endif
 }
