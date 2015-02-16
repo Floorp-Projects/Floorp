@@ -379,15 +379,20 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     // creates a new style rule if we started *or* stopped transitions.
     collection->mStyleRuleRefreshTime = TimeStamp();
     collection->UpdateCheckGeneration(mPresContext);
+    collection->mNeedsRefreshes = true;
+    TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
+    collection->EnsureStyleRuleFor(now, EnsureStyleRule_IsNotThrottled);
   }
 
-  // Replace the new style context by appending the cover rule.
-  nsCOMArray<nsIStyleRule> rules;
-  if (startedAny) {
-    rules.AppendObject(coverRule);
+  // We want to replace the new style context with the after-change style.
+  *aNewStyleContext = afterChangeStyle;
+  if (collection) {
+    // Since we have transition styles, we have to undo this replacement.
+    // The check of collection->mCheckGeneration against the restyle
+    // manager's GetAnimationGeneration() will ensure that we don't go
+    // through the rest of this function again when we do.
+    collection->PostRestyleForAnimation(mPresContext);
   }
-  *aNewStyleContext = mPresContext->StyleSet()->
-                        ResolveStyleByAddingRules(*aNewStyleContext, rules);
 }
 
 void
@@ -473,8 +478,6 @@ nsTransitionManager::ConsiderStartingTransition(
     // GetAnimationRule already called RestyleForAnimation.
     return;
   }
-
-  nsPresContext *presContext = aNewStyleContext->PresContext();
 
   if (!shouldAnimate) {
     if (haveCurrentTransition) {
@@ -612,7 +615,6 @@ nsTransitionManager::ConsiderStartingTransition(
     }
   }
   aElementTransitions->UpdateAnimationGeneration(mPresContext);
-  aElementTransitions->PostRestyleForAnimation(presContext);
 
   *aStartedAny = true;
   aWhichStarted->AddProperty(aProperty);
