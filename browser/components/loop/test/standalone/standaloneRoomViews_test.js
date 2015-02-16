@@ -143,6 +143,108 @@ describe("loop.standaloneRoomViews", function() {
       });
     });
 
+    describe("Local Stream Size Position", function() {
+      var view, localElement;
+
+      beforeEach(function() {
+        sandbox.stub(window, "matchMedia").returns({
+          matches: false
+        });
+        view = mountTestComponent();
+        localElement = view._getElement(".local");
+      });
+
+      it("should be a quarter of the width of the main stream", function() {
+        sandbox.stub(view, "getRemoteVideoDimensions").returns({
+          streamWidth: 640,
+          offsetX: 0
+        });
+
+        view.updateLocalCameraPosition({
+          width: 1,
+          height: 0.75
+        });
+
+        expect(localElement.style.width).eql("160px");
+        expect(localElement.style.height).eql("120px");
+      });
+
+      it("should be a quarter of the width reduced for aspect ratio", function() {
+        sandbox.stub(view, "getRemoteVideoDimensions").returns({
+          streamWidth: 640,
+          offsetX: 0
+        });
+
+        view.updateLocalCameraPosition({
+          width: 0.75,
+          height: 1
+        });
+
+        expect(localElement.style.width).eql("120px");
+        expect(localElement.style.height).eql("160px");
+      });
+
+      it("should ensure the height is a minimum of 48px", function() {
+        sandbox.stub(view, "getRemoteVideoDimensions").returns({
+          streamWidth: 180,
+          offsetX: 0
+        });
+
+        view.updateLocalCameraPosition({
+          width: 1,
+          height: 0.75
+        });
+
+        expect(localElement.style.width).eql("64px");
+        expect(localElement.style.height).eql("48px");
+      });
+
+      it("should ensure the width is a minimum of 48px", function() {
+        sandbox.stub(view, "getRemoteVideoDimensions").returns({
+          streamWidth: 180,
+          offsetX: 0
+        });
+
+        view.updateLocalCameraPosition({
+          width: 0.75,
+          height: 1
+        });
+
+        expect(localElement.style.width).eql("48px");
+        expect(localElement.style.height).eql("64px");
+      });
+
+      it("should position the stream to overlap the main stream by a quarter", function() {
+        sandbox.stub(view, "getRemoteVideoDimensions").returns({
+          streamWidth: 640,
+          offsetX: 0
+        });
+
+        view.updateLocalCameraPosition({
+          width: 1,
+          height: 0.75
+        });
+
+        expect(localElement.style.width).eql("160px");
+        expect(localElement.style.left).eql("600px");
+      });
+
+      it("should position the stream to overlap the main stream by a quarter when the aspect ratio is vertical", function() {
+        sandbox.stub(view, "getRemoteVideoDimensions").returns({
+          streamWidth: 640,
+          offsetX: 0
+        });
+
+        view.updateLocalCameraPosition({
+          width: 0.75,
+          height: 1
+        });
+
+        expect(localElement.style.width).eql("120px");
+        expect(localElement.style.left).eql("610px");
+      });
+    });
+
     describe("#render", function() {
       var view;
 

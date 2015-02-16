@@ -82,8 +82,8 @@
       <caption label="&dataSection.label;"/>
       <grid flex="1">
         <columns>
-          <column dialogWidth="&column.width2;"
-                  subdialogWidth="&inContentColumn.width;"/>
+          <column dialogWidth="&sanitizePrefs2.column.width;"
+                  subdialogWidth="&sanitizePrefs2.inContent.column.width;"/>
           <column flex="1"/>
         </columns>
         <rows>
