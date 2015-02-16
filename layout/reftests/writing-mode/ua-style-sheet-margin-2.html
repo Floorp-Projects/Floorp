@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical margins on dl and dd elements in the UA style sheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+</style>
+<div class=ltr>
+  <dl><dt>term</dt><dd>definition</dd></dl>
+</div>
+<div class=rtl dir=rtl>
+  <dl><dt>term</dt><dd>definition</dd></dl>
+</div>
+<div class=v-rl>
+  <dl><dt>term</dt><dd>definition</dd></dl>
+</div>

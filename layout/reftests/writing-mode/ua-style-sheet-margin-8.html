@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical margins on caption elements in the UA style sheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+table { border: 1px solid purple; }
+caption { border: 1px solid orange; }
+</style>
+<div class=ltr>
+  <table align=center>
+    <td>Table that is bigger than its caption</td>
+    <caption>Caption</caption>
+  </table>
+</div>
+<div class=rtl dir=rtl>
+  <table align=center>
+    <td>Table that is bigger than its caption</td>
+    <caption>Caption</caption>
+  </table>
+</div>
+<div class=v-rl>
+  <table align=center>
+    <td>Table that is bigger than its caption</td>
+    <caption>Caption</caption>
+  </table>
+</div>
