@@ -45,7 +45,7 @@ class ArrayObject;
 
 /* Create a dense array with no capacity allocated, length set to 0. */
 extern ArrayObject * JS_FASTCALL
-NewDenseEmptyArray(JSContext *cx, JSObject *proto = nullptr,
+NewDenseEmptyArray(JSContext *cx, HandleObject proto = NullPtr(),
                    NewObjectKind newKind = GenericObject);
 
 /*
@@ -53,7 +53,7 @@ NewDenseEmptyArray(JSContext *cx, JSObject *proto = nullptr,
  * contents. This is useful, e.g., when accepting length from the user.
  */
 extern ArrayObject * JS_FASTCALL
-NewDenseUnallocatedArray(ExclusiveContext *cx, uint32_t length, JSObject *proto = nullptr,
+NewDenseUnallocatedArray(ExclusiveContext *cx, uint32_t length, HandleObject proto = NullPtr(),
                          NewObjectKind newKind = GenericObject);
 
 /*
@@ -61,12 +61,12 @@ NewDenseUnallocatedArray(ExclusiveContext *cx, uint32_t length, JSObject *proto 
  * but with only |EagerAllocationMaxLength| elements allocated.
  */
 extern ArrayObject * JS_FASTCALL
-NewDensePartlyAllocatedArray(ExclusiveContext *cx, uint32_t length, JSObject *proto = nullptr,
+NewDensePartlyAllocatedArray(ExclusiveContext *cx, uint32_t length, HandleObject proto = NullPtr(),
                              NewObjectKind newKind = GenericObject);
 
 /* Create a dense array with length and capacity == 'length', initialized length set to 0. */
 extern ArrayObject * JS_FASTCALL
-NewDenseFullyAllocatedArray(ExclusiveContext *cx, uint32_t length, JSObject *proto = nullptr,
+NewDenseFullyAllocatedArray(ExclusiveContext *cx, uint32_t length, HandleObject proto = NullPtr(),
                             NewObjectKind newKind = GenericObject);
 
 enum AllocatingBehaviour {
@@ -86,12 +86,12 @@ NewDenseArray(ExclusiveContext *cx, uint32_t length, HandleObjectGroup group,
 /* Create a dense array with a copy of the dense array elements in src. */
 extern ArrayObject *
 NewDenseCopiedArray(JSContext *cx, uint32_t length, HandleArrayObject src,
-                    uint32_t elementOffset, JSObject *proto = nullptr);
+                    uint32_t elementOffset, HandleObject proto = NullPtr());
 
 /* Create a dense array from the given array values, which must be rooted */
 extern ArrayObject *
-NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values, JSObject *proto = nullptr,
-                    NewObjectKind newKind = GenericObject);
+NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values,
+                    HandleObject proto = NullPtr(), NewObjectKind newKind = GenericObject);
 
 /* Create a dense array based on templateObject with the given length. */
 extern ArrayObject *

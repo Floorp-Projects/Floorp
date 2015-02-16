@@ -152,10 +152,6 @@ PluginWidgetParent::RecvCreate(nsresult* aResult)
   DebugOnly<nsresult> drv;
   drv = mWidget->EnableDragDrop(true);
   NS_ASSERTION(NS_SUCCEEDED(drv), "widget call failure");
-  drv = mWidget->Show(true);
-  NS_ASSERTION(NS_SUCCEEDED(drv), "widget call failure");
-  drv = mWidget->Enable(true);
-  NS_ASSERTION(NS_SUCCEEDED(drv), "widget call failure");
 
 #if defined(MOZ_WIDGET_GTK)
   // For setup, initially GTK code expects 'window' to hold the parent.

@@ -150,21 +150,8 @@ var FindHelper = {
         this._targetTab.sendViewportUpdate();
       }
     } else {
-      // Defines the space around the highlighted element as a factor of the element's size.
-      const spacingFactor = 6;
-
-      // We replace the start of the zoom rect to keep the highlighted word in the middle.
-      // We divide this offset by two to consider a spacing on each side of the rect.
-      let x = aData.rect.x + (aData.rect.width * (1 - spacingFactor)) / 2;
-      let y = aData.rect.y + (aData.rect.height * (1 - spacingFactor)) / 2;
-
-      let rect = new Rect(Math.max(x, 0),
-                          Math.max(y, 0),
-                          // we use a bigger viewport than just the highlighted word
-                          aData.rect.width * spacingFactor,
-                          aData.rect.height * spacingFactor);
-
-      ZoomHelper.zoomToRect(rect);
+      // Disabled until bug 1014113 is fixed
+      // ZoomHelper.zoomToRect(aData.rect);
       this._viewportChanged = true;
     }
   }

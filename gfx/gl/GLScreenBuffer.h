@@ -245,8 +245,6 @@ public:
 
     bool Resize(const gfx::IntSize& size);
 
-    void Readback(SharedSurface* src, gfx::DataSourceSurface* dest);
-
 protected:
     bool Attach(SharedSurface* surf, const gfx::IntSize& size);
 

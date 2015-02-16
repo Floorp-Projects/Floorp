@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -31,8 +31,9 @@ namespace mozilla {
  * to separate the safebrowsing cookie.
  */
 
-class LoadContext MOZ_FINAL : public nsILoadContext,
-                              public nsIInterfaceRequestor
+class LoadContext MOZ_FINAL
+  : public nsILoadContext
+  , public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS
@@ -112,15 +113,15 @@ public:
 private:
   ~LoadContext() {}
 
-  nsWeakPtr     mTopFrameElement;
-  uint64_t      mNestedFrameId;
-  uint32_t      mAppId;
-  bool          mIsContent;
-  bool          mUsePrivateBrowsing;
-  bool          mUseRemoteTabs;
-  bool          mIsInBrowserElement;
+  nsWeakPtr mTopFrameElement;
+  uint64_t mNestedFrameId;
+  uint32_t mAppId;
+  bool mIsContent;
+  bool mUsePrivateBrowsing;
+  bool mUseRemoteTabs;
+  bool mIsInBrowserElement;
 #ifdef DEBUG
-  bool          mIsNotNull;
+  bool mIsNotNull;
 #endif
 };
 

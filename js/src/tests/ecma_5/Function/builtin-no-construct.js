@@ -8,7 +8,7 @@ function checkMethod(method) {
         new method();
         assertEq(0, 1, "not reached " + method);
     } catch (e) {
-        assertEq(e.message, "method is not a constructor");
+        assertEq(e.message.indexOf(" is not a constructor") === -1, false);
     }
 }
 

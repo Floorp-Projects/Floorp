@@ -32,22 +32,22 @@ interface nsIXPConnectWrappedNative;
  * boolean to PR_TRUE before making the call.  Implementations may skip writing
  * to *_retval unless they want to return PR_FALSE.
  */
-[uuid(e7dee706-1286-4a22-954b-f0d8a9821bc9)]
+[uuid(402bf112-6d3b-431f-bb0f-d05ec183ee7b)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
 
     const uint32_t WANT_PRECREATE                   = 1 <<  0;
-    const uint32_t WANT_CREATE                      = 1 <<  1;
-    const uint32_t WANT_POSTCREATE                  = 1 <<  2;
+    // unused bit here
+    // unused bit here
     const uint32_t WANT_ADDPROPERTY                 = 1 <<  3;
-    const uint32_t WANT_DELPROPERTY                 = 1 <<  4;
+    // unused bit here
     const uint32_t WANT_GETPROPERTY                 = 1 <<  5;
     const uint32_t WANT_SETPROPERTY                 = 1 <<  6;
     const uint32_t WANT_ENUMERATE                   = 1 <<  7;
     const uint32_t WANT_NEWENUMERATE                = 1 <<  8;
     const uint32_t WANT_RESOLVE                     = 1 <<  9;
-    const uint32_t WANT_CONVERT                     = 1 << 10;
+    // unused bit here
     const uint32_t WANT_FINALIZE                    = 1 << 11;
     // unused bit here!
     const uint32_t WANT_CALL                        = 1 << 13;
@@ -77,25 +77,9 @@ interface nsIXPCScriptable : nsISupports
     void   preCreate(in nsISupports nativeObj, in JSContextPtr cx,
                      in JSObjectPtr globalObj, out JSObjectPtr parentObj);
 
-    void   create(in nsIXPConnectWrappedNative wrapper,
-                  in JSContextPtr cx, in JSObjectPtr obj);
-
-    // Both methods here are protected by WANT_POSTCREATE. If you want to do
-    // something after a wrapper is created, there's a good chance you also
-    // want to do something when the wrapper is transplanted to a new
-    // compartment.
-    void   postCreate(in nsIXPConnectWrappedNative wrapper,
-                      in JSContextPtr cx, in JSObjectPtr obj);
-
-    void postTransplant(in nsIXPConnectWrappedNative wrapper,
-                        in JSContextPtr cx, in JSObjectPtr obj);
-
     boolean addProperty(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
                        in JSValPtr vp);
-
-    boolean delProperty(in nsIXPConnectWrappedNative wrapper,
-                       in JSContextPtr cx, in JSObjectPtr obj, in jsid id);
 
     // The returnCode should be set to NS_SUCCESS_I_DID_SOMETHING if
     // this method does something.
@@ -119,10 +103,6 @@ interface nsIXPCScriptable : nsISupports
     boolean resolve(in nsIXPConnectWrappedNative wrapper,
                     in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
                     out boolean resolvedp);
-
-    boolean convert(in nsIXPConnectWrappedNative wrapper,
-                   in JSContextPtr cx, in JSObjectPtr obj,
-                   in uint32_t type, in JSValPtr vp);
 
     void   finalize(in nsIXPConnectWrappedNative wrapper,
                     in JSFreeOpPtr fop, in JSObjectPtr obj);

@@ -123,11 +123,6 @@ var ZoomHelper = {
    * if it is really tall.
    */
   zoomToRect: function(aRect, aClickY = -1) {
-    if(aRect.isEmpty()) {
-      // Protect from empty or negative-sized rects & potentials NaN in following calculations
-      return;
-    }
-
     let viewport = BrowserApp.selectedTab.getViewport();
 
     let rect = {

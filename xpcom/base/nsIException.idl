@@ -12,7 +12,7 @@
 
 [ptr] native JSContext(JSContext);
 
-[scriptable, uuid(4f2927e5-ae85-4c6b-93d2-2f639af6a236)]
+[scriptable, uuid(4ed5cd87-401a-425a-8d8d-c28fbc1e88b2)]
 interface nsIStackFrame : nsISupports
 {
     // see nsIProgrammingLanguage for list of language consts
@@ -25,6 +25,10 @@ interface nsIStackFrame : nsISupports
     readonly attribute int32_t                 columnNumber;
     readonly attribute AUTF8String             sourceLine;
     readonly attribute nsIStackFrame           caller;
+
+    // Returns the first frame whose principals are subsumed by the caller's
+    // principals.
+    [noscript, implicit_jscontext] readonly attribute nsIStackFrame sanitized;
 
     // Returns a formatted stack string that looks like the sort of
     // string that would be returned by .stack on JS Error objects.
@@ -59,7 +63,7 @@ interface nsIException : nsISupports
     readonly attribute AString                 filename;
     // Valid line numbers begin at '1'. '0' indicates unknown.
     readonly attribute uint32_t                lineNumber;
-    // Valid column numbers begin at 0. 
+    // Valid column numbers begin at 0.
     // We don't have an unambiguous indicator for unknown.
     readonly attribute uint32_t                columnNumber;
 

@@ -23,14 +23,15 @@ from mozprofile import Profile, Preferences
 from mozlog import structured
 import mozinfo
 
+
 class B2GMochitest(MochitestUtilsMixin):
     marionette = None
 
     def __init__(self, marionette_args,
-                       logger_options,
-                       out_of_process=True,
-                       profile_data_dir=None,
-                       locations=os.path.join(here, 'server-locations.txt')):
+                 logger_options,
+                 out_of_process=True,
+                 profile_data_dir=None,
+                 locations=os.path.join(here, 'server-locations.txt')):
         super(B2GMochitest, self).__init__(logger_options)
         self.marionette_args = marionette_args
         self.out_of_process = out_of_process
@@ -43,10 +44,14 @@ class B2GMochitest(MochitestUtilsMixin):
         self.remote_chrome_test_dir = None
 
         if profile_data_dir:
-            self.preferences = [os.path.join(profile_data_dir, f)
-                                 for f in os.listdir(profile_data_dir) if f.startswith('pref')]
-            self.webapps = [os.path.join(profile_data_dir, f)
-                             for f in os.listdir(profile_data_dir) if f.startswith('webapp')]
+            self.preferences = [
+                os.path.join(
+                    profile_data_dir,
+                    f) for f in os.listdir(profile_data_dir) if f.startswith('pref')]
+            self.webapps = [
+                os.path.join(
+                    profile_data_dir,
+                    f) for f in os.listdir(profile_data_dir) if f.startswith('webapp')]
 
         # mozinfo is populated by the parent class
         if mozinfo.info['debug']:
@@ -68,7 +73,12 @@ class B2GMochitest(MochitestUtilsMixin):
 
     def buildTestPath(self, options, testsToFilter=None):
         if options.manifestFile != 'tests.json':
-            super(B2GMochitest, self).buildTestPath(options, testsToFilter, disabled=False)
+            super(
+                B2GMochitest,
+                self).buildTestPath(
+                options,
+                testsToFilter,
+                disabled=False)
         return self.buildTestURL(options)
 
     def build_profile(self, options):
@@ -85,8 +95,11 @@ class B2GMochitest(MochitestUtilsMixin):
             prefs[thispref[0]] = thispref[1]
 
         # interpolate the preferences
-        interpolation = { "server": "%s:%s" % (options.webServer, options.httpPort),
-                          "OOP": "true" if self.out_of_process else "false" }
+        interpolation = {
+            "server": "%s:%s" %
+            (options.webServer,
+             options.httpPort),
+            "OOP": "true" if self.out_of_process else "false"}
         prefs = json.loads(json.dumps(prefs) % interpolation)
         for pref in prefs:
             prefs[pref] = Preferences.cast(prefs[pref])
@@ -138,7 +151,8 @@ class B2GMochitest(MochitestUtilsMixin):
                     if message['action'] == 'test_start':
                         self.runner.last_test = message['test']
 
-            # The logging will be handled by on_output, so we set the stream to None
+            # The logging will be handled by on_output, so we set the stream to
+            # None
             process_args = {'processOutputLine': on_output,
                             'stream': None}
             self.marionette_args['process_args'] = process_args
@@ -150,23 +164,29 @@ class B2GMochitest(MochitestUtilsMixin):
 
             self.remote_log = posixpath.join(self.app_ctx.remote_test_root,
                                              'log', 'mochitest.log')
-            if not self.app_ctx.dm.dirExists(posixpath.dirname(self.remote_log)):
+            if not self.app_ctx.dm.dirExists(
+                posixpath.dirname(
+                    self.remote_log)):
                 self.app_ctx.dm.mkDirs(self.remote_log)
 
             if options.chrome:
                 # Update chrome manifest file in profile with correct path.
                 self.writeChromeManifest(options)
 
-            self.leak_report_file = posixpath.join(self.app_ctx.remote_test_root,
-                                                   'log', 'runtests_leaks.log')
+            self.leak_report_file = posixpath.join(
+                self.app_ctx.remote_test_root,
+                'log',
+                'runtests_leaks.log')
 
             # We don't want to copy the host env onto the device, so pass in an
             # empty env.
             self.browserEnv = self.buildBrowserEnv(options, env={})
 
             # B2G emulator debug tests still make external connections, so don't
-            # pass MOZ_DISABLE_NONLOCAL_CONNECTIONS to them for now (bug 1039019).
-            if mozinfo.info['debug'] and 'MOZ_DISABLE_NONLOCAL_CONNECTIONS' in self.browserEnv:
+            # pass MOZ_DISABLE_NONLOCAL_CONNECTIONS to them for now (bug
+            # 1039019).
+            if mozinfo.info[
+                    'debug'] and 'MOZ_DISABLE_NONLOCAL_CONNECTIONS' in self.browserEnv:
                 del self.browserEnv['MOZ_DISABLE_NONLOCAL_CONNECTIONS']
             self.runner.env.update(self.browserEnv)
 
@@ -176,7 +196,6 @@ class B2GMochitest(MochitestUtilsMixin):
             self.test_script_args.append(options.wifi)
             self.test_script_args.append(options.chrome)
 
-
             self.runner.start(outputTimeout=timeout)
 
             self.marionette.wait_for_port()
@@ -185,7 +204,8 @@ class B2GMochitest(MochitestUtilsMixin):
 
             # Disable offline status management (bug 777145), otherwise the network
             # will be 'offline' when the mochitests start.  Presumably, the network
-            # won't be offline on a real device, so we only do this for emulators.
+            # won't be offline on a real device, so we only do this for
+            # emulators.
             self.marionette.execute_script("""
                 Components.utils.import("resource://gre/modules/Services.jsm");
                 Services.io.manageOfflineStatus = false;
@@ -198,16 +218,20 @@ class B2GMochitest(MochitestUtilsMixin):
                 local = super(B2GMochitest, self).getChromeTestDir(options)
                 local = os.path.join(local, "chrome")
                 remote = self.remote_chrome_test_dir
-                self.log.info("pushing %s to %s on device..." % (local, remote))
+                self.log.info(
+                    "pushing %s to %s on device..." %
+                    (local, remote))
                 self.app_ctx.dm.pushDir(local, remote)
 
             if os.path.isfile(self.test_script):
                 with open(self.test_script, 'r') as script:
-                    self.marionette.execute_script(script.read(),
-                                                   script_args=self.test_script_args)
+                    self.marionette.execute_script(
+                        script.read(),
+                        script_args=self.test_script_args)
             else:
-                self.marionette.execute_script(self.test_script,
-                                               script_args=self.test_script_args)
+                self.marionette.execute_script(
+                    self.test_script,
+                    script_args=self.test_script_args)
             status = self.runner.wait()
 
             if status is None:
@@ -215,16 +239,19 @@ class B2GMochitest(MochitestUtilsMixin):
                 status = 124
 
             local_leak_file = tempfile.NamedTemporaryFile()
-            self.app_ctx.dm.getFile(self.leak_report_file, local_leak_file.name)
+            self.app_ctx.dm.getFile(
+                self.leak_report_file,
+                local_leak_file.name)
             self.app_ctx.dm.removeFile(self.leak_report_file)
 
             processLeakLog(local_leak_file.name, options)
         except KeyboardInterrupt:
-            self.log.info("runtests.py | Received keyboard interrupt.\n");
+            self.log.info("runtests.py | Received keyboard interrupt.\n")
             status = -1
         except:
             traceback.print_exc()
-            self.log.error("Automation Error: Received unexpected exception while running application\n")
+            self.log.error(
+                "Automation Error: Received unexpected exception while running application\n")
             if hasattr(self, 'runner'):
                 self.runner.check_for_crashes()
             status = 1
@@ -249,7 +276,9 @@ class B2GMochitest(MochitestUtilsMixin):
         # is defined; the correct directory will be returned later, over-
         # writing the dummy.
         if hasattr(self, 'app_ctx'):
-            self.remote_chrome_test_dir = posixpath.join(self.app_ctx.remote_test_root, 'chrome');
+            self.remote_chrome_test_dir = posixpath.join(
+                self.app_ctx.remote_test_root,
+                'chrome')
             return self.remote_chrome_test_dir
         return 'dummy-chrome-test-dir'
 
@@ -257,9 +286,20 @@ class B2GMochitest(MochitestUtilsMixin):
 class B2GDeviceMochitest(B2GMochitest, Mochitest):
     remote_log = None
 
-    def __init__(self, marionette_args, logger_options, profile_data_dir,
-                 local_binary_dir, remote_test_root=None, remote_log_file=None):
-        B2GMochitest.__init__(self, marionette_args, logger_options, out_of_process=True, profile_data_dir=profile_data_dir)
+    def __init__(
+            self,
+            marionette_args,
+            logger_options,
+            profile_data_dir,
+            local_binary_dir,
+            remote_test_root=None,
+            remote_log_file=None):
+        B2GMochitest.__init__(
+            self,
+            marionette_args,
+            logger_options,
+            out_of_process=True,
+            profile_data_dir=profile_data_dir)
         self.local_log = None
         self.local_binary_dir = local_binary_dir
 
@@ -314,7 +354,12 @@ class B2GDeviceMochitest(B2GMochitest, Mochitest):
 class B2GDesktopMochitest(B2GMochitest, Mochitest):
 
     def __init__(self, marionette_args, logger_options, profile_data_dir):
-        B2GMochitest.__init__(self, marionette_args, logger_options, out_of_process=False, profile_data_dir=profile_data_dir)
+        B2GMochitest.__init__(
+            self,
+            marionette_args,
+            logger_options,
+            out_of_process=False,
+            profile_data_dir=profile_data_dir)
         Mochitest.__init__(self, logger_options)
         self.certdbNew = True
 
@@ -347,7 +392,10 @@ class B2GDesktopMochitest(B2GMochitest, Mochitest):
         self.setup_common_options(options)
 
         # Copy the extensions to the B2G bundles dir.
-        extensionDir = os.path.join(options.profilePath, 'extensions', 'staged')
+        extensionDir = os.path.join(
+            options.profilePath,
+            'extensions',
+            'staged')
         bundlesDir = os.path.join(os.path.dirname(options.app),
                                   'distribution', 'bundles')
 
@@ -378,15 +426,19 @@ def run_remote_mochitests(parser, options):
         marionette_args['port'] = int(port)
 
     options = parser.verifyRemoteOptions(options)
-    if (options == None):
+    if (options is None):
         print "ERROR: Invalid options specified, use --help for a list of valid options"
         sys.exit(1)
 
-    mochitest = B2GDeviceMochitest(marionette_args, options, options.profile_data_dir,
-                                   options.xrePath, remote_log_file=options.remoteLogFile)
+    mochitest = B2GDeviceMochitest(
+        marionette_args,
+        options,
+        options.profile_data_dir,
+        options.xrePath,
+        remote_log_file=options.remoteLogFile)
 
     options = parser.verifyOptions(options, mochitest)
-    if (options == None):
+    if (options is None):
         sys.exit(1)
 
     retVal = 1
@@ -407,6 +459,7 @@ def run_remote_mochitests(parser, options):
 
     sys.exit(retVal)
 
+
 def run_desktop_mochitests(parser, options):
     # create our Marionette instance
     marionette_args = {}
@@ -420,9 +473,12 @@ def run_desktop_mochitests(parser, options):
         if os.path.isfile("%s-bin" % options.app):
             options.app = "%s-bin" % options.app
 
-    mochitest = B2GDesktopMochitest(marionette_args, options, options.profile_data_dir)
+    mochitest = B2GDesktopMochitest(
+        marionette_args,
+        options,
+        options.profile_data_dir)
     options = MochitestOptions.verifyOptions(parser, options, mochitest)
-    if options == None:
+    if options is None:
         sys.exit(1)
 
     if options.desktop and not options.profile:
@@ -434,6 +490,7 @@ def run_desktop_mochitests(parser, options):
     mochitest.message_logger.finish()
 
     sys.exit(retVal)
+
 
 def main():
     parser = B2GOptions()

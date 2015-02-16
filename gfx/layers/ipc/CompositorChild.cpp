@@ -217,15 +217,17 @@ CompositorChild::RecvUpdatePluginConfigurations(const nsIntPoint& aContentOffset
                             bounds.width, bounds.height, false);
         NS_ASSERTION(NS_SUCCEEDED(rv), "widget call failure");
         nsTArray<nsIntRect> rectsOut;
+        // This call may change the value of isVisible
         CalculatePluginClip(bounds, aPlugins[pluginsIdx].clip(),
                             aContentOffset, aParentLayerVisibleRegion,
                             rectsOut, visibleBounds, isVisible);
-        if (isVisible) {
-          // content clipping region (widget origin)
-          rv = widget->SetWindowClipRegion(rectsOut, false);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "widget call failure");
-        }
+        // content clipping region (widget origin)
+        rv = widget->SetWindowClipRegion(rectsOut, false);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "widget call failure");
       }
+
+      rv = widget->Enable(isVisible);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "widget call failure");
 
       // visible state - updated after clipping, prior to invalidating
       rv = widget->Show(isVisible);
