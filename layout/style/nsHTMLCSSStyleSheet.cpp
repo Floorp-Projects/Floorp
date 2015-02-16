@@ -138,7 +138,7 @@ nsHTMLCSSStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aDat
   // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but
   // it doesn't really matter.
   if (aData->mAttrHasChanged && aData->mAttribute == nsGkAtoms::style) {
-    return eRestyle_StyleAttribute | eRestyle_ChangeAnimationPhase;
+    return eRestyle_StyleAttribute;
   }
 
   return nsRestyleHint(0);
