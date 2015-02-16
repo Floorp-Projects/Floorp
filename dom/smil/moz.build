@@ -67,6 +67,7 @@ FAIL_ON_WARNINGS = True
 LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/svg',
+    '/layout/base',
     '/layout/style',
 ]
 
