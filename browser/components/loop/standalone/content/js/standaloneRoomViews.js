@@ -295,30 +295,54 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @param  {Object} ratio Aspect ratio of the local camera stream
      */
     updateLocalCameraPosition: function(ratio) {
+      // The local stream is a quarter of the remote stream.
+      var LOCAL_STREAM_SIZE = 0.25;
+      // The local stream overlaps the remote stream by a quarter of the local stream.
+      var LOCAL_STREAM_OVERLAP = 0.25;
+      // The minimum size of video height/width allowed by the sdk css.
+      var SDK_MIN_SIZE = 48;
+
       var node = this._getElement(".local");
-      var parent = node.offsetParent || this._getElement(".media");
-      // The local camera view should be a sixth of the size of its offset parent
-      // and positioned to overlap with the remote stream at a quarter of its width.
-      var parentWidth = parent.offsetWidth;
-      var targetWidth = parentWidth / 6;
+      var targetWidth;
 
       node.style.right = "auto";
       if (window.matchMedia && window.matchMedia("screen and (max-width:640px)").matches) {
+        // For reduced screen widths, we just go for a fixed size and no overlap.
         targetWidth = 180;
+        node.style.width = (targetWidth * ratio.width) + "px";
+        node.style.height = (targetWidth * ratio.height) + "px";
         node.style.left = "auto";
       } else {
+        // The local camera view should be a quarter of the size of the remote stream
+        // and positioned to overlap with the remote stream at a quarter of its width.
+
         // Now position the local camera view correctly with respect to the remote
         // video stream.
         var remoteVideoDimensions = this.getRemoteVideoDimensions();
+        targetWidth = remoteVideoDimensions.streamWidth * LOCAL_STREAM_SIZE;
+
+        var realWidth = targetWidth * ratio.width;
+        var realHeight = targetWidth * ratio.height;
+
+        // If we've hit the min size limits, then limit at the minimum.
+        if (realWidth < SDK_MIN_SIZE) {
+          realWidth = SDK_MIN_SIZE;
+          realHeight = realWidth / ratio.width * ratio.height;
+        }
+        if (realHeight < SDK_MIN_SIZE) {
+          realHeight = SDK_MIN_SIZE;
+          realWidth = realHeight / ratio.height * ratio.width;
+        }
+
         var offsetX = (remoteVideoDimensions.streamWidth + remoteVideoDimensions.offsetX);
         // The horizontal offset of the stream, and the width of the resulting
         // pillarbox, is determined by the height exponent of the aspect ratio.
         // Therefore we multiply the width of the local camera view by the height
         // ratio.
-        node.style.left = (offsetX - ((targetWidth * ratio.height) / 4)) + "px";
+        node.style.left = (offsetX - (realWidth * LOCAL_STREAM_OVERLAP)) + "px";
+        node.style.width = realWidth + "px";
+        node.style.height = realHeight + "px";
       }
-      node.style.width = (targetWidth * ratio.width) + "px";
-      node.style.height = (targetWidth * ratio.height) + "px";
     },
 
     /**

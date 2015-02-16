@@ -26,6 +26,9 @@ let OverviewView = {
    * Sets up the view with event binding.
    */
   initialize: function () {
+    if (gFront.getMocksInUse().timeline) {
+      this.disable();
+    }
     this._onRecordingWillStart = this._onRecordingWillStart.bind(this);
     this._onRecordingStarted = this._onRecordingStarted.bind(this);
     this._onRecordingWillStop = this._onRecordingWillStop.bind(this);
@@ -61,12 +64,35 @@ let OverviewView = {
   },
 
   /**
+   * Disabled in the event we're using a Timeline mock, so we'll have no
+   * markers, ticks or memory data to show, so just block rendering and hide
+   * the panel.
+   */
+  disable: function () {
+    this._disabled = true;
+    $("#overview-pane").hidden = true;
+  },
+
+  /**
+   * Returns the disabled status.
+   *
+   * @return boolean
+   */
+  isDisabled: function () {
+    return this._disabled;
+  },
+
+  /**
    * Sets the time interval selection for all graphs in this overview.
    *
    * @param object interval
    *        The { starTime, endTime }, in milliseconds.
    */
   setTimeInterval: function(interval, options = {}) {
+    if (this.isDisabled()) {
+      return;
+    }
+
     let recording = PerformanceController.getCurrentRecording();
     if (recording == null) {
       throw new Error("A recording should be available in order to set the selection.");
@@ -83,10 +109,15 @@ let OverviewView = {
    * Gets the time interval selection for all graphs in this overview.
    *
    * @return object
-   *         The { starTime, endTime }, in milliseconds.
+   *         The { startTime, endTime }, in milliseconds.
    */
   getTimeInterval: function() {
     let recording = PerformanceController.getCurrentRecording();
+
+    if (this.isDisabled()) {
+      return { startTime: 0, endTime: recording.getDuration() };
+    }
+
     if (recording == null) {
       throw new Error("A recording should be available in order to get the selection.");
     }
@@ -172,6 +203,9 @@ let OverviewView = {
    *        The fps graph resolution. @see Graphs.jsm
    */
   render: Task.async(function *(resolution) {
+    if (this.isDisabled()) {
+      return;
+    }
     let recording = PerformanceController.getCurrentRecording();
     let duration = recording.getDuration();
     let markers = recording.getMarkers();

@@ -79,3 +79,7 @@
   height: 16px;
   margin: 7px;
 }
+
+#context-media-eme-learnmore {
+  list-style-image: url("chrome://browser/skin/drm-icon.svg#chains");
+}

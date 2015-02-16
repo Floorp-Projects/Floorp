@@ -3,7 +3,7 @@
 
 /**
  * Tests that the recording model is populated correctly when using timeline
- * and memory actor mocks.
+ * and memory actor mocks, and the correct views are shown.
  */
 
 const WAIT_TIME = 1000;
@@ -14,15 +14,15 @@ let test = Task.async(function*() {
     TEST_MOCK_TIMELINE_ACTOR: true
   });
   Services.prefs.setBoolPref(MEMORY_PREF, true);
-  let { EVENTS, gFront, PerformanceController, PerformanceView } = panel.panelWin;
+  let { EVENTS, $, gFront, PerformanceController, PerformanceView, DetailsView, JsCallTreeView } = panel.panelWin;
 
   let { memory: memoryMock, timeline: timelineMock } = gFront.getMocksInUse();
   ok(memoryMock, "memory should be mocked.");
   ok(timelineMock, "timeline should be mocked.");
 
-  yield startRecording(panel);
+  yield startRecording(panel, { waitForOverview: false });
   busyWait(WAIT_TIME); // allow the profiler module to sample some cpu activity
-  yield stopRecording(panel);
+  yield stopRecording(panel, { waitForOverview: false });
 
   let {
     label, duration, markers, frames, memory, ticks, allocations, profile
@@ -57,6 +57,23 @@ let test = Task.async(function*() {
 
   ok(sampleCount > 0,
     "At least some samples have been iterated over, checking for root nodes.");
+
+  is($("#overview-pane").hidden, true,
+    "overview pane hidden when timeline mocked.");
+
+  is($("#select-waterfall-view").hidden, true,
+    "waterfall view button hidden when timeline mocked");
+  is($("#select-js-calltree-view").hidden, false,
+    "jscalltree view button not hidden when timeline/memory mocked");
+  is($("#select-js-flamegraph-view").hidden, true,
+    "jsflamegraph view button hidden when timeline mocked");
+  is($("#select-memory-calltree-view").hidden, true,
+    "memorycalltree view button hidden when memory mocked");
+  is($("#select-memory-flamegraph-view").hidden, true,
+    "memoryflamegraph view button hidden when memory mocked");
+
+  ok(DetailsView.isViewSelected(JsCallTreeView),
+    "JS Call Tree view selected by default when timeline/memory mocked.");
 
   yield teardown(panel);
   finish();

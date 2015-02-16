@@ -20,3 +20,32 @@
 #tabList[available] {
   display: -moz-box;
 }
+
+treechildren::-moz-tree-image(icon),
+treechildren::-moz-tree-image(noicon) {
+  padding-right: 2px;
+  margin: 0 2px;
+  width: 16px;
+  height: 16px;
+}
+
+treechildren::-moz-tree-image(noicon) {
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+}
+treechildren::-moz-tree-image(container, noicon) {
+  list-style-image: url("chrome://browser/skin/aboutSessionRestore-window-icon.png");
+}
+
+treechildren::-moz-tree-image(checked) {
+  list-style-image: url("chrome://global/skin/in-content/check.svg#check");
+}
+treechildren::-moz-tree-image(checked, selected) {
+  list-style-image: url("chrome://global/skin/in-content/check.svg#check-inverted");
+}
+
+treechildren::-moz-tree-image(partial) {
+  list-style-image: url("chrome://global/skin/in-content/check-partial.svg#check-partial");
+}
+treechildren::-moz-tree-image(partial, selected) {
+  list-style-image: url("chrome://global/skin/in-content/check-partial.svg#check-partial-inverted");
+}

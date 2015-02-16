@@ -34,32 +34,6 @@ this.ResetProfile = {
     return false;
   },
 
-  getMigratedData: function() {
-    Cu.import("resource:///modules/MigrationUtils.jsm");
-
-    // From migration.properties
-    const MIGRATED_TYPES = [
-      128,// Windows/Tabs
-      4,  // History and Bookmarks
-      16, // Passwords
-      8,  // Form History
-      2,  // Cookies
-    ];
-
-    // Loop over possible data to migrate to give the user a list of what will be preserved.
-    let dataTypes = [];
-    for (let itemID of MIGRATED_TYPES) {
-      try {
-        let typeName = MigrationUtils.getLocalizedString(itemID + "_" + MOZ_APP_NAME);
-        dataTypes.push(typeName);
-      } catch (x) {
-        // Catch exceptions when the string for a data type doesn't exist.
-        Cu.reportError(x);
-      }
-    }
-    return dataTypes;
-  },
-
   /**
    * Ask the user if they wish to restart the application to reset the profile.
    */
