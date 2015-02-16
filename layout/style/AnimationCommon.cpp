@@ -828,6 +828,14 @@ AnimationPlayerCollection::UpdateAnimationGeneration(
     aPresContext->RestyleManager()->GetAnimationGeneration();
 }
 
+void
+AnimationPlayerCollection::UpdateCheckGeneration(
+  nsPresContext* aPresContext)
+{
+  mCheckGeneration =
+    aPresContext->RestyleManager()->GetAnimationGeneration();
+}
+
 bool
 AnimationPlayerCollection::HasCurrentAnimations() const
 {
