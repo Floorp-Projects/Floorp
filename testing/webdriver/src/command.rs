@@ -68,13 +68,19 @@ impl WebDriverMessage {
         }
     }
 
-    pub fn from_http(match_type: Route, params: &Captures, body: &str) -> WebDriverResult<WebDriverMessage> {
+    pub fn from_http(match_type: Route, params: &Captures, body: &str, requires_body: bool) -> WebDriverResult<WebDriverMessage> {
         let session_id = WebDriverMessage::get_session_id(params);
-        let body_data = if body != "" {
+        let body_data = if requires_body {
             debug!("Got request body {}", body);
             match Json::from_str(body) {
-                Ok(x) => x,
-                Err(_) => return Err(WebDriverError::new(ErrorStatus::UnknownError,
+                Ok(x) => {
+                    match x {
+                        Json::Object(_) => x,
+                        _ => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                                         "Body was not a json object"))
+                    }
+                },
+                Err(_) => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
                                                          format!("Failed to decode request body as json: {}", body).as_slice()))
             }
         } else {
