@@ -1413,9 +1413,6 @@ nsIOService::OnNetworkLinkEvent(const char *data)
     if (mShutdown)
         return NS_ERROR_NOT_AVAILABLE;
 
-    if (mManageOfflineStatus)
-        return NS_OK;
-
     if (!strcmp(data, NS_NETWORK_LINK_DATA_DOWN)) {
         // check to make sure this won't collide with Autodial
         if (mSocketTransportService) {
@@ -1444,16 +1441,15 @@ nsIOService::OnNetworkLinkEvent(const char *data)
         isUp = false;
     } else if (!strcmp(data, NS_NETWORK_LINK_DATA_UP)) {
         isUp = true;
-    } else if (!strcmp(data, NS_NETWORK_LINK_DATA_CHANGED)) {
-        // CHANGED events are handled by others
-        return NS_OK;
-    } else if (!strcmp(data, NS_NETWORK_LINK_DATA_UNKNOWN)) {
+    } else if (!strcmp(data, NS_NETWORK_LINK_DATA_CHANGED) ||
+               !strcmp(data, NS_NETWORK_LINK_DATA_UNKNOWN)) {
         nsresult rv = mNetworkLinkService->GetIsLinkUp(&isUp);
         NS_ENSURE_SUCCESS(rv, rv);
     } else {
         NS_WARNING("Unhandled network event!");
         return NS_OK;
     }
+
     return SetOffline(!isUp);
 }
 
