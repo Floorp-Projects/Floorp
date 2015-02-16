@@ -654,6 +654,10 @@ winmm_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   written = stm->written;
   LeaveCriticalSection(&stm->lock);
 
+  if (r != MMSYSERR_NOERROR || time.wType != TIME_SAMPLES) {
+    return CUBEB_ERROR;
+  }
+
   *latency = written - time.u.sample;
 
   return CUBEB_OK;
