@@ -211,6 +211,10 @@ GetBuildConfiguration(JSContext* cx, unsigned argc, jsval* vp)
     if (!JS_SetProperty(cx, info, "moz-memory", value))
         return false;
 
+    value.setInt32(sizeof(void *));
+    if (!JS_SetProperty(cx, info, "pointer-byte-size", value))
+        return false;
+
     args.rval().setObject(*info);
     return true;
 }
