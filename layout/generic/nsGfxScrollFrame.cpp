@@ -3177,8 +3177,7 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
   bool isRoot = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
 
   *aOutput->AppendElement() =
-      nsDisplayScrollLayer::ComputeFrameMetrics(
-        mScrolledFrame, mOuter, mOuter->GetContent(),
+      nsDisplayScrollLayer::ComputeFrameMetrics(mScrolledFrame, mOuter,
         aContainerReferenceFrame, aLayer, mScrollParentID,
         scrollport, isRoot, aParameters);
 }
