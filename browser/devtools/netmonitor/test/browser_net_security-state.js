@@ -16,12 +16,6 @@ add_task(function* () {
     "rc4.example.com": "security-state-weak",
   };
 
-  yield new promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["security.tls.insecure_fallback_hosts", "rc4.example.com"]
-    ]}, resolve);
-  });
-
   let [tab, debuggee, monitor] = yield initNetMonitor(CUSTOM_GET_URL);
   let { $, EVENTS, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;

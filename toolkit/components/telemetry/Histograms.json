@@ -6682,6 +6682,12 @@
     "n_values": 16,
     "description": "TLS/SSL version fallback reached the minimum version (1=TLS 1.0, 2=TLS 1.1, 3=TLS 1.2) or the fallback limit (4=TLS 1.0, 8=TLS 1.1, 12=TLS 1.2), stopped the fallback"
   },
+  "SSL_WEAK_CIPHERS_FALLBACK": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "Fallback attempted when server did not support any strong cipher suites"
+  },
   "SSL_CIPHER_SUITE_FULL": {
     "expires_in_version": "never",
     "kind": "enumerated",
