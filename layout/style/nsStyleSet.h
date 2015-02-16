@@ -133,12 +133,15 @@ class nsStyleSet
   // Resolve style by making replacements in the list of style rules as
   // described by aReplacements, but otherwise maintaining the status
   // quo.
+  // aPseudoElement must follow the same rules as for
+  // ResolvePseudoElementStyle, and be null for non-pseudo-element cases
   enum { // flags for aFlags
     // Skip starting CSS animations that result from the style.
     eSkipStartingAnimations = (1<<0),
   };
   already_AddRefed<nsStyleContext>
   ResolveStyleWithReplacement(mozilla::dom::Element* aElement,
+                              mozilla::dom::Element* aPseudoElement,
                               nsStyleContext* aNewParentContext,
                               nsStyleContext* aOldStyleContext,
                               nsRestyleHint aReplacements,
@@ -166,8 +169,8 @@ class nsStyleSet
   // Get a style context for a pseudo-element.  aParentElement must be
   // non-null.  aPseudoID is the nsCSSPseudoElements::Type for the
   // pseudo-element.  aPseudoElement must be non-null if the pseudo-element
-  // type is one that allows user action pseudo-classes after it; otherwise,
-  // it is ignored.
+  // type is one that allows user action pseudo-classes after it or allows
+  // style attributes; otherwise, it is ignored.
   already_AddRefed<nsStyleContext>
   ResolvePseudoElementStyle(mozilla::dom::Element* aParentElement,
                             nsCSSPseudoElements::Type aType,
@@ -430,7 +433,10 @@ class nsStyleSet
                           bool aWalkAllXBLStylesheets);
 
   // Helper for ResolveStyleWithReplacement
+  // aPseudoElement must follow the same rules as for
+  // ResolvePseudoElementStyle, and be null for non-pseudo-element cases
   nsRuleNode* RuleNodeWithReplacement(mozilla::dom::Element* aElement,
+                                      mozilla::dom::Element* aPseudoElement,
                                       nsRuleNode* aOldRuleNode,
                                       nsCSSPseudoElements::Type aPseudoType,
                                       nsRestyleHint aReplacements);
