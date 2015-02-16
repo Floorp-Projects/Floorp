@@ -171,7 +171,8 @@ impl WebDriverHttpApi {
                     if method_match {
                         return WebDriverMessage::from_http(matcher.match_type,
                                                            &captures.unwrap(),
-                                                           body)
+                                                           body,
+                                                           method == Post)
                     } else {
                         error = ErrorStatus::UnknownMethod;
                     }
