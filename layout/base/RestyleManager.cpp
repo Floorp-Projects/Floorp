@@ -71,6 +71,7 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mSkipAnimationRules(false)
   , mPostAnimationRestyles(false)
   , mIsProcessingAnimationStyleChange(false)
+  , mHavePendingNonAnimationRestyles(false)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
   , mRebuildAllRestyleHint(nsRestyleHint(0))
@@ -1688,6 +1689,8 @@ RestyleManager::ProcessPendingRestyles()
                    "We should not have posted new non-animation restyles while "
                    "processing animation restyles");
 
+  mHavePendingNonAnimationRestyles = false;
+
   if (mDoRebuildAllStyleData) {
     // We probably wasted a lot of work up above, but this seems safest
     // and it should be rarely used.
@@ -1785,6 +1788,19 @@ RestyleManager::PostRestyleEventCommon(Element* aElement,
   RestyleTracker& tracker =
     aForAnimation ? mPendingAnimationRestyles : mPendingRestyles;
   tracker.AddPendingRestyle(aElement, aRestyleHint, aMinChangeHint);
+
+  // Set mHavePendingNonAnimationRestyles for any restyle that could
+  // possibly contain non-animation styles.  Unfortunately there's one
+  // level of the cascade and associated change hint
+  // (eRestyle_StyleAttribute) where we don't fully distinguish.
+  // FIXME (bug 1133439): We could at least distinguish by having two
+  // separate eRestyle_StyleAttribute hints, one for animations and one
+  // for other things.
+  if (aRestyleHint & ~(eRestyle_CSSTransitions | eRestyle_CSSAnimations |
+                       eRestyle_ChangeAnimationPhase |
+                       eRestyle_SVGAttrAnimations)) {
+    mHavePendingNonAnimationRestyles = true;
+  }
 
   PostRestyleEventInternal(false);
 }
