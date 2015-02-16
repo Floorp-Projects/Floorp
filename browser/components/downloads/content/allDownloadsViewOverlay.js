@@ -18,6 +18,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource:///modules/DownloadsCommon.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
@@ -39,56 +40,145 @@ const DOWNLOAD_VIEW_SUPPORTED_COMMANDS =
   "downloadsCmd_openReferrer", "downloadsCmd_clearDownloads"];
 
 /**
- * A download element shell is responsible for handling the commands and the
- * displayed data for a single download view element. The download element
- * could represent either a past download (for which we get data from places)  or
- * a "session" download (using a data-item object. See DownloadsCommon.jsm), or both.
+ * Represents a download from the browser history. It implements part of the
+ * interface of the Download object.
  *
- * Once initialized with either a data item or a places node, the created richlistitem
- * can be accessed through the |element| getter, and can then be inserted/removed from
- * a richlistbox.
- *
- * The shell doesn't take care of inserting the item, or removing it when it's no longer
- * valid. That's the caller (a DownloadsPlacesView object) responsibility.
- *
- * The caller is also responsible for "passing over" notifications. The
- * DownloadsPlacesView object implements onDataItemStateChanged and
- * onDataItemChanged of the DownloadsView pseudo interface, and registers as a
- * Places result observer.
- *
- * @param [optional] aDataItem
- *        The data item of a the session download. Required if aPlacesNode is not set
- * @param [optional] aPlacesNode
- *        The places node for a past download. Required if aDataItem is not set.
- * @param [optional] aPlacesMetaData
- *        Object containing metadata from Places annotations values.
- *        This is required when a Places node is provided on construction.
+ * @param url
+ *        URI string for the download source.
  */
-function DownloadElementShell(aDataItem, aPlacesNode, aPlacesMetaData) {
+function HistoryDownload(url) {
+  // TODO (bug 829201): history downloads should get the referrer from Places.
+  this.source = { url };
+  this.target = { path: undefined, size: undefined };
+}
+
+HistoryDownload.prototype = {
+  /**
+   * This method mimicks the "start" method of session downloads, and is called
+   * when the user retries a history download.
+   */
+  start() {
+    // In future we may try to download into the same original target uri, when
+    // we have it.  Though that requires verifying the path is still valid and
+    // may surprise the user if he wants to be requested every time.
+    let browserWin = RecentWindow.getMostRecentBrowserWindow();
+    let initiatingDoc = browserWin ? browserWin.document : document;
+
+    // Do not suggest a file name if we don't know the original target.
+    let leafName = this.target.path ? OS.Path.basename(this.target.path) : null;
+    DownloadURL(this.source.url, leafName, initiatingDoc);
+
+    return Promise.resolve();
+  },
+};
+
+/**
+ * Represents a download from the browser history. It uses the same interface as
+ * the DownloadsDataItem object.
+ *
+ * @param aPlacesNode
+ *        The Places node for the history download.
+ */
+function DownloadsHistoryDataItem(aPlacesNode) {
+  this.download = new HistoryDownload(aPlacesNode.uri);
+
+  // In case this download cannot obtain its end time from the Places metadata,
+  // use the time from the Places node, that is the start time of the download.
+  this.endTime = aPlacesNode.time / 1000;
+}
+
+DownloadsHistoryDataItem.prototype = {
+  __proto__: DownloadsDataItem.prototype,
+
+  /**
+   * Pushes information from Places metadata into this object.
+   */
+  updateFromMetaData(aPlacesMetaData) {
+    try {
+      let targetFile = Cc["@mozilla.org/network/protocol;1?name=file"]
+                         .getService(Ci.nsIFileProtocolHandler)
+                         .getFileFromURLSpec(aPlacesMetaData.targetFileURISpec);
+      this.download.target.path = targetFile.path;
+    } catch (ex) {
+      this.download.target.path = undefined;
+    }
+
+    try {
+      let metaData = JSON.parse(aPlacesMetaData.jsonDetails);
+      this.state = metaData.state;
+      this.endTime = metaData.endTime;
+      this.download.target.size = metaData.fileSize;
+    } catch (ex) {
+      // Metadata might be missing from a download that has started but hasn't
+      // stopped already. Normally, this state is overridden with the one from
+      // the corresponding in-progress session download. But if the browser is
+      // terminated abruptly and additionally the file with information about
+      // in-progress downloads is lost, we may end up using this state. We use
+      // the failed state to allow the download to be restarted.
+      //
+      // On the other hand, if the download is missing the target file
+      // annotation as well, it is just a very old one, and we can assume it
+      // succeeded.
+      this.state = this.download.target.path ? nsIDM.DOWNLOAD_FAILED
+                                             : nsIDM.DOWNLOAD_FINISHED;
+      this.download.target.size = undefined;
+    }
+
+    // This property is currently used to get the size of downloads, but will be
+    // replaced by download.target.size when available for session downloads.
+    this.maxBytes = this.download.target.size;
+
+    // This is not displayed for history downloads, that are never in progress.
+    this.percentComplete = 100;
+  },
+};
+
+/**
+ * A download element shell is responsible for handling the commands and the
+ * displayed data for a single download view element.
+ *
+ * The shell may contain a session download, a history download, or both.  When
+ * both a history and a current download are present, the current download gets
+ * priority and its information is displayed.
+ *
+ * On construction, a new richlistitem is created, and can be accessed through
+ * the |element| getter. The shell doesn't insert the item in a richlistbox, the
+ * caller must do it and remove the element when it's no longer needed.
+ *
+ * The caller is also responsible for forwarding status notifications for
+ * session downloads, calling the onStateChanged and onChanged methods.
+ *
+ * @param [optional] aSessionDataItem
+ *        The session download, required if aHistoryDataItem is not set.
+ * @param [optional] aHistoryDataItem
+ *        The history download, required if aSessionDataItem is not set.
+ */
+function DownloadElementShell(aSessionDataItem, aHistoryDataItem) {
   this._element = document.createElement("richlistitem");
   this._element._shell = this;
 
   this._element.classList.add("download");
   this._element.classList.add("download-state");
 
-  if (aDataItem) {
-    this.dataItem = aDataItem;
+  if (aSessionDataItem) {
+    this.sessionDataItem = aSessionDataItem;
   }
-  if (aPlacesNode) {
-    this.placesMetaData = aPlacesMetaData;
-    this.placesNode = aPlacesNode;
+  if (aHistoryDataItem) {
+    this.historyDataItem = aHistoryDataItem;
   }
 }
 
 DownloadElementShell.prototype = {
-  // The richlistitem for the download
+  /**
+   * The richlistitem for the download.
+   */
   get element() this._element,
 
   /**
-   * Manages the "active" state of the shell.  By default all the shells
-   * without a dataItem are inactive, thus their UI is not updated.  They must
-   * be activated when entering the visible area.  Session downloads are
-   * always active since they always have a dataItem.
+   * Manages the "active" state of the shell.  By default all the shells without
+   * a session download are inactive, thus their UI is not updated.  They must
+   * be activated when entering the visible area.  Session downloads are always
+   * active.
    */
   ensureActive() {
     if (!this._active) {
@@ -99,235 +189,167 @@ DownloadElementShell.prototype = {
   },
   get active() !!this._active,
 
-  // The data item for the download
-  _dataItem: null,
-  get dataItem() this._dataItem,
+  /**
+   * Download or HistoryDownload object to use for displaying information and
+   * for executing commands in the user interface.
+   */
+  get download() this.dataItem.download,
 
-  set dataItem(aValue) {
-    if (this._dataItem != aValue) {
-      if (!aValue && !this._placesNode) {
-        throw new Error("Should always have either a dataItem or a placesNode");
+  /**
+   * DownloadsDataItem or DownloadsHistoryDataItem object to use for displaying
+   * information and for executing commands in the user interface.
+   */
+  get dataItem() this._sessionDataItem || this._historyDataItem,
+
+  _sessionDataItem: null,
+  get sessionDataItem() this._sessionDataItem,
+  set sessionDataItem(aValue) {
+    if (this._sessionDataItem != aValue) {
+      if (!aValue && !this._historyDataItem) {
+        throw new Error("Should always have either a dataItem or a historyDataItem");
       }
 
-      this._dataItem = aValue;
-      if (!this.active) {
-        this.ensureActive();
-      } else {
-        this._updateUI();
-      }
+      this._sessionDataItem = aValue;
+
+      this.ensureActive();
+      this._updateUI();
     }
     return aValue;
   },
 
-  _placesNode: null,
-  get placesNode() this._placesNode,
-  set placesNode(aValue) {
-    if (this._placesNode != aValue) {
-      if (!aValue && !this._dataItem) {
-        throw new Error("Should always have either a dataItem or a placesNode");
+  _historyDataItem: null,
+  get historyDataItem() this._historyDataItem,
+  set historyDataItem(aValue) {
+    if (this._historyDataItem != aValue) {
+      if (!aValue && !this._sessionDataItem) {
+        throw new Error("Should always have either a dataItem or a historyDataItem");
       }
 
-      this._placesNode = aValue;
+      this._historyDataItem = aValue;
 
-      // We don't need to update the UI if we had a data item, because
+      // We don't need to update the UI if we had a session data item, because
       // the places information isn't used in this case.
-      if (!this._dataItem && this.active) {
+      if (!this._sessionDataItem) {
         this._updateUI();
       }
     }
     return aValue;
   },
 
-  // The download uri (as a string)
-  get downloadURI() {
-    if (this._dataItem) {
-      return this._dataItem.download.source.url;
+  // The progressmeter element for the download
+  get _progressElement() {
+    if (!("__progressElement" in this)) {
+      this.__progressElement =
+        document.getAnonymousElementByAttribute(this._element, "anonid",
+                                                "progressmeter");
     }
-    if (this._placesNode) {
-      return this._placesNode.uri;
-    }
-    throw new Error("Unexpected download element state");
+    return this.__progressElement;
   },
 
-  get _downloadURIObj() {
-    if (!("__downloadURIObj" in this)) {
-      this.__downloadURIObj = NetUtil.newURI(this.downloadURI);
-    }
-    return this.__downloadURIObj;
-  },
-
-  _getIcon() {
-    let metaData = this.getDownloadMetaData();
-    if ("filePath" in metaData) {
-      return "moz-icon://" + metaData.filePath + "?size=32";
-    }
-
-    if (this._placesNode) {
-      return "moz-icon://.unknown?size=32";
-    }
-
-    // Assert unreachable.
-    if (this._dataItem) {
-      throw new Error("Session-download items should always have a target file uri");
-    }
-
-    throw new Error("Unexpected download element state");
-  },
-
-  _fetchTargetFileInfo(aUpdateMetaDataAndStatusUI = false) {
-    if (this._targetFileInfoFetched) {
-      throw new Error("_fetchTargetFileInfo should not be called if the information was already fetched");
-    }
+  _updateUI() {
+    // There is nothing to do if the item has always been invisible.
     if (!this.active) {
-      throw new Error("Trying to _fetchTargetFileInfo on an inactive download shell");
-    }
-
-    let path = this.getDownloadMetaData().filePath;
-
-    // In previous version, the target file annotations were not set,
-    // so we cannot tell where is the file.
-    if (path === undefined) {
-      this._targetFileInfoFetched = true;
-      this._targetFileExists = false;
-      if (aUpdateMetaDataAndStatusUI) {
-        this._metaData = null;
-        this._updateDownloadStatusUI();
-      }
-      // Here we don't need to update the download commands,
-      // as the state is unknown as it was.
       return;
     }
 
-    OS.File.stat(path).then(
-      fileInfo => {
-        this._targetFileInfoFetched = true;
-        this._targetFileExists = true;
-        this._targetFileSize = fileInfo.size;
-        if (aUpdateMetaDataAndStatusUI) {
-          this._metaData = null;
-          this._updateDownloadStatusUI();
-        }
-        if (this._element.selected) {
-          goUpdateDownloadCommands();
-        }
-      },
+    // Since the state changed, we may need to check the target file again.
+    this._targetFileChecked = false;
 
-      aReason => {
-        if (aReason instanceof OS.File.Error && aReason.becauseNoSuchFile) {
-          this._targetFileInfoFetched = true;
-          this._targetFileExists = false;
-        } else {
-          Cu.reportError("Could not fetch info for target file (reason: " +
-                         aReason + ")");
-        }
+    this._element.setAttribute("displayName", this.displayName);
+    this._element.setAttribute("image", this.image);
 
-        if (aUpdateMetaDataAndStatusUI) {
-          this._metaData = null;
-          this._updateDownloadStatusUI();
-        }
+    this._updateActiveStatusUI();
+  },
 
-        if (this._element.selected) {
-          goUpdateDownloadCommands();
-        }
-      }
-    );
+  // Updates the download state attribute (and by that hide/unhide the
+  // appropriate buttons and context menu items), the status text label,
+  // and the progress meter.
+  _updateActiveStatusUI() {
+    if (!this.active) {
+      throw new Error("_updateActiveStatusUI called for an inactive item.");
+    }
+
+    this._element.setAttribute("state", this.dataItem.state);
+    this._element.setAttribute("status", this.statusText);
+
+    // We have update the progress meter only for session downloads.
+    if (!this._sessionDataItem) {
+      return;
+    }
+
+    // Copied from updateProgress in downloads.js.
+    if (this.dataItem.starting) {
+      // Before the download starts, the progress meter has its initial value.
+      this._element.setAttribute("progressmode", "normal");
+      this._element.setAttribute("progress", "0");
+    } else if (this.dataItem.state == nsIDM.DOWNLOAD_SCANNING ||
+               this.dataItem.percentComplete == -1) {
+      // We might not know the progress of a running download, and we don't know
+      // the remaining time during the malware scanning phase.
+      this._element.setAttribute("progressmode", "undetermined");
+    } else {
+      // This is a running download of which we know the progress.
+      this._element.setAttribute("progressmode", "normal");
+      this._element.setAttribute("progress", this.dataItem.percentComplete);
+    }
+
+    // Dispatch the ValueChange event for accessibility, if possible.
+    if (this._progressElement) {
+      let event = document.createEvent("Events");
+      event.initEvent("ValueChange", true, true);
+      this._progressElement.dispatchEvent(event);
+    }
   },
 
   /**
-   * Retrieve the meta data object for the download.  The following fields
-   * may be set.
-   *
-   * - state - any download state defined in nsIDownloadManager.  If this field
-   *   is not set, the download state is unknown.
-   * - endTime: the end time of the download.
-   * - filePath: the downloaded file path on the file system, when it
-   *   was downloaded.  The file may not exist.  This is set for session
-   *   downloads that have a local file set, and for history downloads done
-   *   after the landing of bug 591289.
-   * - fileName: the downloaded file name on the file system. Set if filePath
-   *   is set.
-   * - displayName: the user-facing label for the download.  This is always
-   *   set.  If available, it's set to the downloaded file name.  If not, this
-   *   means the download does not have Places metadata because it is very old,
-   *   and in this rare case the download uri is used.
-   * - fileSize (only set for downloads which completed successfully):
-   *   the downloaded file size.  For downloads done after the landing of
-   *   bug 826991, this value is "static" - that is, it does not necessarily
-   *   mean that the file is in place and has this size.
+   * URI string for the file type icon displayed in the download element.
    */
-  getDownloadMetaData() {
-    if (!this._metaData) {
-      if (this._dataItem) {
-        let leafName = OS.Path.basename(this._dataItem.download.target.path);
-        this._metaData = {
-          state:       this._dataItem.state,
-          endTime:     this._dataItem.endTime,
-          fileName:    leafName,
-          displayName: leafName,
-        };
-        if (this._dataItem.done) {
-          this._metaData.fileSize = this._dataItem.maxBytes;
-        }
-        this._metaData.filePath = this._dataItem.download.target.path;
-      } else {
-        try {
-          this._metaData = JSON.parse(this.placesMetaData.jsonDetails);
-        } catch (ex) {
-          this._metaData = {};
-          if (this._targetFileInfoFetched && this._targetFileExists) {
-            // For very old downloads without metadata, we assume that a zero
-            // byte file is a placeholder, and allow the download to restart.
-            this._metaData.state = this._targetFileSize > 0
-                                   ? nsIDM.DOWNLOAD_FINISHED
-                                   : nsIDM.DOWNLOAD_FAILED;
-            this._metaData.fileSize = this._targetFileSize;
-          }
-
-          // This is actually the start-time, but it's the best we can get.
-          this._metaData.endTime = this._placesNode.time / 1000;
-        }
-
-        try {
-          let targetFile = Cc["@mozilla.org/network/protocol;1?name=file"]
-                             .getService(Ci.nsIFileProtocolHandler)
-                             .getFileFromURLSpec(this.placesMetaData
-                                                     .targetFileURISpec);
-          this._metaData.filePath = targetFile.path;
-          this._metaData.fileName = targetFile.leafName;
-          this._metaData.displayName = targetFile.leafName;
-        } catch (ex) {
-          this._metaData.displayName = this.downloadURI;
-        }
-      }
+  get image() {
+    if (this.download.target.path) {
+      return "moz-icon://" + this.download.target.path + "?size=32";
     }
-    return this._metaData;
+
+    // Old history downloads may not have a target path.
+    return "moz-icon://.unknown?size=32";
   },
 
-  _getStatusText() {
+  /**
+   * The user-facing label for the download.  This is normally the leaf name of
+   * download target file.  In case this is a very old history download for
+   * which the target file is unknown, the download source URI is displayed.
+   */
+  get displayName() {
+    if (!this.download.target.path) {
+      return this.download.source.url;
+    }
+    return OS.Path.basename(this.download.target.path);
+  },
+
+  get statusText() {
     let s = DownloadsCommon.strings;
-    if (this._dataItem && this._dataItem.inProgress) {
-      if (this._dataItem.paused) {
+    if (this.dataItem.inProgress) {
+      if (this.dataItem.paused) {
         let transfer =
-          DownloadUtils.getTransferTotal(this._dataItem.download.currentBytes,
-                                         this._dataItem.maxBytes);
+          DownloadUtils.getTransferTotal(this.download.currentBytes,
+                                         this.dataItem.maxBytes);
 
          // We use the same XUL label to display both the state and the amount
          // transferred, for example "Paused -  1.1 MB".
          return s.statusSeparatorBeforeNumber(s.statePaused, transfer);
       }
-      if (this._dataItem.state == nsIDM.DOWNLOAD_DOWNLOADING) {
+      if (this.dataItem.state == nsIDM.DOWNLOAD_DOWNLOADING) {
         let [status, newEstimatedSecondsLeft] =
-          DownloadUtils.getDownloadStatus(this.dataItem.download.currentBytes,
+          DownloadUtils.getDownloadStatus(this.download.currentBytes,
                                           this.dataItem.maxBytes,
-                                          this.dataItem.download.speed,
+                                          this.download.speed,
                                           this._lastEstimatedSecondsLeft || Infinity);
         this._lastEstimatedSecondsLeft = newEstimatedSecondsLeft;
         return status;
       }
-      if (this._dataItem.starting) {
+      if (this.dataItem.starting) {
         return s.stateStarting;
       }
-      if (this._dataItem.state == nsIDM.DOWNLOAD_SCANNING) {
+      if (this.dataItem.state == nsIDM.DOWNLOAD_SCANNING) {
         return s.stateScanning;
       }
 
@@ -336,8 +358,7 @@ DownloadElementShell.prototype = {
 
     // This is a not-in-progress or history download.
     let stateLabel = "";
-    let state = this.getDownloadMetaData().state;
-    switch (state) {
+    switch (this.dataItem.state) {
       case nsIDM.DOWNLOAD_FAILED:
         stateLabel = s.stateFailed;
         break;
@@ -353,27 +374,25 @@ DownloadElementShell.prototype = {
       case nsIDM.DOWNLOAD_DIRTY:
         stateLabel = s.stateDirty;
         break;
-      case nsIDM.DOWNLOAD_FINISHED:{
+      case nsIDM.DOWNLOAD_FINISHED:
         // For completed downloads, show the file size (e.g. "1.5 MB")
-        let metaData = this.getDownloadMetaData();
-        if ("fileSize" in metaData) {
-          let [size, unit] = DownloadUtils.convertByteUnits(metaData.fileSize);
+        if (this.dataItem.maxBytes !== undefined) {
+          let [size, unit] =
+              DownloadUtils.convertByteUnits(this.dataItem.maxBytes);
           stateLabel = s.sizeWithUnits(size, unit);
           break;
         }
         // Fallback to default unknown state.
-      }
       default:
         stateLabel = s.sizeUnknown;
         break;
     }
 
-    // TODO (bug 829201): history downloads should get the referrer from Places.
-    let referrer = this._dataItem && this._dataItem.download.source.referrer ||
-                   this.downloadURI;
+    let referrer = this.download.source.referrer ||
+                   this.download.source.url;
     let [displayHost, fullHost] = DownloadUtils.getURIHost(referrer);
 
-    let date = new Date(this.getDownloadMetaData().endTime);
+    let date = new Date(this.dataItem.endTime);
     let [displayDate, fullDate] = DownloadUtils.getReadableDates(date);
 
     // We use the same XUL label to display the state, the host name, and the
@@ -382,97 +401,16 @@ DownloadElementShell.prototype = {
     return s.statusSeparator(firstPart, displayDate);
   },
 
-  // The progressmeter element for the download
-  get _progressElement() {
-    if (!("__progressElement" in this)) {
-      this.__progressElement =
-        document.getAnonymousElementByAttribute(this._element, "anonid",
-                                                "progressmeter");
+  onStateChanged() {
+    // If a download just finished successfully, it means that the target file
+    // now exists and we can extract its specific icon.  To ensure that the icon
+    // is reloaded, we must change the URI used by the XUL image element, for
+    // example by adding a query parameter.  Since this URI has a "moz-icon"
+    // scheme, this only works if we add one of the parameters explicitly
+    // supported by the nsIMozIconURI interface.
+    if (this.dataItem.state == nsIDM.DOWNLOAD_FINISHED) {
+      this._element.setAttribute("image", this.image + "&state=normal");
     }
-    return this.__progressElement;
-  },
-
-  // Updates the download state attribute (and by that hide/unhide the
-  // appropriate buttons and context menu items), the status text label,
-  // and the progress meter.
-  _updateDownloadStatusUI() {
-    if (!this.active) {
-      throw new Error("_updateDownloadStatusUI called for an inactive item.");
-    }
-
-    let state = this.getDownloadMetaData().state;
-    if (state !== undefined) {
-      this._element.setAttribute("state", state);
-    }
-
-    this._element.setAttribute("status", this._getStatusText());
-
-    // For past-downloads, we're done. For session-downloads, we may also need
-    // to update the progress-meter.
-    if (!this._dataItem) {
-      return;
-    }
-
-    // Copied from updateProgress in downloads.js.
-    if (this._dataItem.starting) {
-      // Before the download starts, the progress meter has its initial value.
-      this._element.setAttribute("progressmode", "normal");
-      this._element.setAttribute("progress", "0");
-    } else if (this._dataItem.state == nsIDM.DOWNLOAD_SCANNING ||
-               this._dataItem.percentComplete == -1) {
-      // We might not know the progress of a running download, and we don't know
-      // the remaining time during the malware scanning phase.
-      this._element.setAttribute("progressmode", "undetermined");
-    } else {
-      // This is a running download of which we know the progress.
-      this._element.setAttribute("progressmode", "normal");
-      this._element.setAttribute("progress", this._dataItem.percentComplete);
-    }
-
-    // Dispatch the ValueChange event for accessibility, if possible.
-    if (this._progressElement) {
-      let event = document.createEvent("Events");
-      event.initEvent("ValueChange", true, true);
-      this._progressElement.dispatchEvent(event);
-    }
-  },
-
-  _updateUI() {
-    if (!this.active) {
-      throw new Error("Trying to _updateUI on an inactive download shell");
-    }
-
-    this._metaData = null;
-    this._targetFileInfoFetched = false;
-
-    let metaData = this.getDownloadMetaData();
-    this._element.setAttribute("displayName", metaData.displayName);
-    this._element.setAttribute("image", this._getIcon());
-
-    // For history downloads done in past releases, the downloads/metaData
-    // annotation is not set, and therefore we cannot tell the download
-    // state without the target file information.
-    if (this._dataItem || this.getDownloadMetaData().state !== undefined) {
-      this._updateDownloadStatusUI();
-    } else {
-      this._fetchTargetFileInfo(true);
-    }
-  },
-
-  onStateChanged(aOldState) {
-    let metaData = this.getDownloadMetaData();
-    metaData.state = this.dataItem.state;
-    if (aOldState != nsIDM.DOWNLOAD_FINISHED && aOldState != metaData.state) {
-      // See comment in DVI_onStateChange in downloads.js (the panel-view)
-      this._element.setAttribute("image", this._getIcon() + "&state=normal");
-      metaData.fileSize = this._dataItem.maxBytes;
-      if (this._targetFileInfoFetched) {
-        this._targetFileInfoFetched = false;
-        this._fetchTargetFileInfo();
-      }
-    }
-
-    this._updateDownloadStatusUI();
 
     if (this._element.selected) {
       goUpdateDownloadCommands();
@@ -482,7 +420,7 @@ DownloadElementShell.prototype = {
   },
 
   onChanged() {
-    this._updateDownloadStatusUI();
+    this._updateActiveStatusUI();
   },
 
   /* nsIController */
@@ -496,114 +434,93 @@ DownloadElementShell.prototype = {
         // We cannot open a session download file unless it's succeeded.
         // If it's succeeded, we need to make sure the file was not removed,
         // as we do for past downloads.
-        if (this._dataItem && !this._dataItem.download.succeeded) {
+        if (this._sessionDataItem && !this.download.succeeded) {
           return false;
         }
 
-        if (this._targetFileInfoFetched) {
+        if (this._targetFileChecked) {
           return this._targetFileExists;
         }
 
         // If the target file information is not yet fetched,
         // temporarily assume that the file is in place.
-        return this.getDownloadMetaData().state == nsIDM.DOWNLOAD_FINISHED;
+        return this.dataItem.state == nsIDM.DOWNLOAD_FINISHED;
       case "downloadsCmd_show":
         // TODO: Bug 827010 - Handle part-file asynchronously.
-        if (this._dataItem &&
-            this._dataItem.partFile && this._dataItem.partFile.exists()) {
+        if (this._sessionDataItem &&
+            this.dataItem.partFile && this.dataItem.partFile.exists()) {
           return true;
         }
 
-        if (this._targetFileInfoFetched) {
+        if (this._targetFileChecked) {
           return this._targetFileExists;
         }
 
         // If the target file information is not yet fetched,
         // temporarily assume that the file is in place.
-        return this.getDownloadMetaData().state == nsIDM.DOWNLOAD_FINISHED;
+        return this.dataItem.state == nsIDM.DOWNLOAD_FINISHED;
       case "downloadsCmd_pauseResume":
-        return this._dataItem && this._dataItem.inProgress &&
-               this._dataItem.download.hasPartialData;
+        return this._sessionDataItem && this.dataItem.inProgress &&
+               this.dataItem.download.hasPartialData;
       case "downloadsCmd_retry":
-        // An history download can always be retried.
-        return !this._dataItem || this._dataItem.canRetry;
+        return this.dataItem.canRetry;
       case "downloadsCmd_openReferrer":
-        return this._dataItem && !!this._dataItem.download.source.referrer;
+        return !!this.download.source.referrer;
       case "cmd_delete":
         // The behavior in this case is somewhat unexpected, so we disallow that.
-        if (this._placesNode && this._dataItem && this._dataItem.inProgress) {
-          return false;
-        }
-        return true;
+        return !this.dataItem.inProgress;
       case "downloadsCmd_cancel":
-        return this._dataItem != null;
+        return !!this._sessionDataItem;
     }
     return false;
-  },
-
-  _retryAsHistoryDownload() {
-    // In future we may try to download into the same original target uri, when
-    // we have it.  Though that requires verifying the path is still valid and
-    // may surprise the user if he wants to be requested every time.
-    let browserWin = RecentWindow.getMostRecentBrowserWindow();
-    let initiatingDoc = browserWin ? browserWin.document : document;
-    DownloadURL(this.downloadURI, this.getDownloadMetaData().fileName,
-                initiatingDoc);
   },
 
   /* nsIController */
   doCommand(aCommand) {
     switch (aCommand) {
       case "downloadsCmd_open": {
-        let file = new FileUtils.File(this._dataItem
-                                      ? this._dataItem.download.target.path
-                                      : this.getDownloadMetaData().filePath);
-
+        let file = new FileUtils.File(this.download.target.path);
         DownloadsCommon.openDownloadedFile(file, null, window);
         break;
       }
       case "downloadsCmd_show": {
-        let file = new FileUtils.File(this._dataItem
-                                      ? this._dataItem.download.target.path
-                                      : this.getDownloadMetaData().filePath);
-
+        let file = new FileUtils.File(this.download.target.path);
         DownloadsCommon.showDownloadedFile(file);
         break;
       }
       case "downloadsCmd_openReferrer": {
-        openURL(this._dataItem.download.source.referrer);
+        openURL(this.download.source.referrer);
         break;
       }
       case "downloadsCmd_cancel": {
-        this._dataItem.download.cancel().catch(() => {});
-        this._dataItem.download.removePartialData().catch(Cu.reportError);
+        this.download.cancel().catch(() => {});
+        this.download.removePartialData().catch(Cu.reportError);
         break;
       }
       case "cmd_delete": {
-        if (this._dataItem) {
+        if (this._sessionDataItem) {
           Downloads.getList(Downloads.ALL)
-                   .then(list => list.remove(this._dataItem.download))
-                   .then(() => this._dataItem.download.finalize(true))
+                   .then(list => list.remove(this.download))
+                   .then(() => this.download.finalize(true))
                    .catch(Cu.reportError);
         }
-        if (this._placesNode) {
-          PlacesUtils.bhistory.removePage(this._downloadURIObj);
+        if (this._historyDataItem) {
+          let uri = NetUtil.newURI(this.download.source.url);
+          PlacesUtils.bhistory.removePage(uri);
         }
         break;
       }
       case "downloadsCmd_retry": {
-        if (this._dataItem) {
-          this._dataItem.download.start().catch(() => {});
-        } else {
-          this._retryAsHistoryDownload();
-        }
+        // Errors when retrying are already reported as download failures.
+        this.download.start().catch(() => {});
         break;
       }
       case "downloadsCmd_pauseResume": {
-        if (this._dataItem.download.stopped) {
-          this._dataItem.download.start();
+        // This command is only enabled for session downloads.
+        if (this.download.stopped) {
+          this.download.start();
         } else {
-          this._dataItem.download.cancel();
+          this.download.cancel();
         }
         break;
       }
@@ -618,8 +535,8 @@ DownloadElementShell.prototype = {
       return true;
     }
     aTerm = aTerm.toLowerCase();
-    return this.getDownloadMetaData().displayName.toLowerCase().contains(aTerm) ||
-           this.downloadURI.toLowerCase().contains(aTerm);
+    return this.displayName.toLowerCase().contains(aTerm) ||
+           this.download.source.url.toLowerCase().contains(aTerm);
   },
 
   // Handles return keypress on the element (the keypress listener is
@@ -646,28 +563,49 @@ DownloadElementShell.prototype = {
       }
       return "";
     }
-    let command = getDefaultCommandForState(this.getDownloadMetaData().state);
+    let command = getDefaultCommandForState(this.dataItem.state);
     if (command && this.isCommandEnabled(command)) {
       this.doCommand(command);
     }
   },
 
   /**
-   * At the first time an item is selected, we don't yet have
-   * the target file information.  Thus the call to goUpdateDownloadCommands
-   * in DPV_onSelect would result in best-guess enabled/disabled result.
-   * That way we let the user perform command immediately. However, once
-   * we have the target file information, we can update the commands
-   * appropriately (_fetchTargetFileInfo() calls goUpdateDownloadCommands).
+   * This method is called by the outer download view, after the controller
+   * commands have already been updated. In case we did not check for the
+   * existence of the target file already, we can do it now and then update
+   * the commands as needed.
    */
   onSelect() {
     if (!this.active) {
       return;
     }
-    if (!this._targetFileInfoFetched) {
-      this._fetchTargetFileInfo();
+
+    // If this is a history download for which no target file information is
+    // available, we cannot retrieve information about the target file.
+    if (!this.download.target.path) {
+      return;
     }
-  }
+
+    // Start checking for existence.  This may be done twice if onSelect is
+    // called again before the information is collected.
+    if (!this._targetFileChecked) {
+      this._checkTargetFileOnSelect().catch(Cu.reportError);
+    }
+  },
+
+  _checkTargetFileOnSelect: Task.async(function* () {
+    try {
+      this._targetFileExists = yield OS.File.exists(this.download.target.path);
+    } finally {
+      // Do not try to check for existence again if this failed once.
+      this._targetFileChecked = true;
+    }
+
+    // Update the commands only if the element is still selected.
+    if (this._element.selected) {
+      goUpdateDownloadCommands();
+    }
+  }),
 };
 
 /**
@@ -889,9 +827,9 @@ DownloadsPlacesView.prototype = {
       // and create another shell.
       shouldCreateShell = true;
       for (let shell of shellsForURI) {
-        if (!shell.dataItem) {
+        if (!shell.sessionDataItem) {
           shouldCreateShell = false;
-          shell.dataItem = aDataItem;
+          shell.sessionDataItem = aDataItem;
           newOrUpdatedShell = shell;
           this._viewItemsForDataItems.set(aDataItem, shell);
           break;
@@ -903,10 +841,14 @@ DownloadsPlacesView.prototype = {
       // If we are adding a new history download here, it means there is no
       // associated session download, thus we must read the Places metadata,
       // because it will not be obscured by the session download.
-      let metaData = aPlacesNode
-                     ? this._getCachedPlacesMetaDataFor(aPlacesNode.uri)
-                     : null;
-      let shell = new DownloadElementShell(aDataItem, aPlacesNode, metaData);
+      let historyDataItem = null;
+      if (aPlacesNode) {
+        let metaData = this._getCachedPlacesMetaDataFor(aPlacesNode.uri);
+        historyDataItem = new DownloadsHistoryDataItem(aPlacesNode);
+        historyDataItem.updateFromMetaData(metaData);
+      }
+      let shell = new DownloadElementShell(aDataItem, historyDataItem);
+      shell.element._placesNode = aPlacesNode;
       newOrUpdatedShell = shell;
       shellsForURI.add(shell);
       if (aDataItem) {
@@ -925,9 +867,11 @@ DownloadsPlacesView.prototype = {
       //    changed, just the reference to the Places node object is different.
       // So, we update all the node references and keep the metadata intact.
       for (let shell of shellsForURI) {
-        if (shell.placesNode != aPlacesNode) {
-          shell.placesNode = aPlacesNode;
+        if (!shell.historyDataItem) {
+          // Create the element to host the metadata when needed.
+          shell.historyDataItem = new DownloadsHistoryDataItem(aPlacesNode);
         }
+        shell.element._placesNode = aPlacesNode;
       }
     }
 
@@ -992,8 +936,8 @@ DownloadsPlacesView.prototype = {
     let shellsForURI = this._downloadElementsShellsForURI.get(downloadURI);
     if (shellsForURI) {
       for (let shell of shellsForURI) {
-        if (shell.dataItem) {
-          shell.placesNode = null;
+        if (shell.sessionDataItem) {
+          shell.historyDataItem = null;
         } else {
           this._removeElement(shell.element);
           shellsForURI.delete(shell);
@@ -1020,7 +964,7 @@ DownloadsPlacesView.prototype = {
     // view item for this this particular data item go away.
     // If there's only one item for this download uri, we should only
     // keep it if it is associated with a history download.
-    if (shells.size > 1 || !shell.placesNode) {
+    if (shells.size > 1 || !shell.historyDataItem) {
       this._removeElement(shell.element);
       shells.delete(shell);
       if (shells.size == 0) {
@@ -1032,8 +976,10 @@ DownloadsPlacesView.prototype = {
       // Previously, we did not use the Places metadata because it was obscured
       // by the session download. Since this is no longer the case, we have to
       // read the latest metadata before removing the session download.
-      shell.placesMetaData = this._getPlacesMetaDataFor(shell.placesNode.uri);
-      shell.dataItem = null;
+      let url = shell.historyDataItem.download.source.url;
+      let metaData = this._getPlacesMetaDataFor(url);
+      shell.historyDataItem.updateFromMetaData(metaData);
+      shell.sessionDataItem = null;
       // Move it below the session-download items;
       if (this._lastSessionDownloadElement == shell.element) {
         this._lastSessionDownloadElement = shell.element.previousSibling;
@@ -1146,14 +1092,9 @@ DownloadsPlacesView.prototype = {
   },
 
   get selectedNodes() {
-    let placesNodes = [];
-    let selectedElements = this._richlistbox.selectedItems;
-    for (let elt of selectedElements) {
-      if (elt._shell.placesNode) {
-        placesNodes.push(elt._shell.placesNode);
-      }
-    }
-    return placesNodes;
+    return [for (element of this._richlistbox.selectedItems)
+            if (element._placesNode)
+            element._placesNode];
   },
 
   get selectedNode() {
@@ -1189,8 +1130,8 @@ DownloadsPlacesView.prototype = {
       // Loop backwards since _removeHistoryDownloadFromView may removeChild().
       for (let i = this._richlistbox.childNodes.length - 1; i >= 0; --i) {
         let element = this._richlistbox.childNodes[i];
-        if (element._shell.placesNode) {
-          this._removeHistoryDownloadFromView(element._shell.placesNode);
+        if (element._placesNode) {
+          this._removeHistoryDownloadFromView(element._placesNode);
         }
       }
     } finally {
@@ -1323,8 +1264,8 @@ DownloadsPlacesView.prototype = {
   },
 
   // DownloadsView
-  onDataItemStateChanged(aDataItem, aOldState) {
-    this._viewItemsForDataItems.get(aDataItem).onStateChanged(aOldState);
+  onDataItemStateChanged(aDataItem) {
+    this._viewItemsForDataItems.get(aDataItem).onStateChanged();
   },
 
   // DownloadsView
@@ -1372,7 +1313,7 @@ DownloadsPlacesView.prototype = {
     // Because history downloads are always removable and are listed after the
     // session downloads, check from bottom to top.
     for (let elt = this._richlistbox.lastChild; elt; elt = elt.previousSibling) {
-      if (elt._shell.placesNode || !elt._shell.dataItem.inProgress) {
+      if (!elt._shell.dataItem.inProgress) {
         return true;
       }
     }
@@ -1380,11 +1321,12 @@ DownloadsPlacesView.prototype = {
   },
 
   _copySelectedDownloadsToClipboard() {
-    let selectedElements = this._richlistbox.selectedItems;
-    let urls = [e._shell.downloadURI for each (e in selectedElements)];
+    let urls = [for (element of this._richlistbox.selectedItems)
+                element._shell.download.source.url];
 
-    Cc["@mozilla.org/widget/clipboardhelper;1"].
-    getService(Ci.nsIClipboardHelper).copyString(urls.join("\n"), document);
+    Cc["@mozilla.org/widget/clipboardhelper;1"]
+      .getService(Ci.nsIClipboardHelper)
+      .copyString(urls.join("\n"), document);
   },
 
   _getURLFromClipboardData() {
@@ -1468,12 +1410,8 @@ DownloadsPlacesView.prototype = {
 
     // Set the state attribute so that only the appropriate items are displayed.
     let contextMenu = document.getElementById("downloadsContextMenu");
-    let state = element._shell.getDownloadMetaData().state;
-    if (state !== undefined) {
-      contextMenu.setAttribute("state", state);
-    } else {
-      contextMenu.removeAttribute("state");
-    }
+    let state = element._shell.dataItem.state;
+    contextMenu.setAttribute("state", state);
 
     if (state == nsIDM.DOWNLOAD_DOWNLOADING) {
       // The resumable property of a download may change at any time, so
@@ -1545,11 +1483,13 @@ DownloadsPlacesView.prototype = {
       return;
     }
 
-    let metaData = selectedItem._shell.getDownloadMetaData();
-    if (!("filePath" in metaData)) {
+    let targetPath = selectedItem._shell.download.target.path;
+    if (!targetPath) {
       return;
     }
-    let file = new FileUtils.File(metaData.filePath);
+
+    // We must check for existence synchronously because this is a DOM event.
+    let file = new FileUtils.File(targetPath);
     if (!file.exists()) {
       return;
     }

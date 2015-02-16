@@ -8,6 +8,7 @@
 
 this.EXPORTED_SYMBOLS = [
   "DownloadsCommon",
+  "DownloadsDataItem",
 ];
 
 /**
@@ -25,10 +26,9 @@ this.EXPORTED_SYMBOLS = [
  * to build a consistent view of the available data.
  *
  * DownloadsDataItem
- * Represents a single item in the list of downloads.  This object either wraps
- * an existing nsIDownload from the Download Manager, or provides the same
- * information read directly from the downloads database, with the possibility
- * of querying the nsIDownload lazily, for performance reasons.
+ * Represents a single item in the list of downloads.  This object wraps the
+ * Download object from the JavaScript API for downloads.  A specialized version
+ * of this object is implemented in the Places front-end view.
  *
  * DownloadsIndicatorData
  * This object registers itself with DownloadsData as a view, and transforms the
