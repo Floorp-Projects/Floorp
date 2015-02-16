@@ -331,7 +331,6 @@ struct AnimationPlayerCollection : public PRCList
     if (element) {
       nsRestyleHint hint = IsForTransitions() ? eRestyle_CSSTransitions
                                               : eRestyle_CSSAnimations;
-      hint |= eRestyle_ChangeAnimationPhase;
       aPresContext->PresShell()->RestyleForAnimation(element, hint);
     }
   }

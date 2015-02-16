@@ -1803,8 +1803,7 @@ Element::SetSMILOverrideStyleRule(css::StyleRule* aStyleRule,
     if (doc) {
       nsCOMPtr<nsIPresShell> shell = doc->GetShell();
       if (shell) {
-        shell->RestyleForAnimation(this,
-          eRestyle_StyleAttribute | eRestyle_ChangeAnimationPhase);
+        shell->RestyleForAnimation(this, eRestyle_StyleAttribute);
       }
     }
   }
