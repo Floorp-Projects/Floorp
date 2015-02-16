@@ -114,6 +114,10 @@ public:
     return mSkipAnimationRules;
   }
 
+  void SetSkipAnimationRules(bool aSkipAnimationRules) {
+    mSkipAnimationRules = aSkipAnimationRules;
+  }
+
   // Whether rule matching should post animation restyles when it skips
   // styles associated with animation.  Only true when
   // SkipAnimationRules() is also true.
@@ -121,6 +125,10 @@ public:
     MOZ_ASSERT(mSkipAnimationRules || !mPostAnimationRestyles,
                "inconsistent state");
     return mPostAnimationRestyles;
+  }
+
+  void SetPostAnimationRestyles(bool aPostAnimationRestyles) {
+    mPostAnimationRestyles = aPostAnimationRestyles;
   }
 
   // Whether we're currently in the animation phase of restyle
