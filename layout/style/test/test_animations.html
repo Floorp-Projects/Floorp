@@ -1491,8 +1491,7 @@ dyn2.appendRule("50% { margin-left: 0px }");
 is(cs.marginLeft, "50px", "dynamic rule change test, @keyframes appendRule");
 var dyn2_kf1 = dyn2.cssRules[0]; // currently 0% { margin-left: 100px }
 dyn2_kf1.style.marginLeft = "-100px";
-// FIXME: Bug 978833 (keyframe rules used as nsIStyleRule but doesn't follow immutability contract)
-todo_is(cs.marginLeft, "-50px", "dynamic rule change test, keyframe style set");
+is(cs.marginLeft, "-50px", "dynamic rule change test, keyframe style set");
 dyn2.name = "dyn2";
 is(cs.marginLeft, "25px", "dynamic rule change test, change in @keyframes name applies (second time)");
 var dyn1_kf2 = dyn1.cssRules[1]; // currently 50% { margin-left: 50px }

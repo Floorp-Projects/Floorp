@@ -70,8 +70,6 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mObservingRefreshDriver(false)
   , mInStyleRefresh(false)
   , mSkipAnimationRules(false)
-  , mPostAnimationRestyles(false)
-  , mIsProcessingAnimationStyleChange(false)
   , mHavePendingNonAnimationRestyles(false)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
@@ -82,8 +80,6 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mReframingStyleContexts(nullptr)
   , mPendingRestyles(ELEMENT_HAS_PENDING_RESTYLE |
                      ELEMENT_IS_POTENTIAL_RESTYLE_ROOT)
-  , mPendingAnimationRestyles(ELEMENT_HAS_PENDING_ANIMATION_RESTYLE |
-                              ELEMENT_IS_POTENTIAL_ANIMATION_RESTYLE_ROOT)
 #ifdef DEBUG
   , mIsProcessingRestyles(false)
 #endif
@@ -92,7 +88,6 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
 #endif
 {
   mPendingRestyles.Init(this);
-  mPendingAnimationRestyles.Init(this);
 }
 
 void
@@ -1572,11 +1567,6 @@ RestyleManager::StartRebuildAllStyleData(RestyleTracker& aRestyleTracker)
   mRebuildAllExtraHint = nsChangeHint(0);
   mRebuildAllRestyleHint = nsRestyleHint(0);
 
-  // Until we get rid of these phases in bug 960465, we need to add
-  // eRestyle_ChangeAnimationPhaseDescendants so that we actually honor
-  // these booleans in all cases.
-  restyleHint |= eRestyle_ChangeAnimationPhaseDescendants;
-
   restyleHint |= eRestyle_ForceDescendants;
 
   if (!(restyleHint & eRestyle_Subtree) &&
@@ -1676,35 +1666,7 @@ RestyleManager::ProcessPendingRestyles()
     mPresContext->TransitionManager()->SetInAnimationOnlyStyleUpdate(true);
   }
 
-  // Until we get rid of these phases in bug 960465, we need to skip
-  // animation restyles during the non-animation phase, and post
-  // animation restyles so that we restyle those elements again in the
-  // animation phase.
-  mSkipAnimationRules = true;
-  mPostAnimationRestyles = true;
-
   ProcessRestyles(mPendingRestyles);
-
-  mPostAnimationRestyles = false;
-  mSkipAnimationRules = false;
-
-#ifdef DEBUG
-  uint32_t oldPendingRestyleCount = mPendingRestyles.Count();
-#endif
-
-  // ...and then process animation restyles.  This needs to happen
-  // second because we need to start animations that resulted from the
-  // first set of restyles (e.g., CSS transitions with negative
-  // transition-delay), and because we need to immediately
-  // restyle-with-animation any just-restyled elements that are
-  // mid-transition (since processing the non-animation restyle ignores
-  // the running transition so it can check for a new change on the same
-  // property, and then posts an immediate animation style change).
-  MOZ_ASSERT(!mIsProcessingAnimationStyleChange, "nesting forbidden");
-  mIsProcessingAnimationStyleChange = true;
-  ProcessRestyles(mPendingAnimationRestyles);
-  MOZ_ASSERT(mIsProcessingAnimationStyleChange, "nesting forbidden");
-  mIsProcessingAnimationStyleChange = false;
 
   if (!haveNonAnimation) {
     mPresContext->TransitionManager()->SetInAnimationOnlyStyleUpdate(false);
@@ -1713,9 +1675,6 @@ RestyleManager::ProcessPendingRestyles()
 #ifdef DEBUG
   mIsProcessingRestyles = false;
 #endif
-  NS_POSTCONDITION(mPendingRestyles.Count() == oldPendingRestyleCount,
-                   "We should not have posted new non-animation restyles while "
-                   "processing animation restyles");
 
   NS_ASSERTION(haveNonAnimation || !mHavePendingNonAnimationRestyles,
                "should not have added restyles");
@@ -1822,12 +1781,12 @@ RestyleManager::UpdateOnlyAnimationStyles()
 }
 
 void
-RestyleManager::PostRestyleEventCommon(Element* aElement,
-                                       nsRestyleHint aRestyleHint,
-                                       nsChangeHint aMinChangeHint,
-                                       bool aForAnimation)
+RestyleManager::PostRestyleEvent(Element* aElement,
+                                 nsRestyleHint aRestyleHint,
+                                 nsChangeHint aMinChangeHint)
 {
-  if (MOZ_UNLIKELY(mPresContext->PresShell()->IsDestroying())) {
+  if (MOZ_UNLIKELY(!mPresContext) ||
+      MOZ_UNLIKELY(mPresContext->PresShell()->IsDestroying())) {
     return;
   }
 
@@ -1836,9 +1795,7 @@ RestyleManager::PostRestyleEventCommon(Element* aElement,
     return;
   }
 
-  RestyleTracker& tracker =
-    aForAnimation ? mPendingAnimationRestyles : mPendingRestyles;
-  tracker.AddPendingRestyle(aElement, aRestyleHint, aMinChangeHint);
+  mPendingRestyles.AddPendingRestyle(aElement, aRestyleHint, aMinChangeHint);
 
   // Set mHavePendingNonAnimationRestyles for any restyle that could
   // possibly contain non-animation styles.  Unfortunately there's one
