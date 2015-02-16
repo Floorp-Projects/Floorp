@@ -88,10 +88,12 @@ dependencies = [
 [[package]]
 name = "mozprofile"
 version = "0.0.1"
+source = "git+https://github.com/jgraham/rust_mozprofile.git?master#a44bb9d227d74c1871b9f544d4b0bbbff6d96db2"
 
 [[package]]
 name = "mozrunner"
 version = "0.0.1"
+source = "git+https://github.com/jgraham/rust_mozrunner.git?master#b95f7e45e8df5eb5059069186cdfcbc082ee9e10"
 dependencies = [
  "mozprofile 0.0.1",
 ]
@@ -176,6 +178,7 @@ dependencies = [
 [[package]]
 name = "webdriver"
 version = "0.0.1"
+source = "git+https://github.com/jgraham/webdriver-rust.git?master#2d85826105886a478114a9ea7b2914bef91ba014"
 dependencies = [
  "hyper 0.1.1 (git+https://github.com/servo/hyper?branch=old_servo_new_cookies)",
  "log 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
