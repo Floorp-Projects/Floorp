@@ -46,18 +46,16 @@ HistoryDownload.prototype = {
   /**
    * Pushes information from Places metadata into this object.
    */
-  updateFromMetaData(aPlacesMetaData) {
+  updateFromMetaData(metaData) {
     try {
       this.target.path = Cc["@mozilla.org/network/protocol;1?name=file"]
                            .getService(Ci.nsIFileProtocolHandler)
-                           .getFileFromURLSpec(aPlacesMetaData.
-                                               targetFileURISpec).path;
+                           .getFileFromURLSpec(metaData.targetFileSpec).path;
     } catch (ex) {
       this.target.path = undefined;
     }
 
-    try {
-      let metaData = JSON.parse(aPlacesMetaData.jsonDetails);
+    if ("state" in metaData) {
       this.succeeded = metaData.state == nsIDM.DOWNLOAD_FINISHED;
       this.error = metaData.state == nsIDM.DOWNLOAD_FAILED
                    ? { message: "History download failed." }
@@ -74,7 +72,7 @@ HistoryDownload.prototype = {
       // is refreshed, at which point these values may be updated.
       this.target.exists = true;
       this.target.size = metaData.fileSize;
-    } catch (ex) {
+    } else {
       // Metadata might be missing from a download that has started but hasn't
       // stopped already. Normally, this state is overridden with the one from
       // the corresponding in-progress session download. But if the browser is
@@ -521,94 +519,82 @@ DownloadsPlacesView.prototype = {
   },
 
   /**
-   * Map containing a metadata object for each download source URI found in
-   * Places annotations, or null if this cache must be rebuilt.
+   * This cache exists in order to optimize the load of the Downloads View, when
+   * Places annotations for history downloads must be read. In fact, annotations
+   * are stored in a single table, and reading all of them at once is much more
+   * efficient than an individual query.
+   *
+   * When this property is first requested, it reads the annotations for all the
+   * history downloads and stores them indefinitely.
+   *
+   * The historical annotations are not expected to change for the duration of
+   * the session, except in the case where a session download is running for the
+   * same URI as a history download. To ensure we don't use stale data, URIs
+   * corresponding to session downloads are permanently removed from the cache.
+   * This is a very small mumber compared to history downloads.
+   *
+   * This property returns a Map from each download source URI found in Places
+   * annotations to an object with the format:
+   *
+   * { targetFileSpec, state, endTime, fileSize, ... }
+   *
+   * The targetFileSpec property is the value of "downloads/destinationFileURI",
+   * while the other properties are taken from "downloads/metaData". Any of the
+   * properties may be missing from the object.
    */
-  _cachedPlacesMetaData: null,
+  get _cachedPlacesMetaData() {
+    if (!this.__cachedPlacesMetaData) {
+      this.__cachedPlacesMetaData = new Map();
 
-  /**
-   * This method exists in order to optimize the first load of the Downloads
-   * View, when Places annotations for history downloads must be read. In fact,
-   * annotations are stored in a single table, and reading all of them at once
-   * is much more efficient than an individual query.
-   *
-   * When this metod is first called, after the Places result container has been
-   * invalidated, it reads the annotations for all the history downloads.
-   *
-   * At this point, as metadata for the various elements is requested by the
-   * view, it is pulled from the cache and returned as an object.
-   *
-   * This works efficiently because the metadata is requested only for newly
-   * created element shells that contain a history download but don't have a
-   * matching session download, and at most one such element shell is created
-   * for each source URI.
-   *
-   * @param url
-   *        URI string of the Places node for which metadata is requested.
-   *
-   * @return Object of the form { targetFileURISpec, jsonDetails }.
-   *         Any of the properties may be missing from the object.
-   */
-  _getCachedPlacesMetaDataFor(url) {
-    if (!this._cachedPlacesMetaData) {
-      this._cachedPlacesMetaData = new Map();
-
-      // Use the destination file annotation to build the initial Map of items.
-      for (let result of PlacesUtils.annotations.getAnnotationsWithName(
-                                                 DESTINATION_FILE_URI_ANNO)) {
-        this._cachedPlacesMetaData.set(result.uri.spec, {
-          targetFileURISpec: result.annotationValue,
-        });
-      }
-
-      // Add the string with the JSON details from the metadata annotation.
+      // Read the metadata annotations first, but ignore invalid JSON.
       for (let result of PlacesUtils.annotations.getAnnotationsWithName(
                                                  DOWNLOAD_META_DATA_ANNO)) {
-        let metadata = this._cachedPlacesMetaData.get(result.uri.spec);
+        try {
+          this.__cachedPlacesMetaData.set(result.uri.spec,
+                                          JSON.parse(result.annotationValue));
+        } catch (ex) {}
+      }
 
-        // The destination file annotation is expected to be present for all
-        // the downloads with the metadata annotation. If this is not the case,
-        // we simply ignore the item, as if it has no JSON details at all.
-        if (metadata) {
-          metadata.jsonDetails = result.annotationValue;
+      // Add the target file annotations to the metadata.
+      for (let result of PlacesUtils.annotations.getAnnotationsWithName(
+                                                 DESTINATION_FILE_URI_ANNO)) {
+        let metaData = this.__cachedPlacesMetaData.get(result.uri.spec);
+        if (!metaData) {
+          metaData = {};
+          this.__cachedPlacesMetaData.set(result.uri.spec, metaData);
         }
+        metaData.targetFileSpec = result.annotationValue;
       }
     }
 
-    let metadata = this._cachedPlacesMetaData.get(url);
-    this._cachedPlacesMetaData.delete(url);
-
-    // In the rare case where a history download is added again, but there is no
-    // corresponding session download, read the metadata from the database. This
-    // could potentially cause an inefficient database access for very old
-    // downloads with no metadata to begin with, but these should have been
-    // already deleted from history on a recent browser profile.
-    return metadata || this._getPlacesMetaDataFor(url);
+    return this.__cachedPlacesMetaData;
   },
+  __cachedPlacesMetaData: null,
 
   /**
-   * Read the latest version of the Places metadata for the given URI.
+   * Reads current metadata from Places annotations for the specified URI, and
+   * returns an object with the format:
    *
-   * @param url
-   *        URI string of the Places node for which metadata is requested.
+   * { targetFileSpec, state, endTime, fileSize, ... }
    *
-   * @return Object of the form { targetFileURISpec, jsonDetails }.
-   *         Any of the properties may be missing from the object.
+   * The targetFileSpec property is the value of "downloads/destinationFileURI",
+   * while the other properties are taken from "downloads/metaData". Any of the
+   * properties may be missing from the object.
    */
-  _getPlacesMetaDataFor(url) {
-    let metadata = {};
+  _getPlacesMetaDataFor(spec) {
+    let metaData = {};
 
     try {
-      let uri = NetUtil.newURI(url);
-      metadata = {
-        targetFileURISpec: PlacesUtils.annotations.getPageAnnotation(
-                                       uri, DESTINATION_FILE_URI_ANNO),
-      };
-      metadata.jsonDetails = PlacesUtils.annotations.getPageAnnotation(
-                                         uri, DOWNLOAD_META_DATA_ANNO);
+      let uri = NetUtil.newURI(spec);
+      try {
+        metaData = JSON.parse(PlacesUtils.annotations.getPageAnnotation(
+                                          uri, DOWNLOAD_META_DATA_ANNO));
+      } catch (ex) {}
+      metaData.targetFileSpec = PlacesUtils.annotations.getPageAnnotation(
+                                            uri, DESTINATION_FILE_URI_ANNO);
     } catch (ex) {}
 
-    return metadata;
+    return metaData;
   },
 
   /**
@@ -644,6 +630,18 @@ DownloadsPlacesView.prototype = {
     if (!shellsForURI) {
       shellsForURI = new Set();
       this._downloadElementsShellsForURI.set(downloadURI, shellsForURI);
+    }
+
+    // When a session download is attached to a shell, we ensure not to keep
+    // stale metadata around for the corresponding history download. This
+    // prevents stale state from being used if the view is rebuilt.
+    //
+    // Note that we will eagerly load the data in the cache at this point, even
+    // if we have seen no history download. The case where no history download
+    // will appear at all is rare enough in normal usage, so we can apply this
+    // simpler solution rather than keeping a list of cache items to ignore.
+    if (sessionDownload) {
+      this._cachedPlacesMetaData.delete(sessionDownload.source.url);
     }
 
     let newOrUpdatedShell = null;
@@ -689,7 +687,8 @@ DownloadsPlacesView.prototype = {
       // because it will not be obscured by the session download.
       let historyDownload = null;
       if (aPlacesNode) {
-        let metaData = this._getCachedPlacesMetaDataFor(aPlacesNode.uri);
+        let metaData = this._cachedPlacesMetaData.get(aPlacesNode.uri) ||
+                       this._getPlacesMetaDataFor(aPlacesNode.uri);
         historyDownload = new HistoryDownload(aPlacesNode);
         historyDownload.updateFromMetaData(metaData);
       }
@@ -962,12 +961,6 @@ DownloadsPlacesView.prototype = {
     if (!aContainer.containerOpen) {
       throw new Error("Root container for the downloads query cannot be closed");
     }
-
-    // When the container is invalidated, it means we are about to re-read all
-    // the information about history downloads from the database, discarding the
-    // download element shells, thus we fully rebuild the Places annotation
-    // cache with the latest values.
-    this._cachedPlacesMetaData = null;
 
     let suppressOnSelect = this._richlistbox.suppressOnSelect;
     this._richlistbox.suppressOnSelect = true;
