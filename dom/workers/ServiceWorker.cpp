@@ -77,6 +77,11 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   WorkerPrivate* workerPrivate = GetWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
+  if (State() == ServiceWorkerState::Redundant) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
   workerPrivate->PostMessage(aCx, aMessage, aTransferable, aRv);
 }
 
