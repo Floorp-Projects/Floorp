@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical properties of fieldset in the UA stylesheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+
+fieldset { height: 100px; width: 100px; }
+
+.ltr .a, .rtl .a { height: 40%; background: #eee; }
+.ltr .b, .rtl .b { height: 60%; background: #ddd; }
+.v-rl .a { width: 40%; background: #eee; }
+.v-rl .b { width: 60%; background: #ddd; }
+
+.ltr fieldset, .rtl fieldset { margin: 0 2px; padding: 0.35em 0.625em 0.75em; }
+.v-rl fieldset { margin: 2px 0; padding: 0.625em 0.35em 0.625em 0.75em; }
+
+.ltr legend, .rtl legend { padding: 0 2px; }
+.v-rl legend { padding: 2px 0; }
+</style>
+<div class=ltr>
+  <fieldset>
+    <legend>Legend</legend>
+    <div class=a></div>
+    <div class=b></div>
+  </fieldset>
+</div>
+
+<div class=rtl dir=rtl>
+  <fieldset>
+    <legend>Legend</legend>
+    <div class=a></div>
+    <div class=b></div>
+  </fieldset>
+</div>
+
+<div class=v-rl>
+  <fieldset>
+    <legend>Legend</legend>
+    <div class=a></div>
+    <div class=b></div>
+  </fieldset>
+</div>
+

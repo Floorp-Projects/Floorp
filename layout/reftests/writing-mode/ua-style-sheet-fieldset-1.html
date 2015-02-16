@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical properties of fieldset in the UA stylesheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+
+fieldset { height: 100px; width: 100px; }
+
+.a { block-size: 40%; background: #eee; }
+.b { block-size: 60%; background: #ddd; }
+</style>
+<div class=ltr>
+  <fieldset>
+    <legend>Legend</legend>
+    <div class=a></div>
+    <div class=b></div>
+  </fieldset>
+</div>
+
+<div class=rtl dir=rtl>
+  <fieldset>
+    <legend>Legend</legend>
+    <div class=a></div>
+    <div class=b></div>
+  </fieldset>
+</div>
+
+<div class=v-rl>
+  <fieldset>
+    <legend>Legend</legend>
+    <div class=a></div>
+    <div class=b></div>
+  </fieldset>
+</div>
+
