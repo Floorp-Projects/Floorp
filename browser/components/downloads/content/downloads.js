@@ -953,9 +953,10 @@ const DownloadsView = {
       return;
     }
 
-    let localFile = DownloadsView.controllerForElement(element)
-                                 .dataItem.localFile;
-    if (!localFile.exists()) {
+    // We must check for existence synchronously because this is a DOM event.
+    let file = new FileUtils.File(DownloadsView.controllerForElement(element)
+                                               .download.target.path);
+    if (!file.exists()) {
       return;
     }
 
@@ -1009,24 +1010,17 @@ DownloadsViewItem.prototype = {
   _element: null,
 
   onStateChanged() {
-    // If a download just finished successfully, it means that the target file
-    // now exists and we can extract its specific icon.  To ensure that the icon
-    // is reloaded, we must change the URI used by the XUL image element, for
-    // example by adding a query parameter.  Since this URI has a "moz-icon"
-    // scheme, this only works if we add one of the parameters explicitly
-    // supported by the nsIMozIconURI interface.
-    if (this.dataItem.state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED) {
-      this.element.setAttribute("image", this.image + "&state=normal");
+    this.element.setAttribute("image", this.image);
+    this.element.setAttribute("state",
+                              DownloadsCommon.stateOfDownload(this.download));
 
+    if (this.download.succeeded) {
       // We assume the existence of the target of a download that just completed
       // successfully, without checking the condition in the background.  If the
       // panel is already open, this will take effect immediately.  If the panel
       // is opened later, a new background existence check will be performed.
       this.element.setAttribute("exists", "true");
     }
-
-    // Update the user interface after switching states.
-    this.element.setAttribute("state", this.dataItem.state);
   },
 
   onChanged() {
@@ -1167,23 +1161,37 @@ DownloadsViewItemController.prototype = {
    */
   dataItem: null,
 
+  get download() this.dataItem.download,
+
   isCommandEnabled(aCommand) {
     switch (aCommand) {
       case "downloadsCmd_open": {
-        return this.dataItem.download.succeeded &&
-               this.dataItem.localFile.exists();
+        if (!this.download.succeeded) {
+          return false;
+        }
+
+        let file = new FileUtils.File(this.download.target.path);
+        return file.exists();
       }
       case "downloadsCmd_show": {
-        return this.dataItem.localFile.exists() ||
-               this.dataItem.partFile.exists();
+        let file = new FileUtils.File(this.download.target.path);
+        if (file.exists()) {
+          return true;
+        }
+
+        if (!this.download.target.partFilePath) {
+          return false;
+        }
+
+        let partFile = new FileUtils.File(this.download.target.partFilePath);
+        return partFile.exists();
       }
       case "downloadsCmd_pauseResume":
-        return this.dataItem.inProgress &&
-               this.dataItem.download.hasPartialData;
+        return this.download.hasPartialData && !this.download.error;
       case "downloadsCmd_retry":
-        return this.dataItem.canRetry;
+        return this.download.canceled || this.download.error;
       case "downloadsCmd_openReferrer":
-        return !!this.dataItem.download.source.referrer;
+        return !!this.download.source.referrer;
       case "cmd_delete":
       case "downloadsCmd_cancel":
       case "downloadsCmd_copyLocation":
@@ -1210,20 +1218,20 @@ DownloadsViewItemController.prototype = {
   commands: {
     cmd_delete() {
       Downloads.getList(Downloads.ALL)
-               .then(list => list.remove(this.dataItem.download))
-               .then(() => this.dataItem.download.finalize(true))
+               .then(list => list.remove(this.download))
+               .then(() => this.download.finalize(true))
                .catch(Cu.reportError);
       PlacesUtils.bhistory.removePage(
-                             NetUtil.newURI(this.dataItem.download.source.url));
+                             NetUtil.newURI(this.download.source.url));
     },
 
     downloadsCmd_cancel() {
-      this.dataItem.download.cancel().catch(() => {});
-      this.dataItem.download.removePartialData().catch(Cu.reportError);
+      this.download.cancel().catch(() => {});
+      this.download.removePartialData().catch(Cu.reportError);
     },
 
     downloadsCmd_open() {
-      this.dataItem.download.launch().catch(Cu.reportError);
+      this.download.launch().catch(Cu.reportError);
 
       // We explicitly close the panel here to give the user the feedback that
       // their click has been received, and we're handling the action.
@@ -1234,7 +1242,8 @@ DownloadsViewItemController.prototype = {
     },
 
     downloadsCmd_show() {
-      DownloadsCommon.showDownloadedFile(this.dataItem.localFile);
+      let file = new FileUtils.File(this.download.target.path);
+      DownloadsCommon.showDownloadedFile(file);
 
       // We explicitly close the panel here to give the user the feedback that
       // their click has been received, and we're handling the action.
@@ -1245,25 +1254,25 @@ DownloadsViewItemController.prototype = {
     },
 
     downloadsCmd_pauseResume() {
-      if (this.dataItem.download.stopped) {
-        this.dataItem.download.start();
+      if (this.download.stopped) {
+        this.download.start();
       } else {
-        this.dataItem.download.cancel();
+        this.download.cancel();
       }
     },
 
     downloadsCmd_retry() {
-      this.dataItem.download.start().catch(() => {});
+      this.download.start().catch(() => {});
     },
 
     downloadsCmd_openReferrer() {
-      openURL(this.dataItem.download.source.referrer);
+      openURL(this.download.source.referrer);
     },
 
     downloadsCmd_copyLocation() {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"]
                       .getService(Ci.nsIClipboardHelper);
-      clipboard.copyString(this.dataItem.download.source.url, document);
+      clipboard.copyString(this.download.source.url, document);
     },
 
     downloadsCmd_doDefault() {
@@ -1271,7 +1280,7 @@ DownloadsViewItemController.prototype = {
 
       // Determine the default command for the current item.
       let defaultCommand = function () {
-        switch (this.dataItem.state) {
+        switch (DownloadsCommon.stateOfDownload(this.download)) {
           case nsIDM.DOWNLOAD_NOTSTARTED:       return "downloadsCmd_cancel";
           case nsIDM.DOWNLOAD_FINISHED:         return "downloadsCmd_open";
           case nsIDM.DOWNLOAD_FAILED:           return "downloadsCmd_retry";
