@@ -200,6 +200,20 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
                        ThrottledAnimationStyleIsUpToDate(),
                    "throttled animations not up to date");
 
+  // Compute what the css-transitions spec calls the "after-change
+  // style", which is the new style without any data from transitions,
+  // but still inheriting from data that contains transitions that are
+  // not stopping or starting right now.
+  nsRefPtr<nsStyleContext> afterChangeStyle;
+  if (collection) {
+    nsStyleSet* styleSet = mPresContext->StyleSet();
+    afterChangeStyle =
+      styleSet->ResolveStyleWithoutAnimation(aElement, aNewStyleContext,
+                                             eRestyle_CSSTransitions);
+  } else {
+    afterChangeStyle = aNewStyleContext;
+  }
+
   // Per http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html
   // I'll consider only the transitions from the number of items in
   // 'transition-property' on down, and later ones will override earlier
@@ -225,19 +239,19 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
              p < eCSSProperty_COUNT_no_shorthands;
              p = nsCSSProperty(p + 1)) {
           ConsiderStartingTransition(p, t, aElement, collection,
-                                     aOldStyleContext, aNewStyleContext,
+                                     aOldStyleContext, afterChangeStyle,
                                      &startedAny, &whichStarted);
         }
       } else if (nsCSSProps::IsShorthand(property)) {
         CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
             subprop, property, nsCSSProps::eEnabledForAllContent) {
           ConsiderStartingTransition(*subprop, t, aElement, collection,
-                                     aOldStyleContext, aNewStyleContext,
+                                     aOldStyleContext, afterChangeStyle,
                                      &startedAny, &whichStarted);
         }
       } else {
         ConsiderStartingTransition(property, t, aElement, collection,
-                                   aOldStyleContext, aNewStyleContext,
+                                   aOldStyleContext, afterChangeStyle,
                                    &startedAny, &whichStarted);
       }
     }
@@ -298,7 +312,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
            !allTransitionProperties.HasProperty(prop.mProperty)) ||
           // properties whose computed values changed but delay and
           // duration are both zero
-          !ExtractComputedValueForTransition(prop.mProperty, aNewStyleContext,
+          !ExtractComputedValueForTransition(prop.mProperty, afterChangeStyle,
                                              currentValue) ||
           currentValue != segment.mToValue) {
         // stop the transition
