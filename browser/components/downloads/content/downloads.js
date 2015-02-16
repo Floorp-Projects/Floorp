@@ -815,10 +815,10 @@ const DownloadsView = {
   },
 
   // DownloadsView
-  onDataItemStateChanged(aDataItem, aOldState) {
+  onDataItemStateChanged(aDataItem) {
     let viewItem = this._visibleViewItems.get(aDataItem);
     if (viewItem) {
-      viewItem.onStateChanged(aOldState);
+      viewItem.onStateChanged();
     }
   },
 
@@ -1054,15 +1054,14 @@ DownloadsViewItem.prototype = {
    * the download might be the same as before, if the data layer received
    * multiple events for the same download.
    */
-  onStateChanged(aOldState) {
+  onStateChanged() {
     // If a download just finished successfully, it means that the target file
     // now exists and we can extract its specific icon.  To ensure that the icon
     // is reloaded, we must change the URI used by the XUL image element, for
     // example by adding a query parameter.  Since this URI has a "moz-icon"
     // scheme, this only works if we add one of the parameters explicitly
     // supported by the nsIMozIconURI interface.
-    if (aOldState != Ci.nsIDownloadManager.DOWNLOAD_FINISHED &&
-        aOldState != this.dataItem.state) {
+    if (this.dataItem.state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED) {
       this._element.setAttribute("image", this.image + "&state=normal");
 
       // We assume the existence of the target of a download that just completed
