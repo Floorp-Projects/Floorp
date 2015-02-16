@@ -45,7 +45,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
  * from the JavaScript API for downloads, and commands are executed using a
  * combination of Download methods and DownloadsCommon.jsm helper functions.
  *
- * Specialized versions of this shell must be defined, currently they are the
+ * Specialized versions of this shell must be defined, and they are required to
+ * implement the "download" property or getter. Currently these objects are the
  * HistoryDownloadElementShell and the DownloadsViewItem for the panel. The
  * history view may use a HistoryDownload object in place of a Download object.
  */
@@ -56,17 +57,6 @@ DownloadElementShell.prototype = {
    * The richlistitem for the download, initialized by the derived object.
    */
   element: null,
-
-  /**
-   * The DownloadsDataItem for the download, overridden by the derived object.
-   */
-  dataItem: null,
-
-  /**
-   * Download or HistoryDownload object to use for displaying information and
-   * for executing commands in the user interface.
-   */
-  get download() this.dataItem.download,
 
   /**
    * URI string for the file type icon displayed in the download element.
