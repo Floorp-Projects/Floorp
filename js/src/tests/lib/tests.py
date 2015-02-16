@@ -82,6 +82,7 @@ class Test(object):
     def __init__(self, path):
         self.path = path     # str:  path of JS file relative to tests root dir
         self.options = []    # [str]: Extra options to pass to the shell
+        self.jitflags = []   # [str]: JIT flags to pass to the shell
 
     @staticmethod
     def prefix_command(path):
@@ -95,8 +96,8 @@ class Test(object):
 
     def get_command(self, js_cmd_prefix):
         dirname, filename = os.path.split(self.path)
-        cmd = js_cmd_prefix + self.options + Test.prefix_command(dirname) \
-              + ['-f', self.path]
+        cmd = js_cmd_prefix + self.jitflags + self.options \
+              + Test.prefix_command(dirname) + ['-f', self.path]
         return cmd
 
     def run(self, js_cmd_prefix, timeout=30.0):

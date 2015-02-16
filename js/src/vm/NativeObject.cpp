@@ -1565,6 +1565,57 @@ js::NativeDefineElement(ExclusiveContext *cx, HandleNativeObject obj, uint32_t i
     return NativeDefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
 
+/*** [[HasProperty]] *****************************************************************************/
+
+// ES6 draft rev31 9.1.7.1 OrdinaryHasProperty
+bool
+js::NativeHasProperty(JSContext *cx, HandleNativeObject obj, HandleId id, bool *foundp)
+{
+    RootedNativeObject pobj(cx, obj);
+    RootedShape shape(cx);
+
+    // This loop isn't explicit in the spec algorithm. See the comment on step
+    // 7.a. below.
+    for (;;) {
+        // Steps 2-3. ('done' is a SpiderMonkey-specific thing, used below.)
+        bool done;
+        if (!LookupOwnPropertyInline<CanGC>(cx, pobj, id, &shape, &done))
+            return false;
+
+        // Step 4.
+        if (shape) {
+            *foundp = true;
+            return true;
+        }
+
+        // Step 5-6. The check for 'done' on this next line is tricky.
+        // done can be true in exactly these unlikely-sounding cases:
+        // - We're looking up an element, and pobj is a TypedArray that
+        //   doesn't have that many elements.
+        // - We're being called from a resolve hook to assign to the property
+        //   being resolved.
+        // What they all have in common is we do not want to keep walking
+        // the prototype chain, and always claim that the property
+        // doesn't exist.
+        RootedObject proto(cx, done ? nullptr : pobj->getProto());
+
+        // Step 8.
+        if (!proto) {
+            *foundp = false;
+            return true;
+        }
+
+        // Step 7.a. If the prototype is also native, this step is a
+        // recursive tail call, and we don't need to go through all the
+        // plumbing of HasProperty; the top of the loop is where
+        // we're going to end up anyway. But if pobj is non-native,
+        // that optimization would be incorrect.
+        if (!proto->isNative())
+            return HasProperty(cx, proto, id, foundp);
+
+        pobj = &proto->as<NativeObject>();
+    }
+}
 
 /*** [[Get]] *************************************************************************************/
 
@@ -1897,9 +1948,9 @@ MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
  * This implements ES6 draft rev 28, 9.1.9 [[Set]] steps 5.c-f, but it
  * is really old code and there are a few barnacles.
  */
-static bool
-SetPropertyByDefining(JSContext *cx, HandleNativeObject obj, HandleObject receiver,
-                      HandleId id, HandleValue v, bool strict, bool objHasOwn)
+bool
+js::SetPropertyByDefining(JSContext *cx, HandleObject obj, HandleObject receiver,
+                          HandleId id, HandleValue v, bool strict, bool objHasOwn)
 {
     // Step 5.c-d: Test whether receiver has an existing own property
     // receiver[id]. The spec calls [[GetOwnProperty]]; js::HasOwnProperty is
@@ -1962,6 +2013,33 @@ SetPropertyByDefining(JSContext *cx, HandleNativeObject obj, HandleObject receiv
 
     Rooted<NativeObject*> nativeReceiver(cx, &receiver->as<NativeObject>());
     return DefinePropertyOrElement(cx, nativeReceiver, id, getter, setter, attrs, v, true, strict);
+}
+
+// When setting |id| for |receiver| and |obj| has no property for id, continue
+// the search up the prototype chain.
+bool
+js::SetPropertyOnProto(JSContext *cx, HandleObject obj, HandleObject receiver,
+                       HandleId id, MutableHandleValue vp, bool strict)
+{
+    MOZ_ASSERT(!obj->is<ProxyObject>());
+
+    RootedObject proto(cx, obj->getProto());
+    if (proto)
+        return SetProperty(cx, proto, receiver, id, vp, strict);
+    return SetPropertyByDefining(cx, obj, receiver, id, vp, strict, false);
+}
+
+bool
+js::SetNonWritableProperty(JSContext *cx, HandleId id, bool strict)
+{
+    // Setting a non-writable property is an error in strict mode code, a
+    // warning with the extra warnings option, and otherwise does nothing.
+
+    if (strict)
+        return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
+    if (cx->compartment()->options().extraWarnings(cx))
+        return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+    return true;
 }
 
 /*
@@ -2103,18 +2181,8 @@ SetExistingProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver
         } else {
             MOZ_ASSERT(shape->isDataDescriptor());
 
-            if (!shape->writable()) {
-                /*
-                 * Error in strict mode code, warn with extra warnings
-                 * options, otherwise do nothing.
-                 */
-
-                if (strict)
-                    return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
-                if (cx->compartment()->options().extraWarnings(cx))
-                    return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
-                return true;
-            }
+            if (!shape->writable())
+                return SetNonWritableProperty(cx, id, strict);
         }
 
         if (pobj == receiver) {

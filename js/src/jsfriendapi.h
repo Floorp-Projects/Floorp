@@ -20,9 +20,9 @@
 #include "js/Class.h"
 
 #if JS_STACK_GROWTH_DIRECTION > 0
-# define JS_CHECK_STACK_SIZE(limit, sp) ((uintptr_t)(sp) < (limit))
+# define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY(((uintptr_t)(sp) < (limit)))
 #else
-# define JS_CHECK_STACK_SIZE(limit, sp) ((uintptr_t)(sp) > (limit))
+# define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY((uintptr_t)(sp) > (limit)))
 #endif
 
 class JSAtom;
@@ -299,6 +299,7 @@ namespace js {
         {                                                                               \
             js::proxy_LookupProperty,                                                   \
             js::proxy_DefineProperty,                                                   \
+            js::proxy_HasProperty,                                                      \
             js::proxy_GetProperty,                                                      \
             js::proxy_SetProperty,                                                      \
             js::proxy_GetOwnPropertyDescriptor,                                         \
@@ -332,10 +333,12 @@ extern JS_FRIEND_API(bool)
 proxy_DefineProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
                      JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
 extern JS_FRIEND_API(bool)
+proxy_HasProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *foundp);
+extern JS_FRIEND_API(bool)
 proxy_GetProperty(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, JS::HandleId id,
                   JS::MutableHandleValue vp);
 extern JS_FRIEND_API(bool)
-proxy_SetProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+proxy_SetProperty(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, JS::HandleId id,
                   JS::MutableHandleValue bp, bool strict);
 extern JS_FRIEND_API(bool)
 proxy_GetOwnPropertyDescriptor(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
@@ -2621,6 +2624,17 @@ GetObjectEnvironmentObjectForFunction(JSFunction *fun);
  */
 extern JS_FRIEND_API(JSPrincipals *)
 GetSavedFramePrincipals(JS::HandleObject savedFrame);
+
+/*
+ * Get the first SavedFrame object in this SavedFrame stack whose principals are
+ * subsumed by the cx's principals. If there is no such frame, return nullptr.
+ *
+ * Do NOT pass a non-SavedFrame object here.
+ *
+ * The savedFrame and cx do not need to be in the same compartment.
+ */
+extern JS_FRIEND_API(JSObject *)
+GetFirstSubsumedSavedFrame(JSContext *cx, JS::HandleObject savedFrame);
 
 } /* namespace js */
 

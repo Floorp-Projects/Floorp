@@ -354,7 +354,8 @@ public:
                                 const int32_t&  aClickCount,
                                 const int32_t&  aModifiers,
                                 const bool&     aIgnoreRootScrollFrame) MOZ_OVERRIDE;
-    virtual bool RecvRealMouseEvent(const mozilla::WidgetMouseEvent& event) MOZ_OVERRIDE;
+    virtual bool RecvRealMouseMoveEvent(const mozilla::WidgetMouseEvent& event) MOZ_OVERRIDE;
+    virtual bool RecvRealMouseButtonEvent(const mozilla::WidgetMouseEvent& event) MOZ_OVERRIDE;
     virtual bool RecvRealKeyEvent(const mozilla::WidgetKeyboardEvent& event,
                                   const MaybeNativeKeyBinding& aBindings) MOZ_OVERRIDE;
     virtual bool RecvMouseWheelEvent(const mozilla::WidgetWheelEvent& event,

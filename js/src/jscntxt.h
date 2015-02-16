@@ -656,7 +656,7 @@ CheckForInterrupt(JSContext *cx)
     // Add an inline fast-path since we have to check for interrupts in some hot
     // C++ loops of library builtins.
     JSRuntime *rt = cx->runtime();
-    if (rt->hasPendingInterrupt())
+    if (MOZ_UNLIKELY(rt->hasPendingInterrupt()))
         return rt->handleInterrupt(cx);
     return true;
 }
