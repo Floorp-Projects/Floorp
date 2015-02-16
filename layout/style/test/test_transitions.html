@@ -227,14 +227,13 @@ function make_reset_test(transition, description)
 var reset_test = make_reset_test("4s margin-left ease-out 4s", "transition-delay reset to starting point");
 var reset_test_reference = make_reset_test("4s margin-left linear -3s", "reference for previous test (reset test)");
 
-// Test that transitions on descendants do not trigger when the
+// Test that transitions on descendants start correctly when the
 // inherited value is itself transitioning.  In other words, when
 // ancestor and descendant both have a transition for the same property,
 // and the descendant inherits the property from the ancestor, the
-// descendant's transition is ignored (as part of the idea of not
-// starting transitions on changes that result from animation).
-// See http://lists.w3.org/Archives/Public/www-style/2009Jun/0121.html
-// and http://lists.w3.org/Archives/Public/www-style/2009Jul/0050.html
+// descendant's transition starts as specified, based on the concepts of
+// the before-change style, the after-change style, and the
+// after-transition style.
 var descendant_tests = [
     { parent_transition: "",
       child_transition: "4s text-indent" },
@@ -642,6 +641,8 @@ function check_descendant_tests() {
     values["letter-spacing"] = [ 10, 5 ];
     var tf = timingFunctions["ease"];
 
+    var time = px_to_num(earlyrefcs.textIndent) / 125;
+
     for (var i in descendant_tests) {
         var test = descendant_tests[i];
 
@@ -679,11 +680,13 @@ function check_descendant_tests() {
                           property + " on child)");
             }
 
-            if (property != "letter-spacing" && child_ti_duration == 0) {
+            // Override the parent's transition with the child's as long
+            // as the child transition is still running.
+            if (property != "letter-spacing" && duration + delay > time) {
                 child_ti_duration = duration;
                 child_ti_delay = delay;
             }
-            if (property != "text-indent" && child_ls_duration == 0) {
+            if (property != "text-indent" && duration + delay > time) {
                 child_ls_duration = duration;
                 child_ls_delay = delay;
             }
