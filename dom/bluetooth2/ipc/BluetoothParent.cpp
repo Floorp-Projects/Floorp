@@ -250,6 +250,12 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_SendMetaDataRequest());
     case Request::TSendPlayStatusRequest:
       return actor->DoRequest(aRequest.get_SendPlayStatusRequest());
+    case Request::TConnectGattClientRequest:
+      return actor->DoRequest(aRequest.get_ConnectGattClientRequest());
+    case Request::TDisconnectGattClientRequest:
+      return actor->DoRequest(aRequest.get_DisconnectGattClientRequest());
+    case Request::TUnregisterGattClientRequest:
+      return actor->DoRequest(aRequest.get_UnregisterGattClientRequest());
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -682,5 +688,43 @@ BluetoothRequestParent::DoRequest(const SendPlayStatusRequest& aRequest)
                            aRequest.position(),
                            aRequest.playStatus(),
                            mReplyRunnable.get());
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ConnectGattClientRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TConnectGattClientRequest);
+
+  mService->ConnectGattClientInternal(aRequest.appUuid(),
+                                      aRequest.deviceAddress(),
+                                      mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const DisconnectGattClientRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TDisconnectGattClientRequest);
+
+  mService->DisconnectGattClientInternal(aRequest.appUuid(),
+                                         aRequest.deviceAddress(),
+                                         mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const UnregisterGattClientRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TUnregisterGattClientRequest);
+
+  mService->UnregisterGattClientInternal(aRequest.clientIf(),
+                                         mReplyRunnable.get());
+
   return true;
 }

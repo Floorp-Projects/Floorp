@@ -40,6 +40,30 @@ UuidToString(const BluetoothUuid& aUuid, nsAString& aString)
   aString.AssignLiteral(uuidStr);
 }
 
+void
+StringToUuid(const char* aString, BluetoothUuid& aUuid)
+{
+  uint32_t uuid0, uuid4;
+  uint16_t uuid1, uuid2, uuid3, uuid5;
+
+  sscanf(aString, "%08x-%04hx-%04hx-%04hx-%08x%04hx",
+         &uuid0, &uuid1, &uuid2, &uuid3, &uuid4, &uuid5);
+
+  uuid0 = htonl(uuid0);
+  uuid1 = htons(uuid1);
+  uuid2 = htons(uuid2);
+  uuid3 = htons(uuid3);
+  uuid4 = htonl(uuid4);
+  uuid5 = htons(uuid5);
+
+  memcpy(&aUuid.mUuid[0], &uuid0, 4);
+  memcpy(&aUuid.mUuid[4], &uuid1, 2);
+  memcpy(&aUuid.mUuid[6], &uuid2, 2);
+  memcpy(&aUuid.mUuid[8], &uuid3, 2);
+  memcpy(&aUuid.mUuid[10], &uuid4, 4);
+  memcpy(&aUuid.mUuid[14], &uuid5, 2);
+}
+
 bool
 SetJsObject(JSContext* aContext,
             const BluetoothValue& aValue,
