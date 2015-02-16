@@ -2069,21 +2069,10 @@ RestyleManager::TryStartingTransition(nsPresContext* aPresContext,
     return;
   }
 
-  // Notify the transition manager, and if it starts a transition,
-  // it will give us back a transition-covering style rule which
-  // we'll use to get *another* style context.  We want to ignore
-  // any already-running transitions, but cover up any that we're
-  // currently starting with their start value so we don't start
-  // them again for descendants that inherit that value.
-  nsCOMPtr<nsIStyleRule> coverRule =
-    aPresContext->TransitionManager()->StyleContextChanged(
-      aContent->AsElement(), aOldStyleContext, *aNewStyleContext);
-  if (coverRule) {
-    nsCOMArray<nsIStyleRule> rules;
-    rules.AppendObject(coverRule);
-    *aNewStyleContext = aPresContext->StyleSet()->
-                          ResolveStyleByAddingRules(*aNewStyleContext, rules);
-  }
+  // Notify the transition manager.  If it starts a transition,
+  // it might modify the new style context.
+  aPresContext->TransitionManager()->StyleContextChanged(
+    aContent->AsElement(), aOldStyleContext, aNewStyleContext);
 }
 
 static inline dom::Element*

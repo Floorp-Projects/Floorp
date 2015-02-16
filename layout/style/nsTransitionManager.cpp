@@ -103,13 +103,14 @@ CSSTransitionPlayer::GetAnimationManager() const
  * nsTransitionManager                                                       *
  *****************************************************************************/
 
-already_AddRefed<nsIStyleRule>
+void
 nsTransitionManager::StyleContextChanged(dom::Element *aElement,
                                          nsStyleContext *aOldStyleContext,
-                                         nsStyleContext *aNewStyleContext)
+                                         nsRefPtr<nsStyleContext>* aNewStyleContext /* inout */)
 {
-  NS_PRECONDITION(aOldStyleContext->GetPseudo() ==
-                      aNewStyleContext->GetPseudo(),
+  nsStyleContext* newStyleContext = *aNewStyleContext;
+
+  NS_PRECONDITION(aOldStyleContext->GetPseudo() == newStyleContext->GetPseudo(),
                   "pseudo type mismatch");
 
   if (mInAnimationOnlyStyleUpdate) {
@@ -118,16 +119,16 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     // animation styles so that we don't consider style changes
     // resulting from changes in the animation time for starting a
     // transition.
-    return nullptr;
+    return;
   }
 
   if (!mPresContext->IsDynamic()) {
     // For print or print preview, ignore transitions.
-    return nullptr;
+    return;
   }
 
   if (aOldStyleContext->HasPseudoElementData() !=
-      aNewStyleContext->HasPseudoElementData()) {
+      newStyleContext->HasPseudoElementData()) {
     // If the old style context and new style context differ in terms of
     // whether they're inside ::first-letter, ::first-line, or similar,
     // bail.  We can't hit this codepath for normal style changes
@@ -143,7 +144,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     // We could consider changing this handling, although it's worth
     // thinking about whether the code below could do anything weird in
     // this case.
-    return nullptr;
+    return;
   }
 
   // NOTE: Things in this function (and ConsiderStartingTransition)
@@ -152,12 +153,12 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
 
   // Return sooner (before the startedAny check below) for the most
   // common case: no transitions specified or running.
-  const nsStyleDisplay *disp = aNewStyleContext->StyleDisplay();
-  nsCSSPseudoElements::Type pseudoType = aNewStyleContext->GetPseudoType();
+  const nsStyleDisplay *disp = newStyleContext->StyleDisplay();
+  nsCSSPseudoElements::Type pseudoType = newStyleContext->GetPseudoType();
   if (pseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement) {
     if (pseudoType != nsCSSPseudoElements::ePseudo_before &&
         pseudoType != nsCSSPseudoElements::ePseudo_after) {
-      return nullptr;
+      return;
     }
 
     NS_ASSERTION((pseudoType == nsCSSPseudoElements::ePseudo_before &&
@@ -177,22 +178,22 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
       disp->mTransitionPropertyCount == 1 &&
       disp->mTransitions[0].GetDelay() == 0.0f &&
       disp->mTransitions[0].GetDuration() == 0.0f) {
-    return nullptr;
+    return;
   }
 
 
   // FIXME (bug 960465): This test should go away.
-  if (aNewStyleContext->PresContext()->RestyleManager()->
+  if (newStyleContext->PresContext()->RestyleManager()->
         IsProcessingAnimationStyleChange()) {
-    return nullptr;
+    return;
   }
 
-  if (aNewStyleContext->GetParent() &&
-      aNewStyleContext->GetParent()->HasPseudoElementData()) {
+  if (newStyleContext->GetParent() &&
+      newStyleContext->GetParent()->HasPseudoElementData()) {
     // Ignore transitions on things that inherit properties from
     // pseudo-elements.
     // FIXME (Bug 522599): Add tests for this.
-    return nullptr;
+    return;
   }
 
   NS_WARN_IF_FALSE(!nsLayoutUtils::AreAsyncAnimationsEnabled() ||
@@ -208,10 +209,10 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   if (collection) {
     nsStyleSet* styleSet = mPresContext->StyleSet();
     afterChangeStyle =
-      styleSet->ResolveStyleWithoutAnimation(aElement, aNewStyleContext,
+      styleSet->ResolveStyleWithoutAnimation(aElement, newStyleContext,
                                              eRestyle_CSSTransitions);
   } else {
-    afterChangeStyle = aNewStyleContext;
+    afterChangeStyle = newStyleContext;
   }
 
   // Per http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html
@@ -329,7 +330,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   }
 
   if (!startedAny) {
-    return nullptr;
+    return;
   }
 
   MOZ_ASSERT(collection,
@@ -347,8 +348,6 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   // descendants don't start their own transitions.  (In the case of
   // negative transition delay, this covering rule produces different
   // results than applying the transition rule immediately would).
-  // Our caller is responsible for restyling again using this covering
-  // rule.
 
   nsRefPtr<css::AnimValuesStyleRule> coverRule = new css::AnimValuesStyleRule;
 
@@ -370,7 +369,11 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   // creates a new style rule.
   collection->mStyleRuleRefreshTime = TimeStamp();
 
-  return coverRule.forget();
+  // Replace the new style context by appending the cover rule.
+  nsCOMArray<nsIStyleRule> rules;
+  rules.AppendObject(coverRule);
+  *aNewStyleContext = mPresContext->StyleSet()->
+                        ResolveStyleByAddingRules(*aNewStyleContext, rules);
 }
 
 void
