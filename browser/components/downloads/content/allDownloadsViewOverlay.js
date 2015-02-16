@@ -38,8 +38,6 @@ const DOWNLOAD_VIEW_SUPPORTED_COMMANDS =
   "downloadsCmd_open", "downloadsCmd_show", "downloadsCmd_retry",
   "downloadsCmd_openReferrer", "downloadsCmd_clearDownloads"];
 
-const NOT_AVAILABLE = Number.MAX_VALUE;
-
 /**
  * A download element shell is responsible for handling the commands and the
  * displayed data for a single download view element. The download element
@@ -62,23 +60,22 @@ const NOT_AVAILABLE = Number.MAX_VALUE;
  *        The data item of a the session download. Required if aPlacesNode is not set
  * @param [optional] aPlacesNode
  *        The places node for a past download. Required if aDataItem is not set.
- * @param [optional] aAnnotations
- *        Map containing annotations values, to speed up the initial loading.
+ * @param [optional] aPlacesMetaData
+ *        Object containing metadata from Places annotations values.
+ *        This is required when a Places node is provided on construction.
  */
-function DownloadElementShell(aDataItem, aPlacesNode, aAnnotations) {
+function DownloadElementShell(aDataItem, aPlacesNode, aPlacesMetaData) {
   this._element = document.createElement("richlistitem");
   this._element._shell = this;
 
   this._element.classList.add("download");
   this._element.classList.add("download-state");
 
-  if (aAnnotations) {
-    this._annotations = aAnnotations;
-  }
   if (aDataItem) {
     this.dataItem = aDataItem;
   }
   if (aPlacesNode) {
+    this.placesMetaData = aPlacesMetaData;
     this.placesNode = aPlacesNode;
   }
 }
@@ -130,12 +127,6 @@ DownloadElementShell.prototype = {
         throw new Error("Should always have either a dataItem or a placesNode");
       }
 
-      // Preserve the annotations map if this is the first loading and we got
-      // cached values.
-      if (this._placesNode || !this._annotations) {
-        this._annotations = new Map();
-      }
-
       this._placesNode = aValue;
 
       // We don't need to update the UI if we had a data item, because
@@ -181,36 +172,6 @@ DownloadElementShell.prototype = {
     }
 
     throw new Error("Unexpected download element state");
-  },
-
-  // Helper for getting a places annotation set for the download.
-  _getAnnotation(aAnnotation, aDefaultValue) {
-    let value;
-    if (this._annotations.has(aAnnotation)) {
-      value = this._annotations.get(aAnnotation);
-    }
-
-    // If the value is cached, or we know it doesn't exist, avoid a database
-    // lookup.
-    if (value === undefined) {
-      try {
-        value = PlacesUtils.annotations.getPageAnnotation(
-          this._downloadURIObj, aAnnotation);
-      } catch (ex) {
-        value = NOT_AVAILABLE;
-      }
-    }
-
-    if (value === NOT_AVAILABLE) {
-      if (aDefaultValue === undefined) {
-        throw new Error("Could not get required annotation '" + aAnnotation +
-                        "' for download with url '" + this.downloadURI + "'");
-      }
-      value = aDefaultValue;
-    }
-
-    this._annotations.set(aAnnotation, value);
-    return value;
   },
 
   _fetchTargetFileInfo(aUpdateMetaDataAndStatusUI = false) {
@@ -272,17 +233,6 @@ DownloadElementShell.prototype = {
     );
   },
 
-  _getAnnotatedMetaData() {
-    return JSON.parse(this._getAnnotation(DOWNLOAD_META_DATA_ANNO));
-  },
-
-  _extractFilePathAndNameFromFileURI(aFileURI) {
-    let file = Cc["@mozilla.org/network/protocol;1?name=file"]
-                .getService(Ci.nsIFileProtocolHandler)
-                .getFileFromURLSpec(aFileURI);
-    return [file.path, file.leafName];
-  },
-
   /**
    * Retrieve the meta data object for the download.  The following fields
    * may be set.
@@ -322,12 +272,15 @@ DownloadElementShell.prototype = {
         }
       } else {
         try {
-          this._metaData = this._getAnnotatedMetaData();
+          this._metaData = JSON.parse(this.placesMetaData.jsonDetails);
         } catch (ex) {
           this._metaData = {};
           if (this._targetFileInfoFetched && this._targetFileExists) {
-            this._metaData.state = this._targetFileSize > 0 ?
-              nsIDM.DOWNLOAD_FINISHED : nsIDM.DOWNLOAD_FAILED;
+            // For very old downloads without metadata, we assume that a zero
+            // byte file is a placeholder, and allow the download to restart.
+            this._metaData.state = this._targetFileSize > 0
+                                   ? nsIDM.DOWNLOAD_FINISHED
+                                   : nsIDM.DOWNLOAD_FAILED;
             this._metaData.fileSize = this._targetFileSize;
           }
 
@@ -336,10 +289,13 @@ DownloadElementShell.prototype = {
         }
 
         try {
-          let targetFileURI = this._getAnnotation(DESTINATION_FILE_URI_ANNO);
-          [this._metaData.filePath, this._metaData.fileName] =
-            this._extractFilePathAndNameFromFileURI(targetFileURI);
-          this._metaData.displayName = this._metaData.fileName;
+          let targetFile = Cc["@mozilla.org/network/protocol;1?name=file"]
+                             .getService(Ci.nsIFileProtocolHandler)
+                             .getFileFromURLSpec(this.placesMetaData
+                                                     .targetFileURISpec);
+          this._metaData.filePath = targetFile.path;
+          this._metaData.fileName = targetFile.leafName;
+          this._metaData.displayName = targetFile.leafName;
         } catch (ex) {
           this._metaData.displayName = this.downloadURI;
         }
@@ -772,35 +728,95 @@ DownloadsPlacesView.prototype = {
     return this._active;
   },
 
-  _getAnnotationsFor(aURI) {
-    if (!this._cachedAnnotations) {
-      this._cachedAnnotations = new Map();
-      for (let name of [ DESTINATION_FILE_URI_ANNO,
-                         DOWNLOAD_META_DATA_ANNO ]) {
-        let results = PlacesUtils.annotations.getAnnotationsWithName(name);
-        for (let result of results) {
-          let url = result.uri.spec;
-          if (!this._cachedAnnotations.has(url)) {
-            this._cachedAnnotations.set(url, new Map());
-          }
-          let m = this._cachedAnnotations.get(url);
-          m.set(result.annotationName, result.annotationValue);
+  /**
+   * Map containing a metadata object for each download source URI found in
+   * Places annotations, or null if this cache must be rebuilt.
+   */
+  _cachedPlacesMetaData: null,
+
+  /**
+   * This method exists in order to optimize the first load of the Downloads
+   * View, when Places annotations for history downloads must be read. In fact,
+   * annotations are stored in a single table, and reading all of them at once
+   * is much more efficient than an individual query.
+   *
+   * When this metod is first called, after the Places result container has been
+   * invalidated, it reads the annotations for all the history downloads.
+   *
+   * At this point, as metadata for the various elements is requested by the
+   * view, it is pulled from the cache and returned as an object.
+   *
+   * This works efficiently because the metadata is requested only for newly
+   * created element shells that contain a history download but don't have a
+   * matching session download, and at most one such element shell is created
+   * for each source URI.
+   *
+   * @param url
+   *        URI string of the Places node for which metadata is requested.
+   *
+   * @return Object of the form { targetFileURISpec, jsonDetails }.
+   *         Any of the properties may be missing from the object.
+   */
+  _getCachedPlacesMetaDataFor(url) {
+    if (!this._cachedPlacesMetaData) {
+      this._cachedPlacesMetaData = new Map();
+
+      // Use the destination file annotation to build the initial Map of items.
+      for (let result of PlacesUtils.annotations.getAnnotationsWithName(
+                                                 DESTINATION_FILE_URI_ANNO)) {
+        this._cachedPlacesMetaData.set(result.uri.spec, {
+          targetFileURISpec: result.annotationValue,
+        });
+      }
+
+      // Add the string with the JSON details from the metadata annotation.
+      for (let result of PlacesUtils.annotations.getAnnotationsWithName(
+                                                 DOWNLOAD_META_DATA_ANNO)) {
+        let metadata = this._cachedPlacesMetaData.get(result.uri.spec);
+
+        // The destination file annotation is expected to be present for all
+        // the downloads with the metadata annotation. If this is not the case,
+        // we simply ignore the item, as if it has no JSON details at all.
+        if (metadata) {
+          metadata.jsonDetails = result.annotationValue;
         }
       }
     }
 
-    let annotations = this._cachedAnnotations.get(aURI);
-    if (!annotations) {
-      // There are no annotations for this entry, that means it is quite old.
-      // Make up a fake annotations entry with default values.
-      annotations = new Map();
-      annotations.set(DESTINATION_FILE_URI_ANNO, NOT_AVAILABLE);
-    }
-    // The meta-data annotation has been added recently, so it's likely missing.
-    if (!annotations.has(DOWNLOAD_META_DATA_ANNO)) {
-      annotations.set(DOWNLOAD_META_DATA_ANNO, NOT_AVAILABLE);
-    }
-    return annotations;
+    let metadata = this._cachedPlacesMetaData.get(url);
+    this._cachedPlacesMetaData.delete(url);
+
+    // In the rare case where a history download is added again, but there is no
+    // corresponding session download, read the metadata from the database. This
+    // could potentially cause an inefficient database access for very old
+    // downloads with no metadata to begin with, but these should have been
+    // already deleted from history on a recent browser profile.
+    return metadata || this._getPlacesMetaDataFor(url);
+  },
+
+  /**
+   * Read the latest version of the Places metadata for the given URI.
+   *
+   * @param url
+   *        URI string of the Places node for which metadata is requested.
+   *
+   * @return Object of the form { targetFileURISpec, jsonDetails }.
+   *         Any of the properties may be missing from the object.
+   */
+  _getPlacesMetaDataFor(url) {
+    let metadata = {};
+
+    try {
+      let uri = NetUtil.newURI(url);
+      metadata = {
+        targetFileURISpec: PlacesUtils.annotations.getPageAnnotation(
+                                       uri, DESTINATION_FILE_URI_ANNO),
+      };
+      metadata.jsonDetails = PlacesUtils.annotations.getPageAnnotation(
+                                         uri, DOWNLOAD_META_DATA_ANNO);
+    } catch (ex) {}
+
+    return metadata;
   },
 
   /**
@@ -877,20 +893,30 @@ DownloadsPlacesView.prototype = {
     }
 
     if (shouldCreateShell) {
-      // Bug 836271: The annotations for a url should be cached only when the
-      // places node is available, i.e. when we know we we'd be notified for
-      // annotation changes. 
-      // Otherwise we may cache NOT_AVILABLE values first for a given session
-      // download, and later use these NOT_AVILABLE values when a history
-      // download for the same URL is added.
-      let cachedAnnotations = aPlacesNode ? this._getAnnotationsFor(downloadURI) : null;
-      let shell = new DownloadElementShell(aDataItem, aPlacesNode, cachedAnnotations);
+      // If we are adding a new history download here, it means there is no
+      // associated session download, thus we must read the Places metadata,
+      // because it will not be obscured by the session download.
+      let metaData = aPlacesNode
+                     ? this._getCachedPlacesMetaDataFor(aPlacesNode.uri)
+                     : null;
+      let shell = new DownloadElementShell(aDataItem, aPlacesNode, metaData);
       newOrUpdatedShell = shell;
       shellsForURI.add(shell);
       if (aDataItem) {
         this._viewItemsForDataItems.set(aDataItem, shell);
       }
     } else if (aPlacesNode) {
+      // We are updating information for a history download for which we have
+      // at least one download element shell already. There are two cases:
+      // 1) There are one or more download element shells for this source URI,
+      //    each with an associated session download. We update the Places node
+      //    because we may need it later, but we don't need to read the Places
+      //    metadata until the last session download is removed.
+      // 2) Occasionally, we may receive a duplicate notification for a history
+      //    download with no associated session download. We have exactly one
+      //    download element shell in this case, but the metdata cannot have
+      //    changed, just the reference to the Places node object is different.
+      // So, we update all the node references and keep the metadata intact.
       for (let shell of shellsForURI) {
         if (shell.placesNode != aPlacesNode) {
           shell.placesNode = aPlacesNode;
@@ -993,6 +1019,12 @@ DownloadsPlacesView.prototype = {
         this._downloadElementsShellsForURI.delete(aDataItem.uri);
       }
     } else {
+      // We have one download element shell containing both a session download
+      // and a history download, and we are now removing the session download.
+      // Previously, we did not use the Places metadata because it was obscured
+      // by the session download. Since this is no longer the case, we have to
+      // read the latest metadata before removing the session download.
+      shell.placesMetaData = this._getPlacesMetaDataFor(shell.placesNode.uri);
       shell.dataItem = null;
       // Move it below the session-download items;
       if (this._lastSessionDownloadElement == shell.element) {
@@ -1134,6 +1166,12 @@ DownloadsPlacesView.prototype = {
     if (!aContainer.containerOpen) {
       throw new Error("Root container for the downloads query cannot be closed");
     }
+
+    // When the container is invalidated, it means we are about to re-read all
+    // the information about history downloads from the database, discarding the
+    // download element shells, thus we fully rebuild the Places annotation
+    // cache with the latest values.
+    this._cachedPlacesMetaData = null;
 
     let suppressOnSelect = this._richlistbox.suppressOnSelect;
     this._richlistbox.suppressOnSelect = true;
