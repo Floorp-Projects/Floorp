@@ -1233,10 +1233,10 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
     return false;
   }
 
-  // Allow PR_CONNECT_RESET_ERROR only for whitelisted sites.
+  // Disallow PR_CONNECT_RESET_ERROR if fallback limit reached.
   if (err == PR_CONNECT_RESET_ERROR &&
-      !socketInfo->SharedState().IOLayerHelpers()
-        .isInsecureFallbackSite(socketInfo->GetHostName())) {
+      socketInfo->SharedState().IOLayerHelpers()
+        .fallbackLimitReached(socketInfo->GetHostName(), range.max)) {
     return false;
   }
 
