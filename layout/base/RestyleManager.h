@@ -19,6 +19,7 @@
 #include "nsRefreshDriver.h"
 #include "nsRefPtrHashtable.h"
 #include "nsCSSPseudoElements.h"
+#include "nsTransitionManager.h"
 
 class nsIFrame;
 class nsStyleChangeList;
@@ -433,8 +434,8 @@ public:
    */
   static bool ShouldLogRestyle(nsPresContext* aPresContext) {
     return aPresContext->RestyleLoggingEnabled() &&
-           (!aPresContext->RestyleManager()->
-               IsProcessingAnimationStyleChange() ||
+           (!aPresContext->TransitionManager()->
+               InAnimationOnlyStyleUpdate() ||
             AnimationRestyleLoggingEnabled());
   }
 
