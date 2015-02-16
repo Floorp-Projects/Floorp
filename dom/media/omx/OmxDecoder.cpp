@@ -600,7 +600,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
       // For some codecs, the length of first decoded frame after seek is 0.
       // Need to ignore it and continue to find the next one
       if (mVideoBuffer->range_length() == 0) {
-        ReleaseVideoBuffer();
+        PostReleaseVideoBuffer(mVideoBuffer, FenceHandle());
         findNextBuffer = true;
       }
     }

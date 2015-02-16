@@ -81,7 +81,11 @@ function memoryActorSupported (target) {
     return false;
   }
 
-  return !!target.getTrait("memoryActorAllocations");
+  // We need to test that both the root actor has `memoryActorAllocations`,
+  // which is in Gecko 38+, and also that the target has a memory actor. There
+  // are scenarios, like addon debugging, where memoryActorAllocations is available,
+  // but no memory actor (like addon debugging in Gecko 38+)
+  return !!target.getTrait("memoryActorAllocations") && target.hasActor("memory");
 }
 exports.memoryActorSupported = Task.async(memoryActorSupported);
 

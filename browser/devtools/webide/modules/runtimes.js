@@ -5,9 +5,9 @@
 const {Cu, Ci} = require("chrome");
 const {Devices} = Cu.import("resource://gre/modules/devtools/Devices.jsm");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
-const {Simulator} = Cu.import("resource://gre/modules/devtools/Simulator.jsm");
-const {ConnectionManager, Connection} = require("devtools/client/connection-manager");
+const {Connection} = require("devtools/client/connection-manager");
 const {DebuggerServer} = require("resource://gre/modules/devtools/dbg-server.jsm");
+const {Simulators} = require("devtools/webide/simulators");
 const discovery = require("devtools/toolkit/discovery/discovery");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const promise = require("promise");
@@ -193,14 +193,12 @@ let SimulatorScanner = {
 
   enable() {
     this._updateRuntimes = this._updateRuntimes.bind(this);
-    Simulator.on("register", this._updateRuntimes);
-    Simulator.on("unregister", this._updateRuntimes);
+    Simulators.on("updated", this._updateRuntimes);
     this._updateRuntimes();
   },
 
   disable() {
-    Simulator.off("register", this._updateRuntimes);
-    Simulator.off("unregister", this._updateRuntimes);
+    Simulators.off("updated", this._updateRuntimes);
   },
 
   _emitUpdated() {
@@ -208,11 +206,13 @@ let SimulatorScanner = {
   },
 
   _updateRuntimes() {
-    this._runtimes = [];
-    for (let name of Simulator.availableNames()) {
-      this._runtimes.push(new SimulatorRuntime(name));
-    }
-    this._emitUpdated();
+    Simulators.getAll().then(simulators => {
+      this._runtimes = [];
+      for (let simulator of simulators) {
+        this._runtimes.push(new SimulatorRuntime(simulator));
+      }
+      this._emitUpdated();
+    });
   },
 
   scan() {
@@ -542,28 +542,26 @@ WiFiRuntime.prototype = {
 // For testing use only
 exports._WiFiRuntime = WiFiRuntime;
 
-function SimulatorRuntime(name) {
-  this.name = name;
+function SimulatorRuntime(simulator) {
+  this.simulator = simulator;
 }
 
 SimulatorRuntime.prototype = {
   type: RuntimeTypes.SIMULATOR,
   connect: function(connection) {
-    let port = ConnectionManager.getFreeTCPPort();
-    let simulator = Simulator.getByName(this.name);
-    if (!simulator || !simulator.launch) {
-      return promise.reject(new Error("Can't find simulator: " + this.name));
-    }
-    return simulator.launch({port: port}).then(() => {
+    return this.simulator.launch().then(port => {
       connection.host = "localhost";
       connection.port = port;
       connection.keepConnecting = true;
-      connection.once(Connection.Events.DISCONNECTED, simulator.close);
+      connection.once(Connection.Events.DISCONNECTED, e => this.simulator.kill());
       connection.connect();
     });
   },
   get id() {
-    return this.name;
+    return this.simulator.id;
+  },
+  get name() {
+    return this.simulator.name;
   },
 };
 

@@ -29,7 +29,7 @@
     <key key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
   </keyset>
 
-  <vbox class="contentPane" flex="1">
+  <vbox class="contentPane largeDialogContainer" flex="1">
     <description id="permissionsText" control="url"/>
     <separator class="thin"/>
     <label id="urlLabel" control="url" value="&address.label;" accesskey="&address.accesskey;"/>

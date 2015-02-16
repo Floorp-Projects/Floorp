@@ -55,6 +55,15 @@
     }                                                                  \
   } while(0)
 
+#define ENSURE_GATT_MGR_IS_READY_VOID(gatt, runnable)                  \
+  do {                                                                 \
+    if (!gatt) {                                                       \
+      NS_NAMED_LITERAL_STRING(replyError, "GattManager is not ready"); \
+      DispatchBluetoothReply(runnable, BluetoothValue(), replyError);  \
+      return;                                                          \
+    }                                                                  \
+  } while(0)
+
 using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
@@ -1105,6 +1114,54 @@ BluetoothServiceBluedroid::IgnoreWaitingCall(BluetoothReplyRunnable* aRunnable)
 void
 BluetoothServiceBluedroid::ToggleCalls(BluetoothReplyRunnable* aRunnable)
 {
+}
+
+//
+// GATT Client
+//
+
+void
+BluetoothServiceBluedroid::ConnectGattClientInternal(
+  const nsAString& aAppUuid, const nsAString& aDeviceAddress,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->Connect(aAppUuid, aDeviceAddress, aRunnable);
+}
+
+void
+BluetoothServiceBluedroid::DisconnectGattClientInternal(
+  const nsAString& aAppUuid, const nsAString& aDeviceAddress,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->Disconnect(aAppUuid, aDeviceAddress, aRunnable);
+}
+
+void
+BluetoothServiceBluedroid::UnregisterGattClientInternal(
+  int aClientIf, BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->UnregisterClient(aClientIf, aRunnable);
 }
 
 //
