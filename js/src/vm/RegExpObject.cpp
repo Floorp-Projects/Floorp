@@ -67,7 +67,7 @@ RegExpObjectBuilder::getOrCreateClone(HandleObjectGroup group)
     MOZ_ASSERT(!reobj_);
     MOZ_ASSERT(group->clasp() == &RegExpObject::class_);
 
-    JSObject *parent = group->proto().toObject()->getParent();
+    RootedObject parent(cx, group->proto().toObject()->getParent());
 
     // Note: RegExp objects are always allocated in the tenured heap. This is
     // not strictly required, but simplifies embedding them in jitcode.
@@ -831,7 +831,7 @@ RegExpCompartment::createMatchResultTemplateObject(JSContext *cx)
     MOZ_ASSERT(!matchResultTemplateObject_);
 
     /* Create template array object */
-    RootedArrayObject templateObject(cx, NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject));
+    RootedArrayObject templateObject(cx, NewDenseUnallocatedArray(cx, 0, NullPtr(), TenuredObject));
     if (!templateObject)
         return matchResultTemplateObject_; // = nullptr
 

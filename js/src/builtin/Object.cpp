@@ -1140,7 +1140,7 @@ CreateObjectPrototype(JSContext *cx, JSProtoKey key)
      * Create |Object.prototype| first, mirroring CreateBlankProto but for the
      * prototype of the created object.
      */
-    RootedPlainObject objectProto(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr,
+    RootedPlainObject objectProto(cx, NewObjectWithGivenProto<PlainObject>(cx, NullPtr(),
                                                                            self, SingletonObject));
     if (!objectProto)
         return nullptr;

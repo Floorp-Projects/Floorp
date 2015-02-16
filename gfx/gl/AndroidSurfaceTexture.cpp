@@ -129,9 +129,11 @@ void
 AndroidSurfaceTexture::UpdateCanDetach()
 {
   // The API for attach/detach only exists on 16+, and PowerVR has some sort of
-  // fencing issue.
+  // fencing issue. Additionally, attach/detach seems to be busted on at least some
+  // Mali adapters (400MP2 for sure, bug 1131793)
   mCanDetach = AndroidBridge::Bridge()->GetAPIVersion() >= 16 &&
-    (!mAttachedContext || mAttachedContext->Vendor() != GLVendor::Imagination);
+    (!mAttachedContext || mAttachedContext->Vendor() != GLVendor::Imagination) &&
+    (!mAttachedContext || mAttachedContext->Vendor() != GLVendor::ARM /* Mali */);
 }
 
 bool

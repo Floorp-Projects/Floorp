@@ -221,10 +221,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitCompareS(LCompareS *lir);
     void visitCompareStrictS(LCompareStrictS *lir);
     void visitCompareVM(LCompareVM *lir);
-    void visitIsNullOrLikeUndefined(LIsNullOrLikeUndefined *lir);
-    void visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBranch *lir);
-    void visitEmulatesUndefined(LEmulatesUndefined *lir);
-    void visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir);
+    void visitIsNullOrLikeUndefinedV(LIsNullOrLikeUndefinedV *lir);
+    void visitIsNullOrLikeUndefinedT(LIsNullOrLikeUndefinedT *lir);
+    void visitIsNullOrLikeUndefinedAndBranchV(LIsNullOrLikeUndefinedAndBranchV *lir);
+    void visitIsNullOrLikeUndefinedAndBranchT(LIsNullOrLikeUndefinedAndBranchT *lir);
     void emitConcat(LInstruction *lir, Register lhs, Register rhs, Register output);
     void visitConcat(LConcat *lir);
     void visitCharCodeAt(LCharCodeAt *lir);
@@ -245,6 +245,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitLoadElementHole(LLoadElementHole *lir);
     void visitLoadUnboxedPointerV(LLoadUnboxedPointerV *lir);
     void visitLoadUnboxedPointerT(LLoadUnboxedPointerT *lir);
+    void visitUnboxObjectOrNull(LUnboxObjectOrNull *lir);
     void visitStoreElementT(LStoreElementT *lir);
     void visitStoreElementV(LStoreElementV *lir);
     void visitStoreElementHoleT(LStoreElementHoleT *lir);

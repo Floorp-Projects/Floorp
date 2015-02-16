@@ -310,7 +310,8 @@ class GlobalObject : public NativeObject
      * Identical to createBlankPrototype, but uses proto as the [[Prototype]]
      * of the returned blank prototype.
      */
-    NativeObject *createBlankPrototypeInheriting(JSContext *cx, const js::Class *clasp, JSObject &proto);
+    NativeObject *createBlankPrototypeInheriting(JSContext *cx, const js::Class *clasp,
+                                                 HandleObject proto);
 
     template <typename T>
     T *createBlankPrototype(JSContext *cx) {
@@ -321,7 +322,7 @@ class GlobalObject : public NativeObject
     NativeObject *getOrCreateObjectPrototype(JSContext *cx) {
         if (functionObjectClassesInitialized())
             return &getPrototype(JSProto_Object).toObject().as<NativeObject>();
-        Rooted<GlobalObject*> self(cx, this);
+        RootedGlobalObject self(cx, this);
         if (!ensureConstructor(cx, self, JSProto_Object))
             return nullptr;
         return &self->getPrototype(JSProto_Object).toObject().as<NativeObject>();
@@ -330,7 +331,7 @@ class GlobalObject : public NativeObject
     NativeObject *getOrCreateFunctionPrototype(JSContext *cx) {
         if (functionObjectClassesInitialized())
             return &getPrototype(JSProto_Function).toObject().as<NativeObject>();
-        Rooted<GlobalObject*> self(cx, this);
+        RootedGlobalObject self(cx, this);
         if (!ensureConstructor(cx, self, JSProto_Object))
             return nullptr;
         return &self->getPrototype(JSProto_Function).toObject().as<NativeObject>();
@@ -382,6 +383,13 @@ class GlobalObject : public NativeObject
         if (regexpClassInitialized())
             return &getPrototype(JSProto_RegExp).toObject();
         return nullptr;
+    }
+
+    static NativeObject *getOrCreateSavedFramePrototype(JSContext *cx,
+                                                        Handle<GlobalObject*> global) {
+        if (!ensureConstructor(cx, global, JSProto_SavedFrame))
+            return nullptr;
+        return &global->getPrototype(JSProto_SavedFrame).toObject().as<NativeObject>();
     }
 
     static JSObject *getOrCreateArrayBufferPrototype(JSContext *cx, Handle<GlobalObject*> global) {
@@ -483,7 +491,7 @@ class GlobalObject : public NativeObject
         Value v = getSlotRef(slot);
         if (v.isObject())
             return &v.toObject();
-        Rooted<GlobalObject*> self(cx, this);
+        RootedGlobalObject self(cx, this);
         if (!init(cx, self))
             return nullptr;
         return &self->getSlot(slot).toObject();
@@ -561,7 +569,7 @@ class GlobalObject : public NativeObject
     }
 
     JSObject *getOrCreateDataViewPrototype(JSContext *cx) {
-        Rooted<GlobalObject*> self(cx, this);
+        RootedGlobalObject self(cx, this);
         if (!ensureConstructor(cx, self, JSProto_DataView))
             return nullptr;
         return &self->getPrototype(JSProto_DataView).toObject();
@@ -867,8 +875,8 @@ GenericCreatePrototype(JSContext *cx, JSProtoKey key)
     JSProtoKey parentKey = ParentKeyForStandardClass(key);
     if (!GlobalObject::ensureConstructor(cx, cx->global(), parentKey))
         return nullptr;
-    JSObject *parentProto = &cx->global()->getPrototype(parentKey).toObject();
-    return cx->global()->createBlankPrototypeInheriting(cx, clasp, *parentProto);
+    RootedObject parentProto(cx, &cx->global()->getPrototype(parentKey).toObject());
+    return cx->global()->createBlankPrototypeInheriting(cx, clasp, parentProto);
 }
 
 inline JSProtoKey

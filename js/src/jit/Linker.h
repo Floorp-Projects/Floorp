@@ -28,8 +28,15 @@ class Linker
         return nullptr;
     }
 
+  public:
+    explicit Linker(MacroAssembler &masm)
+      : masm(masm)
+    {
+        masm.finish();
+    }
+
     template <AllowGC allowGC>
-    JitCode *newCode(JSContext *cx, ExecutableAllocator *execAlloc, CodeKind kind) {
+    JitCode *newCode(JSContext *cx, CodeKind kind) {
         MOZ_ASSERT(masm.numAsmJSAbsoluteLinks() == 0);
 
         gc::AutoSuppressGC suppressGC(cx);
@@ -44,7 +51,8 @@ class Linker
         // ExecutableAllocator requires bytesNeeded to be word-size aligned.
         bytesNeeded = AlignBytes(bytesNeeded, sizeof(void *));
 
-        uint8_t *result = (uint8_t *)execAlloc->alloc(bytesNeeded, &pool, kind);
+        ExecutableAllocator &execAlloc = cx->runtime()->jitRuntime()->execAlloc();
+        uint8_t *result = (uint8_t *)execAlloc.alloc(bytesNeeded, &pool, kind);
         if (!result)
             return fail(cx);
 
@@ -65,26 +73,6 @@ class Linker
         if (masm.embedsNurseryPointers())
             cx->runtime()->gc.storeBuffer.putWholeCellFromMainThread(code);
         return code;
-    }
-
-  public:
-    explicit Linker(MacroAssembler &masm)
-      : masm(masm)
-    {
-        masm.finish();
-    }
-
-    template <AllowGC allowGC>
-    JitCode *newCode(JSContext *cx, CodeKind kind) {
-        return newCode<allowGC>(cx, cx->runtime()->jitRuntime()->execAlloc(), kind);
-    }
-
-    JitCode *newCodeForIonScript(JSContext *cx) {
-        ExecutableAllocator *alloc = cx->runtime()->jitRuntime()->getIonAlloc(cx);
-        if (!alloc)
-            return nullptr;
-
-        return newCode<CanGC>(cx, alloc, ION_CODE);
     }
 };
 

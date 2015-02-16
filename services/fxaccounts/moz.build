@@ -6,7 +6,9 @@
 
 DIRS += ['interfaces']
 
-TEST_DIRS += ['tests']
+MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
+
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
 EXTRA_JS_MODULES += [
   'Credentials.jsm',

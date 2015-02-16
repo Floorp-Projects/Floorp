@@ -60,8 +60,6 @@ using mozilla::PodCopy;
 using mozilla::PodZero;
 using mozilla::RotateLeft;
 
-typedef Rooted<GlobalObject *> RootedGlobalObject;
-
 /* static */ BindingIter
 Bindings::argumentsBinding(ExclusiveContext *cx, InternalBindingsHandle bindings)
 {
@@ -1358,7 +1356,7 @@ const Class ScriptSourceObject::class_ = {
 ScriptSourceObject *
 ScriptSourceObject::create(ExclusiveContext *cx, ScriptSource *source)
 {
-    RootedObject object(cx, NewObjectWithGivenProto(cx, &class_, nullptr, cx->global()));
+    RootedObject object(cx, NewObjectWithGivenProto(cx, &class_, NullPtr(), cx->global()));
     if (!object)
         return nullptr;
     RootedScriptSource sourceObject(cx, &object->as<ScriptSourceObject>());
@@ -3764,7 +3762,7 @@ LazyScript::CreateRaw(ExclusiveContext *cx, HandleFunction fun,
     if (!res)
         return nullptr;
 
-    cx->compartment()->scheduleDelazificationForDebugMode();
+    cx->compartment()->scheduleDelazificationForDebugger();
 
     return new (res) LazyScript(fun, table.forget(), packed, begin, end, lineno, column);
 }

@@ -79,7 +79,7 @@ public:
   int32_t mIdentifier;
   CSSIntPoint mPagePoint;
   CSSIntPoint mClientPoint;
-  nsIntPoint mScreenPoint;
+  LayoutDeviceIntPoint mScreenPoint;
   nsIntPoint mRadius;
   float mRotationAngle;
   float mForce;

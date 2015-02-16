@@ -81,6 +81,7 @@ FLAVORS = {
 
 
 class MochitestRunner(MozbuildObject):
+
     """Easily run mochitests.
 
     This currently contains just the basics for running mochitests. We may want
@@ -91,8 +92,12 @@ class MochitestRunner(MozbuildObject):
         import mozinfo
         appname = 'webapprt-stub' + mozinfo.info.get('bin_suffix', '')
         if sys.platform.startswith('darwin'):
-            appname = os.path.join(self.distdir, self.substs['MOZ_MACBUNDLE_NAME'],
-            'Contents', 'Resources', appname)
+            appname = os.path.join(
+                self.distdir,
+                self.substs['MOZ_MACBUNDLE_NAME'],
+                'Contents',
+                'Resources',
+                appname)
         else:
             appname = os.path.join(self.distdir, 'bin', appname)
         return appname
@@ -106,12 +111,24 @@ class MochitestRunner(MozbuildObject):
             sys.path.append(build_path)
 
         self.tests_dir = os.path.join(self.topobjdir, '_tests')
-        self.mochitest_dir = os.path.join(self.tests_dir, 'testing', 'mochitest')
+        self.mochitest_dir = os.path.join(
+            self.tests_dir,
+            'testing',
+            'mochitest')
         self.bin_dir = os.path.join(self.topobjdir, 'dist', 'bin')
 
-    def run_b2g_test(self, test_paths=None, b2g_home=None, xre_path=None,
-                     total_chunks=None, this_chunk=None, no_window=None,
-                     repeat=0, run_until_failure=False, chrome=False, **kwargs):
+    def run_b2g_test(
+            self,
+            test_paths=None,
+            b2g_home=None,
+            xre_path=None,
+            total_chunks=None,
+            this_chunk=None,
+            no_window=None,
+            repeat=0,
+            run_until_failure=False,
+            chrome=False,
+            **kwargs):
         """Runs a b2g mochitest.
 
         test_paths is an enumerable of paths to tests. It can be a relative path
@@ -137,7 +154,7 @@ class MochitestRunner(MozbuildObject):
             path = os.path.join(self.mochitest_dir, 'runtestsb2g.py')
             with open(path, 'r') as fh:
                 imp.load_module('mochitest', fh, path,
-                    ('.py', 'r', imp.PY_SOURCE))
+                                ('.py', 'r', imp.PY_SOURCE))
 
             import mochitest
             from mochitest_options import B2GOptions
@@ -147,11 +164,19 @@ class MochitestRunner(MozbuildObject):
 
         if test_path:
             if chrome:
-                test_root_file = mozpack.path.join(self.mochitest_dir, 'chrome', test_path)
+                test_root_file = mozpack.path.join(
+                    self.mochitest_dir,
+                    'chrome',
+                    test_path)
             else:
-                test_root_file = mozpack.path.join(self.mochitest_dir, 'tests', test_path)
+                test_root_file = mozpack.path.join(
+                    self.mochitest_dir,
+                    'tests',
+                    test_path)
             if not os.path.exists(test_root_file):
-                print('Specified test path does not exist: %s' % test_root_file)
+                print(
+                    'Specified test path does not exist: %s' %
+                    test_root_file)
                 return 1
             options.testPath = test_path
 
@@ -163,7 +188,9 @@ class MochitestRunner(MozbuildObject):
         options.repeat = repeat
         options.runUntilFailure = run_until_failure
 
-        options.symbolsPath = os.path.join(self.distdir, 'crashreporter-symbols')
+        options.symbolsPath = os.path.join(
+            self.distdir,
+            'crashreporter-symbols')
 
         options.consoleLevel = 'INFO'
         if conditions.is_b2g_desktop(self):
@@ -190,15 +217,46 @@ class MochitestRunner(MozbuildObject):
         options.chrome = chrome
         return mochitest.run_remote_mochitests(parser, options)
 
-    def run_desktop_test(self, context, suite=None, test_paths=None, debugger=None,
-        debugger_args=None, slowscript=False, screenshot_on_fail = False, shuffle=False, closure_behaviour='auto',
-        rerun_failures=False, no_autorun=False, repeat=0, run_until_failure=False,
-        slow=False, chunk_by_dir=0, total_chunks=None, this_chunk=None, extraPrefs=[],
-        jsdebugger=False, debug_on_failure=False, start_at=None, end_at=None,
-        e10s=False, strict_content_sandbox=False, nested_oop=False, dmd=False, dump_output_directory=None,
-        dump_about_memory_after_test=False, dump_dmd_after_test=False,
-        install_extension=None, quiet=False, environment=[], app_override=None, bisectChunk=None, runByDir=False,
-        useTestMediaDevices=False, timeout=None, **kwargs):
+    def run_desktop_test(
+            self,
+            context,
+            suite=None,
+            test_paths=None,
+            debugger=None,
+            debugger_args=None,
+            slowscript=False,
+            screenshot_on_fail=False,
+            shuffle=False,
+            closure_behaviour='auto',
+            rerun_failures=False,
+            no_autorun=False,
+            repeat=0,
+            run_until_failure=False,
+            slow=False,
+            chunk_by_dir=0,
+            total_chunks=None,
+            this_chunk=None,
+            extraPrefs=[],
+            jsdebugger=False,
+            debug_on_failure=False,
+            start_at=None,
+            end_at=None,
+            e10s=False,
+            strict_content_sandbox=False,
+            nested_oop=False,
+            dmd=False,
+            dump_output_directory=None,
+            dump_about_memory_after_test=False,
+            dump_dmd_after_test=False,
+            install_extension=None,
+            quiet=False,
+            environment=[],
+            app_override=None,
+            bisectChunk=None,
+            runByDir=False,
+            useTestMediaDevices=False,
+            timeout=None,
+            **kwargs):
         """Runs a mochitest.
 
         test_paths are path to tests. They can be a relative path from the
@@ -227,9 +285,12 @@ class MochitestRunner(MozbuildObject):
 
         # Make absolute paths relative before calling os.chdir() below.
         if test_paths:
-            test_paths = [self._wrap_path_argument(p).relpath() if os.path.isabs(p) else p for p in test_paths]
+            test_paths = [self._wrap_path_argument(
+                p).relpath() if os.path.isabs(p) else p for p in test_paths]
 
-        failure_file_path = os.path.join(self.statedir, 'mochitest_failures.json')
+        failure_file_path = os.path.join(
+            self.statedir,
+            'mochitest_failures.json')
 
         if rerun_failures and not os.path.exists(failure_file_path):
             print('No failure file present. Did you run mochitests before?')
@@ -241,7 +302,7 @@ class MochitestRunner(MozbuildObject):
             path = os.path.join(self.mochitest_dir, 'runtests.py')
             with open(path, 'r') as fh:
                 imp.load_module('mochitest', fh, path,
-                    ('.py', 'r', imp.PY_SOURCE))
+                                ('.py', 'r', imp.PY_SOURCE))
 
         import mochitest
         from manifestparser import TestManifest
@@ -253,7 +314,7 @@ class MochitestRunner(MozbuildObject):
         # Automation installs its own stream handler to stdout. Since we want
         # all logging to go through us, we just remove their handler.
         remove_handlers = [l for l in logging.getLogger().handlers
-            if isinstance(l, logging.StreamHandler)]
+                           if isinstance(l, logging.StreamHandler)]
         for handler in remove_handlers:
             logging.getLogger().removeHandler(handler)
 
@@ -308,7 +369,9 @@ class MochitestRunner(MozbuildObject):
         options.runSlower = slow
         options.testingModulesDir = os.path.join(self.tests_dir, 'modules')
         options.extraProfileFiles.append(os.path.join(self.distdir, 'plugins'))
-        options.symbolsPath = os.path.join(self.distdir, 'crashreporter-symbols')
+        options.symbolsPath = os.path.join(
+            self.distdir,
+            'crashreporter-symbols')
         options.chunkByDir = chunk_by_dir
         options.totalChunks = total_chunks
         options.thisChunk = this_chunk
@@ -329,11 +392,14 @@ class MochitestRunner(MozbuildObject):
         options.runByDir = runByDir
         options.useTestMediaDevices = useTestMediaDevices
         if timeout:
-          options.timeout = int(timeout)
+            options.timeout = int(timeout)
 
         options.failureFile = failure_file_path
-        if install_extension != None:
-            options.extensionsToInstall = [os.path.join(self.topsrcdir,install_extension)]
+        if install_extension is not None:
+            options.extensionsToInstall = [
+                os.path.join(
+                    self.topsrcdir,
+                    install_extension)]
 
         for k, v in kwargs.iteritems():
             setattr(options, k, v)
@@ -341,18 +407,22 @@ class MochitestRunner(MozbuildObject):
         if test_paths:
             resolver = self._spawn(TestResolver)
 
-            tests = list(resolver.resolve_tests(paths=test_paths, flavor=flavor))
+            tests = list(
+                resolver.resolve_tests(
+                    paths=test_paths,
+                    flavor=flavor))
 
             if not tests:
                 print('No tests could be found in the path specified. Please '
-                    'specify a path that is a test file or is a directory '
-                    'containing tests.')
+                      'specify a path that is a test file or is a directory '
+                      'containing tests.')
                 return 1
 
             manifest = TestManifest()
             manifest.tests.extend(tests)
 
-            if len(tests) == 1 and closure_behaviour == 'auto' and suite == 'plain':
+            if len(
+                    tests) == 1 and closure_behaviour == 'auto' and suite == 'plain':
                 options.closeWhenDone = False
 
             options.manifestFile = manifest
@@ -364,7 +434,7 @@ class MochitestRunner(MozbuildObject):
             options.debugger = debugger
 
         if debugger_args:
-            if options.debugger == None:
+            if options.debugger is None:
                 print("--debugger-args passed, but no debugger specified.")
                 return 1
             options.debuggerArgs = debugger_args
@@ -375,14 +445,22 @@ class MochitestRunner(MozbuildObject):
             elif app_override:
                 options.app = app_override
             if options.gmp_path is None:
-                # Need to fix the location of gmp_fake which might not be shipped in the binary
+                # Need to fix the location of gmp_fake which might not be
+                # shipped in the binary
                 bin_path = self.get_binary_path()
-                options.gmp_path = os.path.join(os.path.dirname(bin_path), 'gmp-fake', '1.0')
+                options.gmp_path = os.path.join(
+                    os.path.dirname(bin_path),
+                    'gmp-fake',
+                    '1.0')
                 options.gmp_path += os.pathsep
-                options.gmp_path += os.path.join(os.path.dirname(bin_path), 'gmp-clearkey', '0.1')
+                options.gmp_path += os.path.join(
+                    os.path.dirname(bin_path),
+                    'gmp-clearkey',
+                    '0.1')
 
-
-        logger_options = {key: value for key, value in vars(options).iteritems() if key.startswith('log')}
+        logger_options = {
+            key: value for key,
+            value in vars(options).iteritems() if key.startswith('log')}
         runner = mochitest.Mochitest(logger_options)
         options = opts.verifyOptions(options, runner)
 
@@ -414,12 +492,17 @@ def MochitestCommand(func):
     # (modified) function. Here, we chain decorators onto the passed in
     # function.
 
-    debugger = CommandArgument('--debugger', '-d', metavar='DEBUGGER',
+    debugger = CommandArgument(
+        '--debugger',
+        '-d',
+        metavar='DEBUGGER',
         help='Debugger binary to run test in. Program name or path.')
     func = debugger(func)
 
-    debugger_args = CommandArgument('--debugger-args',
-        metavar='DEBUGGER_ARGS', help='Arguments to pass to the debugger.')
+    debugger_args = CommandArgument(
+        '--debugger-args',
+        metavar='DEBUGGER_ARGS',
+        help='Arguments to pass to the debugger.')
     func = debugger_args(func)
 
     # Bug 933807 introduced JS_DISABLE_SLOW_SCRIPT_SIGNALS to avoid clever
@@ -427,219 +510,300 @@ def MochitestCommand(func):
     # code. If we don't pass this, the user will need to periodically type
     # "continue" to (safely) resume execution. There are ways to implement
     # automatic resuming; see the bug.
-    slowscript = CommandArgument('--slowscript', action='store_true',
+    slowscript = CommandArgument(
+        '--slowscript',
+        action='store_true',
         help='Do not set the JS_DISABLE_SLOW_SCRIPT_SIGNALS env variable; when not set, recoverable but misleading SIGSEGV instances may occur in Ion/Odin JIT code')
     func = slowscript(func)
 
-    screenshot_on_fail = CommandArgument('--screenshot-on-fail', action='store_true',
+    screenshot_on_fail = CommandArgument(
+        '--screenshot-on-fail',
+        action='store_true',
         help='Take screenshots on all test failures. Set $MOZ_UPLOAD_DIR to a directory for storing the screenshots.')
     func = screenshot_on_fail(func)
 
     shuffle = CommandArgument('--shuffle', action='store_true',
-        help='Shuffle execution order.')
+                              help='Shuffle execution order.')
     func = shuffle(func)
 
-    keep_open = CommandArgument('--keep-open', action='store_const',
-        dest='closure_behaviour', const='open', default='auto',
+    keep_open = CommandArgument(
+        '--keep-open',
+        action='store_const',
+        dest='closure_behaviour',
+        const='open',
+        default='auto',
         help='Always keep the browser open after tests complete.')
     func = keep_open(func)
 
-    autoclose = CommandArgument('--auto-close', action='store_const',
-        dest='closure_behaviour', const='close', default='auto',
+    autoclose = CommandArgument(
+        '--auto-close',
+        action='store_const',
+        dest='closure_behaviour',
+        const='close',
+        default='auto',
         help='Always close the browser after tests complete.')
     func = autoclose(func)
 
-    rerun = CommandArgument('--rerun-failures', action='store_true',
+    rerun = CommandArgument(
+        '--rerun-failures',
+        action='store_true',
         help='Run only the tests that failed during the last test run.')
     func = rerun(func)
 
-    autorun = CommandArgument('--no-autorun', action='store_true',
+    autorun = CommandArgument(
+        '--no-autorun',
+        action='store_true',
         help='Do not starting running tests automatically.')
     func = autorun(func)
 
     repeat = CommandArgument('--repeat', type=int, default=0,
-        help='Repeat the test the given number of times.')
+                             help='Repeat the test the given number of times.')
     func = repeat(func)
 
-    runUntilFailure = CommandArgument("--run-until-failure", action='store_true',
-        help='Run tests repeatedly and stops on the first time a test fails. ' \
-             'Default cap is 30 runs, which can be overwritten ' \
-             'with the --repeat parameter.')
+    runUntilFailure = CommandArgument(
+        "--run-until-failure",
+        action='store_true',
+        help='Run tests repeatedly and stops on the first time a test fails. '
+        'Default cap is 30 runs, which can be overwritten '
+        'with the --repeat parameter.')
     func = runUntilFailure(func)
 
     slow = CommandArgument('--slow', action='store_true',
-        help='Delay execution between tests.')
+                           help='Delay execution between tests.')
     func = slow(func)
 
-    end_at = CommandArgument('--end-at', type=str,
+    end_at = CommandArgument(
+        '--end-at',
+        type=str,
         help='Stop running the test sequence at this test.')
     func = end_at(func)
 
-    start_at = CommandArgument('--start-at', type=str,
+    start_at = CommandArgument(
+        '--start-at',
+        type=str,
         help='Start running the test sequence at this test.')
     func = start_at(func)
 
-    chunk_dir = CommandArgument('--chunk-by-dir', type=int,
+    chunk_dir = CommandArgument(
+        '--chunk-by-dir',
+        type=int,
         help='Group tests together in chunks by this many top directories.')
     func = chunk_dir(func)
 
-    chunk_total = CommandArgument('--total-chunks', type=int,
+    chunk_total = CommandArgument(
+        '--total-chunks',
+        type=int,
         help='Total number of chunks to split tests into.')
     func = chunk_total(func)
 
-    this_chunk = CommandArgument('--this-chunk', type=int,
+    this_chunk = CommandArgument(
+        '--this-chunk',
+        type=int,
         help='If running tests by chunks, the number of the chunk to run.')
     func = this_chunk(func)
 
-    debug_on_failure = CommandArgument('--debug-on-failure', action='store_true',
-        help='Breaks execution and enters the JS debugger on a test failure. ' \
-             'Should be used together with --jsdebugger.')
+    debug_on_failure = CommandArgument(
+        '--debug-on-failure',
+        action='store_true',
+        help='Breaks execution and enters the JS debugger on a test failure. '
+        'Should be used together with --jsdebugger.')
     func = debug_on_failure(func)
 
     setpref = CommandArgument('--setpref', default=[], action='append',
-					 metavar='PREF=VALUE', dest='extraPrefs',
-					 help='defines an extra user preference')
+                              metavar='PREF=VALUE', dest='extraPrefs',
+                              help='defines an extra user preference')
     func = setpref(func)
 
-    jsdebugger = CommandArgument('--jsdebugger', action='store_true',
+    jsdebugger = CommandArgument(
+        '--jsdebugger',
+        action='store_true',
         help='Start the browser JS debugger before running the test. Implies --no-autorun.')
     func = jsdebugger(func)
 
-    e10s = CommandArgument('--e10s', action='store_true',
+    e10s = CommandArgument(
+        '--e10s',
+        action='store_true',
         help='Run tests with electrolysis preferences and test filtering enabled.')
     func = e10s(func)
 
-    strict_content_sandbox = CommandArgument('--strict-content-sandbox', action='store_true',
+    strict_content_sandbox = CommandArgument(
+        '--strict-content-sandbox',
+        action='store_true',
         help='Run tests with a more strict content sandbox (Windows only).')
     func = strict_content_sandbox(func)
 
-    this_chunk = CommandArgument('--nested_oop', action='store_true',
+    this_chunk = CommandArgument(
+        '--nested_oop',
+        action='store_true',
         help='Run tests with nested oop preferences and test filtering enabled.')
     func = this_chunk(func)
 
     dmd = CommandArgument('--dmd', action='store_true',
-        help='Run tests with DMD active.')
+                          help='Run tests with DMD active.')
     func = dmd(func)
 
-    dumpAboutMemory = CommandArgument('--dump-about-memory-after-test', action='store_true',
+    dumpAboutMemory = CommandArgument(
+        '--dump-about-memory-after-test',
+        action='store_true',
         help='Dump an about:memory log after every test.')
     func = dumpAboutMemory(func)
 
     dumpDMD = CommandArgument('--dump-dmd-after-test', action='store_true',
-        help='Dump a DMD log after every test.')
+                              help='Dump a DMD log after every test.')
     func = dumpDMD(func)
 
-    dumpOutputDirectory = CommandArgument('--dump-output-directory', action='store',
+    dumpOutputDirectory = CommandArgument(
+        '--dump-output-directory',
+        action='store',
         help='Specifies the directory in which to place dumped memory reports.')
     func = dumpOutputDirectory(func)
 
-    path = CommandArgument('test_paths', default=None, nargs='*',
+    path = CommandArgument(
+        'test_paths',
+        default=None,
+        nargs='*',
         metavar='TEST',
-        help='Test to run. Can be specified as a single file, a ' \
-            'directory, or omitted. If omitted, the entire test suite is ' \
-            'executed.')
+        help='Test to run. Can be specified as a single file, a '
+        'directory, or omitted. If omitted, the entire test suite is '
+        'executed.')
     func = path(func)
 
-    install_extension = CommandArgument('--install-extension',
-        help='Install given extension before running selected tests. ' \
-            'Parameter is a path to xpi file.')
+    install_extension = CommandArgument(
+        '--install-extension',
+        help='Install given extension before running selected tests. '
+        'Parameter is a path to xpi file.')
     func = install_extension(func)
 
-    quiet = CommandArgument('--quiet', default=False, action='store_true',
+    quiet = CommandArgument(
+        '--quiet',
+        default=False,
+        action='store_true',
         help='Do not print test log lines unless a failure occurs.')
     func = quiet(func)
 
-    setenv = CommandArgument('--setenv', default=[], action='append',
-                             metavar='NAME=VALUE', dest='environment',
-                             help="Sets the given variable in the application's environment")
+    setenv = CommandArgument(
+        '--setenv',
+        default=[],
+        action='append',
+        metavar='NAME=VALUE',
+        dest='environment',
+        help="Sets the given variable in the application's environment")
     func = setenv(func)
 
-    runbydir = CommandArgument('--run-by-dir', default=False,
-                                 action='store_true',
-                                 dest='runByDir',
+    runbydir = CommandArgument(
+        '--run-by-dir',
+        default=False,
+        action='store_true',
+        dest='runByDir',
         help='Run each directory in a single browser instance with a fresh profile.')
     func = runbydir(func)
 
-    bisect_chunk = CommandArgument('--bisect-chunk', type=str,
-                                 dest='bisectChunk',
+    bisect_chunk = CommandArgument(
+        '--bisect-chunk',
+        type=str,
+        dest='bisectChunk',
         help='Specify the failing test name to find the previous tests that may be causing the failure.')
     func = bisect_chunk(func)
 
-    test_media = CommandArgument('--use-test-media-devices', default=False,
-                                 action='store_true',
-                                 dest='useTestMediaDevices',
+    test_media = CommandArgument(
+        '--use-test-media-devices',
+        default=False,
+        action='store_true',
+        dest='useTestMediaDevices',
         help='Use test media device drivers for media testing.')
     func = test_media(func)
 
-    app_override = CommandArgument('--app-override', default=None, action='store',
-        help="Override the default binary used to run tests with the path you provide, e.g. " \
-            " --app-override /usr/bin/firefox . " \
-            "If you have run ./mach package beforehand, you can specify 'dist' to " \
-            "run tests against the distribution bundle's binary.");
+    app_override = CommandArgument(
+        '--app-override',
+        default=None,
+        action='store',
+        help="Override the default binary used to run tests with the path you provide, e.g. "
+        " --app-override /usr/bin/firefox . "
+        "If you have run ./mach package beforehand, you can specify 'dist' to "
+        "run tests against the distribution bundle's binary.")
     func = app_override(func)
 
-    timeout = CommandArgument('--timeout', default=None,
-        help='The per-test timeout time in seconds (default: 60 seconds)');
+    timeout = CommandArgument(
+        '--timeout',
+        default=None,
+        help='The per-test timeout time in seconds (default: 60 seconds)')
     func = timeout(func)
 
     return func
 
+
 def B2GCommand(func):
     """Decorator that adds shared command arguments to b2g mochitest commands."""
 
-    busybox = CommandArgument('--busybox', default=None,
+    busybox = CommandArgument(
+        '--busybox',
+        default=None,
         help='Path to busybox binary to install on device')
     func = busybox(func)
 
     logdir = CommandArgument('--logdir', default=None,
-        help='directory to store log files')
+                             help='directory to store log files')
     func = logdir(func)
 
     profile = CommandArgument('--profile', default=None,
-        help='for desktop testing, the path to the \
+                              help='for desktop testing, the path to the \
               gaia profile to use')
     func = profile(func)
 
     geckopath = CommandArgument('--gecko-path', default=None,
-        help='the path to a gecko distribution that should \
+                                help='the path to a gecko distribution that should \
               be installed on the emulator prior to test')
     func = geckopath(func)
 
-    nowindow = CommandArgument('--no-window', action='store_true', default=False,
+    nowindow = CommandArgument(
+        '--no-window',
+        action='store_true',
+        default=False,
         help='Pass --no-window to the emulator')
     func = nowindow(func)
 
     sdcard = CommandArgument('--sdcard', default="10MB",
-        help='Define size of sdcard: 1MB, 50MB...etc')
+                             help='Define size of sdcard: 1MB, 50MB...etc')
     func = sdcard(func)
 
-    marionette = CommandArgument('--marionette', default=None,
+    marionette = CommandArgument(
+        '--marionette',
+        default=None,
         help='host:port to use when connecting to Marionette')
     func = marionette(func)
 
-    chunk_total = CommandArgument('--total-chunks', type=int,
+    chunk_total = CommandArgument(
+        '--total-chunks',
+        type=int,
         help='Total number of chunks to split tests into.')
     func = chunk_total(func)
 
-    this_chunk = CommandArgument('--this-chunk', type=int,
+    this_chunk = CommandArgument(
+        '--this-chunk',
+        type=int,
         help='If running tests by chunks, the number of the chunk to run.')
     func = this_chunk(func)
 
-    path = CommandArgument('test_paths', default=None, nargs='*',
+    path = CommandArgument(
+        'test_paths',
+        default=None,
+        nargs='*',
         metavar='TEST',
-        help='Test to run. Can be specified as a single file, a ' \
-            'directory, or omitted. If omitted, the entire test suite is ' \
-            'executed.')
+        help='Test to run. Can be specified as a single file, a '
+        'directory, or omitted. If omitted, the entire test suite is '
+        'executed.')
     func = path(func)
 
     repeat = CommandArgument('--repeat', type=int, default=0,
-        help='Repeat the test the given number of times.')
+                             help='Repeat the test the given number of times.')
     func = repeat(func)
 
-    runUntilFailure = CommandArgument("--run-until-failure", action='store_true',
-        help='Run tests repeatedly and stops on the first time a test fails. ' \
-             'Default cap is 30 runs, which can be overwritten ' \
-             'with the --repeat parameter.')
+    runUntilFailure = CommandArgument(
+        "--run-until-failure",
+        action='store_true',
+        help='Run tests repeatedly and stops on the first time a test fails. '
+        'Default cap is 30 runs, which can be overwritten '
+        'with the --repeat parameter.')
     func = runUntilFailure(func)
 
     return func
@@ -648,34 +812,48 @@ def B2GCommand(func):
 _st_parser = argparse.ArgumentParser()
 structured.commandline.add_logging_group(_st_parser)
 
+
 @CommandProvider
 class MachCommands(MachCommandBase):
-    @Command('mochitest-plain', category='testing',
-        conditions=[conditions.is_firefox_or_mulet],
+
+    @Command(
+        'mochitest-plain',
+        category='testing',
+        conditions=[
+            conditions.is_firefox_or_mulet],
         description='Run a plain mochitest (integration test, plain web page).',
         parser=_st_parser)
     @MochitestCommand
     def run_mochitest_plain(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'plain', **kwargs)
 
-    @Command('mochitest-chrome', category='testing',
-        conditions=[conditions.is_firefox],
+    @Command(
+        'mochitest-chrome',
+        category='testing',
+        conditions=[
+            conditions.is_firefox],
         description='Run a chrome mochitest (integration test with some XUL).',
         parser=_st_parser)
     @MochitestCommand
     def run_mochitest_chrome(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'chrome', **kwargs)
 
-    @Command('mochitest-browser', category='testing',
-        conditions=[conditions.is_firefox],
+    @Command(
+        'mochitest-browser',
+        category='testing',
+        conditions=[
+            conditions.is_firefox],
         description='Run a mochitest with browser chrome (integration test with a standard browser).',
         parser=_st_parser)
     @MochitestCommand
     def run_mochitest_browser(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'browser', **kwargs)
 
-    @Command('mochitest-devtools', category='testing',
-        conditions=[conditions.is_firefox],
+    @Command(
+        'mochitest-devtools',
+        category='testing',
+        conditions=[
+            conditions.is_firefox],
         description='Run a devtools mochitest with browser chrome (integration test with a standard browser with the devtools frame).',
         parser=_st_parser)
     @MochitestCommand
@@ -683,21 +861,24 @@ class MachCommands(MachCommandBase):
         return self.run_mochitest(test_paths, 'devtools', **kwargs)
 
     @Command('jetpack-package', category='testing',
-        conditions=[conditions.is_firefox],
-        description='Run a jetpack package test.')
+             conditions=[conditions.is_firefox],
+             description='Run a jetpack package test.')
     @MochitestCommand
     def run_mochitest_jetpack_package(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'jetpack-package', **kwargs)
 
     @Command('jetpack-addon', category='testing',
-        conditions=[conditions.is_firefox],
-        description='Run a jetpack addon test.')
+             conditions=[conditions.is_firefox],
+             description='Run a jetpack addon test.')
     @MochitestCommand
     def run_mochitest_jetpack_addon(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'jetpack-addon', **kwargs)
 
-    @Command('mochitest-metro', category='testing',
-        conditions=[conditions.is_firefox],
+    @Command(
+        'mochitest-metro',
+        category='testing',
+        conditions=[
+            conditions.is_firefox],
         description='Run a mochitest with metro browser chrome (tests for Windows touch interface).',
         parser=_st_parser)
     @MochitestCommand
@@ -705,23 +886,29 @@ class MachCommands(MachCommandBase):
         return self.run_mochitest(test_paths, 'metro', **kwargs)
 
     @Command('mochitest-a11y', category='testing',
-        conditions=[conditions.is_firefox],
-        description='Run an a11y mochitest (accessibility tests).',
-        parser=_st_parser)
+             conditions=[conditions.is_firefox],
+             description='Run an a11y mochitest (accessibility tests).',
+             parser=_st_parser)
     @MochitestCommand
     def run_mochitest_a11y(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'a11y', **kwargs)
 
-    @Command('webapprt-test-chrome', category='testing',
-        conditions=[conditions.is_firefox],
+    @Command(
+        'webapprt-test-chrome',
+        category='testing',
+        conditions=[
+            conditions.is_firefox],
         description='Run a webapprt chrome mochitest (Web App Runtime with the browser chrome).',
         parser=_st_parser)
     @MochitestCommand
     def run_mochitest_webapprt_chrome(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'webapprt-chrome', **kwargs)
 
-    @Command('webapprt-test-content', category='testing',
-        conditions=[conditions.is_firefox],
+    @Command(
+        'webapprt-test-content',
+        category='testing',
+        conditions=[
+            conditions.is_firefox],
         description='Run a webapprt content mochitest (Content rendering of the Web App Runtime).',
         parser=_st_parser)
     @MochitestCommand
@@ -729,14 +916,14 @@ class MachCommands(MachCommandBase):
         return self.run_mochitest(test_paths, 'webapprt-content', **kwargs)
 
     @Command('mochitest', category='testing',
-        conditions=[conditions.is_firefox],
-        description='Run any flavor of mochitest (integration test).',
-        parser=_st_parser)
+             conditions=[conditions.is_firefox],
+             description='Run any flavor of mochitest (integration test).',
+             parser=_st_parser)
     @MochitestCommand
     @CommandArgument('-f', '--flavor', choices=FLAVORS.keys(),
-        help='Only run tests of this flavor.')
+                     help='Only run tests of this flavor.')
     def run_mochitest_general(self, test_paths, flavor=None, test_objects=None,
-            **kwargs):
+                              **kwargs):
         self._preruntest()
 
         from mozbuild.testing import TestResolver
@@ -746,7 +933,7 @@ class MachCommands(MachCommandBase):
         else:
             resolver = self._spawn(TestResolver)
             tests = list(resolver.resolve_tests(paths=test_paths,
-                cwd=self._mach_context.cwd))
+                                                cwd=self._mach_context.cwd))
 
         # Our current approach is to group the tests by suite and then perform
         # an invocation for each suite. Ideally, this would be done
@@ -773,8 +960,11 @@ class MachCommands(MachCommandBase):
         mochitest = self._spawn(MochitestRunner)
         overall = None
         for suite, tests in sorted(suites.items()):
-            result = mochitest.run_desktop_test(self._mach_context,
-                test_paths=[test['file_relpath'] for test in tests], suite=suite,
+            result = mochitest.run_desktop_test(
+                self._mach_context,
+                test_paths=[
+                    test['file_relpath'] for test in tests],
+                suite=suite,
                 **kwargs)
             if result:
                 overall = result
@@ -794,8 +984,11 @@ class MachCommands(MachCommandBase):
 
         mochitest = self._spawn(MochitestRunner)
 
-        return mochitest.run_desktop_test(self._mach_context,
-            test_paths=test_paths, suite=flavor, **kwargs)
+        return mochitest.run_desktop_test(
+            self._mach_context,
+            test_paths=test_paths,
+            suite=flavor,
+            **kwargs)
 
 
 # TODO For now b2g commands will only work with the emulator,
@@ -810,27 +1003,39 @@ def is_emulator(cls):
 
 @CommandProvider
 class B2GCommands(MachCommandBase):
+
     """So far these are only mochitest plain. They are
     implemented separately because their command lines
     are completely different.
     """
+
     def __init__(self, context):
         MachCommandBase.__init__(self, context)
 
         for attr in ('b2g_home', 'xre_path', 'device_name', 'get_build_var'):
             setattr(self, attr, getattr(context, attr, None))
 
-    @Command('mochitest-remote', category='testing',
+    @Command(
+        'mochitest-remote',
+        category='testing',
         description='Run a remote mochitest (integration test for fennec/android).',
-        conditions=[conditions.is_b2g, is_emulator])
+        conditions=[
+            conditions.is_b2g,
+            is_emulator])
     @B2GCommand
     def run_mochitest_remote(self, test_paths, **kwargs):
         if self.get_build_var:
-            host_webapps_dir = os.path.join(self.get_build_var('TARGET_OUT_DATA'),
-                                            'local', 'webapps')
-            if not os.path.isdir(os.path.join(host_webapps_dir,
-                                              'test-container.gaiamobile.org')):
-                print(ENG_BUILD_REQUIRED % ('mochitest-remote', host_webapps_dir))
+            host_webapps_dir = os.path.join(
+                self.get_build_var('TARGET_OUT_DATA'),
+                'local',
+                'webapps')
+            if not os.path.isdir(
+                os.path.join(
+                    host_webapps_dir,
+                    'test-container.gaiamobile.org')):
+                print(
+                    ENG_BUILD_REQUIRED %
+                    ('mochitest-remote', host_webapps_dir))
                 return 1
 
         from mozbuild.controller.building import BuildDriver
@@ -847,22 +1052,29 @@ class B2GCommands(MachCommandBase):
         driver.install_tests(remove=False)
 
         mochitest = self._spawn(MochitestRunner)
-        return mochitest.run_b2g_test(b2g_home=self.b2g_home,
-                xre_path=self.xre_path, test_paths=test_paths, **kwargs)
+        return mochitest.run_b2g_test(
+            b2g_home=self.b2g_home,
+            xre_path=self.xre_path,
+            test_paths=test_paths,
+            **kwargs)
 
     @Command('mochitest-chrome-remote', category='testing',
-        description='Run a remote mochitest-chrome.',
-        conditions=[conditions.is_b2g, is_emulator])
+             description='Run a remote mochitest-chrome.',
+             conditions=[conditions.is_b2g, is_emulator])
     @B2GCommand
     def run_mochitest_chrome_remote(self, test_paths, **kwargs):
         return self.run_mochitest_remote(test_paths, chrome=True, **kwargs)
 
-    @Command('mochitest-b2g-desktop', category='testing',
-        conditions=[conditions.is_b2g_desktop],
+    @Command(
+        'mochitest-b2g-desktop',
+        category='testing',
+        conditions=[
+            conditions.is_b2g_desktop],
         description='Run a b2g desktop mochitest (same as mochitest-plain but for b2g desktop).')
     @B2GCommand
     def run_mochitest_b2g_desktop(self, test_paths, **kwargs):
-        kwargs['profile'] = kwargs.get('profile') or os.environ.get('GAIA_PROFILE')
+        kwargs['profile'] = kwargs.get(
+            'profile') or os.environ.get('GAIA_PROFILE')
         if not kwargs['profile'] or not os.path.isdir(kwargs['profile']):
             print(GAIA_PROFILE_NOT_FOUND % 'mochitest-b2g-desktop')
             return 1
@@ -886,31 +1098,52 @@ class B2GCommands(MachCommandBase):
 
 @CommandProvider
 class AndroidCommands(MachCommandBase):
+
     @Command('robocop', category='testing',
-        conditions=[conditions.is_android],
-        description='Run a Robocop test.')
-    @CommandArgument('test_path', default=None, nargs='?',
+             conditions=[conditions.is_android],
+             description='Run a Robocop test.')
+    @CommandArgument(
+        'test_path',
+        default=None,
+        nargs='?',
         metavar='TEST',
-        help='Test to run. Can be specified as a Robocop test name (like "testLoad"), ' \
-             'or omitted. If omitted, the entire test suite is executed.')
+        help='Test to run. Can be specified as a Robocop test name (like "testLoad"), '
+        'or omitted. If omitted, the entire test suite is executed.')
     def run_robocop(self, test_path):
         self.tests_dir = os.path.join(self.topobjdir, '_tests')
-        self.mochitest_dir = os.path.join(self.tests_dir, 'testing', 'mochitest')
+        self.mochitest_dir = os.path.join(
+            self.tests_dir,
+            'testing',
+            'mochitest')
         import imp
         path = os.path.join(self.mochitest_dir, 'runtestsremote.py')
         with open(path, 'r') as fh:
             imp.load_module('runtestsremote', fh, path,
-                ('.py', 'r', imp.PY_SOURCE))
+                            ('.py', 'r', imp.PY_SOURCE))
         import runtestsremote
 
         args = [
-            '--xre-path=' + os.environ.get('MOZ_HOST_BIN'),
+            '--xre-path=' +
+            os.environ.get('MOZ_HOST_BIN'),
             '--dm_trans=adb',
             '--deviceIP=',
             '--console-level=INFO',
-            '--app=' + self.substs['ANDROID_PACKAGE_NAME'],
-            '--robocop-apk=' + os.path.join(self.topobjdir, 'build', 'mobile', 'robocop', 'robocop-debug.apk'),
-            '--robocop-ini=' + os.path.join(self.topobjdir, 'build', 'mobile', 'robocop', 'robocop.ini'),
+            '--app=' +
+            self.substs['ANDROID_PACKAGE_NAME'],
+            '--robocop-apk=' +
+            os.path.join(
+                self.topobjdir,
+                'build',
+                'mobile',
+                'robocop',
+                'robocop-debug.apk'),
+            '--robocop-ini=' +
+            os.path.join(
+                self.topobjdir,
+                'build',
+                'mobile',
+                'robocop',
+                'robocop.ini'),
             '--log-mach=-',
         ]
 

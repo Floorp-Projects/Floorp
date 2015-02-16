@@ -15,6 +15,7 @@
 #include "GeckoProfiler.h"
 
 #include <bitset>
+#include <vector>
 
 #if defined(XP_WIN)
 

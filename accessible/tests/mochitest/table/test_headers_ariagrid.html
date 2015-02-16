@@ -62,16 +62,37 @@
 
       headerInfoMap = [
         {
-          // not focusable cell (nsARIAGridCellAccessible is used)
+          // not focusable cell (ARIAGridCellAccessible is used)
           cell: "table2_dc_1",
           rowHeaderCells: [],
           columnHeaderCells: [ "table2_ch_1" ]
         },
         {
-          // focusable cell (nsARIAGridCellAccessible is used)
+          // focusable cell (ARIAGridCellAccessible is used)
           cell: "table2_dc_2",
           rowHeaderCells: [],
           columnHeaderCells: [ "table2_ch_2" ]
+        }
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+
+      //////////////////////////////////////////////////////////////////////////
+      // column and row headers from markup for one more crazy grid.
+
+      headerInfoMap = [
+        {
+          // ARIAGridCellAccessible is used
+          cell: "t3_dc_1",
+          rowHeaderCells: [ "t3_rh_1" ],
+          columnHeaderCells: [ ]
+        },
+        {
+          // ARIAGridCellAccessible is used (inside rowgroup)
+          cell: "t3_dc_2",
+          rowHeaderCells: [ "t3_rh_2" ],
+          columnHeaderCells: [ ]
         }
       ];
 
@@ -131,6 +152,31 @@
           <td id="table2_dc_1" role="gridcell">cell1</td>
           <td id="table2_dc_2" role="gridcell" tabindex="-1">cell2</td>
         </tr>
+      </table>
+    </div>
+  </div>
+
+  <div role="grid">
+    <table role="presentation">
+      <tbody role="presentation">
+        <tr role="row">
+          <th id="t3_rh_1" role="rowheader">Row 1</th>
+          <td id="t3_dc_1" role="gridcell" tabindex="-1">
+            Apple Inc.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div role="rowgroup" tabindex="0">
+      <table role="presentation">
+        <tbody role="presentation">
+          <tr role="row">
+            <th id="t3_rh_2" role="rowheader">Row 2</th>
+            <td id="t3_dc_2" role="gridcell" tabindex="-1">
+              Apple-Shmapple Inc.
+            </td>
+          </tr>
+        </tbody>
       </table>
     </div>
   </div>
