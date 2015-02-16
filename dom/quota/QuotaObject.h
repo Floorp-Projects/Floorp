@@ -32,11 +32,8 @@ public:
   void
   Release();
 
-  void
-  UpdateSize(int64_t aSize);
-
   bool
-  MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount);
+  MaybeUpdateSize(int64_t aSize, bool aTruncate);
 
 private:
   QuotaObject(OriginInfo* aOriginInfo, const nsAString& aPath, int64_t aSize)

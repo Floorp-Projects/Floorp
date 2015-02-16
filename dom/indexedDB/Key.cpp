@@ -13,6 +13,7 @@
 #include "mozilla/Endian.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozIStorageStatement.h"
+#include "mozIStorageValueArray.h"
 #include "nsAlgorithm.h"
 #include "nsJSUtils.h"
 #include "ReportInternalError.h"
@@ -27,10 +28,10 @@ namespace indexedDB {
 
  Basic strategy is the following
 
- Numbers: 1 n n n n n n n n    ("n"s are encoded 64bit float)
- Dates:   2 n n n n n n n n    ("n"s are encoded 64bit float)
- Strings: 3 s s s ... 0        ("s"s are encoded unicode bytes)
- Arrays:  4 i i i ... 0        ("i"s are encoded array items)
+ Numbers: 0x10 n n n n n n n n    ("n"s are encoded 64bit float)
+ Dates:   0x20 n n n n n n n n    ("n"s are encoded 64bit float)
+ Strings: 0x30 s s s ... 0        ("s"s are encoded unicode bytes)
+ Arrays:  0x50 i i i ... 0        ("i"s are encoded array items)
 
 
  When encoding floats, 64bit IEEE 754 are almost sortable, except that
@@ -55,65 +56,58 @@ namespace indexedDB {
 
 
  When encoding Arrays, we use an additional trick. Rather than adding a byte
- containing the value '4' to indicate type, we instead add 4 to the next byte.
+ containing the value 0x50 to indicate type, we instead add 0x50 to the next byte.
  This is usually the byte containing the type of the first item in the array.
  So simple examples are
 
- ["foo"]       7 s s s 0 0                              // 7 is 3 + 4
- [1, 2]        5 n n n n n n n n 1 n n n n n n n n 0    // 5 is 1 + 4
+ ["foo"]      0x80 s s s 0 0                              // 0x80 is 0x30 + 0x50
+ [1, 2]       0x60 n n n n n n n n 1 n n n n n n n n 0    // 0x60 is 0x10 + 0x50
 
  Whe do this iteratively if the first item in the array is also an array
 
- [["foo"]]    11 s s s 0 0 0
+ [["foo"]]    0xA0 s s s 0 0 0
 
  However, to avoid overflow in the byte, we only do this 3 times. If the first
  item in an array is an array, and that array also has an array as first item,
  we simply write out the total value accumulated so far and then follow the
  "normal" rules.
 
- [[["foo"]]]  12 3 s s s 0 0 0 0
+ [[["foo"]]]  0xF0 0x30 s s s 0 0 0 0
 
  There is another edge case that can happen though, which is that the array
- doesn't have a first item to which we can add 4 to the type. Instead the
+ doesn't have a first item to which we can add 0x50 to the type. Instead the
  next byte would normally be the array terminator (per basic-strategy table)
- so we simply add the 4 there.
+ so we simply add the 0x50 there.
 
- [[]]         8 0             // 8 is 4 + 4 + 0
- []           4               // 4 is 4 + 0
- [[], "foo"]  8 3 s s s 0 0   // 8 is 4 + 4 + 0
+ [[]]         0xA0 0                // 0xA0 is 0x50 + 0x50 + 0
+ []           0x50                  // 0x50 is 0x50 + 0
+ [[], "foo"]  0xA0 0x30 s s s 0 0   // 0xA0 is 0x50 + 0x50 + 0
 
  Note that the max-3-times rule kicks in before we get a chance to add to the
  array terminator
 
- [[[]]]       12 0 0 0        // 12 is 4 + 4 + 4
-
- We could use a much higher number than 3 at no complexity or performance cost,
- however it seems unlikely that it'll make a practical difference, and the low
- limit makes testing eaiser.
-
+ [[[]]]       0xF0 0 0 0        // 0xF0 is 0x50 + 0x50 + 0x50
 
  As a final optimization we do a post-encoding step which drops all 0s at the
  end of the encoded buffer.
  
- "foo"         // 3 s s s
- 1             // 1 bf f0
- ["a", "b"]    // 7 s 3 s
- [1, 2]        // 5 bf f0 0 0 0 0 0 0 1 c0
- [[]]          // 8
+ "foo"         // 0x30 s s s
+ 1             // 0x10 bf f0
+ ["a", "b"]    // 0x80 s 0 0x30 s
+ [1, 2]        // 0x60 bf f0 0 0 0 0 0 0 0x10 c0
+ [[]]          // 0x80
 */
-
-const int MaxArrayCollapse = 3;
-
-const int MaxRecursionDepth = 256;
 
 nsresult
 Key::EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
                          uint8_t aTypeOffset, uint16_t aRecursionDepth)
 {
-  NS_ENSURE_TRUE(aRecursionDepth < MaxRecursionDepth, NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-
-  static_assert(eMaxType * MaxArrayCollapse < 256,
+  static_assert(eMaxType * kMaxArrayCollapse < 256,
                 "Unable to encode jsvals.");
+
+  if (NS_WARN_IF(aRecursionDepth == kMaxRecursionDepth)) {
+    return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+  }
 
   if (aVal.isString()) {
     nsAutoJSString str;
@@ -139,12 +133,12 @@ Key::EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
     if (JS_IsArrayObject(aCx, obj)) {
       aTypeOffset += eMaxType;
 
-      if (aTypeOffset == eMaxType * MaxArrayCollapse) {
+      if (aTypeOffset == eMaxType * kMaxArrayCollapse) {
         mBuffer.Append(aTypeOffset);
         aTypeOffset = 0;
       }
       NS_ASSERTION((aTypeOffset % eMaxType) == 0 &&
-                   aTypeOffset < (eMaxType * MaxArrayCollapse),
+                   aTypeOffset < (eMaxType * kMaxArrayCollapse),
                    "Wrong typeoffset");
 
       uint32_t length;
@@ -192,7 +186,9 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
                          JSContext* aCx, uint8_t aTypeOffset, JS::MutableHandle<JS::Value> aVal,
                          uint16_t aRecursionDepth)
 {
-  NS_ENSURE_TRUE(aRecursionDepth < MaxRecursionDepth, NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+  if (NS_WARN_IF(aRecursionDepth == kMaxRecursionDepth)) {
+    return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+  }
 
   if (*aPos - aTypeOffset >= eArray) {
     JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0));
@@ -204,7 +200,7 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
 
     aTypeOffset += eMaxType;
 
-    if (aTypeOffset == eMaxType * MaxArrayCollapse) {
+    if (aTypeOffset == eMaxType * kMaxArrayCollapse) {
       ++aPos;
       aTypeOffset = 0;
     }
@@ -331,10 +327,9 @@ nsresult
 Key::DecodeJSVal(const unsigned char*& aPos,
                  const unsigned char* aEnd,
                  JSContext* aCx,
-                 uint8_t aTypeOffset,
                  JS::MutableHandle<JS::Value> aVal)
 {
-  return DecodeJSValInternal(aPos, aEnd, aCx, aTypeOffset, aVal, 0);
+  return DecodeJSValInternal(aPos, aEnd, aCx, 0, aVal, 0);
 }
 
 // static
@@ -466,16 +461,14 @@ nsresult
 Key::SetFromStatement(mozIStorageStatement* aStatement,
                       uint32_t aIndex)
 {
-  uint8_t* data;
-  uint32_t dataLength = 0;
+  return SetFromSource(aStatement, aIndex);
+}
 
-  nsresult rv = aStatement->GetBlob(aIndex, &dataLength, &data);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  mBuffer.Adopt(
-    reinterpret_cast<char*>(const_cast<uint8_t*>(data)), dataLength);
-
-  return NS_OK;
+nsresult
+Key::SetFromValueArray(mozIStorageValueArray* aValues,
+                      uint32_t aIndex)
+{
+  return SetFromSource(aValues, aIndex);
 }
 
 nsresult
@@ -509,7 +502,7 @@ Key::ToJSVal(JSContext* aCx,
   }
 
   const unsigned char* pos = BufferStart();
-  nsresult rv = DecodeJSVal(pos, BufferEnd(), aCx, 0, aVal);
+  nsresult rv = DecodeJSVal(pos, BufferEnd(), aCx, aVal);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -539,6 +532,23 @@ Key::AppendItem(JSContext* aCx, bool aFirstOfArray, JS::Handle<JS::Value> aVal)
     Unset();
     return rv;
   }
+
+  return NS_OK;
+}
+
+template <typename T>
+nsresult
+Key::SetFromSource(T* aSource, uint32_t aIndex)
+{
+  const uint8_t* data;
+  uint32_t dataLength = 0;
+
+  nsresult rv = aSource->GetSharedBlob(aIndex, &dataLength, &data);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  mBuffer.Assign(reinterpret_cast<const char*>(data), dataLength);
 
   return NS_OK;
 }
