@@ -22,6 +22,7 @@
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
   <prefpane id="LanguagesDialogPane"
+            class="largeDialogContainer"
             onpaneload="gLanguagesDialog.init();"
             helpTopic="prefs-languages">
 

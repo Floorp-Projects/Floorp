@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils", "resource://services-comm
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 
-let ReaderMode = {
+this.ReaderMode = {
   // Version of the cache schema.
   CACHE_VERSION: 1,
 

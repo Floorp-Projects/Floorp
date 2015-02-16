@@ -176,6 +176,23 @@ struct SendPlayStatusRequest
   nsString playStatus;
 };
 
+struct ConnectGattClientRequest
+{
+  nsString appUuid;
+  nsString deviceAddress;
+};
+
+struct DisconnectGattClientRequest
+{
+  nsString appUuid;
+  nsString deviceAddress;
+};
+
+struct UnregisterGattClientRequest
+{
+  int clientIf;
+};
+
 union Request
 {
   GetAdaptersRequest;
@@ -208,6 +225,9 @@ union Request
   ToggleCallsRequest;
   SendMetaDataRequest;
   SendPlayStatusRequest;
+  ConnectGattClientRequest;
+  DisconnectGattClientRequest;
+  UnregisterGattClientRequest;
 };
 
 protocol PBluetooth

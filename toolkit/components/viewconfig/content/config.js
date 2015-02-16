@@ -95,7 +95,7 @@ var view = {
         pref = gPrefView[index];
 
       var old = document.getElementById(gSortedColumn);
-      old.setAttribute("sortDirection", "");
+      old.removeAttribute("sortDirection");
       gPrefArray.sort(gSortFunction = gSortFunctions[col.id]);
       if (gPrefView != gPrefArray)
         gPrefView.sort(gSortFunction);

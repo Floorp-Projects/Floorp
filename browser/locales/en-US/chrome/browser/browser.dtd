@@ -837,3 +837,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY processHang.terminatePlugin.accessKey    "P">
 <!ENTITY processHang.terminateProcess.label       "Kill Web Process">
 <!ENTITY processHang.terminateProcess.accessKey   "K">
+
+<!ENTITY emeLearnMoreContextMenu.label            "Learn more about DRM…">
+<!ENTITY emeLearnMoreContextMenu.accesskey        "D">
