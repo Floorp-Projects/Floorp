@@ -270,10 +270,12 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   }
 
   // Stop any transitions for properties that are no longer in
-  // 'transition-property'.
-  // Also stop any transitions for properties that just changed (and are
-  // still in the set of properties to transition), but we didn't just
-  // start the transition because delay and duration are both zero.
+  // 'transition-property', including finished transitions.
+  // Also stop any transitions (and remove any finished transitions)
+  // for properties that just changed (and are still in the set of
+  // properties to transition), but for which we didn't just start the
+  // transition.  This can happen delay and duration are both zero, or
+  // because the new value is not interpolable.
   if (collection) {
     bool checkProperties =
       disp->mTransitions[0].GetProperty() != eCSSPropertyExtra_all_properties;
@@ -322,15 +324,20 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
           // properties no longer in 'transition-property'
       if ((checkProperties &&
            !allTransitionProperties.HasProperty(prop.mProperty)) ||
-          // properties whose computed values changed but delay and
-          // duration are both zero
+          // properties whose computed values changed but for which we
+          // did not start a new transition (because delay and
+          // duration are both zero, or because the new value is not
+          // interpolable); a new transition would have segment.mToValue
+          // matching currentValue
           !ExtractComputedValueForTransition(prop.mProperty, afterChangeStyle,
                                              currentValue) ||
           currentValue != segment.mToValue) {
         // stop the transition
-        player->Cancel();
+        if (!player->GetSource()->IsFinishedTransition()) {
+          player->Cancel();
+          collection->UpdateAnimationGeneration(mPresContext);
+        }
         players.RemoveElementAt(i);
-        collection->UpdateAnimationGeneration(mPresContext);
       }
     } while (i != 0);
 
@@ -440,6 +447,11 @@ nsTransitionManager::ConsiderStartingTransition(
   // this case, we'll end up with shouldAnimate as false (because
   // there's no value change), but we need to return early here rather
   // than cancel the running transition because shouldAnimate is false!
+  //
+  // Likewise, if we got a style change that changed the value to the
+  // endpoint of our finished transition, we also don't want to start
+  // a new transition for the reasons described in
+  // https://lists.w3.org/Archives/Public/www-style/2015Jan/0444.html .
   MOZ_ASSERT(!oldPT || oldPT->Properties()[0].mSegments.Length() == 1,
              "Should have one animation property segment for a transition");
   if (haveCurrentTransition && haveValues &&
@@ -449,7 +461,7 @@ nsTransitionManager::ConsiderStartingTransition(
   }
 
   if (!shouldAnimate) {
-    if (haveCurrentTransition) {
+    if (haveCurrentTransition && !oldPT->IsFinishedTransition()) {
       // We're in the middle of a transition, and just got a non-transition
       // style change to something that we can't animate.  This might happen
       // because we got a non-transition style change changing to the current
@@ -686,16 +698,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
       do {
         --i;
         AnimationPlayer* player = collection->mPlayers[i];
-        if (player->GetSource()->IsFinishedTransition()) {
-          // Actually remove transitions one throttle-able cycle after their
-          // completion. We only clear on a throttle-able cycle because that
-          // means it is a regular restyle tick and thus it is safe to discard
-          // the transition. If the flush is not throttle-able, we might still
-          // have new transitions left to process. See comment below.
-          if (aFlags == Can_Throttle) {
-            collection->mPlayers.RemoveElementAt(i);
-          }
-        } else {
+        if (!player->GetSource()->IsFinishedTransition()) {
           MOZ_ASSERT(player->GetSource(),
                      "Transitions should have source content");
           ComputedTiming computedTiming =
