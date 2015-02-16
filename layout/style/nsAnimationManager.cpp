@@ -428,6 +428,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
   const nsStyleDisplay *disp = aStyleContext->StyleDisplay();
 
+  nsRefPtr<nsStyleContext> styleWithoutAnimation;
+
   for (size_t animIdx = 0, animEnd = disp->mAnimationNameCount;
        animIdx != animEnd; ++animIdx) {
     const StyleAnimation& src = disp->mAnimations[animIdx];
@@ -580,9 +582,14 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
           if (toKeyframe.mKey != 0.0f) {
             // There's no data for this property at 0%, so use the
             // cascaded value above us.
+            if (!styleWithoutAnimation) {
+              styleWithoutAnimation = mPresContext->StyleSet()->
+                ResolveStyleWithoutAnimation(aTarget, aStyleContext,
+                                             eRestyle_ChangeAnimationPhase);
+            }
             interpolated = interpolated &&
               BuildSegment(propData.mSegments, prop, src,
-                           0.0f, aStyleContext, nullptr,
+                           0.0f, styleWithoutAnimation, nullptr,
                            toKeyframe.mKey, toContext);
           }
         }
@@ -594,11 +601,16 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       if (fromKeyframe->mKey != 1.0f) {
         // There's no data for this property at 100%, so use the
         // cascaded value above us.
+        if (!styleWithoutAnimation) {
+          styleWithoutAnimation = mPresContext->StyleSet()->
+            ResolveStyleWithoutAnimation(aTarget, aStyleContext,
+                                         eRestyle_ChangeAnimationPhase);
+        }
         interpolated = interpolated &&
           BuildSegment(propData.mSegments, prop, src,
                        fromKeyframe->mKey, fromContext,
                        fromKeyframe->mRule->Declaration(),
-                       1.0f, aStyleContext);
+                       1.0f, styleWithoutAnimation);
       }
 
       // If we failed to build any segments due to inability to
