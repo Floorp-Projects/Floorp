@@ -52,6 +52,8 @@ const kUDP_WAKEUP_WS_STATUS_CODE = 4774;  // WebSocket Close status code sent
 const kCHILD_PROCESS_MESSAGES = ["Push:Register", "Push:Unregister",
                                  "Push:Registrations"];
 
+const kWS_MAX_WENTDOWN = 2;
+
 // This is a singleton
 this.PushDB = function PushDB() {
   debug("PushDB()");
@@ -65,7 +67,7 @@ this.PushDB.prototype = {
   __proto__: IndexedDBHelper.prototype,
 
   upgradeSchema: function(aTransaction, aDb, aOldVersion, aNewVersion) {
-    debug("PushDB.upgradeSchema()")
+    debug("PushDB.upgradeSchema()");
 
     let objectStore = aDb.createObjectStore(kPUSHDB_STORE_NAME,
                                             { keyPath: "channelID" });
@@ -482,6 +484,12 @@ this.PushService = {
   _upperLimit: 0,
 
   /**
+   * Count the times WebSocket goes down without receiving Pings
+   * so we can re-enable the ping recalculation algorithm
+   */
+  _wsWentDownCounter: 0,
+
+  /**
    * Sends a message to the Push Server through an open websocket.
    * typeof(msg) shall be an object
    */
@@ -678,6 +686,11 @@ this.PushService = {
       return;
     }
 
+    if (!wsWentDown) {
+      debug('Setting websocket down counter to 0');
+      this._wsWentDownCounter = 0;
+    }
+
     if (!this._recalculatePing && !wsWentDown) {
       debug('We do not need to recalculate the ping now, based on previous data');
       return;
@@ -722,6 +735,24 @@ this.PushService = {
 
     let nextPingInterval;
     let lastTriedPingInterval = prefs.get('pingInterval');
+
+    if (!this._recalculatePing && wsWentDown) {
+      debug('Websocket disconnected without ping adaptative algorithm running');
+      this._wsWentDownCounter++;
+      if (this._wsWentDownCounter > kWS_MAX_WENTDOWN) {
+        debug('Too many disconnects. Reenabling ping adaptative algoritm');
+        this._wsWentDownCounter = 0;
+        this._recalculatePing = true;
+        this._lastGoodPingInterval = Math.floor(lastTriedPingInterval / 2);
+        nextPingInterval = this._lastGoodPingInterval;
+        prefs.set('pingInterval', nextPingInterval);
+        this._save(ns, nextPingInterval);
+        return;
+      }
+
+      debug('We do not need to recalculate the ping, based on previous data');
+    }
+
     if (wsWentDown) {
       debug('The WebSocket was disconnected, calculating next ping');
 
@@ -770,6 +801,10 @@ this.PushService = {
     debug('Setting the pingInterval to ' + nextPingInterval);
     prefs.set('pingInterval', nextPingInterval);
 
+    this._save(ns, nextPingInterval);
+  },
+
+  _save: function(ns, nextPingInterval){
     //Save values for our current network
     if (ns.ip) {
       prefs.set('pingInterval.mobile', nextPingInterval);
