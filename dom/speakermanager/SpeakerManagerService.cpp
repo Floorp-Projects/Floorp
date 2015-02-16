@@ -146,8 +146,9 @@ SpeakerManagerService::SetAudioChannelActive(bool aIsActive)
 }
 
 NS_IMETHODIMP
-SpeakerManagerService::Observe(nsISupports* aSubject, const char*
-                               aTopic, const char16_t* aData)
+SpeakerManagerService::Observe(nsISupports* aSubject,
+                               const char* aTopic,
+                               const char16_t* aData)
 {
   if (!strcmp(aTopic, "ipc:content-shutdown")) {
     nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aSubject);
