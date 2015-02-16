@@ -533,6 +533,12 @@ JitCompartment::sweep(FreeOp *fop, JSCompartment *compartment)
 
     if (regExpTestStub_ && !IsJitCodeMarked(&regExpTestStub_))
         regExpTestStub_ = nullptr;
+
+    for (size_t i = 0; i <= SimdTypeDescr::LAST_TYPE; i++) {
+        ReadBarrieredObject &obj = simdTemplateObjects_[i];
+        if (obj && IsObjectAboutToBeFinalized(obj.unsafeGet()))
+            obj.set(nullptr);
+    }
 }
 
 void

@@ -9167,17 +9167,13 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
     if (native == js_String) {
         RootedString emptyString(cx, cx->runtime()->emptyString);
         res.set(StringObject::create(cx, emptyString, TenuredObject));
-        if (!res)
-            return false;
-        return true;
+        return !!res;
     }
 
     if (native == obj_create && args.length() == 1 && args[0].isObjectOrNull()) {
         RootedObject proto(cx, args[0].toObjectOrNull());
         res.set(ObjectCreateImpl(cx, proto, TenuredObject));
-        if (!res)
-            return false;
-        return true;
+        return !!res;
     }
 
     if (JitSupportsSimd()) {
@@ -9186,11 +9182,9 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
            ARITH_COMMONX4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
            BITWISE_COMMONX4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_))
        {
-            Rooted<TypeDescr *> descr(cx, &Int32x4::GetTypeDescr(*cx->global()));
-            res.set(TypedObject::createZeroed(cx, descr, 0, gc::TenuredHeap));
-            if (!res)
-                return false;
-            return true;
+            Rooted<SimdTypeDescr *> descr(cx, &cx->global()->int32x4TypeDescr().as<SimdTypeDescr>());
+            res.set(cx->compartment()->jitCompartment()->getSimdTemplateObjectFor(cx, descr));
+            return !!res;
        }
 #undef ADD_INT32X4_SIMD_OP_NAME_
     }
@@ -9204,20 +9198,14 @@ GetTemplateObjectForClassHook(JSContext *cx, JSNative hook, CallArgs &args,
 {
     if (hook == TypedObject::construct) {
         Rooted<TypeDescr *> descr(cx, &args.callee().as<TypeDescr>());
-        JSObject *obj = TypedObject::createZeroed(cx, descr, 1, gc::TenuredHeap);
-        if (!obj)
-            return false;
-        templateObject.set(obj);
-        return true;
+        templateObject.set(TypedObject::createZeroed(cx, descr, 1, gc::TenuredHeap));
+        return !!templateObject;
     }
 
     if (hook == SimdTypeDescr::call && JitSupportsSimd()) {
         Rooted<SimdTypeDescr *> descr(cx, &args.callee().as<SimdTypeDescr>());
-        JSObject *obj = TypedObject::createZeroed(cx, descr, 0, gc::TenuredHeap);
-        if (!obj)
-            return false;
-        templateObject.set(obj);
-        return true;
+        templateObject.set(cx->compartment()->jitCompartment()->getSimdTemplateObjectFor(cx, descr));
+        return !!templateObject;
     }
 
     return true;
