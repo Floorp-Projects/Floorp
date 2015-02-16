@@ -2216,8 +2216,7 @@ nsHttpChannel::MaybeSetupByteRangeRequest(int64_t partialLen, int64_t contentLen
     nsresult rv = SetupByteRangeRequest(partialLen);
     if (NS_FAILED(rv)) {
         // Make the request unconditional again.
-        mRequestHead.ClearHeader(nsHttp::Range);
-        mRequestHead.ClearHeader(nsHttp::If_Range);
+        UntieByteRangeRequest();
     }
 
     return rv;
@@ -2249,6 +2248,13 @@ nsHttpChannel::SetupByteRangeRequest(int64_t partialLen)
     mIsPartialRequest = true;
 
     return NS_OK;
+}
+
+void
+nsHttpChannel::UntieByteRangeRequest()
+{
+    mRequestHead.ClearHeader(nsHttp::Range);
+    mRequestHead.ClearHeader(nsHttp::If_Range);
 }
 
 nsresult
@@ -2965,9 +2971,16 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
             mCachedContentIsPartial = NS_SUCCEEDED(rv) && mIsPartialRequest;
             if (mCachedContentIsPartial) {
                 rv = OpenCacheInputStream(entry, false, !!appCache);
+                if (NS_FAILED(rv)) {
+                    UntieByteRangeRequest();
+                    return rv;
+                }
+
                 *aResult = ENTRY_NEEDS_REVALIDATION;
-                return rv;
-            } else if (size == 0 && mCacheOnlyMetadata) {
+                return NS_OK;
+            }
+
+            if (size == 0 && mCacheOnlyMetadata) {
                 // Don't break cache entry load when the entry's data size
                 // is 0 and mCacheOnlyMetadata flag is set. In that case we
                 // want to proceed since the LOAD_ONLY_IF_MODIFIED flag is
@@ -4850,7 +4863,6 @@ nsHttpChannel::BeginConnect()
     if (mLoadFlags & LOAD_CLASSIFY_URI) {
         nsCOMPtr<nsIURIClassifier> classifier = do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID);
         if (classifier) {
-            nsCOMPtr<nsIPrincipal> principal = GetPrincipal(false);
             bool tp = false;
             channelClassifier->ShouldEnableTrackingProtection(this, &tp);
             // We skip speculative connections by setting mLocalBlocklist only
@@ -4859,6 +4871,7 @@ nsHttpChannel::BeginConnect()
             // since no network events will be received while the
             // nsChannelClassifier is in progress. See bug 1122691.
             if (tp) {
+                nsCOMPtr<nsIPrincipal> principal = GetURIPrincipal();
                 nsresult response = NS_OK;
                 classifier->ClassifyLocal(principal, tp, &response);
                 if (NS_FAILED(response)) {

@@ -116,26 +116,7 @@ GStreamerReader::GStreamerReader(AbstractMediaDecoder* aDecoder)
 GStreamerReader::~GStreamerReader()
 {
   MOZ_COUNT_DTOR(GStreamerReader);
-  ResetDecode();
-
-  if (mPlayBin) {
-    gst_app_src_end_of_stream(mSource);
-    if (mSource)
-      gst_object_unref(mSource);
-    gst_element_set_state(mPlayBin, GST_STATE_NULL);
-    gst_object_unref(mPlayBin);
-    mPlayBin = nullptr;
-    mVideoSink = nullptr;
-    mVideoAppSink = nullptr;
-    mAudioSink = nullptr;
-    mAudioAppSink = nullptr;
-    gst_object_unref(mBus);
-    mBus = nullptr;
-#if GST_VERSION_MAJOR >= 1
-    g_object_unref(mAllocator);
-    g_object_unref(mBufferPool);
-#endif
-  }
+  NS_ASSERTION(!mPlayBin, "No Shutdown() after Init()");
 }
 
 nsresult GStreamerReader::Init(MediaDecoderReader* aCloneDonor)
@@ -199,6 +180,33 @@ nsresult GStreamerReader::Init(MediaDecoderReader* aCloneDonor)
                    G_CALLBACK(GStreamerReader::ElementAddedCb), this);
 
   return NS_OK;
+}
+
+nsRefPtr<ShutdownPromise>
+GStreamerReader::Shutdown()
+{
+  ResetDecode();
+
+  if (mPlayBin) {
+    gst_app_src_end_of_stream(mSource);
+    if (mSource)
+      gst_object_unref(mSource);
+    gst_element_set_state(mPlayBin, GST_STATE_NULL);
+    gst_object_unref(mPlayBin);
+    mPlayBin = nullptr;
+    mVideoSink = nullptr;
+    mVideoAppSink = nullptr;
+    mAudioSink = nullptr;
+    mAudioAppSink = nullptr;
+    gst_object_unref(mBus);
+    mBus = nullptr;
+#if GST_VERSION_MAJOR >= 1
+    g_object_unref(mAllocator);
+    g_object_unref(mBufferPool);
+#endif
+  }
+
+  return MediaDecoderReader::Shutdown();
 }
 
 GstBusSyncReply

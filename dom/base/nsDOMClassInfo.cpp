@@ -895,45 +895,11 @@ nsDOMClassInfo::PreCreate(nsISupports *nativeObj, JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsDOMClassInfo::Create(nsIXPConnectWrappedNative *wrapper,
-                       JSContext *cx, JSObject *obj)
-{
-  NS_WARNING("nsDOMClassInfo::Create Don't call me!");
-
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
-                           JSContext *cx, JSObject *obj)
-{
-  NS_WARNING("nsDOMClassInfo::PostCreate Don't call me!");
-
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-nsDOMClassInfo::PostTransplant(nsIXPConnectWrappedNative *wrapper,
-                               JSContext *cx, JSObject *obj)
-{
-  MOZ_CRASH("nsDOMClassInfo::PostTransplant Don't call me!");
-}
-
-NS_IMETHODIMP
 nsDOMClassInfo::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             JSObject *obj, jsid id, jsval *vp,
                             bool *_retval)
 {
   NS_WARNING("nsDOMClassInfo::AddProperty Don't call me!");
-
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-nsDOMClassInfo::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *obj, jsid id, bool *_retval)
-{
-  NS_WARNING("nsDOMClassInfo::DelProperty Don't call me!");
 
   return NS_ERROR_UNEXPECTED;
 }
@@ -1009,16 +975,6 @@ nsDOMClassInfo::Resolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMClassInfo::Convert(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                        JSObject *obj, uint32_t type, jsval *vp,
-                        bool *_retval)
-{
-  NS_WARNING("nsDOMClassInfo::Convert Don't call me!");
-
-  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
@@ -2035,7 +1991,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     if (aWin->GetDoc()) {
       aWin->GetDoc()->WarnOnceAbout(nsIDocument::eWindow_Controllers);
     }
-    JS::Rooted<JSObject*> shim(cx, JS_NewObject(cx, &ControllersShimClass, obj));
+    MOZ_ASSERT(JS_IsGlobalObject(obj));
+    JS::Rooted<JSObject*> shim(cx, JS_NewObject(cx, &ControllersShimClass));
     if (NS_WARN_IF(!shim)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

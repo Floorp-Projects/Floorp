@@ -2382,19 +2382,24 @@ XMLHttpRequest::GetResponse(JSContext* /* unused */,
 {
   if (NS_SUCCEEDED(mStateData.mResponseTextResult) &&
       mStateData.mResponse.isUndefined()) {
-    MOZ_ASSERT(mStateData.mResponseText.Length());
     MOZ_ASSERT(NS_SUCCEEDED(mStateData.mResponseResult));
 
-    JSString* str =
-      JS_NewUCStringCopyN(mWorkerPrivate->GetJSContext(),
-                          mStateData.mResponseText.get(),
-                          mStateData.mResponseText.Length());
-    if (!str) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return;
-    }
+    if (mStateData.mResponseText.IsEmpty()) {
+      mStateData.mResponse =
+        JS_GetEmptyStringValue(mWorkerPrivate->GetJSContext());
+    } else {
+      JSString* str =
+        JS_NewUCStringCopyN(mWorkerPrivate->GetJSContext(),
+                            mStateData.mResponseText.get(),
+                            mStateData.mResponseText.Length());
 
-    mStateData.mResponse = STRING_TO_JSVAL(str);
+      if (!str) {
+        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return;
+      }
+
+      mStateData.mResponse = STRING_TO_JSVAL(str);
+    }
   }
 
   JS::ExposeValueToActiveJS(mStateData.mResponse);

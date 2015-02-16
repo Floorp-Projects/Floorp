@@ -16,21 +16,23 @@ namespace mp4_demuxer
 
 static const uint8_t kAnnexBDelimiter[] = { 0, 0, 0, 1 };
 
-void
+bool
 AnnexB::ConvertSampleToAnnexB(MP4Sample* aSample)
 {
   MOZ_ASSERT(aSample);
 
   if (!IsAVCC(aSample)) {
-    return;
+    return true;
   }
   MOZ_ASSERT(aSample->data);
 
-  ConvertSampleTo4BytesAVCC(aSample);
+  if (!ConvertSampleTo4BytesAVCC(aSample)) {
+    return false;
+  }
 
   if (aSample->size < 4) {
-    // Nothing to do, it's corrupted anyway.
-    return;
+    // Nothing to do, it's corrupted anyway.
+    return true;
   }
 
   ByteReader reader(aSample->data, aSample->size);
@@ -49,14 +51,20 @@ AnnexB::ConvertSampleToAnnexB(MP4Sample* aSample)
     writer.Write(p, nalLen);
   }
 
-  aSample->Replace(tmp.begin(), tmp.length());
+  if (!aSample->Replace(tmp.begin(), tmp.length())) {
+    return false;
+  }
 
   // Prepend the Annex B NAL with SPS and PPS tables to keyframes.
   if (aSample->is_sync_point) {
     nsRefPtr<ByteBuffer> annexB =
       ConvertExtraDataToAnnexB(aSample->extra_data);
-    aSample->Prepend(annexB->Elements(), annexB->Length());
+    if (!aSample->Prepend(annexB->Elements(), annexB->Length())) {
+      return false;
+    }
   }
+
+  return true;
 }
 
 already_AddRefed<ByteBuffer>
@@ -203,18 +211,17 @@ ParseNALUnits(ByteWriter& aBw, ByteReader& aBr)
   }
 }
 
-void
+bool
 AnnexB::ConvertSampleToAVCC(MP4Sample* aSample)
 {
   if (IsAVCC(aSample)) {
-    ConvertSampleTo4BytesAVCC(aSample);
-    return;
+    return ConvertSampleTo4BytesAVCC(aSample);
   }
 
   uint32_t header = mozilla::BigEndian::readUint32(aSample->data);
   if (header != 0x00000001 && (header >> 8) != 0x000001) {
     // Not AnnexB, can't convert.
-    return;
+    return true;
   }
 
   mozilla::Vector<uint8_t> nalu;
@@ -222,7 +229,7 @@ AnnexB::ConvertSampleToAVCC(MP4Sample* aSample)
   ByteReader reader(aSample->data, aSample->size);
 
   ParseNALUnits(writer, reader);
-  aSample->Replace(nalu.begin(), nalu.length());
+  return aSample->Replace(nalu.begin(), nalu.length());
 }
 
 already_AddRefed<ByteBuffer>
@@ -312,7 +319,7 @@ AnnexB::HasSPS(const ByteBuffer* aExtraData)
   return numSps > 0;
 }
 
-void
+bool
 AnnexB::ConvertSampleTo4BytesAVCC(MP4Sample* aSample)
 {
   MOZ_ASSERT(IsAVCC(aSample));
@@ -320,7 +327,7 @@ AnnexB::ConvertSampleTo4BytesAVCC(MP4Sample* aSample)
   int nalLenSize = ((*aSample->extra_data)[4] & 3) + 1;
 
   if (nalLenSize == 4) {
-    return;
+    return true;
   }
   mozilla::Vector<uint8_t> dest;
   ByteWriter writer(dest);
@@ -335,12 +342,12 @@ AnnexB::ConvertSampleTo4BytesAVCC(MP4Sample* aSample)
     }
     const uint8_t* p = reader.Read(nalLen);
     if (!p) {
-      return;
+      return true;
     }
     writer.WriteU32(nalLen);
     writer.Write(p, nalLen);
   }
-  aSample->Replace(dest.begin(), dest.length());
+  return aSample->Replace(dest.begin(), dest.length());
 }
 
 bool

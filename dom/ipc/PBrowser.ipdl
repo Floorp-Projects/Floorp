@@ -517,7 +517,12 @@ child:
                int32_t aModifiers,
                bool aIgnoreRootScrollFrame);
 
-    RealMouseEvent(WidgetMouseEvent event);
+    /**
+     * When two consecutive mouse move events would be added to the message queue,
+     * they are 'compressed' by dumping the oldest one.
+     */
+    RealMouseMoveEvent(WidgetMouseEvent event) compress;
+    RealMouseButtonEvent(WidgetMouseEvent event);
     RealKeyEvent(WidgetKeyboardEvent event, MaybeNativeKeyBinding keyBinding);
     MouseWheelEvent(WidgetWheelEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
     RealTouchEvent(WidgetTouchEvent aEvent, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);

@@ -604,5 +604,12 @@ ARIAGridCellAccessible::NativeAttributes()
   stringIdx.AppendInt(rowIdx * colCount + colIdx);
   nsAccUtils::SetAccAttr(attributes, nsGkAtoms::tableCellIndex, stringIdx);
 
+#ifdef DEBUG
+  nsAutoString unused;
+  attributes->SetStringProperty(NS_LITERAL_CSTRING("cppclass"),
+                                NS_LITERAL_STRING("ARIAGridCellAccessible"),
+                                unused);
+#endif
+
   return attributes.forget();
 }

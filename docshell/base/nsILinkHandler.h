@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -22,7 +23,8 @@ class nsString;
 /**
  * Interface used for handling clicks on links
  */
-class nsILinkHandler : public nsISupports {
+class nsILinkHandler : public nsISupports
+{
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILINKHANDLER_IID)
 
@@ -79,7 +81,7 @@ public:
    * @param aTargetSpec indicates where the link is targeted (it may be an empty
    *        string)
    */
-  NS_IMETHOD OnOverLink(nsIContent* aContent, 
+  NS_IMETHOD OnOverLink(nsIContent* aContent,
                         nsIURI* aURLSpec,
                         const char16_t* aTargetSpec) = 0;
 

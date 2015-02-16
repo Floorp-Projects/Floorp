@@ -256,7 +256,7 @@ template <class T>
 static MOZ_ALWAYS_INLINE T *
 js_pod_malloc(size_t numElems)
 {
-    if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+    if (MOZ_UNLIKELY(numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value))
         return nullptr;
     return (T *)js_malloc(numElems * sizeof(T));
 }
@@ -265,7 +265,7 @@ template <class T>
 static MOZ_ALWAYS_INLINE T *
 js_pod_calloc(size_t numElems)
 {
-    if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+    if (MOZ_UNLIKELY(numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value))
         return nullptr;
     return (T *)js_calloc(numElems * sizeof(T));
 }
@@ -275,7 +275,7 @@ static MOZ_ALWAYS_INLINE T *
 js_pod_realloc(T *prior, size_t oldSize, size_t newSize)
 {
     MOZ_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
-    if (newSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+    if (MOZ_UNLIKELY(newSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value))
         return nullptr;
     return (T *)js_realloc(prior, newSize * sizeof(T));
 }

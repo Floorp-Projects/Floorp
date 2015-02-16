@@ -23,6 +23,7 @@
 #endif
 #include "nsBindingManager.h"
 #include "nsGenericHTMLElement.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "nsWrapperCacheInlines.h"
@@ -466,17 +467,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     if (aReparentScope) {
       JS::Rooted<JSObject*> wrapper(cx);
       if ((wrapper = aNode->GetWrapper())) {
-        if (IsDOMObject(wrapper)) {
-          JSAutoCompartment ac(cx, wrapper);
-          rv = ReparentWrapper(cx, wrapper);
-        } else {
-          nsIXPConnect *xpc = nsContentUtils::XPConnect();
-          if (xpc) {
-            rv = xpc->ReparentWrappedNativeIfFound(cx, wrapper, aReparentScope, aNode);
-          } else {
-            rv = NS_ERROR_FAILURE;
-          }
-        }
+        MOZ_ASSERT(IsDOMObject(wrapper));
+        JSAutoCompartment ac(cx, wrapper);
+        rv = ReparentWrapper(cx, wrapper);
         if (NS_FAILED(rv)) {
           aNode->mNodeInfo.swap(nodeInfo);
 

@@ -345,6 +345,7 @@ HTTP(..) == text-scale-03.svg text-scale-03-ref.svg
 == textPath-02.svg pass.svg
 == textPath-03.svg pass.svg
 == textPath-04.svg pass.svg
+== textPath-05.html pass.svg
 == text-style-01a.svg text-style-01-ref.svg
 == text-style-01b.svg text-style-01-ref.svg
 == text-style-01c.svg text-style-01-ref.svg

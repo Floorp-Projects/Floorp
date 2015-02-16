@@ -528,6 +528,10 @@ template JSObject *js::CreateSimd<Int32x4>(JSContext *cx, Int32x4::Elem *data);
 namespace js {
 // Unary SIMD operators
 template<typename T>
+struct Identity {
+    static inline T apply(T x) { return x; }
+};
+template<typename T>
 struct Abs {
     static inline T apply(T x) { return mozilla::Abs(x); }
 };

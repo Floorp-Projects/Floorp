@@ -1419,7 +1419,7 @@ void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
                "Should be on main or decode thread.");
   AssertCurrentThreadInMonitor();
 
-  if (aDuration == -1) {
+  if (aDuration < 0) {
     mDurationSet = false;
     return;
   }
@@ -2113,6 +2113,13 @@ bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
   AssertCurrentThreadInMonitor();
   NS_ASSERTION(mState > DECODER_STATE_DECODING_FIRSTFRAME,
                "Must have loaded first frame for GetBuffered() to work");
+
+  // If we don't have a duration, GetBuffered is probably not going to produce
+  // a useful buffered range. Return false here so that we don't get stuck in
+  // buffering mode for live streams.
+  if (GetDuration() < 0) {
+    return false;
+  }
 
   nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
   nsresult rv = mReader->GetBuffered(buffered.get());

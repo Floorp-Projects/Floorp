@@ -1254,10 +1254,10 @@ CloneObject(JSContext *cx, HandleNativeObject selfHostedObject)
             return nullptr;
         clone = StringObject::create(cx, str);
     } else if (selfHostedObject->is<ArrayObject>()) {
-        clone = NewDenseEmptyArray(cx, nullptr, TenuredObject);
+        clone = NewDenseEmptyArray(cx, NullPtr(), TenuredObject);
     } else {
         MOZ_ASSERT(selfHostedObject->isNative());
-        clone = NewObjectWithGivenProto(cx, selfHostedObject->getClass(), TaggedProto(nullptr), cx->global(),
+        clone = NewObjectWithGivenProto(cx, selfHostedObject->getClass(), NullPtr(), cx->global(),
                                         selfHostedObject->asTenured().getAllocKind(),
                                         SingletonObject);
     }

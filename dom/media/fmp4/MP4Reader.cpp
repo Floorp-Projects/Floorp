@@ -405,14 +405,12 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
 
   if (mDemuxer->Crypto().valid) {
 #ifdef MOZ_EME
-    if (!sIsEMEEnabled) {
-      // TODO: Need to signal DRM/EME required somehow...
-      return NS_ERROR_FAILURE;
-    }
-
     // We have encrypted audio or video. We'll need a CDM to decrypt and
     // possibly decode this. Wait until we've received a CDM from the
-    // JavaScript player app.
+    // JavaScript player app. Note: we still go through the motions here
+    // even if EME is disabled, so that if script tries and fails to create
+    // a CDM, we can detect that and notify chrome and show some UI explaining
+    // that we failed due to EME being disabled.
     nsRefPtr<CDMProxy> proxy;
     nsTArray<uint8_t> initData;
     ExtractCryptoInitData(initData);

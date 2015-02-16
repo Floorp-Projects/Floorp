@@ -666,6 +666,10 @@ struct GLContextSymbols
                                                               GLsizei width, GLsizei height, GLsizei depth,
                                                               GLenum format, GLsizei imageSize, const GLvoid* data);
     PFNGLCOMPRESSEDTEXSUBIMAGE3D fCompressedTexSubImage3D;
+
+    // get_string_indexed
+    typedef const GLubyte* (GLAPIENTRY * pfnGLGetStringiT)(GLenum name, GLuint index);
+    pfnGLGetStringiT fGetStringi;
 };
 
 }
