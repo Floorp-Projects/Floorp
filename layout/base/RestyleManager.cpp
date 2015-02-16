@@ -1805,7 +1805,6 @@ RestyleManager::PostRestyleEvent(Element* aElement,
   // separate eRestyle_StyleAttribute hints, one for animations and one
   // for other things.
   if (aRestyleHint & ~(eRestyle_CSSTransitions | eRestyle_CSSAnimations |
-                       eRestyle_ChangeAnimationPhase |
                        eRestyle_SVGAttrAnimations)) {
     mHavePendingNonAnimationRestyles = true;
   }
@@ -2724,11 +2723,9 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
 
   // If we are restyling this frame with eRestyle_Self or weaker hints,
   // we restyle children with nsRestyleHint(0).  But we pass the
-  // eRestyle_ChangeAnimationPhaseDescendants and eRestyle_ForceDescendants
-  // flags down too.
+  // eRestyle_ForceDescendants flag down too.
   nsRestyleHint childRestyleHint =
     nsRestyleHint(aRestyleHint & (eRestyle_Subtree |
-                                  eRestyle_ChangeAnimationPhaseDescendants |
                                   eRestyle_ForceDescendants));
 
   nsRefPtr<nsStyleContext> oldContext = mFrame->StyleContext();
@@ -4096,8 +4093,6 @@ RestyleManager::RestyleHintToString(nsRestyleHint aHint)
   bool any = false;
   const char* names[] = { "Self", "Subtree", "LaterSiblings", "CSSTransitions",
                           "CSSAnimations", "SVGAttrAnimations", "StyleAttribute",
-                          "ChangeAnimationPhase",
-                          "ChangeAnimationPhaseDescendants",
                           "Force", "ForceDescendants" };
   uint32_t hint = aHint & ((1 << ArrayLength(names)) - 1);
   uint32_t rest = aHint & ~((1 << ArrayLength(names)) - 1);
