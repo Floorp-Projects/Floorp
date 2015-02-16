@@ -445,7 +445,7 @@ class ShutdownLeaks(object):
     self.leakedWindows = {}
     self.leakedDocShells = set()
     self.currentTest = None
-    self.seenShutdown = set()
+    self.seenShutdown = False
 
   def log(self, message):
     if message['action'] == 'log':
@@ -454,9 +454,8 @@ class ShutdownLeaks(object):
           self._logWindow(line)
         elif line[2:10] == "DOCSHELL":
           self._logDocShell(line)
-        elif line.startswith("Completed ShutdownLeaks collections in process"):
-          pid = int(line.split()[-1])
-          self.seenShutdown.add(pid)
+        elif line.startswith("TEST-START | Shutdown"):
+          self.seenShutdown = True
     elif message['action'] == 'test_start':
       fileName = message['test'].replace("chrome://mochitests/content/browser/", "")
       self.currentTest = {"fileName": fileName, "windows": set(), "docShells": set()}
@@ -500,7 +499,7 @@ class ShutdownLeaks(object):
         windows.add(key)
       else:
         windows.discard(key)
-    elif int(pid) in self.seenShutdown and not created:
+    elif self.seenShutdown and not created:
       self.leakedWindows[key] = self._parseValue(line, "url")
 
   def _logDocShell(self, line):
@@ -521,7 +520,7 @@ class ShutdownLeaks(object):
         docShells.add(key)
       else:
         docShells.discard(key)
-    elif int(pid) in self.seenShutdown and not created:
+    elif self.seenShutdown and not created:
       self.leakedDocShells.add(key)
 
   def _parseValue(self, line, name):
