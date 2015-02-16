@@ -589,7 +589,7 @@ RestyleManager::AddSubtreeToOverflowTracker(nsIFrame* aFrame)
 {
   mOverflowChangedTracker.AddFrame(
       aFrame,
-      OverflowChangedTracker::CHILDREN_AND_PARENT_CHANGED);
+      OverflowChangedTracker::CHILDREN_CHANGED);
   nsIFrame::ChildListIterator lists(aFrame);
   for (; !lists.IsDone(); lists.Next()) {
     nsFrameList::Enumerator childFrames(lists.CurrentList());
@@ -855,7 +855,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
             if (!(childFrame->GetStateBits() &
                   (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
               mOverflowChangedTracker.AddFrame(childFrame,
-                           OverflowChangedTracker::CHILDREN_AND_PARENT_CHANGED);
+                           OverflowChangedTracker::CHILDREN_CHANGED);
             }
             NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrIBSplitSibling(childFrame),
                          "SVG frames should not have continuations "
@@ -874,11 +874,11 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
             OverflowChangedTracker::ChangeKind changeKind;
             // If we have both nsChangeHint_UpdateOverflow and
             // nsChangeHint_UpdatePostTransformOverflow,
-            // CHILDREN_AND_PARENT_CHANGED is selected as it is
+            // CHILDREN_CHANGED is selected as it is
             // strictly stronger.
             if (hint & (nsChangeHint_UpdateOverflow |
                         nsChangeHint_UpdateSubtreeOverflow)) {
-              changeKind = OverflowChangedTracker::CHILDREN_AND_PARENT_CHANGED;
+              changeKind = OverflowChangedTracker::CHILDREN_CHANGED;
             } else {
               changeKind = OverflowChangedTracker::TRANSFORM_CHANGED;
             }
