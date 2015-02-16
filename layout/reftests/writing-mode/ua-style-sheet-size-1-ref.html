@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical margins on marquee elements in the UA style sheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; padding: 16px; }
+marquee { background-color: yellow; color: transparent; }
+.ltr marquee { width: -moz-available; height: auto; }
+.rtl marquee { width: -moz-available; height: auto; }
+.v-rl marquee { width: auto; height: -moz-available; }
+</style>
+<div class=ltr>
+  <marquee>A</marquee>
+</div>
+<div class=rtl dir=rtl>
+  <marquee>A</marquee>
+</div>
+<div class=v-rl>
+  <marquee>A</marquee>
+</div>

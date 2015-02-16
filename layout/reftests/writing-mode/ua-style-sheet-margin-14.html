@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical margins on hr elements in the UA style sheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+hr { width: 100px; height: 100px; }
+</style>
+<div class=ltr>
+  <hr>
+</div>
+<div class=rtl dir=rtl>
+  <hr>
+</div>
+<div class=v-rl>
+  <hr>
+</div>

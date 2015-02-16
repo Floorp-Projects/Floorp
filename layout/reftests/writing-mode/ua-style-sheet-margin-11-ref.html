@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical margins on ul elements in the UA style sheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+.ltr ul { margin: 1em 0; padding: 0 0 0 40px; }
+.rtl ul { margin: 1em 0; padding: 0 40px 0 0; }
+.v-rl ul { margin: 0 1em; padding: 40px 0 0 0; }
+</style>
+<div class=ltr>
+  <ul>
+    <li>Item</li>
+  </ul>
+</div>
+<div class=rtl dir=rtl>
+  <ul>
+    <li>Item</li>
+  </ul>
+</div>
+<div class=v-rl>
+  <ul>
+    <li>Item</li>
+  </ul>
+</div>

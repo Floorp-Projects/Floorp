@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical margins on h[123] elements in the UA style sheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+h1, h2, h3 { font-size: 16px; border: 1px solid purple; }
+.ltr h1 { margin: 0.67em 0; }
+.rtl h1 { margin: 0.67em 0; }
+.v-rl h1 { margin: 0 0.67em; }
+.ltr h2 { margin: 0.83em 0; }
+.rtl h2 { margin: 0.83em 0; }
+.v-rl h2 { margin: 0 0.83em; }
+.ltr h3 { margin: 1em 0; }
+.rtl h3 { margin: 1em 0; }
+.v-rl h3 { margin: 0 1em; }
+</style>
+<div class=ltr>
+  <h1>Heading 1</h1>
+  <h2>Heading 2</h2>
+  <h3>Heading 3</h3>
+</div>
+<div class=rtl dir=rtl>
+  <h1>Heading 1</h1>
+  <h2>Heading 2</h2>
+  <h3>Heading 3</h3>
+</div>
+<div class=v-rl>
+  <h1>Heading 1</h1>
+  <h2>Heading 2</h2>
+  <h3>Heading 3</h3>
+</div>
