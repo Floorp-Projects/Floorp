@@ -374,6 +374,12 @@ enum nsRestyleHint {
   // eRestyle_Subtree, which makes us rerun selector matching on all
   // descendants rather than just continuing the restyling process.
   eRestyle_ForceDescendants = (1<<10),
+
+  // Useful unions:
+  eRestyle_AllHintsWithAnimations = eRestyle_CSSTransitions |
+                                    eRestyle_CSSAnimations |
+                                    eRestyle_SVGAttrAnimations |
+                                    eRestyle_StyleAttribute,
 };
 
 // The functions below need an integral type to cast to to avoid
