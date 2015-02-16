@@ -582,7 +582,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
             if (!styleWithoutAnimation) {
               styleWithoutAnimation = mPresContext->StyleSet()->
                 ResolveStyleWithoutAnimation(aTarget, aStyleContext,
-                                             eRestyle_ChangeAnimationPhase);
+                                             eRestyle_AllHintsWithAnimations);
             }
             interpolated = interpolated &&
               BuildSegment(propData.mSegments, prop, src,
@@ -601,7 +601,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
         if (!styleWithoutAnimation) {
           styleWithoutAnimation = mPresContext->StyleSet()->
             ResolveStyleWithoutAnimation(aTarget, aStyleContext,
-                                         eRestyle_ChangeAnimationPhase);
+                                         eRestyle_AllHintsWithAnimations);
         }
         interpolated = interpolated &&
           BuildSegment(propData.mSegments, prop, src,
