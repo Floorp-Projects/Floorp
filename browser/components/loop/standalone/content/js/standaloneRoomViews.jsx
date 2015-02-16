@@ -263,6 +263,16 @@ loop.standaloneRoomViews = (function(mozL10n) {
         // initial size correctly.
         this.updateVideoContainer();
       }
+
+      // When screen sharing stops.
+      if (this.state.receivingScreenShare && !nextState.receivingScreenShare) {
+        // Remove the custom screenshare styles on the remote camera.
+        var node = this._getElement(".remote");
+        node.removeAttribute("style");
+
+        // Force the video sizes to update.
+        this.updateVideoContainer();
+      }
     },
 
     joinRoom: function() {
@@ -317,8 +327,10 @@ loop.standaloneRoomViews = (function(mozL10n) {
         // and positioned to overlap with the remote stream at a quarter of its width.
 
         // Now position the local camera view correctly with respect to the remote
-        // video stream.
-        var remoteVideoDimensions = this.getRemoteVideoDimensions();
+        // video stream or the screen share stream.
+        var remoteVideoDimensions = this.getRemoteVideoDimensions(
+          this.state.receivingScreenShare ? "screen" : "camera");
+
         targetWidth = remoteVideoDimensions.streamWidth * LOCAL_STREAM_SIZE;
 
         var realWidth = targetWidth * ratio.width;
@@ -346,6 +358,53 @@ loop.standaloneRoomViews = (function(mozL10n) {
     },
 
     /**
+     * Specifically updates the remote camera stream size and position, if
+     * a screen share is being received. It is slaved from the position of the
+     * local stream.
+     * This method gets called from `updateVideoContainer`, which is defined in
+     * the `MediaSetupMixin`.
+     *
+     * @param  {Object} ratio Aspect ratio of the remote camera stream
+     */
+    updateRemoteCameraPosition: function(ratio) {
+      // Nothing to do for screenshare
+      if (!this.state.receivingScreenShare) {
+        return;
+      }
+      // XXX For the time being, if we're a narrow screen, aka mobile, we don't display
+      // the remote media (bug 1133534).
+      if (window.matchMedia && window.matchMedia("screen and (max-width:640px)").matches) {
+        return;
+      }
+
+      // 10px separation between the two streams.
+      var LOCAL_REMOTE_SEPARATION = 10;
+
+      var node = this._getElement(".remote");
+      var localNode = this._getElement(".local");
+
+      // Match the width to the local video.
+      node.style.width = localNode.offsetWidth + "px";
+
+      // The height is then determined from the aspect ratio
+      var height = ((localNode.offsetWidth / ratio.width) * ratio.height);
+      node.style.height = height + "px";
+
+      node.style.right = "auto";
+      node.style.bottom = "auto";
+
+      // Now position the local camera view correctly with respect to the remote
+      // video stream.
+
+      // The top is measured from the top of the element down the screen,
+      // so subtract the height of the video and the separation distance.
+      node.style.top = (localNode.offsetTop - height - LOCAL_REMOTE_SEPARATION) + "px";
+
+      // Match the left-hand sides.
+      node.style.left = localNode.offsetLeft + "px";
+    },
+
+    /**
      * Checks if current room is active.
      *
      * @return {Boolean}
@@ -367,14 +426,14 @@ loop.standaloneRoomViews = (function(mozL10n) {
       var remoteStreamClasses = React.addons.classSet({
         "video_inner": true,
         "remote": true,
-        "remote-stream": true,
-        hide: this.state.receivingScreenShare
+        "focus-stream": !this.state.receivingScreenShare,
+        "remote-inset-stream": this.state.receivingScreenShare
       });
 
       var screenShareStreamClasses = React.addons.classSet({
         "screen": true,
-        "remote-stream": true,
-        hide: !this.state.receivingScreenShare
+        "focus-stream": this.state.receivingScreenShare,
+        hide: !this.state.receivingScreenShare,
       });
 
       return (

@@ -275,14 +275,17 @@ loop.shared.mixins = (function() {
      *       same name as the possible video types (currently only "screen").
      * Note: Once we support multiple remote video streams, this function will
      *       need to be updated.
+     *
+     * @param {string} videoType The video type according to the sdk, e.g. "camera" or
+     *                           "screen".
      * @return {Object} contains the remote stream dimension properties of its
      *                  container node, the stream itself and offset of the stream
      *                  relative to its container node in pixels.
      */
-    getRemoteVideoDimensions: function() {
+    getRemoteVideoDimensions: function(videoType) {
       var remoteVideoDimensions;
 
-      Object.keys(this._videoDimensionsCache.remote).forEach(function(videoType) {
+      if (videoType in this._videoDimensionsCache.remote) {
         var node = this._getElement("." + (videoType === "camera" ? "remote" : videoType));
         var width = node.offsetWidth;
         // If the width > 0 then we record its real size by taking its aspect
@@ -327,7 +330,7 @@ loop.shared.mixins = (function() {
               remoteVideoDimensions.height: leadingAxisSize;
           }
         }
-      }, this);
+      }
 
       // Supply some sensible defaults for the remoteVideoDimensions if no remote
       // stream is connected (yet).
@@ -387,13 +390,19 @@ loop.shared.mixins = (function() {
           screenShareStreamParent.style.height = "100%";
         }
 
-        // Update the position and dimensions of the containers of local video
-        // streams, if necessary. The consumer of this mixin should implement the
-        // actual updating mechanism.
+        // Update the position and dimensions of the containers of local and remote
+        // video streams, if necessary. The consumer of this mixin should implement
+        // the actual updating mechanism.
         Object.keys(this._videoDimensionsCache.local).forEach(function(videoType) {
           var ratio = this._videoDimensionsCache.local[videoType].aspectRatio;
           if (videoType == "camera" && this.updateLocalCameraPosition) {
             this.updateLocalCameraPosition(ratio);
+          }
+        }, this);
+        Object.keys(this._videoDimensionsCache.remote).forEach(function(videoType) {
+          var ratio = this._videoDimensionsCache.remote[videoType].aspectRatio;
+          if (videoType == "camera" && this.updateRemoteCameraPosition) {
+            this.updateRemoteCameraPosition(ratio);
           }
         }, this);
       }.bind(this), 0);
