@@ -333,7 +333,8 @@ class SimdTypeDescr : public ComplexTypeDescr
     enum Type {
         TYPE_INT32 = JS_SIMDTYPEREPR_INT32,
         TYPE_FLOAT32 = JS_SIMDTYPEREPR_FLOAT32,
-        TYPE_FLOAT64 = JS_SIMDTYPEREPR_FLOAT64
+        TYPE_FLOAT64 = JS_SIMDTYPEREPR_FLOAT64,
+        LAST_TYPE = TYPE_FLOAT64
     };
 
     static const type::Kind Kind = type::Simd;

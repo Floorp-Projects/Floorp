@@ -7,10 +7,12 @@
 #ifndef jit_JitCompartment_h
 #define jit_JitCompartment_h
 
+#include "mozilla/Array.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "jsweakcache.h"
 
+#include "builtin/TypedObject.h"
 #include "jit/CompileInfo.h"
 #include "jit/IonCode.h"
 #include "jit/JitFrames.h"
@@ -433,11 +435,19 @@ class JitCompartment
     JitCode *regExpExecStub_;
     JitCode *regExpTestStub_;
 
+    mozilla::Array<ReadBarrieredObject, SimdTypeDescr::LAST_TYPE + 1> simdTemplateObjects_;
+
     JitCode *generateStringConcatStub(JSContext *cx);
     JitCode *generateRegExpExecStub(JSContext *cx);
     JitCode *generateRegExpTestStub(JSContext *cx);
 
   public:
+    JSObject *getSimdTemplateObjectFor(JSContext *cx, Handle<SimdTypeDescr*> descr) {
+        ReadBarrieredObject &tpl = simdTemplateObjects_[descr->type()];
+        if (!tpl)
+            tpl.set(TypedObject::createZeroed(cx, descr, 0, gc::TenuredHeap));
+        return tpl.get();
+    }
     JitCode *getStubCode(uint32_t key) {
         ICStubCodeMap::AddPtr p = stubCodes_->lookupForAdd(key);
         if (p)
