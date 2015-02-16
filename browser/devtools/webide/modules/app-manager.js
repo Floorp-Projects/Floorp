@@ -481,7 +481,10 @@ let AppManager = exports.AppManager = {
     return Task.spawn(function* () {
       let self = AppManager;
 
-      let packageDir = yield ProjectBuilding.build(project);
+      let packageDir = yield ProjectBuilding.build({
+        project: project,
+        logger: self.update.bind(self, "pre-package")
+      });
 
       yield self.validateProject(project);
 

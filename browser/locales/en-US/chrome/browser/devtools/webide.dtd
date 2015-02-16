@@ -94,6 +94,7 @@
 <!ENTITY details_location "Location">
 <!ENTITY details_manifestURL "App ID">
 <!ENTITY details_removeProject_button "Remove Project">
+<!ENTITY details_showPrepackageLog_button "Show Pre-package Log">
 
 <!-- New App -->
 <!ENTITY newAppWindowTitle "New App">
@@ -191,3 +192,6 @@
 <!-- LOCALIZATION NOTE (wifi_auth_token_request): Instructions requesting the
      user to transfer authentication info by transferring a token. -->
 <!ENTITY wifi_auth_token_request "If your other device asks for a token instead of scanning a QR code, please copy the value below to the other device:">
+
+<!-- Logs panel -->
+<!ENTITY logs_title "Pre-packaging Command Logs">
