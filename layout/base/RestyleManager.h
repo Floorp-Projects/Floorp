@@ -517,6 +517,7 @@ private:
   // Whether we're currently in the animation phase of restyle
   // processing (to be eliminated in bug 960465)
   bool mIsProcessingAnimationStyleChange : 1;
+  bool mHavePendingNonAnimationRestyles : 1;
 
   uint32_t mHoverGeneration;
   nsChangeHint mRebuildAllExtraHint;
