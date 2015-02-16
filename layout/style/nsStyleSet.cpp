@@ -1409,21 +1409,12 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
                                         eRestyle_CSSAnimations |
                                         eRestyle_SVGAttrAnimations |
                                         eRestyle_StyleAttribute |
-                                        eRestyle_ChangeAnimationPhase |
-                                        eRestyle_ChangeAnimationPhaseDescendants |
                                         eRestyle_Force |
                                         eRestyle_ForceDescendants)),
                     // FIXME: Once bug 979133 lands we'll have a better
                     // way to print these.
                     nsPrintfCString("unexpected replacement bits 0x%" PRIX32,
                                     uint32_t(aReplacements)).get());
-
-  // If we're changing animation phase, we have to reconsider what rules
-  // are in these four levels.
-  if (aReplacements & (eRestyle_ChangeAnimationPhase |
-                       eRestyle_ChangeAnimationPhaseDescendants)) {
-    aReplacements |= eRestyle_AllHintsWithAnimations;
-  }
 
   // FIXME (perf): This should probably not rebuild the whole path, but
   // only the path from the last change in the rule tree, like
@@ -1487,10 +1478,6 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           break;
         }
         case eRestyle_SVGAttrAnimations: {
-          MOZ_ASSERT(aReplacements & (eRestyle_ChangeAnimationPhase |
-                                      eRestyle_ChangeAnimationPhaseDescendants),
-                     "don't know how to do this level without phase change");
-
           SVGAttrAnimationRuleProcessor* ruleProcessor =
             static_cast<SVGAttrAnimationRuleProcessor*>(
               mRuleProcessors[eSVGAttrAnimationSheet].get());
@@ -1501,10 +1488,6 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           break;
         }
         case eRestyle_StyleAttribute: {
-          MOZ_ASSERT(aReplacements & (eRestyle_ChangeAnimationPhase |
-                                      eRestyle_ChangeAnimationPhaseDescendants),
-                     "don't know how to do this level without phase change");
-
           if (!level->mIsImportant) {
             // First time through, we handle the non-!important rule.
             nsHTMLCSSStyleSheet* ruleProcessor =
