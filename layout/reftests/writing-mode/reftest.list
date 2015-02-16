@@ -63,8 +63,9 @@ fuzzy(116,64) HTTP(..) == 1115916-1-vertical-metrics.html 1115916-1-vertical-met
 == ua-style-sheet-size-2.html ua-style-sheet-size-2-ref.html
 
 == ua-style-sheet-fieldset-1.html ua-style-sheet-fieldset-1-ref.html
-skip-if(Android||B2G) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1a-ref.html
+skip-if(Android||B2G||(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu))) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1a-ref.html
 skip-if(!(Android||B2G)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1b-ref.html
+skip-if(!winWidget||/^Windows\x20NT\x205\.1/.test(http.oscpu)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1c-ref.html
 == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1-ref.html
 skip-if(Android||B2G) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html
 skip-if(!(Android||B2G)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html
