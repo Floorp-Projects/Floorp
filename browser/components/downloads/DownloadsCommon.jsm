@@ -8,7 +8,6 @@
 
 this.EXPORTED_SYMBOLS = [
   "DownloadsCommon",
-  "DownloadsDataItem",
 ];
 
 /**
@@ -22,13 +21,8 @@ this.EXPORTED_SYMBOLS = [
  *
  * DownloadsData
  * Retrieves the list of past and completed downloads from the underlying
- * Download Manager data, and provides asynchronous notifications allowing
+ * Downloads API data, and provides asynchronous notifications allowing
  * to build a consistent view of the available data.
- *
- * DownloadsDataItem
- * Represents a single item in the list of downloads.  This object wraps the
- * Download object from the JavaScript API for downloads.  A specialized version
- * of this object is implemented in the Places front-end view.
  *
  * DownloadsIndicatorData
  * This object registers itself with DownloadsData as a view, and transforms the
@@ -350,10 +344,10 @@ this.DownloadsCommon = {
   },
 
   /**
-   * Given an iterable collection of DownloadDataItems, generates and returns
+   * Given an iterable collection of Download objects, generates and returns
    * statistics about that collection.
    *
-   * @param aDataItems An iterable collection of DownloadDataItems.
+   * @param downloads An iterable collection of Download objects.
    *
    * @return Object whose properties are the generated statistics. Currently,
    *         we return the following properties:
@@ -370,7 +364,7 @@ this.DownloadsCommon = {
    *                           complete.
    *         percentComplete : The percentage of bytes successfully downloaded.
    */
-  summarizeDownloads(aDataItems) {
+  summarizeDownloads(downloads) {
     let summary = {
       numActive: 0,
       numPaused: 0,
@@ -381,14 +375,13 @@ this.DownloadsCommon = {
       // slowestSpeed is Infinity so that we can use Math.min to
       // find the slowest speed. We'll set this to 0 afterwards if
       // it's still at Infinity by the time we're done iterating all
-      // dataItems.
+      // download.
       slowestSpeed: Infinity,
       rawTimeLeft: -1,
       percentComplete: -1
     }
 
-    for (let dataItem of aDataItems) {
-      let download = dataItem.download;
+    for (let download of downloads) {
       let state = DownloadsCommon.stateOfDownload(download);
       let maxBytes = DownloadsCommon.maxBytesOfDownload(download);
 
@@ -659,16 +652,12 @@ XPCOMUtils.defineLazyGetter(DownloadsCommon, "isWinVistaOrHigher", function () {
 function DownloadsDataCtor(aPrivate) {
   this._isPrivate = aPrivate;
 
-  // Contains all the available DownloadsDataItem objects.
-  this.dataItems = new Set();
+  // Contains all the available Download objects and their integer state.
   this.oldDownloadStates = new Map();
 
   // Array of view objects that should be notified when the available download
   // data changes.
   this._views = [];
-
-  // Maps Download objects to DownloadDataItem objects.
-  this._downloadToDataItemMap = new Map();
 }
 
 DownloadsDataCtor.prototype = {
@@ -686,11 +675,16 @@ DownloadsDataCtor.prototype = {
   _dataLinkInitialized: false,
 
   /**
+   * Iterator for all the available Download objects. This is empty until the
+   * data has been loaded using the JavaScript API for downloads.
+   */
+  get downloads() this.oldDownloadStates.keys(),
+
+  /**
    * True if there are finished downloads that can be removed from the list.
    */
   get canRemoveFinished() {
-    for (let dataItem of this.dataItems) {
-      let download = dataItem.download;
+    for (let download of this.oldDownloadStates.keys()) {
       // Stopped, paused, and failed downloads with partial data are removed.
       if (download.stopped && !(download.canceled && download.hasPartialData)) {
         return true;
@@ -712,35 +706,32 @@ DownloadsDataCtor.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// Integration with the asynchronous Downloads back-end
 
-  onDownloadAdded(aDownload) {
-    let dataItem = new DownloadsDataItem(aDownload);
-    this._downloadToDataItemMap.set(aDownload, dataItem);
-    this.dataItems.add(dataItem);
-    this.oldDownloadStates.set(aDownload,
-                               DownloadsCommon.stateOfDownload(aDownload));
+  onDownloadAdded(download) {
+    // Download objects do not store the end time of downloads, as the Downloads
+    // API does not need to persist this information for all platforms. Once a
+    // download terminates on a Desktop browser, it becomes a history download,
+    // for which the end time is stored differently, as a Places annotation.
+    download.endTime = Date.now();
+
+    this.oldDownloadStates.set(download,
+                               DownloadsCommon.stateOfDownload(download));
 
     for (let view of this._views) {
-      view.onDataItemAdded(dataItem, true);
+      view.onDownloadAdded(download, true);
     }
   },
 
-  onDownloadChanged(aDownload) {
-    let aDataItem = this._downloadToDataItemMap.get(aDownload);
-    if (!aDataItem) {
-      Cu.reportError("Download doesn't exist.");
-      return;
-    }
-
-    let oldState = this.oldDownloadStates.get(aDownload);
-    let newState = DownloadsCommon.stateOfDownload(aDownload);
-    this.oldDownloadStates.set(aDownload, newState);
+  onDownloadChanged(download) {
+    let oldState = this.oldDownloadStates.get(download);
+    let newState = DownloadsCommon.stateOfDownload(download);
+    this.oldDownloadStates.set(download, newState);
 
     if (oldState != newState) {
-      if (aDownload.succeeded ||
-          (aDownload.canceled && !aDownload.hasPartialData) ||
-          aDownload.error) {
+      if (download.succeeded ||
+          (download.canceled && !download.hasPartialData) ||
+          download.error) {
         // Store the end time that may be displayed by the views.
-        aDownload.endTime = Date.now();
+        download.endTime = Date.now();
 
         // This state transition code should actually be located in a Downloads
         // API module (bug 941009).  Moreover, the fact that state is stored as
@@ -749,17 +740,17 @@ DownloadsDataCtor.prototype = {
         if (!this._isPrivate) {
           try {
             let downloadMetaData = {
-              state: DownloadsCommon.stateOfDownload(aDownload),
-              endTime: aDownload.endTime,
+              state: DownloadsCommon.stateOfDownload(download),
+              endTime: download.endTime,
             };
-            if (aDownload.succeeded ||
-                (aDownload.error && aDownload.error.becauseBlocked)) {
+            if (download.succeeded ||
+                (download.error && download.error.becauseBlocked)) {
               downloadMetaData.fileSize =
-                DownloadsCommon.maxBytesOfDownload(aDataItem.download);
+                DownloadsCommon.maxBytesOfDownload(download);
             }
   
             PlacesUtils.annotations.setPageAnnotation(
-                          NetUtil.newURI(aDownload.source.url),
+                          NetUtil.newURI(download.source.url),
                           "downloads/metaData",
                           JSON.stringify(downloadMetaData), 0,
                           PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
@@ -771,40 +762,33 @@ DownloadsDataCtor.prototype = {
 
       for (let view of this._views) {
         try {
-          view.onDataItemStateChanged(aDataItem);
+          view.onDownloadStateChanged(download);
         } catch (ex) {
           Cu.reportError(ex);
         }
       }
 
-      if (aDownload.succeeded ||
-          (aDownload.error && aDownload.error.becauseBlocked)) {
+      if (download.succeeded ||
+          (download.error && download.error.becauseBlocked)) {
         this._notifyDownloadEvent("finish");
       }
     }
 
-    if (!aDownload.newDownloadNotified) {
-      aDownload.newDownloadNotified = true;
+    if (!download.newDownloadNotified) {
+      download.newDownloadNotified = true;
       this._notifyDownloadEvent("start");
     }
 
     for (let view of this._views) {
-      view.onDataItemChanged(aDataItem);
+      view.onDownloadChanged(download);
     }
   },
 
-  onDownloadRemoved(aDownload) {
-    let dataItem = this._downloadToDataItemMap.get(aDownload);
-    if (!dataItem) {
-      Cu.reportError("Download doesn't exist.");
-      return;
-    }
+  onDownloadRemoved(download) {
+    this.oldDownloadStates.delete(download);
 
-    this._downloadToDataItemMap.delete(aDownload);
-    this.dataItems.delete(dataItem);
-    this.oldDownloadStates.delete(aDownload);
     for (let view of this._views) {
-      view.onDataItemRemoved(dataItem);
+      view.onDownloadRemoved(download);
     }
   },
 
@@ -849,9 +833,9 @@ DownloadsDataCtor.prototype = {
 
     // Sort backwards by start time, ensuring that the most recent
     // downloads are added first regardless of their state.
-    let loadedItemsArray = [...this.dataItems];
-    loadedItemsArray.sort((a, b) => b.download.startTime - a.download.startTime);
-    loadedItemsArray.forEach(dataItem => aView.onDataItemAdded(dataItem, false));
+    let downloadsArray = [...this.oldDownloadStates.keys()];
+    downloadsArray.sort((a, b) => b.startTime - a.startTime);
+    downloadsArray.forEach(download => aView.onDownloadAdded(download, false));
 
     // Notify the view that all data is available.
     aView.onDataLoadCompleted();
@@ -912,106 +896,6 @@ XPCOMUtils.defineLazyGetter(this, "PrivateDownloadsData", function() {
 XPCOMUtils.defineLazyGetter(this, "DownloadsData", function() {
   return new DownloadsDataCtor(false);
 });
-
-////////////////////////////////////////////////////////////////////////////////
-//// DownloadsDataItem
-
-/**
- * Represents a single item in the list of downloads.
- *
- * The endTime property is initialized to the current date and time.
- *
- * @param aDownload
- *        The Download object with the current state.
- */
-function DownloadsDataItem(aDownload) {
-  this.download = aDownload;
-  this.download.endTime = Date.now();
-}
-
-DownloadsDataItem.prototype = {
-  get state() DownloadsCommon.stateOfDownload(this.download),
-
-  /**
-   * Indicates whether the download is proceeding normally, and not finished
-   * yet.  This includes paused downloads.  When this property is true, the
-   * "progress" property represents the current progress of the download.
-   */
-  get inProgress() {
-    return [
-      nsIDM.DOWNLOAD_NOTSTARTED,
-      nsIDM.DOWNLOAD_QUEUED,
-      nsIDM.DOWNLOAD_DOWNLOADING,
-      nsIDM.DOWNLOAD_PAUSED,
-      nsIDM.DOWNLOAD_SCANNING,
-    ].indexOf(this.state) != -1;
-  },
-
-  /**
-   * This is true during the initial phases of a download, before the actual
-   * download of data bytes starts.
-   */
-  get starting() {
-    return this.state == nsIDM.DOWNLOAD_NOTSTARTED ||
-           this.state == nsIDM.DOWNLOAD_QUEUED;
-  },
-
-  /**
-   * Indicates whether the download is paused.
-   */
-  get paused() {
-    return this.state == nsIDM.DOWNLOAD_PAUSED;
-  },
-
-  /**
-   * Indicates whether the download is in a final state, either because it
-   * completed successfully or because it was blocked.
-   */
-  get done() {
-    return [
-      nsIDM.DOWNLOAD_FINISHED,
-      nsIDM.DOWNLOAD_BLOCKED_PARENTAL,
-      nsIDM.DOWNLOAD_BLOCKED_POLICY,
-      nsIDM.DOWNLOAD_DIRTY,
-    ].indexOf(this.state) != -1;
-  },
-
-  /**
-   * Indicates whether the download stopped because of an error, and can be
-   * resumed manually.
-   */
-  get canRetry() {
-    return this.state == nsIDM.DOWNLOAD_CANCELED ||
-           this.state == nsIDM.DOWNLOAD_FAILED;
-  },
-
-  /**
-   * Returns the nsILocalFile for the download target.
-   *
-   * @throws if the native path is not valid.  This can happen if the same
-   *         profile is used on different platforms, for example if a native
-   *         Windows path is stored and then the item is accessed on a Mac.
-   *
-   * @deprecated Callers should use OS.File and "download.target.path".
-   */
-  get localFile() {
-    // We should remove  should use this.download.target.partFilePath and check asyncrhonously.
-    return new FileUtils.File(this.download.target.path);
-  },
-
-  /**
-   * Returns the nsILocalFile for the partially downloaded target.
-   *
-   * @throws if the native path is not valid.  This can happen if the same
-   *         profile is used on different platforms, for example if a native
-   *         Windows path is stored and then the item is accessed on a Mac.
-   *
-   * @deprecated Callers should use OS.File and "download.target.partFilePath".
-   */
-  get partFile() {
-    return new FileUtils.File(this.download.target.path + kPartialDownloadSuffix);
-  },
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadsViewPrototype
@@ -1123,9 +1007,9 @@ const DownloadsViewPrototype = {
    * Called when a new download data item is available, either during the
    * asynchronous data load or when a new download is started.
    *
-   * @param aDataItem
-   *        DownloadsDataItem object that was just added.
-   * @param aNewest
+   * @param download
+   *        Download object that was just added.
+   * @param newest
    *        When true, indicates that this item is the most recent and should be
    *        added in the topmost position.  This happens when a new download is
    *        started.  When false, indicates that the item is the least recent
@@ -1134,7 +1018,33 @@ const DownloadsViewPrototype = {
    *
    * @note Subclasses should override this.
    */
-  onDataItemAdded(aDataItem, aNewest) {
+  onDownloadAdded(download, newest) {
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  /**
+   * Called when the overall state of a Download has changed. In particular,
+   * this is called only once when the download succeeds or is blocked
+   * permanently, and is never called if only the current progress changed.
+   *
+   * The onDownloadChanged notification will always be sent afterwards.
+   *
+   * @note Subclasses should override this.
+   */
+  onDownloadStateChanged(download) {
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  /**
+   * Called every time any state property of a Download may have changed,
+   * including progress properties.
+   *
+   * Note that progress notification changes are throttled at the Downloads.jsm
+   * API level, and there is no throttling mechanism in the front-end.
+   *
+   * @note Subclasses should override this.
+   */
+  onDownloadChanged(download) {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
 
@@ -1142,36 +1052,12 @@ const DownloadsViewPrototype = {
    * Called when a data item is removed, ensures that the widget associated with
    * the view item is removed from the user interface.
    *
-   * @param aDataItem
-   *        DownloadsDataItem object that is being removed.
+   * @param download
+   *        Download object that is being removed.
    *
    * @note Subclasses should override this.
    */
-  onDataItemRemoved(aDataItem) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-  },
-
-  /**
-   * Called when the "state" property of a DownloadsDataItem has changed.
-   *
-   * The onDataItemChanged notification will be sent afterwards.
-   *
-   * @note Subclasses should override this.
-   */
-  onDataItemStateChanged(aDataItem) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-  },
-
-  /**
-   * Called every time any state property of a DownloadsDataItem may have
-   * changed, including progress properties and the "state" property.
-   *
-   * Note that progress notification changes are throttled at the Downloads.jsm
-   * API level, and there is no throttling mechanism in the front-end.
-   *
-   * @note Subclasses should override this.
-   */
-  onDataItemChanged(aDataItem) {
+  onDownloadRemoved(download) {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
 
@@ -1232,48 +1118,17 @@ DownloadsIndicatorDataCtor.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// Callback functions from DownloadsData
 
-  /**
-   * Called after data loading finished.
-   */
   onDataLoadCompleted() {
     DownloadsViewPrototype.onDataLoadCompleted.call(this);
     this._updateViews();
   },
 
-  /**
-   * Called when a new download data item is available, either during the
-   * asynchronous data load or when a new download is started.
-   *
-   * @param aDataItem
-   *        DownloadsDataItem object that was just added.
-   * @param aNewest
-   *        When true, indicates that this item is the most recent and should be
-   *        added in the topmost position.  This happens when a new download is
-   *        started.  When false, indicates that the item is the least recent
-   *        with regard to the items that have been already added. The latter
-   *        generally happens during the asynchronous data load.
-   */
-  onDataItemAdded(aDataItem, aNewest) {
+  onDownloadAdded(download, newest) {
     this._itemCount++;
     this._updateViews();
   },
 
-  /**
-   * Called when a data item is removed, ensures that the widget associated with
-   * the view item is removed from the user interface.
-   *
-   * @param aDataItem
-   *        DownloadsDataItem object that is being removed.
-   */
-  onDataItemRemoved(aDataItem) {
-    this._itemCount--;
-    this._updateViews();
-  },
-
-  // DownloadsView
-  onDataItemStateChanged(aDataItem) {
-    let download = aDataItem.download;
-
+  onDownloadStateChanged(download) {
     if (download.succeeded || download.error) {
       this.attention = true;
     }
@@ -1283,8 +1138,12 @@ DownloadsIndicatorDataCtor.prototype = {
     this._lastTimeLeft = -1;
   },
 
-  // DownloadsView
-  onDataItemChanged() {
+  onDownloadChanged(download) {
+    this._updateViews();
+  },
+
+  onDownloadRemoved(download) {
+    this._itemCount--;
     this._updateViews();
   },
 
@@ -1372,21 +1231,17 @@ DownloadsIndicatorDataCtor.prototype = {
   _lastTimeLeft: -1,
 
   /**
-   * A generator function for the dataItems that this summary is currently
+   * A generator function for the Download objects this summary is currently
    * interested in. This generator is passed off to summarizeDownloads in order
-   * to generate statistics about the dataItems we care about - in this case,
-   * it's all dataItems for active downloads.
+   * to generate statistics about the downloads we care about - in this case,
+   * it's all active downloads.
    */
-  _activeDataItems() {
-    let dataItems = this._isPrivate ? PrivateDownloadsData.dataItems
-                                    : DownloadsData.dataItems;
-    for (let dataItem of dataItems) {
-      if (!dataItem) {
-        continue;
-      }
-      let download = dataItem.download;
+  _activeDownloads() {
+    let downloads = this._isPrivate ? PrivateDownloadsData.downloads
+                                    : DownloadsData.downloads;
+    for (let download of downloads) {
       if (!download.stopped || (download.canceled && download.hasPartialData)) {
-        yield dataItem;
+        yield download;
       }
     }
   },
@@ -1396,7 +1251,7 @@ DownloadsIndicatorDataCtor.prototype = {
    */
   _refreshProperties() {
     let summary =
-      DownloadsCommon.summarizeDownloads(this._activeDataItems());
+      DownloadsCommon.summarizeDownloads(this._activeDownloads());
 
     // Determine if the indicator should be shown or get attention.
     this._hasDownloads = (this._itemCount > 0);
@@ -1457,7 +1312,7 @@ function DownloadsSummaryData(aIsPrivate, aNumToExclude) {
   // completely separated from one another.
   this._loading = false;
 
-  this._dataItems = [];
+  this._downloads = [];
 
   // Floating point value indicating the last number of seconds estimated until
   // the longest download will finish.  We need to store this value so that we
@@ -1496,9 +1351,9 @@ DownloadsSummaryData.prototype = {
     DownloadsViewPrototype.removeView.call(this, aView);
 
     if (this._views.length == 0) {
-      // Clear out our collection of DownloadDataItems. If we ever have
+      // Clear out our collection of Download objects. If we ever have
       // another view registered with us, this will get re-populated.
-      this._dataItems = [];
+      this._downloads = [];
     }
   },
 
@@ -1512,31 +1367,29 @@ DownloadsSummaryData.prototype = {
     this._updateViews();
   },
 
-  onDataItemAdded(aDataItem, aNewest) {
-    if (aNewest) {
-      this._dataItems.unshift(aDataItem);
+  onDownloadAdded(download, newest) {
+    if (newest) {
+      this._downloads.unshift(download);
     } else {
-      this._dataItems.push(aDataItem);
+      this._downloads.push(download);
     }
 
     this._updateViews();
   },
 
-  onDataItemRemoved(aDataItem) {
-    let itemIndex = this._dataItems.indexOf(aDataItem);
-    this._dataItems.splice(itemIndex, 1);
-    this._updateViews();
-  },
-
-  // DownloadsView
-  onDataItemStateChanged() {
+  onDownloadStateChanged() {
     // Since the state of a download changed, reset the estimated time left.
     this._lastRawTimeLeft = -1;
     this._lastTimeLeft = -1;
   },
 
-  // DownloadsView
-  onDataItemChanged() {
+  onDownloadChanged() {
+    this._updateViews();
+  },
+
+  onDownloadRemoved(download) {
+    let itemIndex = this._downloads.indexOf(download);
+    this._downloads.splice(itemIndex, 1);
     this._updateViews();
   },
 
@@ -1573,16 +1426,16 @@ DownloadsSummaryData.prototype = {
   //// Property updating based on current download status
 
   /**
-   * A generator function for the dataItems that this summary is currently
+   * A generator function for the Download objects this summary is currently
    * interested in. This generator is passed off to summarizeDownloads in order
-   * to generate statistics about the dataItems we care about - in this case,
-   * it's the dataItems in this._dataItems after the first few to exclude,
+   * to generate statistics about the downloads we care about - in this case,
+   * it's the downloads in this._downloads after the first few to exclude,
    * which was set when constructing this DownloadsSummaryData instance.
    */
-  _dataItemsForSummary() {
-    if (this._dataItems.length > 0) {
-      for (let i = this._numToExclude; i < this._dataItems.length; ++i) {
-        yield this._dataItems[i];
+  _downloadsForSummary() {
+    if (this._downloads.length > 0) {
+      for (let i = this._numToExclude; i < this._downloads.length; ++i) {
+        yield this._downloads[i];
       }
     }
   },
@@ -1593,7 +1446,7 @@ DownloadsSummaryData.prototype = {
   _refreshProperties() {
     // Pre-load summary with default values.
     let summary =
-      DownloadsCommon.summarizeDownloads(this._dataItemsForSummary());
+      DownloadsCommon.summarizeDownloads(this._downloadsForSummary());
 
     this._description = DownloadsCommon.strings
                                        .otherDownloads2(summary.numActive);
