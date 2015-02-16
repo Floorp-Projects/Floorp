@@ -132,6 +132,10 @@ public:
     mInAnimationOnlyStyleUpdate = aInAnimationOnlyUpdate;
   }
 
+  bool InAnimationOnlyStyleUpdate() const {
+    return mInAnimationOnlyStyleUpdate;
+  }
+
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
