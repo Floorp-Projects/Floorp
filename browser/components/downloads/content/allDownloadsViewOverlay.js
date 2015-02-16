@@ -2,8 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+let { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
+                                  "resource://gre/modules/DownloadUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
+                                  "resource:///modules/DownloadsCommon.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadsViewUI",
+                                  "resource:///modules/DownloadsViewUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
                                   "resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
 
 const nsIDM = Ci.nsIDownloadManager;
 
@@ -20,11 +42,8 @@ const DOWNLOAD_VIEW_SUPPORTED_COMMANDS =
  * Represents a download from the browser history. It implements part of the
  * interface of the Download object.
  *
- * @param url
- *        URI string for the download source.
- * @param endTime
- *        Timestamp with the end time for the download, used if there is no
- *        additional metadata available.
+ * @param aPlacesNode
+ *        The Places node from which the history download should be initialized.
  */
 function HistoryDownload(aPlacesNode) {
   // TODO (bug 829201): history downloads should get the referrer from Places.
@@ -115,11 +134,14 @@ HistoryDownload.prototype = {
   /**
    * This method mimicks the "start" method of session downloads, and is called
    * when the user retries a history download.
+   *
+   * At present, we always ask the user for a new target path when retrying a
+   * history download. In the future we may consider reusing the known target
+   * path if the folder still exists and the file name is not already used,
+   * except when the user preferences indicate that the target path should be
+   * requested every time a new download is started.
    */
   start() {
-    // In future we may try to download into the same original target uri, when
-    // we have it.  Though that requires verifying the path is still valid and
-    // may surprise the user if he wants to be requested every time.
     let browserWin = RecentWindow.getMostRecentBrowserWindow();
     let initiatingDoc = browserWin ? browserWin.document : document;
 
@@ -150,7 +172,7 @@ HistoryDownload.prototype = {
  * displayed data for a single download view element.
  *
  * The shell may contain a session download, a history download, or both.  When
- * both a history and a current download are present, the current download gets
+ * both a history and a session download are present, the session download gets
  * priority and its information is displayed.
  *
  * On construction, a new richlistitem is created, and can be accessed through
@@ -181,7 +203,7 @@ function HistoryDownloadElementShell(aSessionDownload, aHistoryDownload) {
 }
 
 HistoryDownloadElementShell.prototype = {
-  __proto__: DownloadElementShell.prototype,
+  __proto__: DownloadsViewUI.DownloadElementShell.prototype,
 
   /**
    * Manages the "active" state of the shell.  By default all the shells without
@@ -340,10 +362,7 @@ HistoryDownloadElementShell.prototype = {
       }
       case "cmd_delete": {
         if (this._sessionDownload) {
-          Downloads.getList(Downloads.ALL)
-                   .then(list => list.remove(this.download))
-                   .then(() => this.download.finalize(true))
-                   .catch(Cu.reportError);
+          DownloadsCommon.removeAndFinalizeDownload(this.download);
         }
         if (this._historyDownload) {
           let uri = NetUtil.newURI(this.download.source.url);
@@ -404,8 +423,8 @@ HistoryDownloadElementShell.prototype = {
       }
       return "";
     }
-    let command = getDefaultCommandForState(
-                            DownloadsCommon.stateOfDownload(this.download));
+    let state = DownloadsCommon.stateOfDownload(this.download);
+    let command = getDefaultCommandForState(state);
     if (command && this.isCommandEnabled(command)) {
       this.doCommand(command);
     }
@@ -456,7 +475,7 @@ HistoryDownloadElementShell.prototype = {
 
 /**
  * A Downloads Places View is a places view designed to show a places query
- * for history downloads alongside the current "session"-downloads.
+ * for history downloads alongside the session downloads.
  *
  * As we don't use the places controller, some methods implemented by other
  * places views are not implemented by this view.
