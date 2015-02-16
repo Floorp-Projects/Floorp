@@ -12,8 +12,6 @@
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
-#include "nsThreadUtils.h"
-#include "mozilla/Preferences.h"
 
 // nsISupports implementation
 NS_IMPL_ISUPPORTS(nsHTTPCompressConv,
@@ -37,13 +35,6 @@ nsHTTPCompressConv::nsHTTPCompressConv()
     , mSkipCount(0)
     , mFlags(0)
 {
-    if (NS_IsMainThread()) {
-        mFailUncleanStops =
-            (Preferences::GetBool("network.http.enforce-framing.soft", false) ||
-             Preferences::GetBool("network.http.enforce-framing.http", false));
-    } else {
-        mFailUncleanStops = false;
-    }
 }
 
 nsHTTPCompressConv::~nsHTTPCompressConv()
@@ -97,11 +88,6 @@ NS_IMETHODIMP
 nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsISupports *aContext, 
                                   nsresult aStatus)
 {
-    if (!mStreamEnded && NS_SUCCEEDED(aStatus) && mFailUncleanStops) {
-        // This is not a clean end of stream, the transfer is incomplete.
-        aStatus = NS_ERROR_NET_PARTIAL_TRANSFER;
-    }
-
     return mListener->OnStopRequest(request, aContext, aStatus);
 } 
 

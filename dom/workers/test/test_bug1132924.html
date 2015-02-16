@@ -1,0 +1,28 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for 1132924</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+var w = new Worker('bug1132924_worker.js');
+w.onmessage = function(event) {
+  ok(true, "We are still alive.");
+  SimpleTest.finish();
+}
+
+w.postMessage('go');
+
+</script>
+</pre>
+</body>
+</html>

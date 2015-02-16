@@ -12,6 +12,9 @@
 #include "BluetoothProfileManagerBase.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
+
+class BluetoothReplyRunnable;
+
 class BluetoothGattManager MOZ_FINAL : public nsIObserver
                                      , public BluetoothGattNotificationHandler
 {
@@ -24,10 +27,25 @@ public:
   static void DeinitGattInterface(BluetoothProfileResultHandler* aRes);
   virtual ~BluetoothGattManager();
 
+  void Connect(const nsAString& aAppUuid,
+               const nsAString& aDeviceAddr,
+               BluetoothReplyRunnable* aRunnable);
+
+  void Disconnect(const nsAString& aAppUuid,
+                  const nsAString& aDeviceAddr,
+                  BluetoothReplyRunnable* aRunnable);
+
+  void UnregisterClient(int aClientIf,
+                        BluetoothReplyRunnable* aRunnable);
+
 private:
   class CleanupResultHandler;
   class CleanupResultHandlerRunnable;
   class InitGattResultHandler;
+  class RegisterClientResultHandler;
+  class UnregisterClientResultHandler;
+  class ConnectResultHandler;
+  class DisconnectResultHandler;
 
   BluetoothGattManager();
 

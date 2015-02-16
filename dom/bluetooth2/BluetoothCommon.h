@@ -196,6 +196,12 @@ extern bool gBluetoothDebugFlag;
  */
 #define REQUEST_MEDIA_PLAYSTATUS_ID          "requestmediaplaystatus"
 
+/**
+ * When a remote BLE device gets connected / disconnected, we'll dispatch an
+ * event
+ */
+#define GATT_CONNECTION_STATE_CHANGED_ID     "connectionstatechanged"
+
 // Bluetooth address format: xx:xx:xx:xx:xx:xx (or xx_xx_xx_xx_xx_xx)
 #define BLUETOOTH_ADDRESS_LENGTH 17
 #define BLUETOOTH_ADDRESS_NONE   "00:00:00:00:00:00"

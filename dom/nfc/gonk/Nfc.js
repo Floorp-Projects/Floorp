@@ -178,8 +178,10 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     },
 
     setFocusApp: function setFocusApp(id, isFocus) {
-      // if calling setNFCFocus(true) on the same browser-element, ignore.
-      if (isFocus && (id == this.focusApp)) {
+      // if calling setNFCFocus(true) on the browser-element which is already
+      // focused, or calling setNFCFocus(false) on the browser-element which has
+      // lost focus already, ignore.
+      if (isFocus == (id == this.focusApp)) {
         return;
       }
 

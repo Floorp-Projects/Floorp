@@ -272,6 +272,23 @@ UnboxedPlainObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId
 }
 
 /* static */ bool
+UnboxedPlainObject::obj_hasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp)
+{
+    if (obj->as<UnboxedPlainObject>().layout().lookup(id)) {
+        *foundp = true;
+        return true;
+    }
+
+    RootedObject proto(cx, obj->getProto());
+    if (!proto) {
+        *foundp = false;
+        return true;
+    }
+
+    return HasProperty(cx, proto, id, foundp);
+}
+
+/* static */ bool
 UnboxedPlainObject::obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
                                     HandleId id, MutableHandleValue vp)
 {
@@ -292,28 +309,25 @@ UnboxedPlainObject::obj_getProperty(JSContext *cx, HandleObject obj, HandleObjec
 }
 
 /* static */ bool
-UnboxedPlainObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleId id,
-                                    MutableHandleValue vp, bool strict)
+UnboxedPlainObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
+                                    HandleId id, MutableHandleValue vp, bool strict)
 {
     const UnboxedLayout &layout = obj->as<UnboxedPlainObject>().layout();
 
     if (const UnboxedLayout::Property *property = layout.lookup(id)) {
-        if (obj->as<UnboxedPlainObject>().setValue(cx, *property, vp))
-            return true;
+        if (obj == receiver) {
+            if (obj->as<UnboxedPlainObject>().setValue(cx, *property, vp))
+                return true;
 
-        if (!obj->as<UnboxedPlainObject>().convertToNative(cx))
-            return false;
-        return SetProperty(cx, obj, obj, id, vp, strict);
+            if (!obj->as<UnboxedPlainObject>().convertToNative(cx))
+                return false;
+            return SetProperty(cx, obj, receiver, id, vp, strict);
+        }
+
+        return SetPropertyByDefining(cx, obj, receiver, id, vp, strict, false);
     }
 
-    RootedObject proto(cx, obj->getProto());
-    if (!proto) {
-        if (!obj->as<UnboxedPlainObject>().convertToNative(cx))
-            return false;
-        return SetProperty(cx, obj, obj, id, vp, strict);
-    }
-
-    return SetProperty(cx, proto, obj, id, vp, strict);
+    return SetPropertyOnProto(cx, obj, receiver, id, vp, strict);
 }
 
 /* static */ bool
@@ -381,6 +395,7 @@ const Class UnboxedPlainObject::class_ = {
     {
         UnboxedPlainObject::obj_lookupProperty,
         UnboxedPlainObject::obj_defineProperty,
+        UnboxedPlainObject::obj_hasProperty,
         UnboxedPlainObject::obj_getProperty,
         UnboxedPlainObject::obj_setProperty,
         UnboxedPlainObject::obj_getOwnPropertyDescriptor,

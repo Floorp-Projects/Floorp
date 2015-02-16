@@ -1097,8 +1097,9 @@ gfxPlatform::GetSkiaGLGlue()
      * FIXME: This should be stored in TLS or something, since there needs to be one for each thread using it. As it
      * stands, this only works on the main thread.
      */
-    mozilla::gl::SurfaceCaps caps = mozilla::gl::SurfaceCaps::ForRGBA();
-    nsRefPtr<mozilla::gl::GLContext> glContext = mozilla::gl::GLContextProvider::CreateOffscreen(gfxIntSize(16, 16), caps);
+    bool requireCompatProfile = true;
+    nsRefPtr<mozilla::gl::GLContext> glContext;
+    glContext = mozilla::gl::GLContextProvider::CreateHeadless(requireCompatProfile);
     if (!glContext) {
       printf_stderr("Failed to create GLContext for SkiaGL!\n");
       return nullptr;

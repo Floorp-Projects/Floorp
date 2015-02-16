@@ -61,6 +61,8 @@ public:
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)
 
+  // The caller must ensure that Shutdown() is called before aDecoder is
+  // destroyed.
   explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder);
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
@@ -249,10 +251,6 @@ public:
 
   MediaTaskQueue* GetTaskQueue() {
     return mTaskQueue;
-  }
-
-  void ClearDecoder() {
-    mDecoder = nullptr;
   }
 
   // Returns true if the reader implements RequestAudioData()

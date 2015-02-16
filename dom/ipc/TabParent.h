@@ -354,7 +354,7 @@ public:
       return mTabId;
     }
 
-    nsIntPoint GetChildProcessOffset();
+    LayoutDeviceIntPoint GetChildProcessOffset();
 
     /**
      * Native widget remoting protocol for use with windowed plugins with e10s.

@@ -121,7 +121,7 @@ add_test(function serverErrorResponse () {
     function (e) {
       do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
       do_check_eq(e.code, 400);
-      do_check_eq(e.errno, 104);
+      do_check_eq(e.errno, ERRNO_INVALID_FXA_ASSERTION);
       do_check_eq(e.error, "Bad Request");
       do_check_eq(e.message, "Unauthorized");
       run_next_test();
@@ -178,6 +178,28 @@ add_test(function onCompleteRequestError () {
         do_check_eq(e.message, "Error: onComplete error");
         run_next_test();
       }
+  );
+});
+
+add_test(function incorrectErrno() {
+  let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
+  let response = {
+    status: 400,
+    body: "{ \"code\": 400, \"errno\": \"bad errno\", \"error\": \"Bad Request\", \"message\": \"Unauthorized\", \"reason\": \"Invalid fxa assertion\" }",
+  };
+
+  client._Request = new mockResponse(response);
+  client.getTokenFromAssertion("blah", "scope")
+    .then(
+    null,
+    function (e) {
+      do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
+      do_check_eq(e.code, 400);
+      do_check_eq(e.errno, ERRNO_UNKNOWN_ERROR);
+      do_check_eq(e.error, "Bad Request");
+      do_check_eq(e.message, "Unauthorized");
+      run_next_test();
+    }
   );
 });
 
