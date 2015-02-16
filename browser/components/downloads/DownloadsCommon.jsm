@@ -301,6 +301,55 @@ this.DownloadsCommon = {
   _privateSummary: null,
 
   /**
+   * Returns the legacy state integer value for the provided Download object.
+   */
+  stateOfDownload(download) {
+    // Collapse state using the correct priority.
+    if (!download.stopped) {
+      return nsIDM.DOWNLOAD_DOWNLOADING;
+    }
+    if (download.succeeded) {
+      return nsIDM.DOWNLOAD_FINISHED;
+    }
+    if (download.error) {
+      if (download.error.becauseBlockedByParentalControls) {
+        return nsIDM.DOWNLOAD_BLOCKED_PARENTAL;
+      }
+      if (download.error.becauseBlockedByReputationCheck) {
+        return nsIDM.DOWNLOAD_DIRTY;
+      }
+      return nsIDM.DOWNLOAD_FAILED;
+    }
+    if (download.canceled) {
+      if (download.hasPartialData) {
+        return nsIDM.DOWNLOAD_PAUSED;
+      }
+      return nsIDM.DOWNLOAD_CANCELED;
+    }
+    return nsIDM.DOWNLOAD_NOTSTARTED;
+  },
+
+  /**
+   * Returns the highest number of bytes transferred or the known size of the
+   * given Download object, or -1 if the size is not available. Callers should
+   * use Download properties directly when possible.
+   */
+  maxBytesOfDownload(download) {
+    if (download.succeeded) {
+      // If the download succeeded, show the final size if available, otherwise
+      // use the last known number of bytes transferred.  The final size on disk
+      // will be available when bug 941063 is resolved.
+      return download.hasProgress ? download.totalBytes : download.currentBytes;
+    } else if (download.hasProgress) {
+      // If the final size and progress are known, use them.
+      return download.totalBytes;
+    } else {
+      // The download final size and progress percentage is unknown.
+      return -1;
+    }
+  },
+
+  /**
    * Given an iterable collection of DownloadDataItems, generates and returns
    * statistics about that collection.
    *
@@ -339,8 +388,12 @@ this.DownloadsCommon = {
     }
 
     for (let dataItem of aDataItems) {
+      let download = dataItem.download;
+      let state = DownloadsCommon.stateOfDownload(download);
+      let maxBytes = DownloadsCommon.maxBytesOfDownload(download);
+
       summary.numActive++;
-      switch (dataItem.state) {
+      switch (state) {
         case nsIDM.DOWNLOAD_PAUSED:
           summary.numPaused++;
           break;
@@ -349,21 +402,20 @@ this.DownloadsCommon = {
           break;
         case nsIDM.DOWNLOAD_DOWNLOADING:
           summary.numDownloading++;
-          if (dataItem.maxBytes > 0 && dataItem.download.speed > 0) {
-            let sizeLeft = dataItem.maxBytes - dataItem.download.currentBytes;
+          if (maxBytes > 0 && download.speed > 0) {
+            let sizeLeft = maxBytes - download.currentBytes;
             summary.rawTimeLeft = Math.max(summary.rawTimeLeft,
-                                           sizeLeft / dataItem.download.speed);
+                                           sizeLeft / download.speed);
             summary.slowestSpeed = Math.min(summary.slowestSpeed,
-                                            dataItem.download.speed);
+                                            download.speed);
           }
           break;
       }
       // Only add to total values if we actually know the download size.
-      if (dataItem.maxBytes > 0 &&
-          dataItem.state != nsIDM.DOWNLOAD_CANCELED &&
-          dataItem.state != nsIDM.DOWNLOAD_FAILED) {
-        summary.totalSize += dataItem.maxBytes;
-        summary.totalTransferred += dataItem.download.currentBytes;
+      if (maxBytes > 0 && state != nsIDM.DOWNLOAD_CANCELED &&
+                          state != nsIDM.DOWNLOAD_FAILED) {
+        summary.totalSize += maxBytes;
+        summary.totalTransferred += download.currentBytes;
       }
     }
 
@@ -418,7 +470,7 @@ this.DownloadsCommon = {
 
   /**
    * Opens a downloaded file.
-   * If you've a dataItem, you should call dataItem.openLocalFile.
+   *
    * @param aFile
    *        the downloaded file to be opened.
    * @param aMimeInfo
@@ -609,6 +661,7 @@ function DownloadsDataCtor(aPrivate) {
 
   // Contains all the available DownloadsDataItem objects.
   this.dataItems = new Set();
+  this.oldDownloadStates = new Map();
 
   // Array of view objects that should be notified when the available download
   // data changes.
@@ -637,7 +690,9 @@ DownloadsDataCtor.prototype = {
    */
   get canRemoveFinished() {
     for (let dataItem of this.dataItems) {
-      if (!dataItem.inProgress) {
+      let download = dataItem.download;
+      // Stopped, paused, and failed downloads with partial data are removed.
+      if (download.stopped && !(download.canceled && download.hasPartialData)) {
         return true;
       }
     }
@@ -661,22 +716,81 @@ DownloadsDataCtor.prototype = {
     let dataItem = new DownloadsDataItem(aDownload);
     this._downloadToDataItemMap.set(aDownload, dataItem);
     this.dataItems.add(dataItem);
+    this.oldDownloadStates.set(aDownload,
+                               DownloadsCommon.stateOfDownload(aDownload));
 
     for (let view of this._views) {
       view.onDataItemAdded(dataItem, true);
     }
-
-    this._updateDataItemState(dataItem);
   },
 
   onDownloadChanged(aDownload) {
-    let dataItem = this._downloadToDataItemMap.get(aDownload);
-    if (!dataItem) {
+    let aDataItem = this._downloadToDataItemMap.get(aDownload);
+    if (!aDataItem) {
       Cu.reportError("Download doesn't exist.");
       return;
     }
 
-    this._updateDataItemState(dataItem);
+    let oldState = this.oldDownloadStates.get(aDownload);
+    let newState = DownloadsCommon.stateOfDownload(aDownload);
+    this.oldDownloadStates.set(aDownload, newState);
+
+    if (oldState != newState) {
+      if (aDownload.succeeded ||
+          (aDownload.canceled && !aDownload.hasPartialData) ||
+          aDownload.error) {
+        // Store the end time that may be displayed by the views.
+        aDownload.endTime = Date.now();
+
+        // This state transition code should actually be located in a Downloads
+        // API module (bug 941009).  Moreover, the fact that state is stored as
+        // annotations should be ideally hidden behind methods of
+        // nsIDownloadHistory (bug 830415).
+        if (!this._isPrivate) {
+          try {
+            let downloadMetaData = {
+              state: DownloadsCommon.stateOfDownload(aDownload),
+              endTime: aDownload.endTime,
+            };
+            if (aDownload.succeeded ||
+                (aDownload.error && aDownload.error.becauseBlocked)) {
+              downloadMetaData.fileSize =
+                DownloadsCommon.maxBytesOfDownload(aDataItem.download);
+            }
+  
+            PlacesUtils.annotations.setPageAnnotation(
+                          NetUtil.newURI(aDownload.source.url),
+                          "downloads/metaData",
+                          JSON.stringify(downloadMetaData), 0,
+                          PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
+          } catch (ex) {
+            Cu.reportError(ex);
+          }
+        }
+      }
+
+      for (let view of this._views) {
+        try {
+          view.onDataItemStateChanged(aDataItem);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+      }
+
+      if (aDownload.succeeded ||
+          (aDownload.error && aDownload.error.becauseBlocked)) {
+        this._notifyDownloadEvent("finish");
+      }
+    }
+
+    if (!aDownload.newDownloadNotified) {
+      aDownload.newDownloadNotified = true;
+      this._notifyDownloadEvent("start");
+    }
+
+    for (let view of this._views) {
+      view.onDataItemChanged(aDataItem);
+    }
   },
 
   onDownloadRemoved(aDownload) {
@@ -688,68 +802,9 @@ DownloadsDataCtor.prototype = {
 
     this._downloadToDataItemMap.delete(aDownload);
     this.dataItems.delete(dataItem);
+    this.oldDownloadStates.delete(aDownload);
     for (let view of this._views) {
       view.onDataItemRemoved(dataItem);
-    }
-  },
-
-  /**
-   * Updates the given data item and sends related notifications.
-   */
-  _updateDataItemState(aDataItem) {
-    let oldState = aDataItem.state;
-    let wasInProgress = aDataItem.inProgress;
-    let wasDone = aDataItem.done;
-
-    aDataItem.updateFromDownload();
-
-    if (wasInProgress && !aDataItem.inProgress) {
-      aDataItem.endTime = Date.now();
-    }
-
-    if (oldState != aDataItem.state) {
-      for (let view of this._views) {
-        try {
-          view.onDataItemStateChanged(aDataItem, oldState);
-        } catch (ex) {
-          Cu.reportError(ex);
-        }
-      }
-
-      // This state transition code should actually be located in a Downloads
-      // API module (bug 941009).  Moreover, the fact that state is stored as
-      // annotations should be ideally hidden behind methods of
-      // nsIDownloadHistory (bug 830415).
-      if (!this._isPrivate && !aDataItem.inProgress) {
-        try {
-          let downloadMetaData = { state: aDataItem.state,
-                                   endTime: aDataItem.endTime };
-          if (aDataItem.done) {
-            downloadMetaData.fileSize = aDataItem.maxBytes;
-          }
-
-          PlacesUtils.annotations.setPageAnnotation(
-                        NetUtil.newURI(aDataItem.download.source.url),
-                        "downloads/metaData",
-                        JSON.stringify(downloadMetaData), 0,
-                        PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
-        } catch (ex) {
-          Cu.reportError(ex);
-        }
-      }
-    }
-
-    if (!aDataItem.newDownloadNotified) {
-      aDataItem.newDownloadNotified = true;
-      this._notifyDownloadEvent("start");
-    }
-
-    if (!wasDone && aDataItem.done) {
-      this._notifyDownloadEvent("finish");
-    }
-
-    for (let view of this._views) {
-      view.onDataItemChanged(aDataItem);
     }
   },
 
@@ -871,54 +926,11 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsData", function() {
  */
 function DownloadsDataItem(aDownload) {
   this.download = aDownload;
-  this.endTime = Date.now();
-  this.updateFromDownload();
+  this.download.endTime = Date.now();
 }
 
 DownloadsDataItem.prototype = {
-  /**
-   * Updates this object from the underlying Download object.
-   */
-  updateFromDownload() {
-    // Collapse state using the correct priority.
-    if (this.download.succeeded) {
-      this.state = nsIDM.DOWNLOAD_FINISHED;
-    } else if (this.download.error &&
-               this.download.error.becauseBlockedByParentalControls) {
-      this.state = nsIDM.DOWNLOAD_BLOCKED_PARENTAL;
-    } else if (this.download.error &&
-               this.download.error.becauseBlockedByReputationCheck) {
-      this.state = nsIDM.DOWNLOAD_DIRTY;
-    } else if (this.download.error) {
-      this.state = nsIDM.DOWNLOAD_FAILED;
-    } else if (this.download.canceled && this.download.hasPartialData) {
-      this.state = nsIDM.DOWNLOAD_PAUSED;
-    } else if (this.download.canceled) {
-      this.state = nsIDM.DOWNLOAD_CANCELED;
-    } else if (this.download.stopped) {
-      this.state = nsIDM.DOWNLOAD_NOTSTARTED;
-    } else {
-      this.state = nsIDM.DOWNLOAD_DOWNLOADING;
-    }
-
-    if (this.download.succeeded) {
-      // If the download succeeded, show the final size if available, otherwise
-      // use the last known number of bytes transferred.  The final size on disk
-      // will be available when bug 941063 is resolved.
-      this.maxBytes = this.download.hasProgress ?
-                             this.download.totalBytes :
-                             this.download.currentBytes;
-      this.percentComplete = 100;
-    } else if (this.download.hasProgress) {
-      // If the final size and progress are known, use them.
-      this.maxBytes = this.download.totalBytes;
-      this.percentComplete = this.download.progress;
-    } else {
-      // The download final size and progress percentage is unknown.
-      this.maxBytes = -1;
-      this.percentComplete = -1;
-    }
-  },
+  get state() DownloadsCommon.stateOfDownload(this.download),
 
   /**
    * Indicates whether the download is proceeding normally, and not finished
@@ -1259,9 +1271,10 @@ DownloadsIndicatorDataCtor.prototype = {
   },
 
   // DownloadsView
-  onDataItemStateChanged(aDataItem, aOldState) {
-    if (aDataItem.state == nsIDM.DOWNLOAD_FINISHED ||
-        aDataItem.state == nsIDM.DOWNLOAD_FAILED) {
+  onDataItemStateChanged(aDataItem) {
+    let download = aDataItem.download;
+
+    if (download.succeeded || download.error) {
       this.attention = true;
     }
 
@@ -1368,7 +1381,11 @@ DownloadsIndicatorDataCtor.prototype = {
     let dataItems = this._isPrivate ? PrivateDownloadsData.dataItems
                                     : DownloadsData.dataItems;
     for (let dataItem of dataItems) {
-      if (dataItem && dataItem.inProgress) {
+      if (!dataItem) {
+        continue;
+      }
+      let download = dataItem.download;
+      if (!download.stopped || (download.canceled && download.hasPartialData)) {
         yield dataItem;
       }
     }
@@ -1512,7 +1529,7 @@ DownloadsSummaryData.prototype = {
   },
 
   // DownloadsView
-  onDataItemStateChanged(aOldState) {
+  onDataItemStateChanged() {
     // Since the state of a download changed, reset the estimated time left.
     this._lastRawTimeLeft = -1;
     this._lastTimeLeft = -1;
