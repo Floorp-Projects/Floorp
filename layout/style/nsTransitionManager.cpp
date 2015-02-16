@@ -343,37 +343,6 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   MOZ_ASSERT(!startedAny || collection,
              "must have element transitions if we started any transitions");
 
-  // In the CSS working group discussion (2009 Jul 15 telecon,
-  // http://www.w3.org/mid/4A5E1470.4030904@inkedblade.net ) of
-  // http://lists.w3.org/Archives/Public/www-style/2009Jun/0121.html ,
-  // the working group decided that a transition property on an
-  // element should not cause any transitions if the property change
-  // is itself inheriting a value that is transitioning on an
-  // ancestor.  So, to get the correct behavior, we continue the
-  // restyle that caused this transition using a "covering" rule that
-  // covers up any changes on which we started transitions, so that
-  // descendants don't start their own transitions.  (In the case of
-  // negative transition delay, this covering rule produces different
-  // results than applying the transition rule immediately would).
-
-  nsRefPtr<css::AnimValuesStyleRule> coverRule = new css::AnimValuesStyleRule;
-
-  if (startedAny) {
-    AnimationPlayerPtrArray& players = collection->mPlayers;
-    for (size_t i = 0, i_end = players.Length(); i < i_end; ++i) {
-      dom::Animation* anim = players[i]->GetSource();
-      MOZ_ASSERT(anim && anim->Properties().Length() == 1,
-                 "Should have one animation property for a transition");
-      MOZ_ASSERT(anim && anim->Properties()[0].mSegments.Length() == 1,
-                 "Animation property should have one segment for a transition");
-      AnimationProperty& prop = anim->Properties()[0];
-      AnimationPropertySegment& segment = prop.mSegments[0];
-      if (whichStarted.HasProperty(prop.mProperty)) {
-        coverRule->AddValue(prop.mProperty, segment.mFromValue);
-      }
-    }
-  }
-
   if (collection) {
     // Set the style rule refresh time to null so that EnsureStyleRuleFor
     // creates a new style rule if we started *or* stopped transitions.
