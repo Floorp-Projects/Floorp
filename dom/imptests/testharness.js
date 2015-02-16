@@ -836,6 +836,24 @@ policies and contribution forms [3].
     }
     expose(assert_greater_than, "assert_greater_than");
 
+    function assert_between_exclusive(actual, lower, upper, description)
+    {
+        /*
+         * Test if a primitive number is between two others
+         */
+        assert(typeof actual === "number",
+               "assert_between_exclusive", description,
+               "expected a number but got a ${type_actual}",
+               {type_actual:typeof actual});
+
+        assert(actual > lower && actual < upper,
+               "assert_between_exclusive", description,
+               "expected a number greater than ${lower} " +
+               "and less than ${upper} but got ${actual}",
+               {lower:lower, upper:upper, actual:actual});
+    }
+    expose(assert_between_exclusive, "assert_between_exclusive");
+
     function assert_less_than_equal(actual, expected, description)
     {
         /*
@@ -869,6 +887,24 @@ policies and contribution forms [3].
                {expected:expected, actual:actual});
     }
     expose(assert_greater_than_equal, "assert_greater_than_equal");
+
+    function assert_between_inclusive(actual, lower, upper, description)
+    {
+        /*
+         * Test if a primitive number is between to two others or equal to either of them
+         */
+        assert(typeof actual === "number",
+               "assert_between_inclusive", description,
+               "expected a number but got a ${type_actual}",
+               {type_actual:typeof actual});
+
+        assert(actual >= lower && actual <= upper,
+               "assert_between_inclusive", description,
+               "expected a number greater than or equal to ${lower} " +
+               "and less than or equal to ${upper} but got ${actual}",
+               {lower:lower, upper:upper, actual:actual});
+    }
+    expose(assert_between_inclusive, "assert_between_inclusive");
 
     function assert_regexp_match(actual, expected, description) {
         /*
