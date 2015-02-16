@@ -149,7 +149,7 @@ class nsStyleSet
 
   // Resolve style by returning a style context with the specified
   // animation data removed.  It is allowable to remove all animation
-  // data with eRestyle_ChangeAnimationPhase, or by using any other
+  // data with eRestyle_AllHintsWithAnimations, or by using any other
   // hints that are allowed by ResolveStyleWithReplacement.
   already_AddRefed<nsStyleContext>
     ResolveStyleWithoutAnimation(mozilla::dom::Element* aElement,

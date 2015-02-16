@@ -1422,10 +1422,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
   // are in these four levels.
   if (aReplacements & (eRestyle_ChangeAnimationPhase |
                        eRestyle_ChangeAnimationPhaseDescendants)) {
-    aReplacements |= eRestyle_CSSTransitions |
-                     eRestyle_CSSAnimations |
-                     eRestyle_SVGAttrAnimations |
-                     eRestyle_StyleAttribute;
+    aReplacements |= eRestyle_AllHintsWithAnimations;
   }
 
   // FIXME (perf): This should probably not rebuild the whole path, but
