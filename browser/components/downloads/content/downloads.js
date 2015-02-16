@@ -649,15 +649,15 @@ const DownloadsView = {
   loading: false,
 
   /**
-   * Ordered array of all DownloadsDataItem objects.  We need to keep this array
-   * because only a limited number of items are shown at once, and if an item
-   * that is currently visible is removed from the list, we might need to take
-   * another item from the array and make it appear at the bottom.
+   * Ordered array of all Download objects.  We need to keep this array because
+   * only a limited number of items are shown at once, and if an item that is
+   * currently visible is removed from the list, we might need to take another
+   * item from the array and make it appear at the bottom.
    */
-  _dataItems: [],
+  _downloads: [],
 
   /**
-   * Associates the visible DownloadsDataItem objects with their corresponding
+   * Associates the visible Download objects with their corresponding
    * DownloadsViewItem object.  There is a limited number of view items in the
    * panel at any given time.
    */
@@ -668,8 +668,8 @@ const DownloadsView = {
    */
   _itemCountChanged() {
     DownloadsCommon.log("The downloads item count has changed - we are tracking",
-                        this._dataItems.length, "downloads in total.");
-    let count = this._dataItems.length;
+                        this._downloads.length, "downloads in total.");
+    let count = this._downloads.length;
     let hiddenCount = count - this.kItemCountLimit;
 
     if (count > 0) {
@@ -734,8 +734,8 @@ const DownloadsView = {
    * Called when a new download data item is available, either during the
    * asynchronous data load or when a new download is started.
    *
-   * @param aDataItem
-   *        DownloadsDataItem object that was just added.
+   * @param aDownload
+   *        Download object that was just added.
    * @param aNewest
    *        When true, indicates that this item is the most recent and should be
    *        added in the topmost position.  This happens when a new download is
@@ -743,27 +743,27 @@ const DownloadsView = {
    *        and should be appended.  The latter generally happens during the
    *        asynchronous data load.
    */
-  onDataItemAdded(aDataItem, aNewest) {
+  onDownloadAdded(download, aNewest) {
     DownloadsCommon.log("A new download data item was added - aNewest =",
                         aNewest);
 
     if (aNewest) {
-      this._dataItems.unshift(aDataItem);
+      this._downloads.unshift(download);
     } else {
-      this._dataItems.push(aDataItem);
+      this._downloads.push(download);
     }
 
-    let itemsNowOverflow = this._dataItems.length > this.kItemCountLimit;
+    let itemsNowOverflow = this._downloads.length > this.kItemCountLimit;
     if (aNewest || !itemsNowOverflow) {
       // The newly added item is visible in the panel and we must add the
       // corresponding element.  This is either because it is the first item, or
       // because it was added at the bottom but the list still doesn't overflow.
-      this._addViewItem(aDataItem, aNewest);
+      this._addViewItem(download, aNewest);
     }
     if (aNewest && itemsNowOverflow) {
       // If the list overflows, remove the last item from the panel to make room
       // for the new one that we just added at the top.
-      this._removeViewItem(this._dataItems[this.kItemCountLimit]);
+      this._removeViewItem(this._downloads[this.kItemCountLimit]);
     }
 
     // For better performance during batch loads, don't update the count for
@@ -773,45 +773,43 @@ const DownloadsView = {
     }
   },
 
-  /**
-   * Called when a data item is removed.  Ensures that the widget associated
-   * with the view item is removed from the user interface.
-   *
-   * @param aDataItem
-   *        DownloadsDataItem object that is being removed.
-   */
-  onDataItemRemoved(aDataItem) {
-    DownloadsCommon.log("A download data item was removed.");
-
-    let itemIndex = this._dataItems.indexOf(aDataItem);
-    this._dataItems.splice(itemIndex, 1);
-
-    if (itemIndex < this.kItemCountLimit) {
-      // The item to remove is visible in the panel.
-      this._removeViewItem(aDataItem);
-      if (this._dataItems.length >= this.kItemCountLimit) {
-        // Reinsert the next item into the panel.
-        this._addViewItem(this._dataItems[this.kItemCountLimit - 1], false);
-      }
-    }
-
-    this._itemCountChanged();
-  },
-
-  // DownloadsView
-  onDataItemStateChanged(aDataItem) {
-    let viewItem = this._visibleViewItems.get(aDataItem);
+  onDownloadStateChanged(download) {
+    let viewItem = this._visibleViewItems.get(download);
     if (viewItem) {
       viewItem.onStateChanged();
     }
   },
 
-  // DownloadsView
-  onDataItemChanged(aDataItem) {
-    let viewItem = this._visibleViewItems.get(aDataItem);
+  onDownloadChanged(download) {
+    let viewItem = this._visibleViewItems.get(download);
     if (viewItem) {
       viewItem.onChanged();
     }
+  },
+
+  /**
+   * Called when a data item is removed.  Ensures that the widget associated
+   * with the view item is removed from the user interface.
+   *
+   * @param download
+   *        Download object that is being removed.
+   */
+  onDownloadRemoved(download) {
+    DownloadsCommon.log("A download data item was removed.");
+
+    let itemIndex = this._downloads.indexOf(download);
+    this._downloads.splice(itemIndex, 1);
+
+    if (itemIndex < this.kItemCountLimit) {
+      // The item to remove is visible in the panel.
+      this._removeViewItem(download);
+      if (this._downloads.length >= this.kItemCountLimit) {
+        // Reinsert the next item into the panel.
+        this._addViewItem(this._downloads[this.kItemCountLimit - 1], false);
+      }
+    }
+
+    this._itemCountChanged();
   },
 
   /**
@@ -828,15 +826,15 @@ const DownloadsView = {
    * Creates a new view item associated with the specified data item, and adds
    * it to the top or the bottom of the list.
    */
-  _addViewItem(aDataItem, aNewest)
+  _addViewItem(download, aNewest)
   {
     DownloadsCommon.log("Adding a new DownloadsViewItem to the downloads list.",
                         "aNewest =", aNewest);
 
     let element = document.createElement("richlistitem");
-    let viewItem = new DownloadsViewItem(aDataItem, element);
-    this._visibleViewItems.set(aDataItem, viewItem);
-    let viewItemController = new DownloadsViewItemController(aDataItem);
+    let viewItem = new DownloadsViewItem(download, element);
+    this._visibleViewItems.set(download, viewItem);
+    let viewItemController = new DownloadsViewItemController(download);
     this._controllersForElements.set(element, viewItemController);
     if (aNewest) {
       this.richListBox.insertBefore(element, this.richListBox.firstChild);
@@ -848,16 +846,16 @@ const DownloadsView = {
   /**
    * Removes the view item associated with the specified data item.
    */
-  _removeViewItem(aDataItem) {
+  _removeViewItem(download) {
     DownloadsCommon.log("Removing a DownloadsViewItem from the downloads list.");
-    let element = this._visibleViewItems.get(aDataItem).element;
+    let element = this._visibleViewItems.get(download).element;
     let previousSelectedIndex = this.richListBox.selectedIndex;
     this.richListBox.removeChild(element);
     if (previousSelectedIndex != -1) {
       this.richListBox.selectedIndex = Math.min(previousSelectedIndex,
                                                 this.richListBox.itemCount - 1);
     }
-    this._visibleViewItems.delete(aDataItem);
+    this._visibleViewItems.delete(download);
     this._controllersForElements.delete(element);
   },
 
@@ -979,13 +977,13 @@ const DownloadsView = {
  * Builds and updates a single item in the downloads list widget, responding to
  * changes in the download state and real-time data.
  *
- * @param aDataItem
- *        DownloadsDataItem to be associated with the view item.
+ * @param download
+ *        Download object to be associated with the view item.
  * @param aElement
  *        XUL element corresponding to the single download item in the view.
  */
-function DownloadsViewItem(aDataItem, aElement) {
-  this.dataItem = aDataItem;
+function DownloadsViewItem(download, aElement) {
+  this.download = download;
   this.element = aElement;
   this.element._shell = this;
 
@@ -998,11 +996,6 @@ function DownloadsViewItem(aDataItem, aElement) {
 
 DownloadsViewItem.prototype = {
   __proto__: DownloadElementShell.prototype,
-
-  /**
-   * The DownloadDataItem associated with this view item.
-   */
-  dataItem: null,
 
   /**
    * The XUL element corresponding to the associated richlistbox item.
@@ -1148,21 +1141,11 @@ const DownloadsViewController = {
  * Handles all the user interaction events, in particular the "commands",
  * related to a single item in the downloads list widgets.
  */
-function DownloadsViewItemController(aDataItem) {
-  this.dataItem = aDataItem;
+function DownloadsViewItemController(download) {
+  this.download = download;
 }
 
 DownloadsViewItemController.prototype = {
-  //////////////////////////////////////////////////////////////////////////////
-  //// Command dispatching
-
-  /**
-   * The DownloadDataItem controlled by this object.
-   */
-  dataItem: null,
-
-  get download() this.dataItem.download,
-
   isCommandEnabled(aCommand) {
     switch (aCommand) {
       case "downloadsCmd_open": {
