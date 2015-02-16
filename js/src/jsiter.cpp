@@ -1410,7 +1410,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
     RootedObject proto(cx);
     if (global->getSlot(ARRAY_ITERATOR_PROTO).isUndefined()) {
         const Class *cls = &ArrayIteratorPrototypeClass;
-        proto = global->createBlankPrototypeInheriting(cx, cls, *iteratorProto);
+        proto = global->createBlankPrototypeInheriting(cx, cls, iteratorProto);
         if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, array_iterator_methods))
             return false;
         global->setReservedSlot(ARRAY_ITERATOR_PROTO, ObjectValue(*proto));

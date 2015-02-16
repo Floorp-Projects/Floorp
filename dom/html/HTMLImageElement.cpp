@@ -629,8 +629,8 @@ HTMLImageElement::UnbindFromTree(bool aDeep, bool aNullParent)
     }
   }
 
-  if (aNullParent &&
-      nsINode::GetParentNode()->Tag() == nsGkAtoms::picture &&
+  if (aNullParent && GetParent() &&
+      GetParent()->IsHTML(nsGkAtoms::picture) &&
       HTMLPictureElement::IsPictureEnabled()) {
     // Being removed from picture re-triggers selection, even if we
     // weren't using a <source> peer

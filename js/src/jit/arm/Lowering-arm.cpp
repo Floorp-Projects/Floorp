@@ -125,10 +125,19 @@ LIRGeneratorARM::visitBox(MBox *box)
 void
 LIRGeneratorARM::visitUnbox(MUnbox *unbox)
 {
-    // An unbox on arm reads in a type tag (either in memory or a register) and
-    // a payload. Unlike most instructions conusming a box, we ask for the type
-    // second, so that the result can re-use the first input.
     MDefinition *inner = unbox->getOperand(0);
+
+    if (inner->type() == MIRType_ObjectOrNull) {
+        LUnboxObjectOrNull *lir = new(alloc()) LUnboxObjectOrNull(useRegisterAtStart(inner));
+        if (unbox->fallible())
+            assignSnapshot(lir, unbox->bailoutKind());
+        defineReuseInput(lir, unbox, 0);
+        return;
+    }
+
+    // An unbox on arm reads in a type tag (either in memory or a register) and
+    // a payload. Unlike most instructions consuming a box, we ask for the type
+    // second, so that the result can re-use the first input.
     MOZ_ASSERT(inner->type() == MIRType_Value);
 
     ensureDefined(inner);

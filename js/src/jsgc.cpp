@@ -5354,11 +5354,8 @@ GCRuntime::endSweepPhase(bool lastGC)
             SweepScriptData(rt);
 
         /* Clear out any small pools that we're hanging on to. */
-        if (jit::ExecutableAllocator *execAlloc = rt->maybeExecAlloc())
-            execAlloc->purge();
-
-        if (rt->jitRuntime() && rt->jitRuntime()->hasIonAlloc())
-            rt->jitRuntime()->ionAlloc(rt)->purge();
+        if (jit::JitRuntime *jitRuntime = rt->jitRuntime())
+            jitRuntime->execAlloc().purge();
 
         /*
          * This removes compartments from rt->compartment, so we do it last to make
@@ -6501,6 +6498,12 @@ gc::MergeCompartments(JSCompartment *source, JSCompartment *target)
 
     source->clearTables();
     source->unsetIsDebuggee();
+
+    // The delazification flag indicates the presence of LazyScripts in a
+    // compartment for the Debugger API, so if the source compartment created
+    // LazyScripts, the flag must be propagated to the target compartment.
+    if (source->needsDelazificationForDebugger())
+        target->scheduleDelazificationForDebugger();
 
     // Release any relocated arenas which we may be holding on to as they might
     // be in the source zone

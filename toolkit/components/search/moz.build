@@ -8,9 +8,13 @@ XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
 EXTRA_COMPONENTS += [
     'nsSearchSuggestions.js',
-    'nsSidebar.js',
-    'toolkitsearch.manifest',
 ]
+
+if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
+    DEFINES['HAVE_SIDEBAR'] = True
+    EXTRA_COMPONENTS += [
+    'nsSidebar.js',
+    ]
 
 EXTRA_JS_MODULES += [
     'SearchSuggestionController.jsm',
@@ -18,6 +22,7 @@ EXTRA_JS_MODULES += [
 
 EXTRA_PP_COMPONENTS += [
     'nsSearchService.js',
+    'toolkitsearch.manifest',
 ]
 
 EXTRA_JS_MODULES += [

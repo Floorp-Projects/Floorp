@@ -80,6 +80,15 @@ void
 LIRGeneratorX64::visitUnbox(MUnbox *unbox)
 {
     MDefinition *box = unbox->getOperand(0);
+
+    if (box->type() == MIRType_ObjectOrNull) {
+        LUnboxObjectOrNull *lir = new(alloc()) LUnboxObjectOrNull(useRegisterAtStart(box));
+        if (unbox->fallible())
+            assignSnapshot(lir, unbox->bailoutKind());
+        defineReuseInput(lir, unbox, 0);
+        return;
+    }
+
     MOZ_ASSERT(box->type() == MIRType_Value);
 
     LUnboxBase *lir;

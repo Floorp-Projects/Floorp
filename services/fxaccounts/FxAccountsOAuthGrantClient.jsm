@@ -146,6 +146,12 @@ this.FxAccountsOAuthGrantClient.prototype = {
           return resolve(body);
         }
 
+        if (typeof body.errno === 'number') {
+          // Offset oauth server errnos to avoid conflict with other FxA server errnos
+          body.errno += OAUTH_SERVER_ERRNO_OFFSET;
+        } else if (body.errno) {
+          body.errno = ERRNO_UNKNOWN_ERROR;
+        }
         return reject(new FxAccountsOAuthGrantClientError(body));
       };
 

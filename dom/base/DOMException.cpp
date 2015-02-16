@@ -692,6 +692,7 @@ DOMException::Constructor(GlobalObject& /* unused */,
       if (name.EqualsASCII(sDOMErrorMsgMap[idx].mName)) {
         exceptionResult = sDOMErrorMsgMap[idx].mNSResult;
         exceptionCode = sDOMErrorMsgMap[idx].mCode;
+        break;
       }
     }
   }
@@ -739,11 +740,10 @@ DOMException::Sanitize(JSContext* aCx,
     // Now it's possible that the stack on retval still starts with
     // stuff aCx is not supposed to touch; it depends on what's on the
     // stack right this second.  Walk past all of that.
-    while (retval->mLocation && !retval->mLocation->CallerSubsumes(aCx)) {
-      nsCOMPtr<nsIStackFrame> caller;
-      retval->mLocation->GetCaller(getter_AddRefs(caller));
-      retval->mLocation.swap(caller);
-    }
+    nsCOMPtr<nsIStackFrame> stack;
+    nsresult rv = retval->mLocation->GetSanitized(aCx, getter_AddRefs(stack));
+    NS_ENSURE_SUCCESS(rv, false);
+    retval->mLocation.swap(stack);
   }
 
   return ToJSValue(aCx, retval, aSanitizedValue);

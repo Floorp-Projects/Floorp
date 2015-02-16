@@ -864,6 +864,7 @@ void HTMLMediaElement::SelectResource()
         "Should think we're not loading from source children by default");
 
       mLoadingSrc = uri;
+      UpdatePreloadAction();
       if (mPreloadAction == HTMLMediaElement::PRELOAD_NONE) {
         // preload:none media, suspend the load here before we make any
         // network requests.
@@ -1078,9 +1079,12 @@ void HTMLMediaElement::UpdatePreloadAction()
     // Find the appropriate preload action by looking at the attribute.
     const nsAttrValue* val = mAttrsAndChildren.GetAttr(nsGkAtoms::preload,
                                                        kNameSpaceID_None);
-    uint32_t preloadDefault =
-      Preferences::GetInt("media.preload.default",
-                          HTMLMediaElement::PRELOAD_ATTR_METADATA);
+    // MSE doesn't work if preload is none, so it ignores the pref when src is
+    // from MSE.
+    uint32_t preloadDefault = (mLoadingSrc && IsMediaSourceURI(mLoadingSrc)) ?
+                              HTMLMediaElement::PRELOAD_ATTR_METADATA :
+                              Preferences::GetInt("media.preload.default",
+                                                  HTMLMediaElement::PRELOAD_ATTR_METADATA);
     uint32_t preloadAuto =
       Preferences::GetInt("media.preload.auto",
                           HTMLMediaElement::PRELOAD_ENOUGH);

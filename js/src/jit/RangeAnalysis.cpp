@@ -2517,7 +2517,10 @@ MToDouble::truncate()
 bool
 MLoadTypedArrayElementStatic::needTruncation(TruncateKind kind)
 {
-    if (kind >= IndirectTruncate)
+    // IndirectTruncate not possible, since it returns 'undefined'
+    // upon out of bounds read. Doing arithmetic on 'undefined' gives wrong
+    // results. So only set infallible if explicitly truncated.
+    if (kind == Truncate)
         setInfallible();
 
     return false;
