@@ -50,8 +50,20 @@
             ok(!project.manifest, "manifest includes name");
             is(project.name, "--", "Display name uses manifest name");
 
-            let packageDir = yield ProjectBuilding.build(project);
+            let loggedMessages = [];
+            let logger = function (msg) {
+              loggedMessages.push(msg);
+            }
+
+            let packageDir = yield ProjectBuilding.build({
+              project,
+              logger
+            });
             ok(!packageDir, "no custom packagedir");
+            is(loggedMessages[0], "start", "log messages are correct");
+            ok(loggedMessages[1].indexOf("Running pre-package hook") != -1, "log messages are correct");
+            is(loggedMessages[2], "Terminated with error code: 0", "log messages are correct");
+            is(loggedMessages[3], "succeed", "log messages are correct");
 
             // Trigger validation
             yield AppManager.validateProject(AppManager.selectedProject);
@@ -70,9 +82,17 @@
 
             project = win.AppManager.selectedProject;
 
-            packageDir = yield ProjectBuilding.build(project);
+            loggedMessages = [];
+            packageDir = yield ProjectBuilding.build({
+              project,
+              logger
+            });
             is(OS.Path.normalize(packageDir),
                OS.Path.join(packagedAppLocation, "stage"), "custom packagedir");
+            is(loggedMessages[0], "start", "log messages are correct");
+            ok(loggedMessages[1].indexOf("Running pre-package hook") != -1, "log messages are correct");
+            is(loggedMessages[2], "Terminated with error code: 0", "log messages are correct");
+            is(loggedMessages[3], "succeed", "log messages are correct");
 
             // Switch to the package dir in order to verify the generated webapp.manifest
             yield win.Cmds.importPackagedApp(packageDir);
