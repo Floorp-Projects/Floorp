@@ -28,45 +28,47 @@
     <key key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
   </keyset>
 
-  <vbox class="contentPane" flex="1">
-    <label id="languagesLabel" control="permissionsTree">&noTranslationForLanguages.label;</label>
-    <separator class="thin"/>
-    <tree id="languagesTree" flex="1" style="height: 12em;"
-          hidecolumnpicker="true"
-          onkeypress="gTranslationExceptions.onLanguageKeyPress(event)"
-          onselect="gTranslationExceptions.onLanguageSelected();">
-      <treecols>
-        <treecol id="languageCol" label="&treehead.languageName.label;" flex="1"/>
-      </treecols>
-      <treechildren/>
-    </tree>
-  </vbox>
-  <hbox align="end">
-    <hbox class="actionButtons" flex="1">
-      <button id="removeLanguage" disabled="true"
-              accesskey="&removeLanguage.accesskey;"
-              icon="remove" label="&removeLanguage.label;"
-              oncommand="gTranslationExceptions.onLanguageDeleted();"/>
-      <button id="removeAllLanguages"
-              icon="clear" label="&removeAllLanguages.label;"
-              accesskey="&removeAllLanguages.accesskey;"
-              oncommand="gTranslationExceptions.onAllLanguagesDeleted();"/>
-      <spacer flex="1"/>
+  <vbox class="largeDialogContainer">
+    <vbox class="contentPane" flex="1">
+      <label id="languagesLabel" control="permissionsTree">&noTranslationForLanguages.label;</label>
+      <separator class="thin"/>
+      <tree id="languagesTree" flex="1" style="height: 12em;"
+            hidecolumnpicker="true"
+            onkeypress="gTranslationExceptions.onLanguageKeyPress(event)"
+            onselect="gTranslationExceptions.onLanguageSelected();">
+        <treecols>
+          <treecol id="languageCol" label="&treehead.languageName.label;" flex="1"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+    </vbox>
+    <hbox align="end">
+      <hbox class="actionButtons" flex="1">
+        <button id="removeLanguage" disabled="true"
+                accesskey="&removeLanguage.accesskey;"
+                icon="remove" label="&removeLanguage.label;"
+                oncommand="gTranslationExceptions.onLanguageDeleted();"/>
+        <button id="removeAllLanguages"
+                icon="clear" label="&removeAllLanguages.label;"
+                accesskey="&removeAllLanguages.accesskey;"
+                oncommand="gTranslationExceptions.onAllLanguagesDeleted();"/>
+        <spacer flex="1"/>
+      </hbox>
     </hbox>
-  </hbox>
-  <separator/>
-  <vbox class="contentPane" flex="1">
-    <label id="languagesLabel" control="permissionsTree">&noTranslationForSites.label;</label>
-    <separator class="thin"/>
-    <tree id="sitesTree" flex="1" style="height: 12em;"
-          hidecolumnpicker="true"
-          onkeypress="gTranslationExceptions.onSiteKeyPress(event)"
-          onselect="gTranslationExceptions.onSiteSelected();">
-      <treecols>
-        <treecol id="siteCol" label="&treehead.siteName.label;" flex="1"/>
-      </treecols>
-      <treechildren/>
-    </tree>
+    <separator/>
+    <vbox class="contentPane" flex="1">
+      <label id="languagesLabel" control="permissionsTree">&noTranslationForSites.label;</label>
+      <separator class="thin"/>
+      <tree id="sitesTree" flex="1" style="height: 12em;"
+            hidecolumnpicker="true"
+            onkeypress="gTranslationExceptions.onSiteKeyPress(event)"
+            onselect="gTranslationExceptions.onSiteSelected();">
+        <treecols>
+          <treecol id="siteCol" label="&treehead.siteName.label;" flex="1"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+    </vbox>
   </vbox>
   <hbox align="end">
     <hbox class="actionButtons" flex="1">
