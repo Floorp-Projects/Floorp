@@ -2726,7 +2726,12 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
       // is the root node but which have different styles).  If we use
       // up the hint for one of the ancestors that we hit first, then
       // we'll fail to do the restyling we need to do.
-      (mContent->GetParent() || mContent->GetPrimaryFrame() == mFrame)) {
+      // Likewise, if we're restyling something with two nested frames,
+      // and we post a restyle from the transition manager while
+      // computing style for the outer frame (to be computed after the
+      // descendants have been resolved), we don't want to consume it
+      // for the inner frame.
+      mContent->GetPrimaryFrame() == mFrame) {
     mContent->OwnerDoc()->FlushPendingLinkUpdates();
     nsAutoPtr<RestyleTracker::RestyleData> restyleData;
     if (mRestyleTracker.GetRestyleData(mContent->AsElement(), restyleData)) {
