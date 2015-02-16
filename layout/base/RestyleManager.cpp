@@ -1646,9 +1646,34 @@ RestyleManager::ProcessPendingRestyles()
   // resulting from any animations is up-to-date, so that if any style
   // changes we cause trigger transitions, we have the correct old style
   // for starting the transition.
-  if (mHavePendingNonAnimationRestyles || mDoRebuildAllStyleData) {
+  bool haveNonAnimation =
+    mHavePendingNonAnimationRestyles || mDoRebuildAllStyleData;
+  if (haveNonAnimation) {
     IncrementAnimationGeneration();
     UpdateOnlyAnimationStyles();
+  } else {
+    // If we don't have non-animation style updates, then we have queued
+    // up animation style updates from the refresh driver tick.  This
+    // doesn't necessarily include *all* animation style updates, since
+    // we might be suppressing main-thread updates for some animations,
+    // so we don't want to call UpdateOnlyAnimationStyles, which updates
+    // all animations.  In other words, the work that we're about to do
+    // to process the pending restyles queue is a *subset* of the work
+    // that UpdateOnlyAnimationStyles would do, since we're *not*
+    // updating transitions that are running on the compositor thread
+    // and suppressed on the main thread.
+    //
+    // But when we update those styles, we want to suppress updates to
+    // transitions just like we do in UpdateOnlyAnimationStyles.  So we
+    // want to tell the transition manager to act as though we're in
+    // UpdateOnlyAnimationStyles.
+    //
+    // FIXME: In the future, we might want to refactor the way the
+    // animation and transition manager do their refresh driver ticks so
+    // that we can use UpdateOnlyAnimationStyles, with a different
+    // boolean argument, for this update as well, instead of having them
+    // post style updates in their WillRefresh methods.
+    mPresContext->TransitionManager()->SetInAnimationOnlyStyleUpdate(true);
   }
 
   // Until we get rid of these phases in bug 960465, we need to skip
@@ -1681,6 +1706,10 @@ RestyleManager::ProcessPendingRestyles()
   MOZ_ASSERT(mIsProcessingAnimationStyleChange, "nesting forbidden");
   mIsProcessingAnimationStyleChange = false;
 
+  if (!haveNonAnimation) {
+    mPresContext->TransitionManager()->SetInAnimationOnlyStyleUpdate(false);
+  }
+
 #ifdef DEBUG
   mIsProcessingRestyles = false;
 #endif
@@ -1688,6 +1717,8 @@ RestyleManager::ProcessPendingRestyles()
                    "We should not have posted new non-animation restyles while "
                    "processing animation restyles");
 
+  NS_ASSERTION(haveNonAnimation || !mHavePendingNonAnimationRestyles,
+               "should not have added restyles");
   mHavePendingNonAnimationRestyles = false;
 
   if (mDoRebuildAllStyleData) {
