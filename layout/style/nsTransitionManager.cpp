@@ -181,6 +181,17 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     return;
   }
 
+  if (collection &&
+      collection->mCheckGeneration ==
+        mPresContext->RestyleManager()->GetAnimationGeneration()) {
+    // When we start a new transition, we immediately post a restyle.
+    // If the animation generation on the collection is current, that
+    // means *this* is that restyle, since we bump the animation
+    // generation on the restyle manager whenever there's a real style
+    // change (i.e., one where mInAnimationOnlyStyleUpdate isn't true,
+    // which causes us to return above).  Thus we shouldn't do anything.
+    return;
+  }
 
   // FIXME (bug 960465): This test should go away.
   if (newStyleContext->PresContext()->RestyleManager()->
@@ -367,6 +378,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     // Set the style rule refresh time to null so that EnsureStyleRuleFor
     // creates a new style rule if we started *or* stopped transitions.
     collection->mStyleRuleRefreshTime = TimeStamp();
+    collection->UpdateCheckGeneration(mPresContext);
   }
 
   // Replace the new style context by appending the cover rule.
