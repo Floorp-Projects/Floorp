@@ -1649,6 +1649,28 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
                     elementForAnimation, flags);
 }
 
+already_AddRefed<nsStyleContext>
+nsStyleSet::ResolveStyleWithoutAnimation(dom::Element* aTarget,
+                                         nsStyleContext* aStyleContext,
+                                         nsRestyleHint aWhichToRemove)
+{
+  RestyleManager* restyleManager = PresContext()->RestyleManager();
+
+  bool oldSkipAnimationRules = restyleManager->SkipAnimationRules();
+  restyleManager->SetSkipAnimationRules(true);
+  bool oldPostAnimationRestyles = restyleManager->PostAnimationRestyles();
+  restyleManager->SetPostAnimationRestyles(false);
+
+  nsRefPtr<nsStyleContext> result =
+    ResolveStyleWithReplacement(aTarget, aStyleContext->GetParent(),
+                                aStyleContext, aWhichToRemove,
+                                eSkipStartingAnimations);
+
+  restyleManager->SetPostAnimationRestyles(oldPostAnimationRestyles);
+  restyleManager->SetSkipAnimationRules(oldSkipAnimationRules);
+
+  return result.forget();
+}
 
 already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
