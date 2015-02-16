@@ -1577,7 +1577,8 @@ already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
                                         nsStyleContext* aNewParentContext,
                                         nsStyleContext* aOldStyleContext,
-                                        nsRestyleHint aReplacements)
+                                        nsRestyleHint aReplacements,
+                                        uint32_t aFlags)
 {
   nsRuleNode* ruleNode =
     RuleNodeWithReplacement(aElement, aOldStyleContext->RuleNode(),
@@ -1610,9 +1611,10 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
 
   nsCSSPseudoElements::Type pseudoType = aOldStyleContext->GetPseudoType();
   Element* elementForAnimation = nullptr;
-  if (pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
-      pseudoType == nsCSSPseudoElements::ePseudo_before ||
-      pseudoType == nsCSSPseudoElements::ePseudo_after) {
+  if (!(aFlags & eSkipStartingAnimations) &&
+      (pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
+       pseudoType == nsCSSPseudoElements::ePseudo_before ||
+       pseudoType == nsCSSPseudoElements::ePseudo_after)) {
     // We want to compute a correct elementForAnimation to pass in
     // because at this point the parameter is more than just the element
     // for animation; it's also used for the SetBodyTextColor call when

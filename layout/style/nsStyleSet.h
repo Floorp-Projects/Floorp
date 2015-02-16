@@ -133,11 +133,16 @@ class nsStyleSet
   // Resolve style by making replacements in the list of style rules as
   // described by aReplacements, but otherwise maintaining the status
   // quo.
+  enum { // flags for aFlags
+    // Skip starting CSS animations that result from the style.
+    eSkipStartingAnimations = (1<<0),
+  };
   already_AddRefed<nsStyleContext>
   ResolveStyleWithReplacement(mozilla::dom::Element* aElement,
                               nsStyleContext* aNewParentContext,
                               nsStyleContext* aOldStyleContext,
-                              nsRestyleHint aReplacements);
+                              nsRestyleHint aReplacements,
+                              uint32_t aFlags = 0);
 
   // Get a style context for a non-element (which no rules will match),
   // such as text nodes, placeholder frames, and the nsFirstLetterFrame
