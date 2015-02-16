@@ -23,7 +23,7 @@ FileQuotaStream<FileStreamBase>::SetEOF()
     nsresult rv = FileStreamBase::Tell(&offset);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mQuotaObject->UpdateSize(offset);
+    mQuotaObject->MaybeUpdateSize(offset, /* aTruncate */ true);
   }
 
   return NS_OK;
@@ -56,7 +56,7 @@ FileQuotaStream<FileStreamBase>::DoOpen()
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mQuotaObject && (FileStreamBase::mOpenParams.ioFlags & PR_TRUNCATE)) {
-    mQuotaObject->UpdateSize(0);
+    mQuotaObject->MaybeUpdateSize(0, /* aTruncate */ true);
   }
 
   return NS_OK;
@@ -75,8 +75,11 @@ FileQuotaStreamWithWrite<FileStreamBase>::Write(const char* aBuf,
     rv = FileStreamBase::Tell(&offset);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    MOZ_ASSERT(INT64_MAX - offset >= int64_t(aCount));
+
     if (!FileQuotaStreamWithWrite::
-         mQuotaObject->MaybeAllocateMoreSpace(offset, aCount)) {
+         mQuotaObject->MaybeUpdateSize(offset + int64_t(aCount),
+                                       /* aTruncate */ false)) {
       return NS_ERROR_FILE_NO_DEVICE_SPACE;
     }
   }
