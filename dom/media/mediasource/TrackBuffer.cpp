@@ -821,7 +821,7 @@ TrackBuffer::Dump(const char* aPath)
 
 class ReleaseDecoderTask : public nsRunnable {
 public:
-  ReleaseDecoderTask(SourceBufferDecoder* aDecoder)
+  explicit ReleaseDecoderTask(SourceBufferDecoder* aDecoder)
     : mDecoder(aDecoder)
   {
   }
