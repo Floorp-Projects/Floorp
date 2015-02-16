@@ -64,6 +64,21 @@
 
 "use strict";
 
+let { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
+                                  "resource:///modules/DownloadsCommon.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadsViewUI",
+                                  "resource:///modules/DownloadsViewUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
+
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadsPanel
 
@@ -994,7 +1009,7 @@ function DownloadsViewItem(download, aElement) {
 }
 
 DownloadsViewItem.prototype = {
-  __proto__: DownloadElementShell.prototype,
+  __proto__: DownloadsViewUI.DownloadElementShell.prototype,
 
   /**
    * The XUL element corresponding to the associated richlistbox item.
@@ -1169,10 +1184,7 @@ DownloadsViewItemController.prototype = {
    */
   commands: {
     cmd_delete() {
-      Downloads.getList(Downloads.ALL)
-               .then(list => list.remove(this.download))
-               .then(() => this.download.finalize(true))
-               .catch(Cu.reportError);
+      DownloadsCommon.removeAndFinalizeDownload(this.download);
       PlacesUtils.bhistory.removePage(
                              NetUtil.newURI(this.download.source.url));
     },

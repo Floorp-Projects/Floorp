@@ -324,6 +324,17 @@ this.DownloadsCommon = {
   },
 
   /**
+   * Helper function required because the Downloads Panel and the Downloads View
+   * don't share the controller yet.
+   */
+  removeAndFinalizeDownload(download) {
+    Downloads.getList(Downloads.ALL)
+             .then(list => list.remove(download))
+             .then(() => download.finalize(true))
+             .catch(Cu.reportError);
+  },
+
+  /**
    * Given an iterable collection of Download objects, generates and returns
    * statistics about that collection.
    *
@@ -334,7 +345,6 @@ this.DownloadsCommon = {
    *
    *         numActive       : The total number of downloads.
    *         numPaused       : The total number of paused downloads.
-   *         numScanning     : The total number of downloads being scanned.
    *         numDownloading  : The total number of downloads being downloaded.
    *         totalSize       : The total size of all downloads once completed.
    *         totalTransferred: The total amount of transferred data for these
@@ -348,7 +358,6 @@ this.DownloadsCommon = {
     let summary = {
       numActive: 0,
       numPaused: 0,
-      numScanning: 0,
       numDownloading: 0,
       totalSize: 0,
       totalTransferred: 0,
@@ -658,7 +667,7 @@ DownloadsDataCtor.prototype = {
    * True if there are finished downloads that can be removed from the list.
    */
   get canRemoveFinished() {
-    for (let download of this.oldDownloadStates.keys()) {
+    for (let download of this.downloads) {
       // Stopped, paused, and failed downloads with partial data are removed.
       if (download.stopped && !(download.canceled && download.hasPartialData)) {
         return true;
@@ -805,7 +814,7 @@ DownloadsDataCtor.prototype = {
 
     // Sort backwards by start time, ensuring that the most recent
     // downloads are added first regardless of their state.
-    let downloadsArray = [...this.oldDownloadStates.keys()];
+    let downloadsArray = [...this.downloads];
     downloadsArray.sort((a, b) => b.startTime - a.startTime);
     downloadsArray.forEach(download => aView.onDownloadAdded(download, false));
 
@@ -1208,7 +1217,7 @@ DownloadsIndicatorDataCtor.prototype = {
    * to generate statistics about the downloads we care about - in this case,
    * it's all active downloads.
    */
-  _activeDownloads() {
+  * _activeDownloads() {
     let downloads = this._isPrivate ? PrivateDownloadsData.downloads
                                     : DownloadsData.downloads;
     for (let download of downloads) {
@@ -1404,7 +1413,7 @@ DownloadsSummaryData.prototype = {
    * it's the downloads in this._downloads after the first few to exclude,
    * which was set when constructing this DownloadsSummaryData instance.
    */
-  _downloadsForSummary() {
+  * _downloadsForSummary() {
     if (this._downloads.length > 0) {
       for (let i = this._numToExclude; i < this._downloads.length; ++i) {
         yield this._downloads[i];
