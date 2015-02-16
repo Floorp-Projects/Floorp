@@ -579,6 +579,7 @@ public:
   bool IsDoc() const { return HasGenericType(eDocument); }
   DocAccessible* AsDoc();
 
+  bool IsGenericHyperText() const { return mType == eHyperTextType; }
   bool IsHyperText() const { return HasGenericType(eHyperText); }
   HyperTextAccessible* AsHyperText();
 

@@ -37,7 +37,7 @@ class FixedList
         if (length == 0)
             return true;
 
-        if (length & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+        if (MOZ_UNLIKELY(length & mozilla::tl::MulOverflowMask<sizeof(T)>::value))
             return false;
         list_ = (T *)alloc.allocate(length * sizeof(T));
         return list_ != nullptr;
@@ -60,10 +60,10 @@ class FixedList
         size_t newlength = length_ + num;
         if (newlength < length_)
             return false;
-        if (newlength & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+        if (MOZ_UNLIKELY(newlength & mozilla::tl::MulOverflowMask<sizeof(T)>::value))
             return false;
         T *list = (T *)alloc.allocate((length_ + num) * sizeof(T));
-        if (!list)
+        if (MOZ_UNLIKELY(!list))
             return false;
 
         for (size_t i = 0; i < length_; i++)

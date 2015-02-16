@@ -271,8 +271,8 @@ def load_tests(options, requested_paths, excluded_paths):
         for test in test_list:
             for jitflags in flags_list:
                 tmp_test = copy(test)
-                tmp_test.options = copy(test.options)
-                tmp_test.options.extend(jitflags)
+                tmp_test.jitflags = copy(test.jitflags)
+                tmp_test.jitflags.extend(jitflags)
                 new_test_list.append(tmp_test)
         test_list = new_test_list
 

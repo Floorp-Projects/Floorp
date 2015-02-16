@@ -27,6 +27,7 @@
 #include "nsContentCID.h"
 #include "nsServiceManagerUtils.h"
 #include "mozIGeckoMediaPluginService.h"
+#include "mozilla/dom/MediaKeySystemAccess.h"
 
 namespace mozilla {
 
@@ -365,6 +366,9 @@ MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId)
   if (mCreatePromiseId == aId) {
     Release();
   }
+
+  MediaKeySystemAccess::NotifyObservers(mKeySystem,
+                                        MediaKeySystemStatus::Cdm_created);
 }
 
 already_AddRefed<MediaKeySession>

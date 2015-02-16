@@ -7,7 +7,11 @@
 if CONFIG['MOZ_ZIPWRITER']:
     DIRS += ['zipwriter']
 
-TEST_DIRS += ['test']
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome/chrome.ini']
+
+MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
+
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 XPIDL_SOURCES += [
     'nsIJARChannel.idl',

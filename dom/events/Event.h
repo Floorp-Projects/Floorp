@@ -146,9 +146,9 @@ public:
                                    WidgetEvent* aEvent,
                                    LayoutDeviceIntPoint aPoint,
                                    CSSIntPoint aDefaultPoint);
-  static nsIntPoint GetScreenCoords(nsPresContext* aPresContext,
-                                    WidgetEvent* aEvent,
-                                    LayoutDeviceIntPoint aPoint);
+  static LayoutDeviceIntPoint GetScreenCoords(nsPresContext* aPresContext,
+                                              WidgetEvent* aEvent,
+                                              LayoutDeviceIntPoint aPoint);
 
   static already_AddRefed<Event> Constructor(const GlobalObject& aGlobal,
                                              const nsAString& aType,

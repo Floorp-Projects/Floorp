@@ -2597,6 +2597,10 @@ var gListView = {
     while (this._listBox.itemCount > 0)
       this._listBox.removeItemAt(0);
 
+    if (aType == "plugin") {
+      navigator.plugins.refresh(false);
+    }
+
     var self = this;
     getAddonsAndInstalls(aType, function show_getAddonsAndInstalls(aAddonsList, aInstallsList) {
       if (gViewController && aRequest != gViewController.currentViewRequest)

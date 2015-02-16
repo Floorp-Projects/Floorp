@@ -13,9 +13,12 @@
  * from the source profile.
  */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource:///modules/MigrationUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/MigrationUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesBackups",
                                   "resource://gre/modules/PlacesBackups.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionMigration",
@@ -34,6 +37,34 @@ function FirefoxProfileMigrator() {
 
 FirefoxProfileMigrator.prototype = Object.create(MigratorPrototype);
 
+FirefoxProfileMigrator.prototype._getAllProfiles = function () {
+  let allProfiles = new Map();
+  let profiles =
+    Components.classes["@mozilla.org/toolkit/profile-service;1"]
+              .getService(Components.interfaces.nsIToolkitProfileService)
+              .profiles;
+  while (profiles.hasMoreElements()) {
+    let profile = profiles.getNext().QueryInterface(Ci.nsIToolkitProfile);
+    let rootDir = profile.rootDir;
+
+    if (rootDir.exists() && rootDir.isReadable() &&
+        !rootDir.equals(MigrationUtils.profileStartup.directory)) {
+      allProfiles.set(profile.name, rootDir);
+    }
+  }
+  return allProfiles;
+};
+
+function sorter(a, b) {
+  return a.id.toLocaleLowerCase().localeCompare(b.id.toLocaleLowerCase());
+}
+
+Object.defineProperty(FirefoxProfileMigrator.prototype, "sourceProfiles", {
+  get: function() {
+    return [{id: x, name: x} for (x of this._getAllProfiles().keys())].sort(sorter);
+  }
+});
+
 FirefoxProfileMigrator.prototype._getFileObject = function(dir, fileName) {
   let file = dir.clone();
   file.append(fileName);
@@ -42,19 +73,13 @@ FirefoxProfileMigrator.prototype._getFileObject = function(dir, fileName) {
   // they are not expected to work alone. Return null to avoid trying to
   // copy non-existing files.
   return file.exists() ? file : null;
-}
+};
 
-FirefoxProfileMigrator.prototype.getResources = function() {
-  // Only allow migrating from the default (selected) profile since this will
-  // be the only one returned by the toolkit profile service after bug 214675.
-  let sourceProfile =
+FirefoxProfileMigrator.prototype.getResources = function(aProfile) {
+  let sourceProfileDir = aProfile ? this._getAllProfiles().get(aProfile.id) :
     Components.classes["@mozilla.org/toolkit/profile-service;1"]
               .getService(Components.interfaces.nsIToolkitProfileService)
-              .selectedProfile;
-  if (!sourceProfile)
-    return null;
-
-  let sourceProfileDir = sourceProfile.rootDir;
+              .selectedProfile.rootDir;
   if (!sourceProfileDir || !sourceProfileDir.exists() ||
       !sourceProfileDir.isReadable())
     return null;
@@ -67,10 +92,10 @@ FirefoxProfileMigrator.prototype.getResources = function() {
   if (sourceProfileDir.equals(currentProfileDir))
     return null;
 
-  return this._getResourcesInternal(sourceProfileDir, currentProfileDir);
-}
+  return this._getResourcesInternal(sourceProfileDir, currentProfileDir, aProfile);
+};
 
-FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileDir, currentProfileDir) {
+FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileDir, currentProfileDir, aProfile) {
   let getFileResource = function(aMigrationType, aFileNames) {
     let files = [];
     for (let fileName of aFileNames) {
@@ -107,7 +132,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileD
   let sessionFile = this._getFileObject(sourceProfileDir, "sessionstore.js");
   let session;
   if (sessionFile) {
-    session = {
+    session = aProfile ? getFileResource(types.SESSION, ["sessionstore.js"]) : {
       type: types.SESSION,
       migrate: function(aCallback) {
         sessionCheckpoints.copyTo(currentProfileDir, "sessionCheckpoints.json");
@@ -217,7 +242,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileD
   return [r for each (r in [places, cookies, passwords, formData,
                             dictionary, bookmarksBackups, session,
                             times, healthReporter]) if (r)];
-}
+};
 
 Object.defineProperty(FirefoxProfileMigrator.prototype, "startupOnlyMigrator", {
   get: function() true

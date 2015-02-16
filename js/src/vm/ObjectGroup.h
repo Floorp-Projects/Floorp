@@ -113,6 +113,19 @@ class RootedBase<TaggedProto> : public TaggedProtoOperations<Rooted<TaggedProto>
     }
 };
 
+// Since JSObject pointers are either nullptr or a valid object and since the
+// object layout of TaggedProto is identical to a bare object pointer, we can
+// safely treat a pointer to an already-rooted object (e.g. HandleObject) as a
+// pointer to a TaggedProto.
+inline Handle<TaggedProto>
+AsTaggedProto(HandleObject obj)
+{
+    static_assert(sizeof(JSObject*) == sizeof(TaggedProto),
+                  "TaggedProto must be binary compatible with JSObject");
+    return Handle<TaggedProto>::fromMarkedLocation(
+            reinterpret_cast<TaggedProto const*>(obj.address()));
+}
+
 /*
  * Lazy object groups overview.
  *

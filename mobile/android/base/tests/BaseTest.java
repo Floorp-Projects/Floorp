@@ -317,27 +317,6 @@ abstract class BaseTest extends BaseRobocopTest {
         return result;
     }
 
-    /**
-     * @deprecated use {@link #waitForCondition(Condition, int)} instead
-     */
-    @Deprecated
-    protected final boolean waitForTest(final BooleanTest t, final int timeout) {
-        final boolean isSatisfied = mSolo.waitForCondition(new Condition() {
-            @Override
-            public boolean isSatisfied() {
-                return t.test();
-            }
-        }, timeout);
-
-        if (!isSatisfied) {
-            // log out wait failure for diagnostic purposes only;
-            // a failed wait may be normal and does not necessarily
-            // warrant a test assertion/failure
-            mAsserter.dumpLog("waitForTest timeout after " + timeout + " ms");
-        }
-        return isSatisfied;
-    }
-
     protected interface BooleanTest {
         public boolean test();
     }

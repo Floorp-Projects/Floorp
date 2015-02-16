@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.tests;
 
+import com.jayway.android.robotium.solo.Condition;
 
 public class testBookmark extends AboutHomeTest {
     private static String BOOKMARK_URL;
@@ -42,9 +43,9 @@ public class testBookmark extends AboutHomeTest {
     }
 
     private void waitForBookmarked(final boolean isBookmarked) {
-        boolean bookmarked = waitForTest(new BooleanTest() {
+        boolean bookmarked = waitForCondition(new Condition() {
             @Override
-            public boolean test() {
+            public boolean isSatisfied() {
                 return (isBookmarked) ?
                     mDatabaseHelper.isBookmark(BOOKMARK_URL) :
                     !mDatabaseHelper.isBookmark(BOOKMARK_URL);
