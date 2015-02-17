@@ -43,6 +43,7 @@ const KEY_PLUGIN_ENABLED     = "media.{0}.enabled";
 const KEY_PLUGIN_LAST_UPDATE = "media.{0}.lastUpdate";
 const KEY_PLUGIN_VERSION     = "media.{0}.version";
 const KEY_PLUGIN_AUTOUPDATE  = "media.{0}.autoupdate";
+const KEY_PLUGIN_HIDDEN      = "media.{0}.hidden";
 
 // Note regarding the value of |fullDescription| below: This is part of an awful
 // hack to include the licenses for GMP plugins without having bug 624602 fixed
@@ -540,18 +541,21 @@ let GMPProvider = {
   buildPluginList: function() {
     let map = new Map();
     GMP_PLUGINS.forEach(aPlugin => {
-      let plugin = {
-        id: aPlugin.id,
-        name: pluginsBundle.GetStringFromName(aPlugin.name),
-        description: pluginsBundle.GetStringFromName(aPlugin.description),
-        fullDescription: aPlugin.fullDescription,
-        homepageURL: aPlugin.homepageURL,
-        optionsURL: aPlugin.optionsURL,
-        wrapper: null,
-        isEME: aPlugin.isEME
-      };
-      plugin.wrapper = new GMPWrapper(plugin);
-      map.set(plugin.id, plugin);
+      // Only show GMPs in addon manager that aren't hidden.
+      if (!GMPPrefs.get(KEY_PLUGIN_HIDDEN, false, aPlugin.id)) {
+        let plugin = {
+          id: aPlugin.id,
+          name: pluginsBundle.GetStringFromName(aPlugin.name),
+          description: pluginsBundle.GetStringFromName(aPlugin.description),
+          fullDescription: aPlugin.fullDescription,
+          homepageURL: aPlugin.homepageURL,
+          optionsURL: aPlugin.optionsURL,
+          wrapper: null,
+          isEME: aPlugin.isEME
+        };
+        plugin.wrapper = new GMPWrapper(plugin);
+        map.set(plugin.id, plugin);
+      }
     });
     this._plugins = map;
   },
