@@ -265,14 +265,14 @@ class CertErrorRunnable : public SyncRunnableBase
                     uint32_t collectedErrors,
                     PRErrorCode errorCodeTrust,
                     PRErrorCode errorCodeMismatch,
-                    PRErrorCode errorCodeExpired,
+                    PRErrorCode errorCodeTime,
                     uint32_t providerFlags)
     : mFdForLogging(fdForLogging), mCert(cert), mInfoObject(infoObject),
       mDefaultErrorCodeToReport(defaultErrorCodeToReport),
       mCollectedErrors(collectedErrors),
       mErrorCodeTrust(errorCodeTrust),
       mErrorCodeMismatch(errorCodeMismatch),
-      mErrorCodeExpired(errorCodeExpired),
+      mErrorCodeTime(errorCodeTime),
       mProviderFlags(providerFlags)
   {
   }
@@ -289,7 +289,7 @@ private:
   const uint32_t mCollectedErrors;
   const PRErrorCode mErrorCodeTrust;
   const PRErrorCode mErrorCodeMismatch;
-  const PRErrorCode mErrorCodeExpired;
+  const PRErrorCode mErrorCodeTime;
   const uint32_t mProviderFlags;
 };
 
@@ -325,14 +325,14 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
                             /*out*/ uint32_t& collectedErrors,
                             /*out*/ PRErrorCode& errorCodeTrust,
                             /*out*/ PRErrorCode& errorCodeMismatch,
-                            /*out*/ PRErrorCode& errorCodeExpired)
+                            /*out*/ PRErrorCode& errorCodeTime)
 {
   MOZ_ASSERT(cert);
   MOZ_ASSERT(hostName);
   MOZ_ASSERT(collectedErrors == 0);
   MOZ_ASSERT(errorCodeTrust == 0);
   MOZ_ASSERT(errorCodeMismatch == 0);
-  MOZ_ASSERT(errorCodeExpired == 0);
+  MOZ_ASSERT(errorCodeTime == 0);
 
   // Assumes the error prioritization described in mozilla::pkix's
   // BuildForward function. Also assumes that CheckCertHostname was only
@@ -359,10 +359,10 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
       }
       if (validity == secCertTimeExpired) {
         collectedErrors |= nsICertOverrideService::ERROR_TIME;
-        errorCodeExpired = SEC_ERROR_EXPIRED_CERTIFICATE;
+        errorCodeTime = SEC_ERROR_EXPIRED_CERTIFICATE;
       } else if (validity == secCertTimeNotValidYet) {
         collectedErrors |= nsICertOverrideService::ERROR_TIME;
-        errorCodeExpired =
+        errorCodeTime =
           mozilla::pkix::MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE;
       }
       break;
@@ -371,7 +371,7 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
     case SEC_ERROR_EXPIRED_CERTIFICATE:
     case mozilla::pkix::MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE:
       collectedErrors = nsICertOverrideService::ERROR_TIME;
-      errorCodeExpired = defaultErrorCodeToReport;
+      errorCodeTime = defaultErrorCodeToReport;
       break;
 
     case SSL_ERROR_BAD_CERT_DOMAIN:
@@ -504,8 +504,8 @@ CertErrorRunnable::CheckCertOverrides()
         uint32_t probeValue = MapCertErrorToProbeValue(mErrorCodeMismatch);
         Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, probeValue);
       }
-      if (mErrorCodeExpired != 0) {
-        uint32_t probeValue = MapCertErrorToProbeValue(mErrorCodeExpired);
+      if (mErrorCodeTime != 0) {
+        uint32_t probeValue = MapCertErrorToProbeValue(mErrorCodeTime);
         Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, probeValue);
       }
 
@@ -547,7 +547,7 @@ CertErrorRunnable::CheckCertOverrides()
   // pick the error code to report by priority
   PRErrorCode errorCodeToReport = mErrorCodeTrust    ? mErrorCodeTrust
                                 : mErrorCodeMismatch ? mErrorCodeMismatch
-                                : mErrorCodeExpired  ? mErrorCodeExpired
+                                : mErrorCodeTime     ? mErrorCodeTime
                                 : mDefaultErrorCodeToReport;
 
   SSLServerCertVerificationResult* result =
@@ -591,11 +591,11 @@ CreateCertErrorRunnable(CertVerifier& certVerifier,
   uint32_t collected_errors = 0;
   PRErrorCode errorCodeTrust = 0;
   PRErrorCode errorCodeMismatch = 0;
-  PRErrorCode errorCodeExpired = 0;
+  PRErrorCode errorCodeTime = 0;
   if (DetermineCertOverrideErrors(cert, infoObject->GetHostNameRaw(), now,
                                   defaultErrorCodeToReport, collected_errors,
                                   errorCodeTrust, errorCodeMismatch,
-                                  errorCodeExpired) != SECSuccess) {
+                                  errorCodeTime) != SECSuccess) {
     // Attempt to enforce that if DetermineCertOverrideErrors failed,
     // PR_SetError was set with a non-overridable error. This is because if we
     // return from CreateCertErrorRunnable without calling
@@ -628,7 +628,7 @@ CreateCertErrorRunnable(CertVerifier& certVerifier,
                                static_cast<nsIX509Cert*>(nssCert.get()),
                                infoObject, defaultErrorCodeToReport,
                                collected_errors, errorCodeTrust,
-                               errorCodeMismatch, errorCodeExpired,
+                               errorCodeMismatch, errorCodeTime,
                                providerFlags);
 }
 
