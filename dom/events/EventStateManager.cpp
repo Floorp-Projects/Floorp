@@ -1141,24 +1141,6 @@ EventStateManager::IsRemoteTarget(nsIContent* target) {
   return false;
 }
 
-/*static*/ LayoutDeviceIntPoint
-EventStateManager::GetChildProcessOffset(nsFrameLoader* aFrameLoader,
-                                         const WidgetEvent& aEvent)
-{
-  // The "toplevel widget" in child processes is always at position
-  // 0,0.  Map the event coordinates to match that.
-  nsIFrame* targetFrame = aFrameLoader->GetPrimaryFrameOfOwningContent();
-  if (!targetFrame) {
-    return LayoutDeviceIntPoint();
-  }
-  nsPresContext* presContext = targetFrame->PresContext();
-
-  // Find out how far we're offset from the nearest widget.
-  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(&aEvent,
-                                                            targetFrame);
-  return LayoutDeviceIntPoint::FromAppUnitsToNearest(pt, presContext->AppUnitsPerDevPixel());
-}
-
 bool
 CrossProcessSafeEvent(const WidgetEvent& aEvent)
 {

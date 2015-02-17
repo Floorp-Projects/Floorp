@@ -1178,48 +1178,12 @@ TabParent::SendKeyEvent(const nsAString& aType,
   }
 }
 
-bool
-TabParent::MapEventCoordinatesForChildProcess(WidgetEvent* aEvent)
-{
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  if (!frameLoader) {
-    return false;
-  }
-  LayoutDeviceIntPoint offset =
-    EventStateManager::GetChildProcessOffset(frameLoader, *aEvent);
-  MapEventCoordinatesForChildProcess(offset, aEvent);
-  return true;
-}
-
-void
-TabParent::MapEventCoordinatesForChildProcess(
-  const LayoutDeviceIntPoint& aOffset, WidgetEvent* aEvent)
-{
-  if (aEvent->mClass != eTouchEventClass) {
-    aEvent->refPoint = aOffset;
-  } else {
-    aEvent->refPoint = LayoutDeviceIntPoint();
-    // Then offset all the touch points by that distance, to put them
-    // in the space where top-left is 0,0.
-    const WidgetTouchEvent::TouchArray& touches =
-      aEvent->AsTouchEvent()->touches;
-    for (uint32_t i = 0; i < touches.Length(); ++i) {
-      Touch* touch = touches[i];
-      if (touch) {
-        touch->mRefPoint += aOffset;
-      }
-    }
-  }
-}
-
 bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
 {
   if (mIsDestroyed) {
     return false;
   }
-  if (!MapEventCoordinatesForChildProcess(&event)) {
-    return false;
-  }
+  event.refPoint += GetChildProcessOffset();
   if (event.message == NS_MOUSE_MOVE) {
     return SendRealMouseMoveEvent(event);
   }
@@ -1290,9 +1254,7 @@ bool TabParent::SendMouseWheelEvent(WidgetWheelEvent& event)
   ScrollableLayerGuid guid;
   uint64_t blockId;
   ApzAwareEventRoutingToChild(&guid, &blockId);
-  if (!MapEventCoordinatesForChildProcess(&event)) {
-    return false;
-  }
+  event.refPoint += GetChildProcessOffset();
   return PBrowserParent::SendMouseWheelEvent(event, guid, blockId);
 }
 
@@ -1342,10 +1304,7 @@ bool TabParent::SendRealKeyEvent(WidgetKeyboardEvent& event)
   if (mIsDestroyed) {
     return false;
   }
-  if (!MapEventCoordinatesForChildProcess(&event)) {
-    return false;
-  }
-
+  event.refPoint += GetChildProcessOffset();
 
   MaybeNativeKeyBinding bindings;
   bindings = void_t();
@@ -1385,8 +1344,7 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
       return false;
     }
 
-    mChildProcessOffsetAtTouchStart =
-      EventStateManager::GetChildProcessOffset(frameLoader, event);
+    mChildProcessOffsetAtTouchStart = GetChildProcessOffset();
 
     MOZ_ASSERT((!sEventCapturer && mEventCaptureDepth == 0) ||
                (sEventCapturer == this && mEventCaptureDepth > 0));
@@ -1416,7 +1374,10 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
     return false;
   }
 
-  MapEventCoordinatesForChildProcess(mChildProcessOffsetAtTouchStart, &event);
+  LayoutDeviceIntPoint offset = GetChildProcessOffset();
+  for (uint32_t i = 0; i < event.touches.Length(); i++) {
+    event.touches[i]->mRefPoint += offset;
+  }
 
   return (event.message == NS_TOUCH_MOVE) ?
     PBrowserParent::SendRealTouchMoveEvent(event, guid, blockId) :
