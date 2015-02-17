@@ -1623,6 +1623,14 @@ const KTableValue nsCSSProps::kResizeKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const KTableValue nsCSSProps::kRubyAlignKTable[] = {
+  eCSSKeyword_start, NS_STYLE_RUBY_ALIGN_START,
+  eCSSKeyword_center, NS_STYLE_RUBY_ALIGN_CENTER,
+  eCSSKeyword_space_between, NS_STYLE_RUBY_ALIGN_SPACE_BETWEEN,
+  eCSSKeyword_space_around, NS_STYLE_RUBY_ALIGN_SPACE_AROUND,
+  eCSSKeyword_UNKNOWN, -1
+};
+
 const KTableValue nsCSSProps::kRubyPositionKTable[] = {
   eCSSKeyword_over, NS_STYLE_RUBY_POSITION_OVER,
   eCSSKeyword_under, NS_STYLE_RUBY_POSITION_UNDER,
