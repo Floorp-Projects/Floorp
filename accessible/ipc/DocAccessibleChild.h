@@ -70,17 +70,17 @@ public:
 
   virtual bool RecvGetTextAfterOffset(const uint64_t& aID,
                                       const int32_t& aOffset,
-                                      const AccessibleTextBoundary& aBoundaryType,
+                                      const int32_t& aBoundaryType,
                                       nsString* aText, int32_t* aStartOffset,
                                       int32_t* aEndOffset) MOZ_OVERRIDE;
   virtual bool RecvGetTextAtOffset(const uint64_t& aID,
                                    const int32_t& aOffset,
-                                   const AccessibleTextBoundary& aBoundaryType,
+                                   const int32_t& aBoundaryType,
                                    nsString* aText, int32_t* aStartOffset,
                                    int32_t* aEndOffset) MOZ_OVERRIDE;
   virtual bool RecvGetTextBeforeOffset(const uint64_t& aID,
                                        const int32_t& aOffset,
-                                       const AccessibleTextBoundary& aBoundaryType,
+                                       const int32_t& aBoundaryType,
                                        nsString* aText, int32_t* aStartOffset,
                                        int32_t* aEndOffset) MOZ_OVERRIDE;
 
