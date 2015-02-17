@@ -856,3 +856,13 @@ JSCompartment::reportTelemetry()
             runtime_->addTelemetry(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, i);
     }
 }
+
+void
+JSCompartment::addTelemetry(const char *filename, DeprecatedLanguageExtension e)
+{
+    // Only report telemetry for web content, not add-ons or chrome JS.
+    if (addonId || isSystem || !filename || strncmp(filename, "http", 4) != 0)
+        return;
+
+    sawDeprecatedLanguageExtension[e] = true;
+}

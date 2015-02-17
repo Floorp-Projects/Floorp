@@ -8386,7 +8386,7 @@ Parser<ParseHandler>::addTelemetry(JSCompartment::DeprecatedLanguageExtension e)
     JSContext* cx = context->maybeJSContext();
     if (!cx)
         return;
-    cx->compartment()->addTelemetry(e);
+    cx->compartment()->addTelemetry(getFilename(), e);
 }
 
 template class Parser<FullParseHandler>;
