@@ -4568,7 +4568,7 @@ function logical_axis_prop_get_computed(cs, property)
     throw "unexpected writing mode " + writingMode;
   }
 
-  return prop;
+  return cs.getPropertyValue(prop);
 }
 
 function logical_box_prop_get_computed(cs, property)
@@ -4645,7 +4645,7 @@ function logical_box_prop_get_computed(cs, property)
   } else if (/^offset-(block|inline)-(start|end)/.test(property)) {
     property = property.substring(7);  // we want "top" not "offset-top", e.g.
     property = physicalize(property, blockMapping, "block-");
-    property = physicalize(property, blockMapping, "inline-");
+    property = physicalize(property, inlineMapping, "inline-");
   } else if (/-(block|inline)-(start|end)/.test(property)) {
     property = physicalize(property, blockMapping, "block-");
     property = physicalize(property, inlineMapping, "inline-");
