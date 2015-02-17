@@ -1,5 +1,6 @@
 load(libdir + "asm.js");
 
+// Bug 1126251
 var v = asmLink(asmCompile('global', `
     "use asm";
     var frd = global.Math.fround;
@@ -34,3 +35,17 @@ var v = asmLink(asmCompile('global', `
 `), this)();
 
 assertEq(v, NaN);
+
+// Bug 1130618: without GVN
+setJitCompilerOption("ion.gvn.enable", 0);
+var v = asmLink(asmCompile('global', `
+    "use asm";
+    var float32x4 = global.SIMD.float32x4;
+    var splat = float32x4.splat;
+    function e() {
+        return +splat(.1e+71).x;
+    }
+    return e;
+`), this)();
+
+assertEq(v, Infinity);

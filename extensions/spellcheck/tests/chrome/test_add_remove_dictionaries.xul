@@ -68,16 +68,16 @@ function RunTest() {
 
     // test that base and map dictionaries are available
     var dicts = getDictionaryList(editor);
-    isnot(dicts.indexOf("base_utf"), -1, "base is available");
+    isnot(dicts.indexOf("base-utf"), -1, "base is available");
     isnot(dicts.indexOf("maputf"), -1, "map is available");
 
     // select base dictionary
-    setCurrentDictionary(editor, "base_utf");
+    setCurrentDictionary(editor, "base-utf");
 
     onSpellCheck(textbox, function () {
       // test that base dictionary is in use
       is(getMisspelledWords(editor), "Frühstück" + "qwertyu", "base misspellings");
-      is(getCurrentDictionary(editor), "base_utf", "current dictionary");
+      is(getCurrentDictionary(editor), "base-utf", "current dictionary");
 
       // select map dictionary
       setCurrentDictionary(editor, "maputf");
@@ -97,7 +97,7 @@ function RunTest() {
 
           // test that base dictionary is available and map dictionary is unavailable
           var dicts = getDictionaryList(editor);
-          isnot(dicts.indexOf("base_utf"), -1, "base is available");
+          isnot(dicts.indexOf("base-utf"), -1, "base is available");
           is(dicts.indexOf("maputf"), -1, "map is unavailable");
 
           // uninstall base dictionary

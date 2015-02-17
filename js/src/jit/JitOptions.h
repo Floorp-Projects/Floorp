@@ -72,6 +72,7 @@ struct JitOptions
     void setEagerCompilation();
     void setCompilerWarmUpThreshold(uint32_t warmUpThreshold);
     void resetCompilerWarmUpThreshold();
+    void enableGvn(bool val);
 };
 
 extern JitOptions js_JitOptions;

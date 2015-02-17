@@ -25,7 +25,7 @@ public:
                CDMProxy* aProxy)
     : mDecoder(aDecoder)
     , mCallback(aCallback)
-    , mTaskQueue(CreateMediaDecodeTaskQueue())
+    , mTaskQueue(CreateFlushableMediaDecodeTaskQueue())
     , mProxy(aProxy)
     , mSamplesWaitingForKey(new SamplesWaitingForKey(this, mTaskQueue, mProxy))
 #ifdef DEBUG
@@ -44,7 +44,7 @@ public:
 
   class DeliverDecrypted : public DecryptionClient {
   public:
-    DeliverDecrypted(EMEDecryptor* aDecryptor, MediaTaskQueue* aTaskQueue)
+    DeliverDecrypted(EMEDecryptor* aDecryptor, FlushableMediaTaskQueue* aTaskQueue)
       : mDecryptor(aDecryptor)
       , mTaskQueue(aTaskQueue)
     {}
@@ -73,7 +73,7 @@ public:
     }
   private:
     nsRefPtr<EMEDecryptor> mDecryptor;
-    nsRefPtr<MediaTaskQueue> mTaskQueue;
+    nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
   };
 
   virtual nsresult Input(MP4Sample* aSample) MOZ_OVERRIDE {
@@ -149,7 +149,7 @@ private:
 
   nsRefPtr<MediaDataDecoder> mDecoder;
   MediaDataDecoderCallback* mCallback;
-  nsRefPtr<MediaTaskQueue> mTaskQueue;
+  nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
   nsRefPtr<CDMProxy> mProxy;
   nsRefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
 #ifdef DEBUG
@@ -159,7 +159,7 @@ private:
 
 class EMEMediaDataDecoderProxy : public MediaDataDecoderProxy {
 public:
-  EMEMediaDataDecoderProxy(nsIThread* aProxyThread, MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, MediaTaskQueue* aTaskQueue)
+  EMEMediaDataDecoderProxy(nsIThread* aProxyThread, MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, FlushableMediaTaskQueue* aTaskQueue)
    : MediaDataDecoderProxy(aProxyThread, aCallback)
    , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aTaskQueue, aProxy))
   {
@@ -218,7 +218,7 @@ EMEDecoderModule::Shutdown()
 }
 
 static already_AddRefed<MediaDataDecoderProxy>
-CreateDecoderWrapper(MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, MediaTaskQueue* aTaskQueue)
+CreateDecoderWrapper(MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, FlushableMediaTaskQueue* aTaskQueue)
 {
   nsCOMPtr<mozIGeckoMediaPluginService> gmpService = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   if (!gmpService) {
@@ -239,7 +239,7 @@ already_AddRefed<MediaDataDecoder>
 EMEDecoderModule::CreateVideoDecoder(const VideoDecoderConfig& aConfig,
                                      layers::LayersBackend aLayersBackend,
                                      layers::ImageContainer* aImageContainer,
-                                     MediaTaskQueue* aVideoTaskQueue,
+                                     FlushableMediaTaskQueue* aVideoTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
   if (mCDMDecodesVideo && aConfig.crypto.valid) {
@@ -274,7 +274,7 @@ EMEDecoderModule::CreateVideoDecoder(const VideoDecoderConfig& aConfig,
 
 already_AddRefed<MediaDataDecoder>
 EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
-                                     MediaTaskQueue* aAudioTaskQueue,
+                                     FlushableMediaTaskQueue* aAudioTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
   if (mCDMDecodesAudio && aConfig.crypto.valid) {

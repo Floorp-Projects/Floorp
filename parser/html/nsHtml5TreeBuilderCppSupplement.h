@@ -115,20 +115,43 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
                !!mSpeculativeLoadStage);
   // mSpeculativeLoadStage is non-null only in the off-the-main-thread
   // tree builder, which handles the network stream
-  
+
   // Start wall of code for speculative loading and line numbers
-  
+
   if (mSpeculativeLoadStage) {
     switch (aNamespace) {
       case kNameSpaceID_XHTML:
         if (nsHtml5Atoms::img == aName) {
           nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_SRC);
-          if (url) {
-            nsString* crossOrigin =
-              aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+          nsString* srcset =
+            aAttributes->getValue(nsHtml5AttributeName::ATTR_SRCSET);
+          nsString* crossOrigin =
+            aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+          nsString* sizes =
+            aAttributes->getValue(nsHtml5AttributeName::ATTR_SIZES);
+          mSpeculativeLoadQueue.AppendElement()->
+            InitImage(url ? *url : NullString(),
+                      crossOrigin ? *crossOrigin : NullString(),
+                      srcset ? *srcset : NullString(),
+                      sizes ? *sizes : NullString());
+        } else if (nsHtml5Atoms::source == aName) {
+          nsString* srcset =
+            aAttributes->getValue(nsHtml5AttributeName::ATTR_SRCSET);
+          // Sources without srcset cannot be selected. The source could also be
+          // for a media element, but in that context doesn't use srcset.  See
+          // comments in nsHtml5SpeculativeLoad.h about <picture> preloading
+          if (srcset) {
+            nsString* sizes =
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_SIZES);
+            nsString* type =
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
+            nsString* media =
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_MEDIA);
             mSpeculativeLoadQueue.AppendElement()->
-              InitImage(*url,
-                        crossOrigin ? *crossOrigin : NullString());
+              InitPictureSource(*srcset,
+                                sizes ? *sizes : NullString(),
+                                type ? *type : NullString(),
+                                media ? *media : NullString());
           }
         } else if (nsHtml5Atoms::script == aName) {
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -147,7 +170,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
                          (type) ? *type : EmptyString(),
                          (crossOrigin) ? *crossOrigin : NullString(),
                          mode == NS_HTML5TREE_BUILDER_IN_HEAD);
-            mCurrentHtmlScriptIsAsyncOrDefer = 
+            mCurrentHtmlScriptIsAsyncOrDefer =
               aAttributes->contains(nsHtml5AttributeName::ATTR_ASYNC) ||
               aAttributes->contains(nsHtml5AttributeName::ATTR_DEFER);
           }
@@ -170,7 +193,9 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
         } else if (nsHtml5Atoms::video == aName) {
           nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_POSTER);
           if (url) {
-            mSpeculativeLoadQueue.AppendElement()->InitImage(*url, NullString());
+            mSpeculativeLoadQueue.AppendElement()->InitImage(*url, NullString(),
+                                                             NullString(),
+                                                             NullString());
           }
         } else if (nsHtml5Atoms::style == aName) {
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -204,7 +229,9 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
         if (nsHtml5Atoms::image == aName) {
           nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_XLINK_HREF);
           if (url) {
-            mSpeculativeLoadQueue.AppendElement()->InitImage(*url, NullString());
+            mSpeculativeLoadQueue.AppendElement()->InitImage(*url, NullString(),
+                                                             NullString(),
+                                                             NullString());
           }
         } else if (nsHtml5Atoms::script == aName) {
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -236,7 +263,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
               InitStyle(*url, EmptyString(),
                         (crossOrigin) ? *crossOrigin : NullString());
           }
-        }        
+        }
         break;
     }
   } else if (aNamespace != kNameSpaceID_MathML) {
@@ -740,6 +767,13 @@ nsHtml5TreeBuilder::elementPushed(int32_t aNamespace, nsIAtom* aName, nsIContent
     }
     return;
   }
+  if (mSpeculativeLoadStage && aName == nsHtml5Atoms::picture) {
+    // mSpeculativeLoadStage is non-null only in the off-the-main-thread
+    // tree builder, which handles the network stream
+    //
+    // See comments in nsHtml5SpeculativeLoad.h about <picture> preloading
+    mSpeculativeLoadQueue.AppendElement()->InitOpenPicture();
+  }
 }
 
 void
@@ -839,6 +873,13 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
     NS_ASSERTION(treeOp, "Tree op allocation failed.");
     treeOp->Init(eTreeOpProcessMeta, aElement);
     return;
+  }
+  if (mSpeculativeLoadStage && aName == nsHtml5Atoms::picture) {
+    // mSpeculativeLoadStage is non-null only in the off-the-main-thread
+    // tree builder, which handles the network stream
+    //
+    // See comments in nsHtml5SpeculativeLoad.h about <picture> preloading
+    mSpeculativeLoadQueue.AppendElement()->InitEndPicture();
   }
   return;
 }

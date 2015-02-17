@@ -55,6 +55,25 @@ HTMLSourceElement::MatchesCurrentMedia()
   return true;
 }
 
+/* static */ bool
+HTMLSourceElement::WouldMatchMediaForDocument(const nsAString& aMedia,
+                                              const nsIDocument *aDocument)
+{
+  if (aMedia.IsEmpty()) {
+    return true;
+  }
+
+  nsIPresShell* presShell = aDocument->GetShell();
+  nsPresContext* pctx = presShell ? presShell->GetPresContext() : nullptr;
+  MOZ_ASSERT(pctx, "Called for document with no prescontext");
+
+  nsCSSParser cssParser;
+  nsRefPtr<nsMediaList> mediaList = new nsMediaList();
+  cssParser.ParseMediaList(aMedia, nullptr, 0, mediaList, false);
+
+  return pctx && mediaList->Matches(pctx, nullptr);
+}
+
 nsresult
 HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify)

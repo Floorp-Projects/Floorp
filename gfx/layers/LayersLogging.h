@@ -65,6 +65,14 @@ AppendToString(std::stringstream& aStream, const mozilla::gfx::PointTyped<T>& p,
   aStream << pfx << p << sfx;
 }
 
+template<class T>
+void
+AppendToString(std::stringstream& aStream, const mozilla::gfx::IntPointTyped<T>& p,
+               const char* pfx="", const char* sfx="")
+{
+  aStream << pfx << p << sfx;
+}
+
 void
 AppendToString(std::stringstream& aStream, const nsIntRect& r,
                const char* pfx="", const char* sfx="");

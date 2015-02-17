@@ -4568,7 +4568,7 @@ function logical_axis_prop_get_computed(cs, property)
     throw "unexpected writing mode " + writingMode;
   }
 
-  return prop;
+  return cs.getPropertyValue(prop);
 }
 
 function logical_box_prop_get_computed(cs, property)
@@ -4645,7 +4645,7 @@ function logical_box_prop_get_computed(cs, property)
   } else if (/^offset-(block|inline)-(start|end)/.test(property)) {
     property = property.substring(7);  // we want "top" not "offset-top", e.g.
     property = physicalize(property, blockMapping, "block-");
-    property = physicalize(property, blockMapping, "inline-");
+    property = physicalize(property, inlineMapping, "inline-");
   } else if (/-(block|inline)-(start|end)/.test(property)) {
     property = physicalize(property, blockMapping, "block-");
     property = physicalize(property, inlineMapping, "inline-");
@@ -5051,7 +5051,7 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
         "calc(25px*3)",
         "calc(3*25px + 50%)",
       ],
-      invalid_values: ["none", "5" ]
+      invalid_values: [ "auto", "5" ]
     },
     "max-inline-size": {
       domProp: "maxInlineSize",
@@ -5069,7 +5069,7 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
         "calc(25px*3)",
         "calc(3*25px + 50%)",
       ],
-      invalid_values: ["none", "5" ]
+      invalid_values: [ "auto", "5" ]
     },
     "min-block-size": {
       domProp: "minBlockSize",
@@ -5087,7 +5087,7 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
         "calc(25px*3)",
         "calc(3*25px + 50%)",
       ],
-      invalid_values: ["none", "5" ]
+      invalid_values: [ "none", "5" ]
     },
     "min-inline-size": {
       domProp: "minInlineSize",
@@ -5105,7 +5105,7 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
         "calc(25px*3)",
         "calc(3*25px + 50%)",
       ],
-      invalid_values: ["none", "5" ]
+      invalid_values: [ "none", "5" ]
     },
     "offset-block-end": {
       domProp: "offsetBlockEnd",
@@ -5702,6 +5702,16 @@ if (SpecialPowers.getBoolPref("layout.css.ruby.enabled")) {
                                                  "ruby-base-container",
                                                  "ruby-text",
                                                  "ruby-text-container");
+  gCSSProperties["ruby-align"] = {
+    domProp: "rubyAlign",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "space-around" ],
+    other_values: [ "start", "center", "space-between" ],
+    invalid_values: [
+      "end", "1", "10px", "50%", "start center"
+    ]
+  };
   gCSSProperties["ruby-position"] = {
     domProp: "rubyPosition",
     inherited: true,

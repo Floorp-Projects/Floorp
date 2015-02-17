@@ -285,16 +285,13 @@ JS_TypeOfValue(JSContext *cx, HandleValue value)
 }
 
 JS_PUBLIC_API(bool)
-JS_StrictlyEqual(JSContext *cx, jsval value1, jsval value2, bool *equal)
+JS_StrictlyEqual(JSContext *cx, HandleValue value1, HandleValue value2, bool *equal)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value1, value2);
-    bool eq;
-    if (!StrictlyEqual(cx, value1, value2, &eq))
-        return false;
-    *equal = eq;
-    return true;
+    MOZ_ASSERT(equal);
+    return StrictlyEqual(cx, value1, value2, equal);
 }
 
 JS_PUBLIC_API(bool)
@@ -308,16 +305,13 @@ JS_LooselyEqual(JSContext *cx, HandleValue value1, HandleValue value2, bool *equ
 }
 
 JS_PUBLIC_API(bool)
-JS_SameValue(JSContext *cx, jsval value1, jsval value2, bool *same)
+JS_SameValue(JSContext *cx, HandleValue value1, HandleValue value2, bool *same)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value1, value2);
-    bool s;
-    if (!SameValue(cx, value1, value2, &s))
-        return false;
-    *same = s;
-    return true;
+    MOZ_ASSERT(same);
+    return SameValue(cx, value1, value2, same);
 }
 
 JS_PUBLIC_API(bool)
@@ -5469,6 +5463,15 @@ JS_SetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt, uint32_t v
         jit::js_JitOptions.setCompilerWarmUpThreshold(value);
         if (value == 0)
             jit::js_JitOptions.setEagerCompilation();
+        break;
+      case JSJITCOMPILER_ION_GVN_ENABLE:
+        if (value == 0) {
+            jit::js_JitOptions.enableGvn(false);
+            JitSpew(js::jit::JitSpew_IonScripts, "Disable ion's GVN");
+        } else {
+            jit::js_JitOptions.enableGvn(true);
+            JitSpew(js::jit::JitSpew_IonScripts, "Enable ion's GVN");
+        }
         break;
       case JSJITCOMPILER_ION_ENABLE:
         if (value == 1) {

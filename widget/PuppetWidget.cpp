@@ -109,7 +109,6 @@ PuppetWidget::Create(nsIWidget        *aParent,
   mDrawTarget = gfxPlatform::GetPlatform()->
     CreateOffscreenContentDrawTarget(IntSize(1, 1), SurfaceFormat::B8G8R8A8);
 
-  mIMEComposing = false;
   mNeedIMEStateInit = MightNeedIMEFocus(aInitData);
 
   PuppetWidget* parent = static_cast<PuppetWidget*>(aParent);
@@ -305,9 +304,6 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 
   aStatus = nsEventStatus_eIgnore;
 
-  if (event->message == NS_COMPOSITION_START) {
-    mIMEComposing = true;
-  }
   uint32_t seqno = kLatestSeqno;
   switch (event->mClass) {
   case eCompositionEventClass:
@@ -328,11 +324,6 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 
   if (mAttachedWidgetListener) {
     aStatus = mAttachedWidgetListener->HandleEvent(event, mUseAttachedEvents);
-  }
-
-  if (event->mClass == eCompositionEventClass &&
-      event->AsCompositionEvent()->CausesDOMCompositionEndEvent()) {
-    mIMEComposing = false;
   }
 
   return NS_OK;
@@ -402,27 +393,24 @@ PuppetWidget::IMEEndComposition(bool aCancel)
 #endif
 
   nsEventStatus status;
-  WidgetCompositionEvent compositionChangeEvent(true, NS_COMPOSITION_CHANGE,
+  bool noCompositionEvent = true;
+  WidgetCompositionEvent compositionCommitEvent(true, NS_COMPOSITION_COMMIT,
                                                 this);
-  InitEvent(compositionChangeEvent, nullptr);
-  compositionChangeEvent.mSeqno = mIMELastReceivedSeqno;
+  InitEvent(compositionCommitEvent, nullptr);
   // SendEndIMEComposition is always called since ResetInputState
   // should always be called even if we aren't composing something.
   if (!mTabChild ||
-      !mTabChild->SendEndIMEComposition(aCancel,
-                                        &compositionChangeEvent.mData)) {
+      !mTabChild->SendEndIMEComposition(aCancel, &noCompositionEvent,
+                                        &compositionCommitEvent.mData)) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!mIMEComposing)
+  if (noCompositionEvent) {
     return NS_OK;
+  }
 
-  DispatchEvent(&compositionChangeEvent, status);
-
-  WidgetCompositionEvent compositionEndEvent(true, NS_COMPOSITION_END, this);
-  InitEvent(compositionEndEvent, nullptr);
-  compositionEndEvent.mSeqno = mIMELastReceivedSeqno;
-  DispatchEvent(&compositionEndEvent, status);
+  compositionCommitEvent.mSeqno = mIMELastReceivedSeqno;
+  DispatchEvent(&compositionCommitEvent, status);
   return NS_OK;
 }
 
@@ -514,9 +502,6 @@ PuppetWidget::NotifyIMEOfFocusChange(bool aFocus)
     if (queryEvent.mSucceeded) {
       mTabChild->SendNotifyIMETextHint(queryEvent.mReply.mString);
     }
-  } else {
-    // Might not have been committed composition yet
-    IMEEndComposition(false);
   }
 
   uint32_t chromeSeqno;
@@ -958,13 +943,6 @@ PuppetWidget::GetWindowPosition()
   int32_t winX, winY, winW, winH;
   NS_ENSURE_SUCCESS(GetOwningTabChild()->GetDimensions(0, &winX, &winY, &winW, &winH), nsIntPoint());
   return nsIntPoint(winX, winY);
-}
-
-NS_METHOD
-PuppetWidget::GetScreenBounds(nsIntRect &aRect) {
-  aRect.MoveTo(LayoutDeviceIntPoint::ToUntyped(WidgetToScreenOffset()));
-  aRect.SizeTo(mBounds.Size());
-  return NS_OK;
 }
 
 PuppetScreen::PuppetScreen(void *nativeScreen)

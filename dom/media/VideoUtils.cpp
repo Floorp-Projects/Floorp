@@ -294,11 +294,31 @@ public:
   nsRefPtr<MediaTaskQueue> mTaskQueue;
 };
 
+class CreateFlushableTaskQueueTask : public nsRunnable {
+public:
+  NS_IMETHOD Run() {
+    MOZ_ASSERT(NS_IsMainThread());
+    mTaskQueue = new FlushableMediaTaskQueue(GetMediaDecodeThreadPool());
+    return NS_OK;
+  }
+  nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
+};
+
 already_AddRefed<MediaTaskQueue>
 CreateMediaDecodeTaskQueue()
 {
   // We must create the MediaTaskQueue/SharedThreadPool on the main thread.
   nsRefPtr<CreateTaskQueueTask> t(new CreateTaskQueueTask());
+  nsresult rv = NS_DispatchToMainThread(t, NS_DISPATCH_SYNC);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  return t->mTaskQueue.forget();
+}
+
+already_AddRefed<FlushableMediaTaskQueue>
+CreateFlushableMediaDecodeTaskQueue()
+{
+  // We must create the MediaTaskQueue/SharedThreadPool on the main thread.
+  nsRefPtr<CreateFlushableTaskQueueTask> t(new CreateFlushableTaskQueueTask());
   nsresult rv = NS_DispatchToMainThread(t, NS_DISPATCH_SYNC);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return t->mTaskQueue.forget();
