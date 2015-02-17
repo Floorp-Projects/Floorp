@@ -159,7 +159,7 @@ bool
 WindowNamedPropertiesHandler::defineProperty(JSContext* aCx,
                                              JS::Handle<JSObject*> aProxy,
                                              JS::Handle<jsid> aId,
-                                             JS::MutableHandle<JSPropertyDescriptor> aDesc,
+                                             JS::Handle<JSPropertyDescriptor> aDesc,
                                              JS::ObjectOpResult &result) const
 {
   ErrorResult rv;

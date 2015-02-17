@@ -88,15 +88,17 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
 
     // The rest is factored out into a separate function with a weird name.
     // This algorithm continues just below.
-    return SetPropertyIgnoringNamedGetter(cx, proxy, id, vp, receiver, &ownDesc, result);
+    return SetPropertyIgnoringNamedGetter(cx, proxy, id, vp, receiver, ownDesc, result);
 }
 
 bool
 js::SetPropertyIgnoringNamedGetter(JSContext *cx, HandleObject obj, HandleId id,
                                    MutableHandleValue vp, HandleObject receiver,
-                                   MutableHandle<PropertyDescriptor> ownDesc,
+                                   Handle<PropertyDescriptor> ownDesc_,
                                    ObjectOpResult &result)
 {
+    Rooted<PropertyDescriptor> ownDesc(cx, ownDesc_);
+
     // Step 4.
     if (!ownDesc.object()) {
         // The spec calls this variable "parent", but that word has weird
