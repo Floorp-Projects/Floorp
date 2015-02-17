@@ -2606,15 +2606,24 @@ struct nsLineLayout::JustificationComputationState
 {
   PerFrameData* mFirstParticipant;
   PerFrameData* mLastParticipant;
-  // Whether we are going across a boundary of ruby base, i.e.
-  // entering one, leaving one, or both.
-  bool mCrossingRubyBaseBoundary;
+  // When we are going across a boundary of ruby base, i.e. entering
+  // one, leaving one, or both, the following fields will be set to
+  // the corresponding ruby base frame for handling ruby-align.
+  PerFrameData* mLastExitedRubyBase;
+  PerFrameData* mLastEnteredRubyBase;
 
   JustificationComputationState()
     : mFirstParticipant(nullptr)
     , mLastParticipant(nullptr)
-    , mCrossingRubyBaseBoundary(false) { }
+    , mLastExitedRubyBase(nullptr)
+    , mLastEnteredRubyBase(nullptr) { }
 };
+
+static bool
+IsRubyAlignSpaceAround(nsIFrame* aRubyBase)
+{
+  return aRubyBase->StyleText()->mRubyAlign == NS_STYLE_RUBY_ALIGN_SPACE_AROUND;
+}
 
 /**
  * Assign justification gaps for justification
@@ -2629,25 +2638,35 @@ nsLineLayout::AssignInterframeJustificationGaps(
 
   auto& assign = aFrame->mJustificationAssignment;
   auto& prevAssign = prev->mJustificationAssignment;
+
+  if (aState.mLastExitedRubyBase || aState.mLastEnteredRubyBase) {
+    PerFrameData* exitedRubyBase = aState.mLastExitedRubyBase;
+    if (!exitedRubyBase || IsRubyAlignSpaceAround(exitedRubyBase->mFrame)) {
+      prevAssign.mGapsAtEnd = 1;
+    } else {
+      exitedRubyBase->mJustificationAssignment.mGapsAtEnd = 1;
+    }
+
+    PerFrameData* enteredRubyBase = aState.mLastEnteredRubyBase;
+    if (!enteredRubyBase || IsRubyAlignSpaceAround(enteredRubyBase->mFrame)) {
+      assign.mGapsAtStart = 1;
+    } else {
+      enteredRubyBase->mJustificationAssignment.mGapsAtStart = 1;
+    }
+
+    // We are no longer going across a ruby base boundary.
+    aState.mLastExitedRubyBase = nullptr;
+    aState.mLastEnteredRubyBase = nullptr;
+    return 1;
+  }
+
   const auto& info = aFrame->mJustificationInfo;
   const auto& prevInfo = prev->mJustificationInfo;
-
-  if (!info.mIsStartJustifiable &&
-      !prevInfo.mIsEndJustifiable &&
-      !aState.mCrossingRubyBaseBoundary) {
+  if (!info.mIsStartJustifiable && !prevInfo.mIsEndJustifiable) {
     return 0;
   }
 
-  if (aState.mCrossingRubyBaseBoundary) {
-    // For ruby alignment with value space-around, there is
-    // always an expansion opportunity at the boundary of a ruby
-    // base, and it always generates one gap at each side. If we
-    // don't do it here, the interaction between text align and
-    // and ruby align could be strange.
-    prevAssign.mGapsAtEnd = 1;
-    assign.mGapsAtStart = 1;
-    aState.mCrossingRubyBaseBoundary = false;
-  } else if (!info.mIsStartJustifiable) {
+  if (!info.mIsStartJustifiable) {
     prevAssign.mGapsAtEnd = 2;
     assign.mGapsAtStart = 0;
   } else if (!prevInfo.mIsEndJustifiable) {
@@ -2685,8 +2704,9 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
     }
 
     bool isRubyBase = pfd->mFrame->GetType() == nsGkAtoms::rubyBaseFrame;
+    PerFrameData* outerRubyBase = aState.mLastEnteredRubyBase;
     if (isRubyBase) {
-      aState.mCrossingRubyBaseBoundary = true;
+      aState.mLastEnteredRubyBase = pfd;
     }
 
     int extraOpportunities = 0;
@@ -2701,6 +2721,10 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
 
       if (!aState.mLastParticipant) {
         aState.mFirstParticipant = pfd;
+        // It is not an empty ruby base, but we are not assigning gaps
+        // to the content for now. Clear the last entered ruby base so
+        // that we can correctly set the last exited ruby base.
+        aState.mLastEnteredRubyBase = nullptr;
       } else {
         extraOpportunities = AssignInterframeJustificationGaps(pfd, aState);
       }
@@ -2709,7 +2733,14 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
     }
 
     if (isRubyBase) {
-      aState.mCrossingRubyBaseBoundary = true;
+      if (aState.mLastEnteredRubyBase == pfd) {
+        // There is no justification participant inside this ruby base.
+        // Ignore this ruby base completely and restore the outer ruby
+        // base here.
+        aState.mLastEnteredRubyBase = outerRubyBase;
+      } else {
+        aState.mLastExitedRubyBase = pfd;
+      }
     }
 
     if (firstChild) {
@@ -2831,20 +2862,36 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD,
       }
 
       pfd->mBounds.ISize(lineWM) += dw;
+      nscoord gapsAtEnd = 0;
       if (!pfd->mIsTextFrame && assign.TotalGaps()) {
         // It is possible that we assign gaps to non-text frame.
         // Apply the gaps as margin around the frame.
         deltaICoord += aState.Consume(assign.mGapsAtStart);
-        dw += aState.Consume(assign.mGapsAtEnd);
+        gapsAtEnd = aState.Consume(assign.mGapsAtEnd);
+        dw += gapsAtEnd;
       }
       pfd->mBounds.IStart(lineWM) += deltaICoord;
 
-      ApplyLineJustificationToAnnotations(pfd, aPSD, deltaICoord, dw);
+      // The gaps added to the end of the frame should also be
+      // excluded from the isize added to the annotation.
+      ApplyLineJustificationToAnnotations(pfd, aPSD,
+                                          deltaICoord, dw - gapsAtEnd);
       deltaICoord += dw;
       pfd->mFrame->SetRect(lineWM, pfd->mBounds, ContainerWidthForSpan(aPSD));
     }
   }
   return deltaICoord;
+}
+
+static nsIFrame*
+FindNearestRubyBaseAncestor(nsIFrame* aFrame)
+{
+  MOZ_ASSERT(aFrame->StyleContext()->IsInlineDescendantOfRuby());
+  while (aFrame && aFrame->GetType() != nsGkAtoms::rubyBaseFrame) {
+    aFrame = aFrame->GetParent();
+  }
+  MOZ_ASSERT(aFrame, "No ruby base ancestor?");
+  return aFrame;
 }
 
 /**
@@ -2983,14 +3030,20 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
       PerFrameData* firstFrame = computeState.mFirstParticipant;
       if (firstFrame->mFrame->StyleContext()->IsInlineDescendantOfRuby()) {
         MOZ_ASSERT(!firstFrame->mJustificationAssignment.mGapsAtStart);
-        firstFrame->mJustificationAssignment.mGapsAtStart = 1;
-        additionalGaps++;
+        nsIFrame* rubyBase = FindNearestRubyBaseAncestor(firstFrame->mFrame);
+        if (IsRubyAlignSpaceAround(rubyBase)) {
+          firstFrame->mJustificationAssignment.mGapsAtStart = 1;
+          additionalGaps++;
+        }
       }
       PerFrameData* lastFrame = computeState.mLastParticipant;
       if (lastFrame->mFrame->StyleContext()->IsInlineDescendantOfRuby()) {
         MOZ_ASSERT(!lastFrame->mJustificationAssignment.mGapsAtEnd);
-        lastFrame->mJustificationAssignment.mGapsAtEnd = 1;
-        additionalGaps++;
+        nsIFrame* rubyBase = FindNearestRubyBaseAncestor(lastFrame->mFrame);
+        if (IsRubyAlignSpaceAround(rubyBase)) {
+          lastFrame->mJustificationAssignment.mGapsAtEnd = 1;
+          additionalGaps++;
+        }
       }
     }
   }
