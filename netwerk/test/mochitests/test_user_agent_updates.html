@@ -120,7 +120,7 @@ function testDownload(callback) {
       [PREF_UPDATES_TIMEOUT, 10000],
       [PREF_UPDATES_INTERVAL, 1] // 1 second interval
     ]
-  }, function waitForUpdate() setTimeout(function () {
+  }, function waitForUpdate() { setTimeout(function () {
     var ifr = document.createElement('IFRAME');
     ifr.src = "about:blank";
 
@@ -146,7 +146,7 @@ function testDownload(callback) {
     }, false);
 
     document.getElementById('content').appendChild(ifr);
-  }, 100));
+  }, 100); });
 }
 
 function testBadUpdate(callback) {
@@ -157,7 +157,7 @@ function testBadUpdate(callback) {
       [PREF_UPDATES_URL, url],
       [PREF_UPDATES_INTERVAL, 1] // 1 second interval
     ]
-  }, function () setTimeout(function () {
+  }, function () { setTimeout(function () {
     var ifr = document.createElement('IFRAME');
     ifr.src = "about:blank";
 
@@ -171,7 +171,7 @@ function testBadUpdate(callback) {
       callback();
     }, false);
     document.getElementById('content').appendChild(ifr);
-  }, 5000));
+  }, 5000); });
 }
 
 function testProfileLoad(callback) {
@@ -281,13 +281,13 @@ SpecialPowers.pushPrefEnv({
   // testProfileLoad, testDownload, and testProfileSave must run in this order
   //  because testDownload depends on testProfileLoad to call UAO.init()
   //  and testProfileSave depends on testDownload to save overrides to the profile
-  testProfileLoad(function()
-    testDownload(function()
-      testBadUpdate(function()
+  testProfileLoad(function() {
+    testDownload(function() {
+      testBadUpdate(function() {
         testProfileSave(SimpleTest.finish)
-      )
-    )
-  );
+      })
+    })
+  });
 });
 
 </script>

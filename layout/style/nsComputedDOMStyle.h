@@ -374,6 +374,7 @@ private:
 
   /* Text Properties */
   mozilla::dom::CSSValue* DoGetLineHeight();
+  mozilla::dom::CSSValue* DoGetRubyAlign();
   mozilla::dom::CSSValue* DoGetRubyPosition();
   mozilla::dom::CSSValue* DoGetTextAlign();
   mozilla::dom::CSSValue* DoGetTextAlignLast();

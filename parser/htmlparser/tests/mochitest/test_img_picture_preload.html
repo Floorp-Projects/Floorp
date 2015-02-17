@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1067345
+-->
+<head>
+  <title>Test for Bug 1067345</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <script type="text/javascript">
+    // Ensure srcset/picture are enabled, re-run the test at different DPI
+    // levels to ensure preload step does the right responsive image selection
+
+    SimpleTest.waitForExplicitFinish();
+
+    var testDPIs = [ "1.0", "0.5", "2.0", "1.5" ];
+    var iframe = document.createElement("iframe");
+
+    // These accessed by child frame
+    var currentDPI;
+
+    document.body.appendChild(iframe);
+
+    SpecialPowers.pushPrefEnv({'set': [ [ "dom.image.srcset.enabled", true ],
+                                        [ "dom.image.picture.enabled", true ]] },
+                              function() {
+      // Reset the sjs helper so repeat runs work
+      resetRequests();
+      setTimeout(nextTest, 0);
+    });
+
+    function resetRequests() {
+      // Ask the SJS to reset requests
+      var request = new XMLHttpRequest();
+      request.open('GET', "./file_img_picture_preload.sjs?reset", false);
+      request.send(null);
+      is(request.status, 200, "Sending reset to helper should succeed");
+      // Script responds with pre-reset request count
+      var previousRequests = +request.responseText;
+
+      return previousRequests;
+    }
+
+    // Called when iframe is finished
+    function childTestFinished(requestsMade) {
+      setTimeout(function() {
+        // Reset sjs, ensure no new requests appeared after test finished
+        var requestsCleared = resetRequests();
+        is(requestsCleared, requestsMade,
+           "Should not have recorded new requests after test iteration completed");
+
+        setTimeout(nextTest, 0);
+      }, 0);
+    }
+
+    function nextTest() {
+      // Re-run test for each DPI level
+      if (testDPIs.length) {
+        currentDPI = testDPIs.pop();
+        info("Starting test for DPI: " + currentDPI);
+        SpecialPowers.pushPrefEnv({'set': [ [ "layout.css.devPixelsPerPx", currentDPI ]] },
+                                  function() {
+          // Clear image cache for next run (we don't try to validate cached items
+          // in preload).
+          SpecialPowers.Cc["@mozilla.org/image/tools;1"]
+                       .getService(SpecialPowers.Ci.imgITools)
+                       .getImgCacheForDocument(iframe.contentDocument)
+                       .clearCache(false);
+          iframe.src = "./file_img_picture_preload.html?" + currentDPI;
+        });
+      } else {
+        SimpleTest.finish();
+      }
+    }
+  </script>
+
+</body>
+</html>

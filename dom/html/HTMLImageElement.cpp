@@ -420,7 +420,7 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     // img.src, so we only need to handle the unset case
     if (InResponsiveMode()) {
       if (mResponsiveSelector->Content() == this) {
-        mResponsiveSelector->SetDefaultSource(nullptr);
+        mResponsiveSelector->SetDefaultSource(NullString());
       }
       QueueImageLoadTask();
     } else {
@@ -916,7 +916,9 @@ HTMLImageElement::LoadSelectedImage(bool aForce, bool aNotify)
 
   if (mResponsiveSelector) {
     nsCOMPtr<nsIURI> url = mResponsiveSelector->GetSelectedImageURL();
-    rv = LoadImage(url, aForce, aNotify, eImageLoadType_Imageset);
+    if (url) {
+      rv = LoadImage(url, aForce, aNotify, eImageLoadType_Imageset);
+    }
   } else {
     nsAutoString src;
     if (!GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
@@ -1087,6 +1089,14 @@ HTMLImageElement::UpdateResponsiveSource()
   }
 }
 
+/*static */ bool
+HTMLImageElement::SupportedPictureSourceType(const nsAString& aType)
+{
+  return
+    imgLoader::SupportImageWithMimeType(NS_ConvertUTF16toUTF8(aType).get(),
+                                        AcceptedMimeTypes::IMAGES_AND_DOCUMENTS);
+}
+
 bool
 HTMLImageElement::TryCreateResponsiveSelector(nsIContent *aSourceNode,
                                               const nsAString *aSrcset,
@@ -1113,10 +1123,7 @@ HTMLImageElement::TryCreateResponsiveSelector(nsIContent *aSourceNode,
 
     nsAutoString type;
     if (aSourceNode->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
-        !imgLoader::SupportImageWithMimeType(
-          NS_ConvertUTF16toUTF8(type).get(),
-          AcceptedMimeTypes::IMAGES_AND_DOCUMENTS)
-        ) {
+        !SupportedPictureSourceType(type)) {
       return false;
     }
   } else if (aSourceNode->Tag() == nsGkAtoms::img) {
@@ -1164,6 +1171,71 @@ HTMLImageElement::TryCreateResponsiveSelector(nsIContent *aSourceNode,
 
   mResponsiveSelector = sel;
   return true;
+}
+
+/* static */ bool
+HTMLImageElement::SelectSourceForTagWithAttrs(nsIDocument *aDocument,
+                                              bool aIsSourceTag,
+                                              const nsAString& aSrcAttr,
+                                              const nsAString& aSrcsetAttr,
+                                              const nsAString& aSizesAttr,
+                                              const nsAString& aTypeAttr,
+                                              const nsAString& aMediaAttr,
+                                              nsAString& aResult)
+{
+  MOZ_ASSERT(aIsSourceTag || (aTypeAttr.IsEmpty() && aMediaAttr.IsEmpty()),
+             "Passing type or media attrs makes no sense without aIsSourceTag");
+  MOZ_ASSERT(!aIsSourceTag || aSrcAttr.IsEmpty(),
+             "Passing aSrcAttr makes no sense with aIsSourceTag set");
+
+  bool pictureEnabled = HTMLPictureElement::IsPictureEnabled();
+  if (aIsSourceTag && !pictureEnabled) {
+    return false;
+  }
+
+  if (!IsSrcsetEnabled() || aSrcsetAttr.IsEmpty()) {
+    if (!aIsSourceTag) {
+      // For an <img> with no srcset, we would always select the src attr.
+      aResult.Assign(aSrcAttr);
+      return true;
+    }
+    // Otherwise, a <source> without srcset is never selected
+    return false;
+  }
+
+  // Would not consider source tags with unsupported media or type
+  if (aIsSourceTag &&
+      ((!aMediaAttr.IsVoid() &&
+       !HTMLSourceElement::WouldMatchMediaForDocument(aMediaAttr, aDocument)) ||
+      (!aTypeAttr.IsVoid() &&
+       !SupportedPictureSourceType(aTypeAttr)))) {
+    return false;
+  }
+
+  // Using srcset or picture <source>, build a responsive selector for this tag.
+  nsRefPtr<ResponsiveImageSelector> sel =
+    new ResponsiveImageSelector(aDocument);
+
+  sel->SetCandidatesFromSourceSet(aSrcsetAttr);
+  if (pictureEnabled && !aSizesAttr.IsEmpty()) {
+    sel->SetSizesFromDescriptor(aSizesAttr);
+  }
+  if (!aIsSourceTag) {
+    sel->SetDefaultSource(aSrcAttr);
+  }
+
+  if (sel->GetSelectedImageURLSpec(aResult)) {
+    return true;
+  }
+
+  if (!aIsSourceTag) {
+    // <img> tag with no match would definitively load nothing.
+    aResult.Truncate();
+    return true;
+  }
+
+  // <source> tags with no match would leave source yet-undetermined.
+  return false;
 }
 
 void

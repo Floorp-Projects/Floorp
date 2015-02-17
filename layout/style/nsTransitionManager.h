@@ -119,20 +119,21 @@ public:
    * pseudos, aElement is expected to be the generated before/after
    * element.
    *
-   * It may return a "cover rule" (see CoverTransitionStartStyleRule) to
-   * cover up some of the changes for the duration of the restyling of
-   * descendants.  If it does, this function will take care of causing
-   * the necessary restyle afterwards, but the caller must restyle the
-   * element *again* with the original sequence of rules plus the
-   * returned cover rule as the most specific rule.
+   * It may modify the new style context (by replacing
+   * *aNewStyleContext) to cover up some of the changes for the duration
+   * of the restyling of descendants.  If it does, this function will
+   * take care of causing the necessary restyle afterwards.
    */
-  already_AddRefed<nsIStyleRule>
-    StyleContextChanged(mozilla::dom::Element *aElement,
-                        nsStyleContext *aOldStyleContext,
-                        nsStyleContext *aNewStyleContext);
+  void StyleContextChanged(mozilla::dom::Element *aElement,
+                           nsStyleContext *aOldStyleContext,
+                           nsRefPtr<nsStyleContext>* aNewStyleContext /* inout */);
 
   void SetInAnimationOnlyStyleUpdate(bool aInAnimationOnlyUpdate) {
     mInAnimationOnlyStyleUpdate = aInAnimationOnlyUpdate;
+  }
+
+  bool InAnimationOnlyStyleUpdate() const {
+    return mInAnimationOnlyStyleUpdate;
   }
 
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const

@@ -74,20 +74,30 @@ nsHTMLCSSStyleSheet::ElementRulesMatching(nsPresContext* aPresContext,
   rule = aElement->GetSMILOverrideStyleRule();
   if (rule) {
     RestyleManager* restyleManager = aPresContext->RestyleManager();
-    if (restyleManager->SkipAnimationRules()) {
-      // Non-animation restyle -- don't process SMIL override style, because we
-      // don't want SMIL animation to trigger new CSS transitions. Instead,
-      // request an Animation restyle, so we still get noticed.
-      if (restyleManager->PostAnimationRestyles()) {
-        aPresContext->PresShell()->RestyleForAnimation(aElement,
-          eRestyle_StyleAttribute | eRestyle_ChangeAnimationPhase);
-      }
-    } else {
+    if (!restyleManager->SkipAnimationRules()) {
       // Animation restyle (or non-restyle traversal of rules)
       // Now we can walk SMIL overrride style, without triggering transitions.
       rule->RuleMatched();
       aRuleWalker->Forward(rule);
     }
+  }
+}
+
+void
+nsHTMLCSSStyleSheet::PseudoElementRulesMatching(Element* aPseudoElement,
+                                                nsCSSPseudoElements::Type
+                                                  aPseudoType,
+                                                nsRuleWalker* aRuleWalker)
+{
+  MOZ_ASSERT(nsCSSPseudoElements::
+               PseudoElementSupportsStyleAttribute(aPseudoType));
+  MOZ_ASSERT(aPseudoElement);
+
+  // just get the one and only style rule from the content's STYLE attribute
+  css::StyleRule* rule = aPseudoElement->GetInlineStyleRule();
+  if (rule) {
+    rule->RuleMatched();
+    aRuleWalker->Forward(rule);
   }
 }
 
@@ -99,12 +109,8 @@ nsHTMLCSSStyleSheet::RulesMatching(PseudoElementRuleProcessorData* aData)
         "If pseudo element is supposed to support style attribute, it must "
         "have a pseudo element set");
 
-    // just get the one and only style rule from the content's STYLE attribute
-    css::StyleRule* rule = aData->mPseudoElement->GetInlineStyleRule();
-    if (rule) {
-      rule->RuleMatched();
-      aData->mRuleWalker->Forward(rule);
-    }
+    PseudoElementRulesMatching(aData->mPseudoElement, aData->mPseudoType,
+                               aData->mRuleWalker);
   }
 }
 
@@ -146,7 +152,7 @@ nsHTMLCSSStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aDat
   // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but
   // it doesn't really matter.
   if (aData->mAttrHasChanged && aData->mAttribute == nsGkAtoms::style) {
-    return eRestyle_StyleAttribute | eRestyle_ChangeAnimationPhase;
+    return eRestyle_StyleAttribute;
   }
 
   return nsRestyleHint(0);

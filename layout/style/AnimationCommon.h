@@ -215,6 +215,7 @@ struct AnimationPlayerCollection : public PRCList
     , mElementProperty(aElementProperty)
     , mManager(aManager)
     , mAnimationGeneration(0)
+    , mCheckGeneration(0)
     , mNeedsRefreshes(true)
 #ifdef DEBUG
     , mCalledPropertyDtor(false)
@@ -330,7 +331,6 @@ struct AnimationPlayerCollection : public PRCList
     if (element) {
       nsRestyleHint hint = IsForTransitions() ? eRestyle_CSSTransitions
                                               : eRestyle_CSSAnimations;
-      hint |= eRestyle_ChangeAnimationPhase;
       aPresContext->PresShell()->RestyleForAnimation(element, hint);
     }
   }
@@ -368,6 +368,16 @@ struct AnimationPlayerCollection : public PRCList
   uint64_t mAnimationGeneration;
   // Update mAnimationGeneration to nsCSSFrameConstructor's count
   void UpdateAnimationGeneration(nsPresContext* aPresContext);
+
+  // For CSS transitions only, we also record the most recent generation
+  // for which we've done the transition update, so that we avoid doing
+  // it more than once per style change.  This should be greater than or
+  // equal to mAnimationGeneration, except when the generation counter
+  // cycles, or when animations are updated through the DOM Animation
+  // interfaces.
+  uint64_t mCheckGeneration;
+  // Update mAnimationGeneration to nsCSSFrameConstructor's count
+  void UpdateCheckGeneration(nsPresContext* aPresContext);
 
   // Returns true if there is an animation that has yet to finish.
   bool HasCurrentAnimations() const;

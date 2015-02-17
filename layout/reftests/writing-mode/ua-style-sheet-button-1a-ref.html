@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical properties of button in the UA stylesheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+.a { -moz-appearance: none; }
+
+.ltr button,
+.rtl button,
+.ltr input[type="button"],
+.rtl input[type="button"] {
+  padding: 0px 6px;
+}
+
+.v-rl button,
+.v-rl input[type="button"] {
+  padding: 6px 0px;
+}
+</style>
+<div class=ltr>
+  <button>one</button><br>
+  <button class=a>two</button><br>
+  <button disabled>three</button><br>
+  <button class=a disabled>four</button><br>
+  <input type="button" value="five"><br>
+  <input type="button" value="six" class=a><br>
+  <input type="button" value="seven" disabled><br>
+  <input type="button" value="eight" class=a disabled><br>
+</div>
+
+<div class=rtl dir=rtl>
+  <button>one</button><br>
+  <button class=a>two</button><br>
+  <button disabled>three</button><br>
+  <button class=a disabled>four</button><br>
+  <input type="button" value="five"><br>
+  <input type="button" value="six" class=a><br>
+  <input type="button" value="seven" disabled><br>
+  <input type="button" value="eight" class=a disabled><br>
+</div>
+
+<div class=v-rl>
+  <button>one</button><br>
+  <button class=a>two</button><br>
+  <button disabled>three</button><br>
+  <button class=a disabled>four</button><br>
+  <input type="button" value="five"><br>
+  <input type="button" value="six" class=a><br>
+  <input type="button" value="seven" disabled><br>
+  <input type="button" value="eight" class=a disabled><br>
+</div>

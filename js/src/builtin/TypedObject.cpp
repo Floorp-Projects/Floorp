@@ -1920,12 +1920,7 @@ bool
 TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
                              MutableHandleValue vp, bool strict)
 {
-    MOZ_ASSERT(obj->is<TypedObject>());
     Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
-
-    uint32_t index;
-    if (js_IdIsIndex(id, &index))
-        return obj_setElement(cx, obj, receiver, index, vp, strict);
 
     switch (typedObj->typeDescr().kind()) {
       case type::Scalar:
@@ -1935,7 +1930,7 @@ TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleObject recei
       case type::Simd:
         break;
 
-      case type::Array:
+      case type::Array: {
         if (JSID_IS_ATOM(id, cx->names().length)) {
             if (obj == receiver) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage,
@@ -1944,7 +1939,25 @@ TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleObject recei
             }
             return SetNonWritableProperty(cx, id, strict);
         }
+
+        uint32_t index;
+        if (js_IdIsIndex(id, &index)) {
+            if (obj != receiver)
+                return SetPropertyByDefining(cx, obj, receiver, id, vp, strict, false);
+
+            if (index >= uint32_t(typedObj->length())) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                                     nullptr, JSMSG_TYPEDOBJECT_BINARYARRAY_BAD_INDEX);
+                return false;
+            }
+
+            Rooted<TypeDescr*> elementType(cx);
+            elementType = &typedObj->typeDescr().as<ArrayTypeDescr>().elementType();
+            size_t offset = elementType->size() * index;
+            return ConvertAndCopyTo(cx, elementType, typedObj, offset, NullPtr(), vp);
+        }
         break;
+      }
 
       case type::Struct: {
         Rooted<StructTypeDescr*> descr(cx, &typedObj->typeDescr().as<StructTypeDescr>());
@@ -1964,59 +1977,6 @@ TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleObject recei
     }
 
     return SetPropertyOnProto(cx, obj, receiver, id, vp, strict);
-}
-
-bool
-TypedObject::obj_setElement(JSContext *cx, HandleObject obj, HandleObject receiver,
-                            uint32_t index, MutableHandleValue vp, bool strict)
-{
-    MOZ_ASSERT(obj->is<TypedObject>());
-    Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
-    Rooted<TypeDescr *> descr(cx, &typedObj->typeDescr());
-
-    if (obj != receiver) {
-        RootedId id(cx);
-        if (!IndexToId(cx, index, &id))
-            return false;
-        if (descr->is<ArrayTypeDescr>())
-            return SetPropertyByDefining(cx, obj, receiver, id, vp, strict, false);
-        return SetPropertyOnProto(cx, obj, receiver, id, vp, strict);
-    }
-
-    switch (descr->kind()) {
-      case type::Scalar:
-      case type::Reference:
-      case type::Simd:
-      case type::Struct:
-        break;
-
-      case type::Array:
-        return obj_setArrayElement(cx, typedObj, descr, index, vp);
-    }
-
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return SetPropertyOnProto(cx, obj, receiver, id, vp, strict);
-}
-
-/*static*/ bool
-TypedObject::obj_setArrayElement(JSContext *cx,
-                                 Handle<TypedObject*> typedObj,
-                                 Handle<TypeDescr*> descr,
-                                 uint32_t index,
-                                 MutableHandleValue vp)
-{
-    if (index >= (size_t) typedObj->length()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                             nullptr, JSMSG_TYPEDOBJECT_BINARYARRAY_BAD_INDEX);
-        return false;
-    }
-
-    Rooted<TypeDescr*> elementType(cx);
-    elementType = &descr->as<ArrayTypeDescr>().elementType();
-    size_t offset = elementType->size() * index;
-    return ConvertAndCopyTo(cx, elementType, typedObj, offset, NullPtr(), vp);
 }
 
 bool
