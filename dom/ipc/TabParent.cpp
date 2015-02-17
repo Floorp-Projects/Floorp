@@ -259,7 +259,6 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mWritingMode()
   , mIMEComposing(false)
   , mIMECompositionEnding(false)
-  , mIMEEventCountAfterEnding(0)
   , mIMECompositionStart(0)
   , mIMESeqno(0)
   , mIMECompositionRectOffset(0)
@@ -2001,10 +2000,8 @@ TabParent::SendCompositionEvent(WidgetCompositionEvent& event)
 
   mIMEComposing = !event.CausesDOMCompositionEndEvent();
   mIMECompositionStart = std::min(mIMESelectionAnchor, mIMESelectionFocus);
-  if (mIMECompositionEnding) {
-    mIMEEventCountAfterEnding++;
+  if (mIMECompositionEnding)
     return true;
-  }
   event.mSeqno = ++mIMESeqno;
   return PBrowserParent::SendCompositionEvent(event);
 }
@@ -2022,7 +2019,6 @@ TabParent::SendCompositionChangeEvent(WidgetCompositionEvent& event)
 {
   if (mIMECompositionEnding) {
     mIMECompositionText = event.mData;
-    mIMEEventCountAfterEnding++;
     return true;
   }
 
@@ -2113,7 +2109,6 @@ TabParent::GetRenderFrame()
 
 bool
 TabParent::RecvEndIMEComposition(const bool& aCancel,
-                                 bool* aNoCompositionEvent,
                                  nsString* aComposition)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -2121,13 +2116,11 @@ TabParent::RecvEndIMEComposition(const bool& aCancel,
     return true;
 
   mIMECompositionEnding = true;
-  mIMEEventCountAfterEnding = 0;
 
   widget->NotifyIME(IMENotification(aCancel ? REQUEST_TO_CANCEL_COMPOSITION :
                                               REQUEST_TO_COMMIT_COMPOSITION));
 
   mIMECompositionEnding = false;
-  *aNoCompositionEvent = !mIMEEventCountAfterEnding;
   *aComposition = mIMECompositionText;
   mIMECompositionText.Truncate(0);  
   return true;
