@@ -50,7 +50,6 @@ static const char kPrefIPv4OnlyDomains[]     = "network.dns.ipv4OnlyDomains";
 static const char kPrefDisableIPv6[]         = "network.dns.disableIPv6";
 static const char kPrefDisablePrefetch[]     = "network.dns.disablePrefetch";
 static const char kPrefDnsLocalDomains[]     = "network.dns.localDomains";
-static const char kPrefDnsOfflineLocalhost[] = "network.dns.offline-localhost";
 static const char kPrefDnsNotifyResolution[] = "network.dns.notifyResolution";
 
 //-----------------------------------------------------------------------------
@@ -530,12 +529,12 @@ nsDNSService::Init()
     if (mResolver)
         return NS_OK;
     NS_ENSURE_TRUE(!mResolver, NS_ERROR_ALREADY_INITIALIZED);
+
     // prefs
     uint32_t maxCacheEntries  = 400;
     uint32_t defaultCacheLifetime = 120; // seconds
     uint32_t defaultGracePeriod = 60; // seconds
     bool     disableIPv6      = false;
-    bool     offlineLocalhost = true;
     bool     disablePrefetch  = false;
     int      proxyType        = nsIProtocolProxyService::PROXYCONFIG_DIRECT;
     bool     notifyResolution = false;
@@ -558,7 +557,6 @@ nsDNSService::Init()
         prefs->GetBoolPref(kPrefDisableIPv6, &disableIPv6);
         prefs->GetCharPref(kPrefIPv4OnlyDomains, getter_Copies(ipv4OnlyDomains));
         prefs->GetCharPref(kPrefDnsLocalDomains, getter_Copies(localDomains));
-        prefs->GetBoolPref(kPrefDnsOfflineLocalhost, &offlineLocalhost);
         prefs->GetBoolPref(kPrefDisablePrefetch, &disablePrefetch);
 
         // If a manual proxy is in use, disable prefetch implicitly
@@ -577,7 +575,6 @@ nsDNSService::Init()
             prefs->AddObserver(kPrefIPv4OnlyDomains, this, false);
             prefs->AddObserver(kPrefDnsLocalDomains, this, false);
             prefs->AddObserver(kPrefDisableIPv6, this, false);
-            prefs->AddObserver(kPrefDnsOfflineLocalhost, this, false);
             prefs->AddObserver(kPrefDisablePrefetch, this, false);
             prefs->AddObserver(kPrefDnsNotifyResolution, this, false);
 
@@ -618,7 +615,6 @@ nsDNSService::Init()
         mResolver = res;
         mIDN = idn;
         mIPv4OnlyDomains = ipv4OnlyDomains; // exchanges buffer ownership
-        mOfflineLocalhost = offlineLocalhost;
         mDisableIPv6 = disableIPv6;
 
         // Disable prefetching either by explicit preference or if a manual proxy is configured 
@@ -739,14 +735,12 @@ nsDNSService::AsyncResolve(const nsACString  &aHostname,
     if (!res)
         return NS_ERROR_OFFLINE;
 
+    if (mOffline)
+        flags |= RESOLVE_OFFLINE;
+
     nsCString hostname;
     if (!PreprocessHostname(localDomain, aHostname, idn, hostname))
         return NS_ERROR_FAILURE;
-
-    if (mOffline &&
-        (!mOfflineLocalhost || !hostname.LowerCaseEqualsASCII("localhost"))) {
-        flags |= RESOLVE_OFFLINE;
-    }
 
     // make sure JS callers get notification on the main thread
     nsCOMPtr<nsIXPConnectWrappedJS> wrappedListener = do_QueryInterface(listener);
@@ -839,14 +833,12 @@ nsDNSService::Resolve(const nsACString &aHostname,
 
     NS_ENSURE_TRUE(res, NS_ERROR_OFFLINE);
 
+    if (mOffline)
+        flags |= RESOLVE_OFFLINE;
+
     nsCString hostname;
     if (!PreprocessHostname(localDomain, aHostname, idn, hostname))
         return NS_ERROR_FAILURE;
-
-    if (mOffline &&
-        (!mOfflineLocalhost || !hostname.LowerCaseEqualsASCII("localhost"))) {
-        flags |= RESOLVE_OFFLINE;
-    }
 
     //
     // sync resolve: since the host resolver only works asynchronously, we need
