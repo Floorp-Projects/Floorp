@@ -195,6 +195,7 @@ public:
                    InfallibleTArray<LayoutDeviceIntRect>&& aCompositionRects,
                    const LayoutDeviceIntRect& aCaretRect) MOZ_OVERRIDE;
     virtual bool RecvEndIMEComposition(const bool& aCancel,
+                                       bool* aNoCompositionEvent,
                                        nsString* aComposition) MOZ_OVERRIDE;
     virtual bool RecvGetInputContext(int32_t* aIMEEnabled,
                                      int32_t* aIMEOpen,
@@ -418,6 +419,7 @@ protected:
     mozilla::WritingMode mWritingMode;
     bool mIMEComposing;
     bool mIMECompositionEnding;
+    uint32_t mIMEEventCountAfterEnding;
     // Buffer to store composition text during ResetInputState
     // Compositions in almost all cases are small enough for nsAutoString
     nsAutoString mIMECompositionText;
