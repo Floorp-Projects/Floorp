@@ -193,6 +193,10 @@ HitTestingTreeNode::HitTest(const ParentLayerPoint& aPoint) const
   // for this node.
   MOZ_ASSERT(!IsOutsideClip(aPoint));
 
+  if (mOverride & EventRegionsOverride::ForceEmptyHitRegion) {
+    return HitTestResult::HitNothing;
+  }
+
   // When event regions are disabled and we have an APZC on this node, we are
   // actually storing the touch-sensitive section of the composition bounds in
   // the clip region, and we don't need to check against the mEventRegions.
@@ -233,9 +237,10 @@ HitTestingTreeNode::Dump(const char* aPrefix) const
   if (mPrevSibling) {
     mPrevSibling->Dump(aPrefix);
   }
-  printf_stderr("%sHitTestingTreeNode (%p) APZC (%p) g=(%s) %sr=(%s) t=(%s) c=(%s)\n",
+  printf_stderr("%sHitTestingTreeNode (%p) APZC (%p) g=(%s) %s%sr=(%s) t=(%s) c=(%s)\n",
     aPrefix, this, mApzc.get(), mApzc ? Stringify(mApzc->GetGuid()).c_str() : "",
     (mOverride & EventRegionsOverride::ForceDispatchToContent) ? "fdtc " : "",
+    (mOverride & EventRegionsOverride::ForceEmptyHitRegion) ? "fehr " : "",
     Stringify(mEventRegions).c_str(), Stringify(mTransform).c_str(),
     mClipRegion ? Stringify(mClipRegion.ref()).c_str() : "none");
   if (mLastChild) {

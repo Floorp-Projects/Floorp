@@ -23,6 +23,7 @@
 #include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsIObserver.h"
+#include "nsStyleStructInlines.h"
 #include "nsSubDocumentFrame.h"
 #include "nsView.h"
 #include "nsViewportFrame.h"
@@ -622,9 +623,14 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
   , mRemoteFrame(aRemoteFrame)
   , mEventRegionsOverride(EventRegionsOverride::NoOverride)
 {
-  if (aBuilder->IsBuildingLayerEventRegions() &&
-      nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresContext()->PresShell())) {
-    mEventRegionsOverride = EventRegionsOverride::ForceDispatchToContent;
+  if (aBuilder->IsBuildingLayerEventRegions()) {
+    if (aBuilder->IsInsidePointerEventsNoneDoc() ||
+        aFrame->StyleVisibility()->GetEffectivePointerEvents(aFrame) == NS_STYLE_POINTER_EVENTS_NONE) {
+      mEventRegionsOverride |= EventRegionsOverride::ForceEmptyHitRegion;
+    }
+    if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresContext()->PresShell())) {
+      mEventRegionsOverride |= EventRegionsOverride::ForceDispatchToContent;
+    }
   }
 }
 

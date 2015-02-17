@@ -1753,6 +1753,9 @@ ContainerLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (mEventRegionsOverride & EventRegionsOverride::ForceDispatchToContent) {
     aStream << " [force-dtc]";
   }
+  if (mEventRegionsOverride & EventRegionsOverride::ForceEmptyHitRegion) {
+    aStream << " [force-ehr]";
+  }
   if (mHMDInfo) {
     aStream << nsPrintfCString(" [hmd=%p]", mHMDInfo.get()).get();
   }
