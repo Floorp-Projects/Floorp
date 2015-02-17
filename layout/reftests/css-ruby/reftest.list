@@ -2,7 +2,7 @@ default-preferences pref(layout.css.ruby.enabled,true)
 
 == autohiding-1.html autohiding-1-ref.html
 == autohiding-2.html autohiding-2-ref.html
-fails == autohiding-3.html autohiding-3-ref.html # bug 1107701
+== autohiding-3.html autohiding-3-ref.html
 == box-generation-1.html box-generation-1-ref.html
 == box-generation-2.html box-generation-2-ref.html
 == box-generation-3.html box-generation-3-ref.html
@@ -35,7 +35,7 @@ fails == autohiding-3.html autohiding-3-ref.html # bug 1107701
 == line-height-3.html line-height-3-ref.html
 load nested-ruby-1.html
 == no-transform.html no-transform-ref.html
-fails-if(cocoaWidget) == relative-positioning-1.html relative-positioning-1-ref.html # bug 1120280
+== relative-positioning-1.html relative-positioning-1-ref.html
 == relative-positioning-2.html relative-positioning-2-ref.html
 == ruby-position-horizontal.html ruby-position-horizontal-ref.html
 pref(layout.css.vertical-text.enabled,true) fails == ruby-position-vertical-lr.html ruby-position-vertical-lr-ref.html # bug 1112474

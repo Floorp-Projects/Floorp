@@ -7,12 +7,18 @@
   <script type="text/javascript" src="utils.js"></script>
 </head>
 <body style="line-height: 1">
-  <div id="base" style="padding: .8em 0 .5em"><span id="inline">base</span></div>
+  <div id="base">
+    <span id="inline">base</span>
+    <span id="text1" style="font-size: 80%; color: transparent">text</span>
+    <span id="text2" style="font-size: 50%; color: transparent">text</span>
+  </div>
   next line
   <script>
     // Simulate the behavior of ruby layout.
-    makeHeightMatchInlineBox(document.getElementById('base'),
-                             document.getElementById('inline'));
+    var base = document.getElementById('base');
+    makeHeightMatchInlineBox(base, document.getElementById('inline'));
+    base.style.paddingTop = getHeight(document.getElementById('text1'));
+    base.style.paddingBottom = getHeight(document.getElementById('text2'));
   </script>
 </body>
 </html>
