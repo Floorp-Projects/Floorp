@@ -1618,7 +1618,7 @@ class DebugScopeProxy : public BaseProxyHandler
     }
 
     bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                        MutableHandle<PropertyDescriptor> desc,
+                        Handle<PropertyDescriptor> desc,
                         ObjectOpResult &result) const override
     {
         Rooted<ScopeObject*> scope(cx, &proxy->as<DebugScopeObject>().scope());

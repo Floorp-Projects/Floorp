@@ -195,7 +195,7 @@ BaseDOMProxyHandler::getOwnPropertyDescriptor(JSContext* cx,
 
 bool
 DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                                MutableHandle<JSPropertyDescriptor> desc,
+                                Handle<JSPropertyDescriptor> desc,
                                 JS::ObjectOpResult &result, bool *defined) const
 {
   if (desc.hasGetterObject() && desc.setter() == JS_StrictPropertyStub) {
@@ -252,7 +252,7 @@ DOMProxyHandler::set(JSContext *cx, Handle<JSObject*> proxy, Handle<JSObject*> r
     }
   }
 
-  return js::SetPropertyIgnoringNamedGetter(cx, proxy, id, vp, receiver, &desc, result);
+  return js::SetPropertyIgnoringNamedGetter(cx, proxy, id, vp, receiver, desc, result);
 }
 
 bool
