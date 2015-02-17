@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include <map>
 
+#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layout/PRenderFrameParent.h"
 #include "nsDisplayList.h"
 #include "RenderFrameUtils.h"
@@ -184,7 +185,7 @@ public:
 
 private:
   RenderFrameParent* mRemoteFrame;
-  bool mForceDispatchToContentRegion;
+  mozilla::layers::EventRegionsOverride mEventRegionsOverride;
 };
 
 
