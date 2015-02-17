@@ -250,11 +250,6 @@ const char*     nsWindow::sDefaultMainWindowClass = kClassNameGeneral;
 
 TriStateBool nsWindow::sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
 
-// Used in OOPP plugin focus processing.
-const wchar_t* kOOPPPluginFocusEventId   = L"OOPP Plugin Focus Widget Event";
-uint32_t        nsWindow::sOOPPPluginFocusEvent   =
-                  RegisterWindowMessageW(kOOPPPluginFocusEventId);
-
 DWORD           nsWindow::sFirstEventTime = 0;
 TimeStamp       nsWindow::sFirstEventTimeStamp = TimeStamp();
 
@@ -5392,26 +5387,6 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     }
     break;
 
-    default:
-    {
-      if (msg == nsAppShell::GetTaskbarButtonCreatedMessage())
-        SetHasTaskbarIconBeenCreated();
-      if (msg == sOOPPPluginFocusEvent) {
-        if (wParam == 1) {
-          // With OOPP, the plugin window exists in another process and is a child of
-          // this window. This window is a placeholder plugin window for the dom. We
-          // receive this event when the child window receives focus. (sent from
-          // PluginInstanceParent.cpp)
-          ::SendMessage(mWnd, WM_MOUSEACTIVATE, 0, 0); // See nsPluginNativeWindowWin.cpp
-        } else {
-          // WM_KILLFOCUS was received by the child process.
-          if (sJustGotDeactivate) {
-            DispatchFocusToTopLevelWindow(false);
-          }
-        }
-      }
-    }
-    break;
     case WM_SETTINGCHANGE:
       if (IsWin8OrLater() && lParam &&
           !wcsicmp(L"ConvertibleSlateMode", (wchar_t*)lParam)) {
@@ -5427,6 +5402,14 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
           }
         }
       }
+    break;
+
+    default:
+    {
+      if (msg == nsAppShell::GetTaskbarButtonCreatedMessage()) {
+        SetHasTaskbarIconBeenCreated();
+      }
+    }
     break;
 
   }
