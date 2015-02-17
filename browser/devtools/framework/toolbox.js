@@ -10,6 +10,9 @@ const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
 const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
+const OS_HISTOGRAM = "DEVTOOLS_OS_ENUMERATED_PER_USER";
+const OS_IS_64_BITS = "DEVTOOLS_OS_IS_64_BITS_PER_USER";
+const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 
 let {Cc, Ci, Cu} = require("chrome");
 let {Promise: promise} = require("resource://gre/modules/Promise.jsm");
@@ -334,7 +337,7 @@ Toolbox.prototype = {
 
         let buttonsPromise = this._buildButtons();
 
-        this._telemetry.toolOpened("toolbox");
+        this._pingTelemetry();
 
         this.selectTool(this._defaultToolId).then(panel => {
 
@@ -359,13 +362,24 @@ Toolbox.prototype = {
       // Load the toolbox-level actor fronts and utilities now
       this._target.makeRemote().then(() => {
         iframe.setAttribute("src", this._URL);
-        iframe.setAttribute("aria-label", toolboxStrings("toolbox.label"))
+        iframe.setAttribute("aria-label", toolboxStrings("toolbox.label"));
         let domHelper = new DOMHelpers(iframe.contentWindow);
         domHelper.onceDOMReady(domReady);
       });
 
       return deferred.promise;
     }).then(null, console.error.bind(console));
+  },
+
+  _pingTelemetry: function() {
+    this._telemetry.toolOpened("toolbox");
+
+    this._telemetry.logOncePerBrowserVersion(OS_HISTOGRAM,
+                                             this._getOsCpu());
+    this._telemetry.logOncePerBrowserVersion(OS_IS_64_BITS,
+                                             this._getIs64Bits());
+    this._telemetry.logOncePerBrowserVersion(SCREENSIZE_HISTOGRAM,
+                                             this._getScreenDimensions());
   },
 
   /**
@@ -1573,6 +1587,68 @@ Toolbox.prototype = {
    */
   getNotificationBox: function() {
     return this.doc.getElementById("toolbox-notificationbox");
+  },
+
+  _getScreenDimensions: function() {
+    let width = {};
+    let height = {};
+
+    Cc["@mozilla.org/gfx/screenmanager;1"].getService(Ci.nsIScreenManager)
+                                          .primaryScreen.GetRect({}, {}, width, height);
+    let dims = width.value + "x" + height.value;
+
+    if (width.value < 800 || height.value < 600) return 0;
+    if (dims === "800x600")   return 1;
+    if (dims === "1024x768")  return 2;
+    if (dims === "1280x800")  return 3;
+    if (dims === "1280x1024") return 4;
+    if (dims === "1366x768")  return 5;
+    if (dims === "1440x900")  return 6;
+    if (dims === "1920x1080") return 7;
+    if (dims === "2560×1600") return 8;
+    if (dims === "2560×1600") return 9;
+    if (dims === "2880x1800") return 10;
+    if (width.value > 2880 || height.value > 1800) return 12;
+
+    return 11; // Other dimension such as a VM.
+  },
+
+  _getOsCpu: function() {
+    let oscpu = Cc["@mozilla.org/network/protocol;1?name=http"]
+                  .getService(Ci.nsIHttpProtocolHandler).oscpu;
+
+    if (oscpu.contains("NT 5.1") || oscpu.contains("NT 5.2")) return 0;
+    if (oscpu.contains("NT 6.0")) return 1;
+    if (oscpu.contains("NT 6.1")) return 2;
+    if (oscpu.contains("NT 6.2")) return 3;
+    if (oscpu.contains("NT 6.3")) return 4;
+    if (oscpu.contains("OS X"))   return 5;
+    if (oscpu.contains("Linux"))  return 6;
+
+    return 10; // Other OS.
+  },
+
+  /**
+   * Check if we are running a 32 or 64-bit version of Firefox.
+   * @return {Integer}
+   *         0, 1, or 2 where 0=false, 1=true and null=Unknown (probably
+   *         running SPARC, Alpha or ARM).
+   */
+  _getIs64Bits: function() {
+    let appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
+
+    let processor = appInfo.XPCOMABI.split("-")[0];
+
+    switch (processor) {
+      case "x86":
+        return 0;
+      case "x86_64":
+      case "ia_64":
+      case "ppc":
+        return 1;
+    }
+
+    return 2; // SPARC, Alpha or ARM.
   },
 
   /**
