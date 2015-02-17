@@ -620,10 +620,12 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
                                  RenderFrameParent* aRemoteFrame)
   : nsDisplayItem(aBuilder, aFrame)
   , mRemoteFrame(aRemoteFrame)
+  , mEventRegionsOverride(EventRegionsOverride::NoOverride)
 {
-  mForceDispatchToContentRegion =
-    aBuilder->IsBuildingLayerEventRegions() &&
-    nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresContext()->PresShell());
+  if (aBuilder->IsBuildingLayerEventRegions() &&
+      nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresContext()->PresShell())) {
+    mEventRegionsOverride = EventRegionsOverride::ForceDispatchToContent;
+  }
 }
 
 already_AddRefed<Layer>
@@ -636,7 +638,7 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
   visibleRect += aContainerParameters.mOffset;
   nsRefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, visibleRect, this, aContainerParameters);
   if (layer && layer->AsContainerLayer()) {
-    layer->AsContainerLayer()->SetForceDispatchToContentRegion(mForceDispatchToContentRegion);
+    layer->AsContainerLayer()->SetEventRegionsOverride(mEventRegionsOverride);
   }
   return layer.forget();
 }
