@@ -147,8 +147,8 @@ AddonWrapper<Base>::set(JSContext *cx, JS::HandleObject wrapper, JS::HandleObjec
 template<typename Base>
 bool
 AddonWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                                   MutableHandle<JSPropertyDescriptor> desc,
-                                   JS::ObjectOpResult &result) const
+                                   Handle<JSPropertyDescriptor> desc,
+                                   ObjectOpResult &result) const
 {
     Rooted<JSPropertyDescriptor> interpDesc(cx);
     if (!Interpose(cx, wrapper, nullptr, id, &interpDesc))
