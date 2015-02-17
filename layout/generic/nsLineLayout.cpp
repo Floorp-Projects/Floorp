@@ -104,9 +104,6 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   mTotalPlacedFrames = 0;
   mBStartEdge = 0;
   mTrimmableISize = 0;
-#ifdef DEBUG
-  mFinalLineBSize = nscoord_MIN;
-#endif
 
   mInflationMinFontSize =
     nsLayoutUtils::InflationMinFontSizeFor(aOuterReflowState->frame);
