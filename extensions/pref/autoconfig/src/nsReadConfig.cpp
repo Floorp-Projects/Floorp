@@ -24,6 +24,7 @@
 #include "nsCRT.h"
 #include "nspr.h"
 #include "nsXULAppAPI.h"
+#include "nsContentUtils.h"
 
 extern PRLogModuleInfo *MCD;
 
@@ -253,26 +254,23 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, int32_t obsc
             return rv;
 
     } else {
-        nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
-        if (NS_FAILED(rv)) 
-            return rv;
-
         nsAutoCString location("resource://gre/defaults/autoconfig/");
         location += aFileName;
 
         nsCOMPtr<nsIURI> uri;
-        rv = ioService->NewURI(location, nullptr, nullptr, getter_AddRefs(uri));
-        if (NS_FAILED(rv))
-            return rv;
+        rv = NS_NewURI(getter_AddRefs(uri), location);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIChannel> channel;
-        rv = ioService->NewChannelFromURI(uri, getter_AddRefs(channel));
-        if (NS_FAILED(rv))
-            return rv;
+        rv = NS_NewChannel(getter_AddRefs(channel),
+                           uri,
+                           nsContentUtils::GetSystemPrincipal(),
+                           nsILoadInfo::SEC_NORMAL,
+                           nsIContentPolicy::TYPE_OTHER);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         rv = channel->Open(getter_AddRefs(inStr));
-        if (NS_FAILED(rv)) 
-            return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     uint64_t fs64;
