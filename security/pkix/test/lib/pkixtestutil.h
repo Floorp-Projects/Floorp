@@ -270,8 +270,6 @@ TestKeyPair* GenerateDSSKeyPair();
 inline void DeleteTestKeyPair(TestKeyPair* keyPair) { delete keyPair; }
 typedef ScopedPtr<TestKeyPair, DeleteTestKeyPair> ScopedTestKeyPair;
 
-ByteString SHA1(const ByteString& toHash);
-
 Result TestVerifyECDSASignedDigest(const SignedDigest& signedDigest,
                                    Input subjectPublicKeyInfo);
 Result TestVerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
