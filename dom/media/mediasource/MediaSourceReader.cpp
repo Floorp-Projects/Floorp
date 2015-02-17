@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "MediaSourceReader.h"
 
+#include <cmath>
 #include "prlog.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "DecoderTraits.h"
@@ -209,8 +210,7 @@ AdjustEndTime(int64_t* aEndTime, SourceBufferDecoder* aDecoder)
     nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
     aDecoder->GetBuffered(ranges);
     if (ranges->Length() > 0) {
-      // End time is a double so we convert to nearest by adding 0.5.
-      int64_t end = ranges->GetEndTime() * USECS_PER_S + 0.5;
+      int64_t end = std::ceil(ranges->GetEndTime() * USECS_PER_S);
       *aEndTime = std::max(*aEndTime, end);
     }
   }
@@ -474,8 +474,9 @@ MediaSourceReader::SelectDecoder(int64_t aTarget,
     newDecoder->GetBuffered(ranges);
     if (ranges->Find(double(aTarget) / USECS_PER_S,
                      double(aTolerance) / USECS_PER_S) == dom::TimeRanges::NoIndex) {
-      MSE_DEBUGV("SelectDecoder(%lld) newDecoder=%p target not in ranges=%s",
-                 aTarget, newDecoder.get(), DumpTimeRanges(ranges).get());
+      MSE_DEBUGV("SelectDecoder(%lld fuzz:%lld) newDecoder=%p (%d/%d) target not in ranges=%s",
+                 aTarget, aTolerance, newDecoder.get(), i+1,
+                 aTrackDecoders.Length(), DumpTimeRanges(ranges).get());
       continue;
     }
 
