@@ -290,13 +290,12 @@ class ServiceWorkerManager MOZ_FINAL
   , public nsIIPCBackgroundChildCreateCallback
 {
   friend class ActivationRunnable;
+  friend class ServiceWorkerRegistrationInfo;
+  friend class ServiceWorkerRegisterJob;
   friend class GetReadyPromiseRunnable;
   friend class GetRegistrationsRunnable;
   friend class GetRegistrationRunnable;
   friend class QueueFireUpdateFoundRunnable;
-  friend class ServiceWorkerActivateAfterUnloadingJob;
-  friend class ServiceWorkerRegisterJob;
-  friend class ServiceWorkerRegistrationInfo;
   friend class ServiceWorkerUnregisterJob;
 
 public:
@@ -350,8 +349,6 @@ public:
   void
   RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration)
   {
-    MOZ_ASSERT(aRegistration);
-    MOZ_ASSERT(!aRegistration->IsControllingDocuments());
     MOZ_ASSERT(mServiceWorkerRegistrationInfos.Contains(aRegistration->mScope));
     ServiceWorkerManager::RemoveScope(mOrderedScopes, aRegistration->mScope);
     mServiceWorkerRegistrationInfos.Remove(aRegistration->mScope);
