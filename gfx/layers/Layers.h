@@ -916,10 +916,13 @@ public:
    * outside the dispatch-to-content region, we can initiate a gesture without
    * consulting the content thread. Otherwise we must dispatch the event to
    * content.
-   * Note that if a layer or any ancestor layer returns true for
-   * GetForceDispatchToContentRegion() then we must treat the dispatch-to-content
-   * region as encompassing the hit region, and therefore must consult the
-   * content thread before initiating a gesture.
+   * Note that if a layer or any ancestor layer has a ForceEmptyHitRegion
+   * override in GetEventRegionsOverride() then the hit-region must be treated
+   * as empty. Similarly, if there is a ForceDispatchToContent override then
+   * the dispatch-to-content region must be treated as encompassing the entire
+   * hit region, and therefore we must consult the content thread before
+   * initiating a gesture. (If both flags are set, ForceEmptyHitRegion takes
+   * priority.)
    */
   /**
    * CONSTRUCTION PHASE ONLY
