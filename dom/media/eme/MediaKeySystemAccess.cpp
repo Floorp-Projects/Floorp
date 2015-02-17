@@ -121,7 +121,7 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem)
     if (!IsVistaOrLater()) {
       return MediaKeySystemStatus::Cdm_not_supported;
     }
-    if (!Preferences::GetBool("media.eme.adobe-access.enabled", false)) {
+    if (!Preferences::GetBool("media.gmp-eme-adobe.enabled", false)) {
       return MediaKeySystemStatus::Cdm_disabled;
     }
     if (!HaveGMPFor(mps,
