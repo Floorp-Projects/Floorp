@@ -823,7 +823,10 @@ HashableValue::operator==(const HashableValue &other) const
 
 #ifdef DEBUG
     bool same;
-    MOZ_ASSERT(SameValue(nullptr, value, other.value, &same));
+    PerThreadData *data = TlsPerThreadData.get();
+    RootedValue valueRoot(data, value);
+    RootedValue otherRoot(data, other.value);
+    MOZ_ASSERT(SameValue(nullptr, valueRoot, otherRoot, &same));
     MOZ_ASSERT(same == b);
 #endif
     return b;
