@@ -60,7 +60,6 @@ private:
     bool                                      mFirstTime;
     bool                                      mOffline;
     bool                                      mNotifyResolution;
-    bool                                      mOfflineLocalhost;
     nsMainThreadPtrHandle<nsIObserverService> mObserverService;
     nsTHashtable<nsCStringHashKey>            mLocalDomains;
 };
