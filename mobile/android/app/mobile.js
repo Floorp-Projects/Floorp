@@ -849,8 +849,8 @@ pref("device.storage.enabled", true);
 // Enable meta-viewport support for font inflation code
 pref("dom.meta-viewport.enabled", true);
 
-// Enable the OpenH264 plugin support in the addon manager.
-pref("media.gmp-gmpopenh264.provider.enabled", true);
+// Enable GMP support in the addon manager.
+pref("media.gmp-provider.enabled", true);
 
 // The default color scheme in reader mode (light, dark, auto)
 // auto = color automatically adjusts according to ambient light level
