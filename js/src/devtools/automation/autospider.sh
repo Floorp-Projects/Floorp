@@ -111,29 +111,22 @@ $SOURCE/js/src/configure $CONFIGURE_ARGS --enable-nspr-build --prefix=$OBJDIR/di
 $MAKE -s -w -j4 || exit 2
 cp -p $SOURCE/build/unix/run-mozilla.sh $OBJDIR/dist/bin
 
-# The root analysis tests run in a special GC Zeal mode and disable ASLR to
-# make tests reproducible.
 COMMAND_PREFIX=''
+
+# On Linux, disable ASLR to make shell builds a bit more reproducible.
+if type setarch >/dev/null 2>&1; then
+    COMMAND_PREFIX="setarch $(uname -m) -R "
+fi
+
 if [[ "$VARIANT" = "rootanalysis" ]]; then
     export JS_GC_ZEAL=7
 
-    # rootanalysis builds are currently only done on Linux, which should have
-    # setarch, but just in case we enable them on another platform:
-    if type setarch >/dev/null 2>&1; then
-        COMMAND_PREFIX="setarch $(uname -m) -R "
-    fi
 elif [[ "$VARIANT" = "generational" ]]; then
     # Generational is currently being used for compacting GC
     export JS_GC_ZEAL=14
 
     # Ignore timeouts from tests that are known to take too long with this zeal mode
     export JITTEST_EXTRA_ARGS=--ignore-timeouts=$ABSDIR/cgc-jittest-timeouts.txt
-
-    # rootanalysis builds are currently only done on Linux, which should have
-    # setarch, but just in case we enable them on another platform:
-    if type setarch >/dev/null 2>&1; then
-        COMMAND_PREFIX="setarch $(uname -m) -R "
-    fi
 fi
 
 $COMMAND_PREFIX $MAKE check || exit 1
