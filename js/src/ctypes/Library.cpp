@@ -6,7 +6,6 @@
 
 #include "ctypes/Library.h"
 
-#include "prerror.h"
 #include "prlink.h"
 
 #include "ctypes/CTypes.h"
@@ -147,17 +146,12 @@ Library::Create(JSContext* cx, jsval path_, const JSCTypesCallbacks* callbacks)
   PRLibrary* library = PR_LoadLibraryWithFlags(libSpec, 0);
 
   if (!library) {
-    char *error = (char*) JS_malloc(cx, PR_GetErrorTextLength() + 1);
-    if (error)
-      PR_GetErrorText(error);
-
 #ifdef XP_WIN
-    JS_ReportError(cx, "couldn't open library %hs: %s", pathChars, error);
+    JS_ReportError(cx, "couldn't open library %hs", pathChars);
 #else
-    JS_ReportError(cx, "couldn't open library %s: %s", pathBytes, error);
+    JS_ReportError(cx, "couldn't open library %s", pathBytes);
     JS_free(cx, pathBytes);
 #endif
-    JS_free(cx, error);
     return nullptr;
   }
 
