@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1131371</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1131371">Mozilla Bug 1131371</a>
+<div id="display">
+  <div id="content">
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+"use strict";
+
+/** Test for Bug 1131371 **/
+
+/**
+ * This test verifies that certain style changes do or don't cause reflow
+ * and/or frame construction. We do this by checking the framesReflowed &
+ * framesConstructed counts, before & after a style-change, and verifying
+ * that any change to these counts is in line with our expectations.
+ *
+ * Each entry in gTestcases contains these member-values:
+ *   - beforeStyle (optional): initial value to use for "style" attribute.
+ *   - afterStyle: value to change the "style" attribute to.
+ *
+ * Testcases may also include two optional member-values to express that reflow
+ * and/or frame construction *are* in fact expected:
+ *   - expectConstruction (optional): if set to something truthy, then we expect
+ *      frame construction to occur when afterStyle is set. Otherwise, we
+ *      expect that frame construction should *not* occur.
+ *   - expectReflow (optional): if set to something truthy, then we expect
+ *      reflow to occur when afterStyle is set. Otherwise, we expect that
+ *      reflow should *not* occur.
+ */
+const gTestcases = [
+  // Things that shouldn't cause reflow:
+  // -----------------------------------
+  // * Adding an outline (e.g. for focus ring).
+  {
+    afterStyle:  "outline: 1px dotted black",
+  },
+
+  // * Changing between completely-different outlines.
+  {
+    beforeStyle: "outline: 2px solid black",
+    afterStyle:  "outline: 6px dashed yellow",
+  },
+
+  // Things that *should* cause reflow:
+  // ----------------------------------
+  // (e.g. to make sure our counts are actually measuring something)
+
+  // * Changing 'height' should cause reflow, but not frame construction.
+  {
+    beforeStyle: "height: 10px",
+    afterStyle:  "height: 15px",
+    expectReflow: true,
+  },
+
+  // * Changing 'display' should cause frame construction and reflow.
+  {
+    beforeStyle: "display: inline",
+    afterStyle:  "display: table",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+
+];
+
+// Helper function to let us call either "is" or "isnot" & assemble
+// the failure message, based on the provided parameters.
+function checkFinalCount(aFinalCount, aExpectedCount,
+                         aExpectChange, aMsgPrefix, aCountDescription)
+{
+  let compareFunc;
+  let msg = aMsgPrefix;
+  if (aExpectChange) {
+    compareFunc = isnot;
+    msg += "should cause " + aCountDescription;
+  } else {
+    compareFunc = is;
+    msg += "should not cause " + aCountDescription;
+  }
+
+  compareFunc(aFinalCount, aExpectedCount, msg);
+}
+
+// Vars used in runOneTest that we really only have to look up once:
+const gUtils = SpecialPowers.getDOMWindowUtils(window);
+const gElem = document.getElementById("content");
+
+function runOneTest(aTestcase)
+{
+  // sanity-check that we have the one main thing we need:
+  if (!aTestcase.afterStyle) {
+    ok(false, "testcase is missing an 'afterStyle' to change to");
+    return;
+  }
+
+  // Set the "before" style, and compose the first part of the message
+  // to be used in our "is"/"isnot" invocations:
+  let msgPrefix = "Changing style ";
+  if (aTestcase.beforeStyle) {
+    gElem.setAttribute("style", aTestcase.beforeStyle);
+    msgPrefix += "from '" + aTestcase.beforeStyle + "' ";
+  }
+  msgPrefix += "to '" + aTestcase.afterStyle + "' ";
+
+  // Establish initial counts:
+  let unusedVal = gElem.offsetHeight; // flush layout
+  let origFramesConstructed = gUtils.framesConstructed;
+  let origFramesReflowed = gUtils.framesReflowed;
+
+  // Make the change and flush:
+  gElem.setAttribute("style", aTestcase.afterStyle);
+  unusedVal = gElem.offsetHeight; // flush layout
+
+  // Make our is/isnot assertions about whether things should have changed:
+  checkFinalCount(gUtils.framesConstructed, origFramesConstructed,
+                  aTestcase.expectConstruction, msgPrefix,
+                  "frame construction");
+  checkFinalCount(gUtils.framesReflowed, origFramesReflowed,
+                  aTestcase.expectReflow, msgPrefix,
+                  "reflow");
+
+  // Clean up!
+  gElem.removeAttribute("style");
+}
+
+gTestcases.forEach(runOneTest);
+
+</script>
+</pre>
+</body>
+</html>
