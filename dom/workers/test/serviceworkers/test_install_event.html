@@ -38,10 +38,9 @@
 
   function installError() {
     // Silence worker errors so they don't cause the test to fail.
-    window.onerror = function(e) {}
+    window.onerror = function() { }
     return navigator.serviceWorker.register("install_event_error_worker.js", { scope: "./install_event" })
       .then(function(swr) {
-        ok(swr.installing instanceof ServiceWorker, "There should be an installing worker if promise resolves.");
         ok(swr.installing.state == "installing", "Installing worker's state should be 'installing'");
         return new Promise(function(resolve, reject) {
           swr.installing.onstatechange = function(e) {
@@ -86,8 +85,7 @@
   }
 
   function runTest() {
-    Promise.resolve()
-      .then(simpleRegister)
+    simpleRegister()
       .then(nextRegister)
       .then(installError)
       .then(activateError)
