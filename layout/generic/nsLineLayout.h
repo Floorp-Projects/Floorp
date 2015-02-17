@@ -671,6 +671,10 @@ protected:
   bool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaISize);
 
   struct JustificationComputationState;
+
+  static int AssignInterframeJustificationGaps(
+    PerFrameData* aFrame, JustificationComputationState& aState);
+
   int32_t ComputeFrameJustification(PerSpanData* psd,
                                     JustificationComputationState& aState);
 
