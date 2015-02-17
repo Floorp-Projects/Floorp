@@ -80,7 +80,7 @@ public:
                                int32_t* aY) MOZ_OVERRIDE
   { *aX = kMaxDimension;  *aY = kMaxDimension;  return NS_OK; }
 
-  // Widget position is controlled by the parent process via TabChild.
+  // We're always at <0, 0>, and so ignore move requests.
   NS_IMETHOD Move(double aX, double aY) MOZ_OVERRIDE
   { return NS_OK; }
 
@@ -92,14 +92,8 @@ public:
                     double aWidth,
                     double aHeight,
                     bool   aRepaint) MOZ_OVERRIDE
-  {
-    if (mBounds.x != aX || mBounds.y != aY) {
-      NotifyWindowMoved(aX, aY);
-    }
-    mBounds.x = aX;
-    mBounds.y = aY;
-    return Resize(aWidth, aHeight, aRepaint);
-  }
+  // (we're always at <0, 0>)
+  { return Resize(aWidth, aHeight, aRepaint); }
 
   // XXX/cjones: copying gtk behavior here; unclear what disabling a
   // widget is supposed to entail
@@ -129,8 +123,9 @@ public:
   NS_IMETHOD SetTitle(const nsAString& aTitle) MOZ_OVERRIDE
   { return NS_ERROR_UNEXPECTED; }
   
+  // PuppetWidgets are always at <0, 0>.
   virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() MOZ_OVERRIDE
-  { return LayoutDeviceIntPoint::FromUntyped(GetWindowPosition() + GetChromeDimensions()); }
+  { return mozilla::LayoutDeviceIntPoint(0, 0); }
 
   void InitEvent(WidgetGUIEvent& aEvent, nsIntPoint* aPoint = nullptr);
 
@@ -202,8 +197,6 @@ public:
 
   // Get the screen position of the application window.
   nsIntPoint GetWindowPosition();
-
-  NS_IMETHOD GetScreenBounds(nsIntRect &aRect) MOZ_OVERRIDE;
 
 protected:
   bool mEnabled;
