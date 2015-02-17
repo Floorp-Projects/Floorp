@@ -9,7 +9,7 @@
 #if defined(_WIN64)
 /* 64 bit Windows */
 #ifdef _MSC_VER
-#include "vp8_rtcd_x86_64-win64-vs8.h"
+#include "vp8_rtcd_x86_64-win64-vs12.h"
 #else
 #include "vp8_rtcd_x86_64-win64-gcc.h"
 #endif
@@ -17,7 +17,7 @@
 #elif defined(_WIN32)
 /* 32 bit Windows, MSVC. */
 #ifdef _MSC_VER
-#include "vp8_rtcd_x86-win32-vs8.h"
+#include "vp8_rtcd_x86-win32-vs12.h"
 #else
 #include "vp8_rtcd_x86-win32-gcc.h"
 #endif
