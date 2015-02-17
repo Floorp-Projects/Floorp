@@ -2075,8 +2075,8 @@ RelocateCell(Zone *zone, TenuredCell *src, AllocKind thingKind, size_t thingSize
 
             // For copy-on-write objects that own their elements, fix up the
             // owner pointer to point to the relocated object.
-            if (srcNative->hasDynamicElements() && srcNative->denseElementsAreCopyOnWrite()) {
-                HeapPtrNativeObject &owner = srcNative->getElementsHeader()->ownerObject();
+            if (srcNative->denseElementsAreCopyOnWrite()) {
+                HeapPtrNativeObject &owner = dstNative->getElementsHeader()->ownerObject();
                 if (owner == srcNative)
                     owner = dstNative;
             }
