@@ -721,43 +721,102 @@ EqualGivenSameType(JSContext *cx, const Value &lval, const Value &rval, bool *eq
     return true;
 }
 
+static inline bool
+LooselyEqualBooleanAndOther(JSContext *cx, const Value &lval, const Value &rval, bool *result)
+{
+    MOZ_ASSERT(!rval.isBoolean());
+    RootedValue lvalue(cx, Int32Value(lval.toBoolean() ? 1 : 0));
+
+    // The tail-call would end up in Step 3.
+    if (rval.isNumber()) {
+        *result = (lvalue.toNumber() == rval.toNumber());
+        return true;
+    }
+    // The tail-call would end up in Step 6.
+    if (rval.isString()) {
+        double num;
+        if (!StringToNumber(cx, rval.toString(), &num))
+            return false;
+        *result = (lvalue.toNumber() == num);
+        return true;
+    }
+
+    return LooselyEqual(cx, lvalue, rval, result);
+}
+
+// ES6 draft rev32 7.2.12 Abstract Equality Comparison
 bool
 js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *result)
 {
+    // Step 3.
     if (SameType(lval, rval))
         return EqualGivenSameType(cx, lval, rval, result);
 
+    // Handle int32 x double.
+    if (lval.isNumber() && rval.isNumber()) {
+        *result = (lval.toNumber() == rval.toNumber());
+        return true;
+    }
+
+    // Step 4. This a bit more complex, because of the undefined emulating object.
     if (lval.isNullOrUndefined()) {
+        // We can return early here, because null | undefined is only equal to the same set.
         *result = rval.isNullOrUndefined() ||
                   (rval.isObject() && EmulatesUndefined(&rval.toObject()));
         return true;
     }
 
+    // Step 5.
     if (rval.isNullOrUndefined()) {
-        *result = (lval.isObject() && EmulatesUndefined(&lval.toObject()));
+        MOZ_ASSERT(!lval.isNullOrUndefined());
+        *result = lval.isObject() && EmulatesUndefined(&lval.toObject());
         return true;
     }
 
-    RootedValue lvalue(cx, lval);
-    RootedValue rvalue(cx, rval);
-
-    if (!ToPrimitive(cx, &lvalue))
-        return false;
-    if (!ToPrimitive(cx, &rvalue))
-        return false;
-
-    if (SameType(lvalue, rvalue))
-        return EqualGivenSameType(cx, lvalue, rvalue, result);
-
-    if (lvalue.isSymbol() || rvalue.isSymbol()) {
-        *result = false;
+    // Step 6.
+    if (lval.isNumber() && rval.isString()) {
+        double num;
+        if (!StringToNumber(cx, rval.toString(), &num))
+            return false;
+        *result = (lval.toNumber() == num);
         return true;
     }
 
-    double l, r;
-    if (!ToNumber(cx, lvalue, &l) || !ToNumber(cx, rvalue, &r))
-        return false;
-    *result = (l == r);
+    // Step 7.
+    if (lval.isString() && rval.isNumber()) {
+        double num;
+        if (!StringToNumber(cx, lval.toString(), &num))
+            return false;
+        *result = (num == rval.toNumber());
+        return true;
+    }
+
+    // Step 8.
+    if (lval.isBoolean())
+        return LooselyEqualBooleanAndOther(cx, lval, rval, result);
+
+    // Step 9.
+    if (rval.isBoolean())
+        return LooselyEqualBooleanAndOther(cx, rval, lval, result);
+
+    // Step 10.
+    if ((lval.isString() || lval.isNumber() || lval.isSymbol()) && rval.isObject()) {
+        RootedValue rvalue(cx, rval);
+        if (!ToPrimitive(cx, &rvalue))
+            return false;
+        return LooselyEqual(cx, lval, rvalue, result);
+    }
+
+    // Step 11.
+    if (lval.isObject() && (rval.isString() || rval.isNumber() || rval.isSymbol())) {
+        RootedValue lvalue(cx, lval);
+        if (!ToPrimitive(cx, &lvalue))
+            return false;
+        return LooselyEqual(cx, lvalue, rval, result);
+    }
+
+    // Step 12.
+    *result = false;
     return true;
 }
 
@@ -768,16 +827,8 @@ js::StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref, bool *equ
     if (SameType(lval, rval))
         return EqualGivenSameType(cx, lval, rval, equal);
 
-    if (lval.isDouble() && rval.isInt32()) {
-        double ld = lval.toDouble();
-        double rd = rval.toInt32();
-        *equal = (ld == rd);
-        return true;
-    }
-    if (lval.isInt32() && rval.isDouble()) {
-        double ld = lval.toInt32();
-        double rd = rval.toDouble();
-        *equal = (ld == rd);
+    if (lval.isNumber() && rval.isNumber()) {
+        *equal = (lval.toNumber() == rval.toNumber());
         return true;
     }
 
