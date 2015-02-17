@@ -1787,6 +1787,18 @@ TabParent::RecvEnableDisableCommands(const nsString& aAction,
   return true;
 }
 
+NS_IMETHODIMP
+TabParent::GetChildProcessOffset(int32_t* aOutCssX, int32_t* aOutCssY)
+{
+  NS_ENSURE_ARG(aOutCssX);
+  NS_ENSURE_ARG(aOutCssY);
+  CSSPoint offset = LayoutDevicePoint(GetChildProcessOffset())
+      * GetLayoutDeviceToCSSScale();
+  *aOutCssX = offset.x;
+  *aOutCssY = offset.y;
+  return NS_OK;
+}
+
 LayoutDeviceIntPoint
 TabParent::GetChildProcessOffset()
 {
