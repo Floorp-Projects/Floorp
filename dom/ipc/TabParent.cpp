@@ -1189,21 +1189,23 @@ bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
   return SendRealMouseButtonEvent(event);
 }
 
-LayoutDeviceToCSSScale
-TabParent::GetLayoutDeviceToCSSScale()
-{
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
-  nsIDocument* doc = (content ? content->OwnerDoc() : nullptr);
-  nsIPresShell* shell = (doc ? doc->GetShell() : nullptr);
-  nsPresContext* ctx = (shell ? shell->GetPresContext() : nullptr);
-  return LayoutDeviceToCSSScale(ctx
-    ? (float)ctx->AppUnitsPerDevPixel() / nsPresContext::AppUnitsPerCSSPixel()
-    : 0.0f);
-}
-
 CSSPoint TabParent::AdjustTapToChildWidget(const CSSPoint& aPoint)
 {
-  return aPoint + (LayoutDevicePoint(mChildProcessOffsetAtTouchStart) * GetLayoutDeviceToCSSScale());
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
+
+  if (!content || !content->OwnerDoc()) {
+    return aPoint;
+  }
+
+  nsIDocument* doc = content->OwnerDoc();
+  if (!doc || !doc->GetShell()) {
+    return aPoint;
+  }
+  nsPresContext* presContext = doc->GetShell()->GetPresContext();
+
+  return aPoint + CSSPoint(
+    presContext->DevPixelsToFloatCSSPixels(mChildProcessOffsetAtTouchStart.x),
+    presContext->DevPixelsToFloatCSSPixels(mChildProcessOffsetAtTouchStart.y));
 }
 
 bool TabParent::SendHandleSingleTap(const CSSPoint& aPoint, const ScrollableLayerGuid& aGuid)
