@@ -5,6 +5,13 @@
 
 #include <windows.h>
 
+// Support SDK's that don't have LOAD_LIBRARY_SEARCH_SYSTEM32 or
+// SetDefaultDllDirectories.
+#ifndef NTDDI_WIN8
+#define LOAD_LIBRARY_SEARCH_SYSTEM32 0x00000800
+#endif
+typedef BOOL (WINAPI *SetDefaultDllDirectoriesFunction) (DWORD DirectoryFlags);
+
 // Delayed load libraries are loaded when the first symbol is used.
 // The following ensures that we load the delayed loaded libraries from the
 // system directory.
@@ -21,8 +28,9 @@ struct AutoLoadSystemDependencies
       // SetDefaultDllDirectories is always available on Windows 8 and above. It
       // is also available on Windows Vista, Windows Server 2008, and
       // Windows 7 when MS KB2533623 has been applied.
-      decltype(SetDefaultDllDirectories)* setDefaultDllDirectories =
-        (decltype(SetDefaultDllDirectories)*) GetProcAddress(module, "SetDefaultDllDirectories");
+      SetDefaultDllDirectoriesFunction setDefaultDllDirectories =
+          reinterpret_cast<SetDefaultDllDirectoriesFunction>(
+              ::GetProcAddress(module, "SetDefaultDllDirectories"));
       if (setDefaultDllDirectories) {
         setDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
         return;
