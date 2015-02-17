@@ -108,7 +108,7 @@ interface nsIMobileConnectionListener : nsISupports
 #define NO_ADDITIONAL_INFORMATION 0
 %}
 
-[scriptable, builtinclass, uuid(14d66926-8434-11e4-8c3f-f724194bb5f1)]
+[scriptable, uuid(14d66926-8434-11e4-8c3f-f724194bb5f1)]
 interface nsIMobileConnectionCallback : nsISupports
 {
   /**
