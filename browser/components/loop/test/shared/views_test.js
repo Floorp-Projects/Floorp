@@ -118,8 +118,9 @@ describe("loop.shared.views", function() {
           state: SCREEN_SHARE_STATES.PENDING
         }));
 
-      expect(comp.getDOMNode().classList.contains("active")).eql(false);
-      expect(comp.getDOMNode().classList.contains("disabled")).eql(true);
+      var node = comp.getDOMNode().querySelector(".btn-screen-share");
+      expect(node.classList.contains("active")).eql(false);
+      expect(node.classList.contains("disabled")).eql(true);
     });
 
     it("should render an active share button", function() {
@@ -130,11 +131,12 @@ describe("loop.shared.views", function() {
           state: SCREEN_SHARE_STATES.ACTIVE
         }));
 
-      expect(comp.getDOMNode().classList.contains("active")).eql(true);
-      expect(comp.getDOMNode().classList.contains("disabled")).eql(false);
+      var node = comp.getDOMNode().querySelector(".btn-screen-share");
+      expect(node.classList.contains("active")).eql(true);
+      expect(node.classList.contains("disabled")).eql(false);
     });
 
-    it("should dispatch a StartScreenShare action on click when the state is not active",
+    it("should show the screenshare dropdown on click when the state is not active",
        function() {
         var comp = TestUtils.renderIntoDocument(
           React.createElement(sharedViews.ScreenShareControlButton, {
@@ -143,7 +145,24 @@ describe("loop.shared.views", function() {
             state: SCREEN_SHARE_STATES.INACTIVE
           }));
 
-        TestUtils.Simulate.click(comp.getDOMNode());
+        expect(comp.state.showMenu).eql(false);
+
+        TestUtils.Simulate.click(comp.getDOMNode().querySelector(".btn-screen-share"));
+
+        expect(comp.state.showMenu).eql(true);
+      });
+
+    it("should dispatch a StartScreenShare action on option click in screenshare dropdown",
+      function() {
+        var comp = TestUtils.renderIntoDocument(
+          React.createElement(sharedViews.ScreenShareControlButton, {
+            dispatcher: dispatcher,
+            visible: true,
+            state: SCREEN_SHARE_STATES.INACTIVE
+          }));
+
+        TestUtils.Simulate.click(comp.getDOMNode().querySelector(
+          ".conversation-window-dropdown > li"));
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -159,7 +178,7 @@ describe("loop.shared.views", function() {
             state: SCREEN_SHARE_STATES.ACTIVE
           }));
 
-        TestUtils.Simulate.click(comp.getDOMNode());
+        TestUtils.Simulate.click(comp.getDOMNode().querySelector(".btn-screen-share"));
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
