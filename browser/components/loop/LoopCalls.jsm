@@ -69,9 +69,16 @@ CallProgressSocket.prototype = {
     let uri = Services.io.newURI(this._progressUrl, null, null);
 
     // Allow _websocket to be set for testing.
-    this._websocket = this._websocket ||
-      Cc["@mozilla.org/network/protocol;1?name=" + uri.scheme]
-        .createInstance(Ci.nsIWebSocketChannel);
+    if (!this._websocket) {
+      this._websocket = Cc["@mozilla.org/network/protocol;1?name=" + uri.scheme]
+                          .createInstance(Ci.nsIWebSocketChannel);
+
+      this._websocket.initLoadInfo(null, // aLoadingNode
+                                   Services.scriptSecurityManager.getSystemPrincipal(),
+                                   null, // aTriggeringPrincipal
+                                   Ci.nsILoadInfo.SEC_NORMAL,
+                                   Ci.nsIContentPolicy.TYPE_WEBSOCKET);
+    }
 
     this._websocket.asyncOpen(uri, this._progressUrl, this, null);
   },
