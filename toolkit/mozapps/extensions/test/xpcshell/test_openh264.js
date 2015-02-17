@@ -192,8 +192,8 @@ add_task(function* test_pluginRegistration() {
     removePluginDirectory: path => removedPaths.push(path),
   };
 
-  let OpenH264Scope = Cu.import("resource://gre/modules/addons/OpenH264Provider.jsm");
-  OpenH264Scope.gmpService = MockGMPService;
+  let GMPScope = Cu.import("resource://gre/modules/addons/GMPProvider.jsm");
+  GMPScope.gmpService = MockGMPService;
   Services.prefs.setBoolPref(OPENH264_PREF_ENABLED, true);
 
   // Check that the OpenH264 plugin gets registered after startup.
@@ -247,8 +247,8 @@ add_task(function* test_pluginRegistration() {
 });
 
 add_task(function* test_periodicUpdate() {
-  let OpenH264Scope = Cu.import("resource://gre/modules/addons/OpenH264Provider.jsm");
-  Object.defineProperty(OpenH264Scope, "GMPInstallManager", {
+  let GMPScope = Cu.import("resource://gre/modules/addons/GMPProvider.jsm");
+  Object.defineProperty(GMPScope, "GMPInstallManager", {
     value: MockGMPInstallManager,
     writable: true,
     enumerable: true,
