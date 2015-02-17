@@ -121,5 +121,18 @@ struct RtspChannelConnectArgs
   uint32_t channelId;
 };
 
+//-----------------------------------------------------------------------------
+// WS IPDL structs
+//-----------------------------------------------------------------------------
+
+struct WebSocketLoadInfoArgs
+{
+  PrincipalInfo requestingPrincipalInfo;
+  PrincipalInfo triggeringPrincipalInfo;
+  uint32_t      securityFlags;
+  uint32_t      contentPolicyType;
+  uint32_t      innerWindowID;
+};
+
 } // namespace ipc
 } // namespace mozilla
