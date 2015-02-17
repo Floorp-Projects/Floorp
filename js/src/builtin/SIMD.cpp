@@ -490,133 +490,133 @@ namespace js {
 // Unary SIMD operators
 template<typename T>
 struct Identity {
-    static inline T apply(T x) { return x; }
+    static T apply(T x) { return x; }
 };
 template<typename T>
 struct Abs {
-    static inline T apply(T x) { return mozilla::Abs(x); }
+    static T apply(T x) { return mozilla::Abs(x); }
 };
 template<typename T>
 struct Neg {
-    static inline T apply(T x) { return -1 * x; }
+    static T apply(T x) { return -1 * x; }
 };
 template<typename T>
 struct Not {
-    static inline T apply(T x) { return ~x; }
+    static T apply(T x) { return ~x; }
 };
 template<typename T>
 struct RecApprox {
-    static inline T apply(T x) { return 1 / x; }
+    static T apply(T x) { return 1 / x; }
 };
 template<typename T>
 struct RecSqrtApprox {
-    static inline T apply(T x) { return 1 / sqrt(x); }
+    static T apply(T x) { return 1 / sqrt(x); }
 };
 template<typename T>
 struct Sqrt {
-    static inline T apply(T x) { return sqrt(x); }
+    static T apply(T x) { return sqrt(x); }
 };
 
 // Binary SIMD operators
 template<typename T>
 struct Add {
-    static inline T apply(T l, T r) { return l + r; }
+    static T apply(T l, T r) { return l + r; }
 };
 template<typename T>
 struct Sub {
-    static inline T apply(T l, T r) { return l - r; }
+    static T apply(T l, T r) { return l - r; }
 };
 template<typename T>
 struct Div {
-    static inline T apply(T l, T r) { return l / r; }
+    static T apply(T l, T r) { return l / r; }
 };
 template<typename T>
 struct Mul {
-    static inline T apply(T l, T r) { return l * r; }
+    static T apply(T l, T r) { return l * r; }
 };
 template<typename T>
 struct Minimum {
-    static inline T apply(T l, T r) { return math_min_impl(l, r); }
+    static T apply(T l, T r) { return math_min_impl(l, r); }
 };
 template<typename T>
 struct MinNum {
-    static inline T apply(T l, T r) { return IsNaN(l) ? r : (IsNaN(r) ? l : math_min_impl(l, r)); }
+    static T apply(T l, T r) { return IsNaN(l) ? r : (IsNaN(r) ? l : math_min_impl(l, r)); }
 };
 template<typename T>
 struct Maximum {
-    static inline T apply(T l, T r) { return math_max_impl(l, r); }
+    static T apply(T l, T r) { return math_max_impl(l, r); }
 };
 template<typename T>
 struct MaxNum {
-    static inline T apply(T l, T r) { return IsNaN(l) ? r : (IsNaN(r) ? l : math_max_impl(l, r)); }
+    static T apply(T l, T r) { return IsNaN(l) ? r : (IsNaN(r) ? l : math_max_impl(l, r)); }
 };
 template<typename T>
 struct LessThan {
-    static inline int32_t apply(T l, T r) { return l < r ? 0xFFFFFFFF : 0x0; }
+    static int32_t apply(T l, T r) { return l < r ? 0xFFFFFFFF : 0x0; }
 };
 template<typename T>
 struct LessThanOrEqual {
-    static inline int32_t apply(T l, T r) { return l <= r ? 0xFFFFFFFF : 0x0; }
+    static int32_t apply(T l, T r) { return l <= r ? 0xFFFFFFFF : 0x0; }
 };
 template<typename T>
 struct GreaterThan {
-    static inline int32_t apply(T l, T r) { return l > r ? 0xFFFFFFFF : 0x0; }
+    static int32_t apply(T l, T r) { return l > r ? 0xFFFFFFFF : 0x0; }
 };
 template<typename T>
 struct GreaterThanOrEqual {
-    static inline int32_t apply(T l, T r) { return l >= r ? 0xFFFFFFFF : 0x0; }
+    static int32_t apply(T l, T r) { return l >= r ? 0xFFFFFFFF : 0x0; }
 };
 template<typename T>
 struct Equal {
-    static inline int32_t apply(T l, T r) { return l == r ? 0xFFFFFFFF : 0x0; }
+    static int32_t apply(T l, T r) { return l == r ? 0xFFFFFFFF : 0x0; }
 };
 template<typename T>
 struct NotEqual {
-    static inline int32_t apply(T l, T r) { return l != r ? 0xFFFFFFFF : 0x0; }
+    static int32_t apply(T l, T r) { return l != r ? 0xFFFFFFFF : 0x0; }
 };
 template<typename T>
 struct Xor {
-    static inline T apply(T l, T r) { return l ^ r; }
+    static T apply(T l, T r) { return l ^ r; }
 };
 template<typename T>
 struct And {
-    static inline T apply(T l, T r) { return l & r; }
+    static T apply(T l, T r) { return l & r; }
 };
 template<typename T>
 struct Or {
-    static inline T apply(T l, T r) { return l | r; }
+    static T apply(T l, T r) { return l | r; }
 };
 template<typename T>
 struct WithX {
-    static inline T apply(int32_t lane, T scalar, T x) { return lane == 0 ? scalar : x; }
+    static T apply(int32_t lane, T scalar, T x) { return lane == 0 ? scalar : x; }
 };
 template<typename T>
 struct WithY {
-    static inline T apply(int32_t lane, T scalar, T x) { return lane == 1 ? scalar : x; }
+    static T apply(int32_t lane, T scalar, T x) { return lane == 1 ? scalar : x; }
 };
 template<typename T>
 struct WithZ {
-    static inline T apply(int32_t lane, T scalar, T x) { return lane == 2 ? scalar : x; }
+    static T apply(int32_t lane, T scalar, T x) { return lane == 2 ? scalar : x; }
 };
 template<typename T>
 struct WithW {
-    static inline T apply(int32_t lane, T scalar, T x) { return lane == 3 ? scalar : x; }
+    static T apply(int32_t lane, T scalar, T x) { return lane == 3 ? scalar : x; }
 };
 // For the following three operators, if the value v we're trying to shift is
 // such that v << bits can't fit in the int32 range, then we have undefined
 // behavior, according to C++11 [expr.shift]p2.
 struct ShiftLeft {
-    static inline int32_t apply(int32_t v, int32_t bits) {
+    static int32_t apply(int32_t v, int32_t bits) {
         return uint32_t(bits) >= 32 ? 0 : v << bits;
     }
 };
 struct ShiftRightArithmetic {
-    static inline int32_t apply(int32_t v, int32_t bits) {
+    static int32_t apply(int32_t v, int32_t bits) {
         return v >> (uint32_t(bits) >= 32 ? 31 : bits);
     }
 };
 struct ShiftRightLogical {
-    static inline int32_t apply(int32_t v, int32_t bits) {
+    static int32_t apply(int32_t v, int32_t bits) {
         return uint32_t(bits) >= 32 ? 0 : uint32_t(v) >> bits;
     }
 };
