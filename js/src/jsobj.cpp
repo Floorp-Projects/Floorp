@@ -2580,16 +2580,15 @@ js_InitClass(JSContext *cx, HandleObject obj, HandleObject protoProto_,
 void
 JSObject::fixupAfterMovingGC()
 {
-    /*
-     * If this is a copy-on-write elements we may need to fix up both the
-     * elements' pointer back to the owner object, and the elements pointer
-     * itself if it points to inline elements in another object.
-     */
-    if (is<NativeObject>() && as<NativeObject>().hasDynamicElements()) {
-        ObjectElements *header = as<NativeObject>().getElementsHeader();
-        if (header->isCopyOnWrite()) {
-            NativeObject *owner = MaybeForwarded(header->ownerObject().get());
-            as<NativeObject>().elements_ = owner->getElementsHeader()->elements();
+    // For copy-on-write objects that don't own their elements, fix up the
+    // elements pointer if it points to inline elements in the owning object.
+    if (is<NativeObject>()) {
+        NativeObject &obj = as<NativeObject>();
+        if (obj.denseElementsAreCopyOnWrite()) {
+            NativeObject *owner = MaybeForwarded(obj.getElementsHeader()->ownerObject().get());
+            if (owner != &obj && owner->hasFixedElements())
+                obj.elements_ = owner->getElementsHeader()->elements();
+            MOZ_ASSERT(!IsForwarded(obj.getElementsHeader()->ownerObject().get()));
         }
     }
 }
