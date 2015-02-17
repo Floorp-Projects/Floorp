@@ -2628,7 +2628,7 @@ ForwardToNative(JSContext *cx, JSNative native, const JS::CallArgs &args);
 JS_FRIEND_API(bool)
 SetPropertyIgnoringNamedGetter(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                                JS::MutableHandleValue vp, JS::HandleObject receiver,
-                               JS::MutableHandle<JSPropertyDescriptor> ownDesc,
+                               JS::Handle<JSPropertyDescriptor> ownDesc,
                                JS::ObjectOpResult &result);
 
 JS_FRIEND_API(void)
