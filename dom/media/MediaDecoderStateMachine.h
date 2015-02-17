@@ -422,6 +422,9 @@ public:
     WaitRequestRef(aRejection.mType).Complete();
   }
 
+  // Resets all state related to decoding, emptying all buffers etc.
+  void ResetDecode();
+
 private:
   void AcquireMonitorAndInvokeDecodeError();
 
