@@ -5051,7 +5051,7 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
         "calc(25px*3)",
         "calc(3*25px + 50%)",
       ],
-      invalid_values: ["none", "5" ]
+      invalid_values: [ "auto", "5" ]
     },
     "max-inline-size": {
       domProp: "maxInlineSize",
@@ -5069,7 +5069,7 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
         "calc(25px*3)",
         "calc(3*25px + 50%)",
       ],
-      invalid_values: ["none", "5" ]
+      invalid_values: [ "auto", "5" ]
     },
     "min-block-size": {
       domProp: "minBlockSize",
@@ -5087,7 +5087,7 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
         "calc(25px*3)",
         "calc(3*25px + 50%)",
       ],
-      invalid_values: ["none", "5" ]
+      invalid_values: [ "none", "5" ]
     },
     "min-inline-size": {
       domProp: "minInlineSize",
@@ -5105,7 +5105,7 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
         "calc(25px*3)",
         "calc(3*25px + 50%)",
       ],
-      invalid_values: ["none", "5" ]
+      invalid_values: [ "none", "5" ]
     },
     "offset-block-end": {
       domProp: "offsetBlockEnd",
