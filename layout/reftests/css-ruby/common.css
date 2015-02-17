@@ -1,3 +1,7 @@
+@font-face {
+  font-family: Ahem;
+  src: url(../fonts/Ahem.ttf);
+}
 rbc {
   display: ruby-base-container;
 }
