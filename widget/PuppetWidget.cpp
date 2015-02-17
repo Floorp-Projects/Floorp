@@ -402,27 +402,22 @@ PuppetWidget::IMEEndComposition(bool aCancel)
 #endif
 
   nsEventStatus status;
-  WidgetCompositionEvent compositionChangeEvent(true, NS_COMPOSITION_CHANGE,
+  WidgetCompositionEvent compositionCommitEvent(true, NS_COMPOSITION_COMMIT,
                                                 this);
-  InitEvent(compositionChangeEvent, nullptr);
-  compositionChangeEvent.mSeqno = mIMELastReceivedSeqno;
+  InitEvent(compositionCommitEvent, nullptr);
   // SendEndIMEComposition is always called since ResetInputState
   // should always be called even if we aren't composing something.
   if (!mTabChild ||
       !mTabChild->SendEndIMEComposition(aCancel,
-                                        &compositionChangeEvent.mData)) {
+                                        &compositionCommitEvent.mData)) {
     return NS_ERROR_FAILURE;
   }
 
   if (!mIMEComposing)
     return NS_OK;
 
-  DispatchEvent(&compositionChangeEvent, status);
-
-  WidgetCompositionEvent compositionEndEvent(true, NS_COMPOSITION_END, this);
-  InitEvent(compositionEndEvent, nullptr);
-  compositionEndEvent.mSeqno = mIMELastReceivedSeqno;
-  DispatchEvent(&compositionEndEvent, status);
+  compositionCommitEvent.mSeqno = mIMELastReceivedSeqno;
+  DispatchEvent(&compositionCommitEvent, status);
   return NS_OK;
 }
 
