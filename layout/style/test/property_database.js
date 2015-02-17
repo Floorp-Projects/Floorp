@@ -5702,6 +5702,16 @@ if (SpecialPowers.getBoolPref("layout.css.ruby.enabled")) {
                                                  "ruby-base-container",
                                                  "ruby-text",
                                                  "ruby-text-container");
+  gCSSProperties["ruby-align"] = {
+    domProp: "rubyAlign",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "space-around" ],
+    other_values: [ "start", "center", "space-between" ],
+    invalid_values: [
+      "end", "1", "10px", "50%", "start center"
+    ]
+  };
   gCSSProperties["ruby-position"] = {
     domProp: "rubyPosition",
     inherited: true,

@@ -3031,6 +3031,16 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mOffset),
     eStyleAnimType_Sides_Right)
 CSS_PROP_TEXT(
+    ruby-align,
+    ruby_align,
+    RubyAlign,
+    CSS_PROPERTY_PARSE_VALUE,
+    "layout.css.ruby.enabled",
+    VARIANT_HK,
+    kRubyAlignKTable,
+    offsetof(nsStyleText, mRubyAlign),
+    eStyleAnimType_EnumU8)
+CSS_PROP_TEXT(
     ruby-position,
     ruby_position,
     RubyPosition,
