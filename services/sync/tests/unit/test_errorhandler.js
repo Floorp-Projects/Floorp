@@ -14,8 +14,6 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 
 const FAKE_SERVER_URL = "http://dummy:9000/";
 const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
-const LOG_PREFIX_SUCCESS = "success-";
-const LOG_PREFIX_ERROR   = "error-";
 
 const PROLONGED_ERROR_DURATION =
   (Svc.Prefs.get('errorhandler.networkFailureReportTimeout') * 2) * 1000;
@@ -1790,8 +1788,7 @@ add_task(function test_sync_engine_generic_fail() {
       let entries = logsdir.directoryEntries;
       do_check_true(entries.hasMoreElements());
       let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-      do_check_eq(logfile.leafName.slice(0, LOG_PREFIX_ERROR.length),
-                  LOG_PREFIX_ERROR);
+      do_check_true(logfile.leafName.startsWith("sync-error-"), logfile.leafName);
 
       clean();
       server.stop(deferred.resolve);
@@ -1822,8 +1819,7 @@ add_test(function test_logs_on_sync_error_despite_shouldReportError() {
     let entries = logsdir.directoryEntries;
     do_check_true(entries.hasMoreElements());
     let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-    do_check_eq(logfile.leafName.slice(0, LOG_PREFIX_ERROR.length),
-                LOG_PREFIX_ERROR);
+    do_check_true(logfile.leafName.startsWith("sync-error-"), logfile.leafName);
 
     clean();
     run_next_test();
@@ -1850,8 +1846,7 @@ add_test(function test_logs_on_login_error_despite_shouldReportError() {
     let entries = logsdir.directoryEntries;
     do_check_true(entries.hasMoreElements());
     let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-    do_check_eq(logfile.leafName.slice(0, LOG_PREFIX_ERROR.length),
-                LOG_PREFIX_ERROR);
+    do_check_true(logfile.leafName.startsWith("sync-error-"), logfile.leafName);
 
     clean();
     run_next_test();
@@ -1885,8 +1880,7 @@ add_task(function test_engine_applyFailed() {
     let entries = logsdir.directoryEntries;
     do_check_true(entries.hasMoreElements());
     let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-    do_check_eq(logfile.leafName.slice(0, LOG_PREFIX_ERROR.length),
-                LOG_PREFIX_ERROR);
+    do_check_true(logfile.leafName.startsWith("sync-error-"), logfile.leafName);
 
     clean();
     server.stop(deferred.resolve);
