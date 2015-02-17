@@ -6,7 +6,7 @@
 
 Cu.import("resource://gre/modules/Promise.jsm");
 let {AddonTestUtils} = Cu.import("resource://testing-common/AddonManagerTesting.jsm", {});
-let OpenH264Scope = Cu.import("resource://gre/modules/addons/OpenH264Provider.jsm");
+let GMPScope = Cu.import("resource://gre/modules/addons/GMPProvider.jsm");
 
 const OPENH264_PLUGIN_ID       = "gmp-gmpopenh264";
 const OPENH264_PREF_BRANCH     = "media." + OPENH264_PLUGIN_ID + ".";
@@ -249,7 +249,7 @@ add_task(function* testUpdateButton() {
   let doc = gManagerWindow.document;
   let item = get_addon_element(gManagerWindow, OPENH264_PLUGIN_ID);
 
-  Object.defineProperty(OpenH264Scope, "GMPInstallManager", {
+  Object.defineProperty(GMPScope, "GMPInstallManager", {
     value: MockGMPInstallManager,
     writable: true,
     enumerable: true,
@@ -270,7 +270,7 @@ add_task(function* testUpdateButton() {
   yield gInstallDeferred.promise;
 
   Assert.equal(gInstalledAddonId, OPENH264_PLUGIN_ID);
-  delete OpenH264Scope.GMPInstallManager;
+  delete GMPScope.GMPInstallManager;
 });
 
 add_task(function* test_cleanup() {
