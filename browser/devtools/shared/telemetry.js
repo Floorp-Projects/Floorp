@@ -19,17 +19,8 @@
  *      timerHistogram: "DEVTOOLS_MYTOOLNAME_TIME_ACTIVE_SECONDS"
  *    },
  *
- * 3. Include this module at the top of your tool. Use:
- *      let Telemetry = require("devtools/shared/telemetry")
- *
- * 4. Create a telemetry instance in your tool's constructor:
- *      this._telemetry = new Telemetry();
- *
- * 5. When your tool is opened call:
- *      this._telemetry.toolOpened("mytoolname");
- *
- * 6. When your tool is closed call:
- *      this._telemetry.toolClosed("mytoolname");
+ * 3. toolbox.js will automatically ping telemetry with your tools opening and
+ *    timing information.
  *
  * Note:
  * You can view telemetry stats for your local Firefox instance via
@@ -301,6 +292,10 @@ Telemetry.prototype = {
       Services.prefs.setCharPref(TOOLS_OPENED_PREF, latest);
       this.log(perUserHistogram, value);
     }
+  },
+
+  clearToolsOpenedPref: function() {
+    Services.prefs.clearUserPref(TOOLS_OPENED_PREF);
   },
 
   destroy: function() {
