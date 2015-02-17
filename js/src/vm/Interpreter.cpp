@@ -702,7 +702,7 @@ js::HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp)
 }
 
 static inline bool
-EqualGivenSameType(JSContext *cx, const Value &lval, const Value &rval, bool *equal)
+EqualGivenSameType(JSContext *cx, HandleValue lval, HandleValue rval, bool *equal)
 {
     MOZ_ASSERT(SameType(lval, rval));
 
@@ -716,13 +716,13 @@ EqualGivenSameType(JSContext *cx, const Value &lval, const Value &rval, bool *eq
         *equal = (lval.toGCThing() == rval.toGCThing());
         return true;
     }
-    *equal = lval.payloadAsRawUint32() == rval.payloadAsRawUint32();
-    MOZ_ASSERT_IF(lval.isUndefined(), *equal);
+    *equal = lval.get().payloadAsRawUint32() == rval.get().payloadAsRawUint32();
+    MOZ_ASSERT_IF(lval.isUndefined() || lval.isNull(), *equal);
     return true;
 }
 
 static inline bool
-LooselyEqualBooleanAndOther(JSContext *cx, const Value &lval, const Value &rval, bool *result)
+LooselyEqualBooleanAndOther(JSContext *cx, HandleValue lval, HandleValue rval, bool *result)
 {
     MOZ_ASSERT(!rval.isBoolean());
     RootedValue lvalue(cx, Int32Value(lval.toBoolean() ? 1 : 0));
@@ -746,7 +746,7 @@ LooselyEqualBooleanAndOther(JSContext *cx, const Value &lval, const Value &rval,
 
 // ES6 draft rev32 7.2.12 Abstract Equality Comparison
 bool
-js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *result)
+js::LooselyEqual(JSContext *cx, HandleValue lval, HandleValue rval, bool *result)
 {
     // Step 3.
     if (SameType(lval, rval))
@@ -821,9 +821,8 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
 }
 
 bool
-js::StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref, bool *equal)
+js::StrictlyEqual(JSContext *cx, HandleValue lval, HandleValue rval, bool *equal)
 {
-    Value lval = lref, rval = rref;
     if (SameType(lval, rval))
         return EqualGivenSameType(cx, lval, rval, equal);
 
@@ -849,7 +848,7 @@ IsNaN(const Value &v)
 }
 
 bool
-js::SameValue(JSContext *cx, const Value &v1, const Value &v2, bool *same)
+js::SameValue(JSContext *cx, HandleValue v1, HandleValue v2, bool *same)
 {
     if (IsNegativeZero(v1)) {
         *same = IsNegativeZero(v2);
@@ -2091,10 +2090,10 @@ END_CASE(JSOP_NE)
 
 #define STRICT_EQUALITY_OP(OP, COND)                                          \
     JS_BEGIN_MACRO                                                            \
-        const Value &rref = REGS.sp[-1];                                      \
-        const Value &lref = REGS.sp[-2];                                      \
+        HandleValue lval = REGS.stackHandleAt(-2);                            \
+        HandleValue rval = REGS.stackHandleAt(-1);                            \
         bool equal;                                                           \
-        if (!StrictlyEqual(cx, lref, rref, &equal))                           \
+        if (!StrictlyEqual(cx, lval, rval, &equal))                           \
             goto error;                                                       \
         (COND) = equal OP true;                                               \
         REGS.sp--;                                                            \

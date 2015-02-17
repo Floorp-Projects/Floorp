@@ -534,16 +534,18 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
                 break;
 
             if (desc.hasGet()) {
+                RootedValue getter(cx, shape->getterOrUndefined());
                 bool same;
-                if (!SameValue(cx, desc.getterValue(), shape->getterOrUndefined(), &same))
+                if (!SameValue(cx, desc.getterValue(), getter, &same))
                     return false;
                 if (!same)
                     break;
             }
 
             if (desc.hasSet()) {
+                RootedValue setter(cx, shape->setterOrUndefined());
                 bool same;
-                if (!SameValue(cx, desc.setterValue(), shape->setterOrUndefined(), &same))
+                if (!SameValue(cx, desc.setterValue(), setter, &same))
                     return false;
                 if (!same)
                     break;
@@ -669,16 +671,18 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
         MOZ_ASSERT(desc.isAccessorDescriptor() && shape->isAccessorDescriptor());
         if (!shape->configurable()) {
             if (desc.hasSet()) {
+                RootedValue setter(cx, shape->setterOrUndefined());
                 bool same;
-                if (!SameValue(cx, desc.setterValue(), shape->setterOrUndefined(), &same))
+                if (!SameValue(cx, desc.setterValue(), setter, &same))
                     return false;
                 if (!same)
                     return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
             }
 
             if (desc.hasGet()) {
+                RootedValue getter(cx, shape->getterOrUndefined());
                 bool same;
-                if (!SameValue(cx, desc.getterValue(), shape->getterOrUndefined(), &same))
+                if (!SameValue(cx, desc.getterValue(), getter, &same))
                     return false;
                 if (!same)
                     return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
