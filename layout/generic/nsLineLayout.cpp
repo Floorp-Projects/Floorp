@@ -1023,7 +1023,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       if (nsGkAtoms::letterFrame==frameType) {
         pfd->mIsLetterFrame = true;
       } else if (nsGkAtoms::rubyFrame == frameType) {
-        SyncAnnotationContainersBounds(pfd);
+        SyncAnnotationBounds(pfd);
       }
       if (pfd->mSpan) {
         isEmpty = !pfd->mSpan->mHasNonemptyContent && pfd->mFrame->IsSelfEmpty();
@@ -1234,13 +1234,15 @@ nsLineLayout::GetCurrentFrameInlineDistanceFromBlock()
 }
 
 /**
- * This method syncs all ruby annotation containers' bounds in their
- * PerFrameData from their rect. It is necessary to do so because the
- * containers are not part of line in their levels, which means their
- * bounds are not set properly before.
+ * This method syncs bounds of ruby annotations and ruby annotation
+ * containers from their rect. It is necessary because:
+ * Containers are not part of the line in their levels, which means
+ * their bounds are not set properly before.
+ * Ruby annotations' block-axis coordinate may have been changed when
+ * reflowing their containers.
  */
 void
-nsLineLayout::SyncAnnotationContainersBounds(PerFrameData* aRubyFrame)
+nsLineLayout::SyncAnnotationBounds(PerFrameData* aRubyFrame)
 {
   MOZ_ASSERT(aRubyFrame->mFrame->GetType() == nsGkAtoms::rubyFrame);
   MOZ_ASSERT(aRubyFrame->mSpan);
@@ -1249,10 +1251,19 @@ nsLineLayout::SyncAnnotationContainersBounds(PerFrameData* aRubyFrame)
   WritingMode lineWM = mRootSpan->mWritingMode;
   nscoord containerWidth = ContainerWidthForSpan(span);
   for (PerFrameData* pfd = span->mFirstFrame; pfd; pfd = pfd->mNext) {
-    for (PerFrameData* annotation = pfd->mNextAnnotation;
-         annotation; annotation = annotation->mNextAnnotation) {
-      LogicalRect bounds(lineWM, annotation->mFrame->GetRect(), containerWidth);
-      annotation->mBounds = bounds;
+    for (PerFrameData* rtc = pfd->mNextAnnotation;
+         rtc; rtc = rtc->mNextAnnotation) {
+      LogicalRect rtcBounds(lineWM, rtc->mFrame->GetRect(), containerWidth);
+      rtc->mBounds = rtcBounds;
+      nscoord rtcWidth = rtcBounds.Width(lineWM);
+      for (PerFrameData* rt = rtc->mSpan->mFirstFrame; rt; rt = rt->mNext) {
+        LogicalRect rtBounds = rt->mFrame->GetLogicalRect(lineWM, rtcWidth);
+        MOZ_ASSERT(rt->mBounds.IStart(lineWM) == rtBounds.IStart(lineWM) &&
+                   rt->mBounds.ISize(lineWM) == rtBounds.ISize(lineWM) &&
+                   rt->mBounds.BSize(lineWM) == rtBounds.BSize(lineWM),
+                   "Metrics other than bstart should not have been changed");
+        rt->mBounds.BStart(lineWM) = rtBounds.BStart(lineWM);
+      }
     }
   }
 }

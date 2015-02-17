@@ -651,7 +651,7 @@ protected:
   void AllowForStartMargin(PerFrameData* pfd,
                            nsHTMLReflowState& aReflowState);
 
-  void SyncAnnotationContainersBounds(PerFrameData* aRubyFrame);
+  void SyncAnnotationBounds(PerFrameData* aRubyFrame);
 
   bool CanPlaceFrame(PerFrameData* pfd,
                        bool aNotSafeToBreak,
