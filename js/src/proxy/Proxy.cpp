@@ -134,7 +134,7 @@ Proxy::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
 
 bool
 Proxy::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                      MutableHandle<PropertyDescriptor> desc, ObjectOpResult &result)
+                      Handle<PropertyDescriptor> desc, ObjectOpResult &result)
 {
     JS_CHECK_RECURSION(cx, return false);
     const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
@@ -569,7 +569,7 @@ js::proxy_DefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleVal
     desc.setAttributes(attrs);
     desc.setGetter(getter);
     desc.setSetter(setter);
-    return Proxy::defineProperty(cx, obj, id, &desc, result);
+    return Proxy::defineProperty(cx, obj, id, desc, result);
 }
 
 bool
