@@ -4304,6 +4304,13 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
               parentText->mHyphens,
               NS_STYLE_HYPHENS_MANUAL, 0, 0, 0, 0);
 
+  // ruby-align: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForRubyAlign(),
+              text->mRubyAlign, canStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
+              parentText->mRubyAlign,
+              NS_STYLE_RUBY_ALIGN_SPACE_AROUND, 0, 0, 0, 0);
+
   // ruby-position: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForRubyPosition(),
               text->mRubyPosition, canStoreInRuleTree,
