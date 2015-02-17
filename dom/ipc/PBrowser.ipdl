@@ -267,18 +267,15 @@ parent:
     /**
      * Instructs chrome to end any pending composition
      *
-     *  cancel       true if composition should be cancelled
-     *  noCompositionEvent   true if no composition event is fired by commit or
-     *                       cancel
+     *  cancel       PR_TRUE if composition should be cancelled
      *  composition  Text to commit before ending the composition
      *
-     *  if cancel is true,
+     *  if cancel is PR_TRUE,
      *    widget should return empty string for composition
-     *  if cancel is false,
+     *  if cancel is PR_FALSE,
      *    widget should return the current composition text
      */
-    prio(urgent) sync EndIMEComposition(bool cancel)
-                        returns (bool noCompositionEvent, nsString composition);
+    prio(urgent) sync EndIMEComposition(bool cancel) returns (nsString composition);
 
     /**
      * Request that the parent process move focus to the browser's frame. If
