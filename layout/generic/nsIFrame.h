@@ -538,7 +538,13 @@ public:
       nsStyleContext* oldStyleContext = mStyleContext;
       mStyleContext = aContext;
       aContext->AddRef();
+#ifdef DEBUG
+      aContext->FrameAddRef();
+#endif
       DidSetStyleContext(oldStyleContext);
+#ifdef DEBUG
+      oldStyleContext->FrameRelease();
+#endif
       oldStyleContext->Release();
     }
   }
@@ -552,9 +558,15 @@ public:
   void SetStyleContextWithoutNotification(nsStyleContext* aContext)
   {
     if (aContext != mStyleContext) {
+#ifdef DEBUG
+      mStyleContext->FrameRelease();
+#endif
       mStyleContext->Release();
       mStyleContext = aContext;
       aContext->AddRef();
+#ifdef DEBUG
+      aContext->FrameAddRef();
+#endif
     }
   }
 
