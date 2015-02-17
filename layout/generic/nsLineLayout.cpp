@@ -2617,6 +2617,50 @@ struct nsLineLayout::JustificationComputationState
 };
 
 /**
+ * Assign justification gaps for justification
+ * opportunities across two frames.
+ */
+/* static */ int
+nsLineLayout::AssignInterframeJustificationGaps(
+  PerFrameData* aFrame, JustificationComputationState& aState)
+{
+  PerFrameData* prev = aState.mLastParticipant;
+  MOZ_ASSERT(prev);
+
+  auto& assign = aFrame->mJustificationAssignment;
+  auto& prevAssign = prev->mJustificationAssignment;
+  const auto& info = aFrame->mJustificationInfo;
+  const auto& prevInfo = prev->mJustificationInfo;
+
+  if (!info.mIsStartJustifiable &&
+      !prevInfo.mIsEndJustifiable &&
+      !aState.mCrossingRubyBaseBoundary) {
+    return 0;
+  }
+
+  if (aState.mCrossingRubyBaseBoundary) {
+    // For ruby alignment with value space-around, there is
+    // always an expansion opportunity at the boundary of a ruby
+    // base, and it always generates one gap at each side. If we
+    // don't do it here, the interaction between text align and
+    // and ruby align could be strange.
+    prevAssign.mGapsAtEnd = 1;
+    assign.mGapsAtStart = 1;
+    aState.mCrossingRubyBaseBoundary = false;
+  } else if (!info.mIsStartJustifiable) {
+    prevAssign.mGapsAtEnd = 2;
+    assign.mGapsAtStart = 0;
+  } else if (!prevInfo.mIsEndJustifiable) {
+    prevAssign.mGapsAtEnd = 0;
+    assign.mGapsAtStart = 2;
+  } else {
+    prevAssign.mGapsAtEnd = 1;
+    assign.mGapsAtStart = 1;
+  }
+  return 1;
+}
+
+/**
  * Compute the justification info of the given span, and store the
  * number of inner opportunities into the frame's justification info.
  * It returns the number of non-inner opportunities it detects.
@@ -2651,43 +2695,14 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
       extraOpportunities = ComputeFrameJustification(span, aState);
       innerOpportunities += pfd->mJustificationInfo.mInnerOpportunities;
     } else {
-      const auto& info = pfd->mJustificationInfo;
       if (pfd->mIsTextFrame) {
-        innerOpportunities += info.mInnerOpportunities;
+        innerOpportunities += pfd->mJustificationInfo.mInnerOpportunities;
       }
 
-      PerFrameData* prev = aState.mLastParticipant;
-      if (!prev) {
+      if (!aState.mLastParticipant) {
         aState.mFirstParticipant = pfd;
       } else {
-        auto& assign = pfd->mJustificationAssignment;
-        auto& prevAssign = prev->mJustificationAssignment;
-        const auto& prevInfo = prev->mJustificationInfo;
-
-        if (info.mIsStartJustifiable ||
-            prevInfo.mIsEndJustifiable ||
-            aState.mCrossingRubyBaseBoundary) {
-          extraOpportunities = 1;
-          if (aState.mCrossingRubyBaseBoundary) {
-            // For ruby alignment with value space-around, there is
-            // always an expansion opportunity at the boundary of a ruby
-            // base, and it always generates one gap at each side. If we
-            // don't do it here, the interaction between text align and
-            // and ruby align could be strange.
-            prevAssign.mGapsAtEnd = 1;
-            assign.mGapsAtStart = 1;
-            aState.mCrossingRubyBaseBoundary = false;
-          } else if (!info.mIsStartJustifiable) {
-            prevAssign.mGapsAtEnd = 2;
-            assign.mGapsAtStart = 0;
-          } else if (!prevInfo.mIsEndJustifiable) {
-            prevAssign.mGapsAtEnd = 0;
-            assign.mGapsAtStart = 2;
-          } else {
-            prevAssign.mGapsAtEnd = 1;
-            assign.mGapsAtStart = 1;
-          }
-        }
+        extraOpportunities = AssignInterframeJustificationGaps(pfd, aState);
       }
 
       aState.mLastParticipant = pfd;
