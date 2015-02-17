@@ -45,7 +45,8 @@ class WebSocketChannelParent : public PWebSocketParent,
                      const uint32_t& aPingInterval,
                      const bool& aClientSetPingInterval,
                      const uint32_t& aPingTimeout,
-                     const bool& aClientSetPingTimeout) MOZ_OVERRIDE;
+                     const bool& aClientSetPingTimeout,
+                     const WebSocketLoadInfoArgs& aLoadInfoArgs) MOZ_OVERRIDE;
   bool RecvClose(const uint16_t & code, const nsCString & reason) MOZ_OVERRIDE;
   bool RecvSendMsg(const nsCString& aMsg) MOZ_OVERRIDE;
   bool RecvSendBinaryMsg(const nsCString& aMsg) MOZ_OVERRIDE;

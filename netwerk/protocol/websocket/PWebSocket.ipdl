@@ -9,6 +9,7 @@ include protocol PNecko;
 include protocol PBrowser;
 include InputStreamParams;
 include URIParams;
+include NeckoChannelParams;
 
 include protocol PBlob; //FIXME: bug #792908
 
@@ -31,7 +32,8 @@ parent:
             uint32_t aPingInterval,
             bool aClientSetPingInterval,
             uint32_t aPingTimeout,
-            bool aClientSetPingTimeout);
+            bool aClientSetPingTimeout,
+            WebSocketLoadInfoArgs aLoadInfoArgs);
   Close(uint16_t code, nsCString reason);
   SendMsg(nsCString aMsg);
   SendBinaryMsg(nsCString aMsg);

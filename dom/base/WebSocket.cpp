@@ -1574,15 +1574,11 @@ WebSocketImpl::InitializeConnection()
   // are not thread-safe.
   mOriginDocument = nullptr;
 
-  nsCOMPtr<nsILoadInfo> loadInfo =
-    new LoadInfo(doc ?
-                   doc->NodePrincipal() : mPrincipal.get(),
-                 mPrincipal,
-                 doc,
-                 nsILoadInfo::SEC_NORMAL,
-                 nsIContentPolicy::TYPE_WEBSOCKET);
-  rv = wsChannel->SetLoadInfo(loadInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  wsChannel->InitLoadInfo(doc ? doc->AsDOMNode() : nullptr,
+                          doc ? doc->NodePrincipal() : mPrincipal.get(),
+                          mPrincipal,
+                          nsILoadInfo::SEC_NORMAL,
+                          nsIContentPolicy::TYPE_WEBSOCKET);
 
   if (!mRequestedProtocolList.IsEmpty()) {
     rv = wsChannel->SetProtocol(mRequestedProtocolList);
