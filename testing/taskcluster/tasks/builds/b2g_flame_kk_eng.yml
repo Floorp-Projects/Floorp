@@ -1,7 +1,7 @@
 $inherits:
   from: 'tasks/builds/b2g_phone_base.yml'
 task:
-  workerType: b2gbuild-emulator-kk
+  workerType: flame-kk
   scopes:
     - 'docker-worker:cache:build-flame-kk-eng'
   metadata:

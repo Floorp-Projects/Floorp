@@ -32,6 +32,10 @@ use[id$="-red"] {
 use[id$="-white"] {
   fill: #fff;
 }
+
+use[id$="-disabled"] {
+  fill: rgba(255,255,255,.6);
+}
 </style>
 <defs style="display:none">
   <path id="audio-shape" fill-rule="evenodd" clip-rule="evenodd" d="M11.429,6.857v2.286c0,1.894-1.535,3.429-3.429,3.429
@@ -181,5 +185,6 @@ use[id$="-white"] {
 <use id="video-active"        xlink:href="#video-shape"/>
 <use id="tour"                xlink:href="#tour-shape"/>
 <use id="screen-white"        xlink:href="#screen-shape"/>
+<use id="screen-disabled"     xlink:href="#screen-shape"/>
 <use id="screenmute-white"    xlink:href="#screenmute-shape"/>
 </svg>

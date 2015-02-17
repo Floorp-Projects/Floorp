@@ -245,6 +245,90 @@ describe("loop.standaloneRoomViews", function() {
       });
     });
 
+    describe("Remote Stream Size Position", function() {
+      var view, localElement, remoteElement;
+
+      beforeEach(function() {
+        sandbox.stub(window, "matchMedia").returns({
+          matches: false
+        });
+        view = mountTestComponent();
+
+        localElement = {
+          style: {}
+        };
+        remoteElement = {
+          style: {},
+          removeAttribute: sinon.spy()
+        };
+
+        sandbox.stub(view, "_getElement", function(className) {
+          return className === ".local" ? localElement : remoteElement;
+        });
+
+        view.setState({"receivingScreenShare": true});
+      });
+
+      it("should do nothing if not receiving screenshare", function() {
+        view.setState({"receivingScreenShare": false});
+        remoteElement.style.width = "10px";
+
+        view.updateRemoteCameraPosition({
+          width: 1,
+          height: 0.75
+        });
+
+        expect(remoteElement.style.width).eql("10px");
+      });
+
+      it("should be the same width as the local video", function() {
+        localElement.offsetWidth = 100;
+
+        view.updateRemoteCameraPosition({
+          width: 1,
+          height: 0.75
+        });
+
+        expect(remoteElement.style.width).eql("100px");
+      });
+
+      it("should be the same left edge as the local video", function() {
+        localElement.offsetLeft = 50;
+
+        view.updateRemoteCameraPosition({
+          width: 1,
+          height: 0.75
+        });
+
+        expect(remoteElement.style.left).eql("50px");
+      });
+
+      it("should have a height determined by the aspect ratio", function() {
+        localElement.offsetWidth = 100;
+
+        view.updateRemoteCameraPosition({
+          width: 1,
+          height: 0.75
+        });
+
+        expect(remoteElement.style.height).eql("75px");
+      });
+
+      it("should have the top be set such that the bottom is 10px above the local video", function() {
+        localElement.offsetWidth = 100;
+        localElement.offsetTop = 200;
+
+        view.updateRemoteCameraPosition({
+          width: 1,
+          height: 0.75
+        });
+
+        // 200 (top) - 75 (height) - 10 (spacing) = 115
+        expect(remoteElement.style.top).eql("115px");
+      });
+
+    });
+
     describe("#render", function() {
       var view;
 

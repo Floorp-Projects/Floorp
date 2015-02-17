@@ -124,35 +124,54 @@
 
   var SVGIcon = React.createClass({
     render: function() {
+      var sizeUnit = this.props.size.split("x")[0] + "px";
       return (
         <span className="svg-icon" style={{
-          "background-image": "url(/content/shared/img/icons-16x16.svg#" + this.props.shapeId + ")"
+          "backgroundImage": "url(../content/shared/img/icons-" + this.props.size +
+                              ".svg#" + this.props.shapeId + ")",
+          "backgroundSize": sizeUnit + " " + sizeUnit
         }} />
       );
     }
   });
 
   var SVGIcons = React.createClass({
-    shapes: [
-      "audio", "audio-hover", "audio-active", "block",
-      "block-red", "block-hover", "block-active", "contacts", "contacts-hover",
-      "contacts-active", "copy", "checkmark", "google", "google-hover",
-      "google-active", "history", "history-hover", "history-active", "leave",
-      "precall", "precall-hover", "precall-active", "settings", "settings-hover",
-      "settings-active", "tag", "tag-hover", "tag-active", "trash", "unblock",
-      "unblock-hover", "unblock-active", "video", "video-hover", "video-active"
-    ],
+    shapes: {
+      "10x10": ["close", "close-active", "close-disabled", "dropdown",
+        "dropdown-white", "dropdown-active", "dropdown-disabled", "expand",
+        "expand-active", "expand-disabled", "minimize", "minimize-active",
+        "minimize-disabled"
+      ],
+      "14x14": ["audio", "audio-active", "audio-disabled", "facemute",
+        "facemute-active", "facemute-disabled", "hangup", "hangup-active",
+        "hangup-disabled", "incoming", "incoming-active", "incoming-disabled",
+        "link", "link-active", "link-disabled", "mute", "mute-active",
+        "mute-disabled", "pause", "pause-active", "pause-disabled", "video",
+        "video-white", "video-active", "video-disabled", "volume", "volume-active",
+        "volume-disabled"
+      ],
+      "16x16": ["audio", "audio-hover", "audio-active", "block", "block-red",
+        "block-hover", "block-active", "contacts", "contacts-hover", "contacts-active",
+        "copy", "checkmark", "google", "google-hover", "google-active", "history",
+        "history-hover", "history-active", "leave", "precall", "precall-hover",
+        "precall-active", "screen-white", "screenmute-white", "settings",
+        "settings-hover", "settings-active", "tag", "tag-hover", "tag-active",
+        "trash", "unblock", "unblock-hover", "unblock-active", "video", "video-hover",
+        "video-active", "tour"
+      ]
+    },
 
     render: function() {
+      var icons = this.shapes[this.props.size].map(function(shapeId, i) {
+        return (
+          <li key={this.props.size + "-" + i} className="svg-icon-entry">
+            <p><SVGIcon shapeId={shapeId} size={this.props.size} /></p>
+            <p>{shapeId}</p>
+          </li>
+        );
+      }, this);
       return (
-        <div className="svg-icon-list">{
-          this.shapes.map(function(shapeId, i) {
-            return <div key={i} className="svg-icon-entry">
-              <p><SVGIcon shapeId={shapeId} /></p>
-              <p>{shapeId}</p>
-            </div>;
-          }, this)
-        }</div>
+        <ul className="svg-icon-list">{icons}</ul>
       );
     }
   });
@@ -171,7 +190,7 @@
             <a href={this.makeId("#")}>&nbsp;¶</a>
           </h3>
           <div className={cx({comp: true, dashed: this.props.dashed})}
-               style={this.props.style || {}}>
+               style={this.props.style}>
             {this.props.children}
           </div>
         </div>
@@ -182,7 +201,7 @@
   var Section = React.createClass({
     render: function() {
       return (
-        <section id={this.props.name}>
+        <section id={this.props.name} className={this.props.className}>
           <h1>{this.props.name}</h1>
           {this.props.children}
         </section>
@@ -657,9 +676,15 @@
             </Example>
           </Section>
 
-          <Section name="SVG icons preview">
+          <Section name="SVG icons preview" className="svg-icons">
+            <Example summary="10x10">
+              <SVGIcons size="10x10"/>
+            </Example>
+            <Example summary="14x14">
+              <SVGIcons size="14x14" />
+            </Example>
             <Example summary="16x16">
-              <SVGIcons />
+              <SVGIcons size="16x16"/>
             </Example>
           </Section>
 
