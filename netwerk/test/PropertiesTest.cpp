@@ -24,8 +24,6 @@
 #define TEST_URL "resource:/res/test.properties"
 static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
 /***************************************************************************/
 
 int
