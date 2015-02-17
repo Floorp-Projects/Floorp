@@ -2970,7 +2970,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
 
   RestyleResult result;
 
-  if (aRestyleHint || true /* XXX bug 1092363 */) {
+  if (aRestyleHint) {
     result = eRestyleResult_Continue;
   } else {
     result = ComputeRestyleResultFromFrame(aSelf);
@@ -3268,9 +3268,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       // previous continuation, so newContext == oldContext.
 
       if (result != eRestyleResult_Stop) {
-        if (true) {
-          // XXX bug 1092363
-        } else if (copyFromContinuation) {
+        if (copyFromContinuation) {
           LOG_RESTYLE("not swapping style structs, since we copied from a "
                       "continuation");
         } else if (oldContext->IsShared() && newContext->IsShared()) {
