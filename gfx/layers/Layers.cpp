@@ -1274,7 +1274,7 @@ ContainerLayer::DidInsertChild(Layer* aLayer)
 void
 RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 {
-  aAttrs = RefLayerAttributes(GetReferentId());
+  aAttrs = RefLayerAttributes(GetReferentId(), mEventRegionsOverride);
 }
 
 /** 
