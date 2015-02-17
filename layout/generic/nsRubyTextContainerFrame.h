@@ -63,17 +63,17 @@ protected:
                                  nsStyleContext* aContext);
   explicit nsRubyTextContainerFrame(nsStyleContext* aContext)
     : nsRubyTextContainerFrameSuper(aContext)
-    , mLineSize(mozilla::WritingMode(aContext)) {}
+    , mISize(0) {}
 
   void UpdateSpanFlag();
 
   friend class nsRubyBaseContainerFrame;
-  void SetLineSize(const mozilla::LogicalSize& aSize) { mLineSize = aSize; }
+  void SetISize(nscoord aISize) { mISize = aISize; }
 
-  // The intended dimensions of the ruby text container. It is set by
+  // The intended inline size of the ruby text container. It is set by
   // the corresponding ruby base container when the segment is reflowed,
   // and used when the ruby text container is reflowed by its parent.
-  mozilla::LogicalSize mLineSize;
+  nscoord mISize;
 };
 
 #endif /* nsRubyTextContainerFrame_h___ */
