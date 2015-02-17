@@ -649,8 +649,8 @@ nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
       (outlineIsVisible && (mOutlineOffset != aOther.mOutlineOffset ||
                             mOutlineWidth != aOther.mOutlineWidth ||
                             mTwipsPerPixel != aOther.mTwipsPerPixel))) {
-    return NS_CombineHint(nsChangeHint_AllReflowHints,
-                          nsChangeHint_RepaintFrame);
+    return NS_CombineHint(nsChangeHint_UpdateOverflow,
+                          nsChangeHint_SchedulePaint);
   }
 
   if ((mOutlineStyle != aOther.mOutlineStyle) ||
