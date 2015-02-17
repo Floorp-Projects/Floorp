@@ -304,11 +304,8 @@ LayerManagerComposite::EndTransaction(DrawPaintedLayerCallback aCallback,
     // so we don't need to pass any global transform here.
     mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());
 
-    // Disable culling for now. We need to fix /the regressions from
-    // bug 1085223 before we can re-enable this:
-    // 1) Don't cull during progressive draw, 2) OS X tp5 regressions.
-    //nsIntRegion opaque;
-    //ApplyOcclusionCulling(mRoot, opaque);
+    nsIntRegion opaque;
+    ApplyOcclusionCulling(mRoot, opaque);
 
     Render();
     mGeometryChanged = false;
