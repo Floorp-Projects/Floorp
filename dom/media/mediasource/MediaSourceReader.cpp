@@ -709,7 +709,7 @@ MediaSourceReader::NotifyTimeRangesChanged()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   if (mWaitingForSeekData) {
-    //post a task to the state machine thread to call seek.
+    //post a task to the decode queue to try to complete the pending seek.
     RefPtr<nsIRunnable> task(NS_NewRunnableMethod(
         this, &MediaSourceReader::AttemptSeek));
     GetTaskQueue()->Dispatch(task.forget());
