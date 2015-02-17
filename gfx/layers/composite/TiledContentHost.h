@@ -231,6 +231,11 @@ public:
     return mLowPrecisionTiledBuffer.GetValidRegion();
   }
 
+  const nsIntRegion& GetValidRegion() const MOZ_OVERRIDE
+  {
+    return mTiledBuffer.GetValidRegion();
+  }
+
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE
   {
     CompositableHost::SetCompositor(aCompositor);
