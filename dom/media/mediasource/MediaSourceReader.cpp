@@ -874,8 +874,6 @@ MediaSourceReader::AttemptSeek()
     mWaitingForSeekData = false;
   }
 
-  ResetDecode();
-
   // Decoding discontinuity upon seek, reset last times to seek target.
   mLastAudioTime = mPendingSeekTime;
   mLastVideoTime = mPendingSeekTime;
