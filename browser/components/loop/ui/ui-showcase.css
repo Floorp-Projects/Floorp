@@ -170,9 +170,20 @@
 
 /* SVG icons showcase */
 
+.svg-icons h3 {
+  clear: left;
+}
+
+.svg-icon-list {
+  display: block;
+  margin: .5rem 0;
+  clear: left;
+}
+
 .svg-icon-entry {
   width: 180px;
   float: left;
+  background-color: rgba(255,0,255,.1)
 }
 
 .svg-icon-entry > p {
@@ -184,6 +195,7 @@
   display: inline-block;
   width:  16px;
   height: 16px;
+  margin-left: .5rem;
   background-repeat: no-repeat;
   background-size: 16px 16px;
   background-position: center;

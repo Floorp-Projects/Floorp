@@ -26,7 +26,11 @@ use[id$="-active"] {
 }
 
 use[id$="-white"] {
-  fill: rgba(255, 255, 255, 0.8);
+  fill: rgba(255,255,255,0.8);
+}
+
+use[id$="-disabled"] {
+  fill: rgba(255,255,255,0.4);
 }
 </style>
 <defs style="display:none">
