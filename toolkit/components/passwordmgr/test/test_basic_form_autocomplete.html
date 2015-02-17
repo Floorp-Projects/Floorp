@@ -558,13 +558,13 @@ function* runTest() {
   yield runNextTest();
 
 
-  /* Tests for single-user forms with autocomplete=off */
+  /* Tests for single-user forms for ignoring autocomplete=off */
 
   /* test 100 */
   // Turn our attention to form2
   uname = $_(2, "uname");
   pword = $_(2, "pword");
-  checkACForm("", "");
+  checkACForm("singleuser5", "singlepass5");
 
   // Trigger autocomplete popup
   restoreForm();
@@ -585,8 +585,8 @@ function* runTest() {
   // Turn our attention to form3
   uname = $_(3, "uname");
   pword = $_(3, "pword");
-  checkACForm("", "");
-
+  checkACForm("singleuser5", "singlepass5");
+  
   // Trigger autocomplete popup
   restoreForm();
   doKey("down");
@@ -605,7 +605,7 @@ function* runTest() {
   // Turn our attention to form4
   uname = $_(4, "uname");
   pword = $_(4, "pword");
-  checkACForm("", "");
+  checkACForm("singleuser5", "singlepass5");
 
   // Trigger autocomplete popup
   restoreForm();
@@ -625,7 +625,7 @@ function* runTest() {
   // Turn our attention to form5
   uname = $_(5, "uname");
   pword = $_(5, "pword");
-  checkACForm("", "");
+  checkACForm("singleuser5", "singlepass5");
 
   // Trigger autocomplete popup
   restoreForm();
