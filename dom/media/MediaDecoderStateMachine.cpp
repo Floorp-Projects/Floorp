@@ -2958,7 +2958,7 @@ MediaDecoderStateMachine::FlushDecoding()
     // The reader is not supposed to put any tasks to deliver samples into
     // the queue after this runs (unless we request another sample from it).
     RefPtr<nsIRunnable> task;
-    task = NS_NewRunnableMethod(mReader, &MediaDecoderReader::ResetDecode);
+    task = NS_NewRunnableMethod(this, &MediaDecoderStateMachine::ResetDecode);
 
     // Wait for the ResetDecode to run and for the decoder to abort
     // decoding operations and run any pending callbacks. This is
@@ -2977,6 +2977,25 @@ MediaDecoderStateMachine::FlushDecoding()
   // in the state machine are dropped, else subsequent calls to Shutdown()
   // or ReleaseMediaResources() can fail on B2G.
   ResetPlayback();
+}
+
+void
+MediaDecoderStateMachine::ResetDecode()
+{
+  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+
+  if (!mReader) {
+    return;
+  }
+
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    if (mWaitingForDecoderSeek && !mCancelingSeek) {
+      mReader->CancelSeek();
+      mCancelingSeek = true;
+    }
+  }
+  mReader->ResetDecode();
 }
 
 void MediaDecoderStateMachine::RenderVideoFrame(VideoData* aData,
