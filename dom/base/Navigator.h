@@ -287,6 +287,8 @@ public:
                            ErrorResult& aRv);
   void GetLanguages(nsTArray<nsString>& aLanguages);
 
+  bool MozE10sEnabled();
+
   static void GetAcceptLanguages(nsTArray<nsString>& aLanguages);
 
   // WebIDL helper methods
@@ -314,6 +316,8 @@ public:
 #endif
 
   static bool HasTVSupport(JSContext* aCx, JSObject* aGlobal);
+
+  static bool IsE10sEnabled(JSContext* aCx, JSObject* aGlobal);
 
   nsPIDOMWindow* GetParentObject() const
   {
