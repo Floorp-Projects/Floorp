@@ -1245,6 +1245,7 @@ nsStyleContext::ClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs)
 void
 nsStyleContext::DoClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs)
 {
+  NS_ASSERTION(mFrameRefCnt == 0, "frame still referencing style context");
   for (nsStyleStructID i = nsStyleStructID_Inherited_Start;
        i < nsStyleStructID_Inherited_Start + nsStyleStructID_Inherited_Count;
        i = nsStyleStructID(i + 1)) {

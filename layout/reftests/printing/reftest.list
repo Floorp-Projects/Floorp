@@ -32,4 +32,4 @@ skip-if(B2G) fuzzy-if(cocoaWidget,1,5000) == 745025-1.html 745025-1-ref.html # r
 random-if(B2G&&browserIsRemote) == 960822.html 960822-ref.html # reftest-print doesn't work on B2G (scrollbar difference only)
 == 966419-1.html 966419-1-ref.html
 == 966419-2.html 966419-2-ref.html
-skip-if(B2G) asserts(2) HTTP(..) == 1108104.html 1108104-ref.html # bug 1067755
+skip-if(B2G) asserts(3) HTTP(..) == 1108104.html 1108104-ref.html # bug 1067755
