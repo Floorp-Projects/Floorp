@@ -464,8 +464,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     }
 
     lineLayout->VerticalAlignLine();
-    LogicalSize lineSize(lineWM, rtcISize, lineLayout->GetFinalLineBSize());
-    textContainer->SetLineSize(lineSize);
+    textContainer->SetISize(rtcISize);
     lineLayout->EndLineReflow();
   }
 
