@@ -113,6 +113,7 @@ let GMPPrefs = {
   KEY_ADDON_LAST_UPDATE: "media.{0}.lastUpdate",
   KEY_ADDON_VERSION: "media.{0}.version",
   KEY_ADDON_AUTOUPDATE: "media.{0}.autoupdate",
+  KEY_ADDON_HIDDEN: "media.{0}.hidden",
   KEY_URL: "media.gmp-manager.url",
   KEY_URL_OVERRIDE: "media.gmp-manager.url.override",
   KEY_CERT_CHECKATTRS: "media.gmp-manager.cert.checkAttributes",
@@ -452,8 +453,9 @@ GMPInstallManager.prototype = {
       log.info("Found " + gmpAddons.length + " addons advertised.");
       let addonsToInstall = gmpAddons.filter(function(gmpAddon) {
         log.info("Found addon: " + gmpAddon.toString());
-        if (!gmpAddon.isValid || gmpAddon.isInstalled) {
-          log.info("Addon invalid or already installed.");
+
+        if (gmpAddon.isHidden || !gmpAddon.isValid || gmpAddon.isInstalled) {
+          log.info("Addon hidden, invalid or already installed.");
           return false;
         }
 
@@ -734,6 +736,9 @@ GMPAddon.prototype = {
   get isInstalled() {
     return this.version &&
       GMPPrefs.get(GMPPrefs.KEY_ADDON_VERSION, "", this.id) === this.version;
+  },
+  get isHidden() {
+    return GMPPrefs.get(GMPPrefs.KEY_ADDON_HIDDEN, false, this.id);
   }
 };
 /**
