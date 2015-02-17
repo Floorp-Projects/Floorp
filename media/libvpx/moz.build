@@ -42,8 +42,8 @@ if CONFIG['VPX_X86_ASM']:
         SOURCES += files['X86-64_ASM']
 
     # AVX2 only supported on
-    # Darwin and mingw toolchains right now
-    if CONFIG['OS_TARGET'] == 'Darwin' or (CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['GNU_CC']):
+    # Darwin and Windows toolchains right now
+    if CONFIG['OS_TARGET'] in ('Darwin', 'WINNT'):
         SOURCES += files['AVX2']
 
     #postproc is only enabled on x86 with asm
