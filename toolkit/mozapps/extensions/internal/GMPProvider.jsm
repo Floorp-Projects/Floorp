@@ -63,7 +63,7 @@ let gLogAppenderDump = null;
 
 function configureLogging() {
   if (!gLogger) {
-    gLogger = Log.repository.getLogger("Toolkit.OpenH264Provider");
+    gLogger = Log.repository.getLogger("Toolkit.GMPProvider");
     gLogger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
   }
   gLogger.level = prefs.get(OPENH264_PREF_LOGGING_LEVEL, Log.Level.Warn);
@@ -201,7 +201,7 @@ let OpenH264Wrapper = {
       return this._updateTask;
     }
 
-    this._updateTask = Task.spawn(function* OpenH264Provider_updateTask() {
+    this._updateTask = Task.spawn(function* GMPProvider_updateTask() {
       this._log.trace("findUpdates() - updateTask");
       try {
         let installManager = new GMPInstallManager();
@@ -249,14 +249,14 @@ let OpenH264Wrapper = {
   },
 };
 
-let OpenH264Provider = {
-  get name() "OpenH264Provider",
+let GMPProvider = {
+  get name() "GMPProvider",
 
   startup: function() {
     configureLogging();
-    this._log = Log.repository.getLoggerWithMessagePrefix("Toolkit.OpenH264Provider",
-                                                          "OpenH264Provider" + "::");
-    OpenH264Wrapper._log = Log.repository.getLoggerWithMessagePrefix("Toolkit.OpenH264Provider",
+    this._log = Log.repository.getLoggerWithMessagePrefix("Toolkit.GMPProvider",
+                                                          "GMPProvider" + "::");
+    OpenH264Wrapper._log = Log.repository.getLoggerWithMessagePrefix("Toolkit.GMPProvider",
                                                                      "OpenH264Wrapper" + "::");
     this.gmpPath = null;
     if (OpenH264Wrapper.isInstalled) {
@@ -387,7 +387,7 @@ let OpenH264Provider = {
   },
 };
 
-AddonManagerPrivate.registerProvider(OpenH264Provider, [
+AddonManagerPrivate.registerProvider(GMPProvider, [
   new AddonManagerPrivate.AddonType("plugin", URI_EXTENSION_STRINGS,
                                     STRING_TYPE_NAME,
                                     AddonManager.VIEW_TYPE_LIST, 6000,
