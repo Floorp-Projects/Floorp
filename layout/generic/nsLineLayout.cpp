@@ -2901,15 +2901,43 @@ void
 nsLineLayout::ExpandRubyBox(PerFrameData* aFrame, nscoord aReservedISize,
                             nscoord aContainerWidth)
 {
-  int32_t opportunities = aFrame->mJustificationInfo.mInnerOpportunities;
-  // Each expandable ruby box has an gap at each of its sides. For
-  // rb/rbc, see comment in ComputeFrameJustification; for rt/rtc,
-  // see comment in this method below.
-  int32_t gaps = opportunities * 2 + 2;
-  JustificationApplicationState state(gaps, aReservedISize);
-  ApplyFrameJustification(aFrame->mSpan, state);
-
   WritingMode lineWM = mRootSpan->mWritingMode;
+  auto rubyAlign = aFrame->mFrame->StyleText()->mRubyAlign;
+  switch (rubyAlign) {
+    case NS_STYLE_RUBY_ALIGN_START:
+      // do nothing for start
+      break;
+    case NS_STYLE_RUBY_ALIGN_SPACE_BETWEEN:
+    case NS_STYLE_RUBY_ALIGN_SPACE_AROUND: {
+      int32_t opportunities = aFrame->mJustificationInfo.mInnerOpportunities;
+      int32_t gaps = opportunities * 2;
+      if (rubyAlign == NS_STYLE_RUBY_ALIGN_SPACE_AROUND) {
+        // Each expandable ruby box with ruby-align space-around has a
+        // gap at each of its sides. For rb/rbc, see comment in
+        // AssignInterframeJustificationGaps; for rt/rtc, see comment
+        // in ExpandRubyBoxWithAnnotations.
+        gaps += 2;
+      }
+      if (gaps > 0) {
+        JustificationApplicationState state(gaps, aReservedISize);
+        ApplyFrameJustification(aFrame->mSpan, state);
+        break;
+      }
+      // If there are no justification opportunities for space-between,
+      // fall-through to center per spec.
+    }
+    case NS_STYLE_RUBY_ALIGN_CENTER:
+      // Indent all children by half of the reserved inline size.
+      for (PerFrameData* child = aFrame->mSpan->mFirstFrame;
+           child; child = child->mNext) {
+        child->mBounds.IStart(lineWM) += aReservedISize / 2;
+        child->mFrame->SetRect(lineWM, child->mBounds, aContainerWidth);
+      }
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown ruby-align value");
+  }
+
   aFrame->mBounds.ISize(lineWM) += aReservedISize;
   aFrame->mFrame->SetRect(lineWM, aFrame->mBounds, aContainerWidth);
 }
@@ -2941,9 +2969,11 @@ nsLineLayout::ExpandRubyBoxWithAnnotations(PerFrameData* aFrame,
     if (!computeState.mFirstParticipant) {
       continue;
     }
-    // Add one gap at each side of this annotation.
-    computeState.mFirstParticipant->mJustificationAssignment.mGapsAtStart = 1;
-    computeState.mLastParticipant->mJustificationAssignment.mGapsAtEnd = 1;
+    if (IsRubyAlignSpaceAround(aFrame->mFrame)) {
+      // Add one gap at each side of this annotation.
+      computeState.mFirstParticipant->mJustificationAssignment.mGapsAtStart = 1;
+      computeState.mLastParticipant->mJustificationAssignment.mGapsAtEnd = 1;
+    }
     nsIFrame* parentFrame = annotation->mFrame->GetParent();
     nscoord containerWidth = parentFrame->GetRect().Width();
     MOZ_ASSERT(containerWidth == aContainerWidth ||
