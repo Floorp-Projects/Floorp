@@ -565,7 +565,8 @@ public:
     MOZ_ASSERT(!swm->mSetOfScopesBeingUpdated.Contains(mRegistration->mScope));
     swm->mSetOfScopesBeingUpdated.Put(mRegistration->mScope, true);
     nsRefPtr<ServiceWorker> serviceWorker;
-    rv = swm->CreateServiceWorker(mRegistration->mScriptSpec,
+    rv = swm->CreateServiceWorker(mRegistration->mPrincipal,
+                                  mRegistration->mScriptSpec,
                                   mRegistration->mScope,
                                   getter_AddRefs(serviceWorker));
 
@@ -630,7 +631,8 @@ public:
 
     nsRefPtr<ServiceWorker> serviceWorker;
     nsresult rv =
-      swm->CreateServiceWorker(mRegistration->mInstallingWorker->ScriptSpec(),
+      swm->CreateServiceWorker(mRegistration->mPrincipal,
+                               mRegistration->mInstallingWorker->ScriptSpec(),
                                mRegistration->mScope,
                                getter_AddRefs(serviceWorker));
 
@@ -1145,7 +1147,8 @@ ServiceWorkerRegistrationInfo::Activate()
   MOZ_ASSERT(mActiveWorker);
   nsRefPtr<ServiceWorker> serviceWorker;
   nsresult rv =
-    swm->CreateServiceWorker(mActiveWorker->ScriptSpec(),
+    swm->CreateServiceWorker(mPrincipal,
+                             mActiveWorker->ScriptSpec(),
                              mScope,
                              getter_AddRefs(serviceWorker));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2185,11 +2188,13 @@ ServiceWorkerManager::GetActive(nsIDOMWindow* aWindow,
 }
 
 NS_IMETHODIMP
-ServiceWorkerManager::CreateServiceWorker(const nsACString& aScriptSpec,
+ServiceWorkerManager::CreateServiceWorker(nsIPrincipal* aPrincipal,
+                                          const nsACString& aScriptSpec,
                                           const nsACString& aScope,
                                           ServiceWorker** aServiceWorker)
 {
   AssertIsOnMainThread();
+  MOZ_ASSERT(aPrincipal);
 
   WorkerPrivate::LoadInfo info;
   nsresult rv = NS_NewURI(getter_AddRefs(info.mBaseURI), aScriptSpec, nullptr, nullptr);
@@ -2204,14 +2209,7 @@ ServiceWorkerManager::CreateServiceWorker(const nsACString& aScriptSpec,
     return rv;
   }
 
-  // FIXME(nsm): Create correct principal based on app-ness.
-  // Would it make sense to store the nsIPrincipal of the first register() in
-  // the ServiceWorkerRegistrationInfo and use that?
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  rv = ssm->GetNoAppCodebasePrincipal(info.mBaseURI, getter_AddRefs(info.mPrincipal));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  info.mPrincipal = aPrincipal;
 
   // NOTE: this defaults the SW load context to:
   //  - private browsing = false
