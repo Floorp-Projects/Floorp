@@ -35,6 +35,10 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'WMFUtils.cpp',
     ]
 
+    OS_LIBS += [
+        'mfuuid',
+    ]
+
     DEFINES['ENABLE_WMF'] = True
 
 
