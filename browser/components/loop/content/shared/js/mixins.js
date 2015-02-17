@@ -101,6 +101,31 @@ loop.shared.mixins = (function() {
     componentDidMount: function() {
       this.documentBody.addEventListener("click", this._onBodyClick);
       this.documentBody.addEventListener("blur", this.hideDropdownMenu);
+
+      var menu = this.refs.menu;
+      if (!menu) {
+        return;
+      }
+
+      // Correct the position of the menu if necessary.
+      var menuNode = menu.getDOMNode();
+      var menuNodeRect = menuNode.getBoundingClientRect();
+      var bodyRect = {
+        height: this.documentBody.offsetHeight,
+        width: this.documentBody.offsetWidth
+      };
+
+      // First we check the vertical overflow.
+      var y = menuNodeRect.top + menuNodeRect.height;
+      if (y >= bodyRect.height) {
+        menuNode.style.marginTop = bodyRect.height - y + "px";
+      }
+
+      // Then we check the horizontal overflow.
+      var x = menuNodeRect.left + menuNodeRect.width;
+      if (x >= bodyRect.width) {
+        menuNode.style.marginLeft = bodyRect.width - x + "px";
+      }
     },
 
     componentWillUnmount: function() {
