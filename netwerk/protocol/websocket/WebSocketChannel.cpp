@@ -3070,14 +3070,22 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
     return rv;
   }
 
-  rv = io2->NewChannelFromURIWithProxyFlags(
+  rv = io2->NewChannelFromURIWithProxyFlags2(
               localURI,
               mURI,
               nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
               nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
+              mLoadInfo->LoadingNode() ?
+                mLoadInfo->LoadingNode()->AsDOMNode() : nullptr,
+              mLoadInfo->LoadingPrincipal(),
+              mLoadInfo->TriggeringPrincipal(),
+              mLoadInfo->GetSecurityFlags(),
+              mLoadInfo->GetContentPolicyType(),
               getter_AddRefs(localChannel));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Please note that we still call SetLoadInfo on the channel because
+  // we want the same instance of the loadInfo to be set on the channel.
   rv = localChannel->SetLoadInfo(mLoadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
