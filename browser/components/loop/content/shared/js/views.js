@@ -85,6 +85,8 @@ loop.shared.views = (function(_, l10n) {
    *                                 loop.shared.utils.SCREEN_SHARE_STATES
    */
   var ScreenShareControlButton = React.createClass({displayName: "ScreenShareControlButton",
+    mixins: [sharedMixins.DropdownMenuMixin],
+
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       visible: React.PropTypes.bool.isRequired,
@@ -96,9 +98,12 @@ loop.shared.views = (function(_, l10n) {
         this.props.dispatcher.dispatch(
           new sharedActions.EndScreenShare({}));
       } else {
-        this.props.dispatcher.dispatch(
-          new sharedActions.StartScreenShare({}));
+        this.toggleDropdownMenu();
       }
+    },
+
+    _handleShareWindows: function() {
+      this.props.dispatcher.dispatch(new sharedActions.StartScreenShare({}));
     },
 
     _getTitle: function() {
@@ -113,18 +118,36 @@ loop.shared.views = (function(_, l10n) {
         return null;
       }
 
-      var screenShareClasses = React.addons.classSet({
+      var cx = React.addons.classSet;
+
+      var isActive = this.props.state === SCREEN_SHARE_STATES.ACTIVE;
+      var screenShareClasses = cx({
         "btn": true,
         "btn-screen-share": true,
         "transparent-button": true,
-        "active": this.props.state === SCREEN_SHARE_STATES.ACTIVE,
+        "menu-showing": this.state.showMenu,
+        "active": isActive,
         "disabled": this.props.state === SCREEN_SHARE_STATES.PENDING
+      });
+      var dropdownMenuClasses = cx({
+        "native-dropdown-menu": true,
+        "conversation-window-dropdown": true,
+        "visually-hidden": !this.state.showMenu
       });
 
       return (
-        React.createElement("button", {className: screenShareClasses, 
-                onClick: this.handleClick, 
-                title: this._getTitle()})
+        React.createElement("div", null, 
+          React.createElement("button", {className: screenShareClasses, 
+                  onClick: this.handleClick, 
+                  title: this._getTitle()}, 
+            isActive ? null : React.createElement("span", {className: "chevron"})
+          ), 
+          React.createElement("ul", {ref: "menu", className: dropdownMenuClasses}, 
+            React.createElement("li", {onClick: this._handleShareWindows}, 
+              l10n.get("share_windows_button_title")
+            )
+          )
+        )
       );
     }
   });
