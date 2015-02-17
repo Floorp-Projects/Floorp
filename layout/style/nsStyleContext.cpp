@@ -46,6 +46,9 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
     mCachedResetData(nullptr),
     mBits(((uint64_t)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT),
     mRefCnt(0)
+#ifdef DEBUG
+  , mFrameRefCnt(0)
+#endif
 {
   // This check has to be done "backward", because if it were written the
   // more natural way it wouldn't fail even when it needed to.
