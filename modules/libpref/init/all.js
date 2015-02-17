@@ -4494,9 +4494,6 @@ pref("browser.search.official", true);
 #ifndef MOZ_WIDGET_GONK
 // GMPInstallManager prefs
 
-// Enables some extra logging (can reduce performance)
-pref("media.gmp-manager.log", false);
-
 // User-settable override to media.gmp-manager.url for testing purposes.
 //pref("media.gmp-manager.url.override", "");
 
