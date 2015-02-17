@@ -147,7 +147,7 @@ Library::Create(JSContext* cx, jsval path_, const JSCTypesCallbacks* callbacks)
   PRLibrary* library = PR_LoadLibraryWithFlags(libSpec, 0);
 
   if (!library) {
-    char *error = (char*) JS_malloc(PR_GetErrorTextLength() + 1);
+    char *error = (char*) JS_malloc(cx, PR_GetErrorTextLength() + 1);
     if (error)
       PR_GetErrorText(error);
 
