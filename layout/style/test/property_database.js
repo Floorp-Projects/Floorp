@@ -5255,6 +5255,19 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
   for (var prop in verticalTextProperties) {
     gCSSProperties[prop] = verticalTextProperties[prop];
   }
+  /*
+   * Vertical vs horizontal writing-mode can affect line-height
+   * because font metrics may not be symmetrical,
+   * so we require writing-mode:initial to ensure consistency
+   * in font shorthand and line-height tests.
+   */
+  ["font", "line-height"].forEach(function(prop) {
+    var p = gCSSProperties[prop];
+    if (p.prerequisites === undefined) {
+      p.prerequisites = {};
+    }
+    p.prerequisites["writing-mode"] = "initial";
+  });
 }
 
 if (SpecialPowers.getBoolPref("layout.css.masking.enabled")) {
