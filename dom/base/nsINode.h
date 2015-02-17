@@ -1019,7 +1019,7 @@ public:
   // Note: This asserts |IsInAnonymousSubtree()|.
   bool IsAnonymousContentInSVGUseSubtree() const;
 
-  // True for native anonymous content and for XBL content if the binging
+  // True for native anonymous content and for XBL content if the binding
   // has chromeOnlyContent="true".
   bool ChromeOnlyAccess() const
   {
