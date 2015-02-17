@@ -116,15 +116,6 @@ public:
    */
   void VerticalAlignLine();
 
-  // Get the final size of the line, in the block direction.
-  // Do not call this until after we've called VerticalAlignLine.
-  nscoord GetFinalLineBSize() const
-  {
-    NS_ASSERTION(mFinalLineBSize != nscoord_MIN,
-                 "VerticalAlignLine should have been called before");
-    return mFinalLineBSize;
-  }
-
   bool TrimTrailingWhiteSpace();
 
   /**
@@ -651,7 +642,7 @@ protected:
   void AllowForStartMargin(PerFrameData* pfd,
                            nsHTMLReflowState& aReflowState);
 
-  void SyncAnnotationContainersBounds(PerFrameData* aRubyFrame);
+  void SyncAnnotationBounds(PerFrameData* aRubyFrame);
 
   bool CanPlaceFrame(PerFrameData* pfd,
                        bool aNotSafeToBreak,
@@ -680,6 +671,10 @@ protected:
   bool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaISize);
 
   struct JustificationComputationState;
+
+  static int AssignInterframeJustificationGaps(
+    PerFrameData* aFrame, JustificationComputationState& aState);
+
   int32_t ComputeFrameJustification(PerSpanData* psd,
                                     JustificationComputationState& aState);
 

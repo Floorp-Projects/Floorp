@@ -226,7 +226,8 @@ MediaKeySystemAccess::IsSupported(const nsAString& aKeySystem,
 
 /* static */
 void
-MediaKeySystemAccess::NotifyObservers(const nsAString& aKeySystem,
+MediaKeySystemAccess::NotifyObservers(nsIDOMWindow* aWindow,
+                                      const nsAString& aKeySystem,
                                       MediaKeySystemStatus aStatus)
 {
   RequestMediaKeySystemAccessNotification data;
@@ -236,7 +237,7 @@ MediaKeySystemAccess::NotifyObservers(const nsAString& aKeySystem,
   data.ToJSON(json);
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
-    obs->NotifyObservers(nullptr, "mediakeys-request", json.get());
+    obs->NotifyObservers(aWindow, "mediakeys-request", json.get());
   }
 }
 

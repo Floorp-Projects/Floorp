@@ -262,8 +262,6 @@ VideoDecoder::SampleToVideoFrame(IMFSample* aSample,
   int32_t v_size = stride * (height + padding) / 4;
   int32_t halfStride = (stride + 1) / 2;
   int32_t halfHeight = (height + 1) / 2;
-  int32_t halfWidth = (width + 1) / 2;
-  int32_t totalSize = y_size + 2 * v_size;
 
   GetPlatform()->syncrunonmainthread(WrapTask(aVideoFrame,
                                   &GMPVideoi420Frame::CreateEmptyFrame,

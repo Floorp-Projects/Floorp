@@ -252,7 +252,6 @@ private:
   mozilla::RefPtr<DrawTarget> mDrawTarget;
   // IME
   nsIMEUpdatePreference mIMEPreferenceOfParent;
-  bool mIMEComposing;
   // Latest seqno received through events
   uint32_t mIMELastReceivedSeqno;
   // Chrome's seqno value when last blur occurred

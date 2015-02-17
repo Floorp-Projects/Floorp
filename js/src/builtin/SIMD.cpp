@@ -1036,7 +1036,8 @@ Select(JSContext *cx, unsigned argc, Value *vp)
 
 template<class VElem, unsigned NumElem>
 static bool
-TypedArrayDataPtrFromArgs(JSContext *cx, const CallArgs &args, VElem **data)
+TypedArrayFromArgs(JSContext *cx, const CallArgs &args,
+                   MutableHandle<TypedArrayObject*> typedArray, int32_t *byteStart)
 {
     if (!args[0].isObject())
         return ErrorBadArgs(cx);
@@ -1045,21 +1046,20 @@ TypedArrayDataPtrFromArgs(JSContext *cx, const CallArgs &args, VElem **data)
     if (!argobj.is<TypedArrayObject>())
         return ErrorBadArgs(cx);
 
-    Rooted<TypedArrayObject*> typedArray(cx, &argobj.as<TypedArrayObject>());
+    typedArray.set(&argobj.as<TypedArrayObject>());
 
     int32_t index;
     if (!ToInt32(cx, args[1], &index))
         return false;
 
-    int32_t byteStart = index * typedArray->bytesPerElement();
-    if (byteStart < 0 || (uint32_t(byteStart) + NumElem * sizeof(VElem)) > typedArray->byteLength())
+    *byteStart = index * typedArray->bytesPerElement();
+    if (*byteStart < 0 || (uint32_t(*byteStart) + NumElem * sizeof(VElem)) > typedArray->byteLength())
     {
         // Keep in sync with AsmJS OnOutOfBounds function.
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
         return false;
     }
 
-    *data = reinterpret_cast<VElem*>(static_cast<char*>(typedArray->viewData()) + byteStart);
     return true;
 }
 
@@ -1073,8 +1073,9 @@ Load(JSContext *cx, unsigned argc, Value *vp)
     if (args.length() != 2)
         return ErrorBadArgs(cx);
 
-    Elem *typedArrayData = nullptr;
-    if (!TypedArrayDataPtrFromArgs<Elem, NumElem>(cx, args, &typedArrayData))
+    int32_t byteStart;
+    Rooted<TypedArrayObject*> typedArray(cx);
+    if (!TypedArrayFromArgs<Elem, NumElem>(cx, args, &typedArray, &byteStart))
         return false;
 
     Rooted<TypeDescr*> typeDescr(cx, &V::GetTypeDescr(*cx->global()));
@@ -1083,8 +1084,9 @@ Load(JSContext *cx, unsigned argc, Value *vp)
     if (!result)
         return false;
 
-    Elem *dest = reinterpret_cast<Elem*>(result->typedMem());
-    memcpy(dest, typedArrayData, sizeof(Elem) * NumElem);
+    Elem *src = reinterpret_cast<Elem*>(static_cast<char*>(typedArray->viewData()) + byteStart);
+    Elem *dst = reinterpret_cast<Elem*>(result->typedMem());
+    memcpy(dst, src, sizeof(Elem) * NumElem);
 
     args.rval().setObject(*result);
     return true;
@@ -1100,15 +1102,17 @@ Store(JSContext *cx, unsigned argc, Value *vp)
     if (args.length() != 3)
         return ErrorBadArgs(cx);
 
-    Elem *typedArrayData = nullptr;
-    if (!TypedArrayDataPtrFromArgs<Elem, NumElem>(cx, args, &typedArrayData))
+    int32_t byteStart;
+    Rooted<TypedArrayObject*> typedArray(cx);
+    if (!TypedArrayFromArgs<Elem, NumElem>(cx, args, &typedArray, &byteStart))
         return false;
 
     if (!IsVectorObject<V>(args[2]))
         return ErrorBadArgs(cx);
 
     Elem *src = TypedObjectMemory<Elem*>(args[2]);
-    memcpy(typedArrayData, src, sizeof(Elem) * NumElem);
+    Elem *dst = reinterpret_cast<Elem*>(static_cast<char*>(typedArray->viewData()) + byteStart);
+    memcpy(dst, src, sizeof(Elem) * NumElem);
 
     args.rval().setObject(args[2].toObject());
     return true;

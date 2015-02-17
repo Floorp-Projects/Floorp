@@ -55,7 +55,7 @@ public:
 };
 
 SharedDecoderManager::SharedDecoderManager()
-  : mTaskQueue(new MediaTaskQueue(GetMediaDecodeThreadPool()))
+  : mTaskQueue(new FlushableMediaTaskQueue(GetMediaDecodeThreadPool()))
   , mActiveProxy(nullptr)
   , mActiveCallback(nullptr)
   , mWaitForInternalDrain(false)
@@ -73,7 +73,7 @@ SharedDecoderManager::CreateVideoDecoder(
   PlatformDecoderModule* aPDM,
   const mp4_demuxer::VideoDecoderConfig& aConfig,
   layers::LayersBackend aLayersBackend, layers::ImageContainer* aImageContainer,
-  MediaTaskQueue* aVideoTaskQueue, MediaDataDecoderCallback* aCallback)
+  FlushableMediaTaskQueue* aVideoTaskQueue, MediaDataDecoderCallback* aCallback)
 {
   if (!mDecoder) {
     // We use the manager's task queue for the decoder, rather than the one

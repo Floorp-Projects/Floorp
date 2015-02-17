@@ -16,15 +16,15 @@
   text-overflow: inherit;
   overflow: inherit;
   padding: inherit;
-  height: 100%;   /* Need this so percentage heights of kids work right */
+  block-size: 100%; /* Need this so percentage block-sizes of kids work right */
 }
 
 /* miscellaneous form elements */
 
 fieldset > legend {
-  padding-left: 2px;
-  padding-right: 2px;
-  width: -moz-fit-content;
+  -moz-padding-start: 2px;
+  -moz-padding-end: 2px;
+  inline-size: -moz-fit-content;
 }
 
 legend {
@@ -33,9 +33,12 @@ legend {
 
 fieldset {
   display: block;
-  margin-left: 2px;
-  margin-right: 2px;
-  padding: 0.35em 0.625em 0.75em;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 2px;
+  padding-block-start: 0.35em;
+  padding-block-end: 0.75em;
+  -moz-padding-start: 0.625em;
+  -moz-padding-end: 0.625em;
   border: 2px groove ThreeDFace;
 }
 
@@ -50,7 +53,7 @@ label {
 
 input {
   -moz-appearance: textfield;
-  /* The sum of border-top, border-bottom, padding-top, padding-bottom
+  /* The sum of border and padding on block-start and block-end
      must be the same here, for buttons, and for <select> (including its
      internal padding magic) */
   padding: 1px;
@@ -94,10 +97,12 @@ input::-moz-placeholder {
 }
 
 textarea {
-  margin: 1px 0 1px 0;
+  margin-block-start: 1px;
+  margin-block-end: 1px;
   border: 2px inset ThreeDFace;
-  /* The 1px horizontal padding is for parity with Win/IE */
-  padding: 0px 1px;
+  /* The 1px inline padding is for parity with Win/IE */
+  -moz-padding-start: 1px;
+  -moz-padding-end: 1px;
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: medium -moz-fixed;
@@ -187,6 +192,7 @@ textarea:-moz-read-write {
 }
 
 select {
+  writing-mode: horizontal-tb !important; /* XXX remove when bug 1112954 is fixed */
   margin: 0;
   border-color: ThreeDFace;
   background-color: -moz-Combobox;
@@ -227,7 +233,10 @@ select[size][multiple] {
   background-color: -moz-Field;
   color: -moz-FieldText;
   vertical-align: text-bottom;
-  padding: 1px 0 1px 0;
+  padding-block-start: 1px;
+  padding-block-end: 1px;
+  -moz-padding-start: 0;
+  -moz-padding-end: 0;
   -moz-appearance: listbox;
 }
 
@@ -242,8 +251,7 @@ select[size="1"] {
 }
 
 select > button {
-  width: 12px;
-  height: 12px;
+  inline-size: 12px;
   white-space: nowrap;
   position: static !important;
   background-image: url("arrow.gif") !important;
@@ -252,7 +260,7 @@ select > button {
   -moz-appearance: menulist-button;
 
   /* Make sure to size correctly if the combobox has a non-auto height. */
-  height: 100% ! important;
+  block-size: 100% ! important;
   box-sizing: border-box ! important;
 
   /*
@@ -268,23 +276,23 @@ select > button:active {
 }
 
 select:empty {
-  width: 2.5em;
+  inline-size: 2.5em;
 }
 
 *|*::-moz-display-comboboxcontrol-frame {
   overflow: -moz-hidden-unscrollable;
-  /* This top/bottom padding plus the combobox top/bottom border need to
-     add up to the top/bottom borderpadding of text inputs and buttons */ 
-  padding-top: 1px;
-  padding-bottom: 1px;
+  /* This block-start/end padding plus the combobox block-start/end border need to
+     add up to the block-start/end borderpadding of text inputs and buttons */ 
+  padding-block-start: 1px;
+  padding-block-end: 1px;
   -moz-padding-start: 4px;
   -moz-padding-end: 0;
   color: inherit;
   white-space: nowrap;
   text-align: inherit;
   -moz-user-select: none;
-  /* Make sure to size correctly if the combobox has a non-auto height. */
-  height: 100% ! important;
+  /* Make sure to size correctly if the combobox has a non-auto block-size. */
+  block-size: 100% ! important;
   box-sizing: border-box ! important;
   line-height: -moz-block-height;
 }
@@ -293,7 +301,7 @@ option {
   display: block;
   float: none !important;
   position: static !important;
-  min-height: 1em;
+  min-block-size: 1em;
   line-height: normal !important;
   -moz-user-select: none;
   text-indent: 0;
@@ -302,8 +310,8 @@ option {
 }
 
 select > option {
-  padding-top : 0;
-  padding-bottom: 0;
+  padding-block-start : 0;
+  padding-block-end: 0;
   -moz-padding-start: 3px;
   -moz-padding-end: 5px;
 }
@@ -354,13 +362,13 @@ optgroup:before {
 
   /*
    * We can't change the padding here, because that would affect our
-   * intrinsic width, since we scroll.  But at the same time, we want
-   * to make sure that our left border+padding matches the left
+   * intrinsic inline-size, since we scroll.  But at the same time, we want
+   * to make sure that our inline-start border+padding matches the inline-start
    * border+padding of a combobox so that our scrollbar will line up
-   * with the dropmarker.  So set our left border to 2px.
+   * with the dropmarker.  So set our inline-start border to 2px.
    */
   border: 1px outset black !important;
-  border-left-width: 2px ! important;
+  -moz-border-start-width: 2px ! important;
 } 
 
 input:disabled,
@@ -437,7 +445,7 @@ input[type="file"] {
 }
 
 input[type="file"] > xul|label {
-  min-width: 12em;
+  min-inline-size: 12em;
   -moz-padding-start: 5px;
 
   color: inherit;
@@ -453,7 +461,7 @@ input[type="file"] > xul|label {
 
 /* button part of file selector */
 input[type="file"] > button[type="button"] {
-  height: inherit;
+  block-size: inherit;
   font-size: inherit;
   letter-spacing: inherit;
   cursor: inherit;
@@ -465,8 +473,8 @@ input[type="color"]:-moz-system-metric(color-picker-available)::-moz-color-swatc
   height: 100%;
   min-width: 3px;
   min-height: 3px;
-  margin-left: auto;
-  margin-right: auto;
+  -moz-margin-start: auto;
+  -moz-margin-end: auto;
   box-sizing: border-box;
   border: 1px solid grey;
   display: block;
@@ -476,21 +484,27 @@ input[type="color"]:-moz-system-metric(color-picker-available)::-moz-color-swatc
 /* TODO: use text-align: match-parent when bug 645642 is fixed. */
 input[type="file"]:-moz-dir(rtl) > xul|label {
   -moz-padding-start: 0px;
-  padding-right: 5px;
+  -moz-padding-end: 5px;
   text-align: right;
 }
 
 /* radio buttons */
 input[type="radio"] {
   -moz-appearance: radio;
-  margin: 3px 3px 0px 5px;
+  margin-block-start: 3px;
+  margin-block-end: 0px;
+  -moz-margin-start: 5px;
+  -moz-margin-end: 3px;
   border-radius: 100% !important;
 }
 
 /* check boxes */
 input[type="checkbox"] {
   -moz-appearance: checkbox;
-  margin: 3px 3px 3px 4px;
+  margin-block-start: 3px;
+  margin-block-end: 3px;
+  -moz-margin-start: 4px;
+  -moz-margin-end: 3px;
   border-radius: 0 !important;
 }
 
@@ -504,8 +518,8 @@ input[type="checkbox"] {
 input[type="radio"],
 input[type="checkbox"] {
   box-sizing: border-box;
-  width: 13px;
-  height: 13px;
+  inline-size: 13px;
+  block-size: 13px;
   cursor: default;
   padding: 0 !important;
   -moz-binding: none;
@@ -555,10 +569,13 @@ input[type="reset"],
 input[type="button"],
 input[type="submit"] {
   -moz-appearance: button;
-  /* The sum of border-top, border-bottom, padding-top, padding-bottom
+  /* The sum of border and padding on block-start and block-end
      must be the same here, for text inputs, and for <select>.  For
      buttons, make sure to include the -moz-focus-inner border/padding. */
-  padding: 0px 6px 0px 6px;
+  padding-block-start: 0px;
+  -moz-padding-end: 6px;
+  padding-block-end: 0px;
+  -moz-padding-start: 6px;
   border: 2px outset ButtonFace;
   background-color: ButtonFace;
   cursor: default;
@@ -583,8 +600,8 @@ input[type="submit"] {
 }
 
 input[type="color"]:-moz-system-metric(color-picker-available) {
-  width: 64px;
-  height: 23px;
+  inline-size: 64px;
+  block-size: 23px;
 }
 
 button {
@@ -619,7 +636,10 @@ input[type="color"]:-moz-system-metric(color-picker-available):active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
-  padding: 0px 5px 0px 7px;
+  padding-block-start: 0px;
+  -moz-padding-end: 5px;
+  padding-block-end: 0px;
+  -moz-padding-start: 7px;
   border-style: inset;
   background-color: ButtonFace;
 }
@@ -637,7 +657,10 @@ input[type="reset"]::-moz-focus-inner,
 input[type="button"]::-moz-focus-inner,
 input[type="submit"]::-moz-focus-inner,
 input[type="file"] > button[type="button"]::-moz-focus-inner {
-  padding: 0px 2px 0px 2px;
+  padding-block-start: 0px;
+  -moz-padding-end: 2px;
+  padding-block-end: 0px;
+  -moz-padding-start: 2px;
   border: 1px dotted transparent;
 }
 
@@ -661,9 +684,12 @@ select:disabled > button,
 select:disabled > button,
 input[type="submit"]:disabled:active,
 input[type="submit"]:disabled {
-  /* The sum of border-top, border-bottom, padding-top, padding-bottom
+  /* The sum of border and padding on block-start and block-end
      must be the same here and for text inputs */
-  padding: 0px 6px 0px 6px;
+  padding-block-start: 0px;
+  -moz-padding-end: 6px;
+  padding-block-end: 0px;
+  -moz-padding-start: 6px;
   border: 2px outset ButtonFace;
   cursor: inherit; 
 }
@@ -799,7 +825,7 @@ meter {
 input[type=range] {
   -moz-appearance: range;
   display: inline-block;
-  width: 12em;
+  width: 12em; /* XXX how does orient attribute relate to vertical mode? */
   height: 1.3em;
   margin: 0 0.7em;
   /* Override some rules that apply on all input types: */
@@ -910,7 +936,7 @@ input[type=number]::-moz-number-wrapper {
   display: flex;
   float: none !important;
   position: static !important;
-  height: 100%;
+  block-size: 100%;
 }
 
 input[type=number]::-moz-number-text {
@@ -925,7 +951,7 @@ input[type=number]::-moz-number-text {
    */
   text-align: inherit;
   flex: 1;
-  min-width: 0;
+  min-inline-size: 0;
   padding: 0;
   border: 0;
   margin: 0;
@@ -937,6 +963,8 @@ input[type=number]::-moz-number-spin-box {
 %ifdef XP_WIN
   /* The Window's Theme's spin buttons have a very narrow minimum width, so
    * make it something reasonable:
+   * XXX What about vertical mode? How will the spin buttons be arranged?
+   * This may need to be adjusted when bug 1123299 is implemented.
    */
   width: 16px;
 %endif
@@ -956,6 +984,8 @@ input[type=number]::-moz-number-spin-up {
   background-position: center bottom;
   border: 1px solid darkgray;
   border-bottom: none;
+  /* [JK] I think the border-*-*-radius properties here can remain physical,
+     as we probably don't want to turn the spinner sideways in vertical writing mode */
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
 }

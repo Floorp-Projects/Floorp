@@ -52,7 +52,19 @@ addLoadEvent(function() {
     analyser.fftSize = 2049;
   }, DOMException.INDEX_SIZE_ERR);
   expectException(function() {
-    analyser.fftSize = 4096;
+    analyser.fftSize = 4097;
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    analyser.fftSize = 8193;
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    analyser.fftSize = 16385;
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    analyser.fftSize = 32769;
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    analyser.fftSize = 65536;
   }, DOMException.INDEX_SIZE_ERR);
   analyser.fftSize = 1024;
   is(analyser.frequencyBinCount, 512, "Correct new value for frequencyBinCount");

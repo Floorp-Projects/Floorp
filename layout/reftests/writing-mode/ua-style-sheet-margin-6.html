@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical margins on listing elements in the UA style sheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+</style>
+<div class=ltr>
+  <listing>Listing line 1
+Listing line 2</listing>
+</div>
+<div class=rtl dir=rtl>
+  <listing>Listing line 1
+Listing line 2</listing>
+</div>
+<div class=v-rl>
+  <listing>Listing line 1
+Listing line 2</listing>
+</div>

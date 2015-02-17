@@ -8,15 +8,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870022
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="runTest()">
+<body onload="setupTest()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=870022">Mozilla Bug 870022</a>
 
-<!-- Tests that the picture pref is off pending bug 1017875, accounting
+<!-- Tests that the picture pref can still be disabled, accounting
      for dom.images.srcset.enabled being flipped on in the mean time. -->
-
 
 <!-- these should all load red.png (naturalWidth 1) not big.png (natural
      width 3000) regardless of dom.images.srcset.enabled being on or off -->
+
+<div id="testContainer">
 <picture>
   <source srcset="http://example.com/tests/image/test/mochitest/big.png">
   <img id="img1" src="http://example.com/tests/image/test/mochitest/red.png">
@@ -40,6 +41,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870022
 <img id="img-never"
      srcset="http://example.com/tests/image/test/mochitest/big.png 500w"
      sizes="50px">
+</div>
 
 <script type="application/javascript">
 
@@ -51,11 +53,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870022
   var srcsetEnabled = SpecialPowers.getBoolPref(srcsetPref);
   var pictureEnabled = SpecialPowers.getBoolPref(picturePref);
 
-  is(pictureEnabled, false, "picture should be disabled pending bug 1017875");
+  is(pictureEnabled, true, "picture expected to be enabled by default");
 
-  function runTest() {
-    var img = document.querySelector("img");
-    var source = document.querySelector("source");
+  function setupTest() {
+    SpecialPowers.pushPrefEnv({'set': [[ "dom.image.picture.enabled", false ]] }, function() {
+      var container = document.querySelector("#testContainer");
+      // We want to re-create the elements with the pref disabled to ensure
+      // webIDL attributes are not attached
+      var iframe = document.createElement("iframe");
+      iframe.addEventListener("load", function() {
+        runTest(iframe);
+      });
+      document.body.appendChild(iframe);
+      iframe.src = "data:text/html;base64," + btoa(container.innerHTML);
+    });
+  }
+
+  function runTest(iframe) {
+    var doc = iframe.contentDocument;
+    var img = doc.querySelector("img");
+    var source = doc.querySelector("source");
 
     is(img.sizes, undefined, "sizes should not be visible on <img>");
     is(source.sizes, undefined, "sizes should not be visible on <source>");
@@ -70,15 +87,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870022
 
     // Make sure the test images loaded red.png, which is 1x1, not big.png
     for (var id of [ 'img1', 'img2' ]) {
-      var testImg = document.getElementById(id);
+      var testImg = doc.getElementById(id);
       is(testImg.naturalWidth, 1, "Image should have loaded small source");
     }
 
-    var srcsetOnlyImg = document.getElementById("img-srcset-only");
+    var srcsetOnlyImg = doc.getElementById("img-srcset-only");
     is(srcsetOnlyImg.naturalWidth, srcsetEnabled ? 1 : 0,
        "srcset image should only load if srcset is enabled, and never the computed width candidate");
 
-    var neverImg = document.getElementById("img-never");
+    var neverImg = doc.getElementById("img-never");
     is(neverImg.naturalWidth, 0, "Image should not have loaded");
 
     SimpleTest.finish();
