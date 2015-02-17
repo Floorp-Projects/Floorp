@@ -21,7 +21,7 @@ template <>
 class FFmpegAudioDecoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
 {
 public:
-  FFmpegAudioDecoder(MediaTaskQueue* aTaskQueue,
+  FFmpegAudioDecoder(FlushableMediaTaskQueue* aTaskQueue,
                      MediaDataDecoderCallback* aCallback,
                      const mp4_demuxer::AudioDecoderConfig& aConfig);
   virtual ~FFmpegAudioDecoder();

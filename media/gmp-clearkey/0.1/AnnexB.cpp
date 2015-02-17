@@ -38,7 +38,7 @@ AnnexB::ConvertConfig(const std::vector<uint8_t>& aBuffer,
                       std::vector<uint8_t>& aOutAnnexB)
 {
   // Skip past irrelevant headers
-  auto& it = aBuffer.begin() + 5;
+  auto it = aBuffer.begin() + 5;
 
   if (it >= aBuffer.end()) {
     return;

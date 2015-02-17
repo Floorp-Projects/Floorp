@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical margins on pre elements in the UA style sheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+.ltr pre { margin: 1em 0; }
+.rtl pre { margin: 1em 0; }
+.v-rl pre { margin: 0 1em; }
+</style>
+<div class=ltr>
+  <pre>pre line 1
+pre line 2</pre>
+</div>
+<div class=rtl dir=rtl>
+  <pre>pre line 1
+pre line 2</pre>
+</div>
+<div class=v-rl>
+  <pre>pre line 1
+pre line 2</pre>
+</div>

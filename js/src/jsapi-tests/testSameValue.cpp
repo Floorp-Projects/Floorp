@@ -17,8 +17,8 @@ BEGIN_TEST(testSameValue)
      * double, and this is believed to be the only way to make such a
      * comparison possible.
      */
-    jsval v1 = DOUBLE_TO_JSVAL(0.0);
-    jsval v2 = DOUBLE_TO_JSVAL(-0.0);
+    JS::RootedValue v1(cx, JS::DoubleValue(0.0));
+    JS::RootedValue v2(cx, JS::DoubleValue(-0.0));
     bool same;
     CHECK(JS_SameValue(cx, v1, v2, &same));
     CHECK(!same);

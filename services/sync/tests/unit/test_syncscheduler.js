@@ -510,7 +510,7 @@ add_task(function test_autoconnect_mp_locked() {
 
   // Pretend user did not unlock master password.
   let origLocked = Utils.mpLocked;
-  Utils.mpLocked = function() true;
+  Utils.mpLocked = () => true;
 
   let origGetter = Service.identity.__lookupGetter__("syncKey");
   let origSetter = Service.identity.__lookupSetter__("syncKey");

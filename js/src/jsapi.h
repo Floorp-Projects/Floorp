@@ -1057,13 +1057,13 @@ extern JS_PUBLIC_API(JSType)
 JS_TypeOfValue(JSContext *cx, JS::Handle<JS::Value> v);
 
 extern JS_PUBLIC_API(bool)
-JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2, bool *equal);
+JS_StrictlyEqual(JSContext *cx, JS::Handle<JS::Value> v1, JS::Handle<JS::Value> v2, bool *equal);
 
 extern JS_PUBLIC_API(bool)
 JS_LooselyEqual(JSContext *cx, JS::Handle<JS::Value> v1, JS::Handle<JS::Value> v2, bool *equal);
 
 extern JS_PUBLIC_API(bool)
-JS_SameValue(JSContext *cx, jsval v1, jsval v2, bool *same);
+JS_SameValue(JSContext *cx, JS::Handle<JS::Value> v1, JS::Handle<JS::Value> v2, bool *same);
 
 /* True iff fun is the global eval function. */
 extern JS_PUBLIC_API(bool)
@@ -4760,11 +4760,12 @@ JS_SetParallelParsingEnabled(JSRuntime *rt, bool enabled);
 extern JS_PUBLIC_API(void)
 JS_SetOffthreadIonCompilationEnabled(JSRuntime *rt, bool enabled);
 
-#define JIT_COMPILER_OPTIONS(Register)                                  \
-    Register(BASELINE_WARMUP_TRIGGER, "baseline.warmup.trigger")    \
-    Register(ION_WARMUP_TRIGGER, "ion.warmup.trigger")              \
-    Register(ION_ENABLE, "ion.enable")                                  \
-    Register(BASELINE_ENABLE, "baseline.enable")                        \
+#define JIT_COMPILER_OPTIONS(Register)                                     \
+    Register(BASELINE_WARMUP_TRIGGER, "baseline.warmup.trigger")           \
+    Register(ION_WARMUP_TRIGGER, "ion.warmup.trigger")                     \
+    Register(ION_GVN_ENABLE, "ion.gvn.enable")                             \
+    Register(ION_ENABLE, "ion.enable")                                     \
+    Register(BASELINE_ENABLE, "baseline.enable")                           \
     Register(OFFTHREAD_COMPILATION_ENABLE, "offthread-compilation.enable") \
     Register(SIGNALS_ENABLE, "signals.enable")
 

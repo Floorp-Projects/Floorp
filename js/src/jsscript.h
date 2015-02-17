@@ -9,6 +9,7 @@
 #ifndef jsscript_h
 #define jsscript_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/UniquePtr.h"
@@ -2049,7 +2050,7 @@ struct SharedScriptData
 {
     uint32_t length;
     uint32_t natoms;
-    bool marked;
+    mozilla::Atomic<bool, mozilla::ReleaseAcquire> marked;
     jsbytecode data[1];
 
     static SharedScriptData *new_(ExclusiveContext *cx, uint32_t codeLength,

@@ -3082,6 +3082,15 @@ nsComputedDOMStyle::DoGetLineHeight()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetRubyAlign()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(
+    StyleText()->mRubyAlign, nsCSSProps::kRubyAlignKTable));
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetRubyPosition()
 {
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;

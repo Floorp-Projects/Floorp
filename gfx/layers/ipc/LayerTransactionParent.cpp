@@ -386,7 +386,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
         containerLayer->SetInheritedScale(attrs.inheritedXScale(), attrs.inheritedYScale());
         containerLayer->SetScaleToResolution(attrs.scaleToResolution(),
                                              attrs.presShellResolution());
-        containerLayer->SetForceDispatchToContentRegion(attrs.forceDispatchToContentRegion());
+        containerLayer->SetEventRegionsOverride(attrs.eventRegionsOverride());
 
         if (attrs.hmdInfo()) {
           if (!IsSameProcess()) {
@@ -428,6 +428,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
           return false;
         }
         refLayer->SetReferentId(specific.get_RefLayerAttributes().id());
+        refLayer->SetEventRegionsOverride(specific.get_RefLayerAttributes().eventRegionsOverride());
         break;
       }
       case Specific::TImageLayerAttributes: {

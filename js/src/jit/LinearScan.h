@@ -81,6 +81,7 @@ class LinearScanAllocator
     typedef Vector<LiveInterval *, 0, SystemAllocPolicy> SlotList;
     SlotList finishedSlots_;
     SlotList finishedDoubleSlots_;
+    SlotList finishedQuadSlots_;
 #ifdef JS_NUNBOX32
     SlotList finishedNunboxSlots_;
 #endif

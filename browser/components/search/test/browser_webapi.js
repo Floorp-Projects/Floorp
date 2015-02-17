@@ -1,4 +1,11 @@
 let ROOT = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
+const searchBundle = Services.strings.createBundle("chrome://global/locale/search/search.properties");
+const brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+const brandName = brandBundle.GetStringFromName("brandShortName");
+
+function getString(key, ...params) {
+  return searchBundle.formatStringFromName(key, params, params.length);
+}
 
 function AddSearchProvider(...args) {
   return gBrowser.addTab(ROOT + "webapi.html?AddSearchProvider:" + encodeURIComponent(JSON.stringify(args)));
@@ -32,7 +39,7 @@ add_task(function* test_working_AddSearchProvider() {
 
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "confirmEx", "Should see the confirmation dialog.");
-  is(dialog.args.text, "Add \"Foo\" to the list of engines available in the search bar?\n\nFrom: example.com",
+  is(dialog.args.text, getString("addEngineConfirmation", "Foo", "example.com"),
      "Should have seen the right install message");
   dialog.document.documentElement.cancelDialog();
 
@@ -44,7 +51,7 @@ add_task(function* test_HTTP_AddSearchProvider() {
 
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "confirmEx", "Should see the confirmation dialog.");
-  is(dialog.args.text, "Add \"Foo\" to the list of engines available in the search bar?\n\nFrom: example.com",
+  is(dialog.args.text, getString("addEngineConfirmation", "Foo", "example.com"),
      "Should have seen the right install message");
   dialog.document.documentElement.cancelDialog();
 
@@ -56,7 +63,7 @@ add_task(function* test_relative_AddSearchProvider() {
 
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "confirmEx", "Should see the confirmation dialog.");
-  is(dialog.args.text, "Add \"Foo\" to the list of engines available in the search bar?\n\nFrom: example.com",
+  is(dialog.args.text, getString("addEngineConfirmation", "Foo", "example.com"),
      "Should have seen the right install message");
   dialog.document.documentElement.cancelDialog();
 
@@ -68,7 +75,7 @@ add_task(function* test_invalid_AddSearchProvider() {
 
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "alert", "Should see the alert dialog.");
-  is(dialog.args.text, "This search engine isn't supported by Nightly and can't be installed.",
+  is(dialog.args.text, getString("error_invalid_engine_msg", brandName),
      "Should have seen the right error message")
   dialog.document.documentElement.acceptDialog();
 
@@ -81,7 +88,7 @@ add_task(function* test_missing_AddSearchProvider() {
 
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "alert", "Should see the alert dialog.");
-  is(dialog.args.text, "Nightly could not download the search plugin from:\n" + url,
+  is(dialog.args.text, getString("error_loading_engine_msg2", brandName, url),
      "Should have seen the right error message")
   dialog.document.documentElement.acceptDialog();
 
@@ -93,7 +100,7 @@ add_task(function* test_working_addSearchEngine_xml() {
 
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "confirmEx", "Should see the confirmation dialog.");
-  is(dialog.args.text, "Add \"Foo\" to the list of engines available in the search bar?\n\nFrom: example.com",
+  is(dialog.args.text, getString("addEngineConfirmation", "Foo", "example.com"),
      "Should have seen the right install message");
   dialog.document.documentElement.cancelDialog();
 
@@ -105,7 +112,7 @@ add_task(function* test_working_addSearchEngine_src() {
 
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "confirmEx", "Should see the confirmation dialog.");
-  is(dialog.args.text, "Add \"Test Sherlock\" to the list of engines available in the search bar?\n\nFrom: example.com",
+  is(dialog.args.text, getString("addEngineConfirmation", "Test Sherlock", "example.com"),
      "Should have seen the right install message");
   dialog.document.documentElement.cancelDialog();
 
@@ -117,7 +124,7 @@ add_task(function* test_relative_addSearchEngine_xml() {
 
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "confirmEx", "Should see the confirmation dialog.");
-  is(dialog.args.text, "Add \"Foo\" to the list of engines available in the search bar?\n\nFrom: example.com",
+  is(dialog.args.text, getString("addEngineConfirmation", "Foo", "example.com"),
      "Should have seen the right install message");
   dialog.document.documentElement.cancelDialog();
 
@@ -129,7 +136,7 @@ add_task(function* test_relative_addSearchEngine_src() {
 
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "confirmEx", "Should see the confirmation dialog.");
-  is(dialog.args.text, "Add \"Test Sherlock\" to the list of engines available in the search bar?\n\nFrom: example.com",
+  is(dialog.args.text, getString("addEngineConfirmation", "Test Sherlock", "example.com"),
      "Should have seen the right install message");
   dialog.document.documentElement.cancelDialog();
 
@@ -141,7 +148,7 @@ add_task(function* test_invalid_addSearchEngine() {
 
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "alert", "Should see the alert dialog.");
-  is(dialog.args.text, "This search engine isn't supported by Nightly and can't be installed.",
+  is(dialog.args.text, getString("error_invalid_engine_msg", brandName),
      "Should have seen the right error message")
   dialog.document.documentElement.acceptDialog();
 
@@ -153,7 +160,7 @@ add_task(function* test_invalid_icon_addSearchEngine() {
 
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "alert", "Should see the alert dialog.");
-  is(dialog.args.text, "This search engine isn't supported by Nightly and can't be installed.",
+  is(dialog.args.text, getString("error_invalid_engine_msg", brandName),
      "Should have seen the right error message")
   dialog.document.documentElement.acceptDialog();
 
@@ -166,7 +173,7 @@ add_task(function* test_missing_addSearchEngine() {
 
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "alert", "Should see the alert dialog.");
-  is(dialog.args.text, "Nightly could not download the search plugin from:\n" + url,
+  is(dialog.args.text, getString("error_loading_engine_msg2", brandName, url),
      "Should have seen the right error message")
   dialog.document.documentElement.acceptDialog();
 
