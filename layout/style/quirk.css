@@ -35,7 +35,7 @@ menu ul, menu ol, menu dir, menu menu, menu li {
  * alignment correctly. */
 li > ul:-moz-first-node,
 li > ol:-moz-first-node {
-  padding-top: 1em;
+  padding-block-start: 1em;
 }
 
 
@@ -97,11 +97,11 @@ body > ul:-moz-first-node, td > ul:-moz-first-node, th > ul:-moz-first-node,
 body > menu:-moz-first-node, td > menu:-moz-first-node, th > menu:-moz-first-node,
 body > dir:-moz-first-node, td > dir:-moz-first-node, th > dir:-moz-first-node,
 body > ol:-moz-first-node, td > ol:-moz-first-node, th > ol:-moz-first-node {
-  margin-top: 0;
+  margin-block-start: 0;
 }
 
 td > p:-moz-last-node, th > p:-moz-last-node {
-  margin-bottom: 0;
+  margin-block-end: 0;
 }
 
 /* Similar as above, but for empty elements
@@ -136,7 +136,7 @@ th > menu:-moz-only-whitespace:-moz-first-node, body > dir:-moz-only-whitespace:
 td > dir:-moz-only-whitespace:-moz-first-node, th > dir:-moz-only-whitespace:-moz-first-node,
 body > ol:-moz-only-whitespace:-moz-first-node, td > ol:-moz-only-whitespace:-moz-first-node,
 th > ol:-moz-only-whitespace:-moz-first-node {
-  margin-bottom: 0;
+  margin-block-end: 0;
 }
 
 td > p:-moz-only-whitespace:-moz-last-node, th > p:-moz-only-whitespace:-moz-last-node,
@@ -157,7 +157,7 @@ td > ul:-moz-only-whitespace:-moz-last-node, th > ul:-moz-only-whitespace:-moz-l
 td > menu:-moz-only-whitespace:-moz-last-node, th > menu:-moz-only-whitespace:-moz-last-node,
 td > dir:-moz-only-whitespace:-moz-last-node, th > dir:-moz-only-whitespace:-moz-last-node,
 td > ol:-moz-only-whitespace:-moz-last-node, th > ol:-moz-only-whitespace:-moz-last-node {
-  margin-top: 0;
+  margin-block-start: 0;
 }
 
 
@@ -187,13 +187,12 @@ dl > dl {
 
 
 /* Quirk: Make floated images have a margin  (b=58899) */
-
-img[align=left] {
-  margin-right: 3px;
+img[align=left]:-moz-dir(ltr), img[align=right]:-moz-dir(rtl) {
+  -moz-margin-end: 3px;
 }
 
-img[align=right] {
-  margin-left: 3px;
+img[align=right]:-moz-dir(ltr), img[align=left]:-moz-dir(rtl) {
+  -moz-margin-start: 3px;
 }
 
 /*
@@ -209,5 +208,5 @@ input:not([type=image]), textarea {
 
 /* Quirk: give form margin for compat (b=41806) */
 form {
-  margin-bottom: 1em;
+  margin-block-end: 1em;
 }

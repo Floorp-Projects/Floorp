@@ -31,7 +31,17 @@ nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
       aExecutor->SetSpeculationReferrerPolicy(mMetaReferrerPolicy);
       break;
     case eSpeculativeLoadImage:
-      aExecutor->PreloadImage(mUrl, mCrossOrigin);
+      aExecutor->PreloadImage(mUrl, mCrossOrigin, mSrcset, mSizes);
+      break;
+    case eSpeculativeLoadOpenPicture:
+      aExecutor->PreloadOpenPicture();
+      break;
+    case eSpeculativeLoadEndPicture:
+      aExecutor->PreloadEndPicture();
+      break;
+    case eSpeculativeLoadPictureSource:
+      aExecutor->PreloadPictureSource(mSrcset, mSizes, mTypeOrCharsetSource,
+                                      mMedia);
       break;
     case eSpeculativeLoadScript:
       aExecutor->PreloadScript(mUrl, mCharset, mTypeOrCharsetSource,

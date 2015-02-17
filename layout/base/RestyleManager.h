@@ -19,6 +19,7 @@
 #include "nsRefreshDriver.h"
 #include "nsRefPtrHashtable.h"
 #include "nsCSSPseudoElements.h"
+#include "nsTransitionManager.h"
 
 class nsIFrame;
 class nsStyleChangeList;
@@ -108,25 +109,10 @@ public:
   void IncrementAnimationGeneration() { ++mAnimationGeneration; }
 
   // Whether rule matching should skip styles associated with animation
-  bool SkipAnimationRules() const {
-    MOZ_ASSERT(mSkipAnimationRules || !mPostAnimationRestyles,
-               "inconsistent state");
-    return mSkipAnimationRules;
-  }
+  bool SkipAnimationRules() const { return mSkipAnimationRules; }
 
-  // Whether rule matching should post animation restyles when it skips
-  // styles associated with animation.  Only true when
-  // SkipAnimationRules() is also true.
-  bool PostAnimationRestyles() const {
-    MOZ_ASSERT(mSkipAnimationRules || !mPostAnimationRestyles,
-               "inconsistent state");
-    return mPostAnimationRestyles;
-  }
-
-  // Whether we're currently in the animation phase of restyle
-  // processing (to be eliminated in bug 960465)
-  bool IsProcessingAnimationStyleChange() const {
-    return mIsProcessingAnimationStyleChange;
+  void SetSkipAnimationRules(bool aSkipAnimationRules) {
+    mSkipAnimationRules = aSkipAnimationRules;
   }
 
   /**
@@ -338,24 +324,18 @@ public:
   void RebuildAllStyleData(nsChangeHint aExtraHint,
                            nsRestyleHint aRestyleHint);
 
-  // See PostRestyleEventCommon below.
+  /**
+   * Notify the frame constructor that an element needs to have its
+   * style recomputed.
+   * @param aElement: The element to be restyled.
+   * @param aRestyleHint: Which nodes need to have selector matching run
+   *                      on them.
+   * @param aMinChangeHint: A minimum change hint for aContent and its
+   *                        descendants.
+   */
   void PostRestyleEvent(Element* aElement,
                         nsRestyleHint aRestyleHint,
-                        nsChangeHint aMinChangeHint)
-  {
-    if (mPresContext) {
-      PostRestyleEventCommon(aElement, aRestyleHint, aMinChangeHint,
-                             IsProcessingAnimationStyleChange());
-    }
-  }
-
-  // See PostRestyleEventCommon below.
-  void PostAnimationRestyleEvent(Element* aElement,
-                                 nsRestyleHint aRestyleHint,
-                                 nsChangeHint aMinChangeHint)
-  {
-    PostRestyleEventCommon(aElement, aRestyleHint, aMinChangeHint, true);
-  }
+                        nsChangeHint aMinChangeHint);
 
   void PostRestyleEventForLazyConstruction()
   {
@@ -373,25 +353,6 @@ public:
 #endif
 
 private:
-  /**
-   * Notify the frame constructor that an element needs to have its
-   * style recomputed.
-   * @param aElement: The element to be restyled.
-   * @param aRestyleHint: Which nodes need to have selector matching run
-   *                      on them.
-   * @param aMinChangeHint: A minimum change hint for aContent and its
-   *                        descendants.
-   * @param aForAnimation: Whether the style should be computed with or
-   *                       without animation data.  Animation code
-   *                       sometimes needs to pass true; other code
-   *                       should generally pass the the pres context's
-   *                       IsProcessingAnimationStyleChange() value
-   *                       (which is the default value).
-   */
-  void PostRestyleEventCommon(Element* aElement,
-                              nsRestyleHint aRestyleHint,
-                              nsChangeHint aMinChangeHint,
-                              bool aForAnimation);
   void PostRestyleEventInternal(bool aForLazyConstruction);
 
 public:
@@ -425,8 +386,8 @@ public:
    */
   static bool ShouldLogRestyle(nsPresContext* aPresContext) {
     return aPresContext->RestyleLoggingEnabled() &&
-           (!aPresContext->RestyleManager()->
-               IsProcessingAnimationStyleChange() ||
+           (!aPresContext->TransitionManager()->
+               InAnimationOnlyStyleUpdate() ||
             AnimationRestyleLoggingEnabled());
   }
 
@@ -502,13 +463,7 @@ private:
   bool mInStyleRefresh : 1;
   // Whether rule matching should skip styles associated with animation
   bool mSkipAnimationRules : 1;
-  // Whether rule matching should post animation restyles when it skips
-  // styles associated with animation.  Only true when
-  // mSkipAnimationRules is also true.
-  bool mPostAnimationRestyles : 1;
-  // Whether we're currently in the animation phase of restyle
-  // processing (to be eliminated in bug 960465)
-  bool mIsProcessingAnimationStyleChange : 1;
+  bool mHavePendingNonAnimationRestyles : 1;
 
   uint32_t mHoverGeneration;
   nsChangeHint mRebuildAllExtraHint;
@@ -525,7 +480,6 @@ private:
   ReframingStyleContexts* mReframingStyleContexts;
 
   RestyleTracker mPendingRestyles;
-  RestyleTracker mPendingAnimationRestyles;
 
 #ifdef DEBUG
   bool mIsProcessingRestyles;

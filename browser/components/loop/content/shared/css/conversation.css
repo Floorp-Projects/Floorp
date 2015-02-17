@@ -17,6 +17,8 @@
 
 /* desktop version */
 .fx-embedded .conversation-toolbar {
+  /* required to have dropdowns float atop the .room-invitation-overlay: */
+  z-index: 1020;
   position: absolute;
   top: 0;
   left: 0;
@@ -31,22 +33,22 @@
   height: 64px;
 }
 
-.standalone .remote-stream {
+.standalone .focus-stream {
   /* Set at maximum height, minus height of conversation toolbar */
   height: calc(100% - 64px);
 }
 
-.standalone .in-call .remote-stream {
+.standalone .in-call .focus-stream {
   height: 100%;
 }
 
-.conversation-toolbar li {
+.conversation-toolbar > li {
   float: left;
   font-size: 0; /* prevents vertical bottom padding added to buttons in google
                    chrome */
 }
 
-  .standalone .conversation-toolbar li {
+  .standalone .conversation-toolbar > li {
     /* XXX Might make sense to use relative units here.
      */
     margin-right: 16px;
@@ -165,7 +167,8 @@
   background-color: transparent;
   opacity: 1;
 }
-.conversation-toolbar .transparent-button:hover {
+.conversation-toolbar .transparent-button:hover,
+.conversation-toolbar .transparent-button.menu-showing {
   background-color: rgba(255,255,255,.35);
   opacity: 1;
 }
@@ -208,9 +211,15 @@
 
 /* Screen share button */
 .btn-screen-share {
-  /* XXX Replace this with the real button: bug 1126286 */
+  position: relative;
   background-image: url(../img/icons-16x16.svg#screen-white);
   background-size: 16px 16px;
+  width: 42px;
+}
+
+/* Make room for the chevron. */
+.conversation-toolbar .btn-screen-share:not(.active) {
+  background-position: 5px center;
 }
 
 .btn-screen-share.active {
@@ -220,7 +229,21 @@
 }
 
 .btn-screen-share.disabled {
-  /* XXX Add css here for disabled state: bug 1126286 */
+  background-image: url(../img/icons-16x16.svg#screen-disabled);
+}
+
+.btn-screen-share .chevron {
+  background-image: url(../img/icons-10x10.svg#dropdown-white);
+  background-size: 10px 10px;
+  position: absolute;
+  right: 2px;
+  top: 8px;
+  width: 10px;
+  height: 10px;
+}
+
+.btn-screen-share.disabled .chevron {
+  background-image: url(../img/icons-10x10.svg#dropdown-disabled);
 }
 
 .fx-embedded .remote_wrapper {
@@ -231,23 +254,26 @@
   left: 0px;
 }
 
-.standalone .local-stream {
+.standalone .local-stream,
+.standalone .remote-inset-stream {
   /* required to have it superimposed to the control toolbar */
   z-index: 1001;
 }
 
-.standalone .room-conversation .local-stream {
+.standalone .room-conversation .local-stream,
+.standalone .room-conversation .remote-inset-stream {
   box-shadow: none;
 }
 
 /* Side by side video elements */
 
-.conversation .media.side-by-side .remote-stream {
+.conversation .media.side-by-side .focus-stream {
   width: 50%;
   float: left;
 }
 
-.conversation .media.side-by-side .local-stream {
+.conversation .media.side-by-side .local-stream,
+.conversation .media.side-by-side .remote-inset-stream {
   width: 50%;
 }
 
@@ -361,9 +387,10 @@
     background-color: #111;
   }
 
-.conversation-window-dropdown li {
+.conversation-window-dropdown > li {
   padding: 2px;
-  font-size: .9em;
+  font-size: .7rem;
+  white-space: nowrap;
 }
 
 /* Expired call url page */
@@ -502,7 +529,7 @@
   max-height: none;
 }
 
-.conversation .media.nested .remote-stream {
+.conversation .media.nested .focus-stream {
   display: inline-block;
   position: absolute; /* workaround for lack of object-fit; see bug 1020445 */
   width: 100%;
@@ -675,7 +702,8 @@ html, .fx-embedded, #main,
     position: fixed;
   }
 
-  .standalone .local-stream {
+  .standalone .local-stream,
+  .standalone .remote-inset-stream {
     position: absolute;
     right: 15px;
     bottom: 15px;
@@ -719,6 +747,10 @@ html, .fx-embedded, #main,
 
   .standalone .media.nested {
     min-height: 500px;
+  }
+
+  .standalone .remote-inset-stream {
+    display: none;
   }
 
   .standalone .local-stream {
@@ -968,7 +1000,7 @@ html, .fx-embedded, #main,
     height: 38px;
     padding: 8px;
   }
-  .standalone .remote-stream {
+  .standalone .focus-stream {
     /* Set at maximum height, minus height of conversation toolbar */
     height: 100%;
   }

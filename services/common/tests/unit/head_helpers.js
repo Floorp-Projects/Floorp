@@ -64,7 +64,9 @@ function do_check_throws_message(aFunc, aResult) {
  * @usage _("Hello World") -> prints "Hello World"
  * @usage _(1, 2, 3) -> prints "1 2 3"
  */
-let _ = function(some, debug, text, to) print(Array.slice(arguments).join(" "));
+let _ = function(some, debug, text, to) {
+  print(Array.slice(arguments).join(" "));
+};
 
 function httpd_setup (handlers, port=-1) {
   let server = new HttpServer();

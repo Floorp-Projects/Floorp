@@ -44,6 +44,12 @@ public:
   // if no media attr was set.
   bool MatchesCurrentMedia();
 
+  // True if a source tag would match the given media attribute for the
+  // specified document. Used by the preloader to determine valid <source> tags
+  // prior to DOM creation.
+  static bool WouldMatchMediaForDocument(const nsAString& aMediaStr,
+                                         const nsIDocument *aDocument);
+
   // WebIDL
   void GetSrc(nsString& aSrc)
   {

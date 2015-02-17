@@ -7,7 +7,7 @@ function run_test() {
 
   const key = "abcdefghijkmnpqrstuvwxyz23456789";
   _("Passphrase only contains [" + key + "].");
-  do_check_true(pp.split('').every(function(chr) key.indexOf(chr) != -1));
+  do_check_true(pp.split('').every(chr => key.indexOf(chr) != -1));
 
   _("Hyphenated passphrase has 5 hyphens.");
   let hyphenated = Utils.hyphenatePassphrase(pp);

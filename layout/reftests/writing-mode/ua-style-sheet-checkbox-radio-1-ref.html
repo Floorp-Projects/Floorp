@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical properties of checkbox and radio button in the UA stylesheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+
+input[type="radio"],
+input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+}
+
+.ltr input[type="radio"] {
+  margin: 3px 3px 0px 5px;
+}
+.rtl input[type="radio"] {
+  margin: 3px 5px 0px 3px;
+}
+.v-rl input[type="radio"] {
+  margin: 5px 3px 3px 0px;
+}
+
+.ltr input[type="checkbox"] {
+  margin: 3px 3px 3px 4px;
+}
+.rtl input[type="checkbox"] {
+  margin: 3px 4px 3px 3px;
+}
+.v-rl input[type="checkbox"] {
+  margin: 4px 3px 3px 3px;
+}
+
+</style>
+<div class=ltr>
+  <input type=radio checked>radio 1</input><br>
+  <input type=radio>radio 2</input><br>
+  <input type=checkbox checked>checkbox 1</input><br>
+  <input type=checkbox>checkbox 2</input><br>
+</div>
+
+<div class=rtl dir=rtl>
+  <input type=radio checked>radio 1</input><br>
+  <input type=radio>radio 2</input><br>
+  <input type=checkbox checked>checkbox 1</input><br>
+  <input type=checkbox>checkbox 2</input><br>
+</div>
+
+<div class=v-rl>
+  <input type=radio checked>radio 1</input><br>
+  <input type=radio>radio 2</input><br>
+  <input type=checkbox checked>checkbox 1</input><br>
+  <input type=checkbox>checkbox 2</input><br>
+</div>

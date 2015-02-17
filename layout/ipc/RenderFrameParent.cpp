@@ -23,6 +23,7 @@
 #include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsIObserver.h"
+#include "nsStyleStructInlines.h"
 #include "nsSubDocumentFrame.h"
 #include "nsView.h"
 #include "nsViewportFrame.h"
@@ -620,10 +621,17 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
                                  RenderFrameParent* aRemoteFrame)
   : nsDisplayItem(aBuilder, aFrame)
   , mRemoteFrame(aRemoteFrame)
+  , mEventRegionsOverride(EventRegionsOverride::NoOverride)
 {
-  mForceDispatchToContentRegion =
-    aBuilder->IsBuildingLayerEventRegions() &&
-    nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresContext()->PresShell());
+  if (aBuilder->IsBuildingLayerEventRegions()) {
+    if (aBuilder->IsInsidePointerEventsNoneDoc() ||
+        aFrame->StyleVisibility()->GetEffectivePointerEvents(aFrame) == NS_STYLE_POINTER_EVENTS_NONE) {
+      mEventRegionsOverride |= EventRegionsOverride::ForceEmptyHitRegion;
+    }
+    if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresContext()->PresShell())) {
+      mEventRegionsOverride |= EventRegionsOverride::ForceDispatchToContent;
+    }
+  }
 }
 
 already_AddRefed<Layer>
@@ -636,7 +644,7 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
   visibleRect += aContainerParameters.mOffset;
   nsRefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, visibleRect, this, aContainerParameters);
   if (layer && layer->AsContainerLayer()) {
-    layer->AsContainerLayer()->SetForceDispatchToContentRegion(mForceDispatchToContentRegion);
+    layer->AsContainerLayer()->SetEventRegionsOverride(mEventRegionsOverride);
   }
   return layer.forget();
 }
