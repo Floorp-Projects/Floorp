@@ -44,6 +44,18 @@ builds:
         task: tasks/builds/b2g_emulator_ics_opt.yml
       debug:
         task: tasks/builds/b2g_emulator_ics_debug.yml
+  flame-kk:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_flame_kk_opt.yml
+  flame-kk-eng:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_flame_kk_eng.yml
 
 tests:
   cppunit:
