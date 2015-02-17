@@ -518,6 +518,11 @@ class ElementRestyler MOZ_FINAL
 public:
   typedef mozilla::dom::Element Element;
 
+  struct ContextToClear {
+    nsRefPtr<nsStyleContext> mStyleContext;
+    uint32_t mStructs;
+  };
+
   // Construct for the root of the subtree that we're restyling.
   ElementRestyler(nsPresContext* aPresContext,
                   nsIFrame* aFrame,
@@ -525,7 +530,9 @@ public:
                   nsChangeHint aHintsHandledByAncestors,
                   RestyleTracker& aRestyleTracker,
                   TreeMatchContext& aTreeMatchContext,
-                  nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement);
+                  nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
+                  nsTArray<ContextToClear>& aContextsToClear,
+                  nsTArray<nsRefPtr<nsStyleContext>>& aSwappedStructOwners);
 
   // Construct for an element whose parent is being restyled.
   enum ConstructorFlags {
@@ -553,7 +560,9 @@ public:
                   nsChangeHint aHintsHandledByAncestors,
                   RestyleTracker& aRestyleTracker,
                   TreeMatchContext& aTreeMatchContext,
-                  nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement);
+                  nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
+                  nsTArray<ContextToClear>& aContextsToClear,
+                  nsTArray<nsRefPtr<nsStyleContext>>& aSwappedStructOwners);
 
   /**
    * Restyle our frame's element and its subtree.
@@ -593,7 +602,10 @@ public:
                                     nsStyleChangeList* aChangeList,
                                     nsChangeHint       aMinChange,
                                     RestyleTracker&    aRestyleTracker,
-                                    nsRestyleHint      aRestyleHint);
+                                    nsRestyleHint      aRestyleHint,
+                                    nsTArray<ContextToClear>& aContextsToClear,
+                                    nsTArray<nsRefPtr<nsStyleContext>>&
+                                      aSwappedStructOwners);
 
 #ifdef RESTYLE_LOGGING
   bool ShouldLogRestyle() {
@@ -722,6 +734,14 @@ private:
   RestyleTracker& mRestyleTracker;
   TreeMatchContext& mTreeMatchContext;
   nsIFrame* mResolvedChild; // child that provides our parent style context
+  // Array of style context subtrees in which we need to clear out cached
+  // structs at the end of the restyle (after change hints have been
+  // processed).
+  nsTArray<ContextToClear>& mContextsToClear;
+  // Style contexts that had old structs swapped into it and which should
+  // stay alive until the end of the restyle.  (See comment in
+  // ElementRestyler::Restyle.)
+  nsTArray<nsRefPtr<nsStyleContext>>& mSwappedStructOwners;
 
 #ifdef ACCESSIBILITY
   const DesiredA11yNotifications mDesiredA11yNotifications;
