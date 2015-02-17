@@ -228,8 +228,10 @@ enum EventRegionsOverride {
   NoOverride             = 0,
   // Treat all hit regions in the subtree as dispatch-to-content
   ForceDispatchToContent = (1 << 0),
+  // Treat all hit regions in the subtree as empty
+  ForceEmptyHitRegion    = (1 << 1),
   // OR union of all valid bit flags, for use in BitFlagsEnumSerializer
-  ALL_BITS               = (1 << 1) - 1
+  ALL_BITS               = (1 << 2) - 1
 };
 
 MOZ_ALWAYS_INLINE EventRegionsOverride
