@@ -82,7 +82,7 @@ public:
   void SetHitTestData(const EventRegions& aRegions,
                       const gfx::Matrix4x4& aTransform,
                       const Maybe<nsIntRegion>& aClipRegion,
-                      bool aForceDispatchToContent);
+                      const EventRegionsOverride& aOverride);
   bool IsOutsideClip(const ParentLayerPoint& aPoint) const;
   /* Convert aPoint into the LayerPixel space for the layer corresponding to
    * this node. */
@@ -90,8 +90,8 @@ public:
   /* Assuming aPoint is inside the clip region for this node, check which of the
    * event region spaces it falls inside. */
   HitTestResult HitTest(const ParentLayerPoint& aPoint) const;
-  /* Returns the mForceDispatchToContent flag. */
-  bool GetForceDispatchToContent() const;
+  /* Returns the mOverride flag. */
+  EventRegionsOverride GetEventRegionsOverride() const;
 
   /* Debug helpers */
   void Dump(const char* aPrefix = "") const;
@@ -126,10 +126,9 @@ private:
    * present. This value is in L's ParentLayerPixels. */
   Maybe<nsIntRegion> mClipRegion;
 
-  /* If this flag is set, then events to this node and the entire subtree under
-   * should always be treated as dispatch-to-content.
-   */
-  bool mForceDispatchToContent;
+  /* Indicates whether or not the event regions on this node need to be
+   * overridden in a certain way. */
+  EventRegionsOverride mOverride;
 };
 
 }

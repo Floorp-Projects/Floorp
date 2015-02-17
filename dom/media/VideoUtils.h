@@ -264,9 +264,13 @@ nsresult
 GenerateRandomPathName(nsCString& aOutSalt, uint32_t aLength);
 
 class MediaTaskQueue;
+class FlushableMediaTaskQueue;
 
 already_AddRefed<MediaTaskQueue>
 CreateMediaDecodeTaskQueue();
+
+already_AddRefed<FlushableMediaTaskQueue>
+CreateFlushableMediaDecodeTaskQueue();
 
 } // end namespace mozilla
 

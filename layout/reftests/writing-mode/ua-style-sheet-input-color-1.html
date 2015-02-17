@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for logical properties of input type=color in the UA stylesheet</title>
+<style>
+.v-rl { writing-mode: vertical-rl; }
+.ltr, .rtl, .v-rl { border: 1px solid blue; }
+.a { -moz-appearance: none; }
+</style>
+<div class=ltr>
+  <input type=color><br>
+  <input type=color class=a><br>
+</div>
+
+<div class=rtl dir=rtl>
+  <input type=color><br>
+  <input type=color class=a><br>
+</div>
+
+<div class=v-rl>
+  <input type=color><br>
+  <input type=color class=a><br>
+</div>

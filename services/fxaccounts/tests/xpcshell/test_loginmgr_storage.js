@@ -84,7 +84,7 @@ add_task(function test_MPLocked() {
   };
 
   // tell the storage that the MP is locked.
-  fxa.internal.signedInUserStorage.__defineGetter__("_isLoggedIn", function() false);
+  fxa.internal.signedInUserStorage.__defineGetter__("_isLoggedIn", () => false);
   yield fxa.setSignedInUser(creds);
 
   // This should have stored stuff in the .json, and the login manager stuff
@@ -173,7 +173,7 @@ add_task(function test_migrationMPLocked() {
   yield CommonUtils.writeJSON(toWrite, path);
 
   // pretend the MP is locked.
-  fxa.internal.signedInUserStorage.__defineGetter__("_isLoggedIn", function() false);
+  fxa.internal.signedInUserStorage.__defineGetter__("_isLoggedIn", () => false);
 
   // now load it - it should *not* migrate, but should only give the JSON-safe
   // data back.
@@ -186,7 +186,7 @@ add_task(function test_migrationMPLocked() {
   Assert.deepEqual(data, toWrite);
 
   // Now "unlock" and re-ask for the signedInUser - it should migrate.
-  fxa.internal.signedInUserStorage.__defineGetter__("_isLoggedIn", function() true);
+  fxa.internal.signedInUserStorage.__defineGetter__("_isLoggedIn", () => true);
   data = yield fxa.getSignedInUser();
   // this time we should have got all the data, not just the JSON-safe fields.
   Assert.strictEqual(data.kA, creds.kA);
@@ -240,7 +240,7 @@ add_task(function test_consistentWithMPEdgeCases() {
 
   // tell the storage that the MP is locked - this will prevent logout from
   // being able to clear the data.
-  fxa.internal.signedInUserStorage.__defineGetter__("_isLoggedIn", function() false);
+  fxa.internal.signedInUserStorage.__defineGetter__("_isLoggedIn", () => false);
 
   // now set the second credentials.
   yield fxa.setSignedInUser(creds2);

@@ -534,16 +534,18 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
                 break;
 
             if (desc.hasGet()) {
+                RootedValue getter(cx, shape->getterOrUndefined());
                 bool same;
-                if (!SameValue(cx, desc.getterValue(), shape->getterOrUndefined(), &same))
+                if (!SameValue(cx, desc.getterValue(), getter, &same))
                     return false;
                 if (!same)
                     break;
             }
 
             if (desc.hasSet()) {
+                RootedValue setter(cx, shape->setterOrUndefined());
                 bool same;
-                if (!SameValue(cx, desc.setterValue(), shape->setterOrUndefined(), &same))
+                if (!SameValue(cx, desc.setterValue(), setter, &same))
                     return false;
                 if (!same)
                     break;
@@ -669,16 +671,18 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
         MOZ_ASSERT(desc.isAccessorDescriptor() && shape->isAccessorDescriptor());
         if (!shape->configurable()) {
             if (desc.hasSet()) {
+                RootedValue setter(cx, shape->setterOrUndefined());
                 bool same;
-                if (!SameValue(cx, desc.setterValue(), shape->setterOrUndefined(), &same))
+                if (!SameValue(cx, desc.setterValue(), setter, &same))
                     return false;
                 if (!same)
                     return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
             }
 
             if (desc.hasGet()) {
+                RootedValue getter(cx, shape->getterOrUndefined());
                 bool same;
-                if (!SameValue(cx, desc.getterValue(), shape->getterOrUndefined(), &same))
+                if (!SameValue(cx, desc.getterValue(), getter, &same))
                     return false;
                 if (!same)
                     return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
@@ -2580,16 +2584,15 @@ js_InitClass(JSContext *cx, HandleObject obj, HandleObject protoProto_,
 void
 JSObject::fixupAfterMovingGC()
 {
-    /*
-     * If this is a copy-on-write elements we may need to fix up both the
-     * elements' pointer back to the owner object, and the elements pointer
-     * itself if it points to inline elements in another object.
-     */
-    if (is<NativeObject>() && as<NativeObject>().hasDynamicElements()) {
-        ObjectElements *header = as<NativeObject>().getElementsHeader();
-        if (header->isCopyOnWrite()) {
-            NativeObject *owner = MaybeForwarded(header->ownerObject().get());
-            as<NativeObject>().elements_ = owner->getElementsHeader()->elements();
+    // For copy-on-write objects that don't own their elements, fix up the
+    // elements pointer if it points to inline elements in the owning object.
+    if (is<NativeObject>()) {
+        NativeObject &obj = as<NativeObject>();
+        if (obj.denseElementsAreCopyOnWrite()) {
+            NativeObject *owner = MaybeForwarded(obj.getElementsHeader()->ownerObject().get());
+            if (owner != &obj && owner->hasFixedElements())
+                obj.elements_ = owner->getElementsHeader()->elements();
+            MOZ_ASSERT(!IsForwarded(obj.getElementsHeader()->ownerObject().get()));
         }
     }
 }

@@ -130,17 +130,43 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   // will take care of our continuations.
   aStatus = NS_FRAME_COMPLETE;
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
-  aDesiredSize.SetSize(lineWM, mLineSize);
 
-  if (lineWM.IsVerticalRL()) {
-    nscoord deltaWidth = -mLineSize.Width(lineWM);
-    LogicalPoint translation(lineWM, 0, deltaWidth);
+  nscoord minBCoord = nscoord_MAX;
+  nscoord maxBCoord = nscoord_MIN;
+  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
+    nsIFrame* child = e.get();
+    MOZ_ASSERT(child->GetType() == nsGkAtoms::rubyTextFrame);
+    // The container width is still unknown yet.
+    LogicalRect rect = child->GetLogicalRect(lineWM, 0);
+    LogicalMargin margin = child->GetLogicalUsedMargin(lineWM);
+    nscoord blockStart = rect.BStart(lineWM) - margin.BStart(lineWM);
+    minBCoord = std::min(minBCoord, blockStart);
+    nscoord blockEnd = rect.BEnd(lineWM) + margin.BEnd(lineWM);
+    maxBCoord = std::max(maxBCoord, blockEnd);
+  }
 
-    for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-      nsIFrame* child = e.get();
-      MOZ_ASSERT(child->GetType() == nsGkAtoms::rubyTextFrame);
-      child->MovePositionBy(lineWM, translation);
-      nsContainerFrame::PlaceFrameView(child);
+  MOZ_ASSERT(minBCoord <= maxBCoord || mFrames.IsEmpty());
+  LogicalSize size(lineWM, mISize, 0);
+  if (!mFrames.IsEmpty()) {
+    size.BSize(lineWM) = maxBCoord - minBCoord;
+    nscoord deltaBCoord = -minBCoord;
+    if (lineWM.IsVerticalRL()) {
+      deltaBCoord -= size.BSize(lineWM);
+    }
+
+    if (deltaBCoord != 0) {
+      nscoord containerWidth = size.Width(lineWM);
+      for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
+        nsIFrame* child = e.get();
+        LogicalPoint pos = child->GetLogicalPosition(lineWM, containerWidth);
+        pos.B(lineWM) += deltaBCoord;
+        // Relative positioning hasn't happened yet.
+        // So MovePositionBy should be used here.
+        child->SetPosition(lineWM, pos, containerWidth);
+        nsContainerFrame::PlaceFrameView(child);
+      }
     }
   }
+
+  aDesiredSize.SetSize(lineWM, size);
 }

@@ -120,9 +120,9 @@ AnalyserNode::WrapObject(JSContext* aCx)
 void
 AnalyserNode::SetFftSize(uint32_t aValue, ErrorResult& aRv)
 {
-  // Disallow values that are not a power of 2 and outside the [32,2048] range
+  // Disallow values that are not a power of 2 and outside the [32,32768] range
   if (aValue < 32 ||
-      aValue > 2048 ||
+      aValue > 32768 ||
       (aValue & (aValue - 1)) != 0) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;

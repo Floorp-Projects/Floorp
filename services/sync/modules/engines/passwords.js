@@ -99,15 +99,18 @@ PasswordStore.prototype = {
   __proto__: Store.prototype,
 
   _nsLoginInfoFromRecord: function (record) {
+    function nullUndefined(x) {
+      return (x == undefined) ? null : x;
+    }
+
     if (record.formSubmitURL && record.httpRealm) {
       this._log.warn("Record " + record.id + " has both formSubmitURL and httpRealm. Skipping.");
       return null;
     }
-    
+
     // Passing in "undefined" results in an empty string, which later
     // counts as a value. Explicitly `|| null` these fields according to JS
     // truthiness. Records with empty strings or null will be unmolested.
-    function nullUndefined(x) (x == undefined) ? null : x;
     let info = new this._nsLoginInfo(record.hostname,
                                      nullUndefined(record.formSubmitURL),
                                      nullUndefined(record.httpRealm),

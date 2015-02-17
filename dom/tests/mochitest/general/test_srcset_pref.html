@@ -8,11 +8,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870021
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="runTest()">
+<body onload="setupTest()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=870021">Mozilla Bug 870021</a>
 
+<div id="imgContainer">
 <img src="http://example.com/tests/image/test/mochitest/blue.png"
      srcset="http://example.com/tests/image/test/mochitest/big.png">
+</div>
 
 <script type="application/javascript">
 
@@ -20,7 +22,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870021
 
   SimpleTest.waitForExplicitFinish();
 
-  is(SpecialPowers.getBoolPref(srcsetPref), false, "srcset should be disabled pending bug 1018389");
+  is(SpecialPowers.getBoolPref(srcsetPref), true, "srcset should be enabled by default");
+
+  function setupTest() {
+    // Ensure that disabling the pref works as expected
+    SpecialPowers.pushPrefEnv({'set': [[ "dom.image.srcset.enabled", false ]] }, function() {
+      var container = document.querySelector("#imgContainer");
+      // We want to re-create the element with the pref disabled to ensure
+      // webIDL attributes are not attached
+      container.innerHTML = container.innerHTML + " ";
+      var img = container.querySelector("img");
+      img.addEventListener("load", function imgLoad() {
+        img.removeEventListener("load", imgLoad);
+        runTest();
+      });
+    });
+  }
 
   function runTest() {
     var img = document.querySelector("img");

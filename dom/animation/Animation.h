@@ -236,10 +236,10 @@ public:
   static StickyTimeDuration
   ActiveDuration(const AnimationTiming& aTiming);
 
-  // After transitions finish they need to be retained for one throttle-able
-  // cycle (for reasons see explanation in
-  // layout/style/nsTransitionManager.cpp).
-  // In the meantime, however, they should be ignored.
+  // After transitions finish they need to be retained in order to
+  // address the issue described in
+  // https://lists.w3.org/Archives/Public/www-style/2015Jan/0444.html .
+  // However, finished transitions are ignored for many purposes.
   bool IsFinishedTransition() const {
     return mIsFinishedTransition;
   }

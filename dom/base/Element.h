@@ -82,40 +82,29 @@ enum {
   // descendants).
   ELEMENT_IS_POTENTIAL_RESTYLE_ROOT =           ELEMENT_FLAG_BIT(1),
 
-  // Set if the element has a pending animation style change.
-  ELEMENT_HAS_PENDING_ANIMATION_RESTYLE =       ELEMENT_FLAG_BIT(2),
-
-  // Set if the element is a potential animation restyle root (that is,
-  // has an animation style change pending _and_ that style change
-  // will attempt to restyle descendants).
-  ELEMENT_IS_POTENTIAL_ANIMATION_RESTYLE_ROOT = ELEMENT_FLAG_BIT(3),
-
   // Set if the element has a pending animation-only style change as
   // part of an animation-only style update (where we update styles from
   // animation to the current refresh tick, but leave everything else as
   // it was).
-  ELEMENT_HAS_PENDING_ANIMATION_ONLY_RESTYLE =  ELEMENT_FLAG_BIT(4),
+  ELEMENT_HAS_PENDING_ANIMATION_ONLY_RESTYLE =  ELEMENT_FLAG_BIT(2),
 
   // Set if the element is a potential animation-only restyle root (that
   // is, has an animation-only style change pending _and_ that style
   // change will attempt to restyle descendants).
-  ELEMENT_IS_POTENTIAL_ANIMATION_ONLY_RESTYLE_ROOT = ELEMENT_FLAG_BIT(5),
+  ELEMENT_IS_POTENTIAL_ANIMATION_ONLY_RESTYLE_ROOT = ELEMENT_FLAG_BIT(3),
 
   // All of those bits together, for convenience.
   ELEMENT_ALL_RESTYLE_FLAGS = ELEMENT_HAS_PENDING_RESTYLE |
                               ELEMENT_IS_POTENTIAL_RESTYLE_ROOT |
-                              ELEMENT_HAS_PENDING_ANIMATION_RESTYLE |
-                              ELEMENT_IS_POTENTIAL_ANIMATION_RESTYLE_ROOT |
                               ELEMENT_HAS_PENDING_ANIMATION_ONLY_RESTYLE |
                               ELEMENT_IS_POTENTIAL_ANIMATION_ONLY_RESTYLE_ROOT,
 
   // Just the HAS_PENDING bits, for convenience
   ELEMENT_PENDING_RESTYLE_FLAGS = ELEMENT_HAS_PENDING_RESTYLE |
-                                  ELEMENT_HAS_PENDING_ANIMATION_RESTYLE |
                                   ELEMENT_HAS_PENDING_ANIMATION_ONLY_RESTYLE,
 
   // Remaining bits are for subclasses
-  ELEMENT_TYPE_SPECIFIC_BITS_OFFSET = NODE_TYPE_SPECIFIC_BITS_OFFSET + 6
+  ELEMENT_TYPE_SPECIFIC_BITS_OFFSET = NODE_TYPE_SPECIFIC_BITS_OFFSET + 4
 };
 
 #undef ELEMENT_FLAG_BIT

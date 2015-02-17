@@ -219,6 +219,34 @@ struct EventRegions {
   }
 };
 
+// Bit flags that go on a ContainerLayer (or RefLayer) and override the
+// event regions in the entire subtree below. This is needed for propagating
+// various flags across processes since the child-process layout code doesn't
+// know about parent-process listeners or CSS rules.
+enum EventRegionsOverride {
+  // The default, no flags set
+  NoOverride             = 0,
+  // Treat all hit regions in the subtree as dispatch-to-content
+  ForceDispatchToContent = (1 << 0),
+  // Treat all hit regions in the subtree as empty
+  ForceEmptyHitRegion    = (1 << 1),
+  // OR union of all valid bit flags, for use in BitFlagsEnumSerializer
+  ALL_BITS               = (1 << 2) - 1
+};
+
+MOZ_ALWAYS_INLINE EventRegionsOverride
+operator|(EventRegionsOverride a, EventRegionsOverride b)
+{
+  return (EventRegionsOverride)((int)a | (int)b);
+}
+
+MOZ_ALWAYS_INLINE EventRegionsOverride&
+operator|=(EventRegionsOverride& a, EventRegionsOverride b)
+{
+  a = a | b;
+  return a;
+}
+
 } // namespace
 } // namespace
 
