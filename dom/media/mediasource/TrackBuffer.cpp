@@ -361,7 +361,7 @@ TrackBuffer::EvictData(double aPlaybackTime,
                   playbackOffset, decoders[i]->GetResource()->GetSize());
         if (playbackOffset > 0) {
           toEvict -= decoders[i]->GetResource()->EvictData(playbackOffset,
-                                                           toEvict);
+                                                           playbackOffset);
         }
       }
     }
