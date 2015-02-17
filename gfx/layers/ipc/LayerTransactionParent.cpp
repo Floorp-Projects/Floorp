@@ -428,6 +428,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
           return false;
         }
         refLayer->SetReferentId(specific.get_RefLayerAttributes().id());
+        refLayer->SetEventRegionsOverride(specific.get_RefLayerAttributes().eventRegionsOverride());
         break;
       }
       case Specific::TImageLayerAttributes: {
