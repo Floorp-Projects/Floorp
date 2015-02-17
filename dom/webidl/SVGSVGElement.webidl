@@ -73,8 +73,6 @@ interface SVGSVGElement : SVGGraphicsElement {
   Element? getElementById(DOMString elementId);
 };
 
-/*SVGSVGElement implements ViewCSS;
-SVGSVGElement implements DocumentCSS;*/
 SVGSVGElement implements SVGFitToViewBox;
 SVGSVGElement implements SVGZoomAndPan;
 
