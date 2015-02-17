@@ -981,6 +981,59 @@ NativeObject::addDataProperty(ExclusiveContext *cx, HandlePropertyName name,
     return addProperty(cx, self, id, nullptr, nullptr, slot, attrs, 0);
 }
 
+template <AllowGC allowGC>
+bool
+js::NativeLookupOwnProperty(ExclusiveContext *cx,
+                            typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
+                            typename MaybeRooted<jsid, allowGC>::HandleType id,
+                            typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
+{
+    bool done;
+    return LookupOwnPropertyInline<allowGC>(cx, obj, id, propp, &done);
+}
+
+template bool
+js::NativeLookupOwnProperty<CanGC>(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
+                                   MutableHandleShape propp);
+
+template bool
+js::NativeLookupOwnProperty<NoGC>(ExclusiveContext *cx, NativeObject *obj, jsid id,
+                                  FakeMutableHandle<Shape*> propp);
+
+template <AllowGC allowGC>
+bool
+js::NativeLookupProperty(ExclusiveContext *cx,
+                         typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
+                         typename MaybeRooted<jsid, allowGC>::HandleType id,
+                         typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
+                         typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
+{
+    return LookupPropertyInline<allowGC>(cx, obj, id, objp, propp);
+}
+
+template bool
+js::NativeLookupProperty<CanGC>(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
+                                MutableHandleObject objp, MutableHandleShape propp);
+
+template bool
+js::NativeLookupProperty<NoGC>(ExclusiveContext *cx, NativeObject *obj, jsid id,
+                               FakeMutableHandle<JSObject*> objp,
+                               FakeMutableHandle<Shape*> propp);
+
+bool
+js::NativeLookupElement(JSContext *cx, HandleNativeObject obj, uint32_t index,
+                        MutableHandleObject objp, MutableHandleShape propp)
+{
+    RootedId id(cx);
+    if (!IndexToId(cx, index, &id))
+        return false;
+
+    return LookupPropertyInline<CanGC>(cx, obj, id, objp, propp);
+}
+
+
+/*** [[DefineOwnProperty]] ***********************************************************************/
+
 /*
  * Backward compatibility requires allowing addProperty hooks to mutate the
  * nominal initial value of a slotful property, while GC safety wants that
@@ -1445,56 +1498,6 @@ js::NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
     return result.succeed();
 }
 
-template <AllowGC allowGC>
-bool
-js::NativeLookupOwnProperty(ExclusiveContext *cx,
-                            typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
-                            typename MaybeRooted<jsid, allowGC>::HandleType id,
-                            typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
-{
-    bool done;
-    return LookupOwnPropertyInline<allowGC>(cx, obj, id, propp, &done);
-}
-
-template bool
-js::NativeLookupOwnProperty<CanGC>(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
-                                   MutableHandleShape propp);
-
-template bool
-js::NativeLookupOwnProperty<NoGC>(ExclusiveContext *cx, NativeObject *obj, jsid id,
-                                  FakeMutableHandle<Shape*> propp);
-
-template <AllowGC allowGC>
-bool
-js::NativeLookupProperty(ExclusiveContext *cx,
-                         typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
-                         typename MaybeRooted<jsid, allowGC>::HandleType id,
-                         typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
-                         typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
-{
-    return LookupPropertyInline<allowGC>(cx, obj, id, objp, propp);
-}
-
-template bool
-js::NativeLookupProperty<CanGC>(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
-                                MutableHandleObject objp, MutableHandleShape propp);
-
-template bool
-js::NativeLookupProperty<NoGC>(ExclusiveContext *cx, NativeObject *obj, jsid id,
-                               FakeMutableHandle<JSObject*> objp,
-                               FakeMutableHandle<Shape*> propp);
-
-bool
-js::NativeLookupElement(JSContext *cx, HandleNativeObject obj, uint32_t index,
-                        MutableHandleObject objp, MutableHandleShape propp)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-
-    return LookupPropertyInline<CanGC>(cx, obj, id, objp, propp);
-}
-
 bool
 js::NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, PropertyName *name,
                          HandleValue value, GetterOp getter, SetterOp setter,
@@ -1551,6 +1554,7 @@ js::NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, PropertyN
     RootedId id(cx, NameToId(name));
     return NativeDefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
+
 
 /*** [[HasProperty]] *****************************************************************************/
 
