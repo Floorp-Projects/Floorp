@@ -86,7 +86,15 @@ nsHTTPDownloadEvent::Run()
   NS_ENSURE_STATE(ios);
 
   nsCOMPtr<nsIChannel> chan;
-  ios->NewChannel(mRequestSession->mURL, nullptr, nullptr, getter_AddRefs(chan));
+  ios->NewChannel2(mRequestSession->mURL,
+                   nullptr,
+                   nullptr,
+                   nullptr, // aLoadingNode
+                   nsContentUtils::GetSystemPrincipal(),
+                   nullptr, // aTriggeringPrincipal
+                   nsILoadInfo::SEC_NORMAL,
+                   nsIContentPolicy::TYPE_OTHER,
+                   getter_AddRefs(chan));
   NS_ENSURE_STATE(chan);
 
   // Security operations scheduled through normal HTTP channels are given
