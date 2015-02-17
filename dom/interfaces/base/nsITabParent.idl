@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(30361a5b-a3b8-4dbc-b464-e08761abb123)]
+[scriptable, uuid(b19038ba-0d75-40d2-be35-742e26d33bf9)]
 interface nsITabParent : nsISupports
 {
   void injectTouchEvent(in AString aType,
@@ -18,6 +18,8 @@ interface nsITabParent : nsISupports
                         [array, size_is(count)] in float aForces,
                         in uint32_t count,
                         in long aModifiers);
+
+  void getChildProcessOffset(out int32_t aCssX, out int32_t aCssY);
 
   readonly attribute boolean useAsyncPanZoom;
 
