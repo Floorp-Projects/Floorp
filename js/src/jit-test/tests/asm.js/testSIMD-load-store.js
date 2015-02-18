@@ -28,8 +28,10 @@ function assertEqX4(real, expected, assertFunc) {
     }
 }
 
+try {
+
 // Load / Store
-var IMPORTS = USE_ASM + 'var H=new glob.Uint8Array(heap); var i4=glob.SIMD.int32x4; var load=i4.load; var store=i4.store;';
+var IMPORTS = USE_ASM + 'var H=new glob.Uint8Array(heap); var i4=glob.SIMD.int32x4; var ci4=i4.check; var load=i4.load; var store=i4.store;';
 
 //      Bad number of args
 assertAsmTypeFail('glob', 'ffi', 'heap', IMPORTS + "function f(){load();} return f");
@@ -63,9 +65,9 @@ assertAsmTypeFail('glob', 'ffi', 'heap', IMPORTS + "function f(){load(H, " + (IN
 assertAsmTypeFail('glob', 'ffi', 'heap', IMPORTS + "function f(){load(H, " + (INT32_MAX + 1 - 15) + ");} return f");
 asmCompile('glob', 'ffi', 'heap', IMPORTS + "function f(){load(H, " + (INT32_MAX + 1 - 16) + ");} return f");
 
-assertAsmLinkFail(asmCompile('glob', 'ffi', 'heap', IMPORTS + "function f() {return i4(load(H, " + (BUF_MIN - 15) + "));} return f"), this, {}, buf);
-assertEqX4(asmLink(asmCompile('glob', 'ffi', 'heap', IMPORTS + "function f() {return i4(load(H, " + (BUF_MIN - 16) + "));} return f"), this, {}, buf)(), [4, 3, 2, 1]);
-assertEqX4(asmLink(asmCompile('glob', 'ffi', 'heap', IMPORTS + "function f() {return i4(load(H, " + BUF_MIN + " - 16 | 0));} return f"), this, {}, buf)(), [4, 3, 2, 1]);
+assertAsmLinkFail(asmCompile('glob', 'ffi', 'heap', IMPORTS + "function f() {return ci4(load(H, " + (BUF_MIN - 15) + "));} return f"), this, {}, buf);
+assertEqX4(asmLink(asmCompile('glob', 'ffi', 'heap', IMPORTS + "function f() {return ci4(load(H, " + (BUF_MIN - 16) + "));} return f"), this, {}, buf)(), [4, 3, 2, 1]);
+assertEqX4(asmLink(asmCompile('glob', 'ffi', 'heap', IMPORTS + "function f() {return ci4(load(H, " + BUF_MIN + " - 16 | 0));} return f"), this, {}, buf)(), [4, 3, 2, 1]);
 
 var CONSTANT_INDEX = 42;
 var CONSTANT_BYTE_INDEX = CONSTANT_INDEX << 2;
@@ -78,33 +80,35 @@ var loadStoreCode = `
     var i4 = glob.SIMD.int32x4;
     var i4load = i4.load;
     var i4store = i4.store;
+    var ci4 = i4.check;
 
     var f4 = glob.SIMD.float32x4;
     var f4load = f4.load;
     var f4store = f4.store;
+    var cf4 = f4.check;
 
-    function f32l(i) { i=i|0; return f4(f4load(H, i|0)); }
-    function f32lcst() { return f4(f4load(H, ${CONSTANT_BYTE_INDEX})); }
-    function f32s(i, vec) { i=i|0; vec=f4(vec); f4store(H, i|0, vec); }
-    function f32scst(vec) { vec=f4(vec); f4store(H, ${CONSTANT_BYTE_INDEX}, vec); }
+    function f32l(i) { i=i|0; return cf4(f4load(H, i|0)); }
+    function f32lcst() { return cf4(f4load(H, ${CONSTANT_BYTE_INDEX})); }
+    function f32s(i, vec) { i=i|0; vec=cf4(vec); f4store(H, i|0, vec); }
+    function f32scst(vec) { vec=cf4(vec); f4store(H, ${CONSTANT_BYTE_INDEX}, vec); }
 
-    function i32l(i) { i=i|0; return i4(i4load(H, i|0)); }
-    function i32lcst() { return i4(i4load(H, ${CONSTANT_BYTE_INDEX})); }
-    function i32s(i, vec) { i=i|0; vec=i4(vec); i4store(H, i|0, vec); }
-    function i32scst(vec) { vec=i4(vec); i4store(H, ${CONSTANT_BYTE_INDEX}, vec); }
+    function i32l(i) { i=i|0; return ci4(i4load(H, i|0)); }
+    function i32lcst() { return ci4(i4load(H, ${CONSTANT_BYTE_INDEX})); }
+    function i32s(i, vec) { i=i|0; vec=ci4(vec); i4store(H, i|0, vec); }
+    function i32scst(vec) { vec=ci4(vec); i4store(H, ${CONSTANT_BYTE_INDEX}, vec); }
 
     function f32lbndcheck(i) {
         i=i|0;
         if ((i|0) > ${CONSTANT_BYTE_INDEX}) i=${CONSTANT_BYTE_INDEX};
         if ((i|0) < 0) i = 0;
-        return f4(f4load(H, i|0));
+        return cf4(f4load(H, i|0));
     }
     function f32sbndcheck(i, vec) {
         i=i|0;
-        vec=f4(vec);
+        vec=cf4(vec);
         if ((i|0) > ${CONSTANT_BYTE_INDEX}) i=${CONSTANT_BYTE_INDEX};
         if ((i|0) < 0) i = 0;
-        return f4(f4store(H, i|0, vec));
+        return cf4(f4store(H, i|0, vec));
     }
 
     return {
@@ -169,12 +173,12 @@ var code = `
         x = (x>>0) < 0 ? 0 : x;
         // ptr value gets a precise range but the bounds check shouldn't get
         // eliminated.
-        return f4(f4l(u8, 0xFFFA + x | 0));
+        return f4l(u8, 0xFFFA + x | 0);
     }
 
     return g;
 `;
-assertThrowsInstanceOf(() =>asmLink(asmCompile('glob', 'ffi', 'heap', code), this, {}, new ArrayBuffer(0x10000))(0), RangeError);
+assertThrowsInstanceOf(() => asmLink(asmCompile('glob', 'ffi', 'heap', code), this, {}, new ArrayBuffer(0x10000))(0), RangeError);
 
 // Float32x4.store
 function f32s(n, v) { return m.f32s((n|0) << 2 | 0, v); };
@@ -274,6 +278,7 @@ function MakeCodeFor(typeName) {
     return `
     "use asm";
     var type = glob.SIMD.${typeName};
+    var c = type.check;
 
     var lx = type.loadX;
     var lxy = type.loadXY;
@@ -293,13 +298,13 @@ function MakeCodeFor(typeName) {
     function loadCstXY() { return lxy(u8, 41 << 2); }
     function loadCstXYZ() { return lxyz(u8, 41 << 2); }
 
-    function storeX(i, x) { i=i|0; x=type(x); return sx(u8, i, x); }
-    function storeXY(i, x) { i=i|0; x=type(x); return sxy(u8, i, x); }
-    function storeXYZ(i, x) { i=i|0; x=type(x); return sxyz(u8, i, x); }
+    function storeX(i, x) { i=i|0; x=c(x); return sx(u8, i, x); }
+    function storeXY(i, x) { i=i|0; x=c(x); return sxy(u8, i, x); }
+    function storeXYZ(i, x) { i=i|0; x=c(x); return sxyz(u8, i, x); }
 
-    function storeCstX(x) { x=type(x); return sx(u8, 41 << 2, x); }
-    function storeCstXY(x) { x=type(x); return sxy(u8, 41 << 2, x); }
-    function storeCstXYZ(x) { x=type(x); return sxyz(u8, 41 << 2, x); }
+    function storeCstX(x) { x=c(x); return sx(u8, 41 << 2, x); }
+    function storeCstXY(x) { x=c(x); return sxy(u8, 41 << 2, x); }
+    function storeCstXYZ(x) { x=c(x); return sxyz(u8, 41 << 2, x); }
 
     return {
         loadX: loadX,
@@ -505,3 +510,5 @@ TestPartialLoads(mint32x4, i32,
 TestPartialStores(mint32x4, i32, 'int32x4', 42, -3, 13, 37);
 
 })();
+
+} catch (e) { print('stack: ', e.stack); throw e }

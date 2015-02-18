@@ -225,7 +225,7 @@ DocAccessibleChild::RecvTextSubstring(const uint64_t& aID,
 bool
 DocAccessibleChild::RecvGetTextAfterOffset(const uint64_t& aID,
                                            const int32_t& aOffset,
-                                           const AccessibleTextBoundary& aBoundaryType,
+                                           const int32_t& aBoundaryType,
                                            nsString* aText,
                                            int32_t* aStartOffset,
                                            int32_t* aEndOffset)
@@ -243,7 +243,7 @@ DocAccessibleChild::RecvGetTextAfterOffset(const uint64_t& aID,
 bool
 DocAccessibleChild::RecvGetTextAtOffset(const uint64_t& aID,
                                         const int32_t& aOffset,
-                                        const AccessibleTextBoundary& aBoundaryType,
+                                        const int32_t& aBoundaryType,
                                         nsString* aText,
                                         int32_t* aStartOffset,
                                         int32_t* aEndOffset)
@@ -261,7 +261,7 @@ DocAccessibleChild::RecvGetTextAtOffset(const uint64_t& aID,
 bool
 DocAccessibleChild::RecvGetTextBeforeOffset(const uint64_t& aID,
                                             const int32_t& aOffset,
-                                            const AccessibleTextBoundary& aBoundaryType,
+                                            const int32_t& aBoundaryType,
                                             nsString* aText,
                                             int32_t* aStartOffset,
                                             int32_t* aEndOffset)

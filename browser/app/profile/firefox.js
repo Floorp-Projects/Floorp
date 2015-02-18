@@ -1809,8 +1809,8 @@ pref("experiments.manifest.uri", "https://telemetry-experiment.cdn.mozilla.net/m
 // Whether experiments are supported by the current application profile.
 pref("experiments.supported", true);
 
-// Enable the OpenH264 plugin support in the addon manager.
-pref("media.gmp-gmpopenh264.provider.enabled", true);
+// Enable GMP support in the addon manager.
+pref("media.gmp-provider.enabled", true);
 
 pref("browser.apps.URL", "https://marketplace.firefox.com/discovery/");
 

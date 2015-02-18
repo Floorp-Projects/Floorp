@@ -24,6 +24,7 @@ if CONFIG['MOZ_ENABLE_GIO']:
     SOURCES += [
         'nsGIOService.cpp',
         'nsGSettingsService.cpp',
+        'nsPackageKitService.cpp'
     ]
 
 XPCOMBinaryComponent('mozgnome')

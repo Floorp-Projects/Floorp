@@ -132,7 +132,7 @@ class TestAgent {
  public:
   TestAgent() :
       audio_config_(109, "opus", 48000, 960, 2, 64000),
-      audio_conduit_(mozilla::AudioSessionConduit::Create(nullptr)),
+      audio_conduit_(mozilla::AudioSessionConduit::Create()),
       audio_(),
       audio_pipeline_() {
   }
@@ -333,9 +333,12 @@ class TestAgentReceive : public TestAgent {
     bundle_filter_ = filter;
   }
 
-  void UpdateFilterFromRemoteDescription_s(
+  void UpdateFilter_s(
       nsAutoPtr<MediaPipelineFilter> filter) {
-    audio_pipeline_->UpdateFilterFromRemoteDescription_s(filter);
+    audio_pipeline_->UpdateTransport_s(1,
+                                       audio_rtp_transport_.flow_,
+                                       audio_rtcp_transport_.flow_,
+                                       filter);
   }
 
  private:
@@ -417,7 +420,7 @@ class MediaPipelineTest : public ::testing::Test {
       mozilla::SyncRunnable::DispatchToThread(
           test_utils->sts_target(),
           WrapRunnable(&p2_,
-                       &TestAgentReceive::UpdateFilterFromRemoteDescription_s,
+                       &TestAgentReceive::UpdateFilter_s,
                        refinedFilter));
     }
 
@@ -620,14 +623,14 @@ TEST_F(MediaPipelineFilterTest, TestFilterReport1SSRCTruncated) {
     SSRC(16),
     0,0,0
   };
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rr, sizeof(rr)));
   const unsigned char sr[] = {
     RTCP_TYPEINFO(1, MediaPipelineFilter::RECEIVER_REPORT_T, 12),
     REPORT_FRAGMENT(16),
     0,0,0
   };
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(sr, sizeof(rr)));
 }
 
@@ -667,10 +670,18 @@ TEST_F(MediaPipelineFilterTest, TestFilterReport1Inconsistent) {
   // So, when RTCP shows up with a remote SSRC that matches, and a local
   // ssrc that doesn't, we assume the other end has messed up and put ssrcs
   // from more than one m-line in the packet.
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  // TODO: Currently, the webrtc.org code will continue putting old ssrcs
+  // in RTCP that have been negotiated away, causing the RTCP to be dropped
+  // if we leave this checking in. Not sure how we're supposed to prompt
+  // the webrtc.org code to stop doing this.
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rtcp_sr_s16_r17, sizeof(rtcp_sr_s16_r17)));
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rtcp_rr_s16_r17, sizeof(rtcp_rr_s16_r17)));
+  //ASSERT_EQ(MediaPipelineFilter::FAIL,
+  //          filter.FilterRTCP(rtcp_sr_s16_r17, sizeof(rtcp_sr_s16_r17)));
+  //ASSERT_EQ(MediaPipelineFilter::FAIL,
+  //          filter.FilterRTCP(rtcp_rr_s16_r17, sizeof(rtcp_rr_s16_r17)));
 }
 
 TEST_F(MediaPipelineFilterTest, TestFilterReport1NeitherMatch) {
@@ -709,23 +720,35 @@ TEST_F(MediaPipelineFilterTest, TestFilterReport2Inconsistent101) {
   MediaPipelineFilter filter;
   filter.AddRemoteSSRC(16);
   filter.AddLocalSSRC(18);
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rtcp_sr_s16_r17_18,
                               sizeof(rtcp_sr_s16_r17_18)));
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rtcp_rr_s16_r17_18,
                               sizeof(rtcp_rr_s16_r17_18)));
+  //ASSERT_EQ(MediaPipelineFilter::FAIL,
+  //          filter.FilterRTCP(rtcp_sr_s16_r17_18,
+  //                            sizeof(rtcp_sr_s16_r17_18)));
+  //ASSERT_EQ(MediaPipelineFilter::FAIL,
+  //          filter.FilterRTCP(rtcp_rr_s16_r17_18,
+  //                            sizeof(rtcp_rr_s16_r17_18)));
 }
 
 TEST_F(MediaPipelineFilterTest, TestFilterReport2Inconsistent001) {
   MediaPipelineFilter filter;
   filter.AddLocalSSRC(18);
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rtcp_sr_s16_r17_18,
                               sizeof(rtcp_sr_s16_r17_18)));
-  ASSERT_EQ(MediaPipelineFilter::FAIL,
+  ASSERT_EQ(MediaPipelineFilter::PASS,
             filter.FilterRTCP(rtcp_rr_s16_r17_18,
                               sizeof(rtcp_rr_s16_r17_18)));
+  //ASSERT_EQ(MediaPipelineFilter::FAIL,
+  //          filter.FilterRTCP(rtcp_sr_s16_r17_18,
+  //                            sizeof(rtcp_sr_s16_r17_18)));
+  //ASSERT_EQ(MediaPipelineFilter::FAIL,
+  //          filter.FilterRTCP(rtcp_rr_s16_r17_18,
+  //                            sizeof(rtcp_rr_s16_r17_18)));
 }
 
 TEST_F(MediaPipelineFilterTest, TestFilterUnknownRTCPType) {
@@ -768,59 +791,6 @@ TEST_F(MediaPipelineFilterTest, TestPayloadTypeFilterSSRCUpdate) {
             filter.FilterRTCP(rtcp_sr_s16, sizeof(rtcp_sr_s16)));
 }
 
-TEST_F(MediaPipelineFilterTest, TestAnswerAddsSSRCs) {
-  MediaPipelineFilter filter;
-  filter.SetCorrelator(7777);
-  ASSERT_TRUE(Filter(filter, 7777, 555, 110));
-  ASSERT_FALSE(Filter(filter, 7778, 556, 110));
-  // This should also have resulted in the SSRC 555 being added to the filter
-  ASSERT_TRUE(Filter(filter, 0, 555, 110));
-  ASSERT_FALSE(Filter(filter, 0, 556, 110));
-
-  // This sort of thing can happen when getting an answer with SSRC attrs
-  // The answer will not contain the correlator.
-  MediaPipelineFilter filter2;
-  filter2.AddRemoteSSRC(555);
-  filter2.AddRemoteSSRC(556);
-  filter2.AddRemoteSSRC(557);
-
-  filter.IncorporateRemoteDescription(filter2);
-
-  // Ensure that the old SSRC still works.
-  ASSERT_TRUE(Filter(filter, 0, 555, 110));
-
-  // Ensure that the new SSRCs work.
-  ASSERT_TRUE(Filter(filter, 0, 556, 110));
-  ASSERT_TRUE(Filter(filter, 0, 557, 110));
-
-  // Ensure that the correlator continues to work
-  ASSERT_TRUE(Filter(filter, 7777, 558, 110));
-}
-
-TEST_F(MediaPipelineFilterTest, TestSSRCMovedWithSDP) {
-  MediaPipelineFilter filter;
-  filter.SetCorrelator(7777);
-  filter.AddUniquePT(111);
-  ASSERT_TRUE(Filter(filter, 7777, 555, 110));
-
-  MediaPipelineFilter filter2;
-  filter2.AddRemoteSSRC(556);
-
-  filter.IncorporateRemoteDescription(filter2);
-
-  // Ensure that the old SSRC has been removed.
-  ASSERT_FALSE(Filter(filter, 0, 555, 110));
-
-  // Ensure that the new SSRC works.
-  ASSERT_TRUE(Filter(filter, 0, 556, 110));
-
-  // Ensure that the correlator continues to work
-  ASSERT_TRUE(Filter(filter, 7777, 558, 110));
-
-  // Ensure that the payload type mapping continues to work
-  ASSERT_TRUE(Filter(filter, 0, 559, 111));
-}
-
 TEST_F(MediaPipelineFilterTest, TestSSRCMovedWithCorrelator) {
   MediaPipelineFilter filter;
   filter.SetCorrelator(7777);
@@ -841,10 +811,10 @@ TEST_F(MediaPipelineFilterTest, TestRemoteSDPNoSSRCs) {
 
   MediaPipelineFilter filter2;
 
-  filter.IncorporateRemoteDescription(filter2);
+  filter.Update(filter2);
 
   // Ensure that the old SSRC still works.
-  ASSERT_TRUE(Filter(filter, 7777, 555, 110));
+  ASSERT_TRUE(Filter(filter, 0, 555, 110));
 }
 
 TEST_F(MediaPipelineTest, TestAudioSendNoMux) {

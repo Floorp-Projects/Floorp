@@ -63,17 +63,19 @@ function dumpSdp(test) {
 }
 
 function waitForIceConnected(test, pc) {
-  if (pc.isIceConnected()) {
-    info(pc + ": ICE connection state log: " + pc.iceConnectionLog);
-    ok(true, pc + ": ICE is in connected state");
-    return Promise.resolve();
-  }
+  if (!pc.iceCheckingRestartExpected) {
+    if (pc.isIceConnected()) {
+      info(pc + ": ICE connection state log: " + pc.iceConnectionLog);
+      ok(true, pc + ": ICE is in connected state");
+      return Promise.resolve();
+    }
 
-  if (!pc.isIceConnectionPending()) {
-    dumpSdp(test);
-    var details = pc + ": ICE is already in bad state: " + pc.iceConnectionState;
-    ok(false, details);
-    return Promise.reject(new Error(details));
+    if (!pc.isIceConnectionPending()) {
+      dumpSdp(test);
+      var details = pc + ": ICE is already in bad state: " + pc.iceConnectionState;
+      ok(false, details);
+      return Promise.reject(new Error(details));
+    }
   }
 
   return pc.waitForIceConnected()
@@ -135,7 +137,9 @@ function checkTrackStats(pc, audio, outbound) {
 var checkAllTrackStats = pc =>
     Promise.all([0, 1, 2, 3].map(i => checkTrackStats(pc, i & 1, i & 2)));
 
-var commandsPeerConnection = [
+// Commands run once at the beginning of each test, even when performing a
+// renegotiation test.
+var commandsPeerConnectionInitial = [
   function PC_SETUP_SIGNALING_CLIENT(test) {
     if (test.steeplechase) {
       setTimeout(() => {
@@ -169,12 +173,12 @@ var commandsPeerConnection = [
     test.pcRemote.logSignalingState();
   },
 
-  function PC_LOCAL_GUM(test) {
-    return test.pcLocal.getAllUserMedia(test.pcLocal.constraints);
+  function PC_LOCAL_SETUP_ADDSTREAM_HANDLER(test) {
+    test.pcLocal.setupAddStreamEventHandler();
   },
 
-  function PC_REMOTE_GUM(test) {
-    return test.pcRemote.getAllUserMedia(test.pcRemote.constraints);
+  function PC_REMOTE_SETUP_ADDSTREAM_HANDLER(test) {
+    test.pcRemote.setupAddStreamEventHandler();
   },
 
   function PC_LOCAL_CHECK_INITIAL_SIGNALINGSTATE(test) {
@@ -197,6 +201,34 @@ var commandsPeerConnection = [
        "Initial remote ICE connection state is 'new'");
   },
 
+];
+
+var commandsGetUserMedia = [
+  function PC_LOCAL_GUM(test) {
+    return test.pcLocal.getAllUserMedia(test.pcLocal.constraints);
+  },
+
+  function PC_REMOTE_GUM(test) {
+    return test.pcRemote.getAllUserMedia(test.pcRemote.constraints);
+  },
+];
+
+var commandsBeforeRenegotiation = [
+  function PC_LOCAL_SETUP_NEGOTIATION_CALLBACK(test) {
+    test.pcLocal.onnegotiationneeded = event => {
+      test.pcLocal.negotiationNeededFired = true;
+    };
+  },
+];
+
+var commandsAfterRenegotiation = [
+  function PC_LOCAL_CHECK_NEGOTIATION_CALLBACK(test) {
+    ok(test.pcLocal.negotiationNeededFired, "Expected negotiationneeded event");
+    test.pcLocal.negotiationNeededFired = false;
+  },
+];
+
+var commandsPeerConnectionOfferAnswer = [
   function PC_LOCAL_SETUP_ICE_HANDLER(test) {
     test.pcLocal.setupIceCandidateHandler(test);
     if (test.steeplechase) {
@@ -213,6 +245,56 @@ var commandsPeerConnection = [
         send_message({"type": "end_of_trickle_ice"});
       });
     }
+  },
+
+  function PC_LOCAL_STEEPLECHASE_SIGNAL_EXPECTED_LOCAL_TRACKS(test) {
+    if (test.steeplechase) {
+      send_message({"type": "local_expected_tracks",
+                    "expected_tracks": test.pcLocal.expectedLocalTrackTypesById});
+    }
+  },
+
+  function PC_REMOTE_STEEPLECHASE_SIGNAL_EXPECTED_LOCAL_TRACKS(test) {
+    if (test.steeplechase) {
+      send_message({"type": "remote_expected_tracks",
+                    "expected_tracks": test.pcRemote.expectedLocalTrackTypesById});
+    }
+  },
+
+  function PC_LOCAL_GET_EXPECTED_REMOTE_TRACKS(test) {
+    if (test.steeplechase) {
+      return test.getSignalingMessage("remote_expected_tracks").then(
+          message => {
+            test.pcLocal.expectedRemoteTrackTypesById = message.expected_tracks;
+          });
+    } else {
+      // Deep copy, as similar to steeplechase as possible
+      test.pcLocal.expectedRemoteTrackTypesById =
+        JSON.parse(JSON.stringify((test.pcRemote.expectedLocalTrackTypesById)));
+    }
+
+    // Remove what we've already observed
+    Object.keys(test.pcLocal.observedRemoteTrackTypesById).forEach(id => {
+      delete test.pcLocal.expectedRemoteTrackTypesById[id];
+    });
+  },
+
+  function PC_LOCAL_GET_EXPECTED_REMOTE_TRACKS(test) {
+    if (test.steeplechase) {
+      return test.getSignalingMessage("local_expected_tracks").then(
+          message => {
+            test.pcRemote.expectedRemoteTrackTypesById = message.expected_tracks;
+          });
+    } else {
+      // Deep copy, as similar to steeplechase as possible
+      test.pcRemote.expectedRemoteTrackTypesById =
+        JSON.parse(JSON.stringify((test.pcLocal.expectedLocalTrackTypesById)));
+    }
+
+    // Remove what we've already observed
+    Object.keys(test.pcRemote.observedRemoteTrackTypesById).forEach(id => {
+      delete test.pcRemote.expectedRemoteTrackTypesById[id];
+    });
   },
 
   function PC_LOCAL_CREATE_OFFER(test) {
@@ -390,11 +472,11 @@ var commandsPeerConnection = [
   },
 
   function PC_LOCAL_CHECK_MEDIA_TRACKS(test) {
-    return test.pcLocal.checkMediaTracks(test._answer_constraints);
+    return test.pcLocal.checkMediaTracks();
   },
 
   function PC_REMOTE_CHECK_MEDIA_TRACKS(test) {
-    return test.pcRemote.checkMediaTracks(test._offer_constraints);
+    return test.pcRemote.checkMediaTracks();
   },
 
   function PC_LOCAL_CHECK_MEDIA_FLOW_PRESENT(test) {
@@ -468,3 +550,32 @@ var commandsPeerConnection = [
     return checkAllTrackStats(test.pcRemote);
   }
 ];
+
+function PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER(test) {
+  test.originalOffer.sdp = test.originalOffer.sdp.replace(
+      /a=group:BUNDLE .*\r\n/g,
+      ""
+      );
+  info("Updated no bundle offer: " + JSON.stringify(test.originalOffer));
+};
+
+var addRenegotiation = (chain, commands, checks) => {
+  chain.append(commandsBeforeRenegotiation);
+  chain.append(commands);
+  chain.append(commandsAfterRenegotiation);
+  chain.append(commandsPeerConnectionOfferAnswer);
+  if (checks) {
+    chain.append(checks);
+  }
+};
+
+var addRenegotiationAnswerer = (chain, commands, checks) => {
+  chain.append(function SWAP_PC_LOCAL_PC_REMOTE(test) {
+    var temp = test.pcLocal;
+    test.pcLocal = test.pcRemote;
+    test.pcRemote = temp;
+  });
+  addRenegotiation(chain, commands, checks);
+};
+
+

@@ -665,17 +665,26 @@ CodeGenerator::getJumpLabelForBranch(MBasicBlock *block)
 void
 CodeGenerator::visitTestOAndBranch(LTestOAndBranch *lir)
 {
-    MOZ_ASSERT(lir->mir()->operandMightEmulateUndefined(),
-               "Objects which can't emulate undefined should have been constant-folded");
-
-    OutOfLineTestObject *ool = new(alloc()) OutOfLineTestObject();
-    addOutOfLineCode(ool, lir->mir());
+    MIRType inputType = lir->mir()->input()->type();
+    MOZ_ASSERT(inputType == MIRType_ObjectOrNull || lir->mir()->operandMightEmulateUndefined(),
+               "If the object couldn't emulate undefined, this should have been folded.");
 
     Label *truthy = getJumpLabelForBranch(lir->ifTruthy());
     Label *falsy = getJumpLabelForBranch(lir->ifFalsy());
+    Register input = ToRegister(lir->input());
 
-    testObjectEmulatesUndefined(ToRegister(lir->input()), falsy, truthy,
-                                ToRegister(lir->temp()), ool);
+    if (lir->mir()->operandMightEmulateUndefined()) {
+        if (inputType == MIRType_ObjectOrNull)
+            masm.branchTestPtr(Assembler::Zero, input, input, falsy);
+
+        OutOfLineTestObject *ool = new(alloc()) OutOfLineTestObject();
+        addOutOfLineCode(ool, lir->mir());
+
+        testObjectEmulatesUndefined(input, falsy, truthy, ToRegister(lir->temp()), ool);
+    } else {
+        MOZ_ASSERT(inputType == MIRType_ObjectOrNull);
+        testZeroEmitBranch(Assembler::NotEqual, input, lir->ifTruthy(), lir->ifFalsy());
+    }
 }
 
 void
@@ -2553,14 +2562,23 @@ CodeGenerator::visitTypeBarrierV(LTypeBarrierV *lir)
 void
 CodeGenerator::visitTypeBarrierO(LTypeBarrierO *lir)
 {
-    MOZ_ASSERT(lir->mir()->barrierKind() != BarrierKind::TypeTagOnly);
-
     Register obj = ToRegister(lir->object());
     Register scratch = ToTempRegisterOrInvalid(lir->temp());
+    Label miss, ok;
 
-    Label miss;
-    masm.guardObjectType(obj, lir->mir()->resultTypeSet(), scratch, &miss);
+    if (lir->mir()->type() == MIRType_ObjectOrNull) {
+        Label *nullTarget = lir->mir()->resultTypeSet()->mightBeMIRType(MIRType_Null) ? &ok : &miss;
+        masm.branchTestPtr(Assembler::Zero, obj, obj, nullTarget);
+    } else {
+        MOZ_ASSERT(lir->mir()->type() == MIRType_Object);
+        MOZ_ASSERT(lir->mir()->barrierKind() != BarrierKind::TypeTagOnly);
+    }
+
+    if (lir->mir()->barrierKind() != BarrierKind::TypeTagOnly)
+        masm.guardObjectType(obj, lir->mir()->resultTypeSet(), scratch, &miss);
+
     bailoutFrom(&miss, lir->snapshot());
+    masm.bind(&ok);
 }
 
 void

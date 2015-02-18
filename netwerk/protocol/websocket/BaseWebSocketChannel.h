@@ -52,6 +52,9 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   NS_IMETHOD SetPingInterval(uint32_t aSeconds) MOZ_OVERRIDE;
   NS_IMETHOD GetPingTimeout(uint32_t *aSeconds) MOZ_OVERRIDE;
   NS_IMETHOD SetPingTimeout(uint32_t aSeconds) MOZ_OVERRIDE;
+  NS_IMETHOD InitLoadInfo(nsIDOMNode* aLoadingNode, nsIPrincipal* aLoadingPrincipal,
+                          nsIPrincipal* aTriggeringPrincipal, uint32_t aSecurityFlags,
+                          uint32_t aContentPolicyType) MOZ_OVERRIDE;
 
   // Off main thread URI access.
   virtual void GetEffectiveURL(nsAString& aEffectiveURL) const = 0;

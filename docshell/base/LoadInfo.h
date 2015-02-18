@@ -20,6 +20,7 @@ namespace mozilla {
 namespace net {
 class HttpChannelParent;
 class FTPChannelParent;
+class WebSocketChannelParent;
 }
 
 /**
@@ -51,6 +52,7 @@ private:
 
   friend class net::HttpChannelParent;
   friend class net::FTPChannelParent;
+  friend class net::WebSocketChannelParent;
 
   ~LoadInfo();
 

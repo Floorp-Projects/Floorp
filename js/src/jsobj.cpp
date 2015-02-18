@@ -1251,13 +1251,9 @@ js::NewObjectWithGivenTaggedProto(ExclusiveContext *cxArg, const Class *clasp,
             !proto.toObject()->is<GlobalObject>())
         {
             if (cache.lookupProto(clasp, proto.toObject(), allocKind, &entry)) {
-                JSObject *obj = cache.newObjectFromHit<NoGC>(cx, entry, GetInitialHeap(newKind, clasp));
-                if (obj) {
+                JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
+                if (obj)
                     return obj;
-                } else {
-                    obj = cache.newObjectFromHit<CanGC>(cx, entry, GetInitialHeap(newKind, clasp));
-                    MOZ_ASSERT(!obj);
-                }
             } else {
                 gcNumber = rt->gc.gcNumber();
             }
@@ -1424,13 +1420,9 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg, const Class *clasp,
             !cx->compartment()->hasObjectMetadataCallback())
         {
             if (cache.lookupGlobal(clasp, &parent->as<GlobalObject>(), allocKind, &entry)) {
-                JSObject *obj = cache.newObjectFromHit<NoGC>(cx, entry, GetInitialHeap(newKind, clasp));
-                if (obj) {
+                JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
+                if (obj)
                     return obj;
-                } else {
-                    obj = cache.newObjectFromHit<CanGC>(cx, entry, GetInitialHeap(newKind, clasp));
-                    MOZ_ASSERT(!obj);
-                }
             } else {
                 gcNumber = rt->gc.gcNumber();
             }
@@ -1478,6 +1470,7 @@ js::NewObjectWithGroupCommon(JSContext *cx, HandleObjectGroup group, HandleObjec
     NewObjectCache &cache = cx->runtime()->newObjectCache;
 
     NewObjectCache::EntryIndex entry = -1;
+    uint64_t gcNumber = 0;
     if (group->proto().isObject() &&
         parent == group->proto().toObject()->getParent() &&
         newKind == GenericObject &&
@@ -1486,13 +1479,12 @@ js::NewObjectWithGroupCommon(JSContext *cx, HandleObjectGroup group, HandleObjec
         !cx->compartment()->hasObjectMetadataCallback())
     {
         if (cache.lookupGroup(group, allocKind, &entry)) {
-            JSObject *obj = cache.newObjectFromHit<NoGC>(cx, entry, GetInitialHeap(newKind, group->clasp()));
-            if (obj) {
+            JSObject *obj = cache.newObjectFromHit(cx, entry,
+                                                   GetInitialHeap(newKind, group->clasp()));
+            if (obj)
                 return obj;
-            } else {
-                obj = cache.newObjectFromHit<CanGC>(cx, entry, GetInitialHeap(newKind, group->clasp()));
-                MOZ_ASSERT(!obj);
-            }
+        } else {
+            gcNumber = cx->runtime()->gc.gcNumber();
         }
     }
 
@@ -1500,8 +1492,11 @@ js::NewObjectWithGroupCommon(JSContext *cx, HandleObjectGroup group, HandleObjec
     if (!obj)
         return nullptr;
 
-    if (entry != -1 && !obj->as<NativeObject>().hasDynamicSlots())
+    if (entry != -1 && !obj->as<NativeObject>().hasDynamicSlots() &&
+        cx->runtime()->gc.gcNumber() == gcNumber)
+    {
         cache.fillGroup(entry, group, allocKind, &obj->as<NativeObject>());
+    }
 
     return obj;
 }
