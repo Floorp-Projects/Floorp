@@ -243,6 +243,56 @@ static inline MaskLayerImageCache* GetMaskLayerImageCache()
 }
 
 /**
+ * A wrapper for nsIntRegion that can express infinite regions.
+ */
+struct PossiblyInfiniteRegion
+{
+  PossiblyInfiniteRegion() : mIsInfinite(false) {}
+  MOZ_IMPLICIT PossiblyInfiniteRegion(const nsIntRegion& aRegion)
+   : mRegion(aRegion)
+   , mIsInfinite(false)
+  {}
+  MOZ_IMPLICIT PossiblyInfiniteRegion(const nsIntRect& aRect)
+   : mRegion(aRect)
+   , mIsInfinite(false)
+  {}
+
+  // Create an infinite region.
+  static PossiblyInfiniteRegion InfiniteRegion()
+  {
+    PossiblyInfiniteRegion r;
+    r.mIsInfinite = true;
+    return r;
+  }
+
+  bool IsInfinite() const { return mIsInfinite; }
+  bool Intersects(const nsIntRegion& aRegion) const
+  {
+    if (IsInfinite()) {
+      return true;
+    }
+    return !mRegion.Intersect(aRegion).IsEmpty();
+  }
+
+  void AccumulateAndSimplifyOutward(const PossiblyInfiniteRegion& aRegion)
+  {
+    if (!IsInfinite()) {
+      if (aRegion.IsInfinite()) {
+        mIsInfinite = true;
+        mRegion.SetEmpty();
+      } else {
+        mRegion.OrWith(aRegion.mRegion);
+        mRegion.SimplifyOutward(8);
+      }
+    }
+  }
+
+protected:
+  nsIntRegion mRegion;
+  bool mIsInfinite;
+};
+
+/**
  * We keep a stack of these to represent the PaintedLayers that are
  * currently available to have display items added to.
  * We use a stack here because as much as possible we want to
@@ -268,8 +318,7 @@ public:
     mOpaqueForAnimatedGeometryRootParent(false),
     mImage(nullptr),
     mCommonClipCount(-1),
-    mNewChildLayersIndex(-1),
-    mVisibleAboveRegionIsInfinite(false)
+    mNewChildLayersIndex(-1)
   {}
 
 #ifdef MOZ_DUMP_PAINTING
@@ -321,52 +370,9 @@ public:
    */
   already_AddRefed<ImageContainer> CanOptimizeImageLayer(nsDisplayListBuilder* aBuilder);
 
-  void AddVisibleAboveRegion(const nsIntRegion& aAbove)
-  {
-    if (!mVisibleAboveRegionIsInfinite) {
-      mVisibleAboveRegion.Or(mVisibleAboveRegion, aAbove);
-      mVisibleAboveRegion.SimplifyOutward(8);
-    }
-  }
-
-  void CopyAboveRegion(PaintedLayerData* aOther)
-  {
-    if (mVisibleAboveRegionIsInfinite) {
-      return;
-    }
-
-    // If aOther has a draw region and is subject to async transforms then the
-    // layer can potentially be moved arbitrarily on the compositor. So we
-    // should avoid moving display items from on top of the layer to below the
-    // layer, which we do by calling SetVisibleAboveRegionIsInfinite. Note that
-    // if the draw region is empty (such as when aOther has only event-regions
-    // items) then we don't need to do this.
-    bool aOtherCanDrawAnywhere = aOther->IsSubjectToAsyncTransforms()
-                              && !aOther->mVisibleRegion.IsEmpty();
-
-    if (aOther->mVisibleAboveRegionIsInfinite || aOtherCanDrawAnywhere) {
-      SetVisibleAboveRegionIsInfinite();
-    } else {
-      mVisibleAboveRegion.Or(mVisibleAboveRegion, aOther->mVisibleAboveRegion);
-      mVisibleAboveRegion.Or(mVisibleAboveRegion, aOther->mVisibleRegion);
-      mVisibleAboveRegion.SimplifyOutward(8);
-    }
-  }
-
-  void SetVisibleAboveRegionIsInfinite()
-  {
-    mVisibleAboveRegionIsInfinite = true;
-    mVisibleAboveRegion.SetEmpty();
-  }
-
-  bool VisibleAboveRegionIntersects(const nsIntRect& aRect) const
-  {
-    return mVisibleAboveRegionIsInfinite || mVisibleAboveRegion.Intersects(aRect);
-  }
-
   bool VisibleAboveRegionIntersects(const nsIntRegion& aRegion) const
   {
-    return mVisibleAboveRegionIsInfinite || !mVisibleAboveRegion.Intersect(aRegion).IsEmpty();
+    return mVisibleAboveRegion.Intersects(aRegion);
   }
 
   bool VisibleRegionIntersects(const nsIntRect& aRect) const
@@ -502,8 +508,6 @@ public:
    * The union of all the bounds of the display items in this layer.
    */
   nsIntRect mBounds;
-
-private:
   /**
    * The region of visible content above the layer and below the
    * next PaintedLayerData currently in the stack, if any. Note that not
@@ -511,12 +515,7 @@ private:
    * Same coordinate system as mVisibleRegion.
    * This is a conservative approximation: it contains the true region.
    */
-  nsIntRegion  mVisibleAboveRegion;
-  /**
-   * True if mVisibleAboveRegion should be treated as infinite, and all
-   * display items should be considered 'above' this layer.
-   */
-  bool mVisibleAboveRegionIsInfinite;
+  PossiblyInfiniteRegion mVisibleAboveRegion;
 
 };
 
@@ -855,6 +854,31 @@ protected:
 
   bool ChooseAnimatedGeometryRoot(const nsDisplayList& aList,
                                   const nsIFrame **aAnimatedGeometryRoot);
+
+  /**
+   * When adding a new layer above the topmost PaintedLayerData layer in our
+   * PaintedLayerDataStack, update the visible above region of the topmost
+   * PaintedLayerData item.
+   * @param aVisibleRect   The visible rect of the newly-added display item
+   * @param aCanMoveFreely Whether the visible area of the item can change
+   *                       without new layer building.
+   * @param aClipRectIfAny A clip rect, if the layer is clipped, or nullptr.
+   */
+  void UpdateVisibleAboveRegionForNewItem(const nsIntRect& aVisibleRect,
+                                          bool aCanMoveFreely,
+                                          const nsIntRect* aClipRectIfAny);
+
+  /**
+   * When popping aData from the PaintedLayerDataStack, update the next
+   * PaintedLayerData item's visible above region to take the popped layer
+   * into account.
+   * @param aData                 The layer data that is getting popped from
+   *                              the stack.
+   * @param aNextPaintedLayerData The next lower item in the stack, or nullptr
+   *                              if there is none.
+   */
+  void UpdateVisibleAboveRegionOnPop(PaintedLayerData* aData,
+                                     PaintedLayerData* aNextPaintedLayerData);
 
   nsDisplayListBuilder*            mBuilder;
   LayerManager*                    mManager;
@@ -2268,8 +2292,7 @@ ContainerState::PopPaintedLayerData()
     // Since we're going to pop off the last PaintedLayerData, the
     // mVisibleAboveRegion of the second-to-last item will need to include
     // the regions of the last item.
-    PaintedLayerData* nextData = mPaintedLayerDataStack[lastIndex - 1];
-    nextData->CopyAboveRegion(data);
+    UpdateVisibleAboveRegionOnPop(data, mPaintedLayerDataStack[lastIndex - 1]);
   }
 
   mPaintedLayerDataStack.RemoveElementAt(lastIndex);
@@ -2720,6 +2743,54 @@ ContainerState::ComputeOpaqueRect(nsDisplayItem* aItem,
   return opaquePixels;
 }
 
+void
+ContainerState::UpdateVisibleAboveRegionForNewItem(const nsIntRect& aVisibleRect,
+                                                   bool aCanMoveFreely,
+                                                   const nsIntRect* aClipRectIfAny)
+{
+  PaintedLayerData* data = GetTopPaintedLayerData();
+  if (!data) {
+    return;
+  }
+
+  PossiblyInfiniteRegion& visibleAboveRegion = data->mVisibleAboveRegion;
+
+  if (aCanMoveFreely) {
+    // Prerendered transform items can be updated without layer building
+    // (async animations or an empty transaction), so we need to put items
+    // that the transform item can potentially move under into a layer above
+    // this item. We do this by making the visible above region infinite.
+    // If we have a clip, the transform can't escape from the clip rect, and
+    // the clip rect can't change without new layer building. In that case we
+    // can add just the clip rect to the visible above region.
+    visibleAboveRegion.AccumulateAndSimplifyOutward(
+      aClipRectIfAny ? *aClipRectIfAny : PossiblyInfiniteRegion::InfiniteRegion());
+  } else {
+    visibleAboveRegion.AccumulateAndSimplifyOutward(aVisibleRect);
+  }
+}
+
+void
+ContainerState::UpdateVisibleAboveRegionOnPop(PaintedLayerData* aData,
+                                              PaintedLayerData* aNextPaintedLayerData)
+{
+  PossiblyInfiniteRegion& visibleAboveRegion =
+    aNextPaintedLayerData->mVisibleAboveRegion;
+
+  // If aData has a draw region and is subject to async transforms then the
+  // layer can potentially be moved arbitrarily on the compositor. So we
+  // should avoid moving display items from on top of the layer to below the
+  // layer, which we do by making the visibleAboveRegion infinite. Note that
+  // if the visible region is empty (such as when aData has only event-regions
+  // items) then we don't need to do this.
+  if (aData->IsSubjectToAsyncTransforms() && !aData->mVisibleRegion.IsEmpty()) {
+    visibleAboveRegion.AccumulateAndSimplifyOutward(PossiblyInfiniteRegion::InfiniteRegion());
+  } else {
+    visibleAboveRegion.AccumulateAndSimplifyOutward(aData->mVisibleAboveRegion);
+    visibleAboveRegion.AccumulateAndSimplifyOutward(aData->mVisibleRegion);
+  }
+}
+
 /*
  * Iterate through the non-clip items in aList and its descendants.
  * For each item we compute the effective clip rect. Each item is assigned
@@ -2953,27 +3024,12 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       } else {
         ownLayer->SetClipRect(nullptr);
       }
-      PaintedLayerData* data = GetTopPaintedLayerData();
-      if (data) {
-        // Prerendered transform items can be updated without layer building
-        // (async animations or an empty transaction), so we need to put items
-        // that the transform item can potentially move under into a layer
-        // above this item.
-        if (prerenderedTransform) {
-          if (!itemClip.HasClip()) {
-            // The transform item can move anywhere, treat all other content
-            // as being above this item.
-            data->SetVisibleAboveRegionIsInfinite();
-          } else {
-            // The transform can't escape from the clip rect, and the clip
-            // rect can't change without new layer building. Treat all content
-            // that intersects the clip rect as being above this item.
-            data->AddVisibleAboveRegion(clipRect);
-          }
-        } else {
-          data->AddVisibleAboveRegion(itemVisibleRect);
-        }
-      }
+
+      // Update the "visible above region" of the topmost PaintedLayerData item
+      // so that FindPaintedLayerFor and FindOpaqueBackgroundColorFor are aware
+      // of this item, even though it's not in the PaintedLayerDataStack.
+      UpdateVisibleAboveRegionForNewItem(itemVisibleRect, prerenderedTransform,
+                                         itemClip.HasClip() ? &clipRect : nullptr);
 
       // rounded rectangle clipping using mask layers
       // (must be done after visible rect is set on layer)
