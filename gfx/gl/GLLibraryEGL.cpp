@@ -42,6 +42,8 @@ static const char *sEGLExtensionNames[] = {
 
 static PRLibrary* LoadApitraceLibrary()
 {
+    // Initialization of gfx prefs here is only needed during the unit tests...
+    gfxPrefs::GetSingleton();
     if (!gfxPrefs::UseApitrace()) {
         return nullptr;
     }
