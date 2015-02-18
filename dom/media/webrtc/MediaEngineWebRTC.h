@@ -109,9 +109,6 @@ public:
 
   void Refresh(int aIndex);
 
-  bool SatisfiesConstraintSets(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets) MOZ_OVERRIDE;
-
 protected:
   ~MediaEngineWebRTCVideoSource() { Shutdown(); }
 
@@ -129,10 +126,8 @@ private:
   int mMinFps; // Min rate we want to accept
   dom::MediaSourceEnum mMediaSource; // source of media (camera | application | screen)
 
-  static bool SatisfiesConstraintSet(const dom::MediaTrackConstraintSet& aConstraints,
-                                     const webrtc::CaptureCapability& aCandidate);
-  void ChooseCapability(const VideoTrackConstraintsN& aConstraints,
-                        const MediaEnginePrefs& aPrefs);
+  size_t NumCapabilities() MOZ_OVERRIDE;
+  void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut) MOZ_OVERRIDE;
 };
 
 class MediaEngineWebRTCAudioSource : public MediaEngineAudioSource,
