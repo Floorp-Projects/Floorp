@@ -30,7 +30,6 @@ if CONFIG['MOZ_WEBM_ENCODER']:
 TEST_HARNESS_FILES.gtest += [
     '../test/gizmo-frag.mp4',
     '../test/gizmo.mp4',
-    '../test/short-cenc.mp4',
     'dash_dashinit.mp4',
     'mediasource_test.mp4',
     'test.webm',
