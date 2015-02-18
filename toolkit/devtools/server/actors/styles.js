@@ -991,17 +991,6 @@ var StyleRuleActor = protocol.ActorClass({
 
     if (this.rawRule.parentRule) {
       form.parentRule = this.pageStyle._styleRef(this.rawRule.parentRule).actorID;
-
-      // CSS rules that we call media rules are STYLE_RULES that are children
-      // of MEDIA_RULEs. We need to check the parentRule to check if a rule is
-      // a media rule so we do this here instead of in the switch statement
-      // below.
-      if (this.rawRule.parentRule.type === Ci.nsIDOMCSSRule.MEDIA_RULE) {
-        form.media = [];
-        for (let i = 0, n = this.rawRule.parentRule.media.length; i < n; i++) {
-          form.media.push(this.rawRule.parentRule.media.item(i));
-        }
-      }
     }
     if (this.rawRule.parentStyleSheet) {
       form.parentStyleSheet = this.pageStyle._sheetRef(this.rawRule.parentStyleSheet).actorID;
@@ -1024,6 +1013,12 @@ var StyleRuleActor = protocol.ActorClass({
         break;
       case Ci.nsIDOMCSSRule.IMPORT_RULE:
         form.href = this.rawRule.href;
+        break;
+      case Ci.nsIDOMCSSRule.MEDIA_RULE:
+        form.media = [];
+        for (let i = 0, n = this.rawRule.media.length; i < n; i++) {
+          form.media.push(this.rawRule.media.item(i));
+        }
         break;
       case Ci.nsIDOMCSSRule.KEYFRAMES_RULE:
         form.cssText = this.rawRule.cssText;
@@ -1250,10 +1245,9 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
     if (this._originalLocation) {
       return promise.resolve(this._originalLocation);
     }
+
     let parentSheet = this.parentStyleSheet;
     if (!parentSheet) {
-      // This rule doesn't belong to a stylesheet so it is an inline style.
-      // Inline styles do not have any mediaText so we can return early.
       return promise.resolve(this.location);
     }
     return parentSheet.getOriginalLocation(this.line, this.column)
@@ -1261,9 +1255,8 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
         let location = {
           href: source,
           line: line,
-          column: column,
-          mediaText: this.mediaText
-        };
+          column: column
+        }
         if (fromSourceMap === false) {
           location.source = this.parentStyleSheet;
         }
@@ -1272,7 +1265,7 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
         }
         this._originalLocation = location;
         return location;
-      });
+      })
   }
 });
 
