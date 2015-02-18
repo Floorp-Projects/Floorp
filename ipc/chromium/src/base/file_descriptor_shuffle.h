@@ -5,6 +5,8 @@
 #ifndef BASE_FILE_DESCRIPTOR_SHUFFLE_H_
 #define BASE_FILE_DESCRIPTOR_SHUFFLE_H_
 
+#include "mozilla/Attributes.h"
+
 // This code exists to perform the shuffling of file descriptors which is
 // commonly needed when forking subprocesses. The naive approve is very simple,
 // just call dup2 to setup the desired descriptors, but wrong. It's tough to
