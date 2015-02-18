@@ -56,10 +56,11 @@ DataStruct::~DataStruct()
 
 //-------------------------------------------------------------------------
 void
-DataStruct::SetData ( nsISupports* aData, uint32_t aDataLen )
+DataStruct::SetData ( nsISupports* aData, uint32_t aDataLen, bool aIsPrivateData )
 {
   // Now, check to see if we consider the data to be "too large"
-  if (aDataLen > kLargeDatasetSize) {
+  // as well as ensuring that private browsing mode is disabled
+  if (aDataLen > kLargeDatasetSize && !aIsPrivateData) {
     // if so, cache it to disk instead of memory
     if ( NS_SUCCEEDED(WriteCache(aData, aDataLen)) )
       return;
@@ -399,7 +400,7 @@ nsTransferable::SetTransferData(const char *aFlavor, nsISupports *aData, uint32_
   for (size_t i = 0; i < mDataArray.Length(); ++i) {
     DataStruct& data = mDataArray.ElementAt(i);
     if ( data.GetFlavor().Equals(aFlavor) ) {
-      data.SetData ( aData, aDataLen );
+      data.SetData ( aData, aDataLen, mPrivateData );
       return NS_OK;
     }
   }
@@ -415,7 +416,7 @@ nsTransferable::SetTransferData(const char *aFlavor, nsISupports *aData, uint32_
         nsCOMPtr<nsISupports> ConvertedData;
         uint32_t ConvertedLen;
         mFormatConv->Convert(aFlavor, aData, aDataLen, data.GetFlavor().get(), getter_AddRefs(ConvertedData), &ConvertedLen);
-        data.SetData(ConvertedData, ConvertedLen);
+        data.SetData(ConvertedData, ConvertedLen, mPrivateData);
         return NS_OK;
       }
     }
