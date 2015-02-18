@@ -182,7 +182,11 @@ Manifest Destiny gives tests as a list of dictionaries (in python
 terms).
 
 * path: full path to the test
-* relpath: relative path starting from the root manifest location
+* relpath: relative path starting from the root directory. The root directory
+           is typically the location of the root manifest, or the source
+           repository. It can be specified at runtime by passing in `rootdir`
+           to `TestManifest`. Defaults to the directory containing the test's
+           ancestor manifest.
 * name: file name of the test
 * here: the parent directory of the manifest
 * manifest: the path to the manifest containing the test

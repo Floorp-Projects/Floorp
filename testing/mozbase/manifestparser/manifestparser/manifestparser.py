@@ -43,13 +43,13 @@ def denormalize_path(path):
 class ManifestParser(object):
     """read .ini manifests"""
 
-    def __init__(self, manifests=(), defaults=None, strict=True):
+    def __init__(self, manifests=(), defaults=None, strict=True, rootdir=None):
         self._defaults = defaults or {}
         self._ancestor_defaults = {}
         self.tests = []
         self.manifest_defaults = {}
         self.strict = strict
-        self.rootdir = None
+        self.rootdir = rootdir
         self.relativeRoot = None
         if manifests:
             self.read(*manifests)
