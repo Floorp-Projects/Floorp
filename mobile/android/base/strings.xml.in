@@ -391,6 +391,7 @@
   <string name="remote_tabs_panel_moved_title">&remote_tabs_panel_moved_title;</string>
   <string name="remote_tabs_panel_moved_desc">&remote_tabs_panel_moved_desc;</string>
   <string name="remote_tabs_panel_moved_link">&remote_tabs_panel_moved_link;</string>
+  <string name="remote_tabs_never_synced">&remote_tabs_never_synced;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
   <string name="filepicker_audio_title">&filepicker_audio_title;</string>

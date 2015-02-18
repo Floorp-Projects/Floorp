@@ -4,9 +4,9 @@
 
 package org.mozilla.gecko;
 
-import java.util.ArrayList;
-import java.util.List;
 
+
+import android.text.format.DateUtils;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.db.RemoteTab;
 import org.mozilla.gecko.home.TwoLinePageRow;
@@ -20,6 +20,12 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+
 /**
  * An adapter that populates group and child views with remote client and tab
  * data maintained in a monolithic static array.
@@ -28,6 +34,15 @@ import android.widget.TextView;
  * specialization to home fragment styles.
  */
 public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
+    /**
+     * If a device claims to have synced before this date, we will assume it has never synced.
+     */
+    private static final Date EARLIEST_VALID_SYNCED_DATE;
+    static {
+        final Calendar c = GregorianCalendar.getInstance();
+        c.set(2000, Calendar.JANUARY, 1, 0, 0, 0);
+        EARLIEST_VALID_SYNCED_DATE = c.getTime();
+    }
     protected final ArrayList<RemoteClient> clients;
     private final boolean showGroupIndicator;
     protected int groupLayoutId;
@@ -156,7 +171,7 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
         // It's OK to access the DB on the main thread here, as we're just
         // getting a string.
         final GeckoProfile profile = GeckoProfile.get(context);
-        holder.lastModifiedView.setText(profile.getDB().getTabsAccessor().getLastSyncedString(context, now, client.lastModified));
+        holder.lastModifiedView.setText(this.getLastSyncedString(context, now, client.lastModified));
 
         // These views exists only in some of our group views: they are present
         // for the home panel groups and not for the tabs panel groups.
@@ -214,5 +229,20 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
         }
 
         return view;
+    }
+
+    /**
+     * Return a relative "Last synced" time span for the given tab record.
+     *
+     * @param now local time.
+     * @param time to format string for.
+     * @return string describing time span
+     */
+    public String getLastSyncedString(Context context, long now, long time) {
+        if (new Date(time).before(EARLIEST_VALID_SYNCED_DATE)) {
+            return context.getString(R.string.remote_tabs_never_synced);
+        }
+        final CharSequence relativeTimeSpanString = DateUtils.getRelativeTimeSpanString(time, now, DateUtils.MINUTE_IN_MILLIS);
+        return context.getResources().getString(R.string.remote_tabs_last_synced, relativeTimeSpanString);
     }
 }
