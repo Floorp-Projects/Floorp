@@ -37,7 +37,7 @@ function openBookmarksSidebar() {
     // Need to executeSoon since the tree is initialized on sidebar load.
     executeSoon(startTest);
   }, true);
-  toggleSidebar("viewBookmarksSidebar", true);
+  SidebarUI.show("viewBookmarksSidebar");
 }
 
 /**
@@ -171,7 +171,7 @@ function startTest() {
  */
 function finishTest() {
   // Close bookmarks sidebar.
-  toggleSidebar("viewBookmarksSidebar", false);
+  SidebarUI.hide();
 
   // Collapse the personal toolbar if needed.
   if (wasCollapsed) {
