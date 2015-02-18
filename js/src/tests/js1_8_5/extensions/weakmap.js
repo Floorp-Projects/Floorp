@@ -87,7 +87,7 @@ function test()
     check(function() map.set(key, 42) === map);
     check(function() map.get(key) == 42);
     check(function() typeof map.get({}) == "undefined");
-    check(function() map.get({}, "foo") == "foo");
+    check(function() map.get({}, "foo") == undefined);
 
     gc(); gc(); gc();
 
