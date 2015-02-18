@@ -128,6 +128,10 @@ public class TabStrip extends ThemedLinearLayout {
         }
     }
 
+    public void refresh() {
+        tabStripView.refresh();
+    }
+
     @Override
     public void onLightweightThemeChanged() {
         final Drawable drawable = getTheme().getDrawable(this);
