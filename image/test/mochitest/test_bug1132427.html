@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for scrolling selection into view</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// We open a window which contains two copies of the same gif. One at a scaled size, one at the
+// natural image size. We rely on the bug only showing up in the scaled image. The gif has three
+// frames and a delay of 100ms. The first is all white. The second has a very small update area
+// in the upper left, it changes the pixels to slightly off white. The third changes all the
+// pixels to blue. When the bug appears we only update the upper left pixels when looping around
+// from the last frame to the first frame. We compare a middle pixel of the two images to make
+// sure that they are the same at 100ms for a second. If the bug appears then the middle pixel
+// on the scaled image will always be blue and so should not match the middle pixel on the
+// unscaled image which should be white two thirds of the time. If the timers fire at bad times
+// and only fire when both frames are displaying blue we won't be able to detect this bug and the
+// test will pass without testing anything important, but that's not a big deal. That should be
+// rare enough, and the next time the test is run will should do proper testing.
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(openWindow);
+
+var win = null;
+
+function openWindow() {
+  win = window.open("bug1132427.html",
+                "", "scrollbars=yes,toolbar,menubar,width=600,height=800");
+  win.addEventListener("load", doTest, false);
+  win.focus();
+}
+
+function doTest() {
+  setTimeout(continueTest, 1000);
+}
+
+function checkPixel(canvas, context, x1, y1, x2, y2) {
+  var pix = context.getImageData(0, 0, canvas.width, canvas.height).data;
+  for (var i = 0; i < 4; i++) {
+    is(pix[4 * (y1 * canvas.width + x1) + i], pix[4 * (y2 * canvas.width + x2) + i], "pixels should match");
+  }
+}
+
+var iterationsLeft = 10;
+
+function continueTest() {
+  // we need to drawWindow the chrome window so we can get a dump of the retained widget layers
+  // if we have to repaint to fulfill this drawWindow request then it will be impossible to
+  // observe the bug
+  var chromewin = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                     .getInterface(Components.interfaces.nsIWebNavigation)
+                     .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+                     .rootTreeItem
+                     .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                     .getInterface(Components.interfaces.nsIDOMWindow);
+
+  var el = window.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  el.width = chromewin.innerWidth;
+  el.height = chromewin.innerHeight;
+  var ctx = el.getContext("2d");
+  // pass the correct flags so we don't have to flush the retained layers
+  ctx.drawWindow(chromewin, 0, 0, chromewin.innerWidth, chromewin.innerHeight, "rgba(0,0,0,0)",
+    ctx.DRAWWINDOW_USE_WIDGET_LAYERS | ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_DRAW_CARET);
+
+  var leftbox = win.document.getElementById("left").getBoundingClientRect();
+  var rightbox = win.document.getElementById("right").getBoundingClientRect();
+  // this is actually chrome on left and right, but in practice we have none so it doesn't matter
+  var chromeleft = win.outerWidth - win.innerWidth;
+  // this is actually chrome on top and bottom, but bottom chrome is usually small to none and we have
+  // 100px to spare in hitting the middle of the image elements (they are 200x200)
+  var chrometop = win.outerHeight - win.innerHeight;
+
+  // compare the middle of the two image elements
+  checkPixel(el, ctx, chromeleft + leftbox.left + Math.floor(leftbox.width/2), chrometop + leftbox.top + Math.floor(leftbox.height/2),
+                      chromeleft + rightbox.left + Math.floor(rightbox.width/2), chrometop + rightbox.top + Math.floor(rightbox.height/2));
+
+  iterationsLeft--;
+  if (iterationsLeft > 0) {
+    // now test 100ms later, we should have the next frame of the gif then
+    setTimeout(continueTest, 100);
+  } else {
+    win.close();
+    SimpleTest.finish();
+  }
+}
+</script>
+</pre>
+</body>
+
+</html>
