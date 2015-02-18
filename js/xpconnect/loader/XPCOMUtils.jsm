@@ -290,7 +290,8 @@ this.XPCOMUtils = {
           if (outer)
             throw Cr.NS_ERROR_NO_AGGREGATION;
           return (new component()).QueryInterface(iid);
-        }
+        },
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
       }
     }
     return factory;
