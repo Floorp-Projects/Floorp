@@ -4,6 +4,7 @@
 
 let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 
+Cu.import("resource://gre/modules/Messaging.jsm");
 Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -130,9 +131,20 @@ let Passwords = {
     }, true);
 
     // Create item icon.
-    let img = document.createElement("img");
+    let img = document.createElement("div");
     img.className = "icon";
-    img.setAttribute("src", login.hostname + "/favicon.ico");
+
+    // Load favicon from cache.
+    Messaging.sendRequestForResult({
+      type: "Favicon:CacheLoad",
+      url: login.hostname,
+    }).then(function(faviconUrl) {
+      img.style.backgroundImage= "url('" + faviconUrl + "')";
+      img.style.visibility = "visible";
+    }, function(data) {
+      debug("Favicon cache failure : " + data);
+      img.style.visibility = "visible";
+    });
     loginItem.appendChild(img);
 
     // Create item details.
@@ -192,8 +204,8 @@ let Passwords = {
     let detailItem = document.querySelector("#login-details > .login-item");
     let login = detailItem.login = listItem.login;
     let favicon = detailItem.querySelector(".icon");
-    favicon.setAttribute("src", login.hostname + "/favicon.ico");
-
+    favicon.style["background-image"] = listItem.querySelector(".icon").style["background-image"];
+    favicon.style.visibility = "visible";
     document.getElementById("details-header").setAttribute("link", login.hostname);
 
     document.getElementById("detail-hostname").textContent = login.hostname;
