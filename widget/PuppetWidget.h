@@ -21,7 +21,6 @@
 #include "nsBaseWidget.h"
 #include "nsIScreenManager.h"
 #include "nsThreadUtils.h"
-#include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 
@@ -37,8 +36,7 @@ namespace widget {
 
 struct AutoCacheNativeKeyCommands;
 
-class PuppetWidget : public nsBaseWidget,
-                     public nsSupportsWeakReference
+class PuppetWidget : public nsBaseWidget
 {
   typedef mozilla::dom::TabChild TabChild;
   typedef mozilla::gfx::DrawTarget DrawTarget;
