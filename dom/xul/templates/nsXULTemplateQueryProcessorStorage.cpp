@@ -13,7 +13,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 
 #include "nsIURI.h"
-#include "nsIIOService.h"
 #include "nsIFileChannel.h"
 #include "nsIFile.h"
 #include "nsGkAtoms.h"
@@ -27,6 +26,7 @@
 #include "mozIStorageService.h"
 #include "nsIChannel.h"
 #include "nsIDocument.h"
+#include "nsNetUtil.h"
 
 //----------------------------------------------------------------------
 //
@@ -212,11 +212,13 @@ nsXULTemplateQueryProcessorStorage::GetDatasource(nsIArray* aDataSources,
     }
     else {
         nsCOMPtr<nsIChannel> channel;
-        nsCOMPtr<nsIIOService> ioservice =
-            do_GetService("@mozilla.org/network/io-service;1", &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<nsINode> node = do_QueryInterface(aRootNode);
 
-        rv = ioservice->NewChannelFromURI(uri, getter_AddRefs(channel));
+        rv = NS_NewChannel(getter_AddRefs(channel),
+                           uri,
+                           node,
+                           nsILoadInfo::SEC_NORMAL,
+                           nsIContentPolicy::TYPE_OTHER);
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(channel, &rv);

@@ -819,6 +819,12 @@ this.PushService = {
     if (uri.scheme === "wss") {
       this._ws = Cc["@mozilla.org/network/protocol;1?name=wss"]
                    .createInstance(Ci.nsIWebSocketChannel);
+
+      this._ws.initLoadInfo(null, // aLoadingNode
+                            Services.scriptSecurityManager.getSystemPrincipal(),
+                            null, // aTriggeringPrincipal
+                            Ci.nsILoadInfo.SEC_NORMAL,
+                            Ci.nsIContentPolicy.TYPE_WEBSOCKET);
     }
     else if (uri.scheme === "ws") {
       debug("Push over an insecure connection (ws://) is not allowed!");

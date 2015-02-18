@@ -3628,11 +3628,11 @@ nsWebBrowserPersist::CreateChannelFromURI(nsIURI *aURI, nsIChannel **aChannel)
     nsresult rv = NS_OK;
     *aChannel = nullptr;
 
-    nsCOMPtr<nsIIOService> ioserv;
-    ioserv = do_GetIOService(&rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = ioserv->NewChannelFromURI(aURI, aChannel);
+    rv = NS_NewChannel(aChannel,
+                       aURI,
+                       nsContentUtils::GetSystemPrincipal(),
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_OTHER);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_ARG_POINTER(*aChannel);
 

@@ -178,6 +178,12 @@ function RemoteMedia(aURL, aListener, aApp) {
 
   let uri = Services.io.newURI(aURL, null, null);
   this.ws = Cc["@mozilla.org/network/protocol;1?name=ws"].createInstance(Ci.nsIWebSocketChannel);
+  this.ws.initLoadInfo(null, // aLoadingNode
+                       Services.scriptSecurityManager.getSystemPrincipal(),
+                       null, // aTriggeringPrincipal
+                       Ci.nsILoadInfo.SEC_NORMAL,
+                       Ci.nsIContentPolicy.TYPE_WEBSOCKET);
+
   this.ws.asyncOpen(uri, aURL, this, null);
 }
 

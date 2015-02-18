@@ -11,7 +11,6 @@
 #include "nspr.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
-#include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
@@ -25,8 +24,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsNetUtil.h"
 #include "nsStringAPI.h"
-
-static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
 static bool gError = false;
 static int32_t gKeepRunning = 0;
@@ -253,18 +250,25 @@ nsresult StartLoad(const char *aURISpec) {
     nsCOMPtr<nsISupports> contextSup = do_QueryInterface(context, &rv);
     if (NS_FAILED(rv)) return rv;
 
-
-    nsCOMPtr<nsIIOService> serv = do_GetService(kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     // create a uri
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), aURISpec);
     if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsIScriptSecurityManager> secman =
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIPrincipal> systemPrincipal;
+    rv = secman->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+    if (NS_FAILED(rv)) return rv;
+
     // create a channel
     nsCOMPtr<nsIChannel> channel;
-    rv = serv->NewChannelFromURI(uri, getter_AddRefs(channel));
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       uri,
+                       systemPrincipal,
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_OTHER);
     if (NS_FAILED(rv)) return rv;
 
     Consumer *consumer = new Consumer;

@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1017888",
+    title: "Renegotiation: remove audio track"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    addRenegotiation(test.chain,
+      [
+        function PC_LOCAL_REMOVE_AUDIO_TRACK(test) {
+          test.setOfferOptions({ offerToReceiveAudio: true });
+          test.setMediaConstraints([], [{audio: true}]);
+          return test.pcLocal.removeSender(0);
+        },
+      ]
+    );
+
+    // TODO(bug 1093835): figure out how to verify that media stopped flowing from pcLocal
+
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

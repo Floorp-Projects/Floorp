@@ -22,31 +22,35 @@ public:
   {
   }
 
-  nsresult CreateMediaPipeline(const JsepTrackPair& aTrackPair,
-                               const JsepTrack& aTrack);
+  nsresult CreateOrUpdateMediaPipeline(const JsepTrackPair& aTrackPair,
+                                       const JsepTrack& aTrack);
 
 private:
   nsresult CreateMediaPipelineReceiving(
-      RefPtr<TransportFlow> aRtpFlow,
-      RefPtr<TransportFlow> aRtcpFlow,
       const JsepTrackPair& aTrackPair,
       const JsepTrack& aTrack,
+      size_t level,
+      RefPtr<TransportFlow> aRtpFlow,
+      RefPtr<TransportFlow> aRtcpFlow,
+      nsAutoPtr<MediaPipelineFilter> filter,
       const RefPtr<MediaSessionConduit>& aConduit);
 
   nsresult CreateMediaPipelineSending(
-      RefPtr<TransportFlow> aRtpFlow,
-      RefPtr<TransportFlow> aRtcpFlow,
       const JsepTrackPair& aTrackPair,
       const JsepTrack& aTrack,
+      size_t level,
+      RefPtr<TransportFlow> aRtpFlow,
+      RefPtr<TransportFlow> aRtcpFlow,
+      nsAutoPtr<MediaPipelineFilter> filter,
       const RefPtr<MediaSessionConduit>& aConduit);
 
-  nsresult CreateAudioConduit(const JsepTrackPair& aTrackPair,
-                              const JsepTrack& aTrack,
-                              RefPtr<MediaSessionConduit>* aConduitp);
+  nsresult GetOrCreateAudioConduit(const JsepTrackPair& aTrackPair,
+                                   const JsepTrack& aTrack,
+                                   RefPtr<MediaSessionConduit>* aConduitp);
 
-  nsresult CreateVideoConduit(const JsepTrackPair& aTrackPair,
-                              const JsepTrack& aTrack,
-                              RefPtr<MediaSessionConduit>* aConduitp);
+  nsresult GetOrCreateVideoConduit(const JsepTrackPair& aTrackPair,
+                                   const JsepTrack& aTrack,
+                                   RefPtr<MediaSessionConduit>* aConduitp);
 
   MediaConduitErrorCode EnsureExternalCodec(VideoSessionConduit& aConduit,
                                             VideoCodecConfig* aConfig,
@@ -55,6 +59,13 @@ private:
   nsresult CreateOrGetTransportFlow(size_t aLevel, bool aIsRtcp,
                                     const JsepTransport& transport,
                                     RefPtr<TransportFlow>* out);
+
+  nsresult GetTransportParameters(const JsepTrackPair& aTrackPair,
+                                  const JsepTrack& aTrack,
+                                  size_t* aLevelOut,
+                                  RefPtr<TransportFlow>* aRtpOut,
+                                  RefPtr<TransportFlow>* aRtcpOut,
+                                  nsAutoPtr<MediaPipelineFilter>* aFilterOut);
 
 private:
   // Not owned, and assumed to exist as long as the factory.
