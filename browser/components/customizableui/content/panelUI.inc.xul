@@ -64,7 +64,7 @@
                        type="checkbox"
                        class="subviewbutton"
                        key="key_gotoHistory"
-                       oncommand="SidebarUI.toggle('viewHistorySidebar'); PanelUI.hide();">
+                       oncommand="toggleSidebar('viewHistorySidebar'); PanelUI.hide();">
           <observes element="viewHistorySidebar" attribute="checked"/>
         </toolbarbutton>
         <toolbarbutton id="appMenuClearRecentHistory"
@@ -108,7 +108,7 @@
                        label="&viewBookmarksSidebar2.label;"
                        class="subviewbutton"
                        key="viewBookmarksSidebarKb"
-                       oncommand="SidebarUI.toggle('viewBookmarksSidebar'); PanelUI.hide();">
+                       oncommand="toggleSidebar('viewBookmarksSidebar'); PanelUI.hide();">
           <observes element="viewBookmarksSidebar" attribute="checked"/>
         </toolbarbutton>
         <toolbarbutton id="panelMenu_viewBookmarksToolbar"
