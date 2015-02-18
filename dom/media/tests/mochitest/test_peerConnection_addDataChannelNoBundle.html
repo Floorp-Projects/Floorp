@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1017888",
+    title: "Renegotiation: add DataChannel"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    addRenegotiation(test.chain,
+                     commandsCreateDataChannel.concat(
+                       [
+                         function PC_LOCAL_EXPECT_ICE_CHECKING(test) {
+                           test.pcLocal.iceCheckingRestartExpected = true;
+                         },
+                         function PC_REMOTE_EXPECT_ICE_CHECKING(test) {
+                           test.pcRemote.iceCheckingRestartExpected = true;
+                         },
+                       ]
+                      ),
+                     commandsCheckDataChannel);
+
+    test.chain.insertAfterEach('PC_LOCAL_CREATE_OFFER',
+                              PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER);
+
+    // Insert before the second PC_LOCAL_CHECK_MEDIA_TRACKS
+    test.chain.insertBefore('PC_LOCAL_CHECK_MEDIA_TRACKS',
+                            commandsWaitForDataChannel,
+                            false,
+                            1);
+
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.run();
+  });
+
+</script>
+</pre>
+</body>
+</html>

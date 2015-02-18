@@ -23,6 +23,7 @@ interface PeerConnectionObserver
   void onAddIceCandidateSuccess();
   void onAddIceCandidateError(unsigned long name, DOMString message);
   void onIceCandidate(unsigned short level, DOMString mid, DOMString candidate);
+  void onNegotiationNeeded();
 
   /* Stats callbacks */
   void onGetStatsSuccess(optional RTCStatsReportInternal report);
@@ -40,7 +41,7 @@ interface PeerConnectionObserver
 
   /* Changes to MediaStreamTracks */
   void onAddStream(MediaStream stream);
-  void onRemoveStream();
+  void onRemoveStream(MediaStream stream);
   void onAddTrack(MediaStreamTrack track);
-  void onRemoveTrack();
+  void onRemoveTrack(MediaStreamTrack track);
 };

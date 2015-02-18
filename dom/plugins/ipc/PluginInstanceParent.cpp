@@ -23,6 +23,8 @@
 #include "gfxSharedImageSurface.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsPluginInstanceOwner.h"
+#include "nsFocusManager.h"
+#include "nsIDOMElement.h"
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
 #endif
@@ -45,10 +47,6 @@
 #include "mozilla/plugins/PluginSurfaceParent.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
-// Plugin focus event for widget.
-extern const wchar_t* kOOPPPluginFocusEventId;
-UINT gOOPPPluginFocusEvent =
-    RegisterWindowMessage(kOOPPPluginFocusEventId);
 extern const wchar_t* kFlashFullscreenClass;
 #elif defined(MOZ_WIDGET_GTK)
 #include <gdk/gdk.h>
@@ -1789,7 +1787,6 @@ PluginInstanceParent::SubclassPluginWindow(HWND aWnd)
         return;
     }
 
-#if defined(XP_WIN)
     if (XRE_GetProcessType() == GeckoProcessType_Content) {
         if (!aWnd) {
             NS_WARNING("PluginInstanceParent::SubclassPluginWindow unexpected null window");
@@ -1802,7 +1799,6 @@ PluginInstanceParent::SubclassPluginWindow(HWND aWnd)
         sPluginInstanceList->Put((void*)mPluginHWND, this);
         return;
     }
-#endif
 
     NS_ASSERTION(!(mPluginHWND && aWnd != mPluginHWND),
         "PluginInstanceParent::SubclassPluginWindow hwnd is not our window!");
@@ -1821,7 +1817,6 @@ PluginInstanceParent::SubclassPluginWindow(HWND aWnd)
 void
 PluginInstanceParent::UnsubclassPluginWindow()
 {
-#if defined(XP_WIN)
     if (XRE_GetProcessType() == GeckoProcessType_Content) {
         if (mPluginHWND) {
             // Remove 'this' from the plugin list safely
@@ -1837,7 +1832,6 @@ PluginInstanceParent::UnsubclassPluginWindow()
         mPluginHWND = nullptr;
         return;
     }
-#endif
 
     if (mPluginHWND && mPluginWndProc) {
         ::SetWindowLongPtrA(mPluginHWND, GWLP_WNDPROC,
@@ -1980,14 +1974,21 @@ PluginInstanceParent::AnswerPluginFocusChange(const bool& gotFocus)
 {
     PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
 
-    // Currently only in use on windows - an rpc event we receive from the
-    // child when it's plugin window (or one of it's children) receives keyboard
-    // focus. We forward the event down to widget so the dom/focus manager can
-    // be updated.
+    // Currently only in use on windows - an event we receive from the child
+    // when it's plugin window (or one of it's children) receives keyboard
+    // focus. We detect this and forward a notification here so we can update
+    // focus.
 #if defined(OS_WIN)
-    // XXX This needs to go to PuppetWidget. bug ???
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
-      ::SendMessage(mPluginHWND, gOOPPPluginFocusEvent, gotFocus ? 1 : 0, 0);
+    if (gotFocus) {
+      nsPluginInstanceOwner* owner = GetOwner();
+      if (owner) {
+        nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+        nsCOMPtr<nsIDOMElement> element;
+        owner->GetDOMElement(getter_AddRefs(element));
+        if (fm && element) {
+          fm->SetFocus(element, 0);
+        }
+      }
     }
     return true;
 #else

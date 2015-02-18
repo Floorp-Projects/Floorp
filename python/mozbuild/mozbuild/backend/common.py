@@ -25,6 +25,7 @@ from ..frontend.data import (
     PreprocessedWebIDLFile,
     TestManifest,
     TestWebIDLFile,
+    UnifiedSources,
     XPIDLFile,
     WebIDLFile,
 )
@@ -235,6 +236,11 @@ class CommonBackend(BuildBackend):
         elif isinstance(obj, IPDLFile):
             self._ipdl_sources.add(mozpath.join(obj.srcdir, obj.basename))
 
+        elif isinstance(obj, UnifiedSources):
+            if obj.have_unified_mapping:
+                self._write_unified_files(obj.unified_source_mapping, obj.objdir)
+            if hasattr(self, '_process_unified_sources'):
+                self._process_unified_sources(obj)
         else:
             return
 

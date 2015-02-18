@@ -17,11 +17,11 @@
 
   // Make sure to use good, unique messages, since the actual expression will not show up in test results.
   function my_ok(result, msg) {
-    window.opener.postMessage({status: "ok", result: result, message: msg}, "*");
+    parent.postMessage({status: "ok", result: result, message: msg}, "*");
   }
 
   function finish() {
-    window.opener.postMessage({status: "done"}, "*");
+    parent.postMessage({status: "done"}, "*");
   }
 
   navigator.serviceWorker.ready.then(function(swr) {

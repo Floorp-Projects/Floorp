@@ -27,6 +27,9 @@
 #include "nsIClassInfoImpl.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsILoadInfo.h"
+#include "nsIContentPolicy.h"
+#include "nsContentUtils.h"
 
 // For large favicons optimization.
 #include "imgITools.h"
@@ -328,8 +331,15 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
   rv = ioService->GetProtocolHandler("data", getter_AddRefs(protocolHandler));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsILoadInfo> loadInfo =
+    new mozilla::LoadInfo(nsContentUtils::GetSystemPrincipal(),
+                          nullptr, // aTriggeringPrincipal
+                          nullptr, // aLoadingNode
+                          nsILoadInfo::SEC_NORMAL,
+                          nsIContentPolicy::TYPE_IMAGE);
+
   nsCOMPtr<nsIChannel> channel;
-  rv = protocolHandler->NewChannel(dataURI, getter_AddRefs(channel));
+  rv = protocolHandler->NewChannel2(dataURI, loadInfo, getter_AddRefs(channel));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Blocking stream is OK for data URIs.
