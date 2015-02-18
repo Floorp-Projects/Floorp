@@ -796,6 +796,8 @@ public:
     : mRequest(aRequest), mLoader(aLoader), mToken(nullptr)
   {}
 
+  virtual ~NotifyOffThreadScriptLoadCompletedRunnable();
+
   void SetToken(void* aToken) {
     MOZ_ASSERT(aToken && !mToken);
     mToken = aToken;
@@ -812,6 +814,23 @@ nsScriptLoader::ProcessOffThreadRequest(nsScriptLoadRequest* aRequest, void **aO
   nsresult rv = ProcessRequest(aRequest, aOffThreadToken);
   mDocument->UnblockOnload(false);
   return rv;
+}
+
+NotifyOffThreadScriptLoadCompletedRunnable::~NotifyOffThreadScriptLoadCompletedRunnable()
+{
+  if (MOZ_UNLIKELY(mRequest || mLoader) && !NS_IsMainThread()) {
+    nsCOMPtr<nsIThread> mainThread;
+    NS_GetMainThread(getter_AddRefs(mainThread));
+    if (mainThread) {
+      NS_ProxyRelease(mainThread, mRequest);
+      NS_ProxyRelease(mainThread, mLoader);
+    } else {
+      MOZ_ASSERT(false, "We really shouldn't leak!");
+      // Better to leak than crash.
+      unused << mRequest.forget();
+      unused << mLoader.forget();
+    }
+  }
 }
 
 NS_IMETHODIMP
