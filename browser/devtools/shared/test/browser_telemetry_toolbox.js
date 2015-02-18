@@ -28,12 +28,9 @@ function checkResults() {
   checkTelemetry("DEVTOOLS_INSPECTOR_OPENED_BOOLEAN", [0,3,0]);
   checkTelemetry("DEVTOOLS_INSPECTOR_OPENED_PER_USER_FLAG", [0,1,0]);
   checkTelemetry("DEVTOOLS_INSPECTOR_TIME_ACTIVE_SECONDS", null, "hasentries");
-  checkTelemetry("DEVTOOLS_OS_ENUMERATED_PER_USER", null, "hasentries");
-  checkTelemetry("DEVTOOLS_OS_IS_64_BITS_PER_USER", null, "hasentries");
   checkTelemetry("DEVTOOLS_RULEVIEW_OPENED_BOOLEAN", [0,3,0]);
   checkTelemetry("DEVTOOLS_RULEVIEW_OPENED_PER_USER_FLAG", [0,1,0]);
   checkTelemetry("DEVTOOLS_RULEVIEW_TIME_ACTIVE_SECONDS", null, "hasentries");
-  checkTelemetry("DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER", null, "hasentries");
   checkTelemetry("DEVTOOLS_TOOLBOX_OPENED_BOOLEAN", [0,3,0]);
   checkTelemetry("DEVTOOLS_TOOLBOX_OPENED_PER_USER_FLAG", [0,1,0]);
   checkTelemetry("DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS", null, "hasentries");
