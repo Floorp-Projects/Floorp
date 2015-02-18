@@ -295,6 +295,9 @@ let hides = filter(panelEvents, ({type}) => type === "popuphidden");
 let ready = filter(panelEvents, ({type, target}) =>
   getAttachEventType(modelFor(panelFor(target))) === type);
 
+// Panel event emitted when the contents of the panel has been loaded.
+let readyToShow = filter(panelEvents, ({type}) => type === "DOMContentLoaded");
+
 // Styles should be always added as soon as possible, and doesn't makes them
 // depends on `contentScriptWhen`
 let start = filter(panelEvents, ({type}) => type === "document-element-inserted");
@@ -317,6 +320,10 @@ on(ready, "data", ({target}) => {
   let window = domPanel.getContentDocument(target).defaultView;
 
   workerFor(panel).attach(window);
+});
+
+on(readyToShow, "data", ({target}) => {
+  let panel = panelFor(target);
 
   if (!modelFor(panel).ready) {
     modelFor(panel).ready = true;

@@ -12,6 +12,7 @@ const { Class } = require("sdk/core/heritage");
 const { Cc, Ci, Cu } = require("chrome");
 const { notifyObservers } = Cc["@mozilla.org/observer-service;1"].
                               getService(Ci.nsIObserverService);
+const { defer } = require("sdk/core/promise");
 
 const message = x => ({wrappedJSObject: x});
 
@@ -118,6 +119,65 @@ exports["test weak observers are GC-ed on unload"] = (assert, end) => {
 
     end();
   });
+};
+
+exports["test weak observer unsubscribe"] = function*(assert) {
+  const loader = Loader(module);
+  const { Observer, observe, subscribe, unsubscribe } = loader.require("sdk/core/observer");
+  const { WeakReference } = loader.require("sdk/core/reference");
+
+  let sawNotification = false;
+  let firstWait = defer();
+  let secondWait = defer();
+
+  const WeakObserver = Class({
+    extends: Observer,
+    implements: [WeakReference],
+    observe: function() {
+      sawNotification = true;
+      firstWait.resolve();
+    }
+  });
+
+  const StrongObserver = Class({
+    extends: Observer,
+    observe: function() {
+      secondWait.resolve();
+    }
+  });
+
+  observe.define(Observer, (x, ...rest) => x.observe(...rest));
+
+  let weakObserver = new WeakObserver;
+  let strongObserver = new StrongObserver();
+  subscribe(weakObserver, "test-topic");
+  subscribe(strongObserver, "test-wait");
+
+  notifyObservers(null, "test-topic", null);
+  yield firstWait.promise;
+
+  assert.ok(sawNotification, "Should have seen notification before GC");
+  sawNotification = false;
+
+  yield loader.require("sdk/test/memory").gc();
+
+  notifyObservers(null, "test-topic", null);
+  notifyObservers(null, "test-wait", null);
+  yield secondWait.promise;
+
+  assert.ok(sawNotification, "Should have seen notification after GC");
+  sawNotification = false;
+
+  try {
+    unsubscribe(weakObserver, "test-topic");
+    unsubscribe(strongObserver, "test-wait");
+    assert.pass("Should not have seen an exception");
+  }
+  catch (e) {
+    assert.fail("Should not have seen an exception");
+  }
+
+  loader.unload();
 };
 
 require("sdk/test").run(exports);
