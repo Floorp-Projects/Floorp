@@ -40,9 +40,12 @@ add_task(function* () {
   let { RequestsMenu, NetworkDetails } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;
 
-  info("Enabling SSLv3 for the test.");
+  info("Enabling SSLv3 and RC4 for the test.");
   yield new promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [["security.tls.version.min", 0]]}, resolve);
+    SpecialPowers.pushPrefEnv({"set": [
+      ["security.tls.version.min", 0],
+      ["security.tls.insecure_fallback_hosts", "rc4.example.com,ssl3rc4.example.com"]
+    ]}, resolve);
   });
 
   let cipher = $("#security-warning-cipher");
