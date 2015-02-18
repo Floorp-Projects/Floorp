@@ -508,6 +508,7 @@ MediaSourceReader::SwitchAudioSource(int64_t* aTarget)
     return SOURCE_EXISTING;
   }
   mAudioSourceDecoder = newDecoder;
+  GetAudioReader()->ResetDecode();
   if (usedFuzz) {
     // A decoder buffered range is continuous. We would have failed the exact
     // search but succeeded the fuzzy one if our target was shortly before
@@ -554,6 +555,7 @@ MediaSourceReader::SwitchVideoSource(int64_t* aTarget)
     return SOURCE_EXISTING;
   }
   mVideoSourceDecoder = newDecoder;
+  GetVideoReader()->ResetDecode();
   if (usedFuzz) {
     // A decoder buffered range is continuous. We would have failed the exact
     // search but succeeded the fuzzy one if our target was shortly before
@@ -810,6 +812,7 @@ MediaSourceReader::OnVideoSeekFailed(nsresult aResult)
 void
 MediaSourceReader::DoAudioSeek()
 {
+  GetAudioReader()->ResetDecode();
   if (SwitchAudioSource(&mPendingSeekTime) == SOURCE_NONE) {
     // Data we need got evicted since the last time we checked for data
     // availability. Abort current seek attempt.
@@ -860,9 +863,6 @@ MediaSourceReader::AttemptSeek()
   }
 
   ResetDecode();
-  for (uint32_t i = 0; i < mTrackBuffers.Length(); ++i) {
-    mTrackBuffers[i]->ResetDecode();
-  }
 
   // Decoding discontinuity upon seek, reset last times to seek target.
   mLastAudioTime = mPendingSeekTime;
@@ -880,6 +880,7 @@ MediaSourceReader::AttemptSeek()
 void
 MediaSourceReader::DoVideoSeek()
 {
+  GetVideoReader()->ResetDecode();
   if (SwitchVideoSource(&mPendingSeekTime) == SOURCE_NONE) {
     // Data we need got evicted since the last time we checked for data
     // availability. Abort current seek attempt.
