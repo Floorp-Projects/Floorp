@@ -273,7 +273,10 @@ struct Float32x4 {
         return a;
     }
     static bool toType(JSContext *cx, JS::HandleValue v, Elem *out) {
-        *out = v.toNumber();
+        double d;
+        if (!ToNumber(cx, v, &d))
+            return false;
+        *out = float(d);
         return true;
     }
     static void setReturn(CallArgs &args, Elem value) {
@@ -293,8 +296,7 @@ struct Float64x2 {
         return a;
     }
     static bool toType(JSContext *cx, JS::HandleValue v, Elem *out) {
-        *out = v.toNumber();
-        return true;
+        return ToNumber(cx, v, out);
     }
     static void setReturn(CallArgs &args, Elem value) {
         args.rval().setDouble(JS::CanonicalizeNaN(value));

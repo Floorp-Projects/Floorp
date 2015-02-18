@@ -61,6 +61,11 @@ PushSocket.prototype = {
     if (!this._websocket) {
       this._websocket = Cc["@mozilla.org/network/protocol;1?name=wss"]
                           .createInstance(Ci.nsIWebSocketChannel);
+      this._websocket.initLoadInfo(null, // aLoadingNode
+                                   Services.scriptSecurityManager.getSystemPrincipal(),
+                                   null, // aTriggeringPrincipal
+                                   Ci.nsILoadInfo.SEC_NORMAL,
+                                   Ci.nsIContentPolicy.TYPE_WEBSOCKET);
     }
 
     let uri = Services.io.newURI(pushUri, null, null);

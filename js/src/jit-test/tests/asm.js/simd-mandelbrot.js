@@ -29,6 +29,7 @@ var moduleCode = `
   var b8 = new global.Uint8Array(buffer);
   var toF = global.Math.fround;
   var i4 = global.SIMD.int32x4;
+  var ci4 = i4.check;
   var f4 = global.SIMD.float32x4;
   var i4add = i4.add;
   var i4and = i4.and;
@@ -105,7 +106,7 @@ var moduleCode = `
       z_im4   = f4add(c_im4, new_im4);
       count4  = i4add(count4, i4and(mi4, one4));
     }
-    return i4(count4);
+    return ci4(count4);
   }
 
   function mandelColumnX4 (x, width, height, xf, yf, yd, max_iterations) {
@@ -123,7 +124,7 @@ var moduleCode = `
 
     ydx4 = toF(yd * toF(4));
     for (y = 0; (y | 0) < (height | 0); y = (y + 4) | 0) {
-      m4   = i4(mandelPixelX4(toF(xf), toF(yf), toF(yd), max_iterations));
+      m4   = ci4(mandelPixelX4(toF(xf), toF(yf), toF(yd), max_iterations));
       mapColorAndSetPixel(x | 0, y | 0,   width, m4.x, max_iterations);
       mapColorAndSetPixel(x | 0, (y + 1) | 0, width, m4.y, max_iterations);
       mapColorAndSetPixel(x | 0, (y + 2) | 0, width, m4.z, max_iterations);

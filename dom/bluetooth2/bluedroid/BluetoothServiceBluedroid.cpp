@@ -1667,14 +1667,30 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
                                    NS_LITERAL_STRING(KEY_ADAPTER),
                                    BluetoothValue(propertiesArray)));
 
-  if (bonded && !sBondingRunnableArray.IsEmpty()) {
-    DispatchBluetoothReply(sBondingRunnableArray[0],
-                           BluetoothValue(true), EmptyString());
-    sBondingRunnableArray.RemoveElementAt(0);
-  } else if (!bonded && !sUnbondingRunnableArray.IsEmpty()) {
-    DispatchBluetoothReply(sUnbondingRunnableArray[0],
-                           BluetoothValue(true), EmptyString());
-    sUnbondingRunnableArray.RemoveElementAt(0);
+  if (aStatus == STATUS_SUCCESS) {
+    // Resolve existing pair/unpair promise when pair/unpair succeeded
+    if (bonded && !sBondingRunnableArray.IsEmpty()) {
+      DispatchBluetoothReply(sBondingRunnableArray[0],
+                             BluetoothValue(true), EmptyString());
+      sBondingRunnableArray.RemoveElementAt(0);
+    } else if (!bonded && !sUnbondingRunnableArray.IsEmpty()) {
+      DispatchBluetoothReply(sUnbondingRunnableArray[0],
+                             BluetoothValue(true), EmptyString());
+      sUnbondingRunnableArray.RemoveElementAt(0);
+    }
+  } else {
+    // Reject existing pair/unpair promise when pair/unpair failed
+    if (!bonded && !sBondingRunnableArray.IsEmpty()) {
+      DispatchBluetoothReply(sBondingRunnableArray[0],
+                             BluetoothValue(),
+                             NS_LITERAL_STRING("Pair Error"));
+      sBondingRunnableArray.RemoveElementAt(0);
+    } else if (bonded && !sUnbondingRunnableArray.IsEmpty()) {
+      DispatchBluetoothReply(sUnbondingRunnableArray[0],
+                             BluetoothValue(),
+                             NS_LITERAL_STRING("Unpair Error"));
+      sUnbondingRunnableArray.RemoveElementAt(0);
+    }
   }
 }
 

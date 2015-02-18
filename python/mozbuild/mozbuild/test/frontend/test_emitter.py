@@ -725,7 +725,29 @@ class TestEmitterBasic(unittest.TestCase):
         for suffix, files in expected.items():
             sources = suffix_map[suffix]
             self.assertEqual(sources.files, files)
-            self.assertEqual(sources.files_per_unified_file, 32)
+            self.assertTrue(sources.have_unified_mapping)
+
+    def test_unified_sources_non_unified(self):
+        """Test that UNIFIED_SOURCES with FILES_PER_UNIFIED_FILE=1 works properly."""
+        reader = self.reader('unified-sources-non-unified')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 3)
+        for o in objs:
+            self.assertIsInstance(o, UnifiedSources)
+
+        suffix_map = {obj.canonical_suffix: obj for obj in objs}
+        self.assertEqual(len(suffix_map), 3)
+
+        expected = {
+            '.cpp': ['bar.cxx', 'foo.cpp', 'quux.cc'],
+            '.mm': ['objc1.mm', 'objc2.mm'],
+            '.c': ['c1.c', 'c2.c'],
+        }
+        for suffix, files in expected.items():
+            sources = suffix_map[suffix]
+            self.assertEqual(sources.files, files)
+            self.assertFalse(sources.have_unified_mapping)
 
 if __name__ == '__main__':
     main()

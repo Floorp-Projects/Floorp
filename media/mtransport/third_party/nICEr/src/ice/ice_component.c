@@ -239,7 +239,7 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           &ctx->turn_servers[j].turn_server,component->component_id,&cand))
           ABORT(r);
         cand->state=NR_ICE_CAND_STATE_INITIALIZING; /* Don't start */
-        cand->done_cb=nr_ice_initialize_finished_cb;
+        cand->done_cb=nr_ice_gather_finished_cb;
         cand->cb_arg=cand;
 
         TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
@@ -393,6 +393,11 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
     Data pwd;
     nr_ice_candidate *cand;
 
+    if (component->candidate_ct) {
+      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): component with id %d already has candidates, probably restarting gathering because of a new stream",ctx->label,component->component_id);
+      return(0);
+    }
+
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): initializing component with id %d",ctx->label,component->component_id);
 
     if(addr_ct==0){
@@ -435,7 +440,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
     cand=TAILQ_FIRST(&component->candidates);
     while(cand){
       if(cand->state!=NR_ICE_CAND_STATE_INITIALIZING){
-        if(r=nr_ice_candidate_initialize(cand,nr_ice_initialize_finished_cb,cand)){
+        if(r=nr_ice_candidate_initialize(cand,nr_ice_gather_finished_cb,cand)){
           if(r!=R_WOULDBLOCK){
             ctx->uninitialized_candidates--;
             cand->state=NR_ICE_CAND_STATE_FAILED;

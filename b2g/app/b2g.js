@@ -688,6 +688,9 @@ pref("ui.useOverlayScrollbars", 1);
 pref("ui.scrollbarFadeBeginDelay", 450);
 pref("ui.scrollbarFadeDuration", 200);
 
+// Scrollbar position follows the document `dir` attribute
+pref("layout.scrollbar.side", 1);
+
 // Enable the ProcessPriorityManager, and give processes with no visible
 // documents a 1s grace period before they're eligible to be marked as
 // background. Background processes that are perceivable due to playing
@@ -1114,10 +1117,8 @@ pref("dom.requestSync.enabled", true);
 pref("gfx.vsync.hw-vsync.enabled", true);
 pref("gfx.vsync.compositor", true);
 pref("gfx.touch.resample", true);
-pref("gfx.vsync.refreshdriver", true);
 #else
 pref("gfx.vsync.hw-vsync.enabled", false);
 pref("gfx.vsync.compositor", false);
 pref("gfx.touch.resample", false);
-pref("gfx.vsync.refreshdriver", false);
 #endif

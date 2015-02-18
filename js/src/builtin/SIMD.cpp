@@ -350,17 +350,6 @@ SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     Rooted<SimdTypeDescr*> descr(cx, &args.callee().as<SimdTypeDescr>());
-    if (args.length() == 1) {
-        // SIMD type used as a coercion
-        if (!CheckVectorObject(args[0], descr->type())) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR);
-            return false;
-        }
-
-        args.rval().setObject(args[0].toObject());
-        return true;
-    }
-
     MOZ_ASSERT(size_t(static_cast<TypeDescr*>(descr)->size()) <= InlineTypedObject::MaximumSize,
                "inline storage is needed for using InternalHandle belows");
 
@@ -733,27 +722,18 @@ FuncWith(JSContext *cx, unsigned argc, Value *vp)
     typedef typename V::Elem Elem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 2 || !IsVectorObject<V>(args[0]) ||
-        (!args[1].isNumber() && !args[1].isBoolean()))
-    {
+    if (args.length() != 2 || !IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
-    }
 
-    Elem *val = TypedObjectMemory<Elem *>(args[0]);
+    Elem *vec = TypedObjectMemory<Elem *>(args[0]);
     Elem result[V::lanes];
 
-    if (args[1].isNumber()) {
-        Elem withAsNumber;
-        if (!V::toType(cx, args[1], &withAsNumber))
-            return false;
-        for (unsigned i = 0; i < V::lanes; i++)
-            result[i] = OpWith<Elem>::apply(i, withAsNumber, val[i]);
-    } else {
-        MOZ_ASSERT(args[1].isBoolean());
-        bool withAsBool = args[1].toBoolean();
-        for (unsigned i = 0; i < V::lanes; i++)
-            result[i] = OpWith<Elem>::apply(i, withAsBool, val[i]);
-    }
+    Elem value;
+    if (!V::toType(cx, args[1], &value))
+        return false;
+
+    for (unsigned i = 0; i < V::lanes; i++)
+        result[i] = OpWith<Elem>::apply(i, value, vec[i]);
     return StoreResult<V>(cx, args, result);
 }
 
@@ -827,7 +807,7 @@ Int32x4BinaryScalar(JSContext *cx, unsigned argc, Value *vp)
         return ErrorBadArgs(cx);
 
     int32_t result[4];
-    if (!IsVectorObject<Int32x4>(args[0]) || !args[1].isNumber())
+    if (!IsVectorObject<Int32x4>(args[0]))
         return ErrorBadArgs(cx);
 
     int32_t *val = TypedObjectMemory<int32_t *>(args[0]);
@@ -922,7 +902,7 @@ FuncSplat(JSContext *cx, unsigned argc, Value *vp)
     typedef typename Vret::Elem RetElem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 1 || !args[0].isNumber())
+    if (args.length() != 1)
         return ErrorBadArgs(cx);
 
     RetElem arg;

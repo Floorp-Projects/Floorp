@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1017888",
+    title: "Renegotiation: remove then add audio track"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    addRenegotiation(test.chain,
+      [
+        function PC_LOCAL_REMOVE_AUDIO_TRACK(test) {
+          // The new track's pipeline will start with a packet count of
+          // 0, but the remote side will keep its old pipeline and packet
+          // count.
+          test.pcLocal.disableRtpCountChecking = true;
+          return test.pcLocal.removeSender(0);
+        },
+        function PC_LOCAL_ADD_AUDIO_TRACK(test) {
+          return test.pcLocal.getAllUserMedia([{audio: true}]);
+        },
+      ]
+    );
+
+    test.chain.insertAfterEach('PC_LOCAL_CREATE_OFFER',
+                              PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER);
+
+    // TODO(bug 1093835): figure out how to verify if media flows through the new stream
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

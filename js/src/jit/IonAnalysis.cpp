@@ -2519,9 +2519,16 @@ TryEliminateTypeBarrier(MTypeBarrier *barrier, bool *eliminated)
 }
 
 static bool
-TryOptimizeLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull *def, MDefinitionVector *peliminateList)
+TryOptimizeLoadObjectOrNull(MDefinition *def, MDefinitionVector *peliminateList)
 {
     if (def->type() != MIRType_Value)
+        return true;
+
+    // Check if this definition can only produce object or null values.
+    TemporaryTypeSet *types = def->resultTypeSet();
+    if (!types)
+        return true;
+    if (types->baseFlags() & ~(TYPE_FLAG_NULL | TYPE_FLAG_ANYOBJECT))
         return true;
 
     MDefinitionVector eliminateList(def->block()->graph().alloc());
@@ -2532,6 +2539,8 @@ TryOptimizeLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull *def, MDefinitionVec
           case MDefinition::Op_Compare:
             if (ndef->toCompare()->compareType() != MCompare::Compare_Null)
                 return true;
+            break;
+          case MDefinition::Op_Test:
             break;
           case MDefinition::Op_PostWriteBarrier:
             break;
@@ -2546,13 +2555,42 @@ TryOptimizeLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull *def, MDefinitionVec
           case MDefinition::Op_Unbox:
             MOZ_ASSERT(ndef->type() == MIRType_Object);
             break;
+          case MDefinition::Op_TypeBarrier:
+            // For now, only handle type barriers which are not consumed
+            // anywhere and only test that the value is null.
+            if (ndef->hasUses() || ndef->resultTypeSet()->getKnownMIRType() != MIRType_Null)
+                return true;
+            break;
           default:
             return true;
         }
     }
 
+    // On punboxing systems we are better off leaving the value boxed if it
+    // is only stored back to the heap.
+#ifdef JS_PUNBOX64
+    bool foundUse = false;
+    for (MUseDefIterator iter(def); iter; ++iter) {
+        MDefinition *ndef = iter.def();
+        if (!ndef->isStoreFixedSlot() && !ndef->isStoreSlot()) {
+            foundUse = true;
+            break;
+        }
+    }
+    if (!foundUse)
+        return true;
+#endif // JS_PUNBOX64
+
     def->setResultType(MIRType_ObjectOrNull);
 
+    // Fixup the result type of MTypeBarrier uses.
+    for (MUseDefIterator iter(def); iter; ++iter) {
+        MDefinition *ndef = iter.def();
+        if (ndef->isTypeBarrier())
+            ndef->setResultType(MIRType_ObjectOrNull);
+    }
+
+    // Eliminate MToObjectOrNull instruction uses.
     for (size_t i = 0; i < eliminateList.length(); i++) {
         MDefinition *ndef = eliminateList[i];
         ndef->replaceAllUsesWith(def);
@@ -2627,21 +2665,28 @@ jit::EliminateRedundantChecks(MIRGraph &graph)
 
             bool eliminated = false;
 
-            if (def->isBoundsCheck()) {
+            switch (def->op()) {
+              case MDefinition::Op_BoundsCheck:
                 if (!TryEliminateBoundsCheck(checks, index, def->toBoundsCheck(), &eliminated))
                     return false;
-            } else if (def->isTypeBarrier()) {
+                break;
+              case MDefinition::Op_TypeBarrier:
                 if (!TryEliminateTypeBarrier(def->toTypeBarrier(), &eliminated))
                     return false;
-            } else if (def->isLoadUnboxedObjectOrNull()) {
-                if (!TryOptimizeLoadUnboxedObjectOrNull(def->toLoadUnboxedObjectOrNull(), &eliminateList))
+                break;
+              case MDefinition::Op_LoadFixedSlot:
+              case MDefinition::Op_LoadSlot:
+              case MDefinition::Op_LoadUnboxedObjectOrNull:
+                if (!TryOptimizeLoadObjectOrNull(def, &eliminateList))
                     return false;
-            } else {
+                break;
+              default:
                 // Now that code motion passes have finished, replace
                 // instructions which pass through one of their operands
                 // (and perform additional checks) with that operand.
                 if (MDefinition *passthrough = PassthroughOperand(def))
                     def->replaceAllUsesWith(passthrough);
+                break;
             }
 
             if (eliminated)

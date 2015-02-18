@@ -36,6 +36,13 @@ xul|scrollbar[orient="vertical"] {
   max-width: 8px;
 }
 
+/* workaround for bug 1119057: as -moz-margin-start may not work as expected,
+ * force a right margin value in RTL mode.  */
+[dir="rtl"] xul|scrollbar[root="true"][orient="vertical"] {
+  -moz-margin-start: unset;
+  margin-right: -8px;
+}
+
 xul|scrollbar[orient="vertical"] xul|thumb {
   max-width: 6px !important;
   min-width: 6px !important;

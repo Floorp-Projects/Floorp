@@ -10,7 +10,6 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIURL.h"
-#include "nsIIOService.h"
 #include "nsNetCID.h"
 #include "nsIChannel.h"
 #include "nsIComponentManager.h"
@@ -18,11 +17,12 @@
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsISimpleEnumerator.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsILoadInfo.h"
+#include "nsNetUtil.h"
 
 #define TEST_URL "resource:/res/test.properties"
 static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
-
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 /***************************************************************************/
 
@@ -39,11 +39,23 @@ main(int argc, char* argv[])
 
   nsIInputStream* in = nullptr;
 
-  nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &ret));
+  nsCOMPtr<nsIScriptSecurityManager> secman =
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &ret);
+  if (NS_FAILED(ret)) return 1;
+  nsCOMPtr<nsIPrincipal> systemPrincipal;
+    ret = secman->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+   if (NS_FAILED(ret)) return 1;
+
+  nsCOMPtr<nsIURI> uri;
+  ret = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING(TEST_URL));
   if (NS_FAILED(ret)) return 1;
 
   nsIChannel *channel = nullptr;
-  ret = service->NewChannel(NS_LITERAL_CSTRING(TEST_URL), nullptr, nullptr, &channel);
+  ret = NS_NewChannel(&channel,
+                      uri,
+                      systemPrincipal,
+                      nsILoadInfo::SEC_NORMAL,
+                      nsIContentPolicy::TYPE_OTHER);
   if (NS_FAILED(ret)) return 1;
 
   ret = channel->Open(&in);

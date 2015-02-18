@@ -3175,6 +3175,7 @@ public:
 
   static FrameMetrics ComputeFrameMetrics(nsIFrame* aForFrame,
                                           nsIFrame* aScrollFrame,
+                                          nsIContent* aContent,
                                           const nsIFrame* aReferenceFrame,
                                           Layer* aLayer,
                                           ViewID aScrollParentId,
