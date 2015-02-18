@@ -91,27 +91,24 @@ public:
 
   // Manage tracks. We take shared ownership of any track.
   virtual nsresult AddTrack(const RefPtr<JsepTrack>& track) = 0;
-  virtual nsresult RemoveTrack(size_t track_index) = 0;
+  virtual nsresult RemoveTrack(const std::string& streamId,
+                               const std::string& trackId) = 0;
   virtual nsresult ReplaceTrack(size_t track_index,
                                 const RefPtr<JsepTrack>& track) = 0;
 
-  virtual size_t GetLocalTrackCount() const = 0;
-  virtual nsresult GetLocalTrack(size_t index,
-                                 RefPtr<JsepTrack>* track) const = 0;
+  virtual std::vector<RefPtr<JsepTrack>> GetLocalTracks() const = 0;
 
-  virtual size_t GetRemoteTrackCount() const = 0;
-  virtual nsresult GetRemoteTrack(size_t index,
-                                  RefPtr<JsepTrack>* track) const = 0;
+  virtual std::vector<RefPtr<JsepTrack>> GetRemoteTracks() const = 0;
+
+  virtual std::vector<RefPtr<JsepTrack>> GetRemoteTracksAdded() const = 0;
+
+  virtual std::vector<RefPtr<JsepTrack>> GetRemoteTracksRemoved() const = 0;
 
   // Access the negotiated track pairs.
-  virtual size_t GetNegotiatedTrackPairCount() const = 0;
-  virtual nsresult GetNegotiatedTrackPair(size_t index,
-                                          const JsepTrackPair** pair) const = 0;
+  virtual std::vector<JsepTrackPair> GetNegotiatedTrackPairs() const = 0;
 
   // Access transports.
-  virtual size_t GetTransportCount() const = 0;
-  virtual nsresult GetTransport(size_t index,
-                                RefPtr<JsepTransport>* transport) const = 0;
+  virtual std::vector<RefPtr<JsepTransport>> GetTransports() const = 0;
 
   // Basic JSEP operations.
   virtual nsresult CreateOffer(const JsepOfferOptions& options,
@@ -129,7 +126,8 @@ public:
                                          uint16_t level) = 0;
   virtual nsresult AddLocalIceCandidate(const std::string& candidate,
                                         const std::string& mid,
-                                        uint16_t level) = 0;
+                                        uint16_t level,
+                                        bool* skipped) = 0;
   virtual nsresult EndOfLocalCandidates(const std::string& defaultCandidateAddr,
                                         uint16_t defaultCandidatePort,
                                         uint16_t level) = 0;
@@ -153,6 +151,8 @@ public:
 
     return states[state];
   }
+
+  virtual bool AllLocalTracksAreAssigned() const = 0;
 
 protected:
   const std::string mName;

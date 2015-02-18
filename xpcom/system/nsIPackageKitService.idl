@@ -1,0 +1,46 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+interface nsIObserver;
+
+[scriptable, uuid(89bb04f6-ce2a-11e3-8f4f-60a44c717042)]
+interface nsIPackageKitService : nsISupports
+{
+
+  /* PackageKit installation methods */
+  /* See https://github.com/nekohayo/gnome-packagekit/blob/master/src/org.freedesktop.PackageKit.xml */
+  const unsigned long PK_INSTALL_PACKAGE_NAMES = 0;
+  const unsigned long PK_INSTALL_MIME_TYPES = 1;
+  const unsigned long PK_INSTALL_FONTCONFIG_RESOURCES = 2;
+  const unsigned long PK_INSTALL_GSTREAMER_RESOURCES = 3;
+  const unsigned long PK_INSTALL_METHOD_COUNT = 4;
+
+  /* Ask to install a list of packages via PackageKit
+   * @param   packageKitMethod
+   *          The PackageKit installation method
+   * @param   packageArray
+   *          A nonempty array of strings describing the list of packages to
+   *          install.
+   * @param   An object implementing nsIObserver that will be notified with
+   *          a message of topic "packagekit-install". The message data
+   *          contains the error returned by PackageKit if the installation
+   *          fails and is null otherwise.
+   *
+   * This function may raise an NS_ERROR_INVALID_ARG, NS_ERROR_FAILURE or
+   * NS_ERROR_OUT_OF_MEMORY exception. Otherwise, the observer will be notified
+   * when the operation completes.
+   *
+   */
+  void installPackages(in unsigned long packageKitMethod,
+                       in nsIArray packageArray,
+                       in nsIObserver observer);
+};
+
+%{C++
+#define NS_PACKAGEKITSERVICE_CONTRACTID "@mozilla.org/packagekit-service;1"
+%}

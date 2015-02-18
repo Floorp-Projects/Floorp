@@ -348,6 +348,11 @@ static void nr_ice_peer_ctx_start_trickle_timer(nr_ice_peer_ctx *pctx)
   {
     UINT4 grace_period_timeout=0;
 
+    if(pctx->trickle_grace_period_timer) {
+      NR_async_timer_cancel(pctx->trickle_grace_period_timer);
+      pctx->trickle_grace_period_timer=0;
+    }
+
     NR_reg_get_uint4(NR_ICE_REG_TRICKLE_GRACE_PERIOD,&grace_period_timeout);
 
     if (grace_period_timeout) {
@@ -506,27 +511,47 @@ int nr_ice_peer_ctx_start_checks2(nr_ice_peer_ctx *pctx, int allow_non_first)
     nr_ice_media_stream *stream;
     int started = 0;
 
+    /* Might have added some streams */
+    pctx->reported_done = 0;
+    NR_async_timer_cancel(pctx->done_cb_timer);
+    pctx->done_cb_timer = 0;
+    pctx->checks_started = 0;
+
+    if((r=nr_ice_peer_ctx_check_if_done(pctx))) {
+      r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) initial done check failed",pctx->ctx->label,pctx->label);
+      ABORT(r);
+    }
+
+    if (pctx->reported_done) {
+      r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) in %s all streams were done",pctx->ctx->label,pctx->label,__FUNCTION__);
+      return (0);
+    }
+
     stream=STAILQ_FIRST(&pctx->peer_streams);
     if(!stream)
       ABORT(R_FAILED);
 
     while (stream) {
-      if(!TAILQ_EMPTY(&stream->check_list))
-        break;
+      assert(stream->ice_state != NR_ICE_MEDIA_STREAM_UNPAIRED);
 
-      if(!allow_non_first){
-        /* This test applies if:
+      if (stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_FROZEN) {
+        if(!TAILQ_EMPTY(&stream->check_list))
+          break;
 
-           1. allow_non_first is 0 (i.e., non-trickle ICE)
-           2. the first stream has an empty check list.
+        if(!allow_non_first){
+          /* This test applies if:
 
-           But in the non-trickle ICE case, the other side should have provided
-           some candidates or ICE is pretty much not going to work and we're
-           just going to fail. Hence R_FAILED as opposed to R_NOT_FOUND and
-           immediate termination here.
-        */
-        r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) first stream has empty check list",pctx->ctx->label,pctx->label);
-        ABORT(R_FAILED);
+             1. allow_non_first is 0 (i.e., non-trickle ICE)
+             2. the first stream has an empty check list.
+
+             But in the non-trickle ICE case, the other side should have provided
+             some candidates or ICE is pretty much not going to work and we're
+             just going to fail. Hence R_FAILED as opposed to R_NOT_FOUND and
+             immediate termination here.
+          */
+          r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) first stream has empty check list",pctx->ctx->label,pctx->label);
+          ABORT(R_FAILED);
+        }
       }
 
       stream=STAILQ_NEXT(stream, entry);
@@ -620,9 +645,9 @@ static void nr_ice_peer_ctx_fire_done(NR_SOCKET s, int how, void *cb_arg)
     }
   }
 
-/* OK, a stream just went ready. Examine all the streams to see if we're
+/* Examine all the streams to see if we're
    maybe miraculously done */
-int nr_ice_peer_ctx_stream_done(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream)
+int nr_ice_peer_ctx_check_if_done(nr_ice_peer_ctx *pctx)
   {
     int _status;
     nr_ice_media_stream *str;

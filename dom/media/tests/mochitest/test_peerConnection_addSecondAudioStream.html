@@ -7,49 +7,24 @@
 <pre id="test">
 <script type="application/javascript">
   createHTML({
-    bug: "1091242",
+    bug: "1017888",
     title: "Renegotiation: add second audio stream"
   });
 
   var test;
   runNetworkTest(function (options) {
     test = new PeerConnectionTest(options);
-    test.chain.append([
-      function PC_LOCAL_SETUP_NEGOTIATION_CALLBACK(test) {
-        test.pcLocal.onNegotiationneededFired = false;
-        test.pcLocal._pc.onnegotiationneeded = anEvent => {
-          info("pcLocal.onnegotiationneeded fired");
-          test.pcLocal.onNegotiationneededFired = true;
-        };
-      },
-      function PC_LOCAL_ADD_SECOND_STREAM(test) {
-        return test.pcLocal.getAllUserMedia([{audio: true}]);
-      },
-      function PC_LOCAL_CREATE_NEW_OFFER(test) {
-        ok(test.pcLocal.onNegotiationneededFired, "onnegotiationneeded");
-        return test.createOffer(test.pcLocal).then(offer => {
-          test._new_offer = offer;
-        });
-      },
-      function PC_LOCAL_SET_NEW_LOCAL_DESCRIPTION(test) {
-        return test.setLocalDescription(test.pcLocal, test._new_offer, HAVE_LOCAL_OFFER);
-      },
-      function PC_REMOTE_SET_NEW_REMOTE_DESCRIPTION(test) {
-        return test.setRemoteDescription(test.pcRemote, test._new_offer, HAVE_REMOTE_OFFER);
-      },
-      function PC_REMOTE_CREATE_NEW_ANSWER(test) {
-        return test.createAnswer(test.pcRemote).then(answer => {
-          test._new_answer = answer;
-        });
-      },
-      function PC_REMOTE_SET_NEW_LOCAL_DESCRIPTION(test) {
-        return test.setLocalDescription(test.pcRemote, test._new_answer, STABLE);
-      },
-      function PC_LOCAL_SET_NEW_REMOTE_DESCRIPTION(test) {
-        return test.setRemoteDescription(test.pcLocal, test._new_answer, STABLE);
-      }
-      // TODO(bug 1093835): figure out how to verify if media flows through the new stream
-    ]);
+    addRenegotiation(test.chain,
+      [
+        function PC_LOCAL_ADD_SECOND_STREAM(test) {
+          test.setMediaConstraints([{audio: true}, {audio: true}],
+                                   [{audio: true}]);
+          return test.pcLocal.getAllUserMedia([{audio: true}]);
+        },
+      ]
+    );
+
+    // TODO(bug 1093835): figure out how to verify if media flows through the new stream
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.run();
   });

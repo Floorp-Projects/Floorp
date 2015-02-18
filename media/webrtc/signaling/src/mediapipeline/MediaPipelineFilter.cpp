@@ -68,16 +68,17 @@ void MediaPipelineFilter::SetCorrelator(uint32_t correlator) {
   correlator_ = correlator;
 }
 
-void MediaPipelineFilter::IncorporateRemoteDescription(
-    const MediaPipelineFilter& remote_filter) {
-  // Update SSRCs; we completely replace the remote SSRCs, since this could be
-  // renegotiation. We leave our SSRCs alone, though.
-  if (!remote_filter.remote_ssrc_set_.empty()) {
-    remote_ssrc_set_ = remote_filter.remote_ssrc_set_;
+void MediaPipelineFilter::Update(const MediaPipelineFilter& filter_update) {
+  // We will not stomp the remote_ssrc_set_ if the update has no ssrcs,
+  // because we don't want to unlearn any remote ssrcs unless the other end
+  // has explicitly given us a new set.
+  if (!filter_update.remote_ssrc_set_.empty()) {
+    remote_ssrc_set_ = filter_update.remote_ssrc_set_;
   }
 
-  // We do not mess with the payload types or correlator here, since the remote
-  // SDP doesn't tell us anything about what we will be receiving.
+  local_ssrc_set_ = filter_update.local_ssrc_set_;
+  payload_type_set_ = filter_update.payload_type_set_;
+  correlator_ = filter_update.correlator_;
 }
 
 MediaPipelineFilter::Result
@@ -170,7 +171,6 @@ bool MediaPipelineFilter::CheckRtcpReport(const unsigned char* data,
   if (ssrcs_must_match && ssrcs_must_not_match) {
     MOZ_MTLOG(ML_ERROR, "Received an RTCP packet with SSRCs from "
               "multiple m-lines! This is broken.");
-    return false;
   }
 
   // This is set if any ssrc matched

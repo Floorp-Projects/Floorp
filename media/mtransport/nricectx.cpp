@@ -366,8 +366,10 @@ void NrIceCtx::trickle_cb(void *arg, nr_ice_ctx *ice_ctx,
   NrIceCtx *ctx = static_cast<NrIceCtx *>(arg);
   RefPtr<NrIceMediaStream> s = ctx->FindStream(stream);
 
-  // Streams which do not exist shouldn't have candidates.
-  MOZ_ASSERT(s);
+  if (!s) {
+    // This stream has been removed because it is inactive
+    return;
+  }
 
   // Format the candidate.
   char candidate_str[NR_ICE_MAX_ATTRIBUTE_SIZE];
@@ -668,32 +670,26 @@ abort:
 
 nsresult NrIceCtx::StartGathering() {
   ASSERT_ON_THREAD(sts_target_);
-  MOZ_ASSERT(connection_state_ == ICE_CTX_INIT);
-  if (connection_state_ != ICE_CTX_INIT) {
-    MOZ_MTLOG(ML_ERROR, "ICE ctx in the wrong state for gathering: '"
-              << name_ << "'  state: " << connection_state_);
+  // This might start gathering for the first time, or again after
+  // renegotiation, or might do nothing at all if gathering has already
+  // finished.
+  int r = nr_ice_gather(ctx_, &NrIceCtx::gather_cb, this);
+
+  if (r && (r != R_WOULDBLOCK)) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't gather ICE candidates for '"
+                        << name_ << "', error=" << r);
     SetConnectionState(ICE_CTX_FAILED);
     return NS_ERROR_FAILURE;
   }
 
-  int r = nr_ice_initialize(ctx_, &NrIceCtx::initialized_cb, this);
-
-  if (r && r != R_WOULDBLOCK) {
-      MOZ_MTLOG(ML_ERROR, "Couldn't gather ICE candidates for '"
-                << name_ << "'");
-      SetConnectionState(ICE_CTX_FAILED);
-      return NS_ERROR_FAILURE;
-  }
-
   SetGatheringState(ICE_CTX_GATHER_STARTED);
-
   return NS_OK;
 }
 
 RefPtr<NrIceMediaStream> NrIceCtx::FindStream(
     nr_ice_media_stream *stream) {
   for (size_t i=0; i<streams_.size(); ++i) {
-    if (streams_[i]->stream() == stream) {
+    if (streams_[i] && (streams_[i]->stream() == stream)) {
       return streams_[i];
     }
   }
@@ -771,7 +767,7 @@ nsresult NrIceCtx::StartChecks() {
 }
 
 
-void NrIceCtx::initialized_cb(NR_SOCKET s, int h, void *arg) {
+void NrIceCtx::gather_cb(NR_SOCKET s, int h, void *arg) {
   NrIceCtx *ctx = static_cast<NrIceCtx *>(arg);
 
   ctx->SetGatheringState(ICE_CTX_GATHER_COMPLETE);

@@ -4,5 +4,5 @@
 - License, v. 2.0. If a copy of the MPL was not distributed with this file,
 - You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- This is intentionally empty and a dummy to let the OpenH264 provider
+<!-- This is intentionally empty and a dummy to let the GMPProvider
      have a preferences button in the list view. -->
