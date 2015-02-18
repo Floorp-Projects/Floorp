@@ -210,26 +210,15 @@ void SampleIterator::Seek(Microseconds aTime)
 Microseconds
 SampleIterator::GetNextKeyframeTime()
 {
-  nsTArray<Moof>& moofs = mIndex->mMoofParser->Moofs();
-  size_t sample = mCurrentSample + 1;
-  size_t moof = mCurrentMoof;
-  while (true) {
-    while (true) {
-      if (moof == moofs.Length()) {
-        return -1;
-      }
-      if (sample < moofs[moof].mIndex.Length()) {
-        break;
-      }
-      sample = 0;
-      ++moof;
+  SampleIterator itr(*this);
+  Sample* sample;
+  while (!!(sample = itr.Get())) {
+    if (sample->mSync) {
+      return sample->mCompositionRange.start;
     }
-    if (moofs[moof].mIndex[sample].mSync) {
-      return moofs[moof].mIndex[sample].mDecodeTime;
-    }
-    ++sample;
+    itr.Next();
   }
-  MOZ_ASSERT(false); // should not be reached.
+  return -1;
 }
 
 Index::Index(const stagefright::Vector<MediaSource::Indice>& aIndex,
