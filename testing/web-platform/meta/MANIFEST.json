@@ -1031,9 +1031,6 @@
         "url": "/battery-status/battery-interface.js"
       },
       {
-        "url": "/battery-status/countdown.js"
-      },
-      {
         "url": "/battery-status/prime.js"
       },
       {
@@ -4444,10 +4441,10 @@
         "url": "/battery-status/battery-full-manual.html"
       },
       {
-        "url": "/battery-status/battery-plugged-in-manual.html"
+        "url": "/battery-status/battery-plugging-in-manual.html"
       },
       {
-        "url": "/battery-status/battery-unplugged-manual.html"
+        "url": "/battery-status/battery-unplugging-manual.html"
       },
       {
         "url": "/gamepad/events-manual.html"
@@ -4541,6 +4538,24 @@
       },
       {
         "url": "/html-longdesc/reflected-changing-longdesc-manual.html"
+      },
+      {
+        "url": "/html-media-capture/capture_audio-manual.html"
+      },
+      {
+        "url": "/html-media-capture/capture_audio_cancel-manual.html"
+      },
+      {
+        "url": "/html-media-capture/capture_image-manual.html"
+      },
+      {
+        "url": "/html-media-capture/capture_image_cancel-manual.html"
+      },
+      {
+        "url": "/html-media-capture/capture_video-manual.html"
+      },
+      {
+        "url": "/html-media-capture/capture_video_cancel-manual.html"
       },
       {
         "url": "/html/browsers/offline/application-cache-api/api_status_checking-manual.html"
@@ -11942,6 +11957,9 @@
         "url": "/html-media-capture/idlharness.html"
       },
       {
+        "url": "/html/browsers/browsing-the-web/history-traversal/PopStateEvent.html"
+      },
+      {
         "url": "/html/browsers/browsing-the-web/read-media/pageload-image.html"
       },
       {
@@ -11970,9 +11988,6 @@
       },
       {
         "url": "/html/browsers/history/the-history-interface/002.html"
-      },
-      {
-        "url": "/html/browsers/history/the-history-interface/003.html"
       },
       {
         "url": "/html/browsers/history/the-history-interface/004.html"
@@ -13946,6 +13961,9 @@
         "url": "/html/semantics/forms/the-input-element/email.html"
       },
       {
+        "url": "/html/semantics/forms/the-input-element/files.html"
+      },
+      {
         "url": "/html/semantics/forms/the-input-element/hidden.html"
       },
       {
@@ -14444,6 +14462,9 @@
         "url": "/html/syntax/parsing/template/creating-an-element-for-the-token/template-owner-document.html"
       },
       {
+        "url": "/html/syntax/parsing/the-end.html"
+      },
+      {
         "url": "/html/syntax/serializing-html-fragments/outerHTML.html"
       },
       {
@@ -14598,6 +14619,9 @@
       },
       {
         "url": "/http/content_length.html"
+      },
+      {
+        "url": "/infrastructure/failing-test.html"
       },
       {
         "url": "/js/builtins/Array.DefineOwnProperty.html"
@@ -14892,6 +14916,9 @@
       },
       {
         "url": "/notifications/event-onshow.html"
+      },
+      {
+        "url": "/notifications/instance.html"
       },
       {
         "url": "/notifications/interfaces.html"
@@ -18139,6 +18166,6 @@
     "deleted": [],
     "items": {}
   },
-  "rev": "63dafe11d04d035a69351c43297cc1ade8171a6b",
+  "rev": "06dfcf88301bcc02ed25830f0d87c75f041dad4e",
   "url_base": "/"
 }

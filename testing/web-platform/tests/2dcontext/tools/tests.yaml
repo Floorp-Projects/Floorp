@@ -198,7 +198,7 @@
         ("empty", "", None),
         ("onlyspace", "  ", None),
         ("space", "  100", 100),
-        ("whitespace", "\r\n\t\f100", 100),
+        ("whitespace", "\n\t\f100", 100),
         ("plus", "+100", 100),
         ("minus", "-100", None),
         ("octal", "0100", 100),
