@@ -22,7 +22,7 @@ registerCleanupFunction(() => {
 
   // Ensure sidebar is hidden after each test:
   if (!document.getElementById("sidebar-box").hidden) {
-    toggleSidebar("", false);
+    SidebarUI.hide();
   }
 });
 

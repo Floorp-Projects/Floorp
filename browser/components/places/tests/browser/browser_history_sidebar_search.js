@@ -44,7 +44,7 @@ function continue_test() {
                  transition: hs.TRANSITION_TYPED});
   }
   PlacesTestUtils.addVisits(places).then(() => {
-    toggleSidebar("viewHistorySidebar", true);
+    SidebarUI.show("viewHistorySidebar");
   });
 
   sidebar.addEventListener("load", function() {
@@ -63,7 +63,7 @@ function continue_test() {
       check_sidebar_tree_order(pages.length);
 
       // Cleanup.
-      toggleSidebar("viewHistorySidebar", false);
+      SidebarUI.hide();
       PlacesTestUtils.clearHistory().then(finish);
     });
   }, true);
