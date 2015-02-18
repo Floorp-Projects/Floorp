@@ -130,6 +130,7 @@ public:
 
 protected:
   void              ConstructNativeMenus();
+  void              ConstructFallbackNativeMenus();
   nsresult          InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex);
   void              RemoveMenuAtIndex(uint32_t aIndex);
   void              HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode);
