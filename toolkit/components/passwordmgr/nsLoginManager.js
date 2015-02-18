@@ -587,8 +587,7 @@ LoginManager.prototype = {
     log("fillForm processing form[ id:", form.id, "]");
     return LoginManagerContent._asyncFindLogins(form, { showMasterPassword: true })
                               .then(function({ form, loginsFound }) {
-      return LoginManagerContent._fillForm(form, true, true,
-                                           false, false, loginsFound)[0];
+      return LoginManagerContent._fillForm(form, true, false, false, loginsFound)[0];
     });
   },
 

@@ -30,13 +30,32 @@ const ProjectBuilding = exports.ProjectBuilding = {
     return manifest;
   }),
 
-  // If the app depends on some build step, run it before pushing the app
-  build: Task.async(function* (project) {
+  hasPrepackage: Task.async(function* (project) {
     let manifest = yield ProjectBuilding.fetchPackageManifest(project);
-    if (!manifest || !manifest.webide || !manifest.webide.prepackage) {
+    return manifest && manifest.webide && "prepackage" in manifest.webide;
+  }),
+
+  // If the app depends on some build step, run it before pushing the app
+  build: Task.async(function* ({ project, logger }) {
+    if (!this.hasPrepackage(project)) {
       return;
     }
 
+    let manifest = yield ProjectBuilding.fetchPackageManifest(project);
+
+    logger("start");
+    let packageDir;
+    try {
+      packageDir = yield this._build(project, manifest, logger);
+      logger("succeed");
+    } catch(e) {
+      logger("failed", e);
+    }
+
+    return packageDir;
+  }),
+
+  _build: Task.async(function* (project, manifest, logger) {
     // Look for `webide` property
     manifest = manifest.webide;
 
@@ -80,10 +99,10 @@ const ProjectBuilding = exports.ProjectBuilding = {
       cwd = project.location;
     }
 
-    console.log("Running pre-package hook '" + command + "' " +
-                args.join(" ") +
-                " with ENV=[" + env.join(", ") + "]" +
-                " at " + cwd);
+    logger("Running pre-package hook '" + command + "' " +
+           args.join(" ") +
+           " with ENV=[" + env.join(", ") + "]" +
+           " at " + cwd);
 
     // Run the command through a shell command in order to support non absolute
     // paths.
@@ -115,12 +134,12 @@ const ProjectBuilding = exports.ProjectBuilding = {
         workdir: cwd,
 
         stdout: data =>
-          console.log("pre-package: " + data),
+          logger(data),
         stderr: data =>
-          console.error("pre-package: " + data),
+          logger(data),
 
         done: result => {
-          console.log("pre-package: Terminated with error code: " + result.exitCode);
+          logger("Terminated with error code: " + result.exitCode);
           if (result.exitCode == 0) {
             defer.resolve();
           } else {

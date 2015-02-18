@@ -250,7 +250,7 @@ var LoginManagerContent = {
     let doc = form.ownerDocument;
     let autofillForm = gAutofillForms && !PrivateBrowsingUtils.isContentWindowPrivate(doc.defaultView);
 
-    this._fillForm(form, autofillForm, false, false, false, loginsFound);
+    this._fillForm(form, autofillForm, false, false, loginsFound);
   },
 
   /*
@@ -293,7 +293,7 @@ var LoginManagerContent = {
     if (usernameField == acInputField && passwordField) {
       this._asyncFindLogins(acForm, { showMasterPassword: false })
           .then(({ form, loginsFound }) => {
-              this._fillForm(form, true, true, true, true, loginsFound);
+              this._fillForm(form, true, true, true, loginsFound);
           })
           .then(null, Cu.reportError);
     } else {
@@ -564,14 +564,13 @@ var LoginManagerContent = {
    * [success, foundLogins].
    *
    * - autofillForm denotes if we should fill the form in automatically
-   * - ignoreAutocomplete denotes if we should ignore autocomplete=off
-   *     attributes
    * - userTriggered is an indication of whether this filling was triggered by
    *     the user
    * - foundLogins is an array of nsILoginInfo for optimization
    */
-  _fillForm : function (form, autofillForm, ignoreAutocomplete,
-                        clobberPassword, userTriggered, foundLogins) {
+  _fillForm : function (form, autofillForm, clobberPassword,
+                        userTriggered, foundLogins) {
+    let ignoreAutocomplete = true;
     // Heuristically determine what the user/pass fields are
     // We do this before checking to see if logins are stored,
     // so that the user isn't prompted for a master password
