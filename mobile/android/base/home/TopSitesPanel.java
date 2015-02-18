@@ -659,7 +659,7 @@ public class TopSitesPanel extends HomeFragment {
             }
 
             // Otherwise, do this until the async lookup returns.
-            view.displayThumbnail(R.drawable.favicon_globe);
+            view.displayThumbnail(R.drawable.favicon);
 
             // Give each side enough information to shake hands later.
             listener.setLoadId(loadId);
