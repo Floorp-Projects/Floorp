@@ -44,7 +44,7 @@ var TestObserver = {
 };
 
 // Initialize the object that stores the results of notifications.
-for (var formID of ["form1", "form2", "form3", "form4", "form5"])
+for (var formID of ["form1", "form2", "form3", "form5"])
   TestObserver.results[formID] = { receivedNotification: false, data: null };
 
 // Add the observer
@@ -77,15 +77,6 @@ SpecialPowers.addObserver(TestObserver, "passwordmgr-found-logins", false);
     <p>This is form 3.</p>
     <input  type="text"       name="uname">
     <input  type="password"   name="pword" value="existing">
-
-    <button type="submit">Submit</button>
-    <button type="reset"> Reset </button>
-  </form>
-
-  <form id="form4" action="formtest.js" autocomplete="off">
-    <p>This is form 4.</p>
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
 
     <button type="submit">Submit</button>
     <button type="reset"> Reset </button>
@@ -138,17 +129,6 @@ function startTest(){
   is(TestObserver.results["form3"].data.get("foundLogins").constructor.name, "Array", "Checking foundLogins is array");
   is(TestObserver.results["form3"].data.get("foundLogins").length, 1, "Checking foundLogins contains one login");
   is(TestObserver.results["form3"].data.get("selectedLogin"), null, "Checking selectedLogin is null");
-
-  // Test notification of a form that wasn't filled because autocomplete is off.
-  is(TestObserver.results["form4"].receivedNotification, true, "Checking observer was notified");
-  is(TestObserver.results["form4"].data.get("didntFillReason"), "autocompleteOff", "Checking didntFillReason is autocompleteOff");
-  is(SpecialPowers.unwrap(TestObserver.results["form4"].data.get("usernameField")), $_(4, "uname"), "Checking username field is correct");
-  is(SpecialPowers.unwrap(TestObserver.results["form4"].data.get("passwordField")), $_(4, "pword"), "Checking password field is correct");
-  is(TestObserver.results["form4"].data.get("foundLogins").constructor.name, "Array", "Checking foundLogins is array");
-  is(TestObserver.results["form4"].data.get("foundLogins").length, 1, "Checking foundLogins contains one login");
-  ok(TestObserver.results["form4"].data.get("selectedLogin").QueryInterface(Ci.nsILoginInfo), "Checking selectedLogin is nsILoginInfo");
-  ok(TestObserver.results["form4"].data.get("selectedLogin").equals(TestObserver.results["form4"].data.get("foundLogins")[0]),
-     "Checking selectedLogin is found login");
 
   // Test notification of a form that wasn't filled because multiple logins
   // are available for the form.

@@ -414,6 +414,8 @@ DevTools.prototype = {
       // No toolbox for target, create one
       toolbox = new devtools.Toolbox(target, toolId, hostType, hostOptions);
 
+      this.emit("toolbox-created", toolbox);
+
       this._toolboxes.set(target, toolbox);
 
       toolbox.once("destroy", () => {

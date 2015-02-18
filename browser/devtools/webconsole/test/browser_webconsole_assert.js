@@ -20,6 +20,11 @@ function consoleOpened(hud) {
   return waitForMessages({
     webconsole: hud,
     messages: [{
+      text: "undefined",
+      category: CATEGORY_OUTPUT,
+      severity: SEVERITY_LOG,
+    },
+    {
       text: "start",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
