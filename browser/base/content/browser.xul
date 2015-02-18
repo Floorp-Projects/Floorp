@@ -1130,7 +1130,7 @@
           <toolbarbutton class="close-icon tabbable" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="SidebarUI.hide();"/>
         </sidebarheader>
         <browser id="sidebar" flex="1" autoscroll="false" disablehistory="true"
-                  style="min-width: 14em; width: 18em; max-width: 36em;" tooltip="aHTMLTooltip"/>
+                  style="min-width: 14em; width: 18em; max-width: 36em;"/>
       </vbox>
 
       <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
