@@ -37,11 +37,6 @@
                     android:entryValues="@array/pref_restore_values"
                     android:persistent="true" />
 
-    <CheckBoxPreference android:key="android.not_a_preference.tab_queue"
-                        android:title="@string/pref_tab_queue_title"
-                        android:summary="@string/pref_tab_queue_summary"
-                        android:defaultValue="false" />
-
     <org.mozilla.gecko.preferences.AndroidImportPreference
             android:key="android.not_a_preference.import_android"
             gecko:entries="@array/pref_import_android_entries"

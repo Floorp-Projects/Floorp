@@ -28,7 +28,7 @@ public class testSettingsMenuItems extends PixelTest {
      */
 
     // Customize menu items.
-    String[][] PATH_CUSTOMIZE = { { StringHelper.CUSTOMIZE_SECTION_LABEL, "Home, search, tabs, import"} };
+    String[] PATH_CUSTOMIZE = { StringHelper.CUSTOMIZE_SECTION_LABEL };
     String[][] OPTIONS_CUSTOMIZE = {
         { "Home" },
         { "Search", "", "Show search suggestions", "Installed search engines"},
@@ -37,14 +37,14 @@ public class testSettingsMenuItems extends PixelTest {
     };
 
     // Home panel menu items.
-    String[][] PATH_HOME = { { StringHelper.CUSTOMIZE_SECTION_LABEL }, { "Home", "Customize your homepage" } };
+    String[] PATH_HOME = { StringHelper.CUSTOMIZE_SECTION_LABEL, "Home" };
     String[][] OPTIONS_HOME = {
       { "Panels" },
       { "Automatic updates", "Enabled", "Enabled", "Only over Wi-Fi" },
     };
 
     // Display menu items.
-    String[][] PATH_DISPLAY = { { StringHelper.DISPLAY_SECTION_LABEL, "Text, title bar, full-screen browsing" } };
+    String[] PATH_DISPLAY = { StringHelper.DISPLAY_SECTION_LABEL };
     final String[] TITLE_BAR_LABEL_ARR = { StringHelper.TITLE_BAR_LABEL, StringHelper.SHOW_PAGE_TITLE_LABEL,
         StringHelper.SHOW_PAGE_TITLE_LABEL, StringHelper.SHOW_PAGE_ADDRESS_LABEL };
     String[][] OPTIONS_DISPLAY = {
@@ -57,7 +57,7 @@ public class testSettingsMenuItems extends PixelTest {
     };
 
     // Privacy menu items.
-    String[][] PATH_PRIVACY = { { StringHelper.PRIVACY_SECTION_LABEL, "Control passwords, cookies, tracking, data" } };
+    String[] PATH_PRIVACY = { StringHelper.PRIVACY_SECTION_LABEL };
     final String[] TRACKING_PROTECTION_LABEL_ARR = { StringHelper.TRACKING_PROTECTION_LABEL };
     String[][] OPTIONS_PRIVACY = {
         TRACKING_PROTECTION_LABEL_ARR,
@@ -69,7 +69,7 @@ public class testSettingsMenuItems extends PixelTest {
     };
 
     // Mozilla/vendor menu items.
-    String[][] PATH_MOZILLA = { { StringHelper.MOZILLA_SECTION_LABEL, "About " + StringHelper.BRAND_NAME + ", FAQs, data choices" } };
+    String[] PATH_MOZILLA = { StringHelper.MOZILLA_SECTION_LABEL };
     String[][] OPTIONS_MOZILLA = {
         { StringHelper.ABOUT_LABEL },
         { StringHelper.FAQS_LABEL },
@@ -80,7 +80,7 @@ public class testSettingsMenuItems extends PixelTest {
     };
 
     // Developer menu items.
-    String[][] PATH_DEVELOPER = { { StringHelper.DEVELOPER_TOOLS_SECTION_LABEL, "Remote debugging, paint flashing" } };
+    String[] PATH_DEVELOPER = { StringHelper.DEVELOPER_TOOLS_SECTION_LABEL };
     String[][] OPTIONS_DEVELOPER = {
         { StringHelper.PAINT_FLASHING_LABEL },
         { StringHelper.REMOTE_DEBUGGING_LABEL },
@@ -99,7 +99,7 @@ public class testSettingsMenuItems extends PixelTest {
      *  - default string value of item (optional)
      *  - string values of options that are displayed once clicked (optional).
      */
-    public void setupSettingsMap(Map<String[][], List<String[]>> settingsMap) {
+    public void setupSettingsMap(Map<String[], List<String[]>> settingsMap) {
         settingsMap.put(PATH_CUSTOMIZE, new ArrayList<String[]>(Arrays.asList(OPTIONS_CUSTOMIZE)));
         settingsMap.put(PATH_HOME, new ArrayList<String[]>(Arrays.asList(OPTIONS_HOME)));
         settingsMap.put(PATH_DISPLAY, new ArrayList<String[]>(Arrays.asList(OPTIONS_DISPLAY)));
@@ -111,7 +111,7 @@ public class testSettingsMenuItems extends PixelTest {
     public void testSettingsMenuItems() {
         blockForGeckoReady();
 
-        Map<String[][], List<String[]>> settingsMenuItems = new HashMap<String[][], List<String[]>>();
+        Map<String[], List<String[]>> settingsMenuItems = new HashMap<String[], List<String[]>>();
         setupSettingsMap(settingsMenuItems);
 
         // Set special handling for Settings items that are conditionally built.
@@ -153,7 +153,7 @@ public class testSettingsMenuItems extends PixelTest {
      * Check for conditions for building certain settings, and add them to be tested
      * if they are present.
      */
-    public void updateConditionalSettings(Map<String[][], List<String[]>> settingsMap) {
+    public void updateConditionalSettings(Map<String[], List<String[]>> settingsMap) {
         // Preferences dependent on RELEASE_BUILD
         if (!AppConstants.RELEASE_BUILD) {
             // Text reflow - only built if *not* release build
@@ -180,15 +180,6 @@ public class testSettingsMenuItems extends PixelTest {
             settingsMap.get(PATH_CUSTOMIZE).add(autoUpdateUi);
         }
 
-        // Tab Queue
-        if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_ANDROID_TAB_QUEUE) {
-            String[] tabQueue = { StringHelper.TAB_QUEUE_LABEL, "Prevent tabs from opening immediately, but open all queued tabs the next time " + StringHelper.BRAND_NAME + " loads." };
-            settingsMap.get(PATH_CUSTOMIZE).add(tabQueue);
-            final List<String[]> list = settingsMap.remove(PATH_CUSTOMIZE);
-            PATH_CUSTOMIZE[0][1] = "Home, search, tabs, open later, import";
-            settingsMap.put(PATH_CUSTOMIZE, list);
-        }
-
         // Crash reporter
         if (AppConstants.MOZ_CRASHREPORTER) {
             String[] crashReporterUi = { "Crash Reporter", StringHelper.BRAND_NAME + " submits crash reports to help Mozilla make your browser more stable and secure" };
@@ -207,25 +198,16 @@ public class testSettingsMenuItems extends PixelTest {
         }
     }
 
-    public void checkMenuHierarchy(Map<String[][], List<String[]>> settingsMap) {
+    public void checkMenuHierarchy(Map<String[], List<String[]>> settingsMap) {
         // Check the items within each category.
         String section = null;
-        for (Entry<String[][], List<String[]>> e : settingsMap.entrySet()) {
-            final String[][] menuPath = e.getKey();
+        for (Entry<String[], List<String[]>> e : settingsMap.entrySet()) {
+            final String[] menuPath = e.getKey();
 
-            for (String[] menuItem : menuPath) {
-                final String item = menuItem[0];
-                section = "^" + item + "$";
+            for (String menuItem : menuPath) {
+                section = "^" + menuItem + "$";
 
                 waitForEnabledText(section);
-
-                if(menuItem.length > 1) {
-                    final String subtitle = menuItem[1];
-                    boolean foundText = waitForEnabledText("^" + subtitle + "$");
-                    mAsserter.ok(foundText, "Waiting for subtitle item " + subtitle + " for section " + item,
-                            "Found the " + item + " subtitle " + subtitle);
-                }
-
                 mSolo.clickOnText(section);
             }
 

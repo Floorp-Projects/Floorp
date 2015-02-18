@@ -124,8 +124,6 @@
   <string name="pref_category_advanced">&pref_category_advanced;</string>
   <string name="pref_category_customize">&pref_category_customize;</string>
   <string name="pref_category_customize_summary">&pref_category_customize_summary;</string>
-  <string name="pref_category_customize_alt_summary">&pref_category_customize_alt_summary;</string>
-
   <string name="pref_category_search">&pref_category_search3;</string>
   <string name="pref_category_search_summary">&pref_category_search_summary;</string>
   <string name="pref_category_display">&pref_category_display;</string>
@@ -233,8 +231,6 @@
   <string name="pref_update_autodownload_disabled">&pref_update_autodownload_never;</string>
   <string name="pref_update_autodownload_enabled">&pref_update_autodownload_always;</string>
 
-  <string name="pref_tab_queue_title">&pref_tab_queue_title;</string>
-  <string name="pref_tab_queue_summary">&pref_tab_queue_summary;</string>
 
   <string name="pref_about_firefox">&pref_about_firefox;</string>
   <string name="pref_vendor_faqs">&pref_vendor_faqs;</string>

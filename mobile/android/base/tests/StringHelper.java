@@ -229,7 +229,6 @@ public class StringHelper {
     public static final String APPS_LABEL = "Apps";
     public static final String SETTINGS_LABEL = "Settings";
     public static final String GUEST_MODE_LABEL = "New Guest Session";
-    public static final String TAB_QUEUE_LABEL = "Open later";
 
     // Android 3.0+
     public static final String TOOLS_LABEL = "Tools";
