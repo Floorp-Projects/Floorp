@@ -5,10 +5,9 @@
 
 package org.mozilla.gecko.favicons;
 
+import android.graphics.drawable.Drawable;
 import org.mozilla.gecko.AboutPages;
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -23,11 +22,11 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
 
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -452,9 +451,11 @@ public class Favicons {
 
         final Resources res = context.getResources();
 
-        defaultFavicon = BitmapFactory.decodeResource(res, R.drawable.toolbar_favicon_default);
-        if (defaultFavicon == null) {
-            throw new IllegalStateException("Null default favicon was returned from the resources system!");
+        final Drawable defaultFaviconDrawable = res.getDrawable(R.drawable.toolbar_favicon_default);
+        if (defaultFaviconDrawable instanceof BitmapDrawable) {
+            defaultFavicon = ((BitmapDrawable) defaultFaviconDrawable).getBitmap();
+        } else {
+            throw new IllegalStateException("toolbar_favicon_default wasn't a bitmap resource!");
         }
 
         defaultFaviconSize = res.getDimensionPixelSize(R.dimen.favicon_bg);
