@@ -55,8 +55,9 @@ class SavedFrame : public NativeObject {
                     HashPolicy,
                     SystemAllocPolicy> Set;
 
-    class AutoLookupRooter;
-    class HandleLookup;
+    typedef RootedGeneric<Lookup*> AutoLookupRooter;
+    typedef AutoLookupRooter &HandleLookup;
+    class AutoLookupVector;
 
   private:
     static bool finishSavedFrameInit(JSContext *cx, HandleObject ctor, HandleObject proto);
@@ -221,44 +222,6 @@ class SavedStacks {
 
     void sweepPCLocationMap();
     bool getLocation(JSContext *cx, const FrameIter &iter, MutableHandleLocationValue locationp);
-
-    struct FrameState
-    {
-        FrameState() : principals(nullptr), name(nullptr), location() { }
-        explicit FrameState(const FrameIter &iter);
-        FrameState(const FrameState &fs);
-
-        ~FrameState();
-
-        void trace(JSTracer *trc);
-
-        // Note: we don't have to hold/drop principals, because we're
-        // only alive while the stack is being walked and during this
-        // time the principals are kept alive by the stack itself.
-        JSPrincipals  *principals;
-        JSAtom        *name;
-        LocationValue location;
-    };
-
-    class MOZ_STACK_CLASS AutoFrameStateVector : public JS::CustomAutoRooter {
-      public:
-        explicit AutoFrameStateVector(JSContext *cx)
-          : JS::CustomAutoRooter(cx),
-            frames(cx)
-        { }
-
-        typedef Vector<FrameState, 20> FrameStateVector;
-        inline FrameStateVector *operator->() { return &frames; }
-        inline FrameState &operator[](size_t i) { return frames[i]; }
-
-      private:
-        FrameStateVector frames;
-
-        virtual void trace(JSTracer *trc) {
-            for (size_t i = 0; i < frames.length(); i++)
-                frames[i].trace(trc);
-        }
-    };
 };
 
 bool SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata);
