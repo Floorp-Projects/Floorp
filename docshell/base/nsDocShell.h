@@ -12,7 +12,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIBaseWindow.h"
-#include "nsINetworkInterceptController.h"
 #include "nsIScrollable.h"
 #include "nsITextScroll.h"
 #include "nsIContentViewerContainer.h"
@@ -153,7 +152,6 @@ class nsDocShell MOZ_FINAL
   , public nsILinkHandler
   , public nsIClipboardCommands
   , public nsIDOMStorageManager
-  , public nsINetworkInterceptController
   , public mozilla::SupportsWeakPtr<nsDocShell>
 {
   friend class nsDSURIContentListener;
@@ -184,7 +182,6 @@ public:
   NS_DECL_NSIAUTHPROMPTPROVIDER
   NS_DECL_NSICLIPBOARDCOMMANDS
   NS_DECL_NSIWEBSHELLSERVICES
-  NS_DECL_NSINETWORKINTERCEPTCONTROLLER
   NS_FORWARD_SAFE_NSIDOMSTORAGEMANAGER(TopSessionStorageManager())
 
   NS_IMETHOD Stop() MOZ_OVERRIDE {
