@@ -115,15 +115,15 @@ public:
     LeaveCriticalSection(&critical_section);
   }
 
-#ifdef DEBUG
   /* This is guaranteed to have the good behaviour if it succeeds. The behaviour
    * is undefined otherwise. */
   void assert_current_thread_owns()
   {
+#ifdef DEBUG
     /* This implies owner != 0, because GetCurrentThreadId cannot return 0. */
     assert(owner == GetCurrentThreadId());
-  }
 #endif
+  }
 
 private:
   CRITICAL_SECTION critical_section;
@@ -192,7 +192,7 @@ typedef BOOL (WINAPI *revert_mm_thread_characteristics_function)(HANDLE handle);
 
 extern cubeb_ops const wasapi_ops;
 
-int wasapi_stream_stop(cubeb_stream * stm);
+int stream_stop(cubeb_stream * stm, bool * was_running);
 int wasapi_stream_start(cubeb_stream * stm);
 void close_wasapi_stream(cubeb_stream * stm);
 int setup_wasapi_stream(cubeb_stream * stm);
@@ -310,12 +310,8 @@ public:
   HRESULT STDMETHODCALLTYPE
   OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR device_id)
   {
-    /* we don't support capture for now. */
-    if (flow == eCapture) {
-      return S_OK;
-    }
-    /* all our streams are eMultimedia for now */
-    if (role != eMultimedia) {
+    /* we only support a single stream type for now. */
+    if (flow != eRender && role != eMultimedia) {
       return S_OK;
     }
 
@@ -325,15 +321,18 @@ public:
     }
 
     /* Close the stream */
-    wasapi_stream_stop(stm);
+    bool was_running;
     {
       auto_lock lock(stm->stream_reset_lock);
+      stream_stop(stm, &was_running);
       close_wasapi_stream(stm);
       /* Reopen a stream and start it immediately. This will automatically pick the
        * new default device for this role. */
       setup_wasapi_stream(stm);
     }
-    wasapi_stream_start(stm);
+    if (was_running) {
+      wasapi_stream_start(stm);
+    }
 
     return S_OK;
   }
@@ -532,7 +531,7 @@ wasapi_stream_render_loop(LPVOID stream)
     DWORD waitResult = WaitForMultipleObjects(ARRAY_LENGTH(wait_array),
                                               wait_array,
                                               FALSE,
-                                              INFINITE);
+                                              1000);
 
     switch (waitResult) {
     case WAIT_OBJECT_0: { /* shutdown */
@@ -585,6 +584,9 @@ wasapi_stream_render_loop(LPVOID stream)
       }
     }
     break;
+    case WAIT_TIMEOUT:
+      assert(stm->shutdown_event == wait_array[0]);
+      break;
     default:
       LOG("case %d not handled in render loop.", waitResult);
       abort();
@@ -730,6 +732,28 @@ int wasapi_init(cubeb ** context, char const * context_name)
 }
 
 namespace {
+void stop_and_join_render_thread(cubeb_stream * stm)
+{
+  if (!stm->thread) {
+    return;
+  }
+
+  BOOL ok = SetEvent(stm->shutdown_event);
+  if (!ok) {
+    LOG("Destroy SetEvent failed: %d\n", GetLastError());
+  }
+
+  DWORD r = WaitForSingleObject(stm->thread, INFINITE);
+  if (r == WAIT_FAILED) {
+    LOG("Destroy WaitForSingleObject on thread failed: %d\n", GetLastError());
+  }
+
+  CloseHandle(stm->thread);
+  stm->thread = NULL;
+
+  CloseHandle(stm->shutdown_event);
+  stm->shutdown_event = 0;
+}
 
 void wasapi_destroy(cubeb * context)
 {
@@ -947,9 +971,7 @@ int setup_wasapi_stream(cubeb_stream * stm)
   IMMDevice * device;
   WAVEFORMATEX * mix_format;
 
-#ifdef DEBUG
   stm->stream_reset_lock->assert_current_thread_owns();
-#endif
 
   auto_com com;
   if (!com.ok()) {
@@ -1110,17 +1132,8 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
 
   stm->stream_reset_lock = new owned_critical_section();
 
-  stm->shutdown_event = CreateEvent(NULL, 0, 0, NULL);
   stm->refill_event = CreateEvent(NULL, 0, 0, NULL);
-
-  if (!stm->shutdown_event) {
-    LOG("Can't create the shutdown event, error: %x\n", GetLastError());
-    wasapi_stream_destroy(stm);
-    return CUBEB_ERROR;
-  }
-
   if (!stm->refill_event) {
-    SafeRelease(stm->shutdown_event);
     LOG("Can't create the refill event, error: %x\n", GetLastError());
     wasapi_stream_destroy(stm);
     return CUBEB_ERROR;
@@ -1153,9 +1166,7 @@ void close_wasapi_stream(cubeb_stream * stm)
 {
   assert(stm);
 
-#ifdef DEBUG
   stm->stream_reset_lock->assert_current_thread_owns();
-#endif
 
   SafeRelease(stm->client);
   stm->client = NULL;
@@ -1178,20 +1189,8 @@ void wasapi_stream_destroy(cubeb_stream * stm)
 
   unregister_notification_client(stm);
 
-  if (stm->thread) {
-    BOOL ok = SetEvent(stm->shutdown_event);
-    if (!ok) {
-      LOG("Destroy SetEvent failed: %d\n", GetLastError());
-    }
-    DWORD r = WaitForSingleObject(stm->thread, INFINITE);
-    if (r == WAIT_FAILED) {
-      LOG("Destroy WaitForSingleObject on thread failed: %d\n", GetLastError());
-    }
-    CloseHandle(stm->thread);
-    stm->thread = 0;
-  }
+  stop_and_join_render_thread(stm);
 
-  SafeRelease(stm->shutdown_event);
   SafeRelease(stm->refill_event);
 
   {
@@ -1208,7 +1207,13 @@ int wasapi_stream_start(cubeb_stream * stm)
 {
   auto_lock lock(stm->stream_reset_lock);
 
-  assert(stm && !stm->thread);
+  assert(stm && !stm->thread && !stm->shutdown_event);
+
+  stm->shutdown_event = CreateEvent(NULL, 0, 0, NULL);
+  if (!stm->shutdown_event) {
+    LOG("Can't create the shutdown event, error: %x\n", GetLastError());
+    return CUBEB_ERROR;
+  }
 
   stm->thread = (HANDLE) _beginthreadex(NULL, 256 * 1024, wasapi_stream_render_loop, stm, STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
   if (stm->thread == NULL) {
@@ -1227,30 +1232,24 @@ int wasapi_stream_start(cubeb_stream * stm)
   return FAILED(hr) ? CUBEB_ERROR : CUBEB_OK;
 }
 
-int wasapi_stream_stop(cubeb_stream * stm)
+int stream_stop(cubeb_stream * stm, bool * was_running)
 {
-  assert(stm && stm->shutdown_event);
+  assert(stm);
 
-  auto_lock lock(stm->stream_reset_lock);
-
-  BOOL ok = SetEvent(stm->shutdown_event);
-  if (!ok) {
-    LOG("Stop SetEvent failed: %d\n", GetLastError());
-  }
+  stm->stream_reset_lock->assert_current_thread_owns();
 
   HRESULT hr = stm->client->Stop();
   if (FAILED(hr)) {
     LOG("could not stop AudioClient\n");
   }
+  if (was_running) {
+    *was_running = hr == S_OK;
+    assert(*was_running == !!stm->thread);
+  }
 
-  if (stm->thread) {
+  {
     auto_unlock lock(stm->stream_reset_lock);
-    DWORD r = WaitForSingleObject(stm->thread, INFINITE);
-    if (r == WAIT_FAILED) {
-      LOG("Stop WaitForSingleObject on thread failed: %d\n", GetLastError());
-    }
-    CloseHandle(stm->thread);
-    stm->thread = NULL;
+    stop_and_join_render_thread(stm);
   }
 
   if (SUCCEEDED(hr)) {
@@ -1258,6 +1257,12 @@ int wasapi_stream_stop(cubeb_stream * stm)
   }
 
   return FAILED(hr) ? CUBEB_ERROR : CUBEB_OK;
+}
+
+int wasapi_stream_stop(cubeb_stream * stm)
+{
+  auto_lock lock(stm->stream_reset_lock);
+  return stream_stop(stm, NULL);
 }
 
 int wasapi_stream_get_position(cubeb_stream * stm, uint64_t * position)
