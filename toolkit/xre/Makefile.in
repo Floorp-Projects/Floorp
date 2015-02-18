@@ -24,7 +24,7 @@ ifdef MOZ_SOURCE_STAMP
 
   INIARGS = --sourcestamp=$(MOZ_SOURCE_STAMP)
 
-  ifdef MOZILLA_OFFICIAL
+  ifdef MOZ_INCLUDE_SOURCE_INFO
     source_repo := $(call getSourceRepo)
 
     # extra sanity check for old versions of hg, no showconfig support
