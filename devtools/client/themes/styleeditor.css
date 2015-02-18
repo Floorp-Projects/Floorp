@@ -84,16 +84,17 @@
   border-bottom: 1px solid;
 }
 
+.media-responsive-mode-toggle {
+  color: var(--theme-highlight-blue);
+  text-decoration: underline;
+}
+
 .media-rule-line {
   -moz-padding-start: 4px;
 }
 
-.theme-light .media-condition-unmatched {
-  color: grey;
-}
-
-.theme-dark .media-condition-unmatched {
-  color: #606C75;
+.media-condition-unmatched {
+  opacity: 0.4;
 }
 
 .stylesheet-enabled {
