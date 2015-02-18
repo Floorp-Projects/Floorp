@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % webideDTD SYSTEM "chrome://browser/locale/devtools/webide.dtd" >
+  %webideDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf8"/>
+    <link rel="stylesheet" href="chrome://webide/skin/deck.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://browser/skin/devtools/common.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://webide/skin/logs.css" type="text/css"/>
+    <script type="application/javascript;version=1.8" src="chrome://browser/content/devtools/theme-switching.js"></script>
+    <script type="application/javascript;version=1.8" src="logs.js"></script>
+  </head>
+  <body>
+
+    <div id="controls">
+      <a id="close">&deck_close;</a>
+    </div>
+
+    <h1>&logs_title;</h1>
+
+    <ul id="logs" class="devtools-monospace">
+    </ul>
+
+  </body>
+</html>
