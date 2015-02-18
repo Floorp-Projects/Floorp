@@ -277,15 +277,13 @@ enum ParseNodeKind
  *                            PNK_FOROF (for-of) or PNK_FORHEAD (for(;;))
  *                          pn_right: body
  * PNK_FORIN    ternary     pn_kid1:  PNK_VAR to left of 'in', or nullptr
- *                            its pn_xflags may have PNX_POPVAR
- *                            bit set
+ *                            its pn_xflags may have PNX_POPVAR bit set
  *                          pn_kid2: PNK_NAME or destructuring expr
  *                            to left of 'in'; if pn_kid1, then this
  *                            is a clone of pn_kid1->pn_head
  *                          pn_kid3: object expr to right of 'in'
  * PNK_FOROF    ternary     pn_kid1:  PNK_VAR to left of 'of', or nullptr
- *                            its pn_xflags may have PNX_POPVAR
- *                            bit set
+ *                            its pn_xflags may have PNX_POPVAR bit set
  *                          pn_kid2: PNK_NAME or destructuring expr
  *                            to left of 'of'; if pn_kid1, then this
  *                            is a clone of pn_kid1->pn_head
@@ -363,15 +361,8 @@ enum ParseNodeKind
  * PNK_LSH,     binary      pn_left: left-assoc SH expr, pn_right: ADD expr
  * PNK_RSH,
  * PNK_URSH
- * PNK_ADD      binary      pn_left: left-assoc ADD expr, pn_right: MUL expr
- *                          pn_xflags: if a left-associated binary PNK_ADD
- *                            tree has been flattened into a list (see above
- *                            under <Expressions>), pn_xflags will contain
- *                            PNX_STRCAT if at least one list element is a
- *                            string literal (PNK_STRING); if such a list has
- *                            any non-string, non-number term, pn_xflags will
- *                            contain PNX_CANTFOLD.
- * PNK_SUB      binary      pn_left: left-assoc SH expr, pn_right: ADD expr
+ * PNK_ADD,     binary      pn_left: left-assoc ADD expr, pn_right: MUL expr
+ * PNK_SUB
  * PNK_STAR,    binary      pn_left: left-assoc MUL expr, pn_right: UNARY expr
  * PNK_DIV,                 pn_op: JSOP_MUL, JSOP_DIV, JSOP_MOD
  * PNK_MOD
@@ -714,15 +705,14 @@ class ParseNode
 /* PN_LIST pn_xflags bits. */
 #define PNX_POPVAR      0x01            /* PNK_VAR or PNK_CONST last result
                                            needs popping */
-#define PNX_GROUPINIT   0x02            /* var [a, b] = [c, d]; unit list */
-#define PNX_FUNCDEFS    0x04            /* contains top-level function statements */
-#define PNX_SETCALL     0x08            /* call expression in lvalue context */
-#define PNX_DESTRUCT    0x10            /* code evaluating destructuring
+#define PNX_FUNCDEFS    0x02            /* contains top-level function statements */
+#define PNX_SETCALL     0x04            /* call expression in lvalue context */
+#define PNX_DESTRUCT    0x08            /* code evaluating destructuring
                                            arguments occurs before function body */
-#define PNX_SPECIALARRAYINIT 0x20       /* one or more of
+#define PNX_ARRAYHOLESPREAD 0x10        /* one or more of
                                            1. array initialiser has holes
                                            2. array initializer has spread node */
-#define PNX_NONCONST    0x40            /* initialiser has non-constants */
+#define PNX_NONCONST    0x20            /* initialiser has non-constants */
 
     static_assert(PNX_NONCONST < (1 << NumListFlagBits), "Not enough bits");
 
