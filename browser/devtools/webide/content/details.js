@@ -9,6 +9,7 @@ const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).de
 const {AppProjects} = require("devtools/app-manager/app-projects");
 const {AppValidator} = require("devtools/app-manager/app-validator");
 const {AppManager} = require("devtools/webide/app-manager");
+const {ProjectBuilding} = require("devtools/webide/build");
 
 window.addEventListener("load", function onLoad() {
   window.removeEventListener("load", onLoad);
@@ -43,6 +44,8 @@ function resetUI() {
   document.querySelector("#type").textContent = "";
   document.querySelector("#manifestURL").textContent = "";
   document.querySelector("#location").textContent = "";
+
+  document.querySelector("#prePackageLog").hidden = true;
 
   document.querySelector("#errorslist").innerHTML = "";
   document.querySelector("#warningslist").innerHTML = "";
@@ -102,6 +105,12 @@ function updateUI() {
     }
   }
 
+  if (project.type != "runtimeApp" && project.type != "mainProcess") {
+    ProjectBuilding.hasPrepackage(project).then(hasPrepackage => {
+      document.querySelector("#prePackageLog").hidden = !hasPrepackage;
+    });
+  }
+
   let errorsNode = document.querySelector("#errorslist");
   let warningsNode = document.querySelector("#warningslist");
 
@@ -120,6 +129,10 @@ function updateUI() {
       warningsNode.appendChild(li);
     }
   }
+}
+
+function showPrepackageLog() {
+  window.top.UI.selectDeckPanel("logs");
 }
 
 function removeProject() {
