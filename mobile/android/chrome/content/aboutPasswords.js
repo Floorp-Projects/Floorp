@@ -209,7 +209,7 @@ let Passwords = {
       userInputs = domain.split(".").filter(part => part.length > 3);
     }
 
-    let lastChanged = new Date(login.timePasswordChanged);
+    let lastChanged = new Date(login.QueryInterface(Ci.nsILoginMetaInfo).timePasswordChanged);
     let days = Math.round((Date.now() - lastChanged) / 1000 / 60 / 60/ 24);
     document.getElementById("detail-age").textContent = gStringBundle.formatStringFromName("passwordsDetails.age", [days], 1);
 
