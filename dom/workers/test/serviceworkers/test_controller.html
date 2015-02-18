@@ -15,6 +15,9 @@
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
 
+  var content;
+  var iframe;
+
   function simpleRegister() {
     // We use the control scope for the less specific registration. The window will register a worker on controller/
     return navigator.serviceWorker.register("worker.js", { scope: "./control" });
@@ -27,17 +30,23 @@
           ok(e.data.result, e.data.message);
         } else if (e.data.status == "done") {
           window.onmessage = null;
-          w.close();
+          content.removeChild(iframe);
           resolve();
         }
       }
     });
 
-    var w = window.open("controller/index.html");
+    content = document.getElementById("content");
+    ok(content, "Parent exists.");
+
+    iframe = document.createElement("iframe");
+    iframe.setAttribute('src', "controller/index.html");
+    content.appendChild(iframe);
+
     return p;
   }
 
-  // This document just flips the prefs and opens the window for the actual test.
+  // This document just flips the prefs and opens the iframe for the actual test.
   function runTest() {
     simpleRegister()
       .then(testController)

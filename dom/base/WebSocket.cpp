@@ -90,6 +90,7 @@ public:
   , mHasFeatureRegistered(false)
 #endif
   , mIsMainThread(true)
+  , mMutex("WebSocketImpl::mMutex")
   , mWorkerShuttingDown(false)
   {
     if (!NS_IsMainThread()) {
@@ -222,6 +223,9 @@ public:
   nsWeakPtr mWeakLoadGroup;
 
   bool mIsMainThread;
+
+  // This mutex protects mWorkerShuttingDown.
+  mozilla::Mutex mMutex;
   bool mWorkerShuttingDown;
 
 private:
@@ -422,7 +426,14 @@ public:
 
   ~MaybeDisconnect()
   {
-    if (mImpl->mWorkerShuttingDown) {
+    bool toDisconnect = false;
+
+    {
+      MutexAutoLock lock(mImpl->mMutex);
+      toDisconnect = mImpl->mWorkerShuttingDown;
+    }
+
+    if (toDisconnect) {
       mImpl->Disconnect();
     }
   }
@@ -886,7 +897,7 @@ WebSocket::WebSocket(nsPIDOMWindow* aOwnerWindow)
   , mCheckMustKeepAlive(true)
   , mOutgoingBufferedAmount(0)
   , mBinaryType(dom::BinaryType::Blob)
-  , mMutex("WebSocketImpl::mMutex")
+  , mMutex("WebSocket::mMutex")
   , mReadyState(CONNECTING)
 {
   mImpl = new WebSocketImpl(this);
@@ -1563,15 +1574,11 @@ WebSocketImpl::InitializeConnection()
   // are not thread-safe.
   mOriginDocument = nullptr;
 
-  nsCOMPtr<nsILoadInfo> loadInfo =
-    new LoadInfo(doc ?
-                   doc->NodePrincipal() : mPrincipal.get(),
-                 mPrincipal,
-                 doc,
-                 nsILoadInfo::SEC_NORMAL,
-                 nsIContentPolicy::TYPE_WEBSOCKET);
-  rv = wsChannel->SetLoadInfo(loadInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  wsChannel->InitLoadInfo(doc ? doc->AsDOMNode() : nullptr,
+                          doc ? doc->NodePrincipal() : mPrincipal.get(),
+                          mPrincipal,
+                          nsILoadInfo::SEC_NORMAL,
+                          nsIContentPolicy::TYPE_WEBSOCKET);
 
   if (!mRequestedProtocolList.IsEmpty()) {
     rv = wsChannel->SetProtocol(mRequestedProtocolList);
@@ -1982,7 +1989,11 @@ public:
     MOZ_ASSERT(aStatus > workers::Running);
 
     if (aStatus >= Canceling) {
-      mWebSocketImpl->mWorkerShuttingDown = true;
+      {
+        MutexAutoLock lock(mWebSocketImpl->mMutex);
+        mWebSocketImpl->mWorkerShuttingDown = true;
+      }
+
       mWebSocketImpl->CloseConnection(nsIWebSocketChannel::CLOSE_GOING_AWAY);
     }
 
@@ -1991,7 +2002,11 @@ public:
 
   bool Suspend(JSContext* aCx) MOZ_OVERRIDE
   {
-    mWebSocketImpl->mWorkerShuttingDown = true;
+    {
+      MutexAutoLock lock(mWebSocketImpl->mMutex);
+      mWebSocketImpl->mWorkerShuttingDown = true;
+    }
+
     mWebSocketImpl->CloseConnection(nsIWebSocketChannel::CLOSE_GOING_AWAY);
     return true;
   }
@@ -2551,9 +2566,13 @@ namespace {
 
 class WorkerRunnableDispatcher MOZ_FINAL : public WorkerRunnable
 {
+  nsRefPtr<WebSocketImpl> mWebSocketImpl;
+
 public:
-  WorkerRunnableDispatcher(WorkerPrivate* aWorkerPrivate, nsIRunnable* aEvent)
+  WorkerRunnableDispatcher(WebSocketImpl* aImpl, WorkerPrivate* aWorkerPrivate,
+                           nsIRunnable* aEvent)
     : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+    , mWebSocketImpl(aImpl)
     , mEvent(aEvent)
   {
   }
@@ -2561,6 +2580,13 @@ public:
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
+
+    // No messages when disconnected.
+    if (mWebSocketImpl->mDisconnectingOrDisconnected) {
+      NS_WARNING("Dispatching a WebSocket event after the disconnection!");
+      return true;
+    }
+
     aWorkerPrivate->ModifyBusyCountFromWorker(aCx, true);
     return !NS_FAILED(mEvent->Run());
   }
@@ -2596,12 +2622,12 @@ WebSocketImpl::Dispatch(nsIRunnable* aEvent, uint32_t aFlags)
     return NS_DispatchToMainThread(aEvent);
   }
 
-  // No messages when disconnected.
-  if (mDisconnectingOrDisconnected) {
-    NS_WARNING("Dispatching a WebSocket event after the disconnection!");
-    return NS_OK;
-  }
+  // If the target is a worker, we have to use a custom WorkerRunnableDispatcher
+  // runnable.
+  nsRefPtr<WorkerRunnableDispatcher> event =
+    new WorkerRunnableDispatcher(this, mWorkerPrivate, aEvent);
 
+  MutexAutoLock lock(mMutex);
   if (mWorkerShuttingDown) {
     return NS_OK;
   }
@@ -2612,10 +2638,6 @@ WebSocketImpl::Dispatch(nsIRunnable* aEvent, uint32_t aFlags)
   MOZ_ASSERT(HasFeatureRegistered());
 #endif
 
-  // If the target is a worker, we have to use a custom WorkerRunnableDispatcher
-  // runnable.
-  nsRefPtr<WorkerRunnableDispatcher> event =
-    new WorkerRunnableDispatcher(mWorkerPrivate, aEvent);
   if (!event->Dispatch(nullptr)) {
     return NS_ERROR_FAILURE;
   }

@@ -590,7 +590,16 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
   nsIDocument* doc = aContent->OwnerDoc();
 
   nsCOMPtr<nsIChannel> chan;
-  aIOService->NewChannelFromURI(aURI, getter_AddRefs(chan));
+  NS_NewChannel(getter_AddRefs(chan),
+                aURI,
+                doc,
+                nsILoadInfo::SEC_NORMAL,
+                nsIContentPolicy::TYPE_PING,
+                nullptr, // aLoadGroup
+                nullptr, // aCallbacks
+                nsIRequest::LOAD_NORMAL, // aLoadFlags,
+                aIOService);
+
   if (!chan) {
     return;
   }

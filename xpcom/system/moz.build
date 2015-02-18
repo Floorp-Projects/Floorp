@@ -13,6 +13,7 @@ XPIDL_SOURCES += [
     'nsIGnomeVFSService.idl',
     'nsIGSettingsService.idl',
     'nsIHapticFeedback.idl',
+    'nsIPackageKitService.idl',
     'nsIXULAppInfo.idl',
     'nsIXULRuntime.idl',
 ]

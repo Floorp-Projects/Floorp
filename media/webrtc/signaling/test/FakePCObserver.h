@@ -79,16 +79,17 @@ public:
   virtual NS_IMETHODIMP NotifyDataChannel(nsIDOMDataChannel *channel, ER&) = 0;
   virtual NS_IMETHODIMP OnStateChange(mozilla::dom::PCObserverStateType state_type, ER&,
                                       void* = nullptr) = 0;
-  virtual NS_IMETHODIMP OnAddStream(mozilla::DOMMediaStream *stream, ER&) = 0;
-  virtual NS_IMETHODIMP OnRemoveStream(ER&) = 0;
-  virtual NS_IMETHODIMP OnAddTrack(ER&) = 0;
-  virtual NS_IMETHODIMP OnRemoveTrack(ER&) = 0;
+  virtual NS_IMETHODIMP OnAddStream(mozilla::DOMMediaStream &stream, ER&) = 0;
+  virtual NS_IMETHODIMP OnRemoveStream(mozilla::DOMMediaStream &stream, ER&) = 0;
+  virtual NS_IMETHODIMP OnAddTrack(mozilla::MediaStreamTrack &track, ER&) = 0;
+  virtual NS_IMETHODIMP OnRemoveTrack(mozilla::MediaStreamTrack &track, ER&) = 0;
   virtual NS_IMETHODIMP OnReplaceTrackSuccess(ER&) = 0;
   virtual NS_IMETHODIMP OnReplaceTrackError(uint32_t code, const char *msg, ER&) = 0;
   virtual NS_IMETHODIMP OnAddIceCandidateSuccess(ER&) = 0;
   virtual NS_IMETHODIMP OnAddIceCandidateError(uint32_t code, const char *msg, ER&) = 0;
   virtual NS_IMETHODIMP OnIceCandidate(uint16_t level, const char *mid,
                                        const char *candidate, ER&) = 0;
+  virtual NS_IMETHODIMP OnNegotiationNeeded(ER&) = 0;
 protected:
   mozilla::PeerConnectionImpl *pc;
   std::vector<mozilla::DOMMediaStream *> streams;

@@ -2137,13 +2137,8 @@ IsCoercionCall(ModuleCompiler &m, ParseNode *pn, AsmJSCoercion *coercion, ParseN
         return true;
     }
 
-    if (global->isSimdCtor() ||
-        (global->isSimdOperation() && global->simdOperation() == AsmJSSimdOperation_check))
-    {
-        AsmJSSimdType type = global->isSimdCtor()
-                             ? global->simdCtorType()
-                             : global->simdOperationType();
-        switch (type) {
+    if (global->isSimdOperation() && global->simdOperation() == AsmJSSimdOperation_check) {
+        switch (global->simdOperationType()) {
           case AsmJSSimdType_int32x4:
             *coercion = AsmJS_ToInt32x4;
             return true;
@@ -5572,12 +5567,7 @@ class CheckSimdVectorScalarArgs
         }
 
         // Second argument is the scalar
-        Type coercedFormalType = SimdToCoercedScalarType(formalSimdType_);
-        if (!(actualType <= coercedFormalType)) {
-            return f.failf(arg, "%s is not a subtype of %s", actualType.toChars(),
-                           coercedFormalType.toChars());
-        }
-        return true;
+        return CheckSimdScalarArgs(formalSimdType_)(f, arg, argIndex, actualType, def);
     }
 };
 
@@ -5980,11 +5970,6 @@ CheckSimdCtorCall(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Gl
                   MDefinition **def, Type *type)
 {
     MOZ_ASSERT(call->isKind(PNK_CALL));
-
-    AsmJSCoercion coercion;
-    ParseNode *argNode;
-    if (IsCoercionCall(f.m(), call, &coercion, &argNode))
-        return CheckCoercionArg(f, argNode, coercion, def, type);
 
     AsmJSSimdType simdType = global->simdCtorType();
     unsigned length = SimdTypeToLength(simdType);

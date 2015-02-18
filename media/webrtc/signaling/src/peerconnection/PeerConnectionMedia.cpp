@@ -38,9 +38,9 @@
 #endif
 
 
-using namespace mozilla::dom;
 
 namespace mozilla {
+using namespace dom;
 
 static const char* logTag = "PeerConnectionMedia";
 
@@ -48,7 +48,7 @@ nsresult LocalSourceStreamInfo::ReplaceTrack(const std::string& oldTrackId,
                                              DOMMediaStream* aNewStream,
                                              const std::string& newTrackId)
 {
-  mozilla::RefPtr<mozilla::MediaPipeline> pipeline = mPipelines[oldTrackId];
+  RefPtr<MediaPipeline> pipeline = mPipelines[oldTrackId];
 
   if (!pipeline || !mTracks.count(oldTrackId)) {
     CSFLogError(logTag, "Failed to find track id %s", oldTrackId.c_str());
@@ -56,7 +56,7 @@ nsresult LocalSourceStreamInfo::ReplaceTrack(const std::string& oldTrackId,
   }
 
   nsresult rv =
-    static_cast<mozilla::MediaPipelineTransmit*>(pipeline.get())->ReplaceTrack(
+    static_cast<MediaPipelineTransmit*>(pipeline.get())->ReplaceTrack(
         aNewStream, newTrackId);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -64,6 +64,38 @@ nsresult LocalSourceStreamInfo::ReplaceTrack(const std::string& oldTrackId,
   mTracks.insert(newTrackId);
 
   return NS_OK;
+}
+
+static void
+PipelineReleaseRef_m(RefPtr<MediaPipeline> pipeline)
+{}
+
+static void
+PipelineDetachTransport_s(RefPtr<MediaPipeline> pipeline,
+                          nsCOMPtr<nsIThread> mainThread)
+{
+  pipeline->ShutdownTransport_s();
+  mainThread->Dispatch(
+      // Make sure we let go of our reference before dispatching
+      // If the dispatch fails, well, we're hosed anyway.
+      WrapRunnableNM(PipelineReleaseRef_m, pipeline.forget()),
+      NS_DISPATCH_NORMAL);
+}
+
+void
+SourceStreamInfo::RemoveTrack(const std::string& trackId)
+{
+  mTracks.erase(trackId);
+  RefPtr<MediaPipeline> pipeline = GetPipelineByTrackId_m(trackId);
+  if (pipeline) {
+    mPipelines.erase(trackId);
+    pipeline->ShutdownMedia_m();
+    mParent->GetSTSThread()->Dispatch(
+        WrapRunnableNM(PipelineDetachTransport_s,
+                       pipeline.forget(),
+                       mParent->GetMainThread()),
+        NS_DISPATCH_NORMAL);
+  }
 }
 
 void SourceStreamInfo::DetachTransport_s()
@@ -160,7 +192,7 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl *parent)
       mParentName(parent->GetName()),
       mAllowIceLoopback(false),
       mIceCtx(nullptr),
-      mDNSResolver(new mozilla::NrIceResolver()),
+      mDNSResolver(new NrIceResolver()),
       mUuidGen(MakeUnique<PCUuidGenerator>()),
       mMainThread(mParent->GetMainThread()),
       mSTSThread(mParent->GetSTSThread()),
@@ -261,16 +293,11 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
 }
 
 void
-PeerConnectionMedia::UpdateTransports(const mozilla::JsepSession& session) {
+PeerConnectionMedia::UpdateTransports(const JsepSession& session) {
 
-  size_t numTransports = session.GetTransportCount();
-  for (size_t i = 0; i < numTransports; ++i) {
-    RefPtr<JsepTransport> transport;
-
-    nsresult rv = session.GetTransport(i, &transport);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    if (NS_FAILED(rv))
-      break;
+  auto transports = session.GetTransports();
+  for (size_t i = 0; i < transports.size(); ++i) {
+    RefPtr<JsepTransport> transport = transports[i];
 
     std::string ufrag;
     std::string pwd;
@@ -278,6 +305,8 @@ PeerConnectionMedia::UpdateTransports(const mozilla::JsepSession& session) {
 
     bool hasAttrs = false;
     if (transport->mIce) {
+      CSFLogDebug(logTag, "Transport %u is active",
+                          static_cast<unsigned>(i));
       hasAttrs = true;
       ufrag = transport->mIce->GetUfrag();
       pwd = transport->mIce->GetPassword();
@@ -285,8 +314,6 @@ PeerConnectionMedia::UpdateTransports(const mozilla::JsepSession& session) {
     }
 
     // Update the transport.
-    // TODO(bug 1017888): don't repeat candidates on renegotiation. Perhaps
-    // suppress inside nICEr?
     RUN_ON_THREAD(GetSTSThread(),
                   WrapRunnable(RefPtr<PeerConnectionMedia>(this),
                                &PeerConnectionMedia::UpdateIceMediaStream_s,
@@ -300,37 +327,28 @@ PeerConnectionMedia::UpdateTransports(const mozilla::JsepSession& session) {
   }
 
 
-  // TODO(bug 1017888): Need to deal properly with renegotatiation.
-  // For now just start gathering.
   GatherIfReady();
 }
 
 nsresult PeerConnectionMedia::UpdateMediaPipelines(
-    const mozilla::JsepSession& session) {
-  size_t numPairs = session.GetNegotiatedTrackPairCount();
-  mozilla::MediaPipelineFactory factory(this);
-  const mozilla::JsepTrackPair* pair;
+    const JsepSession& session) {
+  auto trackPairs = session.GetNegotiatedTrackPairs();
+  MediaPipelineFactory factory(this);
+  nsresult rv;
 
-  for (size_t i = 0; i < numPairs; ++i) {
-    nsresult rv = session.GetNegotiatedTrackPair(i, &pair);
-    if (NS_FAILED(rv)) {
-      MOZ_ASSERT(false);
-      return rv;
-    }
+  for (auto i = trackPairs.begin(); i != trackPairs.end(); ++i) {
+    JsepTrackPair pair = *i;
 
-    if (pair->mReceiving) {
-      rv = factory.CreateMediaPipeline(*pair, *pair->mReceiving);
+    if (pair.mReceiving) {
+      rv = factory.CreateOrUpdateMediaPipeline(pair, *pair.mReceiving);
       if (NS_FAILED(rv)) {
-        CSFLogError(logTag, "Failed to create receiving pipeline, rv=%u",
-                            static_cast<unsigned>(rv));
         return rv;
       }
     }
-    if (pair->mSending) {
-      rv = factory.CreateMediaPipeline(*pair, *pair->mSending);
+
+    if (pair.mSending) {
+      rv = factory.CreateOrUpdateMediaPipeline(pair, *pair.mSending);
       if (NS_FAILED(rv)) {
-        CSFLogError(logTag, "Failed to create sending pipeline, rv=%u",
-                            static_cast<unsigned>(rv));
         return rv;
       }
     }
@@ -340,26 +358,19 @@ nsresult PeerConnectionMedia::UpdateMediaPipelines(
 }
 
 void
-PeerConnectionMedia::StartIceChecks(const mozilla::JsepSession& session) {
+PeerConnectionMedia::StartIceChecks(const JsepSession& session) {
 
   std::vector<size_t> numComponentsByLevel;
-  for (size_t i = 0; i < session.GetTransportCount(); ++i) {
-    RefPtr<JsepTransport> transport;
-    nsresult rv = session.GetTransport(i, &transport);
-    if (NS_FAILED(rv)) {
-      CSFLogError(logTag, "JsepSession::GetTransport() failed: %u",
-                          static_cast<unsigned>(rv));
-      MOZ_ASSERT(false, "JsepSession::GetTransport() failed!");
-      break;
-    }
-
+  auto transports = session.GetTransports();
+  for (auto i = transports.begin(); i != transports.end(); ++i) {
+    RefPtr<JsepTransport> transport = *i;
     if (transport->mState == JsepTransport::kJsepTransportClosed) {
-      CSFLogDebug(logTag, "Transport %u is disabled",
-                          static_cast<unsigned>(i));
+      CSFLogDebug(logTag, "Transport %s is disabled",
+                          transport->mTransportId.c_str());
       numComponentsByLevel.push_back(0);
     } else {
-      CSFLogDebug(logTag, "Transport %u has %u components",
-                          static_cast<unsigned>(i),
+      CSFLogDebug(logTag, "Transport %s has %u components",
+                          transport->mTransportId.c_str(),
                           static_cast<unsigned>(transport->mComponents));
       numComponentsByLevel.push_back(transport->mComponents);
     }
@@ -411,8 +422,12 @@ PeerConnectionMedia::StartIceChecks_s(
   for (size_t i = 0; i < aComponentCountByLevel.size(); ++i) {
     RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(i));
     if (!stream) {
-      MOZ_ASSERT(false, "JsepSession has more streams than the ICE ctx");
-      break;
+      continue;
+    }
+
+    if (!stream->HasParsedAttributes()) {
+      // Inactive stream. Remove.
+      mIceCtx->RemoveStream(i);
     }
 
     for (size_t c = aComponentCountByLevel[i]; c < stream->components(); ++c) {
@@ -496,12 +511,10 @@ PeerConnectionMedia::GatherIfReady() {
 
 void
 PeerConnectionMedia::EnsureIceGathering_s() {
-  if (mIceCtx->gathering_state() == NrIceCtx::ICE_CTX_GATHER_INIT) {
-    if (mProxyServer) {
-      mIceCtx->SetProxyServer(*mProxyServer);
-    }
-    mIceCtx->StartGathering();
+  if (mProxyServer) {
+    mIceCtx->SetProxyServer(*mProxyServer);
   }
+  mIceCtx->StartGathering();
 }
 
 void
@@ -526,9 +539,14 @@ PeerConnectionMedia::UpdateIceMediaStream_s(size_t aMLine,
   RefPtr<NrIceMediaStream> stream;
 
   if (mIceStreams.size() == aMLine) {
+    mIceStreams.push_back(nullptr);
+  }
+
+  if (!mIceStreams[aMLine]) {
     std::ostringstream os;
     os << mParentName << " level=" << aMLine;
-    stream = mIceCtx->CreateStream(os.str().c_str(), aComponentCount);
+    stream = mIceCtx->CreateStream(os.str().c_str(),
+                                   aComponentCount);
 
     if (!stream) {
       CSFLogError(logTag, "Failed to create ICE stream.");
@@ -540,12 +558,12 @@ PeerConnectionMedia::UpdateIceMediaStream_s(size_t aMLine,
     stream->SignalCandidate.connect(this,
                                     &PeerConnectionMedia::OnCandidateFound_s);
 
-    mIceStreams.push_back(stream);
+    mIceStreams[aMLine] = stream;
   } else {
     stream = mIceStreams[aMLine];
   }
 
-  if (aHasAttrs) {
+  if (aHasAttrs && !stream->HasParsedAttributes()) {
     std::vector<std::string> attrs;
     for (auto i = aCandidateList.begin(); i != aCandidateList.end(); ++i) {
       attrs.push_back("candidate:" + *i);
@@ -595,17 +613,17 @@ PeerConnectionMedia::AddTrack(DOMMediaStream* aMediaStream,
 }
 
 nsresult
-PeerConnectionMedia::RemoveTrack(DOMMediaStream* aMediaStream,
-                                 const std::string& trackId)
+PeerConnectionMedia::RemoveLocalTrack(const std::string& streamId,
+                                      const std::string& trackId)
 {
-  MOZ_ASSERT(aMediaStream);
   ASSERT_ON_THREAD(mMainThread);
 
-  CSFLogDebug(logTag, "%s: MediaStream: %p", __FUNCTION__, aMediaStream);
+  CSFLogDebug(logTag, "%s: stream: %s track: %s", __FUNCTION__,
+                      streamId.c_str(), trackId.c_str());
 
   size_t i;
   for (i = 0; i < mLocalSourceStreams.Length(); ++i) {
-    if (mLocalSourceStreams[i]->GetMediaStream() == aMediaStream) {
+    if (mLocalSourceStreams[i]->GetId() == streamId) {
       break;
     }
   }
@@ -619,6 +637,50 @@ PeerConnectionMedia::RemoveTrack(DOMMediaStream* aMediaStream,
     mLocalSourceStreams.RemoveElementAt(i);
   }
   return NS_OK;
+}
+
+nsresult
+PeerConnectionMedia::RemoveRemoteTrack(const std::string& streamId,
+                                       const std::string& trackId)
+{
+  ASSERT_ON_THREAD(mMainThread);
+
+  CSFLogDebug(logTag, "%s: stream: %s track: %s", __FUNCTION__,
+                      streamId.c_str(), trackId.c_str());
+
+  size_t i;
+  for (i = 0; i < mRemoteSourceStreams.Length(); ++i) {
+    if (mRemoteSourceStreams[i]->GetId() == streamId) {
+      break;
+    }
+  }
+
+  if (i == mRemoteSourceStreams.Length()) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  mRemoteSourceStreams[i]->RemoveTrack(trackId);
+  if (!(mRemoteSourceStreams[i]->GetTrackCount())) {
+    mRemoteSourceStreams.RemoveElementAt(i);
+  }
+  return NS_OK;
+}
+
+nsresult
+PeerConnectionMedia::GetRemoteTrackId(DOMMediaStream* mediaStream,
+                                      TrackID numericTrackId,
+                                      std::string* trackId) const
+{
+  auto* ncThis = const_cast<PeerConnectionMedia*>(this);
+  const RemoteSourceStreamInfo* info =
+    ncThis->GetRemoteStreamByDomStream(*mediaStream);
+
+  if (!info) {
+    CSFLogError(logTag, "%s: Could not find stream info", __FUNCTION__);
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return info->GetTrackId(numericTrackId, trackId);
 }
 
 void
@@ -732,7 +794,8 @@ PeerConnectionMedia::GetLocalStreamByDomStream(const DOMMediaStream& stream)
 }
 
 RemoteSourceStreamInfo*
-PeerConnectionMedia::GetRemoteStreamByDomStream(const DOMMediaStream& stream)
+PeerConnectionMedia::GetRemoteStreamByDomStream(
+    const DOMMediaStream& stream)
 {
   ASSERT_ON_THREAD(mMainThread);
   for (size_t i = 0; i < mRemoteSourceStreams.Length(); ++i) {
@@ -768,62 +831,6 @@ PeerConnectionMedia::GetRemoteStreamById(const std::string& id)
   // simultaneously, whereas in the remote case the stream id exists first,
   // meaning we have to be able to check.
   return nullptr;
-}
-
-static void
-UpdateFilterFromRemoteDescription_s(
-  RefPtr<mozilla::MediaPipeline> receive,
-  RefPtr<mozilla::MediaPipeline> transmit,
-  nsAutoPtr<mozilla::MediaPipelineFilter> filter) {
-
-  // Update filter, and make a copy of the final version.
-  mozilla::MediaPipelineFilter *finalFilter(
-    receive->UpdateFilterFromRemoteDescription_s(filter));
-
-  if (finalFilter) {
-    filter = new mozilla::MediaPipelineFilter(*finalFilter);
-  }
-
-  // Set same filter on transmit pipeline too.
-  transmit->UpdateFilterFromRemoteDescription_s(filter);
-}
-
-bool
-PeerConnectionMedia::UpdateFilterFromRemoteDescription_m(
-    const std::string& trackId,
-    nsAutoPtr<mozilla::MediaPipelineFilter> filter)
-{
-  ASSERT_ON_THREAD(mMainThread);
-
-  RefPtr<mozilla::MediaPipeline> receive;
-  for (size_t i = 0; !receive && i < mRemoteSourceStreams.Length(); ++i) {
-    receive = mRemoteSourceStreams[i]->GetPipelineByTrackId_m(trackId);
-  }
-
-  RefPtr<mozilla::MediaPipeline> transmit;
-  for (size_t i = 0; !transmit && i < mLocalSourceStreams.Length(); ++i) {
-    transmit = mLocalSourceStreams[i]->GetPipelineByTrackId_m(trackId);
-  }
-
-  if (receive && transmit) {
-    // GetPipelineByLevel_m will return nullptr if shutdown is in progress;
-    // since shutdown is initiated in main, and involves a dispatch to STS
-    // before the pipelines are released, our dispatch to STS will complete
-    // before any release can happen due to a shutdown that hasn't started yet.
-    RUN_ON_THREAD(GetSTSThread(),
-                  WrapRunnableNM(
-                      &UpdateFilterFromRemoteDescription_s,
-                      receive,
-                      transmit,
-                      filter
-                  ),
-                  NS_DISPATCH_NORMAL);
-    return true;
-  } else {
-    CSFLogWarn(logTag, "Could not locate track %s to update filter",
-                       trackId.c_str());
-  }
-  return false;
 }
 
 nsresult
@@ -1112,21 +1119,22 @@ SourceStreamInfo::AnyCodecHasPluginID(uint64_t aPluginID)
 
 nsresult
 SourceStreamInfo::StorePipeline(
-  const std::string& trackId,
-  const mozilla::RefPtr<mozilla::MediaPipeline>& aPipeline)
+    const std::string& trackId,
+    const mozilla::RefPtr<mozilla::MediaPipeline>& aPipeline)
 {
   MOZ_ASSERT(mPipelines.find(trackId) == mPipelines.end());
   if (mPipelines.find(trackId) != mPipelines.end()) {
     CSFLogError(logTag, "%s: Storing duplicate track", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
+
   mPipelines[trackId] = aPipeline;
   return NS_OK;
 }
 
 void
 RemoteSourceStreamInfo::SyncPipeline(
-  mozilla::RefPtr<mozilla::MediaPipelineReceive> aPipeline)
+  RefPtr<MediaPipelineReceive> aPipeline)
 {
   // See if we have both audio and video here, and if so cross the streams and
   // sync them
@@ -1136,12 +1144,12 @@ RemoteSourceStreamInfo::SyncPipeline(
   for (auto i = mPipelines.begin(); i != mPipelines.end(); ++i) {
     if (i->second->IsVideo() != aPipeline->IsVideo()) {
       // Ok, we have one video, one non-video - cross the streams!
-      mozilla::WebrtcAudioConduit *audio_conduit =
-        static_cast<mozilla::WebrtcAudioConduit*>(aPipeline->IsVideo() ?
+      WebrtcAudioConduit *audio_conduit =
+        static_cast<WebrtcAudioConduit*>(aPipeline->IsVideo() ?
                                                   i->second->Conduit() :
                                                   aPipeline->Conduit());
-      mozilla::WebrtcVideoConduit *video_conduit =
-        static_cast<mozilla::WebrtcVideoConduit*>(aPipeline->IsVideo() ?
+      WebrtcVideoConduit *video_conduit =
+        static_cast<WebrtcVideoConduit*>(aPipeline->IsVideo() ?
                                                   aPipeline->Conduit() :
                                                   i->second->Conduit());
       video_conduit->SyncTo(audio_conduit);

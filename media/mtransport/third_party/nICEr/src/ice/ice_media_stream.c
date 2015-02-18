@@ -627,7 +627,7 @@ int nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_c
     }
 
     /* Now tell the peer_ctx that we're done */
-    if(r=nr_ice_peer_ctx_stream_done(stream->pctx,stream))
+    if(r=nr_ice_peer_ctx_check_if_done(stream->pctx))
       ABORT(r);
 
   done:
@@ -668,7 +668,7 @@ int nr_ice_media_stream_component_failed(nr_ice_media_stream *stream,nr_ice_comp
     }
 
     /* Now tell the peer_ctx that we're done */
-    if(r=nr_ice_peer_ctx_stream_done(stream->pctx,stream))
+    if(r=nr_ice_peer_ctx_check_if_done(stream->pctx))
       ABORT(r);
 
     _status=0;

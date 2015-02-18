@@ -62,7 +62,7 @@
       ok(getScope(p("sub/dir/afoo")) === p("sub/dir/a"), "Scope should match");
       ok(getScope(p("star*wars")) === p("star*"), "Scope should match");
       ok(getScope(p("star/a.html")) === p(""), "Scope should match");
-      resolve(true);
+      resolve();
     });
   }
 

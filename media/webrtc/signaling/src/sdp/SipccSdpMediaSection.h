@@ -59,6 +59,7 @@ public:
 
   virtual void AddCodec(const std::string& pt, const std::string& name,
                         uint32_t clockrate, uint16_t channels) MOZ_OVERRIDE;
+  virtual void ClearCodecs() MOZ_OVERRIDE;
 
   virtual void AddDataChannel(const std::string& pt, const std::string& name,
                               uint16_t streams) MOZ_OVERRIDE;

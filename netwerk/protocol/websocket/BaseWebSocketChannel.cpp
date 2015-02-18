@@ -182,6 +182,19 @@ BaseWebSocketChannel::SetPingTimeout(uint32_t aSeconds)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+BaseWebSocketChannel::InitLoadInfo(nsIDOMNode* aLoadingNode,
+                                   nsIPrincipal* aLoadingPrincipal,
+                                   nsIPrincipal* aTriggeringPrincipal,
+                                   uint32_t aSecurityFlags,
+                                   uint32_t aContentPolicyType)
+{
+  nsCOMPtr<nsINode> node = do_QueryInterface(aLoadingNode);
+  mLoadInfo = new LoadInfo(aLoadingPrincipal, aTriggeringPrincipal,
+                           node, aSecurityFlags, aContentPolicyType);
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // BaseWebSocketChannel::nsIProtocolHandler
 //-----------------------------------------------------------------------------
