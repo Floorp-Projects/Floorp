@@ -158,7 +158,10 @@ MP4Sample* SampleIterator::GetNext()
 Sample* SampleIterator::Get()
 {
   if (!mIndex->mMoofParser) {
-    return nullptr;
+    MOZ_ASSERT(!mCurrentMoof);
+    return mCurrentSample < mIndex->mIndex.Length()
+      ? &mIndex->mIndex[mCurrentSample]
+      : nullptr;
   }
 
   nsTArray<Moof>& moofs = mIndex->mMoofParser->Moofs();
