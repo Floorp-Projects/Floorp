@@ -926,9 +926,17 @@ PeerConnectionWrapper.prototype = {
         var type = '';
         if (constraints.audio) {
           type = 'audio';
+          stream.getAudioTracks().map(track => {
+            info(this + " gUM local stream " + stream.id +
+              " with audio track " + track.id);
+          });
         }
         if (constraints.video) {
           type += 'video';
+          stream.getVideoTracks().map(track => {
+            info(this + " gUM local stream " + stream.id +
+              " with video track " + track.id);
+          });
         }
         this.attachMedia(stream, type, 'local');
       });
@@ -1119,9 +1127,17 @@ PeerConnectionWrapper.prototype = {
       var type = '';
       if (event.stream.getAudioTracks().length > 0) {
         type = 'audio';
+        event.stream.getAudioTracks().map(track => {
+          info(this + " remote stream " + event.stream.id + " with audio track " +
+               track.id);
+        });
       }
       if (event.stream.getVideoTracks().length > 0) {
         type += 'video';
+        event.stream.getVideoTracks().map(track => {
+          info(this + " remote stream " + event.stream.id + " with video track " +
+            track.id);
+        });
       }
       this.attachMedia(event.stream, type, 'remote');
     });
@@ -1395,11 +1411,9 @@ PeerConnectionWrapper.prototype = {
     var checkSdpForMsids = (desc, streams, side) => {
       streams.forEach(stream => {
         stream.getTracks().forEach(track => {
-          // TODO(bug 1089798): Once DOMMediaStream has an id field, we
-          // should be verifying that the SDP contains
-          // a=msid:<stream-id> <track-id>
-          ok(desc.sdp.match(new RegExp("a=msid:[^ ]+ " + track.id)),
-             side + " SDP contains track id " + track.id );
+          ok(desc.sdp.match(new RegExp("a=msid:" + stream.id + " " + track.id)),
+             this + ": " + side + " SDP contains stream " + stream.id +
+             " and track " + track.id );
         });
       });
     };
