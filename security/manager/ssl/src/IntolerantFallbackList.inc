@@ -17,6 +17,7 @@ static const char* const kIntolerantFallbackList[] =
   "actu.reunion.fr",
   "ad401k.sbisec.co.jp",
   "adman.you.gr",
+  "adsearch.kuronekoyamato.co.jp", // bug 1128366
   "affiliatewalla.com",
   "airportwifi.com", // bug 1116891
   "allyours.virginmedia.com",
@@ -25,6 +26,7 @@ static const char* const kIntolerantFallbackList[] =
   "apps.amerch.com",
   "apps.fpcu.org",
   "apps.sasken.com",
+  "apps.state.or.us", // bug 1130472
   "appsrv.restat.com",
   "arts.ac.uk",
   "ascii.jp",
@@ -44,6 +46,7 @@ static const char* const kIntolerantFallbackList[] =
   "blogwatcher.co.jp",
   "blueportal.vanmarcke.be",
   "bmypage.kuronekoyamato.co.jp", // bug 1128366
+  "bmypageapi.kuronekoyamato.co.jp", // bug 1128366
   "books.spec.whatwg.org", // RC4
   "books.wwnorton.com", // bug 1116891
   "bookstore.alma.edu",
@@ -111,6 +114,8 @@ static const char* const kIntolerantFallbackList[] =
   "dinsmore.fsmoffice.net",
   "direct-teleshop.jp",
   "direct.graydon.nl",
+  "docrecycle.kuronekoyamato.co.jp", // bug 1128366
+  "domparsing.spec.whatwg.org",
   "dream-prize.com",
   "dwwsyw.bjgjj.gov.cn",
   "e-mediador.fiatc.es",
@@ -136,6 +141,7 @@ static const char* const kIntolerantFallbackList[] =
   "eservices.palomar.edu",
   "etimebanker.bankofthewest.com", // bug 1127204
   "etrade.ftft.com.tw",
+  "eu.static.mega.co.nz", // bug 1133496
   "event.kasite.net",
   "extra.ytk.fi",
   "extranet.eurocontrol.int",
@@ -160,10 +166,10 @@ static const char* const kIntolerantFallbackList[] =
   "german.visitkorea.or.kr",
   "gestion.urjc.es",
   "giftcertificates.com",
+  "golfsearch.kuronekoyamato.co.jp", // bug 1128366
   "gosignmeup.com", // bug 1116891
   "gotimeforce.com",
   "hb.posted.co.rs",
-  "helpdesk.attask.com",
   "hercle.com",
   "hikkoshi.homes.co.jp",
   "hollowayusa.com",
@@ -215,6 +221,7 @@ static const char* const kIntolerantFallbackList[] =
   "mail.izhnet.ru",
   "mailoffer.merrickbank.com",
   "map.infonavit.org.mx",
+  "maplink.kuronekoyamato.co.jp", // bug 1128366
   "marketday.com", // bug 1092998
   "mbrapp.fpcu.org",
   "mccbookstore.mchenry.edu",
@@ -229,6 +236,8 @@ static const char* const kIntolerantFallbackList[] =
   "mimesniff.spec.whatwg.org", // RC4
   "miportal.urjc.es",
   "mobile.dream-prize.com",
+  "mobile.kuronekoyamato.co.jp", // bug 1128366
+  "mobileotodoke.kuronekoyamato.co.jp", // bug 1128366
   "mon-ulb.ulb.ac.be",
   "mwed.jp",
   "my.arts.ac.uk",
@@ -237,6 +246,7 @@ static const char* const kIntolerantFallbackList[] =
   "my.kyivstar.ua",
   "my.miit.ru",
   "my.officef5.com",
+  "myaccount.boostmobile.com", // bug 1112178
   "mybank.nbcb.com.cn",
   "mybanner.gvsu.edu",
   "myhancock.hancockcollege.edu",
@@ -244,10 +254,10 @@ static const char* const kIntolerantFallbackList[] =
   "myntc.ntc.edu",
   "mypage.homes.co.jp",
   "mytoi.kuronekoyamato.co.jp", // bug 1128366
-  "myucd.ucd.ie",
   "myuws.uws.edu.au",
   "nbank.hxb.com.cn",
   "nbc.epk.tv",
+  "netbolsa.bpinet.pt", // bug 1132399
   "niche.endsleigh.co.uk",
   "nmsmp.alsok.co.jp",
   "no1.nipponrentacar.co.jp",
@@ -286,7 +296,6 @@ static const char* const kIntolerantFallbackList[] =
   "publicjobs.ie",
   "publicrecords.com",
   "quirks.spec.whatwg.org", // RC4
-  "r.kaipoke.biz",
   "rakuraku-market.com",
   "rcp.kotoha.co.jp",
   "realestate.homes.co.jp",
@@ -296,12 +305,12 @@ static const char* const kIntolerantFallbackList[] =
   "relativitymedia.epk.tv",
   "renewals.cipd.co.uk",
   "repair.kuroneko-kadendr.jp", // bug 1128366
+  "repairmb.kuroneko-kadendr.jp", // bug 1128366
   "reputation.com",
   "research-report.uws.edu.au",
   "reserve.opas.jp",
   "resources.whatwg.org", // RC4
   "rpg.kotoha.co.jp",
-  "rr.com",
   "russian.visitkorea.or.kr",
   "s.aiasahi.jp",
   "sales.mibucorp.co.jp",
@@ -310,38 +319,39 @@ static const char* const kIntolerantFallbackList[] =
   "sboseweb.mcpsweb.org",
   "school.keystoneschoolonline.com",
   "schweser.com",
+  "secure-checkout.t-mobile.com", // bug 1133648
   "secure.bg-mania.jp",
   "secure.fortisbc.com",
   "secure.missouristate.edu",
   "secure.smartcart.com",
   "securedcard.merrickbank.com",
   "secureonline.dwp.gov.uk",
-  "selfcare.rr.com",
   "sems.hrd.ccsd.net",
   "service.autoc-one.jp",
   "services.apvma.gov.au",
   "servizionline.infogroup.it",
   "sgp.kotoha.co.jp",
   "shinchiku.homes.co.jp",
+  "ship-book.kuronekoyamato.co.jp", // bug 1128366
   "shop.autoc-one.jp",
   "shop.kagome.co.jp",
   "shop.lococom.jp",
   "shop.maxim-ic.com",
   "shop.nanairo.coop", // bug 1128318
-  "showcase-tv.com",
   "sigeduweb.udesa.edu.ar",
   "sirius.ws.ryukoku.ac.jp",
   "sisweb.ucd.ie",
   "slovanet.sk",
   "smartcart.com",
   "smarticon.geotrust.com",
+  "smp-cmypage.kuronekoyamato.co.jp", // bug 1128366
   "sony.epk.tv",
   "spanish.visitkorea.or.kr",
   "spp.kotoha.co.jp",
   "ss2.sfcollege.edu",
   "ss5.sfcollege.edu",
   "ssl.0634.co.jp",
-  "ssl.taisho-direct.jp",
+  "ssl.safaribooksonline.com", // bug 1133940
   "startrekonline.com",
   "store.closetmaid.com",
   "store.morningside.edu",
@@ -364,13 +374,12 @@ static const char* const kIntolerantFallbackList[] =
   "ticketseating.com",
   "ticketsupply.com",
   "tienda.boe.es",
-  "timewarnercable.com", // bug 1115883
   "todentaminen.posti.fi",
   "toushi.homes.co.jp",
   "trade.hsfund.com",
   "trueblue.jetblue.com",
   "tsuhanshokai.kuronekoyamato.co.jp", // bug 1128366
-  "twcbc.com",
+  "uketori.kuronekoyamato.co.jp", // bug 1128366
   "universal.epk.tv",
   "url.spec.whatwg.org", // RC4
   "userdoor.com",
@@ -381,7 +390,6 @@ static const char* const kIntolerantFallbackList[] =
   "uxxiportal.upct.es",
   "verkkokauppa.posti.fi",
   "vod.skyperfectv.co.jp",
-  "wayfarer.timewarnercable.com", // bug 1115883
   "web3.secureinternetbank.com", // bug 1111354
   "webapps.ou.edu",
   "webatm.landbank.com.tw",
@@ -410,8 +418,6 @@ static const char* const kIntolerantFallbackList[] =
   "www.araglegalcenter.com",
   "www.arts.ac.uk",
   "www.asknow.com",
-  "www.attask-ondemand.com",
-  "www.attask.com",
   "www.augustasportswear.com",
   "www.auroragov.org",
   "www.bancocredichile.cl",
@@ -431,6 +437,7 @@ static const char* const kIntolerantFallbackList[] =
   "www.bookstore.irsc.edu",
   "www.bookstore.mtu.edu",
   "www.bookstore.westga.edu",
+  "www.boostmobilesales.com", // 1112178
   "www.borsaitaliana.it",
   "www.bottegaverde.es",
   "www.bottegaverde.it",
@@ -448,6 +455,7 @@ static const char* const kIntolerantFallbackList[] =
   "www.cipd.co.uk",
   "www.club-animate.jp",
   "www.cngcorp.com",
+  "www.coastcapitalsavings.com", // bug 1132540
   "www.codan.dk",
   "www.comune.milano.it",
   "www.credem.it",
@@ -518,14 +526,12 @@ static const char* const kIntolerantFallbackList[] =
   "www.hx168.com.cn",
   "www.i-misdo.com",
   "www.iezukuri-net.com",
-  "www.illori.com.tw",
   "www.ingramentertainment.com",
   "www.interpark.com",
   "www.jaf.or.jp",
   "www.jhct.co.jp",
   "www.jifenpay.com",
   "www.kaigojob.com",
-  "www.kaipoke.biz",
   "www.kasite.net",
   "www.kfeducation.com",
   "www.khan.co.kr",
@@ -540,6 +546,7 @@ static const char* const kIntolerantFallbackList[] =
   "www.learndoj.gov",
   "www.lib.cwu.edu",
   "www.libraryvideo.com",
+  "www.licadho-cambodia.org", // bug 1133312
   "www.lm-order.de",
   "www.lococom.jp",
   "www.londonstockexchange.com",
@@ -568,7 +575,6 @@ static const char* const kIntolerantFallbackList[] =
   "www.myhomest.co.jp",
   "www.mynpcdata.net",
   "www.nec-nexs.com",
-  "www.nekonet-ios.jp",
   "www.neways.com",
   "www.newaysonline.com",
   "www.newchinalife.com",
@@ -586,6 +592,7 @@ static const char* const kIntolerantFallbackList[] =
   "www.peoples.com",
   "www.point-tactix.jp",
   "www.polla.cl",
+  "www.popehat.com", // RC4
   "www.priate.jp",
   "www.publicjobs.ie",
   "www.publicrecords.com",
@@ -595,9 +602,7 @@ static const char* const kIntolerantFallbackList[] =
   "www.renaultcredit.com.ar",
   "www.reputation.com",
   "www.riversendtrading.com",
-  "www.rr.com",
   "www.rubriquefidelite.com",
-  "www.ruskfrance.net",
   "www.s-book.net",
   "www.safepass.cn",
   "www.sandiegoimmunizationregistry.org",
@@ -609,7 +614,6 @@ static const char* const kIntolerantFallbackList[] =
   "www.shiki.jp",
   "www.shinsei.e-aichi.jp",
   "www.shop.bt.com",
-  "www.showcase-tv.com",
   "www.sihd-bk.jp",
   "www.sikatoru.com",
   "www.slovanet.sk",
@@ -621,7 +625,6 @@ static const char* const kIntolerantFallbackList[] =
   "www.sokamocka.com",
   "www.sports-nakama.com",
   "www.startrekonline.com",
-  "www.strade.com.vn",
   "www.stub.com",
   "www.stubpass.com",
   "www.sunderland.gov.uk",
@@ -633,10 +636,8 @@ static const char* const kIntolerantFallbackList[] =
   "www.thecopia.com",
   "www.ticketseating.com",
   "www.ticketsupply.com",
-  "www.timewarnercable.com", // bug 1115883
   "www.torrecatalunya.com",
   "www.transunion.ca",
-  "www.twcbc.com",
   "www.u-gakugei.ac.jp",
   "www.ubao.com",
   "www.uccard.co.jp",
@@ -655,7 +656,6 @@ static const char* const kIntolerantFallbackList[] =
   "www.world-family.co.jp",
   "www.xm-l-tax.gov.cn",
   "www.yakult.co.kr",
-  "www.youmeshop.jp",
   "www.yuuka.co.jp",
   "www.zenfolio.com",
   "www.zoominfo.com",
@@ -665,8 +665,11 @@ static const char* const kIntolerantFallbackList[] =
   "www2.shueisha.co.jp",
   "www2.sogo-gogo.com",
   "www2.wou.edu",
+  "www3.econ.ne.jp",
   "www3.ibac.co.jp",
   "www3.taiheiyo-ferry.co.jp",
+  "www4.econ.ne.jp",
+  "www5.econ.ne.jp",
   "wwws.kadokawa.co.jp",
   "xhr.spec.whatwg.org", // RC4
   "yeswellnesspro.fsmoffice.net",
