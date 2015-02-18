@@ -179,7 +179,7 @@ typedef BOOL (WINAPI *revert_mm_thread_characteristics_function)(HANDLE handle);
 
 extern cubeb_ops const wasapi_ops;
 
-int stream_stop(cubeb_stream * stm, bool * was_running);
+int wasapi_stream_stop(cubeb_stream * stm);
 int wasapi_stream_start(cubeb_stream * stm);
 void close_wasapi_stream(cubeb_stream * stm);
 int setup_wasapi_stream(cubeb_stream * stm);
@@ -234,6 +234,9 @@ struct cubeb_stream
   /* This event is set by the stream_stop and stream_destroy
    * function, so the render loop can exit properly. */
   HANDLE shutdown_event;
+  /* Set by OnDefaultDeviceChanged when a stream reconfiguration is required.
+     The reconfiguration is handled by the render loop thread. */
+  HANDLE reconfigure_event;
   /* This is set by WASAPI when we should refill the stream. */
   HANDLE refill_event;
   /* Each cubeb_stream has its own thread. */
@@ -289,9 +292,9 @@ public:
     return S_OK;
   }
 
-  wasapi_endpoint_notification_client(cubeb_stream * stm)
+  wasapi_endpoint_notification_client(HANDLE event)
     : ref_count(1)
-    , stm(stm)
+    , reconfigure_event(event)
   { }
 
   HRESULT STDMETHODCALLTYPE
@@ -302,23 +305,9 @@ public:
       return S_OK;
     }
 
-    auto_com com;
-    if (!com.ok()) {
-      return E_FAIL;
-    }
-
-    /* Close the stream */
-    bool was_running;
-    {
-      auto_lock lock(stm->stream_reset_lock);
-      stream_stop(stm, &was_running);
-      close_wasapi_stream(stm);
-      /* Reopen a stream and start it immediately. This will automatically pick the
-       * new default device for this role. */
-      setup_wasapi_stream(stm);
-    }
-    if (was_running) {
-      wasapi_stream_start(stm);
+    BOOL ok = SetEvent(reconfigure_event);
+    if (!ok) {
+      LOG("SetEvent on reconfigure_event failed: %x", GetLastError());
     }
 
     return S_OK;
@@ -354,9 +343,7 @@ public:
 private:
   /* refcount for this instance, necessary to implement MSCOM semantics. */
   LONG ref_count;
-  /* Pointer to the stream. It is guaranteed that this pointer is
-   * always valid. */
-  cubeb_stream * stm;
+  HANDLE reconfigure_event;
 };
 
 namespace {
@@ -493,7 +480,7 @@ wasapi_stream_render_loop(LPVOID stream)
   cubeb_stream * stm = static_cast<cubeb_stream *>(stream);
 
   bool is_playing = true;
-  HANDLE wait_array[2] = {stm->shutdown_event, stm->refill_event};
+  HANDLE wait_array[3] = {stm->shutdown_event, stm->reconfigure_event, stm->refill_event};
   HANDLE mmcss_handle = NULL;
   HRESULT hr = 0;
   bool first = true;
@@ -530,7 +517,20 @@ wasapi_stream_render_loop(LPVOID stream)
       }
       continue;
     }
-    case WAIT_OBJECT_0 + 1: { /* refill */
+    case WAIT_OBJECT_0 + 1: { /* reconfigure */
+      /* Close the stream */
+      stm->client->Stop();
+      {
+        auto_lock lock(stm->stream_reset_lock);
+        close_wasapi_stream(stm);
+        /* Reopen a stream and start it immediately. This will automatically pick the
+         * new default device for this role. */
+        setup_wasapi_stream(stm);
+      }
+      stm->client->Start();
+      break;
+    }
+    case WAIT_OBJECT_0 + 2: { /* refill */
       UINT32 padding;
 
       hr = stm->client->GetCurrentPadding(&padding);
@@ -570,7 +570,7 @@ wasapi_stream_render_loop(LPVOID stream)
         is_playing = false;
       }
     }
-    break;
+      break;
     case WAIT_TIMEOUT:
       assert(stm->shutdown_event == wait_array[0]);
       break;
@@ -612,7 +612,7 @@ HRESULT register_notification_client(cubeb_stream * stm)
     return hr;
   }
 
-  stm->notification_client = new wasapi_endpoint_notification_client(stm);
+  stm->notification_client = new wasapi_endpoint_notification_client(stm->reconfigure_event);
 
   hr = stm->device_enumerator->RegisterEndpointNotificationCallback(stm->notification_client);
 
@@ -1119,6 +1119,13 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
 
   stm->stream_reset_lock = new owned_critical_section();
 
+  stm->reconfigure_event = CreateEvent(NULL, 0, 0, NULL);
+  if (!stm->reconfigure_event) {
+    LOG("Can't create the reconfigure event, error: %x\n", GetLastError());
+    wasapi_stream_destroy(stm);
+    return CUBEB_ERROR;
+  }
+
   stm->refill_event = CreateEvent(NULL, 0, 0, NULL);
   if (!stm->refill_event) {
     LOG("Can't create the refill event, error: %x\n", GetLastError());
@@ -1178,6 +1185,7 @@ void wasapi_stream_destroy(cubeb_stream * stm)
 
   stop_and_join_render_thread(stm);
 
+  SafeRelease(stm->reconfigure_event);
   SafeRelease(stm->refill_event);
 
   {
@@ -1219,38 +1227,26 @@ int wasapi_stream_start(cubeb_stream * stm)
   return FAILED(hr) ? CUBEB_ERROR : CUBEB_OK;
 }
 
-int stream_stop(cubeb_stream * stm, bool * was_running)
+int wasapi_stream_stop(cubeb_stream * stm)
 {
   assert(stm);
 
-  stm->stream_reset_lock->assert_current_thread_owns();
+  auto_lock lock(stm->stream_reset_lock);
 
   HRESULT hr = stm->client->Stop();
   if (FAILED(hr)) {
     LOG("could not stop AudioClient\n");
   }
-  if (was_running) {
-    *was_running = hr == S_OK;
-    assert(*was_running == !!stm->thread);
-  }
 
-  {
-    stm->stream_reset_lock->leave();
-    stop_and_join_render_thread(stm);
-    stm->stream_reset_lock->enter();
-  }
+  stm->stream_reset_lock->leave();
+  stop_and_join_render_thread(stm);
+  stm->stream_reset_lock->enter();
 
   if (SUCCEEDED(hr)) {
     stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STOPPED);
   }
 
   return FAILED(hr) ? CUBEB_ERROR : CUBEB_OK;
-}
-
-int wasapi_stream_stop(cubeb_stream * stm)
-{
-  auto_lock lock(stm->stream_reset_lock);
-  return stream_stop(stm, NULL);
 }
 
 int wasapi_stream_get_position(cubeb_stream * stm, uint64_t * position)
