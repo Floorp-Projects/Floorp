@@ -14,8 +14,6 @@
 #include "nsBaseWidget.h"
 #include "mozilla/EventForwards.h"
 
-#include "nsWeakReference.h"
-
 #include "nsGkAtoms.h"
 #include "nsIIdleServiceInternal.h"
 #include "nsIRunnable.h"
@@ -77,8 +75,7 @@ class QWheelEvent;
 namespace mozilla {
 namespace widget {
 class MozQWidget;
-class nsWindow : public nsBaseWidget,
-                 public nsSupportsWeakReference
+class nsWindow : public nsBaseWidget
 {
 public:
     nsWindow();
