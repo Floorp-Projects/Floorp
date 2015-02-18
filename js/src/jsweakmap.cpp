@@ -274,7 +274,7 @@ WeakMap_get_impl(JSContext *cx, CallArgs args)
         }
     }
 
-    args.rval().set((args.length() > 1) ? args[1] : UndefinedValue());
+    args.rval().setUndefined();
     return true;
 }
 
