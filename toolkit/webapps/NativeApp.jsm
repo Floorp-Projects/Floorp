@@ -446,7 +446,24 @@ function downloadIcon(aIconURI) {
     });
 #endif
 
-    let channel = NetUtil.newChannel(aIconURI);
+    // If not fetching an icon from chrome:// then we should create a
+    // NoAppCodeBasePrincipal. Note, that we are still in the process of
+    // installing the app, hence app.origin is not available yet and
+    // therefore we can not call getAppCodebasePrincipal.
+    let principal =
+      aIconURI.schemeIs("chrome") ? Services.scriptSecurityManager
+                                            .getSystemPrincipal()
+                                  : Services.scriptSecurityManager
+                                            .getNoAppCodebasePrincipal(aIconURI);
+
+    let channel = NetUtil.newChannel2(aIconURI,
+                                      null,
+                                      null,
+                                      null,      // aLoadingNode
+                                      principal,
+                                      null,      // aTriggeringPrincipal
+                                      Ci.nsILoadInfo.SEC_NORMAL,
+                                      Ci.nsIContentPolicy.TYPE_IMAGE);
     let { BadCertHandler } = Cu.import("resource://gre/modules/CertUtils.jsm", {});
     // Pass true to avoid optional redirect-cert-checking behavior.
     channel.notificationCallbacks = new BadCertHandler(true);
