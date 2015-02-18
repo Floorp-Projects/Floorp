@@ -236,6 +236,8 @@ public:
    */
   virtual const nsIntRegion& GetValidLowPrecisionRegion() const = 0;
 
+  virtual const nsIntRegion& GetValidRegion() const = 0;
+
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   /**
    * Store a fence that will signal when the current buffer is no longer being read.
