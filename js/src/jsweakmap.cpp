@@ -211,13 +211,7 @@ WeakMap_has_impl(JSContext *cx, CallArgs args)
 {
     MOZ_ASSERT(IsWeakMap(args.thisv()));
 
-    if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "WeakMap.has", "0", "s");
-        return false;
-    }
-
-    if (!args[0].isObject()) {
+    if (!args.get(0).isObject()) {
         args.rval().setBoolean(false);
         return true;
     }
@@ -267,13 +261,7 @@ WeakMap_get_impl(JSContext *cx, CallArgs args)
 {
     MOZ_ASSERT(IsWeakMap(args.thisv()));
 
-    if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "WeakMap.get", "0", "s");
-        return false;
-    }
-
-    if (!args[0].isObject()) {
+    if (!args.get(0).isObject()) {
         args.rval().setUndefined();
         return true;
     }
@@ -302,13 +290,7 @@ WeakMap_delete_impl(JSContext *cx, CallArgs args)
 {
     MOZ_ASSERT(IsWeakMap(args.thisv()));
 
-    if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "WeakMap.delete", "0", "s");
-        return false;
-    }
-
-    if (!args[0].isObject()) {
+    if (!args.get(0).isObject()) {
         args.rval().setBoolean(false);
         return true;
     }
@@ -401,23 +383,16 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
 {
     MOZ_ASSERT(IsWeakMap(args.thisv()));
 
-    if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "WeakMap.set", "0", "s");
-        return false;
-    }
-
-    if (!args[0].isObject()) {
+    if (!args.get(0).isObject()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT);
         return false;
     }
 
     RootedObject key(cx, &args[0].toObject());
-    RootedValue value(cx, (args.length() > 1) ? args[1] : UndefinedValue());
     Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
     Rooted<WeakMapObject*> map(cx, &thisObj->as<WeakMapObject>());
 
-    if (!SetWeakMapEntryInternal(cx, map, key, value))
+    if (!SetWeakMapEntryInternal(cx, map, key, args.get(1)))
         return false;
     args.rval().set(args.thisv());
     return true;
