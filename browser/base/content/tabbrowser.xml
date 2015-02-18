@@ -5480,29 +5480,29 @@
             var event = document.createEvent("Events");
             event.initEvent("select", true, true);
             this.dispatchEvent(event);
+
+            this._selectedIndex = val;
+
+            switchPromise.then(() => {
+              // If we cannot find the tabpanel that we were trying to switch to, then
+              // it must have been removed before our Promise could be resolved. In
+              // that case, we just cancel the tab switch.
+              var updatedTabIndex = Array.indexOf(this.childNodes, newPanel);
+              if (updatedTabIndex == -1) {
+                gBrowser._cancelTabSwitch(toTab);
+              } else {
+                this.setAttribute("selectedIndex", updatedTabIndex);
+                gBrowser._finalizeTabSwitch(toTab, fromTab);
+              }
+            }, () => {
+              // If the promise rejected, that means we don't want to actually
+              // flip the deck, so we cancel the tab switch.
+              // We need to nullcheck the method we're about to call because
+              // the binding might be dead at this point.
+              if (gBrowser._cancelTabSwitch)
+                gBrowser._cancelTabSwitch(toTab);
+            });
           }
-
-          this._selectedIndex = val;
-
-          switchPromise.then(() => {
-            // If we cannot find the tabpanel that we were trying to switch to, then
-            // it must have been removed before our Promise could be resolved. In
-            // that case, we just cancel the tab switch.
-            var updatedTabIndex = Array.indexOf(this.childNodes, newPanel);
-            if (updatedTabIndex == -1) {
-              gBrowser._cancelTabSwitch(toTab);
-            } else {
-              this.setAttribute("selectedIndex", updatedTabIndex);
-              gBrowser._finalizeTabSwitch(toTab, fromTab);
-            }
-          }, () => {
-            // If the promise rejected, that means we don't want to actually
-            // flip the deck, so we cancel the tab switch.
-            // We need to nullcheck the method we're about to call because
-            // the binding might be dead at this point.
-            if (gBrowser._cancelTabSwitch)
-              gBrowser._cancelTabSwitch(toTab);
-          });
 
           return val;
         ]]>
