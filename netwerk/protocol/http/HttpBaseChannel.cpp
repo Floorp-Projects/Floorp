@@ -1934,13 +1934,21 @@ HttpBaseChannel::GetURIPrincipal()
 }
 
 bool
+HttpBaseChannel::IsNavigation()
+{
+  return mLoadFlags & LOAD_DOCUMENT_URI;
+}
+
+bool
 HttpBaseChannel::ShouldIntercept()
 {
   nsCOMPtr<nsINetworkInterceptController> controller;
   GetCallback(controller);
   bool shouldIntercept = false;
   if (controller && !mForceNoIntercept) {
-    nsresult rv = controller->ShouldPrepareForIntercept(mURI, &shouldIntercept);
+    nsresult rv = controller->ShouldPrepareForIntercept(mURI,
+                                                        IsNavigation(),
+                                                        &shouldIntercept);
     NS_ENSURE_SUCCESS(rv, false);
   }
   return shouldIntercept;
