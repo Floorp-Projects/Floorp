@@ -17,8 +17,7 @@
                                                   android:persistent="false" />
 
     <PreferenceScreen android:title="@string/pref_category_customize"
-                      android:summary="@string/pref_category_customize_summary"
-                      android:key="android.not_a_preference.customize_screen">
+                      android:summary="@string/pref_category_customize_summary" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
