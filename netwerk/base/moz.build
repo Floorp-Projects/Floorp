@@ -53,7 +53,6 @@ XPIDL_SOURCES += [
     'nsILoadContextInfo.idl',
     'nsILoadGroup.idl',
     'nsILoadGroupChild.idl',
-    'nsILoadInfo.idl',
     'nsIMIMEInputStream.idl',
     'nsIMultiPartChannel.idl',
     'nsINestedURI.idl',
@@ -153,10 +152,6 @@ EXPORTS += [
     'nsURLParsers.h',
 ]
 
-EXPORTS.mozilla += [
-    'LoadInfo.h',
-]
-
 EXPORTS.mozilla.net += [
     'ChannelDiverterChild.h',
     'ChannelDiverterParent.h',
@@ -179,7 +174,6 @@ UNIFIED_SOURCES += [
     'Dashboard.cpp',
     'EventTokenBucket.cpp',
     'LoadContextInfo.cpp',
-    'LoadInfo.cpp',
     'NetworkActivityMonitor.cpp',
     'nsAsyncRedirectVerifyHelper.cpp',
     'nsAsyncStreamCopier.cpp',
