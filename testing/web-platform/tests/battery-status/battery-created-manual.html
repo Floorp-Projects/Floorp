@@ -1,46 +1,54 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Battery Status API Test Suite</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-  </head>
-  <body>
-    <h1>Description</h1>
-    <p>
-      <strong>
-        This test is only useful on devices that expose the BatteryManager interface,
-        but lack a backend implementation.
-      </strong>
-    </p>
-    <p>
-      This test validates that all of the navigator.battery attributes exist and are set to their default values.
-    </p>
-    <h2>Preconditions</h2>
-    <ol>
-      <li>
-        The implementation is unable to report the battery's charging state,
-        charging time, level or remaining time respectively.
-      </li>
-      <li>
-        The device is unplugged from the charger before this test case is run.
-      </li>
-    </ol>
-    <div id="log"></div>
-    <script>
-    (function() {
-      test(function() {
-        var b = navigator.battery;
-        assert_true(b.charging === true, 'charging must be set to true');
-        assert_true(b.chargingTime === 0, 'chargingTime must be set to 0');
-        assert_true(b.level === 1.0, 'level must be set to 1.0');
-        assert_true(b.dischargingTime === Infinity, 'dischargingTime must be set to Infinity');
+<meta charset="utf-8">
+<title>Battery Test: no backend implementation, charger unplugged in</title>
+<meta name="flags" content="interact">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
 
-      }, 'When a BatteryManager object is created, charging must be set to true, ' +
-      'chargingTime to 0, level to 1.0 and dischargingTime to the value positive ' +
-      'Infinity, if the implementation is unable to report the battery\'s charging ' +
-      'state, charging time, level or remaining time respectively.');
-      })();
-    </script>
-  </body>
-</html>
+<h2>Description</h2>
+<p>
+  <strong>
+    This test is only useful on devices that expose the BatteryManager interface,
+    but lack a backend implementation.
+  </strong>
+</p>
+<p>
+  This test validates that all of the navigator.battery attributes exist and are set to their default values.
+</p>
+
+<h2>Preconditions</h2>
+<ol>
+  <li>
+    The implementation is unable to report the battery's charging state,
+    charging time, level or remaining time respectively.
+  </li>
+  <li>
+    The device is unplugged from the charger before this test case is run.
+  </li>
+</ol>
+
+<div id="log"></div>
+
+<script>
+
+async_test(function (t) {
+  navigator.getBattery().then(function (battery) {
+    t.step(function () {
+      assert_true(battery.charging, 'charging must be set to true');
+      assert_equals(battery.chargingTime, 0, 'chargingTime must be set to 0');
+      assert_equals(battery.dischargingTime, Infinity, 'dischargingTime must be set to Infinity');
+      assert_equals(battery.level, 1.0, 'level must be set to 1.0');
+    });
+    t.done();
+  }, function (error) {
+    t.step(function () {
+      assert_unreached(error.message);
+    });
+    t.done();
+  });
+}, 'When a BatteryManager object is created, charging must be set to true, ' +
+   'chargingTime to 0, level to 1.0 and dischargingTime to the value positive ' +
+   'Infinity, if the implementation is unable to report the battery\'s charging ' +
+   'state, charging time, level or remaining time respectively.');
+
+</script>

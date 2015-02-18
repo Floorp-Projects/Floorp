@@ -1,41 +1,42 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>Battery Status Test: BatteryManager - full</title>
-<link rel="author" title="Intel" href="http://www.intel.com">
-<link rel="help" href="http://www.w3.org/TR/battery-status/">
+<title>Battery Test: battery full, charger plugged in</title>
 <meta name="flags" content="interact">
-<meta name="assert" content="All of the navigator.battery attributes exist and are set to their correct values when battery is full">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<body>
-  <h2>Preconditions</h2>
-  <ol>
-    <li>
-      The device is plugged in to the charger before this test is run.
-    </li>
-    <li>
-      The battery is full.
-    </li>
-  </ol>
-</body>
+
+<h2>Description</h2>
+<p>
+  This test validates that all of the navigator.battery attributes exist and are set to their correct values when battery is full.
+</p>
+
+<h2>Preconditions</h2>
+<ol>
+  <li>
+    The device is plugged in to the charger before this test is run.
+  </li>
+  <li>
+    The battery is full.
+  </li>
+</ol>
+
 <script>
 
 async_test(function (t) {
   navigator.getBattery().then(function (battery) {
-      t.step(function () {
-        assert_true(battery.charging, 'The BatteryManager.charging must be set to true');
-        assert_equals(battery.chargingTime, 0, 'The BatteryManager.chargingTime');
-        assert_equals(battery.dischargingTime, Infinity, 'The BatteryManager.dischargingTime');
-        assert_equals(battery.level, 1.0, 'The BatteryManager.level');
-      });
-      t.done();
-    }, function (error) {
-      t.step(function () {
-        assert_unreached(error.message);
-      });
-      t.done();
-    }
-  )
+    t.step(function () {
+      assert_true(battery.charging, 'charging must be set to true');
+      assert_equals(battery.chargingTime, 0, 'chargingTime must be set to 0');
+      assert_equals(battery.dischargingTime, Infinity, 'dischargingTime must be set to Infinity');
+      assert_equals(battery.level, 1.0, 'level must be set to 1.0');
+    });
+    t.done();
+  }, function (error) {
+    t.step(function () {
+      assert_unreached(error.message);
+    });
+    t.done();
+  });
 }, document.title);
 
 </script>
