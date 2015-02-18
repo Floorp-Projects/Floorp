@@ -7,6 +7,7 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Filters.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/PodOperations.h"
 
 #include "gfxContext.h"
@@ -399,8 +400,9 @@ ComputeColorMatrix(uint32_t aColorMatrixType, const nsTArray<float>& aValues,
 
     case SVG_FECOLORMATRIX_TYPE_MATRIX:
     {
-      if (aValues.Length() != 20)
+      if (aValues.Length() != 20) {
         return NS_ERROR_FAILURE;
+      }
 
       PodCopy(aOutMatrix, aValues.Elements(), 20);
       break;
@@ -1479,7 +1481,7 @@ FilterSupport::PostFilterExtentsForPrimitive(const FilterPrimitiveDescription& a
     {
       if (atts.GetUint(eColorMatrixType) == (uint32_t)SVG_FECOLORMATRIX_TYPE_MATRIX) {
         const nsTArray<float>& values = atts.GetFloats(eColorMatrixValues);
-        if (values[19] > 0.0f) {
+        if (values.Length() == 20 && values[19] > 0.0f) {
           return ThebesIntRect(aDescription.PrimitiveSubregion());
         }
       }
