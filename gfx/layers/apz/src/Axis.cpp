@@ -263,6 +263,23 @@ void Axis::StepOverscrollAnimation(double aStepDurationMilliseconds) {
   // Adjust the amount of overscroll based on the velocity.
   // Note that we allow for oscillations.
   mOverscroll += (mVelocity * aStepDurationMilliseconds);
+
+  // Our mechanism for translating a set of mOverscroll values that oscillate
+  // around zero to a set of GetOverscroll() values that have the same sign
+  // (so content is always stretched, never compressed) assumes that
+  // mOverscroll does not exceed mFirstOverscrollAnimationSample in magnitude.
+  // If our calculations were exact, this would be the case, as
+  // mFirstOverscrollAnimationSample is the value of mOverscroll at the first
+  // peak of the oscillation, and a dampened spring should never attain a
+  // displacement greater in magnitude than a previous peak. In our
+  // approximation calculations, however, this may not hold exactly. To ensure
+  // the assumption is not violated, we clamp the magnitude of mOverscroll.
+  if (fabs(mOverscroll) > fabs(mFirstOverscrollAnimationSample)) {
+    mOverscroll = (mOverscroll >= 0)
+                ? fabs(mFirstOverscrollAnimationSample)
+                : -fabs(mFirstOverscrollAnimationSample);
+
+  }
 }
 
 bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
