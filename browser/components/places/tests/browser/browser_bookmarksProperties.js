@@ -79,7 +79,7 @@ gTests.push({
   finish: function() {
     // Close window, toggle sidebar and goto next test.
     this.window.document.documentElement.cancelDialog();
-    SidebarUI.hide();
+    toggleSidebar(this.sidebar, false);
     runNextTest();
   },
 
@@ -138,7 +138,7 @@ gTests.push({
 
   finish: function() {
     this.window.document.documentElement.cancelDialog();
-    SidebarUI.hide();
+    toggleSidebar(this.sidebar, false);
     runNextTest();
   },
 
@@ -232,7 +232,7 @@ gTests.push({
   },
 
   finish: function() {
-    SidebarUI.hide();
+    toggleSidebar(this.sidebar, false);
     runNextTest();
   },
 
@@ -291,7 +291,7 @@ gTests.push({
 
   finish: function() {
     // Window is already closed.
-    SidebarUI.hide();
+    toggleSidebar(this.sidebar, false);
     runNextTest();
   },
 
@@ -390,7 +390,7 @@ gTests.push({
   },
 
   finish: function() {
-    SidebarUI.hide();
+    toggleSidebar(this.sidebar, false);
     runNextTest();
   },
 
@@ -468,7 +468,7 @@ gTests.push({
   },
 
   finish: function() {
-    SidebarUI.hide();
+    toggleSidebar(this.sidebar, false);
     runNextTest();
   },
 
@@ -529,7 +529,7 @@ function execute_test_in_sidebar() {
       // Need to executeSoon since the tree is initialized on sidebar load.
       executeSoon(open_properties_dialog);
     }, true);
-    SidebarUI.show(gCurrentTest.sidebar);
+    toggleSidebar(gCurrentTest.sidebar, true);
 }
 
 function open_properties_dialog() {
