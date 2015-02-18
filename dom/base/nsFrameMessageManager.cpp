@@ -33,7 +33,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
-#include "mozilla/dom/SameProcessMessageQueue.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "mozilla/dom/ipc/BlobChild.h"
@@ -1631,6 +1630,7 @@ NS_IMPL_ISUPPORTS(nsScriptCacheCleaner, nsIObserver)
 nsFrameMessageManager* nsFrameMessageManager::sChildProcessManager = nullptr;
 nsFrameMessageManager* nsFrameMessageManager::sParentProcessManager = nullptr;
 nsFrameMessageManager* nsFrameMessageManager::sSameProcessParentManager = nullptr;
+nsTArray<nsCOMPtr<nsIRunnable> >* nsFrameMessageManager::sPendingSameProcessAsyncMessages = nullptr;
 
 class nsAsyncMessageToSameProcessChild : public nsSameProcessAsyncMessageBase,
                                          public nsRunnable
@@ -1779,7 +1779,7 @@ public:
 
 
 class nsAsyncMessageToSameProcessParent : public nsSameProcessAsyncMessageBase,
-                                          public SameProcessMessageQueue::Runnable
+                                          public nsRunnable
 {
 public:
   nsAsyncMessageToSameProcessParent(JSContext* aCx,
@@ -1788,15 +1788,25 @@ public:
                                     JS::Handle<JSObject *> aCpows,
                                     nsIPrincipal* aPrincipal)
     : nsSameProcessAsyncMessageBase(aCx, aMessage, aData, aCpows, aPrincipal)
+    , mDelivered(false)
   {
   }
 
-  NS_IMETHOD HandleMessage()
+  NS_IMETHOD Run()
   {
-    nsFrameMessageManager* ppm = nsFrameMessageManager::sSameProcessParentManager;
-    ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), ppm);
+    if (nsFrameMessageManager::sPendingSameProcessAsyncMessages) {
+      nsFrameMessageManager::sPendingSameProcessAsyncMessages->RemoveElement(this);
+    }
+    if (!mDelivered) {
+      mDelivered = true;
+      nsFrameMessageManager* ppm = nsFrameMessageManager::sSameProcessParentManager;
+      ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), ppm);
+    }
     return NS_OK;
   }
+
+private:
+  bool mDelivered;
 };
 
 /**
@@ -1822,9 +1832,15 @@ public:
                                      InfallibleTArray<nsString>* aJSONRetVal,
                                      bool aIsSync) MOZ_OVERRIDE
   {
-    SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
-    queue->Flush();
-
+    nsTArray<nsCOMPtr<nsIRunnable> > asyncMessages;
+    if (nsFrameMessageManager::sPendingSameProcessAsyncMessages) {
+      asyncMessages.SwapElements(*nsFrameMessageManager::sPendingSameProcessAsyncMessages);
+      uint32_t len = asyncMessages.Length();
+      for (uint32_t i = 0; i < len; ++i) {
+        nsCOMPtr<nsIRunnable> async = asyncMessages[i];
+        async->Run();
+      }
+    }
     if (nsFrameMessageManager::sSameProcessParentManager) {
       SameProcessCpowHolder cpows(js::GetRuntime(aCx), aCpows);
       nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sSameProcessParentManager;
@@ -1840,10 +1856,13 @@ public:
                                   JS::Handle<JSObject *> aCpows,
                                   nsIPrincipal* aPrincipal) MOZ_OVERRIDE
   {
-    SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
-    nsRefPtr<nsAsyncMessageToSameProcessParent> ev =
+    if (!nsFrameMessageManager::sPendingSameProcessAsyncMessages) {
+      nsFrameMessageManager::sPendingSameProcessAsyncMessages = new nsTArray<nsCOMPtr<nsIRunnable> >;
+    }
+    nsCOMPtr<nsIRunnable> ev =
       new nsAsyncMessageToSameProcessParent(aCx, aMessage, aData, aCpows, aPrincipal);
-    queue->Push(ev);
+    nsFrameMessageManager::sPendingSameProcessAsyncMessages->AppendElement(ev);
+    NS_DispatchToCurrentThread(ev);
     return true;
   }
 
