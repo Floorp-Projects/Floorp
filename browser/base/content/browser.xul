@@ -874,7 +874,7 @@
                       class="subviewbutton"
                       label="&viewBookmarksSidebar2.label;"
                       type="checkbox"
-                      oncommand="SidebarUI.toggle('viewBookmarksSidebar');">
+                      oncommand="toggleSidebar('viewBookmarksSidebar');">
               <observes element="viewBookmarksSidebar" attribute="checked"/>
             </menuitem>
             <!-- NB: temporary solution for bug 985024, this should go away soon. -->
@@ -1127,7 +1127,7 @@
         <sidebarheader id="sidebar-header" align="center">
           <label id="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
           <image id="sidebar-throbber"/>
-          <toolbarbutton class="close-icon tabbable" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="SidebarUI.hide();"/>
+          <toolbarbutton class="close-icon tabbable" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="toggleSidebar();"/>
         </sidebarheader>
         <browser id="sidebar" flex="1" autoscroll="false" disablehistory="true"
                   style="min-width: 14em; width: 18em; max-width: 36em;"/>
