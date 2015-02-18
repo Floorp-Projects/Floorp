@@ -135,12 +135,6 @@ public:
   void
   CancelPump();
 
-  void
-  SetBodyUsed()
-  {
-    mBodyUsed = true;
-  }
-
   // Always set whenever the FetchBody is created on the worker thread.
   workers::WorkerPrivate* mWorkerPrivate;
 
@@ -151,7 +145,15 @@ public:
 protected:
   FetchBody();
 
-  virtual ~FetchBody();
+  virtual ~FetchBody()
+  {
+  }
+
+  void
+  SetBodyUsed()
+  {
+    mBodyUsed = true;
+  }
 
   void
   SetMimeType(ErrorResult& aRv);
