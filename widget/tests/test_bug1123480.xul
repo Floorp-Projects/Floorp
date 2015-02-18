@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
+-->
+<window title="Mozilla Bug 1123480"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="RunTest();">
+  <title>nsTransferable PBM Overflow Selection Test</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+  // Boilerplate constructs
+  var SmallDataset = 100000; // Hundred thousand bytes
+
+  // Create 1 Mo of sample garbage text
+  var Ipsum = ""; // Select text from this
+  for (var Iter = 0; Iter < SmallDataset; Iter++) {
+      Ipsum += Math.random().toString(36) + ' ';
+  }
+
+  function RunTest() {
+    // Construct a nsIFile object for access to file methods
+    Components.utils.import("resource://gre/modules/FileUtils.jsm");
+    var clipboardFile = FileUtils.getFile("TmpD", ["clipboardcache"]);
+
+    // Sanitize environment
+    if (clipboardFile.exists()) {
+        clipboardFile.remove(false);
+    }
+    ok(!clipboardFile.exists(), "failed to presanitize the environment");
+
+    // Overflow a nsTransferable region by using the clipboard helper
+    const gClipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"].getService(Components.interfaces.nsIClipboardHelper);
+    gClipboardHelper.copyString(Ipsum);
+
+    // Disabled private browsing mode should cache large selections to disk
+    ok(clipboardFile.exists(), "correctly saved memory by caching to disk");
+
+    // Sanitize environment again
+    if (clipboardFile.exists()) {
+        clipboardFile.remove(false);
+    }
+    ok(!clipboardFile.exists(), "failed to postsanitize the environment");
+
+    // Repeat procedure of plain text selection with private browsing enabled
+    Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+    var Winpriv = window.open("about:blank", "_blank", "chrome, width=500, height=200, private");
+    ok(Winpriv, "failed to open private window");
+    ok(PrivateBrowsingUtils.isContentWindowPrivate(Winpriv), "correctly used a private window context");
+
+    // Select plaintext in private channel
+    Components.utils.import('resource://gre/modules/Services.jsm');
+    const nsTransferable = Components.Constructor("@mozilla.org/widget/transferable;1", "nsITransferable");
+    const nsSupportsString = Components.Constructor("@mozilla.org/supports-string;1", "nsISupportsString");
+    var Loadctx = PrivateBrowsingUtils.privacyContextFromWindow(Winpriv);
+    var Transfer = nsTransferable();
+    var Suppstr = nsSupportsString();
+    Suppstr.data = Ipsum;
+    Transfer.init(Loadctx);
+    Transfer.addDataFlavor("text/plain");
+    Transfer.setTransferData("text/plain", Suppstr, Ipsum.length);
+    Services.clipboard.setData(Transfer, null, Services.clipboard.kGlobalClipboard);
+
+    // Enabled private browsing mode should not cache any selection to disk
+    ok(!clipboardFile.exists(), "did not violate private browsing mode");
+  }
+  ]]>
+  </script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1123480"
+     target="_blank">Mozilla Bug 1123480</a>
+  </body>
+</window>
