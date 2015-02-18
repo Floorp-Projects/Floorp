@@ -2876,7 +2876,7 @@ var DebugUserAgent = {
   },
 
   onRequest: function(channel, defaultUA) {
-    if (this.DOMAINS.includes(channel.URI.host)) {
+    if (this.DOMAINS.indexOf(channel.URI.host) != -1) {
       return this.DEBUG_UA;
     }
     return null;
