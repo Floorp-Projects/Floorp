@@ -486,14 +486,6 @@ var commandsPeerConnectionOfferAnswer = [
   function PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT(test) {
     return test.pcRemote.checkMediaFlowPresent();
   },
-/* TODO: re-enable when Bug 1095218 lands
-  function PC_LOCAL_CHECK_MSID(test) {
-    test.pcLocal.checkMsids();
-  },
-  function PC_REMOTE_CHECK_MSID(test) {
-    test.pcRemote.checkMsids();
-  },
-*/
   function PC_LOCAL_CHECK_STATS(test) {
     return test.pcLocal.getStats(null).then(stats => {
       test.pcLocal.checkStats(stats, test.steeplechase);
