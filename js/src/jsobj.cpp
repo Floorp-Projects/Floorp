@@ -1038,7 +1038,7 @@ js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
         }
 
         MOZ_ASSERT(nobj->lastProperty()->slotSpan() == last->slotSpan());
-        JS_ALWAYS_TRUE(NativeObject::setLastProperty(cx, nobj, last));
+        JS_ALWAYS_TRUE(nobj->setLastProperty(cx, last));
     } else {
         RootedId id(cx);
         Rooted<PropertyDescriptor> desc(cx);
@@ -1845,7 +1845,7 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind 
     MOZ_ASSERT(!obj->hasPrivate());
     RootedShape shape(cx, obj->lastProperty());
     size_t span = shape->slotSpan();
-    clone->setLastProperty(cx, clone, shape);
+    clone->setLastProperty(cx, shape);
     for (size_t i = 0; i < span; i++) {
         v = obj->getSlot(i);
         if (v.isObject()) {
@@ -2137,7 +2137,7 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
 
         RootedShape newShape(cx, ReshapeForParentAndAllocKind(cx, srcObj->lastProperty(),
                                                               TaggedProto(proto), parent, kind));
-        if (!newShape || !NativeObject::setLastProperty(cx, res, newShape))
+        if (!newShape || !res->setLastProperty(cx, newShape))
             return nullptr;
 
         return res;
@@ -3139,7 +3139,7 @@ js::PreventExtensions(JSContext *cx, HandleObject obj, bool *succeeded)
         return false;
 
     *succeeded = true;
-    return obj->setFlag(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE);
+    return obj->setFlags(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE);
 }
 
 bool
@@ -3234,7 +3234,7 @@ js::SetImmutablePrototype(ExclusiveContext *cx, HandleObject obj, bool *succeede
         return Proxy::setImmutablePrototype(cx->asJSContext(), obj, succeeded);
     }
 
-    if (!obj->setFlag(cx, BaseShape::IMMUTABLE_PROTOTYPE))
+    if (!obj->setFlags(cx, BaseShape::IMMUTABLE_PROTOTYPE))
         return false;
     *succeeded = true;
     return true;
