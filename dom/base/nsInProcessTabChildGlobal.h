@@ -175,7 +175,6 @@ protected:
 public:
   nsIContent* mOwner;
   nsFrameMessageManager* mChromeMessageManager;
-  nsTArray<nsCOMPtr<nsIRunnable> > mASyncMessages;
 };
 
 #endif
