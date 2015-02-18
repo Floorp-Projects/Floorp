@@ -200,16 +200,6 @@ ObjectValueMap::findZoneEdges()
     return true;
 }
 
-static JSObject *
-GetKeyArg(JSContext *cx, CallArgs &args)
-{
-    if (args[0].isPrimitive()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT);
-        return nullptr;
-    }
-    return &args[0].toObject();
-}
-
 MOZ_ALWAYS_INLINE bool
 IsWeakMap(HandleValue v)
 {
@@ -226,11 +216,14 @@ WeakMap_has_impl(JSContext *cx, CallArgs args)
                              "WeakMap.has", "0", "s");
         return false;
     }
-    JSObject *key = GetKeyArg(cx, args);
-    if (!key)
-        return false;
+
+    if (!args[0].isObject()) {
+        args.rval().setBoolean(false);
+        return true;
+    }
 
     if (ObjectValueMap *map = args.thisv().toObject().as<WeakMapObject>().getMap()) {
+        JSObject *key = &args[0].toObject();
         if (map->has(key)) {
             args.rval().setBoolean(true);
             return true;
@@ -279,11 +272,14 @@ WeakMap_get_impl(JSContext *cx, CallArgs args)
                              "WeakMap.get", "0", "s");
         return false;
     }
-    JSObject *key = GetKeyArg(cx, args);
-    if (!key)
-        return false;
+
+    if (!args[0].isObject()) {
+        args.rval().setUndefined();
+        return true;
+    }
 
     if (ObjectValueMap *map = args.thisv().toObject().as<WeakMapObject>().getMap()) {
+        JSObject *key = &args[0].toObject();
         if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
             args.rval().set(ptr->value());
             return true;
@@ -311,11 +307,14 @@ WeakMap_delete_impl(JSContext *cx, CallArgs args)
                              "WeakMap.delete", "0", "s");
         return false;
     }
-    JSObject *key = GetKeyArg(cx, args);
-    if (!key)
-        return false;
+
+    if (!args[0].isObject()) {
+        args.rval().setBoolean(false);
+        return true;
+    }
 
     if (ObjectValueMap *map = args.thisv().toObject().as<WeakMapObject>().getMap()) {
+        JSObject *key = &args[0].toObject();
         if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
             map->remove(ptr);
             args.rval().setBoolean(true);
@@ -407,10 +406,13 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
                              "WeakMap.set", "0", "s");
         return false;
     }
-    RootedObject key(cx, GetKeyArg(cx, args));
-    if (!key)
-        return false;
 
+    if (!args[0].isObject()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT);
+        return false;
+    }
+
+    RootedObject key(cx, &args[0].toObject());
     RootedValue value(cx, (args.length() > 1) ? args[1] : UndefinedValue());
     Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
     Rooted<WeakMapObject*> map(cx, &thisObj->as<WeakMapObject>());
