@@ -13,13 +13,6 @@
 
 namespace mozilla {
 
-enum FactoryType {
-  FactoryTypeDecoder  = 1 << 0,
-  FactoryTypeDemuxer  = 1 << 1,
-  FactoryTypeParser   = 1 << 2,
-  FactoryTypeAll      = FactoryTypeDecoder|FactoryTypeDemuxer|FactoryTypeParser
-};
-
 class GStreamerFormatHelper {
   /* This class can be used to query the GStreamer registry for the required
    * demuxers/decoders from nsHTMLMediaElement::CanPlayType.
@@ -37,8 +30,7 @@ class GStreamerFormatHelper {
     bool CanHandleCodecCaps(GstCaps* aCaps);
 
     static bool IsBlacklistEnabled();
-    static bool IsPluginFeatureBlacklisted(GstPluginFeature *aFeature,
-                                           FactoryType aTypes = FactoryTypeAll);
+    static bool IsPluginFeatureBlacklisted(GstPluginFeature *aFeature);
 
     static GstCaps* ConvertFormatsToCaps(const char* aMIMEType,
                                          const nsAString* aCodecs);
