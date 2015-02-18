@@ -203,7 +203,7 @@ class chunk_by_dir(InstanceFilter):
         tests_by_dir = defaultdict(list)
         ordered_dirs = []
         for test in tests:
-            path = test['path']
+            path = test['relpath']
 
             if path.startswith(os.sep):
                 path = path[1:]
