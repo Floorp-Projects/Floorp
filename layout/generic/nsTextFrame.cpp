@@ -1255,8 +1255,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
               const nsLineList::iterator* aForFrameLine,
               nsTextFrame::TextRunType aWhichTextRun)
 {
-  NS_ASSERTION(aForFrame || aLineContainer,
-               "One of aForFrame or aLineContainer must be set!");
+  MOZ_ASSERT(aForFrame, "for no frame?");
   NS_ASSERTION(!aForFrameLine || aLineContainer,
                "line but no line container");
   
@@ -1268,24 +1267,21 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
     }
     aLineContainer = FindLineContainer(lineContainerChild);
   } else {
-    NS_ASSERTION(!aForFrame ||
-                 (aLineContainer == FindLineContainer(aForFrame) ||
+    NS_ASSERTION((aLineContainer == FindLineContainer(aForFrame) ||
                   aLineContainer->GetType() == nsGkAtoms::rubyTextContainerFrame ||
                   (aLineContainer->GetType() == nsGkAtoms::letterFrame &&
                    aLineContainer->IsFloating())),
                  "Wrong line container hint");
   }
 
-  if (aForFrame) {
-    if (aForFrame->HasAnyStateBits(TEXT_IS_IN_TOKEN_MATHML)) {
-      aLineContainer->AddStateBits(TEXT_IS_IN_TOKEN_MATHML);
-      if (aForFrame->HasAnyStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI)) {
-        aLineContainer->AddStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI);
-      }
+  if (aForFrame->HasAnyStateBits(TEXT_IS_IN_TOKEN_MATHML)) {
+    aLineContainer->AddStateBits(TEXT_IS_IN_TOKEN_MATHML);
+    if (aForFrame->HasAnyStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI)) {
+      aLineContainer->AddStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI);
     }
-    if (aForFrame->HasAnyStateBits(NS_FRAME_MATHML_SCRIPT_DESCENDANT)) {
-      aLineContainer->AddStateBits(NS_FRAME_MATHML_SCRIPT_DESCENDANT);
-    }
+  }
+  if (aForFrame->HasAnyStateBits(NS_FRAME_MATHML_SCRIPT_DESCENDANT)) {
+    aLineContainer->AddStateBits(NS_FRAME_MATHML_SCRIPT_DESCENDANT);
   }
 
   nsPresContext* presContext = aLineContainer->PresContext();
