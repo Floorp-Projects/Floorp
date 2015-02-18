@@ -285,6 +285,8 @@ public:
   virtual void RemoveDirectListener(Fake_MediaStreamListener *aListener) {}
 
   Fake_MediaStream *GetStream() { return mMediaStream; }
+  std::string GetId() const { return mID; }
+  void AssignId(const std::string& id) { mID = id; }
 
   // Hints to tell the SDP generator about whether this
   // MediaStream probably has audio and/or video
@@ -343,6 +345,8 @@ private:
   uint32_t mHintContents;
   nsRefPtr<Fake_MediaStreamTrack> mVideoTrack;
   nsRefPtr<Fake_MediaStreamTrack> mAudioTrack;
+
+  std::string mID;
 };
 
 class Fake_MediaStreamBase : public Fake_MediaStream {

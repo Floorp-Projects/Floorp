@@ -581,7 +581,7 @@ PeerConnectionMedia::UpdateIceMediaStream_s(size_t aMLine,
 
 nsresult
 PeerConnectionMedia::AddTrack(DOMMediaStream* aMediaStream,
-                              std::string* streamId,
+                              const std::string& streamId,
                               const std::string& trackId)
 {
   ASSERT_ON_THREAD(mMainThread);
@@ -594,21 +594,14 @@ PeerConnectionMedia::AddTrack(DOMMediaStream* aMediaStream,
   CSFLogDebug(logTag, "%s: MediaStream: %p", __FUNCTION__, aMediaStream);
 
   nsRefPtr<LocalSourceStreamInfo> localSourceStream =
-    GetLocalStreamByDomStream(*aMediaStream);
+    GetLocalStreamById(streamId);
 
   if (!localSourceStream) {
-    std::string id;
-    if (!mUuidGen->Generate(&id)) {
-      CSFLogError(logTag, "Failed to generate UUID for stream");
-      return NS_ERROR_FAILURE;
-    }
-
-    localSourceStream = new LocalSourceStreamInfo(aMediaStream, this, id);
+    localSourceStream = new LocalSourceStreamInfo(aMediaStream, this, streamId);
     mLocalSourceStreams.AppendElement(localSourceStream);
   }
 
   localSourceStream->AddTrack(trackId);
-  *streamId = localSourceStream->GetId();
   return NS_OK;
 }
 
@@ -621,20 +614,15 @@ PeerConnectionMedia::RemoveLocalTrack(const std::string& streamId,
   CSFLogDebug(logTag, "%s: stream: %s track: %s", __FUNCTION__,
                       streamId.c_str(), trackId.c_str());
 
-  size_t i;
-  for (i = 0; i < mLocalSourceStreams.Length(); ++i) {
-    if (mLocalSourceStreams[i]->GetId() == streamId) {
-      break;
-    }
-  }
-
-  if (i == mLocalSourceStreams.Length()) {
+  nsRefPtr<LocalSourceStreamInfo> localSourceStream =
+    GetLocalStreamById(streamId);
+  if (!localSourceStream) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  mLocalSourceStreams[i]->RemoveTrack(trackId);
-  if (!(mLocalSourceStreams[i]->GetTrackCount())) {
-    mLocalSourceStreams.RemoveElementAt(i);
+  localSourceStream->RemoveTrack(trackId);
+  if (!localSourceStream->GetTrackCount()) {
+    mLocalSourceStreams.RemoveElement(localSourceStream);
   }
   return NS_OK;
 }
@@ -648,32 +636,27 @@ PeerConnectionMedia::RemoveRemoteTrack(const std::string& streamId,
   CSFLogDebug(logTag, "%s: stream: %s track: %s", __FUNCTION__,
                       streamId.c_str(), trackId.c_str());
 
-  size_t i;
-  for (i = 0; i < mRemoteSourceStreams.Length(); ++i) {
-    if (mRemoteSourceStreams[i]->GetId() == streamId) {
-      break;
-    }
-  }
-
-  if (i == mRemoteSourceStreams.Length()) {
+  nsRefPtr<RemoteSourceStreamInfo> remoteSourceStream =
+    GetRemoteStreamById(streamId);
+  if (!remoteSourceStream) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  mRemoteSourceStreams[i]->RemoveTrack(trackId);
-  if (!(mRemoteSourceStreams[i]->GetTrackCount())) {
-    mRemoteSourceStreams.RemoveElementAt(i);
+  remoteSourceStream->RemoveTrack(trackId);
+  if (!remoteSourceStream->GetTrackCount()) {
+    mRemoteSourceStreams.RemoveElement(remoteSourceStream);
   }
   return NS_OK;
 }
 
 nsresult
-PeerConnectionMedia::GetRemoteTrackId(DOMMediaStream* mediaStream,
+PeerConnectionMedia::GetRemoteTrackId(const std::string streamId,
                                       TrackID numericTrackId,
                                       std::string* trackId) const
 {
   auto* ncThis = const_cast<PeerConnectionMedia*>(this);
   const RemoteSourceStreamInfo* info =
-    ncThis->GetRemoteStreamByDomStream(*mediaStream);
+    ncThis->GetRemoteStreamById(streamId);
 
   if (!info) {
     CSFLogError(logTag, "%s: Could not find stream info", __FUNCTION__);
@@ -776,35 +759,6 @@ PeerConnectionMedia::GetLocalStreamById(const std::string& id)
     }
   }
 
-  MOZ_ASSERT(false);
-  return nullptr;
-}
-
-LocalSourceStreamInfo*
-PeerConnectionMedia::GetLocalStreamByDomStream(const DOMMediaStream& stream)
-{
-  ASSERT_ON_THREAD(mMainThread);
-  for (size_t i = 0; i < mLocalSourceStreams.Length(); ++i) {
-    if (&stream == mLocalSourceStreams[i]->GetMediaStream()) {
-      return mLocalSourceStreams[i];
-    }
-  }
-
-  return nullptr;
-}
-
-RemoteSourceStreamInfo*
-PeerConnectionMedia::GetRemoteStreamByDomStream(
-    const DOMMediaStream& stream)
-{
-  ASSERT_ON_THREAD(mMainThread);
-  for (size_t i = 0; i < mRemoteSourceStreams.Length(); ++i) {
-    if (&stream == mRemoteSourceStreams[i]->GetMediaStream()) {
-      return mRemoteSourceStreams[i];
-    }
-  }
-
-  MOZ_ASSERT(false);
   return nullptr;
 }
 
@@ -826,10 +780,6 @@ PeerConnectionMedia::GetRemoteStreamById(const std::string& id)
     }
   }
 
-  // This does not have a MOZ_ASSERT like GetLocalStreamById because in the
-  // case of local streams, the stream id and stream info are created
-  // simultaneously, whereas in the remote case the stream id exists first,
-  // meaning we have to be able to check.
   return nullptr;
 }
 
