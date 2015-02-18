@@ -3,14 +3,14 @@
   "languages-target" : { "app://*.gaiamobile.org/manifest.webapp": "2.2" },
   "languages-provided": {
     "de": {
-      "version": 201411051234,
+      "revision": 201411051234,
       "name": "Deutsch",
       "apps": {
         "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest.webapp": "tests/dom/apps/tests/langpack/de/"
        }
      },
      "pl": {
-      "version": 201411051234,
+      "revision": 201411051234,
       "name": "Polski",
       "apps": {
         "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest.webapp": "tests/dom/apps/tests/langpack/pl/"
