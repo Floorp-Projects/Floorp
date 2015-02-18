@@ -150,6 +150,9 @@ const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 
 const ADDON_ID_SUFFIX = "@appupdatetest.mozilla.org";
 const ADDON_PREP_DIR = "appupdateprep";
+
+const PREF_APP_UPDATE_LASTUPDATETIME = "app.update.lastUpdateTime.background-update-timer";
+
 // Preference for storing add-ons that are disabled by the tests to prevent them
 // from interefering with the tests.
 const PREF_DISABLEDADDONS = "app.update.test.disabledAddons";
@@ -876,6 +879,11 @@ function setupPrefs() {
   if (DEBUG_AUS_TEST) {
     Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, true);
   }
+
+  // Prevent nsIUpdateTimerManager from notifying nsIApplicationUpdateService
+  // to check for updates by setting the last update time to the maximum value
+  // allowed for an integer preference.
+  Services.prefs.setIntPref(PREF_APP_UPDATE_LASTUPDATETIME, 2147483647);
 
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_URL_OVERRIDE)) {
     gAppUpdateURL = Services.prefs.getCharPref(PREF_APP_UPDATE_URL_OVERRIDE);
