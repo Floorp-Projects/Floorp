@@ -313,6 +313,7 @@ MapCertErrorToProbeValue(PRErrorCode errorCode)
     case mozilla::pkix::MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE: return 14;
     case mozilla::pkix::MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE:
       return 15;
+    case SEC_ERROR_INVALID_TIME: return 16;
   }
   NS_WARNING("Unknown certificate error code. Does MapCertErrorToProbeValue "
              "handle everything in DetermineCertOverrideErrors?");
@@ -368,6 +369,7 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
       break;
     }
 
+    case SEC_ERROR_INVALID_TIME:
     case SEC_ERROR_EXPIRED_CERTIFICATE:
     case mozilla::pkix::MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE:
       collectedErrors = nsICertOverrideService::ERROR_TIME;
