@@ -12,8 +12,10 @@ add_task(function*() {
 
   info("Creating the test document");
   let style = "" +
-    "#testid {" +
-    "  background-color: blue;" +
+    "@media screen and (min-width: 10px) {" +
+    "  #testid {" +
+    "    background-color: blue;" +
+    "  }" +
     "}" +
     ".testclass, .unmatched {" +
     "  background-color: green;" +
@@ -35,6 +37,15 @@ function* testContentAfterNodeSelection(inspector, ruleView) {
     "After highlighting null, has a no-results element again.");
 
   yield selectNode("#testid", inspector);
+
+  let linkText = getRuleViewLinkTextByIndex(ruleView, 1);
+  is(linkText, "inline:1 @screen and (min-width: 10px)",
+    "link text at index 1 contains media query text.");
+
+  linkText = getRuleViewLinkTextByIndex(ruleView, 2);
+  is(linkText, "inline:1",
+    "link text at index 2 contains no media query text.");
+
   let classEditor = getRuleViewRuleEditor(ruleView, 2);
   is(classEditor.selectorText.querySelector(".ruleview-selector-matched").textContent,
     ".testclass", ".textclass should be matched.");
