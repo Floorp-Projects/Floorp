@@ -68,84 +68,172 @@ bool MediaEngineCameraVideoSource::AppendToTrack(SourceMediaStream* aSource,
   return aSource->AppendToTrack(aID, &(segment));
 }
 
-// A special version of the algorithm for cameras that don't list capabilities.
-void
-MediaEngineCameraVideoSource::GuessCapability(
-    const VideoTrackConstraintsN& aConstraints,
-    const MediaEnginePrefs& aPrefs)
+// Sub-classes (B2G or desktop) should overload one of both of these two methods
+// to provide capabilities
+size_t
+MediaEngineCameraVideoSource::NumCapabilities()
 {
-  LOG(("GuessCapability: prefs: %dx%d @%d-%dfps",
-       aPrefs.mWidth, aPrefs.mHeight, aPrefs.mFPS, aPrefs.mMinFPS));
+  return mHardcodedCapabilities.Length();
+}
 
-  // In short: compound constraint-ranges and use pref as ideal.
+void
+MediaEngineCameraVideoSource::GetCapability(size_t aIndex,
+                                            webrtc::CaptureCapability& aOut)
+{
+  MOZ_ASSERT(aIndex < mHardcodedCapabilities.Length());
+  aOut = mHardcodedCapabilities[aIndex];
+}
 
-  ConstrainLongRange cWidth(aConstraints.mRequired.mWidth);
-  ConstrainLongRange cHeight(aConstraints.mRequired.mHeight);
+// The full algorithm for all cameras. Sources that don't list capabilities
+// need to fake it and hardcode some by populating mHardcodedCapabilities above.
 
-  if (aConstraints.mAdvanced.WasPassed()) {
-    const auto& advanced = aConstraints.mAdvanced.Value();
-    for (uint32_t i = 0; i < advanced.Length(); i++) {
-      if (AreIntersecting(cWidth, advanced[i].mWidth) &&
-          AreIntersecting(cHeight, advanced[i].mHeight)) {
-        Intersect(cWidth, advanced[i].mWidth);
-        Intersect(cHeight, advanced[i].mHeight);
+/*static*/
+bool
+MediaEngineCameraVideoSource::SatisfiesConstraintSet(const MediaTrackConstraintSet &aConstraints,
+                                                     const webrtc::CaptureCapability& aCandidate) {
+  if (!IsWithin(aCandidate.width, aConstraints.mWidth) ||
+      !IsWithin(aCandidate.height, aConstraints.mHeight)) {
+    return false;
+  }
+  if (!IsWithin(aCandidate.maxFPS, aConstraints.mFrameRate)) {
+    return false;
+  }
+  return true;
+}
+
+// SatisfiesConstraintSets (plural) answers for the capture device as a whole
+// whether it can satisfy an accumulated number of capabilitySets.
+
+bool
+MediaEngineCameraVideoSource::SatisfiesConstraintSets(
+    const nsTArray<const MediaTrackConstraintSet*>& aConstraintSets)
+{
+  size_t num = NumCapabilities();
+
+  CapabilitySet candidateSet;
+  for (size_t i = 0; i < num; i++) {
+    candidateSet.AppendElement(i);
+  }
+
+  for (const MediaTrackConstraintSet* cs : aConstraintSets) {
+    for (size_t i = 0; i < candidateSet.Length();  ) {
+      webrtc::CaptureCapability cap;
+      GetCapability(candidateSet[i], cap);
+      if (!SatisfiesConstraintSet(*cs, cap)) {
+        candidateSet.RemoveElementAt(i);
+      } else {
+        ++i;
       }
     }
   }
-  // Detect Mac HD cams and give them some love in the form of a dynamic default
-  // since that hardware switches between 4:3 at low res and 16:9 at higher res.
-  //
-  // Logic is: if we're relying on defaults in aPrefs, then
-  // only use HD pref when non-HD pref is too small and HD pref isn't too big.
+  return !!candidateSet.Length();
+}
 
-  bool macHD = ((!aPrefs.mWidth || !aPrefs.mHeight) &&
-                mDeviceName.EqualsASCII("FaceTime HD Camera (Built-in)") &&
-                (aPrefs.GetWidth() < cWidth.mMin ||
-                 aPrefs.GetHeight() < cHeight.mMin) &&
-                !(aPrefs.GetWidth(true) > cWidth.mMax ||
-                  aPrefs.GetHeight(true) > cHeight.mMax));
-  int prefWidth = aPrefs.GetWidth(macHD);
-  int prefHeight = aPrefs.GetHeight(macHD);
+void
+MediaEngineCameraVideoSource::ChooseCapability(
+    const VideoTrackConstraintsN &aConstraints,
+    const MediaEnginePrefs &aPrefs)
+{
+  LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps",
+       aPrefs.mWidth, aPrefs.mHeight, aPrefs.mFPS, aPrefs.mMinFPS));
 
-  // Clamp width and height without distorting inherent aspect too much.
+  size_t num = NumCapabilities();
 
-  if (IsWithin(prefWidth, cWidth) == IsWithin(prefHeight, cHeight)) {
-    // If both are within, we get the default (pref) aspect.
-    // If neither are within, we get the aspect of the enclosing constraint.
-    // Either are presumably reasonable (presuming constraints are sane).
-    mCapability.width = Clamp(prefWidth, cWidth);
-    mCapability.height = Clamp(prefHeight, cHeight);
-  } else {
-    // But if only one clips (e.g. width), the resulting skew is undesirable:
-    //       .------------.
-    //       | constraint |
-    //  .----+------------+----.
-    //  |    |            |    |
-    //  |pref|  result    |    |   prefAspect != resultAspect
-    //  |    |            |    |
-    //  '----+------------+----'
-    //       '------------'
-    //  So in this case, preserve prefAspect instead:
-    //  .------------.
-    //  | constraint |
-    //  .------------.
-    //  |pref        |             prefAspect is unchanged
-    //  '------------'
-    //  |            |
-    //  '------------'
-    if (IsWithin(prefWidth, cWidth)) {
-      mCapability.height = Clamp(prefHeight, cHeight);
-      mCapability.width = Clamp((mCapability.height * prefWidth) /
-                                prefHeight, cWidth);
+  CapabilitySet candidateSet;
+  for (size_t i = 0; i < num; i++) {
+    candidateSet.AppendElement(i);
+  }
+
+  // Pick among capabilities: First apply required constraints.
+
+  for (size_t i = 0; i < candidateSet.Length();) {
+    webrtc::CaptureCapability cap;
+    GetCapability(candidateSet[i], cap);
+    if (!SatisfiesConstraintSet(aConstraints.mRequired, cap)) {
+      candidateSet.RemoveElementAt(i);
     } else {
-      mCapability.width = Clamp(prefWidth, cWidth);
-      mCapability.height = Clamp((mCapability.width * prefHeight) /
-                                 prefWidth, cHeight);
+      ++i;
     }
   }
-  mCapability.maxFPS = MediaEngine::DEFAULT_VIDEO_FPS;
-  LOG(("chose cap %dx%d @%dfps",
-       mCapability.width, mCapability.height, mCapability.maxFPS));
+
+  CapabilitySet tailSet;
+
+  // Then apply advanced (formerly known as optional) constraints.
+
+  if (aConstraints.mAdvanced.WasPassed()) {
+    for (const MediaTrackConstraintSet &cs : aConstraints.mAdvanced.Value()) {
+      CapabilitySet rejects;
+      for (size_t i = 0; i < candidateSet.Length();) {
+        webrtc::CaptureCapability cap;
+        GetCapability(candidateSet[i], cap);
+        if (!SatisfiesConstraintSet(cs, cap)) {
+          rejects.AppendElement(candidateSet[i]);
+          candidateSet.RemoveElementAt(i);
+        } else {
+          ++i;
+        }
+      }
+      (candidateSet.Length()? tailSet : candidateSet).MoveElementsFrom(rejects);
+    }
+  }
+
+  if (!candidateSet.Length()) {
+    candidateSet.AppendElement(0);
+  }
+
+  int prefWidth = aPrefs.GetWidth();
+  int prefHeight = aPrefs.GetHeight();
+
+  // Default is closest to available capability but equal to or below;
+  // otherwise closest above.  Since we handle the num=0 case above and
+  // take the first entry always, we can never exit uninitialized.
+
+  webrtc::CaptureCapability cap;
+  bool higher = true;
+  for (size_t i = 0; i < candidateSet.Length(); i++) {
+    GetCapability(candidateSet[i], cap);
+    if (higher) {
+      if (i == 0 ||
+          (mCapability.width > cap.width && mCapability.height > cap.height)) {
+        // closer than the current choice
+        mCapability = cap;
+        // FIXME: expose expected capture delay?
+      }
+      if (cap.width <= (uint32_t) prefWidth && cap.height <= (uint32_t) prefHeight) {
+        higher = false;
+      }
+    } else {
+      if (cap.width > (uint32_t) prefWidth || cap.height > (uint32_t) prefHeight ||
+          cap.maxFPS < (uint32_t) aPrefs.mMinFPS) {
+        continue;
+      }
+      if (mCapability.width < cap.width && mCapability.height < cap.height) {
+        mCapability = cap;
+        // FIXME: expose expected capture delay?
+      }
+    }
+    // Same resolution, maybe better format or FPS match
+    if (mCapability.width == cap.width && mCapability.height == cap.height) {
+      // FPS too low
+      if (cap.maxFPS < (uint32_t) aPrefs.mMinFPS) {
+        continue;
+      }
+      // Better match
+      if (cap.maxFPS < mCapability.maxFPS) {
+        mCapability = cap;
+      } else if (cap.maxFPS == mCapability.maxFPS) {
+        // Resolution and FPS the same, check format
+        if (cap.rawType == webrtc::RawVideoType::kVideoI420
+          || cap.rawType == webrtc::RawVideoType::kVideoYUY2
+          || cap.rawType == webrtc::RawVideoType::kVideoYV12) {
+          mCapability = cap;
+        }
+      }
+    }
+  }
+  LOG(("chose cap %dx%d @%dfps codec %d raw %d",
+       mCapability.width, mCapability.height, mCapability.maxFPS,
+       mCapability.codecType, mCapability.rawType));
 }
 
 void
