@@ -78,18 +78,18 @@ class ChunkByDir(unittest.TestCase):
                 i += 1
                 name = 'test%i' % i
                 test = {'name': name,
-                        'path': os.path.join(d, name)}
+                        'relpath': os.path.join(d, name)}
                 yield test
 
     def run_all_combos(self, dirs):
-        tests = self.generate_tests(dirs)
+        tests = list(self.generate_tests(dirs))
 
-        deepest = max(len(t['path'].split(os.sep))-1 for t in tests)
+        deepest = max(len(t['relpath'].split(os.sep))-1 for t in tests)
         for depth in range(1, deepest+1):
 
             def num_groups(tests):
                 unique = set()
-                for p in [t['path'] for t in tests]:
+                for p in [t['relpath'] for t in tests]:
                     p = p.split(os.sep)
                     p = p[:min(depth, len(p)-1)]
                     unique.add(os.sep.join(p))
@@ -99,7 +99,7 @@ class ChunkByDir(unittest.TestCase):
                 res = []
                 for this in range(1, total+1):
                     f = chunk_by_dir(this, total, depth)
-                    res.append(f(tests, {}))
+                    res.append(list(f(tests, {})))
 
                 lengths = map(num_groups, res)
                 # the chunk with the most dirs should have at most one more

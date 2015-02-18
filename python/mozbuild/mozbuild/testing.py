@@ -29,8 +29,10 @@ def rewrite_test_base(test, new_base, honor_install_to_subdir=False):
     test['here'] = mozpath.join(new_base, test['dir_relpath'])
 
     if honor_install_to_subdir and test.get('install-to-subdir'):
+        manifest_relpath = mozpath.relpath(test['path'],
+            mozpath.dirname(test['manifest']))
         test['path'] = mozpath.join(new_base, test['dir_relpath'],
-            test['install-to-subdir'], test['relpath'])
+            test['install-to-subdir'], manifest_relpath)
     else:
         test['path'] = mozpath.join(new_base, test['file_relpath'])
 
