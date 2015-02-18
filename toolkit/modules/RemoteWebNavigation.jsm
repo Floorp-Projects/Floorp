@@ -61,7 +61,6 @@ RemoteWebNavigation.prototype = {
     if (aPostData || aHeaders)
       throw Components.Exception("RemoteWebNavigation doesn't accept postdata or headers.", Cr.NS_ERROR_INVALID_ARGS);
 
-    this._browser._contentTitle = "";
     this._sendMessage("WebNavigation:LoadURI", {
       uri: aURI,
       flags: aLoadFlags,
