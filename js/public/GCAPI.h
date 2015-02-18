@@ -263,9 +263,10 @@ enum GCProgress {
 
 struct JS_PUBLIC_API(GCDescription) {
     bool isCompartment_;
+    JSGCInvocationKind invocationKind_;
 
-    explicit GCDescription(bool isCompartment)
-      : isCompartment_(isCompartment) {}
+    GCDescription(bool isCompartment, JSGCInvocationKind kind)
+      : isCompartment_(isCompartment), invocationKind_(kind) {}
 
     char16_t *formatMessage(JSRuntime *rt) const;
     char16_t *formatJSON(JSRuntime *rt, uint64_t timestamp) const;
