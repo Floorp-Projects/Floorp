@@ -362,6 +362,28 @@ INNER_MAKE_GECKOVIEW_LIBRARY=echo 'GeckoView library packaging is only enabled o
 INNER_MAKE_GECKOVIEW_EXAMPLE=echo 'GeckoView example packaging is only enabled on Nightly'
 endif
 
+# Create geckolibs Android ARchive and metadata for download by local
+# developers using Gradle.
+ifdef MOZ_ANDROID_GECKOLIBS_AAR
+UPLOAD_EXTRA_FILES += \
+  geckolibs-$(geckolibs-revision).aar \
+  geckolibs-$(geckolibs-revision).aar.sha1 \
+  geckolibs-$(geckolibs-revision).pom \
+  geckolibs-$(geckolibs-revision).pom.sha1 \
+  ivy-geckolibs-$(geckolibs-revision).xml \
+  ivy-geckolibs-$(geckolibs-revision).xml.sha1 \
+  $(NULL)
+
+INNER_MAKE_GECKOLIBS_AAR= \
+  $(PYTHON) -m mozbuild.action.package_geckolibs_aar \
+    --revision '$(BUILDID)' \
+    --topsrcdir '$(topsrcdir)' \
+    --distdir '$(_ABS_DIST)' \
+    '$(_ABS_DIST)'
+else
+INNER_MAKE_GECKOLIBS_AAR=echo 'Android geckolibs.aar packaging is disabled'
+endif
+
 ifdef MOZ_OMX_PLUGIN
 DIST_FILES += libomxplugin.so libomxplugingb.so libomxplugingb235.so \
               libomxpluginhc.so libomxpluginkk.so
@@ -438,6 +460,7 @@ INNER_MAKE_PACKAGE	= \
   $(RELEASE_JARSIGNER) $(_ABS_DIST)/gecko.apk && \
   $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/gecko.apk $(PACKAGE) && \
   $(INNER_ROBOCOP_PACKAGE) && \
+  $(INNER_MAKE_GECKOLIBS_AAR) && \
   $(INNER_MAKE_GECKOVIEW_LIBRARY) && \
   $(INNER_MAKE_GECKOVIEW_EXAMPLE)
 
