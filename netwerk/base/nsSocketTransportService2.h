@@ -17,7 +17,6 @@
 #include "nsIObserver.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/net/DashboardTypes.h"
-#include "mozilla/Atomics.h"
 
 class nsASocketHandler;
 struct PRPollDesc;
@@ -218,10 +217,6 @@ private:
     // True if TCP keepalive is enabled globally.
     bool        mKeepaliveEnabledPref;
 
-    bool                   mServeMultipleEventsPerPollIter;
-    mozilla::Atomic<bool>  mServingPendingQueue;
-    int32_t                mMaxTimePerPollIter;
-
     void OnKeepaliveEnabledPrefChange();
     void NotifyKeepaliveEnabledPrefChange(SocketContext *sock);
 
@@ -238,8 +233,6 @@ private:
     void DetachSocketWithGuard(bool aGuardLocals,
                                SocketContext *socketList,
                                int32_t index);
-
-    void MarkTheLastElementOfPendingQueue();
 };
 
 extern nsSocketTransportService *gSocketTransportService;
