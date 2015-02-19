@@ -925,7 +925,7 @@ function synthesizeComposition(aEvent, aWindow, aCallback)
     case "compositioncommitasis":
       return TIP.commitComposition();
     case "compositioncommit":
-      return TIP.commitComposition(aEvent.data);
+      return TIP.commitComposition(null, 0, aEvent.data);
     default:
       return false;
   }
