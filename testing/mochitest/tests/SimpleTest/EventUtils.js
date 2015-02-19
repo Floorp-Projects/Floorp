@@ -510,100 +510,72 @@ function _computeKeyCodeFromChar(aChar)
 }
 
 /**
- * isKeypressFiredKey() returns TRUE if the given key should cause keypress
- * event when widget handles the native key event.  Otherwise, FALSE.
- *
- * aDOMKeyCode should be one of consts of nsIDOMKeyEvent::DOM_VK_*, or a key
- * name begins with "VK_", or a character.
- */
-function isKeypressFiredKey(aDOMKeyCode)
-{
-  if (typeof(aDOMKeyCode) == "string") {
-    if (aDOMKeyCode.indexOf("VK_") == 0) {
-      aDOMKeyCode = KeyEvent["DOM_" + aDOMKeyCode];
-      if (!aDOMKeyCode) {
-        throw "Unknown key: " + aDOMKeyCode;
-      }
-    } else {
-      // If the key generates a character, it must cause a keypress event.
-      return true;
-    }
-  }
-  switch (aDOMKeyCode) {
-    case KeyEvent.DOM_VK_SHIFT:
-    case KeyEvent.DOM_VK_CONTROL:
-    case KeyEvent.DOM_VK_ALT:
-    case KeyEvent.DOM_VK_CAPS_LOCK:
-    case KeyEvent.DOM_VK_NUM_LOCK:
-    case KeyEvent.DOM_VK_SCROLL_LOCK:
-    case KeyEvent.DOM_VK_META:
-      return false;
-    default:
-      return true;
-  }
-}
-
-/**
  * Synthesize a key event. It is targeted at whatever would be targeted by an
  * actual keypress by the user, typically the focused element.
  *
- * aKey should be either a character or a keycode starting with VK_ such as
- * VK_RETURN.
+ * aKey should be:
+ *  - key value (recommended).  If you specify a non-printable key name,
+ *    append "KEY_" prefix.  Otherwise, specifying a printable key, the
+ *    key value should be specified.
+ *  - keyCode name starting with "VK_" (e.g., VK_RETURN).  This is available
+ *    only for compatibility with legacy API.  Don't use this with new tests.
  *
  * aEvent is an object which may contain the properties:
- *   shiftKey, ctrlKey, altKey, metaKey, accessKey, type, location
- *
- * Sets one of KeyboardEvent.DOM_KEY_LOCATION_* to location.  Otherwise,
- * DOMWindowUtils will choose good location from the keycode.
- *
- * If the type is specified, a key event of that type is fired. Otherwise,
- * a keydown, a keypress and then a keyup event are fired in sequence.
+ *  - code: If you emulates a physical keyboard's key event, this should be
+ *          specified.
+ *  - repeat: If you emulates auto-repeat, you should set the count of repeat.
+ *            This method will automatically synthesize keydown (and keypress).
+ *  - location: If you want to specify this, you can specify this explicitly.
+ *              However, if you don't specify this value, it will be computed
+ *              from code value.
+ *  - type: Basically, you shouldn't specify this.  Then, this function will
+ *          synthesize keydown (, keypress) and keyup.
+ *          If keydown is specified, this only fires keydown (and keypress if
+ *          it should be fired).
+ *          If keyup is specified, this only fires keyup.
+ *  - altKey, altGraphKey, ctrlKey, capsLockKey, fnKey, fnLockKey, numLockKey,
+ *    metaKey, osKey, scrollLockKey, shiftKey, symbolKey, symbolLockKey:
+ *        Basically, you shouldn't use these attributes.  nsITextInputProcessor
+ *        manages modifier key state when you synthesize modifier key events.
+ *        However, if some of these attributes are true, this function activates
+ *        the modifiers only during dispatching the key events.
+ *        Note that if some of these values are false, they are ignored (i.e.,
+ *        not inactivated with this function).
+ *  - keyCode: Must be 0 - 255 (0xFF). If this is specified explicitly,
+ *             .keyCode value is initialized with this value.
  *
  * aWindow is optional, and defaults to the current window object.
  */
 function synthesizeKey(aKey, aEvent, aWindow)
 {
-  var utils = _getDOMWindowUtils(aWindow);
-  if (utils) {
-    var keyEventDict = _createKeyboardEventDictionary(aKey, aEvent);
-    var keyCode = keyEventDict.dictionary.keyCode;
-    var charCode =
-      (aKey.indexOf("VK_") == 0) ?
-        0 : ((keyEventDict.dictionary.key != "") ?
-                keyEventDict.dictionary.key.charCodeAt(0) : 0);
+  var TIP = _getTIP(aWindow);
+  if (!TIP) {
+    return;
+  }
+  var modifiers = _emulateToActivateModifiers(TIP, aEvent);
+  var keyEventDict = _createKeyboardEventDictionary(aKey, aEvent);
+  var keyEvent = new KeyboardEvent("", keyEventDict.dictionary);
+  var dispatchKeydown =
+    !("type" in aEvent) || aEvent.type === "keydown" || !aEvent.type;
+  var dispatchKeyup =
+    !("type" in aEvent) || aEvent.type === "keyup"   || !aEvent.type;
 
-    var modifiers = _parseModifiers(aEvent);
-    var flags = 0;
-    switch (keyEventDict.dictionary.location) {
-      case KeyboardEvent.DOM_KEY_LOCATION_STANDARD:
-        flags |= utils.KEY_FLAG_LOCATION_STANDARD;
-        break;
-      case KeyboardEvent.DOM_KEY_LOCATION_LEFT:
-        flags |= utils.KEY_FLAG_LOCATION_LEFT;
-        break;
-      case KeyboardEvent.DOM_KEY_LOCATION_RIGHT:
-        flags |= utils.KEY_FLAG_LOCATION_RIGHT;
-        break;
-      case KeyboardEvent.DOM_KEY_LOCATION_NUMPAD:
-        flags |= utils.KEY_FLAG_LOCATION_NUMPAD;
-        break;
-    }
-
-    if (!("type" in aEvent) || !aEvent.type) {
-      // Send keydown + (optional) keypress + keyup events.
-      var keyDownDefaultHappened =
-        utils.sendKeyEvent("keydown", keyCode, 0, modifiers, flags);
-      if (isKeypressFiredKey(keyCode) && keyDownDefaultHappened) {
-        utils.sendKeyEvent("keypress", keyCode, charCode, modifiers, flags);
+  try {
+    if (dispatchKeydown) {
+      TIP.keydown(keyEvent, keyEventDict.flags);
+      if ("repeat" in aEvent && aEvent.repeat > 1) {
+        keyEventDict.dictionary.repeat = true;
+        var repeatedKeyEvent = new KeyboardEvent("", keyEventDict.dictionary);
+        for (var i = 1; i < aEvent.repeat; i++) {
+          TIP.keydown(repeatedKeyEvent, keyEventDict.flags);
+        }
       }
-      utils.sendKeyEvent("keyup", keyCode, 0, modifiers, flags);
-    } else if (aEvent.type == "keypress") {
-      // Send standalone keypress event.
-      utils.sendKeyEvent(aEvent.type, keyCode, charCode, modifiers, flags);
-    } else {
-      // Send other standalone event than keypress.
-      utils.sendKeyEvent(aEvent.type, keyCode, 0, modifiers, flags);
     }
+    if (dispatchKeyup) {
+      TIP.keyup(keyEvent, keyEventDict.flags);
+    }
+  } finally {
+    _emulateToInactivateModifiers(TIP, modifiers);
   }
 }
 
@@ -1074,7 +1046,7 @@ function _createKeyboardEventDictionary(aKey, aKeyEvent)
     key: keyName,
     code: "code" in aKeyEvent ? aKeyEvent.code : "",
     location: locationIsDefined ? aKeyEvent.location : 0,
-    repeat: "repeat" in aKeyEvent ? aKeyEvent.repeat : false,
+    repeat: "repeat" in aKeyEvent ? aKeyEvent.repeat === true : false,
     keyCode: keyCode,
   };
   return result;

@@ -784,9 +784,6 @@ var popupTests = [
       }, false);
       newWindow.close();
       thisWindow.focus();
-      // Note that our window dispatches a hacky key event if IMM is installed
-      // on the system during focus change only if Alt key is pressed.
-      synthesizeKey("`", { type: "keypress" }, thisWindow);
     }, false);
   }
 }
