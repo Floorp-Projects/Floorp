@@ -189,16 +189,14 @@ class JSObject : public js::gc::Cell
     inline void setInitialSlotsMaybeNonNative(js::HeapSlot *slots);
     inline void setInitialElementsMaybeNonNative(js::HeapSlot *elements);
 
-  protected:
     enum GenerateShape {
         GENERATE_NONE,
         GENERATE_SHAPE
     };
 
-    bool setFlag(js::ExclusiveContext *cx, /*BaseShape::Flag*/ uint32_t flag,
-                 GenerateShape generateShape = GENERATE_NONE);
+    bool setFlags(js::ExclusiveContext *cx, /*BaseShape::Flag*/ uint32_t flags,
+                  GenerateShape generateShape = GENERATE_NONE);
 
-  public:
     /*
      * An object is a delegate if it is on another object's prototype or scope
      * chain, and therefore the delegate might be asked implicitly to get or
@@ -213,7 +211,7 @@ class JSObject : public js::gc::Cell
     }
 
     bool setDelegate(js::ExclusiveContext *cx) {
-        return setFlag(cx, js::BaseShape::DELEGATE, GENERATE_SHAPE);
+        return setFlags(cx, js::BaseShape::DELEGATE, GENERATE_SHAPE);
     }
 
     bool isBoundFunction() const {
@@ -226,18 +224,18 @@ class JSObject : public js::gc::Cell
         return lastProperty()->hasObjectFlag(js::BaseShape::WATCHED);
     }
     bool setWatched(js::ExclusiveContext *cx) {
-        return setFlag(cx, js::BaseShape::WATCHED, GENERATE_SHAPE);
+        return setFlags(cx, js::BaseShape::WATCHED, GENERATE_SHAPE);
     }
 
     /* See InterpreterFrame::varObj. */
     inline bool isQualifiedVarObj();
     bool setQualifiedVarObj(js::ExclusiveContext *cx) {
-        return setFlag(cx, js::BaseShape::QUALIFIED_VAROBJ);
+        return setFlags(cx, js::BaseShape::QUALIFIED_VAROBJ);
     }
 
     inline bool isUnqualifiedVarObj();
     bool setUnqualifiedVarObj(js::ExclusiveContext *cx) {
-        return setFlag(cx, js::BaseShape::UNQUALIFIED_VAROBJ);
+        return setFlags(cx, js::BaseShape::UNQUALIFIED_VAROBJ);
     }
 
     /*
@@ -250,7 +248,7 @@ class JSObject : public js::gc::Cell
         return lastProperty()->hasObjectFlag(js::BaseShape::UNCACHEABLE_PROTO);
     }
     bool setUncacheableProto(js::ExclusiveContext *cx) {
-        return setFlag(cx, js::BaseShape::UNCACHEABLE_PROTO, GENERATE_SHAPE);
+        return setFlags(cx, js::BaseShape::UNCACHEABLE_PROTO, GENERATE_SHAPE);
     }
 
     /*
@@ -261,7 +259,7 @@ class JSObject : public js::gc::Cell
         return lastProperty()->hasObjectFlag(js::BaseShape::HAD_ELEMENTS_ACCESS);
     }
     bool setHadElementsAccess(js::ExclusiveContext *cx) {
-        return setFlag(cx, js::BaseShape::HAD_ELEMENTS_ACCESS);
+        return setFlags(cx, js::BaseShape::HAD_ELEMENTS_ACCESS);
     }
 
     /*
@@ -397,7 +395,7 @@ class JSObject : public js::gc::Cell
         return lastProperty()->hasObjectFlag(js::BaseShape::ITERATED_SINGLETON);
     }
     bool setIteratedSingleton(js::ExclusiveContext *cx) {
-        return setFlag(cx, js::BaseShape::ITERATED_SINGLETON);
+        return setFlags(cx, js::BaseShape::ITERATED_SINGLETON);
     }
 
     /*
@@ -414,7 +412,7 @@ class JSObject : public js::gc::Cell
         return lastProperty()->hasObjectFlag(js::BaseShape::NEW_SCRIPT_CLEARED);
     }
     bool setNewScriptCleared(js::ExclusiveContext *cx) {
-        return setFlag(cx, js::BaseShape::NEW_SCRIPT_CLEARED);
+        return setFlags(cx, js::BaseShape::NEW_SCRIPT_CLEARED);
     }
 
     /* Set a new prototype for an object with a singleton type. */

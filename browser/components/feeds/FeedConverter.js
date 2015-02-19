@@ -548,15 +548,12 @@ GenericProtocolHandler.prototype = {
     return uri;
   },
   
-  newChannel: function GPH_newChannel(aUri) {
+  newChannel2: function GPH_newChannel(aUri, aLoadInfo) {
     var inner = aUri.QueryInterface(Ci.nsINestedURI).innerURI;
     var channel = Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService).newChannelFromURI2(inner,
-                                                                 null,      // aLoadingNode
-                                                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                                                 null,      // aTriggeringPrincipal
-                                                                 Ci.nsILoadInfo.SEC_NORMAL,
-                                                                 Ci.nsIContentPolicy.TYPE_OTHER);
+                  getService(Ci.nsIIOService).
+                  newChannelFromURIWithLoadInfo(inner, aLoadInfo);
+
     if (channel instanceof Components.interfaces.nsIHttpChannel)
       // Set this so we know this is supposed to be a feed
       channel.setRequestHeader("X-Moz-Is-Feed", "1", false);
@@ -564,6 +561,7 @@ GenericProtocolHandler.prototype = {
     return channel;
   },
   
+
   QueryInterface: function GPH_QueryInterface(iid) {
     if (iid.equals(Ci.nsIProtocolHandler) ||
         iid.equals(Ci.nsISupports))

@@ -1160,23 +1160,21 @@ bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
   return SendRealMouseButtonEvent(event);
 }
 
-CSSPoint TabParent::AdjustTapToChildWidget(const CSSPoint& aPoint)
+LayoutDeviceToCSSScale
+TabParent::GetLayoutDeviceToCSSScale()
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
+  nsIDocument* doc = (content ? content->OwnerDoc() : nullptr);
+  nsIPresShell* shell = (doc ? doc->GetShell() : nullptr);
+  nsPresContext* ctx = (shell ? shell->GetPresContext() : nullptr);
+  return LayoutDeviceToCSSScale(ctx
+    ? (float)ctx->AppUnitsPerDevPixel() / nsPresContext::AppUnitsPerCSSPixel()
+    : 0.0f);
+}
 
-  if (!content || !content->OwnerDoc()) {
-    return aPoint;
-  }
-
-  nsIDocument* doc = content->OwnerDoc();
-  if (!doc || !doc->GetShell()) {
-    return aPoint;
-  }
-  nsPresContext* presContext = doc->GetShell()->GetPresContext();
-
-  return aPoint + CSSPoint(
-    presContext->DevPixelsToFloatCSSPixels(mChildProcessOffsetAtTouchStart.x),
-    presContext->DevPixelsToFloatCSSPixels(mChildProcessOffsetAtTouchStart.y));
+CSSPoint TabParent::AdjustTapToChildWidget(const CSSPoint& aPoint)
+{
+  return aPoint + (LayoutDevicePoint(mChildProcessOffsetAtTouchStart) * GetLayoutDeviceToCSSScale());
 }
 
 bool TabParent::SendHandleSingleTap(const CSSPoint& aPoint, const ScrollableLayerGuid& aGuid)
@@ -1757,6 +1755,18 @@ TabParent::RecvEnableDisableCommands(const nsString& aAction,
   }
 
   return true;
+}
+
+NS_IMETHODIMP
+TabParent::GetChildProcessOffset(int32_t* aOutCssX, int32_t* aOutCssY)
+{
+  NS_ENSURE_ARG(aOutCssX);
+  NS_ENSURE_ARG(aOutCssY);
+  CSSPoint offset = LayoutDevicePoint(GetChildProcessOffset())
+      * GetLayoutDeviceToCSSScale();
+  *aOutCssX = offset.x;
+  *aOutCssY = offset.y;
+  return NS_OK;
 }
 
 LayoutDeviceIntPoint

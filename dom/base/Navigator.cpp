@@ -2440,6 +2440,20 @@ Navigator::HasTVSupport(JSContext* aCx, JSObject* aGlobal)
 }
 
 /* static */
+bool
+Navigator::IsE10sEnabled(JSContext* aCx, JSObject* aGlobal)
+{
+  return XRE_GetProcessType() == GeckoProcessType_Content;
+}
+
+bool
+Navigator::MozE10sEnabled()
+{
+  // This will only be called if IsE10sEnabled() is true.
+  return true;
+}
+
+/* static */
 already_AddRefed<nsPIDOMWindow>
 Navigator::GetWindowFromGlobal(JSObject* aGlobal)
 {

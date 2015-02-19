@@ -5813,7 +5813,7 @@ function getInnerId(window) {
                 getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 };
 
-const symbolProtoToString = typeof Symbol === "function" ? Symbol.prototype.toString : null;
+const symbolProtoToString = Symbol.prototype.toString;
 
 function getSymbolName(symbol) {
   const name = symbolProtoToString.call(symbol).slice("Symbol(".length, -1);

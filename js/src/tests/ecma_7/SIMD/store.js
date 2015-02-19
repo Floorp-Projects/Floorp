@@ -103,9 +103,50 @@ function testStoreFloat64x2() {
     assertThrowsInstanceOf(() => SIMD.float32x4.store(F64, 0, v), TypeError);
 }
 
+function testSharedArrayBufferCompat() {
+    if (!this.SharedArrayBuffer || !this.SharedFloat32Array || !this.Atomics)
+        return;
+
+    var I32 = new SharedInt32Array(16);
+    var TA = I32;
+
+    var F32 = new SharedFloat32Array(TA.buffer);
+    var F64 = new SharedFloat64Array(TA.buffer);
+
+    var int32x4 = SIMD.int32x4(1, 2, 3, 4);
+    var float32x4 = SIMD.float32x4(1, 2, 3, 4);
+    var float64x2 = SIMD.float64x2(1, 2);
+
+    for (var ta of [
+                    new SharedUint8Array(TA.buffer),
+                    new SharedInt8Array(TA.buffer),
+                    new SharedUint16Array(TA.buffer),
+                    new SharedInt16Array(TA.buffer),
+                    new SharedUint32Array(TA.buffer),
+                    new SharedInt32Array(TA.buffer),
+                    new SharedFloat32Array(TA.buffer),
+                    new SharedFloat64Array(TA.buffer)
+                   ])
+    {
+        SIMD.int32x4.store(ta, 0, int32x4);
+        for (var i = 0; i < 4; i++) assertEq(I32[i], [1, 2, 3, 4][i]);
+
+        SIMD.float32x4.store(ta, 0, float32x4);
+        for (var i = 0; i < 4; i++) assertEq(F32[i], [1, 2, 3, 4][i]);
+
+        SIMD.float64x2.store(ta, 0, float64x2);
+        for (var i = 0; i < 2; i++) assertEq(F64[i], [1, 2][i]);
+
+        assertThrowsInstanceOf(() => SIMD.int32x4.store(ta, 1024, int32x4), RangeError);
+        assertThrowsInstanceOf(() => SIMD.float32x4.store(ta, 1024, float32x4), RangeError);
+        assertThrowsInstanceOf(() => SIMD.float64x2.store(ta, 1024, float64x2), RangeError);
+    }
+}
+
 testStoreInt32x4();
 testStoreFloat32x4();
 testStoreFloat64x2();
+testSharedArrayBufferCompat();
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);

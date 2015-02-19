@@ -129,7 +129,7 @@ displayEnabledCallback(bool enabled)
 
 } // anonymous namespace
 
-NS_IMPL_ISUPPORTS_INHERITED(nsWindow, nsBaseWidget, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
 nsWindow::nsWindow()
 {

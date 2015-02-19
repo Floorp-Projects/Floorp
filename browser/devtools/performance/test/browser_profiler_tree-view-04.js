@@ -6,6 +6,8 @@
  * creates the correct DOM nodes in the correct order.
  */
 
+let { CATEGORY_MASK } = devtools.require("devtools/shared/profiler/global");
+
 function test() {
   let { ThreadNode } = devtools.require("devtools/shared/profiler/tree-model");
   let { CallView } = devtools.require("devtools/shared/profiler/tree-view");
@@ -90,34 +92,33 @@ function test() {
 let gSamples = [{
   time: 5,
   frames: [
-    { category: 8,  location: "(root)" },
-    { category: 8,  location: "A (http://foo/bar/baz:12)" },
-    { category: 16, location: "B (http://foo/bar/baz:34)" },
-    { category: 32, location: "C (http://foo/bar/baz:56)" }
+    { category: CATEGORY_MASK('other'),  location: "(root)" },
+    { category: CATEGORY_MASK('other'),  location: "A (http://foo/bar/baz:12)" },
+    { category: CATEGORY_MASK('css'),    location: "B (http://foo/bar/baz:34)" },
+    { category: CATEGORY_MASK('js'),     location: "C (http://foo/bar/baz:56)" }
   ]
 }, {
   time: 5 + 1,
   frames: [
-    { category: 8,  location: "(root)" },
-    { category: 8,  location: "A (http://foo/bar/baz:12)" },
-    { category: 16, location: "B (http://foo/bar/baz:34)" },
-    { category: 64, location: "D (http://foo/bar/baz:78)" }
+    { category: CATEGORY_MASK('other'),  location: "(root)" },
+    { category: CATEGORY_MASK('other'),  location: "A (http://foo/bar/baz:12)" },
+    { category: CATEGORY_MASK('css'),    location: "B (http://foo/bar/baz:34)" },
+    { category: CATEGORY_MASK('gc', 1),  location: "D (http://foo/bar/baz:78)" }
   ]
 }, {
   time: 5 + 1 + 2,
   frames: [
-    { category: 8,  location: "(root)" },
-    { category: 8,  location: "A (http://foo/bar/baz:12)" },
-    { category: 16, location: "B (http://foo/bar/baz:34)" },
-    { category: 64, location: "D (http://foo/bar/baz:78)" }
+    { category: CATEGORY_MASK('other'),  location: "(root)" },
+    { category: CATEGORY_MASK('other'),  location: "A (http://foo/bar/baz:12)" },
+    { category: CATEGORY_MASK('css'),    location: "B (http://foo/bar/baz:34)" },
+    { category: CATEGORY_MASK('gc', 1),  location: "D (http://foo/bar/baz:78)" }
   ]
 }, {
   time: 5 + 1 + 2 + 7,
   frames: [
-    { category: 8,   location: "(root)" },
-    { category: 8,   location: "A (http://foo/bar/baz:12)" },
-    { category: 128, location: "E (http://foo/bar/baz:90)" },
-    { category: 256, location: "F (http://foo/bar/baz:99)" }
+    { category: CATEGORY_MASK('other'),   location: "(root)" },
+    { category: CATEGORY_MASK('other'),   location: "A (http://foo/bar/baz:12)" },
+    { category: CATEGORY_MASK('gc', 2),   location: "E (http://foo/bar/baz:90)" },
+    { category: CATEGORY_MASK('network'), location: "F (http://foo/bar/baz:99)" }
   ]
 }];
-
