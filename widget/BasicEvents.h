@@ -1016,6 +1016,11 @@ public:
    */
   static Modifier AccelModifier();
 
+  /**
+   * GetModifier() returns a modifier flag which is activated by aDOMKeyName.
+   */
+  static Modifier GetModifier(const nsAString& aDOMKeyName);
+
   // true indicates the accel key on the environment is down
   bool IsAccel() const
   {

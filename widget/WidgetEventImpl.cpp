@@ -256,6 +256,17 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
 
 /* static */
 Modifier
+WidgetInputEvent::GetModifier(const nsAString& aDOMKeyName)
+{
+  if (aDOMKeyName.EqualsLiteral("Accel")) {
+    return AccelModifier();
+  }
+  KeyNameIndex keyNameIndex = WidgetKeyboardEvent::GetKeyNameIndex(aDOMKeyName);
+  return WidgetKeyboardEvent::GetModifierForKeyName(keyNameIndex);
+}
+
+/* static */
+Modifier
 WidgetInputEvent::AccelModifier()
 {
   static Modifier sAccelModifier = MODIFIER_NONE;

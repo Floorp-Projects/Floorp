@@ -1155,6 +1155,11 @@ function runKeyTests()
   }
 
   // Modifier state tests
+  var sharedTIP = createTIP();
+  ok(sharedTIP.beginInputTransactionForTests(otherWindow),
+     description + "sharedTIP.beginInputTransactionForTests(otherWindow) should return true");
+  TIP.shareModifierStateOf(sharedTIP);
+  var independentTIP = createTIP();
   const kModifierKeys = [
     { key: "Alt",        code: "AltLeft",      isLockable: false },
     { key: "Alt",        code: "AltRight",     isLockable: false },
@@ -1204,6 +1209,18 @@ function runKeyTests()
     }
   }
 
+  function checkAllTIPModifiers(aTestDesc, aModifiers)
+  {
+    for (var i = 0; i < kModifiers.length; i++) {
+      is(TIP.getModifierState(kModifiers[i]), aModifiers.indexOf(kModifiers[i]) >= 0,
+         aTestDesc + ", TIP.getModifierState(\"" + kModifiers[i] + "\") returns wrong value");
+      is(sharedTIP.getModifierState(kModifiers[i]), TIP.getModifierState(kModifiers[i]),
+         aTestDesc + ", sharedTIP.getModifierState(\"" + kModifiers[i] + "\") returns different value from TIP");
+      is(independentTIP.getModifierState(kModifiers[i]), false,
+         aTestDesc + ", independentTIP.getModifierState(\"" + kModifiers[i] + "\") should return false");
+    }
+  }
+
   // First, all modifiers must be false.
   reset();
   doPreventDefaults = [ "keypress" ];
@@ -1224,9 +1241,13 @@ function runKeyTests()
     var testDesc = "A modifier key \"" + kModifierKeys[i].key + "\" (\"" + kModifierKeys[i].code + "\") and a printable key";
     if (!kModifierKeys[i].isLockable) {
       TIP.keydown(modKey);
+      checkAllTIPModifiers(testDesc + ", \"" + kModifierKeys[i].key + "\" keydown", [ kModifierKeys[i].key ]);
       TIP.keydown(keyA);
+      checkAllTIPModifiers(testDesc + ", \"a\" keydown", [ kModifierKeys[i].key ]);
       TIP.keyup(keyA);
+      checkAllTIPModifiers(testDesc + ", \"a\" keyup", [ kModifierKeys[i].key ]);
       TIP.keyup(modKey);
+      checkAllTIPModifiers(testDesc + ", \"" + kModifierKeys[i].key + "\" keyup", [ ]);
       is(events.length, 5,
          description + testDesc + " should cause 5 events");
       checkModifiers(testDesc, events[0], "keydown",  kModifierKeys[i].key, kModifierKeys[i].code, [ kModifierKeys[i].key ]);
@@ -1236,11 +1257,17 @@ function runKeyTests()
       checkModifiers(testDesc, events[4], "keyup",    kModifierKeys[i].key, kModifierKeys[i].code, [ ]);
     } else {
       TIP.keydown(modKey);
+      checkAllTIPModifiers(testDesc + ", \"" + kModifierKeys[i].key + "\" first keydown", [ kModifierKeys[i].key ]);
       TIP.keyup(modKey);
+      checkAllTIPModifiers(testDesc + ", \"" + kModifierKeys[i].key + "\" first keyup", [ kModifierKeys[i].key ]);
       TIP.keydown(keyA);
+      checkAllTIPModifiers(testDesc + ", \"a\" keydown", [ kModifierKeys[i].key ]);
       TIP.keyup(keyA);
+      checkAllTIPModifiers(testDesc + ", \"a\" keyup", [ kModifierKeys[i].key ]);
       TIP.keydown(modKey);
+      checkAllTIPModifiers(testDesc + ", \"" + kModifierKeys[i].key + "\" second keydown", [ ]);
       TIP.keyup(modKey);
+      checkAllTIPModifiers(testDesc + ", \"" + kModifierKeys[i].key + "\" second keyup", [ ]);
       is(events.length, 7,
          description + testDesc + " should cause 7 events");
       checkModifiers(testDesc, events[0], "keydown",  kModifierKeys[i].key, kModifierKeys[i].code, [ kModifierKeys[i].key ]);
@@ -1258,18 +1285,27 @@ function runKeyTests()
   var shiftRight = new KeyboardEvent("", { key: "Shift", code: "ShiftRight" });
   var shiftVirtual = new KeyboardEvent("", { key: "Shift", code: "" });
   var altGrVirtual = new KeyboardEvent("", { key: "AltGraph", code: "" });
+  var ctrlVirtual = new KeyboardEvent("", { key: "Control", code: "" });
 
   var testDesc = "ShiftLeft press -> ShiftRight press -> ShiftRight release -> ShiftLeft release";
   reset();
   doPreventDefaults = [ "keypress" ];
   TIP.keydown(shiftLeft);
+  checkAllTIPModifiers(testDesc + ", Left-Shift keydown", [ "Shift" ]);
   TIP.keydown(shiftRight);
+  checkAllTIPModifiers(testDesc + ", Right-Shift keydown", [ "Shift" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown", [ "Shift" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup", [ "Shift" ]);
   TIP.keyup(shiftRight);
+  checkAllTIPModifiers(testDesc + ", Right-Shift keyup", [ "Shift" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown (after Right-Shift keyup)", [ "Shift" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup (after Right-Shift keyup)", [ "Shift" ]);
   TIP.keyup(shiftLeft);
+  checkAllTIPModifiers(testDesc + ", Left-Shift keyup", [ ]);
 
   is(events.length, 10,
      description + testDesc + " should cause 10 events");
@@ -1288,13 +1324,21 @@ function runKeyTests()
   reset();
   doPreventDefaults = [ "keypress" ];
   TIP.keydown(shiftLeft);
+  checkAllTIPModifiers(testDesc + ", Left-Shift keydown", [ "Shift" ]);
   TIP.keydown(shiftRight);
+  checkAllTIPModifiers(testDesc + ", Right-Shift keydown", [ "Shift" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown", [ "Shift" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup", [ "Shift" ]);
   TIP.keyup(shiftLeft);
+  checkAllTIPModifiers(testDesc + ", Left-Shift keyup", [ "Shift" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown (after Left-Shift keyup)", [ "Shift" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup (after Left-Shift keyup)", [ "Shift" ]);
   TIP.keyup(shiftRight);
+  checkAllTIPModifiers(testDesc + ", Right-Shift keyup", [ ]);
 
   is(events.length, 10,
      description + testDesc + " should cause 10 events");
@@ -1313,13 +1357,21 @@ function runKeyTests()
   reset();
   doPreventDefaults = [ "keypress" ];
   TIP.keydown(shiftLeft);
+  checkAllTIPModifiers(testDesc + ", Left-Shift keydown", [ "Shift" ]);
   TIP.keydown(shiftVirtual);
+  checkAllTIPModifiers(testDesc + ", Virtual-Shift keydown", [ "Shift" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown", [ "Shift" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup", [ "Shift" ]);
   TIP.keyup(shiftVirtual);
+  checkAllTIPModifiers(testDesc + ", Virtual-Shift keyup", [ "Shift" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown (after Virtual-Shift keyup)", [ "Shift" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup (after Virtual-Shift keyup)", [ "Shift" ]);
   TIP.keyup(shiftLeft);
+  checkAllTIPModifiers(testDesc + ", Left-Shift keyup", [ ]);
 
   is(events.length, 10,
      description + testDesc + " should cause 10 events");
@@ -1338,13 +1390,21 @@ function runKeyTests()
   reset();
   doPreventDefaults = [ "keypress" ];
   TIP.keydown(shiftVirtual);
+  checkAllTIPModifiers(testDesc + ", Virtual-Shift keydown", [ "Shift" ]);
   TIP.keydown(shiftRight);
+  checkAllTIPModifiers(testDesc + ", Right-Shift keydown", [ "Shift" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown", [ "Shift" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup", [ "Shift" ]);
   TIP.keyup(shiftRight);
+  checkAllTIPModifiers(testDesc + ", Right-Shift keyup", [ "Shift" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown (after Right-Shift keyup)", [ "Shift" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup (after Right-Shift keyup)", [ "Shift" ]);
   TIP.keyup(shiftVirtual);
+  checkAllTIPModifiers(testDesc + ", Virtual-Shift keyup", [ ]);
 
   is(events.length, 10,
      description + testDesc + " should cause 10 events");
@@ -1363,16 +1423,27 @@ function runKeyTests()
   reset();
   doPreventDefaults = [ "keypress" ];
   TIP.keydown(shiftLeft);
+  checkAllTIPModifiers(testDesc + ", Left-Shift keydown", [ "Shift" ]);
   TIP.keydown(shiftRight);
+  checkAllTIPModifiers(testDesc + ", Right-Shift keydown", [ "Shift" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown", [ "Shift" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup", [ "Shift" ]);
   TIP.keyup(shiftRight);
+  checkAllTIPModifiers(testDesc + ", Right-Shift keyup", [ "Shift" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown (after Virtual-Shift keyup)", [ "Shift" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup (after Virtual-Shift keyup)", [ "Shift" ]);
   TIP.keyup(shiftRight);
+  checkAllTIPModifiers(testDesc + ", Right-Shift keyup again", [ "Shift" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown (after Virtual-Shift keyup again)", [ "Shift" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup (after Virtual-Shift keyup again)", [ "Shift" ]);
   TIP.keyup(shiftLeft);
+  checkAllTIPModifiers(testDesc + ", Left-Shift keyup", [ ]);
 
   is(events.length, 14,
      description + testDesc + " should cause 14 events");
@@ -1395,15 +1466,25 @@ function runKeyTests()
   reset();
   doPreventDefaults = [ "keypress" ];
   TIP.keydown(shiftLeft);
+  checkAllTIPModifiers(testDesc + ", Left-Shift keydown", [ "Shift" ]);
   TIP.keydown(shiftLeft);
+  checkAllTIPModifiers(testDesc + ", Left-Shift keydown again", [ "Shift" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown", [ "Shift" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup", [ "Shift" ]);
   TIP.keyup(shiftLeft);
+  checkAllTIPModifiers(testDesc + ", Left-Shift keyup", [ ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown (after Left-Shift keyup)", [ ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup (after Left-Shift keyup)", [ ]);
   TIP.keyup(shiftLeft);
+  checkAllTIPModifiers(testDesc + ", Left-Shift keyup again", [ ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown (after Left-Shift keyup again)", [ ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup (after Left-Shift keyup again)", [ ]);
 
   is(events.length, 13,
      description + testDesc + " should cause 13 events");
@@ -1425,13 +1506,21 @@ function runKeyTests()
   reset();
   doPreventDefaults = [ "keypress" ];
   TIP.keydown(shiftVirtual);
+  checkAllTIPModifiers(testDesc + ", Virtual-Shift keydown", [ "Shift" ]);
   TIP.keydown(altGrVirtual);
+  checkAllTIPModifiers(testDesc + ", Virtual-AltGraph keydown", [ "Shift", "AltGraph" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown", [ "Shift", "AltGraph" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup", [ "Shift", "AltGraph" ]);
   TIP.keyup(altGrVirtual);
+  checkAllTIPModifiers(testDesc + ", Virtual-AltGraph keyup", [ "Shift" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown (after Virtual-AltGraph keyup)", [ "Shift" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup (after Virtual-AltGraph keyup)", [ "Shift" ]);
   TIP.keyup(shiftVirtual);
+  checkAllTIPModifiers(testDesc + ", Virtual-Shift keyup", [ ]);
 
   is(events.length, 10,
      description + testDesc + " should cause 10 events");
@@ -1450,13 +1539,21 @@ function runKeyTests()
   reset();
   doPreventDefaults = [ "keypress" ];
   TIP.keydown(shiftVirtual);
+  checkAllTIPModifiers(testDesc + ", Virtual-Shift keydown", [ "Shift" ]);
   TIP.keydown(altGrVirtual);
+  checkAllTIPModifiers(testDesc + ", Virtual-AltGraph keydown", [ "Shift", "AltGraph" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown", [ "Shift", "AltGraph" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup", [ "Shift", "AltGraph" ]);
   TIP.keyup(shiftVirtual);
+  checkAllTIPModifiers(testDesc + ", Virtual-Shift keyup", [ "AltGraph" ]);
   TIP.keydown(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keydown (after Virtual-Shift keyup)", [ "AltGraph" ]);
   TIP.keyup(keyA);
+  checkAllTIPModifiers(testDesc + ", \"a\" keyup (after Virtual-Shift keyup)", [ "AltGraph" ]);
   TIP.keyup(altGrVirtual);
+  checkAllTIPModifiers(testDesc + ", Virtual-AltGraph keyup", [ ]);
 
   is(events.length, 10,
      description + testDesc + " should cause 10 events");
@@ -1470,6 +1567,39 @@ function runKeyTests()
   checkModifiers(testDesc, events[7], "keypress", "a",        "KeyA", [ "AltGraph" ]);
   checkModifiers(testDesc, events[8], "keyup",    "a",        "KeyA", [ "AltGraph" ]);
   checkModifiers(testDesc, events[9], "keyup",    "AltGraph", "",     [ ]);
+
+  // shareModifierStateOf(null) should cause resetting the modifier state
+  function checkTIPModifiers(aTestDesc, aTIP, aModifiers)
+  {
+    for (var i = 0; i < kModifiers.length; i++) {
+      is(aTIP.getModifierState(kModifiers[i]), aModifiers.indexOf(kModifiers[i]) >= 0,
+         description + aTestDesc + ", aTIP.getModifierState(\"" + kModifiers[i] + "\") returns wrong value");
+    }
+  }
+  TIP.keydown(shiftVirtual);
+  TIP.keydown(altGrVirtual);
+  sharedTIP.shareModifierStateOf(null);
+  checkTIPModifiers("sharedTIP.sharedModifierStateOf(null) shouldn't cause TIP's modifiers reset", TIP, [ "Shift", "AltGraph" ]);
+  checkTIPModifiers("sharedTIP.sharedModifierStateOf(null) should cause sharedTIP modifiers reset", sharedTIP, [ ]);
+
+  // sharedTIP.shareModifierStateOf(null) should be unlinked from TIP.
+  TIP.keydown(ctrlVirtual);
+  checkTIPModifiers("TIP.keydown(ctrlVirtual) should cause TIP's modifiers set", TIP, [ "Shift", "AltGraph", "Control" ]);
+  checkTIPModifiers("TIP.keydown(ctrlVirtual) shouldn't cause sharedTIP modifiers set", sharedTIP, [ ]);
+
+  // beginInputTransactionForTests() shouldn't cause modifier state reset.
+  ok(TIP.beginInputTransactionForTests(otherWindow),
+     description + "TIP.beginInputTransactionForTests(otherWindow) should return true");
+  checkTIPModifiers("TIP.beginInputTransactionForTests(otherWindow) shouldn't cause TIP's modifiers set", TIP, [ "Shift", "AltGraph", "Control" ]);
+  TIP.keyup(shiftLeft);
+  TIP.keyup(altGrVirtual);
+  TIP.keyup(ctrlVirtual);
+  checkTIPModifiers("TIP should keep modifier's physical key state", TIP, [ "Shift" ]);
+  ok(TIP.beginInputTransactionForTests(window),
+     description + "TIP.beginInputTransactionForTests(window) should return true");
+  checkTIPModifiers("TIP.beginInputTransactionForTests(window) shouldn't cause TIP's modifiers set", TIP, [ "Shift" ]);
+  TIP.keyup(shiftVirtual);
+  checkTIPModifiers("TIP should keep modifier's physical key state", TIP, [ ]);
 
   window.removeEventListener("keydown", handler, false);
   window.removeEventListener("keypress", handler, false);
