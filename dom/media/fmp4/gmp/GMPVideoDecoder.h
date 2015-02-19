@@ -71,11 +71,14 @@ public:
                   layers::ImageContainer* aImageContainer,
                   MediaTaskQueue* aTaskQueue,
                   MediaDataDecoderCallbackProxy* aCallback)
-   : GMPVideoDecoder(aConfig, aLayersBackend, aImageContainer, aTaskQueue, aCallback,
-                     new VideoCallbackAdapter(aCallback,
-                                              VideoInfo(aConfig.display_width,
-                                                        aConfig.display_height),
-                                              aImageContainer))
+   : mConfig(aConfig)
+   , mCallback(aCallback)
+   , mGMP(nullptr)
+   , mHost(nullptr)
+   , mAdapter(new VideoCallbackAdapter(aCallback,
+                                       VideoInfo(aConfig.display_width,
+                                                 aConfig.display_height),
+                                       aImageContainer))
   {
   }
 
