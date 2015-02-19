@@ -75,23 +75,10 @@
     </style>
 
     <style name="Widget.MenuItemActionBar">
-        <item name="android:layout_width">@dimen/browser_toolbar_height</item>
-        <item name="android:layout_height">@dimen/browser_toolbar_height</item>
-        <item name="android:background">@drawable/action_bar_button</item>
-        <item name="android:scaleType">fitCenter</item>
-
-        <!-- We split up padding* because we can't override it in *.NewTablet otherwise. -->
-        <item name="android:paddingTop">@dimen/browser_toolbar_button_padding</item>
-        <item name="android:paddingBottom">@dimen/browser_toolbar_button_padding</item>
-        <item name="android:paddingLeft">@dimen/browser_toolbar_button_padding</item>
-        <item name="android:paddingRight">@dimen/browser_toolbar_button_padding</item>
-    </style>
-
-    <style name="Widget.MenuItemActionBar.NewTablet">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:scaleType">center</item>
         <item name="android:background">@drawable/new_tablet_action_bar_button</item>
+        <item name="android:scaleType">center</item>
 
         <!-- layout_width/height doesn't work here, likely because it's
              an ImageButton, so we use padding instead.

@@ -10,7 +10,6 @@ import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 
@@ -51,16 +50,6 @@ class BrowserToolbarTablet extends BrowserToolbarTabletBase {
         setButtonEnabled(forwardButton, true);
 
         updateForwardButtonState(ForwardButtonState.HIDDEN);
-
-        setRightMargin();
-    }
-
-    private void setRightMargin() {
-        // TODO: Remove this hack in favor of resources when old tablet is removed.
-        final Resources res = getContext().getResources();
-        final int rightMargin =
-                res.getDimensionPixelOffset(R.dimen.new_tablet_browser_toolbar_menu_right_margin);
-        setPadding(getPaddingLeft(), getPaddingTop(), rightMargin, getPaddingBottom());
     }
 
     private void updateForwardButtonState(final ForwardButtonState state) {

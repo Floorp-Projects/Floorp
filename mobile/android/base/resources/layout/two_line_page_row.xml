@@ -12,7 +12,7 @@
                                           android:layout_width="@dimen/favicon_bg"
                                           android:layout_height="@dimen/favicon_bg"
                                           android:layout_margin="16dp"
-                                          tools:background="@drawable/favicon"/>
+                                          tools:background="@drawable/favicon_globe"/>
 
     <LinearLayout android:layout_width="match_parent"
                   android:layout_height="wrap_content"

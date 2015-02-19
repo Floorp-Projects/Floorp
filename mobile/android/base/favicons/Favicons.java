@@ -5,10 +5,9 @@
 
 package org.mozilla.gecko.favicons;
 
+import android.graphics.drawable.Drawable;
 import org.mozilla.gecko.AboutPages;
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -23,11 +22,11 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
 
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -450,17 +449,13 @@ public class Favicons {
             return;
         }
 
-        final boolean isNewTabletEnabled = NewTabletUI.isEnabled(context);
         final Resources res = context.getResources();
 
-        // Decode the default Favicon ready for use. We'd preferably override the drawable for
-        // different screen sizes, but since we need phone's default favicon on tablet (in
-        // ToolbarDisplayLayout), we can't.
-        final int defaultFaviconDrawableID =
-                isNewTabletEnabled ? R.drawable.new_tablet_default_favicon : R.drawable.favicon;
-        defaultFavicon = BitmapFactory.decodeResource(res, defaultFaviconDrawableID);
-        if (defaultFavicon == null) {
-            throw new IllegalStateException("Null default favicon was returned from the resources system!");
+        final Drawable defaultFaviconDrawable = res.getDrawable(R.drawable.toolbar_favicon_default);
+        if (defaultFaviconDrawable instanceof BitmapDrawable) {
+            defaultFavicon = ((BitmapDrawable) defaultFaviconDrawable).getBitmap();
+        } else {
+            throw new IllegalStateException("toolbar_favicon_default wasn't a bitmap resource!");
         }
 
         defaultFaviconSize = res.getDimensionPixelSize(R.dimen.favicon_bg);
@@ -469,10 +464,7 @@ public class Favicons {
         // downscaled to this size or discarded.
         largestFaviconSize = res.getDimensionPixelSize(R.dimen.favicon_largest_interesting_size);
 
-        // TODO: Remove this branch when old tablet is removed.
-        final int browserToolbarFaviconSizeDimenID = NewTabletUI.isEnabled(context) ?
-                R.dimen.new_tablet_tab_strip_favicon_size : R.dimen.browser_toolbar_favicon_size;
-        browserToolbarFaviconSize = res.getDimensionPixelSize(browserToolbarFaviconSizeDimenID);
+        browserToolbarFaviconSize = res.getDimensionPixelSize(R.dimen.browser_toolbar_favicon_size);
 
         faviconsCache = new FaviconCache(FAVICON_CACHE_SIZE_BYTES, largestFaviconSize);
 

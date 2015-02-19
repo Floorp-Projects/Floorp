@@ -7,6 +7,6 @@
      lock icons so we offset it using this drawable to compensate. -->
 <inset
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:drawable="@drawable/favicon"
+    android:drawable="@drawable/favicon_globe"
     android:insetTop="@dimen/new_tablet_site_security_unknown_inset_top"
     android:insetBottom="@dimen/new_tablet_site_security_unknown_inset_bottom"/>
