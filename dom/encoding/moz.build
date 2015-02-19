@@ -25,13 +25,22 @@ LOCAL_INCLUDES += [
     '/intl/locale',
 ]
 
-GENERATED_FILES += [
-    'domainsfallbacks.properties.h',
-    'encodingsgroups.properties.h',
-    'labelsencodings.properties.h',
-    'localesfallbacks.properties.h',
-    'nonparticipatingdomains.properties.h',
-]
+props2arrays = TOPSRCDIR + '/intl/locale/props2arrays.py'
+prefixes = (
+    'domainsfallbacks',
+    'encodingsgroups',
+    'labelsencodings',
+    'localesfallbacks',
+    'nonparticipatingdomains',
+)
+
+for prefix in prefixes:
+    input_file = prefix + '.properties'
+    header = prefix + '.properties.h'
+    GENERATED_FILES += [header]
+    props = GENERATED_FILES[header]
+    props.script = props2arrays
+    props.inputs = [input_file]
 
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',

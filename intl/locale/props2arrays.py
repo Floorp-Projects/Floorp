@@ -4,36 +4,24 @@
 
 import sys
 
-mappings = {}
-  
-propFile = open(sys.argv[1], "r");
-  
-for line in propFile:
-  line = line.strip()
-  if not line.startswith('#'):
-    parts = line.split("=", 1)
-    if len(parts) == 2 and len(parts[0]) > 0:
-      mappings[parts[0].strip()] = parts[1].strip()
+def main(header, propFile):
+  mappings = {}
+
+  with open(propFile, 'r') as f:
+    for line in f:
+      line = line.strip()
+      if not line.startswith('#'):
+        parts = line.split("=", 1)
+        if len(parts) == 2 and len(parts[0]) > 0:
+          mappings[parts[0].strip()] = parts[1].strip()
  
-propFile.close()
+  keys = mappings.keys()
+  keys.sort()
 
-keys = mappings.keys()
-keys.sort()
+  header.write("// This is a generated file. Please do not edit.\n")
+  header.write("// Please edit the corresponding .properties file instead.\n")
 
-hFile = open(sys.argv[2], "w");
-
-hFile.write("// This is a generated file. Please do not edit.\n")
-hFile.write("// Please edit the corresponding .properties file instead.\n")
-
-first = 1
-for key in keys:
-  if first:
-    first = 0
-  else:
-    hFile.write(',\n')
-  hFile.write('{ "%s", "%s", (const char*)NS_INT32_TO_PTR(%d) }' 
-              % (key, mappings[key], len(mappings[key])));
-hFile.write('\n')
-hFile.flush()
-hFile.close()
+  entries = ['{ "%s", "%s", (const char*)NS_INT32_TO_PTR(%d) }'
+             % (key, mappings[key], len(mappings[key])) for key in keys]
+  header.write(',\n'.join(entries) + '\n')
 
