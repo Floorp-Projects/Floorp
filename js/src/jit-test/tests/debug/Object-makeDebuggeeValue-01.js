@@ -38,7 +38,5 @@ assertEq(gw.makeDebuggeeValue(null), null);
 assertEq(gw.makeDebuggeeValue(1729), 1729);
 assertEq(gw.makeDebuggeeValue(Math.PI), Math.PI);
 assertEq(gw.makeDebuggeeValue(undefined), undefined);
-if (typeof Symbol === "function") {
-    var s = g.eval("Symbol('Stavromula Beta')");
-    assertEq(gw.makeDebuggeeValue(s), s);
-}
+var s = g.eval("Symbol('Stavromula Beta')");
+assertEq(gw.makeDebuggeeValue(s), s);

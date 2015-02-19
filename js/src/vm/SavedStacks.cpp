@@ -53,41 +53,38 @@ struct SavedFrame::Lookup {
     JSAtom       *functionDisplayName;
     SavedFrame   *parent;
     JSPrincipals *principals;
-};
 
-class SavedFrame::AutoLookupRooter : public JS::CustomAutoRooter
-{
-  public:
-    AutoLookupRooter(JSContext *cx, JSAtom *source, uint32_t line, uint32_t column,
-                     JSAtom *functionDisplayName, SavedFrame *parent, JSPrincipals *principals)
-      : JS::CustomAutoRooter(cx),
-        value(source, line, column, functionDisplayName, parent, principals) {}
-
-    operator const SavedFrame::Lookup&() const { return value; }
-    SavedFrame::Lookup &get() { return value; }
-
-  private:
-    virtual void trace(JSTracer *trc) {
-        gc::MarkStringUnbarriered(trc, &value.source, "SavedFrame::Lookup::source");
-        if (value.functionDisplayName) {
-            gc::MarkStringUnbarriered(trc, &value.functionDisplayName,
+    void trace(JSTracer *trc) {
+        gc::MarkStringUnbarriered(trc, &source, "SavedFrame::Lookup::source");
+        if (functionDisplayName) {
+            gc::MarkStringUnbarriered(trc, &functionDisplayName,
                                       "SavedFrame::Lookup::functionDisplayName");
         }
-        if (value.parent)
-            gc::MarkObjectUnbarriered(trc, &value.parent, "SavedFrame::Lookup::parent");
+        if (parent) {
+            gc::MarkObjectUnbarriered(trc, &parent,
+                                      "SavedFrame::Lookup::parent");
+        }
     }
-
-    SavedFrame::Lookup value;
 };
 
-class SavedFrame::HandleLookup
-{
+class MOZ_STACK_CLASS SavedFrame::AutoLookupVector : public JS::CustomAutoRooter {
   public:
-    MOZ_IMPLICIT HandleLookup(SavedFrame::AutoLookupRooter &lookup) : ref(lookup) { }
-    SavedFrame::Lookup *operator->() { return &ref.get(); }
-    operator const SavedFrame::Lookup&() const { return ref; }
+    explicit AutoLookupVector(JSContext *cx)
+      : JS::CustomAutoRooter(cx),
+        lookups(cx)
+    { }
+
+    typedef Vector<Lookup, 20> LookupVector;
+    inline LookupVector *operator->() { return &lookups; }
+    inline Lookup &operator[](size_t i) { return lookups[i]; }
+
   private:
-    SavedFrame::AutoLookupRooter &ref;
+    LookupVector lookups;
+
+    virtual void trace(JSTracer *trc) {
+        for (size_t i = 0; i < lookups.length(); i++)
+            lookups[i].trace(trc);
+    }
 };
 
 /* static */ HashNumber
@@ -580,12 +577,14 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
     // SavedFrame objects at that time.
     //
     // To avoid making many copies of FrameIter (whose copy constructor is
-    // relatively slow), we save the subset of FrameIter's data that is relevant
-    // to our needs in a FrameState object, and maintain a vector of FrameState
-    // objects instead of a vector of FrameIter objects.
+    // relatively slow), we use a vector of `SavedFrame::Lookup` objects, which
+    // only contain the FrameIter data we need. The `SavedFrame::Lookup`
+    // objects are partially initialized with everything except their parent
+    // pointers on the first pass, and then we fill in the parent pointers as we
+    // return in the second pass.
 
-    // Accumulate the vector of FrameState objects in |stackState|.
-    AutoFrameStateVector stackState(cx);
+    // Accumulate the vector of Lookup objects in |stackChain|.
+    SavedFrame::AutoLookupVector stackChain(cx);
     while (!iter.done()) {
         AutoLocationValueRooter location(cx);
 
@@ -595,12 +594,18 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
                 return false;
         }
 
-        {
-            FrameState frameState(iter);
-            frameState.location = location.get();
-            if (!stackState->append(frameState))
-                return false;
-        }
+        // Use growByUninitialized and placement-new instead of just append.
+        // We'd ideally like to use an emplace method once Vector supports it.
+        if (!stackChain->growByUninitialized(1))
+            return false;
+        new (&stackChain->back()) SavedFrame::Lookup(
+          location->source,
+          location->line,
+          location->column,
+          iter.isNonEvalFunctionFrame() ? iter.functionDisplayAtom() : nullptr,
+          nullptr,
+          iter.compartment()->principals
+        );
 
         ++iter;
 
@@ -617,18 +622,13 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
         }
     }
 
-    // Iterate through |stackState| in reverse order and get or create the
+    // Iterate through |stackChain| in reverse order and get or create the
     // actual SavedFrame instances.
     RootedSavedFrame parentFrame(cx, nullptr);
-    for (size_t i = stackState->length(); i != 0; i--) {
-        SavedFrame::AutoLookupRooter lookup(cx,
-                                            stackState[i-1].location.source,
-                                            stackState[i-1].location.line,
-                                            stackState[i-1].location.column,
-                                            stackState[i-1].name,
-                                            parentFrame,
-                                            stackState[i-1].principals);
-        parentFrame = getOrCreateSavedFrame(cx, lookup);
+    for (size_t i = stackChain->length(); i != 0; i--) {
+        SavedFrame::AutoLookupRooter lookup(cx, &stackChain[i-1]);
+        lookup->parent = parentFrame;
+        parentFrame.set(getOrCreateSavedFrame(cx, lookup));
         if (!parentFrame)
             return false;
     }
@@ -640,7 +640,8 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
 SavedFrame *
 SavedStacks::getOrCreateSavedFrame(JSContext *cx, SavedFrame::HandleLookup lookup)
 {
-    DependentAddPtr<SavedFrame::Set> p(cx, frames, lookup);
+    const SavedFrame::Lookup &lookupInstance = *lookup;
+    DependentAddPtr<SavedFrame::Set> p(cx, frames, lookupInstance);
     if (p)
         return *p;
 
@@ -648,7 +649,7 @@ SavedStacks::getOrCreateSavedFrame(JSContext *cx, SavedFrame::HandleLookup looku
     if (!frame)
         return nullptr;
 
-    if (!p.add(cx, frames, lookup, frame))
+    if (!p.add(cx, frames, lookupInstance, frame))
         return nullptr;
 
     return frame;
@@ -776,31 +777,6 @@ SavedStacks::chooseSamplingProbability(JSContext *cx)
         return;
 
     allocationSamplingProbability = allocationTrackingDbg->allocationSamplingProbability;
-}
-
-SavedStacks::FrameState::FrameState(const FrameIter &iter)
-    : principals(iter.compartment()->principals),
-      name(iter.isNonEvalFunctionFrame() ? iter.functionDisplayAtom() : nullptr),
-      location()
-{
-}
-
-SavedStacks::FrameState::FrameState(const FrameState &fs)
-    : principals(fs.principals),
-      name(fs.name),
-      location(fs.location)
-{
-}
-
-SavedStacks::FrameState::~FrameState()
-{
-}
-
-void
-SavedStacks::FrameState::trace(JSTracer *trc) {
-    if (name)
-        gc::MarkStringUnbarriered(trc, &name, "SavedStacks::FrameState::name");
-    location.trace(trc);
 }
 
 bool

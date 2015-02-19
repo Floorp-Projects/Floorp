@@ -23,12 +23,6 @@ function run_test() {
 }
 
 function* testSymbols(client, debuggee) {
-  // Symbol is conditionally defined. If it isn't defined in this build, just pass.
-  if (typeof Symbol === "undefined") {
-    finishClient(client);
-    return;
-  }
-
   const evalCode = () => {
     Components.utils.evalInSandbox(
       "(" + function () {

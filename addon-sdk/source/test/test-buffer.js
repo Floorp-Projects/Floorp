@@ -60,7 +60,7 @@ exports.testBufferMain = function (assert) {
   // invalid encoding for Buffer.toString
   assert.throws(() => {
     b.toString('invalid');
-  }, TypeError, 'invalid encoding for Buffer.toString');
+  }, RangeError, 'invalid encoding for Buffer.toString');
 
   // try to toString() a 0-length slice of a buffer, both within and without the
   // valid buffer range
@@ -248,7 +248,7 @@ exports.testBufferWrite = function (assert) {
 
   assert.throws(() => {
     b.write('test string', 0, 5, 'invalid');
-  }, TypeError, 'invalid encoding with buffer write throws');
+  }, RangeError, 'invalid encoding with buffer write throws');
   // try to write a 0-length string beyond the end of b
   assert.throws(function() {
     b.write('', 2048);
