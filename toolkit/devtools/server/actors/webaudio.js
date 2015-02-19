@@ -14,10 +14,10 @@ const protocol = require("devtools/server/protocol");
 const { CallWatcherActor, CallWatcherFront } = require("devtools/server/actors/call-watcher");
 const { ThreadActor } = require("devtools/server/actors/script");
 const AutomationTimeline = require("./utils/automation-timeline");
-
 const { on, once, off, emit } = events;
 const { types, method, Arg, Option, RetVal } = protocol;
 
+const ENABLE_AUTOMATION = false;
 const AUTOMATION_GRANULARITY = 2000;
 const AUTOMATION_GRANULARITY_MAX = 6000;
 
@@ -680,7 +680,7 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     else if (WebAudioFront.NODE_CREATION_METHODS.has(name)) {
       this._handleCreationCall(functionCall);
     }
-    else if (WebAudioFront.AUTOMATION_METHODS.has(name)) {
+    else if (ENABLE_AUTOMATION && WebAudioFront.AUTOMATION_METHODS.has(name)) {
       this._handleAutomationCall(functionCall);
     }
   },
