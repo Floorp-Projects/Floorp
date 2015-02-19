@@ -62,7 +62,10 @@ public:
   GMPAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
                   MediaTaskQueue* aTaskQueue,
                   MediaDataDecoderCallbackProxy* aCallback)
-   : GMPAudioDecoder(aConfig, aTaskQueue, aCallback, new AudioCallbackAdapter(aCallback))
+   : mConfig(aConfig)
+   , mCallback(aCallback)
+   , mGMP(nullptr)
+   , mAdapter(new AudioCallbackAdapter(aCallback))
   {
   }
 
