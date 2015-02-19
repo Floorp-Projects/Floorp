@@ -913,7 +913,7 @@ js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id, const P
 {
     ObjectOpResult success;
     return StandardDefineProperty(cx, obj, id, desc, success) &&
-           success.checkStrict(cx, id);
+           success.checkStrict(cx, obj, id);
 }
 
 bool
@@ -922,7 +922,7 @@ js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
 {
     ObjectOpResult success;
     return StandardDefineProperty(cx, obj, id, desc, success) &&
-           success.checkStrict(cx, id);
+           success.checkStrict(cx, obj, id);
 }
 
 bool
