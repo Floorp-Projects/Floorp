@@ -233,7 +233,7 @@ LayerManagerComposite::ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaque
       !aLayer->GetMaskLayer() &&
       aLayer->GetLocalOpacity() == 1.0f) {
     if (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) {
-      localOpaque.Or(localOpaque, composite->GetShadowVisibleRegion());
+      localOpaque.Or(localOpaque, composite->GetFullyRenderedRegion());
     }
     localOpaque.MoveBy(transform2d._31, transform2d._32);
     const nsIntRect* clip = aLayer->GetEffectiveClipRect();
@@ -304,11 +304,8 @@ LayerManagerComposite::EndTransaction(DrawPaintedLayerCallback aCallback,
     // so we don't need to pass any global transform here.
     mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());
 
-    // Disable culling for now. We need to fix /the regressions from
-    // bug 1085223 before we can re-enable this:
-    // 1) Don't cull during progressive draw, 2) OS X tp5 regressions.
-    //nsIntRegion opaque;
-    //ApplyOcclusionCulling(mRoot, opaque);
+    nsIntRegion opaque;
+    ApplyOcclusionCulling(mRoot, opaque);
 
     Render();
     mGeometryChanged = false;
@@ -1152,6 +1149,20 @@ LayerComposite::SetLayerManager(LayerManagerComposite* aManager)
 {
   mCompositeManager = aManager;
   mCompositor = aManager->GetCompositor();
+}
+
+nsIntRegion
+LayerComposite::GetFullyRenderedRegion() {
+  if (TiledLayerComposer* tiled = GetTiledLayerComposer()) {
+    nsIntRegion shadowVisibleRegion = GetShadowVisibleRegion();
+    // Discard the region which hasn't been drawn yet when doing
+    // progressive drawing. Note that if the shadow visible region
+    // shrunk the tiled valig region may not have discarded this yet.
+    shadowVisibleRegion.And(shadowVisibleRegion, tiled->GetValidRegion());
+    return shadowVisibleRegion;
+  } else {
+    return GetShadowVisibleRegion();
+  }
 }
 
 #ifndef MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS

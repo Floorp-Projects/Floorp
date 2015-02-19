@@ -501,12 +501,23 @@ WebGLContext::ErrorInvalidEnum(const char* fmt, ...)
 }
 
 void
-WebGLContext::ErrorInvalidEnumInfo(const char* info, GLenum enumvalue)
+WebGLContext::ErrorInvalidEnumInfo(const char* info, GLenum enumValue)
 {
     nsCString name;
-    EnumName(enumvalue, &name);
+    EnumName(enumValue, &name);
 
-    return ErrorInvalidEnum("%s: invalid enum value %s", info, name.get());
+    return ErrorInvalidEnum("%s: invalid enum value %s", info, name.BeginReading());
+}
+
+void
+WebGLContext::ErrorInvalidEnumInfo(const char* info, const char* funcName,
+                                   GLenum enumValue)
+{
+    nsCString name;
+    EnumName(enumValue, &name);
+
+    ErrorInvalidEnum("%s: %s: Invalid enum: 0x%04x (%s).", funcName, info,
+                     enumValue, name.BeginReading());
 }
 
 void

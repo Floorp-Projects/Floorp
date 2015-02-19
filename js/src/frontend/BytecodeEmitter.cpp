@@ -1701,8 +1701,6 @@ BindNameToSlotHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     MOZ_ASSERT(pn->isKind(PNK_NAME));
 
-    MOZ_ASSERT_IF(pn->isKind(PNK_FUNCTION), pn->isBound());
-
     /* Don't attempt if 'pn' is already bound or deoptimized or a function. */
     if (pn->isBound() || pn->isDeoptimized())
         return true;
@@ -3692,7 +3690,7 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
             if (key->isKind(PNK_NUMBER)) {
                 if (!EmitNumberOp(cx, key->pn_dval, bce))              // ... OBJ OBJ KEY
                     return false;
-            } else if (key->isKind(PNK_NAME) || key->isKind(PNK_STRING)) {
+            } else if (key->isKind(PNK_OBJECT_PROPERTY_NAME) || key->isKind(PNK_STRING)) {
                 PropertyName *name = key->pn_atom->asPropertyName();
 
                 // The parser already checked for atoms representing indexes and
@@ -4325,7 +4323,7 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
             if (pnid->isKind(PNK_NUMBER)) {
                 idvalue = NumberValue(pnid->pn_dval);
             } else {
-                MOZ_ASSERT(pnid->isKind(PNK_NAME) || pnid->isKind(PNK_STRING));
+                MOZ_ASSERT(pnid->isKind(PNK_OBJECT_PROPERTY_NAME) || pnid->isKind(PNK_STRING));
                 MOZ_ASSERT(pnid->pn_atom != cx->names().proto);
                 idvalue = StringValue(pnid->pn_atom);
             }
@@ -6598,7 +6596,7 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (!EmitNumberOp(cx, key->pn_dval, bce))
                 return false;
             isIndex = true;
-        } else if (key->isKind(PNK_NAME) || key->isKind(PNK_STRING)) {
+        } else if (key->isKind(PNK_OBJECT_PROPERTY_NAME) || key->isKind(PNK_STRING)) {
             // The parser already checked for atoms representing indexes and
             // used PNK_NUMBER instead, but also watch for ids which TI treats
             // as indexes for simpliciation of downstream analysis.
@@ -6638,7 +6636,7 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (Emit1(cx, bce, op) < 0)
                 return false;
         } else {
-            MOZ_ASSERT(key->isKind(PNK_NAME) || key->isKind(PNK_STRING));
+            MOZ_ASSERT(key->isKind(PNK_OBJECT_PROPERTY_NAME) || key->isKind(PNK_STRING));
 
             jsatomid index;
             if (!bce->makeAtomIndex(key->pn_atom, &index))

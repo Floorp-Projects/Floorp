@@ -322,6 +322,7 @@ ContainsHoistedDeclaration(ExclusiveContext *cx, ParseNode *node, bool *result)
 
       // Grammar sub-components that should never be reached directly by this
       // method, because some parent component should have asserted itself.
+      case PNK_OBJECT_PROPERTY_NAME:
       case PNK_COMPUTED_NAME:
       case PNK_SPREAD:
       case PNK_MUTATEPROTO:
@@ -814,6 +815,7 @@ Fold(ExclusiveContext *cx, ParseNode **pnp,
              * NB: pn must be a PNK_IF as PNK_CONDITIONAL can never have a null
              * kid or an empty statement for a child.
              */
+            handler.prepareNodeForMutation(pn);
             pn->setKind(PNK_STATEMENTLIST);
             pn->setArity(PN_LIST);
             pn->makeEmpty();

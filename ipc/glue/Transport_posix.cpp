@@ -14,8 +14,9 @@
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/FileDescriptor.h"
 
-using namespace base;
 using namespace std;
+
+using base::ProcessHandle;
 
 namespace mozilla {
 namespace ipc {
