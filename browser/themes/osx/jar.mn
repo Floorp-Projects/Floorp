@@ -142,7 +142,6 @@ browser.jar:
   skin/classic/browser/welcome-back.svg               (../shared/incontent-icons/welcome-back.svg)
   skin/classic/browser/reader-mode-16.png             (../shared/reader/reader-mode-16.png)
   skin/classic/browser/reader-mode-16@2x.png          (../shared/reader/reader-mode-16@2x.png)
-  skin/classic/browser/readinglist/sidebar.css        (../shared/readinglist/sidebar.css)
   skin/classic/browser/webRTC-shareDevice-16.png
   skin/classic/browser/webRTC-shareDevice-16@2x.png
   skin/classic/browser/webRTC-shareDevice-64.png
