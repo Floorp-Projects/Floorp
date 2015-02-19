@@ -417,7 +417,6 @@ nsLineLayout::NewPerSpanData()
   psd->mFirstFrame = nullptr;
   psd->mLastFrame = nullptr;
   psd->mContainsFloat = false;
-  psd->mZeroEffectiveSpanBox = false;
   psd->mHasNonemptyContent = false;
 
 #ifdef DEBUG
@@ -1750,7 +1749,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   printf("\n");
 #endif
 
-  // Compute the span's mZeroEffectiveSpanBox flag. What we are trying
+  // Compute the span's zeroEffectiveSpanBox flag. What we are trying
   // to determine is how we should treat the span: should it act
   // "normally" according to css2 or should it effectively
   // "disappear".
@@ -1814,7 +1813,6 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       }
     }
   }
-  psd->mZeroEffectiveSpanBox = zeroEffectiveSpanBox;
 
   // Setup baselineBCoord, minBCoord, and maxBCoord
   nscoord baselineBCoord, minBCoord, maxBCoord;
@@ -2242,17 +2240,17 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   if (psd == mRootSpan) {
     // We should factor in the block element's minimum line-height (as
     // defined in section 10.8.1 of the css2 spec) assuming that
-    // mZeroEffectiveSpanBox is not set on the root span.  This only happens
+    // zeroEffectiveSpanBox is not set on the root span.  This only happens
     // in some cases in quirks mode:
     //  (1) if the root span contains non-whitespace text directly (this
-    //      is handled by mZeroEffectiveSpanBox
+    //      is handled by zeroEffectiveSpanBox
     //  (2) if this line has a bullet
     //  (3) if this is the last line of an LI, DT, or DD element
     //      (The last line before a block also counts, but not before a
     //      BR) (NN4/IE5 quirk)
 
     // (1) and (2) above
-    bool applyMinLH = !psd->mZeroEffectiveSpanBox || mHasBullet;
+    bool applyMinLH = !zeroEffectiveSpanBox || mHasBullet;
     bool isLastLine = !mGotLineBox ||
       (!mLineBox->IsLineWrapped() && !mLineEndsInBR);
     if (!applyMinLH && isLastLine) {
@@ -2309,7 +2307,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     minBCoord = maxBCoord = baselineBCoord;
   }
 
-  if ((psd != mRootSpan) && (psd->mZeroEffectiveSpanBox)) {
+  if (psd != mRootSpan && zeroEffectiveSpanBox) {
 #ifdef NOISY_BLOCKDIR_ALIGN
     printf("   [span]adjusting for zeroEffectiveSpanBox\n");
     printf("     Original: minBCoord=%d, maxBCoord=%d, bSize=%d, ascent=%d, logicalBSize=%d, topLeading=%d, bottomLeading=%d\n",
