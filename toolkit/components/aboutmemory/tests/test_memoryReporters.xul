@@ -45,9 +45,11 @@
 
   let vsizeAmounts = [];
   let residentAmounts = [];
-  let jsGcHeapAmounts = [];
   let heapAllocatedAmounts = [];
   let storageSqliteAmounts = [];
+
+  let jsGcHeapUsedGcThingsTotal = 0;
+  let jsGcHeapUsedGcThings = {};
 
   let present = {}
 
@@ -79,8 +81,9 @@
       vsizeAmounts.push(aAmount);
     } else if (aPath === "resident") {
       residentAmounts.push(aAmount);
-    } else if (aPath === "js-main-runtime-gc-heap-committed/used/gc-things") {
-      jsGcHeapAmounts.push(aAmount); 
+    } else if (aPath.search(/^js-main-runtime-gc-heap-committed\/used\/gc-things\//) >= 0) {
+      jsGcHeapUsedGcThingsTotal += aAmount;
+      jsGcHeapUsedGcThings[aPath] = (jsGcHeapUsedGcThings[aPath] | 0) + 1;
     } else if (aPath === "heap-allocated") {
       heapAllocatedAmounts.push(aAmount);
     } else if (aPath === "storage-sqlite") {
@@ -201,13 +204,20 @@
   mgr.getReportsForThisProcess(handleReportAnonymized, null,
                                /* anonymize = */ true);
 
+  function checkSizeReasonable(aName, aAmount)
+  {
+    // Check the size is reasonable -- i.e. not ridiculously large or small.
+    ok(100 * 1000 <= aAmount && aAmount <= 10 * 1000 * 1000 * 1000,
+       aName + "'s size is reasonable");
+  }
+
   function checkSpecialReport(aName, aAmounts, aCanBeUnreasonable)
   {
     ok(aAmounts.length == 1, aName + " has " + aAmounts.length + " report");
     let n = aAmounts[0];
-    // Check the size is reasonable -- i.e. not ridiculously large or small.
-    ok((100 * 1000 <= n && n <= 10 * 1000 * 1000 * 1000) || aCanBeUnreasonable,
-       aName + "'s size is reasonable");
+    if (!aCanBeUnreasonable) {
+      checkSizeReasonable(aName, n);
+    }
   }
 
   // If mgr.explicit failed, we won't have "heap-allocated" either.
@@ -217,7 +227,12 @@
   // vsize may be unreasonable if ASAN is enabled
   checkSpecialReport("vsize",          vsizeAmounts, /*canBeUnreasonable*/true);
   checkSpecialReport("resident",       residentAmounts);
-  checkSpecialReport("js-main-runtime-gc-heap-committed/used/gc-things", jsGcHeapAmounts);
+
+  for (var reporter in jsGcHeapUsedGcThings) {
+    ok(jsGcHeapUsedGcThings[reporter] == 1);
+  }
+  checkSizeReasonable("js-main-runtime-gc-heap-committed/used/gc-things",
+                      jsGcHeapUsedGcThingsTotal);
 
   ok(present.jsNonWindowCompartments,     "js-non-window compartments are present");
   ok(present.windowObjectsJsCompartments, "window-objects/.../js compartments are present");
