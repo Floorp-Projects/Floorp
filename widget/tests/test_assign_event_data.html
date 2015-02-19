@@ -634,23 +634,39 @@ function runNextTest()
 
 function init()
 {
-  SpecialPowers.pushPrefEnv({"set":[["middlemouse.contentLoadURL", false],
-  			            ["middlemouse.paste", false],
-                                    ["general.autoScroll", false],
-                                    ["mousewheel.default.action", 0],
-                                    ["mousewheel.default.action.override_x", -1],
-                                    ["mousewheel.with_shift.action", 0],
-                                    ["mousewheel.with_shift.action.override_x", -1],
-                                    ["mousewheel.with_control.action", 0],
-                                    ["mousewheel.with_control.action.override_x", -1],
-                                    ["mousewheel.with_alt.action", 0],
-                                    ["mousewheel.with_alt.action.override_x", -1],
-                                    ["mousewheel.with_meta.action", 0],
-                                    ["mousewheel.with_meta.action.override_x", -1]]}, runNextTest);
+  SpecialPowers.setBoolPref("middlemouse.contentLoadURL", false);
+  SpecialPowers.setBoolPref("middlemouse.paste", false);
+  SpecialPowers.setBoolPref("general.autoScroll", false);
+  SpecialPowers.setIntPref("mousewheel.default.action", 0);
+  SpecialPowers.setIntPref("mousewheel.default.action.override_x", -1);
+  SpecialPowers.setIntPref("mousewheel.with_shift.action", 0);
+  SpecialPowers.setIntPref("mousewheel.with_shift.action.override_x", -1);
+  SpecialPowers.setIntPref("mousewheel.with_control.action", 0);
+  SpecialPowers.setIntPref("mousewheel.with_control.action.override_x", -1);
+  SpecialPowers.setIntPref("mousewheel.with_alt.action", 0);
+  SpecialPowers.setIntPref("mousewheel.with_alt.action.override_x", -1);
+  SpecialPowers.setIntPref("mousewheel.with_meta.action", 0);
+  SpecialPowers.setIntPref("mousewheel.with_meta.action.override_x", -1);
+
+  runNextTest();
 }
 
 function finish()
 {
+  SpecialPowers.clearUserPref("middlemouse.contentLoadURL");
+  SpecialPowers.clearUserPref("middlemouse.paste");
+  SpecialPowers.clearUserPref("general.autoScroll");
+  SpecialPowers.clearUserPref("mousewheel.default.action");
+  SpecialPowers.clearUserPref("mousewheel.default.action.override_x");
+  SpecialPowers.clearUserPref("mousewheel.with_shift.action");
+  SpecialPowers.clearUserPref("mousewheel.with_shift.action.override_x");
+  SpecialPowers.clearUserPref("mousewheel.with_control.action");
+  SpecialPowers.clearUserPref("mousewheel.with_control.action.override_x");
+  SpecialPowers.clearUserPref("mousewheel.with_alt.action");
+  SpecialPowers.clearUserPref("mousewheel.with_alt.action.override_x");
+  SpecialPowers.clearUserPref("mousewheel.with_meta.action");
+  SpecialPowers.clearUserPref("mousewheel.with_meta.action.override_x");
+
   SimpleTest.finish();
 }
 

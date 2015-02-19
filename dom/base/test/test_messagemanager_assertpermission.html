@@ -27,6 +27,8 @@ let gAppsService = SpecialPowers.Cc["@mozilla.org/AppsService;1"]
                      .getService(SpecialPowers.Ci.nsIAppsService);
 
 function setUp() {
+  SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
+  SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", true);
   SpecialPowers.addPermission("browser", true, window.document);
   SpecialPowers.addPermission("embed-apps", true, window.document);
 
@@ -34,8 +36,7 @@ function setUp() {
   SpecialPowers.addPermission("foobar", true, { url: APP_URL,
                                                 appId: appId,
                                                 isInBrowserElement: false });
-  SpecialPowers.pushPrefEnv({"set":[['dom.mozBrowserFramesEnabled', true],
-                                    ['dom.ipc.browser_frames.oop_by_default', true]]}, runNextTest);
+  runNextTest();
 }
 
 /**
@@ -167,6 +168,8 @@ function testChildProcessMessageManager() {
 }
 
 function tearDown() {
+  SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
+  SpecialPowers.clearUserPref("dom.ipc.browser_frames.oop_by_default");
   SimpleTest.finish();
 }
 

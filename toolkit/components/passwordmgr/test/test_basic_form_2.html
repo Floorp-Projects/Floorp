@@ -14,6 +14,8 @@ SimpleTest.waitForExplicitFinish();
 
 var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"]
                          .getService(SpecialPowers.Ci.nsILoginManager);
+// Assume that the pref starts out true, so set to false
+SpecialPowers.setBoolPref("signon.autofillForms", false);
 </script>
 
 <p id="display"></p>
@@ -50,14 +52,14 @@ function startTest(){
          is($_(1, "uname").value, "testuser", "Checking for filled username");
          is($_(1, "pword").value, "testpass", "Checking for filled password");
 
+         // Reset pref (since we assumed it was true to start)
+         SpecialPowers.setBoolPref("signon.autofillForms", true);
+
          SimpleTest.finish();
        });
 }
-// Assume that the pref starts out true, so set to false
-SpecialPowers.pushPrefEnv({"set":[["signon.autofillForms", false]]}, setup);
-function setup() {
- window.addEventListener("runTests", startTest);
-}
+window.addEventListener("runTests", startTest);
+
 </script>
 </pre>
 </body>

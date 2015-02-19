@@ -14,7 +14,7 @@
 
   var gBaseURL = 'http://test/tests/dom/datastore/tests/';
   var gHostedManifestURL = gBaseURL + 'file_app.sjs?testToken=file_app_install.html';
-  var gGenerator;
+  var gGenerator = runTest();
 
   SpecialPowers.pushPermissions(
     [{ "type": "browser", "allow": 1, "context": document },
@@ -25,12 +25,11 @@
                                          ["dom.datastore.sysMsgOnChangeShortTimeoutSec", 1],
                                          ["dom.datastore.sysMsgOnChangeLongTimeoutSec", 3],
                                          ["dom.testing.ignore_ipc_principal", true],
-                                         ["dom.testing.datastore_enabled_for_hosted_apps", true],
-					 ["dom.mozBrowserFramesEnabled", true]]}, function() {
+                                         ["dom.testing.datastore_enabled_for_hosted_apps", true]]}, function() {
+
         if (SpecialPowers.isMainProcess()) {
           SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
         }
-        gGenerator = runTest();
         gGenerator.next(); });
     });
 
@@ -50,6 +49,8 @@
     is(typeof navigator.getDataStores, "function", "getDataStores exists and it's a function");
 
     SpecialPowers.setAllAppsLaunchable(true);
+    SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
+
     SpecialPowers.autoConfirmAppInstall(continueTest);
     yield undefined;
 
@@ -101,6 +102,7 @@
   }
 
   function finish() {
+    SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
     SimpleTest.finish();
   }
 
