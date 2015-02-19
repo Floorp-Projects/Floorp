@@ -477,7 +477,6 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
   unsigned int buffer_size, default_buffer_size;
   OSStatus r;
   UInt32 size;
-  AudioDeviceID output_device_id;
   AudioValueRange latency_range;
 
   assert(context);
@@ -783,7 +782,6 @@ audiounit_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 
 int audiounit_stream_set_volume(cubeb_stream * stm, float volume)
 {
-  AudioDeviceID id;
   OSStatus r;
 
   r = AudioUnitSetParameter(stm->unit,

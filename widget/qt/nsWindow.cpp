@@ -89,6 +89,8 @@ static bool sAltGrModifier = false;
 static void find_first_visible_parent(QWindow* aItem, QWindow*& aVisibleItem);
 static bool is_mouse_in_window (MozQWidget* aWindow, double aMouseX, double aMouseY);
 
+NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
+
 nsWindow::nsWindow()
 {
     LOG(("%s [%p]\n", __PRETTY_FUNCTION__, (void *)this));
@@ -1376,10 +1378,6 @@ nsWindow::DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus)
 }
 
 ///////////////////////////////////// OLD GECKO ECENTS need to Sort ///////////////////
-
-NS_IMPL_ISUPPORTS_INHERITED(nsWindow, nsBaseWidget, nsISupportsWeakReference)
-
-
 
 void
 nsWindow::ClearCachedResources()

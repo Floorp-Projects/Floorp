@@ -95,11 +95,11 @@ class EffectiveTLDEntry:
 # DO EVERYTHING #
 #################
 
-def main():
+def main(output, effective_tld_filename):
   """
-  argv[1] is the effective TLD file to parse.
+  effective_tld_filename is the effective TLD file to parse.
   A C++ array of { domain, exception, wild } entries representing the
-  eTLD file is then printed to stdout.
+  eTLD file is then printed to output.
   """
 
   def boolStr(b):
@@ -107,10 +107,7 @@ def main():
       return "true"
     return "false"
 
-  for etld in getEffectiveTLDs(sys.argv[1]):
+  for etld in getEffectiveTLDs(effective_tld_filename):
     exception = boolStr(etld.exception())
     wild = boolStr(etld.wild())
-    print 'ETLD_ENTRY("%s", %s, %s)' % (etld.domain(), exception, wild)
-
-if __name__ == '__main__':
-  main()
+    output.write('ETLD_ENTRY("%s", %s, %s)\n' % (etld.domain(), exception, wild))

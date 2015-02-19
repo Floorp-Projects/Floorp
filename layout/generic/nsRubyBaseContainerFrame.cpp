@@ -376,6 +376,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
                                                 reflowState->mFloatManager,
                                                 reflowState, nullptr,
                                                 aReflowState.mLineLayout);
+    lineLayout->SetSuppressLineWrap(true);
     lineLayouts.AppendElement(lineLayout);
 
     // Line number is useless for ruby text

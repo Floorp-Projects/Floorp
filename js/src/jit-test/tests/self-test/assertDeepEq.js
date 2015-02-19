@@ -14,24 +14,22 @@ assertNotDeepEq(undefined, null);
 assertNotDeepEq({}, null);
 
 // symbols
-if (typeof Symbol === "function") {
-    assertDeepEq(Symbol(), Symbol());
-    assertNotDeepEq(Symbol(), Symbol(""));
-    assertDeepEq(Symbol("tweedledum"), Symbol("tweedledum"));
-    assertNotDeepEq(Symbol("tweedledum"), Symbol("alice"));
-    assertNotDeepEq(Symbol("what-its-called"), Symbol.for("what-its-called"));
-    assertNotDeepEq(Symbol.iterator, Symbol.for("Symbol.iterator"));
-    assertDeepEq([Symbol(), Symbol(), Symbol()],
-                 [Symbol(), Symbol(), Symbol()]);
-    var sym = Symbol();
-    assertDeepEq([sym, sym], [sym, sym]);
-    assertNotDeepEq([sym, sym], [Symbol(), Symbol()]);
-    assertNotDeepEq([sym, sym], [Symbol(), sym]);
-    var obj1 = {}, obj2 = {};
-    obj1[Symbol("x")] = "y";
-    obj2[Symbol("x")] = "y";
-    assertDeepEq(obj1, obj2);
-}
+assertDeepEq(Symbol(), Symbol());
+assertNotDeepEq(Symbol(), Symbol(""));
+assertDeepEq(Symbol("tweedledum"), Symbol("tweedledum"));
+assertNotDeepEq(Symbol("tweedledum"), Symbol("alice"));
+assertNotDeepEq(Symbol("what-its-called"), Symbol.for("what-its-called"));
+assertNotDeepEq(Symbol.iterator, Symbol.for("Symbol.iterator"));
+assertDeepEq([Symbol(), Symbol(), Symbol()],
+             [Symbol(), Symbol(), Symbol()]);
+var sym = Symbol();
+assertDeepEq([sym, sym], [sym, sym]);
+assertNotDeepEq([sym, sym], [Symbol(), Symbol()]);
+assertNotDeepEq([sym, sym], [Symbol(), sym]);
+var obj1 = {}, obj2 = {};
+obj1[Symbol("x")] = "y";
+obj2[Symbol("x")] = "y";
+assertDeepEq(obj1, obj2);
 
 // objects
 assertDeepEq({}, {});
