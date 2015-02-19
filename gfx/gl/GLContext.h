@@ -115,6 +115,7 @@ enum class GLFeature {
     occlusion_query2,
     packed_depth_stencil,
     query_objects,
+    read_buffer,
     renderbuffer_color_float,
     renderbuffer_color_half_float,
     robustness,
