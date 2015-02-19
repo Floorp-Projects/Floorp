@@ -365,6 +365,14 @@ class SelectionCaretsTest(MarionetteTestCase):
     ########################################################################
     # <div> non-editable test cases with selection carets enabled
     ########################################################################
+    def test_content_non_editable_long_press_to_select_a_word(self):
+        self.openTestHtml(enabled=True)
+        self._test_long_press_to_select_a_word(self._content, self.assertEqual)
+
+    def test_content_non_editable_move_selection_carets(self):
+        self.openTestHtml(enabled=True)
+        self._test_move_selection_carets(self._content, self.assertEqual)
+
     def test_content_non_editable_minimum_select_one_character_by_selection(self):
         self.openTestHtml(enabled=True)
         self._test_minimum_select_one_character(self._content, self.assertEqual)
