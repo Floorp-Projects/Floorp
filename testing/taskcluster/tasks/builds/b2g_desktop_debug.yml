@@ -4,6 +4,13 @@ $inherits:
     build_type: 'debug'
 
 task:
+  scopes:
+      - 'docker-worker:cache:build-b2g-desktop-objects-debug'
+
+  payload:
+    cache:
+        build-b2g-desktop-objects-debug: '/home/worker/object-folder'
+
   extra:
     treeherder:
       collection:

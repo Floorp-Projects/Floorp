@@ -2178,7 +2178,7 @@ pref("layout.css.grid.enabled", false);
 // in nsLayoutStylesheetCache::EnsureGlobal and the invalidation of
 // mUASheet in nsLayoutStylesheetCache::DependentPrefChanged (if it's not
 // otherwise needed) are removed.
-pref("layout.css.ruby.enabled", false);
+pref("layout.css.ruby.enabled", true);
 
 // Is support for CSS display:contents enabled?
 pref("layout.css.display-contents.enabled", true);
@@ -4464,12 +4464,6 @@ pref("dom.mozSettings.SettingsService.verbose.enabled", false);
 // IndexedDB transactions to be opened as readonly or keep everything as
 // readwrite.
 pref("dom.mozSettings.allowForceReadOnly", false);
-
-// The interval at which to check for slow running addons
-pref("browser.addon-watch.interval", 120000);
-pref("browser.addon-watch.ignore", "[\"mochikit@mozilla.org\",\"special-powers@mozilla.org\"]");
-// the percentage of time addons are allowed to use without being labeled slow
-pref("browser.addon-watch.percentage-limit", 1);
 
 // RequestSync API is disabled by default.
 pref("dom.requestSync.enabled", false);

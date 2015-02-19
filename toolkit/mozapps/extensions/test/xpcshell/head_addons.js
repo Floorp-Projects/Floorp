@@ -1575,14 +1575,13 @@ function interpolateAndServeFile(request, response) {
     fstream.init(file, -1, 0, 0);
     cstream.init(fstream, "UTF-8", 0, 0);
 
-    let (str = {}) {
-      let read = 0;
-      do {
-        // read as much as we can and put it in str.value
-        read = cstream.readString(0xffffffff, str);
-        data += str.value;
-      } while (read != 0);
-    }
+    let str = {};
+    let read = 0;
+    do {
+      // read as much as we can and put it in str.value
+      read = cstream.readString(0xffffffff, str);
+      data += str.value;
+    } while (read != 0);
     data = data.replace(/%PORT%/g, gPort);
 
     response.write(data);
@@ -1654,13 +1653,12 @@ function loadFile(aFile) {
           createInstance(Components.interfaces.nsIConverterInputStream);
   fstream.init(aFile, -1, 0, 0);
   cstream.init(fstream, "UTF-8", 0, 0);
-  let (str = {}) {
-    let read = 0;
-    do {
-      read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value
-      data += str.value;
-    } while (read != 0);
-  }
+  let str = {};
+  let read = 0;
+  do {
+    read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value
+    data += str.value;
+  } while (read != 0);
   cstream.close();
   return data;
 }

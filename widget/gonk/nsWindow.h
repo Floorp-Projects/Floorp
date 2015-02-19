@@ -19,7 +19,6 @@
 #include "InputData.h"
 #include "nsBaseWidget.h"
 #include "nsRegion.h"
-#include "nsWeakReference.h"
 #include "nsIIdleServiceInternal.h"
 #include "Units.h"
 
@@ -45,7 +44,7 @@ struct InputContext;
 struct InputContextAction;
 }
 
-class nsWindow : public nsBaseWidget, public nsSupportsWeakReference
+class nsWindow : public nsBaseWidget
 {
 public:
     nsWindow();

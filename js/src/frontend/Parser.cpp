@@ -6292,7 +6292,10 @@ Parser<ParseHandler>::assignExpr(InvokedPrediction invoked)
     if (!checkAndMarkAsAssignmentLhs(lhs, flavor))
         return null();
 
+    bool saved = pc->inDeclDestructuring;
+    pc->inDeclDestructuring = false;
     Node rhs = assignExpr();
+    pc->inDeclDestructuring = saved;
     if (!rhs)
         return null();
 

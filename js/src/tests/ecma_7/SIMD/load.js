@@ -11,9 +11,15 @@ const SIZE_64_ARRAY = 8;
 
 const SIZE_BYTES = SIZE_32_ARRAY * 4;
 
-function MakeComparator(kind, arr) {
+function IsSharedTypedArray(arr) {
+    return arr && arr.buffer && arr.buffer instanceof SharedArrayBuffer;
+}
+
+function MakeComparator(kind, arr, shared) {
     var bpe = arr.BYTES_PER_ELEMENT;
-    var uint8 = (bpe != 1) ? new Uint8Array(arr.buffer) : arr;
+    var uint8 = (bpe != 1) ? (IsSharedTypedArray(arr) ? new SharedUint8Array(arr.buffer)
+                                                      : new Uint8Array(arr.buffer))
+                           : arr;
 
     // Size in bytes of a single element in the SIMD vector.
     var sizeOfLaneElem;
@@ -163,9 +169,48 @@ function testLoad(kind, TA) {
     assertThrowsInstanceOf(() => SIMD[kind].load(TA, obj), TypeError);
 }
 
+function testSharedArrayBufferCompat() {
+    if (!this.SharedArrayBuffer || !this.SharedFloat32Array || !this.Atomics)
+        return;
+
+    var TA = new SharedFloat32Array(16);
+    for (var i = 0; i < 16; i++)
+        TA[i] = i + 1;
+
+    for (var ta of [
+                    new SharedUint8Array(TA.buffer),
+                    new SharedInt8Array(TA.buffer),
+                    new SharedUint16Array(TA.buffer),
+                    new SharedInt16Array(TA.buffer),
+                    new SharedUint32Array(TA.buffer),
+                    new SharedInt32Array(TA.buffer),
+                    new SharedFloat32Array(TA.buffer),
+                    new SharedFloat64Array(TA.buffer)
+                   ])
+    {
+        for (var kind of ['int32x4', 'float32x4', 'float64x2']) {
+            var comp = MakeComparator(kind, ta);
+            comp.load(0);
+            comp.loadX(0);
+            comp.loadXY(0);
+            comp.loadXYZ(0);
+
+            comp.load(3);
+            comp.loadX(3);
+            comp.loadXY(3);
+            comp.loadXYZ(3);
+        }
+
+        assertThrowsInstanceOf(() => SIMD.int32x4.load(ta, 1024), RangeError);
+        assertThrowsInstanceOf(() => SIMD.float32x4.load(ta, 1024), RangeError);
+        assertThrowsInstanceOf(() => SIMD.float64x2.load(ta, 1024), RangeError);
+    }
+}
+
 testLoad('float32x4', new Float32Array(SIZE_32_ARRAY));
 testLoad('float64x2', new Float64Array(SIZE_64_ARRAY));
 testLoad('int32x4', new Int32Array(SIZE_32_ARRAY));
+testSharedArrayBufferCompat();
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);
