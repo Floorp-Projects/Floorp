@@ -566,6 +566,9 @@ function runCompositionTests()
 function runKeyTests()
 {
   var description = "runKeyTests(): ";
+  const kModifiers =
+    [ "Alt", "AltGraph", "CapsLock", "Control", "Fn", "FnLock", "Meta", "NumLock",
+      "ScrollLock", "Shift", "Symbol", "SymbolLock", "OS" ];
 
   var TIP = createTIP();
   ok(TIP.beginInputTransactionForTests(window),
@@ -597,9 +600,6 @@ function runKeyTests()
       shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
       defaultPrevented: false
     };
-    var modifiers = [
-      "AltGraph", "CapsLock", "Fn", "NumLock", "OS", "ScrollLock", "Symbol"
-    ];
     function expectedValue(aAttr)
     {
       return aExpectedData[aAttr] !== undefined ? aExpectedData[aAttr] : defaultValues[aAttr];
@@ -635,9 +635,9 @@ function runKeyTests()
        desc + ".altKey is wrong");
     is(aEvent.metaKey, expectedValue("metaKey"),
        desc + ".metaKey is wrong");
-    for (var i = 0; i < modifiers.length; i++) {
-      is(aEvent.getModifierState(modifiers[i]), aExpectedData[modifiers[i]] !== undefined ? aExpectedData[modifiers[i]] : false,
-         desc + ".getModifierState(\"" + modifiers[i] + "\") is wrong");
+    for (var i = 0; i < kModifiers.length; i++) {
+      is(aEvent.getModifierState(kModifiers[i]), aExpectedData[kModifiers[i]] !== undefined ? aExpectedData[kModifiers[i]] : false,
+         desc + ".getModifierState(\"" + kModifiers[i] + "\") is wrong");
     }
   }
 
@@ -1028,7 +1028,7 @@ function runKeyTests()
     { key: "Control",                   keyCode: KeyboardEvent.DOM_VK_CONTROL,            isModifier: true },
     { key: "Alt",                       keyCode: KeyboardEvent.DOM_VK_ALT,                isModifier: true },
     { key: "Pause",                     keyCode: KeyboardEvent.DOM_VK_PAUSE },
-    { key: "CapsLock",                  keyCode: KeyboardEvent.DOM_VK_CAPS_LOCK,          isModifier: true },
+    { key: "CapsLock",                  keyCode: KeyboardEvent.DOM_VK_CAPS_LOCK,          isModifier: true, isLockableModifier: true },
     { key: "Hiragana",                  keyCode: KeyboardEvent.DOM_VK_KANA },
     { key: "Katakana",                  keyCode: KeyboardEvent.DOM_VK_KANA },
     { key: "HiraganaKatakana",          keyCode: KeyboardEvent.DOM_VK_KANA },
@@ -1084,8 +1084,8 @@ function runKeyTests()
     { key: "F22",                       keyCode: KeyboardEvent.DOM_VK_F22 },
     { key: "F23",                       keyCode: KeyboardEvent.DOM_VK_F23 },
     { key: "F24",                       keyCode: KeyboardEvent.DOM_VK_F24 },
-    { key: "NumLock",                   keyCode: KeyboardEvent.DOM_VK_NUM_LOCK,           isModifier: true },
-    { key: "ScrollLock",                keyCode: KeyboardEvent.DOM_VK_SCROLL_LOCK,        isModifier: true },
+    { key: "NumLock",                   keyCode: KeyboardEvent.DOM_VK_NUM_LOCK,           isModifier: true, isLockableModifier: true },
+    { key: "ScrollLock",                keyCode: KeyboardEvent.DOM_VK_SCROLL_LOCK,        isModifier: true, isLockableModifier: true },
     { key: "VolumeMute",                keyCode: KeyboardEvent.DOM_VK_VOLUME_MUTE },
     { key: "VolumeDown",                keyCode: KeyboardEvent.DOM_VK_VOLUME_DOWN },
     { key: "VolumeUp",                  keyCode: KeyboardEvent.DOM_VK_VOLUME_UP },
@@ -1147,7 +1147,329 @@ function runKeyTests()
       is(events[j].keyCode, events[j].type == "keypress" && kKeyToKeyCode[i].isPrintable ? 0 : 0xFF,
          longDesc + " type=\"" + events[j].type + "\", keyCode shouldn't be computed if it's initialized with non-zero value");
     }
+    // Unlock lockable modifier if the key is a lockable modifier key.
+    if (kKeyToKeyCode[i].isLockableModifier) {
+      TIP.keydown(keyEvent, baseFlags);
+      TIP.keyup(keyEvent, baseFlags);
+    }
   }
+
+  // Modifier state tests
+  const kModifierKeys = [
+    { key: "Alt",        code: "AltLeft",      isLockable: false },
+    { key: "Alt",        code: "AltRight",     isLockable: false },
+    { key: "AltGraph",   code: "AltRight",     isLockable: false },
+    { key: "CapsLock",   code: "CapsLock",     isLockable: true },
+    { key: "Control",    code: "ControlLeft",  isLockable: false },
+    { key: "Control",    code: "ControlRight", isLockable: false },
+    { key: "Fn",         code: "Fn",           isLockable: false },
+    { key: "FnLock",     code: "",             isLockable: true },
+    { key: "Meta",       code: "OSLeft",       isLockable: false },
+    { key: "Meta",       code: "OSRight",      isLockable: false },
+    { key: "NumLock",    code: "NumLock",      isLockable: true },
+    { key: "ScrollLock", code: "ScrollLock",   isLockable: true },
+    { key: "Shift",      code: "ShiftLeft",    isLockable: false },
+    { key: "Shift",      code: "ShiftRight",   isLockable: false },
+    { key: "Symbol",     code: "",             isLockable: false },
+    { key: "SymbolLock", code: "",             isLockable: true },
+    { key: "OS",         code: "OSLeft",       isLockable: false },
+    { key: "OS",         code: "OSRight",      isLockable: false },
+  ];
+
+  function checkModifiers(aTestDesc, aEvent, aType, aKey, aCode, aModifiers)
+  {
+    var desc = description + aTestDesc + ", type=\"" + aEvent.type + "\", key=\"" + aEvent.key + "\", code=\"" + aEvent.code + "\"";
+    is(aEvent.type, aType,
+       desc + ", .type value is wrong");
+    if (aEvent.type != aType) {
+      return;
+    }
+    is(aEvent.key, aKey,
+       desc + ", .key value is wrong");
+    if (SpecialPowers.getBoolPref("dom.keyboardevent.code.enabled")) {
+      is(aEvent.code, aCode,
+         desc + ", .code value is wrong");
+    }
+    is(aEvent.altKey, aModifiers.indexOf("Alt") >= 0,
+       desc + ", .altKey value is wrong");
+    is(aEvent.ctrlKey, aModifiers.indexOf("Control") >= 0,
+       desc + ", .ctrlKey value is wrong");
+    is(aEvent.metaKey, aModifiers.indexOf("Meta") >= 0,
+       desc + ", .metaKey value is wrong");
+    is(aEvent.shiftKey, aModifiers.indexOf("Shift") >= 0,
+       desc + ", .shiftKey value is wrong");
+    for (var i = 0; i < kModifiers.length; i++) {
+      is(aEvent.getModifierState(kModifiers[i]), aModifiers.indexOf(kModifiers[i]) >= 0,
+         desc + ", .getModifierState(\"" + kModifiers[i] + "\") returns wrong value");
+    }
+  }
+
+  // First, all modifiers must be false.
+  reset();
+  doPreventDefaults = [ "keypress" ];
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+
+  is(events.length, 3,
+     description + "TIP.keydown(keyA) and TIP.keyup(keyA) should cause keydown, keypress and keyup");
+  checkModifiers("Before dispatching modifier key events", events[0], "keydown",  "a", "KeyA", []);
+  checkModifiers("Before dispatching modifier key events", events[1], "keypress", "a", "KeyA", []);
+  checkModifiers("Before dispatching modifier key events", events[2], "keyup",    "a", "KeyA", []);
+
+  // Test each modifier keydown/keyup causes activating/inactivating the modifier state.
+  for (var i = 0; i < kModifierKeys.length; i++) {
+    reset();
+    doPreventDefaults = [ "keypress" ];
+    var modKey = new KeyboardEvent("", { key: kModifierKeys[i].key, code: kModifierKeys[i].code });
+    var testDesc = "A modifier key \"" + kModifierKeys[i].key + "\" (\"" + kModifierKeys[i].code + "\") and a printable key";
+    if (!kModifierKeys[i].isLockable) {
+      TIP.keydown(modKey);
+      TIP.keydown(keyA);
+      TIP.keyup(keyA);
+      TIP.keyup(modKey);
+      is(events.length, 5,
+         description + testDesc + " should cause 5 events");
+      checkModifiers(testDesc, events[0], "keydown",  kModifierKeys[i].key, kModifierKeys[i].code, [ kModifierKeys[i].key ]);
+      checkModifiers(testDesc, events[1], "keydown",  "a",                  "KeyA",                [ kModifierKeys[i].key ]);
+      checkModifiers(testDesc, events[2], "keypress", "a",                  "KeyA",                [ kModifierKeys[i].key ]);
+      checkModifiers(testDesc, events[3], "keyup",    "a",                  "KeyA",                [ kModifierKeys[i].key ]);
+      checkModifiers(testDesc, events[4], "keyup",    kModifierKeys[i].key, kModifierKeys[i].code, [ ]);
+    } else {
+      TIP.keydown(modKey);
+      TIP.keyup(modKey);
+      TIP.keydown(keyA);
+      TIP.keyup(keyA);
+      TIP.keydown(modKey);
+      TIP.keyup(modKey);
+      is(events.length, 7,
+         description + testDesc + " should cause 7 events");
+      checkModifiers(testDesc, events[0], "keydown",  kModifierKeys[i].key, kModifierKeys[i].code, [ kModifierKeys[i].key ]);
+      checkModifiers(testDesc, events[1], "keyup",    kModifierKeys[i].key, kModifierKeys[i].code, [ kModifierKeys[i].key ]);
+      checkModifiers(testDesc, events[2], "keydown",  "a",                  "KeyA",                [ kModifierKeys[i].key ]);
+      checkModifiers(testDesc, events[3], "keypress", "a",                  "KeyA",                [ kModifierKeys[i].key ]);
+      checkModifiers(testDesc, events[4], "keyup",    "a",                  "KeyA",                [ kModifierKeys[i].key ]);
+      checkModifiers(testDesc, events[5], "keydown",  kModifierKeys[i].key, kModifierKeys[i].code, [ ]);
+      checkModifiers(testDesc, events[6], "keyup",    kModifierKeys[i].key, kModifierKeys[i].code, [ ]);
+    }
+  }
+
+  // Modifier state should be inactivated only when all pressed modifiers are released
+  var shiftLeft = new KeyboardEvent("", { key: "Shift", code: "ShiftLeft" });
+  var shiftRight = new KeyboardEvent("", { key: "Shift", code: "ShiftRight" });
+  var shiftVirtual = new KeyboardEvent("", { key: "Shift", code: "" });
+  var altGrVirtual = new KeyboardEvent("", { key: "AltGraph", code: "" });
+
+  var testDesc = "ShiftLeft press -> ShiftRight press -> ShiftRight release -> ShiftLeft release";
+  reset();
+  doPreventDefaults = [ "keypress" ];
+  TIP.keydown(shiftLeft);
+  TIP.keydown(shiftRight);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftRight);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftLeft);
+
+  is(events.length, 10,
+     description + testDesc + " should cause 10 events");
+  checkModifiers(testDesc, events[0], "keydown",  "Shift", "ShiftLeft",  [ "Shift" ]);
+  checkModifiers(testDesc, events[1], "keydown",  "Shift", "ShiftRight", [ "Shift" ]);
+  checkModifiers(testDesc, events[2], "keydown",  "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[3], "keypress", "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[4], "keyup",    "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[5], "keyup",    "Shift", "ShiftRight", [ "Shift" ]);
+  checkModifiers(testDesc, events[6], "keydown",  "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[7], "keypress", "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[8], "keyup",    "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[9], "keyup",    "Shift", "ShiftLeft",  [ ]);
+
+  testDesc = "ShiftLeft press -> ShiftRight press -> ShiftLeft release -> ShiftRight release";
+  reset();
+  doPreventDefaults = [ "keypress" ];
+  TIP.keydown(shiftLeft);
+  TIP.keydown(shiftRight);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftLeft);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftRight);
+
+  is(events.length, 10,
+     description + testDesc + " should cause 10 events");
+  checkModifiers(testDesc, events[0], "keydown",  "Shift", "ShiftLeft",  [ "Shift" ]);
+  checkModifiers(testDesc, events[1], "keydown",  "Shift", "ShiftRight", [ "Shift" ]);
+  checkModifiers(testDesc, events[2], "keydown",  "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[3], "keypress", "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[4], "keyup",    "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[5], "keyup",    "Shift", "ShiftLeft",  [ "Shift" ]);
+  checkModifiers(testDesc, events[6], "keydown",  "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[7], "keypress", "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[8], "keyup",    "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[9], "keyup",    "Shift", "ShiftRight",  [ ]);
+
+  testDesc = "ShiftLeft press -> virtual Shift press -> virtual Shift release -> ShiftLeft release";
+  reset();
+  doPreventDefaults = [ "keypress" ];
+  TIP.keydown(shiftLeft);
+  TIP.keydown(shiftVirtual);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftVirtual);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftLeft);
+
+  is(events.length, 10,
+     description + testDesc + " should cause 10 events");
+  checkModifiers(testDesc, events[0], "keydown",  "Shift", "ShiftLeft",  [ "Shift" ]);
+  checkModifiers(testDesc, events[1], "keydown",  "Shift", "",           [ "Shift" ]);
+  checkModifiers(testDesc, events[2], "keydown",  "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[3], "keypress", "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[4], "keyup",    "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[5], "keyup",    "Shift", "",           [ "Shift" ]);
+  checkModifiers(testDesc, events[6], "keydown",  "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[7], "keypress", "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[8], "keyup",    "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[9], "keyup",    "Shift", "ShiftLeft",  [ ]);
+
+  testDesc = "virtual Shift press -> ShiftRight press -> ShiftRight release -> virtual Shift release";
+  reset();
+  doPreventDefaults = [ "keypress" ];
+  TIP.keydown(shiftVirtual);
+  TIP.keydown(shiftRight);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftRight);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftVirtual);
+
+  is(events.length, 10,
+     description + testDesc + " should cause 10 events");
+  checkModifiers(testDesc, events[0], "keydown",  "Shift", "",           [ "Shift" ]);
+  checkModifiers(testDesc, events[1], "keydown",  "Shift", "ShiftRight", [ "Shift" ]);
+  checkModifiers(testDesc, events[2], "keydown",  "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[3], "keypress", "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[4], "keyup",    "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[5], "keyup",    "Shift", "ShiftRight", [ "Shift" ]);
+  checkModifiers(testDesc, events[6], "keydown",  "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[7], "keypress", "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[8], "keyup",    "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[9], "keyup",    "Shift", "",           [ ]);
+
+  testDesc = "ShiftLeft press -> ShiftRight press -> ShiftRight release -> ShiftRight release -> ShiftLeft release";
+  reset();
+  doPreventDefaults = [ "keypress" ];
+  TIP.keydown(shiftLeft);
+  TIP.keydown(shiftRight);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftRight);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftRight);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftLeft);
+
+  is(events.length, 14,
+     description + testDesc + " should cause 14 events");
+  checkModifiers(testDesc, events[0],  "keydown",  "Shift", "ShiftLeft",  [ "Shift" ]);
+  checkModifiers(testDesc, events[1],  "keydown",  "Shift", "ShiftRight", [ "Shift" ]);
+  checkModifiers(testDesc, events[2],  "keydown",  "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[3],  "keypress", "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[4],  "keyup",    "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[5],  "keyup",    "Shift", "ShiftRight", [ "Shift" ]);
+  checkModifiers(testDesc, events[6],  "keydown",  "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[7],  "keypress", "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[8],  "keyup",    "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[9],  "keyup",    "Shift", "ShiftRight", [ "Shift" ]);
+  checkModifiers(testDesc, events[10], "keydown",  "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[11], "keypress", "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[12], "keyup",    "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[13], "keyup",    "Shift", "ShiftLeft",  [ ]);
+
+  testDesc = "ShiftLeft press -> ShiftLeft press -> ShiftLeft release -> ShiftLeft release";
+  reset();
+  doPreventDefaults = [ "keypress" ];
+  TIP.keydown(shiftLeft);
+  TIP.keydown(shiftLeft);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftLeft);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftLeft);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+
+  is(events.length, 13,
+     description + testDesc + " should cause 13 events");
+  checkModifiers(testDesc, events[0],  "keydown",  "Shift", "ShiftLeft",  [ "Shift" ]);
+  checkModifiers(testDesc, events[1],  "keydown",  "Shift", "ShiftLeft",  [ "Shift" ]);
+  checkModifiers(testDesc, events[2],  "keydown",  "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[3],  "keypress", "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[4],  "keyup",    "a",     "KeyA",       [ "Shift" ]);
+  checkModifiers(testDesc, events[5],  "keyup",    "Shift", "ShiftLeft",  [ ]);
+  checkModifiers(testDesc, events[6],  "keydown",  "a",     "KeyA",       [ ]);
+  checkModifiers(testDesc, events[7],  "keypress", "a",     "KeyA",       [ ]);
+  checkModifiers(testDesc, events[8],  "keyup",    "a",     "KeyA",       [ ]);
+  checkModifiers(testDesc, events[9],  "keyup",    "Shift", "ShiftLeft",  [ ]);
+  checkModifiers(testDesc, events[10], "keydown",  "a",     "KeyA",       [ ]);
+  checkModifiers(testDesc, events[11], "keypress", "a",     "KeyA",       [ ]);
+  checkModifiers(testDesc, events[12], "keyup",    "a",     "KeyA",       [ ]);
+
+  testDesc = "virtual Shift press -> virtual AltGraph press -> virtual AltGraph release -> virtual Shift release";
+  reset();
+  doPreventDefaults = [ "keypress" ];
+  TIP.keydown(shiftVirtual);
+  TIP.keydown(altGrVirtual);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(altGrVirtual);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftVirtual);
+
+  is(events.length, 10,
+     description + testDesc + " should cause 10 events");
+  checkModifiers(testDesc, events[0], "keydown",  "Shift",    "",     [ "Shift" ]);
+  checkModifiers(testDesc, events[1], "keydown",  "AltGraph", "",     [ "Shift", "AltGraph" ]);
+  checkModifiers(testDesc, events[2], "keydown",  "a",        "KeyA", [ "Shift", "AltGraph" ]);
+  checkModifiers(testDesc, events[3], "keypress", "a",        "KeyA", [ "Shift", "AltGraph" ]);
+  checkModifiers(testDesc, events[4], "keyup",    "a",        "KeyA", [ "Shift", "AltGraph" ]);
+  checkModifiers(testDesc, events[5], "keyup",    "AltGraph", "",     [ "Shift" ]);
+  checkModifiers(testDesc, events[6], "keydown",  "a",        "KeyA", [ "Shift" ]);
+  checkModifiers(testDesc, events[7], "keypress", "a",        "KeyA", [ "Shift" ]);
+  checkModifiers(testDesc, events[8], "keyup",    "a",        "KeyA", [ "Shift" ]);
+  checkModifiers(testDesc, events[9], "keyup",    "Shift",    "",     [ ]);
+
+  testDesc = "virtual Shift press -> virtual AltGraph press -> virtual Shift release -> virtual AltGr release";
+  reset();
+  doPreventDefaults = [ "keypress" ];
+  TIP.keydown(shiftVirtual);
+  TIP.keydown(altGrVirtual);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(shiftVirtual);
+  TIP.keydown(keyA);
+  TIP.keyup(keyA);
+  TIP.keyup(altGrVirtual);
+
+  is(events.length, 10,
+     description + testDesc + " should cause 10 events");
+  checkModifiers(testDesc, events[0], "keydown",  "Shift",    "",     [ "Shift" ]);
+  checkModifiers(testDesc, events[1], "keydown",  "AltGraph", "",     [ "Shift", "AltGraph" ]);
+  checkModifiers(testDesc, events[2], "keydown",  "a",        "KeyA", [ "Shift", "AltGraph" ]);
+  checkModifiers(testDesc, events[3], "keypress", "a",        "KeyA", [ "Shift", "AltGraph" ]);
+  checkModifiers(testDesc, events[4], "keyup",    "a",        "KeyA", [ "Shift", "AltGraph" ]);
+  checkModifiers(testDesc, events[5], "keyup",    "Shift",    "",     [ "AltGraph" ]);
+  checkModifiers(testDesc, events[6], "keydown",  "a",        "KeyA", [ "AltGraph" ]);
+  checkModifiers(testDesc, events[7], "keypress", "a",        "KeyA", [ "AltGraph" ]);
+  checkModifiers(testDesc, events[8], "keyup",    "a",        "KeyA", [ "AltGraph" ]);
+  checkModifiers(testDesc, events[9], "keyup",    "AltGraph", "",     [ ]);
 
   window.removeEventListener("keydown", handler, false);
   window.removeEventListener("keypress", handler, false);

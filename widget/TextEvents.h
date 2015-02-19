@@ -205,6 +205,18 @@ public:
    */
   static uint32_t ComputeKeyCodeFromKeyNameIndex(KeyNameIndex aKeyNameIndex);
 
+  /**
+   * GetModifierForKeyName() returns a value of Modifier which is activated
+   * by the aKeyNameIndex.
+   */
+  static Modifier GetModifierForKeyName(KeyNameIndex aKeyNameIndex);
+
+  /**
+   * IsLockableModifier() returns true if aKeyNameIndex is a lockable modifier
+   * key such as CapsLock and NumLock.
+   */
+  static bool IsLockableModifier(KeyNameIndex aKeyNameIndex);
+
   static void GetDOMKeyName(KeyNameIndex aKeyNameIndex,
                             nsAString& aKeyName);
   static void GetDOMCodeName(CodeNameIndex aCodeNameIndex,
