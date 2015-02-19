@@ -598,12 +598,11 @@ public:
   // PeerConnectionMedia can't do it because it doesn't know about principals
   virtual void PrincipalChanged(DOMMediaStream* aMediaStream) MOZ_OVERRIDE;
 
-  nsresult GetRemoteTrackId(const std::string streamId,
+  nsresult GetRemoteTrackId(DOMMediaStream* mediaStream,
                             TrackID numericTrackId,
                             std::string* trackId) const;
 #endif
 
-  static std::string GetStreamId(const DOMMediaStream& aStream);
   static std::string GetTrackId(const dom::MediaStreamTrack& track);
 
 private:
