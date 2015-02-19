@@ -289,6 +289,32 @@ WidgetInputEvent::AccelModifier()
  * mozilla::WidgetKeyboardEvent (TextEvents.h)
  ******************************************************************************/
 
+bool
+WidgetKeyboardEvent::ShouldCauseKeypressEvents() const
+{
+  // Currently, we don't dispatch keypress events of modifier keys.
+  switch (mKeyNameIndex) {
+    case KEY_NAME_INDEX_Alt:
+    case KEY_NAME_INDEX_AltGraph:
+    case KEY_NAME_INDEX_CapsLock:
+    case KEY_NAME_INDEX_Control:
+    case KEY_NAME_INDEX_Fn:
+    // case KEY_NAME_INDEX_FnLock:
+    // case KEY_NAME_INDEX_Hyper:
+    case KEY_NAME_INDEX_Meta:
+    case KEY_NAME_INDEX_NumLock:
+    case KEY_NAME_INDEX_OS:
+    case KEY_NAME_INDEX_ScrollLock:
+    case KEY_NAME_INDEX_Shift:
+    // case KEY_NAME_INDEX_Super:
+    case KEY_NAME_INDEX_Symbol:
+    // case KEY_NAME_INDEX_SymbolLock:
+      return false;
+    default:
+      return true;
+  }
+}
+
 /*static*/ void
 WidgetKeyboardEvent::GetDOMKeyName(KeyNameIndex aKeyNameIndex,
                                    nsAString& aKeyName)
