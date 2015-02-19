@@ -557,20 +557,49 @@ var LoginManagerContent = {
   /*
    * _fillform
    *
-   * Fill the form with login information if we can find it. This will find
-   * an array of logins if not given any, otherwise it will use the logins
-   * passed in. The logins are returned so they can be reused for
+   * Fill the form with the provided login information.
+   * The logins are returned so they can be reused for
    * optimization. Success of action is also returned in format
    * [success, foundLogins].
    *
    * - autofillForm denotes if we should fill the form in automatically
    * - userTriggered is an indication of whether this filling was triggered by
    *     the user
-   * - foundLogins is an array of nsILoginInfo for optimization
+   * - foundLogins is an array of nsILoginInfo
    */
   _fillForm : function (form, autofillForm, clobberPassword,
                         userTriggered, foundLogins) {
     let ignoreAutocomplete = true;
+    const AUTOFILL_RESULT = {
+      FILLED: 0,
+      NO_PASSWORD_FIELD: 1,
+      PASSWORD_DISABLED_READONLY: 2,
+      NO_LOGINS_FIT: 3,
+      NO_SAVED_LOGINS: 4,
+      EXISTING_PASSWORD: 5,
+      EXISTING_USERNAME: 6,
+      MULTIPLE_LOGINS: 7,
+      NO_AUTOFILL_FORMS: 8,
+      AUTOCOMPLETE_OFF: 9,
+      UNKNOWN_FAILURE: 10,
+    };
+
+    function recordAutofillResult(result) {
+      if (userTriggered) {
+        // Ignore fills as a result of user action.
+        return;
+      }
+      const autofillResultHist = Services.telemetry.getHistogramById("PWMGR_FORM_AUTOFILL_RESULT");
+      autofillResultHist.add(result);
+    }
+
+    // Nothing to do if we have no matching logins available.
+    if (foundLogins.length == 0) {
+      // We don't log() here since this is a very common case.
+      recordAutofillResult(AUTOFILL_RESULT.NO_SAVED_LOGINS);
+      return [false, foundLogins];
+    }
+
     // Heuristically determine what the user/pass fields are
     // We do this before checking to see if logins are stored,
     // so that the user isn't prompted for a master password
@@ -579,12 +608,16 @@ var LoginManagerContent = {
         this._getFormFields(form, false);
 
     // Need a valid password field to do anything.
-    if (passwordField == null)
+    if (passwordField == null) {
+      log("not filling form, no password field found");
+      recordAutofillResult(AUTOFILL_RESULT.NO_PASSWORD_FIELD);
       return [false, foundLogins];
+    }
 
     // If the password field is disabled or read-only, there's nothing to do.
     if (passwordField.disabled || passwordField.readOnly) {
       log("not filling form, password field disabled or read-only");
+      recordAutofillResult(AUTOFILL_RESULT.PASSWORD_DISABLED_READONLY);
       return [false, foundLogins];
     }
 
@@ -619,11 +652,11 @@ var LoginManagerContent = {
       return fit;
     }, this);
 
-
-    // Nothing to do if we have no matching logins available.
-    if (logins.length == 0)
+    if (logins.length == 0) {
+      log("form not filled, none of the logins fit in the field");
+      recordAutofillResult(AUTOFILL_RESULT.NO_LOGINS_FIT);
       return [false, foundLogins];
-
+    }
 
     // The reason we didn't end up filling the form, if any.  We include
     // this in the formInfo object we send with the passwordmgr-found-logins
@@ -641,6 +674,8 @@ var LoginManagerContent = {
       didntFillReason = "existingPassword";
       this._notifyFoundLogins(didntFillReason, usernameField,
                               passwordField, foundLogins, null);
+      log("form not filled, the password field was already filled");
+      recordAutofillResult(AUTOFILL_RESULT.EXISTING_PASSWORD);
       return [false, foundLogins];
     }
 
@@ -743,6 +778,28 @@ var LoginManagerContent = {
 
     this._notifyFoundLogins(didntFillReason, usernameField, passwordField,
                             foundLogins, selectedLogin);
+
+    if (didFillForm) {
+      recordAutofillResult(AUTOFILL_RESULT.FILLED);
+    } else {
+      let autofillResult = AUTOFILL_RESULT.UNKNOWN_FAILURE;
+      switch (didntFillReason) {
+        // existingPassword is already handled above
+        case "existingUsername":
+          autofillResult = AUTOFILL_RESULT.EXISTING_USERNAME;
+          break;
+        case "multipleLogins":
+          autofillResult = AUTOFILL_RESULT.MULTIPLE_LOGINS;
+          break;
+        case "noAutofillForms":
+          autofillResult = AUTOFILL_RESULT.NO_AUTOFILL_FORMS;
+          break;
+        case "autocompleteOff":
+          autofillResult = AUTOFILL_RESULT.AUTOCOMPLETE_OFF;
+          break;
+      }
+      recordAutofillResult(autofillResult);
+    }
 
     return [didFillForm, foundLogins];
   },

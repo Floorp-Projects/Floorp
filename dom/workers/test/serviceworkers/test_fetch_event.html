@@ -1,0 +1,62 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 94048 - test install event.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  SimpleTest.requestCompleteLog();
+
+  function simpleRegister() {
+    var p = navigator.serviceWorker.register("fetch_event_worker.js", { scope: "./fetch" });
+    return p;
+  }
+
+  function testController() {
+    var p = new Promise(function(resolve, reject) {
+      window.onmessage = function(e) {
+        if (e.data.status == "ok") {
+          ok(e.data.result, e.data.message);
+        } else if (e.data.status == "done") {
+          window.onmessage = null;
+          w.close();
+          resolve();
+        }
+      }
+    });
+
+    var w = window.open("fetch/index.html");
+    return p;
+  }
+
+  function runTest() {
+    simpleRegister()
+      .then(testController)
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["dom.fetch.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+

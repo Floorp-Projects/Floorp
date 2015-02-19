@@ -28,6 +28,7 @@ WebGLFramebuffer::WebGLFramebuffer(WebGLContext* webgl, GLuint fbo)
     , mDepthAttachment(LOCAL_GL_DEPTH_ATTACHMENT)
     , mStencilAttachment(LOCAL_GL_STENCIL_ATTACHMENT)
     , mDepthStencilAttachment(LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
+    , mReadBufferMode(LOCAL_GL_COLOR_ATTACHMENT0)
 {
     mContext->mFramebuffers.insertBack(this);
 
@@ -975,6 +976,38 @@ WebGLFramebuffer::FinalizeAttachments() const
                                                 LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
 
     FinalizeDrawAndReadBuffers(gl, ColorAttachment(0).IsDefined());
+}
+
+bool
+WebGLFramebuffer::ValidateForRead(const char* info, TexInternalFormat* const out_format)
+{
+    if (mReadBufferMode == LOCAL_GL_NONE) {
+        mContext->ErrorInvalidOperation("%s: Read buffer mode must not be"
+                                        " NONE.", info);
+        return false;
+    }
+
+    const auto& attachment = GetAttachment(mReadBufferMode);
+
+    if (!CheckAndInitializeAttachments()) {
+        mContext->ErrorInvalidFramebufferOperation("readPixels: incomplete framebuffer");
+        return false;
+    }
+
+    GLenum readPlaneBits = LOCAL_GL_COLOR_BUFFER_BIT;
+    if (!HasCompletePlanes(readPlaneBits)) {
+        mContext->ErrorInvalidOperation("readPixels: Read source attachment doesn't have the"
+                                        " correct color/depth/stencil type.");
+        return false;
+    }
+
+    if (!attachment.IsDefined()) {
+        mContext->ErrorInvalidOperation("readPixels: ");
+        return false;
+    }
+
+    *out_format = attachment.EffectiveInternalFormat();
+    return true;
 }
 
 inline void

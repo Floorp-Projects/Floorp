@@ -30,22 +30,32 @@ protected:
   // The interception controller to notify about the successful channel interception
   nsCOMPtr<nsINetworkInterceptController> mController;
 
+  // The stream to write the body of the synthesized response
+  nsCOMPtr<nsIOutputStream> mResponseBody;
+
   // Response head for use when synthesizing
-  Maybe<nsHttpResponseHead> mSynthesizedResponseHead;
+  Maybe<nsAutoPtr<nsHttpResponseHead>> mSynthesizedResponseHead;
+
+  // Whether this intercepted channel was performing a navigation.
+  bool mIsNavigation;
 
   void EnsureSynthesizedResponse();
-  void DoNotifyController(nsIOutputStream* aOut);
+  void DoNotifyController();
   nsresult DoSynthesizeHeader(const nsACString& aName, const nsACString& aValue);
 
   virtual ~InterceptedChannelBase();
 public:
-  explicit InterceptedChannelBase(nsINetworkInterceptController* aController);
+  InterceptedChannelBase(nsINetworkInterceptController* aController,
+                         bool aIsNavigation);
 
   // Notify the interception controller that the channel has been intercepted
   // and prepare the response body output stream.
   virtual void NotifyController() = 0;
 
   NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetResponseBody(nsIOutputStream** aOutput) MOZ_OVERRIDE;
+  NS_IMETHOD GetIsNavigation(bool* aIsNavigation) MOZ_OVERRIDE;
 };
 
 class InterceptedChannelChrome : public InterceptedChannelBase
@@ -60,7 +70,11 @@ public:
                            nsINetworkInterceptController* aController,
                            nsICacheEntry* aEntry);
 
-  NS_DECL_NSIINTERCEPTEDCHANNEL
+  NS_IMETHOD ResetInterception() MOZ_OVERRIDE;
+  NS_IMETHOD FinishSynthesizedResponse() MOZ_OVERRIDE;
+  NS_IMETHOD GetChannel(nsIChannel** aChannel) MOZ_OVERRIDE;
+  NS_IMETHOD SynthesizeHeader(const nsACString& aName, const nsACString& aValue) MOZ_OVERRIDE;
+  NS_IMETHOD Cancel() MOZ_OVERRIDE;
 
   virtual void NotifyController() MOZ_OVERRIDE;
 };
@@ -70,8 +84,7 @@ class InterceptedChannelContent : public InterceptedChannelBase
   // The actual channel being intercepted.
   nsRefPtr<HttpChannelChild> mChannel;
 
-  // Writeable buffer for use when synthesizing a response in a child process
-  nsCOMPtr<nsIOutputStream> mSynthesizedOutput;
+  // Reader-side of the response body when synthesizing in a child proces
   nsCOMPtr<nsIInputStream> mSynthesizedInput;
 
   // Pump to read the synthesized body in child processes
@@ -85,7 +98,11 @@ public:
                             nsINetworkInterceptController* aController,
                             nsIStreamListener* aListener);
 
-  NS_DECL_NSIINTERCEPTEDCHANNEL
+  NS_IMETHOD ResetInterception() MOZ_OVERRIDE;
+  NS_IMETHOD FinishSynthesizedResponse() MOZ_OVERRIDE;
+  NS_IMETHOD GetChannel(nsIChannel** aChannel) MOZ_OVERRIDE;
+  NS_IMETHOD SynthesizeHeader(const nsACString& aName, const nsACString& aValue) MOZ_OVERRIDE;
+  NS_IMETHOD Cancel() MOZ_OVERRIDE;
 
   virtual void NotifyController() MOZ_OVERRIDE;
 };

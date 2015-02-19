@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<title>reftest, bug 1133392</title>
+<style>
+
+  p:not(.state-one) > span {
+    text-decoration: underline;
+  }
+
+  p > span > span {
+    vertical-align: -2em;
+  }
+
+  p:not(.state-three) > span > span {
+    visibility: hidden;
+  }
+
+</style>
+
+<p class="state-one"><span>This text<br>
+has <span>an underline</span>.</span></p>
+
+<script>
+
+  var p = document.getElementsByTagName("p")[0];
+  p.offsetLeft; // flush layout
+  document.getElementsByTagName('p')[0].className = 'state-two';
+
+  document.addEventListener("MozReftestInvalidate", step_three, false);
+  function step_three(event) {
+    document.getElementsByTagName('p')[0].className = 'state-three';
+    document.documentElement.classList.remove("reftest-wait");
+  }
+
+</script>
+

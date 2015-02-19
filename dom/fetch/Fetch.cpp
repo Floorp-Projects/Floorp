@@ -866,6 +866,11 @@ FetchBody<Request>::FetchBody();
 template
 FetchBody<Response>::FetchBody();
 
+template <class Derived>
+FetchBody<Derived>::~FetchBody()
+{
+}
+
 // Returns true if addref succeeded.
 // Always succeeds on main thread.
 // May fail on worker if RegisterFeature() fails. In that case, it will release

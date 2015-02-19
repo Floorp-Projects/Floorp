@@ -360,6 +360,15 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         return testInt32(cond, Operand(address));
     }
+    Condition testObject(Condition cond, const Operand &operand) {
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
+        cmp32(ToType(operand), ImmTag(JSVAL_TAG_OBJECT));
+        return cond;
+    }
+    Condition testObject(Condition cond, const Address &address) {
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
+        return testObject(cond, Operand(address));
+    }
     Condition testDouble(Condition cond, const Operand &operand) {
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         Condition actual = (cond == Equal) ? Below : AboveOrEqual;

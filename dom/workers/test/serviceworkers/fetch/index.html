@@ -1,0 +1,147 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 94048 - test install event.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<div id="style-test" style="background-color: white"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  function my_ok(result, msg) {
+    window.opener.postMessage({status: "ok", result: result, message: msg}, "*");
+  }
+
+  function check_intercepted_script() {
+    document.getElementById('intercepted-script').test_result =
+      document.currentScript == document.getElementById('intercepted-script');
+  }
+
+  function fetch(name, onload, onerror, headers) {
+    gExpected++;
+
+    onload = onload || function() {
+      my_ok(false, "load should not complete successfully");
+      finish();
+    };
+    onerror = onerror || function() {
+      my_ok(false, "load should be intercepted successfully");
+      finish();
+    };
+
+    var x = new XMLHttpRequest();
+    x.open('GET', name, true);
+    x.onload = function() { onload(x) };
+    x.onerror = function() { onerror(x) };
+    headers = headers || [];
+    headers.forEach(function(header) {
+      x.setRequestHeader(header[0], header[1]);
+    });
+    x.send();
+  }
+
+  var gExpected = 0;
+  var gEncountered = 0;
+  function finish() {
+    gEncountered++;
+    if (gEncountered == gExpected) {
+      window.opener.postMessage({status: "done"}, "*");
+    }
+  }
+
+  function test_onload(creator, complete) {
+    gExpected++;
+    var elem = creator();
+    elem.onload = function() {
+      complete.call(elem);
+      finish();
+    };
+    elem.onerror = function() {
+      my_ok(false, elem.tagName + " load should complete successfully");
+      finish();
+    };
+    document.body.appendChild(elem);
+  }
+
+  function expectAsyncResult() {
+    gExpected++;
+  }
+
+  my_ok(navigator.serviceWorker.controller != null, "should be controlled");
+</script>
+<script src="fetch_tests.js"></script>
+<script>
+  test_onload(function() {
+    var elem = document.createElement('img');
+    elem.src = "nonexistent_image.gifs";
+    elem.id = 'intercepted-img';
+    return elem;
+  }, function() {
+    my_ok(this.complete, "image should be complete");
+    my_ok(this.naturalWidth == 1 && this.naturalHeight == 1, "image should be 1x1 gif");
+  });
+
+  test_onload(function() {
+    var elem = document.createElement('script');
+    elem.id = 'intercepted-script';
+    elem.src = "nonexistent_script.js";
+    return elem;
+  }, function() {
+    my_ok(this.test_result, "script load should be intercepted");
+  });
+
+  test_onload(function() {
+    var elem = document.createElement('link');
+    elem.href = "nonexistent_stylesheet.css";
+    elem.rel = "stylesheet";
+    return elem;
+  }, function() {
+    var styled = document.getElementById('style-test');
+    my_ok(window.getComputedStyle(styled).backgroundColor == 'rgb(0, 0, 0)',
+          "stylesheet load should be intercepted");
+  });
+
+  test_onload(function() {
+    var elem = document.createElement('iframe');
+    elem.id = 'intercepted-iframe';
+    elem.src = "nonexistent_page.html";
+    return elem;
+  }, function() {
+    my_ok(this.test_result, "iframe load should be intercepted");
+  });
+
+  gExpected++;
+  var worker = new Worker('nonexistent_worker_script.js');
+  worker.onmessage = function(e) {
+    my_ok(e.data == "worker-intercept-success", "worker load intercepted");
+    finish();
+  };
+  worker.onerror = function() {
+    my_ok(false, "worker load should be intercepted");
+  };
+
+  gExpected++;
+  var worker = new Worker('fetch_worker_script.js');
+  worker.onmessage = function(e) {
+    if (e.data == "finish") {
+      finish();
+    } else if (e.data == "expect") {
+      gExpected++;
+    } else if (e.data.type == "ok") {
+      my_ok(e.data.value, e.data.msg);
+    }
+  };
+  worker.onerror = function() {
+    my_ok(false, "worker should not cause any errors");
+  };
+</script>
+</pre>
+</body>
+</html>

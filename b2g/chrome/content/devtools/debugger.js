@@ -196,6 +196,7 @@ let RemoteDebugger = {
         globalActorFactories: restrictPrivileges ? {
           webappsActor: DebuggerServer.globalActorFactories.webappsActor,
           deviceActor: DebuggerServer.globalActorFactories.deviceActor,
+          settingsActor: DebuggerServer.globalActorFactories.settingsActor
         } : DebuggerServer.globalActorFactories
       };
       let { RootActor } = devtools.require("devtools/server/actors/root");

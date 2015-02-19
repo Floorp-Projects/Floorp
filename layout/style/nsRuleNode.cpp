@@ -4539,10 +4539,8 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
     else {
       // The parser will never create a list that is *all* URL values --
       // that's invalid.
-      NS_ABORT_IF_FALSE(cursorUnit == eCSSUnit_List ||
-                        cursorUnit == eCSSUnit_ListDep,
-                        nsPrintfCString("unrecognized cursor unit %d",
-                                        cursorUnit).get());
+      MOZ_ASSERT(cursorUnit == eCSSUnit_List || cursorUnit == eCSSUnit_ListDep,
+                 "unrecognized cursor unit");
       const nsCSSValueList* list = cursorValue->GetListValue();
       const nsCSSValueList* list2 = list;
       nsIDocument* doc = aContext->PresContext()->Document();
@@ -4958,9 +4956,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
           transition->SetProperty(prop);
         }
       } else {
-        NS_ABORT_IF_FALSE(val.GetUnit() == eCSSUnit_All,
-                          nsPrintfCString("Invalid transition property unit %d",
-                                          val.GetUnit()).get());
+        MOZ_ASSERT(val.GetUnit() == eCSSUnit_All,
+                   "Invalid transition property unit");
         transition->SetProperty(eCSSPropertyExtra_all_properties);
       }
     }
@@ -5111,9 +5108,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
           break;
         }
         default:
-          NS_ABORT_IF_FALSE(false,
-                            nsPrintfCString("Invalid animation-name unit %d",
-                                            animName.list->mValue.GetUnit()).get());
+          MOZ_ASSERT(false, "Invalid animation-name unit");
       }
     }
 
@@ -5148,10 +5143,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                animDirection.unit == eCSSUnit_Unset) {
       animation->SetDirection(NS_STYLE_ANIMATION_DIRECTION_NORMAL);
     } else if (animDirection.list) {
-      NS_ABORT_IF_FALSE(animDirection.list->mValue.GetUnit() ==
-                          eCSSUnit_Enumerated,
-                        nsPrintfCString("Invalid animation-direction unit %d",
-                                        animDirection.list->mValue.GetUnit()).get());
+      MOZ_ASSERT(animDirection.list->mValue.GetUnit() == eCSSUnit_Enumerated,
+                 "Invalid animation-direction unit");
 
       animation->SetDirection(animDirection.list->mValue.GetIntValue());
     }
@@ -5168,10 +5161,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                animFillMode.unit == eCSSUnit_Unset) {
       animation->SetFillMode(NS_STYLE_ANIMATION_FILL_MODE_NONE);
     } else if (animFillMode.list) {
-      NS_ABORT_IF_FALSE(animFillMode.list->mValue.GetUnit() ==
-                          eCSSUnit_Enumerated,
-                        nsPrintfCString("Invalid animation-fill-mode unit %d",
-                                        animFillMode.list->mValue.GetUnit()).get());
+      MOZ_ASSERT(animFillMode.list->mValue.GetUnit() == eCSSUnit_Enumerated,
+                 "Invalid animation-fill-mode unit");
 
       animation->SetFillMode(animFillMode.list->mValue.GetIntValue());
     }
@@ -5188,10 +5179,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                animPlayState.unit == eCSSUnit_Unset) {
       animation->SetPlayState(NS_STYLE_ANIMATION_PLAY_STATE_RUNNING);
     } else if (animPlayState.list) {
-      NS_ABORT_IF_FALSE(animPlayState.list->mValue.GetUnit() ==
-                          eCSSUnit_Enumerated,
-                        nsPrintfCString("Invalid animation-play-state unit %d",
-                                        animPlayState.list->mValue.GetUnit()).get());
+      MOZ_ASSERT(animPlayState.list->mValue.GetUnit() == eCSSUnit_Enumerated,
+                 "Invalid animation-play-state unit");
 
       animation->SetPlayState(animPlayState.list->mValue.GetIntValue());
     }
@@ -6217,9 +6206,7 @@ SetBackgroundList(nsStyleContext* aStyleContext,
   }
 
   default:
-    NS_ABORT_IF_FALSE(false,
-                      nsPrintfCString("unexpected unit %d",
-                                      aValue.GetUnit()).get());
+    MOZ_ASSERT(false, "unexpected unit");
   }
 
   if (aItemCount > aMaxItemCount)
@@ -6288,9 +6275,7 @@ SetBackgroundPairList(nsStyleContext* aStyleContext,
   }
 
   default:
-    NS_ABORT_IF_FALSE(false,
-                      nsPrintfCString("unexpected unit %d",
-                                      aValue.GetUnit()).get());
+    MOZ_ASSERT(false, "unexpected unit");
   }
 
   if (aItemCount > aMaxItemCount)
@@ -6585,9 +6570,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
     break;
 
   default:
-    NS_ABORT_IF_FALSE(false,
-                      nsPrintfCString("unrecognized shadow unit %d",
-                                      boxShadowValue->GetUnit()).get());
+    MOZ_ASSERT(false, "unrecognized shadow unit");
   }
 
   // border-width, border-*-width: length, enum, inherit
@@ -7927,9 +7910,7 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
   }
 
   default:
-    NS_ABORT_IF_FALSE(false,
-                      nsPrintfCString("unrecognized content unit %d",
-                                      contentValue->GetUnit()).get());
+    MOZ_ASSERT(false, "unrecognized content unit");
   }
 
   // counter-increment: [string [int]]+, none, inherit
