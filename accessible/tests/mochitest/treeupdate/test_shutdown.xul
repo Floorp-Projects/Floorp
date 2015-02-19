@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL tree hierarchy tests">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../treeview.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    function setXULTreeView(aTreeID, aTreeView)
+    {
+      this.treeNode = getNode(aTreeID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.treeNode)
+      ];
+
+      this.invoke = function loadXULTree_invoke()
+      {
+        this.treeNode.view = aTreeView;
+      };
+
+      this.getID = function loadXULTree_getID()
+      {
+        return "Load XUL tree " + prettyName(aTreeID);
+      };
+    }
+
+    function removeTree(aID)
+    {
+      this.tree = getAccessible(aID);
+      this.lastItem = null;
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, document)
+      ];
+
+      this.invoke = function invoke()
+      {
+        this.lastItem = getAccessible(aID).lastChild;
+        this.lastCell = this.lastItem.lastChild;
+        getNode(aID).parentNode.removeChild(getNode(aID));
+      };
+
+      this.check = function check(aEvent)
+      {
+        testIsDefunct(this.tree, aID);
+        testIsDefunct(this.lastItem, "last item of " + aID);
+        if (this.lastCell) {
+          testIsDefunct(this.lastCell, "last item cell of " + aID);
+        }
+      };
+
+      this.getID = function getID()
+      {
+        return "Remove tree from DOM";
+      };
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    // gA11yEventDumpID = "debug";
+    var gQueue = null;
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new setXULTreeView("tree", new nsTreeTreeView()));
+      gQueue.push(new removeTree("tree"));
+
+      gQueue.push(new setXULTreeView("treetable", new nsTreeTreeView()));
+      gQueue.push(new removeTree("treetable"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=503727"
+         title="Reorganize implementation of XUL tree accessibility">
+        Bug 503727
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <tree id="tree" flex="1">
+        <treecols>
+          <treecol id="col" flex="1" primary="true" label="column"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+
+      <tree id="treetable" flex="1">
+        <treecols>
+          <treecol id="col1" flex="1" primary="true" label="column"/>
+          <treecol id="col2" flex="1" label="column 2"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+    </vbox>
+  </hbox>
+
+</window>
