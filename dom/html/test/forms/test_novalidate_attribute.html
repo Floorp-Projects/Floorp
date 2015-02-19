@@ -48,7 +48,8 @@ document.forms[1].addEventListener("submit", function(aEvent) {
   aEvent.target.removeEventListener("submit", arguments.callee, false);
   ok(true, "novalidate has been correctly used for second form");
   var c = document.getElementById('c');
-  c.focus(); synthesizeKey("VK_RETURN", {type: "keypress"});
+  c.focus();
+  synthesizeKey("KEY_Enter", { code: "Enter" });
 }, false);
 
 document.forms[2].addEventListener("submit", function(aEvent) {

@@ -139,10 +139,7 @@ function startTests()
 
     clear();
     synthesizeKey("a", { type: "keydown" });
-    checkKeyEvents(true, false, false, false, "a keydown");
-    clear();
-    synthesizeKey("a", { type: "keypress" });
-    checkKeyEvents(false, true, false, true, "a keypress");
+    checkKeyEvents(true, true, false, true, "a keydown and a keypress");
     is(textarea.value, "a", "textarea value isn't 'a'");
     clear();
     synthesizeKey("a", { type: "keyup" });
