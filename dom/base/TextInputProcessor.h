@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_textinputprocessor_h_
 #define mozilla_dom_textinputprocessor_h_
 
+#include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "nsAutoPtr.h"
@@ -41,18 +42,72 @@ protected:
   virtual ~TextInputProcessor();
 
 private:
+  bool IsComposing() const;
   nsresult BeginInputTransactionInternal(
              nsIDOMWindow* aWindow,
              nsITextInputProcessorCallback* aCallback,
              bool aForTests,
              bool& aSucceeded);
-  nsresult CommitCompositionInternal(const nsAString* aCommitString = nullptr,
-                                     bool* aSucceeded = nullptr);
-  nsresult CancelCompositionInternal();
+  nsresult CommitCompositionInternal(
+             const WidgetKeyboardEvent* aKeyboardEvent = nullptr,
+             uint32_t aKeyFlags = 0,
+             const nsAString* aCommitString = nullptr,
+             bool* aSucceeded = nullptr);
+  nsresult CancelCompositionInternal(
+             const WidgetKeyboardEvent* aKeyboardEvent = nullptr,
+             uint32_t aKeyFlags = 0);
+  nsresult KeydownInternal(const WidgetKeyboardEvent& aKeyboardEvent,
+                           uint32_t aKeyFlags,
+                           bool aAllowToDispatchKeypress,
+                           bool& aDoDefault);
+  nsresult KeyupInternal(const WidgetKeyboardEvent& aKeyboardEvent,
+                         uint32_t aKeyFlags,
+                         bool& aDoDefault);
   nsresult IsValidStateForComposition();
   void UnlinkFromTextEventDispatcher();
   nsresult PrepareKeyboardEventToDispatch(WidgetKeyboardEvent& aKeyboardEvent,
                                           uint32_t aKeyFlags);
+  bool IsValidEventTypeForComposition(
+         const WidgetKeyboardEvent& aKeyboardEvent) const;
+  nsresult PrepareKeyboardEventForComposition(
+             nsIDOMKeyEvent* aDOMKeyEvent,
+             uint32_t& aKeyFlags,
+             uint8_t aOptionalArgc,
+             WidgetKeyboardEvent*& aKeyboardEvent);
+
+  struct EventDispatcherResult
+  {
+    nsresult mResult;
+    bool     mDoDefault;
+    bool     mCanContinue;
+
+    EventDispatcherResult()
+      : mResult(NS_OK)
+      , mDoDefault(true)
+      , mCanContinue(true)
+    {
+    }
+  };
+  EventDispatcherResult MaybeDispatchKeydownForComposition(
+                          const WidgetKeyboardEvent* aKeyboardEvent,
+                          uint32_t aKeyFlags);
+  EventDispatcherResult MaybeDispatchKeyupForComposition(
+                          const WidgetKeyboardEvent* aKeyboardEvent,
+                          uint32_t aKeyFlags);
+
+  /**
+   * AutoPendingCompositionResetter guarantees to clear all pending composition
+   * data in its destructor.
+   */
+  class MOZ_STACK_CLASS AutoPendingCompositionResetter
+  {
+  public:
+    explicit AutoPendingCompositionResetter(TextInputProcessor* aTIP);
+    ~AutoPendingCompositionResetter();
+
+  private:
+    nsRefPtr<TextInputProcessor> mTIP;
+  };
 
   /**
    * TextInputProcessor manages modifier state both with .key and .code.

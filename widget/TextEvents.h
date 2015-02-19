@@ -188,6 +188,11 @@ public:
     GetDOMCodeName(mCodeNameIndex, aCodeName);
   }
 
+  bool IsModifierKeyEvent() const
+  {
+    return GetModifierForKeyName(mKeyNameIndex) != MODIFIER_NONE;
+  }
+
   static void Shutdown();
 
   /**

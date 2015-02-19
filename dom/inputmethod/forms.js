@@ -1307,7 +1307,7 @@ let CompositionManager =  {
     if (!this._isStarted) {
       return;
     }
-    this._textInputProcessor.commitComposition(text ? text : "");
+    this._textInputProcessor.commitComposition(null, 0, text ? text : "");
     this._isStarted = false;
   },
 
