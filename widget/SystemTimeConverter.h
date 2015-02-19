@@ -35,14 +35,14 @@ public:
     static_assert(!IsSigned<Time>::value, "Expected Time to be unsigned");
   }
 
-  template <typename GetCurrentTimeFunc>
+  template <typename CurrentTimeGetter>
   mozilla::TimeStamp
   GetTimeStampFromSystemTime(Time aTime,
-                             GetCurrentTimeFunc aGetCurrentTimeFunc) {
+                             CurrentTimeGetter& aCurrentTimeGetter) {
     // If the reference time is not set, use the current time value to fill
     // it in.
     if (mReferenceTimeStamp.IsNull()) {
-      UpdateReferenceTime(aTime, aGetCurrentTimeFunc);
+      UpdateReferenceTime(aTime, aCurrentTimeGetter);
     }
     TimeStamp roughlyNow = TimeStamp::NowLoRes();
 
@@ -63,7 +63,7 @@ public:
     if (timeSinceReference > kTimeHalfRange &&
         roughlyNow - mReferenceTimeStamp <
           TimeDuration::FromMilliseconds(kTimeHalfRange)) {
-      UpdateReferenceTime(aTime, aGetCurrentTimeFunc);
+      UpdateReferenceTime(aTime, aCurrentTimeGetter);
       timeSinceReference = aTime - mReferenceTime;
     }
 
@@ -107,11 +107,12 @@ public:
   }
 
 private:
-  template <typename GetCurrentTimeFunc>
+  template <typename CurrentTimeGetter>
   void
-  UpdateReferenceTime(Time aTime, GetCurrentTimeFunc aGetCurrentTimeFunc) {
+  UpdateReferenceTime(Time aTime,
+                      const CurrentTimeGetter& aCurrentTimeGetter) {
     mReferenceTime = aTime;
-    Time currentTime = aGetCurrentTimeFunc();
+    Time currentTime = aCurrentTimeGetter.GetCurrentTime();
     TimeStamp currentTimeStamp = TimeStamp::Now();
     Time timeSinceReference = currentTime - aTime;
     mReferenceTimeStamp =
