@@ -160,6 +160,14 @@ public:
   }
 
   /**
+   * ClearPendingComposition() makes this instance forget pending composition.
+   */
+  void ClearPendingComposition()
+  {
+    mPendingComposition.Clear();
+  }
+
+  /**
    * @see nsIWidget::NotifyIME()
    */
   nsresult NotifyIME(const IMENotification& aIMENotification);

@@ -28,6 +28,10 @@ interface nsITextInputProcessorCallback;
  *   if (!TIP.beginInputTransaction(window, callback)) {
  *     return; // You failed to get the rights to make composition
  *   }
+ *   // Create a keyboard event if the following compositionc change is caused
+ *   // by a key event.
+ *   var keyEvent =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
  *   // Set new composition string first
  *   TIP.setPendingCompositionString("some-words-are-inputted");
  *   // Set clause information.
@@ -35,13 +39,17 @@ interface nsITextInputProcessorCallback;
  *   // Set caret position, this is optional.
  *   TIP.setCaretInPendingComposition(23);
  *   // Flush the pending composition
- *   if (!TIP.flushPendingComposition()) {
+ *   if (!TIP.flushPendingComposition(keyEvent)) {
  *     // If it returns false, it fails to start composition.
  *     return;
  *   }
  *
  * Example #2 JS-IME can separate composition string to two or more clauses:
  *
+ *   // Create a keyboard event if the following compositionc change is caused
+ *   // by a key event.
+ *   var keyEvent =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
  *   // First, set composition string again
  *   TIP.setPendingCompositionString("some-words-are-inputted");
  *   // Then, if "are" is selected to convert, there are 3 clauses:
@@ -52,58 +60,93 @@ interface nsITextInputProcessorCallback;
  *   TIP.setCaretInPendingComposition(11);
  *   // Flush the pending composition.  Note that if there is a composition,
  *   // flushPendingComposition() won't return false.
- *   TIP.flushPendingComposition();
+ *   TIP.flushPendingComposition(keyEvent);
  *
  * Example #3 JS-IME can commit composition with specific string with this:
  *
+ *   // Create a keyboard event if the following compositionc change is caused
+ *   // by a key event.
+ *   var keyEvent1 =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
  *   // First, there is a composition.
  *   TIP.setPendingCompositionString("some-words-directly-inputted");
  *   TIP.appendClauseToPendingComposition(28, TIP.ATTR_RAW_CLAUSE);
- *   TIP.flushPendingComposition();
+ *   TIP.flushPendingComposition(keyEvent1);
+ *   // Create a keyboard event if the following commit composition is caused
+ *   // by a key event.
+ *   var keyEvent2 =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
  *   // This is useful when user selects a commit string from candidate list UI
  *   // which is provided by JS-IME.
- *   TIP.commitComposition("selected-words-from-candidate-list");
+ *   TIP.commitComposition(keyEvent2, "selected-words-from-candidate-list");
  *
  * Example #4 JS-IME can commit composition with the last composition string
  *            without specifying commit string:
  *
+ *   // Create a keyboard event if the following compositionc change is caused
+ *   // by a key event.
+ *   var keyEvent1 =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
  *   // First, there is a composition.
  *   TIP.setPendingCompositionString("some-words-will-be-commited");
  *   TIP.appendClauseToPendingComposition(27, TIP.ATTR_RAW_CLAUSE);
- *   TIP.flushPendingComposition();
+ *   TIP.flushPendingComposition(keyEvent1);
+ *   // Create a keyboard event if the following commit is caused by a key
+ *   // event.
+ *   var keyEvent2 =
+ *     new KeyboardEvent("", { key: "Enter", code: "Enter",
+                               keyCode: KeyboardEvent.DOM_VK_RETURN });
  *   // This is useful when user just type Enter key.
- *   TIP.commitComposition();
+ *   TIP.commitComposition(keyEvent2);
  *
  * Example #5 JS-IME can cancel composition with this:
  *
+ *   // Create a keyboard event if the following composition change is caused
+ *   // by a key event.
+ *   var keyEvent1 =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
  *   // First, there is a composition.
  *   TIP.setPendingCompositionString("some-words-will-be-canceled");
  *   TIP.appendClauseToPendingComposition(27, TIP.ATTR_RAW_CLAUSE);
- *   TIP.flushPendingComposition();
+ *   TIP.flushPendingComposition(keyEvent1);
+ *   // Create a keyboard event if the following canceling composition is
+ *   // caused by a key event.
+ *   var keyEvent2 =
+ *     new KeyboardEvent("", { key: "Escape", code: "Escape",
+                               keyCode: KeyboardEvent.DOM_VK_ESCAPE });
  *   // This is useful when user doesn't want to commit the composition.
  *   // FYI: This is same as TIP.commitComposition("") for now.
- *   TIP.cancelComposition();
+ *   TIP.cancelComposition(keyEvent2);
  *
  * Example #6 JS-IME can insert text only with commitComposition():
  *
+ *   // Create a keyboard event if the following inserting text is caused by a
+ *   // key event.
+ *   var keyEvent1 =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
  *   if (!TIP.beginInputTransaction(window, callback)) {
  *     return; // You failed to get the rights to make composition
  *   }
- *   TIP.commitComposition("Some words");
+ *   TIP.commitComposition(keyEvent1, "Some words");
  *
  * Example #7 JS-IME can start composition explicitly:
  *
  *   if (!TIP.beginInputTransaction(window, callback)) {
  *     return; // You failed to get the rights to make composition
  *   }
+ *   // Create a keyboard event if the following starting composition is caused
+ *   // by a key event.
+ *   var keyEvent1 =
+ *     new KeyboardEvent("", { key: "foo", code: "bar", keyCode: buzz });
  *   // If JS-IME don't want to show composing string in the focused editor,
  *   // JS-IME can dispatch only compositionstart event with this.
- *   if (!TIP.startComposition()) {
+ *   if (!TIP.startComposition(keyEvent1)) {
  *     // Failed to start composition.
  *     return;
  *   }
  *   // And when user selects a result from UI of JS-IME, commit with it.
- *   TIP.commitComposition("selected-words");
+ *   // Then, the key event should be null.
+ *   TIP.commitComposition(null, "selected-words");
  *
  * Example #8 JS-IME or JS-Keyboard should dispatch key events even during
  *            composition (non-printable key case):
@@ -211,9 +254,15 @@ interface nsITextInputProcessorCallback;
  *   TIP.keyup(leftShift);
  */
 
-[scriptable, builtinclass, uuid(bb19b843-dbe2-41c5-8485-794121351d3a)]
+[scriptable, builtinclass, uuid(9c3e5c81-52ca-4087-b708-cbfcbac2a055)]
 interface nsITextInputProcessor : nsISupports
 {
+  /**
+   * Returns true if this instance was dispatched compositionstart but hasn't
+   * dispatched compositionend yet.
+   */
+  readonly attribute boolean hasComposition;
+
   /**
    * When you create an instance, you must call beginInputTransaction() first
    * except when you created the instance for automated tests.
@@ -252,11 +301,18 @@ interface nsITextInputProcessor : nsISupports
    * when compositionstart has already been dispatched, this throws an
    * exception.
    *
+   * @param aKeyboardEvent  Key event which causes starting composition.
+   *                        If its type value is "keydown", this method
+   *                        dispatches only keydown event first.  Otherwise,
+   *                        dispatches keydown first and keyup at last.
+   * @param aKeyFlags       See KEY_* constants.
    * @return                Returns true if composition starts normally.
    *                        Otherwise, returns false because it might be
    *                        canceled by the web application.
    */
-  boolean startComposition();
+  [optional_argc]
+    boolean startComposition([optional] in nsIDOMKeyEvent aKeyboardEvent,
+                             [optional] in unsigned long aKeyFlags);
 
   /**
    * Set new composition string.  Pending composition will be flushed by
@@ -333,13 +389,21 @@ interface nsITextInputProcessor : nsISupports
    * string or caret offset is larger than the composition string length, this
    * throws an exception.
    *
+   * @param aKeyboardEvent  Key event which causes the composition string.
+   *                        If its type value is "keydown", this method
+   *                        dispatches only keydown event first.  Otherwise,
+   *                        dispatches keydown first and keyup at last.
+   * @param aKeyFlags       See KEY_* constants.
    * @return                Returns true if there is a composition already or
    *                        starting composition automatically.
    *                        Otherwise, i.e., if it cannot start composition
    *                        automatically, e.g., canceled by web apps, returns
    *                        false.
    */
-  boolean flushPendingComposition();
+  [optional_argc]
+    boolean flushPendingComposition(
+      [optional] in nsIDOMKeyEvent aKeyboardEvent,
+      [optional] in unsigned long aKeyFlags);
 
   /**
    * commitComposition() will commit composition.
@@ -349,6 +413,11 @@ interface nsITextInputProcessor : nsISupports
    * Note that if you tries to commit composition without specifying commit
    * string when there is no composition, this throws an exception.
    *
+   * @param aKeyboardEvent  Key event which causes the commit composition.
+   *                        If its type value is "keydown", this method
+   *                        dispatches only keydown event first.  Otherwise,
+   *                        dispatches keydown first and keyup at last.
+   * @param aKeyFlags       See KEY_* constants.
    * @param aCommitString   This is optional.  If this is not specified,
    *                        composition will be committed with the last
    *                        composing string.  Otherwise, committed with
@@ -360,7 +429,9 @@ interface nsITextInputProcessor : nsISupports
    *                        false.
    */
   [optional_argc]
-    boolean commitComposition([optional] in DOMString aCommitString);
+    boolean commitComposition([optional] in nsIDOMKeyEvent aKeyboardEvent,
+                              [optional] in unsigned long aKeyFlags,
+                              [optional] in DOMString aCommitString);
 
   /**
    * cancelComposition() will cancel composition.  This is for now the same as
@@ -370,8 +441,16 @@ interface nsITextInputProcessor : nsISupports
    *
    * Note that if you tries to cancel composition when there is no composition,
    * this throws an exception.
+   *
+   * @param aKeyboardEvent  Key event which causes the canceling composition.
+   *                        If its type value is "keydown", this method
+   *                        dispatches only keydown event first.  Otherwise,
+   *                        dispatches keydown first and keyup at last.
+   * @param aKeyFlags       See KEY_* constants.
    */
-  void cancelComposition();
+  [optional_argc]
+    void cancelComposition([optional] in nsIDOMKeyEvent aKeyboardEvent,
+                           [optional] in unsigned long aKeyFlags);
 
   // Specifying KEY_DEFAULT_PREVENTED can dispatch key events whose
   // defaultPrevented are true.  Note that if this is specified, keypress event
