@@ -16,11 +16,6 @@ default-preferences pref(layout.css.ruby.enabled,true)
 == dynamic-removal-2.html dynamic-removal-2-ref.html
 == dynamic-removal-3.html dynamic-removal-3-ref.html
 == float-handling.html float-handling-ref.html
-== inlinize-blocks-1.html inlinize-blocks-1-ref.html
-== inlinize-blocks-2.html inlinize-blocks-2-ref.html
-== inlinize-blocks-3.html inlinize-blocks-3-ref.html
-== inlinize-blocks-4.html inlinize-blocks-4-ref.html
-== inlinize-blocks-5.html inlinize-blocks-5-ref.html
 == intra-level-whitespace-1.html intra-level-whitespace-1-ref.html
 == intra-level-whitespace-2.html intra-level-whitespace-2-ref.html
 == intra-level-whitespace-3.html intra-level-whitespace-3-ref.html
