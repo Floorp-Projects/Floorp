@@ -34,6 +34,9 @@ include images3/reftest.list
 # Multi-column Layout 3
 include multicol3/reftest.list
 
+# Ruby Layout Module
+include ruby/reftest.list
+
 # Selectors Level 3
 # include selectors3/reftest.list
 

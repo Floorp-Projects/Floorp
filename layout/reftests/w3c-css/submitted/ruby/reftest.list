@@ -1,0 +1,5 @@
+# Tests for autohiding base-identical annotations
+== ruby-autohide-001.html ruby-autohide-001-ref.html
+== ruby-autohide-002.html ruby-autohide-002-ref.html
+== ruby-autohide-003.html ruby-autohide-003-ref.html
+
