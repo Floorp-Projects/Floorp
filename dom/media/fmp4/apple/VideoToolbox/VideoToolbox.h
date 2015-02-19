@@ -26,6 +26,7 @@ enum {
   kVTDecodeInfo_FrameDropped = 1UL << 1,
 };
 
+typedef CFTypeRef VTSessionRef;
 typedef struct OpaqueVTDecompressionSession* VTDecompressionSessionRef;
 typedef void (*VTDecompressionOutputCallback)(
     void*,
@@ -68,6 +69,20 @@ VTDecompressionSessionWaitForAsynchronousFrames(
 void
 VTDecompressionSessionInvalidate(
     VTDecompressionSessionRef
+);
+
+OSStatus
+VTSessionCopyProperty(
+    VTSessionRef,
+    CFStringRef,
+    CFAllocatorRef,
+    void*
+);
+
+OSStatus
+VTSessionCopySupportedPropertyDictionary(
+    VTSessionRef,
+    CFDictionaryRef*
 );
 
 #endif // mozilla_VideoToolbox_VideoToolbox_h
