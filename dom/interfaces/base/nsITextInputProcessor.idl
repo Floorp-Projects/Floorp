@@ -224,7 +224,7 @@ interface nsITextInputProcessorCallback;
  *   TIP.keyup(leftShift);
  */
 
-[scriptable, builtinclass, uuid(c8b5d3fb-5bed-4b77-b67f-77aee6ac5081)]
+[scriptable, builtinclass, uuid(bb19b843-dbe2-41c5-8485-794121351d3a)]
 interface nsITextInputProcessor : nsISupports
 {
   /**
@@ -409,6 +409,11 @@ interface nsITextInputProcessor : nsISupports
   // represents non-printable key.  Note that if .keyCode is initialized with
   // non-zero value, this flag causes throwing an exception.
   const unsigned long KEY_KEEP_KEYCODE_ZERO                        = 0x00000010;
+  // If KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT is specified when the key event is
+  // a modifier key's, keydown() and keyup() only modifies its modifier state
+  // without dispatching key events.  This is useful for testing odd behavior
+  // or emulating legacy API behavior.
+  const unsigned long KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT         = 0x00000020;
 
   /**
    * keydown() may dispatch a keydown event and some keypress events if
