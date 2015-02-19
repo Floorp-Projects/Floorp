@@ -228,7 +228,7 @@ nsBinaryOutputStream::WriteWStringZ(const char16_t* aString)
   if (length <= 64) {
     copy = temp;
   } else {
-    copy = reinterpret_cast<char16_t*>(moz_malloc(byteCount));
+    copy = reinterpret_cast<char16_t*>(malloc(byteCount));
     if (!copy) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -237,7 +237,7 @@ nsBinaryOutputStream::WriteWStringZ(const char16_t* aString)
   mozilla::NativeEndian::copyAndSwapToBigEndian(copy, aString, length);
   rv = WriteBytes(reinterpret_cast<const char*>(copy), byteCount);
   if (copy != temp) {
-    moz_free(copy);
+    free(copy);
   }
 #endif
 
@@ -798,18 +798,18 @@ nsBinaryInputStream::ReadBytes(uint32_t aLength, char** aResult)
   uint32_t bytesRead;
   char* s;
 
-  s = reinterpret_cast<char*>(moz_malloc(aLength));
+  s = reinterpret_cast<char*>(malloc(aLength));
   if (!s) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   rv = Read(s, aLength, &bytesRead);
   if (NS_FAILED(rv)) {
-    moz_free(s);
+    free(s);
     return rv;
   }
   if (bytesRead != aLength) {
-    moz_free(s);
+    free(s);
     return NS_ERROR_FAILURE;
   }
 

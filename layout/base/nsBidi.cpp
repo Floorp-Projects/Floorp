@@ -190,7 +190,7 @@ bool nsBidi::GetMemory(void **aMemory, size_t *aSize, bool aMayAllocate, size_t 
     if(!aMayAllocate) {
       return false;
     } else {
-      *aMemory=moz_malloc(aSizeNeeded);
+      *aMemory=malloc(aSizeNeeded);
       if (*aMemory!=nullptr) {
         *aSize=aSizeNeeded;
         return true;
@@ -206,7 +206,7 @@ bool nsBidi::GetMemory(void **aMemory, size_t *aSize, bool aMayAllocate, size_t 
       return false;
     } else if(aSizeNeeded!=*aSize && aMayAllocate) {
       /* we may try to grow or shrink */
-      void *memory=moz_realloc(*aMemory, aSizeNeeded);
+      void *memory=realloc(*aMemory, aSizeNeeded);
 
       if(memory!=nullptr) {
         *aMemory=memory;
@@ -225,11 +225,11 @@ bool nsBidi::GetMemory(void **aMemory, size_t *aSize, bool aMayAllocate, size_t 
 
 void nsBidi::Free()
 {
-  moz_free(mDirPropsMemory);
+  free(mDirPropsMemory);
   mDirPropsMemory = nullptr;
-  moz_free(mLevelsMemory);
+  free(mLevelsMemory);
   mLevelsMemory = nullptr;
-  moz_free(mRunsMemory);
+  free(mRunsMemory);
   mRunsMemory = nullptr;
 }
 
