@@ -28,15 +28,6 @@ class HTMLElement(object):
     Represents a DOM Element.
     """
 
-    CLASS = "class name"
-    SELECTOR = "css selector"
-    ID = "id"
-    NAME = "name"
-    LINK_TEXT = "link text"
-    PARTIAL_LINK_TEXT = "partial link text"
-    TAG = "tag name"
-    XPATH = "xpath"
-
     def __init__(self, marionette, id):
         self.marionette = marionette
         assert(id is not None)
