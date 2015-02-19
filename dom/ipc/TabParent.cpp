@@ -923,6 +923,15 @@ TabParent::UIResolutionChanged()
 }
 
 void
+TabParent::RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
+                            const mozilla::CSSPoint& aDestination)
+{
+  if (!mIsDestroyed) {
+    unused << SendRequestFlingSnap(aScrollId, aDestination);
+  }
+}
+
+void
 TabParent::AcknowledgeScrollUpdate(const ViewID& aScrollId, const uint32_t& aScrollGeneration)
 {
   if (!mIsDestroyed) {
