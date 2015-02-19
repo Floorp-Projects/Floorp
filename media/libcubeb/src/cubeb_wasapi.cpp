@@ -573,6 +573,8 @@ wasapi_stream_render_loop(LPVOID stream)
       break;
     case WAIT_TIMEOUT:
       assert(stm->shutdown_event == wait_array[0]);
+      is_playing = false;
+      hr = -1;
       break;
     default:
       LOG("case %d not handled in render loop.", waitResult);
