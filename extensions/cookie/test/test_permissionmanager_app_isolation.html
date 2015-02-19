@@ -22,25 +22,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758258
 
 var Ci = Components.interfaces;
 var Cc = Components.classes;
-
+var gTestRunner;
 SimpleTest.waitForExplicitFinish();
 
 var permManager = Cc["@mozilla.org/permissionmanager;1"]
                     .getService(Ci.nsIPermissionManager);
 
 const gPermName = 'foobar';
-
-var previousPrefs = {
-  mozBrowserFramesEnabled: undefined,
-};
-
-try {
-  previousPrefs.mozBrowserFramesEnabled = SpecialPowers.getBoolPref('dom.mozBrowserFramesEnabled');
-} catch(e)
-{
-}
-
-SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
 
 // We use http://test/ as url so all apps use the same url and app isolation is
 // more obvious.
@@ -140,11 +128,7 @@ function runTest() {
 
         i++;
         if (i >= gData.length) {
-          if (previousPrefs.mozBrowserFramesEnabled !== undefined) {
-            SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', previousPrefs.mozBrowserFramesEnabled);
-          }
-
-          SimpleTest.finish();
+           SimpleTest.finish();
         } else {
           gTestRunner.next();
         }
@@ -159,9 +143,11 @@ function runTest() {
   }
 }
 
-var gTestRunner = runTest();
-gTestRunner.next();
-
+SpecialPowers.pushPrefEnv({"set":[["dom.mozBrowserFramesEnabled", true]]},
+  function() {
+    gTestRunner = runTest();
+    gTestRunner.next();
+});
 </script>
 </pre>
 </body>

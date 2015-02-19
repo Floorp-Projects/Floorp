@@ -26,13 +26,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=853525
  * ugly rounding errors.
  **/
 SimpleTest.waitForExplicitFinish();
-
-// Turn off spatial navigation because it hijacks arrow keydown events:
-SpecialPowers.setBoolPref("snav.enabled", false);
-
+// Turn off Spatial Navigation because it hijacks arrow keydown events:
 SimpleTest.waitForFocus(function() {
-  test();
-  SimpleTest.finish();
+  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, function() {
+    test();
+    SimpleTest.finish();
+  });
 });
 
 /**

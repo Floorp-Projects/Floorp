@@ -18,15 +18,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
   var gHostedManifestURL = gBaseURL + 'file_app.sjs?apptype=hosted&getmanifest=true';
   var gCachedManifestURL = gBaseURL + 'file_app.sjs?apptype=cached&getmanifest=true';
   var gTrustedManifestURL = gBaseURL + 'file_app.sjs?apptype=trusted&getmanifest=true';
-  var gGenerator = runTest();
-
+  var gGenerator;
   // We need to set the trusted hosted app csp pref since it's only in
   // b2g.js for now.
   function setCSPPrefs() {
-    SpecialPowers.pushPrefEnv({'set':
-      [["security.apps.trusted.CSP.default",
-        "default-src *; object-src 'none'"]]},
-      function() {  gGenerator.next(); });
+    SpecialPowers.pushPrefEnv({'set':[["security.apps.trusted.CSP.default",
+"default-src *; object-src 'none'"], ["dom.mozBrowserFramesEnabled",true]]},
+      function() {  gGenerator = runTest(); gGenerator.next(); });
   }
 
   function go() {
@@ -64,10 +62,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
 
   function runTest() {
     // Set up.
-
     SpecialPowers.setAllAppsLaunchable(true);
-    SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
-
     // Test Bug 927699 - navigator.mozApps.install(url) lets NS_ERROR_FAILURE
     //                   onto the web
     var request = navigator.mozApps.install("");
@@ -324,7 +319,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
   }
 
   function finish() {
-    SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
     SimpleTest.finish();
   }
 

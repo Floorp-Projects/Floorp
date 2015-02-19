@@ -22,9 +22,10 @@ SimpleTest.waitForExplicitFinish();
 
 // Turn off spatial navigation because it hijacks VK_RIGHT and VK_LEFT keydown
 // events.
-SpecialPowers.setBoolPref("snav.enabled", false);
-
 SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, startTest);
+});
+function startTest() {
   function textAreaCtor() {
     return document.createElement("textarea");
   }
@@ -42,7 +43,7 @@ SimpleTest.waitForFocus(function() {
   }
 
   SimpleTest.finish();
-});
+}
 
 function test(ctor) {
   var elem = ctor();
