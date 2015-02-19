@@ -8,12 +8,87 @@
 
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ExtendableEventBinding.h"
+#include "mozilla/dom/FetchEventBinding.h"
 #include "mozilla/dom/InstallEventBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "nsProxyRelease.h"
+
+class nsIInterceptedChannel;
+
+namespace mozilla {
+namespace dom {
+  class Request;
+} // namespace dom
+} // namespace mozilla
 
 BEGIN_WORKERS_NAMESPACE
 
 class ServiceWorker;
+class ServiceWorkerClient;
+
+class FetchEvent MOZ_FINAL : public Event
+{
+  nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
+  nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
+  nsRefPtr<ServiceWorkerClient> mClient;
+  nsRefPtr<Request> mRequest;
+  uint64_t mWindowId;
+  bool mIsReload;
+  bool mWaitToRespond;
+protected:
+  explicit FetchEvent(EventTarget* aOwner);
+  ~FetchEvent();
+
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FetchEvent, Event)
+  NS_FORWARD_TO_EVENT
+
+  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  {
+    return FetchEventBinding::Wrap(aCx, this);
+  }
+
+  void PostInit(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker,
+                uint64_t aWindowId);
+
+  static already_AddRefed<FetchEvent>
+  Constructor(const GlobalObject& aGlobal,
+              const nsAString& aType,
+              const FetchEventInit& aOptions,
+              ErrorResult& aRv);
+
+  bool
+  WaitToRespond() const
+  {
+    return mWaitToRespond;
+  }
+
+  Request*
+  Request_() const
+  {
+    return mRequest;
+  }
+
+  already_AddRefed<ServiceWorkerClient>
+  Client();
+
+  bool
+  IsReload() const
+  {
+    return mIsReload;
+  }
+
+  void
+  RespondWith(Promise& aPromise, ErrorResult& aRv);
+
+  already_AddRefed<Promise>
+  ForwardTo(const nsAString& aUrl);
+
+  already_AddRefed<Promise>
+  Default();
+};
 
 class ExtendableEvent : public Event
 {

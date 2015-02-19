@@ -56,6 +56,111 @@ static_assert(FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE == 250,
 
 }
 
+// A stream listener interposed between the nsInputStreamPump used for intercepted channels
+// and this channel's original listener. This is only used to ensure the original listener
+// sees the channel as the request object, and to synthesize OnStatus and OnProgress notifications.
+class InterceptStreamListener : public nsIStreamListener
+                              , public nsIProgressEventSink
+{
+  nsRefPtr<HttpChannelChild> mOwner;
+  nsCOMPtr<nsISupports> mContext;
+  virtual ~InterceptStreamListener() {}
+ public:
+  InterceptStreamListener(HttpChannelChild* aOwner, nsISupports* aContext)
+  : mOwner(aOwner)
+  , mContext(aContext)
+  {
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIPROGRESSEVENTSINK
+
+  void Cleanup();
+};
+
+NS_IMPL_ISUPPORTS(InterceptStreamListener,
+                  nsIStreamListener,
+                  nsIRequestObserver,
+                  nsIProgressEventSink)
+
+NS_IMETHODIMP
+InterceptStreamListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
+{
+  if (mOwner) {
+    mOwner->DoOnStartRequest(mOwner, mContext);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptStreamListener::OnStatus(nsIRequest* aRequest, nsISupports* aContext,
+                                  nsresult status, const char16_t* aStatusArg)
+{
+  if (mOwner) {
+    mOwner->DoOnStatus(mOwner, status);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptStreamListener::OnProgress(nsIRequest* aRequest, nsISupports* aContext,
+                                    int64_t aProgress, int64_t aProgressMax)
+{
+  if (mOwner) {
+    mOwner->DoOnProgress(mOwner, aProgress, aProgressMax);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptStreamListener::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+                                         nsIInputStream* aInputStream, uint64_t aOffset,
+                                         uint32_t aCount)
+{
+  if (!mOwner) {
+    return NS_OK;
+  }
+
+  uint32_t loadFlags;
+  mOwner->GetLoadFlags(&loadFlags);
+
+  if (!(loadFlags & HttpBaseChannel::LOAD_BACKGROUND)) {
+    nsCOMPtr<nsIURI> uri;
+    mOwner->GetURI(getter_AddRefs(uri));
+
+    nsAutoCString host;
+    uri->GetHost(host);
+
+    OnStatus(mOwner, aContext, NS_NET_STATUS_READING, NS_ConvertUTF8toUTF16(host).get());
+
+    int64_t progress = aOffset + aCount;
+    OnProgress(mOwner, aContext, progress, mOwner->GetResponseHead()->ContentLength());
+  }
+
+  mOwner->DoOnDataAvailable(mOwner, mContext, aInputStream, aOffset, aCount);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptStreamListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsresult aStatusCode)
+{
+  if (mOwner) {
+    mOwner->DoPreOnStopRequest(aStatusCode);
+    mOwner->DoOnStopRequest(mOwner, mContext);
+  }
+  Cleanup();
+  return NS_OK;
+}
+
+void
+InterceptStreamListener::Cleanup()
+{
+  mOwner = nullptr;
+  mContext = nullptr;
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelChild
 //-----------------------------------------------------------------------------
@@ -852,6 +957,10 @@ HttpChannelChild::DoNotifyListenerCleanup()
   LOG(("HttpChannelChild::DoNotifyListenerCleanup [this=%p]\n", this));
   if (mIPCOpen)
     PHttpChannelChild::Send__delete__(this);
+  if (mInterceptListener) {
+    mInterceptListener->Cleanup();
+    mInterceptListener = nullptr;
+  }
 }
 
 class DeleteSelfEvent : public ChannelEvent
@@ -1237,6 +1346,10 @@ HttpChannelChild::Cancel(nsresult status)
     mStatus = status;
     if (RemoteChannelExists())
       SendCancel(status);
+    if (mSynthesizedResponsePump) {
+      mSynthesizedResponsePump->Cancel(status);
+    }
+    mInterceptListener = nullptr;
   }
   return NS_OK;
 }
@@ -1340,89 +1453,6 @@ HttpChannelChild::GetSecurityInfo(nsISupports **aSecurityInfo)
 {
   NS_ENSURE_ARG_POINTER(aSecurityInfo);
   NS_IF_ADDREF(*aSecurityInfo = mSecurityInfo);
-  return NS_OK;
-}
-
-// A stream listener interposed between the nsInputStreamPump used for intercepted channels
-// and this channel's original listener. This is only used to ensure the original listener
-// sees the channel as the request object, and to synthesize OnStatus and OnProgress notifications.
-class InterceptStreamListener : public nsIStreamListener
-                              , public nsIProgressEventSink
-{
-  nsRefPtr<HttpChannelChild> mOwner;
-  nsCOMPtr<nsISupports> mContext;
-  virtual ~InterceptStreamListener() {}
-public:
-  InterceptStreamListener(HttpChannelChild* aOwner, nsISupports* aContext)
-  : mOwner(aOwner)
-  , mContext(aContext)
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIREQUESTOBSERVER
-  NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSIPROGRESSEVENTSINK
-};
-
-NS_IMPL_ISUPPORTS(InterceptStreamListener,
-                  nsIStreamListener,
-                  nsIRequestObserver,
-                  nsIProgressEventSink)
-
-NS_IMETHODIMP
-InterceptStreamListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
-{
-  mOwner->DoOnStartRequest(mOwner, mContext);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptStreamListener::OnStatus(nsIRequest* aRequest, nsISupports* aContext,
-                                  nsresult status, const char16_t* aStatusArg)
-{
-  mOwner->DoOnStatus(mOwner, status);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptStreamListener::OnProgress(nsIRequest* aRequest, nsISupports* aContext,
-                                    int64_t aProgress, int64_t aProgressMax)
-{
-  mOwner->DoOnProgress(mOwner, aProgress, aProgressMax);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptStreamListener::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
-                                         nsIInputStream* aInputStream, uint64_t aOffset,
-                                         uint32_t aCount)
-{
-  uint32_t loadFlags;
-  mOwner->GetLoadFlags(&loadFlags);
-
-  if (!(loadFlags & HttpBaseChannel::LOAD_BACKGROUND)) {
-    nsCOMPtr<nsIURI> uri;
-    mOwner->GetURI(getter_AddRefs(uri));
-
-    nsAutoCString host;
-    uri->GetHost(host);
-
-    OnStatus(mOwner, aContext, NS_NET_STATUS_READING, NS_ConvertUTF8toUTF16(host).get());
-
-    int64_t progress = aOffset + aCount;
-    OnProgress(mOwner, aContext, progress, mOwner->GetResponseHead()->ContentLength());
-  }
-
-  mOwner->DoOnDataAvailable(mOwner, mContext, aInputStream, aOffset, aCount);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptStreamListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsresult aStatusCode)
-{
-  mOwner->DoPreOnStopRequest(aStatusCode);
-  mOwner->DoOnStopRequest(mOwner, mContext);
   return NS_OK;
 }
 
@@ -2043,6 +2073,7 @@ HttpChannelChild::DivertToParent(ChannelDiverterChild **aChild)
 void
 HttpChannelChild::ResetInterception()
 {
+  mInterceptListener->Cleanup();
   mInterceptListener = nullptr;
 
   // Continue with the original cross-process request
@@ -2051,7 +2082,7 @@ HttpChannelChild::ResetInterception()
 }
 
 void
-HttpChannelChild::OverrideWithSynthesizedResponse(nsHttpResponseHead* aResponseHead,
+HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>& aResponseHead,
                                                   nsInputStreamPump* aPump)
 {
   mSynthesizedResponsePump = aPump;
@@ -2062,6 +2093,10 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsHttpResponseHead* aResponseH
   for (uint32_t i = 0; i < mSuspendCount; i++) {
     nsresult rv = mSynthesizedResponsePump->Suspend();
     NS_ENSURE_SUCCESS_VOID(rv);
+  }
+
+  if (mCanceled) {
+    mSynthesizedResponsePump->Cancel(mStatus);
   }
 }
 

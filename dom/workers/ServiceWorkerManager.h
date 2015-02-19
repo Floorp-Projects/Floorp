@@ -399,6 +399,9 @@ private:
   nsresult
   Update(ServiceWorkerRegistrationInfo* aRegistration);
 
+  nsresult
+  GetDocumentRegistration(nsIDocument* aDoc, ServiceWorkerRegistrationInfo** aRegistrationInfo);
+
   NS_IMETHOD
   CreateServiceWorkerForWindow(nsPIDOMWindow* aWindow,
                                const nsACString& aScriptSpec,
