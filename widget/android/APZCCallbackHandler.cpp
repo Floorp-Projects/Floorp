@@ -103,6 +103,13 @@ APZCCallbackHandler::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
 }
 
 void
+APZCCallbackHandler::RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
+                                      const mozilla::CSSPoint& aDestination)
+{
+    APZCCallbackHelper::RequestFlingSnap(aScrollId, aDestination);
+}
+
+void
 APZCCallbackHandler::AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
                                              const uint32_t& aScrollGeneration)
 {

@@ -208,6 +208,13 @@ public:
    */
   enum ScrollMomentum { NOT_MOMENTUM, SYNTHESIZED_MOMENTUM_EVENT };
   /**
+   * When set to ENABLE_SNAP, additional scrolling will be performed after the
+   * scroll operation to maintain the constraints set by CSS Scroll snapping.
+   * The additional scrolling may include asynchronous smooth scrolls that
+   * continue to animate after the initial scroll position has been set.
+   */
+  enum ScrollSnapMode { DISABLE_SNAP, ENABLE_SNAP };
+  /**
    * @note This method might destroy the frame, pres shell and other objects.
    * Clamps aScrollPosition to GetScrollRange and sets the scroll position
    * to that value.
@@ -217,7 +224,8 @@ public:
    * The choosen point will be as close as possible to aScrollPosition.
    */
   virtual void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
-                        const nsRect* aRange = nullptr) = 0;
+                        const nsRect* aRange = nullptr,
+                        ScrollSnapMode aSnap = DISABLE_SNAP) = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * Scrolls to a particular position in integer CSS pixels.
@@ -271,7 +279,27 @@ public:
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
                         nsIntPoint* aOverflow = nullptr,
                         nsIAtom* aOrigin = nullptr,
-                        ScrollMomentum aMomentum = NOT_MOMENTUM) = 0;
+                        ScrollMomentum aMomentum = NOT_MOMENTUM,
+                        ScrollSnapMode aSnap = DISABLE_SNAP) = 0;
+
+  /**
+   * Perform scroll snapping, possibly resulting in a smooth scroll to
+   * maintain the scroll snap position constraints.  A predicted landing
+   * position determined by the APZC is used to select the best matching
+   * snap point, allowing touchscreen fling gestures to navigate between
+   * snap points.
+   * @param aDestination The desired landing position of the fling, which
+   * is used to select the best matching snap point.
+   */
+  virtual void FlingSnap(const mozilla::CSSPoint& aDestination) = 0;
+  /**
+   * Perform scroll snapping, possibly resulting in a smooth scroll to
+   * maintain the scroll snap position constraints.  Velocity sampled from
+   * main thread scrolling is used to determine best matching snap point
+   * when called after a fling gesture on a trackpad or mouse wheel.
+   */
+  virtual void ScrollSnap() = 0;
+
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * This tells the scroll frame to try scrolling to the scroll

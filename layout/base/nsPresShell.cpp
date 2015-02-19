@@ -2392,7 +2392,8 @@ PresShell::ScrollPage(bool aForward)
                           nsIScrollableFrame::PAGES,
                           nsIScrollableFrame::SMOOTH,
                           nullptr, nullptr,
-                          nsIScrollableFrame::NOT_MOMENTUM);
+                          nsIScrollableFrame::NOT_MOMENTUM,
+                          nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -2409,7 +2410,8 @@ PresShell::ScrollLine(bool aForward)
                           nsIScrollableFrame::LINES,
                           nsIScrollableFrame::SMOOTH,
                           nullptr, nullptr,
-                          nsIScrollableFrame::NOT_MOMENTUM);
+                          nsIScrollableFrame::NOT_MOMENTUM,
+                          nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -2426,7 +2428,8 @@ PresShell::ScrollCharacter(bool aRight)
                           nsIScrollableFrame::LINES,
                           nsIScrollableFrame::SMOOTH,
                           nullptr, nullptr,
-                          nsIScrollableFrame::NOT_MOMENTUM);
+                          nsIScrollableFrame::NOT_MOMENTUM,
+                          nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -2441,7 +2444,8 @@ PresShell::CompleteScroll(bool aForward)
                           nsIScrollableFrame::WHOLE,
                           nsIScrollableFrame::SMOOTH,
                           nullptr, nullptr,
-                          nsIScrollableFrame::NOT_MOMENTUM);
+                          nsIScrollableFrame::NOT_MOMENTUM,
+                          nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
