@@ -596,6 +596,38 @@ TextInputProcessor::Keyup(nsIDOMKeyEvent* aDOMKeyEvent,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TextInputProcessor::GetModifierState(const nsAString& aModifierKeyName,
+                                     bool* aActive)
+{
+  MOZ_RELEASE_ASSERT(aActive, "aActive must not be null");
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  if (!mModifierKeyDataArray) {
+    *aActive = false;
+    return NS_OK;
+  }
+  Modifiers activeModifiers = mModifierKeyDataArray->GetActiveModifiers();
+  Modifiers modifier = WidgetInputEvent::GetModifier(aModifierKeyName);
+  *aActive = ((activeModifiers & modifier) != 0);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TextInputProcessor::ShareModifierStateOf(nsITextInputProcessor* aOther)
+{
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  if (!aOther) {
+    mModifierKeyDataArray = nullptr;
+    return NS_OK;
+  }
+  TextInputProcessor* other = static_cast<TextInputProcessor*>(aOther);
+  if (!other->mModifierKeyDataArray) {
+    other->mModifierKeyDataArray = new ModifierKeyDataArray();
+  }
+  mModifierKeyDataArray = other->mModifierKeyDataArray;
+  return NS_OK;
+}
+
 /******************************************************************************
  * TextInputProcessor::ModifierKeyData
  ******************************************************************************/

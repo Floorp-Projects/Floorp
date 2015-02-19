@@ -224,7 +224,7 @@ interface nsITextInputProcessorCallback;
  *   TIP.keyup(leftShift);
  */
 
-[scriptable, builtinclass, uuid(16144d6e-a97a-4733-aa6a-3a1287cfe539)]
+[scriptable, builtinclass, uuid(c8b5d3fb-5bed-4b77-b67f-77aee6ac5081)]
 interface nsITextInputProcessor : nsISupports
 {
   /**
@@ -464,6 +464,28 @@ interface nsITextInputProcessor : nsISupports
   [optional_argc]
     boolean keyup(in nsIDOMKeyEvent aKeyboardEvent,
                   [optional] in unsigned long aKeyFlags);
+
+  /**
+   * getModifierState() returns modifier state managed by this instance.
+   *
+   * @param aModifier       One of modifier key names.  This doesn't support
+   *                        virtual modifiers like "Accel".
+   * @return                true if the modifier key is active.  Otherwise,
+   *                        false.
+   */
+  boolean getModifierState(in DOMString aModifierKey);
+
+  /**
+   * shareModifierStateOf() makes the instance shares modifier state of
+   * another instance.  When this is called, the instance refers the modifier
+   * state of another instance.  After that, changes to either this and the
+   * other instance's modifier state is synchronized.
+   *
+   * @param aOther          Another instance which will be referred by the
+   *                        instance.  If this is null, the instance restarts
+   *                        to manage modifier state independently.
+   */
+  void shareModifierStateOf(in nsITextInputProcessor aOther);
 };
 
 %{C++

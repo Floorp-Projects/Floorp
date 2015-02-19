@@ -8,6 +8,7 @@
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcherListener.h"
+#include "nsAutoPtr.h"
 #include "nsITextInputProcessor.h"
 #include "nsITextInputProcessorCallback.h"
 #include "nsTArray.h"
@@ -78,33 +79,51 @@ private:
 
   class ModifierKeyDataArray : public nsTArray<ModifierKeyData>
   {
+    NS_INLINE_DECL_REFCOUNTING(ModifierKeyDataArray)
+
   public:
     Modifiers GetActiveModifiers() const;
     void ActivateModifierKey(const ModifierKeyData& aModifierKeyData);
     void InactivateModifierKey(const ModifierKeyData& aModifierKeyData);
     void ToggleModifierKey(const ModifierKeyData& aModifierKeyData);
+
+  private:
+    virtual ~ModifierKeyDataArray() { }
   };
 
   Modifiers GetActiveModifiers() const
   {
-    return mModifierKeyDataArray.GetActiveModifiers();
+    return mModifierKeyDataArray ?
+      mModifierKeyDataArray->GetActiveModifiers() : 0;
+  }
+  void EnsureModifierKeyDataArray()
+  {
+    if (mModifierKeyDataArray) {
+      return;
+    }
+    mModifierKeyDataArray = new ModifierKeyDataArray();
   }
   void ActivateModifierKey(const ModifierKeyData& aModifierKeyData)
   {
-    mModifierKeyDataArray.ActivateModifierKey(aModifierKeyData);
+    EnsureModifierKeyDataArray();
+    mModifierKeyDataArray->ActivateModifierKey(aModifierKeyData);
   }
   void InactivateModifierKey(const ModifierKeyData& aModifierKeyData)
   {
-    mModifierKeyDataArray.InactivateModifierKey(aModifierKeyData);
+    if (!mModifierKeyDataArray) {
+      return;
+    }
+    mModifierKeyDataArray->InactivateModifierKey(aModifierKeyData);
   }
   void ToggleModifierKey(const ModifierKeyData& aModifierKeyData)
   {
-    mModifierKeyDataArray.ToggleModifierKey(aModifierKeyData);
+    EnsureModifierKeyDataArray();
+    mModifierKeyDataArray->ToggleModifierKey(aModifierKeyData);
   }
 
   TextEventDispatcher* mDispatcher; // [Weak]
   nsCOMPtr<nsITextInputProcessorCallback> mCallback;
-  ModifierKeyDataArray mModifierKeyDataArray;
+  nsRefPtr<ModifierKeyDataArray> mModifierKeyDataArray;
 
   bool mForTests;
 };
