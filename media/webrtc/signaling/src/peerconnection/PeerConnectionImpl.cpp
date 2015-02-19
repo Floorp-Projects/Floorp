@@ -200,11 +200,14 @@ public:
       return;
     }
 
+    CSFLogInfo(logTag, "Returning success for OnAddStream()");
+    // We are running on main thread here so we shouldn't have a race
+    // on this callback
+
     nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
     aStream->GetTracks(tracks);
 
-    std::string streamId = PeerConnectionImpl::GetStreamId(*aStream);
-    bool notifyStream = true;
+    bool newStream = true;
 
     for (size_t i = 0; i < tracks.Length(); i++) {
       std::string trackId;
@@ -212,7 +215,7 @@ public:
       // track. It would be nice if we could specify this along with the numeric
       // track id from the start, but we're stuck doing this fixup after the
       // fact.
-      nsresult rv = wrapper.impl()->GetRemoteTrackId(streamId,
+      nsresult rv = wrapper.impl()->GetRemoteTrackId(aStream,
                                                      tracks[i]->GetTrackID(),
                                                      &trackId);
 
@@ -229,15 +232,16 @@ public:
 
       if (origTrackId == trackId) {
         // Pre-existing track
-        notifyStream = false;
+        newStream = false;
         continue;
       }
 
       tracks[i]->AssignId(NS_ConvertUTF8toUTF16(trackId.c_str()));
 
       JSErrorResult jrv;
-      CSFLogInfo(logTag, "Calling OnAddTrack(%s)", trackId.c_str());
       mObserver->OnAddTrack(*tracks[i], jrv);
+      CSFLogInfo(logTag, "Calling OnAddTrack(%s)",
+                         PeerConnectionImpl::GetTrackId(*tracks[i]).c_str());
       if (jrv.Failed()) {
         CSFLogError(logTag, ": OnAddTrack(%u) failed! Error: %u",
                     static_cast<unsigned>(i),
@@ -245,14 +249,14 @@ public:
       }
     }
 
-    if (notifyStream) {
+    if (newStream) {
       // Start currentTime from the point where this stream was successfully
       // returned.
       aStream->SetLogicalStreamStartTime(
           aStream->GetStream()->GetCurrentTime());
 
       JSErrorResult rv;
-      CSFLogInfo(logTag, "Calling OnAddStream(%s)", streamId.c_str());
+      CSFLogInfo(logTag, "Calling OnAddStream");
       mObserver->OnAddStream(*aStream, rv);
       if (rv.Failed()) {
         CSFLogError(logTag, ": OnAddStream() failed! Error: %u",
@@ -1659,12 +1663,6 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
           return NS_OK;
         }
         CSFLogDebug(logTag, "Added remote stream %s", info->GetId().c_str());
-
-#ifdef MOZILLA_INTERNAL_API
-        info->GetMediaStream()->AssignId(NS_ConvertUTF8toUTF16(streamId.c_str()));
-#else
-        info->GetMediaStream()->AssignId((streamId));
-#endif
       }
 
       size_t numNewAudioTracks = 0;
@@ -1931,7 +1929,7 @@ PeerConnectionImpl::PrincipalChanged(DOMMediaStream* aMediaStream) {
 
 #ifdef MOZILLA_INTERNAL_API
 nsresult
-PeerConnectionImpl::GetRemoteTrackId(const std::string streamId,
+PeerConnectionImpl::GetRemoteTrackId(DOMMediaStream* mediaStream,
                                      TrackID numericTrackId,
                                      std::string* trackId) const
 {
@@ -1939,7 +1937,7 @@ PeerConnectionImpl::GetRemoteTrackId(const std::string streamId,
     return NS_ERROR_UNEXPECTED;
   }
 
-  return mMedia->GetRemoteTrackId(streamId, numericTrackId, trackId);
+  return mMedia->GetRemoteTrackId(mediaStream, numericTrackId, trackId);
 }
 #endif
 
@@ -1952,18 +1950,6 @@ PeerConnectionImpl::GetTrackId(const MediaStreamTrack& aTrack)
   return NS_ConvertUTF16toUTF8(wideTrackId).get();
 #else
   return aTrack.GetId();
-#endif
-}
-
-std::string
-PeerConnectionImpl::GetStreamId(const DOMMediaStream& aStream)
-{
-#ifdef MOZILLA_INTERNAL_API
-  nsString wideStreamId;
-  aStream.GetId(wideStreamId);
-  return NS_ConvertUTF16toUTF8(wideStreamId).get();
-#else
-  return aStream.GetId();
 #endif
 }
 
@@ -1990,9 +1976,10 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
   }
   uint32_t num = mMedia->LocalStreamsLength();
 
-  std::string streamId = PeerConnectionImpl::GetStreamId(aMediaStream);
+  std::string streamId;
   std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
-  nsresult res = mMedia->AddTrack(&aMediaStream, streamId, trackId);
+  // TODO(bug 1089798): streamId should really come from the MS.
+  nsresult res = mMedia->AddTrack(&aMediaStream, &streamId, trackId);
   if (NS_FAILED(res)) {
     return res;
   }
@@ -2056,8 +2043,8 @@ PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  std::string streamId = PeerConnectionImpl::GetStreamId(*stream);
-  nsRefPtr<LocalSourceStreamInfo> info = media()->GetLocalStreamById(streamId);
+  nsRefPtr<LocalSourceStreamInfo> info =
+    media()->GetLocalStreamByDomStream(*stream);
 
   if (!info) {
     CSFLogError(logTag, "%s: Unknown stream", __FUNCTION__);
@@ -2127,8 +2114,8 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
   //  TrackID thisID = aThisTrack.GetTrackID();
   //
 
-  std::string streamId = PeerConnectionImpl::GetStreamId(aStream);
-  nsRefPtr<LocalSourceStreamInfo> info = media()->GetLocalStreamById(streamId);
+  nsRefPtr<LocalSourceStreamInfo> info =
+    media()->GetLocalStreamByDomStream(aStream);
 
   if (!info || !info->HasTrack(origTrackId)) {
     CSFLogError(logTag, "Track to replace (%s) was never added",
