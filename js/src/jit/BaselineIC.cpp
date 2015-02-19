@@ -3119,29 +3119,19 @@ GetDOMProxyProto(JSObject *obj)
     return obj->getTaggedProto().toObjectOrNull();
 }
 
+// Callers are expected to have already guarded on the shape of the
+// object, which guarantees the object is a DOM proxy.
 static void
-GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, Register object,
-                       Address checkProxyHandlerAddr,
-                       Address *checkExpandoShapeAddr,
-                       Address *expandoAndGenerationAddr,
-                       Address *generationAddr,
-                       Register scratch,
-                       GeneralRegisterSet &domProxyRegSet,
-                       Label *checkFailed)
+CheckDOMProxyExpandoDoesNotShadow(JSContext *cx, MacroAssembler &masm, Register object,
+                                  const Address &checkExpandoShapeAddr,
+                                  Address *expandoAndGenerationAddr,
+                                  Address *generationAddr,
+                                  Register scratch,
+                                  GeneralRegisterSet &domProxyRegSet,
+                                  Label *checkFailed)
 {
-    // Guard the following:
-    //      1. The object is a DOMProxy.
-    //      2. The object does not have expando properties, or has an expando
-    //          which is known to not have the desired property.
-    Address handlerAddr(object, ProxyObject::offsetOfHandler());
-
-    // Check that object is a DOMProxy.
-    masm.loadPtr(checkProxyHandlerAddr, scratch);
-    masm.branchPtr(Assembler::NotEqual, handlerAddr, scratch, checkFailed);
-
-    // At this point, if not checking for an expando object, just return.
-    if (!checkExpandoShapeAddr)
-        return;
+    // Guard that the object does not have expando properties, or has an expando
+    // which is known to not have the desired property.
 
     // For the remaining code, we need to reserve some registers to load a value.
     // This is ugly, but unavoidable.
@@ -3178,7 +3168,7 @@ GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, Register object,
     // The reference object used to generate this check may not have had an
     // expando object at all, in which case the presence of a non-undefined
     // expando value in the incoming object is automatically a failure.
-    masm.loadPtr(*checkExpandoShapeAddr, scratch);
+    masm.loadPtr(checkExpandoShapeAddr, scratch);
     masm.branchPtr(Assembler::Equal, scratch, ImmPtr(nullptr), &failDOMProxyCheck);
 
     // Otherwise, ensure that the incoming object has an object for its expando value and that
@@ -7568,17 +7558,16 @@ ICGetPropCallDOMProxyNativeCompiler::generateStubCode(MacroAssembler &masm,
     masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallDOMProxyNative::offsetOfShape()), scratch);
     masm.branchTestObjShape(Assembler::NotEqual, objReg, scratch, &failure);
 
-    // Guard for ListObject.
+    // Guard that our expando object hasn't started shadowing this property.
     {
         GeneralRegisterSet domProxyRegSet(GeneralRegisterSet::All());
         domProxyRegSet.take(BaselineStubReg);
         domProxyRegSet.take(objReg);
         domProxyRegSet.take(scratch);
         Address expandoShapeAddr(BaselineStubReg, ICGetProp_CallDOMProxyNative::offsetOfExpandoShape());
-        GenerateDOMProxyChecks(
+        CheckDOMProxyExpandoDoesNotShadow(
                 cx, masm, objReg,
-                Address(BaselineStubReg, ICGetProp_CallDOMProxyNative::offsetOfProxyHandler()),
-                &expandoShapeAddr, expandoAndGenerationAddr, generationAddr,
+                expandoShapeAddr, expandoAndGenerationAddr, generationAddr,
                 scratch,
                 domProxyRegSet,
                 &failure);
@@ -7660,12 +7649,12 @@ ICGetPropCallDOMProxyNativeCompiler::getStub(ICStubSpace *space)
 
     if (kind == ICStub::GetProp_CallDOMProxyNative) {
         return ICStub::New<ICGetProp_CallDOMProxyNative>(
-            space, getStubCode(), firstMonitorStub_, shape, proxy_->handler(),
+            space, getStubCode(), firstMonitorStub_, shape,
             expandoShape, holder_, holderShape, getter_, pcOffset_);
     }
 
     return ICStub::New<ICGetProp_CallDOMProxyWithGenerationNative>(
-        space, getStubCode(), firstMonitorStub_, shape, proxy_->handler(),
+        space, getStubCode(), firstMonitorStub_, shape,
         expandoAndGeneration, generation, expandoShape, holder_, holderShape, getter_,
         pcOffset_);
 }
@@ -7710,22 +7699,8 @@ ICGetProp_DOMProxyShadowed::Compiler::generateStubCode(MacroAssembler &masm)
     masm.loadPtr(Address(BaselineStubReg, ICGetProp_DOMProxyShadowed::offsetOfShape()), scratch);
     masm.branchTestObjShape(Assembler::NotEqual, objReg, scratch, &failure);
 
-    // Guard for ListObject.
-    {
-        GeneralRegisterSet domProxyRegSet(GeneralRegisterSet::All());
-        domProxyRegSet.take(BaselineStubReg);
-        domProxyRegSet.take(objReg);
-        domProxyRegSet.take(scratch);
-        GenerateDOMProxyChecks(
-                cx, masm, objReg,
-                Address(BaselineStubReg, ICGetProp_DOMProxyShadowed::offsetOfProxyHandler()),
-                /*expandoShapeAddr=*/nullptr,
-                /*expandoAndGenerationAddr=*/nullptr,
-                /*generationAddr=*/nullptr,
-                scratch,
-                domProxyRegSet,
-                &failure);
-    }
+    // No need to do any more guards; it's safe to call ProxyGet even
+    // if we've since stopped shadowing.
 
     // Call ProxyGet(JSContext *cx, HandleObject proxy, HandlePropertyName name, MutableHandleValue vp);
 
@@ -12118,7 +12093,6 @@ ICCall_ScriptedFunCall::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
 ICGetPropCallDOMProxyNativeStub::ICGetPropCallDOMProxyNativeStub(Kind kind, JitCode *stubCode,
                                                                  ICStub *firstMonitorStub,
                                                                  Shape *shape,
-                                                                 const BaseProxyHandler *proxyHandler,
                                                                  Shape *expandoShape,
                                                                  JSObject *holder,
                                                                  Shape *holderShape,
@@ -12127,7 +12101,6 @@ ICGetPropCallDOMProxyNativeStub::ICGetPropCallDOMProxyNativeStub(Kind kind, JitC
 : ICGetPropCallGetter(kind, stubCode, firstMonitorStub, holder, holderShape,
                       getter, pcOffset),
     shape_(shape),
-    proxyHandler_(proxyHandler),
     expandoShape_(expandoShape)
 { }
 
@@ -12155,7 +12128,7 @@ ICGetProp_CallDOMProxyNative::Clone(ICStubSpace *space, ICStub *firstMonitorStub
                                     ICGetProp_CallDOMProxyNative &other)
 {
     return New<ICGetProp_CallDOMProxyNative>(space, other.jitCode(), firstMonitorStub,
-                                             other.shape_, other.proxyHandler_, other.expandoShape_,
+                                             other.shape_, other.expandoShape_,
                                              other.holder_, other.holderShape_, other.getter_,
                                              other.pcOffset_);
 }
@@ -12166,7 +12139,7 @@ ICGetProp_CallDOMProxyWithGenerationNative::Clone(ICStubSpace *space,
                                                   ICGetProp_CallDOMProxyWithGenerationNative &other)
 {
     return New<ICGetProp_CallDOMProxyWithGenerationNative>(space, other.jitCode(), firstMonitorStub,
-                                                           other.shape_, other.proxyHandler_,
+                                                           other.shape_,
                                                            other.expandoAndGeneration_,
                                                            other.generation_,
                                                            other.expandoShape_, other.holder_,
