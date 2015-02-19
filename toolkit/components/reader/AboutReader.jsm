@@ -420,22 +420,13 @@ AboutReader.prototype = {
     this._toolbarElement.classList.toggle("toolbar-hidden");
     this._setSystemUIVisibility(visible);
 
-    if (!visible && !this._hasUsedToolbar) {
-      this._hasUsedToolbar = Services.prefs.getBoolPref("reader.has_used_toolbar");
-      if (!this._hasUsedToolbar) {
-        this._mm.sendAsyncMessage("Reader:ShowToast", { toast: gStrings.GetStringFromName("aboutReader.toolbarTip") });
-        Services.prefs.setBoolPref("reader.has_used_toolbar", true);
-        this._hasUsedToolbar = true;
-      }
+    if (!visible) {
+      this._mm.sendAsyncMessage("Reader:ToolbarHidden");
     }
   },
 
   _toggleToolbarVisibility: function Reader_toggleToolbarVisibility() {
     this._setToolbarVisibility(!this._getToolbarVisibility());
-  },
-
-  _setBrowserToolbarVisiblity: function Reader_setBrowserToolbarVisiblity(visible) {
-    this._mm.sendAsyncMessage("Reader:ToolbarVisibility", { visible: visible });
   },
 
   _setSystemUIVisibility: function Reader_setSystemUIVisibility(visible) {

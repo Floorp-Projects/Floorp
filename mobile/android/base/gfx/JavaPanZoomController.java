@@ -51,10 +51,6 @@ class JavaPanZoomController
     // Animation stops is the velocity is below this threshold when flinging.
     private static final float FLING_STOPPED_THRESHOLD = 0.1f;
 
-    // The distance the user has to pan before we recognize it as such (e.g. to avoid 1-pixel pans
-    // between the touch-down and touch-up of a click). In units of density-independent pixels.
-    public static final float PAN_THRESHOLD = 1/16f * GeckoAppShell.getDpi();
-
     // Angle from axis within which we stay axis-locked
     private static final double AXIS_LOCK_ANGLE = Math.PI / 6.0; // 30 degrees
 
@@ -479,7 +475,7 @@ class JavaPanZoomController
             if (mTarget.getFullScreenState() == FullScreenState.NON_ROOT_ELEMENT && !mSubscroller.scrolling()) {
                 return false;
             }
-            if (panDistance(event) < PAN_THRESHOLD) {
+            if (panDistance(event) < PanZoomController.PAN_THRESHOLD) {
                 return false;
             }
             cancelTouch();

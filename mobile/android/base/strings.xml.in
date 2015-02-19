@@ -38,8 +38,8 @@
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
 
-  <string name="firstrun_welcome_message">&onboard_start_message;</string>
-  <string name="firstrun_welcome_subtext">&onboard_start_subtext;</string>
+  <string name="firstrun_welcome_message">&onboard_start_message2;</string>
+  <string name="firstrun_welcome_subtext">&onboard_start_subtext2;</string>
   <string name="firstrun_welcome_button_account">&onboard_start_button_account;</string>
   <string name="firstrun_welcome_button_browser">&onboard_start_button_browser;</string>
   <string name="firstrun_empty_contentDescription"></string>
@@ -387,6 +387,7 @@
   <string name="remote_tabs_panel_moved_title">&remote_tabs_panel_moved_title;</string>
   <string name="remote_tabs_panel_moved_desc">&remote_tabs_panel_moved_desc;</string>
   <string name="remote_tabs_panel_moved_link">&remote_tabs_panel_moved_link;</string>
+  <string name="remote_tabs_never_synced">&remote_tabs_never_synced;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
   <string name="filepicker_audio_title">&filepicker_audio_title;</string>

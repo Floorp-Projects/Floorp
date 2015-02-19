@@ -33,8 +33,12 @@ add_task(function* () {
   readerButton.click();
   yield promiseTabLoadEvent(tab);
 
-  ok(gBrowser.selectedBrowser.currentURI.spec.startsWith("about:reader"), "about:reader loaded after clicking reader mode button");
+  let readerUrl = gBrowser.selectedBrowser.currentURI.spec;
+  ok(readerUrl.startsWith("about:reader"), "about:reader loaded after clicking reader mode button");
   is_element_visible(readerButton, "Reader mode button is present on about:reader");
+
+  is(gURLBar.value, readerUrl, "gURLBar value is about:reader URL");
+  is(gURLBar.textValue, url.substring("http://".length), "gURLBar is displaying original article URL");
 
   readerButton.click();
   yield promiseTabLoadEvent(tab);

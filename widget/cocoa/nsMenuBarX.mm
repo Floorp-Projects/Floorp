@@ -25,6 +25,9 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIAppStartup.h"
+#include "nsIStringBundle.h"
+#include "nsToolkitCompsCID.h"
 
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
 nsMenuBarX* nsMenuBarX::sLastGeckoMenuBarPainted = nullptr; // Weak
@@ -80,7 +83,9 @@ nsMenuBarX::~nsMenuBarX()
     sPrefItemContent = nullptr;
 
   // make sure we unregister ourselves as a content observer
-  UnregisterForContentChanges(mContent);
+  if (mContent) {
+    UnregisterForContentChanges(mContent);
+  }
 
   // We have to manually clear the array here because clearing causes menu items
   // to call back into the menu bar to unregister themselves. We don't want to
@@ -96,21 +101,24 @@ nsMenuBarX::~nsMenuBarX()
 
 nsresult nsMenuBarX::Create(nsIWidget* aParent, nsIContent* aContent)
 {
-  if (!aParent || !aContent)
+  if (!aParent)
     return NS_ERROR_INVALID_ARG;
 
   mParentWindow = aParent;
   mContent = aContent;
 
-  AquifyMenuBar();
+  if (mContent) {
+    AquifyMenuBar();
 
-  nsresult rv = nsMenuGroupOwnerX::Create(aContent);
-  if (NS_FAILED(rv))
-    return rv;
+    nsresult rv = nsMenuGroupOwnerX::Create(mContent);
+    if (NS_FAILED(rv))
+      return rv;
 
-  RegisterForContentChanges(aContent, this);
-
-  ConstructNativeMenus();
+    RegisterForContentChanges(mContent, this);
+    ConstructNativeMenus();
+  } else {
+    ConstructFallbackNativeMenus();
+  }
 
   // Give this to the parent window. The parent takes ownership.
   static_cast<nsCocoaWindow*>(mParentWindow)->SetMenuBar(this);
@@ -136,6 +144,49 @@ void nsMenuBarX::ConstructNativeMenus()
       }
     }
   }  
+}
+
+void nsMenuBarX::ConstructFallbackNativeMenus()
+{
+  if (sApplicationMenu) {
+    // Menu has already been built.
+    return;
+  }
+
+  nsCOMPtr<nsIStringBundle> stringBundle;
+
+  nsCOMPtr<nsIStringBundleService> bundleSvc = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  bundleSvc->CreateBundle("chrome://global/locale/fallbackMenubar.properties", getter_AddRefs(stringBundle));
+
+  if (!stringBundle) {
+    return;
+  }
+
+  nsXPIDLString labelUTF16;
+  nsXPIDLString keyUTF16;
+
+  const char16_t* labelProp = MOZ_UTF16("quitMenuitem.label");
+  const char16_t* keyProp = MOZ_UTF16("quitMenuitem.key");
+
+  stringBundle->GetStringFromName(labelProp, getter_Copies(labelUTF16));
+  stringBundle->GetStringFromName(keyProp, getter_Copies(keyUTF16));
+
+  NSString* labelStr = [NSString stringWithUTF8String:
+                        NS_ConvertUTF16toUTF8(labelUTF16).get()];
+  NSString* keyStr= [NSString stringWithUTF8String:
+                     NS_ConvertUTF16toUTF8(keyUTF16).get()];
+
+  if (!nsMenuBarX::sNativeEventTarget) {
+    nsMenuBarX::sNativeEventTarget = [[NativeMenuItemTarget alloc] init];
+  }
+
+  sApplicationMenu = [[[[NSApp mainMenu] itemAtIndex:0] submenu] retain];
+  NSMenuItem* quitMenuItem = [[[NSMenuItem alloc] initWithTitle:labelStr
+                                                  action:@selector(menuItemHit:)
+                                                  keyEquivalent:keyStr] autorelease];
+  [quitMenuItem setTarget:nsMenuBarX::sNativeEventTarget];
+  [quitMenuItem setTag:eCommand_ID_Quit];
+  [sApplicationMenu addItem:quitMenuItem];
 }
 
 uint32_t nsMenuBarX::GetMenuCount()
@@ -878,23 +929,25 @@ static BOOL gMenuItemsExecuteCommands = YES;
     return;
   }
 
+  int tag = [sender tag];
+
   if (!gMenuItemsExecuteCommands) {
     return;
   }
 
-  int tag = [sender tag];
-
-  MenuItemInfo* info = [sender representedObject];
-  if (!info)
-    return;
-
-  nsMenuGroupOwnerX* menuGroupOwner = [info menuGroupOwner];
-  if (!menuGroupOwner)
-    return;
-
+  nsMenuGroupOwnerX* menuGroupOwner = nullptr;
   nsMenuBarX* menuBar = nullptr;
-  if (menuGroupOwner->MenuObjectType() == eMenuBarObjectType)
-    menuBar = static_cast<nsMenuBarX*>(menuGroupOwner);
+  MenuItemInfo* info = [sender representedObject];
+
+  if (info) {
+    menuGroupOwner = [info menuGroupOwner];
+    if (!menuGroupOwner) {
+      return;
+    }
+    if (menuGroupOwner->MenuObjectType() == eMenuBarObjectType) {
+      menuBar = static_cast<nsMenuBarX*>(menuGroupOwner);
+    }
+  }
 
   // Do special processing if this is for an app-global command.
   if (tag == eCommand_ID_About) {
@@ -934,7 +987,10 @@ static BOOL gMenuItemsExecuteCommands = YES;
       nsMenuUtilsX::DispatchCommandTo(mostSpecificContent);
     }
     else {
-      [NSApp terminate:nil];
+      nsCOMPtr<nsIAppStartup> appStartup = do_GetService(NS_APPSTARTUP_CONTRACTID);
+      if (appStartup) {
+        appStartup->Quit(nsIAppStartup::eAttemptQuit);
+      }
     }
     return;
   }
