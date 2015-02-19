@@ -165,8 +165,452 @@ function runBeginInputTransactionMethodTests()
   ok(TIP2.beginInputTransactionForTests(window),
      description + "TIP2.beginInputTransactionForTests() should succeed because the composition was already committed #2");
 
-  // Let's check if startComposition() throws an exception after ownership is strolen.
+  // Let's check if beginInputTransaction() fails to steal the rights of TextEventDispatcher during startComposition().
+  var events = [];
+  input.addEventListener("compositionstart", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from compositionstart event handler during TIP1.startComposition();");
+  }, false);
+  TIP1.beginInputTransaction(window, simpleCallback);
+  TIP1.startComposition();
+  is(events.length, 1,
+     description + "compositionstart event should be fired by TIP1.startComposition()");
+  TIP1.cancelComposition();
+
+  // Let's check if beginInputTransaction() fails to steal the rights of TextEventDispatcher during flushPendingComposition().
+  events = [];
+  input.addEventListener("compositionstart", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from compositionstart event handler during a call of TIP1.flushPendingComposition();");
+  }, false);
+  input.addEventListener("compositionupdate", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from compositionupdate event handler during a call of TIP1.flushPendingComposition();");
+  }, false);
+  input.addEventListener("text", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from text event handler during a call of TIP1.flushPendingComposition();");
+  }, false);
+  input.addEventListener("input", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from input event handler during a call of TIP1.flushPendingComposition();");
+  }, false);
+  TIP1.beginInputTransaction(window, simpleCallback);
+  TIP1.setPendingCompositionString(composingStr);
+  TIP1.appendClauseToPendingComposition(composingStr.length, TIP1.ATTR_RAW_CLAUSE);
+  TIP1.flushPendingComposition();
+  is(events.length, 4,
+     description + "compositionstart, compositionupdate, text and input events should be fired by TIP1.flushPendingComposition()");
+  is(events[0].type, "compositionstart",
+     description + "events[0] should be compositionstart");
+  is(events[1].type, "compositionupdate",
+     description + "events[1] should be compositionupdate");
+  is(events[2].type, "text",
+     description + "events[2] should be text");
+  is(events[3].type, "input",
+     description + "events[3] should be input");
+  TIP1.cancelComposition();
+
+  // Let's check if beginInputTransaction() fails to steal the rights of TextEventDispatcher during commitComposition().
+  events = [];
+  TIP1.beginInputTransaction(window, simpleCallback);
+  TIP1.setPendingCompositionString(composingStr);
+  TIP1.appendClauseToPendingComposition(composingStr.length, TIP1.ATTR_RAW_CLAUSE);
+  TIP1.flushPendingComposition();
+  input.addEventListener("text", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from text event handler during a call of TIP1.commitComposition();");
+  }, false);
+  input.addEventListener("compositionend", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from compositionend event handler during a call of TIP1.commitComposition();");
+  }, false);
+  input.addEventListener("input", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from input event handler during a call of TIP1.commitComposition();");
+  }, false);
+  TIP1.commitComposition();
+  is(events.length, 3,
+     description + "text, compositionend and input events should be fired by TIP1.commitComposition()");
+  is(events[0].type, "text",
+     description + "events[0] should be text");
+  is(events[1].type, "compositionend",
+     description + "events[1] should be compositionend");
+  is(events[2].type, "input",
+     description + "events[2] should be input");
+
+  // Let's check if beginInputTransaction() fails to steal the rights of TextEventDispatcher during commitComposition("bar").
+  events = [];
+  input.addEventListener("compositionstart", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from compositionstart event handler during TIP1.commitComposition(\"bar\");");
+  }, false);
+  input.addEventListener("compositionupdate", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction during compositionupdate event handler TIP1.commitComposition(\"bar\");");
+  }, false);
+  input.addEventListener("text", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction during text event handler TIP1.commitComposition(\"bar\");");
+  }, false);
+  input.addEventListener("compositionend", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction during compositionend event handler TIP1.commitComposition(\"bar\");");
+  }, false);
+  input.addEventListener("input", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction during input event handler TIP1.commitComposition(\"bar\");");
+  }, false);
+  TIP1.beginInputTransaction(window, simpleCallback);
+  TIP1.commitComposition("bar");
+  is(events.length, 5,
+     description + "compositionstart, compositionupdate, text, compositionend and input events should be fired by TIP1.commitComposition(\"bar\")");
+  is(events[0].type, "compositionstart",
+     description + "events[0] should be compositionstart");
+  is(events[1].type, "compositionupdate",
+     description + "events[1] should be compositionupdate");
+  is(events[2].type, "text",
+     description + "events[2] should be text");
+  is(events[3].type, "compositionend",
+     description + "events[3] should be compositionend");
+  is(events[4].type, "input",
+     description + "events[4] should be input");
+
+  // Let's check if beginInputTransaction() fails to steal the rights of TextEventDispatcher during cancelComposition().
+  events = [];
+  TIP1.beginInputTransaction(window, simpleCallback);
+  TIP1.setPendingCompositionString(composingStr);
+  TIP1.appendClauseToPendingComposition(composingStr.length, TIP1.ATTR_RAW_CLAUSE);
+  TIP1.flushPendingComposition();
+  input.addEventListener("compositionupdate", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from compositionupdate event handler during a call of TIP1.cancelComposition();");
+  }, false);
+  input.addEventListener("text", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from text event handler during a call of TIP1.cancelComposition();");
+  }, false);
+  input.addEventListener("compositionend", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from compositionend event handler during a call of TIP1.cancelComposition();");
+  }, false);
+  input.addEventListener("input", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from input event handler during a call of TIP1.cancelComposition();");
+  }, false);
+  TIP1.cancelComposition();
+  is(events.length, 4,
+     description + "compositionupdate, text, compositionend and input events should be fired by TIP1.cancelComposition()");
+  is(events[0].type, "compositionupdate",
+     description + "events[0] should be compositionupdate");
+  is(events[1].type, "text",
+     description + "events[1] should be text");
+  is(events[2].type, "compositionend",
+     description + "events[2] should be compositionend");
+  is(events[3].type, "input",
+     description + "events[3] should be input");
+
+  // Let's check if beginInputTransaction() fails to steal the rights of TextEventDispatcher during keydown() and keyup().
+  events = [];
+  TIP1.beginInputTransaction(window, simpleCallback);
+  input.addEventListener("keydown", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from keydown event handler during a call of TIP1.keydown();");
+  }, false);
+  input.addEventListener("keypress", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from keypress event handler during a call of TIP1.keydown();");
+  }, false);
+  input.addEventListener("input", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from input event handler during a call of TIP1.keydown();");
+  }, false);
+  input.addEventListener("keyup", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransaction(window, simpleCallback),
+       description + "TIP2 shouldn't be able to begin input transaction from keyup event handler during a call of TIP1.keyup();");
+  }, false);
+  var keyA = new KeyboardEvent("", { key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A });
+  TIP1.keydown(keyA);
+  TIP1.keyup(keyA);
+  is(events.length, 4,
+     description + "keydown, keypress, input, keyup events should be fired by TIP1.keydown() and TIP1.keyup()");
+  is(events[0].type, "keydown",
+     description + "events[0] should be keydown");
+  is(events[1].type, "keypress",
+     description + "events[1] should be keypress");
+  is(events[2].type, "input",
+     description + "events[2] should be input");
+  is(events[3].type, "keyup",
+     description + "events[3] should be keyup");
+
+  // Let's check if beginInputTransactionForTests() fails to steal the rights of TextEventDispatcher during startComposition().
+  var events = [];
+  input.addEventListener("compositionstart", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from compositionstart event handler during TIP1.startComposition();");
+  }, false);
+  TIP1.beginInputTransactionForTests(window);
+  TIP1.startComposition();
+  is(events.length, 1,
+     description + "compositionstart event should be fired by TIP1.startComposition()");
+  TIP1.cancelComposition();
+
+  // Let's check if beginInputTransactionForTests() fails to steal the rights of TextEventDispatcher during flushPendingComposition().
+  events = [];
+  input.addEventListener("compositionstart", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from compositionstart event handler during a call of TIP1.flushPendingComposition();");
+  }, false);
+  input.addEventListener("compositionupdate", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from compositionupdate event handler during a call of TIP1.flushPendingComposition();");
+  }, false);
+  input.addEventListener("text", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from text event handler during a call of TIP1.flushPendingComposition();");
+  }, false);
+  input.addEventListener("input", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from input event handler during a call of TIP1.flushPendingComposition();");
+  }, false);
+  TIP1.beginInputTransactionForTests(window);
+  TIP1.setPendingCompositionString(composingStr);
+  TIP1.appendClauseToPendingComposition(composingStr.length, TIP1.ATTR_RAW_CLAUSE);
+  TIP1.flushPendingComposition();
+  is(events.length, 4,
+     description + "compositionstart, compositionupdate, text and input events should be fired by TIP1.flushPendingComposition()");
+  is(events[0].type, "compositionstart",
+     description + "events[0] should be compositionstart");
+  is(events[1].type, "compositionupdate",
+     description + "events[1] should be compositionupdate");
+  is(events[2].type, "text",
+     description + "events[2] should be text");
+  is(events[3].type, "input",
+     description + "events[3] should be input");
+  TIP1.cancelComposition();
+
+  // Let's check if beginInputTransactionForTests() fails to steal the rights of TextEventDispatcher during commitComposition().
+  events = [];
+  TIP1.beginInputTransactionForTests(window, simpleCallback);
+  TIP1.setPendingCompositionString(composingStr);
+  TIP1.appendClauseToPendingComposition(composingStr.length, TIP1.ATTR_RAW_CLAUSE);
+  TIP1.flushPendingComposition();
+  input.addEventListener("text", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from text event handler during a call of TIP1.commitComposition();");
+  }, false);
+  input.addEventListener("compositionend", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from compositionend event handler during a call of TIP1.commitComposition();");
+  }, false);
+  input.addEventListener("input", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from input event handler during a call of TIP1.commitComposition();");
+  }, false);
+  TIP1.commitComposition();
+  is(events.length, 3,
+     description + "text, compositionend and input events should be fired by TIP1.commitComposition()");
+  is(events[0].type, "text",
+     description + "events[0] should be text");
+  is(events[1].type, "compositionend",
+     description + "events[1] should be compositionend");
+  is(events[2].type, "input",
+     description + "events[2] should be input");
+
+  // Let's check if beginInputTransactionForTests() fails to steal the rights of TextEventDispatcher during commitComposition("bar").
+  events = [];
+  input.addEventListener("compositionstart", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from compositionstart event handler during TIP1.commitComposition(\"bar\");");
+  }, false);
+  input.addEventListener("compositionupdate", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests during compositionupdate event handler TIP1.commitComposition(\"bar\");");
+  }, false);
+  input.addEventListener("text", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests during text event handler TIP1.commitComposition(\"bar\");");
+  }, false);
+  input.addEventListener("compositionend", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests during compositionend event handler TIP1.commitComposition(\"bar\");");
+  }, false);
+  input.addEventListener("input", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests during input event handler TIP1.commitComposition(\"bar\");");
+  }, false);
+  TIP1.beginInputTransactionForTests(window);
+  TIP1.commitComposition("bar");
+  is(events.length, 5,
+     description + "compositionstart, compositionupdate, text, compositionend and input events should be fired by TIP1.commitComposition(\"bar\")");
+  is(events[0].type, "compositionstart",
+     description + "events[0] should be compositionstart");
+  is(events[1].type, "compositionupdate",
+     description + "events[1] should be compositionupdate");
+  is(events[2].type, "text",
+     description + "events[2] should be text");
+  is(events[3].type, "compositionend",
+     description + "events[3] should be compositionend");
+  is(events[4].type, "input",
+     description + "events[4] should be input");
+
+  // Let's check if beginInputTransactionForTests() fails to steal the rights of TextEventDispatcher during cancelComposition().
+  events = [];
+  TIP1.beginInputTransactionForTests(window, simpleCallback);
+  TIP1.setPendingCompositionString(composingStr);
+  TIP1.appendClauseToPendingComposition(composingStr.length, TIP1.ATTR_RAW_CLAUSE);
+  TIP1.flushPendingComposition();
+  input.addEventListener("compositionupdate", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from compositionupdate event handler during a call of TIP1.cancelComposition();");
+  }, false);
+  input.addEventListener("text", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from text event handler during a call of TIP1.cancelComposition();");
+  }, false);
+  input.addEventListener("compositionend", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from compositionend event handler during a call of TIP1.cancelComposition();");
+  }, false);
+  input.addEventListener("input", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from input event handler during a call of TIP1.cancelComposition();");
+  }, false);
+  TIP1.cancelComposition();
+  is(events.length, 4,
+     description + "compositionupdate, text, compositionend and input events should be fired by TIP1.cancelComposition()");
+  is(events[0].type, "compositionupdate",
+     description + "events[0] should be compositionupdate");
+  is(events[1].type, "text",
+     description + "events[1] should be text");
+  is(events[2].type, "compositionend",
+     description + "events[2] should be compositionend");
+  is(events[3].type, "input",
+     description + "events[3] should be input");
+
+  // Let's check if beginInputTransactionForTests() fails to steal the rights of TextEventDispatcher during keydown() and keyup().
+  events = [];
+  TIP1.beginInputTransactionForTests(window);
+  input.addEventListener("keydown", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests for tests from keydown event handler during a call of TIP1.keydown();");
+  }, false);
+  input.addEventListener("keypress", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from keypress event handler during a call of TIP1.keydown();");
+  }, false);
+  input.addEventListener("input", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from input event handler during a call of TIP1.keydown();");
+  }, false);
+  input.addEventListener("keyup", function (aEvent) {
+    events.push(aEvent);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
+    ok(!TIP2.beginInputTransactionForTests(window),
+       description + "TIP2 shouldn't be able to begin input transaction for tests from keyup event handler during a call of TIP1.keyup();");
+  }, false);
+  var keyA = new KeyboardEvent("", { key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A });
+  TIP1.keydown(keyA);
+  TIP1.keyup(keyA);
+  is(events.length, 4,
+     description + "keydown, keypress, input, keyup events should be fired by TIP1.keydown() and TIP1.keyup()");
+  is(events[0].type, "keydown",
+     description + "events[0] should be keydown");
+  is(events[1].type, "keypress",
+     description + "events[1] should be keypress");
+  is(events[2].type, "input",
+     description + "events[2] should be input");
+  is(events[3].type, "keyup",
+     description + "events[3] should be keyup");
+
+  // Let's check if startComposition() throws an exception after ownership is stolen.
   input.value = "";
+  ok(TIP1.beginInputTransactionForTests(window),
+     description + "TIP1.beginInputTransactionForTests() should succeed because there is no composition");
+  ok(TIP2.beginInputTransactionForTests(window),
+     description + "TIP2.beginInputTransactionForTests() should succeed because there is no composition");
   try {
     TIP1.startComposition();
     ok(false,
