@@ -90,7 +90,8 @@
       }
 
       SpecialPowers.setAllAppsLaunchable(true);
-      SpecialPowers.pushPrefEnv({"set":[["dom.mozBrowserFramesEnabled", true]]}, runTests);
+      SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
+      runTests();
     },
 
     // No confirmation needed when an app is installed

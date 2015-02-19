@@ -5,7 +5,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="loadDeflate()">
+<body onload="testDeflate()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=792831">Mozilla Bug </a>
 <p id="display"></p>
 <div id="content" style="display: none">
@@ -50,6 +50,8 @@ function sendMessage() {
 }
 
 function testDeflate() {
+  SpecialPowers.setBoolPref("network.websocket.extensions.permessage-deflate", tests[testIdx][0]);
+
   ws = new WebSocket(tests[testIdx][2]);
 
   ws.onopen = function(e) {
@@ -87,16 +89,12 @@ function testDeflate() {
       sendText = true;
       testIdx++;
       if (testIdx < tests.length) {
-        loadDeflate();
+        testDeflate();
       } else {
         SimpleTest.finish();
       }
     }
   }
-}
-
-function loadDeflate() {
-  SpecialPowers.pushPrefEnv({"set":[['network.websocket.extensions.permessage-deflate', tests[testIdx][0]]]}, testDeflate);
 }
 
 SimpleTest.waitForExplicitFinish();
