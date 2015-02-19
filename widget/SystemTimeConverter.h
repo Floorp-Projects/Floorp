@@ -8,6 +8,7 @@
 
 #include <limits>
 #include "mozilla/TimeStamp.h"
+#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 
@@ -30,7 +31,9 @@ public:
     , mReferenceTimeStamp() // Initializes to the null timestamp
     , kTimeRange(std::numeric_limits<Time>::max())
     , kTimeHalfRange(kTimeRange / 2)
-  { }
+  {
+    static_assert(!IsSigned<Time>::value, "Expected Time to be unsigned");
+  }
 
   template <typename GetCurrentTimeFunc>
   mozilla::TimeStamp
