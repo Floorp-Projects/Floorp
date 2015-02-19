@@ -214,7 +214,7 @@ public class FaviconView extends ImageView {
     }
 
     public void showDefaultFavicon() {
-        setImageResource(R.drawable.favicon);
+        setImageResource(R.drawable.favicon_globe);
         mDominantColor = 0;
     }
 

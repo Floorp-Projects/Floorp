@@ -4,4 +4,4 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
-        android:src="@null"/>
+        android:src="@drawable/favicon_globe" />

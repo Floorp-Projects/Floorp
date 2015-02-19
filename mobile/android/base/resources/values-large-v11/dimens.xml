@@ -7,6 +7,7 @@
 
     <dimen name="browser_toolbar_height">56dp</dimen>
     <dimen name="browser_toolbar_button_padding">16dp</dimen>
+    <dimen name="browser_toolbar_favicon_size">16dp</dimen>
 
     <dimen name="tabs_counter_size">26sp</dimen>
     <dimen name="panel_grid_view_column_width">200dp</dimen>

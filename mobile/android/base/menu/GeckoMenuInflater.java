@@ -131,22 +131,7 @@ public class GeckoMenuInflater extends MenuInflater {
         item.visible = a.getBoolean(R.styleable.MenuItem_android_visible, true);
         item.enabled = a.getBoolean(R.styleable.MenuItem_android_enabled, true);
         item.hasSubMenu = false;
-
-        // TODO: (bug 1058909) Remove this branch when we remove old tablet. We do this to
-        // avoid using a new menu resource for new tablet.
-        final int iconResID;
-        if (!NewTabletUI.isEnabled(mContext)) {
-            iconResID = a.getResourceId(R.styleable.MenuItem_android_icon, 0);
-        } else {
-            if (item.id == R.id.reload) {
-                iconResID = R.drawable.new_tablet_ic_menu_reload;
-            } else if (HardwareUtils.isLargeTablet() && item.id == R.id.bookmark) {
-                iconResID = R.drawable.new_tablet_ic_menu_bookmark_add;
-            } else {
-                iconResID = a.getResourceId(R.styleable.MenuItem_android_icon, 0);
-            }
-        }
-        item.iconRes = iconResID;
+        item.iconRes = a.getResourceId(R.styleable.MenuItem_android_icon, 0);
 
         if (Versions.feature11Plus) {
             item.showAsAction = a.getInt(R.styleable.MenuItem_android_showAsAction, 0);

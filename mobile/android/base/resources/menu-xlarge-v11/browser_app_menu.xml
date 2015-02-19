@@ -6,7 +6,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:id="@+id/reload"
-          android:icon="@drawable/ic_menu_reload"
+          android:icon="@drawable/new_tablet_ic_menu_reload"
           android:title="@string/reload"
           android:showAsAction="always"/>
 
@@ -21,7 +21,7 @@
           android:visible="false"/>
 
     <item android:id="@+id/bookmark"
-          android:icon="@drawable/ic_menu_bookmark_add"
+          android:icon="@drawable/new_tablet_ic_menu_bookmark_add"
           android:title="@string/bookmark"
           android:showAsAction="always"/>
 

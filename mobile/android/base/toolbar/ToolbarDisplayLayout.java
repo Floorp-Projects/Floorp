@@ -409,7 +409,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
             image = Bitmap.createScaledBitmap(image, mFaviconSize, mFaviconSize, false);
             mFavicon.setImageBitmap(image);
         } else {
-            mFavicon.setImageResource(R.drawable.favicon);
+            mFavicon.setImageResource(R.drawable.favicon_globe);
         }
     }
 
