@@ -6,6 +6,7 @@
 #include "domstubs.idl"
 
 interface nsIDocument;
+interface nsIInterceptedChannel;
 interface nsIPrincipal;
 interface nsIURI;
 
@@ -18,7 +19,7 @@ interface nsIServiceWorkerUnregisterCallback : nsISupports
   [noscript] void UnregisterFailed();
 };
 
-[builtinclass, uuid(861b55e9-d6ac-47cf-a528-8590e9b44de6)]
+[builtinclass, uuid(464882c8-81c0-4620-b9c4-44c12085b65b)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -50,6 +51,15 @@ interface nsIServiceWorkerManager : nsISupports
 
   // Remove ready pending Promise
   void removeReadyPromise(in nsIDOMWindow aWindow);
+
+  // Returns true if a ServiceWorker is available for the scope of aURI.
+  bool isAvailableForURI(in nsIURI aURI);
+
+  // Returns true if a given document is currently controlled by a ServiceWorker
+  bool isControlled(in nsIDocument aDocument);
+
+  // Cause a fetch event to be dispatched to the worker global associated with the given document.
+  void dispatchFetchEvent(in nsIDocument aDoc, in nsIInterceptedChannel aChannel);
 
   // aTarget MUST be a ServiceWorkerRegistration.
   [noscript] void AddRegistrationEventListener(in DOMString aScope, in nsIDOMEventTarget aTarget);

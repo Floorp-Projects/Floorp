@@ -194,7 +194,10 @@ public:
     : mColor(aColor)
   {}
 
-  virtual PatternType GetType() const { return PatternType::COLOR; }
+  virtual PatternType GetType() const MOZ_OVERRIDE
+  {
+    return PatternType::COLOR;
+  }
 
   Color mColor;
 };
@@ -219,7 +222,10 @@ public:
   {
   }
 
-  virtual PatternType GetType() const { return PatternType::LINEAR_GRADIENT; }
+  virtual PatternType GetType() const MOZ_OVERRIDE
+  {
+    return PatternType::LINEAR_GRADIENT;
+  }
 
   Point mBegin;                 //!< Start of the linear gradient
   Point mEnd;                   /**< End of the linear gradient - NOTE: In the case
@@ -256,7 +262,10 @@ public:
   {
   }
 
-  virtual PatternType GetType() const { return PatternType::RADIAL_GRADIENT; }
+  virtual PatternType GetType() const MOZ_OVERRIDE
+  {
+    return PatternType::RADIAL_GRADIENT;
+  }
 
   Point mCenter1; //!< Center of the inner (focal) circle.
   Point mCenter2; //!< Center of the outer circle.
@@ -286,7 +295,10 @@ public:
     , mSamplingRect(aSamplingRect)
   {}
 
-  virtual PatternType GetType() const { return PatternType::SURFACE; }
+  virtual PatternType GetType() const MOZ_OVERRIDE
+  {
+    return PatternType::SURFACE;
+  }
 
   RefPtr<SourceSurface> mSurface; //!< Surface to use for drawing
   ExtendMode mExtendMode;         /**< This determines how the image is extended
@@ -383,7 +395,7 @@ public:
     READ_WRITE
   };
 
-  virtual SurfaceType GetType() const { return SurfaceType::DATA; }
+  virtual SurfaceType GetType() const MOZ_OVERRIDE { return SurfaceType::DATA; }
   /** @deprecated
    * Get the raw bitmap data of the surface.
    * Can return null if there was OOM allocating surface data.
@@ -415,7 +427,7 @@ public:
    * Returns a DataSourceSurface with the same data as this one, but
    * guaranteed to have surface->GetType() == SurfaceType::DATA.
    */
-  virtual TemporaryRef<DataSourceSurface> GetDataSurface();
+  virtual TemporaryRef<DataSourceSurface> GetDataSurface() MOZ_OVERRIDE;
 
 protected:
   bool mIsMapped;

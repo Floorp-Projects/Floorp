@@ -4882,15 +4882,26 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
         tentBSize = nsPresContext::CSSPixelsToAppUnits(150);
       }
 
-      nsSize autoSize =
-        ComputeAutoSizeWithIntrinsicDimensions(minISize, minBSize,
-                                               maxISize, maxBSize,
-                                               tentISize, tentBSize);
-      // The nsSize that ComputeAutoSizeWithIntrinsicDimensions returns will
-      // actually contain logical values if the parameters passed to it were
-      // logical coordinates, so we do NOT perform a physical-to-logical
-      // conversion here, but just assign the fields directly to our result.
-      return LogicalSize(aWM, autoSize.width, autoSize.height);
+      if (aIntrinsicRatio != nsSize(0, 0)) {
+        nsSize autoSize =
+          ComputeAutoSizeWithIntrinsicDimensions(minISize, minBSize,
+                                                 maxISize, maxBSize,
+                                                 tentISize, tentBSize);
+        // The nsSize that ComputeAutoSizeWithIntrinsicDimensions returns will
+        // actually contain logical values if the parameters passed to it were
+        // logical coordinates, so we do NOT perform a physical-to-logical
+        // conversion here, but just assign the fields directly to our result.
+        iSize = autoSize.width;
+        bSize = autoSize.height;
+      } else {
+        // No intrinsic ratio, so just clamp the dimensions
+        // independently without calling
+        // ComputeAutoSizeWithIntrinsicDimensions, which deals with
+        // propagating these changes to the other dimension (and would
+        // be incorrect when there is no intrinsic ratio).
+        iSize = NS_CSS_MINMAX(tentISize, minISize, maxISize);
+        bSize = NS_CSS_MINMAX(tentBSize, minBSize, maxBSize);
+      }
     } else {
 
       // 'auto' iSize, non-'auto' bSize

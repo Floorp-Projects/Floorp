@@ -159,7 +159,7 @@ private:
 
   // Override this channel's pending response with a synthesized one. The content will be
   // asynchronously read from the pump.
-  void OverrideWithSynthesizedResponse(nsHttpResponseHead* aResponseHead, nsInputStreamPump* aPump);
+  void OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>& aResponseHead, nsInputStreamPump* aPump);
 
   RequestHeaderTuples mClientSetRequestHeaders;
   nsCOMPtr<nsIChildChannel> mRedirectChannelChild;

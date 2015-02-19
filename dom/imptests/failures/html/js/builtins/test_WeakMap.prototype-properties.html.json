@@ -2,7 +2,6 @@
   "WeakMap.prototype.clear.length": true,
   "WeakMap.prototype.delete.length": true,
   "WeakMap.prototype.get.length": true,
-  "WeakMap.prototype.get: return undefined": true,
   "WeakMap.prototype.has.length": true,
   "WeakMap.prototype.set.length": true
 }
