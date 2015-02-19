@@ -6462,12 +6462,15 @@ RilObject.prototype[RIL_REQUEST_GPRS_DETACH] = function RIL_REQUEST_GPRS_DETACH(
 RilObject.prototype[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED() {
   let radioState = this.context.Buf.readInt32();
   let newState;
-  if (radioState == RADIO_STATE_UNAVAILABLE) {
-    newState = GECKO_RADIOSTATE_UNKNOWN;
-  } else if (radioState == RADIO_STATE_OFF) {
-    newState = GECKO_RADIOSTATE_DISABLED;
-  } else {
-    newState = GECKO_RADIOSTATE_ENABLED;
+  switch (radioState) {
+    case RADIO_STATE_UNAVAILABLE:
+      newState = GECKO_RADIOSTATE_UNKNOWN;
+      break;
+    case RADIO_STATE_OFF:
+      newState = GECKO_RADIOSTATE_DISABLED;
+      break;
+    default:
+      newState = GECKO_RADIOSTATE_ENABLED;
   }
 
   if (DEBUG) {
@@ -6479,27 +6482,27 @@ RilObject.prototype[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLIC
   }
 
   switch (radioState) {
-  case RADIO_STATE_SIM_READY:
-  case RADIO_STATE_SIM_NOT_READY:
-  case RADIO_STATE_SIM_LOCKED_OR_ABSENT:
-    this._isCdma = false;
-    this._waitingRadioTech = false;
-    break;
-  case RADIO_STATE_RUIM_READY:
-  case RADIO_STATE_RUIM_NOT_READY:
-  case RADIO_STATE_RUIM_LOCKED_OR_ABSENT:
-  case RADIO_STATE_NV_READY:
-  case RADIO_STATE_NV_NOT_READY:
-    this._isCdma = true;
-    this._waitingRadioTech = false;
-    break;
-  case RADIO_STATE_ON: // RIL v7
-    // This value is defined in RIL v7, we will retrieve radio tech by another
-    // request. We leave _isCdma untouched, and it will be set once we get the
-    // radio technology.
-    this._waitingRadioTech = true;
-    this.getVoiceRadioTechnology();
-    break;
+    case RADIO_STATE_SIM_READY:
+    case RADIO_STATE_SIM_NOT_READY:
+    case RADIO_STATE_SIM_LOCKED_OR_ABSENT:
+      this._isCdma = false;
+      this._waitingRadioTech = false;
+      break;
+    case RADIO_STATE_RUIM_READY:
+    case RADIO_STATE_RUIM_NOT_READY:
+    case RADIO_STATE_RUIM_LOCKED_OR_ABSENT:
+    case RADIO_STATE_NV_READY:
+    case RADIO_STATE_NV_NOT_READY:
+      this._isCdma = true;
+      this._waitingRadioTech = false;
+      break;
+    case RADIO_STATE_ON: // RIL v7
+      // This value is defined in RIL v7, we will retrieve radio tech by another
+      // request. We leave _isCdma untouched, and it will be set once we get the
+      // radio technology.
+      this._waitingRadioTech = true;
+      this.getVoiceRadioTechnology();
+      break;
   }
 
   if ((this.radioState == GECKO_RADIOSTATE_UNKNOWN ||
