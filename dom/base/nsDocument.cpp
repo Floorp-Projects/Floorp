@@ -3793,7 +3793,8 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
   }
 
   // Referrer policy spec says to ignore any empty referrer policies.
-  if (aHeaderField == nsGkAtoms::referrer && !aData.IsEmpty()) {
+  // Disabled for now.
+  if (false && aHeaderField == nsGkAtoms::referrer && !aData.IsEmpty()) {
     ReferrerPolicy policy = mozilla::net::ReferrerPolicyFromString(aData);
 
     // Referrer policy spec (section 6.1) says that once the referrer policy
