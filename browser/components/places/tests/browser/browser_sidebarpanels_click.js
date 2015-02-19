@@ -18,7 +18,7 @@ function test() {
   // If a sidebar is already open, close it.
   if (!document.getElementById("sidebar-box").hidden) {
     info("Unexpected sidebar found - a previous test failed to cleanup correctly");
-    SidebarUI.hide();
+    toggleSidebar();
   }
 
   let sidebar = document.getElementById("sidebar");
@@ -76,7 +76,7 @@ function test() {
 
   function testPlacesPanel(preFunc, postFunc) {
     currentTest.init(function() {
-      SidebarUI.show(currentTest.sidebarName);
+      toggleSidebar(currentTest.sidebarName);
     });
 
     sidebar.addEventListener("load", function() {
@@ -95,7 +95,7 @@ function test() {
           aSubject.Dialog.ui.button0.click();
 
           executeSoon(function () {
-              SidebarUI.hide();
+              toggleSidebar(currentTest.sidebarName);
               currentTest.cleanup(postFunc);
             });
         }
