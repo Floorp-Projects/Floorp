@@ -143,6 +143,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
     yieldOffsetList(sc->context),
     typesetCount(0),
     hasSingletons(false),
+    hasTryFinally(false),
     emittingForInit(false),
     emittingRunOnceLambda(false),
     insideEval(insideEval),
@@ -3120,37 +3121,51 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
     if (!EmitTree(cx, bce, body))
         return false;
 
-    // If we fall off the end of a generator, do a final yield.
-    if (bce->sc->isFunctionBox() && bce->sc->asFunctionBox()->isGenerator()) {
-        if (bce->sc->asFunctionBox()->isStarGenerator() && !EmitPrepareIteratorResult(cx, bce))
-            return false;
+    if (bce->sc->isFunctionBox()) {
+        if (bce->sc->asFunctionBox()->isGenerator()) {
+            // If we fall off the end of a generator, do a final yield.
+            if (bce->sc->asFunctionBox()->isStarGenerator() && !EmitPrepareIteratorResult(cx, bce))
+                return false;
 
-        if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
-            return false;
+            if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
+                return false;
 
-        if (bce->sc->asFunctionBox()->isStarGenerator() && !EmitFinishIteratorResult(cx, bce, true))
-            return false;
+            if (bce->sc->asFunctionBox()->isStarGenerator() &&
+                !EmitFinishIteratorResult(cx, bce, true))
+            {
+                return false;
+            }
 
-        if (Emit1(cx, bce, JSOP_SETRVAL) < 0)
-            return false;
+            if (Emit1(cx, bce, JSOP_SETRVAL) < 0)
+                return false;
 
-        ScopeCoordinate sc;
-        // We know that .generator is on the top scope chain node, as we are
-        // at the function end.
-        sc.setHops(0);
-        MOZ_ALWAYS_TRUE(LookupAliasedNameSlot(bce, bce->script, cx->names().dotGenerator, &sc));
-        if (!EmitAliasedVarOp(cx, JSOP_GETALIASEDVAR, sc, DontCheckLexical, bce))
-            return false;
+            ScopeCoordinate sc;
+            // We know that .generator is on the top scope chain node, as we are
+            // at the function end.
+            sc.setHops(0);
+            MOZ_ALWAYS_TRUE(LookupAliasedNameSlot(bce, bce->script, cx->names().dotGenerator, &sc));
+            if (!EmitAliasedVarOp(cx, JSOP_GETALIASEDVAR, sc, DontCheckLexical, bce))
+                return false;
 
-        // No need to check for finally blocks, etc as in EmitReturn.
-        if (!EmitYieldOp(cx, bce, JSOP_FINALYIELDRVAL))
-            return false;
+            // No need to check for finally blocks, etc as in EmitReturn.
+            if (!EmitYieldOp(cx, bce, JSOP_FINALYIELDRVAL))
+                return false;
+        } else {
+            // Non-generator functions just return |undefined|. The JSOP_RETRVAL
+            // emitted below will do that, except if the script has a finally
+            // block: there can be a non-undefined value in the return value
+            // slot. We just emit an explicit return in this case.
+            if (bce->hasTryFinally) {
+                if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
+                    return false;
+                if (Emit1(cx, bce, JSOP_RETURN) < 0)
+                    return false;
+            }
+        }
     }
 
-    /*
-     * Always end the script with a JSOP_RETRVAL. Some other parts of the codebase
-     * depend on this opcode, e.g. js_InternalInterpret.
-     */
+    // Always end the script with a JSOP_RETRVAL. Some other parts of the codebase
+    // depend on this opcode, e.g. InterpreterRegs::setToEndOfScript.
     if (Emit1(cx, bce, JSOP_RETRVAL) < 0)
         return false;
 
@@ -4658,6 +4673,7 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         {
             return false;
         }
+        bce->hasTryFinally = true;
         MOZ_ASSERT(bce->stackDepth == depth);
     }
     if (!PopStatementBCE(cx, bce))
