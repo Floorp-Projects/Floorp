@@ -1064,3 +1064,38 @@ addMessageListener("ContextMenu:SaveVideoFrameAsImage", (message) => {
     dataURL: canvas.toDataURL("image/jpeg", ""),
   });
 });
+
+addMessageListener("ContextMenu:MediaCommand", (message) => {
+  let media = message.objects.element;
+
+  switch (message.data.command) {
+    case "play":
+      media.play();
+      break;
+    case "pause":
+      media.pause();
+      break;
+    case "mute":
+      media.muted = true;
+      break;
+    case "unmute":
+      media.muted = false;
+      break;
+    case "playbackRate":
+      media.playbackRate = message.data.data;
+      break;
+    case "hidecontrols":
+      media.removeAttribute("controls");
+      break;
+    case "showcontrols":
+      media.setAttribute("controls", "true");
+      break;
+    case "hidestats":
+    case "showstats":
+      let event = media.ownerDocument.createEvent("CustomEvent");
+      event.initCustomEvent("media-showStatistics", false, true,
+                            message.data.command == "showstats");
+      media.dispatchEvent(event);
+      break;
+  }
+});
