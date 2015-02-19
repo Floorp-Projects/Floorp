@@ -25,6 +25,7 @@
 #include "cubeb/cubeb-stdint.h"
 #include "cubeb_resampler.h"
 #include <stdio.h>
+#include <cmath>
 
 /**Taken from winbase.h, Not in MinGW.*/
 #ifndef STACK_SIZE_PARAM_IS_A_RESERVATION
@@ -474,7 +475,7 @@ refill(cubeb_stream * stm, float * data, long frames_needed)
 
   long out_frames = cubeb_resampler_fill(stm->resampler, dest, frames_needed);
 
-  clock_add(stm, frames_needed * stream_to_mix_samplerate_ratio(stm));
+  clock_add(stm, roundf(frames_needed * stream_to_mix_samplerate_ratio(stm)));
 
   /* XXX: Handle this error. */
   if (out_frames < 0) {
