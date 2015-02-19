@@ -29,6 +29,7 @@ class GeckoInstance(object):
                       "browser.tabs.remote.autostart.2": False,
                       "browser.warnOnQuit": False,
                       "dom.ipc.reportProcessHangs": False,
+                      "focusmanager.testmode": True,
                       "startup.homepage_welcome_url": "about:blank"}
 
     def __init__(self, host, port, bin, profile=None, app_args=None, symbols_path=None,

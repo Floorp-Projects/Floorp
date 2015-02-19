@@ -1,0 +1,57 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Web Audio Editor test page</title>
+  </head>
+
+  <body>
+
+    <script type="text/javascript;version=1.8">
+      "use strict";
+
+      let ctx = new AudioContext();
+      let osc = ctx.createOscillator();
+
+      function throwError () {
+        try {
+          osc.connect({});
+        } catch (e) {
+          return {
+            lineNumber: e.lineNumber,
+            fileName: e.fileName,
+            columnNumber: e.columnNumber,
+            message: e.message,
+            instanceof: e instanceof TypeError,
+            stringified: e.toString(),
+            name: e.name
+          }
+        }
+      }
+
+      function throwDOMException () {
+        try {
+          osc.frequency.setValueAtTime(0, -1);
+        } catch (e) {
+          return {
+            lineNumber: e.lineNumber,
+            columnNumber: e.columnNumber,
+            filename: e.filename,
+            message: e.message,
+            code: e.code,
+            result: e.result,
+            instanceof: e instanceof DOMException,
+            stringified: e.toString(),
+            name: e.name
+          }
+        }
+      }
+
+
+    </script>
+  </body>
+
+</html>

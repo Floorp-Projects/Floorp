@@ -39,9 +39,7 @@ inline void
 NativeObject::removeLastProperty(ExclusiveContext *cx)
 {
     MOZ_ASSERT(canRemoveLastProperty());
-    RootedNativeObject self(cx, this);
-    RootedShape prev(cx, lastProperty()->previous());
-    JS_ALWAYS_TRUE(setLastProperty(cx, self, prev));
+    JS_ALWAYS_TRUE(setLastProperty(cx, lastProperty()->previous()));
 }
 
 inline bool
@@ -335,8 +333,7 @@ CopyInitializerObject(JSContext *cx, HandlePlainObject baseobj, NewObjectKind ne
         return nullptr;
 
     RootedObject metadata(cx, obj->getMetadata());
-    RootedShape lastProp(cx, baseobj->lastProperty());
-    if (!NativeObject::setLastProperty(cx, obj, lastProp))
+    if (!obj->setLastProperty(cx, baseobj->lastProperty()))
         return nullptr;
     if (metadata && !JSObject::setMetadata(cx, obj, metadata))
         return nullptr;

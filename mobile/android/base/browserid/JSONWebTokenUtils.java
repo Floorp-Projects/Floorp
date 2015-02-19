@@ -186,8 +186,8 @@ public class JSONWebTokenUtils {
         System.out.println("Malformed certificate -- got exception trying to dump contents.");
         return false;
       }
-      System.out.println("certificate header:    " + c.getString("header"));
-      System.out.println("certificate payload:   " + c.getString("payload"));
+      System.out.println("certificate header:    " + c.getObject("header").toJSONString());
+      System.out.println("certificate payload:   " + c.getObject("payload").toJSONString());
       System.out.println("certificate signature: " + c.getString("signature"));
       return true;
     } catch (Exception e) {
@@ -244,8 +244,8 @@ public class JSONWebTokenUtils {
         return false;
       }
       dumpCertificate(a.getString("certificate"));
-      System.out.println("assertion   header:    " + a.getString("header"));
-      System.out.println("assertion   payload:   " + a.getString("payload"));
+      System.out.println("assertion   header:    " + a.getObject("header").toJSONString());
+      System.out.println("assertion   payload:   " + a.getObject("payload").toJSONString());
       System.out.println("assertion   signature: " + a.getString("signature"));
       return true;
     } catch (Exception e) {

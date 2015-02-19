@@ -1038,7 +1038,7 @@ js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
         }
 
         MOZ_ASSERT(nobj->lastProperty()->slotSpan() == last->slotSpan());
-        JS_ALWAYS_TRUE(NativeObject::setLastProperty(cx, nobj, last));
+        JS_ALWAYS_TRUE(nobj->setLastProperty(cx, last));
     } else {
         RootedId id(cx);
         Rooted<PropertyDescriptor> desc(cx);
@@ -1098,7 +1098,7 @@ js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
     return true;
 }
 
-/* ES6 rev 29 (6 Dec 2014) 7.3.14. */
+// ES6 draft rev33 (12 Feb 2015) 7.3.15
 bool
 js::TestIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level, bool *result)
 {
@@ -1111,38 +1111,26 @@ js::TestIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level, bo
         return true;
     }
 
-    if (IsAnyTypedArray(obj)) {
-        if (level == IntegrityLevel::Sealed) {
-            // Typed arrays are considered sealed (bug 1120503).
-            *result = true;
-        } else {
-            // Typed arrays cannot be frozen, but an empty typed array is
-            // considered frozen (bug 1120503).
-            *result = (AnyTypedArrayLength(obj) == 0);
-        }
-        return true;
-    }
-
     // Steps 7-8.
     AutoIdVector props(cx);
     if (!GetPropertyKeys(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY | JSITER_SYMBOLS, &props))
         return false;
 
-    // Step 11.
+    // Step 9.
     RootedId id(cx);
     Rooted<PropertyDescriptor> desc(cx);
     for (size_t i = 0, len = props.length(); i < len; i++) {
         id = props[i];
 
-        // Steps 11.a-b.
+        // Steps 9.a-b.
         if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
             return false;
 
-        // Step 11.c.
+        // Step 9.c.
         if (!desc.object())
             continue;
 
-        // Steps 11.c.i-ii.
+        // Steps 9.c.i-ii.
         if (!desc.isPermanent() ||
             (level == IntegrityLevel::Frozen && desc.isDataDescriptor() && desc.isWritable()))
         {
@@ -1151,7 +1139,7 @@ js::TestIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level, bo
         }
     }
 
-    // Step 12.
+    // Step 10.
     *result = true;
     return true;
 }
@@ -1857,7 +1845,7 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind 
     MOZ_ASSERT(!obj->hasPrivate());
     RootedShape shape(cx, obj->lastProperty());
     size_t span = shape->slotSpan();
-    clone->setLastProperty(cx, clone, shape);
+    clone->setLastProperty(cx, shape);
     for (size_t i = 0; i < span; i++) {
         v = obj->getSlot(i);
         if (v.isObject()) {
@@ -2149,7 +2137,7 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
 
         RootedShape newShape(cx, ReshapeForParentAndAllocKind(cx, srcObj->lastProperty(),
                                                               TaggedProto(proto), parent, kind));
-        if (!newShape || !NativeObject::setLastProperty(cx, res, newShape))
+        if (!newShape || !res->setLastProperty(cx, newShape))
             return nullptr;
 
         return res;
@@ -3151,7 +3139,7 @@ js::PreventExtensions(JSContext *cx, HandleObject obj, bool *succeeded)
         return false;
 
     *succeeded = true;
-    return obj->setFlag(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE);
+    return obj->setFlags(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE);
 }
 
 bool
@@ -3246,7 +3234,7 @@ js::SetImmutablePrototype(ExclusiveContext *cx, HandleObject obj, bool *succeede
         return Proxy::setImmutablePrototype(cx->asJSContext(), obj, succeeded);
     }
 
-    if (!obj->setFlag(cx, BaseShape::IMMUTABLE_PROTOTYPE))
+    if (!obj->setFlags(cx, BaseShape::IMMUTABLE_PROTOTYPE))
         return false;
     *succeeded = true;
     return true;

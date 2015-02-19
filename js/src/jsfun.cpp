@@ -1347,10 +1347,10 @@ JSFunction::initBoundFunction(JSContext *cx, HandleObject target, HandleValue th
     if (!self->toDictionaryMode(cx))
         return false;
 
-    if (!self->setFlag(cx, BaseShape::BOUND_FUNCTION))
+    if (!self->JSObject::setFlags(cx, BaseShape::BOUND_FUNCTION))
         return false;
 
-    if (!NativeObject::setSlotSpan(cx, self, BOUND_FUNCTION_RESERVED_SLOTS + argslen))
+    if (!self->setSlotSpan(cx, BOUND_FUNCTION_RESERVED_SLOTS + argslen))
         return false;
 
     self->setSlot(JSSLOT_BOUND_FUNCTION_TARGET, ObjectValue(*target));

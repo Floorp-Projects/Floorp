@@ -16,10 +16,13 @@ let { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+let { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
 let { WebAudioFront } = devtools.require("devtools/server/actors/webaudio");
 let TargetFactory = devtools.TargetFactory;
+let mm = null;
 
+const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js";
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/webaudioeditor/test/";
 const SIMPLE_CONTEXT_URL = EXAMPLE_URL + "doc_simple-context.html";
 const COMPLEX_CONTEXT_URL = EXAMPLE_URL + "doc_complex-context.html";
@@ -46,6 +49,15 @@ registerCleanupFunction(() => {
   Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", gToolEnabled);
   Cu.forceGC();
 });
+
+/**
+ * Call manually in tests that use frame script utils after initializing
+ * the web audio editor. Call after init but before navigating to a different page.
+ */
+function loadFrameScripts () {
+  mm = gBrowser.selectedBrowser.messageManager;
+  mm.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
+}
 
 function addTab(aUrl, aWindow) {
   info("Adding tab: " + aUrl);
@@ -438,6 +450,33 @@ function waitForInspectorRender (panelWin, EVENTS) {
     once(panelWin, EVENTS.UI_PROPERTIES_TAB_RENDERED),
     once(panelWin, EVENTS.UI_AUTOMATION_TAB_RENDERED)
   ]);
+}
+
+/**
+ * Takes a string `script` and evaluates it directly in the content
+ * in potentially a different process.
+ */
+function evalInDebuggee (script) {
+  let deferred = Promise.defer();
+
+  if (!mm) {
+    throw new Error("`loadFrameScripts()` must be called when using MessageManager.");
+  }
+
+  let id = generateUUID().toString();
+  mm.sendAsyncMessage("devtools:test:eval", { script: script, id: id });
+  mm.addMessageListener("devtools:test:eval:response", handler);
+
+  function handler ({ data }) {
+    if (id !== data.id) {
+      return;
+    }
+
+    mm.removeMessageListener("devtools:test:eval:response", handler);
+    deferred.resolve(data.value);
+  }
+
+  return deferred.promise;
 }
 
 /**

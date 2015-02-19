@@ -101,7 +101,7 @@
     <command id="Tools:WebIDE" oncommand="gDevToolsBrowser.openWebIDE();" disabled="true" hidden="true"/>
     <command id="Tools:BrowserToolbox" oncommand="BrowserToolboxProcess.init();" disabled="true" hidden="true"/>
     <command id="Tools:BrowserContentToolbox" oncommand="gDevToolsBrowser.openContentProcessToolbox();" disabled="true" hidden="true"/>
-    <command id="Tools:BrowserConsole" oncommand="HUDService.toggleBrowserConsole();"/>
+    <command id="Tools:BrowserConsole" oncommand="HUDService.openBrowserConsoleOrFocus();"/>
     <command id="Tools:Scratchpad" oncommand="Scratchpad.openScratchpad();"/>
     <command id="Tools:ResponsiveUI" oncommand="ResponsiveUI.toggle();"/>
     <command id="Tools:Eyedropper" oncommand="openEyedropper();"/>

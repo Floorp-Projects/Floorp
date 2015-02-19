@@ -29,6 +29,15 @@ nsButtonFrameRenderer::nsButtonFrameRenderer()
 nsButtonFrameRenderer::~nsButtonFrameRenderer()
 {
   MOZ_COUNT_DTOR(nsButtonFrameRenderer);
+
+#ifdef DEBUG
+  if (mInnerFocusStyle) {
+    mInnerFocusStyle->FrameRelease();
+  }
+  if (mOuterFocusStyle) {
+    mOuterFocusStyle->FrameRelease();
+  }
+#endif
 }
 
 void
@@ -390,6 +399,15 @@ nsButtonFrameRenderer::ReResolveStyles(nsPresContext* aPresContext)
   nsStyleContext* context = mFrame->StyleContext();
   nsStyleSet *styleSet = aPresContext->StyleSet();
 
+#ifdef DEBUG
+  if (mInnerFocusStyle) {
+    mInnerFocusStyle->FrameRelease();
+  }
+  if (mOuterFocusStyle) {
+    mOuterFocusStyle->FrameRelease();
+  }
+#endif
+
   // style for the inner such as a dotted line (Windows)
   mInnerFocusStyle =
     styleSet->ProbePseudoElementStyle(mFrame->GetContent()->AsElement(),
@@ -401,6 +419,15 @@ nsButtonFrameRenderer::ReResolveStyles(nsPresContext* aPresContext)
     styleSet->ProbePseudoElementStyle(mFrame->GetContent()->AsElement(),
                                       nsCSSPseudoElements::ePseudo_mozFocusOuter,
                                       context);
+
+#ifdef DEBUG
+  if (mInnerFocusStyle) {
+    mInnerFocusStyle->FrameAddRef();
+  }
+  if (mOuterFocusStyle) {
+    mOuterFocusStyle->FrameAddRef();
+  }
+#endif
 }
 
 nsStyleContext*
@@ -421,10 +448,23 @@ nsButtonFrameRenderer::SetStyleContext(int32_t aIndex, nsStyleContext* aStyleCon
 {
   switch (aIndex) {
   case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
+#ifdef DEBUG
+    if (mInnerFocusStyle) {
+      mInnerFocusStyle->FrameRelease();
+    }
+#endif
     mInnerFocusStyle = aStyleContext;
     break;
   case NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX:
+#ifdef DEBUG
+    if (mOuterFocusStyle) {
+      mOuterFocusStyle->FrameRelease();
+    }
+#endif
     mOuterFocusStyle = aStyleContext;
     break;
   }
+#ifdef DEBUG
+  aStyleContext->FrameAddRef();
+#endif
 }

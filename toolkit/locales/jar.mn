@@ -38,6 +38,7 @@
   locale/@AB_CD@/global/devtools/styleinspector.properties (%chrome/global/devtools/styleinspector.properties)
   locale/@AB_CD@/global/dialogOverlay.dtd               (%chrome/global/dialogOverlay.dtd)
   locale/@AB_CD@/global/editMenuOverlay.dtd             (%chrome/global/editMenuOverlay.dtd)
+  locale/@AB_CD@/global/fallbackMenubar.properties      (%chrome/global/fallbackMenubar.properties)
   locale/@AB_CD@/global/filefield.properties            (%chrome/global/filefield.properties)
   locale/@AB_CD@/global/filepicker.dtd                  (%chrome/global/filepicker.dtd)
   locale/@AB_CD@/global/filepicker.properties           (%chrome/global/filepicker.properties)
