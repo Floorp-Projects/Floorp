@@ -254,7 +254,8 @@ NeckoChild::DeallocPUDPSocketChild(PUDPSocketChild* child)
 
 PDNSRequestChild*
 NeckoChild::AllocPDNSRequestChild(const nsCString& aHost,
-                                  const uint32_t& aFlags)
+                                  const uint32_t& aFlags,
+                                  const nsCString& aNetworkInterface)
 {
   // We don't allocate here: instead we always use IPDL constructor that takes
   // an existing object

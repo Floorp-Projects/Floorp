@@ -31,7 +31,8 @@ DNSRequestParent::~DNSRequestParent()
 }
 
 void
-DNSRequestParent::DoAsyncResolve(const nsACString &hostname, uint32_t flags)
+DNSRequestParent::DoAsyncResolve(const nsACString &hostname, uint32_t flags,
+                                 const nsACString &networkInterface)
 {
   nsresult rv;
   mFlags = flags;
@@ -39,8 +40,8 @@ DNSRequestParent::DoAsyncResolve(const nsACString &hostname, uint32_t flags)
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
     nsCOMPtr<nsICancelable> unused;
-    rv = dns->AsyncResolve(hostname, flags, this, mainThread,
-                           getter_AddRefs(unused));
+    rv = dns->AsyncResolveExtended(hostname, flags, networkInterface, this,
+                                   mainThread, getter_AddRefs(unused));
   }
 
   if (NS_FAILED(rv) && !mIPCClosed) {
@@ -52,12 +53,14 @@ DNSRequestParent::DoAsyncResolve(const nsACString &hostname, uint32_t flags)
 bool
 DNSRequestParent::RecvCancelDNSRequest(const nsCString& hostName,
                                        const uint32_t& flags,
+                                       const nsCString& networkInterface,
                                        const nsresult& reason)
 {
   nsresult rv;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    rv = dns->CancelAsyncResolve(hostName, flags, this, reason);
+    rv = dns->CancelAsyncResolveExtended(hostName, flags, networkInterface,
+                                         this, reason);
   }
   return true;
 }
