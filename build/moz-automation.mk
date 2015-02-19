@@ -62,6 +62,7 @@ MOZ_AUTOMATION_TIERS := $(foreach sym,$(moz_automation_symbols),$(if $(filter 1,
 automation/uploadsymbols: automation/buildsymbols
 
 automation/update-packaging: automation/package
+automation/update-packaging: automation/installer
 automation/pretty-update-packaging: automation/pretty-package
 automation/pretty-update-packaging: automation/pretty-installer
 
@@ -80,6 +81,10 @@ automation/upload: automation/update-packaging
 # the way client.mk invokes automation/build), but buildsymbols changes the
 # binaries/libs, and that's what we package/test.
 automation/pretty-package: automation/buildsymbols
+
+# The installer and packager both run stage-package, and may conflict
+# with each other.
+automation/installer: automation/package
 
 # The 'pretty' versions of targets run before the regular ones to avoid
 # conflicts in writing to the same files.
