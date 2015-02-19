@@ -120,7 +120,10 @@ class SyntaxParseHandler
         return Definition::PLACEHOLDER;
     }
 
-    Node newIdentifier(JSAtom *atom, const TokenPos &pos) { return NodeName; }
+    Node newObjectLiteralPropertyName(JSAtom *atom, const TokenPos &pos) {
+        return NodeName;
+    }
+
     Node newNumber(double value, DecimalPoint decimalPoint, const TokenPos &pos) { return NodeGeneric; }
     Node newBooleanLiteral(bool cond, const TokenPos &pos) { return NodeGeneric; }
 
@@ -180,11 +183,12 @@ class SyntaxParseHandler
     Node newArrayLiteral(uint32_t begin, unsigned blockid) { return NodeGeneric; }
     bool addElision(Node literal, const TokenPos &pos) { return true; }
     bool addSpreadElement(Node literal, uint32_t begin, Node inner) { return true; }
-    bool addArrayElement(Node literal, Node element) { return true; }
+    void addArrayElement(Node literal, Node element) { }
 
     Node newObjectLiteral(uint32_t begin) { return NodeGeneric; }
     bool addPrototypeMutation(Node literal, uint32_t begin, Node expr) { return true; }
-    bool addPropertyDefinition(Node literal, Node name, Node expr, bool isShorthand = false) { return true; }
+    bool addPropertyDefinition(Node literal, Node name, Node expr) { return true; }
+    bool addShorthand(Node literal, Node name, Node expr) { return true; }
     bool addMethodDefinition(Node literal, Node name, Node fn, JSOp op) { return true; }
     Node newYieldExpression(uint32_t begin, Node value, Node gen) { return NodeUnparenthesizedYieldExpr; }
     Node newYieldStarExpression(uint32_t begin, Node value, Node gen) { return NodeGeneric; }

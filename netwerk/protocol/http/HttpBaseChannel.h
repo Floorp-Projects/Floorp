@@ -241,7 +241,7 @@ public:
     const NetAddr& GetPeerAddr() { return mPeerAddr; }
 
 public: /* Necko internal use only... */
-
+    bool IsNavigation();
 
     // Return whether upon a redirect code of httpStatus for method, the
     // request method should be rewritten to GET.

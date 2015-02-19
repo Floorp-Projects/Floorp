@@ -12,8 +12,9 @@
 #include "FenceUtilsGonk.h"
 
 using namespace android;
-using namespace base;
 using namespace mozilla::layers;
+
+using base::FileDescriptor;
 
 namespace IPC {
 

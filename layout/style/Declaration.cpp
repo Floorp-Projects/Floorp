@@ -717,9 +717,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       const nsCSSValue *decorationStyle =
         data->ValueFor(eCSSProperty_text_decoration_style);
 
-      NS_ABORT_IF_FALSE(decorationStyle->GetUnit() == eCSSUnit_Enumerated,
-                        nsPrintfCString("bad text-decoration-style unit %d",
-                                        decorationStyle->GetUnit()).get());
+      MOZ_ASSERT(decorationStyle->GetUnit() == eCSSUnit_Enumerated,
+                 "bad text-decoration-style unit");
 
       AppendValueToString(eCSSProperty_text_decoration_line, aValue,
                           aSerialization);
@@ -747,18 +746,15 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       const nsCSSValue *transDelay =
         data->ValueFor(eCSSProperty_transition_delay);
 
-      NS_ABORT_IF_FALSE(transDuration->GetUnit() == eCSSUnit_List ||
-                        transDuration->GetUnit() == eCSSUnit_ListDep,
-                        nsPrintfCString("bad t-duration unit %d",
-                                        transDuration->GetUnit()).get());
-      NS_ABORT_IF_FALSE(transTiming->GetUnit() == eCSSUnit_List ||
-                        transTiming->GetUnit() == eCSSUnit_ListDep,
-                        nsPrintfCString("bad t-timing unit %d",
-                                        transTiming->GetUnit()).get());
-      NS_ABORT_IF_FALSE(transDelay->GetUnit() == eCSSUnit_List ||
-                        transDelay->GetUnit() == eCSSUnit_ListDep,
-                        nsPrintfCString("bad t-delay unit %d",
-                                        transDelay->GetUnit()).get());
+      MOZ_ASSERT(transDuration->GetUnit() == eCSSUnit_List ||
+                 transDuration->GetUnit() == eCSSUnit_ListDep,
+                 "bad t-duration unit");
+      MOZ_ASSERT(transTiming->GetUnit() == eCSSUnit_List ||
+                 transTiming->GetUnit() == eCSSUnit_ListDep,
+                 "bad t-timing unit");
+      MOZ_ASSERT(transDelay->GetUnit() == eCSSUnit_List ||
+                 transDelay->GetUnit() == eCSSUnit_ListDep,
+                 "bad t-delay unit");
 
       const nsCSSValueList* dur = transDuration->GetListValue();
       const nsCSSValueList* tim = transTiming->GetListValue();
@@ -785,10 +781,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
           aValue.Truncate();
         }
       } else {
-        NS_ABORT_IF_FALSE(transProp->GetUnit() == eCSSUnit_List ||
-                          transProp->GetUnit() == eCSSUnit_ListDep,
-                          nsPrintfCString("bad t-prop unit %d",
-                                          transProp->GetUnit()).get());
+        MOZ_ASSERT(transProp->GetUnit() == eCSSUnit_List ||
+                   transProp->GetUnit() == eCSSUnit_ListDep,
+                   "bad t-prop unit");
         const nsCSSValueList* pro = transProp->GetListValue();
         for (;;) {
           pro->mValue.AppendToString(eCSSProperty_transition_property,
@@ -829,10 +824,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
 
       for (uint32_t i = 0; i < numProps; ++i) {
         values[i] = data->ValueFor(subprops[i]);
-        NS_ABORT_IF_FALSE(values[i]->GetUnit() == eCSSUnit_List ||
-                          values[i]->GetUnit() == eCSSUnit_ListDep,
-                          nsPrintfCString("bad a-duration unit %d",
-                                          values[i]->GetUnit()).get());
+        MOZ_ASSERT(values[i]->GetUnit() == eCSSUnit_List ||
+                   values[i]->GetUnit() == eCSSUnit_ListDep,
+                   "bad a-duration unit");
         lists[i] = values[i]->GetListValue();
       }
 

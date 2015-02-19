@@ -31,7 +31,8 @@ public:
   {
   }
 
-  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const;
+  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const
+    MOZ_OVERRIDE;
 
 private:
   nsISupports* MOZ_NON_OWNING_REF mSource;

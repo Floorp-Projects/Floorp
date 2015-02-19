@@ -11,8 +11,12 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"
 
-using namespace base;
 using namespace IPC;
+
+using base::GetCurrentProcessHandle;
+using base::GetProcId;
+using base::ProcessHandle;
+using base::ProcessId;
 
 namespace mozilla {
 namespace ipc {

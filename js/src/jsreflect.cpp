@@ -1796,6 +1796,7 @@ class ASTSerializer
 
     bool identifier(HandleAtom atom, TokenPos *pos, MutableHandleValue dst);
     bool identifier(ParseNode *pn, MutableHandleValue dst);
+    bool objectPropertyName(ParseNode *pn, MutableHandleValue dst);
     bool literal(ParseNode *pn, MutableHandleValue dst);
 
     bool pattern(ParseNode *pn, MutableHandleValue dst);
@@ -3058,7 +3059,7 @@ ASTSerializer::propertyName(ParseNode *pn, MutableHandleValue dst)
 {
     if (pn->isKind(PNK_COMPUTED_NAME))
         return expression(pn, dst);
-    if (pn->isKind(PNK_NAME))
+    if (pn->isKind(PNK_OBJECT_PROPERTY_NAME))
         return identifier(pn, dst);
 
     LOCAL_ASSERT(pn->isKind(PNK_STRING) || pn->isKind(PNK_NUMBER));
@@ -3244,6 +3245,17 @@ bool
 ASTSerializer::identifier(ParseNode *pn, MutableHandleValue dst)
 {
     LOCAL_ASSERT(pn->isArity(PN_NAME) || pn->isArity(PN_NULLARY));
+    LOCAL_ASSERT(pn->pn_atom);
+
+    RootedAtom pnAtom(cx, pn->pn_atom);
+    return identifier(pnAtom, &pn->pn_pos, dst);
+}
+
+bool
+ASTSerializer::objectPropertyName(ParseNode *pn, MutableHandleValue dst)
+{
+    LOCAL_ASSERT(pn->isKind(PNK_OBJECT_PROPERTY_NAME));
+    LOCAL_ASSERT(pn->isArity(PN_NULLARY));
     LOCAL_ASSERT(pn->pn_atom);
 
     RootedAtom pnAtom(cx, pn->pn_atom);
