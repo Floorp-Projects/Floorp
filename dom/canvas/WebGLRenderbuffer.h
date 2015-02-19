@@ -38,6 +38,9 @@ public:
         mImageDataStatus = x;
     }
 
+    GLsizei Samples() const { return mSamples; }
+    void SetSamples(GLsizei samples) { mSamples = samples; }
+
     GLenum InternalFormat() const { return mInternalFormat; }
     void SetInternalFormat(GLenum internalFormat) {
         mInternalFormat = internalFormat;
@@ -55,8 +58,8 @@ public:
     }
 
     void BindRenderbuffer() const;
-    void RenderbufferStorage(GLenum internalFormat, GLsizei width,
-                             GLsizei height) const;
+    void RenderbufferStorage(GLsizei samples, GLenum internalFormat,
+                             GLsizei width, GLsizei height) const;
     void FramebufferRenderbuffer(FBAttachment attachment) const;
     // Only handles a subset of `pname`s.
     GLint GetRenderbufferParameter(RBTarget target, RBParam pname) const;
@@ -76,6 +79,7 @@ protected:
     GLenum mInternalFormat;
     GLenum mInternalFormatForGL;
     WebGLImageDataStatus mImageDataStatus;
+    GLsizei mSamples;
 
     friend class WebGLFramebuffer;
 };
