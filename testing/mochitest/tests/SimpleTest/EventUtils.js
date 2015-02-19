@@ -1183,8 +1183,8 @@ function synthesizeComposition(aEvent, aWindow, aCallback)
         ret = TIP.commitComposition(keyEvent, keyEventDict.flags);
         break;
       case "compositioncommit":
-        ret = TIP.commitComposition(keyEvent, keyEventDict.flags,
-                                    aEvent.data);
+        ret = TIP.commitCompositionWith(aEvent.data, keyEvent,
+                                        keyEventDict.flags);
         break;
     }
   } finally {

@@ -153,8 +153,7 @@ function runBeginInputTransactionMethodTests()
      description + "TIP2.beginInputTransactionForTests(otherWindow) should succeed because there is composition synthesized by TIP1 but it's in other window");
 
   // Let's confirm that the composing string is NOT committed by above tests.
-  ok(TIP1.commitComposition(),
-     description + "TIP1.commitString() should succeed because there should be composing string");
+  TIP1.commitComposition();
   is(input.value, composingStr,
      description + "TIP1.commitString() without specifying commit string should be committed with the last composing string");
 
@@ -255,42 +254,42 @@ function runBeginInputTransactionMethodTests()
   is(events[2].type, "input",
      description + "events[2] should be input");
 
-  // Let's check if beginInputTransaction() fails to steal the rights of TextEventDispatcher during commitComposition(null, 0, "bar").
+  // Let's check if beginInputTransaction() fails to steal the rights of TextEventDispatcher during commitCompositionWith("bar").
   events = [];
   input.addEventListener("compositionstart", function (aEvent) {
     events.push(aEvent);
     input.removeEventListener(aEvent.type, arguments.callee, false);
     ok(!TIP2.beginInputTransaction(window, simpleCallback),
-       description + "TIP2 shouldn't be able to begin input transaction from compositionstart event handler during TIP1.commitComposition(null, 0, \"bar\");");
+       description + "TIP2 shouldn't be able to begin input transaction from compositionstart event handler during TIP1.commitCompositionWith(\"bar\");");
   }, false);
   input.addEventListener("compositionupdate", function (aEvent) {
     events.push(aEvent);
     input.removeEventListener(aEvent.type, arguments.callee, false);
     ok(!TIP2.beginInputTransaction(window, simpleCallback),
-       description + "TIP2 shouldn't be able to begin input transaction during compositionupdate event handler TIP1.commitComposition(null, 0, \"bar\");");
+       description + "TIP2 shouldn't be able to begin input transaction during compositionupdate event handler TIP1.commitCompositionWith(\"bar\");");
   }, false);
   input.addEventListener("text", function (aEvent) {
     events.push(aEvent);
     input.removeEventListener(aEvent.type, arguments.callee, false);
     ok(!TIP2.beginInputTransaction(window, simpleCallback),
-       description + "TIP2 shouldn't be able to begin input transaction during text event handler TIP1.commitComposition(null, 0, \"bar\");");
+       description + "TIP2 shouldn't be able to begin input transaction during text event handler TIP1.commitCompositionWith(\"bar\");");
   }, false);
   input.addEventListener("compositionend", function (aEvent) {
     events.push(aEvent);
     input.removeEventListener(aEvent.type, arguments.callee, false);
     ok(!TIP2.beginInputTransaction(window, simpleCallback),
-       description + "TIP2 shouldn't be able to begin input transaction during compositionend event handler TIP1.commitComposition(null, 0, \"bar\");");
+       description + "TIP2 shouldn't be able to begin input transaction during compositionend event handler TIP1.commitCompositionWith(\"bar\");");
   }, false);
   input.addEventListener("input", function (aEvent) {
     events.push(aEvent);
     input.removeEventListener(aEvent.type, arguments.callee, false);
     ok(!TIP2.beginInputTransaction(window, simpleCallback),
-       description + "TIP2 shouldn't be able to begin input transaction during input event handler TIP1.commitComposition(null, 0, \"bar\");");
+       description + "TIP2 shouldn't be able to begin input transaction during input event handler TIP1.commitCompositionWith(\"bar\");");
   }, false);
   TIP1.beginInputTransaction(window, simpleCallback);
-  TIP1.commitComposition(null, 0, "bar");
+  TIP1.commitCompositionWith("bar");
   is(events.length, 5,
-     description + "compositionstart, compositionupdate, text, compositionend and input events should be fired by TIP1.commitComposition(null, 0, \"bar\")");
+     description + "compositionstart, compositionupdate, text, compositionend and input events should be fired by TIP1.commitCompositionWith(\"bar\")");
   is(events[0].type, "compositionstart",
      description + "events[0] should be compositionstart");
   is(events[1].type, "compositionupdate",
@@ -475,42 +474,42 @@ function runBeginInputTransactionMethodTests()
   is(events[2].type, "input",
      description + "events[2] should be input");
 
-  // Let's check if beginInputTransactionForTests() fails to steal the rights of TextEventDispatcher during commitComposition(null, 0, "bar").
+  // Let's check if beginInputTransactionForTests() fails to steal the rights of TextEventDispatcher during commitCompositionWith("bar").
   events = [];
   input.addEventListener("compositionstart", function (aEvent) {
     events.push(aEvent);
     input.removeEventListener(aEvent.type, arguments.callee, false);
     ok(!TIP2.beginInputTransactionForTests(window),
-       description + "TIP2 shouldn't be able to begin input transaction for tests from compositionstart event handler during TIP1.commitComposition(null, 0, \"bar\");");
+       description + "TIP2 shouldn't be able to begin input transaction for tests from compositionstart event handler during TIP1.commitCompositionWith(\"bar\");");
   }, false);
   input.addEventListener("compositionupdate", function (aEvent) {
     events.push(aEvent);
     input.removeEventListener(aEvent.type, arguments.callee, false);
     ok(!TIP2.beginInputTransactionForTests(window),
-       description + "TIP2 shouldn't be able to begin input transaction for tests during compositionupdate event handler TIP1.commitComposition(null, 0, \"bar\");");
+       description + "TIP2 shouldn't be able to begin input transaction for tests during compositionupdate event handler TIP1.commitCompositionWith(\"bar\");");
   }, false);
   input.addEventListener("text", function (aEvent) {
     events.push(aEvent);
     input.removeEventListener(aEvent.type, arguments.callee, false);
     ok(!TIP2.beginInputTransactionForTests(window),
-       description + "TIP2 shouldn't be able to begin input transaction for tests during text event handler TIP1.commitComposition(null, 0, \"bar\");");
+       description + "TIP2 shouldn't be able to begin input transaction for tests during text event handler TIP1.commitCompositionWith(\"bar\");");
   }, false);
   input.addEventListener("compositionend", function (aEvent) {
     events.push(aEvent);
     input.removeEventListener(aEvent.type, arguments.callee, false);
     ok(!TIP2.beginInputTransactionForTests(window),
-       description + "TIP2 shouldn't be able to begin input transaction for tests during compositionend event handler TIP1.commitComposition(null, 0, \"bar\");");
+       description + "TIP2 shouldn't be able to begin input transaction for tests during compositionend event handler TIP1.commitCompositionWith(\"bar\");");
   }, false);
   input.addEventListener("input", function (aEvent) {
     events.push(aEvent);
     input.removeEventListener(aEvent.type, arguments.callee, false);
     ok(!TIP2.beginInputTransactionForTests(window),
-       description + "TIP2 shouldn't be able to begin input transaction for tests during input event handler TIP1.commitComposition(null, 0, \"bar\");");
+       description + "TIP2 shouldn't be able to begin input transaction for tests during input event handler TIP1.commitCompositionWith(\"bar\");");
   }, false);
   TIP1.beginInputTransactionForTests(window);
-  TIP1.commitComposition(null, 0, "bar");
+  TIP1.commitCompositionWith("bar");
   is(events.length, 5,
-     description + "compositionstart, compositionupdate, text, compositionend and input events should be fired by TIP1.commitComposition(null, 0, \"bar\")");
+     description + "compositionstart, compositionupdate, text, compositionend and input events should be fired by TIP1.commitCompositionWith(\"bar\")");
   is(events[0].type, "compositionstart",
      description + "events[0] should be compositionstart");
   is(events[1].type, "compositionupdate",
@@ -743,7 +742,7 @@ function runBeginInputTransactionMethodTests()
   is(events[2].type, "input",
      description + "events[2] should be input");
 
-  // Let's check if beginInputTransaction() with another window fails to begin new input transaction with different TextEventDispatcher during commitComposition(null, 0, "bar");.
+  // Let's check if beginInputTransaction() with another window fails to begin new input transaction with different TextEventDispatcher during commitCompositionWith("bar");.
   events = [];
   input.addEventListener("compositionstart", function (aEvent) {
     events.push(aEvent);
@@ -751,10 +750,10 @@ function runBeginInputTransactionMethodTests()
     try {
       TIP1.beginInputTransaction(otherWindow, simpleCallback);
       ok(false,
-         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionstart\" should throw an exception during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionstart\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
       ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
-         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionstart\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionstart\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
   input.addEventListener("compositionupdate", function (aEvent) {
@@ -763,10 +762,10 @@ function runBeginInputTransactionMethodTests()
     try {
       TIP1.beginInputTransaction(otherWindow, simpleCallback);
       ok(false,
-         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionupdate\" should throw an exception during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionupdate\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
       ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
-         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionupdate\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionupdate\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
   input.addEventListener("text", function (aEvent) {
@@ -775,10 +774,10 @@ function runBeginInputTransactionMethodTests()
     try {
       TIP1.beginInputTransaction(otherWindow, simpleCallback);
       ok(false,
-         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"text\" should throw an exception during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"text\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
       ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
-         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"text\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"text\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
   input.addEventListener("compositionend", function (aEvent) {
@@ -787,10 +786,10 @@ function runBeginInputTransactionMethodTests()
     try {
       TIP1.beginInputTransaction(otherWindow, simpleCallback);
       ok(false,
-         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionend\" should throw an exception during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionend\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
       ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
-         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionend\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionend\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
   input.addEventListener("input", function (aEvent) {
@@ -799,16 +798,16 @@ function runBeginInputTransactionMethodTests()
     try {
       TIP1.beginInputTransaction(otherWindow, simpleCallback);
       ok(false,
-         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should throw an exception during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
       ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
-         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
   TIP1.beginInputTransaction(window, simpleCallback);
-  TIP1.commitComposition(null, 0, "bar");
+  TIP1.commitCompositionWith("bar");
   is(events.length, 5,
-     description + "compositionstart, compositionupdate, text, compositionend and input events should be fired by TIP1.commitComposition(null, 0, \"bar\")");
+     description + "compositionstart, compositionupdate, text, compositionend and input events should be fired by TIP1.commitCompositionWith(\"bar\")");
   is(events[0].type, "compositionstart",
      description + "events[0] should be compositionstart");
   is(events[1].type, "compositionupdate",
@@ -1089,7 +1088,7 @@ function runBeginInputTransactionMethodTests()
   is(events[2].type, "input",
      description + "events[2] should be input");
 
-  // Let's check if beginInputTransactionForTests() with another window fails to begin new input transaction with different TextEventDispatcher during commitComposition(null, 0, "bar");.
+  // Let's check if beginInputTransactionForTests() with another window fails to begin new input transaction with different TextEventDispatcher during commitCompositionWith("bar");.
   events = [];
   input.addEventListener("compositionstart", function (aEvent) {
     events.push(aEvent);
@@ -1097,10 +1096,10 @@ function runBeginInputTransactionMethodTests()
     try {
       TIP1.beginInputTransactionForTests(otherWindow, simpleCallback);
       ok(false,
-         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionstart\" should throw an exception during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionstart\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
       ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
-         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionstart\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionstart\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
   input.addEventListener("compositionupdate", function (aEvent) {
@@ -1109,10 +1108,10 @@ function runBeginInputTransactionMethodTests()
     try {
       TIP1.beginInputTransactionForTests(otherWindow, simpleCallback);
       ok(false,
-         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionupdate\" should throw an exception during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionupdate\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
       ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
-         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionupdate\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionupdate\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
   input.addEventListener("text", function (aEvent) {
@@ -1121,10 +1120,10 @@ function runBeginInputTransactionMethodTests()
     try {
       TIP1.beginInputTransactionForTests(otherWindow, simpleCallback);
       ok(false,
-         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"text\" should throw an exception during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"text\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
       ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
-         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"text\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"text\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
   input.addEventListener("compositionend", function (aEvent) {
@@ -1133,10 +1132,10 @@ function runBeginInputTransactionMethodTests()
     try {
       TIP1.beginInputTransactionForTests(otherWindow, simpleCallback);
       ok(false,
-         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionend\" should throw an exception during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionend\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
       ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
-         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionend\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionend\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
   input.addEventListener("input", function (aEvent) {
@@ -1145,16 +1144,16 @@ function runBeginInputTransactionMethodTests()
     try {
       TIP1.beginInputTransactionForTests(otherWindow, simpleCallback);
       ok(false,
-         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should throw an exception during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
       ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
-         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition(null, 0, \"bar\")");
+         description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
   TIP1.beginInputTransactionForTests(window, simpleCallback);
-  TIP1.commitComposition(null, 0, "bar");
+  TIP1.commitCompositionWith("bar");
   is(events.length, 5,
-     description + "compositionstart, compositionupdate, text, compositionend and input events should be fired by TIP1.commitComposition(null, 0, \"bar\")");
+     description + "compositionstart, compositionupdate, text, compositionend and input events should be fired by TIP1.commitCompositionWith(\"bar\")");
   is(events[0].type, "compositionstart",
      description + "events[0] should be compositionstart");
   is(events[1].type, "compositionupdate",
@@ -1337,19 +1336,19 @@ function runBeginInputTransactionMethodTests()
        description + "The input element should not have commit string");
   }
 
-  // Let's check if commitComposition(null, 0, "bar") throws an exception after ownership is stolen.
+  // Let's check if commitCompositionWith("bar") throws an exception after ownership is stolen.
   ok(TIP1.beginInputTransactionForTests(window),
      description + "TIP1.beginInputTransactionForTests() should succeed because there is no composition");
   ok(TIP2.beginInputTransactionForTests(window),
      description + "TIP2.beginInputTransactionForTests() should succeed because there is no composition");
   input.value = "";
   try {
-    TIP1.commitComposition(null, 0, "bar");
+    TIP1.commitCompositionWith("bar");
     ok(false,
-       description + "TIP1.commitComposition(null, 0, \"bar\") should cause throwing an exception because TIP2 took the ownership");
+       description + "TIP1.commitCompositionWith(\"bar\") should cause throwing an exception because TIP2 took the ownership");
   } catch (e) {
     ok(e.message.contains("NS_ERROR_NOT_INITIALIZED"),
-       description + "TIP1.commitComposition(null, 0, \"bar\") should cause throwing an exception including NS_ERROR_NOT_INITIALIZED");
+       description + "TIP1.commitCompositionWith(\"bar\") should cause throwing an exception including NS_ERROR_NOT_INITIALIZED");
   } finally {
     is(input.value, "",
        description + "The input element should not have commit string");
@@ -1643,7 +1642,7 @@ function runCompositionTests()
 
   // Committing with different string
   reset();
-  TIP.commitComposition(null, 0, "bar");
+  TIP.commitCompositionWith("bar");
   is(events.length, 2,
      description + "committing with different string should cause compositionupdate and compositionend");
   is(events[0].type, "compositionupdate",
@@ -1666,7 +1665,7 @@ function runCompositionTests()
 
   // Committing with same string
   reset();
-  TIP.commitComposition(null, 0, "buzz");
+  TIP.commitCompositionWith("buzz");
   is(events.length, 1,
      description + "committing with same string should cause only compositionend");
   is(events[0].type, "compositionend",
@@ -1678,7 +1677,7 @@ function runCompositionTests()
 
   // Inserting commit string directly
   reset();
-  TIP.commitComposition(null, 0, "boo!");
+  TIP.commitCompositionWith("boo!");
   is(events.length, 3,
      description + "committing text directly should cause compositionstart, compositionupdate and compositionend");
   is(events[0].type, "compositionstart",
@@ -1910,7 +1909,7 @@ function runCompositionWithKeyEventTests()
 
   // Committing with different string
   reset();
-  TIP.commitComposition(printableKeyEvent, 0, "bar");
+  TIP.commitCompositionWith("bar", printableKeyEvent);
   is(events.length, 3,
      description + "committing with different string should cause compositionupdate and compositionend");
   is(events[0].type, "compositionupdate",
@@ -1935,7 +1934,7 @@ function runCompositionWithKeyEventTests()
 
   // Committing with same string
   reset();
-  TIP.commitComposition(enterKeyEvent, 0, "buzz");
+  TIP.commitCompositionWith("buzz", enterKeyEvent);
   is(events.length, 2,
      description + "committing with same string should cause only compositionend");
   is(events[0].type, "compositionend",
@@ -1949,7 +1948,7 @@ function runCompositionWithKeyEventTests()
 
   // Inserting commit string directly
   reset();
-  TIP.commitComposition(printableKeyEvent, 0, "boo!");
+  TIP.commitCompositionWith("boo!", printableKeyEvent);
   is(events.length, 5,
      description + "committing text directly should cause compositionstart, compositionupdate and compositionend");
   is(events[0].type, "keydown",
@@ -2157,18 +2156,18 @@ function runConsumingKeydownBeforeCompositionTests()
 
   // If keydown before compositionstart is consumed, composition shouldn't be started.
   reset();
-  ok(!TIP.commitComposition(printableKeyEvent, 0, "foo"),
-     description + "TIP.commitComposition(printableKeyEvent, 0, \"foo\") should return false because it's keydown is consumed");
+  ok(!TIP.commitCompositionWith("foo", printableKeyEvent),
+     description + "TIP.commitCompositionWith(\"foo\", printableKeyEvent) should return false because it's keydown is consumed");
   is(events.length, 2,
-     description + "TIP.commitComposition(printableKeyEvent, 0, \"foo\") should cause only keydown and keyup events");
+     description + "TIP.commitCompositionWith(\"foo\", printableKeyEvent) should cause only keydown and keyup events");
   is(events[0].type, "keydown",
-     description + "TIP.commitComposition(printableKeyEvent, 0, \"foo\") should cause keydown event first");
+     description + "TIP.commitCompositionWith(\"foo\", printableKeyEvent) should cause keydown event first");
   is(events[1].type, "keyup",
-     description + "TIP.commitComposition(printableKeyEvent, 0, \"foo\") should cause keyup event after keydown");
+     description + "TIP.commitCompositionWith(\"foo\", printableKeyEvent) should cause keyup event after keydown");
   ok(!TIP.hasComposition,
-     description + "TIP.commitComposition(printableKeyEvent, 0, \"foo\") shouldn't cause composition");
+     description + "TIP.commitCompositionWith(\"foo\", printableKeyEvent) shouldn't cause composition");
   is(input.value, "",
-     description + "TIP.commitComposition(printableKeyEvent, 0, \"foo\") shouldn't cause inserting text");
+     description + "TIP.commitCompositionWith(\"foo\", printableKeyEvent) shouldn't cause inserting text");
 
   SpecialPowers.setBoolPref("dom.keyboardevent.dispatch_during_composition", true);
 
@@ -2197,8 +2196,7 @@ function runConsumingKeydownBeforeCompositionTests()
 
   // If composition is already started, TIP.commitComposition(enterKeyEvent) shouldn't be canceled.
   reset();
-  ok(TIP.commitComposition(enterKeyEvent),
-     description + "TIP.commitComposition(enterKeyEvent) should return true even if preceding keydown is consumed because there was a composition already");
+  TIP.commitComposition(enterKeyEvent);
   is(events.length, 3,
      description + "TIP.commitComposition(enterKeyEvent) should cause keydown, compositionend and keyup events");
   is(events[0].type, "keydown",
@@ -3376,14 +3374,14 @@ function runErrorTests()
        description + "commitComposition() should cause NS_ERROR_FAILURE if there is no composition");
   }
 
-  // commitComposition(null, 0, "") should throw an exception if there is no composition
+  // commitCompositionWith("") should throw an exception if there is no composition
   try {
-    TIP.commitComposition(null, 0, "");
+    TIP.commitCompositionWith("");
     ok(false,
-       description + "commitComposition(null, 0, \"\") should fail if there is no composition");
+       description + "commitCompositionWith(\"\") should fail if there is no composition");
   } catch (e) {
     ok(e.message.contains("NS_ERROR_FAILURE"),
-       description + "commitComposition(null, 0, \"\") should cause NS_ERROR_FAILURE if there is no composition");
+       description + "commitCompositionWith(\"\") should cause NS_ERROR_FAILURE if there is no composition");
   }
 
   // Pending composition string should allow to flush without clause information (for compatibility)
@@ -3646,14 +3644,14 @@ function runErrorTests()
       TIP.cancelComposition();
     }
     try {
-      TIP.commitComposition(keyEvent, 0, "foo");
+      TIP.commitCompositionWith("foo", keyEvent);
       ok(kKeyEventTypes[i].valid,
-         testDescription + "TIP.commitComposition(keyEvent, 0, \"foo\") should not accept the event type");
+         testDescription + "TIP.commitCompositionWith(\"foo\", keyEvent) should not accept the event type");
     } catch (e) {
       ok(!kKeyEventTypes[i].valid,
-         testDescription + "TIP.commitComposition(keyEvent, 0, \"foo\") should not throw an exception for the event type");
+         testDescription + "TIP.commitCompositionWith(\"foo\", keyEvent) should not throw an exception for the event type");
       ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
-         testDescription + "TIP.commitComposition(keyEvent, 0, \"foo\") should cause NS_ERROR_ILLEGAL_VALUE if the key event type isn't valid");
+         testDescription + "TIP.commitCompositionWith(\"foo\", keyEvent) should cause NS_ERROR_ILLEGAL_VALUE if the key event type isn't valid");
     }
     try {
       TIP.startComposition();
@@ -3691,39 +3689,19 @@ function runCommitCompositionTests()
   is(input.value, "foo",
      description + "commitComposition() should commit the composition with the last data");
 
-  // commitComposition(null, 0, "") should commit the composition with empty string.
+  // commitCompositionWith("") should commit the composition with empty string.
   input.value = "";
   TIP.setPendingCompositionString("foo");
   TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
   TIP.setCaretInPendingComposition(3);
   TIP.flushPendingComposition();
-  TIP.commitComposition(null, 0, "");
+  TIP.commitCompositionWith("");
   is(input.value, "",
-     description + "commitComposition(null, 0, \"\") should commit the composition with empty string");
-
-  // commitComposition(null, 0, null) should commit the composition with empty string.
-  input.value = "";
-  TIP.setPendingCompositionString("foo");
-  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
-  TIP.setCaretInPendingComposition(3);
-  TIP.flushPendingComposition();
-  TIP.commitComposition(null, 0, null);
-  is(input.value, "",
-     description + "commitComposition(null, 0, null) should commit the composition with empty string");
-
-  // commitComposition(null, 0, undefined) should commit the composition with the last data.
-  input.value = "";
-  TIP.setPendingCompositionString("foo");
-  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
-  TIP.setCaretInPendingComposition(3);
-  TIP.flushPendingComposition();
-  TIP.commitComposition(null, 0, undefined);
-  todo_is(input.value, "foo",
-          description + "commitComposition(null, 0, undefined) should commit the composition with the last data");
+     description + "commitCompositionWith(\"\") should commit the composition with empty string");
 
   function doCommit(aText)
   {
-    TIP.commitComposition(null, 0, aText);
+    TIP.commitCompositionWith(aText);
   }
 
   // doCommit() should commit the composition with the last data.
@@ -3768,7 +3746,7 @@ function runCommitCompositionTests()
 
   function doCommitWithNullCheck(aText)
   {
-    TIP.commitComposition(null, 0, aText ? aText : "");
+    TIP.commitCompositionWith(aText ? aText : "");
   }
 
   // doCommitWithNullCheck() should commit the composition with the last data.
