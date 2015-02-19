@@ -692,9 +692,9 @@ function runKeyTests()
   is(events.length, 2,
      description + "TIP.keydown(keyEnter) should cause keydown and keypress event");
   checkKeyAttrs("TIP.keydown(keyEnter)", events[0],
-                { type: "keydown",  key: "Enter", code: "Enter" });
+                { type: "keydown",  key: "Enter", code: "Enter", keyCode: KeyboardEvent.DOM_VK_RETURN });
   checkKeyAttrs("TIP.keydown(keyEnter)", events[1],
-                { type: "keypress", key: "Enter", code: "Enter" });
+                { type: "keypress", key: "Enter", code: "Enter", keyCode: KeyboardEvent.DOM_VK_RETURN });
   is(input.value, "a",
      description + "input.value should stay \"a\" which was inputted by TIP.keydown(keyA)");
 
@@ -706,7 +706,7 @@ function runKeyTests()
   is(events.length, 1,
      description + "TIP.keyup(keyEnter) should cause keyup event");
   checkKeyAttrs("TIP.keyup(keyEnter)", events[0],
-                { type: "keyup",      key: "Enter", code: "Enter" });
+                { type: "keyup",      key: "Enter", code: "Enter", keyCode: KeyboardEvent.DOM_VK_RETURN });
   is(input.value, "a",
      description + "input.value should stay \"a\" which was inputted by TIP.keydown(keyA)");
 
@@ -803,11 +803,11 @@ function runKeyTests()
   is(events.length, 3,
      description + "TIP.keydown(keyWithModifiers) and TIP.keyup(keyWithModifiers) should cause keydown, keypress and keyup event");
   checkKeyAttrs("TIP.keydown(keyWithModifiers) and TIP.keyup(keyWithModifiers)", events[0],
-                { type: "keydown",  key: "Escape", code: "Escape" });
+                { type: "keydown",  key: "Escape", code: "Escape", keyCode: KeyboardEvent.DOM_VK_ESCAPE });
   checkKeyAttrs("TIP.keydown(keyWithModifiers) and TIP.keyup(keyWithModifiers)", events[1],
-                { type: "keypress", key: "Escape", code: "Escape" });
+                { type: "keypress", key: "Escape", code: "Escape", keyCode: KeyboardEvent.DOM_VK_ESCAPE });
   checkKeyAttrs("TIP.keydown(keyWithModifiers) and TIP.keyup(keyWithModifiers)", events[2],
-                { type: "keyup",    key: "Escape", code: "Escape" });
+                { type: "keyup",    key: "Escape", code: "Escape", keyCode: KeyboardEvent.DOM_VK_ESCAPE });
   is(input.value, "Enter",
      description + "input.value should stay \"Enter\" which was inputted by TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY)");
 
@@ -907,6 +907,246 @@ function runKeyTests()
   } finally {
     TIP.cancelComposition();
     SpecialPowers.clearUserPref("dom.keyboardevent.dispatch_during_composition");
+  }
+
+  // Test .location computation
+  const kCodeToLocation = [
+    { code: "BracketLeft",              location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "BracketRight",             location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Comma",                    location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Digit0",                   location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Digit1",                   location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Digit2",                   location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Digit3",                   location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Digit4",                   location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Digit5",                   location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Digit6",                   location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Digit7",                   location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Digit8",                   location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Digit9",                   location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Equal",                    location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Minus",                    location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Period",                   location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Slash",                    location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "AltLeft",                  location: KeyboardEvent.DOM_KEY_LOCATION_LEFT },
+    { code: "AltRight",                 location: KeyboardEvent.DOM_KEY_LOCATION_RIGHT },
+    { code: "CapsLock",                 location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "ContextMenu",              location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "ControlLeft",              location: KeyboardEvent.DOM_KEY_LOCATION_LEFT },
+    { code: "ControlRight",             location: KeyboardEvent.DOM_KEY_LOCATION_RIGHT },
+    { code: "Enter",                    location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "OSLeft",                   location: KeyboardEvent.DOM_KEY_LOCATION_LEFT },
+    { code: "OSRight",                  location: KeyboardEvent.DOM_KEY_LOCATION_RIGHT },
+    { code: "ShiftLeft",                location: KeyboardEvent.DOM_KEY_LOCATION_LEFT },
+    { code: "ShiftRight",               location: KeyboardEvent.DOM_KEY_LOCATION_RIGHT },
+    { code: "Space",                    location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Tab",                      location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "ArrowDown",                location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "ArrowLeft",                location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "ArrowRight",               location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "ArrowUp",                  location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "NumLock",                  location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    { code: "Numpad0",                  location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "Numpad1",                  location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "Numpad2",                  location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "Numpad3",                  location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "Numpad4",                  location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "Numpad5",                  location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "Numpad6",                  location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "Numpad7",                  location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "Numpad8",                  location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "Numpad9",                  location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "NumpadAdd",                location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "NumpadBackspace",          location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    // { code: "NumpadClear",              location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    // { code: "NumpadClearEntry",         location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "NumpadComma",              location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "NumpadDecimal",            location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "NumpadDivide",             location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "NumpadEnter",              location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "NumpadEqual",              location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    // { code: "NumpadMemoryAdd",          location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    // { code: "NumpadMemoryClear",        location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    // { code: "NumpadMemoryRecall",       location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    // { code: "NumpadMemoryStore",        location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "NumpadMemorySubtract",     location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "NumpadMultiply",           location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    // { code: "NumpadParenLeft",          location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    // { code: "NumpadParenRight",         location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    { code: "NumpadSubtract",           location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+  ];
+  for (var i = 0; i < kCodeToLocation.length; i++) {
+    var keyEvent = new KeyboardEvent("", { code: kCodeToLocation[i].code });
+    reset();
+    doPreventDefaults = [ "keypress" ];
+    // If the location isn't initialized or initialized with 0, it should be computed from the code value.
+    TIP.keydown(keyEvent);
+    TIP.keyup(keyEvent);
+    var longDesc = description + "testing computation of .location of \"" + kCodeToLocation[i].code + "\", ";
+    is(events.length, 3,
+       longDesc + "keydown, keypress and keyup events should be fired");
+    for (var j = 0; j < events.length; j++) {
+      is(events[j].location, kCodeToLocation[i].location,
+         longDesc + " type=\"" + events[j].type + "\", location value is wrong");
+    }
+    // However, if KEY_KEEP_KEY_LOCATION_STANDARD is specified, .location value should be kept as DOM_KEY_LOCATION_STANDARD (0).
+    reset();
+    doPreventDefaults = [ "keypress" ];
+    TIP.keydown(keyEvent, TIP.KEY_KEEP_KEY_LOCATION_STANDARD);
+    TIP.keyup(keyEvent, TIP.KEY_KEEP_KEY_LOCATION_STANDARD);
+    var longDesc = description + "testing if .location is forcibly set to DOM_KEY_LOCATION_STANDARD, ";
+    is(events.length, 3,
+       longDesc + "keydown, keypress and keyup events should be fired");
+    for (var j = 0; j < events.length; j++) {
+      is(events[j].location, KeyboardEvent.DOM_KEY_LOCATION_STANDARD,
+         longDesc + " type=\"" + events[j].type + "\", location value is not 0");
+    }
+    // If .location is initialized with non-zero value, the value shouldn't be computed again.
+    var keyEventWithLocation = new KeyboardEvent("", { code: kCodeToLocation[i].code, location: 0xFF });
+    reset();
+    doPreventDefaults = [ "keypress" ];
+    TIP.keydown(keyEventWithLocation);
+    TIP.keyup(keyEventWithLocation);
+    longDesc = description + "testing if .location is not computed for \"" + kCodeToLocation[i].location + "\", ";
+    is(events.length, 3,
+       longDesc + "keydown, keypress and keyup events should be fired");
+    for (var j = 0; j < events.length; j++) {
+      is(events[j].location, 0xFF,
+         longDesc + " type=\"" + events[j].type + "\", location shouldn't be computed if it's initialized with non-zero value");
+    }
+  }
+
+  // Test .keyCode value computation
+  const kKeyToKeyCode = [
+    { key: "Cancel",                    keyCode: KeyboardEvent.DOM_VK_CANCEL },
+    { key: "Help",                      keyCode: KeyboardEvent.DOM_VK_HELP },
+    { key: "Backspace",                 keyCode: KeyboardEvent.DOM_VK_BACK_SPACE },
+    { key: "Tab",                       keyCode: KeyboardEvent.DOM_VK_TAB },
+    { key: "Clear",                     keyCode: KeyboardEvent.DOM_VK_CLEAR },
+    { key: "Enter",                     keyCode: KeyboardEvent.DOM_VK_RETURN },
+    { key: "Shift",                     keyCode: KeyboardEvent.DOM_VK_SHIFT,              isModifier: true },
+    { key: "Control",                   keyCode: KeyboardEvent.DOM_VK_CONTROL,            isModifier: true },
+    { key: "Alt",                       keyCode: KeyboardEvent.DOM_VK_ALT,                isModifier: true },
+    { key: "Pause",                     keyCode: KeyboardEvent.DOM_VK_PAUSE },
+    { key: "CapsLock",                  keyCode: KeyboardEvent.DOM_VK_CAPS_LOCK,          isModifier: true },
+    { key: "Hiragana",                  keyCode: KeyboardEvent.DOM_VK_KANA },
+    { key: "Katakana",                  keyCode: KeyboardEvent.DOM_VK_KANA },
+    { key: "HiraganaKatakana",          keyCode: KeyboardEvent.DOM_VK_KANA },
+    { key: "KanaMode",                  keyCode: KeyboardEvent.DOM_VK_KANA },
+    { key: "HangulMode",                keyCode: KeyboardEvent.DOM_VK_HANGUL },
+    { key: "Eisu",                      keyCode: KeyboardEvent.DOM_VK_EISU },
+    { key: "JunjaMode",                 keyCode: KeyboardEvent.DOM_VK_JUNJA },
+    { key: "FinalMode",                 keyCode: KeyboardEvent.DOM_VK_FINAL },
+    { key: "HanjaMode",                 keyCode: KeyboardEvent.DOM_VK_HANJA },
+    { key: "KanjiMode",                 keyCode: KeyboardEvent.DOM_VK_KANJI },
+    { key: "Escape",                    keyCode: KeyboardEvent.DOM_VK_ESCAPE },
+    { key: "Convert",                   keyCode: KeyboardEvent.DOM_VK_CONVERT },
+    { key: "NonConvert",                keyCode: KeyboardEvent.DOM_VK_NONCONVERT },
+    { key: "Accept",                    keyCode: KeyboardEvent.DOM_VK_ACCEPT },
+    { key: "ModeChange",                keyCode: KeyboardEvent.DOM_VK_MODECHANGE },
+    { key: "PageUp",                    keyCode: KeyboardEvent.DOM_VK_PAGE_UP },
+    { key: "PageDown",                  keyCode: KeyboardEvent.DOM_VK_PAGE_DOWN },
+    { key: "End",                       keyCode: KeyboardEvent.DOM_VK_END },
+    { key: "Home",                      keyCode: KeyboardEvent.DOM_VK_HOME },
+    { key: "ArrowLeft",                 keyCode: KeyboardEvent.DOM_VK_LEFT },
+    { key: "ArrowUp",                   keyCode: KeyboardEvent.DOM_VK_UP },
+    { key: "ArrowRight",                keyCode: KeyboardEvent.DOM_VK_RIGHT },
+    { key: "ArrowDown",                 keyCode: KeyboardEvent.DOM_VK_DOWN },
+    { key: "Select",                    keyCode: KeyboardEvent.DOM_VK_SELECT },
+    { key: "Print",                     keyCode: KeyboardEvent.DOM_VK_PRINT },
+    { key: "Execute",                   keyCode: KeyboardEvent.DOM_VK_EXECUTE },
+    { key: "PrintScreen",               keyCode: KeyboardEvent.DOM_VK_PRINTSCREEN },
+    { key: "Insert",                    keyCode: KeyboardEvent.DOM_VK_INSERT },
+    { key: "Delete",                    keyCode: KeyboardEvent.DOM_VK_DELETE },
+    { key: "OS",                        keyCode: KeyboardEvent.DOM_VK_WIN,                isModifier: true },
+    { key: "ContextMenu",               keyCode: KeyboardEvent.DOM_VK_CONTEXT_MENU },
+    { key: "F1",                        keyCode: KeyboardEvent.DOM_VK_F1 },
+    { key: "F2",                        keyCode: KeyboardEvent.DOM_VK_F2 },
+    { key: "F3",                        keyCode: KeyboardEvent.DOM_VK_F3 },
+    { key: "F4",                        keyCode: KeyboardEvent.DOM_VK_F4 },
+    { key: "F5",                        keyCode: KeyboardEvent.DOM_VK_F5 },
+    { key: "F6",                        keyCode: KeyboardEvent.DOM_VK_F6 },
+    { key: "F7",                        keyCode: KeyboardEvent.DOM_VK_F7 },
+    { key: "F8",                        keyCode: KeyboardEvent.DOM_VK_F8 },
+    { key: "F9",                        keyCode: KeyboardEvent.DOM_VK_F9 },
+    { key: "F10",                       keyCode: KeyboardEvent.DOM_VK_F10 },
+    { key: "F11",                       keyCode: KeyboardEvent.DOM_VK_F11 },
+    { key: "F12",                       keyCode: KeyboardEvent.DOM_VK_F12 },
+    { key: "F13",                       keyCode: KeyboardEvent.DOM_VK_F13 },
+    { key: "F14",                       keyCode: KeyboardEvent.DOM_VK_F14 },
+    { key: "F15",                       keyCode: KeyboardEvent.DOM_VK_F15 },
+    { key: "F16",                       keyCode: KeyboardEvent.DOM_VK_F16 },
+    { key: "F17",                       keyCode: KeyboardEvent.DOM_VK_F17 },
+    { key: "F18",                       keyCode: KeyboardEvent.DOM_VK_F18 },
+    { key: "F19",                       keyCode: KeyboardEvent.DOM_VK_F19 },
+    { key: "F20",                       keyCode: KeyboardEvent.DOM_VK_F20 },
+    { key: "F21",                       keyCode: KeyboardEvent.DOM_VK_F21 },
+    { key: "F22",                       keyCode: KeyboardEvent.DOM_VK_F22 },
+    { key: "F23",                       keyCode: KeyboardEvent.DOM_VK_F23 },
+    { key: "F24",                       keyCode: KeyboardEvent.DOM_VK_F24 },
+    { key: "NumLock",                   keyCode: KeyboardEvent.DOM_VK_NUM_LOCK,           isModifier: true },
+    { key: "ScrollLock",                keyCode: KeyboardEvent.DOM_VK_SCROLL_LOCK,        isModifier: true },
+    { key: "VolumeMute",                keyCode: KeyboardEvent.DOM_VK_VOLUME_MUTE },
+    { key: "VolumeDown",                keyCode: KeyboardEvent.DOM_VK_VOLUME_DOWN },
+    { key: "VolumeUp",                  keyCode: KeyboardEvent.DOM_VK_VOLUME_UP },
+    { key: "Meta",                      keyCode: KeyboardEvent.DOM_VK_META,               isModifier: true },
+    { key: "AltGraph",                  keyCode: KeyboardEvent.DOM_VK_ALTGR,              isModifier: true },
+    { key: "Attn",                      keyCode: KeyboardEvent.DOM_VK_ATTN },
+    { key: "CrSel",                     keyCode: KeyboardEvent.DOM_VK_CRSEL },
+    { key: "ExSel",                     keyCode: KeyboardEvent.DOM_VK_EXSEL },
+    { key: "EraseEof",                  keyCode: KeyboardEvent.DOM_VK_EREOF },
+    { key: "Play",                      keyCode: KeyboardEvent.DOM_VK_PLAY },
+    { key: "ZoomToggle",                keyCode: KeyboardEvent.DOM_VK_ZOOM },
+    { key: "ZoomIn",                    keyCode: KeyboardEvent.DOM_VK_ZOOM },
+    { key: "ZoomOut",                   keyCode: KeyboardEvent.DOM_VK_ZOOM },
+    { key: "Unidentified",              keyCode: 0 },
+    { key: "a",                         keyCode: 0, isPrintable: true },
+    { key: "A",                         keyCode: 0, isPrintable: true },
+    { key: " ",                         keyCode: 0, isPrintable: true },
+    { key: "",                          keyCode: 0, isPrintable: true },
+  ];
+
+  for (var i = 0; i < kKeyToKeyCode.length; i++) {
+    var keyEvent = new KeyboardEvent("", { key: kKeyToKeyCode[i].key });
+    var causeKeypress = !kKeyToKeyCode[i].isModifier;
+    var baseFlags = kKeyToKeyCode[i].isPrintable ? 0 : TIP.KEY_NON_PRINTABLE_KEY;
+    reset();
+    doPreventDefaults = [ "keypress" ];
+    // If the keyCode isn't initialized or initialized with 0, it should be computed from the key value only when it's a printable key.
+    TIP.keydown(keyEvent, baseFlags);
+    TIP.keyup(keyEvent, baseFlags);
+    var longDesc = description + "testing computation of .keyCode of \"" + kKeyToKeyCode[i].key + "\", ";
+    is(events.length, causeKeypress ? 3 : 2,
+       longDesc + "keydown" + (causeKeypress ? ", keypress" : "") + " and keyup events should be fired");
+    for (var j = 0; j < events.length; j++) {
+      is(events[j].keyCode, events[j].type == "keypress" && kKeyToKeyCode[i].isPrintable ? 0 : kKeyToKeyCode[i].keyCode,
+         longDesc + " type=\"" + events[j].type + "\", keyCode value is wrong");
+    }
+    // However, if KEY_KEEP_KEYCODE_ZERO is specified, .keyCode value should be kept as 0.
+    reset();
+    doPreventDefaults = [ "keypress" ];
+    TIP.keydown(keyEvent, TIP.KEY_KEEP_KEYCODE_ZERO | baseFlags);
+    TIP.keyup(keyEvent, TIP.KEY_KEEP_KEYCODE_ZERO | baseFlags);
+    var longDesc = description + "testing if .keyCode is forcibly set to KEY_KEEP_KEYCODE_ZERO, ";
+    is(events.length, causeKeypress ? 3 : 2,
+       longDesc + "keydown" + (causeKeypress ? ", keypress" : "") + " and keyup events should be fired");
+    for (var j = 0; j < events.length; j++) {
+      is(events[j].keyCode, 0,
+         longDesc + " type=\"" + events[j].type + "\", keyCode value is not 0");
+    }
+    // If .keyCode is initialized with non-zero value, the value shouldn't be computed again.
+    var keyEventWithLocation = new KeyboardEvent("", { key: kKeyToKeyCode[i].key, keyCode: 0xFF });
+    reset();
+    doPreventDefaults = [ "keypress" ];
+    TIP.keydown(keyEventWithLocation, baseFlags);
+    TIP.keyup(keyEventWithLocation, baseFlags);
+    longDesc = description + "testing if .keyCode is not computed for \"" + kKeyToKeyCode[i].key + "\", ";
+    is(events.length, causeKeypress ? 3 : 2,
+       longDesc + "keydown" + (causeKeypress ? ", keypress" : "") + " and keyup events should be fired");
+    for (var j = 0; j < events.length; j++) {
+      is(events[j].keyCode, events[j].type == "keypress" && kKeyToKeyCode[i].isPrintable ? 0 : 0xFF,
+         longDesc + " type=\"" + events[j].type + "\", keyCode shouldn't be computed if it's initialized with non-zero value");
+    }
   }
 
   window.removeEventListener("keydown", handler, false);
@@ -1115,6 +1355,46 @@ function runErrorTests()
   } finally {
     is(input.value, "",
        description + "The input element should not be modified");
+  }
+
+  // KEY_KEEP_KEY_LOCATION_STANDARD flag should be used only when .location is not initialized with non-zero value.
+  try {
+    var keyEvent = new KeyboardEvent("", { code: "Enter", location: KeyboardEvent.DOM_KEY_LOCATION_LEFT });
+    TIP.keydown(keyEvent, TIP.KEY_KEEP_KEY_LOCATION_STANDARD);
+    ok(false,
+       description + "keydown(KEY_KEEP_KEY_LOCATION_STANDARD) should fail if the .location of the key event is initialized with non-zero value");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "keydown(KEY_KEEP_KEY_LOCATION_STANDARD) should cause NS_ERROR_ILLEGAL_VALUE if the .location of the key event is initialized with nonzero value");
+  }
+  try {
+    var keyEvent = new KeyboardEvent("", { code: "Enter", location: KeyboardEvent.DOM_KEY_LOCATION_LEFT });
+    TIP.keyup(keyEvent, TIP.KEY_KEEP_KEY_LOCATION_STANDARD);
+    ok(false,
+       description + "keyup(KEY_KEEP_KEY_LOCATION_STANDARD) should fail if the .location of the key event is initialized with non-zero value");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "keyup(KEY_KEEP_KEY_LOCATION_STANDARD) should cause NS_ERROR_ILLEGAL_VALUE if the .location of the key event is initialized with nonzero value");
+  }
+
+  // KEY_KEEP_KEYCODE_ZERO flag should be used only when .keyCode is not initialized with non-zero value.
+  try {
+    var keyEvent = new KeyboardEvent("", { key: "Enter", keyCode: KeyboardEvent.DOM_VK_RETURN });
+    TIP.keydown(keyEvent, TIP.KEY_KEEP_KEYCODE_ZERO);
+    ok(false,
+       description + "keydown(KEY_KEEP_KEYCODE_ZERO) should fail if the .keyCode of the key event is initialized with non-zero value");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "keydown(KEY_KEEP_KEYCODE_ZERO) should cause NS_ERROR_ILLEGAL_VALUE if the .keyCode of the key event is initialized with nonzero value");
+  }
+  try {
+    var keyEvent = new KeyboardEvent("", { key: "Enter", keyCode: KeyboardEvent.DOM_VK_RETURN });
+    TIP.keyup(keyEvent, TIP.KEY_KEEP_KEYCODE_ZERO);
+    ok(false,
+       description + "keyup(KEY_KEEP_KEYCODE_ZERO) should fail if the .keyCode of the key event is initialized with non-zero value");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "keyup(KEY_KEEP_KEYCODE_ZERO) should cause NS_ERROR_ILLEGAL_VALUE if the .keyCode of the key event is initialized with nonzero value");
   }
 }
 
