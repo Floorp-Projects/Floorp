@@ -93,9 +93,10 @@ TextEventDispatcher::GetState() const
 }
 
 void
-TextEventDispatcher::InitEvent(WidgetCompositionEvent& aEvent) const
+TextEventDispatcher::InitEvent(WidgetGUIEvent& aEvent) const
 {
   aEvent.time = PR_IntervalNow();
+  aEvent.refPoint = LayoutDeviceIntPoint(0, 0);
   aEvent.mFlags.mIsSynthesizedForTests = mForTests;
 }
 
@@ -222,6 +223,132 @@ TextEventDispatcher::NotifyIME(const IMENotification& aIMENotification)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   return rv;
+}
+
+bool
+TextEventDispatcher::DispatchKeyboardEvent(
+                       uint32_t aMessage,
+                       const WidgetKeyboardEvent& aKeyboardEvent,
+                       nsEventStatus& aStatus)
+{
+  return DispatchKeyboardEventInternal(aMessage, aKeyboardEvent, aStatus);
+}
+
+bool
+TextEventDispatcher::DispatchKeyboardEventInternal(
+                       uint32_t aMessage,
+                       const WidgetKeyboardEvent& aKeyboardEvent,
+                       nsEventStatus& aStatus,
+                       uint32_t aIndexOfKeypress)
+{
+  MOZ_ASSERT(aMessage == NS_KEY_DOWN || aMessage == NS_KEY_UP ||
+             aMessage == NS_KEY_PRESS, "Invalid aMessage value");
+  nsresult rv = GetState();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  // If the key shouldn't cause keypress events, don't this patch them.
+  if (aMessage == NS_KEY_PRESS && !aKeyboardEvent.ShouldCauseKeypressEvents()) {
+    return false;
+  }
+
+  nsCOMPtr<nsIWidget> widget(mWidget);
+
+  WidgetKeyboardEvent keyEvent(true, aMessage, widget);
+  InitEvent(keyEvent);
+  keyEvent.AssignKeyEventData(aKeyboardEvent, false);
+
+  if (aStatus == nsEventStatus_eConsumeNoDefault) {
+    // If the key event should be dispatched as consumed event, marking it here.
+    // This is useful to prevent double action.  E.g., when the key was already
+    // handled by system, our chrome shouldn't handle it.
+    keyEvent.mFlags.mDefaultPrevented = true;
+  }
+
+  // Corrects each member for the specific key event type.
+  if (aMessage == NS_KEY_DOWN || aMessage == NS_KEY_UP) {
+    MOZ_ASSERT(!aIndexOfKeypress,
+      "aIndexOfKeypress must be 0 for either NS_KEY_DOWN or NS_KEY_UP");
+    // charCode of keydown and keyup should be 0.
+    keyEvent.charCode = 0;
+  } else if (keyEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING) {
+    MOZ_ASSERT(!aIndexOfKeypress,
+      "aIndexOfKeypress must be 0 for NS_KEY_PRESS of non-printable key");
+    // If keypress event isn't caused by printable key, its charCode should
+    // be 0.
+    keyEvent.charCode = 0;
+  } else {
+    MOZ_RELEASE_ASSERT(
+      !aIndexOfKeypress || aIndexOfKeypress < keyEvent.mKeyValue.Length(),
+      "aIndexOfKeypress must be 0 - mKeyValue.Length() - 1");
+    keyEvent.keyCode = 0;
+    wchar_t ch =
+      keyEvent.mKeyValue.IsEmpty() ? 0 : keyEvent.mKeyValue[aIndexOfKeypress];
+    keyEvent.charCode = static_cast<uint32_t>(ch);
+    if (ch) {
+      keyEvent.mKeyValue.Assign(ch);
+    } else {
+      keyEvent.mKeyValue.Truncate();
+    }
+  }
+  if (aMessage == NS_KEY_UP) {
+    // mIsRepeat of keyup event must be false.
+    keyEvent.mIsRepeat = false;
+  }
+  // mIsComposing should be initialized later.
+  keyEvent.mIsComposing = false;
+  // XXX Currently, we don't support to dispatch key event with native key
+  //     event information.
+  keyEvent.mNativeKeyEvent = nullptr;
+  // XXX Currently, we don't support to dispatch key events with data for
+  // plugins.
+  keyEvent.mPluginEvent.Clear();
+  // TODO: Manage mUniqueId here.
+
+  widget->DispatchEvent(&keyEvent, aStatus);
+  return true;
+}
+
+bool
+TextEventDispatcher::MaybeDispatchKeypressEvents(
+                       const WidgetKeyboardEvent& aKeyboardEvent,
+                       nsEventStatus& aStatus)
+{
+  // If the key event was consumed, keypress event shouldn't be fired.
+  if (aStatus == nsEventStatus_eConsumeNoDefault) {
+    return false;
+  }
+
+  // If the key isn't a printable key or just inputting one character or
+  // no character, we should dispatch only one keypress.  Otherwise, i.e.,
+  // if the key is a printable key and inputs multiple characters, keypress
+  // event should be dispatched the count of inputting characters times.
+  size_t keypressCount =
+    aKeyboardEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING ?
+      1 : std::max(static_cast<nsAString::size_type>(1),
+                   aKeyboardEvent.mKeyValue.Length());
+  bool isDispatched = false;
+  bool consumed = false;
+  for (size_t i = 0; i < keypressCount; i++) {
+    aStatus = nsEventStatus_eIgnore;
+    if (!DispatchKeyboardEventInternal(NS_KEY_PRESS, aKeyboardEvent,
+                                       aStatus, i)) {
+      // The widget must have been gone.
+      break;
+    }
+    isDispatched = true;
+    if (!consumed) {
+      consumed = (aStatus == nsEventStatus_eConsumeNoDefault);
+    }
+  }
+
+  // If one of the keypress event was consumed, return ConsumeNoDefault.
+  if (consumed) {
+    aStatus = nsEventStatus_eConsumeNoDefault;
+  }
+
+  return isDispatched;
 }
 
 /******************************************************************************
