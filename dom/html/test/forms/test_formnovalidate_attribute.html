@@ -72,7 +72,8 @@ if (observers.hasMoreElements()) {
     ok(true, "formnovalidate should not apply on if not set on the submit " +
              "control used for the submission");
     var c = document.getElementById('c');
-    c.focus(); synthesizeKey("VK_RETURN", {type: "keypress"});
+    c.focus();
+    synthesizeKey("KEY_Enter", { code: "Enter" });
   }, false);
 
   document.getElementById('c').addEventListener("invalid", function(aEvent) {

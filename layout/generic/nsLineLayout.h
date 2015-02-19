@@ -512,7 +512,6 @@ protected:
     const nsHTMLReflowState* mReflowState;
     bool mNoWrap;
     mozilla::WritingMode mWritingMode;
-    bool mZeroEffectiveSpanBox;
     bool mContainsFloat;
     bool mHasNonemptyContent;
 

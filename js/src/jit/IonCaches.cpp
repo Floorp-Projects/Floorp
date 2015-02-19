@@ -701,25 +701,16 @@ EmitLoadSlot(MacroAssembler &masm, NativeObject *holder, Shape *shape, Register 
     }
 }
 
+// Callers are expected to have already guarded on the shape of the
+// object, which guarantees the object is a DOM proxy.
 static void
-GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
-                       PropertyName *name, Register object, Label *stubFailure,
-                       bool skipExpandoCheck = false)
+CheckDOMProxyExpandoDoesNotShadow(JSContext *cx, MacroAssembler &masm, JSObject *obj,
+                                  PropertyName *name, Register object, Label *stubFailure)
 {
     MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
-    // Guard the following:
-    //      1. The object is a DOMProxy.
-    //      2. The object does not have expando properties, or has an expando
-    //          which is known to not have the desired property.
-    Address handlerAddr(object, ProxyObject::offsetOfHandler());
-
-    // Check that object is a DOMProxy.
-    masm.branchPtr(Assembler::NotEqual, handlerAddr,
-                   ImmPtr(obj->as<ProxyObject>().handler()), stubFailure);
-
-    if (skipExpandoCheck)
-        return;
+    // Guard that the object does not have expando properties, or has an expando
+    // which is known to not have the desired property.
 
     // For the remaining code, we need to reserve some registers to load a value.
     // This is ugly, but unvaoidable.
@@ -1550,9 +1541,9 @@ GetPropertyIC::tryAttachDOMProxyShadowed(JSContext *cx, HandleScript outerScript
                                    ImmGCPtr(obj->lastProperty()),
                                    &failures);
 
-    // Make sure object is a DOMProxy
-    GenerateDOMProxyChecks(cx, masm, obj, name(), object(), &failures,
-                           /*skipExpandoCheck=*/true);
+    // No need for more guards: we know this is a DOM proxy, since the shape
+    // guard enforces a given JSClass, so just go ahead and emit the call to
+    // ProxyGet.
 
     if (!EmitCallProxyGet(cx, masm, attacher, name(), liveRegs_, object(), output(),
                           pc(), returnAddr))
@@ -1619,8 +1610,8 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, HandleScript outerScri
                                    ImmGCPtr(obj->lastProperty()),
                                    &failures);
 
-    // Make sure object is a DOMProxy proxy
-    GenerateDOMProxyChecks(cx, masm, obj, name, object(), &failures);
+    // Guard that our expando object hasn't started shadowing this property.
+    CheckDOMProxyExpandoDoesNotShadow(cx, masm, obj, name, object(), &failures);
 
     if (holder) {
         // Found the property on the prototype chain. Treat it like a native
@@ -2238,9 +2229,9 @@ SetPropertyIC::attachDOMProxyShadowed(JSContext *cx, HandleScript outerScript, I
                    Address(object(), JSObject::offsetOfShape()),
                    ImmGCPtr(obj->lastProperty()), &failures);
 
-    // Make sure object is a DOMProxy
-    GenerateDOMProxyChecks(cx, masm, obj, name(), object(), &failures,
-                           /*skipExpandoCheck=*/true);
+    // No need for more guards: we know this is a DOM proxy, since the shape
+    // guard enforces a given JSClass, so just go ahead and emit the call to
+    // ProxySet.
 
     RootedId propId(cx, AtomToId(name()));
     if (!EmitCallProxySet(cx, masm, attacher, propId, liveRegs_, object(),
@@ -2512,8 +2503,8 @@ SetPropertyIC::attachDOMProxyUnshadowed(JSContext *cx, HandleScript outerScript,
                    Address(object(), JSObject::offsetOfShape()),
                    ImmGCPtr(obj->lastProperty()), &failures);
 
-    // Make sure object is a DOMProxy
-    GenerateDOMProxyChecks(cx, masm, obj, name(), object(), &failures);
+    // Guard that our expando object hasn't started shadowing this property.
+    CheckDOMProxyExpandoDoesNotShadow(cx, masm, obj, name(), object(), &failures);
 
     RootedPropertyName propName(cx, name());
     RootedObject holder(cx);

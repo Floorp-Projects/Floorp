@@ -412,10 +412,47 @@ PossiblyFail()
     return true;
 }
 
+static inline bool
+GCIfNeeded(ExclusiveContext *cx)
+{
+    if (cx->isJSContext()) {
+        JSContext *ncx = cx->asJSContext();
+        JSRuntime *rt = ncx->runtime();
+
+#ifdef JS_GC_ZEAL
+        if (rt->gc.needZealousGC())
+            rt->gc.runDebugGC();
+#endif
+
+        // Invoking the interrupt callback can fail and we can't usefully
+        // handle that here. Just check in case we need to collect instead.
+        if (rt->hasPendingInterrupt())
+            rt->gc.gcIfRequested(ncx);
+
+        // If we have grown past our GC heap threshold while in the middle of
+        // an incremental GC, we're growing faster than we're GCing, so stop
+        // the world and do a full, non-incremental GC right now, if possible.
+        if (rt->gc.isIncrementalGCInProgress() &&
+            cx->zone()->usage.gcBytes() > cx->zone()->threshold.gcTriggerBytes())
+        {
+            PrepareZoneForGC(cx->zone());
+            AutoKeepAtoms keepAtoms(cx->perThreadData);
+            rt->gc.gc(GC_NORMAL, JS::gcreason::INCREMENTAL_TOO_SLOW);
+        }
+    }
+
+    return true;
+}
+
 template <AllowGC allowGC>
 static inline bool
 CheckAllocatorState(ExclusiveContext *cx, AllocKind kind)
 {
+    if (allowGC) {
+        if (!GCIfNeeded(cx))
+            return false;
+    }
+
     if (!cx->isJSContext())
         return true;
 
@@ -439,29 +476,6 @@ CheckAllocatorState(ExclusiveContext *cx, AllocKind kind)
     if (!PossiblyFail()) {
         js_ReportOutOfMemory(ncx);
         return false;
-    }
-
-    if (allowGC) {
-#ifdef JS_GC_ZEAL
-        if (rt->gc.needZealousGC())
-            rt->gc.runDebugGC();
-#endif
-        if (rt->hasPendingInterrupt()) {
-            // Invoking the interrupt callback can fail and we can't usefully
-            // handle that here. Just check in case we need to collect instead.
-            rt->gc.gcIfRequested(ncx);
-        }
-
-        // If we have grown past our GC heap threshold while in the middle of
-        // an incremental GC, we're growing faster than we're GCing, so stop
-        // the world and do a full, non-incremental GC right now, if possible.
-        if (rt->gc.isIncrementalGCInProgress() &&
-            ncx->zone()->usage.gcBytes() > ncx->zone()->threshold.gcTriggerBytes())
-        {
-            PrepareZoneForGC(ncx->zone());
-            AutoKeepAtoms keepAtoms(cx->perThreadData);
-            rt->gc.gc(GC_NORMAL, JS::gcreason::INCREMENTAL_TOO_SLOW);
-        }
     }
 
     return true;

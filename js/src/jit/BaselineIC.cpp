@@ -3119,29 +3119,19 @@ GetDOMProxyProto(JSObject *obj)
     return obj->getTaggedProto().toObjectOrNull();
 }
 
+// Callers are expected to have already guarded on the shape of the
+// object, which guarantees the object is a DOM proxy.
 static void
-GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, Register object,
-                       Address checkProxyHandlerAddr,
-                       Address *checkExpandoShapeAddr,
-                       Address *expandoAndGenerationAddr,
-                       Address *generationAddr,
-                       Register scratch,
-                       GeneralRegisterSet &domProxyRegSet,
-                       Label *checkFailed)
+CheckDOMProxyExpandoDoesNotShadow(JSContext *cx, MacroAssembler &masm, Register object,
+                                  const Address &checkExpandoShapeAddr,
+                                  Address *expandoAndGenerationAddr,
+                                  Address *generationAddr,
+                                  Register scratch,
+                                  GeneralRegisterSet &domProxyRegSet,
+                                  Label *checkFailed)
 {
-    // Guard the following:
-    //      1. The object is a DOMProxy.
-    //      2. The object does not have expando properties, or has an expando
-    //          which is known to not have the desired property.
-    Address handlerAddr(object, ProxyObject::offsetOfHandler());
-
-    // Check that object is a DOMProxy.
-    masm.loadPtr(checkProxyHandlerAddr, scratch);
-    masm.branchPtr(Assembler::NotEqual, handlerAddr, scratch, checkFailed);
-
-    // At this point, if not checking for an expando object, just return.
-    if (!checkExpandoShapeAddr)
-        return;
+    // Guard that the object does not have expando properties, or has an expando
+    // which is known to not have the desired property.
 
     // For the remaining code, we need to reserve some registers to load a value.
     // This is ugly, but unavoidable.
@@ -3178,7 +3168,7 @@ GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, Register object,
     // The reference object used to generate this check may not have had an
     // expando object at all, in which case the presence of a non-undefined
     // expando value in the incoming object is automatically a failure.
-    masm.loadPtr(*checkExpandoShapeAddr, scratch);
+    masm.loadPtr(checkExpandoShapeAddr, scratch);
     masm.branchPtr(Assembler::Equal, scratch, ImmPtr(nullptr), &failDOMProxyCheck);
 
     // Otherwise, ensure that the incoming object has an object for its expando value and that
@@ -7568,17 +7558,16 @@ ICGetPropCallDOMProxyNativeCompiler::generateStubCode(MacroAssembler &masm,
     masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallDOMProxyNative::offsetOfShape()), scratch);
     masm.branchTestObjShape(Assembler::NotEqual, objReg, scratch, &failure);
 
-    // Guard for ListObject.
+    // Guard that our expando object hasn't started shadowing this property.
     {
         GeneralRegisterSet domProxyRegSet(GeneralRegisterSet::All());
         domProxyRegSet.take(BaselineStubReg);
         domProxyRegSet.take(objReg);
         domProxyRegSet.take(scratch);
         Address expandoShapeAddr(BaselineStubReg, ICGetProp_CallDOMProxyNative::offsetOfExpandoShape());
-        GenerateDOMProxyChecks(
+        CheckDOMProxyExpandoDoesNotShadow(
                 cx, masm, objReg,
-                Address(BaselineStubReg, ICGetProp_CallDOMProxyNative::offsetOfProxyHandler()),
-                &expandoShapeAddr, expandoAndGenerationAddr, generationAddr,
+                expandoShapeAddr, expandoAndGenerationAddr, generationAddr,
                 scratch,
                 domProxyRegSet,
                 &failure);
@@ -7660,12 +7649,12 @@ ICGetPropCallDOMProxyNativeCompiler::getStub(ICStubSpace *space)
 
     if (kind == ICStub::GetProp_CallDOMProxyNative) {
         return ICStub::New<ICGetProp_CallDOMProxyNative>(
-            space, getStubCode(), firstMonitorStub_, shape, proxy_->handler(),
+            space, getStubCode(), firstMonitorStub_, shape,
             expandoShape, holder_, holderShape, getter_, pcOffset_);
     }
 
     return ICStub::New<ICGetProp_CallDOMProxyWithGenerationNative>(
-        space, getStubCode(), firstMonitorStub_, shape, proxy_->handler(),
+        space, getStubCode(), firstMonitorStub_, shape,
         expandoAndGeneration, generation, expandoShape, holder_, holderShape, getter_,
         pcOffset_);
 }
@@ -7710,22 +7699,8 @@ ICGetProp_DOMProxyShadowed::Compiler::generateStubCode(MacroAssembler &masm)
     masm.loadPtr(Address(BaselineStubReg, ICGetProp_DOMProxyShadowed::offsetOfShape()), scratch);
     masm.branchTestObjShape(Assembler::NotEqual, objReg, scratch, &failure);
 
-    // Guard for ListObject.
-    {
-        GeneralRegisterSet domProxyRegSet(GeneralRegisterSet::All());
-        domProxyRegSet.take(BaselineStubReg);
-        domProxyRegSet.take(objReg);
-        domProxyRegSet.take(scratch);
-        GenerateDOMProxyChecks(
-                cx, masm, objReg,
-                Address(BaselineStubReg, ICGetProp_DOMProxyShadowed::offsetOfProxyHandler()),
-                /*expandoShapeAddr=*/nullptr,
-                /*expandoAndGenerationAddr=*/nullptr,
-                /*generationAddr=*/nullptr,
-                scratch,
-                domProxyRegSet,
-                &failure);
-    }
+    // No need to do any more guards; it's safe to call ProxyGet even
+    // if we've since stopped shadowing.
 
     // Call ProxyGet(JSContext *cx, HandleObject proxy, HandlePropertyName name, MutableHandleValue vp);
 
@@ -7839,7 +7814,7 @@ ICGetProp_ArgumentsCallee::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 /* static */ ICGetProp_Generic *
-ICGetProp_Generic::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+ICGetProp_Generic::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                          ICGetProp_Generic &other)
 {
     return New<ICGetProp_Generic>(space, other.jitCode(), firstMonitorStub);
@@ -9167,17 +9142,13 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
     if (native == js_String) {
         RootedString emptyString(cx, cx->runtime()->emptyString);
         res.set(StringObject::create(cx, emptyString, TenuredObject));
-        if (!res)
-            return false;
-        return true;
+        return !!res;
     }
 
     if (native == obj_create && args.length() == 1 && args[0].isObjectOrNull()) {
         RootedObject proto(cx, args[0].toObjectOrNull());
         res.set(ObjectCreateImpl(cx, proto, TenuredObject));
-        if (!res)
-            return false;
-        return true;
+        return !!res;
     }
 
     if (JitSupportsSimd()) {
@@ -9186,11 +9157,9 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
            ARITH_COMMONX4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
            BITWISE_COMMONX4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_))
        {
-            Rooted<TypeDescr *> descr(cx, &Int32x4::GetTypeDescr(*cx->global()));
-            res.set(TypedObject::createZeroed(cx, descr, 0, gc::TenuredHeap));
-            if (!res)
-                return false;
-            return true;
+            Rooted<SimdTypeDescr *> descr(cx, &cx->global()->int32x4TypeDescr().as<SimdTypeDescr>());
+            res.set(cx->compartment()->jitCompartment()->getSimdTemplateObjectFor(cx, descr));
+            return !!res;
        }
 #undef ADD_INT32X4_SIMD_OP_NAME_
     }
@@ -9204,20 +9173,14 @@ GetTemplateObjectForClassHook(JSContext *cx, JSNative hook, CallArgs &args,
 {
     if (hook == TypedObject::construct) {
         Rooted<TypeDescr *> descr(cx, &args.callee().as<TypeDescr>());
-        JSObject *obj = TypedObject::createZeroed(cx, descr, 1, gc::TenuredHeap);
-        if (!obj)
-            return false;
-        templateObject.set(obj);
-        return true;
+        templateObject.set(TypedObject::createZeroed(cx, descr, 1, gc::TenuredHeap));
+        return !!templateObject;
     }
 
     if (hook == SimdTypeDescr::call && JitSupportsSimd()) {
         Rooted<SimdTypeDescr *> descr(cx, &args.callee().as<SimdTypeDescr>());
-        JSObject *obj = TypedObject::createZeroed(cx, descr, 0, gc::TenuredHeap);
-        if (!obj)
-            return false;
-        templateObject.set(obj);
-        return true;
+        templateObject.set(cx->compartment()->jitCompartment()->getSimdTemplateObjectFor(cx, descr));
+        return !!templateObject;
     }
 
     return true;
@@ -11599,29 +11562,29 @@ ICRetSub_Resume::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
-ICTypeMonitor_SingleObject::ICTypeMonitor_SingleObject(JitCode *stubCode, HandleObject obj)
+ICTypeMonitor_SingleObject::ICTypeMonitor_SingleObject(JitCode *stubCode, JSObject *obj)
   : ICStub(TypeMonitor_SingleObject, stubCode),
     obj_(obj)
 { }
 
-ICTypeMonitor_ObjectGroup::ICTypeMonitor_ObjectGroup(JitCode *stubCode, HandleObjectGroup group)
+ICTypeMonitor_ObjectGroup::ICTypeMonitor_ObjectGroup(JitCode *stubCode, ObjectGroup *group)
   : ICStub(TypeMonitor_ObjectGroup, stubCode),
     group_(group)
 { }
 
-ICTypeUpdate_SingleObject::ICTypeUpdate_SingleObject(JitCode *stubCode, HandleObject obj)
+ICTypeUpdate_SingleObject::ICTypeUpdate_SingleObject(JitCode *stubCode, JSObject *obj)
   : ICStub(TypeUpdate_SingleObject, stubCode),
     obj_(obj)
 { }
 
-ICTypeUpdate_ObjectGroup::ICTypeUpdate_ObjectGroup(JitCode *stubCode, HandleObjectGroup group)
+ICTypeUpdate_ObjectGroup::ICTypeUpdate_ObjectGroup(JitCode *stubCode, ObjectGroup *group)
   : ICStub(TypeUpdate_ObjectGroup, stubCode),
     group_(group)
 { }
 
 ICGetElemNativeStub::ICGetElemNativeStub(ICStub::Kind kind, JitCode *stubCode,
                                          ICStub *firstMonitorStub,
-                                         HandleShape shape, HandlePropertyName name,
+                                         Shape *shape, PropertyName *name,
                                          AccessType acctype, bool needsAtomize)
   : ICMonitoredStub(kind, stubCode, firstMonitorStub),
     shape_(shape),
@@ -11636,8 +11599,8 @@ ICGetElemNativeStub::~ICGetElemNativeStub()
 
 ICGetElemNativeGetterStub::ICGetElemNativeGetterStub(
                         ICStub::Kind kind, JitCode *stubCode, ICStub *firstMonitorStub,
-                        HandleShape shape, HandlePropertyName name, AccessType acctype,
-                        bool needsAtomize, HandleFunction getter, uint32_t pcOffset)
+                        Shape *shape, PropertyName *name, AccessType acctype,
+                        bool needsAtomize, JSFunction *getter, uint32_t pcOffset)
   : ICGetElemNativeStub(kind, stubCode, firstMonitorStub, shape, name, acctype, needsAtomize),
     getter_(getter),
     pcOffset_(pcOffset)
@@ -11649,9 +11612,9 @@ ICGetElemNativeGetterStub::ICGetElemNativeGetterStub(
 
 ICGetElem_NativePrototypeSlot::ICGetElem_NativePrototypeSlot(
                             JitCode *stubCode, ICStub *firstMonitorStub,
-                            HandleShape shape, HandlePropertyName name,
+                            Shape *shape, PropertyName *name,
                             AccessType acctype, bool needsAtomize, uint32_t offset,
-                            HandleObject holder, HandleShape holderShape)
+                            JSObject *holder, Shape *holderShape)
   : ICGetElemNativeSlotStub(ICStub::GetElem_NativePrototypeSlot, stubCode, firstMonitorStub, shape,
                             name, acctype, needsAtomize, offset),
     holder_(holder),
@@ -11660,9 +11623,9 @@ ICGetElem_NativePrototypeSlot::ICGetElem_NativePrototypeSlot(
 
 ICGetElemNativePrototypeCallStub::ICGetElemNativePrototypeCallStub(
                                 ICStub::Kind kind, JitCode *stubCode, ICStub *firstMonitorStub,
-                                HandleShape shape, HandlePropertyName name,
-                                AccessType acctype, bool needsAtomize, HandleFunction getter,
-                                uint32_t pcOffset, HandleObject holder, HandleShape holderShape)
+                                Shape *shape, PropertyName *name,
+                                AccessType acctype, bool needsAtomize, JSFunction *getter,
+                                uint32_t pcOffset, JSObject *holder, Shape *holderShape)
   : ICGetElemNativeGetterStub(kind, stubCode, firstMonitorStub, shape, name, acctype, needsAtomize,
                               getter, pcOffset),
     holder_(holder),
@@ -11670,50 +11633,40 @@ ICGetElemNativePrototypeCallStub::ICGetElemNativePrototypeCallStub(
 {}
 
 /* static */ ICGetElem_NativePrototypeCallNative *
-ICGetElem_NativePrototypeCallNative::Clone(JSContext *cx, ICStubSpace *space,
+ICGetElem_NativePrototypeCallNative::Clone(ICStubSpace *space,
                                            ICStub *firstMonitorStub,
                                            ICGetElem_NativePrototypeCallNative &other)
 {
-    RootedShape shape(cx, other.shape());
-    RootedPropertyName name(cx, other.name());
-    RootedFunction getter(cx, other.getter());
-    RootedObject holder(cx, other.holder());
-    RootedShape holderShape(cx, other.holderShape());
     return New<ICGetElem_NativePrototypeCallNative>(space, other.jitCode(), firstMonitorStub,
-                                                    shape, name, other.accessType(),
-                                                    other.needsAtomize(), getter, other.pcOffset_,
-                                                    holder, holderShape);
+                                                    other.shape(), other.name(), other.accessType(),
+                                                    other.needsAtomize(), other.getter(), other.pcOffset_,
+                                                    other.holder(), other.holderShape());
 }
 
 /* static */ ICGetElem_NativePrototypeCallScripted *
-ICGetElem_NativePrototypeCallScripted::Clone(JSContext *cx, ICStubSpace *space,
+ICGetElem_NativePrototypeCallScripted::Clone(ICStubSpace *space,
                                              ICStub *firstMonitorStub,
                                              ICGetElem_NativePrototypeCallScripted &other)
 {
-    RootedShape shape(cx, other.shape());
-    RootedPropertyName name(cx, other.name());
-    RootedFunction getter(cx, other.getter());
-    RootedObject holder(cx, other.holder());
-    RootedShape holderShape(cx, other.holderShape());
-    return New<ICGetElem_NativePrototypeCallScripted>(space, other.jitCode(), firstMonitorStub, shape, name,
-                                                      other.accessType(), other.needsAtomize(), getter,
-                                                      other.pcOffset_, holder, holderShape);
+    return New<ICGetElem_NativePrototypeCallScripted>(space, other.jitCode(), firstMonitorStub,
+                                                      other.shape(), other.name(),
+                                                      other.accessType(), other.needsAtomize(), other.getter(),
+                                                      other.pcOffset_, other.holder(), other.holderShape());
 }
 
-ICGetElem_Dense::ICGetElem_Dense(JitCode *stubCode, ICStub *firstMonitorStub, HandleShape shape)
+ICGetElem_Dense::ICGetElem_Dense(JitCode *stubCode, ICStub *firstMonitorStub, Shape *shape)
     : ICMonitoredStub(GetElem_Dense, stubCode, firstMonitorStub),
       shape_(shape)
 { }
 
 /* static */ ICGetElem_Dense *
-ICGetElem_Dense::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+ICGetElem_Dense::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                        ICGetElem_Dense &other)
 {
-    RootedShape shape(cx, other.shape_);
-    return New<ICGetElem_Dense>(space, other.jitCode(), firstMonitorStub, shape);
+    return New<ICGetElem_Dense>(space, other.jitCode(), firstMonitorStub, other.shape_);
 }
 
-ICGetElem_TypedArray::ICGetElem_TypedArray(JitCode *stubCode, HandleShape shape, Scalar::Type type)
+ICGetElem_TypedArray::ICGetElem_TypedArray(JitCode *stubCode, Shape *shape, Scalar::Type type)
   : ICStub(GetElem_TypedArray, stubCode),
     shape_(shape)
 {
@@ -11722,13 +11675,13 @@ ICGetElem_TypedArray::ICGetElem_TypedArray(JitCode *stubCode, HandleShape shape,
 }
 
 /* static */ ICGetElem_Arguments *
-ICGetElem_Arguments::Clone(JSContext *, ICStubSpace *space, ICStub *firstMonitorStub,
+ICGetElem_Arguments::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                            ICGetElem_Arguments &other)
 {
     return New<ICGetElem_Arguments>(space, other.jitCode(), firstMonitorStub, other.which());
 }
 
-ICSetElem_Dense::ICSetElem_Dense(JitCode *stubCode, HandleShape shape, HandleObjectGroup group)
+ICSetElem_Dense::ICSetElem_Dense(JitCode *stubCode, Shape *shape, ObjectGroup *group)
   : ICUpdatedStub(SetElem_Dense, stubCode),
     shape_(shape),
     group_(group)
@@ -11754,7 +11707,7 @@ ICSetElemDenseAddCompiler::getStubSpecific(ICStubSpace *space, const AutoShapeVe
     return ICStub::New<ICSetElem_DenseAddImpl<ProtoChainDepth>>(space, stubCode, group, shapes);
 }
 
-ICSetElem_TypedArray::ICSetElem_TypedArray(JitCode *stubCode, HandleShape shape, Scalar::Type type,
+ICSetElem_TypedArray::ICSetElem_TypedArray(JitCode *stubCode, Shape *shape, Scalar::Type type,
                                            bool expectOutOfBounds)
   : ICStub(SetElem_TypedArray, stubCode),
     shape_(shape)
@@ -11764,7 +11717,7 @@ ICSetElem_TypedArray::ICSetElem_TypedArray(JitCode *stubCode, HandleShape shape,
     extra_ |= (static_cast<uint16_t>(expectOutOfBounds) << 8);
 }
 
-ICGetName_Global::ICGetName_Global(JitCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
+ICGetName_Global::ICGetName_Global(JitCode *stubCode, ICStub *firstMonitorStub, Shape *shape,
                                    uint32_t slot)
   : ICMonitoredStub(GetName_Global, stubCode, firstMonitorStub),
     shape_(shape),
@@ -11783,7 +11736,7 @@ ICGetName_Scope<NumHops>::ICGetName_Scope(JitCode *stubCode, ICStub *firstMonito
         shapes_[i].init((*shapes)[i]);
 }
 
-ICGetIntrinsic_Constant::ICGetIntrinsic_Constant(JitCode *stubCode, HandleValue value)
+ICGetIntrinsic_Constant::ICGetIntrinsic_Constant(JitCode *stubCode, const Value &value)
   : ICStub(GetIntrinsic_Constant, stubCode),
     value_(value)
 { }
@@ -11792,7 +11745,7 @@ ICGetIntrinsic_Constant::~ICGetIntrinsic_Constant()
 { }
 
 ICGetProp_Primitive::ICGetProp_Primitive(JitCode *stubCode, ICStub *firstMonitorStub,
-                                         HandleShape protoShape, uint32_t offset)
+                                         Shape *protoShape, uint32_t offset)
   : ICMonitoredStub(GetProp_Primitive, stubCode, firstMonitorStub),
     protoShape_(protoShape),
     offset_(offset)
@@ -11805,16 +11758,16 @@ ICGetPropNativeStub::ICGetPropNativeStub(ICStub::Kind kind, JitCode *stubCode,
 { }
 
 /* static */ ICGetProp_Native *
-ICGetProp_Native::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+ICGetProp_Native::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                         ICGetProp_Native &other)
 {
-    RootedShape shape(cx, other.shape());
-    return New<ICGetProp_Native>(space, other.jitCode(), firstMonitorStub, shape, other.offset());
+    return New<ICGetProp_Native>(space, other.jitCode(), firstMonitorStub, other.shape(),
+                                 other.offset());
 }
 
 ICGetProp_NativePrototype::ICGetProp_NativePrototype(JitCode *stubCode, ICStub *firstMonitorStub,
-                                                     HandleShape shape, uint32_t offset,
-                                                     HandleObject holder, HandleShape holderShape)
+                                                     Shape *shape, uint32_t offset,
+                                                     JSObject *holder, Shape *holderShape)
   : ICGetPropNativeStub(GetProp_NativePrototype, stubCode, firstMonitorStub, offset),
     shape_(shape),
     holder_(holder),
@@ -11822,19 +11775,16 @@ ICGetProp_NativePrototype::ICGetProp_NativePrototype(JitCode *stubCode, ICStub *
 { }
 
 /* static */ ICGetProp_NativePrototype *
-ICGetProp_NativePrototype::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+ICGetProp_NativePrototype::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                  ICGetProp_NativePrototype &other)
 {
-    RootedShape shape(cx, other.shape());
-    RootedObject holder(cx, other.holder_);
-    RootedShape holderShape(cx, other.holderShape_);
-    return New<ICGetProp_NativePrototype>(space, other.jitCode(), firstMonitorStub, shape,
-                                          other.offset(), holder, holderShape);
+    return New<ICGetProp_NativePrototype>(space, other.jitCode(), firstMonitorStub, other.shape(),
+                                          other.offset(), other.holder_, other.holderShape_);
 }
 
 ICGetProp_UnboxedPrototype::ICGetProp_UnboxedPrototype(JitCode *stubCode, ICStub *firstMonitorStub,
-                                                       HandleObjectGroup group, uint32_t offset,
-                                                       HandleObject holder, HandleShape holderShape)
+                                                       ObjectGroup *group, uint32_t offset,
+                                                       JSObject *holder, Shape *holderShape)
   : ICGetPropNativeStub(GetProp_UnboxedPrototype, stubCode, firstMonitorStub, offset),
     group_(group),
     holder_(holder),
@@ -11842,14 +11792,11 @@ ICGetProp_UnboxedPrototype::ICGetProp_UnboxedPrototype(JitCode *stubCode, ICStub
 { }
 
 /* static */ ICGetProp_UnboxedPrototype *
-ICGetProp_UnboxedPrototype::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+ICGetProp_UnboxedPrototype::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                   ICGetProp_UnboxedPrototype &other)
 {
-    RootedObjectGroup group(cx, other.group());
-    RootedObject holder(cx, other.holder_);
-    RootedShape holderShape(cx, other.holderShape_);
-    return New<ICGetProp_UnboxedPrototype>(space, other.jitCode(), firstMonitorStub, group,
-                                           other.offset(), holder, holderShape);
+    return New<ICGetProp_UnboxedPrototype>(space, other.jitCode(), firstMonitorStub, other.group(),
+                                           other.offset(), other.holder_, other.holderShape_);
 }
 
 ICGetProp_NativeDoesNotExist::ICGetProp_NativeDoesNotExist(
@@ -11890,7 +11837,7 @@ ICGetPropNativeDoesNotExistCompiler::ICGetPropNativeDoesNotExistCompiler(
 }
 
 ICGetPropCallGetter::ICGetPropCallGetter(Kind kind, JitCode *stubCode, ICStub *firstMonitorStub,
-                                         HandleObject holder, HandleShape holderShape, HandleFunction getter,
+                                         JSObject *holder, Shape *holderShape, JSFunction *getter,
                                          uint32_t pcOffset)
   : ICMonitoredStub(kind, stubCode, firstMonitorStub),
     holder_(holder),
@@ -11907,9 +11854,9 @@ ICGetPropCallGetter::ICGetPropCallGetter(Kind kind, JitCode *stubCode, ICStub *f
 
 ICGetPropCallPrototypeGetter::ICGetPropCallPrototypeGetter(Kind kind, JitCode *stubCode,
                                                            ICStub *firstMonitorStub,
-                                                           HandleShape receiverShape, HandleObject holder,
-                                                           HandleShape holderShape,
-                                                           HandleFunction getter, uint32_t pcOffset)
+                                                           Shape *receiverShape, JSObject *holder,
+                                                           Shape *holderShape,
+                                                           JSFunction *getter, uint32_t pcOffset)
   : ICGetPropCallGetter(kind, stubCode, firstMonitorStub, holder, holderShape, getter, pcOffset),
     receiverShape_(receiverShape)
 {
@@ -11925,41 +11872,32 @@ ICInstanceOf_Function::ICInstanceOf_Function(JitCode *stubCode, Shape *shape,
 { }
 
 /* static */ ICGetProp_CallScripted *
-ICGetProp_CallScripted::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+ICGetProp_CallScripted::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                               ICGetProp_CallScripted &other)
 {
-    RootedShape receiverShape(cx, other.receiverShape_);
-    RootedObject holder(cx, other.holder_);
-    RootedShape holderShape(cx, other.holderShape_);
-    RootedFunction getter(cx, other.getter_);
-    return New<ICGetProp_CallScripted>(space, other.jitCode(), firstMonitorStub, receiverShape,
-                                       holder, holderShape, getter, other.pcOffset_);
+    return New<ICGetProp_CallScripted>(space, other.jitCode(), firstMonitorStub,
+                                       other.receiverShape_, other.holder_, other.holderShape_,
+                                       other.getter_, other.pcOffset_);
 }
 
 /* static */ ICGetProp_CallNative *
-ICGetProp_CallNative::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+ICGetProp_CallNative::Clone( ICStubSpace *space, ICStub *firstMonitorStub,
                             ICGetProp_CallNative &other)
 {
-    RootedObject holder(cx, other.holder_);
-    RootedShape holderShape(cx, other.holderShape_);
-    RootedFunction getter(cx, other.getter_);
-    return New<ICGetProp_CallNative>(space, other.jitCode(), firstMonitorStub, holder, holderShape,
-                                     getter, other.pcOffset_);
+    return New<ICGetProp_CallNative>(space, other.jitCode(), firstMonitorStub, other.holder_,
+                                     other.holderShape_, other.getter_, other.pcOffset_);
 }
 
 /* static */ ICGetProp_CallNativePrototype *
-ICGetProp_CallNativePrototype::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+ICGetProp_CallNativePrototype::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                      ICGetProp_CallNativePrototype &other)
 {
-    RootedShape receiverShape(cx, other.receiverShape_);
-    RootedObject holder(cx, other.holder_);
-    RootedShape holderShape(cx, other.holderShape_);
-    RootedFunction getter(cx, other.getter_);
-    return New<ICGetProp_CallNativePrototype>(space, other.jitCode(), firstMonitorStub, receiverShape,
-                                              holder, holderShape, getter, other.pcOffset_);
+    return New<ICGetProp_CallNativePrototype>(space, other.jitCode(), firstMonitorStub,
+                                              other.receiverShape_, other.holder_,
+                                              other.holderShape_, other.getter_, other.pcOffset_);
 }
 
-ICSetProp_Native::ICSetProp_Native(JitCode *stubCode, HandleObjectGroup group, HandleShape shape,
+ICSetProp_Native::ICSetProp_Native(JitCode *stubCode, ObjectGroup *group, Shape *shape,
                                    uint32_t offset)
   : ICUpdatedStub(SetProp_Native, stubCode),
     group_(group),
@@ -11981,10 +11919,10 @@ ICSetProp_Native::Compiler::getStub(ICStubSpace *space)
     return stub;
 }
 
-ICSetProp_NativeAdd::ICSetProp_NativeAdd(JitCode *stubCode, HandleObjectGroup group,
+ICSetProp_NativeAdd::ICSetProp_NativeAdd(JitCode *stubCode, ObjectGroup *group,
                                          size_t protoChainDepth,
-                                         HandleShape newShape,
-                                         HandleObjectGroup newGroup,
+                                         Shape *newShape,
+                                         ObjectGroup *newGroup,
                                          uint32_t offset)
   : ICUpdatedStub(SetProp_NativeAdd, stubCode),
     group_(group),
@@ -11998,10 +11936,10 @@ ICSetProp_NativeAdd::ICSetProp_NativeAdd(JitCode *stubCode, HandleObjectGroup gr
 
 template <size_t ProtoChainDepth>
 ICSetProp_NativeAddImpl<ProtoChainDepth>::ICSetProp_NativeAddImpl(JitCode *stubCode,
-                                                                  HandleObjectGroup group,
+                                                                  ObjectGroup *group,
                                                                   const AutoShapeVector *shapes,
-                                                                  HandleShape newShape,
-                                                                  HandleObjectGroup newGroup,
+                                                                  Shape *newShape,
+                                                                  ObjectGroup *newGroup,
                                                                   uint32_t offset)
   : ICSetProp_NativeAdd(stubCode, group, ProtoChainDepth, newShape, newGroup, offset)
 {
@@ -12027,9 +11965,9 @@ ICSetPropNativeAddCompiler::ICSetPropNativeAddCompiler(JSContext *cx, HandleObje
     MOZ_ASSERT(protoChainDepth_ <= ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH);
 }
 
-ICSetPropCallSetter::ICSetPropCallSetter(Kind kind, JitCode *stubCode, HandleShape shape,
-                                         HandleObject holder, HandleShape holderShape,
-                                         HandleFunction setter, uint32_t pcOffset)
+ICSetPropCallSetter::ICSetPropCallSetter(Kind kind, JitCode *stubCode, Shape *shape,
+                                         JSObject *holder, Shape *holderShape,
+                                         JSFunction *setter, uint32_t pcOffset)
   : ICStub(kind, stubCode),
     shape_(shape),
     holder_(holder),
@@ -12041,31 +11979,21 @@ ICSetPropCallSetter::ICSetPropCallSetter(Kind kind, JitCode *stubCode, HandleSha
 }
 
 /* static */ ICSetProp_CallScripted *
-ICSetProp_CallScripted::Clone(JSContext *cx, ICStubSpace *space, ICStub *,
-                              ICSetProp_CallScripted &other)
+ICSetProp_CallScripted::Clone(ICStubSpace *space, ICStub *, ICSetProp_CallScripted &other)
 {
-    RootedShape shape(cx, other.shape_);
-    RootedObject holder(cx, other.holder_);
-    RootedShape holderShape(cx, other.holderShape_);
-    RootedFunction setter(cx, other.setter_);
-    return New<ICSetProp_CallScripted>(space, other.jitCode(), shape, holder, holderShape, setter,
-                                       other.pcOffset_);
+    return New<ICSetProp_CallScripted>(space, other.jitCode(), other.shape_, other.holder_,
+                                       other.holderShape_, other.setter_, other.pcOffset_);
 }
 
 /* static */ ICSetProp_CallNative *
-ICSetProp_CallNative::Clone(JSContext *cx, ICStubSpace *space, ICStub *,
-                            ICSetProp_CallNative &other)
+ICSetProp_CallNative::Clone(ICStubSpace *space, ICStub *, ICSetProp_CallNative &other)
 {
-    RootedShape shape(cx, other.shape_);
-    RootedObject holder(cx, other.holder_);
-    RootedShape holderShape(cx, other.holderShape_);
-    RootedFunction setter(cx, other.setter_);
-    return New<ICSetProp_CallNative>(space, other.jitCode(), shape, holder, holderShape, setter,
-                                     other.pcOffset_);
+    return New<ICSetProp_CallNative>(space, other.jitCode(), other.shape_, other.holder_,
+                                     other.holderShape_, other.setter_, other.pcOffset_);
 }
 
 ICCall_Scripted::ICCall_Scripted(JitCode *stubCode, ICStub *firstMonitorStub,
-                                 HandleFunction callee, HandleObject templateObject,
+                                 JSFunction *callee, JSObject *templateObject,
                                  uint32_t pcOffset)
   : ICMonitoredStub(ICStub::Call_Scripted, stubCode, firstMonitorStub),
     callee_(callee),
@@ -12074,24 +12002,20 @@ ICCall_Scripted::ICCall_Scripted(JitCode *stubCode, ICStub *firstMonitorStub,
 { }
 
 /* static */ ICCall_Scripted *
-ICCall_Scripted::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
-                       ICCall_Scripted &other)
+ICCall_Scripted::Clone(ICStubSpace *space, ICStub *firstMonitorStub, ICCall_Scripted &other)
 {
-    RootedFunction callee(cx, other.callee_);
-    RootedObject templateObject(cx, other.templateObject_);
-    return New<ICCall_Scripted>(space, other.jitCode(), firstMonitorStub, callee, templateObject,
-                                other.pcOffset_);
+    return New<ICCall_Scripted>(space, other.jitCode(), firstMonitorStub, other.callee_,
+                                other.templateObject_, other.pcOffset_);
 }
 
 /* static */ ICCall_AnyScripted *
-ICCall_AnyScripted::Clone(JSContext *, ICStubSpace *space, ICStub *firstMonitorStub,
-                          ICCall_AnyScripted &other)
+ICCall_AnyScripted::Clone(ICStubSpace *space, ICStub *firstMonitorStub, ICCall_AnyScripted &other)
 {
     return New<ICCall_AnyScripted>(space, other.jitCode(), firstMonitorStub, other.pcOffset_);
 }
 
 ICCall_Native::ICCall_Native(JitCode *stubCode, ICStub *firstMonitorStub,
-                             HandleFunction callee, HandleObject templateObject,
+                             JSFunction *callee, JSObject *templateObject,
                              uint32_t pcOffset)
   : ICMonitoredStub(ICStub::Call_Native, stubCode, firstMonitorStub),
     callee_(callee),
@@ -12108,18 +12032,15 @@ ICCall_Native::ICCall_Native(JitCode *stubCode, ICStub *firstMonitorStub,
 }
 
 /* static */ ICCall_Native *
-ICCall_Native::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
-                     ICCall_Native &other)
+ICCall_Native::Clone(ICStubSpace *space, ICStub *firstMonitorStub, ICCall_Native &other)
 {
-    RootedFunction callee(cx, other.callee_);
-    RootedObject templateObject(cx, other.templateObject_);
-    return New<ICCall_Native>(space, other.jitCode(), firstMonitorStub, callee, templateObject,
-                              other.pcOffset_);
+    return New<ICCall_Native>(space, other.jitCode(), firstMonitorStub, other.callee_,
+                              other.templateObject_, other.pcOffset_);
 }
 
 ICCall_ClassHook::ICCall_ClassHook(JitCode *stubCode, ICStub *firstMonitorStub,
                                    const Class *clasp, Native native,
-                                   HandleObject templateObject, uint32_t pcOffset)
+                                   JSObject *templateObject, uint32_t pcOffset)
   : ICMonitoredStub(ICStub::Call_ClassHook, stubCode, firstMonitorStub),
     clasp_(clasp),
     native_(JS_FUNC_TO_DATA_PTR(void *, native)),
@@ -12135,12 +12056,10 @@ ICCall_ClassHook::ICCall_ClassHook(JitCode *stubCode, ICStub *firstMonitorStub,
 }
 
 /* static */ ICCall_ClassHook *
-ICCall_ClassHook::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
-                        ICCall_ClassHook &other)
+ICCall_ClassHook::Clone(ICStubSpace *space, ICStub *firstMonitorStub, ICCall_ClassHook &other)
 {
-    RootedObject templateObject(cx, other.templateObject_);
     ICCall_ClassHook *res = New<ICCall_ClassHook>(space, other.jitCode(), firstMonitorStub,
-                                                  other.clasp(), nullptr, templateObject,
+                                                  other.clasp(), nullptr, other.templateObject_,
                                                   other.pcOffset_);
     if (res)
         res->native_ = other.native();
@@ -12148,7 +12067,7 @@ ICCall_ClassHook::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorS
 }
 
 /* static */ ICCall_ScriptedApplyArray *
-ICCall_ScriptedApplyArray::Clone(JSContext *, ICStubSpace *space, ICStub *firstMonitorStub,
+ICCall_ScriptedApplyArray::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                  ICCall_ScriptedApplyArray &other)
 {
     return New<ICCall_ScriptedApplyArray>(space, other.jitCode(), firstMonitorStub,
@@ -12156,7 +12075,7 @@ ICCall_ScriptedApplyArray::Clone(JSContext *, ICStubSpace *space, ICStub *firstM
 }
 
 /* static */ ICCall_ScriptedApplyArguments *
-ICCall_ScriptedApplyArguments::Clone(JSContext *, ICStubSpace *space,
+ICCall_ScriptedApplyArguments::Clone(ICStubSpace *space,
                                      ICStub *firstMonitorStub,
                                      ICCall_ScriptedApplyArguments &other)
 {
@@ -12165,7 +12084,7 @@ ICCall_ScriptedApplyArguments::Clone(JSContext *, ICStubSpace *space,
 }
 
 /* static */ ICCall_ScriptedFunCall *
-ICCall_ScriptedFunCall::Clone(JSContext *, ICStubSpace *space, ICStub *firstMonitorStub,
+ICCall_ScriptedFunCall::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                               ICCall_ScriptedFunCall &other)
 {
     return New<ICCall_ScriptedFunCall>(space, other.jitCode(), firstMonitorStub, other.pcOffset_);
@@ -12173,17 +12092,15 @@ ICCall_ScriptedFunCall::Clone(JSContext *, ICStubSpace *space, ICStub *firstMoni
 
 ICGetPropCallDOMProxyNativeStub::ICGetPropCallDOMProxyNativeStub(Kind kind, JitCode *stubCode,
                                                                  ICStub *firstMonitorStub,
-                                                                 HandleShape shape,
-                                                                 const BaseProxyHandler *proxyHandler,
-                                                                 HandleShape expandoShape,
-                                                                 HandleObject holder,
-                                                                 HandleShape holderShape,
-                                                                 HandleFunction getter,
+                                                                 Shape *shape,
+                                                                 Shape *expandoShape,
+                                                                 JSObject *holder,
+                                                                 Shape *holderShape,
+                                                                 JSFunction *getter,
                                                                  uint32_t pcOffset)
 : ICGetPropCallGetter(kind, stubCode, firstMonitorStub, holder, holderShape,
                       getter, pcOffset),
     shape_(shape),
-    proxyHandler_(proxyHandler),
     expandoShape_(expandoShape)
 { }
 
@@ -12207,41 +12124,34 @@ ICGetPropCallDOMProxyNativeCompiler::ICGetPropCallDOMProxyNativeCompiler(JSConte
 }
 
 /* static */ ICGetProp_CallDOMProxyNative *
-ICGetProp_CallDOMProxyNative::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+ICGetProp_CallDOMProxyNative::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                     ICGetProp_CallDOMProxyNative &other)
 {
-    RootedShape shape(cx, other.shape_);
-    RootedShape expandoShape(cx, other.expandoShape_);
-    RootedObject holder(cx, other.holder_);
-    RootedShape holderShape(cx, other.holderShape_);
-    RootedFunction getter(cx, other.getter_);
-    return New<ICGetProp_CallDOMProxyNative>(space, other.jitCode(), firstMonitorStub, shape,
-                                             other.proxyHandler_, expandoShape, holder,
-                                             holderShape, getter, other.pcOffset_);
+    return New<ICGetProp_CallDOMProxyNative>(space, other.jitCode(), firstMonitorStub,
+                                             other.shape_, other.expandoShape_,
+                                             other.holder_, other.holderShape_, other.getter_,
+                                             other.pcOffset_);
 }
 
 /* static */ ICGetProp_CallDOMProxyWithGenerationNative *
-ICGetProp_CallDOMProxyWithGenerationNative::Clone(JSContext *cx, ICStubSpace *space,
+ICGetProp_CallDOMProxyWithGenerationNative::Clone(ICStubSpace *space,
                                                   ICStub *firstMonitorStub,
                                                   ICGetProp_CallDOMProxyWithGenerationNative &other)
 {
-    RootedShape shape(cx, other.shape_);
-    RootedShape expandoShape(cx, other.expandoShape_);
-    RootedObject holder(cx, other.holder_);
-    RootedShape holderShape(cx, other.holderShape_);
-    RootedFunction getter(cx, other.getter_);
     return New<ICGetProp_CallDOMProxyWithGenerationNative>(space, other.jitCode(), firstMonitorStub,
-                                                           shape, other.proxyHandler_,
-                                                           other.expandoAndGeneration_, other.generation_,
-                                                           expandoShape, holder, holderShape, getter,
+                                                           other.shape_,
+                                                           other.expandoAndGeneration_,
+                                                           other.generation_,
+                                                           other.expandoShape_, other.holder_,
+                                                           other.holderShape_, other.getter_,
                                                            other.pcOffset_);
 }
 
 ICGetProp_DOMProxyShadowed::ICGetProp_DOMProxyShadowed(JitCode *stubCode,
                                                        ICStub *firstMonitorStub,
-                                                       HandleShape shape,
+                                                       Shape *shape,
                                                        const BaseProxyHandler *proxyHandler,
-                                                       HandlePropertyName name,
+                                                       PropertyName *name,
                                                        uint32_t pcOffset)
   : ICMonitoredStub(ICStub::GetProp_DOMProxyShadowed, stubCode, firstMonitorStub),
     shape_(shape),
@@ -12251,13 +12161,11 @@ ICGetProp_DOMProxyShadowed::ICGetProp_DOMProxyShadowed(JitCode *stubCode,
 { }
 
 /* static */ ICGetProp_DOMProxyShadowed *
-ICGetProp_DOMProxyShadowed::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+ICGetProp_DOMProxyShadowed::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                   ICGetProp_DOMProxyShadowed &other)
 {
-    RootedShape shape(cx, other.shape_);
-    RootedPropertyName name(cx, other.name_);
-    return New<ICGetProp_DOMProxyShadowed>(space, other.jitCode(), firstMonitorStub, shape,
-                                           other.proxyHandler_, name, other.pcOffset_);
+    return New<ICGetProp_DOMProxyShadowed>(space, other.jitCode(), firstMonitorStub, other.shape_,
+                                           other.proxyHandler_, other.name_, other.pcOffset_);
 }
 
 //

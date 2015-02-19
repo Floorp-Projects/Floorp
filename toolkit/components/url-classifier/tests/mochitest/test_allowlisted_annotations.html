@@ -21,8 +21,6 @@ var Ci = SpecialPowers.Ci;
 SpecialPowers.addPermission("trackingprotection",
                             Ci.nsIPermissionManager.ALLOW_ACTION,
                             { url: "https://allowlisted.example.com" });
-// Enable synthetic allowlist URL in nsChannelClassifier
-SpecialPowers.setBoolPref("channelclassifier.allowlist_example", true);
 
 // Add some URLs to the tracking database
 var testData = "tracking.example.com/";
@@ -40,8 +38,6 @@ function clearPermissions() {
   ok(!SpecialPowers.testPermission("trackingprotection",
                                    Ci.nsIPermissionManager.ALLOW_ACTION,
                                    { url: "https://allowlisted.example.com" }));
-  SpecialPowers.clearUserPref("privacy.trackingprotection.enabled");
-  SpecialPowers.clearUserPref("channelclassifier.allowlist_example");
 }
 
 function doUpdate(update) {
@@ -62,7 +58,6 @@ function doUpdate(update) {
       SimpleTest.finish();
     },
     updateSuccess: function(requestedTimeout) {
-      SpecialPowers.setBoolPref("privacy.trackingprotection.enabled", true);
       document.getElementById("testFrame").src = "allowlistAnnotatedFrame.html";
     }
   };
@@ -75,7 +70,9 @@ function doUpdate(update) {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["urlclassifier.trackingTable", "test-track-simple"]]},
+  {"set" : [["urlclassifier.trackingTable", "test-track-simple"],
+            ["privacy.trackingprotection.enabled", true],
+            ["channelclassifier.allowlist_example", true]]},
   function() { doUpdate(testUpdate); });
 
 // Expected finish() call is in "allowlistedAnnotatedFrame.html".

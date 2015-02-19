@@ -161,6 +161,11 @@ pref("dom.gamepad.non_standard_events.enabled", true);
 // Whether the KeyboardEvent.code is enabled
 pref("dom.keyboardevent.code.enabled", true);
 
+// If this is true, TextEventDispatcher dispatches keydown and keyup events
+// even during composition (keypress events are never fired during composition
+// even if this is true).
+pref("dom.keyboardevent.dispatch_during_composition", false);
+
 // Whether the WebCrypto API is enabled
 pref("dom.webcrypto.enabled", true);
 
@@ -186,6 +191,8 @@ pref("browser.sessionhistory.max_total_viewers", -1);
 
 pref("ui.use_native_colors", true);
 pref("ui.click_hold_context_menus", false);
+// Duration of timeout of incremental search in menus (ms).  0 means infinite.
+pref("ui.menu.incremental_search.timeout", 1000);
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 // 0 = default: always, except in high contrast mode
 // 1 = always
@@ -435,11 +442,11 @@ pref("media.webvtt.regions.enabled", false);
 // AudioTrack and VideoTrack support
 pref("media.track.enabled", false);
 
-// Whether to enable MediaSource support.  We want to enable on non-release
-// builds and on release windows, but on release builds restrict to YouTube.  We
-// don't enable for YouTube on non-Windows for now because the MP4 code for
-// those platforms isn't ready yet.
-#if defined(XP_WIN) || !defined(RELEASE_BUILD)
+// Whether to enable MediaSource support.
+// We want to enable on non-release  builds and on release windows and mac
+// but on release builds restrict to YouTube. We don't enable for other
+// configurations because code for those platforms isn't ready yet.
+#if defined(XP_WIN) || defined(XP_MACOSX) || !defined(RELEASE_BUILD)
 pref("media.mediasource.enabled", true);
 #else
 pref("media.mediasource.enabled", false);

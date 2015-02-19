@@ -198,6 +198,17 @@ function testStatesInSubtree(aAccOrElmOrID, aState, aExtraState, aAbsentState)
   }
 }
 
+/**
+ * Fails if no defunct state on the accessible.
+ */
+function testIsDefunct(aAccessible, aTestName)
+{
+  var id = prettyName(aAccessible) + (aTestName ? " [" + aTestName + "]" : "");
+  var [state, extraState] = getStates(aAccessible);
+  isState(extraState & EXT_STATE_DEFUNCT, EXT_STATE_DEFUNCT, true,
+          "no defuct state for " + id + "!");
+}
+
 function getStringStates(aAccOrElmOrID)
 {
   var [state, extraState] = getStates(aAccOrElmOrID);
@@ -209,7 +220,7 @@ function getStates(aAccOrElmOrID)
   var acc = getAccessible(aAccOrElmOrID);
   if (!acc)
     return [0, 0];
-  
+
   var state = {}, extraState = {};
   acc.getState(state, extraState);
 

@@ -558,9 +558,7 @@ struct JSCompartment
     void reportTelemetry();
 
   public:
-    void addTelemetry(DeprecatedLanguageExtension e) {
-        sawDeprecatedLanguageExtension[e] = true;
-    }
+    void addTelemetry(const char *filename, DeprecatedLanguageExtension e);
 };
 
 inline bool

@@ -40,6 +40,7 @@ private:
 
   void MOZ_ALWAYS_INLINE GetDNSRecordHashKey(const nsACString &aHost,
                                              uint32_t aFlags,
+                                             const nsACString &aNetworkInterface,
                                              nsIDNSListener* aListener,
                                              nsACString &aHashKey);
 

@@ -153,3 +153,14 @@ function GetIterator(obj, method) {
     // Step 6.
     return iterator;
 }
+
+function SpeciesConstructor(obj, defaultConstructor) {
+    var C = obj.constructor;
+    if (C === undefined) {
+        return defaultConstructor;
+    }
+    if (!IsConstructor(C)) {
+        ThrowError(JSMSG_NOT_CONSTRUCTOR, DecompileArg(1, C));
+    }
+    return C;
+}

@@ -2938,10 +2938,10 @@ function runIsComposingTest()
 
   // XXX These cases shouldn't occur in actual native key events because we
   //     don't dispatch key events while composition (bug 354358).
+  SpecialPowers.setBoolPref("dom.keyboardevent.dispatch_during_composition", true);
   description = "events before dispatching compositionstart";
   synthesizeKey("VK_LEFT", {});
 
-  synthesizeKey("a", { type: "keydown" });
   description = "events after dispatching compositionchange";
   synthesizeCompositionChange(
     { "composition":
@@ -2951,22 +2951,24 @@ function runIsComposingTest()
           { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
         ]
       },
-      "caret": { "start": 1, "length": 0 }
+      "caret": { "start": 1, "length": 0 },
+      "key": { key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A },
     });
-  synthesizeKey("a", { type: "keyup" });
 
   // Although, firing keypress event during composition is a bug.
   synthesizeKey("VK_INSERT", {});
 
   description = "events for committing composition string";
-  synthesizeKey("VK_RETURN", { type: "keydown" });
 
-  synthesizeComposition({ type: "compositioncommitasis" });
+  synthesizeComposition({ type: "compositioncommitasis",
+                          key: { key: "KEY_Enter", code: "Enter", type: "keydown" } });
 
   // input event will be fired by synthesizing compositionend event.
   // Then, its isComposing should be false.
   description = "events after dispatching compositioncommitasis";
   synthesizeKey("VK_RETURN", { type: "keyup" });
+
+  SpecialPowers.clearUserPref("dom.keyboardevent.dispatch_during_composition");
 
   textarea.removeEventListener("keydown", eventHandler, true);
   textarea.removeEventListener("keypress", eventHandler, true);

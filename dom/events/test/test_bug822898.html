@@ -330,26 +330,14 @@ function runTests() {
   tests.push(testPointerEventCTORS());
 
   tests.push(function() {
-    clearPrefs();
     SimpleTest.finish();
   });
 
   nextTest();
 }
 
-function initPrefs()
-{
-  SpecialPowers.setBoolPref("dom.w3c_pointer_events.enabled", true);      // Enable Pointer Events
-}
-
-function clearPrefs()
-{
-  SpecialPowers.clearUserPref("dom.w3c_pointer_events.enabled");      // Disable Pointer Events
-}
-
-window.onload = function () {
-  initPrefs();
-  SimpleTest.executeSoon(runTests);
+window.onload = function() {
+  SpecialPowers.pushPrefEnv({"set":[["dom.w3c_pointer_events.enabled", true]]}, runTests);
 }
 
 SimpleTest.waitForExplicitFinish();

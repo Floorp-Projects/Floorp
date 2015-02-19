@@ -40,11 +40,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=265203
 <script type="application/javascript">
 
 /** Test for Bug 265203 **/
-
-// Turn off spatial navigation because it hijacks VK_RIGHT and VK_LEFT keydown
-// events
-SpecialPowers.setBoolPref("snav.enabled", false);
-
 var gTestStarted = false;
 var expectedResult = [ null, 0, null ];
 var nextTest;
@@ -101,8 +96,9 @@ function startTest() {
   if (gTestStarted)
     return;
   gTestStarted = true;
-
-  SpecialPowers.pushPrefEnv({"set": [["accessibility.browsewithcaret", true]]}, test0);
+  // Turn off spatial navigation because it hijacks VK_RIGHT and VK_LEFT keydown
+  // events
+  SpecialPowers.pushPrefEnv({"set": [["accessibility.browsewithcaret", true], ["snav.enabled", false]]}, test0);
 }
 
 SimpleTest.waitForExplicitFinish();

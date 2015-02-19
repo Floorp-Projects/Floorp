@@ -153,10 +153,12 @@ protected:
   virtual bool RecvPUDPSocketConstructor(PUDPSocketParent*, const nsCString& aFilter) MOZ_OVERRIDE;
   virtual bool DeallocPUDPSocketParent(PUDPSocketParent*) MOZ_OVERRIDE;
   virtual PDNSRequestParent* AllocPDNSRequestParent(const nsCString& aHost,
-                                                    const uint32_t& aFlags) MOZ_OVERRIDE;
+                                                    const uint32_t& aFlags,
+                                                    const nsCString& aNetworkInterface) MOZ_OVERRIDE;
   virtual bool RecvPDNSRequestConstructor(PDNSRequestParent* actor,
                                           const nsCString& hostName,
-                                          const uint32_t& flags) MOZ_OVERRIDE;
+                                          const uint32_t& flags,
+                                          const nsCString& aNetworkInterface) MOZ_OVERRIDE;
   virtual bool DeallocPDNSRequestParent(PDNSRequestParent*) MOZ_OVERRIDE;
   virtual bool RecvHTMLDNSPrefetch(const nsString& hostname,
                                    const uint16_t& flags) MOZ_OVERRIDE;

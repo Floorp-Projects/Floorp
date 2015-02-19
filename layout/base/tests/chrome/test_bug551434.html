@@ -31,11 +31,10 @@ function runTest()
 
   // key events should not be retargeted when the focus changes to an
   // element in the same document.
-  synthesizeKey("a", { type: "keydown" });
+  synthesizeKey("a", { type: "keydown", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_B });
   is(document.activeElement, $("i2"), "input 2 in focused");
 
-  synthesizeKey("a", { type: "keypress" });
-  synthesizeKey("a", { type: "keyup" });
+  synthesizeKey("a", { type: "keyup", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_B });
 
   is(gKeyDown1, 1, "keydown on input 1");
   is(gKeyPress1, 0, "keypress on input 1");
@@ -53,9 +52,7 @@ function runTest()
 
   var childWinObj = frames[0].wrappedJSObject;
 
-  synthesizeKey("b", { type: "keydown" });
-  synthesizeKey("b", { type: "keypress" });
-  synthesizeKey("b", { type: "keyup" });
+  synthesizeKey("b", { code: "KeyB", keyCode: KeyboardEvent.DOM_VK_B });
   is(gKeyDown3, 1, "keydown on input 3");
   is(gKeyPress3, 1, "keypress on input 3");
   is(gKeyUp3, 1, "keyup on input 3");
@@ -74,9 +71,7 @@ function runTest()
   // element in a chrome document from a content document.
   i4.addEventListener("keydown", function () $("i3").focus(), false);
 
-  synthesizeKey("c", { type: "keydown" });
-  synthesizeKey("c", { type: "keypress" });
-  synthesizeKey("c", { type: "keyup" });
+  synthesizeKey("c", { code: "KeyC", keyCode: KeyboardEvent.DOM_VK_C });
 
   is(gKeyDown3, 1, "keydown on input 3");
   is(gKeyPress3, 1, "keypress on input 3");

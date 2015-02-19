@@ -760,7 +760,7 @@ CloneOldBaselineStub(JSContext *cx, DebugModeOSREntryVector &entries, size_t ent
     switch (oldStub->kind()) {
 #define CASE_KIND(kindName)                                                  \
       case ICStub::kindName:                                                 \
-        entry.newStub = IC##kindName::Clone(cx, stubSpace, firstMonitorStub, \
+        entry.newStub = IC##kindName::Clone(stubSpace, firstMonitorStub,     \
                                             *oldStub->to##kindName());       \
         break;
         PATCHABLE_ICSTUB_KIND_LIST(CASE_KIND)

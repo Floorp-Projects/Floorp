@@ -16,7 +16,14 @@
 namespace mozilla {
 namespace widget {
 
-//static
+// static
+void
+WidgetUtils::Shutdown()
+{
+  WidgetKeyboardEvent::Shutdown();
+}
+
+// static
 already_AddRefed<nsIWidget>
 WidgetUtils::DOMWindowToWidget(nsIDOMWindow *aDOMWindow)
 {

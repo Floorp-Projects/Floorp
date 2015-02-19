@@ -29,11 +29,13 @@ const BadCertHost sBadCertHosts[] =
 {
   { "expired.example.com", "expired" },
   { "notyetvalid.example.com", "notYetValid" },
+  { "before-epoch.example.com", "beforeEpoch" },
   { "selfsigned.example.com", "selfsigned" },
   { "unknownissuer.example.com", "unknownissuer" },
   { "mismatch.example.com", "mismatch" },
   { "expiredissuer.example.com", "expiredissuer" },
   { "notyetvalidissuer.example.com", "notYetValidIssuer" },
+  { "before-epoch-issuer.example.com", "beforeEpochIssuer" },
   { "md5signature.example.com", "md5signature" },
   { "untrusted.example.com", "localhostAndExampleCom" },
   { "untrustedissuer.example.com", "untrustedissuer" },

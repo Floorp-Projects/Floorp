@@ -17,6 +17,7 @@
 #include "base/basictypes.h"
 
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/WidgetUtils.h"
 
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
@@ -107,6 +108,9 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 static void
 nsWidgetGonkModuleDtor()
 {
+    // Shutdown all XP level widget classes.
+    WidgetUtils::Shutdown();
+
     nsLookAndFeel::Shutdown();
     nsAppShellShutdown();
 }
