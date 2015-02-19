@@ -55,7 +55,9 @@ function runTests()
   is(list.selectedItem, $("i1"), "letter pressed not found selectedItem");
 
   keyCheck(list, "T", 2, "letter pressed");
+  SpecialPowers.setIntPref("ui.menu.incremental_search.timeout", 0); // prevent to timeout
   keyCheck(list, "T", 2, "letter pressed");
+  SpecialPowers.clearUserPref("ui.menu.incremental_search.timeout");
   setTimeout(pressedAgain, 1200); 
 }
 
@@ -63,7 +65,9 @@ function pressedAgain()
 {
   var list = $("list");
   keyCheck(list, "T", iswin ? "2b" : 3, "letter pressed again");
+  SpecialPowers.setIntPref("ui.menu.incremental_search.timeout", 0); // prevent to timeout
   keyCheck(list, "W", 2, "second letter pressed");
+  SpecialPowers.clearUserPref("ui.menu.incremental_search.timeout");
   setTimeout(differentPressed, 1200); 
 }
 
