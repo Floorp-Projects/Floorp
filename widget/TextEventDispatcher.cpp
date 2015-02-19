@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "nsIDocShell.h"
@@ -19,12 +20,23 @@ namespace widget {
  * TextEventDispatcher
  *****************************************************************************/
 
+bool TextEventDispatcher::sDispatchKeyEventsDuringComposition = false;
+
 TextEventDispatcher::TextEventDispatcher(nsIWidget* aWidget)
   : mWidget(aWidget)
   , mForTests(false)
   , mIsComposing(false)
 {
   MOZ_RELEASE_ASSERT(mWidget, "aWidget must not be nullptr");
+
+  static bool sInitialized = false;
+  if (!sInitialized) {
+    Preferences::AddBoolVarCache(
+      &sDispatchKeyEventsDuringComposition,
+      "dom.keyboardevent.dispatch_during_composition",
+      false);
+    sInitialized = true;
+  }
 }
 
 nsresult
@@ -251,6 +263,19 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
   // If the key shouldn't cause keypress events, don't this patch them.
   if (aMessage == NS_KEY_PRESS && !aKeyboardEvent.ShouldCauseKeypressEvents()) {
     return false;
+  }
+
+  // Basically, key events shouldn't be dispatched during composition.
+  if (IsComposing()) {
+    // However, if we need to behave like other browsers, we need the keydown
+    // and keyup events.  Note that this behavior is also allowed by D3E spec.
+    // FYI: keypress events must not be fired during composition.
+    if (!sDispatchKeyEventsDuringComposition || aMessage == NS_KEY_PRESS) {
+      return false;
+    }
+    // XXX If there was mOnlyContentDispatch for this case, it might be useful
+    //     because our chrome doesn't assume that key events are fired during
+    //     composition.
   }
 
   nsCOMPtr<nsIWidget> widget(mWidget);
