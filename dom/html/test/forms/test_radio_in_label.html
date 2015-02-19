@@ -23,28 +23,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=229925
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 229925 **/
+SimpleTest.waitForExplicitFinish();
 var r1 = document.getElementById("r1");
 var r2 = document.getElementById("r2");
 var s1 = document.getElementById("s1");
+SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, startTest);
+function startTest() {
+  r1.click();
+  ok(r1.checked,
+     "The first radio input element should be checked by clicking the element");
+  r2.click();
+  ok(r2.checked,
+     "The second radio input element should be checked by clicking the element");
+  s1.click();
+  ok(r1.checked,
+     "The first radio input element should be checked by clicking other element");
 
-r1.click();
-ok(r1.checked,
-   "The first radio input element should be checked by clicking the element");
-r2.click();
-ok(r2.checked,
-   "The second radio input element should be checked by clicking the element");
-s1.click();
-ok(r1.checked,
-   "The first radio input element should be checked by clicking other element");
-
-r1.focus();
-synthesizeKey("VK_LEFT", {});
-ok(r2.checked,
-   "The second radio input element should be checked by key");
-synthesizeKey("VK_LEFT", {});
-ok(r1.checked,
-   "The first radio input element should be checked by key");
-
+  r1.focus();
+  synthesizeKey("VK_LEFT", {});
+  ok(r2.checked,
+     "The second radio input element should be checked by key");
+  synthesizeKey("VK_LEFT", {});
+  ok(r1.checked,
+     "The first radio input element should be checked by key");
+  SimpleTest.finish();
+}
 </script>
 </pre>
 </body>

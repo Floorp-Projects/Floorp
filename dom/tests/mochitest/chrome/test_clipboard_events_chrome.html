@@ -12,9 +12,10 @@
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {
-  SpecialPowers.setBoolPref("dom.event.clipboardevents.enabled", false);
-  window.open("data:text/html,<body onload='window.opener.doChecks(this)'><input id='i' value='Sample Text'></body>",
-              "_blank", "chrome,width=200,height=200");
+  SpecialPowers.pushPrefEnv({"set": [['dom.event.clipboardevents.enabled', false]]}, function() {
+    window.open("data:text/html,<body onload='window.opener.doChecks(this)'><input id='i' value='Sample Text'></body>",
+                "_blank", "chrome,width=200,height=200");
+  });
 }
 
 var event_fired = false;
@@ -49,7 +50,6 @@ function doChecks(win)
     is(textbox.value, "STeText", "paste changed text when preference is disabled");
     ok(event_fired, "paste event fired when preference is disabled")
 
-    SpecialPowers.clearUserPref("dom.event.clipboardevents.enabled");
     win.close();
     SimpleTest.finish();
   }

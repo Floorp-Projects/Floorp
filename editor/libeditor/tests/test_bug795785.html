@@ -29,10 +29,9 @@ SimpleTest.requestFlakyTimeout("This test uses setTimeouts in order to fix an in
 
 // Turn off spatial navigation because it hijacks arrow key events and VK_RETURN
 // events.
-SpecialPowers.setBoolPref("snav.enabled", false);
-
-SimpleTest.waitForFocus(runTests);
-
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, runTests);
+});
 var textarea = document.getElementById("textarea");
 var div = document.getElementById("div");
 

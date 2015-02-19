@@ -16,19 +16,19 @@
   navigator.mozTCPSocket, but mozTCPSocket.open does not work
   in content.
 **/
-SpecialPowers.setBoolPref("dom.mozTCPSocket.enabled", true);
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [['dom.mozTCPSocket.enabled', true]]}, runTest);
+function runTest() {
+  ok('mozTCPSocket' in navigator, "navigator.mozTCPSocket should be accessible if dom.mozTCPSocket.enabled  is true");
 
-ok('mozTCPSocket' in navigator, "navigator.mozTCPSocket should be accessible if dom.mozTCPSocket.enabled is true");
-
-try {
-  navigator.mozTCPSocket.open('localhost', 80);
-  throw new Error("Error: navigator.mozTCPSocket.open should raise for content that does not have the tcp-socket permission");
-} catch (e) {
-  ok(true, "navigator.mozTCPSocket.open should raise for content that does not have the tcp-socket permission");
+  try {
+    navigator.mozTCPSocket.open('localhost', 80);
+    throw new Error("Error: navigator.mozTCPSocket.open should raise for content that does not have the tcp-socket permission");
+  } catch (e) {
+      ok(true, "navigator.mozTCPSocket.open should raise for content that does not have the tcp-socket permission");
+  }
+  SimpleTest.finish();
 }
-
-SpecialPowers.setBoolPref("dom.mozTCPSocket.enabled", false);
-
 </script>
 </pre>
 </body>

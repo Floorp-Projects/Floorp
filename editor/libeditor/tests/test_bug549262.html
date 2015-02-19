@@ -20,7 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549262
 /** Test for Bug 549262 **/
 
 var smoothScrollPref = "general.smoothScroll";
-SpecialPowers.setBoolPref(smoothScrollPref, false);
 SimpleTest.waitForExplicitFinish();
 var win = window.open("file_bug549262.html", "_blank", 
                       "width=600,height=600,scrollbars=yes");
@@ -30,8 +29,10 @@ var cwu = SpecialPowers.getDOMWindowUtils(win);
 function step() {
   cwu.advanceTimeAndRefresh(100);
 }
-
 SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, startTest);
+}, win);
+function startTest() {
   // Make sure that pressing Space when a contenteditable element is not focused
   // will scroll the page.
   var ed = win.document.getElementById("editor");
@@ -121,12 +122,10 @@ SimpleTest.waitForFocus(function() {
   is(win.getSelection().focusOffset, ed.textContent.length, "Selection should be moved to the end");
 
   win.close();
-  SpecialPowers.clearUserPref(smoothScrollPref);
   cwu.restoreNormalRefresh();
 
   SimpleTest.finish();
-}, win);
-
+}
 </script>
 </pre>
 </body>

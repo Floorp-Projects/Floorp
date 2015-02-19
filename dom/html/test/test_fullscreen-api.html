@@ -22,14 +22,6 @@
 <script type="application/javascript">
 
 /** Tests for Bug 545812 **/
-
-// Ensure the full-screen api is enabled, and will be disabled on test exit.
-SpecialPowers.setBoolPref("full-screen-api.enabled", true);
-
-// Disable the requirement for trusted contexts only, so the tests are easier
-// to write.
-SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
-
 SimpleTest.requestFlakyTimeout("untriaged");
 
 // Run the tests which go full-screen in new windows, as mochitests normally
@@ -94,8 +86,6 @@ function runNextTest() {
     }, false);
     gTestIndex++;
   } else {
-    SpecialPowers.clearUserPref("full-screen-api.enabled");
-    SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
     SimpleTest.finish();
   }
 }
@@ -108,11 +98,16 @@ if (isOSXLion || isOSXMtnLion || isOSXYosemite) {
   } catch (e) {
   }
   is(window.fullScreen, false, "Shouldn't be able to set window fullscreen from content");
-
-  addLoadEvent(nextTest);
+  // Ensure the full-screen api is enabled, and will be disabled on test exit.
+  // Disable the requirement for trusted contexts only, so the tests are easier
+  // to write
+  addLoadEvent(function() {
+    SpecialPowers.pushPrefEnv({
+      "set":[["full-screen-api.enabled", true],
+             ["full-screen-api.allow-trusted-requests-only", false]]}, nextTest);
+  });
   SimpleTest.waitForExplicitFinish();
 }
-
 </script>
 </pre>
 </body>

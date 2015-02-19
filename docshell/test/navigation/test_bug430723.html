@@ -37,7 +37,6 @@ var gTallBlueBoxURI = "data:text/html;charset=utf-8;base64,PGh0bWw%2BPGhlYWQ%2BP
 // <p>This is a very tall blue box.</p>
 // </div></body></html>
 
-
 window.onload = runTest;
 
 var testWindow;
@@ -45,8 +44,9 @@ var testNum = 0;
 
 var smoothScrollPref = "general.smoothScroll";
 function runTest() {
-  SpecialPowers.setBoolPref(smoothScrollPref, false);
-  testWindow = window.open(gTallRedBoxURI, "testWindow", "width=300,height=300,location=yes,scrollbars=yes");
+  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, function(){
+    testWindow = window.open(gTallRedBoxURI, "testWindow", "width=300,height=300,location=yes,scrollbars=yes");
+  });
 }
 
 var nextTest =function() {
@@ -124,7 +124,6 @@ var step3 =function() {
           "Page2Again: Ensure we can still scroll.");  
 
     testWindow.close();
-    SpecialPowers.clearUserPref(smoothScrollPref);
     window.SimpleTest.finish();
   }, true);
   sendKey('DOWN', testWindow);
@@ -137,4 +136,3 @@ SimpleTest.waitForExplicitFinish();
 </pre>
 </body>
 </html>
-

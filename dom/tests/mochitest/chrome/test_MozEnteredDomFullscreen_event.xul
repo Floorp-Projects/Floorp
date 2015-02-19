@@ -13,11 +13,8 @@ SimpleTest.waitForExplicitFinish();
 
 // Ensure the full-screen api is enabled, and will be disabled on test exit.
 var gPrevEnabled = SpecialPowers.getBoolPref("full-screen-api.enabled");
-SpecialPowers.setBoolPref("full-screen-api.enabled", true);
-
 var gPrevTrusted = SpecialPowers.getBoolPref("full-screen-api.allow-trusted-requests-only");
-SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
-
+var newwindow;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
@@ -35,13 +32,16 @@ var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                   .getNoAppCodebasePrincipal(uri);
 pm.removeFromPrincipal(principal, "fullscreen");
 
-newwindow = window.open("MozEnteredDomFullscreen_chrome.xul", "_blank","chrome,resizable=yes,width=400,height=400");
+SpecialPowers.pushPrefEnv({"set": [['full-screen-api.enabled', true],
+                                   ['full-screen-api.allow-trusted-requests-only', false]]}, setup);
+
+function setup() {
+   newwindow = window.open("MozEnteredDomFullscreen_chrome.xul", "_blank","chrome,resizable=yes,width=400,height=400");
+}
 
 function done()
 {
   newwindow.close();
-  SpecialPowers.setBoolPref("full-screen-api.enabled", gPrevEnabled);
-  SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", gPrevTrusted);
   SimpleTest.finish();
 }
 
