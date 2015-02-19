@@ -13,6 +13,8 @@ Cu.import("resource:///modules/RecentWindow.jsm");
 Cu.import("resource://gre/modules/WindowsPrefSync.jsm");
 
 
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
                                   "resource://gre/modules/Deprecated.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
@@ -225,6 +227,7 @@ let gInitialPages = [
 #include browser-loop.js
 #include browser-places.js
 #include browser-plugins.js
+#include browser-readinglist.js
 #include browser-safebrowsing.js
 #include browser-sidebar.js
 #include browser-social.js
@@ -1371,6 +1374,7 @@ var gBrowserInit = {
 
       SocialUI.init();
       TabView.init();
+      ReadingListUI.init();
 
       // Telemetry for master-password - we do this after 5 seconds as it
       // can cause IO if NSS/PSM has not already initialized.
@@ -1478,6 +1482,8 @@ var gBrowserInit = {
     DevEdition.uninit();
 
     gMenuButtonUpdateBadge.uninit();
+
+    ReadingListUI.uninit();
 
     SidebarUI.uninit();
 
