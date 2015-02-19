@@ -156,10 +156,10 @@ TextInputProcessor::BeginInputTransactionInternal(
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  // And also if another instance is composing with the new dispatcher, it'll
-  // fail to steal its ownership.  Then, we should not throw an exception,
-  // just return false.
-  if (dispatcher->IsComposing()) {
+  // And also if another instance is composing with the new dispatcher or
+  // dispatching an event, it'll fail to steal its ownership.  Then, we should
+  // not throw an exception, just return false.
+  if (dispatcher->IsComposing() || dispatcher->IsDispatchingEvent()) {
     return NS_OK;
   }
 

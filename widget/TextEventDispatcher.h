@@ -83,6 +83,11 @@ public:
   bool IsComposing() const { return mIsComposing; }
 
   /**
+   * IsDispatchingEvent() returns true while this instance dispatching an event.
+   */
+  bool IsDispatchingEvent() const { return mDispatchingEvent > 0; }
+
+  /**
    * StartComposition() starts composition explicitly.
    */
   nsresult StartComposition(nsEventStatus& aStatus);
@@ -231,6 +236,9 @@ private:
   };
   PendingComposition mPendingComposition;
 
+  // While dispatching an event, this is incremented.
+  uint16_t mDispatchingEvent;
+
   bool mForTests;
   // See IsComposing().
   bool mIsComposing;
@@ -248,6 +256,13 @@ private:
    * the event.
    */
   void InitEvent(WidgetGUIEvent& aEvent) const;
+
+  /**
+   * DispatchEvent() dispatches aEvent on aWidget.
+   */
+  nsresult DispatchEvent(nsIWidget* aWidget,
+                         WidgetGUIEvent& aEvent,
+                         nsEventStatus& aStatus);
 
   /**
    * StartCompositionAutomaticallyIfNecessary() starts composition if it hasn't

@@ -24,6 +24,7 @@ bool TextEventDispatcher::sDispatchKeyEventsDuringComposition = false;
 
 TextEventDispatcher::TextEventDispatcher(nsIWidget* aWidget)
   : mWidget(aWidget)
+  , mDispatchingEvent(0)
   , mForTests(false)
   , mIsComposing(false)
 {
@@ -66,8 +67,9 @@ TextEventDispatcher::BeginInputTransactionInternal(
     if (listener == aListener && mForTests == aForTests) {
       return NS_OK;
     }
-    // If this has composition, any other listener can steal ownership.
-    if (IsComposing()) {
+    // If this has composition or is dispatching an event, any other listener
+    // can steal ownership.
+    if (IsComposing() || mDispatchingEvent) {
       return NS_ERROR_ALREADY_INITIALIZED;
     }
   }
@@ -113,6 +115,19 @@ TextEventDispatcher::InitEvent(WidgetGUIEvent& aEvent) const
 }
 
 nsresult
+TextEventDispatcher::DispatchEvent(nsIWidget* aWidget,
+                                   WidgetGUIEvent& aEvent,
+                                   nsEventStatus& aStatus)
+{
+  nsRefPtr<TextEventDispatcher> kungFuDeathGrip(this);
+  nsCOMPtr<nsIWidget> widget(aWidget);
+  mDispatchingEvent++;
+  nsresult rv = widget->DispatchEvent(&aEvent, aStatus);
+  mDispatchingEvent--;
+  return rv;
+}
+
+nsresult
 TextEventDispatcher::StartComposition(nsEventStatus& aStatus)
 {
   aStatus = nsEventStatus_eIgnore;
@@ -127,11 +142,10 @@ TextEventDispatcher::StartComposition(nsEventStatus& aStatus)
   }
 
   mIsComposing = true;
-  nsCOMPtr<nsIWidget> widget(mWidget);
   WidgetCompositionEvent compositionStartEvent(true, NS_COMPOSITION_START,
-                                               widget);
+                                               mWidget);
   InitEvent(compositionStartEvent);
-  rv = widget->DispatchEvent(&compositionStartEvent, aStatus);
+  rv = DispatchEvent(mWidget, compositionStartEvent, aStatus);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -212,7 +226,7 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
   if (message == NS_COMPOSITION_COMMIT) {
     compositionCommitEvent.mData = *aCommitString;
   }
-  rv = widget->DispatchEvent(&compositionCommitEvent, aStatus);
+  rv = DispatchEvent(widget, compositionCommitEvent, aStatus);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -278,9 +292,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
     //     composition.
   }
 
-  nsCOMPtr<nsIWidget> widget(mWidget);
-
-  WidgetKeyboardEvent keyEvent(true, aMessage, widget);
+  WidgetKeyboardEvent keyEvent(true, aMessage, mWidget);
   InitEvent(keyEvent);
   keyEvent.AssignKeyEventData(aKeyboardEvent, false);
 
@@ -331,7 +343,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
   keyEvent.mPluginEvent.Clear();
   // TODO: Manage mUniqueId here.
 
-  widget->DispatchEvent(&keyEvent, aStatus);
+  DispatchEvent(mWidget, keyEvent, aStatus);
   return true;
 }
 
@@ -474,6 +486,7 @@ TextEventDispatcher::PendingComposition::Flush(TextEventDispatcher* aDispatcher,
     mClauses->AppendElement(mCaret);
   }
 
+  nsRefPtr<TextEventDispatcher> kungFuDeathGrip(aDispatcher);
   nsCOMPtr<nsIWidget> widget(aDispatcher->mWidget);
   WidgetCompositionEvent compChangeEvent(true, NS_COMPOSITION_CHANGE, widget);
   aDispatcher->InitEvent(compChangeEvent);
@@ -496,7 +509,7 @@ TextEventDispatcher::PendingComposition::Flush(TextEventDispatcher* aDispatcher,
   if (aStatus == nsEventStatus_eConsumeNoDefault) {
     return NS_OK;
   }
-  rv = widget->DispatchEvent(&compChangeEvent, aStatus);
+  rv = aDispatcher->DispatchEvent(widget, compChangeEvent, aStatus);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

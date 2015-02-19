@@ -120,15 +120,6 @@ interface nsITextInputProcessorCallback;
  *     // Handle its default action
  *   }
  *
- *   // You should call beginInputTransaction() or
- *   // beginInputTransactionForTests() before every keydow() or keyup() call
- *   // because somebody stole the right to compose on the window.  E.g., in
- *   // this case, another TIP might start composition at receiving a DOM event
- *   // which was caused by preceding keydown().
- *   if (!TIP.beginInputTransaction(window, callback)) {
- *     return; // You failed to get the rights to dispatch key events
- *   }
- *
  *   // Even if keydown event was consumed, keyup event should be dispatched.
  *   if (TIP.keyup(keyEvent)) {
  *     // Handle its default action
@@ -187,10 +178,6 @@ interface nsITextInputProcessorCallback;
  *                                          keyCode: KeyboardEvent.DOM_VK_A });
  *   if (TIP.keydown(keyEvent)) {
  *     // Handle its default action
- *   }
- *
- *   if (!TIP.beginInputTransaction(window, callback)) {
- *     return; // You failed to get the rights to dispatch key events
  *   }
  *
  *   // Even if keydown event was consumed, keyup event should be dispatched.
