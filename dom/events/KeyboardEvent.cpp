@@ -267,10 +267,16 @@ KeyboardEvent::InitWithKeyboardEventInit(EventTarget* aOwner,
   internalEvent->location = aParam.mLocation;
   internalEvent->mIsRepeat = aParam.mRepeat;
   internalEvent->mIsComposing = aParam.mIsComposing;
-  internalEvent->mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
-  internalEvent->mCodeNameIndex = CODE_NAME_INDEX_USE_STRING;
-  internalEvent->mKeyValue = aParam.mKey;
-  internalEvent->mCodeValue = aParam.mCode;
+  internalEvent->mKeyNameIndex =
+    WidgetKeyboardEvent::GetKeyNameIndex(aParam.mKey);
+  if (internalEvent->mKeyNameIndex == KEY_NAME_INDEX_USE_STRING) {
+    internalEvent->mKeyValue = aParam.mKey;
+  }
+  internalEvent->mCodeNameIndex =
+    WidgetKeyboardEvent::GetCodeNameIndex(aParam.mCode);
+  if (internalEvent->mCodeNameIndex == CODE_NAME_INDEX_USE_STRING) {
+    internalEvent->mCodeValue = aParam.mCode;
+  }
 }
 
 NS_IMETHODIMP
