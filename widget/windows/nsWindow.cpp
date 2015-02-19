@@ -252,8 +252,14 @@ namespace mozilla {
 
 class CurrentWindowsTimeGetter {
 public:
-  DWORD operator() () {
+  DWORD GetCurrentTime() const
+  {
     return ::GetTickCount();
+  }
+
+  void GetTimeAsyncForPossibleBackwardsSkew(const TimeStamp& aNow)
+  {
+    // FIXME: Get time async
   }
 };
 

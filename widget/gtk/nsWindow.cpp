@@ -274,8 +274,15 @@ class MOZ_STACK_CLASS CurrentX11TimeGetter
 {
 public:
     CurrentX11TimeGetter(GdkWindow* aWindow) : mWindow(aWindow) { }
-    guint32 operator() () {
+
+    guint32 GetCurrentTime() const
+    {
         return gdk_x11_get_server_time(mWindow);
+    }
+
+    void GetTimeAsyncForPossibleBackwardsSkew(const TimeStamp& aNow)
+    {
+        // FIXME: Get time async
     }
 
 private:
