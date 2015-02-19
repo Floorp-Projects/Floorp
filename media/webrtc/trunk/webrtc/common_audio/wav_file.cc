@@ -45,13 +45,18 @@ WavReader::~WavReader() {
 }
 
 size_t WavReader::ReadSamples(size_t num_samples, int16_t* samples) {
-#ifndef WEBRTC_ARCH_LITTLE_ENDIAN
-#error "Need to convert samples to big-endian when reading from WAV file"
-#endif
+
+
   const size_t read =
       fread(samples, sizeof(*samples), num_samples, file_handle_);
   // If we didn't read what was requested, ensure we've reached the EOF.
   CHECK(read == num_samples || feof(file_handle_));
+#ifndef WEBRTC_ARCH_LITTLE_ENDIAN
+  //convert to big-endian
+  for(size_t idx = 0; idx < num_samples; idx++) {
+    samples[idx] = (samples[idx]<<8) | (samples[idx]>>8);
+  }
+#endif
   return read;
 }
 
@@ -99,10 +104,17 @@ WavWriter::~WavWriter() {
 
 void WavWriter::WriteSamples(const int16_t* samples, size_t num_samples) {
 #ifndef WEBRTC_ARCH_LITTLE_ENDIAN
-#error "Need to convert samples to little-endian when writing to WAV file"
-#endif
+  int16_t * le_samples = new int16_t[num_samples];
+  for(size_t idx = 0; idx < num_samples; idx++) {
+    le_samples[idx] = (samples[idx]<<8) | (samples[idx]>>8);
+  }
+  const size_t written =
+      fwrite(le_samples, sizeof(*le_samples), num_samples, file_handle_);
+  delete []le_samples;
+#else
   const size_t written =
       fwrite(samples, sizeof(*samples), num_samples, file_handle_);
+#endif
   CHECK_EQ(num_samples, written);
   num_samples_ += static_cast<uint32_t>(written);
   CHECK(written <= std::numeric_limits<uint32_t>::max() ||

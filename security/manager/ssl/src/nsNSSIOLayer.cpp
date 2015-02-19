@@ -1207,6 +1207,7 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
   // Note this only happens during the initial SSL handshake.
 
   SSLVersionRange range = socketInfo->GetTLSVersionRange();
+  nsSSLIOLayerHelpers& helpers = socketInfo->SharedState().IOLayerHelpers();
 
   if (err == SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT) {
     // This is a clear signal that we've fallen back too many versions.  Treat
@@ -1216,30 +1217,31 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
     // First, track the original cause of the version fallback.  This uses the
     // same buckets as the telemetry below, except that bucket 0 will include
     // all cases where there wasn't an original reason.
-    PRErrorCode originalReason = socketInfo->SharedState().IOLayerHelpers()
-      .getIntoleranceReason(socketInfo->GetHostName(), socketInfo->GetPort());
+    PRErrorCode originalReason =
+      helpers.getIntoleranceReason(socketInfo->GetHostName(),
+                                   socketInfo->GetPort());
     Telemetry::Accumulate(Telemetry::SSL_VERSION_FALLBACK_INAPPROPRIATE,
                           tlsIntoleranceTelemetryBucket(originalReason));
 
-    socketInfo->SharedState().IOLayerHelpers()
-      .forgetIntolerance(socketInfo->GetHostName(), socketInfo->GetPort());
+    helpers.forgetIntolerance(socketInfo->GetHostName(),
+                              socketInfo->GetPort());
 
     return false;
   }
 
   // Disallow PR_CONNECT_RESET_ERROR if fallback limit reached.
-  if (err == PR_CONNECT_RESET_ERROR &&
-      socketInfo->SharedState().IOLayerHelpers()
-        .fallbackLimitReached(socketInfo->GetHostName(), range.max)) {
+  bool fallbackLimitReached =
+    helpers.fallbackLimitReached(socketInfo->GetHostName(), range.max);
+  if (err == PR_CONNECT_RESET_ERROR && fallbackLimitReached) {
     return false;
   }
 
   if ((err == SSL_ERROR_NO_CYPHER_OVERLAP || err == PR_END_OF_FILE_ERROR ||
        err == PR_CONNECT_RESET_ERROR) &&
+      !fallbackLimitReached &&
       nsNSSComponent::AreAnyWeakCiphersEnabled()) {
-    if (socketInfo->SharedState().IOLayerHelpers()
-                  .rememberStrongCiphersFailed(socketInfo->GetHostName(),
-                                               socketInfo->GetPort(), err)) {
+    if (helpers.rememberStrongCiphersFailed(socketInfo->GetHostName(),
+                                            socketInfo->GetPort(), err)) {
       Telemetry::Accumulate(Telemetry::SSL_WEAK_CIPHERS_FALLBACK,
                             tlsIntoleranceTelemetryBucket(err));
       return true;
@@ -1301,10 +1303,9 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
   // TLS intolerance fallback due to remembered tolerance.
   Telemetry::Accumulate(pre, reason);
 
-  if (!socketInfo->SharedState().IOLayerHelpers()
-                 .rememberIntolerantAtVersion(socketInfo->GetHostName(),
-                                              socketInfo->GetPort(),
-                                              range.min, range.max, err)) {
+  if (!helpers.rememberIntolerantAtVersion(socketInfo->GetHostName(),
+                                           socketInfo->GetPort(),
+                                           range.min, range.max, err)) {
     return false;
   }
 

@@ -2304,6 +2304,11 @@ ia64*-hpux*)
         dnl Probably also a compiler bug, but what can you do?
         PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
         LDFLAGS="$LDFLAGS -DYNAMICBASE"
+        if test "$_CC_MAJOR_VERSION" = "18" -a "$_CC_BUILD_VERSION" = "31101"; then
+            dnl Use MaxILKSize as a workaround for LNK1248 in VS2013update4
+            dnl See https://connect.microsoft.com/VisualStudio/feedback/details/1044914/fatal-error-lnk1248
+            LDFLAGS="$LDFLAGS -MaxILKSize:2147483647"
+        fi
         dnl Minimum reqiurement of Gecko is VS2010 or later which supports
         dnl both SSSE3 and SSE4.1.
         HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
@@ -8693,6 +8698,13 @@ AC_SUBST(MOZ_APP_STATIC_INI)
 AC_SUBST(MOZ_PKG_SPECIAL)
 
 AC_SUBST(MOZILLA_OFFICIAL)
+
+# Build revisions should always be present in official builds
+if test "$MOZILLA_OFFICIAL"; then
+    MOZ_INCLUDE_SOURCE_INFO=1
+fi
+
+AC_SUBST(MOZ_INCLUDE_SOURCE_INFO)
 
 AC_DEFINE_UNQUOTED(MOZ_TELEMETRY_DISPLAY_REV, 2)
 AC_SUBST(MOZ_TELEMETRY_DISPLAY_REV)

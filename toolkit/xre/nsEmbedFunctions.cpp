@@ -69,6 +69,7 @@
 
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
+#include "mozilla/WindowsDllBlocklist.h"
 
 #include "GMPProcessChild.h"
 #include "GMPLoader.h"
@@ -299,6 +300,10 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_MIN(aArgc, 2);
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
+
+#ifdef HAS_DLL_BLOCKLIST
+  DllBlocklist_Initialize();
+#endif
 
 #if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GONK)
   // On non-Fennec Gecko, the GMPLoader code resides in plugin-container,
