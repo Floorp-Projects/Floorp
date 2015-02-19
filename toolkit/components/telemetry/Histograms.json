@@ -7363,6 +7363,12 @@
     "extended_statistics_ok": true,
     "description": "The number of sites for which the user has explicitly rejected saving logins"
   },
+  "PWMGR_FORM_AUTOFILL_RESULT": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values" : 20,
+    "description": "The result of auto-filling a login form. See http://mzl.la/1Mbs6jL for bucket descriptions."
+  },
   "PWMGR_NUM_PASSWORDS_PER_HOSTNAME": {
     "expires_in_version": "never",
     "kind": "linear",
