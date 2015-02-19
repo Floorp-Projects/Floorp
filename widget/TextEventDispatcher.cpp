@@ -68,8 +68,10 @@ TextEventDispatcher::BeginInputTransactionInternal(
       return NS_OK;
     }
     // If this has composition or is dispatching an event, any other listener
-    // can steal ownership.
-    if (IsComposing() || mDispatchingEvent) {
+    // can steal ownership.  Especially, if the latter case is allowed,
+    // nobody cannot begin input transaction with this if a modal dialog is
+    // opened during dispatching an event.
+    if (IsComposing() || IsDispatchingEvent()) {
       return NS_ERROR_ALREADY_INITIALIZED;
     }
   }

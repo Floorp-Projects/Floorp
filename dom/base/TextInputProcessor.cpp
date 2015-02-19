@@ -166,8 +166,13 @@ TextInputProcessor::BeginInputTransactionInternal(
     return NS_OK;
   }
 
-  // If this instance is composing, don't allow to initialize again.
-  if (mDispatcher && mDispatcher->IsComposing()) {
+  // If this instance is composing or dispatching an event, don't allow to
+  // initialize again.  Especially, if we allow to begin input transaction with
+  // another TextEventDispatcher during dispatching an event, it may cause that
+  // nobody cannot begin input transaction with it if the last event causes
+  // opening modal dialog.
+  if (mDispatcher &&
+      (mDispatcher->IsComposing() || mDispatcher->IsDispatchingEvent())) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
