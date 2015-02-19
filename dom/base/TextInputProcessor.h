@@ -48,6 +48,8 @@ private:
   nsresult CancelCompositionInternal();
   nsresult IsValidStateForComposition();
   void UnlinkFromTextEventDispatcher();
+  nsresult PrepareKeyboardEventToDispatch(WidgetKeyboardEvent& aKeyboardEvent,
+                                          uint32_t aKeyFlags);
 
   TextEventDispatcher* mDispatcher; // [Weak]
   nsCOMPtr<nsITextInputProcessorCallback> mCallback;

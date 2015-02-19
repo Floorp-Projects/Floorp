@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMKeyEvent;
 interface nsIDOMWindow;
 interface nsITextInputProcessorCallback;
 
@@ -103,9 +104,102 @@ interface nsITextInputProcessorCallback;
  *   }
  *   // And when user selects a result from UI of JS-IME, commit with it.
  *   TIP.commitComposition("selected-words");
+ *
+ * Example #8 JS-IME or JS-Keyboard should dispatch key events even during
+ *            composition (non-printable key case):
+ *
+ *   if (!TIP.beginInputTransaction(window, callback)) {
+ *     return; // You failed to get the rights to dispatch key events
+ *   }
+ *
+ *   // You don't need to specify .keyCode value if it's non-printable key
+ *   // because it can be computed from .key value.
+ *   // If you specify non-zero value to .keyCode, it'll be used.
+ *   var keyEvent = new KeyboardEvent("", { code: "Enter", key: "Enter" });
+ *   if (TIP.keydown(keyEvent)) {
+ *     // Handle its default action
+ *   }
+ *
+ *   // You should call beginInputTransaction() or
+ *   // beginInputTransactionForTests() before every keydow() or keyup() call
+ *   // because somebody stole the right to compose on the window.  E.g., in
+ *   // this case, another TIP might start composition at receiving a DOM event
+ *   // which was caused by preceding keydown().
+ *   if (!TIP.beginInputTransaction(window, callback)) {
+ *     return; // You failed to get the rights to dispatch key events
+ *   }
+ *
+ *   // Even if keydown event was consumed, keyup event should be dispatched.
+ *   if (TIP.keyup(keyEvent)) {
+ *     // Handle its default action
+ *   }
+ *
+ * Example #9 JS-IME or JS-Keyboard should dispatch key events even during
+ *            composition (printable key case):
+ *
+ *   if (!TIP.beginInputTransaction(window, callback)) {
+ *     return; // You failed to get the rights to dispatch key events
+ *   }
+ *
+ *   // You need to specify .keyCode value if it's printable key.
+ *   // The rules of .keyCode value is documented in MDN:
+ *   //   https://developer.mozilla.org/docs/Web/API/KeyboardEvent.keyCode
+ *   //
+ *   //   #1 If the key location is DOM_KEY_LOCATION_NUMPAD and NumLock is
+ *   //      active, you should specify DOM_VK_NUMPAD[0-9], DOM_VK_MULTIPLY,
+ *   //      DOM_VK_ADD, DOM_VK_SEPARATOR, DOM_VK_SUBTRACT, DOM_VK_DECIMAL or
+ *   //      DOM_VK_DIVIDE.
+ *   //   #2 If the key is Spacebar, use DOM_VK_SPACE.
+ *   //
+ *   //   Following rules are printable keys in DOM_KEY_LOCATION_STANDARD.
+ *   //   .keyCode value for a key shouldn't be changed by modifier states:
+ *   //     #1 If the key can input [0-9] with any modifier state (except
+ *   //        NumLock state), the value should be DOM_VK_[0-9].
+ *   //     #2 Otherwise, and if the key inputs an ASCII alphabet with no
+ *   //        active modifiers, use DOM_VK_[A-Z].
+ *   //     #3 Otherwise, and if the key inputs an ASCII alphabet with no
+ *   //        active modifiers except Shift key state, use DOM_VK_[A-Z] for
+ *   //        the shifted character.  E.g., if a key causes non-alphabet
+ *   //        character such as "@" or a Unicode character without Shift key
+ *   //        but "a" is inputted when Shift key is pressed, the proper
+ *   //        keyCode is DOM_VK_A.
+ *   //     #4 Otherwise, and if the key inputs another ASCII character with
+ *   //        no modifier states, use a proper value for the character.  E.g.,
+ *   //        if the key inputs "*" without Shift key state, it should be
+ *   //        DOM_VK_ASTERISK.
+ *   //     #5 Otherwise, and if the key inputs another ASCII character with
+ *   //        Shift key state, use a proper value for the character.  E.g.,
+ *   //        if a key causes a Unicode character without Shift key but "&"
+ *   //        is inputted when Shift key is pressed, the proper keyCode is
+ *   //        DOM_VK_AMPERSAND.
+ *   //     See above document for the other cases.
+ *   //
+ *   // NOTE: If the software keyboard is 10-key like simple phone,
+ *   //       We don't have common rules to decide its .keyCode value.
+ *   //       Above rules should be used when the JS-Keyboard emulates PC
+ *   //       keyboard.
+ *   // .key value should be inputting character by the key with current
+ *   // modifier state.
+ *   // .code value should be empty string if the JS-Keyboard isn't emulating
+ *   // physical keyboard.  Otherwise, use same value with physical keyboard's
+ *   // same key.
+ *   var keyEvent = new KeyboardEvent("", { code: "KeyA", key: "a",
+ *                                          keyCode: KeyboardEvent.DOM_VK_A });
+ *   if (TIP.keydown(keyEvent)) {
+ *     // Handle its default action
+ *   }
+ *
+ *   if (!TIP.beginInputTransaction(window, callback)) {
+ *     return; // You failed to get the rights to dispatch key events
+ *   }
+ *
+ *   // Even if keydown event was consumed, keyup event should be dispatched.
+ *   if (TIP.keyup(keyEvent)) {
+ *     // Handle its default action
+ *   }
  */
 
-[scriptable, builtinclass, uuid(512f1efe-9e0f-48a4-b423-3936ef948f34)]
+[scriptable, builtinclass, uuid(60371ca6-a8a7-4e24-bf02-e262aa74ba5a)]
 interface nsITextInputProcessor : nsISupports
 {
   /**
@@ -266,6 +360,59 @@ interface nsITextInputProcessor : nsISupports
    * this throws an exception.
    */
   void cancelComposition();
+
+  // Specifying KEY_DEFAULT_PREVENTED can dispatch key events whose
+  // defaultPrevented are true.  Note that if this is specified, keypress event
+  // won't be fired.
+  const unsigned long KEY_DEFAULT_PREVENTED                        = 0x00000001;
+  // If KEY_NON_PRINTABLE_KEY is specified and the .key value isn't valid
+  // key name, the methods will throws an exception.  In other words, this
+  // flag prevents to dispatch key events with wrong key values and to cause
+  // such key events input the key values as text.
+  const unsigned long KEY_NON_PRINTABLE_KEY                        = 0x00000002;
+  // If KEY_FORCE_PRINTABLE_KEY is specified and even if the .key value is a
+  // registered key name, it's treated as inputting text value.
+  const unsigned long KEY_FORCE_PRINTABLE_KEY                      = 0x00000004;
+
+  /**
+   * keydown() may dispatch a keydown event and some keypress events if
+   * preceding keydown event isn't consumed and they are necessary.
+   * Note that even if this is called during composition, key events may not
+   * be dispatched.  In this case, this returns false.
+   *
+   * NOTE: Even if this has composition, JS-Keyboard should call keydown() and
+   *       keyup().  Although, with the default preferences and normal
+   *       conditions, DOM key events won't be fired during composition.
+   *       However, they MAY be dispatched for some reasons, e.g., the web
+   *       content listens only key events, or if the standard DOM event spec
+   *       will be changed in the future.
+   *
+   * @param aKeyboardEvent  Must be a keyboard event which should be dispatched
+   *                        as a keydown event and keypress events.
+   *                        #1 Note that you don't need to set charCode value
+   *                        because it's computed from its key value.
+   *                        #2 If code value is set properly and location value
+   *                        isn't specified (i.e., 0), the location value will
+   *                        be guessed from the code value.
+   *                        #3 Non-defined code names are not allowed. If your
+   *                        key isn't registered, file a bug. If your key isn't
+   *                        defined by any standards, use "" (empty string).
+   * @param aKeyFlags       Special flags.  The values can be some of KEY_*
+   *                        constants.
+   * @return                true if neither the keydown event or following
+   *                        keypress events is *not* consumed.
+   *                        Otherwise, i.e., preventDefault() is called, false.
+   */
+  [optional_argc]
+    boolean keydown(in nsIDOMKeyEvent aKeyboardEvent,
+                    [optional] in unsigned long aKeyFlags);
+
+  /**
+   * Similar to keydown(), but this dispatches only a keyup event.
+   */
+  [optional_argc]
+    boolean keyup(in nsIDOMKeyEvent aKeyboardEvent,
+                  [optional] in unsigned long aKeyFlags);
 };
 
 %{C++
