@@ -30,23 +30,20 @@
     var imgLoadingContent =
       SpecialPowers.wrap(img).QueryInterface(Ci.nsIImageLoadingContent);
     imgLoadingContent.addObserver(gObserver);
-
-    SpecialPowers.setBoolPref('min_discard_timeout_ms', 1);
-
     function initCF() {
       setTimeout(function() { document.adoptNode(tCF0); }, 0);
     }
     document.addEventListener("DOMContentLoaded", initCF, false);
 
     function cleanupAndFinish() {
-      SpecialPowers.clearUserPref('min_discard_timeout_ms');
       imgLoadingContent.removeObserver(gObserver);
       setTimeout("document.documentElement.className = '';", 0);
     }
     function loadhandler() {
       setTimeout("cleanupAndFinish();", 30000);
     }
-    window.addEventListener("load", loadhandler, false);
+    window.addEventListener("load", function() {
+      SpecialPowers.pushPrefEnv({"set":[["min_discard_timeout_ms", 1]]}, loadhandler)}, false);
   </script>
 </body>
 </html>

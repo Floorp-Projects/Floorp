@@ -403,10 +403,12 @@ static const ModifierPair kPairs[] = {
   { MODIFIER_CAPSLOCK,   NS_DOM_KEYNAME_CAPSLOCK },
   { MODIFIER_CONTROL,    NS_DOM_KEYNAME_CONTROL },
   { MODIFIER_FN,         NS_DOM_KEYNAME_FN },
+  { MODIFIER_FNLOCK,     NS_DOM_KEYNAME_FNLOCK },
   { MODIFIER_META,       NS_DOM_KEYNAME_META },
   { MODIFIER_NUMLOCK,    NS_DOM_KEYNAME_NUMLOCK },
   { MODIFIER_SCROLLLOCK, NS_DOM_KEYNAME_SCROLLLOCK },
   { MODIFIER_SHIFT,      NS_DOM_KEYNAME_SHIFT },
+  { MODIFIER_SYMBOL,     NS_DOM_KEYNAME_SYMBOL },
   { MODIFIER_SYMBOLLOCK, NS_DOM_KEYNAME_SYMBOLLOCK },
   { MODIFIER_OS,         NS_DOM_KEYNAME_OS }
 };
@@ -450,46 +452,7 @@ UIEvent::GetModifierStateInternal(const nsAString& aKey)
 {
   WidgetInputEvent* inputEvent = mEvent->AsInputEvent();
   MOZ_ASSERT(inputEvent, "mEvent must be WidgetInputEvent or derived class");
-  if (aKey.EqualsLiteral("Accel")) {
-    return inputEvent->IsAccel();
-  }
-  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SHIFT)) {
-    return inputEvent->IsShift();
-  }
-  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_CONTROL)) {
-    return inputEvent->IsControl();
-  }
-  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_META)) {
-    return inputEvent->IsMeta();
-  }
-  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_ALT)) {
-    return inputEvent->IsAlt();
-  }
-
-  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_ALTGRAPH)) {
-    return inputEvent->IsAltGraph();
-  }
-  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_OS)) {
-    return inputEvent->IsOS();
-  }
-
-  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_CAPSLOCK)) {
-    return inputEvent->IsCapsLocked();
-  }
-  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_NUMLOCK)) {
-    return inputEvent->IsNumLocked();
-  }
-
-  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_FN)) {
-    return inputEvent->IsFn();
-  }
-  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SCROLLLOCK)) {
-    return inputEvent->IsScrollLocked();
-  }
-  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SYMBOLLOCK)) {
-    return inputEvent->IsSymbolLocked();
-  }
-  return false;
+  return ((inputEvent->modifiers & WidgetInputEvent::GetModifier(aKey)) != 0);
 }
 
 } // namespace dom

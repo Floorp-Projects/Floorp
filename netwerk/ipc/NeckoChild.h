@@ -54,7 +54,8 @@ protected:
   virtual PUDPSocketChild* AllocPUDPSocketChild(const nsCString& aFilter) MOZ_OVERRIDE;
   virtual bool DeallocPUDPSocketChild(PUDPSocketChild*) MOZ_OVERRIDE;
   virtual PDNSRequestChild* AllocPDNSRequestChild(const nsCString& aHost,
-                                                  const uint32_t& aFlags) MOZ_OVERRIDE;
+                                                  const uint32_t& aFlags,
+                                                  const nsCString& aNetworkInterface) MOZ_OVERRIDE;
   virtual bool DeallocPDNSRequestChild(PDNSRequestChild*) MOZ_OVERRIDE;
   virtual PRemoteOpenFileChild*
     AllocPRemoteOpenFileChild(const SerializedLoadContext& aSerialized,

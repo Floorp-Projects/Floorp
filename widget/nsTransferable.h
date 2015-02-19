@@ -28,7 +28,7 @@ struct DataStruct
   ~DataStruct();
   
   const nsCString& GetFlavor() const { return mFlavor; }
-  void SetData( nsISupports* inData, uint32_t inDataLen );
+  void SetData( nsISupports* inData, uint32_t inDataLen, bool aIsPrivateData );
   void GetData( nsISupports** outData, uint32_t *outDataLen );
   already_AddRefed<nsIFile> GetFileSpec(const char* aFileName);
   bool IsDataAvailable() const { return (mData && mDataLen > 0) || (!mData && mCacheFileName); }

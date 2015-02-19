@@ -14,11 +14,10 @@ SimpleTest.waitForExplicitFinish();
 
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
-
+var TestObserver;
 // Assume that the pref starts out true, so set to false
-SpecialPowers.setBoolPref("signon.autofillForms", false);
-
-var TestObserver = {
+SpecialPowers.pushPrefEnv({"set":[["signon.autofillForms", false]]}, function() {
+  TestObserver = {
   receivedNotificationFoundForm : false,
   receivedNotificationFoundLogins : false,
   dataFoundForm : "",
@@ -50,6 +49,7 @@ var TestObserver = {
 // Add the observer
 SpecialPowers.addObserver(TestObserver, "passwordmgr-found-form", false);
 SpecialPowers.addObserver(TestObserver, "passwordmgr-found-logins", false);
+});
 </script>
 
 <p id="display"></p>
@@ -90,10 +90,6 @@ function startTest() {
   ok(TestObserver.dataFoundLogins.get("selectedLogin").QueryInterface(Ci.nsILoginInfo), "Checking selectedLogin is nsILoginInfo");
   ok(TestObserver.dataFoundLogins.get("selectedLogin").equals(TestObserver.dataFoundLogins.get("foundLogins")[0]),
      "Checking selectedLogin is found login");
-
-  // Reset pref (since we assumed it was true to start)
-  SpecialPowers.setBoolPref("signon.autofillForms", true);
-
   // Remove the observer
   SpecialPowers.removeObserver(TestObserver, "passwordmgr-found-form");
   SpecialPowers.removeObserver(TestObserver, "passwordmgr-found-logins");

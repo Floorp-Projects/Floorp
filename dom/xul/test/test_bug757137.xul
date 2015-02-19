@@ -21,14 +21,6 @@ SimpleTest.waitForExplicitFinish();
 // |window| synchronously from here.  Out-of-process docshell creation
 // for mozbrowser haves entirely differently.
 // XXX why doesn't pushPrefEnv() work here?
-var ipcTabsWereDisabled;
-try {
-  ipcTabsWereDisabled = SpecialPowers.getBoolPref("dom.ipc.tabs.disabled");
-} catch (e) {
-  ipcTabsWereDisabled = undefined;
-}
-SpecialPowers.setBoolPref("dom.ipc.tabs.disabled", true);
-
 var otherWindow = window.open("window_bug757137.xul", "", "chrome");
 ok(chromeWindowInterface !== null, 'nsIDOMChromeWindow interface is defined');
 var otherChromeWindow = null;
@@ -39,25 +31,22 @@ try {
 }
 ok(otherChromeWindow !== null, 'XUL window should QI to ChromeWindow');
 
-otherWindow.onload = function () {
-  var w = otherWindow.document.getElementById('f').contentWindow;
-  ok(w !== null, 'got the |window| for a mozbrowser iframe');
-  var chromeWindow = null;
-  try {
-    var chromeWindow = w.QueryInterface(chromeWindowInterface);
-  } catch(e) { }
-  ok(chromeWindow === null, 'mozbrowser iframe should not get ChromeWindow');
+SpecialPowers.pushPrefEnv({"set":[["dom.ipc.tabs.disabled", true]]}, startTest);
 
-  otherWindow.close();
-  SimpleTest.waitForFocus(function() {
-    if (ipcTabsWereDisabled !== undefined) {
-      SpecialPowers.setBoolPref("dom.ipc.tabs.disabled", ipcTabsWereDisabled);
-    } else {
-      SpecialPowers.clearUserPref("dom.ipc.tabs.disabled");
-    }
-    SimpleTest.finish();
-  });
-};
+function startTest() {
+  otherWindow.onload = function () {
+    var w = otherWindow.document.getElementById('f').contentWindow;
+    ok(w !== null, 'got the |window| for a mozbrowser iframe');
+    var chromeWindow = null;
+    try {
+      var chromeWindow = w.QueryInterface(chromeWindowInterface);
+    } catch(e) { }
+      ok(chromeWindow === null, 'mozbrowser iframe should not get ChromeWindow');
+
+    otherWindow.close();
+    SimpleTest.waitForFocus(SimpleTest.finish);
+ };
+}
 </script>
 
 </window>

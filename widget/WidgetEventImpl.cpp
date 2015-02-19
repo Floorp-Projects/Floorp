@@ -256,6 +256,17 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
 
 /* static */
 Modifier
+WidgetInputEvent::GetModifier(const nsAString& aDOMKeyName)
+{
+  if (aDOMKeyName.EqualsLiteral("Accel")) {
+    return AccelModifier();
+  }
+  KeyNameIndex keyNameIndex = WidgetKeyboardEvent::GetKeyNameIndex(aDOMKeyName);
+  return WidgetKeyboardEvent::GetModifierForKeyName(keyNameIndex);
+}
+
+/* static */
+Modifier
 WidgetInputEvent::AccelModifier()
 {
   static Modifier sAccelModifier = MODIFIER_NONE;
@@ -289,73 +300,75 @@ WidgetInputEvent::AccelModifier()
  * mozilla::WidgetKeyboardEvent (TextEvents.h)
  ******************************************************************************/
 
-/*static*/ void
+#define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName) MOZ_UTF16(aDOMKeyName),
+const char16_t* WidgetKeyboardEvent::kKeyNames[] = {
+#include "mozilla/KeyNameList.h"
+};
+#undef NS_DEFINE_KEYNAME
+
+#define NS_DEFINE_PHYSICAL_KEY_CODE_NAME(aCPPName, aDOMCodeName) \
+    MOZ_UTF16(aDOMCodeName),
+const char16_t* WidgetKeyboardEvent::kCodeNames[] = {
+#include "mozilla/PhysicalKeyCodeNameList.h"
+};
+#undef NS_DEFINE_PHYSICAL_KEY_CODE_NAME
+
+WidgetKeyboardEvent::KeyNameIndexHashtable*
+  WidgetKeyboardEvent::sKeyNameIndexHashtable = nullptr;
+WidgetKeyboardEvent::CodeNameIndexHashtable*
+  WidgetKeyboardEvent::sCodeNameIndexHashtable = nullptr;
+
+bool
+WidgetKeyboardEvent::ShouldCauseKeypressEvents() const
+{
+  // Currently, we don't dispatch keypress events of modifier keys.
+  switch (mKeyNameIndex) {
+    case KEY_NAME_INDEX_Alt:
+    case KEY_NAME_INDEX_AltGraph:
+    case KEY_NAME_INDEX_CapsLock:
+    case KEY_NAME_INDEX_Control:
+    case KEY_NAME_INDEX_Fn:
+    case KEY_NAME_INDEX_FnLock:
+    // case KEY_NAME_INDEX_Hyper:
+    case KEY_NAME_INDEX_Meta:
+    case KEY_NAME_INDEX_NumLock:
+    case KEY_NAME_INDEX_OS:
+    case KEY_NAME_INDEX_ScrollLock:
+    case KEY_NAME_INDEX_Shift:
+    // case KEY_NAME_INDEX_Super:
+    case KEY_NAME_INDEX_Symbol:
+    case KEY_NAME_INDEX_SymbolLock:
+      return false;
+    default:
+      return true;
+  }
+}
+
+/* static */ void
+WidgetKeyboardEvent::Shutdown()
+{
+  delete sKeyNameIndexHashtable;
+  sKeyNameIndexHashtable = nullptr;
+  delete sCodeNameIndexHashtable;
+  sCodeNameIndexHashtable = nullptr;
+}
+
+/* static */ void
 WidgetKeyboardEvent::GetDOMKeyName(KeyNameIndex aKeyNameIndex,
                                    nsAString& aKeyName)
 {
-  // The expected way to implement this function would be to use a
-  // switch statement.  By using a table-based implementation, below, we
-  // ensure that this function executes in constant time in cases where
-  // compilers wouldn't be able to convert the switch statement to a
-  // jump table.  This table-based implementation also minimizes the
-  // space required by the code and data.
-#define KEY_STR_NUM_INTERNAL(line) key##line
-#define KEY_STR_NUM(line) KEY_STR_NUM_INTERNAL(line)
-
-  // Catch non-ASCII DOM key names in our key name list.
-#define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName)                      \
-  static_assert(sizeof(aDOMKeyName) == MOZ_ARRAY_LENGTH(aDOMKeyName), \
-                "Invalid DOM key name");
-#include "mozilla/KeyNameList.h"
-#undef NS_DEFINE_KEYNAME
-
-  struct KeyNameTable
-  {
-#define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName)          \
-    char16_t KEY_STR_NUM(__LINE__)[sizeof(aDOMKeyName)];
-#include "mozilla/KeyNameList.h"
-#undef NS_DEFINE_KEYNAME
-  };
-
-  static const KeyNameTable kKeyNameTable = {
-#define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName) MOZ_UTF16(aDOMKeyName),
-#include "mozilla/KeyNameList.h"
-#undef NS_DEFINE_KEYNAME
-  };
-
-  static const uint16_t kKeyNameOffsets[] = {
-#define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName)          \
-    offsetof(struct KeyNameTable, KEY_STR_NUM(__LINE__)) / sizeof(char16_t),
-#include "mozilla/KeyNameList.h"
-#undef NS_DEFINE_KEYNAME
-    // Include this entry so we can compute lengths easily.
-    sizeof(kKeyNameTable)
-  };
-
-  // Use the sizeof trick rather than MOZ_ARRAY_LENGTH to avoid problems
-  // with constexpr functions called inside static_assert with some
-  // compilers.
-  static_assert(KEY_NAME_INDEX_USE_STRING ==
-                (sizeof(kKeyNameOffsets)/sizeof(kKeyNameOffsets[0])) - 1,
-                "Invalid enumeration values!");
-
   if (aKeyNameIndex >= KEY_NAME_INDEX_USE_STRING) {
     aKeyName.Truncate();
     return;
   }
 
-  uint16_t offset = kKeyNameOffsets[aKeyNameIndex];
-  uint16_t nextOffset = kKeyNameOffsets[aKeyNameIndex + 1];
-  const char16_t* table = reinterpret_cast<const char16_t*>(&kKeyNameTable);
-
-  // Subtract off 1 for the null terminator.
-  aKeyName.Assign(table + offset, nextOffset - offset - 1);
-
-#undef KEY_STR_NUM
-#undef KEY_STR_NUM_INTERNAL
+  MOZ_RELEASE_ASSERT(static_cast<size_t>(aKeyNameIndex) <
+                       ArrayLength(kKeyNames),
+                     "Illegal key enumeration value");
+  aKeyName = kKeyNames[aKeyNameIndex];
 }
 
-/*static*/ void
+/* static */ void
 WidgetKeyboardEvent::GetDOMCodeName(CodeNameIndex aCodeNameIndex,
                                     nsAString& aCodeName)
 {
@@ -364,18 +377,42 @@ WidgetKeyboardEvent::GetDOMCodeName(CodeNameIndex aCodeNameIndex,
     return;
   }
 
-#define NS_DEFINE_PHYSICAL_KEY_CODE_NAME(aCPPName, aDOMCodeName) \
-    MOZ_UTF16(aDOMCodeName),
-  static const char16_t* kCodeNames[] = {
-#include "mozilla/PhysicalKeyCodeNameList.h"
-    MOZ_UTF16("")
-  };
-#undef NS_DEFINE_PHYSICAL_KEY_CODE_NAME
-
   MOZ_RELEASE_ASSERT(static_cast<size_t>(aCodeNameIndex) <
                        ArrayLength(kCodeNames),
                      "Illegal physical code enumeration value");
   aCodeName = kCodeNames[aCodeNameIndex];
+}
+
+/* static */ KeyNameIndex
+WidgetKeyboardEvent::GetKeyNameIndex(const nsAString& aKeyValue)
+{
+  if (!sKeyNameIndexHashtable) {
+    sKeyNameIndexHashtable =
+      new KeyNameIndexHashtable(ArrayLength(kKeyNames));
+    for (size_t i = 0; i < ArrayLength(kKeyNames); i++) {
+      sKeyNameIndexHashtable->Put(nsDependentString(kKeyNames[i]),
+                                  static_cast<KeyNameIndex>(i));
+    }
+  }
+  KeyNameIndex result = KEY_NAME_INDEX_USE_STRING;
+  sKeyNameIndexHashtable->Get(aKeyValue, &result);
+  return result;
+}
+
+/* static */ CodeNameIndex
+WidgetKeyboardEvent::GetCodeNameIndex(const nsAString& aCodeValue)
+{
+  if (!sCodeNameIndexHashtable) {
+    sCodeNameIndexHashtable =
+      new CodeNameIndexHashtable(ArrayLength(kCodeNames));
+    for (size_t i = 0; i < ArrayLength(kCodeNames); i++) {
+      sCodeNameIndexHashtable->Put(nsDependentString(kCodeNames[i]),
+                                   static_cast<CodeNameIndex>(i));
+    }
+  }
+  CodeNameIndex result = CODE_NAME_INDEX_USE_STRING;
+  sCodeNameIndexHashtable->Get(aCodeValue, &result);
+  return result;
 }
 
 /* static */ const char*
@@ -422,25 +459,247 @@ WidgetKeyboardEvent::ComputeLocationFromCodeValue(CodeNameIndex aCodeNameIndex)
     case CODE_NAME_INDEX_Numpad9:
     case CODE_NAME_INDEX_NumpadAdd:
     case CODE_NAME_INDEX_NumpadBackspace:
-    // case CODE_NAME_INDEX_NumpadClear:
-    // case CODE_NAME_INDEX_NumpadClearEntry:
+    case CODE_NAME_INDEX_NumpadClear:
+    case CODE_NAME_INDEX_NumpadClearEntry:
     case CODE_NAME_INDEX_NumpadComma:
     case CODE_NAME_INDEX_NumpadDecimal:
     case CODE_NAME_INDEX_NumpadDivide:
     case CODE_NAME_INDEX_NumpadEnter:
     case CODE_NAME_INDEX_NumpadEqual:
-    // case CODE_NAME_INDEX_NumpadMemoryAdd:
-    // case CODE_NAME_INDEX_NumpadMemoryClear:
-    // case CODE_NAME_INDEX_NumpadMemoryRecall:
-    // case CODE_NAME_INDEX_NumpadMemoryStore:
+    case CODE_NAME_INDEX_NumpadMemoryAdd:
+    case CODE_NAME_INDEX_NumpadMemoryClear:
+    case CODE_NAME_INDEX_NumpadMemoryRecall:
+    case CODE_NAME_INDEX_NumpadMemoryStore:
     case CODE_NAME_INDEX_NumpadMemorySubtract:
     case CODE_NAME_INDEX_NumpadMultiply:
-    // case CODE_NAME_INDEX_NumpadParenLeft:
-    // case CODE_NAME_INDEX_NumpadParenRight:
+    case CODE_NAME_INDEX_NumpadParenLeft:
+    case CODE_NAME_INDEX_NumpadParenRight:
     case CODE_NAME_INDEX_NumpadSubtract:
       return nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
     default:
       return nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
+  }
+}
+
+/* static */ uint32_t
+WidgetKeyboardEvent::ComputeKeyCodeFromKeyNameIndex(KeyNameIndex aKeyNameIndex)
+{
+  switch (aKeyNameIndex) {
+    case KEY_NAME_INDEX_Cancel:
+      return nsIDOMKeyEvent::DOM_VK_CANCEL;
+    case KEY_NAME_INDEX_Help:
+      return nsIDOMKeyEvent::DOM_VK_HELP;
+    case KEY_NAME_INDEX_Backspace:
+      return nsIDOMKeyEvent::DOM_VK_BACK_SPACE;
+    case KEY_NAME_INDEX_Tab:
+      return nsIDOMKeyEvent::DOM_VK_TAB;
+    case KEY_NAME_INDEX_Clear:
+      return nsIDOMKeyEvent::DOM_VK_CLEAR;
+    case KEY_NAME_INDEX_Enter:
+      return nsIDOMKeyEvent::DOM_VK_RETURN;
+    case KEY_NAME_INDEX_Shift:
+      return nsIDOMKeyEvent::DOM_VK_SHIFT;
+    case KEY_NAME_INDEX_Control:
+      return nsIDOMKeyEvent::DOM_VK_CONTROL;
+    case KEY_NAME_INDEX_Alt:
+      return nsIDOMKeyEvent::DOM_VK_ALT;
+    case KEY_NAME_INDEX_Pause:
+      return nsIDOMKeyEvent::DOM_VK_PAUSE;
+    case KEY_NAME_INDEX_CapsLock:
+      return nsIDOMKeyEvent::DOM_VK_CAPS_LOCK;
+    case KEY_NAME_INDEX_Hiragana:
+    case KEY_NAME_INDEX_Katakana:
+    case KEY_NAME_INDEX_HiraganaKatakana:
+    case KEY_NAME_INDEX_KanaMode:
+      return nsIDOMKeyEvent::DOM_VK_KANA;
+    case KEY_NAME_INDEX_HangulMode:
+      return nsIDOMKeyEvent::DOM_VK_HANGUL;
+    case KEY_NAME_INDEX_Eisu:
+      return nsIDOMKeyEvent::DOM_VK_EISU;
+    case KEY_NAME_INDEX_JunjaMode:
+      return nsIDOMKeyEvent::DOM_VK_JUNJA;
+    case KEY_NAME_INDEX_FinalMode:
+      return nsIDOMKeyEvent::DOM_VK_FINAL;
+    case KEY_NAME_INDEX_HanjaMode:
+      return nsIDOMKeyEvent::DOM_VK_HANJA;
+    case KEY_NAME_INDEX_KanjiMode:
+      return nsIDOMKeyEvent::DOM_VK_KANJI;
+    case KEY_NAME_INDEX_Escape:
+      return nsIDOMKeyEvent::DOM_VK_ESCAPE;
+    case KEY_NAME_INDEX_Convert:
+      return nsIDOMKeyEvent::DOM_VK_CONVERT;
+    case KEY_NAME_INDEX_NonConvert:
+      return nsIDOMKeyEvent::DOM_VK_NONCONVERT;
+    case KEY_NAME_INDEX_Accept:
+      return nsIDOMKeyEvent::DOM_VK_ACCEPT;
+    case KEY_NAME_INDEX_ModeChange:
+      return nsIDOMKeyEvent::DOM_VK_MODECHANGE;
+    case KEY_NAME_INDEX_PageUp:
+      return nsIDOMKeyEvent::DOM_VK_PAGE_UP;
+    case KEY_NAME_INDEX_PageDown:
+      return nsIDOMKeyEvent::DOM_VK_PAGE_DOWN;
+    case KEY_NAME_INDEX_End:
+      return nsIDOMKeyEvent::DOM_VK_END;
+    case KEY_NAME_INDEX_Home:
+      return nsIDOMKeyEvent::DOM_VK_HOME;
+    case KEY_NAME_INDEX_ArrowLeft:
+      return nsIDOMKeyEvent::DOM_VK_LEFT;
+    case KEY_NAME_INDEX_ArrowUp:
+      return nsIDOMKeyEvent::DOM_VK_UP;
+    case KEY_NAME_INDEX_ArrowRight:
+      return nsIDOMKeyEvent::DOM_VK_RIGHT;
+    case KEY_NAME_INDEX_ArrowDown:
+      return nsIDOMKeyEvent::DOM_VK_DOWN;
+    case KEY_NAME_INDEX_Select:
+      return nsIDOMKeyEvent::DOM_VK_SELECT;
+    case KEY_NAME_INDEX_Print:
+      return nsIDOMKeyEvent::DOM_VK_PRINT;
+    case KEY_NAME_INDEX_Execute:
+      return nsIDOMKeyEvent::DOM_VK_EXECUTE;
+    case KEY_NAME_INDEX_PrintScreen:
+      return nsIDOMKeyEvent::DOM_VK_PRINTSCREEN;
+    case KEY_NAME_INDEX_Insert:
+      return nsIDOMKeyEvent::DOM_VK_INSERT;
+    case KEY_NAME_INDEX_Delete:
+      return nsIDOMKeyEvent::DOM_VK_DELETE;
+    case KEY_NAME_INDEX_OS:
+    // case KEY_NAME_INDEX_Super:
+    // case KEY_NAME_INDEX_Hyper:
+      return nsIDOMKeyEvent::DOM_VK_WIN;
+    case KEY_NAME_INDEX_ContextMenu:
+      return nsIDOMKeyEvent::DOM_VK_CONTEXT_MENU;
+    case KEY_NAME_INDEX_Standby:
+      return nsIDOMKeyEvent::DOM_VK_SLEEP;
+    case KEY_NAME_INDEX_F1:
+      return nsIDOMKeyEvent::DOM_VK_F1;
+    case KEY_NAME_INDEX_F2:
+      return nsIDOMKeyEvent::DOM_VK_F2;
+    case KEY_NAME_INDEX_F3:
+      return nsIDOMKeyEvent::DOM_VK_F3;
+    case KEY_NAME_INDEX_F4:
+      return nsIDOMKeyEvent::DOM_VK_F4;
+    case KEY_NAME_INDEX_F5:
+      return nsIDOMKeyEvent::DOM_VK_F5;
+    case KEY_NAME_INDEX_F6:
+      return nsIDOMKeyEvent::DOM_VK_F6;
+    case KEY_NAME_INDEX_F7:
+      return nsIDOMKeyEvent::DOM_VK_F7;
+    case KEY_NAME_INDEX_F8:
+      return nsIDOMKeyEvent::DOM_VK_F8;
+    case KEY_NAME_INDEX_F9:
+      return nsIDOMKeyEvent::DOM_VK_F9;
+    case KEY_NAME_INDEX_F10:
+      return nsIDOMKeyEvent::DOM_VK_F10;
+    case KEY_NAME_INDEX_F11:
+      return nsIDOMKeyEvent::DOM_VK_F11;
+    case KEY_NAME_INDEX_F12:
+      return nsIDOMKeyEvent::DOM_VK_F12;
+    case KEY_NAME_INDEX_F13:
+      return nsIDOMKeyEvent::DOM_VK_F13;
+    case KEY_NAME_INDEX_F14:
+      return nsIDOMKeyEvent::DOM_VK_F14;
+    case KEY_NAME_INDEX_F15:
+      return nsIDOMKeyEvent::DOM_VK_F15;
+    case KEY_NAME_INDEX_F16:
+      return nsIDOMKeyEvent::DOM_VK_F16;
+    case KEY_NAME_INDEX_F17:
+      return nsIDOMKeyEvent::DOM_VK_F17;
+    case KEY_NAME_INDEX_F18:
+      return nsIDOMKeyEvent::DOM_VK_F18;
+    case KEY_NAME_INDEX_F19:
+      return nsIDOMKeyEvent::DOM_VK_F19;
+    case KEY_NAME_INDEX_F20:
+      return nsIDOMKeyEvent::DOM_VK_F20;
+    case KEY_NAME_INDEX_F21:
+      return nsIDOMKeyEvent::DOM_VK_F21;
+    case KEY_NAME_INDEX_F22:
+      return nsIDOMKeyEvent::DOM_VK_F22;
+    case KEY_NAME_INDEX_F23:
+      return nsIDOMKeyEvent::DOM_VK_F23;
+    case KEY_NAME_INDEX_F24:
+      return nsIDOMKeyEvent::DOM_VK_F24;
+    case KEY_NAME_INDEX_NumLock:
+      return nsIDOMKeyEvent::DOM_VK_NUM_LOCK;
+    case KEY_NAME_INDEX_ScrollLock:
+      return nsIDOMKeyEvent::DOM_VK_SCROLL_LOCK;
+    case KEY_NAME_INDEX_VolumeMute:
+      return nsIDOMKeyEvent::DOM_VK_VOLUME_MUTE;
+    case KEY_NAME_INDEX_VolumeDown:
+      return nsIDOMKeyEvent::DOM_VK_VOLUME_DOWN;
+    case KEY_NAME_INDEX_VolumeUp:
+      return nsIDOMKeyEvent::DOM_VK_VOLUME_UP;
+    case KEY_NAME_INDEX_Meta:
+      return nsIDOMKeyEvent::DOM_VK_META;
+    case KEY_NAME_INDEX_AltGraph:
+      return nsIDOMKeyEvent::DOM_VK_ALTGR;
+    case KEY_NAME_INDEX_Attn:
+      return nsIDOMKeyEvent::DOM_VK_ATTN;
+    case KEY_NAME_INDEX_CrSel:
+      return nsIDOMKeyEvent::DOM_VK_CRSEL;
+    case KEY_NAME_INDEX_ExSel:
+      return nsIDOMKeyEvent::DOM_VK_EXSEL;
+    case KEY_NAME_INDEX_EraseEof:
+      return nsIDOMKeyEvent::DOM_VK_EREOF;
+    case KEY_NAME_INDEX_Play:
+      return nsIDOMKeyEvent::DOM_VK_PLAY;
+    case KEY_NAME_INDEX_ZoomToggle:
+    case KEY_NAME_INDEX_ZoomIn:
+    case KEY_NAME_INDEX_ZoomOut:
+      return nsIDOMKeyEvent::DOM_VK_ZOOM;
+    default:
+      return 0;
+  }
+}
+
+/* static */ Modifier
+WidgetKeyboardEvent::GetModifierForKeyName(KeyNameIndex aKeyNameIndex)
+{
+  switch (aKeyNameIndex) {
+    case KEY_NAME_INDEX_Alt:
+      return MODIFIER_ALT;
+    case KEY_NAME_INDEX_AltGraph:
+      return MODIFIER_ALTGRAPH;
+    case KEY_NAME_INDEX_CapsLock:
+      return MODIFIER_CAPSLOCK;
+    case KEY_NAME_INDEX_Control:
+      return MODIFIER_CONTROL;
+    case KEY_NAME_INDEX_Fn:
+      return MODIFIER_FN;
+    case KEY_NAME_INDEX_FnLock:
+      return MODIFIER_FNLOCK;
+    // case KEY_NAME_INDEX_Hyper:
+    case KEY_NAME_INDEX_Meta:
+      return MODIFIER_META;
+    case KEY_NAME_INDEX_NumLock:
+      return MODIFIER_NUMLOCK;
+    case KEY_NAME_INDEX_OS:
+      return MODIFIER_OS;
+    case KEY_NAME_INDEX_ScrollLock:
+      return MODIFIER_SCROLLLOCK;
+    case KEY_NAME_INDEX_Shift:
+      return MODIFIER_SHIFT;
+    // case KEY_NAME_INDEX_Super:
+    case KEY_NAME_INDEX_Symbol:
+      return MODIFIER_SYMBOL;
+    case KEY_NAME_INDEX_SymbolLock:
+      return MODIFIER_SYMBOLLOCK;
+    default:
+      return MODIFIER_NONE;
+  }
+}
+
+/* static */ bool
+WidgetKeyboardEvent::IsLockableModifier(KeyNameIndex aKeyNameIndex)
+{
+  switch (aKeyNameIndex) {
+    case KEY_NAME_INDEX_CapsLock:
+    case KEY_NAME_INDEX_FnLock:
+    case KEY_NAME_INDEX_NumLock:
+    case KEY_NAME_INDEX_ScrollLock:
+    case KEY_NAME_INDEX_SymbolLock:
+      return true;
+    default:
+      return false;
   }
 }
 

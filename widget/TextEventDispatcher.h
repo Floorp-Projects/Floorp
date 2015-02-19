@@ -23,8 +23,8 @@ struct IMENotification;
 /**
  * TextEventDispatcher is a helper class for dispatching widget events defined
  * in TextEvents.h.  Currently, this is a helper for dispatching
- * WidgetCompositionEvent.  However, WidgetKeyboardEvent and/or
- * WidgetQueryContentEvent may be supported by this class in the future.
+ * WidgetCompositionEvent and WidgetKeyboardEvent.  This manages the behavior
+ * of them for conforming to DOM Level 3 Events.
  * An instance of this class is created by nsIWidget instance and owned by it.
  * This is typically created only by the top level widgets because only they
  * handle IME.
@@ -81,6 +81,11 @@ public:
    * calling CommitComposition().
    */
   bool IsComposing() const { return mIsComposing; }
+
+  /**
+   * IsDispatchingEvent() returns true while this instance dispatching an event.
+   */
+  bool IsDispatchingEvent() const { return mDispatchingEvent > 0; }
 
   /**
    * StartComposition() starts composition explicitly.
@@ -155,9 +160,53 @@ public:
   }
 
   /**
+   * ClearPendingComposition() makes this instance forget pending composition.
+   */
+  void ClearPendingComposition()
+  {
+    mPendingComposition.Clear();
+  }
+
+  /**
    * @see nsIWidget::NotifyIME()
    */
   nsresult NotifyIME(const IMENotification& aIMENotification);
+
+  /**
+   * DispatchKeyboardEvent() maybe dispatches aKeyboardEvent.
+   *
+   * @param aMessage        Must be NS_KEY_DOWN or NS_KEY_UP.
+   *                        Use MaybeDispatchKeypressEvents() for dispatching
+   *                        NS_KEY_PRESS.
+   * @param aKeyboardEvent  A keyboard event.
+   * @param aStatus         If dispatching event should be marked as consumed,
+   *                        set nsEventStatus_eConsumeNoDefault.  Otherwise,
+   *                        set nsEventStatus_eIgnore.  After dispatching
+   *                        a event and it's consumed this returns
+   *                        nsEventStatus_eConsumeNoDefault.
+   * @return                true if an event is dispatched.  Otherwise, false.
+   */
+  bool DispatchKeyboardEvent(uint32_t aMessage,
+                             const WidgetKeyboardEvent& aKeyboardEvent,
+                             nsEventStatus& aStatus);
+
+  /**
+   * MaybeDispatchKeypressEvents() maybe dispatches a keypress event which is
+   * generated from aKeydownEvent.
+   *
+   * @param aKeyboardEvent  A keyboard event.
+   * @param aStatus         Sets the result when the caller dispatches
+   *                        aKeyboardEvent.  Note that if the value is
+   *                        nsEventStatus_eConsumeNoDefault, this does NOT
+   *                        dispatch keypress events.
+   *                        When this method dispatches one or more keypress
+   *                        events and one of them is consumed, this returns
+   *                        nsEventStatus_eConsumeNoDefault.
+   * @return                true if one or more events are dispatched.
+   *                        Otherwise, false.
+   */
+  bool MaybeDispatchKeypressEvents(const WidgetKeyboardEvent& aKeyboardEvent,
+                                   nsEventStatus& aStatus);
 
 private:
   // mWidget is owner of the instance.  When this is created, this is set.
@@ -195,9 +244,16 @@ private:
   };
   PendingComposition mPendingComposition;
 
+  // While dispatching an event, this is incremented.
+  uint16_t mDispatchingEvent;
+
   bool mForTests;
   // See IsComposing().
   bool mIsComposing;
+
+  // If this is true, keydown and keyup events are dispatched even when there
+  // is a composition.
+  static bool sDispatchKeyEventsDuringComposition;
 
   nsresult BeginInputTransactionInternal(
              TextEventDispatcherListener* aListener,
@@ -207,7 +263,14 @@ private:
    * InitEvent() initializes aEvent.  This must be called before dispatching
    * the event.
    */
-  void InitEvent(WidgetCompositionEvent& aEvent) const;
+  void InitEvent(WidgetGUIEvent& aEvent) const;
+
+  /**
+   * DispatchEvent() dispatches aEvent on aWidget.
+   */
+  nsresult DispatchEvent(nsIWidget* aWidget,
+                         WidgetGUIEvent& aEvent,
+                         nsEventStatus& aStatus);
 
   /**
    * StartCompositionAutomaticallyIfNecessary() starts composition if it hasn't
@@ -224,6 +287,32 @@ private:
    *                        is nsEventStatus_eConsumeNoDefault.
    */
   nsresult StartCompositionAutomaticallyIfNecessary(nsEventStatus& aStatus);
+
+  /**
+   * DispatchKeyboardEventInternal() maybe dispatches aKeyboardEvent.
+   *
+   * @param aMessage        Must be NS_KEY_DOWN, NS_KEY_UP or NS_KEY_PRESS.
+   * @param aKeyboardEvent  A keyboard event.  If aMessage is NS_KEY_PRESS and
+   *                        the event is for second or later character, its
+   *                        mKeyValue should be empty string.
+   * @param aStatus         If dispatching event should be marked as consumed,
+   *                        set nsEventStatus_eConsumeNoDefault.  Otherwise,
+   *                        set nsEventStatus_eIgnore.  After dispatching
+   *                        a event and it's consumed this returns
+   *                        nsEventStatus_eConsumeNoDefault.
+   * @param aIndexOfKeypress    This must be 0 if aMessage isn't NS_KEY_PRESS or
+   *                            aKeyboard.mKeyNameIndex isn't
+   *                            KEY_NAME_INDEX_USE_STRING.  Otherwise, i.e.,
+   *                            when an NS_KEY_PRESS event causes inputting
+   *                            text, this must be between 0 and
+   *                            mKeyValue.Length() - 1 since keypress events
+   *                            sending only one character per event.
+   * @return                true if an event is dispatched.  Otherwise, false.
+   */
+  bool DispatchKeyboardEventInternal(uint32_t aMessage,
+                                     const WidgetKeyboardEvent& aKeyboardEvent,
+                                     nsEventStatus& aStatus,
+                                     uint32_t aIndexOfKeypress = 0);
 };
 
 } // namespace widget

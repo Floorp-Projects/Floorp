@@ -1803,14 +1803,10 @@ RestyleManager::PostRestyleEvent(Element* aElement,
   mPendingRestyles.AddPendingRestyle(aElement, aRestyleHint, aMinChangeHint);
 
   // Set mHavePendingNonAnimationRestyles for any restyle that could
-  // possibly contain non-animation styles.  Unfortunately there's one
-  // level of the cascade and associated change hint
-  // (eRestyle_StyleAttribute) where we don't fully distinguish.
-  // FIXME (bug 1133439): We could at least distinguish by having two
-  // separate eRestyle_StyleAttribute hints, one for animations and one
-  // for other things.
-  if (aRestyleHint & ~(eRestyle_CSSTransitions | eRestyle_CSSAnimations |
-                       eRestyle_SVGAttrAnimations)) {
+  // possibly contain non-animation styles (i.e., those that require us
+  // to do an animation-only style flush before processing style changes
+  // to ensure correct initialization of CSS transitions).
+  if (aRestyleHint & ~eRestyle_AllHintsWithAnimations) {
     mHavePendingNonAnimationRestyles = true;
   }
 

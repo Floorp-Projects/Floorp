@@ -285,6 +285,13 @@ export_cert unknownissuer unknown-issuer.der
 
 $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -D -n deletedINT
 
+# certutil doesn't expose a way to directly specify a notBefore time.
+# Workaround this by just providing a large enough warp that the notBefore time
+# falls before the UNIX Epoch.
+make_EE beforeEpoch 'CN=Before UNIX Epoch Test End-entity' testCA "before-epoch.example.com" "-w -720 -v 960"
+make_INT beforeEpochINT 'CN=Before UNIX Epoch Test Intermediate' testCA "-w -720 -v 960"
+make_EE beforeEpochIssuer 'CN=Test End-entity with Before UNIX Epoch issuer' beforeEpochINT "before-epoch-issuer.example.com"
+
 make_INT expiredINT 'CN=Expired Test Intermediate' testCA "-w -400"
 make_EE expiredissuer 'CN=Test End-entity with expired issuer' expiredINT "expiredissuer.example.com"
 make_INT notYetValidINT 'CN=Not Yet Valid Test Intermediate' testCA "-w 400"

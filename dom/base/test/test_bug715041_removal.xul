@@ -19,8 +19,6 @@ target="_blank">Mozilla Bug 715041</a>
     <![CDATA[
 
   /** Mock Idle Service Test for Bug 715041 **/
-  SpecialPowers.setBoolPref("dom.idle-observers-api.fuzz_time.disabled", true);
-
   try {
     var idleServiceCID = Components.ID("6f95d965-4322-4829-8a3c-5dc8a4587f4d");
     var idleServiceContractID = "@mozilla.org/widget/idleservice;1";
@@ -836,9 +834,7 @@ target="_blank">Mozilla Bug 715041</a>
   var RemoveHeadAfterLastLocalFiredEnabled = true;
   var RemoveHeadIdleObserverWhileIdleCase1Enabled = true;
   var RemoveLastAddLastEnabled = true;
-
-  RemoveHeadIdleObserverWhileActive();
-
+  SpecialPowers.pushPrefEnv({"set":[['dom.idle-observers-api.fuzz_time.disabled', true]]}, RemoveHeadIdleObserverWhileActive);
 ]]>
     </script>
     </window>

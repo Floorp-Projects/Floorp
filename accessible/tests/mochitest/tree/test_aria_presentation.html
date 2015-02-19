@@ -21,14 +21,18 @@
     // Presentation role don't allow accessible.
     var tree =
       { SECTION: [ // container
-        { TEXT_LEAF: [ ] } // child text of presentation node
+        { TEXT_LEAF: [ ] }, // child text of 'presentation' node
+        { TEXT_LEAF: [ ] } // child text of 'none' node
       ] };
     testAccessibleTree("div_cnt", tree);
 
-    // Focusable element, presentation role is ignored.
+    // Focusable element, 'presentation' and 'none' roles are ignored.
     tree =
       { SECTION: [ // container
-        { PUSHBUTTON: [ // button
+        { PUSHBUTTON: [ // button having 'presentation' role
+          { TEXT_LEAF: [ ] }
+        ] },
+        { PUSHBUTTON: [ // button having 'none' role
           { TEXT_LEAF: [ ] }
         ] }
       ] };
@@ -37,18 +41,28 @@
     // Presentation table, no table structure is exposed.
     tree =
       { SECTION: [ // container
-        { TEXT_CONTAINER: [ // td generic accessible
+        { TEXT_CONTAINER: [ // td generic accessible inside 'presentation' table
+          { TEXT_LEAF: [ ] } // cell text
+        ] },
+        { TEXT_CONTAINER: [ // td generic accessible inside 'none' table
           { TEXT_LEAF: [ ] } // cell text
         ] }
       ] };
     testAccessibleTree("tbl_cnt", tree);
 
-    // Focusable table, presentation role is ignored.
+    // Focusable table, 'presentation' and 'none' roles are ignored.
     tree =
       { SECTION: [ // container
-        { TABLE: [ // table
+        { TABLE: [ // table having 'presentation' role
           { ROW: [ // tr
-            { CELL: [ //td
+            { CELL: [ // td
+              { TEXT_LEAF: [ ] }
+            ] }
+          ] }
+        ] },
+        { TABLE: [ // table having 'none' role
+          { ROW: [ // tr
+            { CELL: [ // td
               { TEXT_LEAF: [ ] }
             ] }
           ] }
@@ -59,15 +73,27 @@
     // Presentation list, expose generic accesisble for list items.
     tree =
       { SECTION: [ // container
-        { PARAGRAPH: [ // li generic accessible
+        { PARAGRAPH: [ // li generic accessible inside 'presentation' role
+          { TEXT_LEAF: [ ] } // li text
+        ] },
+        { PARAGRAPH: [ // li generic accessible inside 'none' role
           { TEXT_LEAF: [ ] } // li text
         ] }
       ] };
     testAccessibleTree("list_cnt", tree);
 
-    // Has ARIA globals or referred by ARIA relationship.
+    // Has ARIA globals or referred by ARIA relationship, role='presentation'
+    // and role='none' are ignored.
     tree =
       { SECTION: [ // container
+        { LABEL: [ // label, has aria-owns
+          { TEXT_LEAF: [ ] }
+        ] },
+        { TEXT_LEAF: [ ] },
+        { LABEL: [ // label, referenced by aria-owns
+          { TEXT_LEAF: [ ] }
+        ] },
+        { TEXT_LEAF: [ ] },
         { LABEL: [ // label, has aria-owns
           { TEXT_LEAF: [ ] }
         ] },
@@ -90,24 +116,34 @@
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=548291"
      title="Accessible tree of ARIA image maps">
-    Mozilla Bug 548291
+    Bug 548291
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=666504"
      title="Ignore role presentation on focusable elements">
-    Mozilla Bug 666504
+    Bug 666504
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=971212"
+     title="Implement ARIA role=none">
+    Bug 971212
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
-  <div id="div_cnt"><div role="presentation">text</div></div>
+  <div id="div_cnt"><div role="presentation">t</div><div role="none">t</div></div>
 
-  <div id="btn_cnt"><button role="presentation">btn</button></div>
+  <div id="btn_cnt"><button role="presentation">btn</button><button role="none">btn</button></div>
 
   <div id="tbl_cnt">
     <table role="presentation">
+      <tr>
+        <td>cell</td>
+      </tr>
+    </table>
+    <table role="none">
       <tr>
         <td>cell</td>
       </tr>
@@ -120,10 +156,18 @@
         <td>cell</td>
       </tr>
     </table>
+    <table role="none" tabindex="0">
+      <tr>
+        <td>cell</td>
+      </tr>
+    </table>
   </div>
 
   <div id="list_cnt">
     <ul role="presentation">
+      <li>item</li>
+    </ul>
+    <ul role="none">
       <li>item</li>
     </ul>
   </div>
@@ -131,6 +175,8 @@
   <div id="airaglobalprop_cnt">
     <label role="presentation" aria-owns="ariaowned">has aria-owns</label>
     <label role="presentation" id="ariaowned">referred by aria-owns</label>
+    <label role="none" aria-owns="ariaowned2">has aria-owns</label>
+    <label role="none" id="ariaowned2">referred by aria-owns</label>
   </div>
 
 </body>

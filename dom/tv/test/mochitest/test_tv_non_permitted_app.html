@@ -14,14 +14,13 @@
 
 var tests = [
   function() {
-    SpecialPowers.pushPrefEnv({"set": [["dom.tv.enabled", true]]}, function() {
+    SpecialPowers.pushPrefEnv({"set": [["dom.tv.enabled", true],["dom.mozBrowserFramesEnabled", true]]}, function() {
       SpecialPowers.pushPermissions(
         [{ "type": "browser", "allow": true, "context": document },
          { "type": "embed-apps", "allow": true, "context": document },
          { "type": "webapps-manage", "allow": true, "context": document }],
         function() {
           SpecialPowers.setAllAppsLaunchable(true);
-          SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
           // No confirmation needed when an app is installed and uninstalled.
           SpecialPowers.autoConfirmAppInstall(() => {
             SpecialPowers.autoConfirmAppUninstall(runTest);

@@ -189,15 +189,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
     if (isDesktop) { // up/down arrow keys not supported on android/b2g
       number.value = "";
       number.focus();
-      synthesizeKey("VK_UP", {});
+      synthesizeKey("KEY_ArrowUp", { code: "ArrowUp" });
       is(numberInput, 1, "input event should be dispatched for up/down arrow key keypress");
       is(number.value, 1, "sanity check value of number control after keypress");
 
-      synthesizeKey("VK_DOWN", { type: "keydown" });
-      synthesizeKey("VK_DOWN", { type: "keypress" });
-      synthesizeKey("VK_DOWN", { type: "keypress" });
-      synthesizeKey("VK_DOWN", { type: "keypress" });
-      synthesizeKey("VK_DOWN", { type: "keyup" });
+      synthesizeKey("KEY_ArrowDown", { code: "ArrowDown", repeat: 3 });
       is(numberInput, 4, "input event should be dispatched for each up/down arrow key keypress event, even when rapidly repeated");
       is(number.value, -2, "sanity check value of number control after multiple keydown events");
 

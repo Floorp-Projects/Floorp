@@ -87,8 +87,6 @@ SimpleTest.waitForFocus(function() {
     const needlessGrowth = preserveRatio ? 1 : 0;
     const reversedGrowth = preserveRatio ? -1 : 1;
 
-    SpecialPowers.setBoolPref("editor.resizing.preserve_ratio", preserveRatio);
-
     // top resizer
     testResizer(W/2,   0, -10, -10,   0,  10);
     testResizer(W/2,   0, -10,   0,   0,   0);
@@ -176,15 +174,15 @@ SimpleTest.waitForFocus(function() {
     testResizer(  0,   0,  10, -10, -10 * reversedGrowth,  10);
     testResizer(  0,   0,  10,   0, -10 * ignoredGrowth,   0);
     testResizer(  0,   0,  10,  10, -10, -10);
-
-    SpecialPowers.clearUserPref("editor.resizing.preserve_ratio");
-  }
-
-  runTests(false);
-  runTests(true);
-
-  SimpleTest.finish();
-});
+ }
+ SpecialPowers.pushPrefEnv({"set": [["editor.resizing.preserve_ratio", false]]}, function() {
+     runTests(false);
+     SpecialPowers.pushPrefEnv({"set": [["editor.resizing.preserve_ratio", true]]}, function() {
+       runTests(true);
+       SimpleTest.finish();
+     });
+   });
+ });
 
 </script>
 </pre>

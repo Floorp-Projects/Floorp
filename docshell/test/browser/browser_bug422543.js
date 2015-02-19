@@ -127,7 +127,7 @@ function notifyReload() {
 function setup(aCallback) {
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla");
   let browser = tab.linkedBrowser;
-  registerCleanupFunction(function () gBrowser.removeTab(tab));
+  registerCleanupFunction(function () { gBrowser.removeTab(tab); });
 
   whenPageShown(browser, function () {
     gFirstListener = new SHistoryListener();

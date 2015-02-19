@@ -25,6 +25,7 @@ public:
   NS_DECL_NSICANCELABLE
 
   DNSRequestChild(const nsCString& aHost, const uint32_t& aFlags,
+                  const nsCString& aNetworkInterface,
                   nsIDNSListener *aListener, nsIEventTarget *target);
 
   void AddIPDLReference() {
@@ -50,6 +51,7 @@ protected:
   nsresult                  mResultStatus;
   nsCString                 mHost;
   uint16_t                  mFlags;
+  nsCString                 mNetworkInterface;
   bool                      mIPCOpen;
 };
 

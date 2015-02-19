@@ -63,33 +63,17 @@ function runTest() {
            "Pixel scrolling should have finished after one refresh driver iteration. " +
            "We shouldn't be scrolling smoothly, even though the pref is set.");
         win.close();
-        clearPrefs();
         SimpleTest.finish();
       });
     });
   }, win);
 }
 
-function initPrefs()
-{
-  // Disables the app level scroll acceleration
-  SpecialPowers.setIntPref("mousewheel.acceleration.start", -1);
-  SpecialPowers.setBoolPref("mousewheel.system_scroll_override_on_root_content.enabled", false);
-
-  // Enables smooth scrolling
-  SpecialPowers.setBoolPref("general.smoothScroll", true);
-}
-
-function clearPrefs()
-{
-  SpecialPowers.clearUserPref("mousewheel.acceleration.start");
-  SpecialPowers.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");
-  SpecialPowers.clearUserPref("general.smoothScroll");
-}
-
-window.onload = function () {
-  initPrefs();
-  SimpleTest.executeSoon(runTest);
+window.onload = function() {
+  SpecialPowers.pushPrefEnv({
+    "set":[["general.smoothScroll", true],
+           ["mousewheel.acceleration.start", -1],
+           ["mousewheel.system_scroll_override_on_root_content.enabled", false]]}, runTest);
 }
 
 SimpleTest.waitForExplicitFinish();
