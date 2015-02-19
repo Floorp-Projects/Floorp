@@ -59,9 +59,6 @@ public:
   void
   InvalidateWorkerReference(WhichServiceWorker aWhichOnes);
 
-  void
-  QueueStateChangeEvent(WhichServiceWorker aWhichOne, ServiceWorkerState aState) const;
-
   // DOMEventTargethelper
   virtual void DisconnectFromOwner() MOZ_OVERRIDE;
 
