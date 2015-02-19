@@ -977,6 +977,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         branchTestNull(cond, Operand(address), label);
     }
 
+    // This one, though, clobbers the ScratchReg.
+    void branchTestObject(Condition cond, const Address &src, Label *label) {
+        cond = testObject(cond, src);
+        j(cond, label);
+    }
+
     // Perform a type-test on a full Value loaded into a register.
     // Clobbers the ScratchReg.
     void branchTestUndefined(Condition cond, const ValueOperand &src, Label *label) {
