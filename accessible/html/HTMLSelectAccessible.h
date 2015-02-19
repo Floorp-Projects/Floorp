@@ -174,6 +174,7 @@ public:
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
   virtual void InvalidateChildren() MOZ_OVERRIDE;
+  virtual bool RemoveChild(Accessible* aChild) MOZ_OVERRIDE;
 
   // ActionAccessible
   virtual uint8_t ActionCount() MOZ_OVERRIDE;

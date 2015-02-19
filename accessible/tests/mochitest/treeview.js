@@ -60,7 +60,7 @@ function nsTableTreeView(aRowCount)
 function nsTreeTreeView()
 {
   this.__proto__ = new nsTreeView();
-  
+
   this.mData = [
     new treeItem("row1"),
     new treeItem("row2_", true, [new treeItem("row2.1_"), new treeItem("row2.2_")]),
