@@ -24,7 +24,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=674770
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.setBoolPref("middlemouse.paste", true);
+  SpecialPowers.pushPrefEnv({"set":[["middlemouse.paste", true]]}, startTest);
+});
+function startTest() {
   localStorage.removeItem("clicked");
   window.linkWasClicked = false;
 
@@ -48,11 +50,10 @@ SimpleTest.waitForFocus(function() {
       ok(!window.linkWasClicked, "The click operation shouldn't work in the contenteditable area");
 
       localStorage.removeItem("clicked");
-      SpecialPowers.clearUserPref("middlemouse.paste");
       SimpleTest.finish();
     }, 100);
   }, 100);
-});
+}
 
 function hitEventLoop(func, times) {
   if (times > 0) {

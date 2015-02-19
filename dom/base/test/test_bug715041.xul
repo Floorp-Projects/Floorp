@@ -19,8 +19,6 @@ target="_blank">Mozilla Bug 715041</a>
     <![CDATA[
 
   /** Mock Idle Service Test for Bug 715041 **/
-  SpecialPowers.setBoolPref("dom.idle-observers-api.fuzz_time.disabled", true);
-
   //class mock javascript idle service
   var idleServiceObj = {
     observers: [],
@@ -810,8 +808,7 @@ target="_blank">Mozilla Bug 715041</a>
   AddShiftLocalEnabled = true;
   AddIdleObserverWithInvalidTimeEnabled = false;
   
-  caseZero();  
-  
+  SpecialPowers.pushPrefEnv({"set":[['dom.idle-observers-api.fuzz_time.disabled', true]]}, caseZero);
     ]]>
     </script>
     </window>

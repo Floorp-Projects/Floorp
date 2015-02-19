@@ -13,17 +13,10 @@
   <script type="application/javascript">
   <![CDATA[
     SimpleTest.waitForExplicitFinish();
+    SpecialPowers.pushPrefEnv({"set":[["browser.preferences.instantApply", false]]}, function() {
 
     // No instant-apply for this test
-    SpecialPowers.setBoolPref("browser.preferences.instantApply", false);
-
     var prefWindow = openDialog("window_preferences_beforeaccept.xul", "", "", windowOnload);
-
-    SimpleTest.registerCleanupFunction(() => {
-      SpecialPowers.clearUserPref("browser.preferences.instantApply");
-      SpecialPowers.clearUserPref("tests.beforeaccept.dialogShown");
-      SpecialPowers.clearUserPref("tests.beforeaccept.called");
-    });
 
     function windowOnload() {
       var dialogShown = prefWindow.document.getElementById("tests.beforeaccept.dialogShown");
@@ -49,6 +42,7 @@
 
       SimpleTest.finish();
     }
+});
   ]]>
   </script>
 

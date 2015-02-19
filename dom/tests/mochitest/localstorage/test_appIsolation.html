@@ -12,18 +12,6 @@ SimpleTest.waitForExplicitFinish();
 var fileTestOnCurrentOrigin = (location.protocol + "//" + location.host + location.pathname)
                               .replace("test_a", "frameA");
 
-var previousPrefs = {
-  mozBrowserFramesEnabled: undefined,
-};
-
-try {
-  previousPrefs.mozBrowserFramesEnabled = SpecialPowers.getBoolPref('dom.mozBrowserFramesEnabled');
-} catch(e)
-{
-}
-
-SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
-
 SpecialPowers.addPermission("browser", true, window.document);
 SpecialPowers.addPermission("embed-apps", true, window.document);
 
@@ -110,10 +98,6 @@ function runTest()
           SpecialPowers.removePermission("browser", window.document);
           SpecialPowers.removePermission("embed-apps", window.document);
 
-          if (previousPrefs.mozBrowserFramesEnabled !== undefined) {
-            SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', previousPrefs.mozBrowserFramesEnabled);
-          }
-
           SimpleTest.finish();
         } else {
           gTestRunner.next();
@@ -131,6 +115,10 @@ function runTest()
 
 var gTestRunner = runTest();
 
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set": [['dom.mozBrowserFramesEnabled', true]]}, startTest);
+});
+
 function startTest()
 {
   is(localStorage.getItem("0"), null, "no data");
@@ -139,9 +127,6 @@ function startTest()
 
   gTestRunner.next();
 }
-
-addLoadEvent(startTest);
-
 </script>
 
 </head>
