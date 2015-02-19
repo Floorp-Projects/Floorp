@@ -107,7 +107,8 @@ function runTest()
   document.getElementById('a').click();
   document.getElementById('b').click();
   var c = document.getElementById('c');
-  c.focus(); synthesizeKey("VK_RETURN", {type: "keypress"});
+  c.focus();
+  synthesizeKey("KEY_Enter", { code: "Enter" });
   document.getElementById('s2').click();
 }
 

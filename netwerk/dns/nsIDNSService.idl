@@ -21,7 +21,7 @@ namespace mozilla { namespace net {
 /**
  * nsIDNSService
  */
-[scriptable, uuid(f1971942-19db-44bf-81e8-d15df220a39f)]
+[scriptable, uuid(de5642c6-61fc-4fcf-9a47-03226b0d4e21)]
 interface nsIDNSService : nsISupports
 {
     /**
@@ -66,7 +66,7 @@ interface nsIDNSService : nsISupports
                             in unsigned long     aFlags,
                             in nsIDNSListener    aListener,
                             in nsresult          aReason);
-    
+
     /**
      * called to synchronously resolve a hostname.  warning this method may
      * block the calling thread for a long period of time.  it is extremely
@@ -82,6 +82,31 @@ interface nsIDNSService : nsISupports
      */
     nsIDNSRecord resolve(in AUTF8String   aHostName,
                          in unsigned long aFlags);
+
+    /**
+     * kicks off an asynchronous host lookup.
+     *
+     * This function is identical to asyncResolve except an additional
+     * parameter aNetwortInterface. If parameter aNetworkInterface is an empty
+     * string function will return the same result as asyncResolve.
+     * Setting aNetworkInterface value make only sense for gonk,because it
+     * an per networking interface query is possible.
+     */
+    nsICancelable asyncResolveExtended(in AUTF8String       aHostName,
+                                       in unsigned long     aFlags,
+                                       in AUTF8String       aNetworkInterface,
+                                       in nsIDNSListener    aListener,
+                                       in nsIEventTarget    aListenerTarget);
+
+    /**
+     * Attempts to cancel a previously requested async DNS lookup
+     * This is an extended versin with a additional parameter aNetworkInterface
+     */
+    void cancelAsyncResolveExtended(in AUTF8String       aHostName,
+                                    in unsigned long     aFlags,
+                                    in AUTF8String       aNetworkInterface,
+                                    in nsIDNSListener    aListener,
+                                    in nsresult          aReason);
 
     /**
      * The method takes a pointer to an nsTArray

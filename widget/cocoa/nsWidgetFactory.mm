@@ -7,6 +7,7 @@
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/WidgetUtils.h"
 
 #include "nsWidgetsCID.h"
 
@@ -37,8 +38,6 @@
 #include "nsPrintDialogX.h"
 #include "nsPrintSession.h"
 #include "nsToolkitCompsCID.h"
-
-#include "mozilla/Module.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -195,6 +194,9 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 static void
 nsWidgetCocoaModuleDtor()
 {
+  // Shutdown all XP level widget classes.
+  WidgetUtils::Shutdown();
+
   NativeKeyBindings::Shutdown();
   nsLookAndFeel::Shutdown();
   nsToolkit::Shutdown();

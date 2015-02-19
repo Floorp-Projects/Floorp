@@ -60,7 +60,6 @@ function runTest() {
       if (!outstandingTests.length) {
         winUtils.restoreNormalRefresh();
         win.close();
-        clearPrefs();
         SimpleTest.finish();
         return;
       }
@@ -98,27 +97,12 @@ function runTest() {
   }, win);
 }
 
-function initPrefs()
-{
-  SpecialPowers.setBoolPref("general.smoothScroll", false);
-  // Disables the app level scroll acceleration
-  SpecialPowers.setIntPref("mousewheel.acceleration.start", -1);
-  SpecialPowers.setBoolPref("mousewheel.system_scroll_override_on_root_content.enabled", false);
-  // Enable zooming for ctrl-scrolling
-  SpecialPowers.setIntPref("mousewheel.with_control.action", 3);
-}
-
-function clearPrefs()
-{
-  SpecialPowers.clearUserPref("general.smoothScroll");
-  SpecialPowers.clearUserPref("mousewheel.acceleration.start");
-  SpecialPowers.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");
-  SpecialPowers.clearUserPref("mousewheel.with_control.action");
-}
-
-window.onload = function () {
-  initPrefs();
-  SimpleTest.executeSoon(runTest);
+window.onload = function() {
+  SpecialPowers.pushPrefEnv({
+    "set":[["general.smoothScroll", false],
+           ["mousewheel.acceleration.start", -1],
+           ["mousewheel.system_scroll_override_on_root_content.enabled", false],
+           ["mousewheel.with_control.action", 3]]}, runTest);
 }
 
 SimpleTest.waitForExplicitFinish();

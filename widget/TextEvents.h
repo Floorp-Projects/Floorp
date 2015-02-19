@@ -21,6 +21,9 @@
 #include "nsTArray.h"
 #include "WritingModes.h"
 
+class nsStringHashKey;
+template<class, class> class nsDataHashtable;
+
 /******************************************************************************
  * virtual keycode values
  ******************************************************************************/
@@ -164,6 +167,10 @@ public:
   nsString mNativeCharactersIgnoringModifiers;
 #endif
 
+  // If the key should cause keypress events, this returns true.
+  // Otherwise, false.
+  bool ShouldCauseKeypressEvents() const;
+
   void GetDOMKeyName(nsAString& aKeyName)
   {
     if (mKeyNameIndex == KEY_NAME_INDEX_USE_STRING) {
@@ -181,12 +188,47 @@ public:
     GetDOMCodeName(mCodeNameIndex, aCodeName);
   }
 
+  bool IsModifierKeyEvent() const
+  {
+    return GetModifierForKeyName(mKeyNameIndex) != MODIFIER_NONE;
+  }
+
+  static void Shutdown();
+
+  /**
+   * ComputeLocationFromCodeValue() returns one of .location value
+   * (nsIDOMKeyEvent::DOM_KEY_LOCATION_*) which is the most preferred value
+   * for the specified specified code value.
+   */
   static uint32_t ComputeLocationFromCodeValue(CodeNameIndex aCodeNameIndex);
+
+  /**
+   * ComputeKeyCodeFromKeyNameIndex() return a .keyCode value which can be
+   * mapped from the specified key value.  Note that this returns 0 if the
+   * key name index is KEY_NAME_INDEX_Unidentified or KEY_NAME_INDEX_USE_STRING.
+   * This means that this method is useful only for non-printable keys.
+   */
+  static uint32_t ComputeKeyCodeFromKeyNameIndex(KeyNameIndex aKeyNameIndex);
+
+  /**
+   * GetModifierForKeyName() returns a value of Modifier which is activated
+   * by the aKeyNameIndex.
+   */
+  static Modifier GetModifierForKeyName(KeyNameIndex aKeyNameIndex);
+
+  /**
+   * IsLockableModifier() returns true if aKeyNameIndex is a lockable modifier
+   * key such as CapsLock and NumLock.
+   */
+  static bool IsLockableModifier(KeyNameIndex aKeyNameIndex);
 
   static void GetDOMKeyName(KeyNameIndex aKeyNameIndex,
                             nsAString& aKeyName);
   static void GetDOMCodeName(CodeNameIndex aCodeNameIndex,
                              nsAString& aCodeName);
+
+  static KeyNameIndex GetKeyNameIndex(const nsAString& aKeyValue);
+  static CodeNameIndex GetCodeNameIndex(const nsAString& aCodeValue);
 
   static const char* GetCommandStr(Command aCommand);
 
@@ -210,6 +252,16 @@ public:
     mNativeKeyEvent = nullptr;
     mUniqueId = aEvent.mUniqueId;
   }
+
+private:
+  static const char16_t* kKeyNames[];
+  static const char16_t* kCodeNames[];
+  typedef nsDataHashtable<nsStringHashKey,
+                          KeyNameIndex> KeyNameIndexHashtable;
+  typedef nsDataHashtable<nsStringHashKey,
+                          CodeNameIndex> CodeNameIndexHashtable;
+  static KeyNameIndexHashtable* sKeyNameIndexHashtable;
+  static CodeNameIndexHashtable* sCodeNameIndexHashtable;
 };
 
 

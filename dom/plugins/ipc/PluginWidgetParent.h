@@ -32,7 +32,6 @@ public:
    */
   static void SendAsyncUpdate(nsIWidget* aWidget);
 
-public:
   PluginWidgetParent();
   virtual ~PluginWidgetParent();
 
@@ -43,7 +42,7 @@ public:
   virtual bool RecvGetNativePluginPort(uintptr_t* value) MOZ_OVERRIDE;
 
   // Helper for compositor checks on the channel
-  bool ActorDestroyed() { return mActorDestroyed; }
+  bool ActorDestroyed() { return !mWidget; }
 
   // Called by PBrowser when it receives a Destroy() call from the child.
   void ParentDestroy();
@@ -54,12 +53,22 @@ public:
 private:
   // The tab our connection is associated with.
   mozilla::dom::TabParent* GetTabParent();
+
+public:
+  // Identifies the side of the connection that initiates shutdown.
+  enum ShutdownType {
+    TAB_CLOSURE = 1,
+    CONTENT     = 2
+  };
+
+private:
+  void Shutdown(ShutdownType aType);
+
   // The chrome side native widget.
   nsCOMPtr<nsIWidget> mWidget;
 #if defined(MOZ_WIDGET_GTK)
   nsAutoPtr<nsPluginNativeWindowGtk> mWrapper;
 #endif
-  bool mActorDestroyed;
 };
 
 } // namespace plugins

@@ -13,8 +13,12 @@
 
 <!-- URLUtils* stubs -->
 <script type=text/plain class=untested>
-interface URLUtils {};
-interface URLUtilsReadOnly {};
+interface URLUtils {
+  stringifier;
+};
+interface URLUtilsReadOnly {
+  stringifier;
+};
 </script>
 <!-- DOM IDLs -->
 <script type=text/plain class=untested>
@@ -3338,7 +3342,7 @@ window.onload = function() {
 		BarProp: [],
 		History: ['window.history'],
 		Location: ['window.location'],
-		PopStateEvent: [],
+		PopStateEvent: ['new PopStateEvent("popstate", { data: {} })'],
 		HashChangeEvent: [],
 		PageTransitionEvent: [],
 		BeforeUnloadEvent: [],

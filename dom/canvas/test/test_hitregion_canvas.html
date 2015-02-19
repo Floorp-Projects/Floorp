@@ -8,8 +8,6 @@
 SimpleTest.waitForExplicitFinish();
 const Cc = SpecialPowers.Cc;
 const Cr = SpecialPowers.Cr;
-SpecialPowers.setBoolPref("canvas.hitregions.enabled", true);
-
 </script>
 
 <p>Canvas test: hit regions</p>
@@ -78,9 +76,9 @@ function runTests() {
   ok(false, "unexpected exception thrown in: test_hitregions");
  }
  SimpleTest.finish();
- SpecialPowers.setBoolPref("canvas.hitregions.enabled", false);
 }
 
-addLoadEvent(runTests);
-
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set":[["canvas.hitregions.enabled", true]]}, runTests);
+});
 </script>

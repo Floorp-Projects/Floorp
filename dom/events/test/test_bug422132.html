@@ -26,7 +26,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=422132
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
-SimpleTest.waitForFocus(runTests, window);
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({
+    "set":[["general.smoothScroll", false],
+           ["mousewheel.min_line_scroll_amount", 1],
+           ["mousewheel.transaction.timeout", 100000]]}, runTests)}, window);
 
 function hitEventLoop(aFunc, aTimes)
 {
@@ -39,10 +43,6 @@ function hitEventLoop(aFunc, aTimes)
 
 function runTests()
 {
-  SpecialPowers.setBoolPref("general.smoothScroll", false);
-  SpecialPowers.setIntPref("mousewheel.min_line_scroll_amount", 1);
-  SpecialPowers.setIntPref("mousewheel.transaction.timeout", 100000);
-
   var target = document.getElementById("target");
 
   var scrollLeft = target.scrollLeft;
@@ -81,9 +81,6 @@ function runTests()
              "not scrolled to right by 0.5 line delta value with pending 0.5 line delta");
           ok(target.scrollTop > scrollTop,
              "not scrolled to bottom by 0.5 line delta value with pending 0.5 line delta");
-          SpecialPowers.clearUserPref("general.smoothScroll");
-          SpecialPowers.clearUserPref("mousewheel.min_line_scroll_amount");
-          SpecialPowers.clearUserPref("mousewheel.transaction.timeout");
           SimpleTest.finish();
         }, 20);
       }, 20);

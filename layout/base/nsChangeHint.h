@@ -348,24 +348,30 @@ enum nsRestyleHint {
   // work.)  Supported only for element style contexts and not for
   // pseudo-elements or anonymous boxes, on which it converts to
   // eRestyle_Self.
+  // If the change is for the advance of a declarative animation, use
+  // the value below instead.
   eRestyle_StyleAttribute = (1<<6),
+
+  // Same as eRestyle_StyleAttribute, but for when the change results
+  // from the advance of a declarative animation.
+  eRestyle_StyleAttribute_Animations = (1<<7),
 
   // Continue the restyling process to the current frame's children even
   // if this frame's restyling resulted in no style changes.
-  eRestyle_Force = (1<<7),
+  eRestyle_Force = (1<<8),
 
   // Continue the restyling process to all of the current frame's
   // descendants, even if any frame's restyling resulted in no style
   // changes.  (Implies eRestyle_Force.)  Note that this is weaker than
   // eRestyle_Subtree, which makes us rerun selector matching on all
   // descendants rather than just continuing the restyling process.
-  eRestyle_ForceDescendants = (1<<8),
+  eRestyle_ForceDescendants = (1<<9),
 
   // Useful unions:
   eRestyle_AllHintsWithAnimations = eRestyle_CSSTransitions |
                                     eRestyle_CSSAnimations |
                                     eRestyle_SVGAttrAnimations |
-                                    eRestyle_StyleAttribute,
+                                    eRestyle_StyleAttribute_Animations,
 };
 
 // The functions below need an integral type to cast to to avoid

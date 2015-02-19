@@ -26,9 +26,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=578771
       /** Test for Bug 578771 **/
       SimpleTest.waitForExplicitFinish();
 
-      // Avoid platform selection differences
-      SpecialPowers.setBoolPref("layout.word_select.eat_space_to_next_word", false);
-
       function testElem(elem, elemTag) {
         var ce = document.getElementById("ce");
         ce.focus();
@@ -42,17 +39,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=578771
         ok(elem.selectionStart == 0 && elem.selectionEnd == 14,
            "Triple-clicking on another " + elemTag + " works correctly");
       }
-
+      // Avoid platform selection differences
       SimpleTest.waitForFocus(function() {
-        var input = document.getElementById("ip");
-        testElem(input, "input");
-
-        var textarea = document.getElementById("ta");
-        testElem(textarea, "textarea");
-
-        SpecialPowers.clearUserPref("layout.word_select.eat_space_to_next_word");
-        SimpleTest.finish();
+         SpecialPowers.pushPrefEnv({"set":[["layout.word_select.eat_space_to_next_word", false]]}, startTest);
       });
+
+      function startTest() {
+         var input = document.getElementById("ip");
+         testElem(input, "input");
+
+         var textarea = document.getElementById("ta");
+         testElem(textarea, "textarea");
+
+         SimpleTest.finish();
+      }
    </script>
   </pre>
 

@@ -172,9 +172,9 @@ const kTests = [
   { description: "WidgetKeyboardEvent (keyup during composition)",
     targetID: "input-text", eventType: "keyup",
     dispatchEvent: function () {
+      SpecialPowers.setBoolPref("dom.keyboardevent.dispatch_during_composition", true);
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
-      synthesizeKey("a", { type: "keydown" });
       synthesizeCompositionChange({ "composition":
         { "string": "\u306D",
           "clauses":
@@ -182,10 +182,11 @@ const kTests = [
             { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
           ]
         },
-        "caret": { "start": 1, "length": 0 }
+        "caret": { "start": 1, "length": 0 },
+        "key": { key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A },
       });
-      synthesizeKey("a", { type: "keyup" });
       synthesizeComposition({ type: "compositioncommitasis" });
+      SpecialPowers.clearUserPref("dom.keyboardevent.dispatch_during_composition");
     },
     canRun: function () {
       return true;
@@ -195,6 +196,7 @@ const kTests = [
   { description: "WidgetKeyboardEvent (keydown during composition)",
     targetID: "input-text", eventType: "keydown",
     dispatchEvent: function () {
+      SpecialPowers.setBoolPref("dom.keyboardevent.dispatch_during_composition", true);
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
       synthesizeCompositionChange({ "composition":
@@ -206,9 +208,9 @@ const kTests = [
         },
         "caret": { "start": 1, "length": 0 }
       });
-      synthesizeKey("VK_RETURN", { type: "keydown" });
-      synthesizeComposition({ type: "compositioncommitasis" });
-      synthesizeKey("VK_RETURN", { type: "keyup" });
+      synthesizeComposition({ type: "compositioncommitasis",
+        key: { key: "KEY_Enter", code: "Enter" } });
+      SpecialPowers.clearUserPref("dom.keyboardevent.dispatch_during_composition");
     },
     canRun: function () {
       return true;
@@ -632,39 +634,23 @@ function runNextTest()
 
 function init()
 {
-  SpecialPowers.setBoolPref("middlemouse.contentLoadURL", false);
-  SpecialPowers.setBoolPref("middlemouse.paste", false);
-  SpecialPowers.setBoolPref("general.autoScroll", false);
-  SpecialPowers.setIntPref("mousewheel.default.action", 0);
-  SpecialPowers.setIntPref("mousewheel.default.action.override_x", -1);
-  SpecialPowers.setIntPref("mousewheel.with_shift.action", 0);
-  SpecialPowers.setIntPref("mousewheel.with_shift.action.override_x", -1);
-  SpecialPowers.setIntPref("mousewheel.with_control.action", 0);
-  SpecialPowers.setIntPref("mousewheel.with_control.action.override_x", -1);
-  SpecialPowers.setIntPref("mousewheel.with_alt.action", 0);
-  SpecialPowers.setIntPref("mousewheel.with_alt.action.override_x", -1);
-  SpecialPowers.setIntPref("mousewheel.with_meta.action", 0);
-  SpecialPowers.setIntPref("mousewheel.with_meta.action.override_x", -1);
-
-  runNextTest();
+  SpecialPowers.pushPrefEnv({"set":[["middlemouse.contentLoadURL", false],
+  			            ["middlemouse.paste", false],
+                                    ["general.autoScroll", false],
+                                    ["mousewheel.default.action", 0],
+                                    ["mousewheel.default.action.override_x", -1],
+                                    ["mousewheel.with_shift.action", 0],
+                                    ["mousewheel.with_shift.action.override_x", -1],
+                                    ["mousewheel.with_control.action", 0],
+                                    ["mousewheel.with_control.action.override_x", -1],
+                                    ["mousewheel.with_alt.action", 0],
+                                    ["mousewheel.with_alt.action.override_x", -1],
+                                    ["mousewheel.with_meta.action", 0],
+                                    ["mousewheel.with_meta.action.override_x", -1]]}, runNextTest);
 }
 
 function finish()
 {
-  SpecialPowers.clearUserPref("middlemouse.contentLoadURL");
-  SpecialPowers.clearUserPref("middlemouse.paste");
-  SpecialPowers.clearUserPref("general.autoScroll");
-  SpecialPowers.clearUserPref("mousewheel.default.action");
-  SpecialPowers.clearUserPref("mousewheel.default.action.override_x");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.action");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.action.override_x");
-  SpecialPowers.clearUserPref("mousewheel.with_control.action");
-  SpecialPowers.clearUserPref("mousewheel.with_control.action.override_x");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.action");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.action.override_x");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.action");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.action.override_x");
-
   SimpleTest.finish();
 }
 

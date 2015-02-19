@@ -47,11 +47,11 @@ function clickEventHnalder(aEvent)
 // NOTE: tests need to check the result *after* the content is actually
 //       modified.  Sometimes, the modification is delayed. Therefore, there
 //       are a lot of functions and SimpleTest.executeSoon()s.
-
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.setBoolPref("middlemouse.contentLoadURL", false);
-  SpecialPowers.setBoolPref("middlemouse.paste", true);
-
+  SpecialPowers.pushPrefEnv({"set":[["middlemouse.contentLoadURL", false],
+                                    ["middlemouse.paste", true]]}, startTest);
+});
+function startTest() {
   frameWindow = iframe.contentWindow;
   frameDocument = iframe.contentDocument;
 
@@ -62,27 +62,24 @@ SimpleTest.waitForFocus(function() {
   var text = frameDocument.getElementById("text");
 
   text.focus();
-
-  SimpleTest.executeSoon(function() {
-    if (navigator.platform.indexOf("Linux") == 0) {
-      synthesizeKey("a", { altKey: true }, frameWindow);
-    } else {
-      synthesizeKey("a", { accelKey: true }, frameWindow);
-    }
-    // Windows and Mac don't have primary selection, we should copy the text to
-    // the global clipboard.
-    if (!SpecialPowers.supportsSelectionClipboard()) {
-      SimpleTest.waitForClipboard("pasted",
-        function() { synthesizeKey("c", { accelKey: true }, frameWindow); },
-        function() { SimpleTest.executeSoon(runInputTests1) },
-        cleanup);
-    } else {
-      // Otherwise, don't call waitForClipboard since it breaks primary
-      // selection.
-      runInputTests1();
-    }
-  });
-});
+  if (navigator.platform.indexOf("Linux") == 0) {
+    synthesizeKey("a", { altKey: true }, frameWindow);
+  } else {
+    synthesizeKey("a", { accelKey: true }, frameWindow);
+  }
+  // Windows and Mac don't have primary selection, we should copy the text to
+  // the global clipboard.
+  if (!SpecialPowers.supportsSelectionClipboard()) {
+    SimpleTest.waitForClipboard("pasted",
+      function() { synthesizeKey("c", { accelKey: true }, frameWindow); },
+      function() { SimpleTest.executeSoon(runInputTests1) },
+      cleanup);
+  } else {
+    // Otherwise, don't call waitForClipboard since it breaks primary
+    // selection.
+    runInputTests1();
+  }
+}
 
 function runInputTests1()
 {
@@ -389,9 +386,6 @@ function runBodyEditableDocumentTests2()
 
 function cleanup()
 {
-  SpecialPowers.clearUserPref("middlemouse.contentLoadURL");
-  SpecialPowers.clearUserPref("middlemouse.paste");
-
   SimpleTest.finish();
 }
 

@@ -1378,12 +1378,14 @@ static const CascadeLevel gCascadeLevels[] = {
   { nsStyleSet::eSVGAttrAnimationSheet, false, false, eRestyle_SVGAttrAnimations },
   { nsStyleSet::eDocSheet,              false, false, nsRestyleHint(0) },
   { nsStyleSet::eScopedDocSheet,        false, false, nsRestyleHint(0) },
-  { nsStyleSet::eStyleAttrSheet,        false, true,  eRestyle_StyleAttribute },
+  { nsStyleSet::eStyleAttrSheet,        false, true,  eRestyle_StyleAttribute |
+                                                      eRestyle_StyleAttribute_Animations },
   { nsStyleSet::eOverrideSheet,         false, false, nsRestyleHint(0) },
   { nsStyleSet::eAnimationSheet,        false, false, eRestyle_CSSAnimations },
   { nsStyleSet::eScopedDocSheet,        true,  false, nsRestyleHint(0) },
   { nsStyleSet::eDocSheet,              true,  false, nsRestyleHint(0) },
-  { nsStyleSet::eStyleAttrSheet,        true,  false, eRestyle_StyleAttribute },
+  { nsStyleSet::eStyleAttrSheet,        true,  false, eRestyle_StyleAttribute |
+                                                      eRestyle_StyleAttribute_Animations },
   { nsStyleSet::eOverrideSheet,         true,  false, nsRestyleHint(0) },
   { nsStyleSet::eUserSheet,             true,  false, nsRestyleHint(0) },
   { nsStyleSet::eAgentSheet,            true,  false, nsRestyleHint(0) },
@@ -1409,6 +1411,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
                                  eRestyle_CSSAnimations |
                                  eRestyle_SVGAttrAnimations |
                                  eRestyle_StyleAttribute |
+                                 eRestyle_StyleAttribute_Animations |
                                  eRestyle_Force |
                                  eRestyle_ForceDescendants)),
              "unexpected replacement bits");
@@ -1449,8 +1452,8 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
                         level->mCheckForImportantRules && doReplace);
 
     if (doReplace) {
-      switch (level->mLevelReplacementHint) {
-        case eRestyle_CSSAnimations: {
+      switch (level->mLevel) {
+        case nsStyleSet::eAnimationSheet: {
           if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
               aPseudoType == nsCSSPseudoElements::ePseudo_before ||
               aPseudoType == nsCSSPseudoElements::ePseudo_after) {
@@ -1462,7 +1465,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           }
           break;
         }
-        case eRestyle_CSSTransitions: {
+        case nsStyleSet::eTransitionSheet: {
           if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
               aPseudoType == nsCSSPseudoElements::ePseudo_before ||
               aPseudoType == nsCSSPseudoElements::ePseudo_after) {
@@ -1474,7 +1477,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           }
           break;
         }
-        case eRestyle_SVGAttrAnimations: {
+        case nsStyleSet::eSVGAttrAnimationSheet: {
           SVGAttrAnimationRuleProcessor* ruleProcessor =
             static_cast<SVGAttrAnimationRuleProcessor*>(
               mRuleProcessors[eSVGAttrAnimationSheet].get());
@@ -1484,7 +1487,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           }
           break;
         }
-        case eRestyle_StyleAttribute: {
+        case nsStyleSet::eStyleAttrSheet: {
           if (!level->mIsImportant) {
             // First time through, we handle the non-!important rule.
             nsHTMLCSSStyleSheet* ruleProcessor =

@@ -127,34 +127,6 @@ function runTests()
     aElement.focus();
     is(SpecialPowers.unwrap(fm.focusedElement), aElement, aDescription + "failed to move focus");
 
-    // Modifier keys:
-    //   Basically, modifier keys shouldn't cause keypress event.  However,
-    //   even if it were dispatched by widget's bug, editor should consume
-    //   it when editor is editable.
-    reset("");
-    synthesizeKey("VK_META", { type: "keypress" });
-    check(aDescription + "Meta", true, true, !aIsReadonly);
-
-    reset("");
-    synthesizeKey("VK_WIN", { type: "keypress" });
-    check(aDescription + "OS", true, true, !aIsReadonly);
-
-    reset("");
-    synthesizeKey("VK_SHIFT", { type: "keypress" });
-    check(aDescription + "Shift", true, true, !aIsReadonly);
-
-    reset("");
-    synthesizeKey("VK_CONTROL", { type: "keypress" });
-    check(aDescription + "Control", true, true, !aIsReadonly);
-
-    // Alt key press event installs menubar key event listener, so,
-    // we should pass Alt key testing on Windows and Linux.
-    if (!kIsWin && !kIsLinux) {
-      reset("");
-      synthesizeKey("VK_ALT", { type: "keypress" });
-      check(aDescription + "Alt", true, true, !aIsReadonly);
-    }
-
     // Backspace key:
     //   If editor is readonly, it doesn't consume.
     //   If editor is editable, it consumes backspace and shift+backspace.

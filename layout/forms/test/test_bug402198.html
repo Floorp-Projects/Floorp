@@ -53,7 +53,7 @@ function doe3() {
   document.getElementById('a').focus();
   document.body.style.display = 'none';
 
-  synthesizeKey('VK_TAB', {type: "keypress", shiftKey: true});
+  synthesizeKey('KEY_Tab', { code: "Tab", shiftKey: true });
 
   is(0, 0, "this is a crash/assertion test, so we're ok if we survived this far");
   setTimeout(function() {document.body.style.display = ''; SimpleTest.finish();}, 0);

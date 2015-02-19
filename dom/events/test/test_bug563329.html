@@ -38,9 +38,6 @@ function getTests() {
 }
 
 function doTest() {
-  // Enable context menus
-  SpecialPowers.setBoolPref("ui.click_hold_context_menus", true);
-
   target = document.getElementById("testTarget");
 
   document.documentElement.addEventListener("contextmenu", function() {
@@ -66,29 +63,18 @@ function doCheckDuration() {
   var duration = 50;
 
   // Change click hold delay
-  SpecialPowers.setIntPref("ui.click_hold_context_menus.delay", duration);
-
-  synthesizeMouse(target, 0, 0, {type: "mousedown"});
+  SpecialPowers.pushPrefEnv({"set":[["ui.click_hold_context_menus.delay", duration]]}, function() { synthesizeMouse(target, 0, 0, {type: "mousedown"}); });
 }
 
 function finishTest() {
   synthesizeKey("VK_ESCAPE", {}, window);
-  try {
-    SpecialPowers.clearUserPref("ui.click_hold_context_menus");
-  }
-  catch(e) {}
-
-  try {
-    SpecialPowers.clearUserPref("ui.click_hold_context_menus.delay");
-  }
-  catch(e) {}
-
   SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(doTest);
-
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set":[["ui.click_hold_context_menus", true]]}, doTest);
+});
 </script>
 </pre>
 <span id="testTarget" style="border: 1px solid black;">testTarget</span>

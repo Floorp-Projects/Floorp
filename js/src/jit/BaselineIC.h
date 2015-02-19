@@ -1512,7 +1512,7 @@ class ICTypeMonitor_SingleObject : public ICStub
 
     HeapPtrObject obj_;
 
-    ICTypeMonitor_SingleObject(JitCode *stubCode, HandleObject obj);
+    ICTypeMonitor_SingleObject(JitCode *stubCode, JSObject *obj);
 
   public:
     HeapPtrObject &object() {
@@ -1546,7 +1546,7 @@ class ICTypeMonitor_ObjectGroup : public ICStub
 
     HeapPtrObjectGroup group_;
 
-    ICTypeMonitor_ObjectGroup(JitCode *stubCode, HandleObjectGroup group);
+    ICTypeMonitor_ObjectGroup(JitCode *stubCode, ObjectGroup *group);
 
   public:
     HeapPtrObjectGroup &group() {
@@ -1645,7 +1645,7 @@ class ICTypeUpdate_SingleObject : public ICStub
 
     HeapPtrObject obj_;
 
-    ICTypeUpdate_SingleObject(JitCode *stubCode, HandleObject obj);
+    ICTypeUpdate_SingleObject(JitCode *stubCode, JSObject *obj);
 
   public:
     HeapPtrObject &object() {
@@ -1680,7 +1680,7 @@ class ICTypeUpdate_ObjectGroup : public ICStub
 
     HeapPtrObjectGroup group_;
 
-    ICTypeUpdate_ObjectGroup(JitCode *stubCode, HandleObjectGroup group);
+    ICTypeUpdate_ObjectGroup(JitCode *stubCode, ObjectGroup *group);
 
   public:
     HeapPtrObjectGroup &group() {
@@ -2656,7 +2656,7 @@ class ICGetElemNativeStub : public ICMonitoredStub
     static const uint16_t ACCESSTYPE_MASK = 0x3;
 
     ICGetElemNativeStub(ICStub::Kind kind, JitCode *stubCode, ICStub *firstMonitorStub,
-                        HandleShape shape, HandlePropertyName name, AccessType acctype,
+                        Shape *shape, PropertyName *name, AccessType acctype,
                         bool needsAtomize);
 
     ~ICGetElemNativeStub();
@@ -2691,7 +2691,7 @@ class ICGetElemNativeSlotStub : public ICGetElemNativeStub
     uint32_t offset_;
 
     ICGetElemNativeSlotStub(ICStub::Kind kind, JitCode *stubCode, ICStub *firstMonitorStub,
-                            HandleShape shape, HandlePropertyName name,
+                            Shape *shape, PropertyName *name,
                             AccessType acctype, bool needsAtomize, uint32_t offset)
       : ICGetElemNativeStub(kind, stubCode, firstMonitorStub, shape, name, acctype, needsAtomize),
         offset_(offset)
@@ -2717,8 +2717,8 @@ class ICGetElemNativeGetterStub : public ICGetElemNativeStub
     uint32_t pcOffset_;
 
     ICGetElemNativeGetterStub(ICStub::Kind kind, JitCode *stubCode, ICStub *firstMonitorStub,
-                            HandleShape shape, HandlePropertyName name, AccessType acctype,
-                            bool needsAtomize, HandleFunction getter, uint32_t pcOffset);
+                              Shape *shape, PropertyName *name, AccessType acctype,
+                              bool needsAtomize, JSFunction *getter, uint32_t pcOffset);
 
   public:
     HeapPtrFunction &getter() {
@@ -2737,7 +2737,7 @@ class ICGetElem_NativeSlot : public ICGetElemNativeSlotStub
 {
     friend class ICStubSpace;
     ICGetElem_NativeSlot(JitCode *stubCode, ICStub *firstMonitorStub,
-                         HandleShape shape, HandlePropertyName name,
+                         Shape *shape, PropertyName *name,
                          AccessType acctype, bool needsAtomize, uint32_t offset)
       : ICGetElemNativeSlotStub(ICStub::GetElem_NativeSlot, stubCode, firstMonitorStub, shape,
                                 name, acctype, needsAtomize, offset)
@@ -2751,9 +2751,9 @@ class ICGetElem_NativePrototypeSlot : public ICGetElemNativeSlotStub
     HeapPtrShape holderShape_;
 
     ICGetElem_NativePrototypeSlot(JitCode *stubCode, ICStub *firstMonitorStub,
-                                  HandleShape shape, HandlePropertyName name,
+                                  Shape *shape, PropertyName *name,
                                   AccessType acctype, bool needsAtomize, uint32_t offset,
-                                  HandleObject holder, HandleShape holderShape);
+                                  JSObject *holder, Shape *holderShape);
 
   public:
     HeapPtrObject &holder() {
@@ -2779,10 +2779,10 @@ class ICGetElemNativePrototypeCallStub : public ICGetElemNativeGetterStub
 
   protected:
     ICGetElemNativePrototypeCallStub(ICStub::Kind kind, JitCode *stubCode, ICStub *firstMonitorStub,
-                                     HandleShape shape, HandlePropertyName name,
-                                     AccessType acctype, bool needsAtomize, HandleFunction getter,
-                                     uint32_t pcOffset, HandleObject holder,
-                                     HandleShape holderShape);
+                                     Shape *shape, PropertyName *name,
+                                     AccessType acctype, bool needsAtomize, JSFunction *getter,
+                                     uint32_t pcOffset, JSObject *holder,
+                                     Shape *holderShape);
 
   public:
     HeapPtrObject &holder() {
@@ -2805,10 +2805,10 @@ class ICGetElem_NativePrototypeCallNative : public ICGetElemNativePrototypeCallS
     friend class ICStubSpace;
 
     ICGetElem_NativePrototypeCallNative(JitCode *stubCode, ICStub *firstMonitorStub,
-                                        HandleShape shape, HandlePropertyName name,
+                                        Shape *shape, PropertyName *name,
                                         AccessType acctype, bool needsAtomize,
-                                        HandleFunction getter, uint32_t pcOffset,
-                                        HandleObject holder, HandleShape holderShape)
+                                        JSFunction *getter, uint32_t pcOffset,
+                                        JSObject *holder, Shape *holderShape)
       : ICGetElemNativePrototypeCallStub(GetElem_NativePrototypeCallNative,
                                          stubCode, firstMonitorStub, shape, name,
                                          acctype, needsAtomize, getter, pcOffset, holder,
@@ -2816,7 +2816,7 @@ class ICGetElem_NativePrototypeCallNative : public ICGetElemNativePrototypeCallS
     {}
 
   public:
-    static ICGetElem_NativePrototypeCallNative *Clone(JSContext *cx, ICStubSpace *space,
+    static ICGetElem_NativePrototypeCallNative *Clone(ICStubSpace *space,
                                                       ICStub *firstMonitorStub,
                                                       ICGetElem_NativePrototypeCallNative &other);
 };
@@ -2826,10 +2826,10 @@ class ICGetElem_NativePrototypeCallScripted : public ICGetElemNativePrototypeCal
     friend class ICStubSpace;
 
     ICGetElem_NativePrototypeCallScripted(JitCode *stubCode, ICStub *firstMonitorStub,
-                                          HandleShape shape, HandlePropertyName name,
+                                          Shape *shape, PropertyName *name,
                                           AccessType acctype, bool needsAtomize,
-                                          HandleFunction getter, uint32_t pcOffset,
-                                          HandleObject holder, HandleShape holderShape)
+                                          JSFunction *getter, uint32_t pcOffset,
+                                          JSObject *holder, Shape *holderShape)
       : ICGetElemNativePrototypeCallStub(GetElem_NativePrototypeCallScripted,
                                          stubCode, firstMonitorStub, shape, name,
                                          acctype, needsAtomize, getter, pcOffset, holder,
@@ -2838,7 +2838,7 @@ class ICGetElem_NativePrototypeCallScripted : public ICGetElemNativePrototypeCal
 
   public:
     static ICGetElem_NativePrototypeCallScripted *
-    Clone(JSContext *cx, ICStubSpace *space,
+    Clone(ICStubSpace *space,
           ICStub *firstMonitorStub,
           ICGetElem_NativePrototypeCallScripted &other);
 };
@@ -2972,10 +2972,10 @@ class ICGetElem_Dense : public ICMonitoredStub
 
     HeapPtrShape shape_;
 
-    ICGetElem_Dense(JitCode *stubCode, ICStub *firstMonitorStub, HandleShape shape);
+    ICGetElem_Dense(JitCode *stubCode, ICStub *firstMonitorStub, Shape *shape);
 
   public:
-    static ICGetElem_Dense *Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+    static ICGetElem_Dense *Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                   ICGetElem_Dense &other);
 
     static size_t offsetOfShape() {
@@ -3043,7 +3043,7 @@ class ICGetElem_TypedArray : public ICStub
   protected: // Protected to silence Clang warning.
     HeapPtrShape shape_;
 
-    ICGetElem_TypedArray(JitCode *stubCode, HandleShape shape, Scalar::Type type);
+    ICGetElem_TypedArray(JitCode *stubCode, Shape *shape, Scalar::Type type);
 
   public:
     static size_t offsetOfShape() {
@@ -3096,7 +3096,7 @@ class ICGetElem_Arguments : public ICMonitoredStub
     }
 
   public:
-    static ICGetElem_Arguments *Clone(JSContext *, ICStubSpace *space, ICStub *firstMonitorStub,
+    static ICGetElem_Arguments *Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                       ICGetElem_Arguments &other);
 
     Which which() const {
@@ -3180,7 +3180,7 @@ class ICSetElem_Dense : public ICUpdatedStub
     HeapPtrShape shape_;
     HeapPtrObjectGroup group_;
 
-    ICSetElem_Dense(JitCode *stubCode, HandleShape shape, HandleObjectGroup group);
+    ICSetElem_Dense(JitCode *stubCode, Shape *shape, ObjectGroup *group);
 
   public:
     static size_t offsetOfShape() {
@@ -3325,7 +3325,7 @@ class ICSetElem_TypedArray : public ICStub
   protected: // Protected to silence Clang warning.
     HeapPtrShape shape_;
 
-    ICSetElem_TypedArray(JitCode *stubCode, HandleShape shape, Scalar::Type type,
+    ICSetElem_TypedArray(JitCode *stubCode, Shape *shape, Scalar::Type type,
                          bool expectOutOfBounds);
 
   public:
@@ -3452,7 +3452,7 @@ class ICGetName_Global : public ICMonitoredStub
     HeapPtrShape shape_;
     uint32_t slot_;
 
-    ICGetName_Global(JitCode *stubCode, ICStub *firstMonitorStub, HandleShape shape, uint32_t slot);
+    ICGetName_Global(JitCode *stubCode, ICStub *firstMonitorStub, Shape *shape, uint32_t slot);
 
   public:
     HeapPtrShape &shape() {
@@ -3617,7 +3617,7 @@ class ICGetIntrinsic_Constant : public ICStub
 
     HeapValue value_;
 
-    ICGetIntrinsic_Constant(JitCode *stubCode, HandleValue value);
+    ICGetIntrinsic_Constant(JitCode *stubCode, const Value &value);
     ~ICGetIntrinsic_Constant();
 
   public:
@@ -3702,7 +3702,7 @@ class ICGetProp_Generic : public ICMonitoredStub
       : ICMonitoredStub(ICStub::GetProp_Generic, stubCode, firstMonitorStub) {}
 
   public:
-    static ICGetProp_Generic *Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+    static ICGetProp_Generic *Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                     ICGetProp_Generic &other);
 
     class Compiler : public ICStubCompiler {
@@ -3758,7 +3758,7 @@ class ICGetProp_Primitive : public ICMonitoredStub
     uint32_t offset_;
 
     ICGetProp_Primitive(JitCode *stubCode, ICStub *firstMonitorStub,
-                        HandleShape protoShape, uint32_t offset);
+                        Shape *protoShape, uint32_t offset);
 
   public:
     HeapPtrShape &protoShape() {
@@ -3865,7 +3865,7 @@ class ICGetProp_Native : public ICGetPropNativeStub
     // Object shape (lastProperty).
     HeapPtrShape shape_;
 
-    ICGetProp_Native(JitCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
+    ICGetProp_Native(JitCode *stubCode, ICStub *firstMonitorStub, Shape *shape,
                      uint32_t offset)
       : ICGetPropNativeStub(GetProp_Native, stubCode, firstMonitorStub, offset),
         shape_(shape)
@@ -3879,7 +3879,7 @@ class ICGetProp_Native : public ICGetPropNativeStub
         return offsetof(ICGetProp_Native, shape_);
     }
 
-    static ICGetProp_Native *Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+    static ICGetProp_Native *Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                    ICGetProp_Native &other);
 };
 
@@ -3898,11 +3898,11 @@ class ICGetProp_NativePrototype : public ICGetPropNativeStub
     HeapPtrObject holder_;
     HeapPtrShape holderShape_;
 
-    ICGetProp_NativePrototype(JitCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
-                              uint32_t offset, HandleObject holder, HandleShape holderShape);
+    ICGetProp_NativePrototype(JitCode *stubCode, ICStub *firstMonitorStub, Shape *shape,
+                              uint32_t offset, JSObject *holder, Shape *holderShape);
 
   public:
-    static ICGetProp_NativePrototype *Clone(JSContext *cx, ICStubSpace *space,
+    static ICGetProp_NativePrototype *Clone(ICStubSpace *space,
                                             ICStub *firstMonitorStub,
                                             ICGetProp_NativePrototype &other);
 
@@ -3943,11 +3943,11 @@ class ICGetProp_UnboxedPrototype : public ICGetPropNativeStub
     HeapPtrShape holderShape_;
 
     ICGetProp_UnboxedPrototype(JitCode *stubCode, ICStub *firstMonitorStub,
-                               HandleObjectGroup group,
-                               uint32_t offset, HandleObject holder, HandleShape holderShape);
+                               ObjectGroup *group,
+                               uint32_t offset, JSObject *holder, Shape *holderShape);
 
   public:
-    static ICGetProp_UnboxedPrototype *Clone(JSContext *cx, ICStubSpace *space,
+    static ICGetProp_UnboxedPrototype *Clone(ICStubSpace *space,
                                              ICStub *firstMonitorStub,
                                              ICGetProp_UnboxedPrototype &other);
 
@@ -4104,7 +4104,7 @@ class ICGetProp_Unboxed : public ICMonitoredStub
     HeapPtrObjectGroup group_;
     uint32_t fieldOffset_;
 
-    ICGetProp_Unboxed(JitCode *stubCode, ICStub *firstMonitorStub, HandleObjectGroup group,
+    ICGetProp_Unboxed(JitCode *stubCode, ICStub *firstMonitorStub, ObjectGroup *group,
                       uint32_t fieldOffset)
       : ICMonitoredStub(ICStub::GetProp_Unboxed, stubCode, firstMonitorStub),
         group_(group), fieldOffset_(fieldOffset)
@@ -4169,7 +4169,7 @@ class ICGetProp_TypedObject : public ICMonitoredStub
     HeapPtrShape shape_;
     uint32_t fieldOffset_;
 
-    ICGetProp_TypedObject(JitCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
+    ICGetProp_TypedObject(JitCode *stubCode, ICStub *firstMonitorStub, Shape *shape,
                           uint32_t fieldOffset)
       : ICMonitoredStub(ICStub::GetProp_TypedObject, stubCode, firstMonitorStub),
         shape_(shape), fieldOffset_(fieldOffset)
@@ -4240,8 +4240,8 @@ class ICGetPropCallGetter : public ICMonitoredStub
     // PC offset of call
     uint32_t pcOffset_;
 
-    ICGetPropCallGetter(Kind kind, JitCode *stubCode, ICStub *firstMonitorStub, HandleObject holder,
-                        HandleShape holderShape, HandleFunction getter, uint32_t pcOffset);
+    ICGetPropCallGetter(Kind kind, JitCode *stubCode, ICStub *firstMonitorStub, JSObject *holder,
+                        Shape *holderShape, JSFunction *getter, uint32_t pcOffset);
 
   public:
     HeapPtrObject &holder() {
@@ -4309,9 +4309,9 @@ class ICGetPropCallPrototypeGetter : public ICGetPropCallGetter
     HeapPtrShape receiverShape_;
 
     ICGetPropCallPrototypeGetter(Kind kind, JitCode *stubCode, ICStub *firstMonitorStub,
-                                 HandleShape receiverShape,
-                                 HandleObject holder, HandleShape holderShape,
-                                 HandleFunction getter, uint32_t pcOffset);
+                                 Shape *receiverShape,
+                                 JSObject *holder, Shape *holderShape,
+                                 JSFunction *getter, uint32_t pcOffset);
 
   public:
     HeapPtrShape &receiverShape() {
@@ -4348,14 +4348,14 @@ class ICGetProp_CallScripted : public ICGetPropCallPrototypeGetter
 
   protected:
     ICGetProp_CallScripted(JitCode *stubCode, ICStub *firstMonitorStub,
-                           HandleShape receiverShape, HandleObject holder, HandleShape holderShape,
-                           HandleFunction getter, uint32_t pcOffset)
+                           Shape *receiverShape, JSObject *holder, Shape *holderShape,
+                           JSFunction *getter, uint32_t pcOffset)
       : ICGetPropCallPrototypeGetter(GetProp_CallScripted, stubCode, firstMonitorStub,
                                      receiverShape, holder, holderShape, getter, pcOffset)
     {}
 
   public:
-    static ICGetProp_CallScripted *Clone(JSContext *cx, ICStubSpace *space,
+    static ICGetProp_CallScripted *Clone(ICStubSpace *space,
                                          ICStub *firstMonitorStub, ICGetProp_CallScripted &other);
 
     class Compiler : public ICGetPropCallPrototypeGetter::Compiler {
@@ -4387,14 +4387,14 @@ class ICGetProp_CallNative : public ICGetPropCallGetter
 
   protected:
 
-    ICGetProp_CallNative(JitCode *stubCode, ICStub *firstMonitorStub, HandleObject obj,
-                            HandleShape shape, HandleFunction getter, uint32_t pcOffset)
+    ICGetProp_CallNative(JitCode *stubCode, ICStub *firstMonitorStub, JSObject *obj,
+                         Shape *shape, JSFunction *getter, uint32_t pcOffset)
       : ICGetPropCallGetter(GetProp_CallNative, stubCode, firstMonitorStub, obj, shape,
                             getter, pcOffset)
     { }
 
   public:
-    static ICGetProp_CallNative *Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+    static ICGetProp_CallNative *Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                        ICGetProp_CallNative &other);
 
     class Compiler : public ICGetPropCallGetter::Compiler
@@ -4432,14 +4432,14 @@ class ICGetProp_CallNativePrototype : public ICGetPropCallPrototypeGetter
 
   protected:
     ICGetProp_CallNativePrototype(JitCode *stubCode, ICStub *firstMonitorStub,
-                         HandleShape receiverShape, HandleObject holder, HandleShape holderShape,
-                         HandleFunction getter, uint32_t pcOffset)
+                         Shape *receiverShape, JSObject *holder, Shape *holderShape,
+                         JSFunction *getter, uint32_t pcOffset)
       : ICGetPropCallPrototypeGetter(GetProp_CallNativePrototype, stubCode, firstMonitorStub,
                                      receiverShape, holder, holderShape, getter, pcOffset)
     {}
 
   public:
-    static ICGetProp_CallNativePrototype *Clone(JSContext *cx, ICStubSpace *space,
+    static ICGetProp_CallNativePrototype *Clone(ICStubSpace *space,
                                                 ICStub *firstMonitorStub,
                                                 ICGetProp_CallNativePrototype &other);
 
@@ -4477,20 +4477,17 @@ class ICGetPropCallDOMProxyNativeStub : public ICGetPropCallGetter
 {
   friend class ICStubSpace;
   protected:
-    // Shape of the DOMProxy
+    // Shape of the DOMProxy.  This enforces its class and hence its proxy handler.
     HeapPtrShape shape_;
-
-    // Proxy handler to check against.
-    const BaseProxyHandler *proxyHandler_;
 
     // Object shape of expected expando object. (nullptr if no expando object should be there)
     HeapPtrShape expandoShape_;
 
     ICGetPropCallDOMProxyNativeStub(ICStub::Kind kind, JitCode *stubCode,
-                                    ICStub *firstMonitorStub, HandleShape shape,
-                                    const BaseProxyHandler *proxyHandler, HandleShape expandoShape,
-                                    HandleObject holder, HandleShape holderShape,
-                                    HandleFunction getter, uint32_t pcOffset);
+                                    ICStub *firstMonitorStub, Shape *shape,
+                                    Shape *expandoShape,
+                                    JSObject *holder, Shape *holderShape,
+                                    JSFunction *getter, uint32_t pcOffset);
 
   public:
     HeapPtrShape &shape() {
@@ -4502,9 +4499,6 @@ class ICGetPropCallDOMProxyNativeStub : public ICGetPropCallGetter
     static size_t offsetOfShape() {
         return offsetof(ICGetPropCallDOMProxyNativeStub, shape_);
     }
-    static size_t offsetOfProxyHandler() {
-        return offsetof(ICGetPropCallDOMProxyNativeStub, proxyHandler_);
-    }
     static size_t offsetOfExpandoShape() {
         return offsetof(ICGetPropCallDOMProxyNativeStub, expandoShape_);
     }
@@ -4513,17 +4507,17 @@ class ICGetPropCallDOMProxyNativeStub : public ICGetPropCallGetter
 class ICGetProp_CallDOMProxyNative : public ICGetPropCallDOMProxyNativeStub
 {
     friend class ICStubSpace;
-    ICGetProp_CallDOMProxyNative(JitCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
-                                 const BaseProxyHandler *proxyHandler, HandleShape expandoShape,
-                                 HandleObject holder, HandleShape holderShape,
-                                 HandleFunction getter, uint32_t pcOffset)
+    ICGetProp_CallDOMProxyNative(JitCode *stubCode, ICStub *firstMonitorStub, Shape *shape,
+                                 Shape *expandoShape,
+                                 JSObject *holder, Shape *holderShape,
+                                 JSFunction *getter, uint32_t pcOffset)
       : ICGetPropCallDOMProxyNativeStub(ICStub::GetProp_CallDOMProxyNative, stubCode,
-                                        firstMonitorStub, shape, proxyHandler, expandoShape,
+                                        firstMonitorStub, shape, expandoShape,
                                         holder, holderShape, getter, pcOffset)
     {}
 
   public:
-    static ICGetProp_CallDOMProxyNative *Clone(JSContext *cx, ICStubSpace *space,
+    static ICGetProp_CallDOMProxyNative *Clone(ICStubSpace *space,
                                                ICStub *firstMonitorStub,
                                                ICGetProp_CallDOMProxyNative &other);
 };
@@ -4536,13 +4530,13 @@ class ICGetProp_CallDOMProxyWithGenerationNative : public ICGetPropCallDOMProxyN
 
   public:
     ICGetProp_CallDOMProxyWithGenerationNative(JitCode *stubCode, ICStub *firstMonitorStub,
-                                               HandleShape shape, const BaseProxyHandler *proxyHandler,
+                                               Shape *shape,
                                                ExpandoAndGeneration *expandoAndGeneration,
-                                               uint32_t generation, HandleShape expandoShape,
-                                               HandleObject holder, HandleShape holderShape,
-                                               HandleFunction getter, uint32_t pcOffset)
+                                               uint32_t generation, Shape *expandoShape,
+                                               JSObject *holder, Shape *holderShape,
+                                               JSFunction *getter, uint32_t pcOffset)
       : ICGetPropCallDOMProxyNativeStub(ICStub::GetProp_CallDOMProxyWithGenerationNative,
-                                        stubCode, firstMonitorStub, shape, proxyHandler,
+                                        stubCode, firstMonitorStub, shape,
                                         expandoShape, holder, holderShape, getter, pcOffset),
         expandoAndGeneration_(expandoAndGeneration),
         generation_(generation)
@@ -4550,7 +4544,7 @@ class ICGetProp_CallDOMProxyWithGenerationNative : public ICGetPropCallDOMProxyN
     }
 
     static ICGetProp_CallDOMProxyWithGenerationNative *
-    Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+    Clone(ICStubSpace *space, ICStub *firstMonitorStub,
           ICGetProp_CallDOMProxyWithGenerationNative &other);
 
     void *expandoAndGeneration() const {
@@ -4601,12 +4595,12 @@ class ICGetProp_DOMProxyShadowed : public ICMonitoredStub
     HeapPtrPropertyName name_;
     uint32_t pcOffset_;
 
-    ICGetProp_DOMProxyShadowed(JitCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
-                               const BaseProxyHandler *proxyHandler, HandlePropertyName name,
+    ICGetProp_DOMProxyShadowed(JitCode *stubCode, ICStub *firstMonitorStub, Shape *shape,
+                               const BaseProxyHandler *proxyHandler, PropertyName *name,
                                uint32_t pcOffset);
 
   public:
-    static ICGetProp_DOMProxyShadowed *Clone(JSContext *cx, ICStubSpace *space,
+    static ICGetProp_DOMProxyShadowed *Clone(ICStubSpace *space,
                                              ICStub *firstMonitorStub,
                                              ICGetProp_DOMProxyShadowed &other);
 
@@ -4763,7 +4757,7 @@ class ICSetProp_Native : public ICUpdatedStub
     HeapPtrShape shape_;
     uint32_t offset_;
 
-    ICSetProp_Native(JitCode *stubCode, HandleObjectGroup group, HandleShape shape, uint32_t offset);
+    ICSetProp_Native(JitCode *stubCode, ObjectGroup *group, Shape *shape, uint32_t offset);
 
   public:
     HeapPtrObjectGroup &group() {
@@ -4826,8 +4820,8 @@ class ICSetProp_NativeAdd : public ICUpdatedStub
     HeapPtrObjectGroup newGroup_;
     uint32_t offset_;
 
-    ICSetProp_NativeAdd(JitCode *stubCode, HandleObjectGroup group, size_t protoChainDepth,
-                        HandleShape newShape, HandleObjectGroup newGroup, uint32_t offset);
+    ICSetProp_NativeAdd(JitCode *stubCode, ObjectGroup *group, size_t protoChainDepth,
+                        Shape *newShape, ObjectGroup *newGroup, uint32_t offset);
 
   public:
     size_t protoChainDepth() const {
@@ -4871,9 +4865,9 @@ class ICSetProp_NativeAddImpl : public ICSetProp_NativeAdd
     static const size_t NumShapes = ProtoChainDepth + 1;
     mozilla::Array<HeapPtrShape, NumShapes> shapes_;
 
-    ICSetProp_NativeAddImpl(JitCode *stubCode, HandleObjectGroup group,
+    ICSetProp_NativeAddImpl(JitCode *stubCode, ObjectGroup *group,
                             const AutoShapeVector *shapes,
-                            HandleShape newShape, HandleObjectGroup newGroup, uint32_t offset);
+                            Shape *newShape, ObjectGroup *newGroup, uint32_t offset);
 
   public:
     void traceShapes(JSTracer *trc) {
@@ -4937,7 +4931,7 @@ class ICSetProp_Unboxed : public ICUpdatedStub
     HeapPtrObjectGroup group_;
     uint32_t fieldOffset_;
 
-    ICSetProp_Unboxed(JitCode *stubCode, HandleObjectGroup group, uint32_t fieldOffset)
+    ICSetProp_Unboxed(JitCode *stubCode, ObjectGroup *group, uint32_t fieldOffset)
       : ICUpdatedStub(ICStub::SetProp_Unboxed, stubCode),
         group_(group),
         fieldOffset_(fieldOffset)
@@ -5002,7 +4996,7 @@ class ICSetProp_TypedObject : public ICUpdatedStub
     uint32_t fieldOffset_;
     bool isObjectReference_;
 
-    ICSetProp_TypedObject(JitCode *stubCode, HandleShape shape, HandleObjectGroup group,
+    ICSetProp_TypedObject(JitCode *stubCode, Shape *shape, ObjectGroup *group,
                           uint32_t fieldOffset, bool isObjectReference)
       : ICUpdatedStub(ICStub::SetProp_TypedObject, stubCode),
         shape_(shape),
@@ -5099,8 +5093,8 @@ class ICSetPropCallSetter : public ICStub
     // PC of call, for profiler
     uint32_t pcOffset_;
 
-    ICSetPropCallSetter(Kind kind, JitCode *stubCode, HandleShape shape, HandleObject holder,
-                        HandleShape holderShape, HandleFunction setter, uint32_t pcOffset);
+    ICSetPropCallSetter(Kind kind, JitCode *stubCode, Shape *shape, JSObject *holder,
+                        Shape *holderShape, JSFunction *setter, uint32_t pcOffset);
 
   public:
     HeapPtrShape &shape() {
@@ -5159,14 +5153,14 @@ class ICSetProp_CallScripted : public ICSetPropCallSetter
     friend class ICStubSpace;
 
   protected:
-    ICSetProp_CallScripted(JitCode *stubCode, HandleShape shape, HandleObject holder,
-                           HandleShape holderShape, HandleFunction setter, uint32_t pcOffset)
+    ICSetProp_CallScripted(JitCode *stubCode, Shape *shape, JSObject *holder,
+                           Shape *holderShape, JSFunction *setter, uint32_t pcOffset)
       : ICSetPropCallSetter(SetProp_CallScripted, stubCode, shape, holder, holderShape,
                             setter, pcOffset)
     {}
 
   public:
-    static ICSetProp_CallScripted *Clone(JSContext *cx, ICStubSpace *space, ICStub *,
+    static ICSetProp_CallScripted *Clone(ICStubSpace *space, ICStub *,
                                          ICSetProp_CallScripted &other);
 
     class Compiler : public ICSetPropCallSetter::Compiler {
@@ -5195,14 +5189,14 @@ class ICSetProp_CallNative : public ICSetPropCallSetter
     friend class ICStubSpace;
 
   protected:
-    ICSetProp_CallNative(JitCode *stubCode, HandleShape shape, HandleObject holder,
-                           HandleShape holderShape, HandleFunction setter, uint32_t pcOffset)
+    ICSetProp_CallNative(JitCode *stubCode, Shape *shape, JSObject *holder,
+                         Shape *holderShape, JSFunction *setter, uint32_t pcOffset)
       : ICSetPropCallSetter(SetProp_CallNative, stubCode, shape, holder, holderShape,
                             setter, pcOffset)
     {}
 
   public:
-    static ICSetProp_CallNative *Clone(JSContext *cx, ICStubSpace *space, ICStub *,
+    static ICSetProp_CallNative *Clone(ICStubSpace *space, ICStub *,
                                        ICSetProp_CallNative &other);
 
     class Compiler : public ICSetPropCallSetter::Compiler {
@@ -5348,11 +5342,11 @@ class ICCall_Scripted : public ICMonitoredStub
     uint32_t pcOffset_;
 
     ICCall_Scripted(JitCode *stubCode, ICStub *firstMonitorStub,
-                    HandleFunction callee, HandleObject templateObject,
+                    JSFunction *callee, JSObject *templateObject,
                     uint32_t pcOffset);
 
   public:
-    static ICCall_Scripted *Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+    static ICCall_Scripted *Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                   ICCall_Scripted &other);
 
     HeapPtrFunction &callee() {
@@ -5383,7 +5377,7 @@ class ICCall_AnyScripted : public ICMonitoredStub
     { }
 
   public:
-    static ICCall_AnyScripted *Clone(JSContext *, ICStubSpace *space, ICStub *firstMonitorStub,
+    static ICCall_AnyScripted *Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                      ICCall_AnyScripted &other);
 
     static size_t offsetOfPCOffset() {
@@ -5409,7 +5403,7 @@ class ICCallScriptedCompiler : public ICCallStubCompiler {
 
   public:
     ICCallScriptedCompiler(JSContext *cx, ICStub *firstMonitorStub,
-                           HandleFunction callee, HandleObject templateObject,
+                           JSFunction *callee, JSObject *templateObject,
                            bool isConstructing, bool isSpread, uint32_t pcOffset)
       : ICCallStubCompiler(cx, ICStub::Call_Scripted),
         firstMonitorStub_(firstMonitorStub),
@@ -5455,11 +5449,11 @@ class ICCall_Native : public ICMonitoredStub
 #endif
 
     ICCall_Native(JitCode *stubCode, ICStub *firstMonitorStub,
-                  HandleFunction callee, HandleObject templateObject,
+                  JSFunction *callee, JSObject *templateObject,
                   uint32_t pcOffset);
 
   public:
-    static ICCall_Native *Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+    static ICCall_Native *Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                 ICCall_Native &other);
 
     HeapPtrFunction &callee() {
@@ -5529,11 +5523,11 @@ class ICCall_ClassHook : public ICMonitoredStub
     uint32_t pcOffset_;
 
     ICCall_ClassHook(JitCode *stubCode, ICStub *firstMonitorStub,
-                     const Class *clasp, Native native, HandleObject templateObject,
+                     const Class *clasp, Native native, JSObject *templateObject,
                      uint32_t pcOffset);
 
   public:
-    static ICCall_ClassHook *Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+    static ICCall_ClassHook *Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                    ICCall_ClassHook &other);
 
     const Class *clasp() {
@@ -5610,7 +5604,7 @@ class ICCall_ScriptedApplyArray : public ICMonitoredStub
     {}
 
   public:
-    static ICCall_ScriptedApplyArray *Clone(JSContext *, ICStubSpace *space,
+    static ICCall_ScriptedApplyArray *Clone(ICStubSpace *space,
                                             ICStub *firstMonitorStub,
                                             ICCall_ScriptedApplyArray &other);
 
@@ -5656,7 +5650,7 @@ class ICCall_ScriptedApplyArguments : public ICMonitoredStub
     {}
 
   public:
-    static ICCall_ScriptedApplyArguments *Clone(JSContext *, ICStubSpace *space,
+    static ICCall_ScriptedApplyArguments *Clone(ICStubSpace *space,
                                                 ICStub *firstMonitorStub,
                                                 ICCall_ScriptedApplyArguments &other);
 
@@ -5703,7 +5697,7 @@ class ICCall_ScriptedFunCall : public ICMonitoredStub
     {}
 
   public:
-    static ICCall_ScriptedFunCall *Clone(JSContext *, ICStubSpace *space, ICStub *firstMonitorStub,
+    static ICCall_ScriptedFunCall *Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                                          ICCall_ScriptedFunCall &other);
 
     static size_t offsetOfPCOffset() {
@@ -5745,8 +5739,8 @@ class ICCall_StringSplit : public ICMonitoredStub
     HeapPtrString expectedArg_;
     HeapPtrArrayObject templateObject_;
 
-    ICCall_StringSplit(JitCode *stubCode, ICStub *firstMonitorStub, uint32_t pcOffset, HandleString thisString,
-                       HandleString argString, HandleArrayObject templateObject)
+    ICCall_StringSplit(JitCode *stubCode, ICStub *firstMonitorStub, uint32_t pcOffset, JSString *thisString,
+                       JSString *argString, ArrayObject *templateObject)
       : ICMonitoredStub(ICStub::Call_StringSplit, stubCode, firstMonitorStub),
         pcOffset_(pcOffset), expectedThis_(thisString), expectedArg_(argString),
         templateObject_(templateObject)

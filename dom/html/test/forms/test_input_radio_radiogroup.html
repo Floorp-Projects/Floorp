@@ -41,28 +41,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=343444
 </form>
 <script class="testbody" type="text/javascript">
 /** Test for Bug 343444 **/
-document.getElementById("start").focus();
-var count=0;
-while (count < 2) {
-  sendKey("DOWN");
-  is(document.activeElement.type, "radio", "radioGroup should ignore non-radio input fields");
-  if (document.activeElement.id == "start") {
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, startTest);
+function startTest() {
+  document.getElementById("start").focus();
+  var count=0;
+  while (count < 2) {
+    sendKey("DOWN");
+    is(document.activeElement.type, "radio", "radioGroup should ignore non-radio input fields");
+    if (document.activeElement.id == "start") {
+      count++;
+    }
+  }
+
+  document.getElementById("start2").focus();
+  count = 0;
+  while (count < 3) {
+    is(document.activeElement.name, "testtwo",
+       "radioGroup should only contain elements with the same @name")
+    sendKey("DOWN");
     count++;
   }
-}
 
-document.getElementById("start2").focus();
-count = 0;
-while (count < 3) {
-  is(document.activeElement.name, "testtwo",
-     "radioGroup should only contain elements with the same @name")
+  document.getElementById("start3").focus();
   sendKey("DOWN");
-  count++;
+  is(document.activeElement.name, "testthree", "we don't have an infinite-loop");
+  SimpleTest.finish();
 }
-
-document.getElementById("start3").focus();
-sendKey("DOWN");
-is(document.activeElement.name, "testthree", "we don't have an infinite-loop");
 </script>
 </pre>
 </body>

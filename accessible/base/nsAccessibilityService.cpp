@@ -962,7 +962,9 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   // If the element is focusable or global ARIA attribute is applied to it or
   // it is referenced by ARIA relationship then treat role="presentation" on
   // the element as the role is not there.
-  if (roleMapEntry && roleMapEntry->Is(nsGkAtoms::presentation)) {
+  if (roleMapEntry &&
+      (roleMapEntry->Is(nsGkAtoms::presentation) ||
+       roleMapEntry->Is(nsGkAtoms::none))) {
     if (!MustBeAccessible(content, document))
       return nullptr;
 

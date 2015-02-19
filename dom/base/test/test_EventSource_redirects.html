@@ -22,8 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=716841
 
   function doTest(test_id) {
     oldPrefVal = SpecialPowers.getBoolPref("dom.server-events.enabled");
-    SpecialPowers.setBoolPref("dom.server-events.enabled", true);
-
     ok(true, "here we go");
 
     source = new EventSource("eventsource_redirect.resource");
@@ -49,8 +47,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=716841
   }
 
   SimpleTest.waitForExplicitFinish();
-  addLoadEvent(doTest);
-
+  addLoadEvent(function() {
+    SpecialPowers.pushPrefEnv({"set": [['dom.server-events.enabled', true]]}, doTest);
+  });
 </script>
 </pre>
 

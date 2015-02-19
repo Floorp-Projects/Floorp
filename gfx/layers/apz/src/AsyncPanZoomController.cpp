@@ -112,11 +112,17 @@ WidgetModifiersToDOMModifiers(mozilla::Modifiers aModifiers)
   if (aModifiers & mozilla::MODIFIER_FN) {
     result |= nsIDOMWindowUtils::MODIFIER_FN;
   }
+  if (aModifiers & mozilla::MODIFIER_FNLOCK) {
+    result |= nsIDOMWindowUtils::MODIFIER_FNLOCK;
+  }
   if (aModifiers & mozilla::MODIFIER_NUMLOCK) {
     result |= nsIDOMWindowUtils::MODIFIER_NUMLOCK;
   }
   if (aModifiers & mozilla::MODIFIER_SCROLLLOCK) {
     result |= nsIDOMWindowUtils::MODIFIER_SCROLLLOCK;
+  }
+  if (aModifiers & mozilla::MODIFIER_SYMBOL) {
+    result |= nsIDOMWindowUtils::MODIFIER_SYMBOL;
   }
   if (aModifiers & mozilla::MODIFIER_SYMBOLLOCK) {
     result |= nsIDOMWindowUtils::MODIFIER_SYMBOLLOCK;
