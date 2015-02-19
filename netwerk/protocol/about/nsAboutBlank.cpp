@@ -23,28 +23,12 @@ nsAboutBlank::NewChannel(nsIURI* aURI,
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;
-    // Bug 1087720 (and Bug 1099296):
-    // Once all callsites have been updated to call NewChannel2()
-    // instead of NewChannel() we should have a non-null loadInfo
-    // consistently. Until then we have to branch on the loadInfo.
-    if (aLoadInfo) {
-      rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
-                                            aURI,
-                                            in,
-                                            NS_LITERAL_CSTRING("text/html"),
-                                            NS_LITERAL_CSTRING("utf-8"),
-                                            aLoadInfo);
-    }
-    else {
-      rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
-                                    aURI,
-                                    in,
-                                    nsContentUtils::GetSystemPrincipal(),
-                                    nsILoadInfo::SEC_NORMAL,
-                                    nsIContentPolicy::TYPE_OTHER,
-                                    NS_LITERAL_CSTRING("text/html"),
-                                    NS_LITERAL_CSTRING("utf-8"));
-    }
+    rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
+                                          aURI,
+                                          in,
+                                          NS_LITERAL_CSTRING("text/html"),
+                                          NS_LITERAL_CSTRING("utf-8"),
+                                          aLoadInfo);
     if (NS_FAILED(rv)) return rv;
 
     channel.forget(result);
