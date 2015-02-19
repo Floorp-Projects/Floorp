@@ -343,26 +343,12 @@ nsAnnoProtocolHandler::NewFaviconChannel(nsIURI *aURI, nsIURI *aAnnotationURI,
   // Create our channel.  We'll call SetContentType with the right type when
   // we know what it actually is.
   nsCOMPtr<nsIChannel> channel;
-  // Bug 1087720 (and Bug 1099296):
-  // Once all callsites have been updated to call NewChannel2() instead of NewChannel()
-  // we should have a non-null loadInfo consistently. Until then we have to brach on the
-  // loadInfo and provide default arguments to create a NewInputStreamChannel.
-  if (aLoadInfo) {
-    rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
-                                          aURI,
-                                          inputStream,
-                                          EmptyCString(), // aContentType
-                                          EmptyCString(), // aContentCharset
-                                          aLoadInfo);
-  }
-  else {
-    rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
-                                  aURI,
-                                  inputStream,
-                                  nsContentUtils::GetSystemPrincipal(),
-                                  nsILoadInfo::SEC_NORMAL,
-                                  nsIContentPolicy::TYPE_IMAGE);
-  }
+  rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
+                                        aURI,
+                                        inputStream,
+                                        EmptyCString(), // aContentType
+                                        EmptyCString(), // aContentCharset
+                                        aLoadInfo);
   NS_ENSURE_SUCCESS(rv, GetDefaultIcon(_channel));
 
   // Now we go ahead and get our data asynchronously for the favicon.

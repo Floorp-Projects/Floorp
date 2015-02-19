@@ -1063,33 +1063,12 @@ nsGIOProtocolHandler::NewChannel2(nsIURI* aURI,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // Bug 1087720 (and Bug 1099296):
-  // Once all callsites have been updated to call NewChannel2() instead of NewChannel()
-  // we should have a non-null loadInfo consistently. Until then we have to brach on the
-  // loadInfo and provide default arguments to create a NewInputStreamChannel.
-  if (aLoadInfo) {
-    rv = NS_NewInputStreamChannelInternal(aResult,
-                                          aURI,
-                                          stream,
-                                          NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE),
-                                          EmptyCString(), // aContentCharset
-                                          aLoadInfo);
-  }
-  else {
-    nsCOMPtr<nsIPrincipal> nullPrincipal =
-      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // start out assuming an unknown content-type.  we'll set the content-type
-    // to something better once we open the URI.
-    rv = NS_NewInputStreamChannel(aResult,
-                                  aURI,
-                                  stream,
-                                  nullPrincipal,
-                                  nsILoadInfo::SEC_NORMAL,
-                                  nsIContentPolicy::TYPE_OTHER,
-                                  NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE));
-  }
+  rv = NS_NewInputStreamChannelInternal(aResult,
+                                        aURI,
+                                        stream,
+                                        NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE),
+                                        EmptyCString(), // aContentCharset
+                                        aLoadInfo);
   if (NS_SUCCEEDED(rv)) {
     stream->SetChannel(*aResult);
   }
