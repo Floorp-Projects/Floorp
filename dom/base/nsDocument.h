@@ -622,7 +622,7 @@ protected:
     DECL_SHIM(nsIApplicationCacheContainer, NSIAPPLICATIONCACHECONTAINER)
 #undef DECL_SHIM
   };
-  
+
   /**
    * Add an ExternalResource for aURI.  aViewer and aLoadGroup might be null
    * when this is called if the URI didn't result in an XML document.  This
