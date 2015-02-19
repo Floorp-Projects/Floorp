@@ -191,6 +191,8 @@ pref("browser.sessionhistory.max_total_viewers", -1);
 
 pref("ui.use_native_colors", true);
 pref("ui.click_hold_context_menus", false);
+// Duration of timeout of incremental search in menus (ms).  0 means infinite.
+pref("ui.menu.incremental_search.timeout", 1000);
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 // 0 = default: always, except in high contrast mode
 // 1 = always
