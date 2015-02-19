@@ -42,11 +42,11 @@ if (OfflineTest.setup()) {
     updateStateChanged: function (aUpdate, aState) {
       switch(aState) {
         case Ci.nsIOfflineCacheUpdateObserver.STATE_ERROR:
-          aUpdate.removeObserver(this);
           errorReceived = true;
           OfflineTest.ok(true, "Expected error. Update canceled");
         break;
         case Ci.nsIOfflineCacheUpdateObserver.STATE_FINISHED:
+          aUpdate.removeObserver(this);
           OfflineTest.ok(errorReceived,
                          "Finished after receiving the expected error");
           finish();
