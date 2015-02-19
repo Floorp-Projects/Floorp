@@ -448,6 +448,38 @@ TextInputProcessor::PrepareKeyboardEventToDispatch(
     aKeyboardEvent.GetDOMKeyName(aKeyboardEvent.mKeyValue);
     aKeyboardEvent.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
   }
+  if (aKeyFlags & KEY_KEEP_KEY_LOCATION_STANDARD) {
+    // If .location is initialized with specific value, using
+    // KEY_KEEP_KEY_LOCATION_STANDARD must be a bug of the caller.
+    // Let's throw an exception for notifying the developer of this bug.
+    if (NS_WARN_IF(aKeyboardEvent.location)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+  } else if (!aKeyboardEvent.location) {
+    // If KeyboardEvent.location is 0, it may be uninitialized.  If so, we
+    // should compute proper location value from its .code value.
+    aKeyboardEvent.location =
+      WidgetKeyboardEvent::ComputeLocationFromCodeValue(
+        aKeyboardEvent.mCodeNameIndex);
+  }
+
+  if (aKeyFlags & KEY_KEEP_KEYCODE_ZERO) {
+    // If .keyCode is initialized with specific value, using
+    // KEY_KEEP_KEYCODE_ZERO must be a bug of the caller.  Let's throw an
+    // exception for notifying the developer of such bug.
+    if (NS_WARN_IF(aKeyboardEvent.keyCode)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+  } else if (!aKeyboardEvent.keyCode &&
+             aKeyboardEvent.mKeyNameIndex > KEY_NAME_INDEX_Unidentified &&
+             aKeyboardEvent.mKeyNameIndex < KEY_NAME_INDEX_USE_STRING) {
+    // If KeyboardEvent.keyCode is 0, it may be uninitialized.  If so, we may
+    // be able to decide a good .keyCode value if the .key value is a
+    // non-printable key.
+    aKeyboardEvent.keyCode =
+      WidgetKeyboardEvent::ComputeKeyCodeFromKeyNameIndex(
+        aKeyboardEvent.mKeyNameIndex);
+  }
   return NS_OK;
 }
 
