@@ -43,6 +43,12 @@ namespace widget {
 class WidgetUtils
 {
 public:
+  /**
+   * Shutdown() is called when "xpcom-will-shutdown" is notified.  This is
+   * useful when you need to observe the notification in XP level code under
+   * widget.
+   */
+  static void Shutdown();
 
   /**
    * Starting at the docshell item for the passed in DOM window this looks up
