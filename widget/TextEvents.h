@@ -21,6 +21,9 @@
 #include "nsTArray.h"
 #include "WritingModes.h"
 
+class nsStringHashKey;
+template<class, class> class nsDataHashtable;
+
 /******************************************************************************
  * virtual keycode values
  ******************************************************************************/
@@ -185,12 +188,17 @@ public:
     GetDOMCodeName(mCodeNameIndex, aCodeName);
   }
 
+  static void Shutdown();
+
   static uint32_t ComputeLocationFromCodeValue(CodeNameIndex aCodeNameIndex);
 
   static void GetDOMKeyName(KeyNameIndex aKeyNameIndex,
                             nsAString& aKeyName);
   static void GetDOMCodeName(CodeNameIndex aCodeNameIndex,
                              nsAString& aCodeName);
+
+  static KeyNameIndex GetKeyNameIndex(const nsAString& aKeyValue);
+  static CodeNameIndex GetCodeNameIndex(const nsAString& aCodeValue);
 
   static const char* GetCommandStr(Command aCommand);
 
@@ -214,6 +222,16 @@ public:
     mNativeKeyEvent = nullptr;
     mUniqueId = aEvent.mUniqueId;
   }
+
+private:
+  static const char16_t* kKeyNames[];
+  static const char16_t* kCodeNames[];
+  typedef nsDataHashtable<nsStringHashKey,
+                          KeyNameIndex> KeyNameIndexHashtable;
+  typedef nsDataHashtable<nsStringHashKey,
+                          CodeNameIndex> CodeNameIndexHashtable;
+  static KeyNameIndexHashtable* sKeyNameIndexHashtable;
+  static CodeNameIndexHashtable* sCodeNameIndexHashtable;
 };
 
 
