@@ -5,29 +5,23 @@
 package org.mozilla.gecko.browserid.verifier;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
-import java.util.List;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.browserid.verifier.BrowserIDVerifierException.BrowserIDVerifierErrorResponseException;
 import org.mozilla.gecko.browserid.verifier.BrowserIDVerifierException.BrowserIDVerifierMalformedResponseException;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BaseResourceDelegate;
 import org.mozilla.gecko.sync.net.Resource;
 import org.mozilla.gecko.sync.net.SyncResponse;
 
 import ch.boye.httpclientandroidlib.HttpResponse;
-import ch.boye.httpclientandroidlib.NameValuePair;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
-import ch.boye.httpclientandroidlib.client.entity.UrlEncodedFormEntity;
-import ch.boye.httpclientandroidlib.message.BasicNameValuePair;
 
-public class BrowserIDRemoteVerifierClient implements BrowserIDVerifierClient {
+public abstract class AbstractBrowserIDRemoteVerifierClient implements BrowserIDVerifierClient {
+  public static final String LOG_TAG = AbstractBrowserIDRemoteVerifierClient.class.getSimpleName();
+
   protected static class RemoteVerifierResourceDelegate extends BaseResourceDelegate {
     private final BrowserIDVerifierDelegate delegate;
 
@@ -93,44 +87,9 @@ public class BrowserIDRemoteVerifierClient implements BrowserIDVerifierClient {
     }
   }
 
-  public static final String LOG_TAG = "BrowserIDRemoteVerifierClient";
-
-  public static final String DEFAULT_VERIFIER_URL = "https://verifier.login.persona.org/verify";
-
   protected final URI verifierUri;
 
-  public BrowserIDRemoteVerifierClient(URI verifierUri) {
+  public AbstractBrowserIDRemoteVerifierClient(URI verifierUri) {
     this.verifierUri = verifierUri;
-  }
-
-  public BrowserIDRemoteVerifierClient() throws URISyntaxException {
-    this.verifierUri = new URI(DEFAULT_VERIFIER_URL);
-  }
-
-  @Override
-  public void verify(String audience, String assertion, final BrowserIDVerifierDelegate delegate) {
-    if (audience == null) {
-      throw new IllegalArgumentException("audience cannot be null.");
-    }
-    if (assertion == null) {
-      throw new IllegalArgumentException("assertion cannot be null.");
-    }
-    if (delegate == null) {
-      throw new IllegalArgumentException("delegate cannot be null.");
-    }
-
-    BaseResource r = new BaseResource(verifierUri);
-
-    r.delegate = new RemoteVerifierResourceDelegate(r, delegate);
-
-    List<NameValuePair> nvps = Arrays.asList(new NameValuePair[] {
-        new BasicNameValuePair("audience", audience),
-        new BasicNameValuePair("assertion", assertion) });
-
-    try {
-      r.post(new UrlEncodedFormEntity(nvps, "UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      delegate.handleError(e);
-    }
   }
 }

@@ -5,8 +5,10 @@
 
 package org.mozilla.gecko;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.util.EnumSet;
@@ -114,6 +116,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Base64;
+import android.util.Base64OutputStream;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -766,6 +770,7 @@ public class BrowserApp extends GeckoApp
             "Accounts:Create",
             "CharEncoding:Data",
             "CharEncoding:State",
+            "Favicon:CacheLoad",
             "Feedback:LastUrl",
             "Feedback:MaybeLater",
             "Feedback:OpenPlayStore",
@@ -774,8 +779,7 @@ public class BrowserApp extends GeckoApp
             "Reader:Share",
             "Settings:Show",
             "Telemetry:Gather",
-            "Updater:Launch",
-            "BrowserToolbar:Visibility");
+            "Updater:Launch");
 
         Distribution distribution = Distribution.init(this);
 
@@ -1309,6 +1313,7 @@ public class BrowserApp extends GeckoApp
             "Accounts:Create",
             "CharEncoding:Data",
             "CharEncoding:State",
+            "Favicon:CacheLoad",
             "Feedback:LastUrl",
             "Feedback:MaybeLater",
             "Feedback:OpenPlayStore",
@@ -1317,8 +1322,7 @@ public class BrowserApp extends GeckoApp
             "Reader:Share",
             "Settings:Show",
             "Telemetry:Gather",
-            "Updater:Launch",
-            "BrowserToolbar:Visibility");
+            "Updater:Launch");
 
         if (AppConstants.MOZ_ANDROID_BEAM) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -1534,17 +1538,6 @@ public class BrowserApp extends GeckoApp
         return (mTabsPanel != null && mTabsPanel.isSideBar());
     }
 
-    private void setBrowserToolbarVisible(final boolean visible) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (mDynamicToolbar.isEnabled()) {
-                    mDynamicToolbar.setVisible(visible, VisibilityTransition.IMMEDIATE);
-                }
-            }
-        });
-    }
-
     private boolean isSideBar() {
         return (HardwareUtils.isTablet() && getOrientation() == Configuration.ORIENTATION_LANDSCAPE);
     }
@@ -1634,6 +1627,10 @@ public class BrowserApp extends GeckoApp
                 }
             });
 
+        } else if ("Favicon:CacheLoad".equals(event)) {
+            final String url = message.getString("url");
+            getFaviconFromCache(callback, url);
+
         } else if ("Feedback:LastUrl".equals(event)) {
             getLastUrl(callback);
 
@@ -1705,13 +1702,56 @@ public class BrowserApp extends GeckoApp
             }
         } else if ("Updater:Launch".equals(event)) {
             handleUpdaterLaunch();
-
-        } else if ("BrowserToolbar:Visibility".equals(event)) {
-            setBrowserToolbarVisible(message.getBoolean("visible"));
-
         } else {
             super.handleMessage(event, message, callback);
         }
+    }
+
+    private void getFaviconFromCache(final EventCallback callback, final String url) {
+        final OnFaviconLoadedListener listener = new OnFaviconLoadedListener() {
+            @Override
+            public void onFaviconLoaded(final String url, final String faviconURL, final Bitmap favicon) {
+                ThreadUtils.assertOnUiThread();
+                // Convert Bitmap to Base64 data URI in background.
+                ThreadUtils.postToBackgroundThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ByteArrayOutputStream out = null;
+                        Base64OutputStream b64 = null;
+
+                        // Failed to load favicon from local.
+                        if (favicon == null) {
+                            callback.sendError("Failed to get favicon from cache");
+                        } else {
+                            try {
+                                out = new ByteArrayOutputStream();
+                                out.write("data:image/png;base64,".getBytes());
+                                b64 = new Base64OutputStream(out, Base64.NO_WRAP);
+                                favicon.compress(Bitmap.CompressFormat.PNG, 100, b64);
+                                callback.sendSuccess(new String(out.toByteArray()));
+                            } catch (IOException e) {
+                                Log.w(LOGTAG, "Failed to convert to base64 data URI");
+                                callback.sendError("Failed to convert favicon to a base64 data URI");
+                            } finally {
+                                try {
+                                    if (out != null) {
+                                        out.close();
+                                    }
+                                    if (b64 != null) {
+                                        b64.close();
+                                    }
+                                } catch (IOException e) {
+                                    Log.w(LOGTAG, "Failed to close the streams");
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        };
+        Favicons.getSizedFaviconForPageFromLocal(getContext(),
+                url,
+                listener);
     }
 
     /**
