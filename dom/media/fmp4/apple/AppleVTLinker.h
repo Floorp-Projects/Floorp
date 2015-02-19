@@ -22,7 +22,8 @@ class AppleVTLinker
 public:
   static bool Link();
   static void Unlink();
-  static CFStringRef skPropHWAccel;
+  static CFStringRef skPropEnableHWAccel;
+  static CFStringRef skPropUsingHWAccel;
 
 private:
   static void* sLink;
