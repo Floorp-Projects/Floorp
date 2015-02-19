@@ -11605,16 +11605,28 @@ class CGDictionary(CGThing):
                                visibility="public",
                                body=self.getMemberInitializer(m))
                    for m in self.memberInfo]
+        if d.parent:
+            # We always want to init our parent with our non-initializing
+            # constructor arg, because either we're about to init ourselves (and
+            # hence our parent) or we don't want any init happening.
+            baseConstructors = [
+                "%s(%s)" % (self.makeClassName(d.parent),
+                            self.getNonInitializingCtorArg())
+            ]
+        else:
+            baseConstructors = None
         ctors = [
             ClassConstructor(
                 [],
                 visibility="public",
+                baseConstructors=baseConstructors,
                 body=(
                     "// Safe to pass a null context if we pass a null value\n"
                     "Init(nullptr, JS::NullHandleValue);\n")),
             ClassConstructor(
-                [Argument("int", "")],
-                visibility="protected",
+                [Argument("const FastDictionaryInitializer&", "")],
+                visibility="public",
+                baseConstructors=baseConstructors,
                 explicit=True,
                 bodyInHeader=True,
                 body='// Do nothing here; this is used by our "Fast" subclass\n')
@@ -11663,7 +11675,9 @@ class CGDictionary(CGThing):
             [],
             visibility="public",
             bodyInHeader=True,
-            baseConstructors=["%s(42)" % selfName],
+            baseConstructors=["%s(%s)" %
+                              (selfName,
+                               self.getNonInitializingCtorArg())],
             body="// Doesn't matter what int we pass to the parent constructor\n")
 
         fastStruct = CGClass("Fast" + selfName,
@@ -11889,6 +11903,12 @@ class CGDictionary(CGThing):
             return "JS::UndefinedValue()"
         if type.isObject():
             return "nullptr"
+        if type.isDictionary():
+            # When we construct ourselves, we don't want to init our member
+            # dictionaries.  Either we're being constructed-but-not-initialized
+            # ourselves (and then we don't want to init them) or we're about to
+            # init ourselves and then we'll init them anyway.
+            return CGDictionary.getNonInitializingCtorArg();
         return None
 
     def getMemberSourceDescription(self, member):
@@ -11898,6 +11918,10 @@ class CGDictionary(CGThing):
     @staticmethod
     def makeIdName(name):
         return IDLToCIdentifier(name) + "_id"
+
+    @staticmethod
+    def getNonInitializingCtorArg():
+        return "FastDictionaryInitializer()"
 
     @staticmethod
     def isDictionaryCopyConstructible(dictionary):
