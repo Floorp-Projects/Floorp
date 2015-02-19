@@ -25,7 +25,8 @@ AppleVTLinker::sLinkStatus = LinkStatus_INIT;
 
 void* AppleVTLinker::sLink = nullptr;
 nsrefcnt AppleVTLinker::sRefCount = 0;
-CFStringRef AppleVTLinker::skPropHWAccel = nullptr;
+CFStringRef AppleVTLinker::skPropEnableHWAccel = nullptr;
+CFStringRef AppleVTLinker::skPropUsingHWAccel = nullptr;
 
 #define LINK_FUNC(func) typeof(func) func;
 #include "AppleVTFunctions.h"
@@ -69,8 +70,10 @@ AppleVTLinker::Link()
 #undef LINK_FUNC
 
   // Will only resolve in 10.9 and later.
-  skPropHWAccel =
+  skPropEnableHWAccel =
     GetIOConst("kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder");
+  skPropUsingHWAccel =
+    GetIOConst("kVTDecompressionPropertyKey_UsingHardwareAcceleratedVideoDecoder");
 
   LOG("Loaded VideoToolbox framework.");
   sLinkStatus = LinkStatus_SUCCEEDED;
@@ -97,7 +100,8 @@ AppleVTLinker::Unlink()
     LOG("Unlinking VideoToolbox framework.");
     dlclose(sLink);
     sLink = nullptr;
-    skPropHWAccel = nullptr;
+    skPropEnableHWAccel = nullptr;
+    skPropUsingHWAccel = nullptr;
     sLinkStatus = LinkStatus_INIT;
   }
 }
