@@ -126,9 +126,9 @@
   <project name="platform/prebuilts/qemu-kernel" path="prebuilts/qemu-kernel" revision="530cad9b205442d2db29361e796299dc323ef9ce"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="a982f43b7f2d5916dc3a859667a8ba78e50b6202"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="6e18b61ee446bdd9880c07ae84197a087490c2e5"/>
-  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="4a2fb672ed4035bda34852bcf36e88faed15c9ab"/>
+  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="c3ca129eeaff384cd77a7fee9c9e61f72eafff3d"/>
   <project name="platform/system/extras" path="system/extras" revision="18f7c51415917eb0e21b30f220db7bd0be4130a7"/>
-  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="85df9b5036010d9aa057c72cdfc7c86fc51f7c10"/>
+  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="6b1d7268043927dd7297f18dc0bd0d01262adcd5"/>
   <project name="platform/system/media" path="system/media" revision="adf8fbacf7395858884690df5e3ce46bc75fa683"/>
   <project name="platform/system/netd" path="system/netd" revision="655392625db084a7122d65a15acf74db7f1da7f7"/>
   <project name="platform/system/security" path="system/security" revision="e6b3fdd892ad994ec3fd0b8959d630e31881801b"/>
