@@ -1428,7 +1428,8 @@ function runTests()
   if (!kIMEEnabledSupported && !kIMEOpenSupported)
     return;
 
-  SpecialPowers.pushPrefEnv({"set":[["test.IME", true]]}, function() {
+  SpecialPowers.setBoolPref("test.IME", true);
+
   // test for normal contents.
   runBasicTest(false, false, "Testing of normal contents");
 
@@ -1478,11 +1479,11 @@ function runTests()
     // This will call onFinish(), so, this test must be the last.
     runEditableSubframeTests();
   });
- });
 }
 
 function onFinish()
 {
+  SpecialPowers.clearUserPref("test.IME");
   SimpleTest.finish();
 }
 

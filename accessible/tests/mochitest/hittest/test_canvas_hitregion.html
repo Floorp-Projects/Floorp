@@ -13,6 +13,8 @@
           src="../layout.js"></script>
 
   <script type="application/javascript">
+    SpecialPowers.setBoolPref("canvas.hitregions.enabled", true);
+
     function redrawCheckbox(context, element, x, y)
     {
       context.save();
@@ -65,13 +67,13 @@
       is(hitAcc, hitcanvas, "Hit match at " + tgtX + "," + tgtY +
                           ". Found: " + prettyName(hitAcc));
 
+      SpecialPowers.setBoolPref("canvas.hitregions.enabled", false);
       SimpleTest.finish();
     }
+
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(function() {
-      SpecialPowers.pushPrefEnv({"set": [['canvas.hitregions.enabled', true]]}, doTest);
-    });
- </script>
+    addA11yLoadEvent(doTest);
+  </script>
 </head>
 <body>
 
