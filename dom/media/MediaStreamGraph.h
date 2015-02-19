@@ -720,25 +720,35 @@ public:
   void AddDirectListener(MediaStreamDirectListener* aListener);
   void RemoveDirectListener(MediaStreamDirectListener* aListener);
 
+  enum {
+    ADDTRACK_QUEUED    = 0x01 // Queue track add until FinishAddTracks()
+  };
   /**
    * Add a new track to the stream starting at the given base time (which
    * must be greater than or equal to the last time passed to
    * AdvanceKnownTracksTime). Takes ownership of aSegment. aSegment should
    * contain data starting after aStart.
    */
-  void AddTrack(TrackID aID, StreamTime aStart, MediaSegment* aSegment)
+  void AddTrack(TrackID aID, StreamTime aStart, MediaSegment* aSegment,
+                uint32_t aFlags = 0)
   {
-    AddTrackInternal(aID, GraphRate(), aStart, aSegment);
+    AddTrackInternal(aID, GraphRate(), aStart, aSegment, aFlags);
   }
 
   /**
    * Like AddTrack, but resamples audio from aRate to the graph rate.
    */
   void AddAudioTrack(TrackID aID, TrackRate aRate, StreamTime aStart,
-                     AudioSegment* aSegment)
+                     AudioSegment* aSegment, uint32_t aFlags = 0)
   {
-    AddTrackInternal(aID, aRate, aStart, aSegment);
+    AddTrackInternal(aID, aRate, aStart, aSegment, aFlags);
   }
+
+  /**
+   * Call after a series of AddTrack or AddAudioTrack calls to implement
+   * any pending track adds.
+   */
+  void FinishAddTracks();
 
   /**
    * Append media data to a track. Ownership of aSegment remains with the caller,
@@ -874,7 +884,8 @@ protected:
   void ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSegment* aSegment);
 
   void AddTrackInternal(TrackID aID, TrackRate aRate,
-                        StreamTime aStart, MediaSegment* aSegment);
+                        StreamTime aStart, MediaSegment* aSegment,
+                        uint32_t aFlags);
 
   TrackData* FindDataForTrack(TrackID aID)
   {
@@ -905,6 +916,7 @@ protected:
   // protected by mMutex
   StreamTime mUpdateKnownTracksTime;
   nsTArray<TrackData> mUpdateTracks;
+  nsTArray<TrackData> mPendingTracks;
   nsTArray<nsRefPtr<MediaStreamDirectListener> > mDirectListeners;
   bool mPullEnabled;
   bool mUpdateFinished;
