@@ -190,7 +190,20 @@ public:
 
   static void Shutdown();
 
+  /**
+   * ComputeLocationFromCodeValue() returns one of .location value
+   * (nsIDOMKeyEvent::DOM_KEY_LOCATION_*) which is the most preferred value
+   * for the specified specified code value.
+   */
   static uint32_t ComputeLocationFromCodeValue(CodeNameIndex aCodeNameIndex);
+
+  /**
+   * ComputeKeyCodeFromKeyNameIndex() return a .keyCode value which can be
+   * mapped from the specified key value.  Note that this returns 0 if the
+   * key name index is KEY_NAME_INDEX_Unidentified or KEY_NAME_INDEX_USE_STRING.
+   * This means that this method is useful only for non-printable keys.
+   */
+  static uint32_t ComputeKeyCodeFromKeyNameIndex(KeyNameIndex aKeyNameIndex);
 
   static void GetDOMKeyName(KeyNameIndex aKeyNameIndex,
                             nsAString& aKeyName);

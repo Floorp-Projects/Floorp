@@ -199,7 +199,7 @@ interface nsITextInputProcessorCallback;
  *   }
  */
 
-[scriptable, builtinclass, uuid(60371ca6-a8a7-4e24-bf02-e262aa74ba5a)]
+[scriptable, builtinclass, uuid(16144d6e-a97a-4733-aa6a-3a1287cfe539)]
 interface nsITextInputProcessor : nsISupports
 {
   /**
@@ -373,12 +373,33 @@ interface nsITextInputProcessor : nsISupports
   // If KEY_FORCE_PRINTABLE_KEY is specified and even if the .key value is a
   // registered key name, it's treated as inputting text value.
   const unsigned long KEY_FORCE_PRINTABLE_KEY                      = 0x00000004;
+  // If KEY_KEEP_KEY_LOCATION_STANDARD is specified when its .location is not
+  // initialized or initialized with 0, the value isn't computed with .code
+  // value.  Note that if .location is initialized with non-zero value,
+  // this flag causes throwing an exception.
+  // NOTE: This is not recommended to use except for tests.
+  const unsigned long KEY_KEEP_KEY_LOCATION_STANDARD               = 0x00000008;
+  // If KEY_KEEP_KEYCODE_ZERO is specified when its .keyCode is not initialized
+  // or initialized with 0, the value isn't computed with .key value when it
+  // represents non-printable key.  Note that if .keyCode is initialized with
+  // non-zero value, this flag causes throwing an exception.
+  const unsigned long KEY_KEEP_KEYCODE_ZERO                        = 0x00000010;
 
   /**
    * keydown() may dispatch a keydown event and some keypress events if
    * preceding keydown event isn't consumed and they are necessary.
    * Note that even if this is called during composition, key events may not
    * be dispatched.  In this case, this returns false.
+   *
+   * You should initialize at least .key value and .code value of the event.
+   * Additionally, if you try to emulate a printable key, .keyCode value should
+   * be specified if there is proper key value.  See the comment of above
+   * example how to decide .keyCode value of a printable key.  On the other
+   * hand, .keyCode value is automatically computed when you try to emulate
+   * non-printable key.  However, if you try to emulate physical keyboard of
+   * desktop platform, you need to specify proper value explicitly because
+   * the mapping table of this API isn't enough to emulate the behavior of
+   * Gecko for desktop platforms.
    *
    * NOTE: Even if this has composition, JS-Keyboard should call keydown() and
    *       keyup().  Although, with the default preferences and normal
@@ -397,6 +418,8 @@ interface nsITextInputProcessor : nsISupports
    *                        #3 Non-defined code names are not allowed. If your
    *                        key isn't registered, file a bug. If your key isn't
    *                        defined by any standards, use "" (empty string).
+   *                        #4 .keyCode is guessed from .key value if the key
+   *                        name is registered and .keyCode isn't initialized.
    * @param aKeyFlags       Special flags.  The values can be some of KEY_*
    *                        constants.
    * @return                true if neither the keydown event or following
