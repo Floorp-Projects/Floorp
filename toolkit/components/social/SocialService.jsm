@@ -549,15 +549,13 @@ this.SocialService = {
     let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
     let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
-
-    // foreign activation uses the activation url for origin, directory or
-    // internal (in-product) activations use the origin defined in the manifest
-    let url = data.installType == "foreign" ?
-            data.url :
-            data.installType == "directory" ||
-            data.installType == "internal" ?
-              data.manifest.origin : undefined;
-    let requestingURI = Services.io.newURI(url, null, null);
+    // internal/directory activations need to use the manifest origin, any other
+    // use the domain activation is occurring on
+    let url = data.url;
+    if (data.installType == "internal" || data.installType == "directory") {
+      url = data.manifest.origin;
+    }
+    let requestingURI =  Services.io.newURI(url, null, null);
     let productName = brandBundle.GetStringFromName("brandShortName");
 
     let message = browserBundle.formatStringFromName("service.install.description",
