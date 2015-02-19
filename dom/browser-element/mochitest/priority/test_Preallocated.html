@@ -36,13 +36,6 @@ function cleanUp()
   }
 
   cleanedUp = true;
-
-  if (preallocationEnabledPref === null) {
-    SpecialPowers.clearUserPref('dom.ipc.processPrelaunch.enabled');
-  } else {
-    SpecialPowers.setBoolPref('dom.ipc.processPrelaunch.enabled',
-                              preallocationEnabledPref);
-  }
 }
 
 // Even if this test times out, we still want to run cleanUp so as to set the
@@ -68,12 +61,11 @@ function runTest()
       SimpleTest.finish();
     });
   });
-
-  // Setting this pref to true should cause us to prelaunch a process.
-  SpecialPowers.setBoolPref('dom.ipc.processPrelaunch.enabled', true);
 }
-
-addEventListener('testready', runTest);
+// Setting this pref to true should cause us to prelaunch a process.
+addEventListener('testready', function() {
+  SpecialPowers.pushPrefEnv({'set':[["dom.ipc.processPrelaunch.enabled",true]]},runTest);
+});
 </script>
 </body>
 </html>

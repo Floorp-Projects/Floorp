@@ -56,12 +56,12 @@ function begin() {
   ok(contextMenu, "Got context menu XUL");
 
   addFullscreenChangeContinuation("enter", fullscreenEntered);
-  SpecialPowers.setBoolPref("full-screen-api.approval-required", false);
-  document.body.mozRequestFullScreen();
+  SpecialPowers.pushPrefEnv({"set":[["full-screen-api.approval-required", false]]}, function() {
+    document.body.mozRequestFullScreen();
+  });
 }
 
 function finish() {
-  SpecialPowers.clearUserPref("full-screen-api.approval-required");
   opener.nextTest();
 }
 

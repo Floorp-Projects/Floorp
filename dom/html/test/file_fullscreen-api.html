@@ -50,10 +50,6 @@ function sendMouseClick(element) {
   synthesizeMouseAtCenter(element, {});
 }
 
-function setRequireTrustedContext(value) {
-  opener.SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", value);
-}
-
 function fullScreenElement() {
   return document.getElementById('full-screen-element');
 }
@@ -213,10 +209,10 @@ function enter_from_arg_test_2(event) {
 
 function exit4(event) {
   ok(!document.mozFullScreen, "38. Should be back in non-full-screen mode (fifth time)");
-  setRequireTrustedContext(true);
-
-  addFullscreenErrorContinuation(error2);
-  fullScreenElement().mozRequestFullScreen();
+  SpecialPowers.pushPrefEnv({"set":[["full-screen-api.allow-trusted-requests-only", true]]}, function() {
+    addFullscreenErrorContinuation(error2);
+    fullScreenElement().mozRequestFullScreen();
+  });
 }
 
 function error2(event) {
@@ -237,22 +233,22 @@ function enter5(event) {
 
 function exit5(event) {
   ok(!document.mozFullScreen, "Should have left full-screen mode (last time).");
-  setRequireTrustedContext(false);
-
-  SpecialPowers.setBoolPref("full-screen-api.enabled", false);
-  is(document.mozFullScreenEnabled, false, "document.mozFullScreenEnabled should be false if full-screen-api.enabled is false");
-
-  addFullscreenErrorContinuation(error3);
-  fullScreenElement().mozRequestFullScreen();
+  SpecialPowers.pushPrefEnv({
+    "set":[["full-screen-api.allow-trusted-requests-only", false],
+           ["full-screen-api.enabled", false]]}, function() {
+              is(document.mozFullScreenEnabled, false, "document.mozFullScreenEnabled should be false if full-screen-api.enabled is false");
+              addFullscreenErrorContinuation(error3);
+              fullScreenElement().mozRequestFullScreen();
+  });
 }
 
 function error3(event) {
   ok(!document.mozFullScreen, "Should still be in normal mode, because pref is not enabled.");
 
-  SpecialPowers.setBoolPref("full-screen-api.enabled", true);
-  is(document.mozFullScreenEnabled, true, "document.mozFullScreenEnabled should be true if full-screen-api.enabled is true");
-
-  opener.nextTest();
+  SpecialPowers.pushPrefEnv({"set":[["full-screen-api.enabled", true]]}, function() {
+    is(document.mozFullScreenEnabled, true, "document.mozFullScreenEnabled should be true if full-screen-api.enabled is true");
+    opener.nextTest();
+  });
 }
 
 function begin() {
