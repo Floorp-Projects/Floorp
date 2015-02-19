@@ -1734,10 +1734,12 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     LOG(("nsHttpConnectionMgr::TryDispatchTransaction without conn "
-         "[trans=%p ci=%s caps=%x wildcardok=%d onlyreused=%d]\n",
-         trans, ent->mConnInfo->HashKey().get(),
+         "[trans=%p ci=%p ci=%s caps=%x wildcardok=%d onlyreused=%d "
+         "active=%d idle=%d]\n", trans,
+         ent->mConnInfo.get(), ent->mConnInfo->HashKey().get(),
          uint32_t(trans->Caps()), !trans->DontRouteViaWildCard(),
-         onlyReusedConnection));
+         onlyReusedConnection, ent->mActiveConns.Length(),
+         ent->mIdleConns.Length()));
 
     nsHttpTransaction::Classifier classification = trans->Classification();
     uint32_t caps = trans->Caps();
@@ -1792,7 +1794,8 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
                 if (NS_SUCCEEDED(loadGroupCI->GetBlockingTransactionCount(&blockers)) &&
                     blockers) {
                     // need to wait for blockers to clear
-                    LOG(("   blocked by load group: [blockers=%d]\n", blockers));
+                    LOG(("   blocked by load group: [lgci=%p trans=%p blockers=%d]\n",
+                         loadGroupCI, trans, blockers));
                     return NS_ERROR_NOT_AVAILABLE;
                 }
             }
@@ -1810,6 +1813,7 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
         if (AddToShortestPipeline(ent, trans,
                                   classification,
                                   mMaxOptimisticPipelinedRequests)) {
+            LOG(("   dispatched step 1 trans=%p\n", trans));
             return NS_OK;
         }
     }
@@ -1826,7 +1830,7 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
         ((mNumActiveConns - mNumSpdyActiveConns) >= gHttpHandler->RequestTokenBucketMinParallelism()) &&
         !(caps & (NS_HTTP_LOAD_AS_BLOCKING | NS_HTTP_LOAD_UNBLOCKED))) {
         if (!trans->TryToRunPacedRequest()) {
-            LOG(("   blocked due to rate pacing\n"));
+            LOG(("   blocked due to rate pacing trans=%p\n", trans));
             return NS_ERROR_NOT_AVAILABLE;
         }
     }
@@ -1863,6 +1867,7 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
             // the transaction dispatched on it.
             AddActiveConn(conn, ent);
             DispatchTransaction(ent, trans, conn);
+            LOG(("   dispatched step 2 (idle) trans=%p\n", trans));
             return NS_OK;
         }
     }
@@ -1876,6 +1881,7 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
         if (AddToShortestPipeline(ent, trans,
                                   classification,
                                   mMaxOptimisticPipelinedRequests)) {
+            LOG(("   dispatched step 3 (pipeline) trans=%p\n", trans));
             return NS_OK;
         }
     }
@@ -1885,12 +1891,14 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
         nsresult rv = MakeNewConnection(ent, trans);
         if (NS_SUCCEEDED(rv)) {
             // this function returns NOT_AVAILABLE for asynchronous connects
+            LOG(("   dispatched step 4 (async new conn) trans=%p\n", trans));
             return NS_ERROR_NOT_AVAILABLE;
         }
 
         if (rv != NS_ERROR_NOT_AVAILABLE) {
             // not available return codes should try next step as they are
             // not hard errors. Other codes should stop now
+            LOG(("   failed step 4 (%x) trans=%p\n", rv, trans));
             return rv;
         }
     }
@@ -1900,6 +1908,7 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
         if (AddToShortestPipeline(ent, trans,
                                   classification,
                                   mMaxPipelinedRequests)) {
+            LOG(("   dispatched step 5 trans=%p\n", trans));
             return NS_OK;
         }
     }
@@ -1912,6 +1921,7 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
         unusedSpdyPersistentConnection->DontReuse();
     }
 
+    LOG(("   not dispatched (queued) trans=%p\n", trans));
     return NS_ERROR_NOT_AVAILABLE;                /* queue it */
 }
 

@@ -133,7 +133,7 @@ public:
 
     // overload of nsAHttpTransaction::LoadGroupConnectionInfo()
     nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() MOZ_OVERRIDE { return mLoadGroupCI.get(); }
-    void SetLoadGroupConnectionInfo(nsILoadGroupConnectionInfo *aLoadGroupCI) { mLoadGroupCI = aLoadGroupCI; }
+    void SetLoadGroupConnectionInfo(nsILoadGroupConnectionInfo *aLoadGroupCI);
     void DispatchedAsBlocking();
     void RemoveDispatchedAsBlocking();
 
