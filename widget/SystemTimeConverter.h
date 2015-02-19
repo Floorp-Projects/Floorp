@@ -59,17 +59,14 @@ public:
     // bit past the reference timestamp (again less than half the range).
     // In that case we should adjust the reference time so it is the
     // earliest time.
-    if (aTime < mReferenceTime &&
-        mReferenceTime - aTime < kTimeHalfRange &&
+    Time timeSinceReference = aTime - mReferenceTime;
+    if (timeSinceReference > kTimeHalfRange &&
         roughlyNow - mReferenceTimeStamp <
           TimeDuration::FromMilliseconds(kTimeHalfRange)) {
       UpdateReferenceTime(aTime, aGetCurrentTimeFunc);
+      timeSinceReference = aTime - mReferenceTime;
     }
 
-    double timeSinceReference =
-      mReferenceTime <= aTime
-        ? aTime - mReferenceTime
-        : static_cast<double>(kTimeRange) + aTime - mReferenceTime;
     TimeStamp timestamp =
       mReferenceTimeStamp + TimeDuration::FromMilliseconds(timeSinceReference);
 
@@ -77,7 +74,8 @@ public:
     // time so we extend timestamp as needed.
     double timesWrapped =
       (roughlyNow - mReferenceTimeStamp).ToMilliseconds() / kTimeRange;
-    int32_t cyclesToAdd = static_cast<int32_t>(timesWrapped); // floor
+    int32_t cyclesToAdd =
+      static_cast<int32_t>(timesWrapped); // Round towards zero
 
     // There is some imprecision in the above calculation since we are using
     // TimeStamp::NowLoRes and mReferenceTime and mReferenceTimeStamp may not
@@ -115,10 +113,7 @@ private:
     mReferenceTime = aTime;
     Time currentTime = aGetCurrentTimeFunc();
     TimeStamp currentTimeStamp = TimeStamp::Now();
-    double timeSinceReference =
-      aTime <= currentTime
-        ? currentTime - aTime
-        : static_cast<double>(kTimeRange) + currentTime - aTime;
+    Time timeSinceReference = currentTime - aTime;
     mReferenceTimeStamp =
       currentTimeStamp - TimeDuration::FromMilliseconds(timeSinceReference);
   }
