@@ -16,6 +16,11 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/net/DNS.h"
 #include <algorithm>
+#include "prerror.h"
+
+#if defined(ANDROID) && ANDROID_VERSION > 19
+#include <resolv_netid.h>
+#endif
 
 #include "prlog.h"
 #if defined(PR_LOGGING)
@@ -215,13 +220,81 @@ _GetTTLData_Windows(const char* aHost, uint16_t* aResult)
 }
 #endif
 
+// Make the same as nspr functions.
+static MOZ_ALWAYS_INLINE PRAddrInfo*
+_Android_GetAddrInfoForNetInterface(const char* hostname,
+                                   uint16_t af,
+                                   uint16_t flags,
+                                   const char* aNetworkInterface)
+{
+#if !defined(ANDROID) || ANDROID_VERSION < 19
+  PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, 0);
+  return nullptr;
+#else
+  if ((af != PR_AF_INET && af != PR_AF_UNSPEC) ||
+      (flags & ~ PR_AI_NOCANONNAME) != PR_AI_ADDRCONFIG) {
+    PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+    return nullptr;
+  }
+
+  struct addrinfo *res, hints;
+  int rv;
+  memset(&hints, 0, sizeof(hints));
+  if (!(flags & PR_AI_NOCANONNAME)) {
+    hints.ai_flags |= AI_CANONNAME;
+  }
+
+#ifdef AI_ADDRCONFIG
+  if ((flags & PR_AI_ADDRCONFIG) &&
+      strcmp(hostname, "localhost") != 0 &&
+      strcmp(hostname, "localhost.localdomain") != 0 &&
+      strcmp(hostname, "localhost6") != 0 &&
+      strcmp(hostname, "localhost6.localdomain6") != 0) {
+    hints.ai_flags |= AI_ADDRCONFIG;
+  }
+#endif
+
+  hints.ai_family = (af == PR_AF_INET) ? AF_INET : AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+
+#if ANDROID_VERSION == 19
+  rv = android_getaddrinfoforiface(hostname, NULL, &hints, aNetworkInterface,
+                                   0, &res);
+#else
+  uint32_t netId = atoi(aNetworkInterface);
+  rv = android_getaddrinfofornet(hostname, NULL, &hints, netId, 0, &res);
+#endif
+
+#ifdef AI_ADDRCONFIG
+  if (rv == EAI_BADFLAGS && (hints.ai_flags & AI_ADDRCONFIG)) {
+    hints.ai_flags &= ~AI_ADDRCONFIG;
+#if ANDROID_VERSION == 19
+    rv = android_getaddrinfoforiface(hostname, NULL, &hints, aNetworkInterface,
+                                     0, &res);
+#else
+    uint32_t netId = atoi(aNetworkInterface);
+    rv = android_getaddrinfofornet(hostname, NULL, &hints, netId, 0, &res);
+#endif
+  }
+#endif
+
+  if (rv == 0) {
+    return (PRAddrInfo *) res;
+  }
+
+  PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, rv);
+  return nullptr;
+#endif
+}
+
 ////////////////////////////////////
 // PORTABLE RUNTIME IMPLEMENTATION//
 ////////////////////////////////////
 
 static MOZ_ALWAYS_INLINE nsresult
 _GetAddrInfo_Portable(const char* aCanonHost, uint16_t aAddressFamily,
-                      uint16_t aFlags, AddrInfo** aAddrInfo)
+                      uint16_t aFlags, const char* aNetworkInterface,
+                      AddrInfo** aAddrInfo)
 {
   MOZ_ASSERT(aCanonHost);
   MOZ_ASSERT(aAddrInfo);
@@ -241,7 +314,18 @@ _GetAddrInfo_Portable(const char* aCanonHost, uint16_t aAddressFamily,
     aAddressFamily = PR_AF_UNSPEC;
   }
 
-  PRAddrInfo* prai = PR_GetAddrInfoByName(aCanonHost, aAddressFamily, prFlags);
+  PRAddrInfo* prai;
+#if defined(ANDROID) && ANDROID_VERSION >= 19
+  if (aNetworkInterface && aNetworkInterface[0] != '\0') {
+    prai = _Android_GetAddrInfoForNetInterface(aCanonHost,
+                                               aAddressFamily,
+                                               prFlags,
+                                               aNetworkInterface);
+  } else
+#endif
+  {
+    prai = PR_GetAddrInfoByName(aCanonHost, aAddressFamily, prFlags);
+  }
 
   if (!prai) {
     return NS_ERROR_UNKNOWN_HOST;
@@ -290,7 +374,7 @@ GetAddrInfoShutdown() {
 
 nsresult
 GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
-            AddrInfo** aAddrInfo, bool aGetTtl)
+            const char* aNetworkInterface, AddrInfo** aAddrInfo, bool aGetTtl)
 {
   if (NS_WARN_IF(!aHost) || NS_WARN_IF(!aAddrInfo)) {
     return NS_ERROR_NULL_POINTER;
@@ -304,7 +388,8 @@ GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
 #endif
 
   *aAddrInfo = nullptr;
-  nsresult rv = _GetAddrInfo_Portable(aHost, aAddressFamily, aFlags, aAddrInfo);
+  nsresult rv = _GetAddrInfo_Portable(aHost, aAddressFamily, aFlags,
+                                      aNetworkInterface, aAddrInfo);
 
 #if DNSQUERY_AVAILABLE
   if (aGetTtl && NS_SUCCEEDED(rv)) {
