@@ -98,6 +98,70 @@ function TypedArrayFill(value, start = 0, end = undefined) {
     return O;
 }
 
+// ES6 draft 32 (2015-02-02) 22.2.3.9 %TypedArray%.prototype.filter(callbackfn[, thisArg])
+function TypedArrayFilter(callbackfn, thisArg = undefined) {
+    // Step 1.
+    var O = this;
+
+    // Steps 2-3.
+    // This function is not generic.
+    if (!IsObject(O) || !IsTypedArray(O)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, thisArg,
+                           "TypedArrayFilter");
+    }
+
+    // Step 4.
+    var len = TypedArrayLength(O);
+
+    // Step 5.
+    if (arguments.length === 0)
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.filter");
+    if (!IsCallable(callbackfn))
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+
+    // Step 6.
+    var T = thisArg;
+
+    // Step 7.
+    var defaultConstructor = _ConstructorForTypedArray(O);
+
+    // Steps 8-9.
+    var C = SpeciesConstructor(O, defaultConstructor);
+
+    // Step 10.
+    var kept = new List();
+
+    // Step 12.
+    var captured = 0;
+
+    // Steps 11, 13 and 13.g.
+    for (var k = 0; k < len; k++) {
+        // Steps 13.b-c.
+        var kValue = O[k];
+        // Steps 13.d-e.
+        var selected = ToBoolean(callFunction(callbackfn, T, kValue, k, O));
+        // Step 13.f.
+        if (selected) {
+            // Step 13.f.i.
+            kept.push(kValue);
+            // Step 13.f.ii.
+            captured++;
+        }
+    }
+
+    // Steps 14-15.
+    var A = new C(captured);
+
+    // Steps 16 and 17.c.
+    for (var n = 0; n < captured; n++) {
+        // Steps 17.a-b.
+        A[n] = kept[n];
+    }
+
+    // Step 18.
+    return A;
+}
+
 // ES6 draft rev28 (2014/10/14) 22.2.3.10 %TypedArray%.prototype.find(predicate[, thisArg]).
 function TypedArrayFind(predicate, thisArg = undefined) {
     // This function is not generic.
@@ -351,6 +415,51 @@ function TypedArrayLastIndexOf(searchElement, fromIndex = undefined) {
 
     // Step 12.
     return -1;
+}
+
+// ES6 draft rev32 (2015-02-02) 22.2.3.18 %TypedArray%.prototype.map(callbackfn [, thisArg]).
+function TypedArrayMap(callbackfn, thisArg = undefined) {
+    // Step 1.
+    var O = this;
+
+    // Steps 2-3.
+    // This function is not generic.
+    if (!IsObject(O) || !IsTypedArray(O)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, thisArg,
+                            "TypedArrayMap");
+    }
+
+    // Step 4.
+    var len = TypedArrayLength(O);
+
+    // Step 5.
+    if (arguments.length === 0)
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, '%TypedArray%.prototype.map');
+    if (!IsCallable(callbackfn))
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+
+    // Step 6.
+    var T = thisArg;
+
+    // Step 7.
+    var defaultConstructor = _ConstructorForTypedArray(O);
+
+    // Steps 8-9.
+    var C = SpeciesConstructor(O, defaultConstructor);
+
+    // Steps 10-11.
+    var A = new C(len);
+
+    // Steps 12, 13.a (implicit) and 13.h.
+    for (var k = 0; k < len; k++) {
+        // Steps 13.d-e.
+        var mappedValue = callFunction(callbackfn, T, O[k], k, O);
+        // Steps 13.f-g.
+        A[k] = mappedValue;
+    }
+
+    // Step 14.
+    return A;
 }
 
 // ES6 draft rev30 (2014/12/24) 22.2.3.19 %TypedArray%.prototype.reduce(callbackfn[, initialValue]).
