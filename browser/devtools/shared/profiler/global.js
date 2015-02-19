@@ -33,25 +33,70 @@ const CATEGORIES = [
  * To be kept in sync with the js::ProfileEntry::Category in ProfilingStack.h
  */
 const CATEGORY_MAPPINGS = {
-  "8": CATEGORIES[0],    // js::ProfileEntry::Category::OTHER
-  "16": CATEGORIES[1],   // js::ProfileEntry::Category::CSS
-  "32": CATEGORIES[2],   // js::ProfileEntry::Category::JS
-  "64": CATEGORIES[3],   // js::ProfileEntry::Category::GC
-  "128": CATEGORIES[3],  // js::ProfileEntry::Category::CC
-  "256": CATEGORIES[4],  // js::ProfileEntry::Category::NETWORK
-  "512": CATEGORIES[5],  // js::ProfileEntry::Category::GRAPHICS
-  "1024": CATEGORIES[6], // js::ProfileEntry::Category::STORAGE
-  "2048": CATEGORIES[7], // js::ProfileEntry::Category::EVENTS
+  "16": CATEGORIES[0],      // js::ProfileEntry::Category::OTHER
+  "32": CATEGORIES[1],      // js::ProfileEntry::Category::CSS
+  "64": CATEGORIES[2],      // js::ProfileEntry::Category::JS
+  "128": CATEGORIES[3],     // js::ProfileEntry::Category::GC
+  "256": CATEGORIES[3],     // js::ProfileEntry::Category::CC
+  "512": CATEGORIES[4],     // js::ProfileEntry::Category::NETWORK
+  "1024": CATEGORIES[5],    // js::ProfileEntry::Category::GRAPHICS
+  "2048": CATEGORIES[6],    // js::ProfileEntry::Category::STORAGE
+  "4096": CATEGORIES[7],    // js::ProfileEntry::Category::EVENTS
 };
+
+/**
+ * Get the numeric bitmask (or set of masks) for the given category
+ * abbreviation. See CATEGORIES and CATEGORY_MAPPINGS above.
+ *
+ * CATEGORY_MASK can be called with just a name if it is expected that the
+ * category is mapped to by exactly one bitmask.  If the category is mapped
+ * to by multiple masks, CATEGORY_MASK for that name must be called with
+ * an additional argument specifying the desired id (in ascending order).
+ */
+const [CATEGORY_MASK, CATEGORY_MASK_LIST] = (function () {
+  let mappings = {};
+  for (let category of CATEGORIES) {
+    let numList = Object.keys(CATEGORY_MAPPINGS)
+          .filter(k => CATEGORY_MAPPINGS[k] == category)
+          .map(k => +k);
+    numList.sort();
+    mappings[category.abbrev] = numList;
+  }
+
+  return [
+    function (name, num) {
+      if (!(name in mappings)) {
+        throw new Error(`Category abbreviation '${name}' does not exist.`);
+      }
+      if (arguments.length == 1) {
+        if (mappings[name].length != 1) {
+          throw new Error(`Expected exactly one category number for '${name}'.`);
+        }
+        return mappings[name][0];
+      }
+      if (num > mappings[name].length) {
+        throw new Error(`Num '${num}' too high for category '${name}'.`);
+      }
+      return mappings[name][num - 1];
+    },
+
+    function (name) {
+      if (!(name in mappings)) {
+        throw new Error(`Category abbreviation '${name}' does not exist.`);
+      }
+      return mappings[name];
+    }
+  ];
+})();
 
 // Human-readable "other" category bitmask. Older Geckos don't have all the
 // necessary instrumentation in the sampling profiler backend for creating
 // a categories graph, in which case we default to the "other" category.
-const CATEGORY_OTHER = 8;
+const CATEGORY_OTHER = CATEGORY_MASK('other');
 
 // Human-readable JIT category bitmask. Certain pseudo-frames in a sample,
 // like "EnterJIT", don't have any associated `cateogry` information.
-const CATEGORY_JIT = 32;
+const CATEGORY_JIT = CATEGORY_MASK('js');
 
 // Exported symbols.
 exports.L10N = L10N;
@@ -59,3 +104,5 @@ exports.CATEGORIES = CATEGORIES;
 exports.CATEGORY_MAPPINGS = CATEGORY_MAPPINGS;
 exports.CATEGORY_OTHER = CATEGORY_OTHER;
 exports.CATEGORY_JIT = CATEGORY_JIT;
+exports.CATEGORY_MASK = CATEGORY_MASK;
+exports.CATEGORY_MASK_LIST = CATEGORY_MASK_LIST;

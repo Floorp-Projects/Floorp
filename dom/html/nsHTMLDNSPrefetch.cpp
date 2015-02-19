@@ -311,21 +311,29 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
       // Only prefetch here if request was deferred and deferral not cancelled
       if (link && link->HasDeferredDNSPrefetchRequest()) {
         nsCOMPtr<nsIURI> hrefURI(link ? link->GetURI() : nullptr);
-        if (hrefURI)
-          hrefURI->GetAsciiHost(hostName);
+        bool isLocalResource = false;
+        nsresult rv;
 
-        if (!hostName.IsEmpty()) {
+        hostName.Truncate();
+        if (hrefURI) {
+          hrefURI->GetAsciiHost(hostName);
+          rv = NS_URIChainHasFlags(hrefURI,
+                                   nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
+                                   &isLocalResource);
+        }
+
+        if (!hostName.IsEmpty() && NS_SUCCEEDED(rv) && !isLocalResource) {
           if (IsNeckoChild()) {
             gNeckoChild->SendHTMLDNSPrefetch(NS_ConvertUTF8toUTF16(hostName),
                                            mEntries[mTail].mFlags);
           } else {
             nsCOMPtr<nsICancelable> tmpOutstanding;
 
-            nsresult rv = sDNSService->AsyncResolve(hostName, 
-                                    mEntries[mTail].mFlags
-                                    | nsIDNSService::RESOLVE_SPECULATE,
-                                    sDNSListener, nullptr,
-                                    getter_AddRefs(tmpOutstanding));
+            rv = sDNSService->AsyncResolve(hostName,
+                                           mEntries[mTail].mFlags
+                                           | nsIDNSService::RESOLVE_SPECULATE,
+                                           sDNSListener, nullptr,
+                                           getter_AddRefs(tmpOutstanding));
             // Tell link that deferred prefetch was requested
             if (NS_SUCCEEDED(rv))
               link->OnDNSPrefetchRequested();

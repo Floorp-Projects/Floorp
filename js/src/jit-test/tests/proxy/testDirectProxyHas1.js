@@ -14,6 +14,5 @@ for (let p of [new Proxy(target, {}), Proxy.revocable(target, {}).proxy]) {
     assertEq('foo' in p, true);
     assertEq('bar' in p, true);
     assertEq('baz' in p, false);
-    if (typeof Symbol === "function")
-        assertEq(Symbol() in p, false);
+    assertEq(Symbol() in p, false);
 }

@@ -1150,7 +1150,7 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
 #endif
 
 #ifdef MOZ_WIDGET_GTK
-  // Check the GConf registry for a protocol handler
+  // Check the GNOME registry for a protocol handler
   *aHandlerExists = nsGNOMERegistry::HandlerExists(aProtocolScheme);
 #endif
 
@@ -1369,22 +1369,6 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
           NS_LossyConvertUTF16toASCII(handler).get(),
           NS_LossyConvertUTF16toASCII(mailcap_description).get()));
 
-#ifdef MOZ_WIDGET_GTK
-  nsRefPtr<nsMIMEInfoBase> gnomeInfo;
-  if (handler.IsEmpty()) {
-    // No useful data yet.  Check the GNOME registry.  Unfortunately, newer
-    // GNOME versions no longer have type-to-extension mappings, so we might
-    // get back a MIMEInfo without any extensions set.  In that case we'll have
-    // to look in our mime.types files for the extensions.
-    LOG(("Looking in GNOME registry\n"));
-    gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType);
-    if (gnomeInfo && gnomeInfo->HasExtensions()) {
-      LOG(("Got MIMEInfo from GNOME registry, and it has extensions set\n"));
-      return gnomeInfo.forget();
-    }
-  }
-#endif
-
   // Now look up our extensions
   nsAutoString extensions, mime_types_description;
   LookUpExtensionsAndDescription(majorType,
@@ -1393,13 +1377,16 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
                                  mime_types_description);
 
 #ifdef MOZ_WIDGET_GTK
-  if (gnomeInfo) {
-    LOG(("Got MIMEInfo from GNOME registry without extensions; setting them "
-         "to %s\n", NS_LossyConvertUTF16toASCII(extensions).get()));
+  if (handler.IsEmpty()) {
+    nsRefPtr<nsMIMEInfoBase> gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType);
+    if (gnomeInfo) {
+      LOG(("Got MIMEInfo from GNOME registry without extensions; setting them "
+           "to %s\n", NS_LossyConvertUTF16toASCII(extensions).get()));
 
-    NS_ASSERTION(!gnomeInfo->HasExtensions(), "How'd that happen?");
-    gnomeInfo->SetFileExtensions(NS_ConvertUTF16toUTF8(extensions));
-    return gnomeInfo.forget();
+      NS_ASSERTION(!gnomeInfo->HasExtensions(), "How'd that happen?");
+      gnomeInfo->SetFileExtensions(NS_ConvertUTF16toUTF8(extensions));
+      return gnomeInfo.forget();
+    }
   }
 #endif
 
@@ -1526,9 +1513,6 @@ nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
 {
   NS_ASSERTION(!aScheme.IsEmpty(), "No scheme was specified!");
 
-  // We must check that a registered handler exists so that gnome_url_show
-  // doesn't fallback to gnomevfs.
-  // See nsGNOMERegistry::LoadURL and bug 389632.
   nsresult rv = OSProtocolHandlerExists(nsPromiseFlatCString(aScheme).get(),
                                         found);
   if (NS_FAILED(rv))

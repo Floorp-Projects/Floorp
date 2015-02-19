@@ -4,10 +4,7 @@
  * third argument, and the receiver as the fourth argument
  */
 var target = {};
-var keys = ['foo'];
-if (typeof Symbol === "function")
-    keys.push(Symbol.for('quux'));
-for (var key of keys) {
+for (var key of ['foo', Symbol.for('quux')]) {
     var handler = { };
     for (let p of [new Proxy(target, handler), Proxy.revocable(target, handler).proxy]) {
         handler.set = function (target1, name, val, receiver) {

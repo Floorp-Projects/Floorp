@@ -80,7 +80,8 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mHasBullet(false),
     mDirtyNextLine(false),
     mLineAtStart(false),
-    mHasRuby(false)
+    mHasRuby(false),
+    mSuppressLineWrap(aOuterReflowState->frame->IsSVGText())
 {
   MOZ_ASSERT(aOuterReflowState, "aOuterReflowState must not be null");
   NS_ASSERTION(aFloatManager || aOuterReflowState->frame->GetType() ==
@@ -225,8 +226,7 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
 
   mBStartEdge = aBCoord;
 
-  psd->mNoWrap =
-    !mStyleText->WhiteSpaceCanWrapStyle() || LineContainerFrame()->IsSVGText();
+  psd->mNoWrap = !mStyleText->WhiteSpaceCanWrapStyle() || mSuppressLineWrap;
   psd->mWritingMode = aWritingMode;
 
   // If this is the first line of a block then see if the text-indent
@@ -457,6 +457,7 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
 
   nsIFrame* frame = aSpanReflowState->frame;
   psd->mNoWrap = !frame->StyleText()->WhiteSpaceCanWrap(frame) ||
+                 mSuppressLineWrap ||
                  frame->StyleContext()->IsInlineDescendantOfRuby();
   psd->mWritingMode = aSpanReflowState->GetWritingMode();
 

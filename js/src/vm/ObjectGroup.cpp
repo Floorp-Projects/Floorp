@@ -334,7 +334,7 @@ JSObject::makeLazyGroup(JSContext *cx, HandleObject obj)
 JSObject::setNewGroupUnknown(JSContext *cx, const js::Class *clasp, JS::HandleObject obj)
 {
     ObjectGroup::setDefaultNewGroupUnknown(cx, clasp, obj);
-    return obj->setFlag(cx, BaseShape::NEW_GROUP_UNKNOWN);
+    return obj->setFlags(cx, BaseShape::NEW_GROUP_UNKNOWN);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1057,8 +1057,7 @@ ObjectGroup::newPlainObject(JSContext *cx, IdValuePair *properties, size_t nprop
     }
     MOZ_ASSERT(obj->getProto() == p->value().group->proto().toObject());
 
-    RootedShape shape(cx, p->value().shape);
-    if (!NativeObject::setLastProperty(cx, obj, shape)) {
+    if (!obj->setLastProperty(cx, p->value().shape)) {
         cx->clearPendingException();
         return nullptr;
     }
