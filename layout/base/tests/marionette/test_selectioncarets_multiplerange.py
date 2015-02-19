@@ -32,6 +32,8 @@ class SelectionCaretsMultipleRangeTest(MarionetteTestCase):
         self.marionette.navigate(test_html)
 
         self._body = self.marionette.find_element(By.ID, 'bd')
+        self._sel1 = self.marionette.find_element(By.ID, 'sel1')
+        self._sel2 = self.marionette.find_element(By.ID, 'sel2')
         self._sel3 = self.marionette.find_element(By.ID, 'sel3')
         self._sel4 = self.marionette.find_element(By.ID, 'sel4')
         self._sel6 = self.marionette.find_element(By.ID, 'sel6')
@@ -103,3 +105,26 @@ class SelectionCaretsMultipleRangeTest(MarionetteTestCase):
         self.actions.flick(self._body, caret2_x, caret2_y, end_caret2_x, end_caret2_y, 1).perform()
         self.assertEqual(self._to_unix_line_ending(sel.selected_content.strip()),
             'this 3\nuser can select this 4\nuser can select this 5\nuser')
+
+    def test_drag_caret_to_beginning_of_a_line(self):
+        '''Bug 1094056
+        Test caret visibility when caret is dragged to beginning of a line
+        '''
+        self.openTestHtml(enabled=True)
+
+        # Select the first word in the second line
+        self._long_press_to_select_word(self._sel2, 0)
+        sel = SelectionManager(self._body)
+        (start_caret_x, start_caret_y), (end_caret_x, end_caret_y) = sel.selection_carets_location()
+
+        # Select target word in the first line
+        self._long_press_to_select_word(self._sel1, 2)
+
+        # Drag end caret to the beginning of the second line
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        self.actions.flick(self._body, caret2_x, caret2_y, start_caret_x, start_caret_y).perform()
+
+        # Drag end caret back to the target word
+        self.actions.flick(self._body, start_caret_x, start_caret_y, caret2_x, caret2_y).perform()
+
+        self.assertEqual(self._to_unix_line_ending(sel.selected_content.strip()), 'select')
