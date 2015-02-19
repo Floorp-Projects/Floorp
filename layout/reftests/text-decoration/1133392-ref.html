@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+<title>reftest, bug 1133392</title>
+<style>
+
+p > span {
+  text-decoration: underline;
+}
+
+p > span > span {
+  vertical-align: -2em;
+}
+
+</style>
+
+<p class="state-one"><span>This text<br>
+has <span>an underline</span>.</span></p>
