@@ -7,7 +7,7 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 const events = require("sdk/event/core");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const protocol = require("devtools/server/protocol");
-const {ContentObserver} = require("devtools/content-observer");
+const {serializeStack, parseStack} = require("toolkit/loader");
 
 const {on, once, off, emit} = events;
 const {method, Arg, Option, RetVal} = protocol;
@@ -417,7 +417,12 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
       let originalFunc = Cu.unwaiveXrays(target[name]);
 
       Cu.exportFunction(function(...args) {
-        let result = Cu.waiveXrays(originalFunc.apply(this, args));
+        let result;
+        try {
+          result = Cu.waiveXrays(originalFunc.apply(this, args));
+        } catch (e) {
+          throw createContentError(e, unwrappedWindow);
+        }
 
         if (self._recording) {
           let stack = getStack(name);
@@ -692,4 +697,46 @@ function getBitToEnumValue(type, object, arg) {
 
   // Cache the combined bitmask value
   return table[arg] = flags.join(" | ") || arg;
+}
+
+/**
+ * Creates a new error from an error that originated from content but was called
+ * from a wrapped overridden method. This is so we can make our own error
+ * that does not look like it originated from the call watcher.
+ *
+ * We use toolkit/loader's parseStack and serializeStack rather than the
+ * parsing done in the local `getStack` function, because it does not expose
+ * column number, would have to change the protocol models `call-stack-items` and `call-details`
+ * which hurts backwards compatibility, and the local `getStack` is an optimized, hot function.
+ */
+function createContentError (e, win) {
+  let { message, name, stack } = e;
+  let parsedStack = parseStack(stack);
+  let { fileName, lineNumber, columnNumber } = parsedStack[parsedStack.length - 1];
+  let error;
+
+  let isDOMException = e instanceof Ci.nsIDOMDOMException;
+  let constructor = isDOMException ? win.DOMException : (win[e.name] || win.Error);
+
+  if (isDOMException) {
+    error = new constructor(message, name);
+    Object.defineProperties(error, {
+      code: { value: e.code },
+      columnNumber: { value: 0 }, // columnNumber is always 0 for DOMExceptions?
+      filename: { value: fileName }, // note the lowercase `filename`
+      lineNumber: { value: lineNumber },
+      result: { value: e.result },
+      stack: { value: serializeStack(parsedStack) }
+    });
+  }
+  else {
+    // Constructing an error here retains all the stack information,
+    // and we can add message, fileName and lineNumber via constructor, though
+    // need to manually add columnNumber.
+    error = new constructor(message, fileName, lineNumber);
+    Object.defineProperty(error, "columnNumber", {
+      value: columnNumber
+    });
+  }
+  return error;
 }

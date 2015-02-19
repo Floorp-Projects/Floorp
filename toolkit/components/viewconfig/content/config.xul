@@ -60,7 +60,7 @@
       <vbox class="description" flex="1">
         <label id="warningText">&aboutWarningText.label;</label>
         <checkbox id="showWarningNextTime" label="&aboutWarningCheckbox.label;" checked="true"/>
-        <hbox pack="center">
+        <hbox class="button-container">
           <button id="warningButton" class="primary" oncommand="ShowPrefs();" label="&aboutWarningButton.label;"/>
         </hbox>
       </vbox>

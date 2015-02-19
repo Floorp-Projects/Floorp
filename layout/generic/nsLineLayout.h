@@ -368,6 +368,8 @@ public:
    */
   nscoord GetCurrentICoord() { return mCurrentSpan->mICoord; }
 
+  void SetSuppressLineWrap(bool aEnabled) { mSuppressLineWrap = aEnabled; }
+
 protected:
   // This state is constant for a given block frame doing line layout
   nsFloatManager* mFloatManager;
@@ -598,6 +600,7 @@ protected:
   bool mDirtyNextLine           : 1;
   bool mLineAtStart             : 1;
   bool mHasRuby                 : 1;
+  bool mSuppressLineWrap        : 1;
 
   int32_t mSpanDepth;
 #ifdef DEBUG

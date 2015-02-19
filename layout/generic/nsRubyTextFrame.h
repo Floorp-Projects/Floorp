@@ -29,6 +29,7 @@ public:
 
   // nsIFrame overrides
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual bool CanContinueTextRun() const MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;

@@ -76,6 +76,18 @@ public:
     mURL.Assign(aURL);
   }
 
+  bool
+  FinalURL() const
+  {
+    return mFinalURL;
+  }
+
+  void
+  SetFinalURL(bool aFinalURL)
+  {
+    mFinalURL = aFinalURL;
+  }
+
   uint16_t
   GetStatus() const
   {
@@ -120,6 +132,7 @@ private:
   ResponseType mType;
   nsCString mTerminationReason;
   nsCString mURL;
+  bool mFinalURL;
   const uint16_t mStatus;
   const nsCString mStatusText;
   nsRefPtr<InternalHeaders> mHeaders;

@@ -259,17 +259,4 @@ public class LocalTabsAccessor implements TabsAccessor {
     private boolean isFilteredURL(String url) {
         return FILTERED_URL_PATTERN.matcher(url).lookingAt();
     }
-
-    /**
-     * Return a relative "Last synced" time span for the given tab record.
-     *
-     * @param now local time.
-     * @param time to format string for.
-     * @return string describing time span
-     */
-    @Override
-    public String getLastSyncedString(Context context, long now, long time) {
-        final CharSequence relativeTimeSpanString = DateUtils.getRelativeTimeSpanString(time, now, DateUtils.MINUTE_IN_MILLIS);
-        return context.getResources().getString(R.string.remote_tabs_last_synced, relativeTimeSpanString);
-    }
 }

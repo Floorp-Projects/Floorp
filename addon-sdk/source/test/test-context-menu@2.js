@@ -10,6 +10,7 @@ const {openWindow, closeWindow, openTab, closeTab,
 const {when} = require("sdk/dom/events");
 const {Item, Menu, Separator, Contexts, Readers } = require("sdk/context-menu@2");
 const prefs = require("sdk/preferences/service");
+const { before, after } = require('sdk/test/utils');
 
 const testPageURI = require.resolve("./test-context-menu").replace(".js", ".html");
 
@@ -1336,5 +1337,14 @@ if (require("@loader/options").isNative) {
     "test skip on jpm": (assert) => assert.pass("skipping this file with jpm")
   };
 }
+
+before(exports, (name, assert) => {
+  // Make sure Java doesn't activate
+  prefs.set("plugin.state.java", 0);
+});
+
+after(exports, (name, assert) => {
+  prefs.reset("plugin.state.java");
+});
 
 require("sdk/test").run(module.exports);

@@ -247,4 +247,14 @@ void GonkAudioDecoderManager::ReleaseAudioBuffer() {
   }
 }
 
+nsresult
+GonkAudioDecoderManager::Flush()
+{
+  GonkDecoderManager::Flush();
+  status_t err = mDecoder->flush();
+  if (err != OK) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
 } // namespace mozilla
