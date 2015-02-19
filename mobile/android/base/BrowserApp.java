@@ -154,6 +154,8 @@ public class BrowserApp extends GeckoApp
                                    LayoutInflater.Factory {
     private static final String LOGTAG = "GeckoBrowserApp";
 
+    private static final boolean ZOOMED_VIEW_ENABLED = AppConstants.NIGHTLY_BUILD;
+
     private static final int TABS_ANIMATION_DURATION = 450;
 
     private static final String ADD_SHORTCUT_TOAST = "add_shortcut_toast";
@@ -184,6 +186,7 @@ public class BrowserApp extends GeckoApp
     private ActionModeCompat mActionMode;
     private boolean mHideDynamicToolbarOnActionModeEnd;
     private TabHistoryController tabHistoryController;
+    private ZoomedView mZoomedView;
 
     private static final int GECKO_TOOLS_MENU = -1;
     private static final int ADDON_MENU_OFFSET = 1000;
@@ -824,6 +827,11 @@ public class BrowserApp extends GeckoApp
 
         // Set the maximum bits-per-pixel the favicon system cares about.
         IconDirectoryEntry.setMaxBPP(GeckoAppShell.getScreenDepth());
+
+        if (ZOOMED_VIEW_ENABLED) {
+            ViewStub stub = (ViewStub) findViewById(R.id.zoomed_view_stub);
+            mZoomedView = (ZoomedView) stub.inflate();
+        }
     }
 
     private void setupSystemUITinting() {
@@ -1297,6 +1305,9 @@ public class BrowserApp extends GeckoApp
         if (mReadingListHelper != null) {
             mReadingListHelper.uninit();
             mReadingListHelper = null;
+        }
+        if (mZoomedView != null) {
+            mZoomedView.destroy();
         }
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
