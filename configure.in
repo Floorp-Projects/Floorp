@@ -2307,7 +2307,7 @@ ia64*-hpux*)
         if test "$_CC_MAJOR_VERSION" = "18" -a "$_CC_BUILD_VERSION" = "31101"; then
             dnl Use MaxILKSize as a workaround for LNK1248 in VS2013update4
             dnl See https://connect.microsoft.com/VisualStudio/feedback/details/1044914/fatal-error-lnk1248
-            LDFLAGS="$LDFLAGS -MaxILKSize:2147483647"
+            LDFLAGS="$LDFLAGS -MaxILKSize:0x7FF00000"
         fi
         dnl Minimum reqiurement of Gecko is VS2010 or later which supports
         dnl both SSSE3 and SSE4.1.
