@@ -1880,6 +1880,9 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           psd->mBEndLeading = endLeading;
         }
         psd->mLogicalBSize += deltaLeading;
+        // We have adjusted the leadings, it is no longer a zero
+        // effective span box.
+        zeroEffectiveSpanBox = false;
       }
     }
 

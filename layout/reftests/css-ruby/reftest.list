@@ -33,6 +33,7 @@ default-preferences pref(layout.css.ruby.enabled,true)
 == line-height-1.html line-height-1-ref.html
 == line-height-2.html line-height-2-ref.html
 == line-height-3.html line-height-3-ref.html
+== line-height-4.html line-height-4-ref.html
 load nested-ruby-1.html
 == no-transform.html no-transform-ref.html
 == relative-positioning-1.html relative-positioning-1-ref.html

@@ -1,0 +1,15 @@
+<title>Bug 1134206 - Ruby line spacing adjustment on quirks mode</title>
+<script type="text/javascript" src="utils.js"></script>
+<div id="base">
+  <span id="inline">base</span>
+  <span id="text1" style="font-size: 80%; color: transparent">text</span>
+  <span id="text2" style="font-size: 50%; color: transparent">text</span>
+</div>
+next line
+<script>
+  // Simulate the behavior of ruby layout.
+  var base = document.getElementById('base');
+  makeHeightMatchInlineBox(base, document.getElementById('inline'));
+  base.style.paddingTop = getHeight(document.getElementById('text1'));
+  base.style.paddingBottom = getHeight(document.getElementById('text2'));
+</script>
