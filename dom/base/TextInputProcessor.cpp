@@ -511,8 +511,20 @@ TextInputProcessor::Keydown(nsIDOMKeyEvent* aDOMKeyEvent,
     return rv;
   }
   *aDoDefault = !(aKeyFlags & KEY_DEFAULT_PREVENTED);
-  // XXX Ignore specified modifier flags for now
-  keyEvent.modifiers = MODIFIER_NONE;
+
+  if (WidgetKeyboardEvent::GetModifierForKeyName(keyEvent.mKeyNameIndex)) {
+    ModifierKeyData modifierKeyData(keyEvent);
+    if (WidgetKeyboardEvent::IsLockableModifier(keyEvent.mKeyNameIndex)) {
+      // If the modifier key is lockable modifier key such as CapsLock,
+      // let's toggle modifier key state at keydown.
+      ToggleModifierKey(modifierKeyData);
+    } else {
+      // Activate modifier flag before dispatching keydown event (i.e., keydown
+      // event should indicate the releasing modifier is active.
+      ActivateModifierKey(modifierKeyData);
+    }
+  }
+  keyEvent.modifiers = GetActiveModifiers();
 
   nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
   rv = IsValidStateForComposition();
@@ -562,8 +574,14 @@ TextInputProcessor::Keyup(nsIDOMKeyEvent* aDOMKeyEvent,
     return rv;
   }
   *aDoDefault = !(aKeyFlags & KEY_DEFAULT_PREVENTED);
-  // XXX Ignore specified modifier flags for now
-  keyEvent.modifiers = MODIFIER_NONE;
+
+  if (WidgetKeyboardEvent::GetModifierForKeyName(keyEvent.mKeyNameIndex) &&
+      !WidgetKeyboardEvent::IsLockableModifier(keyEvent.mKeyNameIndex)) {
+    // Inactivate modifier flag before dispatching keyup event (i.e., keyup
+    // event shouldn't indicate the releasing modifier is active.
+    InactivateModifierKey(ModifierKeyData(keyEvent));
+  }
+  keyEvent.modifiers = GetActiveModifiers();
 
   nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
   rv = IsValidStateForComposition();
@@ -576,6 +594,60 @@ TextInputProcessor::Keyup(nsIDOMKeyEvent* aDOMKeyEvent,
   mDispatcher->DispatchKeyboardEvent(NS_KEY_UP, keyEvent, status);
   *aDoDefault = (status != nsEventStatus_eConsumeNoDefault);
   return NS_OK;
+}
+
+/******************************************************************************
+ * TextInputProcessor::ModifierKeyData
+ ******************************************************************************/
+TextInputProcessor::ModifierKeyData::ModifierKeyData(
+  const WidgetKeyboardEvent& aKeyboardEvent)
+  : mKeyNameIndex(aKeyboardEvent.mKeyNameIndex)
+  , mCodeNameIndex(aKeyboardEvent.mCodeNameIndex)
+{
+  mModifier = WidgetKeyboardEvent::GetModifierForKeyName(mKeyNameIndex);
+  MOZ_ASSERT(mModifier, "mKeyNameIndex must be a modifier key name");
+}
+
+/******************************************************************************
+ * TextInputProcessor::ModifierKeyDataArray
+ ******************************************************************************/
+Modifiers
+TextInputProcessor::ModifierKeyDataArray::GetActiveModifiers() const
+{
+  Modifiers result = MODIFIER_NONE;
+  for (uint32_t i = 0; i < Length(); i++) {
+    result |= ElementAt(i).mModifier;
+  }
+  return result;
+}
+
+void
+TextInputProcessor::ModifierKeyDataArray::ActivateModifierKey(
+  const TextInputProcessor::ModifierKeyData& aModifierKeyData)
+{
+  if (Contains(aModifierKeyData)) {
+    return;
+  }
+  AppendElement(aModifierKeyData);
+}
+
+void
+TextInputProcessor::ModifierKeyDataArray::InactivateModifierKey(
+  const TextInputProcessor::ModifierKeyData& aModifierKeyData)
+{
+  RemoveElement(aModifierKeyData);
+}
+
+void
+TextInputProcessor::ModifierKeyDataArray::ToggleModifierKey(
+  const TextInputProcessor::ModifierKeyData& aModifierKeyData)
+{
+  auto index = IndexOf(aModifierKeyData);
+  if (index == NoIndex) {
+    AppendElement(aModifierKeyData);
+    return;
+  }
+  RemoveElementAt(index);
 }
 
 } // namespace mozilla

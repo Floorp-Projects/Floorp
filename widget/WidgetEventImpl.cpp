@@ -317,7 +317,7 @@ WidgetKeyboardEvent::ShouldCauseKeypressEvents() const
     case KEY_NAME_INDEX_CapsLock:
     case KEY_NAME_INDEX_Control:
     case KEY_NAME_INDEX_Fn:
-    // case KEY_NAME_INDEX_FnLock:
+    case KEY_NAME_INDEX_FnLock:
     // case KEY_NAME_INDEX_Hyper:
     case KEY_NAME_INDEX_Meta:
     case KEY_NAME_INDEX_NumLock:
@@ -326,7 +326,7 @@ WidgetKeyboardEvent::ShouldCauseKeypressEvents() const
     case KEY_NAME_INDEX_Shift:
     // case KEY_NAME_INDEX_Super:
     case KEY_NAME_INDEX_Symbol:
-    // case KEY_NAME_INDEX_SymbolLock:
+    case KEY_NAME_INDEX_SymbolLock:
       return false;
     default:
       return true;
@@ -637,6 +637,58 @@ WidgetKeyboardEvent::ComputeKeyCodeFromKeyNameIndex(KeyNameIndex aKeyNameIndex)
       return nsIDOMKeyEvent::DOM_VK_ZOOM;
     default:
       return 0;
+  }
+}
+
+/* static */ Modifier
+WidgetKeyboardEvent::GetModifierForKeyName(KeyNameIndex aKeyNameIndex)
+{
+  switch (aKeyNameIndex) {
+    case KEY_NAME_INDEX_Alt:
+      return MODIFIER_ALT;
+    case KEY_NAME_INDEX_AltGraph:
+      return MODIFIER_ALTGRAPH;
+    case KEY_NAME_INDEX_CapsLock:
+      return MODIFIER_CAPSLOCK;
+    case KEY_NAME_INDEX_Control:
+      return MODIFIER_CONTROL;
+    case KEY_NAME_INDEX_Fn:
+      return MODIFIER_FN;
+    case KEY_NAME_INDEX_FnLock:
+      return MODIFIER_FNLOCK;
+    // case KEY_NAME_INDEX_Hyper:
+    case KEY_NAME_INDEX_Meta:
+      return MODIFIER_META;
+    case KEY_NAME_INDEX_NumLock:
+      return MODIFIER_NUMLOCK;
+    case KEY_NAME_INDEX_OS:
+      return MODIFIER_OS;
+    case KEY_NAME_INDEX_ScrollLock:
+      return MODIFIER_SCROLLLOCK;
+    case KEY_NAME_INDEX_Shift:
+      return MODIFIER_SHIFT;
+    // case KEY_NAME_INDEX_Super:
+    case KEY_NAME_INDEX_Symbol:
+      return MODIFIER_SYMBOL;
+    case KEY_NAME_INDEX_SymbolLock:
+      return MODIFIER_SYMBOLLOCK;
+    default:
+      return MODIFIER_NONE;
+  }
+}
+
+/* static */ bool
+WidgetKeyboardEvent::IsLockableModifier(KeyNameIndex aKeyNameIndex)
+{
+  switch (aKeyNameIndex) {
+    case KEY_NAME_INDEX_CapsLock:
+    case KEY_NAME_INDEX_FnLock:
+    case KEY_NAME_INDEX_NumLock:
+    case KEY_NAME_INDEX_ScrollLock:
+    case KEY_NAME_INDEX_SymbolLock:
+      return true;
+    default:
+      return false;
   }
 }
 
