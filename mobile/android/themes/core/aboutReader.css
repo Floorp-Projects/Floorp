@@ -355,6 +355,14 @@ body {
   background-position: center;
   background-size: 30px 24px;
   background-repeat: no-repeat;
+  background-color: transparent;
+  border: 0;
+  width: 100%;
+}
+
+/* Remove dotted border when button is focused */
+.button::-moz-focus-inner {
+  border: 0;
 }
 
 .dropdown {

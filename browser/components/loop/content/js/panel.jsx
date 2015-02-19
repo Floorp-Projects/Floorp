@@ -329,11 +329,6 @@ loop.panel = (function(_, mozL10n) {
     render: function() {
       var cx = React.addons.classSet;
 
-      // For now all of the menu entries require FxA so hide the whole gear if FxA is disabled.
-      if (!navigator.mozLoop.fxAEnabled) {
-        return null;
-      }
-
       return (
         <div className="settings-menu dropdown">
           <a className="button-settings" onClick={this.showDropdownMenu}
@@ -347,7 +342,7 @@ loop.panel = (function(_, mozL10n) {
             <SettingsDropdownEntry label={mozL10n.get("settings_menu_item_account")}
                                    onClick={this.handleClickAccountEntry}
                                    icon="account"
-                                   displayed={this._isSignedIn()} />
+                                   displayed={this._isSignedIn() && navigator.mozLoop.fxAEnabled} />
             <SettingsDropdownEntry icon="tour"
                                    label={mozL10n.get("tour_label")}
                                    onClick={this.openGettingStartedTour} />
