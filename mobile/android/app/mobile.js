@@ -858,3 +858,6 @@ pref("reader.color_scheme.values", "[\"light\",\"dark\",\"auto\"]");
 
 // Whether to use a vertical or horizontal toolbar.
 pref("reader.toolbar.vertical", false);
+
+// Whether or not to display buttons related to reading list in reader view.
+pref("browser.readinglist.enabled", true);
