@@ -180,10 +180,6 @@ public:
    */
   void NotifyStreamStateChanged();
 
-  // Webrtc allows the remote side to name a stream whatever it wants, and we
-  // need to surface this to content.
-  void AssignId(const nsAString& aID) { mID = aID; }
-
   // Indicate what track types we eventually expect to add to this stream
   enum {
     HINT_CONTENTS_AUDIO = 1 << 0,
