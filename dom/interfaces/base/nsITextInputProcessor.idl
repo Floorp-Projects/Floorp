@@ -197,6 +197,31 @@ interface nsITextInputProcessorCallback;
  *   if (TIP.keyup(keyEvent)) {
  *     // Handle its default action
  *   }
+ *
+ * Example #10 JS-Keyboard doesn't need to initialize modifier states at
+ *             calling either keydown() or keyup().
+ *
+ *   // Neither beginInputTransaction() nor beginInputTransactionForTests()
+ *   // resets modifier state.
+ *   if (!TIP.beginInputTransaction(window, callback)) {
+ *     return; // You failed to get the rights to dispatch key events
+ *   }
+ *
+ *   var leftShift = new KeyboardEvent("", { code: "ShiftLeft", key: "Shift" });
+ *
+ *   // This causes following key events will be shifted automatically.
+ *   TIP.keydown(leftShift);
+ *
+ *   var rightShift =
+ *     new KeyboardEvent("", { code: "ShiftRight", key: "Shift" });
+ *
+ *   TIP.keydown(rightShift);
+ *
+ *   // keyup of one of shift key doesn't cause inactivating "Shift" state.
+ *   TIP.keyup(rightShift);
+ *
+ *   // This causes inactivating "Shift" state completely.
+ *   TIP.keyup(leftShift);
  */
 
 [scriptable, builtinclass, uuid(16144d6e-a97a-4733-aa6a-3a1287cfe539)]
@@ -420,6 +445,9 @@ interface nsITextInputProcessor : nsISupports
    *                        defined by any standards, use "" (empty string).
    *                        #4 .keyCode is guessed from .key value if the key
    *                        name is registered and .keyCode isn't initialized.
+   *                        #5 modifier key states, e.g., .shiftKey, are
+   *                        ignored.  Instead, modifier states are managed by
+   *                        each instance and set automatically.
    * @param aKeyFlags       Special flags.  The values can be some of KEY_*
    *                        constants.
    * @return                true if neither the keydown event or following

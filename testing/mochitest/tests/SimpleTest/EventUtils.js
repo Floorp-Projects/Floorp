@@ -189,11 +189,17 @@ function _parseModifiers(aEvent)
   if (aEvent.fnKey) {
     mval |= nsIDOMWindowUtils.MODIFIER_FN;
   }
+  if (aEvent.fnLockKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_FNLOCK;
+  }
   if (aEvent.numLockKey) {
     mval |= nsIDOMWindowUtils.MODIFIER_NUMLOCK;
   }
   if (aEvent.scrollLockKey) {
     mval |= nsIDOMWindowUtils.MODIFIER_SCROLLLOCK;
+  }
+  if (aEvent.symbolKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_SYMBOL;
   }
   if (aEvent.symbolLockKey) {
     mval |= nsIDOMWindowUtils.MODIFIER_SYMBOLLOCK;

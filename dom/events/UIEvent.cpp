@@ -403,10 +403,12 @@ static const ModifierPair kPairs[] = {
   { MODIFIER_CAPSLOCK,   NS_DOM_KEYNAME_CAPSLOCK },
   { MODIFIER_CONTROL,    NS_DOM_KEYNAME_CONTROL },
   { MODIFIER_FN,         NS_DOM_KEYNAME_FN },
+  { MODIFIER_FNLOCK,     NS_DOM_KEYNAME_FNLOCK },
   { MODIFIER_META,       NS_DOM_KEYNAME_META },
   { MODIFIER_NUMLOCK,    NS_DOM_KEYNAME_NUMLOCK },
   { MODIFIER_SCROLLLOCK, NS_DOM_KEYNAME_SCROLLLOCK },
   { MODIFIER_SHIFT,      NS_DOM_KEYNAME_SHIFT },
+  { MODIFIER_SYMBOL,     NS_DOM_KEYNAME_SYMBOL },
   { MODIFIER_SYMBOLLOCK, NS_DOM_KEYNAME_SYMBOLLOCK },
   { MODIFIER_OS,         NS_DOM_KEYNAME_OS }
 };
@@ -483,8 +485,14 @@ UIEvent::GetModifierStateInternal(const nsAString& aKey)
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_FN)) {
     return inputEvent->IsFn();
   }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_FNLOCK)) {
+    return inputEvent->IsFnLocked();
+  }
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SCROLLLOCK)) {
     return inputEvent->IsScrollLocked();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SYMBOL)) {
+    return inputEvent->IsSymbol();
   }
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SYMBOLLOCK)) {
     return inputEvent->IsSymbolLocked();
