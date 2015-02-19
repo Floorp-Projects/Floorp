@@ -7419,6 +7419,11 @@ let gRemoteTabsUI = {
       return;
     }
 
+    if (Services.appinfo.inSafeMode) {
+      // e10s isn't supported in safe mode, so don't show the menu items for it
+      return;
+    }
+
     let newRemoteWindow = document.getElementById("menu_newRemoteWindow");
     let newNonRemoteWindow = document.getElementById("menu_newNonRemoteWindow");
     let autostart = Services.appinfo.browserTabsRemoteAutostart;
