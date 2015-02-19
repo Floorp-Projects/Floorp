@@ -1179,7 +1179,7 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
         }
 
         rv = TryDispatchTransaction(ent,
-                                    alreadyHalfOpen || trans->DontRouteViaWildCard(),
+                                    alreadyHalfOpen || !!trans->TunnelProvider(),
                                     trans);
         if (NS_SUCCEEDED(rv) || (rv != NS_ERROR_NOT_AVAILABLE)) {
             if (NS_SUCCEEDED(rv))
@@ -1690,10 +1690,10 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     LOG(("nsHttpConnectionMgr::TryDispatchTransaction without conn "
-         "[trans=%p ci=%p ci=%s caps=%x wildcardok=%d onlyreused=%d "
+         "[trans=%p ci=%p ci=%s caps=%x tunnelprovider=%p onlyreused=%d "
          "active=%d idle=%d]\n", trans,
          ent->mConnInfo.get(), ent->mConnInfo->HashKey().get(),
-         uint32_t(trans->Caps()), !trans->DontRouteViaWildCard(),
+         uint32_t(trans->Caps()), trans->TunnelProvider(),
          onlyReusedConnection, ent->mActiveConns.Length(),
          ent->mIdleConns.Length()));
 
@@ -1857,6 +1857,10 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
             LOG(("   failed step 4 (%x) trans=%p\n", rv, trans));
             return rv;
         }
+    } else if (trans->TunnelProvider() && trans->TunnelProvider()->MaybeReTunnel(trans)) {
+        LOG(("   sort of dispatched step 4a tunnel requeue trans=%p\n", trans));
+        // the tunnel provider took responsibility for making a new tunnel
+        return NS_OK;
     }
 
     // step 5
@@ -2067,7 +2071,7 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
     MOZ_ASSERT(ci);
 
     nsConnectionEntry *ent =
-        GetOrCreateConnectionEntry(ci, trans->DontRouteViaWildCard());
+        GetOrCreateConnectionEntry(ci, !!trans->TunnelProvider());
 
     // SPDY coalescing of hostnames means we might redirect from this
     // connection entry onto the preferred one.
@@ -2111,7 +2115,7 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
         trans->SetConnection(nullptr);
         rv = DispatchTransaction(ent, trans, conn);
     } else {
-        rv = TryDispatchTransaction(ent, trans->DontRouteViaWildCard(), trans);
+        rv = TryDispatchTransaction(ent, !!trans->TunnelProvider(), trans);
     }
 
     if (NS_SUCCEEDED(rv)) {

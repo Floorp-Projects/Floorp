@@ -225,7 +225,7 @@ public:
   void GetNegotiatedToken(nsACString &s) { s.Assign(mNegotiatedToken); }
 
   void SendPing() MOZ_OVERRIDE;
-
+  bool MaybeReTunnel(nsAHttpTransaction *) MOZ_OVERRIDE;
   bool UseH2Deps() { return mUseH2Deps; }
 
 private:
@@ -486,10 +486,10 @@ private:
 private:
 /// connect tunnels
   void DispatchOnTunnel(nsAHttpTransaction *, nsIInterfaceRequestor *);
+  void CreateTunnel(nsHttpTransaction *, nsHttpConnectionInfo *, nsIInterfaceRequestor *);
   void RegisterTunnel(Http2Stream *);
   void UnRegisterTunnel(Http2Stream *);
   uint32_t FindTunnelCount(nsHttpConnectionInfo *);
-
   nsDataHashtable<nsCStringHashKey, uint32_t> mTunnelHash;
 };
 

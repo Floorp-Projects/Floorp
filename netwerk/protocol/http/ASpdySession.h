@@ -33,6 +33,15 @@ public:
 
   static ASpdySession *NewSpdySession(uint32_t version, nsISocketTransport *);
 
+  // MaybeReTunnel() is called by the connection manager when it cannot
+  // dispatch a tunneled transaction. That might be because the tunnels it
+  // expects to see are dead (and we may or may not be able to make more),
+  // or it might just need to wait longer for one of them to become free.
+  //
+  // return true if the session takes back ownership of the transaction from
+  // the connection manager.
+  virtual bool MaybeReTunnel(nsAHttpTransaction *) = 0;
+
   virtual void PrintDiagnostics (nsCString &log) = 0;
 
   bool ResponseTimeoutEnabled() const MOZ_OVERRIDE MOZ_FINAL {
