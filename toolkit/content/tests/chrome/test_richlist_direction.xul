@@ -69,7 +69,7 @@ function test_richlistbox()
   ok(richListBox.currentIndex > currentIndex, "Selection should move upwards");
   richListBox.selectedItem = richListBox.lastChild;
   richListBox.focus();
-  synthesizeKey("VK_DOWN", {shiftKey: true, type: "keypress"}, window);
+  synthesizeKey("KEY_ArrowDown", { shiftKey: true, code: "ArrowDown" }, window);
   let items = [richListBox.selectedItems[0],
                richListBox.selectedItems[1]];
   is(items[0], richListBox.lastChild, "The last element should still be selected");
@@ -115,7 +115,7 @@ function test_richlistbox()
   ok(richListBox.currentIndex < currentIndex, "Selection should move upwards");
   richListBox.selectedItem = richListBox.firstChild;
   richListBox.focus();
-  synthesizeKey("VK_DOWN", {shiftKey: true, type: "keypress"}, window);
+  synthesizeKey("KEY_ArrowDown", { shiftKey: true, code: "ArrowDown" }, window);
   items = [richListBox.selectedItems[0],
            richListBox.selectedItems[1]];
   is(items[0], richListBox.firstChild, "The last element should still be selected");
