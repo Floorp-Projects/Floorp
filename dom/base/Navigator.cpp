@@ -1217,6 +1217,12 @@ Navigator::SendBeacon(const nsAString& aUrl,
       !contentType.Equals(APPLICATION_WWW_FORM_URLENCODED) &&
       !contentType.Equals(MULTIPART_FORM_DATA) &&
       !contentType.Equals(TEXT_PLAIN)) {
+
+    // we need to set the sameOriginChecker as a notificationCallback
+    // so we can tell the channel not to follow redirects
+    nsCOMPtr<nsIInterfaceRequestor> soc = nsContentUtils::GetSameOriginChecker();
+    channel->SetNotificationCallbacks(soc);
+
     nsCOMPtr<nsIChannel> preflightChannel;
     nsTArray<nsCString> unsafeHeaders;
     unsafeHeaders.AppendElement(NS_LITERAL_CSTRING("Content-Type"));
