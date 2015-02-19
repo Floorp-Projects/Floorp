@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIHttpChannelInternal;
+interface nsIChannel;
 interface nsIOutputStream;
 interface nsIURI;
 
@@ -16,7 +16,7 @@ interface nsIURI;
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(0b5f82a7-5824-4a0d-bf5c-8a8a7684c0c8)]
+[scriptable, uuid(9d127b63-dfad-484d-a0e1-cb82697a095b)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**
@@ -37,6 +37,28 @@ interface nsIInterceptedChannel : nsISupports
      * after this point.
      */
     void finishSynthesizedResponse();
+
+    /**
+     * Cancel the pending intercepted request.
+     * @return NS_ERROR_FAILURE if the response has already been synthesized or
+     *         the original request has been instructed to continue.
+     */
+    void cancel();
+
+    /**
+     * The synthesized response body to be produced.
+     */
+    readonly attribute nsIOutputStream responseBody;
+
+    /**
+     * The underlying channel object that was intercepted.
+     */
+    readonly attribute nsIChannel channel;
+
+    /**
+     * True if the underlying request was caused by a navigation attempt.
+     */
+    readonly attribute bool isNavigation;
 };
 
 /**
@@ -45,7 +67,7 @@ interface nsIInterceptedChannel : nsISupports
  * request should be intercepted before any network request is initiated.
  */
 
-[scriptable, uuid(b3ad3e9b-91d8-44d0-a0c5-dc2e9374f599)]
+[scriptable, uuid(69150b77-b561-43a2-bfba-7301dd5a35d0)]
 interface nsINetworkInterceptController : nsISupports
 {
     /**
@@ -53,15 +75,15 @@ interface nsINetworkInterceptController : nsISupports
      * requests until specifically instructed to do so.
      *
      * @param aURI the URI being requested by a channel
+     * @param aIsNavigate True if the request is for a navigation, false for a fetch.
      */
-    bool shouldPrepareForIntercept(in nsIURI aURI);
+    bool shouldPrepareForIntercept(in nsIURI aURI, in bool aIsNavigate);
 
     /**
      * Notification when a given intercepted channel is prepared to accept a synthesized
      * response via the provided stream.
      *
      * @param aChannel the controlling interface for a channel that has been intercepted
-     * @param aStream a stream directly into the channel's synthesized response body
      */
-    void channelIntercepted(in nsIInterceptedChannel aChannel, in nsIOutputStream aStream);
+    void channelIntercepted(in nsIInterceptedChannel aChannel);
 };
