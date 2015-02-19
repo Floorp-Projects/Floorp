@@ -469,6 +469,65 @@ function TypedArrayReverse() {
     return O;
 }
 
+// ES6 draft rev32 (2015-02-02) 22.2.3.23 %TypedArray%.prototype.slice(start, end).
+function TypedArraySlice(start, end) {
+
+    // Step 1.
+    var O = this;
+
+    // Step 2-3.
+    if (!IsObject(O) || !IsTypedArray(O)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, O, start, end, "TypedArraySlice");
+    }
+
+    // Step 4.
+    var len = TypedArrayLength(O);
+
+    // Steps 5-6.
+    var relativeStart = ToInteger(start);
+
+    // Step 7.
+    var k = relativeStart < 0
+            ? std_Math_max(len + relativeStart, 0)
+            : std_Math_min(relativeStart, len);
+
+    // Steps 8-9.
+    var relativeEnd = end === undefined ? len : ToInteger(end);
+
+    // Step 10.
+    var final = relativeEnd < 0
+                ? std_Math_max(len + relativeEnd, 0)
+                : std_Math_min(relativeEnd, len);
+
+    // Step 11.
+    var count = std_Math_max(final - k, 0);
+
+    // Step 12.
+    var defaultConstructor = _ConstructorForTypedArray(O);
+
+    // Steps 13-14.
+    var C = SpeciesConstructor(O, defaultConstructor);
+
+    // Steps 15-16.
+    var A = new C(count);
+
+    // Step 17.
+    var n = 0;
+
+    // Step 18.
+    while (k < final) {
+        // Steps 18.a-e.
+        A[n] = O[k];
+        // Step 18f.
+        k++;
+        // Step 18g.
+        n++;
+    }
+
+    // Step 19.
+    return A;
+}
+
 // ES6 draft rev30 (2014/12/24) 22.2.3.25 %TypedArray%.prototype.some(callbackfn[, thisArg]).
 function TypedArraySome(callbackfn, thisArg = undefined) {
     // This function is not generic.
