@@ -491,9 +491,27 @@ TextInputProcessor::FlushPendingComposition(nsIDOMKeyEvent* aDOMKeyEvent,
 NS_IMETHODIMP
 TextInputProcessor::CommitComposition(nsIDOMKeyEvent* aDOMKeyEvent,
                                       uint32_t aKeyFlags,
-                                      const nsAString& aCommitString,
-                                      uint8_t aOptionalArgc,
-                                      bool* aSucceeded)
+                                      uint8_t aOptionalArgc)
+{
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+
+  WidgetKeyboardEvent* keyboardEvent;
+  nsresult rv =
+    PrepareKeyboardEventForComposition(aDOMKeyEvent, aKeyFlags, aOptionalArgc,
+                                       keyboardEvent);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return CommitCompositionInternal(keyboardEvent, aKeyFlags);
+}
+
+NS_IMETHODIMP
+TextInputProcessor::CommitCompositionWith(const nsAString& aCommitString,
+                                          nsIDOMKeyEvent* aDOMKeyEvent,
+                                          uint32_t aKeyFlags,
+                                          uint8_t aOptionalArgc,
+                                          bool* aSucceeded)
 {
   MOZ_RELEASE_ASSERT(aSucceeded, "aSucceeded must not be nullptr");
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
@@ -506,11 +524,8 @@ TextInputProcessor::CommitComposition(nsIDOMKeyEvent* aDOMKeyEvent,
     return rv;
   }
 
-  const nsAString* commitString =
-    aOptionalArgc < 3 ? nullptr: &aCommitString;
-
   return CommitCompositionInternal(keyboardEvent, aKeyFlags,
-                                   commitString, aSucceeded);
+                                   &aCommitString, aSucceeded);
 }
 
 nsresult
