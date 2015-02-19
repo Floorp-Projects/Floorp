@@ -70,7 +70,7 @@ class AutoIdVector;
  *     if (!DefineProperty(cx, obj, id, ..., result))
  *         return false;
  *     if (!result)
- *         return result.reportError(cx, id);
+ *         return result.reportError(cx, obj, id);
  *
  * Users don't have to call `result.report()`; another possible ending is:
  *
@@ -122,12 +122,14 @@ class ObjectOpResult
      * Convenience method. Return true if ok() or if strict is false; otherwise
      * throw a TypeError and return false.
      */
-    bool checkStrict(JSContext *cx, HandleId id) {
-        return ok() || reportError(cx, id);
+    bool checkStrict(JSContext *cx, HandleObject obj, HandleId id) {
+        if (ok())
+            return true;
+        return reportError(cx, obj, id);
     }
 
     /* Throw an exception. Call this only if !ok(). */
-    JS_PUBLIC_API(bool) reportError(JSContext *cx, HandleId id);
+    JS_PUBLIC_API(bool) reportError(JSContext *cx, HandleObject obj, HandleId id);
 };
 
 }
