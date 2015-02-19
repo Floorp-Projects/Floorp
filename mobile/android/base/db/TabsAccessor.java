@@ -23,5 +23,4 @@ public interface TabsAccessor {
     public void getTabs(final Context context, final OnQueryTabsCompleteListener listener);
     public void getTabs(final Context context, final int limit, final OnQueryTabsCompleteListener listener);
     public void persistLocalTabs(final ContentResolver cr, final Iterable<Tab> tabs);
-    public String getLastSyncedString(Context context, long now, long time);
 }
