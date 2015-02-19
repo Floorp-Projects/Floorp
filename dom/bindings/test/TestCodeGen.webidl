@@ -990,6 +990,8 @@ dictionary Dict : ParentDict {
 
   required long requiredLong;
   required object requiredObject;
+
+  CustomEventInit customEventInit;
 };
 
 dictionary ParentDict : GrandparentDict {

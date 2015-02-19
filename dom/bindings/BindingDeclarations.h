@@ -39,6 +39,14 @@ protected:
   bool StringifyToJSON(JSContext* aCx,
                        JS::MutableHandle<JS::Value> aValue,
                        nsAString& aJSON) const;
+
+  // Struct used as a way to force a dictionary constructor to not init the
+  // dictionary (via constructing from a pointer to this class).  We're putting
+  // it here so that all the dictionaries will have access to it, but outside
+  // code will not.
+  struct FastDictionaryInitializer {
+  };
+
 private:
   // aString is expected to actually be an nsAString*.  Should only be
   // called from StringifyToJSON.
