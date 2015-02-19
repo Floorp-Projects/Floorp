@@ -183,12 +183,6 @@ DOMMediaStream::CurrentTime()
 }
 
 void
-DOMMediaStream::GetId(nsAString& aID) const
-{
-  aID = mID;
-}
-
-void
 DOMMediaStream::GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks)
 {
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
