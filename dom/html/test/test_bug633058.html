@@ -23,9 +23,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633058
 SimpleTest.waitForExplicitFinish();
 
 // Turn off Spatial Navigation so that the 'keypress' event fires.
-SpecialPowers.setBoolPref('snav.enabled', false);
-
 SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[['snav.enabled', false]]}, startTest);
+});
+function startTest() {
   var nbExpectedKeyPress = 8;
   var inputGotKeyPress = 0;
   var divGotKeyPress = 0;
@@ -60,8 +61,7 @@ SimpleTest.waitForFocus(function() {
     synthesizeKey('VK_RETURN', {});
   }, false);
   input.focus();
-});
-
+}
 </script>
 </pre>
 </body>

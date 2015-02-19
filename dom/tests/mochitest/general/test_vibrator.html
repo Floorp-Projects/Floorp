@@ -12,6 +12,7 @@
      navigator.vibrate throws an exception where appropriate. -->
 
 <script class="testbody" type="text/javascript;version=1.7">
+SimpleTest.waitForExplicitFinish();
 var result;
 function expectFailure(param) {
   result = navigator.vibrate(param);
@@ -23,7 +24,7 @@ function expectSuccess(param) {
   is(result, true, 'vibrate(' + param + ') must succeed.');
 }
 
-function tests() {
+function tests(aEnabled) {
   // Some edge cases that the bindings should handle for us.
   expectSuccess(null);
   expectSuccess(undefined);
@@ -68,24 +69,18 @@ function tests() {
     navigator.vibrate([100, 100]);
   }
   ok(true, "Didn't crash after issuing a lot of vibrate() calls.");
+  if(!aEnabled)
+    SimpleTest.finish();
 }
-
-var origVibratorEnabled = SpecialPowers.getBoolPref('dom.vibrator.enabled');
 
 // Test with the vibrator pref enabled.
-try {
-  SpecialPowers.setBoolPref('dom.vibrator.enabled', true);
-  tests();
-
-  // Everything should be the same when the vibrator is disabled -- in
-  // particular, a disabled vibrator shouldn't eat failures we'd otherwise
-  // observe.
-  SpecialPowers.setBoolPref('dom.vibrator.enabled', false);
-  tests();
-}
-finally {
-  SpecialPowers.setBoolPref('dom.vibrator.enabled', origVibratorEnabled);
-}
+SpecialPowers.pushPrefEnv({"set": [['dom.vibrator.enabled', true]]}, function() {
+  tests(true);
+  SpecialPowers.pushPrefEnv({"set": [['dom.vibrator.enabled', false]]}, tests(false));
+});
+// Everything should be the same when the vibrator is disabled -- in
+// particular, a disabled vibrator shouldn't eat failures we'd otherwise
+// observe.
 
 </script>
 </body>

@@ -14,34 +14,36 @@
 
 // Test to ensure NetworkStats is enabled but mozNetworkStats.getAvailableNetworks
 // does not work in content because mozNetworkStats is null when no permission.
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [['dom.mozNetworkStats.enabled', true]]}, runTest);
+  function runTest() {
+    SpecialPowers.removePermission("networkstats-manage", document);
 
-SpecialPowers.setBoolPref("dom.mozNetworkStats.enabled", true);
-SpecialPowers.removePermission("networkstats-manage", document);
+    ok(SpecialPowers.getBoolPref("dom.mozNetworkStats.enabled"),
+      "Preference 'dom.mozNetworkStats.enabled' is true.");
 
-ok(SpecialPowers.getBoolPref("dom.mozNetworkStats.enabled"),
-   "Preference 'dom.mozNetworkStats.enabled' is true.");
+    ok(!SpecialPowers.hasPermission("networkstats-manage", document),
+      "Has no permission 'networkstats-manage'.");
 
-ok(!SpecialPowers.hasPermission("networkstats-manage", document),
-   "Has no permission 'networkstats-manage'.");
+    ok('mozNetworkStats' in navigator, "navigator.mozNetworkStats should exist");
 
-ok('mozNetworkStats' in navigator, "navigator.mozNetworkStats should exist");
+    is(navigator.mozNetworkStats, null,
+      "mozNetworkStats should be null when no permission.");
 
-is(navigator.mozNetworkStats, null,
-   "mozNetworkStats should be null when no permission.");
+    var error;
+    try {
+      navigator.mozNetworkStats.getAvailableNetworks;
 
-var error;
-try {
-  navigator.mozNetworkStats.getAvailableNetworks;
+      ok(false,
+    	   "Accessing navigator.mozNetworkStats.getAvailableNetworks should throw!");
+        } catch (ex) {
+          error = ex;
+        }
 
-  ok(false,
-  	 "Accessing navigator.mozNetworkStats.getAvailableNetworks should throw!");
-} catch (ex) {
-  error = ex;
+   ok(error,
+     "Got an exception accessing navigator.mozNetworkStats.getAvailableNetworks");
+   SimpleTest.finish();
 }
-
-ok(error,
-   "Got an exception accessing navigator.mozNetworkStats.getAvailableNetworks");
-
 </script>
 </pre>
 </body>

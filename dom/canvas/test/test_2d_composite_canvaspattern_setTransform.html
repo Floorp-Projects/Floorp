@@ -8,7 +8,6 @@
 SimpleTest.waitForExplicitFinish();
 const Cc = SpecialPowers.Cc;
 const Cr = SpecialPowers.Cr;
-SpecialPowers.setBoolPref("canvas.path.enabled", true);
 
 function isPixel(ctx, x,y, r,g,b,a, d) {
 	var pos = x + "," + y;
@@ -67,7 +66,9 @@ function runTests() {
  SimpleTest.finish();
 }
 
-addLoadEvent(runTests);
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set":[["canvas.path.enabled", true]]}, runTests)
+});
 
 // Don't leak the world via the Path2D reference to its window.
 document.all;

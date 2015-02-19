@@ -11,13 +11,15 @@
   <script type="application/javascript;version=1.7">
   var gHostedManifestURL = 'http://test/tests/dom/datastore/tests/file_app.sjs?testToken=file_readonly.html';
   var gHostedManifestURL2 = 'http://example.com/tests/dom/datastore/tests/file_app.sjs?testToken=file_readonly.html&template=file_app2.template.webapp';
-  var gGenerator = runTest();
-
-  SpecialPowers.pushPermissions(
-    [{ "type": "browser", "allow": 1, "context": document },
-     { "type": "embed-apps", "allow": 1, "context": document },
-     { "type": "webapps-manage", "allow": 1, "context": document }],
-    function() { gGenerator.next() });
+  var gGenerator;
+  SpecialPowers.pushPrefEnv({"set": [["dom.mozBrowserFramesEnabled", true]]}, function() {
+    gGenerator = runTest();
+    SpecialPowers.pushPermissions(
+      [{ "type": "browser", "allow": 1, "context": document },
+       { "type": "embed-apps", "allow": 1, "context": document },
+       { "type": "webapps-manage", "allow": 1, "context": document }],
+       function() { gGenerator.next() });
+  });
 
   function continueTest() {
     try { gGenerator.next(); }
@@ -35,8 +37,6 @@
     }
 
     SpecialPowers.setAllAppsLaunchable(true);
-    SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
-
     SpecialPowers.autoConfirmAppInstall(continueTest);
     yield undefined;
 
@@ -98,7 +98,6 @@
   }
 
   function finish() {
-    SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
     SimpleTest.finish();
   }
 

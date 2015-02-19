@@ -108,44 +108,32 @@ function test6() {
   activationListener =
     function() {
       ok(true, "Untrusted DOMActivate should activate a link");
-      test7();
+      SpecialPowers.pushPrefEnv({"set":[["dom.disable_open_during_load", false]]}, test7);
     }
   dispatchDOMActivate(testlink);
 }
 
-var oldPref;
 function test7() {
-  oldPref = SpecialPowers.getBoolPref("dom.disable_open_during_load");
-  SpecialPowers.setBoolPref("dom.disable_open_during_load", false);
   testlink.href = "javascript:opener.activationListener(); window.close();";
   testlink.target = "_blank";
   activationListener =
     function() {
       ok(true, "Click() should activate a link");
-      setTimeout(test8, 0);
+      SpecialPowers.pushPrefEnv({"set":[["dom.disable_open_during_load", true]]}, test8);
     }
   testlink.click();
 }
 
 function test8() {
-  SpecialPowers.setBoolPref("dom.disable_open_during_load", true);
   testlink.href = "javascript:opener.activationListener(); window.close();";
   testlink.target = "_blank";
   activationListener =
     function() {
       ok(false, "Click() should not activate a link");
-      setTimeout(test9, 0);
     }
-  testlink.click();  
-  hitEventLoop(10, test9);
-} 
-
-
-function test9() {
-  SpecialPowers.setBoolPref("dom.disable_open_during_load", oldPref);
-  SimpleTest.finish();
+  testlink.click();
+  SimpleTest.executeSoon(SimpleTest.finish);
 }
-
 addLoadEvent(test1);
 
 </script>
