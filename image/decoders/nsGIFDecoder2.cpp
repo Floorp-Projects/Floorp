@@ -93,8 +93,8 @@ nsGIFDecoder2::nsGIFDecoder2(RasterImage* aImage)
 
 nsGIFDecoder2::~nsGIFDecoder2()
 {
-  moz_free(mGIFStruct.local_colormap);
-  moz_free(mGIFStruct.hold);
+  free(mGIFStruct.local_colormap);
+  free(mGIFStruct.hold);
 }
 
 void
@@ -1161,8 +1161,8 @@ nsGIFDecoder2::SetHold(const uint8_t* buf1, uint32_t count1,
                        uint32_t count2 /* = 0 */)
 {
   // We have to handle the case that buf currently points to hold
-  uint8_t* newHold = (uint8_t*) moz_malloc(std::max(uint32_t(MIN_HOLD_SIZE),
-                                            count1 + count2));
+  uint8_t* newHold = (uint8_t*) malloc(std::max(uint32_t(MIN_HOLD_SIZE),
+                                       count1 + count2));
   if (!newHold) {
     mGIFStruct.state = gif_error;
     return false;
@@ -1173,7 +1173,7 @@ nsGIFDecoder2::SetHold(const uint8_t* buf1, uint32_t count1,
     memcpy(newHold + count1, buf2, count2);
   }
 
-  moz_free(mGIFStruct.hold);
+  free(mGIFStruct.hold);
   mGIFStruct.hold = newHold;
   mGIFStruct.bytes_in_hold = count1 + count2;
   return true;

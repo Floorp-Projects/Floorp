@@ -603,7 +603,7 @@ MediaEngineGonkVideoSource::OnTakePictureComplete(uint8_t* aData, uint32_t aLeng
       : mPhotoDataLength(aLength)
     {
       mCallbacks.SwapElements(aCallbacks);
-      mPhotoData = (uint8_t*) moz_malloc(aLength);
+      mPhotoData = (uint8_t*) malloc(aLength);
       memcpy(mPhotoData, aData, mPhotoDataLength);
       mMimeType = aMimeType;
     }

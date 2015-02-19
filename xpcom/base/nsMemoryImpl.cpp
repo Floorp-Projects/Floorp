@@ -218,7 +218,7 @@ NS_Realloc(void* aPtr, size_t aSize)
 XPCOM_API(void)
 NS_Free(void* aPtr)
 {
-  moz_free(aPtr);
+  free(aPtr);
 }
 
 nsresult

@@ -28,7 +28,7 @@ nsPreloadedStream::nsPreloadedStream(nsIAsyncInputStream *aStream,
 
 nsPreloadedStream::~nsPreloadedStream()
 {
-    moz_free(mBuf);
+    free(mBuf);
 }
 
 NS_IMETHODIMP
