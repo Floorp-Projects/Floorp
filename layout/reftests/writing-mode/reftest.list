@@ -1,6 +1,7 @@
-# This directory contains tests for vertical text and logical layout coordinates
-# It should not be included in layout/reftests/reftest.list until vertical layout
-# is turned on
+# This directory contains tests for vertical text and logical layout coordinates.
+# They require the vertical-text pref to be true, otherwise lots of them will fail.
+default-preferences pref(layout.css.vertical-text.enabled,true)
+
 HTTP(..) == 1079154-1-vertical-rl-columns.html 1079154-1-vertical-rl-columns-ref.html
 == 1082844.html 1082844-ref.html
 HTTP(..) == 1083748.html 1083748-ref.html
@@ -70,7 +71,8 @@ skip-if(!winWidget||/^Windows\x20NT\x205\.1/.test(http.oscpu)) == ua-style-sheet
 skip-if(Android||B2G) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html
 skip-if(!(Android||B2G)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html
 == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
-fails == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html # bug 1123299
+== ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
+
 HTTP(..) == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
 HTTP(..) == 1127488-align-start-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
 HTTP(..) == 1127488-align-end-horizontal-tb-ltr.html 1127488-align-top-right-ref.html
