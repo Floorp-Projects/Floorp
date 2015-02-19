@@ -1,0 +1,24 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html id="html">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Bug 1019441: Marionette tests for selection carets (multiple lines)</title>
+  </head>
+  <body>
+  <style>
+    *
+    {
+      -moz-user-select:none;
+    }
+  </style>
+    <div><textarea id="textarea2" style="width: 10em; height: 6em; overflow: auto;">First Line&#13;&#10;&#13;&#10;Second Line&#13;&#10;&#13;&#10;Third Line</textarea></div>
+    <br />
+    <div style="width: 10em; height: 6em; overflow: auto; -moz-user-select:text" id="contenteditable2" contenteditable="true">First Line<br></br>Second Line<br></br>Third Line</div>
+    <br />
+    <div style="width: 10em; height: 6em; overflow: auto; -moz-user-select:text" id="content2">First Line<br></br>Second Line<br></br>Third Line</div>
+  </body>
+</html>
