@@ -33,7 +33,7 @@ function test() {
       resolve(win);
     }, true);
 
-    win.toggleSidebar(sidebarID, true);
+    win.SidebarUI.show(sidebarID);
 
     return promise;
   }
