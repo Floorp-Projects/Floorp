@@ -22,10 +22,11 @@ bar</textarea>
 /** Test for Bug 645914 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[["layout.word_select.eat_space_to_next_word", true],
+                                    ["browser.triple_click_selects_paragraph", false]]}, startTest);
+});
+function startTest() {
   var textarea = document.querySelector("textarea");
-  SpecialPowers.setBoolPref("layout.word_select.eat_space_to_next_word", true);
-  SpecialPowers.setBoolPref("browser.triple_click_selects_paragraph", false);
-
   textarea.selectionStart = textarea.selectionEnd = 0;
 
   // Simulate a double click on foo
@@ -54,11 +55,8 @@ SimpleTest.waitForFocus(function() {
   is(textarea.selectionStart, 0, "The start of the selection should be at the beginning of the text");
   is(textarea.selectionEnd, textarea.value.length, "The end of the selection should be the end of the paragraph");
 
-  SpecialPowers.clearUserPref("layout.word_select.eat_space_to_next_word");
-  SpecialPowers.clearUserPref("browser.triple_click_selects_paragraph");
   SimpleTest.finish();
-});
-
+}
 </script>
 </pre>
 </body>

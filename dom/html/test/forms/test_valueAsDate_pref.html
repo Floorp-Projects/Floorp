@@ -20,16 +20,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=874640
     var state = states.shift();
 
     if (state == 'end') {
-      SpecialPowers.setBoolPref("dom.experimental_forms", pref);
       SimpleTest.finish();
       return;
     }
 
-    SpecialPowers.setBoolPref("dom.experimental_forms", state === 'true');
-    iframe.src = 'data:text/html,<script>' +
+    SpecialPowers.pushPrefEnv({"set":[["dom.experimental_forms", state === 'true']]}, 
+      function() {
+        iframe.src = 'data:text/html,<script>' +
                  'parent.is("valueAsDate" in document.createElement("input"), ' +
                  state + ', "valueAsDate presence state should be ' + state + '");' +
                  '<\/script>'
+     });
   }
 
   </script>

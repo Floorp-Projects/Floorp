@@ -42,16 +42,18 @@ function begin() {
 
   // Request full-screen from a non trusted context (this script isn't a user
   // generated event!).
-  SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", true);
-  addFullscreenErrorContinuation(
-    function() {
-      ok(!document.mozFullScreen, "Should not grant request in non-trusted context");
-      // Test requesting full-screen mode in a long-running user-generated event handler.
-      // The request in the key handler should not be granted.
-      window.addEventListener("keypress", keyHandler, false);
-      synthesizeKey("VK_A", {});
-    });
-  document.body.mozRequestFullScreen();
+  SpecialPowers.pushPrefEnv({"set":[["full-screen-api.allow-trusted-requests-only", true]]}, startTest);
+  function startTest() {
+    addFullscreenErrorContinuation(
+      function() {
+        ok(!document.mozFullScreen, "Should not grant request in non-trusted context");
+        // Test requesting full-screen mode in a long-running user-generated event handler.
+        // The request in the key handler should not be granted.
+        window.addEventListener("keypress", keyHandler, false);
+        synthesizeKey("VK_A", {});
+      });
+    document.body.mozRequestFullScreen();
+ }
 }
 
 function keyHandler(event) {
@@ -69,14 +71,14 @@ function keyHandler(event) {
 
       // Disable the requirement for trusted contexts only, so the tests are easier
       // to write.
-      SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
-
-      // Create an iframe without a allowfullscreen attribute, whose contents requests
-      // full-screen. The request should be denied, and we should not receive a fullscreenchange
-      // event in this document.
-      var iframe = document.createElement("iframe");
-      iframe.src = "file_fullscreen-denied-inner.html";
-      document.body.appendChild(iframe);
+      SpecialPowers.pushPrefEnv({"set":[["full-screen-api.allow-trusted-requests-only", false]]}, function() {
+        // Create an iframe without a allowfullscreen attribute, whose contents requests
+        // full-screen. The request should be denied, and we should not receive a fullscreenchange
+        // event in this document.
+        var iframe = document.createElement("iframe");
+        iframe.src = "file_fullscreen-denied-inner.html";
+        document.body.appendChild(iframe);
+      });
     });
   document.body.mozRequestFullScreen();
 }

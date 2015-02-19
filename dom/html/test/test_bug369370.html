@@ -89,17 +89,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
         is(kidDoc.body.scrollTop,   0, "Checking scrollTop");
 
         kidWin.close();
-        SpecialPowers.clearUserPref("browser.enable_automatic_image_resizing");
         SimpleTest.finish();
     }
+    var kidWin;
+    var kidDoc;
 
     SimpleTest.waitForExplicitFinish();
-    SpecialPowers.setBoolPref("browser.enable_automatic_image_resizing", true);
-
-    var kidWin = window.open("bug369370-popup.png", "bug369370", "width=400,height=300");
-    var kidDoc; // will init onload
-    ok(kidWin, "opened child window");
-    kidWin.onload = childLoaded;
+    SpecialPowers.pushPrefEnv({"set":[["browser.enable_automatic_image_resizing", true]]}, function() {
+       kidWin = window.open("bug369370-popup.png", "bug369370", "width=400,height=300");
+       // will init onload
+       ok(kidWin, "opened child window");
+       kidWin.onload = childLoaded;
+    });
   </script>
 </body>
 </html>
