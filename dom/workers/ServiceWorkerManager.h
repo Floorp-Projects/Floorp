@@ -201,9 +201,6 @@ public:
   void
   FinishActivate(bool aSuccess);
 
-  void
-  QueueStateChangeEvent(ServiceWorkerInfo* aInfo,
-                        ServiceWorkerState aState) const;
 };
 
 /*
@@ -218,6 +215,11 @@ private:
   const ServiceWorkerRegistrationInfo* mRegistration;
   nsCString mScriptSpec;
   ServiceWorkerState mState;
+  // We hold rawptrs since the ServiceWorker constructor and destructor ensure
+  // addition and removal.
+  // There is a high chance of there being at least one ServiceWorker
+  // associated with this all the time.
+  nsAutoTArray<ServiceWorker*, 1> mInstances;
 
   ~ServiceWorkerInfo()
   { }
@@ -229,6 +231,12 @@ public:
   ScriptSpec() const
   {
     return mScriptSpec;
+  }
+
+  const nsCString&
+  Scope() const
+  {
+    return mRegistration->mScope;
   }
 
   void SetScriptSpec(const nsCString& aSpec)
@@ -253,23 +261,7 @@ public:
   }
 
   void
-  UpdateState(ServiceWorkerState aState)
-  {
-#ifdef DEBUG
-    // Any state can directly transition to redundant, but everything else is
-    // ordered.
-    if (aState != ServiceWorkerState::Redundant) {
-      MOZ_ASSERT_IF(mState == ServiceWorkerState::EndGuard_, aState == ServiceWorkerState::Installing);
-      MOZ_ASSERT_IF(mState == ServiceWorkerState::Installing, aState == ServiceWorkerState::Installed);
-      MOZ_ASSERT_IF(mState == ServiceWorkerState::Installed, aState == ServiceWorkerState::Activating);
-      MOZ_ASSERT_IF(mState == ServiceWorkerState::Activating, aState == ServiceWorkerState::Activated);
-    }
-    // Activated can only go to redundant.
-    MOZ_ASSERT_IF(mState == ServiceWorkerState::Activated, aState == ServiceWorkerState::Redundant);
-#endif
-    mState = aState;
-    mRegistration->QueueStateChangeEvent(this, mState);
-  }
+  UpdateState(ServiceWorkerState aState);
 
   // Only used to set initial state when loading from disk!
   void
@@ -277,6 +269,12 @@ public:
   {
     mState = aState;
   }
+
+  void
+  AppendWorker(ServiceWorker* aWorker);
+
+  void
+  RemoveWorker(ServiceWorker* aWorker);
 };
 
 #define NS_SERVICEWORKERMANAGER_IMPL_IID                 \
@@ -404,14 +402,12 @@ private:
 
   NS_IMETHOD
   CreateServiceWorkerForWindow(nsPIDOMWindow* aWindow,
-                               const nsACString& aScriptSpec,
-                               const nsACString& aScope,
+                               ServiceWorkerInfo* aInfo,
                                ServiceWorker** aServiceWorker);
 
   NS_IMETHOD
   CreateServiceWorker(nsIPrincipal* aPrincipal,
-                      const nsACString& aScriptSpec,
-                      const nsACString& aScope,
+                      ServiceWorkerInfo* aInfo,
                       ServiceWorker** aServiceWorker);
 
   NS_IMETHODIMP
