@@ -235,6 +235,10 @@ private:
   // See IsComposing().
   bool mIsComposing;
 
+  // If this is true, keydown and keyup events are dispatched even when there
+  // is a composition.
+  static bool sDispatchKeyEventsDuringComposition;
+
   nsresult BeginInputTransactionInternal(
              TextEventDispatcherListener* aListener,
              bool aForTests);
