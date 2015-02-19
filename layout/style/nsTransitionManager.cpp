@@ -176,8 +176,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     GetAnimationPlayers(aElement, pseudoType, false);
   if (!collection &&
       disp->mTransitionPropertyCount == 1 &&
-      disp->mTransitions[0].GetDelay() == 0.0f &&
-      disp->mTransitions[0].GetDuration() == 0.0f) {
+      disp->mTransitions[0].GetCombinedDuration() <= 0.0f) {
     return;
   }
 
@@ -227,9 +226,10 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   nsCSSPropertySet whichStarted;
   for (uint32_t i = disp->mTransitionPropertyCount; i-- != 0; ) {
     const StyleTransition& t = disp->mTransitions[i];
-    // Check delay and duration first, since they default to zero, and
-    // when they're both zero, we can ignore the transition.
-    if (t.GetDelay() != 0.0f || t.GetDuration() != 0.0f) {
+    // Check the combined duration (combination of delay and duration)
+    // first, since it defaults to zero, which means we can ignore the
+    // transition.
+    if (t.GetCombinedDuration() > 0.0f) {
       // We might have something to transition.  See if any of the
       // properties in question changed and are animatable.
       // FIXME: Would be good to find a way to share code between this
@@ -581,6 +581,8 @@ nsTransitionManager::ConsiderStartingTransition(
   }
 #endif
   if (haveCurrentTransition) {
+    players[currentIndex]->Cancel();
+    oldPT = nullptr; // Clear pointer so it doesn't dangle
     players[currentIndex] = player;
   } else {
     if (!players.AppendElement(player)) {

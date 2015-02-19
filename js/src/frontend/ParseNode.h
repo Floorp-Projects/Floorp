@@ -89,6 +89,7 @@ class UpvarCookie
     F(OBJECT) \
     F(CALL) \
     F(NAME) \
+    F(OBJECT_PROPERTY_NAME) \
     F(COMPUTED_NAME) \
     F(NUMBER) \
     F(STRING) \

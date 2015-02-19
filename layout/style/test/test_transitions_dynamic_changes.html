@@ -18,6 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=525530
 
 var p = document.getElementById("display");
 var cs = getComputedStyle(p, "");
+var utils = SpecialPowers.DOMWindowUtils;
 
 p.style.transitionProperty = "all";
 p.style.transitionDuration = "4s";
@@ -52,6 +53,25 @@ is(cs.textIndent, "50px",
 p.style.textIndent = "0px";
 is(cs.textIndent, "0px",
    "changing property after changing duration and delay stops transition");
+
+/** Test for Bug 1133375 */
+p.style.transitionDuration = "1s";
+p.style.transitionDelay = "-1s";
+p.style.transitionProperty = "text-indent";
+var endCount = 0;
+function incrementEndCount(event) { ++endCount; }
+p.addEventListener("transitionend", incrementEndCount, false);
+utils.advanceTimeAndRefresh(0);
+p.style.textIndent = "100px";
+is(cs.textIndent, "100px", "value should now be 100px");
+utils.advanceTimeAndRefresh(10);
+is(endCount, 0, "should not have started transition when combined duration less than or equal to 0");
+p.style.transitionDelay = "-2s";
+p.style.textIndent = "0";
+is(cs.textIndent, "0px", "value should now be 0px");
+utils.advanceTimeAndRefresh(10);
+is(endCount, 0, "should not have started transition when combined duration less than or equal to 0");
+utils.restoreNormalRefresh();
 
 </script>
 </pre>

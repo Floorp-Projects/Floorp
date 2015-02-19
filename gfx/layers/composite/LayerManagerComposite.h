@@ -441,6 +441,13 @@ public:
   bool HasLayerBeenComposited() { return mLayerComposited; }
   nsIntRect GetClearRect() { return mClearRect; }
 
+  /**
+   * Return the part of the visible region that has been fully rendered.
+   * While progressive drawing is in progress this region will be
+   * a subset of the shadow visible region.
+   */
+  nsIntRegion GetFullyRenderedRegion();
+
 protected:
   gfx::Matrix4x4 mShadowTransform;
   nsIntRegion mShadowVisibleRegion;
