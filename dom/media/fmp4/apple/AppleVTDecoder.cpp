@@ -305,6 +305,20 @@ AppleVTDecoder::InitializeSession()
     return NS_ERROR_FAILURE;
   }
 
+  if (AppleVTLinker::skPropUsingHWAccel) {
+    CFBooleanRef isUsingHW = nullptr;
+    rv = VTSessionCopyProperty(mSession,
+                               AppleVTLinker::skPropUsingHWAccel,
+                               kCFAllocatorDefault,
+                               &isUsingHW);
+    if (rv != noErr) {
+      LOG("AppleVTDecoder: system doesn't support hardware acceleration");
+    }
+    LOG("AppleVTDecoder: %s hardware accelerated decoding",
+        (rv == noErr && isUsingHW == kCFBooleanTrue) ? "using" : "not using");
+  } else {
+    LOG("AppleVTDecoder: couldn't determine hardware acceleration status.");
+  }
   return NS_OK;
 }
 
@@ -356,11 +370,11 @@ AppleVTDecoder::CreateDecoderExtensions()
 CFDictionaryRef
 AppleVTDecoder::CreateDecoderSpecification()
 {
-  if (!AppleVTLinker::skPropHWAccel) {
+  if (!AppleVTLinker::skPropEnableHWAccel) {
     return nullptr;
   }
 
-  const void* specKeys[] = { AppleVTLinker::skPropHWAccel };
+  const void* specKeys[] = { AppleVTLinker::skPropEnableHWAccel };
   const void* specValues[] = { kCFBooleanTrue };
   static_assert(ArrayLength(specKeys) == ArrayLength(specValues),
                 "Non matching keys/values array size");
