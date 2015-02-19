@@ -1,8 +1,5 @@
 default-preferences pref(layout.css.ruby.enabled,true)
 
-== autohiding-1.html autohiding-1-ref.html
-== autohiding-2.html autohiding-2-ref.html
-== autohiding-3.html autohiding-3-ref.html
 == box-generation-1.html box-generation-1-ref.html
 == box-generation-2.html box-generation-2-ref.html
 == box-generation-3.html box-generation-3-ref.html
