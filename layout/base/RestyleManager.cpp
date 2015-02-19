@@ -831,8 +831,15 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
                    nsChangeHint_UpdateParentOverflow |
                    nsChangeHint_UpdateSubtreeOverflow))) {
         if (hint & nsChangeHint_UpdateSubtreeOverflow) {
-          // FIXME (bug 1133392): Continuations?
-          AddSubtreeToOverflowTracker(frame);
+          for (nsIFrame *cont = frame; cont; cont =
+                 nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
+            AddSubtreeToOverflowTracker(cont);
+          }
+          // The work we just did in AddSubtreeToOverflowTracker
+          // subsumes some of the other hints:
+          hint = NS_SubtractHint(hint,
+                   NS_CombineHint(nsChangeHint_UpdateOverflow,
+                                  nsChangeHint_UpdatePostTransformOverflow));
         }
         if (hint & nsChangeHint_ChildrenOnlyTransform) {
           // The overflow areas of the child frames need to be updated:
@@ -866,15 +873,13 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         if (!(frame->GetStateBits() &
               (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
           if (hint & (nsChangeHint_UpdateOverflow |
-                      nsChangeHint_UpdateSubtreeOverflow |
                       nsChangeHint_UpdatePostTransformOverflow)) {
             OverflowChangedTracker::ChangeKind changeKind;
             // If we have both nsChangeHint_UpdateOverflow and
             // nsChangeHint_UpdatePostTransformOverflow,
             // CHILDREN_CHANGED is selected as it is
             // strictly stronger.
-            if (hint & (nsChangeHint_UpdateOverflow |
-                        nsChangeHint_UpdateSubtreeOverflow)) {
+            if (hint & nsChangeHint_UpdateOverflow) {
               changeKind = OverflowChangedTracker::CHILDREN_CHANGED;
             } else {
               changeKind = OverflowChangedTracker::TRANSFORM_CHANGED;

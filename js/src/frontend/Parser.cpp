@@ -7008,26 +7008,30 @@ template <>
 ParseNode*
 Parser<FullParseHandler>::legacyArrayComprehension(ParseNode *array)
 {
-    array->setKind(PNK_ARRAYCOMP);
-
-    // Remove the single element from array's linked list, leaving us with an
-    // empty array literal and a comprehension expression.
+    // Discard our presumed array literal containing only a single element, and
+    // instead return an array comprehension node.  Extract the few bits of
+    // information needed from the array literal, then free it.
+    MOZ_ASSERT(array->isKind(PNK_ARRAY));
     MOZ_ASSERT(array->pn_count == 1);
-    ParseNode *bodyExpr = array->last();
+
+    uint32_t arrayBegin = handler.getPosition(array).begin;
+    uint32_t blockid = array->pn_blockid;
+
+    ParseNode *bodyExpr = array->pn_head;
     array->pn_count = 0;
     array->pn_tail = &array->pn_head;
     *array->pn_tail = nullptr;
 
-    ParseNode *comp = legacyComprehensionTail(bodyExpr, array->pn_blockid, NotGenerator,
-                                              nullptr, LegacyComprehensionHeadBlockScopeDepth(pc));
+    handler.freeTree(array);
+
+    ParseNode *comp = legacyComprehensionTail(bodyExpr, blockid, NotGenerator, nullptr,
+                                              LegacyComprehensionHeadBlockScopeDepth(pc));
     if (!comp)
         return null();
 
     MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_AFTER_ARRAY_COMPREHENSION);
 
-    TokenPos p = handler.getPosition(array);
-    p.end = pos().end;
-    return handler.newArrayComprehension(comp, array->pn_blockid, p);
+    return handler.newArrayComprehension(comp, blockid, TokenPos(arrayBegin, pos().end));
 }
 
 template <>
@@ -7770,8 +7774,7 @@ Parser<ParseHandler>::arrayInitializer()
                     return null();
                 if (foldConstants && !FoldConstants(context, &element, this))
                     return null();
-                if (!handler.addArrayElement(literal, element))
-                    return null();
+                handler.addArrayElement(literal, element);
             }
 
             if (tt != TOK_COMMA) {
@@ -7936,7 +7939,7 @@ Parser<ParseHandler>::objectLiteral()
                 op = atom == context->names().get ? JSOP_INITPROP_GETTER
                                                   : JSOP_INITPROP_SETTER;
             } else {
-                propname = handler.newIdentifier(atom, pos());
+                propname = handler.newObjectLiteralPropertyName(atom, pos());
                 if (!propname)
                     return null();
                 break;
@@ -7949,7 +7952,7 @@ Parser<ParseHandler>::objectLiteral()
                 return null();
             if (tt == TOK_NAME) {
                 atom = tokenStream.currentName();
-                propname = newName(atom->asPropertyName());
+                propname = handler.newObjectLiteralPropertyName(atom, pos());
                 if (!propname)
                     return null();
             } else if (tt == TOK_STRING) {
@@ -7982,7 +7985,7 @@ Parser<ParseHandler>::objectLiteral()
             } else {
                 // Not an accessor property after all.
                 tokenStream.ungetToken();
-                propname = handler.newIdentifier(atom, pos());
+                propname = handler.newObjectLiteralPropertyName(atom, pos());
                 if (!propname)
                     return null();
                 op = JSOP_INITPROP;
@@ -8061,20 +8064,16 @@ Parser<ParseHandler>::objectLiteral()
                     report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
                     return null();
                 }
-                if (!abortIfSyntaxParser())
-                    return null();
+
                 tokenStream.ungetToken();
                 if (!tokenStream.checkForKeyword(atom, nullptr))
                     return null();
-                PropertyName *name = handler.isName(propname);
-                MOZ_ASSERT(atom);
-                propname = newName(name);
-                if (!propname)
+
+                Node nameExpr = identifierName();
+                if (!nameExpr)
                     return null();
-                Node ident = identifierName();
-                if (!ident)
-                    return null();
-                if (!handler.addPropertyDefinition(literal, propname, ident, true))
+
+                if (!handler.addShorthand(literal, propname, nameExpr))
                     return null();
             } else if (tt == TOK_LP) {
                 tokenStream.ungetToken();

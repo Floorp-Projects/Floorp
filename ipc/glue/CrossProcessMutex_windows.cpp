@@ -10,7 +10,8 @@
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
 
-using namespace base;
+using base::GetCurrentProcessHandle;
+using base::ProcessHandle;
 
 namespace mozilla {
 

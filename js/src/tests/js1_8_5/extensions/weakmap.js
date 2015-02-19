@@ -83,21 +83,38 @@ function test()
     var map = new WeakMap();
 
     check(function() !map.has(key));
-    map.set(key, 42);
+    check(function() map.delete(key) == false);
+    check(function() map.set(key, 42) === map);
     check(function() map.get(key) == 42);
     check(function() typeof map.get({}) == "undefined");
-    check(function() map.get({}, "foo") == "foo");
+    check(function() map.get({}, "foo") == undefined);
 
     gc(); gc(); gc();
 
     check(function() map.get(key) == 42);
-    map.delete(key);
+    check(function() map.delete(key) == true);
+    check(function() map.delete(key) == false);
+    check(function() map.delete({}) == false);
+
     check(function() typeof map.get(key) == "undefined");
     check(function() !map.has(key));
+    check(function() map.delete(key) == false);
 
     var value = { };
-    map.set(new Object(), value);
+    check(function() map.set(new Object(), value) === map);
     gc(); gc(); gc();
+
+    check(function() map.has("non-object key") == false);
+    check(function() map.has() == false);
+    check(function() map.get("non-object key") == undefined);
+    check(function() map.get() == undefined);
+    check(function() map.delete("non-object key") == false);
+    check(function() map.delete() == false);
+
+    check(function() map.set(key) === map);
+    check(function() map.get(key) == undefined);
+
+    checkThrows(function() map.set("non-object key", value));
 
     print ("done");
 
