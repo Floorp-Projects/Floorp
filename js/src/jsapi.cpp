@@ -138,14 +138,17 @@ ErrorTakesIdArgument(unsigned msg)
 }
 
 JS_PUBLIC_API(bool)
-JS::ObjectOpResult::reportError(JSContext *cx, HandleId id)
+JS::ObjectOpResult::reportError(JSContext *cx, HandleObject obj, HandleId id)
 {
     static_assert(unsigned(OkCode) == unsigned(JSMSG_NOT_AN_ERROR),
                   "unsigned value of OkCode must not be an error code");
     MOZ_ASSERT(!ok());
-    MOZ_ASSERT(code_ != Uninitialized);
 
-    if (ErrorTakesIdArgument(code_)) {
+    if (code_ == JSMSG_OBJECT_NOT_EXTENSIBLE) {
+        RootedValue val(cx, ObjectValue(*obj));
+        ReportValueErrorFlags(cx, JSREPORT_ERROR, code_, JSDVG_IGNORE_STACK, val,
+                              NullPtr(), nullptr, nullptr);
+    } else if (ErrorTakesIdArgument(code_)) {
         RootedValue idv(cx, IdToValue(id));
         RootedString str(cx, ValueToSource(cx, idv));
         if (!str)
