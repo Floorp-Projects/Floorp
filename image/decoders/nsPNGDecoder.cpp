@@ -661,7 +661,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
       (channels <= 2 || interlace_type == PNG_INTERLACE_ADAM7)) {
     uint32_t bpp[] = { 0, 3, 4, 3, 4 };
     decoder->mCMSLine =
-      (uint8_t*)moz_malloc(bpp[channels] * width);
+      (uint8_t*)malloc(bpp[channels] * width);
     if (!decoder->mCMSLine) {
       png_longjmp(decoder->mPNG, 5); // NS_ERROR_OUT_OF_MEMORY
     }
@@ -669,7 +669,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 
   if (interlace_type == PNG_INTERLACE_ADAM7) {
     if (height < INT32_MAX / (width * channels)) {
-      decoder->interlacebuf = (uint8_t*)moz_malloc(channels * width * height);
+      decoder->interlacebuf = (uint8_t*)malloc(channels * width * height);
     }
     if (!decoder->interlacebuf) {
       png_longjmp(decoder->mPNG, 5); // NS_ERROR_OUT_OF_MEMORY

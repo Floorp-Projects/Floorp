@@ -31,8 +31,8 @@ if CONFIG['_MSC_VER']:
     CFLAGS += ['-Zl']
 
 # Code with FINAL_LIBRARY = 'xul' shouldn't do this, but the code
-# here doesn't use moz_malloc functions anyways, while not setting
+# here doesn't use malloc functions anyways, while not setting
 # MOZ_NO_MOZALLOC makes the code include mozalloc.h, which includes
 # inline operator new definitions that MSVC linker doesn't strip
-# when linking the xpt tests without mozalloc.
+# when linking the xpt tests.
 DEFINES['MOZ_NO_MOZALLOC'] = True

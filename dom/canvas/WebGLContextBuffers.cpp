@@ -174,7 +174,7 @@ WebGLContext::BufferData(GLenum target, WebGLsizeiptr size, GLenum usage)
     if (!boundBuffer)
         return ErrorInvalidOperation("bufferData: no buffer bound!");
 
-    UniquePtr<uint8_t> zeroBuffer((uint8_t*)moz_calloc(size, 1));
+    UniquePtr<uint8_t> zeroBuffer((uint8_t*)calloc(size, 1));
     if (!zeroBuffer)
         return ErrorOutOfMemory("bufferData: out of memory");
 

@@ -20,7 +20,7 @@ public:
 
   ~BlobSet()
   {
-    moz_free(mData);
+    free(mData);
   }
 
   nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
@@ -52,7 +52,7 @@ protected:
     if (!bufferLen.isValid())
       return false;
 
-    void* data = moz_realloc(mData, bufferLen.value());
+    void* data = realloc(mData, bufferLen.value());
     if (!data)
       return false;
 

@@ -95,7 +95,7 @@ TryAllocAlignedBytes(size_t aSize)
              nullptr : ptr;
 #else
     // Oh well, hope that luck is with us in the allocator
-    return moz_malloc(aSize);
+    return malloc(aSize);
 #endif
 }
 

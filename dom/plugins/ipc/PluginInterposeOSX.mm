@@ -265,13 +265,13 @@ NSCursorInfo::NSCursorInfo(const Cursor* aCursor)
     }
   }
 
-  moz_free(bitmap);
+  free(bitmap);
 }
 
 NSCursorInfo::~NSCursorInfo()
 {
   if (mCustomImageData) {
-    moz_free(mCustomImageData);
+    free(mCustomImageData);
   }
 }
 
@@ -438,7 +438,7 @@ NSCursor* NSCursorInfo::GetTransparentCursor() const
     }
   }
 
-  moz_free(data);
+  free(data);
 
   // Fall back to an arrow cursor if (for some reason) the above code failed.
   if (!retval) {
@@ -528,7 +528,7 @@ void NSCursorInfo::SetHotSpot(nsPoint aHotSpot)
 void NSCursorInfo::SetCustomImageData(uint8_t* aData, uint32_t aDataLength)
 {
   if (mCustomImageData) {
-    moz_free(mCustomImageData);
+    free(mCustomImageData);
   }
   if (aDataLength) {
     mCustomImageData = (uint8_t*) moz_xmalloc(aDataLength);

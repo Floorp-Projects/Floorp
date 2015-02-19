@@ -184,7 +184,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
     NS_ASSERTION(mContextStack.Depth() == 0, "Context stack not empty?");
     mContextStack.Clear();
 
-    moz_free(mText);
+    free(mText);
 }
 
 //----------------------------------------------------------------------
@@ -1051,7 +1051,7 @@ XULContentSinkImpl::AddText(const char16_t* aText,
 {
   // Create buffer when we first need it
   if (0 == mTextSize) {
-      mText = (char16_t *) moz_malloc(sizeof(char16_t) * 4096);
+      mText = (char16_t *) malloc(sizeof(char16_t) * 4096);
       if (nullptr == mText) {
           return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1074,7 +1074,7 @@ XULContentSinkImpl::AddText(const char16_t* aText,
       }
       else {
         mTextSize += aLength;
-        mText = (char16_t *) moz_realloc(mText, sizeof(char16_t) * mTextSize);
+        mText = (char16_t *) realloc(mText, sizeof(char16_t) * mTextSize);
         if (nullptr == mText) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
