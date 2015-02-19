@@ -5,6 +5,7 @@
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcher.h"
+#include "mozilla/TextEvents.h"
 #include "mozilla/TextInputProcessor.h"
 #include "nsIDocShell.h"
 #include "nsIWidget.h"
@@ -428,6 +429,121 @@ TextInputProcessor::OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher)
   MOZ_ASSERT(aTextEventDispatcher == mDispatcher,
              "Wrong TextEventDispatcher notifies this");
   UnlinkFromTextEventDispatcher();
+}
+
+nsresult
+TextInputProcessor::PrepareKeyboardEventToDispatch(
+                      WidgetKeyboardEvent& aKeyboardEvent,
+                      uint32_t aKeyFlags)
+{
+  if (NS_WARN_IF(aKeyboardEvent.mCodeNameIndex == CODE_NAME_INDEX_USE_STRING)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  if ((aKeyFlags & KEY_NON_PRINTABLE_KEY) &&
+      NS_WARN_IF(aKeyboardEvent.mKeyNameIndex == KEY_NAME_INDEX_USE_STRING)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  if ((aKeyFlags & KEY_FORCE_PRINTABLE_KEY) &&
+      aKeyboardEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING) {
+    aKeyboardEvent.GetDOMKeyName(aKeyboardEvent.mKeyValue);
+    aKeyboardEvent.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TextInputProcessor::Keydown(nsIDOMKeyEvent* aDOMKeyEvent,
+                            uint32_t aKeyFlags,
+                            uint8_t aOptionalArgc,
+                            bool* aDoDefault)
+{
+  MOZ_RELEASE_ASSERT(aDoDefault, "aDoDefault must not be nullptr");
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  if (!aOptionalArgc) {
+    aKeyFlags = 0;
+  }
+  *aDoDefault = false;
+  if (NS_WARN_IF(!aDOMKeyEvent)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  WidgetKeyboardEvent* originalKeyEvent =
+    aDOMKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
+  if (NS_WARN_IF(!originalKeyEvent)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  // We shouldn't modify the internal WidgetKeyboardEvent.
+  WidgetKeyboardEvent keyEvent(*originalKeyEvent);
+  nsresult rv = PrepareKeyboardEventToDispatch(keyEvent, aKeyFlags);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  *aDoDefault = !(aKeyFlags & KEY_DEFAULT_PREVENTED);
+  // XXX Ignore specified modifier flags for now
+  keyEvent.modifiers = MODIFIER_NONE;
+
+  nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
+  rv = IsValidStateForComposition();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsEventStatus status = *aDoDefault ? nsEventStatus_eIgnore :
+                                       nsEventStatus_eConsumeNoDefault;
+  if (!mDispatcher->DispatchKeyboardEvent(NS_KEY_DOWN, keyEvent, status)) {
+    // If keydown event isn't dispatched, we don't need to dispatch keypress
+    // events.
+    return NS_OK;
+  }
+
+  mDispatcher->MaybeDispatchKeypressEvents(keyEvent, status);
+
+  *aDoDefault = (status != nsEventStatus_eConsumeNoDefault);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TextInputProcessor::Keyup(nsIDOMKeyEvent* aDOMKeyEvent,
+                          uint32_t aKeyFlags,
+                          uint8_t aOptionalArgc,
+                          bool* aDoDefault)
+{
+  MOZ_RELEASE_ASSERT(aDoDefault, "aDoDefault must not be nullptr");
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  if (!aOptionalArgc) {
+    aKeyFlags = 0;
+  }
+  *aDoDefault = false;
+  if (NS_WARN_IF(!aDOMKeyEvent)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  WidgetKeyboardEvent* originalKeyEvent =
+    aDOMKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
+  if (NS_WARN_IF(!originalKeyEvent)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  // We shouldn't modify the internal WidgetKeyboardEvent.
+  WidgetKeyboardEvent keyEvent(*originalKeyEvent);
+  nsresult rv = PrepareKeyboardEventToDispatch(keyEvent, aKeyFlags);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  *aDoDefault = !(aKeyFlags & KEY_DEFAULT_PREVENTED);
+  // XXX Ignore specified modifier flags for now
+  keyEvent.modifiers = MODIFIER_NONE;
+
+  nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
+  rv = IsValidStateForComposition();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsEventStatus status = *aDoDefault ? nsEventStatus_eIgnore :
+                                       nsEventStatus_eConsumeNoDefault;
+  mDispatcher->DispatchKeyboardEvent(NS_KEY_UP, keyEvent, status);
+  *aDoDefault = (status != nsEventStatus_eConsumeNoDefault);
+  return NS_OK;
 }
 
 } // namespace mozilla

@@ -219,6 +219,44 @@ function runBeginInputTransactionMethodTests()
        description + "The input element should not have commit string");
   }
 
+  // Let's check if keydown() throws an exception after ownership is stolen.
+  ok(TIP1.beginInputTransactionForTests(window),
+     description + "TIP1.beginInputTransactionForTests() should succeed because there is no composition");
+  ok(TIP2.beginInputTransactionForTests(window),
+     description + "TIP2.beginInputTransactionForTests() should succeed because there is no composition");
+  input.value = "";
+  try {
+    var keyF = new KeyboardEvent("", { key: "f", code: "KeyF", keyCode: KeyboardEvent.DOM_VK_F });
+    TIP1.keydown(keyF);
+    ok(false,
+       description + "TIP1.keydown(keyF) should cause throwing an exception because TIP2 took the ownership");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_NOT_INITIALIZED"),
+       description + "TIP1.keydown(keyF) should cause throwing an exception including NS_ERROR_NOT_INITIALIZED");
+  } finally {
+    is(input.value, "",
+       description + "The input element should not be modified");
+  }
+
+  // Let's check if keyup() throws an exception after ownership is stolen.
+  ok(TIP1.beginInputTransactionForTests(window),
+     description + "TIP1.beginInputTransactionForTests() should succeed because there is no composition");
+  ok(TIP2.beginInputTransactionForTests(window),
+     description + "TIP2.beginInputTransactionForTests() should succeed because there is no composition");
+  input.value = "";
+  try {
+    var keyF = new KeyboardEvent("", { key: "f", code: "KeyF", keyCode: KeyboardEvent.DOM_VK_F });
+    TIP1.keyup(keyF);
+    ok(false,
+       description + "TIP1.keyup(keyF) should cause throwing an exception because TIP2 took the ownership");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_NOT_INITIALIZED"),
+       description + "TIP1.keyup(keyF) should cause throwing an exception including NS_ERROR_NOT_INITIALIZED");
+  } finally {
+    is(input.value, "",
+       description + "The input element should not be modified");
+  }
+
   // aCallback of nsITextInputProcessor.beginInputTransaction() must not be omitted.
   try {
     TIP1.beginInputTransaction(window);
@@ -525,6 +563,357 @@ function runCompositionTests()
   window.removeEventListener("compositionend", handler, false);
 }
 
+function runKeyTests()
+{
+  var description = "runKeyTests(): ";
+
+  var TIP = createTIP();
+  ok(TIP.beginInputTransactionForTests(window),
+     description + "TIP.beginInputTransactionForTests() should succeed");
+
+  var events;
+  var doPreventDefaults;
+
+  function reset()
+  {
+    events = [];
+    doPreventDefaults = [];
+  }
+
+  function handler(aEvent)
+  {
+    events.push(aEvent);
+    if (doPreventDefaults.indexOf(aEvent.type) >= 0) {
+      aEvent.preventDefault();
+    }
+  }
+
+  function checkKeyAttrs(aMethodDescription, aEvent, aExpectedData)
+  {
+    var desc = description + aMethodDescription + ", type=\"" + aEvent.type + "\", key=\"" + aEvent.key + "\", code=\"" + aEvent.code + "\": ";
+    var defaultValues = {
+      key: "Unidentified", code: "", keyCode: 0, charCode: 0,
+      location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD, repeat: false, isComposing: false,
+      shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+      defaultPrevented: false
+    };
+    var modifiers = [
+      "AltGraph", "CapsLock", "Fn", "NumLock", "OS", "ScrollLock", "Symbol"
+    ];
+    function expectedValue(aAttr)
+    {
+      return aExpectedData[aAttr] !== undefined ? aExpectedData[aAttr] : defaultValues[aAttr];
+    }
+    is(aEvent.type, aExpectedData.type,
+       desc + " should cause keydown event");
+    if (aEvent.type != aExpectedData.type) {
+      return;
+    }
+    is(aEvent.defaultPrevented, expectedValue("defaultPrevented"),
+       desc + ".defaultPrevented is wrong");
+    is(aEvent.key, expectedValue("key"),
+       desc + ".key is wrong");
+    if (SpecialPowers.getBoolPref("dom.keyboardevent.code.enabled")) {
+      is(aEvent.code, expectedValue("code"),
+         desc + ".code is wrong");
+    }
+    is(aEvent.location, expectedValue("location"),
+       desc + ".location is wrong");
+    is(aEvent.repeat, expectedValue("repeat"),
+       desc + ".repeat is wrong");
+    is(aEvent.isComposing, expectedValue("isComposing"),
+       desc + ".isComposing is wrong");
+    is(aEvent.keyCode, expectedValue("keyCode"),
+       desc + ".keyCode is wrong");
+    is(aEvent.charCode, expectedValue("charCode"),
+       desc + ".charCode is wrong");
+    is(aEvent.shiftKey, expectedValue("shiftKey"),
+       desc + ".shiftKey is wrong");
+    is(aEvent.ctrlKey, expectedValue("ctrlKey"),
+       desc + ".ctrlKey is wrong");
+    is(aEvent.altKey, expectedValue("altKey"),
+       desc + ".altKey is wrong");
+    is(aEvent.metaKey, expectedValue("metaKey"),
+       desc + ".metaKey is wrong");
+    for (var i = 0; i < modifiers.length; i++) {
+      is(aEvent.getModifierState(modifiers[i]), aExpectedData[modifiers[i]] !== undefined ? aExpectedData[modifiers[i]] : false,
+         desc + ".getModifierState(\"" + modifiers[i] + "\") is wrong");
+    }
+  }
+
+  window.addEventListener("keydown", handler, false);
+  window.addEventListener("keypress", handler, false);
+  window.addEventListener("keyup", handler, false);
+
+  input.value = "";
+  input.focus();
+
+
+  // Printable key test:
+  // Emulates pressing 'a' key.
+  var keyA = new KeyboardEvent("", { key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A });
+
+  reset();
+  var doDefaultKeydown = TIP.keydown(keyA);
+
+  ok(!doDefaultKeydown,
+     description + "TIP.keydown(keyA) should return false because the keypress event should be consumed by the input element");
+  is(events.length, 2,
+     description + "TIP.keydown(keyA) should cause keydown and keypress event");
+  checkKeyAttrs("TIP.keydown(keyA)", events[0],
+                { type: "keydown",  key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A, charCode: 0 });
+  checkKeyAttrs("TIP.keydown(keyA)", events[1],
+                { type: "keypress", key: "a", code: "KeyA", keyCode: 0,                      charCode: "a".charCodeAt(0), defaultPrevented: true });
+  is(input.value, "a",
+     description + "input.value should be \"a\" which is inputted by TIP.keydown(keyA)");
+
+  // Emulates releasing 'a' key.
+  reset();
+  var doDefaultKeyup = TIP.keyup(keyA);
+  ok(doDefaultKeyup,
+     description + "TIP.keyup(keyA) should return true");
+  is(events.length, 1,
+     description + "TIP.keyup(keyA) should cause keyup event");
+  checkKeyAttrs("TIP.keyup(keyA)", events[0],
+                { type: "keyup",      key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A, charCode: 0 });
+  is(input.value, "a",
+     description + "input.value should stay \"a\" which was inputted by TIP.keydown(keyA)");
+
+
+  // Non-printable key test:
+  // Emulates pressing Enter key.
+  var keyEnter = new KeyboardEvent("", { key: "Enter", code: "Enter" });
+
+  reset();
+  doDefaultKeydown = TIP.keydown(keyEnter);
+
+  ok(doDefaultKeydown,
+     description + "TIP.keydown(keyEnter) should return true");
+  is(events.length, 2,
+     description + "TIP.keydown(keyEnter) should cause keydown and keypress event");
+  checkKeyAttrs("TIP.keydown(keyEnter)", events[0],
+                { type: "keydown",  key: "Enter", code: "Enter" });
+  checkKeyAttrs("TIP.keydown(keyEnter)", events[1],
+                { type: "keypress", key: "Enter", code: "Enter" });
+  is(input.value, "a",
+     description + "input.value should stay \"a\" which was inputted by TIP.keydown(keyA)");
+
+  // Emulates releasing Enter key.
+  reset();
+  doDefaultKeyup = TIP.keyup(keyEnter);
+  ok(doDefaultKeyup,
+     description + "TIP.keyup(keyEnter) should return true");
+  is(events.length, 1,
+     description + "TIP.keyup(keyEnter) should cause keyup event");
+  checkKeyAttrs("TIP.keyup(keyEnter)", events[0],
+                { type: "keyup",      key: "Enter", code: "Enter" });
+  is(input.value, "a",
+     description + "input.value should stay \"a\" which was inputted by TIP.keydown(keyA)");
+
+
+  // KEY_DEFAULT_PREVENTED should cause defaultPrevented = true and not cause keypress event
+  var keyB = new KeyboardEvent("", { key: "b", code: "KeyB", keyCode: KeyboardEvent.DOM_VK_B });
+
+  reset();
+  doDefaultKeydown = TIP.keydown(keyB, TIP.KEY_DEFAULT_PREVENTED);
+  doDefaultKeyup   = TIP.keyup(keyB, TIP.KEY_DEFAULT_PREVENTED);
+
+  ok(!doDefaultKeydown,
+     description + "TIP.keydown(keyB, TIP.KEY_DEFAULT_PREVENTED) should return false because it's marked as consumed at dispatching the event");
+  ok(!doDefaultKeyup,
+     description + "TIP.keyup(keyB, TIP.KEY_DEFAULT_PREVENTED) should return false because it's marked as consumed at dispatching the event");
+  is(events.length, 2,
+     description + "TIP.keydown(keyB, TIP.KEY_DEFAULT_PREVENTED) and TIP.keyup(keyB, TIP.KEY_DEFAULT_PREVENTED) should cause keydown and keyup event");
+  checkKeyAttrs("TIP.keydown(keyB, TIP.KEY_DEFAULT_PREVENTED) and TIP.keyup(keyB, TIP.KEY_DEFAULT_PREVENTED)", events[0],
+                { type: "keydown", key: "b", code: "KeyB", keyCode: KeyboardEvent.DOM_VK_B, defaultPrevented: true });
+  checkKeyAttrs("TIP.keydown(keyB, TIP.KEY_DEFAULT_PREVENTED) and TIP.keyup(keyB, TIP.KEY_DEFAULT_PREVENTED)", events[1],
+                { type: "keyup",   key: "b", code: "KeyB", keyCode: KeyboardEvent.DOM_VK_B, defaultPrevented: true });
+  is(input.value, "a",
+     description + "input.value shouldn't be modified by default prevented key events");
+
+  // Assume that KeyX causes inputting text "abc"
+  input.value = "";
+  var keyABC = new KeyboardEvent("", { key: "abc", code: "KeyX", keyCode: KeyboardEvent.DOM_VK_A });
+
+  reset();
+  doDefaultKeydown = TIP.keydown(keyABC);
+  doDefaultKeyup   = TIP.keyup(keyABC);
+
+  ok(!doDefaultKeydown,
+     description + "TIP.keydown(keyABC) should return false because the keypress events should be consumed by the input element");
+  ok(doDefaultKeyup,
+     description + "TIP.keyup(keyABC) should return true");
+  is(events.length, 5,
+     description + "TIP.keydown(keyABC) and TIP.keyup(keyABC) should cause keydown, keypress, keypress, keypress and keyup event");
+  checkKeyAttrs("TIP.keydown(keyABC) and TIP.keyup(keyABC)", events[0],
+                { type: "keydown",  key: "abc",           code: "KeyX", keyCode: KeyboardEvent.DOM_VK_A, charCode: 0,                   defaultPrevented: false });
+  checkKeyAttrs("TIP.keydown(keyABC) and TIP.keyup(keyABC)", events[1],
+                { type: "keypress", key: "abc".charAt(0), code: "KeyX", keyCode: 0,                      charCode: "abc".charCodeAt(0), defaultPrevented: true });
+  checkKeyAttrs("TIP.keydown(keyABC) and TIP.keyup(keyABC)", events[2],
+                { type: "keypress", key: "abc".charAt(1), code: "KeyX", keyCode: 0,                      charCode: "abc".charCodeAt(1), defaultPrevented: true });
+  checkKeyAttrs("TIP.keydown(keyABC) and TIP.keyup(keyABC)", events[3],
+                { type: "keypress", key: "abc".charAt(2), code: "KeyX", keyCode: 0,                      charCode: "abc".charCodeAt(2), defaultPrevented: true });
+  checkKeyAttrs("TIP.keydown(keyABC) and TIP.keyup(keyABC)", events[4],
+                { type: "keyup",    key: "abc",           code: "KeyX", keyCode: KeyboardEvent.DOM_VK_A, charCode: 0,                   defaultPrevented: false });
+  is(input.value, "abc",
+     description + "input.value should be \"abc\"");
+
+  // If KEY_FORCE_PRINTABLE_KEY is specified, registered key names can be a printable key which inputs the specified value.
+  input.value = "";
+  var keyEnterPrintable = new KeyboardEvent("", { key: "Enter", code: "Enter", keyCode: KeyboardEvent.DOM_VK_RETURN });
+
+  reset();
+  doDefaultKeydown = TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY);
+  doDefaultKeyup   = TIP.keyup(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY);
+
+  ok(!doDefaultKeydown,
+     description + "TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) should return false because the keypress events should be consumed by the input element");
+  ok(doDefaultKeyup,
+     description + "TIP.keyup(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) should return true");
+  is(events.length, 7,
+     description + "TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) and TIP.keyup(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) should cause keydown, keypress, keypress, keypress, keypress, keypress and keyup event");
+  checkKeyAttrs("TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) and TIP.keyup(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY)", events[0],
+                { type: "keydown",  key: "Enter",           code: "Enter", keyCode: KeyboardEvent.DOM_VK_RETURN, charCode: 0,                    defaultPrevented: false });
+  checkKeyAttrs("TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) and TIP.keyup(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY)", events[1],
+                { type: "keypress", key: "Enter".charAt(0), code: "Enter", keyCode: 0,                           charCode: "Enter".charCodeAt(0), defaultPrevented: true });
+  checkKeyAttrs("TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) and TIP.keyup(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY)", events[2],
+                { type: "keypress", key: "Enter".charAt(1), code: "Enter", keyCode: 0,                           charCode: "Enter".charCodeAt(1), defaultPrevented: true });
+  checkKeyAttrs("TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) and TIP.keyup(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY)", events[3],
+                { type: "keypress", key: "Enter".charAt(2), code: "Enter", keyCode: 0,                           charCode: "Enter".charCodeAt(2), defaultPrevented: true });
+  checkKeyAttrs("TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) and TIP.keyup(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY)", events[4],
+                { type: "keypress", key: "Enter".charAt(3), code: "Enter", keyCode: 0,                           charCode: "Enter".charCodeAt(3), defaultPrevented: true });
+  checkKeyAttrs("TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) and TIP.keyup(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY)", events[5],
+                { type: "keypress", key: "Enter".charAt(4), code: "Enter", keyCode: 0,                           charCode: "Enter".charCodeAt(4), defaultPrevented: true });
+  checkKeyAttrs("TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY) and TIP.keyup(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY)", events[6],
+                { type: "keyup",    key: "Enter",           code: "Enter", keyCode: KeyboardEvent.DOM_VK_RETURN, charCode: 0,                     defaultPrevented: false });
+  is(input.value, "Enter",
+     description + "input.value should be \"Enter\"");
+
+  // modifiers should be ignored.
+  var keyWithModifiers = new KeyboardEvent("", { key: "Escape", code: "Escape", shiftKey: true, ctrlKey: true, altKey: true, metaKey: true });
+
+  reset();
+  doDefaultKeydown = TIP.keydown(keyWithModifiers);
+  doDefaultKeyup   = TIP.keyup(keyWithModifiers);
+
+  ok(doDefaultKeydown,
+     description + "TIP.keydown(keyWithModifiers) should return true");
+  ok(doDefaultKeyup,
+     description + "TIP.keyup(keyWithModifiers) should return true");
+  is(events.length, 3,
+     description + "TIP.keydown(keyWithModifiers) and TIP.keyup(keyWithModifiers) should cause keydown, keypress and keyup event");
+  checkKeyAttrs("TIP.keydown(keyWithModifiers) and TIP.keyup(keyWithModifiers)", events[0],
+                { type: "keydown",  key: "Escape", code: "Escape" });
+  checkKeyAttrs("TIP.keydown(keyWithModifiers) and TIP.keyup(keyWithModifiers)", events[1],
+                { type: "keypress", key: "Escape", code: "Escape" });
+  checkKeyAttrs("TIP.keydown(keyWithModifiers) and TIP.keyup(keyWithModifiers)", events[2],
+                { type: "keyup",    key: "Escape", code: "Escape" });
+  is(input.value, "Enter",
+     description + "input.value should stay \"Enter\" which was inputted by TIP.keydown(keyEnterPrintable, TIP.KEY_FORCE_PRINTABLE_KEY)");
+
+  // Call preventDefault() at keydown
+  input.value = "";
+  reset();
+  doPreventDefaults = [ "keydown" ];
+  doDefaultKeydown = TIP.keydown(keyA);
+  doDefaultKeyup   = TIP.keyup(keyA);
+
+  ok(!doDefaultKeydown,
+     description + "TIP.keydown(keyA) should return false because keydown event's preventDefault should be called");
+  ok(doDefaultKeyup,
+     description + "TIP.keyup(keyA) should return true");
+  is(events.length, 2,
+     description + "TIP.keydown(keyA) and TIP.keyup(keyA) with preventing default of keydown should cause keydown and keyup event");
+  checkKeyAttrs("TIP.keydown(keyA) and TIP.keyup(keyA) with preventing default of keydown", events[0],
+                { type: "keydown",  key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A, defaultPrevented: true });
+  checkKeyAttrs("TIP.keydown(keyA) and TIP.keyup(keyA) with preventing default of keydown", events[1],
+                { type: "keyup",    key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A, defaultPrevented: false });
+  is(input.value, "",
+     description + "input.value shouldn't be modified by TIP.keyup(keyA) if the keydown event is consumed");
+
+  // Call preventDefault() at keypress
+  reset();
+  doPreventDefaults = [ "keypress" ];
+  doDefaultKeydown = TIP.keydown(keyA);
+  doDefaultKeyup   = TIP.keyup(keyA);
+
+  ok(!doDefaultKeydown,
+     description + "TIP.keydown(keyA) should return false because keypress event's preventDefault should be called");
+  ok(doDefaultKeyup,
+     description + "TIP.keyup(keyA) should return true");
+  is(events.length, 3,
+     description + "TIP.keydown(keyA) and TIP.keyup(keyA) with preventing default of keypress should cause keydown, keypress and keyup event");
+  checkKeyAttrs("TIP.keydown(keyA) and TIP.keyup(keyA) with preventing default of keypress", events[0],
+                { type: "keydown",  key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A, charCode: 0,                 defaultPrevented: false });
+  checkKeyAttrs("TIP.keydown(keyA) and TIP.keyup(keyA) with preventing default of keypress", events[1],
+                { type: "keypress", key: "a", code: "KeyA", keyCode: 0,                      charCode: "a".charCodeAt(0), defaultPrevented: true });
+  checkKeyAttrs("TIP.keydown(keyA) and TIP.keyup(keyA) with preventing default of keypress", events[2],
+                { type: "keyup",    key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A, charCode: 0,                 defaultPrevented: false });
+  is(input.value, "",
+     description + "input.value shouldn't be modified by TIP.keyup(keyA) if the keypress event is consumed");
+
+  // Call preventDefault() at keyup
+  input.value = "";
+  reset();
+  doPreventDefaults = [ "keyup" ];
+  doDefaultKeydown = TIP.keydown(keyA);
+  doDefaultKeyup   = TIP.keyup(keyA);
+
+  ok(!doDefaultKeydown,
+     description + "TIP.keydown(keyA) should return false because the key event should be consumed by the input element");
+  ok(!doDefaultKeyup,
+     description + "TIP.keyup(keyA) should return false because keyup event's preventDefault should be called");
+  is(events.length, 3,
+     description + "TIP.keydown(keyA) and TIP.keyup(keyA) with preventing default of keyup should cause keydown, keypress and keyup event");
+  checkKeyAttrs("TIP.keydown(keyA) and TIP.keyup(keyA) with preventing default of keyup", events[0],
+                { type: "keydown",  key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A, charCode: 0,                 defaultPrevented: false });
+  checkKeyAttrs("TIP.keydown(keyA) and TIP.keyup(keyA) with preventing default of keyup", events[1],
+                { type: "keypress", key: "a", code: "KeyA", keyCode: 0,                      charCode: "a".charCodeAt(0), defaultPrevented: true });
+  checkKeyAttrs("TIP.keydown(keyA) and TIP.keyup(keyA) with preventing default of keyup", events[2],
+                { type: "keyup",    key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A, charCode: 0,                 defaultPrevented: true });
+  is(input.value, "a",
+     description + "input.value should be \"a\" by TIP.keyup(keyA) even if the keyup event is consumed");
+
+  // key events during composition
+  try {
+    SpecialPowers.setBoolPref("dom.keyboardevent.dispatch_during_composition", false);
+
+    ok(TIP.startComposition(), "TIP.startComposition() should start composition");
+
+    input.value = "";
+    reset();
+    TIP.keydown(keyA);
+    is(events.length, 0,
+       description + "TIP.keydown(keyA) shouldn't cause key events during composition if it's disabled by the pref");
+    reset();
+    TIP.keyup(keyA);
+    is(events.length, 0,
+       description + "TIP.keyup(keyA) shouldn't cause key events during composition if it's disabled by the pref");
+
+    SpecialPowers.setBoolPref("dom.keyboardevent.dispatch_during_composition", true);
+    reset();
+    TIP.keydown(keyA);
+    is(events.length, 1,
+       description + "TIP.keydown(keyA) should cause keydown event even composition if it's enabled by the pref");
+    checkKeyAttrs("TIP.keydown(keyA) during composition", events[0],
+                  { type: "keydown",  key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A, charCode: 0, isComposing: true });
+    reset();
+    TIP.keyup(keyA);
+    is(events.length, 1,
+       description + "TIP.keyup(keyA) should cause keyup event even composition if it's enabled by the pref");
+    checkKeyAttrs("TIP.keyup(keyA) during composition", events[0],
+                  { type: "keyup",    key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A, charCode: 0, isComposing: true });
+
+  } finally {
+    TIP.cancelComposition();
+    SpecialPowers.clearUserPref("dom.keyboardevent.dispatch_during_composition");
+  }
+
+  window.removeEventListener("keydown", handler, false);
+  window.removeEventListener("keypress", handler, false);
+  window.removeEventListener("keyup", handler, false);
+}
+
 function runErrorTests()
 {
   var description = "runErrorTests(): ";
@@ -666,6 +1055,66 @@ function runErrorTests()
   } catch (e) {
     ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
        description + "flushPendingComposition() should cause NS_ERROR_ILLEGAL_VALUE if caret position is out of composition string");
+  }
+
+  // Calling keydown() with a KeyboardEvent initialized with invalid code value should cause an exception.
+  input.value = "";
+  try {
+    var keyInvalidCode = new KeyboardEvent("", { key: "f", code: "InvalidCodeValue", keyCode: KeyboardEvent.DOM_VK_F });
+    TIP.keydown(keyInvalidCode);
+    ok(false,
+       description + "TIP.keydown(keyInvalidCode) should cause throwing an exception because its code value is not registered");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "TIP.keydown(keyInvalidCode) should cause throwing an exception including NS_ERROR_ILLEGAL_VALUE");
+  } finally {
+    is(input.value, "",
+       description + "The input element should not be modified");
+  }
+
+  // Calling keyup() with a KeyboardEvent initialized with invalid code value should cause an exception.
+  input.value = "";
+  try {
+    var keyInvalidCode = new KeyboardEvent("", { key: "f", code: "InvalidCodeValue", keyCode: KeyboardEvent.DOM_VK_F });
+    TIP.keyup(keyInvalidCode);
+    ok(false,
+       description + "TIP.keyup(keyInvalidCode) should cause throwing an exception because its code value is not registered");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "TIP.keyup(keyInvalidCode) should cause throwing an exception including NS_ERROR_ILLEGAL_VALUE");
+  } finally {
+    is(input.value, "",
+       description + "The input element should not be modified");
+  }
+
+  // Calling keydown(KEY_NON_PRINTABLE_KEY) with a KeyboardEvent initialized with non-key name should cause an exception.
+  input.value = "";
+  try {
+    var keyInvalidKey = new KeyboardEvent("", { key: "ESCAPE", code: "Escape", keyCode: KeyboardEvent.DOM_VK_Escape});
+    TIP.keydown(keyInvalidKey, TIP.KEY_NON_PRINTABLE_KEY);
+    ok(false,
+       description + "TIP.keydown(keyInvalidKey, TIP.KEY_NON_PRINTABLE_KEY) should cause throwing an exception because its key value is not registered");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "keydown(keyInvalidKey, TIP.KEY_NON_PRINTABLE_KEY) should cause throwing an exception including NS_ERROR_ILLEGAL_VALUE");
+  } finally {
+    is(input.value, "",
+       description + "The input element should not be modified");
+  }
+
+  // Calling keyup(KEY_NON_PRINTABLE_KEY) with a KeyboardEvent initialized with non-key name should cause an exception.
+  input.value = "";
+  try {
+    var keyInvalidKey = new KeyboardEvent("", { key: "ESCAPE", code: "Escape", keyCode: KeyboardEvent.DOM_VK_Escape});
+    TIP.keydown(keyInvalidKey, TIP.KEY_NON_PRINTABLE_KEY);
+    ok(false,
+       description + "TIP.keyup(keyInvalidKey, TIP.KEY_NON_PRINTABLE_KEY) should cause throwing an exception because its key value is not registered");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "keyup(keyInvalidKey, TIP.KEY_NON_PRINTABLE_KEY) should cause throwing an exception including NS_ERROR_ILLEGAL_VALUE");
+  } finally {
+    is(input.value, "",
+       description + "The input element should not be modified");
   }
 }
 
@@ -1021,6 +1470,7 @@ function runTests()
   runBeginInputTransactionMethodTests();
   runReleaseTests();
   runCompositionTests();
+  runKeyTests();
   runErrorTests();
   runCommitCompositionTests();
   runCallbackTests(false);
