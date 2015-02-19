@@ -480,6 +480,7 @@ TextInputProcessor::PrepareKeyboardEventToDispatch(
       WidgetKeyboardEvent::ComputeKeyCodeFromKeyNameIndex(
         aKeyboardEvent.mKeyNameIndex);
   }
+
   return NS_OK;
 }
 
@@ -523,6 +524,11 @@ TextInputProcessor::Keydown(nsIDOMKeyEvent* aDOMKeyEvent,
       // event should indicate the releasing modifier is active.
       ActivateModifierKey(modifierKeyData);
     }
+    if (aKeyFlags & KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT) {
+      return NS_OK;
+    }
+  } else if (NS_WARN_IF(aKeyFlags & KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT)) {
+    return NS_ERROR_INVALID_ARG;
   }
   keyEvent.modifiers = GetActiveModifiers();
 
@@ -575,11 +581,17 @@ TextInputProcessor::Keyup(nsIDOMKeyEvent* aDOMKeyEvent,
   }
   *aDoDefault = !(aKeyFlags & KEY_DEFAULT_PREVENTED);
 
-  if (WidgetKeyboardEvent::GetModifierForKeyName(keyEvent.mKeyNameIndex) &&
-      !WidgetKeyboardEvent::IsLockableModifier(keyEvent.mKeyNameIndex)) {
-    // Inactivate modifier flag before dispatching keyup event (i.e., keyup
-    // event shouldn't indicate the releasing modifier is active.
-    InactivateModifierKey(ModifierKeyData(keyEvent));
+  if (WidgetKeyboardEvent::GetModifierForKeyName(keyEvent.mKeyNameIndex)) {
+    if (!WidgetKeyboardEvent::IsLockableModifier(keyEvent.mKeyNameIndex)) {
+      // Inactivate modifier flag before dispatching keyup event (i.e., keyup
+      // event shouldn't indicate the releasing modifier is active.
+      InactivateModifierKey(ModifierKeyData(keyEvent));
+    }
+    if (aKeyFlags & KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT) {
+      return NS_OK;
+    }
+  } else if (NS_WARN_IF(aKeyFlags & KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT)) {
+    return NS_ERROR_INVALID_ARG;
   }
   keyEvent.modifiers = GetActiveModifiers();
 
