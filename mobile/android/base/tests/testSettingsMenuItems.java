@@ -45,7 +45,7 @@ public class testSettingsMenuItems extends PixelTest {
 
     // Display menu items.
     String[] PATH_DISPLAY = { StringHelper.DISPLAY_SECTION_LABEL };
-    final String[] TITLE_BAR_LABEL_ARR = { StringHelper.TITLE_BAR_LABEL, StringHelper.SHOW_PAGE_TITLE_LABEL,
+    final String[] TITLE_BAR_LABEL_ARR = { StringHelper.TITLE_BAR_LABEL, StringHelper.SHOW_PAGE_ADDRESS_LABEL,
         StringHelper.SHOW_PAGE_TITLE_LABEL, StringHelper.SHOW_PAGE_ADDRESS_LABEL };
     String[][] OPTIONS_DISPLAY = {
         { StringHelper.TEXT_SIZE_LABEL },
