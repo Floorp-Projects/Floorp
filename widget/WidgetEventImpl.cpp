@@ -459,21 +459,21 @@ WidgetKeyboardEvent::ComputeLocationFromCodeValue(CodeNameIndex aCodeNameIndex)
     case CODE_NAME_INDEX_Numpad9:
     case CODE_NAME_INDEX_NumpadAdd:
     case CODE_NAME_INDEX_NumpadBackspace:
-    // case CODE_NAME_INDEX_NumpadClear:
-    // case CODE_NAME_INDEX_NumpadClearEntry:
+    case CODE_NAME_INDEX_NumpadClear:
+    case CODE_NAME_INDEX_NumpadClearEntry:
     case CODE_NAME_INDEX_NumpadComma:
     case CODE_NAME_INDEX_NumpadDecimal:
     case CODE_NAME_INDEX_NumpadDivide:
     case CODE_NAME_INDEX_NumpadEnter:
     case CODE_NAME_INDEX_NumpadEqual:
-    // case CODE_NAME_INDEX_NumpadMemoryAdd:
-    // case CODE_NAME_INDEX_NumpadMemoryClear:
-    // case CODE_NAME_INDEX_NumpadMemoryRecall:
-    // case CODE_NAME_INDEX_NumpadMemoryStore:
+    case CODE_NAME_INDEX_NumpadMemoryAdd:
+    case CODE_NAME_INDEX_NumpadMemoryClear:
+    case CODE_NAME_INDEX_NumpadMemoryRecall:
+    case CODE_NAME_INDEX_NumpadMemoryStore:
     case CODE_NAME_INDEX_NumpadMemorySubtract:
     case CODE_NAME_INDEX_NumpadMultiply:
-    // case CODE_NAME_INDEX_NumpadParenLeft:
-    // case CODE_NAME_INDEX_NumpadParenRight:
+    case CODE_NAME_INDEX_NumpadParenLeft:
+    case CODE_NAME_INDEX_NumpadParenRight:
     case CODE_NAME_INDEX_NumpadSubtract:
       return nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
     default:
