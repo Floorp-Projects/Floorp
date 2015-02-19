@@ -4477,18 +4477,15 @@ class ICGetPropCallDOMProxyNativeStub : public ICGetPropCallGetter
 {
   friend class ICStubSpace;
   protected:
-    // Shape of the DOMProxy
+    // Shape of the DOMProxy.  This enforces its class and hence its proxy handler.
     HeapPtrShape shape_;
-
-    // Proxy handler to check against.
-    const BaseProxyHandler *proxyHandler_;
 
     // Object shape of expected expando object. (nullptr if no expando object should be there)
     HeapPtrShape expandoShape_;
 
     ICGetPropCallDOMProxyNativeStub(ICStub::Kind kind, JitCode *stubCode,
                                     ICStub *firstMonitorStub, Shape *shape,
-                                    const BaseProxyHandler *proxyHandler, Shape *expandoShape,
+                                    Shape *expandoShape,
                                     JSObject *holder, Shape *holderShape,
                                     JSFunction *getter, uint32_t pcOffset);
 
@@ -4502,9 +4499,6 @@ class ICGetPropCallDOMProxyNativeStub : public ICGetPropCallGetter
     static size_t offsetOfShape() {
         return offsetof(ICGetPropCallDOMProxyNativeStub, shape_);
     }
-    static size_t offsetOfProxyHandler() {
-        return offsetof(ICGetPropCallDOMProxyNativeStub, proxyHandler_);
-    }
     static size_t offsetOfExpandoShape() {
         return offsetof(ICGetPropCallDOMProxyNativeStub, expandoShape_);
     }
@@ -4514,11 +4508,11 @@ class ICGetProp_CallDOMProxyNative : public ICGetPropCallDOMProxyNativeStub
 {
     friend class ICStubSpace;
     ICGetProp_CallDOMProxyNative(JitCode *stubCode, ICStub *firstMonitorStub, Shape *shape,
-                                 const BaseProxyHandler *proxyHandler, Shape *expandoShape,
+                                 Shape *expandoShape,
                                  JSObject *holder, Shape *holderShape,
                                  JSFunction *getter, uint32_t pcOffset)
       : ICGetPropCallDOMProxyNativeStub(ICStub::GetProp_CallDOMProxyNative, stubCode,
-                                        firstMonitorStub, shape, proxyHandler, expandoShape,
+                                        firstMonitorStub, shape, expandoShape,
                                         holder, holderShape, getter, pcOffset)
     {}
 
@@ -4536,13 +4530,13 @@ class ICGetProp_CallDOMProxyWithGenerationNative : public ICGetPropCallDOMProxyN
 
   public:
     ICGetProp_CallDOMProxyWithGenerationNative(JitCode *stubCode, ICStub *firstMonitorStub,
-                                               Shape *shape, const BaseProxyHandler *proxyHandler,
+                                               Shape *shape,
                                                ExpandoAndGeneration *expandoAndGeneration,
                                                uint32_t generation, Shape *expandoShape,
                                                JSObject *holder, Shape *holderShape,
                                                JSFunction *getter, uint32_t pcOffset)
       : ICGetPropCallDOMProxyNativeStub(ICStub::GetProp_CallDOMProxyWithGenerationNative,
-                                        stubCode, firstMonitorStub, shape, proxyHandler,
+                                        stubCode, firstMonitorStub, shape,
                                         expandoShape, holder, holderShape, getter, pcOffset),
         expandoAndGeneration_(expandoAndGeneration),
         generation_(generation)
