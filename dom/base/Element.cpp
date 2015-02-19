@@ -1803,7 +1803,12 @@ Element::SetSMILOverrideStyleRule(css::StyleRule* aStyleRule,
     if (doc) {
       nsCOMPtr<nsIPresShell> shell = doc->GetShell();
       if (shell) {
-        shell->RestyleForAnimation(this, eRestyle_StyleAttribute);
+        // Pass both eRestyle_StyleAttribute and
+        // eRestyle_StyleAttribute_Animations since we don't know if
+        // this style represents only the ticking of an existing
+        // animation or whether it's a new or changed animation.
+        shell->RestyleForAnimation(this, eRestyle_StyleAttribute |
+                                         eRestyle_StyleAttribute_Animations);
       }
     }
   }
