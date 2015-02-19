@@ -5125,7 +5125,7 @@ nsDocument::DispatchContentLoadedEvents()
   // document).
   nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
                                        NS_LITERAL_STRING("DOMContentLoaded"),
-                                       true, true);
+                                       true, false);
 
   if (mTiming) {
     mTiming->NotifyDOMContentLoadedEnd(nsIDocument::GetDocumentURI());
