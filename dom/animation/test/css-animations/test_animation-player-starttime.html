@@ -1,0 +1,554 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>Tests for the effect of setting a CSS animation's AnimationPlayer.startTime</title>
+    <style>
+
+.animated-div {
+  margin-left: 10px;
+  /* Make it easier to calculate expected values: */
+  animation-timing-function: linear ! important;
+}
+
+@keyframes anim {
+  from { margin-left: 100px; }
+  to { margin-left: 200px; }
+}
+
+    </style>
+    <script src="/resources/testharness.js"></script>
+    <script src="/resources/testharnessreport.js"></script>
+  </head>
+  <body>
+    <div id="log"></div>
+    <script type="text/javascript;version=1.8">
+
+'use strict';
+
+// TODO: add equivalent tests without an animation-delay, but first we need to
+// change the timing of animationstart dispatch. (Right now the animationstart
+// event will fire before the ready Promise is resolved if there is no
+// animation-delay.)
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=1134163
+
+// TODO: Once the computedTiming property is implemented, add checks to the
+// checker helpers to ensure that computedTiming's properties are updated as
+// expected.
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=1108055
+
+
+const CSS_ANIM_EVENTS = ['animationstart', 'animationiteration', 'animationend'];
+const ANIM_DELAY_MS = 1000000; // 1000s
+const ANIM_DUR_MS = 1000000; // 1000s
+
+// Expected computed 'margin-left' values at points during the active interval:
+// When we assert_between_inclusive using these values we could in theory cause
+// intermittent failure due to long refresh driver delays, but since the active
+// duration is 1000s long, a delay would need to be around 100s to cause that.
+// If that's happening than we have issues that we should solve anyway, so a
+// failure to make us look into that seems like a good thing.
+const UNANIMATED_POSITION = 10;
+const INITIAL_POSITION = 100;
+const TEN_PCT_POSITION = 110;
+const FIFTY_PCT_POSITION = 150;
+const NINETY_PCT_POSITION = 190;
+const END_POSITION = 200;
+
+function addDiv(id)
+{
+  var div = document.createElement('div');
+  div.setAttribute('class', 'animated-div');
+  if (id) {
+    div.setAttribute('id', id);
+  }
+  document.body.appendChild(div);
+  return div;
+}
+
+/**
+ * CSS animation events fire asynchronously after we set 'startTime'. This
+ * helper class allows us to handle such events using Promises.
+ *
+ * To use this class:
+ *
+ *   var eventWatcher = new EventWatcher(watchedNode, eventTypes);
+ *   eventWatcher.waitForEvent(eventType).then(function() {
+ *     // Promise fulfilled
+ *     checkStuff();
+ *     makeSomeChanges();
+ *     return eventWatcher.waitForEvent(nextEventType);
+ *   }).then(function() {
+ *     // Promise fulfilled
+ *     checkMoreStuff();
+ *     eventWatcher.stopWatching(); // all done - stop listening for events
+ *   });
+ *
+ * This class will assert_true(false) if an event occurs when there is no
+ * Promise created by a waitForEvent() call waiting to be fulfilled, or if the
+ * event is of a different type to the type passed to waitForEvent. This helps
+ * provide test coverage to ensure that only events that are expected occur, in
+ * the correct order and with the correct timing. It also helps vastly simplify
+ * the already complex code below by avoiding lots of gnarly error handling
+ * code.
+ */
+function EventWatcher(watchedNode, eventTypes)
+{
+  if (typeof eventTypes == 'string') {
+    eventTypes = [eventTypes];
+  }
+
+  var waitingFor = null;
+
+  function eventHandler(evt) {
+    if (!waitingFor) {
+      assert_true(false, 'Not expecting event, but got: ' + evt.type +
+        ' targeting element #' + evt.target.getAttribute('id'));
+      return;
+    }
+    if (evt.type != waitingFor.types[0]) {
+      assert_true(false, 'Expected ' + waitingFor.types[0] + ' event but got ' +
+                         evt.type + ' event');
+      return;
+    }
+    if (waitingFor.types.length > 1) {
+      // Pop first event from array
+      waitingFor.types.shift();
+      return;
+    }
+    // We need to null out waitingFor before calling the resolve function since
+    // the Promise's resolve handlers may call waitForEvent() which will need
+    // to set waitingFor.
+    var resolveFunc = waitingFor.resolve;
+    waitingFor = null;
+    resolveFunc(evt);
+  }
+
+  for (let event of eventTypes) {
+    watchedNode.addEventListener(event, eventHandler);
+  }
+
+  this.waitForEvent = function(type) {
+    if (typeof type != 'string') {
+      return Promise.reject('Event type not a string');
+    }
+    return this.waitForEvents([type]);
+  };
+
+  /**
+   * This is useful when two events are expected to fire one immediately after
+   * the other. This happens when we skip over the entire active interval for
+   * instance. In this case an 'animationstart' and an 'animationend' are fired
+   * and due to the asynchronous nature of Promise callbacks this won't work:
+   *
+   *   eventWatcher.waitForEvent('animationstart').then(function() {
+   *     return waitForEvent('animationend');
+   *   }).then(...);
+   *
+   * It doesn't work because the 'animationend' listener is added too late,
+   * because the resolve handler for the first Promise is called asynchronously
+   * some time after the 'animationstart' event is called, rather than at the
+   * time the event reaches the watched element.
+   */
+  this.waitForEvents = function(types) {
+    if (waitingFor) {
+      return Promise.reject('Already waiting for an event');
+    }
+    return new Promise(function(resolve, reject) {
+      waitingFor = {
+        types: types,
+        resolve: resolve,
+        reject: reject
+      };
+    });
+  };
+
+  this.stopWatching = function() {
+    for (let event of eventTypes) {
+      watchedNode.removeEventListener(event, eventHandler);
+    }
+  };
+
+  return this;
+}
+
+// The terms used for the naming of the following helper functions refer to
+// terms used in the Web Animations specification for specific phases of an
+// animation. The terms can be found here:
+//
+//   http://w3c.github.io/web-animations/#animation-node-phases-and-states
+//
+// Note the distinction between "player start time" and "animation start time".
+// The former is the start of the start delay. The latter is the start of the
+// active interval. (If there is no delay, they are the same.)
+
+// Called when startTime is set to the time the start delay would ideally
+// start (not accounting for any delay to next paint tick).
+function checkStateOnSettingStartTimeToAnimationCreationTime(player)
+{
+  // We don't test player.startTime since our caller just set it.
+
+  assert_equals(player.playState, 'running',
+    'AnimationPlayer.playState should be "running" at the start of ' +
+    'the start delay');
+
+  assert_equals(player.source.target.style.animationPlayState, 'running',
+    'AnimationPlayer.source.target.style.animationPlayState should be ' +
+    '"running" at the start of the start delay');
+
+  var div = player.source.target;
+  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
+  assert_equals(marginLeft, UNANIMATED_POSITION,
+                'the computed value of margin-left should be unaffected ' +
+                'at the beginning of the start delay');
+}
+
+// Called when the ready Promise's callbacks should happen
+function checkStateOnReadyPromiseResolved(player)
+{
+  assert_less_than_equal(player.startTime, document.timeline.currentTime,
+    'AnimationPlayer.startTime should be less than the timeline\'s ' +
+    'currentTime on the first paint tick after animation creation');
+
+  assert_equals(player.playState, 'running',
+    'AnimationPlayer.playState should be "running" on the first paint ' +
+    'tick after animation creation');
+
+  assert_equals(player.source.target.style.animationPlayState, 'running',
+    'AnimationPlayer.source.target.style.animationPlayState should be ' +
+    '"running" on the first paint tick after animation creation');
+
+  var div = player.source.target;
+  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
+  assert_equals(marginLeft, UNANIMATED_POSITION,
+                'the computed value of margin-left should be unaffected ' +
+                'by an animation with a delay on ready Promise resolve');
+}
+
+// Called when startTime is set to the time the active interval starts.
+function checkStateAtActiveIntervalStartTime(player)
+{
+  // We don't test player.startTime since our caller just set it.
+
+  assert_equals(player.playState, 'running',
+    'AnimationPlayer.playState should be "running" at the start of ' +
+    'the active interval');
+
+  assert_equals(player.source.target.style.animationPlayState, 'running',
+    'AnimationPlayer.source.target.style.animationPlayState should be ' +
+    '"running" at the start of the active interval');
+
+  var div = player.source.target;
+  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
+  assert_between_inclusive(marginLeft, INITIAL_POSITION, TEN_PCT_POSITION,
+    'the computed value of margin-left should be close to the value at the ' +
+    'beginning of the animation');
+}
+
+function checkStateAtFiftyPctOfActiveInterval(player)
+{
+  // We don't test player.startTime since our caller just set it.
+
+  var div = player.source.target;
+  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
+  assert_equals(marginLeft, FIFTY_PCT_POSITION,
+    'the computed value of margin-left should be half way through the ' +
+    'animation at the midpoint of the active interval');
+}
+
+function checkStateAtNinetyPctOfActiveInterval(player)
+{
+  // We don't test player.startTime since our caller just set it.
+
+  var div = player.source.target;
+  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
+  assert_between_inclusive(marginLeft, NINETY_PCT_POSITION, END_POSITION,
+    'the computed value of margin-left should be close to the value at the ' +
+    'end of the animation');
+}
+
+// Called when startTime is set to the time the active interval ends.
+function checkStateAtActiveIntervalEndTime(player)
+{
+  // We don't test player.startTime since our caller just set it.
+
+/* For some reason this fails occasionally during the skiping backwards tests
+  assert_equals(player.playState, 'finished',
+    'AnimationPlayer.playState should be "finished" at the end of ' +
+    'the active interval');
+*/
+
+  assert_equals(player.source.target.style.animationPlayState, "running",
+    'AnimationPlayer.source.target.style.animationPlayState should be ' +
+    '"finished" at the end of the active interval');
+
+  var div = player.source.target;
+  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
+  assert_equals(marginLeft, UNANIMATED_POSITION,
+    'the computed value of margin-left should be unaffected ' +
+    'by the animation at the end of the active duration');
+}
+
+
+test(function()
+{
+  var div = addDiv();
+
+  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+
+  var player = div.getAnimationPlayers()[0];
+
+  // Animations shouldn't start until the next paint tick, so:
+  assert_equals(player.startTime, null,
+    'AnimationPlayer.startTime should be unresolved when an animation ' +
+    'is initially created');
+
+  assert_equals(player.playState, "pending",
+    'AnimationPlayer.playState should be "pending" when an animation ' +
+    'is initially created');
+
+  assert_equals(player.source.target.style.animationPlayState, 'running',
+    'AnimationPlayer.source.target.style.animationPlayState should be ' +
+    '"running" when an animation is initially created');
+
+  // XXX Ideally we would have a test to check the ready Promise is initially
+  // unresolved, but currently there is no Web API to do that. Waiting for the
+  // ready Promise with a timeout doesn't work because the resolved callback
+  // will be called (async) regardless of whether the Promise was resolved in
+  // the past or is resolved in the future.
+
+  var currentTime = document.timeline.currentTime;
+  player.startTime = document.timeline.currentTime;
+  assert_approx_equals(player.startTime, currentTime, 0.0001, // rounding error
+    'Check setting of startTime actually works');
+
+  checkStateOnSettingStartTimeToAnimationCreationTime(player);
+
+  div.parentNode.removeChild(div);
+}, 'Examine newly created Animation');
+
+
+async_test(function(t) {
+  var div = addDiv();
+  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+
+  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+
+  var player = div.getAnimationPlayers()[0];
+
+  player.ready.then(t.step_func(function() {
+    checkStateOnReadyPromiseResolved(player);
+
+    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS; // jump to start of active interval
+    return eventWatcher.waitForEvent('animationstart');
+  })).then(t.step_func(function() {
+    checkStateAtActiveIntervalStartTime(player);
+
+    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.5; // 50% through active interval
+    checkStateAtFiftyPctOfActiveInterval(player);
+
+    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.9; // 90% through active interval
+    checkStateAtNinetyPctOfActiveInterval(player);
+
+    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS; // end of active interval
+    return eventWatcher.waitForEvent('animationend');
+  })).then(t.step_func(function() {
+    checkStateAtActiveIntervalEndTime(player);
+
+    eventWatcher.stopWatching();
+    div.parentNode.removeChild(div);
+  })).catch(t.step_func(function(reason) {
+    assert_true(false, reason);
+  })).then(function() {
+    t.done();
+  });
+}, 'Skipping forward through animation');
+
+
+async_test(function(t) {
+  var div = addDiv();
+  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+
+  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+
+  var player = div.getAnimationPlayers()[0];
+
+  player.startTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS; // end of active interval
+
+  // Skipping over the active interval will dispatch an 'animationstart' then
+  // an 'animationend' event. We need to wait for these events before we start
+  // testing going backwards since EventWatcher will fail the test if it gets
+  // an event that we haven't told it about.
+  eventWatcher.waitForEvents(['animationstart', 'animationend']).then(t.step_func(function() {
+    // Now we can start the tests for skipping backwards, but first we check
+    // that after the events we're still in the same end time state:
+    checkStateAtActiveIntervalEndTime(player);
+
+    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.9; // 90% through active interval
+
+    // Despite going backwards from after the end of the animation to just
+    // before the end of the animation, we now expect an animationstart event
+    // because we went from outside to inside the active interval.
+    return eventWatcher.waitForEvent('animationstart');
+  })).then(t.step_func(function() {
+    checkStateAtNinetyPctOfActiveInterval(player);
+
+    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.5; // 50% through active interval
+    checkStateAtFiftyPctOfActiveInterval(player);
+
+    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS; // jump to start of active interval
+    checkStateAtActiveIntervalStartTime(player);
+
+    player.startTime = document.timeline.currentTime;
+    // Despite going backwards from just after the active interval starts to
+    // the animation start time, we now expect an animationend event
+    // because we went from inside to outside the active interval.
+    return eventWatcher.waitForEvent('animationend');
+  })).then(t.step_func(function() {
+    checkStateOnReadyPromiseResolved(player);
+
+    eventWatcher.stopWatching();
+    div.parentNode.removeChild(div);
+  })).catch(t.step_func(function(reason) {
+    assert_true(false, reason);
+  })).then(function() {
+    t.done();
+  });
+
+  // This must come after we've set up the Promise chain, since requesting
+  // computed style will force events to be dispatched.
+  checkStateAtActiveIntervalEndTime(player);
+}, 'Skipping backwards through animation');
+
+
+// Here we have multiple tests to check that redundant startTime changes do NOT
+// dispatch events. It's impossible to distinguish between events not being
+// dispatched and events just taking an incredibly long time to dispatch
+// without some sort of risk of creating intermittent failure. We have a short
+// timeout here since we don't want to delay the completion of this test file
+// waiting for a long time to make "more sure" events weren't dispatched rather
+// than being late.
+//
+// We test:
+//
+//   * before -> active, then back
+//   * before -> after, then back
+//   * active -> before, then back
+//   * active -> after, then back
+//   * after -> before, then back
+//   * after -> active, then back
+//
+// We do all these tests in a single async_test since that allows us to share
+// the timeout that we use to wait so that this test file isn't delayed by the
+// timeout time multiplied by number of tests.
+async_test(function(t) {
+  var divs = new Array(6);
+  var eventWatchers = new Array(6);
+  var players = new Array(6);
+  for (let i = 0; i < 6; i++) {
+    divs[i] = addDiv();
+    eventWatchers[i] = new EventWatcher(divs[i], CSS_ANIM_EVENTS);
+    divs[i].style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+    players[i] = divs[i].getAnimationPlayers()[0];
+  }
+
+  var beforeTime = document.timeline.currentTime - ANIM_DELAY_MS / 2;
+  var activeTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS / 2;
+  var afterTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS - ANIM_DELAY_MS / 2;
+
+  // before -> active, then back:
+  players[0].startTime = activeTime;
+  players[0].startTime = beforeTime;
+
+  // before -> after, then back:
+  players[1].startTime = afterTime;
+  players[1].startTime = beforeTime;
+
+  // active -> before, then back:
+  eventWatchers[2].waitForEvent('animationstart').then(function() {
+    players[2].startTime = beforeTime;
+    players[2].startTime = activeTime;
+  });
+  players[2].startTime = activeTime; // get us into the initial state
+
+  // active -> after, then back:
+  eventWatchers[3].waitForEvent('animationstart').then(function() {
+    players[3].startTime = afterTime;
+    players[3].startTime = activeTime;
+  });
+  players[3].startTime = activeTime; // get us into the initial state
+
+  // after -> before, then back:
+  eventWatchers[4].waitForEvents(['animationstart', 'animationend']).then(function() {
+    players[4].startTime = beforeTime;
+    players[4].startTime = afterTime;
+  });
+  players[4].startTime = afterTime; // get us into the initial state
+
+  // after -> active, then back:
+  eventWatchers[5].waitForEvents(['animationstart', 'animationend']).then(function() {
+    players[5].startTime = activeTime;
+    players[5].startTime = afterTime;
+  });
+  players[5].startTime = afterTime; // get us into the initial state
+
+  // See the long comment documenting this async_test for an explanation of
+  // why we have this timeout and its relationship to intermittent failure.
+  setTimeout(function() {
+    for (let i = 0; i < 6; i++) {
+      eventWatchers[i].stopWatching();
+      divs[i].parentNode.removeChild(divs[i]);
+    }
+    t.done();
+  }, 1000);
+}, 'Redundant changes');
+
+
+async_test(function(t) {
+  var div = addDiv();
+  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+
+  var player = div.getAnimationPlayers()[0];
+
+  player.ready.then(t.step_func(function() {
+    player.startTime = null;
+    return player.ready;
+  })).then(t.step_func(function() {
+    div.parentNode.removeChild(div);
+  })).catch(t.step_func(function(reason) {
+    assert_true(false, reason);
+  })).then(function() {
+    t.done();
+  });
+}, 'Setting startTime to null');
+
+
+async_test(function(t) {
+  var div = addDiv();
+  div.style.animation = 'anim 100s';
+
+  var player = div.getAnimationPlayers()[0];
+
+  player.ready.then(t.step_func(function() {
+    var savedStartTime = player.startTime;
+
+    assert_not_equals(player.startTime, null,
+      'AnimationPlayer.startTime not null on ready Promise resolve');
+
+    player.pause();
+    assert_equals(player.startTime, null,
+      'AnimationPlayer.startTime is null after paused');
+    assert_equals(player.playState, 'paused',
+      'AnimationPlayer.playState is "paused" after pause() call');
+
+    div.parentNode.removeChild(div);
+  })).catch(t.step_func(function(reason) {
+    assert_true(false, reason);
+  })).then(function() {
+    t.done();
+  });
+}, 'AnimationPlayer.startTime after paused');
+
+    </script>
+  </body>
+</html>
