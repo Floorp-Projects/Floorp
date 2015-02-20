@@ -396,6 +396,23 @@ bool OpenSlesInput::EnqueueAllBuffers() {
   return true;
 }
 
+void OpenSlesInput::SetupVoiceMode() {
+  SLAndroidConfigurationItf configItf;
+  SLresult res = (*sles_recorder_)->GetInterface(sles_recorder_, SL_IID_ANDROIDCONFIGURATION_,
+                                                 (void*)&configItf);
+  WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "OpenSL GetInterface: %d", res);
+
+  if (res == SL_RESULT_SUCCESS) {
+    SLuint32 voiceMode = SL_ANDROID_RECORDING_PRESET_VOICE_COMMUNICATION;
+    SLuint32 voiceSize = sizeof(voiceMode);
+
+    res = (*configItf)->SetConfiguration(configItf,
+                                         SL_ANDROID_KEY_RECORDING_PRESET,
+                                         &voiceMode, voiceSize);
+    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "OpenSL Set Voice mode res: %d", res);
+  }
+}
+
 #if defined(WEBRTC_GONK) && defined(WEBRTC_HARDWARE_AEC_NS)
 bool OpenSlesInput::CheckPlatformAEC() {
   effect_descriptor_t fxDesc;
@@ -519,16 +536,7 @@ bool OpenSlesInput::CreateAudioRecorder() {
                                       &recorder_config),
       false);
 
-  // Set audio recorder configuration to
-  // SL_ANDROID_RECORDING_PRESET_VOICE_COMMUNICATION which ensures that we
-  // use the main microphone tuned for audio communications.
-  SLuint32 stream_type = SL_ANDROID_RECORDING_PRESET_VOICE_COMMUNICATION;
-  OPENSL_RETURN_ON_FAILURE(
-      (*recorder_config)->SetConfiguration(recorder_config,
-                                           SL_ANDROID_KEY_RECORDING_PRESET,
-                                           &stream_type,
-                                           sizeof(SLint32)),
-      false);
+  SetupVoiceMode();
 
   // Realize the recorder in synchronous mode.
   OPENSL_RETURN_ON_FAILURE((*sles_recorder_)->Realize(sles_recorder_,
