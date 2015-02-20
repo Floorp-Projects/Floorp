@@ -29,6 +29,7 @@ class nsIPrincipal;
 
 #define NS_CONTENTPOLICY_CONTRACTID   "@mozilla.org/layout/content-policy;1"
 #define NS_CONTENTPOLICY_CATEGORY "content-policy"
+#define NS_SIMPLECONTENTPOLICY_CATEGORY "simple-content-policy"
 #define NS_CONTENTPOLICY_CID                              \
   {0x0e3afd3d, 0xeb60, 0x4c2b,                            \
      { 0x96, 0x3b, 0x56, 0xd7, 0xc4, 0x39, 0xf1, 0x24 }}
