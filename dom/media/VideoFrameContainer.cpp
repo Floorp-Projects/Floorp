@@ -33,6 +33,10 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
                                           Image* aImage,
                                           TimeStamp aTargetTime)
 {
+  if (!aImage->IsValid()) {
+    return;
+  }
+
   MutexAutoLock lock(mMutex);
 
   if (aIntrinsicSize != mIntrinsicSize) {
