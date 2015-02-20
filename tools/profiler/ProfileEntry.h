@@ -152,6 +152,12 @@ public:
     mPseudoStack = nullptr;
     mPlatformData = nullptr;
   }
+
+  uint32_t bufferGeneration() const {
+    MOZ_ASSERT(mBuffer->mGeneration >= 0);
+    return mBuffer->mGeneration;
+  }
+
 private:
   FRIEND_TEST(ThreadProfile, InsertOneTag);
   FRIEND_TEST(ThreadProfile, InsertOneTagWithTinyBuffer);
