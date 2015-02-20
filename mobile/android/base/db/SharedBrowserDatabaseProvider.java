@@ -6,7 +6,6 @@ package org.mozilla.gecko.db;
 
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
-import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.PerProfileDatabases.DatabaseHelperFactory;
 
 import android.content.Context;
@@ -36,6 +35,14 @@ public abstract class SharedBrowserDatabaseProvider extends AbstractPerProfileDa
     @Override
     protected PerProfileDatabases<BrowserDatabaseHelper> getDatabases() {
         return databases;
+    }
+
+    // Can't mark as @Override. Added in API 11.
+    public void shutdown() {
+        synchronized (SharedBrowserDatabaseProvider.class) {
+            databases.shutdown();
+            databases = null;
+        }
     }
 
     @Override
