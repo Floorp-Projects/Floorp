@@ -427,7 +427,7 @@ public:
   }
 
   bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
     if (aWorkerPrivate->WorkerScriptExecutedSuccessfully()) {
@@ -2154,7 +2154,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD
-  VisitHeader(const nsACString& aHeader, const nsACString& aValue)
+  VisitHeader(const nsACString& aHeader, const nsACString& aValue) MOZ_OVERRIDE
   {
     mHeaderNames.AppendElement(aHeader);
     mHeaderValues.AppendElement(aValue);
@@ -2195,7 +2195,7 @@ public:
   }
 
   bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
   {
     MOZ_ASSERT(aWorkerPrivate);
     return DispatchFetchEvent(aCx, aWorkerPrivate);
