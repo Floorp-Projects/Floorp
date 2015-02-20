@@ -214,10 +214,13 @@ LocalMediaStreamPlayback.prototype = Object.create(MediaStreamPlayback.prototype
   }
 });
 
+// haxx to prevent SimpleTest from failing at window.onload
+function addLoadEvent() {}
+
 var scriptsReady = Promise.all([
   "/tests/SimpleTest/SimpleTest.js",
   "head.js"
-].map(script => {
+].map(script  => {
   var el = document.createElement("script");
   el.src = script;
   document.head.appendChild(el);
@@ -229,8 +232,5 @@ function createHTML(options) {
 }
 
 function runTest(f) {
-  return scriptsReady.then(() => {
-    SimpleTest.waitForExplicitFinish();
-    return runTestWhenReady(f);
-  });
+  return scriptsReady.then(() => runTestWhenReady(f));
 }
