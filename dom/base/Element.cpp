@@ -797,6 +797,15 @@ Element::ScrollByNoFlush(int32_t aDx, int32_t aDy)
   return (before != after);
 }
 
+void
+Element::MozScrollSnap()
+{
+  nsIScrollableFrame* sf = GetScrollFrame(nullptr, false);
+  if (sf) {
+    sf->ScrollSnap();
+  }
+}
+
 static nsSize GetScrollRectSizeForOverflowVisibleFrame(nsIFrame* aFrame)
 {
   if (!aFrame) {

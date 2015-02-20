@@ -7356,6 +7356,16 @@ nsGlobalWindow::ScrollByPages(int32_t numPages,
 }
 
 void
+nsGlobalWindow::MozScrollSnap()
+{
+  FlushPendingNotifications(Flush_Layout);
+  nsIScrollableFrame *sf = GetScrollFrame();
+  if (sf) {
+    sf->ScrollSnap();
+  }
+}
+
+void
 nsGlobalWindow::MozRequestOverfill(OverfillCallback& aCallback,
                                    mozilla::ErrorResult& aError)
 {
