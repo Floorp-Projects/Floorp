@@ -306,10 +306,7 @@ TrackBuffer::EvictData(double aPlaybackTime,
     return false;
   }
 
-  int64_t totalSize = 0;
-  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
-    totalSize += mDecoders[i]->GetResource()->GetSize();
-  }
+  int64_t totalSize = GetSize();
 
   int64_t toEvict = totalSize - aThreshold;
   if (toEvict <= 0 || mInitializedDecoders.IsEmpty()) {
@@ -447,6 +444,27 @@ TrackBuffer::RemoveEmptyDecoders(nsTArray<mozilla::SourceBufferDecoder*>& aDecod
       RemoveDecoder(aDecoders[i]);
     }
   }
+}
+
+int64_t
+TrackBuffer::GetSize()
+{
+  int64_t totalSize = 0;
+  for (uint32_t i = 0; i < mInitializedDecoders.Length(); ++i) {
+    totalSize += mInitializedDecoders[i]->GetResource()->GetSize();
+  }
+  return totalSize;
+}
+
+bool
+TrackBuffer::HasOnlyIncompleteMedia()
+{
+  if (!mCurrentDecoder) {
+    return false;
+  }
+  nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
+  mCurrentDecoder->GetBuffered(buffered);
+  return mCurrentDecoder->GetResource()->GetSize() && !buffered->Length();
 }
 
 void

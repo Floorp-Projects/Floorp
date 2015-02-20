@@ -64,7 +64,7 @@ public:
 protected:
   virtual ~HTMLMetaElement();
 
-  virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
+  virtual void GetItemValueText(DOMString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
 };
 

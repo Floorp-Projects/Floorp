@@ -2960,15 +2960,21 @@ nsDisplayThemedBackground::GetBoundsInternal() {
   return r + ToReferenceFrame();
 }
 
-bool
+void
 nsDisplayBackgroundColor::ApplyOpacity(nsDisplayListBuilder* aBuilder,
                                        float aOpacity,
                                        const DisplayItemClip* aClip)
 {
+  NS_ASSERTION(CanApplyOpacity(), "ApplyOpacity should be allowed");
   mColor.a = mColor.a * aOpacity;
   if (aClip) {
     IntersectClip(aBuilder, *aClip);
   }
+}
+
+bool
+nsDisplayBackgroundColor::CanApplyOpacity() const
+{
   return true;
 }
 
@@ -3822,15 +3828,21 @@ nsDisplayOpacity::NeedsActiveLayer(nsDisplayListBuilder* aBuilder)
   return false;
 }
 
-bool
+void
 nsDisplayOpacity::ApplyOpacity(nsDisplayListBuilder* aBuilder,
                              float aOpacity,
                              const DisplayItemClip* aClip)
 {
+  NS_ASSERTION(CanApplyOpacity(), "ApplyOpacity should be allowed");
   mOpacity = mOpacity * aOpacity;
   if (aClip) {
     IntersectClip(aBuilder, *aClip);
   }
+}
+
+bool
+nsDisplayOpacity::CanApplyOpacity() const
+{
   return true;
 }
 
@@ -3841,14 +3853,41 @@ nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
     return false;
 
   nsDisplayItem* child = mList.GetBottom();
-  // Only try folding our opacity down if we have a single
-  // child. We could potentially do this also if we had multiple
-  // children as long as they don't overlap.
-  if (!child || child->GetAbove()) {
+  // Only try folding our opacity down if we have at most three children
+  // that don't overlap and can all apply the opacity to themselves.
+  if (!child) {
+    return false;
+  }
+  struct {
+    nsDisplayItem* item;
+    nsRect bounds;
+  } children[3];
+  bool snap;
+  uint32_t numChildren = 0;
+  for (; numChildren < ArrayLength(children) && child; numChildren++, child = child->GetAbove()) {
+    if (!child->CanApplyOpacity()) {
+      return false;
+    }
+    children[numChildren].item = child;
+    children[numChildren].bounds = child->GetBounds(aBuilder, &snap);
+  }
+  if (child) {
+    // we have a fourth (or more) child
     return false;
   }
 
-  return child->ApplyOpacity(aBuilder, mOpacity, mClip);
+  for (uint32_t i = 0; i < numChildren; i++) {
+    for (uint32_t j = i+1; j < numChildren; j++) {
+      if (children[i].bounds.Intersects(children[j].bounds)) {
+        return false;
+      }
+    }
+  }
+
+  for (uint32_t i = 0; i < numChildren; i++) {
+    children[i].item->ApplyOpacity(aBuilder, mOpacity, mClip);
+  }
+  return true;
 }
 
 nsDisplayItem::LayerState

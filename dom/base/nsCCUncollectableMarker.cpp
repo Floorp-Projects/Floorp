@@ -169,8 +169,8 @@ MarkMessageManagers()
   if (nsFrameMessageManager::sSameProcessParentManager) {
     nsFrameMessageManager::sSameProcessParentManager->MarkForCC();
   }
-  if (nsFrameMessageManager::sChildProcessManager) {
-    nsFrameMessageManager::sChildProcessManager->MarkForCC();
+  if (nsFrameMessageManager::GetChildProcessManager()) {
+    nsFrameMessageManager::GetChildProcessManager()->MarkForCC();
   }
 }
 
