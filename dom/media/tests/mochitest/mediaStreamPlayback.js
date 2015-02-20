@@ -213,3 +213,27 @@ LocalMediaStreamPlayback.prototype = Object.create(MediaStreamPlayback.prototype
     }
   }
 });
+
+function runTest(f) {
+  // Use addEventListener to avoid SimpleTest hacking an .onload assignment
+  window.addEventListener('load', () => {
+    SimpleTest.waitForExplicitFinish();
+    realRunTest(f);
+  });
+}
+
+function createHTML(options) {
+  window.addEventListener('load', () => {
+    realCreateHTML(options);
+  });
+}
+
+[
+  "/tests/SimpleTest/SimpleTest.js",
+  "head.js"
+].forEach(script => {
+  console.log('msp');
+  var el = document.createElement("script");
+  el.src = script;
+  document.head.appendChild(el);
+});
