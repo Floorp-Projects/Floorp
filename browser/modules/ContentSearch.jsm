@@ -210,6 +210,11 @@ this.ContentSearch = {
     let engine = Services.search.getEngineByName(data.engineName);
     let submission = engine.getSubmission(data.searchString, "", data.whence);
     let browser = msg.target;
+    let newTab;
+    if (data.useNewTab) {
+      newTab = browser.getTabBrowser().addTab();
+      browser = newTab.linkedBrowser;
+    }
     try {
       browser.loadURIWithFlags(submission.uri.spec,
                                Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null,
@@ -220,6 +225,9 @@ this.ContentSearch = {
       // message and the time we handle it.  In that case, trying to call any
       // method on it will throw.
       return Promise.resolve();
+    }
+    if (data.useNewTab) {
+      browser.getTabBrowser().selectedTab = newTab;
     }
     let win = browser.ownerDocument.defaultView;
     win.BrowserSearch.recordSearchInHealthReport(engine, data.whence,

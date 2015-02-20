@@ -49,11 +49,12 @@ let gSearch = {
     let searchText = this._nodes.text;
     let searchStr = searchText.value;
     if (this.currentEngineName && searchStr.length) {
-
+      let useNewTab = event && event.button == 1;
       let eventData = {
         engineName: this.currentEngineName,
         searchString: searchStr,
         whence: "newtab",
+        useNewTab: useNewTab,
       }
 
       if (searchText.hasAttribute("selection-index")) {
@@ -244,7 +245,7 @@ let gSearch = {
       let parent = document.getElementById("newtab-scrollbox");
       this._suggestionController =
         new SearchSuggestionUIController(this._nodes.text, parent,
-                                         () => this.search());
+                                         event => this.search(event));
     }
     this._suggestionController.engineName = engine.name;
   },
