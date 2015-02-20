@@ -146,6 +146,7 @@ let ClickEventHandler = {
 
   stopScroll: function() {
     if (this._scrollable) {
+      this._scrollable.mozScrollSnap();
       this._scrollable = null;
 
       Cc["@mozilla.org/eventlistenerservice;1"]
