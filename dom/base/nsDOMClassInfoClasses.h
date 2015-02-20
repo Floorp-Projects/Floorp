@@ -40,6 +40,7 @@ DOMCI_CLASS(MozMobileMessageThread)
 DOMCI_CLASS(CSSFontFaceRule)
 
 DOMCI_CLASS(ContentFrameMessageManager)
+DOMCI_CLASS(ContentProcessMessageManager)
 DOMCI_CLASS(ChromeMessageBroadcaster)
 DOMCI_CLASS(ChromeMessageSender)
 
