@@ -21,9 +21,7 @@ namespace mozilla {
 void
 DisplayItemClip::SetTo(const nsRect& aRect)
 {
-  mHaveClipRect = true;
-  mClipRect = aRect;
-  mRoundedClipRects.Clear();
+  SetTo(aRect, nullptr);
 }
 
 void
@@ -31,9 +29,13 @@ DisplayItemClip::SetTo(const nsRect& aRect, const nscoord* aRadii)
 {
   mHaveClipRect = true;
   mClipRect = aRect;
-  mRoundedClipRects.SetLength(1);
-  mRoundedClipRects[0].mRect = aRect;
-  memcpy(mRoundedClipRects[0].mRadii, aRadii, sizeof(nscoord)*8);
+  if (aRadii) {
+    mRoundedClipRects.SetLength(1);
+    mRoundedClipRects[0].mRect = aRect;
+    memcpy(mRoundedClipRects[0].mRadii, aRadii, sizeof(nscoord)*8);
+  } else {
+    mRoundedClipRects.Clear();
+  }
 }
 
 void
