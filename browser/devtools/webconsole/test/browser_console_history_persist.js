@@ -59,6 +59,15 @@ let test = asyncTest(function* () {
   is (JSON.stringify(hud4.jsterm.history), '["1","2","3","4","5","6","7","8","9","\\"hello from third tab\\""]',
     "Fourth tab has most recent history");
 
+  yield hud4.jsterm.clearHistory();
+  is (JSON.stringify(hud4.jsterm.history), '[]',
+    "Clearing history for a tab works");
+
+  yield loadTab(TEST_URI);
+  let hud5 = yield openConsole();
+  is (JSON.stringify(hud5.jsterm.history), '[]',
+    "Clearing history carries over to a new tab");
+
   info ("Clearing custom input history pref");
   Services.prefs.clearUserPref("devtools.webconsole.inputHistoryCount");
 });
