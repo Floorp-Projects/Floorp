@@ -12,7 +12,7 @@
  Exposed=(ServiceWorker)]
 interface FetchEvent : Event {
   readonly attribute Request request;
-  readonly attribute ServiceWorkerClient client; // The window issuing the request.
+  readonly attribute Client client; // The window issuing the request.
   readonly attribute boolean isReload;
 
   [Throws] void respondWith(Promise<Response> r);
@@ -22,6 +22,6 @@ interface FetchEvent : Event {
 
 dictionary FetchEventInit : EventInit {
   Request request;
-  ServiceWorkerClient client;
+  Client client;
   boolean isReload;
 };
