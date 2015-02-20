@@ -5,14 +5,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=983504
 -->
 <head>
   <meta charset="utf-8">
-  <title>mozGetUserMedia Basic Screenshare Test</title>
+  <title>getUserMedia Basic Screenshare Test</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="mediaStreamPlayback.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=983504">mozGetUserMedia Basic Screenshare Test</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=983504">getUserMedia Basic Screenshare Test</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   <video id="testVideo"></video>
@@ -39,16 +39,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=983504
       fake: false
     };
 
-    getUserMedia(constraints, function (aStream) {
+    getUserMedia(constraints).then(aStream => {
       checkMediaStreamTracks(constraints, aStream);
 
       var playback = new LocalMediaStreamPlayback(testVideo, aStream);
-      playback.playMediaWithStreamStop(false, function () {
-        aStream.stop();
-        SimpleTest.finish();
-      }, generateErrorCallback());
-
-    }, generateErrorCallback());
+      return playback.playMediaWithStreamStop(false);
+    }).then(() => SimpleTest.finish(), generateErrorCallback());
 
   });
 

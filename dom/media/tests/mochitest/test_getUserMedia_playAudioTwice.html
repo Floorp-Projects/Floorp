@@ -1,18 +1,18 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=822109
 -->
 <head>
   <meta charset="utf-8">
-  <title>mozGetUserMedia Play Audio Twice</title>
+  <title>getUserMedia Play Audio Twice</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="mediaStreamPlayback.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=822109">mozGetUserMedia Play Audio Twice</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=822109">getUserMedia Play Audio Twice</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   <audio id="testAudio"></audio>
@@ -23,23 +23,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=822109
    * Run a test that we can complete an audio playback cycle twice in a row.
    */
   runTest(function () {
-    getUserMedia({audio: true}, function(audioStream) {
+    getUserMedia({audio: true}).then(audioStream => {
       var testAudio = document.getElementById('testAudio');
       var audioStreamPlayback = new LocalMediaStreamPlayback(testAudio,
         audioStream);
 
-      audioStreamPlayback.playMedia(false, function() {
-
-        audioStreamPlayback.playMedia(true, function() {
-          audioStream.stop();
-          SimpleTest.finish();
-        }, generateErrorCallback());
-
-      }, generateErrorCallback());
-
-    }, generateErrorCallback());
+      return audioStreamPlayback.playMedia(false)
+        .then(() => audioStreamPlayback.playMedia(true))
+        .then(() => audioStream.stop());
+    }).then(() => SimpleTest.finish(), generateErrorCallback());
   });
-
 </script>
 </pre>
 </body>
