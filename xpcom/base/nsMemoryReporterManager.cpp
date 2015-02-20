@@ -544,6 +544,157 @@ PrivateDistinguishedAmount(int64_t* aN)
   *aN = pmcex.PrivateUsage;
   return NS_OK;
 }
+
+class WindowsAddressSpaceReporter MOZ_FINAL : public nsIMemoryReporter
+{
+  ~WindowsAddressSpaceReporter() {}
+
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+  {
+    MEMORY_BASIC_INFORMATION info = { 0 };
+    bool isPrevSegStackGuard = false;
+    for (size_t currentAddress = 0; ; ) {
+      if (!VirtualQuery((LPCVOID)currentAddress, &info, sizeof(info))) {
+        // Something went wrong, just return whatever we've got already.
+        break;
+      }
+
+      size_t size = info.RegionSize;
+
+      // For each range of pages, we consider one or more of its State, Type
+      // and Protect values. These are documented at
+      // https://msdn.microsoft.com/en-us/library/windows/desktop/aa366775%28v=vs.85%29.aspx
+      // (for State and Type) and
+      // https://msdn.microsoft.com/en-us/library/windows/desktop/aa366786%28v=vs.85%29.aspx
+      // (for Protect).
+      //
+      // Not all State values have accompanying Type and Protection values.
+      bool doType = false;
+      bool doProtect = false;
+
+      nsCString path("address-space");
+
+      switch (info.State) {
+        case MEM_FREE:
+          path.AppendLiteral("/free");
+          break;
+
+        case MEM_RESERVE:
+          path.AppendLiteral("/reserved");
+          doType = true;
+          break;
+
+        case MEM_COMMIT:
+          path.AppendLiteral("/commit");
+          doType = true;
+          doProtect = true;
+          break;
+
+        default:
+          // Should be impossible, but handle it just in case.
+          path.AppendLiteral("/???");
+          break;
+      }
+
+      if (doType) {
+        switch (info.Type) {
+          case MEM_IMAGE:
+            path.AppendLiteral("/image");
+            break;
+
+          case MEM_MAPPED:
+            path.AppendLiteral("/mapped");
+            break;
+
+          case MEM_PRIVATE:
+            path.AppendLiteral("/private");
+            break;
+
+          default:
+            // Should be impossible, but handle it just in case.
+            path.AppendLiteral("/???");
+            break;
+        }
+      }
+
+      if (doProtect) {
+        // Basic attributes. Exactly one of these should be set.
+        if (info.Protect & PAGE_EXECUTE) {
+          path.AppendLiteral("/execute");
+        }
+        if (info.Protect & PAGE_EXECUTE_READ) {
+          path.AppendLiteral("/execute-read");
+        }
+        if (info.Protect & PAGE_EXECUTE_READWRITE) {
+          path.AppendLiteral("/execute-readwrite");
+        }
+        if (info.Protect & PAGE_EXECUTE_WRITECOPY) {
+          path.AppendLiteral("/execute-writecopy");
+        }
+        if (info.Protect & PAGE_NOACCESS) {
+          path.AppendLiteral("/noaccess");
+        }
+        if (info.Protect & PAGE_READONLY) {
+          path.AppendLiteral("/readonly");
+        }
+        if (info.Protect & PAGE_READWRITE) {
+          path.AppendLiteral("/readwrite");
+        }
+        if (info.Protect & PAGE_WRITECOPY) {
+          path.AppendLiteral("/writecopy");
+        }
+
+        // Modifiers. At most one of these should be set.
+        if (info.Protect & PAGE_GUARD) {
+          path.AppendLiteral("+guard");
+        }
+        if (info.Protect & PAGE_NOCACHE) {
+          path.AppendLiteral("+nocache");
+        }
+        if (info.Protect & PAGE_WRITECOMBINE) {
+          path.AppendLiteral("+writecombine");
+        }
+
+        // Annotate likely stack segments, too.
+        if (isPrevSegStackGuard &&
+            info.State == MEM_COMMIT &&
+            doType && info.Type == MEM_PRIVATE &&
+            doProtect && info.Protect == PAGE_READWRITE) {
+          path.AppendLiteral(" (stack)");
+        }
+      }
+
+      isPrevSegStackGuard =
+        info.State == MEM_COMMIT &&
+        doType && info.Type == MEM_PRIVATE &&
+        doProtect && info.Protect == (PAGE_READWRITE|PAGE_GUARD);
+
+      nsresult rv;
+      rv = aHandleReport->Callback(
+        EmptyCString(), path, KIND_OTHER, UNITS_BYTES, size,
+        NS_LITERAL_CSTRING("From MEMORY_BASIC_INFORMATION."), aData);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      size_t lastAddress = currentAddress;
+      currentAddress += size;
+
+      // If we overflow, we've examined all of the address space.
+      if (currentAddress < lastAddress) {
+        break;
+      }
+    }
+
+    return NS_OK;
+  }
+};
+NS_IMPL_ISUPPORTS(WindowsAddressSpaceReporter, nsIMemoryReporter)
+
 #endif  // XP_<PLATFORM>
 
 #ifdef HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER
@@ -1024,6 +1175,10 @@ nsMemoryReporterManager::Init()
 
 #ifdef MOZ_DMD
   RegisterStrongReporter(new mozilla::dmd::DMDReporter());
+#endif
+
+#ifdef XP_WIN
+  RegisterStrongReporter(new WindowsAddressSpaceReporter());
 #endif
 
 #ifdef XP_UNIX
