@@ -734,7 +734,7 @@ SharedTextureClientD3D9::SharedTextureClientD3D9(gfx::SurfaceFormat aFormat, Tex
 SharedTextureClientD3D9::~SharedTextureClientD3D9()
 {
   if (mTexture && mActor) {
-    KeepUntilFullDeallocation(new TKeepAlive<IDirect3DTexture9>(mTexture));
+    KeepUntilFullDeallocation(MakeUnique<TKeepAlive<IDirect3DTexture9>>(mTexture));
   }
   MOZ_COUNT_DTOR(SharedTextureClientD3D9);
 }
