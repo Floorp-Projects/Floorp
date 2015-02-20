@@ -645,11 +645,17 @@ LogThisType(const char* aTypeName)
   return he != nullptr;
 }
 
+static PLHashNumber
+HashNumber(const void* aKey)
+{
+  return PLHashNumber(NS_PTR_TO_INT32(aKey));
+}
+
 static intptr_t
 GetSerialNumber(void* aPtr, bool aCreate)
 {
   PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers,
-                                            PLHashNumber(NS_PTR_TO_INT32(aPtr)),
+                                            HashNumber(aPtr),
                                             aPtr);
   if (hep && *hep) {
     return reinterpret_cast<serialNumberRecord*>((*hep)->value)->serialNumber;
@@ -658,7 +664,7 @@ GetSerialNumber(void* aPtr, bool aCreate)
     record->serialNumber = ++gNextSerialNumber;
     record->refCount = 0;
     record->COMPtrCount = 0;
-    PL_HashTableRawAdd(gSerialNumbers, hep, PLHashNumber(NS_PTR_TO_INT32(aPtr)),
+    PL_HashTableRawAdd(gSerialNumbers, hep, HashNumber(aPtr),
                        aPtr, reinterpret_cast<void*>(record));
     return gNextSerialNumber;
   }
@@ -669,7 +675,7 @@ static int32_t*
 GetRefCount(void* aPtr)
 {
   PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers,
-                                            PLHashNumber(NS_PTR_TO_INT32(aPtr)),
+                                            HashNumber(aPtr),
                                             aPtr);
   if (hep && *hep) {
     return &((reinterpret_cast<serialNumberRecord*>((*hep)->value))->refCount);
@@ -683,7 +689,7 @@ static int32_t*
 GetCOMPtrCount(void* aPtr)
 {
   PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers,
-                                            PLHashNumber(NS_PTR_TO_INT32(aPtr)),
+                                            HashNumber(aPtr),
                                             aPtr);
   if (hep && *hep) {
     return &((reinterpret_cast<serialNumberRecord*>((*hep)->value))->COMPtrCount);
@@ -758,12 +764,6 @@ InitLog(const char* aEnvVar, const char* aMsg, FILE** aResult)
   return false;
 }
 
-
-static PLHashNumber
-HashNumber(const void* aKey)
-{
-  return PLHashNumber(NS_PTR_TO_INT32(aKey));
-}
 
 static void
 maybeUnregisterAndCloseFile(FILE*& aFile)
