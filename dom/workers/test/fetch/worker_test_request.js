@@ -27,21 +27,70 @@ function testDefaultCtor() {
 }
 
 function testClone() {
-  var req = (new Request("./cloned_request.txt", {
+  var orig = new Request("./cloned_request.txt", {
               method: 'POST',
               headers: { "Content-Length": 5 },
               body: "Sample body",
               mode: "same-origin",
               credentials: "same-origin",
-            })).clone();
-  ok(req.method === "POST", "Request method is POST");
-  ok(req.headers instanceof Headers, "Request should have non-null Headers object");
-  is(req.headers.get('content-length'), "5", "Request content-length should be 5.");
-  ok(req.url === (new URL("./cloned_request.txt", self.location.href)).href,
+            });
+  var clone = orig.clone();
+  ok(clone.method === "POST", "Request method is POST");
+  ok(clone.headers instanceof Headers, "Request should have non-null Headers object");
+
+  is(clone.headers.get('content-length'), "5", "Response content-length should be 5.");
+  orig.headers.set('content-length', 6);
+  is(clone.headers.get('content-length'), "5", "Request content-length should be 5.");
+
+  ok(clone.url === (new URL("./cloned_request.txt", self.location.href)).href,
        "URL should be resolved with entry settings object's API base URL");
-  ok(req.referrer === "about:client", "Default referrer is `client` which serializes to about:client.");
-  ok(req.mode === "same-origin", "Request mode is same-origin");
-  ok(req.credentials === "same-origin", "Default credentials is same-origin");
+  ok(clone.referrer === "about:client", "Default referrer is `client` which serializes to about:client.");
+  ok(clone.mode === "same-origin", "Request mode is same-origin");
+  ok(clone.credentials === "same-origin", "Default credentials is same-origin");
+
+  ok(!orig.bodyUsed, "Original body is not consumed.");
+  ok(!clone.bodyUsed, "Clone body is not consumed.");
+
+  var origBody = null;
+  var clone2 = null;
+  return orig.text().then(function (body) {
+    origBody = body;
+    is(origBody, "Sample body", "Original body string matches");
+    ok(orig.bodyUsed, "Original body is consumed.");
+    ok(!clone.bodyUsed, "Clone body is not consumed.");
+
+    try {
+      orig.clone()
+      ok(false, "Cannot clone Request whose body is already consumed");
+    } catch (e) {
+      is(e.name, "TypeError", "clone() of consumed body should throw TypeError");
+    }
+
+    clone2 = clone.clone();
+    return clone.text();
+  }).then(function (body) {
+    is(body, origBody, "Clone body matches original body.");
+    ok(clone.bodyUsed, "Clone body is consumed.");
+
+    try {
+      clone.clone()
+      ok(false, "Cannot clone Request whose body is already consumed");
+    } catch (e) {
+      is(e.name, "TypeError", "clone() of consumed body should throw TypeError");
+    }
+
+    return clone2.text();
+  }).then(function (body) {
+    is(body, origBody, "Clone body matches original body.");
+    ok(clone2.bodyUsed, "Clone body is consumed.");
+
+    try {
+      clone2.clone()
+      ok(false, "Cannot clone Request whose body is already consumed");
+    } catch (e) {
+      is(e.name, "TypeError", "clone() of consumed body should throw TypeError");
+    }
+  });
 }
 
 function testUsedRequest() {
@@ -266,7 +315,6 @@ onmessage = function() {
   var done = function() { postMessage({ type: 'finish' }) }
 
   testDefaultCtor();
-  testClone();
   testSimpleUrlParse();
   testUrlFragment();
   testMethod();
@@ -278,6 +326,7 @@ onmessage = function() {
     .then(testBodyUsed)
     .then(testBodyExtraction)
     .then(testUsedRequest)
+    .then(testClone())
     // Put more promise based tests here.
     .then(done)
     .catch(function(e) {

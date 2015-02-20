@@ -76,6 +76,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TabChildGlobal, DOMEventTargetHelper)
   NS_FORWARD_SAFE_NSIMESSAGELISTENERMANAGER(mMessageManager)
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
+  NS_FORWARD_SAFE_NSIMESSAGEMANAGERGLOBAL(mMessageManager)
   NS_IMETHOD SendSyncMessage(const nsAString& aMessageName,
                              JS::Handle<JS::Value> aObject,
                              JS::Handle<JS::Value> aRemote,
@@ -104,15 +105,6 @@ public:
   }
   NS_IMETHOD GetContent(nsIDOMWindow** aContent) MOZ_OVERRIDE;
   NS_IMETHOD GetDocShell(nsIDocShell** aDocShell) MOZ_OVERRIDE;
-  NS_IMETHOD Dump(const nsAString& aStr) MOZ_OVERRIDE
-  {
-    return mMessageManager ? mMessageManager->Dump(aStr) : NS_OK;
-  }
-  NS_IMETHOD PrivateNoteIntentionalCrash() MOZ_OVERRIDE;
-  NS_IMETHOD Btoa(const nsAString& aBinaryData,
-                  nsAString& aAsciiBase64String) MOZ_OVERRIDE;
-  NS_IMETHOD Atob(const nsAString& aAsciiString,
-                  nsAString& aBinaryData) MOZ_OVERRIDE;
 
   nsresult AddEventListener(const nsAString& aType,
                             nsIDOMEventListener* aListener,
@@ -173,7 +165,7 @@ protected:
 // It make sense to place in this class all helper functions, and functionality which could be shared between
 // Cross-process/Cross-thread implmentations.
 class TabChildBase : public nsISupports,
-                     public nsFrameScriptExecutor,
+                     public nsMessageManagerScriptExecutor,
                      public ipc::MessageManagerCallback
 {
 public:

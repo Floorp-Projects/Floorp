@@ -28,7 +28,7 @@ class EventChainPreVisitor;
 } // namespace mozilla
 
 class nsInProcessTabChildGlobal : public mozilla::DOMEventTargetHelper,
-                                  public nsFrameScriptExecutor,
+                                  public nsMessageManagerScriptExecutor,
                                   public nsIInProcessContentFrameMessageManager,
                                   public nsIGlobalObject,
                                   public nsIScriptObjectPrincipal,
@@ -44,6 +44,7 @@ public:
 
   NS_FORWARD_SAFE_NSIMESSAGELISTENERMANAGER(mMessageManager)
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
+  NS_FORWARD_SAFE_NSIMESSAGEMANAGERGLOBAL(mMessageManager)
   NS_IMETHOD SendSyncMessage(const nsAString& aMessageName,
                              JS::Handle<JS::Value> aObject,
                              JS::Handle<JS::Value> aRemote,
@@ -72,15 +73,6 @@ public:
   }
   NS_IMETHOD GetContent(nsIDOMWindow** aContent) MOZ_OVERRIDE;
   NS_IMETHOD GetDocShell(nsIDocShell** aDocShell) MOZ_OVERRIDE;
-  NS_IMETHOD Dump(const nsAString& aStr) MOZ_OVERRIDE
-  {
-    return mMessageManager ? mMessageManager->Dump(aStr) : NS_OK;
-  }
-  NS_IMETHOD PrivateNoteIntentionalCrash() MOZ_OVERRIDE;
-  NS_IMETHOD Btoa(const nsAString& aBinaryData,
-                  nsAString& aAsciiBase64String) MOZ_OVERRIDE;
-  NS_IMETHOD Atob(const nsAString& aAsciiString,
-                  nsAString& aBinaryData) MOZ_OVERRIDE;
 
   NS_DECL_NSIINPROCESSCONTENTFRAMEMESSAGEMANAGER
 

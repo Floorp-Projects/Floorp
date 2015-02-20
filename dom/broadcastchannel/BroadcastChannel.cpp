@@ -335,7 +335,7 @@ public:
 
   virtual bool Notify(JSContext* aCx, workers::Status aStatus) MOZ_OVERRIDE
   {
-    if (aStatus >= Canceling) {
+    if (aStatus >= Closing) {
       mChannel->Shutdown();
     }
 
@@ -636,13 +636,6 @@ BroadcastChannel::Shutdown()
 {
   mState = StateClosed;
 
-  // If shutdown() is called we have to release the reference if we still keep
-  // it.
-  if (mIsKeptAlive) {
-    mIsKeptAlive = false;
-    Release();
-  }
-
   if (mWorkerFeature) {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     workerPrivate->RemoveFeature(workerPrivate->GetJSContext(), mWorkerFeature);
@@ -656,6 +649,13 @@ BroadcastChannel::Shutdown()
     NS_DispatchToCurrentThread(runnable);
 
     mActor = nullptr;
+  }
+
+  // If shutdown() is called we have to release the reference if we still keep
+  // it.
+  if (mIsKeptAlive) {
+    mIsKeptAlive = false;
+    Release();
   }
 }
 

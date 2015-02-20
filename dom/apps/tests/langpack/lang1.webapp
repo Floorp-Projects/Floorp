@@ -3,7 +3,7 @@
   "languages-target" : { "app://*.gaiamobile.org/manifest.webapp": "2.2" },
   "languages-provided": {
     "fr": {
-      "version": 201411051234,
+      "revision": 201411051234,
       "name": "Français",
       "apps": {
         "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest.webapp": "tests/dom/apps/tests/langpack/fr/"
