@@ -173,7 +173,7 @@ protected:
 // It make sense to place in this class all helper functions, and functionality which could be shared between
 // Cross-process/Cross-thread implmentations.
 class TabChildBase : public nsISupports,
-                     public nsFrameScriptExecutor,
+                     public nsMessageManagerScriptExecutor,
                      public ipc::MessageManagerCallback
 {
 public:
