@@ -58,11 +58,18 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  bool SatisfiesConstraintSets(
+  uint32_t GetBestFitnessDistance(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets) MOZ_OVERRIDE;
 
 protected:
-  typedef nsTArray<size_t> CapabilitySet;
+  struct CapabilityCandidate {
+    CapabilityCandidate(uint8_t index, uint32_t distance = 0)
+    : mIndex(index), mDistance(distance) {}
+
+    size_t mIndex;
+    uint32_t mDistance;
+  };
+  typedef nsTArray<CapabilityCandidate> CapabilitySet;
 
   ~MediaEngineCameraVideoSource() {}
 
@@ -71,18 +78,14 @@ protected:
                              layers::Image* aImage,
                              TrackID aID,
                              StreamTime delta);
-
-  static bool IsWithin(int32_t n, const dom::ConstrainLongRange& aRange);
-  static bool IsWithin(double n, const dom::ConstrainDoubleRange& aRange);
-  static int32_t Clamp(int32_t n, const dom::ConstrainLongRange& aRange);
-  static bool AreIntersecting(const dom::ConstrainLongRange& aA,
-                              const dom::ConstrainLongRange& aB);
-  static bool Intersect(dom::ConstrainLongRange& aA, const dom::ConstrainLongRange& aB);
-  static bool SatisfiesConstraintSet(const dom::MediaTrackConstraintSet& aConstraints,
-                                     const webrtc::CaptureCapability& aCandidate);
+  template<class ValueType, class ConstrainRange>
+  static uint32_t FitnessDistance(ValueType n, const ConstrainRange& aRange);
+  static uint32_t GetFitnessDistance(const webrtc::CaptureCapability& aCandidate,
+                                     const dom::MediaTrackConstraintSet &aConstraints);
+  static void TrimLessFitCandidates(CapabilitySet& set);
   virtual size_t NumCapabilities();
   virtual void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut);
-  void ChooseCapability(const VideoTrackConstraintsN &aConstraints,
+  bool ChooseCapability(const dom::MediaTrackConstraints &aConstraints,
                         const MediaEnginePrefs &aPrefs);
 
   // Engine variables.

@@ -20,7 +20,7 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
 
     virtual void GetName(nsAString_internal&) MOZ_OVERRIDE;
     virtual void GetUUID(nsAString_internal&) MOZ_OVERRIDE;
-    virtual nsresult Allocate(const VideoTrackConstraintsN &,
+    virtual nsresult Allocate(const dom::MediaTrackConstraints &,
                               const mozilla::MediaEnginePrefs&) MOZ_OVERRIDE;
     virtual nsresult Deallocate() MOZ_OVERRIDE;
     virtual nsresult Start(mozilla::SourceMediaStream*, mozilla::TrackID) MOZ_OVERRIDE;
@@ -32,10 +32,10 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     virtual const dom::MediaSourceEnum GetMediaSource() MOZ_OVERRIDE {
       return dom::MediaSourceEnum::Browser;
     }
-    virtual bool SatisfiesConstraintSets(
+    virtual uint32_t GetBestFitnessDistance(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets) MOZ_OVERRIDE
     {
-      return true;
+      return 0;
     }
 
     virtual nsresult TakePhoto(PhotoCallback* aCallback) MOZ_OVERRIDE
