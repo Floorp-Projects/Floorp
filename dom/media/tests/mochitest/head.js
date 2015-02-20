@@ -114,21 +114,22 @@ function getUserMedia(constraints) {
   return navigator.mediaDevices.getUserMedia(constraints);
 }
 
+// These are the promises we use to track that the prerequisites for the test
+// are in place before running it.  Users of this file need to ensure that they
+// also provide a promise called `scriptsReady` as well.
+var setTestOptions;
+var testConfigured = new Promise(r => setTestOptions = r);
 
-/**
- * Setup any Mochitest for WebRTC by enabling the preference for
- * peer connections. As by bug 797979 it will also enable mozGetUserMedia()
- * and disable the mozGetUserMedia() permission checking.
- *
- * @param {Function} aCallback
- *        Test method to execute after initialization
- */
-function realRunTest(aCallback) {
-  if (window.SimpleTest) {
-    // Running as a Mochitest.
-    SimpleTest.waitForExplicitFinish();
-    SimpleTest.requestFlakyTimeout("WebRTC inherently depends on timeouts");
-    SpecialPowers.pushPrefEnv({'set': [
+function setupEnvironment() {
+  if (!window.SimpleTest) {
+    return Promise.resolve();
+  }
+
+  // Running as a Mochitest.
+  SimpleTest.requestFlakyTimeout("WebRTC inherently depends on timeouts");
+  window.finish = () => SimpleTest.finish();
+  SpecialPowers.pushPrefEnv({
+    'set': [
       ['dom.messageChannel.enabled', true],
       ['media.peerconnection.enabled', true],
       ['media.peerconnection.identity.enabled', true],
@@ -136,28 +137,38 @@ function realRunTest(aCallback) {
       ['media.peerconnection.default_iceservers', '[]'],
       ['media.navigator.permission.disabled', true],
       ['media.getusermedia.screensharing.enabled', true],
-      ['media.getusermedia.screensharing.allowed_domains', "mochi.test"]]
-    }, function () {
-      try {
-        aCallback();
-      }
-      catch (err) {
-        generateErrorCallback()(err);
-      }
-    });
-  } else {
-    // Steeplechase, let it call the callback.
-    window.run_test = function(is_initiator) {
-      var options = {is_local: is_initiator,
-                     is_remote: !is_initiator};
-      aCallback(options);
-    };
-    // Also load the steeplechase test code.
-    var s = document.createElement("script");
-    s.src = "/test.js";
-    document.head.appendChild(s);
-  }
+      ['media.getusermedia.screensharing.allowed_domains', "mochi.test"]
+    ]
+  }, setTestOptions);
 }
+
+// This is called by steeplechase; which provides the test configuration options
+// directly to the test through this function.  If we're not on steeplechase,
+// the test is configured directly and immediately.
+function run_test(is_initiator) {
+  var options = { is_local: is_initiator,
+                  is_remote: !is_initiator };
+
+  // Also load the steeplechase test code.
+  var s = document.createElement("script");
+  s.src = "/test.js";
+  s.onload = () => setTestOptions(options);
+  document.head.appendChild(s);
+}
+
+function runTestWhenReady(testFunc) {
+  setupEnvironment();
+  return Promise.all([scriptsReady, testConfigured]).then(() => {
+    try {
+      return testConfigured.then(options => testFunc(options));
+    } catch (e) {
+      ok(false, 'Error executing test: ' + e +
+         ((typeof e.stack === 'string') ?
+          (' ' + e.stack.split('\n').join(' ... ')) : ''));
+    }
+  });
+}
+
 
 /**
  * Checks that the media stream tracks have the expected amount of tracks
@@ -254,7 +265,7 @@ function generateErrorCallback(message) {
 }
 
 var unexpectedEventArrived;
-var unexpectedEventArrivedPromise = new Promise((x, reject) => {
+var rejectOnUnexpectedEvent = new Promise((x, reject) => {
   unexpectedEventArrived = reject;
 });
 
@@ -279,11 +290,11 @@ function unexpectedEvent(message, eventName) {
 }
 
 /**
- * Implements the event guard pattern used throughout.  Each of the 'onxxx'
+ * Implements the one-shot event pattern used throughout.  Each of the 'onxxx'
  * attributes on the wrappers can be set with a custom handler.  Prior to the
  * handler being set, if the event fires, it causes the test execution to halt.
- * Once but that handler is used exactly once, and subsequent events will also
- * cause test execution to halt.
+ * That handler is used exactly once, after which the original, error-generating
+ * handler is re-installed.  Thus, each event handler is used at most once.
  *
  * @param {object} wrapper
  *        The wrapper on which the psuedo-handler is installed
@@ -291,20 +302,15 @@ function unexpectedEvent(message, eventName) {
  *        The real source of events
  * @param {string} event
  *        The name of the event
- * @param {function} redirect
- *        (Optional) a function that determines what is passed to the event
- *        handler. By default, the handler is passed the wrapper (as opposed to
- *        the normal cases where they receive an event object).  This redirect
- *        function is passed the event.
  */
-function guardEvent(wrapper, obj, event, redirect) {
-  redirect = redirect || (e => wrapper);
+function createOneShotEventWrapper(wrapper, obj, event) {
   var onx = 'on' + event;
   var unexpected = unexpectedEvent(wrapper, event);
   wrapper[onx] = unexpected;
   obj[onx] = e => {
     info(wrapper + ': "on' + event + '" event fired');
-    wrapper[onx](redirect(e));
+    e.wrapper = wrapper;
+    wrapper[onx](e);
     wrapper[onx] = unexpected;
   };
 }
@@ -339,10 +345,7 @@ CommandChain.prototype = {
 
       return prev.then(() => {
         info('Run step ' + (i + 1) + ': ' + next.name);
-        return Promise.race([
-          next(this._framework),
-          unexpectedEventArrivedPromise
-        ]);
+        return Promise.race([ next(this._framework), rejectOnUnexpectedEvent ]);
       });
     }, Promise.resolve())
       .catch(e =>
@@ -353,9 +356,6 @@ CommandChain.prototype = {
 
   /**
    * Add new commands to the end of the chain
-   *
-   * @param {function[]} commands
-   *        List of command functions
    */
   append: function(commands) {
     this.commands = this.commands.concat(commands);
@@ -363,45 +363,30 @@ CommandChain.prototype = {
 
   /**
    * Returns the index of the specified command in the chain.
-   *
-   * @param {function|string} id
-   *        Command function or name
-   * @returns {number} Index of the command
    */
-  indexOf: function (id) {
-    if (typeof id === 'string') {
-      return this.commands.findIndex(f => f.name === id);
+  indexOf: function(functionOrName) {
+    if (typeof functionOrName === 'string') {
+      return this.commands.findIndex(f => f.name === functionOrName);
     }
-    return this.commands.indexOf(id);
+    return this.commands.indexOf(functionOrName);
   },
 
   /**
    * Inserts the new commands after the specified command.
-   *
-   * @param {function|string} id
-   *        Command function or name
-   * @param {function[]} commands
-   *        List of commands
    */
-  insertAfter: function (id, commands) {
-    this._insertHelper(id, commands, 1);
+  insertAfter: function(functionOrName, commands) {
+    this._insertHelper(functionOrName, commands, 1);
   },
 
   /**
    * Inserts the new commands before the specified command.
-   *
-   * @param {string} id
-   *        Command function or name
-   * @param {function[]} commands
-   *        List of commands
    */
-  insertBefore: function (id, commands) {
-    this._insertHelper(id, commands);
+  insertBefore: function(functionOrName, commands) {
+    this._insertHelper(functionOrName, commands, 0);
   },
 
-  _insertHelper: function(id, commands, delta) {
-    delta = delta || 0;
-    var index = this.indexOf(id);
+  _insertHelper: function(functionOrName, commands, delta) {
+    var index = this.indexOf(functionOrName);
 
     if (index >= 0) {
       this.commands = [].concat(
@@ -412,14 +397,10 @@ CommandChain.prototype = {
   },
 
   /**
-   * Removes the specified command
-   *
-   * @param {function|string} id
-   *         Command function or name
-   * @returns {function[]} Removed commands
+   * Removes the specified command, returns what was removed.
    */
-  remove: function (id) {
-    var index = this.indexOf(id);
+  remove: function(functionOrName) {
+    var index = this.indexOf(functionOrName);
     if (index >= 0) {
       return this.commands.splice(index, 1);
     }
@@ -427,14 +408,10 @@ CommandChain.prototype = {
   },
 
   /**
-   * Removes all commands after the specified one.
-   *
-   * @param {function|string} id
-   *        Command function or name
-   * @returns {function[]} Removed commands
+   * Removes all commands after the specified one, returns what was removed.
    */
-  removeAfter: function (id) {
-    var index = this.indexOf(id);
+  removeAfter: function(functionOrName) {
+    var index = this.indexOf(functionOrName);
     if (index >= 0) {
       return this.commands.splice(index + 1);
     }
@@ -442,14 +419,10 @@ CommandChain.prototype = {
   },
 
   /**
-   * Removes all commands before the specified one.
-   *
-   * @param {function|string} id
-   *        Command function or name
-   * @returns {function[]} Removed commands
+   * Removes all commands before the specified one, returns what was removed.
    */
-  removeBefore: function (id) {
-    var index = this.indexOf(id);
+  removeBefore: function(functionOrName) {
+    var index = this.indexOf(functionOrName);
     if (index >= 0) {
       return this.commands.splice(0, index);
     }
@@ -457,50 +430,33 @@ CommandChain.prototype = {
   },
 
   /**
-   * Replaces a single command.
-   *
-   * @param {function|string} id
-   *        Command function or name
-   * @param {function[]} commands
-   *        List of commands
-   * @returns {function[]} Removed commands
+   * Replaces a single command, returns what was removed.
    */
-  replace: function (id, commands) {
-    this.insertBefore(id, commands);
-    return this.remove(id);
+  replace: function(functionOrName, commands) {
+    this.insertBefore(functionOrName, commands);
+    return this.remove(functionOrName);
   },
 
   /**
-   * Replaces all commands after the specified one.
-   *
-   * @param {function|string} id
-   *        Command function or name
-   * @returns {object[]} Removed commands
+   * Replaces all commands after the specified one, returns what was removed.
    */
-  replaceAfter: function (id, commands) {
-    var oldCommands = this.removeAfter(id);
+  replaceAfter: function(functionOrName, commands) {
+    var oldCommands = this.removeAfter(functionOrName);
     this.append(commands);
     return oldCommands;
   },
 
   /**
-   * Replaces all commands before the specified one.
-   *
-   * @param {function|string} id
-   *        Command function or name
-   * @returns {object[]} Removed commands
+   * Replaces all commands before the specified one, returns what was removed.
    */
-  replaceBefore: function (id, commands) {
-    var oldCommands = this.removeBefore(id);
-    this.insertBefore(id, commands);
+  replaceBefore: function(functionOrName, commands) {
+    var oldCommands = this.removeBefore(functionOrName);
+    this.insertBefore(functionOrName, commands);
     return oldCommands;
   },
 
   /**
    * Remove all commands whose name match the specified regex.
-   *
-   * @param {regex} id_match
-   *        Regular expression to match command names.
    */
   filterOut: function (id_match) {
     this.commands = this.commands.filter(c => !id_match.test(c.name));
@@ -509,18 +465,17 @@ CommandChain.prototype = {
 
 
 function IsMacOSX10_6orOlder() {
-    var is106orOlder = false;
+  if (navigator.platform.indexOf("Mac") !== 0) {
+    return false;
+  }
 
-    if (navigator.platform.indexOf("Mac") == 0) {
-        var version = Cc["@mozilla.org/system-info;1"]
-                        .getService(Ci.nsIPropertyBag2)
-                        .getProperty("version");
-        // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10.x !
-        // Mac OS 10.7 is Darwin version 11.x. the |version| string we've got here
-        // is the Darwin version.
-        is106orOlder = (parseFloat(version) < 11.0);
-    }
-    return is106orOlder;
+  var version = Cc["@mozilla.org/system-info;1"]
+      .getService(Ci.nsIPropertyBag2)
+      .getProperty("version");
+  // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10.x !
+  // Mac OS 10.7 is Darwin version 11.x. the |version| string we've got here
+  // is the Darwin version.
+  return (parseFloat(version) < 11.0);
 }
 
 (function(){
