@@ -34,6 +34,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "mozilla/dom/ipc/BlobChild.h"
@@ -120,6 +121,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameMessageManager)
   /* Frame message managers (non-process message managers) support nsIFrameScriptLoader. */
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFrameScriptLoader,
                                      mChrome && !mIsProcessManager)
+
+  /* Process message managers (process message managers) support nsIProcessScriptLoader. */
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIProcessScriptLoader,
+                                     mChrome && mIsProcessManager)
 
   /* Message senders in the chrome process support nsIProcessChecker. */
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIProcessChecker,
@@ -432,9 +437,9 @@ nsFrameMessageManager::RemoveWeakMessageListener(const nsAString& aMessage,
 // nsIFrameScriptLoader
 
 NS_IMETHODIMP
-nsFrameMessageManager::LoadFrameScript(const nsAString& aURL,
-                                       bool aAllowDelayedLoad,
-                                       bool aRunInGlobalScope)
+nsFrameMessageManager::LoadScript(const nsAString& aURL,
+                                  bool aAllowDelayedLoad,
+                                  bool aRunInGlobalScope)
 {
   if (aAllowDelayedLoad) {
     if (IsGlobal() || IsBroadcaster()) {
@@ -463,14 +468,14 @@ nsFrameMessageManager::LoadFrameScript(const nsAString& aURL,
     if (mm) {
       // Use false here, so that child managers don't cache the script, which
       // is already cached in the parent.
-      mm->LoadFrameScript(aURL, false, aRunInGlobalScope);
+      mm->LoadScript(aURL, false, aRunInGlobalScope);
     }
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFrameMessageManager::RemoveDelayedFrameScript(const nsAString& aURL)
+nsFrameMessageManager::RemoveDelayedScript(const nsAString& aURL)
 {
   for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
     if (mPendingScripts[i] == aURL) {
@@ -483,7 +488,7 @@ nsFrameMessageManager::RemoveDelayedFrameScript(const nsAString& aURL)
 }
 
 NS_IMETHODIMP
-nsFrameMessageManager::GetDelayedFrameScripts(JSContext* aCx, JS::MutableHandle<JS::Value> aList)
+nsFrameMessageManager::GetDelayedScripts(JSContext* aCx, JS::MutableHandle<JS::Value> aList)
 {
   // Frame message managers may return an incomplete list because scripts
   // that were loaded after it was connected are not added to the list.
@@ -515,6 +520,49 @@ nsFrameMessageManager::GetDelayedFrameScripts(JSContext* aCx, JS::MutableHandle<
 
   aList.setObject(*array);
   return NS_OK;
+}
+
+// nsIFrameScriptLoader
+
+NS_IMETHODIMP
+nsFrameMessageManager::LoadFrameScript(const nsAString& aURL,
+                                       bool aAllowDelayedLoad,
+                                       bool aRunInGlobalScope)
+{
+  return LoadScript(aURL, aAllowDelayedLoad, aRunInGlobalScope);
+}
+
+NS_IMETHODIMP
+nsFrameMessageManager::RemoveDelayedFrameScript(const nsAString& aURL)
+{
+  return RemoveDelayedScript(aURL);
+}
+
+NS_IMETHODIMP
+nsFrameMessageManager::GetDelayedFrameScripts(JSContext* aCx, JS::MutableHandle<JS::Value> aList)
+{
+  return GetDelayedScripts(aCx, aList);
+}
+
+// nsIProcessScriptLoader
+
+NS_IMETHODIMP
+nsFrameMessageManager::LoadProcessScript(const nsAString& aURL,
+                                         bool aAllowDelayedLoad)
+{
+  return LoadScript(aURL, aAllowDelayedLoad, false);
+}
+
+NS_IMETHODIMP
+nsFrameMessageManager::RemoveDelayedProcessScript(const nsAString& aURL)
+{
+  return RemoveDelayedScript(aURL);
+}
+
+NS_IMETHODIMP
+nsFrameMessageManager::GetDelayedProcessScripts(JSContext* aCx, JS::MutableHandle<JS::Value> aList)
+{
+  return GetDelayedScripts(aCx, aList);
 }
 
 static bool
@@ -1678,6 +1726,15 @@ public:
     MOZ_COUNT_DTOR(SameParentProcessMessageManagerCallback);
   }
 
+  virtual bool DoLoadMessageManagerScript(const nsAString& aURL,
+                                          bool aRunInGlobalScope) MOZ_OVERRIDE
+  {
+    ProcessGlobal* global = ProcessGlobal::Get();
+    MOZ_ASSERT(!aRunInGlobalScope);
+    global->LoadScript(aURL);
+    return true;
+  }
+
   virtual bool DoSendAsyncMessage(JSContext* aCx,
                                   const nsAString& aMessage,
                                   const StructuredCloneData& aData,
@@ -1934,7 +1991,10 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
                                                         nullptr,
                                                         MM_PROCESSMANAGER | MM_OWNSCALLBACK);
   nsFrameMessageManager::SetChildProcessManager(mm);
-  return CallQueryInterface(mm, aResult);
+  ProcessGlobal* global = new ProcessGlobal(mm);
+  NS_ENSURE_TRUE(global->Init(), NS_ERROR_UNEXPECTED);
+  return CallQueryInterface(global, aResult);
+
 }
 
 static PLDHashOperator
