@@ -1002,6 +1002,12 @@ GMPParent::SetNodeId(const nsACString& aNodeId)
   mNodeId = aNodeId;
 }
 
+const nsCString&
+GMPParent::GetVersion() const
+{
+  return mVersion;
+}
+
 bool
 GMPParent::RecvAsyncShutdownRequired()
 {

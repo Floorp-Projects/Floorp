@@ -115,6 +115,8 @@ public:
   void SetNodeId(const nsACString& aNodeId);
   const nsACString& GetNodeId() const { return mNodeId; }
 
+  const nsCString& GetVersion() const;
+
   // Returns true if a plugin can be or is being used across multiple NodeIds.
   bool CanBeSharedCrossNodeIds() const;
 
