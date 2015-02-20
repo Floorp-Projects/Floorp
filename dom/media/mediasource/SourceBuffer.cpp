@@ -561,8 +561,9 @@ SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult&
   // See if we have enough free space to append our new data.
   // As we can only evict once we have playable data, we must give a chance
   // to the DASH player to provide a complete media segment.
-  if ((mTrackBuffer->GetSize() > mEvictionThreshold - aLength) &&
-      !mTrackBuffer->HasOnlyIncompleteMedia()) {
+  if (aLength > mEvictionThreshold ||
+      ((mTrackBuffer->GetSize() > mEvictionThreshold - aLength) &&
+       !mTrackBuffer->HasOnlyIncompleteMedia())) {
     aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
     return nullptr;
   }
