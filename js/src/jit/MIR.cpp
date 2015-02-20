@@ -948,6 +948,30 @@ MSimdSwizzle::foldsTo(TempAllocator &alloc)
     return this;
 }
 
+template <typename T>
+static void
+PrintOpcodeOperation(T *mir, FILE *fp)
+{
+    mir->MDefinition::printOpcode(fp);
+    fprintf(fp, " (%s)", T::OperationName(mir->operation()));
+}
+
+void
+MSimdBinaryArith::printOpcode(FILE *fp) const
+{
+    PrintOpcodeOperation(this, fp);
+}
+void
+MSimdBinaryBitwise::printOpcode(FILE *fp) const
+{
+    PrintOpcodeOperation(this, fp);
+}
+void
+MSimdUnaryArith::printOpcode(FILE *fp) const
+{
+    PrintOpcodeOperation(this, fp);
+}
+
 MCloneLiteral *
 MCloneLiteral::New(TempAllocator &alloc, MDefinition *obj)
 {
