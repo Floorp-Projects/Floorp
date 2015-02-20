@@ -416,7 +416,7 @@ struct JitcodeMapEntryTraceCallback
     uint32_t gen;
     uint32_t lapCount;
 
-    JitcodeMapEntryTraceCallback(JSTracer *trc)
+    explicit JitcodeMapEntryTraceCallback(JSTracer *trc)
       : trc(trc),
         gen(trc->runtime()->profilerSampleBufferGen()),
         lapCount(trc->runtime()->profilerSampleBufferLapCount())
