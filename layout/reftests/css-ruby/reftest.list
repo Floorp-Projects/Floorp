@@ -31,7 +31,9 @@ load nested-ruby-1.html
 == relative-positioning-1.html relative-positioning-1-ref.html
 == relative-positioning-2.html relative-positioning-2-ref.html
 == ruby-align-1.html ruby-align-1-ref.html
+== ruby-align-1a.html ruby-align-1-ref.html
 == ruby-align-2.html ruby-align-2-ref.html
+== ruby-align-2a.html ruby-align-2-ref.html
 == ruby-position-horizontal.html ruby-position-horizontal-ref.html
 pref(layout.css.vertical-text.enabled,true) fails == ruby-position-vertical-lr.html ruby-position-vertical-lr-ref.html # bug 1112474
 pref(layout.css.vertical-text.enabled,true) fails == ruby-position-vertical-rl.html ruby-position-vertical-rl-ref.html # bug 1112474

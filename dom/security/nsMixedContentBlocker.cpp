@@ -19,6 +19,7 @@
 #include "nsIContentViewer.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsIParentChannel.h"
 #include "mozilla/Preferences.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsISecureBrowserUI.h"
@@ -212,6 +213,16 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   if (!aOldChannel) {
     NS_ERROR("No channel when evaluating mixed content!");
     return NS_ERROR_FAILURE;
+  }
+
+  // If we are in the parent process in e10s, we don't have access to the
+  // document node, and hence ShouldLoad will fail when we try to get
+  // the docShell.  If that's the case, ignore mixed content checks
+  // on redirects in the parent.  Let the child check for mixed content.
+  nsCOMPtr<nsIParentChannel> is_ipc_channel;
+  NS_QueryNotificationCallbacks(aNewChannel, is_ipc_channel);
+  if (is_ipc_channel) {
+    return NS_OK;
   }
 
   nsresult rv;

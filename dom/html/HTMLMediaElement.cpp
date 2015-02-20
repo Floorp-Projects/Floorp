@@ -85,6 +85,7 @@
 #include "mozilla/dom/VideoTrackList.h"
 #include "mozilla/dom/TextTrack.h"
 #include "nsIContentPolicy.h"
+#include "mozilla/Telemetry.h"
 
 #include "ImageContainer.h"
 #include "nsRange.h"
@@ -2140,7 +2141,7 @@ HTMLMediaElement::~HTMLMediaElement()
 }
 
 void
-HTMLMediaElement::GetItemValueText(nsAString& aValue)
+HTMLMediaElement::GetItemValueText(DOMString& aValue)
 {
   // Can't call GetSrc because we don't have a JSContext
   GetURIAttr(nsGkAtoms::src, nullptr, aValue);
@@ -2548,11 +2549,61 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
   return rv;
 }
 
+void
+HTMLMediaElement::ReportMSETelemetry()
+{
+  // Report telemetry for videos when a page is unloaded. We
+  // want to know data on what state the video is at when
+  // the user has exited.
+  enum UnloadedState {
+    ENDED = 0,
+    PAUSED = 1,
+    STALLED = 2,
+    SEEKING = 3,
+    OTHER = 4
+  };
+
+  UnloadedState state = OTHER;
+  if (Seeking()) {
+    state = SEEKING;
+  }
+  else if (Ended()) {
+    state = ENDED;
+  }
+  else if (Paused()) {
+    state = PAUSED;
+  }
+  else {
+    // For buffering we check if the current playback position is at the end
+    // of a buffered range, within a margin of error. We also consider to be
+    // buffering if the last frame status was buffering and the ready state is
+    // HAVE_CURRENT_DATA to account for times where we are in a buffering state
+    // regardless of what actual data we have buffered.
+    bool stalled = false;
+    nsRefPtr<TimeRanges> ranges = Buffered();
+    const double errorMargin = 0.05;
+    double t = CurrentTime();
+    TimeRanges::index_type index = ranges->Find(t, errorMargin);
+    ErrorResult ignore;
+    stalled = index != TimeRanges::NoIndex &&
+              (ranges->End(index, ignore) - t) < errorMargin;
+    stalled |= mLastNextFrameStatus == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING &&
+                                       mReadyState == HTMLMediaElement::HAVE_CURRENT_DATA;
+    if (stalled) {
+      state = STALLED;
+    }
+  }
+
+  Telemetry::Accumulate(Telemetry::VIDEO_MSE_UNLOAD_STATE, state);
+  LOG(PR_LOG_DEBUG, ("%p VIDEO_MSE_UNLOAD_STATE = %d", this, state));
+}
+
 void HTMLMediaElement::UnbindFromTree(bool aDeep,
                                       bool aNullParent)
 {
-  if (!mPaused && mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY)
+  if (!mPaused && mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
     Pause();
+  }
 
   mElementInTreeState = ELEMENT_NOT_INTREE_HAD_INTREE;
 
@@ -3701,6 +3752,10 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
   if (aPauseElement != mPausedForInactiveDocumentOrChannel) {
     mPausedForInactiveDocumentOrChannel = aPauseElement;
     if (aPauseElement) {
+      if (mMediaSource) {
+        ReportMSETelemetry();
+      }
+
 #ifdef MOZ_EME
       // For EME content, force destruction of the CDM client (and CDM
       // instance if this is the last client for that CDM instance) and
@@ -3742,11 +3797,21 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
   }
 }
 
+bool HTMLMediaElement::IsBeingDestroyed()
+{
+  nsIDocument* ownerDoc = OwnerDoc();
+  nsIDocShell* docShell = ownerDoc ? ownerDoc->GetDocShell() : nullptr;
+  bool isBeingDestroyed = false;
+  if (docShell) {
+    docShell->IsBeingDestroyed(&isBeingDestroyed);
+  }
+  return isBeingDestroyed;
+}
+
 void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 {
   nsIDocument* ownerDoc = OwnerDoc();
-
-  if (mDecoder) {
+  if (mDecoder && !IsBeingDestroyed()) {
     mDecoder->SetElementVisibility(!ownerDoc->Hidden());
     mDecoder->NotifyOwnerActivityChanged();
   }

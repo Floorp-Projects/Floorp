@@ -60,7 +60,7 @@ public:
     SetHTMLAttr(nsGkAtoms::src, aSrc, rv);
   }
 
-  void GetType(nsString& aType)
+  void GetType(DOMString& aType)
   {
     GetHTMLAttr(nsGkAtoms::type, aType);
   }
@@ -69,7 +69,7 @@ public:
     SetHTMLAttr(nsGkAtoms::type, aType, rv);
   }
 
-  void GetSrcset(nsString& aSrcset)
+  void GetSrcset(DOMString& aSrcset)
   {
     GetHTMLAttr(nsGkAtoms::srcset, aSrcset);
   }
@@ -78,7 +78,7 @@ public:
     SetHTMLAttr(nsGkAtoms::srcset, aSrcset, rv);
   }
 
-  void GetSizes(nsString& aSizes)
+  void GetSizes(DOMString& aSizes)
   {
     GetHTMLAttr(nsGkAtoms::sizes, aSizes);
   }
@@ -87,7 +87,7 @@ public:
     SetHTMLAttr(nsGkAtoms::sizes, aSizes, rv);
   }
 
-  void GetMedia(nsString& aMedia)
+  void GetMedia(DOMString& aMedia)
   {
     GetHTMLAttr(nsGkAtoms::media, aMedia);
   }
@@ -102,7 +102,7 @@ protected:
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
 protected:
-  virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
+  virtual void GetItemValueText(DOMString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
 
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,

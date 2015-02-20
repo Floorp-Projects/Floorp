@@ -63,7 +63,7 @@ public:
   // nsIDOMHTMLFrameSetElement
   NS_DECL_NSIDOMHTMLFRAMESETELEMENT
 
-  void GetCols(nsString& aCols)
+  void GetCols(DOMString& aCols)
   {
     GetHTMLAttr(nsGkAtoms::cols, aCols);
   }
@@ -71,7 +71,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::cols, aCols, aError);
   }
-  void GetRows(nsString& aRows)
+  void GetRows(DOMString& aRows)
   {
     GetHTMLAttr(nsGkAtoms::rows, aRows);
   }

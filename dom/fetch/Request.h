@@ -115,7 +115,7 @@ public:
   }
 
   already_AddRefed<Request>
-  Clone() const;
+  Clone(ErrorResult& aRv) const;
 
   already_AddRefed<InternalRequest>
   GetInternalRequest();

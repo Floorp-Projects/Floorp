@@ -210,9 +210,9 @@ HTMLBodyElement::SetBackground(const nsAString& aBackground)
 NS_IMETHODIMP
 HTMLBodyElement::GetBackground(nsAString& aBackground)
 {
-  nsString background;
+  DOMString background;
   GetBackground(background);
-  aBackground = background;
+  background.ToString(aBackground);
   return NS_OK;
 }
 
@@ -227,9 +227,9 @@ HTMLBodyElement::SetVLink(const nsAString& aVLink)
 NS_IMETHODIMP
 HTMLBodyElement::GetVLink(nsAString& aVLink)
 {
-  nsString vLink;
+  DOMString vLink;
   GetVLink(vLink);
-  aVLink = vLink;
+  vLink.ToString(aVLink);
   return NS_OK;
 }
 
@@ -244,9 +244,9 @@ HTMLBodyElement::SetALink(const nsAString& aALink)
 NS_IMETHODIMP
 HTMLBodyElement::GetALink(nsAString& aALink)
 {
-  nsString aLink;
+  DOMString aLink;
   GetALink(aLink);
-  aALink = aLink;
+  aLink.ToString(aALink);
   return NS_OK;
 }
 
@@ -261,9 +261,9 @@ HTMLBodyElement::SetLink(const nsAString& aLink)
 NS_IMETHODIMP
 HTMLBodyElement::GetLink(nsAString& aLink)
 {
-  nsString link;
+  DOMString link;
   GetLink(link);
-  aLink = link;
+  link.ToString(aLink);
   return NS_OK;
 }
 
@@ -278,9 +278,9 @@ HTMLBodyElement::SetText(const nsAString& aText)
 NS_IMETHODIMP
 HTMLBodyElement::GetText(nsAString& aText)
 {
-  nsString text;
+  DOMString text;
   GetText(text);
-  aText = text;
+  text.ToString(aText);
   return NS_OK;
 }
 
@@ -295,9 +295,9 @@ HTMLBodyElement::SetBgColor(const nsAString& aBgColor)
 NS_IMETHODIMP
 HTMLBodyElement::GetBgColor(nsAString& aBgColor)
 {
-  nsString bgColor;
+  DOMString bgColor;
   GetBgColor(bgColor);
-  aBgColor = bgColor;
+  bgColor.ToString(aBgColor);
   return NS_OK;
 }
 
