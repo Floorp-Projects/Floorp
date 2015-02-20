@@ -59,7 +59,8 @@ public:
     eSTYLESHEET =   0x00000004,
     eNEXT =         0x00000008,
     eALTERNATE =    0x00000010,
-    eHTMLIMPORT =   0x00000020
+    eHTMLIMPORT =   0x00000020,
+    ePRECONNECT =   0x00000040
   };
 
   // The return value is a bitwise or of 0 or more RelValues.
