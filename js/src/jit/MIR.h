@@ -1843,7 +1843,7 @@ class MSimdShuffle
 
 class MSimdUnaryArith
   : public MUnaryInstruction,
-    public NoTypePolicy::Data
+    public SimdSameAsReturnedTypePolicy<0>::Data
 {
   public:
     enum Operation {
@@ -1873,8 +1873,6 @@ class MSimdUnaryArith
     MSimdUnaryArith(MDefinition *def, Operation op, MIRType type)
       : MUnaryInstruction(def), operation_(op)
     {
-        MOZ_ASSERT(IsSimdType(type));
-        MOZ_ASSERT(def->type() == type);
         MOZ_ASSERT_IF(type == MIRType_Int32x4, op == neg || op == not_);
         setResultType(type);
         setMovable();
@@ -1882,9 +1880,17 @@ class MSimdUnaryArith
 
   public:
     INSTRUCTION_HEADER(SimdUnaryArith)
+
+    static MSimdUnaryArith *New(TempAllocator &alloc, MDefinition *def, Operation op, MIRType t)
+    {
+        return new(alloc) MSimdUnaryArith(def, op, t);
+    }
+
     static MSimdUnaryArith *NewAsmJS(TempAllocator &alloc, MDefinition *def,
                                      Operation op, MIRType t)
     {
+        MOZ_ASSERT(IsSimdType(t));
+        MOZ_ASSERT(def->type() == t);
         return new(alloc) MSimdUnaryArith(def, op, t);
     }
 

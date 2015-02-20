@@ -282,6 +282,24 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     BITWISE_COMMONX4_SIMD_OP(INLINE_SIMD_BITWISE_)
 #undef INLINE_SIMD_BITWISE_
 
+    if (native == js::simd_int32x4_not)
+        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::not_, SimdTypeDescr::TYPE_INT32);
+    if (native == js::simd_int32x4_neg)
+        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::neg, SimdTypeDescr::TYPE_INT32);
+
+    if (native == js::simd_float32x4_not)
+        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::not_, SimdTypeDescr::TYPE_FLOAT32);
+    if (native == js::simd_float32x4_neg)
+        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::neg, SimdTypeDescr::TYPE_FLOAT32);
+    if (native == js::simd_float32x4_abs)
+        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::abs, SimdTypeDescr::TYPE_FLOAT32);
+    if (native == js::simd_float32x4_sqrt)
+        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::sqrt, SimdTypeDescr::TYPE_FLOAT32);
+    if (native == js::simd_float32x4_reciprocal)
+        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::reciprocal, SimdTypeDescr::TYPE_FLOAT32);
+    if (native == js::simd_float32x4_reciprocalSqrt)
+        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::reciprocalSqrt, SimdTypeDescr::TYPE_FLOAT32);
+
     return InliningStatus_NotInlined;
 }
 
@@ -2901,10 +2919,44 @@ IonBuilder::inlineBinarySimd(CallInfo &callInfo, JSNative native, typename T::Op
 
     // If the type of any of the arguments is neither a SIMD type, an Object
     // type, or a Value, then the applyTypes phase will add a fallible box &
-    // unbox sequence.  This does not matter much as the binary bitwise
-    // instruction is supposed to produce a TypeError once it is called.
+    // unbox sequence.  This does not matter much as all binary SIMD
+    // instructions are supposed to produce a TypeError when they're called
+    // with non SIMD-arguments.
     T *ins = T::New(alloc(), callInfo.getArg(0), callInfo.getArg(1), op,
                     SimdTypeDescrToMIRType(type));
+
+    MSimdBox *obj = MSimdBox::New(alloc(), constraints(), ins, inlineTypedObject,
+                                  inlineTypedObject->group()->initialHeap(constraints()));
+
+    current->add(ins);
+    current->add(obj);
+    current->push(obj);
+
+    callInfo.setImplicitlyUsedUnchecked();
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineUnarySimd(CallInfo &callInfo, JSNative native, MSimdUnaryArith::Operation op,
+                            SimdTypeDescr::Type type)
+{
+    if (callInfo.argc() != 1)
+        return InliningStatus_NotInlined;
+
+    JSObject *templateObject = inspector->getTemplateObjectForNative(pc, native);
+    if (!templateObject)
+        return InliningStatus_NotInlined;
+
+    InlineTypedObject *inlineTypedObject = &templateObject->as<InlineTypedObject>();
+    MOZ_ASSERT(inlineTypedObject->typeDescr().as<SimdTypeDescr>().type() == type);
+
+    // If the type of the argument isn't a SIMD type, an Object type, or a
+    // Value, then the applyTypes phase will add a fallible box & unbox
+    // sequence.  This does not matter much as all unary SIMD instructions are
+    // supposed to produce a TypeError when they're called with non
+    // SIMD-arguments.
+    MSimdUnaryArith *ins = MSimdUnaryArith::New(alloc(), callInfo.getArg(0), op,
+                                                SimdTypeDescrToMIRType(type));
 
     MSimdBox *obj = MSimdBox::New(alloc(), constraints(), ins, inlineTypedObject,
                                   inlineTypedObject->group()->initialHeap(constraints()));
