@@ -8,7 +8,6 @@ callback BrowserElementNextPaintEventCallback = void ();
 
 dictionary BrowserElementDownloadOptions {
   DOMString? filename;
-  DOMString? referrer;
 };
 
 [NoInterfaceObject]
