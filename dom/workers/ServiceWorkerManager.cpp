@@ -2637,8 +2637,8 @@ FireControllerChangeOnMatchingDocument(nsISupports* aKey,
 } // anonymous namespace
 
 void
-ServiceWorkerManager::GetServicedClients(const nsCString& aScope,
-                                     nsTArray<uint64_t>* aControlledDocuments)
+ServiceWorkerManager::GetAllClients(const nsCString& aScope,
+                                    nsTArray<uint64_t>* aControlledDocuments)
 {
   nsRefPtr<ServiceWorkerRegistrationInfo> registration = GetRegistration(aScope);
 
