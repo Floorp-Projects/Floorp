@@ -152,8 +152,8 @@ describe("loop.shared.utils", function() {
       // fake mozL10n
       sandbox.stub(navigator.mozL10n, "get", function(id) {
         switch(id) {
-          case "share_email_subject4": return "subject";
-          case "share_email_body4":    return "body";
+          case "share_email_subject5": return "subject";
+          case "share_email_body5":    return "body";
         }
       });
       composeEmail = sandbox.spy();
