@@ -68,7 +68,7 @@ public:
 #undef WINDOW_EVENT_HELPER
 #undef EVENT
 
-  void GetText(nsString& aText)
+  void GetText(DOMString& aText)
   {
     GetHTMLAttr(nsGkAtoms::text, aText);
   }
@@ -76,7 +76,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::text, aText, aError);
   }
-  void GetLink(nsString& aLink)
+  void GetLink(DOMString& aLink)
   {
     GetHTMLAttr(nsGkAtoms::link, aLink);
   }
@@ -84,7 +84,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::link, aLink, aError);
   }
-  void GetVLink(nsString& aVLink)
+  void GetVLink(DOMString& aVLink)
   {
     GetHTMLAttr(nsGkAtoms::vlink, aVLink);
   }
@@ -92,7 +92,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::vlink, aVLink, aError);
   }
-  void GetALink(nsString& aALink)
+  void GetALink(DOMString& aALink)
   {
     GetHTMLAttr(nsGkAtoms::alink, aALink);
   }
@@ -100,7 +100,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::alink, aALink, aError);
   }
-  void GetBgColor(nsString& aBgColor)
+  void GetBgColor(DOMString& aBgColor)
   {
     GetHTMLAttr(nsGkAtoms::bgcolor, aBgColor);
   }
@@ -108,7 +108,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::bgcolor, aBgColor, aError);
   }
-  void GetBackground(nsString& aBackground)
+  void GetBackground(DOMString& aBackground)
   {
     GetHTMLAttr(nsGkAtoms::background, aBackground);
   }

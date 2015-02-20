@@ -133,7 +133,7 @@ function runTest() {
   // Opens the iframe to the test page.
   // Only the French locale is available.
   openPage("index.html",
-    [_({"fr":[{"version":201411051234,"name":"Français","target":"2.2"}]})]);
+    [_({"fr":[{"revision":201411051234,"name":"Français","target":"2.2"}]})]);
   yield undefined;
 
   // Install the de and pl langpack.
@@ -143,7 +143,7 @@ function runTest() {
   // Opens the iframe to the test page.
   // French, German and Polish locales are available.
   openPage("index.html",
-    [_({"fr":[{"version":201411051234,"name":"Français","target":"2.2"}],"de":[{"version":201411051234,"name":"Deutsch","target":"2.2"}],"pl":[{"version":201411051234,"name":"Polski","target":"2.2"}]})]);
+    [_({"fr":[{"revision":201411051234,"name":"Français","target":"2.2"}],"de":[{"revision":201411051234,"name":"Deutsch","target":"2.2"}],"pl":[{"revision":201411051234,"name":"Polski","target":"2.2"}]})]);
   yield undefined;
 
   // Uninstall the second langpack.
@@ -159,7 +159,7 @@ function runTest() {
   // Opens the iframe to the test page.
   // Only the French locale is available.
   openPage("index.html",
-    [_({"fr":[{"version":201411051234,"name":"Français","target":"2.2"}]})]);
+    [_({"fr":[{"revision":201411051234,"name":"Français","target":"2.2"}]})]);
   yield undefined;
 
   // Uninstall the first langpack.
@@ -181,9 +181,9 @@ function runTest() {
   // Opens the iframe to the event test page.
   // Will get additionallanguageschange events.
   openPage("event.html",
-    [_({"fr":[{"version":201411051234,"name":"Français","target":"2.2"}]}),
-     _({"fr":[{"version":201411051234,"name":"Français","target":"2.2"}],"de":[{"version":201411051234,"name":"Deutsch","target":"2.2"}]}),
-     _({"fr":[{"version":201411051234,"name":"Français","target":"2.2"}],"de":[{"version":201411051234,"name":"Deutsch","target":"2.2"}],"pl":[{"version":201411051234,"name":"Polski","target":"2.2"}]})]);
+    [_({"fr":[{"revision":201411051234,"name":"Français","target":"2.2"}]}),
+     _({"fr":[{"revision":201411051234,"name":"Français","target":"2.2"}],"de":[{"revision":201411051234,"name":"Deutsch","target":"2.2"}]}),
+     _({"fr":[{"revision":201411051234,"name":"Français","target":"2.2"}],"de":[{"revision":201411051234,"name":"Deutsch","target":"2.2"}],"pl":[{"revision":201411051234,"name":"Polski","target":"2.2"}]})]);
   yield undefined;
 
   // Opens the iframe to the resource test page.

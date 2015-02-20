@@ -36,7 +36,7 @@ HTMLSharedObjectElement::HTMLSharedObjectElement(already_AddRefed<mozilla::dom::
 }
 
 void
-HTMLSharedObjectElement::GetItemValueText(nsAString& aValue)
+HTMLSharedObjectElement::GetItemValueText(DOMString& aValue)
 {
   if (mNodeInfo->Equals(nsGkAtoms::applet)) {
     nsGenericHTMLElement::GetItemValueText(aValue);

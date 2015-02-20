@@ -92,7 +92,7 @@ HTMLAnchorElement::TabIndexDefault()
 }
 
 void
-HTMLAnchorElement::GetItemValueText(nsAString& aValue)
+HTMLAnchorElement::GetItemValueText(DOMString& aValue)
 {
   GetHref(aValue);
 }

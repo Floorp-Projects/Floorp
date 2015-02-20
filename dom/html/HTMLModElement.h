@@ -28,7 +28,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::cite, aCite, aRv);
   }
-  void GetDateTime(nsAString& aDateTime)
+  void GetDateTime(DOMString& aDateTime)
   {
     GetHTMLAttr(nsGkAtoms::datetime, aDateTime);
   }

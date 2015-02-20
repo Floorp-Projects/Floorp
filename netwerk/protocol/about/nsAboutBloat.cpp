@@ -112,28 +112,12 @@ nsAboutBloat::NewChannel(nsIURI* aURI,
     }
 
     nsIChannel* channel = nullptr;
-    // Bug 1087720 (and Bug 1099296):
-    // Once all callsites have been updated to call NewChannel2()
-    // instead of NewChannel() we should have a non-null loadInfo
-    // consistently. Until then we have to branch on the loadInfo.
-    if (aLoadInfo) {
-      rv = NS_NewInputStreamChannelInternal(&channel,
-                                            aURI,
-                                            inStr,
-                                            NS_LITERAL_CSTRING("text/plain"),
-                                            NS_LITERAL_CSTRING("utf-8"),
-                                            aLoadInfo);
-    }
-    else {
-      rv = NS_NewInputStreamChannel(&channel,
-                                    aURI,
-                                    inStr,
-                                    nsContentUtils::GetSystemPrincipal(),
-                                    nsILoadInfo::SEC_NORMAL,
-                                    nsIContentPolicy::TYPE_OTHER,
-                                    NS_LITERAL_CSTRING("text/plain"),
-                                    NS_LITERAL_CSTRING("utf-8"));
-    }
+    rv = NS_NewInputStreamChannelInternal(&channel,
+                                          aURI,
+                                          inStr,
+                                          NS_LITERAL_CSTRING("text/plain"),
+                                          NS_LITERAL_CSTRING("utf-8"),
+                                          aLoadInfo);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
