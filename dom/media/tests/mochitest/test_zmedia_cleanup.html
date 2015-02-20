@@ -1,24 +1,22 @@
 <!DOCTYPE HTML>
 <html>
   <head>
-    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-    <script type="application/javascript" src="pc.js"></script>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="network.js"></script>
   </head>
 <body>
 <pre id="test">
 <script type="application/javascript">
+
 SimpleTest.waitForExplicitFinish();
 
 if ("nsINetworkInterfaceListService" in SpecialPowers.Ci) {
-  var utils = getNetworkUtils();
-  utils.tearDownNetwork(function() {
-    ok(true, 'Successfully teared down network interface');
-    SimpleTest.finish();
-  }, function() {
-    ok(true, 'Network interface was in down state already');
-    SimpleTest.finish();
-  });
+  getNetworkUtils().tearDownNetwork()
+    .then(() =>
+          ok(true, 'Successfully teared down network interface'),
+          () =>
+          ok(true, 'Network interface was in down state already'))
+    .then(() => SimpleTest.finish());
 } else {
   ok(true, 'No need to cleanup network interface');
   SimpleTest.finish();

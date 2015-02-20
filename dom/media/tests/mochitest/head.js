@@ -6,7 +6,6 @@
 
 var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
-var Cr = SpecialPowers.Cr;
 
 // Specifies whether we are using fake streams to run this automation
 var FAKE_ENABLED = true;
@@ -34,7 +33,7 @@ try {
  * @param {boolean} [meta.visible=false]
  *        Visibility of the media elements
  */
-function createHTML(meta) {
+function realCreateHTML(meta) {
   var test = document.getElementById('test');
 
   // Create the head content
@@ -48,13 +47,13 @@ function createHTML(meta) {
 
   // Create the body content
   var anchor = document.createElement('a');
-  anchor.setAttribute('target', '_blank');
-
+  anchor.textContent = meta.title;
   if (meta.bug) {
     anchor.setAttribute('href', 'https://bugzilla.mozilla.org/show_bug.cgi?id=' + meta.bug);
+  } else {
+    anchor.setAttribute('target', '_blank');
   }
 
-  anchor.textContent = meta.title;
   document.body.insertBefore(anchor, test);
 
   var display = document.createElement('p');
@@ -83,14 +82,16 @@ function createMediaElement(type, label) {
   var element = document.getElementById(id);
 
   // Sanity check that we haven't created the element already
-  if (element)
+  if (element) {
     return element;
+  }
 
   element = document.createElement(type === 'audio' ? 'audio' : 'video');
   element.setAttribute('id', id);
   element.setAttribute('height', 100);
   element.setAttribute('width', 150);
   element.setAttribute('controls', 'controls');
+  element.setAttribute('autoplay', 'autoplay');
   document.getElementById('content').appendChild(element);
 
   return element;
@@ -122,7 +123,7 @@ function getUserMedia(constraints) {
  * @param {Function} aCallback
  *        Test method to execute after initialization
  */
-function runTest(aCallback) {
+function realRunTest(aCallback) {
   if (window.SimpleTest) {
     // Running as a Mochitest.
     SimpleTest.waitForExplicitFinish();
@@ -169,10 +170,10 @@ function runTest(aCallback) {
  *                                     tracks being checked
  */
 function checkMediaStreamTracksByType(constraints, type, mediaStreamTracks) {
-  if(constraints[type]) {
+  if (constraints[type]) {
     is(mediaStreamTracks.length, 1, 'One ' + type + ' track shall be present');
 
-    if(mediaStreamTracks.length) {
+    if (mediaStreamTracks.length) {
       is(mediaStreamTracks[0].kind, type, 'Track kind should be ' + type);
       ok(mediaStreamTracks[0].id, 'Track id should be defined');
     }
@@ -512,7 +513,7 @@ function IsMacOSX10_6orOlder() {
 
     if (navigator.platform.indexOf("Mac") == 0) {
         var version = Cc["@mozilla.org/system-info;1"]
-                        .getService(SpecialPowers.Ci.nsIPropertyBag2)
+                        .getService(Ci.nsIPropertyBag2)
                         .getProperty("version");
         // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10.x !
         // Mac OS 10.7 is Darwin version 11.x. the |version| string we've got here
@@ -521,3 +522,11 @@ function IsMacOSX10_6orOlder() {
     }
     return is106orOlder;
 }
+
+(function(){
+  var el = document.createElement("link");
+  el.rel = "stylesheet";
+  el.type = "text/css";
+  el.href= "/tests/SimpleTest/test.css";
+  document.head.appendChild(el);
+}());

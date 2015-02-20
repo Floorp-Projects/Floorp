@@ -1,24 +1,15 @@
 ﻿<!DOCTYPE HTML>
 <html>
 <head>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="pc.js"></script>
 </head>
 <body>
-<video id="v1" controls="controls" height="120" width="160" autoplay></video>
-<video id="v2" controls="controls" height="120" width="160" autoplay></video><br>
 <pre id="test">
 <script type="application/javascript;version=1.8">
   createHTML({
     bug: "1091898",
     title: "PeerConnection with promises (sendonly)",
     visible: true
-  });
-
-  var waituntil = func => new Promise(resolve => {
-    var inter = setInterval(() => func() && resolve(clearInterval(inter)), 200);
   });
 
   var pc1 = new mozRTCPeerConnection();
@@ -34,11 +25,15 @@
   pc2.onicecandidate = e => pc1_stable.then(() => !e.candidate ||
     pc1.addIceCandidate(e.candidate)).catch(generateErrorCallback());
 
+  var v1, v2;
   var delivered = new Promise(resolve =>
     pc2.onaddstream = e => resolve(v2.mozSrcObject = e.stream));
-  var canPlayThrough = new Promise(resolve => v2.canplaythrough = e => resolve());
 
   runNetworkTest(function() {
+    v1 = createMediaElement('video', 'v1');
+    v2 = createMediaElement('video', 'v2');
+    var canPlayThrough = new Promise(resolve => v2.canplaythrough = e => resolve());
+
     is(v2.currentTime, 0, "v2.currentTime is zero at outset");
 
     navigator.mediaDevices.getUserMedia({ fake: true, video: true, audio: true })
@@ -51,7 +46,7 @@
     .then(() => pc1.setRemoteDescription(pc2.localDescription))
     .then(() => delivered)
 //    .then(() => canPlayThrough)    // why doesn't this fire?
-    .then(() => waituntil(() => v2.currentTime > 0 && v2.mozSrcObject.currentTime > 0))
+    .then(() => waitUntil(() => v2.currentTime > 0 && v2.mozSrcObject.currentTime > 0))
     .then(() => ok(v2.currentTime > 0, "v2.currentTime is moving (" + v2.currentTime + ")"))
     .then(() => ok(true, "Connected."))
     .catch(reason => ok(false, "unexpected failure: " + reason))

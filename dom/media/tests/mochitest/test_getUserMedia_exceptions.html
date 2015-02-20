@@ -71,21 +71,17 @@ function unexpectedCall(obj) {
  * is thrown on the mozGetUserMedia call with the parameters
  * specified.
  */
-runTest(function () {
-  exceptionTests.forEach(function (test) {
-    var exception = false;
-    try {
-      navigator.mozGetUserMedia.apply(navigator, test.params);
-    } catch (e) {
-      exception = (e.message === test.error);
-      if(!exception) {
-        info(e.message);
-      }
+exceptionTests.forEach(function (test) {
+  var exception = false;
+  try {
+    navigator.mozGetUserMedia.apply(navigator, test.params);
+  } catch (e) {
+    exception = (e.message === test.error);
+    if(!exception) {
+      info(e.message);
     }
-    ok(exception, "Exception for " + test.message);
-  });
-
-  SimpleTest.finish();
+  }
+  ok(exception, "Exception for " + test.message);
 });
 
 </script>
