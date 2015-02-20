@@ -39,9 +39,9 @@ HTMLFrameSetElement::SetCols(const nsAString& aCols)
 NS_IMETHODIMP
 HTMLFrameSetElement::GetCols(nsAString& aCols)
 {
-  nsString cols;
+  DOMString cols;
   GetCols(cols);
-  aCols = cols;
+  cols.ToString(aCols);
   return NS_OK;
 }
 
@@ -56,9 +56,9 @@ HTMLFrameSetElement::SetRows(const nsAString& aRows)
 NS_IMETHODIMP
 HTMLFrameSetElement::GetRows(nsAString& aRows)
 {
-  nsString rows;
+  DOMString rows;
   GetRows(rows);
-  aRows = rows;
+  rows.ToString(aRows);
   return NS_OK;
 }
 

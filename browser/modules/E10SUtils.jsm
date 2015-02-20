@@ -30,6 +30,10 @@ this.E10SUtils = {
     if (!aURL)
       aURL = "about:blank";
 
+    // Javascript urls can load in any process, they apply to the current document
+    if (aURL.startsWith("javascript:"))
+      return true;
+
     let processIsRemote = aProcess == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
 
     let canLoadRemote = true;

@@ -331,7 +331,7 @@ MP4Demuxer::GetEvictionOffset(Microseconds aTime)
   for (int i = 0; i < mPrivate->mIndexes.Length(); i++) {
     offset = std::min(offset, mPrivate->mIndexes[i]->GetEvictionOffset(aTime));
   }
-  return offset == std::numeric_limits<uint64_t>::max() ? -1 : offset;
+  return offset == std::numeric_limits<uint64_t>::max() ? 0 : offset;
 }
 
 Microseconds

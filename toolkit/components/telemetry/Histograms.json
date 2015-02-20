@@ -7256,6 +7256,12 @@
     "n_buckets": 16,
     "description": "The number of entries in persistent DataStorage (HSTS and HPKP data, basically)"
   },
+  "VIDEO_MSE_UNLOAD_STATE": {
+    "expires_in_version": "45",
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "MSE video state when unloading. ended = 0, paused = 1, stalled = 2, seeking = 3, other = 4"
+  },
   "FX_SANITIZE_TOTAL": {
     "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
     "expires_in_version": "40",

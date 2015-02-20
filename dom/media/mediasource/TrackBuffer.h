@@ -104,6 +104,13 @@ public:
   // Abort any pending appendBuffer by rejecting any pending promises.
   void AbortAppendData();
 
+  // Return the size used by all decoders managed by this TrackBuffer.
+  int64_t GetSize();
+
+  // Return true if we have a partial media segment being appended that is
+  // currently not playable.
+  bool HasOnlyIncompleteMedia();
+
 #ifdef MOZ_EME
   nsresult SetCDMProxy(CDMProxy* aProxy);
 #endif

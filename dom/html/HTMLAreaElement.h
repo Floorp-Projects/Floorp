@@ -117,7 +117,7 @@ public:
     SetHTMLAttr(nsGkAtoms::ping, aPing, aError);
   }
   
-  void GetRel(nsString& aValue)
+  void GetRel(DOMString& aValue)
   {
     GetHTMLAttr(nsGkAtoms::rel, aValue);
   }
@@ -180,7 +180,7 @@ protected:
 
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
-  virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
+  virtual void GetItemValueText(DOMString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
   nsRefPtr<nsDOMTokenList > mRelList;
 };

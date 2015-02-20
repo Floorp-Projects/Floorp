@@ -20,6 +20,7 @@
 #include "VideoUtils.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
+#include "mozilla/EMEUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -80,8 +81,6 @@ HaveGMPFor(mozIGeckoMediaPluginService* aGMPService,
   if (!aTag.IsEmpty()) {
     tags.AppendElement(aTag);
   }
-  // Note: EME plugins need a non-null nodeId here, as they must
-  // not be shared across origins.
   bool hasPlugin = false;
   if (NS_FAILED(aGMPService->HasPluginForAPI(aAPI,
                                              &tags,
@@ -91,9 +90,37 @@ HaveGMPFor(mozIGeckoMediaPluginService* aGMPService,
   return hasPlugin;
 }
 
+static MediaKeySystemStatus
+EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
+                    const nsAString& aKeySystem,
+                    int32_t aMinCdmVersion)
+{
+  if (aMinCdmVersion == NO_CDM_VERSION) {
+    return MediaKeySystemStatus::Available;
+  }
+
+  nsTArray<nsCString> tags;
+  tags.AppendElement(NS_ConvertUTF16toUTF8(aKeySystem));
+  nsAutoCString versionStr;
+  if (NS_FAILED(aGMPService->GetPluginVersionForAPI(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
+                                                    &tags,
+                                                    versionStr))) {
+    return MediaKeySystemStatus::Error;
+  }
+
+  nsresult rv;
+  int32_t version = versionStr.ToInteger(&rv);
+  if (NS_FAILED(rv) || version < 0 || aMinCdmVersion > version) {
+    return MediaKeySystemStatus::Cdm_insufficient_version;
+  }
+
+  return MediaKeySystemStatus::Available;
+}
+
 /* static */
 MediaKeySystemStatus
-MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem)
+MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
+                                         int32_t aMinCdmVersion)
 {
   MOZ_ASSERT(Preferences::GetBool("media.eme.enabled", false));
   nsCOMPtr<mozIGeckoMediaPluginService> mps =
@@ -111,7 +138,7 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem)
                     NS_LITERAL_CSTRING(GMP_API_DECRYPTOR))) {
       return MediaKeySystemStatus::Cdm_not_installed;
     }
-    return MediaKeySystemStatus::Available;
+    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion);
   }
 
 #ifdef XP_WIN
@@ -129,7 +156,7 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem)
                     NS_LITERAL_CSTRING(GMP_API_DECRYPTOR))) {
       return MediaKeySystemStatus::Cdm_not_installed;
     }
-    return MediaKeySystemStatus::Available;
+    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion);
   }
 #endif
 
