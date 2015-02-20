@@ -20,14 +20,10 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 
 let gEMEUIObserver = function(subject, topic, data) {
-  let win = subject.ownerDocument.defaultView.top;
+  let win = subject.top;
   let mm = getMessageManagerForWindow(win);
   if (mm) {
-    mm.sendAsyncMessage("EMEVideo:MetadataLoaded", {
-      // bug 1129370 covers making this the actual DRM provider inferred from
-      // either |subject| or |data| here.
-      drmProvider: "Adobe"
-    });
+    mm.sendAsyncMessage("EMEVideo:ContentMediaKeysRequest", data);
   }
 };
 
@@ -44,4 +40,4 @@ function getMessageManagerForWindow(aContentWindow) {
   }
 }
 
-Services.obs.addObserver(gEMEUIObserver, "media-eme-metadataloaded", false);
+Services.obs.addObserver(gEMEUIObserver, "mediakeys-request", false);

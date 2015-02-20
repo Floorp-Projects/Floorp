@@ -192,45 +192,48 @@
 #ifdef MOZ_DATA_REPORTING
     <!-- Data Choices -->
     <tabpanel id="dataChoicesPanel" orient="vertical">
-#ifdef MOZ_TELEMETRY_REPORTING
-      <groupbox>
-        <caption><label>&telemetrySection.label;</label></caption>
-        <description>&telemetryDesc.label;</description>
-        <hbox>
-          <checkbox id="submitTelemetryBox"
-                    preference="toolkit.telemetry.enabled"
-                    label="&enableTelemetry.label;"
-                    accesskey="&enableTelemetry.accesskey;"/>
-          <spacer flex="1"/>
-          <label id="telemetryLearnMore"
-                 class="text-link">&telemetryLearnMore.label;</label>
-        </hbox>
-      </groupbox>
-#endif
 #ifdef MOZ_SERVICES_HEALTHREPORT
       <groupbox>
-        <caption><label>&healthReportSection.label;</label></caption>
-        <description>&healthReportDesc.label;</description>
-        <hbox>
-          <checkbox id="submitHealthReportBox"
-                    label="&enableHealthReport.label;"
+        <caption>
+          <checkbox id="submitHealthReportBox" label="&enableHealthReport.label;"
                     accesskey="&enableHealthReport.accesskey;"/>
-          <spacer flex="1"/>
-          <label id="FHRLearnMore"
-                 class="text-link">&healthReportLearnMore.label;</label>
-        </hbox>
+        </caption>
+        <vbox>
+          <hbox class="indent">
+            <label flex="1">&healthReportDesc.label;</label>
+            <spacer flex="10"/>
+            <label id="FHRLearnMore"
+                   class="text-link">&healthReportLearnMore.label;</label>
+          </hbox>
+#ifdef MOZ_TELEMETRY_REPORTING
+          <hbox class="indent">
+            <groupbox flex="1">
+              <caption>
+                <checkbox id="submitTelemetryBox" preference="toolkit.telemetry.enabled"
+                          label="&enableTelemetryData.label;"
+                          accesskey="&enableTelemetryData.accesskey;"/>
+              </caption>
+              <hbox class="indent">
+                <label id="telemetryDataDesc" flex="1">&telemetryDesc.label;</label>
+                <spacer flex="10"/>
+                <label id="telemetryLearnMore"
+                       class="text-link">&telemetryLearnMore.label;</label>
+              </hbox>
+            </groupbox>
+          </hbox>
+#endif
+        </vbox>
       </groupbox>
 #endif
 #ifdef MOZ_CRASHREPORTER
       <groupbox>
-        <caption><label>&crashReporterSection.label;</label></caption>
-        <description>&crashReporterDesc.label;</description>
-        <hbox>
-          <checkbox id="submitCrashesBox"
-                    label="&enableCrashReporter.label;"
+        <caption>
+          <checkbox id="submitCrashesBox" label="&enableCrashReporter.label;"
                     accesskey="&enableCrashReporter.accesskey;"/>
-
-          <spacer flex="1"/>
+        </caption>
+        <hbox class="indent">
+          <label flex="1">&crashReporterDesc.label;</label>
+          <spacer flex="10"/>
           <label id="crashReporterLearnMore"
                  class="text-link">&crashReporterLearnMore.label;</label>
         </hbox>
