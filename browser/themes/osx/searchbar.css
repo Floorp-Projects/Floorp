@@ -139,8 +139,11 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
 
 .search-panel-current-engine {
   border-top: none !important;
-  border-bottom: 1px solid #ccc;
   border-radius: 4px 4px 0 0;
+}
+
+.search-panel-current-engine:not([showonlysettings]) {
+  border-bottom: 1px solid #ccc;
 }
 
 .search-panel-header {
@@ -285,10 +288,6 @@ searchbar[oneoffui] .searchbar-engine-button {
   -moz-appearance: none;
   border-radius: 0 0 4px 4px;
   min-height: 32px;
-}
-
-.search-setting-button[showonlysettings] {
-  border-radius: 4px;
 }
 
 .search-setting-button[selected] {
