@@ -101,7 +101,11 @@
 
             const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
             var newitem = document.createElementNS(XULNS, "notification");
-            newitem.setAttribute("label", aLabel);
+            // Can't use instanceof in case this was created from a different document:
+            let labelIsDocFragment = aLabel && typeof aLabel == "object" && aLabel.nodeType &&
+                                     aLabel.nodeType == aLabel.DOCUMENT_FRAGMENT_NODE;
+            if (!labelIsDocFragment)
+              newitem.setAttribute("label", aLabel);
             newitem.setAttribute("value", aValue);
             if (aImage)
               newitem.setAttribute("image", aImage);
@@ -148,6 +152,13 @@
               newitem.style.opacity = "0";
             }
             this.insertBefore(newitem, insertPos);
+            // Can only insert the document fragment after the item has been created because
+            // otherwise the XBL structure isn't there yet:
+            if (labelIsDocFragment) {
+              document.getAnonymousElementByAttribute(newitem, "anonid", "messageText")
+                .appendChild(aLabel);
+            }
+
             if (!insertPos)
               this._showNotification(newitem, true);
 
