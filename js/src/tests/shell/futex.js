@@ -67,6 +67,12 @@ mem[1] = 37;
 mem[2] = DEBUG;
 setSharedArrayBuffer(mem.buffer);
 
+if (helperThreadCount() === 0) {
+  // Abort if there is no helper thread.
+  reportCompare(true,true);
+  quit();
+}
+
 evalInWorker(`
 var mem = new SharedInt32Array(getSharedArrayBuffer());
 function dprint(s) {
