@@ -28,16 +28,16 @@ function test() {
   function run() {
     return Task.spawn(function*() {
       let newSource = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.NEW_SOURCE);
-      callInTab(gTab, "evalSource");
+      callInTab(gTab, "evalSourceWithSourceURL");
       yield newSource;
 
-      yield gPanel.addBreakpoint({ actor: gSources.values[1], line: 2 });
+      yield gPanel.addBreakpoint({ actor: gSources.values[0], line: 2 });
       yield ensureThreadClientState(gPanel, "resumed");
 
       const paused = waitForThreadEvents(gPanel, "paused");
       callInTab(gTab, "bar");
       let frame = (yield paused).frame;
-      is(frame.where.source.actor, gSources.values[1], "Should have broken on the eval'ed source");
+      is(frame.where.source.actor, gSources.values[0], "Should have broken on the eval'ed source");
       is(frame.where.line, 2, "Should break on line 2");
 
       yield resumeDebuggerThenCloseAndFinish(gPanel);
