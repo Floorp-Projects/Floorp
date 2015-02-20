@@ -1359,7 +1359,7 @@ MFloor::trySpecializeFloat32(TempAllocator &alloc)
 {
     MOZ_ASSERT(type() == MIRType_Int32);
     if (EnsureFloatInputOrConvert(this, alloc))
-        setPolicyType(MIRType_Float32);
+        specialization_ = MIRType_Float32;
 }
 
 void
@@ -1367,7 +1367,7 @@ MCeil::trySpecializeFloat32(TempAllocator &alloc)
 {
     MOZ_ASSERT(type() == MIRType_Int32);
     if (EnsureFloatInputOrConvert(this, alloc))
-        setPolicyType(MIRType_Float32);
+        specialization_ = MIRType_Float32;
 }
 
 void
@@ -1375,7 +1375,7 @@ MRound::trySpecializeFloat32(TempAllocator &alloc)
 {
     MOZ_ASSERT(type() == MIRType_Int32);
     if (EnsureFloatInputOrConvert(this, alloc))
-        setPolicyType(MIRType_Float32);
+        specialization_ = MIRType_Float32;
 }
 
 MCompare *
@@ -2308,7 +2308,7 @@ MMathFunction::trySpecializeFloat32(TempAllocator &alloc)
     }
 
     setResultType(MIRType_Float32);
-    setPolicyType(MIRType_Float32);
+    specialization_ = MIRType_Float32;
 }
 
 MHypot *MHypot::New(TempAllocator &alloc, const MDefinitionVector & vector)
@@ -4330,7 +4330,7 @@ MSqrt::trySpecializeFloat32(TempAllocator &alloc) {
     }
 
     setResultType(MIRType_Float32);
-    setPolicyType(MIRType_Float32);
+    specialization_ = MIRType_Float32;
 }
 
 MDefinition *
