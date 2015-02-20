@@ -732,12 +732,15 @@ protected:
                                 PaintedLayer* aNewLayer);
 
   /**
-   * Try to determine whether the PaintedLayer at aPaintedLayerIndex
+   * Try to determine whether a layer with visible region aTargetVisibleRegion
    * has a single opaque color behind it, over the entire bounds of its visible
-   * region.
-   * If successful, return that color, otherwise return NS_RGBA(0,0,0,0).
+   * region. The target layer is assumed to be on top of all thebes layers in
+   * the thebes layer data stack that have a stack index < aUnderPaintedLayerIndex.
+   * If successful, return the color, otherwise return NS_RGBA(0,0,0,0).
+   * aTargetVisibleRegion is relative to the the container reference frame.
    */
-  nscolor FindOpaqueBackgroundColorFor(int32_t aPaintedLayerIndex);
+  nscolor FindOpaqueBackgroundColorFor(const nsIntRegion& aTargetVisibleRegion,
+                                       int32_t aUnderPaintedLayerIndex);
   /**
    * Find the fixed-pos frame, if any, containing (or equal to)
    * aAnimatedGeometryRoot. Only return a fixed-pos frame if its viewport
@@ -1865,19 +1868,19 @@ ContainerState::SetOuterVisibleRegionForLayer(Layer* aLayer,
 }
 
 nscolor
-ContainerState::FindOpaqueBackgroundColorFor(int32_t aPaintedLayerIndex)
+ContainerState::FindOpaqueBackgroundColorFor(const nsIntRegion& aTargetVisibleRegion,
+                                             int32_t aUnderPaintedLayerIndex)
 {
-  PaintedLayerData* target = mPaintedLayerDataStack[aPaintedLayerIndex];
-  for (int32_t i = aPaintedLayerIndex - 1; i >= 0; --i) {
+  for (int32_t i = aUnderPaintedLayerIndex - 1; i >= 0; --i) {
     PaintedLayerData* candidate = mPaintedLayerDataStack[i];
-    if (candidate->VisibleAboveRegionIntersects(target->mVisibleRegion)) {
+    if (candidate->VisibleAboveRegionIntersects(aTargetVisibleRegion)) {
       // Some non-PaintedLayer content between target and candidate; this is
       // hopeless
-      break;
+      return NS_RGBA(0,0,0,0);
     }
 
     nsIntRegion intersection;
-    intersection.And(candidate->mVisibleRegion, target->mVisibleRegion);
+    intersection.And(candidate->mVisibleRegion, aTargetVisibleRegion);
     if (intersection.IsEmpty()) {
       // The layer doesn't intersect our target, ignore it and move on
       continue;
@@ -1885,7 +1888,7 @@ ContainerState::FindOpaqueBackgroundColorFor(int32_t aPaintedLayerIndex)
 
     // The candidate intersects our target. If any layer has a solid-color
     // area behind our target, this must be it. Scan its display items.
-    nsIntRect deviceRect = target->mVisibleRegion.GetBounds();
+    nsIntRect deviceRect = aTargetVisibleRegion.GetBounds();
     nsRect appUnitRect = deviceRect.ToAppUnits(mAppUnitsPerDevPixel);
     appUnitRect.ScaleInverseRoundOut(mParameters.mXScale, mParameters.mYScale);
 
@@ -1902,7 +1905,7 @@ ContainerState::FindOpaqueBackgroundColorFor(int32_t aPaintedLayerIndex)
           continue;
 
         if (!snappedBounds.Contains(deviceRect))
-          break;
+          return NS_RGBA(0,0,0,0);
 
       } else {
         // The layer's visible rect is already (close enough to) pixel
@@ -1911,7 +1914,7 @@ ContainerState::FindOpaqueBackgroundColorFor(int32_t aPaintedLayerIndex)
           continue;
 
         if (!bounds.Contains(appUnitRect))
-          break;
+          return NS_RGBA(0,0,0,0);
       }
 
       if (item->IsInvisibleInRect(appUnitRect)) {
@@ -1929,9 +1932,8 @@ ContainerState::FindOpaqueBackgroundColorFor(int32_t aPaintedLayerIndex)
       if (item->IsUniform(mBuilder, &color) && NS_GET_A(color) == 255)
         return color;
 
-      break;
+      return NS_RGBA(0,0,0,0);
     }
-    break;
   }
   return NS_RGBA(0,0,0,0);
 }
@@ -2176,7 +2178,7 @@ ContainerState::PopPaintedLayerData()
   if (layer == data->mLayer) {
     nscolor backgroundColor = NS_RGBA(0,0,0,0);
     if (!isOpaque) {
-      backgroundColor = FindOpaqueBackgroundColorFor(lastIndex);
+      backgroundColor = FindOpaqueBackgroundColorFor(data->mVisibleRegion, lastIndex);
       if (NS_GET_A(backgroundColor) == 255) {
         isOpaque = true;
       }
