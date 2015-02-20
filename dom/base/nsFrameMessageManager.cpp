@@ -29,6 +29,7 @@
 #include "nsIDOMClassInfo.h"
 #include "xpcpublic.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/IntentionalCrash.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/nsIContentParent.h"
@@ -775,7 +776,12 @@ nsFrameMessageManager::Dump(const nsAString& aStr)
 NS_IMETHODIMP
 nsFrameMessageManager::PrivateNoteIntentionalCrash()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::NoteIntentionalCrash("tab");
+    return NS_OK;
+  } else {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 }
 
 NS_IMETHODIMP
@@ -796,14 +802,14 @@ NS_IMETHODIMP
 nsFrameMessageManager::Btoa(const nsAString& aBinaryData,
                             nsAString& aAsciiBase64String)
 {
-  return NS_OK;
+  return nsContentUtils::Btoa(aBinaryData, aAsciiBase64String);
 }
 
 NS_IMETHODIMP
 nsFrameMessageManager::Atob(const nsAString& aAsciiString,
                             nsAString& aBinaryData)
 {
-  return NS_OK;
+  return nsContentUtils::Atob(aAsciiString, aBinaryData);
 }
 
 // nsIProcessChecker

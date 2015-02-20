@@ -205,27 +205,6 @@ nsInProcessTabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsInProcessTabChildGlobal::Btoa(const nsAString& aBinaryData,
-                            nsAString& aAsciiBase64String)
-{
-  return nsContentUtils::Btoa(aBinaryData, aAsciiBase64String);
-}
-
-NS_IMETHODIMP
-nsInProcessTabChildGlobal::Atob(const nsAString& aAsciiString,
-                            nsAString& aBinaryData)
-{
-  return nsContentUtils::Atob(aAsciiString, aBinaryData);
-}
-
-
-NS_IMETHODIMP
-nsInProcessTabChildGlobal::PrivateNoteIntentionalCrash()
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 void
 nsInProcessTabChildGlobal::Disconnect()
 {
