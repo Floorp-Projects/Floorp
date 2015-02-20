@@ -19,6 +19,7 @@ runWithMSE(function (ms, v) {
     fetchWithXHR("seek.webm", function (arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 25223));
       sb.addEventListener("updateend", function () {
+        sb.removeEventListener('updateend', arguments.callee);
         sb.appendBuffer(new Uint8Array(arrayBuffer, 25223));
       });
     });
