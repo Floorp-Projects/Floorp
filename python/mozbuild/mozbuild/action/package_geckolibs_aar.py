@@ -77,6 +77,8 @@ def main(args):
     parser.add_argument(dest='dir',
                         metavar='DIR',
                         help='Path to write geckolibs Android ARchive and metadata to.')
+    parser.add_argument('--verbose', '-v', default=False, action='store_true',
+                        help='be verbose')
     parser.add_argument('--revision',
                         help='Revision identifier to write.')
     parser.add_argument('--topsrcdir',
@@ -115,8 +117,12 @@ def main(args):
         ))
 
     for p in paths_to_hash:
-        with open("%s.sha1" % p, 'wt') as f:
+        sha = "%s.sha1" % p
+        with open(sha, 'wt') as f:
             f.write(util.hash_file(p, hasher=hashlib.sha1()))
+        if args.verbose:
+            print(p)
+            print(sha)
 
     return 0
 

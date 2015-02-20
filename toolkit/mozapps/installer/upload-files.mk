@@ -365,6 +365,8 @@ endif
 # Create geckolibs Android ARchive and metadata for download by local
 # developers using Gradle.
 ifdef MOZ_ANDROID_GECKOLIBS_AAR
+geckolibs-revision := $(BUILDID)
+
 UPLOAD_EXTRA_FILES += \
   geckolibs-$(geckolibs-revision).aar \
   geckolibs-$(geckolibs-revision).aar.sha1 \
@@ -376,7 +378,8 @@ UPLOAD_EXTRA_FILES += \
 
 INNER_MAKE_GECKOLIBS_AAR= \
   $(PYTHON) -m mozbuild.action.package_geckolibs_aar \
-    --revision '$(BUILDID)' \
+    --verbose \
+    --revision $(geckolibs-revision) \
     --topsrcdir '$(topsrcdir)' \
     --distdir '$(_ABS_DIST)' \
     '$(_ABS_DIST)'
