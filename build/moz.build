@@ -48,3 +48,14 @@ if CONFIG['MOZ_BUILD_APP'] == 'browser':
     PYTHON_UNIT_TESTS += [
         'compare-mozconfig/compare-mozconfigs-wrapper.py',
     ]
+
+if CONFIG['ENABLE_TESTS'] or CONFIG['MOZ_DMD']:
+    tools_dir = TOPSRCDIR + '/tools/rb/'
+    FINAL_TARGET_FILES += [tools_dir + 'fix_stack_using_bpsyms.py']
+    if CONFIG['OS_ARCH'] == 'Darwin':
+        FINAL_TARGET_FILES += [tools_dir + 'fix_macosx_stack.py']
+    if CONFIG['OS_ARCH'] == 'Linux':
+        FINAL_TARGET_FILES += [tools_dir + 'fix_linux_stack.py']
+
+if CONFIG['MOZ_DMD']:
+    FINAL_TARGET_FILES += [TOPSRCDIR + '/memory/replace/dmd/dmd.py']
