@@ -215,26 +215,6 @@ function waitUntil(func, time) {
   });
 }
 
-
-/**
- * Returns the contents of a blob as text
- *
- * @param {Blob} blob
-          The blob to retrieve the contents from
- */
-function getBlobContent(blob) {
-  return new Promise(resolve => {
-    var reader = new FileReader();
-
-    // Listen for 'onloadend' which will always be called after a success or failure
-    reader.onloadend = function (event) {
-      resolve(event.target.result);
-    };
-
-    reader.readAsText(blob);
-  });
-}
-
 /*** Test control flow methods */
 
 /**
