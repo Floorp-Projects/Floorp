@@ -8,6 +8,7 @@
 #include "mp4_demuxer/MoofParser.h"
 #include "media/stagefright/MediaSource.h"
 #include "MediaResource.h"
+#include "mozilla/fallible.h"
 
 #include <algorithm>
 #include <limits>
@@ -99,7 +100,7 @@ MP4Sample* SampleIterator::GetNext()
   sample->size = s->mByteRange.Length();
 
   // Do the blocking read
-  sample->data = sample->extra_buffer = new (fallible) uint8_t[sample->size];
+  sample->data = sample->extra_buffer = new ((fallible_t())) uint8_t[sample->size];
   if (!sample->data) {
     return nullptr;
   }
