@@ -16,7 +16,7 @@ interface ServiceWorkerGlobalScope : WorkerGlobalScope {
   // FIXME(nsm): Bug 982725
   // readonly attribute CacheList caches;
 
-  readonly attribute ServiceWorkerClients clients;
+  readonly attribute Clients clients;
 
   [Unforgeable] readonly attribute DOMString scope;
 
