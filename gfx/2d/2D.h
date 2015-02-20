@@ -371,7 +371,7 @@ protected:
 class DataSourceSurface : public SourceSurface
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurface)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurface, MOZ_OVERRIDE)
   DataSourceSurface()
     : mIsMapped(false)
   {
