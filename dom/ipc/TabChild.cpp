@@ -2618,7 +2618,7 @@ TabChild::RecvLoadRemoteScript(const nsString& aURL, const bool& aRunInGlobalSco
     // error.
     return true;
 
-  LoadFrameScriptInternal(aURL, aRunInGlobalScope);
+  LoadScriptInternal(aURL, aRunInGlobalScope);
   return true;
 }
 
@@ -2769,7 +2769,7 @@ TabChild::InitTabChildGlobal(FrameScriptLoading aScriptLoading)
     nsISupports* scopeSupports = NS_ISUPPORTS_CAST(EventTarget*, scope);
 
     NS_NAMED_LITERAL_CSTRING(globalId, "outOfProcessTabChildGlobal");
-    NS_ENSURE_TRUE(InitTabChildGlobalInternal(scopeSupports, globalId), false);
+    NS_ENSURE_TRUE(InitChildGlobalInternal(scopeSupports, globalId), false);
 
     scope->Init();
 

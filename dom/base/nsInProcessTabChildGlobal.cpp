@@ -318,7 +318,7 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
     id.Append(u);
   }
   nsISupports* scopeSupports = NS_ISUPPORTS_CAST(EventTarget*, this);
-  NS_ENSURE_STATE(InitTabChildGlobalInternal(scopeSupports, id));
+  NS_ENSURE_STATE(InitChildGlobalInternal(scopeSupports, id));
   return NS_OK;
 }
 
@@ -352,6 +352,6 @@ nsInProcessTabChildGlobal::LoadFrameScript(const nsAString& aURL, bool aRunInGlo
   }
   bool tmp = mLoadingScript;
   mLoadingScript = true;
-  LoadFrameScriptInternal(aURL, aRunInGlobalScope);
+  LoadScriptInternal(aURL, aRunInGlobalScope);
   mLoadingScript = tmp;
 }

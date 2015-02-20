@@ -1393,17 +1393,17 @@ NS_NewGlobalMessageManager(nsIMessageBroadcaster** aResult)
   return CallQueryInterface(mm, aResult);
 }
 
-nsDataHashtable<nsStringHashKey, nsFrameScriptObjectExecutorHolder*>*
-  nsFrameScriptExecutor::sCachedScripts = nullptr;
-nsScriptCacheCleaner* nsFrameScriptExecutor::sScriptCacheCleaner = nullptr;
+nsDataHashtable<nsStringHashKey, nsMessageManagerScriptHolder*>*
+  nsMessageManagerScriptExecutor::sCachedScripts = nullptr;
+nsScriptCacheCleaner* nsMessageManagerScriptExecutor::sScriptCacheCleaner = nullptr;
 
 void
-nsFrameScriptExecutor::DidCreateGlobal()
+nsMessageManagerScriptExecutor::DidCreateGlobal()
 {
   NS_ASSERTION(mGlobal, "Should have mGlobal!");
   if (!sCachedScripts) {
     sCachedScripts =
-      new nsDataHashtable<nsStringHashKey, nsFrameScriptObjectExecutorHolder*>;
+      new nsDataHashtable<nsStringHashKey, nsMessageManagerScriptHolder*>;
 
     nsRefPtr<nsScriptCacheCleaner> scriptCacheCleaner =
       new nsScriptCacheCleaner();
@@ -1413,7 +1413,7 @@ nsFrameScriptExecutor::DidCreateGlobal()
 
 static PLDHashOperator
 RemoveCachedScriptEntry(const nsAString& aKey,
-                        nsFrameScriptObjectExecutorHolder*& aData,
+                        nsMessageManagerScriptHolder*& aData,
                         void* aUserArg)
 {
   delete aData;
@@ -1422,7 +1422,7 @@ RemoveCachedScriptEntry(const nsAString& aKey,
 
 // static
 void
-nsFrameScriptExecutor::Shutdown()
+nsMessageManagerScriptExecutor::Shutdown()
 {
   if (sCachedScripts) {
     AutoSafeJSContext cx;
@@ -1438,8 +1438,8 @@ nsFrameScriptExecutor::Shutdown()
 }
 
 void
-nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL,
-                                               bool aRunInGlobalScope)
+nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
+                                                   bool aRunInGlobalScope)
 {
   if (!mGlobal || !sCachedScripts) {
     return;
@@ -1448,7 +1448,7 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL,
   JSRuntime* rt = CycleCollectedJSRuntime::Get()->Runtime();
   JS::Rooted<JSScript*> script(rt);
 
-  nsFrameScriptObjectExecutorHolder* holder = sCachedScripts->Get(aURL);
+  nsMessageManagerScriptHolder* holder = sCachedScripts->Get(aURL);
   if (holder && holder->WillRunInGlobalScope() == aRunInGlobalScope) {
     script = holder->mScript;
   } else {
@@ -1480,10 +1480,11 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL,
 }
 
 void
-nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
-                                                    bool aRunInGlobalScope,
-                                                    bool aShouldCache,
-                                                    JS::MutableHandle<JSScript*> aScriptp)
+nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
+  const nsAString& aURL,
+  bool aRunInGlobalScope,
+  bool aShouldCache,
+  JS::MutableHandle<JSScript*> aScriptp)
 {
   nsCString url = NS_ConvertUTF16toUTF8(aURL);
   nsCOMPtr<nsIURI> uri;
@@ -1565,11 +1566,11 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
     uri->GetScheme(scheme);
     // We don't cache data: scripts!
     if (aShouldCache && !scheme.EqualsLiteral("data")) {
-      nsFrameScriptObjectExecutorHolder* holder;
+      nsMessageManagerScriptHolder* holder;
 
       // Root the object also for caching.
       if (script) {
-        holder = new nsFrameScriptObjectExecutorHolder(cx, script, aRunInGlobalScope);
+        holder = new nsMessageManagerScriptHolder(cx, script, aRunInGlobalScope);
       }
       sCachedScripts->Put(aURL, holder);
     }
@@ -1577,8 +1578,9 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
 }
 
 void
-nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
-                                                    bool aRunInGlobalScope)
+nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
+  const nsAString& aURL,
+  bool aRunInGlobalScope)
 {
   AutoSafeJSContext cx;
   JS::Rooted<JSScript*> script(cx);
@@ -1586,8 +1588,9 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
 }
 
 bool
-nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope,
-                                                  const nsACString& aID)
+nsMessageManagerScriptExecutor::InitChildGlobalInternal(
+  nsISupports* aScope,
+  const nsACString& aID)
 {
 
   nsCOMPtr<nsIJSRuntimeService> runtimeSvc =
