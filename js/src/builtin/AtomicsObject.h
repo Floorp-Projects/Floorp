@@ -7,6 +7,7 @@
 #ifndef builtin_AtomicsObject_h
 #define builtin_AtomicsObject_h
 
+#include "jslock.h"
 #include "jsobj.h"
 
 namespace js {
@@ -18,15 +19,14 @@ class AtomicsObject : public JSObject
     static JSObject* initClass(JSContext *cx, Handle<GlobalObject *> global);
     static bool toString(JSContext *cx, unsigned int argc, jsval *vp);
 
-    static const int FutexOK = 0;
-
+    // Defined return values for futexWait.
     // The error values must be negative because APIs such as futexWaitOrRequeue
     // return a value that is either the number of tasks woken or an error code.
-    static const int FutexNotequal = -1;
-    static const int FutexTimedout = -2;
-
-    // Internal signals; negative for the same reason.
-    static const int FutexInterrupted = -1000;
+    enum FutexWaitResult : int32_t {
+        FutexOK = 0,
+        FutexNotequal = -1,
+        FutexTimedout = -2
+    };
 };
 
 void atomics_fullMemoryBarrier();
@@ -43,6 +43,85 @@ bool atomics_xor(JSContext *cx, unsigned argc, Value *vp);
 bool atomics_futexWait(JSContext *cx, unsigned argc, Value *vp);
 bool atomics_futexWake(JSContext *cx, unsigned argc, Value *vp);
 bool atomics_futexWakeOrRequeue(JSContext *cx, unsigned argc, Value *vp);
+
+class FutexRuntime
+{
+public:
+    static bool initialize();
+    static void destroy();
+
+    static void lock();
+    static void unlock();
+
+    FutexRuntime();
+    bool initInstance();
+    void destroyInstance();
+
+    // Parameters to wake().
+    enum WakeReason {
+        WakeExplicit,           // Being asked to wake up by another thread
+        WakeForJSInterrupt      // Interrupt requested
+    };
+
+    // Block the calling thread and wait.
+    //
+    // The futex lock must be held around this call.
+    //
+    // The timeout is the number of milliseconds, with fractional
+    // times allowed; specify positive infinity for an indefinite wait.
+    //
+    // wait() will not wake up spuriously.  It will return true and
+    // set *result to a return code appropriate for
+    // Atomics.futexWait() on success, and return false on error.
+    bool wait(JSContext *cx, double timeout, AtomicsObject::FutexWaitResult *result);
+
+    // Wake the thread represented by this Runtime.
+    //
+    // The futex lock must be held around this call.  (The sleeping
+    // thread will not wake up until the caller of futexWake()
+    // releases the lock.)
+    //
+    // If the thread is not waiting then this method does nothing.
+    //
+    // If the thread is waiting in a call to futexWait() and the
+    // reason is WakeExplicit then the futexWait() call will return
+    // with Woken.
+    //
+    // If the thread is waiting in a call to futexWait() and the
+    // reason is WakeForJSInterrupt then the futexWait() will return
+    // with WokenForJSInterrupt; in the latter case the caller of
+    // futexWait() must handle the interrupt.
+    void wake(WakeReason reason);
+
+    bool isWaiting();
+
+  private:
+    enum FutexState {
+        Idle,                   // We are not waiting or woken
+        Waiting,                // We are waiting, nothing has happened yet
+        WaitingInterrupted,     // We are waiting, but have been interrupted
+        Woken,                  // Woken by a script call to futexWake
+        WokenForJSInterrupt     // Woken by an interrupt handler
+    };
+
+    // Condition variable that this runtime will wait on.
+    PRCondVar *cond_;
+
+    // Current futex state for this runtime.  When not in a wait this
+    // is Idle; when in a wait it is Waiting or the reason the futex
+    // is about to wake up.
+    FutexState state_;
+
+    // Shared futex lock for all runtimes.  We can perhaps do better,
+    // but any lock will need to be per-domain (consider SharedWorker)
+    // or coarser.
+    static mozilla::Atomic<PRLock*> lock_;
+
+#ifdef DEBUG
+    // Null or the thread holding the lock.
+    static mozilla::Atomic<PRThread*> lockHolder_;
+#endif
+};
 
 }  /* namespace js */
 
