@@ -341,19 +341,9 @@ interface nsISyncMessageSender : nsIMessageSender
                        [optional] in nsIPrincipal principal);
 };
 
-[scriptable, builtinclass, uuid(894ff2d4-39a3-4df8-9d76-8ee329975488)]
-interface nsIContentFrameMessageManager : nsISyncMessageSender
+[scriptable, builtinclass, uuid(e04a7ade-c61a-46ec-9f13-efeabedd9d3d)]
+interface nsIMessageManagerGlobal : nsISyncMessageSender
 {
-  /**
-   * The current top level window in the frame or null.
-   */
-  readonly attribute nsIDOMWindow content;
-
-  /**
-   * The top level docshell or null.
-   */
-  readonly attribute nsIDocShell docShell;
-
   /**
    * Print a string to stdout.
    */
@@ -365,11 +355,25 @@ interface nsIContentFrameMessageManager : nsISyncMessageSender
    */
   void privateNoteIntentionalCrash();
 
-   /**
-    * Ascii base64 data to binary data and vice versa
-    */
-   DOMString atob(in DOMString aAsciiString);
-   DOMString btoa(in DOMString aBase64Data);
+  /**
+   * Ascii base64 data to binary data and vice versa
+   */
+  DOMString atob(in DOMString aAsciiString);
+  DOMString btoa(in DOMString aBase64Data);
+};
+
+[scriptable, builtinclass, uuid(fff36099-9f84-4c7c-b69a-1cbf103d1708)]
+interface nsIContentFrameMessageManager : nsIMessageManagerGlobal
+{
+  /**
+   * The current top level window in the frame or null.
+   */
+  readonly attribute nsIDOMWindow content;
+
+  /**
+   * The top level docshell or null.
+   */
+  readonly attribute nsIDocShell docShell;
 };
 
 [uuid(a2325927-9c0c-437d-9215-749c79235031)]
