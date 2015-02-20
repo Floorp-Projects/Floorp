@@ -26,7 +26,7 @@ const STRING_TYPE_NAME       = "type.%ID%.name";
 
 const SEC_IN_A_DAY           = 24 * 60 * 60;
 
-const NS_GRE_BIN_DIR         = "GreD";
+const NS_GRE_DIR             = "GreD";
 const CLEARKEY_PLUGIN_ID     = "gmp-clearkey";
 const CLEARKEY_VERSION       = "0.1";
 
@@ -467,9 +467,9 @@ let GMPProvider = {
 
     if (Preferences.get(KEY_EME_ENABLED, false)) {
       try {
-        let greBinDir = Services.dirsvc.get(NS_GRE_BIN_DIR,
-                                            Ci.nsILocalFile);
-        let clearkeyPath = OS.Path.join(greBinDir.path,
+        let greDir = Services.dirsvc.get(NS_GRE_DIR,
+                                         Ci.nsILocalFile);
+        let clearkeyPath = OS.Path.join(greDir.path,
                                         CLEARKEY_PLUGIN_ID,
                                         CLEARKEY_VERSION);
         this._log.info("startup - adding clearkey CDM directory " +
