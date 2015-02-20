@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1055676 - Tests for ruby-align</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    ruby { line-height: 0; }
+    rt { font-size: 100%; }
+    rb > div { width: 160px; }
+  </style>
+</head>
+<body style="font: 16px/3 Ahem">
+  <ruby>
+    <rb><div></div><rt style="ruby-align: start">X X X</rt>
+  </ruby><br>
+  <ruby>
+    <rb><div></div><rt style="ruby-align: center">X X X</rt>
+  </ruby><br>
+  <ruby>
+    <rb><div></div><rt style="ruby-align: space-between">X X X</rt>
+  </ruby><br>
+  <ruby>
+    <rb><div></div><rt style="ruby-align: space-around">X X X</rt>
+  </ruby>
+</body>
+</html>

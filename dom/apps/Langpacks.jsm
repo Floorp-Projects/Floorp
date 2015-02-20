@@ -32,7 +32,7 @@ let debug = Services.prefs.getBoolPref("dom.mozApps.debug")
   * "languages-target" : { "app://*.gaiamobile.org/manifest.webapp": "2.2" },
   * "languages-provided": {
   * "de": {
-  *   "version": 201411051234,
+  *   "revision": 201411051234,
   *   "name": "Deutsch",
   *   "apps": {
   *     "app://calendar.gaiamobile.org/manifest.webapp": "/de/calendar",
@@ -81,7 +81,7 @@ this.Langpacks = {
         }
         let current = this._data[aManifestURL].langs[lang];
         langs[lang].push({
-          version: current.version,
+          revision: current.revision,
           name: current.name,
           target: current.target
         });
@@ -128,7 +128,7 @@ this.Langpacks = {
                        "UnavailableLanguage");
     }
 
-    // Check that we have the right version.
+    // Check that we have the langpack for the right app version.
     let item = this._data[aData.manifestURL].langs[aData.lang];
     if (item.target != aData.version) {
       return sendError("No version " + aData.version + " for this app.",
@@ -187,14 +187,14 @@ this.Langpacks = {
     for (let lang in aManifest["languages-provided"]) {
       let item = aManifest["languages-provided"][lang];
 
-      if (!item.version) {
-        debug("Error: missing 'version' in languages-provided." + lang);
+      if (!item.revision) {
+        debug("Error: missing 'revision' in languages-provided." + lang);
         return false;
       }
 
-      if (typeof item.version !== "number") {
+      if (typeof item.revision !== "number") {
         debug("Error: languages-provided." + lang +
-              ".version must be a number but is a " + (typeof item.version));
+              ".revision must be a number but is a " + (typeof item.revision));
         return false;
       }
 
@@ -242,13 +242,13 @@ this.Langpacks = {
 
     for (let lang in aManifest["languages-provided"]) {
       let item = aManifest["languages-provided"][lang];
-      let version = item.version;   // The langpack version, not the platform.
+      let revision = item.revision;
       let name = item.name || lang; // If no name specified, default to lang.
       for (let app in item.apps) {
         let sendEvent = false;
         if (!this._data[app] ||
             !this._data[app].langs[lang] ||
-            this._data[app].langs[lang].version > version) {
+            this._data[app].langs[lang].revision > revision) {
           if (!this._data[app]) {
             this._data[app] = {
               appId: this._appIdFromManifestURL(app),
@@ -256,7 +256,7 @@ this.Langpacks = {
             };
           }
           this._data[app].langs[lang] = {
-            version: version,
+            revision: revision,
             target: platformVersion,
             name: name,
             url: origin.resolve(item.apps[app]),

@@ -18,15 +18,63 @@ function testDefaultCtor() {
 }
 
 function testClone() {
-  var res = (new Response("This is a body", {
+  var orig = new Response("This is a body", {
               status: 404,
               statusText: "Not Found",
               headers: { "Content-Length": 5 },
-            })).clone();
-  is(res.status, 404, "Response status is 404");
-  is(res.statusText, "Not Found", "Response statusText is POST");
-  ok(res.headers instanceof Headers, "Response should have non-null Headers object");
-  is(res.headers.get('content-length'), "5", "Response content-length should be 5.");
+            });
+  var clone = orig.clone();
+  is(clone.status, 404, "Response status is 404");
+  is(clone.statusText, "Not Found", "Response statusText is POST");
+  ok(clone.headers instanceof Headers, "Response should have non-null Headers object");
+
+  is(clone.headers.get('content-length'), "5", "Response content-length should be 5.");
+  orig.headers.set('content-length', 6);
+  is(clone.headers.get('content-length'), "5", "Response content-length should be 5.");
+
+  ok(!orig.bodyUsed, "Original body is not consumed.");
+  ok(!clone.bodyUsed, "Clone body is not consumed.");
+
+  var origBody = null;
+  var clone2 = null;
+  return orig.text().then(function (body) {
+    origBody = body;
+    is(origBody, "This is a body", "Original body string matches");
+    ok(orig.bodyUsed, "Original body is consumed.");
+    ok(!clone.bodyUsed, "Clone body is not consumed.");
+
+    try {
+      orig.clone()
+      ok(false, "Cannot clone Response whose body is already consumed");
+    } catch (e) {
+      is(e.name, "TypeError", "clone() of consumed body should throw TypeError");
+    }
+
+    clone2 = clone.clone();
+    return clone.text();
+  }).then(function (body) {
+    is(body, origBody, "Clone body matches original body.");
+    ok(clone.bodyUsed, "Clone body is consumed.");
+
+    try {
+      clone.clone()
+      ok(false, "Cannot clone Response whose body is already consumed");
+    } catch (e) {
+      is(e.name, "TypeError", "clone() of consumed body should throw TypeError");
+    }
+
+    return clone2.text();
+  }).then(function (body) {
+    is(body, origBody, "Clone body matches original body.");
+    ok(clone2.bodyUsed, "Clone body is consumed.");
+
+    try {
+      clone2.clone()
+      ok(false, "Cannot clone Response whose body is already consumed");
+    } catch (e) {
+      is(e.name, "TypeError", "clone() of consumed body should throw TypeError");
+    }
+  });
 }
 
 function testRedirect() {
@@ -169,7 +217,6 @@ onmessage = function() {
   var done = function() { postMessage({ type: 'finish' }) }
 
   testDefaultCtor();
-  testClone();
   testRedirect();
   testOk();
   testFinalURL();
@@ -178,6 +225,7 @@ onmessage = function() {
     .then(testBodyCreation)
     .then(testBodyUsed)
     .then(testBodyExtraction)
+    .then(testClone)
     // Put more promise based tests here.
     .then(done)
     .catch(function(e) {

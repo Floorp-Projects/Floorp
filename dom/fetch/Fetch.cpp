@@ -1164,7 +1164,7 @@ FetchBody<Derived>::ConsumeBody(ConsumeType aType, ErrorResult& aRv)
 {
   mConsumeType = aType;
   if (BodyUsed()) {
-    aRv.ThrowTypeError(MSG_REQUEST_BODY_CONSUMED_ERROR);
+    aRv.ThrowTypeError(MSG_FETCH_BODY_CONSUMED_ERROR);
     return nullptr;
   }
 

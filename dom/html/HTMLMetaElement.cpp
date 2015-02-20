@@ -36,7 +36,7 @@ NS_IMPL_STRING_ATTR(HTMLMetaElement, Name, name)
 NS_IMPL_STRING_ATTR(HTMLMetaElement, Scheme, scheme)
 
 void
-HTMLMetaElement::GetItemValueText(nsAString& aValue)
+HTMLMetaElement::GetItemValueText(DOMString& aValue)
 {
   GetContent(aValue);
 }
