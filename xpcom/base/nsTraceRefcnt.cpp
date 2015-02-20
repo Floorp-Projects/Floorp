@@ -1104,16 +1104,14 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
 
     bool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
     if (aRefcnt == 1 && gAllocLog && loggingThisType && loggingThisObject) {
-      fprintf(gAllocLog, "\n<%s> 0x%08X %" PRIdPTR " Create\n",
-              aClass, NS_PTR_TO_INT32(aPtr), serialno);
+      fprintf(gAllocLog, "\n<%s> %p %" PRIdPTR " Create\n", aClass, aPtr, serialno);
       nsTraceRefcnt::WalkTheStackCached(gAllocLog);
     }
 
     if (gRefcntsLog && loggingThisType && loggingThisObject) {
       // Can't use PR_LOG(), b/c it truncates the line
-      fprintf(gRefcntsLog,
-              "\n<%s> 0x%08X %" PRIuPTR " AddRef %" PRIuPTR "\n",
-              aClass, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
+      fprintf(gRefcntsLog, "\n<%s> %p %" PRIuPTR " AddRef %" PRIuPTR "\n",
+              aClass, aPtr, serialno, aRefcnt);
       nsTraceRefcnt::WalkTheStackCached(gRefcntsLog);
       fflush(gRefcntsLog);
     }
@@ -1158,8 +1156,8 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
     if (gRefcntsLog && loggingThisType && loggingThisObject) {
       // Can't use PR_LOG(), b/c it truncates the line
       fprintf(gRefcntsLog,
-              "\n<%s> 0x%08X %" PRIuPTR " Release %" PRIuPTR "\n", aClass,
-              NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
+              "\n<%s> %p %" PRIuPTR " Release %" PRIuPTR "\n",
+              aClass, aPtr, serialno, aRefcnt);
       nsTraceRefcnt::WalkTheStackCached(gRefcntsLog);
       fflush(gRefcntsLog);
     }
@@ -1168,9 +1166,7 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
     // yet we still want to see deletion information:
 
     if (aRefcnt == 0 && gAllocLog && loggingThisType && loggingThisObject) {
-      fprintf(gAllocLog,
-              "\n<%s> 0x%08X %" PRIdPTR " Destroy\n",
-              aClass, NS_PTR_TO_INT32(aPtr), serialno);
+      fprintf(gAllocLog, "\n<%s> %p %" PRIdPTR " Destroy\n", aClass, aPtr, serialno);
       nsTraceRefcnt::WalkTheStackCached(gAllocLog);
     }
 
@@ -1210,8 +1206,8 @@ NS_LogCtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
 
     bool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
     if (gAllocLog && loggingThisType && loggingThisObject) {
-      fprintf(gAllocLog, "\n<%s> 0x%08X %" PRIdPTR " Ctor (%d)\n",
-              aType, NS_PTR_TO_INT32(aPtr), serialno, aInstanceSize);
+      fprintf(gAllocLog, "\n<%s> %p %" PRIdPTR " Ctor (%d)\n",
+              aType, aPtr, serialno, aInstanceSize);
       nsTraceRefcnt::WalkTheStackCached(gAllocLog);
     }
 
@@ -1252,8 +1248,8 @@ NS_LogDtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogDeleteXPCOM instead to get file and line numbers.)
     if (gAllocLog && loggingThisType && loggingThisObject) {
-      fprintf(gAllocLog, "\n<%s> 0x%08X %" PRIdPTR " Dtor (%d)\n",
-              aType, NS_PTR_TO_INT32(aPtr), serialno, aInstanceSize);
+      fprintf(gAllocLog, "\n<%s> %p %" PRIdPTR " Dtor (%d)\n",
+              aType, aPtr, serialno, aInstanceSize);
       nsTraceRefcnt::WalkTheStackCached(gAllocLog);
     }
 
@@ -1295,9 +1291,8 @@ NS_LogCOMPtrAddRef(void* aCOMPtr, nsISupports* aObject)
     bool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
 
     if (gCOMPtrLog && loggingThisObject) {
-      fprintf(gCOMPtrLog, "\n<?> 0x%08X %" PRIdPTR " nsCOMPtrAddRef %d 0x%08X\n",
-              NS_PTR_TO_INT32(object), serialno, count ? (*count) : -1,
-              NS_PTR_TO_INT32(aCOMPtr));
+      fprintf(gCOMPtrLog, "\n<?> %p %" PRIdPTR " nsCOMPtrAddRef %d %p\n",
+              object, serialno, count ? (*count) : -1, aCOMPtr);
       nsTraceRefcnt::WalkTheStackCached(gCOMPtrLog);
     }
 
@@ -1339,9 +1334,8 @@ NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject)
     bool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
 
     if (gCOMPtrLog && loggingThisObject) {
-      fprintf(gCOMPtrLog, "\n<?> 0x%08X %" PRIdPTR " nsCOMPtrRelease %d 0x%08X\n",
-              NS_PTR_TO_INT32(object), serialno, count ? (*count) : -1,
-              NS_PTR_TO_INT32(aCOMPtr));
+      fprintf(gCOMPtrLog, "\n<?> %p %" PRIdPTR " nsCOMPtrRelease %d %p\n",
+              object, serialno, count ? (*count) : -1, aCOMPtr);
       nsTraceRefcnt::WalkTheStackCached(gCOMPtrLog);
     }
 
