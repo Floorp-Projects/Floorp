@@ -577,6 +577,17 @@
 
     <tooltip id="dynamic-shortcut-tooltip"
              onpopupshowing="UpdateDynamicShortcutTooltipText(this);"/>
+
+    <menupopup id="emeNotificationsPopup">
+      <menuitem id="emeNotificationsNotNow"
+                label="Not now"
+                acceskey="N"
+                oncommand="gEMEHandler.onNotNow(this);"/>
+      <menuitem id="emeNotificationsDontAskAgain"
+                label="Don't ask me again"
+                acceskey="D"
+                oncommand="gEMEHandler.onDontAskAgain(this);"/>
+    </menupopup>
   </popupset>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
