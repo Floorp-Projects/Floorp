@@ -35,12 +35,10 @@ public:
   ProfileEntry(char aTagName, Address aTagAddress);
   ProfileEntry(char aTagName, int aTagLine);
   ProfileEntry(char aTagName, char aTagChar);
-  friend std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry);
   bool is_ent_hint(char hintChar);
   bool is_ent_hint();
   bool is_ent(char tagName);
   void* get_tagPtr();
-  void log();
   const ProfilerMarker* getMarker() {
     MOZ_ASSERT(mTagName == 'm');
     return mTagMarker;
@@ -88,8 +86,6 @@ public:
   void addStoredMarker(ProfilerMarker* aStoredMarker);
   void deleteExpiredStoredMarkers();
 
-  std::ostream& StreamToOStream(std::ostream& stream, int aThreadId) const;
-
 protected:
   char* processDynamicTag(int readPos, int* tagsConsumed, char* tagBuff);
   int FindLastSampleOfThread(int aThreadId);
@@ -132,8 +128,6 @@ public:
   void addStoredMarker(ProfilerMarker *aStoredMarker);
 
   void IterateTags(IterateTagsCallback aCallback);
-  friend std::ostream& operator<<(std::ostream& stream,
-                                  const ThreadProfile& profile);
   void ToStreamAsJSON(std::ostream& stream);
   JSObject *ToJSObject(JSContext *aCx);
   PseudoStack* GetPseudoStack();
@@ -187,7 +181,5 @@ public:
 
   void StreamTrackedOptimizations(JSStreamWriter& b, void* addr, uint8_t index);
 };
-
-std::ostream& operator<<(std::ostream& stream, const ThreadProfile& profile);
 
 #endif /* ndef MOZ_PROFILE_ENTRY_H */
