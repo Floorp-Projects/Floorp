@@ -143,14 +143,16 @@ loop.shared.utils = (function(mozL10n) {
       return;
     }
     navigator.mozLoop.composeEmail(
-      mozL10n.get("share_email_subject4", {
-        clientShortname: mozL10n.get("clientShortname2")
+      mozL10n.get("share_email_subject5", {
+        clientShortname2: mozL10n.get("clientShortname2")
       }),
-      mozL10n.get("share_email_body4", {
+      mozL10n.get("share_email_body5", {
         callUrl: callUrl,
-        clientShortname: mozL10n.get("clientShortname2"),
+        brandShortname: mozL10n.get("brandShortname"),
+        clientShortname2: mozL10n.get("clientShortname2"),
+        clientSuperShortname: mozL10n.get("clientSuperShortname"),
         learnMoreUrl: navigator.mozLoop.getLoopPref("learnMoreUrl")
-      }),
+      }).replace(/\r\n/g, "\n").replace(/\n/g, "\r\n"),
       recipient
     );
   }
