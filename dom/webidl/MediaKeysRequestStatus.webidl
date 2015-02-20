@@ -10,6 +10,7 @@ enum MediaKeySystemStatus {
   "cdm-disabled",
   "cdm-not-supported",
   "cdm-not-installed",
+  "cdm-insufficient-version",
   "cdm-created",
   "error"
 };
