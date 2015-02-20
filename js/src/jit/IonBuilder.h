@@ -812,6 +812,8 @@ class IonBuilder
     template <typename T>
     InliningStatus inlineBinarySimd(CallInfo &callInfo, JSNative native,
                                     typename T::Operation op, SimdTypeDescr::Type type);
+    InliningStatus inlineUnarySimd(CallInfo &callInfo, JSNative native,
+                                   MSimdUnaryArith::Operation op, SimdTypeDescr::Type type);
 
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo &callInfo);
