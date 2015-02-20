@@ -1713,41 +1713,6 @@ void MediaDecoderStateMachine::Seek(const SeekTarget& aTarget)
   }
   mQueuedSeekTarget.Reset();
 
-  StartSeek(aTarget);
-}
-
-void
-MediaDecoderStateMachine::EnqueueStartQueuedSeekTask()
-{
-  nsCOMPtr<nsIRunnable> event =
-    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::StartQueuedSeek);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-}
-
-void
-MediaDecoderStateMachine::StartQueuedSeek()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  if (!mQueuedSeekTarget.IsValid()) {
-    return;
-  }
-  StartSeek(mQueuedSeekTarget);
-  mQueuedSeekTarget.Reset();
-}
-
-void
-MediaDecoderStateMachine::StartSeek(const SeekTarget& aTarget)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  AssertCurrentThreadInMonitor();
-
-  MOZ_ASSERT(mState >= DECODER_STATE_DECODING);
-
-  if (mState == DECODER_STATE_SHUTDOWN) {
-    return;
-  }
-
   // Bound the seek time to be inside the media range.
   int64_t end = GetEndTime();
   NS_ASSERTION(mStartTime != -1, "Should know start time by now");
@@ -1771,6 +1736,17 @@ MediaDecoderStateMachine::StartSeek(const SeekTarget& aTarget)
   }
 
   ScheduleStateMachine();
+}
+
+void
+MediaDecoderStateMachine::EnqueueStartQueuedSeekTask()
+{
+  MOZ_ASSERT(mQueuedSeekTarget.IsValid());
+  MOZ_ASSERT(mState >= DECODER_STATE_DECODING, "MDSM::Seek will requeue this seek!");
+  DECODER_LOG("Applying queued seek to %lld\n", mQueuedSeekTarget.mTime);
+  nsCOMPtr<nsIRunnable> event =
+    NS_NewRunnableMethodWithArg<SeekTarget>(this, &MediaDecoderStateMachine::Seek, mQueuedSeekTarget);
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 
 void MediaDecoderStateMachine::StopAudioThread()
