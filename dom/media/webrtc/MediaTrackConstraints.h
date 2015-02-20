@@ -79,7 +79,7 @@ struct NormalizedConstraintSet
 
 struct FlattenedConstraints : public NormalizedConstraintSet
 {
-  FlattenedConstraints(const dom::MediaTrackConstraints& aOther);
+  explicit FlattenedConstraints(const dom::MediaTrackConstraints& aOther);
 };
 
 }
