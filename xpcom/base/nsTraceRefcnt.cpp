@@ -1381,6 +1381,6 @@ nsTraceRefcnt::SetActivityIsLegal(bool aLegal)
     PR_NewThreadPrivateIndex(&gActivityTLS, nullptr);
   }
 
-  PR_SetThreadPrivate(gActivityTLS, NS_INT32_TO_PTR(!aLegal));
+  PR_SetThreadPrivate(gActivityTLS, reinterpret_cast<void*>(!aLegal));
 #endif
 }
