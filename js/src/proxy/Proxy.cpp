@@ -38,7 +38,11 @@ js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext *cx, jsid id)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                              JSMSG_OBJECT_ACCESS_DENIED);
     } else {
-        JSString *str = IdToString(cx, id);
+        RootedValue idVal(cx, IdToValue(id));
+        JSString *str = ValueToSource(cx, idVal);
+        if (!str) {
+            return;
+        }
         AutoStableStringChars chars(cx);
         const char16_t *prop = nullptr;
         if (str->ensureFlat(cx) && chars.initTwoByte(cx, str))

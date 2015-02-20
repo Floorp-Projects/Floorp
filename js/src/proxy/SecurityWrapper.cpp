@@ -108,7 +108,10 @@ SecurityWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper,
                                       HandleId id, MutableHandle<PropertyDescriptor> desc) const
 {
     if (desc.getter() || desc.setter()) {
-        JSString *str = IdToString(cx, id);
+        RootedValue idVal(cx, IdToValue(id));
+        JSString *str = ValueToSource(cx, idVal);
+        if (!str)
+            return false;
         AutoStableStringChars chars(cx);
         const char16_t *prop = nullptr;
         if (str->ensureFlat(cx) && chars.initTwoByte(cx, str))
