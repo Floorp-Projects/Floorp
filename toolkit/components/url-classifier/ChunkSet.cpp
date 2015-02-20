@@ -48,14 +48,6 @@ ChunkSet::Set(uint32_t aChunk)
   return NS_OK;
 }
 
-nsresult
-ChunkSet::Unset(uint32_t aChunk)
-{
-  mChunks.RemoveElementSorted(aChunk);
-
-  return NS_OK;
-}
-
 bool
 ChunkSet::Has(uint32_t aChunk) const
 {
