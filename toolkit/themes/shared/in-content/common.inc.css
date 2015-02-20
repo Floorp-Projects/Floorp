@@ -40,6 +40,7 @@ xul|caption {
   margin: 0;
 }
 
+xul|caption > xul|checkbox,
 xul|caption > xul|label {
   font-size: 1.3rem;
   font-weight: bold;
