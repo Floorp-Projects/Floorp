@@ -92,6 +92,7 @@ protected:
   nsresult ResetOutputBuffers();
 
   void DecoderLoop();
+  nsresult GetInputBuffer(JNIEnv* env, int index, jni::Object::LocalRef* buffer);
   virtual void ClearQueue();
 };
 
