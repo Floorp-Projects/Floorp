@@ -63,7 +63,7 @@ Request::Constructor(const GlobalObject& aGlobal,
     inputReq->GetBody(getter_AddRefs(body));
     if (body) {
       if (inputReq->BodyUsed()) {
-        aRv.ThrowTypeError(MSG_REQUEST_BODY_CONSUMED_ERROR);
+        aRv.ThrowTypeError(MSG_FETCH_BODY_CONSUMED_ERROR);
         return nullptr;
       } else {
         inputReq->SetBodyUsed();
@@ -255,12 +255,20 @@ Request::Constructor(const GlobalObject& aGlobal,
 }
 
 already_AddRefed<Request>
-Request::Clone() const
+Request::Clone(ErrorResult& aRv) const
 {
-  // FIXME(nsm): Bug 1073231. This is incorrect, but the clone method isn't
-  // well defined yet.
-  nsRefPtr<Request> request = new Request(mOwner,
-                                          new InternalRequest(*mRequest));
+  if (BodyUsed()) {
+    aRv.ThrowTypeError(MSG_FETCH_BODY_CONSUMED_ERROR);
+    return nullptr;
+  }
+
+  nsRefPtr<InternalRequest> ir = mRequest->Clone();
+  if (!ir) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Request> request = new Request(mOwner, ir);
   return request.forget();
 }
 
