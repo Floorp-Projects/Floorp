@@ -805,10 +805,10 @@ class IonBuilder
 
     // SIMD intrinsics and natives.
     InliningStatus inlineConstructSimdObject(CallInfo &callInfo, SimdTypeDescr *target);
-    InliningStatus inlineSimdBinaryArith(CallInfo &callInfo, JSNative native,
-                                         MSimdBinaryArith::Operation op, SimdTypeDescr::Type type);
-    InliningStatus inlineSimdBinaryBitwise(CallInfo &callInfo, JSNative native,
-                                           MSimdBinaryBitwise::Operation op, SimdTypeDescr::Type type);
+
+    template <typename T>
+    InliningStatus inlineBinarySimd(CallInfo &callInfo, JSNative native,
+                                    typename T::Operation op, SimdTypeDescr::Type type);
 
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo &callInfo);
