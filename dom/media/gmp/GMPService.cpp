@@ -673,13 +673,34 @@ public:
 };
 
 NS_IMETHODIMP
-GeckoMediaPluginService::HasPluginForAPI(const nsACString& aAPI,
-                                         nsTArray<nsCString>* aTags,
-                                         bool* aResult)
+GeckoMediaPluginService::GetPluginVersionForAPI(const nsACString& aAPI,
+                                                nsTArray<nsCString>* aTags,
+                                                nsACString& aOutVersion)
 {
   NS_ENSURE_ARG(aTags && aTags->Length() > 0);
-  NS_ENSURE_ARG(aResult);
 
+  nsresult rv = EnsurePluginsOnDiskScanned();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to load GMPs from disk.");
+    return rv;
+  }
+
+  {
+    MutexAutoLock lock(mMutex);
+    nsCString api(aAPI);
+    GMPParent* gmp = FindPluginForAPIFrom(0, api, *aTags, nullptr);
+    if (!gmp) {
+      return NS_ERROR_FAILURE;
+    }
+    aOutVersion = gmp->GetVersion();
+  }
+
+  return NS_OK;
+}
+
+nsresult
+GeckoMediaPluginService::EnsurePluginsOnDiskScanned()
+{
   const char* env = nullptr;
   if (!mScannedPluginOnDisk && (env = PR_GetEnv("MOZ_GMP_PATH")) && *env) {
     // We have a MOZ_GMP_PATH environment variable which may specify the
@@ -693,11 +714,28 @@ GeckoMediaPluginService::HasPluginForAPI(const nsACString& aAPI,
     MOZ_ASSERT(mScannedPluginOnDisk, "Should have scanned MOZ_GMP_PATH by now");
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GeckoMediaPluginService::HasPluginForAPI(const nsACString& aAPI,
+                                         nsTArray<nsCString>* aTags,
+                                         bool* aOutHavePlugin)
+{
+  NS_ENSURE_ARG(aTags && aTags->Length() > 0);
+  NS_ENSURE_ARG(aOutHavePlugin);
+
+  nsresult rv = EnsurePluginsOnDiskScanned();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to load GMPs from disk.");
+    return rv;
+  }
+
   {
     MutexAutoLock lock(mMutex);
     nsCString api(aAPI);
     GMPParent* gmp = FindPluginForAPIFrom(0, api, *aTags, nullptr);
-    *aResult = (gmp != nullptr);
+    *aOutHavePlugin = (gmp != nullptr);
   }
 
   return NS_OK;

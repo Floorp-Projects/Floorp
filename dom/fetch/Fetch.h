@@ -99,7 +99,7 @@ template <class Derived>
 class FetchBody {
 public:
   bool
-  BodyUsed() { return mBodyUsed; }
+  BodyUsed() const { return mBodyUsed; }
 
   already_AddRefed<Promise>
   ArrayBuffer(ErrorResult& aRv)

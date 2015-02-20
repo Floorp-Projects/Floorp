@@ -15,6 +15,11 @@ SOURCES += [
     'TestWebMBuffered.cpp',
 ]
 
+if CONFIG['MOZ_EME']:
+    SOURCES += [
+        'TestEME.cpp',
+    ]
+
 if CONFIG['MOZ_WEBM_ENCODER']:
     SOURCES += [
         'TestVideoTrackEncoder.cpp',
@@ -34,6 +39,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
     '/dom/media',
+    '/dom/media/eme',
     '/dom/media/encoder',
     '/dom/media/fmp4',
     '/dom/media/gmp',

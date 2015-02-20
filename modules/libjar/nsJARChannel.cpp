@@ -872,23 +872,12 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
             // we have to provide default arguments in case mLoadInfo is null;
             uint32_t loadFlags =
               mLoadFlags & ~(LOAD_DOCUMENT_URI | LOAD_CALL_CONTENT_SNIFFERS);
-            if (mLoadInfo) {
-              rv = NS_NewChannelInternal(getter_AddRefs(channel),
-                                         mJarBaseURI,
-                                         mLoadInfo,
-                                         mLoadGroup,
-                                         mCallbacks,
-                                         loadFlags);
-            } else {
-              rv = NS_NewChannel(getter_AddRefs(channel),
-                                 mJarBaseURI,
-                                 nsContentUtils::GetSystemPrincipal(),
-                                 nsILoadInfo::SEC_NORMAL,
-                                 nsIContentPolicy::TYPE_OTHER,
-                                 mLoadGroup,
-                                 mCallbacks,
-                                 loadFlags);
-            }
+            rv = NS_NewChannelInternal(getter_AddRefs(channel),
+                                       mJarBaseURI,
+                                       mLoadInfo,
+                                       mLoadGroup,
+                                       mCallbacks,
+                                       loadFlags);
             if (NS_FAILED(rv)) {
               mIsPending = false;
               mListenerContext = nullptr;

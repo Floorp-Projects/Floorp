@@ -21,7 +21,7 @@ public:
   virtual ~HTMLTimeElement();
 
   // HTMLTimeElement WebIDL
-  void GetDateTime(nsAString& aDateTime)
+  void GetDateTime(DOMString& aDateTime)
   {
     GetHTMLAttr(nsGkAtoms::datetime, aDateTime);
   }
@@ -31,7 +31,7 @@ public:
     SetHTMLAttr(nsGkAtoms::datetime, aDateTime, aError);
   }
 
-  virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
+  virtual void GetItemValueText(DOMString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
 

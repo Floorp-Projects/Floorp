@@ -62,7 +62,7 @@ MSG_DEF(MSG_INVALID_HEADER_SEQUENCE, 0, JSEXN_TYPEERR, "Headers require name/val
 MSG_DEF(MSG_PERMISSION_DENIED_TO_PASS_ARG, 1, JSEXN_TYPEERR, "Permission denied to pass cross-origin object as {0}.")
 MSG_DEF(MSG_MISSING_REQUIRED_DICTIONARY_MEMBER, 1, JSEXN_TYPEERR, "Missing required {0}.")
 MSG_DEF(MSG_INVALID_REQUEST_METHOD, 1, JSEXN_TYPEERR, "Invalid request method {0}.")
-MSG_DEF(MSG_REQUEST_BODY_CONSUMED_ERROR, 0, JSEXN_TYPEERR, "Request body has already been consumed.")
+MSG_DEF(MSG_FETCH_BODY_CONSUMED_ERROR, 0, JSEXN_TYPEERR, "Body has already been consumed.")
 MSG_DEF(MSG_RESPONSE_INVALID_STATUSTEXT_ERROR, 0, JSEXN_TYPEERR, "Response statusText may not contain newline or carriage return.")
 MSG_DEF(MSG_FETCH_FAILED, 0, JSEXN_TYPEERR, "NetworkError when attempting to fetch resource.")
 MSG_DEF(MSG_NO_BODY_ALLOWED_FOR_GET_AND_HEAD, 0, JSEXN_TYPEERR, "HEAD or GET Request cannot have a body.")
