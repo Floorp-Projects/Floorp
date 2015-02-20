@@ -266,6 +266,26 @@ var tests = [
     ],
     shouldPass: false,
   },
+  {
+    name: "CDM version less than",
+    keySystem: CLEARKEY_ID + ".0",
+    shouldPass: true
+  },
+  {
+    name: "CDM version equal to",
+    keySystem: CLEARKEY_ID + ".1",
+    shouldPass: true
+  },
+  {
+    name: "CDM version greater than",
+    keySystem: CLEARKEY_ID + ".2",
+    shouldPass: false
+  },
+  {
+    name: "Non-whole number CDM version",
+    keySystem: CLEARKEY_ID + ".0.1",
+    shouldPass: false
+  },
 ];
 
 function beginTest() {
