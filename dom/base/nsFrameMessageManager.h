@@ -274,6 +274,10 @@ public:
   {
     return sChildProcessManager;
   }
+  static void SetChildProcessManager(nsFrameMessageManager* aManager)
+  {
+    sChildProcessManager = aManager;
+  }
 private:
   nsresult SendMessage(const nsAString& aMessageName,
                        JS::Handle<JS::Value> aJSON,
@@ -307,10 +311,10 @@ protected:
                           nsFrameMessageManager* aChildMM);
 public:
   static nsFrameMessageManager* sParentProcessManager;
-  static nsFrameMessageManager* sChildProcessManager;
   static nsFrameMessageManager* sSameProcessParentManager;
   static nsTArray<nsCOMPtr<nsIRunnable> >* sPendingSameProcessAsyncMessages;
 private:
+  static nsFrameMessageManager* sChildProcessManager;
   enum ProcessCheckerType {
     PROCESS_CHECKER_PERMISSION,
     PROCESS_CHECKER_MANIFEST_URL,
