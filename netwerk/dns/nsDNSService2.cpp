@@ -249,11 +249,13 @@ nsDNSRecord::HasMore(bool *result)
     }
 
     NetAddrElement *iterCopy = mIter;
+    int iterGenCntCopy = mIterGenCnt;
 
     NetAddr addr;
     *result = NS_SUCCEEDED(GetNextAddr(0, &addr));
 
     mIter = iterCopy;
+    mIterGenCnt = iterGenCntCopy;
     mDone = false;
 
     return NS_OK;
