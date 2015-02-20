@@ -165,6 +165,9 @@ public:
   uint32_t mNativeModifierFlags;
   nsString mNativeCharacters;
   nsString mNativeCharactersIgnoringModifiers;
+  // If this is non-empty, create a text event for plugins instead of a
+  // keyboard event.
+  nsString mPluginTextEventString;
 #endif
 
   // If the key should cause keypress events, this returns true.
@@ -251,6 +254,14 @@ public:
     // is destroyed.
     mNativeKeyEvent = nullptr;
     mUniqueId = aEvent.mUniqueId;
+#ifdef XP_MACOSX
+    mNativeKeyCode = aEvent.mNativeKeyCode;
+    mNativeModifierFlags = aEvent.mNativeModifierFlags;
+    mNativeCharacters.Assign(aEvent.mNativeCharacters);
+    mNativeCharactersIgnoringModifiers.
+      Assign(aEvent.mNativeCharactersIgnoringModifiers);
+    mPluginTextEventString.Assign(aEvent.mPluginTextEventString);
+#endif
   }
 
 private:
