@@ -154,6 +154,7 @@ private:
 class nsFrameMessageManager MOZ_FINAL : public nsIContentFrameMessageManager,
                                         public nsIMessageBroadcaster,
                                         public nsIFrameScriptLoader,
+                                        public nsIProcessScriptLoader,
                                         public nsIProcessChecker
 {
   friend class mozilla::dom::MessageManagerReporter;
@@ -220,6 +221,7 @@ public:
   NS_DECL_NSIMESSAGEMANAGERGLOBAL
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
   NS_DECL_NSIFRAMESCRIPTLOADER
+  NS_DECL_NSIPROCESSSCRIPTLOADER
   NS_DECL_NSIPROCESSCHECKER
 
   static nsFrameMessageManager*
@@ -287,6 +289,13 @@ private:
                        uint8_t aArgc,
                        JS::MutableHandle<JS::Value> aRetval,
                        bool aIsSync);
+
+  NS_IMETHOD LoadScript(const nsAString& aURL,
+                        bool aAllowDelayedLoad,
+                        bool aRunInGlobalScope);
+  NS_IMETHOD RemoveDelayedScript(const nsAString& aURL);
+  NS_IMETHOD GetDelayedScripts(JSContext* aCx, JS::MutableHandle<JS::Value> aList);
+
 protected:
   friend class MMListenerRemover;
   // We keep the message listeners as arrays in a hastable indexed by the

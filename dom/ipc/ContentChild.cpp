@@ -31,6 +31,7 @@
 #include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/PCrashReporterChild.h"
+#include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/asmjscache/PAsmJSCacheEntryChild.h"
@@ -1910,6 +1911,14 @@ ContentChild::RecvNotifyVisited(const URIParams& aURI)
     if (history) {
         history->NotifyVisited(newURI);
     }
+    return true;
+}
+
+bool
+ContentChild::RecvLoadProcessScript(const nsString& aURL)
+{
+    ProcessGlobal* global = ProcessGlobal::Get();
+    global->LoadScript(aURL);
     return true;
 }
 

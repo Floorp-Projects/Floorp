@@ -17,6 +17,7 @@
 namespace mozilla {
 namespace dom {
 class TabChildGlobal;
+class ProcessGlobal;
 } // namespace dom
 } // namespace mozilla
 class SandboxPrivate;
@@ -263,6 +264,7 @@ protected:
 
 private:
   friend class mozilla::dom::TabChildGlobal;
+  friend class mozilla::dom::ProcessGlobal;
   friend class SandboxPrivate;
   friend class nsInProcessTabChildGlobal;
   friend class nsWindowRoot;

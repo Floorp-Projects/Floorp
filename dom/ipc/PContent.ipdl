@@ -553,6 +553,8 @@ child:
      */
     async Shutdown();
 
+    async LoadProcessScript(nsString url);
+
 parent:
     /**
      * Tell the parent process a new accessible document has been created.
