@@ -6,6 +6,7 @@ package org.mozilla.gecko.db;
 
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
+import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.PerProfileDatabases.DatabaseHelperFactory;
 
 import android.content.Context;
@@ -102,8 +103,8 @@ public abstract class SharedBrowserDatabaseProvider extends AbstractPerProfileDa
         // IDs of matching rows, then delete them in one go.
         final long now = System.currentTimeMillis();
         final String selection = SyncColumns.IS_DELETED + " = 1 AND " +
-                SyncColumns.DATE_MODIFIED + " <= " +
-                (now - MAX_AGE_OF_DELETED_RECORDS);
+                                 SyncColumns.DATE_MODIFIED + " <= " +
+                                 (now - MAX_AGE_OF_DELETED_RECORDS);
 
         final String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
         final SQLiteDatabase db = getWritableDatabaseForProfile(profile, isTest(fromUri));
