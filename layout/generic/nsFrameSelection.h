@@ -642,6 +642,7 @@ private:
   }
 
   friend class mozilla::dom::Selection;
+  friend struct mozilla::AutoPrepareFocusRange;
 #ifdef DEBUG
   void printSelection();       // for debugging
 #endif /* DEBUG */
