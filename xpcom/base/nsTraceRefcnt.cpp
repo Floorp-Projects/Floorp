@@ -131,8 +131,7 @@ static const char kStaticCtorDtorWarning[] =
 static void
 AssertActivityIsLegal()
 {
-  if (gActivityTLS == BAD_TLS_INDEX ||
-      NS_PTR_TO_INT32(PR_GetThreadPrivate(gActivityTLS)) != 0) {
+  if (gActivityTLS == BAD_TLS_INDEX || PR_GetThreadPrivate(gActivityTLS)) {
     if (PR_GetEnv("MOZ_FATAL_STATIC_XPCOM_CTORS_DTORS")) {
       NS_RUNTIMEABORT(kStaticCtorDtorWarning);
     } else {
