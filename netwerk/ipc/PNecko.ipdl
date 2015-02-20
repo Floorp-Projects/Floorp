@@ -73,6 +73,7 @@ parent:
                   URIParams fileuri,
                   OptionalURIParams appuri);
 
+  SpeculativeConnect(URIParams uri);
   HTMLDNSPrefetch(nsString hostname, uint16_t flags);
   CancelHTMLDNSPrefetch(nsString hostname, uint16_t flags, nsresult reason);
   PRtspController();
