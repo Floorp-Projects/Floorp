@@ -2303,7 +2303,7 @@ nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
 }
 
 bool
-nsFrameLoader::DoLoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope)
+nsFrameLoader::DoLoadMessageManagerScript(const nsAString& aURL, bool aRunInGlobalScope)
 {
   auto* tabParent = TabParent::GetFrom(GetRemoteBrowser());
   if (tabParent) {

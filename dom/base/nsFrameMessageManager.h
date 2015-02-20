@@ -54,7 +54,7 @@ class MessageManagerCallback
 public:
   virtual ~MessageManagerCallback() {}
 
-  virtual bool DoLoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope)
+  virtual bool DoLoadMessageManagerScript(const nsAString& aURL, bool aRunInGlobalScope)
   {
     return true;
   }
