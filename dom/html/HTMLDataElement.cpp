@@ -30,7 +30,7 @@ HTMLDataElement::WrapNode(JSContext* aCx)
 }
 
 void
-HTMLDataElement::GetItemValueText(nsAString& text)
+HTMLDataElement::GetItemValueText(DOMString& text)
 {
   GetValue(text);
 }

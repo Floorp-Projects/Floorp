@@ -147,20 +147,9 @@ nsChromeProtocolHandler::NewChannel2(nsIURI* aURI,
         return rv;
     }
 
-    // Bug 1087720 (and Bug 1099296):
-    // Once all callsites have been updated to call NewChannel2() instead of NewChannel()
-    // we should have a non-null loadInfo consistently. Until then we have to branch on the
-    // loadInfo.
-    if (aLoadInfo) {
-        rv = NS_NewChannelInternal(getter_AddRefs(result),
-                                   resolvedURI,
-                                   aLoadInfo);
-    }
-    else {
-        nsCOMPtr<nsIIOService> ioServ(do_GetIOService(&rv));
-        NS_ENSURE_SUCCESS(rv, rv);
-        rv = ioServ->NewChannelFromURI(resolvedURI, getter_AddRefs(result));
-    }
+    rv = NS_NewChannelInternal(getter_AddRefs(result),
+                               resolvedURI,
+                               aLoadInfo);
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG

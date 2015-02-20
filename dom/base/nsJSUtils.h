@@ -217,6 +217,8 @@ public:
     return JS_IdToValue(aContext, id, &v) && init(aContext, v);
   }
 
+  bool init(const JS::Value &v);
+
   ~nsAutoJSString() {}
 };
 

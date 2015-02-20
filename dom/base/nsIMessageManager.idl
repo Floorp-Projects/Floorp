@@ -341,19 +341,9 @@ interface nsISyncMessageSender : nsIMessageSender
                        [optional] in nsIPrincipal principal);
 };
 
-[scriptable, builtinclass, uuid(894ff2d4-39a3-4df8-9d76-8ee329975488)]
-interface nsIContentFrameMessageManager : nsISyncMessageSender
+[scriptable, builtinclass, uuid(e04a7ade-c61a-46ec-9f13-efeabedd9d3d)]
+interface nsIMessageManagerGlobal : nsISyncMessageSender
 {
-  /**
-   * The current top level window in the frame or null.
-   */
-  readonly attribute nsIDOMWindow content;
-
-  /**
-   * The top level docshell or null.
-   */
-  readonly attribute nsIDocShell docShell;
-
   /**
    * Print a string to stdout.
    */
@@ -365,17 +355,36 @@ interface nsIContentFrameMessageManager : nsISyncMessageSender
    */
   void privateNoteIntentionalCrash();
 
-   /**
-    * Ascii base64 data to binary data and vice versa
-    */
-   DOMString atob(in DOMString aAsciiString);
-   DOMString btoa(in DOMString aBase64Data);
+  /**
+   * Ascii base64 data to binary data and vice versa
+   */
+  DOMString atob(in DOMString aAsciiString);
+  DOMString btoa(in DOMString aBase64Data);
+};
+
+[scriptable, builtinclass, uuid(fff36099-9f84-4c7c-b69a-1cbf103d1708)]
+interface nsIContentFrameMessageManager : nsIMessageManagerGlobal
+{
+  /**
+   * The current top level window in the frame or null.
+   */
+  readonly attribute nsIDOMWindow content;
+
+  /**
+   * The top level docshell or null.
+   */
+  readonly attribute nsIDocShell docShell;
 };
 
 [uuid(a2325927-9c0c-437d-9215-749c79235031)]
 interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
 {
   [notxpcom] nsIContent getOwnerContent();
+};
+
+[scriptable, builtinclass, uuid(9ca95410-b253-11e4-ab27-0800200c9a66)]
+interface nsIContentProcessMessageManager : nsIMessageManagerGlobal
+{
 };
 
 [scriptable, builtinclass, uuid(6fb78110-45ae-11e3-8f96-0800200c9a66)]
@@ -403,6 +412,31 @@ interface nsIFrameScriptLoader : nsISupports
    */
   [implicit_jscontext]
   jsval getDelayedFrameScripts();
+};
+
+[scriptable, builtinclass, uuid(7e1e1a20-b24f-11e4-ab27-0800200c9a66)]
+interface nsIProcessScriptLoader : nsISupports
+{
+  /**
+   * Load a script in the (possibly remote) process. aURL must be the absolute URL.
+   * data: URLs are also supported. For example data:,dump("foo\n");
+   * If aAllowDelayedLoad is true, script will be loaded when the
+   * remote frame becomes available. Otherwise the script will be loaded
+   * only if the frame is already available.
+   */
+  void loadProcessScript(in AString aURL, in boolean aAllowDelayedLoad);
+
+  /**
+   * Removes aURL from the list of scripts which support delayed load.
+   */
+  void removeDelayedProcessScript(in AString aURL);
+
+  /**
+   * Returns all delayed scripts that will be loaded once a (remote)
+   * frame becomes available. The return value is a list of URLs.
+   */
+  [implicit_jscontext]
+  jsval getDelayedProcessScripts();
 };
 
 [scriptable, builtinclass, uuid(637e8538-4f8f-4a3d-8510-e74386233e19)]
