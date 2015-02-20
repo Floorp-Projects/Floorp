@@ -30,6 +30,7 @@ DEFINE_KEYNAME_WITH_SAME_NAME(Unidentified)
  *****************************************************************************/
 DEFINE_KEYNAME_INTERNAL(PrintableKey, "MozPrintableKey")
 DEFINE_KEYNAME_INTERNAL(HomeScreen, "MozHomeScreen")
+DEFINE_KEYNAME_INTERNAL(CameraFocusAdjust, "MozCameraFocusAdjust")
 
 /******************************************************************************
  * Modifier Keys

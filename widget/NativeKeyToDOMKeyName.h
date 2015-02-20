@@ -1301,6 +1301,10 @@ KEY_MAP_QT      (ZoomToggle, Qt::Key_Zoom)
 // HomeScreen
 KEY_MAP_ANDROID (HomeScreen, AKEYCODE_HOME)
 
+// Focus
+KEY_MAP_QT      (CameraFocusAdjust, Qt::Key_CameraFocus)
+KEY_MAP_ANDROID (CameraFocusAdjust, AKEYCODE_FOCUS)
+
 #undef KEY_MAP_WIN
 #undef KEY_MAP_WIN_JPN
 #undef KEY_MAP_WIN_KOR
