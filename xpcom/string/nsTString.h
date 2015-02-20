@@ -446,7 +446,7 @@ public:
   /**
    * verify restrictions for dependent strings
    */
-  void AssertValidDepedentString()
+  void AssertValidDependentString()
   {
     NS_ASSERTION(mData, "nsTDependentString must wrap a non-NULL buffer");
     NS_ASSERTION(mLength != size_type(-1), "nsTDependentString has bogus length");

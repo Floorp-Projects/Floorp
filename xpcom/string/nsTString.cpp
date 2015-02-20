@@ -42,6 +42,6 @@ nsTString_CharT::Rebind(const char_type* data, size_type length)
   mData = const_cast<char_type*>(data);
   mLength = length;
   SetDataFlags(F_TERMINATED);
-  AssertValidDepedentString();
+  AssertValidDependentString();
 }
 
