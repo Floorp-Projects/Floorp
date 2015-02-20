@@ -159,7 +159,7 @@ let Reader = {
     let browser = tab.browser;
     if (browser.currentURI.spec.startsWith("about:reader")) {
       this.pageAction.id = PageActions.add({
-        title: Strings.browser.GetStringFromName("readerMode.exit"),
+        title: Strings.browser.GetStringFromName("readerView.exit"),
         icon: "drawable://reader_active",
         clickCallback: () => this.pageAction.readerModeCallback(tab.id),
         important: true
@@ -176,7 +176,7 @@ let Reader = {
 
     if (browser.isArticle) {
       this.pageAction.id = PageActions.add({
-        title: Strings.browser.GetStringFromName("readerMode.enter"),
+        title: Strings.browser.GetStringFromName("readerView.enter"),
         icon: "drawable://reader",
         clickCallback: () => this.pageAction.readerModeCallback(tab.id),
         longClickCallback: () => this.pageAction.readerModeActiveCallback(tab.id),

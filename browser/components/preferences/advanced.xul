@@ -167,51 +167,50 @@
 #ifdef MOZ_DATA_REPORTING
         <!-- Data Choices -->
         <tabpanel id="dataChoicesPanel" orient="vertical">
-#ifdef MOZ_TELEMETRY_REPORTING
-          <groupbox>
-            <caption label="&telemetrySection.label;"/>
-            <description>&telemetryDesc.label;</description>
-            <hbox>
-              <checkbox id="submitTelemetryBox"
-                        preference="toolkit.telemetry.enabled"
-                        label="&enableTelemetry.label;"
-                        accesskey="&enableTelemetry.accesskey;"/>
-              <spacer flex="1"/>
-              <label id="telemetryLearnMore"
-                     class="text-link"
-                     value="&telemetryLearnMore.label;"
-                     onclick="gAdvancedPane.openTextLink(event)"/>
-            </hbox>
-          </groupbox>
-#endif
 #ifdef MOZ_SERVICES_HEALTHREPORT
           <groupbox>
-            <caption label="&healthReportSection.label;"/>
-            <description>&healthReportDesc.label;</description>
-            <hbox>
-              <checkbox id="submitHealthReportBox"
+            <caption>
+              <checkbox id="submitHealthReportBox" label="&enableHealthReport.label;"
                         oncommand="gAdvancedPane.updateSubmitHealthReport();"
-                        label="&enableHealthReport.label;"
                         accesskey="&enableHealthReport.accesskey;"/>
-              <spacer flex="1"/>
-              <label id="FHRLearnMore"
-                     class="text-link"
-                     value="&healthReportLearnMore.label;"
-                     onclick="gAdvancedPane.openTextLink(event)"/>
-            </hbox>
+            </caption>
+            <vbox>
+              <hbox class="indent">
+                <label flex="1">&healthReportDesc.label;</label>
+                <spacer flex="10"/>
+                <label id="FHRLearnMore" class="text-link"
+                       value="&healthReportLearnMore.label;"
+                       onclick="gAdvancedPane.openTextLink(event)"/>
+              </hbox>
+#ifdef MOZ_TELEMETRY_REPORTING
+              <hbox class="indent">
+                <vbox flex="1">
+                  <checkbox id="submitTelemetryBox" label="&enableTelemetryData.label;"
+                            preference="toolkit.telemetry.enabled"
+                            accesskey="&enableTelemetryData.accesskey;"/>
+                  <hbox class="indent">
+                    <label id="telemetryDataDesc" flex="1">&telemetryDesc.label;</label>
+                    <spacer flex="10"/>
+                    <label id="telemetryLearnMore" class="text-link"
+                           value="&telemetryLearnMore.label;"
+                           onclick="gAdvancedPane.openTextLink(event)"/>
+                  </hbox>
+                </vbox>
+              </hbox>
+#endif
+            </vbox>
           </groupbox>
 #endif
 #ifdef MOZ_CRASHREPORTER
           <groupbox>
-            <caption label="&crashReporterSection.label;"/>
-            <description>&crashReporterDesc.label;</description>
-            <hbox>
-              <checkbox id="submitCrashesBox"
+            <caption>
+              <checkbox id="submitCrashesBox" label="&enableCrashReporter.label;"
                         oncommand="gAdvancedPane.updateSubmitCrashes();"
-                        label="&enableCrashReporter.label;"
                         accesskey="&enableCrashReporter.accesskey;"/>
-
-              <spacer flex="1"/>
+            </caption>
+            <hbox class="indent">
+              <label flex="1">&crashReporterDesc.label;</label>
+              <spacer flex="10"/>
               <label id="crashReporterLearnMore"
                      class="text-link"
                      value="&crashReporterLearnMore.label;"

@@ -25,7 +25,8 @@ interface Response {
   readonly attribute ByteString statusText;
   [SameObject] readonly attribute Headers headers;
 
-  [NewObject] Response clone();
+  [Throws,
+   NewObject] Response clone();
 };
 Response implements Body;
 

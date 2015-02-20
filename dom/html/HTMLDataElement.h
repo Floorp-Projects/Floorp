@@ -20,7 +20,7 @@ public:
   explicit HTMLDataElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   // HTMLDataElement WebIDL
-  void GetValue(nsAString& aValue)
+  void GetValue(DOMString& aValue)
   {
     GetHTMLAttr(nsGkAtoms::value, aValue);
   }
@@ -30,7 +30,7 @@ public:
     SetHTMLAttr(nsGkAtoms::value, aValue, aError);
   }
 
-  virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
+  virtual void GetItemValueText(DOMString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
 

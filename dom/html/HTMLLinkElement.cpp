@@ -119,7 +119,7 @@ NS_IMPL_STRING_ATTR(HTMLLinkElement, Target, target)
 NS_IMPL_STRING_ATTR(HTMLLinkElement, Type, type)
 
 void
-HTMLLinkElement::GetItemValueText(nsAString& aValue)
+HTMLLinkElement::GetItemValueText(DOMString& aValue)
 {
   GetHref(aValue);
 }
