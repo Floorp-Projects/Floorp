@@ -2456,16 +2456,12 @@ void MediaDecoderStateMachine::DecodeSeek()
   int64_t seekTime = mCurrentSeekTarget.mTime;
   mDecoder->StopProgressUpdates();
 
-  bool currentTimeChanged = false;
   mCurrentTimeBeforeSeek = GetMediaTime();
-  if (mCurrentTimeBeforeSeek != seekTime) {
-    currentTimeChanged = true;
-    // Stop playback now to ensure that while we're outside the monitor
-    // dispatching SeekingStarted, playback doesn't advance and mess with
-    // mCurrentFrameTime that we've setting to seekTime here.
-    StopPlayback();
-    UpdatePlaybackPositionInternal(seekTime);
-  }
+  // Stop playback now to ensure that while we're outside the monitor
+  // dispatching SeekingStarted, playback doesn't advance and mess with
+  // mCurrentFrameTime that we've setting to seekTime here.
+  StopPlayback();
+  UpdatePlaybackPositionInternal(seekTime);
 
   // SeekingStarted will do a UpdateReadyStateForData which will
   // inform the element and its users that we have no frames
@@ -2486,41 +2482,30 @@ void MediaDecoderStateMachine::DecodeSeek()
 
   mDecodeToSeekTarget = false;
 
-  if (!currentTimeChanged) {
-    DECODER_LOG("Seek !currentTimeChanged...");
-    mDropAudioUntilNextDiscontinuity = false;
-    mDropVideoUntilNextDiscontinuity = false;
-    nsCOMPtr<nsIRunnable> task = NS_NewRunnableMethod(this, &MediaDecoderStateMachine::SeekCompleted);
-    nsresult rv = GetStateMachineThread()->Dispatch(task, NS_DISPATCH_NORMAL);
-    if (NS_FAILED(rv)) {
-      DecodeError();
-    }
-  } else {
-    // The seek target is different than the current playback position,
-    // we'll need to seek the playback position, so shutdown our decode
-    // thread and audio sink.
-    StopAudioThread();
-    ResetPlayback();
+  // The seek target is different than the current playback position,
+  // we'll need to seek the playback position, so shutdown our decode
+  // thread and audio sink.
+  StopAudioThread();
+  ResetPlayback();
 
-    nsresult res;
-    {
-      ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-      // We must not hold the state machine monitor while we call into
-      // the reader, since it could do I/O or deadlock some other way.
-      res = mReader->ResetDecode();
-      if (NS_SUCCEEDED(res)) {
-        mReader->Seek(seekTime, GetEndTime())
-               ->Then(DecodeTaskQueue(), __func__, this,
-                      &MediaDecoderStateMachine::OnSeekCompleted,
-                      &MediaDecoderStateMachine::OnSeekFailed);
-      }
+  nsresult res;
+  {
+    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+    // We must not hold the state machine monitor while we call into
+    // the reader, since it could do I/O or deadlock some other way.
+    res = mReader->ResetDecode();
+    if (NS_SUCCEEDED(res)) {
+      mReader->Seek(seekTime, GetEndTime())
+             ->Then(DecodeTaskQueue(), __func__, this,
+                    &MediaDecoderStateMachine::OnSeekCompleted,
+                    &MediaDecoderStateMachine::OnSeekFailed);
     }
-    if (NS_FAILED(res)) {
-      DecodeError();
-      return;
-    }
-    mWaitingForDecoderSeek = true;
   }
+  if (NS_FAILED(res)) {
+    DecodeError();
+    return;
+  }
+  mWaitingForDecoderSeek = true;
 }
 
 void
