@@ -2445,14 +2445,6 @@ void MediaDecoderStateMachine::DecodeSeek()
   mDropAudioUntilNextDiscontinuity = HasAudio();
   mDropVideoUntilNextDiscontinuity = HasVideo();
 
-  // During the seek, don't have a lock on the decoder state,
-  // otherwise long seek operations can block the main thread.
-  // The events dispatched to the main thread are SYNC calls.
-  // These calls are made outside of the decode monitor lock so
-  // it is safe for the main thread to makes calls that acquire
-  // the lock since it won't deadlock. We check the state when
-  // acquiring the lock again in case shutdown has occurred
-  // during the time when we didn't have the lock.
   int64_t seekTime = mCurrentSeekTarget.mTime;
   mDecoder->StopProgressUpdates();
 
@@ -2466,19 +2458,12 @@ void MediaDecoderStateMachine::DecodeSeek()
   // SeekingStarted will do a UpdateReadyStateForData which will
   // inform the element and its users that we have no frames
   // to display
-  {
-    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    nsCOMPtr<nsIRunnable> startEvent =
-      NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
-        mDecoder,
-        &MediaDecoder::SeekingStarted,
-        mCurrentSeekTarget.mEventVisibility);
-    NS_DispatchToMainThread(startEvent, NS_DISPATCH_SYNC);
-  }
-  if (mState != DECODER_STATE_SEEKING) {
-    // May have shutdown while we released the monitor.
-    return;
-  }
+  nsCOMPtr<nsIRunnable> startEvent =
+    NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
+      mDecoder,
+      &MediaDecoder::SeekingStarted,
+      mCurrentSeekTarget.mEventVisibility);
+  NS_DispatchToMainThread(startEvent, NS_DISPATCH_NORMAL);
 
   mDecodeToSeekTarget = false;
 
@@ -2539,15 +2524,12 @@ MediaDecoderStateMachine::OnSeekFailed(nsresult aResult)
     // Try again.
     mCurrentSeekTarget = mSeekTarget;
     mSeekTarget.Reset();
-    {
-      ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-      nsCOMPtr<nsIRunnable> startEvent =
-        NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
-          mDecoder,
-          &MediaDecoder::SeekingStarted,
-          mCurrentSeekTarget.mEventVisibility);
-      NS_DispatchToMainThread(startEvent, NS_DISPATCH_SYNC);
-    }
+    nsCOMPtr<nsIRunnable> startEvent =
+      NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
+        mDecoder,
+        &MediaDecoder::SeekingStarted,
+        mCurrentSeekTarget.mEventVisibility);
+    NS_DispatchToMainThread(startEvent, NS_DISPATCH_NORMAL);
     mReader->Seek(mCurrentSeekTarget.mTime, mEndTime)
            ->Then(DecodeTaskQueue(), __func__, this,
                   &MediaDecoderStateMachine::OnSeekCompleted,
