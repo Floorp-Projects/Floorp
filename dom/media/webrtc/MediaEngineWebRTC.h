@@ -89,7 +89,7 @@ public:
     Init();
   }
 
-  virtual nsresult Allocate(const VideoTrackConstraintsN& aConstraints,
+  virtual nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                             const MediaEnginePrefs& aPrefs) MOZ_OVERRIDE;
   virtual nsresult Deallocate() MOZ_OVERRIDE;
   virtual nsresult Start(SourceMediaStream*, TrackID) MOZ_OVERRIDE;
@@ -160,7 +160,7 @@ public:
   virtual void GetName(nsAString& aName) MOZ_OVERRIDE;
   virtual void GetUUID(nsAString& aUUID) MOZ_OVERRIDE;
 
-  virtual nsresult Allocate(const AudioTrackConstraintsN& aConstraints,
+  virtual nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                             const MediaEnginePrefs& aPrefs) MOZ_OVERRIDE;
   virtual nsresult Deallocate() MOZ_OVERRIDE;
   virtual nsresult Start(SourceMediaStream* aStream, TrackID aID) MOZ_OVERRIDE;

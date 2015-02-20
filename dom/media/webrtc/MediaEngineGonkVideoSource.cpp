@@ -151,7 +151,7 @@ MediaEngineGonkVideoSource::NumCapabilities()
 }
 
 nsresult
-MediaEngineGonkVideoSource::Allocate(const VideoTrackConstraintsN& aConstraints,
+MediaEngineGonkVideoSource::Allocate(const dom::MediaTrackConstraints& aConstraints,
                                      const MediaEnginePrefs& aPrefs)
 {
   LOG((__FUNCTION__));

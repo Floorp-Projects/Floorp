@@ -22,4 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 879861 - Touch CLOBBER because adding a new IDL is a crapshoot these days.
+Bug 1119335 - (DOMString or sequence<DOMString> or ConstrainDOMStringParameters)
+needs binding flush (Bug 1103153).

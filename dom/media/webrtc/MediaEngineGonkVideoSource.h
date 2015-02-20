@@ -60,7 +60,7 @@ public:
       Init();
     }
 
-  virtual nsresult Allocate(const VideoTrackConstraintsN &aConstraints,
+  virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                             const MediaEnginePrefs &aPrefs) MOZ_OVERRIDE;
   virtual nsresult Deallocate() MOZ_OVERRIDE;
   virtual nsresult Start(SourceMediaStream* aStream, TrackID aID) MOZ_OVERRIDE;
