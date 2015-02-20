@@ -54,7 +54,6 @@ private:
   bool Contains(MediaByteRange aRange) const;
   BoxContext* mContext;
   mozilla::MediaByteRange mRange;
-  uint64_t mBodyOffset;
   uint64_t mChildOffset;
   AtomType mType;
   const Box* mParent;
