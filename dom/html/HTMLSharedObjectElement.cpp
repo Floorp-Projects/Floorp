@@ -17,6 +17,11 @@
 #include "nsIScriptError.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
+#ifdef XP_MACOSX
+#include "mozilla/EventDispatcher.h"
+#include "mozilla/dom/Event.h"
+#include "mozilla/dom/HTMLObjectElement.h"
+#endif
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(SharedObject)
 
@@ -107,6 +112,17 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLSharedObjectElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLSharedObjectElement)
+
+#ifdef XP_MACOSX
+
+NS_IMETHODIMP
+HTMLSharedObjectElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
+{
+  HTMLObjectElement::HandleFocusBlurPlugin(this, aVisitor.mEvent);
+  return NS_OK;
+}
+
+#endif // #ifdef XP_MACOSX
 
 nsresult
 HTMLSharedObjectElement::BindToTree(nsIDocument *aDocument,

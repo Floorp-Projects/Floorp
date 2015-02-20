@@ -196,6 +196,12 @@ public:
   // Get the screen position of the application window.
   nsIntPoint GetWindowPosition();
 
+  NS_IMETHOD StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
+                            int32_t aPanelX, int32_t aPanelY,
+                            nsString& aCommitted) MOZ_OVERRIDE;
+
+  NS_IMETHOD SetPluginFocused(bool& aFocused) MOZ_OVERRIDE;
+
 protected:
   bool mEnabled;
   bool mVisible;

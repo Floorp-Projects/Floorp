@@ -2104,6 +2104,33 @@ TabParent::RecvEndIMEComposition(const bool& aCancel,
 }
 
 bool
+TabParent::RecvStartPluginIME(const WidgetKeyboardEvent& aKeyboardEvent,
+                              const int32_t& aPanelX, const int32_t& aPanelY,
+                              nsString* aCommitted)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+  widget->StartPluginIME(aKeyboardEvent,
+                         (int32_t&)aPanelX, 
+                         (int32_t&)aPanelY,
+                         *aCommitted);
+  return true;
+}
+
+bool
+TabParent::RecvSetPluginFocused(const bool& aFocused)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+  widget->SetPluginFocused((bool&)aFocused);
+  return true;
+}
+
+bool
 TabParent::RecvGetInputContext(int32_t* aIMEEnabled,
                                int32_t* aIMEOpen,
                                intptr_t* aNativeIMEContext)

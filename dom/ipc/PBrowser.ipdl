@@ -281,6 +281,28 @@ parent:
                         returns (bool noCompositionEvent, nsString composition);
 
     /**
+     * Tells chrome to start plugin IME.  If this results in a string getting
+     * committed, the result is in aCommitted (otherwise aCommitted is empty).
+     *
+     * aKeyboardEvent     The event with which plugin IME is to be started
+     * panelX and panelY  Location in screen coordinates of the IME input panel
+     *                    (should be just under the plugin)
+     * aCommitted         The string committed during IME -- otherwise empty
+     */
+    prio(urgent) sync StartPluginIME(WidgetKeyboardEvent aKeyboardEvent,
+                                     int32_t panelX, int32_t panelY)
+                                     returns (nsString aCommitted);
+
+    /**
+     * Tells chrome (and specifically the appropriate widget) whether or not
+     * a plugin (inside the widget) has the keyboard focus.  Should be sent
+     * when the keyboard focus changes too or from a plugin.
+     *
+     * aFocused  Whether or not a plugin is focused
+     */
+    prio(urgent) async SetPluginFocused(bool aFocused);
+
+    /**
      * Request that the parent process move focus to the browser's frame. If
      * canRaise is true, the window can be raised if it is inactive.
      */
