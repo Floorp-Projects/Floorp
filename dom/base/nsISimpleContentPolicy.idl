@@ -10,18 +10,26 @@
 interface nsIURI;
 interface nsIDOMNode;
 interface nsIPrincipal;
+interface nsIDOMElement;
 
 /**
  * Interface for content policy mechanism.  Implementations of this
  * interface can be used to control loading of various types of out-of-line
  * content, or processing of certain types of in-line content.
  *
+ * This interface differs from nsIContentPolicy in that it offers less control
+ * (the DOM node doing the load is not provided) but more flexibility for
+ * Gecko. In particular, this interface allows an add-on in the chrome process
+ * to block loads without using cross-process wrappers (CPOWs). Add-ons should
+ * prefer this interface to nsIContentPolicy because it should be faster in
+ * e10s. In the future, it may also be run asynchronously.
+ *
  * WARNING: do not block the caller from shouldLoad or shouldProcess (e.g.,
  * by launching a dialog to prompt the user for something).
  */
 
-[scriptable,uuid(447a2300-ab3c-11e4-bcd8-0800200c9a66)]
-interface nsIContentPolicy : nsIContentPolicyBase
+[scriptable,uuid(83d93c70-ab46-11e4-bcd8-0800200c9a66)]
+interface nsISimpleContentPolicy : nsIContentPolicyBase
 {
   /**
    * Should the resource at this location be loaded?
@@ -38,11 +46,13 @@ interface nsIContentPolicy : nsIContentPolicyBase
    *                          initiated this load request; can be null if
    *                          inapplicable
    *
-   * @param aContext          OPTIONAL. the nsIDOMNode or nsIDOMWindow that
-   *                          initiated the request, or something that can QI
-   *                          to one of those; can be null if inapplicable.
-   *                          Note that for navigation events (new windows and
-   *                          link clicks), this is the NEW window.
+   * @param aTopFrameElement  OPTIONAL. The top frame element (typically a
+   *                          <xul:browser> element) that initiated the
+   *                          request. In a content process, this argument
+   *                          will be null.
+   *
+   * @param aIsTopLevel       OPTIONAL. True iff the request was initiated
+   *                          from a frame where |window.top === window|.
    *
    * @param aMimeTypeGuess    OPTIONAL. a guess for the requested content's
    *                          MIME type, based on information available to
@@ -81,10 +91,11 @@ interface nsIContentPolicy : nsIContentPolicyBase
   short shouldLoad(in nsContentPolicyType aContentType,
                    in nsIURI        aContentLocation,
                    in nsIURI        aRequestOrigin,
-                   in nsISupports   aContext,
+                   in nsIDOMElement aTopFrameElement,
+                   in boolean       aIsTopLevel,
                    in ACString      aMimeTypeGuess,
                    in nsISupports   aExtra,
-                   [optional] in nsIPrincipal  aRequestPrincipal);
+                   in nsIPrincipal  aRequestPrincipal);
 
   /**
    * Should the resource be processed?
@@ -103,9 +114,13 @@ interface nsIContentPolicy : nsIContentPolicyBase
    *                          initiated this load request; can be null if
    *                          inapplicable
    *
-   * @param aContext          OPTIONAL. the nsIDOMNode or nsIDOMWindow that
-   *                          initiated the request, or something that can QI
-   *                          to one of those; can be null if inapplicable.
+   * @param aTopFrameElement  OPTIONAL. The top frame element (typically a
+   *                          <xul:browser> element) that initiated the
+   *                          request. In a content process, this argument
+   *                          will be null.
+   *
+   * @param aIsTopLevel       OPTIONAL. True iff the request was initiated
+   *                          from a frame where |window.top === window|.
    *
    * @param aMimeType         the MIME type of the requested resource (e.g.,
    *                          image/png), as reported by the networking library,
@@ -124,8 +139,9 @@ interface nsIContentPolicy : nsIContentPolicyBase
   short shouldProcess(in nsContentPolicyType aContentType,
                       in nsIURI        aContentLocation,
                       in nsIURI        aRequestOrigin,
-                      in nsISupports   aContext,
+                      in nsIDOMElement aTopFrameElement,
+                      in boolean       aIsTopLevel,
                       in ACString      aMimeType,
                       in nsISupports   aExtra,
-                      [optional] in nsIPrincipal  aRequestPrincipal);
+                      in nsIPrincipal  aRequestPrincipal);
 };

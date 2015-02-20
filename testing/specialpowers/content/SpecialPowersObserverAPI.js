@@ -417,6 +417,7 @@ SpecialPowersObserverAPI.prototype = {
         sb.addMessageListener = (name, listener) => {
           this._chromeScriptListeners.push({ id: id, name: name, listener: listener });
         };
+        sb.browserElement = aMessage.target;
 
         // Also expose assertion functions
         let reporter = function (err, message, stack) {
