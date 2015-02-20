@@ -8,6 +8,9 @@
     #chains-pressed > use > path {
       fill: url(#pressedGradient);
     }
+    #chains-black > use > path {
+      fill: black;
+    }
 
     g:not(:target) {
       display: none;
@@ -40,6 +43,11 @@
     <use xlink:href="#path3"/>
   </g>
   <g id="chains-pressed">
+    <use xlink:href="#path1"/>
+    <use xlink:href="#path2"/>
+    <use xlink:href="#path3"/>
+  </g>
+  <g id="chains-black">
     <use xlink:href="#path1"/>
     <use xlink:href="#path2"/>
     <use xlink:href="#path3"/>
