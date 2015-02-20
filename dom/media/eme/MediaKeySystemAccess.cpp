@@ -20,6 +20,7 @@
 #include "VideoUtils.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
+#include "mozilla/EMEUtils.h"
 
 namespace mozilla {
 namespace dom {
