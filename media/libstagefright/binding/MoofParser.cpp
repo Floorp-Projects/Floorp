@@ -4,7 +4,6 @@
 
 #include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/Box.h"
-#include "mp4_demuxer/SinfParser.h"
 #include <limits>
 
 namespace mp4_demuxer
@@ -29,7 +28,7 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
       mInitRange = MediaByteRange(0, box.Range().mEnd);
       ParseMoov(box);
     } else if (box.IsType("moof")) {
-      Moof moof(box, mTrex, mMdhd, mEdts, mSinf);
+      Moof moof(box, mTrex, mMdhd, mEdts, mTimestampOffset);
 
       if (!mMoofs.IsEmpty()) {
         // Stitch time ranges together in the case of a (hopefully small) time
@@ -148,8 +147,6 @@ MoofParser::ParseMdia(Box& aBox, Tkhd& aTkhd)
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("mdhd")) {
       mMdhd = Mdhd(box);
-    } else if (box.IsType("minf")) {
-      ParseMinf(box);
     }
   }
 }
@@ -167,60 +164,12 @@ MoofParser::ParseMvex(Box& aBox)
   }
 }
 
-void
-MoofParser::ParseMinf(Box& aBox)
-{
-  for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
-    if (box.IsType("stbl")) {
-      ParseStbl(box);
-    }
-  }
-}
-
-void
-MoofParser::ParseStbl(Box& aBox)
-{
-  for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
-    if (box.IsType("stsd")) {
-      ParseStsd(box);
-    }
-  }
-}
-
-void
-MoofParser::ParseStsd(Box& aBox)
-{
-  for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
-    if (box.IsType("encv") || box.IsType("enca")) {
-      ParseEncrypted(box);
-    }
-  }
-}
-
-void
-MoofParser::ParseEncrypted(Box& aBox)
-{
-  for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
-    // Some MP4 files have been found to have multiple sinf boxes in the same
-    // enc* box. This does not match spec anyway, so just choose the first
-    // one that parses properly.
-    if (box.IsType("sinf")) {
-      mSinf = Sinf(box);
-
-      if (mSinf.IsValid()) {
-        break;
-      }
-    }
-  }
-}
-
-Moof::Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf)
-  : mRange(aBox.Range())
-  , mMaxRoundingError(0)
+Moof::Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Microseconds aTimestampOffset) :
+    mRange(aBox.Range()), mTimestampOffset(aTimestampOffset), mMaxRoundingError(0)
 {
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("traf")) {
-      ParseTraf(box, aTrex, aMdhd, aEdts, aSinf);
+      ParseTraf(box, aTrex, aMdhd, aEdts);
     }
   }
   ProcessCenc();
@@ -291,7 +240,7 @@ Moof::ProcessCenc()
 }
 
 void
-Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf)
+Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts)
 {
   Tfhd tfhd(aTrex);
   Tfdt tfdt;
@@ -304,9 +253,9 @@ Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf)
       } else if (box.IsType("trun")) {
         ParseTrun(box, tfhd, tfdt, aMdhd, aEdts);
       } else if (box.IsType("saiz")) {
-        mSaizs.AppendElement(Saiz(box, aSinf.mDefaultEncryptionType));
+        mSaizs.AppendElement(Saiz(box));
       } else if (box.IsType("saio")) {
-        mSaios.AppendElement(Saio(box, aSinf.mDefaultEncryptionType));
+        mSaios.AppendElement(Saio(box));
       }
     }
   }
@@ -400,10 +349,10 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
     sample.mByteRange = MediaByteRange(offset, offset + sampleSize);
     offset += sampleSize;
 
-    sample.mDecodeTime = aMdhd.ToMicroseconds(decodeTime);
+    sample.mDecodeTime = aMdhd.ToMicroseconds(decodeTime) + mTimestampOffset;
     sample.mCompositionRange = Interval<Microseconds>(
-      aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset - aEdts.mMediaStart),
-      aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart));
+      aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset - aEdts.mMediaStart) + mTimestampOffset,
+      aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart) + mTimestampOffset);
     decodeTime += sampleDuration;
 
     sample.mSync = !(sampleFlags & 0x1010000);
@@ -510,8 +459,7 @@ Trex::Trex(Box& aBox)
   mValid = true;
 }
 
-Tfhd::Tfhd(Box& aBox, Trex& aTrex)
-  : Trex(aTrex)
+Tfhd::Tfhd(Box& aBox, Trex& aTrex) : Trex(aTrex)
 {
   MOZ_ASSERT(aBox.IsType("tfhd"));
   MOZ_ASSERT(aBox.Parent()->IsType("traf"));
@@ -609,9 +557,7 @@ Edts::Edts(Box& aBox)
   reader->DiscardRemaining();
 }
 
-Saiz::Saiz(Box& aBox, AtomType aDefaultType)
-  : mAuxInfoType(aDefaultType)
-  , mAuxInfoTypeParameter(0)
+Saiz::Saiz(Box& aBox) : mAuxInfoType("sinf"), mAuxInfoTypeParameter(0)
 {
   BoxReader reader(aBox);
   if (!reader->CanReadType<uint32_t>()) {
@@ -642,9 +588,7 @@ Saiz::Saiz(Box& aBox, AtomType aDefaultType)
   mValid = true;
 }
 
-Saio::Saio(Box& aBox, AtomType aDefaultType)
-  : mAuxInfoType(aDefaultType)
-  , mAuxInfoTypeParameter(0)
+Saio::Saio(Box& aBox) : mAuxInfoType("sinf"), mAuxInfoTypeParameter(0)
 {
   BoxReader reader(aBox);
   if (!reader->CanReadType<uint32_t>()) {

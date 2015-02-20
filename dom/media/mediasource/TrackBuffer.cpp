@@ -39,9 +39,6 @@ extern PRLogModuleInfo* GetMediaSourceAPILog();
 // prevent evicting the current playback point.
 #define MSE_EVICT_THRESHOLD_TIME 2.0
 
-// Time in microsecond under which a timestamp will be considered to be 0.
-#define FUZZ_TIMESTAMP_OFFSET 100000
-
 namespace mozilla {
 
 TrackBuffer::TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& aType)
@@ -49,7 +46,6 @@ TrackBuffer::TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& a
   , mType(aType)
   , mLastStartTimestamp(0)
   , mLastTimestampOffset(0)
-  , mAdjustedTimestamp(0)
   , mShutdown(false)
 {
   MOZ_COUNT_CTOR(TrackBuffer);
@@ -189,8 +185,7 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
   if (newInitData) {
     if (!gotInit) {
       // We need a new decoder, but we can't initialize it yet.
-      nsRefPtr<SourceBufferDecoder> decoder =
-        NewDecoder(aTimestampOffset - mAdjustedTimestamp);
+      nsRefPtr<SourceBufferDecoder> decoder = NewDecoder(aTimestampOffset);
       // The new decoder is stored in mDecoders/mCurrentDecoder, so we
       // don't need to do anything with 'decoder'. It's only a placeholder.
       if (!decoder) {
@@ -198,7 +193,7 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
         return p;
       }
     } else {
-      if (!decoders.NewDecoder(aTimestampOffset - mAdjustedTimestamp)) {
+      if (!decoders.NewDecoder(aTimestampOffset)) {
         mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
         return p;
       }
@@ -211,6 +206,8 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
   }
 
   if (gotMedia) {
+    start += aTimestampOffset;
+    end += aTimestampOffset;
     if (mLastEndTimestamp &&
         (!mParser->TimestampsFuzzyEqual(start, mLastEndTimestamp.value()) ||
          mLastTimestampOffset != aTimestampOffset ||
@@ -223,8 +220,7 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
         // This data is earlier in the timeline than data we have already
         // processed or not continuous, so we must create a new decoder
         // to handle the decoding.
-        if (!hadCompleteInitData ||
-            !decoders.NewDecoder(aTimestampOffset - mAdjustedTimestamp)) {
+        if (!hadCompleteInitData || !decoders.NewDecoder(aTimestampOffset)) {
           mInitializationPromise.Reject(NS_ERROR_FAILURE, __func__);
           return p;
         }
@@ -238,12 +234,6 @@ TrackBuffer::AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset)
     }
     mLastEndTimestamp.reset();
     mLastEndTimestamp.emplace(end);
-  }
-
-  if (gotMedia && start > 0 &&
-      (start < FUZZ_TIMESTAMP_OFFSET || start < mAdjustedTimestamp)) {
-    AdjustDecodersTimestampOffset(mAdjustedTimestamp - start);
-    mAdjustedTimestamp = start;
   }
 
   if (!AppendDataToCurrentResource(aData, end - start)) {
@@ -923,15 +913,6 @@ TrackBuffer::RangeRemoval(int64_t aStart, int64_t aEnd)
     }
   }
   return true;
-}
-
-void
-TrackBuffer::AdjustDecodersTimestampOffset(int32_t aOffset)
-{
-  ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
-  for (uint32_t i = 0; i < mDecoders.Length(); i++) {
-    mDecoders[i]->SetTimestampOffset(mDecoders[i]->GetTimestampOffset() + aOffset);
-  }
 }
 
 } // namespace mozilla

@@ -142,8 +142,8 @@ public:
 #endif
 
   virtual bool IsAsync() const MOZ_OVERRIDE {
-    return (!GetAudioReader() || GetAudioReader()->IsAsync()) &&
-           (!GetVideoReader() || GetVideoReader()->IsAsync());
+    return (!mAudioReader || mAudioReader->IsAsync()) &&
+           (!mVideoReader || mVideoReader->IsAsync());
   }
 
   // Returns true if aReader is a currently active audio or video
@@ -154,17 +154,17 @@ public:
   void GetMozDebugReaderData(nsAString& aString);
 
 private:
-  // Switch the current audio/video source to the source that
+  // Switch the current audio/video reader to the reader that
   // contains aTarget (or up to aTolerance after target). Both
   // aTarget and aTolerance are in microseconds.
-  enum SwitchSourceResult {
-    SOURCE_ERROR = -1,
-    SOURCE_EXISTING = 0,
-    SOURCE_NEW = 1,
+  enum SwitchReaderResult {
+    READER_ERROR = -1,
+    READER_EXISTING = 0,
+    READER_NEW = 1,
   };
 
-  SwitchSourceResult SwitchAudioSource(int64_t aTarget);
-  SwitchSourceResult SwitchVideoSource(int64_t aTarget);
+  SwitchReaderResult SwitchAudioReader(int64_t aTarget);
+  SwitchReaderResult SwitchVideoReader(int64_t aTarget);
 
   void DoAudioRequest();
   void DoVideoRequest();
@@ -193,27 +193,22 @@ private:
     mVideoPromise.Reject(DECODE_ERROR, __func__);
   }
 
-  MediaDecoderReader* GetAudioReader() const;
-  MediaDecoderReader* GetVideoReader() const;
-  int64_t GetReaderAudioTime(int64_t aTime) const;
-  int64_t GetReaderVideoTime(int64_t aTime) const;
-
   // Will reject the MediaPromise with END_OF_STREAM if mediasource has ended
   // or with WAIT_FOR_DATA otherwise.
   void CheckForWaitOrEndOfStream(MediaData::Type aType, int64_t aTime /* microseconds */);
 
-  // Return a decoder from the set available in aTrackDecoders that has data
+  // Return a reader from the set available in aTrackDecoders that has data
   // available in the range requested by aTarget.
-  already_AddRefed<SourceBufferDecoder> SelectDecoder(int64_t aTarget,
-                                                      int64_t aTolerance,
-                                                      const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders);
+  already_AddRefed<MediaDecoderReader> SelectReader(int64_t aTarget,
+                                                    int64_t aTolerance,
+                                                    const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders);
   bool HaveData(int64_t aTarget, MediaData::Type aType);
 
   void AttemptSeek();
   bool IsSeeking() { return mPendingSeekTime != -1; }
 
-  nsRefPtr<SourceBufferDecoder> mAudioSourceDecoder;
-  nsRefPtr<SourceBufferDecoder> mVideoSourceDecoder;
+  nsRefPtr<MediaDecoderReader> mAudioReader;
+  nsRefPtr<MediaDecoderReader> mVideoReader;
 
   nsTArray<nsRefPtr<TrackBuffer>> mTrackBuffers;
   nsTArray<nsRefPtr<TrackBuffer>> mShutdownTrackBuffers;
