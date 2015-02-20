@@ -452,7 +452,7 @@ nsFrameMessageManager::LoadFrameScript(const nsAString& aURL,
 #ifdef DEBUG_smaug
     printf("Will load %s \n", NS_ConvertUTF16toUTF8(aURL).get());
 #endif
-    NS_ENSURE_TRUE(mCallback->DoLoadFrameScript(aURL, aRunInGlobalScope),
+    NS_ENSURE_TRUE(mCallback->DoLoadMessageManagerScript(aURL, aRunInGlobalScope),
                    NS_ERROR_FAILURE);
   }
 
