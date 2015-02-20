@@ -1904,6 +1904,8 @@ class MSimdUnaryArith
         return congruentIfOperandsEqual(ins) && ins->toSimdUnaryArith()->operation() == operation();
     }
 
+    void printOpcode(FILE *fp) const MOZ_OVERRIDE;
+
     ALLOW_CLONE(MSimdUnaryArith);
 };
 
@@ -2055,6 +2057,8 @@ class MSimdBinaryArith
         return operation_ == ins->toSimdBinaryArith()->operation();
     }
 
+    void printOpcode(FILE *fp) const MOZ_OVERRIDE;
+
     ALLOW_CLONE(MSimdBinaryArith)
 };
 
@@ -2117,6 +2121,8 @@ class MSimdBinaryBitwise
             return false;
         return operation_ == ins->toSimdBinaryBitwise()->operation();
     }
+
+    void printOpcode(FILE *fp) const MOZ_OVERRIDE;
 
     ALLOW_CLONE(MSimdBinaryBitwise)
 };
