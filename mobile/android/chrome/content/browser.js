@@ -182,6 +182,8 @@ lazilyLoadedObserverScripts.forEach(function (aScript) {
     "Reader:ToolbarHidden",
     "Reader:SystemUIVisibility",
     "Reader:UpdateReaderButton",
+    "Reader:SetIntPref",
+    "Reader:SetCharPref",
   ], "chrome://browser/content/Reader.js"],
 ].forEach(aScript => {
   let [name, messages, script] = aScript;
