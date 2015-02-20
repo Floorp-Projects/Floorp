@@ -112,7 +112,7 @@ public:
   }
 
   already_AddRefed<Response>
-  Clone();
+  Clone(ErrorResult& aRv) const;
 
   void
   SetBody(nsIInputStream* aBody);
