@@ -99,6 +99,7 @@ UNIFIED_SOURCES += [
     'SelectionCarets.cpp',
     'StackArena.cpp',
     'TouchCaret.cpp',
+    'TouchManager.cpp',
 ]
 
 # nsPresArena.cpp needs to be built separately because it uses plarena.h.
