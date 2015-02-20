@@ -74,6 +74,7 @@ browser.jar:
 *       content/browser/browser.css                   (content/browser.css)
 *       content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xul                   (content/browser.xul)
+*       content/browser/browser-eme.properties        (content/browser-eme.properties)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
 *       content/browser/chatWindow.xul                (content/chatWindow.xul)
         content/browser/content.js                    (content/content.js)
