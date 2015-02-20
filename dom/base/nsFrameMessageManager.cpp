@@ -1656,7 +1656,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    nsFrameMessageManager* ppm = nsFrameMessageManager::sChildProcessManager;
+    nsFrameMessageManager* ppm = nsFrameMessageManager::GetChildProcessManager();
     ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), ppm);
     return NS_OK;
   }
@@ -1920,7 +1920,7 @@ nsFrameMessageManager::NewProcessMessageManager(mozilla::dom::nsIContentParent* 
 nsresult
 NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
 {
-  NS_ASSERTION(!nsFrameMessageManager::sChildProcessManager,
+  NS_ASSERTION(!nsFrameMessageManager::GetChildProcessManager(),
                "Re-creating sChildProcessManager");
 
   MessageManagerCallback* cb;
@@ -1933,7 +1933,7 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
   nsFrameMessageManager* mm = new nsFrameMessageManager(cb,
                                                         nullptr,
                                                         MM_PROCESSMANAGER | MM_OWNSCALLBACK);
-  nsFrameMessageManager::sChildProcessManager = mm;
+  nsFrameMessageManager::SetChildProcessManager(mm);
   return CallQueryInterface(mm, aResult);
 }
 
