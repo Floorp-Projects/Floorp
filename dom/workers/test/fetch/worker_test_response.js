@@ -217,7 +217,6 @@ onmessage = function() {
   var done = function() { postMessage({ type: 'finish' }) }
 
   testDefaultCtor();
-  testClone();
   testRedirect();
   testOk();
   testFinalURL();
@@ -226,6 +225,7 @@ onmessage = function() {
     .then(testBodyCreation)
     .then(testBodyUsed)
     .then(testBodyExtraction)
+    .then(testClone)
     // Put more promise based tests here.
     .then(done)
     .catch(function(e) {
