@@ -53,9 +53,13 @@ function removeWidget() {
 
 // Filters out the trailing menuseparators from the sidebar list
 function getSidebarList() {
-  let sidebars = [...gSidebarMenu.children];
-  while (sidebars[sidebars.length - 1].localName == "menuseparator")
-    sidebars.pop();
+  let sidebars = [...gSidebarMenu.children].filter(sidebar => {
+    if (sidebar.localName == "menuseparator")
+      return false;
+    if (sidebar.getAttribute("hidden") == "true")
+      return false;
+    return true;
+  });
   return sidebars;
 }
 
