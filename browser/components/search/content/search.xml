@@ -1063,6 +1063,12 @@
           let selectedButton = this.selectedButton;
           let buttons = this.getSelectableButtons(aCycleEngines);
 
+          let suggestionsHidden;
+          if (!aSkipSuggestions && popup.hasAttribute("showonlysettings")) {
+            aSkipSuggestions = true;
+            suggestionsHidden = true;
+          }
+
           // If the last suggestion is selected, DOWN selects the first button.
           if (!aSkipSuggestions && aForward &&
               popup.selectedIndex + 1 == popup.view.rowCount) {
@@ -1083,7 +1089,7 @@
             else
               this.selectedButton = null;
 
-            if (this.selectedButton || aCycleEngines)
+            if (this.selectedButton || aCycleEngines || suggestionsHidden)
               return true;
 
             // Set the selectedIndex to something that will make
@@ -1104,7 +1110,7 @@
               return true;
             }
 
-            if (!aForward && (aCycleEngines ||
+            if (!aForward && (aCycleEngines || suggestionsHidden ||
                               (!aSkipSuggestions && popup.selectedIndex == -1))) {
               // the last button.
               this.selectedButton = buttons[buttons.length - 1];
@@ -1122,15 +1128,6 @@
           let popup = this.popup;
           if (!popup.popupOpen)
             return;
-
-          if (aEvent.keyCode == KeyEvent.DOM_VK_DOWN &&
-              popup.hasAttribute("showonlysettings")) {
-            // If the suggestion tree is collapsed, don't let the down arrow
-            // key event reach the tree.
-            aEvent.preventDefault();
-            aEvent.stopPropagation();
-            return;
-          }
 
           let list = document.getAnonymousElementByAttribute(popup, "anonid",
                                                              "search-panel-one-offs");

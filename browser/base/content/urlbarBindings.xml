@@ -984,7 +984,7 @@
       <stylesheet src="chrome://browser/skin/searchbar.css"/>
     </resources>
     <content ignorekeys="true" level="top" consumeoutsideclicks="never">
-      <xul:hbox xbl:inherits="collapsed=showonlysettings" anonid="searchbar-engine"
+      <xul:hbox anonid="searchbar-engine" xbl:inherits="showonlysettings"
                 class="search-panel-header search-panel-current-engine">
         <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
         <xul:label anonid="searchbar-engine-name" flex="1" crop="end"
@@ -1000,8 +1000,7 @@
       </xul:tree>
       <xul:deck anonid="search-panel-one-offs-header"
                 selectedIndex="0"
-                class="search-panel-header search-panel-current-input"
-                xbl:inherits="hidden=showonlysettings">
+                class="search-panel-header search-panel-current-input">
         <xul:label anonid="searchbar-oneoffheader-search" value="&searchWithHeader.label;"/>
         <xul:hbox anonid="search-panel-searchforwith"
                   class="search-panel-current-input">
@@ -1011,11 +1010,9 @@
         </xul:hbox>
       </xul:deck>
       <xul:description anonid="search-panel-one-offs"
-                       class="search-panel-one-offs"
-                       xbl:inherits="hidden=showonlysettings"/>
+                       class="search-panel-one-offs"/>
       <xul:vbox anonid="add-engines"/>
       <xul:button anonid="search-settings"
-                  xbl:inherits="showonlysettings"
                   oncommand="BrowserUITelemetry.countSearchSettingsEvent('searchbar');openPreferences('paneSearch')"
                   class="search-setting-button search-panel-header"
                   label="&changeSearchSettings.button;"/>
