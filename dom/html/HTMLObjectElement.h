@@ -30,6 +30,12 @@ public:
 
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
 
+#ifdef XP_MACOSX
+  // nsIDOMEventTarget
+  NS_IMETHOD PostHandleEvent(EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  static void HandleFocusBlurPlugin(Element* aElement, WidgetEvent* aEvent);
+#endif
+
   // nsIDOMHTMLObjectElement
   NS_DECL_NSIDOMHTMLOBJECTELEMENT
 
