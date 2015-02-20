@@ -248,10 +248,6 @@ SourceBufferDecoder::GetBuffered(dom::TimeRanges* aBuffered)
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  // Adjust buffered range according to timestamp offset.
-  aBuffered->Shift((double)mTimestampOffset / USECS_PER_S);
-
   if (!WasTrimmed()) {
     return NS_OK;
   }
@@ -264,8 +260,7 @@ SourceBufferDecoder::GetBuffered(dom::TimeRanges* aBuffered)
 int64_t
 SourceBufferDecoder::ConvertToByteOffset(double aTime)
 {
-  int64_t readerOffset =
-    mReader->GetEvictionOffset(aTime - double(mTimestampOffset) / USECS_PER_S);
+  int64_t readerOffset = mReader->GetEvictionOffset(aTime);
   if (readerOffset >= 0) {
     return readerOffset;
   }
@@ -279,9 +274,7 @@ SourceBufferDecoder::ConvertToByteOffset(double aTime)
   }
   int64_t length = GetResource()->GetLength();
   MOZ_ASSERT(length > 0);
-  int64_t offset =
-    ((aTime - double(mTimestampOffset) / USECS_PER_S) /
-      (double(mRealMediaDuration) / USECS_PER_S)) * length;
+  int64_t offset = (aTime / (double(mRealMediaDuration) / USECS_PER_S)) * length;
   return offset;
 }
 

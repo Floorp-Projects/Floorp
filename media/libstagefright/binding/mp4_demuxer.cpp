@@ -73,11 +73,10 @@ private:
   nsRefPtr<Stream> mSource;
 };
 
-MP4Demuxer::MP4Demuxer(Stream* source, Monitor* aMonitor)
-  : mPrivate(new StageFrightPrivate())
-  , mSource(source)
-  , mMonitor(aMonitor)
-  , mNextKeyframeTime(-1)
+MP4Demuxer::MP4Demuxer(Stream* source, Microseconds aTimestampOffset, Monitor* aMonitor)
+  : mPrivate(new StageFrightPrivate()), mSource(source),
+    mTimestampOffset(aTimestampOffset), mMonitor(aMonitor),
+    mNextKeyframeTime(-1)
 {
   mPrivate->mExtractor = new MPEG4Extractor(new DataSourceAdapter(source));
 }
@@ -122,9 +121,9 @@ MP4Demuxer::Init()
       mAudioConfig.Update(metaData, mimeType);
       nsRefPtr<Index> index = new Index(mPrivate->mAudio->exportIndex(),
                                         mSource, mAudioConfig.mTrackId,
-                                        mMonitor);
+                                        mTimestampOffset, mMonitor);
       mPrivate->mIndexes.AppendElement(index);
-      if (index->IsFragmented()) {
+      if (index->IsFragmented() && !mAudioConfig.crypto.valid) {
         mPrivate->mAudioIterator = new SampleIterator(index);
       }
     } else if (!mPrivate->mVideo.get() && !strncmp(mimeType, "video/", 6)) {
@@ -136,9 +135,9 @@ MP4Demuxer::Init()
       mVideoConfig.Update(metaData, mimeType);
       nsRefPtr<Index> index = new Index(mPrivate->mVideo->exportIndex(),
                                         mSource, mVideoConfig.mTrackId,
-                                        mMonitor);
+                                        mTimestampOffset, mMonitor);
       mPrivate->mIndexes.AppendElement(index);
-      if (index->IsFragmented()) {
+      if (index->IsFragmented() && !mVideoConfig.crypto.valid) {
         mPrivate->mVideoIterator = new SampleIterator(index);
       }
     }
@@ -233,7 +232,7 @@ MP4Demuxer::DemuxAudioSample()
     return nullptr;
   }
 
-  sample->Update(mAudioConfig.media_time);
+  sample->Update(mAudioConfig.media_time, mTimestampOffset);
 
   return sample.forget();
 }
@@ -266,7 +265,7 @@ MP4Demuxer::DemuxVideoSample()
     return nullptr;
   }
 
-  sample->Update(mVideoConfig.media_time);
+  sample->Update(mVideoConfig.media_time, mTimestampOffset);
   sample->extra_data = mVideoConfig.extra_data;
 
   return sample.forget();
