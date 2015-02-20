@@ -602,9 +602,9 @@ protected:
   // The decoder monitor must be held.
   nsresult EnqueueDecodeFirstFrameTask();
 
-  // Dispatches a task to the decode task queue to seek the decoder.
+  // Clears any previous seeking state and initiates a new see on the decoder.
   // The decoder monitor must be held.
-  nsresult EnqueueDecodeSeekTask();
+  void InitiateSeek();
 
   nsresult DispatchAudioDecodeTaskIfNeeded();
 
@@ -1090,14 +1090,8 @@ protected:
   // mCurrentSeekTarget.
   bool mDecodeToSeekTarget;
 
-  // True if we've issued Seek() to the reader, but haven't yet received
-  // OnSeekCompleted. We should avoid trying to decode more audio/video
-  // until this completes.
-  bool mWaitingForDecoderSeek;
-
-  // True if we're in the process of canceling a seek. This allows us to avoid
-  // invoking CancelSeek() multiple times.
-  bool mCancelingSeek;
+  // Track the current seek request.
+  MediaPromiseConsumerHolder<MediaDecoderReader::SeekPromise> mSeekRequest;
 
   // We record the playback position before we seek in order to
   // determine where the seek terminated relative to the playback position
