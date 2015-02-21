@@ -460,8 +460,11 @@ JSContext::currentScript(jsbytecode **ppc,
     if (act->isJit()) {
         JSScript *script = nullptr;
         js::jit::GetPcScript(const_cast<JSContext *>(this), &script, ppc);
-        if (!allowCrossCompartment && script->compartment() != compartment())
+        if (!allowCrossCompartment && script->compartment() != compartment()) {
+            if (ppc)
+                *ppc = nullptr;
             return nullptr;
+        }
         return script;
     }
 
