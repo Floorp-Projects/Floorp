@@ -153,176 +153,53 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   }
 }
 
-/*static*/
-bool
-MediaEngineWebRTCVideoSource::SatisfiesConstraintSet(const MediaTrackConstraintSet &aConstraints,
-                                                     const webrtc::CaptureCapability& aCandidate) {
-  if (!MediaEngineCameraVideoSource::IsWithin(aCandidate.width, aConstraints.mWidth) ||
-      !MediaEngineCameraVideoSource::IsWithin(aCandidate.height, aConstraints.mHeight)) {
-    return false;
-  }
-  if (!MediaEngineCameraVideoSource::IsWithin(aCandidate.maxFPS, aConstraints.mFrameRate)) {
-    return false;
-  }
-  return true;
-}
-
-typedef nsTArray<uint8_t> CapabilitySet;
-
-// SatisfiesConstraintSets (plural) answers for the capture device as a whole
-// whether it can satisfy an accumulated number of capabilitySets.
-
-bool
-MediaEngineWebRTCVideoSource::SatisfiesConstraintSets(
-    const nsTArray<const MediaTrackConstraintSet*>& aConstraintSets)
+size_t
+MediaEngineWebRTCVideoSource::NumCapabilities()
 {
-  NS_ConvertUTF16toUTF8 uniqueId(mUniqueId);
+  NS_ConvertUTF16toUTF8 uniqueId(mUniqueId); // TODO: optimize this?
+
   int num = mViECapture->NumberOfCapabilities(uniqueId.get(), kMaxUniqueIdLength);
-  if (num <= 0) {
-    return true;
+  if (num > 0) {
+    return num;
   }
+  // Mac doesn't support capabilities.
+  //
+  // Hardcode generic desktop capabilities modeled on OSX camera.
+  // Note: Values are empirically picked to be OSX friendly, as on OSX, values
+  // other than these cause the source to not produce.
 
-  CapabilitySet candidateSet;
-  for (int i = 0; i < num; i++) {
-    candidateSet.AppendElement(i);
-  }
-
-  for (size_t j = 0; j < aConstraintSets.Length(); j++) {
-    for (size_t i = 0; i < candidateSet.Length();  ) {
-      webrtc::CaptureCapability cap;
-      mViECapture->GetCaptureCapability(uniqueId.get(), kMaxUniqueIdLength,
-                                        candidateSet[i], cap);
-      if (!SatisfiesConstraintSet(*aConstraintSets[j], cap)) {
-        candidateSet.RemoveElementAt(i);
-      } else {
-        ++i;
-      }
+  if (mHardcodedCapabilities.IsEmpty()) {
+    for (int i = 0; i < 9; i++) {
+      webrtc::CaptureCapability c;
+      c.width = 1920 - i*128;
+      c.height = 1080 - i*72;
+      c.maxFPS = 30;
+      mHardcodedCapabilities.AppendElement(c);
+    }
+    for (int i = 0; i < 16; i++) {
+      webrtc::CaptureCapability c;
+      c.width = 640 - i*40;
+      c.height = 480 - i*30;
+      c.maxFPS = 30;
+      mHardcodedCapabilities.AppendElement(c);
     }
   }
-  return !!candidateSet.Length();
+  return mHardcodedCapabilities.Length();
 }
 
 void
-MediaEngineWebRTCVideoSource::ChooseCapability(
-    const VideoTrackConstraintsN &aConstraints,
-    const MediaEnginePrefs &aPrefs)
+MediaEngineWebRTCVideoSource::GetCapability(size_t aIndex,
+                                            webrtc::CaptureCapability& aOut)
 {
-  NS_ConvertUTF16toUTF8 uniqueId(mUniqueId);
-  int num = mViECapture->NumberOfCapabilities(uniqueId.get(), kMaxUniqueIdLength);
-  if (num <= 0) {
-    // Mac doesn't support capabilities.
-    return GuessCapability(aConstraints, aPrefs);
+  if (!mHardcodedCapabilities.IsEmpty()) {
+    MediaEngineCameraVideoSource::GetCapability(aIndex, aOut);
   }
-
-  // The rest is the full algorithm for cameras that can list their capabilities.
-
-  LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps",
-       aPrefs.mWidth, aPrefs.mHeight, aPrefs.mFPS, aPrefs.mMinFPS));
-
-  CapabilitySet candidateSet;
-  for (int i = 0; i < num; i++) {
-    candidateSet.AppendElement(i);
-  }
-
-  // Pick among capabilities: First apply required constraints.
-
-  for (uint32_t i = 0; i < candidateSet.Length();) {
-    webrtc::CaptureCapability cap;
-    mViECapture->GetCaptureCapability(uniqueId.get(), kMaxUniqueIdLength,
-                                      candidateSet[i], cap);
-    if (!SatisfiesConstraintSet(aConstraints.mRequired, cap)) {
-      candidateSet.RemoveElementAt(i);
-    } else {
-      ++i;
-    }
-  }
-
-  CapabilitySet tailSet;
-
-  // Then apply advanced (formerly known as optional) constraints.
-
-  if (aConstraints.mAdvanced.WasPassed()) {
-    auto &array = aConstraints.mAdvanced.Value();
-
-    for (uint32_t i = 0; i < array.Length(); i++) {
-      CapabilitySet rejects;
-      for (uint32_t j = 0; j < candidateSet.Length();) {
-        webrtc::CaptureCapability cap;
-        mViECapture->GetCaptureCapability(uniqueId.get(), kMaxUniqueIdLength,
-                                          candidateSet[j], cap);
-        if (!SatisfiesConstraintSet(array[i], cap)) {
-          rejects.AppendElement(candidateSet[j]);
-          candidateSet.RemoveElementAt(j);
-        } else {
-          ++j;
-        }
-      }
-      (candidateSet.Length()? tailSet : candidateSet).MoveElementsFrom(rejects);
-    }
-  }
-
-  if (!candidateSet.Length()) {
-    candidateSet.AppendElement(0);
-  }
-
-  int prefWidth = aPrefs.GetWidth();
-  int prefHeight = aPrefs.GetHeight();
-
-  // Default is closest to available capability but equal to or below;
-  // otherwise closest above.  Since we handle the num=0 case above and
-  // take the first entry always, we can never exit uninitialized.
-
-  webrtc::CaptureCapability cap;
-  bool higher = true;
-  for (uint32_t i = 0; i < candidateSet.Length(); i++) {
-    mViECapture->GetCaptureCapability(NS_ConvertUTF16toUTF8(mUniqueId).get(),
-                                      kMaxUniqueIdLength, candidateSet[i], cap);
-    if (higher) {
-      if (i == 0 ||
-          (mCapability.width > cap.width && mCapability.height > cap.height)) {
-        // closer than the current choice
-        mCapability = cap;
-        // FIXME: expose expected capture delay?
-      }
-      if (cap.width <= (uint32_t) prefWidth && cap.height <= (uint32_t) prefHeight) {
-        higher = false;
-      }
-    } else {
-      if (cap.width > (uint32_t) prefWidth || cap.height > (uint32_t) prefHeight ||
-          cap.maxFPS < (uint32_t) aPrefs.mMinFPS) {
-        continue;
-      }
-      if (mCapability.width < cap.width && mCapability.height < cap.height) {
-        mCapability = cap;
-        // FIXME: expose expected capture delay?
-      }
-    }
-    // Same resolution, maybe better format or FPS match
-    if (mCapability.width == cap.width && mCapability.height == cap.height) {
-      // FPS too low
-      if (cap.maxFPS < (uint32_t) aPrefs.mMinFPS) {
-        continue;
-      }
-      // Better match
-      if (cap.maxFPS < mCapability.maxFPS) {
-        mCapability = cap;
-      } else if (cap.maxFPS == mCapability.maxFPS) {
-        // Resolution and FPS the same, check format
-        if (cap.rawType == webrtc::RawVideoType::kVideoI420
-          || cap.rawType == webrtc::RawVideoType::kVideoYUY2
-          || cap.rawType == webrtc::RawVideoType::kVideoYV12) {
-          mCapability = cap;
-        }
-      }
-    }
-  }
-  LOG(("chose cap %dx%d @%dfps codec %d raw %d",
-       mCapability.width, mCapability.height, mCapability.maxFPS,
-       mCapability.codecType, mCapability.rawType));
+  NS_ConvertUTF16toUTF8 uniqueId(mUniqueId); // TODO: optimize this?
+  mViECapture->GetCaptureCapability(uniqueId.get(), kMaxUniqueIdLength, aIndex, aOut);
 }
 
 nsresult
-MediaEngineWebRTCVideoSource::Allocate(const VideoTrackConstraintsN &aConstraints,
+MediaEngineWebRTCVideoSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                        const MediaEnginePrefs &aPrefs)
 {
   LOG((__FUNCTION__));
@@ -330,8 +207,9 @@ MediaEngineWebRTCVideoSource::Allocate(const VideoTrackConstraintsN &aConstraint
     // Note: if shared, we don't allow a later opener to affect the resolution.
     // (This may change depending on spec changes for Constraints/settings)
 
-    ChooseCapability(aConstraints, aPrefs);
-
+    if (!ChooseCapability(aConstraints, aPrefs)) {
+      return NS_ERROR_UNEXPECTED;
+    }
     if (mViECapture->AllocateCaptureDevice(NS_ConvertUTF16toUTF8(mUniqueId).get(),
                                            kMaxUniqueIdLength, mCaptureIndex)) {
       return NS_ERROR_FAILURE;

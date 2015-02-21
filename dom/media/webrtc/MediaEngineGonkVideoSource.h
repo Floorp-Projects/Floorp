@@ -60,7 +60,7 @@ public:
       Init();
     }
 
-  virtual nsresult Allocate(const VideoTrackConstraintsN &aConstraints,
+  virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                             const MediaEnginePrefs &aPrefs) MOZ_OVERRIDE;
   virtual nsresult Deallocate() MOZ_OVERRIDE;
   virtual nsresult Start(SourceMediaStream* aStream, TrackID aID) MOZ_OVERRIDE;
@@ -69,11 +69,6 @@ public:
                           SourceMediaStream* aSource,
                           TrackID aId,
                           StreamTime aDesiredTime) MOZ_OVERRIDE;
-  virtual bool SatisfiesConstraintSets(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets)
-  {
-    return true;
-  }
 
   void OnHardwareStateChange(HardwareState aState, nsresult aReason) MOZ_OVERRIDE;
   void GetRotation();
@@ -109,8 +104,7 @@ protected:
   // Initialize the needed Video engine interfaces.
   void Init();
   void Shutdown();
-  void ChooseCapability(const VideoTrackConstraintsN& aConstraints,
-                        const MediaEnginePrefs& aPrefs);
+  size_t NumCapabilities() MOZ_OVERRIDE;
   // Initialize the recording frame (MediaBuffer) callback and Gonk camera.
   // MediaBuffer will transfers to MediaStreamGraph via AppendToTrack.
   nsresult InitDirectMediaBuffer();

@@ -28,7 +28,7 @@ dictionary MediaStreamConstraints {
 };
 
 interface MediaStream : EventTarget {
-    // readonly attribute DOMString    id;
+    readonly attribute DOMString    id;
     sequence<AudioStreamTrack> getAudioTracks();
     sequence<VideoStreamTrack> getVideoTracks();
     sequence<MediaStreamTrack> getTracks();

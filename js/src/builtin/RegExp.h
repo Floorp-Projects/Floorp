@@ -26,6 +26,9 @@ namespace js {
 // regular expression execution.
 enum RegExpStaticsUpdate { UpdateRegExpStatics, DontUpdateRegExpStatics };
 
+// Whether RegExp statics should be used to create a RegExp instance.
+enum RegExpStaticsUse { UseRegExpStatics, DontUseRegExpStatics };
+
 RegExpRunStatus
 ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string,
               MatchPairs *matches, RegExpStaticsUpdate staticsUpdate);
@@ -79,6 +82,16 @@ regexp_exec_no_statics(JSContext *cx, unsigned argc, Value *vp);
  */
 extern bool
 regexp_test_no_statics(JSContext *cx, unsigned argc, Value *vp);
+
+/*
+ * Behaves like RegExp(string) or RegExp(string, string), but doesn't use
+ * RegExp statics.
+ *
+ * Usage: re = regexp_construct(pattern)
+ *        re = regexp_construct(pattern, flags)
+ */
+extern bool
+regexp_construct_no_statics(JSContext *cx, unsigned argc, Value *vp);
 
 } /* namespace js */
 

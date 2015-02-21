@@ -1739,7 +1739,7 @@ public:
                                   const nsAString& aMessage,
                                   const StructuredCloneData& aData,
                                   JS::Handle<JSObject *> aCpows,
-                                  nsIPrincipal* aPrincipal)
+                                  nsIPrincipal* aPrincipal) MOZ_OVERRIDE
   {
     nsRefPtr<nsIRunnable> ev =
       new nsAsyncMessageToSameProcessChild(aCx, aMessage, aData, aCpows,
@@ -1748,25 +1748,25 @@ public:
     return true;
   }
 
-  bool CheckPermission(const nsAString& aPermission)
+  bool CheckPermission(const nsAString& aPermission) MOZ_OVERRIDE
   {
     // In a single-process scenario, the child always has all capabilities.
     return true;
   }
 
-  bool CheckManifestURL(const nsAString& aManifestURL)
+  bool CheckManifestURL(const nsAString& aManifestURL) MOZ_OVERRIDE
   {
     // In a single-process scenario, the child always has all capabilities.
     return true;
   }
 
-  bool CheckAppHasPermission(const nsAString& aPermission)
+  bool CheckAppHasPermission(const nsAString& aPermission) MOZ_OVERRIDE
   {
     // In a single-process scenario, the child always has all capabilities.
     return true;
   }
 
-  virtual bool CheckAppHasStatus(unsigned short aStatus)
+  virtual bool CheckAppHasStatus(unsigned short aStatus) MOZ_OVERRIDE
   {
     // In a single-process scenario, the child always has all capabilities.
     return true;

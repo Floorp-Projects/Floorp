@@ -439,6 +439,28 @@ PuppetWidget::NotifyIMEInternal(const IMENotification& aIMENotification)
   }
 }
 
+NS_IMETHODIMP
+PuppetWidget::StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
+                             int32_t aPanelX, int32_t aPanelY,
+                             nsString& aCommitted)
+{
+  if (!mTabChild ||
+      !mTabChild->SendStartPluginIME(aKeyboardEvent, aPanelX,
+                                     aPanelY, &aCommitted)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PuppetWidget::SetPluginFocused(bool& aFocused)
+{
+  if (!mTabChild || !mTabChild->SendSetPluginFocused(aFocused)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP_(void)
 PuppetWidget::SetInputContext(const InputContext& aContext,
                               const InputContextAction& aAction)

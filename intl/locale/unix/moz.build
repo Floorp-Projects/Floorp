@@ -24,6 +24,10 @@ FINAL_LIBRARY = 'xul'
 GENERATED_FILES = [
     'unixcharset.properties.h',
 ]
+unixcharset = GENERATED_FILES['unixcharset.properties.h']
+unixcharset.script = '../props2arrays.py'
+unixcharset.inputs = ['unixcharset.properties']
+
 LOCAL_INCLUDES += [
     '..',
 ]

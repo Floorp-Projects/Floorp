@@ -265,7 +265,7 @@ MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
 }
 
 nsresult
-MediaEngineWebRTCAudioSource::Allocate(const AudioTrackConstraintsN &aConstraints,
+MediaEngineWebRTCAudioSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                        const MediaEnginePrefs &aPrefs)
 {
   if (mState == kReleased) {

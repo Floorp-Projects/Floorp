@@ -27,7 +27,6 @@
 namespace mozilla {
 
 using namespace mozilla::gfx;
-using dom::ConstrainLongRange;
 
 NS_IMPL_ISUPPORTS(MediaEngineTabVideoSource, nsIDOMEventListener, nsITimerCallback)
 
@@ -116,45 +115,26 @@ MediaEngineTabVideoSource::GetUUID(nsAString_internal& aUuid)
 }
 
 nsresult
-MediaEngineTabVideoSource::Allocate(const VideoTrackConstraintsN& aConstraints,
+MediaEngineTabVideoSource::Allocate(const dom::MediaTrackConstraints& aConstraints,
                                     const MediaEnginePrefs& aPrefs)
 {
+  // windowId and scrollWithPage are not proper constraints, so just read them.
+  // They have no well-defined behavior in advanced, so ignore them there.
 
-  ConstrainLongRange cWidth(aConstraints.mRequired.mWidth);
-  ConstrainLongRange cHeight(aConstraints.mRequired.mHeight);
+  mWindowId = aConstraints.mBrowserWindow.WasPassed() ?
+              aConstraints.mBrowserWindow.Value() : -1;
+  mScrollWithPage = aConstraints.mScrollWithPage.WasPassed() ?
+                    aConstraints.mScrollWithPage.Value() : true;
 
-  mWindowId = aConstraints.mBrowserWindow.WasPassed() ? aConstraints.mBrowserWindow.Value() : -1;
-  bool haveScrollWithPage = aConstraints.mScrollWithPage.WasPassed();
-  mScrollWithPage =  haveScrollWithPage ? aConstraints.mScrollWithPage.Value() : true;
+  FlattenedConstraints c(aConstraints);
 
-  if (aConstraints.mAdvanced.WasPassed()) {
-    const auto& advanced = aConstraints.mAdvanced.Value();
-    for (uint32_t i = 0; i < advanced.Length(); i++) {
-      if (cWidth.mMax >= advanced[i].mWidth.mMin && cWidth.mMin <= advanced[i].mWidth.mMax &&
-         cHeight.mMax >= advanced[i].mHeight.mMin && cHeight.mMin <= advanced[i].mHeight.mMax) {
-        cWidth.mMin = std::max(cWidth.mMin, advanced[i].mWidth.mMin);
-        cHeight.mMin = std::max(cHeight.mMin, advanced[i].mHeight.mMin);
-        cWidth.mMax = std::min(cWidth.mMax, advanced[i].mWidth.mMax);
-        cHeight.mMax = std::min(cHeight.mMax, advanced[i].mHeight.mMax);
-      }
-
-      if (mWindowId == -1 && advanced[i].mBrowserWindow.WasPassed()) {
-        mWindowId = advanced[i].mBrowserWindow.Value();
-      }
-
-      if (!haveScrollWithPage && advanced[i].mScrollWithPage.WasPassed()) {
-        mScrollWithPage = advanced[i].mScrollWithPage.Value();
-        haveScrollWithPage = true;
-      }
-    }
-  }
-
-  ConstrainLongRange defaultRange;
-
-  mBufWidthMax  = defaultRange.mMax > cWidth.mMax ? cWidth.mMax : aPrefs.GetWidth(false);
-  mBufHeightMax  = defaultRange.mMax > cHeight.mMax ? cHeight.mMax : aPrefs.GetHeight(false);
-
-  mTimePerFrame = aPrefs.mFPS ? 1000 / aPrefs.mFPS : aPrefs.mFPS;
+  mBufWidthMax = c.mWidth.Clamp(c.mWidth.mIdeal.WasPassed() ?
+                                c.mWidth.mIdeal.Value() : aPrefs.GetWidth(false));
+  mBufHeightMax = c.mHeight.Clamp(c.mHeight.mIdeal.WasPassed() ?
+                                  c.mHeight.mIdeal.Value() : aPrefs.GetHeight(false));
+  double frameRate = c.mFrameRate.Clamp(c.mFrameRate.mIdeal.WasPassed() ?
+                                     c.mFrameRate.mIdeal.Value() : aPrefs.mFPS);
+  mTimePerFrame = std::max(10, int(1000.0 / (frameRate > 0? frameRate : 1)));
   return NS_OK;
 }
 

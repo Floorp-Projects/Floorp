@@ -16,6 +16,10 @@ FINAL_LIBRARY = 'xul'
 GENERATED_FILES = [
     'wincharset.properties.h',
 ]
+wincharset = GENERATED_FILES['wincharset.properties.h']
+wincharset.script = '../props2arrays.py'
+wincharset.inputs = ['wincharset.properties']
+
 LOCAL_INCLUDES += [
     '..',
 ]
