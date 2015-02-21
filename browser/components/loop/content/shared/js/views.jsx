@@ -102,8 +102,18 @@ loop.shared.views = (function(_, l10n) {
       }
     },
 
+    _startScreenShare: function(type) {
+      this.props.dispatcher.dispatch(new sharedActions.StartScreenShare({
+        type: type
+      }));
+    },
+
+    _handleShareTabs: function() {
+      this._startScreenShare("browser");
+    },
+
     _handleShareWindows: function() {
-      this.props.dispatcher.dispatch(new sharedActions.StartScreenShare({}));
+      this._startScreenShare("window");
     },
 
     _getTitle: function() {
@@ -143,6 +153,9 @@ loop.shared.views = (function(_, l10n) {
             {isActive ? null : <span className="chevron"/>}
           </button>
           <ul ref="menu" className={dropdownMenuClasses}>
+            <li onClick={this._handleShareTabs} className="disabled">
+              {l10n.get("share_tabs_button_title")}
+            </li>
             <li onClick={this._handleShareWindows}>
               {l10n.get("share_windows_button_title")}
             </li>

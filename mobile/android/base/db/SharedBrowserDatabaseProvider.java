@@ -38,6 +38,14 @@ public abstract class SharedBrowserDatabaseProvider extends AbstractPerProfileDa
         return databases;
     }
 
+    // Can't mark as @Override. Added in API 11.
+    public void shutdown() {
+        synchronized (SharedBrowserDatabaseProvider.class) {
+            databases.shutdown();
+            databases = null;
+        }
+    }
+
     @Override
     public boolean onCreate() {
         // If necessary, do the shared DB work.
@@ -95,8 +103,8 @@ public abstract class SharedBrowserDatabaseProvider extends AbstractPerProfileDa
         // IDs of matching rows, then delete them in one go.
         final long now = System.currentTimeMillis();
         final String selection = SyncColumns.IS_DELETED + " = 1 AND " +
-                SyncColumns.DATE_MODIFIED + " <= " +
-                (now - MAX_AGE_OF_DELETED_RECORDS);
+                                 SyncColumns.DATE_MODIFIED + " <= " +
+                                 (now - MAX_AGE_OF_DELETED_RECORDS);
 
         final String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
         final SQLiteDatabase db = getWritableDatabaseForProfile(profile, isTest(fromUri));

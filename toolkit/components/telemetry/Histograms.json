@@ -4532,15 +4532,6 @@
     "description": "The way the GeckoApp was launched. (Normal, URL, Prefetch, Redirector)",
     "cpp_guard": "ANDROID"
   },
-  "FENNEC_STARTUP_TIME_ABOUTHOME": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 100,
-    "high": "10000",
-    "n_buckets": 20,
-    "description": "Time for the about:home page to be displayed (ms)",
-    "cpp_guard": "ANDROID"
-  },
   "FENNEC_STARTUP_TIME_GECKOREADY": {
     "expires_in_version": "never",
     "kind": "exponential",
