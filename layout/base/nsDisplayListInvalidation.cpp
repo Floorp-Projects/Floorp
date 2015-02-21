@@ -24,12 +24,6 @@ nsDisplayItemGenericGeometry::nsDisplayItemGenericGeometry(nsDisplayItem* aItem,
   , mBorderRect(aItem->GetBorderRect())
 {}
 
-bool
-ShouldSyncDecodeImages(nsDisplayListBuilder* aBuilder)
-{
-  return aBuilder->ShouldSyncDecodeImages();
-}
-
 void
 nsDisplayItemGenericGeometry::MoveBy(const nsPoint& aOffset)
 {
@@ -59,7 +53,6 @@ nsDisplayBorderGeometry::MoveBy(const nsPoint& aOffset)
 nsDisplayBackgroundGeometry::nsDisplayBackgroundGeometry(nsDisplayBackgroundImage* aItem,
                                                          nsDisplayListBuilder* aBuilder)
   : nsDisplayItemGeometry(aItem, aBuilder)
-  , nsImageGeometryMixin(aItem, aBuilder)
   , mPositioningArea(aItem->GetPositioningArea())
 {}
 

@@ -535,7 +535,6 @@ public:
   }
 #endif
 
-  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion *aInvalidRegion) MOZ_OVERRIDE;
@@ -544,24 +543,16 @@ public:
   NS_DISPLAY_DECL_NAME("TableRowBackground", TYPE_TABLE_ROW_BACKGROUND)
 };
 
-nsDisplayItemGeometry*
-nsDisplayTableRowBackground::AllocateGeometry(nsDisplayListBuilder* aBuilder)
-{
-  return new nsDisplayItemGenericImageGeometry(this, aBuilder);
-}
-
 void
 nsDisplayTableRowBackground::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                                        const nsDisplayItemGeometry* aGeometry,
                                                        nsRegion *aInvalidRegion)
 {
-  auto geometry =
-    static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
-
-  if (aBuilder->ShouldSyncDecodeImages() &&
-      geometry->ShouldInvalidateToSyncDecodeImages()) {
-    bool snap;
-    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
+  if (aBuilder->ShouldSyncDecodeImages()) {
+    if (nsTableFrame::AnyTablePartHasUndecodedBackgroundImage(mFrame, mFrame->GetNextSibling())) {
+      bool snap;
+      aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
+    }
   }
 
   nsDisplayTableItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
@@ -577,11 +568,7 @@ nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
                                  mFrame->PresContext(), *aCtx,
                                  mVisibleRect, ToReferenceFrame(),
                                  aBuilder->GetBackgroundPaintFlags());
-
-  DrawResult result =
-    painter.PaintRow(static_cast<nsTableRowFrame*>(mFrame));
-
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
+  painter.PaintRow(static_cast<nsTableRowFrame*>(mFrame));
 }
 
 void

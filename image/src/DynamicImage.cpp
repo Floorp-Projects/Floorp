@@ -260,6 +260,12 @@ DynamicImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
   return NS_OK;
 }
 
+bool
+DynamicImage::IsDecoded()
+{
+  return true;
+}
+
 NS_IMETHODIMP
 DynamicImage::LockImage()
 {

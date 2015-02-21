@@ -1382,7 +1382,7 @@ nsDisplayImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
     static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
 
   if (aBuilder->ShouldSyncDecodeImages() &&
-      geometry->ShouldInvalidateToSyncDecodeImages()) {
+      geometry->LastDrawResult() != DrawResult::SUCCESS) {
     bool snap;
     aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
   }

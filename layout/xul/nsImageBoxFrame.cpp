@@ -388,7 +388,7 @@ nsDisplayXULImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
 
   if (aBuilder->ShouldSyncDecodeImages() &&
       boxFrame->mImageRequest &&
-      geometry->ShouldInvalidateToSyncDecodeImages()) {
+      geometry->LastDrawResult() != DrawResult::SUCCESS) {
       bool snap;
       aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
   }
