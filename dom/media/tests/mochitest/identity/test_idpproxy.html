@@ -49,9 +49,14 @@ function test_protocol_sandbox() {
   });
 }
 
-function makeSandbox(hash) {
-  var sandbox = new IdpSandbox('example.com',
-                           'idp.js' + (hash ? ('#' + hash) : ''));
+function idpName(hash) {
+  return 'idp.js' + (hash ? ('#' + hash) : '');
+}
+
+function makeSandbox(js) {
+  var name = js || idpName();
+  info('Creating a sandbox for the protocol: ' + name);
+  var sandbox = new IdpSandbox('example.com', name);
   return sandbox.start().then(idp => SpecialPowers.wrap(idp));
 }
 
@@ -98,6 +103,29 @@ function test_assertion_failure(reason) {
   };
 }
 
+function test_load_failure() {
+  return makeSandbox('non-existent-file')
+    .then(() => ok(false, 'Should fail to load non-existent file'),
+          e => ok(e, 'Should fail to load non-existent file'));
+}
+
+function test_redirect_ok(from) {
+  return () => {
+    return makeSandbox(from)
+      .then(idp => idp.generateAssertion('hello', 'example.net'))
+      .then(r => ok(SpecialPowers.wrap(r).assertion,
+                    'Redirect to https should be OK'));
+  };
+}
+
+function test_redirect_fail(from) {
+  return () => {
+    return makeSandbox(from)
+      .then(() => ok(false, 'Redirect to https should fail'),
+            e => ok(e, 'Redirect to https should fail'));
+  };
+}
+
 function run_all_tests() {
   [
     test_domain_sandbox,
@@ -110,7 +138,20 @@ function run_all_tests() {
     // fail if the IdP throws
     test_assertion_failure('throw'),
     // fail if the IdP is not ready
-    test_assertion_failure('not_ready')
+    test_assertion_failure('not_ready'),
+
+    test_load_failure(),
+    // Test a redirect to an HTTPS origin, which should be OK
+    test_redirect_ok('idp-redirect-https.js'),
+    // Two redirects is fine too
+    test_redirect_ok('idp-redirect-https-double.js'),
+    // A secure redirect to a path other than /.well-known/idp-proxy/* should
+    // also work fine.
+    test_redirect_ok('idp-redirect-https-odd-path.js'),
+    // A redirect to HTTP is not-cool
+    test_redirect_fail('idp-redirect-http.js'),
+    // Also catch tricks like https->http->https
+    test_redirect_fail('idp-redirect-http-trick.js')
   ].reduce((p, test) => {
     return p.then(test)
       .catch(e => ok(false, test.name + ' failed: ' +
