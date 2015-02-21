@@ -1097,5 +1097,9 @@ addMessageListener("ContextMenu:MediaCommand", (message) => {
                             message.data.command == "showstats");
       media.dispatchEvent(event);
       break;
+    case "fullscreen":
+      if (content.document.mozFullScreenEnabled)
+        media.mozRequestFullScreen();
+      break;
   }
 });

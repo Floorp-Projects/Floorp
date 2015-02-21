@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+  %browserDTD;
+]>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <script src="chrome://browser/content/readinglist/sidebar.js" type="application/javascript;version=1.8"></script>
+    <link rel="stylesheet" type="text/css" media="all" href="chrome://browser/skin/readinglist/sidebar.css"/>
+    <!-- <title>&readingList.label;</title> -->
+  </head>
+
+  <body role="application">
+    <template id="item-template">
+      <div class="item" role="option" tabindex="-1">
+        <div class="item-thumb-container"></div>
+        <div class="item-summary-container">
+          <div class="item-title"></div>
+          <div class="item-domain"></div>
+        </div>
+      </div>
+    </template>
+
+    <div id="list" role="listbox" tabindex="1"></div>
+  </body>
+</html>

@@ -16,7 +16,9 @@ add_task(function* test() {
   }
 
   let sidebar = yield promiseLoadedSidebar("viewBookmarksSidebar");
-  registerCleanupFunction(toggleSidebar);
+  registerCleanupFunction(() => {
+    SidebarUI.hide();
+  });
 
   // Focus the tree and check if its controller is returned.
   let tree = sidebar.contentDocument.getElementById("bookmarks-view");
@@ -59,6 +61,6 @@ function promiseLoadedSidebar(cmd) {
       resolve(sidebar);
     }, true);
 
-    toggleSidebar(cmd, true);
+    SidebarUI.show(cmd);
   });
 }

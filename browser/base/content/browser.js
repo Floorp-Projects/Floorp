@@ -12,6 +12,11 @@ Cu.import("resource://gre/modules/NotificationDB.jsm");
 Cu.import("resource:///modules/RecentWindow.jsm");
 Cu.import("resource://gre/modules/WindowsPrefSync.jsm");
 
+
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
+                                  "resource://gre/modules/Deprecated.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
                                   "resource:///modules/BrowserUITelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
@@ -222,7 +227,9 @@ let gInitialPages = [
 #include browser-loop.js
 #include browser-places.js
 #include browser-plugins.js
+#include browser-readinglist.js
 #include browser-safebrowsing.js
+#include browser-sidebar.js
 #include browser-social.js
 #include browser-tabview.js
 #include browser-thumbnails.js
@@ -899,8 +906,6 @@ var gBrowserInit = {
   delayedStartupFinished: false,
 
   onLoad: function() {
-    var mustLoadSidebar = false;
-
     gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver, false);
 
     Services.obs.addObserver(gPluginHandler.pluginCrashed, "plugin-crashed", false);
@@ -952,61 +957,7 @@ var gBrowserInit = {
     // setup history swipe animation
     gHistorySwipeAnimation.init();
 
-    if (window.opener && !window.opener.closed &&
-        window.opener.document.documentURIObject.schemeIs("chrome") &&
-        PrivateBrowsingUtils.isWindowPrivate(window) == PrivateBrowsingUtils.isWindowPrivate(window.opener)) {
-      let openerSidebarBox = window.opener.document.getElementById("sidebar-box");
-      // If the opener had a sidebar, open the same sidebar in our window.
-      // The opener can be the hidden window too, if we're coming from the state
-      // where no windows are open, and the hidden window has no sidebar box.
-      if (openerSidebarBox && !openerSidebarBox.hidden) {
-        let sidebarCmd = openerSidebarBox.getAttribute("sidebarcommand");
-        let sidebarCmdElem = document.getElementById(sidebarCmd);
-
-        // dynamically generated sidebars will fail this check.
-        if (sidebarCmdElem) {
-          let sidebarBox = document.getElementById("sidebar-box");
-          let sidebarTitle = document.getElementById("sidebar-title");
-
-          sidebarTitle.setAttribute(
-            "value", window.opener.document.getElementById("sidebar-title").getAttribute("value"));
-          sidebarBox.setAttribute("width", openerSidebarBox.boxObject.width);
-
-          sidebarBox.setAttribute("sidebarcommand", sidebarCmd);
-          // Note: we're setting 'src' on sidebarBox, which is a <vbox>, not on
-          // the <browser id="sidebar">. This lets us delay the actual load until
-          // delayedStartup().
-          sidebarBox.setAttribute(
-            "src", window.opener.document.getElementById("sidebar").getAttribute("src"));
-          mustLoadSidebar = true;
-
-          sidebarBox.hidden = false;
-          document.getElementById("sidebar-splitter").hidden = false;
-          sidebarCmdElem.setAttribute("checked", "true");
-        }
-      }
-    }
-    else {
-      let box = document.getElementById("sidebar-box");
-      if (box.hasAttribute("sidebarcommand")) {
-        let commandID = box.getAttribute("sidebarcommand");
-        if (commandID) {
-          let command = document.getElementById(commandID);
-          if (command) {
-            mustLoadSidebar = true;
-            box.hidden = false;
-            document.getElementById("sidebar-splitter").hidden = false;
-            command.setAttribute("checked", "true");
-          }
-          else {
-            // Remove the |sidebarcommand| attribute, because the element it
-            // refers to no longer exists, so we should assume this sidebar
-            // panel has been uninstalled. (249883)
-            box.removeAttribute("sidebarcommand");
-          }
-        }
-      }
-    }
+    SidebarUI.init();
 
     // Certain kinds of automigration rely on this notification to complete
     // their tasks BEFORE the browser window is shown. SessionStore uses it to
@@ -1095,7 +1046,7 @@ var gBrowserInit = {
     ToolbarIconColor.init();
 
     // Wait until chrome is painted before executing code not critical to making the window visible
-    this._boundDelayedStartup = this._delayedStartup.bind(this, mustLoadSidebar);
+    this._boundDelayedStartup = this._delayedStartup.bind(this);
     window.addEventListener("MozAfterPaint", this._boundDelayedStartup);
 
     this._loadHandled = true;
@@ -1106,7 +1057,7 @@ var gBrowserInit = {
     this._boundDelayedStartup = null;
   },
 
-  _delayedStartup: function(mustLoadSidebar) {
+  _delayedStartup: function() {
     let tmp = {};
     Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", tmp);
     let TelemetryTimestamps = tmp.TelemetryTimestamps;
@@ -1269,11 +1220,7 @@ var gBrowserInit = {
 
     Services.telemetry.getHistogramById("E10S_WINDOW").add(gMultiProcessBrowser);
 
-    if (mustLoadSidebar) {
-      let sidebar = document.getElementById("sidebar");
-      let sidebarBox = document.getElementById("sidebar-box");
-      sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
-    }
+    SidebarUI.startDelayedLoad();
 
     UpdateUrlbarSearchSplitterState();
 
@@ -1427,6 +1374,7 @@ var gBrowserInit = {
 
       SocialUI.init();
       TabView.init();
+      ReadingListUI.init();
 
       // Telemetry for master-password - we do this after 5 seconds as it
       // can cause IO if NSS/PSM has not already initialized.
@@ -1535,14 +1483,9 @@ var gBrowserInit = {
 
     gMenuButtonUpdateBadge.uninit();
 
-    var enumerator = Services.wm.getEnumerator(null);
-    enumerator.getNext();
-    if (!enumerator.hasMoreElements()) {
-      document.persist("sidebar-box", "sidebarcommand");
-      document.persist("sidebar-box", "width");
-      document.persist("sidebar-box", "src");
-      document.persist("sidebar-title", "value");
-    }
+    ReadingListUI.uninit();
+
+    SidebarUI.uninit();
 
     // Now either cancel delayedStartup, or clean up the services initialized from
     // it.
@@ -1769,7 +1712,7 @@ function HandleAppCommandEvent(evt) {
     BrowserSearch.webSearch();
     break;
   case "Bookmarks":
-    toggleSidebar('viewBookmarksSidebar');
+    SidebarUI.toggle("viewBookmarksSidebar");
     break;
   case "Home":
     BrowserHome();
@@ -3139,23 +3082,19 @@ var PrintPreviewListener = {
     else
       this._showChrome();
 
-    if (this._chromeState.sidebarOpen)
-      toggleSidebar(this._sidebarCommand);
-
     TabsInTitlebar.allowedBy("print-preview", !gInPrintPreviewMode);
   },
   _hideChrome: function () {
     this._chromeState = {};
 
-    var sidebar = document.getElementById("sidebar-box");
-    this._chromeState.sidebarOpen = !sidebar.hidden;
-    this._sidebarCommand = sidebar.getAttribute("sidebarcommand");
+    this._chromeState.sidebarOpen = SidebarUI.isOpen;
+    this._sidebarCommand = SidebarUI.currentID;
+    SidebarUI.hide();
 
     var notificationBox = gBrowser.getNotificationBox();
     this._chromeState.notificationsOpen = !notificationBox.notificationsHidden;
     notificationBox.notificationsHidden = true;
 
-    document.getElementById("sidebar").setAttribute("src", "about:blank");
     gBrowser.updateWindowResizers();
 
     this._chromeState.findOpen = gFindBarInitialized && !gFindBar.hidden;
@@ -3185,6 +3124,9 @@ var PrintPreviewListener = {
 
     if (this._chromeState.syncNotificationsOpen)
       document.getElementById("sync-notifications").notificationsHidden = false;
+
+    if (this._chromeState.sidebarOpen)
+      SidebarUI.show(this._sidebarCommand);
   }
 }
 
@@ -5213,121 +5155,6 @@ function displaySecurityInfo()
   BrowserPageInfo(null, "securityTab");
 }
 
-/**
- * Opens or closes the sidebar identified by commandID.
- *
- * @param commandID a string identifying the sidebar to toggle; see the
- *                  note below. (Optional if a sidebar is already open.)
- * @param forceOpen boolean indicating whether the sidebar should be
- *                  opened regardless of its current state (optional).
- * @note
- * We expect to find a xul:broadcaster element with the specified ID.
- * The following attributes on that element may be used and/or modified:
- *  - id           (required) the string to match commandID. The convention
- *                 is to use this naming scheme: 'view<sidebar-name>Sidebar'.
- *  - sidebarurl   (required) specifies the URL to load in this sidebar.
- *  - sidebartitle or label (in that order) specify the title to
- *                 display on the sidebar.
- *  - checked      indicates whether the sidebar is currently displayed.
- *                 Note that toggleSidebar updates this attribute when
- *                 it changes the sidebar's visibility.
- *  - group        this attribute must be set to "sidebar".
- */
-function toggleSidebar(commandID, forceOpen) {
-
-  var sidebarBox = document.getElementById("sidebar-box");
-  if (!commandID)
-    commandID = sidebarBox.getAttribute("sidebarcommand");
-
-  var sidebarBroadcaster = document.getElementById(commandID);
-  var sidebar = document.getElementById("sidebar"); // xul:browser
-  var sidebarTitle = document.getElementById("sidebar-title");
-  var sidebarSplitter = document.getElementById("sidebar-splitter");
-
-  if (sidebarBroadcaster.getAttribute("checked") == "true") {
-    if (!forceOpen) {
-      // Replace the document currently displayed in the sidebar with about:blank
-      // so that we can free memory by unloading the page. We need to explicitly
-      // create a new content viewer because the old one doesn't get destroyed
-      // until about:blank has loaded (which does not happen as long as the
-      // element is hidden).
-      sidebar.setAttribute("src", "about:blank");
-      sidebar.docShell.createAboutBlankContentViewer(null);
-
-      sidebarBroadcaster.removeAttribute("checked");
-      sidebarBox.setAttribute("sidebarcommand", "");
-      sidebarTitle.value = "";
-      sidebarBox.hidden = true;
-      sidebarSplitter.hidden = true;
-      gBrowser.selectedBrowser.focus();
-    } else {
-      fireSidebarFocusedEvent();
-    }
-    return;
-  }
-
-  // now we need to show the specified sidebar
-
-  // ..but first update the 'checked' state of all sidebar broadcasters
-  var broadcasters = document.getElementsByAttribute("group", "sidebar");
-  for (let broadcaster of broadcasters) {
-    // skip elements that observe sidebar broadcasters and random
-    // other elements
-    if (broadcaster.localName != "broadcaster")
-      continue;
-
-    if (broadcaster != sidebarBroadcaster)
-      broadcaster.removeAttribute("checked");
-    else
-      sidebarBroadcaster.setAttribute("checked", "true");
-  }
-
-  sidebarBox.hidden = false;
-  sidebarSplitter.hidden = false;
-
-  var url = sidebarBroadcaster.getAttribute("sidebarurl");
-  var title = sidebarBroadcaster.getAttribute("sidebartitle");
-  if (!title)
-    title = sidebarBroadcaster.getAttribute("label");
-  sidebar.setAttribute("src", url); // kick off async load
-  sidebarBox.setAttribute("sidebarcommand", sidebarBroadcaster.id);
-  sidebarTitle.value = title;
-
-  // We set this attribute here in addition to setting it on the <browser>
-  // element itself, because the code in gBrowserInit.onUnload persists this
-  // attribute, not the "src" of the <browser id="sidebar">. The reason it
-  // does that is that we want to delay sidebar load a bit when a browser
-  // window opens. See delayedStartup().
-  sidebarBox.setAttribute("src", url);
-
-  if (sidebar.contentDocument.location.href != url)
-    sidebar.addEventListener("load", sidebarOnLoad, true);
-  else // older code handled this case, so we do it too
-    fireSidebarFocusedEvent();
-}
-
-function sidebarOnLoad(event) {
-  var sidebar = document.getElementById("sidebar");
-  sidebar.removeEventListener("load", sidebarOnLoad, true);
-  // We're handling the 'load' event before it bubbles up to the usual
-  // (non-capturing) event handlers. Let it bubble up before firing the
-  // SidebarFocused event.
-  setTimeout(fireSidebarFocusedEvent, 0);
-}
-
-/**
- * Fire a "SidebarFocused" event on the sidebar's |window| to give the sidebar
- * a chance to adjust focus as needed. An additional event is needed, because
- * we don't want to focus the sidebar when it's opened on startup or in a new
- * window, only when the user opens the sidebar.
- */
-function fireSidebarFocusedEvent() {
-  var sidebar = document.getElementById("sidebar");
-  var event = document.createEvent("Events");
-  event.initEvent("SidebarFocused", true, false);
-  sidebar.contentWindow.dispatchEvent(event);
-}
-
 
 var gHomeButton = {
   prefDomain: "browser.startup.homepage",
@@ -5474,38 +5301,37 @@ function getBrowserSelection(aCharLen) {
 }
 
 var gWebPanelURI;
-function openWebPanel(aTitle, aURI)
-{
-    // Ensure that the web panels sidebar is open.
-    toggleSidebar('viewWebPanelsSidebar', true);
+function openWebPanel(title, uri) {
+  // Ensure that the web panels sidebar is open.
+  SidebarUI.show("viewWebPanelsSidebar");
 
-    // Set the title of the panel.
-    document.getElementById("sidebar-title").value = aTitle;
+  // Set the title of the panel.
+  SidebarUI.title = title;
 
-    // Tell the Web Panels sidebar to load the bookmark.
-    var sidebar = document.getElementById("sidebar");
-    if (sidebar.docShell && sidebar.contentDocument && sidebar.contentDocument.getElementById('web-panels-browser')) {
-        sidebar.contentWindow.loadWebPanel(aURI);
-        if (gWebPanelURI) {
-            gWebPanelURI = "";
-            sidebar.removeEventListener("load", asyncOpenWebPanel, true);
-        }
+  // Tell the Web Panels sidebar to load the bookmark.
+  if (SidebarUI.browser.docShell && SidebarUI.browser.contentDocument &&
+      SidebarUI.browser.contentDocument.getElementById("web-panels-browser")) {
+    SidebarUI.browser.contentWindow.loadWebPanel(uri);
+    if (gWebPanelURI) {
+      gWebPanelURI = "";
+      SidebarUI.browser.removeEventListener("load", asyncOpenWebPanel, true);
     }
-    else {
-        // The panel is still being constructed.  Attach an onload handler.
-        if (!gWebPanelURI)
-            sidebar.addEventListener("load", asyncOpenWebPanel, true);
-        gWebPanelURI = aURI;
+  } else {
+    // The panel is still being constructed.  Attach an onload handler.
+    if (!gWebPanelURI) {
+      SidebarUI.browser.addEventListener("load", asyncOpenWebPanel, true);
     }
+    gWebPanelURI = uri;
+  }
 }
 
-function asyncOpenWebPanel(event)
-{
-    var sidebar = document.getElementById("sidebar");
-    if (gWebPanelURI && sidebar.contentDocument && sidebar.contentDocument.getElementById('web-panels-browser'))
-        sidebar.contentWindow.loadWebPanel(gWebPanelURI);
-    gWebPanelURI = "";
-    sidebar.removeEventListener("load", asyncOpenWebPanel, true);
+function asyncOpenWebPanel(event) {
+  if (gWebPanelURI && SidebarUI.browser.contentDocument &&
+      SidebarUI.browser.contentDocument.getElementById("web-panels-browser")) {
+    SidebarUI.browser.contentWindow.loadWebPanel(gWebPanelURI);
+  }
+  gWebPanelURI = "";
+  SidebarUI.browser.removeEventListener("load", asyncOpenWebPanel, true);
 }
 
 /*

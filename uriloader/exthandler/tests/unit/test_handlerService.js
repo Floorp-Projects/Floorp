@@ -44,6 +44,20 @@ function run_test() {
     regSvc.close();
   }
 
+  let isLinux = ("@mozilla.org/gio-service;1" in Components.classes);
+  if (isLinux) {
+    // Check mailto handler from GIO
+    // If there isn't one, then we have no mailto handler
+    let gIOSvc = Cc["@mozilla.org/gio-service;1"].
+                 createInstance(Ci.nsIGIOService);
+    try {
+      gIOSvc.getAppForURIScheme("mailto");
+      noMailto = false;
+    } catch (ex) {
+      noMailto = true;
+    }
+  }
+
   //**************************************************************************//
   // Sample Data
 
@@ -157,7 +171,7 @@ function run_test() {
   else
     do_check_eq(0, protoInfo.possibleApplicationHandlers.length);
 
-  // Win7+ might not have a default mailto: handler
+  // Win7+ or Linux's GIO might not have a default mailto: handler
   if (noMailto)
     do_check_true(protoInfo.alwaysAskBeforeHandling);
   else
@@ -168,7 +182,7 @@ function run_test() {
   protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
   if (haveDefaultHandlersVersion) {
     do_check_eq(2, protoInfo.possibleApplicationHandlers.length);
-    // Win7+ might not have a default mailto: handler, but on other platforms
+    // Win7+ or Linux's GIO may have no default mailto: handler. Otherwise
     // alwaysAskBeforeHandling is expected to be false here, because although
     // the pref is true, the value in RDF is false. The injected mailto handler
     // carried over the default pref value, and so when we set the pref above
