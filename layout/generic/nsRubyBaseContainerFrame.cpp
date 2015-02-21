@@ -200,6 +200,49 @@ RubyColumnEnumerator::GetColumn(RubyColumn& aColumn) const
   aColumn.mIsIntraLevelWhitespace = mAtIntraLevelWhitespace;
 }
 
+static gfxBreakPriority
+LineBreakBefore(const nsHTMLReflowState& aReflowState, nsRubyBaseFrame* aFrame)
+{
+  for (nsIFrame* child = aFrame; child;
+       child = child->GetFirstPrincipalChild()) {
+    if (!child->CanContinueTextRun()) {
+      // It is not an inline element. We can break before it.
+      return gfxBreakPriority::eNormalBreak;
+    }
+    if (child->GetType() != nsGkAtoms::textFrame) {
+      continue;
+    }
+
+    auto textFrame = static_cast<nsTextFrame*>(child);
+    gfxSkipCharsIterator iter =
+      textFrame->EnsureTextRun(nsTextFrame::eInflated,
+                               aReflowState.rendContext->ThebesContext(),
+                               aReflowState.mLineLayout->LineContainerFrame(),
+                               aReflowState.mLineLayout->GetLine());
+    iter.SetOriginalOffset(textFrame->GetContentOffset());
+    uint32_t pos = iter.GetSkippedOffset();
+    gfxTextRun* textRun = textFrame->GetTextRun(nsTextFrame::eInflated);
+    if (pos >= textRun->GetLength()) {
+      // The text frame contains no character at all.
+      return gfxBreakPriority::eNoBreak;
+    }
+    // Return whether we can break before the first character.
+    if (textRun->CanBreakLineBefore(pos)) {
+      return gfxBreakPriority::eNormalBreak;
+    }
+    // Check whether we can wrap word here.
+    const nsStyleText* textStyle = textFrame->StyleText();
+    if (textStyle->WordCanWrap(textFrame) && textRun->IsClusterStart(pos)) {
+      return gfxBreakPriority::eWordWrapBreak;
+    }
+    // We cannot break before.
+    return gfxBreakPriority::eNoBreak;
+  }
+  // Neither block, nor text frame is found as a leaf. We won't break
+  // before this base frame. It is the behavior of empty spans.
+  return gfxBreakPriority::eNoBreak;
+}
+
 static nscoord
 CalculateColumnPrefISize(nsRenderingContext* aRenderingContext,
                          const RubyColumnEnumerator& aEnumerator)
@@ -621,49 +664,6 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
   }
 
   return icoord;
-}
-
-static gfxBreakPriority
-LineBreakBefore(const nsHTMLReflowState& aReflowState, nsRubyBaseFrame* aFrame)
-{
-  for (nsIFrame* child = aFrame; child;
-       child = child->GetFirstPrincipalChild()) {
-    if (!child->CanContinueTextRun()) {
-      // It is not an inline element. We can break before it.
-      return gfxBreakPriority::eNormalBreak;
-    }
-    if (child->GetType() != nsGkAtoms::textFrame) {
-      continue;
-    }
-
-    auto textFrame = static_cast<nsTextFrame*>(child);
-    gfxSkipCharsIterator iter =
-      textFrame->EnsureTextRun(nsTextFrame::eInflated,
-                               aReflowState.rendContext->ThebesContext(),
-                               aReflowState.mLineLayout->LineContainerFrame(),
-                               aReflowState.mLineLayout->GetLine());
-    iter.SetOriginalOffset(textFrame->GetContentOffset());
-    uint32_t pos = iter.GetSkippedOffset();
-    gfxTextRun* textRun = textFrame->GetTextRun(nsTextFrame::eInflated);
-    if (pos >= textRun->GetLength()) {
-      // The text frame contains no character at all.
-      return gfxBreakPriority::eNoBreak;
-    }
-    // Return whether we can break before the first character.
-    if (textRun->CanBreakLineBefore(pos)) {
-      return gfxBreakPriority::eNormalBreak;
-    }
-    // Check whether we can wrap word here.
-    const nsStyleText* textStyle = textFrame->StyleText();
-    if (textStyle->WordCanWrap(textFrame) && textRun->IsClusterStart(pos)) {
-      return gfxBreakPriority::eWordWrapBreak;
-    }
-    // We cannot break before.
-    return gfxBreakPriority::eNoBreak;
-  }
-  // Neither block, nor text frame is found as a leaf. We won't break
-  // before this base frame. It is the behavior of empty spans.
-  return gfxBreakPriority::eNoBreak;
 }
 
 nscoord
