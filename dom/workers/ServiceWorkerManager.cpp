@@ -2483,10 +2483,7 @@ ServiceWorkerManager::CreateServiceWorker(nsIPrincipal* aPrincipal,
   //  - use remote tabs = false
   // Alternatively we could persist the original load group values and use
   // them here.
-  rv = NS_NewLoadGroup(getter_AddRefs(info.mLoadGroup), info.mPrincipal);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  WorkerPrivate::OverrideLoadInfoLoadGroup(info);
 
   nsRefPtr<ServiceWorker> serviceWorker;
   RuntimeService* rs = RuntimeService::GetOrCreateService();
