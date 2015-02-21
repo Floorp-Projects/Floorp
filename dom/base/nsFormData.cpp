@@ -8,6 +8,8 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLFormElement.h"
 
+#include "MultipartFileImpl.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -75,13 +77,33 @@ void
 nsFormData::Append(const nsAString& aName, File& aBlob,
                    const Optional<nsAString>& aFilename)
 {
-  nsString filename;
-  if (aFilename.WasPassed()) {
-    filename = aFilename.Value();
-  } else {
-    filename.SetIsVoid(true);
+  // Step 3 "If value is a Blob object and not a File object, set value to
+  // a new File object, representing the same bytes, whose name attribute value
+  // is "blob"."
+  // Step 4 "If value is a File object and filename is given, set value to
+  // a new File object, representing the same bytes, whose name attribute
+  // value is filename."
+  nsString filename = NS_LITERAL_STRING("blob");
+  if (aBlob.IsFile()) {
+    aBlob.GetName(filename);
+    if (aFilename.WasPassed()) {
+      filename = aFilename.Value();
+    }
   }
-  AddNameFilePair(aName, &aBlob, filename);
+
+  nsAutoTArray<nsRefPtr<FileImpl>, 1> blobImpls;
+  blobImpls.AppendElement(aBlob.Impl());
+
+  nsAutoString contentType;
+  aBlob.GetType(contentType);
+
+  nsRefPtr<MultipartFileImpl> impl =
+    new MultipartFileImpl(blobImpls, filename, contentType);
+
+  nsRefPtr<File> file = new File(aBlob.GetParentObject(), impl);
+  nsAutoString voidString;
+  voidString.SetIsVoid(true);
+  AddNameFilePair(aName, file, voidString);
 }
 
 void
@@ -264,10 +286,11 @@ nsFormData::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
 {
   nsFSMultipartFormData fs(NS_LITERAL_CSTRING("UTF-8"), nullptr);
 
+  nsAutoString voidString;
+  voidString.SetIsVoid(true);
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
     if (mFormData[i].valueIsFile) {
-      fs.AddNameFilePair(mFormData[i].name, mFormData[i].fileValue,
-                         mFormData[i].filename);
+      fs.AddNameFilePair(mFormData[i].name, mFormData[i].fileValue, voidString);
     }
     else {
       fs.AddNameValuePair(mFormData[i].name, mFormData[i].stringValue);

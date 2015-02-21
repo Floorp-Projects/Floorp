@@ -39,7 +39,6 @@ private:
     nsString name;
     nsString stringValue;
     nsRefPtr<File> fileValue;
-    nsString filename;
     bool valueIsFile;
   };
 
@@ -66,7 +65,6 @@ private:
     MOZ_ASSERT(aData);
     aData->name = aName;
     aData->fileValue = aBlob;
-    aData->filename = aFilename;
     aData->valueIsFile = true;
   }
 

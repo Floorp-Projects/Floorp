@@ -97,6 +97,21 @@ function testIterate() {
   todo(false, "Implement this in Bug 1085284.");
 }
 
+function testFilename() {
+  var f = new FormData();
+  // Spec says if a Blob (which is not a File) is added, the name parameter is effectively ignored, always set to "blob".
+  f.append("blob", new Blob(["hi"]), "blob1.txt");
+  is(f.get("blob").name, "blob", "Blob's filename should be blob irrespective of what was passed.");
+
+  // Spec says if a File is added, the name parameter is respected if passed.
+  f.append("file1", new File(["hi"], "file1.txt"));
+  is(f.get("file1").name, "file1.txt", "File's filename should be original's name if no filename is explicitly passed.");
+  f.append("file2", new File(["hi"], "file2.txt"), "fakename.txt");
+  is(f.get("file2").name, "fakename.txt", "File's filename should be explicitly passed name.");
+  f.append("file3", new File(["hi"], ""));
+  is(f.get("file3").name, "", "File's filename is returned even if empty.");
+}
+
 function testSend() {
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "form_submit_server.sjs");
@@ -112,10 +127,10 @@ function testSend() {
             'form-data; name="empty"; filename="blob"');
 
         is(response[1].headers['Content-Disposition'],
-            'form-data; name="explicit"; filename="explicit-file-name"');
+            'form-data; name="explicit"; filename="blob"');
 
         is(response[2].headers['Content-Disposition'],
-            'form-data; name="explicit-empty"; filename=""');
+            'form-data; name="explicit-empty"; filename="blob"');
 
         is(response[3].headers['Content-Disposition'],
             'form-data; name="file-name"; filename="testname"');
@@ -133,10 +148,13 @@ function testSend() {
 
     var fd = new FormData();
     fd.append("empty", blob);
-    fd.append("explicit", blob, "explicit-file-name");
+    fd.append("explicit", blob, "explicit-file-name-will-be-ignored");
     fd.append("explicit-empty", blob, "");
     file = new File([blob], 'testname',  {type: 'text/plain'});
     fd.append("file-name", file);
+    // XXXnsm Empty filename will get converted to "blob" when sending to
+    // server, which I guess is acceptable since no spec seems to define
+    // anything. Blink does the same.
     file = new File([blob], '',  {type: 'text/plain'});
     fd.append("empty-file-name", file);
     file = new File([blob], 'testname',  {type: 'text/plain'});
@@ -152,6 +170,7 @@ function runTest() {
   testDelete();
   testSet();
   testIterate();
+  testFilename();
   // Finally, send an XHR and verify the response matches.
   testSend();
 }
