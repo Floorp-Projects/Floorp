@@ -747,6 +747,11 @@ HandleException(ResumeFromException *rfe)
 
     JitActivation *activation = cx->runtime()->activation()->asJit();
 
+#ifdef CHECK_OSIPOINT_REGISTERS
+    if (js_JitOptions.checkOsiPointRegisters)
+        activation->setCheckRegs(false);
+#endif
+
     // The Debugger onExceptionUnwind hook (reachable via
     // HandleExceptionBaseline below) may cause on-stack recompilation of
     // baseline scripts, which may patch return addresses on the stack. Since
