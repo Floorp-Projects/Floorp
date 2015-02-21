@@ -107,6 +107,10 @@ function runTest() {
       } else {
         addChildRanges([[0,160,0,170]], e);
       }
+    } else if (test == "#prev8") {
+      if (op == "AD") {
+        addChildRanges([[0,150,0,155], [0,68,0,70]], e);
+      }
     }
   } else {
     if (test == "#next1") {
@@ -144,6 +148,10 @@ function runTest() {
         addChildRanges([[0,168,0,170]], e);
       } else {
         sel.extend(e.firstChild, 170);
+      }
+    } else if (test == "#next8") {
+      if (op == "AD") {
+        addChildRanges([[0,68,0,70], [0,150,0,155]], e);
       }
     }
   }
