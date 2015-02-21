@@ -49,6 +49,7 @@ function run_test() {
 
   gPrefs.setBoolPref(GMPScope.KEY_LOGGING_DUMP, true);
   gPrefs.setIntPref(GMPScope.KEY_LOGGING_LEVEL, 0);
+  gPrefs.setBoolPref(GMPScope.KEY_EME_ENABLED, true);
   for (let addon of gMockAddons.values()) {
     gPrefs.setBoolPref(gGetKey(GMPScope.KEY_PLUGIN_HIDDEN, addon.id), false);
   }
@@ -190,7 +191,7 @@ add_task(function* test_globalEmeDisabled() {
     Assert.equal(addon.permissions, AddonManager.PERM_CAN_UPGRADE |
                                     AddonManager.PERM_CAN_ENABLE);
   }
-  gPrefs.clearUserPref(GMPScope.KEY_EME_ENABLED);
+  gPrefs.setBoolPref(GMPScope.KEY_EME_ENABLED, true);
   GMPScope.GMPProvider.shutdown();
   GMPScope.GMPProvider.startup();
 });

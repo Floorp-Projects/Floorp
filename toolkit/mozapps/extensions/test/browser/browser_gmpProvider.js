@@ -117,6 +117,7 @@ add_task(function* initializeState() {
 
   // Start out with plugins not being installed, disabled and automatic updates
   // disabled.
+  gPrefs.setBoolPref(GMPScope.KEY_EME_ENABLED, true);
   for (let addon of gMockAddons) {
     gPrefs.setBoolPref(getKey(GMPScope.KEY_PLUGIN_ENABLED, addon.id), false);
     gPrefs.setIntPref(getKey(GMPScope.KEY_PLUGIN_LAST_UPDATE, addon.id), 0);
@@ -257,7 +258,7 @@ add_task(function* testInstalledGlobalEmeDisabled() {
     let neverActivate = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "never-activate-menuitem");
     is(menu.selectedItem, neverActivate, "Plugin state should be never-activate.");
   }
-  gPrefs.clearUserPref(GMPScope.KEY_EME_ENABLED);
+  gPrefs.setBoolPref(GMPScope.KEY_EME_ENABLED, true);
 });
 
 add_task(function* testInstalledGlobalEmeDisabledDetails() {
@@ -289,7 +290,7 @@ add_task(function* testInstalledGlobalEmeDisabledDetails() {
     is_element_hidden(menuSep, "Menu separator is hidden.");
     contextMenu.hidePopup();
   }
-  gPrefs.clearUserPref(GMPScope.KEY_EME_ENABLED);
+  gPrefs.setBoolPref(GMPScope.KEY_EME_ENABLED, true);
 });
 
 add_task(function* testPreferencesButton() {
