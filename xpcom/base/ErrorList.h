@@ -519,6 +519,9 @@
   ERROR(NS_ERROR_DOM_QUOTA_REACHED,                FAILURE(1014)),
   ERROR(NS_ERROR_DOM_JS_EXCEPTION,                 FAILURE(1015)),
 
+  /* A way to represent uncatchable exceptions */
+  ERROR(NS_ERROR_UNCATCHABLE_EXCEPTION,            FAILURE(1016)),
+
   /* May be used to indicate when e.g. setting a property value didn't
    * actually change the value, like for obj.foo = "bar"; obj.foo = "bar";
    * the second assignment throws NS_SUCCESS_DOM_NO_OPERATION.
