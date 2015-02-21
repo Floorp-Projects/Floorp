@@ -3,9 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-#include "pkix/pkix.h"
 #include "pkixgtest.h"
-#include "pkixtestutil.h"
 
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
@@ -45,7 +43,7 @@ CreateCert(const char* issuerCN,
   return certDER;
 }
 
-class AlgorithmTestsTrustDomain final : public TrustDomain
+class AlgorithmTestsTrustDomain final : public DefaultCryptoTrustDomain
 {
 public:
   AlgorithmTestsTrustDomain(const ByteString& rootDER,
@@ -101,35 +99,6 @@ private:
   Result IsChainValid(const DERArray&, Time) override
   {
     return Success;
-  }
-
-  Result DigestBuf(Input input, DigestAlgorithm digestAlg,
-                   /*out*/ uint8_t* digestBuf, size_t digestLen) override
-  {
-    return TestDigestBuf(input, digestAlg, digestBuf, digestLen);
-  }
-
-  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
-                                            override
-  {
-    return Success;
-  }
-
-  Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
-                                    Input subjectPublicKeyInfo) override
-  {
-    return TestVerifyRSAPKCS1SignedDigest(signedDigest, subjectPublicKeyInfo);
-  }
-
-  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
-  {
-    return Success;
-  }
-
-  Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
-                                 Input subjectPublicKeyInfo) override
-  {
-    return TestVerifyECDSASignedDigest(signedDigest, subjectPublicKeyInfo);
   }
 
   ByteString rootDER;
