@@ -39,7 +39,6 @@ private:
     nsString name;
     nsString stringValue;
     nsRefPtr<File> fileValue;
-    nsString filename;
     bool valueIsFile;
   };
 
@@ -60,13 +59,11 @@ private:
 
   void SetNameFilePair(FormDataTuple* aData,
                        const nsAString& aName,
-                       File* aBlob,
-                       const nsAString& aFilename)
+                       File* aBlob)
   {
     MOZ_ASSERT(aData);
     aData->name = aName;
     aData->fileValue = aBlob;
-    aData->filename = aFilename;
     aData->valueIsFile = true;
   }
 
@@ -117,11 +114,10 @@ public:
     return NS_OK;
   }
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   File* aBlob,
-                                   const nsString& aFilename) MOZ_OVERRIDE
+                                   File* aBlob) MOZ_OVERRIDE
   {
     FormDataTuple* data = mFormData.AppendElement();
-    SetNameFilePair(data, aName, aBlob, aFilename);
+    SetNameFilePair(data, aName, aBlob);
     return NS_OK;
   }
 private:
