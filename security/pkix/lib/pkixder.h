@@ -600,7 +600,7 @@ OptionalExtensions(Reader& input, uint8_t tag,
 Result DigestAlgorithmIdentifier(Reader& input,
                                  /*out*/ DigestAlgorithm& algorithm);
 
-enum PublicKeyAlgorithm
+enum class PublicKeyAlgorithm
 {
   RSA_PKCS1,
   ECDSA,

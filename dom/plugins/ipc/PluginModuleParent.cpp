@@ -897,6 +897,13 @@ CreateFlashMinidump(DWORD processId, ThreadId childThread,
 bool
 PluginModuleChromeParent::ShouldContinueFromReplyTimeout()
 {
+    if (mIsFlashPlugin) {
+        MessageLoop::current()->PostTask(
+            FROM_HERE,
+            mTaskFactory.NewRunnableMethod(
+                &PluginModuleChromeParent::NotifyFlashHang));
+    }
+
 #ifdef XP_WIN
     if (LaunchHangUI()) {
         return true;
@@ -1277,6 +1284,15 @@ PluginModuleChromeParent::ActorDestroy(ActorDestroyReason why)
     UnregisterSettingsCallbacks();
 
     PluginModuleParent::ActorDestroy(why);
+}
+
+void
+PluginModuleParent::NotifyFlashHang()
+{
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (obs) {
+        obs->NotifyObservers(nullptr, "flash-plugin-hang", nullptr);
+    }
 }
 
 void

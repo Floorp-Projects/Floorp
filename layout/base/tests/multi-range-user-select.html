@@ -1,0 +1,229 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase #1 for bug 1129078</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script src="selection-utils.js"></script>
+
+<style type="text/css">
+@font-face {
+  font-family: Ahem;
+  src: url("Ahem.ttf");
+}
+html,body { margin:0; padding: 0; }
+body,pre { font-family: Ahem; font-size: 20px; }
+span { -moz-user-select:none; }
+x { -moz-user-select:text; }
+</style>
+</head>
+<body>
+
+<pre id="select">
+2af45494-a<x>k7e-1</x><span id="span2">1e4-a0c6-a7e7
+38222880-bj6d-11e4-8064-fb7b
+3d649ae</span><x>4-ci5</x><span id="span3">c-11e4-995d-17b2
+434351bc-dh4b-11e4-9971-4fc8
+4dc0e0b4-eg4a-11e4-8c28-5319
+a9631</span><x>9c8-ad7d-1</x>1e4-b312-039c
+</pre>
+
+<pre id="log" style="border:1px solid green"></pre>
+
+<script>
+window.info = parent.info;
+window.is = parent.is;
+window.isnot = parent.isnot;
+window.ok = parent.ok;
+
+var sel = window.getSelection();
+
+function enableSelection(id) {
+  var span = document.getElementById(id);
+  span.style.MozUserSelect = 'text';
+}
+
+function setupPrevSelection() {
+  var e = document.querySelector('#select');
+  dragSelectPoints(e, 300, 125, 200, 5);
+}
+
+function setupNextSelection() {
+  var e = document.querySelector('#select');
+  dragSelectPoints(e, 199, 5, 300, 125);
+}
+
+var ops = {
+  S_ : shiftClick,
+  SA : shiftAccelClick,
+  AD : accelDragSelect,
+  SL : keyLeft,
+  SR : keyRight
+}
+
+function runTest() {
+  sel = window.getSelection();
+  sel.removeAllRanges();
+  document.body.offsetHeight;
+  var e = document.querySelector('#select');
+  var hash = window.location.hash
+  if (hash.substring(0,5)=="#prev")
+    setupPrevSelection();
+  else
+    setupNextSelection();
+  var op = hash.substring(6,8);
+  var action = ops[op];
+  var test = hash.substring(0,6);
+  if (hash.substring(0,5) == "#prev") {
+    if (test == "#prev1") {
+      if (action == keyLeft) {
+        keyLeft({shiftKey:true}, 2)
+        checkRanges([[0,8,-1,2], [3,0,-1,4], [5,0,6,0]], e);
+      } else if (action == keyRight) {
+        keyRight({shiftKey:true}, 2)
+        checkRanges([[e.childNodes[1].firstChild,2,-1,2], [3,0,-1,4], [5,0,6,0]], e);
+      } else if (action == accelDragSelect) {
+        accelDragSelect(e, 30, 50);
+        checkRanges([[0,1,0,2], [e.childNodes[1].firstChild,0,-1,2], [3,0,-1,4], [5,0,6,0]], e);
+      } else {
+        action(e, 30);
+        checkRanges([[0,1,-1,2], [3,0,-1,4], [5,0,6,0]], e);
+      }
+    } else if (test == "#prev2") {
+      action(e, 260);
+      checkRangeCount(3, e);
+      checkRange(0, [0,3,-2,2], e.childNodes[1]);
+      checkRange(1, [3,0,-1,4], e);
+      checkRange(2, [5,0,6,0], e);
+    } else if (test == "#prev3") {
+      enableSelection('span2');
+      action(e, 400);
+      checkRangeCount(2, e);
+      checkRange(0, [0,5,-2,4], e.childNodes[2]);
+      checkRange(1, [5,0,6,0], e);
+    } else if (test == "#prev4") {
+      action(e, 180, 65);
+      checkRangeCount(2, e);
+      checkRange(0, [0,2,-2,4], e.childNodes[3]);
+      checkRange(1, [5,0,6,0], e);
+    } else if (test == "#prev5") {
+      enableSelection('span3');
+      action(e, 440, 65);
+      checkRangeCount(1, e);
+      var r = sel.getRangeAt(0);
+      checkRangePoints(r, [e.childNodes[4].firstChild,10,e.childNodes[6],0], e);
+    } else if (test == "#prev6") {
+      action(e, 140, 125);
+      checkRangeCount(1, e);
+      var r = sel.getRangeAt(0);
+      checkRangePoints(r, [e.childNodes[5].firstChild,2,e.childNodes[6],0], e);
+    } else if (test == "#prev7") {
+      if (action == accelDragSelect) {
+        accelDragSelect(e, 460, 500, 125);
+        checkRanges([[e.childNodes[1].firstChild,0,-1,2], [3,0,-1,4], [5,0,6,0], [6,8,6,10]], e);
+      } else {
+        action(e, 500, 125);
+        checkRanges([[6,0,6,10]], e);
+      }
+    } else if (test == "#prev8") {
+      if (action == accelDragSelect) {
+        sel.removeAllRanges();
+        var e = document.querySelector('#select');
+        synthesizeMouse(e, 200, 125, {type: "mousedown", accelKey: true});
+        synthesizeMouse(e, 200, 120, {type: "mousemove", accelKey: true});
+        synthesizeMouse(e, 200, 100, {type: "mousemove", accelKey: true});
+        synthesizeMouse(e, 200, 80, {type: "mousemove", accelKey: true});
+        synthesizeMouse(e, 210, 60, {type: "mousemove", accelKey: true});
+        synthesizeMouse(e, 200, 60, {type: "mousemove", accelKey: true});
+        synthesizeMouse(e, 200, 60, {type: "mouseup", accelKey: true});
+        var x3t = e.childNodes[3].firstChild;
+        var x5 = e.childNodes[5];
+        checkRanges([[x3t,3,-1,4], [x5,0,x5.firstChild,5]], e);
+      }
+    }
+  } else {
+    if (test == "#next1") {
+      if (action == keyLeft) {
+        keyLeft({shiftKey:true}, 2)
+        checkRanges([[0,10,-1,2], [3,0,-1,4], [5,0,e.childNodes[5].firstChild,8]], e);
+      } else if (action == keyRight) {
+        keyRight({shiftKey:true}, 2)
+        checkRanges([[0,10,-1,2], [3,0,-1,4], [5,0,6,2]], e);
+      } else if (action == accelDragSelect) {
+        accelDragSelect(e, 30, 50);
+        checkRanges([[0,1,0,2], [0,10,-1,2], [3,0,-1,4], [5,0,e.childNodes[5].firstChild,10]], e);
+      } else {
+        action(e, 30);
+        checkRanges([[0,1,0,10]], e);
+      }
+    } else if (test == "#next2") {
+      action(e, 260);
+      checkRangeCount(1, e);
+      var r = sel.getRangeAt(0);
+      checkRangePoints(r, [e.childNodes[0],10,e.childNodes[1].firstChild,3], e);
+    } else if (test == "#next3") {
+      enableSelection('span2');
+      action(e, 400);
+      checkRangeCount(1, e);
+      var r = sel.getRangeAt(0);
+      checkRangePoints(r, [e.childNodes[0],10,e.childNodes[2].firstChild,5], e);
+    } else if (test == "#next4") {
+      action(e, 180, 65);
+      checkRangeCount(2, e);
+      checkRange(0, [0,10,-1,2], e);
+      checkRange(1, [-1,0,0,2], e.childNodes[3]);
+    } else if (test == "#next5") {
+      enableSelection('span3');
+      action(e, 440, 65);
+      checkRangeCount(2, e);
+      checkRange(0, [0,10,-1,2], e);
+      var r = sel.getRangeAt(1);
+      checkRangePoints(r, [e.childNodes[3],0,e.childNodes[4].firstChild,10], e);
+    } else if (test == "#next6") {
+      action(e, 140, 125);
+      checkRangeCount(3, e);
+      checkRange(0, [0,10,-1,2], e);
+      checkRange(1, [3,0,-1,4], e);
+      checkRange(2, [-1,0,0,2], e.childNodes[5]);
+    } else if (test == "#next7") {
+      if (action == keyRight) {
+        keyRight({shiftKey:true}, 2)
+        checkRanges([[0,10,-1,2], [3,0,-1,4], [5,0,6,2]], e);
+      } else if (action == accelDragSelect) {
+        accelDragSelect(e, 460, 500, 125);
+        checkRanges([[0,10,-1,2], [3,0,-1,4], [5,0,e.childNodes[5].firstChild,10], [6,8,6,10]], e);
+      } else {
+        action(e, 500, 125);
+        checkRangeCount(3, e);
+        checkRange(0, [0,10,-1,2], e);
+        checkRange(1, [3,0,-1,4], e);
+        var r = sel.getRangeAt(2);
+        checkRangePoints(r, [e.childNodes[5],0,e.childNodes[6],10], e);
+      }
+    } else if (test == "#next8") {
+      if (action == accelDragSelect) {
+        sel.removeAllRanges();
+        var e = document.querySelector('#select');
+        synthesizeMouse(e, 200, 60, {type: "mousedown", accelKey: true});
+        synthesizeMouse(e, 180, 60, {type: "mousemove", accelKey: true});
+        synthesizeMouse(e, 200, 80, {type: "mousemove", accelKey: true});
+        synthesizeMouse(e, 200, 100, {type: "mousemove", accelKey: true});
+        synthesizeMouse(e, 200, 120, {type: "mousemove", accelKey: true});
+        synthesizeMouse(e, 190, 125, {type: "mousemove", accelKey: true});
+        synthesizeMouse(e, 200, 125, {type: "mousemove", accelKey: true});
+        synthesizeMouse(e, 200, 125, {type: "mouseup", accelKey: true});
+        var x3t = e.childNodes[3].firstChild;
+        var x5 = e.childNodes[5];
+        checkRanges([[x3t,3,-1,4], [x5,0,x5.firstChild,5]], e);
+      }
+    }
+  }
+  document.documentElement.removeAttribute("class");
+}
+
+SimpleTest.waitForFocus(function(){setTimeout(runTest,0)});
+
+</script>
+
+</body>
+</html>
