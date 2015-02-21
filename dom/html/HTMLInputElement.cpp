@@ -5709,13 +5709,13 @@ HTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
     const nsTArray<nsRefPtr<File>>& files = GetFilesInternal();
 
     for (uint32_t i = 0; i < files.Length(); ++i) {
-      aFormSubmission->AddNameFilePair(name, files[i], NullString());
+      aFormSubmission->AddNameFilePair(name, files[i]);
     }
 
     if (files.IsEmpty()) {
       // If no file was selected, pretend we had an empty file with an
       // empty filename.
-      aFormSubmission->AddNameFilePair(name, nullptr, NullString());
+      aFormSubmission->AddNameFilePair(name, nullptr);
 
     }
 
