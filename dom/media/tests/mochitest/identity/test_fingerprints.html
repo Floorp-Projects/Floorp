@@ -15,8 +15,8 @@ function getIdentityAssertion(fpArray) {
   var sandbox = new rtcid.IdpSandbox('example.com', 'idp.js');
   return sandbox.start()
     .then(idp => SpecialPowers.wrap(idp)
-          .generateAssertion(JSON.stringify({ fingerprint: fpArray }),
-                             'https://example.com'))
+                   .generateAssertion(JSON.stringify({ fingerprint: fpArray }),
+                                      'https://example.com'))
     .then(assertion => {
       assertion = SpecialPowers.wrap(assertion);
       var assertionString = btoa(JSON.stringify(assertion));

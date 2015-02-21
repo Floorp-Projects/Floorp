@@ -15,7 +15,7 @@
     this.domain = global.location.host;
     var path = global.location.pathname;
     this.protocol =
-      path.substring(p.lastIndexOf('/') + 1) + global.location.hash;
+      path.substring(path.lastIndexOf('/') + 1) + global.location.hash;
   }
 
   function borkResult(result) {
@@ -24,6 +24,12 @@
     }
     if (instructions.some(is("fail"))) {
       return Promise.reject(new Error('Failing!'));
+    }
+    if (instructions.some(is("loginerror"))) {
+      return Promise.reject({
+        name: 'IdpLoginError',
+        loginUrl: 'https://example.com/log/in/here'
+      });
     }
     if (instructions.some(is("hang"))) {
       return new Promise(r => {});
