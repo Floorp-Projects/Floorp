@@ -22,7 +22,7 @@ function ifTestingSupported() {
     "A snapshot actor was sent after recording.");
 
   let animationOverview = yield snapshotActor.getOverview();
-  ok(snapshotActor,
+  ok(animationOverview,
     "An animation overview could be retrieved after recording.");
 
   let thumbnails = animationOverview.thumbnails;
