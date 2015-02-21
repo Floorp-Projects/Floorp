@@ -389,11 +389,13 @@ RTCPeerConnection.prototype = {
   _initIdp: function() {
     let prefName = "media.peerconnection.identity.timeout";
     let idpTimeout = Services.prefs.getIntPref(prefName);
-    let warningFunc = this.logWarning.bind(this);
-    this._localIdp = new PeerConnectionIdp(this._win, idpTimeout, warningFunc,
-                                           this.dispatchEvent.bind(this));
-    this._remoteIdp = new PeerConnectionIdp(this._win, idpTimeout, warningFunc,
-                                            this.dispatchEvent.bind(this));
+    let warn = this.logWarning.bind(this);
+    let idpErrorReport = (type, args) => {
+      this.dispatchEvent(
+        new this._win.RTCPeerConnectionIdentityErrorEvent(type, args));
+    };
+    this._localIdp = new PeerConnectionIdp(idpTimeout, warn, idpErrorReport);
+    this._remoteIdp = new PeerConnectionIdp(idpTimeout, warn, idpErrorReport);
   },
 
   // Add a function to the internal operations chain.
@@ -706,23 +708,22 @@ RTCPeerConnection.prototype = {
           this._impl.setRemoteDescription(type, desc.sdp);
         });
 
-        let pp = new Promise(resolve =>
-            this._remoteIdp.verifyIdentityFromSDP(desc.sdp, origin, resolve))
-        .then(msg => {
-          // If this pc has an identity already, then identity in sdp must match
-          if (expectedIdentity && (!msg || msg.identity !== expectedIdentity)) {
-            throw new this._win.DOMException(
-                "Peer Identity mismatch, expected: " + expectedIdentity,
-                "IncompatibleSessionDescriptionError");
-          }
-          if (msg) {
-            // Set new identity and generate an event.
-            this._impl.peerIdentity = msg.identity;
-            this._peerIdentity = new this._win.RTCIdentityAssertion(
-              this._remoteIdp.provider, msg.identity);
-            this.dispatchEvent(new this._win.Event("peeridentity"));
-          }
-        });
+        let pp = this._remoteIdp.verifyIdentityFromSDP(desc.sdp, origin)
+            .then(msg => {
+              // If this pc has an identity already, then identity in sdp must match
+              if (expectedIdentity && (!msg || msg.identity !== expectedIdentity)) {
+                throw new this._win.DOMException(
+                  "Peer Identity mismatch, expected: " + expectedIdentity,
+                  "IncompatibleSessionDescriptionError");
+              }
+              if (msg) {
+                // Set new identity and generate an event.
+                this._impl.peerIdentity = msg.identity;
+                this._peerIdentity = new this._win.RTCIdentityAssertion(
+                  this._remoteIdp.provider, msg.identity);
+                this.dispatchEvent(new this._win.Event("peeridentity"));
+              }
+            });
         // Only wait for Idp validation if we need identity matching.
         return expectedIdentity? this._win.Promise.all([p, pp]).then(() => {}) : p;
       });
@@ -734,7 +735,10 @@ RTCPeerConnection.prototype = {
     this._localIdp.setIdentityProvider(provider, protocol, username);
   },
 
-  _gotIdentityAssertion: function(assertion){
+  _gotIdentityAssertion: function(assertion) {
+    if (!assertion) {
+      return;
+    }
     let args = { assertion: assertion };
     let ev = new this._win.RTCPeerConnectionIdentityEvent("identityresult", args);
     this.dispatchEvent(ev);
@@ -743,14 +747,8 @@ RTCPeerConnection.prototype = {
   getIdentityAssertion: function() {
     this._checkClosed();
 
-    var gotAssertion = assertion => {
-      if (assertion) {
-        this._gotIdentityAssertion(assertion);
-      }
-    };
-
-    this._localIdp.getIdentityAssertion(this._impl.fingerprint,
-                                        gotAssertion);
+    this._localIdp.getIdentityAssertion(this._impl.fingerprint)
+      .then(assertion => this._gotIdentityAssertion(assertion));
   },
 
   updateIce: function(config) {
@@ -888,7 +886,7 @@ RTCPeerConnection.prototype = {
       return null;
     }
 
-    sdp = this._localIdp.wrapSdp(sdp);
+    sdp = this._localIdp.addIdentityAttribute(sdp);
     return new this._win.mozRTCSessionDescription({ type: this._localType,
                                                     sdp: sdp });
   },
@@ -1042,15 +1040,20 @@ PeerConnectionObserver.prototype = {
 
   onCreateOfferSuccess: function(sdp) {
     let pc = this._dompc;
-    let fp = pc._impl.fingerprint;
-    let origin = Cu.getWebIDLCallerPrincipal().origin;
-    pc._localIdp.appendIdentityToSDP(sdp, fp, origin, function(sdp, assertion) {
-      if (assertion) {
-        pc._gotIdentityAssertion(assertion);
-      }
+    let idp = pc._localIdp;
+
+    if (idp.enabled) {
+      idp.getIdentityAssertion(pc._impl.fingerprint)
+        .then(assertion => {
+          pc._gotIdentityAssertion(assertion);
+          sdp = idp.addIdentityAttribute(sdp);
+          pc._onCreateOfferSuccess(new pc._win.mozRTCSessionDescription({ type: "offer",
+                                                                          sdp: sdp }));
+        }, e => {}); // errors are handled in the IdP
+    } else {
       pc._onCreateOfferSuccess(new pc._win.mozRTCSessionDescription({ type: "offer",
                                                                       sdp: sdp }));
-    }.bind(this));
+    }
   },
 
   onCreateOfferError: function(code, message) {
@@ -1059,15 +1062,20 @@ PeerConnectionObserver.prototype = {
 
   onCreateAnswerSuccess: function(sdp) {
     let pc = this._dompc;
-    let fp = pc._impl.fingerprint;
-    let origin = Cu.getWebIDLCallerPrincipal().origin;
-    pc._localIdp.appendIdentityToSDP(sdp, fp, origin, function(sdp, assertion) {
-      if (assertion) {
-        pc._gotIdentityAssertion(assertion);
-      }
+    let idp = pc._localIdp;
+
+    if (idp.enabled) {
+      idp.getIdentityAssertion(pc._impl.fingerprint)
+        .then(assertion => {
+          pc._gotIdentityAssertion(assertion);
+          sdp = idp.addIdentityAttribute(sdp);
+          pc._onCreateAnswerSuccess(new pc._win.mozRTCSessionDescription({ type: "answer",
+                                                                           sdp: sdp }));
+        }, e => {});
+    } else {
       pc._onCreateAnswerSuccess(new pc._win.mozRTCSessionDescription({ type: "answer",
                                                                        sdp: sdp }));
-    }.bind(this));
+    }
   },
 
   onCreateAnswerError: function(code, message) {
