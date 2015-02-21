@@ -466,15 +466,11 @@ nsresult
 AppleATDecoder::GetImplicitAACMagicCookie(const mp4_demuxer::MP4Sample* aSample)
 {
   // Prepend ADTS header to AAC audio.
-  nsAutoPtr<mp4_demuxer::MP4Sample> adtssample(aSample->Clone());
-  if (!adtssample) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
+  mp4_demuxer::MP4Sample adtssample(*aSample);
   bool rv = mp4_demuxer::Adts::ConvertSample(mConfig.channel_count,
                                              mConfig.frequency_index,
                                              mConfig.aac_profile,
-                                             adtssample);
+                                             &adtssample);
   if (!rv) {
     NS_WARNING("Failed to apply ADTS header");
     return NS_ERROR_FAILURE;
@@ -492,8 +488,8 @@ AppleATDecoder::GetImplicitAACMagicCookie(const mp4_demuxer::MP4Sample* aSample)
   }
 
   OSStatus status = AudioFileStreamParseBytes(mStream,
-                                              adtssample->size,
-                                              adtssample->data,
+                                              adtssample.size,
+                                              adtssample.data,
                                               0 /* discontinuity */);
   if (status) {
     NS_WARNING("Couldn't parse sample");
