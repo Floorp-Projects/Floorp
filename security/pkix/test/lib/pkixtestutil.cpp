@@ -173,6 +173,22 @@ static ByteString CertID(OCSPResponseContext& context);
 static ByteString CertStatus(OCSPResponseContext& context);
 
 static ByteString
+SHA1(const ByteString& toHash)
+{
+  uint8_t digestBuf[20];
+  Input input;
+  if (input.Init(toHash.data(), toHash.length()) != Success) {
+    abort();
+  }
+  Result rv = TestDigestBuf(input, DigestAlgorithm::sha1, digestBuf,
+                            sizeof(digestBuf));
+  if (rv != Success) {
+    abort();
+  }
+  return ByteString(digestBuf, sizeof(digestBuf));
+}
+
+static ByteString
 HashedOctetString(const ByteString& bytes)
 {
   ByteString digest(SHA1(bytes));

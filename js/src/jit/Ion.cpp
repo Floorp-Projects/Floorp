@@ -2459,6 +2459,11 @@ InvalidateActivation(FreeOp *fop, const JitActivationIterator &activations, bool
 {
     JitSpew(JitSpew_IonInvalidate, "BEGIN invalidating activation");
 
+#ifdef CHECK_OSIPOINT_REGISTERS
+    if (js_JitOptions.checkOsiPointRegisters)
+        activations->asJit()->setCheckRegs(false);
+#endif
+
     size_t frameno = 1;
 
     for (JitFrameIterator it(activations); !it.done(); ++it, ++frameno) {

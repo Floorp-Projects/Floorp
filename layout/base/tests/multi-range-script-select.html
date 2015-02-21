@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase #1 for bug 1129078</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script src="selection-utils.js"></script>
+
+<style type="text/css">
+@font-face {
+  font-family: Ahem;
+  src: url("Ahem.ttf");
+}
+html,body { margin:0; padding: 0; }
+body,pre { font-family: Ahem; font-size: 20px; }
+</style>
+</head>
+<body>
+
+<pre id="select">
+2af45494-ak7e-11e4-a0c6-a7e7
+38222880-bj6d-11e4-8064-fb7b
+3d649ae4-ci5c-11e4-995d-17b2
+434351bc-dh4b-11e4-9971-4fc8
+4dc0e0b4-eg4a-11e4-8c28-5319
+a96319c8-ad7d-11e4-b312-039c
+</pre>
+
+<pre id="log" style="border:1px solid green"></pre>
+
+<script>
+window.info = parent.info;
+window.is = parent.is;
+window.isnot = parent.isnot;
+window.ok = parent.ok;
+
+function setupPrevSelection() {
+  var sel = window.getSelection();
+  var e = document.querySelector('#select');
+  addChildRanges([[0,150,0,160], [0,65,0,70], [0,15,0,15]], e);
+  sel.extend(e.firstChild, 10);  // to get eDirPrevious direction
+}
+
+function setupNextSelection() {
+  var sel = window.getSelection();
+  var e = document.querySelector('#select');
+  addChildRanges([[0,10,0,15], [0,65,0,70], [0,150,0,160]], e);
+}
+
+var ops = {
+  S_ : shiftClick,
+  SA : shiftAccelClick,
+  AD : accelDragSelect,
+  SL : keyLeft,
+  SR : keyRight
+}
+
+function runTest() {
+  var e = document.querySelector('#select');
+  var hash = window.location.hash
+  if (hash.substring(0,5)=="#prev")
+    setupPrevSelection();
+  else
+    setupNextSelection();
+  var op = hash.substring(6,8);
+  var action = ops[op];
+  var test = hash.substring(0,6);
+  if (hash.substring(0,5) == "#prev") {
+    if (test == "#prev1") {
+      if (action == keyLeft) {
+        keyLeft({shiftKey:true}, 2)
+        checkRanges([[0,8,0,15], [0,65,0,70], [0,150,0,160]], e);
+      } else if (action == keyRight) {
+        keyRight({shiftKey:true}, 2)
+        checkRanges([[0,12,0,15], [0,65,0,70], [0,150,0,160]], e);
+      } else if (action == accelDragSelect) {
+        accelDragSelect(e, 30, 50);
+        checkRanges([[0,1,0,2], [0,10,0,15], [0,65,0,70], [0,150,0,160]], e);
+      } else {
+        action(e, 30);
+        checkRanges([[0,1,0,15], [0,65,0,70], [0,150,0,160]], e);
+      }
+    } else if (test == "#prev2") {
+      action(e, 260);
+      checkRanges([[0,13,0,15], [0,65,0,70], [0,150,0,160]], e);
+    } else if (test == "#prev3") {
+      action(e, 400);
+      if (action == shiftClick)
+        checkRanges([[0,15,0,20], [0,65,0,70], [0,150,0,160]], e);
+      else if (action == shiftAccelClick)
+        checkRanges([[0,15,0,20], [0,65,0,70], [0,150,0,160]], e);
+    } else if (test == "#prev4") {
+      action(e, 180, 65);
+      if (action == shiftClick)
+        checkRanges([[0,15,0,67], [0,67,0,70], [0,150,0,160]], e);
+      else if (action == shiftAccelClick)
+        checkRanges([[0,15,0,67], [0,67,0,70], [0,150,0,160]], e); 
+     } else if (test == "#prev5") {
+      action(e, 440, 65);
+      if (action == shiftClick)
+        checkRanges([[0,15,0,80], [0,150,0,160]], e);
+      else if (action == shiftAccelClick)
+        checkRanges([[0,15,0,80], [0,150,0,160]], e);
+    } else if (test == "#prev6") {
+      action(e, 140, 125);
+      if (action == shiftClick)
+        checkRanges([[0,15,0,152], [0,152,0,160]], e);
+      else if (action == shiftAccelClick)
+        checkRanges([[0,15,0,152], [0,152,0,160]], e);
+    } else if (test == "#prev7") {
+      if (action == accelDragSelect) {
+        accelDragSelect(e, 460, 500, 125);
+        checkRanges([[0,10,0,15], [0,65,0,70], [0,150,0,160], [0,168,0,170]], e);
+      } else if (action == shiftClick) {
+        action(e, 500, 125);
+        checkRanges([[0,15,0,170]], e);
+      } else if (action == shiftAccelClick) {
+        action(e, 500, 125);
+        checkRanges([[0,15,0,170]], e);
+      }
+    }
+  } else {
+    if (test == "#next1") {
+      if (action == keyLeft) {
+        keyLeft({shiftKey:true}, 2)
+        checkRanges([[0,10,0,15], [0,65,0,70], [0,150,0,158]], e);
+      } else if (action == keyRight) {
+        keyRight({shiftKey:true}, 2)
+        checkRanges([[0,10,0,15], [0,65,0,70], [0,150,0,162]], e);
+      } else if (action == accelDragSelect) {
+        accelDragSelect(e, 30, 50);
+        checkRanges([[0,1,0,2], [0,10,0,15], [0,65,0,70], [0,150,0,160]], e);
+      } else {
+        action(e, 30);
+        checkRanges([[0,1,0,150]], e);
+      }
+    } else if (test == "#next2") {
+      action(e, 260);
+      checkRanges([[0,10,0,13], [0,13,0,150]], e);
+    } else if (test == "#next3") {
+      action(e, 400);
+      if (action == shiftClick)
+        checkRanges([[0,10,0,15], [0,20,0,150]], e);
+      else if (action == shiftAccelClick)
+        checkRanges([[0,10,0,15], [0,20,0,150]], e);
+    } else if (test == "#next4") {
+      action(e, 180, 65);
+      if (action == shiftClick)
+        checkRanges([[0,10,0,15], [0,65,0,67], [0,67,0,150]], e);
+      else if (action == shiftAccelClick)
+        checkRanges([[0,10,0,15], [0,65,0,67], [0,67,0,150]], e);
+     } else if (test == "#next5") {
+      action(e, 440, 65);
+      if (action == shiftClick)
+        checkRanges([[0,10,0,15], [0,65,0,70], [0,80,0,150]], e);
+      else if (action == shiftAccelClick)
+        checkRanges([[0,10,0,15], [0,65,0,70], [0,80,0,150]], e);
+    } else if (test == "#next6") {
+      action(e, 140, 125);
+      if (action == shiftClick)
+        checkRanges([[0,10,0,15], [0,65,0,70], [0,150,0,152]], e);
+      else if (action == shiftAccelClick)
+        checkRanges([[0,10,0,15], [0,65,0,70], [0,150,0,152]], e);
+    } else if (test == "#next7") {
+      if (action == accelDragSelect) {
+        accelDragSelect(e, 460, 500, 125);
+        checkRanges([[0,10,0,15], [0,65,0,70], [0,150,0,160], [0,168,0,170]], e);
+      } else if (action == shiftClick) {
+        action(e, 500, 125);
+        checkRanges([[0,10,0,15], [0,65,0,70], [0,150,0,170]], e);
+      } else if (action == shiftAccelClick) {
+        action(e, 500, 125);
+        checkRanges([[0,10,0,15], [0,65,0,70], [0,150,0,170]], e);
+      }
+    }
+  }
+  document.documentElement.removeAttribute("class");
+}
+
+SimpleTest.waitForFocus(runTest);
+
+</script>
+
+</body>
+</html>

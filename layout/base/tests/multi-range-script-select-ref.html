@@ -1,0 +1,173 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase #1 for bug 1129078</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="selection-utils.js"></script>
+
+<style type="text/css">
+@font-face {
+  font-family: Ahem;
+  src: url("Ahem.ttf");
+}
+html,body { margin:0; padding: 0; }
+body,pre { font-family: Ahem; font-size: 20px; }
+</style>
+</head>
+<body>
+
+<pre id="select">
+2af45494-ak7e-11e4-a0c6-a7e7
+38222880-bj6d-11e4-8064-fb7b
+3d649ae4-ci5c-11e4-995d-17b2
+434351bc-dh4b-11e4-9971-4fc8
+4dc0e0b4-eg4a-11e4-8c28-5319
+a96319c8-ad7d-11e4-b312-039c
+</pre>
+
+<pre id="log" style="border:1px solid green"></pre>
+
+<script>
+
+var sel = window.getSelection();
+var e = document.querySelector('#select');
+function setupSelectionPrev3() {
+  addChildRanges([[0,150,0,160], [0,65,0,70], [0,15,0,15]], e);
+  sel.extend(e.firstChild, 10);  // to get eDirPrevious direction
+}
+function setupSelectionPrev2() {
+  addChildRanges([[0,150,0,160], [0,70,0,70]], e);
+  sel.extend(e.firstChild, 65);  // to get eDirPrevious direction
+}
+function setupSelectionPrev1() {
+  addChildRanges([[0,160,0,160]], e);
+  sel.extend(e.firstChild, 150);  // to get eDirPrevious direction
+}
+
+function setupSelectionNext3() {
+  addChildRanges([[0,10,0,15], [0,65,0,70], [0,150,0,160]], e);
+}
+function setupSelectionNext2() {
+  addChildRanges([[0,10,0,15], [0,65,0,70]], e);
+}
+function setupSelectionNext2b() {
+  addChildRanges([[0,15,0,80], [0,150,0,160]], e);
+}
+function setupSelectionNext1() {
+  addChildRanges([[0,10,0,15]], e);
+}
+function setupSelectionNext1b() {
+  addChildRanges([[0,15,0,170]], e);
+}
+function setupSelectionNext1c() {
+  addChildRanges([[0,150,0,160]], e);
+}
+
+function runTest() {
+  var hash = window.location.hash
+  var op = hash.substring(6,8);
+  var test = hash.substring(0,6);
+  if (hash.substring(0,5) == "#prev") {
+    if (test == "#prev1") {
+      setupSelectionPrev3();
+      if (op == "SL") {
+        sel.extend(e.firstChild, 8);
+      } else if (op == "SR") {
+        sel.extend(e.firstChild, 12);
+      } else if (op == "AD") {
+        addChildRanges([[0,1,0,2]], e);
+      } else {
+        sel.extend(e.firstChild, 1);
+      }
+    } else if (test == "#prev2") {
+      setupSelectionPrev3();
+      sel.extend(e.firstChild, 13);
+    } else if (test == "#prev3") {
+      if (op == "S_") {
+        setupSelectionPrev3();
+        sel.extend(e.firstChild, 20);
+      } else if (op == "SA") {
+        setupSelectionPrev3();
+        sel.extend(e.firstChild, 20);
+      }
+    } else if (test == "#prev4") {
+      addChildRanges([[0,67,0,70], [0,150,0,160], [0,15,0,67]], e); 
+    } else if (test == "#prev5") {
+      if (op == "S_") {
+        setupSelectionNext2b();
+      } else if (op == "SA") {
+        setupSelectionNext2b();
+      }
+    } else if (test == "#prev6") {
+      addChildRanges([[0,152,0,160], [0,15,0,152]], e);
+    } else if (test == "#prev7") {
+      if (op == "AD") {
+        setupSelectionPrev3();
+        addChildRanges([[0,168,0,170]], e);
+      } else if (op == "S_") {
+        setupSelectionNext1b();
+      } else if (op == "SA") {
+        setupSelectionNext1b();
+      }
+    }
+  } else {
+    if (test == "#next1") {
+      if (op == "SL") {
+        setupSelectionNext3();
+        sel.extend(e.firstChild, 158);
+      } else if (op == "SR") {
+        setupSelectionNext3();
+        sel.extend(e.firstChild, 162);
+      } else if (op == "AD") {
+        setupSelectionNext3();
+        addChildRanges([[0,1,0,2]], e);
+      } else if (op == "S_") {
+        setupSelectionNext1c();
+        sel.extend(e.firstChild, 1);
+      } else if (op == "SA") {
+        setupSelectionNext1c();
+        sel.extend(e.firstChild, 1);
+      }
+    } else if (test == "#next2") {
+      addChildRanges([[0,10,0,13], [0,150,0,151]], e);
+      sel.extend(e.firstChild, 13);
+    } else if (test == "#next3") {
+      if (op == "S_") {
+        addChildRanges([[0,10,0,15], [0,150,0,151]], e);
+        sel.extend(e.firstChild, 20);
+      } else if (op == "SA") {
+        setupSelectionNext3();
+        sel.extend(e.firstChild, 20);
+      }
+    } else if (test == "#next4") {
+      setupSelectionNext3();
+      sel.extend(e.firstChild, 67);
+    } else if (test == "#next5") {
+      if (op == "S_") {
+        setupSelectionNext3();
+        sel.extend(e.firstChild, 80);
+      } else if (op == "SA") {
+        setupSelectionNext3();
+        sel.extend(e.firstChild, 80);
+      }
+    } else if (test == "#next6") {
+      setupSelectionNext3();
+      sel.extend(e.firstChild, 152);
+    } else if (test == "#next7") {
+      setupSelectionNext3();
+      if (op == "AD") {
+        addChildRanges([[0,168,0,170]], e);
+      } else {
+        sel.extend(e.firstChild, 170);
+      }
+    }
+  }
+  document.documentElement.removeAttribute("class");
+}
+
+SimpleTest.waitForFocus(runTest);
+
+</script>
+
+</body>
+</html>

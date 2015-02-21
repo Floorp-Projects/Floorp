@@ -259,6 +259,7 @@ protected:
     void InitAsyncSurrogates();
 
 protected:
+    void NotifyFlashHang();
     void NotifyPluginCrashed();
     void OnInitFailure();
 

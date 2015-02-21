@@ -132,6 +132,7 @@ class WorkerPrivateParent : public DOMEventTargetHelper
   class SynchronizeAndResumeRunnable;
 
 protected:
+  class InterfaceRequestor;
   class EventTarget;
   friend class EventTarget;
 
@@ -162,6 +163,9 @@ public:
     nsCOMPtr<nsIContentSecurityPolicy> mCSP;
     nsCOMPtr<nsIChannel> mChannel;
     nsCOMPtr<nsILoadGroup> mLoadGroup;
+
+    // Only set if we have a custom overriden load group
+    nsRefPtr<InterfaceRequestor> mInterfaceRequestor;
 
     nsAutoPtr<PrincipalInfo> mPrincipalInfo;
     nsCString mDomain;
@@ -206,6 +210,9 @@ public:
 
       MOZ_ASSERT(!mLoadGroup);
       aOther.mLoadGroup.swap(mLoadGroup);
+
+      MOZ_ASSERT(!mInterfaceRequestor);
+      aOther.mInterfaceRequestor.swap(mInterfaceRequestor);
 
       MOZ_ASSERT(!mPrincipalInfo);
       mPrincipalInfo = aOther.mPrincipalInfo.forget();
@@ -392,6 +399,9 @@ public:
 
   bool
   ModifyBusyCount(JSContext* aCx, bool aIncrease);
+
+  void
+  ForgetOverridenLoadGroup(nsCOMPtr<nsILoadGroup>& aLoadGroupOut);
 
   void
   ForgetMainThreadObjects(nsTArray<nsCOMPtr<nsISupports> >& aDoomed);
@@ -763,6 +773,9 @@ public:
   void
   StealHostObjectURIs(nsTArray<nsCString>& aArray);
 
+  void
+  UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGroup);
+
   IMPL_EVENT_HANDLER(message)
   IMPL_EVENT_HANDLER(error)
 
@@ -921,10 +934,19 @@ public:
   static bool
   WorkerAvailable(JSContext* /* unused */, JSObject* /* unused */);
 
+  enum LoadGroupBehavior
+  {
+    InheritLoadGroup,
+    OverrideLoadGroup
+  };
+
   static nsresult
   GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow, WorkerPrivate* aParent,
               const nsAString& aScriptURL, bool aIsChromeWorker,
-              LoadInfo* aLoadInfo);
+              LoadGroupBehavior aLoadGroupBehavior, LoadInfo* aLoadInfo);
+
+  static void
+  OverrideLoadInfoLoadGroup(LoadInfo& aLoadInfo);
 
   WorkerDebugger*
   Debugger() const

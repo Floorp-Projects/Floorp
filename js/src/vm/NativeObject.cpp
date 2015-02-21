@@ -1733,6 +1733,8 @@ Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
     return false;
 }
 
+enum IsNameLookup { NotNameLookup = false, NameLookup = true };
+
 /*
  * Finish getting the property `receiver[id]` after looking at every object on
  * the prototype chain and not finding any such property.
@@ -1752,7 +1754,7 @@ Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
  */
 static bool
 GetNonexistentProperty(JSContext *cx, HandleNativeObject obj, HandleId id,
-                       HandleObject receiver, MutableHandleValue vp)
+                       HandleObject receiver, IsNameLookup nameLookup, MutableHandleValue vp)
 {
     vp.setUndefined();
 
@@ -1768,12 +1770,7 @@ GetNonexistentProperty(JSContext *cx, HandleNativeObject obj, HandleId id,
     }
 
     // If we are doing a name lookup, this is a ReferenceError.
-    jsbytecode *pc = nullptr;
-    RootedScript script(cx, cx->currentScript(&pc));
-    if (!pc)
-        return true;
-    JSOp op = (JSOp) *pc;
-    if (op == JSOP_GETXPROP) {
+    if (nameLookup) {
         JSAutoByteString printable;
         if (js_ValueToPrintable(cx, IdToValue(id), &printable))
             js_ReportIsNotDefined(cx, printable.ptr());
@@ -1785,11 +1782,19 @@ GetNonexistentProperty(JSContext *cx, HandleNativeObject obj, HandleId id,
     //
     // Don't warn if extra warnings not enabled or for random getprop
     // operations.
-    if (!cx->compartment()->options().extraWarnings(cx) || (op != JSOP_GETPROP && op != JSOP_GETELEM))
+    if (!cx->compartment()->options().extraWarnings(cx))
+        return true;
+
+    jsbytecode *pc;
+    RootedScript script(cx, cx->currentScript(&pc));
+    if (!script)
+        return true;
+
+    if (*pc != JSOP_GETPROP && *pc != JSOP_GETELEM)
         return true;
 
     // Don't warn repeatedly for the same script.
-    if (!script || script->warnedAboutUndefinedProp())
+    if (script->warnedAboutUndefinedProp())
         return true;
 
     // Don't warn in self-hosted code (where the further presence of
@@ -1803,7 +1808,7 @@ GetNonexistentProperty(JSContext *cx, HandleNativeObject obj, HandleId id,
         return true;
 
     // Do not warn about tests like (obj[prop] == undefined).
-    pc += js_CodeSpec[op].length;
+    pc += js_CodeSpec[*pc].length;
     if (Detecting(cx, script, pc))
         return true;
 
@@ -1819,7 +1824,7 @@ GetNonexistentProperty(JSContext *cx, HandleNativeObject obj, HandleId id,
 /* The NoGC version of GetNonexistentProperty, present only to make types line up. */
 bool
 GetNonexistentProperty(JSContext *cx, NativeObject *obj, jsid id, JSObject *receiver,
-                       FakeMutableHandle<Value> vp)
+                       IsNameLookup nameLookup, FakeMutableHandle<Value> vp)
 {
     return false;
 }
@@ -1846,6 +1851,7 @@ NativeGetPropertyInline(JSContext *cx,
                         typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
                         typename MaybeRooted<JSObject*, allowGC>::HandleType receiver,
                         typename MaybeRooted<jsid, allowGC>::HandleType id,
+                        IsNameLookup nameLookup,
                         typename MaybeRooted<Value, allowGC>::MutableHandleType vp)
 {
     typename MaybeRooted<NativeObject*, allowGC>::RootType pobj(cx, obj);
@@ -1882,7 +1888,7 @@ NativeGetPropertyInline(JSContext *cx,
         // Step 4.c. The spec algorithm simply returns undefined if proto is
         // null, but see the comment on GetNonexistentProperty.
         if (!proto)
-            return GetNonexistentProperty(cx, obj, id, receiver, vp);
+            return GetNonexistentProperty(cx, obj, id, receiver, nameLookup, vp);
 
         // Step 4.d. If the prototype is also native, this step is a
         // recursive tail call, and we don't need to go through all the
@@ -1900,16 +1906,23 @@ bool
 js::NativeGetProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver, HandleId id,
                       MutableHandleValue vp)
 {
-    return NativeGetPropertyInline<CanGC>(cx, obj, receiver, id, vp);
+    return NativeGetPropertyInline<CanGC>(cx, obj, receiver, id, NotNameLookup, vp);
 }
 
 bool
 js::NativeGetPropertyNoGC(JSContext *cx, NativeObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     AutoAssertNoException noexc(cx);
-    return NativeGetPropertyInline<NoGC>(cx, obj, receiver, id, vp);
+    return NativeGetPropertyInline<NoGC>(cx, obj, receiver, id, NotNameLookup, vp);
 }
 
+bool
+js::GetPropertyForNameLookup(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
+{
+    if (GetPropertyOp op = obj->getOps()->getProperty)
+        return op(cx, obj, obj, id, vp);
+    return NativeGetPropertyInline<CanGC>(cx, obj.as<NativeObject>(), obj, id, NameLookup, vp);
+}
 
 /*** [[Set]] *************************************************************************************/
 

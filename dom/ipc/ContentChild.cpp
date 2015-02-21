@@ -93,6 +93,8 @@
 #include "nsISpellChecker.h"
 #include "nsClipboardProxy.h"
 #include "nsISystemMessageCache.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsDirectoryServiceDefs.h"
 
 #include "IHistory.h"
 #include "nsNetUtil.h"
@@ -1081,8 +1083,11 @@ ContentChild::CleanUpSandboxEnvironment()
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+
+#include <stdlib.h>
+
 static bool
-GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath)
+GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath, nsCString &aAppDir)
 {
   nsAutoCString appPath;
   nsAutoCString appBinaryPath(
@@ -1112,6 +1117,23 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath)
     return false;
   }
 
+  nsCOMPtr<nsIFile> appDir;
+  nsCOMPtr<nsIProperties> dirSvc =
+    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+  if (!dirSvc) {
+    return false;
+  }
+  rv = dirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
+                   NS_GET_IID(nsIFile), getter_AddRefs(appDir));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  bool exists;
+  rv = appDir->Exists(&exists);
+  if (NS_FAILED(rv) || !exists) {
+    return false;
+  }
+
   bool isLink;
   app->IsSymlink(&isLink);
   if (isLink) {
@@ -1125,6 +1147,12 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath)
   } else {
     appBinary->GetNativePath(aAppBinaryPath);
   }
+  appDir->IsSymlink(&isLink);
+  if (isLink) {
+    appDir->GetNativeTarget(aAppDir);
+  } else {
+    appDir->GetNativePath(aAppDir);
+  }
 
   return true;
 }
@@ -1132,8 +1160,8 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath)
 static void
 StartMacOSContentSandbox()
 {
-  nsAutoCString appPath, appBinaryPath;
-  if (!GetAppPaths(appPath, appBinaryPath)) {
+  nsAutoCString appPath, appBinaryPath, appDir;
+  if (!GetAppPaths(appPath, appBinaryPath, appDir)) {
     MOZ_CRASH("Error resolving child process path");
   }
 
@@ -1141,6 +1169,7 @@ StartMacOSContentSandbox()
   info.type = MacSandboxType_Content;
   info.appPath.Assign(appPath);
   info.appBinaryPath.Assign(appBinaryPath);
+  info.appDir.Assign(appDir);
 
   nsAutoCString err;
   if (!mozilla::StartMacSandbox(info, err)) {

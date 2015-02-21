@@ -370,20 +370,6 @@ GenerateDSSKeyPair()
                            privateKey.release());
 }
 
-ByteString
-SHA1(const ByteString& toHash)
-{
-  InitNSSIfNeeded();
-
-  uint8_t digestBuf[SHA1_LENGTH];
-  SECStatus srv = PK11_HashBuf(SEC_OID_SHA1, digestBuf, toHash.data(),
-                               static_cast<int32_t>(toHash.length()));
-  if (srv != SECSuccess) {
-    return ByteString();
-  }
-  return ByteString(digestBuf, sizeof(digestBuf));
-}
-
 Result
 TestVerifyECDSASignedDigest(const SignedDigest& signedDigest,
                             Input subjectPublicKeyInfo)

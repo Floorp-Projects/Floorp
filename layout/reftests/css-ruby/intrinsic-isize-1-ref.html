@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1134432 - Intrinsic ISize calculation of ruby</title>
+  <style>
+    div {
+      display: inline-block;
+      border: 1px solid black;
+    }
+    span {
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div style="width: -moz-min-content">
+    <span>ABC</span><span>DEF</span>
+  </div>
+  <div style="width: -moz-max-content">
+    <span>ABC</span><span>DEF</span>
+  </div>
+  <br>
+
+  <div style="width: -moz-min-content">
+    XYZ<span>ABC</span><span>DEF</span>XYZ
+  </div>
+  <div style="width: -moz-max-content">
+    XYZ<span>ABC</span><span>DEF</span>XYZ
+  </div>
+  <br>
+
+  <div style="width: -moz-min-content">
+    <span>あい</span><span>うえ</span>
+  </div>
+  <div style="width: -moz-max-content">
+    <span>あい</span><span>うえ</span>
+  </div>
+  <br>
+
+  <div style="width: -moz-min-content">
+    お<span>あい</span><span>うえ</span>お
+  </div>
+  <div style="width: -moz-max-content">
+    お<span>あい</span><span>うえ</span>お
+  </div>
+  <br>
+</body>
+</html>

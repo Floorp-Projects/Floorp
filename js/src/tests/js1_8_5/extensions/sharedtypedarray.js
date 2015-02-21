@@ -228,8 +228,10 @@ function testSharedTypedArrayMethods() {
     assertEq(v[9], -5);
 }
 
-testSharedArrayBuffer();
-testSharedTypedArray();
-testSharedTypedArrayMethods();
+if (typeof SharedArrayBuffer === "function") {
+    testSharedArrayBuffer();
+    testSharedTypedArray();
+    testSharedTypedArrayMethods();
+}
 
 reportCompare(0, 0, 'ok');

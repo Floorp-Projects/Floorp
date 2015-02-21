@@ -65,7 +65,7 @@ public:
 public:
   nsresult ClearRuleCascades();
 
-  static nsresult Startup();
+  static void Startup();
   static void Shutdown();
   static void FreeSystemMetrics();
   static bool HasSystemMetric(nsIAtom* aMetric);
