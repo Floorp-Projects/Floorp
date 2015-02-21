@@ -21,6 +21,7 @@
     macro(ArrayIteratorNext, ArrayIteratorNext, "ArrayIteratorNext") \
     macro(ArrayType, ArrayType, "ArrayType") \
     macro(ArrayValues, ArrayValues, "ArrayValues") \
+    macro(Async, Async, "Async") \
     macro(buffer, buffer, "buffer") \
     macro(builder, builder, "builder") \
     macro(byteLength, byteLength, "byteLength") \
