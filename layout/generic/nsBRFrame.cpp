@@ -164,14 +164,18 @@ BRFrame::Reflow(nsPresContext* aPresContext,
 BRFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
                            nsIFrame::InlineMinISizeData *aData)
 {
-  aData->ForceBreak(aRenderingContext);
+  if (!StyleContext()->IsInlineDescendantOfRuby()) {
+    aData->ForceBreak(aRenderingContext);
+  }
 }
 
 /* virtual */ void
 BRFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                             nsIFrame::InlinePrefISizeData *aData)
 {
-  aData->ForceBreak(aRenderingContext);
+  if (!StyleContext()->IsInlineDescendantOfRuby()) {
+    aData->ForceBreak(aRenderingContext);
+  }
 }
 
 /* virtual */ nscoord
