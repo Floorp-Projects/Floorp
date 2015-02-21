@@ -599,6 +599,10 @@ this.BrowserUITelemetry = {
     this._countEvent(["click-builtin-item", source, "search-settings"]);
   },
 
+  countPanicEvent: function(timeId) {
+    this._countEvent(["forget-button", timeId]);
+  },
+
   _logAwesomeBarSearchResult: function (url) {
     let spec = Services.search.parseSubmissionURL(url);
     if (spec.engine) {

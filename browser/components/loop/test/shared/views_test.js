@@ -152,7 +152,7 @@ describe("loop.shared.views", function() {
         expect(comp.state.showMenu).eql(true);
       });
 
-    it("should dispatch a StartScreenShare action on option click in screenshare dropdown",
+    it("should dispatch a 'browser' StartScreenShare action on option click",
       function() {
         var comp = TestUtils.renderIntoDocument(
           React.createElement(sharedViews.ScreenShareControlButton, {
@@ -166,7 +166,24 @@ describe("loop.shared.views", function() {
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.StartScreenShare({}));
+          new sharedActions.StartScreenShare({ type: "browser" }));
+      });
+
+    it("should dispatch a 'window' StartScreenShare action on option click",
+      function() {
+        var comp = TestUtils.renderIntoDocument(
+          React.createElement(sharedViews.ScreenShareControlButton, {
+            dispatcher: dispatcher,
+            visible: true,
+            state: SCREEN_SHARE_STATES.INACTIVE
+          }));
+
+        TestUtils.Simulate.click(comp.getDOMNode().querySelector(
+          ".conversation-window-dropdown > li:last-child"));
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.StartScreenShare({ type: "window" }));
       });
 
     it("should dispatch a EndScreenShare action on click when the state is active",

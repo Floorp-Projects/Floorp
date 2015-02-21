@@ -191,6 +191,27 @@ add_task(function* focus_change_closes_popup() {
   textbox.value = "";
 });
 
+// Moving focus away from the search box should close the small popup
+add_task(function* focus_change_closes_small_popup() {
+  gURLBar.focus();
+
+  let promise = promiseEvent(searchPopup, "popupshown");
+  // For some reason sending the mouse event immediately doesn't open the popup.
+  SimpleTest.executeSoon(() => {
+    EventUtils.synthesizeMouseAtCenter(searchIcon, {});
+  });
+  yield promise;
+  is(searchPopup.getAttribute("showonlysettings"), "true", "Should show the small popup");
+
+  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+
+  promise = promiseEvent(searchPopup, "popuphidden");
+  let promise2 = promiseEvent(searchbar, "blur");
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
+  yield promise;
+  yield promise2;
+});
+
 // Pressing escape should close the popup.
 add_task(function* escape_closes_popup() {
   gURLBar.focus();
@@ -442,4 +463,6 @@ add_task(function* dont_rollup_oncaretmove() {
   promise = promiseEvent(searchPopup, "popuphidden");
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   yield promise;
+
+  textbox.value = "";
 });
