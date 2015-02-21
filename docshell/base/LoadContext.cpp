@@ -11,7 +11,7 @@ namespace mozilla {
 
 NS_IMPL_ISUPPORTS(LoadContext, nsILoadContext, nsIInterfaceRequestor)
 
-LoadContext::LoadContext(nsIPrincipal* aPrincipal)
+LoadContext::LoadContext(nsIPrincipal* aPrincipal, nsILoadContext* aOptionalBase)
   : mTopFrameElement(nullptr)
   , mNestedFrameId(0)
   , mIsContent(true)
@@ -24,6 +24,15 @@ LoadContext::LoadContext(nsIPrincipal* aPrincipal)
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aPrincipal->GetAppId(&mAppId)));
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
     aPrincipal->GetIsInBrowserElement(&mIsInBrowserElement)));
+
+  if (!aOptionalBase) {
+    return;
+  }
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aOptionalBase->GetIsContent(&mIsContent)));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    aOptionalBase->GetUsePrivateBrowsing(&mUsePrivateBrowsing)));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aOptionalBase->GetUseRemoteTabs(&mUseRemoteTabs)));
 }
 
 //-----------------------------------------------------------------------------
