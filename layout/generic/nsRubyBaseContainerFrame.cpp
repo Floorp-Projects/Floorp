@@ -209,15 +209,21 @@ CalculateColumnPrefISize(nsRenderingContext* aRenderingContext,
   for (uint32_t i = 0; i < levelCount; i++) {
     nsIFrame* frame = aEnumerator.GetFrameAtLevel(i);
     if (frame) {
-      max = std::max(max, frame->GetPrefISize(aRenderingContext));
+      nsIFrame::InlinePrefISizeData data;
+      frame->AddInlinePrefISize(aRenderingContext, &data);
+      MOZ_ASSERT(data.prevLines == 0, "Shouldn't have prev lines");
+      max = std::max(max, data.currentLine);
     }
   }
   return max;
 }
 
+// FIXME Currently we use pref isize of ruby content frames for
+//       computing min isize of ruby frame, which may cause problem.
+//       See bug 1134945.
 /* virtual */ void
 nsRubyBaseContainerFrame::AddInlineMinISize(
-    nsRenderingContext *aRenderingContext, nsIFrame::InlineMinISizeData *aData)
+  nsRenderingContext *aRenderingContext, nsIFrame::InlineMinISizeData *aData)
 {
   AutoTextContainerArray textContainers;
   GetTextContainers(textContainers);
@@ -226,38 +232,54 @@ nsRubyBaseContainerFrame::AddInlineMinISize(
     if (textContainers[i]->IsSpanContainer()) {
       // Since spans are not breakable internally, use our pref isize
       // directly if there is any span.
-      aData->currentLine += GetPrefISize(aRenderingContext);
+      nsIFrame::InlinePrefISizeData data;
+      AddInlinePrefISize(aRenderingContext, &data);
+      aData->currentLine += data.currentLine;
+      if (data.currentLine > 0) {
+        aData->atStartOfLine = false;
+      }
       return;
     }
   }
 
-  nscoord max = 0;
-  RubyColumnEnumerator enumerator(this, textContainers);
-  for (; !enumerator.AtEnd(); enumerator.Next()) {
-    // We use *pref* isize for computing the min isize of columns
-    // because ruby bases and texts are unbreakable internally.
-    max = std::max(max, CalculateColumnPrefISize(aRenderingContext,
-                                                 enumerator));
+  for (nsIFrame* frame = this; frame; frame = frame->GetNextInFlow()) {
+    RubyColumnEnumerator enumerator(
+      static_cast<nsRubyBaseContainerFrame*>(frame), textContainers);
+    for (; !enumerator.AtEnd(); enumerator.Next()) {
+      // FIXME This simply assumes that there is an optional break
+      //       between ruby columns, which is no true in many cases.
+      aData->OptionallyBreak(aRenderingContext);
+      nscoord isize = CalculateColumnPrefISize(aRenderingContext, enumerator);
+      aData->currentLine += isize;
+      if (isize > 0) {
+        aData->atStartOfLine = false;
+      }
+    }
   }
-  aData->currentLine += max;
 }
 
 /* virtual */ void
 nsRubyBaseContainerFrame::AddInlinePrefISize(
-    nsRenderingContext *aRenderingContext, nsIFrame::InlinePrefISizeData *aData)
+  nsRenderingContext *aRenderingContext, nsIFrame::InlinePrefISizeData *aData)
 {
   AutoTextContainerArray textContainers;
   GetTextContainers(textContainers);
 
   nscoord sum = 0;
-  RubyColumnEnumerator enumerator(this, textContainers);
-  for (; !enumerator.AtEnd(); enumerator.Next()) {
-    sum += CalculateColumnPrefISize(aRenderingContext, enumerator);
+  for (nsIFrame* frame = this; frame; frame = frame->GetNextInFlow()) {
+    RubyColumnEnumerator enumerator(
+      static_cast<nsRubyBaseContainerFrame*>(frame), textContainers);
+    for (; !enumerator.AtEnd(); enumerator.Next()) {
+      sum += CalculateColumnPrefISize(aRenderingContext, enumerator);
+    }
   }
   for (uint32_t i = 0, iend = textContainers.Length(); i < iend; i++) {
     if (textContainers[i]->IsSpanContainer()) {
       nsIFrame* frame = textContainers[i]->GetFirstPrincipalChild();
-      sum = std::max(sum, frame->GetPrefISize(aRenderingContext));
+      nsIFrame::InlinePrefISizeData data;
+      frame->AddInlinePrefISize(aRenderingContext, &data);
+      MOZ_ASSERT(data.prevLines == 0, "Shouldn't have prev lines");
+      sum = std::max(sum, data.currentLine);
     }
   }
   aData->currentLine += sum;
