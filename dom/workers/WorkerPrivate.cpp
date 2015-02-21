@@ -15,16 +15,19 @@
 #include "nsIDOMMessageEvent.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIMemoryReporter.h"
 #include "nsIPermissionManager.h"
 #include "nsIScriptError.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsITabChild.h"
 #include "nsITextToSubURI.h"
 #include "nsIThreadInternal.h"
 #include "nsITimer.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsIWorkerDebugger.h"
 #include "nsIXPConnect.h"
 #include "nsPerformance.h"
@@ -704,13 +707,16 @@ class MainThreadReleaseRunnable MOZ_FINAL : public nsRunnable
 {
   nsTArray<nsCOMPtr<nsISupports>> mDoomed;
   nsTArray<nsCString> mHostObjectURIs;
+  nsCOMPtr<nsILoadGroup> mLoadGroupToCancel;
 
 public:
   MainThreadReleaseRunnable(nsTArray<nsCOMPtr<nsISupports>>& aDoomed,
-                            nsTArray<nsCString>& aHostObjectURIs)
+                            nsTArray<nsCString>& aHostObjectURIs,
+                            nsCOMPtr<nsILoadGroup>& aLoadGroupToCancel)
   {
     mDoomed.SwapElements(aDoomed);
     mHostObjectURIs.SwapElements(aHostObjectURIs);
+    mLoadGroupToCancel.swap(aLoadGroupToCancel);
   }
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -718,6 +724,11 @@ public:
   NS_IMETHOD
   Run() MOZ_OVERRIDE
   {
+    if (mLoadGroupToCancel) {
+      mLoadGroupToCancel->Cancel(NS_BINDING_ABORTED);
+      mLoadGroupToCancel = nullptr;
+    }
+
     mDoomed.Clear();
 
     for (uint32_t index = 0; index < mHostObjectURIs.Length(); index++) {
@@ -761,6 +772,9 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
   {
+    nsCOMPtr<nsILoadGroup> loadGroupToCancel;
+    mFinishedWorker->ForgetOverridenLoadGroup(loadGroupToCancel);
+
     nsTArray<nsCOMPtr<nsISupports>> doomed;
     mFinishedWorker->ForgetMainThreadObjects(doomed);
 
@@ -768,7 +782,7 @@ private:
     mFinishedWorker->StealHostObjectURIs(hostObjectURIs);
 
     nsRefPtr<MainThreadReleaseRunnable> runnable =
-      new MainThreadReleaseRunnable(doomed, hostObjectURIs);
+      new MainThreadReleaseRunnable(doomed, hostObjectURIs, loadGroupToCancel);
     if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       NS_WARNING("Failed to dispatch, going to leak!");
     }
@@ -816,6 +830,9 @@ private:
 
     runtime->UnregisterWorker(cx, mFinishedWorker);
 
+    nsCOMPtr<nsILoadGroup> loadGroupToCancel;
+    mFinishedWorker->ForgetOverridenLoadGroup(loadGroupToCancel);
+
     nsTArray<nsCOMPtr<nsISupports> > doomed;
     mFinishedWorker->ForgetMainThreadObjects(doomed);
 
@@ -823,7 +840,7 @@ private:
     mFinishedWorker->StealHostObjectURIs(hostObjectURIs);
 
     nsRefPtr<MainThreadReleaseRunnable> runnable =
-      new MainThreadReleaseRunnable(doomed, hostObjectURIs);
+      new MainThreadReleaseRunnable(doomed, hostObjectURIs, loadGroupToCancel);
     if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
       NS_WARNING("Failed to dispatch, going to leak!");
     }
@@ -1983,6 +2000,129 @@ private:
 };
 
 template <class Derived>
+class WorkerPrivateParent<Derived>::InterfaceRequestor MOZ_FINAL
+  : public nsIInterfaceRequestor
+{
+  NS_DECL_ISUPPORTS
+
+public:
+  InterfaceRequestor(nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(aPrincipal);
+
+    // Look for an existing LoadContext.  This is optional and it's ok if
+    // we don't find one.
+    nsCOMPtr<nsILoadContext> baseContext;
+    if (aLoadGroup) {
+      nsCOMPtr<nsIInterfaceRequestor> callbacks;
+      aLoadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
+      if (callbacks) {
+        callbacks->GetInterface(NS_GET_IID(nsILoadContext),
+                                getter_AddRefs(baseContext));
+      }
+    }
+
+    mLoadContext = new LoadContext(aPrincipal, baseContext);
+  }
+
+  void
+  MaybeAddTabChild(nsILoadGroup* aLoadGroup)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!aLoadGroup) {
+      return;
+    }
+
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    aLoadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
+    if (!callbacks) {
+      return;
+    }
+
+    nsCOMPtr<nsITabChild> tabChild;
+    callbacks->GetInterface(NS_GET_IID(nsITabChild), getter_AddRefs(tabChild));
+    if (!tabChild) {
+      return;
+    }
+
+    // Use weak references to the tab child.  Holding a strong reference will
+    // not prevent an ActorDestroy() from being called on the TabChild.
+    // Therefore, we should let the TabChild destroy itself as soon as possible.
+    mTabChildList.AppendElement(do_GetWeakReference(tabChild));
+  }
+
+  NS_IMETHOD
+  GetInterface(const nsIID& aIID, void** aSink) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mLoadContext);
+
+    if (aIID.Equals(NS_GET_IID(nsILoadContext))) {
+      nsCOMPtr<nsILoadContext> ref = mLoadContext;
+      ref.forget(aSink);
+      return NS_OK;
+    }
+
+    // If we still have an active nsITabChild, then return it.  Its possible,
+    // though, that all of the TabChild objects have been destroyed.  In that
+    // case we return NS_NOINTERFACE.
+    if(aIID.Equals(NS_GET_IID(nsITabChild))) {
+      nsCOMPtr<nsITabChild> tabChild = GetAnyLiveTabChild();
+      if (!tabChild) {
+        return NS_NOINTERFACE;
+      }
+      tabChild.forget(aSink);
+      return NS_OK;
+    }
+
+    return NS_NOINTERFACE;
+  }
+
+private:
+  ~InterfaceRequestor() { }
+
+  already_AddRefed<nsITabChild>
+  GetAnyLiveTabChild()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Search our list of known TabChild objects for one that still exists.
+    while (!mTabChildList.IsEmpty()) {
+      nsCOMPtr<nsITabChild> tabChild =
+        do_QueryReferent(mTabChildList.LastElement());
+
+      // Does this tab child still exist?  If so, return it.  We are done.
+      if (tabChild) {
+        return tabChild.forget();
+      }
+
+      // Otherwise remove the stale weak reference and check the next one
+      mTabChildList.RemoveElementAt(mTabChildList.Length() - 1);
+    }
+
+    return nullptr;
+  }
+
+  nsCOMPtr<nsILoadContext> mLoadContext;
+
+  // Array of weak references to nsITabChild.  We do not want to keep TabChild
+  // actors alive for long after their ActorDestroy() methods are called.
+  nsTArray<nsWeakPtr> mTabChildList;
+};
+
+template <class Derived>
+NS_IMPL_ADDREF(WorkerPrivateParent<Derived>::InterfaceRequestor)
+
+template <class Derived>
+NS_IMPL_RELEASE(WorkerPrivateParent<Derived>::InterfaceRequestor)
+
+template <class Derived>
+NS_IMPL_QUERY_INTERFACE(WorkerPrivateParent<Derived>::InterfaceRequestor,
+                        nsIInterfaceRequestor)
+
+template <class Derived>
 class WorkerPrivateParent<Derived>::EventTarget MOZ_FINAL
   : public nsIEventTarget
 {
@@ -2835,13 +2975,29 @@ WorkerPrivateParent<Derived>::ModifyBusyCount(JSContext* aCx, bool aIncrease)
 
 template <class Derived>
 void
+WorkerPrivateParent<Derived>::ForgetOverridenLoadGroup(
+                                          nsCOMPtr<nsILoadGroup>& aLoadGroupOut)
+{
+  AssertIsOnParentThread();
+
+  // If we're not overriden, then do nothing here.  Let the load group get
+  // handled in ForgetMainThreadObjects().
+  if (!mLoadInfo.mInterfaceRequestor) {
+    return;
+  }
+
+  mLoadInfo.mLoadGroup.swap(aLoadGroupOut);
+}
+
+template <class Derived>
+void
 WorkerPrivateParent<Derived>::ForgetMainThreadObjects(
                                       nsTArray<nsCOMPtr<nsISupports> >& aDoomed)
 {
   AssertIsOnParentThread();
   MOZ_ASSERT(!mMainThreadObjectsForgotten);
 
-  static const uint32_t kDoomedCount = 8;
+  static const uint32_t kDoomedCount = 9;
 
   aDoomed.SetCapacity(kDoomedCount);
 
@@ -2853,6 +3009,7 @@ WorkerPrivateParent<Derived>::ForgetMainThreadObjects(
   SwapToISupportsArray(mLoadInfo.mChannel, aDoomed);
   SwapToISupportsArray(mLoadInfo.mCSP, aDoomed);
   SwapToISupportsArray(mLoadInfo.mLoadGroup, aDoomed);
+  SwapToISupportsArray(mLoadInfo.mInterfaceRequestor, aDoomed);
   // Before adding anything here update kDoomedCount above!
 
   MOZ_ASSERT(aDoomed.Length() == kDoomedCount);
@@ -3632,6 +3789,16 @@ WorkerPrivateParent<Derived>::StealHostObjectURIs(nsTArray<nsCString>& aArray)
 }
 
 template <class Derived>
+void
+WorkerPrivateParent<Derived>::UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGroup)
+{
+  AssertIsOnMainThread();
+
+  // The load group should have been overriden at init time.
+  mLoadInfo.mInterfaceRequestor->MaybeAddTabChild(aBaseLoadGroup);
+}
+
+template <class Derived>
 NS_IMPL_ADDREF_INHERITED(WorkerPrivateParent<Derived>, DOMEventTargetHelper)
 
 template <class Derived>
@@ -4062,7 +4229,8 @@ WorkerPrivate::Constructor(JSContext* aCx,
     stackLoadInfo.emplace();
 
     nsresult rv = GetLoadInfo(aCx, nullptr, parent, aScriptURL,
-                              aIsChromeWorker, stackLoadInfo.ptr());
+                              aIsChromeWorker, InheritLoadGroup,
+                              stackLoadInfo.ptr());
     if (NS_FAILED(rv)) {
       scriptloader::ReportLoadError(aCx, aScriptURL, rv, !parent);
       aRv.Throw(rv);
@@ -4117,7 +4285,9 @@ WorkerPrivate::Constructor(JSContext* aCx,
 nsresult
 WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
                            WorkerPrivate* aParent, const nsAString& aScriptURL,
-                           bool aIsChromeWorker, LoadInfo* aLoadInfo)
+                           bool aIsChromeWorker,
+                           LoadGroupBehavior aLoadGroupBehavior,
+                           LoadInfo* aLoadInfo)
 {
   using namespace mozilla::dom::workers::scriptloader;
   using mozilla::dom::indexedDB::IDBFactory;
@@ -4350,10 +4520,8 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
       loadInfo.mReportCSPViolations = false;
     }
 
-    if (!loadInfo.mLoadGroup) {
-      rv = NS_NewLoadGroup(getter_AddRefs(loadInfo.mLoadGroup),
-                           loadInfo.mPrincipal);
-      NS_ENSURE_SUCCESS(rv, rv);
+    if (!loadInfo.mLoadGroup || aLoadGroupBehavior == OverrideLoadGroup) {
+      OverrideLoadInfoLoadGroup(loadInfo);
     }
     MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(loadInfo.mLoadGroup,
                                             loadInfo.mPrincipal));
@@ -4371,6 +4539,26 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
 
   aLoadInfo->StealFrom(loadInfo);
   return NS_OK;
+}
+
+// static
+void
+WorkerPrivate::OverrideLoadInfoLoadGroup(LoadInfo& aLoadInfo)
+{
+  MOZ_ASSERT(!aLoadInfo.mInterfaceRequestor);
+
+  aLoadInfo.mInterfaceRequestor = new InterfaceRequestor(aLoadInfo.mPrincipal,
+                                                         aLoadInfo.mLoadGroup);
+  aLoadInfo.mInterfaceRequestor->MaybeAddTabChild(aLoadInfo.mLoadGroup);
+
+  nsCOMPtr<nsILoadGroup> loadGroup =
+    do_CreateInstance(NS_LOADGROUP_CONTRACTID);
+
+  nsresult rv =
+    loadGroup->SetNotificationCallbacks(aLoadInfo.mInterfaceRequestor);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
+
+  aLoadInfo.mLoadGroup = loadGroup.forget();
 }
 
 void

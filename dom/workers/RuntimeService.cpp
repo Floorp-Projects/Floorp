@@ -2260,7 +2260,9 @@ RuntimeService::CreateSharedWorkerInternal(const GlobalObject& aGlobal,
 
   WorkerPrivate::LoadInfo loadInfo;
   nsresult rv = WorkerPrivate::GetLoadInfo(cx, window, nullptr, aScriptURL,
-                                           false, &loadInfo);
+                                           false,
+                                           WorkerPrivate::OverrideLoadGroup,
+                                           &loadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CreateSharedWorkerFromLoadInfo(cx, &loadInfo, aScriptURL, aName, aType,
@@ -2314,6 +2316,11 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
     NS_ENSURE_TRUE(workerPrivate, rv.ErrorCode());
 
     created = true;
+  } else {
+    // If we're attaching to an existing SharedWorker private, then we
+    // must update the overriden load group to account for our document's
+    // load group.
+    workerPrivate->UpdateOverridenLoadGroup(aLoadInfo->mLoadGroup);
   }
 
   nsRefPtr<SharedWorker> sharedWorker = new SharedWorker(window, workerPrivate);
