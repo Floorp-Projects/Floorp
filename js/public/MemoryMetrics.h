@@ -435,12 +435,66 @@ struct RuntimeSizes
 #undef FOR_EACH_SIZE
 };
 
+struct GCThingSizes
+{
+#define FOR_EACH_SIZE(macro) \
+    macro(_, _, object) \
+    macro(_, _, script) \
+    macro(_, _, lazyScript) \
+    macro(_, _, shape) \
+    macro(_, _, baseShape) \
+    macro(_, _, objectGroup) \
+    macro(_, _, string) \
+    macro(_, _, symbol) \
+    macro(_, _, jitcode) \
+
+    GCThingSizes()
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        dummy()
+    {}
+
+    GCThingSizes(GCThingSizes &&other)
+      : FOR_EACH_SIZE(COPY_OTHER_SIZE)
+        dummy()
+    {}
+
+    void addToKind(JSGCTraceKind kind, intptr_t n) {
+        switch (kind) {
+          case JSTRACE_OBJECT:       object += n;      break;
+          case JSTRACE_STRING:       string += n;      break;
+          case JSTRACE_SYMBOL:       symbol += n;      break;
+          case JSTRACE_SCRIPT:       script += n;      break;
+          case JSTRACE_SHAPE:        shape += n;       break;
+          case JSTRACE_BASE_SHAPE:   baseShape += n;   break;
+          case JSTRACE_JITCODE:      jitcode += n;     break;
+          case JSTRACE_LAZY_SCRIPT:  lazyScript += n;  break;
+          case JSTRACE_OBJECT_GROUP: objectGroup += n; break;
+          default:
+            MOZ_CRASH("Bad trace kind for GCThingSizes");
+        }
+    }
+
+    void addSizes(const GCThingSizes &other) {
+        FOR_EACH_SIZE(ADD_OTHER_SIZE)
+    }
+
+    size_t totalSize() const {
+        size_t n = 0;
+        FOR_EACH_SIZE(ADD_SIZE_TO_N)
+        return n;
+    }
+
+    FOR_EACH_SIZE(DECL_SIZE)
+    int dummy;  // present just to absorb the trailing comma from FOR_EACH_SIZE(ZERO_SIZE)
+
+#undef FOR_EACH_SIZE
+};
+
 struct ZoneStats
 {
 #define FOR_EACH_SIZE(macro) \
     macro(Other,   IsLiveGCThing,  symbolsGCHeap) \
     macro(Other,   NotLiveGCThing, gcHeapArenaAdmin) \
-    macro(Other,   NotLiveGCThing, unusedGCThings) \
     macro(Other,   IsLiveGCThing,  lazyScriptsGCHeap) \
     macro(Other,   NotLiveGCThing, lazyScriptsMallocHeap) \
     macro(Other,   IsLiveGCThing,  jitCodesGCHeap) \
@@ -451,6 +505,7 @@ struct ZoneStats
 
     ZoneStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
+        unusedGCThings(),
         stringInfo(),
         extra(),
         allStrings(nullptr),
@@ -460,6 +515,7 @@ struct ZoneStats
 
     ZoneStats(ZoneStats &&other)
       : FOR_EACH_SIZE(COPY_OTHER_SIZE)
+        unusedGCThings(mozilla::Move(other.unusedGCThings)),
         stringInfo(mozilla::Move(other.stringInfo)),
         extra(other.extra),
         allStrings(other.allStrings),
@@ -482,6 +538,7 @@ struct ZoneStats
     void addSizes(const ZoneStats &other) {
         MOZ_ASSERT(isTotals);
         FOR_EACH_SIZE(ADD_OTHER_SIZE)
+        unusedGCThings.addSizes(other.unusedGCThings);
         stringInfo.add(other.stringInfo);
     }
 
@@ -496,6 +553,7 @@ struct ZoneStats
     void addToTabSizes(JS::TabSizes *sizes) const {
         MOZ_ASSERT(isTotals);
         FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
+        sizes->add(JS::TabSizes::Other, unusedGCThings.totalSize());
         stringInfo.addToTabSizes(sizes);
     }
 
@@ -504,6 +562,7 @@ struct ZoneStats
     // measurements of the notable script sources and move them into
     // |notableStrings|.
     FOR_EACH_SIZE(DECL_SIZE)
+    GCThingSizes unusedGCThings;
     StringInfo stringInfo;
     void *extra;    // This field can be used by embedders.
 

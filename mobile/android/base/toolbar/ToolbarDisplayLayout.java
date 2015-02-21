@@ -14,6 +14,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.SiteIdentity.MixedMode;
@@ -191,7 +192,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         mSiteSecurityVisible = (mSiteSecurity.getVisibility() == View.VISIBLE);
 
         mSiteIdentityPopup = new SiteIdentityPopup(mActivity);
-        mSiteIdentityPopup.setAnchor(mTitle);
+        mSiteIdentityPopup.setAnchor(mSiteSecurity);
 
         mStop = (ImageButton) findViewById(R.id.stop);
         mPageActionLayout = (PageActionLayout) findViewById(R.id.page_action_layout);
@@ -360,10 +361,13 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
             return;
         }
 
-        CharSequence title = url;
+        String strippedURL = stripAboutReaderURL(url);
+
         if (mPrefs.shouldTrimUrls()) {
-            title = StringUtils.stripCommonSubdomains(StringUtils.stripScheme(url));
+            strippedURL = StringUtils.stripCommonSubdomains(StringUtils.stripScheme(strippedURL));
         }
+
+        CharSequence title = strippedURL;
 
         final String baseDomain = tab.getBaseDomain();
         if (!TextUtils.isEmpty(baseDomain)) {
@@ -380,6 +384,14 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         }
 
         setTitle(title);
+    }
+
+    private String stripAboutReaderURL(final String url) {
+        if (!AboutPages.isAboutReader(url)) {
+            return url;
+        }
+
+        return ReaderModeUtils.getUrlFromAboutReader(url);
     }
 
     private void updateFavicon(Tab tab) {

@@ -95,6 +95,8 @@ public:
   // WebIDL
   double CurrentTime();
 
+  void GetId(nsAString& aID) const;
+
   void GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks);
   void GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks);
   void GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks);
@@ -177,6 +179,10 @@ public:
    * Called when the main-thread state of the MediaStream changed.
    */
   void NotifyStreamStateChanged();
+
+  // Webrtc allows the remote side to name a stream whatever it wants, and we
+  // need to surface this to content.
+  void AssignId(const nsAString& aID) { mID = aID; }
 
   // Indicate what track types we eventually expect to add to this stream
   enum {
@@ -292,6 +298,8 @@ protected:
   nsRefPtr<StreamListener> mListener;
 
   nsTArray<nsAutoPtr<OnTracksAvailableCallback> > mRunOnTracksAvailable;
+
+  nsString mID;
 
   // Keep these alive until the stream finishes
   nsTArray<nsCOMPtr<nsISupports> > mConsumersToKeepAlive;

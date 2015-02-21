@@ -141,23 +141,11 @@ check-jit-test::
 
 check:: check-style
 
-# jstests doesn't have a --jitflags option, so we need to loop, updating the
-# exit code (RC) after each invocation.
-# FIXME: MethodJIT doesn't work for 1 test case (bug 644393), so
-# --no-extensions is set to skip that test. Remove as soon as possible.
 check-jstests:
-	RC=0; \
-	for f in `echo '$(JITFLAGS)' | tr ',' '\n'`; \
-		do \
-			$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/tests/jstests.py \
-				--tinderbox --no-progress \
-				--no-extensions \
-				--timeout 300 \
-				--args="`echo $$f | sed 's/\(.\)/ -\1/g'`" \
-				$(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX); \
-			RC=$$(( $$RC || $$?)); \
-		done; \
-	exit $$RC
+	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/tests/jstests.py \
+		--no-progress --tinderbox --timeout 300 \
+		$(JSTESTS_EXTRA_ARGS) \
+		$(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX)
 
 # FIXME:
 # We want to run check-jstests as part of |make check| on all platforms, on

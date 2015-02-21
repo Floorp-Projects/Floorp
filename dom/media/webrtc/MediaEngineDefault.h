@@ -40,7 +40,7 @@ public:
   virtual void GetName(nsAString&) MOZ_OVERRIDE;
   virtual void GetUUID(nsAString&) MOZ_OVERRIDE;
 
-  virtual nsresult Allocate(const VideoTrackConstraintsN &aConstraints,
+  virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                             const MediaEnginePrefs &aPrefs) MOZ_OVERRIDE;
   virtual nsresult Deallocate() MOZ_OVERRIDE;
   virtual nsresult Start(SourceMediaStream*, TrackID) MOZ_OVERRIDE;
@@ -54,7 +54,7 @@ public:
                           SourceMediaStream *aSource,
                           TrackID aId,
                           StreamTime aDesiredTime) MOZ_OVERRIDE;
-  virtual bool SatisfiesConstraintSets(
+  virtual uint32_t GetBestFitnessDistance(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets) MOZ_OVERRIDE
   {
     return true;
@@ -108,7 +108,7 @@ public:
   virtual void GetName(nsAString&) MOZ_OVERRIDE;
   virtual void GetUUID(nsAString&) MOZ_OVERRIDE;
 
-  virtual nsresult Allocate(const AudioTrackConstraintsN &aConstraints,
+  virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                             const MediaEnginePrefs &aPrefs) MOZ_OVERRIDE;
   virtual nsresult Deallocate() MOZ_OVERRIDE;
   virtual nsresult Start(SourceMediaStream*, TrackID) MOZ_OVERRIDE;

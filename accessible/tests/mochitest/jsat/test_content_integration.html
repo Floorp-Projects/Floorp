@@ -48,7 +48,7 @@
           // check checkbox
           [ContentMessages.activateCurrent(),
            new ExpectedClickAction({ no_android: true }),
-           new ExpectedCheckAction(true, { android_todo: true })],
+           new ExpectedCheckAction(true)],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(['much range', {'string': 'label'}])],
           [ContentMessages.simpleMoveNext,
@@ -74,7 +74,7 @@
           // uncheck checkbox
           [ContentMessages.activateCurrent(),
            new ExpectedClickAction({ no_android: true }),
-           new ExpectedCheckAction(false, { android_todo: true })],
+           new ExpectedCheckAction(false)],
           [ContentMessages.simpleMovePrevious,
            new ExpectedCursorChange(['wow', {'string': 'headingLevel', 'args': [1]}])],
           [ContentMessages.simpleMovePrevious,

@@ -29,6 +29,12 @@ case $cmd in
 	rm -rf ${pkg} ${tgtpath}
 	;;
 "build")
+        # Ensure that the configure script is newer than the configure.in script.
+        if [ ${SRCDIR}/configure.in -nt ${SRCDIR}/configure ]; then
+            echo "error: js/src/configure is out of date. Please regenerate before packaging." >&2
+            exit 1
+        fi
+
 	echo "Packaging source tarball ${pkg}..."
 	if [ -d ${tgtpath} ]; then
 		echo "WARNING - dist tree ${tgtpath} already exists!"
@@ -48,12 +54,11 @@ case $cmd in
 		${SRCDIR}/../../nsprpub/config/make-system-wrappers.pl
 
 	# copy build and config directory.
-	${MKDIR} -p ${tgtpath}/build
 	cp -t ${tgtpath} -dRp ${SRCDIR}/../../build ${SRCDIR}/../../config
 
 	# put in js itself
 	cp -t ${tgtpath} -dRp ${SRCDIR}/../../mfbt
-	cp -t ${tgtpath}/js -dRp ${SRCDIR}/../jsd ${SRCDIR}/../public
+	cp -t ${tgtpath}/js -dRp ${SRCDIR}/../public
 	find ${SRCDIR} -mindepth 1 -maxdepth 1 -not -path ${DIST} -a -not -name ${pkg} \
 		-exec cp -t ${tgtpath}/js/src -dRp {} +
 
@@ -76,6 +81,13 @@ case $cmd in
 	${MKDIR} -p ${tgtpath}/modules/zlib
 	cp -t ${tgtpath}/modules/zlib -dRp \
 		${SRCDIR}/../../modules/zlib/src
+	${MKDIR} -p ${tgtpath}/layout/tools/reftest
+	cp -t ${tgtpath}/layout/tools/reftest -dRp \
+	        ${SRCDIR}/../../layout/tools/reftest/reftest
+	${MKDIR} -p ${tgtpath}/toolkit/mozapps/installer
+	cp -t ${tgtpath}/toolkit/mozapps/installer -dRp \
+	        ${SRCDIR}/../../toolkit/mozapps/installer/package-name.mk \
+	        ${SRCDIR}/../../toolkit/mozapps/installer/upload-files.mk \
 
 	# remove *.pyc and *.pyo files if any
 	find ${tgtpath} -type f -name "*.pyc" -o -name "*.pyo" |xargs rm -f

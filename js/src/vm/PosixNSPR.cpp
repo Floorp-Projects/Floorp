@@ -319,6 +319,12 @@ PR_MillisecondsToInterval(uint32_t milli)
     return milli;
 }
 
+uint32_t
+PR_MicrosecondsToInterval(uint32_t micro)
+{
+    return (micro + 999) / 1000;
+}
+
 static const uint64_t TicksPerSecond = 1000;
 static const uint64_t NanoSecondsInSeconds = 1000000000;
 static const uint64_t MicroSecondsInSeconds = 1000000;

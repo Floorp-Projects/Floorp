@@ -8,6 +8,7 @@
 #define __nsContentPolicy_h__
 
 #include "nsIContentPolicy.h"
+#include "nsISimpleContentPolicy.h"
 #include "nsCategoryCache.h"
 
 /* 
@@ -28,6 +29,7 @@ class nsContentPolicy : public nsIContentPolicy
  private:
     //Array of policies
     nsCategoryCache<nsIContentPolicy> mPolicies;
+    nsCategoryCache<nsISimpleContentPolicy> mSimplePolicies;
 
     //Helper type for CheckPolicy
     typedef
@@ -37,9 +39,17 @@ class nsContentPolicy : public nsIContentPolicy
                            const nsACString &, nsISupports*, nsIPrincipal*,
                            int16_t*));
 
+    typedef
+    NS_STDCALL_FUNCPROTO(nsresult, SCPMethod, nsISimpleContentPolicy,
+                         ShouldProcess,
+                         (uint32_t, nsIURI*, nsIURI*, nsIDOMElement*, bool,
+                           const nsACString &, nsISupports*, nsIPrincipal*,
+                           int16_t*));
+
     //Helper method that applies policyMethod across all policies in mPolicies
     // with the given parameters
-    nsresult CheckPolicy(CPMethod policyMethod, uint32_t contentType,
+    nsresult CheckPolicy(CPMethod policyMethod, SCPMethod simplePolicyMethod,
+                         uint32_t contentType,
                          nsIURI *aURI, nsIURI *origURI,
                          nsISupports *requestingContext,
                          const nsACString &mimeGuess, nsISupports *extra,
