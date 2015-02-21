@@ -243,6 +243,28 @@ LineBreakBefore(const nsHTMLReflowState& aReflowState, nsRubyBaseFrame* aFrame)
   return gfxBreakPriority::eNoBreak;
 }
 
+static void
+GetIsLineBreakAllowed(nsIFrame* aFrame, bool aIsLineBreakable,
+                      bool* aAllowInitialLineBreak, bool* aAllowLineBreak)
+{
+  nsIFrame* parent = aFrame->GetParent();
+  bool inNestedRuby = parent->StyleContext()->IsInlineDescendantOfRuby();
+  // Allow line break between ruby bases when white-space allows,
+  // we are not inside a nested ruby, and there is no span.
+  bool allowLineBreak = !inNestedRuby &&
+                        aFrame->StyleText()->WhiteSpaceCanWrap(aFrame);
+  bool allowInitialLineBreak = allowLineBreak;
+  if (!aFrame->GetPrevInFlow()) {
+    allowInitialLineBreak = !inNestedRuby &&
+                            parent->StyleText()->WhiteSpaceCanWrap(parent);
+  }
+  if (!aIsLineBreakable) {
+    allowInitialLineBreak = false;
+  }
+  *aAllowInitialLineBreak = allowInitialLineBreak;
+  *aAllowLineBreak = allowLineBreak;
+}
+
 static nscoord
 CalculateColumnPrefISize(nsRenderingContext* aRenderingContext,
                          const RubyColumnEnumerator& aEnumerator)
@@ -464,19 +486,9 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
                                       0, aReflowState.AvailableISize(),
                                       &mBaseline);
 
-  nsIFrame* parent = GetParent();
-  bool inNestedRuby = parent->StyleContext()->IsInlineDescendantOfRuby();
-  // Allow line break between ruby bases when white-space allows,
-  // we are not inside a nested ruby, and there is no span.
-  bool allowLineBreak = !inNestedRuby && StyleText()->WhiteSpaceCanWrap(this);
-  bool allowInitialLineBreak = allowLineBreak;
-  if (!GetPrevInFlow()) {
-    allowInitialLineBreak = !inNestedRuby &&
-      parent->StyleText()->WhiteSpaceCanWrap(parent);
-  }
-  if (!aReflowState.mLineLayout->LineIsBreakable()) {
-    allowInitialLineBreak = false;
-  }
+  bool allowInitialLineBreak, allowLineBreak;
+  GetIsLineBreakAllowed(this, aReflowState.mLineLayout->LineIsBreakable(),
+                        &allowInitialLineBreak, &allowLineBreak);
 
   nscoord isize = 0;
   // Reflow columns excluding any span
