@@ -83,7 +83,7 @@ interface mozRTCPeerConnection : EventTarget  {
                             optional DOMString protocol,
                             optional DOMString username);
   [Pref="media.peerconnection.identity.enabled"]
-  void getIdentityAssertion();
+  Promise<DOMString> getIdentityAssertion();
   Promise<mozRTCSessionDescription> createOffer (optional RTCOfferOptions options);
   Promise<mozRTCSessionDescription> createAnswer ();
   Promise<void> setLocalDescription (mozRTCSessionDescription description);
@@ -96,7 +96,9 @@ interface mozRTCPeerConnection : EventTarget  {
   readonly attribute RTCIceGatheringState iceGatheringState;
   readonly attribute RTCIceConnectionState iceConnectionState;
   [Pref="media.peerconnection.identity.enabled"]
-  readonly attribute RTCIdentityAssertion? peerIdentity;
+  readonly attribute Promise<RTCIdentityAssertion> peerIdentity;
+  [Pref="media.peerconnection.identity.enabled"]
+  readonly attribute DOMString? idpLoginUrl;
 
   [ChromeOnly]
   attribute DOMString id;
@@ -138,14 +140,6 @@ interface mozRTCPeerConnection : EventTarget  {
   RTCDataChannel createDataChannel (DOMString label,
                                     optional RTCDataChannelInit dataChannelDict);
   attribute EventHandler ondatachannel;
-  [Pref="media.peerconnection.identity.enabled"]
-  attribute EventHandler onidentityresult;
-  [Pref="media.peerconnection.identity.enabled"]
-  attribute EventHandler onpeeridentity;
-  [Pref="media.peerconnection.identity.enabled"]
-  attribute EventHandler onidpassertionerror;
-  [Pref="media.peerconnection.identity.enabled"]
-  attribute EventHandler onidpvalidationerror;
 };
 
 // Legacy callback API
