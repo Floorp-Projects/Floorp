@@ -200,6 +200,73 @@ RubyColumnEnumerator::GetColumn(RubyColumn& aColumn) const
   aColumn.mIsIntraLevelWhitespace = mAtIntraLevelWhitespace;
 }
 
+static gfxBreakPriority
+LineBreakBefore(nsIFrame* aFrame,
+                nsRenderingContext* aRenderingContext,
+                nsIFrame* aLineContainerFrame,
+                const nsLineList::iterator* aLine)
+{
+  for (nsIFrame* child = aFrame; child;
+       child = child->GetFirstPrincipalChild()) {
+    if (!child->CanContinueTextRun()) {
+      // It is not an inline element. We can break before it.
+      return gfxBreakPriority::eNormalBreak;
+    }
+    if (child->GetType() != nsGkAtoms::textFrame) {
+      continue;
+    }
+
+    auto textFrame = static_cast<nsTextFrame*>(child);
+    gfxSkipCharsIterator iter =
+      textFrame->EnsureTextRun(nsTextFrame::eInflated,
+                               aRenderingContext->ThebesContext(),
+                               aLineContainerFrame, aLine);
+    iter.SetOriginalOffset(textFrame->GetContentOffset());
+    uint32_t pos = iter.GetSkippedOffset();
+    gfxTextRun* textRun = textFrame->GetTextRun(nsTextFrame::eInflated);
+    if (pos >= textRun->GetLength()) {
+      // The text frame contains no character at all.
+      return gfxBreakPriority::eNoBreak;
+    }
+    // Return whether we can break before the first character.
+    if (textRun->CanBreakLineBefore(pos)) {
+      return gfxBreakPriority::eNormalBreak;
+    }
+    // Check whether we can wrap word here.
+    const nsStyleText* textStyle = textFrame->StyleText();
+    if (textStyle->WordCanWrap(textFrame) && textRun->IsClusterStart(pos)) {
+      return gfxBreakPriority::eWordWrapBreak;
+    }
+    // We cannot break before.
+    return gfxBreakPriority::eNoBreak;
+  }
+  // Neither block, nor text frame is found as a leaf. We won't break
+  // before this base frame. It is the behavior of empty spans.
+  return gfxBreakPriority::eNoBreak;
+}
+
+static void
+GetIsLineBreakAllowed(nsIFrame* aFrame, bool aIsLineBreakable,
+                      bool* aAllowInitialLineBreak, bool* aAllowLineBreak)
+{
+  nsIFrame* parent = aFrame->GetParent();
+  bool inNestedRuby = parent->StyleContext()->IsInlineDescendantOfRuby();
+  // Allow line break between ruby bases when white-space allows,
+  // we are not inside a nested ruby, and there is no span.
+  bool allowLineBreak = !inNestedRuby &&
+                        aFrame->StyleText()->WhiteSpaceCanWrap(aFrame);
+  bool allowInitialLineBreak = allowLineBreak;
+  if (!aFrame->GetPrevInFlow()) {
+    allowInitialLineBreak = !inNestedRuby &&
+                            parent->StyleText()->WhiteSpaceCanWrap(parent);
+  }
+  if (!aIsLineBreakable) {
+    allowInitialLineBreak = false;
+  }
+  *aAllowInitialLineBreak = allowInitialLineBreak;
+  *aAllowLineBreak = allowLineBreak;
+}
+
 static nscoord
 CalculateColumnPrefISize(nsRenderingContext* aRenderingContext,
                          const RubyColumnEnumerator& aEnumerator)
@@ -209,15 +276,21 @@ CalculateColumnPrefISize(nsRenderingContext* aRenderingContext,
   for (uint32_t i = 0; i < levelCount; i++) {
     nsIFrame* frame = aEnumerator.GetFrameAtLevel(i);
     if (frame) {
-      max = std::max(max, frame->GetPrefISize(aRenderingContext));
+      nsIFrame::InlinePrefISizeData data;
+      frame->AddInlinePrefISize(aRenderingContext, &data);
+      MOZ_ASSERT(data.prevLines == 0, "Shouldn't have prev lines");
+      max = std::max(max, data.currentLine);
     }
   }
   return max;
 }
 
+// FIXME Currently we use pref isize of ruby content frames for
+//       computing min isize of ruby frame, which may cause problem.
+//       See bug 1134945.
 /* virtual */ void
 nsRubyBaseContainerFrame::AddInlineMinISize(
-    nsRenderingContext *aRenderingContext, nsIFrame::InlineMinISizeData *aData)
+  nsRenderingContext *aRenderingContext, nsIFrame::InlineMinISizeData *aData)
 {
   AutoTextContainerArray textContainers;
   GetTextContainers(textContainers);
@@ -226,38 +299,66 @@ nsRubyBaseContainerFrame::AddInlineMinISize(
     if (textContainers[i]->IsSpanContainer()) {
       // Since spans are not breakable internally, use our pref isize
       // directly if there is any span.
-      aData->currentLine += GetPrefISize(aRenderingContext);
+      nsIFrame::InlinePrefISizeData data;
+      AddInlinePrefISize(aRenderingContext, &data);
+      aData->currentLine += data.currentLine;
+      if (data.currentLine > 0) {
+        aData->atStartOfLine = false;
+      }
       return;
     }
   }
 
-  nscoord max = 0;
-  RubyColumnEnumerator enumerator(this, textContainers);
-  for (; !enumerator.AtEnd(); enumerator.Next()) {
-    // We use *pref* isize for computing the min isize of columns
-    // because ruby bases and texts are unbreakable internally.
-    max = std::max(max, CalculateColumnPrefISize(aRenderingContext,
-                                                 enumerator));
+  bool firstFrame = true;
+  bool allowInitialLineBreak, allowLineBreak;
+  GetIsLineBreakAllowed(this, !aData->atStartOfLine,
+                        &allowInitialLineBreak, &allowLineBreak);
+  for (nsIFrame* frame = this; frame; frame = frame->GetNextInFlow()) {
+    RubyColumnEnumerator enumerator(
+      static_cast<nsRubyBaseContainerFrame*>(frame), textContainers);
+    for (; !enumerator.AtEnd(); enumerator.Next()) {
+      if (firstFrame ? allowInitialLineBreak : allowLineBreak) {
+        nsIFrame* baseFrame = enumerator.GetFrameAtLevel(0);
+        if (baseFrame) {
+          gfxBreakPriority breakPriority =
+            LineBreakBefore(baseFrame, aRenderingContext, nullptr, nullptr);
+          if (breakPriority != gfxBreakPriority::eNoBreak) {
+            aData->OptionallyBreak(aRenderingContext);
+          }
+        }
+      }
+      firstFrame = false;
+      nscoord isize = CalculateColumnPrefISize(aRenderingContext, enumerator);
+      aData->currentLine += isize;
+      if (isize > 0) {
+        aData->atStartOfLine = false;
+      }
+    }
   }
-  aData->currentLine += max;
 }
 
 /* virtual */ void
 nsRubyBaseContainerFrame::AddInlinePrefISize(
-    nsRenderingContext *aRenderingContext, nsIFrame::InlinePrefISizeData *aData)
+  nsRenderingContext *aRenderingContext, nsIFrame::InlinePrefISizeData *aData)
 {
   AutoTextContainerArray textContainers;
   GetTextContainers(textContainers);
 
   nscoord sum = 0;
-  RubyColumnEnumerator enumerator(this, textContainers);
-  for (; !enumerator.AtEnd(); enumerator.Next()) {
-    sum += CalculateColumnPrefISize(aRenderingContext, enumerator);
+  for (nsIFrame* frame = this; frame; frame = frame->GetNextInFlow()) {
+    RubyColumnEnumerator enumerator(
+      static_cast<nsRubyBaseContainerFrame*>(frame), textContainers);
+    for (; !enumerator.AtEnd(); enumerator.Next()) {
+      sum += CalculateColumnPrefISize(aRenderingContext, enumerator);
+    }
   }
   for (uint32_t i = 0, iend = textContainers.Length(); i < iend; i++) {
     if (textContainers[i]->IsSpanContainer()) {
       nsIFrame* frame = textContainers[i]->GetFirstPrincipalChild();
-      sum = std::max(sum, frame->GetPrefISize(aRenderingContext));
+      nsIFrame::InlinePrefISizeData data;
+      frame->AddInlinePrefISize(aRenderingContext, &data);
+      MOZ_ASSERT(data.prevLines == 0, "Shouldn't have prev lines");
+      sum = std::max(sum, data.currentLine);
     }
   }
   aData->currentLine += sum;
@@ -399,19 +500,9 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
                                       0, aReflowState.AvailableISize(),
                                       &mBaseline);
 
-  nsIFrame* parent = GetParent();
-  bool inNestedRuby = parent->StyleContext()->IsInlineDescendantOfRuby();
-  // Allow line break between ruby bases when white-space allows,
-  // we are not inside a nested ruby, and there is no span.
-  bool allowLineBreak = !inNestedRuby && StyleText()->WhiteSpaceCanWrap(this);
-  bool allowInitialLineBreak = allowLineBreak;
-  if (!GetPrevInFlow()) {
-    allowInitialLineBreak = !inNestedRuby &&
-      parent->StyleText()->WhiteSpaceCanWrap(parent);
-  }
-  if (!aReflowState.mLineLayout->LineIsBreakable()) {
-    allowInitialLineBreak = false;
-  }
+  bool allowInitialLineBreak, allowLineBreak;
+  GetIsLineBreakAllowed(this, aReflowState.mLineLayout->LineIsBreakable(),
+                        &allowInitialLineBreak, &allowLineBreak);
 
   nscoord isize = 0;
   // Reflow columns excluding any span
@@ -601,49 +692,6 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
   return icoord;
 }
 
-static gfxBreakPriority
-LineBreakBefore(const nsHTMLReflowState& aReflowState, nsRubyBaseFrame* aFrame)
-{
-  for (nsIFrame* child = aFrame; child;
-       child = child->GetFirstPrincipalChild()) {
-    if (!child->CanContinueTextRun()) {
-      // It is not an inline element. We can break before it.
-      return gfxBreakPriority::eNormalBreak;
-    }
-    if (child->GetType() != nsGkAtoms::textFrame) {
-      continue;
-    }
-
-    auto textFrame = static_cast<nsTextFrame*>(child);
-    gfxSkipCharsIterator iter =
-      textFrame->EnsureTextRun(nsTextFrame::eInflated,
-                               aReflowState.rendContext->ThebesContext(),
-                               aReflowState.mLineLayout->LineContainerFrame(),
-                               aReflowState.mLineLayout->GetLine());
-    iter.SetOriginalOffset(textFrame->GetContentOffset());
-    uint32_t pos = iter.GetSkippedOffset();
-    gfxTextRun* textRun = textFrame->GetTextRun(nsTextFrame::eInflated);
-    if (pos >= textRun->GetLength()) {
-      // The text frame contains no character at all.
-      return gfxBreakPriority::eNoBreak;
-    }
-    // Return whether we can break before the first character.
-    if (textRun->CanBreakLineBefore(pos)) {
-      return gfxBreakPriority::eNormalBreak;
-    }
-    // Check whether we can wrap word here.
-    const nsStyleText* textStyle = textFrame->StyleText();
-    if (textStyle->WordCanWrap(textFrame) && textRun->IsClusterStart(pos)) {
-      return gfxBreakPriority::eWordWrapBreak;
-    }
-    // We cannot break before.
-    return gfxBreakPriority::eNoBreak;
-  }
-  // Neither block, nor text frame is found as a leaf. We won't break
-  // before this base frame. It is the behavior of empty spans.
-  return gfxBreakPriority::eNoBreak;
-}
-
 nscoord
 nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
                                           uint32_t aColumnIndex,
@@ -730,8 +778,10 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
       aReflowState.mAllowLineBreak : aReflowState.mAllowInitialLineBreak;
     if (allowBreakBefore) {
       bool shouldBreakBefore = false;
-      gfxBreakPriority breakPriority =
-        LineBreakBefore(baseReflowState, aColumn.mBaseFrame);
+      gfxBreakPriority breakPriority = LineBreakBefore(
+        aColumn.mBaseFrame, baseReflowState.rendContext,
+        baseReflowState.mLineLayout->LineContainerFrame(),
+        baseReflowState.mLineLayout->GetLine());
       if (breakPriority != gfxBreakPriority::eNoBreak) {
         int32_t offset;
         gfxBreakPriority lastBreakPriority;

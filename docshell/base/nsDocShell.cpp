@@ -4975,8 +4975,15 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     }
     tsi = do_QueryInterface(securityInfo);
     if (tsi) {
-      // Usually we should have aFailedChannel and get a detailed message
-      tsi->GetErrorMessage(getter_Copies(messageStr));
+      uint32_t securityState;
+      tsi->GetSecurityState(&securityState);
+      if (securityState & nsIWebProgressListener::STATE_USES_SSL_3) {
+        error.AssignLiteral("sslv3Used");
+        addHostPort = true;
+      } else {
+        // Usually we should have aFailedChannel and get a detailed message
+        tsi->GetErrorMessage(getter_Copies(messageStr));
+      }
     } else {
       // No channel, let's obtain the generic error message
       if (nsserr) {

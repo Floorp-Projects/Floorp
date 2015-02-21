@@ -100,7 +100,10 @@ XPCThrower::ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx)
     *  If there is a pending exception when the native call returns and
     *  it has the same error result as returned by the native call, then
     *  the native call may be passing through an error from a previous JS
-    *  call. So we'll just throw that exception into our JS.
+    *  call. So we'll just throw that exception into our JS.  Note that
+    *  we don't need to worry about NS_ERROR_UNCATCHABLE_EXCEPTION,
+    *  because presumably there would be no pending exception for that
+    *  nsresult!
     */
 
     if (CheckForPendingException(result, ccx))

@@ -156,24 +156,10 @@
           errDesc.id = "errorLongDesc";
         }
 
-        if (err == "nssFailure2" &&
-            sd.textContent.contains("ssl_error_unsupported_version")) {
-          var ssl3ErrorTitle = document.getElementById("et_ssl3");
-          var ssl3ErrorDesc = document.getElementById("ed_ssl3");
-          var ssl3ShortDesc = document.getElementById("esd_ssl3");
+        if (err == "sslv3Used") {
           var learnMoreText = document.getElementById("learn_more_ssl3");
 
-          errTitle.parentNode.replaceChild(ssl3ErrorTitle, errTitle);
-          ssl3ErrorTitle.id = "errorTitleText";
-          ssl3ErrorTitle.setAttribute("sslv3", "true");
-          errTitle = ssl3ErrorTitle;
-
-          sd.innerHTML = ssl3ShortDesc.innerHTML;
-          sd.querySelector('span').textContent = location.hostname;
-
-          errDesc.parentNode.replaceChild(ssl3ErrorDesc, errDesc);
-          ssl3ErrorDesc.id = "errorLongDesc";
-          ssl3ErrorDesc.querySelector('span').textContent = "ssl_error_unsupported_version";
+          errTitle.setAttribute("sslv3", "true");
 
           var retryBtn = document.getElementById("errorTryAgain");
           retryBtn.textContent = learnMoreText.textContent;
@@ -218,7 +204,7 @@
 
         window.addEventListener("AboutNetErrorOptions", function(evt) {
         // Pinning errors are of type nssFailure2
-          if (getErrorCode() == "nssFailure2" && !errTitle.hasAttribute("sslv3")) {
+          if (getErrorCode() == "nssFailure2") {
             var learnMoreLink = document.getElementById("learnMoreLink");
             // nssFailure2 also gets us other non-overrideable errors. Choose
             // a "learn more" link based on description:
@@ -391,7 +377,7 @@
         <h1 id="et_cspBlocked">&cspBlocked.title;</h1>
         <h1 id="et_remoteXUL">&remoteXUL.title;</h1>
         <h1 id="et_corruptedContentError">&corruptedContentError.title;</h1>
-        <h1 id="et_ssl3">&oldSecurityProtocol.title;</h1>
+        <h1 id="et_sslv3Used">&sslv3Used.title;</h1>
       </div>
       <div id="errorDescriptionsContainer">
         <div id="ed_generic">&generic.longDesc;</div>
@@ -418,9 +404,8 @@
         <div id="ed_cspBlocked">&cspBlocked.longDesc;</div>
         <div id="ed_remoteXUL">&remoteXUL.longDesc;</div>
         <div id="ed_corruptedContentError">&corruptedContentError.longDesc;</div>
-        <div id="esd_ssl3">&oldSecurityProtocol.longDesc2;</div>
-        <div id="ed_ssl3">&oldSecurityProtocol.advancedInfo;</div>
-        <div id="learn_more_ssl3">&oldSecurityProtocol.learnMore;</div>
+        <div id="ed_sslv3Used">&sslv3Used.longDesc;</div>
+        <div id="learn_more_ssl3">&sslv3Used.learnMore;</div>
       </div>
     </div>
 

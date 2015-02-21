@@ -1101,13 +1101,11 @@ nsCSSRuleProcessor::ClearSheets()
   mSheets.Clear();
 }
 
-/* static */ nsresult
+/* static */ void
 nsCSSRuleProcessor::Startup()
 {
   Preferences::AddBoolVarCache(&gSupportVisitedPseudo, VISITED_PSEUDO_PREF,
                                true);
-
-  return NS_OK;
 }
 
 static bool

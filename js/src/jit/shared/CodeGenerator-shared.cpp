@@ -1167,6 +1167,10 @@ CodeGeneratorShared::verifyOsiPointRegs(LSafepoint *safepoint)
     // before the return address.
     masm.branch32(Assembler::NotEqual, checkRegs, Imm32(1), &failure);
 
+    // Set checkRegs to 0, so that we don't try to verify registers after we
+    // return from this script to the caller.
+    masm.store32(Imm32(0), checkRegs);
+
     // Ignore clobbered registers. Some instructions (like LValueToInt32) modify
     // temps after calling into the VM. This is fine because no other
     // instructions (including this OsiPoint) will depend on them. Also

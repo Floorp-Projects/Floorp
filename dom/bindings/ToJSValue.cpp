@@ -66,6 +66,8 @@ ToJSValue(JSContext* aCx,
           JS::MutableHandle<JS::Value> aValue)
 {
   MOZ_ASSERT(aArgument.Failed());
+  MOZ_ASSERT(!aArgument.IsUncatchableException(),
+             "Doesn't make sense to convert uncatchable exception to a JS value!");
   AutoForceSetExceptionOnContext forceExn(aCx);
   DebugOnly<bool> throwResult = ThrowMethodFailedWithDetails(aCx, aArgument, "", "");
   MOZ_ASSERT(!throwResult);

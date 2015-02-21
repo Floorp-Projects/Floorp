@@ -49,6 +49,7 @@ public:
     , mIsDetached(false)
     , mMaySpanAnonymousSubtrees(false)
     , mInSelection(false)
+    , mIsGenerated(false)
     , mStartOffsetWasIncremented(false)
     , mEndOffsetWasIncremented(false)
     , mEnableGravitationOnElementRemoval(true)
@@ -151,6 +152,27 @@ public:
     } else {
       UnregisterCommonAncestor(commonAncestor);
     }
+  }
+
+  /**
+   * Return true if this range was generated.
+   * @see SetIsGenerated
+   */
+  bool IsGenerated() const
+  {
+    return mIsGenerated;
+  }
+
+  /**
+   * Mark this range as being generated or not.
+   * Currently it is used for marking ranges that are created when splitting up
+   * a range to exclude a -moz-user-select:none region.
+   * @see Selection::AddItem
+   * @see ExcludeNonSelectableNodes
+   */
+  void SetIsGenerated(bool aIsGenerated)
+  {
+    mIsGenerated = aIsGenerated;
   }
 
   nsINode* GetCommonAncestor() const;
@@ -333,6 +355,7 @@ protected:
   bool mIsDetached;
   bool mMaySpanAnonymousSubtrees;
   bool mInSelection;
+  bool mIsGenerated;
   bool mStartOffsetWasIncremented;
   bool mEndOffsetWasIncremented;
   bool mEnableGravitationOnElementRemoval;
