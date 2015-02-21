@@ -641,6 +641,8 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
                                                         const nsRect& aDirtyRect)
 {
   nsRect dirtyRectRelativeToDirtyFrame = aDirtyRect;
+  DisplayItemClip clip;
+  const DisplayItemClip* clipPtr = nullptr;
   if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
       IsPaintingToWindow()) {
     NS_ASSERTION(aDirtyFrame == aFrame->GetParent(), "Dirty frame should be viewport frame");
@@ -653,6 +655,19 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
       dirtyRectRelativeToDirtyFrame.SizeTo(ps->GetScrollPositionClampingScrollPortSize());
     } else {
       dirtyRectRelativeToDirtyFrame.SizeTo(aDirtyFrame->GetSize());
+    }
+
+    // Always clip fixed items to the root scroll frame's scrollport, because
+    // we skip setting the clip in ScrollFrameHelper if we have a displayport.
+    nsIFrame* rootScroll = aFrame->PresContext()->PresShell()->GetRootScrollFrame();
+    if (rootScroll) {
+      nsIScrollableFrame* scrollable = do_QueryFrame(rootScroll);
+
+      nsRect clipRect = scrollable->GetScrollPortRect() + ToReferenceFrame(rootScroll);
+      nscoord radii[8];
+      bool haveRadii = rootScroll->GetPaddingBoxBorderRadii(radii);
+      clip.SetTo(clipRect, haveRadii ? radii : nullptr);
+      clipPtr = &clip;
     }
   }
 
@@ -672,8 +687,16 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
 
   if (!dirty.IntersectRect(dirty, overflowRect))
     return;
-  const DisplayItemClip* clip = mClipState.GetClipForContainingBlockDescendants();
-  OutOfFlowDisplayData* data = clip ? new OutOfFlowDisplayData(*clip, dirty)
+
+  // Combine clips if necessary
+  const DisplayItemClip* oldClip = mClipState.GetClipForContainingBlockDescendants();
+  if (clipPtr && oldClip) {
+    clip.IntersectWith(*oldClip);
+  } else if (oldClip) {
+    clipPtr = oldClip;
+  }
+
+  OutOfFlowDisplayData* data = clipPtr ? new OutOfFlowDisplayData(*clipPtr, dirty)
     : new OutOfFlowDisplayData(dirty);
   aFrame->Properties().Set(nsDisplayListBuilder::OutOfFlowDisplayDataProperty(), data);
 

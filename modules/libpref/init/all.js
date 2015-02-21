@@ -4555,9 +4555,6 @@ pref("reader.color_scheme.values", "[\"light\",\"dark\",\"sepia\"]");
 // The font type in reader (sans-serif, serif)
 pref("reader.font_type", "sans-serif");
 
-// Font type values available in reader mode UI.
-pref("reader.font_type.values", "[\"serif\",\"sans-serif\"]");
-
 // Whether or not the user has interacted with the reader mode toolbar.
 // This is used to show a first-launch tip in reader mode.
 pref("reader.has_used_toolbar", false);

@@ -73,13 +73,17 @@ let AboutReader = function(mm, win) {
   this._setColorSchemePref(colorScheme);
 
   let fontTypeSample = gStrings.GetStringFromName("aboutReader.fontTypeSample");
-  let fontTypeValues = JSON.parse(Services.prefs.getCharPref("reader.font_type.values"));
-  let fontTypeOptions = fontTypeValues.map((value) => {
-    return { name: fontTypeSample,
-             description: gStrings.GetStringFromName("aboutReader.fontType." + value),
-             value: value,
-             linkClass: value };
-  });
+  let fontTypeOptions = [
+    { name: fontTypeSample,
+      description: gStrings.GetStringFromName("aboutReader.fontType.serif"),
+      value: "serif",
+      linkClass: "serif" },
+    { name: fontTypeSample,
+      description: gStrings.GetStringFromName("aboutReader.fontType.sans-serif"),
+      value: "sans-serif",
+      linkClass: "sans-serif"
+    },
+  ];
 
   let fontType = Services.prefs.getCharPref("reader.font_type");
   this._setupSegmentedButton("font-type-buttons", fontTypeOptions, fontType, this._setFontType.bind(this));

@@ -1,54 +1,66 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
+"use strict";
+
+/*
+ Deep copy of bookmark data, using the front-end codepath:
+
+ - create test folder A
+ - add a subfolder to folder A, and add items to it
+ - validate folder A (sanity check)
+ - copy folder A, creating new folder B, using the front-end path
+ - validate folder B
+ - undo copy transaction
+ - validate folder B (empty)
+ - redo copy transaction
+ - validate folder B's contents
+*/
+
+add_task(function* () {
   // sanity check
   ok(PlacesUtils, "checking PlacesUtils, running in chrome context?");
   ok(PlacesUIUtils, "checking PlacesUIUtils, running in chrome context?");
 
-  /*
-   Deep copy of bookmark data, using the front-end codepath:
+  let toolbarId = PlacesUtils.toolbarFolderId;
+  let toolbarNode = PlacesUtils.getFolderContents(toolbarId).root;
 
-   - create test folder A
-   - add a subfolder to folder A, and add items to it
-   - validate folder A (sanity check)
-   - copy folder A, creating new folder B, using the front-end path
-   - validate folder B
-   - undo copy transaction
-   - validate folder B (empty)
-   - redo copy transaction
-   - validate folder B's contents
-
-  */
-
-  var toolbarId = PlacesUtils.toolbarFolderId;
-  var toolbarNode = PlacesUtils.getFolderContents(toolbarId).root;
-
-  var oldCount = toolbarNode.childCount;
-  var testRootId = PlacesUtils.bookmarks.createFolder(toolbarId, "test root", -1);
+  let oldCount = toolbarNode.childCount;
+  let testRoot = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "test root"
+  });
   is(toolbarNode.childCount, oldCount+1, "confirm test root node is a container, and is empty");
-  var testRootNode = toolbarNode.getChild(toolbarNode.childCount-1);
+
+  let testRootNode = toolbarNode.getChild(toolbarNode.childCount-1);
   testRootNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
   testRootNode.containerOpen = true;
   is(testRootNode.childCount, 0, "confirm test root node is a container, and is empty");
 
   // create folder A, fill it, validate its contents
-  var folderAId = PlacesUtils.bookmarks.createFolder(testRootId, "A", -1);
-  populate(folderAId);
-  var folderANode = PlacesUtils.getFolderContents(folderAId).root;
+  let folderA = yield PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    parentGuid: testRoot.guid,
+    title: "A"
+  });
+
+  yield populate(folderA);
+
+  let folderAId = yield PlacesUtils.promiseItemId(folderA.guid);
+  let folderANode = PlacesUtils.getFolderContents(folderAId).root;
   validate(folderANode);
   is(testRootNode.childCount, 1, "create test folder");
 
   // copy it, using the front-end helper functions
-  var serializedNode = PlacesUtils.wrapNode(folderANode, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
-  var rawNode = PlacesUtils.unwrapNodes(serializedNode, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER).shift();
+  let serializedNode = PlacesUtils.wrapNode(folderANode, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
+  let rawNode = PlacesUtils.unwrapNodes(serializedNode, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER).shift();
   // confirm serialization
   ok(rawNode.type, "confirm json node");
   folderANode.containerOpen = false;
 
-  var transaction = PlacesUIUtils.makeTransaction(rawNode,
+  let testRootId = yield PlacesUtils.promiseItemId(testRoot.guid);
+  let transaction = PlacesUIUtils.makeTransaction(rawNode,
                                                   PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
                                                   testRootId,
                                                   -1,
@@ -59,7 +71,7 @@ function test() {
   is(testRootNode.childCount, 2, "create test folder via copy");
 
   // validate the copy
-  var folderBNode = testRootNode.getChild(1);
+  let folderBNode = testRootNode.getChild(1);
   validate(folderBNode);
 
   // undo the transaction, confirm the removal
@@ -78,14 +90,28 @@ function test() {
 
   // clean up
   PlacesUtils.transactionManager.undoTransaction();
-  PlacesUtils.bookmarks.removeItem(folderAId);
-}
+  yield PlacesUtils.bookmarks.remove(folderA.guid);
+});
 
-function populate(aFolderId) {
-  var folderId = PlacesUtils.bookmarks.createFolder(aFolderId, "test folder", -1);
-  PlacesUtils.bookmarks.insertBookmark(folderId, PlacesUtils._uri("http://foo"), -1, "test bookmark");
-  PlacesUtils.bookmarks.insertSeparator(folderId, -1);
-}
+let populate = Task.async(function* (parentFolder) {
+  let folder = yield PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    parentGuid: parentFolder.guid,
+    title: "test folder"
+  });
+
+  yield PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    parentGuid: folder.guid,
+    title: "test bookmark",
+    url: "http://foo"
+  });
+
+  yield PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+    parentGuid: folder.guid
+  });
+});
 
 function validate(aNode) {
   PlacesUtils.asContainer(aNode);

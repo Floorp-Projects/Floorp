@@ -5,6 +5,8 @@
 
 #include "DOMMediaStream.h"
 #include "nsContentUtils.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIUUIDGenerator.h"
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/LocalMediaStreamBinding.h"
 #include "mozilla/dom/AudioNode.h"
@@ -146,6 +148,20 @@ DOMMediaStream::DOMMediaStream()
     mStream(nullptr), mHintContents(0), mTrackTypesAvailable(0),
     mNotifiedOfMediaStreamGraphShutdown(false), mCORSMode(CORS_NONE)
 {
+  nsresult rv;
+  nsCOMPtr<nsIUUIDGenerator> uuidgen =
+    do_GetService("@mozilla.org/uuid-generator;1", &rv);
+
+  if (NS_SUCCEEDED(rv) && uuidgen) {
+    nsID uuid;
+    memset(&uuid, 0, sizeof(uuid));
+    rv = uuidgen->GenerateUUIDInPlace(&uuid);
+    if (NS_SUCCEEDED(rv)) {
+      char buffer[NSID_LENGTH];
+      uuid.ToProvidedString(buffer);
+      mID = NS_ConvertASCIItoUTF16(buffer);
+    }
+  }
 }
 
 DOMMediaStream::~DOMMediaStream()
@@ -180,6 +196,12 @@ DOMMediaStream::CurrentTime()
   }
   return mStream->
     StreamTimeToSeconds(mStream->GetCurrentTime() - mLogicalStreamStartTime);
+}
+
+void
+DOMMediaStream::GetId(nsAString& aID) const
+{
+  aID = mID;
 }
 
 void

@@ -18,9 +18,6 @@ namespace dom {
 class File;
 }
 
-struct VideoTrackConstraintsN;
-struct AudioTrackConstraintsN;
-
 /**
  * Abstract interface for managing audio and video devices. Each platform
  * must implement a concrete class that will map these classes and methods
@@ -219,10 +216,10 @@ public:
   virtual ~MediaEngineVideoSource() {}
 
   /* This call reserves but does not start the device. */
-  virtual nsresult Allocate(const VideoTrackConstraintsN &aConstraints,
+  virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                             const MediaEnginePrefs &aPrefs) = 0;
 
-  virtual bool SatisfiesConstraintSets(
+  virtual uint32_t GetBestFitnessDistance(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets) = 0;
 
 protected:
@@ -241,7 +238,7 @@ public:
   virtual ~MediaEngineAudioSource() {}
 
   /* This call reserves but does not start the device. */
-  virtual nsresult Allocate(const AudioTrackConstraintsN &aConstraints,
+  virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                             const MediaEnginePrefs &aPrefs) = 0;
 protected:
   explicit MediaEngineAudioSource(MediaEngineState aState)

@@ -48,9 +48,12 @@
 #include "builtin/AtomicsObject.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/FloatingPoint.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+
+#include "prmjtime.h"
 
 #include "vm/GlobalObject.h"
 #include "vm/SharedTypedArrayObject.h"
@@ -152,13 +155,6 @@ static bool
 ReportBadArrayType(JSContext *cx)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_ATOMICS_BAD_ARRAY);
-    return false;
-}
-
-static bool
-ReportNoFutexes(JSContext *cx)
-{
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_ATOMICS_NOT_INSTALLED);
     return false;
 }
 
@@ -697,7 +693,7 @@ namespace js {
 //
 // The type is declared opaque in SharedArrayObject.h.  Instances of
 // js::FutexWaiter are stack-allocated and linked onto a list across a
-// call to JS::PerRuntimeFutexAPI::wait().
+// call to FutexRuntime::wait().
 //
 // The 'waiters' field of the SharedArrayRawBuffer points to the highest
 // priority waiter in the list, and lower priority nodes are linked through
@@ -709,30 +705,39 @@ namespace js {
 class FutexWaiter
 {
   public:
-    FutexWaiter(uint32_t offset, JS::PerRuntimeFutexAPI *fx)
+    FutexWaiter(uint32_t offset, JSRuntime *rt)
       : offset(offset),
-        fx(fx),
+        rt(rt),
         lower_pri(nullptr),
         back(nullptr)
     {
     }
 
-    bool        waiting;                // Set to true when the worker is on the list and not woken
     uint32_t    offset;                 // int32 element index within the SharedArrayBuffer
-    JS::PerRuntimeFutexAPI *fx;         // ...
+    JSRuntime   *rt;                    // The runtime of the waiter
     FutexWaiter *lower_pri;             // Lower priority nodes in circular doubly-linked list of waiters
     FutexWaiter *back;                  // Other direction
 };
 
 class AutoLockFutexAPI
 {
-    JS::PerRuntimeFutexAPI * const fx;
   public:
-    explicit AutoLockFutexAPI(JS::PerRuntimeFutexAPI *fx) : fx(fx) {
-        fx->lock();
+    AutoLockFutexAPI() {
+        FutexRuntime::lock();
     }
     ~AutoLockFutexAPI() {
-        fx->unlock();
+        FutexRuntime::unlock();
+    }
+};
+
+class AutoUnlockFutexAPI
+{
+  public:
+    AutoUnlockFutexAPI() {
+        FutexRuntime::unlock();
+    }
+    ~AutoUnlockFutexAPI() {
+        FutexRuntime::lock();
     }
 };
 
@@ -748,9 +753,7 @@ js::atomics_futexWait(JSContext *cx, unsigned argc, Value *vp)
     HandleValue timeoutv = args.get(3);
     MutableHandleValue r = args.rval();
 
-    JS::PerRuntimeFutexAPI* fx = cx->runtime()->futexAPI_;
-    if (!fx)
-        return ReportNoFutexes(cx);
+    JSRuntime* rt = cx->runtime();
 
     Rooted<SharedTypedArrayObject *> view(cx, nullptr);
     if (!GetSharedTypedArray(cx, objv, &view))
@@ -764,11 +767,17 @@ js::atomics_futexWait(JSContext *cx, unsigned argc, Value *vp)
     int32_t value;
     if (!ToInt32(cx, valv, &value))
         return false;
-    double timeout;
-    if (!ToInteger(cx, timeoutv, &timeout))
-        return false;
-    if (timeout < 0)
-        timeout = 0;
+    double timeout_ms;
+    if (timeoutv.isUndefined()) {
+        timeout_ms = mozilla::PositiveInfinity<double>();
+    } else {
+        if (!ToNumber(cx, timeoutv, &timeout_ms))
+            return false;
+        if (mozilla::IsNaN(timeout_ms))
+            timeout_ms = mozilla::PositiveInfinity<double>();
+        else if (timeout_ms < 0)
+            timeout_ms = 0;
+    }
 
     if (!inRange) {
         atomics_fullMemoryBarrier();
@@ -778,7 +787,7 @@ js::atomics_futexWait(JSContext *cx, unsigned argc, Value *vp)
 
     // This lock also protects the "waiters" field on SharedArrayRawBuffer,
     // and it provides the necessary memory fence.
-    AutoLockFutexAPI lock(fx);
+    AutoLockFutexAPI lock;
 
     int32_t* addr = (int32_t*)view->viewData() + offset;
     if (*addr != value) {
@@ -789,8 +798,7 @@ js::atomics_futexWait(JSContext *cx, unsigned argc, Value *vp)
     Rooted<SharedArrayBufferObject *> sab(cx, &view->buffer()->as<SharedArrayBufferObject>());
     SharedArrayRawBuffer *sarb = sab->rawBufferObject();
 
-    FutexWaiter w(offset, fx);
-    w.waiting = true;
+    FutexWaiter w(offset, rt);
     if (FutexWaiter *waiters = sarb->waiters()) {
         w.lower_pri = waiters;
         w.back = waiters->back;
@@ -801,33 +809,10 @@ js::atomics_futexWait(JSContext *cx, unsigned argc, Value *vp)
         sarb->setWaiters(&w);
     }
 
-    bool retval = true;
-    switch (fx->wait(timeout)) {
-      case JS::PerRuntimeFutexAPI::Woken:
-        r.setInt32(AtomicsObject::FutexOK);
-        break;
-      case JS::PerRuntimeFutexAPI::Timedout:
-        r.setInt32(AtomicsObject::FutexTimedout);
-        break;
-      case JS::PerRuntimeFutexAPI::ErrorException:
-        MOZ_ASSERT(JS_IsExceptionPending(cx));
-        retval = false;
-        break;
-      case JS::PerRuntimeFutexAPI::InterruptForTerminate:
-        JS_ClearPendingException(cx);
-        retval = false;
-        break;
-      case JS::PerRuntimeFutexAPI::WaitingNotAllowed:
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_ATOMICS_WAIT_NOT_ALLOWED);
-        retval = false;
-        break;
-      case JS::PerRuntimeFutexAPI::ErrorTooLong:
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_ATOMICS_TOO_LONG);
-        retval = false;
-        break;
-      default:
-        MOZ_CRASH();
-    }
+    AtomicsObject::FutexWaitResult result = AtomicsObject::FutexOK;
+    bool retval = rt->fx.wait(cx, timeout_ms, &result);
+    if (retval)
+        r.setInt32(result);
 
     if (w.lower_pri == &w) {
         sarb->setWaiters(nullptr);
@@ -869,11 +854,7 @@ js::atomics_futexWake(JSContext *cx, unsigned argc, Value *vp)
     if (count < 0)
         count = 0;
 
-    JS::PerRuntimeFutexAPI* fx = cx->runtime()->futexAPI_;
-    if (!fx)
-        return ReportNoFutexes(cx);
-
-    AutoLockFutexAPI lock(fx);
+    AutoLockFutexAPI lock;
 
     Rooted<SharedArrayBufferObject *> sab(cx, &view->buffer()->as<SharedArrayBufferObject>());
     SharedArrayRawBuffer *sarb = sab->rawBufferObject();
@@ -885,10 +866,9 @@ js::atomics_futexWake(JSContext *cx, unsigned argc, Value *vp)
         do {
             FutexWaiter *c = iter;
             iter = iter->lower_pri;
-            if (c->offset != offset || !c->waiting)
+            if (c->offset != offset || !c->rt->fx.isWaiting())
                 continue;
-            c->fx->wake();
-            c->waiting = false;
+            c->rt->fx.wake(FutexRuntime::WakeExplicit);
             ++woken;
             --count;
         } while (count > 0 && iter != waiters);
@@ -936,11 +916,7 @@ js::atomics_futexWakeOrRequeue(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    JS::PerRuntimeFutexAPI* fx = cx->runtime()->futexAPI_;
-    if (!fx)
-        return ReportNoFutexes(cx);
-
-    AutoLockFutexAPI lock(fx);
+    AutoLockFutexAPI lock;
 
     int32_t* addr = (int32_t*)view->viewData() + offset1;
     if (*addr != value) {
@@ -980,11 +956,10 @@ js::atomics_futexWakeOrRequeue(JSContext *cx, unsigned argc, Value *vp)
     while (iter != &whead) {
         FutexWaiter *c = iter;
         iter = iter->lower_pri;
-        if (!c->waiting || c->offset != offset1)
+        if (c->offset != offset1 || !c->rt->fx.isWaiting())
             continue;
         if (count > 0) {
-            c->fx->wake();
-            c->waiting = false;
+            c->rt->fx.wake(FutexRuntime::WakeExplicit);
             ++woken;
             --count;
         } else {
@@ -1022,6 +997,218 @@ js::atomics_futexWakeOrRequeue(JSContext *cx, unsigned argc, Value *vp)
 
     r.setInt32(woken);
     return true;
+}
+
+/* static */ bool
+js::FutexRuntime::initialize()
+{
+    MOZ_ASSERT(!lock_);
+    lock_ = PR_NewLock();
+    return lock_ != nullptr;
+}
+
+/* static */ void
+js::FutexRuntime::destroy()
+{
+    if (lock_) {
+        PR_DestroyLock(lock_);
+        lock_ = nullptr;
+    }
+}
+
+/* static */ void
+js::FutexRuntime::lock()
+{
+    PR_Lock(lock_);
+#ifdef DEBUG
+    MOZ_ASSERT(!lockHolder_);
+    lockHolder_ = PR_GetCurrentThread();
+#endif
+}
+
+/* static */ mozilla::Atomic<PRLock*> FutexRuntime::lock_;
+
+#ifdef DEBUG
+/* static */ mozilla::Atomic<PRThread*> FutexRuntime::lockHolder_;
+#endif
+
+/* static */ void
+js::FutexRuntime::unlock()
+{
+#ifdef DEBUG
+    MOZ_ASSERT(lockHolder_ == PR_GetCurrentThread());
+    lockHolder_ = nullptr;
+#endif
+    PR_Unlock(lock_);
+}
+
+js::FutexRuntime::FutexRuntime()
+  : cond_(nullptr),
+    state_(Idle)
+{
+}
+
+bool
+js::FutexRuntime::initInstance()
+{
+    MOZ_ASSERT(lock_);
+    cond_ = PR_NewCondVar(lock_);
+    return cond_ != nullptr;
+}
+
+void
+js::FutexRuntime::destroyInstance()
+{
+    if (cond_)
+        PR_DestroyCondVar(cond_);
+}
+
+bool
+js::FutexRuntime::isWaiting()
+{
+    return state_ == Waiting || state_ == WaitingInterrupted;
+}
+
+bool
+js::FutexRuntime::wait(JSContext *cx, double timeout_ms, AtomicsObject::FutexWaitResult *result)
+{
+    MOZ_ASSERT(&cx->runtime()->fx == this);
+    MOZ_ASSERT(lockHolder_ == PR_GetCurrentThread());
+    MOZ_ASSERT(state_ == Idle || state_ == WaitingInterrupted);
+
+    // Disallow waiting when a runtime is processing an interrupt.
+    // See explanation below.
+
+    if (state_ == WaitingInterrupted) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_ATOMICS_WAIT_NOT_ALLOWED);
+        return false;
+    }
+
+    const bool timed = !mozilla::IsInfinite(timeout_ms);
+
+    // Reject the timeout if it is not exactly representable.  2e50 ms = 2e53 us = 6e39 years.
+
+    if (timed && timeout_ms > 2e50) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_ATOMICS_TOO_LONG);
+        return false;
+    }
+
+    // Times and intervals are in microseconds.
+
+    const uint64_t finalEnd = timed ? PRMJ_Now() + (uint64_t)ceil(timeout_ms * 1000.0) : 0;
+
+    // 4000s is about the longest timeout slice that is guaranteed to
+    // work cross-platform.
+
+    const uint64_t maxSlice = 4000000000LLU;
+    bool retval = true;
+
+    for (;;) {
+        uint64_t sliceStart = 0;
+        uint32_t timeout = PR_INTERVAL_NO_TIMEOUT;
+        if (timed) {
+            sliceStart = PRMJ_Now();
+            uint64_t timeLeft = finalEnd > sliceStart ? finalEnd - sliceStart : 0;
+            timeout = PR_MicrosecondsToInterval((uint32_t)Min(timeLeft, maxSlice));
+        }
+        state_ = Waiting;
+#ifdef DEBUG
+        PRThread* holder = lockHolder_;
+        lockHolder_ = nullptr;
+#endif
+        JS_ALWAYS_TRUE(PR_WaitCondVar(cond_, timeout) == PR_SUCCESS);
+#ifdef DEBUG
+        lockHolder_ = holder;
+#endif
+        switch (state_) {
+          case FutexRuntime::Waiting:
+            // Timeout or spurious wakeup.
+            if (timed) {
+                uint64_t now = PRMJ_Now();
+                if (now >= finalEnd) {
+                    *result = AtomicsObject::FutexTimedout;
+                    goto finished;
+                }
+            }
+            break;
+
+          case FutexRuntime::Woken:
+            *result = AtomicsObject::FutexOK;
+            goto finished;
+
+          case FutexRuntime::WokenForJSInterrupt:
+            // The interrupt handler may reenter the engine.  In that case
+            // there are two complications:
+            //
+            // - The waiting thread is not actually waiting on the
+            //   condition variable so we have to record that it
+            //   should be woken when the interrupt handler returns.
+            //   To that end, we flag the thread as interrupted around
+            //   the interrupt and check state_ when the interrupt
+            //   handler returns.  A futexWake() call that reaches the
+            //   runtime during the interrupt sets state_ to woken.
+            //
+            // - It is in principle possible for futexWait() to be
+            //   reentered on the same thread/runtime and waiting on the
+            //   same location and to yet again be interrupted and enter
+            //   the interrupt handler.  In this case, it is important
+            //   that when another agent wakes waiters, all waiters using
+            //   the same runtime on the same location are woken in LIFO
+            //   order; FIFO may be the required order, but FIFO would
+            //   fail to wake up the innermost call.  Interrupts are
+            //   outside any spec anyway.  Also, several such suspended
+            //   waiters may be woken at a time.
+            //
+            //   For the time being we disallow waiting from within code
+            //   that runs from within an interrupt handler; this may
+            //   occasionally (very rarely) be surprising but is
+            //   expedient.  Other solutions exist, see bug #1131943.  The
+            //   code that performs the check is above, at the head of
+            //   this function.
+
+            state_ = WaitingInterrupted;
+            {
+                AutoUnlockFutexAPI unlock;
+                retval = cx->runtime()->handleInterrupt(cx);
+            }
+            if (!retval)
+                goto finished;
+            if (state_ == Woken) {
+                *result = AtomicsObject::FutexOK;
+                goto finished;
+            }
+            break;
+
+          default:
+            MOZ_CRASH();
+        }
+    }
+finished:
+    state_ = Idle;
+    return retval;
+}
+
+void
+js::FutexRuntime::wake(WakeReason reason)
+{
+    MOZ_ASSERT(lockHolder_ == PR_GetCurrentThread());
+    MOZ_ASSERT(isWaiting());
+
+    if (state_ == WaitingInterrupted && reason == WakeExplicit) {
+        state_ = Woken;
+        return;
+    }
+    switch (reason) {
+      case WakeExplicit:
+        state_ = Woken;
+        break;
+      case WakeForJSInterrupt:
+        state_ = WokenForJSInterrupt;
+        break;
+      default:
+        MOZ_CRASH();
+    }
+    PR_NotifyCondVar(cond_);
 }
 
 const JSFunctionSpec AtomicsMethods[] = {

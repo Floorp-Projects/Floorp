@@ -1413,6 +1413,10 @@ nsIOService::OnNetworkLinkEvent(const char *data)
     if (mShutdown)
         return NS_ERROR_NOT_AVAILABLE;
 
+    if (!mManageOfflineStatus) {
+      return NS_OK;
+    }
+
     if (!strcmp(data, NS_NETWORK_LINK_DATA_DOWN)) {
         // check to make sure this won't collide with Autodial
         if (mSocketTransportService) {

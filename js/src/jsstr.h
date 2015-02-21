@@ -91,6 +91,8 @@ struct JSSubString {
  */
 #define JS7_ISDEC(c)    ((((unsigned)(c)) - '0') <= 9)
 #define JS7_UNDEC(c)    ((c) - '0')
+#define JS7_ISOCT(c)    ((((unsigned)(c)) - '0') <= 7)
+#define JS7_UNOCT(c)    (JS7_UNDEC(c))
 #define JS7_ISHEX(c)    ((c) < 128 && isxdigit(c))
 #define JS7_UNHEX(c)    (unsigned)(JS7_ISDEC(c) ? (c) - '0' : 10 + tolower(c) - 'a')
 #define JS7_ISLET(c)    ((c) < 128 && isalpha(c))

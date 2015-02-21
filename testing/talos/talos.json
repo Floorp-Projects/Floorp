@@ -1,11 +1,11 @@
 {
     "talos.zip": {
-        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.f3179facd945.zip",
+        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.0f48d2fb3fe3.zip",
         "path": ""
     },
     "global": {
         "talos_repo": "https://hg.mozilla.org/build/talos",
-        "talos_revision": "3edc0c98940e"
+        "talos_revision": "0f48d2fb3fe3"
     },
     "extra_options": {
         "android": [ "--apkPath=%(apk_path)s" ]

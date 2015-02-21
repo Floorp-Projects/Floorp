@@ -1190,8 +1190,8 @@ function openURL(aURL)
                                                  null,      // aLoadingNode
                                                  Services.scriptSecurityManager.getSystemPrincipal(),
                                                  null,      // aTriggeringPrincipal
-                                                 Ci.nsILoadInfo.SEC_NORMAL,
-                                                 Ci.nsIContentPolicy.TYPE_OTHER);
+                                                 Components.interfaces.nsILoadInfo.SEC_NORMAL,
+                                                 Components.interfaces.nsIContentPolicy.TYPE_OTHER);
     var uriLoader = Components.classes["@mozilla.org/uriloader;1"]
                               .getService(Components.interfaces.nsIURILoader);
     uriLoader.openURI(channel,

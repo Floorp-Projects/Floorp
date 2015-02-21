@@ -368,6 +368,7 @@ private:
                                         bool ignoreMissingPartialLen = false);
     nsresult SetupByteRangeRequest(int64_t partialLen);
     void UntieByteRangeRequest();
+    void UntieValidationRequest();
     nsresult OpenCacheInputStream(nsICacheEntry* cacheEntry, bool startBuffering,
                                   bool checkingAppCacheEntry);
 

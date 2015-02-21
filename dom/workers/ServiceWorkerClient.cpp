@@ -10,7 +10,7 @@
 #include "nsGlobalWindow.h"
 #include "WorkerPrivate.h"
 
-#include "mozilla/dom/ServiceWorkerClientBinding.h"
+#include "mozilla/dom/ClientBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -29,7 +29,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 ServiceWorkerClient::WrapObject(JSContext* aCx)
 {
-  return ServiceWorkerClientBinding::Wrap(aCx, this);
+  return ClientBinding::Wrap(aCx, this);
 }
 
 namespace {

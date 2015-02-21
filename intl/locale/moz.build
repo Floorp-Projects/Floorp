@@ -64,6 +64,9 @@ RESOURCE_FILES += [
 GENERATED_FILES += [
     'langGroups.properties.h',
 ]
+langgroups = GENERATED_FILES['langGroups.properties.h']
+langgroups.script = 'props2arrays.py'
+langgroups.inputs = ['langGroups.properties']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     CXXFLAGS += CONFIG['MOZ_QT_CFLAGS']
