@@ -4,7 +4,7 @@ function test() {
   // XXX This looks a bit odd, but is needed to avoid throwing when removing the
   // event listeners below. See bug 310955.
   document.getElementById("sidebar").addEventListener("load", delayedOpenUrl, true);
-  toggleSidebar("viewWebPanelsSidebar", true);
+  SidebarUI.show("viewWebPanelsSidebar");
 }
 
 function delayedOpenUrl() {
@@ -75,7 +75,7 @@ function contextMenuClosed()
   var sidebar = document.getElementById("sidebar");
   sidebar.contentDocument.removeEventListener("popuphidden", contextMenuClosed, false);
 
-  toggleSidebar("viewWebPanelsSidebar");
+  SidebarUI.hide();
 
   ok(document.getElementById("sidebar-box").hidden, "Sidebar successfully hidden");
 

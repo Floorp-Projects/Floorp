@@ -1078,12 +1078,6 @@ nsContextMenu.prototype = {
     mm.addMessageListener("ContextMenu:SaveVideoFrameAsImage:Result", onMessage);
   },
 
-  fullScreenVideo: function () {
-    let video = this.target;
-    if (document.mozFullScreenEnabled)
-      video.mozRequestFullScreen();
-  },
-
   leaveDOMFullScreen: function() {
     document.mozCancelFullScreen();
   },

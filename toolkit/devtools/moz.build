@@ -16,6 +16,7 @@ DIRS += [
     'security',
     'server',
     'sourcemap',
+    'shared',
     'styleinspector',
     'tern',
     'transport',

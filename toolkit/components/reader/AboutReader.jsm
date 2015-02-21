@@ -301,7 +301,10 @@ AboutReader.prototype = {
     this._fontSize = newFontSize;
     htmlClasses.add("font-size" + this._fontSize);
 
-    Services.prefs.setIntPref("reader.font_size", this._fontSize);
+    this._mm.sendAsyncMessage("Reader:SetIntPref", {
+      name: "reader.font_size",
+      value: this._fontSize
+    });
   },
 
   _handleDeviceLight: function Reader_handleDeviceLight(newLux) {
@@ -392,7 +395,10 @@ AboutReader.prototype = {
     this._enableAmbientLighting(colorSchemePref === "auto");
     this._setColorScheme(colorSchemePref);
 
-    Services.prefs.setCharPref("reader.color_scheme", colorSchemePref);
+    this._mm.sendAsyncMessage("Reader:SetCharPref", {
+      name: "reader.color_scheme",
+      value: colorSchemePref
+    });
   },
 
   _setFontType: function Reader_setFontType(newFontType) {
@@ -407,7 +413,10 @@ AboutReader.prototype = {
     this._fontType = newFontType;
     bodyClasses.add(this._fontType);
 
-    Services.prefs.setCharPref("reader.font_type", this._fontType);
+    this._mm.sendAsyncMessage("Reader:SetCharPref", {
+      name: "reader.font_type",
+      value: this._fontType
+    });
   },
 
   _getToolbarVisibility: function Reader_getToolbarVisibility() {
