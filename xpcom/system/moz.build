@@ -10,7 +10,6 @@ XPIDL_SOURCES += [
     'nsIGConfService.idl',
     'nsIGeolocationProvider.idl',
     'nsIGIOService.idl',
-    'nsIGnomeVFSService.idl',
     'nsIGSettingsService.idl',
     'nsIHapticFeedback.idl',
     'nsIPackageKitService.idl',
