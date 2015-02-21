@@ -7,6 +7,7 @@
 #ifndef __Helpers_h
 #define __Helpers_h
 
+#include "nsIAsyncOutputStream.h"
 #include "nsString.h"
 #include <stdint.h>
 
@@ -33,6 +34,22 @@ ConsumeAndValidateStream(nsIInputStream* aStream,
 void
 ConsumeAndValidateStream(nsIInputStream* aStream,
                          const nsACString& aExpectedData);
+
+class OutputStreamCallback MOZ_FINAL : public nsIOutputStreamCallback
+{
+public:
+  OutputStreamCallback();
+
+  bool Called() const { return mCalled; }
+
+private:
+  ~OutputStreamCallback();
+
+  bool mCalled;
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOUTPUTSTREAMCALLBACK
+};
 
 } // namespace testing
 
