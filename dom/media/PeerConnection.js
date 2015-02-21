@@ -309,7 +309,6 @@ function RTCPeerConnection() {
 
   this._localType = null;
   this._remoteType = null;
-  this._peerIdentity = null;
 
   // States
   this._iceGatheringState = this._iceConnectionState = "new";
@@ -387,15 +386,16 @@ RTCPeerConnection.prototype = {
   },
 
   _initIdp: function() {
+    this._peerIdentity = new this._win.Promise((resolve, reject) => {
+      this._resolvePeerIdentity = resolve;
+      this._rejectPeerIdentity = reject;
+    });
+    this._lastIdentityValidation = this._win.Promise.resolve();
+
     let prefName = "media.peerconnection.identity.timeout";
     let idpTimeout = Services.prefs.getIntPref(prefName);
-    let warn = this.logWarning.bind(this);
-    let idpErrorReport = (type, args) => {
-      this.dispatchEvent(
-        new this._win.RTCPeerConnectionIdentityErrorEvent(type, args));
-    };
-    this._localIdp = new PeerConnectionIdp(idpTimeout, warn, idpErrorReport);
-    this._remoteIdp = new PeerConnectionIdp(idpTimeout, warn, idpErrorReport);
+    this._localIdp = new PeerConnectionIdp(this._win, idpTimeout);
+    this._remoteIdp = new PeerConnectionIdp(this._win, idpTimeout);
   },
 
   // Add a function to the internal operations chain.
@@ -566,6 +566,15 @@ RTCPeerConnection.prototype = {
                           });
   },
 
+  _addIdentityAssertion: function(p, origin) {
+    if (this._localIdp.enabled) {
+      return this._localIdp.getIdentityAssertion(this._impl.fingerprint, origin)
+        .then(() => p)
+        .then(sdp => this._localIdp.addIdentityAttribute(sdp));
+    }
+    return p;
+  },
+
   createOffer: function(optionsOrOnSuccess, onError, options) {
     let onSuccess;
     if (typeof optionsOrOnSuccess == "function") {
@@ -574,13 +583,12 @@ RTCPeerConnection.prototype = {
       options = optionsOrOnSuccess;
     }
     return this._legacyCatch(onSuccess, onError, () => {
-
       // TODO: Remove old constraint-like RTCOptions support soon (Bug 1064223).
       // Note that webidl bindings make o.mandatory implicit but not o.optional.
       function convertLegacyOptions(o) {
         // Detect (mandatory OR optional) AND no other top-level members.
         let lcy = ((o.mandatory && Object.keys(o.mandatory).length) || o.optional) &&
-                  Object.keys(o).length == (o.mandatory? 1 : 0) + (o.optional? 1 : 0);
+            Object.keys(o).length == (o.mandatory? 1 : 0) + (o.optional? 1 : 0);
         if (!lcy) {
           return false;
         }
@@ -613,21 +621,30 @@ RTCPeerConnection.prototype = {
 
       if (options && convertLegacyOptions(options)) {
         this.logWarning(
-            "Mandatory/optional in createOffer options is deprecated! Use " +
+          "Mandatory/optional in createOffer options is deprecated! Use " +
             JSON.stringify(options) + " instead (note the case difference)!",
-            null, 0);
+          null, 0);
       }
-      return this._chain(() => new this._win.Promise((resolve, reject) => {
-        this._onCreateOfferSuccess = resolve;
-        this._onCreateOfferFailure = reject;
-        this._impl.createOffer(options);
-      }));
+
+      let origin = Cu.getWebIDLCallerPrincipal().origin;
+      return this._chain(() => {
+        let p = new this._win.Promise((resolve, reject) => {
+          this._onCreateOfferSuccess = resolve;
+          this._onCreateOfferFailure = reject;
+          this._impl.createOffer(options);
+        });
+        p = this._addIdentityAssertion(p, origin);
+        return p.then(
+          sdp => new this._win.mozRTCSessionDescription({ type: "offer", sdp: sdp }));
+      });
     });
   },
 
   createAnswer: function(onSuccess, onError) {
     return this._legacyCatch(onSuccess, onError, () => {
-      return this._chain(() => new this._win.Promise((resolve, reject) => {
+      let origin = Cu.getWebIDLCallerPrincipal().origin;
+      return this._chain(() => {
+        let p = new this._win.Promise((resolve, reject) => {
         // We give up line-numbers in errors by doing this here, but do all
         // state-checks inside the chain, to support the legacy feature that
         // callers don't have to wait for setRemoteDescription to finish.
@@ -642,9 +659,15 @@ RTCPeerConnection.prototype = {
         this._onCreateAnswerSuccess = resolve;
         this._onCreateAnswerFailure = reject;
         this._impl.createAnswer();
-      }));
+        });
+        p = this._addIdentityAssertion(p, origin);
+        return p.then(sdp => {
+          return new this._win.mozRTCSessionDescription({ type: "answer", sdp: sdp });
+        });
+      });
     });
   },
+
 
   setLocalDescription: function(desc, onSuccess, onError) {
     return this._legacyCatch(onSuccess, onError, () => {
@@ -674,6 +697,50 @@ RTCPeerConnection.prototype = {
     });
   },
 
+  _validateIdentity: function(sdp, origin) {
+    let expectedIdentity;
+
+    // Only run a single identity verification at a time.  We have to do this to
+    // avoid problems with the fact that identity validation doesn't block the
+    // resolution of setRemoteDescription().
+    let validation = this._lastIdentityValidation
+      .then(() => this._remoteIdp.verifyIdentityFromSDP(sdp, origin))
+      .then(msg => {
+        expectedIdentity = this._impl.peerIdentity;
+        // If this pc has an identity already, then the identity in sdp must match
+        if (expectedIdentity && (!msg || msg.identity !== expectedIdentity)) {
+          this.close();
+          throw new this._win.DOMException(
+            "Peer Identity mismatch, expected: " + expectedIdentity,
+            "IncompatibleSessionDescriptionError");
+        }
+        if (msg) {
+          // Set new identity and generate an event.
+          this._impl.peerIdentity = msg.identity;
+          let assertion = new this._win.RTCIdentityAssertion(
+            this._remoteIdp.provider, msg.identity);
+          this._resolvePeerIdentity(assertion);
+        }
+      })
+      .catch(e => {
+        this._rejectPeerIdentity(e);
+        // If we don't expect a specific peer identity, failure to get a valid
+        // peer identity is not a terminal state, so replace the promise to
+        // allow another attempt.
+        if (!this._impl.peerIdentity) {
+          this._peerIdentity = new this._win.Promise((resolve, reject) => {
+            this._resolvePeerIdentity = resolve;
+            this._rejectPeerIdentity = reject;
+          });
+        }
+        throw e;
+      });
+    this._lastIdentityValidation = validation.catch(() => {});
+
+    // Only wait for IdP validation if we need identity matching
+    return expectedIdentity ? validation : this._win.Promise.resolve();
+  },
+
   setRemoteDescription: function(desc, onSuccess, onError) {
     return this._legacyCatch(onSuccess, onError, () => {
       this._remoteType = desc.type;
@@ -692,41 +759,21 @@ RTCPeerConnection.prototype = {
         default:
           throw new this._win.DOMException(
               "Invalid type " + desc.type + " provided to setRemoteDescription",
-              "InvalidParameterError");
+            "InvalidParameterError");
       }
 
-      // Get caller's origin before chaining and pass it in
+      // Get caller's origin before hitting the promise chain
       let origin = Cu.getWebIDLCallerPrincipal().origin;
 
-      return this._chain(() => {
-        let expectedIdentity = this._impl.peerIdentity;
-
-        // Do setRemoteDescription and identity validation in parallel
-        let p = new this._win.Promise((resolve, reject) => {
+      // Do setRemoteDescription and identity validation in parallel
+      return this._chain(() => this._win.Promise.all([
+        new this._win.Promise((resolve, reject) => {
           this._onSetRemoteDescriptionSuccess = resolve;
           this._onSetRemoteDescriptionFailure = reject;
           this._impl.setRemoteDescription(type, desc.sdp);
-        });
-
-        let pp = this._remoteIdp.verifyIdentityFromSDP(desc.sdp, origin)
-            .then(msg => {
-              // If this pc has an identity already, then identity in sdp must match
-              if (expectedIdentity && (!msg || msg.identity !== expectedIdentity)) {
-                throw new this._win.DOMException(
-                  "Peer Identity mismatch, expected: " + expectedIdentity,
-                  "IncompatibleSessionDescriptionError");
-              }
-              if (msg) {
-                // Set new identity and generate an event.
-                this._impl.peerIdentity = msg.identity;
-                this._peerIdentity = new this._win.RTCIdentityAssertion(
-                  this._remoteIdp.provider, msg.identity);
-                this.dispatchEvent(new this._win.Event("peeridentity"));
-              }
-            });
-        // Only wait for Idp validation if we need identity matching.
-        return expectedIdentity? this._win.Promise.all([p, pp]).then(() => {}) : p;
-      });
+        }),
+        this._validateIdentity(desc.sdp, origin)
+      ])).then(() => {}); // must return undefined
     });
   },
 
@@ -735,20 +782,11 @@ RTCPeerConnection.prototype = {
     this._localIdp.setIdentityProvider(provider, protocol, username);
   },
 
-  _gotIdentityAssertion: function(assertion) {
-    if (!assertion) {
-      return;
-    }
-    let args = { assertion: assertion };
-    let ev = new this._win.RTCPeerConnectionIdentityEvent("identityresult", args);
-    this.dispatchEvent(ev);
-  },
-
   getIdentityAssertion: function() {
-    this._checkClosed();
-
-    this._localIdp.getIdentityAssertion(this._impl.fingerprint)
-      .then(assertion => this._gotIdentityAssertion(assertion));
+    let origin = Cu.getWebIDLCallerPrincipal().origin;
+    return this._chain(() => {
+      return this._localIdp.getIdentityAssertion(this._impl.fingerprint, origin);
+    });
   },
 
   updateIce: function(config) {
@@ -902,6 +940,7 @@ RTCPeerConnection.prototype = {
   },
 
   get peerIdentity() { return this._peerIdentity; },
+  get idpLoginUrl() { return this._localIdp.idpLoginUrl; },
   get id() { return this._impl.id; },
   set id(s) { this._impl.id = s; },
   get iceGatheringState()  { return this._iceGatheringState; },
@@ -1039,21 +1078,7 @@ PeerConnectionObserver.prototype = {
   },
 
   onCreateOfferSuccess: function(sdp) {
-    let pc = this._dompc;
-    let idp = pc._localIdp;
-
-    if (idp.enabled) {
-      idp.getIdentityAssertion(pc._impl.fingerprint)
-        .then(assertion => {
-          pc._gotIdentityAssertion(assertion);
-          sdp = idp.addIdentityAttribute(sdp);
-          pc._onCreateOfferSuccess(new pc._win.mozRTCSessionDescription({ type: "offer",
-                                                                          sdp: sdp }));
-        }, e => {}); // errors are handled in the IdP
-    } else {
-      pc._onCreateOfferSuccess(new pc._win.mozRTCSessionDescription({ type: "offer",
-                                                                      sdp: sdp }));
-    }
+    this._dompc._onCreateOfferSuccess(sdp);
   },
 
   onCreateOfferError: function(code, message) {
@@ -1061,21 +1086,7 @@ PeerConnectionObserver.prototype = {
   },
 
   onCreateAnswerSuccess: function(sdp) {
-    let pc = this._dompc;
-    let idp = pc._localIdp;
-
-    if (idp.enabled) {
-      idp.getIdentityAssertion(pc._impl.fingerprint)
-        .then(assertion => {
-          pc._gotIdentityAssertion(assertion);
-          sdp = idp.addIdentityAttribute(sdp);
-          pc._onCreateAnswerSuccess(new pc._win.mozRTCSessionDescription({ type: "answer",
-                                                                           sdp: sdp }));
-        }, e => {});
-    } else {
-      pc._onCreateAnswerSuccess(new pc._win.mozRTCSessionDescription({ type: "answer",
-                                                                       sdp: sdp }));
-    }
+    this._dompc._onCreateAnswerSuccess(sdp);
   },
 
   onCreateAnswerError: function(code, message) {

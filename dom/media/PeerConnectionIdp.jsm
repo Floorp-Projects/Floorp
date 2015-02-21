@@ -12,36 +12,18 @@ Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'IdpSandbox',
   'resource://gre/modules/media/IdpSandbox.jsm');
 
-function TimerResolver(resolve) {
-  this.notify = resolve;
-}
-TimerResolver.prototype = {
-  getInterface: function(iid) {
-    return this.QueryInterface(iid);
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
-}
-function delay(t) {
-  return new Promise(resolve => {
-    let timer = Cc['@mozilla.org/timer;1'].getService(Ci.nsITimer);
-    timer.initWithCallback(new TimerResolver(resolve), t, 0); // One shot
-  });
-}
-
 /**
  * Creates an IdP helper.
  *
+ * @param win (object) the window we are working for
  * @param timeout (int) the timeout in milliseconds
- * @param warningFunc (function) somewhere to dump warning messages
- * @param dispatchErrorFunc (function(string, dict)) somewhere to dump errors
  */
-function PeerConnectionIdp(timeout, warningFunc, dispatchErrorFunc) {
+function PeerConnectionIdp(win, timeout) {
+  this._win = win;
   this._timeout = timeout || 5000;
-  this._warning = warningFunc;
-  this._dispatchError = dispatchErrorFunc;
 
-  this.assertion = null;
   this.provider = null;
+  this._resetAssertion();
 }
 
 (function() {
@@ -58,7 +40,13 @@ PeerConnectionIdp.prototype = {
     return !!this._idp;
   },
 
+  _resetAssertion: function() {
+    this.assertion = null;
+    this.idpLoginUrl = null;
+  },
+
   setIdentityProvider: function(provider, protocol, username) {
+    this._resetAssertion();
     this.provider = provider;
     this.protocol = protocol || 'default';
     this.username = username;
@@ -71,38 +59,22 @@ PeerConnectionIdp.prototype = {
     this._idp = new IdpSandbox(provider, protocol);
   },
 
+  // start the IdP and do some error fixup
+  start: function() {
+    return this._idp.start()
+      .catch(e => {
+        throw new this._win.DOMException(e.message, 'IdpError');
+      });
+  },
+
   close: function() {
-    this.assertion = null;
+    this._resetAssertion();
     this.provider = null;
     this.protocol = null;
     if (this._idp) {
       this._idp.stop();
       this._idp = null;
     }
-  },
-
-  /**
-   * Generate an error event of the identified type;
-   * and put a little more precise information in the console.
-   *
-   * A little note on error handling in this class: this class reports errors
-   * exclusively through the event handlers that are passed to it
-   * (this._dispatchError, specifically).  That means that all the functions
-   * return resolved promises; promises are never rejected.  This probably isn't
-   * the best design, but the refactor can wait.
-   */
-  reportError: function(type, message, extra) {
-    let args = {
-      idp: this.provider,
-      protocol: this.protocol
-    };
-    if (extra) {
-      Object.keys(extra).forEach(function(k) {
-        args[k] = extra[k];
-      });
-    }
-    this._warning('RTC identity: ' + message, null, 0);
-    this._dispatchError('idp' + type + 'error', args);
   },
 
   _getFingerprintsFromSdp: function(sdp) {
@@ -131,7 +103,7 @@ PeerConnectionIdp.prototype = {
     let mLineMatch = sdp.match(PeerConnectionIdp._mLinePattern);
     if (mLineMatch) {
       let sessionLevel = sdp.substring(0, mLineMatch.index);
-      let idMatch = sessionLevel.match(PeerConnectionIdp._identityPattern);
+      idMatch = sessionLevel.match(PeerConnectionIdp._identityPattern);
     }
     if (!idMatch) {
       return; // undefined === no identity
@@ -141,12 +113,12 @@ PeerConnectionIdp.prototype = {
     try {
       assertion = JSON.parse(atob(idMatch[1]));
     } catch (e) {
-      this.reportError('validation',
-                       'invalid identity assertion: ' + e);
+      throw new this._win.DOMException('invalid identity assertion: ' + e,
+                                       'InvalidSessionDescriptionError');
     }
     if (!this._isValidAssertion(assertion)) {
-      this.reportError('validation', 'assertion missing' +
-                       ' idp/idp.domain/assertion');
+      throw new this._win.DOMException('assertion missing idp/idp.domain/assertion',
+                                       'InvalidSessionDescriptionError');
     }
     return assertion;
   },
@@ -157,15 +129,15 @@ PeerConnectionIdp.prototype = {
    * IdP proxy as parameter, else (verification failed OR no a=identity line in
    * SDP at all) null is passed to callback.
    *
-   * Note that this only verifies that the SDP is coherent.  This relies on the
-   * invariant that the RTCPeerConnection won't connect to a peer if the
+   * Note that this only verifies that the SDP is coherent.  We still rely on
+   * the fact that the RTCPeerConnection won't connect to a peer if the
    * fingerprint of the certificate they offer doesn't appear in the SDP.
    */
   verifyIdentityFromSDP: function(sdp, origin) {
     let identity = this._getIdentityFromSdp(sdp);
     let fingerprints = this._getFingerprintsFromSdp(sdp);
     if (!identity || fingerprints.length <= 0) {
-      return Promise.resolve();
+      return this._win.Promise.resolve(); // undefined result = no identity
     }
 
     this.setIdentityProvider(identity.idp.domain, identity.idp.protocol);
@@ -175,17 +147,21 @@ PeerConnectionIdp.prototype = {
   /**
    * Checks that the name in the identity provided by the IdP is OK.
    *
-   * @param error (function) an error function to call
    * @param name (string) the name to validate
    * @throws if the name isn't valid
    */
-  _validateName: function(error, name) {
+  _validateName: function(name) {
+    let error = msg => {
+        throw new this._win.DOMException('assertion name error: ' + msg,
+                                         'IdpError');
+    };
+
     if (typeof name !== 'string') {
-      return error('name not a string');
+      error('name not a string');
     }
     let atIdx = name.indexOf('@');
     if (atIdx <= 0) {
-      return error('missing authority in name from IdP');
+      error('missing authority in name from IdP');
     }
 
     // no third party assertions... for now
@@ -197,14 +173,13 @@ PeerConnectionIdp.prototype = {
     if (providerPortIdx > 0) {
       provider = provider.substring(0, providerPortIdx);
     }
-    let idnService = Components.classes['@mozilla.org/network/idn-service;1'].
-      getService(Components.interfaces.nsIIDNService);
+    let idnService = Components.classes['@mozilla.org/network/idn-service;1']
+        .getService(Components.interfaces.nsIIDNService);
     if (idnService.convertUTF8toACE(tail) !==
         idnService.convertUTF8toACE(provider)) {
-      return error('name "' + identity.name +
+      error('name "' + identity.name +
             '" doesn\'t match IdP: "' + this.provider + '"');
     }
-    return true;
   },
 
   /**
@@ -212,33 +187,38 @@ PeerConnectionIdp.prototype = {
    * the message from the IdP proxy.  That way, broken IdPs aren't likely to
    * cause catastrophic damage.
    */
-  _isValidVerificationResponse: function(validation, sdpFingerprints) {
+  _checkValidation: function(validation, sdpFingerprints) {
     let error = msg => {
-      this.reportError('validation', 'assertion validation failure: ' + msg);
-      return false;
+      throw new this._win.DOMException('IdP validation error: ' + msg,
+                                       'IdpError');
     };
+
+    if (!this.provider) {
+      error('IdP closed');
+    }
 
     if (typeof validation !== 'object' ||
         typeof validation.contents !== 'string' ||
         typeof validation.identity !== 'string') {
-      return error('no payload in validation response');
+      error('no payload in validation response');
     }
 
     let fingerprints;
     try {
       fingerprints = JSON.parse(validation.contents).fingerprint;
     } catch (e) {
-      return error('idp returned invalid JSON');
+      error('invalid JSON');
     }
 
     let isFingerprint = f =>
         (typeof f.digest === 'string') &&
         (typeof f.algorithm === 'string');
     if (!Array.isArray(fingerprints) || !fingerprints.every(isFingerprint)) {
-      return error('fingerprints must be an array of objects' +
-                   ' with digest and algorithm attributes');
+      error('fingerprints must be an array of objects' +
+            ' with digest and algorithm attributes');
     }
 
+    // everything in `innerSet` is found in `outerSet`
     let isSubsetOf = (outerSet, innerSet, comparator) => {
       return innerSet.every(i => {
         return outerSet.some(o => comparator(i, o));
@@ -248,25 +228,22 @@ PeerConnectionIdp.prototype = {
       return (a.digest === b.digest) && (a.algorithm === b.algorithm);
     };
     if (!isSubsetOf(fingerprints, sdpFingerprints, compareFingerprints)) {
-      return error('the fingerprints in SDP aren\'t covered by the assertion');
+      error('the fingerprints must be covered by the assertion');
     }
-    return this._validateName(error, validation.identity);
+    this._validateName(validation.identity);
+    return validation;
   },
 
   /**
    * Asks the IdP proxy to verify an identity assertion.
    */
   _verifyIdentity: function(assertion, fingerprints, origin) {
-    let validationPromise = this._idp.start()
-        .then(idp => idp.validateAssertion(assertion, origin));
+    let p = this.start()
+        .then(idp => this._wrapCrossCompartmentPromise(
+          idp.validateAssertion(assertion, origin)))
+        .then(validation => this._checkValidation(validation, fingerprints));
 
-    return this._safetyNet('validation', validationPromise)
-      .then(validation => {
-        if (validation &&
-            this._isValidVerificationResponse(validation, fingerprints)) {
-          return validation;
-        }
-      });
+    return this._applyTimeout(p);
   },
 
   /**
@@ -287,13 +264,14 @@ PeerConnectionIdp.prototype = {
 
   /**
    * Asks the IdP proxy for an identity assertion.  Don't call this unless you
-   * have checked .enabled, or you really like exceptions.
+   * have checked .enabled, or you really like exceptions.  Also, don't call
+   * this when another call is still running, because it's not certain which
+   * call will finish first and the final state will be similarly uncertain.
    */
-  getIdentityAssertion: function(fingerprint) {
+  getIdentityAssertion: function(fingerprint, origin) {
     if (!this.enabled) {
-      this.reportError('assertion', 'no IdP set,' +
-                       ' call setIdentityProvider() to set one');
-      return Promise.resolve();
+      throw new this._win.DOMException(
+        'no IdP set, call setIdentityProvider() to set one', 'InvalidStateError');
     }
 
     let [algorithm, digest] = fingerprint.split(' ', 2);
@@ -303,51 +281,60 @@ PeerConnectionIdp.prototype = {
         digest: digest
       }]
     };
-    let origin = Cu.getWebIDLCallerPrincipal().origin;
 
-    let assertionPromise = this._idp.start()
-        .then(idp => idp.generateAssertion(JSON.stringify(content),
-                                           origin, this.username));
-
-    return this._safetyNet('assertion', assertionPromise)
-      .then(assertion => {
-        if (this._isValidAssertion(assertion)) {
+    this._resetAssertion();
+    let p = this.start()
+        .then(idp => this._wrapCrossCompartmentPromise(
+          idp.generateAssertion(JSON.stringify(content),
+                                origin, this.username)))
+        .then(assertion => {
+          if (!this._isValidAssertion(assertion)) {
+            throw new this._win.DOMException('IdP generated invalid assertion',
+                                             'IdpError');
+          }
           // save the base64+JSON assertion, since that is all that is used
           this.assertion = btoa(JSON.stringify(assertion));
-        } else {
-          if (assertion) {
-            // only report an error for an invalid assertion
-            // other paths generate more specific error reports
-            this.reportError('assertion', 'invalid assertion generated');
+          return this.assertion;
+        });
+
+    return this._applyTimeout(p);
+  },
+
+  /**
+   * Promises generated by the sandbox need to be very carefully treated so that
+   * they can chain into promises in the `this._win` compartment.  Results need
+   * to be cloned across; errors need to be converted.
+   */
+  _wrapCrossCompartmentPromise: function(sandboxPromise) {
+    return new this._win.Promise((resolve, reject) => {
+      sandboxPromise.then(
+        result => resolve(Cu.cloneInto(result, this._win)),
+        e => {
+          let message = '' + (e.message || JSON.stringify(e) || 'IdP error');
+          if (e.name === 'IdpLoginError') {
+            if (typeof e.loginUrl === 'string') {
+              this.idpLoginUrl = e.loginUrl;
+            }
+            reject(new this._win.DOMException(message, 'IdpLoginError'));
+          } else {
+            reject(new this._win.DOMException(message, 'IdpError'));
           }
-          this.assertion = null;
-        }
-        return this.assertion;
-      });
+        });
+    });
   },
 
   /**
    * Wraps a promise, adding a timeout guard on it so that it can't take longer
-   * than the specified time.  Returns a promise that always resolves; if there
-   * is a problem the resolved value is undefined.
+   * than the specified time.  Returns a promise that rejects if the timeout
+   * elapses before `p` resolves.
    */
-  _safetyNet: function(type, p) {
-    let done = false; // ... all because Promises don't expose state
-    let timeoutPromise = delay(this._timeout)
+  _applyTimeout: function(p) {
+    let timeout = new this._win.Promise(
+      r => this._win.setTimeout(r, this._timeout))
         .then(() => {
-          if (!done) {
-            this.reportError(type, 'IdP timed out');
-          }
+          throw new this._win.DOMException('IdP timed out', 'IdpError');
         });
-    let realPromise = p
-        .catch(e => this.reportError(type, 'error reported by IdP: ' + e.message))
-        .then(result => {
-          done = true;
-          return result;
-        });
-    // If timeoutPromise completes first, the returned value will be undefined,
-    // just like when there is an error.
-    return Promise.race([realPromise, timeoutPromise]);
+    return this._win.Promise.race([ timeout, p ]);
   }
 };
 
