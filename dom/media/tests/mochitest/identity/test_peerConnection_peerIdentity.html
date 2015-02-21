@@ -35,8 +35,8 @@ function theTest() {
     fake: true,
     peerIdentity: id1
   }]);
-  test.setIdentityProvider(test.pcLocal, 'test1.example.com', 'idp.html');
-  test.setIdentityProvider(test.pcRemote, 'test2.example.com', 'idp.html');
+  test.setIdentityProvider(test.pcLocal, 'test1.example.com', 'idp.js');
+  test.setIdentityProvider(test.pcRemote, 'test2.example.com', 'idp.js');
   test.chain.append([
 
     function PEER_IDENTITY_IS_SET_CORRECTLY(test) {
