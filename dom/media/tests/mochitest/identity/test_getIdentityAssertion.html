@@ -20,75 +20,59 @@ function checkIdentity(assertion, identity) {
   is(user, identity, 'id should be "' + identity + '" is "' + user + '"');
 }
 
+function getAssertion(t, instructions, userHint) {
+  t.pcLocal.setIdentityProvider('example.com', 'idp.js' + instructions,
+                                userHint);
+  return t.pcLocal._pc.getIdentityAssertion();
+}
+
 var test;
 function theTest() {
   test = new PeerConnectionTest();
   test.setMediaConstraints([{audio: true}], [{audio: true}]);
   test.chain.removeAfter('PC_REMOTE_CHECK_INITIAL_SIGNALINGSTATE');
   test.chain.append([
-    function GET_IDENTITY_ASSERTION_FAILS_WITHOUT_PROVIDER(t) {
-      t.pcLocal._pc.onidpassertionerror = e => {
-        ok(e, 'getIdentityAssertion should fail without provider');
-        t.next();
-      };
-      t.pcLocal._pc.getIdentityAssertion();
+    function PC_LOCAL_IDENTITY_ASSERTION_FAILS_WITHOUT_PROVIDER(t) {
+      return t.pcLocal._pc.getIdentityAssertion()
+        .then(a => ok(false, 'should fail without provider'),
+              e => ok(e, 'should fail without provider'));
     },
-    function GET_IDENTITY_ASSERTION_FIRES_EVENTUALLY_AND_SUBSEQUENTLY(t) {
-      var fired = 0;
-      t.setIdentityProvider(t.pcLocal, 'example.com', 'idp.js');
-      t.pcLocal._pc.onidentityresult = e => {
-        fired++;
-        if (fired == 1) {
-          ok(true, 'identityresult fired once');
-          checkIdentity(e.assertion, 'someone@example.com');
-        } else if (fired == 2) {
-          ok(true, 'identityresult fired twice');
-          checkIdentity(e.assertion, 'someone@example.com');
-          t.next();
-        }
-      };
-      t.pcLocal._pc.onidpassertionerror = e => {
-        ok(false, '2x should not fire error event');
-        t.next();
-      };
-      t.pcLocal._pc.getIdentityAssertion();
-      t.pcLocal._pc.getIdentityAssertion();
+
+    function PC_LOCAL_GET_TWO_ASSERTIONS(t) {
+      return Promise.all([
+        getAssertion(t, ''),
+        getAssertion(t, '')
+      ]).then(assertions => {
+        is(assertions.length, 2, "Two assertions generated");
+        assertions.forEach(a => checkIdentity(a, 'someone@example.com'));
+      });
     },
-    function GET_IDENTITY_ASSERTION_FAILS(t) {
-      t.setIdentityProvider(t.pcLocal, 'example.com', 'idp.js#fail');
-      t.pcLocal._pc.onidentityresult = e => {
-        ok(false, '#fail should not get an identity result');
-        t.next();
-      };
-      t.pcLocal._pc.onidpassertionerror = e => {
-        ok(e, '#fail should fire error event');
-        t.next();
-      };
-      t.pcLocal._pc.getIdentityAssertion();
+
+    function PC_LOCAL_IDP_FAILS(t) {
+      return getAssertion(t, '#fail')
+        .then(a => ok(false, '#fail should not get an identity result'),
+              e => is(e.name, 'IdpError', '#fail should cause rejection'));
     },
-    function GET_IDENTITY_ASSERTION_IDP_NOT_READY(t) {
-      t.setIdentityProvider(t.pcLocal, 'example.com', 'idp.js#not_ready');
-      t.pcLocal._pc.onidentityresult = e => {
-        ok(false, '#not_ready should not get an identity result');
-        t.next();
-      };
-      t.pcLocal._pc.onidpassertionerror = e => {
-        ok(e, '#not_ready should fire error event');
-        t.next();
-      };
-      t.pcLocal._pc.getIdentityAssertion();
+
+    function PC_LOCAL_IDP_LOGIN_ERROR(t) {
+      return getAssertion(t, '#loginerror')
+        .then(a => ok(false, '#loginerror should not work'),
+              e => {
+                is(e.name, 'IdpLoginError', 'name is IdpLoginError');
+                is(t.pcLocal._pc.idpLoginUrl, 'https://example.com/log/in/here',
+                   'got the right login URL from the IdP');
+              });
     },
-    function GET_IDENTITY_ASSERTION_WITH_SPECIFIC_NAME(t) {
-      t.setIdentityProvider(t.pcLocal, 'example.com', 'idp.js', 'user@example.com');
-      t.pcLocal._pc.onidentityresult = e => {
-        checkIdentity(e.assertion, 'user@example.com');
-        t.next();
-      };
-      t.pcLocal._pc.onidpassertionerror = e => {
-        ok(false, 'user@ should not fire error event');
-        t.next();
-      };
-      t.pcLocal._pc.getIdentityAssertion();
+
+    function PC_LOCAL_IDP_NOT_READY(t) {
+      return getAssertion(t, '#not_ready')
+        .then(a => ok(false, '#not_ready should not get an identity result'),
+              e => is(e.name, 'IdpError', '#not_ready should cause rejection'));
+    },
+
+    function PC_LOCAL_ASSERTION_WITH_SPECIFIC_NAME(t) {
+      return getAssertion(t, '', 'user@example.com')
+        .then(a => checkIdentity(a, 'user@example.com'));
     }
   ]);
   test.run();

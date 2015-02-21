@@ -3,7 +3,6 @@
 <head>
   <script type="application/javascript">var scriptRelativePath = "../";</script>
   <script type="application/javascript" src="../pc.js"></script>
-  <script type="application/javascript" src="identityevent.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -17,74 +16,36 @@
 runNetworkTest(function () {
   var test = new PeerConnectionTest();
   test.setMediaConstraints([{audio: true}], [{audio: true}]);
-  // first example generates a bad assertion that can be detected immediately
-  test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.js#bad-assert', 'nobody');
-  // second generates a bad assertion, but that only fails to validate
-  test.setIdentityProvider(test.pcRemote, 'example.com', 'idp.js#bad-validate', 'nobody');
+  // No IdP for local.
+  // Remote generates a bad assertion, but that only fails to validate
+  test.pcRemote.setIdentityProvider('example.com', 'idp.js#bad-validate', 'nobody');
 
-  var localEvents = trapIdentityEvents(test.pcLocal._pc);
-  var remoteEvents = trapIdentityEvents(test.pcRemote._pc);
-
-  // if we get a peeridentity event, something is wrong
-  function assertNoIdentity() {
-    ok(!localEvents.peeridentity,
-       'no peer identity event for local peer');
-    ok(!remoteEvents.peeridentity,
-       'no peer identity event for remote peer');
-    throw new Error('got peeridentity, aborting test');
-  }
-  test.pcLocal._pc.onpeeridentity = assertNoIdentity;
-  test.pcRemote._pc.onpeeridentity = assertNoIdentity;
+  // Save the peerIdentity promises now, since when they reject they are
+  // replaced and we expect them to be rejected this time
+  var peerIdentityLocal = test.pcLocal._pc.peerIdentity;
+  var peerIdentityRemote = test.pcRemote._pc.peerIdentity;
 
   test.chain.append([
-    function CHECK_IDENTITY_EVENTS(t) {
-      return new Promise(resolve => {
-        var checkEvents = () => {
-          ok(localEvents.idpassertionerror,
-             'local assertion generation should fail (idpassertionerror)');
-          is(localEvents.idpassertionerror.idp,
-             'example.com', 'event IdP is correct');
-          is(localEvents.idpassertionerror.protocol,
-             'idp.js#bad-assert', 'event IdP protocol is #bad-assert');
-          ok(!remoteEvents.idpassertionerror,
-             'remote assertion generation should succeed (idpassertionerror)');
-          ok(!localEvents.identityresult,
-             'local assertion generation should fail (identityresult)');
-          ok(remoteEvents.identityresult,
-             'remote assertion generation should succeed (identityresult)');
-
-          ok(localEvents.idpvalidationerror, 'local fails to validate');
-          is(localEvents.idpvalidationerror.idp, 'example.com',
-             'event IdP is correct');
-          is(localEvents.idpvalidationerror.protocol, 'idp.js#bad-validate',
-             'event IdP protocol is #bad-validate');
-          ok(!remoteEvents.idpvalidationerror,
-             'remote doesn\'t even see an assertion');
-
-          resolve();
-        };
-
-        // we actually have to wait on this because IdP validation is asynchronous
-        if (localEvents.idpvalidationerror) {
-          checkEvents();
-        } else {
-          // have to let the other event handlers have a chance to record success
-          // before we run the checks that rely on that recording
-          t.pcLocal._pc.onidpvalidationerror = checkEvents;
-        }
-      });
+    function ONLY_REMOTE_SDP_INCLUDES_IDENTITY_ASSERTION(t) {
+      ok(!t.originalOffer.sdp.contains('a=identity'),
+         'a=identity not contained in the offer SDP');
+      ok(t.originalAnswer.sdp.contains('a=identity'),
+         'a=identity is contained in the answer SDP');
     },
-
-    function PEER_IDENTITY_IS_EMPTY(test) {
-      ok(!test.pcLocal._pc.peerIdentity, 'local peerIdentity is not set');
-      ok(!test.pcRemote._pc.peerIdentity, 'remote peerIdentity is not set');
-    },
-
-    function ONLY_REMOTE_SDP_INCLUDES_IDENTITY_ASSERTION(test) {
-      ok(!test.originalOffer.sdp.contains('a=identity'), 'a=identity not contained in the offer SDP');
-      ok(test.originalAnswer.sdp.contains('a=identity'), 'a=identity is contained in the answer SDP');
+    function PEER_IDENTITY_IS_EMPTY(t) {
+      // we are only waiting for the local side to complete
+      // an error on the remote side is immediately fatal though
+      return Promise.race([
+        peerIdentityLocal.then(
+          () => ok(false, t.pcLocal + ' incorrectly received valid peer identity'),
+          e => ok(e, t.pcLocal + ' correctly failed to validate peer identity')),
+        peerIdentityRemote.then(
+          () => ok(false, t.pcRemote + ' incorrecly received a valid peer identity'),
+          e => ok(false, t.pcRemote + ' incorrectly rejected peer identity'))
+      ]);
     }
   ]);
+
   test.run();
 });
 
