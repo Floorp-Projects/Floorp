@@ -179,6 +179,10 @@ public class Tab {
         return mUrl;
     }
 
+    /**
+     * Returns the base domain of the loaded uri. Note that if the page is
+     * a Reader mode uri, the base domain returned is that of the original uri.
+     */
     public String getBaseDomain() {
         return mBaseDomain;
     }

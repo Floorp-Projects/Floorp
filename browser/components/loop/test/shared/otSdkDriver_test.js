@@ -139,7 +139,9 @@ describe("loop.OTSdkDriver", function () {
     });
 
     it("should dispatch a `ScreenSharingState` action", function() {
-      driver.startScreenShare(new sharedActions.StartScreenShare());
+      driver.startScreenShare(new sharedActions.StartScreenShare({
+        type: "window"
+      }));
 
       sinon.assert.calledOnce(dispatcher.dispatch);
       sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -149,7 +151,9 @@ describe("loop.OTSdkDriver", function () {
     });
 
     it("should initialize a publisher", function() {
-      driver.startScreenShare(new sharedActions.StartScreenShare());
+      driver.startScreenShare(new sharedActions.StartScreenShare({
+        type: "window"
+      }));
 
       sinon.assert.calledOnce(sdk.initPublisher);
       sinon.assert.calledWithMatch(sdk.initPublisher,
@@ -161,7 +165,9 @@ describe("loop.OTSdkDriver", function () {
     beforeEach(function() {
       driver.getScreenShareElementFunc = function() {};
 
-      driver.startScreenShare(new sharedActions.StartScreenShare());
+      driver.startScreenShare(new sharedActions.StartScreenShare({
+        type: "window"
+      }));
 
       sandbox.stub(dispatcher, "dispatch");
 
@@ -611,7 +617,9 @@ describe("loop.OTSdkDriver", function () {
 
       driver.getScreenShareElementFunc = function() {};
 
-      driver.startScreenShare(new sharedActions.StartScreenShare());
+      driver.startScreenShare(new sharedActions.StartScreenShare({
+        type: "window"
+      }));
 
       sandbox.stub(dispatcher, "dispatch");
     });

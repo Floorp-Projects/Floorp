@@ -376,6 +376,9 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
 
             @Override
             public void onAnimationEnd(Animation animation) {
+                // (bug 1132720) Hide the View so it doesn't flicker as the Activity closes.
+                ShareDialog.this.setVisible(false);
+
                 finish();
             }
 
