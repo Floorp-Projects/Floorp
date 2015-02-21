@@ -1223,7 +1223,7 @@ pref("security.sandbox.windows.log.stackTraceDepth", 0);
 // This setting is read when the content process is started. On Mac the content
 // process is killed when all windows are closed, so a change will take effect
 // when the 1st window is opened. It was decided to default this setting to 1.
-pref("security.sandbox.macos.content.moreStrict", 1);
+pref("security.sandbox.macos.content.level", 1);
 #endif
 
 // This pref governs whether we attempt to work around problems caused by
