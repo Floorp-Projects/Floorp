@@ -12,7 +12,6 @@
 #include "media/stagefright/MediaDefs.h"
 #include "media/stagefright/Utils.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/fallible.h"
 #include "include/ESDS.h"
 
 using namespace stagefright;
@@ -211,24 +210,19 @@ MP4Sample::MP4Sample()
 {
 }
 
-MP4Sample*
-MP4Sample::Clone() const
+MP4Sample::MP4Sample(const MP4Sample& copy)
+  : mMediaBuffer(nullptr)
+  , decode_timestamp(copy.decode_timestamp)
+  , composition_timestamp(copy.composition_timestamp)
+  , duration(copy.duration)
+  , byte_offset(copy.byte_offset)
+  , is_sync_point(copy.is_sync_point)
+  , size(copy.size)
+  , crypto(copy.crypto)
+  , extra_data(copy.extra_data)
 {
-  nsAutoPtr<MP4Sample> s(new MP4Sample());
-  s->decode_timestamp = decode_timestamp;
-  s->composition_timestamp = composition_timestamp;
-  s->duration = duration;
-  s->byte_offset = byte_offset;
-  s->is_sync_point = is_sync_point;
-  s->size = size;
-  s->crypto = crypto;
-  s->extra_data = extra_data;
-  s->extra_buffer = s->data = new ((fallible_t())) uint8_t[size];
-  if (!s->extra_buffer) {
-    return nullptr;
-  }
-  memcpy(s->data, data, size);
-  return s.forget();
+  extra_buffer = data = new uint8_t[size];
+  memcpy(data, copy.data, size);
 }
 
 MP4Sample::~MP4Sample()
@@ -255,7 +249,7 @@ MP4Sample::Update(int64_t& aMediaTime, int64_t& aTimestampOffset)
   crypto.Update(m);
 }
 
-bool
+void
 MP4Sample::Pad(size_t aPaddingBytes)
 {
   size_t newSize = size + aPaddingBytes;
@@ -264,10 +258,7 @@ MP4Sample::Pad(size_t aPaddingBytes)
   // not then we copy to a new buffer.
   uint8_t* newData = mMediaBuffer && newSize <= mMediaBuffer->size()
                        ? data
-                       : new ((fallible_t())) uint8_t[newSize];
-  if (!newData) {
-    return false;
-  }
+                       : new uint8_t[newSize];
 
   memset(newData + size, 0, aPaddingBytes);
 
@@ -279,11 +270,9 @@ MP4Sample::Pad(size_t aPaddingBytes)
       mMediaBuffer = nullptr;
     }
   }
-
-  return true;
 }
 
-bool
+void
 MP4Sample::Prepend(const uint8_t* aData, size_t aSize)
 {
   size_t newSize = size + aSize;
@@ -292,10 +281,7 @@ MP4Sample::Prepend(const uint8_t* aData, size_t aSize)
   // not then we copy to a new buffer.
   uint8_t* newData = mMediaBuffer && newSize <= mMediaBuffer->size()
                        ? data
-                       : new ((fallible_t())) uint8_t[newSize];
-  if (!newData) {
-    return false;
-  }
+                       : new uint8_t[newSize];
 
   memmove(newData + aSize, data, size);
   memmove(newData, aData, aSize);
@@ -308,21 +294,16 @@ MP4Sample::Prepend(const uint8_t* aData, size_t aSize)
       mMediaBuffer = nullptr;
     }
   }
-
-  return true;
 }
 
-bool
+void
 MP4Sample::Replace(const uint8_t* aData, size_t aSize)
 {
   // If the existing MediaBuffer has enough space then we just recycle it. If
   // not then we copy to a new buffer.
   uint8_t* newData = mMediaBuffer && aSize <= mMediaBuffer->size()
                        ? data
-                       : new ((fallible_t())) uint8_t[aSize];
-  if (!newData) {
-    return false;
-  }
+                       : new uint8_t[aSize];
 
   memcpy(newData, aData, aSize);
   size = aSize;
@@ -334,7 +315,5 @@ MP4Sample::Replace(const uint8_t* aData, size_t aSize)
       mMediaBuffer = nullptr;
     }
   }
-
-  return true;
 }
 }
