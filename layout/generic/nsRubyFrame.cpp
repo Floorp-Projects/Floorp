@@ -106,22 +106,24 @@ SegmentEnumerator::Next()
 nsRubyFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
                                nsIFrame::InlineMinISizeData *aData)
 {
-  nscoord max = 0;
-  for (SegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
-    max = std::max(max, e.GetBaseContainer()->GetMinISize(aRenderingContext));
+  for (nsIFrame* frame = this; frame; frame = frame->GetNextInFlow()) {
+    for (SegmentEnumerator e(static_cast<nsRubyFrame*>(frame));
+         !e.AtEnd(); e.Next()) {
+      e.GetBaseContainer()->AddInlineMinISize(aRenderingContext, aData);
+    }
   }
-  aData->currentLine += max;
 }
 
 /* virtual */ void
 nsRubyFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                                 nsIFrame::InlinePrefISizeData *aData)
 {
-  nscoord sum = 0;
-  for (SegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
-    sum += e.GetBaseContainer()->GetPrefISize(aRenderingContext);
+  for (nsIFrame* frame = this; frame; frame = frame->GetNextInFlow()) {
+    for (SegmentEnumerator e(static_cast<nsRubyFrame*>(frame));
+         !e.AtEnd(); e.Next()) {
+      e.GetBaseContainer()->AddInlinePrefISize(aRenderingContext, aData);
+    }
   }
-  aData->currentLine += sum;
 }
 
 /* virtual */ void
