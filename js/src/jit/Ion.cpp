@@ -495,13 +495,6 @@ JitRuntime::Mark(JSTracer *trc)
         JitCode *code = i.get<JitCode>();
         MarkJitCodeRoot(trc, &code, "wrapper");
     }
-
-    // Mark all heap the jitcode global table map.
-    if (trc->runtime()->hasJitRuntime() &&
-        trc->runtime()->jitRuntime()->hasJitcodeGlobalTable())
-    {
-        trc->runtime()->jitRuntime()->getJitcodeGlobalTable()->mark(trc);
-    }
 }
 
 void
@@ -667,7 +660,7 @@ JitCode::finalize(FreeOp *fop)
     // If this jitcode has a bytecode map, de-register it.
     if (hasBytecodeMap_) {
         MOZ_ASSERT(rt->jitRuntime()->hasJitcodeGlobalTable());
-        rt->jitRuntime()->getJitcodeGlobalTable()->releaseEntry(raw(), rt);
+        rt->jitRuntime()->getJitcodeGlobalTable()->removeEntry(raw(), rt);
     }
 
     // Buffer can be freed at any time hereafter. Catch use-after-free bugs.
