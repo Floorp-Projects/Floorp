@@ -59,10 +59,27 @@ as the content compartment sees it, waive the xray wrapper with
 :   Either SpiderMonkey's inferred name for this stack frame's function, or
     `null`.
 
-`parent`
-:   Either this stack frame's parent stack frame (the next older frame), or
-    `null` if this is the oldest frame in the captured stack.
+`asyncCause`
+:   If this stack frame is the `asyncParent` of other stack frames, then this is
+    a string representing the type of asynchronous call by which this frame
+    invoked its children. For example, if this frame's children are calls to
+    handlers for a promise this frame created, this frame's `asyncCause` would
+    be `"Promise"`. If the asynchronous call was started in a descendant frame
+    to which the requester of the property does not have access, this will be
+    the generic string `"Async"`. If this is not an asynchronous call point,
+    this will be `null`.
 
+`asyncParent`
+:   If this stack frame was called as a result of an asynchronous operation, for
+    example if the function referenced by this frame is a promise handler, this
+    property points to the stack frame responsible for the asynchronous call,
+    for example where the promise was created. If the frame responsible for the
+    call is not accessible to the caller, this points to the youngest accessible
+    ancestor of the real frame, if any. In all other cases, this is `null`.
+
+`parent`
+:   This stack frame's caller, or `null` if this is the oldest frame on the
+    stack. In this case, there might be an `asyncParent` instead.
 
 ## Function Properties of the `SavedFrame.prototype` Object
 
