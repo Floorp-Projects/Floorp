@@ -1367,6 +1367,9 @@ HasDataProperty(JSContext *cx, NativeObject *obj, PropertyName *name, Value *vp)
     return HasDataProperty(cx, obj, NameToId(name), vp);
 }
 
+extern bool
+GetPropertyForNameLookup(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp);
+
 } /* namespace js */
 
 template <>
