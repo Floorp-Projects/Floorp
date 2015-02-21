@@ -7,7 +7,6 @@
 
 #include "mozilla/Attributes.h"
 #include "celldata.h"
-#include "imgIContainer.h"
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsStyleCoord.h"
@@ -107,8 +106,6 @@ private:
   */
 class nsTableFrame : public nsContainerFrame
 {
-  typedef mozilla::image::DrawResult DrawResult;
-
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -249,9 +246,16 @@ public:
    * columns, row groups, rows, and cells), and the table border, and all
    * internal borders if border-collapse is on.
    */
-  DrawResult PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
-                                        const nsRect& aDirtyRect,
-                                        nsPoint aPt, uint32_t aBGPaintFlags);
+  void PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
+                                  const nsRect& aDirtyRect,
+                                  nsPoint aPt, uint32_t aBGPaintFlags);
+
+  /**
+   * Determines if any table part has a background image that is currently not
+   * decoded. Does not look into cell contents (ie only table parts).
+   */
+  static bool AnyTablePartHasUndecodedBackgroundImage(nsIFrame* aStart,
+                                                      nsIFrame* aEnd);
 
   /** Get the outer half (i.e., the part outside the height and width of
    *  the table) of the largest segment (?) of border-collapsed border on

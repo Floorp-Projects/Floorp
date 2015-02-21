@@ -41,7 +41,6 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
-using namespace mozilla::image;
 
 //#define NOISY_SEARCH 1
 
@@ -1886,7 +1885,6 @@ public:
   }
 #endif
 
-  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion *aInvalidRegion) MOZ_OVERRIDE;
@@ -1898,25 +1896,12 @@ private:
   nsRect          mRect;
 };
 
-nsDisplayItemGeometry*
-nsDisplayMathMLCharBackground::AllocateGeometry(nsDisplayListBuilder* aBuilder)
-{
-  return new nsDisplayItemGenericImageGeometry(this, aBuilder);
-}
-
 void
 nsDisplayMathMLCharBackground::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                                          const nsDisplayItemGeometry* aGeometry,
                                                          nsRegion *aInvalidRegion)
 {
-  auto geometry =
-    static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
-
-  if (aBuilder->ShouldSyncDecodeImages() &&
-      geometry->ShouldInvalidateToSyncDecodeImages()) {
-    bool snap;
-    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
-  }
+  AddInvalidRegionForSyncDecodeBackgroundImages(aBuilder, aGeometry, aInvalidRegion);
 
   nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
 }
@@ -1926,14 +1911,10 @@ void nsDisplayMathMLCharBackground::Paint(nsDisplayListBuilder* aBuilder,
 {
   const nsStyleBorder* border = mStyleContext->StyleBorder();
   nsRect rect(mRect + ToReferenceFrame());
-
-  DrawResult result =
-    nsCSSRendering::PaintBackgroundWithSC(mFrame->PresContext(), *aCtx, mFrame,
-                                          mVisibleRect, rect,
-                                          mStyleContext, *border,
-                                          aBuilder->GetBackgroundPaintFlags());
-
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
+  nsCSSRendering::PaintBackgroundWithSC(mFrame->PresContext(), *aCtx, mFrame,
+                                        mVisibleRect, rect,
+                                        mStyleContext, *border,
+                                        aBuilder->GetBackgroundPaintFlags());
 }
 
 class nsDisplayMathMLCharForeground : public nsDisplayItem {
