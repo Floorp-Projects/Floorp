@@ -17,8 +17,8 @@ var test;
 function theTest() {
   test = new PeerConnectionTest();
   test.setMediaConstraints([{audio: true}], [{audio: true}]);
-  test.setIdentityProvider(test.pcLocal, "test1.example.com", "idp.html", "someone");
-  test.setIdentityProvider(test.pcRemote, "test2.example.com", "idp.html", "someone");
+  test.setIdentityProvider(test.pcLocal, "test1.example.com", "idp.js", "someone");
+  test.setIdentityProvider(test.pcRemote, "test2.example.com", "idp.js", "someone");
 
   var localEvents = trapIdentityEvents(test.pcLocal._pc);
   var remoteEvents = trapIdentityEvents(test.pcRemote._pc);
