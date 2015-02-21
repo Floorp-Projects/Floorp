@@ -238,7 +238,7 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES.media += [
-    'IdpProxy.jsm',
+    'IdpSandbox.jsm',
     'PeerConnectionIdp.jsm',
     'RTCStatsReport.jsm',
 ]
