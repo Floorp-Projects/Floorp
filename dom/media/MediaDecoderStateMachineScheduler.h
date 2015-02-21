@@ -26,10 +26,10 @@ class MediaDecoderStateMachineScheduler {
     SCHEDULER_STATE_SHUTDOWN
   };
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderStateMachineScheduler)
   MediaDecoderStateMachineScheduler(ReentrantMonitor& aMonitor,
                                     nsresult (*aTimeoutCallback)(void*),
                                     void* aClosure, bool aRealTime);
-  ~MediaDecoderStateMachineScheduler();
   nsresult Init();
   nsresult Schedule(int64_t aUsecs = 0);
   void ScheduleAndShutdown();
@@ -54,6 +54,7 @@ public:
   }
 
 private:
+  ~MediaDecoderStateMachineScheduler();
   void ResetTimer();
 
   // Callback function provided by MediaDecoderStateMachine to run

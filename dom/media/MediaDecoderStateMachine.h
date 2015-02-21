@@ -772,7 +772,7 @@ protected:
 
   // Used to schedule state machine cycles. This should never outlive
   // the life cycle of the state machine.
-  const nsAutoPtr<MediaDecoderStateMachineScheduler> mScheduler;
+  const nsRefPtr<MediaDecoderStateMachineScheduler> mScheduler;
 
   // Time at which the last video sample was requested. If it takes too long
   // before the sample arrives, we will increase the amount of audio we buffer.
