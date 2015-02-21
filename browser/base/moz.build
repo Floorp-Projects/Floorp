@@ -20,6 +20,7 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/newtab/browser.ini',
     'content/test/plugins/browser.ini',
     'content/test/popupNotifications/browser.ini',
+    'content/test/referrer/browser.ini',
     'content/test/social/browser.ini',
 ]
 
