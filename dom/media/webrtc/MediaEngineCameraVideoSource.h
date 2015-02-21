@@ -63,7 +63,7 @@ public:
 
 protected:
   struct CapabilityCandidate {
-    CapabilityCandidate(uint8_t index, uint32_t distance = 0)
+    explicit CapabilityCandidate(uint8_t index, uint32_t distance = 0)
     : mIndex(index), mDistance(distance) {}
 
     size_t mIndex;
