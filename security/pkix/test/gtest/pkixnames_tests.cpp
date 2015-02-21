@@ -21,11 +21,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "pkix/pkix.h"
 #include "pkixcheck.h"
 #include "pkixder.h"
 #include "pkixgtest.h"
-#include "pkixtestutil.h"
 #include "pkixutil.h"
 
 namespace mozilla { namespace pkix {
