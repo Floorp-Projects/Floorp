@@ -185,8 +185,8 @@ IdpSandbox.prototype = {
   // Provides the sandbox with some useful facilities.  Initially, this is only
   // a minimal set; it is far easier to add more as the need arises, than to
   // take them back if we discover a mistake.
-  _populateSandbox: function() {
-    this.sandbox.location = Cu.cloneInto(createLocationFromURI(this.source),
+  _populateSandbox: function(uri) {
+    this.sandbox.location = Cu.cloneInto(createLocationFromURI(uri),
                                          this.sandbox,
                                          { cloneFunctions: true });
   },
@@ -205,12 +205,14 @@ IdpSandbox.prototype = {
         'rtcIdentityProvider'
       ]
     });
-    this._populateSandbox();
-
     let registrar = this.sandbox.rtcIdentityProvider;
     if (!Cu.isXrayWrapper(registrar)) {
       throw new Error('IdP setup failed');
     }
+
+    // have to use the ultimate URI, not the starting one to avoid
+    // that origin stealing from the one that redirected to it
+    this._populateSandbox(result.request.URI);
     // putting a javascript version of 1.8 here seems fragile
     Cu.evalInSandbox(result.data, this.sandbox,
                      '1.8', result.request.URI.spec, 1);
