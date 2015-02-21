@@ -23,12 +23,11 @@
  */
 
 #include <limits>
+#include <stdint.h>
 #include <vector>
-#include "pkixgtest.h"
 
 #include "pkixder.h"
-#include "pkixtestutil.h"
-#include "stdint.h"
+#include "pkixgtest.h"
 
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::der;
