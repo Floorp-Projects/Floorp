@@ -277,7 +277,7 @@ BaselineCompiler::compile()
             return Method_Error;
 
         JitcodeGlobalEntry::BaselineEntry entry;
-        entry.init(code, code->raw(), code->rawEnd(), script, str);
+        entry.init(code->raw(), code->rawEnd(), script, str);
 
         JitcodeGlobalTable *globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
         if (!globalTable->addEntry(entry, cx->runtime())) {

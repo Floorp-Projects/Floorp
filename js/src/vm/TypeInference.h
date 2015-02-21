@@ -315,9 +315,6 @@ class TypeSet
         bool isSingleton() const {
             return isObject() && !!(data & 1);
         }
-        bool isSingletonUnchecked() const {
-            return isObjectUnchecked() && !!(data & 1);
-        }
 
         inline JSObject *singleton() const;
         inline JSObject *singletonNoBarrier() const;
@@ -326,9 +323,6 @@ class TypeSet
 
         bool isGroup() const {
             return isObject() && !(data & 1);
-        }
-        bool isGroupUnchecked() const {
-            return isObjectUnchecked() && !(data & 1);
         }
 
         inline ObjectGroup *group() const;

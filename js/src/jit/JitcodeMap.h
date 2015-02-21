@@ -10,7 +10,6 @@
 #include "ds/SplayTree.h"
 #include "jit/CompactBuffer.h"
 #include "jit/CompileInfo.h"
-#include "jit/ExecutableAllocator.h"
 #include "jit/OptimizationTracking.h"
 #include "jit/shared/CodeGenerator-shared.h"
 
@@ -59,52 +58,27 @@ class JitcodeGlobalEntry
 
     struct BaseEntry
     {
-        JitCode *jitcode_;
         void *nativeStartAddr_;
         void *nativeEndAddr_;
-        uint32_t gen_;
-        Kind kind_ : 7;
+        Kind kind_;
 
         void init() {
-            jitcode_ = nullptr;
             nativeStartAddr_ = nullptr;
             nativeEndAddr_ = nullptr;
-            gen_ = UINT32_MAX;
             kind_ = INVALID;
         }
 
-        void init(Kind kind, JitCode *code,
-                  void *nativeStartAddr, void *nativeEndAddr)
-        {
-            MOZ_ASSERT_IF(kind != Query, code);
+        void init(Kind kind, void *nativeStartAddr, void *nativeEndAddr) {
             MOZ_ASSERT(nativeStartAddr);
             MOZ_ASSERT(nativeEndAddr);
             MOZ_ASSERT(kind > INVALID && kind < LIMIT);
-            jitcode_ = code;
             nativeStartAddr_ = nativeStartAddr;
             nativeEndAddr_ = nativeEndAddr;
-            gen_ = UINT32_MAX;
             kind_ = kind;
-        }
-
-        uint32_t generation() const {
-            return gen_;
-        }
-        void setGeneration(uint32_t gen) {
-            gen_ = gen;
-        }
-        bool isSampled(uint32_t currentGen, uint32_t lapCount) {
-            if (gen_ == UINT32_MAX || currentGen == UINT32_MAX)
-                return false;
-            MOZ_ASSERT(currentGen >= gen_);
-            return (currentGen - gen_) <= lapCount;
         }
 
         Kind kind() const {
             return kind_;
-        }
-        JitCode *jitcode() const {
-            return jitcode_;
         }
         void *nativeStartAddr() const {
             return nativeStartAddr_;
@@ -122,8 +96,6 @@ class JitcodeGlobalEntry
         bool containsPointer(void *ptr) const {
             return startsBelowPointer(ptr) && endsAbovePointer(ptr);
         }
-
-        void markJitcode(JSTracer *trc);
     };
 
     struct IonEntry : public BaseEntry
@@ -174,12 +146,12 @@ class JitcodeGlobalEntry
 
         SizedScriptList *scriptList_;
 
-        void init(JitCode *code, void *nativeStartAddr, void *nativeEndAddr,
+        void init(void *nativeStartAddr, void *nativeEndAddr,
                   SizedScriptList *scriptList, JitcodeIonTable *regionTable)
         {
             MOZ_ASSERT(scriptList);
             MOZ_ASSERT(regionTable);
-            BaseEntry::init(Ion, code, nativeStartAddr, nativeEndAddr);
+            BaseEntry::init(Ion, nativeStartAddr, nativeEndAddr);
             regionTable_ = regionTable;
             scriptList_ = scriptList;
             optsRegionTable_ = nullptr;
@@ -258,8 +230,6 @@ class JitcodeGlobalEntry
         }
 
         mozilla::Maybe<uint8_t> trackedOptimizationIndexAtAddr(void *ptr);
-
-        void mark(JSTracer *trc);
     };
 
     struct BaselineEntry : public BaseEntry
@@ -273,11 +243,10 @@ class JitcodeGlobalEntry
         jsbytecode *ionAbortPc_;
         const char *ionAbortMessage_;
 
-        void init(JitCode *code, void *nativeStartAddr, void *nativeEndAddr,
-                  JSScript *script, const char *str)
+        void init(void *nativeStartAddr, void *nativeEndAddr, JSScript *script, const char *str)
         {
             MOZ_ASSERT(script != nullptr);
-            BaseEntry::init(Baseline, code, nativeStartAddr, nativeEndAddr);
+            BaseEntry::init(Baseline, nativeStartAddr, nativeEndAddr);
             script_ = script;
             str_ = str;
         }
@@ -315,11 +284,10 @@ class JitcodeGlobalEntry
     {
         void *rejoinAddr_;
 
-        void init(JitCode *code, void *nativeStartAddr, void *nativeEndAddr,
-                  void *rejoinAddr)
+        void init(void *nativeStartAddr, void *nativeEndAddr, void *rejoinAddr)
         {
             MOZ_ASSERT(rejoinAddr != nullptr);
-            BaseEntry::init(IonCache, code, nativeStartAddr, nativeEndAddr);
+            BaseEntry::init(IonCache, nativeStartAddr, nativeEndAddr);
             rejoinAddr_ = rejoinAddr;
         }
 
@@ -341,8 +309,8 @@ class JitcodeGlobalEntry
     // stack when profiling is enabled.
     struct DummyEntry : public BaseEntry
     {
-        void init(JitCode *code, void *nativeStartAddr, void *nativeEndAddr) {
-            BaseEntry::init(Dummy, code, nativeStartAddr, nativeEndAddr);
+        void init(void *nativeStartAddr, void *nativeEndAddr) {
+            BaseEntry::init(Dummy, nativeStartAddr, nativeEndAddr);
         }
 
         void destroy() {}
@@ -366,7 +334,7 @@ class JitcodeGlobalEntry
     struct QueryEntry : public BaseEntry
     {
         void init(void *addr) {
-            BaseEntry::init(Query, nullptr, addr, addr);
+            BaseEntry::init(Query, addr, addr);
         }
         uint8_t *addr() const {
             return reinterpret_cast<uint8_t *>(nativeStartAddr());
@@ -451,24 +419,11 @@ class JitcodeGlobalEntry
         }
     }
 
-    JitCode *jitcode() const {
-        return baseEntry().jitcode();
-    }
     void *nativeStartAddr() const {
         return base_.nativeStartAddr();
     }
     void *nativeEndAddr() const {
         return base_.nativeEndAddr();
-    }
-
-    uint32_t generation() const {
-        return baseEntry().generation();
-    }
-    void setGeneration(uint32_t gen) {
-        baseEntry().setGeneration(gen);
-    }
-    bool isSampled(uint32_t currentGen, uint32_t lapCount) {
-        return baseEntry().isSampled(currentGen, lapCount);
     }
 
     bool startsBelowPointer(void *ptr) const {
@@ -497,9 +452,6 @@ class JitcodeGlobalEntry
         return base_.kind();
     }
 
-    bool isValid() const {
-        return (kind() > INVALID) && (kind() < LIMIT);
-    }
     bool isIon() const {
         return kind() == Ion;
     }
@@ -516,10 +468,6 @@ class JitcodeGlobalEntry
         return kind() == Query;
     }
 
-    BaseEntry &baseEntry() {
-        MOZ_ASSERT(isValid());
-        return base_;
-    }
     IonEntry &ionEntry() {
         MOZ_ASSERT(isIon());
         return ion_;
@@ -541,10 +489,6 @@ class JitcodeGlobalEntry
         return query_;
     }
 
-    const BaseEntry &baseEntry() const {
-        MOZ_ASSERT(isValid());
-        return base_;
-    }
     const IonEntry &ionEntry() const {
         MOZ_ASSERT(isIon());
         return ion_;
@@ -666,13 +610,16 @@ class JitcodeGlobalTable
   public:
     typedef SplayTree<JitcodeGlobalEntry, JitcodeGlobalEntry> EntryTree;
 
+    typedef Vector<JitcodeGlobalEntry, 0, SystemAllocPolicy> EntryVector;
+
   private:
     static const size_t LIFO_CHUNK_SIZE = 16 * 1024;
     LifoAlloc treeAlloc_;
     EntryTree tree_;
+    EntryVector entries_;
 
   public:
-    JitcodeGlobalTable() : treeAlloc_(LIFO_CHUNK_SIZE), tree_(&treeAlloc_) {
+    JitcodeGlobalTable() : treeAlloc_(LIFO_CHUNK_SIZE), tree_(&treeAlloc_), entries_() {
         // Always checking coherency in DEBUG builds may cause tests to time
         // out under --baseline-eager or --ion-eager.
         tree_.disableCheckCoherency();
@@ -684,9 +631,6 @@ class JitcodeGlobalTable
     }
 
     bool lookup(void *ptr, JitcodeGlobalEntry *result, JSRuntime *rt);
-    bool lookupForSampler(void *ptr, JitcodeGlobalEntry *result, JSRuntime *rt,
-                          uint32_t sampleBufferGen);
-
     void lookupInfallible(void *ptr, JitcodeGlobalEntry *result, JSRuntime *rt);
 
     bool addEntry(const JitcodeGlobalEntry::IonEntry &entry, JSRuntime *rt) {
@@ -703,14 +647,9 @@ class JitcodeGlobalTable
     }
 
     void removeEntry(void *startAddr, JSRuntime *rt);
-    void releaseEntry(void *startAddr, JSRuntime *rt);
-
-    void mark(JSTracer *trc);
 
   private:
     bool addEntry(const JitcodeGlobalEntry &entry, JSRuntime *rt);
-
-    JitcodeGlobalEntry *lookupInPlace(void *ptr);
 };
 
 

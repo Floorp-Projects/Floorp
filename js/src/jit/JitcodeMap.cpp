@@ -9,7 +9,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/UniquePtr.h"
 #include "jsprf.h"
-#include "gc/Marking.h"
 
 #include "jit/BaselineJIT.h"
 #include "jit/JitSpewer.h"
@@ -335,28 +334,12 @@ JitcodeGlobalTable::lookup(void *ptr, JitcodeGlobalEntry *result, JSRuntime *rt)
 {
     MOZ_ASSERT(result);
 
-    JitcodeGlobalEntry *entry = lookupInPlace(ptr);
-    if (!entry)
-        return false;
+    // Construct a JitcodeGlobalEntry::Query to do the lookup
+    JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(ptr);
 
-    *result = *entry;
-    return true;
-}
-
-bool
-JitcodeGlobalTable::lookupForSampler(void *ptr, JitcodeGlobalEntry *result, JSRuntime *rt,
-                                     uint32_t sampleBufferGen)
-{
-    MOZ_ASSERT(result);
-
-    JitcodeGlobalEntry *entry = lookupInPlace(ptr);
-    if (!entry)
-        return false;
-
-    entry->setGeneration(sampleBufferGen);
-
-    *result = *entry;
-    return true;
+    // Lookups on tree does mutation.  Suppress sampling when this is happening.
+    AutoSuppressProfilerSampling suppressSampling(rt);
+    return tree_.contains(query, result);
 }
 
 void
@@ -364,13 +347,6 @@ JitcodeGlobalTable::lookupInfallible(void *ptr, JitcodeGlobalEntry *result, JSRu
 {
     mozilla::DebugOnly<bool> success = lookup(ptr, result, rt);
     MOZ_ASSERT(success);
-}
-
-JitcodeGlobalEntry *
-JitcodeGlobalTable::lookupInPlace(void *ptr)
-{
-    JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(ptr);
-    return tree_.maybeLookup(query);
 }
 
 bool
@@ -390,83 +366,13 @@ JitcodeGlobalTable::removeEntry(void *startAddr, JSRuntime *rt)
     AutoSuppressProfilerSampling suppressSampling(rt);
 
     JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(startAddr);
-    JitcodeGlobalEntry *entry = tree_.maybeLookup(query);
-    MOZ_ASSERT(entry);
+    JitcodeGlobalEntry result;
+    mozilla::DebugOnly<bool> success = tree_.contains(query, &result);
+    MOZ_ASSERT(success);
 
     // Destroy entry before removing it from tree.
-    entry->destroy();
+    result.destroy();
     tree_.remove(query);
-}
-
-void
-JitcodeGlobalTable::releaseEntry(void *startAddr, JSRuntime *rt)
-{
-    JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(startAddr);
-    mozilla::DebugOnly<JitcodeGlobalEntry *> entry = tree_.maybeLookup(query);
-    mozilla::DebugOnly<uint32_t> gen = rt->profilerSampleBufferGen();
-    mozilla::DebugOnly<uint32_t> lapCount = rt->profilerSampleBufferLapCount();
-    MOZ_ASSERT(entry);
-    MOZ_ASSERT_IF(gen != UINT32_MAX, !entry->isSampled(gen, lapCount));
-    removeEntry(startAddr, rt);
-}
-
-struct JitcodeMapEntryTraceCallback
-{
-    JSTracer *trc;
-    uint32_t gen;
-    uint32_t lapCount;
-
-    explicit JitcodeMapEntryTraceCallback(JSTracer *trc)
-      : trc(trc),
-        gen(trc->runtime()->profilerSampleBufferGen()),
-        lapCount(trc->runtime()->profilerSampleBufferLapCount())
-    {
-        if (!trc->runtime()->spsProfiler.enabled())
-            gen = UINT32_MAX;
-    }
-
-    void operator()(JitcodeGlobalEntry &entry) {
-        // If an entry is not sampled, reset its generation to
-        // the invalid generation, and skip it.
-        if (!entry.isSampled(gen, lapCount)) {
-            entry.setGeneration(UINT32_MAX);
-            return;
-        }
-
-        // Mark jitcode pointed to by this entry.
-        entry.baseEntry().markJitcode(trc);
-
-        // Mark ion entry if necessary.
-        if (entry.isIon())
-            entry.ionEntry().mark(trc);
-    }
-};
-
-void
-JitcodeGlobalTable::mark(JSTracer *trc)
-{
-    AutoSuppressProfilerSampling suppressSampling(trc->runtime());
-    JitcodeMapEntryTraceCallback traceCallback(trc);
-    tree_.forEach<JitcodeMapEntryTraceCallback &>(traceCallback);
-}
-
-void
-JitcodeGlobalEntry::BaseEntry::markJitcode(JSTracer *trc)
-{
-    MarkJitCodeRoot(trc, &jitcode_, "jitcodglobaltable-baseentry-jitcode");
-}
-
-void
-JitcodeGlobalEntry::IonEntry::mark(JSTracer *trc)
-{
-    if (!optsAllTypes_)
-        return;
-
-    for (IonTrackedTypeWithAddendum *iter = optsAllTypes_->begin();
-         iter != optsAllTypes_->end(); iter++)
-    {
-        TypeSet::MarkTypeRoot(trc, &(iter->type), "jitcodeglobaltable-ionentry-type");
-    }
 }
 
 /* static */ void
@@ -898,7 +804,7 @@ JitcodeIonTable::makeIonEntry(JSContext *cx, JitCode *code,
 
     SizedScriptList *scriptList = new (mem) SizedScriptList(numScripts, scripts,
                                                             &profilingStrings[0]);
-    out.init(code, code->raw(), code->rawEnd(), scriptList, this);
+    out.init(code->raw(), code->rawEnd(), scriptList, this);
     return true;
 }
 
