@@ -3175,7 +3175,12 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
 {
   nsPoint toReferenceFrame = mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
   nsRect scrollport = mScrollPort + toReferenceFrame;
-  if (!gfxPrefs::LayoutUseContainersForRootFrames() || mAddClipRectToLayer) {
+  // If APZ is enabled, do not apply clips to the scroll ports of metrics
+  // above the first one on a given layer. They will be applied by the
+  // compositor instead, with async transforms for the scrollframes interspersed
+  // between them.
+  bool omitClip = gfxPrefs::AsyncPanZoomEnabled() && aOutput->Length() > 0;
+  if (!omitClip && (!gfxPrefs::LayoutUseContainersForRootFrames() || mAddClipRectToLayer)) {
     // When using containers, the container layer contains the clip. Otherwise
     // we always include the clip.
     *aClipRect = scrollport;
