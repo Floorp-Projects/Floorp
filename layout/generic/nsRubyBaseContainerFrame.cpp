@@ -201,7 +201,10 @@ RubyColumnEnumerator::GetColumn(RubyColumn& aColumn) const
 }
 
 static gfxBreakPriority
-LineBreakBefore(const nsHTMLReflowState& aReflowState, nsRubyBaseFrame* aFrame)
+LineBreakBefore(nsIFrame* aFrame,
+                nsRenderingContext* aRenderingContext,
+                nsIFrame* aLineContainerFrame,
+                const nsLineList::iterator* aLine)
 {
   for (nsIFrame* child = aFrame; child;
        child = child->GetFirstPrincipalChild()) {
@@ -216,9 +219,8 @@ LineBreakBefore(const nsHTMLReflowState& aReflowState, nsRubyBaseFrame* aFrame)
     auto textFrame = static_cast<nsTextFrame*>(child);
     gfxSkipCharsIterator iter =
       textFrame->EnsureTextRun(nsTextFrame::eInflated,
-                               aReflowState.rendContext->ThebesContext(),
-                               aReflowState.mLineLayout->LineContainerFrame(),
-                               aReflowState.mLineLayout->GetLine());
+                               aRenderingContext->ThebesContext(),
+                               aLineContainerFrame, aLine);
     iter.SetOriginalOffset(textFrame->GetContentOffset());
     uint32_t pos = iter.GetSkippedOffset();
     gfxTextRun* textRun = textFrame->GetTextRun(nsTextFrame::eInflated);
@@ -307,13 +309,25 @@ nsRubyBaseContainerFrame::AddInlineMinISize(
     }
   }
 
+  bool firstFrame = true;
+  bool allowInitialLineBreak, allowLineBreak;
+  GetIsLineBreakAllowed(this, !aData->atStartOfLine,
+                        &allowInitialLineBreak, &allowLineBreak);
   for (nsIFrame* frame = this; frame; frame = frame->GetNextInFlow()) {
     RubyColumnEnumerator enumerator(
       static_cast<nsRubyBaseContainerFrame*>(frame), textContainers);
     for (; !enumerator.AtEnd(); enumerator.Next()) {
-      // FIXME This simply assumes that there is an optional break
-      //       between ruby columns, which is no true in many cases.
-      aData->OptionallyBreak(aRenderingContext);
+      if (firstFrame ? allowInitialLineBreak : allowLineBreak) {
+        nsIFrame* baseFrame = enumerator.GetFrameAtLevel(0);
+        if (baseFrame) {
+          gfxBreakPriority breakPriority =
+            LineBreakBefore(baseFrame, aRenderingContext, nullptr, nullptr);
+          if (breakPriority != gfxBreakPriority::eNoBreak) {
+            aData->OptionallyBreak(aRenderingContext);
+          }
+        }
+      }
+      firstFrame = false;
       nscoord isize = CalculateColumnPrefISize(aRenderingContext, enumerator);
       aData->currentLine += isize;
       if (isize > 0) {
@@ -764,8 +778,10 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
       aReflowState.mAllowLineBreak : aReflowState.mAllowInitialLineBreak;
     if (allowBreakBefore) {
       bool shouldBreakBefore = false;
-      gfxBreakPriority breakPriority =
-        LineBreakBefore(baseReflowState, aColumn.mBaseFrame);
+      gfxBreakPriority breakPriority = LineBreakBefore(
+        aColumn.mBaseFrame, baseReflowState.rendContext,
+        baseReflowState.mLineLayout->LineContainerFrame(),
+        baseReflowState.mLineLayout->GetLine());
       if (breakPriority != gfxBreakPriority::eNoBreak) {
         int32_t offset;
         gfxBreakPriority lastBreakPriority;
