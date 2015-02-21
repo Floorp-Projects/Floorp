@@ -6,7 +6,6 @@
 #ifndef nsButtonFrameRenderer_h___
 #define nsButtonFrameRenderer_h___
 
-#include "imgIContainer.h"
 #include "nsAutoPtr.h"
 #include "nsMargin.h"
 
@@ -25,8 +24,6 @@ class nsStyleContext;
 #define NS_BUTTON_RENDERER_LAST_CONTEXT_INDEX   NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX
 
 class nsButtonFrameRenderer {
-  typedef mozilla::image::DrawResult DrawResult;
-
 public:
 
   nsButtonFrameRenderer();
@@ -44,11 +41,11 @@ public:
                                    const nsRect& aDirtyRect,
                                    const nsRect& aRect);
 
-  DrawResult PaintBorderAndBackground(nsPresContext* aPresContext,
-                                      nsRenderingContext& aRenderingContext,
-                                      const nsRect& aDirtyRect,
-                                      const nsRect& aRect,
-                                      uint32_t aBGFlags);
+  void PaintBorderAndBackground(nsPresContext* aPresContext,
+                                nsRenderingContext& aRenderingContext,
+                                const nsRect& aDirtyRect,
+                                const nsRect& aRect,
+                                uint32_t aBGFlags);
 
   void SetFrame(nsFrame* aFrame, nsPresContext* aPresContext);
  

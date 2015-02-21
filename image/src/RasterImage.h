@@ -248,7 +248,7 @@ public:
                                        nsresult aStatus,
                                        bool aLastPart) MOZ_OVERRIDE;
 
-  void NotifyForDecodeOnDrawOnly();
+  void BlockOnloadForDecodeOnDraw();
 
   /**
    * A hint of the number of bytes of source data that the image contains. If
@@ -394,6 +394,7 @@ private: // data
 
   // Boolean flags (clustered together to conserve space):
   bool                       mHasSize:1;       // Has SetSize() been called?
+  bool                       mBlockedOnload:1; // Did send BLOCK_ONLOAD?
   bool                       mDecodeOnDraw:1;  // Decoding on draw?
   bool                       mTransient:1;     // Is the image short-lived?
   bool                       mDiscardable:1;   // Is container discardable?
