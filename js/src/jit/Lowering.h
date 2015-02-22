@@ -197,6 +197,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitStoreElementHole(MStoreElementHole *ins);
     void visitStoreUnboxedObjectOrNull(MStoreUnboxedObjectOrNull *ins);
     void visitStoreUnboxedString(MStoreUnboxedString *ins);
+    void visitConvertUnboxedObjectToNative(MConvertUnboxedObjectToNative *ins);
     void visitEffectiveAddress(MEffectiveAddress *ins);
     void visitArrayPopShift(MArrayPopShift *ins);
     void visitArrayPush(MArrayPush *ins);

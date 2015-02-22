@@ -1709,6 +1709,31 @@ class ConstraintDataFreezeObjectForTypedArrayData
     }
 };
 
+// Constraint which triggers recompilation if an unboxed object in some group
+// is converted to a native object.
+class ConstraintDataFreezeObjectForUnboxedConvertedToNative
+{
+  public:
+    ConstraintDataFreezeObjectForUnboxedConvertedToNative()
+    {}
+
+    const char *kind() { return "freezeObjectForUnboxedConvertedToNative"; }
+
+    bool invalidateOnNewType(TypeSet::Type type) { return false; }
+    bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
+    bool invalidateOnNewObjectState(ObjectGroup *group) {
+        return group->unboxedLayout().nativeGroup() != nullptr;
+    }
+
+    bool constraintHolds(JSContext *cx,
+                         const HeapTypeSetKey &property, TemporaryTypeSet *expected)
+    {
+        return !invalidateOnNewObjectState(property.object()->maybeGroup());
+    }
+
+    bool shouldSweep() { return false; }
+};
+
 } /* anonymous namespace */
 
 void
@@ -1731,6 +1756,17 @@ TypeSet::ObjectKey::watchStateChangeForTypedArrayData(CompilerConstraintList *co
     typedef CompilerConstraintInstance<ConstraintDataFreezeObjectForTypedArrayData> T;
     constraints->add(alloc->new_<T>(alloc, objectProperty,
                                     ConstraintDataFreezeObjectForTypedArrayData(tarray)));
+}
+
+void
+TypeSet::ObjectKey::watchStateChangeForUnboxedConvertedToNative(CompilerConstraintList *constraints)
+{
+    HeapTypeSetKey objectProperty = property(JSID_EMPTY);
+    LifoAlloc *alloc = constraints->alloc();
+
+    typedef CompilerConstraintInstance<ConstraintDataFreezeObjectForUnboxedConvertedToNative> T;
+    constraints->add(alloc->new_<T>(alloc, objectProperty,
+                                    ConstraintDataFreezeObjectForUnboxedConvertedToNative()));
 }
 
 static void
@@ -2561,16 +2597,28 @@ js::AddTypePropertyId(ExclusiveContext *cx, ObjectGroup *group, jsid id, TypeSet
               TypeSet::ObjectGroupString(group), TypeIdString(id), TypeSet::TypeString(type));
     types->addType(cx, type);
 
+    // If this addType caused the type set to be marked as containing any
+    // object, make sure that is reflected in other type sets the addType is
+    // propagated to below.
+    if (type.isObjectUnchecked() && types->unknownObject())
+        type = TypeSet::AnyObjectType();
+
     // Propagate new types from partially initialized groups to fully
     // initialized groups for the acquired properties analysis. Note that we
     // don't need to do this for other property changes, as these will also be
     // reflected via shape changes on the object that will prevent the object
     // from acquiring the fully initialized group.
-    if (group->newScript() && group->newScript()->initializedGroup()) {
-        if (type.isObjectUnchecked() && types->unknownObject())
-            type = TypeSet::AnyObjectType();
+    if (group->newScript() && group->newScript()->initializedGroup())
         AddTypePropertyId(cx, group->newScript()->initializedGroup(), id, type);
-    }
+
+    // Maintain equivalent type information for unboxed object groups and their
+    // corresponding native group. Since type sets might contain the unboxed
+    // group but not the native group, this ensures optimizations based on the
+    // unboxed group are valid for the native group.
+    if (group->maybeUnboxedLayout() && group->maybeUnboxedLayout()->nativeGroup())
+        AddTypePropertyId(cx, group->maybeUnboxedLayout()->nativeGroup(), id, type);
+    if (ObjectGroup *unboxedGroup = group->maybeOriginalUnboxedGroup())
+        AddTypePropertyId(cx, unboxedGroup, id, type);
 }
 
 void
@@ -2666,6 +2714,12 @@ ObjectGroup::setFlags(ExclusiveContext *cx, ObjectGroupFlags flags)
     // acquired properties analysis.
     if (newScript() && newScript()->initializedGroup())
         newScript()->initializedGroup()->setFlags(cx, flags);
+
+    // Propagate flag changes between unboxed and corresponding native groups.
+    if (maybeUnboxedLayout() && maybeUnboxedLayout()->nativeGroup())
+        maybeUnboxedLayout()->nativeGroup()->setFlags(cx, flags);
+    if (ObjectGroup *unboxedGroup = maybeOriginalUnboxedGroup())
+        unboxedGroup->setFlags(cx, flags);
 }
 
 void
@@ -3566,7 +3620,7 @@ TypeNewScript::rollbackPartiallyInitializedObjects(JSContext *cx, ObjectGroup *g
         }
 
         if (thisv.toObject().is<UnboxedPlainObject>() &&
-            !thisv.toObject().as<UnboxedPlainObject>().convertToNative(cx))
+            !UnboxedPlainObject::convertToNative(cx, &thisv.toObject()))
         {
             CrashAtUnhandlableOOM("rollbackPartiallyInitializedObjects");
         }
@@ -3701,6 +3755,12 @@ ConstraintTypeSet::sweep(Zone *zone, AutoClearTypeInferenceStateOnOOM &oom)
                 // Object sets containing objects with unknown properties might
                 // not be complete. Mark the type set as unknown, which it will
                 // be treated as during Ion compilation.
+                //
+                // Note that we don't have to do this when the type set might
+                // be missing the native group corresponding to an unboxed
+                // object group. In this case, the native group points to the
+                // unboxed object group via its addendum, so as long as objects
+                // with either group exist, neither group will be finalized.
                 flags |= TYPE_FLAG_ANYOBJECT;
                 clearObjects();
                 objectCount = 0;
