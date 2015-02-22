@@ -10,8 +10,8 @@ EXTRA_JS_MODULES.addons += [
     'AddonRepository_SQLiteMigrator.jsm',
     'AddonUpdateChecker.jsm',
     'Content.js',
+    'GMPProvider.jsm',
     'LightweightThemeImageOptimizer.jsm',
-    'OpenH264Provider.jsm',
     'SpellCheckDictionaryBootstrap.js',
 ]
 
