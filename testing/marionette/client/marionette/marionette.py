@@ -874,7 +874,7 @@ class Marionette(object):
 
         :returns: A dict of the capabilities offered."""
         self.wait_for_port(timeout=timeout)
-        self.session = self._send_message('newSession', 'value', capabilities=desired_capabilities, session_id=session_id)
+        self.session = self._send_message('newSession', 'value', capabilities=desired_capabilities, sessionId=session_id)
         self.b2g = 'b2g' in self.session
         return self.session
 
