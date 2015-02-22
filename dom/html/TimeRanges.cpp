@@ -172,5 +172,14 @@ TimeRanges::WrapObject(JSContext* aCx)
   return TimeRangesBinding::Wrap(aCx, this);
 }
 
+void
+TimeRanges::Shift(double aOffset)
+{
+  for (index_type i = 0; i < mRanges.Length(); ++i) {
+    mRanges[i].mStart += aOffset;
+    mRanges[i].mEnd += aOffset;
+  }
+}
+
 } // namespace dom
 } // namespace mozilla
