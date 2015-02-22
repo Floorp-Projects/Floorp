@@ -223,6 +223,7 @@
     _(StoreElementV)                \
     _(StoreElementT)                \
     _(StoreUnboxedPointer)          \
+    _(ConvertUnboxedObjectToNative) \
     _(ArrayPopShiftV)               \
     _(ArrayPopShiftT)               \
     _(ArrayPushV)                   \

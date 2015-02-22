@@ -1,7 +1,9 @@
 <!DOCTYPE HTML>
-<html>
-<body>
-  <embed style="-moz-transform:scaleY(-1)" type="application/x-test" drawmode="solid" color="FF00FF00" width="200" height="200"></embed>
+<html class="reftest-wait">
+<script src="forceloadplugin.js">
+</script>
+<body onload="forceLoadPlugin('p')">
+  <embed style="-moz-transform:scaleY(-1)" type="application/x-test" drawmode="solid" color="FF00FF00" width="200" height="200" id="p"></embed>
 </body>
 </html>
 

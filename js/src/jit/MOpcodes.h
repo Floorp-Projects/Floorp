@@ -184,6 +184,7 @@ namespace jit {
     _(StoreElementHole)                                                     \
     _(StoreUnboxedObjectOrNull)                                             \
     _(StoreUnboxedString)                                                   \
+    _(ConvertUnboxedObjectToNative)                                         \
     _(ArrayPopShift)                                                        \
     _(ArrayPush)                                                            \
     _(ArrayConcat)                                                          \

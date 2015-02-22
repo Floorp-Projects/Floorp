@@ -118,6 +118,8 @@ if type setarch >/dev/null 2>&1; then
     COMMAND_PREFIX="setarch $(uname -m) -R "
 fi
 
+RUN_JSTESTS=true
+
 if [[ "$VARIANT" = "rootanalysis" ]]; then
     export JS_GC_ZEAL=7
 
@@ -128,6 +130,11 @@ elif [[ "$VARIANT" = "generational" ]]; then
     # Ignore timeouts from tests that are known to take too long with this zeal mode
     export JITTEST_EXTRA_ARGS=--ignore-timeouts=$ABSDIR/cgc-jittest-timeouts.txt
     export JSTESTS_EXTRA_ARGS=--exclude-file=$ABSDIR/cgc-jstests-slow.txt
+
+    case "$platform" in
+    win*)
+        RUN_JSTESTS=false
+    esac
 fi
 
 if [[ "$VARIANT" = "warnaserr" ]]; then
@@ -137,4 +144,6 @@ fi
 $COMMAND_PREFIX $MAKE check || exit 1
 $COMMAND_PREFIX $MAKE check-jit-test || exit 1
 $COMMAND_PREFIX $OBJDIR/dist/bin/jsapi-tests || exit 1
-$COMMAND_PREFIX $MAKE check-jstests || exit 1
+if $RUN_JSTESTS; then
+    $COMMAND_PREFIX $MAKE check-jstests || exit 1
+fi

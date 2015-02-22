@@ -900,7 +900,7 @@ js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id, const P
     if (IsAnyTypedArray(obj))
         return DefinePropertyOnTypedArray(cx, obj, id, desc, throwError, rval);
 
-    if (obj->is<UnboxedPlainObject>() && !obj->as<UnboxedPlainObject>().convertToNative(cx))
+    if (obj->is<UnboxedPlainObject>() && !UnboxedPlainObject::convertToNative(cx, obj))
         return false;
 
     if (obj->getOps()->lookupProperty) {

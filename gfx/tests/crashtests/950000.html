@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style id="s">
+
+@font-face {
+  font-family: x;
+  src: url(bogus-font.ttf);
+}
+
+@font-face {
+  font-family: y;
+  src: url(bogus-font.ttf);
+}
+
+</style>
+
+<script>
+
+function boom()
+{
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    ctx.font = 'normal 20px x';
+
+    document.getElementById("s").remove();
+
+    setTimeout(function() {
+       ctx.measureText("A");
+    }, 50);
+}
+
+window.addEventListener("DOMContentLoaded", boom, false)
+
+</script>
+</head>
+
+<body><div style="font-family: y;">y</div></body>
+</html>

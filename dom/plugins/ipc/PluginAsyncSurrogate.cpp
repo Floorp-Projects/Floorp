@@ -358,15 +358,33 @@ PluginAsyncSurrogate::PendingNewStreamCall::PendingNewStreamCall(
 {
 }
 
-/* static */ bool
-PluginAsyncSurrogate::SetStreamType(NPStream* aStream, uint16_t aStreamType)
+/* static */ nsNPAPIPluginStreamListener*
+PluginAsyncSurrogate::GetStreamListener(NPStream* aStream)
 {
   nsNPAPIStreamWrapper* wrapper =
     reinterpret_cast<nsNPAPIStreamWrapper*>(aStream->ndata);
   if (!wrapper) {
-    return false;
+    return nullptr;
   }
-  nsNPAPIPluginStreamListener* streamListener = wrapper->GetStreamListener();
+  return wrapper->GetStreamListener();
+}
+
+void
+PluginAsyncSurrogate::DestroyAsyncStream(NPStream* aStream)
+{
+  MOZ_ASSERT(aStream);
+  nsNPAPIPluginStreamListener* streamListener = GetStreamListener(aStream);
+  MOZ_ASSERT(streamListener);
+  // streamListener was suspended during async init. We must resume the stream
+  // request prior to calling _destroystream for cleanup to work correctly.
+  streamListener->ResumeRequest();
+  parent::_destroystream(mInstance, aStream, NPRES_DONE);
+}
+
+/* static */ bool
+PluginAsyncSurrogate::SetStreamType(NPStream* aStream, uint16_t aStreamType)
+{
+  nsNPAPIPluginStreamListener* streamListener = GetStreamListener(aStream);
   if (!streamListener) {
     return false;
   }
@@ -433,6 +451,12 @@ PluginAsyncSurrogate::WaitForInit()
     mozilla::ipc::MessageChannel* contentChannel = cp->GetIPCChannel();
     MOZ_ASSERT(contentChannel);
     while (!mParent->mNPInitialized) {
+      if (mParent->mShutdown) {
+        // Since we are pumping the message channel for events, it may be
+        // possible for module initialization to fail during this loop. We must
+        // return false if this happens or else we'll be permanently stuck.
+        return false;
+      }
       result = contentChannel->WaitForIncomingMessage();
       if (!result) {
         return result;
@@ -442,6 +466,12 @@ PluginAsyncSurrogate::WaitForInit()
   mozilla::ipc::MessageChannel* channel = mParent->GetIPCChannel();
   MOZ_ASSERT(channel);
   while (!mAcceptCalls) {
+    if (mInitCancelled) {
+      // Since we are pumping the message channel for events, it may be
+      // possible for plugin instantiation to fail during this loop. We must
+      // return false if this happens or else we'll be permanently stuck.
+      return false;
+    }
     result = channel->WaitForIncomingMessage();
     if (!result) {
       break;
@@ -474,7 +504,7 @@ PluginAsyncSurrogate::NotifyAsyncInitFailed()
   // Clean up any pending NewStream requests
   for (uint32_t i = 0, len = mPendingNewStreamCalls.Length(); i < len; ++i) {
     PendingNewStreamCall& curPendingCall = mPendingNewStreamCalls[i];
-    parent::_destroystream(mInstance, curPendingCall.mStream, NPRES_DONE);
+    DestroyAsyncStream(curPendingCall.mStream);
   }
   mPendingNewStreamCalls.Clear();
 

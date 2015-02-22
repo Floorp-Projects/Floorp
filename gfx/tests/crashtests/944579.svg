@@ -1,0 +1,26 @@
+<html><head></head><body><svg xmlns="http://www.w3.org/2000/svg" width="500">
+
+<filter>
+  <feMorphology></feMorphology>
+</filter>
+<g><rect></rect>
+</g>
+
+<filter>
+<feMorphology></feMorphology>
+</filter>
+<g>
+  <rect></rect>
+</g>
+
+<filter id="f3" primitiveUnits="objectBoundingBox">
+  <feMorphology operator="dilate" radius="32542"></feMorphology>
+</filter>
+<g filter="url(#f3)"><rect width="4294967217ex" height="100" x="29%"></rect>
+</g>
+
+<filter></filter>
+<g></g>
+
+</svg>
+</body><style>></style></html><!-- -->

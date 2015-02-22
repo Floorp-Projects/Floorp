@@ -8,119 +8,163 @@
   <script class="testbody" type="application/javascript">
 "use strict";
 var Cu = SpecialPowers.Cu;
-var rtcid = Cu.import("resource://gre/modules/media/IdpProxy.jsm");
-var IdpProxy = rtcid.IdpProxy;
-var request = {
-  type: "SIGN",
-  message: "foo"
-};
+var rtcid = Cu.import("resource://gre/modules/media/IdpSandbox.jsm");
+var IdpSandbox = rtcid.IdpSandbox;
+var dummyPayload = JSON.stringify({
+  this: 'is',
+  a: ['stu', 6],
+  obj: null
+});
 
-function test_domain_sandbox(done) {
+function test_domain_sandbox() {
   var diabolical = {
     toString : function() {
-      return "example.com/path";
+      return 'example.com/path';
     }
   };
-  var domains = [ "ex/foo", "user@ex", "user:pass@ex", "ex#foo", "ex?foo",
-                  "", 12, null, diabolical, true ];
+  var domains = [ 'ex/foo', 'user@ex', 'user:pass@ex', 'ex#foo', 'ex?foo',
+                  '', 12, null, diabolical, true ];
   domains.forEach(function(domain) {
     try {
-      var idp = new IdpProxy(domain);
-      ok(false, "IdpProxy didn't catch bad domain: " + domain);
+      var idp = new IdpSandbox(domain);
+      ok(false, 'IdpSandbox allowed a bad domain: ' + domain);
     } catch (e) {
-      var str = (typeof domain === "string") ? domain : typeof domain;
-      ok(true, "Evil domain '" + str + "' raises exception");
+      var str = (typeof domain === 'string') ? domain : typeof domain;
+      ok(true, 'Evil domain "' + str + '" raises exception');
     }
   });
-  done();
 }
 
-function test_protocol_sandbox(done) {
-  var protos = [ "../evil/proto", "..%2Fevil%2Fproto",
-                 "\\evil", "%5cevil", 12, true, {} ];
+function test_protocol_sandbox() {
+  var protos = [ '../evil/proto', '..%2Fevil%2Fproto',
+                 '\\evil', '%5cevil', 12, true, {} ];
   protos.forEach(function(proto) {
     try {
-      var idp = new IdpProxy("example.com", proto);
-      ok(false, "IdpProxy didn't catch bad protocol: " + proto);
+      var idp = new IdpSandbox('example.com', proto);
+      ok(false, 'IdpSandbox allowed a bad protocol: ' + proto);
     } catch (e) {
-      var str = (typeof proto === "string") ? proto : typeof proto;
-      ok(true, "Evil protocol '" + proto + "' raises exception");
+      var str = (typeof proto === 'string') ? proto : typeof proto;
+      ok(true, 'Evil protocol "' + proto + '" raises exception');
     }
   });
-  done();
 }
 
-function handleFailure(done) {
-  function failure(error) {
-    ok(false, "IdP error" + error);
-    done();
-  }
-  return failure;
+function idpName(hash) {
+  return 'idp.js' + (hash ? ('#' + hash) : '');
 }
 
-function test_success_response(done) {
-  var idp;
-  var failure = handleFailure(done);
-
-  function handleResponse(response) {
-    is(SpecialPowers.wrap(response).type, "SUCCESS", "IdP responds with SUCCESS");
-    idp.close();
-    done();
-  }
-
-  idp = new IdpProxy("example.com", "idp.html");
-  idp.start(failure);
-  idp.send(request, handleResponse);
+function makeSandbox(js) {
+  var name = js || idpName();
+  info('Creating a sandbox for the protocol: ' + name);
+  var sandbox = new IdpSandbox('example.com', name);
+  return sandbox.start().then(idp => SpecialPowers.wrap(idp));
 }
 
-function test_error_response(done) {
-  var idp;
-  var failure = handleFailure(done);
-
-  function handleResponse(response) {
-    is(SpecialPowers.wrap(response).type, "ERROR", "IdP should produce ERROR");
-    idp.close();
-    done();
-  }
-
-  idp = new IdpProxy("example.com", "idp.html#error");
-  idp.start(failure);
-  idp.send(request, handleResponse);
+function test_generate_assertion() {
+  return makeSandbox()
+    .then(idp => idp.generateAssertion(dummyPayload,
+                                       'https://example.net'))
+    .then(response => {
+      response = SpecialPowers.wrap(response);
+      is(response.idp.domain, 'example.com', 'domain is correct');
+      is(response.idp.protocol, 'idp.js', 'protocol is correct');
+      ok(typeof response.assertion === 'string', 'assertion is present');
+    });
 }
 
-function test_delayed_response(done) {
-  var idp;
-  var failure = handleFailure(done);
+// test that the test IdP can eat its own dogfood; which is the only way to test
+// validateAssertion, since that consumes the output of generateAssertion (in
+// theory, generateAssertion could identify a different IdP domain).
 
-  function handleResponse(response) {
-    is(SpecialPowers.wrap(response).type, "SUCCESS",
-       "IdP should handle delayed response");
-    idp.close();
-    done();
-  }
-
-  idp = new IdpProxy("example.com", "idp.html#delay100");
-  idp.start(failure);
-  idp.send(request, handleResponse);
+function test_validate_assertion() {
+  return makeSandbox()
+    .then(idp => idp.generateAssertion(dummyPayload,
+                                       'https://example.net', 'user'))
+    .then(assertion => {
+      var wrapped = SpecialPowers.wrap(assertion);
+      return makeSandbox()
+        .then(idp => idp.validateAssertion(wrapped.assertion,
+                                           'https://example.net'));
+    }).then(response => {
+      response = SpecialPowers.wrap(response);
+      is(response.identity, 'user@example.com');
+      is(response.contents, dummyPayload);
+    });
 }
 
-var TESTS = [ test_domain_sandbox, test_protocol_sandbox,
-              test_success_response, test_error_response,
-              test_delayed_response ];
+// We don't want to test the #bad or the #hang instructions,
+// errors of the sort those generate aren't handled by the sandbox code.
+function test_assertion_failure(reason) {
+  return () => {
+    return makeSandbox(idpName(reason))
+      .then(idp => idp.generateAssertion('hello', 'example.net'))
+      .then(r => ok(false, 'should not succeed on ' + reason),
+            e => ok(true, 'failed correctly on ' + reason));
+  };
+}
 
-function run_next_test() {
-  if (TESTS.length) {
-    var test = TESTS.shift();
-    test(run_next_test);
-  } else {
-    SimpleTest.finish();
-  }
+function test_load_failure() {
+  return makeSandbox('non-existent-file')
+    .then(() => ok(false, 'Should fail to load non-existent file'),
+          e => ok(e, 'Should fail to load non-existent file'));
+}
+
+function test_redirect_ok(from) {
+  return () => {
+    return makeSandbox(from)
+      .then(idp => idp.generateAssertion('hello', 'example.net'))
+      .then(r => ok(SpecialPowers.wrap(r).assertion,
+                    'Redirect to https should be OK'));
+  };
+}
+
+function test_redirect_fail(from) {
+  return () => {
+    return makeSandbox(from)
+      .then(() => ok(false, 'Redirect to https should fail'),
+            e => ok(e, 'Redirect to https should fail'));
+  };
+}
+
+function run_all_tests() {
+  [
+    test_domain_sandbox,
+    test_protocol_sandbox,
+    test_generate_assertion,
+    test_validate_assertion,
+
+    // fail of the IdP fails
+    test_assertion_failure('fail'),
+    // fail if the IdP throws
+    test_assertion_failure('throw'),
+    // fail if the IdP is not ready
+    test_assertion_failure('not_ready'),
+
+    test_load_failure(),
+    // Test a redirect to an HTTPS origin, which should be OK
+    test_redirect_ok('idp-redirect-https.js'),
+    // Two redirects is fine too
+    test_redirect_ok('idp-redirect-https-double.js'),
+    // A secure redirect to a path other than /.well-known/idp-proxy/* should
+    // also work fine.
+    test_redirect_ok('idp-redirect-https-odd-path.js'),
+    // A redirect to HTTP is not-cool
+    test_redirect_fail('idp-redirect-http.js'),
+    // Also catch tricks like https->http->https
+    test_redirect_fail('idp-redirect-http-trick.js')
+  ].reduce((p, test) => {
+    return p.then(test)
+      .catch(e => ok(false, test.name + ' failed: ' +
+                     SpecialPowers.wrap(e).message + '\n' +
+                     SpecialPowers.wrap(e).stack));
+  }, Promise.resolve())
+    .then(() => SimpleTest.finish());
 }
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
-  "set" : [ [ "dom.messageChannel.enabled", true ] ]
-}, run_next_test);
+  set: [ [ 'dom.messageChannel.enabled', true ] ]
+}, run_all_tests);
 </script>
   </body>
 </html>
