@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug </title>
+</head>
+<body>
+
+<iframe src="947158-iframe.html" width="100%" frameborder=0></iframe>
+<iframe src="947158-iframe.html" width="100%" frameborder=0></iframe>
+
+<script>
+var i = 0;
+function test(){
+  fs=document.querySelectorAll('iframe');
+  f=fs[Math.floor(Math.random()*fs.length)];
+  f.width=Math.random()*100+"%";
+  if (i++ < 10) {
+     setTimeout(test,300);
+     f.offsetHeight;
+     return;
+  }
+  for (var j = 0; j < fs.length; j++) {
+    f = fs[j];
+    f.parentNode.removeChild(f);
+  }
+  document.documentElement.removeAttribute("class");
+}
+test();
+</script>
+
+</body>
+</html>
