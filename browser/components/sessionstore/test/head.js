@@ -502,6 +502,10 @@ function promiseTabRestored(tab) {
   return promiseEvent(tab, "SSTabRestored");
 }
 
+function promiseTabRestoring(tab) {
+  return promiseEvent(tab, "SSTabRestoring");
+}
+
 function sendMessage(browser, name, data = {}) {
   browser.messageManager.sendAsyncMessage(name, data);
   return promiseContentMessage(browser, name);
