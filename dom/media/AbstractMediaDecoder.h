@@ -65,9 +65,6 @@ public:
   // Can be called on any thread.
   virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded) = 0;
 
-  // For decoders with a notion of timestamp offset, returns the value in microseconds.
-  virtual int64_t GetTimestampOffset() const { return 0; }
-
   // Return the duration of the media in microseconds.
   virtual int64_t GetMediaDuration() = 0;
 
