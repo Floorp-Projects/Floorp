@@ -860,11 +860,7 @@ pref("browser.preferences.instantApply", true);
 #endif
 
 // Toggles between the two Preferences implementations, pop-up window and in-content
-#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.preferences.inContent", true);
-#else
-pref("browser.preferences.inContent", false);
-#endif
 
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
