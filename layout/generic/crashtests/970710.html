@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<script>
+
+var text =
+    "B" +
+    "C" +
+    "D" +
+    "E" +
+    "F" +
+    "\u0643" +
+    "\u0002" +
+    "G" +
+    "\u202D" +
+    "H" +
+    "I" +
+    " " +
+    "\u0007" +
+    "";
+
+function boom()
+{
+    var math = document.createElementNS("http://www.w3.org/1998/Math/MathML", "math");
+    var mover = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mover");
+    document.body.appendChild(math);
+    math.appendChild(mover);
+    var textNode = document.createTextNode(text);
+    mover.appendChild(textNode);
+    document.body.style.display = "table-row-group";
+    document.body.style.textAlign = "justify";
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

@@ -1545,7 +1545,12 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
         aProperty == eCSSProperty__x_system_font) {
       // We treat serialization of aliases like '-moz-transform' as a special
       // case, since it really wants to be serialized as if it were a longhand
-      // even though it is implemented as a shorthand.
+      // even though it is implemented as a shorthand. We also need to
+      // serialize -x-system-font's token stream value, even though the
+      // value is set through the font shorthand.  This serialization
+      // of -x-system-font is needed when we need to output the
+      // 'font' shorthand followed by a number of overriding font
+      // longhand components.
       aResult.Append(mValue.mTokenStream->mTokenStream);
     }
   } else if (eCSSUnit_Pair == unit) {

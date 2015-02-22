@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html class="reftest-wait">
 <head>
   <style type="text/css">
 #one {
@@ -27,6 +27,8 @@
   z-index:1;
 }
   </style>
+  <script src="utils.js" type="text/javascript">
+  </script>
   <script type="text/javascript">
 function paintCanvas() {
   var canvas = document.getElementById("two");
@@ -34,10 +36,15 @@ function paintCanvas() {
   ctx.fillStyle = "rgba(255,0,0, 0.6)";
   ctx.fillRect(0,0, 200,200);
 }
+
+  function doTest() {
+    paintCanvas();
+    forceLoadPlugin(['one', 'four']);
+  }
   </script>
 </style>
 </head>
-<body onload="paintCanvas();">
+<body onload="doTest();">
   <embed id="four" type="application/x-test" width="200" height="200"
          drawmode="solid" color="FFFF0000"></embed>
   <div id="three"></div>

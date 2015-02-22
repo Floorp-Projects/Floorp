@@ -2,6 +2,8 @@
 <html class="reftest-wait">
 <head>
   <title>Test for bugs 807728 and 810426</title>
+  <script src="utils.js">
+  </script>
   <script>
 function start()
 {
@@ -49,7 +51,7 @@ function start()
 document.addEventListener("MozReftestInvalidate", start, false);
   </script>
 </head>
-<body>
+<body onLoad="forceLoadPlugin('plugin', true)">
   <embed id="plugin" type="application/x-test"
          drawmode="solid" color="FF000000" width="30" height="50">
   </embed>

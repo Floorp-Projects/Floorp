@@ -87,6 +87,8 @@ load 580100-1.html
 load 580212-1.html
 load 580233-1.html
 load 580719-1.html
+load 593526.html
+load 593526.xul
 load 594654-1.xhtml
 load 595727-1.html
 load 624198.xhtml
@@ -109,4 +111,7 @@ load 893572-1.html
 load 893572-2.html
 load 893572-3.html
 load 893572-4.html
+load 944579.svg
+load 944579.html
+pref(security.fileuri.strict_origin_policy,false) load 950000.html
 load 1034403-1.html

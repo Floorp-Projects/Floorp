@@ -153,6 +153,15 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
         return LAllocation();
 #endif
     }
+
+    bool uses(Register reg) {
+        for (size_t i = 0; i < numMoves(); i++) {
+            LMove move = getMove(i);
+            if (*move.from() == LGeneralReg(reg) || *move.to() == LGeneralReg(reg))
+                return true;
+        }
+        return false;
+    }
 };
 
 
@@ -4649,6 +4658,22 @@ class LStoreUnboxedPointer : public LInstructionHelper<0, 3, 0>
     }
     const LAllocation *value() {
         return getOperand(2);
+    }
+};
+
+// If necessary, convert an unboxed object in a particular group to its native
+// representation.
+class LConvertUnboxedObjectToNative : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(ConvertUnboxedObjectToNative)
+
+    explicit LConvertUnboxedObjectToNative(const LAllocation &object) {
+        setOperand(0, object);
+    }
+
+    MConvertUnboxedObjectToNative *mir() {
+        return mir_->toConvertUnboxedObjectToNative();
     }
 };
 
