@@ -1704,14 +1704,10 @@ PluginInstanceParent::RecvAsyncNPP_NewResult(const NPError& aResult)
     }
 
     nsPluginInstanceOwner* owner = GetOwner();
-    if (!owner) {
-        // This is possible in async plugin land; the instance may outlive
-        // the owner
-        return true;
-    }
-
-    if (aResult != NPERR_NO_ERROR) {
-        owner->NotifyHostAsyncInitFailed();
+    // It is possible for a plugin instance to outlive its owner when async
+    // plugin init is turned on, so we need to handle that case.
+    if (aResult != NPERR_NO_ERROR || !owner) {
+        mSurrogate->NotifyAsyncInitFailed();
         return true;
     }
 
