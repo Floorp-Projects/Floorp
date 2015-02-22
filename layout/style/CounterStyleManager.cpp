@@ -339,7 +339,7 @@ CJKIdeographicToText(CounterValue aOrdinal, nsSubstring& aResult,
     if (unitidx == 0) {
       unit10Kidx = pos / 4;
     }
-    int32_t cur = aOrdinal % 10;
+    auto cur = static_cast<MakeUnsigned<CounterValue>::Type>(aOrdinal) % 10;
     if (cur == 0) {
       if (needZero) {
         needZero = false;

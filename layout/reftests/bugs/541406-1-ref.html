@@ -1,7 +1,11 @@
 <!DOCTYPE HTML>
-<html style="overflow:hidden">
-<body>
+<html class="reftest-wait" style="overflow:hidden">
+<head>
+<script src="forceloadplugin.js">
+</script>
+</head>
+<body onload="forceLoadPlugin('p')">
 <object style="position:absolute; width:100%; height:100%; left:0; top:0;"
-        type="application/x-test"></object>
+        type="application/x-test" id="p"></object>
 </body>
 </html>

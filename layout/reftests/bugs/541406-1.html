@@ -1,6 +1,14 @@
 <!DOCTYPE HTML>
-<html>
-<body onload="document.getElementById('p').focus()">
+<html class="reftest-wait">
+<head>
+<script src="forceloadplugin.js">
+</script>
+</head>
+<body onload="forceLoadPlugin('p', function() {
+  var p = document.getElementById('p');
+  p.focus();
+  document.documentElement.removeAttribute('class');
+})">
 <object style="position:absolute; width:100%; height:100%; left:0; top:0;"
         type="application/x-test" id="p"></object>
 </body>
