@@ -444,6 +444,7 @@ load 897852.html
 asserts-if(Android,2) asserts-if(!Android,4-6) load 898913.html # bug 847368
 pref(layers.acceleration.disabled,true) pref(layers.force-active,true) load 919434.html
 pref(layout.css.sticky.enabled,true) load 926728.html
+load 930381.html
 load 931464.html
 load 936988-1.html
 load 931450.html
