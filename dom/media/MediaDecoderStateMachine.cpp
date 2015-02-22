@@ -2154,10 +2154,21 @@ void
 MediaDecoderStateMachine::DecodeError()
 {
   AssertCurrentThreadInMonitor();
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
-
   if (mState == DECODER_STATE_SHUTDOWN) {
     // Already shutdown.
+    return;
+  }
+
+  // DecodeError should probably be redesigned so that it doesn't need to run
+  // on the Decode Task Queue, but this does the trick for now.
+  if (!OnDecodeThread()) {
+    RefPtr<nsIRunnable> task(
+      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::AcquireMonitorAndInvokeDecodeError));
+    nsresult rv = DecodeTaskQueue()->Dispatch(task);
+
+    if (NS_FAILED(rv)) {
+      DECODER_WARN("Failed to dispatch AcquireMonitorAndInvokeDecodeError");
+    }
     return;
   }
 
@@ -3643,12 +3654,7 @@ void MediaDecoderStateMachine::OnAudioSinkError()
 
   // Otherwise notify media decoder/element about this error for it makes
   // no sense to play an audio-only file without sound output.
-  RefPtr<nsIRunnable> task(
-    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::AcquireMonitorAndInvokeDecodeError));
-  nsresult rv = DecodeTaskQueue()->Dispatch(task);
-  if (NS_FAILED(rv)) {
-    DECODER_WARN("Failed to dispatch AcquireMonitorAndInvokeDecodeError");
-  }
+  DecodeError();
 }
 
 } // namespace mozilla
