@@ -825,7 +825,7 @@ SyncObjectD3D11::FinalizeFrame()
   if (mD3D10SyncedTextures.size()) {
     RefPtr<IDXGIKeyedMutex> mutex;
     hr = mD3D10Texture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
-    hr = mutex->AcquireSync(0, 10000);
+    hr = mutex->AcquireSync(0, 20000);
 
     if (hr == WAIT_TIMEOUT) {
       MOZ_CRASH();
