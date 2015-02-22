@@ -29,7 +29,7 @@ interface Body {
 
 [NoInterfaceObject, Exposed=(Window,Worker)]
 interface GlobalFetch {
-  [Throws, Func="mozilla::dom::Headers::PrefEnabled"]
+  [Throws]
   Promise<Response> fetch(RequestInfo input, optional RequestInit init);
 };
 
