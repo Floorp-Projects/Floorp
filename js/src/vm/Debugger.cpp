@@ -123,7 +123,7 @@ GetOrCreateFunctionScript(JSContext *cx, HandleFunction fun)
 bool
 js::ReportObjectRequired(JSContext *cx)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, "value");
     return false;
 }
 
