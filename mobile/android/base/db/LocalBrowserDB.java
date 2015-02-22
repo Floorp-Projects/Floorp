@@ -32,6 +32,7 @@ import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
+import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB.FilterFlags;
@@ -93,6 +94,7 @@ public class LocalBrowserDB {
     private final Uri mFaviconsUriWithProfile;
     private final Uri mThumbnailsUriWithProfile;
     private final Uri mReadingListUriWithProfile;
+    private final Uri mSearchHistoryUri;
 
     private static final String[] DEFAULT_BOOKMARK_COLUMNS =
             new String[] { Bookmarks._ID,
@@ -114,6 +116,8 @@ public class LocalBrowserDB {
         mFaviconsUriWithProfile = appendProfile(Favicons.CONTENT_URI);
         mThumbnailsUriWithProfile = appendProfile(Thumbnails.CONTENT_URI);
         mReadingListUriWithProfile = appendProfile(ReadingListItems.CONTENT_URI);
+
+        mSearchHistoryUri = BrowserContract.SearchHistory.CONTENT_URI;
 
         mUpdateHistoryUriWithProfile = mHistoryUriWithProfile.buildUpon().
             appendQueryParameter(BrowserContract.PARAM_INCREMENT_VISITS, "true").
@@ -680,6 +684,7 @@ public class LocalBrowserDB {
 
     public void clearHistory(ContentResolver cr) {
         cr.delete(mHistoryUriWithProfile, null, null);
+        cr.delete(mSearchHistoryUri, null, null);
     }
 
     @RobocopTarget
