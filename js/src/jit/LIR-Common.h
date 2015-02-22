@@ -4661,6 +4661,22 @@ class LStoreUnboxedPointer : public LInstructionHelper<0, 3, 0>
     }
 };
 
+// If necessary, convert an unboxed object in a particular group to its native
+// representation.
+class LConvertUnboxedObjectToNative : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(ConvertUnboxedObjectToNative)
+
+    explicit LConvertUnboxedObjectToNative(const LAllocation &object) {
+        setOperand(0, object);
+    }
+
+    MConvertUnboxedObjectToNative *mir() {
+        return mir_->toConvertUnboxedObjectToNative();
+    }
+};
+
 class LArrayPopShiftV : public LInstructionHelper<BOX_PIECES, 1, 2>
 {
   public:
