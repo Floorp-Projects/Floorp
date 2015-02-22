@@ -298,11 +298,6 @@ pref("chrome.override_package.passwordmgr", "browser");
 // enable xul error pages
 pref("browser.xul.error_pages.enabled", true);
 
-pref("browser.history.grouping", "day");
-pref("browser.history.showSessions", false);
-pref("browser.sessionhistory.max_entries", 50);
-pref("browser.history_expire_sites", 40000);
-
 // disable color management
 pref("gfx.color_management.mode", 0);
 
