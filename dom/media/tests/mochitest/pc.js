@@ -731,6 +731,9 @@ DataChannelWrapper.prototype = {
  */
 function PeerConnectionWrapper(label, configuration, h264) {
   this.configuration = configuration;
+  if (configuration && configuration.label_suffix) {
+    label = label + "_" + configuration.label_suffix;
+  }
   this.label = label;
   this.whenCreated = Date.now();
 
