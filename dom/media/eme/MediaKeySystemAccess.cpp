@@ -108,7 +108,7 @@ MediaKeySystemAccess::IsKeySystemSupported(const nsAString& aKeySystem)
 
 #ifdef XP_WIN
   if (aKeySystem.EqualsLiteral("com.adobe.access") &&
-      Preferences::GetBool("media.eme.adobe-access.enabled", false) &&
+      Preferences::GetBool("media.gmp-eme-adobe.enabled", false) &&
       IsVistaOrLater() && // Win Vista and later only.
       HaveGMPFor(mps,
                  NS_LITERAL_CSTRING("com.adobe.access"),

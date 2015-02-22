@@ -4462,9 +4462,6 @@ pref("browser.search.official", true);
 #ifndef MOZ_WIDGET_GONK
 // GMPInstallManager prefs
 
-// Enables some extra logging (can reduce performance)
-pref("media.gmp-manager.log", false);
-
 // User-settable override to media.gmp-manager.url for testing purposes.
 //pref("media.gmp-manager.url.override", "");
 
@@ -4498,5 +4495,8 @@ pref("media.gmp-manager.certs.1.issuerName", "CN=DigiCert Secure Server CA,O=Dig
 pref("media.gmp-manager.certs.1.commonName", "aus4.mozilla.org");
 pref("media.gmp-manager.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
 pref("media.gmp-manager.certs.2.commonName", "aus4.mozilla.org");
+
+// Adobe EME is currently pref'd off by default and hidden in the addon manager.
+pref("media.gmp-eme-adobe.hidden", true);
 #endif
 
