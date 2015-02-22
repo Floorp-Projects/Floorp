@@ -367,6 +367,9 @@ include ../xul/reftest/reftest.list
 # xul grid
 include ../xul/grid/reftests/reftest.list
 
+# writing-mode
+include writing-mode/reftest.list
+
 # z-index/
 include z-index/reftest.list
 
