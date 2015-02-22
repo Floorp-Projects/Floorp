@@ -206,11 +206,19 @@ class TemporaryTypeSet;
  *   that compilation.
  *
  * The contents of a type set completely describe the values that a particular
- * lvalue might have, except in cases where an object's type is mutated. In
- * such cases, type sets which had the object's old type might not have the
- * object's new type. Type mutation occurs only in specific circumstances ---
- * when an object's prototype changes, and when it is swapped with another
- * object --- and will cause the object's properties to be marked as unknown.
+ * lvalue might have, except for the following cases:
+ *
+ * - If an object's prototype or class is dynamically mutated, its group will
+ *   change. Type sets containing the old group will not necessarily contain
+ *   the new group. When this occurs, the properties of the old and new group
+ *   will both be marked as unknown, which will prevent Ion from optimizing
+ *   based on the object's type information.
+ *
+ * - If an unboxed object is converted to a native object, its group will also
+ *   change and type sets containing the old group will not necessarily contain
+ *   the new group. Unlike the above case, this will not degrade property type
+ *   information, but Ion will no longer optimize unboxed objects with the old
+ *   group.
  */
 class TypeSet
 {
@@ -247,6 +255,7 @@ class TypeSet
         bool hasStableClassAndProto(CompilerConstraintList *constraints);
         void watchStateChangeForInlinedCall(CompilerConstraintList *constraints);
         void watchStateChangeForTypedArrayData(CompilerConstraintList *constraints);
+        void watchStateChangeForUnboxedConvertedToNative(CompilerConstraintList *constraints);
         HeapTypeSetKey property(jsid id);
         void ensureTrackedProperty(JSContext *cx, jsid id);
 

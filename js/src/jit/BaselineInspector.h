@@ -96,7 +96,8 @@ class BaselineInspector
     typedef Vector<ObjectGroup *, 4, JitAllocPolicy> ObjectGroupVector;
     bool maybeInfoForPropertyOp(jsbytecode *pc,
                                 ShapeVector &nativeShapes,
-                                ObjectGroupVector &unboxedGroups);
+                                ObjectGroupVector &unboxedGroups,
+                                ObjectGroupVector &convertUnboxedGroups);
 
     SetElemICInspector setElemICInspector(jsbytecode *pc) {
         return makeICInspector<SetElemICInspector>(pc, ICStub::SetElem_Fallback);
