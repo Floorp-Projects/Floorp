@@ -210,6 +210,12 @@
     "n_buckets": 50,
     "description": "Time spent on one asynchronous SnowWhite freeing (ms)"
   },
+  "DEVICE_RESET_REASON": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call)"
+  },
   "FORGET_SKIPPABLE_MAX": {
     "expires_in_version": "never",
     "kind": "exponential",
