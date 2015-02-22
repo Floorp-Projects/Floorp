@@ -1907,6 +1907,8 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
     return NS_OK;
 }
 
+#if defined(XP_WIN) || defined(XP_MACOSX)
+
 nsresult
 PluginModuleContentParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 {
@@ -1918,6 +1920,8 @@ PluginModuleContentParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error
     }
     return rv;
 }
+
+#endif
 
 nsresult
 PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
