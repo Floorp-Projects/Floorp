@@ -72,11 +72,7 @@ BrowserStreamParent::RecvAsyncNPP_NewStreamResult(const NPError& rv,
   }
 
   if (error != NPERR_NO_ERROR) {
-    // streamListener was suspended during async init. We must resume the stream
-    // request prior to calling _destroystream for cleanup to work correctly.
-    streamListener->ResumeRequest();
-    // We need to clean up the stream
-    parent::_destroystream(mNPP->GetNPP(), mStream, NPRES_DONE);
+    surrogate->DestroyAsyncStream(mStream);
     unused << PBrowserStreamParent::Send__delete__(this);
   }
 
