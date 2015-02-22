@@ -91,6 +91,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "RemotePrompt",
 XPCOMUtils.defineLazyModuleGetter(this, "ContentPrefServiceParent",
                                   "resource://gre/modules/ContentPrefServiceParent.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "SelfSupportBackend",
+                                  "resource:///modules/SelfSupportBackend.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
                                   "resource:///modules/sessionstore/SessionStore.jsm");
 
@@ -627,6 +630,8 @@ BrowserGlue.prototype = {
     LoginManagerParent.init();
     ReaderParent.init();
 
+    SelfSupportBackend.init();
+
 #ifdef NIGHTLY_BUILD
     Services.prefs.addObserver(POLARIS_ENABLED, this, false);
 #endif
@@ -887,6 +892,8 @@ BrowserGlue.prototype = {
     } catch (e) {
       Cu.reportError("Could not end startup crash tracking in quit-application-granted: " + e);
     }
+
+    SelfSupportBackend.uninit();
 
     CustomizationTabPreloader.uninit();
     WebappManager.uninit();
