@@ -15,6 +15,25 @@
           src="../role.js"></script>
   <script type="application/javascript"
           src="../states.js"></script>
+
+  <script type="application/javascript">
+    // Front end stuff sometimes likes to stuff things in the hidden window(s)
+    // in which case there's accessibles for that content.
+    Components.utils.import("resource://gre/modules/Services.jsm");
+
+    // Force the creation of an accessible for the hidden window's document.
+    var doc = Services.appShell.hiddenDOMWindow.document;
+    gAccRetrieval.getAccessibleFor(doc);
+
+    // The private hidden window will be lazily created that's why we need to do
+    // it here *before* loading '../events.js' or else we'll have a duplicate
+    // reorder event.
+    var privateDoc = Services.appShell.hiddenPrivateDOMWindow.document;
+
+    // Force the creation of an accessible for the private hidden window's doc.
+    gAccRetrieval.getAccessibleFor(privateDoc);
+  </script>
+
   <script type="application/javascript"
           src="../events.js"></script>
 
@@ -174,6 +193,12 @@
         var accTree = {
           role: ROLE_APP_ROOT,
           children: [
+            {
+              role: ROLE_CHROME_WINDOW
+            },
+            {
+              role: ROLE_CHROME_WINDOW
+            },
             {
               role: ROLE_CHROME_WINDOW
             },
