@@ -328,67 +328,6 @@ regexp_toString(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsRegExp, regexp_toString_impl>(cx, args);
 }
 
-/* ES6 draft rev29 21.2.5.3 RegExp.prototype.flags */
-bool
-regexp_flags(JSContext *cx, unsigned argc, JS::Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    /* Steps 1-2. */
-    if (!args.thisv().isObject()) {
-        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, args.thisv(), NullPtr());
-        if (!bytes)
-            return false;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                             bytes, "not an object");
-        js_free(bytes);
-        return false;
-    }
-    RootedObject thisObj(cx, &args.thisv().toObject());
-
-    /* Step 3. */
-    StringBuffer sb(cx);
-
-    /* Steps 4-6. */
-    RootedValue global(cx);
-    if (!GetProperty(cx, thisObj, thisObj, cx->names().global, &global))
-        return false;
-    if (ToBoolean(global) && !sb.append('g'))
-        return false;
-
-    /* Steps 7-9. */
-    RootedValue ignoreCase(cx);
-    if (!GetProperty(cx, thisObj, thisObj, cx->names().ignoreCase, &ignoreCase))
-        return false;
-    if (ToBoolean(ignoreCase) && !sb.append('i'))
-        return false;
-
-    /* Steps 10-12. */
-    RootedValue multiline(cx);
-    if (!GetProperty(cx, thisObj, thisObj, cx->names().multiline, &multiline))
-        return false;
-    if (ToBoolean(multiline) && !sb.append('m'))
-        return false;
-
-    /* Steps 13-15. */
-    RootedValue unicode(cx);
-    if (!GetProperty(cx, thisObj, thisObj, cx->names().unicode, &unicode))
-        return false;
-    if (ToBoolean(unicode) && !sb.append('u'))
-        return false;
-
-    /* Steps 16-18. */
-    RootedValue sticky(cx);
-    if (!GetProperty(cx, thisObj, thisObj, cx->names().sticky, &sticky))
-        return false;
-    if (ToBoolean(sticky) && !sb.append('y'))
-        return false;
-
-    /* Step 19. */
-    args.rval().setString(sb.finishString());
-    return true;
-}
-
 /* ES6 draft rev32 21.2.5.4. */
 MOZ_ALWAYS_INLINE bool
 regexp_global_impl(JSContext *cx, CallArgs args)
@@ -499,7 +438,7 @@ regexp_sticky(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 static const JSPropertySpec regexp_properties[] = {
-    JS_PSG("flags", regexp_flags, 0),
+    JS_SELF_HOSTED_GET("flags", "RegExpFlagsGetter", 0),
     JS_PSG("global", regexp_global, 0),
     JS_PSG("ignoreCase", regexp_ignoreCase, 0),
     JS_PSG("multiline", regexp_multiline, 0),
