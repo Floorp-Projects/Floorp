@@ -59,3 +59,7 @@ if CONFIG['ENABLE_TESTS'] or CONFIG['MOZ_DMD']:
 
 if CONFIG['MOZ_DMD']:
     FINAL_TARGET_FILES += [TOPSRCDIR + '/memory/replace/dmd/dmd.py']
+
+# Put a useful .gdbinit in the bin directory, to be picked up automatically
+# by GDB when we debug executables there.
+FINAL_TARGET_FILES += [TOPSRCDIR + '/.gdbinit']
