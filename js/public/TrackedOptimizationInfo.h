@@ -279,8 +279,7 @@ struct ForEachTrackedOptimizationAttemptOp
 
 JS_PUBLIC_API(void)
 ForEachTrackedOptimizationAttempt(JSRuntime *rt, void *addr,
-                                  ForEachTrackedOptimizationAttemptOp &op,
-                                  JSScript **scriptOut, jsbytecode **pcOut);
+                                  ForEachTrackedOptimizationAttemptOp &op);
 
 struct ForEachTrackedOptimizationTypeInfoOp
 {
