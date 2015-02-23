@@ -86,6 +86,9 @@ bool CacheObserver::sSanitizeOnShutdown = kDefaultSanitizeOnShutdown;
 static bool kDefaultClearCacheOnShutdown = false;
 bool CacheObserver::sClearCacheOnShutdown = kDefaultClearCacheOnShutdown;
 
+static bool kDefaultCacheFSReported = false;
+bool CacheObserver::sCacheFSReported = kDefaultCacheFSReported;
+
 NS_IMPL_ISUPPORTS(CacheObserver,
                   nsIObserver,
                   nsISupportsWeakReference)
@@ -315,6 +318,32 @@ CacheObserver::StoreDiskCacheCapacity()
 {
   mozilla::Preferences::SetInt("browser.cache.disk.capacity",
                                sDiskCacheCapacity);
+}
+
+// static
+void
+CacheObserver::SetCacheFSReported()
+{
+  sCacheFSReported = true;
+
+  if (!sSelf) {
+    return;
+  }
+
+  if (NS_IsMainThread()) {
+    sSelf->StoreCacheFSReported();
+  } else {
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(sSelf, &CacheObserver::StoreCacheFSReported);
+    NS_DispatchToMainThread(event);
+  }
+}
+
+void
+CacheObserver::StoreCacheFSReported()
+{
+  mozilla::Preferences::SetInt("browser.cache.disk.filesystem_reported",
+                               sCacheFSReported);
 }
 
 // static
