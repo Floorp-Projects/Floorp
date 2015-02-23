@@ -1,3 +1,4 @@
 -r mozbase_requirements.txt
 ../marionette/transport
+../marionette/driver
 ../marionette
