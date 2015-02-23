@@ -217,16 +217,6 @@ class JitcodeGlobalEntry
             return !!optsRegionTable_;
         }
 
-        const IonTrackedOptimizationsRegionTable *trackedOptimizationsRegionTable() const {
-            MOZ_ASSERT(hasTrackedOptimizations());
-            return optsRegionTable_;
-        }
-
-        uint8_t numOptimizationAttempts() const {
-            MOZ_ASSERT(hasTrackedOptimizations());
-            return optsAttemptsTable_->numEntries();
-        }
-
         IonTrackedOptimizationsAttempts trackedOptimizationAttempts(uint8_t index) {
             MOZ_ASSERT(hasTrackedOptimizations());
             return optsAttemptsTable_->entry(index);
