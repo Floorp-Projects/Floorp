@@ -561,6 +561,8 @@ public class BrowserSearch extends HomeFragment
 
                 if (engine.name.equals(suggestEngine) && suggestTemplate != null) {
                     // Suggest engine should be at the front of the list.
+                    // We're baking in an assumption here that the suggest engine
+                    // is also the default engine.
                     searchEngines.add(0, engine);
 
                     // The only time Tabs.getInstance().getSelectedTab() should
