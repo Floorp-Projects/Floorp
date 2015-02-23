@@ -6602,6 +6602,18 @@
     "n_buckets": 50,
     "description": "Size (in MB) of a cache that reached a file count limit"
   },
+  "NETWORK_CACHE_HIT_MISS_STAT_PER_CACHE_SIZE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 40,
+    "description": "Hit/Miss count split by cache size in file count (0=Hit 0-5000, 1=Miss 0-5000, 2=Hit 5001-10000, ...)"
+  },
+  "NETWORK_CACHE_HIT_RATE_PER_CACHE_SIZE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 400,
+    "description": "Hit rate for a specific cache size in file count. The hit rate is split into 20 buckets, the lower limit of the range in percents is 5*n/20. The cache size is divided into 20 ranges of length 5000, the lower limit of the range is 5000*(n%20)"
+  },
   "DATABASE_LOCKED_EXCEPTION": {
     "expires_in_version": "42",
     "kind": "enumerated",
