@@ -133,7 +133,6 @@ class Transaction;
 
 class ShadowLayerForwarder : public CompositableForwarder
 {
-  friend class ContentClientIncremental;
   friend class ClientLayerManager;
 
 public:
@@ -147,10 +146,6 @@ public:
 
   virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
                                        TextureFlags aFlags) MOZ_OVERRIDE;
-
-  virtual void CreatedIncrementalBuffer(CompositableClient* aCompositable,
-                                        const TextureInfo& aTextureInfo,
-                                        const nsIntRect& aBufferRect) MOZ_OVERRIDE;
 
   /**
    * Adds an edit in the layers transaction in order to attach
@@ -258,13 +253,6 @@ public:
   virtual void UpdateTextureRegion(CompositableClient* aCompositable,
                                    const ThebesBufferData& aThebesBufferData,
                                    const nsIntRegion& aUpdatedRegion) MOZ_OVERRIDE;
-
-  virtual void UpdateTextureIncremental(CompositableClient* aCompositable,
-                                        TextureIdentifier aTextureId,
-                                        SurfaceDescriptor& aDescriptor,
-                                        const nsIntRegion& aUpdatedRegion,
-                                        const nsIntRect& aBufferRect,
-                                        const nsIntPoint& aBufferRotation) MOZ_OVERRIDE;
 
   /**
    * Communicate the picture rect of an image to the compositor
