@@ -193,6 +193,7 @@ public class BrowserApp extends GeckoApp
     private static final int GECKO_TOOLS_MENU = -1;
     private static final int ADDON_MENU_OFFSET = 1000;
     public static final String TAB_HISTORY_FRAGMENT_TAG = "tabHistoryFragment";
+
     private static class MenuItemInfo {
         public int id;
         public String label;
@@ -3513,6 +3514,12 @@ public class BrowserApp extends GeckoApp
     @Override
     protected String getDefaultProfileName() throws NoMozillaDirectoryException {
         return GeckoProfile.getDefaultProfileName(this);
+    }
+
+    // For use from tests only.
+    @RobocopTarget
+    public ReadingListHelper getReadingListHelper() {
+        return mReadingListHelper;
     }
 
     /**
