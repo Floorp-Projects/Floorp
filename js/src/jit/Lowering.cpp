@@ -3993,10 +3993,10 @@ LIRGenerator::visitSimdBinaryComp(MSimdBinaryComp *ins)
     if (ShouldReorderCommutative(ins->lhs(), ins->rhs(), ins))
         ins->reverse();
 
-    if (ins->compareType() == MSimdBinaryComp::CompareInt32x4) {
+    if (ins->specialization() == MIRType_Int32x4) {
         LSimdBinaryCompIx4 *add = new(alloc()) LSimdBinaryCompIx4();
         lowerForCompIx4(add, ins, ins->lhs(), ins->rhs());
-    } else if (ins->compareType() == MSimdBinaryComp::CompareFloat32x4) {
+    } else if (ins->specialization() == MIRType_Float32x4) {
         LSimdBinaryCompFx4 *add = new(alloc()) LSimdBinaryCompFx4();
         lowerForCompFx4(add, ins, ins->lhs(), ins->rhs());
     } else {

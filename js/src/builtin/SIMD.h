@@ -215,15 +215,17 @@
     _(and)                           \
     _(or)                            \
     _(xor)
-#define FOREACH_COMMONX4_SIMD_OP(_)  \
-    ARITH_COMMONX4_SIMD_OP(_)        \
-    BITWISE_COMMONX4_SIMD_OP(_)      \
+#define COMP_COMMONX4_SIMD_OP(_)     \
     _(lessThan)                      \
     _(lessThanOrEqual)               \
     _(equal)                         \
     _(notEqual)                      \
     _(greaterThan)                   \
-    _(greaterThanOrEqual)            \
+    _(greaterThanOrEqual)
+#define FOREACH_COMMONX4_SIMD_OP(_)  \
+    ARITH_COMMONX4_SIMD_OP(_)        \
+    BITWISE_COMMONX4_SIMD_OP(_)      \
+    COMP_COMMONX4_SIMD_OP(_)         \
     _(bitselect)                     \
     _(select)                        \
     _(swizzle)                       \

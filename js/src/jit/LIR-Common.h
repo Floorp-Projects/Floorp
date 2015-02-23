@@ -425,15 +425,7 @@ public:
         return mir_->toSimdBinaryComp()->operation();
     }
     const char *extraName() const {
-        switch (operation()) {
-          case MSimdBinaryComp::greaterThan: return "greaterThan";
-          case MSimdBinaryComp::greaterThanOrEqual: return "greaterThanOrEqual";
-          case MSimdBinaryComp::lessThan: return "lessThan";
-          case MSimdBinaryComp::lessThanOrEqual: return "lessThanOrEqual";
-          case MSimdBinaryComp::equal: return "equal";
-          case MSimdBinaryComp::notEqual: return "notEqual";
-        }
-        MOZ_CRASH("unexpected operation");
+        return MSimdBinaryComp::OperationName(operation());
     }
 };
 

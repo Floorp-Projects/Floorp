@@ -282,6 +282,14 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     BITWISE_COMMONX4_SIMD_OP(INLINE_SIMD_BITWISE_)
 #undef INLINE_SIMD_BITWISE_
 
+#define INLINE_SIMD_COMPARISON_(OP)                                                                \
+    if (native == js::simd_int32x4_##OP)                                                           \
+        return inlineCompSimd(callInfo, native, MSimdBinaryComp::OP, SimdTypeDescr::TYPE_INT32);   \
+    if (native == js::simd_float32x4_##OP)                                                         \
+        return inlineCompSimd(callInfo, native, MSimdBinaryComp::OP, SimdTypeDescr::TYPE_FLOAT32);
+    COMP_COMMONX4_SIMD_OP(INLINE_SIMD_COMPARISON_)
+#undef INLINE_SIMD_COMPARISON_
+
     if (native == js::simd_int32x4_not)
         return inlineUnarySimd(callInfo, native, MSimdUnaryArith::not_, SimdTypeDescr::TYPE_INT32);
     if (native == js::simd_int32x4_neg)
@@ -2958,6 +2966,24 @@ IonBuilder::inlineBinarySimd(CallInfo &callInfo, JSNative native, typename T::Op
     // with non SIMD-arguments.
     MIRType mirType = SimdTypeDescrToMIRType(type);
     T *ins = T::New(alloc(), callInfo.getArg(0), callInfo.getArg(1), op, mirType);
+    return boxSimd(callInfo, ins, templateObj);
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineCompSimd(CallInfo &callInfo, JSNative native, MSimdBinaryComp::Operation op,
+                           SimdTypeDescr::Type compType)
+{
+    InlineTypedObject *templateObj = nullptr;
+    if (!checkInlineSimd(callInfo, native, SimdTypeDescr::TYPE_INT32, 2, &templateObj))
+        return InliningStatus_NotInlined;
+
+    // If the type of any of the arguments is neither a SIMD type, an Object
+    // type, or a Value, then the applyTypes phase will add a fallible box &
+    // unbox sequence.  This does not matter much as all binary SIMD
+    // instructions are supposed to produce a TypeError when they're called
+    // with non SIMD-arguments.
+    MIRType mirType = SimdTypeDescrToMIRType(compType);
+    MSimdBinaryComp *ins = MSimdBinaryComp::New(alloc(), callInfo.getArg(0), callInfo.getArg(1), op, mirType);
     return boxSimd(callInfo, ins, templateObj);
 }
 
