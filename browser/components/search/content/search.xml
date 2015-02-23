@@ -826,8 +826,6 @@
         element = document.createElementNS(kXULNS, "menuseparator");
         cxmenu.appendChild(element);
 
-        this.setAttribute("aria-owns", this.popup.id);
-
         var insertLocation = cxmenu.firstChild;
         while (insertLocation.nextSibling &&
                insertLocation.getAttribute("cmd") != "cmd_paste")
@@ -1021,11 +1019,9 @@
           if (val && !val.classList.contains("dummy")) {
             val.setAttribute("selected", "true");
             this._selectedButton = val;
-            this.setAttribute("aria-activedescendant", val.id);
             return;
           }
 
-          this.removeAttribute("aria-activedescendant");
           this._selectedButton = null;
         ]]></setter>
       </property>
