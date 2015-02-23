@@ -5576,8 +5576,13 @@ GCRuntime::finishCollection(JS::gcreason::Reason reason)
     lastGCTime = currentTime;
 
     // If this is an OOM GC reason, wait on the background sweeping thread
-    // before returning to ensure that we free as much as possible.
-    if (reason == JS::gcreason::LAST_DITCH || reason == JS::gcreason::MEM_PRESSURE) {
+    // before returning to ensure that we free as much as possible. If this is
+    // a zeal-triggered GC, we want to ensure that the mutator can continue
+    // allocating on the same pages to reduce fragmentation.
+    if (reason == JS::gcreason::LAST_DITCH ||
+        reason == JS::gcreason::MEM_PRESSURE ||
+        reason == JS::gcreason::DEBUG_GC)
+    {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
         rt->gc.waitBackgroundSweepOrAllocEnd();
     }
