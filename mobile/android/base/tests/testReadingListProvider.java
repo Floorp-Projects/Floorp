@@ -8,7 +8,9 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
+import android.app.Activity;
 import android.content.ContentResolver;
+import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.ReadingListAccessor;
@@ -88,6 +90,13 @@ public class testReadingListProvider extends ContentProviderTest {
         super.setUp(sProviderFactory, BrowserContract.READING_LIST_AUTHORITY, DB_NAME);
         for (TestCase test: TESTS_TO_RUN) {
             mTests.add(test);
+        }
+
+        // Disable background fetches of content, because it causes the test harness
+        // to kill us for network fetches.
+        Activity a = getActivity();
+        if (a instanceof BrowserApp) {
+            ((BrowserApp) a).getReadingListHelper().disableBackgroundFetches();
         }
     }
 
