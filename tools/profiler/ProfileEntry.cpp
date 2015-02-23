@@ -400,13 +400,17 @@ void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JS
                         // TODOshu: cannot stream tracked optimization info if
                         // the JS engine has already shut down when streaming.
                         if (rt) {
+                          JSScript *optsScript;
+                          jsbytecode *optsPC;
                           b.Name("opts");
                           b.BeginArray();
                             StreamOptimizationTypeInfoOp typeInfoOp(b);
                             JS::ForEachTrackedOptimizationTypeInfo(rt, pc, typeInfoOp);
                             StreamOptimizationAttemptsOp attemptOp(b);
-                            JS::ForEachTrackedOptimizationAttempt(rt, pc, attemptOp);
+                            JS::ForEachTrackedOptimizationAttempt(rt, pc, attemptOp,
+                                                                  &optsScript, &optsPC);
                           b.EndArray();
+                          b.NameValue("optsLine", JS_PCToLineNumber(optsScript, optsPC));
                         }
                       }
                     b.EndObject();

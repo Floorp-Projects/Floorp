@@ -1123,11 +1123,13 @@ IonBuilder::trackInlineSuccessUnchecked(InliningStatus status)
 
 JS_PUBLIC_API(void)
 JS::ForEachTrackedOptimizationAttempt(JSRuntime *rt, void *addr,
-                                      ForEachTrackedOptimizationAttemptOp &op)
+                                      ForEachTrackedOptimizationAttemptOp &op,
+                                      JSScript **scriptOut, jsbytecode **pcOut)
 {
     JitcodeGlobalTable *table = rt->jitRuntime()->getJitcodeGlobalTable();
     JitcodeGlobalEntry entry;
     table->lookupInfallible(addr, &entry, rt);
+    entry.youngestFrameLocationAtAddr(rt, addr, scriptOut, pcOut);
     Maybe<uint8_t> index = entry.trackedOptimizationIndexAtAddr(addr);
     entry.trackedOptimizationAttempts(index.value()).forEach(op);
 }
@@ -1143,7 +1145,7 @@ InterpretedFunctionFilenameAndLineNumber(JSFunction *fun, const char **filename,
         source = fun->lazyScript()->maybeForwardedScriptSource();
         *lineno = fun->lazyScript()->lineno();
     }
-    *filename = source->introducerFilename();
+    *filename = source->filename();
 }
 
 static JSFunction *
@@ -1224,7 +1226,7 @@ class ForEachTypeInfoAdapter : public IonTrackedOptimizationsTypeInfo::ForEachOp
         if (tracked.hasAllocationSite()) {
             JSScript *script = tracked.script;
             op_.readType("alloc site", buf,
-                         script->maybeForwardedScriptSource()->introducerFilename(),
+                         script->maybeForwardedScriptSource()->filename(),
                          PCToLineNumber(script, script->offsetToPC(tracked.offset)));
             return;
         }
