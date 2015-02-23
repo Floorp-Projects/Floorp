@@ -1067,6 +1067,11 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry* aFontEntry,
     NS_ASSERTION(aFontEntry->mFamilyName.Length() != 0,
                  "caching a font associated with no family yet");
 
+    // if caching is disabled, simply return
+    if (Preferences::GetBool("gfx.downloadable_fonts.disable_cache")) {
+        return;
+    }
+
     gfxUserFontData* data = aFontEntry->mUserFontData;
     if (data->mIsBuffer) {
 #ifdef DEBUG_USERFONT_CACHE
@@ -1143,7 +1148,8 @@ gfxUserFontSet::UserFontCache::GetFont(nsIURI* aSrcURI,
                                        gfxUserFontEntry* aUserFontEntry,
                                        bool aPrivate)
 {
-    if (!sUserFonts) {
+    if (!sUserFonts ||
+        Preferences::GetBool("gfx.downloadable_fonts.disable_cache")) {
         return nullptr;
     }
 
