@@ -14,7 +14,8 @@ import unittest
 import weakref
 import warnings
 
-from errors import (
+
+from marionette_driver.errors import (
         ErrorCodes, MarionetteException, InstallGeckoError, TimeoutException, InvalidResponseException,
         JavascriptException, NoSuchElementException, XPathLookupException, NoSuchWindowException,
         StaleElementException, ScriptTimeoutException, ElementNotVisibleException,
@@ -22,10 +23,10 @@ from errors import (
         InvalidCookieDomainException, UnableToSetCookieException, InvalidSelectorException,
         MoveTargetOutOfBoundsException, FrameSendNotInitializedError, FrameSendFailureError
         )
-from marionette import Marionette
+from marionette_driver.marionette import Marionette
 from mozlog.structured.structuredlog import get_default_logger
-from wait import Wait
-from expected import element_present, element_not_present
+from marionette_driver.wait import Wait
+from marionette_driver.expected import element_present, element_not_present
 
 
 class SkipTest(Exception):
