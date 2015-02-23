@@ -27,9 +27,7 @@ typedef MediaPromise<bool, bool, false> ShutdownPromise;
 // they're received, and are guaranteed to not be executed concurrently.
 // They may be executed on different threads, and a memory barrier is used
 // to make this threadsafe for objects that aren't already threadsafe.
-class MediaTaskQueue MOZ_FINAL {
-  ~MediaTaskQueue();
-
+class MediaTaskQueue {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaTaskQueue)
 
@@ -42,12 +40,6 @@ public:
   nsresult ForceDispatch(TemporaryRef<nsIRunnable> aRunnable);
 
   nsresult SyncDispatch(TemporaryRef<nsIRunnable> aRunnable);
-
-  nsresult FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable);
-
-  // Removes all pending tasks from the task queue, and blocks until
-  // the currently running task (if any) finishes.
-  void Flush();
 
   // Puts the queue in a shutdown state and returns immediately. The queue will
   // remain alive at least until all the events are drained, because the Runners
@@ -70,7 +62,9 @@ public:
   // the task queue. This is for debugging/validation purposes only.
   bool IsCurrentThreadIn();
 
-private:
+protected:
+  virtual ~MediaTaskQueue();
+
 
   // Blocks until all task finish executing. Called internally by methods
   // that need to wait until the task queue is idle.
@@ -81,7 +75,6 @@ private:
 
   nsresult DispatchLocked(TemporaryRef<nsIRunnable> aRunnable,
                           DispatchMode aMode);
-  void FlushLocked();
 
   RefPtr<SharedThreadPool> mPool;
 
@@ -113,24 +106,6 @@ private:
   bool mIsShutdown;
   MediaPromiseHolder<ShutdownPromise> mShutdownPromise;
 
-  class MOZ_STACK_CLASS AutoSetFlushing
-  {
-  public:
-    explicit AutoSetFlushing(MediaTaskQueue* aTaskQueue) : mTaskQueue(aTaskQueue)
-    {
-      mTaskQueue->mQueueMonitor.AssertCurrentThreadOwns();
-      mTaskQueue->mIsFlushing = true;
-    }
-    ~AutoSetFlushing()
-    {
-      mTaskQueue->mQueueMonitor.AssertCurrentThreadOwns();
-      mTaskQueue->mIsFlushing = false;
-    }
-
-  private:
-    MediaTaskQueue* mTaskQueue;
-  };
-
   // True if we're flushing; we reject new tasks if we're flushing.
   bool mIsFlushing;
 
@@ -144,6 +119,37 @@ private:
   private:
     RefPtr<MediaTaskQueue> mQueue;
   };
+};
+
+class FlushableMediaTaskQueue : public MediaTaskQueue
+{
+public:
+  explicit FlushableMediaTaskQueue(TemporaryRef<SharedThreadPool> aPool) : MediaTaskQueue(aPool) {}
+  nsresult FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable);
+  void Flush();
+
+private:
+
+  class MOZ_STACK_CLASS AutoSetFlushing
+  {
+  public:
+    explicit AutoSetFlushing(FlushableMediaTaskQueue* aTaskQueue) : mTaskQueue(aTaskQueue)
+    {
+      mTaskQueue->mQueueMonitor.AssertCurrentThreadOwns();
+      mTaskQueue->mIsFlushing = true;
+    }
+    ~AutoSetFlushing()
+    {
+      mTaskQueue->mQueueMonitor.AssertCurrentThreadOwns();
+      mTaskQueue->mIsFlushing = false;
+    }
+
+  private:
+    FlushableMediaTaskQueue* mTaskQueue;
+  };
+
+  void FlushLocked();
+
 };
 
 } // namespace mozilla
