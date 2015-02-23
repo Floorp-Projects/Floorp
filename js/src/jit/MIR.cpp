@@ -971,6 +971,11 @@ MSimdUnaryArith::printOpcode(FILE *fp) const
 {
     PrintOpcodeOperation(this, fp);
 }
+void
+MSimdBinaryComp::printOpcode(FILE *fp) const
+{
+    PrintOpcodeOperation(this, fp);
+}
 
 MCloneLiteral *
 MCloneLiteral::New(TempAllocator &alloc, MDefinition *obj)

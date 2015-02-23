@@ -737,18 +737,17 @@ template bool ObjectPolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruc
 template bool ObjectPolicy<2>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 template bool ObjectPolicy<3>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 
-template <unsigned Op>
 static bool
-MaybeSimdUnbox(TempAllocator &alloc, MInstruction *ins, MIRType type)
+MaybeSimdUnbox(TempAllocator &alloc, MInstruction *ins, MIRType type, unsigned op)
 {
     MOZ_ASSERT(IsSimdType(type));
-    MDefinition *in = ins->getOperand(Op);
+    MDefinition *in = ins->getOperand(op);
     if (in->type() == type)
         return true;
 
     MSimdUnbox *replace = MSimdUnbox::New(alloc, in, type);
     ins->block()->insertBefore(ins, replace);
-    ins->replaceOperand(Op, replace);
+    ins->replaceOperand(op, replace);
 
     return replace->typePolicy()->adjustInputs(alloc, replace);
 }
@@ -757,7 +756,7 @@ template <unsigned Op>
 bool
 SimdSameAsReturnedTypePolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
-    return MaybeSimdUnbox<Op>(alloc, ins, ins->type());
+    return MaybeSimdUnbox(alloc, ins, ins->type(), Op);
 }
 
 template bool
@@ -765,11 +764,22 @@ SimdSameAsReturnedTypePolicy<0>::staticAdjustInputs(TempAllocator &alloc, MInstr
 template bool
 SimdSameAsReturnedTypePolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 
+bool
+SimdAllPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    MIRType specialization = ins->typePolicySpecialization();
+    for (unsigned i = 0, e = ins->numOperands(); i < e; i++) {
+        if (!MaybeSimdUnbox(alloc, ins, specialization, i))
+            return false;
+    }
+    return true;
+}
+
 template <unsigned Op>
 bool
 SimdPolicy<Op>::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
-    return MaybeSimdUnbox<Op>(alloc, ins, ins->typePolicySpecialization());
+    return MaybeSimdUnbox(alloc, ins, ins->typePolicySpecialization(), Op);
 }
 
 template bool
@@ -1055,6 +1065,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     _(FilterTypeSetPolicy)                      \
     _(InstanceOfPolicy)                         \
     _(PowPolicy)                                \
+    _(SimdAllPolicy)                            \
     _(StoreTypedArrayElementStaticPolicy)       \
     _(StoreTypedArrayHolePolicy)                \
     _(StoreTypedArrayPolicy)                    \

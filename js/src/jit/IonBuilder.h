@@ -818,6 +818,8 @@ class IonBuilder
     template <typename T>
     InliningStatus inlineBinarySimd(CallInfo &callInfo, JSNative native,
                                     typename T::Operation op, SimdTypeDescr::Type type);
+    InliningStatus inlineCompSimd(CallInfo &callInfo, JSNative native,
+                                  MSimdBinaryComp::Operation op, SimdTypeDescr::Type compType);
     InliningStatus inlineUnarySimd(CallInfo &callInfo, JSNative native,
                                    MSimdUnaryArith::Operation op, SimdTypeDescr::Type type);
     InliningStatus inlineSimdConvert(CallInfo &callInfo, JSNative native, bool isCast,
