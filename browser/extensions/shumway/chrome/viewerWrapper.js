@@ -53,6 +53,7 @@ function runViewer() {
     // ShumwayStreamConverter.
     var shumwayComAdapter = Components.utils.createObjectIn(childWindow, {defineAs: 'ShumwayCom'});
     Components.utils.exportFunction(sendMessage, shumwayComAdapter, {defineAs: 'sendMessage'});
+    Components.utils.exportFunction(enableDebug, shumwayComAdapter, {defineAs: 'enableDebug'});
     Object.defineProperties(shumwayComAdapter, {
       onLoadFileCallback: { value: null, writable: true },
       onExternalCallback: { value: null, writable: true },
@@ -117,6 +118,10 @@ function runViewer() {
       return window.notifyShumwayMessage(detail);
     });
 
+    messageManager.addMessageListener('Shumway:enableDebug', function (message) {
+      enableDebug();
+    });
+
     window.onExternalCallback = function (call) {
       return externalInterface.callback(JSON.stringify(call));
     };
@@ -135,7 +140,76 @@ function runViewer() {
     messageManager.sendAsyncMessage('Shumway:init', {});
   }
 
+
+  function handleDebug(connection) {
+    viewer.parentNode.removeChild(viewer); // we don't need viewer anymore
+    document.body.className = 'remoteDebug';
+
+    function sendMessage(data) {
+      var detail = {
+        action: data.action,
+        data: data.data,
+        sync: data.sync
+      };
+      if (data.callback) {
+        detail.callback = true;
+        detail.cookie = data.cookie;
+      }
+      return window.notifyShumwayMessage(detail);
+    }
+
+    connection.onData = function (data) {
+      switch (data.action) {
+        case 'sendMessage':
+          return sendMessage(data.detail);
+        case 'reload':
+          document.body.className = 'remoteReload';
+          setTimeout(function () {
+            window.top.location.reload();
+          }, 1000);
+          return;
+      }
+    };
+
+    window.onExternalCallback = function (call) {
+      return connection.send({action: 'onExternalCallback', detail: call});
+    };
+
+    window.onMessageCallback = function (response) {
+      return connection.send({action: 'onMessageCallback', detail: response});
+    };
+
+    window.onLoadFileCallback = function (args) {
+      if (args.array) {
+        args.array = Array.prototype.slice.call(args.array, 0);
+      }
+      return connection.send({action: 'onLoadFileCallback', detail: args}, true);
+    };
+
+    connection.send({action: 'runViewer'}, true);
+  }
+
+  function enableDebug() {
+    DebugUtils.enableDebug(window.swfUrlLoading);
+    setTimeout(function () {
+      window.top.location.reload();
+    }, 1000);
+  }
+
   promise.then(function (oop) {
+    if (DebugUtils.isEnabled) {
+      DebugUtils.createDebuggerConnection(window.swfUrlLoading).then(function (debuggerConnection) {
+        if (debuggerConnection) {
+          handleDebug(debuggerConnection);
+        } else if (oop) {
+          handlerOOP();
+        } else {
+          handler();
+        }
+      });
+      return;
+    }
+
     if (oop) {
       handlerOOP();
     } else {
