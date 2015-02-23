@@ -29,7 +29,7 @@ using namespace mozilla::widget;
 // A wake lock listener that disables screen saver when requested by
 // Gecko. For example when we're playing video in a foreground tab we
 // don't want the screen saver to turn on.
-class WinWakeLockListener : public nsIDOMMozWakeLockListener {
+class WinWakeLockListener MOZ_FINAL : public nsIDOMMozWakeLockListener {
 public:
   NS_DECL_ISUPPORTS;
 
