@@ -3,9 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// Store width as a preference rather than hardcode
-// TODO bug 1009056
-const INSPECTOR_WIDTH = 300;
+const MIN_INSPECTOR_WIDTH = 300;
 
 // Strings for rendering
 const EXPAND_INSPECTOR_STRING = L10N.getStr("expandInspector");
@@ -32,7 +30,7 @@ let InspectorView = {
     // Set up view controller
     this.el = $("#web-audio-inspector");
     this.splitter = $("#inspector-splitter");
-    this.el.setAttribute("width", INSPECTOR_WIDTH);
+    this.el.setAttribute("width", Services.prefs.getIntPref("devtools.webaudioeditor.inspectorWidth"));
     this.button = $("#inspector-pane-toggle");
     mixin(this, ToggleMixin);
     this.bindToggle();
@@ -149,6 +147,10 @@ let InspectorView = {
   },
 
   _onResize: function () {
+    if (this.el.getAttribute("width") < MIN_INSPECTOR_WIDTH) {
+      this.el.setAttribute("width", MIN_INSPECTOR_WIDTH);
+    }
+    Services.prefs.setIntPref("devtools.webaudioeditor.inspectorWidth", this.el.getAttribute("width"));
     window.emit(EVENTS.UI_INSPECTOR_RESIZE);
   },
 
