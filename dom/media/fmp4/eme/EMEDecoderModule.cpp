@@ -36,7 +36,7 @@ public:
                CDMProxy* aProxy)
     : mDecoder(aDecoder)
     , mCallback(aCallback)
-    , mTaskQueue(CreateMediaDecodeTaskQueue())
+    , mTaskQueue(CreateFlushableMediaDecodeTaskQueue())
     , mProxy(aProxy)
     , mSamplesWaitingForKey(new SamplesWaitingForKey(this, mTaskQueue, mProxy))
 #ifdef DEBUG
@@ -55,7 +55,7 @@ public:
 
   class DeliverDecrypted : public DecryptionClient {
   public:
-    DeliverDecrypted(EMEDecryptor* aDecryptor, MediaTaskQueue* aTaskQueue)
+    DeliverDecrypted(EMEDecryptor* aDecryptor, FlushableMediaTaskQueue* aTaskQueue)
       : mDecryptor(aDecryptor)
       , mTaskQueue(aTaskQueue)
     {}
@@ -84,7 +84,7 @@ public:
     }
   private:
     nsRefPtr<EMEDecryptor> mDecryptor;
-    nsRefPtr<MediaTaskQueue> mTaskQueue;
+    nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
   };
 
   virtual nsresult Input(MP4Sample* aSample) MOZ_OVERRIDE {
@@ -160,7 +160,7 @@ private:
 
   nsRefPtr<MediaDataDecoder> mDecoder;
   MediaDataDecoderCallback* mCallback;
-  nsRefPtr<MediaTaskQueue> mTaskQueue;
+  nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
   nsRefPtr<CDMProxy> mProxy;
   nsRefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
 #ifdef DEBUG
@@ -196,7 +196,7 @@ already_AddRefed<MediaDataDecoder>
 EMEDecoderModule::CreateVideoDecoder(const VideoDecoderConfig& aConfig,
                                      layers::LayersBackend aLayersBackend,
                                      layers::ImageContainer* aImageContainer,
-                                     MediaTaskQueue* aVideoTaskQueue,
+                                     FlushableMediaTaskQueue* aVideoTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
   if (mCDMDecodesVideo && aConfig.crypto.valid) {
@@ -230,7 +230,7 @@ EMEDecoderModule::CreateVideoDecoder(const VideoDecoderConfig& aConfig,
 
 already_AddRefed<MediaDataDecoder>
 EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
-                                     MediaTaskQueue* aAudioTaskQueue,
+                                     FlushableMediaTaskQueue* aAudioTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
   if (mCDMDecodesAudio && aConfig.crypto.valid) {

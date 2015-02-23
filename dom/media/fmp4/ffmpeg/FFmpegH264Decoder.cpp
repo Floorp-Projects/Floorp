@@ -25,7 +25,7 @@ namespace mozilla
 {
 
 FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
-  MediaTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
+  FlushableMediaTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
   const mp4_demuxer::VideoDecoderConfig& aConfig,
   ImageContainer* aImageContainer)
   : FFmpegDataDecoder(aTaskQueue, GetCodecId(aConfig.mime_type))

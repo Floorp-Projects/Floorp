@@ -25,7 +25,7 @@ using namespace android;
 namespace mozilla {
 
 GonkMediaDataDecoder::GonkMediaDataDecoder(GonkDecoderManager* aManager,
-                                           MediaTaskQueue* aTaskQueue,
+                                           FlushableMediaTaskQueue* aTaskQueue,
                                            MediaDataDecoderCallback* aCallback)
   : mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
