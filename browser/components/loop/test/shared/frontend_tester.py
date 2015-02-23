@@ -1,5 +1,5 @@
 from marionette_test import MarionetteTestCase
-from errors import NoSuchElementException
+from marionette_driver.errors import NoSuchElementException
 import threading
 import SimpleHTTPServer
 import SocketServer
