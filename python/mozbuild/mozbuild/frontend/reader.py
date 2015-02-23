@@ -410,8 +410,10 @@ class MozbuildSandbox(Sandbox):
         func, code, path = template
 
         def template_function(*args, **kwargs):
-            context = TemplateContext(self._context._allowed_variables,
-                                      self._context.config)
+            context = TemplateContext(
+                template=func.func_name,
+                allowed_variables=self._context._allowed_variables,
+                config=self._context.config)
             context.add_source(self._context.current_path)
             for p in self._context.all_paths:
                 context.add_source(p)

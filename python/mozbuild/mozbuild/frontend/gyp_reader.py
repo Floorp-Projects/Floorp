@@ -61,8 +61,8 @@ class GypContext(TemplateContext):
     """
     def __init__(self, config, relobjdir):
         self._relobjdir = relobjdir
-        TemplateContext.__init__(self, allowed_variables=self.VARIABLES(),
-            config=config)
+        TemplateContext.__init__(self, template='Gyp',
+            allowed_variables=self.VARIABLES(), config=config)
 
     @classmethod
     @memoize
