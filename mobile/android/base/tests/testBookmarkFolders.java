@@ -21,7 +21,7 @@ public class testBookmarkFolders extends AboutHomeTest {
     private static String DESKTOP_BOOKMARK_URL;
 
     public void testBookmarkFolders() {
-        DESKTOP_BOOKMARK_URL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
+        DESKTOP_BOOKMARK_URL = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_02_URL);
 
         setUpDesktopBookmarks();
         checkBookmarkList();
@@ -29,9 +29,9 @@ public class testBookmarkFolders extends AboutHomeTest {
 
     private void checkBookmarkList() {
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
-        waitForText(StringHelper.DESKTOP_FOLDER_LABEL);
-        clickOnBookmarkFolder(StringHelper.DESKTOP_FOLDER_LABEL);
-        waitForText(StringHelper.TOOLBAR_FOLDER_LABEL);
+        waitForText(mStringHelper.DESKTOP_FOLDER_LABEL);
+        clickOnBookmarkFolder(mStringHelper.DESKTOP_FOLDER_LABEL);
+        waitForText(mStringHelper.TOOLBAR_FOLDER_LABEL);
 
         // Verify the number of folders displayed in the Desktop Bookmarks folder is correct
         ListView desktopFolderContent = findListViewWithTag(HomePager.LIST_TAG_BOOKMARKS);
@@ -40,17 +40,17 @@ public class testBookmarkFolders extends AboutHomeTest {
         // Three folders and "Up to Bookmarks".
         mAsserter.is(adapter.getCount(), 4, "Checking that the correct number of folders is displayed in the Desktop Bookmarks folder");
 
-        clickOnBookmarkFolder(StringHelper.TOOLBAR_FOLDER_LABEL);
+        clickOnBookmarkFolder(mStringHelper.TOOLBAR_FOLDER_LABEL);
 
         // Go up in the bookmark folder hierarchy
-        clickOnBookmarkFolder(String.format(StringHelper.BOOKMARKS_UP_TO, StringHelper.DESKTOP_FOLDER_LABEL));
-        mAsserter.ok(waitForText(StringHelper.BOOKMARKS_MENU_FOLDER_LABEL), "Going up in the folder hierarchy", "We are back in the Desktop Bookmarks folder");
+        clickOnBookmarkFolder(String.format(mStringHelper.BOOKMARKS_UP_TO, mStringHelper.DESKTOP_FOLDER_LABEL));
+        mAsserter.ok(waitForText(mStringHelper.BOOKMARKS_MENU_FOLDER_LABEL), "Going up in the folder hierarchy", "We are back in the Desktop Bookmarks folder");
 
-        clickOnBookmarkFolder(String.format(StringHelper.BOOKMARKS_UP_TO, StringHelper.BOOKMARKS_ROOT_LABEL));
-        mAsserter.ok(waitForText(StringHelper.DESKTOP_FOLDER_LABEL), "Going up in the folder hierarchy", "We are back in the main Bookmarks List View");
+        clickOnBookmarkFolder(String.format(mStringHelper.BOOKMARKS_UP_TO, mStringHelper.BOOKMARKS_ROOT_LABEL));
+        mAsserter.ok(waitForText(mStringHelper.DESKTOP_FOLDER_LABEL), "Going up in the folder hierarchy", "We are back in the main Bookmarks List View");
 
-        clickOnBookmarkFolder(StringHelper.DESKTOP_FOLDER_LABEL);
-        clickOnBookmarkFolder(StringHelper.TOOLBAR_FOLDER_LABEL);
+        clickOnBookmarkFolder(mStringHelper.DESKTOP_FOLDER_LABEL);
+        clickOnBookmarkFolder(mStringHelper.TOOLBAR_FOLDER_LABEL);
         isBookmarkDisplayed(DESKTOP_BOOKMARK_URL);
 
         // Open the bookmark from a bookmark folder hierarchy
@@ -62,7 +62,7 @@ public class testBookmarkFolders extends AboutHomeTest {
         boolean success = waitForCondition(new Condition() {
             @Override
             public boolean isSatisfied() {
-                View desktopFolder = getBookmarkFolderView(StringHelper.DESKTOP_FOLDER_LABEL);
+                View desktopFolder = getBookmarkFolderView(mStringHelper.DESKTOP_FOLDER_LABEL);
                 if (desktopFolder == null) {
                     return false;
                 }
@@ -72,11 +72,11 @@ public class testBookmarkFolders extends AboutHomeTest {
 
         mAsserter.ok(success, "Trying to long click on the Desktop Bookmarks","Desktop Bookmarks folder could not be long clicked");
 
-        final String contextMenuString = StringHelper.BOOKMARK_CONTEXT_MENU_ITEMS[0];
+        final String contextMenuString = mStringHelper.BOOKMARK_CONTEXT_MENU_ITEMS[0];
         mAsserter.ok(!waitForText(contextMenuString), "Folders do not have context menus", "The context menu was not opened");
 
         // Even if no context menu is opened long clicking a folder still opens it. We need to close it.
-        clickOnBookmarkFolder(String.format(StringHelper.BOOKMARKS_UP_TO, StringHelper.BOOKMARKS_ROOT_LABEL));
+        clickOnBookmarkFolder(String.format(mStringHelper.BOOKMARKS_UP_TO, mStringHelper.BOOKMARKS_ROOT_LABEL));
     }
 
     private void clickOnBookmarkFolder(final String folderName) {
@@ -127,7 +127,7 @@ public class testBookmarkFolders extends AboutHomeTest {
     private void setUpDesktopBookmarks() {
         blockForGeckoReady();
 
-        // Get the folder id of the StringHelper.DESKTOP_FOLDER_LABEL folder
+        // Get the folder id of the mStringHelper.DESKTOP_FOLDER_LABEL folder
         Long desktopFolderId = mDatabaseHelper.getFolderIdFromGuid("toolbar");
 
         // Generate a Guid for the bookmark
@@ -140,7 +140,7 @@ public class testBookmarkFolders extends AboutHomeTest {
 
         long now = System.currentTimeMillis();
         ContentValues values = new ContentValues();
-        values.put("title", StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE);
+        values.put("title", mStringHelper.ROBOCOP_BLANK_PAGE_02_TITLE);
         values.put("url", DESKTOP_BOOKMARK_URL);
         values.put("parent", desktopFolderId);
         values.put("modified", now);
