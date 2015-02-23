@@ -6,7 +6,7 @@ use hyper::method::Method::{Get, Post, Delete};
 use command::{WebDriverMessage};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
 
-static routes: [(Method, &'static str, Route); 41] = [
+static ROUTES: [(Method, &'static str, Route); 41] = [
     (Post, "/session", Route::NewSession),
     (Delete, "/session/{sessionId}", Route::DeleteSession),
     (Post, "/session/{sessionId}/url", Route::Get),
@@ -122,22 +122,22 @@ impl RequestMatcher {
     fn compile_path(path: &str) -> Regex {
         let mut rv = String::new();
         rv.push_str("^");
-        let mut components = path.split('/');
+        let components = path.split('/');
         for component in components {
             if component.starts_with("{") {
                 if !component.ends_with("}") {
                     panic!("Invalid url pattern")
                 }
-                rv.push_str(format!("(?P<{}>[^/]+)/", &component[1..component.len()-1]).as_slice());
+                rv.push_str(&format!("(?P<{}>[^/]+)/", &component[1..component.len()-1])[..]);
             } else {
-                rv.push_str(format!("{}/", component).as_slice());
+                rv.push_str(&format!("{}/", component)[..]);
             }
         }
         //Remove the trailing /
         rv.pop();
         rv.push_str("$");
         //This will fail at runtime if the regexp is invalid
-        Regex::new(rv.as_slice()).unwrap()
+        Regex::new(&rv[..]).unwrap()
     }
 }
 
@@ -151,7 +151,7 @@ impl WebDriverHttpApi {
             routes: vec![]
         };
         debug!("Creating routes");
-        for &(ref method, ref url, ref match_type) in routes.iter() {
+        for &(ref method, ref url, ref match_type) in ROUTES.iter() {
             rv.add(method.clone(), *url, *match_type);
         };
         rv
@@ -180,6 +180,6 @@ impl WebDriverHttpApi {
             }
         }
         Err(WebDriverError::new(error,
-                                format!("{} {} did not match a known command", method, path).as_slice()))
+                                &format!("{} {} did not match a known command", method, path)[..]))
     }
 }
