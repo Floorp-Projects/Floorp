@@ -261,7 +261,7 @@ pref("media.wakelock_timeout", 2000);
 pref("media.play-stand-alone", true);
 
 #if defined(XP_WIN)
-pref("media.decoder.heuristic.dormant.enabled", true);
+pref("media.decoder.heuristic.dormant.enabled", false);
 pref("media.decoder.heuristic.dormant.timeout", 60000);
 #endif
 
