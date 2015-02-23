@@ -64,6 +64,7 @@ CacheFileMetadata::CacheFileMetadata(CacheFileHandle *aHandle, const nsACString 
 CacheFileMetadata::CacheFileMetadata(bool aMemoryOnly, const nsACString &aKey)
   : CacheMemoryConsumer(aMemoryOnly ? MEMORY_ONLY : NORMAL)
   , mHandle(nullptr)
+  , mFirstRead(true)
   , mHashArray(nullptr)
   , mHashArraySize(0)
   , mHashCount(0)
@@ -95,6 +96,7 @@ CacheFileMetadata::CacheFileMetadata(bool aMemoryOnly, const nsACString &aKey)
 CacheFileMetadata::CacheFileMetadata()
   : CacheMemoryConsumer(DONT_REPORT /* This is a helper class */)
   , mHandle(nullptr)
+  , mFirstRead(true)
   , mHashArray(nullptr)
   , mHashArraySize(0)
   , mHashCount(0)
@@ -206,6 +208,7 @@ CacheFileMetadata::ReadMetadata(CacheFileMetadataListener *aListener)
   LOG(("CacheFileMetadata::ReadMetadata() - Reading metadata from disk, trying "
        "offset=%lld, filesize=%lld [this=%p]", offset, size, this));
 
+  mReadStart = mozilla::TimeStamp::Now();
   mListener = aListener;
   rv = CacheFileIOManager::Read(mHandle, offset, mBuf, mBufSize, this);
   if (NS_FAILED(rv)) {
@@ -629,6 +632,16 @@ CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
     return NS_OK;
   }
 
+  if (mFirstRead) {
+    Telemetry::AccumulateTimeDelta(
+      Telemetry::NETWORK_CACHE_METADATA_FIRST_READ_TIME_MS, mReadStart);
+    Telemetry::Accumulate(
+      Telemetry::NETWORK_CACHE_METADATA_FIRST_READ_SIZE, mBufSize);
+  } else {
+    Telemetry::AccumulateTimeDelta(
+      Telemetry::NETWORK_CACHE_METADATA_SECOND_READ_TIME_MS, mReadStart);
+  }
+
   // check whether we have read all necessary data
   uint32_t realOffset = NetworkEndian::readUint32(mBuf + mBufSize -
                                                   sizeof(uint32_t));
@@ -663,6 +676,8 @@ CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
     LOG(("CacheFileMetadata::OnDataRead() - We need to read %d more bytes to "
          "have full metadata. [this=%p]", missing, this));
 
+    mFirstRead = false;
+    mReadStart = mozilla::TimeStamp::Now();
     rv = CacheFileIOManager::Read(mHandle, realOffset, mBuf, missing, this);
     if (NS_FAILED(rv)) {
       LOG(("CacheFileMetadata::OnDataRead() - CacheFileIOManager::Read() "
@@ -679,6 +694,9 @@ CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
 
     return NS_OK;
   }
+
+  Telemetry::Accumulate(Telemetry::NETWORK_CACHE_METADATA_SIZE,
+                        size - realOffset);
 
   // We have all data according to offset information at the end of the entry.
   // Try to parse it.
