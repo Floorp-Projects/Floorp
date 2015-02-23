@@ -11,3 +11,4 @@ fuzzy-if(winWidget&&!layersGPUAccelerated,102,205) == positioned-container-1.htm
 test-pref(layout.css.sticky.enabled,true) skip-if(B2G&&browserIsRemote) == sticky-legend-1.html sticky-legend-1-ref.html
 == abs-pos-child-sizing.html abs-pos-child-sizing-ref.html
 == overflow-hidden.html overflow-hidden-ref.html
+== legend-rtl.html legend-rtl-ref.html
