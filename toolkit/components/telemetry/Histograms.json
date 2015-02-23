@@ -6614,6 +6614,36 @@
     "n_values": 400,
     "description": "Hit rate for a specific cache size in file count. The hit rate is split into 20 buckets, the lower limit of the range in percents is 5*n/20. The cache size is divided into 20 ranges of length 5000, the lower limit of the range is 5000*(n%20)"
   },
+  "NETWORK_CACHE_METADATA_FIRST_READ_TIME_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent to read the first part of the metadata from the cache entry file."
+  },
+  "NETWORK_CACHE_METADATA_SECOND_READ_TIME_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent to read the missing part of the metadata from the cache entry file."
+  },
+  "NETWORK_CACHE_METADATA_FIRST_READ_SIZE": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "5119",
+    "n_buckets": 256,
+    "description": "Guessed size of the metadata that we read from the cache file as the first part."
+  },
+  "NETWORK_CACHE_METADATA_SIZE": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "5119",
+    "n_buckets": 256,
+    "description": "Actual size of the metadata parsed from the disk."
+  },
   "DATABASE_LOCKED_EXCEPTION": {
     "expires_in_version": "42",
     "kind": "enumerated",
