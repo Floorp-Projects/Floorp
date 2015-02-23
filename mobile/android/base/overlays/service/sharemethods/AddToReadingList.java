@@ -10,31 +10,30 @@ import android.content.Context;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.LocalBrowserDB;
+import org.mozilla.gecko.db.ReadingListProvider;
 import org.mozilla.gecko.overlays.service.ShareData;
 
-import static org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 
 /**
  * ShareMethod to add a page to the reading list.
  *
  * Inserts the given URL/title pair into the reading list database.
- * TODO: In the event the page turns out not to be reader-mode-compatible, freezes sometimes occur
- * when we subsequently load the page in reader mode. (Bug 1044781)
  */
 public class AddToReadingList extends ShareMethod {
     private static final String LOGTAG = "GeckoAddToReadingList";
 
     @Override
     public Result handle(ShareData shareData) {
-        ContentResolver resolver = context.getContentResolver();
+        final ContentResolver resolver = context.getContentResolver();
 
-        LocalBrowserDB browserDB = new LocalBrowserDB(GeckoProfile.DEFAULT_PROFILE);
+        final ContentValues values = new ContentValues();
+        values.put(ReadingListItems.TITLE, shareData.title);
+        values.put(ReadingListItems.URL, shareData.url);
+        values.put(ReadingListItems.ADDED_ON, System.currentTimeMillis());
+        values.put(ReadingListItems.ADDED_BY, ReadingListProvider.PLACEHOLDER_THIS_DEVICE);
 
-        ContentValues values = new ContentValues();
-        values.put(Bookmarks.TITLE, shareData.title);
-        values.put(Bookmarks.URL, shareData.url);
-
-        browserDB.getReadingListAccessor().addReadingListItem(resolver, values);
+        new LocalBrowserDB(GeckoProfile.DEFAULT_PROFILE).getReadingListAccessor().addReadingListItem(resolver, values);
 
         return Result.SUCCESS;
     }
