@@ -1,21 +1,23 @@
 //Until it's clear what the unstable things are replaced by
-#![allow(unstable)]
-#![allow(non_snake_case)]
 
-#[macro_use] extern crate log;
+#![feature(old_io)]
+#![feature(old_path)]
+#![feature(env)]
+#![feature(std_misc)]
+#[macro_use]
+extern crate log;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate argparse;
-extern crate core;
 extern crate hyper;
 extern crate regex;
 extern crate mozprofile;
 extern crate mozrunner;
 #[macro_use] extern crate webdriver;
 
-use std::io::net::ip::SocketAddr;
+use std::env;
+use std::old_io::net::ip::SocketAddr;
 use std::str::FromStr;
-use std::os;
-use std::path::Path;
+use std::old_path::Path;
 
 use argparse::{ArgumentParser, StoreTrue, Store};
 use webdriver::server::start;
@@ -55,19 +57,19 @@ fn parse_args() -> Result<Options, ()> {
         let mut parser = ArgumentParser::new();
         parser.set_description("WebDriver to marionette proxy.");
         parser.refer(&mut opts.binary)
-            .add_option(&["-b", "--binary"], Box::new(Store::<String>),
+            .add_option(&["-b", "--binary"], Store,
                         "Path to the Firefox binary");
         parser.refer(&mut opts.webdriver_port)
-            .add_option(&["--webdriver-port"], Box::new(Store::<u16>),
+            .add_option(&["--webdriver-port"], Store,
                         "Port to run webdriver on");
         parser.refer(&mut opts.marionette_port)
-            .add_option(&["--marionette-port"], Box::new(Store::<u16>),
+            .add_option(&["--marionette-port"], Store,
                         "Port to run marionette on");
         parser.refer(&mut opts.connect_existing)
-            .add_option(&["--connect-existing"], Box::new(StoreTrue),
+            .add_option(&["--connect-existing"], StoreTrue,
                         "Connect to an existing firefox process");
         if let Err(e) = parser.parse_args() {
-            os::set_exit_status(e);
+            env::set_exit_status(e);
             return Err(())
         };
     }
@@ -78,15 +80,15 @@ fn parse_args() -> Result<Options, ()> {
 
 // Valid addresses to parse are "HOST:PORT" or ":PORT".
 // If the host isn't specified, 127.0.0.1 will be assumed.
-fn parse_addr(s: String) -> Result<SocketAddr, String> {
-    let mut parts: Vec<&str> = s.as_slice().splitn(1, ':').collect();
+fn parse_addr(s: &str) -> Result<SocketAddr, String> {
+    let mut parts: Vec<&str> = s.splitn(1, ':').collect();
     if parts.len() == 2 {
         parts[0] = "127.0.0.1";
     }
     let full_addr = parts.connect(":");
-    match FromStr::from_str(full_addr.as_slice()) {
-        Some(addr) => Ok(addr),
-        None => Err(format!("illegal address: {}", s))
+    match FromStr::from_str(&full_addr[..]) {
+        Ok(addr) => Ok(addr),
+        Err(_) => Err(format!("illegal address: {}", s))
     }
 }
 
@@ -95,7 +97,7 @@ fn main() {
         Ok(args) => args,
         Err(_) => return
     };
-    let addr = match parse_addr(DEFAULT_ADDR.to_string()) {
+    let addr = match parse_addr(DEFAULT_ADDR) {
         Ok(x) => x,
         Err(e) => {
             println!("{}", e);
