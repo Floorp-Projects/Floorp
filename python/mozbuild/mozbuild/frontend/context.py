@@ -268,6 +268,10 @@ class Context(KeyedDefaultDict):
 
 
 class TemplateContext(Context):
+    def __init__(self, template=None, allowed_variables={}, config=None):
+        self.template = template
+        super(TemplateContext, self).__init__(allowed_variables, config)
+
     def _validate(self, key, value):
         return Context._validate(self, key, value, True)
 
