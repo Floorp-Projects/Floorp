@@ -313,6 +313,9 @@ struct ForEachTrackedOptimizationTypeInfoOp
     // The lineno parameter is the line number if the type is keyed by
     // "constructor", "alloc site", or if the type itself refers to a scripted
     // function. Otherwise it is UINT32_MAX.
+    //
+    // The location parameter is the only one that may need escaping if being
+    // quoted.
     virtual void readType(const char *keyedBy, const char *name,
                           const char *location, unsigned lineno) = 0;
 
