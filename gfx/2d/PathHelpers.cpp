@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include "PathHelpers.h"
 
 namespace mozilla {
@@ -236,6 +239,29 @@ StrokeSnappedEdgesOfRect(const Rect& aRect, DrawTarget& aDrawTarget,
   p2 = aRect.BottomRight();
   SnapLineToDevicePixelsForStroking(p1, p2, aDrawTarget);
   aDrawTarget.StrokeLine(p1, p2, aColor, aStrokeOptions);
+}
+
+// The logic for this comes from _cairo_stroke_style_max_distance_from_path
+Margin
+MaxStrokeExtents(const StrokeOptions& aStrokeOptions,
+                 const Matrix& aTransform)
+{
+  double styleExpansionFactor = 0.5f;
+
+  if (aStrokeOptions.mLineCap == CapStyle::SQUARE) {
+    styleExpansionFactor = M_SQRT1_2;
+  }
+
+  if (aStrokeOptions.mLineJoin == JoinStyle::MITER &&
+      styleExpansionFactor < M_SQRT2 * aStrokeOptions.mMiterLimit) {
+    styleExpansionFactor = M_SQRT2 * aStrokeOptions.mMiterLimit;
+  }
+
+  styleExpansionFactor *= aStrokeOptions.mLineWidth;
+
+  double dx = styleExpansionFactor * hypot(aTransform._11, aTransform._21);
+  double dy = styleExpansionFactor * hypot(aTransform._22, aTransform._12);
+  return Margin(dy, dx, dy, dx);
 }
 
 } // namespace gfx
