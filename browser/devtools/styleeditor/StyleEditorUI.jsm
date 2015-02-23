@@ -447,13 +447,15 @@ StyleEditorUI.prototype = {
    *         Editor to create UI for.
    */
   _sourceLoaded: function(editor) {
+    let ordinal = editor.styleSheet.styleSheetIndex;
+    ordinal = ordinal == -1 ? Number.MAX_SAFE_INTEGER : ordinal;
     // add new sidebar item and editor to the UI
     this._view.appendTemplatedItem(STYLE_EDITOR_TEMPLATE, {
       data: {
         editor: editor
       },
       disableAnimations: this._alwaysDisableAnimations,
-      ordinal: editor.styleSheet.styleSheetIndex,
+      ordinal: ordinal,
       onCreate: function(summary, details, data) {
         let editor = data.editor;
         editor.summary = summary;

@@ -9,7 +9,7 @@
 //
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Unknown sheet source");
 
-const TESTCASE_URI = TEST_BASE + "simple.html";
+const TESTCASE_URI = TEST_BASE_HTTP + "simple.html";
 
 let TESTCASE_CSS_SOURCE = "body{background-color:red;";
 

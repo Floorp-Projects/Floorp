@@ -15,6 +15,7 @@ const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devt
 const Editor  = require("devtools/sourceeditor/editor");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {CssLogic} = require("devtools/styleinspector/css-logic");
+const {console} = require("resource://gre/modules/devtools/Console.jsm");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -251,11 +252,27 @@ StyleSheetEditor.prototype = {
           callback(source);
         }
         return source;
+      }, e => {
+        if (this._isDestroyed) {
+          console.warn("Could not fetch the source for " +
+                       this.styleSheet.href +
+                       ", the editor was destroyed");
+          Cu.reportError(e);
+        } else {
+          throw e;
+        }
       });
     }, e => {
-      this.emit("error", { key: LOAD_ERROR, append: this.styleSheet.href });
-      throw e;
-    })
+      if (this._isDestroyed) {
+        console.warn("Could not fetch the source for " +
+                     this.styleSheet.href +
+                     ", the editor was destroyed");
+        Cu.reportError(e);
+      } else {
+        this.emit("error", { key: LOAD_ERROR, append: this.styleSheet.href });
+        throw e;
+      }
+    });
   },
 
   /**
@@ -712,6 +729,7 @@ StyleSheetEditor.prototype = {
     this.cssSheet.off("property-change", this._onPropertyChange);
     this.cssSheet.off("media-rules-changed", this._onMediaRulesChanged);
     this.styleSheet.off("error", this._onError);
+    this._isDestroyed = true;
   }
 }
 
