@@ -5,11 +5,12 @@
 import sys
 import time
 
-import errors
-import wait
+from marionette_driver import errors
+from marionette_driver import wait
+from marionette_driver.wait import Wait
 
 from marionette_test import MarionetteTestCase
-from wait import Wait
+
 
 class TickingClock(object):
     def __init__(self, incr=1):

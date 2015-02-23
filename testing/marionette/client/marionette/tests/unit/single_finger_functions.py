@@ -1,5 +1,5 @@
-from marionette import Actions
-from errors import TimeoutException
+from marionette_driver.marionette import Actions
+from marionette_driver.errors import TimeoutException
 
 def wait_for_condition_else_raise(marionette, wait_for_condition, expected, script):
     try:
