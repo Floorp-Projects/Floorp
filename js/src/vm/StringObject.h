@@ -31,6 +31,14 @@ class StringObject : public NativeObject
     static inline StringObject *create(JSContext *cx, HandleString str,
                                        NewObjectKind newKind = GenericObject);
 
+    /*
+     * Compute the initial shape to associate with fresh String objects, which
+     * encodes the initial length property. Return the shape after changing
+     * |obj|'s last property to it.
+     */
+    static Shape *
+    assignInitialShape(ExclusiveContext *cx, Handle<StringObject*> obj);
+
     JSString *unbox() const {
         return getFixedSlot(PRIMITIVE_VALUE_SLOT).toString();
     }
@@ -58,19 +66,6 @@ class StringObject : public NativeObject
     /* For access to init, as String.prototype is special. */
     friend JSObject *
     ::js_InitStringClass(JSContext *cx, js::HandleObject global);
-
-    /* For access to assignInitialShape. */
-    friend bool
-    EmptyShape::ensureInitialCustomShape<StringObject>(ExclusiveContext *cx,
-                                                       Handle<StringObject*> obj);
-
-    /*
-     * Compute the initial shape to associate with fresh String objects, which
-     * encodes the initial length property. Return the shape after changing
-     * |obj|'s last property to it.
-     */
-    static Shape *
-    assignInitialShape(ExclusiveContext *cx, Handle<StringObject*> obj);
 };
 
 } // namespace js
