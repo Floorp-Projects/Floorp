@@ -12,8 +12,8 @@ from pprint import pprint
 from StringIO import StringIO
 
 PLATFORMS= [
-  'x86-win32-vs8',
-  'x86_64-win64-vs8',
+  'x86-win32-vs12',
+  'x86_64-win64-vs12',
   'x86-linux-gcc',
   'x86_64-linux-gcc',
   'generic-gnu',
