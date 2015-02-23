@@ -29,6 +29,58 @@
 
 namespace mozilla { namespace pkix {
 
+// 4.1.1.2 signatureAlgorithm
+// 4.1.2.3 signature
+
+Result
+CheckSignatureAlgorithm(Input signatureAlgorithmValue, Input signatureValue)
+{
+  // 4.1.1.2. signatureAlgorithm
+  der::PublicKeyAlgorithm publicKeyAlg;
+  DigestAlgorithm digestAlg;
+  Reader signatureAlgorithmReader(signatureAlgorithmValue);
+  Result rv = der::SignatureAlgorithmIdentifierValue(signatureAlgorithmReader,
+                                                     publicKeyAlg, digestAlg);
+  if (rv != Success) {
+    return rv;
+  }
+  rv = der::End(signatureAlgorithmReader);
+  if (rv != Success) {
+    return rv;
+  }
+
+  // 4.1.2.3. Signature
+  der::PublicKeyAlgorithm signedPublicKeyAlg;
+  DigestAlgorithm signedDigestAlg;
+  Reader signedSignatureAlgorithmReader(signatureValue);
+  rv = der::SignatureAlgorithmIdentifierValue(signedSignatureAlgorithmReader,
+                                              signedPublicKeyAlg,
+                                              signedDigestAlg);
+  if (rv != Success) {
+    return rv;
+  }
+  rv = der::End(signedSignatureAlgorithmReader);
+  if (rv != Success) {
+    return rv;
+  }
+
+  // "This field MUST contain the same algorithm identifier as the
+  // signatureAlgorithm field in the sequence Certificate." However, it may
+  // be encoded differently. In particular, one of the fields may have a NULL
+  // parameter while the other one may omit the parameter field altogether, and
+  // these are considered equivalent. Some certificates generation software
+  // actually generates certificates like that, so we compare the parsed values
+  // instead of comparing the encoded values byte-for-byte.
+  //
+  // Along the same lines, we accept two different OIDs for RSA-with-SHA1, and
+  // we consider those OIDs to be equivalent here.
+  if (publicKeyAlg != signedPublicKeyAlg || digestAlg != signedDigestAlg) {
+    return Result::ERROR_SIGNATURE_ALGORITHM_MISMATCH;
+  }
+
+  return Success;
+}
+
 // 4.1.2.5 Validity
 
 Result
@@ -735,21 +787,36 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
 
   const EndEntityOrCA endEntityOrCA = cert.endEntityOrCA;
 
+  // Check the cert's trust first, because we want to minimize the amount of
+  // processing we do on a distrusted cert, in case it is trying to exploit
+  // some bug in our processing.
   rv = trustDomain.GetCertTrust(endEntityOrCA, requiredPolicy, cert.GetDER(),
                                 trustLevel);
   if (rv != Success) {
     return rv;
   }
-  if (trustLevel == TrustLevel::ActivelyDistrusted) {
-    return Result::ERROR_UNTRUSTED_CERT;
-  }
-  if (trustLevel != TrustLevel::TrustAnchor &&
-      trustLevel != TrustLevel::InheritsTrust) {
-    // The TrustDomain returned a trust level that we weren't expecting.
-    return Result::FATAL_ERROR_INVALID_STATE;
+
+  switch (trustLevel) {
+    case TrustLevel::InheritsTrust:
+      rv = CheckSignatureAlgorithm(cert.GetSignedData().algorithm,
+                                   cert.GetSignature());
+      if (rv != Success) {
+        return rv;
+      }
+      break;
+
+    case TrustLevel::TrustAnchor:
+      // We don't even bother checking signatureAlgorithm or signature for
+      // syntactic validity for trust anchors, because we don't use those
+      // fields for anything, and because the trust anchor might be signed
+      // with a signature algorithm we don't actually support.
+      break;
+
+    case TrustLevel::ActivelyDistrusted:
+      return Result::ERROR_UNTRUSTED_CERT;
   }
 
-  // Check the SPKI first, because it is one of the most selective properties
+  // Check the SPKI early, because it is one of the most selective properties
   // of the certificate due to SHA-1 deprecation and the deprecation of
   // certificates with keys weaker than RSA 2048.
   Reader spki(cert.GetSubjectPublicKeyInfo());
