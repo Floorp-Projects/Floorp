@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_test import MarionetteTestCase
-from errors import InvalidElementStateException
+from marionette_driver.errors import InvalidElementStateException
 
 class TestClear(MarionetteTestCase):
     def testWriteableTextInputShouldClear(self):
@@ -56,7 +56,7 @@ class TestClear(MarionetteTestCase):
         element = self.marionette.find_element("id","content-editable")
         element.clear()
         self.assertEqual("", element.text)
-        
+
     def testTextInputShouldNotClearWhenDisabled(self):
         test_html = self.marionette.absolute_url("test_clearing.html")
         self.marionette.navigate(test_html)
