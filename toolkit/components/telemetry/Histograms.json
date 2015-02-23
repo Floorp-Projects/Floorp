@@ -6589,6 +6589,19 @@
     "n_values": "7",
     "description": "Final status of the CacheFileInputStream (0=ok, 1=other error, 2=out of memory, 3=disk full, 4=file corrupted, 5=file not found, 6=binding aborted)"
   },
+  "NETWORK_CACHE_FS_TYPE": {
+    "expires_in_version": "42",
+    "kind": "enumerated",
+    "n_values": "5",
+    "description": "Type of FS that the cache is stored on (0=NTFS (Win), 1=FAT32 (Win), 2=FAT (Win), 3=other FS (Win), 4=other OS)"
+  },
+  "NETWORK_CACHE_SIZE_FULL_FAT": {
+    "expires_in_version": "42",
+    "kind": "linear",
+    "high": "500",
+    "n_buckets": 50,
+    "description": "Size (in MB) of a cache that reached a file count limit"
+  },
   "DATABASE_LOCKED_EXCEPTION": {
     "expires_in_version": "42",
     "kind": "enumerated",
