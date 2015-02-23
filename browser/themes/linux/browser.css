@@ -518,6 +518,11 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
 }
 
+#menu_readingList,
+#BMB_readingList {
+  list-style-image: url("chrome://browser/skin/readinglist/readinglist-icon.svg");
+}
+
 #menu_openDownloads {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 16px 16px 0px);

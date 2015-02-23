@@ -563,6 +563,11 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   }
 }
 
+/* #menu_readingList, svg icons don't work in the mac native menubar */
+#BMB_readingList {
+  list-style-image: url("chrome://browser/skin/readinglist/readinglist-icon.svg");
+}
+
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */
 
 toolbar .toolbarbutton-1:not([type="menu-button"]),
