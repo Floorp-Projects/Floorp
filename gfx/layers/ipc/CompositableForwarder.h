@@ -56,14 +56,6 @@ public:
   virtual void Connect(CompositableClient* aCompositable) = 0;
 
   /**
-   * Notify the CompositableHost that it should create host-side-only
-   * texture(s), that we will update incrementally using UpdateTextureIncremental.
-   */
-  virtual void CreatedIncrementalBuffer(CompositableClient* aCompositable,
-                                        const TextureInfo& aTextureInfo,
-                                        const nsIntRect& aBufferRect) = 0;
-
-  /**
    * Tell the CompositableHost on the compositor side what TiledLayerBuffer to
    * use for the next composition.
    */
@@ -82,23 +74,6 @@ public:
   virtual void UpdateTextureRegion(CompositableClient* aCompositable,
                                    const ThebesBufferData& aThebesBufferData,
                                    const nsIntRegion& aUpdatedRegion) = 0;
-
-  /**
-   * Notify the compositor to update aTextureId using aDescriptor, and take
-   * ownership of aDescriptor.
-   *
-   * aDescriptor only contains the pixels for aUpdatedRegion, and is relative
-   * to aUpdatedRegion.TopLeft().
-   *
-   * aBufferRect/aBufferRotation define the new valid region contained
-   * within the texture after the update has been applied.
-   */
-  virtual void UpdateTextureIncremental(CompositableClient* aCompositable,
-                                        TextureIdentifier aTextureId,
-                                        SurfaceDescriptor& aDescriptor,
-                                        const nsIntRegion& aUpdatedRegion,
-                                        const nsIntRect& aBufferRect,
-                                        const nsIntPoint& aBufferRotation) = 0;
 
   /**
    * Communicate the picture rect of a YUV image in aLayer to the compositor

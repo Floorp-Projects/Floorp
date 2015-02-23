@@ -587,17 +587,6 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
 
         break;
       }
-      case EditReply::TOpTextureSwap: {
-        MOZ_LAYERS_LOG(("[LayersForwarder] TextureSwap"));
-
-        const OpTextureSwap& ots = reply.get_OpTextureSwap();
-
-        CompositableClient* compositable =
-          CompositableClient::FromIPDLActor(ots.compositableChild());
-        MOZ_ASSERT(compositable);
-        compositable->SetDescriptorFromReply(ots.textureId(), ots.image());
-        break;
-      }
       case EditReply::TReturnReleaseFence: {
         const ReturnReleaseFence& rep = reply.get_ReturnReleaseFence();
         FenceHandle fence = rep.fence();

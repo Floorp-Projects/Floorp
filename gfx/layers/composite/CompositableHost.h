@@ -102,45 +102,6 @@ public:
   }
 
   /**
-   * Update the content host using a surface that only contains the updated
-   * region.
-   *
-   * Takes ownership of aSurface, and is responsible for freeing it.
-   *
-   * @param aTextureId Texture to update.
-   * @param aSurface Surface containing the update area. Its contents are relative
-   *                 to aUpdated.TopLeft()
-   * @param aUpdated Area of the content host to update.
-   * @param aBufferRect New area covered by the content host.
-   * @param aBufferRotation New buffer rotation.
-   */
-  virtual void UpdateIncremental(TextureIdentifier aTextureId,
-                                 SurfaceDescriptor& aSurface,
-                                 const nsIntRegion& aUpdated,
-                                 const nsIntRect& aBufferRect,
-                                 const nsIntPoint& aBufferRotation)
-  {
-    MOZ_ASSERT(false, "should be implemented or not used");
-  }
-
-  /**
-   * Ensure that a suitable texture host exists in this compsitable.
-   *
-   * Only used with ContentHostIncremental.
-   *
-   * No SurfaceDescriptor or TextureIdentifier is provider as we
-   * don't have a single surface for the texture contents, and we
-   * need to allocate our own one to be updated later.
-   */
-  virtual bool CreatedIncrementalTexture(ISurfaceAllocator* aAllocator,
-                                         const TextureInfo& aTextureInfo,
-                                         const nsIntRect& aBufferRect)
-  {
-    NS_ERROR("should be implemented or not used");
-    return false;
-  }
-
-  /**
    * Returns the front buffer.
    */
   virtual TextureHost* GetAsTextureHost() { return nullptr; }
