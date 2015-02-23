@@ -219,6 +219,12 @@ DownloadNotification.prototype = {
     if (this._show) {
       if (!this.id) {
         this.id = Notifications.create(this.options);
+      } else if (!this.options.ongoing) {
+        // We need to explictly cancel ongoing notifications,
+        // since updating them to be non-ongoing doesn't seem
+        // to work. See bug 1130834.
+        Notifications.cancel(this.id);
+        this.id = Notifications.create(this.options);
       } else {
         Notifications.update(this.id, this.options);
       }
