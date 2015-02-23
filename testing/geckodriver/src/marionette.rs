@@ -1,9 +1,9 @@
 use rustc_serialize::json;
 use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
-use std::io::{IoResult, TcpStream, IoError};
-use std::io::timer::Timer;
-use std::path::Path;
+use std::old_io::{IoResult, TcpStream, IoError};
+use std::old_io::timer::Timer;
+use std::old_path::Path;
 use std::sync::Mutex;
 use std::time::duration::Duration;
 
@@ -87,7 +87,7 @@ impl MarionetteHandler {
         if let Err(e) = connection.connect() {
             return Err(WebDriverError::new(
                 ErrorStatus::UnknownError,
-                format!("Failed to start marionette connection:\n{}", e.desc).as_slice()));
+                &format!("Failed to start marionette connection:\n{}", e.desc)[..]));
         }
         debug!("Marionette connection started");
         self.connection = Mutex::new(Some(connection));
@@ -116,7 +116,7 @@ impl MarionetteHandler {
 }
 
 impl WebDriverHandler for MarionetteHandler {
-    fn handle_command(&mut self, session: &Option<Session>, msg: &WebDriverMessage) -> WebDriverResult<WebDriverResponse> {
+    fn handle_command(&mut self, _: &Option<Session>, msg: &WebDriverMessage) -> WebDriverResult<WebDriverResponse> {
         let mut create_connection = false;
         match self.connection.lock() {
             Ok(ref mut connection) => {
@@ -157,7 +157,7 @@ impl WebDriverHandler for MarionetteHandler {
         }
     }
 
-    fn delete_session(&mut self, session: &Option<Session>) {
+    fn delete_session(&mut self, _: &Option<Session>) {
         if let Ok(connection) = self.connection.lock() {
             if let Some(ref conn) = *connection {
                 conn.close();
@@ -190,7 +190,7 @@ impl MarionetteSession {
         let initital_id = session_id.unwrap_or("".to_string());
         MarionetteSession {
             session_id: initital_id,
-            to: String::from_str("root")
+            to: "root".to_string()
         }
     }
 
@@ -502,7 +502,7 @@ impl MarionetteConnection {
         msg.insert("to".to_string(), "root".to_json());
         match self.send(&msg.to_json()) {
             Ok(resp) => {
-                let json_data = object_from_json(resp.as_slice()).ok().expect("Failed to connect to marionette");
+                let json_data = object_from_json(&resp[..]).ok().expect("Failed to connect to marionette");
                 match json_data.get(&"id".to_string()) {
                     Some(x) => match x.as_string() {
                         Some(id) => self.session.to = id.to_string(),
@@ -520,14 +520,14 @@ impl MarionetteConnection {
     }
 
     fn encode_msg(&self, msg:&Json) -> String {
-        let data = json::encode(msg);
+        let data = json::encode(msg).unwrap();
         format!("{}:{}", data.len(), data)
     }
 
     pub fn send_message(&mut self, msg: &WebDriverMessage) -> WebDriverResult<WebDriverResponse>  {
         let resp = try!(self.session.msg_to_marionette(msg));
         let resp_data = try!(self.send(&resp));
-        self.session.response_from_json(msg, resp_data.as_slice())
+        self.session.response_from_json(msg, &resp_data[..])
     }
 
     fn send(&mut self, msg: &Json) -> WebDriverResult<String> {
@@ -535,7 +535,7 @@ impl MarionetteConnection {
         debug!("Sending {}", data);
         match self.stream {
             Some(ref mut stream) => {
-                if stream.write_str(data.as_slice()).is_err() {
+                if stream.write_str(&data[..]).is_err() {
                     return Err(WebDriverError::new(ErrorStatus::UnknownError,
                                                    "Failed to write response to stream"))
                 }
@@ -556,7 +556,7 @@ impl MarionetteConnection {
     }
 
     fn read_resp(&mut self) -> Result<String, IoError> {
-        let mut bytes = 0us;
+        let mut bytes = 0usize;
         //TODO: Check before we unwrap?
         let mut stream = self.stream.as_mut().unwrap();
         loop {
