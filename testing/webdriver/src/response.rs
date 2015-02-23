@@ -1,9 +1,8 @@
 use rustc_serialize::json;
-use rustc_serialize::json::ToJson;
 
 use common::{Nullable, Date};
 
-#[derive(Show)]
+#[derive(Debug)]
 pub enum WebDriverResponse {
     NewSession(NewSessionResponse),
     DeleteSession,
@@ -16,19 +15,19 @@ pub enum WebDriverResponse {
 
 impl WebDriverResponse {
     pub fn to_json_string(self) -> String {
-        match self {
+        (match self {
             WebDriverResponse::NewSession(x) => json::encode(&x),
-            WebDriverResponse::DeleteSession => "{}".to_string(),
+            WebDriverResponse::DeleteSession => Ok("{}".to_string()),
             WebDriverResponse::WindowSize(x) => json::encode(&x),
             WebDriverResponse::ElementRect(x) => json::encode(&x),
             WebDriverResponse::Cookie(x) => json::encode(&x),
             WebDriverResponse::Generic(x) => json::encode(&x),
-            WebDriverResponse::Void => "{}".to_string()
-        }
+            WebDriverResponse::Void => Ok("{}".to_string())
+        }).unwrap()
     }
 }
 
-#[derive(RustcEncodable, Show)]
+#[derive(RustcEncodable, Debug)]
 pub struct NewSessionResponse {
     pub sessionId: String,
     pub value: json::Json
@@ -43,7 +42,7 @@ impl NewSessionResponse {
     }
 }
 
-#[derive(RustcEncodable, Show)]
+#[derive(RustcEncodable, Debug)]
 pub struct ValueResponse {
     value: json::Json
 }
@@ -56,7 +55,7 @@ impl ValueResponse {
     }
 }
 
-#[derive(RustcEncodable, Show)]
+#[derive(RustcEncodable, Debug)]
 pub struct WindowSizeResponse {
     width: u64,
     height: u64
@@ -71,7 +70,7 @@ impl WindowSizeResponse {
     }
 }
 
-#[derive(RustcEncodable, Show)]
+#[derive(RustcEncodable, Debug)]
 pub struct ElementRectResponse {
     x: u64,
     y: u64,
@@ -91,7 +90,7 @@ impl ElementRectResponse {
 }
 
 //TODO: some of these fields are probably supposed to be optional
-#[derive(RustcEncodable, PartialEq, Show)]
+#[derive(RustcEncodable, PartialEq, Debug)]
 pub struct Cookie {
     name: String,
     value: String,
@@ -119,7 +118,7 @@ impl Cookie {
     }
 }
 
-#[derive(RustcEncodable, Show)]
+#[derive(RustcEncodable, Debug)]
 pub struct CookieResponse {
     value: Vec<Cookie>
 }

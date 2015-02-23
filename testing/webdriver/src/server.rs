@@ -1,10 +1,10 @@
-use std::io::net::ip::IpAddr;
+use std::old_io::net::ip::IpAddr;
 use std::num::FromPrimitive;
 use std::sync::Mutex;
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::thread::Thread;
+use std::thread;
 
-use hyper::header::common::ContentLength;
+use hyper::header::ContentLength;
 use hyper::method::Method;
 use hyper::server::{Server, Handler, Request, Response};
 use hyper::uri::RequestUri::AbsolutePath;
@@ -91,9 +91,9 @@ impl<T: WebDriverHandler> Dispatcher<T> {
                         if existing_session.id != *msg_session_id {
                             Err(WebDriverError::new(
                                 ErrorStatus::InvalidSessionId,
-                                format!("Got unexpected session id {} expected {}",
-                                        msg_session_id,
-                                        existing_session.id).as_slice()))
+                                &format!("Got unexpected session id {} expected {}",
+                                         msg_session_id,
+                                         existing_session.id)[..]))
                         } else {
                             Ok(())
                         }
@@ -165,7 +165,7 @@ impl Handler for HttpHandler {
                     // matter as long as we are only handling one request at a time.
                     match self.api.lock() {
                         Ok(ref api) => {
-                            api.decode_request(req.method, path.as_slice(), body.as_slice())
+                            api.decode_request(req.method, &path[..], &body[..])
                         },
                         Err(_) => return
                     }
@@ -215,7 +215,7 @@ impl Handler for HttpHandler {
                 }
                 res.headers_mut().set(ContentLength(resp_body.len() as u64));
                 let mut stream = res.start();
-                stream.write_str(resp_body.as_slice()).unwrap();
+                stream.write_str(&resp_body[..]).unwrap();
                 stream.unwrap().end().unwrap();
             },
             _ => {}
@@ -223,12 +223,12 @@ impl Handler for HttpHandler {
     }
 }
 
-pub fn start<T: WebDriverHandler>(ip_address: IpAddr, port: u16, handler: T) {
+pub fn start<T: 'static+WebDriverHandler>(ip_address: IpAddr, port: u16, handler: T) {
     let server = Server::http(ip_address, port);
 
     let (msg_send, msg_recv) = channel();
 
-    Thread::spawn(move || {
+    thread::spawn(move || {
         let mut dispatcher = Dispatcher::new(handler);
         dispatcher.run(msg_recv)
     });

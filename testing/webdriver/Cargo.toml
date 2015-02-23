@@ -5,10 +5,11 @@ version = "0.0.1"
 authors = ["James Graham <james@hoppipolla.co.uk>"]
 
 [dependencies]
-log = "0.1.9"
-rustc-serialize = "0.2.7"
-uuid = "0.1.7"
+log = "0.2.4"
+regex = "0.1.15"
+rustc-serialize = "0.2.15"
+uuid = "0.1.10"
 
 [dependencies.hyper]
-git = "https://github.com/servo/hyper"
-branch = "old_servo_new_cookies"
+git = "https://github.com/hyperium/hyper"
+branch = "master"
