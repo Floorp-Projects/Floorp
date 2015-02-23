@@ -1512,20 +1512,27 @@ class MSimdConstant
 // Converts all lanes of a given vector into the type of another vector
 class MSimdConvert
   : public MUnaryInstruction,
-    public NoTypePolicy::Data
+    public SimdPolicy<0>::Data
 {
     MSimdConvert(MDefinition *obj, MIRType fromType, MIRType toType)
       : MUnaryInstruction(obj)
     {
-        MOZ_ASSERT(IsSimdType(obj->type()) && fromType == obj->type());
         MOZ_ASSERT(IsSimdType(toType));
         setResultType(toType);
+        specialization_ = fromType; // expects fromType as input
     }
 
   public:
     INSTRUCTION_HEADER(SimdConvert)
     static MSimdConvert *NewAsmJS(TempAllocator &alloc, MDefinition *obj, MIRType fromType,
                                   MIRType toType)
+    {
+        MOZ_ASSERT(IsSimdType(obj->type()) && fromType == obj->type());
+        return new(alloc) MSimdConvert(obj, fromType, toType);
+    }
+
+    static MSimdConvert *New(TempAllocator &alloc, MDefinition *obj, MIRType fromType,
+                             MIRType toType)
     {
         return new(alloc) MSimdConvert(obj, fromType, toType);
     }
@@ -1542,20 +1549,27 @@ class MSimdConvert
 // Casts bits of a vector input to another SIMD type (doesn't generate code).
 class MSimdReinterpretCast
   : public MUnaryInstruction,
-    public NoTypePolicy::Data
+    public SimdPolicy<0>::Data
 {
     MSimdReinterpretCast(MDefinition *obj, MIRType fromType, MIRType toType)
       : MUnaryInstruction(obj)
     {
-        MOZ_ASSERT(IsSimdType(obj->type()) && fromType == obj->type());
         MOZ_ASSERT(IsSimdType(toType));
         setResultType(toType);
+        specialization_ = fromType; // expects fromType as input
     }
 
   public:
     INSTRUCTION_HEADER(SimdReinterpretCast)
     static MSimdReinterpretCast* NewAsmJS(TempAllocator &alloc, MDefinition *obj, MIRType fromType,
                                           MIRType toType)
+    {
+        MOZ_ASSERT(IsSimdType(obj->type()) && fromType == obj->type());
+        return new(alloc) MSimdReinterpretCast(obj, fromType, toType);
+    }
+
+    static MSimdReinterpretCast* New(TempAllocator &alloc, MDefinition *obj, MIRType fromType,
+                                     MIRType toType)
     {
         return new(alloc) MSimdReinterpretCast(obj, fromType, toType);
     }

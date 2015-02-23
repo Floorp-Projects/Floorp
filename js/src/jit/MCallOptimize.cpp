@@ -300,6 +300,16 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     if (native == js::simd_float32x4_reciprocalSqrt)
         return inlineUnarySimd(callInfo, native, MSimdUnaryArith::reciprocalSqrt, SimdTypeDescr::TYPE_FLOAT32);
 
+    typedef bool IsCast;
+    if (native == js::simd_float32x4_fromInt32x4)
+        return inlineSimdConvert(callInfo, native, IsCast(false), SimdTypeDescr::TYPE_INT32, SimdTypeDescr::TYPE_FLOAT32);
+    if (native == js::simd_int32x4_fromFloat32x4)
+        return inlineSimdConvert(callInfo, native, IsCast(false), SimdTypeDescr::TYPE_FLOAT32, SimdTypeDescr::TYPE_INT32);
+    if (native == js::simd_float32x4_fromInt32x4Bits)
+        return inlineSimdConvert(callInfo, native, IsCast(true), SimdTypeDescr::TYPE_INT32, SimdTypeDescr::TYPE_FLOAT32);
+    if (native == js::simd_int32x4_fromFloat32x4Bits)
+        return inlineSimdConvert(callInfo, native, IsCast(true), SimdTypeDescr::TYPE_FLOAT32, SimdTypeDescr::TYPE_INT32);
+
     return InliningStatus_NotInlined;
 }
 
@@ -2902,32 +2912,28 @@ SimdTypeDescrToMIRType(SimdTypeDescr::Type type)
     MOZ_CRASH("unexpected SimdTypeDescr");
 }
 
-template<typename T>
-IonBuilder::InliningStatus
-IonBuilder::inlineBinarySimd(CallInfo &callInfo, JSNative native, typename T::Operation op,
-                             SimdTypeDescr::Type type)
+bool
+IonBuilder::checkInlineSimd(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type,
+                            unsigned numArgs, InlineTypedObject **templateObj)
 {
-    if (callInfo.argc() != 2)
-        return InliningStatus_NotInlined;
+    if (callInfo.argc() != numArgs)
+        return false;
 
     JSObject *templateObject = inspector->getTemplateObjectForNative(pc, native);
     if (!templateObject)
-        return InliningStatus_NotInlined;
+        return false;;
 
     InlineTypedObject *inlineTypedObject = &templateObject->as<InlineTypedObject>();
     MOZ_ASSERT(inlineTypedObject->typeDescr().as<SimdTypeDescr>().type() == type);
+    *templateObj = inlineTypedObject;
+    return true;
+}
 
-    // If the type of any of the arguments is neither a SIMD type, an Object
-    // type, or a Value, then the applyTypes phase will add a fallible box &
-    // unbox sequence.  This does not matter much as all binary SIMD
-    // instructions are supposed to produce a TypeError when they're called
-    // with non SIMD-arguments.
-    T *ins = T::New(alloc(), callInfo.getArg(0), callInfo.getArg(1), op,
-                    SimdTypeDescrToMIRType(type));
-
-    MSimdBox *obj = MSimdBox::New(alloc(), constraints(), ins, inlineTypedObject,
-                                  inlineTypedObject->group()->initialHeap(constraints()));
-
+IonBuilder::InliningStatus
+IonBuilder::boxSimd(CallInfo &callInfo, MInstruction *ins, InlineTypedObject *templateObj)
+{
+    MSimdBox *obj = MSimdBox::New(alloc(), constraints(), ins, templateObj,
+                                  templateObj->group()->initialHeap(constraints()));
     current->add(ins);
     current->add(obj);
     current->push(obj);
@@ -2936,37 +2942,57 @@ IonBuilder::inlineBinarySimd(CallInfo &callInfo, JSNative native, typename T::Op
     return InliningStatus_Inlined;
 }
 
+template<typename T>
+IonBuilder::InliningStatus
+IonBuilder::inlineBinarySimd(CallInfo &callInfo, JSNative native, typename T::Operation op,
+                             SimdTypeDescr::Type type)
+{
+    InlineTypedObject *templateObj = nullptr;
+    if (!checkInlineSimd(callInfo, native, type, 2, &templateObj))
+        return InliningStatus_NotInlined;
+
+    // If the type of any of the arguments is neither a SIMD type, an Object
+    // type, or a Value, then the applyTypes phase will add a fallible box &
+    // unbox sequence.  This does not matter much as all binary SIMD
+    // instructions are supposed to produce a TypeError when they're called
+    // with non SIMD-arguments.
+    MIRType mirType = SimdTypeDescrToMIRType(type);
+    T *ins = T::New(alloc(), callInfo.getArg(0), callInfo.getArg(1), op, mirType);
+    return boxSimd(callInfo, ins, templateObj);
+}
+
 IonBuilder::InliningStatus
 IonBuilder::inlineUnarySimd(CallInfo &callInfo, JSNative native, MSimdUnaryArith::Operation op,
                             SimdTypeDescr::Type type)
 {
-    if (callInfo.argc() != 1)
+    InlineTypedObject *templateObj = nullptr;
+    if (!checkInlineSimd(callInfo, native, type, 1, &templateObj))
         return InliningStatus_NotInlined;
 
-    JSObject *templateObject = inspector->getTemplateObjectForNative(pc, native);
-    if (!templateObject)
+    // See comment in inlineBinarySimd
+    MIRType mirType = SimdTypeDescrToMIRType(type);
+    MSimdUnaryArith *ins = MSimdUnaryArith::New(alloc(), callInfo.getArg(0), op, mirType);
+    return boxSimd(callInfo, ins, templateObj);
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineSimdConvert(CallInfo &callInfo, JSNative native, bool isCast,
+                              SimdTypeDescr::Type from, SimdTypeDescr::Type to)
+{
+    InlineTypedObject *templateObj = nullptr;
+    if (!checkInlineSimd(callInfo, native, to, 1, &templateObj))
         return InliningStatus_NotInlined;
 
-    InlineTypedObject *inlineTypedObject = &templateObject->as<InlineTypedObject>();
-    MOZ_ASSERT(inlineTypedObject->typeDescr().as<SimdTypeDescr>().type() == type);
+    // See comment in inlineBinarySimd
+    MInstruction *ins;
+    MIRType fromType = SimdTypeDescrToMIRType(from);
+    MIRType toType = SimdTypeDescrToMIRType(to);
+    if (isCast)
+        ins = MSimdReinterpretCast::New(alloc(), callInfo.getArg(0), fromType, toType);
+    else
+        ins = MSimdConvert::New(alloc(), callInfo.getArg(0), fromType, toType);
 
-    // If the type of the argument isn't a SIMD type, an Object type, or a
-    // Value, then the applyTypes phase will add a fallible box & unbox
-    // sequence.  This does not matter much as all unary SIMD instructions are
-    // supposed to produce a TypeError when they're called with non
-    // SIMD-arguments.
-    MSimdUnaryArith *ins = MSimdUnaryArith::New(alloc(), callInfo.getArg(0), op,
-                                                SimdTypeDescrToMIRType(type));
-
-    MSimdBox *obj = MSimdBox::New(alloc(), constraints(), ins, inlineTypedObject,
-                                  inlineTypedObject->group()->initialHeap(constraints()));
-
-    current->add(ins);
-    current->add(obj);
-    current->push(obj);
-
-    callInfo.setImplicitlyUsedUnchecked();
-    return InliningStatus_Inlined;
+    return boxSimd(callInfo, ins, templateObj);
 }
 
 } // namespace jit
