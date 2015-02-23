@@ -634,6 +634,8 @@ LIRGeneratorX86Shared::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
 void
 LIRGeneratorX86Shared::visitSimdBinaryArith(MSimdBinaryArith *ins)
 {
+    MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
     MOZ_ASSERT(IsSimdType(ins->type()));
 
     MDefinition *lhs = ins->lhs();
