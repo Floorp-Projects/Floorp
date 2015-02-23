@@ -107,6 +107,7 @@ check("o[~(o)]");
 check("o[+ (o)]");
 check("o[- (o)]");
 
+
 // A few one off tests
 check_one("6", (function () { 6() }), " is not a function");
 check_one("Array.prototype.reverse.call(...)", (function () { Array.prototype.reverse.call('123'); }), " is read-only");
@@ -114,6 +115,8 @@ check_one(`(intermediate value)[Symbol.iterator](...).next(...).value`,
           function () { var [{ x }] = [null, {}]; }, " is null");
 check_one(`(intermediate value)[Symbol.iterator](...).next(...).value`,
           function () { ieval("let (x) { var [a, b, [c0, c1]] = [x, x, x]; }") }, " is undefined");
+check_one("void 1", function() { (void 1)(); }, " is not a function");
+check_one("void o[1]", function() { var o = []; (void o[1])() }, " is not a function");
 
 // Check fallback behavior
 assertThrowsInstanceOf(function () { for (let x of undefined) {} }, TypeError);
