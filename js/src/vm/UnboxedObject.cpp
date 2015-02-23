@@ -146,7 +146,7 @@ UnboxedPlainObject::getValue(const UnboxedLayout::Property &property)
 void
 UnboxedPlainObject::trace(JSTracer *trc, JSObject *obj)
 {
-    const UnboxedLayout &layout = obj->as<UnboxedPlainObject>().layout();
+    const UnboxedLayout &layout = obj->as<UnboxedPlainObject>().layoutDontCheckGeneration();
     const int32_t *list = layout.traceList();
     if (!list)
         return;
