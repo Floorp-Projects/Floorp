@@ -1,4 +1,5 @@
 marionette-transport == 0.4
+marionette-driver == 0.1
 manifestparser
 mozhttpd >= 0.5
 mozinfo >= 0.7
