@@ -12,8 +12,8 @@ import types
 import weakref
 
 from b2ginstance import B2GInstance
-from errors import InvalidResponseException
-from marionette import Marionette
+from marionette_driver.errors import InvalidResponseException
+from marionette_driver.marionette import Marionette
 from marionette_test import MarionetteTestCase
 from marionette_transport import MarionetteTransport
 from runtests import MarionetteTestRunner, cli
