@@ -1245,8 +1245,11 @@ ReadSPSProfilingStack(JSContext *cx, unsigned argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setUndefined();
 
-    if (!cx->runtime()->spsProfiler.enabled())
+    // Return boolean 'false' if profiler is not enabled.
+    if (!cx->runtime()->spsProfiler.enabled()) {
         args.rval().setBoolean(false);
+        return true;
+    }
 
     // Array holding physical jit stack frames.
     RootedObject stack(cx, NewDenseEmptyArray(cx));
