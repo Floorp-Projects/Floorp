@@ -19,6 +19,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "Units.h"
 #include "js/TypeDecls.h"
+#include "nsIGlobalObject.h"
 
 class nsIContent;
 class nsIDOMEventTarget;
@@ -63,15 +64,6 @@ private:
                        WidgetEvent* aEvent);
 
 public:
-  void GetParentObject(nsIScriptGlobalObject** aParentObject)
-  {
-    if (mOwner) {
-      CallQueryInterface(mOwner, aParentObject);
-    } else {
-      *aParentObject = nullptr;
-    }
-  }
-
   static Event* FromSupports(nsISupports* aSupports)
   {
     nsIDOMEvent* event =
@@ -93,7 +85,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Event)
 
-  nsISupports* GetParentObject()
+  nsIGlobalObject* GetParentObject()
   {
     return mOwner;
   }
@@ -274,7 +266,7 @@ protected:
   mozilla::WidgetEvent*       mEvent;
   nsRefPtr<nsPresContext>     mPresContext;
   nsCOMPtr<EventTarget>       mExplicitOriginalTarget;
-  nsCOMPtr<nsPIDOMWindow>     mOwner; // nsPIDOMWindow for now.
+  nsCOMPtr<nsIGlobalObject>   mOwner;
   bool                        mEventIsInternal;
   bool                        mPrivateDataDuplicated;
   bool                        mIsMainThreadEvent;
