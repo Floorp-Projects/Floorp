@@ -57,9 +57,16 @@ let AboutReader = function(mm, win) {
 
   this._setupStyleDropdown();
   this._setupButton("close-button", this._onReaderClose.bind(this), "aboutReader.toolbar.close");
-  this._setupButton("toggle-button", this._onReaderToggle.bind(this), "aboutReader.toolbar.addToReadingList");
   this._setupButton("share-button", this._onShare.bind(this), "aboutReader.toolbar.share");
-  this._setupButton("list-button", this._onList.bind(this), "aboutReader.toolbar.openReadingList");
+
+  try {
+    if (Services.prefs.getBoolPref("browser.readinglist.enabled")) {
+      this._setupButton("toggle-button", this._onReaderToggle.bind(this), "aboutReader.toolbar.addToReadingList");
+      this._setupButton("list-button", this._onList.bind(this), "aboutReader.toolbar.openReadingList");
+    }
+  } catch (e) {
+    // Pref doesn't exist.
+  }
 
   let colorSchemeValues = JSON.parse(Services.prefs.getCharPref("reader.color_scheme.values"));
   let colorSchemeOptions = colorSchemeValues.map((value) => {
@@ -699,6 +706,7 @@ AboutReader.prototype = {
 
   _setupButton: function Reader_setupButton(id, callback, titleEntity) {
     let button = this._doc.getElementById(id);
+    button.removeAttribute("hidden");
     button.setAttribute("title", gStrings.GetStringFromName(titleEntity));
 
     button.addEventListener("click", function(aEvent) {

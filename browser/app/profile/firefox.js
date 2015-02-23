@@ -1513,6 +1513,9 @@ pref("devtools.canvasdebugger.enabled", false);
 // Enable the Web Audio Editor
 pref("devtools.webaudioeditor.enabled", false);
 
+// Web Audio Editor Inspector Width should be a preference
+pref("devtools.webaudioeditor.inspectorWidth", 300);
+
 // Default theme ("dark" or "light")
 #ifdef MOZ_DEV_EDITION
 pref("devtools.theme", "dark");
@@ -1870,8 +1873,10 @@ pref("dom.ipc.reportProcessHangs", false);
 pref("dom.ipc.reportProcessHangs", true);
 #endif
 
+#ifndef NIGHTLY_BUILD
 // Disable reader mode by default.
 pref("reader.parse-on-load.enabled", false);
+#endif
 
 // Disable ReadingList by default.
 pref("browser.readinglist.enabled", false);

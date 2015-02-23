@@ -838,12 +838,23 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY processHang.terminateProcess.label       "Kill Web Process">
 <!ENTITY processHang.terminateProcess.accessKey   "K">
 
-<!ENTITY readingList.label                        "Reading List">
-<!ENTITY readingList.sidebar.commandKey           "R">
 <!ENTITY emeLearnMoreContextMenu.label            "Learn more about DRM…">
 <!ENTITY emeLearnMoreContextMenu.accesskey        "D">
-
 <!ENTITY emeNotificationsNotNow.label             "Not now">
 <!ENTITY emeNotificationsNotNow.accesskey         "N">
 <!ENTITY emeNotificationsDontAskAgain.label       "Don't ask me again">
 <!ENTITY emeNotificationsDontAskAgain.accesskey   "D">
+
+<!ENTITY readingList.label                        "Reading List">
+<!ENTITY readingList.sidebar.commandKey           "R">
+<!-- Pre-landed string for bug 1124400 -->
+<!ENTITY readingList.showSidebar.label            "Show Reading List Sidebar">
+<!-- Pre-landed string for bug 1124153 -->
+<!ENTITY readingList.sidebar.showMore.label       "Show more…">
+<!-- Pre-landed string for bug 1133662 -->
+<!ENTITY readingList.sidebar.emptyText            "Add articles to your Reading List to save them for later and find them easily when you need them.">
+<!-- Pre-landed string for bug 1123525 -->
+<!ENTITY readingList.sidebar.delete.tooltip       "Remove this from your Reading List">
+<!-- Pre-landed strings for bug 1123519 -->
+<!ENTITY readingList.sidebar.add.label            "Add to Reading List">
+<!ENTITY readingList.sidebar.add.tooltip          "Add this page to your Reading List">
