@@ -37,21 +37,39 @@ use webdriver::error::{
     WebDriverResult, WebDriverError, ErrorStatus};
 use webdriver::server::{WebDriverHandler, Session};
 
+pub enum BrowserLauncher {
+    None,
+    BinaryLauncher(Path)
+}
+
+pub struct MarionetteSettings {
+    port: u16,
+    launcher: BrowserLauncher
+}
+
+impl MarionetteSettings {
+    pub fn new(port: u16, launcher: BrowserLauncher) -> MarionetteSettings {
+        MarionetteSettings {
+            port: port,
+            launcher: launcher
+        }
+    }
+}
 
 pub struct MarionetteHandler {
     connection: Mutex<Option<MarionetteConnection>>,
-    binary: Path,
+    launcher: BrowserLauncher,
     browser: Option<FirefoxRunner>,
     port: u16,
 }
 
 impl MarionetteHandler {
-    pub fn new(binary: Path, port: u16) -> MarionetteHandler {
+    pub fn new(settings: MarionetteSettings) -> MarionetteHandler {
         MarionetteHandler {
             connection: Mutex::new(None),
-            binary: binary,
+            launcher: settings.launcher,
             browser: None,
-            port: port
+            port: settings.port
         }
     }
 
@@ -77,16 +95,21 @@ impl MarionetteHandler {
     }
 
     fn start_browser(&mut self) -> IoResult<()> {
-        let mut runner = try!(FirefoxRunner::new(self.binary.clone(), None));
-        runner.profile.preferences.insert("marionette.defaultPrefs.enabled",
-                                          PrefValue::PrefBool(true));
-        runner.profile.preferences.insert("marionette.defaultPrefs.port",
-                                          PrefValue::PrefInt(self.port as isize));
-        runner.start();
+        match self.launcher {
+            BrowserLauncher::BinaryLauncher(ref binary) => {
+                let mut runner = try!(FirefoxRunner::new(binary.clone(), None));
+                runner.profile.preferences.insert("marionette.defaultPrefs.enabled",
+                                                  PrefValue::PrefBool(true));
+                runner.profile.preferences.insert("marionette.defaultPrefs.port",
+                                                  PrefValue::PrefInt(self.port as isize));
+                try!(runner.start());
 
-        self.browser = Some(runner);
+                self.browser = Some(runner);
 
-        debug!("Browser started");
+                debug!("Browser started");
+            },
+            BrowserLauncher::None => {}
+        }
 
         Ok(())
     }
