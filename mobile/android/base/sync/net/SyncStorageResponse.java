@@ -12,11 +12,11 @@ import org.mozilla.gecko.background.common.log.Logger;
 import ch.boye.httpclientandroidlib.HttpResponse;
 
 public class SyncStorageResponse extends SyncResponse {
+  private static final String LOG_TAG = "SyncStorageResponse";
 
   // Responses that are actionable get constant status codes.
   public static final String RESPONSE_CLIENT_UPGRADE_REQUIRED = "16";
 
-  private static final String LOG_TAG = "SyncStorageResponse";
   public static HashMap<String, String> SERVER_ERROR_MESSAGES;
   static {
     HashMap<String, String> errors = new HashMap<String, String>();
@@ -60,7 +60,7 @@ public class SyncStorageResponse extends SyncResponse {
 
 
   public SyncStorageResponse(HttpResponse res) {
-    this.response = res;
+    super(res);
   }
 
   public String getErrorMessage() throws IllegalStateException, IOException {
