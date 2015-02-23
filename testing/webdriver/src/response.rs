@@ -18,12 +18,12 @@ impl WebDriverResponse {
     pub fn to_json_string(self) -> String {
         match self {
             WebDriverResponse::NewSession(x) => json::encode(&x),
-            WebDriverResponse::DeleteSession => "".to_string(),
+            WebDriverResponse::DeleteSession => "{}".to_string(),
             WebDriverResponse::WindowSize(x) => json::encode(&x),
             WebDriverResponse::ElementRect(x) => json::encode(&x),
             WebDriverResponse::Cookie(x) => json::encode(&x),
             WebDriverResponse::Generic(x) => json::encode(&x),
-            WebDriverResponse::Void => "".to_string()
+            WebDriverResponse::Void => "{}".to_string()
         }
     }
 }

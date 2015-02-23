@@ -77,9 +77,30 @@ impl WebDriverError {
 
     pub fn http_status(&self) -> u32 {
         match self.status {
-            ErrorStatus::UnknownPath => 404u32,
-            ErrorStatus::UnknownMethod => 405u32,
-            _ => 500u32
+            ErrorStatus::ElementNotSelectable => 400,
+            ErrorStatus::ElementNotVisible => 400,
+            ErrorStatus::InvalidArgument => 400,
+            ErrorStatus::InvalidCookieDomain => 400,
+            ErrorStatus::InvalidElementCoordinates => 400,
+            ErrorStatus::InvalidElementState => 400,
+            ErrorStatus::InvalidSelector => 400,
+            ErrorStatus::InvalidSessionId => 404,
+            ErrorStatus::JavascriptError => 500,
+            ErrorStatus::MoveTargetOutOfBounds => 500,
+            ErrorStatus::NoSuchAlert => 400,
+            ErrorStatus::NoSuchElement => 404,
+            ErrorStatus::NoSuchFrame => 400,
+            ErrorStatus::NoSuchWindow => 400,
+            ErrorStatus::ScriptTimeout => 408,
+            ErrorStatus::SessionNotCreated => 500,
+            ErrorStatus::StaleElementReference => 400,
+            ErrorStatus::Timeout => 408,
+            ErrorStatus::UnableToSetCookie => 500,
+            ErrorStatus::UnexpectedAlertOpen => 500,
+            ErrorStatus::UnknownError => 500,
+            ErrorStatus::UnknownPath => 404,
+            ErrorStatus::UnknownMethod => 405,
+            ErrorStatus::UnsupportedOperation => 500,
         }
     }
 
@@ -92,7 +113,7 @@ impl ToJson for WebDriverError {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
         data.insert("status".to_string(), self.status_code().to_json());
-        data.insert("error".to_string(), self.message.to_json());
+        data.insert("message".to_string(), self.message.to_json());
         Json::Object(data)
     }
 }
