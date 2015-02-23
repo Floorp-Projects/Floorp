@@ -6,11 +6,11 @@ dependencies = [
  "getopts 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.1.1 (git+https://github.com/servo/hyper?branch=old_servo_new_cookies)",
  "log 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "mozprofile 0.0.1",
- "mozrunner 0.0.1",
+ "mozprofile 0.0.1 (git+http://github.com/jgraham/rust_mozprofile.git#a44bb9d227d74c1871b9f544d4b0bbbff6d96db2)",
+ "mozrunner 0.0.1 (git+http://github.com/jgraham/rust_mozrunner.git#b95f7e45e8df5eb5059069186cdfcbc082ee9e10)",
  "rustc-serialize 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "webdriver 0.0.1",
+ "webdriver 0.0.1 (registry+git+https://github.com/jgraham/webdriver-rust.git#1592a9150589ddab44e36aca2b241929de0c6e68)",
 ]
 
 [[package]]
@@ -88,14 +88,14 @@ dependencies = [
 [[package]]
 name = "mozprofile"
 version = "0.0.1"
-source = "git+https://github.com/jgraham/rust_mozprofile.git?master#a44bb9d227d74c1871b9f544d4b0bbbff6d96db2"
+source = "git+http://github.com/jgraham/rust_mozprofile.git#a44bb9d227d74c1871b9f544d4b0bbbff6d96db2"
 
 [[package]]
 name = "mozrunner"
 version = "0.0.1"
-source = "git+https://github.com/jgraham/rust_mozrunner.git?master#b95f7e45e8df5eb5059069186cdfcbc082ee9e10"
+source = "git+http://github.com/jgraham/rust_mozrunner.git#b95f7e45e8df5eb5059069186cdfcbc082ee9e10"
 dependencies = [
- "mozprofile 0.0.1",
+ "mozprofile 0.0.1 (git+http://github.com/jgraham/rust_mozprofile.git#a44bb9d227d74c1871b9f544d4b0bbbff6d96db2)",
 ]
 
 [[package]]
@@ -178,7 +178,7 @@ dependencies = [
 [[package]]
 name = "webdriver"
 version = "0.0.1"
-source = "git+https://github.com/jgraham/webdriver-rust.git?master#2d85826105886a478114a9ea7b2914bef91ba014"
+source = "git+https://github.com/jgraham/webdriver-rust.git#1592a9150589ddab44e36aca2b241929de0c6e68"
 dependencies = [
  "hyper 0.1.1 (git+https://github.com/servo/hyper?branch=old_servo_new_cookies)",
  "log 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
