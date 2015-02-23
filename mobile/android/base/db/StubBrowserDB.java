@@ -48,22 +48,37 @@ class StubReadingListAccessor implements ReadingListAccessor {
     }
 
     @Override
-    public void addReadingListItem(ContentResolver cr, ContentValues values) {
+    public long addReadingListItem(ContentResolver cr, ContentValues values) {
+        return 0L;
+    }
 
+    @Override
+    public long addBasicReadingListItem(ContentResolver cr, String url, String title) {
+        return 0L;
     }
 
     @Override
     public void updateReadingListItem(ContentResolver cr, ContentValues values) {
-
     }
 
     @Override
     public void removeReadingListItemWithURL(ContentResolver cr, String uri) {
-
     }
 
     @Override
     public void registerContentObserver(Context context, ContentObserver observer) {
+    }
+
+    @Override
+    public void markAsRead(ContentResolver cr, long itemID) {
+    }
+
+    @Override
+    public void updateContent(ContentResolver cr, long itemID, String resolvedTitle, String resolvedURL, String excerpt) {
+    }
+
+    @Override
+    public void deleteItem(ContentResolver cr, long itemID) {
 
     }
 }
