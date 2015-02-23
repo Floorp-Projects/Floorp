@@ -69,6 +69,19 @@ MOZTT_FILES = $(patsubst external/moztt/%,$(MOZTTDIR)/%,$(filter external/moztt/
 INSTALL_TARGETS += MOZTT
 endif
 
+ifdef MOZ_VALGRIND
+_VALGRIND_DIR = $(DEPTH)/_valgrind
+GARBAGE_DIRS += $(_VALGRIND_DIR)
+
+_VALGRIND_FILES = \
+		$(topsrcdir)/build/valgrind/cross-architecture.sup \
+		$(topsrcdir)/build/valgrind/i386-redhat-linux-gnu.sup \
+		$(topsrcdir)/build/valgrind/x86_64-redhat-linux-gnu.sup \
+		$(NULL)
+_VALGRIND_DEST = $(_VALGRIND_DIR)
+INSTALL_TARGETS += _VALGRIND
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 TARGET_DEPTH = ..
@@ -86,20 +99,6 @@ endif
 endif
 
 libs:: automation.py
-
-ifdef MOZ_VALGRIND
-_VALGRIND_DIR = $(DEPTH)/_valgrind
-GARBAGE_DIRS += $(_VALGRIND_DIR)
-
-_VALGRIND_FILES = \
-		$(topsrcdir)/build/valgrind/cross-architecture.sup \
-		$(topsrcdir)/build/valgrind/i386-redhat-linux-gnu.sup \
-		$(topsrcdir)/build/valgrind/x86_64-redhat-linux-gnu.sup \
-		$(NULL)
-
-libs:: $(_VALGRIND_FILES)
-	$(INSTALL) $^ $(_VALGRIND_DIR)
-endif
 
 ifdef ENABLE_TESTS
 GARBAGE += $(srcdir)/automationutils.pyc
