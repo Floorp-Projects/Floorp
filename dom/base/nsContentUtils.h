@@ -157,7 +157,7 @@ struct EventNameMapping
 {
   // This holds pointers to nsGkAtoms members, and is therefore safe as a
   // non-owning reference.
-  nsIAtom* MOZ_OWNING_REF mAtom;
+  nsIAtom* MOZ_NON_OWNING_REF mAtom;
   uint32_t mId;
   int32_t  mType;
   mozilla::EventClassID mEventClassID;
