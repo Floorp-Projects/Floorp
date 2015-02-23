@@ -88,10 +88,10 @@ BreakpointActorMap.prototype = {
    * Generate all BreakpointActors that match the given location in
    * this BreakpointActorMap.
    *
-   * @param OriginalLocation location
+   * @param GeneratedLocation location
    *        The location for which matching BreakpointActors should be generated.
    */
-  findActors: function* (location = new OriginalLocation()) {
+  findActors: function* (location = new GeneratedLocation()) {
     function* findKeys(object, key) {
       if (key !== undefined) {
         if (key in object) {
@@ -106,20 +106,11 @@ BreakpointActorMap.prototype = {
     }
 
     let query = {
-      sourceActorID: location.originalSourceActor ? location.originalSourceActor.actorID : undefined,
-      line: location.originalLine,
+      sourceActorID: location.generatedSourceActor ? location.generatedSourceActor.actorID : undefined,
+      line: location.generatedLine,
+      beginColumn: location.generatedColumn ? location.generatedColumn : undefined,
+      endColumn: location.generatedColumn ? location.generatedColumn + 1 : undefined
     };
-
-    // If location contains a line, assume we are searching for a whole line
-    // breakpoint, and set begin/endColumn accordingly. Otherwise, we are
-    // searching for all breakpoints, so begin/endColumn should be left unset.
-    if (location.originalLine) {
-      query.beginColumn = location.originalColumn ? location.originalColumn : 0;
-      query.endColumn = location.originalColumn ? location.originalColumn + 1 : Infinity;
-    } else {
-      query.beginColumn = location.originalColumn ? query.originalColumn : undefined;
-      query.endColumn = location.originalColumn ? query.originalColumn + 1 : undefined;
-    }
 
     for (let sourceActorID of findKeys(this._actors, query.sourceActorID))
     for (let line of findKeys(this._actors[sourceActorID], query.line))
@@ -133,14 +124,14 @@ BreakpointActorMap.prototype = {
    * Return the BreakpointActor at the given location in this
    * BreakpointActorMap.
    *
-   * @param OriginalLocation location
+   * @param GeneratedLocation location
    *        The location for which the BreakpointActor should be returned.
    *
    * @returns BreakpointActor actor
    *          The BreakpointActor at the given location.
    */
-  getActor: function (originalLocation) {
-    for (let actor of this.findActors(originalLocation)) {
+  getActor: function (location) {
+    for (let actor of this.findActors(location)) {
       return actor;
     }
 
@@ -151,19 +142,19 @@ BreakpointActorMap.prototype = {
    * Set the given BreakpointActor to the given location in this
    * BreakpointActorMap.
    *
-   * @param OriginalLocation location
+   * @param GeneratedLocation location
    *        The location to which the given BreakpointActor should be set.
    *
    * @param BreakpointActor actor
    *        The BreakpointActor to be set to the given location.
    */
   setActor: function (location, actor) {
-    let { originalSourceActor, originalLine, originalColumn } = location;
+    let { generatedSourceActor, generatedLine, generatedColumn } = location;
 
-    let sourceActorID = originalSourceActor.actorID;
-    let line = originalLine;
-    let beginColumn = originalColumn ? originalColumn : 0;
-    let endColumn = originalColumn ? originalColumn + 1 : Infinity;
+    let sourceActorID = generatedSourceActor.actorID;
+    let line = generatedLine;
+    let beginColumn = generatedColumn ? generatedColumn : 0;
+    let endColumn = generatedColumn ? generatedColumn + 1 : Infinity;
 
     if (!this._actors[sourceActorID]) {
       this._actors[sourceActorID] = [];
@@ -184,16 +175,16 @@ BreakpointActorMap.prototype = {
    * Delete the BreakpointActor from the given location in this
    * BreakpointActorMap.
    *
-   * @param OriginalLocation location
+   * @param GeneratedLocation location
    *        The location from which the BreakpointActor should be deleted.
    */
   deleteActor: function (location) {
-    let { originalSourceActor, originalLine, originalColumn } = location;
+    let { generatedSourceActor, generatedLine, generatedColumn } = location;
 
-    let sourceActorID = originalSourceActor.actorID;
-    let line = originalLine;
-    let beginColumn = originalColumn ? originalColumn : 0;
-    let endColumn = originalColumn ? originalColumn + 1 : Infinity;
+    let sourceActorID = generatedSourceActor.actorID;
+    let line = generatedLine;
+    let beginColumn = generatedColumn ? generatedColumn : 0;
+    let endColumn = generatedColumn ? generatedColumn + 1 : Infinity;
 
     if (this._actors[sourceActorID]) {
       if (this._actors[sourceActorID][line]) {
@@ -2036,23 +2027,14 @@ ThreadActor.prototype = {
     }
 
     // Set any stored breakpoints.
-    let promises = [];
-    let sourceActor = this.sources.createNonSourceMappedActor(aScript.source);
     let endLine = aScript.startLine + aScript.lineCount - 1;
-    for (let actor of this.breakpointActorMap.findActors()) {
-      promises.push(this.sources.getGeneratedLocation(actor.originalLocation)
-                                .then((generatedLocation) => {
-        // Limit the search to the line numbers contained in the new script.
-        if (generatedLocation.generatedSourceActor.actorID === sourceActor.actorID &&
-            generatedLocation.generatedLine >= aScript.startLine &&
-            generatedLocation.generatedLine <= endLine) {
-          sourceActor.setBreakpointForActor(actor, generatedLocation);
-        }
-      }));
-    }
-
-    if (promises.length > 0) {
-      this.synchronize(Promise.all(promises));
+    let source = this.sources.createNonSourceMappedActor(aScript.source);
+    for (let bpActor of this.breakpointActorMap.findActors({ sourceActor: source })) {
+      // Limit the search to the line numbers contained in the new script.
+      if (bpActor.generatedLocation.generatedLine >= aScript.startLine
+          && bpActor.generatedLocation.generatedLine <= endLine) {
+        source.setBreakpointForActor(bpActor);
+      }
     }
 
     // Go ahead and establish the source actors for this script, which
@@ -2727,21 +2709,21 @@ SourceActor.prototype = {
    * NB: This will override a pre-existing BreakpointActor's condition with
    * the given the location's condition.
    *
-   * @param OriginalLocation originalLocation
+   * @param Object originalLocation
    *        The original location of the breakpoint.
-   * @param GeneratedLocation generatedLocation
+   * @param Object generatedLocation
    *        The generated location of the breakpoint.
    * @returns BreakpointActor
    */
   _getOrCreateBreakpointActor: function (originalLocation, generatedLocation,
                                          condition)
   {
-    let actor = this.breakpointActorMap.getActor(originalLocation);
+    let actor = this.breakpointActorMap.getActor(generatedLocation);
     if (!actor) {
       actor = new BreakpointActor(this.threadActor, originalLocation,
                                   generatedLocation, condition);
       this.threadActor.threadLifetimePool.addActor(actor);
-      this.breakpointActorMap.setActor(originalLocation, actor);
+      this.breakpointActorMap.setActor(generatedLocation, actor);
       return actor;
     }
 
@@ -2850,24 +2832,26 @@ SourceActor.prototype = {
       let actor = this._getOrCreateBreakpointActor(originalLocation,
                                                    generatedLocation,
                                                    condition);
-      return generatedLocation.generatedSourceActor
-                              .setBreakpointForActor(actor, generatedLocation);
+      return generatedLocation.generatedSourceActor.setBreakpointForActor(actor);
     });
   },
 
   /*
-   * Ensure the given BreakpointActor is set as breakpoint handler on all
-   * scripts that match the given generated location.
+   * Set the given BreakpointActor as breakpoint handler on all scripts that
+   * match the given location for which the BreakpointActor is not already a
+   * breakpoint handler.
    *
    * @param BreakpointActor actor
-   *        The BreakpointActor to be set as breakpoint handler for the given
-   *        generated location.
-   * @param GeneratedLocation generatedLocation
-   *        The generated location for which the BreakpointActor should be set
-   *        as breakpoint handler.
+   *        The BreakpointActor to set as breakpoint handler.
    */
-  setBreakpointForActor: function (actor, generatedLocation) {
+  setBreakpointForActor: function (actor) {
     let originalLocation = actor.originalLocation;
+    let generatedLocation = new GeneratedLocation(
+      this,
+      actor.generatedLocation.generatedLine,
+      actor.generatedLocation.generatedColumn
+    );
+
     let { generatedLine, generatedColumn } = generatedLocation;
 
     // Find all scripts matching the given location. We will almost always have
@@ -2935,11 +2919,27 @@ SourceActor.prototype = {
           result.line,
           generatedLocation.generatedColumn
         );
+
+        // Check whether we already have a breakpoint actor for the actual
+        // location. If we do have an existing actor, then the actor we created
+        // above is redundant and must be destroyed. If we do not have an existing
+        // actor, we need to update the breakpoint store with the new location.
+
+        let existingActor = this.breakpointActorMap.getActor(actualGeneratedLocation);
+        if (existingActor) {
+          actor.onDelete();
+          this.breakpointActorMap.deleteActor(generatedLocation);
+          actor = existingActor;
+        } else {
+          actor.generatedLocation = actualGeneratedLocation;
+          this.breakpointActorMap.deleteActor(generatedLocation);
+          this.breakpointActorMap.setActor(actualGeneratedLocation, actor);
+          setBreakpointOnEntryPoints(this.threadActor, actor, result.entryPoints);
+        }
       } else {
+        setBreakpointOnEntryPoints(this.threadActor, actor, result.entryPoints);
         actualGeneratedLocation = generatedLocation;
       }
-
-      setBreakpointOnEntryPoints(this.threadActor, actor, result.entryPoints);
     }
 
     return Promise.resolve().then(() => {
@@ -2953,22 +2953,6 @@ SourceActor.prototype = {
       if (actualOriginalLocation.originalSourceActor.url !== originalLocation.originalSourceActor.url ||
           actualOriginalLocation.originalLine !== originalLocation.originalLine)
       {
-        // Check whether we already have a breakpoint actor for the actual
-        // location. If we do have an existing actor, then the actor we created
-        // above is redundant and must be destroyed. If we do not have an existing
-        // actor, we need to update the breakpoint store with the new location.
-
-        let existingActor = this.breakpointActorMap.getActor(actualOriginalLocation);
-        if (existingActor) {
-          actor.onDelete();
-          this.breakpointActorMap.deleteActor(originalLocation);
-          response.actor = existingActor.actorID;
-        } else {
-          actor.generatedLocation = actualGeneratedLocation;
-          this.breakpointActorMap.deleteActor(originalLocation);
-          this.breakpointActorMap.setActor(actualOriginalLocation, actor);
-        }
-
         response.actualLocation = {
           source: actualOriginalLocation.originalSourceActor.form(),
           line: actualOriginalLocation.originalLine,
@@ -4628,10 +4612,16 @@ FrameActor.prototype.requestTypes = {
  *
  * @param ThreadActor aThreadActor
  *        The parent thread actor that contains this breakpoint.
- * @param OriginalLocation originalLocation
- *        The original location of the breakpoint.
- * @param GeneratedLocation generatedLocation
- *        The generated location of the breakpoint.
+ * @param object aOriginalLocation
+ *        An object with the following properties:
+ *        - sourceActor: A SourceActor that represents the source
+ *        - line: the specified line
+ *        - column: the specified column
+ * @param object aGeneratedLocation
+ *        An object with the following properties:
+ *        - sourceActor: A SourceActor that represents the source
+ *        - line: the specified line
+ *        - column: the specified column
  * @param string aCondition
  *        Optional. A condition which, when false, will cause the breakpoint to
  *        be skipped.
@@ -4733,8 +4723,8 @@ BreakpointActor.prototype = {
    */
   onDelete: function (aRequest) {
     // Remove from the breakpoint store.
-    if (this.originalLocation) {
-      this.threadActor.breakpointActorMap.deleteActor(this.originalLocation);
+    if (this.generatedLocation) {
+      this.threadActor.breakpointActorMap.deleteActor(this.generatedLocation);
     }
     this.threadActor.threadLifetimePool.removeActor(this);
     // Remove the actual breakpoint from the associated scripts.
