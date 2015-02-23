@@ -444,6 +444,28 @@
                    onpopupshowing="if (!this.parentNode._placesView)
                                      new PlacesMenu(event, 'place:folder=TOOLBAR');"/>
       </menu>
+#ifndef XP_MACOSX
+# Disabled on Mac because we can't fill native menupopups asynchronously
+      <menuseparator/>
+      <menu id="menu_readingList"
+            class="menu-iconic bookmark-item"
+            label="&readingList.label;"
+            container="true">
+        <observes element="readingListSidebar" attribute="hidden"/>
+        <menupopup id="readingListPopup"
+#ifndef XP_MACOSX
+                   placespopup="true"
+#endif
+                   onpopupshowing="ReadingListUI.onReadingListPopupShowing(this);">
+          <menuseparator id="viewReadingListSidebarSeparator"/>
+          <menuitem id="viewReadingListSidebar" class="subviewbutton"
+                    oncommand="SidebarUI.toggle('readingListSidebar');"
+                    label="&readingList.showSidebar.label;">
+            <observes element="readingListSidebar" attribute="checked"/>
+          </menuitem>
+        </menupopup>
+      </menu>
+#endif
       <menuseparator id="bookmarksMenuItemsSeparator"/>
       <!-- Bookmarks menu items -->
       <menuseparator builder="end"

@@ -2526,6 +2526,12 @@ notification[value="translation"] {
   -moz-image-region: auto;
 }
 
+#menu_readingList,
+#BMB_readingList {
+  list-style-image: url("chrome://browser/skin/readinglist/readinglist-icon.svg");
+  -moz-image-region: auto;
+}
+
 /* ::::: Keyboard UI Panel ::::: */
 
 .KUI-panel {
