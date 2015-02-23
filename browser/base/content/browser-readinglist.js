@@ -4,6 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
+XPCOMUtils.defineLazyModuleGetter(this, "ReadingList",
+  "resource:///modules/readinglist/ReadingList.jsm");
+
 let ReadingListUI = {
   /**
    * Initialize the ReadingList UI.
@@ -65,4 +68,70 @@ let ReadingListUI = {
       SidebarUI.hide();
     }
   },
+
+  onReadingListPopupShowing(target) {
+    if (target.id == "BMB_readingListPopup") {
+      // Setting this class in the .xul file messes with the way
+      // browser-places.js inserts bookmarks in the menu.
+      document.getElementById("BMB_viewReadingListSidebar")
+              .classList.add("panel-subview-footer");
+    }
+
+    while (!target.firstChild.id)
+      target.firstChild.remove();
+
+    let classList = "menuitem-iconic bookmark-item menuitem-with-favicon";
+    let insertPoint = target.firstChild;
+    if (insertPoint.classList.contains("subviewbutton"))
+      classList += " subviewbutton";
+
+    ReadingList.getItems().then(items => {
+      for (let item of items) {
+        let menuitem = document.createElement("menuitem");
+        menuitem.setAttribute("label", item.title || item.url.spec);
+        menuitem.setAttribute("class", classList);
+
+        let node = menuitem._placesNode = {
+          // Passing the PlacesUtils.nodeIsURI check is required for the
+          // onCommand handler to load our URI.
+          type: Ci.nsINavHistoryResultNode.RESULT_TYPE_URI,
+
+          // makes PlacesUIUtils.canUserRemove return false.
+          // The context menu is broken without this.
+          parent: {type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER},
+
+          // A -1 id makes this item a non-bookmark, which avoids calling
+          // PlacesUtils.annotations.itemHasAnnotation to check if the
+          // bookmark should be opened in the sidebar (this call fails for
+          // readinglist item, and breaks loading our URI).
+          itemId: -1,
+
+          // Used by the tooltip and onCommand handlers.
+          uri: item.url.spec,
+
+          // Used by the tooltip.
+          title: item.title
+        };
+
+        Favicons.getFaviconURLForPage(item.url, uri => {
+          if (uri) {
+            menuitem.setAttribute("image",
+                                  Favicons.getFaviconLinkForIcon(uri).spec);
+          }
+        });
+
+        target.insertBefore(menuitem, insertPoint);
+      }
+
+      if (!items.length) {
+        let menuitem = document.createElement("menuitem");
+        let bundle =
+          Services.strings.createBundle("chrome://browser/locale/places/places.properties");
+        menuitem.setAttribute("label", bundle.GetStringFromName("bookmarksMenuEmptyFolder"));
+        menuitem.setAttribute("class", "bookmark-item");
+        menuitem.setAttribute("disabled", true);
+        target.insertBefore(menuitem, insertPoint);
+      }
+    });
+  }
 };
