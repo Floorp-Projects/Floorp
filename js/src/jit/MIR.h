@@ -1928,41 +1928,32 @@ class MSimdUnaryArith
 // the comparison: all bits are set to 1 if the comparison is true, 0 otherwise.
 class MSimdBinaryComp
   : public MBinaryInstruction,
-    public NoTypePolicy::Data
+    public SimdAllPolicy::Data
 {
   public:
     enum Operation {
-        greaterThan,
-        greaterThanOrEqual,
-        lessThan,
-        lessThanOrEqual,
-        equal,
-        notEqual
+#define NAME_(x) x,
+        COMP_COMMONX4_SIMD_OP(NAME_)
+#undef NAME_
     };
 
-    enum CompareType {
-        CompareInt32x4,
-        CompareFloat32x4
-    };
+    static const char* OperationName(Operation op) {
+        switch (op) {
+#define NAME_(x) case x: return #x;
+        COMP_COMMONX4_SIMD_OP(NAME_)
+#undef NAME_
+        }
+        MOZ_CRASH("unexpected operation");
+    }
 
   private:
     Operation operation_;
-    CompareType compareType_;
 
-    MSimdBinaryComp(MDefinition *left, MDefinition *right, Operation op)
+    MSimdBinaryComp(MDefinition *left, MDefinition *right, Operation op, MIRType opType)
       : MBinaryInstruction(left, right), operation_(op)
     {
-        MOZ_ASSERT(IsSimdType(left->type()));
-        MOZ_ASSERT(left->type() == right->type());
-
-        if (left->type() == MIRType_Int32x4) {
-            compareType_ = CompareInt32x4;
-        } else {
-            MOZ_ASSERT(left->type() == MIRType_Float32x4);
-            compareType_ = CompareFloat32x4;
-        }
-
         setResultType(MIRType_Int32x4);
+        specialization_ = opType;
         setMovable();
         if (op == equal || op == notEqual)
             setCommutative();
@@ -1973,7 +1964,15 @@ class MSimdBinaryComp
     static MSimdBinaryComp *NewAsmJS(TempAllocator &alloc, MDefinition *left, MDefinition *right,
                                      Operation op)
     {
-        return new(alloc) MSimdBinaryComp(left, right, op);
+        MOZ_ASSERT(IsSimdType(left->type()));
+        MOZ_ASSERT(left->type() == right->type());
+        return new(alloc) MSimdBinaryComp(left, right, op, left->type());
+    }
+
+    static MSimdBinaryComp *New(TempAllocator &alloc, MDefinition *left, MDefinition *right,
+                                Operation op, MIRType opType)
+    {
+        return new(alloc) MSimdBinaryComp(left, right, op, opType);
     }
 
     AliasSet getAliasSet() const MOZ_OVERRIDE {
@@ -1981,7 +1980,7 @@ class MSimdBinaryComp
     }
 
     Operation operation() const { return operation_; }
-    CompareType compareType() const { return compareType_; }
+    MIRType specialization() const { return specialization_; }
 
     // Swap the operands and reverse the comparison predicate.
     void reverse() {
@@ -2001,8 +2000,12 @@ class MSimdBinaryComp
     bool congruentTo(const MDefinition *ins) const MOZ_OVERRIDE {
         if (!binaryCongruentTo(ins))
             return false;
-        return operation_ == ins->toSimdBinaryComp()->operation();
+        const MSimdBinaryComp *other = ins->toSimdBinaryComp();
+        return specialization_ == other->specialization() &&
+               operation_ == other->operation();
     }
+
+    void printOpcode(FILE *fp) const MOZ_OVERRIDE;
 
     ALLOW_CLONE(MSimdBinaryComp)
 };
