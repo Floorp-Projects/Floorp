@@ -248,10 +248,6 @@ body {
   border-bottom: 1px solid #c1c1c1;
 }
 
-.button[hidden] {
-  display: none;
-}
-
 .dropdown {
   text-align: center;
   list-style: none;
