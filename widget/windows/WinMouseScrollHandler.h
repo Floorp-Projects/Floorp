@@ -295,8 +295,8 @@ private:
 
   private:
     bool mInitialized;
-    int32_t mScrollLines;
-    int32_t mScrollChars;
+    uint32_t mScrollLines;
+    uint32_t mScrollChars;
   };
 
   SystemSettings mSystemSettings;
