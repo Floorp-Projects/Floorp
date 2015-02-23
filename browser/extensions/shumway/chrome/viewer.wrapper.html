@@ -36,11 +36,23 @@ limitations under the License.
       line-height: 0;
       border: 0px none;
     }
+
+    body.remoteStopped {
+      background-color: red;
+    }
+    body.remoteDebug {
+      background-color: green;
+    }
+    body.remoteReload {
+      background-color: yellow;
+    }
   </style>
 </head>
 
 <body>
   <iframe id="viewer" src="resource://shumway/web/viewer.html" width="100%" height="100%" mozbrowser remote="true"></iframe>
+  <script src="chrome://shumway/content/pingpong.js"></script>
+  <script src="chrome://shumway/content/viewerDebugger.js"></script>
   <script src="chrome://shumway/content/viewerWrapper.js"></script>
 </body>
 </html>
