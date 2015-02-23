@@ -617,7 +617,13 @@ class AutoDetectInvalidation
     void setReturnOverride();
 
   public:
-    AutoDetectInvalidation(JSContext *cx, MutableHandleValue rval, IonScript *ionScript = nullptr);
+    AutoDetectInvalidation(JSContext *cx, MutableHandleValue rval, IonScript *ionScript)
+      : cx_(cx), ionScript_(ionScript), rval_(rval), disabled_(false)
+    {
+        MOZ_ASSERT(ionScript);
+    }
+
+    AutoDetectInvalidation(JSContext *cx, MutableHandleValue rval);
 
     void disable() {
         MOZ_ASSERT(!disabled_);
