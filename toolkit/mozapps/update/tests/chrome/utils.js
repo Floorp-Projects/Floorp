@@ -167,6 +167,8 @@ const TEST_ADDONS = [ "appdisabled_1", "appdisabled_2",
                       "updateversion_1", "updateversion_2",
                       "userdisabled_1", "userdisabled_2", "hotfix" ];
 
+const LOG_FUNCTION = info;
+
 var gURLData = URL_HOST + "/" + REL_PATH_DATA + "/";
 
 var gTestTimeout = 240000; // 4 minutes
@@ -660,10 +662,11 @@ function waitForRemoteContentLoaded(aEvent) {
   // expected or isn't the event's originalTarget.
   if (gRemoteContentState != gTest.expectedRemoteContentState ||
       aEvent.originalTarget != gRemoteContent) {
-    debugDump("returning early\n" +
-              "gRemoteContentState: " + gRemoteContentState + "\n" +
+    debugDump("returning early. " +
+              "gRemoteContentState: " +
+              gRemoteContentState + ", " +
               "expectedRemoteContentState: " +
-              gTest.expectedRemoteContentState + "\n" +
+              gTest.expectedRemoteContentState + ", " +
               "aEvent.originalTarget.nodeName: " +
               aEvent.originalTarget.nodeName);
     return true;
@@ -955,9 +958,8 @@ function resetFiles() {
       removeDirRecursive(updatedDir);
     }
     catch (e) {
-      dump("Unable to remove directory\n" +
-           "path: " + updatedDir.path + "\n" +
-           "Exception: " + e + "\n");
+      logTestInfo("Unable to remove directory. Path: " + updatedDir.path +
+                  ", Exception: " + e);
     }
   }
 }
