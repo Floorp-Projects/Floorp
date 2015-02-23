@@ -250,7 +250,7 @@ class GeckoInputConnection
     @Override
     public synchronized boolean beginBatchEdit() {
         mBatchEditCount++;
-        mEditableClient.setUpdateGecko(false);
+        mEditableClient.setUpdateGecko(false, false);
         return true;
     }
 
@@ -259,6 +259,10 @@ class GeckoInputConnection
         if (mBatchEditCount > 0) {
             mBatchEditCount--;
             if (mBatchEditCount == 0) {
+                // Force Gecko update for cancelled auto-correction of single-
+                // character words to prevent character duplication. (bug 1133802)
+                boolean forceUpdate = !mBatchTextChanged && !mBatchSelectionChanged;
+
                 if (mBatchTextChanged) {
                     notifyTextChange();
                     mBatchTextChanged = false;
@@ -269,7 +273,7 @@ class GeckoInputConnection
                                            Selection.getSelectionEnd(editable));
                     mBatchSelectionChanged = false;
                 }
-                mEditableClient.setUpdateGecko(true);
+                mEditableClient.setUpdateGecko(true, forceUpdate);
             }
         } else {
             Log.w(LOGTAG, "endBatchEdit() called, but mBatchEditCount == 0?!");
