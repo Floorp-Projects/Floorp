@@ -222,13 +222,9 @@ public:
 
     mWriter.BeginObject();
       mWriter.NameValue("keyedBy", keyedBy);
-      if (name) {
-        mWriter.NameValue("name", name);
-      }
+      mWriter.NameValue("name", name);
       if (location) {
         mWriter.NameValue("location", location);
-      }
-      if (lineno != UINT32_MAX) {
         mWriter.NameValue("line", lineno);
       }
     mWriter.EndObject();
