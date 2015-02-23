@@ -18,6 +18,7 @@ import org.mozilla.gecko.tests.components.ToolbarComponent;
 import org.mozilla.gecko.tests.helpers.HelperInitializer;
 
 import android.content.Intent;
+import android.content.res.Resources;
 import android.text.TextUtils;
 
 import com.jayway.android.robotium.solo.Solo;
