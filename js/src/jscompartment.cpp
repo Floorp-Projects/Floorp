@@ -495,14 +495,14 @@ JSCompartment::wrap(JSContext *cx, MutableHandle<PropDesc> desc)
 }
 
 /*
- * This method marks pointers that cross compartment boundaries. It should be
- * called only for per-compartment GCs, since full GCs naturally follow pointers
- * across compartments.
+ * This method marks pointers that cross compartment boundaries. It is called in
+ * per-zone GCs (since full GCs naturally follow pointers across compartments)
+ * and when compacting to update cross-compartment pointers.
  */
 void
 JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
 {
-    MOZ_ASSERT(!zone()->isCollecting());
+    MOZ_ASSERT(!zone()->isCollecting() || trc->runtime()->isHeapCompacting());
 
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         Value v = e.front().value();
