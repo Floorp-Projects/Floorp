@@ -809,11 +809,19 @@ class IonBuilder
     // SIMD intrinsics and natives.
     InliningStatus inlineConstructSimdObject(CallInfo &callInfo, SimdTypeDescr *target);
 
+    //  helpers
+    bool checkInlineSimd(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type,
+                         unsigned numArgs, InlineTypedObject **templateObj);
+    IonBuilder::InliningStatus boxSimd(CallInfo &callInfo, MInstruction *ins,
+                                       InlineTypedObject *templateObj);
+
     template <typename T>
     InliningStatus inlineBinarySimd(CallInfo &callInfo, JSNative native,
                                     typename T::Operation op, SimdTypeDescr::Type type);
     InliningStatus inlineUnarySimd(CallInfo &callInfo, JSNative native,
                                    MSimdUnaryArith::Operation op, SimdTypeDescr::Type type);
+    InliningStatus inlineSimdConvert(CallInfo &callInfo, JSNative native, bool isCast,
+                                     SimdTypeDescr::Type from, SimdTypeDescr::Type to);
 
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo &callInfo);
