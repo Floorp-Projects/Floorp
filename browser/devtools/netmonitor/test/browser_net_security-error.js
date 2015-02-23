@@ -37,7 +37,7 @@ add_task(function* () {
   is(errorbox.hidden, false, "Error box is visble.");
   is(infobox.hidden, true, "Information box is hidden.");
 
-  isnot(errormsg.textContent, "", "Error message is not empty.");
+  isnot(errormsg.value, "", "Error message is not empty.");
 
   yield teardown(monitor);
 

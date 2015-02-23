@@ -579,10 +579,6 @@ label.requests-menu-status-code {
   overflow: auto;
 }
 
-#security-error-message {
-  white-space: pre-wrap;
-}
-
 .security-warning-icon {
   background-image: url(alerticon-warning.png);
   background-size: 13px 12px;
