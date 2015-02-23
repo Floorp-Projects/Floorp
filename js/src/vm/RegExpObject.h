@@ -376,6 +376,14 @@ class RegExpObject : public NativeObject
     createNoStatics(ExclusiveContext *cx, HandleAtom atom, RegExpFlag flags,
                     frontend::TokenStream *ts, LifoAlloc &alloc);
 
+    /*
+     * Compute the initial shape to associate with fresh RegExp objects,
+     * encoding their initial properties. Return the shape after
+     * changing |obj|'s last property to it.
+     */
+    static Shape *
+    assignInitialShape(ExclusiveContext *cx, Handle<RegExpObject*> obj);
+
     /* Accessors. */
 
     static unsigned lastIndexSlot() { return LAST_INDEX_SLOT; }
@@ -445,19 +453,6 @@ class RegExpObject : public NativeObject
 
   private:
     friend class RegExpObjectBuilder;
-
-    /* For access to assignInitialShape. */
-    friend bool
-    EmptyShape::ensureInitialCustomShape<RegExpObject>(ExclusiveContext *cx,
-                                                       Handle<RegExpObject*> obj);
-
-    /*
-     * Compute the initial shape to associate with fresh RegExp objects,
-     * encoding their initial properties. Return the shape after
-     * changing |obj|'s last property to it.
-     */
-    static Shape *
-    assignInitialShape(ExclusiveContext *cx, Handle<RegExpObject*> obj);
 
     bool init(ExclusiveContext *cx, HandleAtom source, RegExpFlag flags);
 
