@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_test import MarionetteTestCase, skip_if_b2g, skip_if_e10s
-from errors import MarionetteException, TimeoutException
+from marionette_driver.errors import MarionetteException, TimeoutException
 
 class TestNavigate(MarionetteTestCase):
     def test_navigate(self):

@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_test import MarionetteTestCase, skip_if_e10s
-from errors import NoAlertPresentException, ElementNotVisibleException
-from marionette import Alert
-from wait import Wait
+from marionette_driver.errors import NoAlertPresentException, ElementNotVisibleException
+from marionette_driver.marionette import Alert
+from marionette_driver.wait import Wait
 
 class TestTabModals(MarionetteTestCase):
 

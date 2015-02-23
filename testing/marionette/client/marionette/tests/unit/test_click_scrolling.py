@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from by import By
-from errors import MoveTargetOutOfBoundsException
+from marionette_driver.by import By
+from marionette_driver.errors import MoveTargetOutOfBoundsException
 from marionette_test import MarionetteTestCase, skip
 
 
