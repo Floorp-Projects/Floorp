@@ -60,7 +60,7 @@
             android:key="sync_now"
             android:defaultValue=""
             android:persistent="false"
-            android:title="Sync now"
+            android:title="@string/fxaccount_status_sync_now"
             android:summary="" />
 
         <CheckBoxPreference
