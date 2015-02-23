@@ -415,7 +415,33 @@ public class BrowserContract {
         public static final String[] DEFAULT_PROJECTION = new String[] { _ID, URL, TITLE, EXCERPT, WORD_COUNT };
 
         // Minimum fields required to create a reading list item.
-        public static final String[] REQUIRED_FIELDS = { Bookmarks.URL, Bookmarks.TITLE };
+        public static final String[] REQUIRED_FIELDS = { ReadingListItems.URL, ReadingListItems.TITLE };
+
+        // All fields that might be mapped from the DB into a record object.
+        public static final String[] ALL_FIELDS = {
+                EXCERPT,
+                CLIENT_LAST_MODIFIED,
+                GUID,
+                SERVER_LAST_MODIFIED,
+                SERVER_STORED_ON,
+                ADDED_ON,
+                MARKED_READ_ON,
+                IS_DELETED,
+                IS_ARCHIVED,
+                IS_UNREAD,
+                IS_ARTICLE,
+                IS_FAVORITE,
+                RESOLVED_URL,
+                RESOLVED_TITLE,
+                ADDED_BY,
+                MARKED_READ_BY,
+                WORD_COUNT,
+                READ_POSITION,
+                CONTENT_STATUS,
+
+                SYNC_STATUS,
+                SYNC_CHANGE_FLAGS,
+        };
 
         public static final String TABLE_NAME = "reading_list";
     }
