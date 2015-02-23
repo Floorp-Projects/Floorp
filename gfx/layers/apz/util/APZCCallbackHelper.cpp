@@ -244,7 +244,7 @@ already_AddRefed<nsIDOMWindowUtils>
 APZCCallbackHelper::GetDOMWindowUtils(const nsIContent* aContent)
 {
     nsCOMPtr<nsIDOMWindowUtils> utils;
-    nsIDocument* doc = aContent->GetCurrentDoc();
+    nsIDocument* doc = aContent->GetComposedDoc();
     if (doc) {
         utils = GetDOMWindowUtils(doc);
     }
