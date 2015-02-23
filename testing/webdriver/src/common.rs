@@ -1,14 +1,14 @@
-use core::num::ToPrimitive;
-use rustc_serialize::json::{Json, ToJson, ParserError};
+use rustc_serialize::json::{Json, ToJson};
 use rustc_serialize::{Encodable, Encoder};
 use std::collections::BTreeMap;
 use std::error::{Error, FromError};
+use std::num::ToPrimitive;
 
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
 
 static ELEMENT_KEY: &'static str = "element-6066-11e4-a52e-4f735466cecf";
 
-#[derive(RustcEncodable, PartialEq, Show)]
+#[derive(RustcEncodable, PartialEq, Debug)]
 pub struct Date(u64);
 
 impl Date {
@@ -24,7 +24,7 @@ impl ToJson for Date {
     }
 }
 
-#[derive(PartialEq, Clone, Show)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Nullable<T: ToJson> {
     Value(T),
     Null

@@ -81,7 +81,7 @@ impl WebDriverMessage {
                     }
                 },
                 Err(_) => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                         format!("Failed to decode request body as json: {}", body).as_slice()))
+                                                         &format!("Failed to decode request body as json: {}", body)[..]))
             }
         } else {
             Json::Null

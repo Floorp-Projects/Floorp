@@ -1,8 +1,9 @@
 use rustc_serialize::json::{Json, ToJson, ParserError};
 use std::collections::BTreeMap;
 use std::error::{Error, FromError};
+use std::fmt;
 
-#[derive(PartialEq, Show)]
+#[derive(PartialEq, Debug)]
 pub enum ErrorStatus {
     ElementNotSelectable,
     ElementNotVisible,
@@ -32,10 +33,16 @@ pub enum ErrorStatus {
 
 pub type WebDriverResult<T> = Result<T, WebDriverError>;
 
-#[derive(Show)]
+#[derive(Debug)]
 pub struct WebDriverError {
     pub status: ErrorStatus,
     pub message: String
+}
+
+impl fmt::Display for WebDriverError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.message.fmt(f)
+    }
 }
 
 impl WebDriverError {
@@ -123,10 +130,6 @@ impl Error for WebDriverError {
         self.status_code()
     }
 
-    fn detail(&self) -> Option<String> {
-        Some(self.message.clone())
-    }
-
     fn cause(&self) -> Option<&Error> {
         None
     }
@@ -135,6 +138,6 @@ impl Error for WebDriverError {
 impl FromError<ParserError> for WebDriverError {
     fn from_error(err: ParserError) -> WebDriverError {
         let msg = format!("{:?}", err);
-        WebDriverError::new(ErrorStatus::UnknownError, msg.as_slice())
+        WebDriverError::new(ErrorStatus::UnknownError, &msg[..])
     }
 }

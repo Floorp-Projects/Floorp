@@ -1,10 +1,10 @@
-//Until it's clear what the unstable things are replaced by
-#![allow(unstable)]
+#![feature(old_io)]
+#![feature(core)]
 #![allow(non_snake_case)]
 
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 extern crate "rustc-serialize" as rustc_serialize;
-extern crate core;
 extern crate hyper;
 extern crate regex;
 
