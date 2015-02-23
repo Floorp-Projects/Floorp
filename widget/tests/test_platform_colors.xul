@@ -55,7 +55,7 @@ var colors = {
   "-moz-buttondefault": ["rgb(220, 220, 220)"],
   "-moz-buttonhoverface": ["rgb(240, 240, 240)"],
   "-moz-buttonhovertext": ["rgb(0, 0, 0)"],
-  "-moz-cellhighlight": ["rgb(212, 212, 212)"],
+  "-moz-cellhighlight": ["rgb(212, 212, 212)", "rgb(220, 220, 220)"],
   "-moz-cellhighlighttext": ["rgb(0, 0, 0)"],
   "-moz-eventreerow": ["rgb(255, 255, 255)"],
   "-moz-field": ["rgb(255, 255, 255)"],

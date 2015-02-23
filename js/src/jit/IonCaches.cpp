@@ -471,6 +471,20 @@ IonCache::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
 {
 }
 
+static void *
+GetReturnAddressToIonCode(JSContext *cx)
+{
+    JitFrameIterator iter(cx);
+    MOZ_ASSERT(iter.type() == JitFrame_Exit);
+
+    void *returnAddr = iter.returnAddress();
+#ifdef DEBUG
+    ++iter;
+    MOZ_ASSERT(iter.isIonJS());
+#endif
+    return returnAddr;
+}
+
 static void
 GeneratePrototypeGuards(JSContext *cx, IonScript *ion, MacroAssembler &masm, JSObject *obj,
                         JSObject *holder, Register objectReg, Register scratchReg,
@@ -1243,7 +1257,7 @@ IsCacheableArrayLength(JSContext *cx, HandleObject obj, HandlePropertyName name,
 
 template <class GetPropCache>
 static GetPropertyIC::NativeGetPropCacheability
-CanAttachNativeGetProp(typename GetPropCache::Context cx, const GetPropCache &cache,
+CanAttachNativeGetProp(JSContext *cx, const GetPropCache &cache,
                        HandleObject obj, HandlePropertyName name,
                        MutableHandleNativeObject holder, MutableHandleShape shape,
                        bool skipArrayLen = false)
@@ -1311,7 +1325,7 @@ CanAttachNativeGetProp(typename GetPropCache::Context cx, const GetPropCache &ca
 }
 
 bool
-GetPropertyIC::allowArrayLength(Context cx, HandleObject obj) const
+GetPropertyIC::allowArrayLength(JSContext *cx, HandleObject obj) const
 {
     if (!idempotent())
         return true;
@@ -1814,8 +1828,7 @@ GetPropertyIC::tryAttachArgumentsLength(JSContext *cx, HandleScript outerScript,
 
 bool
 GetPropertyIC::tryAttachStub(JSContext *cx, HandleScript outerScript, IonScript *ion,
-                             HandleObject obj, HandlePropertyName name,
-                             void *returnAddr, bool *emitted)
+                             HandleObject obj, HandlePropertyName name, bool *emitted)
 {
     MOZ_ASSERT(!*emitted);
 
@@ -1824,6 +1837,8 @@ GetPropertyIC::tryAttachStub(JSContext *cx, HandleScript outerScript, IonScript 
 
     if (!*emitted && !tryAttachArgumentsLength(cx, outerScript, ion, obj, name, emitted))
         return false;
+
+    void *returnAddr = GetReturnAddressToIonCode(cx);
 
     if (!*emitted && !tryAttachProxy(cx, outerScript, ion, obj, name, returnAddr, emitted))
         return false;
@@ -1844,11 +1859,9 @@ GetPropertyIC::tryAttachStub(JSContext *cx, HandleScript outerScript, IonScript 
 }
 
 /* static */ bool
-GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
+GetPropertyIC::update(JSContext *cx, HandleScript outerScript, size_t cacheIndex,
                       HandleObject obj, MutableHandleValue vp)
 {
-    void *returnAddr;
-    RootedScript outerScript(cx, GetTopJitJSScript(cx, &returnAddr));
     IonScript *ion = outerScript->ionScript();
 
     GetPropertyIC &cache = ion->getCache(cacheIndex).toGetProperty();
@@ -1865,7 +1878,7 @@ GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
     // limit. Once we can make calls from within generated stubs, a new call
     // stub will be generated instead and the previous stubs unlinked.
     bool emitted = false;
-    if (!cache.tryAttachStub(cx, outerScript, ion, obj, name, returnAddr, &emitted))
+    if (!cache.tryAttachStub(cx, outerScript, ion, obj, name, &emitted))
         return false;
 
     if (cache.idempotent() && !emitted) {
@@ -2933,12 +2946,10 @@ CanAttachSetUnboxed(JSContext *cx, HandleObject obj, HandleId id, ConstantOrRegi
 }
 
 bool
-SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
+SetPropertyIC::update(JSContext *cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
                       HandleValue value)
 {
-    void *returnAddr;
-    RootedScript script(cx, GetTopJitJSScript(cx, &returnAddr));
-    IonScript *ion = script->ionScript();
+    IonScript *ion = outerScript->ionScript();
     SetPropertyIC &cache = ion->getCache(cacheIndex).toSetProperty();
     RootedPropertyName name(cx, cache.name());
     RootedId id(cx, AtomToId(name));
@@ -2953,26 +2964,27 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     bool addedSetterStub = false;
     if (cache.canAttachStub() && !obj->watched()) {
         if (!addedSetterStub && obj->is<ProxyObject>()) {
+            void *returnAddr = GetReturnAddressToIonCode(cx);
             if (IsCacheableDOMProxy(obj)) {
                 DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, obj, id);
                 if (shadows == ShadowCheckFailed)
                     return false;
                 if (shadows == Shadows) {
-                    if (!cache.attachDOMProxyShadowed(cx, script, ion, obj, returnAddr))
+                    if (!cache.attachDOMProxyShadowed(cx, outerScript, ion, obj, returnAddr))
                         return false;
                     addedSetterStub = true;
                 } else {
                     MOZ_ASSERT(shadows == DoesntShadow || shadows == DoesntShadowUnique);
                     if (shadows == DoesntShadowUnique)
                         cache.reset();
-                    if (!cache.attachDOMProxyUnshadowed(cx, script, ion, obj, returnAddr))
+                    if (!cache.attachDOMProxyUnshadowed(cx, outerScript, ion, obj, returnAddr))
                         return false;
                     addedSetterStub = true;
                 }
             }
 
             if (!addedSetterStub && !cache.hasGenericProxyStub()) {
-                if (!cache.attachGenericProxy(cx, script, ion, returnAddr))
+                if (!cache.attachGenericProxy(cx, outerScript, ion, returnAddr))
                     return false;
                 addedSetterStub = true;
             }
@@ -2986,13 +2998,14 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
 
         if (!addedSetterStub && canCache == CanAttachSetSlot) {
             RootedNativeObject nobj(cx, &obj->as<NativeObject>());
-            if (!cache.attachSetSlot(cx, script, ion, nobj, shape, checkTypeset))
+            if (!cache.attachSetSlot(cx, outerScript, ion, nobj, shape, checkTypeset))
                 return false;
             addedSetterStub = true;
         }
 
         if (!addedSetterStub && canCache == CanAttachCallSetter) {
-            if (!cache.attachCallSetter(cx, script, ion, obj, holder, shape, returnAddr))
+            void *returnAddr = GetReturnAddressToIonCode(cx);
+            if (!cache.attachCallSetter(cx, outerScript, ion, obj, holder, shape, returnAddr))
                 return false;
             addedSetterStub = true;
         }
@@ -3004,7 +3017,7 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
                                                     cache.needsTypeBarrier(),
                                                     &checkTypeset, &unboxedOffset, &unboxedType))
         {
-            if (!cache.attachSetUnboxed(cx, script, ion, obj, id, unboxedOffset, unboxedType,
+            if (!cache.attachSetUnboxed(cx, outerScript, ion, obj, id, unboxedOffset, unboxedType,
                                         checkTypeset))
             {
                 return false;
@@ -3028,7 +3041,7 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
                                 &checkTypeset))
     {
         RootedNativeObject nobj(cx, &obj->as<NativeObject>());
-        if (!cache.attachAddSlot(cx, script, ion, nobj, oldShape, oldGroup, checkTypeset))
+        if (!cache.attachAddSlot(cx, outerScript, ion, nobj, oldShape, oldGroup, checkTypeset))
             return false;
         addedSetterStub = true;
     }
@@ -3074,8 +3087,7 @@ EqualStringsHelper(JSString *str1, JSString *str2)
 
 bool
 GetElementIC::attachGetProp(JSContext *cx, HandleScript outerScript, IonScript *ion,
-                            HandleObject obj, const Value &idval, HandlePropertyName name,
-                            void *returnAddr)
+                            HandleObject obj, const Value &idval, HandlePropertyName name)
 {
     MOZ_ASSERT(index().reg().hasValue());
 
@@ -3155,7 +3167,9 @@ GetElementIC::attachGetProp(JSContext *cx, HandleScript outerScript, IonScript *
                          &failures);
     } else {
         MOZ_ASSERT(canCache == GetPropertyIC::CanAttachCallGetter);
+
         // Set the frame for bailout safety of the OOL call.
+        void *returnAddr = GetReturnAddressToIonCode(cx);
         if (!GenerateCallGetter(cx, ion, masm, attacher, obj, name, holder, shape, liveRegs_,
                                 object(), output(), returnAddr, &failures))
         {
@@ -3506,11 +3520,9 @@ GetElementIC::attachArgumentsElement(JSContext *cx, HandleScript outerScript, Io
 }
 
 bool
-GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
+GetElementIC::update(JSContext *cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
                      HandleValue idval, MutableHandleValue res)
 {
-    void *returnAddr;
-    RootedScript outerScript(cx, GetTopJitJSScript(cx, &returnAddr));
     IonScript *ion = outerScript->ionScript();
     GetElementIC &cache = ion->getCache(cacheIndex).toGetElement();
     RootedScript script(cx);
@@ -3547,7 +3559,7 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
         }
         if (!attachedStub && cache.monitoredResult() && canAttachGetProp(obj, idval, id)) {
             RootedPropertyName name(cx, JSID_TO_ATOM(id)->asPropertyName());
-            if (!cache.attachGetProp(cx, outerScript, ion, obj, idval, name, returnAddr))
+            if (!cache.attachGetProp(cx, outerScript, ion, obj, idval, name))
                 return false;
             attachedStub = true;
         }
@@ -3897,10 +3909,9 @@ SetElementIC::attachTypedArrayElement(JSContext *cx, HandleScript outerScript, I
 }
 
 bool
-SetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
+SetElementIC::update(JSContext *cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
                      HandleValue idval, HandleValue value)
 {
-    RootedScript outerScript(cx, GetTopJitJSScript(cx));
     IonScript *ion = outerScript->ionScript();
     SetElementIC &cache = ion->getCache(cacheIndex).toSetElement();
 
@@ -4066,9 +4077,9 @@ IsCacheableNonGlobalScopeChain(JSObject *scopeChain, JSObject *holder)
 }
 
 JSObject *
-BindNameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain)
+BindNameIC::update(JSContext *cx, HandleScript outerScript, size_t cacheIndex,
+                   HandleObject scopeChain)
 {
-    RootedScript outerScript(cx, GetTopJitJSScript(cx));
     IonScript *ion = outerScript->ionScript();
     BindNameIC &cache = ion->getCache(cacheIndex).toBindName();
     HandlePropertyName name = cache.name();
@@ -4216,11 +4227,9 @@ IsCacheableNameCallGetter(HandleObject scopeChain, HandleObject obj, HandleObjec
 }
 
 bool
-NameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
+NameIC::update(JSContext *cx, HandleScript outerScript, size_t cacheIndex, HandleObject scopeChain,
                MutableHandleValue vp)
 {
-    void *returnAddr;
-    RootedScript outerScript(cx, GetTopJitJSScript(cx, &returnAddr));
     IonScript *ion = outerScript->ionScript();
 
     NameIC &cache = ion->getCache(cacheIndex).toName();
@@ -4253,8 +4262,12 @@ NameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
                 return false;
             }
         } else if (IsCacheableNameCallGetter(scopeChain, obj, holder, shape)) {
-            if (!cache.attachCallGetter(cx, outerScript, ion, scopeChain, obj, holder, shape, returnAddr))
+            void *returnAddr = GetReturnAddressToIonCode(cx);
+            if (!cache.attachCallGetter(cx, outerScript, ion, scopeChain, obj, holder, shape,
+                                        returnAddr))
+            {
                 return false;
+            }
         }
     }
 
