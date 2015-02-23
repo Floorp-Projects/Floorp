@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+'use strict';
+
 const INSTALL_LOCALE = "@AB_CD@";
 const MOZ_APP_NAME = "@MOZ_APP_NAME@";
 const BIN_SUFFIX = "@BIN_SUFFIX@";
@@ -139,6 +141,8 @@ const PIPE_TO_NULL = ">nul";
 #else
 const PIPE_TO_NULL = "> /dev/null 2>&1";
 #endif
+
+const LOG_FUNCTION = do_print;
 
 // This default value will be overridden when using the http server.
 var gURLData = URL_HOST + "/";
@@ -1417,41 +1421,46 @@ function getMockUpdRootD() {
 }
 #endif
 
-if (IS_WIN) {
-  const kLockFileName = "updated.update_in_progress.lock";
-  /**
-   * Helper function for locking a directory on Windows.
-   *
-   * @param   aDir
-   *          The nsIFile for the directory to lock.
-   */
-  function lockDirectory(aDir) {
-    var file = aDir.clone();
-    file.append(kLockFileName);
-    file.create(file.NORMAL_FILE_TYPE, 0o444);
-    file.QueryInterface(AUS_Ci.nsILocalFileWin);
-    file.fileAttributesWin |= file.WFA_READONLY;
-    file.fileAttributesWin &= ~file.WFA_READWRITE;
-    logTestInfo("testing the successful creation of the lock file");
-    do_check_true(file.exists());
-    do_check_false(file.isWritable());
+const kLockFileName = "updated.update_in_progress.lock";
+/**
+ * Helper function for locking a directory on Windows.
+ *
+ * @param   aDir
+ *          The nsIFile for the directory to lock.
+ */
+function lockDirectory(aDir) {
+  if (!IS_WIN) {
+    do_throw("Windows only function called by a different platform!");
   }
-  /**
-   * Helper function for unlocking a directory on Windows.
-   *
-   * @param   aDir
-   *          The nsIFile for the directory to unlock.
-   */
-  function unlockDirectory(aDir) {
-    var file = aDir.clone();
-    file.append(kLockFileName);
-    file.QueryInterface(AUS_Ci.nsILocalFileWin);
-    file.fileAttributesWin |= file.WFA_READWRITE;
-    file.fileAttributesWin &= ~file.WFA_READONLY;
-    logTestInfo("removing and testing the successful removal of the lock file");
-    file.remove(false);
-    do_check_false(file.exists());
+
+  let file = aDir.clone();
+  file.append(kLockFileName);
+  file.create(file.NORMAL_FILE_TYPE, 0o444);
+  file.QueryInterface(AUS_Ci.nsILocalFileWin);
+  file.fileAttributesWin |= file.WFA_READONLY;
+  file.fileAttributesWin &= ~file.WFA_READWRITE;
+  logTestInfo("testing the successful creation of the lock file");
+  do_check_true(file.exists());
+  do_check_false(file.isWritable());
+}
+/**
+ * Helper function for unlocking a directory on Windows.
+ *
+ * @param   aDir
+ *          The nsIFile for the directory to unlock.
+ */
+function unlockDirectory(aDir) {
+  if (!IS_WIN) {
+    do_throw("Windows only function called by a different platform!");
   }
+  let file = aDir.clone();
+  file.append(kLockFileName);
+  file.QueryInterface(AUS_Ci.nsILocalFileWin);
+  file.fileAttributesWin |= file.WFA_READWRITE;
+  file.fileAttributesWin &= ~file.WFA_READONLY;
+  logTestInfo("removing and testing the successful removal of the lock file");
+  file.remove(false);
+  do_check_false(file.exists());
 }
 
 /**
@@ -3229,7 +3238,7 @@ function start_httpserver() {
 
   if (!dir.isDirectory()) {
     do_throw("A file instead of a directory was specified for HttpServer " +
-             "registerDirectory! Path: " + dir.path + "\n");
+             "registerDirectory! Path: " + dir.path);
   }
 
   AUS_Cu.import("resource://testing-common/httpd.js");
@@ -3639,7 +3648,7 @@ function setEnvironment() {
   env.set("XPCOM_DEBUG_BREAK", "warn");
 
   if (gStageUpdate) {
-    logTestInfo("setting the MOZ_UPDATE_STAGING environment variable to 1\n");
+    logTestInfo("setting the MOZ_UPDATE_STAGING environment variable to 1");
     env.set("MOZ_UPDATE_STAGING", "1");
   }
 
@@ -3705,7 +3714,7 @@ function resetEnvironment() {
   }
 
   if (gStageUpdate) {
-    logTestInfo("removing the MOZ_UPDATE_STAGING environment variable\n");
+    logTestInfo("removing the MOZ_UPDATE_STAGING environment variable");
     env.set("MOZ_UPDATE_STAGING", "");
   }
 
