@@ -14,8 +14,6 @@ function run_test() {
   // The mock XMLHttpRequest is MUCH faster
   overrideXHR(callHandleEvent);
   standardInit();
-  // The HTTP server is only used for the mar file downloads which is slow
-  start_httpserver();
 
   let registrar = Components.manager.QueryInterface(AUS_Ci.nsIComponentRegistrar);
   registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
