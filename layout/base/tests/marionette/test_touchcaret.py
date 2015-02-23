@@ -3,10 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from by import By
-from marionette import Actions
+from marionette_driver.by import By
+from marionette_driver.marionette import Actions
+from marionette_driver.selection import SelectionManager
 from marionette_test import MarionetteTestCase
-from selection import SelectionManager
 
 
 class TouchCaretTest(MarionetteTestCase):
