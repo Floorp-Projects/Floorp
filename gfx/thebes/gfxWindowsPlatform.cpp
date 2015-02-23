@@ -18,6 +18,7 @@
 #include "mozilla/WindowsVersion.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
+#include "mozilla/Telemetry.h"
 
 #include "nsIWindowsRegKey.h"
 #include "nsIFile.h"
@@ -474,7 +475,9 @@ gfxWindowsPlatform::UpdateRenderMode()
  * desktop.
  */
     bool didReset = false;
-    if (DidRenderingDeviceReset()) {
+    DeviceResetReason resetReason = DeviceResetReason::OK;
+    if (DidRenderingDeviceReset(&resetReason)) {
+      Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON, uint32_t(resetReason));
       mD3D11DeviceInitialized = false;
       mD3D11Device = nullptr;
       mD3D11ContentDevice = nullptr;
@@ -1140,10 +1143,35 @@ gfxWindowsPlatform::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlag
 }
 
 bool
-gfxWindowsPlatform::DidRenderingDeviceReset()
+gfxWindowsPlatform::DidRenderingDeviceReset(DeviceResetReason* aResetReason)
 {
+  if (aResetReason) {
+    *aResetReason = DeviceResetReason::OK;
+  }
+
   if (mD3D11Device) {
-    if (mD3D11Device->GetDeviceRemovedReason() != S_OK) {
+    HRESULT hr = mD3D11Device->GetDeviceRemovedReason();
+    if (hr != S_OK) {
+      if (aResetReason) {
+        switch (hr) {
+        case DXGI_ERROR_DEVICE_HUNG:
+          *aResetReason = DeviceResetReason::HUNG;
+          break;
+        case DXGI_ERROR_DEVICE_REMOVED:
+          *aResetReason = DeviceResetReason::REMOVED;
+          break;
+        case DXGI_ERROR_DEVICE_RESET:
+          *aResetReason = DeviceResetReason::RESET;
+          break;
+        case DXGI_ERROR_DRIVER_INTERNAL_ERROR:
+          *aResetReason = DeviceResetReason::DRIVER_ERROR;
+          break;
+        case DXGI_ERROR_INVALID_CALL:
+          *aResetReason = DeviceResetReason::INVALID_CALL;
+        default:
+          MOZ_ASSERT(false);
+        }
+      }
       return true;
     }
   }
