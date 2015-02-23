@@ -79,9 +79,6 @@ BackCert::Init()
   if (rv != Success) {
     return rv;
   }
-  // XXX: Ignored. What are we supposed to check? This seems totally redundant
-  // with Certificate.signatureAlgorithm. Is it important to check that they
-  // are consistent with each other? It doesn't seem to matter!
   rv = der::ExpectTagAndGetValue(tbsCertificate, der::SEQUENCE, signature);
   if (rv != Success) {
     return rv;
