@@ -1147,7 +1147,7 @@ InterpretedFunctionFilenameAndLineNumber(JSFunction *fun, const char **filename,
 }
 
 static JSFunction *
-InterpretedFunctionFromTrackedType(const IonTrackedTypeWithAddendum &tracked)
+FunctionFromTrackedType(const IonTrackedTypeWithAddendum &tracked)
 {
     if (tracked.hasConstructor())
         return tracked.constructor;
@@ -1184,7 +1184,32 @@ class ForEachTypeInfoAdapter : public IonTrackedOptimizationsTypeInfo::ForEachOp
         char buf[512];
         const uint32_t bufsize = mozilla::ArrayLength(buf);
 
-        if (JSFunction *fun = InterpretedFunctionFromTrackedType(tracked)) {
+        if (JSFunction *fun = FunctionFromTrackedType(tracked)) {
+            if (fun->isNative()) {
+                //
+                // Print out the absolute address of the function pointer.
+                //
+                // Note that this address is not usable without knowing the
+                // starting address at which our shared library is loaded. Shared
+                // library information is exposed by the profiler. If this address
+                // needs to be symbolicated manually (e.g., when it is gotten via
+                // debug spewing of all optimization information), it needs to be
+                // converted to an offset from the beginning of the shared library
+                // for use with utilities like `addr2line` on Linux and `atos` on
+                // OS X. Converting to an offset may be done via dladdr():
+                //
+                //   void *addr = JS_FUNC_TO_DATA_PTR(void *, fun->native());
+                //   uintptr_t offset;
+                //   Dl_info info;
+                //   if (dladdr(addr, &info) != 0)
+                //       offset = uintptr_t(addr) - uintptr_t(info.dli_fbase);
+                //
+                uintptr_t addr = JS_FUNC_TO_DATA_PTR(uintptr_t, fun->native());
+                JS_snprintf(buf, bufsize, "%llx", addr);
+                op_.readType("native", nullptr, buf, UINT32_MAX);
+                return;
+            }
+
             PutEscapedString(buf, bufsize, fun->displayAtom(), 0);
             const char *filename;
             unsigned lineno;
@@ -1204,7 +1229,12 @@ class ForEachTypeInfoAdapter : public IonTrackedOptimizationsTypeInfo::ForEachOp
             return;
         }
 
-        op_.readType("prototype", buf, nullptr, 0);
+        if (ty.isGroup()) {
+            op_.readType("prototype", buf, nullptr, UINT32_MAX);
+            return;
+        }
+
+        op_.readType("singleton", buf, nullptr, UINT32_MAX);
     }
 
     void operator()(JS::TrackedTypeSite site, MIRType mirType) MOZ_OVERRIDE {
