@@ -295,6 +295,133 @@ ActorPool.prototype = {
 
 exports.ActorPool = ActorPool;
 
+/**
+ * An OriginalLocation represents a location in an original source.
+ *
+ * @param SourceActor actor
+ *        A SourceActor representing an original source.
+ * @param Number line
+ *        A line within the given source.
+ * @param Number column
+ *        A column within the given line.
+ * @param String name
+ *        The name of the symbol corresponding to this OriginalLocation.
+ */
+function OriginalLocation(actor, line, column, name) {
+  this._connection = actor ? actor.conn : null;
+  this._actorID = actor ? actor.actorID : undefined;
+  this._line = line;
+  this._column = column;
+  this._name = name;
+}
+
+OriginalLocation.fromGeneratedLocation = function (generatedLocation) {
+  return new OriginalLocation(
+    generatedLocation.generatedSourceActor,
+    generatedLocation.generatedLine,
+    generatedLocation.generatedColumn
+  );
+};
+
+OriginalLocation.prototype = {
+  get originalSourceActor() {
+    return this._connection ? this._connection.getActor(this._actorID) : null;
+  },
+
+  get originalUrl() {
+    let actor = this.originalSourceActor;
+    let source = actor.source;
+    return source ? source.url : actor._originalUrl;
+  },
+
+  get originalLine() {
+    return this._line;
+  },
+
+  get originalColumn() {
+    return this._column;
+  },
+
+  get originalName() {
+    return this._name;
+  },
+
+  get generatedSourceActor() {
+    throw new Error("Shouldn't  access generatedSourceActor from an OriginalLocation");
+  },
+
+  get generatedLine() {
+    throw new Error("Shouldn't access generatedLine from an OriginalLocation");
+  },
+
+  get generatedColumn() {
+    throw new Error("Shouldn't access generatedColumn from an Originallocation");
+  }
+};
+
+exports.OriginalLocation = OriginalLocation;
+
+/**
+ * A GeneratedLocation represents a location in an original source.
+ *
+ * @param SourceActor actor
+ *        A SourceActor representing a generated source.
+ * @param Number line
+ *        A line within the given source.
+ * @param Number column
+ *        A column within the given line.
+ */
+function GeneratedLocation(actor, line, column) {
+  this._connection = actor ? actor.conn : null;
+  this._actorID = actor ? actor.actorID : undefined;
+  this._line = line;
+  this._column = column;
+}
+
+GeneratedLocation.fromOriginalLocation = function (originalLocation) {
+  return new GeneratedLocation(
+    originalLocation.originalSourceActor,
+    originalLocation.originalLine,
+    originalLocation.originalColumn
+  );
+};
+
+GeneratedLocation.prototype = {
+  get originalSourceActor() {
+    throw new Error();
+  },
+
+  get originalUrl() {
+    throw new Error("Shouldn't access originalUrl from a GeneratedLocation");
+  },
+
+  get originalLine() {
+    throw new Error("Shouldn't access originalLine from a GeneratedLocation");
+  },
+
+  get originalColumn() {
+    throw new Error("Shouldn't access originalColumn from a GeneratedLocation");
+  },
+
+  get originalName() {
+    throw new Error("Shouldn't access originalName from a GeneratedLocation");
+  },
+
+  get generatedSourceActor() {
+    return this._connection ? this._connection.getActor(this._actorID) : null;
+  },
+
+  get generatedLine() {
+    return this._line;
+  },
+
+  get generatedColumn() {
+    return this._column;
+  }
+};
+
+exports.GeneratedLocation = GeneratedLocation;
+
 // TODO bug 863089: use Debugger.Script.prototype.getOffsetColumn when it is
 // implemented.
 exports.getOffsetColumn = function getOffsetColumn(aOffset, aScript) {

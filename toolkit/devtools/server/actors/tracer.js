@@ -8,7 +8,7 @@ const { Cu } = require("chrome");
 const { DebuggerServer } = require("devtools/server/main");
 const { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
 const Debugger = require("Debugger");
-const { getOffsetColumn } = require("devtools/server/actors/common");
+const { GeneratedLocation, getOffsetColumn } = require("devtools/server/actors/common");
 const promise = require("promise");
 
 Cu.import("resource://gre/modules/Task.jsm");
@@ -339,25 +339,25 @@ TracerActor.prototype = {
         if (aFrame.script) {
           let sources = this._parent.threadActor.sources;
 
-          sourceMappedLocation = yield sources.getOriginalLocation({
-            sourceActor: sources.createNonSourceMappedActor(aFrame.script.source),
-            url: aFrame.script.source.url,
-            line: aFrame.script.startLine,
+          sourceMappedLocation = yield sources.getOriginalLocation(new GeneratedLocation(
+            sources.createNonSourceMappedActor(aFrame.script.source),
+            aFrame.script.startLine,
             // We should return the location of the start of the script, but
             // Debugger.Script does not provide complete start locations (bug
             // 901138). Instead, return the current offset (the location of the
             // first statement in the function).
-            column: getOffsetColumn(aFrame.offset, aFrame.script)
-          });
+            getOffsetColumn(aFrame.offset, aFrame.script)
+          ));
         }
       }
 
       if (this._requestsForTraceType.name) {
-        if (sourceMappedLocation && sourceMappedLocation.name) {
-          packet.name = sourceMappedLocation.name;
+        if (sourceMappedLocation && sourceMappedLocation.originalName) {
+          packet.name = sourceMappedLocation.originalName;
         } else {
           packet.name = name;
         }
+        packet.name = name;
       }
 
       if (this._requestsForTraceType.location) {
@@ -365,10 +365,9 @@ TracerActor.prototype = {
           // Don't copy sourceMappedLocation directly because it
           // contains a reference to the source actor
           packet.location = {
-            url: sourceMappedLocation.url,
-            line: sourceMappedLocation.line,
-            column: sourceMappedLocation.column,
-            name: sourceMappedLocation.name
+            url: sourceMappedLocation.originalUrl,
+            line: sourceMappedLocation.originalLine,
+            column: sourceMappedLocation.originalColumn
           };
         }
       }
