@@ -84,8 +84,13 @@ loop.shared.utils = (function(mozL10n) {
     return !!localStorage.getItem(prefName);
   }
 
+  function isChrome(platform) {
+    return platform.toLowerCase().indexOf('chrome') > -1 ||
+           platform.toLowerCase().indexOf('chromium') > -1;
+  }
+
   function isFirefox(platform) {
-    return platform.indexOf("Firefox") !== -1;
+    return platform.toLowerCase().indexOf("firefox") !== -1;
   }
 
   function isFirefoxOS(platform) {
@@ -95,6 +100,11 @@ loop.shared.utils = (function(mozL10n) {
     // XXX WebActivities are also exposed in WebRT on Firefox for Android,
     //     so we need a better check. Bug 1065403.
     return !!window.MozActivity && /mobi/i.test(platform);
+  }
+
+  function isOpera(platform) {
+    return platform.toLowerCase().indexOf('opera') > -1 ||
+           platform.toLowerCase().indexOf('opr') > -1;
   }
 
   /**
@@ -167,8 +177,10 @@ loop.shared.utils = (function(mozL10n) {
     composeCallUrlEmail: composeCallUrlEmail,
     formatDate: formatDate,
     getBoolPreference: getBoolPreference,
+    isChrome: isChrome,
     isFirefox: isFirefox,
     isFirefoxOS: isFirefoxOS,
+    isOpera: isOpera,
     getUnsupportedPlatform: getUnsupportedPlatform,
     locationData: locationData
   };
