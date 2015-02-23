@@ -30,7 +30,7 @@ class ImageContainer;
 class MediaDataDecoder;
 class MediaDataDecoderCallback;
 class MediaInputQueue;
-class MediaTaskQueue;
+class FlushableMediaTaskQueue;
 class CDMProxy;
 typedef int64_t Microseconds;
 
@@ -83,8 +83,7 @@ public:
   static already_AddRefed<PlatformDecoderModule>
   CreateCDMWrapper(CDMProxy* aProxy,
                    bool aHasAudio,
-                   bool aHasVideo,
-                   MediaTaskQueue* aTaskQueue);
+                   bool aHasVideo);
 #endif
 
   // Called to shutdown the decoder module and cleanup state. The PDM
@@ -109,7 +108,7 @@ public:
   CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                     layers::LayersBackend aLayersBackend,
                     layers::ImageContainer* aImageContainer,
-                    MediaTaskQueue* aVideoTaskQueue,
+                    FlushableMediaTaskQueue* aVideoTaskQueue,
                     MediaDataDecoderCallback* aCallback) = 0;
 
   // Creates an Audio decoder with the specified properties.
@@ -124,7 +123,7 @@ public:
   // This is called on the decode task queue.
   virtual already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
-                     MediaTaskQueue* aAudioTaskQueue,
+                     FlushableMediaTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) = 0;
 
   // An audio decoder module must support AAC by default.

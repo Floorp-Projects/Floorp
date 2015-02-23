@@ -23,7 +23,7 @@ class BlankMediaDataDecoder : public MediaDataDecoder {
 public:
 
   BlankMediaDataDecoder(BlankMediaDataCreator* aCreator,
-                        MediaTaskQueue* aTaskQueue,
+                        FlushableMediaTaskQueue* aTaskQueue,
                         MediaDataDecoderCallback* aCallback)
     : mCreator(aCreator)
     , mTaskQueue(aTaskQueue)
@@ -85,7 +85,7 @@ public:
 
 private:
   nsAutoPtr<BlankMediaDataCreator> mCreator;
-  RefPtr<MediaTaskQueue> mTaskQueue;
+  RefPtr<FlushableMediaTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 };
 
@@ -216,7 +216,7 @@ public:
   CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                      layers::LayersBackend aLayersBackend,
                      layers::ImageContainer* aImageContainer,
-                     MediaTaskQueue* aVideoTaskQueue,
+                     FlushableMediaTaskQueue* aVideoTaskQueue,
                      MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE {
     BlankVideoDataCreator* creator = new BlankVideoDataCreator(
       aConfig.display_width, aConfig.display_height, aImageContainer);
@@ -230,7 +230,7 @@ public:
   // Decode thread.
   virtual already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
-                     MediaTaskQueue* aAudioTaskQueue,
+                     FlushableMediaTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE {
     BlankAudioDataCreator* creator = new BlankAudioDataCreator(
       aConfig.channel_count, aConfig.samples_per_second);

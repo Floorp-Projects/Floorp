@@ -19,7 +19,7 @@ namespace mozilla
 bool FFmpegDataDecoder<LIBAV_VER>::sFFmpegInitDone = false;
 StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMonitor;
 
-FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(MediaTaskQueue* aTaskQueue,
+FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FlushableMediaTaskQueue* aTaskQueue,
                                                 AVCodecID aCodecID)
   : mTaskQueue(aTaskQueue)
   , mCodecContext(nullptr)
