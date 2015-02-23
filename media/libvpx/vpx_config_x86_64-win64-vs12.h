@@ -29,8 +29,8 @@
 #define HAVE_SSE3 1
 #define HAVE_SSSE3 1
 #define HAVE_SSE4_1 1
-#define HAVE_AVX 0
-#define HAVE_AVX2 0
+#define HAVE_AVX 1
+#define HAVE_AVX2 1
 #define HAVE_ALTIVEC 0
 #define HAVE_VPX_PORTS 1
 #define HAVE_STDINT_H 0

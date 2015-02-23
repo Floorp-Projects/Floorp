@@ -293,6 +293,8 @@ pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == glyph-decomposition-g
 == auto-hyphenation-tr-1.html auto-hyphenation-tr-1-ref.html
 == auto-hyphenation-uk-1.html auto-hyphenation-uk-1-ref.html
 
+== auto-hyphenation-transformed-1.html auto-hyphenation-transformed-1-ref.html
+
 # osx-font-smoothing - with and without subpixel AA, only under OSX
 fails-if(!cocoaWidget||OSX==1006||OSX==1007) != osx-font-smoothing.html osx-font-smoothing-ref.html
 fails-if(!cocoaWidget||OSX==1006||OSX==1007) != osx-font-smoothing-2.html osx-font-smoothing-2-notref.html

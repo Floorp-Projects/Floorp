@@ -638,16 +638,14 @@ class GetPropertyIC : public RepatchIonCache
     };
 
     // Helpers for CanAttachNativeGetProp
-    typedef JSContext * Context;
-    bool allowArrayLength(Context cx, HandleObject obj) const;
+    bool allowArrayLength(JSContext *cx, HandleObject obj) const;
     bool allowGetters() const {
         return monitoredResult() && !idempotent();
     }
 
     // Attach the proper stub, if possible
     bool tryAttachStub(JSContext *cx, HandleScript outerScript, IonScript *ion,
-                       HandleObject obj, HandlePropertyName name,
-                       void *returnAddr, bool *emitted);
+                       HandleObject obj, HandlePropertyName name, bool *emitted);
 
     bool tryAttachProxy(JSContext *cx, HandleScript outerScript, IonScript *ion,
                         HandleObject obj, HandlePropertyName name,
@@ -678,7 +676,8 @@ class GetPropertyIC : public RepatchIonCache
     bool tryAttachArgumentsLength(JSContext *cx, HandleScript outerScript, IonScript *ion,
                                   HandleObject obj, HandlePropertyName name, bool *emitted);
 
-    static bool update(JSContext *cx, size_t cacheIndex, HandleObject obj, MutableHandleValue vp);
+    static bool update(JSContext *cx, HandleScript outerScript, size_t cacheIndex,
+                       HandleObject obj, MutableHandleValue vp);
 };
 
 class SetPropertyIC : public RepatchIonCache
@@ -764,7 +763,8 @@ class SetPropertyIC : public RepatchIonCache
     bool attachDOMProxyUnshadowed(JSContext *cx, HandleScript outerScript, IonScript *ion,
                                   HandleObject obj, void *returnAddr);
 
-    static bool update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue value);
+    static bool update(JSContext *cx, HandleScript outerScript, size_t cacheIndex,
+                       HandleObject obj, HandleValue value);
 };
 
 class GetElementIC : public RepatchIonCache
@@ -846,8 +846,7 @@ class GetElementIC : public RepatchIonCache
                                            TypedOrValueRegister output);
 
     bool attachGetProp(JSContext *cx, HandleScript outerScript, IonScript *ion,
-                       HandleObject obj, const Value &idval, HandlePropertyName name,
-                       void *returnAddr);
+                       HandleObject obj, const Value &idval, HandlePropertyName name);
 
     bool attachDenseElement(JSContext *cx, HandleScript outerScript, IonScript *ion,
                             HandleObject obj, const Value &idval);
@@ -859,8 +858,8 @@ class GetElementIC : public RepatchIonCache
                                 HandleObject obj);
 
     static bool
-    update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
-           MutableHandleValue vp);
+    update(JSContext *cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
+           HandleValue idval, MutableHandleValue vp);
 
     void incFailedUpdates() {
         failedUpdates_++;
@@ -954,8 +953,8 @@ class SetElementIC : public RepatchIonCache
                                  HandleObject tarr);
 
     static bool
-    update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
-           HandleValue value);
+    update(JSContext *cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
+           HandleValue idval, HandleValue value);
 };
 
 class BindNameIC : public RepatchIonCache
@@ -992,7 +991,7 @@ class BindNameIC : public RepatchIonCache
                          HandleObject scopeChain, HandleObject holder);
 
     static JSObject *
-    update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain);
+    update(JSContext *cx, HandleScript outerScript, size_t cacheIndex, HandleObject scopeChain);
 };
 
 class NameIC : public RepatchIonCache
@@ -1043,7 +1042,8 @@ class NameIC : public RepatchIonCache
                           HandleShape shape, void *returnAddr);
 
     static bool
-    update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, MutableHandleValue vp);
+    update(JSContext *cx, HandleScript outerScript, size_t cacheIndex, HandleObject scopeChain,
+           MutableHandleValue vp);
 };
 
 #undef CACHE_HEADER

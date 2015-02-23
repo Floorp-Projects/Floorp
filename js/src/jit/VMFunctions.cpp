@@ -36,10 +36,9 @@ namespace jit {
 // run before the constructors for static VMFunctions.
 /* static */ VMFunction *VMFunction::functions;
 
-AutoDetectInvalidation::AutoDetectInvalidation(JSContext *cx, MutableHandleValue rval,
-                                               IonScript *ionScript)
+AutoDetectInvalidation::AutoDetectInvalidation(JSContext *cx, MutableHandleValue rval)
   : cx_(cx),
-    ionScript_(ionScript ? ionScript : GetTopJitJSScript(cx)->ionScript()),
+    ionScript_(GetTopJitJSScript(cx)->ionScript()),
     rval_(rval),
     disabled_(false)
 { }
