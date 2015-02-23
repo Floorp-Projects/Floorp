@@ -842,6 +842,8 @@ class GetElementIC : public RepatchIonCache
 
     static bool canAttachGetProp(JSObject *obj, const Value &idval, jsid id);
     static bool canAttachDenseElement(JSObject *obj, const Value &idval);
+    static bool canAttachDenseElementHole(JSObject *obj, const Value &idval,
+                                          TypedOrValueRegister output);
     static bool canAttachTypedArrayElement(JSObject *obj, const Value &idval,
                                            TypedOrValueRegister output);
 
@@ -850,6 +852,9 @@ class GetElementIC : public RepatchIonCache
 
     bool attachDenseElement(JSContext *cx, HandleScript outerScript, IonScript *ion,
                             HandleObject obj, const Value &idval);
+
+    bool attachDenseElementHole(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                                HandleObject obj, const Value &idval);
 
     bool attachTypedArrayElement(JSContext *cx, HandleScript outerScript, IonScript *ion,
                                  HandleObject tarr, const Value &idval);
