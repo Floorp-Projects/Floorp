@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+'use strict';
+
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -344,7 +346,7 @@ var gUpdates = {
   onLoad: function() {
     this.wiz = document.documentElement;
 
-    gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false)
+    gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
 
     this.strings = document.getElementById("updateStrings");
     var brandStrings = document.getElementById("brandStrings");
@@ -427,13 +429,8 @@ var gUpdates = {
 
         var p = this.update.selectedPatch;
         if (p) {
-          var state = p.state;
-          var patchFailed;
-          try {
-            patchFailed = this.update.getProperty("patchingFailed");
-          }
-          catch (e) {
-          }
+          let state = p.state;
+          let patchFailed = this.update.getProperty("patchingFailed");
           if (patchFailed) {
             if (patchFailed == "partial" && this.update.patchCount == 2) {
               // If the system failed to apply the partial patch, show the
@@ -453,24 +450,24 @@ var gUpdates = {
           // Now select the best page to start with, given the current state of
           // the Update.
           switch (state) {
-          case STATE_PENDING:
-          case STATE_PENDING_SVC:
-          case STATE_APPLIED:
-          case STATE_APPLIED_SVC:
-            this.sourceEvent = SRCEVT_BACKGROUND;
-            aCallback("finishedBackground");
-            return;
-          case STATE_DOWNLOADING:
-            aCallback("downloading");
-            return;
-          case STATE_FAILED:
-            window.getAttention();
-            aCallback("errorpatching");
-            return;
-          case STATE_DOWNLOAD_FAILED:
-          case STATE_APPLYING:
-            aCallback("errors");
-            return;
+            case STATE_PENDING:
+            case STATE_PENDING_SVC:
+            case STATE_APPLIED:
+            case STATE_APPLIED_SVC:
+              this.sourceEvent = SRCEVT_BACKGROUND;
+              aCallback("finishedBackground");
+              return;
+            case STATE_DOWNLOADING:
+              aCallback("downloading");
+              return;
+            case STATE_FAILED:
+              window.getAttention();
+              aCallback("errorpatching");
+              return;
+            case STATE_DOWNLOAD_FAILED:
+            case STATE_APPLYING:
+              aCallback("errors");
+              return;
           }
         }
         if (this.update.licenseURL)
@@ -1615,48 +1612,48 @@ var gDownloadingPage = {
 
     var u = gUpdates.update;
     switch (status) {
-    case CoR.NS_ERROR_CORRUPTED_CONTENT:
-    case CoR.NS_ERROR_UNEXPECTED:
-      if (u.selectedPatch.state == STATE_DOWNLOAD_FAILED &&
-          (u.isCompleteUpdate || u.patchCount != 2)) {
-        // Verification error of complete patch, informational text is held in
-        // the update object.
+      case CoR.NS_ERROR_CORRUPTED_CONTENT:
+      case CoR.NS_ERROR_UNEXPECTED:
+        if (u.selectedPatch.state == STATE_DOWNLOAD_FAILED &&
+            (u.isCompleteUpdate || u.patchCount != 2)) {
+          // Verification error of complete patch, informational text is held in
+          // the update object.
+          this.cleanUp();
+          gUpdates.wiz.goTo("errors");
+          break;
+        }
+        // Verification failed for a partial patch, complete patch is now
+        // downloading so return early and do NOT remove the download listener!
+
+        // Reset the progress meter to "undertermined" mode so that we don't
+        // show old progress for the new download of the "complete" patch.
+        this._downloadProgress.mode = "undetermined";
+        this._pauseButton.disabled = true;
+        document.getElementById("verificationFailed").hidden = false;
+        break;
+      case CoR.NS_BINDING_ABORTED:
+        LOG("gDownloadingPage", "onStopRequest - pausing download");
+        // Do not remove UI listener since the user may resume downloading again.
+        break;
+      case CoR.NS_OK:
+        LOG("gDownloadingPage", "onStopRequest - patch verification succeeded");
+        // If the background update pref is set, we should wait until the update
+        // is actually staged in the background.
+        let aus = CoC["@mozilla.org/updates/update-service;1"].
+                  getService(CoI.nsIApplicationUpdateService);
+        if (aus.canStageUpdates) {
+          this._setUpdateApplying();
+        } else {
+          this.cleanUp();
+          gUpdates.wiz.goTo("finished");
+        }
+        break;
+      default:
+        LOG("gDownloadingPage", "onStopRequest - transfer failed");
+        // Some kind of transfer error, die.
         this.cleanUp();
         gUpdates.wiz.goTo("errors");
         break;
-      }
-      // Verification failed for a partial patch, complete patch is now
-      // downloading so return early and do NOT remove the download listener!
-
-      // Reset the progress meter to "undertermined" mode so that we don't
-      // show old progress for the new download of the "complete" patch.
-      this._downloadProgress.mode = "undetermined";
-      this._pauseButton.disabled = true;
-      document.getElementById("verificationFailed").hidden = false;
-      break;
-    case CoR.NS_BINDING_ABORTED:
-      LOG("gDownloadingPage", "onStopRequest - pausing download");
-      // Do not remove UI listener since the user may resume downloading again.
-      break;
-    case CoR.NS_OK:
-      LOG("gDownloadingPage", "onStopRequest - patch verification succeeded");
-      // If the background update pref is set, we should wait until the update
-      // is actually staged in the background.
-      var aus = CoC["@mozilla.org/updates/update-service;1"].
-                getService(CoI.nsIApplicationUpdateService);
-      if (aus.canStageUpdates) {
-        this._setUpdateApplying();
-      } else {
-        this.cleanUp();
-        gUpdates.wiz.goTo("finished");
-      }
-      break;
-    default:
-      LOG("gDownloadingPage", "onStopRequest - transfer failed");
-      // Some kind of transfer error, die.
-      this.cleanUp();
-      gUpdates.wiz.goTo("errors");
-      break;
     }
   },
 
@@ -1775,16 +1772,16 @@ var gErrorPatchingPage = {
 
   onWizardNext: function() {
     switch (gUpdates.update.selectedPatch.state) {
-    case STATE_PENDING:
-    case STATE_PENDING_SVC: 
-      gUpdates.wiz.goTo("finished");
-      break;
-    case STATE_DOWNLOADING:
-      gUpdates.wiz.goTo("downloading");
-      break;
-    case STATE_DOWNLOAD_FAILED:
-      gUpdates.wiz.goTo("errors");
-      break;
+      case STATE_PENDING:
+      case STATE_PENDING_SVC: 
+        gUpdates.wiz.goTo("finished");
+        break;
+      case STATE_DOWNLOADING:
+        gUpdates.wiz.goTo("downloading");
+        break;
+      case STATE_DOWNLOAD_FAILED:
+        gUpdates.wiz.goTo("errors");
+        break;
     }
   }
 };
