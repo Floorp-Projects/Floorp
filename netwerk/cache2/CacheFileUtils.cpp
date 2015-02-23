@@ -424,6 +424,116 @@ ValidityMap::operator[](uint32_t aIdx)
   return mMap.ElementAt(aIdx);
 }
 
+StaticMutex DetailedCacheHitTelemetry::sLock;
+uint32_t DetailedCacheHitTelemetry::sRecordCnt = 0;
+DetailedCacheHitTelemetry::HitRate DetailedCacheHitTelemetry::sHRStats[kNumOfRanges];
+
+DetailedCacheHitTelemetry::HitRate::HitRate()
+{
+  Reset();
+}
+
+void
+DetailedCacheHitTelemetry::HitRate::AddRecord(ERecType aType)
+{
+  if (aType == HIT) {
+    ++mHitCnt;
+  } else {
+    ++mMissCnt;
+  }
+}
+
+uint32_t
+DetailedCacheHitTelemetry::HitRate::GetHitRateBucket(uint32_t aNumOfBuckets) const
+{
+  uint32_t bucketIdx = (aNumOfBuckets * mHitCnt) / (mHitCnt + mMissCnt);
+  if (bucketIdx == aNumOfBuckets) { // make sure 100% falls into the last bucket
+    --bucketIdx;
+  }
+
+  return bucketIdx;
+}
+
+uint32_t
+DetailedCacheHitTelemetry::HitRate::Count()
+{
+  return mHitCnt + mMissCnt;
+}
+
+void
+DetailedCacheHitTelemetry::HitRate::Reset()
+{
+  mHitCnt = 0;
+  mMissCnt = 0;
+}
+
+// static
+void
+DetailedCacheHitTelemetry::AddRecord(ERecType aType, TimeStamp aLoadStart)
+{
+  bool isUpToDate = false;
+  CacheIndex::IsUpToDate(&isUpToDate);
+  if (!isUpToDate) {
+    // Ignore the record when the entry file count might be incorrect
+    return;
+  }
+
+  uint32_t entryCount;
+  nsresult rv = CacheIndex::GetEntryFileCount(&entryCount);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  uint32_t rangeIdx = entryCount / kRangeSize;
+  if (rangeIdx >= kNumOfRanges) { // The last range has no upper limit.
+    rangeIdx = kNumOfRanges - 1;
+  }
+
+  uint32_t hitMissValue = 2 * rangeIdx; // 2 values per range
+  if (aType == MISS) { // The order is HIT, MISS
+    ++hitMissValue;
+  }
+
+  StaticMutexAutoLock lock(sLock);
+
+  if (aType == MISS) {
+    mozilla::Telemetry::AccumulateTimeDelta(
+      mozilla::Telemetry::NETWORK_CACHE_V2_MISS_TIME_MS,
+      aLoadStart);
+  } else {
+    mozilla::Telemetry::AccumulateTimeDelta(
+      mozilla::Telemetry::NETWORK_CACHE_V2_HIT_TIME_MS,
+      aLoadStart);
+  }
+
+  Telemetry::Accumulate(Telemetry::NETWORK_CACHE_HIT_MISS_STAT_PER_CACHE_SIZE,
+                        hitMissValue);
+
+  sHRStats[rangeIdx].AddRecord(aType);
+  ++sRecordCnt;
+
+  if (sRecordCnt < kTotalSamplesReportLimit) {
+    return;
+  }
+
+  sRecordCnt = 0;
+
+  for (uint32_t i = 0; i < kNumOfRanges; ++i) {
+    if (sHRStats[i].Count() >= kHitRateSamplesReportLimit) {
+      // The telemetry enums are grouped by buckets as follows:
+      // Telemetry value : 0,1,2,3, ... ,19,20,21,22, ... ,398,399
+      // Hit rate bucket : 0,0,0,0, ... , 0, 1, 1, 1, ... , 19, 19
+      // Cache size range: 0,1,2,3, ... ,19, 0, 1, 2, ... , 18, 19
+      uint32_t bucketOffset = sHRStats[i].GetHitRateBucket(kHitRateBuckets) *
+                              kNumOfRanges;
+
+      Telemetry::Accumulate(Telemetry::NETWORK_CACHE_HIT_RATE_PER_CACHE_SIZE,
+                            bucketOffset + i);
+      sHRStats[i].Reset();
+    }
+  }
+}
+
 } // CacheFileUtils
 } // net
 } // mozilla
