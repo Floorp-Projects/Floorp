@@ -67,6 +67,30 @@ add_task(function* test_add() {
      "Adding an engine does not remove engines from hidden list.");
 });
 
+add_task(function* test_diacritics() {
+  const diacritic_engine = "Foo \u2661";
+  let ns = {};
+  Cu.import("resource://gre/modules/Preferences.jsm", ns);
+
+  ns.Preferences.set("browser.search.hiddenOneOffs", diacritic_engine);
+  yield promiseNewEngine("testEngine_diacritics.xml");
+
+  let hiddenOneOffs =
+    ns.Preferences.get("browser.search.hiddenOneOffs").split(",");
+  is(hiddenOneOffs.some(x => x == diacritic_engine), false,
+     "Observer cleans up added hidden engines that include a diacritic.");
+
+  ns.Preferences.set("browser.search.hiddenOneOffs", diacritic_engine);
+
+  info("Removing testEngine_diacritics.xml");
+  Services.search.removeEngine(Services.search.getEngineByName(diacritic_engine));
+
+  hiddenOneOffs =
+    ns.Preferences.get("browser.search.hiddenOneOffs").split(",");
+  is(hiddenOneOffs.some(x => x == diacritic_engine), false,
+     "Observer cleans up removed hidden engines that include a diacritic.");
+});
+
 registerCleanupFunction(() => {
   info("Removing testEngine.xml");
   Services.search.removeEngine(Services.search.getEngineByName("Foo"));
