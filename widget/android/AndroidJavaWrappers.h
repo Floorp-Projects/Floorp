@@ -36,15 +36,6 @@ class AutoLocalJNIFrame;
 
 void InitAndroidJavaWrappers(JNIEnv *jEnv);
 
-/*
- * Note: do not store global refs to any WrappedJavaObject;
- * these are live only during a particular JNI method, as
- * NewGlobalRef is -not- called on the jobject.
- *
- * If this is needed, WrappedJavaObject can be extended to
- * handle it.
- */
-
 class RefCountedJavaObject {
 public:
     RefCountedJavaObject(JNIEnv* env, jobject obj) : mRefCnt(0), mObject(env->NewGlobalRef(obj)) {}
@@ -66,6 +57,14 @@ private:
     jobject mObject;
 };
 
+/*
+ * Note: do not store global refs to any WrappedJavaObject;
+ * these are live only during a particular JNI method, as
+ * NewGlobalRef is -not- called on the jobject.
+ *
+ * If this is needed, WrappedJavaObject can be extended to
+ * handle it.
+ */
 class WrappedJavaObject {
 public:
     WrappedJavaObject() :
