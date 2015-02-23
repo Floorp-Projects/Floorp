@@ -4,7 +4,7 @@
 
 
 function mouseInteraction(mouseEvent, responseEvent, itemNode) {
-  let eventPromise = BrowserUITestUtils.waitForEvent(RLSidebarUtils.list, responseEvent);
+  let eventPromise = BrowserTestUtils.waitForEvent(RLSidebarUtils.list, responseEvent);
   let details = {};
   if (mouseEvent != "click") {
     details.type = mouseEvent;
