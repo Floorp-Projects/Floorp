@@ -42,55 +42,21 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindow *parent,
                                                   nsIObserver *openDialogObserver,
                                                   bool *notifyOnOpen)
 {
-  m_observer = openDialogObserver;
-
-  nsresult rv = NS_ERROR_FAILURE;
-  
-  if (m_dialog)
-    return NS_ERROR_ALREADY_INITIALIZED;
-  
-  if (!dialogURL || !*dialogURL)
-    return NS_ERROR_INVALID_ARG;
-
-  if (parent)
-  {
-    // Set up window.arguments[0]...
-    nsCOMPtr<nsISupportsArray> array;
-    rv = NS_NewISupportsArray(getter_AddRefs(array));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsISupportsInterfacePointer> ifptr =
-      do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    ifptr->SetData(static_cast<nsIPrintProgress*>(this));
-    ifptr->SetDataIID(&NS_GET_IID(nsIPrintProgress));
-
-    array->AppendElement(ifptr);
-
-    array->AppendElement(parameters);
-
-    // Open the dialog.
-    nsCOMPtr<nsIDOMWindow> newWindow;
-    rv = parent->OpenDialog(NS_ConvertASCIItoUTF16(dialogURL),
-                            NS_LITERAL_STRING("_blank"),
-                            NS_LITERAL_STRING("chrome,titlebar,dependent,centerscreen"),
-                            array, getter_AddRefs(newWindow));
-    if (NS_SUCCEEDED(rv)) {
-      *notifyOnOpen = true;
-    }
-  }
-
-  return rv;
+  MOZ_ASSERT_UNREACHABLE("The nsPrintingPromptService::ShowProgress "
+                         "implementation for OS X returns "
+                         "NS_ERROR_NOT_IMPLEMENTED, so we should never get "
+                         "here.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void closeProgressDialog (in boolean forceClose); */
 NS_IMETHODIMP nsPrintProgress::CloseProgressDialog(bool forceClose)
 {
-  m_closeProgress = true;
-  // XXX Casting bool to nsresult
-  return OnStateChange(nullptr, nullptr, nsIWebProgressListener::STATE_STOP,
-                       static_cast<nsresult>(forceClose));
+  MOZ_ASSERT_UNREACHABLE("The nsPrintingPromptService::ShowProgress "
+                         "implementation for OS X returns "
+                         "NS_ERROR_NOT_IMPLEMENTED, so we should never get "
+                         "here.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* nsIPrompt GetPrompter (); */
