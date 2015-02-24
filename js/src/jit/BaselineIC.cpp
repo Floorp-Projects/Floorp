@@ -9175,6 +9175,7 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
 #undef ADD_INT32X4_SIMD_OP_NAME_
 #define ADD_FLOAT32X4_SIMD_OP_NAME_(OP) || native == js::simd_float32x4_##OP
        if (false
+           ARITH_COMMONX4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_)
            ARITH_FLOAT32X4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_)
            BITWISE_COMMONX4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_))
        {
