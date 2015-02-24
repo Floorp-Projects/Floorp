@@ -146,13 +146,18 @@ assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'function ch(b2) { if
 
 // Tests for no calls in heap index expressions
 
-const SETUP = USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); i32=new I32(b2); b=b2; return true }';
+const CHANGE_FUN = 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); i32=new I32(b2); b=b2; return true }';
+const SETUP = USE_ASM + IMPORT2 + 'var imul=glob.Math.imul; var ffi=ffis.ffi;' + CHANGE_FUN;
 
        asmCompile('glob', 'ffis', 'b', SETUP + 'function f() { i32[0] } return f');
        asmCompile('glob', 'ffis', 'b', SETUP + 'function f() { i32[0] = 0 } return f');
        asmCompile('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[i >> 2] } return f');
        asmCompile('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[i >> 2] = 0 } return f');
+       asmCompile('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[(imul(i,i)|0) >> 2] = 0 } return f');
+       asmCompile('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[i >> 2] = (imul(i,i)|0) } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[(ffi()|0) >> 2] } return f');
 assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[(g()|0) >> 2] } function g() { return 0 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[(TBL[i&0]()|0) >> 2] } function g() { return 0 } var TBL=[g]; return f');
 assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[(g()|0) >> 2] = 0 } function g() { return 0 } return f');
 assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[i >> 2] = g()|0 } function g() { return 0 } return f');
 assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[i32[(g()|0)>>2] >> 2] } function g() { return 0 } return f');
@@ -161,6 +166,8 @@ assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[i 
 assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[((i32[i>>2]|0) + (g()|0)) >> 2] } function g() { return 0 } return f');
 assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[((i32[i>>2]|0) + (g()|0)) >> 2] = 0 } function g() { return 0 } return f');
 assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[i >> 2] = (i32[i>>2]|0) + (g()|0) } function g() { return 0 } return f');
+if (isSimdAvailable() && typeof SIMD !== 'undefined')
+    asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'var i4 = glob.SIMD.int32x4; var add = i4.add;' + CHANGE_FUN + 'function f(i) { i=i|0; i32[i4(i,1,2,i).x >> 2]; i32[add(i4(0,0,0,0),i4(1,1,1,1)).x >> 2]; } return f');
 
 // Tests for constant heap accesses when change-heap is used
 
