@@ -1267,11 +1267,16 @@ js::NewObjectWithGivenTaggedProto(ExclusiveContext *cxArg, const Class *clasp,
 
     /*
      * Default parent to the parent of the prototype, which was set from
-     * the parent of the prototype's constructor.
+     * the parent of the prototype's constructor.  If there is no
+     * prototype, use the global.
      */
     RootedObject parent(cxArg, parentArg);
-    if (!parent && proto.isObject())
-        parent = proto.toObject()->getParent();
+    if (!parent) {
+        if (proto.isObject())
+            parent = proto.toObject()->getParent();
+        else
+            parent = cxArg->global();
+    }
 
     RootedObject obj(cxArg, NewObject(cxArg, group, parent, allocKind, newKind));
     if (!obj)
