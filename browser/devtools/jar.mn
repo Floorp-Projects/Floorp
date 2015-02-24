@@ -76,6 +76,8 @@ browser.jar:
     content/browser/devtools/shadereditor.js                           (shadereditor/shadereditor.js)
     content/browser/devtools/canvasdebugger.xul                        (canvasdebugger/canvasdebugger.xul)
     content/browser/devtools/canvasdebugger.js                         (canvasdebugger/canvasdebugger.js)
+    content/browser/devtools/canvasdebugger/snapshotslist.js           (canvasdebugger/snapshotslist.js)
+    content/browser/devtools/canvasdebugger/callslist.js               (canvasdebugger/callslist.js)
     content/browser/devtools/d3.js                                     (shared/d3.js)
     content/browser/devtools/webaudioeditor.xul                        (webaudioeditor/webaudioeditor.xul)
     content/browser/devtools/dagre-d3.js                               (webaudioeditor/lib/dagre-d3.js)

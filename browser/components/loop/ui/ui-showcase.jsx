@@ -287,14 +287,14 @@
           </Section>
 
           <Section name="IncomingCallView">
-            <Example summary="Default / incoming video call" dashed="true" style={{width: "260px", height: "254px"}}>
+            <Example summary="Default / incoming video call" dashed="true" style={{width: "300px", height: "272px"}}>
               <div className="fx-embedded">
                 <IncomingCallView model={mockConversationModel}
                                   video={true} />
               </div>
             </Example>
 
-            <Example summary="Default / incoming audio only call" dashed="true" style={{width: "260px", height: "254px"}}>
+            <Example summary="Default / incoming audio only call" dashed="true" style={{width: "300px", height: "272px"}}>
               <div className="fx-embedded">
                 <IncomingCallView model={mockConversationModel}
                                   video={false} />
@@ -303,7 +303,7 @@
           </Section>
 
           <Section name="IncomingCallView-ActiveState">
-            <Example summary="Default" dashed="true" style={{width: "260px", height: "254px"}}>
+            <Example summary="Default" dashed="true" style={{width: "300px", height: "272px"}}>
               <div className="fx-embedded" >
                 <IncomingCallView  model={mockConversationModel}
                                    showMenu={true} />
@@ -314,19 +314,19 @@
           <Section name="ConversationToolbar">
             <h2>Desktop Conversation Window</h2>
             <div className="fx-embedded override-position">
-              <Example summary="Default (260x265)" dashed="true">
+              <Example summary="Default" dashed="true" style={{width: "300px", height: "272px"}}>
                 <ConversationToolbar video={{enabled: true}}
                                      audio={{enabled: true}}
                                      hangup={noop}
                                      publishStream={noop} />
               </Example>
-              <Example summary="Video muted">
+              <Example summary="Video muted" style={{width: "300px", height: "272px"}}>
                 <ConversationToolbar video={{enabled: false}}
                                      audio={{enabled: true}}
                                      hangup={noop}
                                      publishStream={noop} />
               </Example>
-              <Example summary="Audio muted">
+              <Example summary="Audio muted" style={{width: "300px", height: "272px"}}>
                 <ConversationToolbar video={{enabled: true}}
                                      audio={{enabled: false}}
                                      hangup={noop}
@@ -383,7 +383,7 @@
 
           <Section name="PendingConversationView (Desktop)">
             <Example summary="Connecting" dashed="true"
-                     style={{width: "260px", height: "265px"}}>
+                     style={{width: "300px", height: "272px"}}>
               <div className="fx-embedded">
                 <DesktopPendingConversationView callState={"gather"}
                                                 contact={mockContact}
@@ -394,13 +394,13 @@
 
           <Section name="CallFailedView">
             <Example summary="Call Failed" dashed="true"
-                     style={{width: "260px", height: "265px"}}>
+                     style={{width: "300px", height: "272px"}}>
               <div className="fx-embedded">
                 <CallFailedView dispatcher={dispatcher} store={conversationStore} />
               </div>
             </Example>
             <Example summary="Call Failed — with call URL error" dashed="true"
-                     style={{width: "260px", height: "265px"}}>
+                     style={{width: "300px", height: "272px"}}>
               <div className="fx-embedded">
                 <CallFailedView dispatcher={dispatcher} emailLinkError={true}
                                 store={conversationStore} />
@@ -430,7 +430,7 @@
 
           <Section name="ConversationView">
             <Example summary="Desktop conversation window" dashed="true"
-                     style={{width: "260px", height: "265px"}}>
+                     style={{width: "300px", height: "272px"}}>
               <div className="fx-embedded">
                 <ConversationView sdk={mockSDK}
                                   model={mockConversationModel}
@@ -452,7 +452,7 @@
             </Example>
 
             <Example summary="Desktop conversation window local audio stream"
-                     dashed="true" style={{width: "260px", height: "265px"}}>
+                     dashed="true" style={{width: "300px", height: "272px"}}>
               <div className="fx-embedded">
                 <ConversationView sdk={mockSDK}
                                   video={{enabled: false}}
@@ -503,13 +503,13 @@
               <strong>Note:</strong> For the useable demo, you can access submitted data at&nbsp;
               <a href="https://input.allizom.org/">input.allizom.org</a>.
             </p>
-            <Example summary="Default (useable demo)" dashed="true" style={{width: "260px"}}>
+            <Example summary="Default (useable demo)" dashed="true" style={{width: "300px", height: "272px"}}>
               <FeedbackView feedbackStore={feedbackStore} />
             </Example>
-            <Example summary="Detailed form" dashed="true" style={{width: "260px"}}>
+            <Example summary="Detailed form" dashed="true" style={{width: "300px", height: "272px"}}>
               <FeedbackView feedbackStore={feedbackStore} feedbackState={FEEDBACK_STATES.DETAILS} />
             </Example>
-            <Example summary="Thank you!" dashed="true" style={{width: "260px"}}>
+            <Example summary="Thank you!" dashed="true" style={{width: "300px", height: "272px"}}>
               <FeedbackView feedbackStore={feedbackStore} feedbackState={FEEDBACK_STATES.SENT} />
             </Example>
           </Section>

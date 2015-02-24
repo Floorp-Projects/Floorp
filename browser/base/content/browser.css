@@ -908,6 +908,11 @@ chatbox {
   width: 260px; /* CHAT_WIDTH_OPEN in socialchat.xml */
 }
 
+chatbox[large="true"] {
+  width: 300px;
+  heigth: 272px;
+}
+
 chatbox[minimized="true"] {
   width: 160px;
   height: 20px; /* CHAT_WIDTH_MINIMIZED in socialchat.xml */

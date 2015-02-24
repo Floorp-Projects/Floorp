@@ -29,6 +29,7 @@ let mm = null
 const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js";
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/canvasdebugger/test/";
 const SET_TIMEOUT_URL = EXAMPLE_URL + "doc_settimeout.html";
+const NO_CANVAS_URL = EXAMPLE_URL + "doc_no-canvas.html";
 const SIMPLE_CANVAS_URL = EXAMPLE_URL + "doc_simple-canvas.html";
 const SIMPLE_BITMASKS_URL = EXAMPLE_URL + "doc_simple-canvas-bitmasks.html";
 const SIMPLE_CANVAS_TRANSPARENT_URL = EXAMPLE_URL + "doc_simple-canvas-transparent.html";
@@ -41,6 +42,8 @@ const RAF_BEGIN_URL = EXAMPLE_URL + "doc_raf-begin.html";
 waitForExplicitFinish();
 
 let gToolEnabled = Services.prefs.getBoolPref("devtools.canvasdebugger.enabled");
+
+gDevTools.testing = true;
 
 registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");

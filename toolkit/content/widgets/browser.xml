@@ -1082,6 +1082,9 @@
         <parameter name="aOtherBrowser"/>
         <body>
         <![CDATA[
+          if (this.isRemoteBrowser != aOtherBrowser.isRemoteBrowser)
+            throw new Error("Can only swap docshells between browsers in the same process.");
+
           // We need to swap fields that are tied to our docshell or related to
           // the loaded page
           // Fields which are built as a result of notifactions (pageshow/hide,
@@ -1095,6 +1098,26 @@
             "_webNavigation",
             "_permanentKey"
           ];
+
+          if (this.isRemoteBrowser) {
+            fieldsToSwap.push(...[
+              "_remoteWebNavigation",
+              "_remoteWebProgressManager",
+              "_remoteWebProgress",
+              "_remoteFinder",
+              "_securityUI",
+              "_documentURI",
+              "_documentContentType",
+              "_contentTitle",
+              "_characterSet",
+              "_contentPrincipal",
+              "_syncHandler",
+              "_imageDocument",
+              "_fullZoom",
+              "_textZoom",
+              "_isSyntheticDocument",
+            ]);
+          }
 
           var ourFieldValues = {};
           var otherFieldValues = {};
@@ -1111,8 +1134,10 @@
 
           // Before we swap the actual docShell property we need to detach the
           // form fill controller from those docShells.
-          this.detachFormFill();
-          aOtherBrowser.detachFormFill();
+          if (!this.isRemoteBrowser) {
+            this.detachFormFill();
+            aOtherBrowser.detachFormFill();
+          }
 
           for each (var field in fieldsToSwap) {
             this[field] = otherFieldValues[field];
@@ -1122,15 +1147,26 @@
           // Re-attach the docShells to the form fill controller.
           if (!this.isRemoteBrowser) {
             this.attachFormFill();
-          }
-          if (!aOtherBrowser.isRemoteBrowser) {
             aOtherBrowser.attachFormFill();
-          }
 
-          // Null the current nsITypeAheadFind instances so that they're
-          // lazily re-created on access. We need to do this because they
-          // might have attached the wrong docShell.
-          this._fastFind = aOtherBrowser._fastFind = null;
+            // Null the current nsITypeAheadFind instances so that they're
+            // lazily re-created on access. We need to do this because they
+            // might have attached the wrong docShell.
+            this._fastFind = aOtherBrowser._fastFind = null;
+          }
+          else {
+            // Rewire the remote listeners
+            this._remoteWebNavigation.swapBrowser(this);
+            aOtherBrowser._remoteWebNavigation.swapBrowser(aOtherBrowser);
+
+            this._remoteWebProgressManager.swapBrowser(this);
+            aOtherBrowser._remoteWebProgressManager.swapBrowser(aOtherBrowser);
+
+            if (this._remoteFinder)
+              this._remoteFinder.swapBrowser(this);
+            if (aOtherBrowser._remoteFinder)
+              aOtherBrowser._remoteFinder.swapBrowser(aOtherBrowser);
+          }
         ]]>
         </body>
       </method>

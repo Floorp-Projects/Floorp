@@ -257,6 +257,30 @@ function injectLoopAPI(targetWindow) {
       }
     },
 
+    getActiveTabWindowId: {
+      enumerable: true,
+      writable: true,
+      value: function(callback) {
+        let win = Services.wm.getMostRecentWindow("navigator:browser");
+        let browser = win && win.gBrowser.selectedTab.linkedBrowser;
+        if (!win || !browser) {
+          // This may happen when an undocked conversation window is the only
+          // window left.
+          let err = new Error("No tabs available to share.");
+          MozLoopService.log.error(err);
+          callback(cloneValueInto(err, targetWindow));
+          return;
+        }
+
+        let mm = browser.messageManager;
+        mm.addMessageListener("webrtc:response:StartBrowserSharing", function listener(message) {
+          mm.removeMessageListener("webrtc:response:StartBrowserSharing", listener);
+          callback(null, message.data.windowID);
+        });
+        mm.sendAsyncMessage("webrtc:StartBrowserSharing");
+      }
+    },
+
     /**
      * Returns the window data for a specific conversation window id.
      *
