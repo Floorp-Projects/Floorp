@@ -28,7 +28,7 @@ class SymbolObject : public NativeObject
      * Creates a new Symbol object boxing the given primitive Symbol.  The
      * object's [[Prototype]] is determined from context.
      */
-    static SymbolObject *create(JSContext *cx, JS::Symbol *symbol);
+    static SymbolObject *create(JSContext *cx, JS::HandleSymbol symbol);
 
     JS::Symbol *unbox() const {
         return getFixedSlot(PRIMITIVE_VALUE_SLOT).toSymbol();
