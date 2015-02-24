@@ -322,7 +322,23 @@ let CanvasActor = exports.CanvasActor = protocol.ActorClass({
     let deferred = this._currentAnimationFrameSnapshot = promise.defer();
     return deferred.promise;
   }, {
-    response: { snapshot: RetVal("frame-snapshot") }
+    response: { snapshot: RetVal("nullable:frame-snapshot") }
+  }),
+
+  /**
+   * Cease attempts to record an animation frame.
+   */
+  stopRecordingAnimationFrame: method(function() {
+   if (!this._callWatcher.isRecording()) {
+      return;
+    }
+    this._animationStarted = false;
+    this._callWatcher.pauseRecording();
+    this._callWatcher.eraseRecording();
+    this._currentAnimationFrameSnapshot.resolve(null);
+    this._currentAnimationFrameSnapshot = null;
+  }, {
+    oneway: true
   }),
 
   /**

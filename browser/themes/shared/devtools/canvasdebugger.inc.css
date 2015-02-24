@@ -14,7 +14,6 @@
 
 .notice-container {
   margin-top: -50vh;
-  font-size: 120%;
   background-color: var(--theme-toolbar-background);
   color: var(--theme-body-color-alt);
 }
@@ -30,14 +29,8 @@
   display: none;
 }
 
-.theme-dark #import-notice {
-  font-size: 250%;
-  color: rgba(255,255,255,0.2);
-}
-
-.theme-light #import-notice {
-  font-size: 250%;
-  color: rgba(0,0,0,0.2);
+#waiting-notice {
+  font-size: 110%;
 }
 
 /* Snapshots pane */
