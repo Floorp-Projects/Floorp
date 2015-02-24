@@ -5473,7 +5473,7 @@ GCRuntime::endSweepPhase(bool lastGC)
 }
 
 GCRuntime::IncrementalProgress
-GCRuntime::compactPhase(bool lastGC, JS::gcreason::Reason reason)
+GCRuntime::compactPhase(JS::gcreason::Reason reason)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
 
@@ -5506,16 +5506,18 @@ GCRuntime::compactPhase(bool lastGC, JS::gcreason::Reason reason)
 #endif
 
     // Release the relocated arenas, or in debug builds queue them to be
-    // released until the start of the next GC unless this is the last GC.
+    // released until the start of the next GC unless this is the last GC or we
+    // are doing a last ditch GC.
 #ifndef DEBUG
     releaseRelocatedArenas(relocatedList);
 #else
-    protectRelocatedArenas(relocatedList);
-    MOZ_ASSERT(!relocatedArenasToRelease);
-    if (!lastGC)
-        relocatedArenasToRelease = relocatedList;
-    else
+    if (reason == JS::gcreason::DESTROY_RUNTIME || reason == JS::gcreason::LAST_DITCH) {
         releaseRelocatedArenas(relocatedList);
+    } else {
+        MOZ_ASSERT(!relocatedArenasToRelease);
+        protectRelocatedArenas(relocatedList);
+        relocatedArenasToRelease = relocatedList;
+    }
 #endif
 
     // Ensure execess chunks are returns to the system and free arenas
@@ -5939,7 +5941,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
             break;
 
       case COMPACT:
-        if (isCompacting && compactPhase(lastGC, reason) == NotFinished)
+        if (isCompacting && compactPhase(reason) == NotFinished)
             break;
 
         finishCollection(reason);
