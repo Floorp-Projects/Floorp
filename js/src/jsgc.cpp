@@ -1935,13 +1935,6 @@ CanRelocateAllocKind(AllocKind kind)
     return kind <= FINALIZE_OBJECT_LAST;
 }
 
-static bool
-CanRelocateTraceKind(JSGCTraceKind kind)
-{
-    return kind == JSTRACE_OBJECT;
-}
-
-
 size_t ArenaHeader::countFreeCells()
 {
     size_t count = 0;
@@ -2255,21 +2248,16 @@ void
 MovingTracer::Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     TenuredCell *thing = TenuredCell::fromPointer(*thingp);
-    if (!CanRelocateTraceKind(kind)) {
-        MOZ_ASSERT(!IsForwarded(thing));
+
+    // Currently we only relocate objects.
+    if (kind != JSTRACE_OBJECT) {
+        MOZ_ASSERT(!RelocationOverlay::isCellForwarded(thing));
         return;
     }
 
-    Zone *zone = thing->zoneFromAnyThread();
-    if (!zone->isGCCompacting()) {
-        MOZ_ASSERT(!IsForwarded(thing));
-        return;
-    }
-
-    if (IsForwarded(thing)) {
-        Cell *dst = Forwarded(thing);
-        *thingp = dst;
-    }
+    JSObject *obj = reinterpret_cast<JSObject*>(thing);
+    if (IsForwarded(obj))
+        *thingp = Forwarded(obj);
 }
 
 void
@@ -5506,7 +5494,7 @@ GCRuntime::compactPhase(bool lastGC, JS::gcreason::Reason reason)
     for (ArenaHeader *arena = relocatedList; arena; arena = arena->next) {
         for (ArenaCellIterUnderFinalize i(arena); !i.done(); i.next()) {
             TenuredCell *src = i.getCell();
-            MOZ_ASSERT(IsForwarded(src));
+            MOZ_ASSERT(RelocationOverlay::isCellForwarded(src));
             TenuredCell *dest = Forwarded(src);
             MOZ_ASSERT(src->isMarked(BLACK) == dest->isMarked(BLACK));
             MOZ_ASSERT(src->isMarked(GRAY) == dest->isMarked(GRAY));
