@@ -9,8 +9,8 @@
 
 // Expected values:
 let res1 = [
-      {selector: "#element-size",              value: "160" + "\u00D7" + "160"},
-      {selector: ".size > span",               value: "100" + "\u00D7" + "100"},
+      {selector: "#element-size",              value: "160" + "\u00D7" + "160.117"},
+      {selector: ".size > span",               value: "100" + "\u00D7" + "100.117"},
       {selector: ".margin.top > span",         value: 30},
       {selector: ".margin.left > span",        value: "auto"},
       {selector: ".margin.bottom > span",      value: 30},
@@ -43,7 +43,7 @@ let res2 = [
 ];
 
 add_task(function*() {
-  let style = "div { position: absolute; top: 42px; left: 42px; height: 100px; width: 100px; border: 10px solid black; padding: 20px; margin: 30px auto;}";
+  let style = "div { position: absolute; top: 42px; left: 42px; height: 100.111px; width: 100px; border: 10px solid black; padding: 20px; margin: 30px auto;}";
   let html = "<style>" + style + "</style><div></div>"
 
   yield addTab("data:text/html," + encodeURIComponent(html));
