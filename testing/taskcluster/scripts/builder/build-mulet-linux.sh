@@ -33,4 +33,6 @@ mv *.linux-x86_64.json      $HOME/artifacts/target.linux-x86_64.json
 mv *.tests.zip              $HOME/artifacts/target.tests.zip
 mv jsshell-linux-x86_64.zip $HOME/artifacts/jsshell-linux-x86_64.zip
 
+ccache -s
+
 ################################### build.sh ###################################
