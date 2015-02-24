@@ -719,10 +719,9 @@ class BuildReader(object):
     each sandbox evaluation. Its return value is ignored.
     """
 
-    def __init__(self, config, sandbox_post_eval_cb=None):
+    def __init__(self, config):
         self.config = config
 
-        self._sandbox_post_eval_cb = sandbox_post_eval_cb
         self._log = logging.getLogger(__name__)
         self._read_files = set()
         self._execution_stack = []
@@ -967,9 +966,6 @@ class BuildReader(object):
         sandbox.exec_file(path)
         context.execution_time = time.time() - time_start
 
-        if self._sandbox_post_eval_cb:
-            self._sandbox_post_eval_cb(context)
-
         # We first collect directories populated in variables.
         dir_vars = ['DIRS']
 
@@ -1011,9 +1007,6 @@ class BuildReader(object):
                 gyp_contexts.append(gyp_context)
 
         for gyp_context in gyp_contexts:
-            if self._sandbox_post_eval_cb:
-                self._sandbox_post_eval_cb(gyp_context)
-
             context['DIRS'].append(mozpath.relpath(gyp_context.objdir, context.objdir))
 
         yield context
