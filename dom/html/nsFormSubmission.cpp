@@ -38,6 +38,7 @@
 #include "nsContentUtils.h"
 
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/File.h"
 
 using namespace mozilla;
 using mozilla::dom::EncodingUtils;
@@ -78,7 +79,7 @@ public:
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue);
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   nsIDOMBlob* aBlob,
+                                   File* aBlob,
                                    const nsString& aFilename);
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
                                         nsIInputStream** aPostDataStream);
@@ -165,7 +166,7 @@ nsFSURLEncoded::AddIsindex(const nsAString& aValue)
 
 nsresult
 nsFSURLEncoded::AddNameFilePair(const nsAString& aName,
-                                nsIDOMBlob* aBlob,
+                                File* aBlob,
                                 const nsString& aFilename)
 {
   if (!mWarnedFileControl) {
@@ -174,9 +175,8 @@ nsFSURLEncoded::AddNameFilePair(const nsAString& aName,
   }
 
   nsAutoString filename;
-  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
-  if (file) {
-    file->GetName(filename);
+  if (aBlob && aBlob->IsFile()) {
+    aBlob->GetName(filename);
   }
 
   return AddNameValuePair(aName, filename);
@@ -441,7 +441,7 @@ nsFSMultipartFormData::AddNameValuePair(const nsAString& aName,
 
 nsresult
 nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
-                                       nsIDOMBlob* aBlob,
+                                       File* aBlob,
                                        const nsString& aFilename)
 {
   // Encode the control name
@@ -459,9 +459,8 @@ nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
     } else {
       // Get and encode the filename
       nsAutoString filename16;
-      nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
-      if (file) {
-        rv = file->GetName(filename16);
+      if (aBlob->IsFile()) {
+        rv = aBlob->GetName(filename16);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -469,7 +468,7 @@ nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
         filename16.AssignLiteral("blob");
       } else {
         nsAutoString filepath16;
-        rv = file->GetPath(filepath16);
+        rv = aBlob->GetPath(filepath16);
         NS_ENSURE_SUCCESS(rv, rv);
         if (!filepath16.IsEmpty()) {
           // File.path includes trailing "/"
@@ -598,7 +597,7 @@ public:
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue);
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   nsIDOMBlob* aBlob,
+                                   File* aBlob,
                                    const nsString& aFilename);
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
                                         nsIInputStream** aPostDataStream);
@@ -622,13 +621,12 @@ nsFSTextPlain::AddNameValuePair(const nsAString& aName,
 
 nsresult
 nsFSTextPlain::AddNameFilePair(const nsAString& aName,
-                               nsIDOMBlob* aBlob,
+                               File* aBlob,
                                const nsString& aFilename)
 {
   nsAutoString filename;
-  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
-  if (file) {
-    file->GetName(filename);
+  if (aBlob && aBlob->IsFile()) {
+    aBlob->GetName(filename);
   }
 
   AddNameValuePair(aName, filename);

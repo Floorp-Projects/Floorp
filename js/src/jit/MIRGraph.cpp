@@ -19,7 +19,8 @@ using mozilla::Swap;
 
 MIRGenerator::MIRGenerator(CompileCompartment *compartment, const JitCompileOptions &options,
                            TempAllocator *alloc, MIRGraph *graph, CompileInfo *info,
-                           const OptimizationInfo *optimizationInfo)
+                           const OptimizationInfo *optimizationInfo,
+                           Label *outOfBoundsLabel, bool usesSignalHandlersForAsmJSOOB)
   : compartment(compartment),
     info_(info),
     optimizationInfo_(optimizationInfo),
@@ -40,6 +41,8 @@ MIRGenerator::MIRGenerator(CompileCompartment *compartment, const JitCompileOpti
     instrumentedProfiling_(false),
     instrumentedProfilingIsCached_(false),
     nurseryObjects_(*alloc),
+    outOfBoundsLabel_(outOfBoundsLabel),
+    usesSignalHandlersForAsmJSOOB_(usesSignalHandlersForAsmJSOOB),
     options(options)
 { }
 
@@ -406,11 +409,10 @@ MBasicBlock::inherit(TempAllocator &alloc, BytecodeAnalysis *analysis, MBasicBlo
     MOZ_ASSERT(!entryResumePoint_);
 
     // Propagate the caller resume point from the inherited block.
-    MResumePoint *callerResumePoint = pred ? pred->callerResumePoint() : nullptr;
+    callerResumePoint_ = pred ? pred->callerResumePoint() : nullptr;
 
     // Create a resume point using our initial stack state.
-    entryResumePoint_ = new(alloc) MResumePoint(this, pc(), callerResumePoint,
-                                                MResumePoint::ResumeAt);
+    entryResumePoint_ = new(alloc) MResumePoint(this, pc(), MResumePoint::ResumeAt);
     if (!entryResumePoint_->init(alloc))
         return false;
 
@@ -475,6 +477,8 @@ MBasicBlock::inheritResumePoint(MBasicBlock *pred)
     MOZ_ASSERT(kind_ != PENDING_LOOP_HEADER);
     MOZ_ASSERT(pred != nullptr);
 
+    callerResumePoint_ = pred->callerResumePoint();
+
     if (!predecessors_.append(pred))
         return false;
 
@@ -495,8 +499,7 @@ MBasicBlock::initEntrySlots(TempAllocator &alloc)
     discardResumePoint(entryResumePoint_);
 
     // Create a resume point using our initial stack state.
-    entryResumePoint_ = MResumePoint::New(alloc, this, pc(), callerResumePoint(),
-                                          MResumePoint::ResumeAt);
+    entryResumePoint_ = MResumePoint::New(alloc, this, pc(), MResumePoint::ResumeAt);
     if (!entryResumePoint_)
         return false;
     return true;
