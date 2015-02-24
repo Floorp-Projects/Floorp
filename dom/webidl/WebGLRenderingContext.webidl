@@ -520,7 +520,7 @@ interface WebGLRenderingContext {
     void bindFramebuffer(GLenum target, WebGLFramebuffer? framebuffer);
     void bindRenderbuffer(GLenum target, WebGLRenderbuffer? renderbuffer);
     void bindTexture(GLenum target, WebGLTexture? texture);
-    void blendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+    void blendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
     void blendEquation(GLenum mode);
     void blendEquationSeparate(GLenum modeRGB, GLenum modeAlpha);
     void blendFunc(GLenum sfactor, GLenum dfactor);
@@ -535,7 +535,7 @@ interface WebGLRenderingContext {
 
     [WebGLHandlesContextLoss] GLenum checkFramebufferStatus(GLenum target);
     void clear(GLbitfield mask);
-    void clearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+    void clearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
     void clearDepth(GLclampf depth);
     void clearStencil(GLint s);
     void colorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
