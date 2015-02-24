@@ -351,14 +351,14 @@ protected:
   int32_t mStartOffset;
   int32_t mEndOffset;
 
-  bool mIsPositioned;
-  bool mIsDetached;
-  bool mMaySpanAnonymousSubtrees;
-  bool mInSelection;
-  bool mIsGenerated;
-  bool mStartOffsetWasIncremented;
-  bool mEndOffsetWasIncremented;
-  bool mEnableGravitationOnElementRemoval;
+  bool mIsPositioned : 1;
+  bool mIsDetached : 1;
+  bool mMaySpanAnonymousSubtrees : 1;
+  bool mInSelection : 1;
+  bool mIsGenerated : 1;
+  bool mStartOffsetWasIncremented : 1;
+  bool mEndOffsetWasIncremented : 1;
+  bool mEnableGravitationOnElementRemoval : 1;
 #ifdef DEBUG
   int32_t  mAssertNextInsertOrAppendIndex;
   nsINode* mAssertNextInsertOrAppendNode;
