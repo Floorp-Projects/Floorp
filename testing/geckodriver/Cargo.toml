@@ -5,6 +5,7 @@ authors = ["James Graham <james@hoppipolla.co.uk>"]
 
 [dependencies]
 log = "0.2.4"
+env_logger = "0.2.2"
 regex = "0.1.15"
 rustc-serialize = "0.2.15"
 uuid = "0.1.10"

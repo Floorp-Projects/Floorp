@@ -8,11 +8,13 @@
 extern crate log;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate argparse;
+extern crate env_logger;
 extern crate hyper;
-extern crate regex;
 extern crate mozprofile;
 extern crate mozrunner;
-#[macro_use] extern crate webdriver;
+extern crate regex;
+#[macro_use]
+extern crate webdriver;
 
 use std::env;
 use std::old_io::net::ip::SocketAddr;
@@ -93,6 +95,7 @@ fn parse_addr(s: &str) -> Result<SocketAddr, String> {
 }
 
 fn main() {
+    env_logger::init().unwrap();
     let opts = match parse_args() {
         Ok(args) => args,
         Err(_) => return
