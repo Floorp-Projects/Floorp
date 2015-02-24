@@ -56,7 +56,7 @@ tasks:
 
         # Note: This task is built server side without the context or tooling that
         # exist in tree so we must hard code the version
-        image: 'quay.io/mozilla/decision:0.0.3'
+        image: 'quay.io/mozilla/builder:0.3.0'
 
         # Virtually no network or other potentially risky operations happen as part
         # of the task timeout aside from the initial clone. We intentionally have
@@ -68,7 +68,7 @@ tasks:
           - /bin/bash
           - -cx
           - >
-            source $(which entrypoint) &&
+            source ./bin/decision.sh &&
             ./mach taskcluster-graph
             --project='{{project}}'
             --message='{{comment}}'
