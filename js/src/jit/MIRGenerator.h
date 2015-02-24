@@ -39,7 +39,7 @@ class MIRGenerator
     MIRGenerator(CompileCompartment *compartment, const JitCompileOptions &options,
                  TempAllocator *alloc, MIRGraph *graph,
                  CompileInfo *info, const OptimizationInfo *optimizationInfo,
-                 Label *outOfBoundsLabel = nullptr, bool usesSignalHandlersForOOB = false);
+                 Label *outOfBoundsLabel = nullptr, bool usesSignalHandlersForAsmJSOOB = false);
 
     TempAllocator &alloc() {
         return *alloc_;
@@ -201,7 +201,7 @@ class MIRGenerator
     ObjectVector nurseryObjects_;
 
     Label *outOfBoundsLabel_;
-    bool usesSignalHandlersForOOB_;
+    bool usesSignalHandlersForAsmJSOOB_;
 
     void addAbortedNewScriptPropertiesGroup(ObjectGroup *type);
     void setForceAbort() {
@@ -227,11 +227,19 @@ class MIRGenerator
         return nurseryObjects_;
     }
 
-    bool usesSignalHandlersForOOB() const {
-        return usesSignalHandlersForOOB_;
-    }
     Label *outOfBoundsLabel() const {
         return outOfBoundsLabel_;
+    }
+    bool needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess *access) const {
+        // A heap access needs a bounds-check branch if we're not relying on signal
+        // handlers to catch errors, and if it's not proven to be within bounds.
+        // We use signal-handlers on x64, but on x86 there isn't enough address
+        // space for a guard region.
+#ifdef JS_CODEGEN_X64
+        if (usesSignalHandlersForAsmJSOOB_)
+            return false;
+#endif
+        return access->needsBoundsCheck();
     }
 };
 

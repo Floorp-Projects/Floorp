@@ -12181,21 +12181,57 @@ class MAsmJSNeg
 
 class MAsmJSHeapAccess
 {
-    Scalar::Type accessType_;
+    int32_t offset_;
+    Scalar::Type accessType_ : 8;
     bool needsBoundsCheck_;
     unsigned numSimdElems_;
 
   public:
     MAsmJSHeapAccess(Scalar::Type accessType, bool needsBoundsCheck, unsigned numSimdElems = 0)
-      : accessType_(accessType), needsBoundsCheck_(needsBoundsCheck), numSimdElems_(numSimdElems)
+      : offset_(0), accessType_(accessType),
+        needsBoundsCheck_(needsBoundsCheck), numSimdElems_(numSimdElems)
     {
         MOZ_ASSERT(numSimdElems <= ScalarTypeToLength(accessType));
     }
 
+    int32_t offset() const { return offset_; }
+    int32_t endOffset() const { return offset() + byteSize(); }
     Scalar::Type accessType() const { return accessType_; }
+    unsigned byteSize() const {
+        return Scalar::isSimdType(accessType())
+               ? Scalar::scalarByteSize(accessType()) * numSimdElems()
+               : TypedArrayElemSize(accessType());
+    }
     bool needsBoundsCheck() const { return needsBoundsCheck_; }
     void removeBoundsCheck() { needsBoundsCheck_ = false; }
     unsigned numSimdElems() const { MOZ_ASSERT(Scalar::isSimdType(accessType_)); return numSimdElems_; }
+
+    bool tryAddDisplacement(int32_t o) {
+        // Compute the new offset. Check for overflow and negative. In theory it
+        // ought to be possible to support negative offsets, but it'd require
+        // more elaborate bounds checking mechanisms than we currently have.
+        MOZ_ASSERT(offset_ >= 0);
+        int32_t newOffset = uint32_t(offset_) + o;
+        if (newOffset < 0)
+            return false;
+
+        // Compute the new offset to the end of the access. Check for overflow
+        // and negative here also.
+        int32_t newEnd = uint32_t(newOffset) + byteSize();
+        if (newEnd < 0)
+            return false;
+        MOZ_ASSERT(uint32_t(newEnd) >= uint32_t(newOffset));
+
+        // If we need bounds checking, keep it within the more restrictive
+        // AsmJSCheckedImmediateRange. Otherwise, just keep it within what
+        // the instruction set can support.
+        size_t range = needsBoundsCheck() ? AsmJSCheckedImmediateRange : AsmJSImmediateRange;
+        if (size_t(newEnd) > range)
+            return false;
+
+        offset_ = newOffset;
+        return true;
+    }
 };
 
 class MAsmJSLoadHeap
@@ -12259,6 +12295,7 @@ class MAsmJSLoadHeap
     }
 
     MDefinition *ptr() const { return getOperand(0); }
+    void replacePtr(MDefinition *newPtr) { replaceOperand(0, newPtr); }
     MemoryBarrierBits barrierBefore() const { return barrierBefore_; }
     MemoryBarrierBits barrierAfter() const { return barrierAfter_; }
 
@@ -12302,6 +12339,7 @@ class MAsmJSStoreHeap
     }
 
     MDefinition *ptr() const { return getOperand(0); }
+    void replacePtr(MDefinition *newPtr) { replaceOperand(0, newPtr); }
     MDefinition *value() const { return getOperand(1); }
     MemoryBarrierBits barrierBefore() const { return barrierBefore_; }
     MemoryBarrierBits barrierAfter() const { return barrierAfter_; }
