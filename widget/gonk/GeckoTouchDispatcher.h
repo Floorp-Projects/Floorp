@@ -46,14 +46,15 @@ class GeckoTouchDispatcher
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GeckoTouchDispatcher)
 
 public:
-  GeckoTouchDispatcher();
+  static GeckoTouchDispatcher* GetInstance();
   void NotifyTouch(MultiTouchInput& aTouch, TimeStamp aEventTime);
   void DispatchTouchEvent(MultiTouchInput aMultiTouch);
   void DispatchTouchMoveEvents(TimeStamp aVsyncTime);
-  static bool NotifyVsync(TimeStamp aVsyncTimestamp);
-  static void SetCompositorVsyncObserver(layers::CompositorVsyncObserver* aObserver);
+  bool NotifyVsync(TimeStamp aVsyncTimestamp);
+  void SetCompositorVsyncObserver(layers::CompositorVsyncObserver* aObserver);
 
 private:
+  GeckoTouchDispatcher();
   void ResampleTouchMoves(MultiTouchInput& aOutTouch, TimeStamp vsyncTime);
   void SendTouchEvent(MultiTouchInput& aData);
   void DispatchMouseEvent(MultiTouchInput& aMultiTouch,
