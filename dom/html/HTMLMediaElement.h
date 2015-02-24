@@ -1354,6 +1354,51 @@ protected:
 
   ElementInTreeState mElementInTreeState;
 
+public:
+  // Helper class to measure times for MSE telemetry stats
+  class TimeDurationAccumulator {
+  public:
+    TimeDurationAccumulator()
+      : mCount(0)
+    {
+    }
+    void Start() {
+      if (IsStarted()) {
+        return;
+      }
+      mStartTime = TimeStamp::Now();
+    }
+    void Pause() {
+      if (!IsStarted()) {
+        return;
+      }
+      mSum += (TimeStamp::Now() - mStartTime);
+      mCount++;
+      mStartTime = TimeStamp();
+    }
+    bool IsStarted() const {
+      return !mStartTime.IsNull();
+    }
+    double Total() const {
+      return mSum.ToSeconds();
+    }
+    uint32_t Count() const {
+      return mCount;
+    }
+  private:
+    TimeStamp mStartTime;
+    TimeDuration mSum;
+    uint32_t mCount;
+  };
+private:
+  // Total time an MSE video has spent playing
+  TimeDurationAccumulator mPlayTime;
+
+  // Time spent buffering in an MSE video
+  TimeDurationAccumulator mRebufferTime;
+
+  // Time spent between video load and video playback.
+  TimeDurationAccumulator mJoinLatency;
 };
 
 } // namespace dom
