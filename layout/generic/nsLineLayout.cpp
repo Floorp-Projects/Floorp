@@ -1019,8 +1019,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     } else {
       if (nsGkAtoms::letterFrame==frameType) {
         pfd->mIsLetterFrame = true;
-      } else if (nsGkAtoms::rubyFrame == frameType) {
-        SyncAnnotationBounds(pfd);
       }
       if (pfd->mSpan) {
         isEmpty = !pfd->mSpan->mHasNonemptyContent && pfd->mFrame->IsSelfEmpty();
@@ -1127,6 +1125,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         }
         if (nsGkAtoms::rubyFrame == frameType) {
           mHasRuby = true;
+          SyncAnnotationBounds(pfd);
         }
       }
 
@@ -2797,17 +2796,15 @@ nsLineLayout::AdvanceAnnotationInlineBounds(PerFrameData* aPFD,
 /**
  * This function applies the changes of icoord and isize caused by
  * justification to annotations of the given frame.
- * aPFD must be one of the frames in aContainingSpan.
  */
 void
 nsLineLayout::ApplyLineJustificationToAnnotations(PerFrameData* aPFD,
-                                                  PerSpanData* aContainingSpan,
                                                   nscoord aDeltaICoord,
                                                   nscoord aDeltaISize)
 {
   PerFrameData* pfd = aPFD->mNextAnnotation;
-  nscoord containerWidth = ContainerWidthForSpan(aContainingSpan);
   while (pfd) {
+    nscoord containerWidth = pfd->mFrame->GetParent()->GetRect().Width();
     AdvanceAnnotationInlineBounds(pfd, containerWidth,
                                   aDeltaICoord, aDeltaISize);
 
@@ -2876,8 +2873,7 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD,
 
       // The gaps added to the end of the frame should also be
       // excluded from the isize added to the annotation.
-      ApplyLineJustificationToAnnotations(pfd, aPSD,
-                                          deltaICoord, dw - gapsAtEnd);
+      ApplyLineJustificationToAnnotations(pfd, deltaICoord, dw - gapsAtEnd);
       deltaICoord += dw;
       pfd->mFrame->SetRect(lineWM, pfd->mBounds, ContainerWidthForSpan(aPSD));
     }

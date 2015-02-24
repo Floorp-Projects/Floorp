@@ -22,10 +22,8 @@
  * limitations under the License.
  */
 
-#include "pkix/pkix.h"
 #include "pkixder.h"
 #include "pkixgtest.h"
-#include "pkixtestutil.h"
 
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
@@ -60,7 +58,7 @@ CreateCertWithOneExtension(const char* subjectStr, const ByteString& extension)
   return CreateCertWithExtensions(subjectStr, extensions);
 }
 
-class TrustEverythingTrustDomain final : public TrustDomain
+class TrustEverythingTrustDomain final : public DefaultCryptoTrustDomain
 {
 private:
   Result GetCertTrust(EndEntityOrCA, const CertPolicyId&, Input,
@@ -68,13 +66,6 @@ private:
   {
     trustLevel = TrustLevel::TrustAnchor;
     return Success;
-  }
-
-  Result FindIssuer(Input /*encodedIssuerName*/, IssuerChecker& /*checker*/,
-                    Time /*time*/) override
-  {
-    ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
   Result CheckRevocation(EndEntityOrCA, const CertID&, Time,
@@ -88,36 +79,6 @@ private:
   {
     return Success;
   }
-
-  Result DigestBuf(Input input, DigestAlgorithm digestAlg,
-                   /*out*/ uint8_t* digestBuf, size_t digestLen) override
-  {
-    return TestDigestBuf(input, digestAlg, digestBuf, digestLen);
-  }
-
-  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
-                                            override
-  {
-    return Success;
-  }
-
-  Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
-                                    Input subjectPublicKeyInfo) override
-  {
-    return TestVerifyRSAPKCS1SignedDigest(signedDigest, subjectPublicKeyInfo);
-  }
-
-  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
-  {
-    return Success;
-  }
-
-  Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
-                                 Input subjectPublicKeyInfo) override
-  {
-    return TestVerifyECDSASignedDigest(signedDigest, subjectPublicKeyInfo);
-  }
-
 };
 
 // python DottedOIDToCode.py --tlv unknownExtensionOID 1.3.6.1.4.1.13769.666.666.666.1.500.9.3

@@ -210,8 +210,21 @@ class JitcodeGlobalEntry
         uint32_t callStackAtAddr(JSRuntime *rt, void *ptr, const char **results,
                                  uint32_t maxResults) const;
 
+        void youngestFrameLocationAtAddr(JSRuntime *rt, void *ptr,
+                                         JSScript **script, jsbytecode **pc) const;
+
         bool hasTrackedOptimizations() const {
             return !!optsRegionTable_;
+        }
+
+        const IonTrackedOptimizationsRegionTable *trackedOptimizationsRegionTable() const {
+            MOZ_ASSERT(hasTrackedOptimizations());
+            return optsRegionTable_;
+        }
+
+        uint8_t numOptimizationAttempts() const {
+            MOZ_ASSERT(hasTrackedOptimizations());
+            return optsAttemptsTable_->numEntries();
         }
 
         IonTrackedOptimizationsAttempts trackedOptimizationAttempts(uint8_t index) {
@@ -278,6 +291,9 @@ class JitcodeGlobalEntry
 
         uint32_t callStackAtAddr(JSRuntime *rt, void *ptr, const char **results,
                                  uint32_t maxResults) const;
+
+        void youngestFrameLocationAtAddr(JSRuntime *rt, void *ptr,
+                                         JSScript **script, jsbytecode **pc) const;
     };
 
     struct IonCacheEntry : public BaseEntry
@@ -302,6 +318,9 @@ class JitcodeGlobalEntry
 
         uint32_t callStackAtAddr(JSRuntime *rt, void *ptr, const char **results,
                                  uint32_t maxResults) const;
+
+        void youngestFrameLocationAtAddr(JSRuntime *rt, void *ptr,
+                                         JSScript **script, jsbytecode **pc) const;
     };
 
     // Dummy entries are created for jitcode generated when profiling is not turned on,
@@ -325,6 +344,13 @@ class JitcodeGlobalEntry
                                  uint32_t maxResults) const
         {
             return 0;
+        }
+
+        void youngestFrameLocationAtAddr(JSRuntime *rt, void *ptr,
+                                         JSScript **script, jsbytecode **pc) const
+        {
+            *script = nullptr;
+            *pc = nullptr;
         }
     };
 
@@ -549,6 +575,23 @@ class JitcodeGlobalEntry
             MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
         }
         return false;
+    }
+
+    void youngestFrameLocationAtAddr(JSRuntime *rt, void *ptr,
+                                     JSScript **script, jsbytecode **pc) const
+    {
+        switch (kind()) {
+          case Ion:
+            return ionEntry().youngestFrameLocationAtAddr(rt, ptr, script, pc);
+          case Baseline:
+            return baselineEntry().youngestFrameLocationAtAddr(rt, ptr, script, pc);
+          case IonCache:
+            return ionCacheEntry().youngestFrameLocationAtAddr(rt, ptr, script, pc);
+          case Dummy:
+            return dummyEntry().youngestFrameLocationAtAddr(rt, ptr, script, pc);
+          default:
+            MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
+        }
     }
 
     // Figure out the number of the (JSScript *, jsbytecode *) pairs that are active

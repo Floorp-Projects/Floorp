@@ -62,7 +62,8 @@ let runTest = Task.async(function*() {
 
   let request = navigator.mozApps.install(app.manifestURL);
 
-  let (deferred = Promise.defer()) {
+  {
+    let deferred = Promise.defer();
     request.onerror = function() {
       deferred.reject(this.error.name);
     };

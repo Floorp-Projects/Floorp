@@ -81,6 +81,8 @@ var ignoreCallees = {
     "PLDHashTableOps.hashKey" : true,
     "z_stream_s.zfree" : true,
     "GrGLInterface.fCallback" : true,
+    "std::strstreambuf._M_alloc_fun" : true,
+    "std::strstreambuf._M_free_fun" : true,
 };
 
 function fieldCallCannotGC(csu, fullfield)
@@ -136,6 +138,10 @@ var ignoreFunctions = {
     "PR_SetThreadPrivate" : true,
     "JSObject* js::GetWeakmapKeyDelegate(JSObject*)" : true, // FIXME: mark with AutoSuppressGCAnalysis instead
     "uint8 NS_IsMainThread()" : true,
+
+    // Has an indirect call under it by the name "__f", which seemed too
+    // generic to ignore by itself.
+    "void* std::_Locale_impl::~_Locale_impl(int32)" : true,
 
     // FIXME!
     "NS_LogInit": true,

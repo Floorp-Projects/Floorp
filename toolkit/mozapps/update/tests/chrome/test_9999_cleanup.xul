@@ -77,9 +77,8 @@ function runTest() {
     removeDirRecursive(addonPrepDir);
   }
   catch (e) {
-    dump("Unable to remove directory\n" +
-         "path: " + addonPrepDir.path + "\n" +
-         "Exception: " + e + "\n");
+    logTestInfo("Unable to remove directory. Path: " + addonPrepDir.path +
+                ", Exception: " + e);
   }
 
   resetAddons(finishTest);

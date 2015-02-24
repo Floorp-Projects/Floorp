@@ -61,74 +61,84 @@ function run_test() {
   doTestFinish();
 }
 
-if (IS_WIN) {
-  /**
-   * Determines a unique mutex name for the installation.
-   *
-   * @return Global mutex path.
-   */
-  function getPerInstallationMutexName() {
-    let hasher = AUS_Cc["@mozilla.org/security/hash;1"].
-                 createInstance(AUS_Ci.nsICryptoHash);
-    hasher.init(hasher.SHA1);
-
-    let exeFile = Services.dirsvc.get(XRE_EXECUTABLE_FILE, AUS_Ci.nsILocalFile);
-
-    let converter = AUS_Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                    createInstance(AUS_Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    let data = converter.convertToByteArray(exeFile.path.toLowerCase());
-
-    hasher.update(data, data.length);
-    return "Global\\MozillaUpdateMutex-" + hasher.finish(true);
+/**
+ * Determines a unique mutex name for the installation.
+ *
+ * @return Global mutex path.
+ */
+function getPerInstallationMutexName() {
+  if (!IS_WIN) {
+    do_throw("Windows only function called by a different platform!");
   }
 
-  /**
-   * Closes a Win32 handle.
-   *
-   * @param  aHandle
-   *         The handle to close.
-   */
-  function closeHandle(aHandle) {
-    let lib = ctypes.open("kernel32.dll");
-    let CloseHandle = lib.declare("CloseHandle",
-                                  ctypes.winapi_abi,
-                                  ctypes.int32_t, /* success */
-                                  ctypes.void_t.ptr); /* handle */
-    CloseHandle(aHandle);
-    lib.close();
+  let hasher = AUS_Cc["@mozilla.org/security/hash;1"].
+               createInstance(AUS_Ci.nsICryptoHash);
+  hasher.init(hasher.SHA1);
+
+  let exeFile = Services.dirsvc.get(XRE_EXECUTABLE_FILE, AUS_Ci.nsILocalFile);
+
+  let converter = AUS_Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                  createInstance(AUS_Ci.nsIScriptableUnicodeConverter);
+  converter.charset = "UTF-8";
+  let data = converter.convertToByteArray(exeFile.path.toLowerCase());
+
+  hasher.update(data, data.length);
+  return "Global\\MozillaUpdateMutex-" + hasher.finish(true);
+}
+
+/**
+ * Closes a Win32 handle.
+ *
+ * @param  aHandle
+ *         The handle to close.
+ */
+function closeHandle(aHandle) {
+  if (!IS_WIN) {
+    do_throw("Windows only function called by a different platform!");
   }
 
-  /**
-   * Creates a mutex.
-   *
-   * @param  aName
-   *         The name for the mutex.
-   * @return The Win32 handle to the mutex.
-   */
-  function createMutex(aName) {
-    const INITIAL_OWN = 1;
-    const ERROR_ALREADY_EXISTS = 0xB7;
-    let lib = ctypes.open("kernel32.dll");
-    let CreateMutexW = lib.declare("CreateMutexW",
-                                   ctypes.winapi_abi,
-                                   ctypes.void_t.ptr, /* return handle */
-                                   ctypes.void_t.ptr, /* security attributes */
-                                   ctypes.int32_t, /* initial owner */
-                                   ctypes.char16_t.ptr); /* name */
+  let lib = ctypes.open("kernel32.dll");
+  let CloseHandle = lib.declare("CloseHandle",
+                                ctypes.winapi_abi,
+                                ctypes.int32_t, /* success */
+                                ctypes.void_t.ptr); /* handle */
+  CloseHandle(aHandle);
+  lib.close();
+}
 
-    let handle = CreateMutexW(null, INITIAL_OWN, aName);
-    lib.close();
-    let alreadyExists = ctypes.winLastError == ERROR_ALREADY_EXISTS;
-    if (handle && !handle.isNull() && alreadyExists) {
-      closeHandle(handle);
-      handle = null;
-    }
-
-    if (handle && handle.isNull()) {
-      handle = null;
-    }
-
-    return handle;
+/**
+ * Creates a mutex.
+ *
+ * @param  aName
+ *         The name for the mutex.
+ * @return The Win32 handle to the mutex.
+ */
+function createMutex(aName) {
+  if (!IS_WIN) {
+    do_throw("Windows only function called by a different platform!");
   }
+
+  const INITIAL_OWN = 1;
+  const ERROR_ALREADY_EXISTS = 0xB7;
+  let lib = ctypes.open("kernel32.dll");
+  let CreateMutexW = lib.declare("CreateMutexW",
+                                 ctypes.winapi_abi,
+                                 ctypes.void_t.ptr, /* return handle */
+                                 ctypes.void_t.ptr, /* security attributes */
+                                 ctypes.int32_t, /* initial owner */
+                                 ctypes.char16_t.ptr); /* name */
+
+  let handle = CreateMutexW(null, INITIAL_OWN, aName);
+  lib.close();
+  let alreadyExists = ctypes.winLastError == ERROR_ALREADY_EXISTS;
+  if (handle && !handle.isNull() && alreadyExists) {
+    closeHandle(handle);
+    handle = null;
+  }
+
+  if (handle && handle.isNull()) {
+    handle = null;
+  }
+
+  return handle;
 }

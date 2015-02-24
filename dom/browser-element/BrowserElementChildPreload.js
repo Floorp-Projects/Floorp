@@ -816,21 +816,26 @@ BrowserElementChild.prototype = {
   },
 
   _getSystemCtxMenuData: function(elem) {
+    let documentURI = 
+      docShell.QueryInterface(Ci.nsIWebNavigation).currentURI.spec;
     if ((elem instanceof Ci.nsIDOMHTMLAnchorElement && elem.href) ||
         (elem instanceof Ci.nsIDOMHTMLAreaElement && elem.href)) {
       return {uri: elem.href,
+              documentURI: documentURI,
               text: elem.textContent.substring(0, kLongestReturnedString)};
     }
     if (elem instanceof Ci.nsIImageLoadingContent && elem.currentURI) {
-      return {uri: elem.currentURI.spec};
+      return {uri: elem.currentURI.spec, documentURI: documentURI};
     }
     if (elem instanceof Ci.nsIDOMHTMLImageElement) {
-      return {uri: elem.src};
+      return {uri: elem.src, documentURI: documentURI};
     }
     if (elem instanceof Ci.nsIDOMHTMLMediaElement) {
       let hasVideo = !(elem.readyState >= elem.HAVE_METADATA &&
                        (elem.videoWidth == 0 || elem.videoHeight == 0));
-      return {uri: elem.currentSrc || elem.src, hasVideo: hasVideo};
+      return {uri: elem.currentSrc || elem.src,
+              hasVideo: hasVideo,
+              documentURI: documentURI};
     }
     if (elem instanceof Ci.nsIDOMHTMLInputElement &&
         elem.hasAttribute("name")) {
@@ -847,6 +852,7 @@ BrowserElementChild.prototype = {
             ? parent.getAttribute("method").toLowerCase()
             : "get";
           return {
+            documentURI: documentURI,
             action: actionHref,
             method: method,
             name: elem.getAttribute("name"),
