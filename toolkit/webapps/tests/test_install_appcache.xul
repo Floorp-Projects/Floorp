@@ -60,7 +60,8 @@ let runTest = Task.async(function*() {
 
   let request = navigator.mozApps.install(app.manifestURL);
 
-  let (deferred = Promise.defer()) {
+  {
+    let deferred = Promise.defer();
     request.onerror = function() {
       deferred.reject(this.error.name);
     };
@@ -76,7 +77,8 @@ let runTest = Task.async(function*() {
   }
   ok(true, "App launchable");
 
-  let (size = 0) {
+  {
+    let size = 0;
     do {
       try {
         size = yield dirSize(OS.Path.join(testAppInfo.profileDir.path, "OfflineCache"));
@@ -99,7 +101,8 @@ let runTest = Task.async(function*() {
   }
   ok(!appClosed, "App was launched and is still running");
 
-  let (size = 0) {
+  {
+    let size = 0;
     do {
       try {
         size = yield dirSize(OS.Path.join(testAppInfo.cacheDir.path, "OfflineCache"));

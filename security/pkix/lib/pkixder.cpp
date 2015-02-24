@@ -111,6 +111,13 @@ SignatureAlgorithmIdentifierValue(Reader& input,
                                  /*out*/ PublicKeyAlgorithm& publicKeyAlgorithm,
                                  /*out*/ DigestAlgorithm& digestAlgorithm)
 {
+  // RFC 5758 Section 3.2 (ECDSA with SHA-2), and RFC 3279 Section 2.2.3
+  // (ECDSA with SHA-1) say that parameters must be omitted.
+  //
+  // RFC 4055 Section 5 and RFC 3279 Section 2.2.1 both say that parameters for
+  // RSA must be encoded as NULL; we relax that requirement by allowing the
+  // NULL to be omitted, to match all the other signature algorithms we support
+  // and for compatibility.
   Reader algorithmID;
   Result rv = AlgorithmIdentifierValue(input, algorithmID);
   if (rv != Success) {
@@ -165,15 +172,6 @@ SignatureAlgorithmIdentifierValue(Reader& input,
   static const uint8_t ecdsa_with_SHA1[] = {
     0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x01
   };
-
-  // RFC 5758 Section 3.1 (DSA with SHA-2), RFC 3279 Section 2.2.2 (DSA with
-  // SHA-1), RFC 5758 Section 3.2 (ECDSA with SHA-2), and RFC 3279
-  // Section 2.2.3 (ECDSA with SHA-1) all say that parameters must be omitted.
-  //
-  // RFC 4055 Section 5 and RFC 3279 Section 2.2.1 both say that parameters for
-  // RSA must be encoded as NULL; we relax that requirement by allowing the
-  // NULL to be omitted, to match all the other signature algorithms we support
-  // and for compatibility.
 
   // Matching is attempted based on a rough estimate of the commonality of the
   // algorithm, to minimize the number of MatchRest calls.

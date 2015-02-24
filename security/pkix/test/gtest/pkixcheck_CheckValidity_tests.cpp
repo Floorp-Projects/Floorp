@@ -23,8 +23,6 @@
  */
 
 #include "pkixgtest.h"
-#include "pkix/pkixtypes.h"
-#include "pkixtestutil.h"
 
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;

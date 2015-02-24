@@ -133,8 +133,6 @@ enum class EffectTypes : uint8_t {
  */
 enum class CompositableType : uint8_t {
   UNKNOWN,
-  CONTENT_INC,     // painted layer interface, only sends incremental
-                   // updates to a texture on the compositor side.
   CONTENT_TILED,   // tiled painted layer
   IMAGE,           // image with single buffering
   IMAGE_OVERLAY,   // image without buffer
@@ -143,19 +141,6 @@ enum class CompositableType : uint8_t {
   CONTENT_DOUBLE,  // painted layer interface, double buffering
   COUNT
 };
-
-/**
- * How the texture host is used for composition,
- * XXX - Only used by ContentClientIncremental
- */
-enum class DeprecatedTextureHostFlags : uint8_t {
-  DEFAULT = 0,       // The default texture host for the given SurfaceDescriptor
-  TILED = 1 << 0,    // A texture host that supports tiling
-  COPY_PREVIOUS = 1 << 1, // Texture contents should be initialized
-                                      // from the previous texture.
-  ALL_BITS = (1 << 2) - 1
-};
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DeprecatedTextureHostFlags)
 
 #ifdef XP_WIN
 typedef void* SyncHandle;
@@ -195,20 +180,6 @@ struct TextureFactoryIdentifier
 };
 
 /**
- * Identify a texture to a compositable. Many textures can have the same id, but
- * the id is unique for any texture owned by a particular compositable.
- * XXX - We don't really need this, it will be removed along with the incremental
- * ContentClient/Host.
- */
-enum class TextureIdentifier : uint8_t {
-  Front = 1,
-  Back = 2,
-  OnWhiteFront = 3,
-  OnWhiteBack = 4,
-  HighBound
-};
-
-/**
  * Information required by the compositor from the content-side for creating or
  * using compositables and textures.
  * XXX - TextureInfo is a bad name: this information is useful for the compositable,
@@ -218,27 +189,22 @@ enum class TextureIdentifier : uint8_t {
 struct TextureInfo
 {
   CompositableType mCompositableType;
-  // XXX - only used by ContentClientIncremental
-  DeprecatedTextureHostFlags mDeprecatedTextureHostFlags;
   TextureFlags mTextureFlags;
 
   TextureInfo()
     : mCompositableType(CompositableType::UNKNOWN)
-    , mDeprecatedTextureHostFlags(DeprecatedTextureHostFlags::DEFAULT)
     , mTextureFlags(TextureFlags::NO_FLAGS)
   {}
 
   explicit TextureInfo(CompositableType aType,
                        TextureFlags aTextureFlags = TextureFlags::DEFAULT)
     : mCompositableType(aType)
-    , mDeprecatedTextureHostFlags(DeprecatedTextureHostFlags::DEFAULT)
     , mTextureFlags(aTextureFlags)
   {}
 
   bool operator==(const TextureInfo& aOther) const
   {
     return mCompositableType == aOther.mCompositableType &&
-           mDeprecatedTextureHostFlags == aOther.mDeprecatedTextureHostFlags &&
            mTextureFlags == aOther.mTextureFlags;
   }
 };

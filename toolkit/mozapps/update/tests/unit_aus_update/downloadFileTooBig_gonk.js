@@ -5,7 +5,10 @@
 
 const KEY_UPDATE_ARCHIVE_DIR = "UpdArchD"
 
-let gActiveUpdate = null;
+let gActiveUpdate;
+let gDirService;
+let gDirProvider;
+let gOldProviders;
 
 function FakeDirProvider() {}
 FakeDirProvider.prototype = {

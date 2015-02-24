@@ -41,7 +41,6 @@ using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
 using struct mozilla::layers::FenceHandleFromChild from "mozilla/layers/FenceUtils.h";
-using mozilla::layers::TextureIdentifier from "mozilla/layers/CompositorTypes.h";
 using std::string from "string";
 
 namespace mozilla {
@@ -339,25 +338,10 @@ struct OpUseOverlaySource {
   OverlaySource overlay;
 };
 
-struct OpCreatedIncrementalTexture {
-  PCompositable compositable;
-  TextureInfo textureInfo;
-  nsIntRect bufferRect;
-};
-
 struct OpPaintTextureRegion {
   PCompositable compositable;
   ThebesBufferData bufferData;
   nsIntRegion updatedRegion;
-};
-
-struct OpPaintTextureIncremental {
-  PCompositable compositable;
-  TextureIdentifier textureId;
-  SurfaceDescriptor image;
-  nsIntRegion updatedRegion;
-  nsIntRect bufferRect;
-  nsIntPoint bufferRotation;
 };
 
 struct OpUpdatePictureRect {
@@ -438,10 +422,7 @@ struct OpReplyDeliverFence {
 union CompositableOperation {
   OpUpdatePictureRect;
 
-  OpCreatedIncrementalTexture;
-
   OpPaintTextureRegion;
-  OpPaintTextureIncremental;
 
   OpUseTiledLayerBuffer;
 
@@ -487,12 +468,6 @@ struct OpContentBufferSwap {
   nsIntRegion frontUpdatedRegion;
 };
 
-struct OpTextureSwap {
-  PCompositable compositable;
-  TextureIdentifier textureId;
-  SurfaceDescriptor image;
-};
-
 struct ReturnReleaseFence {
   PCompositable compositable;
   PTexture texture;
@@ -503,7 +478,6 @@ struct ReturnReleaseFence {
 // only to be used for buffer swapping.
 union EditReply {
   OpContentBufferSwap;
-  OpTextureSwap;
 
   ReturnReleaseFence;
 };
