@@ -1719,9 +1719,6 @@ JS::ProfilingFrameIterator::ProfilingFrameIterator(JSRuntime *rt, const Register
     activation_(rt->profilingActivation()),
     savedPrevJitTop_(nullptr)
 {
-    // Should only be instantiated when profiling is enabled.
-    MOZ_ASSERT(rt_->spsProfiler.enabled());
-
     if (!activation_)
         return;
 
