@@ -827,8 +827,6 @@ class TypeNewScript
 
   private:
     // Scripted function which this information was computed for.
-    // If instances of the associated group are created without calling
-    // 'new' on this function, the new script information is cleared.
     HeapPtrFunction function_;
 
     // Any preliminary objects with the type. The analyses are not performed
@@ -902,6 +900,8 @@ class TypeNewScript
     bool rollbackPartiallyInitializedObjects(JSContext *cx, ObjectGroup *group);
 
     static void make(JSContext *cx, ObjectGroup *group, JSFunction *fun);
+    static TypeNewScript *makeNativeVersion(JSContext *cx, TypeNewScript *newScript,
+                                            PlainObject *templateObject);
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
