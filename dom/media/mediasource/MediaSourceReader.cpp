@@ -844,7 +844,12 @@ MediaSourceReader::AttemptSeek()
   // Seek methods since it can deadlock.
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    if (!mWaitingForSeekData || !TrackBuffersContainTime(mPendingSeekTime)) {
+    if (!mWaitingForSeekData) {
+      return;
+    }
+    if (!TrackBuffersContainTime(mPendingSeekTime)) {
+      mVideoSourceDecoder = nullptr;
+      mAudioSourceDecoder = nullptr;
       return;
     }
     mWaitingForSeekData = false;
