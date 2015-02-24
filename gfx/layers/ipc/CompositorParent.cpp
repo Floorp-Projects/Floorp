@@ -445,7 +445,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
     mApzcTreeManager = new APZCTreeManager();
   }
 
-  if (gfxPrefs::VsyncAlignedCompositor()) {
+  if (gfxPrefs::VsyncAlignedCompositor() && gfxPrefs::HardwareVsyncEnabled()) {
     mCompositorVsyncObserver = new CompositorVsyncObserver(this, aWidget);
   }
 

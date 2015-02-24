@@ -4325,6 +4325,43 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     return true;
   },
 
+  function PseudoArray({obj, threadActor}, aGrip, aRawObj) {
+    let length = 0;
+
+    // Making sure all keys are numbers from 0 to length-1
+    let keys = obj.getOwnPropertyNames();
+    if (keys.length == 0) {
+      return false;
+    }
+    for (let key of keys) {
+      if (isNaN(key) || key != length++) {
+        return false;
+      }
+    }
+
+    aGrip.preview = {
+      kind: "ArrayLike",
+      length: length,
+    };
+
+    // Avoid recursive object grips.
+    if (threadActor._gripDepth > 1) {
+      return true;
+    }
+
+    let items = aGrip.preview.items = [];
+
+    let i = 0;
+    for (let key of keys) {
+      if (aRawObj.hasOwnProperty(key) && i++ < OBJECT_PREVIEW_MAX_ITEMS) {
+        let value = makeDebuggeeValueIfNeeded(obj, aRawObj[key]);
+        items.push(threadActor.createValueGrip(value));
+      }
+    }
+
+    return true;
+  }, // PseudoArray
+
   function GenericObject(aObjectActor, aGrip) {
     let {obj, threadActor} = aObjectActor;
     if (aGrip.preview || aGrip.displayString || threadActor._gripDepth > 1) {
