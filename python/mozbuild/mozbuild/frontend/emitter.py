@@ -524,7 +524,12 @@ class TreeMetadataEmitter(LoggingMixin):
                 flags = generated_files[f]
                 output = f
                 if flags.script:
-                    script = mozpath.join(context.srcdir, flags.script)
+                    method = "main"
+                    if ':' in flags.script:
+                        script, method = flags.script.split(':')
+                    else:
+                        script = flags.script
+                    script = mozpath.join(context.srcdir, script)
                     inputs = [mozpath.join(context.srcdir, i) for i in flags.inputs]
 
                     if not os.path.exists(script):
@@ -542,8 +547,9 @@ class TreeMetadataEmitter(LoggingMixin):
                                 % (f, i), context)
                 else:
                     script = None
+                    method = None
                     inputs = []
-                yield GeneratedFile(context, script, output, inputs)
+                yield GeneratedFile(context, script, method, output, inputs)
 
         test_harness_files = context.get('TEST_HARNESS_FILES')
         if test_harness_files:
