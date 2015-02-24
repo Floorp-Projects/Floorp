@@ -56,8 +56,20 @@ class SavedFrame : public NativeObject {
                     SystemAllocPolicy> Set;
 
     typedef RootedGeneric<Lookup*> AutoLookupRooter;
-    typedef AutoLookupRooter &HandleLookup;
+
     class AutoLookupVector;
+
+    class MOZ_STACK_CLASS HandleLookup {
+        friend class AutoLookupVector;
+
+        Lookup &lookup;
+
+        explicit HandleLookup(Lookup &lookup) : lookup(lookup) { }
+
+      public:
+        inline Lookup &get() { return lookup; }
+        inline Lookup *operator->() { return &lookup; }
+    };
 
   private:
     static bool finishSavedFrameInit(JSContext *cx, HandleObject ctor, HandleObject proto);
