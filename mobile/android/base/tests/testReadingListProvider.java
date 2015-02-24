@@ -8,8 +8,12 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
+import android.app.Activity;
+import android.content.ContentResolver;
+import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
+import org.mozilla.gecko.db.ReadingListAccessor;
 import org.mozilla.gecko.db.ReadingListProvider;
 
 import android.content.ContentProvider;
@@ -19,23 +23,46 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.*;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.ADDED_ON;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.CLIENT_LAST_MODIFIED;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.EXCERPT;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.GUID;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.IS_UNREAD;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.RESOLVED_TITLE;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.RESOLVED_URL;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.SERVER_LAST_MODIFIED;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.SERVER_STORED_ON;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.SYNC_CHANGE_FLAGS;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.SYNC_CHANGE_NONE;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.SYNC_CHANGE_RESOLVED;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.SYNC_CHANGE_UNREAD_CHANGED;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.SYNC_STATUS;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.SYNC_STATUS_MODIFIED;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.SYNC_STATUS_NEW;
+import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.SYNC_STATUS_SYNCED;
+import static org.mozilla.gecko.db.BrowserContract.URLColumns.TITLE;
+import static org.mozilla.gecko.db.BrowserContract.URLColumns.URL;
+
 public class testReadingListProvider extends ContentProviderTest {
 
     private static final String DB_NAME = "browser.db";
 
     // List of tests to be run sorted by dependency.
-    private final TestCase[] TESTS_TO_RUN = { new TestInsertItems(),
-                                              new TestDeleteItems(),
-                                              new TestUpdateItems(),
-                                              new TestBatchOperations(),
-                                              new TestBrowserProviderNotifications() };
+    private final TestCase[] TESTS_TO_RUN = {
+            new TestInsertItems(),
+            new TestDeleteItems(),
+            new TestUpdateItems(),
+            new TestBatchOperations(),
+            new TestBrowserProviderNotifications(),
+            new TestStateSequencing(),
+    };
 
     // Columns used to test for item equivalence.
-    final String[] TEST_COLUMNS = { ReadingListItems.TITLE,
-                                    ReadingListItems.URL,
-                                    ReadingListItems.EXCERPT,
-                                    ReadingListItems.LENGTH,
-                                    ReadingListItems.DATE_CREATED };
+    final String[] TEST_COLUMNS = { TITLE,
+                                    URL,
+                                    EXCERPT,
+                                    ADDED_ON };
 
     // Indicates that insertions have been tested. ContentProvider.insert
     // has been proven to work.
@@ -64,6 +91,13 @@ public class testReadingListProvider extends ContentProviderTest {
         for (TestCase test: TESTS_TO_RUN) {
             mTests.add(test);
         }
+
+        // Disable background fetches of content, because it causes the test harness
+        // to kill us for network fetches.
+        Activity a = getActivity();
+        if (a instanceof BrowserApp) {
+            ((BrowserApp) a).getReadingListHelper().disableBackgroundFetches();
+        }
     }
 
     public void testReadingListProviderTests() throws Exception {
@@ -85,21 +119,21 @@ public class testReadingListProvider extends ContentProviderTest {
         @Override
         public void test() throws Exception {
             ContentValues b = createFillerReadingListItem();
-            long id = ContentUris.parseId(mProvider.insert(ReadingListItems.CONTENT_URI, b));
+            long id = ContentUris.parseId(mProvider.insert(CONTENT_URI, b));
             Cursor c = getItemById(id);
 
             try {
                 mAsserter.ok(c.moveToFirst(), "Inserted item found", "");
                 assertRowEqualsContentValues(c, b);
 
-                mAsserter.is(c.getInt(c.getColumnIndex(ReadingListItems.CONTENT_STATUS)),
-                             ReadingListItems.STATUS_UNFETCHED,
+                mAsserter.is(c.getInt(c.getColumnIndex(CONTENT_STATUS)),
+                             STATUS_UNFETCHED,
                              "Inserted item has correct default content status");
             } finally {
                 c.close();
             }
 
-            testInsertWithNullCol(ReadingListItems.GUID);
+            testInsertWithNullCol(URL);
             mContentProviderInsertTested = true;
         }
 
@@ -112,7 +146,7 @@ public class testReadingListProvider extends ContentProviderTest {
             b.putNull(colName);
 
             try {
-                ContentUris.parseId(mProvider.insert(ReadingListItems.CONTENT_URI, b));
+                ContentUris.parseId(mProvider.insert(CONTENT_URI, b));
                 // If we get to here, the flawed insertion succeeded. Fail the test.
                 mAsserter.ok(false, "Insertion did not succeed with " + colName + " == null", "");
             } catch (NullPointerException e) {
@@ -128,17 +162,31 @@ public class testReadingListProvider extends ContentProviderTest {
 
         @Override
         public void test() throws Exception {
-            long id = insertAnItemWithAssertion();
-            // Test that the item is only marked as deleted and
+            final long one = insertAnItemWithAssertion();
+            final long two = insertAnItemWithAssertion();
+
+            assignGUID(one);
+
+            // Test that the item with a GUID is only marked as deleted and
             // not removed from the database.
-            testNonFirefoxSyncDelete(id);
+            testNonSyncDelete(one, true);
 
-            // Test that the item is removed from the database.
-            testFirefoxSyncDelete(id);
+            // The item without a GUID is just deleted immediately.
+            testNonSyncDelete(two, false);
 
-            id = insertAnItemWithAssertion();
+            // Test that the item with a GUID is removed from the database when deleted by Sync.
+            testSyncDelete(one);
+
+            final long three = insertAnItemWithAssertion();
+
             // Test that deleting works with only a URI.
-            testDeleteWithItemURI(id);
+            testDeleteWithItemURI(three);
+        }
+
+        private void assignGUID(final long id) {
+            final ContentValues values = new ContentValues();
+            values.put(GUID, "abcdefghi");
+            mProvider.update(CONTENT_URI, values, _ID + " = " + id, null);
         }
 
         /**
@@ -146,19 +194,26 @@ public class testReadingListProvider extends ContentProviderTest {
          * as deleted and not actually removed from the database. Also verify that the item
          * marked as deleted doesn't show up in a query.
          *
+         * Note that items are deleted immediately if they don't have a GUID.
+         *
          * @param id of the item to be deleted
+         * @param hasGUID if true, we expect the item to stick around and be marked.
          */
-        private void testNonFirefoxSyncDelete(long id) {
-            final int deleted = mProvider.delete(ReadingListItems.CONTENT_URI,
-                    ReadingListItems._ID + " = ?",
-                    new String[] { String.valueOf(id) });
+        private void testNonSyncDelete(long id, boolean hasGUID) {
+            final int deleted = mProvider.delete(CONTENT_URI,
+                                                 _ID + " = " + id,
+                                                 null);
 
             mAsserter.is(deleted, 1, "Inserted item was deleted");
 
             // PARAM_SHOW_DELETED in the URI allows items marked as deleted to be
             // included in the query.
-            Uri uri = appendUriParam(ReadingListItems.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1");
-            assertItemExistsByID(uri, id, "Deleted item was only marked as deleted");
+            Uri uri = appendUriParam(CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1");
+            if (hasGUID) {
+                assertItemExistsByID(uri, id, "Deleted item was only marked as deleted");
+            } else {
+                assertItemDoesNotExistByID(uri, id, "Deleted item had no GUID, so was really deleted.");
+            }
 
             // Test that the 'deleted' item does not show up in a query when PARAM_SHOW_DELETED
             // is not specified in the URI.
@@ -171,14 +226,14 @@ public class testReadingListProvider extends ContentProviderTest {
          *
          * @param id of the item to be deleted
          */
-        private void testFirefoxSyncDelete(long id) {
-            final int deleted = mProvider.delete(appendUriParam(ReadingListItems.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"),
-                    ReadingListItems._ID + " = ?",
-                    new String[] { String.valueOf(id) });
+        private void testSyncDelete(long id) {
+            final int deleted = mProvider.delete(appendUriParam(CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"),
+                    _ID + " = " + id,
+                    null);
 
             mAsserter.is(deleted, 1, "Inserted item was deleted");
 
-            Uri uri = appendUriParam(ReadingListItems.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1");
+            Uri uri = appendUriParam(CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1");
             assertItemDoesNotExistByID(uri, id, "Inserted item is now actually deleted");
         }
 
@@ -189,7 +244,7 @@ public class testReadingListProvider extends ContentProviderTest {
          * @param id of the item to be deleted
          */
         private void testDeleteWithItemURI(long id) {
-            final int deleted = mProvider.delete(ContentUris.withAppendedId(ReadingListItems.CONTENT_URI, id), null, null);
+            final int deleted = mProvider.delete(ContentUris.withAppendedId(CONTENT_URI, id), null, null);
             mAsserter.is(deleted, 1, "Inserted item was deleted using URI with id");
         }
     }
@@ -205,7 +260,7 @@ public class testReadingListProvider extends ContentProviderTest {
             ensureCanInsert();
 
             ContentValues original = createFillerReadingListItem();
-            long id = ContentUris.parseId(mProvider.insert(ReadingListItems.CONTENT_URI, original));
+            long id = ContentUris.parseId(mProvider.insert(CONTENT_URI, original));
             int updated = 0;
             Long originalDateCreated = null;
             Long originalDateModified = null;
@@ -214,16 +269,16 @@ public class testReadingListProvider extends ContentProviderTest {
             try {
                 mAsserter.ok(c.moveToFirst(), "Inserted item found", "");
 
-                originalDateCreated = c.getLong(c.getColumnIndex(ReadingListItems.DATE_CREATED));
-                originalDateModified = c.getLong(c.getColumnIndex(ReadingListItems.DATE_MODIFIED));
+                originalDateCreated = c.getLong(c.getColumnIndex(ADDED_ON));
+                originalDateModified = c.getLong(c.getColumnIndex(CLIENT_LAST_MODIFIED));
 
-                updates.put(ReadingListItems.TITLE, original.getAsString(ReadingListItems.TITLE) + "CHANGED");
-                updates.put(ReadingListItems.URL, original.getAsString(ReadingListItems.URL) + "/more/stuff");
-                updates.put(ReadingListItems.EXCERPT, original.getAsString(ReadingListItems.EXCERPT) + "CHANGED");
+                updates.put(TITLE, original.getAsString(TITLE) + "CHANGED");
+                updates.put(URL, original.getAsString(URL) + "/more/stuff");
+                updates.put(EXCERPT, original.getAsString(EXCERPT) + "CHANGED");
 
-                updated = mProvider.update(ReadingListItems.CONTENT_URI, updates,
-                                               ReadingListItems._ID + " = ?",
-                                               new String[] { String.valueOf(id) });
+                updated = mProvider.update(CONTENT_URI, updates,
+                                           _ID + " = ?",
+                                           new String[] { String.valueOf(id) });
 
                 mAsserter.is(updated, 1, "Inserted item was updated");
             } finally {
@@ -232,18 +287,17 @@ public class testReadingListProvider extends ContentProviderTest {
 
             // Name change for clarity. These values will be compared with the
             // current cursor row.
-            ContentValues expectedValues = updates;
+            final ContentValues expectedValues = updates;
             c = getItemById(id);
             try {
                 mAsserter.ok(c.moveToFirst(), "Updated item found", "");
-                mAsserter.isnot(c.getLong(c.getColumnIndex(ReadingListItems.DATE_MODIFIED)),
+                mAsserter.isnot(c.getLong(c.getColumnIndex(CLIENT_LAST_MODIFIED)),
                 originalDateModified,
                 "Date modified should have changed");
 
-                // DATE_CREATED and LENGTH should equal old values since they weren't updated.
-                expectedValues.put(ReadingListItems.DATE_CREATED, originalDateCreated);
-                expectedValues.put(ReadingListItems.LENGTH, original.getAsString(ReadingListItems.LENGTH));
-                assertRowEqualsContentValues(c, expectedValues, /* compareDateModified */ false);
+                // ADDED_ON shouldn't have changed.
+                expectedValues.put(ADDED_ON, originalDateCreated);
+                assertRowEqualsContentValues(c, expectedValues, /* compareDateModified */ false, TEST_COLUMNS);
             } finally {
                 c.close();
             }
@@ -251,44 +305,24 @@ public class testReadingListProvider extends ContentProviderTest {
             // Test that updates on an item that doesn't exist does not modify any rows.
             testUpdateWithInvalidID();
 
-            // Test that update fails when a GUID is null.
-            testUpdateWithNullCol(id, ReadingListItems.GUID);
-
             mContentProviderUpdateTested = true;
         }
 
         /**
          * Test that updates on an item that doesn't exist does
          * not modify any rows.
-         *
-         * @param id of the item to be deleted
          */
         private void testUpdateWithInvalidID() {
             ensureEmptyDatabase();
             final ContentValues b = createFillerReadingListItem();
-            final long id = ContentUris.parseId(mProvider.insert(ReadingListItems.CONTENT_URI, b));
+            final long id = ContentUris.parseId(mProvider.insert(CONTENT_URI, b));
             final long INVALID_ID = id + 1;
             final ContentValues updates = new ContentValues();
-            updates.put(ReadingListItems.TITLE, b.getAsString(ReadingListItems.TITLE) + "CHANGED");
-            final int updated = mProvider.update(ReadingListItems.CONTENT_URI, updates,
-                                               ReadingListItems._ID + " = ?",
-                                               new String[] { String.valueOf(INVALID_ID) });
-            mAsserter.is(updated, 0, "Should not be able to update item with an invalid GUID");
-        }
-
-        /**
-         * Test that update fails when a required column is null.
-         */
-        private int testUpdateWithNullCol(long id, String colName) {
-            ContentValues updates = new ContentValues();
-            updates.putNull(colName);
-
-            int updated = mProvider.update(ReadingListItems.CONTENT_URI, updates,
-                                           ReadingListItems._ID + " = ?",
-                                           new String[] { String.valueOf(id) });
-
-            mAsserter.is(updated, 0, "Should not be able to update item with " + colName + " == null ");
-            return updated;
+            updates.put(TITLE, b.getAsString(TITLE) + "CHANGED");
+            final int updated = mProvider.update(CONTENT_URI, updates,
+                                                 _ID + " = ?",
+                                                 new String[] { String.valueOf(INVALID_ID) });
+            mAsserter.is(updated, 0, "Should not be able to update item with an invalid ID");
         }
     }
 
@@ -306,23 +340,22 @@ public class testReadingListProvider extends ContentProviderTest {
             for (int i = 0; i < ITEM_COUNT; i++) {
                 final String url =  "http://www.test.org/" + i;
                 allVals[i] = new ContentValues();
-                allVals[i].put(ReadingListItems.TITLE, "Test" + i);
-                allVals[i].put(ReadingListItems.URL, url);
-                allVals[i].put(ReadingListItems.EXCERPT, "EXCERPT" + i);
-                allVals[i].put(ReadingListItems.LENGTH, i);
+                allVals[i].put(TITLE, "Test" + i);
+                allVals[i].put(URL, url);
+                allVals[i].put(EXCERPT, "EXCERPT" + i);
                 urls.add(url);
             }
 
-            int inserts = mProvider.bulkInsert(ReadingListItems.CONTENT_URI, allVals);
+            int inserts = mProvider.bulkInsert(CONTENT_URI, allVals);
             mAsserter.is(inserts, ITEM_COUNT, "Excepted number of inserts matches");
 
-            Cursor c = mProvider.query(ReadingListItems.CONTENT_URI, null,
-                               null,
-                               null,
-                               null);
+            final Cursor c = mProvider.query(CONTENT_URI, null,
+                                             null,
+                                             null,
+                                             null);
             try {
                 while (c.moveToNext()) {
-                    final String url = c.getString(c.getColumnIndex(ReadingListItems.URL));
+                    final String url = c.getString(c.getColumnIndex(URL));
                     mAsserter.ok(urls.contains(url), "Bulk inserted item with url == " + url + " was found in the DB", "");
                     // We should only be seeing each item once. Remove from set to prevent dups.
                     urls.remove(url);
@@ -369,10 +402,10 @@ public class testReadingListProvider extends ContentProviderTest {
 
             // Update
             mResolver.notifyChangeList.clear();
-            h.put(ReadingListItems.TITLE, "http://newexample.com");
+            h.put(TITLE, "http://newexample.com");
 
             long numUpdated = mProvider.update(ReadingListItems.CONTENT_URI, h,
-                                               ReadingListItems._ID + " = ?",
+                                               _ID + " = ?",
                                                new String[] { String.valueOf(id) });
 
             mAsserter.is(numUpdated,
@@ -423,12 +456,198 @@ public class testReadingListProvider extends ContentProviderTest {
         }
     }
 
+    private class TestStateSequencing extends TestCase {
+        @Override
+        protected void test() throws Exception {
+            final ReadingListAccessor accessor = getTestProfile().getDB().getReadingListAccessor();
+            final ContentResolver cr = getActivity().getContentResolver();
+            final Uri syncURI = CONTENT_URI.buildUpon()
+                                           .appendQueryParameter(BrowserContract.PARAM_IS_SYNC, "1")
+                                           .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1")
+                                           .build();
+
+            mAsserter.ok(accessor != null, "We have an accessor.", null);
+
+            // Verify that the accessor thinks we're empty.
+            mAsserter.ok(0 == accessor.getCount(cr), "We have no items.", null);
+
+            // Insert an item via the accessor.
+            final long addedItem = accessor.addBasicReadingListItem(cr, "http://example.org/", "Example A");
+
+            mAsserter.ok(1 == accessor.getCount(cr), "We have one item.", null);
+            final Cursor cursor = accessor.getReadingList(cr);
+            try {
+                mAsserter.ok(cursor.moveToNext(), "The cursor isn't empty.", null);
+                mAsserter.ok(1 == cursor.getCount(), "The cursor agrees.", null);
+            } finally {
+                cursor.close();
+            }
+
+            // Verify that it has no GUID, that its state is NEW, etc.
+            // This requires fetching more fields than the accessor uses.
+            final Cursor all = getEverything(syncURI);
+            try {
+                mAsserter.ok(all.moveToNext(), "The cursor isn't empty.", null);
+                mAsserter.ok(1 == all.getCount(), "The cursor agrees.", null);
+
+                ContentValues expected = new ContentValues();
+                expected.putNull(GUID);
+                expected.put(SYNC_STATUS, SYNC_STATUS_NEW);
+                expected.put(SYNC_CHANGE_FLAGS, SYNC_CHANGE_NONE);
+                expected.put(URL, "http://example.org/");
+                expected.put(TITLE, "Example A");
+                expected.putNull(RESOLVED_URL);
+                expected.putNull(RESOLVED_TITLE);
+
+                final String[] testColumns = {GUID, SYNC_STATUS, SYNC_CHANGE_FLAGS, URL, TITLE, RESOLVED_URL, RESOLVED_TITLE, URL, TITLE};
+                assertRowEqualsContentValues(all, expected, false, testColumns);
+            } finally {
+                all.close();
+            }
+
+            // Pretend that it was just synced.
+            final long serverTime = System.currentTimeMillis();
+            final ContentValues wasSynced = new ContentValues();
+            wasSynced.put(GUID, "eeeeeeeeeeeeee");
+            wasSynced.put(SYNC_STATUS, SYNC_STATUS_SYNCED);
+            wasSynced.put(SYNC_CHANGE_FLAGS, SYNC_CHANGE_NONE);
+            wasSynced.put(SERVER_STORED_ON, serverTime);
+            wasSynced.put(SERVER_LAST_MODIFIED, serverTime);
+
+            mAsserter.ok(1 == mProvider.update(syncURI, wasSynced, _ID + " = " + addedItem, null), "Updated one item.", null);
+            final Cursor afterSync = getEverything(syncURI);
+            try {
+                mAsserter.ok(afterSync.moveToNext(), "The cursor isn't empty.", null);
+                final String[] testColumns = {GUID, SYNC_STATUS, SYNC_CHANGE_FLAGS, SERVER_STORED_ON, SERVER_LAST_MODIFIED};
+                assertRowEqualsContentValues(afterSync, wasSynced, false, testColumns);
+            } finally {
+                afterSync.close();
+            }
+
+            // Make changes to the record that exercise the various change flags, verifying that
+            // the correct flags are set.
+            final long beforeMarkedRead = System.currentTimeMillis();
+            accessor.markAsRead(cr, addedItem);
+            final ContentValues markedAsRead = new ContentValues();
+            markedAsRead.put(GUID, "eeeeeeeeeeeeee");
+            markedAsRead.put(SYNC_STATUS, SYNC_STATUS_MODIFIED);
+            markedAsRead.put(SYNC_CHANGE_FLAGS, SYNC_CHANGE_UNREAD_CHANGED);
+            markedAsRead.put(IS_UNREAD, 0);
+
+            final Cursor afterMarkedRead = getEverything(syncURI);
+            try {
+                mAsserter.ok(afterMarkedRead.moveToNext(), "The cursor isn't empty.", null);
+                final String[] testColumns = {GUID, SYNC_STATUS, SYNC_CHANGE_FLAGS, IS_UNREAD};
+                assertRowEqualsContentValues(afterMarkedRead, markedAsRead, false, testColumns);
+                assertModifiedInRange(afterMarkedRead, beforeMarkedRead);
+            } finally {
+                afterMarkedRead.close();
+            }
+
+            // Now our content is here!
+            final long beforeContentUpdated = System.currentTimeMillis();
+            accessor.updateContent(cr, addedItem, "New title", "http://www.example.com/article", "The excerpt is long.");
+
+            // After this the content status should have changed, and we should be flagged to sync.
+            final ContentValues contentUpdated = new ContentValues();
+            contentUpdated.put(GUID, "eeeeeeeeeeeeee");
+            contentUpdated.put(SYNC_STATUS, SYNC_STATUS_MODIFIED);
+            contentUpdated.put(SYNC_CHANGE_FLAGS, SYNC_CHANGE_UNREAD_CHANGED | SYNC_CHANGE_RESOLVED);
+            contentUpdated.put(IS_UNREAD, 0);
+            contentUpdated.put(CONTENT_STATUS, STATUS_FETCHED_ARTICLE);
+
+            final Cursor afterContentUpdated = getEverything(syncURI);
+            try {
+                mAsserter.ok(afterContentUpdated.moveToNext(), "The cursor isn't empty.", null);
+                final String[] testColumns = {GUID, SYNC_STATUS, SYNC_CHANGE_FLAGS, IS_UNREAD, CONTENT_STATUS};
+                assertRowEqualsContentValues(afterContentUpdated, contentUpdated, false, testColumns);
+                assertModifiedInRange(afterContentUpdated, beforeContentUpdated);
+            } finally {
+                afterContentUpdated.close();
+            }
+
+            // Delete the record, and verify that its Sync state is DELETED.
+            final long beforeDeletion = System.currentTimeMillis();
+            accessor.deleteItem(cr, addedItem);
+            final ContentValues itemDeleted = new ContentValues();
+            itemDeleted.put(GUID, "eeeeeeeeeeeeee");
+            itemDeleted.put(SYNC_STATUS, SYNC_STATUS_DELETED);
+            itemDeleted.put(SYNC_CHANGE_FLAGS, SYNC_CHANGE_NONE);
+            // TODO: CONTENT_STATUS on deletion?
+
+            final Cursor afterDeletion = getEverything(syncURI);
+            try {
+                mAsserter.ok(afterDeletion.moveToNext(), "The cursor isn't empty.", null);
+                final String[] testColumns = {GUID, SYNC_STATUS, SYNC_CHANGE_FLAGS};
+                assertRowEqualsContentValues(afterDeletion, itemDeleted, false, testColumns);
+                assertModifiedInRange(afterDeletion, beforeDeletion);
+            } finally {
+                afterDeletion.close();
+            }
+
+            // The accessor will no longer return the record.
+            mAsserter.ok(0 == accessor.getCount(cr), "No items found.", null);
+
+            // Add a new record as Sync -- it should start in state SYNCED.
+            final ContentValues newRecord = new ContentValues();
+            final long newServerTime = System.currentTimeMillis() - 50000;
+            newRecord.put(GUID, "ffeeeeeeeeeeee");
+            newRecord.put(SYNC_STATUS, SYNC_STATUS_SYNCED);
+            newRecord.put(SYNC_CHANGE_FLAGS, SYNC_CHANGE_NONE);
+            newRecord.put(SERVER_STORED_ON, newServerTime);
+            newRecord.put(SERVER_LAST_MODIFIED, newServerTime);
+            newRecord.put(CLIENT_LAST_MODIFIED, System.currentTimeMillis());
+            newRecord.put(URL, "http://www.mozilla.org/");
+            newRecord.put(TITLE, "Mozilla");
+
+            final long newID = ContentUris.parseId(cr.insert(syncURI, newRecord));
+            mAsserter.ok(newID > 0, "New ID is greater than 0.", null);
+            mAsserter.ok(newID != addedItem, "New ID differs from last ID.", null);
+
+            final Cursor afterNewInsert = getEverything(syncURI);
+            try {
+                mAsserter.ok(afterNewInsert.moveToNext(), "The cursor isn't empty.", null);
+                mAsserter.ok(2 == afterNewInsert.getCount(), "The cursor has two rows.", null);
+
+                // Default sort order means newest first.
+                final String[] testColumns = {GUID, SYNC_STATUS, SYNC_CHANGE_FLAGS, SERVER_STORED_ON, SERVER_LAST_MODIFIED, CLIENT_LAST_MODIFIED, URL, TITLE};
+                assertRowEqualsContentValues(afterNewInsert, newRecord, false, testColumns);
+            } finally {
+                afterNewInsert.close();
+            }
+
+            // Make a change to it. Verify that it's now changed with the right flags.
+            final long beforeNewRead = System.currentTimeMillis();
+            accessor.markAsRead(cr, newID);
+            newRecord.put(SYNC_STATUS, SYNC_STATUS_MODIFIED);
+            newRecord.put(SYNC_CHANGE_FLAGS, SYNC_CHANGE_UNREAD_CHANGED);
+
+            final Cursor afterNewRead = getEverything(syncURI);
+            try {
+                mAsserter.ok(afterNewRead.moveToNext(), "The cursor isn't empty.", null);
+                mAsserter.ok(2 == afterNewRead.getCount(), "The cursor has two rows.", null);
+
+                // Default sort order means newest first.
+                final String[] testColumns = {GUID, SYNC_STATUS, SYNC_CHANGE_FLAGS, SERVER_STORED_ON, SERVER_LAST_MODIFIED, URL, TITLE};
+                assertRowEqualsContentValues(afterNewRead, newRecord, false, testColumns);
+                assertModifiedInRange(afterNewRead, beforeNewRead);
+            } finally {
+                afterNewRead.close();
+            }
+        }
+
+        private void assertModifiedInRange(Cursor cursor, long earliest) {
+            final long dbModified = cursor.getLong(cursor.getColumnIndexOrThrow(CLIENT_LAST_MODIFIED));
+            mAsserter.ok(dbModified >= earliest, "DB timestamp is at least as late as earliest.", null);
+            mAsserter.ok(dbModified <= System.currentTimeMillis(), "DB timestamp is earlier than now.", null);
+        }
+    }
+
     /**
      * Removes all items from the DB.
      */
     private void ensureEmptyDatabase() {
-        Uri uri = appendUriParam(ReadingListItems.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1");
-        getWritableDatabase(uri).delete(ReadingListItems.TABLE_NAME, null, null);
+        getWritableDatabase(CONTENT_URI).delete(TABLE_NAME, null, null);
     }
 
 
@@ -443,34 +662,35 @@ public class testReadingListProvider extends ContentProviderTest {
      * Checks that the values in the cursor's current row match those
      * in the ContentValues object.
      *
-     * @param cursor over the row to be checked
-     * @param values to be checked
+     * @param testColumns
+     * @param cursorWithActual over the row to be checked
+     * @param expectedValues to be checked
      */
-    private void assertRowEqualsContentValues(Cursor cursorWithActual, ContentValues expectedValues, boolean compareDateModified) {
-        for (String column: TEST_COLUMNS) {
+    private void assertRowEqualsContentValues(Cursor cursorWithActual, ContentValues expectedValues, boolean compareDateModified, String[] testColumns) {
+        for (String column: testColumns) {
             String expected = expectedValues.getAsString(column);
             String actual = cursorWithActual.getString(cursorWithActual.getColumnIndex(column));
             mAsserter.is(actual, expected, "Item has correct " + column);
         }
 
         if (compareDateModified) {
-            String expected = expectedValues.getAsString(ReadingListItems.DATE_MODIFIED);
-            String actual = cursorWithActual.getString(cursorWithActual.getColumnIndex(ReadingListItems.DATE_MODIFIED));
-            mAsserter.is(actual, expected, "Item has correct " + ReadingListItems.DATE_MODIFIED);
+            String expected = expectedValues.getAsString(CLIENT_LAST_MODIFIED);
+            String actual = cursorWithActual.getString(cursorWithActual.getColumnIndex(CLIENT_LAST_MODIFIED));
+            mAsserter.is(actual, expected, "Item has correct " + CLIENT_LAST_MODIFIED);
         }
     }
 
     private void assertRowEqualsContentValues(Cursor cursorWithActual, ContentValues expectedValues) {
-        assertRowEqualsContentValues(cursorWithActual, expectedValues, true);
+        assertRowEqualsContentValues(cursorWithActual, expectedValues, true, TEST_COLUMNS);
     }
 
     private ContentValues fillContentValues(String title, String url, String excerpt) {
         ContentValues values = new ContentValues();
 
-        values.put(ReadingListItems.TITLE, title);
-        values.put(ReadingListItems.URL, url);
-        values.put(ReadingListItems.EXCERPT, excerpt);
-        values.put(ReadingListItems.LENGTH, excerpt.length());
+        values.put(TITLE, title);
+        values.put(URL, url);
+        values.put(EXCERPT, excerpt);
+        values.put(ADDED_ON, System.currentTimeMillis());
 
         return values;
     }
@@ -480,15 +700,23 @@ public class testReadingListProvider extends ContentProviderTest {
         return fillContentValues("Example", "http://example.com/?num=" + rand.nextInt(), "foo bar");
     }
 
+    private Cursor getEverything(Uri uri) {
+        return mProvider.query(uri,
+                               null,
+                               null,
+                               null,
+                               null);
+    }
+
     private Cursor getItemById(Uri uri, long id, String[] projection) {
         return mProvider.query(uri, projection,
-                               ReadingListItems._ID + " = ?",
+                               _ID + " = ?",
                                new String[] { String.valueOf(id) },
                                null);
     }
 
     private Cursor getItemById(long id) {
-        return getItemById(ReadingListItems.CONTENT_URI, id, null);
+        return getItemById(CONTENT_URI, id, null);
     }
 
     private Cursor getItemById(Uri uri, long id) {
@@ -518,7 +746,7 @@ public class testReadingListProvider extends ContentProviderTest {
         ensureCanInsert();
 
         ContentValues v = createFillerReadingListItem();
-        long id = ContentUris.parseId(mProvider.insert(ReadingListItems.CONTENT_URI, v));
+        long id = ContentUris.parseId(mProvider.insert(CONTENT_URI, v));
 
         assertItemExistsByID(id, "Inserted item found");
         return id;
