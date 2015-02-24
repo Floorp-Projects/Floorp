@@ -549,8 +549,8 @@ class CodeGeneratorShared : public LElementVisitor
     }
 
     inline void verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, bool isLoad,
-                                            Scalar::Type type, const Operand &mem,
-                                            LAllocation alloc);
+                                            Scalar::Type type, unsigned numElems,
+                                            const Operand &mem, LAllocation alloc);
 };
 
 // An out-of-line path is generated at the end of the function.
