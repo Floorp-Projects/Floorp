@@ -109,6 +109,13 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
 
   *aCookieString = nullptr;
 
+  // Fast past: don't bother sending IPC messages about nullprincipal'd
+  // documents.
+  nsAutoCString scheme;
+  aHostURI->GetScheme(scheme);
+  if (scheme.EqualsLiteral("moz-nullprincipal"))
+    return NS_OK;
+
   // Determine whether the request is foreign. Failure is acceptable.
   bool isForeign = true;
   if (RequireThirdPartyCheck())
@@ -136,6 +143,13 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
 {
   NS_ENSURE_ARG(aHostURI);
   NS_ENSURE_ARG_POINTER(aCookieString);
+
+  // Fast past: don't bother sending IPC messages about nullprincipal'd
+  // documents.
+  nsAutoCString scheme;
+  aHostURI->GetScheme(scheme);
+  if (scheme.EqualsLiteral("moz-nullprincipal"))
+    return NS_OK;
 
   // Determine whether the request is foreign. Failure is acceptable.
   bool isForeign = true;
