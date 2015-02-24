@@ -19,7 +19,8 @@ using mozilla::Swap;
 
 MIRGenerator::MIRGenerator(CompileCompartment *compartment, const JitCompileOptions &options,
                            TempAllocator *alloc, MIRGraph *graph, CompileInfo *info,
-                           const OptimizationInfo *optimizationInfo)
+                           const OptimizationInfo *optimizationInfo,
+                           Label *outOfBoundsLabel, bool usesSignalHandlersForOOB)
   : compartment(compartment),
     info_(info),
     optimizationInfo_(optimizationInfo),
@@ -40,6 +41,8 @@ MIRGenerator::MIRGenerator(CompileCompartment *compartment, const JitCompileOpti
     instrumentedProfiling_(false),
     instrumentedProfilingIsCached_(false),
     nurseryObjects_(*alloc),
+    outOfBoundsLabel_(outOfBoundsLabel),
+    usesSignalHandlersForOOB_(usesSignalHandlersForOOB),
     options(options)
 { }
 

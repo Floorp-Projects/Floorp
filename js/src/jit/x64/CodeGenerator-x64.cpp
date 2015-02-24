@@ -313,9 +313,9 @@ CodeGeneratorX64::emitSimdLoad(LAsmJSLoadHeap *ins)
     }
 
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
-    if (mir->needsBoundsCheck()) {
+    if (mir->needsBoundsCheck() && !gen->usesSignalHandlersForOOB()) {
         maybeCmpOffset = masm.cmp32WithPatch(ToRegister(ptr), Imm32(0)).offset();
-        masm.j(Assembler::AboveOrEqual, mir->outOfBoundsLabel()); // Throws RangeError
+        masm.j(Assembler::AboveOrEqual, gen->outOfBoundsLabel()); // Throws RangeError
     }
 
     unsigned numElems = mir->numSimdElems();
@@ -376,7 +376,7 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     memoryBarrier(ins->mir()->barrierBefore());
     OutOfLineLoadTypedArrayOutOfBounds *ool = nullptr;
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
-    if (mir->needsBoundsCheck()) {
+    if (mir->needsBoundsCheck() && !gen->usesSignalHandlersForOOB()) {
         CodeOffsetLabel cmp = masm.cmp32WithPatch(ToRegister(ptr), Imm32(0));
         ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), vt);
         addOutOfLineCode(ool, ins->mir());
@@ -467,9 +467,9 @@ CodeGeneratorX64::emitSimdStore(LAsmJSStoreHeap *ins)
     }
 
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
-    if (mir->needsBoundsCheck()) {
+    if (mir->needsBoundsCheck() && !gen->usesSignalHandlersForOOB()) {
         maybeCmpOffset = masm.cmp32WithPatch(ToRegister(ptr), Imm32(0)).offset();
-        masm.j(Assembler::AboveOrEqual, mir->outOfBoundsLabel()); // Throws RangeError
+        masm.j(Assembler::AboveOrEqual, gen->outOfBoundsLabel()); // Throws RangeError
     }
 
     unsigned numElems = mir->numSimdElems();
@@ -529,7 +529,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     memoryBarrier(ins->mir()->barrierBefore());
     Label rejoin;
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
-    if (mir->needsBoundsCheck()) {
+    if (mir->needsBoundsCheck() && !gen->usesSignalHandlersForOOB()) {
         CodeOffsetLabel cmp = masm.cmp32WithPatch(ToRegister(ptr), Imm32(0));
         masm.j(Assembler::AboveOrEqual, &rejoin);
         maybeCmpOffset = cmp.offset();

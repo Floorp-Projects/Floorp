@@ -479,7 +479,7 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 
     if (Scalar::isSimdType(accessType)) {
         return emitSimdLoad(accessType, mir->numSimdElems(), ptr, ToFloatRegister(out),
-                            mir->needsBoundsCheck(), mir->outOfBoundsLabel());
+                            mir->needsBoundsCheck(), gen->outOfBoundsLabel());
     }
 
     memoryBarrier(ins->mir()->barrierBefore());
@@ -698,7 +698,7 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
 
     if (Scalar::isSimdType(vt)) {
         return emitSimdStore(vt, mir->numSimdElems(), ToFloatRegister(value), ptr,
-                             mir->needsBoundsCheck(), mir->outOfBoundsLabel());
+                             mir->needsBoundsCheck(), gen->outOfBoundsLabel());
     }
 
     memoryBarrier(ins->mir()->barrierBefore());
