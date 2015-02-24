@@ -199,6 +199,7 @@ this.DOMApplicationRegistry = {
   allAppsLaunchable: false,
   _updateHandlers: [ ],
   _pendingUninstalls: {},
+  _contentActions: new Map(),
   dirKey: DIRECTORY_NAME,
 
   init: function() {
@@ -209,6 +210,7 @@ this.DOMApplicationRegistry = {
                      "Webapps:GetInstalled",
                      "Webapps:GetNotInstalled",
                      "Webapps:Launch",
+                     "Webapps:LocationChange",
                      "Webapps:InstallPackage",
                      "Webapps:GetList",
                      "Webapps:RegisterForMessages",
@@ -1385,6 +1387,9 @@ this.DOMApplicationRegistry = {
         case "Webapps:Launch":
           this.doLaunch(msg, mm);
           break;
+        case "Webapps:LocationChange":
+          this.onLocationChange(msg.oid);
+          break;
         case "Webapps:CheckInstalled":
           this.checkInstalled(msg, mm);
           break;
@@ -2525,6 +2530,7 @@ this.DOMApplicationRegistry = {
       aMm.sendAsyncMessage("Webapps:Install:Return:KO", aData);
       Cu.reportError("Error installing app from: " + app.installOrigin +
                      ": " + aError);
+      this.popContentAction(aData.oid);
     }.bind(this);
 
     if (app.receipts.length > 0) {
@@ -2586,17 +2592,27 @@ this.DOMApplicationRegistry = {
 
     let installApp = (function() {
       app.manifestHash = this.computeManifestHash(app.manifest);
-      // We allow bypassing the install confirmation process to facilitate
-      // automation.
-      let prefName = "dom.mozApps.auto_confirm_install";
-      if (Services.prefs.prefHasUserValue(prefName) &&
-          Services.prefs.getBoolPref(prefName)) {
-        this.confirmInstall(aData);
-      } else {
-        Services.obs.notifyObservers(aMm, "webapps-ask-install",
-                                     JSON.stringify(aData));
+
+      // Check to see if the action has been cancelled in the interim.
+      let cancelled = this.actionCancelled(aData.oid);
+      this.popContentAction(aData.oid);
+      if (!cancelled) {
+        // We allow bypassing the install confirmation process to facilitate
+        // automation.
+        let prefName = "dom.mozApps.auto_confirm_install";
+        if (Services.prefs.prefHasUserValue(prefName) &&
+            Services.prefs.getBoolPref(prefName)) {
+          this.confirmInstall(aData);
+        } else {
+          Services.obs.notifyObservers(aMm, "webapps-ask-install",
+                                       JSON.stringify(aData));
+        }
       }
     }).bind(this);
+
+    // This action will be popped on success in installApp, or on
+    // failure in sendError.
+    this.pushContentAction(aData.oid);
 
     // We may already have the manifest (e.g. AutoInstall),
     // in which case we don't need to load it.
@@ -2669,6 +2685,7 @@ this.DOMApplicationRegistry = {
       aMm.sendAsyncMessage("Webapps:Install:Return:KO", aData);
       Cu.reportError("Error installing packaged app from: " +
                      app.installOrigin + ": " + aError);
+      this.popContentAction(aData.oid);
     }.bind(this);
 
     if (app.receipts.length > 0) {
@@ -2707,17 +2724,26 @@ this.DOMApplicationRegistry = {
     let installApp = (function() {
       app.manifestHash = this.computeManifestHash(app.updateManifest);
 
-      // We allow bypassing the install confirmation process to facilitate
-      // automation.
-      let prefName = "dom.mozApps.auto_confirm_install";
-      if (Services.prefs.prefHasUserValue(prefName) &&
-          Services.prefs.getBoolPref(prefName)) {
-        this.confirmInstall(aData);
-      } else {
-        Services.obs.notifyObservers(aMm, "webapps-ask-install",
-                                     JSON.stringify(aData));
+      // Check to see if the action has been cancelled in the interim.
+      let cancelled = this.actionCancelled(aData.oid);
+      this.popContentAction(aData.oid);
+      if (!cancelled) {
+        // We allow bypassing the install confirmation process to facilitate
+        // automation.
+        let prefName = "dom.mozApps.auto_confirm_install";
+        if (Services.prefs.prefHasUserValue(prefName) &&
+            Services.prefs.getBoolPref(prefName)) {
+          this.confirmInstall(aData);
+        } else {
+          Services.obs.notifyObservers(aMm, "webapps-ask-install",
+                                       JSON.stringify(aData));
+        }
       }
     }).bind(this);
+
+    // This action will be popped on success in installApp, or on
+    // failure in sendError.
+    this.pushContentAction(aData.oid);
 
     // We may already have the manifest (e.g. AutoInstall),
     // in which case we don't need to load it.
@@ -2765,6 +2791,42 @@ this.DOMApplicationRegistry = {
     }).bind(this), false);
 
     xhr.send(null);
+  },
+
+  onLocationChange(oid) {
+    let action = this._contentActions.get(oid);
+    if (action) {
+      action.cancelled = true;
+    }
+  },
+
+  pushContentAction: function(windowID) {
+    let actions = this._contentActions.get(windowID);
+    if (!actions) {
+      actions = {
+        count: 0,
+        cancelled: false,
+      };
+      this._contentActions.set(windowID, actions);
+    }
+    actions.count++;
+  },
+
+  popContentAction: function(windowID) {
+    let actions = this._contentActions.get(windowID);
+    if (!actions) {
+      Cu.reportError(`Failed to pop content action for window with ID ${windowID}`);
+      return;
+    }
+    actions.count--;
+    if (!actions.count) {
+      this._contentActions.delete(windowID);
+    }
+  },
+
+  actionCancelled: function(windowID) {
+    return this._contentActions.has(windowID) &&
+           this._contentActions.get(windowID).cancelled;
   },
 
   denyInstall: function(aData) {
