@@ -78,7 +78,7 @@ class MOZ_STACK_CLASS SavedFrame::AutoLookupVector : public JS::CustomAutoRooter
 
     typedef Vector<Lookup, 20> LookupVector;
     inline LookupVector *operator->() { return &lookups; }
-    inline Lookup &operator[](size_t i) { return lookups[i]; }
+    inline HandleLookup operator[](size_t i) { return HandleLookup(lookups[i]); }
 
   private:
     LookupVector lookups;
@@ -628,7 +628,7 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
     // actual SavedFrame instances.
     RootedSavedFrame parentFrame(cx, nullptr);
     for (size_t i = stackChain->length(); i != 0; i--) {
-        SavedFrame::AutoLookupRooter lookup(cx, &stackChain[i-1]);
+        SavedFrame::HandleLookup lookup = stackChain[i-1];
         lookup->parent = parentFrame;
         parentFrame.set(getOrCreateSavedFrame(cx, lookup));
         if (!parentFrame)
@@ -642,7 +642,7 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
 SavedFrame *
 SavedStacks::getOrCreateSavedFrame(JSContext *cx, SavedFrame::HandleLookup lookup)
 {
-    const SavedFrame::Lookup &lookupInstance = *lookup;
+    const SavedFrame::Lookup &lookupInstance = lookup.get();
     DependentAddPtr<SavedFrame::Set> p(cx, frames, lookupInstance);
     if (p)
         return *p;
