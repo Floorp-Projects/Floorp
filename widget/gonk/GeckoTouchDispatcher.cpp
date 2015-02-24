@@ -51,6 +51,16 @@ static const uint64_t kInputExpirationThresholdMs = 1000;
 
 static StaticRefPtr<GeckoTouchDispatcher> sTouchDispatcher;
 
+/* static */ GeckoTouchDispatcher*
+GeckoTouchDispatcher::GetInstance()
+{
+  if (!sTouchDispatcher) {
+    sTouchDispatcher = new GeckoTouchDispatcher();
+    ClearOnShutdown(&sTouchDispatcher);
+  }
+  return sTouchDispatcher;
+}
+
 GeckoTouchDispatcher::GeckoTouchDispatcher()
   : mTouchQueueLock("GeckoTouchDispatcher::mTouchQueueLock")
   , mTouchEventsFiltered(false)
@@ -70,40 +80,32 @@ GeckoTouchDispatcher::GeckoTouchDispatcher()
   mMaxPredict = TimeDuration::FromMilliseconds(gfxPrefs::TouchResampleMaxPredict());
   mOldTouchThreshold = TimeDuration::FromMilliseconds(gfxPrefs::TouchResampleOldTouchThreshold());
   mDelayedVsyncThreshold = TimeDuration::FromMilliseconds(gfxPrefs::TouchResampleVsyncDelayThreshold());
-  sTouchDispatcher = this;
-  ClearOnShutdown(&sTouchDispatcher);
 }
 
-/* static */ void
+void
 GeckoTouchDispatcher::SetCompositorVsyncObserver(mozilla::layers::CompositorVsyncObserver *aObserver)
 {
-  MOZ_ASSERT(sTouchDispatcher != nullptr);
   MOZ_ASSERT(NS_IsMainThread());
   // We assume on b2g that there is only 1 CompositorParent
-  MOZ_ASSERT(sTouchDispatcher->mCompositorVsyncObserver == nullptr);
-  if (sTouchDispatcher->mResamplingEnabled) {
-    sTouchDispatcher->mCompositorVsyncObserver = aObserver;
+  MOZ_ASSERT(mCompositorVsyncObserver == nullptr);
+  if (mResamplingEnabled) {
+    mCompositorVsyncObserver = aObserver;
   }
 }
 
-// Timestamp is in nanoseconds
-/* static */ bool
+bool
 GeckoTouchDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp)
 {
-  if (sTouchDispatcher == nullptr) {
-    return false;
-  }
-
-  MOZ_ASSERT(sTouchDispatcher->mResamplingEnabled);
+  MOZ_ASSERT(mResamplingEnabled);
   bool haveTouchData = false;
   {
-    MutexAutoLock lock(sTouchDispatcher->mTouchQueueLock);
-    haveTouchData = !sTouchDispatcher->mTouchMoveEvents.empty();
+    MutexAutoLock lock(mTouchQueueLock);
+    haveTouchData = !mTouchMoveEvents.empty();
   }
 
   if (haveTouchData) {
     layers::APZThreadUtils::AssertOnControllerThread();
-    sTouchDispatcher->DispatchTouchMoveEvents(aVsyncTimestamp);
+    DispatchTouchMoveEvents(aVsyncTimestamp);
   }
 
   return haveTouchData;
