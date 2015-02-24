@@ -4432,7 +4432,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     callInfo.pushFormals(current);
 
     MResumePoint *outerResumePoint =
-        MResumePoint::New(alloc(), current, pc, MResumePoint::Outer);
+        MResumePoint::New(alloc(), current, pc, callerResumePoint_, MResumePoint::Outer);
     if (!outerResumePoint)
         return false;
     current->setOuterResumePoint(outerResumePoint);
@@ -5089,7 +5089,7 @@ IonBuilder::inlineObjectGroupFallback(CallInfo &callInfo, MBasicBlock *dispatchB
 
     // Capture stack prior to the call operation. This captures the function.
     MResumePoint *preCallResumePoint =
-        MResumePoint::New(alloc(), dispatchBlock, pc, MResumePoint::ResumeAt);
+        MResumePoint::New(alloc(), dispatchBlock, pc, callerResumePoint_, MResumePoint::ResumeAt);
     if (!preCallResumePoint)
         return false;
 
@@ -6771,7 +6771,7 @@ IonBuilder::resume(MInstruction *ins, jsbytecode *pc, MResumePoint::Mode mode)
 {
     MOZ_ASSERT(ins->isEffectful() || !ins->isMovable());
 
-    MResumePoint *resumePoint = MResumePoint::New(alloc(), ins->block(), pc,
+    MResumePoint *resumePoint = MResumePoint::New(alloc(), ins->block(), pc, callerResumePoint_,
                                                   mode);
     if (!resumePoint)
         return false;
@@ -9589,7 +9589,7 @@ IonBuilder::annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPro
     if (inlinePropTable->numEntries() > 0) {
         // Push the object back onto the stack temporarily to capture the resume point.
         current->push(obj);
-        MResumePoint *resumePoint = MResumePoint::New(alloc(), current, pc,
+        MResumePoint *resumePoint = MResumePoint::New(alloc(), current, pc, callerResumePoint_,
                                                       MResumePoint::ResumeAt);
         if (!resumePoint)
             return false;
