@@ -1092,9 +1092,7 @@ protected:
                                               GLenum pname);
 
     // Returns x rounded to the next highest multiple of y.
-    static CheckedUint32 RoundedToNextMultipleOf(CheckedUint32 x,
-                                                 CheckedUint32 y)
-    {
+    static CheckedUint32 RoundedToNextMultipleOf(CheckedUint32 x, CheckedUint32 y) {
         return ((x + y - 1) / y) * y;
     }
 
@@ -1692,6 +1690,8 @@ private:
 
     WebGLContext* mWebGL;
 };
+
+size_t RoundUpToMultipleOf(size_t value, size_t multiple);
 
 } // namespace mozilla
 
