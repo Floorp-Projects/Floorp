@@ -161,7 +161,7 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
         LogicalPoint pos = child->GetLogicalPosition(lineWM, containerWidth);
         pos.B(lineWM) += deltaBCoord;
         // Relative positioning hasn't happened yet.
-        // So MovePositionBy should be used here.
+        // So MovePositionBy should not be used here.
         child->SetPosition(lineWM, pos, containerWidth);
         nsContainerFrame::PlaceFrameView(child);
       }
