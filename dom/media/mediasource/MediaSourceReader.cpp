@@ -810,8 +810,12 @@ MediaSourceReader::OnVideoSeekFailed(nsresult aResult)
 void
 MediaSourceReader::DoAudioSeek()
 {
-  SwitchAudioSource(&mPendingSeekTime);
-  MOZ_ASSERT(GetAudioReader());
+  if (SwitchAudioSource(&mPendingSeekTime) == SOURCE_NONE) {
+    // Data we need got evicted since the last time we checked for data
+    // availability. Abort current seek attempt.
+    mWaitingForSeekData = true;
+    return;
+  }
   mAudioSeekRequest.Begin(GetAudioReader()->Seek(GetReaderAudioTime(mPendingSeekTime), 0)
                          ->RefableThen(GetTaskQueue(), __func__, this,
                                        &MediaSourceReader::OnAudioSeekCompleted,
@@ -876,8 +880,12 @@ MediaSourceReader::AttemptSeek()
 void
 MediaSourceReader::DoVideoSeek()
 {
-  SwitchVideoSource(&mPendingSeekTime);
-  MOZ_ASSERT(GetVideoReader());
+  if (SwitchVideoSource(&mPendingSeekTime) == SOURCE_NONE) {
+    // Data we need got evicted since the last time we checked for data
+    // availability. Abort current seek attempt.
+    mWaitingForSeekData = true;
+    return;
+  }
   mVideoSeekRequest.Begin(GetVideoReader()->Seek(GetReaderVideoTime(mPendingSeekTime), 0)
                           ->RefableThen(GetTaskQueue(), __func__, this,
                                         &MediaSourceReader::OnVideoSeekCompleted,
