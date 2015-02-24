@@ -21,13 +21,13 @@ function run_test()
 function test_get_actor() {
   let bpStore = new BreakpointActorMap();
   let location = {
-    generatedSourceActor: { actor: 'actor1' },
-    generatedLine: 3
+    originalSourceActor: { actor: 'actor1' },
+    originalLine: 3
   };
   let columnLocation = {
-    generatedSourceActor: { actor: 'actor2' },
-    generatedLine: 5,
-    generatedColumn: 15
+    originalSourceActor: { actor: 'actor2' },
+    originalLine: 5,
+    originalColumn: 15
   };
 
   // Shouldn't have breakpoint
@@ -59,9 +59,9 @@ function test_set_actor() {
   // Breakpoint with column
   let bpStore = new BreakpointActorMap();
   let location = {
-    generatedSourceActor: { actor: 'actor1' },
-    generatedLine: 10,
-    generatedColumn: 9
+    originalSourceActor: { actor: 'actor1' },
+    originalLine: 10,
+    originalColumn: 9
   };
   bpStore.setActor(location, {});
   do_check_true(!!bpStore.getActor(location),
@@ -69,8 +69,8 @@ function test_set_actor() {
 
   // Breakpoint without column (whole line breakpoint)
   location = {
-    generatedSourceActor: { actor: 'actor2' },
-    generatedLine: 103
+    originalSourceActor: { actor: 'actor2' },
+    originalLine: 103
   };
   bpStore.setActor(location, {});
   do_check_true(!!bpStore.getActor(location),
@@ -81,9 +81,9 @@ function test_delete_actor() {
   // Breakpoint with column
   let bpStore = new BreakpointActorMap();
   let location = {
-    generatedSourceActor: { actor: 'actor1' },
-    generatedLine: 10,
-    generatedColumn: 9
+    originalSourceActor: { actor: 'actor1' },
+    originalLine: 10,
+    originalColumn: 9
   };
   bpStore.setActor(location, {});
   bpStore.deleteActor(location);
@@ -92,8 +92,8 @@ function test_delete_actor() {
 
   // Breakpoint without column (whole line breakpoint)
   location = {
-    generatedSourceActor: { actor: 'actor2' },
-    generatedLine: 103
+    originalSourceActor: { actor: 'actor2' },
+    originalLine: 103
   };
   bpStore.setActor(location, {});
   bpStore.deleteActor(location);
@@ -103,14 +103,14 @@ function test_delete_actor() {
 
 function test_find_actors() {
   let bps = [
-    { generatedSourceActor: { actor: "actor1" }, generatedLine: 10 },
-    { generatedSourceActor: { actor: "actor1" }, generatedLine: 10, generatedColumn: 3 },
-    { generatedSourceActor: { actor: "actor1" }, generatedLine: 10, generatedColumn: 10 },
-    { generatedSourceActor: { actor: "actor1" }, generatedLine: 23, generatedColumn: 89 },
-    { generatedSourceActor: { actor: "actor2" }, generatedLine: 10, generatedColumn: 1 },
-    { generatedSourceActor: { actor: "actor2" }, generatedLine: 20, generatedColumn: 5 },
-    { generatedSourceActor: { actor: "actor2" }, generatedLine: 30, generatedColumn: 34 },
-    { generatedSourceActor: { actor: "actor2" }, generatedLine: 40, generatedColumn: 56 }
+    { originalSourceActor: { actor: "actor1" }, originalLine: 10 },
+    { originalSourceActor: { actor: "actor1" }, originalLine: 10, originalColumn: 3 },
+    { originalSourceActor: { actor: "actor1" }, originalLine: 10, originalColumn: 10 },
+    { originalSourceActor: { actor: "actor1" }, originalLine: 23, originalColumn: 89 },
+    { originalSourceActor: { actor: "actor2" }, originalLine: 10, originalColumn: 1 },
+    { originalSourceActor: { actor: "actor2" }, originalLine: 20, originalColumn: 5 },
+    { originalSourceActor: { actor: "actor2" }, originalLine: 30, originalColumn: 34 },
+    { originalSourceActor: { actor: "actor2" }, originalLine: 40, originalColumn: 56 }
   ];
 
   let bpStore = new BreakpointActorMap();
@@ -130,8 +130,8 @@ function test_find_actors() {
 
   // Breakpoints by URL
 
-  bpSet = new Set(bps.filter(bp => { return bp.generatedSourceActor.actorID === "actor1" }));
-  for (let bp of bpStore.findActors({ generatedSourceActor: { actorID: "actor1" } })) {
+  bpSet = new Set(bps.filter(bp => { return bp.originalSourceActor.actorID === "actor1" }));
+  for (let bp of bpStore.findActors({ originalSourceActor: { actorID: "actor1" } })) {
     bpSet.delete(bp);
   }
   do_check_eq(bpSet.size, 0,
@@ -139,15 +139,15 @@ function test_find_actors() {
 
   // Breakpoints by URL and line
 
-  bpSet = new Set(bps.filter(bp => { return bp.generatedSourceActor.actorID === "actor1" && bp.generatedLine === 10; }));
+  bpSet = new Set(bps.filter(bp => { return bp.originalSourceActor.actorID === "actor1" && bp.originalLine === 10; }));
   let first = true;
-  for (let bp of bpStore.findActors({ generatedSourceActor: { actorID: "actor1" }, generatedLine: 10 })) {
+  for (let bp of bpStore.findActors({ originalSourceActor: { actorID: "actor1" }, originalLine: 10 })) {
     if (first) {
-      do_check_eq(bp.generatedColumn, undefined,
+      do_check_eq(bp.originalColumn, undefined,
                   "Should always get the whole line breakpoint first");
       first = false;
     } else {
-      do_check_neq(bp.generatedColumn, undefined,
+      do_check_neq(bp.originalColumn, undefined,
                    "Should not get the whole line breakpoint any time other than first.");
     }
     bpSet.delete(bp);
@@ -161,9 +161,9 @@ function test_duplicate_actors() {
 
   // Breakpoint with column
   let location = {
-    generatedSourceActor: { actorID: "foo-actor" },
-    generatedLine: 10,
-    generatedColumn: 9
+    originalSourceActor: { actorID: "foo-actor" },
+    originalLine: 10,
+    originalColumn: 9
   };
   bpStore.setActor(location, {});
   bpStore.setActor(location, {});
@@ -172,8 +172,8 @@ function test_duplicate_actors() {
 
   // Breakpoint without column (whole line breakpoint)
   location = {
-    generatedSourceActor: { actorID: "foo-actor" },
-    generatedLine: 15
+    originalSourceActor: { actorID: "foo-actor" },
+    originalLine: 15
   };
   bpStore.setActor(location, {});
   bpStore.setActor(location, {});
