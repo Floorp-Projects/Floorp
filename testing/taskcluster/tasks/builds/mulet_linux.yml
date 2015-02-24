@@ -25,7 +25,8 @@ task:
       - -c
       - >
         checkout-gecko workspace &&
-        ./workspace/gecko/testing/taskcluster/scripts/builder/build-mulet-linux.sh workspace
+        cd ./workspace/gecko/testing/taskcluster/scripts/builder &&
+        buildbot_step 'Build' ./build-mulet-linux.sh $HOME/workspace
 
   extra:
     treeherder:
