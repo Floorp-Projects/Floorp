@@ -145,6 +145,10 @@ public:
   static IDWriteFactory *GetDWriteFactory();
   ID2D1RenderTarget *GetRT() { return mRT; }
 
+  static uint32_t GetMaxSurfaceSize() {
+    return D3D10_REQ_TEXTURE2D_U_OR_V_DIMENSION;
+  }
+
   operator std::string() const {
     std::stringstream stream;
     stream << "DrawTargetD2D(" << this << ")";

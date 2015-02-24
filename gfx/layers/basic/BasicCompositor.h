@@ -103,7 +103,7 @@ public:
 
   virtual bool SupportsPartialTextureUpdate() MOZ_OVERRIDE { return true; }
   virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) MOZ_OVERRIDE { return true; }
-  virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE { return INT32_MAX; }
+  virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE;
   virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) MOZ_OVERRIDE { }
   
   virtual void SetScreenRenderOffset(const ScreenPoint& aOffset) MOZ_OVERRIDE {
@@ -140,6 +140,8 @@ private:
 
   gfx::IntRect mInvalidRect;
   nsIntRegion mInvalidRegion;
+
+  uint32_t mMaxTextureSize;
 };
 
 } // namespace layers
