@@ -20,19 +20,28 @@
 namespace js {
 namespace jit {
 
+
+static inline JitcodeRegionEntry
+RegionAtAddr(const JitcodeGlobalEntry::IonEntry &entry, void *ptr,
+             uint32_t *ptrOffset)
+{
+    MOZ_ASSERT(entry.containsPointer(ptr));
+    *ptrOffset = reinterpret_cast<uint8_t *>(ptr) -
+                 reinterpret_cast<uint8_t *>(entry.nativeStartAddr());
+
+    uint32_t regionIdx = entry.regionTable()->findRegionEntry(*ptrOffset);
+    MOZ_ASSERT(regionIdx < entry.regionTable()->numRegions());
+
+    return entry.regionTable()->regionEntry(regionIdx);
+}
+
 bool
 JitcodeGlobalEntry::IonEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
                                               BytecodeLocationVector &results,
                                               uint32_t *depth) const
 {
-    MOZ_ASSERT(containsPointer(ptr));
-    uint32_t ptrOffset = reinterpret_cast<uint8_t *>(ptr) -
-                         reinterpret_cast<uint8_t *>(nativeStartAddr());
-
-    uint32_t regionIdx = regionTable()->findRegionEntry(ptrOffset);
-    MOZ_ASSERT(regionIdx < regionTable()->numRegions());
-
-    JitcodeRegionEntry region = regionTable()->regionEntry(regionIdx);
+    uint32_t ptrOffset;
+    JitcodeRegionEntry region = RegionAtAddr(*this, ptr, &ptrOffset);
     *depth = region.scriptDepth();
 
     JitcodeRegionEntry::ScriptPcIterator locationIter = region.scriptPcIterator();
@@ -61,15 +70,10 @@ JitcodeGlobalEntry::IonEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
                                               const char **results,
                                               uint32_t maxResults) const
 {
-    MOZ_ASSERT(containsPointer(ptr));
     MOZ_ASSERT(maxResults >= 1);
-    uint32_t ptrOffset = reinterpret_cast<uint8_t *>(ptr) -
-                         reinterpret_cast<uint8_t *>(nativeStartAddr());
 
-    uint32_t regionIdx = regionTable()->findRegionEntry(ptrOffset);
-    MOZ_ASSERT(regionIdx < regionTable()->numRegions());
-
-    JitcodeRegionEntry region = regionTable()->regionEntry(regionIdx);
+    uint32_t ptrOffset;
+    JitcodeRegionEntry region = RegionAtAddr(*this, ptr, &ptrOffset);
 
     JitcodeRegionEntry::ScriptPcIterator locationIter = region.scriptPcIterator();
     MOZ_ASSERT(locationIter.hasMore());
@@ -86,6 +90,23 @@ JitcodeGlobalEntry::IonEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
     }
 
     return count;
+}
+
+void
+JitcodeGlobalEntry::IonEntry::youngestFrameLocationAtAddr(JSRuntime *rt, void *ptr,
+                                                          JSScript **script, jsbytecode **pc) const
+{
+    uint32_t ptrOffset;
+    JitcodeRegionEntry region = RegionAtAddr(*this, ptr, &ptrOffset);
+
+    JitcodeRegionEntry::ScriptPcIterator locationIter = region.scriptPcIterator();
+    MOZ_ASSERT(locationIter.hasMore());
+    uint32_t scriptIdx, pcOffset;
+    locationIter.readNext(&scriptIdx, &pcOffset);
+    pcOffset = region.findPcOffset(ptrOffset, pcOffset);
+
+    *script = getScript(scriptIdx);
+    *pc = (*script)->offsetToPC(pcOffset);
 }
 
 void
@@ -156,6 +177,16 @@ JitcodeGlobalEntry::BaselineEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
 }
 
 void
+JitcodeGlobalEntry::BaselineEntry::youngestFrameLocationAtAddr(JSRuntime *rt, void *ptr,
+                                                               JSScript **script,
+                                                               jsbytecode **pc) const
+{
+    uint8_t *addr = reinterpret_cast<uint8_t*>(ptr);
+    *script = script_;
+    *pc = script_->baselineScript()->approximatePcForNativeAddress(script_, addr);
+}
+
+void
 JitcodeGlobalEntry::BaselineEntry::destroy()
 {
     if (!str_)
@@ -164,19 +195,25 @@ JitcodeGlobalEntry::BaselineEntry::destroy()
     str_ = nullptr;
 }
 
+static inline void
+RejoinEntry(JSRuntime *rt, const JitcodeGlobalEntry::IonCacheEntry &cache,
+            void *ptr, JitcodeGlobalEntry *entry)
+{
+    MOZ_ASSERT(cache.containsPointer(ptr));
+
+    // There must exist an entry for the rejoin addr if this entry exists.
+    JitRuntime *jitrt = rt->jitRuntime();
+    jitrt->getJitcodeGlobalTable()->lookupInfallible(cache.rejoinAddr(), entry, rt);
+    MOZ_ASSERT(entry->isIon());
+}
+
 bool
 JitcodeGlobalEntry::IonCacheEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
                                                    BytecodeLocationVector &results,
                                                    uint32_t *depth) const
 {
-    MOZ_ASSERT(containsPointer(ptr));
-
-    // There must exist an entry for the rejoin addr if this entry exists.
-    JitRuntime *jitrt = rt->jitRuntime();
     JitcodeGlobalEntry entry;
-    jitrt->getJitcodeGlobalTable()->lookupInfallible(rejoinAddr(), &entry, rt);
-    MOZ_ASSERT(entry.isIon());
-
+    RejoinEntry(rt, *this, ptr, &entry);
     return entry.callStackAtAddr(rt, rejoinAddr(), results, depth);
 }
 
@@ -185,15 +222,19 @@ JitcodeGlobalEntry::IonCacheEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
                                                    const char **results,
                                                    uint32_t maxResults) const
 {
-    MOZ_ASSERT(containsPointer(ptr));
-
-    // There must exist an entry for the rejoin addr if this entry exists.
-    JitRuntime *jitrt = rt->jitRuntime();
     JitcodeGlobalEntry entry;
-    jitrt->getJitcodeGlobalTable()->lookupInfallible(rejoinAddr(), &entry, rt);
-    MOZ_ASSERT(entry.isIon());
-
+    RejoinEntry(rt, *this, ptr, &entry);
     return entry.callStackAtAddr(rt, rejoinAddr(), results, maxResults);
+}
+
+void
+JitcodeGlobalEntry::IonCacheEntry::youngestFrameLocationAtAddr(JSRuntime *rt, void *ptr,
+                                                               JSScript **script,
+                                                               jsbytecode **pc) const
+{
+    JitcodeGlobalEntry entry;
+    RejoinEntry(rt, *this, ptr, &entry);
+    return entry.youngestFrameLocationAtAddr(rt, ptr, script, pc);
 }
 
 
