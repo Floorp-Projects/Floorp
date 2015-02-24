@@ -3258,6 +3258,160 @@ GetElementIC::attachDenseElement(JSContext *cx, HandleScript outerScript, IonScr
     return linkAndAttachStub(cx, masm, attacher, ion, "dense array");
 }
 
+
+/* static */ bool
+GetElementIC::canAttachDenseElementHole(JSObject *obj, const Value &idval, TypedOrValueRegister output)
+{
+    if (!idval.isInt32())
+        return false;
+
+    if (!output.hasValue())
+        return false;
+
+    if (!obj->isNative())
+        return false;
+
+    if (obj->as<NativeObject>().getDenseInitializedLength() == 0)
+        return false;
+
+    while (obj) {
+        if (obj->isIndexed())
+            return false;
+
+        if (ClassCanHaveExtraProperties(obj->getClass()))
+            return false;
+
+        JSObject *proto = obj->getProto();
+        if (!proto)
+            break;
+
+        if (!proto->isNative())
+            return false;
+
+        // Make sure objects on the prototype don't have dense elements.
+        if (proto->as<NativeObject>().getDenseInitializedLength() != 0)
+            return false;
+
+        obj = proto;
+    }
+
+    return true;
+}
+
+static bool
+GenerateDenseElementHole(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
+                         IonScript *ion, JSObject *obj, const Value &idval,
+                         Register object, ConstantOrRegister index, TypedOrValueRegister output)
+{
+    MOZ_ASSERT(GetElementIC::canAttachDenseElementHole(obj, idval, output));
+    MOZ_ASSERT(obj->lastProperty());
+
+    Register scratchReg = output.valueReg().scratchReg();
+
+    // Guard on the shape and group, to prevent non-dense elements from appearing.
+    Label failures;
+    attacher.branchNextStubOrLabel(masm, Assembler::NotEqual,
+                                   Address(object, JSObject::offsetOfShape()),
+                                   ImmGCPtr(obj->lastProperty()), &failures);
+
+
+    if (obj->hasUncacheableProto()) {
+        masm.loadPtr(Address(object, JSObject::offsetOfGroup()), scratchReg);
+        Address proto(scratchReg, ObjectGroup::offsetOfProto());
+        masm.branchPtr(Assembler::NotEqual, proto,
+                       ImmMaybeNurseryPtr(obj->getProto()), &failures);
+    }
+
+    JSObject *pobj = obj->getProto();
+    while (pobj) {
+        MOZ_ASSERT(pobj->lastProperty());
+
+        masm.movePtr(ImmMaybeNurseryPtr(pobj), scratchReg);
+        if (pobj->hasUncacheableProto()) {
+            MOZ_ASSERT(!pobj->isSingleton());
+            Address groupAddr(scratchReg, JSObject::offsetOfGroup());
+            masm.branchPtr(Assembler::NotEqual, groupAddr, ImmGCPtr(pobj->group()), &failures);
+        }
+
+        // Make sure the shape matches, to avoid non-dense elements.
+        masm.branchPtr(Assembler::NotEqual, Address(scratchReg, JSObject::offsetOfShape()),
+                       ImmGCPtr(pobj->lastProperty()), &failures);
+
+        // Load elements vector.
+        masm.loadPtr(Address(scratchReg, NativeObject::offsetOfElements()), scratchReg);
+
+        // Also make sure there are no dense elements.
+        Label hole;
+        Address initLength(scratchReg, ObjectElements::offsetOfInitializedLength());
+        masm.branch32(Assembler::NotEqual, initLength, Imm32(0), &failures);
+
+        pobj = pobj->getProto();
+    }
+
+    // Ensure the index is an int32 value.
+    Register indexReg = InvalidReg;
+    Register elementsReg = InvalidReg;
+
+    if (index.reg().hasValue()) {
+        indexReg = scratchReg;
+        MOZ_ASSERT(indexReg != InvalidReg);
+        ValueOperand val = index.reg().valueReg();
+
+        masm.branchTestInt32(Assembler::NotEqual, val, &failures);
+
+        // Unbox the index.
+        masm.unboxInt32(val, indexReg);
+
+        // Save the object register.
+        masm.push(object);
+        elementsReg = object;
+    } else {
+        MOZ_ASSERT(!index.reg().typedReg().isFloat());
+        indexReg = index.reg().typedReg().gpr();
+        elementsReg = scratchReg;
+    }
+
+    // Load elements vector.
+    masm.loadPtr(Address(object, NativeObject::offsetOfElements()), elementsReg);
+
+    // Guard on the initialized length.
+    Label hole;
+    Address initLength(elementsReg, ObjectElements::offsetOfInitializedLength());
+    masm.branch32(Assembler::BelowOrEqual, initLength, indexReg, &hole);
+
+    // Load the value.
+    Label done;
+    masm.loadValue(BaseObjectElementIndex(elementsReg, indexReg), output.valueReg());
+    masm.branchTestMagic(Assembler::NotEqual, output.valueReg(), &done);
+
+    // Load undefined for the hole.
+    masm.bind(&hole);
+    masm.moveValue(UndefinedValue(), output.valueReg());
+
+    masm.bind(&done);
+    // Restore the object register.
+    if (elementsReg == object)
+        masm.pop(object);
+    attacher.jumpRejoin(masm);
+
+    // All failure flows through here.
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
+
+    return true;
+}
+
+bool
+GetElementIC::attachDenseElementHole(JSContext *cx, HandleScript outerScript, IonScript *ion,
+                                     HandleObject obj, const Value &idval)
+{
+    MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
+    RepatchStubAppender attacher(*this);
+    GenerateDenseElementHole(cx, masm, attacher, ion, obj, idval, object(), index(), output());
+
+    return linkAndAttachStub(cx, masm, attacher, ion, "dense hole");
+}
+
 /* static */ bool
 GetElementIC::canAttachTypedArrayElement(JSObject *obj, const Value &idval,
                                          TypedOrValueRegister output)
@@ -3565,6 +3719,13 @@ GetElementIC::update(JSContext *cx, HandleScript outerScript, size_t cacheIndex,
         }
         if (!attachedStub && !cache.hasDenseStub() && canAttachDenseElement(obj, idval)) {
             if (!cache.attachDenseElement(cx, outerScript, ion, obj, idval))
+                return false;
+            attachedStub = true;
+        }
+        if (!attachedStub && cache.monitoredResult() &&
+            canAttachDenseElementHole(obj, idval, cache.output()))
+        {
+            if (!cache.attachDenseElementHole(cx, outerScript, ion, obj, idval))
                 return false;
             attachedStub = true;
         }

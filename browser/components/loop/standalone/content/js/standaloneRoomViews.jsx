@@ -83,10 +83,20 @@ loop.standaloneRoomViews = (function(mozL10n) {
         case ROOM_STATES.MEDIA_WAIT: {
           var msg = mozL10n.get("call_progress_getting_media_description",
                                 {clientShortname: mozL10n.get("clientShortname2")});
-          // XXX Bug 1047040 will add images to help prompt the user.
+          var utils = loop.shared.utils;
+          var isChrome = utils.isChrome(navigator.userAgent);
+          var isFirefox = utils.isFirefox(navigator.userAgent);
+          var isOpera = utils.isOpera(navigator.userAgent);
+          var promptMediaMessageClasses = React.addons.classSet({
+            "prompt-media-message": true,
+            "chrome": isChrome,
+            "firefox": isFirefox,
+            "opera": isOpera,
+            "other": !isChrome && !isFirefox && !isOpera
+          });
           return (
             <div className="room-inner-info-area">
-              <p className="prompt-media-message">
+              <p className={promptMediaMessageClasses}>
                 {msg}
               </p>
             </div>
