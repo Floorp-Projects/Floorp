@@ -904,6 +904,38 @@ TabParent::RecvSetDimensions(const uint32_t& aFlags,
   return false;
 }
 
+static nsIntPoint
+GetChromeDisplacement(nsFrameLoader *aFrameLoader)
+{
+  if (!aFrameLoader) {
+    return nsIntPoint();
+  }
+
+  // Calculate the displacement from the primary frame of the tab
+  // content to the top-level frame of the widget we are in.
+  nsIFrame* contentFrame = aFrameLoader->GetPrimaryFrameOfOwningContent();
+  if (!contentFrame) {
+    return nsIntPoint();
+  }
+
+  nsIFrame* nextFrame = nsLayoutUtils::GetCrossDocParentFrame(contentFrame);
+  if (!nextFrame) {
+    NS_WARNING("Couldn't find window chrome to calculate displacement to.");
+    return nsIntPoint();
+  }
+
+  nsIFrame* rootFrame = nextFrame;
+  while (nextFrame) {
+    rootFrame = nextFrame;
+    nextFrame = nsLayoutUtils::GetCrossDocParentFrame(rootFrame);
+  }
+
+  nsPoint offset = contentFrame->GetOffsetToCrossDoc(rootFrame);
+  int32_t appUnitsPerDevPixel = rootFrame->PresContext()->AppUnitsPerDevPixel();
+  return nsIntPoint((int)(offset.x/appUnitsPerDevPixel),
+                    (int)(offset.y/appUnitsPerDevPixel));
+}
+
 void
 TabParent::UpdateDimensions(const nsIntRect& rect, const nsIntSize& size)
 {
@@ -928,7 +960,9 @@ TabParent::UpdateDimensions(const nsIntRect& rect, const nsIntSize& size)
     mDimensions = size;
     mOrientation = orientation;
 
-    nsIntPoint chromeOffset = -GetChildProcessOffset();
+    nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+    nsIntPoint chromeOffset = GetChromeDisplacement(frameLoader);
+
     unused << SendUpdateDimensions(mRect, mDimensions, mOrientation, chromeOffset);
   }
 }
