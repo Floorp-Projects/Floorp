@@ -145,6 +145,14 @@ JS_NewObjectWithUniqueType(JSContext *cx, const JSClass *clasp, HandleObject pro
     return obj;
 }
 
+JS_FRIEND_API(JSObject *)
+JS_NewObjectWithoutMetadata(JSContext *cx, const JSClass *clasp, JS::Handle<JSObject*> proto)
+{
+    // Use an AutoEnterAnalysis to suppress invocation of the metadata callback.
+    AutoEnterAnalysis enter(cx);
+    return JS_NewObjectWithGivenProto(cx, clasp, proto);
+}
+
 JS_FRIEND_API(JSPrincipals *)
 JS_GetCompartmentPrincipals(JSCompartment *compartment)
 {
