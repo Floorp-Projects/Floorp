@@ -986,31 +986,52 @@ TrackBuffer::RangeRemoval(int64_t aStart, int64_t aEnd)
     // Nothing to remove.
     return false;
   }
-  if (aEnd < bufferedEnd) {
-    // TODO. We only handle trimming.
+
+  if (aStart > bufferedStart && aEnd < bufferedEnd) {
+    // TODO. We only handle trimming and removal from the start.
     NS_WARNING("RangeRemoval unsupported arguments. "
-               "Can only handle trimming");
+               "Can only handle trimming (trim left or trim right");
     return false;
   }
 
   nsTArray<SourceBufferDecoder*> decoders;
   decoders.AppendElements(mInitializedDecoders);
 
-  // Only trimming existing buffers.
-  for (size_t i = 0; i < decoders.Length(); ++i) {
-    decoders[i]->Trim(aStart);
-    if (aStart <= buffered->GetStartTime()) {
-      // We've completely emptied it, can clear the data.
-      int64_t size = decoders[i]->GetResource()->GetSize();
-      decoders[i]->GetResource()->EvictData(size, size);
-      if (decoders[i] == mCurrentDecoder ||
-          mParentDecoder->IsActiveReader(decoders[i]->GetReader())) {
-        continue;
+  if (aStart <= bufferedStart && aEnd < bufferedEnd) {
+    // Evict data from beginning.
+    for (size_t i = 0; i < decoders.Length(); ++i) {
+      nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
+      decoders[i]->GetBuffered(buffered);
+      if (buffered->GetEndTime() < aEnd) {
+        // Can be fully removed.
+        MSE_DEBUG("remove all bufferedEnd=%f time=%f, size=%lld",
+                  buffered->GetEndTime(), time,
+                  decoders[i]->GetResource()->GetSize());
+        decoders[i]->GetResource()->EvictAll();
+      } else {
+        int64_t offset = decoders[i]->ConvertToByteOffset(aEnd);
+        MSE_DEBUG("removing some bufferedEnd=%f offset=%lld size=%lld",
+                  buffered->GetEndTime(), offset,
+                  decoders[i]->GetResource()->GetSize());
+        if (offset > 0) {
+          decoders[i]->GetResource()->EvictData(offset, offset);
+        }
       }
-      MSE_DEBUG("remove empty decoders=%d", i);
-      RemoveDecoder(decoders[i]);
+    }
+  } else {
+    // Only trimming existing buffers.
+    for (size_t i = 0; i < decoders.Length(); ++i) {
+      if (aStart <= buffered->GetStartTime()) {
+        // It will be entirely emptied, can clear all data.
+        decoders[i]->GetResource()->EvictAll();
+      } else {
+        decoders[i]->Trim(aStart);
+      }
     }
   }
+
+  RemoveEmptyDecoders(decoders);
+
   return true;
 }
 
