@@ -18,6 +18,12 @@ namespace dom {
 class File;
 }
 
+enum {
+  kVideoTrack = 1,
+  kAudioTrack = 2,
+  kTrackCount
+};
+
 /**
  * Abstract interface for managing audio and video devices. Each platform
  * must implement a concrete class that will map these classes and methods
