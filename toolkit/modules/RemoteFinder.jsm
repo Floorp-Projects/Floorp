@@ -17,18 +17,34 @@ XPCOMUtils.defineLazyGetter(this, "GetClipboardSearchString",
 );
 
 function RemoteFinder(browser) {
-  this._browser = browser;
   this._listeners = new Set();
   this._searchString = null;
 
-  let mm = this._browser.messageManager;
-  mm.addMessageListener("Finder:Result", this);
-  mm.addMessageListener("Finder:MatchesResult", this);
-  mm.addMessageListener("Finder:CurrentSelectionResult",this);
-  mm.sendAsyncMessage("Finder:Initialize");
+  this.swapBrowser(browser);
 }
 
 RemoteFinder.prototype = {
+  swapBrowser: function(aBrowser) {
+    if (this._messageManager) {
+      this._messageManager.removeMessageListener("Finder:Result", this);
+      this._messageManager.removeMessageListener("Finder:MatchesResult", this);
+      this._messageManager.removeMessageListener("Finder:CurrentSelectionResult",this);
+    }
+    else {
+      aBrowser.messageManager.sendAsyncMessage("Finder:Initialize");
+    }
+
+    this._browser = aBrowser;
+    this._messageManager = this._browser.messageManager;
+    this._messageManager.addMessageListener("Finder:Result", this);
+    this._messageManager.addMessageListener("Finder:MatchesResult", this);
+    this._messageManager.addMessageListener("Finder:CurrentSelectionResult", this);
+
+    // Ideally listeners would have removed themselves but that doesn't happen
+    // right now
+    this._listeners.clear();
+  },
+
   addResultListener: function (aListener) {
     this._listeners.add(aListener);
   },
@@ -58,7 +74,13 @@ RemoteFinder.prototype = {
     }
 
     for (let l of this._listeners) {
-      l[callback].apply(l, params);
+      // Don't let one callback throwing stop us calling the rest
+      try {
+        l[callback].apply(l, params);
+      }
+      catch (e) {
+        Cu.reportError(e);
+      }
     }
   },
 

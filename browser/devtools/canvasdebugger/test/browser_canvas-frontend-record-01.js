@@ -32,8 +32,6 @@ function ifTestingSupported() {
 
   is($("#record-snapshot").getAttribute("checked"), "true",
     "The 'record snapshot' button should now be checked.");
-  is($("#record-snapshot").getAttribute("disabled"), "true",
-    "The 'record snapshot' button should now be disabled.");
   is($("#record-snapshot").hasAttribute("hidden"), false,
     "The 'record snapshot' button should still be visible.");
 

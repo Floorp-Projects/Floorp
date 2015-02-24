@@ -1068,7 +1068,7 @@ var StyleRuleActor = protocol.ActorClass({
       document = this.getDocument(parentStyleSheet);
     }
 
-    let tempElement = document.createElement("div");
+    let tempElement = document.createElementNS(XHTML_NS, "div");
 
     for (let mod of modifications) {
       if (mod.type === "set") {
