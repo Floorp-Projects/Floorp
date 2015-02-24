@@ -9236,6 +9236,7 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
            WITH_COMMONX4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
            || native == js::simd_int32x4_not || native == js::simd_int32x4_neg
            || native == js::simd_int32x4_fromFloat32x4 || native == js::simd_int32x4_fromFloat32x4Bits
+           || native == js::simd_int32x4_select || native == js::simd_int32x4_bitselect
            || native == js::simd_int32x4_splat)
        {
             Rooted<SimdTypeDescr *> descr(cx, &cx->global()->int32x4TypeDescr().as<SimdTypeDescr>());
@@ -9251,6 +9252,7 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
            || native == js::simd_float32x4_reciprocal || native == js::simd_float32x4_reciprocalSqrt
            || native == js::simd_float32x4_not || native == js::simd_float32x4_neg
            || native == js::simd_float32x4_fromInt32x4 || native == js::simd_float32x4_fromInt32x4Bits
+           || native == js::simd_float32x4_select || native == js::simd_float32x4_bitselect
            || native == js::simd_float32x4_splat)
        {
             Rooted<SimdTypeDescr *> descr(cx, &cx->global()->float32x4TypeDescr().as<SimdTypeDescr>());

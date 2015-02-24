@@ -786,6 +786,24 @@ template bool
 SimdPolicy<0>::adjustInputs(TempAllocator &alloc, MInstruction *ins);
 
 bool
+SimdSelectPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    MIRType specialization = ins->typePolicySpecialization();
+
+    // First input is the mask, which has to be an int32x4 (for now).
+    if (!MaybeSimdUnbox(alloc, ins, MIRType_Int32x4, 0))
+        return false;
+
+    // Next inputs are the two vectors of a particular type.
+    for (unsigned i = 1; i < 3; i++) {
+        if (!MaybeSimdUnbox(alloc, ins, specialization, i))
+            return false;
+    }
+
+    return true;
+}
+
+bool
 CallPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
     MCall *call = ins->toCall();
@@ -1066,6 +1084,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     _(InstanceOfPolicy)                         \
     _(PowPolicy)                                \
     _(SimdAllPolicy)                            \
+    _(SimdSelectPolicy)                         \
     _(StoreTypedArrayElementStaticPolicy)       \
     _(StoreTypedArrayHolePolicy)                \
     _(StoreTypedArrayPolicy)                    \
