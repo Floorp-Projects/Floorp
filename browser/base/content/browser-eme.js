@@ -167,6 +167,15 @@ let gEMEHandler = {
 
     let message = gNavigatorBundle.getFormattedString(msgId, [this._brandShortName]);
     let anchorId = "eme-notification-icon";
+    let firstPlayPref = "browser.eme.ui.firstContentShown";
+    if (!Services.prefs.getPrefType(firstPlayPref) ||
+        !Services.prefs.getBoolPref(firstPlayPref)) {
+      document.getElementById(anchorId).setAttribute("firstplay", "true");
+      Services.prefs.setBoolPref(firstPlayPref, true);
+    } else {
+      document.getElementById(anchorId).removeAttribute("firstplay");
+    }
+
 
     let mainAction = {
       label: gNavigatorBundle.getString(btnLabelId),
