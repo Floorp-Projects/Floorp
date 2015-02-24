@@ -217,8 +217,11 @@ this.BrowserUtils = {
    * @return a boolean indicating if linkNode has a rel="noreferrer" attribute.
    */
   linkHasNoReferrer: function (linkNode) {
+    // A null linkNode typically means that we're checking a link that wasn't
+    // provided via an <a> link, like a text-selected URL.  Don't leak
+    // referrer information in this case.
     if (!linkNode)
-      return false;
+      return true;
 
     let rel = linkNode.getAttribute("rel");
     if (!rel)

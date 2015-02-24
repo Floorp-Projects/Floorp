@@ -186,8 +186,8 @@ CodeGeneratorShared::restoreLiveVolatile(LInstruction *ins)
 
 void
 CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, bool isLoad,
-                                                 Scalar::Type type, const Operand &mem,
-                                                 LAllocation alloc)
+                                                 Scalar::Type type, unsigned numElems,
+                                                 const Operand &mem, LAllocation alloc)
 {
 #ifdef DEBUG
     using namespace Disassembler;
@@ -229,9 +229,11 @@ CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, b
         MOZ_CRASH("Unexpected array type");
     }
 
+    size_t size = Scalar::isSimdType(type)
+                  ? Scalar::scalarByteSize(type) * numElems
+                  : TypedArrayElemSize(type);
     masm.verifyHeapAccessDisassembly(begin, end,
-                                     HeapAccess(kind, TypedArrayElemSize(type),
-                                     ComplexAddress(mem), op));
+                                     HeapAccess(kind, size, ComplexAddress(mem), op));
 #endif
 }
 
