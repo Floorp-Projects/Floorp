@@ -136,7 +136,7 @@ function* promiseOnLoad() {
   });
 }
 
-function promiseNewEngine(basename, swapCurrent = true) {
+function promiseNewEngine(basename) {
   return new Promise((resolve, reject) => {
     info("Waiting for engine to be added: " + basename);
     Services.search.init({
@@ -146,13 +146,9 @@ function promiseNewEngine(basename, swapCurrent = true) {
         Services.search.addEngine(url, Ci.nsISearchEngine.TYPE_MOZSEARCH, "", false, {
           onSuccess: function (engine) {
             info("Search engine added: " + basename);
-            if (swapCurrent) {
-              Services.search.currentEngine = engine;
-            }
+            Services.search.currentEngine = engine;
             registerCleanupFunction(() => {
-              if (swapCurrent) {
-                Services.search.currentEngine = current;
-              }
+              Services.search.currentEngine = current;
               Services.search.removeEngine(engine);
               info("Search engine removed: " + basename);
             });
