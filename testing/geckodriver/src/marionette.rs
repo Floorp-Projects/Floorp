@@ -240,7 +240,7 @@ impl MarionetteSession {
                 ErrorStatus::UnknownError,
                 "Error message was not a string");
             return Err(WebDriverError::new(status,
-                                           format!("Marionette Error: {}", err_msg)));
+                                           &format!("Marionette Error: {}", err_msg)[..]));
         }
 
         try!(self.update(message, &json_data));
