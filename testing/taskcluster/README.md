@@ -1,5 +1,16 @@
 # Taskcluster + Gecko Integration
 
+## Directory structure:
+
+  - tasks/  : All task definitions
+
+  - tests/  : Tests for the mach target internals related to task graph
+              generation
+
+  - scripts : Various scripts used by taskcluster docker images and
+              utilities these exist in tree primarily to avoid rebuilding
+              docker images.
+
 ## Task conventions
 
 In order to properly enable task reuse there are a small number of
