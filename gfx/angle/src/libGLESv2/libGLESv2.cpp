@@ -295,7 +295,7 @@ void GL_APIENTRY glBlendColor(GLclampf red, GLclampf green, GLclampf blue, GLcla
 
     if (context)
     {
-        context->getState().setBlendColor(gl::clamp01(red), gl::clamp01(green), gl::clamp01(blue), gl::clamp01(alpha));
+        context->getState().setBlendColor(red, green, blue, alpha);
     }
 }
 
