@@ -257,7 +257,6 @@ VerifyHeapAccess(uint8_t *begin, uint8_t *end, const HeapAccess &expected)
     MOZ_ASSERT(e == end);
     MOZ_ASSERT(disassembled == expected);
 }
-
 #endif
 
 } // namespace Disassembler
