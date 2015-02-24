@@ -5520,6 +5520,10 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason)
     }
 #endif
 
+    // Ensure execess chunks are returns to the system and free arenas
+    // decommitted.
+    shrinkBuffers();
+
 #ifdef DEBUG
     CheckHashTablesAfterMovingGC(rt);
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
@@ -5564,10 +5568,6 @@ GCRuntime::finishCollection(JS::gcreason::Reason reason)
         MOZ_ASSERT(!zone->isCollecting());
         MOZ_ASSERT(!zone->wasGCStarted());
     }
-
-    // Ensure execess chunks are returned to the system and free arenas
-    // decommitted.
-    shrinkBuffers();
 
     lastGCTime = currentTime;
 
