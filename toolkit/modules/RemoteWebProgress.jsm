@@ -35,6 +35,7 @@ function RemoteWebProgress(aManager, aIsTopLevel) {
 
   this._isLoadingDocument = false;
   this._DOMWindow = null;
+  this._DOMWindowID = 0;
   this._isTopLevel = aIsTopLevel;
   this._loadType = 0;
 }
@@ -54,7 +55,7 @@ RemoteWebProgress.prototype = {
 
   get isLoadingDocument() { return this._isLoadingDocument },
   get DOMWindow() { return this._DOMWindow; },
-  get DOMWindowID() { return 0; },
+  get DOMWindowID() { return this._DOMWindowID; },
   get isTopLevel() { return this._isTopLevel },
   get loadType() { return this._loadType; },
 
@@ -147,6 +148,7 @@ RemoteWebProgressManager.prototype = {
       // Update the actual WebProgress fields.
       webProgress._isLoadingDocument = json.webProgress.isLoadingDocument;
       webProgress._DOMWindow = objects.DOMWindow;
+      webProgress._DOMWindowID = json.webProgress.DOMWindowID;
       webProgress._loadType = json.webProgress.loadType;
     }
 
