@@ -46,16 +46,19 @@ function expectSyntaxError(code)
 expectSyntaxError("function f1() {} 'use strict'; function f2() {}");
 expectSyntaxError("function f3() { var x; 'use strict'; }");
 
-expectSyntaxError("function f4() {} 'use asm'; function f5() {}");
+if (isAsmJSCompilationAvailable())
+  expectSyntaxError("function f4() {} 'use asm'; function f5() {}");
 expectSyntaxError("function f6() { var x; 'use strict'; }");
-expectSyntaxError("'use asm'; function f7() {}");
+if (isAsmJSCompilationAvailable())
+  expectSyntaxError("'use asm'; function f7() {}");
 
 // No errors expected -- useless non-directives, but not contrary to used
 // semantics.
 evaluateNoRval("'use strict'; function f8() {} 'use strict'; function f9() {}");
 evaluateNoRval("'use strict'; function f10() { var z; 'use strict' }");
 
-evaluateNoRval("function f11() { 'use asm'; return {}; }");
+if (isAsmJSCompilationAvailable())
+  evaluateNoRval("function f11() { 'use asm'; return {}; }");
 
 /******************************************************************************/
 
