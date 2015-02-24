@@ -71,8 +71,6 @@ public:
 
   virtual void SetMediaEndTime(int64_t aTime) MOZ_FINAL MOZ_OVERRIDE;
 
-  virtual void UpdatePlaybackPosition(int64_t aTime) MOZ_FINAL MOZ_OVERRIDE;
-
   virtual void OnReadMetadataCompleted() MOZ_FINAL MOZ_OVERRIDE;
 
   virtual MediaDecoderOwner* GetOwner() MOZ_FINAL MOZ_OVERRIDE;
