@@ -1695,8 +1695,8 @@ DrawTargetCG::Init(BackendType aType,
   // with zero area drawtargets
   if (aSize.width <= 0 ||
       aSize.height <= 0 ||
-      aSize.width > GetMaxSurfaceSize() ||
-      aSize.height > GetMaxSurfaceSize())
+      size_t(aSize.width) > GetMaxSurfaceSize() ||
+      size_t(aSize.height) > GetMaxSurfaceSize())
   {
     gfxWarning() << "Failed to Init() DrawTargetCG because of bad size.";
     mColorSpace = nullptr;
