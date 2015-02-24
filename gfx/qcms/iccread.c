@@ -554,7 +554,7 @@ static struct lutmABType *read_tag_lutmABType(struct mem_source *src, struct tag
 	// We require 3in/out channels since we only support RGB->XYZ (or RGB->LAB)
 	// XXX: If we remove this restriction make sure that the number of channels
 	//      is less or equal to the maximum number of mAB curves in qcmsint.h
-	//      also check for clut_size overflow.
+	//      also check for clut_size overflow. Also make sure it's != 0
 	if (num_in_channels != 3 || num_out_channels != 3)
 		return NULL;
 
@@ -584,6 +584,9 @@ static struct lutmABType *read_tag_lutmABType(struct mem_source *src, struct tag
 		// clut_size can not overflow since lg(256^num_in_channels) = 24 bits.
 		for (i = 0; i < num_in_channels; i++) {
 			clut_size *= read_u8(src, clut_offset + i);
+			if (clut_size == 0) {
+				invalid_source(src, "bad clut_size");
+			}
 		}
 	} else {
 		clut_size = 0;
@@ -604,6 +607,9 @@ static struct lutmABType *read_tag_lutmABType(struct mem_source *src, struct tag
 
 	for (i = 0; i < num_in_channels; i++) {
 		lut->num_grid_points[i] = read_u8(src, clut_offset + i);
+		if (lut->num_grid_points[i] == 0) {
+			invalid_source(src, "bad grid_points");
+		}
 	}
 
 	// Reverse the processing of transformation elements for mBA type.
@@ -686,6 +692,10 @@ static struct lutType *read_tag_lutType(struct mem_source *src, struct tag_index
 	} else if (type == LUT16_TYPE) {
 		num_input_table_entries  = read_u16(src, offset + 48);
 		num_output_table_entries = read_u16(src, offset + 50);
+		if (num_input_table_entries == 0 || num_output_table_entries == 0) {
+			invalid_source(src, "Bad channel count");
+			return NULL;
+		}
 		entry_size = 2;
 	} else {
 		assert(0); // the caller checks that this doesn't happen
@@ -699,15 +709,18 @@ static struct lutType *read_tag_lutType(struct mem_source *src, struct tag_index
 
 	clut_size = pow(grid_points, in_chan);
 	if (clut_size > MAX_CLUT_SIZE) {
+		invalid_source(src, "CLUT too large");
 		return NULL;
 	}
 
 	if (in_chan != 3 || out_chan != 3) {
+		invalid_source(src, "CLUT only supports RGB");
 		return NULL;
 	}
 
 	lut = malloc(sizeof(struct lutType) + (num_input_table_entries * in_chan + clut_size*out_chan + num_output_table_entries * out_chan)*sizeof(float));
 	if (!lut) {
+		invalid_source(src, "CLUT too large");
 		return NULL;
 	}
 
@@ -718,9 +731,9 @@ static struct lutType *read_tag_lutType(struct mem_source *src, struct tag_index
 
 	lut->num_input_table_entries  = num_input_table_entries;
 	lut->num_output_table_entries = num_output_table_entries;
-	lut->num_input_channels   = read_u8(src, offset + 8);
-	lut->num_output_channels  = read_u8(src, offset + 9);
-	lut->num_clut_grid_points = read_u8(src, offset + 10);
+	lut->num_input_channels   = in_chan;
+	lut->num_output_channels  = out_chan;
+	lut->num_clut_grid_points = grid_points;
 	lut->e00 = read_s15Fixed16Number(src, offset+12);
 	lut->e01 = read_s15Fixed16Number(src, offset+16);
 	lut->e02 = read_s15Fixed16Number(src, offset+20);
