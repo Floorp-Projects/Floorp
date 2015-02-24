@@ -4,7 +4,5 @@
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES := $(filter-out -DUNICODE,$(DEFINES))
-
 DeprecatedPremultiplyTables.h: $(srcdir)/genTables.py
 	$(PYTHON) $(srcdir)/genTables.py
