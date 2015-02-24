@@ -74,8 +74,8 @@ impl MarionetteHandler {
     }
 
     fn create_connection(&mut self, session_id: &Option<String>) -> WebDriverResult<()> {
-        if self.start_browser().is_err() {
-            error!("Erros starting browser");
+        if let Err(e) = self.start_browser() {
+            error!("Error starting browser: {}", e.desc);
             return Err(WebDriverError::new(
                 ErrorStatus::UnknownError,
                 "Failed to start browser")
@@ -239,7 +239,8 @@ impl MarionetteSession {
                 error.get("message").unwrap_or(&default_msg).as_string(),
                 ErrorStatus::UnknownError,
                 "Error message was not a string");
-            return Err(WebDriverError::new(status, err_msg));
+            return Err(WebDriverError::new(status,
+                                           format!("Marionette Error: {}", err_msg)));
         }
 
         try!(self.update(message, &json_data));
