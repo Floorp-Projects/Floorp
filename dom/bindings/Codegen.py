@@ -381,7 +381,7 @@ class CGDOMJSClass(CGThing):
             classFlags += "JSCLASS_DOM_GLOBAL | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS) | JSCLASS_IMPLEMENTS_BARRIERS"
             traceHook = "JS_GlobalObjectTraceHook"
             reservedSlots = "JSCLASS_GLOBAL_APPLICATION_SLOTS"
-            if not self.descriptor.workers:
+            if self.descriptor.interface.identifier.name == "Window":
                 classExtensionAndObjectOps = fill(
                     """
                     {
