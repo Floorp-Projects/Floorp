@@ -1277,7 +1277,7 @@ bool CacheIndex::IsForcedValidEntry(const SHA1Sum::Hash *aHash)
   nsRefPtr<CacheFileHandle> handle;
 
   CacheFileIOManager::gInstance->mHandles.GetHandle(
-    aHash, false, getter_AddRefs(handle));
+    aHash, getter_AddRefs(handle));
 
   if (!handle)
     return false;
@@ -2775,7 +2775,7 @@ CacheIndex::BuildIndex()
 
 #ifdef DEBUG
     nsRefPtr<CacheFileHandle> handle;
-    CacheFileIOManager::gInstance->mHandles.GetHandle(&hash, false,
+    CacheFileIOManager::gInstance->mHandles.GetHandle(&hash,
                                                       getter_AddRefs(handle));
 #endif
 
@@ -2988,7 +2988,7 @@ CacheIndex::UpdateIndex()
 
 #ifdef DEBUG
     nsRefPtr<CacheFileHandle> handle;
-    CacheFileIOManager::gInstance->mHandles.GetHandle(&hash, false,
+    CacheFileIOManager::gInstance->mHandles.GetHandle(&hash,
                                                       getter_AddRefs(handle));
 #endif
 

@@ -363,6 +363,82 @@ CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTyp
     masm.jmp(ool->rejoin());
 }
 
+void
+CodeGeneratorX86Shared::visitOffsetBoundsCheck(OffsetBoundsCheck *oolCheck)
+{
+    // The access is heap[ptr + offset]. The inline code checks that
+    // ptr < heap.length - offset. We get here when that fails. We need to check
+    // for the case where ptr + offset >= 0, in which case the access is still
+    // in bounds.
+    MOZ_ASSERT(oolCheck->offset() != 0,
+               "An access without a constant offset doesn't need a separate OffsetBoundsCheck");
+    masm.cmp32(oolCheck->ptrReg(), Imm32(-uint32_t(oolCheck->offset())));
+    masm.j(Assembler::Below, oolCheck->outOfBounds());
+
+#ifdef JS_CODEGEN_X64
+    // In order to get the offset to wrap properly, we must sign-extend the
+    // pointer to 32-bits. We'll zero out the sign extension immediately
+    // after the access to restore asm.js invariants.
+    masm.movslq(oolCheck->ptrReg(), oolCheck->ptrReg());
+#endif
+
+    masm.jmp(oolCheck->rejoin());
+}
+
+uint32_t
+CodeGeneratorX86Shared::emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess *access,
+                                                   const MInstruction *mir,
+                                                   Register ptr, Label *fail)
+{
+    // Emit a bounds-checking branch for |access|.
+
+    MOZ_ASSERT(gen->needsAsmJSBoundsCheckBranch(access));
+
+    Label *pass = nullptr;
+
+    // If we have a non-zero offset, it's possible that |ptr| itself is out of
+    // bounds, while adding the offset computes an in-bounds address. To catch
+    // this case, we need a second branch, which we emit out of line since it's
+    // unlikely to be needed in normal programs.
+    if (access->offset() != 0) {
+        OffsetBoundsCheck *oolCheck = new(alloc()) OffsetBoundsCheck(fail, ptr, access->offset());
+        fail = oolCheck->entry();
+        pass = oolCheck->rejoin();
+        addOutOfLineCode(oolCheck, mir);
+    }
+
+    // The bounds check is a comparison with an immediate value. The asm.js
+    // module linking process will add the length of the heap to the immediate
+    // field, so -access->endOffset() will turn into
+    // (heapLength - access->endOffset()), allowing us to test whether the end
+    // of the access is beyond the end of the heap.
+    uint32_t maybeCmpOffset = masm.cmp32WithPatch(ptr, Imm32(-access->endOffset())).offset();
+    masm.j(Assembler::Above, fail);
+
+    if (pass)
+        masm.bind(pass);
+
+    return maybeCmpOffset;
+}
+
+void
+CodeGeneratorX86Shared::cleanupAfterAsmJSBoundsCheckBranch(const MAsmJSHeapAccess *access,
+                                                           Register ptr)
+{
+    // Clean up after performing a heap access checked by a branch.
+
+    MOZ_ASSERT(gen->needsAsmJSBoundsCheckBranch(access));
+
+#ifdef JS_CODEGEN_X64
+    // If the offset is 0, we don't use an OffsetBoundsCheck.
+    if (access->offset() != 0) {
+        // Zero out the high 32 bits, in case the OffsetBoundsCheck code had to
+        // sign-extend (movslq) the pointer value to get wraparound to work.
+        masm.movl(ptr, ptr);
+    }
+#endif
+}
+
 bool
 CodeGeneratorX86Shared::generateOutOfLineCode()
 {

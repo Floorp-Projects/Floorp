@@ -28,25 +28,14 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     ValueOperand ToOutValue(LInstruction *ins);
     ValueOperand ToTempValue(LInstruction *ins, size_t pos);
 
-    template<typename T>
-    void loadAndNoteViewTypeElement(Scalar::Type vt, const T &srcAddr, const LDefinition *out);
-    template<typename T>
-    void load(Scalar::Type vt, const T &srcAddr, const LDefinition *out);
-    template<typename T>
-    void storeAndNoteViewTypeElement(Scalar::Type vt, const LAllocation *value, const T &dstAddr);
-    template<typename T>
-    void store(Scalar::Type vt, const LAllocation *value, const T &dstAddr);
+    void load(Scalar::Type vt, const Operand &srcAddr, const LDefinition *out);
+    void store(Scalar::Type vt, const LAllocation *value, const Operand &dstAddr);
 
-    template<typename T>
-    void loadSimd(Scalar::Type type, unsigned numElems, T srcAddr, FloatRegister out);
-    void emitSimdLoad(Scalar::Type type, unsigned numElems, const LAllocation *ptr,
-                      FloatRegister out, bool needsBoundsCheck = false, Label *oobLabel = nullptr);
+    void loadSimd(Scalar::Type type, unsigned numElems, const Operand &srcAddr, FloatRegister out);
+    void emitSimdLoad(LAsmJSLoadHeap *ins);
 
-    template<typename T>
-    void storeSimd(Scalar::Type type, unsigned numElems, FloatRegister in, T destAddr);
-    void emitSimdStore(Scalar::Type type, unsigned numElems, FloatRegister in,
-                       const LAllocation *ptr, bool needsBoundsCheck = false,
-                       Label *oobLabel = nullptr);
+    void storeSimd(Scalar::Type type, unsigned numElems, FloatRegister in, const Operand &dstAddr);
+    void emitSimdStore(LAsmJSStoreHeap *ins);
 
     void memoryBarrier(MemoryBarrierBits barrier);
 

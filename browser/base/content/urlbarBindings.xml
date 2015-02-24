@@ -1049,6 +1049,7 @@
         </xul:hbox>
       </xul:deck>
       <xul:description anonid="search-panel-one-offs"
+                       role="group"
                        class="search-panel-one-offs"/>
       <xul:vbox anonid="add-engines"/>
       <xul:button anonid="search-settings"
@@ -1062,6 +1063,18 @@
            false after the mousedown event has been triggered to detect what
            caused rollup. -->
       <field name="_isHiding">false</field>
+      <field name="_bundle">null</field>
+      <property name="bundle" readonly="true">
+        <getter>
+          <![CDATA[
+            if (!this._bundle) {
+              const kBundleURI = "chrome://browser/locale/search.properties";
+              this._bundle = Services.strings.createBundle(kBundleURI);
+            }
+            return this._bundle;
+          ]]>
+        </getter>
+      </property>
 
       <method name="updateHeader">
         <body><![CDATA[
@@ -1077,10 +1090,8 @@
             this.removeAttribute("src");
           }
 
-          const kBundleURI = "chrome://browser/locale/search.properties";
-          let bundle = Services.strings.createBundle(kBundleURI);
-          let headerText = bundle.formatStringFromName("searchHeader",
-                                                       [currentEngine.name], 1);
+          let headerText = this.bundle.formatStringFromName("searchHeader",
+                                                            [currentEngine.name], 1);
           document.getAnonymousElementByAttribute(this, "anonid", "searchbar-engine-name")
                   .setAttribute("value", headerText);
           document.getAnonymousElementByAttribute(this, "anonid", "searchbar-engine")
@@ -1125,17 +1136,28 @@
         let headerPanel =
           document.getAnonymousElementByAttribute(this, "anonid",
                                                   "search-panel-one-offs-header");
+        let list = document.getAnonymousElementByAttribute(this, "anonid",
+                                                           "search-panel-one-offs");
         let textbox = searchbar.textbox;
         let self = this;
         let inputHandler = function() {
           headerSearchText.setAttribute("value", textbox.value);
+          let groupText;
           if (textbox.value) {
             self.removeAttribute("showonlysettings");
+            groupText = headerSearchText.previousSibling.value +
+                        '"' + headerSearchText.value + '"' +
+                        headerSearchText.nextSibling.value;
             headerPanel.selectedIndex = 1;
           }
           else {
+            let noSearchHeader =
+              document.getAnonymousElementByAttribute(self, "anonid",
+                                                      "searchbar-oneoffheader-search");
+            groupText = noSearchHeader.value;
             headerPanel.selectedIndex = 0;
           }
+          list.setAttribute("aria-label", groupText);
         };
         textbox.addEventListener("input", inputHandler);
         this.addEventListener("popuphiding", function hiding() {
@@ -1157,12 +1179,11 @@
 
         let addEngines = gBrowser.selectedBrowser.engines;
         if (addEngines && addEngines.length > 0) {
-          const kBundleURI = "chrome://browser/locale/search.properties";
-          let bundle = Services.strings.createBundle(kBundleURI);
           for (let engine of addEngines) {
             let button = document.createElementNS(kXULNS, "button");
-            let label = bundle.formatStringFromName("cmd_addFoundEngine",
-                                                    [engine.title], 1);
+            let label = this.bundle.formatStringFromName("cmd_addFoundEngine",
+                                                         [engine.title], 1);
+            button.id = "searchbar-add-engine-" + engine.title.replace(/ /g, '-');
             button.setAttribute("class", "addengine-item");
             button.setAttribute("label", label);
             button.setAttribute("pack", "start");
@@ -1180,8 +1201,6 @@
         }
 
         // Finally, build the list of one-off buttons.
-        let list = document.getAnonymousElementByAttribute(this, "anonid",
-                                                           "search-panel-one-offs")
         while (list.firstChild)
           list.firstChild.remove();
 
@@ -1240,11 +1259,15 @@
         let height = rowCount * 33; // 32px per row, 1px border.
         list.setAttribute("height", height + "px");
 
+        // Ensure we can refer to the settings button by ID:
+        let settingsEl = document.getAnonymousElementByAttribute(this, "anonid", "search-settings");
+        settingsEl.id = this.id + "-anon-search-settings";
+
         let dummyItems = enginesPerRow - (engines.length % enginesPerRow || enginesPerRow);
         for (let i = 0; i < engines.length; ++i) {
           let engine = engines[i];
           let button = document.createElementNS(kXULNS, "button");
-          button.setAttribute("label", engine.name);
+          button.id = "searchbar-engine-one-off-item-" + engine.name.replace(/ /g, '-');
           let uri = "chrome://browser/skin/search-engine-placeholder.png";
           if (engine.iconURI) {
             uri = PlacesUtils.getImageURLForResolution(window, engine.iconURI.spec);

@@ -551,7 +551,7 @@ CacheFileContextEvictor::EvictEntries()
          mEntries[0]->mIterator.get(), mEntries[0]->mInfo.get()));
 
     nsRefPtr<CacheFileHandle> handle;
-    CacheFileIOManager::gInstance->mHandles.GetHandle(&hash, false,
+    CacheFileIOManager::gInstance->mHandles.GetHandle(&hash,
                                                       getter_AddRefs(handle));
     if (handle) {
       // We doom any active handle in CacheFileIOManager::EvictByContext(), so

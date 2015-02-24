@@ -20,7 +20,7 @@ interface AnimationPlayer {
   readonly attribute Animation? source;
   readonly attribute AnimationTimeline timeline;
   [BinaryName="startTimeAsDouble"]
-  readonly attribute double? startTime;
+  attribute double? startTime;
   [BinaryName="currentTimeAsDouble"]
   readonly attribute double? currentTime;
 

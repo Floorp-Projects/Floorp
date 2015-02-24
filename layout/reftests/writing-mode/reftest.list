@@ -70,7 +70,8 @@ skip-if(!winWidget||/^Windows\x20NT\x205\.1/.test(http.oscpu)) == ua-style-sheet
 skip-if(Android||B2G) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html
 skip-if(!(Android||B2G)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html
 == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
-fails == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html # bug 1123299
+== ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
+
 HTTP(..) == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
 HTTP(..) == 1127488-align-start-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
 HTTP(..) == 1127488-align-end-horizontal-tb-ltr.html 1127488-align-top-right-ref.html
@@ -102,3 +103,4 @@ HTTP(..) == 1127488-align-end-vertical-lr-ltr.html 1127488-align-bottom-left-ref
 HTTP(..) == 1127488-align-left-vertical-lr-ltr.html 1127488-align-top-left-ref.html
 HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
 == 1131013-vertical-bidi.html 1131013-vertical-bidi-ref.html
+fails-if(B2G) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html # bug 1136067

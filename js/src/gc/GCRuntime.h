@@ -908,7 +908,7 @@ class GCRuntime
     void sweepBackgroundThings(ZoneList &zones, LifoAlloc &freeBlocks, ThreadType threadType);
     void assertBackgroundSweepingFinished();
     bool shouldCompact();
-    IncrementalProgress compactPhase(bool lastGC, JS::gcreason::Reason reason);
+    IncrementalProgress compactPhase(JS::gcreason::Reason reason);
     void sweepTypesAfterCompacting(Zone *zone);
     void sweepZoneAfterCompacting(Zone *zone);
     ArenaHeader *relocateArenas(JS::gcreason::Reason reason);

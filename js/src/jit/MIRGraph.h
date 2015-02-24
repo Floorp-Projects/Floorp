@@ -57,6 +57,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // This block cannot be reached by any means.
     bool unreachable_;
 
+    MResumePoint *callerResumePoint_;
+
     // Pushes a copy of a local variable or argument.
     void pushVariable(uint32_t slot);
 
@@ -545,11 +547,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         discardResumePoint(outerResumePoint_);
         outerResumePoint_ = nullptr;
     }
-    MResumePoint *callerResumePoint() {
-        return entryResumePoint() ? entryResumePoint()->caller() : nullptr;
+    MResumePoint *callerResumePoint() const {
+        return callerResumePoint_;
     }
     void setCallerResumePoint(MResumePoint *caller) {
-        entryResumePoint()->setCaller(caller);
+        callerResumePoint_ = caller;
     }
     size_t numEntrySlots() const {
         return entryResumePoint()->stackDepth();

@@ -32,6 +32,7 @@ import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
+import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.distribution.Distribution;
@@ -98,6 +99,7 @@ public class LocalBrowserDB implements BrowserDB {
     private final Uri mUpdateHistoryUriWithProfile;
     private final Uri mFaviconsUriWithProfile;
     private final Uri mThumbnailsUriWithProfile;
+    private final Uri mSearchHistoryUri;
 
     private LocalSearches searches;
     private LocalTabsAccessor tabsAccessor;
@@ -123,6 +125,8 @@ public class LocalBrowserDB implements BrowserDB {
         mCombinedUriWithProfile = DBUtils.appendProfile(profile, Combined.CONTENT_URI);
         mFaviconsUriWithProfile = DBUtils.appendProfile(profile, Favicons.CONTENT_URI);
         mThumbnailsUriWithProfile = DBUtils.appendProfile(profile, Thumbnails.CONTENT_URI);
+
+        mSearchHistoryUri = BrowserContract.SearchHistory.CONTENT_URI;
 
         mUpdateHistoryUriWithProfile =
                 mHistoryUriWithProfile.buildUpon()
@@ -718,6 +722,7 @@ public class LocalBrowserDB implements BrowserDB {
     @Override
     public void clearHistory(ContentResolver cr) {
         cr.delete(mHistoryUriWithProfile, null, null);
+        cr.delete(mSearchHistoryUri, null, null);
     }
 
     @Override
