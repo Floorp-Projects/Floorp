@@ -848,6 +848,7 @@ let MozLoopServiceInternal = {
       }
 
       chatbox.setAttribute("dark", true);
+      chatbox.setAttribute("large", true);
 
       chatbox.addEventListener("DOMContentLoaded", function loaded(event) {
         if (event.target != chatbox.contentDocument) {

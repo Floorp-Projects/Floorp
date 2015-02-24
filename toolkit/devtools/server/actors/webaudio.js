@@ -16,7 +16,7 @@ const { ThreadActor } = require("devtools/server/actors/script");
 const AutomationTimeline = require("./utils/automation-timeline");
 const { on, once, off, emit } = events;
 const { types, method, Arg, Option, RetVal } = protocol;
-
+const AUDIO_NODE_DEFINITION = require("devtools/server/actors/utils/audionodes.json");
 const ENABLE_AUTOMATION = false;
 const AUTOMATION_GRANULARITY = 2000;
 const AUTOMATION_GRANULARITY_MAX = 6000;
@@ -41,118 +41,6 @@ const AUTOMATION_METHODS = [
 const NODE_ROUTING_METHODS = [
   "connect", "disconnect"
 ];
-
-const NODE_PROPERTIES = {
-  "OscillatorNode": {
-    "properties": {
-      "type": {},
-      "frequency": {
-        "param": true
-      },
-      "detune": {
-        "param": true
-      }
-    }
-  },
-  "GainNode": {
-    "properties": { "gain": { "param": true }}
-  },
-  "DelayNode": {
-    "properties": { "delayTime": { "param": true }}
-  },
-  // TODO deal with figuring out adding `detune` AudioParam
-  // for AudioBufferSourceNode, which is in the spec
-  // but not yet added in implementation
-  // bug 1116852
-  "AudioBufferSourceNode": {
-    "properties": {
-      "buffer": { "Buffer": true },
-      "playbackRate": {
-        "param": true
-      },
-      "loop": {},
-      "loopStart": {},
-      "loopEnd": {}
-    }
-  },
-  "ScriptProcessorNode": {
-    "properties": { "bufferSize": { "readonly": true }}
-  },
-  "PannerNode": {
-    "properties": {
-      "panningModel": {},
-      "distanceModel": {},
-      "refDistance": {},
-      "maxDistance": {},
-      "rolloffFactor": {},
-      "coneInnerAngle": {},
-      "coneOuterAngle": {},
-      "coneOuterGain": {}
-    }
-  },
-  "ConvolverNode": {
-    "properties": {
-      "buffer": { "Buffer": true },
-      "normalize": {},
-    }
-  },
-  "DynamicsCompressorNode": {
-    "properties": {
-      "threshold": { "param": true },
-      "knee": { "param": true },
-      "ratio": { "param": true },
-      "reduction": {},
-      "attack": { "param": true },
-      "release": { "param": true }
-    }
-  },
-  "BiquadFilterNode": {
-    "properties": {
-      "type": {},
-      "frequency": { "param": true },
-      "Q": { "param": true },
-      "detune": { "param": true },
-      "gain": { "param": true }
-    }
-  },
-  "WaveShaperNode": {
-    "properties": {
-      "curve": { "Float32Array": true },
-      "oversample": {}
-    }
-  },
-  "AnalyserNode": {
-    "properties": {
-      "fftSize": {},
-      "minDecibels": {},
-      "maxDecibels": {},
-      "smoothingTimeConstant": {},
-      "frequencyBinCount": { "readonly": true },
-    }
-  },
-  "AudioDestinationNode": {
-    "unbypassable": true
-  },
-  "ChannelSplitterNode": {
-    "unbypassable": true
-  },
-  "ChannelMergerNode": {
-    "unbypassable": true
-  },
-  "MediaElementAudioSourceNode": {},
-  "MediaStreamAudioSourceNode": {},
-  "MediaStreamAudioDestinationNode": {
-    "unbypassable": true,
-    "properties": {
-      "stream": { "MediaStream": true }
-    }
-  },
-  "StereoPannerNode": {
-    "properties": {
-      "pan": {}
-    }
-  }
-};
 
 /**
  * An Audio Node actor allowing communication to a specific audio node in the
@@ -189,7 +77,7 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
     }
 
     // Create automation timelines for all AudioParams
-    Object.keys(NODE_PROPERTIES[this.type].properties || {})
+    Object.keys(AUDIO_NODE_DEFINITION[this.type].properties || {})
       .filter(isAudioParam.bind(null, node))
       .forEach(paramName => {
         this.automation[paramName] = new AutomationTimeline(node[paramName].defaultValue);
@@ -252,7 +140,7 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
       return;
     }
 
-    let bypassable = !NODE_PROPERTIES[this.type].unbypassable;
+    let bypassable = !AUDIO_NODE_DEFINITION[this.type].unbypassable;
     if (bypassable) {
       node.passThrough = enable;
     }
@@ -345,7 +233,7 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
    *        Name of the AudioParam whose flags are desired.
    */
   getParamFlags: method(function (param) {
-    return ((NODE_PROPERTIES[this.type] || {}).properties || {})[param];
+    return ((AUDIO_NODE_DEFINITION[this.type] || {}).properties || {})[param];
   }, {
     request: { param: Arg(0, "string") },
     response: { flags: RetVal("nullable:primitive") }
@@ -356,7 +244,7 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
    * corresponding to a property name and current value of the audio node.
    */
   getParams: method(function (param) {
-    let props = Object.keys(NODE_PROPERTIES[this.type].properties || {});
+    let props = Object.keys(AUDIO_NODE_DEFINITION[this.type].properties || {});
     return props.map(prop =>
       ({ param: prop, value: this.getParam(prop), flags: this.getParamFlags(prop) }));
   }, {
@@ -618,7 +506,7 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
    * flags.
    */
   getDefinition: method(function () {
-    return NODE_PROPERTIES;
+    return AUDIO_NODE_DEFINITION;
   }, {
     response: { definition: RetVal("json") }
   }),
@@ -833,7 +721,7 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
    */
   _instrumentParams: function (node) {
     let type = getConstructorName(node);
-    Object.keys(NODE_PROPERTIES[type].properties || {})
+    Object.keys(AUDIO_NODE_DEFINITION[type].properties || {})
       .filter(isAudioParam.bind(null, node))
       .forEach(paramName => {
         let param = node[paramName];

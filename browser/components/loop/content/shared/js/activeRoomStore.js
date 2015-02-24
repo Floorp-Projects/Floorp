@@ -128,7 +128,9 @@ loop.store.ActiveRoomStore = (function() {
         "windowUnload",
         "leaveRoom",
         "feedbackComplete",
-        "videoDimensionsChanged"
+        "videoDimensionsChanged",
+        "startScreenShare",
+        "endScreenShare"
       ]);
     },
 
@@ -391,6 +393,49 @@ loop.store.ActiveRoomStore = (function() {
      */
     receivingScreenShare: function(actionData) {
       this.setStoreState({receivingScreenShare: actionData.receiving});
+    },
+
+    /**
+     * Initiates a screen sharing publisher.
+     *
+     * @param {sharedActions.StartScreenShare} actionData
+     */
+    startScreenShare: function(actionData) {
+      this.dispatchAction(new sharedActions.ScreenSharingState({
+        state: SCREEN_SHARE_STATES.PENDING
+      }));
+
+      var options = {
+        videoSource: actionData.type
+      };
+      if (options.videoSource === "browser") {
+        this._mozLoop.getActiveTabWindowId(function(err, windowId) {
+          if (err || !windowId) {
+            this.dispatchAction(new sharedActions.ScreenSharingState({
+              state: SCREEN_SHARE_STATES.INACTIVE
+            }));
+            return;
+          }
+          options.constraints = {
+            browserWindow: windowId,
+            scrollWithPage: true
+          };
+          this._sdkDriver.startScreenShare(options);
+        }.bind(this));
+      } else {
+        this._sdkDriver.startScreenShare(options);
+      }
+    },
+
+    /**
+     * Ends an active screenshare session.
+     */
+    endScreenShare: function() {
+      if (this._sdkDriver.endScreenShare()) {
+        this.dispatchAction(new sharedActions.ScreenSharingState({
+          state: SCREEN_SHARE_STATES.INACTIVE
+        }));
+      }
     },
 
     /**
