@@ -62,3 +62,5 @@ mv $WORKSPACE/B2G/out/target/product/generic/tests/gaia-tests.zip $HOME/artifact
 mv $WORKSPACE/B2G/out/target/product/generic/tests/b2g-*.zip $HOME/artifacts/b2g-tests.zip
 mv $WORKSPACE/B2G/out/emulator.tar.gz $HOME/artifacts/emulator.tar.gz
 mv $WORKSPACE/B2G/objdir-gecko/dist/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
+
+ccache -s
