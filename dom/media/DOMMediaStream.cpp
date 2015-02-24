@@ -389,16 +389,7 @@ DOMMediaStream::RemovePrincipalChangeObserver(PrincipalChangeObserver* aObserver
 void
 DOMMediaStream::SetHintContents(TrackTypeHints aHintContents)
 {
-  TrackTypeHints oldHintContents = mHintContents;
   mHintContents |= aHintContents;
-  if (aHintContents & HINT_CONTENTS_VIDEO &&
-      !(oldHintContents & HINT_CONTENTS_VIDEO)) {
-    CreateDOMTrack(kVideoTrack, MediaSegment::VIDEO);
-  }
-  if (aHintContents & HINT_CONTENTS_AUDIO &&
-      !(oldHintContents & HINT_CONTENTS_AUDIO)) {
-    CreateDOMTrack(kAudioTrack, MediaSegment::AUDIO);
-  }
 }
 
 MediaStreamTrack*
