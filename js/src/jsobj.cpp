@@ -1869,7 +1869,8 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind 
     MOZ_ASSERT(!obj->hasPrivate());
     RootedShape shape(cx, obj->lastProperty());
     size_t span = shape->slotSpan();
-    clone->setLastProperty(cx, shape);
+    if (!clone->setLastProperty(cx, shape))
+        return nullptr;
     for (size_t i = 0; i < span; i++) {
         v = obj->getSlot(i);
         if (v.isObject()) {
