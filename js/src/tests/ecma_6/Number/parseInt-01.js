@@ -161,6 +161,8 @@ assertEq(Number.parseInt("A", 17), 10);
 assertEq(Number.parseInt("0A", 17), 10);
 assertEq(Number.parseInt("00A", 17), 10);
 
+/* Number.parseInt should be the same function object as global parseInt. */
+assertEq(Number.parseInt, parseInt);
 
 /******************************************************************************/
 

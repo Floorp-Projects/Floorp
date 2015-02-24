@@ -459,8 +459,6 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
 static const JSFunctionSpec number_functions[] = {
     JS_SELF_HOSTED_FN(js_isNaN_str, "Global_isNaN", 1,0),
     JS_SELF_HOSTED_FN(js_isFinite_str, "Global_isFinite", 1,0),
-    JS_FN(js_parseFloat_str,    num_parseFloat,      1,0),
-    JS_FN(js_parseInt_str,      num_parseInt,        2,0),
     JS_FS_END
 };
 
@@ -1029,8 +1027,6 @@ static const JSFunctionSpec number_static_methods[] = {
     JS_FN("isInteger", Number_isInteger, 1, 0),
     JS_SELF_HOSTED_FN("isNaN", "Number_isNaN", 1,0),
     JS_SELF_HOSTED_FN("isSafeInteger", "Number_isSafeInteger", 1,0),
-    JS_FN("parseFloat", num_parseFloat, 1, 0),
-    JS_FN("parseInt", num_parseInt, 2, 0),
     JS_FS_END
 };
 
@@ -1199,6 +1195,24 @@ js_InitNumberClass(JSContext *cx, HandleObject obj)
         return nullptr;
 
     if (!JS_DefineFunctions(cx, global, number_functions))
+        return nullptr;
+
+    /* Number.parseInt should be the same function object as global parseInt. */
+    RootedId parseIntId(cx, NameToId(cx->names().parseInt));
+    JSFunction *parseInt = DefineFunction(cx, global, parseIntId, num_parseInt, 2, 0);
+    if(!parseInt)
+        return nullptr;
+    RootedValue parseIntValue(cx, ObjectValue(*parseInt));
+    if(!DefineProperty(cx, ctor, parseIntId, parseIntValue, nullptr, nullptr, 0))
+        return nullptr;
+
+    /* Number.parseFloat should be the same function object as global parseFloat. */
+    RootedId parseFloatId(cx, NameToId(cx->names().parseFloat));
+    JSFunction *parseFloat = DefineFunction(cx, global, parseFloatId, num_parseFloat, 1, 0);
+    if(!parseFloat)
+        return nullptr;
+    RootedValue parseFloatValue(cx, ObjectValue(*parseFloat));
+    if(!DefineProperty(cx, ctor, parseFloatId, parseFloatValue, nullptr, nullptr, 0))
         return nullptr;
 
     RootedValue valueNaN(cx, cx->runtime()->NaNValue);
