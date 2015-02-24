@@ -422,7 +422,7 @@ LayoutView.prototype = {
           // might be missing.
           continue;
         }
-        let parsedValue = parseInt(layout[property]);
+        let parsedValue = parseFloat(layout[property]);
         if (Number.isNaN(parsedValue)) {
           // Not a number. We use the raw string.
           // Useful for "position" for example.
@@ -451,9 +451,10 @@ LayoutView.prototype = {
 
       width -= this.map.borderLeft.value + this.map.borderRight.value +
                this.map.paddingLeft.value + this.map.paddingRight.value;
-
+      width = parseFloat(width.toPrecision(6));
       height -= this.map.borderTop.value + this.map.borderBottom.value +
                 this.map.paddingTop.value + this.map.paddingBottom.value;
+      height = parseFloat(height.toPrecision(6));
 
       let newValue = width + "\u00D7" + height;
       if (this.sizeLabel.textContent != newValue) {

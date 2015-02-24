@@ -747,8 +747,8 @@ var PageStyleActor = protocol.ActorClass({
     // the size of the element.
 
     let clientRect = node.rawNode.getBoundingClientRect();
-    layout.width = Math.ceil(clientRect.width);
-    layout.height = Math.ceil(clientRect.height);
+    layout.width = parseFloat(clientRect.width.toPrecision(6));
+    layout.height = parseFloat(clientRect.height.toPrecision(6));
 
     // We compute and update the values of margins & co.
     let style = CssLogic.getComputedStyle(node.rawNode);
@@ -776,7 +776,7 @@ var PageStyleActor = protocol.ActorClass({
 
     for (let i in this.map) {
       let property = this.map[i].property;
-      this.map[i].value = parseInt(style.getPropertyValue(property));
+      this.map[i].value = parseFloat(style.getPropertyValue(property));
     }
 
 
