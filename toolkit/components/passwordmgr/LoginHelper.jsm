@@ -222,7 +222,7 @@ this.LoginHelper = {
       }
     } else {
       // Need one or the other!
-      throw new Error(Can't add a login without a httpRealm or formSubmitURL.");
+      throw new Error("Can't add a login without a httpRealm or formSubmitURL.");
     }
 
     // Throws if there are bogus values.
