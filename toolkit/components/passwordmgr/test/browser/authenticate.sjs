@@ -24,12 +24,12 @@ function handleRequest(request, response)
     authHeader = request.getHeader("Authorization");
     match = /Basic (.+)/.exec(authHeader);
     if (match.length != 2)
-        throw "Couldn't parse auth header: " + authHeader;
+        throw new Error("Couldn't parse auth header: " + authHeader);
 
     var userpass = base64ToString(match[1]); // no atob() :-(
     match = /(.*):(.*)/.exec(userpass);
     if (match.length != 3)
-        throw "Couldn't decode auth header: " + userpass;
+        throw new Error("Couldn't decode auth header: " + userpass);
     actual_user = match[1];
     actual_pass = match[2];
   }

@@ -166,7 +166,7 @@ Services.obs.removeObserver(TestObserver, "passwordmgr-storage-changed");
 LoginTest.clearData();
 
 } catch (e) {
-    throw "FAILED in test #" + testnum + " -- " + testdesc + ": " + e;
+    throw new Error("FAILED in test #" + testnum + " -- " + testdesc + ": " + e);
 }
 
 });

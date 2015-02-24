@@ -643,10 +643,11 @@ BrowserElementParent.prototype = {
     if (!this._isAlive()) {
       return null;
     }
-    let ioService =
-      Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
-    let uri = ioService.newURI(_url, null, null);
+    
+    let uri = Services.io.newURI(_url, null, null);
     let url = uri.QueryInterface(Ci.nsIURL);
+
+    debug('original _options = ' + uneval(_options));
 
     // Ensure we have _options, we always use it to send the filename.
     _options = _options || {};
@@ -654,7 +655,7 @@ BrowserElementParent.prototype = {
       _options.filename = url.fileName;
     }
 
-    debug('_options = ' + uneval(_options));
+    debug('final _options = ' + uneval(_options));
 
     // Ensure we have a filename.
     if (!_options.filename) {
@@ -732,7 +733,37 @@ BrowserElementParent.prototype = {
                                              Ci.nsIRequestObserver])
     };
 
-    let channel = ioService.newChannelFromURI(url);
+    // If we have a URI we'll use it to get the triggering principal to use, 
+    // if not available a null principal is acceptable.
+    let referrer = null;
+    let principal = null;
+    if (_options.referrer) {
+      // newURI can throw on malformed URIs.
+      try {
+        referrer = Services.io.newURI(_options.referrer, null, null);
+      }
+      catch(e) {
+        debug('Malformed referrer -- ' + e);
+      }
+      // This simply returns null if there is no principal available
+      // for the requested uri. This is an acceptable fallback when
+      // calling newChannelFromURI2.
+      principal = 
+        Services.scriptSecurityManager.getAppCodebasePrincipal(
+          referrer, 
+          this._frameLoader.loadContext.appId, 
+          this._frameLoader.loadContext.isInBrowserElement);
+    }
+
+    debug('Using principal? ' + !!principal);
+
+    let channel = 
+      Services.io.newChannelFromURI2(url,
+                                     null,       // No document. 
+                                     principal,  // Loading principal
+                                     principal,  // Triggering principal
+                                     Ci.nsILoadInfo.SEC_NORMAL,
+                                     Ci.nsIContentPolicy.TYPE_OTHER);
 
     // XXX We would set private browsing information prior to calling this.
     channel.notificationCallbacks = interfaceRequestor;
@@ -749,8 +780,8 @@ BrowserElementParent.prototype = {
     channel.loadFlags |= flags;
 
     if (channel instanceof Ci.nsIHttpChannel) {
-      debug('Setting HTTP referrer = ' + this._window.document.documentURIObject);
-      channel.referrer = this._window.document.documentURIObject;
+      debug('Setting HTTP referrer = ' + (referrer && referrer.spec)); 
+      channel.referrer = referrer;
       if (channel instanceof Ci.nsIHttpChannelInternal) {
         channel.forceAllowThirdPartyCookie = true;
       }
