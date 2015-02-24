@@ -405,16 +405,18 @@ void MediaDecoderStateMachine::SendStreamData()
 
     if (!stream->mStreamInitialized) {
       if (mInfo.HasAudio()) {
+        TrackID audioTrackId = mInfo.mAudio.mTrackInfo.mOutputId;
         AudioSegment* audio = new AudioSegment();
-        mediaStream->AddAudioTrack(kAudioTrack, mInfo.mAudio.mRate, 0, audio);
-        stream->mStream->DispatchWhenNotEnoughBuffered(kAudioTrack,
+        mediaStream->AddAudioTrack(audioTrackId, mInfo.mAudio.mRate, 0, audio);
+        stream->mStream->DispatchWhenNotEnoughBuffered(audioTrackId,
             GetStateMachineThread(), GetWakeDecoderRunnable());
         stream->mNextAudioTime = mStartTime + stream->mInitialTime;
       }
       if (mInfo.HasVideo()) {
+        TrackID videoTrackId = mInfo.mVideo.mTrackInfo.mOutputId;
         VideoSegment* video = new VideoSegment();
-        mediaStream->AddTrack(kVideoTrack, 0, video);
-        stream->mStream->DispatchWhenNotEnoughBuffered(kVideoTrack,
+        mediaStream->AddTrack(videoTrackId, 0, video);
+        stream->mStream->DispatchWhenNotEnoughBuffered(videoTrackId,
             GetStateMachineThread(), GetWakeDecoderRunnable());
 
         // TODO: We can't initialize |mNextVideoTime| until |mStartTime|
@@ -428,6 +430,7 @@ void MediaDecoderStateMachine::SendStreamData()
 
     if (mInfo.HasAudio()) {
       MOZ_ASSERT(stream->mNextAudioTime != -1, "Should've been initialized");
+      TrackID audioTrackId = mInfo.mAudio.mTrackInfo.mOutputId;
       nsAutoTArray<nsRefPtr<AudioData>,10> audio;
       // It's OK to hold references to the AudioData because AudioData
       // is ref-counted.
@@ -440,10 +443,10 @@ void MediaDecoderStateMachine::SendStreamData()
       // SendStreamAudio(). This is consistent with how |mNextVideoTime|
       // is updated for video samples.
       if (output.GetDuration() > 0) {
-        mediaStream->AppendToTrack(kAudioTrack, &output);
+        mediaStream->AppendToTrack(audioTrackId, &output);
       }
       if (AudioQueue().IsFinished() && !stream->mHaveSentFinishAudio) {
-        mediaStream->EndTrack(kAudioTrack);
+        mediaStream->EndTrack(audioTrackId);
         stream->mHaveSentFinishAudio = true;
       }
       endPosition = std::max(endPosition,
@@ -453,6 +456,7 @@ void MediaDecoderStateMachine::SendStreamData()
 
     if (mInfo.HasVideo()) {
       MOZ_ASSERT(stream->mNextVideoTime != -1, "Should've been initialized");
+      TrackID videoTrackId = mInfo.mVideo.mTrackInfo.mOutputId;
       nsAutoTArray<nsRefPtr<VideoData>,10> video;
       // It's OK to hold references to the VideoData because VideoData
       // is ref-counted.
@@ -492,10 +496,10 @@ void MediaDecoderStateMachine::SendStreamData()
         }
       }
       if (output.GetDuration() > 0) {
-        mediaStream->AppendToTrack(kVideoTrack, &output);
+        mediaStream->AppendToTrack(videoTrackId, &output);
       }
       if (VideoQueue().IsFinished() && !stream->mHaveSentFinishVideo) {
-        mediaStream->EndTrack(kVideoTrack);
+        mediaStream->EndTrack(videoTrackId);
         stream->mHaveSentFinishVideo = true;
       }
       endPosition = std::max(endPosition,
@@ -562,10 +566,12 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedAudio(int64_t aAmpleAudioUSecs)
   DecodedStreamData* stream = mDecoder->GetDecodedStream();
 
   if (stream && stream->mStreamInitialized && !stream->mHaveSentFinishAudio) {
-    if (!stream->mStream->HaveEnoughBuffered(kAudioTrack)) {
+    MOZ_ASSERT(mInfo.HasAudio());
+    TrackID audioTrackId = mInfo.mAudio.mTrackInfo.mOutputId;
+    if (!stream->mStream->HaveEnoughBuffered(audioTrackId)) {
       return false;
     }
-    stream->mStream->DispatchWhenNotEnoughBuffered(kAudioTrack,
+    stream->mStream->DispatchWhenNotEnoughBuffered(audioTrackId,
         GetStateMachineThread(), GetWakeDecoderRunnable());
   }
 
@@ -583,10 +589,12 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
   DecodedStreamData* stream = mDecoder->GetDecodedStream();
 
   if (stream && stream->mStreamInitialized && !stream->mHaveSentFinishVideo) {
-    if (!stream->mStream->HaveEnoughBuffered(kVideoTrack)) {
+    MOZ_ASSERT(mInfo.HasVideo());
+    TrackID videoTrackId = mInfo.mVideo.mTrackInfo.mOutputId;
+    if (!stream->mStream->HaveEnoughBuffered(videoTrackId)) {
       return false;
     }
-    stream->mStream->DispatchWhenNotEnoughBuffered(kVideoTrack,
+    stream->mStream->DispatchWhenNotEnoughBuffered(videoTrackId,
         GetStateMachineThread(), GetWakeDecoderRunnable());
   }
 
