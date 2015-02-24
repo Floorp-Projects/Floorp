@@ -1186,11 +1186,13 @@
           list.firstChild.remove();
 
         let hiddenList;
-        let ns = {};
-        Cu.import("resource://gre/modules/Preferences.jsm", ns);
-        let pref =
-          ns.Preferences.get("browser.search.hiddenOneOffs");
-        hiddenList = pref ? pref.split(",") : [];
+        try {
+          let pref =
+            Services.prefs.getCharPref("browser.search.hiddenOneOffs");
+          hiddenList = pref ? pref.split(",") : [];
+        } catch(e) {
+          hiddenList = [];
+        }
 
         let currentEngineName = Services.search.currentEngine.name;
         let engines = Services.search.getVisibleEngines()

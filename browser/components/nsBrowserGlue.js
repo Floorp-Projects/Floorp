@@ -430,14 +430,12 @@ BrowserGlue.prototype = {
         // an engine, and that newly added engines are visible.
         if (data == "engine-added" || data == "engine-removed") {
           let engineName = subject.QueryInterface(Ci.nsISearchEngine).name;
-          let ns = {};
-          Cu.import("resource://gre/modules/Preferences.jsm", ns);
           let hiddenPref =
-            ns.Preferences.get("browser.search.hiddenOneOffs");
+            Services.prefs.getCharPref("browser.search.hiddenOneOffs");
           let hiddenEngines = hiddenPref ? hiddenPref.split(",") : [];
           hiddenEngines = hiddenEngines.filter(x => x !== engineName);
-          ns.Preferences.set("browser.search.hiddenOneOffs",
-                             hiddenEngines.join(","));
+          Services.prefs.setCharPref("browser.search.hiddenOneOffs",
+                                     hiddenEngines.join(","));
         }
 
         if (data != "engine-default" && data != "engine-current") {
