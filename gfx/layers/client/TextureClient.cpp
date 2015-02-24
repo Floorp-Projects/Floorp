@@ -745,7 +745,7 @@ BufferTextureClient::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFla
   }
 
   uint32_t bufSize = ImageDataSerializer::ComputeMinBufferSize(aSize, mFormat);
-  if (!Allocate(bufSize)) {
+  if (!bufSize || !Allocate(bufSize)) {
     return false;
   }
 
