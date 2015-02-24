@@ -829,6 +829,8 @@ class IonBuilder
     InliningStatus inlineSimdSplat(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type);
     InliningStatus inlineSimdConvert(CallInfo &callInfo, JSNative native, bool isCast,
                                      SimdTypeDescr::Type from, SimdTypeDescr::Type to);
+    InliningStatus inlineSimdSelect(CallInfo &callInfo, JSNative native, bool isElementWise,
+                                    SimdTypeDescr::Type type);
 
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo &callInfo);
