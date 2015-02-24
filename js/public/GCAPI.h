@@ -99,7 +99,8 @@ namespace JS {
     D(REFRESH_FRAME)                            \
     D(FULL_GC_TIMER)                            \
     D(SHUTDOWN_CC)                              \
-    D(FINISH_LARGE_EVALUATE)
+    D(FINISH_LARGE_EVALUATE)                    \
+    D(USER_INACTIVE)
 
 namespace gcreason {
 
