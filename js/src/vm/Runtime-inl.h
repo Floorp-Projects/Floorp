@@ -67,8 +67,14 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entryIndex, js::gc::I
         return obj;
     }
 
-    // Trigger an identical allocation to the one that notified us of OOM
-    // so that we trigger the right kind of GC automatically.
+    // Trigger an identical allocation to the one that notified us of OOM so
+    // that we trigger the right kind of GC automatically; note that even
+    // though we are passing CanGC to AllocateObjectForCacheHit it will never
+    // allow GC during the allocation itself. The reason is that this would
+    // clobber our cache and make us unable to initialize from it. Instead we
+    // do an independent non-allocation GC, then return nullptr so that we'll
+    // take the slow allocation path. The callee is responsible for ensuring
+    // that the index it uses to fill the cache is still correct after this GC.
     mozilla::DebugOnly<JSObject *> obj2 =
         js::gc::AllocateObjectForCacheHit<CanGC>(cx, entry->kind, heap, group->clasp());
     MOZ_ASSERT(!obj2);

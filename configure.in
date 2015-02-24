@@ -9130,6 +9130,9 @@ if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -
   # Force disable DSS support in jemalloc.
   ac_configure_args="$ac_configure_args ac_cv_func_sbrk=false"
 
+  # Make Linux builds munmap freed chunks instead of recycling them.
+  ac_configure_args="$ac_configure_args --enable-munmap"
+
   if ! test -e memory/jemalloc; then
     mkdir -p memory/jemalloc
   fi

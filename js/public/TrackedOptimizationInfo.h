@@ -279,7 +279,8 @@ struct ForEachTrackedOptimizationAttemptOp
 
 JS_PUBLIC_API(void)
 ForEachTrackedOptimizationAttempt(JSRuntime *rt, void *addr,
-                                  ForEachTrackedOptimizationAttemptOp &op);
+                                  ForEachTrackedOptimizationAttemptOp &op,
+                                  JSScript **scriptOut, jsbytecode **pcOut);
 
 struct ForEachTrackedOptimizationTypeInfoOp
 {
@@ -293,15 +294,28 @@ struct ForEachTrackedOptimizationTypeInfoOp
     //                   function.
     //   - "alloc site"  for object types tied to an allocation site.
     //   - "prototype"   for object types tied neither to a constructor nor
-    //                   to an allocation site.
+    //                   to an allocation site, but to a prototype.
+    //   - "singleton"   for object types which only has a single value.
+    //   - "function"    for object types referring to scripted functions.
+    //   - "native"      for object types referring to native functions.
     //
     // The name parameter is the string representation of the type. If the
     // type is keyed by "constructor", or if the type itself refers to a
-    // scripted function, the name is the function's displayAtom.
+    // scripted function, the name is the function's displayAtom. If the type
+    // is keyed by "native", this is nullptr.
     //
-    // If the type is keyed by "constructor", "alloc site", or if the type
-    // itself refers to a scripted function, the location and lineno
-    // parameters will be respectively non-nullptr and non-0.
+    // The location parameter is the filename if the type is keyed by
+    // "constructor", "alloc site", or if the type itself refers to a scripted
+    // function. If the type is keyed by "native", it is the offset of the
+    // native function, suitable for use with addr2line on Linux or atos on OS
+    // X. Otherwise it is nullptr.
+    //
+    // The lineno parameter is the line number if the type is keyed by
+    // "constructor", "alloc site", or if the type itself refers to a scripted
+    // function. Otherwise it is UINT32_MAX.
+    //
+    // The location parameter is the only one that may need escaping if being
+    // quoted.
     virtual void readType(const char *keyedBy, const char *name,
                           const char *location, unsigned lineno) = 0;
 
