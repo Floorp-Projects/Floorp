@@ -3072,6 +3072,22 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
 
     mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, scrolledContent);
+
+    if (idSetter.ShouldForceLayerForScrollParent() &&
+        !gfxPrefs::LayoutUseContainersForRootFrames())
+    {
+      // Note that forcing layerization of scroll parents follows the scroll
+      // handoff chain which is subject to the out-of-flow-frames caveat noted
+      // above (where the idSetter variable is created).
+      //
+      // This is not compatible when using containes for root scrollframes.
+      MOZ_ASSERT(shouldBuildLayer && mScrolledFrame->GetContent());
+      mShouldBuildScrollableLayer = true;
+    }
+  }
+
+  if (mShouldBuildScrollableLayer && !gfxPrefs::LayoutUseContainersForRootFrames()) {
+    aBuilder->ForceLayerForScrollParent();
   }
 
   if (MOZ_UNLIKELY(mOuter->StyleDisplay()->mOverflowClipBox ==
