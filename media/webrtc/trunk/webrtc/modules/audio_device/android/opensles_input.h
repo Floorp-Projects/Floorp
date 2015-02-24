@@ -147,9 +147,9 @@ class OpenSlesInput {
   // etc, so it should be called when starting recording.
   bool CreateAudioRecorder();
   void DestroyAudioRecorder();
+  void SetupVoiceMode();
 #if defined(WEBRTC_GONK) && defined(WEBRTC_HARDWARE_AEC_NS)
   void SetupAECAndNS();
-  void SetupVoiceMode();
   bool CheckPlatformAEC();
 #endif
 

@@ -422,7 +422,7 @@ GetObjectAllocKindForCopy(const Nursery &nursery, JSObject *obj)
 
     // Unboxed plain objects are sized according to the data they store.
     if (obj->is<UnboxedPlainObject>()) {
-        size_t nbytes = obj->as<UnboxedPlainObject>().layout().size();
+        size_t nbytes = obj->as<UnboxedPlainObject>().layoutDontCheckGeneration().size();
         return GetGCObjectKindForBytes(UnboxedPlainObject::offsetOfData() + nbytes);
     }
 

@@ -257,17 +257,29 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineBoundFunction(callInfo, target);
 
     // Simd functions
-#define INLINE_INT32X4_SIMD_ARITH_(OP)                                                      \
-    if (native == js::simd_int32x4_##OP)                                                    \
-        return inlineSimdInt32x4BinaryArith(callInfo, native, MSimdBinaryArith::Op_##OP);
+#define INLINE_INT32X4_SIMD_ARITH_(OP)                                                           \
+    if (native == js::simd_int32x4_##OP)                                                         \
+        return inlineBinarySimd<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_##OP,   \
+                                                  SimdTypeDescr::TYPE_INT32);
     ARITH_COMMONX4_SIMD_OP(INLINE_INT32X4_SIMD_ARITH_)
 #undef INLINE_INT32X4_SIMD_ARITH_
 
-#define INLINE_INT32X4_SIMD_BITWISE_(OP)                                                    \
-    if (native == js::simd_int32x4_##OP)                                                    \
-        return inlineSimdInt32x4BinaryBitwise(callInfo, native, MSimdBinaryBitwise::OP##_);
-    BITWISE_COMMONX4_SIMD_OP(INLINE_INT32X4_SIMD_BITWISE_)
-#undef INLINE_INT32X4_SIMD_BITWISE_
+#define INLINE_FLOAT32X4_SIMD_ARITH_(OP)                                                         \
+    if (native == js::simd_float32x4_##OP)                                                       \
+        return inlineBinarySimd<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_##OP,   \
+                                                  SimdTypeDescr::TYPE_FLOAT32);
+    ARITH_FLOAT32X4_SIMD_OP(INLINE_FLOAT32X4_SIMD_ARITH_)
+#undef INLINE_FLOAT32X4_SIMD_ARITH_
+
+#define INLINE_SIMD_BITWISE_(OP)                                                                 \
+    if (native == js::simd_int32x4_##OP)                                                         \
+        return inlineBinarySimd<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::OP##_, \
+                                                    SimdTypeDescr::TYPE_INT32);                  \
+    if (native == js::simd_float32x4_##OP)                                                       \
+        return inlineBinarySimd<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::OP##_, \
+                                                    SimdTypeDescr::TYPE_FLOAT32);
+    BITWISE_COMMONX4_SIMD_OP(INLINE_SIMD_BITWISE_)
+#undef INLINE_SIMD_BITWISE_
 
     return InliningStatus_NotInlined;
 }
@@ -2860,41 +2872,21 @@ IonBuilder::inlineConstructSimdObject(CallInfo &callInfo, SimdTypeDescr *descr)
     return InliningStatus_Inlined;
 }
 
-IonBuilder::InliningStatus
-IonBuilder::inlineSimdInt32x4BinaryArith(CallInfo &callInfo, JSNative native,
-                                         MSimdBinaryArith::Operation op)
+static MIRType
+SimdTypeDescrToMIRType(SimdTypeDescr::Type type)
 {
-    if (callInfo.argc() != 2)
-        return InliningStatus_NotInlined;
-
-    JSObject *templateObject = inspector->getTemplateObjectForNative(pc, native);
-    if (!templateObject)
-        return InliningStatus_NotInlined;
-
-    InlineTypedObject *inlineTypedObject = &templateObject->as<InlineTypedObject>();
-    MOZ_ASSERT(inlineTypedObject->typeDescr().as<SimdTypeDescr>().type() == js::Int32x4::type);
-
-    // If the type of any of the arguments is neither a SIMD type, an Object
-    // type, or a Value, then the applyTypes phase will add a fallible box &
-    // unbox sequence.  This does not matter much as the binary arithmetic
-    // instruction is supposed to produce a TypeError once it is called.
-    MSimdBinaryArith *ins = MSimdBinaryArith::New(alloc(), callInfo.getArg(0), callInfo.getArg(1),
-                                                  op, MIRType_Int32x4);
-
-    MSimdBox *obj = MSimdBox::New(alloc(), constraints(), ins, inlineTypedObject,
-                                  inlineTypedObject->group()->initialHeap(constraints()));
-
-    current->add(ins);
-    current->add(obj);
-    current->push(obj);
-
-    callInfo.setImplicitlyUsedUnchecked();
-    return InliningStatus_Inlined;
+    switch (type) {
+      case SimdTypeDescr::TYPE_FLOAT32:   return MIRType_Float32x4;
+      case SimdTypeDescr::TYPE_INT32:     return MIRType_Int32x4;
+      case SimdTypeDescr::TYPE_FLOAT64:   break;
+    }
+    MOZ_CRASH("unexpected SimdTypeDescr");
 }
 
+template<typename T>
 IonBuilder::InliningStatus
-IonBuilder::inlineSimdInt32x4BinaryBitwise(CallInfo &callInfo, JSNative native,
-                                           MSimdBinaryBitwise::Operation op)
+IonBuilder::inlineBinarySimd(CallInfo &callInfo, JSNative native, typename T::Operation op,
+                             SimdTypeDescr::Type type)
 {
     if (callInfo.argc() != 2)
         return InliningStatus_NotInlined;
@@ -2904,14 +2896,14 @@ IonBuilder::inlineSimdInt32x4BinaryBitwise(CallInfo &callInfo, JSNative native,
         return InliningStatus_NotInlined;
 
     InlineTypedObject *inlineTypedObject = &templateObject->as<InlineTypedObject>();
-    MOZ_ASSERT(inlineTypedObject->typeDescr().as<SimdTypeDescr>().type() == js::Int32x4::type);
+    MOZ_ASSERT(inlineTypedObject->typeDescr().as<SimdTypeDescr>().type() == type);
 
     // If the type of any of the arguments is neither a SIMD type, an Object
     // type, or a Value, then the applyTypes phase will add a fallible box &
     // unbox sequence.  This does not matter much as the binary bitwise
     // instruction is supposed to produce a TypeError once it is called.
-    MSimdBinaryBitwise *ins = MSimdBinaryBitwise::New(alloc(), callInfo.getArg(0), callInfo.getArg(1),
-                                                      op, MIRType_Int32x4);
+    T *ins = T::New(alloc(), callInfo.getArg(0), callInfo.getArg(1), op,
+                    SimdTypeDescrToMIRType(type));
 
     MSimdBox *obj = MSimdBox::New(alloc(), constraints(), ins, inlineTypedObject,
                                   inlineTypedObject->group()->initialHeap(constraints()));
