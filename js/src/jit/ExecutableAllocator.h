@@ -33,9 +33,9 @@
 
 #include "jit/arm/Simulator-arm.h"
 #include "jit/mips/Simulator-mips.h"
+#include "js/GCAPI.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
-#include "js/GCAPI.h"
 
 #ifdef JS_CPU_SPARC
 #ifdef __linux__  // bugzilla 502369
