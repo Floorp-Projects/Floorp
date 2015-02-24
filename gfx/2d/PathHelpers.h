@@ -283,6 +283,16 @@ GFX2D_API void StrokeSnappedEdgesOfRect(const Rect& aRect,
                                         const ColorPattern& aColor,
                                         const StrokeOptions& aStrokeOptions);
 
+/**
+ * Return the margin, in device space, by which a stroke can extend beyond the
+ * rendered shape.
+ * @param  aStrokeOptions The stroke options that the stroke is drawn with.
+ * @param  aTransform     The user space to device space transform.
+ * @return                The stroke margin.
+ */
+GFX2D_API Margin MaxStrokeExtents(const StrokeOptions& aStrokeOptions,
+                                  const Matrix& aTransform);
+
 extern UserDataKey sDisablePixelSnapping;
 
 /**

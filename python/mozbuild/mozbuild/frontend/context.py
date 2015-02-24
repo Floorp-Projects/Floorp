@@ -83,7 +83,7 @@ class Context(KeyedDefaultDict):
         # a list to be a problem.
         self._all_paths = []
         self.config = config
-        self.executed_time = 0
+        self.execution_time = 0
         KeyedDefaultDict.__init__(self, self._factory)
 
     def push_source(self, path):

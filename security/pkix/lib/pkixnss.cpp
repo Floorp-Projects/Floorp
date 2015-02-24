@@ -194,6 +194,9 @@ RegisterErrorTable()
     { "MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE",
       "A certificate that is not yet valid was used to issue the server's "
       "certificate." },
+    { "MOZILLA_PKIX_ERROR_SIGNATURE_ALGORITHM_MISMATCH",
+      "The signature algorithm in the signature field of the certificate does "
+      "not match the algorithm in its signatureAlgorithm field." },
   };
   // Note that these error strings are not localizable.
   // When these strings change, update the localization information too.

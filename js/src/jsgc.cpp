@@ -5546,7 +5546,7 @@ GCRuntime::compactPhase(bool lastGC, JS::gcreason::Reason reason)
 }
 
 void
-GCRuntime::finishCollection()
+GCRuntime::finishCollection(JS::gcreason::Reason reason)
 {
     MOZ_ASSERT(marker.isDrained());
     marker.stop();
@@ -5566,6 +5566,13 @@ GCRuntime::finishCollection()
     }
 
     lastGCTime = currentTime;
+
+    // If this is an OOM GC reason, wait on the background sweeping thread
+    // before returning to ensure that we free as much as possible.
+    if (reason == JS::gcreason::LAST_DITCH || reason == JS::gcreason::MEM_PRESSURE) {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
+        rt->gc.waitBackgroundSweepOrAllocEnd();
+    }
 }
 
 /* Start a new heap session. */
@@ -5933,7 +5940,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
         if (isCompacting && compactPhase(lastGC, reason) == NotFinished)
             break;
 
-        finishCollection();
+        finishCollection(reason);
 
         incrementalState = NO_INCREMENTAL;
         break;
