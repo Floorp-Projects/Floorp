@@ -152,7 +152,7 @@ IncrementalDownload.prototype = {
     tm.mainThread.dispatch(function() {
         this._observer = observer.QueryInterface(AUS_Ci.nsIRequestObserver);
         this._ctxt = ctxt;
-        this._observer.onStartRequest(this, this.ctxt);
+        this._observer.onStartRequest(this, this._ctxt);
         let mar = getTestDirFile(FILE_SIMPLE_MAR);
         mar.copyTo(this._destination.parent, this._destination.leafName);
         var status = AUS_Cr.NS_OK

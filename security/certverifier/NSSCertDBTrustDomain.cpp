@@ -713,6 +713,12 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
 }
 
 Result
+NSSCertDBTrustDomain::CheckSignatureDigestAlgorithm(DigestAlgorithm)
+{
+  return Success;
+}
+
+Result
 NSSCertDBTrustDomain::CheckRSAPublicKeyModulusSizeInBits(
   EndEntityOrCA /*endEntityOrCA*/, unsigned int modulusSizeInBits)
 {
