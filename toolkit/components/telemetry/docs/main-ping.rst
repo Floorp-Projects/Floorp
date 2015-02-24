@@ -23,7 +23,7 @@ Structure::
         reason: <string>, // what triggered this ping: "saved-session", "environment-change", "shutdown", ...
         revision: <string>, // the Histograms.json revision
         timezoneOffset: <number>, // time-zone offset from UTC, in minutes, for the current locale
-        previousBuildId: <string>,
+        previousBuildId: <string>, // null if this is the first run, or the previous build ID is unknown
 
         sessionId: <uuid>,  // random session id, shared by subsessions
         subsessionId: <uuid>,  // random subsession id
