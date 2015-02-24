@@ -406,10 +406,11 @@ MBasicBlock::inherit(TempAllocator &alloc, BytecodeAnalysis *analysis, MBasicBlo
     MOZ_ASSERT(!entryResumePoint_);
 
     // Propagate the caller resume point from the inherited block.
-    callerResumePoint_ = pred ? pred->callerResumePoint() : nullptr;
+    MResumePoint *callerResumePoint = pred ? pred->callerResumePoint() : nullptr;
 
     // Create a resume point using our initial stack state.
-    entryResumePoint_ = new(alloc) MResumePoint(this, pc(), MResumePoint::ResumeAt);
+    entryResumePoint_ = new(alloc) MResumePoint(this, pc(), callerResumePoint,
+                                                MResumePoint::ResumeAt);
     if (!entryResumePoint_->init(alloc))
         return false;
 
@@ -474,8 +475,6 @@ MBasicBlock::inheritResumePoint(MBasicBlock *pred)
     MOZ_ASSERT(kind_ != PENDING_LOOP_HEADER);
     MOZ_ASSERT(pred != nullptr);
 
-    callerResumePoint_ = pred->callerResumePoint();
-
     if (!predecessors_.append(pred))
         return false;
 
@@ -496,7 +495,8 @@ MBasicBlock::initEntrySlots(TempAllocator &alloc)
     discardResumePoint(entryResumePoint_);
 
     // Create a resume point using our initial stack state.
-    entryResumePoint_ = MResumePoint::New(alloc, this, pc(), MResumePoint::ResumeAt);
+    entryResumePoint_ = MResumePoint::New(alloc, this, pc(), callerResumePoint(),
+                                          MResumePoint::ResumeAt);
     if (!entryResumePoint_)
         return false;
     return true;
