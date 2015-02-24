@@ -1661,11 +1661,6 @@ void MediaDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int6
   UpdateReadyStateForData();
 }
 
-void MediaDecoder::UpdatePlaybackPosition(int64_t aTime)
-{
-  mDecoderStateMachine->UpdatePlaybackPosition(aTime);
-}
-
 // Provide access to the state machine object
 MediaDecoderStateMachine* MediaDecoder::GetStateMachine() const {
   return mDecoderStateMachine;
