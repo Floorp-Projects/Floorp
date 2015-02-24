@@ -4,6 +4,8 @@ test $MOZCONFIG # mozconfig is required...
 test -d $1 # workspace must exist at this point...
 WORKSPACE=$( cd "$1" && pwd )
 
+. setup-ccache.sh
+
 # Gecko source:
 export GECKO_DIR=$WORKSPACE/gecko
 # Gaia source:
