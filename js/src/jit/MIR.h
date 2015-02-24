@@ -2036,6 +2036,15 @@ class MSimdBinaryBitwise
         xor_
     };
 
+    static const char* OperationName(Operation op) {
+        switch (op) {
+          case and_: return "and";
+          case or_:  return "or";
+          case xor_: return "xor";
+        }
+        MOZ_CRASH("unexpected operation");
+    }
+
   private:
     Operation operation_;
 

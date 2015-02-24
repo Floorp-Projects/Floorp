@@ -1026,7 +1026,11 @@ Event::TimeStamp() const
       return 0.0;
     }
 
-    nsPerformance* perf = mOwner->GetPerformance();
+    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mOwner);
+    if (NS_WARN_IF(!win)) {
+      return 0.0;
+    }
+    nsPerformance* perf = win->GetPerformance();
     if (NS_WARN_IF(!perf)) {
       return 0.0;
     }
@@ -1049,8 +1053,9 @@ Event::TimeStamp() const
 bool
 Event::GetPreventDefault() const
 {
-  if (mOwner) {
-    if (nsIDocument* doc = mOwner->GetExtantDoc()) {
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mOwner));
+  if (win) {
+    if (nsIDocument* doc = win->GetExtantDoc()) {
       doc->WarnOnceAbout(nsIDocument::eGetPreventDefault);
     }
   }
@@ -1130,23 +1135,23 @@ Event::SetOwner(mozilla::dom::EventTarget* aOwner)
 
   nsCOMPtr<nsINode> n = do_QueryInterface(aOwner);
   if (n) {
-    mOwner = do_QueryInterface(n->OwnerDoc()->GetScopeObject());
+    mOwner = n->OwnerDoc()->GetScopeObject();
     return;
   }
 
   nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aOwner);
   if (w) {
     if (w->IsOuterWindow()) {
-      mOwner = w->GetCurrentInnerWindow();
+      mOwner = do_QueryInterface(w->GetCurrentInnerWindow());
     } else {
-      mOwner.swap(w);
+      mOwner = do_QueryInterface(w);
     }
     return;
   }
 
   nsCOMPtr<DOMEventTargetHelper> eth = do_QueryInterface(aOwner);
   if (eth) {
-    mOwner = eth->GetOwner();
+    mOwner = eth->GetParentObject();
     return;
   }
 

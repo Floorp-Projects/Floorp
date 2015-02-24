@@ -102,7 +102,7 @@ public class TabStripView extends TwoWayView {
             updateSelectedStyle(selected);
 
             if (ensureVisible) {
-                ensurePositionIsVisible(selected);
+                ensurePositionIsVisible(selected, true);
             }
         }
     }
@@ -239,10 +239,14 @@ public class TabStripView extends TwoWayView {
         });
     }
 
-    private void ensurePositionIsVisible(final int position) {
+    /**
+     * Ensures the tab at the given position is visible. If we are not restoring tabs and
+     * shouldAnimate == true, the tab will animate to be visible, if it is not already visible.
+     */
+    private void ensurePositionIsVisible(final int position, final boolean shouldAnimate) {
         // We just want to move the strip to the right position
         // when restoring tabs on startup.
-        if (isRestoringTabs) {
+        if (isRestoringTabs || !shouldAnimate) {
             setSelection(position);
             return;
         }
@@ -412,6 +416,13 @@ public class TabStripView extends TwoWayView {
         super.draw(canvas);
         drawDividers(canvas);
         drawFadingEdge(canvas);
+    }
+
+    public void refresh() {
+        final int selectedPosition = getPositionForSelectedTab();
+        if (selectedPosition != -1) {
+            ensurePositionIsVisible(selectedPosition, false);
+        }
     }
 
     private class TabAnimatorListener implements AnimatorListener {

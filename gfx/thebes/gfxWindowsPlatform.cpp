@@ -1973,13 +1973,6 @@ public:
         mSoftwareVsyncRate = TimeDuration::FromMilliseconds(rate);
       }
 
-      virtual ~D3DVsyncDisplay()
-      {
-        MOZ_ASSERT(NS_IsMainThread());
-        DisableVsync();
-        delete mVsyncThread;
-      }
-
       virtual void EnableVsync() MOZ_OVERRIDE
       {
         MOZ_ASSERT(NS_IsMainThread());
@@ -2082,6 +2075,13 @@ public:
       }
 
     private:
+      virtual ~D3DVsyncDisplay()
+      {
+        MOZ_ASSERT(NS_IsMainThread());
+        DisableVsync();
+        delete mVsyncThread;
+      }
+
       bool IsInVsyncThread()
       {
         return mVsyncThread->thread_id() == PlatformThread::CurrentId();

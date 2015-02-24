@@ -34,7 +34,7 @@ static long gLastEventMsg = 0;
 void PrintEvent(UINT msg, bool aShowAllEvents, bool aShowMouseMoves)
 {
   int inx = 0;
-  while (gAllEvents[inx].mId != (long)msg && gAllEvents[inx].mStr != nullptr) {
+  while (gAllEvents[inx].mId != msg && gAllEvents[inx].mStr != nullptr) {
     inx++;
   }
   if (aShowAllEvents || (!aShowAllEvents && gLastEventMsg != (long)msg)) {
