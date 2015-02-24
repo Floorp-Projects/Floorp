@@ -3,14 +3,15 @@ name = "wires"
 version = "0.0.1"
 dependencies = [
  "argparse 0.1.0 (git+http://github.com/tailhook/rust-argparse.git)",
+ "env_logger 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.2.0 (git+https://github.com/hyperium/hyper)",
  "log 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "mozprofile 0.0.1",
- "mozrunner 0.0.1",
+ "mozprofile 0.0.1 (git+http://github.com/jgraham/rust_mozprofile.git)",
+ "mozrunner 0.0.1 (git+http://github.com/jgraham/rust_mozrunner.git)",
  "regex 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.2.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
- "webdriver 0.0.1",
+ "webdriver 0.0.1 (git+http://github.com/jgraham/webdriver-rust.git)",
 ]
 
 [[package]]
@@ -27,6 +28,15 @@ dependencies = [
  "rustc-serialize 0.2.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 0.2.21 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "log 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -89,6 +99,7 @@ dependencies = [
 [[package]]
 name = "mozprofile"
 version = "0.0.1"
+source = "git+http://github.com/jgraham/rust_mozprofile.git#bb42d6417aa0c291e9f8b7e1a9415433aea13f74"
 dependencies = [
  "log 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -96,8 +107,9 @@ dependencies = [
 [[package]]
 name = "mozrunner"
 version = "0.0.1"
+source = "git+http://github.com/jgraham/rust_mozrunner.git#97ce9372ba95bdcd94121982affe186e8b2219b3"
 dependencies = [
- "mozprofile 0.0.1",
+ "mozprofile 0.0.1 (git+http://github.com/jgraham/rust_mozprofile.git)",
 ]
 
 [[package]]
@@ -187,6 +199,7 @@ dependencies = [
 [[package]]
 name = "webdriver"
 version = "0.0.1"
+source = "git+http://github.com/jgraham/webdriver-rust.git#8bf036c35e4893bf523c6f8e2041a8a7eeb3e89b"
 dependencies = [
  "hyper 0.2.0 (git+https://github.com/hyperium/hyper)",
  "log 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
