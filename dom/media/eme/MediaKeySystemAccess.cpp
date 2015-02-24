@@ -93,23 +93,32 @@ HaveGMPFor(mozIGeckoMediaPluginService* aGMPService,
 static MediaKeySystemStatus
 EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
                     const nsAString& aKeySystem,
-                    int32_t aMinCdmVersion)
+                    int32_t aMinCdmVersion,
+                    bool aCheckForV6=false)
 {
-  if (aMinCdmVersion == NO_CDM_VERSION) {
-    return MediaKeySystemStatus::Available;
-  }
-
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_ConvertUTF16toUTF8(aKeySystem));
+  bool hasPlugin;
   nsAutoCString versionStr;
   if (NS_FAILED(aGMPService->GetPluginVersionForAPI(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
                                                     &tags,
-                                                    versionStr)) &&
+                                                    &hasPlugin,
+                                                    versionStr)) ||
       // XXX to be removed later in bug 1147692
-      NS_FAILED(aGMPService->GetPluginVersionForAPI(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR_COMPAT),
-                                                    &tags,
-                                                    versionStr))) {
+      (aCheckForV6 && !hasPlugin &&
+       NS_FAILED(aGMPService->GetPluginVersionForAPI(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR_COMPAT),
+                                                     &tags,
+                                                     &hasPlugin,
+                                                     versionStr)))) {
     return MediaKeySystemStatus::Error;
+  }
+
+  if (!hasPlugin) {
+    return MediaKeySystemStatus::Cdm_not_installed;
+  }
+
+  if (aMinCdmVersion == NO_CDM_VERSION) {
+    return MediaKeySystemStatus::Available;
   }
 
   nsresult rv;
@@ -137,11 +146,6 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
     if (!Preferences::GetBool("media.eme.clearkey.enabled", true)) {
       return MediaKeySystemStatus::Cdm_disabled;
     }
-    if (!HaveGMPFor(mps,
-                    NS_LITERAL_CSTRING("org.w3.clearkey"),
-                    NS_LITERAL_CSTRING(GMP_API_DECRYPTOR))) {
-      return MediaKeySystemStatus::Cdm_not_installed;
-    }
     return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion);
   }
 
@@ -155,16 +159,7 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
     if (!Preferences::GetBool("media.gmp-eme-adobe.enabled", false)) {
       return MediaKeySystemStatus::Cdm_disabled;
     }
-    if (!HaveGMPFor(mps,
-                    NS_ConvertUTF16toUTF8(aKeySystem),
-                    NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)) &&
-        // XXX to be removed later in bug 1147692
-        !HaveGMPFor(mps,
-                    NS_ConvertUTF16toUTF8(aKeySystem),
-                    NS_LITERAL_CSTRING(GMP_API_DECRYPTOR_COMPAT))) {
-      return MediaKeySystemStatus::Cdm_not_installed;
-    }
-    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion);
+    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, true);
   }
 #endif
 
