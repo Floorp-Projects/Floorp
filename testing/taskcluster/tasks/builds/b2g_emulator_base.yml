@@ -18,7 +18,8 @@ task:
       - -c
       - >
         checkout-gecko workspace &&
-        ./workspace/gecko/testing/taskcluster/scripts/builder/build-emulator.sh workspace
+        cd ./workspace/gecko/testing/taskcluster/scripts/builder &&
+        buildbot_step 'Build' ./build-emulator.sh $HOME/workspace
 
   extra:
     # Rather then enforcing particular conventions we require that all build

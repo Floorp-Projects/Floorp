@@ -17,7 +17,8 @@ task:
       - -c
       - >
         checkout-gecko workspace &&
-        ./workspace/gecko/testing/taskcluster/scripts/builder/build-b2g-desktop.sh workspace
+        cd ./workspace/gecko/testing/taskcluster/scripts/builder &&
+        buildbot_step 'Build' ./build-b2g-desktop.sh $HOME/workspace
 
   extra:
     treeherder:
