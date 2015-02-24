@@ -1625,7 +1625,6 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
   // Bug 50255 and Bug 351310: Keep the characters unshifted for shortcuts and
   // accesskeys and make sure that numbers are always passed as such.
   if (uniChar && (mModKeyState.IsControl() || mModKeyState.IsAlt())) {
-    KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
     char16_t unshiftedCharCode =
       (mVirtualKeyCode >= '0' && mVirtualKeyCode <= '9') ?
         mVirtualKeyCode :  mModKeyState.IsShift() ?
@@ -2126,7 +2125,6 @@ NativeKey::DispatchKeyPressEventsWithKeyboardLayout() const
   uint32_t skipUniChars = longestLength - inputtingChars.mLength;
   uint32_t skipShiftedChars = longestLength - shiftedChars.mLength;
   uint32_t skipUnshiftedChars = longestLength - unshiftedChars.mLength;
-  UINT keyCode = !inputtingChars.mLength ? mDOMKeyCode : 0;
   bool defaultPrevented = false;
   for (uint32_t cnt = 0; cnt < longestLength; cnt++) {
     uint16_t uniChar, shiftedChar, unshiftedChar;

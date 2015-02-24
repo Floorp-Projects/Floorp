@@ -492,7 +492,7 @@ class CCacheStats(object):
     DIRECTORY_DESCRIPTION = "cache directory"
     PRIMARY_CONFIG_DESCRIPTION = "primary config"
     SECONDARY_CONFIG_DESCRIPTION = "secondary config      (readonly)"
-    ABSOLUTE_KEYS = {'cache_max_size'}
+    ABSOLUTE_KEYS = {'cache_files', 'cache_size', 'cache_max_size'}
     FORMAT_KEYS = {'cache_size', 'cache_max_size'}
 
     GiB = 1024 ** 3

@@ -909,6 +909,9 @@ class TypeNewScript
 /* Is this a reasonable PC to be doing inlining on? */
 inline bool isInlinableCall(jsbytecode *pc);
 
+bool
+ClassCanHaveExtraProperties(const Class *clasp);
+
 /*
  * Whether Array.prototype, or an object on its proto chain, has an
  * indexed property.
