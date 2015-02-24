@@ -1075,6 +1075,13 @@ AsmJSMachExceptionHandler::install(JSRuntime *rt)
 static bool
 HandleFault(int signum, siginfo_t *info, void *ctx)
 {
+    // The signals we're expecting come from access violations, accessing
+    // mprotected memory. If the signal originates anywhere else, don't try
+    // to handle it.
+    MOZ_RELEASE_ASSERT(signum == SIGSEGV);
+    if (info->si_code != SEGV_ACCERR)
+        return false;
+
     CONTEXT *context = (CONTEXT *)ctx;
     uint8_t **ppc = ContextToPC(context);
     uint8_t *pc = *ppc;
