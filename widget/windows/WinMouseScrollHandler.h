@@ -289,14 +289,14 @@ private:
     bool IsPageScroll(bool aForVertical) const
     {
       MOZ_ASSERT(mInitialized, "SystemSettings must be initialized");
-      return aForVertical ? (mScrollLines == WHEEL_PAGESCROLL) :
-                            (mScrollChars == WHEEL_PAGESCROLL);
+      return aForVertical ? (uint32_t(mScrollLines) == WHEEL_PAGESCROLL) :
+                            (uint32_t(mScrollChars) == WHEEL_PAGESCROLL);
     }
 
   private:
     bool mInitialized;
-    uint32_t mScrollLines;
-    uint32_t mScrollChars;
+    int32_t mScrollLines;
+    int32_t mScrollChars;
   };
 
   SystemSettings mSystemSettings;

@@ -320,15 +320,6 @@ Mark(JSTracer *trc, ScopeObject **obj, const char *name)
     MarkObjectUnbarriered(trc, obj, name);
 }
 
-bool
-IsCellMarked(Cell **thingp);
-
-bool
-IsCellAboutToBeFinalized(Cell **thing);
-
-bool
-IsCellAboutToBeFinalizedFromAnyThread(Cell **thing);
-
 inline bool
 IsMarked(BarrieredBase<Value> *v)
 {

@@ -1935,7 +1935,6 @@ CanRelocateAllocKind(AllocKind kind)
     return kind <= FINALIZE_OBJECT_LAST;
 }
 
-
 size_t ArenaHeader::countFreeCells()
 {
     size_t count = 0;
@@ -2249,16 +2248,16 @@ void
 MovingTracer::Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     TenuredCell *thing = TenuredCell::fromPointer(*thingp);
-    Zone *zone = thing->zoneFromAnyThread();
-    if (!zone->isGCCompacting()) {
-        MOZ_ASSERT(!IsForwarded(thing));
+
+    // Currently we only relocate objects.
+    if (kind != JSTRACE_OBJECT) {
+        MOZ_ASSERT(!RelocationOverlay::isCellForwarded(thing));
         return;
     }
 
-    if (IsForwarded(thing)) {
-        Cell *dst = Forwarded(thing);
-        *thingp = dst;
-    }
+    JSObject *obj = reinterpret_cast<JSObject*>(thing);
+    if (IsForwarded(obj))
+        *thingp = Forwarded(obj);
 }
 
 void
@@ -5471,7 +5470,7 @@ GCRuntime::endSweepPhase(bool lastGC)
 }
 
 GCRuntime::IncrementalProgress
-GCRuntime::compactPhase(bool lastGC, JS::gcreason::Reason reason)
+GCRuntime::compactPhase(JS::gcreason::Reason reason)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
 
@@ -5495,7 +5494,7 @@ GCRuntime::compactPhase(bool lastGC, JS::gcreason::Reason reason)
     for (ArenaHeader *arena = relocatedList; arena; arena = arena->next) {
         for (ArenaCellIterUnderFinalize i(arena); !i.done(); i.next()) {
             TenuredCell *src = i.getCell();
-            MOZ_ASSERT(IsForwarded(src));
+            MOZ_ASSERT(RelocationOverlay::isCellForwarded(src));
             TenuredCell *dest = Forwarded(src);
             MOZ_ASSERT(src->isMarked(BLACK) == dest->isMarked(BLACK));
             MOZ_ASSERT(src->isMarked(GRAY) == dest->isMarked(GRAY));
@@ -5504,16 +5503,18 @@ GCRuntime::compactPhase(bool lastGC, JS::gcreason::Reason reason)
 #endif
 
     // Release the relocated arenas, or in debug builds queue them to be
-    // released until the start of the next GC unless this is the last GC.
+    // released until the start of the next GC unless this is the last GC or we
+    // are doing a last ditch GC.
 #ifndef DEBUG
     releaseRelocatedArenas(relocatedList);
 #else
-    protectRelocatedArenas(relocatedList);
-    MOZ_ASSERT(!relocatedArenasToRelease);
-    if (!lastGC)
-        relocatedArenasToRelease = relocatedList;
-    else
+    if (reason == JS::gcreason::DESTROY_RUNTIME || reason == JS::gcreason::LAST_DITCH) {
         releaseRelocatedArenas(relocatedList);
+    } else {
+        MOZ_ASSERT(!relocatedArenasToRelease);
+        protectRelocatedArenas(relocatedList);
+        relocatedArenasToRelease = relocatedList;
+    }
 #endif
 
     // Ensure execess chunks are returns to the system and free arenas
@@ -5937,7 +5938,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
             break;
 
       case COMPACT:
-        if (isCompacting && compactPhase(lastGC, reason) == NotFinished)
+        if (isCompacting && compactPhase(reason) == NotFinished)
             break;
 
         finishCollection(reason);

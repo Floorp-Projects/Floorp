@@ -310,7 +310,6 @@ CacheFileHandles::~CacheFileHandles()
 
 nsresult
 CacheFileHandles::GetHandle(const SHA1Sum::Hash *aHash,
-                            bool aReturnDoomed,
                             CacheFileHandle **_retval)
 {
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
@@ -344,15 +343,11 @@ CacheFileHandles::GetHandle(const SHA1Sum::Hash *aHash,
   if (handle->IsDoomed()) {
     LOG(("CacheFileHandles::GetHandle() hash=%08x%08x%08x%08x%08x "
          "found doomed handle %p, entry %p", LOGSHA1(aHash), handle.get(), entry));
-
-    // If the consumer doesn't want doomed handles, exit with NOT_AVAIL.
-    if (!aReturnDoomed) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  } else {
-    LOG(("CacheFileHandles::GetHandle() hash=%08x%08x%08x%08x%08x "
-         "found handle %p, entry %p", LOGSHA1(aHash), handle.get(), entry));
+    return NS_ERROR_NOT_AVAILABLE;
   }
+
+  LOG(("CacheFileHandles::GetHandle() hash=%08x%08x%08x%08x%08x "
+       "found handle %p, entry %p", LOGSHA1(aHash), handle.get(), entry));
 
   handle.forget(_retval);
   return NS_OK;
@@ -810,7 +805,7 @@ public:
     if (!mIOMan) {
       rv = NS_ERROR_NOT_INITIALIZED;
     } else {
-      rv = mIOMan->DoomFileByKeyInternal(&mHash, false);
+      rv = mIOMan->DoomFileByKeyInternal(&mHash);
       mIOMan = nullptr;
     }
 
@@ -1575,7 +1570,7 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<CacheFileHandle> handle;
-  mHandles.GetHandle(aHash, false, getter_AddRefs(handle));
+  mHandles.GetHandle(aHash, getter_AddRefs(handle));
 
   if ((aFlags & (OPEN | CREATE | CREATE_NEW)) == CREATE_NEW) {
     if (handle) {
@@ -2074,11 +2069,10 @@ CacheFileIOManager::DoomFileByKey(const nsACString &aKey,
 }
 
 nsresult
-CacheFileIOManager::DoomFileByKeyInternal(const SHA1Sum::Hash *aHash,
-                                          bool aFailIfAlreadyDoomed)
+CacheFileIOManager::DoomFileByKeyInternal(const SHA1Sum::Hash *aHash)
 {
-  LOG(("CacheFileIOManager::DoomFileByKeyInternal() [hash=%08x%08x%08x%08x%08x,"
-        " failIfAlreadyDoomed=%d]", LOGSHA1(aHash), aFailIfAlreadyDoomed));
+  LOG(("CacheFileIOManager::DoomFileByKeyInternal() [hash=%08x%08x%08x%08x%08x]"
+       , LOGSHA1(aHash)));
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
 
@@ -2094,14 +2088,10 @@ CacheFileIOManager::DoomFileByKeyInternal(const SHA1Sum::Hash *aHash,
 
   // Find active handle
   nsRefPtr<CacheFileHandle> handle;
-  mHandles.GetHandle(aHash, true, getter_AddRefs(handle));
+  mHandles.GetHandle(aHash, getter_AddRefs(handle));
 
   if (handle) {
     handle->Log();
-
-    if (handle->IsDoomed()) {
-      return aFailIfAlreadyDoomed ? NS_ERROR_NOT_AVAILABLE : NS_OK;
-    }
 
     return DoomFileInternal(handle);
   }
@@ -2244,7 +2234,7 @@ CacheFileIOManager::GetEntryInfo(const SHA1Sum::Hash *aHash,
   nsAutoCString uriSpec;
 
   nsRefPtr<CacheFileHandle> handle;
-  ioMan->mHandles.GetHandle(aHash, false, getter_AddRefs(handle));
+  ioMan->mHandles.GetHandle(aHash, getter_AddRefs(handle));
   if (handle) {
     nsRefPtr<nsILoadContextInfo> info =
       CacheFileUtils::ParseKey(handle->Key(), &enhanceId, &uriSpec);
@@ -2615,23 +2605,13 @@ CacheFileIOManager::OverLimitEvictionInternal()
     rv = CacheIndex::GetEntryForEviction(false, &hash, &cnt);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = DoomFileByKeyInternal(&hash, true);
+    rv = DoomFileByKeyInternal(&hash);
     if (NS_SUCCEEDED(rv)) {
       consecutiveFailures = 0;
     } else if (rv == NS_ERROR_NOT_AVAILABLE) {
       LOG(("CacheFileIOManager::OverLimitEvictionInternal() - "
            "DoomFileByKeyInternal() failed. [rv=0x%08x]", rv));
       // TODO index is outdated, start update
-
-#ifdef DEBUG
-      // Dooming should never fail due to already doomed handle, but bug 1028415
-      // shows that this unexpected state can happen. Assert in debug build so
-      // we can find the cause if we ever find a way to reproduce it with NSPR
-      // logging enabled.
-      nsRefPtr<CacheFileHandle> handle;
-      mHandles.GetHandle(&hash, true, getter_AddRefs(handle));
-      MOZ_ASSERT(!handle || !handle->IsDoomed());
-#endif
 
       // Make sure index won't return the same entry again
       CacheIndex::RemoveEntry(&hash);
@@ -3650,7 +3630,7 @@ CacheFileIOManager::OpenNSPRHandle(CacheFileHandle *aHandle, bool aCreate)
 
       rv = CacheIndex::GetEntryForEviction(true, &hash, &cnt);
       if (NS_SUCCEEDED(rv)) {
-        rv = DoomFileByKeyInternal(&hash, true);
+        rv = DoomFileByKeyInternal(&hash);
       }
       if (NS_SUCCEEDED(rv)) {
         rv = aHandle->mFile->OpenNSPRFileDesc(

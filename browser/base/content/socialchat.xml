@@ -463,7 +463,9 @@
           // We can't use calcTotalWidthOf due to the transitions...
           const CHAT_WIDTH_OPEN = 260;
           const CHAT_WIDTH_MINIMIZED = 160;
-          return aChatbox.minimized ? CHAT_WIDTH_MINIMIZED : CHAT_WIDTH_OPEN;
+          let openWidth = aChatbox.hasAttribute("large") ? 300 : CHAT_WIDTH_OPEN;
+
+          return aChatbox.minimized ? CHAT_WIDTH_MINIMIZED : openWidth;
         ]]></body>
       </method>
 

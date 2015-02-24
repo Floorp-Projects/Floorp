@@ -22,6 +22,7 @@
 #include "mozilla/PodOperations.h"
 
 #include "asmjs/AsmJSModule.h"
+#include "jit/Disassembler.h"
 #include "vm/Runtime.h"
 
 using namespace js;
@@ -308,6 +309,28 @@ enum { REG_EIP = 14 };
 # define CONTEXT ucontext_t
 #endif
 
+// Define a context type for use in the emulator code. This is usually just
+// the same as CONTEXT, but on Mac we use a different structure since we call
+// into the emulator code from a Mach exception handler rather than a
+// sigaction-style signal handler.
+#if defined(XP_MACOSX)
+# if defined(JS_CODEGEN_X64)
+struct macos_x64_context {
+    x86_thread_state64_t thread;
+    x86_float_state64_t float_;
+};
+#  define EMULATOR_CONTEXT macos_x64_context
+# else
+struct macos_x86_context {
+    x86_thread_state_t thread;
+    x86_float_state_t float_;
+};
+#  define EMULATOR_CONTEXT macos_x86_context
+# endif
+#else
+# define EMULATOR_CONTEXT CONTEXT
+#endif
+
 #if defined(JS_CPU_X64)
 # define PC_sig(p) RIP_sig(p)
 #elif defined(JS_CPU_X86)
@@ -329,96 +352,368 @@ ContextToPC(CONTEXT *context)
 }
 
 #if defined(JS_CODEGEN_X64)
-template <class T>
-static void
-SetXMMRegToNaN(Scalar::Type viewType, T *xmm_reg)
+MOZ_COLD static void
+SetFPRegToNaN(size_t size, void *fp_reg)
 {
-    switch (viewType) {
-      case Scalar::Float32: {
-        JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(float));
-        float *floats = reinterpret_cast<float*>(xmm_reg);
-        floats[0] = GenericNaN();
-        floats[1] = 0;
-        floats[2] = 0;
-        floats[3] = 0;
-        break;
-      }
-      case Scalar::Float64: {
-        JS_STATIC_ASSERT(sizeof(T) == 2 * sizeof(double));
-        double *dbls = reinterpret_cast<double*>(xmm_reg);
-        dbls[0] = GenericNaN();
-        dbls[1] = 0;
-        break;
-      }
-      // Float32x4 and Int32x4 out of bounds are handled with the OutOfBounds stub.
-      case Scalar::Float32x4:
-      case Scalar::Int32x4:
-      case Scalar::Int8:
-      case Scalar::Uint8:
-      case Scalar::Int16:
-      case Scalar::Uint16:
-      case Scalar::Int32:
-      case Scalar::Uint32:
-      case Scalar::Uint8Clamped:
-      case Scalar::MaxTypedArrayViewType:
-        MOZ_CRASH("unexpected type in SetXMMRegToNaN");
+    MOZ_RELEASE_ASSERT(size <= Simd128DataSize);
+    memset(fp_reg, 0, Simd128DataSize);
+    switch (size) {
+      case 4: *static_cast<float *>(fp_reg) = GenericNaN(); break;
+      case 8: *static_cast<double *>(fp_reg) = GenericNaN(); break;
+      default:
+        // All SIMD accesses throw on OOB.
+        MOZ_CRASH("unexpected size in SetFPRegToNaN");
     }
+}
+
+MOZ_COLD static void
+SetGPRegToZero(void *gp_reg)
+{
+    memset(gp_reg, 0, sizeof(intptr_t));
+}
+
+MOZ_COLD static void
+SetFPRegToLoadedValue(const void *addr, size_t size, void *fp_reg)
+{
+    MOZ_RELEASE_ASSERT(size <= Simd128DataSize);
+    memset(fp_reg, 0, Simd128DataSize);
+    memcpy(fp_reg, addr, size);
+}
+
+MOZ_COLD static void
+SetGPRegToLoadedValue(const void *addr, size_t size, void *gp_reg)
+{
+    MOZ_RELEASE_ASSERT(size <= sizeof(void *));
+    memset(gp_reg, 0, sizeof(void *));
+    memcpy(gp_reg, addr, size);
+}
+
+MOZ_COLD static void
+SetGPRegToLoadedValueSext32(const void *addr, size_t size, void *gp_reg)
+{
+    MOZ_RELEASE_ASSERT(size <= sizeof(int32_t));
+    int8_t msb = static_cast<const int8_t *>(addr)[size - 1];
+    memset(gp_reg, 0, sizeof(void *));
+    memset(gp_reg, msb >> 7, sizeof(int32_t));
+    memcpy(gp_reg, addr, size);
+}
+
+MOZ_COLD static void
+StoreValueFromFPReg(void *addr, size_t size, const void *fp_reg)
+{
+    MOZ_RELEASE_ASSERT(size <= Simd128DataSize);
+    memcpy(addr, fp_reg, size);
+}
+
+MOZ_COLD static void
+StoreValueFromGPReg(void *addr, size_t size, const void *gp_reg)
+{
+    MOZ_RELEASE_ASSERT(size <= sizeof(void *));
+    memcpy(addr, gp_reg, size);
+}
+
+MOZ_COLD static void
+StoreValueFromGPImm(void *addr, size_t size, int32_t imm)
+{
+    MOZ_RELEASE_ASSERT(size <= sizeof(imm));
+    memcpy(addr, &imm, size);
 }
 
 # if !defined(XP_MACOSX)
-static void
-SetRegisterToCoercedUndefined(CONTEXT *context, Scalar::Type viewType, AnyRegister reg)
+MOZ_COLD static void *
+AddressOfFPRegisterSlot(CONTEXT *context, FloatRegisters::Code code)
 {
-    if (reg.isFloat()) {
-        switch (reg.fpu().code()) {
-          case X86Encoding::xmm0:  SetXMMRegToNaN(viewType, &XMM_sig(context, 0)); break;
-          case X86Encoding::xmm1:  SetXMMRegToNaN(viewType, &XMM_sig(context, 1)); break;
-          case X86Encoding::xmm2:  SetXMMRegToNaN(viewType, &XMM_sig(context, 2)); break;
-          case X86Encoding::xmm3:  SetXMMRegToNaN(viewType, &XMM_sig(context, 3)); break;
-          case X86Encoding::xmm4:  SetXMMRegToNaN(viewType, &XMM_sig(context, 4)); break;
-          case X86Encoding::xmm5:  SetXMMRegToNaN(viewType, &XMM_sig(context, 5)); break;
-          case X86Encoding::xmm6:  SetXMMRegToNaN(viewType, &XMM_sig(context, 6)); break;
-          case X86Encoding::xmm7:  SetXMMRegToNaN(viewType, &XMM_sig(context, 7)); break;
-          case X86Encoding::xmm8:  SetXMMRegToNaN(viewType, &XMM_sig(context, 8)); break;
-          case X86Encoding::xmm9:  SetXMMRegToNaN(viewType, &XMM_sig(context, 9)); break;
-          case X86Encoding::xmm10: SetXMMRegToNaN(viewType, &XMM_sig(context, 10)); break;
-          case X86Encoding::xmm11: SetXMMRegToNaN(viewType, &XMM_sig(context, 11)); break;
-          case X86Encoding::xmm12: SetXMMRegToNaN(viewType, &XMM_sig(context, 12)); break;
-          case X86Encoding::xmm13: SetXMMRegToNaN(viewType, &XMM_sig(context, 13)); break;
-          case X86Encoding::xmm14: SetXMMRegToNaN(viewType, &XMM_sig(context, 14)); break;
-          case X86Encoding::xmm15: SetXMMRegToNaN(viewType, &XMM_sig(context, 15)); break;
-          default: MOZ_CRASH();
-        }
-    } else {
-        switch (reg.gpr().code()) {
-          case X86Encoding::rax: RAX_sig(context) = 0; break;
-          case X86Encoding::rcx: RCX_sig(context) = 0; break;
-          case X86Encoding::rdx: RDX_sig(context) = 0; break;
-          case X86Encoding::rbx: RBX_sig(context) = 0; break;
-          case X86Encoding::rsp: RSP_sig(context) = 0; break;
-          case X86Encoding::rbp: RBP_sig(context) = 0; break;
-          case X86Encoding::rsi: RSI_sig(context) = 0; break;
-          case X86Encoding::rdi: RDI_sig(context) = 0; break;
-          case X86Encoding::r8:  R8_sig(context)  = 0; break;
-          case X86Encoding::r9:  R9_sig(context)  = 0; break;
-          case X86Encoding::r10: R10_sig(context) = 0; break;
-          case X86Encoding::r11: R11_sig(context) = 0; break;
-          case X86Encoding::r12: R12_sig(context) = 0; break;
-          case X86Encoding::r13: R13_sig(context) = 0; break;
-          case X86Encoding::r14: R14_sig(context) = 0; break;
-          case X86Encoding::r15: R15_sig(context) = 0; break;
-          default: MOZ_CRASH();
-        }
+    switch (code) {
+      case X86Encoding::xmm0:  return &XMM_sig(context, 0);
+      case X86Encoding::xmm1:  return &XMM_sig(context, 1);
+      case X86Encoding::xmm2:  return &XMM_sig(context, 2);
+      case X86Encoding::xmm3:  return &XMM_sig(context, 3);
+      case X86Encoding::xmm4:  return &XMM_sig(context, 4);
+      case X86Encoding::xmm5:  return &XMM_sig(context, 5);
+      case X86Encoding::xmm6:  return &XMM_sig(context, 6);
+      case X86Encoding::xmm7:  return &XMM_sig(context, 7);
+      case X86Encoding::xmm8:  return &XMM_sig(context, 8);
+      case X86Encoding::xmm9:  return &XMM_sig(context, 9);
+      case X86Encoding::xmm10: return &XMM_sig(context, 10);
+      case X86Encoding::xmm11: return &XMM_sig(context, 11);
+      case X86Encoding::xmm12: return &XMM_sig(context, 12);
+      case X86Encoding::xmm13: return &XMM_sig(context, 13);
+      case X86Encoding::xmm14: return &XMM_sig(context, 14);
+      case X86Encoding::xmm15: return &XMM_sig(context, 15);
+      default: break;
     }
+    MOZ_CRASH();
+}
+
+MOZ_COLD static void *
+AddressOfGPRegisterSlot(EMULATOR_CONTEXT *context, Registers::Code code)
+{
+    switch (code) {
+      case X86Encoding::rax: return &RAX_sig(context);
+      case X86Encoding::rcx: return &RCX_sig(context);
+      case X86Encoding::rdx: return &RDX_sig(context);
+      case X86Encoding::rbx: return &RBX_sig(context);
+      case X86Encoding::rsp: return &RSP_sig(context);
+      case X86Encoding::rbp: return &RBP_sig(context);
+      case X86Encoding::rsi: return &RSI_sig(context);
+      case X86Encoding::rdi: return &RDI_sig(context);
+      case X86Encoding::r8:  return &R8_sig(context);
+      case X86Encoding::r9:  return &R9_sig(context);
+      case X86Encoding::r10: return &R10_sig(context);
+      case X86Encoding::r11: return &R11_sig(context);
+      case X86Encoding::r12: return &R12_sig(context);
+      case X86Encoding::r13: return &R13_sig(context);
+      case X86Encoding::r14: return &R14_sig(context);
+      case X86Encoding::r15: return &R15_sig(context);
+      default: break;
+    }
+    MOZ_CRASH();
+}
+# else
+MOZ_COLD static void *
+AddressOfFPRegisterSlot(EMULATOR_CONTEXT *context, FloatRegisters::Code code)
+{
+    switch (code) {
+      case X86Encoding::xmm0:  return &context->float_.__fpu_xmm0;
+      case X86Encoding::xmm1:  return &context->float_.__fpu_xmm1;
+      case X86Encoding::xmm2:  return &context->float_.__fpu_xmm2;
+      case X86Encoding::xmm3:  return &context->float_.__fpu_xmm3;
+      case X86Encoding::xmm4:  return &context->float_.__fpu_xmm4;
+      case X86Encoding::xmm5:  return &context->float_.__fpu_xmm5;
+      case X86Encoding::xmm6:  return &context->float_.__fpu_xmm6;
+      case X86Encoding::xmm7:  return &context->float_.__fpu_xmm7;
+      case X86Encoding::xmm8:  return &context->float_.__fpu_xmm8;
+      case X86Encoding::xmm9:  return &context->float_.__fpu_xmm9;
+      case X86Encoding::xmm10: return &context->float_.__fpu_xmm10;
+      case X86Encoding::xmm11: return &context->float_.__fpu_xmm11;
+      case X86Encoding::xmm12: return &context->float_.__fpu_xmm12;
+      case X86Encoding::xmm13: return &context->float_.__fpu_xmm13;
+      case X86Encoding::xmm14: return &context->float_.__fpu_xmm14;
+      case X86Encoding::xmm15: return &context->float_.__fpu_xmm15;
+      default: break;
+    }
+    MOZ_CRASH();
+}
+
+MOZ_COLD static void *
+AddressOfGPRegisterSlot(EMULATOR_CONTEXT *context, Registers::Code code)
+{
+    switch (code) {
+      case X86Encoding::rax: return &context->thread.__rax;
+      case X86Encoding::rcx: return &context->thread.__rcx;
+      case X86Encoding::rdx: return &context->thread.__rdx;
+      case X86Encoding::rbx: return &context->thread.__rbx;
+      case X86Encoding::rsp: return &context->thread.__rsp;
+      case X86Encoding::rbp: return &context->thread.__rbp;
+      case X86Encoding::rsi: return &context->thread.__rsi;
+      case X86Encoding::rdi: return &context->thread.__rdi;
+      case X86Encoding::r8:  return &context->thread.__r8;
+      case X86Encoding::r9:  return &context->thread.__r9;
+      case X86Encoding::r10: return &context->thread.__r10;
+      case X86Encoding::r11: return &context->thread.__r11;
+      case X86Encoding::r12: return &context->thread.__r12;
+      case X86Encoding::r13: return &context->thread.__r13;
+      case X86Encoding::r14: return &context->thread.__r14;
+      case X86Encoding::r15: return &context->thread.__r15;
+      default: break;
+    }
+    MOZ_CRASH();
 }
 # endif  // !XP_MACOSX
 
-static void
-RedirectToOutOfBoundsLabel(uint8_t **ppc, const AsmJSModule &module)
+MOZ_COLD static void
+SetRegisterToCoercedUndefined(EMULATOR_CONTEXT *context, size_t size,
+                              const Disassembler::OtherOperand &value)
 {
-    MOZ_ASSERT(module.containsFunctionPC(*ppc));
-    *ppc = module.outOfBoundsExit();
+    if (value.kind() == Disassembler::OtherOperand::FPR)
+        SetFPRegToNaN(size, AddressOfFPRegisterSlot(context, value.fpr()));
+    else
+        SetGPRegToZero(AddressOfGPRegisterSlot(context, value.gpr()));
 }
+
+MOZ_COLD static void
+SetRegisterToLoadedValue(EMULATOR_CONTEXT *context, const void *addr, size_t size,
+                         const Disassembler::OtherOperand &value)
+{
+    if (value.kind() == Disassembler::OtherOperand::FPR)
+        SetFPRegToLoadedValue(addr, size, AddressOfFPRegisterSlot(context, value.fpr()));
+    else
+        SetGPRegToLoadedValue(addr, size, AddressOfGPRegisterSlot(context, value.gpr()));
+}
+
+MOZ_COLD static void
+SetRegisterToLoadedValueSext32(EMULATOR_CONTEXT *context, const void *addr, size_t size,
+                               const Disassembler::OtherOperand &value)
+{
+    SetGPRegToLoadedValueSext32(addr, size, AddressOfGPRegisterSlot(context, value.gpr()));
+}
+
+MOZ_COLD static void
+StoreValueFromRegister(EMULATOR_CONTEXT *context, void *addr, size_t size,
+                       const Disassembler::OtherOperand &value)
+{
+    if (value.kind() == Disassembler::OtherOperand::FPR)
+        StoreValueFromFPReg(addr, size, AddressOfFPRegisterSlot(context, value.fpr()));
+    else if (value.kind() == Disassembler::OtherOperand::GPR)
+        StoreValueFromGPReg(addr, size, AddressOfGPRegisterSlot(context, value.gpr()));
+    else
+        StoreValueFromGPImm(addr, size, value.imm());
+}
+
+MOZ_COLD static uint8_t *
+ComputeAccessAddress(EMULATOR_CONTEXT *context, const Disassembler::ComplexAddress &address)
+{
+    MOZ_RELEASE_ASSERT(!address.isPCRelative(), "PC-relative addresses not supported yet");
+
+    uintptr_t result = address.disp();
+
+    if (address.base() != Registers::Invalid) {
+        uintptr_t base;
+        StoreValueFromGPReg(&base, sizeof(uintptr_t),
+                            AddressOfGPRegisterSlot(context, address.base()));
+        result += base;
+    }
+
+    if (address.index() != Registers::Invalid) {
+        uintptr_t index;
+        StoreValueFromGPReg(&index, sizeof(uintptr_t),
+                            AddressOfGPRegisterSlot(context, address.index()));
+        result += index * (1 << address.scale());
+    }
+
+    return reinterpret_cast<uint8_t *>(result);
+}
+
+MOZ_COLD static uint8_t *
+EmulateHeapAccess(EMULATOR_CONTEXT *context, uint8_t *pc, uint8_t *faultingAddress,
+                  const AsmJSHeapAccess *heapAccess, const AsmJSModule &module)
+{
+    MOZ_RELEASE_ASSERT(module.containsFunctionPC(pc));
+    MOZ_RELEASE_ASSERT(module.usesSignalHandlersForOOB());
+    MOZ_RELEASE_ASSERT(!heapAccess->hasLengthCheck());
+    MOZ_RELEASE_ASSERT(heapAccess->insnOffset() == (pc - module.codeBase()));
+
+    // Disassemble the instruction which caused the trap so that we can extract
+    // information about it and decide what to do.
+    Disassembler::HeapAccess access;
+    uint8_t *end = Disassembler::DisassembleHeapAccess(pc, &access);
+    const Disassembler::ComplexAddress &address = access.address();
+    MOZ_RELEASE_ASSERT(end > pc);
+    MOZ_RELEASE_ASSERT(module.containsFunctionPC(end));
+
+#if defined(JS_CODEGEN_X64)
+    // Check x64 asm.js heap access invariants.
+    MOZ_RELEASE_ASSERT(address.disp() >= 0);
+    MOZ_RELEASE_ASSERT(address.base() == HeapReg.code());
+    MOZ_RELEASE_ASSERT(address.index() != HeapReg.code());
+    MOZ_RELEASE_ASSERT(address.scale() == 0);
+    if (address.base() != Registers::Invalid) {
+        uintptr_t base;
+        StoreValueFromGPReg(&base, sizeof(uintptr_t),
+                            AddressOfGPRegisterSlot(context, address.base()));
+        MOZ_RELEASE_ASSERT(reinterpret_cast<uint8_t *>(base) == module.maybeHeap());
+    }
+    if (address.index() != Registers::Invalid) {
+        uintptr_t index;
+        StoreValueFromGPReg(&index, sizeof(uintptr_t),
+                            AddressOfGPRegisterSlot(context, address.index()));
+        MOZ_RELEASE_ASSERT(uint32_t(index) == index);
+    }
+#endif
+
+    // Determine the actual effective address of the faulting access. We can't
+    // rely on the faultingAddress given to us by the OS, because we need the
+    // address of the start of the access, and the OS may sometimes give us an
+    // address somewhere in the middle of the heap access.
+    uint8_t *accessAddress = ComputeAccessAddress(context, address);
+    MOZ_RELEASE_ASSERT(size_t(faultingAddress - accessAddress) < access.size(),
+                       "Given faulting address does not appear to be within computed "
+                       "faulting address range");
+    MOZ_RELEASE_ASSERT(accessAddress >= module.maybeHeap(),
+                       "Access begins outside the asm.js heap");
+    MOZ_RELEASE_ASSERT(accessAddress + access.size() <= module.maybeHeap() + AsmJSMappedSize,
+                       "Access extends beyond the asm.js heap guard region");
+    MOZ_RELEASE_ASSERT(accessAddress + access.size() > module.maybeHeap() + module.heapLength(),
+                       "Computed access address is not actually out of bounds");
+
+    // The basic sandbox model is that all heap accesses are a heap base
+    // register plus an index, and the index is always computed with 32-bit
+    // operations, so we know it can only be 4 GiB off of the heap base.
+    //
+    // However, we wish to support the optimization of folding immediates
+    // and scaled indices into addresses, and any address arithmetic we fold
+    // gets done at full pointer width, so it doesn't get properly wrapped.
+    // We support this by extending AsmJSMappedSize to the greatest size
+    // that could be reached by such an unwrapped address, and then when we
+    // arrive here in the signal handler for such an access, we compute the
+    // fully wrapped address, and perform the load or store on it.
+    //
+    // Taking a signal is really slow, but in theory programs really shouldn't
+    // be hitting this anyway.
+    intptr_t unwrappedOffset = accessAddress - module.maybeHeap();
+    uint32_t wrappedOffset = uint32_t(unwrappedOffset);
+    size_t size = access.size();
+    MOZ_RELEASE_ASSERT(wrappedOffset + size > wrappedOffset);
+    bool inBounds = wrappedOffset < module.heapLength() &&
+                    wrappedOffset + size < module.heapLength();
+
+    // If this is storing Z of an XYZ, check whether X is also in bounds, so
+    // that we don't store anything before throwing.
+    MOZ_RELEASE_ASSERT(unwrappedOffset > heapAccess->offsetWithinWholeSimdVector());
+    uint32_t wrappedBaseOffset = uint32_t(unwrappedOffset - heapAccess->offsetWithinWholeSimdVector());
+    if (wrappedBaseOffset >= module.heapLength())
+        inBounds = false;
+
+    if (inBounds) {
+        // We now know that this is an access that is actually in bounds when
+        // properly wrapped. Complete the load or store with the wrapped
+        // address.
+        uint8_t *wrappedAddress = module.maybeHeap() + wrappedOffset;
+        MOZ_RELEASE_ASSERT(wrappedAddress >= module.maybeHeap());
+        MOZ_RELEASE_ASSERT(wrappedAddress + size > wrappedAddress);
+        MOZ_RELEASE_ASSERT(wrappedAddress + size <= module.maybeHeap() + module.heapLength());
+        switch (access.kind()) {
+          case Disassembler::HeapAccess::Load:
+            SetRegisterToLoadedValue(context, wrappedAddress, size, access.otherOperand());
+            break;
+          case Disassembler::HeapAccess::LoadSext32:
+            SetRegisterToLoadedValueSext32(context, wrappedAddress, size, access.otherOperand());
+            break;
+          case Disassembler::HeapAccess::Store:
+            StoreValueFromRegister(context, wrappedAddress, size, access.otherOperand());
+            break;
+          case Disassembler::HeapAccess::Unknown:
+            MOZ_CRASH("Failed to disassemble instruction");
+        }
+    } else {
+        // We now know that this is an out-of-bounds access made by an asm.js
+        // load/store that we should handle.
+
+        if (heapAccess->throwOnOOB())
+            return module.outOfBoundsExit();
+
+        switch (access.kind()) {
+          case Disassembler::HeapAccess::Load:
+          case Disassembler::HeapAccess::LoadSext32:
+            // Assign the JS-defined result value to the destination register
+            // (ToInt32(undefined) or ToNumber(undefined), determined by the
+            // type of the destination register). Very conveniently, we can
+            // infer the type from the register class, since all SIMD accesses
+            // throw on out of bounds (see above), so the only types using FP
+            // registers are float32 and double.
+            SetRegisterToCoercedUndefined(context, access.size(), access.otherOperand());
+            break;
+          case Disassembler::HeapAccess::Store:
+            // Do nothing.
+            break;
+          case Disassembler::HeapAccess::Unknown:
+            MOZ_CRASH("Failed to disassemble instruction");
+        }
+    }
+
+    return end;
+}
+
 #endif // JS_CODEGEN_X64
 
 #if defined(XP_WIN)
@@ -453,7 +748,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
 
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    void *faultingAddress = (void*)record->ExceptionInformation[1];
+    uint8_t *faultingAddress = reinterpret_cast<uint8_t *>(record->ExceptionInformation[1]);
     if (!module.maybeHeap() ||
         faultingAddress < module.maybeHeap() ||
         faultingAddress >= module.maybeHeap() + AsmJSMappedSize)
@@ -484,26 +779,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!heapAccess)
         return false;
 
-    // We now know that this is an out-of-bounds access made by an asm.js
-    // load/store that we should handle.
-
-    // SIMD out-of-bounds loads and stores just need to throw.
-    if (Scalar::isSimdType(heapAccess->type())) {
-        RedirectToOutOfBoundsLabel(ppc, module);
-        return true;
-    }
-
-    // Also not necessary, but, since we can, do.
-    if (heapAccess->isLoad() != !record->ExceptionInformation[0])
-        return false;
-
-    // If this is a load, assign the JS-defined result value to the destination
-    // register (ToInt32(undefined) or ToNumber(undefined), determined by the
-    // type of the destination register) and set the PC to the next op. Upon
-    // return from the handler, execution will resume at this next PC.
-    if (heapAccess->isLoad())
-        SetRegisterToCoercedUndefined(context, heapAccess->type(), heapAccess->loadedReg());
-    *ppc += heapAccess->opLength();
+    *ppc = EmulateHeapAccess(context, pc, faultingAddress, heapAccess, module);
 
     return true;
 # else
@@ -525,81 +801,18 @@ AsmJSFaultHandler(LPEXCEPTION_POINTERS exception)
 # include <mach/exc.h>
 
 static uint8_t **
-ContextToPC(x86_thread_state_t &state)
+ContextToPC(EMULATOR_CONTEXT *context)
 {
 # if defined(JS_CPU_X64)
-    static_assert(sizeof(state.uts.ts64.__rip) == sizeof(void*),
+    static_assert(sizeof(context->thread.__rip) == sizeof(void*),
                   "stored IP should be compile-time pointer-sized");
-    return reinterpret_cast<uint8_t**>(&state.uts.ts64.__rip);
+    return reinterpret_cast<uint8_t**>(&context->thread.__rip);
 # else
-    static_assert(sizeof(state.uts.ts32.__eip) == sizeof(void*),
+    static_assert(sizeof(context->thread.uts.ts32.__eip) == sizeof(void*),
                   "stored IP should be compile-time pointer-sized");
-    return reinterpret_cast<uint8_t**>(&state.uts.ts32.__eip);
-# endif
+    return reinterpret_cast<uint8_t**>(&context->thread.uts.ts32.__eip);
+#endif
 }
-
-# if defined(JS_CODEGEN_X64)
-static bool
-SetRegisterToCoercedUndefined(mach_port_t rtThread, x86_thread_state64_t &state,
-                              const AsmJSHeapAccess &heapAccess)
-{
-    if (heapAccess.loadedReg().isFloat()) {
-        kern_return_t kret;
-
-        x86_float_state64_t fstate;
-        unsigned int count = x86_FLOAT_STATE64_COUNT;
-        kret = thread_get_state(rtThread, x86_FLOAT_STATE64, (thread_state_t) &fstate, &count);
-        if (kret != KERN_SUCCESS)
-            return false;
-
-        Scalar::Type viewType = heapAccess.type();
-        switch (heapAccess.loadedReg().fpu().code()) {
-          case X86Encoding::xmm0:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm0); break;
-          case X86Encoding::xmm1:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm1); break;
-          case X86Encoding::xmm2:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm2); break;
-          case X86Encoding::xmm3:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm3); break;
-          case X86Encoding::xmm4:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm4); break;
-          case X86Encoding::xmm5:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm5); break;
-          case X86Encoding::xmm6:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm6); break;
-          case X86Encoding::xmm7:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm7); break;
-          case X86Encoding::xmm8:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm8); break;
-          case X86Encoding::xmm9:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm9); break;
-          case X86Encoding::xmm10: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm10); break;
-          case X86Encoding::xmm11: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm11); break;
-          case X86Encoding::xmm12: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm12); break;
-          case X86Encoding::xmm13: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm13); break;
-          case X86Encoding::xmm14: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm14); break;
-          case X86Encoding::xmm15: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm15); break;
-          default: MOZ_CRASH();
-        }
-
-        kret = thread_set_state(rtThread, x86_FLOAT_STATE64, (thread_state_t)&fstate, x86_FLOAT_STATE64_COUNT);
-        if (kret != KERN_SUCCESS)
-            return false;
-    } else {
-        switch (heapAccess.loadedReg().gpr().code()) {
-          case X86Encoding::rax: state.__rax = 0; break;
-          case X86Encoding::rcx: state.__rcx = 0; break;
-          case X86Encoding::rdx: state.__rdx = 0; break;
-          case X86Encoding::rbx: state.__rbx = 0; break;
-          case X86Encoding::rsp: state.__rsp = 0; break;
-          case X86Encoding::rbp: state.__rbp = 0; break;
-          case X86Encoding::rsi: state.__rsi = 0; break;
-          case X86Encoding::rdi: state.__rdi = 0; break;
-          case X86Encoding::r8:  state.__r8  = 0; break;
-          case X86Encoding::r9:  state.__r9  = 0; break;
-          case X86Encoding::r10: state.__r10 = 0; break;
-          case X86Encoding::r11: state.__r11 = 0; break;
-          case X86Encoding::r12: state.__r12 = 0; break;
-          case X86Encoding::r13: state.__r13 = 0; break;
-          case X86Encoding::r14: state.__r14 = 0; break;
-          case X86Encoding::r15: state.__r15 = 0; break;
-          default: MOZ_CRASH();
-        }
-    }
-    return true;
-}
-# endif
 
 // This definition was generated by mig (the Mach Interface Generator) for the
 // routine 'exception_raise' (exc.defs).
@@ -637,14 +850,29 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
     mach_port_t rtThread = request.body.thread.name;
 
     // Read out the JSRuntime thread's register state.
-    x86_thread_state_t state;
-    unsigned int count = x86_THREAD_STATE_COUNT;
+    EMULATOR_CONTEXT context;
+# if defined(JS_CODEGEN_X64)
+    unsigned int thread_state_count = x86_THREAD_STATE64_COUNT;
+    unsigned int float_state_count = x86_FLOAT_STATE64_COUNT;
+    int thread_state = x86_THREAD_STATE64;
+    int float_state = x86_FLOAT_STATE64;
+# else
+    unsigned int thread_state_count = x86_THREAD_STATE_COUNT;
+    unsigned int float_state_count = x86_FLOAT_STATE_COUNT;
+    int thread_state = x86_THREAD_STATE;
+    int float_state = x86_FLOAT_STATE;
+# endif
     kern_return_t kret;
-    kret = thread_get_state(rtThread, x86_THREAD_STATE, (thread_state_t)&state, &count);
+    kret = thread_get_state(rtThread, thread_state,
+                            (thread_state_t)&context.thread, &thread_state_count);
+    if (kret != KERN_SUCCESS)
+        return false;
+    kret = thread_get_state(rtThread, float_state,
+                            (thread_state_t)&context.float_, &float_state_count);
     if (kret != KERN_SUCCESS)
         return false;
 
-    uint8_t **ppc = ContextToPC(state);
+    uint8_t **ppc = ContextToPC(&context);
     uint8_t *pc = *ppc;
 
     if (request.body.exception != EXC_BAD_ACCESS || request.body.codeCnt != 2)
@@ -658,10 +886,10 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
     if (!module.containsFunctionPC(pc))
         return false;
 
-# if defined(JS_CPU_X64)
+# if defined(JS_CODEGEN_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    void *faultingAddress = (void*)request.body.code[1];
+    uint8_t *faultingAddress = reinterpret_cast<uint8_t *>(request.body.code[1]);
     if (!module.maybeHeap() ||
         faultingAddress < module.maybeHeap() ||
         faultingAddress >= module.maybeHeap() + AsmJSMappedSize)
@@ -673,26 +901,13 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
     if (!heapAccess)
         return false;
 
-    // We now know that this is an out-of-bounds access made by an asm.js
-    // load/store that we should handle.
+    *ppc = EmulateHeapAccess(&context, pc, faultingAddress, heapAccess, module);
 
-    if (Scalar::isSimdType(heapAccess->type())) {
-        // SIMD out-of-bounds loads and stores just need to throw.
-        RedirectToOutOfBoundsLabel(ppc, module);
-    } else {
-        // If this is a load, assign the JS-defined result value to the destination
-        // register (ToInt32(undefined) or ToNumber(undefined), determined by the
-        // type of the destination register) and set the PC to the next op. Upon
-        // return from the handler, execution will resume at this next PC.
-        if (heapAccess->isLoad()) {
-            if (!SetRegisterToCoercedUndefined(rtThread, state.uts.ts64, *heapAccess))
-                return false;
-        }
-        *ppc += heapAccess->opLength();
-    }
-
-    // Update the thread state with the new pc.
-    kret = thread_set_state(rtThread, x86_THREAD_STATE, (thread_state_t)&state, x86_THREAD_STATE_COUNT);
+    // Update the thread state with the new pc and register values.
+    kret = thread_set_state(rtThread, float_state, (thread_state_t)&context.float_, float_state_count);
+    if (kret != KERN_SUCCESS)
+        return false;
+    kret = thread_set_state(rtThread, thread_state, (thread_state_t)&context.thread, thread_state_count);
     if (kret != KERN_SUCCESS)
         return false;
 
@@ -860,6 +1075,13 @@ AsmJSMachExceptionHandler::install(JSRuntime *rt)
 static bool
 HandleFault(int signum, siginfo_t *info, void *ctx)
 {
+    // The signals we're expecting come from access violations, accessing
+    // mprotected memory. If the signal originates anywhere else, don't try
+    // to handle it.
+    MOZ_RELEASE_ASSERT(signum == SIGSEGV);
+    if (info->si_code != SEGV_ACCERR)
+        return false;
+
     CONTEXT *context = (CONTEXT *)ctx;
     uint8_t **ppc = ContextToPC(context);
     uint8_t *pc = *ppc;
@@ -881,7 +1103,7 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
 # if defined(JS_CODEGEN_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    void *faultingAddress = info->si_addr;
+    uint8_t *faultingAddress = static_cast<uint8_t *>(info->si_addr);
     if (!module.maybeHeap() ||
         faultingAddress < module.maybeHeap() ||
         faultingAddress >= module.maybeHeap() + AsmJSMappedSize)
@@ -893,22 +1115,7 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
     if (!heapAccess)
         return false;
 
-    // We now know that this is an out-of-bounds access made by an asm.js
-    // load/store that we should handle.
-
-    // SIMD out-of-bounds loads and stores just need to throw.
-    if (Scalar::isSimdType(heapAccess->type())) {
-        RedirectToOutOfBoundsLabel(ppc, module);
-        return true;
-    }
-
-    // If this is a load, assign the JS-defined result value to the destination
-    // register (ToInt32(undefined) or ToNumber(undefined), determined by the
-    // type of the destination register) and set the PC to the next op. Upon
-    // return from the handler, execution will resume at this next PC.
-    if (heapAccess->isLoad())
-        SetRegisterToCoercedUndefined(context, heapAccess->type(), heapAccess->loadedReg());
-    *ppc += heapAccess->opLength();
+    *ppc = EmulateHeapAccess(context, pc, faultingAddress, heapAccess, module);
 
     return true;
 # else

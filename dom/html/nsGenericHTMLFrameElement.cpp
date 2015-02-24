@@ -131,7 +131,7 @@ nsGenericHTMLFrameElement::GetContentWindow()
 void
 nsGenericHTMLFrameElement::EnsureFrameLoader()
 {
-  if (!IsInDoc() || mFrameLoader || mFrameLoaderCreationDisallowed) {
+  if (!IsInComposedDoc() || mFrameLoader || mFrameLoaderCreationDisallowed) {
     // If frame loader is there, we just keep it around, cached
     return;
   }
@@ -221,7 +221,7 @@ nsGenericHTMLFrameElement::BindToTree(nsIDocument* aDocument,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDocument) {
+  if (IsInComposedDoc()) {
     NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                  "Missing a script blocker!");
 

@@ -70,6 +70,10 @@ class Operand
       : kind_(MEM_ADDRESS32),
         disp_(X86Encoding::AddressImmediate(address.addr))
     { }
+    explicit Operand(PatchedAbsoluteAddress address)
+      : kind_(MEM_ADDRESS32),
+        disp_(X86Encoding::AddressImmediate(address.addr))
+    { }
 
     Address toAddress() const {
         MOZ_ASSERT(kind() == MEM_REG_DISP);

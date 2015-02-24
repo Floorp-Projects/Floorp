@@ -65,6 +65,7 @@ var gTestSteps = [
     let tab = gBrowser.addTab();
     tab.linkedBrowser.addEventListener("load", function () {
       tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+      gBrowser.updateBrowserRemoteness(tabToKeep.linkedBrowser, tab.linkedBrowser.isRemoteBrowser);
       gBrowser.swapBrowsersAndCloseOther(tabToKeep, tab);
       ensure_opentabs_match_db(function () {
         gBrowser.removeTab(tabToKeep);

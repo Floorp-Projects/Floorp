@@ -79,7 +79,7 @@
       <property name="finder" readonly="true">
         <getter><![CDATA[
           if (!this._remoteFinder) {
-            // Don't attempt to create the remote web progress if the
+            // Don't attempt to create the remote finder if the
             // messageManager has already gone away
             if (!this.messageManager)
               return null;

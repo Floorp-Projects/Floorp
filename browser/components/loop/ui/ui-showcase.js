@@ -287,14 +287,14 @@
           ), 
 
           React.createElement(Section, {name: "IncomingCallView"}, 
-            React.createElement(Example, {summary: "Default / incoming video call", dashed: "true", style: {width: "260px", height: "254px"}}, 
+            React.createElement(Example, {summary: "Default / incoming video call", dashed: "true", style: {width: "300px", height: "272px"}}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(IncomingCallView, {model: mockConversationModel, 
                                   video: true})
               )
             ), 
 
-            React.createElement(Example, {summary: "Default / incoming audio only call", dashed: "true", style: {width: "260px", height: "254px"}}, 
+            React.createElement(Example, {summary: "Default / incoming audio only call", dashed: "true", style: {width: "300px", height: "272px"}}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(IncomingCallView, {model: mockConversationModel, 
                                   video: false})
@@ -303,7 +303,7 @@
           ), 
 
           React.createElement(Section, {name: "IncomingCallView-ActiveState"}, 
-            React.createElement(Example, {summary: "Default", dashed: "true", style: {width: "260px", height: "254px"}}, 
+            React.createElement(Example, {summary: "Default", dashed: "true", style: {width: "300px", height: "272px"}}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(IncomingCallView, {model: mockConversationModel, 
                                    showMenu: true})
@@ -314,19 +314,19 @@
           React.createElement(Section, {name: "ConversationToolbar"}, 
             React.createElement("h2", null, "Desktop Conversation Window"), 
             React.createElement("div", {className: "fx-embedded override-position"}, 
-              React.createElement(Example, {summary: "Default (260x265)", dashed: "true"}, 
+              React.createElement(Example, {summary: "Default", dashed: "true", style: {width: "300px", height: "272px"}}, 
                 React.createElement(ConversationToolbar, {video: {enabled: true}, 
                                      audio: {enabled: true}, 
                                      hangup: noop, 
                                      publishStream: noop})
               ), 
-              React.createElement(Example, {summary: "Video muted"}, 
+              React.createElement(Example, {summary: "Video muted", style: {width: "300px", height: "272px"}}, 
                 React.createElement(ConversationToolbar, {video: {enabled: false}, 
                                      audio: {enabled: true}, 
                                      hangup: noop, 
                                      publishStream: noop})
               ), 
-              React.createElement(Example, {summary: "Audio muted"}, 
+              React.createElement(Example, {summary: "Audio muted", style: {width: "300px", height: "272px"}}, 
                 React.createElement(ConversationToolbar, {video: {enabled: true}, 
                                      audio: {enabled: false}, 
                                      hangup: noop, 
@@ -383,7 +383,7 @@
 
           React.createElement(Section, {name: "PendingConversationView (Desktop)"}, 
             React.createElement(Example, {summary: "Connecting", dashed: "true", 
-                     style: {width: "260px", height: "265px"}}, 
+                     style: {width: "300px", height: "272px"}}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopPendingConversationView, {callState: "gather", 
                                                 contact: mockContact, 
@@ -394,13 +394,13 @@
 
           React.createElement(Section, {name: "CallFailedView"}, 
             React.createElement(Example, {summary: "Call Failed", dashed: "true", 
-                     style: {width: "260px", height: "265px"}}, 
+                     style: {width: "300px", height: "272px"}}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(CallFailedView, {dispatcher: dispatcher, store: conversationStore})
               )
             ), 
             React.createElement(Example, {summary: "Call Failed — with call URL error", dashed: "true", 
-                     style: {width: "260px", height: "265px"}}, 
+                     style: {width: "300px", height: "272px"}}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(CallFailedView, {dispatcher: dispatcher, emailLinkError: true, 
                                 store: conversationStore})
@@ -430,7 +430,7 @@
 
           React.createElement(Section, {name: "ConversationView"}, 
             React.createElement(Example, {summary: "Desktop conversation window", dashed: "true", 
-                     style: {width: "260px", height: "265px"}}, 
+                     style: {width: "300px", height: "272px"}}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(ConversationView, {sdk: mockSDK, 
                                   model: mockConversationModel, 
@@ -452,7 +452,7 @@
             ), 
 
             React.createElement(Example, {summary: "Desktop conversation window local audio stream", 
-                     dashed: "true", style: {width: "260px", height: "265px"}}, 
+                     dashed: "true", style: {width: "300px", height: "272px"}}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(ConversationView, {sdk: mockSDK, 
                                   video: {enabled: false}, 
@@ -503,13 +503,13 @@
               React.createElement("strong", null, "Note:"), " For the useable demo, you can access submitted data at ", 
               React.createElement("a", {href: "https://input.allizom.org/"}, "input.allizom.org"), "."
             ), 
-            React.createElement(Example, {summary: "Default (useable demo)", dashed: "true", style: {width: "260px"}}, 
+            React.createElement(Example, {summary: "Default (useable demo)", dashed: "true", style: {width: "300px", height: "272px"}}, 
               React.createElement(FeedbackView, {feedbackStore: feedbackStore})
             ), 
-            React.createElement(Example, {summary: "Detailed form", dashed: "true", style: {width: "260px"}}, 
+            React.createElement(Example, {summary: "Detailed form", dashed: "true", style: {width: "300px", height: "272px"}}, 
               React.createElement(FeedbackView, {feedbackStore: feedbackStore, feedbackState: FEEDBACK_STATES.DETAILS})
             ), 
-            React.createElement(Example, {summary: "Thank you!", dashed: "true", style: {width: "260px"}}, 
+            React.createElement(Example, {summary: "Thank you!", dashed: "true", style: {width: "300px", height: "272px"}}, 
               React.createElement(FeedbackView, {feedbackStore: feedbackStore, feedbackState: FEEDBACK_STATES.SENT})
             )
           ), 

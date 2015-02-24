@@ -653,7 +653,7 @@ CodeGenerator::getJumpLabelForBranch(MBasicBlock *block)
     // important here as these tests are extremely unlikely to be used in loop
     // backedges, so emit inline code for the patchable jump. Heap allocating
     // the label allows it to be used by out of line blocks.
-    Label *res = GetJitContext()->temp->lifoAlloc()->new_<Label>();
+    Label *res = alloc().lifoAlloc()->new_<Label>();
     Label after;
     masm.jump(&after);
     masm.bind(res);
