@@ -181,9 +181,6 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
   case CompositableType::IMAGE_BRIDGE:
     NS_ERROR("Cannot create an image bridge compositable this way");
     break;
-  case CompositableType::CONTENT_INC:
-    result = new ContentHostIncremental(aTextureInfo);
-    break;
   case CompositableType::CONTENT_TILED:
     result = new TiledContentHost(aTextureInfo);
     break;

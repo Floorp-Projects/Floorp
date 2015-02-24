@@ -66,7 +66,7 @@ LoginManagerStorage_mozStorage.prototype = {
       return this._dbConnection;
     }
 
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw new Components.Exception("Interface not available", Cr.NS_ERROR_NO_INTERFACE);
   },
 
   __crypto : null,  // nsILoginManagerCrypto service
@@ -220,7 +220,7 @@ LoginManagerStorage_mozStorage.prototype = {
       // If the import fails on first run, we want to delete the db
       if (isFirstRun && e == "Import failed")
         this._dbCleanup(false);
-      throw "Initialization failed";
+      throw new Error("Initialization failed");
     }
   },
 
@@ -253,7 +253,7 @@ LoginManagerStorage_mozStorage.prototype = {
     loginClone.QueryInterface(Ci.nsILoginMetaInfo);
     if (loginClone.guid) {
       if (!this._isGuidUnique(loginClone.guid))
-        throw "specified GUID already exists";
+        throw new Error("specified GUID already exists");
     } else {
       loginClone.guid = this._uuidService.generateUUID().toString();
     }
@@ -302,7 +302,7 @@ LoginManagerStorage_mozStorage.prototype = {
       stmt.execute();
     } catch (e) {
       this.log("addLogin failed: " + e.name + " : " + e.message);
-      throw "Couldn't write to database, login not added.";
+      throw new Error("Couldn't write to database, login not added.");
     } finally {
       if (stmt) {
         stmt.reset();
@@ -321,7 +321,7 @@ LoginManagerStorage_mozStorage.prototype = {
   removeLogin : function (login) {
     let [idToDelete, storedLogin] = this._getIdForLogin(login);
     if (!idToDelete)
-      throw "No matching logins";
+      throw new Error("No matching logins");
 
     // Execute the statement & remove from DB
     let query  = "DELETE FROM moz_logins WHERE id = :id";
@@ -335,7 +335,7 @@ LoginManagerStorage_mozStorage.prototype = {
       transaction.commit();
     } catch (e) {
       this.log("_removeLogin failed: " + e.name + " : " + e.message);
-      throw "Couldn't write to database, login not removed.";
+      throw new Error("Couldn't write to database, login not removed.");
       transaction.rollback();
     } finally {
       if (stmt) {
@@ -353,7 +353,7 @@ LoginManagerStorage_mozStorage.prototype = {
   modifyLogin : function (oldLogin, newLoginData) {
     let [idToModify, oldStoredLogin] = this._getIdForLogin(oldLogin);
     if (!idToModify)
-      throw "No matching logins";
+      throw new Error("No matching logins");
 
     let newLogin = LoginHelper.buildModifiedLogin(oldStoredLogin, newLoginData);
 
@@ -361,7 +361,7 @@ LoginManagerStorage_mozStorage.prototype = {
     if (newLogin.guid != oldStoredLogin.guid &&
         !this._isGuidUnique(newLogin.guid))
     {
-      throw "specified GUID already exists";
+      throw new Error("specified GUID already exists");
     }
 
     // Look for an existing entry in case key properties changed.
@@ -371,7 +371,7 @@ LoginManagerStorage_mozStorage.prototype = {
                                    newLogin.httpRealm);
 
       if (logins.some(login => newLogin.matches(login, true)))
-        throw "This login already exists.";
+        throw new Error("This login already exists.");
     }
 
     // Get the encrypted value of the username and password.
@@ -417,7 +417,7 @@ LoginManagerStorage_mozStorage.prototype = {
       stmt.execute();
     } catch (e) {
       this.log("modifyLogin failed: " + e.name + " : " + e.message);
-      throw "Couldn't write to database, login not modified.";
+      throw new Error("Couldn't write to database, login not modified.");
     } finally {
       if (stmt) {
         stmt.reset();
@@ -519,7 +519,7 @@ LoginManagerStorage_mozStorage.prototype = {
           break;
         // Fail if caller requests an unknown property.
         default:
-          throw "Unexpected field: " + field;
+          throw new Error("Unexpected field: " + field);
       }
     }
 
@@ -610,7 +610,7 @@ LoginManagerStorage_mozStorage.prototype = {
     } catch (e) {
       this.log("_removeAllLogins failed: " + e.name + " : " + e.message);
       transaction.rollback();
-      throw "Couldn't write to database";
+      throw new Error("Couldn't write to database");
     } finally {
       if (stmt) {
         stmt.reset();
@@ -669,7 +669,7 @@ LoginManagerStorage_mozStorage.prototype = {
       stmt.execute();
     } catch (e) {
       this.log("setLoginSavingEnabled failed: " + e.name + " : " + e.message);
-      throw "Couldn't write to database"
+      throw new Error("Couldn't write to database");
     } finally {
       if (stmt) {
         stmt.reset();

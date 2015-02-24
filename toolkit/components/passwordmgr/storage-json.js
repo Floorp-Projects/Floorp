@@ -115,7 +115,7 @@ this.LoginManagerStorage_json.prototype = {
       }.bind(this)).catch(Cu.reportError);
     } catch (e) {
       this.log("Initialization failed: " + e);
-      throw "Initialization failed";
+      throw new Error("Initialization failed");
     }
   },
 
@@ -151,7 +151,7 @@ this.LoginManagerStorage_json.prototype = {
     loginClone.QueryInterface(Ci.nsILoginMetaInfo);
     if (loginClone.guid) {
       if (!this._isGuidUnique(loginClone.guid))
-        throw "specified GUID already exists";
+        throw new Error("specified GUID already exists");
     } else {
       loginClone.guid = gUUIDGenerator.generateUUID().toString();
     }
@@ -199,7 +199,7 @@ this.LoginManagerStorage_json.prototype = {
 
     let [idToDelete, storedLogin] = this._getIdForLogin(login);
     if (!idToDelete)
-      throw "No matching logins";
+      throw new Error("No matching logins");
 
     let foundIndex = this._store.data.logins.findIndex(l => l.id == idToDelete);
     if (foundIndex != -1) {
@@ -220,7 +220,7 @@ this.LoginManagerStorage_json.prototype = {
 
     let [idToModify, oldStoredLogin] = this._getIdForLogin(oldLogin);
     if (!idToModify)
-      throw "No matching logins";
+      throw new Error("No matching logins");
 
     let newLogin = LoginHelper.buildModifiedLogin(oldStoredLogin, newLoginData);
 
@@ -228,7 +228,7 @@ this.LoginManagerStorage_json.prototype = {
     if (newLogin.guid != oldStoredLogin.guid &&
         !this._isGuidUnique(newLogin.guid))
     {
-      throw "specified GUID already exists";
+      throw new Error("specified GUID already exists");
     }
 
     // Look for an existing entry in case key properties changed.
@@ -238,7 +238,7 @@ this.LoginManagerStorage_json.prototype = {
                                    newLogin.httpRealm);
 
       if (logins.some(login => newLogin.matches(login, true)))
-        throw "This login already exists.";
+        throw new Error("This login already exists.");
     }
 
     // Get the encrypted value of the username and password.
@@ -362,7 +362,7 @@ this.LoginManagerStorage_json.prototype = {
             break;
           // Fail if caller requests an unknown property.
           default:
-            throw "Unexpected field: " + field;
+            throw new Error("Unexpected field: " + field);
         }
       }
       return true;

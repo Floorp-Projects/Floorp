@@ -124,6 +124,8 @@
       ]]></destructor>
 
       <field name="_value">""</field>
+      <field name="gotResultForCurrentQuery">false</field>
+      <field name="handleEnterWhenGotResult">false</field>
 
       <!--
         onBeforeValueGet is called by the base-binding's .value getter.
@@ -806,11 +808,48 @@
             this._value = this.inputField.value;
             gBrowser.userTypedValue = this.value;
             this.valueIsTyped = true;
+            this.gotResultForCurrentQuery = false;
             this.mController.handleText();
           }
           this.resetActionType();
         ]]></body>
       </method>
+
+      <method name="handleEnter">
+        <body><![CDATA[
+          // When UnifiedComplete is enabled, we need to ensure we're using
+          // a selected autocomplete result. A result should automatically be
+          // selected by default (UnifiedComplete guarantees at least one
+          // result), however autocomplete is async and therefore we may not
+          // have a result set relating to the current input yet. If that
+          // happens, we need to mark that when the first result does get added,
+          // it needs to be handled as if enter was pressed with that first
+          // result selected.
+          // With UnifiedComplete disabled we don't have this problem, as the
+          // default is to use the value directly from the input field (without
+          // relying on autocomplete).
+
+          if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete")) {
+            return this.mController.handleEnter(false);
+          }
+
+          // If anything other than the default (first) result is selected, then
+          // it must have been manually selected by the human. We let this
+          // explicit choice be used, even if it may be related to a previous
+          // input.
+          // However, if the default result is automatically selected, we
+          // ensure that it corresponds to the current input.
+
+          if (this.popup.selectedIndex != 0 || this.gotResultForCurrentQuery) {
+            return this.mController.handleEnter(false);
+          }
+
+          this.handleEnterWhenGotResult = true;
+
+          return true;
+        ]]></body>
+      </method>
+
     </implementation>
 
     <handlers>
@@ -1483,6 +1522,12 @@
 
             if (this._matchCount > 0 && this.selectedIndex == -1)
               this.selectedIndex = 0;
+
+            this.input.gotResultForCurrentQuery = true;
+            if (this.input.handleEnterWhenGotResult) {
+              this.input.handleEnterWhenGotResult = false;
+              this.input.mController.handleEnter(false);
+            }
           ]]>
         </body>
       </method>

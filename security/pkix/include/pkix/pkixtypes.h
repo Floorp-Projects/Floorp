@@ -271,6 +271,13 @@ public:
                     /*optional*/ const Input* stapledOCSPresponse,
                     /*optional*/ const Input* aiaExtension) = 0;
 
+  // Check that the given digest algorithm is acceptable for use in signatures.
+  //
+  // Return Success if the algorithm is acceptable,
+  // Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED if the algorithm is not
+  // acceptable, or another error code if another error occurred.
+  virtual Result CheckSignatureDigestAlgorithm(DigestAlgorithm digestAlg) = 0;
+
   // Check that the RSA public key size is acceptable.
   //
   // Return Success if the key size is acceptable,
