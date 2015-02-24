@@ -17,7 +17,7 @@ describe("loop.panel", function() {
   var fakeXHR, fakeWindow, fakeMozLoop;
   var requests = [];
 
-  beforeEach(function(done) {
+  beforeEach(function() {
     sandbox = sinon.sandbox.create();
     fakeXHR = sandbox.useFakeXMLHttpRequest();
     requests = [];
@@ -65,8 +65,6 @@ describe("loop.panel", function() {
     };
 
     document.mozL10n.initialize(navigator.mozLoop);
-    // XXX prevent a race whenever mozL10n hasn't been initialized yet
-    setTimeout(done, 0);
   });
 
   afterEach(function() {
