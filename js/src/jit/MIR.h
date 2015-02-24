@@ -12183,14 +12183,11 @@ class MAsmJSHeapAccess
 {
     Scalar::Type accessType_;
     bool needsBoundsCheck_;
-    Label *outOfBoundsLabel_;
     unsigned numSimdElems_;
 
   public:
-    MAsmJSHeapAccess(Scalar::Type accessType, bool needsBoundsCheck,
-                     Label *outOfBoundsLabel = nullptr, unsigned numSimdElems = 0)
-      : accessType_(accessType), needsBoundsCheck_(needsBoundsCheck),
-        outOfBoundsLabel_(outOfBoundsLabel), numSimdElems_(numSimdElems)
+    MAsmJSHeapAccess(Scalar::Type accessType, bool needsBoundsCheck, unsigned numSimdElems = 0)
+      : accessType_(accessType), needsBoundsCheck_(needsBoundsCheck), numSimdElems_(numSimdElems)
     {
         MOZ_ASSERT(numSimdElems <= ScalarTypeToLength(accessType));
     }
@@ -12198,7 +12195,6 @@ class MAsmJSHeapAccess
     Scalar::Type accessType() const { return accessType_; }
     bool needsBoundsCheck() const { return needsBoundsCheck_; }
     void removeBoundsCheck() { needsBoundsCheck_ = false; }
-    Label *outOfBoundsLabel() const { return outOfBoundsLabel_; }
     unsigned numSimdElems() const { MOZ_ASSERT(Scalar::isSimdType(accessType_)); return numSimdElems_; }
 };
 
@@ -12211,10 +12207,9 @@ class MAsmJSLoadHeap
     MemoryBarrierBits barrierAfter_;
 
     MAsmJSLoadHeap(Scalar::Type accessType, MDefinition *ptr, bool needsBoundsCheck,
-                   Label *outOfBoundsLabel, unsigned numSimdElems,
-                   MemoryBarrierBits before, MemoryBarrierBits after)
+                   unsigned numSimdElems, MemoryBarrierBits before, MemoryBarrierBits after)
       : MUnaryInstruction(ptr),
-        MAsmJSHeapAccess(accessType, needsBoundsCheck, outOfBoundsLabel, numSimdElems),
+        MAsmJSHeapAccess(accessType, needsBoundsCheck, numSimdElems),
         barrierBefore_(before),
         barrierAfter_(after)
     {
@@ -12255,12 +12250,11 @@ class MAsmJSLoadHeap
 
     static MAsmJSLoadHeap *New(TempAllocator &alloc, Scalar::Type accessType,
                                MDefinition *ptr, bool needsBoundsCheck,
-                               Label *outOfBoundsLabel = nullptr,
                                unsigned numSimdElems = 0,
                                MemoryBarrierBits barrierBefore = MembarNobits,
                                MemoryBarrierBits barrierAfter = MembarNobits)
     {
-        return new(alloc) MAsmJSLoadHeap(accessType, ptr, needsBoundsCheck, outOfBoundsLabel,
+        return new(alloc) MAsmJSLoadHeap(accessType, ptr, needsBoundsCheck,
                                          numSimdElems, barrierBefore, barrierAfter);
     }
 
@@ -12284,10 +12278,9 @@ class MAsmJSStoreHeap
     MemoryBarrierBits barrierAfter_;
 
     MAsmJSStoreHeap(Scalar::Type accessType, MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
-                    Label *outOfBoundsLabel, unsigned numSimdElems,
-                    MemoryBarrierBits before, MemoryBarrierBits after)
+                    unsigned numSimdElems, MemoryBarrierBits before, MemoryBarrierBits after)
       : MBinaryInstruction(ptr, v),
-        MAsmJSHeapAccess(accessType, needsBoundsCheck, outOfBoundsLabel, numSimdElems),
+        MAsmJSHeapAccess(accessType, needsBoundsCheck, numSimdElems),
         barrierBefore_(before),
         barrierAfter_(after)
     {
@@ -12300,12 +12293,11 @@ class MAsmJSStoreHeap
 
     static MAsmJSStoreHeap *New(TempAllocator &alloc, Scalar::Type accessType,
                                 MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
-                                Label *outOfBoundsLabel = nullptr,
                                 unsigned numSimdElems = 0,
                                 MemoryBarrierBits barrierBefore = MembarNobits,
                                 MemoryBarrierBits barrierAfter = MembarNobits)
     {
-        return new(alloc) MAsmJSStoreHeap(accessType, ptr, v, needsBoundsCheck, outOfBoundsLabel,
+        return new(alloc) MAsmJSStoreHeap(accessType, ptr, v, needsBoundsCheck,
                                           numSimdElems, barrierBefore, barrierAfter);
     }
 
