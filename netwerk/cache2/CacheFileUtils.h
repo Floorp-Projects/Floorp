@@ -9,6 +9,8 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "mozilla/StaticMutex.h"
+#include "mozilla/TimeStamp.h"
 
 class nsILoadContextInfo;
 class nsACString;
@@ -84,6 +86,64 @@ public:
 
 private:
   nsTArray<ValidityPair> mMap;
+};
+
+
+class DetailedCacheHitTelemetry {
+public:
+  enum ERecType {
+    HIT  = 0,
+    MISS = 1
+  };
+
+  static void AddRecord(ERecType aType, TimeStamp aLoadStart);
+
+private:
+  class HitRate {
+  public:
+    HitRate();
+
+    void     AddRecord(ERecType aType);
+    // Returns the bucket index that the current hit rate falls into according
+    // to the given aNumOfBuckets.
+    uint32_t GetHitRateBucket(uint32_t aNumOfBuckets) const;
+    uint32_t Count();
+    void     Reset();
+
+  private:
+    uint32_t mHitCnt;
+    uint32_t mMissCnt;
+  };
+
+  // Group the hits and misses statistics by cache files count ranges (0-5000,
+  // 5001-10000, ... , 95001- )
+  static const uint32_t kRangeSize = 5000;
+  static const uint32_t kNumOfRanges = 20;
+
+  // Use the same ranges to report an average hit rate. Report the hit rates
+  // (and reset the counters) every kTotalSamplesReportLimit samples.
+  static const uint32_t kTotalSamplesReportLimit = 1000;
+
+  // Report hit rate for a given cache size range only if it contains
+  // kHitRateSamplesReportLimit or more samples. This limit should avoid
+  // reporting a biased statistics.
+  static const uint32_t kHitRateSamplesReportLimit = 500;
+
+  // All hit rates are accumulated in a single telemetry probe, so to use
+  // a sane number of enumerated values the hit rate is divided into buckets
+  // instead of using a percent value. This constant defines number of buckets
+  // that we divide the hit rates into. I.e. we'll report ranges 0%-5%, 5%-10%,
+  // 10-%15%, ...
+  static const uint32_t kHitRateBuckets = 20;
+
+  // Protects sRecordCnt, sHitStats and Telemetry::Accumulated() calls.
+  static StaticMutex sLock;
+
+  // Counter of samples that is compared against kTotalSamplesReportLimit.
+  static uint32_t sRecordCnt;
+ 
+  // Hit rate statistics for every cache size range.
+  static HitRate sHRStats[kNumOfRanges];
 };
 
 } // CacheFileUtils

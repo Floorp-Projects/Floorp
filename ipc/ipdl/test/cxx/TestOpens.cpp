@@ -20,6 +20,9 @@ struct RunnableMethodTraits<mozilla::_ipdltest2::TestOpensOpenedChild>
 
 using namespace mozilla::ipc;
 
+using base::ProcessHandle;
+using base::Thread;
+
 namespace mozilla {
 // NB: this is generally bad style, but I am lazy.
 using namespace _ipdltest;

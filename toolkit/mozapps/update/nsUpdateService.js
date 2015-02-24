@@ -1598,19 +1598,19 @@ function UpdatePatch(patch) {
     var attr = patch.attributes.item(i);
     attr.QueryInterface(Ci.nsIDOMAttr);
     switch (attr.name) {
-    case "selected":
-      this.selected = attr.value == "true";
-      break;
-    case "size":
-      if (0 == parseInt(attr.value)) {
-        LOG("UpdatePatch:init - 0-sized patch!");
-        throw Cr.NS_ERROR_ILLEGAL_VALUE;
-      }
-      // fall through
-    default:
-      this[attr.name] = attr.value;
-      break;
-    };
+      case "selected":
+        this.selected = attr.value == "true";
+        break;
+      case "size":
+        if (0 == parseInt(attr.value)) {
+          LOG("UpdatePatch:init - 0-sized patch!");
+          throw Cr.NS_ERROR_ILLEGAL_VALUE;
+        }
+        // fall through
+      default:
+        this[attr.name] = attr.value;
+        break;
+    }
   }
 }
 UpdatePatch.prototype = {
@@ -1622,17 +1622,21 @@ UpdatePatch.prototype = {
     patch.setAttribute("type", this.type);
     patch.setAttribute("URL", this.URL);
     // finalURL is not available until after the download has started
-    if (this.finalURL)
+    if (this.finalURL) {
       patch.setAttribute("finalURL", this.finalURL);
+    }
     patch.setAttribute("hashFunction", this.hashFunction);
     patch.setAttribute("hashValue", this.hashValue);
     patch.setAttribute("size", this.size);
-    patch.setAttribute("selected", this.selected);
+    if (this.selected) {
+      patch.setAttribute("selected", this.selected);
+    }
     patch.setAttribute("state", this.state);
 
     for (var p in this._properties) {
-      if (this._properties[p].present)
+      if (this._properties[p].present) {
         patch.setAttribute(p, this._properties[p].data);
+      }
     }
 
     return patch;
@@ -1672,12 +1676,15 @@ UpdatePatch.prototype = {
 
   /**
    * See nsIPropertyBag.idl
+   * Note: returns null instead of throwing when the property doesn't exist to
+   *       simplify code and to silence warnings in debug builds.
    */
   getProperty: function UpdatePatch_getProperty(name) {
     if (name in this._properties &&
-        this._properties[name].present)
+        this._properties[name].present) {
       return this._properties[name].data;
-    throw Cr.NS_ERROR_FAILURE;
+    }
+    return null;
   },
 
   /**
@@ -1728,15 +1735,17 @@ function Update(update) {
 
   // Null <update>, assume this is a message container and do no
   // further initialization
-  if (!update)
+  if (!update) {
     return;
+  }
 
   const ELEMENT_NODE = Ci.nsIDOMNode.ELEMENT_NODE;
   for (var i = 0; i < update.childNodes.length; ++i) {
     var patchElement = update.childNodes.item(i);
     if (patchElement.nodeType != ELEMENT_NODE ||
-        patchElement.localName != "patch")
+        patchElement.localName != "patch") {
       continue;
+    }
 
     patchElement.QueryInterface(Ci.nsIDOMElement);
     try {
@@ -1747,8 +1756,9 @@ function Update(update) {
     this._patches.push(patch);
   }
 
-  if (this._patches.length == 0 && !update.hasAttribute("unsupported"))
+  if (this._patches.length == 0 && !update.hasAttribute("unsupported")) {
     throw Cr.NS_ERROR_ILLEGAL_VALUE;
+  }
 
   // Fallback to the behavior prior to bug 530872 if the update does not have an
   // appVersion attribute.
@@ -1762,82 +1772,84 @@ function Update(update) {
     }
   }
 
+  // Set the installDate value with the current time. If the update has an
+  // installDate attribute this will be replaced with that value if it doesn't
+  // equal 0.
+  this.installDate = (new Date()).getTime();
+
   for (var i = 0; i < update.attributes.length; ++i) {
     var attr = update.attributes.item(i);
     attr.QueryInterface(Ci.nsIDOMAttr);
-    if (attr.value == "undefined")
+    if (attr.value == "undefined") {
       continue;
-    else if (attr.name == "detailsURL")
+    } else if (attr.name == "detailsURL") {
       this._detailsURL = attr.value;
-    else if (attr.name == "extensionVersion") {
+    } else if (attr.name == "extensionVersion") {
       // Prevent extensionVersion from replacing appVersion if appVersion is
       // present in the update xml.
-      if (!this.appVersion)
+      if (!this.appVersion) {
         this.appVersion = attr.value;
-    }
-    else if (attr.name == "installDate" && attr.value)
-      this.installDate = parseInt(attr.value);
-    else if (attr.name == "isCompleteUpdate")
+      }
+    } else if (attr.name == "installDate" && attr.value) {
+      let val = parseInt(attr.value);
+      if (val) {
+        this.installDate = val;
+      }
+    } else if (attr.name == "isCompleteUpdate") {
       this.isCompleteUpdate = attr.value == "true";
-    else if (attr.name == "isSecurityUpdate")
+    } else if (attr.name == "isSecurityUpdate") {
       this.isSecurityUpdate = attr.value == "true";
-    else if (attr.name == "isOSUpdate")
+    } else if (attr.name == "isOSUpdate") {
       this.isOSUpdate = attr.value == "true";
-    else if (attr.name == "showNeverForVersion")
+    } else if (attr.name == "showNeverForVersion") {
       this.showNeverForVersion = attr.value == "true";
-    else if (attr.name == "showPrompt")
+    } else if (attr.name == "showPrompt") {
       this.showPrompt = attr.value == "true";
-    else if (attr.name == "promptWaitTime")
-    {
-      if(!isNaN(attr.value))
+    } else if (attr.name == "promptWaitTime") {
+      if(!isNaN(attr.value)) {
         this.promptWaitTime = parseInt(attr.value);
-    }
-    else if (attr.name == "unsupported")
+      }
+    } else if (attr.name == "unsupported") {
       this.unsupported = attr.value == "true";
-    else if (attr.name == "version") {
+    } else if (attr.name == "version") {
       // Prevent version from replacing displayVersion if displayVersion is
       // present in the update xml.
-      if (!this.displayVersion)
+      if (!this.displayVersion) {
         this.displayVersion = attr.value;
-    }
-    else {
+      }
+    } else {
       this[attr.name] = attr.value;
 
       switch (attr.name) {
-      case "appVersion":
-      case "billboardURL":
-      case "buildID":
-      case "channel":
-      case "displayVersion":
-      case "licenseURL":
-      case "name":
-      case "platformVersion":
-      case "previousAppVersion":
-      case "serviceURL":
-      case "statusText":
-      case "type":
-        break;
-      default:
-        // Save custom attributes when serializing to the local xml file but
-        // don't use this method for the expected attributes which are already
-        // handled in serialize.
-        this.setProperty(attr.name, attr.value);
-        break;
-      };
+        case "appVersion":
+        case "billboardURL":
+        case "buildID":
+        case "channel":
+        case "displayVersion":
+        case "licenseURL":
+        case "name":
+        case "platformVersion":
+        case "previousAppVersion":
+        case "serviceURL":
+        case "statusText":
+        case "type":
+          break;
+        default:
+          // Save custom attributes when serializing to the local xml file but
+          // don't use this method for the expected attributes which are already
+          // handled in serialize.
+          this.setProperty(attr.name, attr.value);
+          break;
+      }
     }
   }
-
-  // Set the initial value with the current time when it doesn't already have a
-  // value or the value is already set to 0 (bug 316328).
-  if (!this.installDate && this.installDate != 0)
-    this.installDate = (new Date()).getTime();
 
   // The Update Name is either the string provided by the <update> element, or
   // the string: "<App Name> <Update App Version>"
   var name = "";
-  if (update.hasAttribute("name"))
+  if (update.hasAttribute("name")) {
     name = update.getAttribute("name");
-  else {
+  } else {
     var brandBundle = Services.strings.createBundle(URI_BRAND_PROPERTIES);
     var appName = brandBundle.GetStringFromName("brandShortName");
     name = gUpdateBundle.formatStringFromName("updateName",
@@ -1917,6 +1929,12 @@ Update.prototype = {
    * See nsIUpdateService.idl
    */
   serialize: function Update_serialize(updates) {
+    // If appVersion isn't defined just return null. This happens when a
+    // temporary nsIUpdate is passed to the UI when the
+    // app.update.showInstalledUI prefence is set to true.
+    if (!this.appVersion) {
+      return null;
+    }
     var update = updates.createElementNS(URI_UPDATE_NS, "update");
     update.setAttribute("appVersion", this.appVersion);
     update.setAttribute("buildID", this.buildID);
@@ -1937,29 +1955,38 @@ Update.prototype = {
     update.setAttribute("version", this.displayVersion);
 
     // Optional attributes
-    if (this.billboardURL)
+    if (this.billboardURL) {
       update.setAttribute("billboardURL", this.billboardURL);
-    if (this.detailsURL)
+    }
+    if (this.detailsURL) {
       update.setAttribute("detailsURL", this.detailsURL);
-    if (this.licenseURL)
+    }
+    if (this.licenseURL) {
       update.setAttribute("licenseURL", this.licenseURL);
-    if (this.platformVersion)
+    }
+    if (this.platformVersion) {
       update.setAttribute("platformVersion", this.platformVersion);
-    if (this.previousAppVersion)
+    }
+    if (this.previousAppVersion) {
       update.setAttribute("previousAppVersion", this.previousAppVersion);
-    if (this.statusText)
+    }
+    if (this.statusText) {
       update.setAttribute("statusText", this.statusText);
-    if (this.unsupported)
+    }
+    if (this.unsupported) {
       update.setAttribute("unsupported", this.unsupported);
+    }
     updates.documentElement.appendChild(update);
 
     for (var p in this._properties) {
-      if (this._properties[p].present)
+      if (this._properties[p].present) {
         update.setAttribute(p, this._properties[p].data);
+      }
     }
 
-    for (var i = 0; i < this.patchCount; ++i)
+    for (let i = 0; i < this.patchCount; ++i) {
       update.appendChild(this.getPatchAt(i).serialize(updates));
+    }
 
     return update;
   },
@@ -1998,11 +2025,14 @@ Update.prototype = {
 
   /**
    * See nsIPropertyBag.idl
+   * Note: returns null instead of throwing when the property doesn't exist to
+   *       simplify code and to silence warnings in debug builds.
    */
   getProperty: function Update_getProperty(name) {
-    if (name in this._properties && this._properties[name].present)
+    if (name in this._properties && this._properties[name].present) {
       return this._properties[name].data;
-    throw Cr.NS_ERROR_FAILURE;
+    }
+    return null;
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdate,
@@ -2081,41 +2111,41 @@ UpdateService.prototype = {
    */
   observe: function AUS_observe(subject, topic, data) {
     switch (topic) {
-    case "post-update-processing":
-      // Clean up any extant updates
-      this._postUpdateProcessing();
-      break;
-    case "network:offline-status-changed":
-      this._offlineStatusChanged(data);
-      break;
-    case "nsPref:changed":
-      if (data == PREF_APP_UPDATE_LOG) {
-        gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
-      }
-      break;
+      case "post-update-processing":
+        // Clean up any extant updates
+        this._postUpdateProcessing();
+        break;
+      case "network:offline-status-changed":
+        this._offlineStatusChanged(data);
+        break;
+      case "nsPref:changed":
+        if (data == PREF_APP_UPDATE_LOG) {
+          gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
+        }
+        break;
 #ifdef MOZ_WIDGET_GONK
-    case "profile-change-net-teardown": // fall thru
+      case "profile-change-net-teardown": // fall thru
 #endif
-    case "xpcom-shutdown":
-      Services.obs.removeObserver(this, topic);
-      Services.prefs.removeObserver(PREF_APP_UPDATE_LOG, this);
+      case "xpcom-shutdown":
+        Services.obs.removeObserver(this, topic);
+        Services.prefs.removeObserver(PREF_APP_UPDATE_LOG, this);
 
 #ifdef XP_WIN
-      // If we hold the update mutex, let it go!
-      // The OS would clean this up sometime after shutdown,
-      // but that would have no guarantee on timing.
-      if (gUpdateMutexHandle) {
-        closeHandle(gUpdateMutexHandle);
-      }
+        // If we hold the update mutex, let it go!
+        // The OS would clean this up sometime after shutdown,
+        // but that would have no guarantee on timing.
+        if (gUpdateMutexHandle) {
+          closeHandle(gUpdateMutexHandle);
+        }
 #endif
-      if (this._retryTimer) {
-        this._retryTimer.cancel();
-      }
+        if (this._retryTimer) {
+          this._retryTimer.cancel();
+        }
 
-      this.pauseDownload();
-      // Prevent leaking the downloader (bug 454964)
-      this._downloader = null;
-      break;
+        this.pauseDownload();
+        // Prevent leaking the downloader (bug 454964)
+        this._downloader = null;
+        break;
     }
   },
 
@@ -3217,11 +3247,8 @@ UpdateService.prototype = {
       throw Cr.NS_ERROR_FAILURE;
     }
 
-    let osApplyToDir;
-    try {
-      aUpdate.QueryInterface(Ci.nsIWritablePropertyBag);
-      osApplyToDir = aUpdate.getProperty("osApplyToDir");
-    } catch (e) {}
+    aUpdate.QueryInterface(Ci.nsIWritablePropertyBag);
+    let osApplyToDir = aUpdate.getProperty("osApplyToDir");
 
     if (!osApplyToDir) {
       LOG("UpdateService:applyOsUpdate - Error: osApplyToDir is not defined" +
@@ -3478,8 +3505,9 @@ UpdateManager.prototype = {
               createInstance(Ci.nsIFileOutputStream);
     var modeFlags = FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
                     FileUtils.MODE_TRUNCATE;
-    if (!file.exists())
+    if (!file.exists()) {
       file.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+    }
     fos.init(file, modeFlags, FileUtils.PERMS_FILE, 0);
 
     try {
@@ -3489,15 +3517,18 @@ UpdateManager.prototype = {
       var doc = parser.parseFromString(EMPTY_UPDATES_DOCUMENT, "text/xml");
 
       for (var i = 0; i < updates.length; ++i) {
-        if (updates[i])
+        // If appVersion isn't defined don't add the update. This happens when a
+        // temporary nsIUpdate is passed to the UI when the
+        // app.update.showInstalledUI prefence is set to true.
+        if (updates[i] && updates[i].appVersion) {
           doc.documentElement.appendChild(updates[i].serialize(doc));
+        }
       }
 
       var serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
                        createInstance(Ci.nsIDOMSerializer);
       serializer.serializeToStream(doc.documentElement, fos, null);
-    }
-    catch (e) {
+    } catch (e) {
     }
 
     FileUtils.closeSafeFileOutputStream(fos);
@@ -3829,7 +3860,7 @@ Checker.prototype = {
       if (this._isHttpStatusCode(status)) {
         update.errorCode = HTTP_ERROR_OFFSET + status;
       }
-      if (e.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
+      if (e.result && e.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
         update.errorCode = updates[0] ? CERT_ATTR_CHECK_FAILED_HAS_UPDATE
                                       : CERT_ATTR_CHECK_FAILED_NO_UPDATE;
       }
@@ -3896,13 +3927,13 @@ Checker.prototype = {
       this._request.abort();
 
     switch (duration) {
-    case Ci.nsIUpdateChecker.CURRENT_SESSION:
-      this._enabled = false;
-      break;
-    case Ci.nsIUpdateChecker.ANY_CHECKS:
-      this._enabled = false;
-      Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, this._enabled);
-      break;
+      case Ci.nsIUpdateChecker.CURRENT_SESSION:
+        this._enabled = false;
+        break;
+      case Ci.nsIUpdateChecker.ANY_CHECKS:
+        this._enabled = false;
+        Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, this._enabled);
+        break;
     }
 
     this._callback = null;
@@ -3981,10 +4012,11 @@ Downloader.prototype = {
    */
   _verifyDownload: function Downloader__verifyDownload() {
     LOG("Downloader:_verifyDownload called");
-    if (!this._request)
+    if (!this._request) {
       return false;
+    }
 
-    var destination = this._request.destination;
+    let destination = this._request.destination;
 
     // Ensure that the file size matches the expected file size.
     if (destination.fileSize != this._patch.size) {
@@ -3993,16 +4025,18 @@ Downloader.prototype = {
     }
 
     LOG("Downloader:_verifyDownload downloaded size == expected size.");
-    var fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
+    let fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
                      createInstance(Ci.nsIFileInputStream);
     fileStream.init(destination, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
 
+    let digest;
     try {
-      var hash = Cc["@mozilla.org/security/hash;1"].
+      let hash = Cc["@mozilla.org/security/hash;1"].
                  createInstance(Ci.nsICryptoHash);
       var hashFunction = Ci.nsICryptoHash[this._patch.hashFunction.toUpperCase()];
-      if (hashFunction == undefined)
+      if (hashFunction == undefined) {
         throw Cr.NS_ERROR_UNEXPECTED;
+      }
       hash.init(hashFunction);
       hash.updateFromStream(fileStream, -1);
       // NOTE: For now, we assume that the format of _patch.hashValue is hex
@@ -4069,35 +4103,35 @@ Downloader.prototype = {
       LOG("Downloader:_selectPatch - found existing patch with state: " +
           state);
       switch (state) {
-      case STATE_DOWNLOADING:
-        LOG("Downloader:_selectPatch - resuming download");
-        return selectedPatch;
+        case STATE_DOWNLOADING:
+          LOG("Downloader:_selectPatch - resuming download");
+          return selectedPatch;
 #ifdef MOZ_WIDGET_GONK
-      case STATE_PENDING:
-      case STATE_APPLYING:
-        LOG("Downloader:_selectPatch - resuming interrupted apply");
-        return selectedPatch;
-      case STATE_APPLIED:
-        LOG("Downloader:_selectPatch - already downloaded and staged");
-        return null;
-#else
-      case STATE_PENDING_SVC:
-      case STATE_PENDING:
-        LOG("Downloader:_selectPatch - already downloaded and staged");
-        return null;
-#endif
-      default:
-        // Something went wrong when we tried to apply the previous patch.
-        // Try the complete patch next time.
-        if (update && selectedPatch.type == "partial") {
-          useComplete = true;
-        } else {
-          // This is a pretty fatal error.  Just bail.
-          LOG("Downloader:_selectPatch - failed to apply complete patch!");
-          writeStatusFile(updateDir, STATE_NONE);
-          writeVersionFile(getUpdatesDir(), null);
+        case STATE_PENDING:
+        case STATE_APPLYING:
+          LOG("Downloader:_selectPatch - resuming interrupted apply");
+          return selectedPatch;
+        case STATE_APPLIED:
+          LOG("Downloader:_selectPatch - already downloaded and staged");
           return null;
-        }
+#else
+        case STATE_PENDING_SVC:
+        case STATE_PENDING:
+          LOG("Downloader:_selectPatch - already downloaded and staged");
+          return null;
+#endif
+        default:
+          // Something went wrong when we tried to apply the previous patch.
+          // Try the complete patch next time.
+          if (update && selectedPatch.type == "partial") {
+            useComplete = true;
+          } else {
+            // This is a pretty fatal error.  Just bail.
+            LOG("Downloader:_selectPatch - failed to apply complete patch!");
+            writeStatusFile(updateDir, STATE_NONE);
+            writeVersionFile(getUpdatesDir(), null);
+            return null;
+          }
       }
 
       selectedPatch = null;
@@ -4571,14 +4605,8 @@ Downloader.prototype = {
         // notify the user about the error. If the update was a background
         // update there is no notification since the user won't be expecting it.
         if (!Services.wm.getMostRecentWindow(UPDATE_WINDOW_NAME)) {
-          try {
-            this._update.QueryInterface(Ci.nsIWritablePropertyBag);
-            var fgdl = this._update.getProperty("foregroundDownload");
-          }
-          catch (e) {
-          }
-
-          if (fgdl == "true") {
+          this._update.QueryInterface(Ci.nsIWritablePropertyBag);
+          if (this._update.getProperty("foregroundDownload") == "true") {
             var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                            createInstance(Ci.nsIUpdatePrompt);
             prompter.showUpdateError(this._update);
