@@ -31,9 +31,7 @@ loop.OTSdkDriver = (function() {
 
       this.dispatcher.register(this, [
         "setupStreamElements",
-        "setMute",
-        "startScreenShare",
-        "endScreenShare"
+        "setMute"
       ]);
   };
 
@@ -88,14 +86,21 @@ loop.OTSdkDriver = (function() {
 
     /**
      * Initiates a screen sharing publisher.
+     *
+     * options items:
+     *  - {String}  videoSource    The type of screen to share. Values of 'screen',
+     *                             'window', 'application' and 'browser' are
+     *                             currently supported.
+     *  - {mixed}   browserWindow  The unique identifier of a browser window. May
+     *                             be passed when `videoSource` is 'browser'.
+     *  - {Boolean} scrollWithPage Flag to signal that scrolling a page should
+     *                             update the stream. May be passed when
+     *                             `videoSource` is 'browser'.
+     *
+     * @param {Object} options Hash containing options for the SDK
      */
-    startScreenShare: function(actionData) {
-      this.dispatcher.dispatch(new sharedActions.ScreenSharingState({
-        state: SCREEN_SHARE_STATES.PENDING
-      }));
-
-      var config = this._getCopyPublisherConfig();
-      config.videoSource = actionData.type;
+    startScreenShare: function(options) {
+      var config = _.extend(this._getCopyPublisherConfig(), options);
 
       this.screenshare = this.sdk.initPublisher(this.getScreenShareElementFunc(),
         config);
@@ -104,20 +109,21 @@ loop.OTSdkDriver = (function() {
     },
 
     /**
-     * Ends an active screenshare session.
+     * Ends an active screenshare session. Return `true` when an active screen-
+     * sharing session was ended or `false` when no session is active.
+     *
+     * @type {Boolean}
      */
     endScreenShare: function() {
       if (!this.screenshare) {
-        return;
+        return false;
       }
 
       this.session.unpublish(this.screenshare);
       this.screenshare.off("accessAllowed accessDenied");
       this.screenshare.destroy();
       delete this.screenshare;
-      this.dispatcher.dispatch(new sharedActions.ScreenSharingState({
-        state: SCREEN_SHARE_STATES.INACTIVE
-      }));
+      return true;
     },
 
     /**
