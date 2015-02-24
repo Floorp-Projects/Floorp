@@ -237,21 +237,6 @@ class TestBuildReader(unittest.TestCase):
         self.assertEqual([context['XPIDL_MODULE'] for context in contexts],
             ['foobar', 'foobar', 'baz', 'foobar'])
 
-    def test_process_eval_callback(self):
-        def strip_dirs(context):
-            context['DIRS'][:] = []
-            count[0] += 1
-
-        reader = self.reader('traversal-simple',
-            sandbox_post_eval_cb=strip_dirs)
-
-        count = [0]
-
-        contexts = list(reader.read_topsrcdir())
-
-        self.assertEqual(len(contexts), 1)
-        self.assertEqual(len(count), 1)
-
 
 if __name__ == '__main__':
     main()

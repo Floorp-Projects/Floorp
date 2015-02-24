@@ -541,17 +541,6 @@ ImageBridgeChild::EndTransaction()
   for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
     const EditReply& reply = replies[i];
     switch (reply.type()) {
-    case EditReply::TOpTextureSwap: {
-      const OpTextureSwap& ots = reply.get_OpTextureSwap();
-
-      CompositableClient* compositable =
-        CompositableClient::FromIPDLActor(ots.compositableChild());
-
-      MOZ_ASSERT(compositable);
-
-      compositable->SetDescriptorFromReply(ots.textureId(), ots.image());
-      break;
-    }
     case EditReply::TReturnReleaseFence: {
       const ReturnReleaseFence& rep = reply.get_ReturnReleaseFence();
       FenceHandle fence = rep.fence();
