@@ -11,6 +11,7 @@
 #include "Rect.h"
 #include "ScaledFontMac.h"
 #include "Tools.h"
+#include "PathHelpers.h"
 #include <vector>
 #include <algorithm>
 #include "MacIOSurface.h"
@@ -990,17 +991,174 @@ DrawTargetCG::FillRect(const Rect &aRect,
   CGContextRestoreGState(mCg);
 }
 
-void
-DrawTargetCG::StrokeLine(const Point &p1, const Point &p2, const Pattern &aPattern, const StrokeOptions &aStrokeOptions, const DrawOptions &aDrawOptions)
+static Float
+DashPeriodLength(const StrokeOptions& aStrokeOptions)
 {
-  if (!std::isfinite(p1.x) ||
-      !std::isfinite(p1.y) ||
-      !std::isfinite(p2.x) ||
-      !std::isfinite(p2.y)) {
+  Float length = 0;
+  for (size_t i = 0; i < aStrokeOptions.mDashLength; i++) {
+    length += aStrokeOptions.mDashPattern[i];
+  }
+  if (aStrokeOptions.mDashLength & 1) {
+    // "If an odd number of values is provided, then the list of values is
+    // repeated to yield an even number of values."
+    // Double the length.
+    length += length;
+  }
+  return length;
+}
+
+inline Float
+RoundDownToMultiple(Float aValue, Float aFactor)
+{
+  return floorf(aValue / aFactor) * aFactor;
+}
+
+static Rect
+UserSpaceStrokeClip(const Rect &aDeviceClip,
+                   const Matrix &aTransform,
+                   const StrokeOptions &aStrokeOptions)
+{
+  Matrix inverse = aTransform;
+  if (!inverse.Invert()) {
+    return Rect();
+  }
+  Rect deviceClip = aDeviceClip;
+  deviceClip.Inflate(MaxStrokeExtents(aStrokeOptions, aTransform));
+  return inverse.TransformBounds(deviceClip);
+}
+
+static Rect
+ShrinkClippedStrokedRect(const Rect &aStrokedRect, const Rect &aDeviceClip,
+                         const Matrix &aTransform,
+                         const StrokeOptions &aStrokeOptions)
+{
+  Rect userSpaceStrokeClip =
+    UserSpaceStrokeClip(aDeviceClip, aTransform, aStrokeOptions);
+
+  Rect intersection = aStrokedRect.Intersect(userSpaceStrokeClip);
+  Float dashPeriodLength = DashPeriodLength(aStrokeOptions);
+  if (intersection.IsEmpty() || dashPeriodLength == 0.0f) {
+    return intersection;
+  }
+
+  // Reduce the rectangle side lengths in multiples of the dash period length
+  // so that the visible dashes stay in the same place.
+  Margin insetBy = aStrokedRect - intersection;
+  insetBy.top = RoundDownToMultiple(insetBy.top, dashPeriodLength);
+  insetBy.right = RoundDownToMultiple(insetBy.right, dashPeriodLength);
+  insetBy.bottom = RoundDownToMultiple(insetBy.bottom, dashPeriodLength);
+  insetBy.left = RoundDownToMultiple(insetBy.left, dashPeriodLength);
+
+  Rect shrunkRect = aStrokedRect;
+  shrunkRect.Deflate(insetBy);
+  return shrunkRect;
+}
+
+// Liang-Barsky
+// This algorithm was chosen for its code brevity, with the hope that its
+// performance is good enough.
+// Sets aStart and aEnd to floats between 0 and the line length, or returns
+// false if the line is completely outside the rect.
+static bool
+IntersectLineWithRect(const Point& aP1, const Point& aP2, const Rect& aClip,
+                      Float* aStart, Float* aEnd)
+{
+  Float t0 = 0.0f;
+  Float t1 = 1.0f;
+  Point vector = aP2 - aP1;
+  for (uint32_t edge = 0; edge < 4; edge++) {
+    Float p, q;
+    switch (edge) {
+      case 0: p = -vector.x; q = aP1.x - aClip.x; break;
+      case 1: p =  vector.x; q = aClip.XMost() - aP1.x; break;
+      case 2: p = -vector.y; q = aP1.y - aClip.y; break;
+      case 3: p =  vector.y; q = aClip.YMost() - aP1.y; break;
+    }
+
+    if (p == 0.0f) {
+      // Line is parallel to the edge.
+      if (q < 0.0f) {
+        return false;
+      }
+      continue;
+    }
+
+    Float r = q / p;
+    if (p < 0) {
+      t0 = std::max(t0, r);
+    } else {
+      t1 = std::min(t1, r);
+    }
+
+    if (t0 > t1) {
+      return false;
+    }
+  }
+
+  Float length = vector.Length();
+  *aStart = t0 * length;
+  *aEnd = t1 * length;
+  return true;
+}
+
+// Adjusts aP1 and aP2 to a shrunk line, or returns false if the line is
+// completely outside the clip.
+static bool
+ShrinkClippedStrokedLine(Point &aP1, Point& aP2, const Rect &aDeviceClip,
+                         const Matrix &aTransform,
+                         const StrokeOptions &aStrokeOptions)
+{
+  Rect userSpaceStrokeClip =
+    UserSpaceStrokeClip(aDeviceClip, aTransform, aStrokeOptions);
+
+  Point vector = aP2 - aP1;
+  Float length = vector.Length();
+
+  if (length == 0.0f) {
+    return true;
+  }
+
+  Float start = 0;
+  Float end = length;
+  if (!IntersectLineWithRect(aP1, aP2, userSpaceStrokeClip, &start, &end)) {
+    return false;
+  }
+
+  Float dashPeriodLength = DashPeriodLength(aStrokeOptions);
+  if (dashPeriodLength > 0.0f) {
+    // Shift the line points by multiples of dashPeriodLength so that the
+    // dashes stay in the same place.
+    start = RoundDownToMultiple(start, dashPeriodLength);
+    end = length - RoundDownToMultiple(length - end, dashPeriodLength);
+  }
+
+  Point startPoint = aP1;
+  aP1 = Point(startPoint.x + start * vector.x / length,
+              startPoint.y + start * vector.y / length);
+  aP2 = Point(startPoint.x + end * vector.x / length,
+              startPoint.y + end * vector.y / length);
+  return true;
+}
+
+void
+DrawTargetCG::StrokeLine(const Point &aP1, const Point &aP2, const Pattern &aPattern, const StrokeOptions &aStrokeOptions, const DrawOptions &aDrawOptions)
+{
+  if (!std::isfinite(aP1.x) ||
+      !std::isfinite(aP1.y) ||
+      !std::isfinite(aP2.x) ||
+      !std::isfinite(aP2.y)) {
     return;
   }
 
   if (MOZ2D_ERROR_IF(!mCg)) {
+    return;
+  }
+
+  Point p1 = aP1;
+  Point p2 = aP2;
+
+  Rect deviceClip(0, 0, mSize.width, mSize.height);
+  if (!ShrinkClippedStrokedLine(p1, p2, deviceClip, mTransform, aStrokeOptions)) {
     return;
   }
 
@@ -1078,6 +1236,20 @@ DrawTargetCG::StrokeRect(const Rect &aRect,
   if (MOZ2D_ERROR_IF(!cg)) {
     return;
   }
+
+  // Stroking large rectangles with dashes is expensive with CG (fixed
+  // overhead based on the number of dashes, regardless of whether the dashes
+  // are visible), so we try to reduce the size of the stroked rectangle as
+  // much as possible before passing it on to CG.
+  Rect rect = aRect;
+  if (!rect.IsEmpty()) {
+    Rect deviceClip(0, 0, mSize.width, mSize.height);
+    rect = ShrinkClippedStrokedRect(rect, deviceClip, mTransform, aStrokeOptions);
+    if (rect.IsEmpty()) {
+      return;
+    }
+  }
+
   CGContextSetAlpha(mCg, aDrawOptions.mAlpha);
   CGContextSetBlendMode(mCg, ToBlendMode(aDrawOptions.mCompositionOp));
 
