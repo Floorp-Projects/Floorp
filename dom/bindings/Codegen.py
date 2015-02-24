@@ -4635,10 +4635,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         descriptor = descriptorProvider.getDescriptor(
             type.unroll().inner.identifier.name)
 
-        if descriptor.nativeType == 'JSObject':
-            # XXXbz Workers code does this sometimes
-            assert descriptor.workers
-            return handleJSObjectType(type, isMember, failureCode, exceptionCode, sourceDescription)
+        assert descriptor.nativeType != 'JSObject'
 
         if descriptor.interface.isCallback():
             name = descriptor.interface.identifier.name
@@ -4715,9 +4712,10 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                     exceptionCode,
                     isCallbackReturnValue,
                     firstCap(sourceDescription)))
-        elif descriptor.workers:
-            return handleJSObjectType(type, isMember, failureCode, exceptionCode, sourceDescription)
         else:
+            # Worker descriptors can't end up here, because all of our
+            # "external" stuff is not exposed in workers.
+            assert not descriptor.workers
             # Either external, or new-binding non-castable.  We always have a
             # holder for these, because we don't actually know whether we have
             # to addref when unwrapping or not.  So we just pass an
