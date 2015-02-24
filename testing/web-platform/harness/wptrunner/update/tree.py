@@ -124,6 +124,13 @@ class HgTree(object):
     def commit_patch(self):
         self.hg("qfinish")
 
+    def contains_commit(self, commit):
+        try:
+            self.hg("identify", "-r", commit.sha1)
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
 
 class GitTree(object):
     name = "git"
