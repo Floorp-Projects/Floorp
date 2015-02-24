@@ -22,21 +22,18 @@
  * limitations under the License.
  */
 
-#include "pkix/pkix.h"
 #include "pkixgtest.h"
-#include "pkixtestutil.h"
 
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
 
 const uint16_t END_ENTITY_MAX_LIFETIME_IN_DAYS = 10;
 
-class OCSPTestTrustDomain : public TrustDomain
+// Note that CheckRevocation is never called for OCSP signing certificates.
+class OCSPTestTrustDomain : public DefaultCryptoTrustDomain
 {
 public:
-  OCSPTestTrustDomain()
-  {
-  }
+  OCSPTestTrustDomain() { }
 
   Result GetCertTrust(EndEntityOrCA endEntityOrCA, const CertPolicyId&,
                       Input, /*out*/ TrustLevel& trustLevel)
@@ -46,62 +43,6 @@ public:
     trustLevel = TrustLevel::InheritsTrust;
     return Success;
   }
-
-  Result FindIssuer(Input, IssuerChecker&, Time) final override
-  {
-    ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-
-  Result CheckRevocation(EndEntityOrCA, const CertID&, Time,
-                         /*optional*/ const Input*, /*optional*/ const Input*)
-                         final override
-  {
-    // TODO: I guess mozilla::pkix should support revocation of designated
-    // OCSP responder eventually, but we don't now, so this function should
-    // never get called.
-    ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-
-  Result IsChainValid(const DERArray&, Time) final override
-  {
-    ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-
-  Result DigestBuf(Input item, DigestAlgorithm digestAlg,
-                   /*out*/ uint8_t* digestBuf, size_t digestBufLen)
-                   final override
-  {
-    return TestDigestBuf(item, digestAlg, digestBuf, digestBufLen);
-  }
-
-  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
-                                            final override
-  {
-    return Success;
-  }
-
-  Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
-                                    Input subjectPublicKeyInfo) override
-  {
-    return TestVerifyRSAPKCS1SignedDigest(signedDigest, subjectPublicKeyInfo);
-  }
-
-  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) final override
-  {
-    return Success;
-  }
-
-  Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
-                                 Input subjectPublicKeyInfo) override
-  {
-    return TestVerifyECDSASignedDigest(signedDigest, subjectPublicKeyInfo);
-  }
-
-  OCSPTestTrustDomain(const OCSPTestTrustDomain&) = delete;
-  void operator=(const OCSPTestTrustDomain&) = delete;
 };
 
 namespace {

@@ -160,7 +160,7 @@ private:
   // Search can be made using a fuzz factor. Should an approximated value be
   // found instead, aTarget will be updated to the actual target found.
   enum SwitchSourceResult {
-    SOURCE_ERROR = -1,
+    SOURCE_NONE = -1,
     SOURCE_EXISTING = 0,
     SOURCE_NEW = 1,
   };

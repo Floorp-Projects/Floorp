@@ -45,7 +45,7 @@ function copyCF_HTML(cfhtml, success, failure) {
 
     var flavors = [CF_HTML];
     if (!cb.hasDataMatchingFlavors(flavors, flavors.length, cb.kGlobalClipboard)) {
-      setTimeout(function() copyCF_HTML_worker(success, failure), 100);
+      setTimeout(function() { copyCF_HTML_worker(success, failure); }, 100);
       return;
     }
 
@@ -59,7 +59,7 @@ function copyCF_HTML(cfhtml, success, failure) {
       trans.getTransferData(CF_HTML, data, {});
       data = SpecialPowers.wrap(data).value.QueryInterface(Ci.nsISupportsCString).data;
     } catch (e) {
-      setTimeout(function() copyCF_HTML_worker(success, failure), 100);
+      setTimeout(function() { copyCF_HTML_worker(success, failure); }, 100);
       return;
     }
     success();

@@ -430,8 +430,8 @@ function removeUpdateDirsAndFiles() {
     if (file.exists())
       file.remove(false);
   } catch (e) {
-    dump("Unable to remove file\nPath: " + file.path +
-         "\nException: " + e + "\n");
+    logTestInfo("Unable to remove file. Path: " + file.path +
+                ", Exception: " + e);
   }
 
   file = getUpdatesXMLFile(false);
@@ -439,8 +439,8 @@ function removeUpdateDirsAndFiles() {
     if (file.exists())
       file.remove(false);
   } catch (e) {
-    dump("Unable to remove file\nPath: " + file.path +
-         "\nException: " + e + "\n");
+    logTestInfo("Unable to remove file. Path: " + file.path +
+                ", Exception: " + e);
   }
 
   // This fails sporadically on Mac OS X so wrap it in a try catch
@@ -448,8 +448,8 @@ function removeUpdateDirsAndFiles() {
   try {
     cleanUpdatesDir(updatesDir);
   } catch (e) {
-    dump("Unable to remove files / directories from directory\nPath: " +
-         updatesDir.path + "\nException: " + e + "\n");
+    logTestInfo("Unable to remove files / directories from directory. Path: " +
+                updatesDir.path + ", Exception: " + e);
   }
 }
 
@@ -483,8 +483,8 @@ function cleanUpdatesDir(aDir) {
         try {
           entry.remove(true);
         } catch (e) {
-          dump("cleanUpdatesDir: unable to remove directory\nPath: " +
-               entry.path + "\nException: " + e + "\n");
+          logTestInfo("cleanUpdatesDir: unable to remove directory. Path: " +
+                      entry.path + ", Exception: " + e);
           throw(e);
         }
       }
@@ -493,8 +493,8 @@ function cleanUpdatesDir(aDir) {
       try {
         entry.remove(false);
       } catch (e) {
-        dump("cleanUpdatesDir: unable to remove file\nPath: " + entry.path +
-             "\nException: " + e + "\n");
+       logTestInfo("cleanUpdatesDir: unable to remove file. Path: " +
+                   entry.path + ", Exception: " + e);
         throw(e);
       }
     }
@@ -614,8 +614,9 @@ function logTestInfo(aText, aCaller) {
              (mm < 10 ? "0" + mm : mm) + ":" +
              (ss < 10 ? "0" + ss : ss) + ":" +
              (ms < 10 ? "00" + ms : ms < 100 ? "0" + ms : ms);
-  dump(time + " | TEST-INFO | " + caller.filename + " | [" + caller.name +
-       " : " + caller.lineNumber + "] " + aText + "\n");
+  let msg = time + " | TEST-INFO | " + caller.filename + " | [" + caller.name +
+            " : " + caller.lineNumber + "] " + aText;
+  LOG_FUNCTION(msg);
 }
 
 /**

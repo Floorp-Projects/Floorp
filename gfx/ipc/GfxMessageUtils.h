@@ -278,21 +278,6 @@ struct ParamTraits<mozilla::layers::TextureFlags>
 {};
 
 template <>
-struct ParamTraits<mozilla::layers::TextureIdentifier>
-  : public ContiguousEnumSerializer<
-             mozilla::layers::TextureIdentifier,
-             mozilla::layers::TextureIdentifier::Front,
-             mozilla::layers::TextureIdentifier::HighBound>
-{};
-
-template <>
-struct ParamTraits<mozilla::layers::DeprecatedTextureHostFlags>
-  : public BitFlagsEnumSerializer<
-             mozilla::layers::DeprecatedTextureHostFlags,
-             mozilla::layers::DeprecatedTextureHostFlags::ALL_BITS>
-{};
-
-template <>
 struct ParamTraits<mozilla::layers::DiagnosticTypes>
   : public BitFlagsEnumSerializer<
              mozilla::layers::DiagnosticTypes,
@@ -834,14 +819,12 @@ struct ParamTraits<mozilla::layers::TextureInfo>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, aParam.mCompositableType);
-    WriteParam(aMsg, aParam.mDeprecatedTextureHostFlags);
     WriteParam(aMsg, aParam.mTextureFlags);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->mCompositableType) &&
-           ReadParam(aMsg, aIter, &aResult->mDeprecatedTextureHostFlags) &&
            ReadParam(aMsg, aIter, &aResult->mTextureFlags);
   }
 };

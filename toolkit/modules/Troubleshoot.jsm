@@ -28,6 +28,7 @@ catch (e) {
 // under the "accessibility.*" branch.
 const PREFS_WHITELIST = [
   "accessibility.",
+  "apz.",
   "browser.cache.",
   "browser.display.",
   "browser.download.folderList",
