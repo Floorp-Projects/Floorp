@@ -1935,6 +1935,12 @@ CanRelocateAllocKind(AllocKind kind)
     return kind <= FINALIZE_OBJECT_LAST;
 }
 
+static bool
+CanRelocateTraceKind(JSGCTraceKind kind)
+{
+    return kind == JSTRACE_OBJECT;
+}
+
 
 size_t ArenaHeader::countFreeCells()
 {
@@ -2249,6 +2255,11 @@ void
 MovingTracer::Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     TenuredCell *thing = TenuredCell::fromPointer(*thingp);
+    if (!CanRelocateTraceKind(kind)) {
+        MOZ_ASSERT(!IsForwarded(thing));
+        return;
+    }
+
     Zone *zone = thing->zoneFromAnyThread();
     if (!zone->isGCCompacting()) {
         MOZ_ASSERT(!IsForwarded(thing));
