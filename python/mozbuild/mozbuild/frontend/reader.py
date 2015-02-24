@@ -62,6 +62,7 @@ from .context import (
     VARIABLES,
     DEPRECATION_HINTS,
     SPECIAL_VARIABLES,
+    SUBCONTEXTS,
     TemplateContext,
 )
 
@@ -140,12 +141,14 @@ class MozbuildSandbox(Sandbox):
             return SPECIAL_VARIABLES[key][0](self._context)
         if key in FUNCTIONS:
             return self._create_function(FUNCTIONS[key])
+        if key in SUBCONTEXTS:
+            return self._create_subcontext(SUBCONTEXTS[key])
         if key in self.templates:
             return self._create_template_function(self.templates[key])
         return Sandbox.__getitem__(self, key)
 
     def __setitem__(self, key, value):
-        if key in SPECIAL_VARIABLES or key in FUNCTIONS:
+        if key in SPECIAL_VARIABLES or key in FUNCTIONS or key in SUBCONTEXTS:
             raise KeyError()
         if key in self.exports:
             self._context[key] = value
@@ -309,6 +312,14 @@ class MozbuildSandbox(Sandbox):
         code += ''.join(lines[begin[0] - 1:])
 
         self.templates[name] = func, code, self._context.current_path
+
+    @memoize
+    def _create_subcontext(self, cls):
+        """Return a function object that creates SubContext instances."""
+        def fn(*args, **kwargs):
+            return cls(self._context, *args, **kwargs)
+
+        return fn
 
     @memoize
     def _create_function(self, function_def):
@@ -1003,11 +1014,12 @@ class BuildReader(object):
 
         for gyp_context in gyp_contexts:
             context['DIRS'].append(mozpath.relpath(gyp_context.objdir, context.objdir))
+            sandbox.subcontexts.append(gyp_context)
 
         yield context
 
-        for gyp_context in gyp_contexts:
-            yield gyp_context
+        for subcontext in sandbox.subcontexts:
+            yield subcontext
 
         # Traverse into referenced files.
 
