@@ -356,9 +356,7 @@ js::AssertSameCompartment(JSObject *objA, JSObject *objB)
 JS_FRIEND_API(void)
 js::NotifyAnimationActivity(JSObject *obj)
 {
-    int64_t timeNow = PRMJ_Now();
-    obj->compartment()->lastAnimationTime = timeNow;
-    obj->runtimeFromMainThread()->lastAnimationTime = timeNow;
+    obj->compartment()->lastAnimationTime = PRMJ_Now();
 }
 
 JS_FRIEND_API(uint32_t)
