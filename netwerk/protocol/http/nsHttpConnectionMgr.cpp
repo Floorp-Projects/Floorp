@@ -2811,7 +2811,7 @@ nsHttpConnectionMgr::ActivateTimeoutTick()
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     LOG(("nsHttpConnectionMgr::ActivateTimeoutTick() "
-         "this=%p mTimeoutTick=%p\n"));
+         "this=%p mTimeoutTick=%p\n", this, mTimeoutTick.get()));
 
     // The timer tick should be enabled if it is not already pending.
     // Upon running the tick will rearm itself if there are active

@@ -32,7 +32,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void bailout(const T &t, LSnapshot *snapshot);
 
   protected:
-
     // Load a NaN or zero into a register for an out of bounds AsmJS or static
     // typed array load.
     class OutOfLineLoadTypedArrayOutOfBounds : public OutOfLineCodeBase<CodeGeneratorX86Shared>
@@ -50,6 +49,31 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
             codegen->visitOutOfLineLoadTypedArrayOutOfBounds(this);
         }
     };
+
+    // Additional bounds checking for heap accesses with constant offsets.
+    class OffsetBoundsCheck : public OutOfLineCodeBase<CodeGeneratorX86Shared>
+    {
+        Label *outOfBounds_;
+        Register ptrReg_;
+        int32_t offset_;
+      public:
+        OffsetBoundsCheck(Label *outOfBounds, Register ptrReg, int32_t offset)
+          : outOfBounds_(outOfBounds), ptrReg_(ptrReg), offset_(offset)
+        {}
+
+        Label *outOfBounds() const { return outOfBounds_; }
+        Register ptrReg() const { return ptrReg_; }
+        int32_t offset() const { return offset_; }
+        void accept(CodeGeneratorX86Shared *codegen) {
+            codegen->visitOffsetBoundsCheck(this);
+        }
+    };
+
+    // Functions for emitting bounds-checking code with branches.
+    MOZ_WARN_UNUSED_RESULT
+    uint32_t emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess *mir, const MInstruction *ins,
+                                        Register ptr, Label *fail);
+    void cleanupAfterAsmJSBoundsCheckBranch(const MAsmJSHeapAccess *mir, Register ptr);
 
     // Label for the common return path.
     NonAssertingLabel returnLabel_;
@@ -214,6 +238,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitMemoryBarrier(LMemoryBarrier *ins);
 
     void visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool);
+    void visitOffsetBoundsCheck(OffsetBoundsCheck *oolCheck);
 
     void visitNegI(LNegI *lir);
     void visitNegD(LNegD *lir);

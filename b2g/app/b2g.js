@@ -34,6 +34,9 @@ pref("browser.tabs.remote.autostart.1", false);
 // Bug 945235: Prevent all bars to be considered visible:
 pref("toolkit.defaultChromeFeatures", "chrome,dialog=no,close,resizable,scrollbars,extrachrome");
 
+// Disable focus rings
+pref("browser.display.focus_ring_width", 0);
+
 // Device pixel to CSS px ratio, in percent. Set to -1 to calculate based on display density.
 pref("browser.viewport.scaleRatio", -1);
 
