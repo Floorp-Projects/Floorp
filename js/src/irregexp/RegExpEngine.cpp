@@ -1612,8 +1612,8 @@ RegExpCompiler::Assemble(JSContext *cx,
         return RegExpCode();
 
     if (reg_exp_too_big_) {
-        JS_ReportError(cx, "regexp too big");
         code.destroy();
+        JS_ReportError(cx, "regexp too big");
         return RegExpCode();
     }
 
