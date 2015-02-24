@@ -543,14 +543,12 @@ let Impl = {
     let ret = {
       reason: reason,
       OS: ai.OS,
-      appID: ai.ID,
-      appVersion: ai.version,
-      appName: ai.name,
-      appBuildID: ai.appBuildID,
-      appUpdateChannel: UpdateChannel.get(),
+      appVersion: ai.version, // TODO: In Environment, but needed for |submissionPath|
+      appName: ai.name, // TODO: In Environment, but needed for |submissionPath|
+      appBuildID: ai.appBuildID, // TODO: In Environment, but needed for |submissionPath|
+      appUpdateChannel: UpdateChannel.get(), // TODO: In Environment, but needed for |submissionPath|
       platformBuildID: ai.platformBuildID,
       revision: HISTOGRAMS_FILE_VERSION,
-      locale: getLocale(),
       asyncPluginInit: Preferences.get(PREF_ASYNC_PLUGIN_INIT, false)
     };
 
@@ -563,58 +561,6 @@ let Impl = {
 
     if (this._previousBuildID) {
       ret.previousBuildID = this._previousBuildID;
-    }
-
-    // sysinfo fields are not always available, get what we can.
-    let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-    let fields = ["cpucount", "memsize", "arch", "version", "kernel_version",
-                  "device", "manufacturer", "hardware", "tablet",
-                  "hasMMX", "hasSSE", "hasSSE2", "hasSSE3",
-                  "hasSSSE3", "hasSSE4A", "hasSSE4_1", "hasSSE4_2",
-                  "hasEDSP", "hasARMv6", "hasARMv7", "hasNEON", "isWow64",
-                  "profileHDDModel", "profileHDDRevision", "binHDDModel",
-                  "binHDDRevision", "winHDDModel", "winHDDRevision"];
-    for each (let field in fields) {
-      let value;
-      try {
-        value = sysInfo.getProperty(field);
-      } catch (e) {
-        continue;
-      }
-      if (field == "memsize") {
-        // Send RAM size in megabytes. Rounding because sysinfo doesn't
-        // always provide RAM in multiples of 1024.
-        value = Math.round(value / 1024 / 1024);
-      }
-      ret[field] = value;
-    }
-
-    // gfxInfo fields are not always available, get what we can.
-    let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
-    let gfxfields = ["adapterDescription", "adapterVendorID", "adapterDeviceID",
-                     "adapterSubsysID", "adapterRAM", "adapterDriver",
-                     "adapterDriverVersion", "adapterDriverDate",
-                     "adapterDescription2", "adapterVendorID2",
-                     "adapterDeviceID2", "adapterSubsysID2", "adapterRAM2",
-                     "adapterDriver2", "adapterDriverVersion2",
-                     "adapterDriverDate2", "isGPU2Active", "D2DEnabled",
-                     "DWriteEnabled", "DWriteVersion"
-                    ];
-
-    if (gfxInfo) {
-      for each (let field in gfxfields) {
-        try {
-          let value = gfxInfo[field];
-          // bug 940806: We need to do a strict equality comparison here,
-          // otherwise a type conversion will occur and boolean false values
-          // will get filtered out
-          if (value !== "") {
-            ret[field] = value;
-          }
-        } catch (e) {
-          continue
-        }
-      }
     }
 
 #ifndef MOZ_WIDGET_GONK

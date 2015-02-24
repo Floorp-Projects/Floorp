@@ -168,7 +168,6 @@ function checkPayloadInfo(payload, reason) {
   // get rid of the non-deterministic field
   const expected_info = {
     OS: "XPCShell", 
-    appID: "xpcshell@tests.mozilla.org", 
     appVersion: "1", 
     appName: "XPCShell", 
     appBuildID: "2007010101",
@@ -182,7 +181,6 @@ function checkPayloadInfo(payload, reason) {
 
   do_check_eq(payload.info.reason, reason);
   do_check_true("appUpdateChannel" in payload.info);
-  do_check_true("locale" in payload.info);
   do_check_true("revision" in payload.info);
   if (Services.appinfo.isOfficial) {
     do_check_true(payload.info.revision.startsWith("http"));
@@ -193,24 +191,6 @@ function checkPayloadInfo(payload, reason) {
     do_check_true("clientID" in payload);
     do_check_neq(payload.clientID, null);
     do_check_eq(payload.clientID, gDataReportingClientID);
-  }
-
-  try {
-    // If we've not got nsIGfxInfoDebug, then this will throw and stop us doing
-    // this test.
-    let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfoDebug);
-    let isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
-    let isOSX = ("nsILocalFileMac" in Components.interfaces);
-
-    if (isWindows || isOSX) {
-      do_check_true("adapterVendorID" in payload.info);
-      do_check_true("adapterDeviceID" in payload.info);
-      if (isWindows) {
-        do_check_true("adapterSubsysID" in payload.info);
-      }
-    }
-  }
-  catch (x) {
   }
 }
 
@@ -435,13 +415,6 @@ function write_fake_failedprofilelocks_file() {
 
 function run_test() {
   do_test_pending();
-  try {
-    let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfoDebug);
-    gfxInfo.spoofVendorID("0xabcd");
-    gfxInfo.spoofDeviceID("0x1234");
-  } catch (x) {
-    // If we can't test gfxInfo, that's fine, we'll note it later.
-  }
 
   // Addon manager needs a profile directory
   do_get_profile();
