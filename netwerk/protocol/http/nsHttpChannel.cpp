@@ -4237,12 +4237,14 @@ nsHttpChannel::InstallCacheListener(int64_t offset)
         do_CreateInstance(kStreamListenerTeeCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsICacheStorageService> serv =
-        do_GetService("@mozilla.org/netwerk/cache-storage-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsIEventTarget> cacheIOTarget;
-    serv->GetIoTarget(getter_AddRefs(cacheIOTarget));
+    if (!CacheObserver::UseNewCache()) {
+        nsCOMPtr<nsICacheStorageService> serv =
+            do_GetService("@mozilla.org/netwerk/cache-storage-service;1", &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        serv->GetIoTarget(getter_AddRefs(cacheIOTarget));
+    }
 
     if (!cacheIOTarget) {
         LOG(("nsHttpChannel::InstallCacheListener sync tee %p rv=%x "

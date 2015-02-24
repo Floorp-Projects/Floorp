@@ -660,14 +660,17 @@ nsPNGEncoder::ConvertHostARGBRow(const uint8_t* aSrc, uint8_t* aDest,
     uint8_t* pixelOut = &aDest[x * pixelStride];
 
     uint8_t alpha = (pixelIn & 0xff000000) >> 24;
-    if (alpha == 0) {
-      pixelOut[0] = pixelOut[1] = pixelOut[2] = pixelOut[3] = 0;
+    pixelOut[pixelStride - 1] = alpha; // overwritten below if pixelStride == 3
+    if (alpha == 255) {
+      pixelOut[0] = (pixelIn & 0xff0000) >> 16;
+      pixelOut[1] = (pixelIn & 0x00ff00) >>  8;
+      pixelOut[2] = (pixelIn & 0x0000ff)      ;
+    } else if (alpha == 0) {
+      pixelOut[0] = pixelOut[1] = pixelOut[2] = 0;
     } else {
       pixelOut[0] = (((pixelIn & 0xff0000) >> 16) * 255 + alpha / 2) / alpha;
       pixelOut[1] = (((pixelIn & 0x00ff00) >>  8) * 255 + alpha / 2) / alpha;
-      pixelOut[2] = (((pixelIn & 0x0000ff) >>  0) * 255 + alpha / 2) / alpha;
-      if (aUseTransparency)
-        pixelOut[3] = alpha;
+      pixelOut[2] = (((pixelIn & 0x0000ff)      ) * 255 + alpha / 2) / alpha;
     }
   }
 }
