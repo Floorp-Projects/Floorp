@@ -116,6 +116,9 @@ public:
   static void PokeShrinkGCBuffers();
   static void KillShrinkGCBuffersTimer();
 
+  static void PokeShrinkingGC();
+  static void KillShrinkingGCTimer();
+
   static void MaybePokeCC();
   static void KillCCTimer();
   static void KillICCTimer();
