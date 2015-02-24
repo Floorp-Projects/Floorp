@@ -614,6 +614,10 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
     MSE_DEBUG("was shut down while reading metadata. Aborting initialization.");
     return;
   }
+  if (mCurrentDecoder != aDecoder) {
+    MSE_DEBUG("append was cancelled. Aborting initialization.");
+    return;
+  }
 
   if (NS_SUCCEEDED(rv) && reader->IsWaitingOnCDMResource()) {
     mWaitingDecoders.AppendElement(aDecoder);
