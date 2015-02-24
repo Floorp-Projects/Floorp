@@ -17,7 +17,7 @@ describe("loop.contacts", function() {
   var sandbox;
   var fakeWindow;
 
-  beforeEach(function(done) {
+  beforeEach(function() {
     sandbox = sinon.sandbox.create();
     navigator.mozLoop = {
       getStrings: function(entityName) {
@@ -39,8 +39,6 @@ describe("loop.contacts", function() {
     loop.shared.mixins.setRootObject(fakeWindow);
 
     document.mozL10n.initialize(navigator.mozLoop);
-    // XXX prevent a race whenever mozL10n hasn't been initialized yet
-    setTimeout(done, 0);
   });
 
   afterEach(function() {
