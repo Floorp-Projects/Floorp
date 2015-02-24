@@ -449,6 +449,30 @@ Factory::DoesBackendSupportDataDrawtarget(BackendType aType)
   return false;
 }
 
+uint32_t
+Factory::GetMaxSurfaceSize(BackendType aType)
+{
+  switch (aType) {
+  case BackendType::CAIRO:
+  case BackendType::COREGRAPHICS:
+    return DrawTargetCairo::GetMaxSurfaceSize();
+#ifdef XP_MACOSX
+  case BackendType::COREGRAPHICS_ACCELERATED:
+    return DrawTargetCG::GetMaxSurfaceSize();
+#endif
+  case BackendType::SKIA:
+    return INT_MAX;
+#ifdef WIN32
+  case BackendType::DIRECT2D:
+    return DrawTargetD2D::GetMaxSurfaceSize();
+  case BackendType::DIRECT2D1_1:
+    return DrawTargetD2D1::GetMaxSurfaceSize();
+#endif
+  default:
+    return 0;
+  }
+}
+
 TemporaryRef<ScaledFont>
 Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSize)
 {
