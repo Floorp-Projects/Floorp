@@ -28,6 +28,7 @@ let mm = null
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js";
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/canvasdebugger/test/";
+const SET_TIMEOUT_URL = EXAMPLE_URL + "doc_settimeout.html";
 const SIMPLE_CANVAS_URL = EXAMPLE_URL + "doc_simple-canvas.html";
 const SIMPLE_BITMASKS_URL = EXAMPLE_URL + "doc_simple-canvas-bitmasks.html";
 const SIMPLE_CANVAS_TRANSPARENT_URL = EXAMPLE_URL + "doc_simple-canvas-transparent.html";

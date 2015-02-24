@@ -35,6 +35,10 @@ this.WebappManager = {
     Services.obs.addObserver(this, "webapps-ask-uninstall", false);
     Services.obs.addObserver(this, "webapps-launch", false);
     Services.obs.addObserver(this, "webapps-uninstall", false);
+    cpmm.sendAsyncMessage("Webapps:RegisterForMessages",
+                          { messages: ["Webapps:Install:Return:OK",
+                                       "Webapps:Install:Return:KO",
+                                       "Webapps:UpdateState"]});
     cpmm.addMessageListener("Webapps:Install:Return:OK", this);
     cpmm.addMessageListener("Webapps:Install:Return:KO", this);
     cpmm.addMessageListener("Webapps:UpdateState", this);
@@ -45,6 +49,10 @@ this.WebappManager = {
     Services.obs.removeObserver(this, "webapps-ask-uninstall");
     Services.obs.removeObserver(this, "webapps-launch");
     Services.obs.removeObserver(this, "webapps-uninstall");
+    cpmm.sendAsyncMessage("Webapps:UnregisterForMessages",
+                          ["Webapps:Install:Return:OK",
+                           "Webapps:Install:Return:KO",
+                           "Webapps:UpdateState"]);
     cpmm.removeMessageListener("Webapps:Install:Return:OK", this);
     cpmm.removeMessageListener("Webapps:Install:Return:KO", this);
     cpmm.removeMessageListener("Webapps:UpdateState", this);
@@ -84,18 +92,18 @@ this.WebappManager = {
     let data = JSON.parse(aData);
     data.mm = aSubject;
 
-    let win;
+    let browser;
     switch(aTopic) {
       case "webapps-ask-install":
-        win = this._getWindowForId(data.oid);
-        if (win && win.location.href == data.from) {
-          this.doInstall(data, win);
+        browser = this._getBrowserForId(data.topId);
+        if (browser) {
+          this.doInstall(data, browser);
         }
         break;
       case "webapps-ask-uninstall":
-        win = this._getWindowForId(data.windowId);
-        if (win && win.location.href == data.from) {
-          this.doUninstall(data, win);
+        browser = this._getBrowserForId(data.topId);
+        if (browser) {
+          this.doUninstall(data, browser);
         }
         break;
       case "webapps-launch":
@@ -107,17 +115,28 @@ this.WebappManager = {
     }
   },
 
-  _getWindowForId: function(aId) {
-    let someWindow = Services.wm.getMostRecentWindow(null);
-    return someWindow && Services.wm.getOuterWindowWithId(aId);
+  _getBrowserForId: function(aId) {
+    let windows = Services.wm.getEnumerator("navigator:browser");
+    while (windows.hasMoreElements()) {
+      let window = windows.getNext();
+      let tabbrowser = window.gBrowser;
+      let foundBrowser = tabbrowser.getBrowserForOuterWindowID(aId);
+      if (foundBrowser) {
+        return foundBrowser;
+      }
+    }
+    let foundWindow = Services.wm.getOuterWindowWithId(aId);
+    if (foundWindow) {
+      return foundWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIWebNavigation)
+                        .QueryInterface(Ci.nsIDocShell)
+                        .chromeEventHandler;
+    }
+    return null;
   },
 
-  doInstall: function(aData, aWindow) {
-    let browser = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShell)
-                         .chromeEventHandler;
-    let chromeDoc = browser.ownerDocument;
+  doInstall: function(aData, aBrowser) {
+    let chromeDoc = aBrowser.ownerDocument;
     let chromeWin = chromeDoc.defaultView;
     let popupProgressContent =
       chromeDoc.getElementById("webapps-install-progress-content");
@@ -135,7 +154,7 @@ this.WebappManager = {
         notification.remove();
 
         notification = chromeWin.PopupNotifications.
-                        show(browser,
+                        show(aBrowser,
                              "webapps-install-progress",
                              bundle.getString("webapps.install.inprogress"),
                              "webapps-notification-icon");
@@ -152,7 +171,7 @@ this.WebappManager = {
         this.installations[manifestURL] = Promise.defer();
         this.installations[manifestURL].promise.then(() => {
           notifyInstallSuccess(aData.app, nativeApp, bundle,
-                               PrivateBrowsingUtils.isWindowPrivate(aWindow));
+                               PrivateBrowsingUtils.isBrowserPrivate(aBrowser));
         }, (error) => {
           Cu.reportError("Error installing webapp: " + error);
         }).then(() => {
@@ -198,20 +217,41 @@ this.WebappManager = {
     let message = bundle.getFormattedString("webapps.requestInstall",
                                             [manifest.name, host], 2);
 
-    notification = chromeWin.PopupNotifications.show(browser,
+    let eventCallback = null;
+    let gBrowser = chromeWin.gBrowser;
+    if (gBrowser) {
+      let windowID = aData.oid;
+
+      let listener = {
+        onLocationChange(webProgress) {
+          if (webProgress.DOMWindowID == windowID) {
+            notification.remove();
+          }
+        }
+      };
+
+      gBrowser.addProgressListener(listener);
+
+      eventCallback = (event) => {
+        if (event != "removed") {
+          return;
+        }
+        // The notification was removed, so we should
+        // remove our listener.
+        gBrowser.removeProgressListener(listener);
+      }
+    }
+
+    notification = chromeWin.PopupNotifications.show(aBrowser,
                                                      "webapps-install",
                                                      message,
                                                      "webapps-notification-icon",
-                                                     mainAction);
-
+                                                     mainAction, [],
+                                                     eventCallback);
   },
 
-  doUninstall: function(aData, aWindow) {
-    let browser = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShell)
-                         .chromeEventHandler;
-    let chromeDoc = browser.ownerDocument;
+  doUninstall: function(aData, aBrowser) {
+    let chromeDoc = aBrowser.ownerDocument;
     let chromeWin = chromeDoc.defaultView;
 
     let bundle = chromeWin.gNavigatorBundle;
@@ -243,10 +283,37 @@ this.WebappManager = {
     let message = bundle.getFormattedString("webapps.requestUninstall",
                                             [manifest.name]);
 
+
+    let eventCallback = null;
+    let gBrowser = chromeWin.gBrowser;
+    if (gBrowser) {
+      let windowID = aData.oid;
+
+      let listener = {
+        onLocationChange(webProgress) {
+          if (webProgress.DOMWindowID == windowID) {
+            notification.remove();
+          }
+        }
+      };
+
+      gBrowser.addProgressListener(listener);
+
+      eventCallback = (event) => {
+        if (event != "removed") {
+          return;
+        }
+        // The notification was removed, so we should
+        // remove our listener.
+        gBrowser.removeProgressListener(listener);
+      }
+    }
+
     notification = chromeWin.PopupNotifications.show(
-                     browser, "webapps-uninstall", message,
+                     aBrowser, "webapps-uninstall", message,
                      "webapps-notification-icon",
-                     mainAction, [secondaryAction]);
+                     mainAction, [secondaryAction],
+                     eventCallback);
   }
 }
 

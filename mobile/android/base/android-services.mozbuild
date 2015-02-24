@@ -981,6 +981,7 @@ sync_java_files = [
     'sync/net/HawkAuthHeaderProvider.java',
     'sync/net/HMACAuthHeaderProvider.java',
     'sync/net/HttpResponseObserver.java',
+    'sync/net/MozResponse.java',
     'sync/net/Resource.java',
     'sync/net/ResourceDelegate.java',
     'sync/net/SRPConstants.java',

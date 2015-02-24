@@ -423,7 +423,7 @@ LoginTest.deleteFile(OS.Constants.Path.profileDir, filename + ".corrupt");
 LoginTest.deleteFile(OS.Constants.Path.profileDir, filename);
 
 } catch (e) {
-    throw "FAILED in test #" + testnum + " -- " + testdesc + ": " + e;
+    throw new Error("FAILED in test #" + testnum + " -- " + testdesc + ": " + e);
 }
 
 });
