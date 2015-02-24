@@ -311,6 +311,7 @@ selfhosting_srcs := \
   $(srcdir)/builtin/Map.js \
   $(srcdir)/builtin/Number.js \
   $(srcdir)/builtin/Object.js \
+  $(srcdir)/builtin/RegExp.js \
   $(srcdir)/builtin/String.js \
   $(srcdir)/builtin/Set.js \
   $(srcdir)/builtin/TypedArray.js \
