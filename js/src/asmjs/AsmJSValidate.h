@@ -25,6 +25,7 @@
 
 #include "jsutil.h"
 
+#include "jit/Registers.h"
 #include "js/TypeDecls.h"
 #include "vm/NativeObject.h"
 
@@ -53,13 +54,25 @@ ValidateAsmJS(ExclusiveContext *cx, AsmJSParser &parser, frontend::ParseNode *st
 // The assumed page size; dynamically checked in ValidateAsmJS.
 const size_t AsmJSPageSize = 4096;
 
+// Targets define AsmJSImmediateRange to be the size of an address immediate,
+// and AsmJSCheckedImmediateRange, to be the size of an address immediate that
+// can be supported by signal-handler OOB handling.
+static_assert(jit::AsmJSCheckedImmediateRange <= jit::AsmJSImmediateRange,
+              "AsmJSImmediateRange should be the size of an unconstrained "
+              "address immediate");
+
 #ifdef JS_CPU_X64
 // On x64, the internal ArrayBuffer data array is inflated to 4GiB (only the
 // byteLength portion of which is accessible) so that out-of-bounds accesses
 // (made using a uint32 index) are guaranteed to raise a SIGSEGV.
-// Unaligned accesses and mask optimizations might also try to access a few
-// bytes after this limit, so just inflate it by AsmJSPageSize.
-static const size_t AsmJSMappedSize = 4 * 1024ULL * 1024ULL * 1024ULL + AsmJSPageSize;
+// Then, an additional extent is added to permit folding of small immediate
+// values into addresses. And finally, unaligned accesses and mask optimizations
+// might also try to access a few bytes after this limit, so just inflate it by
+// AsmJSPageSize.
+static const size_t AsmJSMappedSize = 4 * 1024ULL * 1024ULL * 1024ULL +
+                                      jit::AsmJSCheckedImmediateRange +
+                                      AsmJSPageSize;
+
 #endif
 
 // From the asm.js spec Linking section:
