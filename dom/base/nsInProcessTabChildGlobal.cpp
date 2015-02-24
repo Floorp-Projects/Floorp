@@ -129,6 +129,7 @@ nsInProcessTabChildGlobal::~nsInProcessTabChildGlobal()
 NS_IMETHODIMP_(bool)
 nsInProcessTabChildGlobal::MarkForCC()
 {
+  MarkScopesForCC();
   return mMessageManager ? mMessageManager->MarkForCC() : false;
 }
 
