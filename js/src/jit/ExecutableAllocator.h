@@ -35,6 +35,7 @@
 #include "jit/mips/Simulator-mips.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
+#include "js/GCAPI.h"
 
 #ifdef JS_CPU_SPARC
 #ifdef __linux__  // bugzilla 502369
@@ -250,8 +251,11 @@ class ExecutableAllocator {
 
     void releasePoolPages(ExecutablePool *pool) {
         MOZ_ASSERT(pool->m_allocation.pages);
-        if (destroyCallback)
+        if (destroyCallback) {
+            // Do not allow GC during the page release callback.
+            JS::AutoSuppressGCAnalysis nogc;
             destroyCallback(pool->m_allocation.pages, pool->m_allocation.size);
+        }
         systemRelease(pool->m_allocation);
         MOZ_ASSERT(m_pools.initialized());
         m_pools.remove(m_pools.lookup(pool));   // this asserts if |pool| is not in m_pools
