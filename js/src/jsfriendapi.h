@@ -151,6 +151,24 @@ extern JS_FRIEND_API(JSObject *)
 JS_CloneObject(JSContext *cx, JS::HandleObject obj, JS::HandleObject proto,
                JS::HandleObject parent);
 
+/*
+ * Copy the own properties of src to dst in a fast way.  src and dst must both
+ * be native and must be in the compartment of cx.  They must have the same
+ * class, the same parent, and the same prototype.  Class reserved slots will
+ * NOT be copied.
+ *
+ * dst must not have any properties on it before this function is called.
+ *
+ * src must have been allocated via JS_NewObjectWithoutMetadata so that we can
+ * be sure it has no metadata that needs copying to dst.  This also means that
+ * dst needs to have the compartment global as its parent.  This function will
+ * preserve the existing metadata on dst, if any.
+ */
+extern JS_FRIEND_API(bool)
+JS_InitializePropertiesFromCompatibleNativeObject(JSContext *cx,
+                                                  JS::HandleObject dst,
+                                                  JS::HandleObject src);
+
 extern JS_FRIEND_API(JSString *)
 JS_BasicObjectToString(JSContext *cx, JS::HandleObject obj);
 
