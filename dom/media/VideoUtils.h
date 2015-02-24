@@ -148,8 +148,11 @@ static const int64_t USECS_PER_S = 1000000;
 // Number of microseconds per millisecond.
 static const int64_t USECS_PER_MS = 1000;
 
+// Converts milliseconds to seconds.
+#define MS_TO_SECONDS(ms) ((double)(ms) / (PR_MSEC_PER_SEC))
+
 // Converts seconds to milliseconds.
-#define MS_TO_SECONDS(s) ((double)(s) / (PR_MSEC_PER_SEC))
+#define SECONDS_TO_MS(s) ((int)((s) * (PR_MSEC_PER_SEC)))
 
 // Converts from seconds to microseconds. Returns failure if the resulting
 // integer is too big to fit in an int64_t.
