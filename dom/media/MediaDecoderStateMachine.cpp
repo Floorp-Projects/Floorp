@@ -409,7 +409,8 @@ void MediaDecoderStateMachine::SendStreamData()
       if (mInfo.HasAudio()) {
         TrackID audioTrackId = mInfo.mAudio.mTrackInfo.mOutputId;
         AudioSegment* audio = new AudioSegment();
-        mediaStream->AddAudioTrack(audioTrackId, mInfo.mAudio.mRate, 0, audio);
+        mediaStream->AddAudioTrack(audioTrackId, mInfo.mAudio.mRate, 0, audio,
+                                   SourceMediaStream::ADDTRACK_QUEUED);
         stream->mStream->DispatchWhenNotEnoughBuffered(audioTrackId,
             GetStateMachineThread(), GetWakeDecoderRunnable());
         stream->mNextAudioTime = mStartTime + stream->mInitialTime;
@@ -417,7 +418,8 @@ void MediaDecoderStateMachine::SendStreamData()
       if (mInfo.HasVideo()) {
         TrackID videoTrackId = mInfo.mVideo.mTrackInfo.mOutputId;
         VideoSegment* video = new VideoSegment();
-        mediaStream->AddTrack(videoTrackId, 0, video);
+        mediaStream->AddTrack(videoTrackId, 0, video,
+                              SourceMediaStream::ADDTRACK_QUEUED);
         stream->mStream->DispatchWhenNotEnoughBuffered(videoTrackId,
             GetStateMachineThread(), GetWakeDecoderRunnable());
 
@@ -427,6 +429,7 @@ void MediaDecoderStateMachine::SendStreamData()
         // into MediaDecoderStateMachine.
         stream->mNextVideoTime = mStartTime + stream->mInitialTime;
       }
+      mediaStream->FinishAddTracks();
       stream->mStreamInitialized = true;
     }
 
