@@ -3073,11 +3073,20 @@ js::TypeMonitorCallSlow(JSContext *cx, JSObject *callee, const CallArgs &args, b
 static inline bool
 IsAboutToBeFinalized(TypeSet::ObjectKey **keyp)
 {
-    // Mask out the low bit indicating whether this is a group or JS object.
-    uintptr_t flagBit = uintptr_t(*keyp) & 1;
-    gc::Cell *tmp = reinterpret_cast<gc::Cell *>(uintptr_t(*keyp) & ~1);
-    bool isAboutToBeFinalized = IsCellAboutToBeFinalized(&tmp);
-    *keyp = reinterpret_cast<TypeSet::ObjectKey *>(uintptr_t(tmp) | flagBit);
+    TypeSet::ObjectKey *key = *keyp;
+    bool isAboutToBeFinalized;
+    if (key->isGroup()) {
+        ObjectGroup *group = key->groupNoBarrier();
+        isAboutToBeFinalized = IsObjectGroupAboutToBeFinalized(&group);
+        if (!isAboutToBeFinalized)
+            *keyp = TypeSet::ObjectKey::get(group);
+    } else {
+        MOZ_ASSERT(key->isSingleton());
+        JSObject *singleton = key->singletonNoBarrier();
+        isAboutToBeFinalized = IsObjectAboutToBeFinalized(&singleton);
+        if (!isAboutToBeFinalized)
+            *keyp = TypeSet::ObjectKey::get(singleton);
+    }
     return isAboutToBeFinalized;
 }
 
