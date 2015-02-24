@@ -1,6 +1,17 @@
 Version history
 ===============
 
+### 3.2.0 (2015-02-19) ###
+
+* Update ALPN token to final RFC version (h2).
+* Update altsvc implementation to draft 06: [draft-ietf-httpbis-alt-svc-06]
+
+[draft-ietf-httpbis-altsvc-06]: http://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-06
+
+### 3.1.2 (2015-02-17) ###
+
+* Update the example server to have a safe push example.
+
 ### 3.1.1 (2015-01-29) ###
 
 * Bugfix release.

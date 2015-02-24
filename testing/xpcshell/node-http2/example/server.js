@@ -12,19 +12,19 @@ function onRequest(request, response) {
 
   // Serving server.js from cache. Useful for microbenchmarks.
   if (request.url === cachedUrl) {
+    if (response.push) {
+      // Also push down the client js, since it's possible if the requester wants
+      // one, they want both.
+      var push = response.push('/client.js');
+      push.writeHead(200);
+      fs.createReadStream(path.join(__dirname, '/client.js')).pipe(push);
+    }
     response.end(cachedFile);
   }
 
   // Reading file from disk if it exists and is safe.
   else if ((filename.indexOf(__dirname) === 0) && fs.existsSync(filename) && fs.statSync(filename).isFile()) {
     response.writeHead('200');
-
-    // If they download the certificate, push the private key too, they might need it.
-    if (response.push && request.url === '/localhost.crt') {
-      var push = response.push('/localhost.key');
-      push.writeHead(200);
-      fs.createReadStream(path.join(__dirname, '/localhost.key')).pipe(push);
-    }
 
     fs.createReadStream(filename).pipe(response);
   }
