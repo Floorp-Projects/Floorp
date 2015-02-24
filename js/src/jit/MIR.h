@@ -246,6 +246,7 @@ class MNode : public TempObject
     MBasicBlock *block() const {
         return block_;
     }
+    MBasicBlock *caller() const;
 
     // Sets an already set operand, updating use information. If you're looking
     // for setOperand, this is probably what you want.
@@ -11716,11 +11717,10 @@ class MResumePoint MOZ_FINAL :
     MStoresToRecoverList stores_;
 
     jsbytecode *pc_;
-    MResumePoint *caller_;
     MInstruction *instruction_;
     Mode mode_;
 
-    MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent, Mode mode);
+    MResumePoint(MBasicBlock *block, jsbytecode *pc, Mode mode);
     void inherit(MBasicBlock *state);
 
   protected:
@@ -11742,7 +11742,7 @@ class MResumePoint MOZ_FINAL :
 
   public:
     static MResumePoint *New(TempAllocator &alloc, MBasicBlock *block, jsbytecode *pc,
-                             MResumePoint *parent, Mode mode);
+                             Mode mode);
     static MResumePoint *New(TempAllocator &alloc, MBasicBlock *block, MResumePoint *model,
                              const MDefinitionVector &operands);
     static MResumePoint *Copy(TempAllocator &alloc, MResumePoint *src);
@@ -11782,15 +11782,10 @@ class MResumePoint MOZ_FINAL :
     jsbytecode *pc() const {
         return pc_;
     }
-    MResumePoint *caller() const {
-        return caller_;
-    }
-    void setCaller(MResumePoint *caller) {
-        caller_ = caller;
-    }
+    MResumePoint *caller() const;
     uint32_t frameCount() const {
         uint32_t count = 1;
-        for (MResumePoint *it = caller_; it; it = it->caller_)
+        for (MResumePoint *it = caller(); it; it = it->caller())
             count++;
         return count;
     }
@@ -12181,25 +12176,57 @@ class MAsmJSNeg
 
 class MAsmJSHeapAccess
 {
-    Scalar::Type accessType_;
+    int32_t offset_;
+    Scalar::Type accessType_ : 8;
     bool needsBoundsCheck_;
-    Label *outOfBoundsLabel_;
     unsigned numSimdElems_;
 
   public:
-    MAsmJSHeapAccess(Scalar::Type accessType, bool needsBoundsCheck,
-                     Label *outOfBoundsLabel = nullptr, unsigned numSimdElems = 0)
-      : accessType_(accessType), needsBoundsCheck_(needsBoundsCheck),
-        outOfBoundsLabel_(outOfBoundsLabel), numSimdElems_(numSimdElems)
+    MAsmJSHeapAccess(Scalar::Type accessType, bool needsBoundsCheck, unsigned numSimdElems = 0)
+      : offset_(0), accessType_(accessType),
+        needsBoundsCheck_(needsBoundsCheck), numSimdElems_(numSimdElems)
     {
         MOZ_ASSERT(numSimdElems <= ScalarTypeToLength(accessType));
     }
 
+    int32_t offset() const { return offset_; }
+    int32_t endOffset() const { return offset() + byteSize(); }
     Scalar::Type accessType() const { return accessType_; }
+    unsigned byteSize() const {
+        return Scalar::isSimdType(accessType())
+               ? Scalar::scalarByteSize(accessType()) * numSimdElems()
+               : TypedArrayElemSize(accessType());
+    }
     bool needsBoundsCheck() const { return needsBoundsCheck_; }
     void removeBoundsCheck() { needsBoundsCheck_ = false; }
-    Label *outOfBoundsLabel() const { return outOfBoundsLabel_; }
     unsigned numSimdElems() const { MOZ_ASSERT(Scalar::isSimdType(accessType_)); return numSimdElems_; }
+
+    bool tryAddDisplacement(int32_t o) {
+        // Compute the new offset. Check for overflow and negative. In theory it
+        // ought to be possible to support negative offsets, but it'd require
+        // more elaborate bounds checking mechanisms than we currently have.
+        MOZ_ASSERT(offset_ >= 0);
+        int32_t newOffset = uint32_t(offset_) + o;
+        if (newOffset < 0)
+            return false;
+
+        // Compute the new offset to the end of the access. Check for overflow
+        // and negative here also.
+        int32_t newEnd = uint32_t(newOffset) + byteSize();
+        if (newEnd < 0)
+            return false;
+        MOZ_ASSERT(uint32_t(newEnd) >= uint32_t(newOffset));
+
+        // If we need bounds checking, keep it within the more restrictive
+        // AsmJSCheckedImmediateRange. Otherwise, just keep it within what
+        // the instruction set can support.
+        size_t range = needsBoundsCheck() ? AsmJSCheckedImmediateRange : AsmJSImmediateRange;
+        if (size_t(newEnd) > range)
+            return false;
+
+        offset_ = newOffset;
+        return true;
+    }
 };
 
 class MAsmJSLoadHeap
@@ -12211,10 +12238,9 @@ class MAsmJSLoadHeap
     MemoryBarrierBits barrierAfter_;
 
     MAsmJSLoadHeap(Scalar::Type accessType, MDefinition *ptr, bool needsBoundsCheck,
-                   Label *outOfBoundsLabel, unsigned numSimdElems,
-                   MemoryBarrierBits before, MemoryBarrierBits after)
+                   unsigned numSimdElems, MemoryBarrierBits before, MemoryBarrierBits after)
       : MUnaryInstruction(ptr),
-        MAsmJSHeapAccess(accessType, needsBoundsCheck, outOfBoundsLabel, numSimdElems),
+        MAsmJSHeapAccess(accessType, needsBoundsCheck, numSimdElems),
         barrierBefore_(before),
         barrierAfter_(after)
     {
@@ -12255,16 +12281,16 @@ class MAsmJSLoadHeap
 
     static MAsmJSLoadHeap *New(TempAllocator &alloc, Scalar::Type accessType,
                                MDefinition *ptr, bool needsBoundsCheck,
-                               Label *outOfBoundsLabel = nullptr,
                                unsigned numSimdElems = 0,
                                MemoryBarrierBits barrierBefore = MembarNobits,
                                MemoryBarrierBits barrierAfter = MembarNobits)
     {
-        return new(alloc) MAsmJSLoadHeap(accessType, ptr, needsBoundsCheck, outOfBoundsLabel,
+        return new(alloc) MAsmJSLoadHeap(accessType, ptr, needsBoundsCheck,
                                          numSimdElems, barrierBefore, barrierAfter);
     }
 
     MDefinition *ptr() const { return getOperand(0); }
+    void replacePtr(MDefinition *newPtr) { replaceOperand(0, newPtr); }
     MemoryBarrierBits barrierBefore() const { return barrierBefore_; }
     MemoryBarrierBits barrierAfter() const { return barrierAfter_; }
 
@@ -12284,10 +12310,9 @@ class MAsmJSStoreHeap
     MemoryBarrierBits barrierAfter_;
 
     MAsmJSStoreHeap(Scalar::Type accessType, MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
-                    Label *outOfBoundsLabel, unsigned numSimdElems,
-                    MemoryBarrierBits before, MemoryBarrierBits after)
+                    unsigned numSimdElems, MemoryBarrierBits before, MemoryBarrierBits after)
       : MBinaryInstruction(ptr, v),
-        MAsmJSHeapAccess(accessType, needsBoundsCheck, outOfBoundsLabel, numSimdElems),
+        MAsmJSHeapAccess(accessType, needsBoundsCheck, numSimdElems),
         barrierBefore_(before),
         barrierAfter_(after)
     {
@@ -12300,16 +12325,16 @@ class MAsmJSStoreHeap
 
     static MAsmJSStoreHeap *New(TempAllocator &alloc, Scalar::Type accessType,
                                 MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
-                                Label *outOfBoundsLabel = nullptr,
                                 unsigned numSimdElems = 0,
                                 MemoryBarrierBits barrierBefore = MembarNobits,
                                 MemoryBarrierBits barrierAfter = MembarNobits)
     {
-        return new(alloc) MAsmJSStoreHeap(accessType, ptr, v, needsBoundsCheck, outOfBoundsLabel,
+        return new(alloc) MAsmJSStoreHeap(accessType, ptr, v, needsBoundsCheck,
                                           numSimdElems, barrierBefore, barrierAfter);
     }
 
     MDefinition *ptr() const { return getOperand(0); }
+    void replacePtr(MDefinition *newPtr) { replaceOperand(0, newPtr); }
     MDefinition *value() const { return getOperand(1); }
     MemoryBarrierBits barrierBefore() const { return barrierBefore_; }
     MemoryBarrierBits barrierAfter() const { return barrierAfter_; }

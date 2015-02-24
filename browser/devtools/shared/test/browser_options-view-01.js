@@ -95,7 +95,9 @@ function* click(view, win, menuitem) {
   let button = win.document.querySelector("#options-button");
   EventUtils.synthesizeMouseAtCenter(button, {}, win);
   yield opened;
+  is(button.getAttribute("open"), "true", "button has `open` attribute");
 
   EventUtils.synthesizeMouseAtCenter(menuitem, {}, win);
   yield closed;
+  ok(!button.hasAttribute("open"), "button does not have `open` attribute");
 }

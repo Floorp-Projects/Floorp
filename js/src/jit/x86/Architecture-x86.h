@@ -239,6 +239,11 @@ hasMultiAlias()
     return false;
 }
 
+// Support some constant-offset addressing.
+// See the comments above AsmJSMappedSize in AsmJSValidate.h for more info.
+static const size_t AsmJSCheckedImmediateRange = 4096;
+static const size_t AsmJSImmediateRange = UINT32_C(0x80000000);
+
 } // namespace jit
 } // namespace js
 
