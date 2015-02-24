@@ -210,8 +210,7 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
 #endif
     largeAllocationFailureCallback(nullptr),
     oomCallback(nullptr),
-    debuggerMallocSizeOf(ReturnZeroSize),
-    lastAnimationTime(0)
+    debuggerMallocSizeOf(ReturnZeroSize)
 {
     setGCStoreBufferPtr(&gc.storeBuffer);
 
