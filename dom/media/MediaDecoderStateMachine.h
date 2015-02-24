@@ -632,7 +632,6 @@ protected:
   // to idle mode. This is threadsafe, and can be called from any thread.
   // The decoder monitor must be held.
   void DispatchDecodeTasksIfNeeded();
-  void AcquireMonitorAndInvokeDispatchDecodeTasksIfNeeded();
 
   // Returns the "media time". This is the absolute time which the media
   // playback has reached. i.e. this returns values in the range
