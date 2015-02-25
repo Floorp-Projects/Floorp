@@ -22,7 +22,7 @@ Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 
-const PING_FORMAT_VERSION = 2;
+const PING_FORMAT_VERSION = 4;
 const TEST_PING_TYPE = "test-ping-type";
 const TEST_PING_RETENTION = 180;
 
