@@ -142,7 +142,9 @@ static bool enableIon = false;
 static bool enableAsmJS = false;
 static bool enableNativeRegExp = false;
 static bool enableUnboxedObjects = false;
+#ifdef JS_GC_ZEAL
 static char gZealStr[128];
+#endif
 
 static bool printTiming = false;
 static const char *jsCacheDir = nullptr;
