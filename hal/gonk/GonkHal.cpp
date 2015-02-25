@@ -1199,12 +1199,12 @@ OomAdjOfOomScoreAdj(int aOomScoreAdj)
 }
 
 static void
-RoundOomScoreAdjUpWithBackroundLRU(int& aOomScoreAdj, uint32_t aBackgroundLRU)
+RoundOomScoreAdjUpWithLRU(int& aOomScoreAdj, uint32_t aLRU)
 {
   // We want to add minimum value to round OomScoreAdj up according to
-  // the steps by aBackgroundLRU.
+  // the steps by aLRU.
   aOomScoreAdj +=
-    ceil(((float)OOM_SCORE_ADJ_MAX / OOM_ADJUST_MAX) * aBackgroundLRU);
+    ceil(((float)OOM_SCORE_ADJ_MAX / OOM_ADJUST_MAX) * aLRU);
 }
 
 #define OOM_LOG(level, args...) __android_log_print(level, "OomLogger", ##args)
@@ -1790,12 +1790,10 @@ EnsureKernelLowMemKillerParamsSet()
 }
 
 void
-SetProcessPriority(int aPid,
-                   ProcessPriority aPriority,
-                   uint32_t aBackgroundLRU)
+SetProcessPriority(int aPid, ProcessPriority aPriority, uint32_t aLRU)
 {
   HAL_LOG("SetProcessPriority(pid=%d, priority=%d, LRU=%u)",
-          aPid, aPriority, aBackgroundLRU);
+          aPid, aPriority, aLRU);
 
   // If this is the first time SetProcessPriority was called, set the kernel's
   // OOM parameters according to our prefs.
@@ -1810,7 +1808,7 @@ SetProcessPriority(int aPid,
 
   int oomScoreAdj = pc->OomScoreAdj();
 
-  RoundOomScoreAdjUpWithBackroundLRU(oomScoreAdj, aBackgroundLRU);
+  RoundOomScoreAdjUpWithLRU(oomScoreAdj, aLRU);
 
   // We try the newer interface first, and fall back to the older interface
   // on failure.

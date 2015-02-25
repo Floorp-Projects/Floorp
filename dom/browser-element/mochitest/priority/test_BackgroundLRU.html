@@ -49,7 +49,7 @@ function runTest() {
     // We wait until another one is set to background, too.
     // Once there are two in background, the first one (LRU order)
     // should have 'backgroundLRU' equals 1
-    var p = expectPriorityWithBackgroundLRUSet(childID, '1');
+    var p = expectPriorityWithLRUSet(childID, '1');
     iframe2.setVisible(false);
 
     return p;
