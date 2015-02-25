@@ -3,12 +3,25 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://gre/modules/services/healthreport/profile.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://testing-common/AddonManagerTesting.jsm");
+Cu.import("resource://testing-common/httpd.js");
 
+// Lazy load |LightweightThemeManager|, we won't be using it on Gonk.
+XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
+                                  "resource://gre/modules/LightweightThemeManager.jsm");
+
+// The webserver hosting the addons.
+let gHttpServer = null;
+// The URL of the webserver root.
+let gHttpRoot = null;
+// The URL of the data directory, on the webserver.
+let gDataRoot = null;
 
 const PLATFORM_VERSION = "1.9.2";
 const APP_VERSION = "1";
@@ -36,6 +49,106 @@ const gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 const gIsMac = ("@mozilla.org/xpcom/mac-utils;1" in Cc);
 const gIsAndroid =  ("@mozilla.org/android/bridge;1" in Cc);
 const gIsGonk = ("@mozilla.org/cellbroadcast/gonkservice;1" in Cc);
+
+const FLASH_PLUGIN_NAME = "Shockwave Flash";
+const FLASH_PLUGIN_DESC = "A mock flash plugin";
+const FLASH_PLUGIN_VERSION = "\u201c1.1.1.1\u201d";
+const PLUGIN_MIME_TYPE1 = "application/x-shockwave-flash";
+const PLUGIN_MIME_TYPE2 = "text/plain";
+
+const PLUGIN2_NAME = "Quicktime";
+const PLUGIN2_DESC = "A mock Quicktime plugin";
+const PLUGIN2_VERSION = "2.3";
+
+const PLUGINHOST_CONTRACTID = "@mozilla.org/plugin/host;1";
+const PLUGINHOST_CID = Components.ID("{2329e6ea-1f15-4cbe-9ded-6e98e842de0e}");
+
+const PERSONA_ID = "3785";
+// Defined by LightweightThemeManager, it is appended to the PERSONA_ID.
+const PERSONA_ID_SUFFIX = "@personas.mozilla.org";
+const PERSONA_NAME = "Test Theme";
+const PERSONA_DESCRIPTION = "A nice theme/persona description.";
+
+const PLUGIN_UPDATED_TOPIC     = "plugins-list-updated";
+
+/**
+ * Used to mock plugin tags in our fake plugin host.
+ */
+function PluginTag(aName, aDescription, aVersion, aEnabled) {
+  this.name = aName;
+  this.description = aDescription;
+  this.version = aVersion;
+  this.disabled = !aEnabled;
+}
+
+PluginTag.prototype = {
+  name: null,
+  description: null,
+  version: null,
+  filename: null,
+  fullpath: null,
+  disabled: false,
+  blocklisted: false,
+  clicktoplay: true,
+
+  mimeTypes: [ PLUGIN_MIME_TYPE1, PLUGIN_MIME_TYPE2 ],
+
+  getMimeTypes: function(count) {
+    count.value = this.mimeTypes.length;
+    return this.mimeTypes;
+  }
+};
+
+// A container for the plugins handled by the fake plugin host.
+let gInstalledPlugins = [
+  new PluginTag("Java", "A mock Java plugin", "1.0", false /* Disabled */),
+  new PluginTag(FLASH_PLUGIN_NAME, FLASH_PLUGIN_DESC, FLASH_PLUGIN_VERSION, true),
+];
+
+// A fake plugin host for testing plugin telemetry environment.
+let PluginHost = {
+  getPluginTags: function(countRef) {
+    countRef.value = gInstalledPlugins.length;
+    return gInstalledPlugins;
+  },
+
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsIPluginHost)
+     || iid.equals(Ci.nsISupports))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  }
+}
+
+let PluginHostFactory = {
+  createInstance: function (outer, iid) {
+    if (outer != null)
+      throw Components.results.NS_ERROR_NO_AGGREGATION;
+    return PluginHost.QueryInterface(iid);
+  }
+};
+
+function registerFakePluginHost() {
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  registrar.registerFactory(PLUGINHOST_CID, "Fake Plugin Host",
+                            PLUGINHOST_CONTRACTID, PluginHostFactory);
+}
+
+/**
+ * Used to spoof the Persona Id.
+ */
+function spoofTheme(aId, aName, aDesc) {
+  return {
+    id: aId,
+    name: aName,
+    description: aDesc,
+    headerURL: "http://lwttest.invalid/a.png",
+    footerURL: "http://lwttest.invalid/b.png",
+    textcolor: Math.random().toString(),
+    accentcolor: Math.random().toString()
+  };
+}
 
 function spoofGfxAdapter() {
   try {
@@ -133,8 +246,8 @@ function checkBuildSection(data) {
   Assert.ok("build" in data, "There must be a build section in Environment.");
 
   for (let f in expectedInfo) {
-    Assert.ok(checkString(data.build[f]));
-    Assert.equal(data.build[f], expectedInfo[f]);
+    Assert.ok(checkString(data.build[f]), f + " must be a valid string.");
+    Assert.equal(data.build[f], expectedInfo[f], f + " must have the correct value.");
   }
 
   // Make sure architecture and hotfixVersion are in the environment.
@@ -163,7 +276,8 @@ function checkSettingsSection(data) {
   Assert.ok("settings" in data, "There must be a settings section in Environment.");
 
   for (let f in EXPECTED_FIELDS_TYPES) {
-    Assert.equal(typeof data.settings[f], EXPECTED_FIELDS_TYPES[f]);
+    Assert.equal(typeof data.settings[f], EXPECTED_FIELDS_TYPES[f],
+                 f + " must have the correct type.");
   }
 
   // Check "isDefaultBrowser" separately, as it can either be null or boolean.
@@ -194,7 +308,7 @@ function checkPartnerSection(data) {
   Assert.ok("partner" in data, "There must be a partner section in Environment.");
 
   for (let f in EXPECTED_FIELDS) {
-    Assert.equal(data.partner[f], EXPECTED_FIELDS[f]);
+    Assert.equal(data.partner[f], EXPECTED_FIELDS[f], f + " must have the correct value.");
   }
 
   // Check that "partnerNames" exists and contains the correct element.
@@ -216,11 +330,12 @@ function checkGfxAdapter(data) {
   };
 
   for (let f in EXPECTED_ADAPTER_FIELDS_TYPES) {
-    Assert.ok(f in data);
+    Assert.ok(f in data, f + " must be available.");
 
     if (data[f]) {
       // Since we have a non-null value, check if it has the correct type.
-      Assert.equal(typeof data[f], EXPECTED_ADAPTER_FIELDS_TYPES[f]);
+      Assert.equal(typeof data[f], EXPECTED_ADAPTER_FIELDS_TYPES[f],
+                   f + " must have the correct type.");
     }
   }
 }
@@ -233,7 +348,7 @@ function checkSystemSection(data) {
 
   // Make sure we have all the top level sections and fields.
   for (let f of EXPECTED_FIELDS) {
-    Assert.ok(f in data.system);
+    Assert.ok(f in data.system, f + " must be available.");
   }
 
   Assert.ok(Number.isFinite(data.system.memoryMB), "MemoryMB must be a number.");
@@ -307,12 +422,137 @@ function checkSystemSection(data) {
   catch (e) {}
 }
 
+function checkActiveAddon(data){
+  const EXPECTED_ADDON_FIELDS_TYPES = {
+    blocklisted: "boolean",
+    name: "string",
+    userDisabled: "boolean",
+    appDisabled: "boolean",
+    version: "string",
+    scope: "number",
+    type: "string",
+    foreignInstall: "boolean",
+    hasBinaryComponents: "boolean",
+    installDay: "number",
+    updateDay: "number",
+  };
+
+  for (let f in EXPECTED_ADDON_FIELDS_TYPES) {
+    Assert.ok(f in data, f + " must be available.");
+    Assert.equal(typeof data[f], EXPECTED_ADDON_FIELDS_TYPES[f],
+                 f + " must have the correct type.");
+  }
+
+  // We check "description" separately, as it can be null.
+  Assert.ok(checkNullOrString(data.description));
+}
+
+function checkPlugin(data) {
+  const EXPECTED_PLUGIN_FIELDS_TYPES = {
+    name: "string",
+    version: "string",
+    description: "string",
+    blocklisted: "boolean",
+    disabled: "boolean",
+    clicktoplay: "boolean",
+    updateDay: "number",
+  };
+
+  for (let f in EXPECTED_PLUGIN_FIELDS_TYPES) {
+    Assert.ok(f in data, f + " must be available.");
+    Assert.equal(typeof data[f], EXPECTED_PLUGIN_FIELDS_TYPES[f],
+                 f + " must have the correct type.");
+  }
+
+  Assert.ok(Array.isArray(data.mimeTypes));
+  for (let type of data.mimeTypes) {
+    Assert.ok(checkString(type));
+  }
+}
+
+function checkTheme(data) {
+  // "hasBinaryComponents" is not available when testing.
+  const EXPECTED_THEME_FIELDS_TYPES = {
+    id: "string",
+    blocklisted: "boolean",
+    name: "string",
+    userDisabled: "boolean",
+    appDisabled: "boolean",
+    version: "string",
+    scope: "number",
+    foreignInstall: "boolean",
+    installDay: "number",
+    updateDay: "number",
+  };
+
+  for (let f in EXPECTED_THEME_FIELDS_TYPES) {
+    Assert.ok(f in data, f + " must be available.");
+    Assert.equal(typeof data[f], EXPECTED_THEME_FIELDS_TYPES[f],
+                 f + " must have the correct type.");
+  }
+
+  // We check "description" separately, as it can be null.
+  Assert.ok(checkNullOrString(data.description));
+}
+
+function checkActiveGMPlugin(data) {
+  Assert.equal(typeof data.version, "string");
+  Assert.equal(typeof data.userDisabled, "boolean");
+  Assert.equal(typeof data.applyBackgroundUpdates, "boolean");
+}
+
+function checkAddonsSection(data) {
+  const EXPECTED_FIELDS = [
+    "activeAddons", "theme", "activePlugins", "activeGMPlugins", "activeExperiment",
+    "persona",
+  ];
+
+  Assert.ok("addons" in data, "There must be an addons section in Environment.");
+  for (let f of EXPECTED_FIELDS) {
+    Assert.ok(f in data.addons, f + " must be available.");
+  }
+
+  // Check the active addons, if available.
+  let activeAddons = data.addons.activeAddons;
+  for (let addon in activeAddons) {
+    checkActiveAddon(activeAddons[addon]);
+  }
+
+  // Check "theme" structure.
+  if (Object.keys(data.addons.theme).length !== 0) {
+    checkTheme(data.addons.theme);
+  }
+
+  // Check the active plugins.
+  Assert.ok(Array.isArray(data.addons.activePlugins));
+  for (let plugin of data.addons.activePlugins) {
+    checkPlugin(plugin);
+  }
+
+  // Check active GMPlugins
+  let activeGMPlugins = data.addons.activeGMPlugins;
+  for (let gmPlugin in activeGMPlugins) {
+    checkActiveGMPlugin(activeGMPlugins[gmPlugin]);
+  }
+
+  // Check the active Experiment
+  let experiment = data.addons.activeExperiment;
+  if (Object.keys(experiment).length !== 0) {
+    Assert.ok(checkString(experiment.id));
+    Assert.ok(checkString(experiment.branch));
+  }
+
+  // Check persona
+  Assert.ok(checkNullOrString(data.addons.persona));
+}
+
 function checkEnvironmentData(data) {
   checkBuildSection(data);
   checkSettingsSection(data);
   checkProfileSection(data);
   checkPartnerSection(data);
   checkSystemSection(data);
+  checkAddonsSection(data);
 }
 
 function run_test() {
@@ -320,6 +560,24 @@ function run_test() {
   spoofGfxAdapter();
   do_get_profile();
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
+
+  // Spoof the persona ID, but not on Gonk.
+  if (!gIsGonk) {
+    LightweightThemeManager.currentTheme =
+      spoofTheme(PERSONA_ID, PERSONA_NAME, PERSONA_DESCRIPTION);
+  }
+  // Register a fake plugin host for consistent flash version data.
+  registerFakePluginHost();
+
+  // Setup a webserver to serve Addons, Plugins, etc.
+  gHttpServer = new HttpServer();
+  gHttpServer.start(-1);
+  let port = gHttpServer.identity.primaryPort;
+  gHttpRoot = "http://localhost:" + port + "/";
+  gDataRoot = gHttpRoot + "data/";
+  gHttpServer.registerDirectory("/data/", do_get_cwd());
+  do_register_cleanup(() => gHttpServer.stop(() => {}));
+
   spoofPartnerInfo();
   // Spoof the the hotfixVersion
   Preferences.set("extensions.hotfix.lastVersion", APP_HOTFIX_VERSION);
@@ -457,6 +715,193 @@ add_task(function* test_prefWatch_prefReset() {
 
   // Unregister the listener.
   TelemetryEnvironment.unregisterChangeListener("testWatchPrefs_reset");
+  yield TelemetryEnvironment.shutdown();
+});
+
+add_task(function* test_addonsWatch_InterestingChange() {
+  const ADDON_INSTALL_URL = gDataRoot + "restartless.xpi";
+  const ADDON_ID = "tel-restartless-xpi@tests.mozilla.org";
+  // We only expect a single notification for each install, uninstall, enable, disable.
+  const EXPECTED_NOTIFICATIONS = 4;
+
+  yield TelemetryEnvironment.init();
+  let deferred = PromiseUtils.defer();
+  let receivedNotifications = 0;
+
+  let registerCheckpointPromise = (aExpected) => {
+    return new Promise(resolve => TelemetryEnvironment.registerChangeListener(
+      "testWatchAddons_Changes" + aExpected, () => {
+        receivedNotifications++;
+        resolve();
+      }));
+  };
+
+  let assertCheckpoint = (aExpected) => {
+    Assert.equal(receivedNotifications, aExpected);
+    TelemetryEnvironment.unregisterChangeListener("testWatchAddons_Changes" + aExpected);
+  };
+
+  // Test for receiving one notification after each change.
+  let checkpointPromise = registerCheckpointPromise(1);
+  yield AddonTestUtils.installXPIFromURL(ADDON_INSTALL_URL);
+  yield checkpointPromise;
+  assertCheckpoint(1);
+  
+  checkpointPromise = registerCheckpointPromise(2);
+  let addon = yield AddonTestUtils.getAddonById(ADDON_ID);
+  addon.userDisabled = true;
+  yield checkpointPromise;
+  assertCheckpoint(2);
+
+  checkpointPromise = registerCheckpointPromise(3);
+  addon.userDisabled = false;
+  yield checkpointPromise;
+  assertCheckpoint(3);
+
+  checkpointPromise = registerCheckpointPromise(4);
+  yield AddonTestUtils.uninstallAddonByID(ADDON_ID);
+  yield checkpointPromise;
+  assertCheckpoint(4);
+
+  yield TelemetryEnvironment.shutdown();
+
+  Assert.equal(receivedNotifications, EXPECTED_NOTIFICATIONS,
+               "We must only receive the notifications we expect.");
+});
+
+add_task(function* test_pluginsWatch_Add() {
+  yield TelemetryEnvironment.init();
+
+  let newPlugin = new PluginTag(PLUGIN2_NAME, PLUGIN2_DESC, PLUGIN2_VERSION, true);
+  gInstalledPlugins.push(newPlugin);
+
+  let deferred = PromiseUtils.defer();
+  let receivedNotifications = 0;
+  let callback = () => {
+    receivedNotifications++;
+    deferred.resolve();
+  };
+  TelemetryEnvironment.registerChangeListener("testWatchPlugins_Add", callback);
+
+  Services.obs.notifyObservers(null, PLUGIN_UPDATED_TOPIC, null);
+  yield deferred.promise;
+
+  TelemetryEnvironment.unregisterChangeListener("testWatchPlugins_Add");
+  yield TelemetryEnvironment.shutdown();
+
+  Assert.equal(receivedNotifications, 1, "We must only receive one notification.");
+});
+
+add_task(function* test_pluginsWatch_Remove() {
+  yield TelemetryEnvironment.init();
+
+  // Find the test plugin.
+  let plugin = gInstalledPlugins.find(plugin => (plugin.name == PLUGIN2_NAME));
+  Assert.ok(plugin, "The test plugin must exist.");
+
+  // Remove it from the PluginHost.
+  gInstalledPlugins = gInstalledPlugins.filter(p => p != plugin);
+
+  let deferred = PromiseUtils.defer();
+  let receivedNotifications = 0;
+  let callback = () => {
+    receivedNotifications++;
+    deferred.resolve();
+  };
+  TelemetryEnvironment.registerChangeListener("testWatchPlugins_Remove", callback);
+
+  Services.obs.notifyObservers(null, PLUGIN_UPDATED_TOPIC, null);
+  yield deferred.promise;
+
+  TelemetryEnvironment.unregisterChangeListener("testWatchPlugins_Remove");
+  yield TelemetryEnvironment.shutdown();
+
+  Assert.equal(receivedNotifications, 1, "We must only receive one notification.");
+});
+
+add_task(function* test_addonsWatch_NotInterestingChange() {
+  // We are not interested to dictionary addons changes.
+  const DICTIONARY_ADDON_INSTALL_URL = gDataRoot + "dictionary.xpi";
+  const INTERESTING_ADDON_INSTALL_URL = gDataRoot + "restartless.xpi";
+  yield TelemetryEnvironment.init();
+
+  let receivedNotifications = 0;
+  TelemetryEnvironment.registerChangeListener("testNotInteresting",
+                                              () => receivedNotifications++);
+
+  yield AddonTestUtils.installXPIFromURL(DICTIONARY_ADDON_INSTALL_URL);
+  yield AddonTestUtils.installXPIFromURL(INTERESTING_ADDON_INSTALL_URL);
+
+  Assert.equal(receivedNotifications, 1, "We must receive only one notification.");
+
+  TelemetryEnvironment.unregisterChangeListener("testNotInteresting");
+  yield TelemetryEnvironment.shutdown();
+});
+
+add_task(function* test_addonsAndPlugins() {
+  const ADDON_INSTALL_URL = gDataRoot + "restartless.xpi";
+  const ADDON_ID = "tel-restartless-xpi@tests.mozilla.org";
+  const ADDON_INSTALL_DATE = truncateToDays(Date.now());
+  const EXPECTED_ADDON_DATA = {
+    blocklisted: false,
+    description: "A restartless addon which gets enabled without a reboot.",
+    name: "XPI Telemetry Restartless Test",
+    userDisabled: false,
+    appDisabled: false,
+    version: "1.0",
+    scope: 1,
+    type: "extension",
+    foreignInstall: false,
+    hasBinaryComponents: false,
+    installDay: ADDON_INSTALL_DATE,
+    updateDay: ADDON_INSTALL_DATE,
+  };
+
+  const EXPECTED_PLUGIN_DATA = {
+    name: FLASH_PLUGIN_NAME,
+    version: FLASH_PLUGIN_VERSION,
+    description: FLASH_PLUGIN_DESC,
+    blocklisted: false,
+    disabled: false,
+    clicktoplay: true,
+  };
+
+  yield TelemetryEnvironment.init();
+
+  // Install an addon so we have some data.
+  yield AddonTestUtils.installXPIFromURL(ADDON_INSTALL_URL);
+
+  let data = yield TelemetryEnvironment.getEnvironmentData();
+  checkEnvironmentData(data);
+
+  // Check addon data.
+  Assert.ok(ADDON_ID in data.addons.activeAddons, "We must have one active addon.");
+  let targetAddon = data.addons.activeAddons[ADDON_ID];
+  for (let f in EXPECTED_ADDON_DATA) {
+    Assert.equal(targetAddon[f], EXPECTED_ADDON_DATA[f], f + " must have the correct value.");
+  }
+
+  // Check theme data.
+  let theme = data.addons.theme;
+  Assert.equal(theme.id, (PERSONA_ID + PERSONA_ID_SUFFIX));
+  Assert.equal(theme.name, PERSONA_NAME);
+  Assert.equal(theme.description, PERSONA_DESCRIPTION);
+
+  // Check plugin data.
+  Assert.equal(data.addons.activePlugins.length, 1, "We must have only one active plugin.");
+  let targetPlugin = data.addons.activePlugins[0];
+  for (let f in EXPECTED_PLUGIN_DATA) {
+    Assert.equal(targetPlugin[f], EXPECTED_PLUGIN_DATA[f], f + " must have the correct value.");
+  }
+
+  // Check plugin mime types.
+  Assert.ok(targetPlugin.mimeTypes.find(m => m == PLUGIN_MIME_TYPE1));
+  Assert.ok(targetPlugin.mimeTypes.find(m => m == PLUGIN_MIME_TYPE2));
+  Assert.ok(!targetPlugin.mimeTypes.find(m => m == "Not There."));
+
+  let personaId = (gIsGonk) ? null : PERSONA_ID;
+  Assert.equal(data.addons.persona, personaId, "The correct Persona Id must be reported.");
+
   yield TelemetryEnvironment.shutdown();
 });
 
