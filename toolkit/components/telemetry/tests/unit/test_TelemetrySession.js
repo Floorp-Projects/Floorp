@@ -29,6 +29,7 @@ Cu.import("resource://gre/modules/osfile.jsm", this);
 
 const PING_FORMAT_VERSION = 4;
 const PING_TYPE_MAIN = "main";
+const PING_TYPE_SAVED_SESSION = "saved-session";
 
 const REASON_SAVED_SESSION = "saved-session";
 const REASON_TEST_PING = "test-ping";
@@ -634,17 +635,18 @@ add_task(function* test_saveLoadPing() {
   let ping1 = decodeRequestPayload(request1);
   let ping2 = decodeRequestPayload(request2);
 
-  checkPingFormat(ping1, PING_TYPE_MAIN, true, true);
-  checkPingFormat(ping2, PING_TYPE_MAIN, true, true);
-
-  // Check we have the correct two requests. Ordering is not guaranteed.
-  if (ping1.payload.info.reason === REASON_TEST_PING) {
-    // Until we change MainPing according to bug 1120982, common ping payload
-    // will contain another nested payload.
+  // Check we have the correct two requests. Ordering is not guaranteed. The ping type
+  // is encoded in the URL.
+  let requestTypeComponent = request1.path.split("/")[4];
+  if (requestTypeComponent === PING_TYPE_MAIN) {
+    checkPingFormat(ping1, PING_TYPE_MAIN, true, true);
     checkPayload(ping1.payload, REASON_TEST_PING, 1);
+    checkPingFormat(ping2, PING_TYPE_SAVED_SESSION, true, true);
     checkPayload(ping2.payload, REASON_SAVED_SESSION, 1);
   } else {
+    checkPingFormat(ping1, PING_TYPE_SAVED_SESSION, true, true);
     checkPayload(ping1.payload, REASON_SAVED_SESSION, 1);
+    checkPingFormat(ping2, PING_TYPE_MAIN, true, true);
     checkPayload(ping2.payload, REASON_TEST_PING, 1);
   }
 });
