@@ -509,7 +509,12 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
     LOG(("nsHttpTransaction::OnSocketStatus [this=%p status=%x progress=%lld]\n",
         this, status, progress));
 
-    if (TimingEnabled()) {
+    // If the timing is enabled, and we are not using a persistent connection
+    // then the requestStart timestamp will be null, so we mark the timestamps
+    // for domainLookupStart/End and connectStart/End
+    // If we are using a persistent connection they will remain null,
+    // and the correct value will be returned in nsPerformance.
+    if (TimingEnabled() && GetRequestStart().IsNull()) {
         if (status == NS_NET_STATUS_RESOLVING_HOST) {
             SetDomainLookupStart(TimeStamp::Now());
         } else if (status == NS_NET_STATUS_RESOLVED_HOST) {
