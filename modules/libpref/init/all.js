@@ -4556,8 +4556,8 @@ pref("reader.parse-on-load.enabled", true);
 // is disabled by default.
 pref("reader.parse-on-load.force-enabled", false);
 
-// The default relative font size in reader mode (1-5)
-pref("reader.font_size", 3);
+// The default relative font size in reader mode (1-9)
+pref("reader.font_size", 5);
 
 // The default color scheme in reader mode (light, dark, sepia, auto)
 // auto = color automatically adjusts according to ambient light level
