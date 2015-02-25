@@ -187,6 +187,7 @@ function run_test() {
   gHttpServer.registerPrefixHandler("/submit/telemetry/", pingHandler);
   gHttpServer.start(-1);
   do_get_profile();
+  loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   // Send the needed startup notifications to the datareporting service
   // to ensure that it has been initialized.
