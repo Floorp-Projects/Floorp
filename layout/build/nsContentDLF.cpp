@@ -133,7 +133,7 @@ NS_IMETHODIMP
 nsContentDLF::CreateInstance(const char* aCommand,
                              nsIChannel* aChannel,
                              nsILoadGroup* aLoadGroup,
-                             const nsACString& aContentType, 
+                             const nsACString& aContentType,
                              nsIDocShell* aContainer,
                              nsISupports* aExtraInfo,
                              nsIStreamListener** aDocListener,
@@ -241,24 +241,25 @@ nsContentDLF::CreateInstance(const char* aCommand,
   }
 
   if (mozilla::DecoderTraits::ShouldHandleMediaType(contentType.get())) {
-    return CreateDocument(aCommand, 
+    return CreateDocument(aCommand,
                           aChannel, aLoadGroup,
                           aContainer, kVideoDocumentCID,
                           aDocListener, aDocViewer);
-  }  
+  }
 
   // Try image types
   if (IsImageContentType(contentType.get())) {
-    return CreateDocument(aCommand, 
+    return CreateDocument(aCommand,
                           aChannel, aLoadGroup,
                           aContainer, kImageDocumentCID,
                           aDocListener, aDocViewer);
   }
 
-  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
-  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
-  if(pluginHost &&
-     pluginHost->PluginExistsForType(contentType.get())) {
+  nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
+  // Don't exclude disabled plugins, which will still trigger the "this plugin
+  // is disabled" placeholder.
+  if (pluginHost && pluginHost->HavePluginForType(contentType,
+                                                  nsPluginHost::eExcludeNone)) {
     return CreateDocument(aCommand,
                           aChannel, aLoadGroup,
                           aContainer, kPluginDocumentCID,

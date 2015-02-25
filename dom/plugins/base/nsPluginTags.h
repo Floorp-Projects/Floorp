@@ -106,8 +106,16 @@ public:
   int64_t       mLastModifiedTime;
   nsCOMPtr<nsITimer> mUnloadTimer;
 
-  uint32_t      GetBlocklistState();
   void          InvalidateBlocklistState();
+
+  // Returns true if this plugin claims it supports this MIME type.  The
+  // comparison is done ASCII-case-insensitively.
+  bool          HasMimeType(const nsACString & aMimeType) const;
+  // Returns true if this plugin claims it supports the given extension.  In hat
+  // case, aMatchingType is set to the MIME type the plugin claims corresponds
+  // to this extension.  Again, the extension is done ASCII-case-insensitively.
+  bool          HasExtension(const nsACString & aExtension,
+                             /* out */ nsACString & aMatchingType) const;
 
 private:
   virtual ~nsPluginTag();
