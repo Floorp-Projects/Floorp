@@ -458,9 +458,17 @@ let Printing = {
       printSettings = null;
     }
 
-    let print = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIWebBrowserPrint);
-    print.print(printSettings, null);
+    let rv = Cr.NS_OK;
+    try {
+      let print = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebBrowserPrint);
+      print.print(printSettings, null);
+    } catch(e) {
+      // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
+      // causing an exception to be thrown which we catch here.
+      rv = e.result;
+    }
+    sendAsyncMessage("Printing:Print:Done", { rv }, { printSettings });
   },
 
   updatePageCount() {
