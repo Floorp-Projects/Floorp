@@ -858,15 +858,13 @@ class GeneratedFile(ContextDerived):
 
     __slots__ = (
         'script',
-        'method',
         'output',
         'inputs',
     )
 
-    def __init__(self, context, script, method, output, inputs):
+    def __init__(self, context, script, output, inputs):
         ContextDerived.__init__(self, context)
         self.script = script
-        self.method = method
         self.output = output
         self.inputs = inputs
 

@@ -5,7 +5,7 @@
 GENERATED_FILES += [ 'bar.c', 'foo.c', 'quux.c' ]
 
 bar = GENERATED_FILES['bar.c']
-bar.script = 'generate-bar.py:baz'
+bar.script = 'generate-bar.py'
 
 foo = GENERATED_FILES['foo.c']
 foo.script = 'generate-foo.py'

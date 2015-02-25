@@ -526,14 +526,6 @@ VARIABLES = {
         supported for passing to scripts, and that all arguments provided
         to the script should be filenames relative to the directory in which
         the moz.build file is located.
-
-        To enable using the same script for generating multiple files with
-        slightly different non-filename parameters, alternative entry points
-        into ``script`` can be specified::
-
-          GENERATED_FILES += ['bar.c']
-          bar = GENERATED_FILES['bar.c']
-          bar.script = 'generate.py:make_bar'
         """, 'export'),
 
     'DEFINES': (OrderedDict, dict,

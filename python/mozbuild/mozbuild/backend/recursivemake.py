@@ -409,12 +409,11 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('GENERATED_FILES += %s\n' % obj.output)
             if obj.script:
                 backend_file.write("""{output}: {script}{inputs}
-\t$(call py_action,file_generate,{script} {method} {output}{inputs})
+\t$(call py_action,file_generate,{script} {output}{inputs})
 
 """.format(output=obj.output,
            inputs=' ' + ' '.join(obj.inputs) if obj.inputs else '',
-           script=obj.script,
-           method=obj.method))
+           script=obj.script))
 
         elif isinstance(obj, TestHarnessFiles):
             self._process_test_harness_files(obj, backend_file)
