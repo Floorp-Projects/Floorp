@@ -222,19 +222,21 @@
     _(notEqual)                      \
     _(greaterThan)                   \
     _(greaterThanOrEqual)
+#define WITH_COMMONX4_SIMD_OP(_)     \
+    _(withX)                         \
+    _(withY)                         \
+    _(withZ)                         \
+    _(withW)
 #define FOREACH_COMMONX4_SIMD_OP(_)  \
     ARITH_COMMONX4_SIMD_OP(_)        \
     BITWISE_COMMONX4_SIMD_OP(_)      \
     COMP_COMMONX4_SIMD_OP(_)         \
+    WITH_COMMONX4_SIMD_OP(_)         \
     _(bitselect)                     \
     _(select)                        \
     _(swizzle)                       \
     _(shuffle)                       \
     _(splat)                         \
-    _(withX)                         \
-    _(withY)                         \
-    _(withZ)                         \
-    _(withW)                         \
     _(not)                           \
     _(neg)                           \
     _(load)                          \

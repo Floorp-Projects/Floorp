@@ -977,6 +977,13 @@ MSimdBinaryComp::printOpcode(FILE *fp) const
     PrintOpcodeOperation(this, fp);
 }
 
+void
+MSimdInsertElement::printOpcode(FILE *fp) const
+{
+    MDefinition::printOpcode(fp);
+    fprintf(fp, " (%s)", MSimdInsertElement::LaneName(lane()));
+}
+
 MCloneLiteral *
 MCloneLiteral::New(TempAllocator &alloc, MDefinition *obj)
 {
