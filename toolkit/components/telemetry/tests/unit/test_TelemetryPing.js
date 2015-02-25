@@ -220,6 +220,14 @@ add_task(function* test_simplePing() {
 
   yield sendPing(false, false);
   let request = yield gRequestIterator.next();
+
+  // Check that we have a version query parameter in the URL.
+  Assert.notEqual(request.queryString, "");
+
+  // Make sure the version in the query string matches the new ping format version.
+  let params = request.queryString.split("&");
+  Assert.ok(params.find(p => p == ("v=" + PING_FORMAT_VERSION)));
+
   let ping = decodeRequestPayload(request);
   checkPingFormat(ping, TEST_PING_TYPE, false, false);
 });

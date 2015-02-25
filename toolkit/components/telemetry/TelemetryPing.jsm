@@ -554,7 +554,9 @@ let Impl = {
   doPing: function doPing(ping, isPersisted) {
     this._log.trace("doPing - Server " + this._server + ", Persisted " + isPersisted);
     let deferred = Promise.defer();
-    let url = this._server + this.submissionPath(ping);
+    let isNewPing = isNewPingFormat(ping);
+    let version = isNewPing ? PING_FORMAT_VERSION : 1;
+    let url = this._server + this.submissionPath(ping) + "?v=" + version;
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance(Ci.nsIXMLHttpRequest);
     request.mozBackgroundRequest = true;
@@ -587,7 +589,7 @@ let Impl = {
     request.addEventListener("load", handler(true).bind(this), false);
 
     // If that's a legacy ping format, just send its payload.
-    let networkPayload = isNewPingFormat(ping) ? ping : ping.payload;
+    let networkPayload = isNewPing ? ping : ping.payload;
     request.setRequestHeader("Content-Encoding", "gzip");
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
