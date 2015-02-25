@@ -1,0 +1,486 @@
+<html>
+  <head>
+    <meta charset='UTF-8'>
+    <script src='/tests/SimpleTest/SimpleTest.js'></script>
+    <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+  </head>
+  <body>
+<script id='vs' type='x-shader/x-vertex'>
+
+attribute vec2 aVertCoord;
+
+void main(void) {
+  gl_Position = vec4(aVertCoord, 0.0, 1.0);
+}
+
+</script>
+<script id='fs' type='x-shader/x-fragment'>
+
+precision mediump float; // 💩
+
+uniform vec4 uFragColor;
+
+void main(void) {
+  gl_FragColor = uFragColor;
+}
+
+</script>
+
+<canvas id='c' width='200' height='200'></canvas>
+
+<script>
+
+function GetGLSLByElemId(elemId) {
+  var elem = document.getElementById(elemId);
+  if (!elem)
+    throw 'Bad `elemId`: ' + elemId;
+
+  return elem.innerHTML.trim();
+}
+
+function ProgramByElemIds(gl, vsId, fsId) {
+  var vs = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vs, GetGLSLByElemId(vsId));
+  gl.compileShader(vs);
+
+  var fs = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fs, GetGLSLByElemId(fsId));
+  gl.compileShader(fs);
+
+  var prog = gl.createProgram();
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+
+  gl.linkProgram(prog);
+
+  var success = gl.getProgramParameter(prog, gl.LINK_STATUS);
+  if (success)
+      return prog;
+
+  console.log('Error linking program for \'' + vsId + '\' and \'' + fsId + '\'.');
+  console.log('\nLink log: ' + gl.getProgramInfoLog(prog));
+  console.log('\nVert shader log: ' + gl.getShaderInfoLog(vs));
+  console.log('\nFrag shader log: ' + gl.getShaderInfoLog(fs));
+  return null;
+}
+
+var RGBA = 0x1908;
+var UNSIGNED_BYTE = 0x1401;
+var FLOAT = 0x1406;
+var HALF_FLOAT_OES = 0x8D61;
+var HALF_FLOAT = 0x140B;
+var RGBA4 = 0x8056;
+var RGBA8 = 0x8058;
+var RGBA32F = 0x8814;
+var RGBA16F = 0x881A;
+
+function EnumName(val) {
+  switch (val) {
+    case RGBA:
+      return 'RGBA';
+    case UNSIGNED_BYTE:
+      return 'UNSIGNED_BYTE';
+    case FLOAT:
+      return 'FLOAT';
+    case HALF_FLOAT_OES:
+      return 'HALF_FLOAT_OES';
+    case HALF_FLOAT:
+      return 'HALF_FLOAT';
+    case RGBA4:
+      return 'RGBA4';
+    case RGBA32F:
+      return 'RGBA32F';
+    default:
+      throw 'Unknown enum: 0x' + val.toString(16);
+  }
+}
+
+var gl;
+
+function RGBAToString(arr) {
+  return '[' + arr[0].toPrecision(4) + ', ' +
+               arr[1].toPrecision(4) + ', ' +
+               arr[2].toPrecision(4) + ', ' +
+               arr[3].toPrecision(4) + ']';
+}
+
+function TestScreenColor(gl, isFBFloat, r, g, b, a) {
+  var readType = isFBFloat ? FLOAT : UNSIGNED_BYTE;
+
+  var arr;
+  switch (readType) {
+    case gl.UNSIGNED_BYTE:
+      arr = new Uint8Array(4);
+      break;
+
+    case gl.FLOAT:
+      arr = new Float32Array(4);
+      break;
+
+    default:
+      throw 'Bad `readType`.';
+  }
+
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, readType, arr);
+
+  var err = gl.getError();
+  ok(err == 0, 'Should be no errors.');
+  if (err)
+    return;
+
+  var floatArr;
+  switch (readType) {
+    case gl.UNSIGNED_BYTE:
+      floatArr = new Float32Array(4);
+      floatArr[0] = arr[0] / 255.0;
+      floatArr[1] = arr[1] / 255.0;
+      floatArr[2] = arr[2] / 255.0;
+      floatArr[3] = arr[3] / 255.0;
+      break;
+
+    case gl.FLOAT:
+      floatArr = arr;
+      break;
+
+    default:
+      throw 'Bad `readType`.';
+  }
+
+  var testText = RGBAToString(floatArr);
+  var refText = RGBAToString([r, g, b, a]);
+
+  var eps = 1.0 / 255.0;
+  var isSame = (Math.abs(floatArr[0] - r) < eps &&
+                Math.abs(floatArr[1] - g) < eps &&
+                Math.abs(floatArr[2] - b) < eps &&
+                Math.abs(floatArr[3] - a) < eps);
+
+  ok(isSame, 'Should be ' + refText + ', was ' + testText + ',');
+}
+
+function TestReadFormat(gl, isFBFloat, format, type) {
+  var err = gl.getError();
+  if (err) {
+    ok(false, 'Should be no error at start of TestReadFormat(). (0x' + err.toString(16) + ')');
+    return;
+  }
+  var implFormat = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_FORMAT);
+  var implType = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_TYPE);
+
+  var err = gl.getError();
+  if (err) {
+    ok(false, 'Should be no error at start2 of TestReadFormat(). (0x' + err.toString(16) + ')');
+    return;
+  }
+
+  var defaultReadType = isFBFloat ? FLOAT : UNSIGNED_BYTE;
+
+  var formatOk = (format == gl.RGBA &&
+                  type == defaultReadType);
+
+  if (format == implFormat &&
+      type == implType)
+  {
+    formatOk = true;
+  }
+
+  var w = 1;
+  var h = 1;
+  var channels = 4;
+  var arrSize = w * h * channels;
+
+  var arr;
+  switch (type) {
+    case UNSIGNED_BYTE:
+      arr = new Uint8Array(arrSize);
+      break;
+
+    case FLOAT:
+      arr = new Float32Array(arrSize);
+      break;
+
+    case HALF_FLOAT_OES:
+    case HALF_FLOAT:
+      arr = new Uint16Array(arrSize);
+      break;
+
+    default:
+      throw 'Bad `type`: 0x' + type.toString(16);
+  }
+
+  gl.readPixels(0, 0, 1, 1, format, type, arr);
+  var wasOk = gl.getError() == 0;
+
+  var text = 'Should ' + (formatOk ? '' : 'not ') + 'allow reading with ' +
+             EnumName(format) + '/' + EnumName(type) + '.'
+  ok(wasOk == formatOk, text);
+}
+
+function TestError(gl, expectedErr, descText) {
+  var err = gl.getError();
+
+  while (gl.getError()) {}
+
+  ok(err == expectedErr,
+     descText + ': Error should be 0x' + expectedErr.toString(16) + ', was 0x' +
+     err.toString(16) + '.');
+
+  return err;
+}
+
+function AttachRBToCurFB(gl, sizedFormat) {
+  var isSupported;
+  switch (sizedFormat) {
+  case RGBA4:
+    isSupported = true;
+    break;
+
+  case RGBA16F:
+    isSupported = !!gl.getExtension('EXT_color_buffer_half_float');
+    break;
+
+  case RGBA32F:
+    isSupported = !!gl.getExtension('WEBGL_color_buffer_float');
+    break;
+
+  default:
+    throw 'Bad `sizedFormat`.';
+  }
+
+  var rb = gl.createRenderbuffer();
+  gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+  gl.renderbufferStorage(gl.RENDERBUFFER, sizedFormat, 1, 1);
+
+  var correctError = isSupported ? 0 : gl.INVALID_ENUM;
+  var err = TestError(gl, correctError, 'RB specification with supported format');
+  if (err)
+    return false;
+
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, rb);
+
+  var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  var isComplete = (status == gl.FRAMEBUFFER_COMPLETE);
+  ok(isComplete, 'Framebuffer should be complete after RB attachment.');
+  return isComplete;
+}
+
+function AttachTexToCurFB(gl, sizedFormat) {
+  var canCreate;
+  var isAttachGuaranteed;
+  var format;
+  var type;
+
+  switch (sizedFormat) {
+  case RGBA8:
+    canCreate = true;
+    isAttachGuaranteed = true;
+    format = RGBA;
+    type = UNSIGNED_BYTE;
+    break;
+
+  case RGBA16F:
+    canCreate = !!gl.getExtension('OES_texture_half_float');
+    isAttachGuaranteed = !!gl.getExtension('EXT_color_buffer_half_float');
+    format = RGBA;
+    type = HALF_FLOAT_OES;
+    break;
+
+  case RGBA32F:
+    canCreate = !!gl.getExtension('OES_texture_float');
+    isAttachGuaranteed = !!gl.getExtension('WEBGL_color_buffer_float');
+    format = RGBA;
+    type = FLOAT;
+    break;
+
+  default:
+    throw 'Bad `sizedFormat`.';
+  }
+
+  var tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, format, 1, 1, 0, format, type, null);
+
+  var correctError = canCreate ? 0 : gl.INVALID_ENUM;
+  var err = TestError(gl, correctError, 'Tex specification with supported format');
+  if (err)
+    return false;
+
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+
+  var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  var isComplete = (status == gl.FRAMEBUFFER_COMPLETE);
+
+  if (!isAttachGuaranteed && !isComplete)
+    todo(false, 'Framebuffer needn\'t be complete after tex attachment.');
+  else
+    ok(isComplete, 'Framebuffer should be complete after tex attachment.');
+
+  return isComplete;
+}
+
+function IsFormatFloat(sizedFormat) {
+  switch (sizedFormat) {
+  case RGBA4:
+  case RGBA8:
+    return false;
+
+  case RGBA16F:
+  case RGBA32F:
+    return true;
+
+  default:
+    throw 'Bad `sizedFormat`.';
+  }
+}
+
+function TestType(gl, prog, isTex, sizedFormat) {
+  TestError(gl, 0, 'At start of TestRB()');
+
+  var isAttached = isTex ? AttachTexToCurFB(gl, sizedFormat)
+                         : AttachRBToCurFB(gl, sizedFormat);
+  if (!isAttached)
+    return;
+
+  var isFormatFloat = IsFormatFloat(sizedFormat);
+
+  TestReadFormat(gl, isFormatFloat, gl.RGBA, gl.UNSIGNED_BYTE);
+  TestReadFormat(gl, isFormatFloat, gl.RGBA, gl.FLOAT);
+  TestReadFormat(gl, isFormatFloat, gl.RGBA, HALF_FLOAT);
+  TestReadFormat(gl, isFormatFloat, gl.RGBA, HALF_FLOAT_OES);
+
+  //////////////////////////////////////
+
+  ok(true, 'Drawing:');
+
+  gl.clearColor(0.0, 1.5, 0.5, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  if (isFormatFloat)
+    TestScreenColor(gl, isFormatFloat, 0, 1.5, 0.5, 1);
+  else
+    TestScreenColor(gl, isFormatFloat, 0, 1, 0.5, 1);
+
+  ////////
+
+  ok(true, 'Clearing:');
+
+  gl.uniform4f(prog.uFragColor, 0, 0.5, 1.5, 1);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  if (isFormatFloat)
+    TestScreenColor(gl, isFormatFloat, 0, 0.5, 1.5, 1);
+  else
+    TestScreenColor(gl, isFormatFloat, 0, 0.5, 1.0, 1);
+
+  ////////
+
+  ok(true, 'Blending:');
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.CONSTANT_COLOR, gl.ZERO);
+  gl.blendColor(0, 10, 0.1, 1);
+
+  gl.uniform4f(prog.uFragColor, 0, 0.5, 15.0, 1);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  if (isFormatFloat)
+    TestScreenColor(gl, isFormatFloat, 0, 5.0, 1.5, 1);
+  else
+    TestScreenColor(gl, isFormatFloat, 0, 0.5, 0.1, 1);
+
+  gl.disable(gl.BLEND);
+
+  //////////////////////////////////////
+}
+
+// Give ourselves a scope to return early from:
+(function() {
+  var canvas = document.getElementById('c');
+  var attribs = {
+    antialias: false,
+    depth: false,
+  };
+  gl = canvas.getContext('experimental-webgl', attribs);
+  if (!gl) {
+    todo(false, 'WebGL is unavailable.');
+    return;
+  }
+
+  var cbf = gl.getExtension('WEBGL_color_buffer_float');
+  var cbhf = gl.getExtension('EXT_color_buffer_half_float');
+
+  //////////////////////////////////////
+
+  gl.viewport(0, 0, 1, 1);
+
+  var prog = ProgramByElemIds(gl, 'vs', 'fs');
+  ok(prog, 'Program should link.');
+  if (!prog)
+    return;
+
+  prog.aVertCoord = gl.getAttribLocation(prog, 'aVertCoord');
+  prog.uFragColor = gl.getUniformLocation(prog, 'uFragColor');
+
+  gl.useProgram(prog);
+
+  var arr = new Float32Array([
+    -1, -1,
+     1, -1,
+    -1,  1,
+     1,  1,
+  ]);
+  var vb = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+  gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+  //////////////////////////////////////
+
+  var fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+  error = gl.getError();
+  ok(error == 0, 'Should be no errors after setup. (0x' + error.toString(16) + ')');
+
+  //////////////////////////////////////
+  ok(true, '---------------------------------------------------------------------------');
+  ok(true, 'RGBA8 texture');
+  TestType(gl, prog, true, RGBA8);
+
+  ok(true, '---------------------------------------------------------------------------');
+  ok(true, 'RGBA16F texture');
+  TestType(gl, prog, true, RGBA16F);
+
+  ok(true, '---------------------------------------------------------------------------');
+  ok(true, 'RGBA32F texture');
+  TestType(gl, prog, true, RGBA32F);
+
+  ////////
+
+  ok(true, '---------------------------------------------------------------------------');
+  ok(true, 'RGBA4 renderbuffer');
+  TestType(gl, prog, false, RGBA4);
+
+  ok(true, '---------------------------------------------------------------------------');
+  ok(true, 'RGBA16F renderbuffer');
+  TestType(gl, prog, false, RGBA16F);
+
+  ok(true, '---------------------------------------------------------------------------');
+  ok(true, 'RGBA32F renderbuffer');
+  TestType(gl, prog, false, RGBA32F);
+
+  ok(true, '---------------------------------------------------------------------------');
+  //////////////////////////////////////
+
+  error = gl.getError();
+  ok(error == 0, 'Should be no errors after test.');
+
+  ok(true, 'TEST COMPLETE');
+})();
+
+</script>
+
+  </body>
+</html>

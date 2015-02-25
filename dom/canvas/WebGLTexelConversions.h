@@ -105,7 +105,7 @@ unpackFromFloat16(uint16_t v)
     uint16_t exp = (v >> 10) & 0x001F;
     uint16_t mantissa = v & 0x03FF;
 
-    if (exp) {
+    if (!exp) {
         // Handle denormalized numbers
         // Adapted from: OpenGL ES 2.0 Programming Guide Appx.
         // Converting Float to Half-Float

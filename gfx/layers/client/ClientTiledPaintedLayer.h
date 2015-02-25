@@ -107,6 +107,13 @@ private:
   bool IsScrollingOnCompositor(const FrameMetrics& aParentMetrics);
 
   /**
+   * Check if we should use progressive draw on this layer. We will
+   * disable progressive draw based on a preference or if the layer
+   * is not being scrolled.
+   */
+  bool UseProgressiveDraw();
+
+  /**
    * Helper function to do the high-precision paint.
    * This function returns true if it updated the paint buffer.
    */

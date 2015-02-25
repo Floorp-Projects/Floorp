@@ -9,6 +9,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
+#include "mozilla/ipc/URIParams.h"
+
 #include "nsNetUtil.h"
 #include "nsEscape.h"
 #include "nsCRT.h"
@@ -17,6 +19,12 @@
 //// nsNullPrincipalURI
 
 nsNullPrincipalURI::nsNullPrincipalURI(const nsCString &aSpec)
+{
+  InitializeFromSpec(aSpec);
+}
+
+void
+nsNullPrincipalURI::InitializeFromSpec(const nsCString &aSpec)
 {
   int32_t dividerPosition = aSpec.FindChar(':');
   NS_ASSERTION(dividerPosition != -1, "Malformed URI!");
@@ -44,6 +52,7 @@ NS_INTERFACE_MAP_BEGIN(nsNullPrincipalURI)
   else
   NS_INTERFACE_MAP_ENTRY(nsIURI)
   NS_INTERFACE_MAP_ENTRY(nsISizeOf)
+  NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableURI)
 NS_INTERFACE_MAP_END
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -270,6 +279,31 @@ nsNullPrincipalURI::SchemeIs(const char *aScheme, bool *_schemeIs)
 {
   *_schemeIs = (0 == nsCRT::strcasecmp(mScheme.get(), aScheme));
   return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// nsIIPCSerializableURI
+
+void
+nsNullPrincipalURI::Serialize(mozilla::ipc::URIParams &aParams)
+{
+  aParams = mozilla::ipc::NullPrincipalURIParams();
+}
+
+bool
+nsNullPrincipalURI::Deserialize(const mozilla::ipc::URIParams &aParams)
+{
+  if (aParams.type() != mozilla::ipc::URIParams::TNullPrincipalURIParams) {
+    MOZ_ASSERT_UNREACHABLE("unexpected URIParams type");
+    return false;
+  }
+
+  nsCString str;
+  nsresult rv = nsNullPrincipal::GenerateNullPrincipalURI(str);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  InitializeFromSpec(str);
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

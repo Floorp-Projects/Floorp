@@ -1693,10 +1693,11 @@ DrawTargetCG::Init(BackendType aType,
 {
   // XXX: we should come up with some consistent semantics for dealing
   // with zero area drawtargets
-  if (aSize.width <= 0 || aSize.height <= 0 ||
-      // 32767 is the maximum size supported by cairo
-      // we clamp to that to make it easier to interoperate
-      aSize.width > 32767 || aSize.height > 32767) {
+  if (aSize.width <= 0 ||
+      aSize.height <= 0 ||
+      size_t(aSize.width) > GetMaxSurfaceSize() ||
+      size_t(aSize.height) > GetMaxSurfaceSize())
+  {
     gfxWarning() << "Failed to Init() DrawTargetCG because of bad size.";
     mColorSpace = nullptr;
     mCg = nullptr;
