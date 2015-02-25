@@ -46,6 +46,8 @@ const PREF_UPDATE_AUTODOWNLOAD = "app.update.auto";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
+const EXPERIMENTS_CHANGED_TOPIC = "experiments-changed";
+
 /**
  * Turn a millisecond timestamp into a day timestamp.
  *
@@ -234,6 +236,9 @@ this.TelemetryEnvironment = {
   // Every entry contains a recording policy (RECORD_PREF_*).
   _watchedPrefs: null,
 
+  // The Addons change listener, init by |_startWatchingAddons| .
+  _addonsListener: null,
+
   /**
    * Initialize TelemetryEnvironment.
    */
@@ -247,6 +252,7 @@ this.TelemetryEnvironment = {
     this._log.trace("init");
     this._shutdown = false;
     this._startWatchingPrefs();
+    this._startWatchingAddons();
   },
 
   /**
@@ -262,6 +268,7 @@ this.TelemetryEnvironment = {
     this._log.trace("shutdown");
     this._shutdown = true;
     this._stopWatchingPrefs();
+    this._stopWatchingAddons();
     this._changeListeners.clear();
     yield this._collectTask;
   }),
@@ -819,6 +826,90 @@ this.TelemetryEnvironment = {
 
     return addonData;
   }),
+
+  /**
+   * Start watching the addons for changes.
+   */
+  _startWatchingAddons: function () {
+    // Define a listener to catch addons changes from the AddonManager. This part is
+    // tricky, as we only want to detect when the set of active addons changes without
+    // getting double notifications.
+    //
+    // We identified the following cases:
+    //
+    // * onEnabled:   Gets called when a restartless addon is enabled. Doesn't get called
+    //                if the restartless addon is installed and directly enabled.
+    // * onDisabled:  Gets called when disabling a restartless addon or can get called when
+    //                uninstalling a restartless addon from the UI (see bug 612168).
+    // * onInstalled: Gets called for all addon installs.
+    // * onUninstalling: Called the moment before addon uninstall happens.
+
+    this._addonsListener = {
+      onEnabled: addon => {
+        this._log.trace("_addonsListener - onEnabled " + addon.id);
+        this._onActiveAddonsChanged(addon)
+      },
+      onDisabled: addon => {
+        this._log.trace("_addonsListener - onDisabled " + addon.id);
+        this._onActiveAddonsChanged(addon);
+      },
+      onInstalled: addon => {
+        this._log.trace("_addonsListener - onInstalled " + addon.id +
+                        ", isActive: " + addon.isActive);
+        if (addon.isActive) {
+          this._onActiveAddonsChanged(addon);
+        }
+      },
+      onUninstalling: (addon, requiresRestart) => {
+        this._log.trace("_addonsListener - onUninstalling " + addon.id +
+                        ", isActive: " + addon.isActive +
+                        ", requiresRestart: " + requiresRestart);
+        if (!addon.isActive || requiresRestart) {
+          return;
+        }
+        this._onActiveAddonsChanged(addon);
+      },
+    };
+
+    AddonManager.addAddonListener(this._addonsListener);
+
+    // Watch for experiment changes as well.
+    Services.obs.addObserver(this, EXPERIMENTS_CHANGED_TOPIC, false);
+  },
+
+  /**
+   * Stop watching addons for changes.
+   */
+  _stopWatchingAddons: function () {
+    AddonManager.removeAddonListener(this._addonsListener);
+    Services.obs.removeObserver(this, EXPERIMENTS_CHANGED_TOPIC);
+    this._addonsListener = null;
+  },
+
+  /**
+   * Triggered when an addon changes its state.
+   * @param aAddon The addon which triggered the change.
+   */
+  _onActiveAddonsChanged: function (aAddon) {
+    const INTERESTING_ADDONS = [ "extension", "plugin", "service", "theme" ];
+
+    this._log.trace("_onActiveAddonsChanged - id " + aAddon.id + ", type " + aAddon.type);
+
+    if (INTERESTING_ADDONS.find(addon => addon == aAddon.type)) {
+      this._onEnvironmentChange("addons-changed");
+    }
+  },
+
+  /**
+   * Handle experiment change notifications.
+   */
+  observe: function (aSubject, aTopic, aData) {
+    this._log.trace("observe - Topic " + aTopic);
+
+    if (aTopic == EXPERIMENTS_CHANGED_TOPIC) {
+      this._onEnvironmentChange("experiment-changed");
+    }
+  },
 
   /**
    * Get the environment data in object form.
