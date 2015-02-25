@@ -115,7 +115,6 @@ public:
   nsresult      Collapse(nsINode* aParentNode, int32_t aOffset);
   nsresult      Extend(nsINode* aParentNode, int32_t aOffset);
   nsRange*      GetRangeAt(int32_t aIndex);
-  int32_t GetRangeCount() { return mRanges.Length(); }
 
   // Get the anchor-to-focus range if we don't care which end is
   // anchor and which end is focus.
