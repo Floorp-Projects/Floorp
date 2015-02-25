@@ -52,13 +52,13 @@ add_test(function test_read_pbr() {
   };
 
   let successCb = function successCb(pbrs) {
-    do_check_eq(pbrs[0].adn.fileId, 0x4f3a);
-    do_check_eq(pbrs.length, 1);
+    equal(pbrs[0].adn.fileId, 0x4f3a);
+    equal(pbrs.length, 1);
   };
 
   let errorCb = function errorCb(errorMsg) {
     do_print("Reading EF_PBR failed, msg = " + errorMsg);
-    do_check_true(false);
+    ok(false);
   };
 
   record.readPBR(successCb, errorCb);
@@ -69,7 +69,7 @@ add_test(function test_read_pbr() {
     ifLoadEF = true;
   }
   record.readPBR(successCb, errorCb);
-  do_check_false(ifLoadEF);
+  ok(!ifLoadEF);
 
   run_next_test();
 });
@@ -117,13 +117,13 @@ add_test(function test_read_email() {
 
     // fileId and recordNumber are dummy arguments.
     record.readEmail(fileId, type, recordNumber, function(email) {
-      do_check_eq(email, expectedResult);
+      equal(email, expectedResult);
     });
   };
 
   doTestReadEmail(ICC_USIM_TYPE1_TAG, "email@mozilla.com$#");
   doTestReadEmail(ICC_USIM_TYPE2_TAG, "email@mozilla.com");
-  do_check_eq(record._emailRecordSize, recordSize);
+  equal(record._emailRecordSize, recordSize);
 
   run_next_test();
 });
@@ -164,29 +164,29 @@ add_test(function test_update_email() {
       count++;
 
       // Request Type.
-      do_check_eq(this.readInt32(), REQUEST_SIM_IO);
+      equal(this.readInt32(), REQUEST_SIM_IO);
 
       // Token : we don't care
       this.readInt32();
 
       // command.
-      do_check_eq(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
+      equal(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
 
       // fileId.
-      do_check_eq(this.readInt32(), fileId);
+      equal(this.readInt32(), fileId);
 
       // pathId.
-      do_check_eq(this.readString(),
+      equal(this.readString(),
                   EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK);
 
       // p1.
-      do_check_eq(this.readInt32(), recordNumber);
+      equal(this.readInt32(), recordNumber);
 
       // p2.
-      do_check_eq(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
+      equal(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
 
       // p3.
-      do_check_eq(this.readInt32(), recordSize);
+      equal(this.readInt32(), recordSize);
 
       // data.
       let strLen = this.readInt32();
@@ -195,14 +195,14 @@ add_test(function test_update_email() {
         email = iccHelper.read8BitUnpackedToString(recordSize);
       } else {
         email = iccHelper.read8BitUnpackedToString(recordSize - 2);
-        do_check_eq(pduHelper.readHexOctet(), pbr.adn.sfi);
-        do_check_eq(pduHelper.readHexOctet(), expectedAdnRecordId);
+        equal(pduHelper.readHexOctet(), pbr.adn.sfi);
+        equal(pduHelper.readHexOctet(), expectedAdnRecordId);
       }
       this.readStringDelimiter(strLen);
-      do_check_eq(email, expectedEmail);
+      equal(email, expectedEmail);
 
       // pin2.
-      do_check_eq(this.readString(), null);
+      equal(this.readString(), null);
 
       if (!ril.v5Legacy) {
         // AID. Ignore because it's from modem.
@@ -262,12 +262,12 @@ add_test(function test_read_anr() {
 
     // fileId and recordNumber are dummy arguments.
     record.readANR(fileId, fileType, recordNumber, function(anr) {
-      do_check_eq(anr, expectedResult);
+      equal(anr, expectedResult);
     });
   };
 
   doTestReadAnr(ICC_USIM_TYPE1_TAG, "0123456");
-  do_check_eq(record._anrRecordSize, recordSize);
+  equal(record._anrRecordSize, recordSize);
 
   run_next_test();
 });
@@ -308,47 +308,47 @@ add_test(function test_update_anr() {
       count++;
 
       // Request Type.
-      do_check_eq(this.readInt32(), REQUEST_SIM_IO);
+      equal(this.readInt32(), REQUEST_SIM_IO);
 
       // Token : we don't care
       this.readInt32();
 
       // command.
-      do_check_eq(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
+      equal(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
 
       // fileId.
-      do_check_eq(this.readInt32(), fileId);
+      equal(this.readInt32(), fileId);
 
       // pathId.
-      do_check_eq(this.readString(),
+      equal(this.readString(),
                   EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK);
 
       // p1.
-      do_check_eq(this.readInt32(), recordNumber);
+      equal(this.readInt32(), recordNumber);
 
       // p2.
-      do_check_eq(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
+      equal(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
 
       // p3.
-      do_check_eq(this.readInt32(), recordSize);
+      equal(this.readInt32(), recordSize);
 
       // data.
       let strLen = this.readInt32();
       // EF_AAS, ignore.
       pduHelper.readHexOctet();
-      do_check_eq(iccHelper.readNumberWithLength(), expectedANR);
+      equal(iccHelper.readNumberWithLength(), expectedANR);
       // EF_CCP, ignore.
       pduHelper.readHexOctet();
       // EF_EXT1, ignore.
       pduHelper.readHexOctet();
       if (pbr.anr0.fileType === ICC_USIM_TYPE2_TAG) {
-        do_check_eq(pduHelper.readHexOctet(), pbr.adn.sfi);
-        do_check_eq(pduHelper.readHexOctet(), expectedAdnRecordId);
+        equal(pduHelper.readHexOctet(), pbr.adn.sfi);
+        equal(pduHelper.readHexOctet(), expectedAdnRecordId);
       }
       this.readStringDelimiter(strLen);
 
       // pin2.
-      do_check_eq(this.readString(), null);
+      equal(this.readString(), null);
 
       if (!ril.v5Legacy) {
         // AID. Ignore because it's from modem.
@@ -406,14 +406,14 @@ add_test(function test_read_iap() {
 
     let successCb = function successCb(iap) {
       for (let i = 0; i < iap.length; i++) {
-        do_check_eq(expectedIAP[i], iap[i]);
+        equal(expectedIAP[i], iap[i]);
       }
       run_next_test();
     }.bind(this);
 
     let errorCb = function errorCb(errorMsg) {
       do_print(errorMsg);
-      do_check_true(false);
+      ok(false);
       run_next_test();
     }.bind(this);
 
@@ -453,39 +453,39 @@ add_test(function test_update_iap() {
   function do_test(expectedIAP) {
     buf.sendParcel = function() {
       // Request Type.
-      do_check_eq(this.readInt32(), REQUEST_SIM_IO);
+      equal(this.readInt32(), REQUEST_SIM_IO);
 
       // Token : we don't care
       this.readInt32();
 
       // command.
-      do_check_eq(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
+      equal(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
 
       // fileId.
-      do_check_eq(this.readInt32(), fileId);
+      equal(this.readInt32(), fileId);
 
       // pathId.
-      do_check_eq(this.readString(),
+      equal(this.readString(),
                   EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK);
 
       // p1.
-      do_check_eq(this.readInt32(), recordNumber);
+      equal(this.readInt32(), recordNumber);
 
       // p2.
-      do_check_eq(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
+      equal(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
 
       // p3.
-      do_check_eq(this.readInt32(), recordSize);
+      equal(this.readInt32(), recordSize);
 
       // data.
       let strLen = this.readInt32();
       for (let i = 0; i < recordSize; i++) {
-        do_check_eq(expectedIAP[i], pduHelper.readHexOctet());
+        equal(expectedIAP[i], pduHelper.readHexOctet());
       }
       this.readStringDelimiter(strLen);
 
       // pin2.
-      do_check_eq(this.readString(), null);
+      equal(this.readString(), null);
 
       if (!ril.v5Legacy) {
         // AID. Ignore because it's from modem.
@@ -528,39 +528,39 @@ add_test(function test_update_adn_like() {
 
   buf.sendParcel = function() {
     // Request Type.
-    do_check_eq(this.readInt32(), REQUEST_SIM_IO);
+    equal(this.readInt32(), REQUEST_SIM_IO);
 
     // Token : we don't care
     this.readInt32();
 
     // command.
-    do_check_eq(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
+    equal(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
 
     // fileId.
-    do_check_eq(this.readInt32(), fileId);
+    equal(this.readInt32(), fileId);
 
     // pathId.
-    do_check_eq(this.readString(), EF_PATH_MF_SIM + EF_PATH_DF_TELECOM);
+    equal(this.readString(), EF_PATH_MF_SIM + EF_PATH_DF_TELECOM);
 
     // p1.
-    do_check_eq(this.readInt32(), 1);
+    equal(this.readInt32(), 1);
 
     // p2.
-    do_check_eq(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
+    equal(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
 
     // p3.
-    do_check_eq(this.readInt32(), 0x20);
+    equal(this.readInt32(), 0x20);
 
     // data.
     let contact = pdu.readAlphaIdDiallingNumber(0x20);
-    do_check_eq(contact.alphaId, "test");
-    do_check_eq(contact.number, "123456");
+    equal(contact.alphaId, "test");
+    equal(contact.number, "123456");
 
     // pin2.
     if (fileId == ICC_EF_ADN) {
-      do_check_eq(this.readString(), null);
+      equal(this.readString(), null);
     } else {
-      do_check_eq(this.readString(), "1111");
+      equal(this.readString(), "1111");
     }
 
     if (!ril.v5Legacy) {
@@ -631,12 +631,12 @@ add_test(function test_find_free_record_id() {
   recordHelper.findFreeRecordId(
     fileId,
     function(recordId) {
-      do_check_eq(recordId, 2);
+      equal(recordId, 2);
       run_next_test();
     }.bind(this),
     function(errorMsg) {
       do_print(errorMsg);
-      do_check_true(false);
+      ok(false);
       run_next_test();
     }.bind(this));
 });
@@ -663,15 +663,15 @@ add_test(function test_fetch_icc_recodes() {
 
   RIL.appType = CARD_APPTYPE_SIM;
   iccRecord.fetchICCRecords();
-  do_check_eq(fetchTag, 0x01);
+  equal(fetchTag, 0x01);
 
   RIL.appType = CARD_APPTYPE_RUIM;
   iccRecord.fetchICCRecords();
-  do_check_eq(fetchTag, 0x02);
+  equal(fetchTag, 0x02);
 
   RIL.appType = CARD_APPTYPE_USIM;
   iccRecord.fetchICCRecords();
-  do_check_eq(fetchTag, 0x01);
+  equal(fetchTag, 0x01);
 
   run_next_test();
 });
@@ -711,7 +711,7 @@ add_test(function test_handling_iccid() {
 
     record.readICCID();
 
-    do_check_eq(ril.iccInfo.iccid, expectedICCID);
+    equal(ril.iccInfo.iccid, expectedICCID);
   }
 
   // Invalid value 0xE at high nibbile + low nibbile contains 0xF.

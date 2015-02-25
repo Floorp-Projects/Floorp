@@ -34,15 +34,15 @@ function hexStringToParcelByteArrayData(hexString) {
 
 add_test(function test_ril_consts_cellbroadcast_misc() {
   // Must be 16 for indexing.
-  do_check_eq(CB_DCS_LANG_GROUP_1.length, 16);
-  do_check_eq(CB_DCS_LANG_GROUP_2.length, 16);
+  equal(CB_DCS_LANG_GROUP_1.length, 16);
+  equal(CB_DCS_LANG_GROUP_2.length, 16);
 
   // Array length must be even.
-  do_check_eq(CB_NON_MMI_SETTABLE_RANGES.length & 0x01, 0);
+  equal(CB_NON_MMI_SETTABLE_RANGES.length & 0x01, 0);
   for (let i = 0; i < CB_NON_MMI_SETTABLE_RANGES.length;) {
     let from = CB_NON_MMI_SETTABLE_RANGES[i++];
     let to = CB_NON_MMI_SETTABLE_RANGES[i++];
-    do_check_eq(from < to, true);
+    equal(from < to, true);
   }
 
   run_next_test();
@@ -67,11 +67,11 @@ add_test(function test_ril_worker_GsmPDUHelper_readCbDataCodingScheme() {
     let msg = {};
     context.GsmPDUHelper.readCbDataCodingScheme(msg);
 
-    do_check_eq(msg.dcs, dcs);
-    do_check_eq(msg.encoding, encoding);
-    do_check_eq(msg.language, language);
-    do_check_eq(msg.hasLanguageIndicator, hasLanguageIndicator);
-    do_check_eq(msg.messageClass, messageClass);
+    equal(msg.dcs, dcs);
+    equal(msg.encoding, encoding);
+    equal(msg.language, language);
+    equal(msg.hasLanguageIndicator, hasLanguageIndicator);
+    equal(msg.messageClass, messageClass);
   }
 
   function test_dcs_throws(dcs) {
@@ -79,7 +79,7 @@ add_test(function test_ril_worker_GsmPDUHelper_readCbDataCodingScheme() {
       return dcs;
     };
 
-    do_check_throws(function() {
+    throws(function() {
       context.GsmPDUHelper.readCbDataCodingScheme({});
     }, "Unsupported CBS data coding scheme: " + dcs);
   }
@@ -189,15 +189,15 @@ add_test(function test_ril_worker_GsmPDUHelper_readGsmCbData() {
     };
     context.GsmPDUHelper.readGsmCbData(msg, options[3].length);
 
-    do_check_eq(msg.body, expected[0]);
-    do_check_eq(msg.data == null, expected[1] == null);
+    equal(msg.body, expected[0]);
+    equal(msg.data == null, expected[1] == null);
     if (expected[1] != null) {
-      do_check_eq(msg.data.length, expected[1].length);
+      equal(msg.data.length, expected[1].length);
       for (let i = 0; i < expected[1].length; i++) {
-        do_check_eq(msg.data[i], expected[1][i]);
+        equal(msg.data[i], expected[1][i]);
       }
     }
-    do_check_eq(msg.language, expected[2]);
+    equal(msg.language, expected[2]);
   }
 
   // We're testing Cell Broadcast message body with all zeros octet stream. As
@@ -249,7 +249,7 @@ add_test(function test_ril_worker__checkCellBroadcastMMISettable() {
   let ril = context.RIL;
 
   function test(from, to, expected) {
-    do_check_eq(expected, ril._checkCellBroadcastMMISettable(from, to));
+    equal(expected, ril._checkCellBroadcastMMISettable(from, to));
   }
 
   test(-2, -1, false);
@@ -301,7 +301,7 @@ add_test(function test_ril_worker__mergeCellBroadcastConfigs() {
 
   function test(olist, from, to, expected) {
     let result = ril._mergeCellBroadcastConfigs(olist, from, to);
-    do_check_eq(JSON.stringify(expected), JSON.stringify(result));
+    equal(JSON.stringify(expected), JSON.stringify(result));
   }
 
   test(null, 0, 1, [0, 1]);
@@ -488,8 +488,8 @@ add_test(function test_GsmPDUHelper_readUmtsCbMessage_MultiParts() {
                            hexStringToParcelByteArrayData(pdu)));
 
     let postedMessage = workerHelper.postedMessage;
-    do_check_eq("cellbroadcast-received", postedMessage.rilMessageType);
-    do_check_eq(postedMessage.fullBody.length,
+    equal("cellbroadcast-received", postedMessage.rilMessageType);
+    equal(postedMessage.fullBody.length,
                 aNumOfPages * CB_MAX_CONTENT_PER_PAGE_7BIT);
   }
 
@@ -534,11 +534,11 @@ add_test(function test_GsmPDUHelper_readUmtsCbMessage_Binary() {
                            hexStringToParcelByteArrayData(pdu)));
 
     let postedMessage = workerHelper.postedMessage;
-    do_check_eq("cellbroadcast-received", postedMessage.rilMessageType);
-    do_check_eq(postedMessage.fullData.length,
+    equal("cellbroadcast-received", postedMessage.rilMessageType);
+    equal(postedMessage.fullData.length,
                 aNumOfPages * CB_UMTS_MESSAGE_PAGE_SIZE);
     for (let i = 0; i < postedMessage.fullData.length; i++) {
-      do_check_eq(postedMessage.fullData[i], 255);
+      equal(postedMessage.fullData[i], 255);
     }
   }
 

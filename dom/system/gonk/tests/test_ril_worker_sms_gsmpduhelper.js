@@ -30,14 +30,14 @@ add_test(function test_GsmPDUHelper_readDataCodingScheme() {
     let msg = {};
     helper.readDataCodingScheme(msg);
 
-    do_check_eq(msg.dcs, dcs);
-    do_check_eq(msg.encoding, encoding);
-    do_check_eq(msg.messageClass, messageClass);
-    do_check_eq(msg.mwi == null, mwi == null);
+    equal(msg.dcs, dcs);
+    equal(msg.encoding, encoding);
+    equal(msg.messageClass, messageClass);
+    equal(msg.mwi == null, mwi == null);
     if (mwi != null) {
-      do_check_eq(msg.mwi.active, mwi.active);
-      do_check_eq(msg.mwi.discard, mwi.discard);
-      do_check_eq(msg.mwi.msgCount, mwi.msgCount);
+      equal(msg.mwi.active, mwi.active);
+      equal(msg.mwi.discard, mwi.discard);
+      equal(msg.mwi.msgCount, mwi.msgCount);
     }
   }
 
@@ -179,7 +179,7 @@ add_test(function test_GsmPDUHelper_writeStringAsSeptets() {
       helper.resetOctetWritten();
       helper.writeStringAsSeptets(str, paddingBits, PDU_NL_IDENTIFIER_DEFAULT,
                                   PDU_NL_IDENTIFIER_DEFAULT);
-      do_check_eq(Math.ceil(((len * 7) + paddingBits) / 8),
+      equal(Math.ceil(((len * 7) + paddingBits) / 8),
                   helper.octetsWritten);
     }
   }
@@ -217,7 +217,7 @@ add_test(function test_GsmPDUHelper_readAddress() {
     }
     let length = helper.readHexOctet();
     let parsedAddr = helper.readAddress(length);
-    do_check_eq(parsedAddr, addrString);
+    equal(parsedAddr, addrString);
   }
 
   // For AlphaNumeric

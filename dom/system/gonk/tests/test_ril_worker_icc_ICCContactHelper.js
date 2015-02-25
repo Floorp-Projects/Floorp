@@ -17,7 +17,7 @@ add_test(function test_error_message_read_icc_contact () {
 
   function do_test(options, expectedErrorMsg) {
     ril.sendChromeMessage = function(message) {
-      do_check_eq(message.errorMsg, expectedErrorMsg);
+      equal(message.errorMsg, expectedErrorMsg);
     }
     ril.readICCContacts(options);
   }
@@ -51,7 +51,7 @@ add_test(function test_error_message_update_icc_contact() {
 
   function do_test(options, expectedErrorMsg) {
     ril.sendChromeMessage = function(message) {
-      do_check_eq(message.errorMsg, expectedErrorMsg);
+      equal(message.errorMsg, expectedErrorMsg);
     }
     ril.updateICCContact(options);
   }
@@ -371,7 +371,7 @@ add_test(function test_read_icc_contacts() {
 
     let onerror = function onerror(errorMsg) {
       do_print("readICCContacts failed: " + errorMsg);
-      do_check_true(false);
+      ok(false);
     };
 
     contactHelper.readICCContacts(aTestData.simType, aTestData.contactType, onsuccess, onerror);
@@ -438,49 +438,49 @@ add_test(function test_update_icc_contact() {
 
     recordHelper.updateADNLike = function(fileId, contact, pin2, onsuccess, onerror) {
       if (aContactType === GECKO_CARDCONTACT_TYPE_FDN) {
-        do_check_eq(fileId, ICC_EF_FDN);
+        equal(fileId, ICC_EF_FDN);
       } else if (aContactType === GECKO_CARDCONTACT_TYPE_ADN) {
-        do_check_eq(fileId, ICC_EF_ADN);
+        equal(fileId, ICC_EF_ADN);
       }
-      do_check_eq(pin2, aPin2);
-      do_check_eq(contact.alphaId, aContact.alphaId);
-      do_check_eq(contact.number, aContact.number);
+      equal(pin2, aPin2);
+      equal(contact.alphaId, aContact.alphaId);
+      equal(contact.number, aContact.number);
       onsuccess();
     };
 
     recordHelper.readIAP = function(fileId, recordNumber, onsuccess, onerror) {
-      do_check_eq(fileId, IAP_FILE_ID);
-      do_check_eq(recordNumber, ADN_RECORD_ID);
+      equal(fileId, IAP_FILE_ID);
+      equal(recordNumber, ADN_RECORD_ID);
       onsuccess((aHaveIapIndex) ? [EMAIL_RECORD_ID, ANR0_RECORD_ID]
                                 : [0xff, 0xff]);
     };
 
     recordHelper.updateIAP = function(fileId, recordNumber, iap, onsuccess, onerror) {
-      do_check_eq(fileId, IAP_FILE_ID);
-      do_check_eq(recordNumber, ADN_RECORD_ID);
+      equal(fileId, IAP_FILE_ID);
+      equal(recordNumber, ADN_RECORD_ID);
       onsuccess();
     };
 
     recordHelper.updateEmail = function(pbr, recordNumber, email, adnRecordId, onsuccess, onerror) {
-      do_check_eq(pbr.email.fileId, EMAIL_FILE_ID);
+      equal(pbr.email.fileId, EMAIL_FILE_ID);
       if (pbr.email.fileType === ICC_USIM_TYPE1_TAG) {
-        do_check_eq(recordNumber, ADN_RECORD_ID);
+        equal(recordNumber, ADN_RECORD_ID);
       } else if (pbr.email.fileType === ICC_USIM_TYPE2_TAG) {
-        do_check_eq(recordNumber, EMAIL_RECORD_ID);
+        equal(recordNumber, EMAIL_RECORD_ID);
       }
-      do_check_eq(email, aContact.email);
+      equal(email, aContact.email);
       onsuccess();
     };
 
     recordHelper.updateANR = function(pbr, recordNumber, number, adnRecordId, onsuccess, onerror) {
-      do_check_eq(pbr.anr0.fileId, ANR0_FILE_ID);
+      equal(pbr.anr0.fileId, ANR0_FILE_ID);
       if (pbr.anr0.fileType === ICC_USIM_TYPE1_TAG) {
-        do_check_eq(recordNumber, ADN_RECORD_ID);
+        equal(recordNumber, ADN_RECORD_ID);
       } else if (pbr.anr0.fileType === ICC_USIM_TYPE2_TAG) {
-        do_check_eq(recordNumber, ANR0_RECORD_ID);
+        equal(recordNumber, ANR0_RECORD_ID);
       }
       if (Array.isArray(aContact.anr)) {
-        do_check_eq(number, aContact.anr[0]);
+        equal(number, aContact.anr[0]);
       }
       onsuccess();
     };
@@ -506,7 +506,7 @@ add_test(function test_update_icc_contact() {
     };
 
     contactHelper.updateICCContact(aSimType, aContactType, aContact, aPin2, onsuccess, onerror);
-    do_check_true(isSuccess);
+    ok(isSuccess);
   }
 
   let contacts = [
@@ -619,12 +619,12 @@ add_test(function test_update_icc_contact_with_remove_type1_attr() {
   };
 
   recordHelper.updateEmail = function(pbr, recordNumber, email, adnRecordId, onsuccess, onerror) {
-    do_check_true(email == null);
+    ok(email == null);
     onsuccess();
   };
 
   recordHelper.updateANR = function(pbr, recordNumber, number, adnRecordId, onsuccess, onerror) {
-    do_check_true(number == null);
+    ok(number == null);
     onsuccess();
   };
 
@@ -651,12 +651,12 @@ add_test(function test_update_icc_contact_with_remove_type1_attr() {
     };
 
     let successCb = function() {
-      do_check_true(true);
+      ok(true);
     };
 
     let errorCb = function(errorMsg) {
       do_print(errorMsg);
-      do_check_true(false);
+      ok(false);
     };
 
     contactHelper.updateICCContact(CARD_APPTYPE_USIM,
@@ -693,13 +693,13 @@ add_test(function test_find_free_icc_contact_sim() {
   };
 
   let successCb = function(pbrIndex, recordId) {
-    do_check_eq(pbrIndex, PBR_INDEX);
+    equal(pbrIndex, PBR_INDEX);
     records[recordId] = {};
   };
 
   let errorCb = function(errorMsg) {
     do_print(errorMsg);
-    do_check_true(false);
+    ok(false);
   };
 
   for (let i = 0; i < MAX_RECORDS; i++) {
@@ -708,15 +708,15 @@ add_test(function test_find_free_icc_contact_sim() {
                                      successCb, errorCb);
   }
   // The 1st element, records[0], is null.
-  do_check_eq(records.length - 1, MAX_RECORDS);
+  equal(records.length - 1, MAX_RECORDS);
 
   // Now the EF is full, so finding a free one should result failure.
   successCb = function(pbrIndex, recordId) {
-    do_check_true(false);
+    ok(false);
   };
 
   errorCb = function(errorMsg) {
-    do_check_true(errorMsg === "No free record found.");
+    ok(errorMsg === "No free record found.");
   };
   contactHelper.findFreeICCContact(CARD_APPTYPE_SIM, GECKO_CARDCONTACT_TYPE_ADN,
                                    successCb, errorCb);
@@ -756,12 +756,12 @@ add_test(function test_find_free_icc_contact_usim() {
   };
 
   let successCb = function(pbrIndex, recordId) {
-    do_check_eq(pbrIndex, 0);
+    equal(pbrIndex, 0);
     pbrs[pbrIndex].adn.records[recordId] = {};
   };
 
   let errorCb = function(errorMsg) {
-    do_check_true(false);
+    ok(false);
   };
 
   contactHelper.findFreeICCContact(CARD_APPTYPE_USIM,
@@ -771,8 +771,8 @@ add_test(function test_find_free_icc_contact_usim() {
   // Now the EF_ADN in the 1st phonebook set is full, so the next free contact
   // will come from the 2nd phonebook set.
   successCb = function(pbrIndex, recordId) {
-    do_check_eq(pbrIndex, 1);
-    do_check_eq(recordId, 1);
+    equal(pbrIndex, 1);
+    equal(recordId, 1);
   }
   contactHelper.findFreeICCContact(CARD_APPTYPE_USIM,
                                    GECKO_CARDCONTACT_TYPE_ADN,

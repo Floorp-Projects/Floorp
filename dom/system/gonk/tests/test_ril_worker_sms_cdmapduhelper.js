@@ -29,10 +29,10 @@ add_test(function test_CdmaPDUHelper_encodeUserDataReplyOption() {
 
   let expectedDataBuffer = [PDU_CDMA_MSG_USERDATA_REPLY_OPTION, 0x01, 0x40];
 
-  do_check_eq(testDataBuffer.length, expectedDataBuffer.length);
+  equal(testDataBuffer.length, expectedDataBuffer.length);
 
   for (let i = 0; i < expectedDataBuffer.length; i++) {
-    do_check_eq(testDataBuffer[i], expectedDataBuffer[i]);
+    equal(testDataBuffer[i], expectedDataBuffer[i]);
   }
 
   run_next_test();
@@ -58,8 +58,8 @@ add_test(function test_CdmaPDUHelper_decodeUserDataMsgStatus() {
     context.BitBufferHelper.startRead(testDataBuffer);
     let result = helper.decodeUserDataMsgStatus();
 
-    do_check_eq(result.errorClass, octet >>> 6);
-    do_check_eq(result.msgStatus, octet & 0x3F);
+    equal(result.errorClass, octet >>> 6);
+    equal(result.msgStatus, octet & 0x3F);
   }
 
   // 00|000000: no error|Message accepted
@@ -93,7 +93,7 @@ add_test(function test_CdmaPDUHelper_decodeCdmaPDUMsg_Shift_jis() {
   function test_decodePDUMsg(testDataBuffer, expected, encoding, msgType, msgBodySize) {
     context.BitBufferHelper.startRead(testDataBuffer);
     let result = helper.decodeCdmaPDUMsg(encoding, msgType, msgBodySize);
-    do_check_eq(result, expected);
+    equal(result, expected);
   }
 
   // Shift-JIS has 1 byte and 2 byte code for one character and has some types of characters:

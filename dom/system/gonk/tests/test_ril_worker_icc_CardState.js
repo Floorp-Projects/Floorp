@@ -28,7 +28,7 @@ add_test(function test_personalization_state() {
 
     ril._isCdma = isCdma;
     ril._processICCStatus(iccStatus);
-    do_check_eq(ril.cardState, geckoCardState);
+    equal(ril.cardState, geckoCardState);
   }
 
   // Test GSM personalization state.
@@ -117,7 +117,7 @@ add_test(function test_card_app_state() {
     };
 
     ril._processICCStatus(iccStatus);
-    do_check_eq(ril.cardState, geckoCardState);
+    equal(ril.cardState, geckoCardState);
   }
 
   testCardAppState(CARD_APPSTATE_ILLEGAL,
@@ -159,7 +159,7 @@ add_test(function test_icc_permanent_blocked() {
     };
 
     ril._processICCStatus(iccStatus);
-    do_check_eq(ril.cardState, Ci.nsIIccProvider.CARD_STATE_PERMANENT_BLOCKED);
+    equal(ril.cardState, Ci.nsIIccProvider.CARD_STATE_PERMANENT_BLOCKED);
   }
 
   testPermanentBlocked(1,
@@ -202,9 +202,9 @@ add_test(function test_icc_without_app_index() {
   ril._processICCStatus(iccStatus);
 
   // Should read icc id event if the app index is -1.
-  do_check_eq(ril.iccInfo.iccid, ICCID);
+  equal(ril.iccInfo.iccid, ICCID);
   // cardState is "unknown" if the app index is -1.
-  do_check_eq(ril.cardState, GECKO_CARDSTATE_UNKNOWN);
+  equal(ril.cardState, GECKO_CARDSTATE_UNKNOWN);
 
   run_next_test();
 });

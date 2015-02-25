@@ -37,8 +37,8 @@ function setCallForwardSuccess(procedure, serviceCode, sia, sib, sic) {
 
   let postedMessage = workerhelper.postedMessage;
 
-  do_check_eq(postedMessage.errorMsg, undefined);
-  do_check_true(postedMessage.success);
+  equal(postedMessage.errorMsg, undefined);
+  ok(postedMessage.success);
 }
 
 add_test(function test_sendMMI_call_forwarding_activation() {
@@ -85,13 +85,13 @@ add_test(function test_sendMMI_call_forwarding_interrogation() {
 
   let postedMessage = workerhelper.postedMessage;
 
-  do_check_eq(postedMessage.errorMsg, undefined);
-  do_check_true(postedMessage.success);
-  do_check_true(Array.isArray(postedMessage.rules));
-  do_check_eq(postedMessage.rules.length, 1);
-  do_check_true(postedMessage.rules[0].active);
-  do_check_eq(postedMessage.rules[0].reason, CALL_FORWARD_REASON_UNCONDITIONAL);
-  do_check_eq(postedMessage.rules[0].number, "+34666222333");
+  equal(postedMessage.errorMsg, undefined);
+  ok(postedMessage.success);
+  ok(Array.isArray(postedMessage.rules));
+  equal(postedMessage.rules.length, 1);
+  ok(postedMessage.rules[0].active);
+  equal(postedMessage.rules[0].reason, CALL_FORWARD_REASON_UNCONDITIONAL);
+  equal(postedMessage.rules[0].number, "+34666222333");
   run_next_test();
 });
 
@@ -115,8 +115,8 @@ add_test(function test_sendMMI_call_forwarding_interrogation_no_rules() {
 
   let postedMessage = workerhelper.postedMessage;
 
-  do_check_eq(postedMessage.errorMsg, GECKO_ERROR_GENERIC_FAILURE);
-  do_check_false(postedMessage.success);
+  equal(postedMessage.errorMsg, GECKO_ERROR_GENERIC_FAILURE);
+  ok(!postedMessage.success);
 
   run_next_test();
 });

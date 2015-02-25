@@ -14,7 +14,12 @@ task:
     maxRunTime: 14400
 
     command:
-      - build-emulator.sh
+      - /bin/bash
+      - -c
+      - >
+        checkout-gecko workspace &&
+        cd ./workspace/gecko/testing/taskcluster/scripts/builder &&
+        buildbot_step 'Build' ./build-emulator.sh $HOME/workspace
 
   extra:
     # Rather then enforcing particular conventions we require that all build

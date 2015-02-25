@@ -30,9 +30,9 @@ add_test(function test_queryCLIP_provisioned() {
 
   let postedMessage = workerHelper.postedMessage;
 
-  do_check_eq(postedMessage.errorMsg, undefined);
-  do_check_true(postedMessage.success);
-  do_check_eq(postedMessage.provisioned, 1);
+  equal(postedMessage.errorMsg, undefined);
+  ok(postedMessage.success);
+  equal(postedMessage.provisioned, 1);
   run_next_test();
 });
 
@@ -59,7 +59,7 @@ add_test(function test_getCLIP_error_generic_failure_invalid_length() {
 
   let postedMessage = workerHelper.postedMessage;
 
-  do_check_eq(postedMessage.errorMsg, "GenericFailure");
-  do_check_false(postedMessage.success);
+  equal(postedMessage.errorMsg, "GenericFailure");
+  ok(!postedMessage.success);
   run_next_test();
 });

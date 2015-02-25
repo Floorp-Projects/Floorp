@@ -21,13 +21,13 @@ add_test(function test_write_timestamp() {
   helper.writeTimestamp(dateInput);
   dateOutput.setTime(helper.readTimestamp());
 
-  do_check_eq(dateInput.getFullYear(), dateOutput.getFullYear());
-  do_check_eq(dateInput.getMonth(), dateOutput.getMonth());
-  do_check_eq(dateInput.getDate(), dateOutput.getDate());
-  do_check_eq(dateInput.getHours(), dateOutput.getHours());
-  do_check_eq(dateInput.getMinutes(), dateOutput.getMinutes());
-  do_check_eq(dateInput.getSeconds(), dateOutput.getSeconds());
-  do_check_eq(dateInput.getTimezoneOffset(), dateOutput.getTimezoneOffset());
+  equal(dateInput.getFullYear(), dateOutput.getFullYear());
+  equal(dateInput.getMonth(), dateOutput.getMonth());
+  equal(dateInput.getDate(), dateOutput.getDate());
+  equal(dateInput.getHours(), dateOutput.getHours());
+  equal(dateInput.getMinutes(), dateOutput.getMinutes());
+  equal(dateInput.getSeconds(), dateOutput.getSeconds());
+  equal(dateInput.getTimezoneOffset(), dateOutput.getTimezoneOffset());
 
   // 2034-01-23 12:34:56 -0800 GMT
   let time = Date.UTC(2034, 1, 23, 12, 34, 56);
@@ -36,13 +36,13 @@ add_test(function test_write_timestamp() {
   helper.writeTimestamp(dateInput);
   dateOutput.setTime(helper.readTimestamp());
 
-  do_check_eq(dateInput.getFullYear(), dateOutput.getFullYear());
-  do_check_eq(dateInput.getMonth(), dateOutput.getMonth());
-  do_check_eq(dateInput.getDate(), dateOutput.getDate());
-  do_check_eq(dateInput.getHours(), dateOutput.getHours());
-  do_check_eq(dateInput.getMinutes(), dateOutput.getMinutes());
-  do_check_eq(dateInput.getSeconds(), dateOutput.getSeconds());
-  do_check_eq(dateInput.getTimezoneOffset(), dateOutput.getTimezoneOffset());
+  equal(dateInput.getFullYear(), dateOutput.getFullYear());
+  equal(dateInput.getMonth(), dateOutput.getMonth());
+  equal(dateInput.getDate(), dateOutput.getDate());
+  equal(dateInput.getHours(), dateOutput.getHours());
+  equal(dateInput.getMinutes(), dateOutput.getMinutes());
+  equal(dateInput.getSeconds(), dateOutput.getSeconds());
+  equal(dateInput.getTimezoneOffset(), dateOutput.getTimezoneOffset());
 
   run_next_test();
 });
@@ -58,22 +58,22 @@ add_test(function test_octect_BCD() {
   // 23
   let number = 23;
   let octet = helper.BCDToOctet(number);
-  do_check_eq(helper.octetToBCD(octet), number);
+  equal(helper.octetToBCD(octet), number);
 
   // 56
   number = 56;
   octet = helper.BCDToOctet(number);
-  do_check_eq(helper.octetToBCD(octet), number);
+  equal(helper.octetToBCD(octet), number);
 
   // 0x23
   octet = 0x23;
   number = helper.octetToBCD(octet);
-  do_check_eq(helper.BCDToOctet(number), octet);
+  equal(helper.BCDToOctet(number), octet);
 
   // 0x56
   octet = 0x56;
   number = helper.octetToBCD(octet);
-  do_check_eq(helper.BCDToOctet(number), octet);
+  equal(helper.BCDToOctet(number), octet);
 
   run_next_test();
 });

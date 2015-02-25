@@ -18,12 +18,12 @@ add_test(function test_load_linear_fixed_ef() {
 
   io.getResponse = function fakeGetResponse(options) {
     // When recordSize is provided, loadLinearFixedEF should call iccIO directly.
-    do_check_true(false);
+    ok(false);
     run_next_test();
   };
 
   ril.iccIO = function fakeIccIO(options) {
-    do_check_true(true);
+    ok(true);
     run_next_test();
   };
 
@@ -40,13 +40,13 @@ add_test(function test_load_linear_fixed_ef() {
   let io = context.ICCIOHelper;
 
   io.getResponse = function fakeGetResponse(options) {
-    do_check_true(true);
+    ok(true);
     run_next_test();
   };
 
   ril.iccIO = function fakeIccIO(options) {
     // When recordSize is not provided, loadLinearFixedEF should call getResponse.
-    do_check_true(false);
+    ok(false);
     run_next_test();
   };
 
@@ -65,7 +65,7 @@ add_test(function test_process_icc_io_error() {
     let called = false;
     function errorCb(errorMsg) {
       called = true;
-      do_check_eq(errorMsg, expectedErrorMsg);
+      equal(errorMsg, expectedErrorMsg);
     }
 
     // Write sw1 and sw2 to buffer.
@@ -78,7 +78,7 @@ add_test(function test_process_icc_io_error() {
                                     onerror: errorCb});
 
     // onerror callback should be triggered.
-    do_check_true(called);
+    ok(called);
   }
 
   let TEST_DATA = [
@@ -126,7 +126,7 @@ add_test(function test_icc_io_get_response_for_transparent_structure() {
                    structure: EF_STRUCTURE_TRANSPARENT};
     iccioHelper.processICCIOGetResponse(options);
 
-    do_check_eq(options.fileSize, 0x0A);
+    equal(options.fileSize, 0x0A);
   }
 
   run_next_test();
@@ -164,9 +164,9 @@ add_test(function test_icc_io_get_response_for_linear_fixed_structure() {
                    structure: EF_STRUCTURE_LINEAR_FIXED};
     iccioHelper.processICCIOGetResponse(options);
 
-    do_check_eq(options.fileSize, 0x1A);
-    do_check_eq(options.recordSize, 0x1A);
-    do_check_eq(options.totalRecords, 0x01);
+    equal(options.fileSize, 0x1A);
+    equal(options.recordSize, 0x1A);
+    equal(options.totalRecords, 0x01);
   }
 
   run_next_test();
