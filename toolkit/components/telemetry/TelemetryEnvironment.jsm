@@ -14,8 +14,191 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
+                                  "resource://gre/modules/ctypes.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ProfileTimesAccessor",
+                                  "resource://gre/modules/services/healthreport/profile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
+                                  "resource://gre/modules/UpdateChannel.jsm");
 
 const LOGGER_NAME = "Toolkit.Telemetry";
+
+const PREF_BLOCKLIST_ENABLED = "extensions.blocklist.enabled";
+const PREF_DISTRIBUTION_ID = "distribution.id";
+const PREF_DISTRIBUTION_VERSION = "distribution.version";
+const PREF_DISTRIBUTOR = "app.distributor";
+const PREF_DISTRIBUTOR_CHANNEL = "app.distributor.channel";
+const PREF_E10S_ENABLED = "browser.tabs.remote.autostart";
+const PREF_HOTFIX_LASTVERSION = "extensions.hotfix.lastVersion";
+const PREF_APP_PARTNER_BRANCH = "app.partner.";
+const PREF_PARTNER_ID = "mozilla.partner.id";
+const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
+const PREF_UPDATE_ENABLED = "app.update.enabled";
+const PREF_UPDATE_AUTODOWNLOAD = "app.update.auto";
+
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * Turn a millisecond timestamp into a day timestamp.
+ *
+ * @param aMsec a number of milliseconds since epoch.
+ * @return the number of whole days denoted by the input.
+ */
+function truncateToDays(aMsec) {
+  return Math.floor(aMsec / MILLISECONDS_PER_DAY);
+}
+
+/**
+ * Get the current browser.
+ * @return a string with the locale or null on failure.
+ */
+function getBrowserLocale() {
+  try {
+    return Cc["@mozilla.org/chrome/chrome-registry;1"].
+             getService(Ci.nsIXULChromeRegistry).
+             getSelectedLocale('global');
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Get the current OS locale.
+ * @return a string with the OS locale or null on failure.
+ */
+function getSystemLocale() {
+  try {
+    return Services.locale.getLocaleComponentForUserAgent();
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Safely get a sysinfo property and return its value. If the property is not
+ * available, return aDefault.
+ *
+ * @param aPropertyName the property name to get.
+ * @param aDefault the value to return if aPropertyName is not available.
+ * @return The property value, if available, or aDefault.
+ */
+function getSysinfoProperty(aPropertyName, aDefault) {
+  try {
+    // |getProperty| may throw if |aPropertyName| does not exist.
+    return Services.sysinfo.getProperty(aPropertyName);
+  } catch (e) {}
+
+  return aDefault;
+}
+
+/**
+ * Safely get a gfxInfo field and return its value. If the field is not available, return
+ * aDefault.
+ *
+ * @param aPropertyName the property name to get.
+ * @param aDefault the value to return if aPropertyName is not available.
+ * @return The property value, if available, or aDefault.
+ */
+function getGfxField(aPropertyName, aDefault) {
+  let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+
+  try {
+    // Accessing the field may throw if |aPropertyName| does not exist.
+    let gfxProp = gfxInfo[aPropertyName];
+    if (gfxProp !== "") {
+      return gfxProp;
+    }
+  } catch (e) {}
+
+  return aDefault;
+}
+
+/**
+ * Get the information about a graphic adapter.
+ *
+ * @param aSuffix A suffix to add to the properties names.
+ * @return An object containing the adapter properties.
+ */
+function getGfxAdapter(aSuffix = "") {
+  let memoryMB = getGfxField("adapterRAM" + aSuffix, null);
+  if (memoryMB) {
+    memoryMB = parseInt(memoryMB, 10);
+  }
+
+  return {
+    description: getGfxField("adapterDescription" + aSuffix, null),
+    vendorID: getGfxField("adapterVendorID" + aSuffix, null),
+    deviceID: getGfxField("adapterDeviceID" + aSuffix, null),
+    subsysID: getGfxField("adapterSubsysID" + aSuffix, null),
+    RAM: memoryMB,
+    driver: getGfxField("adapterDriver" + aSuffix, null),
+    driverVersion: getGfxField("adapterDriverVersion" + aSuffix, null),
+    driverDate: getGfxField("adapterDriverDate" + aSuffix, null),
+  };
+}
+
+#ifdef XP_WIN
+/**
+ * Gets the service pack information on Windows platforms. This was copied from
+ * nsUpdateService.js.
+ *
+ * @return An object containing the service pack major and minor versions.
+ */
+function getServicePack() {
+  const BYTE = ctypes.uint8_t;
+  const WORD = ctypes.uint16_t;
+  const DWORD = ctypes.uint32_t;
+  const WCHAR = ctypes.char16_t;
+  const BOOL = ctypes.int;
+
+  // This structure is described at:
+  // http://msdn.microsoft.com/en-us/library/ms724833%28v=vs.85%29.aspx
+  const SZCSDVERSIONLENGTH = 128;
+  const OSVERSIONINFOEXW = new ctypes.StructType('OSVERSIONINFOEXW',
+      [
+      {dwOSVersionInfoSize: DWORD},
+      {dwMajorVersion: DWORD},
+      {dwMinorVersion: DWORD},
+      {dwBuildNumber: DWORD},
+      {dwPlatformId: DWORD},
+      {szCSDVersion: ctypes.ArrayType(WCHAR, SZCSDVERSIONLENGTH)},
+      {wServicePackMajor: WORD},
+      {wServicePackMinor: WORD},
+      {wSuiteMask: WORD},
+      {wProductType: BYTE},
+      {wReserved: BYTE}
+      ]);
+
+  let kernel32 = ctypes.open("kernel32");
+  try {
+    let GetVersionEx = kernel32.declare("GetVersionExW",
+                                        ctypes.default_abi,
+                                        BOOL,
+                                        OSVERSIONINFOEXW.ptr);
+    let winVer = OSVERSIONINFOEXW();
+    winVer.dwOSVersionInfoSize = OSVERSIONINFOEXW.size;
+
+    if(0 === GetVersionEx(winVer.address())) {
+      throw("Failure in GetVersionEx (returned 0)");
+    }
+
+    return {
+      major: winVer.wServicePackMajor,
+      minor: winVer.wServicePackMinor,
+    };
+  } catch (e) {
+    return {
+      major: null,
+      minor: null,
+    };
+  } finally {
+    kernel32.close();
+  }
+}
+#endif
 
 this.TelemetryEnvironment = {
   _shutdown: true,
@@ -29,9 +212,10 @@ this.TelemetryEnvironment = {
   // Policy to use when saving preferences. Exported for using them in tests.
   RECORD_PREF_STATE: 1, // Don't record the preference value
   RECORD_PREF_VALUE: 2, // We only record user-set prefs.
+  RECORD_PREF_NOTIFY_ONLY: 3, // Record nothing, just notify of changes.
 
   // A map of watched preferences which trigger an Environment change when modified.
-  // Every entry contains a recording policy (RECORD_PREF_STATE or RECORD_PREF_VALUE).
+  // Every entry contains a recording policy (RECORD_PREF_*).
   _watchedPrefs: null,
 
   /**
@@ -119,8 +303,9 @@ this.TelemetryEnvironment = {
 
     let prefData = {};
     for (let pref in this._watchedPrefs) {
-      // We only want to record preferences if they are non-default.
-      if (!Preferences.isSet(pref)) {
+      // Only record preferences if they are non-default and policy allows recording.
+      if (!Preferences.isSet(pref) ||
+          this._watchedPrefs[pref] == this.RECORD_PREF_NOTIFY_ONLY) {
         continue;
       }
 
@@ -175,12 +360,272 @@ this.TelemetryEnvironment = {
   },
 
   /**
+   * Get the build data in object form.
+   * @return Object containing the build data.
+   */
+  _getBuild: function () {
+    let buildData = {
+      applicationId: Services.appinfo.ID,
+      applicationName: Services.appinfo.name,
+      architecture: Services.sysinfo.get("arch"),
+      buildId: Services.appinfo.appBuildID,
+      version: Services.appinfo.version,
+      vendor: Services.appinfo.vendor,
+      platformVersion: Services.appinfo.platformVersion,
+      xpcomAbi: Services.appinfo.XPCOMABI,
+      hotfixVersion: Preferences.get(PREF_HOTFIX_LASTVERSION, null),
+    };
+
+    // Add |architecturesInBinary| only for Mac Universal builds.
+    if ("@mozilla.org/xpcom/mac-utils;1" in Cc) {
+      let macUtils = Cc["@mozilla.org/xpcom/mac-utils;1"].getService(Ci.nsIMacUtils);
+      if (macUtils && macUtils.isUniversalBinary) {
+        buildData.architecturesInBinary = macUtils.architecturesInBinary;
+      }
+    }
+
+    return buildData;
+  },
+
+  /**
+   * Determine if Firefox is the default browser.
+   * @returns null on error, true if we are the default browser, or false otherwise.
+   */
+  _isDefaultBrowser: function () {
+    let shellService;
+    try {
+      shellService = Cc["@mozilla.org/browser/shell-service;1"]
+                       .getService(Ci.nsIShellService);
+    } catch (ex) {
+      this._log.error("_isDefaultBrowser - Could not obtain shell service", ex);
+      return null;
+    }
+
+    if (shellService) {
+      try {
+        // This uses the same set of flags used by the pref pane.
+        return shellService.isDefaultBrowser(false, true) ? true : false;
+      } catch (ex) {
+        this._log.error("_isDefaultBrowser - Could not determine if default browser", ex);
+        return null;
+      }
+    }
+
+    return null;
+  },
+
+  /**
    * Get the settings data in object form.
    * @return Object containing the settings.
    */
   _getSettings: function () {
+    let updateChannel = null;
+    try {
+      updateChannel = UpdateChannel.get();
+    } catch (e) {}
+
     return {
-      "userPrefs": this._getPrefData(),
+      blocklistEnabled: Preferences.get(PREF_BLOCKLIST_ENABLED, true),
+      isDefaultBrowser: this._isDefaultBrowser(),
+      e10sEnabled: Preferences.get(PREF_E10S_ENABLED, false),
+      telemetryEnabled: Preferences.get(PREF_TELEMETRY_ENABLED, false),
+      locale: getBrowserLocale(),
+      update: {
+        channel: updateChannel,
+        enabled: Preferences.get(PREF_UPDATE_ENABLED, true),
+        autoDownload: Preferences.get(PREF_UPDATE_AUTODOWNLOAD, true),
+      },
+      userPrefs: this._getPrefData(),
+    };
+  },
+
+  /**
+   * Get the profile data in object form.
+   * @return Object containing the profile data.
+   */
+  _getProfile: Task.async(function* () {
+    let profileAccessor = new ProfileTimesAccessor(null, this._log);
+
+    let creationDate = yield profileAccessor.created;
+    let resetDate = yield profileAccessor.reset;
+
+    let profileData = {
+      creationDate: truncateToDays(creationDate),
+    };
+
+    if (resetDate) {
+      profileData.resetDate = truncateToDays(resetDate);
+    }
+
+    return profileData;
+  }),
+
+  /**
+   * Get the partner data in object form.
+   * @return Object containing the partner data.
+   */
+  _getPartner: function () {
+    let partnerData = {
+      distributionId: Preferences.get(PREF_DISTRIBUTION_ID, null),
+      distributionVersion: Preferences.get(PREF_DISTRIBUTION_VERSION, null),
+      partnerId: Preferences.get(PREF_PARTNER_ID, null),
+      distributor: Preferences.get(PREF_DISTRIBUTOR, null),
+      distributorChannel: Preferences.get(PREF_DISTRIBUTOR_CHANNEL, null),
+    };
+
+    // Get the PREF_APP_PARTNER_BRANCH branch and append its children to partner data.
+    let partnerBranch = Services.prefs.getBranch(PREF_APP_PARTNER_BRANCH);
+    partnerData.partnerNames = partnerBranch.getChildList("")
+
+    return partnerData;
+  },
+
+  /**
+   * Get the CPU information.
+   * @return Object containing the CPU information data.
+   */
+  _getCpuData: function () {
+    let cpuData = {
+      count: getSysinfoProperty("cpucount", null),
+      vendor: null, // TODO: bug 1128472
+      family: null, // TODO: bug 1128472
+      model: null, // TODO: bug 1128472
+      stepping: null, // TODO: bug 1128472
+    };
+
+    const CPU_EXTENSIONS = ["hasMMX", "hasSSE", "hasSSE2", "hasSSE3", "hasSSSE3",
+                            "hasSSE4A", "hasSSE4_1", "hasSSE4_2", "hasEDSP", "hasARMv6",
+                            "hasARMv7", "hasNEON"];
+
+    // Enumerate the available CPU extensions.
+    let availableExts = [];
+    for (let ext of CPU_EXTENSIONS) {
+      try {
+        Services.sysinfo.getProperty(ext);
+        // If it doesn't throw, add it to the list.
+        availableExts.push(ext);
+      } catch (e) {}
+    }
+
+    cpuData.extensions = availableExts;
+
+    return cpuData;
+  },
+
+#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
+  /**
+   * Get the device information, if we are on a portable device.
+   * @return Object containing the device information data.
+   */
+  _getDeviceData: function () {
+    return {
+      model: getSysinfoProperty("device", null),
+      manufacturer: getSysinfoProperty("manufacturer", null),
+      hardware: getSysinfoProperty("hardware", null),
+      isTablet: getSysinfoProperty("tablet", null),
+    };
+  },
+#endif
+
+  /**
+   * Get the OS information.
+   * @return Object containing the OS data.
+   */
+  _getOSData: function () {
+#ifdef XP_WIN
+    // Try to get service pack information.
+    let servicePack = getServicePack();
+#endif
+
+    return {
+      name: getSysinfoProperty("name", null),
+      version: getSysinfoProperty("version", null),
+#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
+      kernelVersion: getSysinfoProperty("kernel_version", null),
+#elif defined(XP_WIN)
+      servicePackMajor: servicePack.major,
+      servicePackMinor: servicePack.minor,
+#endif
+      locale: getSystemLocale(),
+    };
+  },
+
+  /**
+   * Get the HDD information.
+   * @return Object containing the HDD data.
+   */
+  _getHDDData: function () {
+    return {
+      profile: { // hdd where the profile folder is located
+        model: getSysinfoProperty("profileHDDModel", null),
+        revision: getSysinfoProperty("profileHDDRevision", null),
+      },
+      binary:  { // hdd where the application binary is located
+        model: getSysinfoProperty("binHDDModel", null),
+        revision: getSysinfoProperty("binHDDRevision", null),
+      },
+      system:  { // hdd where the system files are located
+        model: getSysinfoProperty("winHDDModel", null),
+        revision: getSysinfoProperty("winHDDRevision", null),
+      },
+    };
+  },
+
+  /**
+   * Get the GFX information.
+   * @return Object containing the GFX data.
+   */
+  _getGFXData: function () {
+    let gfxData = {
+      D2DEnabled: getGfxField("D2DEnabled", null),
+      DWriteEnabled: getGfxField("DWriteEnabled", null),
+      DWriteVersion: getGfxField("DWriteVersion", null),
+      adapters: [],
+    };
+
+    // GfxInfo does not yet expose a way to iterate through all the adapters.
+    gfxData.adapters.push(getGfxAdapter(""));
+    gfxData.adapters[0].GPUActive = true;
+
+    // If we have a second adapter add it to the gfxData.adapters section.
+    let hasGPU2 = getGfxField("adapterDeviceID2", null) !== null;
+    if (!hasGPU2) {
+      this._log.trace("_getGFXData - Only one display adapter detected.");
+      return gfxData;
+    }
+
+    this._log.trace("_getGFXData - Two display adapters detected.");
+
+    gfxData.adapters.push(getGfxAdapter("2"));
+    gfxData.adapters[1].GPUActive = getGfxField("isGPU2Active ", null);
+
+    return gfxData;
+  },
+
+  /**
+   * Get the system data in object form.
+   * @return Object containing the system data.
+   */
+  _getSystem: function () {
+    let memoryMB = getSysinfoProperty("memsize", null);
+    if (memoryMB) {
+      // Send RAM size in megabytes. Rounding because sysinfo doesn't
+      // always provide RAM in multiples of 1024.
+      memoryMB = Math.round(memoryMB / 1024 / 1024);
+    }
+
+    return {
+      memoryMB: memoryMB,
+#ifdef XP_WIN
+      isWow64: getSysinfoProperty("isWow64", null),
+#endif
+      cpu: this._getCpuData(),
+#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
+      device: this._getDeviceData(),
+#endif
+      os: this._getOSData(),
+      hdd: this._getHDDData(),
+      gfx: this._getGFXData(),
     };
   },
 
@@ -210,7 +655,11 @@ this.TelemetryEnvironment = {
 
     // Define the data collection function for each section.
     let sections = {
+      "build" : () => this._getBuild(),
       "settings": () => this._getSettings(),
+      "profile": () => this._getProfile(),
+      "partner": () => this._getPartner(),
+      "system": () => this._getSystem(),
     };
 
     let data = {};
@@ -219,9 +668,9 @@ this.TelemetryEnvironment = {
     // sections instead of all.
     for (let s in sections) {
       try {
-        data[s] = sections[s]();
+        data[s] = yield sections[s]();
       } catch (e) {
-        this._log.error("getEnvironmentData - There was an exception collecting " + s, e);
+        this._log.error("_doGetEnvironmentData - There was an exception collecting " + s, e);
       }
     }
 
