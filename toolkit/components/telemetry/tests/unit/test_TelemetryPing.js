@@ -172,7 +172,7 @@ function run_test() {
 
   // Addon manager needs a profile directory
   do_get_profile();
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   Services.prefs.setBoolPref(PREF_ENABLED, true);
   Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
