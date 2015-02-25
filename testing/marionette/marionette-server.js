@@ -95,6 +95,18 @@ Services.obs.addObserver(function () {
   delayedBrowserStarted = true;
 }, BROWSER_STARTUP_FINISHED, false);
 
+const Context = {
+  CHROME: "chrome",
+  CONTENT: "content",
+};
+
+Context.fromString = function(s) {
+  s = s.toUpperCase();
+  if (s in this)
+    return this[s];
+  return null;
+};
+
 /*
  * Custom exceptions
  */
@@ -142,7 +154,7 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
   this.messageManager = this.globalMessageManager;
   this.browsers = {}; //holds list of BrowserObjs
   this.curBrowser = null; // points to current browser
-  this.context = "content";
+  this.context = Context.CONTENT;
   this.scriptTimeout = null;
   this.searchTimeout = null;
   this.pageTimeout = null;
@@ -155,7 +167,9 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
   this.curFrame = null; // chrome iframe that currently has focus
   this.mainContentFrameId = null;
   this.importedScripts = FileUtils.getFile('TmpD', ['marionetteChromeScripts']);
-  this.importedScriptHashes = {"chrome" : [], "content": []};
+  this.importedScriptHashes = {};
+  this.importedScriptHashes[Context.CONTENT] = [];
+  this.importedScriptHashes[Context.CHROME] = [];
   this.currentFrameElement = null;
   this.testName = null;
   this.mozBrowserClose = null;
@@ -195,7 +209,6 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
 }
 
 MarionetteServerConnection.prototype = {
-
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIMessageListener,
                                          Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
@@ -419,7 +432,7 @@ MarionetteServerConnection.prototype = {
     let type = null;
     if (this.curFrame == null) {
       if (this.curBrowser == null) {
-        if (this.context == "content") {
+        if (this.context == Context.CONTENT) {
           type = 'navigator:browser';
         }
         return Services.wm.getMostRecentWindow(type);
@@ -440,7 +453,7 @@ MarionetteServerConnection.prototype = {
    */
   getWinEnumerator: function MDA_getWinEnumerator() {
     let type = null;
-    if (appName != "B2G" && this.context == "content") {
+    if (appName != "B2G" && this.context == Context.CONTENT) {
       type = 'navigator:browser';
     }
     return Services.wm.getEnumerator(type);
@@ -814,12 +827,12 @@ MarionetteServerConnection.prototype = {
    */
   setContext: function MDA_setContext(aRequest) {
     this.command_id = this.getCommandId();
-    let context = aRequest.parameters.value;
-    if (context != "content" && context != "chrome") {
+    let val = aRequest.parameters.value;
+    let ctx = Context.fromString(val);
+    if (ctx === null) {
       this.sendError("invalid context", 500, null, this.command_id);
-    }
-    else {
-      this.context = context;
+    } else {
+      this.context = ctx;
       this.sendOk(this.command_id);
     }
   },
@@ -956,7 +969,7 @@ MarionetteServerConnection.prototype = {
       //then they expect the same behaviour as webdriver
       newSandbox = true;
     }
-    if (this.context == "content") {
+    if (this.context == Context.CONTENT) {
       this.sendAsync("executeScript",
                      {
                        script: aRequest.parameters.script,
@@ -1076,15 +1089,18 @@ MarionetteServerConnection.prototype = {
       //then they expect the same behaviour as webdriver
       aRequest.newSandbox = true;
     }
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       if (aRequest.parameters.async) {
         this.executeWithCallback(aRequest, aRequest.parameters.async);
       }
       else {
         this.execute(aRequest, true);
       }
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("executeJSScript",
                      {
                        script: aRequest.parameters.script,
@@ -1098,6 +1114,7 @@ MarionetteServerConnection.prototype = {
                        line: aRequest.parameters.line,
                      },
                      command_id);
+      break;
    }
   },
 
@@ -1128,7 +1145,7 @@ MarionetteServerConnection.prototype = {
       newSandbox = true;
     }
 
-    if (this.context == "content") {
+    if (this.context == Context.CONTENT) {
       this.sendAsync("executeAsyncScript",
                      {
                        script: aRequest.parameters.script,
@@ -1295,7 +1312,7 @@ MarionetteServerConnection.prototype = {
   get: function MDA_get(aRequest) {
     let command_id = this.command_id = this.getCommandId();
 
-    if (this.context != "chrome") {
+    if (this.context == Context.CONTENT) {
       // If a remoteness update interrupts our page load, this will never return
       // We need to re-issue this request to correctly poll for readyState and
       // send errors.
@@ -1304,6 +1321,7 @@ MarionetteServerConnection.prototype = {
         this.messageManager.broadcastAsyncMessage(
           "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
           aRequest.parameters);
+        return;
       });
       aRequest.command_id = command_id;
       aRequest.parameters.pageTimeout = this.pageTimeout;
@@ -1359,11 +1377,15 @@ MarionetteServerConnection.prototype = {
   getCurrentUrl: function MDA_getCurrentUrl() {
     let isB2G = appName == "B2G";
     this.command_id = this.getCommandId();
-    if (this.context === "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       this.sendResponse(this.getCurrentWindow().location.href, this.command_id);
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("getCurrentUrl", {isB2G: isB2G}, this.command_id);
+      break;
     }
   },
 
@@ -1372,13 +1394,16 @@ MarionetteServerConnection.prototype = {
    */
   getTitle: function MDA_getTitle() {
     this.command_id = this.getCommandId();
-    if (this.context == "chrome"){
+    switch (this.context) {
+    case Context.CHROME:
       var curWindow = this.getCurrentWindow();
       var title = curWindow.document.documentElement.getAttribute('title');
       this.sendResponse(title, this.command_id);
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("getTitle", {}, this.command_id);
+      break;
     }
   },
 
@@ -1387,9 +1412,9 @@ MarionetteServerConnection.prototype = {
    */
   getWindowType: function MDA_getWindowType() {
     this.command_id = this.getCommandId();
-      var curWindow = this.getCurrentWindow();
-      var type = curWindow.document.documentElement.getAttribute('windowtype');
-      this.sendResponse(type, this.command_id);
+    let win = this.getCurrentWindow();
+    let typ = win.document.documentElement.getAttribute("windowtype");
+    this.sendResponse(typ, this.command_id);
   },
 
   /**
@@ -1397,14 +1422,17 @@ MarionetteServerConnection.prototype = {
    */
   getPageSource: function MDA_getPageSource(){
     this.command_id = this.getCommandId();
-    if (this.context == "chrome"){
-      let curWindow = this.getCurrentWindow();
-      let XMLSerializer = curWindow.XMLSerializer;
-      let pageSource = new XMLSerializer().serializeToString(curWindow.document);
+    switch (this.context) {
+    case Context.CHROME:
+      let win = this.getCurrentWindow();
+      let s = new win.XMLSerializer();
+      let pageSource = s.serializeToString(win.document);
       this.sendResponse(pageSource, this.command_id);
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("getPageSource", {}, this.command_id);
+      break;
     }
   },
 
@@ -1667,7 +1695,8 @@ MarionetteServerConnection.prototype = {
   getActiveFrame: function MDA_getActiveFrame() {
     this.command_id = this.getCommandId();
 
-    if (this.context == "chrome") {
+    switch (this.context) {
+    case Context.CHROME:
       if (this.curFrame) {
         let frameUid = this.curBrowser.elementManager.addToKnownElements(this.curFrame.frameElement);
         this.sendResponse(frameUid, this.command_id);
@@ -1675,9 +1704,11 @@ MarionetteServerConnection.prototype = {
         // no current frame, we're at toplevel
         this.sendResponse(null, this.command_id);
       }
-    } else {
-      // not chrome
+      break;
+
+    case Context.CONTENT:
       this.sendResponse(this.currentFrameElement, this.command_id);
+      break;
     }
   },
 
@@ -1708,7 +1739,7 @@ MarionetteServerConnection.prototype = {
 
       checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
     }
-    if (this.context == "chrome") {
+    if (this.context == Context.CHROME) {
       let foundFrame = null;
       if ((aRequest.parameters.id == null) && (aRequest.parameters.element == null)) {
         this.curFrame = null;
@@ -1858,18 +1889,16 @@ MarionetteServerConnection.prototype = {
     let serId = aRequest.parameters.id;
     let x = aRequest.parameters.x;
     let y = aRequest.parameters.y;
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       this.sendError("Command 'singleTap' is not available in chrome context", 500, null, this.command_id);
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.addFrameCloseListener("tap");
-      this.sendAsync("singleTap",
-                     {
-                       id: serId,
-                       corx: x,
-                       cory: y
-                     },
-                     this.command_id);
+      this.sendAsync("singleTap", {id: serId, corx: x, cory: y}, this.command_id);
+      break;
     }
   },
 
@@ -1883,7 +1912,9 @@ MarionetteServerConnection.prototype = {
     let command_id = this.command_id = this.getCommandId();
     let chain = aRequest.parameters.chain;
     let nextId = aRequest.parameters.nextId;
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       if (appName != 'Firefox') {
         // Be conservative until this has a use case and is established to work as
         // expected on b2g/fennec.
@@ -1902,7 +1933,9 @@ MarionetteServerConnection.prototype = {
       let currWin = this.getCurrentWindow();
       let elementManager = this.curBrowser.elementManager;
       this.actions.dispatchActions(chain, nextId, currWin, elementManager, callbacks);
-    } else {
+      break;
+
+    case Context.CONTENT:
       this.addFrameCloseListener("action chain");
       this.sendAsync("actionChain",
                      {
@@ -1910,6 +1943,7 @@ MarionetteServerConnection.prototype = {
                        nextId: nextId
                      },
                      command_id);
+      break;
     }
   },
 
@@ -1924,10 +1958,12 @@ MarionetteServerConnection.prototype = {
 
   multiAction: function MDA_multiAction(aRequest) {
     this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
-       this.sendError("Command 'multiAction' is not available in chrome context", 500, null, this.command_id);
-    }
-    else {
+    switch (this.context) {
+    case Context.CHROME:
+      this.sendError("Command 'multiAction' is not available in chrome context", 500, null, this.command_id);
+      break;
+
+    case Context.CONTENT:
       this.addFrameCloseListener("multi action chain");
       this.sendAsync("multiAction",
                      {
@@ -1935,6 +1971,7 @@ MarionetteServerConnection.prototype = {
                        maxlen: aRequest.parameters.max_length
                      },
                      this.command_id);
+     break;
    }
  },
 
@@ -1947,7 +1984,9 @@ MarionetteServerConnection.prototype = {
    */
   findElement: function MDA_findElement(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       let id;
       try {
         let on_success = this.sendResponse.bind(this);
@@ -1965,8 +2004,9 @@ MarionetteServerConnection.prototype = {
         this.sendError(e.message, e.code, e.stack, command_id);
         return;
       }
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("findElementContent",
                      {
                        value: aRequest.parameters.value,
@@ -1975,6 +2015,7 @@ MarionetteServerConnection.prototype = {
                        searchTimeout: this.searchTimeout
                      },
                      command_id);
+      break;
     }
   },
 
@@ -2007,7 +2048,9 @@ MarionetteServerConnection.prototype = {
    */
   findElements: function MDA_findElements(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       let id;
       try {
         let on_success = this.sendResponse.bind(this);
@@ -2024,8 +2067,9 @@ MarionetteServerConnection.prototype = {
         this.sendError(e.message, e.code, e.stack, command_id);
         return;
       }
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("findElementsContent",
                      {
                        value: aRequest.parameters.value,
@@ -2034,6 +2078,7 @@ MarionetteServerConnection.prototype = {
                        searchTimeout: this.searchTimeout
                      },
                      command_id);
+      break;
     }
   },
 
@@ -2074,7 +2119,9 @@ MarionetteServerConnection.prototype = {
    */
   clickElement: function MDA_clickElementent(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       try {
         //NOTE: click atom fails, fall back to click() action
         let el = this.curBrowser.elementManager.getKnownElement(
@@ -2085,8 +2132,9 @@ MarionetteServerConnection.prototype = {
       catch (e) {
         this.sendError(e.message, e.code, e.stack, command_id);
       }
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       // We need to protect against the click causing an OOP frame to close.
       // This fires the mozbrowserclose event when it closes so we need to
       // listen for it and then just send an error back. The person making the
@@ -2095,6 +2143,7 @@ MarionetteServerConnection.prototype = {
       this.sendAsync("clickElement",
                      { id: aRequest.parameters.id },
                      command_id);
+      break;
     }
   },
 
@@ -2108,7 +2157,9 @@ MarionetteServerConnection.prototype = {
    */
   getElementAttribute: function MDA_getElementAttribute(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       try {
         let el = this.curBrowser.elementManager.getKnownElement(
             aRequest.parameters.id, this.getCurrentWindow());
@@ -2118,14 +2169,16 @@ MarionetteServerConnection.prototype = {
       catch (e) {
         this.sendError(e.message, e.code, e.stack, command_id);
       }
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("getElementAttribute",
                      {
                        id: aRequest.parameters.id,
                        name: aRequest.parameters.name
                      },
                      command_id);
+      break;
     }
   },
 
@@ -2138,8 +2191,10 @@ MarionetteServerConnection.prototype = {
    */
   getElementText: function MDA_getElementText(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
-      //Note: for chrome, we look at text nodes, and any node with a "label" field
+
+    switch (this.context) {
+    case Context.CHROME:
+      // Note: for chrome, we look at text nodes, and any node with a "label" field
       try {
         let el = this.curBrowser.elementManager.getKnownElement(
             aRequest.parameters.id, this.getCurrentWindow());
@@ -2151,11 +2206,13 @@ MarionetteServerConnection.prototype = {
       catch (e) {
         this.sendError(e.message, e.code, e.stack, command_id);
       }
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("getElementText",
                      { id: aRequest.parameters.id },
                      command_id);
+      break;
     }
   },
 
@@ -2168,7 +2225,9 @@ MarionetteServerConnection.prototype = {
    */
   getElementTagName: function MDA_getElementTagName(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Content.CHROME:
       try {
         let el = this.curBrowser.elementManager.getKnownElement(
             aRequest.parameters.id, this.getCurrentWindow());
@@ -2177,11 +2236,13 @@ MarionetteServerConnection.prototype = {
       catch (e) {
         this.sendError(e.message, e.code, e.stack, command_id);
       }
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("getElementTagName",
                      { id: aRequest.parameters.id },
                      command_id);
+      break;
     }
   },
 
@@ -2194,7 +2255,9 @@ MarionetteServerConnection.prototype = {
    */
   isElementDisplayed: function MDA_isElementDisplayed(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       try {
         let el = this.curBrowser.elementManager.getKnownElement(
             aRequest.parameters.id, this.getCurrentWindow());
@@ -2203,11 +2266,13 @@ MarionetteServerConnection.prototype = {
       catch (e) {
         this.sendError(e.message, e.code, e.stack, command_id);
       }
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("isElementDisplayed",
                      { id:aRequest.parameters.id },
                      command_id);
+      break;
     }
   },
 
@@ -2246,11 +2311,15 @@ MarionetteServerConnection.prototype = {
   */
   submitElement: function MDA_submitElement(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       this.sendError("Command 'submitElement' is not available in chrome context", 500, null, this.command_id);
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("submitElement", {id: aRequest.parameters.id}, command_id);
+      break;
     }
   },
 
@@ -2264,7 +2333,9 @@ MarionetteServerConnection.prototype = {
   isElementEnabled: function(aRequest) {
     let command_id = this.command_id = this.getCommandId();
     let id = aRequest.parameters.id;
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       try {
         // Selenium atom doesn't quite work here
         let win = this.getCurrentWindow();
@@ -2273,8 +2344,11 @@ MarionetteServerConnection.prototype = {
       } catch (e) {
         this.sendError(e.message, e.code, e.stack, command_id);
       }
-    } else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("isElementEnabled", {id: id}, command_id);
+      break;
     }
   },
 
@@ -2287,7 +2361,9 @@ MarionetteServerConnection.prototype = {
    */
   isElementSelected: function MDA_isElementSelected(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       try {
         //Selenium atom doesn't quite work here
         let el = this.curBrowser.elementManager.getKnownElement(
@@ -2305,17 +2381,21 @@ MarionetteServerConnection.prototype = {
       catch (e) {
         this.sendError(e.message, e.code, e.stack, command_id);
       }
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("isElementSelected",
                      { id:aRequest.parameters.id },
                      command_id);
+      break;
     }
   },
 
   getElementSize: function MDA_getElementSize(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       try {
         let el = this.curBrowser.elementManager.getKnownElement(
             aRequest.parameters.id, this.getCurrentWindow());
@@ -2326,17 +2406,21 @@ MarionetteServerConnection.prototype = {
       catch (e) {
         this.sendError(e.message, e.code, e.stack, command_id);
       }
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("getElementSize",
                      { id:aRequest.parameters.id },
                      command_id);
+      break;
     }
   },
 
   getElementRect: function MDA_getElementRect(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       try {
         let el = this.curBrowser.elementManager.getKnownElement(
             aRequest.parameters.id, this.getCurrentWindow());
@@ -2349,11 +2433,13 @@ MarionetteServerConnection.prototype = {
       catch (e) {
         this.sendError(e.message, e.code, e.stack, command_id);
       }
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("getElementRect",
                      { id:aRequest.parameters.id },
                      command_id);
+      break;
     }
   },
 
@@ -2367,21 +2453,25 @@ MarionetteServerConnection.prototype = {
    */
   sendKeysToElement: function MDA_sendKeysToElement(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       let currentWindow = this.getCurrentWindow();
       let el = this.curBrowser.elementManager.getKnownElement(
         aRequest.parameters.id, currentWindow);
       utils.sendKeysToElement(currentWindow, el, aRequest.parameters.value,
                               this.sendOk.bind(this), this.sendError.bind(this),
-                              command_id, this.context);
-    }
-    else {
+                              command_id, true /* ignore visibility check */);
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("sendKeysToElement",
                      {
                        id:aRequest.parameters.id,
                        value: aRequest.parameters.value
                      },
                      command_id);
+      break;
     }
   },
 
@@ -2407,8 +2497,10 @@ MarionetteServerConnection.prototype = {
    */
   clearElement: function MDA_clearElement(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
-      //the selenium atom doesn't work here
+
+    switch (this.context) {
+    case Context.CHROME:
+      // The selenium atom doesn't work here
       try {
         let el = this.curBrowser.elementManager.getKnownElement(
             aRequest.parameters.id, this.getCurrentWindow());
@@ -2423,11 +2515,13 @@ MarionetteServerConnection.prototype = {
       catch (e) {
         this.sendError(e.message, e.code, e.stack, command_id);
       }
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("clearElement",
                      { id:aRequest.parameters.id },
                      command_id);
+      break;
     }
   },
 
@@ -2717,7 +2811,7 @@ MarionetteServerConnection.prototype = {
   },
 
   emulatorCmdResult: function emulatorCmdResult(message) {
-    if (this.context != "chrome") {
+    if (this.context == Context.CONTENT) {
       this.sendAsync("emulatorCmdResult", message, -1);
       return;
     }
@@ -2759,7 +2853,9 @@ MarionetteServerConnection.prototype = {
         return;
     }
     this.importedScriptHashes[this.context].push(hash);
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       let file;
       if (this.importedScripts.exists()) {
         file = FileUtils.openFileOutputStream(this.importedScripts,
@@ -2776,22 +2872,27 @@ MarionetteServerConnection.prototype = {
       file.write(aRequest.parameters.script, aRequest.parameters.script.length);
       file.close();
       this.sendOk(command_id);
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("importScript",
                      { script: aRequest.parameters.script },
                      command_id);
+      break;
     }
   },
 
   clearImportedScripts: function MDA_clearImportedScripts(aRequest) {
     let command_id = this.command_id = this.getCommandId();
     try {
-      if (this.context == "chrome") {
+      switch (this.context) {
+      case Context.CHROME:
         this.deleteFile('marionetteChromeScripts');
-      }
-      else {
+        break;
+
+      case Context.CONTENT:
         this.deleteFile('marionetteContentScripts');
+        break;
       }
     }
     catch (e) {
@@ -2821,7 +2922,9 @@ MarionetteServerConnection.prototype = {
    */
   takeScreenshot: function MDA_takeScreenshot(aRequest) {
     this.command_id = this.getCommandId();
-    if (this.context == "chrome") {
+
+    switch (this.context) {
+    case Context.CHROME:
       var win = this.getCurrentWindow();
       var canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
       var doc;
@@ -2859,13 +2962,15 @@ MarionetteServerConnection.prototype = {
       var dataUrl = canvas.toDataURL("image/png", "");
       var data = dataUrl.substring(dataUrl.indexOf(",") + 1);
       this.sendResponse(data, this.command_id);
-    }
-    else {
+      break;
+
+    case Context.CONTENT:
       this.sendAsync("takeScreenshot",
                    {id: aRequest.parameters.id,
                     highlights: aRequest.parameters.highlights,
                     full: aRequest.parameters.full},
                    this.command_id);
+      break;
     }
   },
 
