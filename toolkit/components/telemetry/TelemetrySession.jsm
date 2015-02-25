@@ -17,6 +17,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 const IS_CONTENT_PROCESS = (function() {
   // We cannot use Services.appinfo here because in telemetry xpcshell tests,
@@ -106,6 +107,23 @@ function generateUUID() {
 }
 
 /**
+ * This is a policy object used to override behavior for testing.
+ */
+let Policy = {
+  now: () => new Date(),
+};
+
+/**
+ * Takes a date and returns it trunctated to a date with daily precision.
+ */
+function truncateToDays(date) {
+  return new Date(date.getFullYear(),
+                  date.getMonth(),
+                  date.getDate(),
+                  0, 0, 0, 0);
+}
+
+/**
  * Read current process I/O counters.
  */
 let processInfo = {
@@ -169,10 +187,11 @@ this.TelemetrySession = Object.freeze({
   /**
    * Returns the current telemetry payload.
    * @param reason Optional, the reason to trigger the payload.
+   * @param clearSubsession Optional, whether to clear subsession specific data.
    * @returns Object
    */
-  getPayload: function(reason) {
-    return Impl.getPayload(reason);
+  getPayload: function(reason, clearSubsession = false) {
+    return Impl.getPayload(reason, clearSubsession);
   },
   /**
    * Save histograms to a file.
@@ -279,6 +298,8 @@ let Impl = {
   // where source is a weak reference to the child process,
   // and payload is the telemetry payload from that child process.
   _childTelemetry: [],
+  // Date of the last session split
+  _subsessionStartDate: null,
 
   /**
    * Gets a series of simple measurements (counters). At the moment, this
@@ -450,12 +471,12 @@ let Impl = {
     return retgram;
   },
 
-  getHistograms: function getHistograms(subsession) {
-    this._log.trace("getHistograms");
+  getHistograms: function getHistograms(subsession, clearSubsession) {
+    this._log.trace("getHistograms - subsession: " + subsession + ", clearSubsession: " + clearSubsession);
 
     let registered =
       Telemetry.registeredHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, []);
-    let hls = subsession ? Telemetry.snapshotSubsessionHistograms(false)
+    let hls = subsession ? Telemetry.snapshotSubsessionHistograms(clearSubsession)
                          : Telemetry.histogramSnapshots;
     let ret = {};
 
@@ -489,8 +510,8 @@ let Impl = {
     return ret;
   },
 
-  getKeyedHistograms: function(subsession) {
-    this._log.trace("getKeyedHistograms");
+  getKeyedHistograms: function(subsession, clearSubsession) {
+    this._log.trace("getKeyedHistograms - subsession: " + subsession + ", clearSubsession: " + clearSubsession);
 
     let registered =
       Telemetry.registeredKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, []);
@@ -499,7 +520,13 @@ let Impl = {
     for (let id of registered) {
       ret[id] = {};
       let keyed = Telemetry.getKeyedHistogramById(id);
-      let snapshot = subsession ? keyed.subsessionSnapshot() : keyed.snapshot();
+      let snapshot = null;
+      if (subsession) {
+        snapshot = clearSubsession ? keyed.snapshotSubsessionAndClear()
+                                   : keyed.subsessionSnapshot();
+      } else {
+        snapshot = keyed.snapshot();
+      }
       for (let key of Object.keys(snapshot)) {
         ret[id][key] = this.packHistogram(snapshot[key]);
       }
@@ -542,6 +569,8 @@ let Impl = {
       platformBuildID: ai.platformBuildID,
       revision: HISTOGRAMS_FILE_VERSION,
       asyncPluginInit: Preferences.get(PREF_ASYNC_PLUGIN_INIT, false)
+
+      subsessionStartDate: truncateToDays(this._subsessionStartDate).toISOString(),
     };
 
     // In order to share profile data, the appName used for Metro Firefox is "Firefox",
@@ -712,14 +741,8 @@ let Impl = {
    * to |this.getSimpleMeasurements| and |this.getMetadata|,
    * respectively.
    */
-  assemblePayloadWithMeasurements: function(simpleMeasurements, info, reason) {
-    const classicReasons = [
-      "saved-session",
-      "idle-daily",
-      "gather-payload",
-      "test-ping",
-    ];
-    const isSubsession = classicReasons.indexOf(reason) == -1;
+  assemblePayloadWithMeasurements: function(simpleMeasurements, info, reason, clearSubsession) {
+    const isSubsession = !this._isClassicReason(reason);
     this._log.trace("assemblePayloadWithMeasurements - reason: " + reason +
                     ", submitting subsession data: " + isSubsession);
 
@@ -727,8 +750,8 @@ let Impl = {
     let payloadObj = {
       ver: PAYLOAD_VERSION,
       simpleMeasurements: simpleMeasurements,
-      histograms: this.getHistograms(isSubsession),
-      keyedHistograms: this.getKeyedHistograms(isSubsession),
+      histograms: this.getHistograms(isSubsession, clearSubsession),
+      keyedHistograms: this.getKeyedHistograms(isSubsession, clearSubsession),
       chromeHangs: Telemetry.chromeHangs,
       threadHangStats: this.getThreadHangStats(Telemetry.threadHangStats),
       log: TelemetryLog.entries(),
@@ -761,14 +784,20 @@ let Impl = {
     if (this._childTelemetry.length) {
       payloadObj.childPayloads = this.getChildPayloads();
     }
+
     return payloadObj;
   },
 
-  getSessionPayload: function getSessionPayload(reason) {
-    this._log.trace("getSessionPayload - Reason " + reason);
+  getSessionPayload: function getSessionPayload(reason, clearSubsession) {
+    this._log.trace("getSessionPayload - reason: " + reason + ", clearSubsession: " + clearSubsession);
+
     let measurements = this.getSimpleMeasurements(reason == "saved-session");
     let info = !IS_CONTENT_PROCESS ? this.getMetadata(reason) : null;
-    return this.assemblePayloadWithMeasurements(measurements, info, reason);
+    let payload = this.assemblePayloadWithMeasurements(measurements, info, reason, clearSubsession);
+
+    this._subsessionStartDate = Policy.now();
+
+    return payload;
   },
 
   /**
@@ -779,7 +808,8 @@ let Impl = {
     // populate histograms one last time
     this.gatherMemory();
 
-    let payload = this.getSessionPayload(reason);
+    const isSubsession = !this._isClassicReason(reason);
+    let payload = this.getSessionPayload(reason, isSubsession);
     let options = {
       retentionDays: RETENTION_DAYS,
       addClientId: true,
@@ -844,6 +874,9 @@ let Impl = {
     }
 
     this._log.trace("setupChromeProcess");
+
+    this._sessionStartDate = Policy.now();
+    this._subsessionStartDate = this._sessionStartDate;
 
     // Initialize some probes that are kept in their own modules
     this._thirdPartyCookies = new ThirdPartyCookieProbe();
@@ -967,13 +1000,14 @@ let Impl = {
 
   sendContentProcessPing: function sendContentProcessPing(reason) {
     this._log.trace("sendContentProcessPing - Reason " + reason);
-    let payload = this.getSessionPayload(reason);
+    const isSubsession = !this._isClassicReason(reason);
+    let payload = this.getSessionPayload(reason, isSubsession);
     cpmm.sendAsyncMessage(MESSAGE_TELEMETRY_PAYLOAD, payload);
   },
 
   savePendingPings: function savePendingPings() {
     this._log.trace("savePendingPings");
-    let payload = this.getSessionPayload("saved-session");
+    let payload = this.getSessionPayload("saved-session", false);
     let options = {
       retentionDays: RETENTION_DAYS,
       addClientId: true,
@@ -984,7 +1018,7 @@ let Impl = {
 
   testSaveHistograms: function testSaveHistograms(file) {
     this._log.trace("testSaveHistograms - Path: " + file.path);
-    let payload = this.getSessionPayload("saved-session");
+    let payload = this.getSessionPayload("saved-session", false);
     let options = {
       retentionDays: RETENTION_DAYS,
       addClientId: true,
@@ -1013,8 +1047,8 @@ let Impl = {
 #endif
   },
 
-  getPayload: function getPayload(reason) {
-    this._log.trace("getPayload");
+  getPayload: function getPayload(reason, clearSubsession) {
+    this._log.trace("getPayload - clearSubsession: " + clearSubsession);
     reason = reason || "gather-payload";
     // This function returns the current Telemetry payload to the caller.
     // We only gather startup info once.
@@ -1023,7 +1057,7 @@ let Impl = {
       this._slowSQLStartup = Telemetry.slowSQL;
     }
     this.gatherMemory();
-    return this.getSessionPayload(reason);
+    return this.getSessionPayload(reason, clearSubsession);
   },
 
   gatherStartup: function gatherStartup() {
@@ -1142,7 +1176,7 @@ let Impl = {
     //    it on the next backgrounding). Not deleting it is faster, so that's what we do.
     case "application-background":
       if (Telemetry.canSend) {
-        let payload = this.getSessionPayload("saved-session");
+        let payload = this.getSessionPayload("saved-session", false);
         let options = {
           retentionDays: RETENTION_DAYS,
           addClientId: true,
@@ -1167,5 +1201,15 @@ let Impl = {
       return this.savePendingPings();
     }
     return Promise.resolve();
+  },
+
+  _isClassicReason: function(reason) {
+    const classicReasons = [
+      "saved-session",
+      "idle-daily",
+      "gather-payload",
+      "test-ping",
+    ];
+    return classicReasons.indexOf(reason) != -1;
   },
 };
