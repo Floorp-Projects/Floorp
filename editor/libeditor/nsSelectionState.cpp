@@ -55,7 +55,7 @@ nsSelectionState::SaveSelection(Selection* aSel)
 {
   MOZ_ASSERT(aSel);
   int32_t arrayCount = mArray.Length();
-  int32_t rangeCount = aSel->GetRangeCount();
+  int32_t rangeCount = aSel->RangeCount();
 
   // if we need more items in the array, new them
   if (arrayCount < rangeCount) {
