@@ -31,7 +31,7 @@ class nsNullPrincipal MOZ_FINAL : public nsJSPrincipals
 {
 public:
   nsNullPrincipal();
-  
+
   // Our refcount is managed by nsJSPrincipals.  Use this macro to avoid an
   // extra refcount member.
 
@@ -48,6 +48,8 @@ public:
                 bool aInMozBrowser = false);
 
   virtual void GetScriptLocation(nsACString &aStr) MOZ_OVERRIDE;
+
+  static nsresult GenerateNullPrincipalURI(nsACString &aStr);
 
 #ifdef DEBUG
   virtual void dumpImpl() MOZ_OVERRIDE;

@@ -62,6 +62,7 @@ from .context import (
     VARIABLES,
     DEPRECATION_HINTS,
     SPECIAL_VARIABLES,
+    SUBCONTEXTS,
     TemplateContext,
 )
 
@@ -140,12 +141,14 @@ class MozbuildSandbox(Sandbox):
             return SPECIAL_VARIABLES[key][0](self._context)
         if key in FUNCTIONS:
             return self._create_function(FUNCTIONS[key])
+        if key in SUBCONTEXTS:
+            return self._create_subcontext(SUBCONTEXTS[key])
         if key in self.templates:
             return self._create_template_function(self.templates[key])
         return Sandbox.__getitem__(self, key)
 
     def __setitem__(self, key, value):
-        if key in SPECIAL_VARIABLES or key in FUNCTIONS:
+        if key in SPECIAL_VARIABLES or key in FUNCTIONS or key in SUBCONTEXTS:
             raise KeyError()
         if key in self.exports:
             self._context[key] = value
@@ -309,6 +312,14 @@ class MozbuildSandbox(Sandbox):
         code += ''.join(lines[begin[0] - 1:])
 
         self.templates[name] = func, code, self._context.current_path
+
+    @memoize
+    def _create_subcontext(self, cls):
+        """Return a function object that creates SubContext instances."""
+        def fn(*args, **kwargs):
+            return cls(self._context, *args, **kwargs)
+
+        return fn
 
     @memoize
     def _create_function(self, function_def):
@@ -736,7 +747,7 @@ class BuildReader(object):
         read, a new Context is created and emitted.
         """
         path = mozpath.join(self.config.topsrcdir, 'moz.build')
-        return self.read_mozbuild(path, self.config, read_tiers=True)
+        return self.read_mozbuild(path, self.config)
 
     def all_mozbuild_paths(self):
         """Iterator over all available moz.build files.
@@ -872,8 +883,7 @@ class BuildReader(object):
             for name, key, value in assignments:
                 yield p, name, key, value
 
-    def read_mozbuild(self, path, config, read_tiers=False, descend=True,
-            metadata={}):
+    def read_mozbuild(self, path, config, descend=True, metadata={}):
         """Read and process a mozbuild file, descending into children.
 
         This starts with a single mozbuild file, executes it, and descends into
@@ -883,10 +893,6 @@ class BuildReader(object):
         each element as a relative directory path. For each encountered
         directory, we will open the moz.build file located in that
         directory in a new Sandbox and process it.
-
-        If read_tiers is True (it should only be True for the top-level
-        mozbuild file in a project), the TIERS variable will be used for
-        traversal as well.
 
         If descend is True (the default), we will descend into child
         directories and files per variable values.
@@ -900,8 +906,8 @@ class BuildReader(object):
         """
         self._execution_stack.append(path)
         try:
-            for s in self._read_mozbuild(path, config, read_tiers=read_tiers,
-                descend=descend, metadata=metadata):
+            for s in self._read_mozbuild(path, config, descend=descend,
+                                         metadata=metadata):
                 yield s
 
         except BuildReaderError as bre:
@@ -927,7 +933,7 @@ class BuildReader(object):
             raise BuildReaderError(list(self._execution_stack),
                 sys.exc_info()[2], other_error=e)
 
-    def _read_mozbuild(self, path, config, read_tiers, descend, metadata):
+    def _read_mozbuild(self, path, config, descend, metadata):
         path = mozpath.normpath(path)
         log(self._log, logging.DEBUG, 'read_mozbuild', {'path': path},
             'Reading file: {path}')
@@ -1008,11 +1014,12 @@ class BuildReader(object):
 
         for gyp_context in gyp_contexts:
             context['DIRS'].append(mozpath.relpath(gyp_context.objdir, context.objdir))
+            sandbox.subcontexts.append(gyp_context)
 
         yield context
 
-        for gyp_context in gyp_contexts:
-            yield gyp_context
+        for subcontext in sandbox.subcontexts:
+            yield subcontext
 
         # Traverse into referenced files.
 
@@ -1051,7 +1058,7 @@ class BuildReader(object):
                 continue
 
             for res in self.read_mozbuild(child_path, context.config,
-                read_tiers=False, metadata=child_metadata):
+                                          metadata=child_metadata):
                 yield res
 
         self._execution_stack.pop()

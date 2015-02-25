@@ -19,9 +19,9 @@ add_test(function test_is_icc_service_available() {
   function test_table(sst, geckoService, simEnabled, usimEnabled) {
     RIL.iccInfoPrivate.sst = sst;
     RIL.appType = CARD_APPTYPE_SIM;
-    do_check_eq(ICCUtilsHelper.isICCServiceAvailable(geckoService), simEnabled);
+    equal(ICCUtilsHelper.isICCServiceAvailable(geckoService), simEnabled);
     RIL.appType = CARD_APPTYPE_USIM;
-    do_check_eq(ICCUtilsHelper.isICCServiceAvailable(geckoService), usimEnabled);
+    equal(ICCUtilsHelper.isICCServiceAvailable(geckoService), usimEnabled);
   }
 
   test_table([0x08], "ADN", true, false);
@@ -41,9 +41,9 @@ add_test(function test_is_gsm_8bit_alphabet() {
   const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
   const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
 
-  do_check_eq(ICCUtilsHelper.isGsm8BitAlphabet(langTable), true);
-  do_check_eq(ICCUtilsHelper.isGsm8BitAlphabet(langShiftTable), true);
-  do_check_eq(ICCUtilsHelper.isGsm8BitAlphabet("\uaaaa"), false);
+  equal(ICCUtilsHelper.isGsm8BitAlphabet(langTable), true);
+  equal(ICCUtilsHelper.isGsm8BitAlphabet(langShiftTable), true);
+  equal(ICCUtilsHelper.isGsm8BitAlphabet("\uaaaa"), false);
 
   run_next_test();
 });
@@ -93,14 +93,14 @@ add_test(function test_parse_pbr_tlvs() {
   ];
 
   let pbr = context.ICCUtilsHelper.parsePbrTlvs(pbrTlvs);
-  do_check_eq(pbr.adn.fileId, 0x4F3a);
-  do_check_eq(pbr.iap.fileId, 0x4F25);
-  do_check_eq(pbr.pbc.fileId, 0x4F09);
-  do_check_eq(pbr.email.fileId, 0x4F50);
-  do_check_eq(pbr.anr0.fileId, 0x4f11);
-  do_check_eq(pbr.anr1.fileId, 0x4f12);
-  do_check_eq(pbr.ccp1.fileId, 0x4F3D);
-  do_check_eq(pbr.ext1.fileId, 0x4F4A);
+  equal(pbr.adn.fileId, 0x4F3a);
+  equal(pbr.iap.fileId, 0x4F25);
+  equal(pbr.pbc.fileId, 0x4F09);
+  equal(pbr.email.fileId, 0x4F50);
+  equal(pbr.anr0.fileId, 0x4f11);
+  equal(pbr.anr1.fileId, 0x4f12);
+  equal(pbr.ccp1.fileId, 0x4F3D);
+  equal(pbr.ext1.fileId, 0x4F4A);
 
   run_next_test();
 });
@@ -117,12 +117,12 @@ add_test(function test_mcc_mnc_parsing() {
     let result = helper.parseMccMncFromImsi(imsi, mncLength);
 
     if (!imsi) {
-      do_check_eq(result, null);
+      equal(result, null);
       return;
     }
 
-    do_check_eq(result.mcc, expectedMcc);
-    do_check_eq(result.mnc, expectedMnc);
+    equal(result.mcc, expectedMcc);
+    equal(result.mnc, expectedMnc);
   }
 
   // Test the imsi is null.
@@ -153,10 +153,10 @@ add_test(function test_get_network_name_from_icc() {
                                                       operatorData.lac);
 
     if (expectedResult == null) {
-      do_check_eq(result, expectedResult);
+      equal(result, expectedResult);
     } else {
-      do_check_eq(result.fullName, expectedResult.longName);
-      do_check_eq(result.shortName, expectedResult.shortName);
+      equal(result.fullName, expectedResult.longName);
+      equal(result.shortName, expectedResult.shortName);
     }
   }
 
@@ -311,7 +311,7 @@ add_test(function test_is_cphs_service_available() {
     RIL.iccInfoPrivate.cphsSt.set(cphsSt);
 
     for (let service in GECKO_ICC_SERVICES.cphs) {
-      do_check_eq(ICCUtilsHelper.isCphsServiceAvailable(service),
+      equal(ICCUtilsHelper.isCphsServiceAvailable(service),
                   geckoService == service);
     }
   }

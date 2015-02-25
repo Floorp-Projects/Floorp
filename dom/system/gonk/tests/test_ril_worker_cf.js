@@ -23,7 +23,7 @@ function toaFromString(number) {
 add_test(function test_toaFromString_empty() {
   let retval = toaFromString("");
 
-  do_check_eq(retval, TOA_UNKNOWN);
+  equal(retval, TOA_UNKNOWN);
 
   run_next_test();
 });
@@ -31,7 +31,7 @@ add_test(function test_toaFromString_empty() {
 add_test(function test_toaFromString_undefined() {
   let retval = toaFromString();
 
-  do_check_eq(retval, TOA_UNKNOWN);
+  equal(retval, TOA_UNKNOWN);
 
   run_next_test();
 });
@@ -39,7 +39,7 @@ add_test(function test_toaFromString_undefined() {
 add_test(function test_toaFromString_unknown() {
   let retval = toaFromString("666222333");
 
-  do_check_eq(retval, TOA_UNKNOWN);
+  equal(retval, TOA_UNKNOWN);
 
   run_next_test();
 });
@@ -47,7 +47,7 @@ add_test(function test_toaFromString_unknown() {
 add_test(function test_toaFromString_international() {
   let retval = toaFromString("+34666222333");
 
-  do_check_eq(retval, TOA_INTERNATIONAL);
+  equal(retval, TOA_INTERNATIONAL);
 
   run_next_test();
 });
@@ -73,8 +73,8 @@ add_test(function test_setCallForward_unconditional() {
 
   let postedMessage = workerHelper.postedMessage;
 
-  do_check_eq(postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
-  do_check_true(postedMessage.success);
+  equal(postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
+  ok(postedMessage.success);
 
   run_next_test();
 });
@@ -122,13 +122,13 @@ add_test(function test_queryCallForwardStatus_unconditional() {
 
   let postedMessage = workerHelper.postedMessage;
 
-  do_check_eq(postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
-  do_check_true(postedMessage.success);
-  do_check_true(Array.isArray(postedMessage.rules));
+  equal(postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
+  ok(postedMessage.success);
+  ok(Array.isArray(postedMessage.rules));
   do_print(postedMessage.rules.length);
-  do_check_eq(postedMessage.rules.length, 1);
-  do_check_true(postedMessage.rules[0].active);
-  do_check_eq(postedMessage.rules[0].reason, CALL_FORWARD_REASON_UNCONDITIONAL);
-  do_check_eq(postedMessage.rules[0].number, "+34666222333");
+  equal(postedMessage.rules.length, 1);
+  ok(postedMessage.rules[0].active);
+  equal(postedMessage.rules[0].reason, CALL_FORWARD_REASON_UNCONDITIONAL);
+  equal(postedMessage.rules[0].number, "+34666222333");
   run_next_test();
 });

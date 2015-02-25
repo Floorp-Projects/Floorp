@@ -62,7 +62,7 @@ add_test(function test_if_send_stk_terminal_profile() {
 
   context.RIL._processICCStatus(iccStatus);
 
-  do_check_eq(profileSend, false);
+  equal(profileSend, false);
 
   run_next_test();
 });
@@ -81,7 +81,7 @@ add_test(function test_send_stk_terminal_profile() {
   buf.seekIncoming(8);
   let profile = buf.readString();
   for (let i = 0; i < STK_SUPPORTED_TERMINAL_PROFILE.length; i++) {
-    do_check_eq(parseInt(profile.substring(2 * i, 2 * i + 2), 16),
+    equal(parseInt(profile.substring(2 * i, 2 * i + 2), 16),
                 STK_SUPPORTED_TERMINAL_PROFILE[i]);
   }
 
@@ -99,7 +99,7 @@ add_test(function test_stk_terminal_response() {
 
   buf.sendParcel = function() {
     // Type
-    do_check_eq(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
+    equal(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
 
     // Token : we don't care
     this.readInt32();
@@ -108,34 +108,34 @@ add_test(function test_stk_terminal_response() {
     //                      TLV_DEVICE_ID_SIZE(4) +
     //                      TLV_RESULT_SIZE(3) +
     //                      TEXT LENGTH(10))
-    do_check_eq(this.readInt32(), 44);
+    equal(this.readInt32(), 44);
 
     // Command Details, Type-Length-Value
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 3);
-    do_check_eq(pduHelper.readHexOctet(), 0x01);
-    do_check_eq(pduHelper.readHexOctet(), STK_CMD_PROVIDE_LOCAL_INFO);
-    do_check_eq(pduHelper.readHexOctet(), STK_LOCAL_INFO_NNA);
+    equal(pduHelper.readHexOctet(), 3);
+    equal(pduHelper.readHexOctet(), 0x01);
+    equal(pduHelper.readHexOctet(), STK_CMD_PROVIDE_LOCAL_INFO);
+    equal(pduHelper.readHexOctet(), STK_LOCAL_INFO_NNA);
 
     // Device Identifies, Type-Length-Value(Source ID-Destination ID)
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
-    do_check_eq(pduHelper.readHexOctet(), 2);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
+    equal(pduHelper.readHexOctet(), 2);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
 
     // Result
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 1);
-    do_check_eq(pduHelper.readHexOctet(), STK_RESULT_OK);
+    equal(pduHelper.readHexOctet(), 1);
+    equal(pduHelper.readHexOctet(), STK_RESULT_OK);
 
     // Text
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_TEXT_STRING |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_TEXT_STRING |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 8);
-    do_check_eq(pduHelper.readHexOctet(), STK_TEXT_CODING_GSM_7BIT_PACKED);
-    do_check_eq(pduHelper.readSeptetsToString(7, 0, PDU_NL_IDENTIFIER_DEFAULT,
+    equal(pduHelper.readHexOctet(), 8);
+    equal(pduHelper.readHexOctet(), STK_TEXT_CODING_GSM_7BIT_PACKED);
+    equal(pduHelper.readSeptetsToString(7, 0, PDU_NL_IDENTIFIER_DEFAULT,
                 PDU_NL_IDENTIFIER_DEFAULT), "Mozilla");
 
     run_next_test();
@@ -170,7 +170,7 @@ add_test(function test_stk_terminal_response_get_input_empty_string() {
 
   buf.sendParcel = function() {
     // Type
-    do_check_eq(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
+    equal(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
 
     // Token : we don't care
     this.readInt32();
@@ -179,33 +179,33 @@ add_test(function test_stk_terminal_response_get_input_empty_string() {
     //                      TLV_DEVICE_ID_SIZE(4) +
     //                      TLV_RESULT_SIZE(3) +
     //                      TEXT LENGTH(3))
-    do_check_eq(this.readInt32(), 30);
+    equal(this.readInt32(), 30);
 
     // Command Details, Type-Length-Value
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 3);
-    do_check_eq(pduHelper.readHexOctet(), 0x01);
-    do_check_eq(pduHelper.readHexOctet(), STK_CMD_GET_INPUT);
-    do_check_eq(pduHelper.readHexOctet(), 0x00);
+    equal(pduHelper.readHexOctet(), 3);
+    equal(pduHelper.readHexOctet(), 0x01);
+    equal(pduHelper.readHexOctet(), STK_CMD_GET_INPUT);
+    equal(pduHelper.readHexOctet(), 0x00);
 
     // Device Identifies, Type-Length-Value(Source ID-Destination ID)
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
-    do_check_eq(pduHelper.readHexOctet(), 2);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
+    equal(pduHelper.readHexOctet(), 2);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
 
     // Result
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 1);
-    do_check_eq(pduHelper.readHexOctet(), STK_RESULT_OK);
+    equal(pduHelper.readHexOctet(), 1);
+    equal(pduHelper.readHexOctet(), STK_RESULT_OK);
 
     // Text
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_TEXT_STRING |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_TEXT_STRING |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 1);
-    do_check_eq(pduHelper.readHexOctet(), STK_TEXT_CODING_GSM_8BIT);
+    equal(pduHelper.readHexOctet(), 1);
+    equal(pduHelper.readHexOctet(), STK_TEXT_CODING_GSM_8BIT);
 
     run_next_test();
   };
@@ -252,7 +252,7 @@ add_test(function test_stk_terminal_response_get_input_160_unpacked_characters()
 
   buf.sendParcel = function() {
     // Type
-    do_check_eq(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
+    equal(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
 
     // Token : we don't care
     this.readInt32();
@@ -261,36 +261,36 @@ add_test(function test_stk_terminal_response_get_input_160_unpacked_characters()
     //                       TLV_DEVICE_ID_SIZE(4) +
     //                       TLV_RESULT_SIZE(3) +
     //                       TEXT LENGTH(164))
-    do_check_eq(this.readInt32(), 352);
+    equal(this.readInt32(), 352);
 
     // Command Details, Type-Length-Value
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 3);
-    do_check_eq(pduHelper.readHexOctet(), 0x01);
-    do_check_eq(pduHelper.readHexOctet(), STK_CMD_GET_INPUT);
-    do_check_eq(pduHelper.readHexOctet(), 0x00);
+    equal(pduHelper.readHexOctet(), 3);
+    equal(pduHelper.readHexOctet(), 0x01);
+    equal(pduHelper.readHexOctet(), STK_CMD_GET_INPUT);
+    equal(pduHelper.readHexOctet(), 0x00);
 
     // Device Identifies, Type-Length-Value(Source ID-Destination ID)
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
-    do_check_eq(pduHelper.readHexOctet(), 2);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
+    equal(pduHelper.readHexOctet(), 2);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
 
     // Result
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 1);
-    do_check_eq(pduHelper.readHexOctet(), STK_RESULT_OK);
+    equal(pduHelper.readHexOctet(), 1);
+    equal(pduHelper.readHexOctet(), STK_RESULT_OK);
 
     // Text
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_TEXT_STRING |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_TEXT_STRING |
                                           COMPREHENSIONTLV_FLAG_CR);
     // C-TLV Length Encoding: 161 = 0x81 0xA1
-    do_check_eq(pduHelper.readHexOctet(), 0x81);
-    do_check_eq(pduHelper.readHexOctet(), 0xA1);
-    do_check_eq(pduHelper.readHexOctet(), STK_TEXT_CODING_GSM_8BIT);
-    do_check_eq(iccPduHelper.read8BitUnpackedToString(160), TEST_TEXT_STRING);
+    equal(pduHelper.readHexOctet(), 0x81);
+    equal(pduHelper.readHexOctet(), 0xA1);
+    equal(pduHelper.readHexOctet(), STK_TEXT_CODING_GSM_8BIT);
+    equal(iccPduHelper.read8BitUnpackedToString(160), TEST_TEXT_STRING);
 
     run_next_test();
   };
@@ -326,7 +326,7 @@ add_test(function test_stk_terminal_response_get_inkey_no_response_from_user() {
 
   buf.sendParcel = function() {
     // Type
-    do_check_eq(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
+    equal(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
 
     // Token : we don't care
     this.readInt32();
@@ -335,33 +335,33 @@ add_test(function test_stk_terminal_response_get_inkey_no_response_from_user() {
     //                       TLV_DEVICE_ID_SIZE(4) +
     //                       TLV_RESULT_SIZE(3) +
     //                       DURATION(4))
-    do_check_eq(this.readInt32(), 32);
+    equal(this.readInt32(), 32);
 
     // Command Details, Type-Length-Value
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 3);
-    do_check_eq(pduHelper.readHexOctet(), 0x01);
-    do_check_eq(pduHelper.readHexOctet(), STK_CMD_GET_INKEY);
-    do_check_eq(pduHelper.readHexOctet(), 0x00);
+    equal(pduHelper.readHexOctet(), 3);
+    equal(pduHelper.readHexOctet(), 0x01);
+    equal(pduHelper.readHexOctet(), STK_CMD_GET_INKEY);
+    equal(pduHelper.readHexOctet(), 0x00);
 
     // Device Identifies, Type-Length-Value(Source ID-Destination ID)
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
-    do_check_eq(pduHelper.readHexOctet(), 2);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
+    equal(pduHelper.readHexOctet(), 2);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
 
     // Result
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 1);
-    do_check_eq(pduHelper.readHexOctet(), STK_RESULT_NO_RESPONSE_FROM_USER);
+    equal(pduHelper.readHexOctet(), 1);
+    equal(pduHelper.readHexOctet(), STK_RESULT_NO_RESPONSE_FROM_USER);
 
     // Duration, Type-Length-Value(Time unit, Time interval)
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DURATION);
-    do_check_eq(pduHelper.readHexOctet(), 2);
-    do_check_eq(pduHelper.readHexOctet(), STK_TIME_UNIT_SECOND);
-    do_check_eq(pduHelper.readHexOctet(), 10);
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DURATION);
+    equal(pduHelper.readHexOctet(), 2);
+    equal(pduHelper.readHexOctet(), STK_TIME_UNIT_SECOND);
+    equal(pduHelper.readHexOctet(), 10);
 
     run_next_test();
   };
@@ -396,7 +396,7 @@ add_test(function test_stk_terminal_response_get_inkey() {
 
     buf.sendParcel = function() {
       // Type
-      do_check_eq(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
+      equal(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
 
       // Token : we don't care
       this.readInt32();
@@ -405,34 +405,34 @@ add_test(function test_stk_terminal_response_get_inkey() {
       //                      TLV_DEVICE_ID_SIZE(4) +
       //                      TLV_RESULT_SIZE(3) +
       //                      TEXT LENGTH(4))
-      do_check_eq(this.readInt32(), 32);
+      equal(this.readInt32(), 32);
 
       // Command Details, Type-Length-Value
-      do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
+      equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
                                             COMPREHENSIONTLV_FLAG_CR);
-      do_check_eq(pduHelper.readHexOctet(), 3);
-      do_check_eq(pduHelper.readHexOctet(), 0x01);
-      do_check_eq(pduHelper.readHexOctet(), STK_CMD_GET_INKEY);
-      do_check_eq(pduHelper.readHexOctet(), 0x04);
+      equal(pduHelper.readHexOctet(), 3);
+      equal(pduHelper.readHexOctet(), 0x01);
+      equal(pduHelper.readHexOctet(), STK_CMD_GET_INKEY);
+      equal(pduHelper.readHexOctet(), 0x04);
 
       // Device Identifies, Type-Length-Value(Source ID-Destination ID)
-      do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
-      do_check_eq(pduHelper.readHexOctet(), 2);
-      do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
-      do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+      equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
+      equal(pduHelper.readHexOctet(), 2);
+      equal(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+      equal(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
 
       // Result
-      do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
+      equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
                                             COMPREHENSIONTLV_FLAG_CR);
-      do_check_eq(pduHelper.readHexOctet(), 1);
-      do_check_eq(pduHelper.readHexOctet(), STK_RESULT_OK);
+      equal(pduHelper.readHexOctet(), 1);
+      equal(pduHelper.readHexOctet(), STK_RESULT_OK);
 
       // Yes/No response
-      do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_TEXT_STRING |
+      equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_TEXT_STRING |
                                             COMPREHENSIONTLV_FLAG_CR);
-      do_check_eq(pduHelper.readHexOctet(), 2);
-      do_check_eq(pduHelper.readHexOctet(), STK_TEXT_CODING_GSM_8BIT);
-      do_check_eq(pduHelper.readHexOctet(), isYesNo ? 0x01 : 0x00);
+      equal(pduHelper.readHexOctet(), 2);
+      equal(pduHelper.readHexOctet(), STK_TEXT_CODING_GSM_8BIT);
+      equal(pduHelper.readHexOctet(), isYesNo ? 0x01 : 0x00);
     };
 
     let response = {
@@ -471,7 +471,7 @@ add_test(function test_stk_terminal_response_with_additional_info() {
 
     buf.sendParcel = function() {
       // Type
-      do_check_eq(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
+      equal(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
 
       // Token : we don't care
       this.readInt32();
@@ -479,28 +479,28 @@ add_test(function test_stk_terminal_response_with_additional_info() {
       // Data Length 26 = 2 * (TLV_COMMAND_DETAILS_SIZE(5) +
       //                       TLV_DEVICE_ID_SIZE(4) +
       //                       TLV_RESULT_SIZE(4))
-      do_check_eq(this.readInt32(), 26);
+      equal(this.readInt32(), 26);
 
       // Command Details, Type-Length-Value(commandNumber, typeOfCommand, commandQualifier)
-      do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
+      equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
                                             COMPREHENSIONTLV_FLAG_CR);
-      do_check_eq(pduHelper.readHexOctet(), 3);
-      do_check_eq(pduHelper.readHexOctet(), 0x01);
-      do_check_eq(pduHelper.readHexOctet(), STK_CMD_DISPLAY_TEXT);
-      do_check_eq(pduHelper.readHexOctet(), 0x01);
+      equal(pduHelper.readHexOctet(), 3);
+      equal(pduHelper.readHexOctet(), 0x01);
+      equal(pduHelper.readHexOctet(), STK_CMD_DISPLAY_TEXT);
+      equal(pduHelper.readHexOctet(), 0x01);
 
       // Device Identifies, Type-Length-Value(Source ID-Destination ID)
-      do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
-      do_check_eq(pduHelper.readHexOctet(), 2);
-      do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
-      do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+      equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
+      equal(pduHelper.readHexOctet(), 2);
+      equal(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+      equal(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
 
       // Result, Type-Length-Value(General result, Additional information on result)
-      do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
+      equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
                                             COMPREHENSIONTLV_FLAG_CR);
-      do_check_eq(pduHelper.readHexOctet(), 2);
-      do_check_eq(pduHelper.readHexOctet(), STK_RESULT_TERMINAL_CRNTLY_UNABLE_TO_PROCESS);
-      do_check_eq(pduHelper.readHexOctet(), aInfo);
+      equal(pduHelper.readHexOctet(), 2);
+      equal(pduHelper.readHexOctet(), STK_RESULT_TERMINAL_CRNTLY_UNABLE_TO_PROCESS);
+      equal(pduHelper.readHexOctet(), aInfo);
     };
 
     let response = {
@@ -545,23 +545,23 @@ add_test(function test_write_location_info_tlv() {
   tlvHelper.writeLocationInfoTlv(loc);
 
   let tag = pduHelper.readHexOctet();
-  do_check_eq(tag, COMPREHENSIONTLV_TAG_LOCATION_INFO |
+  equal(tag, COMPREHENSIONTLV_TAG_LOCATION_INFO |
                    COMPREHENSIONTLV_FLAG_CR);
 
   let length = pduHelper.readHexOctet();
-  do_check_eq(length, 9);
+  equal(length, 9);
 
   let mcc_mnc = pduHelper.readSwappedNibbleBcdString(3);
-  do_check_eq(mcc_mnc, "46692");
+  equal(mcc_mnc, "46692");
 
   let lac = (pduHelper.readHexOctet() << 8) | pduHelper.readHexOctet();
-  do_check_eq(lac, 10291);
+  equal(lac, 10291);
 
   let cellId = (pduHelper.readHexOctet() << 24) |
                (pduHelper.readHexOctet() << 16) |
                (pduHelper.readHexOctet() << 8)  |
                (pduHelper.readHexOctet());
-  do_check_eq(cellId, 19072823);
+  equal(cellId, 19072823);
 
   // Test with 1-digit mnc, and gsmCellId obtained from GSM network.
   loc = {
@@ -573,20 +573,20 @@ add_test(function test_write_location_info_tlv() {
   tlvHelper.writeLocationInfoTlv(loc);
 
   tag = pduHelper.readHexOctet();
-  do_check_eq(tag, COMPREHENSIONTLV_TAG_LOCATION_INFO |
+  equal(tag, COMPREHENSIONTLV_TAG_LOCATION_INFO |
                    COMPREHENSIONTLV_FLAG_CR);
 
   length = pduHelper.readHexOctet();
-  do_check_eq(length, 7);
+  equal(length, 7);
 
   mcc_mnc = pduHelper.readSwappedNibbleBcdString(3);
-  do_check_eq(mcc_mnc, "46602");
+  equal(mcc_mnc, "46602");
 
   lac = (pduHelper.readHexOctet() << 8) | pduHelper.readHexOctet();
-  do_check_eq(lac, 10291);
+  equal(lac, 10291);
 
   cellId = (pduHelper.readHexOctet() << 8) | (pduHelper.readHexOctet());
-  do_check_eq(cellId, 65534);
+  equal(cellId, 65534);
 
   // Test with 3-digit mnc, and gsmCellId obtained from GSM network.
   loc = {
@@ -598,20 +598,20 @@ add_test(function test_write_location_info_tlv() {
   tlvHelper.writeLocationInfoTlv(loc);
 
   tag = pduHelper.readHexOctet();
-  do_check_eq(tag, COMPREHENSIONTLV_TAG_LOCATION_INFO |
+  equal(tag, COMPREHENSIONTLV_TAG_LOCATION_INFO |
                    COMPREHENSIONTLV_FLAG_CR);
 
   length = pduHelper.readHexOctet();
-  do_check_eq(length, 7);
+  equal(length, 7);
 
   mcc_mnc = pduHelper.readSwappedNibbleBcdString(3);
-  do_check_eq(mcc_mnc, "466222");
+  equal(mcc_mnc, "466222");
 
   lac = (pduHelper.readHexOctet() << 8) | pduHelper.readHexOctet();
-  do_check_eq(lac, 10291);
+  equal(lac, 10291);
 
   cellId = (pduHelper.readHexOctet() << 8) | (pduHelper.readHexOctet());
-  do_check_eq(cellId, 65534);
+  equal(cellId, 65534);
 
   run_next_test();
 });
@@ -627,13 +627,13 @@ add_test(function test_write_disconnecting_cause() {
 
   tlvHelper.writeCauseTlv(RIL_ERROR_TO_GECKO_ERROR[ERROR_GENERIC_FAILURE]);
   let tag = pduHelper.readHexOctet();
-  do_check_eq(tag, COMPREHENSIONTLV_TAG_CAUSE | COMPREHENSIONTLV_FLAG_CR);
+  equal(tag, COMPREHENSIONTLV_TAG_CAUSE | COMPREHENSIONTLV_FLAG_CR);
   let len = pduHelper.readHexOctet();
-  do_check_eq(len, 2);  // We have one cause.
+  equal(len, 2);  // We have one cause.
   let standard = pduHelper.readHexOctet();
-  do_check_eq(standard, 0x60);
+  equal(standard, 0x60);
   let cause = pduHelper.readHexOctet();
-  do_check_eq(cause, 0x80 | ERROR_GENERIC_FAILURE);
+  equal(cause, 0x80 | ERROR_GENERIC_FAILURE);
 
   run_next_test();
 });
@@ -647,16 +647,16 @@ add_test(function test_get_size_of_length_octets() {
   let tlvHelper = context.ComprehensionTlvHelper;
 
   let length = 0x70;
-  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 1);
+  equal(tlvHelper.getSizeOfLengthOctets(length), 1);
 
   length = 0x80;
-  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 2);
+  equal(tlvHelper.getSizeOfLengthOctets(length), 2);
 
   length = 0x180;
-  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 3);
+  equal(tlvHelper.getSizeOfLengthOctets(length), 3);
 
   length = 0x18000;
-  do_check_eq(tlvHelper.getSizeOfLengthOctets(length), 4);
+  equal(tlvHelper.getSizeOfLengthOctets(length), 4);
 
   run_next_test();
 });
@@ -672,25 +672,25 @@ add_test(function test_write_length() {
 
   let length = 0x70;
   tlvHelper.writeLength(length);
-  do_check_eq(pduHelper.readHexOctet(), length);
+  equal(pduHelper.readHexOctet(), length);
 
   length = 0x80;
   tlvHelper.writeLength(length);
-  do_check_eq(pduHelper.readHexOctet(), 0x81);
-  do_check_eq(pduHelper.readHexOctet(), length);
+  equal(pduHelper.readHexOctet(), 0x81);
+  equal(pduHelper.readHexOctet(), length);
 
   length = 0x180;
   tlvHelper.writeLength(length);
-  do_check_eq(pduHelper.readHexOctet(), 0x82);
-  do_check_eq(pduHelper.readHexOctet(), (length >> 8) & 0xff);
-  do_check_eq(pduHelper.readHexOctet(), length & 0xff);
+  equal(pduHelper.readHexOctet(), 0x82);
+  equal(pduHelper.readHexOctet(), (length >> 8) & 0xff);
+  equal(pduHelper.readHexOctet(), length & 0xff);
 
   length = 0x18000;
   tlvHelper.writeLength(length);
-  do_check_eq(pduHelper.readHexOctet(), 0x83);
-  do_check_eq(pduHelper.readHexOctet(), (length >> 16) & 0xff);
-  do_check_eq(pduHelper.readHexOctet(), (length >> 8) & 0xff);
-  do_check_eq(pduHelper.readHexOctet(), length & 0xff);
+  equal(pduHelper.readHexOctet(), 0x83);
+  equal(pduHelper.readHexOctet(), (length >> 16) & 0xff);
+  equal(pduHelper.readHexOctet(), (length >> 8) & 0xff);
+  equal(pduHelper.readHexOctet(), length & 0xff);
 
   run_next_test();
 });
@@ -731,7 +731,7 @@ function test_stk_proactive_command(aOptions) {
   let ctlvs = berTlv.value;
   let ctlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
   let cmdDetails = ctlv.value;
-  do_check_eq(cmdDetails.typeOfCommand, testTypeOfCommand);
+  equal(cmdDetails.typeOfCommand, testTypeOfCommand);
 
   stkFactory.createParam(cmdDetails, ctlvs, (aResult) => {
     cmdDetails.options = aResult;
@@ -766,19 +766,19 @@ add_test(function test_stk_proactive_command_search_for_selected_tags() {
   let selectedCtlvs =
       stkHelper.searchForSelectedTags(berTlv.value, [COMPREHENSIONTLV_TAG_ALPHA_ID]);
   let tlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_ALPHA_ID);
-  do_check_eq(tlv.value.identifier, "alpha id 1");
+  equal(tlv.value.identifier, "alpha id 1");
 
   tlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_ALPHA_ID);
-  do_check_eq(tlv.value.identifier, "alpha id 2");
+  equal(tlv.value.identifier, "alpha id 2");
 
   tlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_ALPHA_ID);
-  do_check_eq(tlv.value.identifier, "alpha id 3");
+  equal(tlv.value.identifier, "alpha id 3");
 
   tlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_ALPHA_ID);
-  do_check_eq(tlv.value.identifier, "alpha id 4");
+  equal(tlv.value.identifier, "alpha id 4");
 
   tlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_ALPHA_ID);
-  do_check_eq(tlv.value.identifier, "alpha id 5");
+  equal(tlv.value.identifier, "alpha id 5");
 
   run_next_test();
 });
@@ -800,7 +800,7 @@ add_test(function test_stk_proactive_command_refresh() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let stkHelper = context.StkProactiveCmdHelper;
       let ctlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_FILE_LIST, ctlvs);
-      do_check_eq(ctlv.value.fileList, "3F002FE2");
+      equal(ctlv.value.fileList, "3F002FE2");
     }
   });
 
@@ -827,12 +827,12 @@ add_test(function test_stk_proactive_command_play_tone() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let playTone = cmdDetails.options;
 
-      do_check_eq(playTone.text, "Dial Tone");
-      do_check_eq(playTone.tone, STK_TONE_TYPE_DIAL_TONE);
-      do_check_eq(playTone.duration.timeUnit, STK_TIME_UNIT_SECOND);
-      do_check_eq(playTone.duration.timeInterval, 5);
-      do_check_eq(playTone.iconSelfExplanatory, true);
-      do_check_eq(playTone.icons, 1);
+      equal(playTone.text, "Dial Tone");
+      equal(playTone.tone, STK_TONE_TYPE_DIAL_TONE);
+      equal(playTone.duration.timeUnit, STK_TIME_UNIT_SECOND);
+      equal(playTone.duration.timeInterval, 5);
+      equal(playTone.iconSelfExplanatory, true);
+      equal(playTone.icons, 1);
     }
   });
 
@@ -856,8 +856,8 @@ add_test(function test_stk_proactive_command_poll_interval() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let interval = cmdDetails.options;
 
-      do_check_eq(interval.timeUnit, STK_TIME_UNIT_SECOND);
-      do_check_eq(interval.timeInterval, 0x14);
+      equal(interval.timeUnit, STK_TIME_UNIT_SECOND);
+      equal(interval.timeInterval, 0x14);
     }
   });
 
@@ -884,9 +884,9 @@ add_test(function test_stk_proactive_command_display_text() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let textMsg = cmdDetails.options;
 
-      do_check_eq(textMsg.text, "Saldo 2.04 E. Validez 20/05/13. ");
-      do_check_eq(textMsg.iconSelfExplanatory, true);
-      do_check_eq(textMsg.icons, 1);
+      equal(textMsg.text, "Saldo 2.04 E. Validez 20/05/13. ");
+      equal(textMsg.iconSelfExplanatory, true);
+      equal(textMsg.icons, 1);
     }
   });
 
@@ -910,10 +910,10 @@ add_test(function test_stk_proactive_command_event_list() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let event = cmdDetails.options;
 
-      do_check_eq(Array.isArray(event.eventList), true);
+      equal(Array.isArray(event.eventList), true);
 
       for (let i = 0; i < event.eventList.length; i++) {
-        do_check_eq(event.eventList[i], i);
+        equal(event.eventList[i], i);
       }
     }
   });
@@ -941,17 +941,17 @@ add_test(function test_stk_proactive_command_get_input() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let input = cmdDetails.options;
 
-      do_check_eq(input.text, "Text");
-      do_check_eq(input.isAlphabet, true);
-      do_check_eq(input.isUCS2, true);
-      do_check_eq(input.hideInput, true);
-      do_check_eq(input.isPacked, true);
-      do_check_eq(input.isHelpAvailable, true);
-      do_check_eq(input.minLength, 0x01);
-      do_check_eq(input.maxLength, 0x10);
-      do_check_eq(input.defaultText, "Default");
-      do_check_eq(input.iconSelfExplanatory, true);
-      do_check_eq(input.icons, 1);
+      equal(input.text, "Text");
+      equal(input.isAlphabet, true);
+      equal(input.isUCS2, true);
+      equal(input.hideInput, true);
+      equal(input.isPacked, true);
+      equal(input.isHelpAvailable, true);
+      equal(input.minLength, 0x01);
+      equal(input.maxLength, 0x10);
+      equal(input.defaultText, "Default");
+      equal(input.iconSelfExplanatory, true);
+      equal(input.icons, 1);
     }
   });
 
@@ -970,10 +970,10 @@ add_test(function test_stk_proactive_command_get_input() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let input = cmdDetails.options;
 
-      do_check_eq(input.text, null);
-      do_check_eq(input.minLength, 0x01);
-      do_check_eq(input.maxLength, 0x10);
-      do_check_eq(input.defaultText, null);
+      equal(input.text, null);
+      equal(input.minLength, 0x01);
+      equal(input.maxLength, 0x10);
+      equal(input.defaultText, null);
     }
   });
 
@@ -1003,9 +1003,9 @@ add_test(function test_stk_proactive_command_more_time() {
   let berTlv = berHelper.decode(more_time_1.length);
   let ctlvs = berTlv.value;
   let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_MORE_TIME);
-  do_check_eq(tlv.value.commandQualifier, 0x00);
+  equal(tlv.value.commandNumber, 0x01);
+  equal(tlv.value.typeOfCommand, STK_CMD_MORE_TIME);
+  equal(tlv.value.commandQualifier, 0x00);
 
   run_next_test();
 });
@@ -1034,25 +1034,25 @@ add_test(function test_stk_proactive_command_select_item() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let menu = cmdDetails.options;
 
-      do_check_eq(menu.title, "Title");
-      do_check_eq(menu.iconSelfExplanatory, true);
-      do_check_eq(menu.icons, 1);
-      do_check_eq(menu.items[0].identifier, 1);
-      do_check_eq(menu.items[0].text, "item 1");
-      do_check_eq(menu.items[0].iconSelfExplanatory, true);
-      do_check_eq(menu.items[0].icons, 1);
-      do_check_eq(menu.items[1].identifier, 2);
-      do_check_eq(menu.items[1].text, "item 2");
-      do_check_eq(menu.items[1].iconSelfExplanatory, true);
-      do_check_eq(menu.items[1].icons, 2);
-      do_check_eq(menu.items[2].identifier, 3);
-      do_check_eq(menu.items[2].text, "item 3");
-      do_check_eq(menu.items[2].iconSelfExplanatory, true);
-      do_check_eq(menu.items[2].icons, 3);
-      do_check_eq(menu.nextActionList[0], STK_CMD_SET_UP_CALL);
-      do_check_eq(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
-      do_check_eq(menu.nextActionList[2], STK_CMD_PLAY_TONE);
-      do_check_eq(menu.defaultItem, 0x00);
+      equal(menu.title, "Title");
+      equal(menu.iconSelfExplanatory, true);
+      equal(menu.icons, 1);
+      equal(menu.items[0].identifier, 1);
+      equal(menu.items[0].text, "item 1");
+      equal(menu.items[0].iconSelfExplanatory, true);
+      equal(menu.items[0].icons, 1);
+      equal(menu.items[1].identifier, 2);
+      equal(menu.items[1].text, "item 2");
+      equal(menu.items[1].iconSelfExplanatory, true);
+      equal(menu.items[1].icons, 2);
+      equal(menu.items[2].identifier, 3);
+      equal(menu.items[2].text, "item 3");
+      equal(menu.items[2].iconSelfExplanatory, true);
+      equal(menu.items[2].icons, 3);
+      equal(menu.nextActionList[0], STK_CMD_SET_UP_CALL);
+      equal(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
+      equal(menu.nextActionList[2], STK_CMD_PLAY_TONE);
+      equal(menu.defaultItem, 0x00);
     }
   });
 
@@ -1074,17 +1074,17 @@ add_test(function test_stk_proactive_command_select_item() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let menu = cmdDetails.options;
 
-      do_check_eq(menu.title, "Title");
-      do_check_eq(menu.items[0].identifier, 1);
-      do_check_eq(menu.items[0].text, "item 1");
-      do_check_eq(menu.items[1].identifier, 2);
-      do_check_eq(menu.items[1].text, "item 2");
-      do_check_eq(menu.items[2].identifier, 3);
-      do_check_eq(menu.items[2].text, "item 3");
-      do_check_eq(menu.nextActionList[0], STK_NEXT_ACTION_NULL);
-      do_check_eq(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
-      do_check_eq(menu.nextActionList[2], STK_NEXT_ACTION_END_PROACTIVE_SESSION);
-      do_check_eq(menu.defaultItem, 0x02);
+      equal(menu.title, "Title");
+      equal(menu.items[0].identifier, 1);
+      equal(menu.items[0].text, "item 1");
+      equal(menu.items[1].identifier, 2);
+      equal(menu.items[1].text, "item 2");
+      equal(menu.items[2].identifier, 3);
+      equal(menu.items[2].text, "item 3");
+      equal(menu.nextActionList[0], STK_NEXT_ACTION_NULL);
+      equal(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
+      equal(menu.nextActionList[2], STK_NEXT_ACTION_END_PROACTIVE_SESSION);
+      equal(menu.defaultItem, 0x02);
     }
   });
 
@@ -1114,24 +1114,24 @@ add_test(function test_stk_proactive_command_set_up_menu() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let menu = cmdDetails.options;
 
-      do_check_eq(menu.title, "Title");
-      do_check_eq(menu.iconSelfExplanatory, true);
-      do_check_eq(menu.icons, 1);
-      do_check_eq(menu.items[0].identifier, 1);
-      do_check_eq(menu.items[0].text, "item 1");
-      do_check_eq(menu.items[0].iconSelfExplanatory, true);
-      do_check_eq(menu.items[0].icons, 1);
-      do_check_eq(menu.items[1].identifier, 2);
-      do_check_eq(menu.items[1].text, "item 2");
-      do_check_eq(menu.items[1].iconSelfExplanatory, true);
-      do_check_eq(menu.items[1].icons, 2);
-      do_check_eq(menu.items[2].identifier, 3);
-      do_check_eq(menu.items[2].text, "item 3");
-      do_check_eq(menu.items[2].iconSelfExplanatory, true);
-      do_check_eq(menu.items[2].icons, 3);
-      do_check_eq(menu.nextActionList[0], STK_CMD_SET_UP_CALL);
-      do_check_eq(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
-      do_check_eq(menu.nextActionList[2], STK_CMD_PLAY_TONE);
+      equal(menu.title, "Title");
+      equal(menu.iconSelfExplanatory, true);
+      equal(menu.icons, 1);
+      equal(menu.items[0].identifier, 1);
+      equal(menu.items[0].text, "item 1");
+      equal(menu.items[0].iconSelfExplanatory, true);
+      equal(menu.items[0].icons, 1);
+      equal(menu.items[1].identifier, 2);
+      equal(menu.items[1].text, "item 2");
+      equal(menu.items[1].iconSelfExplanatory, true);
+      equal(menu.items[1].icons, 2);
+      equal(menu.items[2].identifier, 3);
+      equal(menu.items[2].text, "item 3");
+      equal(menu.items[2].iconSelfExplanatory, true);
+      equal(menu.items[2].icons, 3);
+      equal(menu.nextActionList[0], STK_CMD_SET_UP_CALL);
+      equal(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
+      equal(menu.nextActionList[2], STK_CMD_PLAY_TONE);
     }
   });
 
@@ -1152,16 +1152,16 @@ add_test(function test_stk_proactive_command_set_up_menu() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let menu = cmdDetails.options;
 
-      do_check_eq(menu.title, "Title");
-      do_check_eq(menu.items[0].identifier, 1);
-      do_check_eq(menu.items[0].text, "item 1");
-      do_check_eq(menu.items[1].identifier, 2);
-      do_check_eq(menu.items[1].text, "item 2");
-      do_check_eq(menu.items[2].identifier, 3);
-      do_check_eq(menu.items[2].text, "item 3");
-      do_check_eq(menu.nextActionList[0], STK_NEXT_ACTION_END_PROACTIVE_SESSION);
-      do_check_eq(menu.nextActionList[1], STK_NEXT_ACTION_NULL);
-      do_check_eq(menu.nextActionList[2], STK_NEXT_ACTION_NULL);
+      equal(menu.title, "Title");
+      equal(menu.items[0].identifier, 1);
+      equal(menu.items[0].text, "item 1");
+      equal(menu.items[1].identifier, 2);
+      equal(menu.items[1].text, "item 2");
+      equal(menu.items[2].identifier, 3);
+      equal(menu.items[2].text, "item 3");
+      equal(menu.nextActionList[0], STK_NEXT_ACTION_END_PROACTIVE_SESSION);
+      equal(menu.nextActionList[1], STK_NEXT_ACTION_NULL);
+      equal(menu.nextActionList[2], STK_NEXT_ACTION_NULL);
     }
   });
 
@@ -1189,13 +1189,13 @@ add_test(function test_stk_proactive_command_set_up_call() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let setupCall = cmdDetails.options;
 
-      do_check_eq(setupCall.address, "012340123456,1,2");
-      do_check_eq(setupCall.confirmMessage.text, "Disconnect");
-      do_check_eq(setupCall.confirmMessage.iconSelfExplanatory, true);
-      do_check_eq(setupCall.confirmMessage.icons, 1);
-      do_check_eq(setupCall.callMessage.text, "Message");
-      do_check_eq(setupCall.callMessage.iconSelfExplanatory, false);
-      do_check_eq(setupCall.callMessage.icons, 2);
+      equal(setupCall.address, "012340123456,1,2");
+      equal(setupCall.confirmMessage.text, "Disconnect");
+      equal(setupCall.confirmMessage.iconSelfExplanatory, true);
+      equal(setupCall.confirmMessage.icons, 1);
+      equal(setupCall.callMessage.text, "Message");
+      equal(setupCall.callMessage.iconSelfExplanatory, false);
+      equal(setupCall.callMessage.icons, 2);
     }
   });
 
@@ -1219,12 +1219,12 @@ add_test(function test_stk_proactive_command_timer_management() {
     typeOfCommand: STK_CMD_TIMER_MANAGEMENT,
     icons: null,
     testFunc: (context, cmdDetails, ctlvs) => {
-      do_check_eq(cmdDetails.commandQualifier, STK_TIMER_START);
+      equal(cmdDetails.commandQualifier, STK_TIMER_START);
 
       let timer = cmdDetails.options;
 
-      do_check_eq(timer.timerId, 0x01);
-      do_check_eq(timer.timerValue, (0x01 * 60 * 60) + (0x02 * 60) + 0x03);
+      equal(timer.timerId, 0x01);
+      equal(timer.timerValue, (0x01 * 60 * 60) + (0x02 * 60) + 0x03);
     }
   });
 
@@ -1240,12 +1240,12 @@ add_test(function test_stk_proactive_command_timer_management() {
     typeOfCommand: STK_CMD_TIMER_MANAGEMENT,
     icons: null,
     testFunc: (context, cmdDetails, ctlvs) => {
-      do_check_eq(cmdDetails.commandQualifier, STK_TIMER_DEACTIVATE);
+      equal(cmdDetails.commandQualifier, STK_TIMER_DEACTIVATE);
 
       let timer = cmdDetails.options;
 
-      do_check_eq(timer.timerId, 0x01);
-      do_check_true(timer.timerValue === undefined);
+      equal(timer.timerId, 0x01);
+      ok(timer.timerValue === undefined);
     }
   });
 
@@ -1274,10 +1274,10 @@ add_test(function test_stk_proactive_command_provide_local_information() {
     typeOfCommand: STK_CMD_PROVIDE_LOCAL_INFO,
     icons: null,
     testFunc: (context, cmdDetails, ctlvs) => {
-      do_check_eq(cmdDetails.commandQualifier, STK_LOCAL_INFO_IMEI);
+      equal(cmdDetails.commandQualifier, STK_LOCAL_INFO_IMEI);
 
       let provideLocalInfo = cmdDetails.options;
-      do_check_eq(provideLocalInfo.localInfoType, STK_LOCAL_INFO_IMEI);
+      equal(provideLocalInfo.localInfoType, STK_LOCAL_INFO_IMEI);
     }
   });
 
@@ -1292,10 +1292,10 @@ add_test(function test_stk_proactive_command_provide_local_information() {
     typeOfCommand: STK_CMD_PROVIDE_LOCAL_INFO,
     icons: null,
     testFunc: (context, cmdDetails, ctlvs) => {
-      do_check_eq(cmdDetails.commandQualifier, STK_LOCAL_INFO_DATE_TIME_ZONE);
+      equal(cmdDetails.commandQualifier, STK_LOCAL_INFO_DATE_TIME_ZONE);
 
       let provideLocalInfo = cmdDetails.options;
-      do_check_eq(provideLocalInfo.localInfoType, STK_LOCAL_INFO_DATE_TIME_ZONE);
+      equal(provideLocalInfo.localInfoType, STK_LOCAL_INFO_DATE_TIME_ZONE);
     }
   });
 
@@ -1327,7 +1327,7 @@ add_test(function test_stk_proactive_command_open_channel() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let bipMsg = cmdDetails.options;
 
-      do_check_eq(bipMsg.text, "Open");
+      equal(bipMsg.text, "Open");
     }
   });
 
@@ -1345,7 +1345,7 @@ add_test(function test_stk_proactive_command_open_channel() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let bipMsg = cmdDetails.options;
 
-      do_check_eq(bipMsg.text, "Close");
+      equal(bipMsg.text, "Close");
     }
   });
 
@@ -1363,7 +1363,7 @@ add_test(function test_stk_proactive_command_open_channel() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let bipMsg = cmdDetails.options;
 
-      do_check_eq(bipMsg.text, "Receive");
+      equal(bipMsg.text, "Receive");
     }
   });
 
@@ -1381,7 +1381,7 @@ add_test(function test_stk_proactive_command_open_channel() {
     testFunc: (context, cmdDetails, ctlvs) => {
       let bipMsg = cmdDetails.options;
 
-      do_check_eq(bipMsg.text, "Send");
+      equal(bipMsg.text, "Send");
     }
   });
 
@@ -1399,7 +1399,7 @@ add_test(function test_stk_event_download_location_status() {
 
   buf.sendParcel = function() {
     // Type
-    do_check_eq(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
+    equal(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
     // Token : we don't care
     this.readInt32();
@@ -1408,48 +1408,48 @@ add_test(function test_stk_event_download_location_status() {
     //                      TLV_EVENT_LIST_SIZE(3) +
     //                      TLV_LOCATION_STATUS_SIZE(3) +
     //                      TLV_LOCATION_INFO_GSM_SIZE(9))
-    do_check_eq(this.readInt32(), 42);
+    equal(this.readInt32(), 42);
 
     // BER tag
-    do_check_eq(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
+    equal(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
 
     // BER length, 19 = TLV_DEVICE_ID_SIZE(4) +
     //                  TLV_EVENT_LIST_SIZE(3) +
     //                  TLV_LOCATION_STATUS_SIZE(3) +
     //                  TLV_LOCATION_INFO_GSM_SIZE(9)
-    do_check_eq(pduHelper.readHexOctet(), 19);
+    equal(pduHelper.readHexOctet(), 19);
 
     // Event List, Type-Length-Value
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 1);
-    do_check_eq(pduHelper.readHexOctet(), STK_EVENT_TYPE_LOCATION_STATUS);
+    equal(pduHelper.readHexOctet(), 1);
+    equal(pduHelper.readHexOctet(), STK_EVENT_TYPE_LOCATION_STATUS);
 
     // Device Identifies, Type-Length-Value(Source ID-Destination ID)
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 2);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+    equal(pduHelper.readHexOctet(), 2);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
 
     // Location Status, Type-Length-Value
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_LOCATION_STATUS |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_LOCATION_STATUS |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 1);
-    do_check_eq(pduHelper.readHexOctet(), STK_SERVICE_STATE_NORMAL);
+    equal(pduHelper.readHexOctet(), 1);
+    equal(pduHelper.readHexOctet(), STK_SERVICE_STATE_NORMAL);
 
     // Location Info, Type-Length-Value
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_LOCATION_INFO |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_LOCATION_INFO |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 7);
+    equal(pduHelper.readHexOctet(), 7);
 
-    do_check_eq(pduHelper.readHexOctet(), 0x21); // MCC + MNC
-    do_check_eq(pduHelper.readHexOctet(), 0x63);
-    do_check_eq(pduHelper.readHexOctet(), 0x54);
-    do_check_eq(pduHelper.readHexOctet(), 0); // LAC
-    do_check_eq(pduHelper.readHexOctet(), 0);
-    do_check_eq(pduHelper.readHexOctet(), 0); // Cell ID
-    do_check_eq(pduHelper.readHexOctet(), 0);
+    equal(pduHelper.readHexOctet(), 0x21); // MCC + MNC
+    equal(pduHelper.readHexOctet(), 0x63);
+    equal(pduHelper.readHexOctet(), 0x54);
+    equal(pduHelper.readHexOctet(), 0); // LAC
+    equal(pduHelper.readHexOctet(), 0);
+    equal(pduHelper.readHexOctet(), 0); // Cell ID
+    equal(pduHelper.readHexOctet(), 0);
 
     run_next_test();
   };
@@ -1483,7 +1483,7 @@ add_test(function test_stk_event_download_language_selection() {
 
   buf.sendParcel = function() {
     // Type
-    do_check_eq(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
+    equal(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
     // Token : we don't care
     this.readInt32();
@@ -1491,33 +1491,33 @@ add_test(function test_stk_event_download_language_selection() {
     // Data Size, 26 = 2 * (2 + TLV_DEVICE_ID_SIZE(4) +
     //                      TLV_EVENT_LIST_SIZE(3) +
     //                      TLV_LANGUAGE(4))
-    do_check_eq(this.readInt32(), 26);
+    equal(this.readInt32(), 26);
 
     // BER tag
-    do_check_eq(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
+    equal(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
 
     // BER length, 19 = TLV_DEVICE_ID_SIZE(4) +
     //                  TLV_EVENT_LIST_SIZE(3) +
     //                  TLV_LANGUAGE(4)
-    do_check_eq(pduHelper.readHexOctet(), 11);
+    equal(pduHelper.readHexOctet(), 11);
 
     // Event List, Type-Length-Value
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 1);
-    do_check_eq(pduHelper.readHexOctet(), STK_EVENT_TYPE_LANGUAGE_SELECTION);
+    equal(pduHelper.readHexOctet(), 1);
+    equal(pduHelper.readHexOctet(), STK_EVENT_TYPE_LANGUAGE_SELECTION);
 
     // Device Identifies, Type-Length-Value(Source ID-Destination ID)
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 2);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+    equal(pduHelper.readHexOctet(), 2);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
 
     // Language, Type-Length-Value
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_LANGUAGE);
-    do_check_eq(pduHelper.readHexOctet(), 2);
-    do_check_eq(iccHelper.read8BitUnpackedToString(2), "zh");
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_LANGUAGE);
+    equal(pduHelper.readHexOctet(), 2);
+    equal(iccHelper.read8BitUnpackedToString(2), "zh");
 
     run_next_test();
   };
@@ -1542,32 +1542,32 @@ add_test(function test_stk_event_download_user_activity() {
 
   buf.sendParcel = function() {
     // Type
-    do_check_eq(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
+    equal(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
     // Token : we don't care
     this.readInt32();
 
     // Data Size, 18 = 2 * (2 + TLV_DEVICE_ID_SIZE(4) + TLV_EVENT_LIST_SIZE(3))
-    do_check_eq(this.readInt32(), 18);
+    equal(this.readInt32(), 18);
 
     // BER tag
-    do_check_eq(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
+    equal(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
 
     // BER length, 7 = TLV_DEVICE_ID_SIZE(4) + TLV_EVENT_LIST_SIZE(3)
-    do_check_eq(pduHelper.readHexOctet(), 7);
+    equal(pduHelper.readHexOctet(), 7);
 
     // Event List, Type-Length-Value
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 1);
-    do_check_eq(pduHelper.readHexOctet(), STK_EVENT_TYPE_USER_ACTIVITY);
+    equal(pduHelper.readHexOctet(), 1);
+    equal(pduHelper.readHexOctet(), STK_EVENT_TYPE_USER_ACTIVITY);
 
     // Device Identities, Type-Length-Value(Source ID-Destination ID)
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 2);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+    equal(pduHelper.readHexOctet(), 2);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
 
     run_next_test();
   };
@@ -1591,32 +1591,32 @@ add_test(function test_stk_event_download_idle_screen_available() {
 
   buf.sendParcel = function() {
     // Type
-    do_check_eq(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
+    equal(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
     // Token : we don't care
     this.readInt32();
 
     // Data Size, 18 = 2 * (2 + TLV_DEVICE_ID_SIZE(4) + TLV_EVENT_LIST_SIZE(3))
-    do_check_eq(this.readInt32(), 18);
+    equal(this.readInt32(), 18);
 
     // BER tag
-    do_check_eq(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
+    equal(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
 
     // BER length, 7 = TLV_DEVICE_ID_SIZE(4) + TLV_EVENT_LIST_SIZE(3)
-    do_check_eq(pduHelper.readHexOctet(), 7);
+    equal(pduHelper.readHexOctet(), 7);
 
     // Event List, Type-Length-Value
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 1);
-    do_check_eq(pduHelper.readHexOctet(), STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE);
+    equal(pduHelper.readHexOctet(), 1);
+    equal(pduHelper.readHexOctet(), STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE);
 
     // Device Identities, Type-Length-Value(Source ID-Destination ID)
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 2);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_DISPLAY);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+    equal(pduHelper.readHexOctet(), 2);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_DISPLAY);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
 
     run_next_test();
   };
@@ -1640,40 +1640,40 @@ add_test(function test_stk_event_download_browser_termination() {
 
   buf.sendParcel = function() {
     // Type
-    do_check_eq(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
+    equal(this.readInt32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
     // Token : we don't care
     this.readInt32();
 
     // Data Size, 24 = 2 * ( 2+TLV_DEVICE_ID(4)+TLV_EVENT_LIST_SIZE(3)
     //                        +TLV_BROWSER_TERMINATION_CAUSE(3) )
-    do_check_eq(this.readInt32(), 24);
+    equal(this.readInt32(), 24);
 
     // BER tag
-    do_check_eq(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
+    equal(pduHelper.readHexOctet(), BER_EVENT_DOWNLOAD_TAG);
 
     // BER length, 10 = TLV_DEVICE_ID(4)+TLV_EVENT_LIST_SIZE(3)
     //                  ++TLV_BROWSER_TERMINATION_CAUSE(3)
-    do_check_eq(pduHelper.readHexOctet(), 10);
+    equal(pduHelper.readHexOctet(), 10);
 
     // Event List, Type-Length-Value
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_EVENT_LIST |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 1);
-    do_check_eq(pduHelper.readHexOctet(), STK_EVENT_TYPE_BROWSER_TERMINATION);
+    equal(pduHelper.readHexOctet(), 1);
+    equal(pduHelper.readHexOctet(), STK_EVENT_TYPE_BROWSER_TERMINATION);
 
     // Device Identities, Type-Length-Value(Source ID-Destination ID)
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 2);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
-    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+    equal(pduHelper.readHexOctet(), 2);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+    equal(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
 
     // Browser Termination Case, Type-Length-Value
-    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_BROWSER_TERMINATION_CAUSE |
+    equal(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_BROWSER_TERMINATION_CAUSE |
                                           COMPREHENSIONTLV_FLAG_CR);
-    do_check_eq(pduHelper.readHexOctet(), 1);
-    do_check_eq(pduHelper.readHexOctet(), STK_BROWSER_TERMINATION_CAUSE_USER);
+    equal(pduHelper.readHexOctet(), 1);
+    equal(pduHelper.readHexOctet(), STK_BROWSER_TERMINATION_CAUSE_USER);
 
     run_next_test();
   };

@@ -886,7 +886,7 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fBlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) {
+    void fBlendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) {
         BEFORE_GL_CALL;
         mSymbols.fBlendColor(red, green, blue, alpha);
         AFTER_GL_CALL;
@@ -986,7 +986,7 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fClearColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a) {
+    void fClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
         BEFORE_GL_CALL;
         mSymbols.fClearColor(r, g, b, a);
         AFTER_GL_CALL;

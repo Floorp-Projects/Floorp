@@ -67,9 +67,9 @@ add_test(function test_notification() {
     context.RIL._processSuppSvcNotification(notificationInfo);
 
     let postedMessage = workerHelper.postedMessage;
-    do_check_eq(postedMessage.rilMessageType, 'suppSvcNotification');
-    do_check_eq(postedMessage.notification, resultNotification);
-    do_check_eq(postedMessage.callIndex, resultCallIndex);
+    equal(postedMessage.rilMessageType, 'suppSvcNotification');
+    equal(postedMessage.notification, resultNotification);
+    equal(postedMessage.callIndex, resultCallIndex);
 
     // Clear all existed calls.
     context.RIL._processCalls({});
