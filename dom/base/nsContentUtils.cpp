@@ -6772,7 +6772,7 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
 {
   MOZ_ASSERT(aSelection && aRoot);
 
-  if (!aSelection->GetRangeCount()) {
+  if (!aSelection->RangeCount()) {
     // Nothing selected
     aOutStartOffset = aOutEndOffset = 0;
     return;
@@ -6833,7 +6833,7 @@ nsContentUtils::GetSelectionBoundingRect(Selection* aSel)
       res = nsLayoutUtils::TransformFrameRectToAncestor(frame, res, relativeTo);
     }
   } else {
-    int32_t rangeCount = aSel->GetRangeCount();
+    int32_t rangeCount = aSel->RangeCount();
     nsLayoutUtils::RectAccumulator accumulator;
     for (int32_t idx = 0; idx < rangeCount; ++idx) {
       nsRange* range = aSel->GetRangeAt(idx);

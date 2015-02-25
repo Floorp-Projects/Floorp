@@ -1169,7 +1169,7 @@ HyperTextAccessible::SetSelectionRange(int32_t aStartPos, int32_t aEndPos)
   NS_ENSURE_STATE(domSel);
 
   // Set up the selection.
-  for (int32_t idx = domSel->GetRangeCount() - 1; idx > 0; idx--)
+  for (int32_t idx = domSel->RangeCount() - 1; idx > 0; idx--)
     domSel->RemoveRange(domSel->GetRangeAt(idx));
   SetSelectionBoundsAt(0, aStartPos, aEndPos);
 
@@ -1474,7 +1474,7 @@ HyperTextAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
     return false;
 
   nsRefPtr<nsRange> range;
-  uint32_t rangeCount = domSel->GetRangeCount();
+  uint32_t rangeCount = domSel->RangeCount();
   if (aSelectionNum == static_cast<int32_t>(rangeCount))
     range = new nsRange(mContent);
   else
@@ -1502,7 +1502,7 @@ HyperTextAccessible::RemoveFromSelection(int32_t aSelectionNum)
   if (!domSel)
     return false;
 
-  if (aSelectionNum < 0 || aSelectionNum >= domSel->GetRangeCount())
+  if (aSelectionNum < 0 || aSelectionNum >= static_cast<int32_t>(domSel->RangeCount()))
     return false;
 
   domSel->RemoveRange(domSel->GetRangeAt(aSelectionNum));
@@ -1948,7 +1948,7 @@ HyperTextAccessible::GetSpellTextAttr(nsINode* aNode,
   if (!domSel)
     return;
 
-  int32_t rangeCount = domSel->GetRangeCount();
+  int32_t rangeCount = domSel->RangeCount();
   if (rangeCount <= 0)
     return;
 

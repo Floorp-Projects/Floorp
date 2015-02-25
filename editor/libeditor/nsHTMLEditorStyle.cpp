@@ -144,7 +144,7 @@ nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   NS_ENSURE_SUCCESS(res, res);
   if (!cancel && !handled) {
     // loop thru the ranges in the selection
-    uint32_t rangeCount = selection->GetRangeCount();
+    uint32_t rangeCount = selection->RangeCount();
     for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
       nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
 
@@ -1369,7 +1369,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
   if (!cancel && !handled)
   {
     // loop thru the ranges in the selection
-    uint32_t rangeCount = selection->GetRangeCount();
+    uint32_t rangeCount = selection->RangeCount();
     for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
       nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
       if (aProperty == nsGkAtoms::name) {
@@ -1542,7 +1542,7 @@ nsHTMLEditor::RelativeFontChange( int32_t aSizeChange)
   nsAutoTxnsConserveSelection dontSpazMySelection(this);
 
   // loop thru the ranges in the selection
-  uint32_t rangeCount = selection->GetRangeCount();
+  uint32_t rangeCount = selection->RangeCount();
   for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
     nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
 
