@@ -96,6 +96,11 @@ function wrapWithExceptionHandler(f) {
   return wrapper;
 }
 
+function fakeNow(date) {
+  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
+  session.Policy.now = () => date;
+}
+
 function registerPingHandler(handler) {
   gHttpServer.registerPrefixHandler("/submit/telemetry/",
 				   wrapWithExceptionHandler(handler));
@@ -538,6 +543,10 @@ add_task(function* test_saveLoadPing() {
 });
 
 add_task(function* test_checkSubsession() {
+  let now = new Date(2020, 1, 1, 12, 0, 0);
+  let expectedDate = new Date(2020, 1, 1, 0, 0, 0);
+  fakeNow(now);
+
   const COUNT_ID = "TELEMETRY_TEST_COUNT";
   const KEYED_ID = "TELEMETRY_TEST_KEYED_COUNT";
   const count = Telemetry.getHistogramById(COUNT_ID);
@@ -668,8 +677,17 @@ add_task(function* test_checkSubsession() {
   checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms);
 
   // We should be able to reset only the subsession histograms.
-  count.clear(true);
-  keyed.clear(true);
+  // First check that "snapshot and clear" still returns the old state...
+  classic = TelemetrySession.getPayload();
+  subsession = TelemetrySession.getPayload("environment-change", true);
+
+  Assert.equal(classic.info.subsessionStartDate, expectedDate.toISOString());
+  Assert.equal(subsession.info.subsessionStartDate, expectedDate.toISOString());
+  checkHistograms(classic.histograms, subsession.histograms);
+  checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms);
+
+  // ... then check that the next snapshot shows the subsession
+  // histograms got reset.
   classic = TelemetrySession.getPayload();
   subsession = TelemetrySession.getPayload("environment-change");
 
