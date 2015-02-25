@@ -44,6 +44,7 @@ var SelectionHandler = {
   _focusIsRTL: false,
 
   _activeType: 0, // TYPE_NONE
+  _selectionID: 0, // Unique Selection ID
 
   _draggingHandles: false, // True while user drags text selection handles
   _dragStartAnchorOffset: null, // Editables need initial pos during HandleMove events
@@ -134,10 +135,19 @@ var SelectionHandler = {
         }
         break;
       }
+
       case "Tab:Selected":
-      case "TextSelection:End":
         this._closeSelection();
         break;
+
+      case "TextSelection:End":
+        let data = JSON.parse(aData);
+        // End the requested selection only.
+        if (this._selectionID === data.selectionID) {
+          this._closeSelection();
+        }
+        break;
+
       case "TextSelection:Action":
         for (let type in this.actions) {
           if (this.actions[type].id == aData) {
@@ -365,6 +375,7 @@ var SelectionHandler = {
     // Determine position and show handles, open actionbar
     this._positionHandles(positions);
     Messaging.sendRequest({
+      selectionID: this._selectionID,
       type: "TextSelection:ShowHandles",
       handles: [this.HANDLE_TYPE_ANCHOR, this.HANDLE_TYPE_FOCUS]
     });
@@ -756,6 +767,7 @@ var SelectionHandler = {
     // Determine position and show caret, open actionbar
     this._positionHandles();
     Messaging.sendRequest({
+      selectionID: this._selectionID,
       type: "TextSelection:ShowHandles",
       handles: [this.HANDLE_TYPE_CARET]
     });
@@ -777,6 +789,7 @@ var SelectionHandler = {
       aElement.focus();
     }
 
+    this._selectionID++;
     this._stopDraggingHandles();
     this._contentWindow = aElement.ownerDocument.defaultView;
     this._targetIsRTL = (this._contentWindow.getComputedStyle(aElement, "").direction == "rtl");
