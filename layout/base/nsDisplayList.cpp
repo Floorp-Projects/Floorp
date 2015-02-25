@@ -5949,6 +5949,30 @@ nsDisplayTransform::WriteDebugInfo(std::stringstream& aStream)
   AppendToString(aStream, GetTransform());
 }
 
+nsDisplayItemGeometry*
+nsCharClipDisplayItem::AllocateGeometry(nsDisplayListBuilder* aBuilder)
+{
+  return new nsCharClipGeometry(this, aBuilder);
+}
+
+void
+nsCharClipDisplayItem::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                         const nsDisplayItemGeometry* aGeometry,
+                                         nsRegion* aInvalidRegion)
+{
+  const nsCharClipGeometry* geometry = static_cast<const nsCharClipGeometry*>(aGeometry);
+
+  bool snap;
+  nsRect newRect = geometry->mBounds;
+  nsRect oldRect = GetBounds(aBuilder, &snap);
+  if (mLeftEdge != geometry->mLeftEdge ||
+      mRightEdge != geometry->mRightEdge ||
+      !oldRect.IsEqualInterior(newRect) ||
+      !geometry->mBorderRect.IsEqualInterior(GetBorderRect())) {
+    aInvalidRegion->Or(oldRect, newRect);
+  }
+}
+
 nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame, nsDisplayList* aList)
     : nsDisplayWrapList(aBuilder, aFrame, aList),
