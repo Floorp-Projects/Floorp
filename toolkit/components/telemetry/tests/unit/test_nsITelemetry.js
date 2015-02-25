@@ -719,6 +719,18 @@ function test_keyed_subsession() {
   Assert.ok(KEY in h.subsessionSnapshot());
   Assert.equal(h.snapshot(KEY).sum, 1);
   Assert.equal(h.subsessionSnapshot(KEY).sum, 1);
+
+  // Check that "snapshot and clear" works properly.
+  let snapshot = h.snapshot();
+  let subsession = h.snapshotSubsessionAndClear();
+  Assert.ok(KEY in snapshot);
+  Assert.ok(KEY in subsession);
+  Assert.equal(snapshot[KEY].sum, 1);
+  Assert.equal(subsession[KEY].sum, 1);
+
+  subsession = h.subsessionSnapshot();
+  Assert.ok(!(KEY in subsession));
+  Assert.equal(h.subsessionSnapshot(KEY).sum, 0);
 }
 
 function generateUUID() {
