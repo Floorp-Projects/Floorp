@@ -35,29 +35,40 @@ body {
   font-family: serif;
 }
 
-.font-size1,
-.font-size1-sample {
+.font-size1 {
+  font-size: 10px;
+}
+
+.font-size2 {
+  font-size: 12px;
+}
+
+.font-size3 {
   font-size: 14px;
 }
 
-.font-size2,
-.font-size2-sample {
+.font-size4  {
   font-size: 16px;
 }
 
-.font-size3,
-.font-size3-sample {
+.font-size5 {
   font-size: 18px;
 }
 
-.font-size4,
-.font-size4-sample {
+.font-size6 {
   font-size: 20px;
 }
 
-.font-size5,
-.font-size5-sample {
+.font-size7 {
   font-size: 22px;
+}
+
+.font-size8 {
+  font-size: 24px;
+}
+
+.font-size9 {
+  font-size: 26px;
 }
 
 
@@ -297,6 +308,7 @@ body {
 }
 
 #font-type-buttons,
+#font-size-buttons,
 .segmented-button {
   display: flex;
   flex-direction: row;
@@ -306,6 +318,7 @@ body {
 }
 
 #font-type-buttons > li,
+#font-size-buttons > button,
 .segmented-button > li {
   flex: 1 0 auto;
   text-align: center;
@@ -313,8 +326,9 @@ body {
   padding: 10px;
 }
 
-#font-type-buttons > li {
-  width: 50px; /* combined with flex, this acts as a minimum width */
+#font-type-buttons > li,
+#font-size-buttons > button {
+  width: 100px; /* combined with flex, this acts as a minimum width */
 }
 
 .segmented-button > li {
@@ -323,6 +337,7 @@ body {
 }
 
 #font-type-buttons > li:first-child,
+#font-size-buttons > button:first-child,
 .segmented-button > li:first-child {
   border-left: 0px;
 }
@@ -371,6 +386,16 @@ body {
   font-size: 12px;
 }
 
+.minus-button,
+.plus-button {
+  background-color: transparent;
+  border: 0;
+  height: 50px;
+  background-size: 18px 18px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
 /* Android-only controls */
 .share-button {
   display: none;
@@ -402,4 +427,12 @@ body {
 
 .list-button {
   background-image: url("chrome://global/skin/reader/RM-Reading-List-24x24.svg");
+}
+
+.minus-button {
+  background-image: url("chrome://global/skin/reader/RM-Minus-24x24.svg");
+}
+
+.plus-button {
+  background-image: url("chrome://global/skin/reader/RM-Plus-24x24.svg");
 }
