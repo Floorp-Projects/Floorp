@@ -194,24 +194,6 @@ class TestEmitterBasic(unittest.TestCase):
         expected = ['bar.c', 'foo.c']
         for o, expected_filename in zip(objs, expected):
             self.assertEqual(o.output, expected_filename)
-            self.assertEqual(o.script, None)
-            self.assertEqual(o.method, None)
-            self.assertEqual(o.inputs, [])
-
-    def test_generated_files_method_names(self):
-        reader = self.reader('generated-files-method-names')
-        objs = self.read_topsrcdir(reader)
-
-        self.assertEqual(len(objs), 2)
-        for o in objs:
-            self.assertIsInstance(o, GeneratedFile)
-
-        expected = ['bar.c', 'foo.c']
-        expected_method_names = ['make_bar', 'main']
-        for o, expected_filename, expected_method in zip(objs, expected, expected_method_names):
-            self.assertEqual(o.output, expected_filename)
-            self.assertEqual(o.method, expected_method)
-            self.assertEqual(o.inputs, [])
 
     def test_generated_files_no_script(self):
         reader = self.reader('generated-files-no-script')
