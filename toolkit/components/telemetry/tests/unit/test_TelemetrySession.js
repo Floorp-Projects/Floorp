@@ -1105,7 +1105,7 @@ add_task(function* test_invalidSessionData() {
   // Load back the serialised session data.
   let data = yield CommonUtils.readJSON(dataFilePath);
   Assert.equal(data.profileSubsessionCounter, expectedSubsessions);
-  Assert.equal(data.previousSubsessionId, expectedUUID);
+  Assert.equal(data.previousSubsessionId, null);
 });
 
 add_task(function* stopServer(){
