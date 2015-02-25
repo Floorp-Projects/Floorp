@@ -69,6 +69,7 @@ function run_test() {
 add_task(function* test_setup() {
   createAppInfo();
   gProfileDir = do_get_profile();
+  startAddonManagerOnly();
   yield initialiseTelemetry();
   gPolicy = new Experiments.Policy();
 
