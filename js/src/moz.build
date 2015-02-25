@@ -498,7 +498,7 @@ if CONFIG['_MSC_VER']:
     # But given the conversion from bool is specified, and this is a
     # pattern widely used in code in js/src, suppress this warning here.
     CXXFLAGS += ['-wd4805']
-    CXXFLAGS += ['-we4067']
+    CXXFLAGS += ['-we4067', '-we4258']
 
 if CONFIG['OS_ARCH'] not in ('WINNT', 'HP-UX'):
     OS_LIBS += [
