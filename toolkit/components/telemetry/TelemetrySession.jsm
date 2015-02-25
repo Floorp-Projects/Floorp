@@ -27,6 +27,8 @@ const IS_CONTENT_PROCESS = (function() {
 
 // When modifying the payload in incompatible ways, please bump this version number
 const PAYLOAD_VERSION = 1;
+const PING_TYPE = "main";
+const RETENTION_DAYS = 14;
 
 // This is the HG changeset of the Histogram.json file, used to associate
 // submitted ping data with its histogram definition (bug 832007)
@@ -194,15 +196,6 @@ this.TelemetrySession = Object.freeze({
    */
   setAddOns: function(aAddOns) {
     return Impl.setAddOns(aAddOns);
-  },
-  /**
-   * Load histograms from a file.
-   * Used only for testing purposes.
-   *
-   * @param aFile - File to load from.
-   */
-  testLoadHistograms: function(aFile) {
-    return Impl.testLoadHistograms(aFile);
   },
   /**
    * Descriptive metadata
@@ -775,16 +768,6 @@ let Impl = {
     return this.assemblePayloadWithMeasurements(measurements, info, reason);
   },
 
-  assemblePing: function assemblePing(payloadObj, reason) {
-    let slug = this._uuid;
-    return { slug: slug, reason: reason, payload: payloadObj };
-  },
-
-  getSessionPayloadAndSlug: function getSessionPayloadAndSlug(reason) {
-    this._log.trace("getSessionPayloadAndSlug - Reason " + reason);
-    return this.assemblePing(this.getSessionPayload(reason), reason);
-  },
-
   /**
    * Send data to the server. Record success/send-time in histograms
    */
@@ -792,21 +775,14 @@ let Impl = {
     this._log.trace("send - Reason " + reason);
     // populate histograms one last time
     this.gatherMemory();
-    return TelemetryPing.send(reason, this.getSessionPayloadAndSlug(reason));
-  },
 
-  submissionPath: function submissionPath(ping) {
-    let slug;
-    if (!ping) {
-      slug = this._uuid;
-    } else {
-      let info = ping.payload.info;
-      let pathComponents = [ping.slug, info.reason, info.appName,
-                            info.appVersion, info.appUpdateChannel,
-                            info.appBuildID];
-      slug = pathComponents.join("/");
-    }
-    return "/submit/telemetry/" + slug;
+    let payload = this.getSessionPayload(reason);
+    let options = {
+      retentionDays: RETENTION_DAYS,
+      addClientId: true,
+      addEnvironment: true,
+    };
+    return TelemetryPing.send(PING_TYPE, payload, options);
   },
 
   attachObservers: function attachObservers() {
@@ -948,10 +924,6 @@ let Impl = {
     delayedTask.arm();
   },
 
-  testLoadHistograms: function testLoadHistograms(file) {
-    return TelemetryFile.testLoadHistograms(file);
-  },
-
   getFlashVersion: function getFlashVersion() {
     this._log.trace("getFlashVersion");
     let host = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
@@ -998,13 +970,26 @@ let Impl = {
 
   savePendingPings: function savePendingPings() {
     this._log.trace("savePendingPings");
-    let sessionPing = this.getSessionPayloadAndSlug("saved-session");
-    return TelemetryFile.savePendingPings(sessionPing);
+    let payload = this.getSessionPayload("saved-session");
+    let options = {
+      retentionDays: RETENTION_DAYS,
+      addClientId: true,
+      addEnvironment: true,
+    };
+    return TelemetryPing.savePendingPings(PING_TYPE, payload, options);
   },
 
   testSaveHistograms: function testSaveHistograms(file) {
-    return TelemetryFile.savePingToFile(this.getSessionPayloadAndSlug("saved-session"),
-      file.path, true);
+    this._log.trace("testSaveHistograms - Path: " + file.path);
+    let payload = this.getSessionPayload("saved-session");
+    let options = {
+      retentionDays: RETENTION_DAYS,
+      addClientId: true,
+      addEnvironment: true,
+      overwrite: true,
+      filePath: file.path,
+    };
+    return TelemetryPing.testSavePingToFile(PING_TYPE, payload, options);
   },
 
   /**
@@ -1154,8 +1139,14 @@ let Impl = {
     //    it on the next backgrounding). Not deleting it is faster, so that's what we do.
     case "application-background":
       if (Telemetry.canSend) {
-        let ping = this.getSessionPayloadAndSlug("saved-session");
-        TelemetryFile.savePing(ping, true);
+        let payload = this.getSessionPayload("saved-session");
+        let options = {
+          retentionDays: RETENTION_DAYS,
+          addClientId: true,
+          addEnvironment: true,
+          overwrite: true,
+        };
+        TelemetryPing.savePing(PING_TYPE, payload, options);
       }
       break;
 #endif
