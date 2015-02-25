@@ -1031,39 +1031,6 @@ static const JSFunctionSpec number_static_methods[] = {
 };
 
 
-/* NB: Keep this in synch with number_constants[]. */
-enum nc_slot {
-    NC_NaN,
-    NC_POSITIVE_INFINITY,
-    NC_NEGATIVE_INFINITY,
-    NC_MAX_VALUE,
-    NC_MIN_VALUE,
-    NC_MAX_SAFE_INTEGER,
-    NC_MIN_SAFE_INTEGER,
-    NC_EPSILON,
-    NC_LIMIT
-};
-
-/*
- * Some to most C compilers forbid spelling these at compile time, or barf
- * if you try, so all but MAX_VALUE are set up by InitRuntimeNumberState
- * using union jsdpun.
- */
-static JSConstDoubleSpec number_constants[] = {
-    {"NaN",               0                          },
-    {"POSITIVE_INFINITY", 0                          },
-    {"NEGATIVE_INFINITY", 0                          },
-    {"MAX_VALUE",         1.7976931348623157E+308    },
-    {"MIN_VALUE",         0                          },
-    /* ES6 (April 2014 draft) 20.1.2.6 */
-    {"MAX_SAFE_INTEGER",  9007199254740991           },
-    /* ES6 (April 2014 draft) 20.1.2.10 */
-    {"MIN_SAFE_INTEGER", -9007199254740991,          },
-    /* ES6 (May 2013 draft) 15.7.3.7 */
-    {"EPSILON", 2.2204460492503130808472633361816e-16},
-    {0,0}
-};
-
 /*
  * Set the exception mask to mask all exceptions and set the FPU precision
  * to 53 bit mantissa (64 bit doubles).
@@ -1085,17 +1052,6 @@ bool
 js::InitRuntimeNumberState(JSRuntime *rt)
 {
     FIX_FPU();
-
-    /*
-     * Our NaN must be one particular canonical value, because we rely on NaN
-     * encoding for our value representation.  See Value.h.
-     */
-    number_constants[NC_NaN].val = GenericNaN();
-
-    number_constants[NC_POSITIVE_INFINITY].val = mozilla::PositiveInfinity<double>();
-    number_constants[NC_NEGATIVE_INFINITY].val = mozilla::NegativeInfinity<double>();
-
-    number_constants[NC_MIN_VALUE].val = MinNumberValue<double>();
 
     // XXX If EXPOSE_INTL_API becomes true all the time at some point,
     //     js::InitRuntimeNumberState is no longer fallible, and we should
@@ -1183,6 +1139,25 @@ js_InitNumberClass(JSContext *cx, HandleObject obj)
 
     if (!LinkConstructorAndPrototype(cx, ctor, numberProto))
         return nullptr;
+
+    /*
+     * Our NaN must be one particular canonical value, because we rely on NaN
+     * encoding for our value representation.  See Value.h.
+     */
+    static JSConstDoubleSpec number_constants[] = {
+        {"NaN",               GenericNaN()               },
+        {"POSITIVE_INFINITY", mozilla::PositiveInfinity<double>() },
+        {"NEGATIVE_INFINITY", mozilla::NegativeInfinity<double>() },
+        {"MAX_VALUE",         1.7976931348623157E+308    },
+        {"MIN_VALUE",         MinNumberValue<double>()   },
+        /* ES6 (April 2014 draft) 20.1.2.6 */
+        {"MAX_SAFE_INTEGER",  9007199254740991           },
+        /* ES6 (April 2014 draft) 20.1.2.10 */
+        {"MIN_SAFE_INTEGER", -9007199254740991,          },
+        /* ES6 (May 2013 draft) 15.7.3.7 */
+        {"EPSILON", 2.2204460492503130808472633361816e-16},
+        {0,0}
+    };
 
     /* Add numeric constants (MAX_VALUE, NaN, &c.) to the Number constructor. */
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))
