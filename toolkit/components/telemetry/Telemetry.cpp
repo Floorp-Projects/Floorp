@@ -784,7 +784,8 @@ public:
   uint32_t GetHistogramType() const { return mHistogramType; }
   nsresult GetDataset(uint32_t* dataset) const;
   nsresult GetJSKeys(JSContext* cx, JS::CallArgs& args);
-  nsresult GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj, bool subsession);
+  nsresult GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj,
+                         bool subsession, bool clearSubsession);
 
   nsresult Add(const nsCString& key, uint32_t aSample);
   void Clear(bool subsession);
@@ -1377,7 +1378,8 @@ JSKeyedHistogram_Keys(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 bool
-KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc, JS::Value *vp, bool subsession)
+KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc, JS::Value *vp,
+                            bool subsession, bool clearSubsession)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj) {
@@ -1398,7 +1400,7 @@ KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc, JS::Value *vp, bool su
       return false;
     }
 
-    if (!NS_SUCCEEDED(keyed->GetJSSnapshot(cx, snapshot, subsession))) {
+    if (!NS_SUCCEEDED(keyed->GetJSSnapshot(cx, snapshot, subsession, clearSubsession))) {
       JS_ReportError(cx, "Failed to reflect keyed histograms");
       return false;
     }
@@ -1442,13 +1444,24 @@ KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc, JS::Value *vp, bool su
 bool
 JSKeyedHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  return KeyedHistogram_SnapshotImpl(cx, argc, vp, false);
+  return KeyedHistogram_SnapshotImpl(cx, argc, vp, false, false);
 }
 
 bool
 JSKeyedHistogram_SubsessionSnapshot(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  return KeyedHistogram_SnapshotImpl(cx, argc, vp, true);
+  return KeyedHistogram_SnapshotImpl(cx, argc, vp, true, false);
+}
+
+bool
+JSKeyedHistogram_SnapshotSubsessionAndClear(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  if (args.length() != 0) {
+    JS_ReportError(cx, "No key arguments supported for snapshotSubsessionAndClear");
+  }
+
+  return KeyedHistogram_SnapshotImpl(cx, argc, vp, true, true);
 }
 
 bool
@@ -1518,6 +1531,7 @@ WrapAndReturnKeyedHistogram(KeyedHistogram *h, JSContext *cx, JS::MutableHandle<
   if (!(JS_DefineFunction(cx, obj, "add", JSKeyedHistogram_Add, 2, 0)
         && JS_DefineFunction(cx, obj, "snapshot", JSKeyedHistogram_Snapshot, 1, 0)
         && JS_DefineFunction(cx, obj, "subsessionSnapshot", JSKeyedHistogram_SubsessionSnapshot, 1, 0)
+        && JS_DefineFunction(cx, obj, "snapshotSubsessionAndClear", JSKeyedHistogram_SnapshotSubsessionAndClear, 0, 0)
         && JS_DefineFunction(cx, obj, "keys", JSKeyedHistogram_Keys, 0, 0)
         && JS_DefineFunction(cx, obj, "clear", JSKeyedHistogram_Clear, 0, 0)
         && JS_DefineFunction(cx, obj, "dataset", JSKeyedHistogram_Dataset, 0, 0))) {
@@ -2357,7 +2371,7 @@ TelemetryImpl::KeyedHistogramsReflector(const nsACString& key, nsAutoPtr<KeyedHi
     return PL_DHASH_STOP;
   }
 
-  if (!NS_SUCCEEDED(entry->GetJSSnapshot(cx, snapshot, false))) {
+  if (!NS_SUCCEEDED(entry->GetJSSnapshot(cx, snapshot, false, false))) {
     return PL_DHASH_STOP;
   }
 
@@ -4092,11 +4106,16 @@ KeyedHistogram::ReflectKeyedHistogram(KeyedHistogramEntry* entry, JSContext* cx,
 }
 
 nsresult
-KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj, bool subsession)
+KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj,
+                              bool subsession, bool clearSubsession)
 {
   KeyedHistogramMapType& map = subsession ? mSubsessionMap : mHistogramMap;
   if (!map.ReflectIntoJS(&KeyedHistogram::ReflectKeyedHistogram, cx, obj)) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (subsession && clearSubsession) {
+    Clear(true);
   }
 
   return NS_OK;
