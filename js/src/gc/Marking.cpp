@@ -802,11 +802,11 @@ TypeSet::MarkTypeRoot(JSTracer *trc, TypeSet::Type *v, const char *name)
 {
     JS_ROOT_MARKING_ASSERT(trc);
     trc->setTracingName(name);
-    if (v->isSingletonUnchecked()) {
+    if (v->isSingleton()) {
         JSObject *obj = v->singleton();
         MarkInternal(trc, &obj);
         *v = TypeSet::ObjectType(obj);
-    } else if (v->isGroupUnchecked()) {
+    } else if (v->isGroup()) {
         ObjectGroup *group = v->group();
         MarkInternal(trc, &group);
         *v = TypeSet::ObjectType(group);
