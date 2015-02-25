@@ -6,6 +6,7 @@
 #ifndef ChunkSet_h__
 #define ChunkSet_h__
 
+
 #include "Entries.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -26,18 +27,25 @@ public:
 
   nsresult Serialize(nsACString& aStr);
   nsresult Set(uint32_t aChunk);
-  bool Has(uint32_t chunk) const;
-  nsresult Merge(const ChunkSet& aOther);
-  uint32_t Length() const { return mChunks.Length(); }
-  nsresult Remove(const ChunkSet& aOther);
+  nsresult Unset(uint32_t aChunk);
   void Clear();
+  nsresult Merge(const ChunkSet& aOther);
+  nsresult Remove(const ChunkSet& aOther);
+
+  bool Has(uint32_t chunk) const;
+
+  uint32_t Length() const { return mChunks.Length(); }
 
   nsresult Write(nsIOutputStream* aOut) {
     return WriteTArray(aOut, mChunks);
   }
+
   nsresult Read(nsIInputStream* aIn, uint32_t aNumElements) {
     return ReadTArray(aIn, &mChunks, aNumElements);
   }
+
+  uint32_t *Begin() { return mChunks.Elements(); }
+  uint32_t *End() { return mChunks.Elements() + mChunks.Length(); }
 
 private:
   FallibleTArray<uint32_t> mChunks;
