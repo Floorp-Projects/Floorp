@@ -486,7 +486,6 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
   // like the native stack, the JS stack is iterated youngest-to-oldest and we
   // need to iterate oldest-to-youngest when adding entries to aProfile.
 
-  uint32_t startBufferGen = aProfile.bufferGeneration();
   uint32_t jsCount = 0;
   JS::ProfilingFrameIterator::Frame jsFrames[1000];
   {
@@ -501,9 +500,7 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
       registerState.lr = aSample->lr;
 #endif
 
-      JS::ProfilingFrameIterator jsIter(pseudoStack->mRuntime,
-                                        registerState,
-                                        startBufferGen);
+      JS::ProfilingFrameIterator jsIter(pseudoStack->mRuntime, registerState);
       for (; jsCount < maxFrames && !jsIter.done(); ++jsIter) {
         uint32_t extracted = jsIter.extractStack(jsFrames, jsCount, maxFrames);
         MOZ_ASSERT(extracted <= (maxFrames - jsCount));
@@ -603,16 +600,6 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
     MOZ_ASSERT(nativeIndex >= 0);
     aProfile.addTag(ProfileEntry('l', (void*)aNativeStack.pc_array[nativeIndex]));
     nativeIndex--;
-  }
-
-  MOZ_ASSERT(aProfile.bufferGeneration() >= startBufferGen);
-  uint32_t lapCount = aProfile.bufferGeneration() - startBufferGen;
-
-  // Update the JS runtime with the current profile sample buffer generation.
-  if (pseudoStack->mRuntime) {
-    JS::UpdateJSRuntimeProfilerSampleBufferGen(pseudoStack->mRuntime,
-                                               aProfile.bufferGeneration(),
-                                               lapCount);
   }
 }
 
