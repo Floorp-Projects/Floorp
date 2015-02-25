@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(c782cf96-7f44-45ac-8d76-e0d1b174e562)]
+[scriptable, uuid(749d0bdf-8c7a-4b4a-bb32-eaf3d69af45e)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -39,7 +39,7 @@ interface nsITelemetry : nsISupports
   const unsigned long DATASET_RELEASE_CHANNEL_OPTIN = 1;
 
 
-  /*
+  /**
    * An object containing a snapshot from all of the currently registered histograms.
    * { name1: {data1}, name2:{data2}...}
    * where data is consists of the following properties:
@@ -54,6 +54,12 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   readonly attribute jsval histogramSnapshots;
+
+  /**
+   * As histogramSnapshots, except this contains the internally duplicated histograms for subsession telemetry.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval subsessionHistogramSnapshots;
 
   /**
    * The amount of time, in milliseconds, that the last session took
