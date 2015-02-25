@@ -43,10 +43,11 @@ const PING_SAVE_FOLDER = "saved-telemetry-pings";
 const PING_TIMEOUT_LENGTH = 5000;
 const EXPIRED_PINGS = 5;
 const OVERDUE_PINGS = 6;
+const OLD_FORMAT_PINGS = 4;
 const RECENT_PINGS = 4;
 const LRU_PINGS = TelemetryFile.MAX_LRU_PINGS;
 
-const TOTAL_EXPECTED_PINGS = OVERDUE_PINGS + RECENT_PINGS;
+const TOTAL_EXPECTED_PINGS = OVERDUE_PINGS + RECENT_PINGS + OLD_FORMAT_PINGS;
 
 let gHttpServer = new HttpServer();
 let gCreatedPings = 0;
@@ -260,6 +261,74 @@ add_task(function* test_most_recent_pings_kept() {
   assertNotSaved(tail);
   yield resetTelemetry();
   yield clearPings(pings);
+});
+
+/**
+ * Create an overdue ping in the old format and try to send it.
+ */
+add_task(function* test_overdue_old_format() {
+  // A test ping in the old, standard format.
+  const PING_OLD_FORMAT = {
+    slug: "1234567abcd",
+    reason: "test-ping",
+    payload: {
+      info: {
+        reason: "test-ping",
+        OS: "XPCShell",
+        appID: "SomeId",
+        appVersion: "1.0",
+        appName: "XPCShell",
+        appBuildID: "123456789",
+        appUpdateChannel: "Test",
+        platformBuildID: "987654321",
+      },
+    },
+  };
+
+  // A ping with no info section, but with a slug.
+  const PING_NO_INFO = {
+    slug: "1234-no-info-ping",
+    reason: "test-ping",
+    payload: {}
+  };
+
+  // A ping with no payload.
+  const PING_NO_PAYLOAD = {
+    slug: "5678-no-payload",
+    reason: "test-ping",
+  };
+
+  // A ping with no info and no slug.
+  const PING_NO_SLUG = {
+    reason: "test-ping",
+    payload: {}
+  };
+
+  const PING_FILES_PATHS = [
+    Path.join(Constants.Path.profileDir, PING_SAVE_FOLDER, PING_OLD_FORMAT.slug),
+    Path.join(Constants.Path.profileDir, PING_SAVE_FOLDER, PING_NO_INFO.slug),
+    Path.join(Constants.Path.profileDir, PING_SAVE_FOLDER, PING_NO_PAYLOAD.slug),
+    Path.join(Constants.Path.profileDir, PING_SAVE_FOLDER, "no-slug-file"),
+  ];
+
+  // Write the ping to file and make it overdue.
+  yield TelemetryFile.savePing(PING_OLD_FORMAT, true);
+  yield TelemetryFile.savePing(PING_NO_INFO, true);
+  yield TelemetryFile.savePing(PING_NO_PAYLOAD, true);
+  yield TelemetryFile.savePingToFile(PING_NO_SLUG, PING_FILES_PATHS[3], true);
+
+  for (let f in PING_FILES_PATHS) {
+    yield File.setDates(PING_FILES_PATHS[f], null, Date.now() - OVERDUE_PING_FILE_AGE);
+  }
+
+  yield startTelemetry();
+  assertReceivedPings(OLD_FORMAT_PINGS);
+
+  // |TelemetryFile.cleanup| doesn't know how to remove a ping with no slug or id,
+  // so remove it manually so that the next test doesn't fail.
+  yield OS.File.remove(PING_FILES_PATHS[3]);
+
+  yield resetTelemetry();
 });
 
 /**

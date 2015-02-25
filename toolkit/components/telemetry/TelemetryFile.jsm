@@ -259,7 +259,9 @@ this.TelemetryFile = {
 
 ///// Utility functions
 function pingFilePath(ping) {
-  return OS.Path.join(TelemetryFile.pingDirectoryPath, ping.id);
+  // Support legacy ping formats, who don't have an "id" field, but a "slug" field.
+  let pingIdentifier = (ping.slug) ? ping.slug : ping.id;
+  return OS.Path.join(TelemetryFile.pingDirectoryPath, pingIdentifier);
 }
 
 function getPingDirectory() {
