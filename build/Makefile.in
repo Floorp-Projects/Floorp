@@ -42,16 +42,11 @@ endif
 
 endif
 
-# Put a useful .gdbinit in the bin directory, to be picked up automatically
-# by GDB when we debug executables there.
 # NOTE: Keep .gdbinit in the topsrcdir for people who run gdb from the topsrcdir.
-GDBINIT_FILES := $(topsrcdir)/.gdbinit
-GDBINIT_OBJDIR_FILES = $(topsrcdir)/.gdbinit
-GDBINIT_DEST = $(FINAL_TARGET)
-
 # needs to be absolute to be distinct from $(topsrcdir)/.gdbinit
+GDBINIT_OBJDIR_FILES = $(topsrcdir)/.gdbinit
 GDBINIT_OBJDIR_DEST = $(abspath $(DEPTH))
-INSTALL_TARGETS += GDBINIT GDBINIT_OBJDIR
+INSTALL_TARGETS += GDBINIT_OBJDIR
 
 # Put a .lldbinit in the bin directory and the objdir, to be picked up
 # automatically by LLDB when we debug executables using either of those two
@@ -66,19 +61,25 @@ LLDBINIT_FINAL_TARGET_FILES := $(DEPTH)/.lldbinit
 LLDBINIT_FINAL_TARGET_DEST = $(FINAL_TARGET)
 INSTALL_TARGETS += LLDBINIT_FINAL_TARGET
 
-ifeq (1_1,$(MOZ_ASAN)_$(CLANG_CL))
-# Install the clang-cl runtime library for ASAN next to the binaries we produce.
-CLANG_RT_ASAN_FILES := $(MOZ_CLANG_RT_ASAN_LIB_PATH)
-CLANG_RT_ASAN_DEST = $(FINAL_TARGET)
-INSTALL_TARGETS += CLANG_RT_ASAN
-endif
-
 ifdef MOZTTDIR
 # Install the Firefox OS fonts.
 include $(MOZTTDIR)/fonts.mk
 MOZTT_DEST = $(FINAL_TARGET)/fonts
 MOZTT_FILES = $(patsubst external/moztt/%,$(MOZTTDIR)/%,$(filter external/moztt/%,$(subst :, ,$(PRODUCT_COPY_FILES))))
 INSTALL_TARGETS += MOZTT
+endif
+
+ifdef MOZ_VALGRIND
+_VALGRIND_DIR = $(DEPTH)/_valgrind
+GARBAGE_DIRS += $(_VALGRIND_DIR)
+
+_VALGRIND_FILES = \
+		$(topsrcdir)/build/valgrind/cross-architecture.sup \
+		$(topsrcdir)/build/valgrind/i386-redhat-linux-gnu.sup \
+		$(topsrcdir)/build/valgrind/x86_64-redhat-linux-gnu.sup \
+		$(NULL)
+_VALGRIND_DEST = $(_VALGRIND_DIR)
+INSTALL_TARGETS += _VALGRIND
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -99,41 +100,6 @@ endif
 
 libs:: automation.py
 
-ifdef MOZ_VALGRIND
-_VALGRIND_DIR = $(DEPTH)/_valgrind
-GARBAGE_DIRS += $(_VALGRIND_DIR)
-
-_VALGRIND_FILES = \
-		$(topsrcdir)/build/valgrind/cross-architecture.sup \
-		$(topsrcdir)/build/valgrind/i386-redhat-linux-gnu.sup \
-		$(topsrcdir)/build/valgrind/x86_64-redhat-linux-gnu.sup \
-		$(NULL)
-
-libs:: $(_VALGRIND_FILES)
-	$(INSTALL) $^ $(_VALGRIND_DIR)
-endif
-
-ifneq (,$(ENABLE_TESTS)$(MOZ_DMD))
-libs:: $(topsrcdir)/tools/rb/fix_stack_using_bpsyms.py
-	$(INSTALL) $< $(DIST)/bin
-
-ifeq ($(OS_ARCH),Darwin)
-libs:: $(topsrcdir)/tools/rb/fix_macosx_stack.py
-	$(INSTALL) $< $(DIST)/bin
-endif
-
-ifeq ($(OS_ARCH),Linux)
-libs:: $(topsrcdir)/tools/rb/fix_linux_stack.py
-	$(INSTALL) $< $(DIST)/bin
-endif
-endif # ENABLE_TESTS or MOZ_DMD
-
 ifdef ENABLE_TESTS
 GARBAGE += $(srcdir)/automationutils.pyc
 endif # ENABLE_TESTS
-
-ifdef MOZ_DMD
-libs:: $(topsrcdir)/memory/replace/dmd/dmd.py
-	$(INSTALL) $< $(DIST)/bin
-endif
-

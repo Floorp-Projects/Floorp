@@ -149,8 +149,8 @@
                     label="&options.disableJavaScript.label;"
                     tooltiptext="&options.disableJavaScript.tooltip;"/>
           <hbox class="hidden-labels-box">
-            <checkbox label="&options.enableChrome.label4;"
-                      tooltiptext="&options.enableChrome.tooltip2;"
+            <checkbox label="&options.enableChrome.label5;"
+                      tooltiptext="&options.enableChrome.tooltip3;"
                       data-pref="devtools.chrome.enabled"/>
           </hbox>
           <hbox class="hidden-labels-box">
