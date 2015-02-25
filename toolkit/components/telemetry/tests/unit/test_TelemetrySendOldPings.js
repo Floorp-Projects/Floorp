@@ -356,6 +356,55 @@ add_task(function* test_overdue_pings_trigger_send() {
   yield resetTelemetry();
 });
 
+/**
+ * Create a ping in the old format, send it, and make sure the request URL contains
+ * the correct version query parameter.
+ */
+add_task(function* test_overdue_old_format() {
+  // A test ping in the old, standard format.
+  const PING_OLD_FORMAT = {
+    slug: "1234567abcd",
+    reason: "test-ping",
+    payload: {
+      info: {
+        reason: "test-ping",
+        OS: "XPCShell",
+        appID: "SomeId",
+        appVersion: "1.0",
+        appName: "XPCShell",
+        appBuildID: "123456789",
+        appUpdateChannel: "Test",
+        platformBuildID: "987654321",
+      },
+    },
+  };
+
+  const filePath =
+    Path.join(Constants.Path.profileDir, PING_SAVE_FOLDER, PING_OLD_FORMAT.slug);
+
+  // Write the ping to file and make it overdue.
+  yield TelemetryFile.savePing(PING_OLD_FORMAT, true);
+  yield File.setDates(filePath, null, Date.now() - OVERDUE_PING_FILE_AGE);
+
+  let receivedPings = 0;
+  // Register a new prefix handler to validate the URL.
+  gHttpServer.registerPrefixHandler("/submit/telemetry/", request => {
+    // Check that we have a version query parameter in the URL.
+    Assert.notEqual(request.queryString, "");
+
+    // Make sure the version in the query string matches the old ping format version.
+    let params = request.queryString.split("&");
+    Assert.ok(params.find(p => p == "v=1"));
+
+    receivedPings++;
+  });
+
+  yield startTelemetry();
+  Assert.equal(receivedPings, 1, "We must receive a ping in the old format.");
+
+  yield resetTelemetry();
+});
+
 add_task(function* teardown() {
   yield stopHttpServer();
 });
