@@ -922,7 +922,12 @@ let Impl = {
    * respectively.
    */
   assemblePayloadWithMeasurements: function(simpleMeasurements, info, reason, clearSubsession) {
+#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
     const isSubsession = !this._isClassicReason(reason);
+#else
+    const isSubsession = false;
+    clearSubsession = false;
+#endif
     this._log.trace("assemblePayloadWithMeasurements - reason: " + reason +
                     ", submitting subsession data: " + isSubsession);
 
@@ -976,6 +981,9 @@ let Impl = {
 
   getSessionPayload: function getSessionPayload(reason, clearSubsession) {
     this._log.trace("getSessionPayload - reason: " + reason + ", clearSubsession: " + clearSubsession);
+#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
+    clearSubsession = false;
+#endif
 
     let measurements = this.getSimpleMeasurements(reason == REASON_SAVED_SESSION);
     let info = !IS_CONTENT_PROCESS ? this.getMetadata(reason) : null;
@@ -1134,10 +1142,12 @@ let Impl = {
         this.gatherMemory();
 
         Telemetry.asyncFetchTelemetryData(function () {});
-        this._rescheduleDailyTimer();
 
+#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+        this._rescheduleDailyTimer();
         TelemetryEnvironment.registerChangeListener(ENVIRONMENT_CHANGE_LISTENER,
                                                     () => this._onEnvironmentChange());
+#endif
 
         this._delayedInitTaskDeferred.resolve();
       } catch (e) {
@@ -1413,10 +1423,11 @@ let Impl = {
    */
   shutdownChromeProcess: function(testing = false) {
     this._log.trace("shutdownChromeProcess - testing: " + testing);
-    TelemetryEnvironment.unregisterChangeListener(ENVIRONMENT_CHANGE_LISTENER);
 
     let cleanup = () => {
+#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
       TelemetryEnvironment.unregisterChangeListener(ENVIRONMENT_CHANGE_LISTENER);
+#endif
       if (this._dailyTimerId) {
         Policy.clearDailyTimeout(this._dailyTimerId);
         this._dailyTimerId = null;
