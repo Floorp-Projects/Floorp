@@ -605,6 +605,57 @@ function test_datasets()
   Assert.ok(registered.has("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT"));
 }
 
+function test_subsession() {
+  const ID = "TELEMETRY_TEST_COUNT";
+  let h = Telemetry.getHistogramById(ID);
+
+  // Both original and duplicate should start out the same.
+  h.clear();
+  let snapshot = Telemetry.histogramSnapshots;
+  let subsession = Telemetry.subsessionHistogramSnapshots;
+  Assert.ok(!(ID in snapshot));
+  Assert.ok(!(ID in subsession));
+
+  // They should instantiate and pick-up the count.
+  h.add(1);
+  snapshot = Telemetry.histogramSnapshots;
+  subsession = Telemetry.subsessionHistogramSnapshots;
+  Assert.ok(ID in snapshot);
+  Assert.ok(ID in subsession);
+  Assert.equal(snapshot[ID].sum, 1);
+  Assert.equal(subsession[ID].sum, 1);
+
+  // They should still reset properly.
+  h.clear();
+  snapshot = Telemetry.histogramSnapshots;
+  subsession = Telemetry.subsessionHistogramSnapshots;
+  Assert.ok(!(ID in snapshot));
+  Assert.ok(!(ID in subsession));
+
+  // Both should instantiate and pick-up the count.
+  h.add(1);
+  snapshot = Telemetry.histogramSnapshots;
+  subsession = Telemetry.subsessionHistogramSnapshots;
+  Assert.equal(snapshot[ID].sum, 1);
+  Assert.equal(subsession[ID].sum, 1);
+
+  // Check that we are able to only reset the duplicate histogram.
+  h.clear(true);
+  snapshot = Telemetry.histogramSnapshots;
+  subsession = Telemetry.subsessionHistogramSnapshots;
+  Assert.ok(ID in snapshot);
+  Assert.ok(ID in subsession);
+  Assert.equal(snapshot[ID].sum, 1);
+  Assert.equal(subsession[ID].sum, 0);
+
+  // Both should register the next count.
+  h.add(1);
+  snapshot = Telemetry.histogramSnapshots;
+  subsession = Telemetry.subsessionHistogramSnapshots;
+  Assert.equal(snapshot[ID].sum, 2);
+  Assert.equal(subsession[ID].sum, 1);
+}
+
 function test_keyed_subsession() {
   let h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_FLAG");
   const KEY = "foo";
@@ -673,5 +724,6 @@ function run_test()
   test_expired_histogram();
   test_keyed_histogram();
   test_datasets();
+  test_subsession();
   test_keyed_subsession();
 }

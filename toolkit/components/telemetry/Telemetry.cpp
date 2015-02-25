@@ -700,6 +700,9 @@ private:
   nsresult GetHistogramByName(const nsACString &name, Histogram **ret);
   bool ShouldReflectHistogram(Histogram *h);
   void IdentifyCorruptHistograms(StatisticsRecorder::Histograms &hs);
+  nsresult CreateHistogramSnapshots(JSContext *cx,
+                                    JS::MutableHandle<JS::Value> ret,
+                                    bool subsession);
   typedef StatisticsRecorder::Histograms::iterator HistogramIterator;
 
   struct AddonHistogramInfo {
@@ -995,6 +998,89 @@ GetHistogramByEnumId(Telemetry::ID id, Histogram **ret)
   return NS_OK;
 }
 
+/**
+ * This clones a histogram |existing| with the id |existingId| to a
+ * new histogram with the name |newName|.
+ * For simplicity this is limited to registered histograms.
+ */
+Histogram*
+CloneHistogram(const nsACString& newName, Telemetry::ID existingId,
+               Histogram& existing)
+{
+  const TelemetryHistogram &info = gHistograms[existingId];
+  Histogram *clone = nullptr;
+  nsresult rv;
+
+  rv = HistogramGet(PromiseFlatCString(newName).get(), info.expiration(),
+                    info.histogramType, existing.declared_min(),
+                    existing.declared_max(), existing.bucket_count(),
+                    true, &clone);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  Histogram::SampleSet ss;
+  existing.SnapshotSample(&ss);
+  clone->AddSampleSet(ss);
+
+  return clone;
+}
+
+/**
+ * This clones a histogram with the id |existingId| to a new histogram
+ * with the name |newName|.
+ * For simplicity this is limited to registered histograms.
+ */
+Histogram*
+CloneHistogram(const nsACString& newName, Telemetry::ID existingId)
+{
+  Histogram *existing = nullptr;
+  nsresult rv = GetHistogramByEnumId(existingId, &existing);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return CloneHistogram(newName, existingId, *existing);
+}
+
+Histogram*
+GetSubsessionHistogram(Histogram& existing)
+{
+  Telemetry::ID id;
+  nsresult rv = TelemetryImpl::GetHistogramEnumId(existing.histogram_name().c_str(), &id);
+  if (NS_FAILED(rv) || gHistograms[id].keyed) {
+    return nullptr;
+  }
+
+  static Histogram* subsession[Telemetry::HistogramCount] = {};
+  if (subsession[id]) {
+    return subsession[id];
+  }
+
+  NS_NAMED_LITERAL_CSTRING(prefix, SUBSESSION_HISTOGRAM_PREFIX);
+  nsDependentCString existingName(gHistograms[id].id());
+  if (StringBeginsWith(existingName, prefix)) {
+    return nullptr;
+  }
+
+  nsCString subsessionName(prefix);
+  subsessionName.Append(existingName);
+
+  subsession[id] = CloneHistogram(subsessionName, id, existing);
+  return subsession[id];
+}
+
+nsresult
+HistogramAdd(Histogram& histogram, int32_t value)
+{
+  histogram.Add(value);
+  if (Histogram* subsession = GetSubsessionHistogram(histogram)) {
+    subsession->Add(value);
+  }
+
+  return NS_OK;
+}
+
 bool
 FillRanges(JSContext *cx, JS::Handle<JSObject*> array, Histogram *h)
 {
@@ -1093,6 +1179,7 @@ JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
   }
 
   Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
+  MOZ_ASSERT(h);
   Histogram::ClassType type = h->histogram_type();
 
   int32_t value = 1;
@@ -1114,7 +1201,7 @@ JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
   }
 
   if (TelemetryImpl::CanRecord()) {
-    h->Add(value);
+    HistogramAdd(*h, value);
   }
 
   return true;
@@ -1156,8 +1243,28 @@ JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
     return false;
   }
 
+  bool onlySubsession = false;
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() >= 1) {
+    if (!args[0].isBoolean()) {
+      JS_ReportError(cx, "Not a boolean");
+      return false;
+    }
+
+    onlySubsession = JS::ToBoolean(args[0]);
+  }
+
   Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
-  h->Clear();
+  MOZ_ASSERT(h);
+  if(!onlySubsession) {
+    h->Clear();
+  }
+
+  if (Histogram* subsession = GetSubsessionHistogram(*h)) {
+    subsession->Clear();
+  }
+
   return true;
 }
 
@@ -1863,25 +1970,12 @@ TelemetryImpl::HistogramFrom(const nsACString &name, const nsACString &existing_
   if (NS_FAILED(rv)) {
     return rv;
   }
-  const TelemetryHistogram &p = gHistograms[id];
 
-  Histogram *existing;
-  rv = GetHistogramByEnumId(id, &existing);
-  if (NS_FAILED(rv)) {
-    return rv;
+  Histogram* clone = CloneHistogram(name, id);
+  if (!clone) {
+    return NS_ERROR_FAILURE;
   }
 
-  Histogram *clone;
-  rv = HistogramGet(PromiseFlatCString(name).get(), p.expiration(),
-                    p.histogramType, existing->declared_min(),
-                    existing->declared_max(), existing->bucket_count(),
-                    true, &clone);
-  if (NS_FAILED(rv))
-    return rv;
-
-  Histogram::SampleSet ss;
-  existing->SnapshotSample(&ss);
-  clone->AddSampleSet(ss);
   return WrapAndReturnHistogram(clone, cx, ret);
 }
 
@@ -2064,8 +2158,10 @@ TelemetryImpl::UnregisterAddonHistograms(const nsACString &id)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TelemetryImpl::GetHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+nsresult
+TelemetryImpl::CreateHistogramSnapshots(JSContext *cx,
+                                        JS::MutableHandle<JS::Value> ret,
+                                        bool subsession)
 {
   JS::Rooted<JSObject*> root_obj(cx, JS_NewPlainObject(cx));
   if (!root_obj)
@@ -2106,6 +2202,14 @@ TelemetryImpl::GetHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value>
       continue;
     }
 
+    Histogram* original = h;
+    if (subsession) {
+      h = GetSubsessionHistogram(*h);
+      if (!h) {
+        continue;
+      }
+    }
+
     hobj = JS_NewPlainObject(cx);
     if (!hobj) {
       return NS_ERROR_FAILURE;
@@ -2119,13 +2223,25 @@ TelemetryImpl::GetHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value>
     case REFLECT_FAILURE:
       return NS_ERROR_FAILURE;
     case REFLECT_OK:
-      if (!JS_DefineProperty(cx, root_obj, h->histogram_name().c_str(), hobj,
-                             JSPROP_ENUMERATE)) {
+      if (!JS_DefineProperty(cx, root_obj, original->histogram_name().c_str(),
+                             hobj, JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+{
+  return CreateHistogramSnapshots(cx, ret, false);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetSubsessionHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+{
+  return CreateHistogramSnapshots(cx, ret, true);
 }
 
 bool
@@ -3358,7 +3474,7 @@ Accumulate(ID aHistogram, uint32_t aSample)
   Histogram *h;
   nsresult rv = GetHistogramByEnumId(aHistogram, &h);
   if (NS_SUCCEEDED(rv))
-    h->Add(aSample);
+    HistogramAdd(*h, aSample);
 }
 
 void
@@ -3389,7 +3505,7 @@ Accumulate(const char* name, uint32_t sample)
   Histogram *h;
   rv = GetHistogramByEnumId(id, &h);
   if (NS_SUCCEEDED(rv)) {
-    h->Add(sample);
+    HistogramAdd(*h, sample);
   }
 }
 
