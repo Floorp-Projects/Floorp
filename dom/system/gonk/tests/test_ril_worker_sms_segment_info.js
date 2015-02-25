@@ -42,7 +42,7 @@ add_test(function test_SmsSegmentHelper__countGsm7BitSeptets() {
   };
 
   function do_check_calc(str, expectedCalcLen, lst, sst, strict7BitEncoding, strToWrite) {
-    do_check_eq(expectedCalcLen,
+    equal(expectedCalcLen,
                 gSmsSegmentHelper
                   .countGsm7BitSeptets(str,
                                        PDU_NL_LOCKING_SHIFT_TABLES[lst],
@@ -52,7 +52,7 @@ add_test(function test_SmsSegmentHelper__countGsm7BitSeptets() {
     helper.resetOctetWritten();
     strToWrite = strToWrite || str;
     helper.writeStringAsSeptets(strToWrite, 0, lst, sst);
-    do_check_eq(Math.ceil(expectedCalcLen * 7 / 8), helper.octetsWritten);
+    equal(Math.ceil(expectedCalcLen * 7 / 8), helper.octetsWritten);
   }
 
   // Test calculation encoded message length using both locking/single shift tables.

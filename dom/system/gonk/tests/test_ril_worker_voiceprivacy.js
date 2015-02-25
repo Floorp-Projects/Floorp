@@ -24,7 +24,7 @@ add_test(function test_setVoicePrivacyMode_success() {
 
   let postedMessage = workerHelper.postedMessage;
 
-  do_check_eq(postedMessage.errorMsg, undefined);
+  equal(postedMessage.errorMsg, undefined);
 
   run_next_test();
 });
@@ -46,7 +46,7 @@ add_test(function test_setVoicePrivacyMode_generic_failure() {
 
   let postedMessage = workerHelper.postedMessage;
 
-  do_check_eq(postedMessage.errorMsg, "GenericFailure");
+  equal(postedMessage.errorMsg, "GenericFailure");
 
   run_next_test();
 });
@@ -70,8 +70,8 @@ add_test(function test_queryVoicePrivacyMode_success_enabled_true() {
 
   let postedMessage = workerHelper.postedMessage;
 
-  do_check_eq(postedMessage.errorMsg, undefined);
-  do_check_true(postedMessage.enabled);
+  equal(postedMessage.errorMsg, undefined);
+  ok(postedMessage.enabled);
   run_next_test();
 });
 
@@ -94,7 +94,7 @@ add_test(function test_queryVoicePrivacyMode_success_enabled_false() {
 
   let postedMessage = workerHelper.postedMessage;
 
-  do_check_eq(postedMessage.errorMsg, undefined);
-  do_check_false(postedMessage.enabled);
+  equal(postedMessage.errorMsg, undefined);
+  ok(!postedMessage.enabled);
   run_next_test();
 });
