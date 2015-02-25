@@ -150,12 +150,15 @@ this.TelemetryPing = Object.freeze({
 
 let Impl = {
   _initialized: false,
+  _initStarted: false, // Whether we started setting up TelemetryPing.
   _log: null,
   _prevValues: {},
   // The previous build ID, if this is the first run with a new build.
   // Undefined if this is not the first run, or the previous build ID is unknown.
   _previousBuildID: undefined,
   _clientID: null,
+  // A task performing delayed initialization
+  _delayedInitTask: null,
 
   popPayloads: function popPayloads(reason, externalPayload) {
     function payloadIter() {
@@ -318,13 +321,31 @@ let Impl = {
 
   /**
    * Initializes telemetry within a timer. If there is no PREF_SERVER set, don't turn on telemetry.
+   *
+   * This delayed initialization means TelemetryPing init can be in the following states:
+   * 1) setupTelemetry was never called
+   * or it was called and
+   *   2) _delayedInitTask was scheduled, but didn't run yet.
+   *   3) _delayedInitTask is currently running.
+   *   4) _delayedInitTask finished running and is nulled out.
    */
   setupTelemetry: function setupTelemetry(testing) {
+    this._initStarted = true;
     if (testing && !this._log) {
       this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
     }
 
     this._log.trace("setupTelemetry");
+
+    if (this._delayedInitTask) {
+      this._log.error("setupTelemetry - init task already running");
+      return this._delayedInitTask;
+    }
+
+    if (this._initialized && !testing) {
+      this._log.error("setupTelemetry - already initialized");
+      return Promise.resolve();
+    }
 
     // Initialize some probes that are kept in their own modules
     this._thirdPartyCookies = new ThirdPartyCookieProbe();
@@ -345,49 +366,87 @@ let Impl = {
     // run various late initializers. Otherwise our gathered memory
     // footprint and other numbers would be too optimistic.
     let deferred = Promise.defer();
-    let delayedTask = new DeferredTask(function* () {
-      this._initialized = true;
+    this._delayedInitTask = new DeferredTask(function* () {
+      try {
+        this._initialized = true;
 
-      yield TelemetryEnvironment.init();
+        yield TelemetryEnvironment.init();
 
-      yield TelemetryFile.loadSavedPings();
-      // If we have any TelemetryPings lying around, we'll be aggressive
-      // and try to send them all off ASAP.
-      if (TelemetryFile.pingsOverdue > 0) {
-        this._log.trace("setupChromeProcess - Sending " + TelemetryFile.pingsOverdue +
-                        " overdue pings now.");
-        // It doesn't really matter what we pass to this.send as a reason,
-        // since it's never sent to the server. All that this.send does with
-        // the reason is check to make sure it's not a test-ping.
-        yield this.send("overdue-flush");
+        yield TelemetryFile.loadSavedPings();
+        // If we have any TelemetryPings lying around, we'll be aggressive
+        // and try to send them all off ASAP.
+        if (TelemetryFile.pingsOverdue > 0) {
+          this._log.trace("setupChromeProcess - Sending " + TelemetryFile.pingsOverdue +
+                          " overdue pings now.");
+          // It doesn't really matter what we pass to this.send as a reason,
+          // since it's never sent to the server. All that this.send does with
+          // the reason is check to make sure it's not a test-ping.
+          yield this.send("overdue-flush");
+        }
+
+        if ("@mozilla.org/datareporting/service;1" in Cc) {
+          let drs = Cc["@mozilla.org/datareporting/service;1"]
+                      .getService(Ci.nsISupports)
+                      .wrappedJSObject;
+          this._clientID = yield drs.getClientID();
+          // Update cached client id.
+          Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
+        } else {
+          // Nuke potentially cached client id.
+          Preferences.reset(PREF_CACHED_CLIENTID);
+        }
+
+        Telemetry.asyncFetchTelemetryData(function () {});
+        deferred.resolve();
+      } catch (e) {
+        deferred.reject(e);
+      } finally {
+        this._delayedInitTask = null;
       }
-
-      if ("@mozilla.org/datareporting/service;1" in Cc) {
-        let drs = Cc["@mozilla.org/datareporting/service;1"]
-                    .getService(Ci.nsISupports)
-                    .wrappedJSObject;
-        this._clientID = yield drs.getClientID();
-        // Update cached client id.
-        Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
-      } else {
-        // Nuke potentially cached client id.
-        Preferences.reset(PREF_CACHED_CLIENTID);
-      }
-
-      Telemetry.asyncFetchTelemetryData(function () {});
-      deferred.resolve();
-
     }.bind(this), testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
     AsyncShutdown.sendTelemetry.addBlocker("TelemetryPing: shutting down",
                                            () => this.shutdown());
 
-    delayedTask.arm();
+    this._delayedInitTask.arm();
     return deferred.promise;
   },
 
   shutdown: function() {
-    return TelemetryEnvironment.shutdown();
+    this._log.trace("shutdown");
+
+    let cleanup = () => {
+      if (!this._initialized) {
+        return;
+      }
+      let reset = () => {
+        this._initialized = false;
+        this._initStarted = false;
+      };
+      return TelemetryEnvironment.shutdown().then(reset, reset);
+    };
+
+    // We can be in one the following states here:
+    // 1) setupTelemetry was never called
+    // or it was called and
+    //   2) _delayedInitTask was scheduled, but didn't run yet.
+    //   3) _delayedInitTask is running now.
+    //   4) _delayedInitTask finished running already.
+
+    // This handles 1).
+    if (!this._initStarted) {
+      return Promise.resolve();
+    }
+
+    // This handles 4).
+    if (!this._delayedInitTask) {
+      // We already ran the delayed initialization.
+      return cleanup();
+    }
+
+    // This handles 2) and 3).
+    this._delayedInitTask.disarm();
+    return this._delayedInitTask.finalize().then(cleanup);
   },
 
   /**
