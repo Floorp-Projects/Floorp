@@ -391,7 +391,7 @@ function numberRange(lower, upper)
 function test_keyed_boolean_histogram()
 {
   const KEYED_ID = "test::keyed::boolean";
-  KEYS = ["key"+(i+1) for (i of numberRange(0, 2))];
+  let KEYS = ["key"+(i+1) for (i of numberRange(0, 2))];
   KEYS.push("漢語");
   let histogramBase = {
     "min": 1,
@@ -605,6 +605,39 @@ function test_datasets()
   Assert.ok(registered.has("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT"));
 }
 
+function test_keyed_subsession() {
+  let h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_FLAG");
+  const KEY = "foo";
+
+  // Both original and subsession should start out the same.
+  h.clear();
+  Assert.ok(!(KEY in h.snapshot()));
+  Assert.ok(!(KEY in h.subsessionSnapshot()));
+  Assert.equal(h.snapshot(KEY).sum, 0);
+  Assert.equal(h.subsessionSnapshot(KEY).sum, 0);
+
+  // Both should register the flag.
+  h.add(KEY, 1);
+  Assert.ok(KEY in h.snapshot());
+  Assert.ok(KEY in h.subsessionSnapshot());
+  Assert.equal(h.snapshot(KEY).sum, 1);
+  Assert.equal(h.subsessionSnapshot(KEY).sum, 1);
+
+  // Check that we are able to only reset the subsession histogram.
+  h.clear(true);
+  Assert.ok(KEY in h.snapshot());
+  Assert.ok(!(KEY in h.subsessionSnapshot()));
+  Assert.equal(h.snapshot(KEY).sum, 1);
+  Assert.equal(h.subsessionSnapshot(KEY).sum, 0);
+
+  // Setting the flag again should make both match again.
+  h.add(KEY, 1);
+  Assert.ok(KEY in h.snapshot());
+  Assert.ok(KEY in h.subsessionSnapshot());
+  Assert.equal(h.snapshot(KEY).sum, 1);
+  Assert.equal(h.subsessionSnapshot(KEY).sum, 1);
+}
+
 function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
   // strip {}
@@ -640,4 +673,5 @@ function run_test()
   test_expired_histogram();
   test_keyed_histogram();
   test_datasets();
+  test_keyed_subsession();
 }

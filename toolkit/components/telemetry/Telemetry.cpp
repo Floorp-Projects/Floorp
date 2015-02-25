@@ -84,6 +84,7 @@ using base::LinearHistogram;
 using base::StatisticsRecorder;
 
 const char KEYED_HISTOGRAM_NAME_SEPARATOR[] = "#";
+const char SUBSESSION_HISTOGRAM_PREFIX[] = "sub#";
 
 enum reflectStatus {
   REFLECT_OK,
@@ -774,18 +775,21 @@ public:
   KeyedHistogram(const nsACString &name, const nsACString &expiration,
                  uint32_t histogramType, uint32_t min, uint32_t max,
                  uint32_t bucketCount);
-  nsresult GetHistogram(const nsCString& name, Histogram** histogram);
-  Histogram* GetHistogram(const nsCString& name);
+  nsresult GetHistogram(const nsCString& name, Histogram** histogram, bool subsession);
+  Histogram* GetHistogram(const nsCString& name, bool subsession);
   uint32_t GetHistogramType() const { return mHistogramType; }
   nsresult GetDataset(uint32_t* dataset) const;
   nsresult GetJSKeys(JSContext* cx, JS::CallArgs& args);
-  nsresult GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj);
-  void Clear();
+  nsresult GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj, bool subsession);
+
+  nsresult Add(const nsCString& key, uint32_t aSample);
+  void Clear(bool subsession);
 
 private:
   typedef nsBaseHashtableET<nsCStringHashKey, Histogram*> KeyedHistogramEntry;
   typedef AutoHashtable<KeyedHistogramEntry> KeyedHistogramMapType;
   KeyedHistogramMapType mHistogramMap;
+  KeyedHistogramMapType mSubsessionMap;
 
   struct ReflectKeysArgs {
     JSContext* jsContext;
@@ -1243,17 +1247,7 @@ JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
     }
   }
 
-  Histogram* h = nullptr;
-  nsresult rv = keyed->GetHistogram(NS_ConvertUTF16toUTF8(key), &h);
-  if (NS_FAILED(rv)) {
-    JS_ReportError(cx, "Failed to get histogram");
-    return false;
-  }
-
-  if (TelemetryImpl::CanRecord()) {
-    h->Add(value);
-  }
-
+  keyed->Add(NS_ConvertUTF16toUTF8(key), value);
   return true;
 }
 
@@ -1275,7 +1269,7 @@ JSKeyedHistogram_Keys(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 bool
-JSKeyedHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
+KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc, JS::Value *vp, bool subsession)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj) {
@@ -1296,7 +1290,7 @@ JSKeyedHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
       return false;
     }
 
-    if (!NS_SUCCEEDED(keyed->GetJSSnapshot(cx, snapshot))) {
+    if (!NS_SUCCEEDED(keyed->GetJSSnapshot(cx, snapshot, subsession))) {
       JS_ReportError(cx, "Failed to reflect keyed histograms");
       return false;
     }
@@ -1312,7 +1306,7 @@ JSKeyedHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
   }
 
   Histogram* h = nullptr;
-  nsresult rv = keyed->GetHistogram(NS_ConvertUTF16toUTF8(key), &h);
+  nsresult rv = keyed->GetHistogram(NS_ConvertUTF16toUTF8(key), &h, subsession);
   if (NS_FAILED(rv)) {
     JS_ReportError(cx, "Failed to get histogram");
     return false;
@@ -1338,6 +1332,18 @@ JSKeyedHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 bool
+JSKeyedHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+  return KeyedHistogram_SnapshotImpl(cx, argc, vp, false);
+}
+
+bool
+JSKeyedHistogram_SubsessionSnapshot(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+  return KeyedHistogram_SnapshotImpl(cx, argc, vp, true);
+}
+
+bool
 JSKeyedHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -1350,7 +1356,19 @@ JSKeyedHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
     return false;
   }
 
-  keyed->Clear();
+  bool onlySubsession = false;
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (args.length() >= 1) {
+    if (!(args[0].isNumber() || args[0].isBoolean())) {
+      JS_ReportError(cx, "Not a boolean");
+      return false;
+    }
+
+    onlySubsession = JS::ToBoolean(args[0]);
+  }
+
+  keyed->Clear(onlySubsession);
   return true;
 }
 
@@ -1391,6 +1409,7 @@ WrapAndReturnKeyedHistogram(KeyedHistogram *h, JSContext *cx, JS::MutableHandle<
     return NS_ERROR_FAILURE;
   if (!(JS_DefineFunction(cx, obj, "add", JSKeyedHistogram_Add, 2, 0)
         && JS_DefineFunction(cx, obj, "snapshot", JSKeyedHistogram_Snapshot, 1, 0)
+        && JS_DefineFunction(cx, obj, "subsessionSnapshot", JSKeyedHistogram_SubsessionSnapshot, 1, 0)
         && JS_DefineFunction(cx, obj, "keys", JSKeyedHistogram_Keys, 0, 0)
         && JS_DefineFunction(cx, obj, "clear", JSKeyedHistogram_Clear, 0, 0)
         && JS_DefineFunction(cx, obj, "dataset", JSKeyedHistogram_Dataset, 0, 0))) {
@@ -1667,6 +1686,7 @@ mFailedLockCount(0)
   mTrackedDBs.MarkImmutable();
 #endif
 
+  // Create registered keyed histograms
   for (size_t i = 0; i < ArrayLength(gHistograms); ++i) {
     const TelemetryHistogram& h = gHistograms[i];
     if (!h.keyed) {
@@ -2213,7 +2233,7 @@ TelemetryImpl::KeyedHistogramsReflector(const nsACString& key, nsAutoPtr<KeyedHi
     return PL_DHASH_STOP;
   }
 
-  if (!NS_SUCCEEDED(entry->GetJSSnapshot(cx, snapshot))) {
+  if (!NS_SUCCEEDED(entry->GetJSSnapshot(cx, snapshot, false))) {
     return PL_DHASH_STOP;
   }
 
@@ -3351,11 +3371,7 @@ Accumulate(ID aID, const nsCString& aKey, uint32_t aSample)
   const TelemetryHistogram& th = gHistograms[aID];
   KeyedHistogram* keyed = TelemetryImpl::GetKeyedHistogramById(nsDependentCString(th.id()));
   MOZ_ASSERT(keyed);
-
-  Histogram* histogram = keyed->GetHistogram(aKey);
-  if (histogram) {
-    histogram->Add(aSample);
-  }
+  keyed->Add(aKey, aSample);
 }
 
 void
@@ -3776,6 +3792,7 @@ KeyedHistogram::KeyedHistogram(const nsACString &name, const nsACString &expirat
                                uint32_t histogramType, uint32_t min, uint32_t max,
                                uint32_t bucketCount)
   : mHistogramMap()
+  , mSubsessionMap()
   , mName(name)
   , mExpiration(expiration)
   , mHistogramType(histogramType)
@@ -3786,15 +3803,21 @@ KeyedHistogram::KeyedHistogram(const nsACString &name, const nsACString &expirat
 }
 
 nsresult
-KeyedHistogram::GetHistogram(const nsCString& key, Histogram** histogram)
+KeyedHistogram::GetHistogram(const nsCString& key, Histogram** histogram,
+                             bool subsession)
 {
-  KeyedHistogramEntry* entry = mHistogramMap.GetEntry(key);
+  KeyedHistogramMapType& map = subsession ? mSubsessionMap : mHistogramMap;
+  KeyedHistogramEntry* entry = map.GetEntry(key);
   if (entry) {
     *histogram = entry->mData;
     return NS_OK;
   }
 
-  nsCString histogramName = mName;
+  nsCString histogramName;
+  if (subsession) {
+    histogramName.Append(SUBSESSION_HISTOGRAM_PREFIX);
+  }
+  histogramName.Append(mName);
   histogramName.Append(KEYED_HISTOGRAM_NAME_SEPARATOR);
   histogramName.Append(key);
 
@@ -3810,7 +3833,7 @@ KeyedHistogram::GetHistogram(const nsCString& key, Histogram** histogram)
   h->SetFlags(Histogram::kExtendedStatisticsFlag);
   *histogram = h;
 
-  entry = mHistogramMap.PutEntry(key);
+  entry = map.PutEntry(key);
   if (MOZ_UNLIKELY(!entry)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -3820,10 +3843,10 @@ KeyedHistogram::GetHistogram(const nsCString& key, Histogram** histogram)
 }
 
 Histogram*
-KeyedHistogram::GetHistogram(const nsCString& key)
+KeyedHistogram::GetHistogram(const nsCString& key, bool subsession)
 {
   Histogram* h = nullptr;
-  if (NS_FAILED(GetHistogram(key, &h))) {
+  if (NS_FAILED(GetHistogram(key, &h, subsession))) {
     return nullptr;
   }
   return h;
@@ -3852,9 +3875,34 @@ KeyedHistogram::ClearHistogramEnumerator(KeyedHistogramEntry* entry, void*)
   return PL_DHASH_NEXT;
 }
 
-void
-KeyedHistogram::Clear()
+nsresult
+KeyedHistogram::Add(const nsCString& key, uint32_t sample)
 {
+  if (!TelemetryImpl::CanRecord()) {
+    return NS_OK;
+  }
+
+  Histogram* histogram = GetHistogram(key, false);
+  Histogram* subsession = GetHistogram(key, true);
+  MOZ_ASSERT(histogram && subsession);
+  if (!histogram || !subsession) {
+    return NS_ERROR_FAILURE;
+  }
+
+  histogram->Add(sample);
+  subsession->Add(sample);
+  return NS_OK;
+}
+
+void
+KeyedHistogram::Clear(bool onlySubsession)
+{
+  mSubsessionMap.EnumerateEntries(&KeyedHistogram::ClearHistogramEnumerator, nullptr);
+  mSubsessionMap.Clear();
+  if (onlySubsession) {
+    return;
+  }
+
   mHistogramMap.EnumerateEntries(&KeyedHistogram::ClearHistogramEnumerator, nullptr);
   mHistogramMap.Clear();
 }
@@ -3920,9 +3968,10 @@ KeyedHistogram::ReflectKeyedHistogram(KeyedHistogramEntry* entry, JSContext* cx,
 }
 
 nsresult
-KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj)
+KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj, bool subsession)
 {
-  if (!mHistogramMap.ReflectIntoJS(&KeyedHistogram::ReflectKeyedHistogram, cx, obj)) {
+  KeyedHistogramMapType& map = subsession ? mSubsessionMap : mHistogramMap;
+  if (!map.ReflectIntoJS(&KeyedHistogram::ReflectKeyedHistogram, cx, obj)) {
     return NS_ERROR_FAILURE;
   }
 
