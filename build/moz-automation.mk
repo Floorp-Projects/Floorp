@@ -36,6 +36,7 @@ tier_UPDATE_PACKAGING = update-packaging
 tier_PRETTY_UPDATE_PACKAGING = pretty-update-packaging
 tier_UPLOAD_SYMBOLS = uploadsymbols
 tier_UPLOAD = upload
+tier_SDK = sdk
 
 # Automation build steps. Everything in MOZ_AUTOMATION_TIERS also gets used in
 # TIERS for mach display. As such, the MOZ_AUTOMATION_TIERS are roughly sorted
@@ -55,6 +56,7 @@ moz_automation_symbols = \
   L10N_CHECK \
   PRETTY_L10N_CHECK \
   UPLOAD \
+  SDK \
   $(NULL)
 MOZ_AUTOMATION_TIERS := $(foreach sym,$(moz_automation_symbols),$(if $(filter 1,$(MOZ_AUTOMATION_$(sym))),$(tier_$(sym))))
 
@@ -76,15 +78,17 @@ automation/upload: automation/package
 automation/upload: automation/package-tests
 automation/upload: automation/buildsymbols
 automation/upload: automation/update-packaging
+automation/upload: automation/sdk
 
 # automation/{pretty-}package should depend on build (which is implicit due to
 # the way client.mk invokes automation/build), but buildsymbols changes the
 # binaries/libs, and that's what we package/test.
 automation/pretty-package: automation/buildsymbols
 
-# The installer and packager both run stage-package, and may conflict
+# The installer, sdk and packager all run stage-package, and may conflict
 # with each other.
 automation/installer: automation/package
+automation/sdk: automation/installer automation/package
 
 # The 'pretty' versions of targets run before the regular ones to avoid
 # conflicts in writing to the same files.
