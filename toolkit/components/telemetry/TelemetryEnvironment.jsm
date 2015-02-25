@@ -225,7 +225,6 @@ this.TelemetryEnvironment = {
   _changeListeners: new Map(),
   // Async task for collecting the environment data.
   _collectTask: null,
-  _doNotify: false,
 
   // Policy to use when saving preferences. Exported for using them in tests.
   RECORD_PREF_STATE: 1, // Don't record the preference value
@@ -238,6 +237,12 @@ this.TelemetryEnvironment = {
 
   // The Addons change listener, init by |_startWatchingAddons| .
   _addonsListener: null,
+
+  // AddonManager may shut down before us, in which case we cache the addons here.
+  // It is always null if the AM didn't shut down before us.
+  // If cached, it is an object containing the addon information, suitable for use
+  // in the environment data.
+  _cachedAddons: null,
 
   /**
    * Initialize TelemetryEnvironment.
@@ -253,6 +258,10 @@ this.TelemetryEnvironment = {
     this._shutdown = false;
     this._startWatchingPrefs();
     this._startWatchingAddons();
+
+    AddonManager.shutdown.addBlocker("TelemetryEnvironment: caching addons",
+                                      () => this._blockAddonManagerShutdown(),
+                                      () => this._getState());
   },
 
   /**
@@ -275,6 +284,8 @@ this.TelemetryEnvironment = {
     this._stopWatchingAddons();
     this._changeListeners.clear();
     yield this._collectTask;
+
+    this._cachedAddons = null;
   }),
 
   _configureLog: function () {
@@ -671,8 +682,13 @@ this.TelemetryEnvironment = {
   /**
    * Get the addon data in object form.
    * @return Object containing the addon data.
+   *
+   * This should only be called from the environment collection task
+   * or _blockAddonManagerShutdown, otherwise we risk running this
+   * during addon manager shutdown.
    */
   _getActiveAddons: Task.async(function* () {
+
     // Request addons, asynchronously.
     let allAddons = yield promiseGetAddonsByTypes(["extension", "service"]);
 
@@ -705,6 +721,10 @@ this.TelemetryEnvironment = {
   /**
    * Get the currently active theme data in object form.
    * @return Object containing the active theme data.
+   *
+   * This should only be called from the environment collection task
+   * or _blockAddonManagerShutdown, otherwise we risk running this
+   * during addon manager shutdown.
    */
   _getActiveTheme: Task.async(function* () {
     // Request themes, asynchronously.
@@ -769,6 +789,10 @@ this.TelemetryEnvironment = {
   /**
    * Get the GMPlugins data in object form.
    * @return Object containing the GMPlugins data.
+   *
+   * This should only be called from the environment collection task
+   * or _blockAddonManagerShutdown, otherwise we risk running this
+   * during addon manager shutdown.
    */
   _getActiveGMPlugins: Task.async(function* () {
     // Request plugins, asynchronously.
@@ -817,11 +841,21 @@ this.TelemetryEnvironment = {
   /**
    * Get the addon data in object form.
    * @return Object containing the addon data.
+   *
+   * This should only be called from the environment collection task
+   * or _blockAddonManagerShutdown, otherwise we risk running this
+   * during addon manager shutdown.
    */
   _getAddons: Task.async(function* () {
-    let activeAddons = yield this._getActiveAddons();
-    let activeTheme = yield this._getActiveTheme();
-    let activeGMPlugins = yield this._getActiveGMPlugins();
+    // AddonManager may have shutdown already, in which case we should have cached addon data.
+    // It can't shutdown during the collection here because we have a blocker on the AMs
+    // shutdown barrier that waits for the collect task.
+    let addons = this._cachedAddons || {};
+    if (!this._cachedAddons) {
+      addons.activeAddons = yield this._getActiveAddons();
+      addons.activeTheme = yield this._getActiveTheme();
+      addons.activeGMPlugins = yield this._getActiveGMPlugins();
+    }
 
     let personaId = null;
 #ifndef MOZ_WIDGET_GONK
@@ -832,10 +866,10 @@ this.TelemetryEnvironment = {
 #endif
 
     let addonData = {
-      activeAddons: activeAddons,
-      theme: activeTheme,
+      activeAddons: addons.activeAddons,
+      theme: addons.activeTheme,
       activePlugins: this._getActivePlugins(),
-      activeGMPlugins: activeGMPlugins,
+      activeGMPlugins: addons.activeGMPlugins,
       activeExperiment: this._getActiveExperiment(),
       persona: personaId,
     };
@@ -897,8 +931,10 @@ this.TelemetryEnvironment = {
    * Stop watching addons for changes.
    */
   _stopWatchingAddons: function () {
-    AddonManager.removeAddonListener(this._addonsListener);
-    Services.obs.removeObserver(this, EXPERIMENTS_CHANGED_TOPIC);
+    if (this._addonsListener) {
+      AddonManager.removeAddonListener(this._addonsListener);
+      Services.obs.removeObserver(this, EXPERIMENTS_CHANGED_TOPIC);
+    }
     this._addonsListener = null;
   },
 
@@ -991,5 +1027,35 @@ this.TelemetryEnvironment = {
         this._log.warning("_onEnvironmentChange - listener " + name + " caught error", e);
       }
     }
+  },
+
+  /**
+   * This blocks the AddonManager shutdown barrier, it caches addons we might need later.
+   * It also lets an active collect task finish first as it may still access the AM.
+   */
+  _blockAddonManagerShutdown: Task.async(function*() {
+    this._log.trace("_blockAddonManagerShutdown");
+
+    this._stopWatchingAddons();
+
+    this._cachedAddons = {
+      activeAddons: yield this._getActiveAddons(),
+      activeTheme: yield this._getActiveTheme(),
+      activeGMPlugins: yield this._getActiveGMPlugins(),
+    };
+
+    yield this._collectTask;
+  }),
+
+  /**
+   * Get an object describing the current state of this module for AsyncShutdown diagnostics.
+   */
+  _getState: function() {
+    return {
+      shutdown: this._shutdown,
+      hasCollectTask: !!this._collectTask,
+      hasAddonsListener: !!this._addonsListener,
+      hasCachedAddons: !!this._cachedAddons,
+    };
   },
 };
