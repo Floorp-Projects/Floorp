@@ -151,8 +151,7 @@ add_test(function test_request_exit_emergencyCbMode_explicitly() {
 
   context.RIL.handleChromeMessage({rilMessageType: "exitEmergencyCbMode"});
   context.RIL[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE](1, {
-    rilMessageType: "exitEmergencyCbMode",
-    rilRequestError: ERROR_SUCCESS
+    rilMessageType: "exitEmergencyCbMode"
   });
   let postedMessage = workerHelper.postedMessage;
 
