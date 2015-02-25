@@ -36,17 +36,21 @@
                     android:entryValues="@array/pref_cookies_values"
                     android:persistent="false" />
 
-    <org.mozilla.gecko.preferences.LinkPreference android:key="android.not_a_preference.signon.manage"
-                                                  android:title="@string/pref_manage_logins"
-                                                  url="about:passwords"/>
+    <PreferenceCategory android:title="@string/pref_category_logins">
 
-    <CheckBoxPreference android:key="signon.rememberSignons"
-                        android:title="@string/pref_remember_signons"
-                        android:persistent="false" />
+        <org.mozilla.gecko.preferences.LinkPreference android:key="android.not_a_preference.signon.manage"
+                                                      android:title="@string/pref_manage_logins"
+                                                      url="about:passwords"/>
 
-    <CheckBoxPreference android:key="privacy.masterpassword.enabled"
-                        android:title="@string/pref_use_master_password"
-                        android:persistent="false" />
+        <CheckBoxPreference android:key="signon.rememberSignons"
+                            android:title="@string/pref_remember_signons"
+                            android:persistent="false" />
+
+        <CheckBoxPreference android:key="privacy.masterpassword.enabled"
+                            android:title="@string/pref_use_master_password"
+                            android:persistent="false" />
+
+    </PreferenceCategory>
 
     <!-- keys prefixed with "android.not_a_preference." are not synced with Gecko -->
     <PreferenceCategory android:title="@string/pref_clear_private_data_category">
