@@ -266,6 +266,16 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             return JS::NumberValue(uint32_t(i));
         }
         case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE: {
+            if (mBoundReadFramebuffer) {
+                FBStatus status = mBoundReadFramebuffer->CheckFramebufferStatus();
+                if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
+                    ErrorInvalidOperation("getParameter: Read framebuffer must be"
+                                          " complete before querying"
+                                          " IMPLEMENTATION_COLOR_READ_TYPE.");
+                    return JS::NullValue();
+                }
+            }
+
             GLint i = 0;
             if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
                 gl->fGetIntegerv(pname, &i);
@@ -275,6 +285,16 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             return JS::NumberValue(uint32_t(i));
         }
         case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT: {
+            if (mBoundReadFramebuffer) {
+                FBStatus status = mBoundReadFramebuffer->CheckFramebufferStatus();
+                if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
+                    ErrorInvalidOperation("getParameter: Read framebuffer must be"
+                                          " complete before querying"
+                                          " IMPLEMENTATION_COLOR_READ_FORMAT.");
+                    return JS::NullValue();
+                }
+            }
+
             GLint i = 0;
             if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
                 gl->fGetIntegerv(pname, &i);

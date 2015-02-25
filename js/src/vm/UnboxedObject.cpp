@@ -35,6 +35,9 @@ UnboxedLayout::trace(JSTracer *trc)
 
     if (nativeShape_)
         MarkShape(trc, &nativeShape_, "unboxed_layout_nativeShape");
+
+    if (replacementNewGroup_)
+        MarkObjectGroup(trc, &replacementNewGroup_, "unboxed_layout_replacementNewGroup");
 }
 
 size_t
@@ -172,18 +175,49 @@ UnboxedPlainObject::trace(JSTracer *trc, JSObject *obj)
 /* static */ bool
 UnboxedLayout::makeNativeGroup(JSContext *cx, ObjectGroup *group)
 {
+    AutoEnterAnalysis enter(cx);
+
     UnboxedLayout &layout = group->unboxedLayout();
+    Rooted<TaggedProto> proto(cx, group->proto());
 
     MOZ_ASSERT(!layout.nativeGroup());
 
-    // Immediately clear any new script on the group, as
-    // rollbackPartiallyInitializedObjects() will be confused by the type
-    // changes we make later on.
-    group->clearNewScript(cx);
+    // Immediately clear any new script on the group. This is done by replacing
+    // the existing new script with one for a replacement default new group.
+    // This is done so that the size of the replacment group's objects is the
+    // same as that for the unboxed group, so that we do not see polymorphic
+    // slot accesses later on for sites that see converted objects from this
+    // group and objects that were allocated using the replacement new group.
+    RootedObjectGroup replacementNewGroup(cx);
+    if (layout.newScript()) {
+        replacementNewGroup = ObjectGroupCompartment::makeGroup(cx, &PlainObject::class_, proto);
+        if (!replacementNewGroup)
+            return false;
 
-    AutoEnterAnalysis enter(cx);
+        PlainObject *templateObject = NewObjectWithGroup<PlainObject>(cx, replacementNewGroup,
+                                                                      cx->global(), layout.getAllocKind(),
+                                                                      MaybeSingletonObject);
+        if (!templateObject)
+            return false;
 
-    Rooted<TaggedProto> proto(cx, group->proto());
+        for (size_t i = 0; i < layout.properties().length(); i++) {
+            const UnboxedLayout::Property &property = layout.properties()[i];
+            if (!templateObject->addDataProperty(cx, NameToId(property.name), i, JSPROP_ENUMERATE))
+                return false;
+            MOZ_ASSERT(templateObject->slotSpan() == i + 1);
+            MOZ_ASSERT(!templateObject->inDictionaryMode());
+        }
+
+        TypeNewScript *replacementNewScript =
+            TypeNewScript::makeNativeVersion(cx, layout.newScript(), templateObject);
+        if (!replacementNewScript)
+            return false;
+
+        replacementNewGroup->setNewScript(replacementNewScript);
+        gc::TraceTypeNewScript(replacementNewGroup);
+
+        group->clearNewScript(cx, replacementNewGroup);
+    }
 
     size_t nfixed = gc::GetGCKindSlots(layout.getAllocKind());
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &PlainObject::class_, proto,
@@ -214,8 +248,8 @@ UnboxedLayout::makeNativeGroup(JSContext *cx, ObjectGroup *group)
             TypeSet::TypeList types;
             if (!property->types.enumerateTypes(&types))
                 return false;
-            for (size_t i = 0; i < types.length(); i++)
-                AddTypePropertyId(cx, nativeGroup, property->id, types[i]);
+            for (size_t j = 0; j < types.length(); j++)
+                AddTypePropertyId(cx, nativeGroup, property->id, types[j]);
             HeapTypeSet *nativeProperty = nativeGroup->maybeGetProperty(property->id);
             if (nativeProperty->canSetDefinite(i))
                 nativeProperty->setDefinite(i);
@@ -224,6 +258,7 @@ UnboxedLayout::makeNativeGroup(JSContext *cx, ObjectGroup *group)
 
     layout.nativeGroup_ = nativeGroup;
     layout.nativeShape_ = shape;
+    layout.replacementNewGroup_ = replacementNewGroup;
 
     nativeGroup->setOriginalUnboxedGroup(group);
 
