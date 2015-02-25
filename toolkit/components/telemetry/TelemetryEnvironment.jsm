@@ -506,7 +506,6 @@ this.TelemetryEnvironment = {
     if (resetDate) {
       profileData.resetDate = truncateToDays(resetDate);
     }
-
     return profileData;
   }),
 
@@ -991,7 +990,9 @@ this.TelemetryEnvironment = {
     let sections = {
       "build" : () => this._getBuild(),
       "settings": () => this._getSettings(),
+#ifndef MOZ_WIDGET_ANDROID
       "profile": () => this._getProfile(),
+#endif
       "partner": () => this._getPartner(),
       "system": () => this._getSystem(),
       "addons": () => this._getAddons(),
