@@ -6737,6 +6737,9 @@ class MCheckOverRecursed
     static MCheckOverRecursed *New(TempAllocator &alloc) {
         return new(alloc) MCheckOverRecursed();
     }
+    AliasSet getAliasSet() const MOZ_OVERRIDE {
+        return AliasSet::None();
+    }
 };
 
 // Check whether we need to fire the interrupt handler.
