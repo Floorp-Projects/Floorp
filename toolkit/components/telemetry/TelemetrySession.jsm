@@ -390,7 +390,9 @@ this.TelemetrySession = Object.freeze({
    * Used only for testing purposes.
    */
   reset: function() {
-    Impl._sessionId = Policy.generateSessionUUID();
+    Impl._sessionId = null;
+    Impl._subsessionId = null;
+    Impl._previousSubsessionId = null;
     Impl._subsessionCounter = 0;
     Impl._profileSubsessionCounter = 0;
     this.uninstall();
@@ -456,9 +458,9 @@ let Impl = {
   // where source is a weak reference to the child process,
   // and payload is the telemetry payload from that child process.
   _childTelemetry: [],
-  // Generate a unique id once per session so the server can cope with duplicate
+  // Unique id that identifies this session so the server can cope with duplicate
   // submissions, orphaning and other oddities. The id is shared across subsessions.
-  _sessionId: Policy.generateSessionUUID(),
+  _sessionId: null,
   // Random subsession id.
   _subsessionId: null,
   // Subsession id of the previous subsession (even if it was in a different session),
@@ -1086,6 +1088,9 @@ let Impl = {
       return Promise.resolve();
     }
 
+    // Generate a unique id once per session so the server can cope with duplicate
+    // submissions, orphaning and other oddities. The id is shared across subsessions.
+    this._sessionId = Policy.generateSessionUUID();
     this.startNewSubsession();
     // startNewSubsession sets |_subsessionStartDate| to the current date/time. Use
     // the very same value for |_sessionStartDate|.
