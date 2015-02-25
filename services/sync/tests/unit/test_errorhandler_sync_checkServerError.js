@@ -200,6 +200,7 @@ add_identity_test(this, function test_service_offline() {
   let deferred = Promise.defer();
   server.stop(() => {
     Services.io.offline = true;
+    Services.prefs.setBoolPref("network.dns.offline-localhost", false);
 
     try {
       do_check_eq(Status.sync, SYNC_SUCCEEDED);
@@ -214,6 +215,7 @@ add_identity_test(this, function test_service_offline() {
       Service.startOver();
     }
     Services.io.offline = false;
+    Services.prefs.clearUserPref("network.dns.offline-localhost");
     deferred.resolve();
   });
   yield deferred.promise;
