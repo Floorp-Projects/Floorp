@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Test container background searching with clipped display items</title>
+
+<style>
+
+div {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  margin-bottom: -200px;
+}
+
+#outer {
+  background-color: red;
+}
+
+#container {
+  will-change: opacity;
+}
+
+#backgroundCover {
+  background-color: lime;
+}
+
+#roundedClip {
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+#clippedItem {
+  background-color: lime;
+}
+
+#separatePaintedLayer {
+  position: sticky;
+  border: 1px solid lime;
+}
+
+</style>
+
+<div id="outer">
+  <div id="container">
+    <div id="backgroundCover"></div>
+    <div id="roundedClip">
+      <div id="clippedItem"></div>
+    </div>
+    <div id="separatePaintedLayer"></div>
+  </div>
+</div>

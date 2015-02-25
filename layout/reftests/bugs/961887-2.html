@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Make sure that we don't pull background colors into container layers that have effects applied on them</title>
+
+<style>
+
+#outer {
+  background-color: white;
+  border: 1px solid black;
+}
+
+#outer > div {
+  margin: 20px;
+  border: 1px solid white;
+  height: 20px;
+}
+
+#inner1 {
+  mix-blend-mode: difference;
+}
+
+#inner2 {
+  filter: invert(100%);
+}
+
+</style>
+
+<div id="outer">
+  <div id="inner1"></div>
+  <div id="inner2"></div>
+</div>
