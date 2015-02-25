@@ -142,7 +142,7 @@ function add_test_receiving_sms(expected, pdu) {
       },
       postMessage: function(message) {
         do_print("fullBody: " + message.fullBody);
-        do_check_eq(expected, message.fullBody)
+        equal(expected, message.fullBody)
       }
     });
 
@@ -247,7 +247,7 @@ add_test(function test_sendSMS_UCS2_without_langIndex_langShiftIndex_defined() {
     //
     // If we have additional 6(type, len, langIndex, type len, langShiftIndex)
     // octets here, then bug 809553 is not fixed.
-    do_check_eq(this.outgoingIndex, 57);
+    equal(this.outgoingIndex, 57);
 
     run_next_test();
   };

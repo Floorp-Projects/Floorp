@@ -167,9 +167,14 @@ def parse_commit(message, jobs):
 
     # shlex used to ensure we split correctly when giving values to argparse.
     parts = shlex.split(message)
+    try_idx = None
+    for idx, part in enumerate(parts):
+        if part == TRY_DELIMITER:
+            try_idx = idx
+            break
 
-    if parts[0] != TRY_DELIMITER:
-        raise InvalidCommitException('Invalid commit format must start with' +
+    if try_idx is None:
+        raise InvalidCommitException('Invalid commit format contain ' +
                 TRY_DELIMITER)
 
     # Argument parser based on try flag flags
@@ -177,7 +182,7 @@ def parse_commit(message, jobs):
     parser.add_argument('-b', dest='build_types')
     parser.add_argument('-p', nargs='?', dest='platforms', const='all', default='all')
     parser.add_argument('-u', nargs='?', dest='tests', const='all', default='all')
-    args, unknown = parser.parse_known_args(parts[1:])
+    args, unknown = parser.parse_known_args(parts[try_idx:])
 
     # Then builds...
     if args.build_types is None:

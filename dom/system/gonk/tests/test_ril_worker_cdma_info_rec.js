@@ -59,7 +59,7 @@ add_test(function test_display() {
   let helper = context.CdmaPDUHelper;
   let records = helper.decodeInformationRecord();
 
-  do_check_eq(records[0].display, "Test Info");
+  equal(records[0].display, "Test Info");
 
   run_next_test();
 });
@@ -79,7 +79,7 @@ add_test(function test_extended_display() {
   let helper = context.CdmaPDUHelper;
   let records = helper.decodeInformationRecord();
 
-  do_check_eq(records[0].display, "Test Extended Info");
+  equal(records[0].display, "Test Extended Info");
 
   run_next_test();
 });
@@ -102,8 +102,8 @@ add_test(function test_mixed() {
   let helper = context.CdmaPDUHelper;
   let records = helper.decodeInformationRecord();
 
-  do_check_eq(records[0].display, "Test Info 1");
-  do_check_eq(records[1].display, "Test Info 2");
+  equal(records[0].display, "Test Info 1");
+  equal(records[1].display, "Test Info 2");
 
   run_next_test();
 });
@@ -126,8 +126,8 @@ add_test(function test_multiple() {
   let helper = context.CdmaPDUHelper;
   let records = helper.decodeInformationRecord();
 
-  do_check_eq(records[0].display, "Test Info 1");
-  do_check_eq(records[1].display, "Test Info 2");
+  equal(records[0].display, "Test Info 1");
+  equal(records[1].display, "Test Info 2");
 
   run_next_test();
 });
@@ -147,9 +147,9 @@ add_test(function test_signal() {
   let helper = context.CdmaPDUHelper;
   let records = helper.decodeInformationRecord();
 
-  do_check_eq(records[0].signal.type, 0x00);
-  do_check_eq(records[0].signal.alertPitch, 0x01);
-  do_check_eq(records[0].signal.signal, 0x03);
+  equal(records[0].signal.type, 0x00);
+  equal(records[0].signal.alertPitch, 0x01);
+  equal(records[0].signal.signal, 0x03);
 
   run_next_test();
 });
@@ -169,7 +169,7 @@ add_test(function test_signal_not_present() {
   let helper = context.CdmaPDUHelper;
   let records = helper.decodeInformationRecord();
 
-  do_check_eq(records.length, 0);
+  equal(records.length, 0);
 
   run_next_test();
 });
@@ -189,10 +189,10 @@ add_test(function test_line_control() {
   let helper = context.CdmaPDUHelper;
   let records = helper.decodeInformationRecord();
 
-  do_check_eq(records[0].lineControl.polarityIncluded, 1);
-  do_check_eq(records[0].lineControl.toggle, 0);
-  do_check_eq(records[0].lineControl.reverse, 1);
-  do_check_eq(records[0].lineControl.powerDenial, 255);
+  equal(records[0].lineControl.polarityIncluded, 1);
+  equal(records[0].lineControl.toggle, 0);
+  equal(records[0].lineControl.reverse, 1);
+  equal(records[0].lineControl.powerDenial, 255);
 
   run_next_test();
 });
@@ -209,7 +209,7 @@ add_test(function test_clir() {
   let helper = context.CdmaPDUHelper;
   let records = helper.decodeInformationRecord();
 
-  do_check_eq(records[0].clirCause, 1);
+  equal(records[0].clirCause, 1);
 
   run_next_test();
 });
@@ -227,8 +227,8 @@ add_test(function test_clir() {
   let helper = context.CdmaPDUHelper;
   let records = helper.decodeInformationRecord();
 
-  do_check_eq(records[0].audioControl.upLink, 1);
-  do_check_eq(records[0].audioControl.downLink, 255);
+  equal(records[0].audioControl.upLink, 1);
+  equal(records[0].audioControl.downLink, 255);
 
   run_next_test();
 });

@@ -13,6 +13,7 @@
 #include "nsID.h"
 #include "nsJARURI.h"
 #include "nsIIconURI.h"
+#include "nsNullPrincipalURI.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
@@ -41,7 +42,7 @@ SerializeURI(nsIURI* aURI,
 
   nsCOMPtr<nsIIPCSerializableURI> serializable = do_QueryInterface(aURI);
   if (!serializable) {
-    MOZ_CRASH("All IPDL URIs must be serializable scheme!");
+    MOZ_CRASH("All IPDL URIs must be serializable!");
   }
 
   serializable->Serialize(aParams);
@@ -88,6 +89,10 @@ DeserializeURI(const URIParams& aParams)
 
     case URIParams::TIconURIParams:
       serializable = do_CreateInstance(kIconURICID);
+      break;
+
+    case URIParams::TNullPrincipalURIParams:
+      serializable = new nsNullPrincipalURI();
       break;
 
     default:
