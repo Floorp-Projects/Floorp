@@ -186,6 +186,12 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
     movePoint = mouseEvent->AsGUIEvent()->refPoint;
   }
 
+  // XUL has no SelectionCarets elements.
+  if (!mPresShell->GetSelectionCaretsStartElement() ||
+      !mPresShell->GetSelectionCaretsEndElement()) {
+    return nsEventStatus_eIgnore;
+  }
+
   // Get event coordinate relative to root frame
   nsIFrame* rootFrame = mPresShell->GetRootFrame();
   if (!rootFrame) {
