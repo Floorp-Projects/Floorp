@@ -26,7 +26,7 @@ Structure::
       },
       settings: {
         blocklistEnabled: <bool>, // true on failure
-        isDefaultBrowser: <bool>, // null on failure
+        isDefaultBrowser: <bool>, // null on failure, not available on Android
         e10sEnabled: <bool>, // false on failure
         telemetryEnabled: <bool>, // false on failure
         locale: <string>, // e.g. "it", null on failure

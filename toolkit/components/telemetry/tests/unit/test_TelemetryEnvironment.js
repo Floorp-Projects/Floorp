@@ -288,8 +288,13 @@ function checkSettingsSection(data) {
                  f + " must have the correct type.");
   }
 
-  // Check "isDefaultBrowser" separately, as it can either be null or boolean.
-  Assert.ok(checkNullOrBool(data.settings.isDefaultBrowser));
+  // Check "isDefaultBrowser" separately, as it is not available on Android an can either be
+  // null or boolean on other platforms.
+  if (gIsAndroid) {
+    Assert.ok(!("isDefaultBrowser" in data.settings), "Must not be available on Android.");
+  } else {
+    Assert.ok(checkNullOrBool(data.settings.isDefaultBrowser));
+  }
 
   // Check "channel" separately, as it can either be null or string.
   let update = data.settings.update;
