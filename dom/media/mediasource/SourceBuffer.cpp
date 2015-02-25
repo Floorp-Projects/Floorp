@@ -252,14 +252,14 @@ SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
+  if (mUpdating) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
   if (IsNaN(mMediaSource->Duration()) ||
       aStart < 0 || aStart > mMediaSource->Duration() ||
       aEnd <= aStart || IsNaN(aEnd)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return;
-  }
-  if (mUpdating) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
