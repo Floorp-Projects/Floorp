@@ -669,9 +669,17 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
       TableUpdate * tu = pParse->GetTableUpdate(resultsPtr->ElementAt(i).table);
       LOG(("CacheCompletion Addchunk %d hash %X", resultsPtr->ElementAt(i).entry.addChunk,
            resultsPtr->ElementAt(i).entry.ToUint32()));
-      tu->NewAddComplete(resultsPtr->ElementAt(i).entry.addChunk,
-                         resultsPtr->ElementAt(i).entry.complete);
-      tu->NewAddChunk(resultsPtr->ElementAt(i).entry.addChunk);
+      rv = tu->NewAddComplete(resultsPtr->ElementAt(i).entry.addChunk,
+                              resultsPtr->ElementAt(i).entry.complete);
+      if (NS_FAILED(rv)) {
+        // We can bail without leaking here because ForgetTableUpdates
+        // hasn't been called yet.
+        return rv;
+      }
+      rv = tu->NewAddChunk(resultsPtr->ElementAt(i).entry.addChunk);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
       tu->SetLocalUpdate();
       updates.AppendElement(tu);
       pParse->ForgetTableUpdates();
