@@ -164,14 +164,14 @@ os_spawn(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 
     int32_t childPid = fork();
-    if (childPid) {
-        args.rval().setInt32(childPid);
-        return true;
-    }
-
     if (childPid == -1) {
         ReportSysError(cx, "fork failed");
         return false;
+    }
+
+    if (childPid) {
+        args.rval().setInt32(childPid);
+        return true;
     }
 
     // We are in the child
@@ -208,8 +208,11 @@ os_kill(JSContext* cx, unsigned argc, Value* vp)
     }
 
     int status = kill(pid, signal);
-    if (status == -1)
+    if (status == -1) {
         ReportSysError(cx, "kill failed");
+        return false;
+    }
+
     args.rval().setUndefined();
     return true;
 }
@@ -231,7 +234,7 @@ os_waitpid(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() >= 2)
         nohang = JS::ToBoolean(args[1]);
 
-    int status;
+    int status = 0;
     pid_t result = waitpid(pid, &status, nohang ? WNOHANG : 0);
     if (result == -1) {
         ReportSysError(cx, "os.waitpid failed");
@@ -247,11 +250,11 @@ os_waitpid(JSContext* cx, unsigned argc, Value* vp)
         v.setInt32(result);
         if (!JS_DefineProperty(cx, info, "pid", v, JSPROP_ENUMERATE))
             return false;
-    }
-    if (WIFEXITED(status)) {
-        v.setInt32(WEXITSTATUS(status));
-        if (!JS_DefineProperty(cx, info, "exitStatus", v, JSPROP_ENUMERATE))
-            return false;
+        if (WIFEXITED(status)) {
+            v.setInt32(WEXITSTATUS(status));
+            if (!JS_DefineProperty(cx, info, "exitStatus", v, JSPROP_ENUMERATE))
+                return false;
+        }
     }
 
     args.rval().setObject(*info);
