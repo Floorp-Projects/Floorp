@@ -615,8 +615,10 @@ add_task(function* test_initAndShutdown() {
   TelemetryEnvironment.registerChangeListener("foo", () => {});
   TelemetryEnvironment.unregisterChangeListener("foo");
 
-  // Other calls after shutdown should reject.
-  Assert.ok(yield isRejected(TelemetryEnvironment.shutdown()));
+  // Shutting down again should be ignored.
+  yield TelemetryEnvironment.shutdown();
+
+  // Getting the environment data should reject after shutdown.
   Assert.ok(yield isRejected(TelemetryEnvironment.getEnvironmentData()));
 });
 
