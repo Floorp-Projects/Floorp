@@ -40,5 +40,5 @@ interface SourceBuffer : EventTarget {
   [Throws]
   void abort();
   [Throws]
-  void remove(double start, double end);
+  void remove(double start, unrestricted double end);
 };
