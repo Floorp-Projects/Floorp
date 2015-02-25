@@ -15,7 +15,7 @@ assertEq(os.getenv("SQUAMMISH_HILLBILLY_GOAT_SQUEEZERS"), undefined);
 assertEq(os.system("true"), 0, "/bin/true should exit 0");
 assertEq(os.system("false") != 0, true, "/bin/false should exit nonzero");
 
-var kidpid = os.spawn("sleep 3600");
+var kidpid = os.spawn("sleep 60");
 assertEq(kidpid > 0, true, "spawning sleep");
 var info = os.waitpid(kidpid, true);
 assertEq(info.hasOwnProperty("pid"), false);
