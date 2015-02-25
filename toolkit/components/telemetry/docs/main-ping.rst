@@ -34,7 +34,7 @@ Structure::
         profileSubsessionCounter: <number>, // the running no. of all subsessions for the whole profile life time
 
         sessionStartDate: <ISO date>, // daily precision
-        subsessionStartDate: <ISO date>, // daily precision
+        subsessionStartDate: <ISO date>, // daily precision, ISO date in local time
         subsessionLength: <number>, // the subsession length in seconds
       },
 
