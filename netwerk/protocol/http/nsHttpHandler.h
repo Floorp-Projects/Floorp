@@ -39,6 +39,12 @@ class nsHttpConnectionInfo;
 class nsHttpTransaction;
 class AltSvcMapping;
 
+enum FrameCheckLevel {
+    FRAMECHECK_LAX,
+    FRAMECHECK_BARELY,
+    FRAMECHECK_STRICT
+};
+
 //-----------------------------------------------------------------------------
 // nsHttpHandler - protocol handler for HTTP and HTTPS
 //-----------------------------------------------------------------------------
@@ -151,8 +157,9 @@ public:
       return mTCPKeepaliveLongLivedIdleTimeS;
     }
 
-    // returns the network.http.enforce-framing.http1 preference
-    bool GetEnforceH1Framing() { return mEnforceH1Framing; }
+    // returns the HTTP framing check level preference, as controlled with
+    // network.http.enforce-framing.http1 and network.http.enforce-framing.soft
+    FrameCheckLevel GetEnforceH1Framing() { return mEnforceH1Framing; }
 
     nsHttpAuthCache     *AuthCache(bool aPrivate) {
         return aPrivate ? &mPrivateAuthCache : &mAuthCache;
@@ -531,7 +538,7 @@ private:
 
     // if true, generate NS_ERROR_PARTIAL_TRANSFER for h1 responses with
     // incorrect content lengths or malformed chunked encodings
-    bool mEnforceH1Framing;
+    FrameCheckLevel mEnforceH1Framing;
 
 private:
     // For Rate Pacing Certain Network Events. Only assign this pointer on
