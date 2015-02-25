@@ -170,10 +170,11 @@ this.TelemetrySession = Object.freeze({
   },
   /**
    * Returns the current telemetry payload.
+   * @param reason Optional, the reason to trigger the payload.
    * @returns Object
    */
-  getPayload: function() {
-    return Impl.getPayload();
+  getPayload: function(reason) {
+    return Impl.getPayload(reason);
   },
   /**
    * Save histograms to a file.
@@ -458,11 +459,12 @@ let Impl = {
     return retgram;
   },
 
-  getHistograms: function getHistograms(hls) {
+  getHistograms: function getHistograms(subsession) {
     this._log.trace("getHistograms");
 
     let registered =
       Telemetry.registeredHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, []);
+    let hls = subsession ? Telemetry.subsessionHistogramSnapshots : Telemetry.histogramSnapshots;
     let ret = {};
 
     for (let name of registered) {
@@ -495,7 +497,7 @@ let Impl = {
     return ret;
   },
 
-  getKeyedHistograms: function() {
+  getKeyedHistograms: function(subsession) {
     this._log.trace("getKeyedHistograms");
 
     let registered =
@@ -505,7 +507,7 @@ let Impl = {
     for (let id of registered) {
       ret[id] = {};
       let keyed = Telemetry.getKeyedHistogramById(id);
-      let snapshot = keyed.snapshot();
+      let snapshot = subsession ? keyed.subsessionSnapshot() : keyed.snapshot();
       for (let key of Object.keys(snapshot)) {
         ret[id][key] = this.packHistogram(snapshot[key]);
       }
@@ -792,15 +794,23 @@ let Impl = {
    * to |this.getSimpleMeasurements| and |this.getMetadata|,
    * respectively.
    */
-  assemblePayloadWithMeasurements: function assemblePayloadWithMeasurements(simpleMeasurements, info) {
-    this._log.trace("assemblePayloadWithMeasurements");
+  assemblePayloadWithMeasurements: function(simpleMeasurements, info, reason) {
+    const classicReasons = [
+      "saved-session",
+      "idle-daily",
+      "gather-payload",
+      "test-ping",
+    ];
+    const isSubsession = classicReasons.indexOf(reason) == -1;
+    this._log.trace("assemblePayloadWithMeasurements - reason: " + reason +
+                    ", submitting subsession data: " + isSubsession);
 
     // Payload common to chrome and content processes.
     let payloadObj = {
       ver: PAYLOAD_VERSION,
       simpleMeasurements: simpleMeasurements,
-      histograms: this.getHistograms(Telemetry.histogramSnapshots),
-      keyedHistograms: this.getKeyedHistograms(),
+      histograms: this.getHistograms(isSubsession),
+      keyedHistograms: this.getKeyedHistograms(isSubsession),
       chromeHangs: Telemetry.chromeHangs,
       threadHangStats: this.getThreadHangStats(Telemetry.threadHangStats),
       log: TelemetryLog.entries(),
@@ -840,7 +850,7 @@ let Impl = {
     this._log.trace("getSessionPayload - Reason " + reason);
     let measurements = this.getSimpleMeasurements(reason == "saved-session");
     let info = !IS_CONTENT_PROCESS ? this.getMetadata(reason) : null;
-    return this.assemblePayloadWithMeasurements(measurements, info);
+    return this.assemblePayloadWithMeasurements(measurements, info, reason);
   },
 
   assemblePing: function assemblePing(payloadObj, reason) {
@@ -1093,8 +1103,9 @@ let Impl = {
 #endif
   },
 
-  getPayload: function getPayload() {
+  getPayload: function getPayload(reason) {
     this._log.trace("getPayload");
+    reason = reason || "gather-payload";
     // This function returns the current Telemetry payload to the caller.
     // We only gather startup info once.
     if (Object.keys(this._slowSQLStartup).length == 0) {
@@ -1102,7 +1113,7 @@ let Impl = {
       this._slowSQLStartup = Telemetry.slowSQL;
     }
     this.gatherMemory();
-    return this.getSessionPayload("gather-payload");
+    return this.getSessionPayload(reason);
   },
 
   gatherStartup: function gatherStartup() {
