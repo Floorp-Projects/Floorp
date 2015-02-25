@@ -94,22 +94,4 @@ ConsumeAndValidateStream(nsIInputStream* aStream,
   ASSERT_TRUE(aExpectedData.Equals(outputData));
 }
 
-NS_IMPL_ISUPPORTS(OutputStreamCallback, nsIOutputStreamCallback);
-
-OutputStreamCallback::OutputStreamCallback()
-  : mCalled(false)
-{
-}
-
-OutputStreamCallback::~OutputStreamCallback()
-{
-}
-
-NS_IMETHODIMP
-OutputStreamCallback::OnOutputStreamReady(nsIAsyncOutputStream* aStream)
-{
-  mCalled = true;
-  return NS_OK;
-}
-
 } // namespace testing
