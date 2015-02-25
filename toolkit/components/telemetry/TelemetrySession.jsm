@@ -84,10 +84,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
-#ifndef MOZ_WIDGET_GONK
-XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
-                                  "resource://gre/modules/LightweightThemeManager.jsm");
-#endif
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryPing",
                                   "resource://gre/modules/TelemetryPing.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryFile",
@@ -563,32 +559,12 @@ let Impl = {
       ret.previousBuildID = this._previousBuildID;
     }
 
-#ifndef MOZ_WIDGET_GONK
-    let theme = LightweightThemeManager.currentTheme;
-    if (theme) {
-      ret.persona = theme.id;
-    }
-#endif
-
     if (this._addons)
       ret.addons = this._addons;
 
     let flashVersion = this.getFlashVersion();
     if (flashVersion)
       ret.flashVersion = flashVersion;
-
-    try {
-      let scope = {};
-      Cu.import("resource:///modules/experiments/Experiments.jsm", scope);
-      let experiments = scope.Experiments.instance()
-      let activeExperiment = experiments.getActiveExperimentID();
-      if (activeExperiment) {
-        ret.activeExperiment = activeExperiment;
-	ret.activeExperimentBranch = experiments.getActiveExperimentBranch();
-      }
-    } catch(e) {
-      // If this is not Firefox, the import will fail.
-    }
 
     return ret;
   },

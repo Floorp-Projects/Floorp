@@ -342,17 +342,6 @@ function checkPayload(request, payload, reason, successfulPings) {
   Assert.deepEqual(expected_keyed_count, keyedHistograms[TELEMETRY_TEST_KEYED_COUNT]);
 }
 
-function dummyTheme(id) {
-  return {
-    id: id,
-    name: Math.random().toString(),
-    headerURL: "http://lwttest.invalid/a.png",
-    footerURL: "http://lwttest.invalid/b.png",
-    textcolor: Math.random().toString(),
-    accentcolor: Math.random().toString()
-  };
-}
-
 // A fake plugin host for testing flash version telemetry
 let PluginHost = {
   getPluginTags: function(countRef) {
@@ -468,7 +457,6 @@ function actualTest() {
                          .QueryInterface(Ci.nsITimerCallback);
 
   gInternalManager.observe(null, "addons-startup", null);
-  LightweightThemeManager.currentTheme = dummyTheme("1234");
 
   // fake plugin host for consistent flash version data
   registerFakePluginHost();
