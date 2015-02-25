@@ -1438,6 +1438,9 @@ pref("devtools.timeline.enabled", true);
 #else
 pref("devtools.timeline.enabled", false);
 #endif
+
+// TODO remove `devtools.timeline.hiddenMarkers.` branches when performance
+// tool lands (bug 1075567)
 pref("devtools.timeline.hiddenMarkers", "[]");
 
 // Enable perftools via build command
@@ -1455,6 +1458,7 @@ pref("devtools.profiler.ui.show-platform-data", false);
 pref("devtools.profiler.ui.show-idle-blocks", true);
 
 // The default Performance UI settings
+pref("devtools.performance.timeline.hidden-markers", "[]");
 pref("devtools.performance.ui.invert-call-tree", true);
 pref("devtools.performance.ui.invert-flame-graph", false);
 pref("devtools.performance.ui.flatten-tree-recursion", true);

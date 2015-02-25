@@ -17,6 +17,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
+Cu.import("resource://gre/modules/devtools/event-emitter.js");
 
 this.EXPORTED_SYMBOLS = [
   "Heritage", "ViewHelpers", "WidgetMethods",
@@ -392,25 +393,57 @@ ViewHelpers.L10N.prototype = {
  *   let prefs = new ViewHelpers.Prefs("root.path.to.branch", {
  *     myIntPref: ["Int", "leaf.path.to.my-int-pref"],
  *     myCharPref: ["Char", "leaf.path.to.my-char-pref"],
+ *     myJsonPref: ["Json", "leaf.path.to.my-json-pref"]
  *     ...
  *   });
  *
+ * Get/set:
  *   prefs.myCharPref = "foo";
  *   let aux = prefs.myCharPref;
  *
+ * Observe:
+ *   prefs.registerObserver();
+ *   prefs.on("pref-changed", (prefName, prefValue) => {
+ *     ...
+ *   });
+ *
  * @param string aPrefsRoot
  *        The root path to the required preferences branch.
- * @param object aPrefsObject
+ * @param object aPrefsBlueprint
  *        An object containing { accessorName: [prefType, prefName] } keys.
  */
-ViewHelpers.Prefs = function(aPrefsRoot = "", aPrefsObject = {}) {
-  this._root = aPrefsRoot;
-  this._cache = new Map();
+ViewHelpers.Prefs = function(aPrefsRoot = "", aPrefsBlueprint = {}) {
+  EventEmitter.decorate(this);
 
-  for (let accessorName in aPrefsObject) {
-    let [prefType, prefName] = aPrefsObject[accessorName];
-    this.map(accessorName, prefType, prefName);
+  this._cache = new Map();
+  let self = this;
+
+  for (let [accessorName, [prefType, prefName]] of Iterator(aPrefsBlueprint)) {
+    this._map(accessorName, prefType, aPrefsRoot, prefName);
   }
+
+  let observer = {
+    register: function() {
+      this.branch = Services.prefs.getBranch(aPrefsRoot + ".");
+      this.branch.addObserver("", this, false);
+    },
+    unregister: function() {
+      this.branch.removeObserver("", this);
+    },
+    observe: function(_, __, aPrefName) {
+      // If this particular pref isn't handled by the blueprint object,
+      // even though it's in the specified branch, ignore it.
+      let accessor = self._accessor(aPrefsBlueprint, aPrefName);
+      if (!(accessor in self)) {
+        return;
+      }
+      self._cache.delete(aPrefName);
+      self.emit("pref-changed", accessor, self[accessor]);
+    }
+  };
+
+  this.registerObserver = () => observer.register();
+  this.unregisterObserver = () => observer.unregister();
 };
 
 ViewHelpers.Prefs.prototype = {
@@ -418,15 +451,16 @@ ViewHelpers.Prefs.prototype = {
    * Helper method for getting a pref value.
    *
    * @param string aType
+   * @param string aPrefsRoot
    * @param string aPrefName
    * @return any
    */
-  _get: function(aType, aPrefName) {
+  _get: function(aType, aPrefsRoot, aPrefName) {
     let cachedPref = this._cache.get(aPrefName);
     if (cachedPref !== undefined) {
       return cachedPref;
     }
-    let value = Services.prefs["get" + aType + "Pref"](aPrefName);
+    let value = Services.prefs["get" + aType + "Pref"]([aPrefsRoot, aPrefName].join("."));
     this._cache.set(aPrefName, value);
     return value;
   },
@@ -435,11 +469,12 @@ ViewHelpers.Prefs.prototype = {
    * Helper method for setting a pref value.
    *
    * @param string aType
+   * @param string aPrefsRoot
    * @param string aPrefName
    * @param any aValue
    */
-  _set: function(aType, aPrefName, aValue) {
-    Services.prefs["set" + aType + "Pref"](aPrefName, aValue);
+  _set: function(aType, aPrefsRoot, aPrefName, aValue) {
+    Services.prefs["set" + aType + "Pref"]([aPrefsRoot, aPrefName].join("."), aValue);
     this._cache.set(aPrefName, aValue);
   },
 
@@ -450,26 +485,36 @@ ViewHelpers.Prefs.prototype = {
    *
    * @param string aAccessorName
    * @param string aType
+   * @param string aPrefsRoot
    * @param string aPrefName
    * @param array aSerializer
    */
-  map: function(aAccessorName, aType, aPrefName, aSerializer = { in: e => e, out: e => e }) {
+  _map: function(aAccessorName, aType, aPrefsRoot, aPrefName, aSerializer = { in: e => e, out: e => e }) {
+    if (aPrefName in this) {
+      throw new Error(`Can't use ${aPrefName} because it's already a property.`);
+    }
     if (aType == "Json") {
-      this.map(aAccessorName, "Char", aPrefName, { in: JSON.parse, out: JSON.stringify });
+      this._map(aAccessorName, "Char", aPrefsRoot, aPrefName, { in: JSON.parse, out: JSON.stringify });
       return;
     }
 
     Object.defineProperty(this, aAccessorName, {
-      get: () => aSerializer.in(this._get(aType, [this._root, aPrefName].join("."))),
-      set: (e) => this._set(aType, [this._root, aPrefName].join("."), aSerializer.out(e))
+      get: () => aSerializer.in(this._get(aType, aPrefsRoot, aPrefName)),
+      set: (e) => this._set(aType, aPrefsRoot, aPrefName, aSerializer.out(e))
     });
   },
 
   /**
-   * Clears all the cached preferences' values.
+   * Finds the accessor in this object for the provided property name,
+   * based on the blueprint object used in the constructor.
    */
-  refresh: function() {
-    this._cache.clear();
+  _accessor: function(aPrefsBlueprint, aPrefName) {
+    for (let [accessorName, [, prefName]] of Iterator(aPrefsBlueprint)) {
+      if (prefName == aPrefName) {
+        return accessorName;
+      }
+    }
+    return null;
   }
 };
 

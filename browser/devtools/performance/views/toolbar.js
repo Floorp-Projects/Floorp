@@ -11,6 +11,9 @@ let ToolbarView = {
    * Sets up the view with event binding.
    */
   initialize: Task.async(function *() {
+    this._onFilterPopupShowing = this._onFilterPopupShowing.bind(this);
+    this._onFilterPopupHiding = this._onFilterPopupHiding.bind(this);
+    this._onHiddenMarkersChanged = this._onHiddenMarkersChanged.bind(this);
     this._onPrefChanged = this._onPrefChanged.bind(this);
 
     this.optionsView = new OptionsView({
@@ -20,14 +23,85 @@ let ToolbarView = {
 
     yield this.optionsView.initialize();
     this.optionsView.on("pref-changed", this._onPrefChanged);
+
+    this._buildMarkersFilterPopup();
+    this._updateHiddenMarkersPopup();
+    $("#performance-filter-menupopup").addEventListener("popupshowing", this._onFilterPopupShowing);
+    $("#performance-filter-menupopup").addEventListener("popuphiding",  this._onFilterPopupHiding);
   }),
 
   /**
    * Unbinds events and cleans up view.
    */
   destroy: function () {
+    $("#performance-filter-menupopup").removeEventListener("popupshowing", this._onFilterPopupShowing);
+    $("#performance-filter-menupopup").removeEventListener("popuphiding",  this._onFilterPopupHiding);
+
     this.optionsView.off("pref-changed", this._onPrefChanged);
     this.optionsView.destroy();
+  },
+
+  /**
+   * Creates the timeline markers filter popup.
+   */
+  _buildMarkersFilterPopup: function() {
+    for (let [markerName, markerDetails] of Iterator(TIMELINE_BLUEPRINT)) {
+      let menuitem = document.createElement("menuitem");
+      menuitem.setAttribute("closemenu", "none");
+      menuitem.setAttribute("type", "checkbox");
+      menuitem.setAttribute("align", "center");
+      menuitem.setAttribute("flex", "1");
+      menuitem.setAttribute("label", markerDetails.label);
+      menuitem.setAttribute("marker-type", markerName);
+
+      menuitem.addEventListener("command", this._onHiddenMarkersChanged);
+
+      // Style used by pseudo element ::before in performance.inc.css
+      let bulletStyle = `--bullet-bg: ${markerDetails.fill};`
+      bulletStyle += `--bullet-border: ${markerDetails.stroke}`;
+      menuitem.setAttribute("style", bulletStyle);
+
+      $("#performance-filter-menupopup").appendChild(menuitem);
+    }
+  },
+
+  /**
+   * Updates the menu items checked state in the timeline markers filter popup.
+   */
+  _updateHiddenMarkersPopup: function() {
+    let menuItems = $$("#performance-filter-menupopup menuitem[marker-type]");
+    let hiddenMarkers = PerformanceController.getPref("hidden-markers");
+
+    for (let menuitem of menuItems) {
+      if (~hiddenMarkers.indexOf(menuitem.getAttribute("marker-type"))) {
+        menuitem.removeAttribute("checked");
+      } else {
+        menuitem.setAttribute("checked", "true");
+      }
+    }
+  },
+
+  /**
+   * Fired when the markers filter popup starts to show.
+   */
+  _onFilterPopupShowing: function() {
+    $("#filter-button").setAttribute("open", "true");
+  },
+
+  /**
+   * Fired when the markers filter popup starts to hide.
+   */
+  _onFilterPopupHiding: function() {
+    $("#filter-button").removeAttribute("open");
+  },
+
+  /**
+   * Fired when a menu item in the markers filter popup is checked or unchecked.
+   */
+  _onHiddenMarkersChanged: function() {
+    let checkedMenuItems = $$("#performance-filter-menupopup menuitem[marker-type]:not([checked])");
+    let hiddenMarkers = Array.map(checkedMenuItems, e => e.getAttribute("marker-type"));
+    PerformanceController.setPref("hidden-markers", hiddenMarkers);
   },
 
   /**
