@@ -10,6 +10,7 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
@@ -19,6 +20,10 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
                                   "resource://gre/modules/ctypes.jsm");
+#ifndef MOZ_WIDGET_GONK
+XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
+                                  "resource://gre/modules/LightweightThemeManager.jsm");
+#endif
 XPCOMUtils.defineLazyModuleGetter(this, "ProfileTimesAccessor",
                                   "resource://gre/modules/services/healthreport/profile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
@@ -75,6 +80,17 @@ function getSystemLocale() {
   } catch (e) {
     return null;
   }
+}
+
+/**
+ * Asynchronously get a list of addons of the specified type from the AddonManager.
+ * @param aTypes An array containing the types of addons to request.
+ * @return Promise<Array> resolved when AddonManager has finished, returning an
+ *         array of addons.
+ */
+function promiseGetAddonsByTypes(aTypes) {
+  return new Promise((resolve) =>
+                     AddonManager.getAddonsByTypes(aTypes, (addons) => resolve(addons)));
 }
 
 /**
@@ -630,6 +646,181 @@ this.TelemetryEnvironment = {
   },
 
   /**
+   * Get the addon data in object form.
+   * @return Object containing the addon data.
+   */
+  _getActiveAddons: Task.async(function* () {
+    // Request addons, asynchronously.
+    let allAddons = yield promiseGetAddonsByTypes(["extension", "service"]);
+
+    let activeAddons = {};
+    for (let addon of allAddons) {
+      // Skip addons which are not active.
+      if (!addon.isActive) {
+        continue;
+      }
+
+      activeAddons[addon.id] = {
+        blocklisted: (addon.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
+        description: addon.description,
+        name: addon.name,
+        userDisabled: addon.userDisabled,
+        appDisabled: addon.appDisabled,
+        version: addon.version,
+        scope: addon.scope,
+        type: addon.type,
+        foreignInstall: addon.foreignInstall,
+        hasBinaryComponents: addon.hasBinaryComponents,
+        installDay: truncateToDays(addon.installDate.getTime()),
+        updateDay: truncateToDays(addon.updateDate.getTime()),
+      };
+    }
+
+    return activeAddons;
+  }),
+
+  /**
+   * Get the currently active theme data in object form.
+   * @return Object containing the active theme data.
+   */
+  _getActiveTheme: Task.async(function* () {
+    // Request themes, asynchronously.
+    let themes = yield promiseGetAddonsByTypes(["theme"]);
+
+    let activeTheme = {};
+    // We only store information about the active theme.
+    let theme = themes.find(theme => theme.isActive);
+    if (theme) {
+      activeTheme = {
+        id: theme.id,
+        blocklisted: (theme.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
+        description: theme.description,
+        name: theme.name,
+        userDisabled: theme.userDisabled,
+        appDisabled: theme.appDisabled,
+        version: theme.version,
+        scope: theme.scope,
+        foreignInstall: theme.foreignInstall,
+        hasBinaryComponents: theme.hasBinaryComponents,
+        installDay: truncateToDays(theme.installDate.getTime()),
+        updateDay: truncateToDays(theme.updateDate.getTime()),
+      };
+    }
+
+    return activeTheme;
+  }),
+
+  /**
+   * Get the plugins data in object form.
+   * @return Object containing the plugins data.
+   */
+  _getActivePlugins: function () {
+    let pluginTags =
+      Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost).getPluginTags({});
+
+    let activePlugins = [];
+    for (let tag of pluginTags) {
+      // Skip plugins which are not active.
+      if (tag.disabled) {
+        continue;
+      }
+
+      // Make sure to have a valid date.
+      let updateDate = new Date(Math.max(0, tag.lastModifiedTime));
+
+      activePlugins.push({
+        name: tag.name,
+        version: tag.version,
+        description: tag.description,
+        blocklisted: tag.blocklisted,
+        disabled: tag.disabled,
+        clicktoplay: tag.clicktoplay,
+        mimeTypes: tag.getMimeTypes({}),
+        updateDay: truncateToDays(updateDate.getTime()),
+      });
+    }
+
+    return activePlugins;
+  },
+
+  /**
+   * Get the GMPlugins data in object form.
+   * @return Object containing the GMPlugins data.
+   */
+  _getActiveGMPlugins: Task.async(function* () {
+    // Request plugins, asynchronously.
+    let allPlugins = yield promiseGetAddonsByTypes(["plugin"]);
+
+    let activeGMPlugins = {};
+    for (let plugin of allPlugins) {
+      // Only get GM Plugin info.
+      if (!plugin.isGMPlugin) {
+        continue;
+      }
+
+      activeGMPlugins[plugin.id] = {
+        version: plugin.version,
+        userDisabled: plugin.userDisabled,
+        applyBackgroundUpdates: plugin.applyBackgroundUpdates,
+      };
+    }
+
+    return activeGMPlugins;
+  }),
+
+  /**
+   * Get the active experiment data in object form.
+   * @return Object containing the active experiment data.
+   */
+  _getActiveExperiment: function () {
+    let experimentInfo = {};
+    try {
+      let scope = {};
+      Cu.import("resource:///modules/experiments/Experiments.jsm", scope);
+      let experiments = scope.Experiments.instance()
+      let activeExperiment = experiments.getActiveExperimentID();
+      if (activeExperiment) {
+        experimentInfo.id = activeExperiment;
+        experimentInfo.branch = experiments.getActiveExperimentBranch();
+      }
+    } catch(e) {
+      // If this is not Firefox, the import will fail.
+      return experimentInfo;
+    }
+
+    return experimentInfo;
+  },
+
+  /**
+   * Get the addon data in object form.
+   * @return Object containing the addon data.
+   */
+  _getAddons: Task.async(function* () {
+    let activeAddons = yield this._getActiveAddons();
+    let activeTheme = yield this._getActiveTheme();
+    let activeGMPlugins = yield this._getActiveGMPlugins();
+
+    let personaId = null;
+#ifndef MOZ_WIDGET_GONK
+    let theme = LightweightThemeManager.currentTheme;
+    if (theme) {
+      personaId = theme.id;
+    }
+#endif
+
+    let addonData = {
+      activeAddons: activeAddons,
+      theme: activeTheme,
+      activePlugins: this._getActivePlugins(),
+      activeGMPlugins: activeGMPlugins,
+      activeExperiment: this._getActiveExperiment(),
+      persona: personaId,
+    };
+
+    return addonData;
+  }),
+
+  /**
    * Get the environment data in object form.
    * @return Promise<Object> Resolved with the data on success, otherwise rejected.
    */
@@ -660,6 +851,7 @@ this.TelemetryEnvironment = {
       "profile": () => this._getProfile(),
       "partner": () => this._getPartner(),
       "system": () => this._getSystem(),
+      "addons": () => this._getAddons(),
     };
 
     let data = {};

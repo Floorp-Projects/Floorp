@@ -123,7 +123,7 @@ Structure::
         activeAddons: { // the currently enabled addons
           <addon id>: {
             blocklisted: <bool>,
-            description: <string>,
+            description: <string>, // null if not available
             name: <string>,
             userDisabled: <bool>,
             appDisabled: <bool>,
