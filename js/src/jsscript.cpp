@@ -3412,7 +3412,7 @@ JSScript::markChildren(JSTracer *trc)
     // JSScript::Create(), but not yet finished initializing it with
     // fullyInitFromEmitter() or fullyInitTrivial().
 
-    MOZ_ASSERT_IF(IsMarkingTracer(trc) &&
+    MOZ_ASSERT_IF(trc->isMarkingTracer() &&
                   static_cast<GCMarker *>(trc)->shouldCheckCompartments(),
                   zone()->isCollecting());
 
@@ -3450,7 +3450,7 @@ JSScript::markChildren(JSTracer *trc)
     if (maybeLazyScript())
         MarkLazyScriptUnbarriered(trc, &lazyScript, "lazyScript");
 
-    if (IsMarkingTracer(trc)) {
+    if (trc->isMarkingTracer()) {
         compartment()->mark();
 
         if (code())

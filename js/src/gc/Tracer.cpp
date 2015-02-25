@@ -325,10 +325,10 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
     buf[bufsize - 1] = '\0';
 }
 
-JSTracer::JSTracer(JSRuntime *rt, JSTraceCallback traceCallback,
+JSTracer::JSTracer(JSRuntime *rt, TracerKindTag kindTag,
                    WeakMapTraceKind weakTraceKind /* = TraceWeakMapValues */)
-  : callback(traceCallback)
-  , runtime_(rt)
+  : runtime_(rt)
+  , tag(kindTag)
   , debugPrinter_(nullptr)
   , debugPrintArg_(nullptr)
   , debugPrintIndex_(size_t(-1))
@@ -387,7 +387,7 @@ JSTracer::debugPrintIndex() const
 }
 
 void
-JSTracer::setTraceCallback(JSTraceCallback traceCallback)
+JS::CallbackTracer::setTraceCallback(JSTraceCallback traceCallback)
 {
     callback = traceCallback;
 }
@@ -512,7 +512,7 @@ MarkStack::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
  * so we delay visting entries.
  */
 GCMarker::GCMarker(JSRuntime *rt)
-  : JSTracer(rt, nullptr, DoNotTraceWeakMaps),
+  : JSTracer(rt, JSTracer::MarkingTracer, DoNotTraceWeakMaps),
     stack(size_t(-1)),
     color(BLACK),
     unmarkedArenaStackTop(nullptr),

@@ -2162,7 +2162,7 @@ GCRuntime::relocateArenas(Zone *zone, JS::gcreason::Reason reason, SliceBudget &
 
 
 void
-MovingTracer::Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
+MovingTracer::Visit(JS::CallbackTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     TenuredCell *thing = TenuredCell::fromPointer(*thingp);
 
@@ -3620,11 +3620,11 @@ GCRuntime::shouldPreserveJITCode(JSCompartment *comp, int64_t currentTime,
 }
 
 #ifdef DEBUG
-class CompartmentCheckTracer : public JSTracer
+class CompartmentCheckTracer : public JS::CallbackTracer
 {
   public:
     CompartmentCheckTracer(JSRuntime *rt, JSTraceCallback callback)
-      : JSTracer(rt, callback)
+      : JS::CallbackTracer(rt, callback)
     {}
 
     Cell *src;
@@ -3684,7 +3684,7 @@ CompartmentOfCell(Cell *thing, JSGCTraceKind kind)
 }
 
 static void
-CheckCompartmentCallback(JSTracer *trcArg, void **thingp, JSGCTraceKind kind)
+CheckCompartmentCallback(JS::CallbackTracer *trcArg, void **thingp, JSGCTraceKind kind)
 {
     CompartmentCheckTracer *trc = static_cast<CompartmentCheckTracer *>(trcArg);
     TenuredCell *thing = TenuredCell::fromPointer(*thingp);
@@ -3804,8 +3804,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
     }
 
     marker.start();
-    MOZ_ASSERT(!marker.callback);
-    MOZ_ASSERT(IsMarkingTracer(&marker));
+    GCMarker *gcmarker = &marker;
 
     /* For non-incremental GC the following sweep discards the jit code. */
     if (isIncremental) {
@@ -3814,8 +3813,6 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
             zone->discardJitCode(rt->defaultFreeOp());
         }
     }
-
-    GCMarker *gcmarker = &marker;
 
     startNumber = number;
 
