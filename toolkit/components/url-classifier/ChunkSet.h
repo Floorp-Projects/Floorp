@@ -48,7 +48,7 @@ public:
   uint32_t *End() { return mChunks.Elements() + mChunks.Length(); }
 
 private:
-  FallibleTArray<uint32_t> mChunks;
+  nsTArray<uint32_t> mChunks;
 };
 
 }

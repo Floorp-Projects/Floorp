@@ -123,47 +123,40 @@ namespace safebrowsing {
 const uint32_t STORE_MAGIC = 0x1231af3b;
 const uint32_t CURRENT_VERSION = 3;
 
-nsresult
+void
 TableUpdate::NewAddPrefix(uint32_t aAddChunk, const Prefix& aHash)
 {
   AddPrefix *add = mAddPrefixes.AppendElement();
-  if (!add) return NS_ERROR_OUT_OF_MEMORY;
   add->addChunk = aAddChunk;
   add->prefix = aHash;
-  return NS_OK;
 }
 
-nsresult
+void
 TableUpdate::NewSubPrefix(uint32_t aAddChunk, const Prefix& aHash, uint32_t aSubChunk)
 {
   SubPrefix *sub = mSubPrefixes.AppendElement();
-  if (!sub) return NS_ERROR_OUT_OF_MEMORY;
   sub->addChunk = aAddChunk;
   sub->prefix = aHash;
   sub->subChunk = aSubChunk;
-  return NS_OK;
 }
 
-nsresult
+void
 TableUpdate::NewAddComplete(uint32_t aAddChunk, const Completion& aHash)
 {
   AddComplete *add = mAddCompletes.AppendElement();
-  if (!add) return NS_ERROR_OUT_OF_MEMORY;
   add->addChunk = aAddChunk;
   add->complete = aHash;
-  return NS_OK;
 }
 
-nsresult
+void
 TableUpdate::NewSubComplete(uint32_t aAddChunk, const Completion& aHash, uint32_t aSubChunk)
 {
   SubComplete *sub = mSubCompletes.AppendElement();
-  if (!sub) return NS_ERROR_OUT_OF_MEMORY;
   sub->addChunk = aAddChunk;
   sub->complete = aHash;
   sub->subChunk = aSubChunk;
-  return NS_OK;
 }
+
 
 HashStore::HashStore(const nsACString& aTableName, nsIFile* aStoreDir)
   : mTableName(aTableName)

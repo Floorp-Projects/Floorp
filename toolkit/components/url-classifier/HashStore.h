@@ -39,28 +39,18 @@ public:
 
   // Throughout, uint32_t aChunk refers only to the chunk number. Chunk data is
   // stored in the Prefix structures.
-  nsresult NewAddChunk(uint32_t aChunk) {
-    return mAddChunks.Set(aChunk);
-  } NS_WARN_UNUSED_RESULT;
-  nsresult NewSubChunk(uint32_t aChunk) {
-    return mSubChunks.Set(aChunk);
-  } NS_WARN_UNUSED_RESULT;
-  nsresult NewAddExpiration(uint32_t aChunk) {
-    return mAddExpirations.Set(aChunk);
-  } NS_WARN_UNUSED_RESULT;
-  nsresult NewSubExpiration(uint32_t aChunk) {
-    return mSubExpirations.Set(aChunk);
-  } NS_WARN_UNUSED_RESULT;
-  nsresult NewAddPrefix(uint32_t aAddChunk,
-                        const Prefix& aPrefix) NS_WARN_UNUSED_RESULT;
-  nsresult NewSubPrefix(uint32_t aAddChunk,
-                        const Prefix& aPrefix,
-                        uint32_t aSubChunk) NS_WARN_UNUSED_RESULT;
-  nsresult NewAddComplete(uint32_t aChunk,
-                          const Completion& aCompletion) NS_WARN_UNUSED_RESULT;
-  nsresult NewSubComplete(uint32_t aAddChunk,
-                          const Completion& aCompletion,
-                          uint32_t aSubChunk) NS_WARN_UNUSED_RESULT;
+  void NewAddChunk(uint32_t aChunk) { mAddChunks.Set(aChunk); }
+  void NewSubChunk(uint32_t aChunk) { mSubChunks.Set(aChunk); }
+
+  void NewAddExpiration(uint32_t aChunk) { mAddExpirations.Set(aChunk); }
+  void NewSubExpiration(uint32_t aChunk) { mSubExpirations.Set(aChunk); }
+
+  void NewAddPrefix(uint32_t aAddChunk, const Prefix& aPrefix);
+  void NewSubPrefix(uint32_t aAddChunk, const Prefix& aPrefix, uint32_t aSubChunk);
+
+  void NewAddComplete(uint32_t aChunk, const Completion& aCompletion);
+  void NewSubComplete(uint32_t aAddChunk, const Completion& aCompletion,
+                      uint32_t aSubChunk);
   void SetLocalUpdate(void) { mLocalUpdate = true; }
   bool IsLocalUpdate(void) { return mLocalUpdate; }
 
