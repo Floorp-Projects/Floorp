@@ -6538,6 +6538,15 @@ bool nsWindow::AutoErase(HDC dc)
   return false;
 }
 
+void
+nsWindow::ClearCompositor(nsWindow* aWindow)
+{
+  if (aWindow->mLayerManager) {
+    aWindow->mLayerManager = nullptr;
+    aWindow->DestroyCompositor();
+  }
+}
+
 bool
 nsWindow::ShouldUseOffMainThreadCompositing()
 {
