@@ -36,6 +36,9 @@ const REASON_SAVED_SESSION = "saved-session";
 const REASON_IDLE_DAILY = "idle-daily";
 const REASON_GATHER_PAYLOAD = "gather-payload";
 const REASON_TEST_PING = "test-ping";
+const REASON_ENVIRONMENT_CHANGE = "environment-change";
+
+const ENVIRONMENT_CHANGE_LISTENER = "TelemetrySession::onEnvironmentChange";
 
 const SEC_IN_ONE_DAY  = 24 * 60 * 60;
 const MS_IN_ONE_DAY   = SEC_IN_ONE_DAY * 1000;
@@ -110,6 +113,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
                                   "resource://gre/modules/UITelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
+                                  "resource://gre/modules/TelemetryEnvironment.jsm");
 
 function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
@@ -972,6 +977,9 @@ let Impl = {
       Telemetry.asyncFetchTelemetryData(function () {});
       this._rescheduleDailyTimer();
 
+      TelemetryEnvironment.registerChangeListener(ENVIRONMENT_CHANGE_LISTENER,
+                                                  () => this._onEnvironmentChange());
+
       deferred.resolve();
 
     }.bind(this), testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
@@ -1240,6 +1248,8 @@ let Impl = {
    *                can send pings or not, which is used for testing.
    */
   shutdown: function(testing = false) {
+    TelemetryEnvironment.unregisterChangeListener(ENVIRONMENT_CHANGE_LISTENER);
+
     if (this._dailyTimerId) {
       Policy.clearDailyTimeout(this._dailyTimerId);
       this._dailyTimerId = null;
@@ -1292,6 +1302,18 @@ let Impl = {
     this._rescheduleDailyTimer();
     // Return the promise so tests can wait on the ping submission.
     return promise;
+  },
+
+  _onEnvironmentChange: function() {
+    this._log.trace("_onEnvironmentChange");
+    let payload = this.getSessionPayload(REASON_ENVIRONMENT_CHANGE, true);
+
+    let options = {
+      retentionDays: RETENTION_DAYS,
+      addClientId: true,
+      addEnvironment: true,
+    };
+    let promise = TelemetryPing.send(PING_TYPE_MAIN, payload, options);
   },
 
   _isClassicReason: function(reason) {

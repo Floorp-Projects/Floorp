@@ -248,7 +248,7 @@ this.TelemetryEnvironment = {
       return;
     }
 
-    this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, "TelemetryEnvironment::");
+    this._configureLog();
     this._log.trace("init");
     this._shutdown = false;
     this._startWatchingPrefs();
@@ -273,12 +273,22 @@ this.TelemetryEnvironment = {
     yield this._collectTask;
   }),
 
+  _configureLog: function () {
+    if (this._log) {
+      return;
+    }
+    this._log = Log.repository.getLoggerWithMessagePrefix(
+                                 LOGGER_NAME, "TelemetryEnvironment::");
+  },
+
   /**
    * Register a listener for environment changes.
+   * It's fine to call this on an unitialized TelemetryEnvironment.
    * @param name The name of the listener - good for debugging purposes.
    * @param listener A JS callback function.
    */
   registerChangeListener: function (name, listener) {
+    this._configureLog();
     this._log.trace("registerChangeListener for " + name);
     if (this._shutdown) {
       this._log.warn("registerChangeListener - already shutdown")
@@ -289,9 +299,11 @@ this.TelemetryEnvironment = {
 
   /**
    * Unregister from listening to environment changes.
+   * It's fine to call this on an unitialized TelemetryEnvironment.
    * @param name The name of the listener to remove.
    */
   unregisterChangeListener: function (name) {
+    this._configureLog();
     this._log.trace("unregisterChangeListener for " + name);
     if (this._shutdown) {
       this._log.warn("registerChangeListener - already shutdown")
