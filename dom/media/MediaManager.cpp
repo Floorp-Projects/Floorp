@@ -1328,14 +1328,15 @@ public:
     already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> aOnSuccess,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aOnFailure,
     uint64_t aWindowId, nsACString& aAudioLoopbackDev,
-    nsACString& aVideoLoopbackDev)
+    nsACString& aVideoLoopbackDev, bool aUseFakeDevices)
     : mConstraints(aConstraints)
     , mOnSuccess(aOnSuccess)
     , mOnFailure(aOnFailure)
     , mManager(MediaManager::GetInstance())
     , mWindowId(aWindowId)
     , mLoopbackAudioDevice(aAudioLoopbackDev)
-    , mLoopbackVideoDevice(aVideoLoopbackDev) {}
+    , mLoopbackVideoDevice(aVideoLoopbackDev)
+    , mUseFakeDevices(aUseFakeDevices) {}
 
   void // NS_IMETHOD
   Run()
@@ -1343,7 +1344,7 @@ public:
     NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
     nsRefPtr<MediaEngine> backend;
-    if (mConstraints.mFake)
+    if (mConstraints.mFake || mUseFakeDevices)
       backend = new MediaEngineDefault(mConstraints.mFakeTracks);
     else
       backend = mManager->GetBackend(mWindowId);
@@ -1387,6 +1388,7 @@ private:
   // automated media tests only.
   nsCString mLoopbackAudioDevice;
   nsCString mLoopbackVideoDevice;
+  bool mUseFakeDevices;
 };
 
 MediaManager::MediaManager()
@@ -1596,10 +1598,15 @@ MediaManager::GetUserMedia(
   if (!Preferences::GetBool("media.navigator.video.enabled", true)) {
     c.mVideo.SetAsBoolean() = false;
   }
+  bool fake = true;
+  if (!c.mFake &&
+      !Preferences::GetBool("media.navigator.streams.fake", false)) {
+    fake = false;
+  }
 
   // Pass callbacks and MediaStreamListener along to GetUserMediaTask.
   nsAutoPtr<GetUserMediaTask> task;
-  if (c.mFake) {
+  if (fake) {
     // Fake stream from default backend.
     task = new GetUserMediaTask(c, onSuccess.forget(),
       onFailure.forget(), windowID, listener, mPrefs, new MediaEngineDefault(c.mFakeTracks));
@@ -1711,7 +1718,7 @@ MediaManager::GetUserMedia(
 
   // XXX No full support for picture in Desktop yet (needs proper UI)
   if (privileged ||
-      (c.mFake && !Preferences::GetBool("media.navigator.permission.fake"))) {
+      (fake && !Preferences::GetBool("media.navigator.permission.fake"))) {
     MediaManager::GetMessageLoop()->PostTask(FROM_HERE, task.forget());
   } else {
     bool isHTTPS = false;
@@ -1805,12 +1812,14 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
     Preferences::GetCString("media.audio_loopback_dev");
   nsAdoptingCString loopbackVideoDevice =
     Preferences::GetCString("media.video_loopback_dev");
+  bool useFakeStreams =
+    Preferences::GetBool("media.navigator.streams.fake", false);
 
   MediaManager::GetMessageLoop()->PostTask(FROM_HERE,
     new GetUserMediaDevicesTask(
       aConstraints, onSuccess.forget(), onFailure.forget(),
       (aInnerWindowID ? aInnerWindowID : aWindow->WindowID()),
-      loopbackAudioDevice, loopbackVideoDevice));
+      loopbackAudioDevice, loopbackVideoDevice, useFakeStreams));
 
   return NS_OK;
 }
