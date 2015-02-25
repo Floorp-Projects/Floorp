@@ -237,6 +237,67 @@ class TestBuildReader(unittest.TestCase):
         self.assertEqual([context['XPIDL_MODULE'] for context in contexts],
             ['foobar', 'foobar', 'baz', 'foobar'])
 
+    def test_find_relevant_mozbuilds(self):
+        reader = self.reader('reader-relevant-mozbuild')
+
+        # Absolute paths outside topsrcdir are rejected.
+        with self.assertRaises(Exception):
+            reader._find_relevant_mozbuilds(['/foo'])
+
+        # File in root directory.
+        paths = reader._find_relevant_mozbuilds(['file'])
+        self.assertEqual(paths, {'file': ['moz.build']})
+
+        # File in child directory.
+        paths = reader._find_relevant_mozbuilds(['d1/file1'])
+        self.assertEqual(paths, {'d1/file1': ['moz.build', 'd1/moz.build']})
+
+        # Multiple files in same directory.
+        paths = reader._find_relevant_mozbuilds(['d1/file1', 'd1/file2'])
+        self.assertEqual(paths, {
+            'd1/file1': ['moz.build', 'd1/moz.build'],
+            'd1/file2': ['moz.build', 'd1/moz.build']})
+
+        # Missing moz.build from missing intermediate directory.
+        paths = reader._find_relevant_mozbuilds(
+            ['d1/no-intermediate-moz-build/child/file'])
+        self.assertEqual(paths, {
+            'd1/no-intermediate-moz-build/child/file': [
+                'moz.build', 'd1/moz.build', 'd1/no-intermediate-moz-build/child/moz.build']})
+
+        # Lots of empty directories.
+        paths = reader._find_relevant_mozbuilds([
+            'd1/parent-is-far/dir1/dir2/dir3/file'])
+        self.assertEqual(paths, {
+            'd1/parent-is-far/dir1/dir2/dir3/file':
+                ['moz.build', 'd1/moz.build', 'd1/parent-is-far/moz.build']})
+
+        # Lots of levels.
+        paths = reader._find_relevant_mozbuilds([
+            'd1/every-level/a/file', 'd1/every-level/b/file'])
+        self.assertEqual(paths, {
+            'd1/every-level/a/file': [
+                'moz.build',
+                'd1/moz.build',
+                'd1/every-level/moz.build',
+                'd1/every-level/a/moz.build',
+            ],
+            'd1/every-level/b/file': [
+                'moz.build',
+                'd1/moz.build',
+                'd1/every-level/moz.build',
+                'd1/every-level/b/moz.build',
+            ],
+        })
+
+        # Different root directories.
+        paths = reader._find_relevant_mozbuilds(['d1/file', 'd2/file', 'file'])
+        self.assertEqual(paths, {
+            'file': ['moz.build'],
+            'd1/file': ['moz.build', 'd1/moz.build'],
+            'd2/file': ['moz.build', 'd2/moz.build'],
+        })
+
 
 if __name__ == '__main__':
     main()
