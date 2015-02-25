@@ -403,7 +403,9 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, js
   char *args = (char *) malloc(len + 1);
   jenv->GetStringUTFRegion(jargs, 0, len, args);
   args[len] = '\0';
+  ElfLoader::Singleton.ExpectShutdown(false);
   GeckoStart(args, &sAppData);
+  ElfLoader::Singleton.ExpectShutdown(true);
   free(args);
 }
 
