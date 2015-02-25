@@ -2702,18 +2702,13 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const nsACString&
   if (found)
     return NS_OK;
 
-  const nsCString& flatExt = PromiseFlatCString(aFileExt);
   // Try the plugins
-  const char* mimeType;
-  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv));
-  nsPluginHost* pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
-  if (NS_SUCCEEDED(rv)) {
-    if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForExtension(flatExt.get(), mimeType))) {
-      aContentType = mimeType;
-      return NS_OK;
-    }
+  nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
+  if (pluginHost &&
+      pluginHost->HavePluginForExtension(aFileExt, aContentType)) {
+    return NS_OK;
   }
-  
+
   rv = NS_OK;
   // Let's see if an extension added something
   nsCOMPtr<nsICategoryManager> catMan(do_GetService("@mozilla.org/categorymanager;1"));
@@ -2730,7 +2725,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const nsACString&
   else {
     rv = NS_ERROR_NOT_AVAILABLE;
   }
-  
+
   return rv;
 }
 

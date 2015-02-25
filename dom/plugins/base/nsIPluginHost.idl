@@ -27,7 +27,7 @@ interface nsIPluginPlayPreviewInfo : nsISupports
   boolean checkWhitelist(in AUTF8String pageURI, in AUTF8String objectURI);
 };
 
-[scriptable, uuid(6034e3a0-365b-48a5-a257-586946ff361e)]
+[scriptable, uuid(d7d5b2e0-105b-4c9d-8558-b6b31f28b7df)]
 interface nsIPluginHost : nsISupports
 {
   /**
@@ -49,6 +49,12 @@ interface nsIPluginHost : nsISupports
    */
   const uint32_t FLAG_CLEAR_ALL = 0;
   const uint32_t FLAG_CLEAR_CACHE = 1;
+
+  /*
+   * For use with Get*ForType functions
+   */
+  const uint32_t EXCLUDE_NONE     = 0;
+  const uint32_t EXCLUDE_DISABLED = 1 << 0;
 
   /*
    * Clear site data for a given plugin.
@@ -106,7 +112,14 @@ interface nsIPluginHost : nsISupports
 
   nsIPluginPlayPreviewInfo getPlayPreviewInfo(in AUTF8String mimeType);
 
-  ACString getPermissionStringForType(in AUTF8String mimeType);
+  /**
+   * Get the "permission string" for the plugin.  This is a string that can be
+   * passed to the permission manager to see whether the plugin is allowed to
+   * run, for example.  This will typically be based on the plugin's "nice name"
+   * and its blocklist state.
+   */
+  ACString getPermissionStringForType(in AUTF8String mimeType,
+                                      [optional] in uint32_t excludeFlags);
 
   /**
    * Get the nsIPluginTag for this MIME type. This method works with both
@@ -116,16 +129,20 @@ interface nsIPluginHost : nsISupports
    * @throws NS_ERROR_NOT_AVAILABLE if no plugin is available for this MIME
    *         type.
    */
-  nsIPluginTag getPluginTagForType(in AUTF8String mimeType);
+  nsIPluginTag getPluginTagForType(in AUTF8String mimeType,
+                                   [optional] in uint32_t excludeFlags);
 
   /**
-   * Get the nsIPluginTag state for this MIME type.
+   * Get the nsIPluginTag enabled state for this MIME type.  See
+   * nsIPluginTag.enabledState.
    */
-  unsigned long getStateForType(in AUTF8String mimeType);
+  unsigned long getStateForType(in AUTF8String mimeType,
+                                [optional] in uint32_t excludeFlags);
 
   /**
-   * Get the blocklist state for a MIME type.
+   * Get the blocklist state for a MIME type.  See nsIPluginTag.blocklistState.
    */
-  uint32_t getBlocklistStateForType(in string aMimeType);
+  uint32_t getBlocklistStateForType(in AUTF8String aMimeType,
+                                    [optional] in uint32_t excludeFlags);
 };
 
