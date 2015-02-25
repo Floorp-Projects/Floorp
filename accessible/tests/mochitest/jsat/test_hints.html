@@ -43,6 +43,9 @@
         accOrElmOrID: 'nested_link3',
         expectedHints: [{string: 'link-hint'}, {string: 'pushbutton-hint'},
           "Double tap and hold to activate"]
+      }, {
+        accOrElmOrID: 'menuitemradio',
+        expectedHints: [{string: 'radiomenuitem-hint'}]
       }];
 
       // Test hints.
@@ -80,6 +83,7 @@
       <a href="#" id="link_with_hint_override" aria-moz-hint="Tap and hold to get to menu">I am a special link</a>
       <button id="button_with_default_hint">Toggle</button>
       <button id="button_with_hint_override" aria-moz-hint="Tap and hold to activate">Special</button>
+      <span id="menuitemradio" role="menuitemradio">Item 1</span>
   </div>
 </body>
 </html>
