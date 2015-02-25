@@ -4,6 +4,8 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
+Cu.import("resource://gre/modules/Preferences.jsm", this);
+Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 
 function run_test() {
   do_test_pending();
@@ -63,6 +65,72 @@ add_task(function* test_changeNotify() {
   for (let i=0; i<4; ++i) {
     TelemetryEnvironment.unregisterChangeListener("test"+i);
   }
+});
+
+add_task(function* test_prefWatchPolicies() {
+  const PREF_TEST_1 = "toolkit.telemetry.test.pref_new";
+  const PREF_TEST_2 = "toolkit.telemetry.test.pref1";
+  const PREF_TEST_3 = "toolkit.telemetry.test.pref2";
+
+  const expectedValue = "some-test-value";
+
+  let prefsToWatch = {};
+  prefsToWatch[PREF_TEST_1] = TelemetryEnvironment.RECORD_PREF_VALUE;
+  prefsToWatch[PREF_TEST_2] = TelemetryEnvironment.RECORD_PREF_STATE;
+  prefsToWatch[PREF_TEST_3] = TelemetryEnvironment.RECORD_PREF_STATE;
+
+  yield TelemetryEnvironment.init();
+
+  // Set the Environment preferences to watch.
+  TelemetryEnvironment._watchPreferences(prefsToWatch);
+  let deferred = PromiseUtils.defer();
+  TelemetryEnvironment.registerChangeListener("testWatchPrefs", deferred.resolve);
+
+  // Trigger a change in the watched preferences.
+  Preferences.set(PREF_TEST_1, expectedValue);
+  Preferences.set(PREF_TEST_2, false);
+  yield deferred.promise;
+
+  // Unregister the listener.
+  TelemetryEnvironment.unregisterChangeListener("testWatchPrefs");
+
+  // Check environment contains the correct data.
+  let environmentData = yield TelemetryEnvironment.getEnvironmentData();
+
+  let userPrefs = environmentData.settings.userPrefs;
+
+  Assert.equal(userPrefs[PREF_TEST_1], expectedValue,
+               "Environment contains the correct preference value.");
+  Assert.equal(userPrefs[PREF_TEST_2], null,
+               "Report that the pref was user set and has no value.");
+  Assert.ok(!(PREF_TEST_3 in userPrefs),
+            "Do not report if preference not user set.");
+
+  yield TelemetryEnvironment.shutdown();
+});
+
+add_task(function* test_prefWatch_prefReset() {
+  const PREF_TEST = "toolkit.telemetry.test.pref1";
+
+  let prefsToWatch = {};
+  prefsToWatch[PREF_TEST] = TelemetryEnvironment.RECORD_PREF_STATE;
+  // Set the preference to a non-default value.
+  Preferences.set(PREF_TEST, false);
+
+  yield TelemetryEnvironment.init();
+
+  // Set the Environment preferences to watch.
+  TelemetryEnvironment._watchPreferences(prefsToWatch);
+  let deferred = PromiseUtils.defer();
+  TelemetryEnvironment.registerChangeListener("testWatchPrefs_reset", deferred.resolve);
+
+  // Trigger a change in the watched preferences.
+  Preferences.reset(PREF_TEST);
+  yield deferred.promise;
+
+  // Unregister the listener.
+  TelemetryEnvironment.unregisterChangeListener("testWatchPrefs_reset");
+  yield TelemetryEnvironment.shutdown();
 });
 
 add_task(function*() {
