@@ -94,6 +94,14 @@ function generateUUID() {
   return str.substring(1, str.length - 1);
 }
 
+/**
+ * Determine if the ping has new ping format or a legacy one.
+ */
+function isNewPingFormat(aPing) {
+  return ("id" in aPing) && ("application" in aPing) &&
+         ("version" in aPing) && (aPing.version >= 2);
+}
+
 this.EXPORTED_SYMBOLS = ["TelemetryPing"];
 
 this.TelemetryPing = Object.freeze({
@@ -511,13 +519,35 @@ let Impl = {
   },
 
   submissionPath: function submissionPath(ping) {
-    let app = ping.application;
-    // We insert the Ping id in the URL to simplify server handling of duplicated
-    // pings.
-    let pathComponents = [ping.id, ping.type, app.name, app.version,
-                          app.channel, app.buildId];
-    let slug = pathComponents.join("/");
+    // The new ping format contains an "application" section, the old one doesn't.
+    let pathComponents;
+    if (isNewPingFormat(ping)) {
+      // We insert the Ping id in the URL to simplify server handling of duplicated
+      // pings.
+      let app = ping.application;
+      pathComponents = [
+        ping.id, ping.type, app.name, app.version, app.channel, app.buildId
+      ];
+    } else {
+      // This is a ping in the old format.
+      if (!("slug" in ping)) {
+        // That's odd, we don't have a slug. Generate one so that TelemetryFile.jsm works.
+        ping.slug = generateUUID();
+      }
 
+      // Do we have enough info to build a submission URL?
+      let payload = ("payload" in ping) ? ping.payload : null;
+      if (payload && ("info" in payload)) {
+        let info = ping.payload.info;
+        pathComponents = [ ping.slug, info.reason, info.appName, info.appVersion,
+                           info.appUpdateChannel, info.appBuildID ];
+      } else {
+        // Only use the UUID as the slug.
+        pathComponents = [ ping.slug ];
+      }
+    }
+
+    let slug = pathComponents.join("/");
     return "/submit/telemetry/" + slug;
   },
 
@@ -556,11 +586,13 @@ let Impl = {
     request.addEventListener("error", handler(false).bind(this), false);
     request.addEventListener("load", handler(true).bind(this), false);
 
+    // If that's a legacy ping format, just send its payload.
+    let networkPayload = isNewPingFormat(ping) ? ping : ping.payload;
     request.setRequestHeader("Content-Encoding", "gzip");
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
-    let utf8Payload = converter.ConvertFromUnicode(JSON.stringify(ping));
+    let utf8Payload = converter.ConvertFromUnicode(JSON.stringify(networkPayload));
     utf8Payload += converter.Finish();
     let payloadStream = Cc["@mozilla.org/io/string-input-stream;1"]
                         .createInstance(Ci.nsIStringInputStream);
