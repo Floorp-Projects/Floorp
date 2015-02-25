@@ -17,7 +17,7 @@ Finally, the structure also contains the `payload`, which is the specific data s
 Structure::
 
     {
-      type: <string>, // "main", "activation", "deletion", ...
+      type: <string>, // "main", "activation", "deletion", "saved-session", ...
       id: <UUID>, // a UUID that identifies this ping
       creationDate: <ISO date>, // the date the ping was generated
       version: <number>, // the version of the ping format, currently 4
