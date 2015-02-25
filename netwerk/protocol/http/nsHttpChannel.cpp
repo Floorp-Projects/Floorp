@@ -5155,7 +5155,7 @@ nsHttpChannel::GetDomainLookupStart(TimeStamp* _retval) {
     if (mDNSPrefetch && mDNSPrefetch->TimingsValid())
         *_retval = mDNSPrefetch->StartTimestamp();
     else if (mTransaction)
-        *_retval = mTransaction->Timings().domainLookupStart;
+        *_retval = mTransaction->GetDomainLookupStart();
     else
         *_retval = mTransactionTimings.domainLookupStart;
     return NS_OK;
@@ -5166,7 +5166,7 @@ nsHttpChannel::GetDomainLookupEnd(TimeStamp* _retval) {
     if (mDNSPrefetch && mDNSPrefetch->TimingsValid())
         *_retval = mDNSPrefetch->EndTimestamp();
     else if (mTransaction)
-        *_retval = mTransaction->Timings().domainLookupEnd;
+        *_retval = mTransaction->GetDomainLookupEnd();
     else
         *_retval = mTransactionTimings.domainLookupEnd;
     return NS_OK;
@@ -5175,7 +5175,7 @@ nsHttpChannel::GetDomainLookupEnd(TimeStamp* _retval) {
 NS_IMETHODIMP
 nsHttpChannel::GetConnectStart(TimeStamp* _retval) {
     if (mTransaction)
-        *_retval = mTransaction->Timings().connectStart;
+        *_retval = mTransaction->GetConnectStart();
     else
         *_retval = mTransactionTimings.connectStart;
     return NS_OK;
@@ -5184,7 +5184,7 @@ nsHttpChannel::GetConnectStart(TimeStamp* _retval) {
 NS_IMETHODIMP
 nsHttpChannel::GetConnectEnd(TimeStamp* _retval) {
     if (mTransaction)
-        *_retval = mTransaction->Timings().connectEnd;
+        *_retval = mTransaction->GetConnectEnd();
     else
         *_retval = mTransactionTimings.connectEnd;
     return NS_OK;
@@ -5193,7 +5193,7 @@ nsHttpChannel::GetConnectEnd(TimeStamp* _retval) {
 NS_IMETHODIMP
 nsHttpChannel::GetRequestStart(TimeStamp* _retval) {
     if (mTransaction)
-        *_retval = mTransaction->Timings().requestStart;
+        *_retval = mTransaction->GetRequestStart();
     else
         *_retval = mTransactionTimings.requestStart;
     return NS_OK;
@@ -5202,7 +5202,7 @@ nsHttpChannel::GetRequestStart(TimeStamp* _retval) {
 NS_IMETHODIMP
 nsHttpChannel::GetResponseStart(TimeStamp* _retval) {
     if (mTransaction)
-        *_retval = mTransaction->Timings().responseStart;
+        *_retval = mTransaction->GetResponseStart();
     else
         *_retval = mTransactionTimings.responseStart;
     return NS_OK;
@@ -5211,7 +5211,7 @@ nsHttpChannel::GetResponseStart(TimeStamp* _retval) {
 NS_IMETHODIMP
 nsHttpChannel::GetResponseEnd(TimeStamp* _retval) {
     if (mTransaction)
-        *_retval = mTransaction->Timings().responseEnd;
+        *_retval = mTransaction->GetResponseEnd();
     else
         *_retval = mTransactionTimings.responseEnd;
     return NS_OK;
