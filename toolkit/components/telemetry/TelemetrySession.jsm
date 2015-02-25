@@ -31,6 +31,7 @@ const IS_CONTENT_PROCESS = (function() {
 // When modifying the payload in incompatible ways, please bump this version number
 const PAYLOAD_VERSION = 4;
 const PING_TYPE_MAIN = "main";
+const PING_TYPE_SAVED_SESSION = "saved-session";
 const RETENTION_DAYS = 14;
 
 const REASON_DAILY = "daily";
@@ -147,6 +148,21 @@ function truncateToDays(date) {
                   date.getMonth(),
                   date.getDate(),
                   0, 0, 0, 0);
+}
+
+/**
+ * Get the ping type based on the payload.
+ * @param {Object} aPayload The ping payload.
+ * @return {String} A string representing the ping type.
+ */
+function getPingType(aPayload) {
+  // To remain consistent with server-side ping handling, set "saved-session" as the ping
+  // type for "saved-session" payload reasons.
+  if (aPayload.info.reason == REASON_SAVED_SESSION) {
+    return PING_TYPE_SAVED_SESSION;
+  }
+
+  return PING_TYPE_MAIN;
 }
 
 /**
@@ -991,7 +1007,7 @@ let Impl = {
       addClientId: true,
       addEnvironment: true,
     };
-    return TelemetryPing.send(PING_TYPE_MAIN, payload, options);
+    return TelemetryPing.send(getPingType(payload), payload, options);
   },
 
   attachObservers: function attachObservers() {
@@ -1213,7 +1229,7 @@ let Impl = {
       addClientId: true,
       addEnvironment: true,
     };
-    return TelemetryPing.savePendingPings(PING_TYPE_MAIN, payload, options);
+    return TelemetryPing.savePendingPings(getPingType(payload), payload, options);
   },
 
   testSaveHistograms: function testSaveHistograms(file) {
@@ -1226,7 +1242,7 @@ let Impl = {
       overwrite: true,
       filePath: file.path,
     };
-    return TelemetryPing.testSavePingToFile(PING_TYPE_MAIN, payload, options);
+    return TelemetryPing.testSavePingToFile(getPingType(payload), payload, options);
   },
 
   /**
@@ -1383,7 +1399,7 @@ let Impl = {
           addEnvironment: true,
           overwrite: true,
         };
-        TelemetryPing.savePing(PING_TYPE_MAIN, payload, options);
+        TelemetryPing.savePing(getPingType(payload), payload, options);
       }
       break;
 #endif
@@ -1481,7 +1497,7 @@ let Impl = {
       addClientId: true,
       addEnvironment: true,
     };
-    let promise = TelemetryPing.send(PING_TYPE_MAIN, payload, options);
+    let promise = TelemetryPing.send(getPingType(payload), payload, options);
 
     this._rescheduleDailyTimer();
     // Return the promise so tests can wait on the ping submission.
@@ -1552,7 +1568,7 @@ let Impl = {
       addClientId: true,
       addEnvironment: true,
     };
-    let promise = TelemetryPing.send(PING_TYPE_MAIN, payload, options);
+    let promise = TelemetryPing.send(getPingType(payload), payload, options);
   },
 
   _isClassicReason: function(reason) {
