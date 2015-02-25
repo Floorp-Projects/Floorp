@@ -29,6 +29,7 @@
             ok(!win.UI._busyPromise, "UI is not busy");
 
             yield win.Cmds.importPackagedApp(packagedAppLocation);
+            yield waitForUpdate(win, "project-validated");
 
             let project = win.AppManager.selectedProject;
             is(project.location, packagedAppLocation, "Location is valid");
@@ -40,6 +41,7 @@
 
             let hostedAppManifest = TEST_BASE + "hosted_app.manifest";
             yield win.Cmds.importHostedApp(hostedAppManifest);
+            yield waitForUpdate(win, "project-validated");
 
             project = win.AppManager.selectedProject;
             is(project.location, hostedAppManifest, "Location is valid");
@@ -49,6 +51,7 @@
 
             hostedAppManifest = TEST_BASE + "/app";
             yield win.Cmds.importHostedApp(hostedAppManifest);
+            yield waitForUpdate(win, "project-validated");
 
             project = win.AppManager.selectedProject;
             ok(project.location.endsWith('manifest.webapp'), "The manifest was found and the project was updated");

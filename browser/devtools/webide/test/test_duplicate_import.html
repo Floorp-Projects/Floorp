@@ -28,14 +28,17 @@
 
           info("to call importPackagedApp(" + packagedAppLocation + ")");
           yield win.Cmds.importPackagedApp(packagedAppLocation);
+          yield waitForUpdate(win, "project-validated");
           yield nextTick();
 
           info("to call importHostedApp(" + hostedAppManifest + ")");
           yield win.Cmds.importHostedApp(hostedAppManifest);
+          yield waitForUpdate(win, "project-validated");
           yield nextTick();
 
           info("to call importPackagedApp(" + packagedAppLocation + ") again");
           yield win.Cmds.importPackagedApp(packagedAppLocation);
+          yield waitForUpdate(win, "project-validated");
 
           let project = win.AppManager.selectedProject;
           is(project.location, packagedAppLocation, "Correctly reselected existing packaged app.");
@@ -43,6 +46,7 @@
 
           info("to call importHostedApp(" + hostedAppManifest + ") again");
           yield win.Cmds.importHostedApp(hostedAppManifest);
+          yield waitForUpdate(win, "project-validated");
           project = win.AppManager.selectedProject;
           is(project.location, hostedAppManifest, "Correctly reselected existing hosted app.");
           yield nextTick();
@@ -71,4 +75,3 @@
     </script>
   </body>
 </html>
-
