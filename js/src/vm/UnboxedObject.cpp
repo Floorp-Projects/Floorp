@@ -243,17 +243,20 @@ UnboxedLayout::makeNativeGroup(JSContext *cx, ObjectGroup *group)
         return false;
 
     // Propagate all property types from the old group to the new group.
-    for (size_t i = 0; i < group->getPropertyCount(); i++) {
-        if (ObjectGroup::Property *property = group->getProperty(i)) {
-            TypeSet::TypeList types;
-            if (!property->types.enumerateTypes(&types))
-                return false;
-            for (size_t j = 0; j < types.length(); j++)
-                AddTypePropertyId(cx, nativeGroup, property->id, types[j]);
-            HeapTypeSet *nativeProperty = nativeGroup->maybeGetProperty(property->id);
-            if (nativeProperty->canSetDefinite(i))
-                nativeProperty->setDefinite(i);
-        }
+    for (size_t i = 0; i < layout.properties().length(); i++) {
+        const UnboxedLayout::Property &property = layout.properties()[i];
+        jsid id = NameToId(property.name);
+
+        HeapTypeSet *typeProperty = group->maybeGetProperty(id);
+        TypeSet::TypeList types;
+        if (!typeProperty->enumerateTypes(&types))
+            return false;
+        MOZ_ASSERT(!types.empty());
+        for (size_t j = 0; j < types.length(); j++)
+            AddTypePropertyId(cx, nativeGroup, id, types[j]);
+        HeapTypeSet *nativeProperty = nativeGroup->maybeGetProperty(id);
+        if (nativeProperty->canSetDefinite(i))
+            nativeProperty->setDefinite(i);
     }
 
     layout.nativeGroup_ = nativeGroup;
