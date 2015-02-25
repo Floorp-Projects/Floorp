@@ -29,6 +29,7 @@
   <script type="application/javascript" src="performance/views/recordings.js"/>
 
   <popupset id="performance-options-popupset">
+    <menupopup id="performance-filter-menupopup"/>
     <menupopup id="performance-options-menupopup">
       <menuitem id="option-show-platform-data"
                 type="checkbox"
@@ -85,6 +86,12 @@
 
     <vbox id="performance-pane" flex="1">
       <toolbar id="performance-toolbar" class="devtools-toolbar">
+        <hbox id="performance-toolbar-control-other" class="devtools-toolbarbutton-group">
+          <toolbarbutton id="filter-button"
+                         popup="performance-filter-menupopup"
+                         class="devtools-toolbarbutton"
+                         tooltiptext="&profilerUI.options.filter.tooltiptext;"/>
+        </hbox>
         <hbox id="performance-toolbar-controls-detail-views" class="devtools-toolbarbutton-group">
           <toolbarbutton id="select-waterfall-view"
                          class="devtools-toolbarbutton devtools-button"
@@ -112,7 +119,7 @@
           <toolbarbutton id="performance-options-button"
                          class="devtools-toolbarbutton devtools-option-toolbarbutton"
                          popup="performance-options-menupopup"
-                         tooltiptext="&profilerUI.options.tooltiptext;"/>
+                         tooltiptext="&profilerUI.options.gear.tooltiptext;"/>
         </hbox>
       </toolbar>
 
