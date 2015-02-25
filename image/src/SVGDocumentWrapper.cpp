@@ -320,7 +320,8 @@ SVGDocumentWrapper::SetupViewer(nsIRequest* aRequest,
   nsCOMPtr<nsIStreamListener> listener;
   rv = docLoaderFactory->CreateInstance("external-resource", chan,
                                         newLoadGroup,
-                                        IMAGE_SVG_XML, nullptr, nullptr,
+                                        NS_LITERAL_CSTRING(IMAGE_SVG_XML),
+                                        nullptr, nullptr,
                                         getter_AddRefs(listener),
                                         getter_AddRefs(viewer));
   NS_ENSURE_SUCCESS(rv, rv);
