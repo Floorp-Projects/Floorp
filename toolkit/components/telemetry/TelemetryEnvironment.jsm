@@ -261,8 +261,12 @@ this.TelemetryEnvironment = {
    */
   shutdown: Task.async(function* () {
     if (this._shutdown) {
-      this._log.error("shutdown - Already shut down");
-      throw new Error("Already shut down");
+      if (this._log) {
+        this._log.error("shutdown - Already shut down");
+      } else {
+        Cu.reportError("TelemetryEnvironment.shutdown - Already shut down");
+      }
+      return;
     }
 
     this._log.trace("shutdown");
