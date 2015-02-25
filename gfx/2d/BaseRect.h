@@ -111,8 +111,8 @@ struct BaseRect {
     Sub result;
     result.x = std::max<T>(x, aRect.x);
     result.y = std::max<T>(y, aRect.y);
-    result.width = std::min<T>(XMost(), aRect.XMost()) - result.x;
-    result.height = std::min<T>(YMost(), aRect.YMost()) - result.y;
+    result.width = std::min<T>(x - result.x + width, aRect.x - result.x + aRect.width);
+    result.height = std::min<T>(y - result.y + height, aRect.y - result.y + aRect.height);
     if (result.width < 0 || result.height < 0) {
       result.SizeTo(0, 0);
     }

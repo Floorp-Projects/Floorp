@@ -29,7 +29,7 @@ const Class SymbolObject::class_ = {
 };
 
 SymbolObject *
-SymbolObject::create(JSContext *cx, JS::Symbol *symbol)
+SymbolObject::create(JSContext *cx, JS::HandleSymbol symbol)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &class_);
     if (!obj)

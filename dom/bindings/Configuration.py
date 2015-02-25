@@ -305,10 +305,8 @@ class Descriptor(DescriptorProvider):
         # Read the desc, and fill in the relevant defaults.
         ifaceName = self.interface.identifier.name
         if self.interface.isExternal():
-            if self.workers:
-                nativeTypeDefault = "JSObject"
-            else:
-                nativeTypeDefault = "nsIDOM" + ifaceName
+            assert not self.workers
+            nativeTypeDefault = "nsIDOM" + ifaceName
         elif self.interface.isCallback():
             nativeTypeDefault = "mozilla::dom::" + ifaceName
         else:

@@ -71,10 +71,18 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     HeapPtrObjectGroup nativeGroup_;
     HeapPtrShape nativeShape_;
 
+    // If nativeGroup is set and this object originally had a TypeNewScript,
+    // this points to the default 'new' group which replaced this one (and
+    // which might itself have been cleared since). This link is only needed to
+    // keep the replacement group from being GC'ed. If it were GC'ed and a new
+    // one regenerated later, that new group might have a different allocation
+    // kind from this group.
+    HeapPtrObjectGroup replacementNewGroup_;
+
   public:
     UnboxedLayout(const PropertyVector &properties, size_t size)
       : size_(size), newScript_(nullptr), traceList_(nullptr),
-        nativeGroup_(nullptr), nativeShape_(nullptr)
+        nativeGroup_(nullptr), nativeShape_(nullptr), replacementNewGroup_(nullptr)
     {
         properties_.appendAll(properties);
     }

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 sts=2 ts=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -86,6 +87,24 @@ nsNullPrincipal::Init(uint32_t aAppId, bool aInMozBrowser)
   mAppId = aAppId;
   mInMozBrowser = aInMozBrowser;
 
+  nsCString str;
+  nsresult rv = GenerateNullPrincipalURI(str);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mURI = new nsNullPrincipalURI(str);
+
+  return NS_OK;
+}
+
+void
+nsNullPrincipal::GetScriptLocation(nsACString &aStr)
+{
+  mURI->GetSpec(aStr);
+}
+
+nsresult
+nsNullPrincipal::GenerateNullPrincipalURI(nsACString &aStr)
+{
   // FIXME: bug 327161 -- make sure the uuid generator is reseeding-resistant.
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -104,26 +123,17 @@ nsNullPrincipal::Init(uint32_t aAppId, bool aInMozBrowser)
 
   // Use an nsCString so we only do the allocation once here and then share
   // with nsJSPrincipals
-  nsCString str;
-  str.SetCapacity(prefixLen + suffixLen);
+  aStr.SetCapacity(prefixLen + suffixLen);
 
-  str.Append(NS_NULLPRINCIPAL_PREFIX);
-  str.Append(chars);
+  aStr.Append(NS_NULLPRINCIPAL_PREFIX);
+  aStr.Append(chars);
 
-  if (str.Length() != prefixLen + suffixLen) {
+  if (aStr.Length() != prefixLen + suffixLen) {
     NS_WARNING("Out of memory allocating null-principal URI");
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mURI = new nsNullPrincipalURI(str);
-
   return NS_OK;
-}
-
-void
-nsNullPrincipal::GetScriptLocation(nsACString &aStr)
-{
-  mURI->GetSpec(aStr);
 }
 
 #ifdef DEBUG

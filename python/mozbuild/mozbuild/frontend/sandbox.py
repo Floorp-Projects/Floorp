@@ -22,6 +22,7 @@ from __future__ import unicode_literals
 import copy
 import os
 import sys
+import weakref
 
 from contextlib import contextmanager
 
@@ -116,11 +117,21 @@ class Sandbox(dict):
         assert isinstance(self._builtins, ReadOnlyDict)
         assert isinstance(context, Context)
 
-        self._context = context
+        # Contexts are modeled as a stack because multiple context managers
+        # may be active.
+        self._active_contexts = [context]
+
+        # Seen sub-contexts. Will be populated with other Context instances
+        # that were related to execution of this instance.
+        self.subcontexts = []
 
         # We need to record this because it gets swallowed as part of
         # evaluation.
         self._last_name_error = None
+
+    @property
+    def _context(self):
+        return self._active_contexts[-1]
 
     def exec_file(self, path):
         """Execute code at a path in the sandbox.
@@ -152,6 +163,9 @@ class Sandbox(dict):
         """
         if path:
             self._context.push_source(path)
+
+        old_sandbox = self._context._sandbox
+        self._context._sandbox = weakref.ref(self)
 
         # We don't have to worry about bytecode generation here because we are
         # too low-level for that. However, we could add bytecode generation via
@@ -190,8 +204,30 @@ class Sandbox(dict):
             raise SandboxExecutionError(self._context.source_stack, exc[0],
                 exc[1], exc[2])
         finally:
+            self._context._sandbox = old_sandbox
             if path:
                 self._context.pop_source()
+
+    def push_subcontext(self, context):
+        """Push a SubContext onto the execution stack.
+
+        When called, the active context will be set to the specified context,
+        meaning all variable accesses will go through it. We also record this
+        SubContext as having been executed as part of this sandbox.
+        """
+        self._active_contexts.append(context)
+        if context not in self.subcontexts:
+            self.subcontexts.append(context)
+
+    def pop_subcontext(self, context):
+        """Pop a SubContext off the execution stack.
+
+        SubContexts must be pushed and popped in opposite order. This is
+        validated as part of the function call to ensure proper consumer API
+        use.
+        """
+        popped = self._active_contexts.pop()
+        assert popped == context
 
     def __getitem__(self, key):
         if key.isupper():

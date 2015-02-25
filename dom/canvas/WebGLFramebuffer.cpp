@@ -129,6 +129,7 @@ WebGLFramebuffer::Attachment::IsReadableFloat() const
     MOZ_ASSERT(internalformat != LOCAL_GL_NONE);
     TexType type = TypeFromInternalFormat(internalformat);
     return type == LOCAL_GL_FLOAT ||
+           type == LOCAL_GL_HALF_FLOAT_OES ||
            type == LOCAL_GL_HALF_FLOAT;
 }
 
@@ -803,6 +804,7 @@ WebGLFramebuffer::CheckFramebufferStatus() const
     // Ok, attach our chosen flavor of {DEPTH, STENCIL, DEPTH_STENCIL}.
     FinalizeAttachments();
 
+    // TODO: This should not be unconditionally GL_FRAMEBUFFER.
     mStatus = mContext->gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     return mStatus;
 }

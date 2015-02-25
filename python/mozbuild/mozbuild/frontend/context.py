@@ -60,11 +60,11 @@ class Context(KeyedDefaultDict):
     lots of empty/default values, you have a data structure with only the
     values that were read or touched.
 
-    Instances of variables classes are created by invoking class_name(),
-    except when class_name derives from ContextDerivedValue, in which
-    case class_name(instance_of_the_context) is invoked.
-    A value is added to those calls when instances are created during
-    assignment (setitem).
+    Instances of variables classes are created by invoking ``class_name()``,
+    except when class_name derives from ``ContextDerivedValue`` or
+    ``SubContext``, in which case ``class_name(instance_of_the_context)`` or
+    ``class_name(self)`` is invoked. A value is added to those calls when
+    instances are created during assignment (setitem).
 
     allowed_variables is a dict of the variables that can be set and read in
     this context instance. Keys in this dict are the strings representing keys
@@ -84,6 +84,7 @@ class Context(KeyedDefaultDict):
         self._all_paths = []
         self.config = config
         self.execution_time = 0
+        self._sandbox = None
         KeyedDefaultDict.__init__(self, self._factory)
 
     def push_source(self, path):
@@ -272,6 +273,35 @@ class TemplateContext(Context):
         return Context._validate(self, key, value, True)
 
 
+class SubContext(Context, ContextDerivedValue):
+    """A Context derived from another Context.
+
+    Sub-contexts are intended to be used as context managers.
+
+    Sub-contexts inherit paths and other relevant state from the parent
+    context.
+    """
+    def __init__(self, parent):
+        assert isinstance(parent, Context)
+
+        Context.__init__(self, allowed_variables=self.VARIABLES,
+                         config=parent.config)
+
+        # Copy state from parent.
+        for p in parent.source_stack:
+            self.push_source(p)
+        self._sandbox = parent._sandbox
+
+    def __enter__(self):
+        if not self._sandbox or self._sandbox() is None:
+            raise Exception('a sandbox is required')
+
+        self._sandbox().push_subcontext(self)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._sandbox().pop_subcontext(self)
+
+
 class FinalTargetValue(ContextDerivedValue, unicode):
     def __new__(cls, context, value=""):
         if not value:
@@ -364,6 +394,27 @@ def ContextDerivedTypedList(type, base_class=List):
             super(_TypedList, self).__init__(iterable)
 
     return _TypedList
+
+
+# This defines functions that create sub-contexts.
+#
+# Values are classes that are SubContexts. The class name will be turned into
+# a function that when called emits an instance of that class.
+#
+# Arbitrary arguments can be passed to the class constructor. The first
+# argument is always the parent context. It is up to each class to perform
+# argument validation.
+SUBCONTEXTS = [
+]
+
+for cls in SUBCONTEXTS:
+    if not issubclass(cls, SubContext):
+        raise ValueError('SUBCONTEXTS entry not a SubContext class: %s' % cls)
+
+    if not hasattr(cls, 'VARIABLES'):
+        raise ValueError('SUBCONTEXTS entry does not have VARIABLES: %s' % cls)
+
+SUBCONTEXTS = {cls.__name__: cls for cls in SUBCONTEXTS}
 
 
 # This defines the set of mutable global variables.

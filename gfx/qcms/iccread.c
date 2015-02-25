@@ -547,7 +547,7 @@ static struct lutmABType *read_tag_lutmABType(struct mem_source *src, struct tag
 	}
 
 	num_in_channels = read_u8(src, offset + 8);
-	num_out_channels = read_u8(src, offset + 8);
+	num_out_channels = read_u8(src, offset + 9);
 	if (num_in_channels > MAX_CHANNELS || num_out_channels > MAX_CHANNELS)
 		return NULL;
 
