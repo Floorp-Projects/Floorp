@@ -20,7 +20,7 @@ Structure::
       type: <string>, // "main", "activation", "deletion", ...
       id: <UUID>, // a UUID that identifies this ping
       creationDate: <ISO date>, // the date the ping was generated
-      version: <number>, // the version of the ping format, currently 2
+      version: <number>, // the version of the ping format, currently 4
 
       application: {
         architecture: <string>, // build architecture, e.g. x86

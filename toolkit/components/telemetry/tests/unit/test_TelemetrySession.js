@@ -27,7 +27,7 @@ Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/osfile.jsm", this);
 
-const PING_FORMAT_VERSION = 2;
+const PING_FORMAT_VERSION = 4;
 const PING_TYPE_MAIN = "main";
 
 const REASON_SAVED_SESSION = "saved-session";
