@@ -43,7 +43,12 @@ types.addDictType("AllocationsRecordingOptions", {
   // The probability we sample any given allocation when recording
   // allocations. Must be between 0.0 and 1.0. Defaults to 1.0, or sampling
   // every allocation.
-  probability: "number"
+  probability: "number",
+
+  // The maximum number of of allocation events to keep in the allocations
+  // log. If new allocations arrive, when we are already at capacity, the oldest
+  // allocation event is lost. This number must fit in a 32 bit signed integer.
+  maxLogLength: "number"
 });
 
 /**
@@ -164,6 +169,9 @@ let MemoryActor = protocol.ActorClass({
     this.dbg.memory.allocationSamplingProbability = options.probability != null
       ? options.probability
       : 1.0;
+    if (options.maxLogLength != null) {
+      this.dbg.memory.maxAllocationsLogLength = options.maxLogLength;
+    }
     this.dbg.memory.trackingAllocationSites = true;
 
     return Date.now();
