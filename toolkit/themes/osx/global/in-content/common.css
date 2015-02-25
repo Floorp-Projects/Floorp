@@ -82,3 +82,17 @@ xul|*.inline-link:-moz-focusring {
   color: #ff9500;
   text-decoration: underline;
 }
+
+xul|button:-moz-focusring,
+xul|menulist:-moz-focusring,
+xul|checkbox:-moz-focusring > .checkbox-check,
+xul|radio[focused="true"] > .radio-check,
+xul|tab:-moz-focusring > .tab-middle > .tab-text {
+	outline: 2px solid rgba(0,149,221,0.5);
+	outline-offset: 1px;
+	-moz-outline-radius: 2px;
+}
+
+xul|radio[focused="true"] > .radio-check {
+	-moz-outline-radius: 100%;
+}
