@@ -536,9 +536,6 @@
 @RESPATH@/components/Webapps.manifest
 @RESPATH@/components/AppsService.js
 @RESPATH@/components/AppsService.manifest
-@RESPATH@/components/nsDOMIdentity.js
-@RESPATH@/components/nsIDService.js
-@RESPATH@/components/Identity.manifest
 @RESPATH@/components/recording-cmdline.js
 @RESPATH@/components/recording-cmdline.manifest
 @RESPATH@/components/htmlMenuBuilder.js
