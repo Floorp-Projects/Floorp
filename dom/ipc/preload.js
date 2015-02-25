@@ -91,6 +91,13 @@ const BrowserElementIsPreloaded = true;
   } catch (e) {
   }
 
+  try {
+    if (Services.prefs.getBoolPref("layers.async-pan-zoom.enabled") === false) {
+      Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanningAPZDisabled.js", global);
+    }
+  } catch (e) {
+  }
+
   Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanning.js", global);
   Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementChildPreload.js", global);
 
