@@ -49,7 +49,7 @@ your operating system.
 
 The test environment can be started using
 
-    python serve.py
+    ./serve
 
 This will start HTTP servers on two ports and a websockets server on
 one port. By default one web server starts on port 8000 and the other

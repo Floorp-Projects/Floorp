@@ -166,7 +166,8 @@ IdlArray.prototype.internal_add_idls = function(parsed_idls)
         switch(parsed_idl.type)
         {
         case "interface":
-            this.members[parsed_idl.name] = new IdlInterface(parsed_idl);
+            this.members[parsed_idl.name] =
+                new IdlInterface(parsed_idl, /* is_callback = */ false);
             break;
 
         case "exception":
@@ -193,8 +194,8 @@ IdlArray.prototype.internal_add_idls = function(parsed_idls)
             break;
 
         case "callback interface":
-            // TODO
-            console.log("callback interface not yet supported");
+            this.members[parsed_idl.name] =
+                new IdlInterface(parsed_idl, /* is_callback = */ true);
             break;
 
         default:
@@ -928,12 +929,16 @@ IdlException.prototype.test_object = function(desc)
 //@}
 
 /// IdlInterface ///
-function IdlInterface(obj) { IdlExceptionOrInterface.call(this, obj); }
+function IdlInterface(obj, is_callback) {
+    IdlExceptionOrInterface.call(this, obj);
+
+    this._is_callback = is_callback;
+}
 IdlInterface.prototype = Object.create(IdlExceptionOrInterface.prototype);
 IdlInterface.prototype.is_callback = function()
 //@{
 {
-    return this.has_extended_attribute("Callback");
+    return this._is_callback;
 };
 //@}
 
@@ -1112,21 +1117,29 @@ IdlInterface.prototype.test_self = function()
 
     test(function()
     {
+        // This function tests WebIDL as of 2015-01-21.
+        // https://heycam.github.io/webidl/#interface-object
+
+        if (this.is_callback() && !this.has_constants()) {
+            return;
+        }
+
         assert_own_property(self, this.name,
                             "self does not have own property " + format_value(this.name));
 
-        if (this.has_extended_attribute("Callback")) {
+        if (this.is_callback()) {
             assert_false("prototype" in self[this.name],
                          this.name + ' should not have a "prototype" property');
             return;
         }
 
-        // "The interface object must also have a property named “prototype”
-        // with attributes { [[Writable]]: false, [[Enumerable]]: false,
-        // [[Configurable]]: false } whose value is an object called the
-        // interface prototype object. This object has properties that
-        // correspond to the attributes and operations defined on the
-        // interface, and is described in more detail in section 4.5.3 below."
+        // "An interface object for a non-callback interface must have a
+        // property named “prototype” with attributes { [[Writable]]: false,
+        // [[Enumerable]]: false, [[Configurable]]: false } whose value is an
+        // object called the interface prototype object. This object has
+        // properties that correspond to the regular attributes and regular
+        // operations defined on the interface, and is described in more detail
+        // in section 4.5.4 below."
         assert_own_property(self[this.name], "prototype",
                             'interface "' + this.name + '" does not have own property "prototype"');
         var desc = Object.getOwnPropertyDescriptor(self[this.name], "prototype");
@@ -1144,45 +1157,55 @@ IdlInterface.prototype.test_self = function()
         //       correct. Consolidate that code.
 
         // "The interface prototype object for a given interface A must have an
-        // internal [[Prototype]] property whose value is as follows:
-        // "If A is not declared to inherit from another interface, then the
-        // value of the internal [[Prototype]] property of A is the Array
-        // prototype object ([ECMA-262], section 15.4.4) if the interface was
-        // declared with ArrayClass, or the Object prototype object otherwise
+        // internal [[Prototype]] property whose value is returned from the
+        // following steps:
+        // "If A is declared with the [Global] or [PrimaryGlobal] extended
+        // attribute, and A supports named properties, then return the named
+        // properties object for A, as defined in section 4.5.5 below.
+        // "Otherwise, if A is declared to inherit from another interface, then
+        // return the interface prototype object for the inherited interface.
+        // "Otherwise, if A is declared with the [ArrayClass] extended
+        // attribute, then return %ArrayPrototype% ([ECMA-262], section
+        // 6.1.7.4).
+        // "Otherwise, return %ObjectPrototype% ([ECMA-262], section 6.1.7.4).
         // ([ECMA-262], section 15.2.4).
-        // "Otherwise, A does inherit from another interface. The value of the
-        // internal [[Prototype]] property of A is the interface prototype
-        // object for the inherited interface."
-        var inherit_interface, inherit_interface_has_interface_object;
-        if (this.base) {
-            inherit_interface = this.base;
-            inherit_interface_has_interface_object =
-                !this.array
-                     .members[inherit_interface]
-                     .has_extended_attribute("NoInterfaceObject");
-        } else if (this.has_extended_attribute('ArrayClass')) {
-            inherit_interface = 'Array';
-            inherit_interface_has_interface_object = true;
-        } else {
-            inherit_interface = 'Object';
-            inherit_interface_has_interface_object = true;
-        }
-        if (inherit_interface_has_interface_object) {
-            assert_own_property(self, inherit_interface,
-                                'should inherit from ' + inherit_interface + ', but self has no such property');
-            assert_own_property(self[inherit_interface], 'prototype',
-                                'should inherit from ' + inherit_interface + ', but that object has no "prototype" property');
-            assert_equals(Object.getPrototypeOf(self[this.name].prototype),
-                          self[inherit_interface].prototype,
-                          'prototype of ' + this.name + '.prototype is not ' + inherit_interface + '.prototype');
-        } else {
-            // We can't test that we get the correct object, because this is the
-            // only way to get our hands on it. We only test that its class
-            // string, at least, is correct.
+        if (this.name === "Window") {
             assert_class_string(Object.getPrototypeOf(self[this.name].prototype),
-                                inherit_interface + 'Prototype',
-                                'Class name for prototype of ' + this.name +
-                                '.prototype is not "' + inherit_interface + 'Prototype"');
+                                'WindowProperties',
+                                'Class name for prototype of Window' +
+                                '.prototype is not "WindowProperties"');
+        } else {
+            var inherit_interface, inherit_interface_has_interface_object;
+            if (this.base) {
+                inherit_interface = this.base;
+                inherit_interface_has_interface_object =
+                    !this.array
+                         .members[inherit_interface]
+                         .has_extended_attribute("NoInterfaceObject");
+            } else if (this.has_extended_attribute('ArrayClass')) {
+                inherit_interface = 'Array';
+                inherit_interface_has_interface_object = true;
+            } else {
+                inherit_interface = 'Object';
+                inherit_interface_has_interface_object = true;
+            }
+            if (inherit_interface_has_interface_object) {
+                assert_own_property(self, inherit_interface,
+                                    'should inherit from ' + inherit_interface + ', but self has no such property');
+                assert_own_property(self[inherit_interface], 'prototype',
+                                    'should inherit from ' + inherit_interface + ', but that object has no "prototype" property');
+                assert_equals(Object.getPrototypeOf(self[this.name].prototype),
+                              self[inherit_interface].prototype,
+                              'prototype of ' + this.name + '.prototype is not ' + inherit_interface + '.prototype');
+            } else {
+                // We can't test that we get the correct object, because this is the
+                // only way to get our hands on it. We only test that its class
+                // string, at least, is correct.
+                assert_class_string(Object.getPrototypeOf(self[this.name].prototype),
+                                    inherit_interface + 'Prototype',
+                                    'Class name for prototype of ' + this.name +
+                                    '.prototype is not "' + inherit_interface + 'Prototype"');
+            }
         }
 
         // "The class string of an interface prototype object is the
@@ -1200,10 +1223,14 @@ IdlInterface.prototype.test_self = function()
 
     test(function()
     {
+        if (this.is_callback() && !this.has_constants()) {
+            return;
+        }
+
         assert_own_property(self, this.name,
                             "self does not have own property " + format_value(this.name));
 
-        if (this.has_extended_attribute("Callback")) {
+        if (this.is_callback()) {
             assert_false("prototype" in self[this.name],
                          this.name + ' should not have a "prototype" property');
             return;
@@ -1236,6 +1263,10 @@ IdlInterface.prototype.test_member_const = function(member)
 {
     test(function()
     {
+        if (this.is_callback() && !this.has_constants()) {
+            return;
+        }
+
         assert_own_property(self, this.name,
                             "self does not have own property " + format_value(this.name));
 
@@ -1261,10 +1292,14 @@ IdlInterface.prototype.test_member_const = function(member)
     // exist on the interface prototype object."
     test(function()
     {
+        if (this.is_callback() && !this.has_constants()) {
+            return;
+        }
+
         assert_own_property(self, this.name,
                             "self does not have own property " + format_value(this.name));
 
-        if (this.has_extended_attribute("Callback")) {
+        if (this.is_callback()) {
             assert_false("prototype" in self[this.name],
                          this.name + ' should not have a "prototype" property');
             return;
@@ -1292,6 +1327,10 @@ IdlInterface.prototype.test_member_attribute = function(member)
 {
     test(function()
     {
+        if (this.is_callback() && !this.has_constants()) {
+            return;
+        }
+
         assert_own_property(self, this.name,
                             "self does not have own property " + format_value(this.name));
         assert_own_property(self[this.name], "prototype",
@@ -1333,10 +1372,14 @@ IdlInterface.prototype.test_member_operation = function(member)
 {
     test(function()
     {
+        if (this.is_callback() && !this.has_constants()) {
+            return;
+        }
+
         assert_own_property(self, this.name,
                             "self does not have own property " + format_value(this.name));
 
-        if (this.has_extended_attribute("Callback")) {
+        if (this.is_callback()) {
             assert_false("prototype" in self[this.name],
                          this.name + ' should not have a "prototype" property');
             return;
@@ -1430,10 +1473,14 @@ IdlInterface.prototype.test_member_stringifier = function(member)
 {
     test(function()
     {
+        if (this.is_callback() && !this.has_constants()) {
+            return;
+        }
+
         assert_own_property(self, this.name,
                             "self does not have own property " + format_value(this.name));
 
-        if (this.has_extended_attribute("Callback")) {
+        if (this.is_callback()) {
             assert_false("prototype" in self[this.name],
                          this.name + ' should not have a "prototype" property');
             return;
