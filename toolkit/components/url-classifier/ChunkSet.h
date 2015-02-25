@@ -40,7 +40,7 @@ public:
   }
 
 private:
-  nsTArray<uint32_t> mChunks;
+  FallibleTArray<uint32_t> mChunks;
 };
 
 }
