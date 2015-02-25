@@ -458,6 +458,8 @@ let Impl = {
   _dailyTimerId: null,
   // A task performing delayed initialization of the chrome process
   _delayedInitTask: null,
+  // The deferred promise resolved when the initialization task completes.
+  _delayedInitTaskDeferred: null,
 
   /**
    * Gets a series of simple measurements (counters). At the moment, this
@@ -1051,12 +1053,12 @@ let Impl = {
     this._log.trace("setupChromeProcess");
 
     if (this._delayedInitTask) {
-      this._log.error("setupTelemetry - init task already running");
-      return this._delayedInitTask;
+      this._log.error("setupChromeProcess - init task already running");
+      return this._delayedInitTaskDeferred.promise;
     }
 
     if (this._initialized && !testing) {
-      this._log.error("setupTelemetry - already initialized");
+      this._log.error("setupChromeProcess - already initialized");
       return Promise.resolve();
     }
 
@@ -1101,7 +1103,7 @@ let Impl = {
     // Delay full telemetry initialization to give the browser time to
     // run various late initializers. Otherwise our gathered memory
     // footprint and other numbers would be too optimistic.
-    let deferred = Promise.defer();
+    this._delayedInitTaskDeferred = Promise.defer();
     this._delayedInitTask = new DeferredTask(function* () {
       try {
         this._initialized = true;
@@ -1121,16 +1123,17 @@ let Impl = {
         TelemetryEnvironment.registerChangeListener(ENVIRONMENT_CHANGE_LISTENER,
                                                     () => this._onEnvironmentChange());
 
-        deferred.resolve();
+        this._delayedInitTaskDeferred.resolve();
       } catch (e) {
-        deferred.reject();
+        this._delayedInitTaskDeferred.reject();
       } finally {
         this._delayedInitTask = null;
+        this._delayedInitTaskDeferred = null;
       }
     }.bind(this), testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
     this._delayedInitTask.arm();
-    return deferred.promise;
+    return this._delayedInitTaskDeferred.promise;
   },
 
   /**
