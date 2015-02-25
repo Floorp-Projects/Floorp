@@ -1083,13 +1083,6 @@ this.MozLoopService = {
     // stub out API functions for unit testing
     Object.freeze(this);
 
-    // Clear the old throttling mechanism. This code will be removed in bug 1094915,
-    // should be around Fx 39.
-    Services.prefs.clearUserPref("loop.throttled");
-    Services.prefs.clearUserPref("loop.throttled2");
-    Services.prefs.clearUserPref("loop.soft_start_ticket_number");
-    Services.prefs.clearUserPref("loop.soft_start_hostname");
-
     // Don't do anything if loop is not enabled.
     if (!Services.prefs.getBoolPref("loop.enabled")) {
       return Promise.reject(new Error("loop is not enabled"));
