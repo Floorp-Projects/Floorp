@@ -52,9 +52,9 @@ let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
 
     let samples = RecordingUtils.getSamplesFromAllocations(allocations);
     let data = FlameGraphUtils.createFlameGraphDataFromSamples(samples, {
-      invertStack: PerformanceController.getPref("invert-flame-graph"),
-      flattenRecursion: PerformanceController.getPref("flatten-tree-recursion"),
-      showIdleBlocks: PerformanceController.getPref("show-idle-blocks") && L10N.getStr("table.idle")
+      invertStack: PerformanceController.getOption("invert-flame-graph"),
+      flattenRecursion: PerformanceController.getOption("flatten-tree-recursion"),
+      showIdleBlocks: PerformanceController.getOption("show-idle-blocks") && L10N.getStr("table.idle")
     });
 
     this.graph.setData({ data,
