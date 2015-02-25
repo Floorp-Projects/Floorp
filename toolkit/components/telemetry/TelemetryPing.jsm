@@ -276,6 +276,8 @@ let Impl = {
   _clientID: null,
   // A task performing delayed initialization
   _delayedInitTask: null,
+  // The deferred promise resolved when the initialization task completes.
+  _delayedInitTaskDeferred: null,
 
   _shutdownBarrier: new AsyncShutdown.Barrier("TelemetryPing: Waiting for clients."),
 
@@ -676,7 +678,7 @@ let Impl = {
 
     if (this._delayedInitTask) {
       this._log.error("setupTelemetry - init task already running");
-      return this._delayedInitTask;
+      return this._delayedInitTaskDeferred.promise;
     }
 
     if (this._initialized && !testing) {
@@ -702,7 +704,7 @@ let Impl = {
     // Delay full telemetry initialization to give the browser time to
     // run various late initializers. Otherwise our gathered memory
     // footprint and other numbers would be too optimistic.
-    let deferred = Promise.defer();
+    this._delayedInitTaskDeferred = Promise.defer();
     this._delayedInitTask = new DeferredTask(function* () {
       try {
         this._initialized = true;
@@ -734,11 +736,12 @@ let Impl = {
         }
 
         Telemetry.asyncFetchTelemetryData(function () {});
-        deferred.resolve();
+        this._delayedInitTaskDeferred.resolve();
       } catch (e) {
-        deferred.reject(e);
+        this._delayedInitTaskDeferred.reject(e);
       } finally {
         this._delayedInitTask = null;
+        this._delayedInitTaskDeferred = null;
       }
     }.bind(this), testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
@@ -747,7 +750,7 @@ let Impl = {
                                            () => this._getState());
 
     this._delayedInitTask.arm();
-    return deferred.promise;
+    return this._delayedInitTaskDeferred.promise;
   },
 
   shutdown: function() {
