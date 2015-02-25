@@ -4168,6 +4168,11 @@
     "kind": "boolean",
     "description": "DOM: Ranges that are detached on destruction (bug 702948)"
   },
+  "DOM_WINDOW_SHOWMODALDIALOG_USED": {
+    "expires_in_version": "41",
+    "kind": "flag",
+    "description": "Whether Window.showModalDialog was used in this session"
+  },
   "LOCALDOMSTORAGE_INIT_DATABASE_MS": {
     "expires_in_version": "40",
     "kind": "exponential",
