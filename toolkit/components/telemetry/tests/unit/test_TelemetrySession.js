@@ -14,6 +14,7 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js", this);
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -81,6 +82,12 @@ XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
           .getService(Ci.nsISupports)
           .wrappedJSObject);
 
+function generateUUID() {
+  let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
+  // strip {}
+  return str.substring(1, str.length - 1);
+}
+
 function sendPing() {
   TelemetrySession.gatherStartup();
   if (gServerStarted) {
@@ -105,11 +112,6 @@ function wrapWithExceptionHandler(f) {
   return wrapper;
 }
 
-function fakeNow(date) {
-  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
-  session.Policy.now = () => new Date(date.getTime());
-}
-
 function futureDate(date, offset) {
   return new Date(date.getTime() + offset);
 }
@@ -117,6 +119,12 @@ function futureDate(date, offset) {
 function fakeNow(date) {
   let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
   session.Policy.now = () => date;
+}
+
+function fakeGenerateUUID(sessionFunc, subsessionFunc) {
+  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
+  session.Policy.generateSessionUUID = sessionFunc;
+  session.Policy.generateSubsessionUUID = subsessionFunc;
 }
 
 function registerPingHandler(handler) {
@@ -234,7 +242,61 @@ function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
   Assert.equal("environment" in aPing, aHasEnvironment);
 }
 
+function checkPayloadInfo(data) {
+  const ALLOWED_REASONS = [
+    "environment-change", "shutdown", "daily", "saved-session", "test-ping"
+  ];
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  let numberCheck = arg => { return (typeof arg == "number"); };
+  let positiveNumberCheck = arg => { return numberCheck(arg) && (arg >= 0); };
+  let stringCheck = arg => { return (typeof arg == "string") && (arg != ""); };
+  let isoDateCheck = arg => { return stringCheck(arg) && !Number.isNaN(Date.parse(arg)); }
+  let revisionCheck = arg => {
+    return (Services.appinfo.isOfficial) ? stringCheck(arg) : (typeof arg == "string");
+  };
+  let uuidCheck = arg => uuidRegex.test(arg);
+
+  const EXPECTED_INFO_FIELDS_TYPES = {
+    reason: stringCheck,
+    revision: revisionCheck,
+    timezoneOffset: numberCheck,
+    sessionId: uuidCheck,
+    subsessionId: uuidCheck,
+    // Special case: previousSubsessionId is null on first run.
+    previousSubsessionId: (arg) => { return (arg) ? uuidCheck(arg) : true; },
+    subsessionCounter: positiveNumberCheck,
+    profileSubsessionCounter: positiveNumberCheck,
+    sessionStartDate: isoDateCheck,
+    subsessionStartDate: isoDateCheck,
+    subsessionLength: positiveNumberCheck,
+  };
+
+  for (let f in EXPECTED_INFO_FIELDS_TYPES) {
+    Assert.ok(f in data, f + " must be available.");
+
+    let checkFunc = EXPECTED_INFO_FIELDS_TYPES[f];
+    Assert.ok(checkFunc(data[f]),
+              f + " must have the correct type and valid data " + data[f]);
+  }
+
+  // Previous buildId is not mandatory.
+  if (data.previousBuildId) {
+    Assert.ok(stringCheck(data.previousBuildId));
+  }
+
+  Assert.ok(ALLOWED_REASONS.find(r => r == data.reason),
+            "Payload must contain an allowed reason.");
+
+  Assert.ok(Date.parse(data.subsessionStartDate) >= Date.parse(data.sessionStartDate));
+  Assert.ok(data.profileSubsessionCounter >= data.subsessionCounter);
+  Assert.ok(data.timezoneOffset >= -12*60, "The timezone must be in a valid range.");
+  Assert.ok(data.timezoneOffset <= 12*60, "The timezone must be in a valid range.");
+}
+
 function checkPayload(payload, reason, successfulPings) {
+  Assert.ok("info" in payload, "Payload must contain an info section.");
+  checkPayloadInfo(payload.info);
+
   Assert.ok(payload.simpleMeasurements.uptime >= 0);
   Assert.equal(payload.simpleMeasurements.startupInterrupted, 1);
   Assert.equal(payload.simpleMeasurements.shutdownDuration, SHUTDOWN_TIME);
@@ -514,11 +576,38 @@ add_task(function* test_simplePing() {
   gServerStarted = true;
   gRequestIterator = Iterator(new Request());
 
+  let now = new Date(2020, 1, 1, 12, 0, 0);
+  let expectedDate = new Date(2020, 1, 1, 0, 0, 0);
+  fakeNow(now);
+
+  const expectedSessionUUID = "bd314d15-95bf-4356-b682-b6c4a8942202";
+  const expectedSubsessionUUID = "3e2e5f6c-74ba-4e4d-a93f-a48af238a8c7";
+  fakeGenerateUUID(() => expectedSessionUUID, () => expectedSubsessionUUID);
+  yield TelemetrySession.reset();
+
+  // Session and subsession start dates are faked during TelemetrySession setup. We can
+  // now fake the session duration.
+  const SESSION_DURATION_IN_MINUTES = 15;
+  fakeNow(new Date(2020, 1, 1, 12, SESSION_DURATION_IN_MINUTES, 0));
+
   yield sendPing();
   let request = yield gRequestIterator.next();
   let ping = decodeRequestPayload(request);
 
   checkPingFormat(ping, PING_TYPE_MAIN, true, true);
+
+  // Check that we get the data we expect.
+  let payload = ping.payload;
+  Assert.equal(payload.info.sessionId, expectedSessionUUID);
+  Assert.equal(payload.info.subsessionId, expectedSubsessionUUID);
+  let sessionStartDate = new Date(payload.info.sessionStartDate);
+  Assert.equal(sessionStartDate.toISOString(), expectedDate.toISOString());
+  let subsessionStartDate = new Date(payload.info.subsessionStartDate);
+  Assert.equal(subsessionStartDate.toISOString(), expectedDate.toISOString());
+  Assert.equal(payload.info.subsessionLength, SESSION_DURATION_IN_MINUTES * 60);
+
+  // Restore the UUID generator so we don't mess with other tests.
+  fakeGenerateUUID(generateUUID, generateUUID);
 });
 
 // Saves the current session histograms, reloads them, performs a ping
@@ -564,7 +653,7 @@ add_task(function* test_checkSubsession() {
   let now = new Date(2020, 1, 1, 12, 0, 0);
   let expectedDate = new Date(2020, 1, 1, 0, 0, 0);
   fakeNow(now);
-  TelemetrySession.setup();
+  yield TelemetrySession.setup();
 
   const COUNT_ID = "TELEMETRY_TEST_COUNT";
   const KEYED_ID = "TELEMETRY_TEST_KEYED_COUNT";
@@ -920,6 +1009,81 @@ add_task(function* test_savedSessionClientID() {
   Assert.equal(TelemetryFile.pingsLoaded, 1);
   let ping = TelemetryFile.popPendingPings().next();
   Assert.equal(ping.value.clientId, gDataReportingClientID);
+});
+
+add_task(function* test_savedSessionData() {
+  // Create the directory which will contain the data file, if it doesn't already
+  // exist.
+  const dataDir  = OS.Path.join(OS.Constants.Path.profileDir, "datareporting");
+  yield OS.File.makeDir(dataDir);
+
+  // Write test data to the session data file.
+  const dataFilePath = OS.Path.join(dataDir, "session-state.json");
+  const sessionState = {
+    previousSubsessionId: null,
+    profileSubsessionCounter: 3785,
+  };
+  yield CommonUtils.writeJSON(sessionState, dataFilePath);
+
+  const PREF_TEST = "toolkit.telemetry.test.pref1";
+  Preferences.reset(PREF_TEST);
+  let prefsToWatch = {};
+  prefsToWatch[PREF_TEST] = TelemetryEnvironment.RECORD_PREF_VALUE;
+
+  // We expect one new subsession when starting TelemetrySession and one after triggering
+  // an environment change.
+  const expectedSubsessions = sessionState.profileSubsessionCounter + 2;
+  const expectedUUID = "009fd1ad-b85e-4817-b3e5-000000003785";
+  fakeGenerateUUID(generateUUID, () => expectedUUID);
+
+  // Start TelemetrySession so that it loads the session data file.
+  yield TelemetrySession.reset();
+  // Watch a test preference, trigger and environment change and wait for it to propagate.
+  TelemetryEnvironment._watchPreferences(prefsToWatch);
+  let changePromise = new Promise(resolve =>
+    TelemetryEnvironment.registerChangeListener("test_fake_change", resolve));
+  Preferences.set(PREF_TEST, 1);
+  yield changePromise;
+  TelemetryEnvironment.unregisterChangeListener("test_fake_change");
+
+  let payload = TelemetrySession.getPayload();
+  Assert.equal(payload.info.profileSubsessionCounter, expectedSubsessions);
+  yield TelemetrySession.shutdown();
+
+  // Load back the serialised session data.
+  let data = yield CommonUtils.readJSON(dataFilePath);
+  Assert.equal(data.profileSubsessionCounter, expectedSubsessions);
+  Assert.equal(data.previousSubsessionId, expectedUUID);
+});
+
+add_task(function* test_invalidSessionData() {
+  // Create the directory which will contain the data file, if it doesn't already
+  // exist.
+  const dataDir  = OS.Path.join(OS.Constants.Path.profileDir, "datareporting");
+  yield OS.File.makeDir(dataDir);
+
+  // Write test data to the session data file.
+  const dataFilePath = OS.Path.join(dataDir, "session-state.json");
+  const sessionState = {
+    profileSubsessionCounter: "not-a-number?",
+    someOtherField: 12,
+  };
+  yield CommonUtils.writeJSON(sessionState, dataFilePath);
+
+  // The session data file should not load. Only expect the current subsession.
+  const expectedSubsessions = 1;
+  const expectedUUID = "009fd1ad-b85e-4817-b3e5-000000003785";
+  fakeGenerateUUID(() => expectedUUID, () => expectedUUID);
+  // Start TelemetrySession so that it loads the session data file.
+  yield TelemetrySession.reset();
+  let payload = TelemetrySession.getPayload();
+  Assert.equal(payload.info.profileSubsessionCounter, expectedSubsessions);
+  yield TelemetrySession.shutdown();
+
+  // Load back the serialised session data.
+  let data = yield CommonUtils.readJSON(dataFilePath);
+  Assert.equal(data.profileSubsessionCounter, expectedSubsessions);
+  Assert.equal(data.previousSubsessionId, expectedUUID);
 });
 
 add_task(function* stopServer(){
