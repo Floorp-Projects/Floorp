@@ -312,5 +312,5 @@ add_task(function* test_times() {
 });
 
 add_task(function* test_shutdown() {
-  yield TelemetrySession.shutdown();
+  yield TelemetrySession.shutdown(false);
 });

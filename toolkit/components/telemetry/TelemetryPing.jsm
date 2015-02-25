@@ -211,7 +211,7 @@ this.TelemetryPing = Object.freeze({
   },
 
   /**
-   * Only used for testing. Saves a ping to disk with a specific file name and path.
+   * Only used for testing. Saves a ping to disk and return the ping id once done.
    *
    * @param {String} aType The type of the ping.
    * @param {Object} aPayload The actual data payload for the ping.
@@ -224,9 +224,11 @@ this.TelemetryPing = Object.freeze({
    *                  environment data.
    * @param {Boolean} [aOptions.overwrite=false] true overwrites a ping with the same name,
    *                  if found.
-   * @param {String} aOptions.filePath The path to save the ping to.
+   * @param {String} [aOptions.filePath] The path to save the ping to. Will save to default
+   *                 ping location if not provided.
    *
-   * @returns {Promise} A promise that resolves when the ping is saved to disk.
+   * @returns {Promise<Integer>} A promise that resolves with the ping id when the ping is
+   *                             saved to disk.
    */
   testSavePingToFile: function(aType, aPayload, aOptions = {}) {
     let options = aOptions;
@@ -450,7 +452,7 @@ let Impl = {
   },
 
   /**
-   * Save a ping to disk with a specific file name.
+   * Save a ping to disk and return the ping id when done.
    *
    * @param {String} aType The type of the ping.
    * @param {Object} aPayload The actual data payload for the ping.
@@ -462,18 +464,25 @@ let Impl = {
    * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
    *                  environment data.
    * @param {Boolean} aOptions.overwrite true overwrites a ping with the same name, if found.
-   * @param {String} aOptions.filePath The path to save the ping to.
+   * @param {String} [aOptions.filePath] The path to save the ping to. Will save to default
+   *                 ping location if not provided.
    *
-   * @returns {Promise} A promise that resolves when the ping is saved to disk.
+   * @returns {Promise} A promise that resolves with the ping id when the ping is saved to
+   *                    disk.
    */
   testSavePingToFile: function testSavePingToFile(aType, aPayload, aOptions) {
     this._log.trace("testSavePingToFile - Type " + aType + ", Server " + this._server +
                     ", aOptions " + JSON.stringify(aOptions));
-
     return this.assemblePing(aType, aPayload, aOptions)
-        .then(pingData => TelemetryFile.savePingToFile(pingData, aOptions.filePath,
-                                                       aOptions.overwrite),
-              error => this._log.error("testSavePingToFile - Rejection", error));
+        .then(pingData => {
+            if (aOptions.filePath) {
+              return TelemetryFile.savePingToFile(pingData, aOptions.filePath, aOptions.overwrite)
+                                  .then(() => { return pingData.id; });
+            } else {
+              return TelemetryFile.savePing(pingData, aOptions.overwrite)
+                                  .then(() => { return pingData.id; });
+            }
+        }, error => this._log.error("testSavePing - Rejection", error));
   },
 
   finishPingRequest: function finishPingRequest(success, startTime, ping, isPersisted) {
