@@ -87,16 +87,16 @@ Structure::
         },
         hdd: {
           profile: { // hdd where the profile folder is located
-              model: <string>, // null on failure
-              revision: <string>, // null on failure
+              model: <string>, // windows only or null on failure
+              revision: <string>, // windows only or null on failure
           },
           binary:  { // hdd where the application binary is located
-              model: <string>, // null on failure
-              revision: <string>, // null on failure
+              model: <string>, // windows only or null on failure
+              revision: <string>, // windows only or null on failure
           },
           system:  { // hdd where the system files are located
-              model: <string>, // null on failure
-              revision: <string>, // null on failure
+              model: <string>, // windows only or null on failure
+              revision: <string>, // windows only or null on failure
           },
         },
         gfx: {
