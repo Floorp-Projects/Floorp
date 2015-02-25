@@ -861,14 +861,11 @@ SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
 }
 
 void
-SetProcessPriority(int aPid,
-                   ProcessPriority aPriority,
-                   uint32_t aBackgroundLRU)
+SetProcessPriority(int aPid, ProcessPriority aPriority, uint32_t aLRU)
 {
   // n.b. The sandboxed implementation crashes; SetProcessPriority works only
   // from the main process.
-  MOZ_ASSERT(aBackgroundLRU == 0 || aPriority == PROCESS_PRIORITY_BACKGROUND);
-  PROXY_IF_SANDBOXED(SetProcessPriority(aPid, aPriority, aBackgroundLRU));
+  PROXY_IF_SANDBOXED(SetProcessPriority(aPid, aPriority, aLRU));
 }
 
 void
