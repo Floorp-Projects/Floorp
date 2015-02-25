@@ -49,7 +49,7 @@ struct GLContextSymbols
     PFNGLBINDTEXTUREPROC fBindTexture;
     typedef void (GLAPIENTRY * PFNGLBINDVERTEXARRAYPROC) (GLuint array);
     PFNGLBINDVERTEXARRAYPROC fBindVertexArray;
-    typedef void (GLAPIENTRY * PFNGLBLENDCOLORPROC) (GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+    typedef void (GLAPIENTRY * PFNGLBLENDCOLORPROC) (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
     PFNGLBLENDCOLORPROC fBlendColor;
     typedef void (GLAPIENTRY * PFNGLBLENDEQUATIONPROC) (GLenum mode);
     PFNGLBLENDEQUATIONPROC fBlendEquation;
@@ -73,7 +73,7 @@ struct GLContextSymbols
     PFNGLCLEARBUFFERIVPROC fClearBufferiv;
     typedef void (GLAPIENTRY * PFNGLCLEARBUFFERUIVPROC) (GLenum buffer, GLint drawbuffer, const GLuint* value);
     PFNGLCLEARBUFFERUIVPROC fClearBufferuiv;
-    typedef void (GLAPIENTRY * PFNGLCLEARCOLORPROC) (GLclampf, GLclampf, GLclampf, GLclampf);
+    typedef void (GLAPIENTRY * PFNGLCLEARCOLORPROC) (GLfloat, GLfloat, GLfloat, GLfloat);
     PFNGLCLEARCOLORPROC fClearColor;
     typedef void (GLAPIENTRY * PFNGLCLEARSTENCILPROC) (GLint);
     PFNGLCLEARSTENCILPROC fClearStencil;

@@ -219,6 +219,12 @@ ClientTiledPaintedLayer::IsScrollingOnCompositor(const FrameMetrics& aParentMetr
 bool
 ClientTiledPaintedLayer::UseFastPath()
 {
+  // The fast path doesn't allow rendering at low resolution. It will draw the low-res
+  // area at full resolution and cause OOM.
+  if (gfxPrefs::UseLowPrecisionBuffer()) {
+    return false;
+  }
+
   LayerMetricsWrapper scrollAncestor;
   GetAncestorLayers(&scrollAncestor, nullptr);
   if (!scrollAncestor) {
@@ -227,16 +233,35 @@ ClientTiledPaintedLayer::UseFastPath()
   const FrameMetrics& parentMetrics = scrollAncestor.Metrics();
 
   bool multipleTransactionsNeeded = gfxPlatform::GetPlatform()->UseProgressivePaint()
-                                 || gfxPrefs::UseLowPrecisionBuffer()
                                  || !parentMetrics.GetCriticalDisplayPort().IsEmpty();
   bool isFixed = GetIsFixedPosition() || GetParent()->GetIsFixedPosition();
   bool isScrollable = parentMetrics.IsScrollable();
 
-  return !multipleTransactionsNeeded || isFixed || !isScrollable
-#if !defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
-         || !IsScrollingOnCompositor(parentMetrics)
+  return !multipleTransactionsNeeded || isFixed || !isScrollable;
+}
+
+bool
+ClientTiledPaintedLayer::UseProgressiveDraw() {
+  // Don't draw progressively in a reftest scenario (that's what the HasShadowTarget() check is for).
+  if (!gfxPlatform::GetPlatform()->UseProgressivePaint() || ClientManager()->HasShadowTarget()) {
+    return false;
+  }
+
+  // XXX We probably want to disable progressive drawing for non active APZ layers in the future
+  //     but we should wait for a proper test case before making this change.
+
+#if 0 //!defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
+  LayerMetricsWrapper scrollAncestor;
+  GetAncestorLayers(&scrollAncestor, nullptr);
+  if (!scrollAncestor) {
+    return true;
+  }
+  const FrameMetrics& parentMetrics = scrollAncestor.Metrics();
+
+  return !IsScrollingOnCompositor(parentMetrics);
+#else
+  return true;
 #endif
-         ;
 }
 
 bool
@@ -251,10 +276,8 @@ ClientTiledPaintedLayer::RenderHighPrecision(nsIntRegion& aInvalidRegion,
     return false;
   }
 
-  // Only draw progressively when the resolution is unchanged, and we're not
-  // in a reftest scenario (that's what the HasShadowManager() check is for).
-  if (gfxPlatform::GetPlatform()->UseProgressivePaint() &&
-      !ClientManager()->HasShadowTarget() &&
+  // Only draw progressively when the resolution is unchanged
+  if (UseProgressiveDraw() &&
       mContentClient->mTiledBuffer.GetFrameResolution() == mPaintData.mResolution) {
     // Store the old valid region, then clear it before painting.
     // We clip the old valid region to the visible region, as it only gets
@@ -418,36 +441,20 @@ ClientTiledPaintedLayer::RenderLayer()
       ToClientLayer(GetMaskLayer())->RenderLayer();
     }
 
-    // For more complex cases we need to calculate a bunch of metrics before we
-    // can do the paint.
-    BeginPaint();
-    if (mPaintData.mPaintFinished) {
-      return;
-    }
-
     // In some cases we can take a fast path and just be done with it.
     if (UseFastPath()) {
       TILING_LOG("TILING %p: Taking fast-path\n", this);
       mValidRegion = neededRegion;
-
-      // Make sure that tiles that fall outside of the visible region or outside of the
-      // critical displayport are discarded on the first update. Also make sure that we
-      // only draw stuff inside the critical displayport on the first update.
-      if (!mPaintData.mCriticalDisplayPort.IsEmpty()) {
-        mValidRegion.And(mValidRegion, LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort));
-        invalidRegion.And(invalidRegion, LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort));
-      }
-
-      if (invalidRegion.IsEmpty()) {
-        EndPaint();
-        return;
-      }
-
-      mContentClient->mTiledBuffer.SetFrameResolution(mPaintData.mResolution);
       mContentClient->mTiledBuffer.PaintThebes(mValidRegion, invalidRegion, callback, data);
       ClientManager()->Hold(this);
       mContentClient->UseTiledLayerBuffer(TiledContentClient::TILED_BUFFER);
-      EndPaint();
+      return;
+    }
+
+    // For more complex cases we need to calculate a bunch of metrics before we
+    // can do the paint.
+    BeginPaint();
+    if (mPaintData.mPaintFinished) {
       return;
     }
 
