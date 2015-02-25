@@ -8,6 +8,24 @@
 #include "TouchManager.h"
 #include "nsPresShell.h"
 
+bool TouchManager::gPreventMouseEvents = false;
+nsRefPtrHashtable<nsUint32HashKey, dom::Touch>* TouchManager::gCaptureTouchList;
+
+/*static*/ void
+TouchManager::InitializeStatics()
+{
+  NS_ASSERTION(!gCaptureTouchList, "InitializeStatics called multiple times!");
+  gCaptureTouchList = new nsRefPtrHashtable<nsUint32HashKey, dom::Touch>;
+}
+
+/*static*/ void
+TouchManager::ReleaseStatics()
+{
+  NS_ASSERTION(gCaptureTouchList, "ReleaseStatics called without Initialize!");
+  delete gCaptureTouchList;
+  gCaptureTouchList = nullptr;
+}
+
 void
 TouchManager::Init(PresShell* aPresShell, nsIDocument* aDocument)
 {
@@ -51,9 +69,8 @@ EvictTouchPoint(nsRefPtr<dom::Touch>& aTouch,
     }
   }
   if (!node || !aLimitToDocument || node->OwnerDoc() == aLimitToDocument) {
-    // We couldn't dispatch touchend. Remove the touch from gCaptureTouchList
-    // explicitly.
-    nsIPresShell::gCaptureTouchList->Remove(aTouch->Identifier());
+    // We couldn't dispatch touchend. Remove the touch from gCaptureTouchList explicitly.
+    TouchManager::gCaptureTouchList->Remove(aTouch->Identifier());
   }
 }
 
@@ -71,7 +88,7 @@ void
 TouchManager::EvictTouches()
 {
   WidgetTouchEvent::AutoTouchArray touches;
-  PresShell::gCaptureTouchList->Enumerate(&AppendToTouchList, &touches);
+  gCaptureTouchList->Enumerate(&AppendToTouchList, &touches);
   for (uint32_t i = 0; i < touches.Length(); ++i) {
     EvictTouchPoint(touches[i], mDocument);
   }
@@ -93,7 +110,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
       // queue
       if (touchEvent->touches.Length() == 1) {
         WidgetTouchEvent::AutoTouchArray touches;
-        PresShell::gCaptureTouchList->Enumerate(&AppendToTouchList, (void *)&touches);
+        gCaptureTouchList->Enumerate(&AppendToTouchList, (void *)&touches);
         for (uint32_t i = 0; i < touches.Length(); ++i) {
           EvictTouchPoint(touches[i]);
         }
@@ -102,12 +119,12 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
       for (uint32_t i = 0; i < touchEvent->touches.Length(); ++i) {
         dom::Touch* touch = touchEvent->touches[i];
         int32_t id = touch->Identifier();
-        if (!PresShell::gCaptureTouchList->Get(id, nullptr)) {
+        if (!gCaptureTouchList->Get(id, nullptr)) {
           // If it is not already in the queue, it is a new touch
           touch->mChanged = true;
         }
         touch->mMessage = aEvent->message;
-        PresShell::gCaptureTouchList->Put(id, touch);
+        gCaptureTouchList->Put(id, touch);
       }
       break;
     }
@@ -125,7 +142,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         int32_t id = touch->Identifier();
         touch->mMessage = aEvent->message;
 
-        nsRefPtr<dom::Touch> oldTouch = PresShell::gCaptureTouchList->GetWeak(id);
+        nsRefPtr<dom::Touch> oldTouch = gCaptureTouchList->GetWeak(id);
         if (!oldTouch) {
           touches.RemoveElementAt(i);
           continue;
@@ -142,7 +159,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         }
         touch->SetTarget(targetPtr);
 
-        PresShell::gCaptureTouchList->Put(id, touch);
+        gCaptureTouchList->Put(id, touch);
         // if we're moving from touchstart to touchmove for this touch
         // we allow preventDefault to prevent mouse events
         if (oldTouch->mMessage != touch->mMessage) {
@@ -165,7 +182,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
             }
           }
         } else {
-          if (PresShell::gPreventMouseEvents) {
+          if (gPreventMouseEvents) {
             *aStatus = nsEventStatus_eConsumeNoDefault;
           }
           return false;
@@ -190,7 +207,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         touch->mChanged = true;
 
         int32_t id = touch->Identifier();
-        nsRefPtr<dom::Touch> oldTouch = PresShell::gCaptureTouchList->GetWeak(id);
+        nsRefPtr<dom::Touch> oldTouch = gCaptureTouchList->GetWeak(id);
         if (!oldTouch) {
           continue;
         }
@@ -198,10 +215,10 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
 
         aCurrentEventContent = do_QueryInterface(targetPtr);
         touch->SetTarget(targetPtr);
-        PresShell::gCaptureTouchList->Remove(id);
+        gCaptureTouchList->Remove(id);
       }
       // add any touches left in the touch list, but ensure changed=false
-      PresShell::gCaptureTouchList->Enumerate(&AppendToTouchList, (void *)&touches);
+      gCaptureTouchList->Enumerate(&AppendToTouchList, (void *)&touches);
       break;
     }
     default:

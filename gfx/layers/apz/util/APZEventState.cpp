@@ -13,6 +13,7 @@
 #include "nsITimer.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsIWidget.h"
+#include "TouchManager.h"
 
 #define APZES_LOG(...)
 // #define APZES_LOG(...) printf_stderr("APZCCH: " __VA_ARGS__)
@@ -189,7 +190,7 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
     mActiveElementManager->SetTargetElement(aEvent.touches[0]->GetTarget());
   }
 
-  bool isTouchPrevented = nsIPresShell::gPreventMouseEvents ||
+  bool isTouchPrevented = TouchManager::gPreventMouseEvents ||
       aEvent.mFlags.mMultipleActionsPrevented;
   switch (aEvent.message) {
   case NS_TOUCH_START: {

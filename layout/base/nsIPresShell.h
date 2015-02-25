@@ -1242,11 +1242,7 @@ public:
   }
 
   // mouse capturing
-
   static CapturingContentInfo gCaptureInfo;
-
-  static nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Touch>* gCaptureTouchList;
-  static bool gPreventMouseEvents;
 
   struct PointerCaptureInfo
   {
