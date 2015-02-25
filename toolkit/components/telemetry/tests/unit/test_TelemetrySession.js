@@ -26,7 +26,11 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/osfile.jsm", this);
 
 const PING_FORMAT_VERSION = 2;
-const PING_TYPE = "main";
+const PING_TYPE_MAIN = "main";
+
+const REASON_SAVED_SESSION = "saved-session";
+const REASON_TEST_PING = "test-ping";
+const REASON_DAILY = "daily";
 
 const PLATFORM_VERSION = "1.9.2";
 const APP_VERSION = "1";
@@ -50,6 +54,9 @@ const RW_OWNER = parseInt("0600", 8);
 
 const NUMBER_OF_THREADS_TO_LAUNCH = 30;
 let gNumberOfThreadsLaunched = 0;
+
+const SEC_IN_ONE_DAY  = 24 * 60 * 60;
+const MS_IN_ONE_DAY   = SEC_IN_ONE_DAY * 1000;
 
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
@@ -98,7 +105,11 @@ function wrapWithExceptionHandler(f) {
 
 function fakeNow(date) {
   let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
-  session.Policy.now = () => date;
+  session.Policy.now = () => new Date(date.getTime());
+}
+
+function futureDate(date, offset) {
+  return new Date(date.getTime() + offset);
 }
 
 function registerPingHandler(handler) {
@@ -500,7 +511,7 @@ add_task(function* test_simplePing() {
   let request = yield gRequestIterator.next();
   let ping = decodeRequestPayload(request);
 
-  checkPingFormat(ping, PING_TYPE, true, true);
+  checkPingFormat(ping, PING_TYPE_MAIN, true, true);
 });
 
 // Saves the current session histograms, reloads them, performs a ping
@@ -527,18 +538,18 @@ add_task(function* test_saveLoadPing() {
   let ping1 = decodeRequestPayload(request1);
   let ping2 = decodeRequestPayload(request2);
 
-  checkPingFormat(ping1, PING_TYPE, true, true);
-  checkPingFormat(ping2, PING_TYPE, true, true);
+  checkPingFormat(ping1, PING_TYPE_MAIN, true, true);
+  checkPingFormat(ping2, PING_TYPE_MAIN, true, true);
 
   // Check we have the correct two requests. Ordering is not guaranteed.
-  if (ping1.payload.info.reason === "test-ping") {
+  if (ping1.payload.info.reason === REASON_TEST_PING) {
     // Until we change MainPing according to bug 1120982, common ping payload
     // will contain another nested payload.
-    checkPayload(ping1.payload, "test-ping", 1);
-    checkPayload(ping2.payload, "saved-session", 1);
+    checkPayload(ping1.payload, REASON_TEST_PING, 1);
+    checkPayload(ping2.payload, REASON_SAVED_SESSION, 1);
   } else {
-    checkPayload(ping1.payload, "saved-session", 1);
-    checkPayload(ping2.payload, "test-ping", 1);
+    checkPayload(ping1.payload, REASON_SAVED_SESSION, 1);
+    checkPayload(ping2.payload, REASON_TEST_PING, 1);
   }
 });
 
@@ -546,6 +557,7 @@ add_task(function* test_checkSubsession() {
   let now = new Date(2020, 1, 1, 12, 0, 0);
   let expectedDate = new Date(2020, 1, 1, 0, 0, 0);
   fakeNow(now);
+  TelemetrySession.setup();
 
   const COUNT_ID = "TELEMETRY_TEST_COUNT";
   const KEYED_ID = "TELEMETRY_TEST_KEYED_COUNT";
@@ -681,8 +693,10 @@ add_task(function* test_checkSubsession() {
   classic = TelemetrySession.getPayload();
   subsession = TelemetrySession.getPayload("environment-change", true);
 
-  Assert.equal(classic.info.subsessionStartDate, expectedDate.toISOString());
-  Assert.equal(subsession.info.subsessionStartDate, expectedDate.toISOString());
+  let subsessionStartDate = new Date(classic.info.subsessionStartDate);
+  Assert.equal(subsessionStartDate.toISOString(), expectedDate.toISOString());
+  subsessionStartDate = new Date(subsession.info.subsessionStartDate);
+  Assert.equal(subsessionStartDate.toISOString(), expectedDate.toISOString());
   checkHistograms(classic.histograms, subsession.histograms);
   checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms);
 
@@ -720,6 +734,94 @@ add_task(function* test_checkSubsession() {
   Assert.equal(classic.keyedHistograms[KEYED_ID]["b"].sum, 2);
   Assert.equal(subsession.keyedHistograms[KEYED_ID]["a"].sum, 1);
   Assert.equal(subsession.keyedHistograms[KEYED_ID]["b"].sum, 1);
+});
+
+add_task(function* test_dailyCollection() {
+  let now = new Date(2030, 1, 1, 12, 0, 0);
+  let nowDay = new Date(2030, 1, 1, 0, 0, 0);
+  let timerCallback = null;
+  let timerDelay = null;
+
+  gRequestIterator = Iterator(new Request());
+
+  fakeNow(now);
+  fakeDailyTimers((callback, timeout) => {
+    dump("fake setDailyTimeout(" + callback + ", " + timeout + ")\n");
+    timerCallback = callback;
+    timerDelay = timeout;
+    return 1;
+  }, () => {});
+
+  // Init and check timer.
+  yield TelemetrySession.setup();
+  TelemetryPing.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
+
+  Assert.ok(!!timerCallback);
+  Assert.ok(Number.isFinite(timerDelay));
+  let timerDate = futureDate(now, timerDelay);
+  let expectedDate = futureDate(nowDay, MS_IN_ONE_DAY);
+  Assert.equal(timerDate.toISOString(), expectedDate.toISOString());
+
+  // Set histograms to expected state.
+  const COUNT_ID = "TELEMETRY_TEST_COUNT";
+  const KEYED_ID = "TELEMETRY_TEST_KEYED_COUNT";
+  const count = Telemetry.getHistogramById(COUNT_ID);
+  const keyed = Telemetry.getKeyedHistogramById(KEYED_ID);
+
+  count.clear();
+  keyed.clear();
+  count.add(1);
+  keyed.add("a", 1);
+  keyed.add("b", 1);
+  keyed.add("b", 1);
+
+  // Trigger and collect daily ping.
+  yield timerCallback();
+  let request = yield gRequestIterator.next();
+  Assert.ok(!!request);
+  let ping = decodeRequestPayload(request);
+
+  Assert.equal(ping.type, PING_TYPE_MAIN);
+  Assert.equal(ping.payload.info.reason, REASON_DAILY);
+  let subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
+  Assert.equal(subsessionStartDate.toISOString(), nowDay.toISOString());
+
+  Assert.equal(ping.payload.histograms[COUNT_ID].sum, 1);
+  Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["a"].sum, 1);
+  Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["b"].sum, 2);
+
+  // Trigger and collect another ping. The histograms should be reset.
+  yield timerCallback();
+  request = yield gRequestIterator.next();
+  Assert.ok(!!request);
+  ping = decodeRequestPayload(request);
+
+  Assert.equal(ping.type, PING_TYPE_MAIN);
+  Assert.equal(ping.payload.info.reason, REASON_DAILY);
+  subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
+  Assert.equal(subsessionStartDate.toISOString(), nowDay.toISOString());
+
+  Assert.equal(ping.payload.histograms[COUNT_ID].sum, 0);
+  Assert.deepEqual(ping.payload.keyedHistograms[KEYED_ID], {});
+
+  // Trigger and collect another daily ping, with the histograms being set again.
+  count.add(1);
+  keyed.add("a", 1);
+  keyed.add("b", 1);
+
+  yield timerCallback();
+  request = yield gRequestIterator.next();
+  Assert.ok(!!request);
+  ping = decodeRequestPayload(request);
+
+  Assert.equal(ping.type, PING_TYPE_MAIN);
+  Assert.equal(ping.payload.info.reason, REASON_DAILY);
+  subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
+  Assert.equal(subsessionStartDate.toISOString(), nowDay.toISOString());
+
+  Assert.equal(ping.payload.histograms[COUNT_ID].sum, 1);
+  Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["a"].sum, 1);
+  Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["b"].sum, 1);
 });
 
 // Checks that an expired histogram file is deleted when loaded.

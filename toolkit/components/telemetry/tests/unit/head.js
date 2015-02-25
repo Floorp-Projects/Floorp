@@ -73,7 +73,17 @@ function createAppInfo(id, name, version, platformVersion) {
                             XULAPPINFO_CONTRACTID, XULAppInfoFactory);
 }
 
+// Fake setTimeout and clearTimeout for the daily timer in tests for controllable behavior.
+function fakeDailyTimers(set, clear) {
+  let session = Components.utils.import("resource://gre/modules/TelemetrySession.jsm");
+  session.Policy.setDailyTimeout = set;
+  session.Policy.clearDailyTimeout = clear;
+}
+
 // Set logging preferences for all the tests.
 Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
 Services.prefs.setBoolPref("toolkit.telemetry.log.dump", true);
 TelemetryPing.initLogging();
+
+// Avoid timers interrupting test behavior.
+fakeDailyTimers(() => {}, () => {});
