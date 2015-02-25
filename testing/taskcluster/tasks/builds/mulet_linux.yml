@@ -7,14 +7,12 @@ task:
 
   workerType: b2gbuild-desktop
   scopes:
-    - 'docker-worker:cache:sources-gecko'
-    - 'docker-worker:cache:build-mulet-linux-objects'
+    - 'docker-worker:cache:build-mulet-linux-workspace'
     - 'docker-worker:cache:tooltool-cache'
 
   payload:
     cache:
-      sources-gecko: '/home/worker/gecko'
-      build-mulet-linux-objects: '/home/worker/object-folder'
+      build-mulet-linux-workspace: '/home/worker/workspace'
       tooltool-cache: '/home/worker/tools/tooltool-cache'
 
     env:
@@ -23,7 +21,12 @@ task:
     maxRunTime: 3600
 
     command:
-      - bin/build-mulet-linux.sh
+      - /bin/bash
+      - -c
+      - >
+        checkout-gecko workspace &&
+        cd ./workspace/gecko/testing/taskcluster/scripts/builder &&
+        buildbot_step 'Build' ./build-mulet-linux.sh $HOME/workspace
 
   extra:
     treeherder:
