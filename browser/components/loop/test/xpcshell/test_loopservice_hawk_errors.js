@@ -37,7 +37,6 @@ add_task(function* setup_server() {
 
 add_task(function* error_offline() {
   Services.io.offline = true;
-  Services.prefs.setBoolPref("network.dns.offline-localhost", false);
   yield MozLoopServiceInternal.hawkRequestInternal(LOOP_SESSION_TYPE.GUEST, "/offline", "GET").then(
     () => Assert.ok(false, "Should have rejected"),
     (error) => {
@@ -180,7 +179,6 @@ function run_test() {
     Services.prefs.clearUserPref("loop.hawk-session-token");
     Services.prefs.clearUserPref("loop.hawk-session-token.fxa");
     Services.prefs.clearUserPref("loop.urlsExpiryTimeSeconds");
-    Services.prefs.clearUserPref("network.dns.offline-localhost");
     MozLoopService.errors.clear();
   });
 
