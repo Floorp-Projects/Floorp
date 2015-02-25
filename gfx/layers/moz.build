@@ -359,6 +359,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
     '/docshell/base',  # for nsDocShell.h
+    '/layout/base',    # for TouchManager.h
 ]
 
 FINAL_LIBRARY = 'xul'

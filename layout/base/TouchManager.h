@@ -17,6 +17,10 @@ class nsIDocument;
 
 class TouchManager {
 public:
+  // Initialize and release static variables
+  static void InitializeStatics();
+  static void ReleaseStatics();
+
   void Init(PresShell* aPresShell, nsIDocument* aDocument);
   void Destroy();
 
@@ -25,6 +29,9 @@ public:
                       bool& aTouchIsNew,
                       bool& aIsHandlingUserInput,
                       nsCOMPtr<nsIContent>& aCurrentEventContent);
+
+  static bool gPreventMouseEvents;
+  static nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Touch>* gCaptureTouchList;
 
 private:
   void EvictTouches();
