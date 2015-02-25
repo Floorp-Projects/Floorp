@@ -40,7 +40,7 @@ Structure::
           // only record they are present with value being set to null.
         },
       },
-      profile: {
+      profile: { // This section is not available on Android.
         creationDate: <integer>, // integer days since UNIX epoch, e.g. 16446
         resetDate: <integer>, // integer days since UNIX epoch, e.g. 16446 - optional
       },

@@ -7,7 +7,6 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
-Cu.import("resource://gre/modules/services/healthreport/profile.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://testing-common/AddonManagerTesting.jsm");
 Cu.import("resource://testing-common/httpd.js");
@@ -15,6 +14,10 @@ Cu.import("resource://testing-common/httpd.js");
 // Lazy load |LightweightThemeManager|, we won't be using it on Gonk.
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
+
+// Lazy load |ProfileTimesAccessor| as it is not available on Android.
+XPCOMUtils.defineLazyModuleGetter(this, "ProfileTimesAccessor",
+                                  "resource://gre/modules/services/healthreport/profile.jsm");
 
 // The webserver hosting the addons.
 let gHttpServer = null;
@@ -161,6 +164,11 @@ function spoofGfxAdapter() {
 }
 
 function spoofProfileReset() {
+  if (gIsAndroid) {
+    // ProfileTimesAccessor is not available on Android.
+    return true;
+  }
+
   let profileAccessor = new ProfileTimesAccessor();
 
   return profileAccessor.writeTimes({
@@ -291,6 +299,12 @@ function checkSettingsSection(data) {
 }
 
 function checkProfileSection(data) {
+  if (gIsAndroid) {
+    Assert.ok(!("profile" in data),
+              "There must be no profile section in Environment on Android.");
+    return;
+  }
+
   Assert.ok("profile" in data, "There must be a profile section in Environment.");
   Assert.equal(data.profile.creationDate, truncateToDays(PROFILE_CREATION_DATE_MS));
   Assert.equal(data.profile.resetDate, truncateToDays(PROFILE_RESET_DATE_MS));
