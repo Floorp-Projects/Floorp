@@ -4,6 +4,11 @@
 Components.utils.import("resource://gre/modules/TelemetryPing.jsm", this);
 Components.utils.import("resource://gre/modules/Services.jsm", this);
 
+const gIsWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
+const gIsMac = ("@mozilla.org/xpcom/mac-utils;1" in Components.classes);
+const gIsAndroid =  ("@mozilla.org/android/bridge;1" in Components.classes);
+const gIsGonk = ("@mozilla.org/cellbroadcast/gonkservice;1" in Components.classes);
+
 let gOldAppInfo = null;
 let gGlobalScope = this;
 

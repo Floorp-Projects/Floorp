@@ -652,6 +652,11 @@ add_task(function* test_saveLoadPing() {
 });
 
 add_task(function* test_checkSubsession() {
+  if (gIsAndroid) {
+    // We don't support subsessions yet on Android.
+    return;
+  }
+
   let now = new Date(2020, 1, 1, 12, 0, 0);
   let expectedDate = new Date(2020, 1, 1, 0, 0, 0);
   fakeNow(now);
@@ -835,6 +840,11 @@ add_task(function* test_checkSubsession() {
 });
 
 add_task(function* test_dailyCollection() {
+  if (gIsAndroid) {
+    // We don't do daily collections yet on Android.
+    return;
+  }
+
   let now = new Date(2030, 1, 1, 12, 0, 0);
   let nowDay = new Date(2030, 1, 1, 0, 0, 0);
   let timerCallback = null;
@@ -923,6 +933,11 @@ add_task(function* test_dailyCollection() {
 });
 
 add_task(function* test_environmentChange() {
+  if (gIsAndroid) {
+    // We don't split subsessions on environment changes yet on Android.
+    return;
+  }
+
   let now = new Date(2040, 1, 1, 12, 0, 0);
   let nowDay = new Date(2040, 1, 1, 0, 0, 0);
   let timerCallback = null;
@@ -1037,6 +1052,11 @@ add_task(function* test_savedSessionData() {
   const expectedSubsessions = sessionState.profileSubsessionCounter + 2;
   const expectedUUID = "009fd1ad-b85e-4817-b3e5-000000003785";
   fakeGenerateUUID(generateUUID, () => expectedUUID);
+
+  if (gIsAndroid) {
+    // We don't support subsessions yet on Android, so skip the next checks.
+    return;
+  }
 
   // Start TelemetrySession so that it loads the session data file.
   yield TelemetrySession.reset();
