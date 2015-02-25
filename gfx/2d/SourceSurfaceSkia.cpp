@@ -98,6 +98,7 @@ SourceSurfaceSkia::InitFromTexture(DrawTargetSkia* aOwner,
                                    SurfaceFormat aFormat)
 {
   MOZ_ASSERT(aOwner, "null GrContext");
+#ifdef USE_SKIA_GPU
   GrBackendTextureDesc skiaTexGlue;
   mSize.width = skiaTexGlue.fWidth = aSize.width;
   mSize.height = skiaTexGlue.fHeight = aSize.height;
@@ -112,6 +113,7 @@ SourceSurfaceSkia::InitFromTexture(DrawTargetSkia* aOwner,
   SkGrPixelRef *texRef = new SkGrPixelRef(imgInfo, skiaTexture, false);
   mBitmap.setInfo(imgInfo, aSize.width*aSize.height*4);
   mBitmap.setPixelRef(texRef);
+#endif
 
   mDrawTarget = aOwner;
   return true;
