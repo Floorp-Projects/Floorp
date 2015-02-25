@@ -34,6 +34,7 @@ namespace JS {
 class JS_PUBLIC_API(ProfilingFrameIterator)
 {
     JSRuntime *rt_;
+    uint32_t sampleBufferGen_;
     js::Activation *activation_;
 
     // When moving past a JitActivation, we need to save the prevJitTop
@@ -68,6 +69,10 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
 
     void settle();
 
+    bool hasSampleBufferGen() const {
+        return sampleBufferGen_ != UINT32_MAX;
+    }
+
   public:
     struct RegisterState
     {
@@ -77,7 +82,8 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
         void *lr;
     };
 
-    ProfilingFrameIterator(JSRuntime *rt, const RegisterState &state);
+    ProfilingFrameIterator(JSRuntime *rt, const RegisterState &state,
+                           uint32_t sampleBufferGen = UINT32_MAX);
     ~ProfilingFrameIterator();
     void operator++();
     bool done() const { return !activation_; }
@@ -116,6 +122,18 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
     bool isAsmJS() const;
     bool isJit() const;
 };
+
+/**
+ * After each sample run, this method should be called with the latest sample
+ * buffer generation, and the lapCount.  It will update corresponding fields on
+ * JSRuntime.
+ *
+ * See fields |profilerSampleBufferGen|, |profilerSampleBufferLapCount| on
+ * JSRuntime for documentation about what these values are used for.
+ */
+JS_FRIEND_API(void)
+UpdateJSRuntimeProfilerSampleBufferGen(JSRuntime *runtime, uint32_t generation,
+                                       uint32_t lapCount);
 
 } // namespace JS
 
